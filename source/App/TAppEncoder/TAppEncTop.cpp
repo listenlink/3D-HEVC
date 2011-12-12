@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TAppEncTop.cpp
@@ -17,9 +50,9 @@
 
 TAppEncTop::TAppEncTop()
 {
-//GT VSO
+#if HHI_VSO
   m_iLastFramePutInERViewBuffer = -1;
-//GT VSO end
+#endif
 }
 
 TAppEncTop::~TAppEncTop()
@@ -54,7 +87,6 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setGOPSize                      ( m_iGOPSize );
     m_acTEncTopList[iViewIdx]->setRateGOPSize                  ( m_iRateGOPSize );
 
-//  // SB
     m_acTEncTopList[iViewIdx]->setSeqStructure                              ( m_cInputFormatString );
 
     m_acTEncTopList[iViewIdx]->setQP                           ( m_aiQP[0] );
@@ -78,12 +110,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setBipredSearchRange            ( m_bipredSearchRange );
     m_acTEncTopList[iViewIdx]->setMaxDeltaQP                   ( m_iMaxDeltaQP  );
 
+#if HHI_VSO
     //====== VSO =========
-//GT VSO
     m_acTEncTopList[iViewIdx]->setForceLambdaScaleVSO          ( false );
     m_acTEncTopList[iViewIdx]->setLambdaScaleVSO               ( 1     );
     m_acTEncTopList[iViewIdx]->setVSOMode                      ( 0     );
-//GT VSO end
+#endif
 
     //====== Tool list ========
     m_acTEncTopList[iViewIdx]->setUseSBACRD                    ( m_bUseSBACRD   );
@@ -108,9 +140,9 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setQuadtreeTUMaxDepthIntra      ( m_uiQuadtreeTUMaxDepthIntra );
     m_acTEncTopList[iViewIdx]->setUseFastEnc                   ( m_bUseFastEnc  );
 
-//GT VSO
+#if HHI_VSO
     m_acTEncTopList[iViewIdx]->setUseVSO                       ( false ); //GT: might be enabled later for VSO Mode 4
-//GT VSO end
+#endif
 
     m_acTEncTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
     m_acTEncTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
@@ -119,19 +151,26 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
     m_acTEncTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
     m_acTEncTopList[iViewIdx]->setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#if DEPTH_MAP_GENERATION
     m_acTEncTopList[iViewIdx]->setPredDepthMapGeneration       ( m_uiPredDepthMapGeneration );
-    m_acTEncTopList[iViewIdx]->setMultiviewMvPredMode          ( m_uiMultiviewMvPredMode );
-    m_acTEncTopList[iViewIdx]->setMultiviewMvRegMode           ( iViewIdx ? m_uiMultiviewMvRegMode       : 0   );
-    m_acTEncTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( iViewIdx ? m_dMultiviewMvRegLambdaScale : 0.0 );
     m_acTEncTopList[iViewIdx]->setPdmPrecision                 ( (UInt)m_cCameraData.getPdmPrecision     () );
     m_acTEncTopList[iViewIdx]->setPdmScaleNomDelta             (       m_cCameraData.getPdmScaleNomDelta () );
     m_acTEncTopList[iViewIdx]->setPdmOffset                    (       m_cCameraData.getPdmOffset        () );
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
+    m_acTEncTopList[iViewIdx]->setMultiviewMvPredMode          ( m_uiMultiviewMvPredMode );
+    m_acTEncTopList[iViewIdx]->setMultiviewMvRegMode           ( iViewIdx ? m_uiMultiviewMvRegMode       : 0   );
+    m_acTEncTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( iViewIdx ? m_dMultiviewMvRegLambdaScale : 0.0 );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     m_acTEncTopList[iViewIdx]->setMultiviewResPredMode         ( m_uiMultiviewResPredMode );
+#endif
 
-#if SB_INTERVIEW_SKIP
+
+#if HHI_INTERVIEW_SKIP
     m_acTEncTopList[iViewIdx]->setInterViewSkip            ( iViewIdx ? m_uiInterViewSkip : 0 );
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
-    m_acTEncTopList[iViewIdx]->setInterViewSkipLambdaScale ( iViewIdx ? m_dInterViewSkipLambdaScale : 1 );
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
+    m_acTEncTopList[iViewIdx]->setInterViewSkipLambdaScale ( iViewIdx ? (Int)m_dInterViewSkipLambdaScale : 1 );
 #endif
 #endif
     m_acTEncTopList[iViewIdx]->setUseMRG                       ( m_bUseMRG      ); // SOPH:
@@ -146,8 +185,8 @@ Void TAppEncTop::xInitLibCfg()
 #ifdef ROUNDING_CONTROL_BIPRED
     m_acTEncTopList[iViewIdx]->setUseRoundingControlBipred(m_useRoundingControlBipred);
 #endif
-#if HHI_DMM_INTRA
-    m_acTEncTopList[iViewIdx]->setUseDepthModelModes( false );
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+    m_acTEncTopList[iViewIdx]->setUseDMM( false );
 #endif
 #if CONSTRAINED_INTRA_PRED
     m_acTEncTopList[iViewIdx]->setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
@@ -174,11 +213,11 @@ Void TAppEncTop::xInitLibCfg()
 #if MTK_SAO
     m_acTEncTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[0]     );
 #endif
+#if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
+#endif
 
     m_acTEncTopList[iViewIdx]->setPictureDigestEnabled(m_pictureDigestEnabled);
-    m_acTEncTopList[iViewIdx]->setOmitUnusedBlocks          ( m_bOmitUnusedBlocks && (iViewIdx != 0) );
-
     m_acTEncTopList[iViewIdx]->setQpChangeFrame( m_iQpChangeFrame );
     m_acTEncTopList[iViewIdx]->setQpChangeOffsetVideo( m_iQpChangeOffsetVideo );
     m_acTEncTopList[iViewIdx]->setQpChangeOffsetDepth( m_iQpChangeOffsetDepth );
@@ -186,12 +225,12 @@ Void TAppEncTop::xInitLibCfg()
   if( m_bUsingDepthMaps )
   {
 
-//GT VSO
+#if HHI_VSO
     for (Int iViewIdx=0; iViewIdx<m_iNumberOfExternalRefs; iViewIdx++)
     {
         m_acTVideoIOYuvERFileList.push_back(new TVideoIOYuv);
     }
-//GT VSO end
+#endif
 
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
     {
@@ -218,7 +257,6 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setGOPSize                      ( m_iGOPSize );
       m_acTEncDepthTopList[iViewIdx]->setRateGOPSize                  ( m_iRateGOPSize );
 
-//  // SB
       m_acTEncDepthTopList[iViewIdx]->setSeqStructure                              ( m_cInputFormatString );
 
       m_acTEncDepthTopList[iViewIdx]->setQP                           ( m_aiQP[1] );
@@ -265,15 +303,15 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setQuadtreeTUMaxDepthIntra      ( m_uiQuadtreeTUMaxDepthIntra );
       m_acTEncDepthTopList[iViewIdx]->setUseFastEnc                   ( m_bUseFastEnc  );
 
-//GT VSO
+#if HHI_VSO
       m_acTEncDepthTopList[iViewIdx]->setUseVSO                       ( m_bUseVSO      ); //GT: might be enabled/disabled later for VSO Mode 4
       m_acTEncDepthTopList[iViewIdx]->setForceLambdaScaleVSO          ( m_bForceLambdaScaleVSO );
       m_acTEncDepthTopList[iViewIdx]->setLambdaScaleVSO               ( m_dLambdaScaleVSO );
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
       m_acTEncDepthTopList[iViewIdx]->setAllowNegDist                 ( m_bAllowNegDist );
 #endif
       m_acTEncDepthTopList[iViewIdx]->setVSOMode                      ( m_uiVSOMode );
-//GT VSO end
+#endif
 
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
@@ -282,15 +320,21 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( false );
       m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( 0 );
+#if DEPTH_MAP_GENERATION
       m_acTEncDepthTopList[iViewIdx]->setPredDepthMapGeneration       ( 0 );
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvPredMode          ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegMode           ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( 0.0 );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
       m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
+#endif
 
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
       m_acTEncDepthTopList[iViewIdx]->setInterViewSkip            ( 0 );
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
       m_acTEncDepthTopList[iViewIdx]->setInterViewSkipLambdaScale ( 1 );
 #endif
 #endif
@@ -306,8 +350,8 @@ Void TAppEncTop::xInitLibCfg()
 #ifdef ROUNDING_CONTROL_BIPRED
       m_acTEncDepthTopList[iViewIdx]->setUseRoundingControlBipred(m_useRoundingControlBipred);
 #endif
-#if HHI_DMM_INTRA
-      m_acTEncDepthTopList[iViewIdx]->setUseDepthModelModes( m_bUseDepthModelModes );
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+      m_acTEncDepthTopList[iViewIdx]->setUseDMM( m_bUseDMM );
 #endif
 #if CONSTRAINED_INTRA_PRED
       m_acTEncDepthTopList[iViewIdx]->setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
@@ -334,16 +378,18 @@ Void TAppEncTop::xInitLibCfg()
 #if MTK_SAO
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
 #endif
+#if HHI_MPI
       m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#endif
 
       m_acTEncDepthTopList[iViewIdx]->setPictureDigestEnabled(m_pictureDigestEnabled);
-      m_acTEncDepthTopList[iViewIdx]->setOmitUnusedBlocks        ( m_bOmitUnusedBlocks && (iViewIdx != 0) ); 
 
       m_acTEncDepthTopList[iViewIdx]->setQpChangeFrame( m_iQpChangeFrame );
       m_acTEncDepthTopList[iViewIdx]->setQpChangeOffsetVideo( m_iQpChangeOffsetVideo );
       m_acTEncDepthTopList[iViewIdx]->setQpChangeOffsetDepth( m_iQpChangeOffsetDepth );
     }
   }
+#if HHI_INTER_VIEW_MOTION_PRED
   else if( m_uiMultiviewMvRegMode )
   {
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
@@ -351,37 +397,32 @@ Void TAppEncTop::xInitLibCfg()
       m_acTVideoIOYuvDepthInputFileList.push_back( new TVideoIOYuv );
     }
   }
+#endif
 
-//GT VSO
+#if HHI_VSO
   if ( m_bUseVSO )
   {
     if ( m_uiVSOMode == 4 )
-    {      
-#if GERHARD_RM_DEBUG_MM
-      m_cMMCheckModel .create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, LOG2_DISP_PREC_LUT, 0 );
-#endif
+    {
       m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, LOG2_DISP_PREC_LUT, 0 );
 
       for ( Int iViewNum = 0; iViewNum < m_iNumberOfViews; iViewNum++ )
       {
         for (Int iContent = 0; iContent < 2; iContent++ )
         {
-          Int iNumOfModels   = m_cRenModStrParser.getNumOfModelsForView(iViewNum, iContent); 
-          Bool bUseVSO = (iNumOfModels != 0); 
+          Int iNumOfModels   = m_cRenModStrParser.getNumOfModelsForView(iViewNum, iContent);
+          Bool bUseVSO = (iNumOfModels != 0);
 
-          TEncTop* pcEncTop = ( iContent == 0 ) ? m_acTEncTopList[iViewNum] : m_acTEncDepthTopList[iViewNum]; 
-          pcEncTop->setUseVSO( bUseVSO ); 
-          pcEncTop->getRdCost()->setRenModel( bUseVSO ? &m_cRendererModel : NULL ); 
-          
+          TEncTop* pcEncTop = ( iContent == 0 ) ? m_acTEncTopList[iViewNum] : m_acTEncDepthTopList[iViewNum];
+          pcEncTop->setUseVSO( bUseVSO );
+          pcEncTop->getRdCost()->setRenModel( bUseVSO ? &m_cRendererModel : NULL );
+
           for (Int iCurModel = 0; iCurModel < iNumOfModels; iCurModel++ )
           {
-            Int iModelNum; Int iLeftViewNum; Int iRightViewNum; Int iDump; Int iOrgRefNum; Int iBlendMode; 
+            Int iModelNum; Int iLeftViewNum; Int iRightViewNum; Int iDump; Int iOrgRefNum; Int iBlendMode;
 
-            m_cRenModStrParser.getSingleModelData  ( iViewNum, iContent, iCurModel, iModelNum, iBlendMode, iLeftViewNum, iRightViewNum, iOrgRefNum, iDump ) ; 
-            m_cRendererModel  .createSingleModel   ( iViewNum, iContent, iModelNum, iLeftViewNum, iRightViewNum, (iOrgRefNum != -1), iBlendMode ); 
-#if GERHARD_RM_DEBUG_MM
-            m_cMMCheckModel   .createSingleModel   ( iViewNum, iContent, iModelNum, iLeftViewNum, iRightViewNum, (iOrgRefNum != -1), iBlendMode ); 
-#endif
+            m_cRenModStrParser.getSingleModelData  ( iViewNum, iContent, iCurModel, iModelNum, iBlendMode, iLeftViewNum, iRightViewNum, iOrgRefNum, iDump ) ;
+            m_cRendererModel  .createSingleModel   ( iViewNum, iContent, iModelNum, iLeftViewNum, iRightViewNum, (iOrgRefNum != -1), iBlendMode );
           }
         }
       }
@@ -390,10 +431,12 @@ Void TAppEncTop::xInitLibCfg()
     {
       m_cRendererTop.init(m_iSourceWidth, m_iSourceHeight,true,0,0,true, 0,0,0,0,0,0,0,1,0,0 );  //GT: simplest configuration
     }
-
   }
-//GT VSO end
-  m_cUsedPelsRenderer.init(m_iSourceWidth, m_iSourceHeight, true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 ); 
+#endif
+
+#if HHI_INTERVIEW_SKIP
+  m_cUsedPelsRenderer.init(m_iSourceWidth, m_iSourceHeight, true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 );
+#endif
 }
 
 Void TAppEncTop::xCreateLib()
@@ -420,19 +463,21 @@ Void TAppEncTop::xCreateLib()
       // Neo Decoder
       m_acTEncDepthTopList[iViewIdx]->create();
     }
+#if HHI_INTER_VIEW_MOTION_PRED
     else if( m_uiMultiviewMvRegMode )
     {
       m_acTVideoIOYuvDepthInputFileList[iViewIdx]->open( m_pchDepthInputFileList[iViewIdx],     false, m_uiInputBitDepth, m_uiInternalBitDepth );  // read  mode
       m_acTVideoIOYuvDepthInputFileList[iViewIdx]->skipFrames(m_FrameSkip, m_iSourceWidth, m_iSourceHeight);
     }
+#endif
   }
 
-//GT VSO
+#if HHI_VSO
   for(Int iViewIdx=0; iViewIdx < m_iNumberOfExternalRefs; iViewIdx++)
   {
     m_acTVideoIOYuvERFileList[iViewIdx]->open( m_pchERRefFileList[iViewIdx], false, m_uiInputBitDepth, m_uiInternalBitDepth ); // read mode
   }
-//GT VSO end
+#endif
 }
 
 Void TAppEncTop::xDestroyLib()
@@ -440,14 +485,14 @@ Void TAppEncTop::xDestroyLib()
 
   m_cTVideoIOBitsFile.closeBits();
 
-//GT VSO
+#if HHI_VSO
   for ( Int iViewIdx = 0; iViewIdx < m_iNumberOfExternalRefs; iViewIdx++ )
   {
     m_acTVideoIOYuvERFileList[iViewIdx]->close();
     delete m_acTVideoIOYuvERFileList[iViewIdx];
     m_acTVideoIOYuvERFileList[iViewIdx] = 0;
   };
-//GT VSO end
+#endif
 
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
   {
@@ -562,10 +607,12 @@ Void TAppEncTop::encode()
   {
     pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
   }
+#if HHI_INTER_VIEW_MOTION_PRED
   if( m_uiMultiviewMvRegMode )
   {
     pcPdmDepthOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
   }
+#endif
 
   TComBitstream*    pcBitstream = new TComBitstream;
   pcBitstream->create( (m_iSourceWidth * m_iSourceHeight * 3) >> 1 ) ; //GT: is size reasonable ??
@@ -588,16 +635,22 @@ Void TAppEncTop::encode()
         bEos[iViewIdx] = ( m_iFrameRcvdVector[iViewIdx] == (m_iFrameToBeEncoded - 1) ?    true : bEos[iViewIdx]   );   //GT: FramesToBeEncoded Reached
         bAllEos = bAllEos|bEos[iViewIdx] ;
 
+#if HHI_INTER_VIEW_MOTION_PRED
         if( m_uiMultiviewMvRegMode && iViewIdx )
         {
           m_acTVideoIOYuvDepthInputFileList[iViewIdx]->read( pcPdmDepthOrg, m_aiPad, m_bUsingDepthMaps );
         }
+#endif
 
         // increase number of received frames
         m_iFrameRcvdVector[iViewIdx]++ ;
       }
 
+#if HHI_INTER_VIEW_MOTION_PRED
       m_acTEncTopList[iViewIdx]->receivePic( bEos[iViewIdx],  pcPicYuvOrg, m_cListPicYuvRecList[iViewIdx]->back(), ( m_uiMultiviewMvRegMode && iViewIdx ? pcPdmDepthOrg : 0 ) );
+#else
+      m_acTEncTopList[iViewIdx]->receivePic( bEos[iViewIdx],  pcPicYuvOrg, m_cListPicYuvRecList[iViewIdx]->back(), 0 );
+#endif
 
       if( m_bUsingDepthMaps )
       {
@@ -627,13 +680,13 @@ Void TAppEncTop::encode()
       m_cCameraData.update( (UInt)iCurrPoc );
     }
 
-//GT VSO
+#if HHI_VSO    
     if ( m_bUseVSO && ( m_uiVSOMode != 4) )
     {
       //GT: Read external reference pics or render references
       xStoreVSORefPicsInBuffer();       //GT;
     }
-//GT VSO end
+#endif
 
     //GT: Encode
     for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )     // Start encoding
@@ -687,7 +740,7 @@ Void TAppEncTop::encode()
     }
 
 #if AMVP_BUFFERCOMPRESS
-    // compress motion for entire access 
+    // compress motion for entire access
     if( bCurrPocCoded )
     {
       for( Int iViewIdx = 0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
@@ -728,7 +781,6 @@ Void TAppEncTop::encode()
   delete pcDepthPicYuvOrg ;
   pcDepthPicYuvOrg = NULL ;
 
-  // SB valgrid
   pcBitstream->destroy();
   delete pcBitstream;
   pcBitstream = NULL ;
@@ -750,9 +802,9 @@ Void TAppEncTop::encode()
 
   if ( pcPdmDepthOrg )
   {
-    pcPdmDepthOrg->destroy(); 
-    delete pcPdmDepthOrg; 
-    pcPdmDepthOrg = NULL; 
+    pcPdmDepthOrg->destroy();
+    delete pcPdmDepthOrg;
+    pcPdmDepthOrg = NULL;
   }
 
   // delete buffers & classes
@@ -846,7 +898,7 @@ Void TAppEncTop::xDeleteBuffer( )
 
   // Delete ERFiles
 
-//GT VSO
+#if HHI_VSO
   std::map< Int,vector<TComPicYuv*> >::iterator iterMapPicExtRefView = m_cMapPicExtRefView.begin();
   while ( iterMapPicExtRefView != m_cMapPicExtRefView.end() )
   {
@@ -860,7 +912,7 @@ Void TAppEncTop::xDeleteBuffer( )
     }
     iterMapPicExtRefView++;
   }
-//GT VSO end
+#endif
 }
 
 /** \param iNumEncoded  number of encoded frames
@@ -919,8 +971,8 @@ TComPic* TAppEncTop::xGetPicFromView( Int iViewIdx, Int iPoc, bool bDepth )
 
 TComPicYuv* TAppEncTop::xGetPicYuvFromView( Int iViewIdx, Int iPoc, Bool bDepth, Bool bRecon )
 {
-  TComPic*    pcPic = xGetPicFromView( iViewIdx, iPoc, bDepth); 
-  TComPicYuv* pcPicYuv = NULL; 
+  TComPic*    pcPic = xGetPicFromView( iViewIdx, iPoc, bDepth);
+  TComPicYuv* pcPicYuv = NULL;
 
   if (pcPic != NULL)
   {
@@ -928,18 +980,19 @@ TComPicYuv* TAppEncTop::xGetPicYuvFromView( Int iViewIdx, Int iPoc, Bool bDepth,
     {
       if ( pcPic->getReconMark() )
       {
-        pcPicYuv = pcPic->getPicYuvRec(); 
+        pcPicYuv = pcPic->getPicYuvRec();
       }
     }
     else
     {
-      pcPicYuv = pcPic->getPicYuvOrg(); 
-    }    
+      pcPicYuv = pcPic->getPicYuvOrg();
+    }
   };
 
-  return pcPicYuv; 
-}; 
+  return pcPicYuv;
+};
 
+#if HHI_VSO
 Void TAppEncTop::xSetBasePicYuv( Int iViewIdx, Int iPoc, TComMVDRefData* pcRefInfo, InterViewReference eView, bool bDepth )
 {
 
@@ -974,23 +1027,20 @@ Void TAppEncTop::setMVDPic( Int iViewIdx, Int iPoc, TComMVDRefData* pcMVDRefData
     xSetBasePicYuv(iViewIdx + 1, iPoc, pcMVDRefData, NEXTVIEW, true );
   }
 
-//GT campara
+
   xSetBaseLUT       (iViewIdx, iViewIdx-1  , pcMVDRefData, PREVVIEW );
   xSetBaseLUT       (iViewIdx, iViewIdx+1  , pcMVDRefData, NEXTVIEW );
-//GT campara end
 
-//GT VSO
+
   if ( m_bUseVSO && m_uiVSOMode != 4)
   {
     xSetERPicYuvs               (iViewIdx, iPoc, pcMVDRefData);
     pcMVDRefData->setShiftLUTsERView(m_cCameraData.getSynthViewShiftLUTD()[iViewIdx],  m_cCameraData.getSynthViewShiftLUTI()[iViewIdx] );
     pcMVDRefData->setRefViewInd     (m_aaiBaseViewRefInd[iViewIdx], m_aaiERViewRefInd[iViewIdx], m_aaiERViewRefLutInd[iViewIdx]);
   }
-//GT VSO end
-
 };
 
-//GT campara
+
 Void TAppEncTop::xSetBaseLUT( Int iViewIdxSource, Int iViewIdxTarget, TComMVDRefData* pcRefInfo, InterViewReference eView )
 {
   if ( ( iViewIdxSource < 0) || ( iViewIdxSource >= m_iNumberOfViews )||( iViewIdxTarget < 0) || ( iViewIdxTarget >= m_iNumberOfViews ) )
@@ -998,10 +1048,7 @@ Void TAppEncTop::xSetBaseLUT( Int iViewIdxSource, Int iViewIdxTarget, TComMVDRef
   assert( abs( iViewIdxTarget - iViewIdxSource ) <= 1 );  //GT; Not supported yet
   pcRefInfo->setShiftLUTsBaseView(eView, m_cCameraData.getBaseViewShiftLUTD()[iViewIdxSource][iViewIdxTarget],m_cCameraData.getBaseViewShiftLUTI()[iViewIdxSource][iViewIdxTarget] );
 };
-//GT campara end
 
-
-//GT VSO
 Void TAppEncTop::xSetERPicYuvs( Int iViewIdx, Int iPoc, TComMVDRefData* pcReferenceInfo )
 {
   std::vector<TComPicYuv*> apcExtRefViews;
@@ -1013,8 +1060,6 @@ Void TAppEncTop::xSetERPicYuvs( Int iViewIdx, Int iPoc, TComMVDRefData* pcRefere
 
   pcReferenceInfo->setPicYuvERViews( cMapIt->second );
 }
-
-
 
 Void TAppEncTop::xStoreVSORefPicsInBuffer()
 {
@@ -1129,21 +1174,22 @@ Void TAppEncTop::xStoreVSORefPicsInBuffer()
     m_cMapPicExtRefView.erase ( m_cMapPicExtRefView.begin() );
   }
 }
-// GT VSO end
+#endif
 
+#if HHI_INTERVIEW_SKIP
 Void TAppEncTop::getUsedPelsMap( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUsedSplsMap )
 {
-  AOT( iViewIdx <= 0); 
-  AOT( iViewIdx >= m_iNumberOfViews ); 
-  AOF( m_bOmitUnusedBlocks );
-  AOF( m_cCameraData.getCurFrameId() == iPoc ); 
+  AOT( iViewIdx <= 0);
+  AOT( iViewIdx >= m_iNumberOfViews );
+  AOF( m_uiInterViewSkip != 0 );
+  AOF( m_cCameraData.getCurFrameId() == iPoc );
 
-  Int iViewSIdx      = m_cCameraData.getBaseId2SortedId()[iViewIdx]; 
-  Int iFirstViewSIdx = m_cCameraData.getBaseId2SortedId()[0]; 
+  Int iViewSIdx      = m_cCameraData.getBaseId2SortedId()[iViewIdx];
+  Int iFirstViewSIdx = m_cCameraData.getBaseId2SortedId()[0];
 
   AOT( iViewSIdx == iFirstViewSIdx );
 
-  Bool bFirstIsLeft = (iFirstViewSIdx < iViewSIdx); 
+  Bool bFirstIsLeft = (iFirstViewSIdx < iViewSIdx);
 
     m_cUsedPelsRenderer.setShiftLUTs(
       m_cCameraData.getBaseViewShiftLUTD()[0][iViewIdx],
@@ -1153,103 +1199,98 @@ Void TAppEncTop::getUsedPelsMap( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUse
       m_cCameraData.getBaseViewShiftLUTI()[0][iViewIdx],
       m_cCameraData.getBaseViewShiftLUTI()[0][iViewIdx],
       -1
-      ); 
-  
+      );
+
 
   TComPicYuv* pcPicYuvDepth = xGetPicYuvFromView(0, iPoc, true, true );
-  AOF( pcPicYuvDepth); 
+  AOF( pcPicYuvDepth);
 
-  m_cUsedPelsRenderer.getUsedSamplesMap( pcPicYuvDepth, pcPicYuvUsedSplsMap, bFirstIsLeft ); 
+  m_cUsedPelsRenderer.getUsedSamplesMap( pcPicYuvDepth, pcPicYuvUsedSplsMap, bFirstIsLeft );
 
 }
+#endif
 
+#if HHI_VSO
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent )
 {
-  Int iEncViewSIdx = m_cCameraData.getBaseId2SortedId()[ iEncViewIdx ]; 
+  Int iEncViewSIdx = m_cCameraData.getBaseId2SortedId()[ iEncViewIdx ];
 
   // setup base views
-  Int iNumOfBV = m_cRenModStrParser.getNumOfBaseViewsForView( iEncViewSIdx, iEncContent );         
+  Int iNumOfBV = m_cRenModStrParser.getNumOfBaseViewsForView( iEncViewSIdx, iEncContent );
 
   for (Int iCurView = 0; iCurView < iNumOfBV; iCurView++ )
-  {       
-    Int iBaseViewSIdx; 
-    Int iVideoDistMode; 
-    Int iDepthDistMode; 
+  {
+    Int iBaseViewSIdx;
+    Int iVideoDistMode;
+    Int iDepthDistMode;
 
-    m_cRenModStrParser.getBaseViewData( iEncViewSIdx, iEncContent, iCurView, iBaseViewSIdx, iVideoDistMode, iDepthDistMode ); 
+    m_cRenModStrParser.getBaseViewData( iEncViewSIdx, iEncContent, iCurView, iBaseViewSIdx, iVideoDistMode, iDepthDistMode );
 
-    AOT( iVideoDistMode < 0 || iVideoDistMode > 2 ); 
+    AOT( iVideoDistMode < 0 || iVideoDistMode > 2 );
 
-    Int iBaseViewIdx = m_cCameraData.getBaseSortedId2Id()[ iBaseViewSIdx ]; 
+    Int iBaseViewIdx = m_cCameraData.getBaseSortedId2Id()[ iBaseViewSIdx ];
 
-    TComPicYuv* pcPicYuvVideoRec  = xGetPicYuvFromView( iBaseViewIdx, iPoc, false, true  ); 
-    TComPicYuv* pcPicYuvDepthRec  = xGetPicYuvFromView( iBaseViewIdx, iPoc, true , true  );  
-    TComPicYuv* pcPicYuvVideoOrg  = xGetPicYuvFromView( iBaseViewIdx, iPoc, false, false ); 
-    TComPicYuv* pcPicYuvDepthOrg  = xGetPicYuvFromView( iBaseViewIdx, iPoc, true , false );  
-                                
-    TComPicYuv* pcPicYuvVideoRef  = ( iVideoDistMode == 2 ) ? pcPicYuvVideoOrg  : NULL;       
-    TComPicYuv* pcPicYuvDepthRef  = ( iDepthDistMode == 2 ) ? pcPicYuvDepthOrg  : NULL;   
-          
-    TComPicYuv* pcPicYuvVideoTest = ( iVideoDistMode == 0 ) ? pcPicYuvVideoOrg  : pcPicYuvVideoRec; 
-    TComPicYuv* pcPicYuvDepthTest = ( iDepthDistMode == 0 ) ? pcPicYuvDepthOrg  : pcPicYuvDepthRec; 
+    TComPicYuv* pcPicYuvVideoRec  = xGetPicYuvFromView( iBaseViewIdx, iPoc, false, true  );
+    TComPicYuv* pcPicYuvDepthRec  = xGetPicYuvFromView( iBaseViewIdx, iPoc, true , true  );
+    TComPicYuv* pcPicYuvVideoOrg  = xGetPicYuvFromView( iBaseViewIdx, iPoc, false, false );
+    TComPicYuv* pcPicYuvDepthOrg  = xGetPicYuvFromView( iBaseViewIdx, iPoc, true , false );
 
-    AOT( (iVideoDistMode == 2) != (pcPicYuvVideoRef != NULL) ); 
-    AOT( (iDepthDistMode == 2) != (pcPicYuvDepthRef != NULL) );     
-    AOT( pcPicYuvDepthTest == NULL ); 
-    AOT( pcPicYuvVideoTest == NULL ); 
+    TComPicYuv* pcPicYuvVideoRef  = ( iVideoDistMode == 2 ) ? pcPicYuvVideoOrg  : NULL;
+    TComPicYuv* pcPicYuvDepthRef  = ( iDepthDistMode == 2 ) ? pcPicYuvDepthOrg  : NULL;
 
-    m_cRendererModel.setBaseView( iBaseViewSIdx, pcPicYuvVideoTest, pcPicYuvDepthTest, pcPicYuvVideoRef, pcPicYuvDepthRef ); 
-#if GERHARD_RM_DEBUG_MM
-    m_cMMCheckModel .setBaseView( iBaseViewSIdx, pcPicYuvVideoTest, pcPicYuvDepthTest, pcPicYuvVideoRef, pcPicYuvDepthRef ); 
-#endif
+    TComPicYuv* pcPicYuvVideoTest = ( iVideoDistMode == 0 ) ? pcPicYuvVideoOrg  : pcPicYuvVideoRec;
+    TComPicYuv* pcPicYuvDepthTest = ( iDepthDistMode == 0 ) ? pcPicYuvDepthOrg  : pcPicYuvDepthRec;
+
+    AOT( (iVideoDistMode == 2) != (pcPicYuvVideoRef != NULL) );
+    AOT( (iDepthDistMode == 2) != (pcPicYuvDepthRef != NULL) );
+    AOT( pcPicYuvDepthTest == NULL );
+    AOT( pcPicYuvVideoTest == NULL );
+
+    m_cRendererModel.setBaseView( iBaseViewSIdx, pcPicYuvVideoTest, pcPicYuvDepthTest, pcPicYuvVideoRef, pcPicYuvDepthRef );
   }
 
-  m_cRendererModel.setErrorMode( iEncViewSIdx, iEncContent, 0 ); 
-#if GERHARD_RM_DEBUG_MM
-  m_cMMCheckModel .setErrorMode( iEncViewSIdx, iEncContent, 0 ); 
-#endif
-
+  m_cRendererModel.setErrorMode( iEncViewSIdx, iEncContent, 0 );
   // setup virtual views
-  Int iNumOfSV  = m_cRenModStrParser.getNumOfModelsForView( iEncViewSIdx, iEncContent );     
+  Int iNumOfSV  = m_cRenModStrParser.getNumOfModelsForView( iEncViewSIdx, iEncContent );
   for (Int iCurView = 0; iCurView < iNumOfSV; iCurView++ )
-  { 
-    Int iOrgRefBaseViewSIdx; 
-    Int iLeftBaseViewSIdx; 
-    Int iRightBaseViewSIdx; 
-    Int iSynthViewRelNum; 
-    Int iModelNum; 
-    Int iBlendMode; 
-    m_cRenModStrParser.getSingleModelData(iEncViewSIdx, iEncContent, iCurView, iModelNum, iBlendMode,iLeftBaseViewSIdx, iRightBaseViewSIdx, iOrgRefBaseViewSIdx, iSynthViewRelNum ); 
+  {
+    Int iOrgRefBaseViewSIdx;
+    Int iLeftBaseViewSIdx;
+    Int iRightBaseViewSIdx;
+    Int iSynthViewRelNum;
+    Int iModelNum;
+    Int iBlendMode;
+    m_cRenModStrParser.getSingleModelData(iEncViewSIdx, iEncContent, iCurView, iModelNum, iBlendMode,iLeftBaseViewSIdx, iRightBaseViewSIdx, iOrgRefBaseViewSIdx, iSynthViewRelNum );
 
-    Int iLeftBaseViewIdx    = -1;   
-    Int iRightBaseViewIdx   = -1;        
+    Int iLeftBaseViewIdx    = -1;
+    Int iRightBaseViewIdx   = -1;
 
-    TComPicYuv* pcPicYuvOrgRef  = NULL; 
-    Int**      ppiShiftLUTLeft  = NULL; 
-    Int**      ppiShiftLUTRight = NULL;       
-    Int**      ppiBaseShiftLUTLeft  = NULL; 
-    Int**      ppiBaseShiftLUTRight = NULL;       
+    TComPicYuv* pcPicYuvOrgRef  = NULL;
+    Int**      ppiShiftLUTLeft  = NULL;
+    Int**      ppiShiftLUTRight = NULL;
+    Int**      ppiBaseShiftLUTLeft  = NULL;
+    Int**      ppiBaseShiftLUTRight = NULL;
 
 
-    Int        iDistToLeft      = -1; 
+    Int        iDistToLeft      = -1;
 
-    Int iSynthViewIdx = m_cCameraData.synthRelNum2Idx( iSynthViewRelNum ); 
+    Int iSynthViewIdx = m_cCameraData.synthRelNum2Idx( iSynthViewRelNum );
 
     if ( iLeftBaseViewSIdx != -1 )
     {
-      iLeftBaseViewIdx   = m_cCameraData.getBaseSortedId2Id()   [ iLeftBaseViewSIdx ]; 
+      iLeftBaseViewIdx   = m_cCameraData.getBaseSortedId2Id()   [ iLeftBaseViewSIdx ];
       ppiShiftLUTLeft    = m_cCameraData.getSynthViewShiftLUTI()[ iLeftBaseViewIdx  ][ iSynthViewIdx  ];
     }
 
     if ( iRightBaseViewSIdx != -1 )
     {
-      iRightBaseViewIdx  = m_cCameraData.getBaseSortedId2Id()   [iRightBaseViewSIdx ]; 
+      iRightBaseViewIdx  = m_cCameraData.getBaseSortedId2Id()   [iRightBaseViewSIdx ];
       ppiShiftLUTRight   = m_cCameraData.getSynthViewShiftLUTI()[ iRightBaseViewIdx ][ iSynthViewIdx ];
     }
 
     if ( iRightBaseViewSIdx != -1 && iLeftBaseViewSIdx != -1 )
-    { 
-      iDistToLeft    = m_cCameraData.getRelDistLeft(  iSynthViewIdx , iLeftBaseViewIdx, iRightBaseViewIdx); 
+    {
+      iDistToLeft    = m_cCameraData.getRelDistLeft(  iSynthViewIdx , iLeftBaseViewIdx, iRightBaseViewIdx);
       ppiBaseShiftLUTLeft  = m_cCameraData.getBaseViewShiftLUTI() [ iLeftBaseViewIdx  ][ iRightBaseViewIdx ];
       ppiBaseShiftLUTRight = m_cCameraData.getBaseViewShiftLUTI() [ iRightBaseViewIdx ][ iLeftBaseViewIdx  ];
 
@@ -1257,15 +1298,12 @@ Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent )
 
     if ( iOrgRefBaseViewSIdx != -1 )
     {
-      pcPicYuvOrgRef = xGetPicYuvFromView( m_cCameraData.getBaseSortedId2Id()[ iOrgRefBaseViewSIdx ] , iPoc, false, false ); 
-      AOF ( pcPicYuvOrgRef ); 
-    }      
+      pcPicYuvOrgRef = xGetPicYuvFromView( m_cCameraData.getBaseSortedId2Id()[ iOrgRefBaseViewSIdx ] , iPoc, false, false );
+      AOF ( pcPicYuvOrgRef );
+    }
 
-    m_cRendererModel.setSingleModel( iModelNum, ppiShiftLUTLeft, ppiBaseShiftLUTLeft, ppiShiftLUTRight, ppiBaseShiftLUTRight, iDistToLeft, pcPicYuvOrgRef ); 
-#if GERHARD_RM_DEBUG_MM
-    m_cMMCheckModel .setSingleModel( iModelNum, ppiShiftLUTLeft, ppiBaseShiftLUTLeft, ppiShiftLUTRight, ppiBaseShiftLUTRight, iDistToLeft, pcPicYuvOrgRef ); 
-#endif
+    m_cRendererModel.setSingleModel( iModelNum, ppiShiftLUTLeft, ppiBaseShiftLUTLeft, ppiShiftLUTRight, ppiBaseShiftLUTRight, iDistToLeft, pcPicYuvOrgRef );
   }
 }
+#endif
 
-// GT VSO end

@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TDecSbac.cpp
@@ -18,9 +51,6 @@ TDecSbac::TDecSbac()
 , m_uiMaxAlfCtrlDepth         ( 0 )
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            )
-#if MW_MVI_SIGNALLING_MODE == 0
-, m_cCUMvInheritanceFlagSCModel(1,             1,               NUM_MVI_FLAG_CTX              )
-#endif
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        )
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         )
 , m_cCUMVMergeIdxExtSCModel   ( 1,             1,               NUM_MV_MERGE_IDX_EXT_CTX      )
@@ -63,7 +93,7 @@ TDecSbac::TDecSbac()
 , m_cAOSvlcSCModel            ( 1,             1,               NUM_AO_SVLC_CTX              )
 #endif
 , m_cViewIdxSCModel           ( 1,             1,               NUM_VIEW_IDX_CTX              )
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_cIntraDMMSCModel          ( 1,             1,               NUM_DMM_CTX                   )
 , m_cIntraWedgeSCModel        ( 1,             1,               NUM_WEDGE_CTX                 )
 #endif
@@ -84,9 +114,6 @@ Void TDecSbac::resetEntropy          (TComSlice* pcSlice)
   SliceType eSliceType  = pcSlice->getSliceType();
   
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (Short*)INIT_SPLIT_FLAG );
-#if MW_MVI_SIGNALLING_MODE == 0
-  m_cCUMvInheritanceFlagSCModel.initBuffer( eSliceType, iQp, (Short*)INIT_MVI_FLAG );
-#endif
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_SKIP_FLAG );
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (Short*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (Short*)INIT_MERGE_IDX_EXT );
@@ -126,7 +153,7 @@ Void TDecSbac::resetEntropy          (TComSlice* pcSlice)
 #endif
   m_cCUTransSubdivFlagSCModel.initBuffer ( eSliceType, iQp, (Short*)INIT_TRANS_SUBDIV_FLAG );
   m_cViewIdxSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_VIEW_IDX );
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cIntraDMMSCModel.initBuffer          ( eSliceType, iQp, (Short*)INIT_INTRA_DMM );
   m_cIntraWedgeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_INTRA_WEDGELET );
 #endif
@@ -360,7 +387,7 @@ Void TDecSbac::xReadGoRiceExGolomb( UInt &ruiSymbol, UInt &ruiGoRiceParam )
 
   return;
 }
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
 {
   UInt uiSymbol;
@@ -551,18 +578,19 @@ Void TDecSbac::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 }
 
 
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
 Void TDecSbac::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
-  const UInt uiMviMergePos = bMVIAvailable ? MVI_MERGE_POS : MRG_MAX_NUM_CANDS;
+  const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : MRG_MAX_NUM_CANDS;
 #endif
   //--- set number of candidates and availability ---
   Bool  abAvailable[ MRG_MAX_NUM_CANDS ];
   UInt  uiNumCand = 0;
   for( UInt uiIdx = 0; uiIdx < MRG_MAX_NUM_CANDS; uiIdx++ )
   {
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
     if( uiIdx == uiMviMergePos )
     {
       abAvailable[ uiIdx ] = true;
@@ -628,7 +656,7 @@ Void TDecSbac::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
     }
   }
 
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   if( ruiMergeIndex > uiMviMergePos )
   {
     ruiMergeIndex--;
@@ -660,20 +688,26 @@ Void TDecSbac::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
   }
   DTRACE_CABAC_T( "\n" );
 }
+#endif
 
 
 Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if MW_MVI_SIGNALLING_MODE == 1
-  if( ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
-      ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) )
-#else
-  if( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE )
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+  if(
+#if HHI_INTER_VIEW_MOTION_PRED
+      ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
 #endif
+#if HHI_MPI
+      ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ||
+#endif
+      0
+    )
   {
     parseMergeIndexMV( pcCU, ruiMergeIndex, uiAbsPartIdx, uiDepth );
     return;
   }
+#endif
 
   Bool bLeftInvolved = false;
   Bool bAboveInvolved = false;
@@ -826,22 +860,6 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   return;
 }
 
-#if MW_MVI_SIGNALLING_MODE == 0
-Void TDecSbac::parseMvInheritanceFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  const Int iTextureModeDepth = pcCU->getTextureModeDepth( uiAbsPartIdx );
-  if( iTextureModeDepth != -1 && uiDepth > iTextureModeDepth )
-    return;
-
-  UInt uiSymbol;
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUMvInheritanceFlagSCModel.get( 0, 0, pcCU->getCtxMvInheritanceFlag( uiAbsPartIdx, uiDepth ) ) );
-  if( uiSymbol == 1 )
-  {
-    pcCU->setTextureModeDepthSubParts( uiDepth, uiAbsPartIdx, uiDepth );
-  }
-}
-#endif
-
 /** parse partition size
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -964,7 +982,7 @@ Void TDecSbac::parsePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   pcCU->setPredModeSubParts( (PredMode)iPredMode, uiAbsPartIdx, uiDepth );
 }
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
 Void TDecSbac::xParseWedgeFullInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
@@ -1135,7 +1153,8 @@ Void TDecSbac::xParseWedgePredDirDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx,
   pcCU->setWedgePredDirDeltaDC1SubParts( iDC1, uiAbsPartIdx, uiDepth );
   pcCU->setWedgePredDirDeltaDC2SubParts( iDC2, uiAbsPartIdx, uiDepth );
 }
-
+#endif
+#if HHI_DMM_PRED_TEX
 Void TDecSbac::xParseWedgePredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiDC1, uiDC2;
@@ -1203,9 +1222,9 @@ Void TDecSbac::parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   Int  uiIPredMode;
   UInt uiSymbol;
   
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   UInt uiFlag = 0;
-  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDepthModelModes() && g_uiMaxCUWidth>>uiDepth < 64 )
+  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDMM() && g_uiMaxCUWidth>>uiDepth < 64 )
   {
     m_pcTDecBinIf->decodeBin( uiFlag, m_cIntraDMMSCModel.get(0, 0, 0) );
   }
@@ -1213,89 +1232,32 @@ Void TDecSbac::parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   {
     UInt uiDMMode;
 
-#if DMM_NO_TEXTURE_MODES
-    pcCU->setTextureModeAllowanceSubParts( false, uiAbsPartIdx, uiDepth );
-
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1;
     if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && g_uiMaxCUWidth>>uiDepth > 4 )
     {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
-      if( DMM_INTRA_MODE_BITS > 1 ) { m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1; }
-
-      if( uiDMMode > 1 )
-      {
-        uiDMMode += 4;
-      }
-    }
-    else
-    {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 2;
     }
 #else
-    TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getTexturePic()->getPicYuvRec();
-    Int     iRefStride = pcPicYuvRef->getStride();
-    Pel*    piRefY;
-
-    TComYuv cTempYuv; 
-    UInt uiTempStride = 0;
-    Pel* piTempY;
-
-    UInt uiWidth = g_uiMaxCUWidth>>uiDepth; 
-    UInt uiHeight = g_uiMaxCUHeight>>uiDepth;
-    piRefY = pcPicYuvRef->getLumaAddr( pcCU->getAddr(), uiAbsPartIdx );
-    cTempYuv.create( uiWidth, uiHeight ); cTempYuv.clear();
-    piTempY = cTempYuv.getLumaAddr( 0, uiWidth );
-    uiTempStride = cTempYuv.getStride();
-
-    for ( Int y = 0; y < uiHeight; y++ )
-    {
-      ::memcpy(piTempY, piRefY, sizeof(Pel)*uiWidth);
-      piTempY += uiTempStride;
-      piRefY += iRefStride;
-    }
-
-    UInt64 uiDCSAD = cTempYuv.getLumaDistDCSAD( uiWidth );
-
-    cTempYuv.destroy();
-
-    if( uiDCSAD < (UInt)(pcCU->getQP(0))/2 )
-    {
-      pcCU->setTextureModeAllowanceSubParts( false, uiAbsPartIdx, uiDepth );
-
-      if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && g_uiMaxCUWidth>>uiDepth > 4 )
-      {
-                                        m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
-        if( DMM_INTRA_MODE_BITS > 1 ) { m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1; }
-
-        if( uiDMMode > 1 )
-        {
-          uiDMMode += 4;
-        }
-      }
-      else
-      {
-        pcCU->setTextureModeAllowanceSubParts( true, uiAbsPartIdx, uiDepth );
-
         m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
-      }
-    }
-    else
-    {
-                                      m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
-      if( DMM_INTRA_MODE_BITS > 1 ) { m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1; }
       if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && g_uiMaxCUWidth>>uiDepth > 4 )
       {
-        if( DMM_INTRA_MODE_BITS > 2 ) { m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 2; }
-      }
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1;
     }
 #endif
-    uiIPredMode = g_aucAdditionalIntraModeList[uiDMMode];
+    uiIPredMode = uiDMMode + MAX_MODE_ID_INTRA_DIR + 1;
 
+#if HHI_DMM_WEDGE_INTRA
     if( uiIPredMode == DMM_WEDGE_FULL_IDX )          { xParseWedgeFullInfo          ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_WEDGE_FULL_D_IDX )        { xParseWedgeFullDeltaInfo     ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_WEDGE_PREDDIR_IDX )       { xParseWedgePredDirInfo       ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_WEDGE_PREDDIR_D_IDX )     { xParseWedgePredDirDeltaInfo  ( pcCU, uiAbsPartIdx, uiDepth ); }
+#endif
+#if HHI_DMM_PRED_TEX
     if( uiIPredMode == DMM_WEDGE_PREDTEX_D_IDX )     { xParseWedgePredTexDeltaInfo  ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_CONTOUR_PREDTEX_D_IDX )   { xParseContourPredTexDeltaInfo( pcCU, uiAbsPartIdx, uiDepth ); }
+#endif
   }
   else
 #endif
@@ -1369,73 +1331,42 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
   Int  uiIPredMode;
   UInt uiSymbol;
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   UInt uiFlag = 0;
-  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDepthModelModes() && g_uiMaxCUWidth>>uiDepth < 64 )
+  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDMM() && g_uiMaxCUWidth>>uiDepth < 64 )
   {
     m_pcTDecBinIf->decodeBin( uiFlag, m_cIntraDMMSCModel.get(0, 0, 0) );
   }
   if ( uiFlag )
   {
     UInt uiDMMode;
-    TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getTexturePic()->getPicYuvRec();
-    Int     iRefStride = pcPicYuvRef->getStride();
-    Pel*    piRefY;
 
-    TComYuv cTempYuv; 
-    UInt uiTempStride = 0;
-    Pel* piTempY;
-
-    UInt uiWidth = g_uiMaxCUWidth>>uiDepth; 
-    UInt uiHeight = g_uiMaxCUHeight>>uiDepth;
-    piRefY = pcPicYuvRef->getLumaAddr( pcCU->getAddr(), uiAbsPartIdx );
-    cTempYuv.create( uiWidth, uiHeight ); cTempYuv.clear();
-    piTempY = cTempYuv.getLumaAddr( 0, uiWidth );
-    uiTempStride = cTempYuv.getStride();
-
-    for ( Int y = 0; y < uiHeight; y++ )
-    {
-      ::memcpy(piTempY, piRefY, sizeof(Pel)*uiWidth);
-      piTempY += uiTempStride;
-      piRefY += iRefStride;
-    }
-
-    UInt64 uiDCSAD = cTempYuv.getLumaDistDCSAD( uiWidth );
-
-    if( uiDCSAD < 23 )
-    {
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1;
       if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && g_uiMaxCUWidth>>uiDepth > 4 )
       {
-        m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
-        if( DMM_INTRA_MODE_BITS > 1 ) { m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1; }
-
-        if( uiDMMode > 1 )
-        {
-          uiDMMode += 4;
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 2;
         }
-      }
-      else
-      {
-        m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
-      }
-    }
-    else
-    {
+#else
       m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode  = uiSymbol;
-      if( DMM_INTRA_MODE_BITS > 1 ) { m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1; }
       if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && g_uiMaxCUWidth>>uiDepth > 4 )
       {
-        if( DMM_INTRA_MODE_BITS > 2 ) { m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 2; }
-      }
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cIntraDMMSCModel.get(0, 0, 1) ); uiDMMode |= uiSymbol << 1;
     }
+#endif
     uiIPredMode = g_aucAdditionalIntraModeList[uiDMMode];
 
+#if HHI_DMM_WEDGE_INTRA
     if( uiIPredMode == DMM_WEDGE_FULL_IDX )          { xParseWedgeFullInfo          ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_WEDGE_FULL_D_IDX )        { xParseWedgeFullDeltaInfo     ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_WEDGE_PREDDIR_IDX )       { xParseWedgePredDirInfo       ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_WEDGE_PREDDIR_D_IDX )     { xParseWedgePredDirDeltaInfo  ( pcCU, uiAbsPartIdx, uiDepth ); }
+#endif
+#if HHI_DMM_PRED_TEX
     if( uiIPredMode == DMM_WEDGE_PREDTEX_D_IDX )     { xParseWedgePredTexDeltaInfo  ( pcCU, uiAbsPartIdx, uiDepth ); }
     if( uiIPredMode == DMM_CONTOUR_PREDTEX_D_IDX )   { xParseContourPredTexDeltaInfo( pcCU, uiAbsPartIdx, uiDepth ); }
+#endif
   }
   else
 #endif

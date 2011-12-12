@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TDecTop.h
@@ -65,7 +98,7 @@ private:
   Int                     m_iGopSize;
   Bool                    m_bGopSizeSet;
   int                     m_iMaxRefPicNum;
-  
+
 #if DCM_DECODING_REFRESH
   Bool                    m_bRefreshPending;    ///< refresh pending flag
   UInt                    m_uiPOCCDR;           ///< temporal reference of the CDR picture
@@ -79,7 +112,7 @@ private:
   TComSPS                 m_cSPS;
   TComPPS                 m_cPPS;
   TComSlice*              m_apcSlicePilot;
-  
+
   SEImessages *m_SEIs; ///< "all" SEI messages.  If not NULL, we own the object.
 
   // functional classes
@@ -97,8 +130,12 @@ private:
 #if MTK_SAO
   TComSampleAdaptiveOffset m_cSAO;
 #endif
+#if DEPTH_MAP_GENERATION
   TComDepthMapGenerator   m_cDepthMapGenerator;
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator   m_cResidualGenerator;
+#endif
 
   Bool                    m_bIsDepth;
   Int                     m_iViewIdx;
@@ -118,21 +155,21 @@ private:
 public:
   TDecTop();
   virtual ~TDecTop();
-  
+
   Void  create  ();
   Void  destroy ();
 
   void setPictureDigestEnabled(bool enabled) { m_cGopDecoder.setPictureDigestEnabled(enabled); }
-  
+
   Void  init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance = true );
 #if DCM_SKIP_DECODING_FRAMES
   Bool  decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame, Int& iPOCLastDisplay);
 #else
   Void  decode ( Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS );
 #endif
-  
+
   TComSPS *getSPS() { return (m_uiValidPS & 1) ? &m_cSPS : NULL; }
-  
+
   Void  deletePicBuffer();
 
   Void  deleteExtraPicBuffers( Int iPoc );
@@ -148,7 +185,6 @@ public:
 
   Void setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
 
-  // SB
   TComList<TComPic*>*     getListPic            () { return  &m_cListPic;             }
   TAppDecTop*             getDecTop           ( ){ return  m_pcTAppDecTop ;};
 
@@ -160,7 +196,7 @@ public:
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
-  
+
 };// END CLASS DEFINITION TDecTop
 
 

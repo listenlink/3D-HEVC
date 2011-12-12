@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TDecCAVLC.cpp
@@ -144,7 +177,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   // Tool on/off
   xReadFlag( uiCode ); pcSPS->setUseALF ( uiCode ? true : false );
   xReadFlag( uiCode ); pcSPS->setUseDQP ( uiCode ? true : false );
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   xReadFlag( uiCode ); pcSPS->setUseLDC ( uiCode ? true : false );
 #endif
   xReadFlag( uiCode ); pcSPS->setUseMRG ( uiCode ? true : false ); // SOPH:
@@ -192,7 +225,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   g_uiIBDI_MAX  = ((1<<(g_uiBitDepth+g_uiBitIncrement))-1);
 #endif
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   g_dDeltaDCsQuantOffset = Double(g_uiBitIncrement) -  2.0;
 #endif
 
@@ -208,8 +241,12 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if( uiCode )
   { // baseview SPS -> set standard values
     pcSPS->initMultiviewSPS         ( 0 );
+#if DEPTH_MAP_GENERATION
     pcSPS->setPredDepthMapGeneration( 0, false );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     pcSPS->setMultiviewResPredMode  ( 0 );
+#endif
   }
   else
   {
@@ -219,14 +256,20 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       xReadUvlc( uiCode ); // view id
       xReadSvlc(  iCode ); // view order index
       pcSPS->initMultiviewSPSDepth    ( uiCode, iCode );
+#if DEPTH_MAP_GENERATION
       pcSPS->setPredDepthMapGeneration( uiCode, true );
-      pcSPS->setMultiviewResPredMode  ( 0 );
-#if HHI_DMM_INTRA
-      xReadFlag( uiCode );
-      pcSPS->setUseDepthModelModes( uiCode ? true : false );
 #endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+      pcSPS->setMultiviewResPredMode  ( 0 );
+#endif
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+      xReadFlag( uiCode );
+      pcSPS->setUseDMM( uiCode ? true : false );
+#endif
+#if HHI_MPI
       xReadFlag( uiCode );
       pcSPS->setUseMVI( uiCode ? true : false );
+#endif
     }
     else
     {
@@ -249,7 +292,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       }
       pcSPS->initMultiviewSPS( uiViewId, iVOI, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset );
       
-      UInt uiPredDepthMapGeneration = 0, uiMultiviewMvPredMode = 0, uiPdmPrecision = 0, uiMultiviewResPredMode = 0;
+#if DEPTH_MAP_GENERATION
+      UInt uiPredDepthMapGeneration = 0, uiPdmPrecision = 0;
+#if HHI_INTER_VIEW_MOTION_PRED
+      UInt uiMultiviewMvPredMode = 0;
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+      UInt uiMultiviewResPredMode = 0;
+#endif
       xReadUvlc( uiPredDepthMapGeneration );
       if( uiPredDepthMapGeneration )
       {
@@ -259,12 +309,25 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
           xReadSvlc( iCode );   m_aaiTempPdmScaleNomDelta[ uiViewId ][ uiBaseId ] = iCode;
           xReadSvlc( iCode );   m_aaiTempPdmOffset       [ uiViewId ][ uiBaseId ] = iCode;
         }
+#if HHI_INTER_VIEW_MOTION_PRED
         xReadUvlc  ( uiMultiviewMvPredMode );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
         xReadFlag  ( uiMultiviewResPredMode );
+#endif
       }
+#if HHI_INTER_VIEW_MOTION_PRED
       pcSPS->setPredDepthMapGeneration( uiViewId, false, uiPredDepthMapGeneration, uiMultiviewMvPredMode, uiPdmPrecision, m_aaiTempPdmScaleNomDelta, m_aaiTempPdmOffset );
+#else
+      pcSPS->setPredDepthMapGeneration( uiViewId, false, uiPredDepthMapGeneration, 0, uiPdmPrecision, m_aaiTempPdmScaleNomDelta, m_aaiTempPdmOffset );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
       pcSPS->setMultiviewResPredMode  ( uiMultiviewResPredMode );
+#endif
+#endif
+#if HHI_MPI
       pcSPS->setUseMVI( false );
+#endif
     }
   }
 
@@ -843,22 +906,6 @@ Void TDecCavlc::parseSplitFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   pcCU->setDepthSubParts( uiDepth + uiSymbol, uiAbsPartIdx );
 
   return ;
-}
-#endif
-
-#if MW_MVI_SIGNALLING_MODE == 0
-Void TDecCavlc::parseMvInheritanceFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  const Int iTextureModeDepth = pcCU->getTextureModeDepth( uiAbsPartIdx );
-  if( iTextureModeDepth != -1 && uiDepth > iTextureModeDepth )
-    return;
-
-  UInt uiSymbol;
-  xReadFlag( uiSymbol );
-  if( uiSymbol == 1 )
-  {
-    pcCU->setTextureModeDepthSubParts( uiDepth, uiAbsPartIdx, uiDepth );
-  }
 }
 #endif
 
@@ -2573,13 +2620,14 @@ Void TDecCavlc::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 }
 
 
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
 Void 
 TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt  uiNumCand = 0;
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
-  const UInt uiMviMergePos = bMVIAvailable ? MVI_MERGE_POS : MRG_MAX_NUM_CANDS;
+  const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : MRG_MAX_NUM_CANDS;
   if( bMVIAvailable )
     uiNumCand++;
 #endif
@@ -2604,7 +2652,7 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
   ruiMergeIndex = uiUnaryIdx;
   for( UInt uiIdx = 0; uiIdx <= ruiMergeIndex; uiIdx++ )
   {
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
     if( uiIdx > uiMviMergePos )
     {
       if( pcCU->getNeighbourCandIdx( uiIdx - 1, uiAbsPartIdx ) != uiIdx )
@@ -2619,7 +2667,7 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
       ruiMergeIndex++;
     }
   }
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   if( ruiMergeIndex > uiMviMergePos )
   {
     ruiMergeIndex--;
@@ -2630,6 +2678,7 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
   }
 #endif
 }
+#endif
 
 
 /** parse merge index
@@ -2641,16 +2690,21 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
  */
 Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if MW_MVI_SIGNALLING_MODE == 1
-  if( ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
-      ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) )
-#else
-  if( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE )
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+  if(
+#if HHI_INTER_VIEW_MOTION_PRED
+      ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
 #endif
+#if HHI_MPI
+      ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ||
+#endif
+      0
+    )
   {
     parseMergeIndexMV( pcCU, ruiMergeIndex, uiAbsPartIdx, uiDepth );
     return;
   }
+#endif
 
   Bool bLeftInvolved = false;
   Bool bAboveInvolved = false;

@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TEncTop.cpp
@@ -57,8 +90,12 @@ Void TEncTop::create ()
 #endif
   m_cAdaptiveLoopFilter.create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
   m_cLoopFilter.        create( g_uiMaxCUDepth );
+#if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+#endif
 
 #if MQT_BA_RA && MQT_ALF_NPASS
   if(m_bUseALF)
@@ -88,8 +125,8 @@ Void TEncTop::create ()
     }
   }
 
-#if HHI_DMM_INTRA
-  if( g_aacWedgeLists.empty() && m_bUseDepthModelModes && m_bIsDepth )
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  if( g_aacWedgeLists.empty() && m_bUseDMM && m_bIsDepth )
   {
     initWedgeLists();
   }
@@ -118,8 +155,12 @@ Void TEncTop::destroy ()
 #endif
   m_cAdaptiveLoopFilter.destroy();
   m_cLoopFilter.        destroy();
+#if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator. destroy();
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator. destroy();
+#endif
 
   // SBAC RD
   if( m_bUseSBACRD )
@@ -171,8 +212,12 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
   m_cCuEncoder.   init( this );
 
   m_pcTAppEncTop = pcTAppEncTop;
+#if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
+#endif
 
   // initialize transform & quantization class
   m_pcCavlcCoder = getCavlcCoder();
@@ -253,12 +298,14 @@ Void TEncTop::encode( bool bEos, std::map<PicOrderCnt, TComPicYuv*>& rcMapPicYuv
       m_acOutputPicMap.erase( m_cSeqIter.getPoc() );
       pcPic          = cIter->second ;
 
+#if DEPTH_MAP_GENERATION
       // add extra pic buffers
       Bool  bNeedPrdDepthMapBuf = ( m_uiPredDepthMapGeneration > 0 );
       if( bNeedPrdDepthMapBuf && !pcPic->getPredDepthMap() )
       {
         pcPic->addPrdDepthMapBuffer();
       }
+#endif
 
       // needed? dont think so
       TComPicYuv      cPicOrg;
@@ -322,6 +369,7 @@ Void TEncTop::receivePic( bool bEos, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicY
     TComPic* pcPicCurr = NULL;
     xGetNewPicBuffer( pcPicCurr ); //GT: assigns next POC to input pic and stores it in m_cListPic
     pcPicYuvOrg->copyToPic( pcPicCurr->getPicYuvOrg() );
+#if HHI_INTER_VIEW_MOTION_PRED
     if( m_uiMultiviewMvRegMode )
     {
       AOF( pcOrgPdmDepth );
@@ -333,6 +381,7 @@ Void TEncTop::receivePic( bool bEos, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicY
       AOT( pcOrgPdmDepth );
       AOT( pcPicCurr->getOrgDepthMap() );
     }
+#endif
     m_acInputPicMap.insert( std::make_pair(pcPicCurr->getPOC(), pcPicCurr)); //GT: input pic to m_acInputPicMap
     assert( m_acOutputPicMap.find( pcPicCurr->getPOC() ) == m_acOutputPicMap.end() );
     m_acOutputPicMap[pcPicCurr->getPOC()] = pcPicYuvRec;
@@ -366,9 +415,15 @@ TEncTop::deleteExtraPicBuffers( Int iPoc )
   if ( pcPic )
   {
     pcPic->removeOriginalBuffer   ();
+#if HHI_INTER_VIEW_MOTION_PRED
     pcPic->removeOrgDepthMapBuffer();
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     pcPic->removeResidualBuffer   ();
+#endif
+#if HHI_INTERVIEW_SKIP
     pcPic->removeUsedPelsMapBuffer();
+#endif
   }
 }
 
@@ -433,14 +488,19 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   m_iNumPicRcvd++;
 
   rpcPic->addOriginalBuffer();
+#if HHI_INTER_VIEW_MOTION_PRED
   if( m_uiMultiviewMvRegMode )
   {
     rpcPic->addOrgDepthMapBuffer();
   }
-  if( m_bOmitUnusedBlocks )
+#endif
+
+#if HHI_INTERVIEW_SKIP
+  if( getInterViewSkip() )
   {
     rpcPic->addUsedPelsMapBuffer();
   }
+#endif
 
   rpcPic->setCurrSliceIdx( 0 ); // MW
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
@@ -469,7 +529,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setQuadtreeTUMaxDepthIntra( m_uiQuadtreeTUMaxDepthIntra    );
 
   m_cSPS.setUseDQP        ( m_iMaxDeltaQP != 0  );
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   m_cSPS.setUseLDC        ( m_bUseLDC           );
 #endif
   m_cSPS.setUsePAD        ( m_bUsePAD           );
@@ -485,21 +545,37 @@ Void TEncTop::xInitSPS()
   if( m_bIsDepth )
   {
     m_cSPS.initMultiviewSPSDepth    ( m_uiViewId, m_iViewOrderIdx );
+#if DEPTH_MAP_GENERATION
     m_cSPS.setPredDepthMapGeneration( m_uiViewId, true );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     m_cSPS.setMultiviewResPredMode  ( 0 );
+#endif
   }
   else
   {
     m_cSPS.initMultiviewSPS           ( m_uiViewId, m_iViewOrderIdx, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
     if( m_uiViewId )
     {
+#if DEPTH_MAP_GENERATION
+#if HHI_INTER_VIEW_MOTION_PRED
       m_cSPS.setPredDepthMapGeneration( m_uiViewId, false, m_uiPredDepthMapGeneration, m_uiMultiviewMvPredMode, m_uiPdmPrecision, m_aaiPdmScaleNomDelta, m_aaiPdmOffset );
+#else
+      m_cSPS.setPredDepthMapGeneration( m_uiViewId, false, m_uiPredDepthMapGeneration, 0, m_uiPdmPrecision, m_aaiPdmScaleNomDelta, m_aaiPdmOffset );
+#endif
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
       m_cSPS.setMultiviewResPredMode  ( m_uiMultiviewResPredMode );
+#endif
     }
     else
     {
+#if DEPTH_MAP_GENERATION
       m_cSPS.setPredDepthMapGeneration( m_uiViewId, false );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
       m_cSPS.setMultiviewResPredMode  ( 0 );
+#endif
     }
   }
   m_cSPS.setSPSId( ( m_uiViewId << 1 ) + ( m_bIsDepth ? 1 : 0 ) );
@@ -536,10 +612,12 @@ Void TEncTop::xInitSPS()
 #if MTK_SAO
   m_cSPS.setUseSAO             ( m_bUseSAO         );
 #endif
-#if HHI_DMM_INTRA
-  m_cSPS.setUseDepthModelModes( m_bUseDepthModelModes );
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+#if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
+#endif
 
   m_cSPS.setCodedPictureBufferSize( m_uiCodedPictureStoreSize );
 }

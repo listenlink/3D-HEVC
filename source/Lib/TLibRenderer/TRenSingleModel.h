@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 
@@ -33,7 +66,7 @@ public:
   // Create Model
   Void   create    ( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode );
 
-  // Set Frame dependent datas
+  // Set Frame dependent data
   Void   setLRView ( Int iViewPos, Pel** apiCurVideoPel, Int* aiCurVideoStride, Pel* piCurDepthPel, Int iCurDepthStride );
   Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference );
 
@@ -50,10 +83,6 @@ public:
 
   // Get Reference Data
   Void   getRefView  ( TComPicYuv*& rpcPicYuvRefView, Pel**& rppiRefVideoPel, Int*& raiStrides );
-
-#if GERHARD_RM_DEBUG_MM
-  Bool   compare( TRenSingleModel* pcRefModel );
-#endif
 
 private:
   // Set and inc Current Row
@@ -85,13 +114,15 @@ private:
 
   // Blending
   __inline Void   xSetShiftedPelBlend ( Int iSourcePos, Int iTargetSPos, Pel iFilled, RMDist& riError );
+
+#if HHI_VSO_COLOR_PLANES
+  __inline Void   xGetBlendedValue    ( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV );
   __inline Void   xGetBlendedValueBM1 ( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV );
   __inline Void   xGetBlendedValueBM2 ( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV );
-
-#if GERHARD_RM_COLOR_PLANES
-  __inline Void   xGetBlendedValue    ( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV );
 #else
   __inline Void   xGetBlendedValue    ( Pel iYL,   Pel iYR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY );
+  __inline Void   xGetBlendedValueBM1 ( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY );
+  __inline Void   xGetBlendedValueBM2 ( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY );
 #endif
   __inline Pel    xBlend              ( Pel pVal1, Pel pVal2, Int iWeightVal2 );
 
@@ -109,11 +140,7 @@ private:
   __inline Void   xSetBools  ( Bool* pbSource    , Int iSourceStride, Int iWidth, Int iHeight, Bool bVal );
   __inline Void   xSetInts   ( Int*  piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Int iVal );
 
-#if GERHARD_RM_DEBUG_MM
-public:
-#else
 private:
-#endif
 
   // Image sizes
   Int   m_iWidth;

@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 #include "TRenImage.h"
 #include "TRenTop.h"
@@ -878,7 +911,6 @@ Void TRenTop::xBackShiftPlanePixels( PelImagePlane** apcInputPlanes, PelImagePla
 
 Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePlane* pcDepthPlane, PelImagePlane** apcOutputPlanes, PelImagePlane* pcFilledPlane, UInt uiNumberOfPlanes  )
 {
-
   Bool bRenderDepth = (apcInputPlanes[0] == pcDepthPlane);
 
   Int iOutputWidth  = apcOutputPlanes[0]->getWidth();
@@ -1495,22 +1527,6 @@ Void TRenTop::xPostProcessImage(PelImage* pcInImage, PelImage* pcOutImage)
   };
 }
 
-Void TRenTop::xChangePixels( PelImage* pcDispImage )
-{
-  if (m_uNumelauiChangePixels < 3 )
-  {
-    return;
-  };
-
-  UInt* puiCP = m_auiChangePixels;
-  UInt uiWidth = pcDispImage->getPlane(0)->getWidth();
-
-  for (UInt uiIdx = 0; uiIdx < m_uNumelauiChangePixels; uiIdx+= 3 )
-  {
-    pcDispImage->getPlane(0)->getPlaneData()[ puiCP[ uiIdx ] * uiWidth + puiCP[ uiIdx + 1 ] ] =  puiCP[uiIdx + 2 ];
-  };
-};
-
 
 Void TRenTop::xCutPlaneMargin( PelImagePlane* pcImagePlane, Pel cFill, UInt uiScale )
 {
@@ -1602,29 +1618,16 @@ Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImage
     Pel* pcFilledLeftData  = pcFilledLeftPlane     ->getPlaneData();
     Pel* pcLeftImageData   = (*apcLeftPlane)       ->getPlaneData();
 
-    //Int iSumLeft        = 0;
-    //Int iSumRight       = 0;
-    //Int iSumLeftSquare  = 0;
-    //Int iSumRightSquare = 0;
+ 
 
     for (UInt uiYPos = 0; uiYPos < iHeight; uiYPos++ )
     {
-      //Int iRowSumLeft        = 0;
-      //Int iRowSumRight       = 0;
-      //Int iRowSumLeftSquare  = 0;
-      //Int iRowSumRightSquare = 0;
-
       for (UInt uiXPos = 0; uiXPos < iWidth; uiXPos++ )
       {
           if      ( pcFilledLeftData[uiXPos] == REN_IS_FILLED &&  pcFilledRightData[uiXPos] == REN_IS_FILLED )
           {
             aiHistLeft [pcLeftImageData   [uiXPos] ]++;
             aiHistRight[pcRightImageData  [uiXPos] ]++;
-            //iNumElem++;
-            //iRowSumLeft        += ;
-            //iRowSumRight       += pcRightImageData [uiXPos];
-            //iRowSumLeftSquare  += pcLeftImageData  [uiXPos] * pcLeftImageData [uiXPos];
-            //iRowSumRightSquare += pcRightImageData [uiXPos] * pcRightImageData[uiXPos];
           }
       }
 
@@ -1659,9 +1662,6 @@ Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImage
 
     while( iCurChangeVal <= g_uiIBDI_MAX )
     {
-#if 0 //GERHARD_DEBUG
-      std::cout << iCumSumBase << " " << iCumSumChange << " " << iCurBaseVal << " " << iCurChangeVal << std::endl;
-#endif
       if ( iCumSumBase == iCumSumChange )
       {
         aiConvLUT[iCurChangeVal] = Min(iCurBaseVal, g_uiIBDI_MAX);
@@ -1709,8 +1709,6 @@ Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImage
 delete[] aiHistLeft ;
 delete[] aiHistRight;
 delete[] aiConvLUT  ;
-
-
 }
 
 
@@ -1891,82 +1889,6 @@ Void TRenTop::xBlendPlanesAvg( PelImagePlane** apcLeftPlane, PelImagePlane** apc
   }
 }
 
-
-Void TRenTop::xReEstimateDisp( Pel* pcInputLeftImageRow, Pel* pcInputRightImageRow, Int iLeftImageStride, Int iRightImageStride, Int iPosX, Pel cLeftDepth, Pel cRightDepth, Int iLut, Pel& rcBestDepth, Int& riBestSAD )
-{
-  Int iHalfBlkSizeMin1 = 3;
-  UInt uiStep = m_iRelShiftLUTPrec;
-
-  AOT(iHalfBlkSizeMin1 > 3);
-
-  Pel cInc = (cRightDepth < cLeftDepth) ? 1 : -1;
-
-  UInt uiBestSAD  = -1;
-
-  for (Pel cCurDepth = cRightDepth; cCurDepth <= cLeftDepth; cCurDepth += cInc )
-  {
-    Int iShiftLeft  = m_ppiShiftLUTLeft [iLut][ RemoveBitIncrement( cCurDepth)];
-    Int iShiftRight = m_ppiShiftLUTLeft [iLut][ RemoveBitIncrement( cCurDepth)];
-
-    Int iShiftedPosLeft  = iPosX - iShiftLeft;
-    Int iShiftedPosRight = iPosX - iShiftRight;
-
-    if ( !(( iShiftedPosLeft < 0 ) || (iShiftedPosLeft >= m_uiSampledWidth) || ( iShiftedPosRight < 0 ) || (iShiftedPosRight >= m_uiSampledWidth)))
-    {
-      Pel* pcCurLeftIm  = pcInputLeftImageRow  - iLeftImageStride  * iHalfBlkSizeMin1 - iHalfBlkSizeMin1*uiStep - iShiftLeft;
-      Pel* pcCurRightIm = pcInputRightImageRow - iRightImageStride * iHalfBlkSizeMin1 - iHalfBlkSizeMin1*uiStep - iShiftRight;
-
-      UInt uiSAD = 0;
-
-      for ( Int iCurPosY= 0; iCurPosY < (iHalfBlkSizeMin1 << 1) + 1; iCurPosY++ )
-      {
-        for ( Int iCurPosX = 0; iCurPosX < (iHalfBlkSizeMin1 << 1) * uiStep + uiStep; iCurPosX += uiStep  )
-        {
-          uiSAD += abs( pcCurLeftIm[iCurPosX] - pcCurRightIm[iCurPosX] );
-        }
-        pcCurLeftIm  += iLeftImageStride;
-        pcCurRightIm += iRightImageStride;
-      }
-
-      if (uiSAD < uiBestSAD)
-      {
-        uiBestSAD = uiSAD;
-        rcBestDepth = cCurDepth;
-      }
-    }
-  }
-}
-
-Int TRenTop::xVSRSHoleCount( Pel* pcFilledData, Int iFilledStride, Int iCenterPosX, Int iCenterPosY )
-{
-  // Counts holes in a 6x6 Block around iPosX and iPosY
-  //GT: currently not supported for rendering in up sampled domain ( padding to less )
-  if ( m_iLog2SamplingFactor > 0 )
-  {
-    return 0;
-  }
-
-  Int iHalfBlkSizeY = 3;
-  Int iHalfBlkSizeX = 3;  // iHalfBlkSizeY * ( 1 << m_iLog2SamplingFactor );
-
-  Int iNumOfHolePels = 0;
-  pcFilledData -= ( iHalfBlkSizeX + iHalfBlkSizeY * iFilledStride );
-
-  for (Int iPosY = 0; iPosY < (iHalfBlkSizeY << 1) + 1; iPosY++)
-  {
-    for (Int iPosX = 0; iPosX < (iHalfBlkSizeX << 1) + 1; iPosX++)
-    {
-      if (*pcFilledData == REN_IS_HOLE)
-      {
-        iNumOfHolePels++;
-      }
-      pcFilledData++;
-    }
-    pcFilledData += iFilledStride;
-  }
-  return iNumOfHolePels;
-}
-
 // Temporal Filter from Zhejiang University: (a little different from m16041: Temporal Improvement Method in View Synthesis)
 Void TRenTop::temporalFilterVSRS( TComPicYuv* pcPicYuvVideoCur, TComPicYuv* pcPicYuvDepthCur, TComPicYuv* pcPicYuvVideoLast, TComPicYuv* pcPicYuvDepthLast, Bool bFirstFrame )
 {
@@ -2095,10 +2017,6 @@ TRenTop::TRenTop()
   // PostProcessing
   m_iPostProcMode        = eRenPostProNone;
 
-  //ChangePixels
-  m_auiChangePixels[0] = 0;
-  m_uNumelauiChangePixels = 0;
-
   // Cut
   m_auiCut[0] = 0;
   m_auiCut[1] = 0;
@@ -2210,10 +2128,6 @@ Void TRenTop::init(UInt uiImageWidth,
   // PostProcessing
   m_iPostProcMode    = iPostProcMode;
 
-  //ChangePixels
-  m_auiChangePixels[0] = 0;
-  m_uNumelauiChangePixels = 0;
-
   // Used pel map
   m_iUsedPelMapMarExt     = iUsedPelMapMarExt;
 
@@ -2260,12 +2174,6 @@ Void TRenTop::init(UInt uiImageWidth,
   m_aiBlkMoving[ ( m_auiInputResolution[0] >> 2 ) + 3 ] = 0;
 }
 
-
-Void TRenTop::xGetChangePixels( UInt& ruiNumPixels, UInt* & rauiChangePixels )
-{
-  ruiNumPixels = m_uNumelauiChangePixels;
-  rauiChangePixels = m_auiChangePixels;
-}
 
 TRenTop::~TRenTop()
 {

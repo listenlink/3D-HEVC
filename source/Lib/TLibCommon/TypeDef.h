@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file     TypeDef.h
     \brief    Define basic types, new types and enumerations
 */
@@ -5,10 +38,28 @@
 #ifndef _TYPEDEF__
 #define _TYPEDEF__
 
-#define MW_DEPTH_MAP_INTERP_FILTER        2 // 0:std, 1:bilin, 2:nearest neighbour
-#define MW_FULL_PEL_DEPTH_MAP_MV_SIGNALLING 1
-#define MW_MVI_SIGNALLING_MODE            1 // 0: mvi_flags at each layer, 1: using merge_flag
-#define SB_DEBUG                          1
+
+//>>>>> HHI 3DV tools >>>>>
+#define HHI_INTER_VIEW_MOTION_PRED      1   // inter-view motion parameter prediction
+#define HHI_INTER_VIEW_RESIDUAL_PRED    1   // inter-view residual prediction
+#define HHI_FULL_PEL_DEPTH_MAP_MV_ACC   1   // full-pel mv accuracy for depth maps
+#define HHI_MPI                         1   // motion parameter inheritance from texture picture for depth map coding
+#define HHI_INTERVIEW_SKIP              1   // skipping of residual for renderable regions
+#define HHI_INTERVIEW_SKIP_LAMBDA_SCALE 1   // scaling of lambda in cost calculation in rederable regions
+#define HHI_VSO                         1   // view synthesis optimization
+#define HHI_VSO_COLOR_PLANES            1   // view synthesis optimization in color planes
+#define HHI_VSO_DIST_INT                1   // view synthesis optimization integer distorition in rdo process
+
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE && !HHI_INTERVIEW_SKIP
+  #error "HHI_INTERVIEW_SKIP_LAMBDA_SCALE cannot be enabled if HHI_INTERVIEW_SKIP is not"
+#endif
+
+#define HHI_DMM_WEDGE_INTRA             1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
+#define HHI_DMM_PRED_TEX                1   // depth model model dependent on texture (inter-component Wedgelet and Contour prediction )
+
+#define HHI_NO_LowDelayCoding           0   // old-fashioned encoder control, should be adapted to hm5.0
+//<<<<< HHI 3DV tools <<<<<
+
 
 ////////////////////////////
 // AHG18 Weighted Prediction defines section start
@@ -41,18 +92,6 @@
 
 #define PART_MRG                          1            // If the number of partitions is two and size > 8, only merging mode is enabled for the first partition & do not code merge_flag for the first partition
 #define HHI_MRG_SKIP                      1            // (JCTVC-E481 - merge skip) replaces the AMVP based skip by merge based skip (E481 - MERGE skip)
-
-#define HHI_DMM_INTRA                     1            //< PM: depth modelling modes for intra
-#if HHI_DMM_INTRA
-#define NUM_DMM_INTRA                     8
-#define DMM_INTRA_MODE_BITS               3
-#define DMM_WEDGEMODEL_MIN_SIZE           4            //< PM: do not change
-#define DMM_WEDGEMODEL_MAX_SIZE          32
-#define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4            //< PM: do not change
-#define DMM_RES_CHECK_INTRA               1            //< CB: skip residual for intra blocks
-#define HHI_DISABLE_INTRA_SMOOTHING_DEPTH 0
-#define DMM_NO_TEXTURE_MODES              0
-#endif
 
 #if HHI_RQT_INTRA_SPEEDUP_MOD && !HHI_RQT_INTRA_SPEEDUP
 #error
@@ -149,32 +188,44 @@
 #define NUM_INTRA_MODE                    35
 #define PLANAR_IDX                        (NUM_INTRA_MODE-1)
 #endif
-#if HHI_DMM_INTRA
+
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#define DMM_WEDGEMODEL_MIN_SIZE           4            
+#define DMM_WEDGEMODEL_MAX_SIZE          32
+#define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4            
+
 #if ADD_PLANAR_MODE
 #define  MAX_MODE_ID_INTRA_DIR            34
-enum MODE_IDX
-{
-  DMM_WEDGE_FULL_IDX       = 35,
-  DMM_WEDGE_FULL_D_IDX        = 36,
-  DMM_WEDGE_PREDTEX_IDX       = 37,
-  DMM_WEDGE_PREDTEX_D_IDX     = 38,
-  DMM_CONTOUR_PREDTEX_IDX     = 39,
-  DMM_CONTOUR_PREDTEX_D_IDX   = 40,
-  DMM_WEDGE_PREDDIR_IDX   = 41,
-  DMM_WEDGE_PREDDIR_D_IDX = 42
-};
 #else
 #define  MAX_MODE_ID_INTRA_DIR            33
+#endif
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
 enum MODE_IDX
 {
-  DMM_WEDGE_FULL_IDX       = 34,
-  DMM_WEDGE_FULL_D_IDX        = 35,
-  DMM_WEDGE_PREDTEX_IDX       = 36,
-  DMM_WEDGE_PREDTEX_D_IDX     = 37,
-  DMM_CONTOUR_PREDTEX_IDX     = 38,
-  DMM_CONTOUR_PREDTEX_D_IDX   = 39,
-  DMM_WEDGE_PREDDIR_IDX   = 40,
-  DMM_WEDGE_PREDDIR_D_IDX = 41
+  DMM_WEDGE_FULL_IDX         = MAX_MODE_ID_INTRA_DIR+1,
+  DMM_WEDGE_FULL_D_IDX       = MAX_MODE_ID_INTRA_DIR+2,
+  DMM_WEDGE_PREDTEX_IDX      = MAX_MODE_ID_INTRA_DIR+3,
+  DMM_WEDGE_PREDTEX_D_IDX    = MAX_MODE_ID_INTRA_DIR+4,
+  DMM_CONTOUR_PREDTEX_IDX    = MAX_MODE_ID_INTRA_DIR+5,
+  DMM_CONTOUR_PREDTEX_D_IDX  = MAX_MODE_ID_INTRA_DIR+6,
+  DMM_WEDGE_PREDDIR_IDX      = MAX_MODE_ID_INTRA_DIR+7,
+  DMM_WEDGE_PREDDIR_D_IDX    = MAX_MODE_ID_INTRA_DIR+8
+};
+#elif HHI_DMM_WEDGE_INTRA && !HHI_DMM_PRED_TEX
+enum MODE_IDX
+{
+  DMM_WEDGE_FULL_IDX         = MAX_MODE_ID_INTRA_DIR+1,
+  DMM_WEDGE_FULL_D_IDX       = MAX_MODE_ID_INTRA_DIR+2,
+  DMM_WEDGE_PREDDIR_IDX      = MAX_MODE_ID_INTRA_DIR+3,
+  DMM_WEDGE_PREDDIR_D_IDX    = MAX_MODE_ID_INTRA_DIR+4
+};
+#elif !HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+enum MODE_IDX
+{
+  DMM_WEDGE_PREDTEX_IDX      = MAX_MODE_ID_INTRA_DIR+1,
+  DMM_WEDGE_PREDTEX_D_IDX    = MAX_MODE_ID_INTRA_DIR+2,
+  DMM_CONTOUR_PREDTEX_IDX    = MAX_MODE_ID_INTRA_DIR+3,
+  DMM_CONTOUR_PREDTEX_D_IDX  = MAX_MODE_ID_INTRA_DIR+4,
 };
 #endif
 #endif
@@ -324,9 +375,7 @@ typedef       Int             TCoeff;     ///< transform coefficient
 // ====================================================================================================================
 typedef       Int64           RMDist;     ///< renderer model distortion
 
-#define RDO_DIST_INT    1
-
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
 typedef       Int              Dist;       ///< RDO distortion
 #define       RDO_DIST_MIN     MIN_INT
 #define       RDO_DIST_MAX     MAX_INT

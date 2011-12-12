@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TComRom.h
@@ -13,7 +46,7 @@
 #include<iostream>
 
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 #include "TComWedgelet.h"
 #endif
 
@@ -37,7 +70,7 @@ Void         initFrameScanXY( UInt* pBuff, UInt* pBuffX, UInt* pBuffY, Int iWidt
 Void         initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight, Int iDepth);
 #endif //QC_MDCS
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 Void initWedgeLists();
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 #endif
@@ -71,7 +104,7 @@ extern       UInt g_uiAddCUDepth;
 
 extern       UInt g_auiPUOffset[4];
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 extern       std::vector<std::vector<TComWedgelet> > g_aacWedgeLists;
 extern       std::vector<std::vector<TComWedgeRef> > g_aacWedgeRefLists;
 #endif
@@ -286,12 +319,10 @@ extern const UChar g_aucAngIntraModeOrder[NUM_INTRA_MODE];
 extern const UChar g_aucAngIntraModeOrder[34];
 #endif
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 extern const UChar g_aucWedgeFullBitsListIdx[7];
 extern const UChar g_aucIntraSizeIdxToWedgeSize[7];
-extern const UChar g_aucAdditionalIntraModeList[NUM_DMM_INTRA];
 extern const WedgeResolution g_aeWedgeResolutionList[5];
-
 extern       double g_dDeltaDCsQuantOffset;
 #endif
 
@@ -314,18 +345,28 @@ extern const UChar g_aucConvertTxtTypeToIdx[4];
 // Mode-Dependent DST Matrices
 #if INTRA_DST_TYPE_7
 extern const short g_as_DST_MAT_4 [4][4];
-#if ADD_PLANAR_MODE && !HHI_DMM_INTRA
+#if ADD_PLANAR_MODE
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+extern const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE+8];
+extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE+8];
+#elif HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+extern const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE+4];
+extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE+4];
+#else
 extern const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE];
 extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE];
-#elif !ADD_PLANAR_MODE && HHI_DMM_INTRA
-extern const UChar g_aucDCTDSTMode_Vert[34+NUM_DMM_INTRA];
-extern const UChar g_aucDCTDSTMode_Hor[34+NUM_DMM_INTRA];
-#elif ADD_PLANAR_MODE && HHI_DMM_INTRA
-extern const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE+NUM_DMM_INTRA];
-extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE+NUM_DMM_INTRA];
+#endif
+#else
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+extern const UChar g_aucDCTDSTMode_Vert[34+8];
+extern const UChar g_aucDCTDSTMode_Hor[34+8];
+#elif HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+extern const UChar g_aucDCTDSTMode_Vert[34+4];
+extern const UChar g_aucDCTDSTMode_Hor[34+4];
 #else
 extern const UChar g_aucDCTDSTMode_Vert[34];
 extern const UChar g_aucDCTDSTMode_Hor[34];
+#endif
 #endif
 #endif
 // ==========================================
@@ -333,9 +374,6 @@ extern const UChar g_aucDCTDSTMode_Hor[34];
 // ====================================================================================================================
 // Misc.
 // ====================================================================================================================
-#if SB_DEBUG
-extern Bool g_bEncoding ;
-#endif
 
 #if QC_MOD_LCEC
 __inline UInt xRunLevelInd(Int lev, Int run, Int maxrun, UInt lrg1Pos)
@@ -499,7 +537,7 @@ __inline Void mapPlanartoDC( UChar& curDir ) { curDir = (curDir == PLANAR_IDX) ?
 __inline Void mapPlanartoDC(  UInt& curDir ) { curDir = (curDir == PLANAR_IDX) ? 2 : curDir; }
 __inline Void mapPlanartoDC(   Int& curDir ) { curDir = (curDir == PLANAR_IDX) ? 2 : curDir; }
 #endif
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 __inline Void mapDMMtoDC( UChar& curDir ) { curDir = (curDir > MAX_MODE_ID_INTRA_DIR) ? 2 : curDir; }
 __inline Void mapDMMtoDC(  UInt& curDir ) { curDir = (curDir > MAX_MODE_ID_INTRA_DIR) ? 2 : curDir; }
 __inline Void mapDMMtoDC(   Int& curDir ) { curDir = (curDir > MAX_MODE_ID_INTRA_DIR) ? 2 : curDir; }

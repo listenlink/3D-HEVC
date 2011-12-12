@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     CommonDef.h
@@ -14,7 +47,6 @@
 #include "TypeDef.h"
 #include "TComRom.h"
 
-// SB
 #include <string>
 #include <assert.h>
 #include <stdlib.h>
@@ -25,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "3.0rc2"                 ///< Current software version
-#define NV_VERSION        "0.31r4"                   ///< Current software version
+#define NV_VERSION        "0.37"                   ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -69,24 +101,6 @@
 #endif
 
 
-#define SEBASTIAN                   1
-#if     SEBASTIAN
-#define SB_INTERVIEW_SKIP           1
-#define SB_INTERVIEW_SKIP_LAMBDA_SCALE 1
-#define SB_MEM_FIX                  1
-#define SB_NO_LowDelayCoding        0   // noch offen in motionestimation
-#endif
-
-#define GERHARD                     1
-#if     GERHARD
-#define GERHARD_VQM_XCHECK          0
-#define GERHARD_RM_DEBUG_MM         0
-#define GERHARD_RM_HOLE_EXT         0
-#define GERHARD_RM_COLOR_PLANES     1
-#define GERHARD_RM_SPLAT            1
-#endif
-
-
 // ====================================================================================================================
 // Common constants
 // ====================================================================================================================
@@ -115,13 +129,19 @@
 
 #define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
 
-// SB
 #define MAX_INPUT_VIEW_NUM					10				///< max. number of input view for multiview coding
 
-// GT
+#if HHI_VSO
 #define MAX_ERREF_VIEW_NUM					15				///< max. number of virtual external reference views
+#endif
 #define LOG2_DISP_PREC_LUT   				2		  		///< log2 of disparity precision used in integer disparity LUTs
 
+
+#if ( HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED )
+#define DEPTH_MAP_GENERATION        1
+#else
+#define DEPTH_MAP_GENERATION        0
+#endif
 
 //>>>>> generation and usage of virtual prediction depth maps >>>>>
 #define PDM_DEPTH_MAP_MCP_FILTER          2         // 0: standard filter, 1:bilinear, 2:nearest neighbour
@@ -150,7 +170,7 @@
 
 #define OUTPUT_RESIDUAL_PICTURES          0         // output residual pictures (for debugging)
 
-#define MVI_MERGE_POS                     0         // position of mvi in merge list (0..5)
+#define HHI_MPI_MERGE_POS                     0         // position of mvi in merge list (0..5)
 
 
 // ====================================================================================================================
@@ -297,7 +317,6 @@ typedef _AlfParam    ALFParam;
 typedef _SaoParam    SAOParam;
 #endif
 
-// SB from ViCo for formatted string parsing
 
 class VideoCodecException
 {
