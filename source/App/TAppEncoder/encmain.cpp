@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 
   // print information
   fprintf( stdout, "\n" );
-  fprintf( stdout, "HM %s based Multiview plus Depth Coder: Encoder Version [%s]", HM_VERSION, NV_VERSION );
+  fprintf( stdout, "HM %s based Multiview Video plus Depth Coder: Encoder Version [%s]", HM_VERSION, NV_VERSION );
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );
