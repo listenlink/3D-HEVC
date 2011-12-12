@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TComDataCU.cpp
@@ -19,7 +52,9 @@ TComDataCU::TComDataCU()
   m_pcPic              = NULL;
   m_pcSlice            = NULL;
   m_puhDepth           = NULL;
+#if HHI_MPI
   m_piTextureModeDepth = NULL;
+#endif
   
   m_pePartSize         = NULL;
   m_pePredMode         = NULL;
@@ -30,8 +65,10 @@ TComDataCU::TComDataCU()
   m_phQP               = NULL;
   m_pbMergeFlag        = NULL;
   m_puhMergeIndex      = NULL;
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pbResPredAvailable = NULL;
   m_pbResPredFlag      = NULL;
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     m_apuhNeighbourCandIdx[ui] = NULL;
@@ -70,7 +107,7 @@ TComDataCU::TComDataCU()
   m_bdQP               = false;               
 #endif//SNY_DQP
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   m_puiWedgeFullTabIdx  = NULL;
   m_piWedgeFullDeltaDC1       = NULL;
   m_piWedgeFullDeltaDC2       = NULL;
@@ -79,15 +116,14 @@ TComDataCU::TComDataCU()
   m_piWedgePredDirDeltaDC1   = NULL;
   m_piWedgePredDirDeltaDC2   = NULL;
   m_piWedgePredDirDeltaEnd   = NULL;
-
+#endif
+#if HHI_DMM_PRED_TEX
   m_puiWedgePredTexTabIdx     = NULL;
   m_piWedgePredTexDeltaDC1    = NULL;
   m_piWedgePredTexDeltaDC2    = NULL;
 
   m_piContourPredTexDeltaDC1  = NULL;
   m_piContourPredTexDeltaDC2  = NULL;
-
-  m_pbTextureModesAllowed     = NULL;
 #endif
 }
 
@@ -107,7 +143,9 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
   {
     m_phQP               = (UChar*    )xMalloc(UChar,    uiNumPartition);
     m_puhDepth           = (UChar*    )xMalloc(UChar,    uiNumPartition);
+#if HHI_MPI
     m_piTextureModeDepth = (Int*      )xMalloc(Int,      uiNumPartition);
+#endif
     m_puhWidth           = (UChar*    )xMalloc(UChar,    uiNumPartition);
     m_puhHeight          = (UChar*    )xMalloc(UChar,    uiNumPartition);
     m_pePartSize         = (PartSize* )xMalloc(PartSize, uiNumPartition);
@@ -117,8 +155,10 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
     m_puhMergeIndex      = (UChar* )xMalloc(UChar,  uiNumPartition);
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pbResPredAvailable = (Bool*  )xMalloc(Bool,   uiNumPartition);
     m_pbResPredFlag      = (Bool*  )xMalloc(Bool,   uiNumPartition);
+#endif
     for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
     {
       m_apuhNeighbourCandIdx[ ui ] = (UChar* )xMalloc(UChar, uiNumPartition);
@@ -146,8 +186,8 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_acCUMvField[0].create( uiNumPartition );
     m_acCUMvField[1].create( uiNumPartition );
     
-#if HHI_DMM_INTRA
-    m_puiWedgeFullTabIdx  = (UInt*   )xMalloc(UInt,    uiNumPartition);
+#if HHI_DMM_WEDGE_INTRA
+    m_puiWedgeFullTabIdx       = (UInt*)xMalloc(UInt, uiNumPartition);
     m_piWedgeFullDeltaDC1       = (Int* )xMalloc(Int,  uiNumPartition);
     m_piWedgeFullDeltaDC2       = (Int* )xMalloc(Int,  uiNumPartition);
 
@@ -155,15 +195,14 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_piWedgePredDirDeltaDC1   = (Int* )xMalloc(Int,  uiNumPartition);
     m_piWedgePredDirDeltaDC2   = (Int* )xMalloc(Int,  uiNumPartition);
     m_piWedgePredDirDeltaEnd   = (Int* )xMalloc(Int,  uiNumPartition);
-
+#endif
+#if HHI_DMM_PRED_TEX
     m_puiWedgePredTexTabIdx     = (UInt*)xMalloc(UInt, uiNumPartition);
     m_piWedgePredTexDeltaDC1    = (Int* )xMalloc(Int,  uiNumPartition);
     m_piWedgePredTexDeltaDC2    = (Int* )xMalloc(Int,  uiNumPartition);
 
     m_piContourPredTexDeltaDC1  = (Int* )xMalloc(Int,  uiNumPartition);
     m_piContourPredTexDeltaDC2  = (Int* )xMalloc(Int,  uiNumPartition);
-
-    m_pbTextureModesAllowed     = (Bool*)xMalloc(Bool, uiNumPartition);
 #endif
   }
   else
@@ -202,7 +241,9 @@ Void TComDataCU::destroy()
   {
     if ( m_phQP               ) { xFree(m_phQP);                m_phQP              = NULL; }
     if ( m_puhDepth           ) { xFree(m_puhDepth);            m_puhDepth          = NULL; }
+#if HHI_MPI
     if ( m_piTextureModeDepth ) { xFree(m_piTextureModeDepth);  m_piTextureModeDepth= NULL; }
+#endif
     if ( m_puhWidth           ) { xFree(m_puhWidth);            m_puhWidth          = NULL; }
     if ( m_puhHeight          ) { xFree(m_puhHeight);           m_puhHeight         = NULL; }
     if ( m_pePartSize         ) { xFree(m_pePartSize);          m_pePartSize        = NULL; }
@@ -214,8 +255,10 @@ Void TComDataCU::destroy()
     if ( m_puhInterDir        ) { xFree(m_puhInterDir);         m_puhInterDir       = NULL; }
     if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag       = NULL; }
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex     = NULL; }
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     if ( m_pbResPredAvailable ) { xFree(m_pbResPredAvailable);  m_pbResPredAvailable= NULL; }
     if ( m_pbResPredFlag      ) { xFree(m_pbResPredFlag);       m_pbResPredFlag     = NULL; }
+#endif
     for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
     {
       if( m_apuhNeighbourCandIdx[ ui ] ) { xFree(m_apuhNeighbourCandIdx[ ui ]); m_apuhNeighbourCandIdx[ ui ] = NULL; }
@@ -234,7 +277,7 @@ Void TComDataCU::destroy()
     m_acCUMvField[0].destroy();
     m_acCUMvField[1].destroy();
     
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
     if ( m_puiWedgeFullTabIdx  ) { xFree(m_puiWedgeFullTabIdx);   m_puiWedgeFullTabIdx  = NULL; }
     if ( m_piWedgeFullDeltaDC1  ) { xFree(m_piWedgeFullDeltaDC1);   m_piWedgeFullDeltaDC1  = NULL; }
     if ( m_piWedgeFullDeltaDC2  ) { xFree(m_piWedgeFullDeltaDC2);   m_piWedgeFullDeltaDC2  = NULL; }
@@ -243,15 +286,14 @@ Void TComDataCU::destroy()
     if ( m_piWedgePredDirDeltaEnd ) { xFree(m_piWedgePredDirDeltaEnd); m_piWedgePredDirDeltaEnd = NULL; }
     if ( m_piWedgePredDirDeltaDC1 ) { xFree(m_piWedgePredDirDeltaDC1); m_piWedgePredDirDeltaDC1 = NULL; }
     if ( m_piWedgePredDirDeltaDC2 ) { xFree(m_piWedgePredDirDeltaDC2); m_piWedgePredDirDeltaDC2 = NULL; }
-
+#endif
+#if HHI_DMM_PRED_TEX
     if ( m_puiWedgePredTexTabIdx     ) { xFree(m_puiWedgePredTexTabIdx);     m_puiWedgePredTexTabIdx     = NULL; }
     if ( m_piWedgePredTexDeltaDC1    ) { xFree(m_piWedgePredTexDeltaDC1);    m_piWedgePredTexDeltaDC1    = NULL; }
     if ( m_piWedgePredTexDeltaDC2    ) { xFree(m_piWedgePredTexDeltaDC2);    m_piWedgePredTexDeltaDC2    = NULL; }
 
     if ( m_piContourPredTexDeltaDC1  ) { xFree(m_piContourPredTexDeltaDC1);  m_piContourPredTexDeltaDC1  = NULL; }
     if ( m_piContourPredTexDeltaDC2  ) { xFree(m_piContourPredTexDeltaDC2);  m_piContourPredTexDeltaDC2  = NULL; }
-
-    if ( m_pbTextureModesAllowed     ) { xFree(m_pbTextureModesAllowed   );  m_pbTextureModesAllowed     = NULL; }
 #endif    
   }
   
@@ -307,8 +349,10 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt  );
   memset( m_pbMergeFlag,        0, iSizeInBool  );
   memset( m_puhMergeIndex,      0, iSizeInUchar );
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   memset( m_pbResPredAvailable, 0, iSizeInBool  );
   memset( m_pbResPredFlag,      0, iSizeInBool  );
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     memset( m_apuhNeighbourCandIdx[ ui ], 0, iSizeInUchar );
@@ -321,7 +365,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   memset( m_puhCbf[1],          0, iSizeInUchar );
   memset( m_puhCbf[2],          0, iSizeInUchar );
   memset( m_puhDepth,           0, iSizeInUchar );
+#if HHI_MPI
   memset( m_piTextureModeDepth,-1, iSizeInInt );
+#endif
   
   UChar uhWidth  = g_uiMaxCUWidth;
   UChar uhHeight = g_uiMaxCUHeight;
@@ -389,7 +435,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_apcCUColocated[1] = pcSlice->getRefPic( REF_PIC_LIST_1, 0)->getCU( m_uiCUAddr );
   }
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   memset( m_puiWedgeFullTabIdx,  0, iSizeInUInt   );
   memset( m_piWedgeFullDeltaDC1,       0, iSizeInInt  );
   memset( m_piWedgeFullDeltaDC2,       0, iSizeInInt  );
@@ -398,15 +444,14 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   memset( m_piWedgePredDirDeltaDC1,   0, iSizeInInt  );
   memset( m_piWedgePredDirDeltaDC2,   0, iSizeInInt  );
   memset( m_piWedgePredDirDeltaEnd,   0, iSizeInInt  );
-
+#endif
+#if HHI_DMM_PRED_TEX
   memset( m_puiWedgePredTexTabIdx,     0, iSizeInUInt );
   memset( m_piWedgePredTexDeltaDC1,    0, iSizeInInt  );
   memset( m_piWedgePredTexDeltaDC2,    0, iSizeInInt  );
 
   memset( m_piContourPredTexDeltaDC1,  0, iSizeInInt  );
   memset( m_piContourPredTexDeltaDC2,  0, iSizeInInt  );
-
-  memset( m_pbTextureModesAllowed,  false, iSizeInBool );
 #endif    
 }
 
@@ -425,8 +470,10 @@ Void TComDataCU::initEstData()
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt );
   memset( m_pbMergeFlag,        0, iSizeInBool  );
   memset( m_puhMergeIndex,      0, iSizeInUchar );
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   memset( m_pbResPredAvailable, 0, iSizeInBool  );
   memset( m_pbResPredFlag,      0, iSizeInBool  );
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     memset( m_apuhNeighbourCandIdx[ ui ], 0, iSizeInUchar );
@@ -460,7 +507,7 @@ Void TComDataCU::initEstData()
   m_acCUMvField[0].clearMvField();
   m_acCUMvField[1].clearMvField();
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   memset( m_puiWedgeFullTabIdx,  0, iSizeInUInt   );
   memset( m_piWedgeFullDeltaDC1,       0, iSizeInInt  );
   memset( m_piWedgeFullDeltaDC2,       0, iSizeInInt  );
@@ -469,18 +516,19 @@ Void TComDataCU::initEstData()
   memset( m_piWedgePredDirDeltaDC1,   0, iSizeInInt  );
   memset( m_piWedgePredDirDeltaDC2,   0, iSizeInInt  );
   memset( m_piWedgePredDirDeltaEnd,   0, iSizeInInt  );
-
+#endif
+#if HHI_DMM_PRED_TEX
   memset( m_puiWedgePredTexTabIdx,     0, iSizeInUInt );
   memset( m_piWedgePredTexDeltaDC1,    0, iSizeInInt  );
   memset( m_piWedgePredTexDeltaDC2,    0, iSizeInInt  );
 
   memset( m_piContourPredTexDeltaDC1,  0, iSizeInInt  );
   memset( m_piContourPredTexDeltaDC2,  0, iSizeInInt  );
-
-  memset( m_pbTextureModesAllowed,  false, iSizeInBool );
 #endif    
 
+#if HHI_MPI
   memset( m_piTextureModeDepth, -1, iSizeInInt );
+#endif
 }
 
 // initialize Sub partition
@@ -512,8 +560,10 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth )
   memset( m_puiAlfCtrlFlag,     0, iSizeInUInt );
   memset( m_pbMergeFlag,        0, iSizeInBool  );
   memset( m_puhMergeIndex,      0, iSizeInUchar );
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   memset( m_pbResPredAvailable, 0, iSizeInBool  );
   memset( m_pbResPredFlag,      0, iSizeInBool  );
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     memset( m_apuhNeighbourCandIdx[ ui ], 0, iSizeInUchar );
@@ -526,7 +576,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth )
   memset( m_puhCbf[1],          0, iSizeInUchar );
   memset( m_puhCbf[2],          0, iSizeInUchar );
   memset( m_puhDepth,     uiDepth, iSizeInUchar );
+#if HHI_MPI
   memset( m_piTextureModeDepth, -1, iSizeInInt );
+#endif
   
   UChar uhWidth  = g_uiMaxCUWidth  >> uiDepth;
   UChar uhHeight = g_uiMaxCUHeight >> uiDepth;
@@ -564,7 +616,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth )
   m_uiSliceStartCU          = pcCU->getSliceStartCU();
   m_uiEntropySliceStartCU   = pcCU->getEntropySliceStartCU();
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   memset( m_puiWedgeFullTabIdx,  0, iSizeInUInt   );
   memset( m_piWedgeFullDeltaDC1,       0, iSizeInInt  );
   memset( m_piWedgeFullDeltaDC2,       0, iSizeInInt  );
@@ -573,15 +625,14 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth )
   memset( m_piWedgePredDirDeltaDC1,   0, iSizeInInt  );
   memset( m_piWedgePredDirDeltaDC2,   0, iSizeInInt  );
   memset( m_piWedgePredDirDeltaEnd,   0, iSizeInInt  );
-
+#endif
+#if HHI_DMM_PRED_TEX
   memset( m_puiWedgePredTexTabIdx,     0, iSizeInUInt );
   memset( m_piWedgePredTexDeltaDC1,    0, iSizeInInt  );
   memset( m_piWedgePredTexDeltaDC2,    0, iSizeInInt  );
 
   memset( m_piContourPredTexDeltaDC1,  0, iSizeInInt  );
   memset( m_piContourPredTexDeltaDC2,  0, iSizeInInt  );
-
-  memset( m_pbTextureModesAllowed,  false, iSizeInBool );
 #endif
 }
 
@@ -610,8 +661,10 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   m_pbMergeFlag         = pcCU->getMergeFlag()        + uiPart;
   m_puhMergeIndex       = pcCU->getMergeIndex()       + uiPart;
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pbResPredAvailable  = pcCU->getResPredAvail()     + uiPart;
   m_pbResPredFlag       = pcCU->getResPredFlag ()     + uiPart;
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     m_apuhNeighbourCandIdx[ ui ] = pcCU->getNeighbourCandIdx( ui ) + uiPart;
@@ -629,7 +682,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_puhDepth=pcCU->getDepth()                     + uiPart;
   m_puhWidth=pcCU->getWidth()                     + uiPart;
   m_puhHeight=pcCU->getHeight()                   + uiPart;
+#if HHI_MPI
   m_piTextureModeDepth=pcCU->getTextureModeDepth()+ uiPart;
+#endif
   
   m_apiMVPIdx[0]=pcCU->getMVPIdx(REF_PIC_LIST_0)  + uiPart;
   m_apiMVPIdx[1]=pcCU->getMVPIdx(REF_PIC_LIST_1)  + uiPart;
@@ -666,7 +721,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_uiSliceStartCU        = pcCU->getSliceStartCU();
   m_uiEntropySliceStartCU = pcCU->getEntropySliceStartCU();
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   m_puiWedgeFullTabIdx  = pcCU->getWedgeFullTabIdx()  + uiPart;   
   m_piWedgeFullDeltaDC1       = pcCU->getWedgeFullDeltaDC1()      + uiPart;   
   m_piWedgeFullDeltaDC2       = pcCU->getWedgeFullDeltaDC2()      + uiPart;   
@@ -675,15 +730,14 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_piWedgePredDirDeltaDC1   = pcCU->getWedgePredDirDeltaDC1()   + uiPart;   
   m_piWedgePredDirDeltaDC2   = pcCU->getWedgePredDirDeltaDC2()   + uiPart;   
   m_piWedgePredDirDeltaEnd   = pcCU->getWedgePredDirDeltaEnd()   + uiPart;
-
+#endif
+#if HHI_DMM_PRED_TEX
   m_puiWedgePredTexTabIdx     = pcCU->getWedgePredTexTabIdx()     + uiPart;   
   m_piWedgePredTexDeltaDC1    = pcCU->getWedgePredTexDeltaDC1()   + uiPart;   
   m_piWedgePredTexDeltaDC2    = pcCU->getWedgePredTexDeltaDC2()   + uiPart;   
 
   m_piContourPredTexDeltaDC1  = pcCU->getContourPredTexDeltaDC1() + uiPart;   
   m_piContourPredTexDeltaDC2  = pcCU->getContourPredTexDeltaDC2() + uiPart;   
-
-  m_pbTextureModesAllowed     = pcCU->getTextureModeAllowance()   + uiPart;   
 #endif
 }
 
@@ -717,8 +771,10 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   
   m_pbMergeFlag        = pcCU->getMergeFlag()             + uiAbsPartIdx;
   m_puhMergeIndex      = pcCU->getMergeIndex()            + uiAbsPartIdx;
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pbResPredAvailable = pcCU->getResPredAvail()          + uiAbsPartIdx;
   m_pbResPredFlag      = pcCU->getResPredFlag ()          + uiAbsPartIdx;
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui ++ )
   {
     m_apuhNeighbourCandIdx[ui] = pcCU->getNeighbourCandIdx( ui ) + uiAbsPartIdx;
@@ -730,7 +786,9 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_acCUMvField[eRefPicList].setMvPtr(pcCU->getCUMvField(eRefPicList)->getMv()     + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setMvdPtr(pcCU->getCUMvField(eRefPicList)->getMvd()    + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setRefIdxPtr(pcCU->getCUMvField(eRefPicList)->getRefIdx() + uiAbsPartIdx);
+#if HHI_MPI
   m_piTextureModeDepth = pcCU->getTextureModeDepth() + uiAbsPartIdx;
+#endif
 
   m_uiSliceStartCU        = pcCU->getSliceStartCU();
   m_uiEntropySliceStartCU = pcCU->getEntropySliceStartCU();
@@ -761,8 +819,10 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_puiAlfCtrlFlag      + uiOffset, pcCU->getAlfCtrlFlag(),       iSizeInUInt  );
   memcpy( m_pbMergeFlag         + uiOffset, pcCU->getMergeFlag(),         iSizeInBool  );
   memcpy( m_puhMergeIndex       + uiOffset, pcCU->getMergeIndex(),        iSizeInUchar );
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   memcpy( m_pbResPredAvailable  + uiOffset, pcCU->getResPredAvail(),      iSizeInBool  );
   memcpy( m_pbResPredFlag       + uiOffset, pcCU->getResPredFlag(),       iSizeInBool  );
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     memcpy( m_apuhNeighbourCandIdx[ ui ] + uiOffset, pcCU->getNeighbourCandIdx( ui ), iSizeInUchar );
@@ -806,7 +866,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   m_uiSliceStartCU        = pcCU->getSliceStartCU();
   m_uiEntropySliceStartCU = pcCU->getEntropySliceStartCU();
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   memcpy( m_puiWedgeFullTabIdx   + uiOffset, pcCU->getWedgeFullTabIdx(),    iSizeInUInt    );
   memcpy( m_piWedgeFullDeltaDC1       + uiOffset, pcCU->getWedgeFullDeltaDC1(),      iSizeInInt  );
   memcpy( m_piWedgeFullDeltaDC2       + uiOffset, pcCU->getWedgeFullDeltaDC2(),      iSizeInInt  );
@@ -815,18 +875,19 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_piWedgePredDirDeltaDC1   + uiOffset, pcCU->getWedgePredDirDeltaDC1(),   iSizeInInt  );
   memcpy( m_piWedgePredDirDeltaDC2   + uiOffset, pcCU->getWedgePredDirDeltaDC2(),   iSizeInInt  );
   memcpy( m_piWedgePredDirDeltaEnd   + uiOffset, pcCU->getWedgePredDirDeltaEnd(),   iSizeInInt  );
-
+#endif
+#if HHI_DMM_PRED_TEX
   memcpy( m_puiWedgePredTexTabIdx     + uiOffset, pcCU->getWedgePredTexTabIdx(),     iSizeInUInt );
   memcpy( m_piWedgePredTexDeltaDC1    + uiOffset, pcCU->getWedgePredTexDeltaDC1(),   iSizeInInt  );
   memcpy( m_piWedgePredTexDeltaDC2    + uiOffset, pcCU->getWedgePredTexDeltaDC2(),   iSizeInInt  );
 
   memcpy( m_piContourPredTexDeltaDC1  + uiOffset, pcCU->getContourPredTexDeltaDC1(), iSizeInInt  );
   memcpy( m_piContourPredTexDeltaDC2  + uiOffset, pcCU->getContourPredTexDeltaDC2(), iSizeInInt  );
-
-  memcpy( m_pbTextureModesAllowed     + uiOffset, pcCU->getTextureModeAllowance(),   iSizeInBool );
 #endif
 
+#if HHI_MPI
   memcpy( m_piTextureModeDepth + uiOffset, pcCU->getTextureModeDepth(), iSizeInInt );
+#endif
 }
 
 // Copy current predicted part to a CU in picture.
@@ -853,8 +914,10 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   
   memcpy( rpcCU->getMergeFlag()         + m_uiAbsIdxInLCU, m_pbMergeFlag,         iSizeInBool  );
   memcpy( rpcCU->getMergeIndex()        + m_uiAbsIdxInLCU, m_puhMergeIndex,       iSizeInUchar );
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   memcpy( rpcCU->getResPredAvail()      + m_uiAbsIdxInLCU, m_pbResPredAvailable,  iSizeInBool  );
   memcpy( rpcCU->getResPredFlag()       + m_uiAbsIdxInLCU, m_pbResPredFlag,       iSizeInBool  );
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     memcpy( rpcCU->getNeighbourCandIdx( ui ) + m_uiAbsIdxInLCU, m_apuhNeighbourCandIdx[ui], iSizeInUchar );
@@ -890,7 +953,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   rpcCU->setSliceStartCU( m_uiSliceStartCU );
   rpcCU->setEntropySliceStartCU( m_uiEntropySliceStartCU );
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   memcpy( rpcCU->getWedgeFullTabIdx()  + m_uiAbsIdxInLCU, m_puiWedgeFullTabIdx,  iSizeInUInt   );
   memcpy( rpcCU->getWedgeFullDeltaDC1()      + m_uiAbsIdxInLCU, m_piWedgeFullDeltaDC1,       iSizeInInt  );
   memcpy( rpcCU->getWedgeFullDeltaDC2()      + m_uiAbsIdxInLCU, m_piWedgeFullDeltaDC2,       iSizeInInt  );
@@ -899,18 +962,19 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   memcpy( rpcCU->getWedgePredDirDeltaDC1()   + m_uiAbsIdxInLCU, m_piWedgePredDirDeltaDC1,   iSizeInInt  );
   memcpy( rpcCU->getWedgePredDirDeltaDC2()   + m_uiAbsIdxInLCU, m_piWedgePredDirDeltaDC2,   iSizeInInt  );
   memcpy( rpcCU->getWedgePredDirDeltaEnd()   + m_uiAbsIdxInLCU, m_piWedgePredDirDeltaEnd,   iSizeInInt  );
-
+#endif
+#if HHI_DMM_PRED_TEX
   memcpy( rpcCU->getWedgePredTexTabIdx()     + m_uiAbsIdxInLCU, m_puiWedgePredTexTabIdx,     iSizeInUInt );
   memcpy( rpcCU->getWedgePredTexDeltaDC1()   + m_uiAbsIdxInLCU, m_piWedgePredTexDeltaDC1,    iSizeInInt  );
   memcpy( rpcCU->getWedgePredTexDeltaDC2()   + m_uiAbsIdxInLCU, m_piWedgePredTexDeltaDC2,    iSizeInInt  );
 
   memcpy( rpcCU->getContourPredTexDeltaDC1() + m_uiAbsIdxInLCU, m_piContourPredTexDeltaDC1,  iSizeInInt  );
   memcpy( rpcCU->getContourPredTexDeltaDC2() + m_uiAbsIdxInLCU, m_piContourPredTexDeltaDC2,  iSizeInInt  );
-
-  memcpy( rpcCU->getTextureModeAllowance()   + m_uiAbsIdxInLCU, m_pbTextureModesAllowed,     iSizeInBool  );
 #endif
 
+#if HHI_MPI
   memcpy( rpcCU->getTextureModeDepth() + m_uiAbsIdxInLCU, m_piTextureModeDepth, iSizeInInt );
+#endif
 }
 
 Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
@@ -938,8 +1002,10 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   memcpy( rpcCU->getAlfCtrlFlag()       + uiPartOffset, m_puiAlfCtrlFlag,      iSizeInUInt  );
   memcpy( rpcCU->getMergeFlag()         + uiPartOffset, m_pbMergeFlag,         iSizeInBool  );
   memcpy( rpcCU->getMergeIndex()        + uiPartOffset, m_puhMergeIndex,       iSizeInUchar );
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   memcpy( rpcCU->getResPredAvail()      + uiPartOffset, m_pbResPredAvailable,  iSizeInBool  );
   memcpy( rpcCU->getResPredFlag()       + uiPartOffset, m_pbResPredFlag,       iSizeInBool  );
+#endif
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ui++ )
   {
     memcpy( rpcCU->getNeighbourCandIdx( ui ) + uiPartOffset, m_apuhNeighbourCandIdx[ui], iSizeInUchar );
@@ -974,7 +1040,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   rpcCU->setSliceStartCU( m_uiSliceStartCU );
   rpcCU->setEntropySliceStartCU( m_uiEntropySliceStartCU );
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   memcpy( rpcCU->getWedgeFullTabIdx()  + uiPartOffset, m_puiWedgeFullTabIdx,  iSizeInUInt   );
   memcpy( rpcCU->getWedgeFullDeltaDC1()      + uiPartOffset, m_piWedgeFullDeltaDC1,       iSizeInInt  );
   memcpy( rpcCU->getWedgeFullDeltaDC2()      + uiPartOffset, m_piWedgeFullDeltaDC2,       iSizeInInt  );
@@ -983,18 +1049,19 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   memcpy( rpcCU->getWedgePredDirDeltaDC1()   + uiPartOffset, m_piWedgePredDirDeltaDC1,   iSizeInInt  );
   memcpy( rpcCU->getWedgePredDirDeltaDC2()   + uiPartOffset, m_piWedgePredDirDeltaDC2,   iSizeInInt  );
   memcpy( rpcCU->getWedgePredDirDeltaEnd()   + uiPartOffset, m_piWedgePredDirDeltaEnd,   iSizeInInt  );
-
+#endif
+#if HHI_DMM_PRED_TEX
   memcpy( rpcCU->getWedgePredTexTabIdx()     + uiPartOffset, m_puiWedgePredTexTabIdx,     iSizeInUInt );
   memcpy( rpcCU->getWedgePredTexDeltaDC1()   + uiPartOffset, m_piWedgePredTexDeltaDC1,    iSizeInInt  );
   memcpy( rpcCU->getWedgePredTexDeltaDC2()   + uiPartOffset, m_piWedgePredTexDeltaDC2,    iSizeInInt  );
 
   memcpy( rpcCU->getContourPredTexDeltaDC1() + uiPartOffset, m_piContourPredTexDeltaDC1,  iSizeInInt  );
   memcpy( rpcCU->getContourPredTexDeltaDC2() + uiPartOffset, m_piContourPredTexDeltaDC2,  iSizeInInt  );
-
-  memcpy( rpcCU->getTextureModeAllowance()   + uiPartOffset, m_pbTextureModesAllowed,     iSizeInBool  );
 #endif
 
+#if HHI_MPI
   memcpy( rpcCU->getTextureModeDepth() + uiPartOffset, m_piTextureModeDepth, iSizeInInt );
+#endif
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -1355,8 +1422,7 @@ TComDataCU* TComDataCU::getPUAboveRightAdi(UInt&  uiARPartUnitIdx, UInt uiPuWidt
   return m_pcCUAboveRight;
 }
 
-
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
 Void TComDataCU::setWedgeFullTabIdxSubParts( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
@@ -1426,7 +1492,8 @@ Void TComDataCU::setWedgePredDirDeltaEndSubParts( Int iDelta, UInt uiAbsPartIdx,
     m_piWedgePredDirDeltaEnd[uiAbsPartIdx+ui] = iDelta;
   }
 }
-
+#endif
+#if HHI_DMM_PRED_TEX
 Void TComDataCU::setWedgePredTexTabIdxSubParts( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
@@ -1476,15 +1543,9 @@ Void TComDataCU::setContourPredTexDeltaDC2SubParts( Int iDC2, UInt uiAbsPartIdx,
     m_piContourPredTexDeltaDC2[uiAbsPartIdx+ui] = iDC2;
   }
 }
-
-Void TComDataCU::setTextureModeAllowanceSubParts ( Bool bTMAllowed, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
-
-  memset( m_pbTextureModesAllowed + uiAbsPartIdx, bTMAllowed, sizeof(Bool)*uiCurrPartNumb );
-}
 #endif
 
+#if HHI_INTER_VIEW_MOTION_PRED
 Int
 TComDataCU::getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv )
 {
@@ -1510,7 +1571,10 @@ TComDataCU::getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int 
   ROFRS( pcDepthMapGenerator, false );
   return pcDepthMapGenerator->getIViewOrgDepthMvPred( this, uiPartIdx, eRefPicList, iRefIdx, rcMv );
 }
+#endif
 
+
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 Bool
 TComDataCU::getResidualSamples( UInt uiPartIdx, TComYuv* pcYuv )
 {
@@ -1518,6 +1582,7 @@ TComDataCU::getResidualSamples( UInt uiPartIdx, TComYuv* pcYuv )
   ROFRS( pcResidualGenerator, false );
   return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv );
 }
+#endif
 
 
 Int TComDataCU::getMostProbableIntraDirLuma( UInt uiAbsPartIdx )
@@ -1532,7 +1597,7 @@ Int TComDataCU::getMostProbableIntraDirLuma( UInt uiAbsPartIdx )
 #if ADD_PLANAR_MODE
   mapPlanartoDC( iLeftIntraDir );
 #endif
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   mapDMMtoDC( iLeftIntraDir );
 #endif
   
@@ -1542,7 +1607,7 @@ Int TComDataCU::getMostProbableIntraDirLuma( UInt uiAbsPartIdx )
 #if ADD_PLANAR_MODE
   mapPlanartoDC( iAboveIntraDir );
 #endif
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   mapDMMtoDC( iAboveIntraDir );
 #endif
   
@@ -1577,7 +1642,7 @@ Int TComDataCU::getIntraDirLumaPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[
 #if ADD_PLANAR_MODE
   mapPlanartoDC( iLeftIntraDir );
 #endif
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   mapDMMtoDC( iLeftIntraDir );
 #endif
 
@@ -1587,7 +1652,7 @@ Int TComDataCU::getIntraDirLumaPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[
 #if ADD_PLANAR_MODE
   mapPlanartoDC( iAboveIntraDir );
 #endif
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   mapDMMtoDC( iAboveIntraDir );
 #endif
 
@@ -1691,25 +1756,6 @@ UInt TComDataCU::getCtxSplitFlag( UInt uiAbsPartIdx, UInt uiDepth )
   
   return uiCtx;
 }
-
-#if MW_MVI_SIGNALLING_MODE == 0
-UInt TComDataCU::getCtxMvInheritanceFlag( UInt uiAbsPartIdx, UInt uiDepth )
-{
-//  return 0; // MW
-  TComDataCU* pcTempCU;
-  UInt        uiTempPartIdx;
-  UInt        uiCtx;
-  // Get left split flag
-  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-  uiCtx  = ( pcTempCU ) ? ( ( pcTempCU->getTextureModeDepth( uiTempPartIdx ) == uiDepth ) ? 1 : 0 ) : 0;
-
-  // Get above split flag
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-  uiCtx += ( pcTempCU ) ? ( ( pcTempCU->getTextureModeDepth( uiTempPartIdx ) == uiDepth ) ? 1 : 0 ) : 0;
-
-  return uiCtx;
-}
-#endif
 
 UInt TComDataCU::getCtxIntraDirChroma( UInt uiAbsPartIdx )
 {
@@ -2147,6 +2193,7 @@ Void TComDataCU::setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, U
   setSubPartUChar( uiMergeIndex, m_puhMergeIndex, uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 Void TComDataCU::setResPredAvailSubParts( Bool bResPredAvailable, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   setSubPartBool( bResPredAvailable, m_pbResPredAvailable, uiAbsPartIdx, uiDepth, uiPartIdx );
@@ -2156,6 +2203,7 @@ Void TComDataCU::setResPredFlagSubParts( Bool bResPredFlag, UInt uiAbsPartIdx, U
 {
   setSubPartBool( bResPredFlag, m_pbResPredFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
 }
+#endif
 
 Void TComDataCU::setChromIntraDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -2631,6 +2679,7 @@ Bool TComDataCU::avoidMergeCandidate( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDe
 Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, UInt* puiNeighbourCandIdx )
 {
   UInt uiAbsPartAddr = m_uiAbsIdxInLCU + uiAbsPartIdx;
+#if HHI_INTER_VIEW_MOTION_PRED
   Bool bNoPdmMerge   = ( m_pcSlice->getSPS()->getViewId() == 0 || ( m_pcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) != PDM_USE_FOR_MERGE );
   UInt uiPdmMergePos = ( bNoPdmMerge ? 5 : PDM_MERGE_POS );
   UInt uiLeftAddr    = ( uiPdmMergePos < 1 ? 1 : 0 );
@@ -2639,6 +2688,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   UInt uiCorRTAddr   = ( uiPdmMergePos < 4 ? 4 : 3 );
   UInt uiCorBLAddr   = ( uiPdmMergePos < 5 ? 5 : 4 );
   UInt uiPdmAddr     =   uiPdmMergePos;
+#else
+  UInt uiLeftAddr    = 0;
+  UInt uiAboveAddr   = 1;
+  UInt uiColocAddr   = 2;
+  UInt uiCorRTAddr   = 3;
+  UInt uiCorBLAddr   = 4;
+#endif
   
   bool abCandIsInter[ MRG_MAX_NUM_CANDS ];
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ++ui )
@@ -3098,6 +3154,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   }
 
 
+#if HHI_INTER_VIEW_MOTION_PRED
   //===== add merge with predicted depth maps =====
   TComMv  acPdmMv       [2];
   Int     aiPdmRefIdx   [2] = {-1,-1};
@@ -3123,6 +3180,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       pcMvFieldNeighbours[(uiPdmAddr<<1)+1 ].setMvField( acPdmMv[ 1 ], aiPdmRefIdx[ 1 ] );
     }
   }
+#endif
 
 
   //===== remove duplicates =====
@@ -3319,6 +3377,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 
   Int iLeftIdx = -1;
 
+#if HHI_INTER_VIEW_MOTION_PRED
 #if ( PDM_AMVP_POS == 0 )
   // get inter-view mv predictor (at position 0)
   TComMv  cPdmMvPred;
@@ -3327,6 +3386,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     clipMv( cPdmMvPred );
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
   }
+#endif
 #endif
 
 #if !DCM_SIMPLIFIED_MVP
@@ -3387,6 +3447,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   
 
 
+#if HHI_INTER_VIEW_MOTION_PRED
 #if ( PDM_AMVP_POS == 1 )
   // get inter-view mv predictor (at position 1)
   TComMv  cPdmMvPred;
@@ -3396,7 +3457,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
   }
 #endif
-
+#endif
 
   
   // Above predictor search
@@ -3594,6 +3655,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 
 
 
+#if HHI_INTER_VIEW_MOTION_PRED
 #if ( PDM_AMVP_POS == 2 )
   // get inter-view mv predictor (at position 2)
   TComMv  cPdmMvPred;
@@ -3603,7 +3665,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
   }
 #endif
-
+#endif
 
   // Get Temporal Motion Predictor
 #if AMVP_NEIGH_COL
@@ -3753,6 +3815,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 #endif // AMVP_NEIGH_COL
 
 
+#if HHI_INTER_VIEW_MOTION_PRED
 #if ( PDM_AMVP_POS == 3 )
   // get inter-view mv predictor (at position 3)
   TComMv  cPdmMvPred;
@@ -3762,7 +3825,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
   }
 #endif
-
+#endif
 
   // Check No MV Candidate
   xUniqueMVPCand( pInfo );
@@ -3853,7 +3916,7 @@ Int TComDataCU::searchMVPIdx(TComMv cMv, AMVPInfo* pInfo)
 Void TComDataCU::clipMv    (TComMv&  rcMv)
 {
   Int  iMvShift = 2;
-#if MW_DEPTH_MAP_INTERP_FILTER == 2 && MW_FULL_PEL_DEPTH_MAP_MV_SIGNALLING
+#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
   if( getSlice()->getSPS()->isDepth() )
     iMvShift = 0;
 #endif
@@ -4675,6 +4738,7 @@ Bool TComDataCU::isSuroundingRefIdxException     ( UInt   uiAbsPartIdx )
 }
 #endif
 
+#if HHI_MPI
 Void TComDataCU::setTextureModeDepthSubParts( Int iTextureModeDepth, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
@@ -4691,34 +4755,18 @@ Void TComDataCU::copyTextureMotionDataFrom( TComDataCU* pcCU, UInt uiDepth, UInt
   UInt uiNumPartition = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
   Int iSizeInUchar  = sizeof( UChar ) * uiNumPartition;
   Int iSizeInInt    = sizeof( Int   ) * uiNumPartition;
-//#if HHI_MRG
-//  Int iSizeInBool   = sizeof( Bool  ) * uiNumPartition;
-//#endif
 
-//  memcpy( m_pePartSize + uiAbsPartIdxDst,  pcCU->getPartitionSize() + uiAbsPartIdxSrc,  sizeof( PartSize ) * uiNumPartition );
   memcpy( m_pePredMode + uiAbsPartIdxDst,  pcCU->getPredictionMode() + uiAbsPartIdxSrc, sizeof( PredMode ) * uiNumPartition );
   memcpy( m_puhInterDir + uiAbsPartIdxDst, pcCU->getInterDir() + uiAbsPartIdxSrc,       iSizeInUchar );
-
-//#if HHI_MRG
-//  m_pbMergeFlag        = pcCU->getMergeFlag()             + uiAbsPartIdx;
-//  m_puhMergeIndex      = pcCU->getMergeIndex()            + uiAbsPartIdx;
-//  for( UInt ui = 0; ui < HHI_NUM_MRG_CAND; ui ++ )
-//  {
-//    m_apuhNeighbourCandIdx[ui] = pcCU->getNeighbourCandIdx( ui ) + uiAbsPartIdx;
-//  }
-//#endif
 
   memcpy( m_apiMVPIdx[0] + uiAbsPartIdxDst, pcCU->getMVPIdx(REF_PIC_LIST_0) + uiAbsPartIdxSrc, iSizeInInt );
   memcpy( m_apiMVPIdx[1] + uiAbsPartIdxDst, pcCU->getMVPIdx(REF_PIC_LIST_1) + uiAbsPartIdxSrc, iSizeInInt );
   memcpy( m_apiMVPNum[0] + uiAbsPartIdxDst, pcCU->getMVPNum(REF_PIC_LIST_0) + uiAbsPartIdxSrc, iSizeInInt );
   memcpy( m_apiMVPNum[1] + uiAbsPartIdxDst, pcCU->getMVPNum(REF_PIC_LIST_1) + uiAbsPartIdxSrc, iSizeInInt );
 
-//  m_acCUMvField[0].copyFrom( pcCU->getCUMvField( REF_PIC_LIST_0 ), pcCU->getTotalNumPart(), 0 );
-//  m_acCUMvField[1].copyFrom( pcCU->getCUMvField( REF_PIC_LIST_1 ), pcCU->getTotalNumPart(), 0 );
-
   pcCU->getCUMvField( REF_PIC_LIST_0 )->copyTo( &m_acCUMvField[0], -Int(uiAbsPartIdxSrc) + uiAbsPartIdxDst, uiAbsPartIdxSrc, uiNumPartition );
   pcCU->getCUMvField( REF_PIC_LIST_1 )->copyTo( &m_acCUMvField[1], -Int(uiAbsPartIdxSrc) + uiAbsPartIdxDst, uiAbsPartIdxSrc, uiNumPartition );
-#if MW_DEPTH_MAP_INTERP_FILTER == 2 && MW_FULL_PEL_DEPTH_MAP_MV_SIGNALLING
+#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
   for( UInt ui = 0; ui < uiNumPartition; ui++ )
   {
     m_acCUMvField[0].getMv( uiAbsPartIdxDst + ui ) += TComMv( 2, 2 );
@@ -4735,6 +4783,7 @@ Void TComDataCU::copyTextureMotionDataFrom( TComDataCU* pcCU, UInt uiDepth, UInt
   }
 #endif
 }
+#endif
 
 Void TComDataCU::getPosInPic( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY )
 {

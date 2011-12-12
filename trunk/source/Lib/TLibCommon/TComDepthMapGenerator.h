@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TComDepthMapGenerator.h
@@ -15,6 +48,8 @@
 #include "TComSlice.h"
 
 
+#if DEPTH_MAP_GENERATION
+
 
 class TComSPSAccess // would be better to have a real SPS buffer
 {
@@ -28,7 +63,9 @@ public:
                       Bool     bIsDepth = false ) { return m_aacActiveSPS[ bIsDepth ? 1 : 0 ][ uiViewId ]; }
 
   UInt      getPdm  ()                            { if( m_aacActiveSPS[0][1] ) { return m_aacActiveSPS[0][1]->getPredDepthMapGeneration(); } return 0; }
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   UInt      getResPrd ()                          { if( m_aacActiveSPS[0][1] ) { return m_aacActiveSPS[0][1]->getMultiviewResPredMode  (); } return 0; }
+#endif
 
 private:
   TComSPS*  m_aacActiveSPS[ 2 ][ MAX_NUMBER_VIEWS ];
@@ -83,13 +120,17 @@ public:
   Void  updateDepthMap        ( TComPic*      pcPic );
   Void  dumpDepthMap          ( TComPic*      pcPic, char* pFilenameBase );
 
+#if HHI_INTER_VIEW_MOTION_PRED
   Void  covertOrgDepthMap     ( TComPic*      pcPic );
+#endif
 
   UInt  getBaseViewId         ( UInt          uiIdx ) { AOF( uiIdx < m_auiBaseIdList.size() );  return m_auiBaseIdList[uiIdx]; }
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
+#if HHI_INTER_VIEW_MOTION_PRED
   Int   getPdmMergeCandidate  ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool  getPdmMvPred          ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge );
   Bool  getIViewOrgDepthMvPred( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
+#endif
 
   TComPrediction*   getPrediction ()  { return m_pcPrediction;  }
   TComSPSAccess*    getSPSAccess  ()  { return m_pcSPSAccess;   }
@@ -175,6 +216,9 @@ private:
   Bool              m_aabDepthSet[ MAX_CU_SIZE >> 2 ][ MAX_CU_SIZE >> 2 ];
   Int               m_aai4x4Depth[ MAX_CU_SIZE >> 2 ][ MAX_CU_SIZE >> 2 ];
 };
+
+
+#endif // DEPTH_MAP_GENERATION
 
 #endif // __TCOM_DEPTH_MAP_GENERATOR__
 

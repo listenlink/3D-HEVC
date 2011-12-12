@@ -1,3 +1,38 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
 /** \file     TComSlice.cpp
     \brief    slice header and SPS class
 */
@@ -16,18 +51,18 @@ TComSlice::TComSlice()
   m_aiNumRefIdx[0]      = 0;
   m_aiNumRefIdx[1]      = 0;
   m_bLoopFilterDisable  = false;
-
+  
   m_iSliceQpDelta       = 0;
-
+  
   m_iDepth              = 0;
-
+  
   m_pcPic               = NULL;
   m_bRefenced           = false;
 #ifdef ROUNDING_CONTROL_BIPRED
   m_bRounding           = false;
 #endif
   m_uiColDir = 0;
-
+  
   m_iViewIdx = 0 ;
 
   initEqualRef();
@@ -35,7 +70,7 @@ TComSlice::TComSlice()
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
   m_bRefIdxCombineCoding = false;
 #endif
-#if DCM_COMB_LIST
+#if DCM_COMB_LIST 
   m_bRefPicListCombinationFlag = false;
   m_bRefPicListModificationFlagLC = false;
 #endif
@@ -60,19 +95,19 @@ Void TComSlice::initSlice()
 {
   m_aiNumRefIdx[0]      = 0;
   m_aiNumRefIdx[1]      = 0;
-
+  
   m_uiColDir = 0;
 
   ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
   ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
   m_pcTexturePic = NULL;
-
+  
   initEqualRef();
   m_bNoBackPredFlag = false;
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
   m_bRefIdxCombineCoding = false;
 #endif
-#if DCM_COMB_LIST
+#if DCM_COMB_LIST 
   m_bRefPicListCombinationFlag = false;
   m_bRefPicListModificationFlagLC = false;
 #endif
@@ -82,18 +117,18 @@ Void  TComSlice::sortPicList        (TComList<TComPic*>& rcListPic)
 {
   TComPic*    pcPicExtract;
   TComPic*    pcPicInsert;
-
+  
   TComList<TComPic*>::iterator    iterPicExtract;
   TComList<TComPic*>::iterator    iterPicExtract_1;
   TComList<TComPic*>::iterator    iterPicInsert;
-
+  
   for (Int i = 1; i < (Int)(rcListPic.size()); i++)
   {
     iterPicExtract = rcListPic.begin();
     for (Int j = 0; j < i; j++) iterPicExtract++;
     pcPicExtract = *(iterPicExtract);
     pcPicExtract->setCurrSliceIdx(0);
-
+    
     iterPicInsert = rcListPic.begin();
     while (iterPicInsert != iterPicExtract)
     {
@@ -103,12 +138,12 @@ Void  TComSlice::sortPicList        (TComList<TComPic*>& rcListPic)
       {
         break;
       }
-
+      
       iterPicInsert++;
     }
-
+    
     iterPicExtract_1 = iterPicExtract;    iterPicExtract_1++;
-
+    
     //  swap iterPicExtract and iterPicInsert, iterPicExtract = curr. / iterPicInsert = insertion position
     rcListPic.insert (iterPicInsert, iterPicExtract, iterPicExtract_1);
     rcListPic.erase  (iterPicExtract);
@@ -127,7 +162,7 @@ Void TComSlice::setRefPOCList       ()
 
 }
 
-#if DCM_COMB_LIST
+#if DCM_COMB_LIST 
 Void TComSlice::generateCombinedList()
 {
   if(m_aiNumRefIdx[REF_PIC_LIST_C] > 0)
@@ -161,7 +196,7 @@ Void TComSlice::generateCombinedList()
         }
 
         if(bTempRefIdxInL2 == true)
-        {
+        { 
           m_eListIdFromIdxOfLC[m_aiNumRefIdx[REF_PIC_LIST_C]] = REF_PIC_LIST_0;
           m_iRefIdxFromIdxOfLC[m_aiNumRefIdx[REF_PIC_LIST_C]] = iNumRefIdx;
           m_iRefIdxOfLC[REF_PIC_LIST_0][iNumRefIdx] = m_aiNumRefIdx[REF_PIC_LIST_C]++;
@@ -345,14 +380,14 @@ Void TComSlice::initMultiviewSlice( Int** aaiScale, Int** aaiOffset )
  * \param bRefreshPending flag indicating if a deferred decoding refresh is pending
  * \param rcListPic reference to the reference picture list
  * This function marks the reference pictures as "unused for reference" in the following conditions.
- * If the nal_unit_type is IDR all pictures in the reference picture list
- * is marked as "unused for reference"
+ * If the nal_unit_type is IDR all pictures in the reference picture list  
+ * is marked as "unused for reference" 
  * Otherwise do for the CDR case (non CDR case has no effect since both if conditions below will not be true)
- *    If the bRefreshPending flag is true (a deferred decoding refresh is pending) and the current
- *    temporal reference is greater than the temporal reference of the latest CDR picture (uiPOCCDR),
- *    mark all reference pictures except the latest CDR picture as "unused for reference" and set
+ *    If the bRefreshPending flag is true (a deferred decoding refresh is pending) and the current 
+ *    temporal reference is greater than the temporal reference of the latest CDR picture (uiPOCCDR), 
+ *    mark all reference pictures except the latest CDR picture as "unused for reference" and set 
  *    the bRefreshPending flag to false.
- *    If the nal_unit_type is CDR, set the bRefreshPending flag to true and iPOCCDR to the temporal
+ *    If the nal_unit_type is CDR, set the bRefreshPending flag to true and iPOCCDR to the temporal 
  *    reference of the current picture.
  * Note that the current picture is already placed in the reference list and its marking is not changed.
  * If the current picture has a nal_ref_idc that is not 0, it will remain marked as "used for reference".
@@ -360,7 +395,7 @@ Void TComSlice::initMultiviewSlice( Int** aaiScale, Int** aaiOffset )
 Void TComSlice::decodingRefreshMarking(UInt& uiPOCCDR, Bool& bRefreshPending, TComList<TComPic*>& rcListPic)
 {
   TComPic*                 rpcPic;
-  UInt uiPOCCurr = getPOC();
+  UInt uiPOCCurr = getPOC(); 
 
   if (getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR)  // IDR
   {
@@ -376,7 +411,7 @@ Void TComSlice::decodingRefreshMarking(UInt& uiPOCCDR, Bool& bRefreshPending, TC
   }
   else // CDR or No DR
   {
-    if (bRefreshPending==true && uiPOCCurr > uiPOCCDR) // CDR reference marking pending
+    if (bRefreshPending==true && uiPOCCurr > uiPOCCDR) // CDR reference marking pending 
     {
       TComList<TComPic*>::iterator        iterPic       = rcListPic.begin();
       while (iterPic != rcListPic.end())
@@ -385,11 +420,11 @@ Void TComSlice::decodingRefreshMarking(UInt& uiPOCCDR, Bool& bRefreshPending, TC
         if (rpcPic->getPOC() != uiPOCCurr && rpcPic->getPOC() != uiPOCCDR) rpcPic->getSlice(0)->setReferenced(false);
         iterPic++;
       }
-      bRefreshPending = false;
+      bRefreshPending = false; 
     }
     if (getNalUnitType() == NAL_UNIT_CODED_SLICE_CDR) // CDR picture found
     {
-      bRefreshPending = true;
+      bRefreshPending = true; 
       uiPOCCDR = uiPOCCurr;
     }
   }
@@ -406,13 +441,13 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_iViewIdx             = pSrc->m_iViewIdx;
 #if DCM_DECODING_REFRESH
   m_eNalUnitType         = pSrc->m_eNalUnitType;
-#endif
+#endif  
   m_eSliceType           = pSrc->m_eSliceType;
   m_iSliceQp             = pSrc->m_iSliceQp;
   m_iSymbolMode          = pSrc->m_iSymbolMode;
   m_bLoopFilterDisable   = pSrc->m_bLoopFilterDisable;
-
-#if DCM_COMB_LIST
+  
+#if DCM_COMB_LIST  
   for (i = 0; i < 3; i++)
   {
     m_aiNumRefIdx[i]     = pSrc->m_aiNumRefIdx[i];
@@ -439,7 +474,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   {
     m_aiNumRefIdx[i]     = pSrc->m_aiNumRefIdx[i];
   }
-#endif
+#endif  
 
   m_iSliceQpDelta        = pSrc->m_iSliceQpDelta;
   for (i = 0; i < 2; i++)
@@ -450,7 +485,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
       m_aiRefPOCList[i][j]   = pSrc->m_aiRefPOCList[i][j];
       m_aiRefViewList[i][j]  = pSrc->m_aiRefViewList[i][j];
     }
-  }
+  }  
   m_iDepth               = pSrc->m_iDepth;
 
   // referenced slice
@@ -488,7 +523,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_uiSliceCurEndCUAddr           = pSrc->m_uiSliceCurEndCUAddr;
   m_uiSliceIdx                    = pSrc->m_uiSliceIdx;
   m_uiEntropySliceMode            = pSrc->m_uiEntropySliceMode;
-  m_uiEntropySliceArgument        = pSrc->m_uiEntropySliceArgument;
+  m_uiEntropySliceArgument        = pSrc->m_uiEntropySliceArgument; 
   m_uiEntropySliceCurStartCUAddr  = pSrc->m_uiEntropySliceCurStartCUAddr;
   m_uiEntropySliceCurEndCUAddr    = pSrc->m_uiEntropySliceCurEndCUAddr;
   m_bNextSlice                    = pSrc->m_bNextSlice;
@@ -533,7 +568,7 @@ Void  TComSlice::displayWpScaling()
   }
 }
 
-// Default WP values settings : no weight.
+// Default WP values settings : no weight. 
 Void  TComSlice::resetWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3])
 {
   for ( int e=0 ; e<2 ; e++ ) {
@@ -607,14 +642,16 @@ TComSPS::TComSPS()
   m_uiMinTrDepth  = 0;
   m_uiMaxTrDepth  = 1;
   m_uiMaxTrSize   = 32;
-
+  
   // Tool list
   m_bUseALF       = false;
   m_bUseDQP       = false;
-
+  
   m_bUseMRG      = false; // SOPH:
+#if HHI_MPI
   m_bUseMVI = false;
-
+#endif
+  
   m_uiViewId              = 0;
   m_iViewOrderIdx         = 0;
   m_bDepth                = false;
@@ -623,18 +660,22 @@ TComSPS::TComSPS()
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
 
+#if DEPTH_MAP_GENERATION
   m_uiPredDepthMapGeneration = 0;
-  m_uiMultiviewMvPredMode    = 0;
   m_uiPdmPrecision           = 0;
   ::memset( m_aiPdmScaleNomDelta, 0x00, sizeof( m_aiPdmScaleNomDelta  ) );
   ::memset( m_aiPdmOffset,        0x00, sizeof( m_aiPdmOffset         ) );
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
+  m_uiMultiviewMvPredMode    = 0;
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_uiMultiviewResPredMode   = 0;
+#endif
 
   // AMVP parameter
   ::memset( m_aeAMVPMode, 0, sizeof( m_aeAMVPMode ) );
-#if SB_MEM_FIX
-  m_bUseDepthModelModes = false;
-#endif
+  m_bUseDMM = false;
 }
 
 TComSPS::~TComSPS()
@@ -696,17 +737,20 @@ TComSPS::initMultiviewSPSDepth( UInt uiViewId, Int iViewOrderIdx )
 }
 
 
+#if DEPTH_MAP_GENERATION
 Void
 TComSPS::setPredDepthMapGeneration( UInt uiViewId, Bool bIsDepth, UInt uiPdmGenMode, UInt uiPdmMvPredMode, UInt uiPdmPrec, Int** aaiPdmScaleNomDelta, Int** aaiPdmOffset )
-{
+{ 
   AOF( m_uiViewId == uiViewId );
   AOF( m_bDepth   == bIsDepth );
   AOT( ( uiViewId == 0 || bIsDepth ) && uiPdmGenMode );
   AOT( uiPdmGenMode && ( aaiPdmScaleNomDelta == 0 || aaiPdmOffset == 0 ) );
   AOT( uiPdmMvPredMode && uiPdmGenMode == 0 );
-
+  
   m_uiPredDepthMapGeneration = uiPdmGenMode;
+#if HHI_INTER_VIEW_MOTION_PRED
   m_uiMultiviewMvPredMode    = uiPdmMvPredMode;
+#endif
   m_uiPdmPrecision           = ( m_uiPredDepthMapGeneration ? uiPdmPrec : 0 );
   ::memset( m_aiPdmScaleNomDelta, 0x00, sizeof( m_aiPdmScaleNomDelta  ) );
   ::memset( m_aiPdmOffset,        0x00, sizeof( m_aiPdmOffset         ) );
@@ -719,4 +763,4 @@ TComSPS::setPredDepthMapGeneration( UInt uiViewId, Bool bIsDepth, UInt uiPdmGenM
     }
   }
 }
-
+#endif

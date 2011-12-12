@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TComRom.cpp
@@ -63,7 +96,7 @@ Void destroyROM()
 #endif //QC_MDCS
   }
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   if ( !g_aacWedgeLists.empty() )
   {
     for ( UInt ui = 0; ui < g_aacWedgeLists.size(); ui++ )
@@ -2368,40 +2401,60 @@ const short g_as_DST_MAT_4 [4][4]=
 };
 // Mapping each Unified Directional Intra prediction direction to DCT/DST transform 
 // 0 implies use DCT, 1 implies DST
-#if ADD_PLANAR_MODE && !HHI_DMM_INTRA
+#if ADD_PLANAR_MODE
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE+8] =
+#elif HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE+4] =
+#else
 const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE] =
-#elif !ADD_PLANAR_MODE && HHI_DMM_INTRA
-const UChar g_aucDCTDSTMode_Vert[34+NUM_DMM_INTRA] =
-#elif ADD_PLANAR_MODE && HHI_DMM_INTRA
-const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE+NUM_DMM_INTRA] =
+#endif
+#else
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+const UChar g_aucDCTDSTMode_Vert[34+8] =
+#elif
+const UChar g_aucDCTDSTMode_Vert[34+4] =
 #else
 const UChar g_aucDCTDSTMode_Vert[34] =
+#endif
 #endif
 { //0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33
   1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 ,0 
 #if ADD_PLANAR_MODE
 ,1
 #endif
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
 ,0,0,0,0,0,0,0,0
+#elif HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+,0,0,0,0
 #endif
 };
-#if ADD_PLANAR_MODE && !HHI_DMM_INTRA
+#if ADD_PLANAR_MODE
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE+8] =
+#elif HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE+4] =
+#else
 const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE] =
-#elif !ADD_PLANAR_MODE && HHI_DMM_INTRA
-const UChar g_aucDCTDSTMode_Hor[34+NUM_DMM_INTRA] =
-#elif ADD_PLANAR_MODE && HHI_DMM_INTRA
-const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE+NUM_DMM_INTRA] =
+#endif
+#else
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+const UChar g_aucDCTDSTMode_Hor[34+8] =
+#elif
+const UChar g_aucDCTDSTMode_Hor[34+4] =
 #else
 const UChar g_aucDCTDSTMode_Hor[34] =
+#endif
 #endif
 { //0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33
   0, 1, 0, 1, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1 ,1 
 #if ADD_PLANAR_MODE
 ,1
 #endif
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
 ,0,0,0,0,0,0,0,0
+#elif HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+,0,0,0,0
 #endif
 };
 #endif  // for INTRA_DST_TYPE_7
@@ -2535,7 +2588,7 @@ const UChar g_aucAngModeMapping[4][34] = // intra mode conversion for most proba
   {2,2,2,2,2, 2,2,0,0,0, 0,0,0,0,2, 2,2,2,2,2, 2,1,1,1,1, 1,1,1,1,1, 2,2,2,2}                // conversion to 3 modes
 };
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 const WedgeResolution g_aeWedgeResolutionList[5] = 
 {
   HALF_PEL,    //  4x4
@@ -2567,18 +2620,6 @@ const UChar g_aucIntraSizeIdxToWedgeSize[7] =
   128  
 };
 
-const UChar g_aucAdditionalIntraModeList[NUM_DMM_INTRA] =
-{
-  DMM_WEDGE_FULL_IDX,
-  DMM_WEDGE_FULL_D_IDX,
-  DMM_WEDGE_PREDTEX_IDX,
-  DMM_WEDGE_PREDTEX_D_IDX,
-  DMM_CONTOUR_PREDTEX_IDX,
-  DMM_CONTOUR_PREDTEX_D_IDX,
-  DMM_WEDGE_PREDDIR_IDX,
-  DMM_WEDGE_PREDDIR_D_IDX
-};
-
 double g_dDeltaDCsQuantOffset = 0.0;
 #endif
 
@@ -2594,9 +2635,6 @@ UInt g_uiBASE_MAX     = 255;  // max. value before IBDI
 // ====================================================================================================================
 // Misc.
 // ====================================================================================================================
-#if SB_DEBUG
-Bool g_bEncoding = false ;
-#endif
 Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 
 #if ENC_DEC_TRACE
@@ -2753,7 +2791,7 @@ const UChar ChromaMapping[2][5] =
 };
 #endif
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 std::vector<std::vector<TComWedgelet> > g_aacWedgeLists;
 std::vector<std::vector<TComWedgeRef> > g_aacWedgeRefLists;
 

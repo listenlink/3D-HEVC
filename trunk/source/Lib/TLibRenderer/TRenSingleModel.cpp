@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 #include "TRenImage.h"
 #include "TRenFilter.h"
@@ -450,19 +483,9 @@ TRenSingleModel::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
 
       if ( iCurSPos < iMinChangedSPos )
       {
-#if GERHARD_RM_HOLE_EXT
-        if ( (iCurSPos > 0) && (m_apiFilledRow[m_iCurViewPos][ iCurSPos-1 ] != REN_IS_FILLED) || (iCurSPos > 1) && (m_apiFilledRow[m_iCurViewPos][ iCurSPos-2 ] != REN_IS_FILLED) )
-        {
-          iMinChangedSPos = iMinChangedSPos - m_iHoleMargin - 2;
-        }
-        else
-        {
           break;
         }
-#else
-        break;
-#endif
-      }
+
       iCurPosX--;
       iLastSPos    = iCurSPos;
       m_iLastDepth = m_iCurDepth;
@@ -553,19 +576,8 @@ TRenSingleModel::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
 
       if ( iCurSPos > iMaxChangedSPos )
       {
-#if GERHARD_RM_HOLE_EXT
-        if ( (iCurSPos > 0) && (m_apiFilledRow[m_iCurViewPos][ iCurSPos-1 ] != REN_IS_FILLED) || (iCurSPos > 1) && (m_apiFilledRow[m_iCurViewPos][ iCurSPos-2 ] != REN_IS_FILLED) )
-        {
-          iMaxChangedSPos = iMaxChangedSPos - m_iHoleMargin - 2;
-        }
-        else
-        {
           break;
         }
-#else
-        break;
-#endif
-      }
       iCurPosX++;
       iLastSPos    = iCurSPos;
       m_iLastDepth = m_iCurDepth;
@@ -582,12 +594,6 @@ TRenSingleModel::xInitRenderPartL(  Int iEndChangePos, Int iLastSPos )
 {
   // GET MINIMAL OCCLUDED SAMPLE POSITION
   Int iCurPosX           = iEndChangePos;
-
-#if GERHARD_RM_HOLE_EXT
-  Int iEndFillSPos = iLastSPos + m_iHoleMargin;
-  while ( (iCurPosX + 1 < m_iWidth) &&  ( xShift(iCurPosX + 1) <= iEndFillSPos) && !(m_apbOccludedRow[m_iCurViewPos][ iCurPosX + 1] ) )
-    iCurPosX++;
-#endif
 
   if ( ( iCurPosX + 1 < m_iWidth ) && (m_apbOccludedRow[m_iCurViewPos][ iCurPosX + 1] ) )
   {
@@ -614,14 +620,6 @@ TRenSingleModel::xInitRenderPartL(  Int iEndChangePos, Int iLastSPos )
   }
 
   m_bInOcclusion = iLastSPos >= m_iLastOccludedSPos;
-
-#if GERHARD_RM_HOLE_EXT
-  // RE-RENDER if not filled
-  if (  (     ( ( iLastSPos < m_iLastOccludedSPos) && ( m_apiFilledRow[m_iCurViewPos][ iLastSPos ] != REN_IS_FILLED ) )))
-  {
-    xRemoveHoleExtL(iLastSPos, iEndChangePos+1, iError );
-  }
-#endif
 };
 
 __inline Void
@@ -629,12 +627,6 @@ TRenSingleModel::xInitRenderPartR(  Int iStartChangePos, Int iLastSPos )
 {
   // GET MINIMAL OCCLUDED SAMPLE POSITION
   Int iCurPosX           = iStartChangePos;
-
-#if GERHARD_RM_HOLE_EXT
-  Int iEndFillSPos = iLastSPos + m_iHoleMargin;
-  while ( (iCurPosX + 1 < m_iWidth) &&  ( xShift(iCurPosX + 1) <= iEndFillSPos) && !(m_apbOccludedRow[m_iCurViewPos][ iCurPosX + 1] ) )
-    iCurPosX++;
-#endif
 
   if ( ( iCurPosX - 1 > -1 ) && (m_apbOccludedRow[m_iCurViewPos][ iCurPosX - 1] ) )
   {
@@ -651,11 +643,7 @@ TRenSingleModel::xInitRenderPartR(  Int iStartChangePos, Int iLastSPos )
     {
       m_iLastOccludedSPos = xShift(iCurPosX) - 1;
     }
-#if GERHARD_RM_SPLAT
     m_iLastOccludedSPosFP = xRoundR( m_iLastOccludedSPos );
-#else
-    m_iLastOccludedSPosFP = xRangeLeftR( m_iLastOccludedSPos );
-#endif
   }
   else
   {
@@ -664,14 +652,6 @@ TRenSingleModel::xInitRenderPartR(  Int iStartChangePos, Int iLastSPos )
   }
 
   m_bInOcclusion = iLastSPos <= m_iLastOccludedSPos;
-
-#if GERHARD_RM_HOLE_EXT
-  // RE-RENDER if not filled
-  if (  (     ( ( iLastSPos < m_iLastOccludedSPos) && ( m_apiFilledRow[m_iCurViewPos][ iLastSPos ] != REN_IS_FILLED ) )))
-  {
-    xRemoveHoleExtL(iLastSPos, iStartChangePos+1, iError );
-  }
-#endif
 };
 
 
@@ -751,7 +731,7 @@ TRenSingleModel::xRenderRangeL(Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist&
     if ( iCurSPos >= iLastSPos )
     {
       m_iLastOccludedSPos = iLastSPos;
-#if GERHARD_RM_SPLAT
+
       Int iRightSPosFP = xRoundL( iLastSPos );
       if ( ( iRightSPosFP == xRangeRightL(iLastSPos)) && (iRightSPosFP >= 0) )
       {
@@ -759,9 +739,6 @@ TRenSingleModel::xRenderRangeL(Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist&
         xSetShiftedPel( (iCurPos+1) << m_iShiftPrec, iRightSPosFP, REN_IS_FILLED, riError );
       }
       m_iLastOccludedSPosFP = iRightSPosFP;
-#else
-      m_iLastOccludedSPosFP = xRangeLeftL( m_iLastOccludedSPos );
-#endif
 
       m_bInOcclusion = true;
 
@@ -812,7 +789,6 @@ TRenSingleModel::xRenderRangeR(Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist&
     {
       m_iLastOccludedSPos = iLastSPos;
 
-#if GERHARD_RM_SPLAT
       Int iLeftSPosFP = xRoundR( iLastSPos );
       if ( ( iLeftSPosFP == xRangeLeftR(iLastSPos)) && (iLeftSPosFP <= m_iWidth - 1) )
       {
@@ -820,7 +796,6 @@ TRenSingleModel::xRenderRangeR(Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist&
         xSetShiftedPel( (iCurPos-1) << m_iShiftPrec, iLeftSPosFP, REN_IS_FILLED, riError );
       }
       m_iLastOccludedSPosFP = iLeftSPosFP;
-#endif
 
       m_bInOcclusion = true;
 
@@ -861,8 +836,6 @@ TRenSingleModel::xRenderRangeR(Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist&
   }
 }
 
-
-
 __inline Void
 TRenSingleModel::xFillHoleL( Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist& riError )
 {
@@ -873,65 +846,20 @@ TRenSingleModel::xFillHoleL( Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist& r
   Int iStartFillPos  = iCurPos;
   Int iLastPos      = iCurPos + 1;
 
-#if GERHARD_RM_HOLE_EXT
-  Int iErrorCorrection = 0;
-  Int iLastPosInNewData = iLastPos - m_iStartChangePosX;
-  Int iEndFillSPos   = iLastSPos + m_iHoleMargin;
-  ////////// Go back hole margin width and correct error  ///////
-  while( ( (iLastPos+1) < m_iWidth) && (iLastSPos > iEndFillSPos) )
-  {
-    iCurPos++;
-    iLastPos++;
-    iLastPosInNewData++;
-    iCurSPos = iLastSPos;
-
-    iLastSPos = xShift( iLastPos, iLastPosInNewData);
-
-    if ( iLastSPos < 0        ) iLastSPos = 0;
-    if ( iLastSPos >= m_iWidth ) iLastSPos = m_iWidth-1;
-
-    Int iDiff = iLastSPos - iCurSPos;
-
-    // Stop if other hole begins, or if position is occluded
-    if (iDiff > 2  || iLastSPos >= Min( iEndFillSPos, m_iLastOccludedSPos ) || iCurSPos == 0)
-    {
-      iCurPos--;
-      iLastPos--;
-      iLastPosInNewData--;
-      iLastSPos = iCurSPos;
-      iCurSPos = xShift( iCurPos, iLastPosInNewData-1);
-      break;
-    }
-
-    if ( !m_bSet )
-    {
-      xRenderShiftedRangeL(iCurSPos, iLastSPos, iCurPos, iLastPos, iErrorCorrection );
-    }
-  }
-
-  riError -= iErrorCorrection;
-
-  ////////// Fill enlarged hole  ///////
-#endif
-
   Int iStartFillSPosFP = xRangeLeftL(iStartFillSPos);
 
-#if GERHARD_RM_SPLAT
   if (iStartFillSPosFP == xRoundL(iStartFillSPos))
   {
-#endif
     if ((iStartFillSPosFP >= 0) && (iStartFillSPosFP < m_iLastOccludedSPosFP) )
     {
       m_iThisDepth = m_iCurDepth;
       xSetShiftedPel     ( iStartFillPos << m_iShiftPrec, iStartFillSPosFP, REN_IS_FILLED, riError );
     }
-#if GERHARD_RM_SPLAT
   }
   else
   {
     iStartFillSPosFP--;
   }
-#endif
 
   m_iThisDepth = m_iLastDepth;
   for (Int iFillSPos = Max(iStartFillSPosFP+1,0); iFillSPos <= min(xRangeRightL( iLastSPos ), m_iLastOccludedSPosFP-1 ); iFillSPos++ )
@@ -950,66 +878,20 @@ TRenSingleModel::xFillHoleR( Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist& r
   Int iEndFillPos    = iCurPos;
   Int iLastPos       = iCurPos - 1;
 
-
-#if GERHARD_RM_HOLE_EXT
-  Int iErrorCorrection = 0;
-  Int iLPosInNewData = iLastPos - m_iStartChangePosX;
-  Int iEndFillSPos   = iLastSPos + m_iHoleMargin;
-  ////////// Go back hole margin width and correct error  ///////
-  while( ( (iLastPos+1) < m_iWidth) && (iLastSPos > iEndFillSPos) )
-  {
-    iCurPos++;
-    iLastPos++;
-    iLPosInNewData++;
-    iCurSPos = iLastSPos;
-
-    iLastSPos = xShift( iLastPos, iLPosInNewData);
-
-    if ( iLastSPos < 0        ) iLastSPos = 0;
-    if ( iLastSPos >= m_iWidth ) iLastSPos = m_iWidth-1;
-
-    Int iDiff = iLastSPos - iCurSPos;
-
-    // Stop if other hole begins, or if position is occluded
-    if (iDiff > 2  || iLastSPos >= Min( iEndFillSPos, m_iLastOccludedSPos ) || iCurSPos == 0)
-    {
-      iCurPos--;
-      iLastPos--;
-      iLPosInNewData--;
-      iLastSPos = iCurSPos;
-      iCurSPos = xShift( iCurPos, iLPosInNewData-1);
-      break;
-    }
-
-    if ( !m_bSet )
-    {
-      xRenderShiftedRangeL(iCurSPos, iLastSPos, iCurPos, iLastPos, iErrorCorrection );
-    }
-  }
-
-  riError -= iErrorCorrection;
-
-  ////////// Fill enlarged hole  ///////
-#endif
-
   Int iStartFillSPosFP = xRangeRightR(iStartFillSPos);
 
-#if GERHARD_RM_SPLAT
   if (iStartFillSPosFP == xRoundR(iStartFillSPos))
   {
-#endif
     if ((iStartFillSPosFP < m_iWidth) && (iStartFillSPosFP > m_iLastOccludedSPosFP) )
     {
       m_iThisDepth = m_iCurDepth;
       xSetShiftedPel( iEndFillPos << m_iShiftPrec, iStartFillSPosFP, REN_IS_FILLED, riError );
     }
-#if GERHARD_RM_SPLAT
   }
   else
   {
     iStartFillSPosFP++;
   }
-#endif
 
   m_iThisDepth = m_iLastDepth;
   for (Int iFillSPos = max(xRangeLeftR( iLastSPos ), m_iLastOccludedSPosFP+1); iFillSPos <= min(iStartFillSPosFP,m_iWidth)-1 ; iFillSPos++ )
@@ -1017,61 +899,6 @@ TRenSingleModel::xFillHoleR( Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist& r
     xSetShiftedPel( iLastPos << m_iShiftPrec, iFillSPos, REN_IS_HOLE, riError );
   }
 }
-
-#if GERHARD_RM_HOLE_EXT
-Void TRenSingleModel::xRemoveHoleExtL( Int iShiftedLeftPos,  Int iLeftPos, Int& riError )
-{
-  if (iShiftedLeftPos < 0 || iShiftedLeftPos == (m_iWidth - 1) )
-    return;
-
-  Int iStartRemovePos      = iLeftPos;
-  Int iEndRemoveSPos = iShiftedLeftPos + m_iHoleMargin;
-  Int iRightPos            = iLeftPos + 1;
-
-  Int iShiftedRightPos;
-
-  ////////// Go back hole margin width ///////
-  while(  iRightPos  < m_iWidth )
-  {
-    iShiftedRightPos = xShift(iRightPos);
-
-    if ( iShiftedRightPos < 0         ) iShiftedRightPos = 0;
-    if ( iShiftedRightPos >= m_iWidth ) iShiftedRightPos = m_iWidth-1;
-
-    Int iDiff = iShiftedRightPos - iShiftedLeftPos;
-
-    // Stop if other hole begins, or if position is occluded
-    if ( iDiff > 2 || iShiftedRightPos >= m_iLastOccludedSPos )
-    {
-      // Go back one
-      iShiftedRightPos = iShiftedLeftPos;
-      iRightPos--;
-      iLeftPos--;
-      iShiftedLeftPos = xShift(iLeftPos);
-      break;
-    }
-
-    if  ( (iShiftedRightPos > iEndRemoveSPos)  )
-    {
-      break;
-    }
-
-    iShiftedLeftPos = iShiftedRightPos;
-    iLeftPos++;
-    iRightPos++;
-  }
-
-  ////////// Remove Hole margin  ///////
-  while( iLeftPos >= iStartRemovePos )
-  {
-    xRenderShiftedRangeL(iShiftedLeftPos, iShiftedRightPos, iLeftPos, iRightPos, riError );
-    iLeftPos--;
-    iRightPos--;
-    iShiftedRightPos = iShiftedLeftPos;
-    iShiftedLeftPos  = xShift(iLeftPos);
-  }
-}
-#endif
 
 __inline Void
 TRenSingleModel::xExtrapolateMarginL(Int iCurSPos, Int iCurPos, RMDist& riError )
@@ -1265,13 +1092,13 @@ TRenSingleModel::xSetShiftedPel(Int iSourcePos, Int iTargetSPos, Pel iFilled, RM
   if ( m_bSet )
   {
     m_aapiSynthVideoPelRow[m_iCurViewPos][0][iTargetSPos] = m_aapiBaseVideoPelRow[m_iCurViewPos][0][iSourcePos];
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     m_aapiSynthVideoPelRow[m_iCurViewPos][1][iTargetSPos] = m_aapiBaseVideoPelRow[m_iCurViewPos][1][iSourcePos];
     m_aapiSynthVideoPelRow[m_iCurViewPos][2][iTargetSPos] = m_aapiBaseVideoPelRow[m_iCurViewPos][2][iSourcePos];
 #endif
     m_apiFilledRow        [m_iCurViewPos]   [iTargetSPos] = iFilled;
     Int iDiffY = m_aapiRefVideoPelRow    [0][iTargetSPos] - m_aapiSynthVideoPelRow[m_iCurViewPos][0][iTargetSPos];
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     Int iDiffU = m_aapiRefVideoPelRow    [1][iTargetSPos] - m_aapiSynthVideoPelRow[m_iCurViewPos][1][iTargetSPos];
     Int iDiffV = m_aapiRefVideoPelRow    [2][iTargetSPos] - m_aapiSynthVideoPelRow[m_iCurViewPos][2][iTargetSPos];
     m_apiErrorRow                           [iTargetSPos] = xGetDist( iDiffY, iDiffU, iDiffV);
@@ -1283,7 +1110,7 @@ TRenSingleModel::xSetShiftedPel(Int iSourcePos, Int iTargetSPos, Pel iFilled, RM
   {
     Int iSDOld   = m_apiErrorRow            [iTargetSPos];
     Int iDiffY   = m_aapiRefVideoPelRow  [0][iTargetSPos] - m_aapiBaseVideoPelRow [m_iCurViewPos][0][iSourcePos];
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     Int iDiffU   = m_aapiRefVideoPelRow  [1][iTargetSPos] - m_aapiBaseVideoPelRow [m_iCurViewPos][1][iSourcePos];
     Int iDiffV   = m_aapiRefVideoPelRow  [2][iTargetSPos] - m_aapiBaseVideoPelRow [m_iCurViewPos][2][iSourcePos];
     riError     += ( xGetDist(iDiffY,iDiffU,iDiffV) - iSDOld  );
@@ -1304,7 +1131,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
   //  AOT(  m_apiFilledRow[m_iViewPos][iTargetSPos] != REN_IS_HOLE);
 
   Pel piBlendedValueY;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
   Pel piBlendedValueU;
   Pel piBlendedValueV;
 #endif
@@ -1315,7 +1142,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
     xGetBlendedValue (
       m_aapiBaseVideoPelRow                                    [0][0][iSourcePos ]  ,
       m_aapiSynthVideoPelRow                                   [1][0][iTargetSPos]  ,
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
       m_aapiBaseVideoPelRow                                    [0][1][iSourcePos ]  ,
       m_aapiSynthVideoPelRow                                   [1][1][iTargetSPos]  ,
       m_aapiBaseVideoPelRow                                    [0][2][iSourcePos ]  ,
@@ -1326,7 +1153,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
       iFilled,
       m_apiFilledRow                                           [1]   [iTargetSPos]  ,
       piBlendedValueY
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     , piBlendedValueU,
       piBlendedValueV
 #endif
@@ -1337,7 +1164,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
     xGetBlendedValue (
       m_aapiSynthVideoPelRow                                   [0][0][iTargetSPos],
       m_aapiBaseVideoPelRow                                    [1][0][iSourcePos ],
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
       m_aapiSynthVideoPelRow                                   [0][1][iTargetSPos],
       m_aapiBaseVideoPelRow                                    [1][1][iSourcePos ],
       m_aapiSynthVideoPelRow                                   [0][2][iTargetSPos],
@@ -1348,7 +1175,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
       m_apiFilledRow                                           [0]   [iTargetSPos],
       iFilled                                                                     ,
       piBlendedValueY
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     , piBlendedValueU,
       piBlendedValueV
 #endif
@@ -1360,7 +1187,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
     m_apiSynthDepthPelRow [m_iCurViewPos]   [iTargetSPos] = m_iThisDepth;
     m_aapiSynthVideoPelRow[m_iCurViewPos][0][iTargetSPos] = m_aapiBaseVideoPelRow[m_iCurViewPos][0][iSourcePos];
     m_aapiSynthVideoPelRow[2            ][0][iTargetSPos] = piBlendedValueY;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     m_aapiSynthVideoPelRow[m_iCurViewPos][1][iTargetSPos] = m_aapiBaseVideoPelRow[m_iCurViewPos][1][iSourcePos];
     m_aapiSynthVideoPelRow[2            ][1][iTargetSPos] = piBlendedValueU;
     m_aapiSynthVideoPelRow[m_iCurViewPos][2][iTargetSPos] = m_aapiBaseVideoPelRow[m_iCurViewPos][2][iSourcePos];
@@ -1369,7 +1196,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
     m_apiFilledRow        [m_iCurViewPos]   [iTargetSPos] = iFilled;
 
     Int iDiffY = m_aapiRefVideoPelRow    [0][iTargetSPos] - piBlendedValueY;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     Int iDiffU = m_aapiRefVideoPelRow    [1][iTargetSPos] - piBlendedValueU;
     Int iDiffV = m_aapiRefVideoPelRow    [2][iTargetSPos] - piBlendedValueV;
     m_apiErrorRow                           [iTargetSPos] = xGetDist(iDiffY, iDiffU, iDiffV );
@@ -1381,7 +1208,7 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
   {
     Int iSDOld   = m_apiErrorRow            [iTargetSPos];
     Int iDiffY = m_aapiRefVideoPelRow    [0][iTargetSPos] - piBlendedValueY;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     Int iDiffU = m_aapiRefVideoPelRow    [1][iTargetSPos] - piBlendedValueU;
     Int iDiffV = m_aapiRefVideoPelRow    [2][iTargetSPos] - piBlendedValueV;
     riError   += ( xGetDist( iDiffY, iDiffU, iDiffV ) - iSDOld );
@@ -1410,7 +1237,7 @@ TRenSingleModel::xGetDist( Int iDiffY )
   return ((iDiffY * iDiffY) >> m_iDistShift);
 }
 
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
 __inline Void
 TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV )
 #else
@@ -1422,11 +1249,19 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
   {
     if (m_iBlendMode == 1 )
     {
+#if HHI_VSO_COLOR_PLANES
       xGetBlendedValueBM1(  iYL,  iYR,  iUL,  iUR,  iVL,  iVR,  iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY,  riU, riV );
+#else
+      xGetBlendedValueBM1(  iYL,  iYR,  iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY );
+#endif
     }
     else
     {
+#if HHI_VSO_COLOR_PLANES
       xGetBlendedValueBM2(  iYL,  iYR,  iUL,  iUR,  iVL,  iVR,  iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY,  riU, riV );
+#else
+      xGetBlendedValueBM2(  iYL,  iYR, iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY );
+#endif
     }
     return;
   }
@@ -1440,7 +1275,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
       if      ((iFilledL == REN_IS_FILLED) && ( iFilledR != REN_IS_FILLED))
       {
         riY = xBlend( iYL, iYR, iFilledR >> 1 );
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
         riU = xBlend( iUL, iUR, iFilledR >> 1 );
         riV = xBlend( iVL, iVR, iFilledR >> 1 );
 #endif
@@ -1449,7 +1284,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
       else if ((iFilledL != REN_IS_FILLED) && ( iFilledR == REN_IS_FILLED))
       {
         riY = xBlend( iYR, iYL, (iFilledL >> 1) );
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
         riU = xBlend( iUR, iUL, (iFilledL >> 1) );
         riV = xBlend( iVR, iVL, (iFilledL >> 1) );
 #endif
@@ -1457,7 +1292,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
       else
       {
         riY = xBlend( iYR, iYL, m_iBlendDistWeight );
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
         riU = xBlend( iUR, iUL, m_iBlendDistWeight );
         riV = xBlend( iVR, iVL, m_iBlendDistWeight );
 #endif
@@ -1466,7 +1301,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
     else if ( iDepthDifference < 0 )
     {
       riY = iYL;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
       riU = iUL;
       riV = iVL;
 #endif
@@ -1474,7 +1309,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
     else
     {
       riY = iYR;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
       riU = iUR;
       riV = iVR;
 #endif
@@ -1485,7 +1320,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
     if ( iDepthR < iDepthL )
     {
         riY =  iYR;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
         riU =  iUR;
         riV =  iVR;
 #endif
@@ -1493,7 +1328,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
     else
     {
         riY =  iYL;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
         riU =  iUL;
         riV =  iVL;
 #endif
@@ -1504,7 +1339,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
     if (iFilledR == REN_IS_HOLE)
     {
         riY = iYL;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
         riU = iUL;
         riV = iVL;
 #endif
@@ -1512,7 +1347,7 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
     else
     {
       riY = iYR;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
       riU = iUR;
       riV = iVR;
 #endif
@@ -1522,12 +1357,16 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
 }
 
 __inline Void
+#if HHI_VSO_COLOR_PLANES
 TRenSingleModel::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV )
+#else
+TRenSingleModel::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY )
+#endif
 {
   if      ( iFilledL == REN_IS_FILLED ||  iFilledR == REN_IS_HOLE )
   {
     riY = iYL;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     riU = iUL;
     riV = iVL;
 #endif
@@ -1535,7 +1374,7 @@ TRenSingleModel::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iV
   else if ( iFilledL == REN_IS_HOLE  )
   {
     riY = iYR;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     riU = iUR;
     riV = iVR;
 #endif
@@ -1543,7 +1382,7 @@ TRenSingleModel::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iV
   else
   {
     riY = xBlend( iYR, iYL, iFilledL );
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     riU = xBlend( iUR, iUL, iFilledL );
     riV = xBlend( iVR, iUL, iFilledL );
 #endif
@@ -1551,12 +1390,16 @@ TRenSingleModel::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iV
 }
 
 __inline Void
+#if HHI_VSO_COLOR_PLANES
 TRenSingleModel::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV )
+#else
+TRenSingleModel::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY )
+#endif
 {
   if      ( iFilledR == REN_IS_FILLED ||  iFilledL == REN_IS_HOLE )
   {
     riY = iYR;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     riU = iUR;
     riV = iVR;
 #endif
@@ -1564,7 +1407,7 @@ TRenSingleModel::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iV
   else if ( iFilledR == REN_IS_HOLE  )
   {
     riY = iYL;
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     riU = iUL;
     riV = iVL;
 #endif
@@ -1572,59 +1415,15 @@ TRenSingleModel::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iV
   else
   {
     riY = xBlend( iYL, iYR, iFilledR );
-#if GERHARD_RM_COLOR_PLANES
+#if HHI_VSO_COLOR_PLANES
     riU = xBlend( iUL, iUR, iFilledR );
     riV = xBlend( iVL, iUR, iFilledR );
 #endif
   }
 }
 
-
-
 __inline Pel
 TRenSingleModel::xBlend( Pel pVal1, Pel pVal2, Int iWeightVal2 )
 {
   return pVal1  +  (Pel) (  ( (Int) ( pVal2 - pVal1) * iWeightVal2 + (1 << (REN_VDWEIGHT_PREC - 1)) ) >> REN_VDWEIGHT_PREC );
 }
-
-#if GERHARD_RM_DEBUG_MM
-Bool
-TRenSingleModel::compare( TRenSingleModel* pcRefModel )
-{
-  Bool bNoDirectStop = true;
-  Bool bEqual = true;
-
-  for (Int iBaseView = 0; iBaseView < 2; iBaseView++ )
-  {
-    for (Int iPosY = 0; iPosY < m_iHeight; iPosY++ ) //GT: change to 1 !!! for small tests
-    {
-      for (Int iPosX = 0; iPosX < m_iWidth; iPosX++ )
-      {
-        if (( iBaseView == m_iMode ) || ( m_iMode == 2 ))
-        {
- //         MEV_RF( "imswitch", &mxAW(m_iWidth, m_iHeight, m_aiBaseDepthStrides[iBaseView], m_apiBaseDepthPel  [iBaseView] ), &mxAW(m_iWidth, m_iHeight, pcRefModel->m_aiBaseDepthStrides[iBaseView], pcRefModel->m_apiBaseDepthPel  [iBaseView] ), &mxAW("u" ), 0);
-          bEqual = bEqual && ( m_apiBaseDepthPel  [iBaseView]   [iPosX+iPosY* m_aiBaseDepthStrides[iBaseView]] == pcRefModel->m_apiBaseDepthPel  [iBaseView]   [iPosX+iPosY* pcRefModel->m_aiBaseDepthStrides[iBaseView] ] );AOF( bNoDirectStop || bEqual );
-          bEqual = bEqual && ( m_apiFilled        [iBaseView]   [iPosX+iPosY*                       m_iStride] == pcRefModel->m_apiFilled        [iBaseView]   [iPosX+iPosY* m_iStride] );                                   AOF( bNoDirectStop || bEqual );
-          bEqual = bEqual && ( m_piError                        [iPosX+iPosY*                       m_iStride] == pcRefModel->m_piError                        [iPosX+iPosY* m_iStride] );                                   AOF( bNoDirectStop || bEqual );
-          bEqual = bEqual && ( m_apbOccluded      [iBaseView]   [iPosX+iPosY*                       m_iStride] == pcRefModel->m_apbOccluded      [iBaseView]   [iPosX+iPosY* m_iStride] );                                   AOF( bNoDirectStop || bEqual );
-          bEqual = bEqual && ( m_aapiSynthVideoPel[iBaseView][0][iPosX+iPosY*                       m_iStride] == pcRefModel->m_aapiSynthVideoPel[iBaseView][0][iPosX+iPosY* m_iStride] );                                   AOF( bNoDirectStop || bEqual );
-          bEqual = bEqual && ( m_aapiSynthVideoPel[iBaseView][0][iPosX+iPosY*                       m_iStride] >= 0 );                                                                                                       AOF( bNoDirectStop || bEqual );
-          bEqual = bEqual && ( m_aapiSynthVideoPel[iBaseView][0][iPosX+iPosY*                       m_iStride] <= g_uiIBDI_MAX );                                                                                                      AOF( bNoDirectStop || bEqual );
-          if (m_iMode == 2 )
-          {
-            bEqual = bEqual && ( m_apiSynthDepthPel [iBaseView]   [iPosX+iPosY*                       m_iStride] == pcRefModel->m_apiSynthDepthPel [iBaseView]   [iPosX+iPosY* m_iStride] );                                   AOF( bNoDirectStop || bEqual );
-          }
-          //if (!bEqual)
-          //{
-          //  std::cout << "Mismatch in PosX: " << iPosX << " PosY: " << iPosY << std::endl;
-          //  AOF(false);
-          //  exit(55);
-          //}
-        }
-      }
-    }
-  }
-  return bEqual;
-}
-
-#endif

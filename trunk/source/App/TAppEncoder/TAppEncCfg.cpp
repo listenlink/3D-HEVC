@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TAppEncCfg.cpp
@@ -38,9 +71,9 @@ void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg);
 TAppEncCfg::TAppEncCfg()
 {
   m_aidQP = NULL;
-//GT VSO
+#if HHI_VSO
   m_aaiERViewRefLutInd.resize( MAX_INPUT_VIEW_NUM );
-//GT VSO end
+#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -88,8 +121,10 @@ TAppEncCfg::~TAppEncCfg()
   if (m_pchBaseViewCameraNumbers != NULL)
     free (m_pchBaseViewCameraNumbers);
 
+#if HHI_VSO
   if (  m_pchVSOConfig != NULL)
     free (  m_pchVSOConfig );
+#endif
 
 }
 
@@ -171,13 +206,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("QuadtreeTUMaxDepthInter", m_uiQuadtreeTUMaxDepthInter, 2u)
 
   /* Coding structure paramters */
-  ("CodecPictureStoreSize,cpss",  m_uiCodedPictureStoreSize, 16u, "Size of coded picture Buffer")
+  ("CodedPictureStoreSize,cpss",  m_uiCodedPictureStoreSize, 16u, "Size of coded picture Buffer")
 #if DCM_DECODING_REFRESH
   ("DecodingRefreshType,-dr",m_iDecodingRefreshType, 0, "intra refresh, (0:none 1:CDR 2:IDR)")
 #endif
   ("GOPSize,g",      m_iGOPSize,      1, "GOP size of temporal structure")
   ("RateGOPSize,-rg",m_iRateGOPSize, -1, "GOP size of hierarchical QP assignment (-1: implies inherit GOPSize value)")
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   ("LowDelayCoding",         m_bUseLDC,             false, "low-delay mode")
 #endif
 #if DCM_COMB_LIST
@@ -220,20 +255,21 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterAlphaC0Offset", m_iLoopFilterAlphaC0Offset, 0)
   ("LoopFilterBetaOffset", m_iLoopFilterBetaOffset, 0 )
 
-//GT campara
+  /* Camera Paremetes */
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
   ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
-//GT campara end
+
 
     /* View Synthesis Optimization */
-//GT VSO
+
+#if HHI_VSO
   ("VSOConfig",                       m_pchVSOConfig            , (Char *) 0    , "VSO configuration")
     ("VSO",                             m_bUseVSO                 , false         , "Use VSO" )
     // GT: For development, will be removed later
   ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
-  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 0.6  , "Lambda Scaling for VSO")
+  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 0.5  , "Lambda Scaling for VSO")
     ("ForceLambdaScaleVSO",             m_bForceLambdaScaleVSO    , false         , "Force using Lambda Scale VSO also in non-VSO-Mode")
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
   ("AllowNegDist",                    m_bAllowNegDist           , true         , "Allow negative Distortion in VSO")
 #endif
 
@@ -241,7 +277,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("ERRefFile_%d,er_%d",              m_pchERRefFileList        , (char *) 0    , MAX_ERREF_VIEW_NUM , "virtual external reference view file name %d")
     ("VSERViewReferences_%d,evr_%d"  ,  m_aaiERViewRefInd         , vector<Int>() , MAX_INPUT_VIEW_NUM, "Numbers of external virtual reference views to be used for this view")
     ("VSBaseViewReferences_%d,bvr_%d",  m_aaiBaseViewRefInd       , vector<Int>() , MAX_INPUT_VIEW_NUM, "Numbers of external virtual reference views to be used for this view")
-//GT VSO end
+#endif
 
   /* Coding tools */
   ("MRG", m_bUseMRG, true, "merging of motion partitions")
@@ -280,26 +316,32 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                               "\t0: disable")
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
 
-#if HHI_DMM_INTRA
-  ("DMM", m_bUseDepthModelModes, false, "add depth modes intra")
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  ("DMM", m_bUseDMM, false, "add depth modes intra")
 #endif
+#if HHI_MPI
   ("MVI", m_bUseMVI, false, "use motion vector inheritance for depth map coding")
+#endif
 
   /* Multiview tools */
+#if DEPTH_MAP_GENERATION
   ("PredDepthMapGen",  m_uiPredDepthMapGeneration, (UInt)0, "generation of prediction depth maps for motion data prediction" )
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
   ("MultiviewMvPred",  m_uiMultiviewMvPredMode,    (UInt)0, "usage of predicted depth maps" )
   ("MultiviewMvRegMode",        m_uiMultiviewMvRegMode,         (UInt)0, "regularization mode for multiview motion vectors" )
   ("MultiviewMvRegLambdaScale", m_dMultiviewMvRegLambdaScale, (Double)0, "lambda scale for multiview motion vector regularization" )
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   ("MultiviewResPred", m_uiMultiviewResPredMode,   (UInt)0, "usage of inter-view residual prediction" )
-
-  ("OmitUnusedBlocks", m_bOmitUnusedBlocks, false, "omit blocks not used for rendering")
+#endif
 
   ("QpChangeFrame", m_iQpChangeFrame, PicOrderCnt(0), "start frame for QP change")
   ("QpChangeOffsetVideo", m_iQpChangeOffsetVideo, 0, "QP change offset for video")
   ("QpChangeOffsetDepth", m_iQpChangeOffsetDepth, 0, "QP change offset for depth")
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   ("InterViewSkip",  m_uiInterViewSkip,    (UInt)0, "usage of interview skip" )
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   ("InterViewSkipLambdaScale",  m_dInterViewSkipLambdaScale,    (Double)8, "lambda scale for interview skip" )
 #endif
 #endif
@@ -386,25 +428,39 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 //GT QP Depth end
 
-//GT VSO
+#if HHI_VSO
   m_bUseVSO = m_bUseVSO && m_bUsingDepthMaps && (m_uiVSOMode != 0);
-//GT VSO end
+#endif
 
   xCleanUpVectors();
 
+#if HHI_VSO
   if ( m_abUseALF .size() < 2)
     m_abUseALF .push_back( m_bUseVSO ? false : m_abUseALF[0]  );
 
   if ( m_abUseRDOQ.size() < 2)
-    m_abUseRDOQ.push_back( m_bUseVSO ? false : m_abUseRDOQ[0] );
+    m_abUseRDOQ.push_back( m_bUseVSO ? true : m_abUseRDOQ[0] );
 
   if ( m_abLoopFilterDisable.size() < 2)
     m_abLoopFilterDisable.push_back( m_bUseVSO ? true : m_abLoopFilterDisable[0]  );
 
   if (m_abUseSAO.size() < 2)
     m_abUseSAO.push_back            ( m_bUseVSO ? false : m_abUseSAO[0] );
+#else
+  if ( m_abUseALF .size() < 2)
+    m_abUseALF .push_back( m_abUseALF[0]  );
 
-//GT VSO
+  if ( m_abUseRDOQ.size() < 2)
+    m_abUseRDOQ.push_back( m_abUseRDOQ[0] );
+
+  if ( m_abLoopFilterDisable.size() < 2)
+    m_abLoopFilterDisable.push_back( m_abLoopFilterDisable[0]  );
+
+  if (m_abUseSAO.size() < 2)
+    m_abUseSAO.push_back            ( m_abUseSAO[0] );
+#endif
+
+#if HHI_VSO
   if ( m_bUseVSO )
   {
     if ( m_iNumberOfExternalRefs != 0 )
@@ -422,12 +478,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       m_aaiBaseViewRefInd .resize( m_iNumberOfViews );
     }
   }
-//GT VSO end
+#endif
 
   // set global variables
   xSetGlobal();
 
   // read and check camera parameters
+#if HHI_VSO
 if ( m_bUseVSO && m_uiVSOMode == 4)
 {
   m_cRenModStrParser.setString( m_iNumberOfViews, m_pchVSOConfig );
@@ -467,8 +524,21 @@ else
     NULL,
     NULL,
     LOG2_DISP_PREC_LUT );
-
 }
+#else
+  m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
+    m_uiInputBitDepth,
+    (UInt)m_iCodedCamParPrecision,
+    m_FrameSkip,
+    (UInt)m_iFrameToBeEncoded,
+    m_pchCameraParameterFile,
+    m_pchBaseViewCameraNumbers,
+    NULL,
+    NULL,
+    LOG2_DISP_PREC_LUT );
+#endif
+
+
   // check validity of input parameters
   xCheckParameter();
   m_cCameraData.check( false, true );
@@ -557,8 +627,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara    ( Int( m_pchReconFileList.size() ) < m_iNumberOfViews,              "Number of ReconFiles must be greater than or equal to NumberOfViews" );
 
   xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
+#if DEPTH_MAP_GENERATION
   xConfirmPara    ( m_uiPredDepthMapGeneration > 3,                                   "PredDepthMapGen must be less than or equal to 3" );
   xConfirmPara    ( m_uiPredDepthMapGeneration >= 2 && !m_bUsingDepthMaps,            "PredDepthMapGen >= 2 requires CodeDepthMaps = 1" );
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
   xConfirmPara    ( m_uiMultiviewMvPredMode > 7,                                      "MultiviewMvPred must be less than or equal to 7" );
   xConfirmPara    ( m_uiMultiviewMvPredMode > 0 && m_uiPredDepthMapGeneration == 0 ,  "MultiviewMvPred > 0 requires PredDepthMapGen > 0" );
   xConfirmPara    ( m_uiMultiviewMvRegMode       > 1,                                 "MultiviewMvRegMode must be less than or equal to 1" );
@@ -567,20 +640,22 @@ Void TAppEncCfg::xCheckParameter()
   {
     xConfirmPara  ( Int( m_pchDepthInputFileList.size() ) < m_iNumberOfViews,         "MultiviewMvRegMode > 0 requires the presence of input depth maps" );
   }
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   xConfirmPara    ( m_uiMultiviewResPredMode > 1,                                     "MultiviewResPred must be less than or equal to 1" );
   xConfirmPara    ( m_uiMultiviewResPredMode > 0 && m_uiPredDepthMapGeneration == 0 , "MultiviewResPred > 0 requires PredDepthMapGen > 0" );
+#endif
 
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   xConfirmPara    ( m_uiInterViewSkip > 1,                                        "RenderingSkipMode > 1 not supported" );
   xConfirmPara    ( m_uiInterViewSkip > 0 && !m_bUsingDepthMaps,                  "RenderingSkipMode > 0 requires CodeDepthMaps = 1" );
-  xConfirmPara    ( m_uiInterViewSkip > 0 && !m_bOmitUnusedBlocks,                "RenderingSkipMode > 0 requires OmitUnusedBlocks = 1" );
 #endif
   if( m_bUsingDepthMaps )
   {
     xConfirmPara  ( Int( m_pchDepthInputFileList.size() ) < m_iNumberOfViews,         "Number of DepthInputFiles must be greater than or equal to NumberOfViews" );
     xConfirmPara  ( Int( m_pchDepthReconFileList.size() ) < m_iNumberOfViews,         "Number of DepthReconFiles must be greater than or equal to NumberOfViews" );
 
-//GT VSO
+#if HHI_VSO
     if( m_bUseVSO )
     {
       xConfirmPara( m_pchCameraParameterFile    == 0                             ,   "CameraParameterFile must be given");
@@ -591,11 +666,11 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara( m_iNumberOfExternalRefs               > MAX_ERREF_VIEW_NUM,      "NumberOfExternalRefs must be less than of equal to TAppMVEncCfg::MAX_ERREF_VIEW_NUM" );
       xConfirmPara( Int( m_pchERRefFileList .size() ) < m_iNumberOfExternalRefs,     "Number of ERRefFileFiles  must be greater than or equal to NumberOfExternalRefs" );
     }
-//GT VSO end
+#endif
   }
 
 #if DCM_COMB_LIST
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   xConfirmPara( m_bUseLComb==false && m_bUseLDC==false,         "LComb can only be 0 if LowDelayCoding is 1" );
 #else
   xConfirmPara( m_bUseLComb==false,                             "LComb can only be 0 if LowDelayCoding is 1" );
@@ -658,12 +733,12 @@ TAppEncCfg::xCleanUpVectors()
   xCleanUpVector( m_pchReconFileList,       (char*)0 );
   xCleanUpVector( m_pchDepthReconFileList,  (char*)0 );
 
-//GT VSO
+#if HHI_VSO
   if ( m_bUseVSO)
   {
     xCleanUpVector( m_pchERRefFileList,       (char*)0 );
   }
-//GT VSO end
+#endif
 }
 
 /** \todo use of global variables should be removed later
@@ -783,7 +858,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 0,  m_abLoopFilterDisable[1] ? 1 : 0 );
   printf("Coded Camera Param. Precision: %d\n", m_iCodedCamParPrecision);
 
-//GT VSO
+#if HHI_VSO
   printf("Force use of Lambda Scale    : %d\n", m_bForceLambdaScaleVSO );
 
   if ( m_bUseVSO )
@@ -791,13 +866,12 @@ Void TAppEncCfg::xPrintParameter()
     printf("VSO Lambda Scale             : %5.2f\n", m_dLambdaScaleVSO );
     printf("VSO Mode                     : %d\n",    m_uiVSOMode       );
     printf("VSO Config                   : %s\n",    m_pchVSOConfig    );
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
     printf("VSO Negative Distortion      : %d\n",    m_bAllowNegDist ? 1 : 0);
 #endif
   }
-//GT VSO end
+#endif
 
-  printf("Omit unused blocks           : %d\n",    (m_bOmitUnusedBlocks )?(1):(0));
 
   printf("\n");
 
@@ -848,11 +922,15 @@ Void TAppEncCfg::xPrintParameter()
   printf("ALF:%d ", (m_abUseALF [1] ? 1 : 0));
   printf("SAO:%d ", (m_abUseSAO [1] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
+#if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
-#if HHI_DMM_INTRA
-  printf("DMM:%d ", m_bUseDepthModelModes );
 #endif
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  printf("DMM:%d ", m_bUseDMM );
+#endif
+#if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
+#endif
   printf("\n");
 
   fflush(stdout);

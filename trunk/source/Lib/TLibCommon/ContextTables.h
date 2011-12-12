@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     ContextTables.h
@@ -13,9 +46,6 @@
 // ====================================================================================================================
 
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
-#if MW_MVI_SIGNALLING_MODE == 0
-#define NUM_MVI_FLAG_CTX              3       ///< number of context models for motion inheritance flag
-#endif
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
 
 #define NUM_ALF_CRTL_FLAG_CTX         3       ///< number of context models for ALF ctrl flag
@@ -71,7 +101,7 @@
 
 #define NUM_VIEW_IDX_CTX              6
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 #define NUM_DMM_CTX                   2
 #define NUM_WEDGE_CTX                 4
 #endif
@@ -119,23 +149,6 @@ INIT_SPLIT_FLAG[3][NUM_SPLIT_FLAG_CTX][2] =
     {  -14,   71 }, {   -7,   74 }, {  -10,   92 }
   }
 };
-
-#if MW_MVI_SIGNALLING_MODE == 0
-// initial probability for skip flag
-static const Short
-INIT_MVI_FLAG[3][NUM_MVI_FLAG_CTX][2] =
-{
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  }
-};
-#endif
 
 // initial probability for skip flag
 static const Short
@@ -1323,7 +1336,7 @@ INIT_TRANS_SUBDIV_FLAG[3][NUM_TRANS_SUBDIV_FLAG_CTX][2] =
   }
 };
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 static const Short
 INIT_INTRA_DMM[3][NUM_DMM_CTX][2] =
 {

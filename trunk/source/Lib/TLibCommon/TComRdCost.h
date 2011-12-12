@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file     TComRdCost.h
     \brief    RD cost computation classes (header)
 */
@@ -57,7 +90,7 @@ public:
 #ifdef ROUNDING_CONTROL_BIPRED
   FpDistFuncRnd DistFuncRnd;
 #endif
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   Pel*  pUsed;
   Int   iStrideUsed;
 #endif
@@ -86,7 +119,7 @@ public:
     DistFuncRnd = NULL;
 #endif
     iSubShift = 0;
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
     pUsed       = 0;
     iStrideUsed = 0;
 #endif
@@ -115,7 +148,7 @@ private:
   UInt                    m_uiLambdaMotionSSE;
   Double                  m_dFrameLambda;
 
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Double                  m_dLambdaScale ;
 #endif
   // for motion cost
@@ -147,10 +180,12 @@ public:
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
 
   Void    setLambda      ( Double dLambda );
+#if HHI_INTER_VIEW_MOTION_PRED
   Void    setLambdaMVReg ( Double dLambda );
+#endif
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
 
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Void   setLambdaScale  ( Double dLambdaScale) { m_dLambdaScale = dLambdaScale; }
   Double   getLambdaScale  ( ) { return m_dLambdaScale ; }
 #endif
@@ -286,13 +321,12 @@ private:
 #endif
 
 public:
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, Pel* piUsed, Int iUsedStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif
   UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 
-//GT VSO
-
+#if HHI_VSO
 private:
   Double                  m_dLambdaVSO;
   Double                  m_dSqrtLambdaVSO;
@@ -300,7 +334,7 @@ private:
   UInt                    m_uiLambdaMotionSSEVSO;
   Double                  m_dFrameLambdaVSO;
 
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
   Bool                    m_bAllowNegDist;
 #endif
 
@@ -333,7 +367,7 @@ public:
   Void    setVSOMode( UInt uiIn);
   UInt    getVSOMode( )                  { return m_uiVSOMode; }
 
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
   Void    setAllowNegDist ( Bool bAllowNegDist );
 #endif
 
@@ -345,17 +379,9 @@ public:
   Double calcRdCostVSO( UInt   uiBits, Dist   uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
 
 private:
-
-  Dist xGetDistVSOMode1( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD );
-  Dist xGetDistVSOMode2( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD );
-  Dist xGetDistVSOMode3( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD );
   Dist xGetDistVSOMode4( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD );
 
-#if GERHARD_VQM_XCHECK
-  Dist xGetDistXCheck(  Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD );
-#endif
-
-//GT VSO end
+#endif // HHI_VSO
 
 };// END CLASS DEFINITION TComRdCost
 

@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TComDataCU.h
@@ -50,7 +83,9 @@ private:
   UChar*        m_puhWidth;           ///< array of widths
   UChar*        m_puhHeight;          ///< array of heights
   UChar*        m_puhDepth;           ///< array of depths
+#if HHI_MPI
   Int*          m_piTextureModeDepth; ///< at which depth is prediction data inherited from texture picture ( -1 : none )
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // CU data
@@ -89,8 +124,10 @@ private:
   
   Bool*         m_pbMergeFlag;        ///< array of merge flags
   UChar*        m_puhMergeIndex;      ///< array of merge candidate indices
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Bool*         m_pbResPredAvailable; ///< array of residual prediction available flags
   Bool*         m_pbResPredFlag;      ///< array of residual prediction flags
+#endif
   UChar*        m_apuhNeighbourCandIdx[ MRG_MAX_NUM_CANDS ];///< array of motion vector predictor candidates indices
   UChar*        m_puhLumaIntraDir;    ///< array of intra directions (luma)
   UChar*        m_puhChromaIntraDir;  ///< array of intra directions (chroma)
@@ -99,7 +136,7 @@ private:
   Int*          m_apiMVPNum[2];       ///< array of number of possible motion vectors predictors
   UInt*         m_puiAlfCtrlFlag;     ///< array of ALF flags
   UInt*         m_puiTmpAlfCtrlFlag;  ///< temporal array of ALF flags
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   UInt*         m_puiWedgeFullTabIdx;
   Int*          m_piWedgeFullDeltaDC1;
   Int*          m_piWedgeFullDeltaDC2;
@@ -108,15 +145,14 @@ private:
   Int*          m_piWedgePredDirDeltaDC1;
   Int*          m_piWedgePredDirDeltaDC2;
   Int*          m_piWedgePredDirDeltaEnd;
-
+#endif
+#if HHI_DMM_PRED_TEX
   UInt*         m_puiWedgePredTexTabIdx;
   Int*          m_piWedgePredTexDeltaDC1;
   Int*          m_piWedgePredTexDeltaDC2;
 
   Int*          m_piContourPredTexDeltaDC1;
   Int*          m_piContourPredTexDeltaDC2;
-
-  Bool*         m_pbTextureModesAllowed;
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -200,11 +236,13 @@ public:
   UChar         getDepth              ( UInt uiIdx )            { return m_puhDepth[uiIdx]; }
   Void          setDepth              ( UInt uiIdx, UChar  uh ) { m_puhDepth[uiIdx] = uh;   }
   
+#if HHI_MPI
   Int*          getTextureModeDepth   ()                        { return m_piTextureModeDepth; }
   Int           getTextureModeDepth   ( UInt uiIdx )            { return m_piTextureModeDepth[uiIdx]; }
   Void          setTextureModeDepth   ( UInt uiIdx, Int iTextureModeDepth ){ m_piTextureModeDepth[uiIdx] = iTextureModeDepth; }
   Void          setTextureModeDepthSubParts( Int iTextureModeDepth, UInt uiAbsPartIdx, UInt uiDepth );
   Void          copyTextureMotionDataFrom( TComDataCU* pcCU, UInt uiDepth, UInt uiAbsPartIdxSrc, UInt uiAbsPartIdxDst = 0 );
+#endif
 
   Void          setDepthSubParts      ( UInt uiDepth, UInt uiAbsPartIdx );
   Void          getPosInPic           ( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY );
@@ -290,6 +328,7 @@ public:
   Void          setNeighbourCandIdx         ( UInt uiCandIdx, UInt uiIdx, UChar uhNeighCands ) { m_apuhNeighbourCandIdx[uiCandIdx][uiIdx] = uhNeighCands;}
   Void          setNeighbourCandIdxSubParts ( UInt uiCandIdx, UChar uhNumCands, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Bool*         getResPredAvail         ()                        { return m_pbResPredAvailable;        }
   Bool          getResPredAvail         ( UInt uiIdx )            { return m_pbResPredAvailable[uiIdx]; }
   Void          setResPredAvail         ( UInt uiIdx, Bool b )    { m_pbResPredAvailable[uiIdx] = b;    }
@@ -301,6 +340,7 @@ public:
   Void          setResPredFlagSubParts  ( Bool b, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 
   Void          setResPredIndicator     ( Bool bAv, Bool bRP )    { m_pbResPredAvailable[0] = bAv; m_pbResPredFlag[0] = bRP; }
+#endif
 
   Void          setSubPartBool        ( Bool bParameter, Bool* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
   Void          setSubPartUChar       ( UInt bParameter, UChar* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
@@ -330,7 +370,7 @@ public:
   Void          copyAlfCtrlFlagToTmp  ();
   Void          copyAlfCtrlFlagFromTmp();
   
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
   UInt*         getWedgeFullTabIdx         ()                        { return m_puiWedgeFullTabIdx;        }
   UInt          getWedgeFullTabIdx         ( UInt uiIdx )            { return m_puiWedgeFullTabIdx[uiIdx]; }
   Void          setWedgeFullTabIdx         ( UInt uiIdx, UInt uh )   { m_puiWedgeFullTabIdx[uiIdx] = uh;   }
@@ -365,7 +405,8 @@ public:
   Int           getWedgePredDirDeltaEnd        ( UInt uiIdx )         { return m_piWedgePredDirDeltaEnd[uiIdx]; }
   Void          setWedgePredDirDeltaEnd        ( UInt uiIdx, Int iD ) { m_piWedgePredDirDeltaEnd[uiIdx] = iD;   }
   Void          setWedgePredDirDeltaEndSubParts( Int iDelta, UInt uiAbsPartIdx, UInt uiDepth );
-
+#endif
+#if HHI_DMM_PRED_TEX
   UInt*         getWedgePredTexTabIdx       ()                       { return m_puiWedgePredTexTabIdx;           }
   UInt          getWedgePredTexTabIdx       ( UInt uiIdx )           { return m_puiWedgePredTexTabIdx[uiIdx];    }
   Void          setWedgePredTexTabIdx       ( UInt uiIdx, UInt uh )  { m_puiWedgePredTexTabIdx[uiIdx] = uh;      }
@@ -390,17 +431,16 @@ public:
   Int           getContourPredTexDeltaDC2       ( UInt uiIdx )         { return m_piContourPredTexDeltaDC2[uiIdx];   }
   Void          setContourPredTexDeltaDC2       ( UInt uiIdx, Int i )  { m_piContourPredTexDeltaDC2[uiIdx] = i;      }
   Void          setContourPredTexDeltaDC2SubParts( Int iDC2, UInt uiAbsPartIdx, UInt uiDepth );
-
-  Bool*         getTextureModeAllowance         ()                     { return m_pbTextureModesAllowed;          }
-  Bool          getTextureModeAllowance         ( UInt uiIdx )         { return m_pbTextureModesAllowed[uiIdx];   }
-  Void          setTextureModeAllowance         ( UInt uiIdx, Bool b ) { m_pbTextureModesAllowed[uiIdx] = b;      }
-  Void          setTextureModeAllowanceSubParts ( Bool bTMAllowed, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
+#if HHI_INTER_VIEW_MOTION_PRED
   Int           getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Bool          getResidualSamples( UInt uiPartIdx, TComYuv* pcYuv = 0 );
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
@@ -516,9 +556,6 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   
   UInt          getCtxSplitFlag                 ( UInt   uiAbsPartIdx, UInt uiDepth                   );
-#if MW_MVI_SIGNALLING_MODE == 0
-  UInt          getCtxMvInheritanceFlag         ( UInt   uiAbsPartIdx, UInt uiDepth                   );
-#endif
   UInt          getCtxCbf                       ( UInt   uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   UInt          getCtxQtCbf                     ( UInt   uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   UInt          getCtxQtRootCbf                 ( UInt   uiAbsPartIdx                                 );

@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 /** \file     TDecTop.cpp
     \brief    decoder class
 */
@@ -257,8 +290,12 @@ Void TDecTop::destroy()
 
   m_cSliceDecoder.destroy();
 
+#if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator.destroy();
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.destroy();
+#endif
 }
 
 Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
@@ -267,22 +304,39 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
   if( bFirstInstance )
     initROM();
 #if MTK_SAO
-  m_cGopDecoder.  init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cAdaptiveLoopFilter, &m_cSAO, &m_cDepthMapGenerator, &m_cResidualGenerator );
+  m_cGopDecoder.  init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cAdaptiveLoopFilter, &m_cSAO
+#if DEPTH_MAP_GENERATION
+                      , &m_cDepthMapGenerator
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+                      , &m_cResidualGenerator 
+#endif
+                      );
 #else
-  m_cGopDecoder.  init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cAdaptiveLoopFilter, &m_cDepthMapGenerator, &m_cResidualGenerator );
+  m_cGopDecoder.  init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cAdaptiveLoopFilter
+#if DEPTH_MAP_GENERATION
+                      , &m_cDepthMapGenerator
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+                      , &m_cResidualGenerator 
+#endif
+                      );
 #endif
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
   m_cEntropyDecoder.init(&m_cPrediction);
 
   m_pcTAppDecTop = pcTAppDecTop;
+#if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator.init( &m_cPrediction, m_pcTAppDecTop->getSPSAccess(), m_pcTAppDecTop->getAUPicAccess() );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
+#endif
 }
 
 Void TDecTop::setSPS(TComSPS cSPS)
 {
   m_cSPS = cSPS ;
-#if SB_MEM_FIX
       if ( !m_cAdaptiveLoopFilter.isCreated())
       {
   m_cAdaptiveLoopFilter.create( m_cSPS.getWidth(), m_cSPS.getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
@@ -291,13 +345,6 @@ Void TDecTop::setSPS(TComSPS cSPS)
 #endif
   m_cLoopFilter.        create( g_uiMaxCUDepth );
       }
-#else
-      m_cAdaptiveLoopFilter.create( m_cSPS.getWidth(), m_cSPS.getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-#if MTK_SAO
-      m_cSAO.create( m_cSPS.getWidth(), m_cSPS.getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-#endif
-      m_cLoopFilter.        create( g_uiMaxCUDepth );
-#endif
   m_uiValidPS |= 1;
 }
 
@@ -333,16 +380,20 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 {
   m_iMaxRefPicNum = getCodedPictureBufferSize( );
 
+#if DEPTH_MAP_GENERATION
   Bool bNeedPrdDepthMapBuffer = ( !pcSlice->getSPS()->isDepth() && ( pcSlice->getSPS()->getViewId() == 0 || pcSlice->getSPS()->getPredDepthMapGeneration() > 0 ) );
+#endif
 
   if (m_cListPic.size() < (UInt)m_iMaxRefPicNum)
   {
     rpcPic = new TComPic;
     rpcPic->create ( pcSlice->getSPS()->getWidth(), pcSlice->getSPS()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+#if DEPTH_MAP_GENERATION
     if( bNeedPrdDepthMapBuffer )
     {
       rpcPic->addPrdDepthMapBuffer();
     }
+#endif
     m_cListPic.pushBack( rpcPic );
 
     return;
@@ -371,10 +422,12 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   }
   rpcPic->getPicYuvRec()->setBorderExtension(false);
 
+#if DEPTH_MAP_GENERATION
   if( bNeedPrdDepthMapBuffer && !rpcPic->getPredDepthMap() )
   {
     rpcPic->addPrdDepthMapBuffer();
   }
+#endif
 }
 
 
@@ -396,12 +449,17 @@ TDecTop::deleteExtraPicBuffers( Int iPoc )
   if ( pcPic )
   {
     pcPic->removeOriginalBuffer   ();
+#if HHI_INTER_VIEW_MOTION_PRED
     pcPic->removeOrgDepthMapBuffer();
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     pcPic->removeResidualBuffer   ();
+#endif
+#if HHI_INTERVIEW_SKIP
     pcPic->removeUsedPelsMapBuffer();
+#endif
   }
 }
-
 
 #if AMVP_BUFFERCOMPRESS
 Void
@@ -491,7 +549,6 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       }
 
       // create ALF temporary buffer
-#if SB_MEM_FIX
       if ( !m_cAdaptiveLoopFilter.isCreated())
       {
       m_cAdaptiveLoopFilter.create( m_cSPS.getWidth(), m_cSPS.getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
@@ -500,13 +557,6 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 #endif
       m_cLoopFilter.        create( g_uiMaxCUDepth );
       }
-#else
-      m_cAdaptiveLoopFilter.create( m_cSPS.getWidth(), m_cSPS.getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-#if MTK_SAO
-      m_cSAO.create( m_cSPS.getWidth(), m_cSPS.getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-#endif
-      m_cLoopFilter.        create( g_uiMaxCUDepth );
-#endif
       m_uiValidPS |= 1;
 
       return false;
@@ -593,8 +643,12 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
         m_cSliceDecoder.create( m_apcSlicePilot, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
 
+#if DEPTH_MAP_GENERATION
         m_cDepthMapGenerator.create( true, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
         m_cResidualGenerator.create( true, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+#endif
       }
 
       //  Set picture slice pointer
@@ -662,8 +716,8 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
       pcPic->setCurrSliceIdx(m_uiSliceIdx);
 
-#if HHI_DMM_INTRA
-    if ( m_cSPS.getUseDepthModelModes() && g_aacWedgeLists.empty() && m_bIsDepth )
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+    if ( m_cSPS.getUseDMM() && g_aacWedgeLists.empty() && m_bIsDepth )
       {
         initWedgeLists();
       }

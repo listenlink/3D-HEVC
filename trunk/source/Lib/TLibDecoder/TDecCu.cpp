@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TDecCu.cpp
@@ -159,36 +192,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
   
-#if MW_MVI_SIGNALLING_MODE == 0
-  if( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE )
-  {
-    m_pcEntropyDecoder->decodeMvInheritanceFlag( pcCU, uiAbsPartIdx, uiDepth );
-
-    if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == uiDepth )
-    {
-      assert( pcCU->getZorderIdxInCU() == 0 );
-      TComDataCU *pcTextureCU = pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() );
-      pcCU->copyTextureMotionDataFrom( pcTextureCU, uiDepth, pcCU->getZorderIdxInCU() + uiAbsPartIdx, uiAbsPartIdx );
-
-      UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
-      for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
-      {
-        const UChar uhNewDepth = max( uiDepth, pcTextureCU->getDepth( uiAbsPartIdx + ui ) );
-        if( pcCU->getPredictionMode( uiAbsPartIdx + ui ) == MODE_SKIP )
-          pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_INTER );
-        assert( pcCU->getPredictionMode( uiAbsPartIdx + ui ) == MODE_INTER );
-        pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_NxN );
-        pcCU->setDepth( uiAbsPartIdx + ui, uhNewDepth );
-        pcCU->setWidth( uiAbsPartIdx + ui, g_uiMaxCUWidth>>uhNewDepth );
-        pcCU->setHeight( uiAbsPartIdx + ui, g_uiMaxCUHeight>>uhNewDepth );
-      }
-    }
-  }
-#endif
-
   if( ( uiRPelX < pcCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < pcCU->getSlice()->getSPS()->getHeight() ) )
   {
+#if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 || uiDepth < pcCU->getTextureModeDepth( uiAbsPartIdx ) )
+#endif
       m_pcEntropyDecoder->decodeSplitFlag( pcCU, uiAbsPartIdx, uiDepth );
   }
   else
@@ -219,7 +227,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
   
   // decode CU mode and the partition size
+#if HHI_MPI
   if( !pcCU->getSlice()->isIntra() && pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 )
+#else
+  if( !pcCU->getSlice()->isIntra() )
+#endif
   {
     m_pcEntropyDecoder->decodeSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
   }
@@ -261,7 +273,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       m_pcEntropyDecoder->decodeMVPIdx( pcCU, uiAbsPartIdx, uiDepth, REF_PIC_LIST_1, m_ppcCU[uiDepth]);
     }
 #endif
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == uiDepth )
     {
       TComDataCU *pcTextureCU = pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() );
@@ -280,12 +292,16 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
 #endif
  
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyDecoder->decodeResPredFlag( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
+#endif
     return;
   }
 
+#if HHI_MPI
   if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 )
   {
+#endif
     m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
 
     m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
@@ -293,14 +309,16 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
     m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
 
+#if HHI_MPI
     if( !pcCU->isIntra( uiAbsPartIdx ) )
     {
       m_ppcCU[uiDepth]  ->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
       m_ppcCU[uiDepth]  ->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
+#if HHI_INTER_VIEW_RESIDUAL_PRED
       m_pcEntropyDecoder->decodeResPredFlag    ( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
+#endif
     }
 
-#if MW_MVI_SIGNALLING_MODE == 1
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == uiDepth )
     {
       assert( pcCU->getZorderIdxInCU() == 0 );
@@ -334,8 +352,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         return;
       }
     }
-#endif
   }
+#endif
+
   UInt uiCurrWidth      = pcCU->getWidth ( uiAbsPartIdx );
   UInt uiCurrHeight     = pcCU->getHeight( uiAbsPartIdx );
   
@@ -401,7 +420,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPar
 
 Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   if( pcCU->getTextureModeDepth( 0 ) != -1 )
     pcCU->setPartSizeSubParts( SIZE_NxN, 0, uiDepth );
 #endif
@@ -409,11 +428,12 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   // inter prediction
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
   
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   if( pcCU->getTextureModeDepth( 0 ) != -1 )
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
 #endif
   
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   if( pcCU->getResPredFlag( 0 ) )
   {
     AOF( pcCU->getResPredAvail( 0 ) );
@@ -421,7 +441,8 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     AOF( bOK );
     m_ppcYuvReco[uiDepth]->add( m_ppcYuvResPred[uiDepth], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
   }
-  
+#endif
+
   // inter recon
   xDecodeInterTexture( pcCU, 0, uiDepth );
   
@@ -432,10 +453,12 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
   else
   {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     if( pcCU->getResPredFlag( 0 ) )
     {
       m_ppcYuvReco[uiDepth]->clip( pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
     }
+#endif
     m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
   }
 }
@@ -646,7 +669,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
                                      m_pcPrediction->getPredicBufHeight (),
                                      bAboveAvail, bLeftAvail );
   
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   if( uiLumaPredMode > MAX_MODE_ID_INTRA_DIR )
   {
     m_pcPrediction->predIntraLumaDMM( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail, false );

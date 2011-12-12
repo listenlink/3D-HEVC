@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /** \file     TEncTop.h
     \brief    encoder class (header)
@@ -26,7 +59,6 @@
 #include "TEncSearch.h"
 #include "TEncAdaptiveLoopFilter.h"
 
-//SB
 #include "TEncSeqStructure.h"
 #include <map>
 #include "TEncAnalyze.h"
@@ -70,12 +102,15 @@ private:
   TEncBinCABAC            m_cBinCoderCABAC;               ///< bin coder CABAC
 
   // processing unit
-  // SB
   TEncPic                 m_cPicEncoder;                  ///< Pic encoder
   TEncSlice               m_cSliceEncoder;                ///< slice encoder
   TEncCu                  m_cCuEncoder;                   ///< CU encoder
+#if DEPTH_MAP_GENERATION
   TComDepthMapGenerator   m_cDepthMapGenerator;           ///< depth map generator
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator   m_cResidualGenerator;           ///< generator for residual pictures
+#endif
 
   // SPS
   TComSPS                 m_cSPS;                         ///< SPS
@@ -150,8 +185,12 @@ public:
   TComRdCost*             getRdCost             () { return  &m_cRdCost;              }
   TEncSbac***             getRDSbacCoder        () { return  m_pppcRDSbacCoder;       }
   TEncSbac*               getRDGoOnSbacCoder    () { return  &m_cRDGoOnSbacCoder;     }
+#if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  getDepthMapGenerator  () { return  &m_cDepthMapGenerator;   }
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator*  getResidualGenerator  () { return  &m_cResidualGenerator;   }
+#endif
 
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
@@ -163,7 +202,6 @@ public:
 
   Void                    printOutSummary       ( UInt uiNumAllPicCoded );
 
-  //SB
   TEncAnalyze             m_cAnalyzeAll;
   TEncAnalyze             m_cAnalyzeI;
   TEncAnalyze             m_cAnalyzeP;
@@ -178,9 +216,7 @@ public:
 //GT PRE LOAD ENC BUFFER
   Void encode    ( bool bEos, std::map<PicOrderCnt, TComPicYuv*>& rcMapPicYuvRecOut, TComBitstream* pcBitstreamOut, Bool& bNewPicNeeded );
   Void receivePic( bool bEos, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvRec, TComPicYuv* pcOrgPdmDepth = 0 );
-
 };
-
 
 #endif // __TENCTOP__
 

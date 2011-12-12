@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TEncSbac.cpp
@@ -25,9 +58,6 @@ TEncSbac::TEncSbac()
 , m_uiCoeffCost               ( 0 )
 , m_uiMaxAlfCtrlDepth         ( 0 )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            )
-#if MW_MVI_SIGNALLING_MODE == 0
-, m_cCUMvInheritanceFlagSCModel(1,             1,               NUM_MVI_FLAG_CTX              )
-#endif
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             )
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        )
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         )
@@ -71,7 +101,7 @@ TEncSbac::TEncSbac()
 , m_cAOSvlcSCModel            ( 1,             1,               NUM_AO_SVLC_CTX              )
 #endif
 , m_cViewIdxSCModel           ( 1,             1,               NUM_VIEW_IDX_CTX              )
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_cIntraDMMSCModel          ( 1,             1,               NUM_DMM_CTX                   )
 , m_cIntraWedgeSCModel        ( 1,             1,               NUM_WEDGE_CTX                 )
 #endif
@@ -93,9 +123,6 @@ Void TEncSbac::resetEntropy           ()
   SliceType eSliceType  = m_pcSlice->getSliceType();
   
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (Short*)INIT_SPLIT_FLAG );
-#if MW_MVI_SIGNALLING_MODE == 0
-  m_cCUMvInheritanceFlagSCModel.initBuffer( eSliceType, iQp, (Short*)INIT_MVI_FLAG );
-#endif
   
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_SKIP_FLAG );
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( eSliceType, iQp, (Short*)INIT_ALF_CTRL_FLAG );
@@ -136,7 +163,7 @@ Void TEncSbac::resetEntropy           ()
   m_cAOSvlcSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_AO_SVLC );
 #endif
   m_cViewIdxSCModel.initBuffer           ( eSliceType, iQp, (Short*)INIT_VIEW_IDX );
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cIntraDMMSCModel.initBuffer          ( eSliceType, iQp, (Short*)INIT_INTRA_DMM );
   m_cIntraWedgeSCModel.initBuffer        ( eSliceType, iQp, (Short*)INIT_INTRA_WEDGELET );
 #endif
@@ -306,7 +333,7 @@ Void TEncSbac::xWriteGoRiceExGolomb( UInt uiSymbol, UInt &ruiGoRiceParam )
 
   return;
 }
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 Void TEncSbac::xWriteExGolombLevel( UInt uiSymbol, ContextModel& rcSCModel  )
 {
   if( uiSymbol )
@@ -387,9 +414,6 @@ Void TEncSbac::xCopyFrom( TEncSbac* pSrc )
   this->m_uiLastQp    = pSrc->m_uiLastQp;
   
   this->m_cCUSplitFlagSCModel      .copyFrom( &pSrc->m_cCUSplitFlagSCModel       );
-#if MW_MVI_SIGNALLING_MODE == 0
-  this->m_cCUMvInheritanceFlagSCModel.copyFrom( &pSrc->m_cCUMvInheritanceFlagSCModel );
-#endif
   this->m_cCUSkipFlagSCModel       .copyFrom( &pSrc->m_cCUSkipFlagSCModel        );
   this->m_cCUMergeFlagExtSCModel  .copyFrom( &pSrc->m_cCUMergeFlagExtSCModel);
   this->m_cCUMergeIdxExtSCModel   .copyFrom( &pSrc->m_cCUMergeIdxExtSCModel);
@@ -420,7 +444,7 @@ Void TEncSbac::xCopyFrom( TEncSbac* pSrc )
   this->m_cCUAbsSCModel            .copyFrom( &pSrc->m_cCUAbsSCModel             );
   this->m_cMVPIdxSCModel           .copyFrom( &pSrc->m_cMVPIdxSCModel            );
   this->m_cViewIdxSCModel          .copyFrom( &pSrc->m_cViewIdxSCModel           );
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   this->m_cIntraDMMSCModel         .copyFrom( &pSrc->m_cIntraDMMSCModel          );
   this->m_cIntraWedgeSCModel       .copyFrom( &pSrc->m_cIntraWedgeSCModel        );
 #endif
@@ -635,18 +659,19 @@ Void TEncSbac::codeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 
 
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
 Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   //--- set number of candidates and availability ---
   Bool  abAvailable[ MRG_MAX_NUM_CANDS ];
   UInt  uiNumCand = 0;
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
-  const UInt uiMviMergePos = bMVIAvailable ? MVI_MERGE_POS : MRG_MAX_NUM_CANDS;
+  const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : MRG_MAX_NUM_CANDS;
 #endif
   for( UInt uiIdx = 0; uiIdx < MRG_MAX_NUM_CANDS; uiIdx++ )
   {
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
     if( uiIdx == uiMviMergePos )
     {
       abAvailable[ uiIdx ] = true;
@@ -692,15 +717,15 @@ Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
   //--- determine unary index ---
   UInt  uiMergeIdx  = pcCU->getMergeIndex( uiAbsPartIdx );
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_MPI
   if( bMVIAvailable )
   {
     const Bool bUseMVI = pcCU->getTextureModeDepth( uiAbsPartIdx ) != -1;
     if( bUseMVI )
     {
-      uiMergeIdx = MVI_MERGE_POS;
+      uiMergeIdx = HHI_MPI_MERGE_POS;
     }
-    else if( uiMergeIdx >= MVI_MERGE_POS )
+    else if( uiMergeIdx >= HHI_MPI_MERGE_POS )
     {
       uiMergeIdx++;
     }
@@ -747,7 +772,7 @@ Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
   DTRACE_CABAC_T( "\n" );
 }
-
+#endif
 
 
 /** code merge index
@@ -757,9 +782,12 @@ Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
-#if MW_MVI_SIGNALLING_MODE == 1
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED && HHI_MPI
   if( ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
       ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) )
+#elif HHI_MPI
+  if( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
 #else
   if( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE )
 #endif
@@ -767,6 +795,7 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
     codeMergeIndexMV( pcCU, uiAbsPartIdx );
     return;
   }
+#endif
 
   Bool bLeftInvolved = false;
   Bool bAboveInvolved = false;
@@ -883,6 +912,7 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 
 
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 Void 
 TEncSbac::codeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
@@ -890,6 +920,7 @@ TEncSbac::codeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   UInt  uiSymbol  = ( pcCU->getResPredFlag( uiAbsPartIdx ) ? 1 : 0 );
   m_pcBinIf->encodeBin( uiSymbol, m_cResPredFlagSCModel.get( 0, 0, uiCtx ) );
 }
+#endif
 
 
 Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
@@ -907,21 +938,6 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   return;
 }
 
-#if MW_MVI_SIGNALLING_MODE == 0
-Void TEncSbac::codeMvInheritanceFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  const Int iTextureModeDepth = pcCU->getTextureModeDepth( uiAbsPartIdx );
-  if( iTextureModeDepth != -1 && uiDepth > iTextureModeDepth )
-    return;
-
-  UInt uiCtx    = pcCU->getCtxMvInheritanceFlag( uiAbsPartIdx, uiDepth );
-  UInt uiSymbol = iTextureModeDepth == uiDepth ? 1 : 0;
-
-  assert( uiCtx < 3 );
-  m_pcBinIf->encodeBin( uiSymbol, m_cCUMvInheritanceFlagSCModel.get( 0, 0, uiCtx ) );
-}
-#endif
-
 Void TEncSbac::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
 {
   m_pcBinIf->encodeBin( uiSymbol, m_cCUTransSubdivFlagSCModel.get( 0, 0, uiCtx ) );
@@ -934,7 +950,7 @@ Void TEncSbac::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
   DTRACE_CABAC_T( "\n" )
 }
 
-#if HHI_DMM_INTRA
+#if HHI_DMM_WEDGE_INTRA
 Void TEncSbac::xCodeWedgeFullInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
@@ -1030,7 +1046,8 @@ Void TEncSbac::xCodeWedgePredDirDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
     m_pcBinIf->encodeBinEP( uiSign );
   }
 }
-
+#endif
+#if HHI_DMM_PRED_TEX
 Void TEncSbac::xCodeWedgePredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   Int iDeltaDC1 = pcCU->getWedgePredTexDeltaDC1( uiAbsPartIdx );
@@ -1075,8 +1092,8 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
 
-#if HHI_DMM_INTRA
-  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDepthModelModes() && pcCU->getWidth( uiAbsPartIdx ) < 64 )
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDMM() && pcCU->getWidth( uiAbsPartIdx ) < 64 )
   {
     m_pcBinIf->encodeBin( uiDir > MAX_MODE_ID_INTRA_DIR, m_cIntraDMMSCModel.get(0, 0, 0) );
   }
@@ -1085,39 +1102,32 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
     assert( pcCU->getWidth( uiAbsPartIdx ) < 64 );
     UInt uiDMMode = uiDir - (MAX_MODE_ID_INTRA_DIR+1);
 
-    if( !pcCU->getTextureModeAllowance( uiAbsPartIdx ) )
-    {
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+    m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
+    m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
+
       if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && pcCU->getWidth( uiAbsPartIdx ) > 4 )
       {
-        if( uiDMMode > 1 )
-        {
-          uiDMMode -= 4;
+      m_pcBinIf->encodeBin( (uiDMMode & 0x04) >> 2, m_cIntraDMMSCModel.get(0, 0, 1) );
         }
+#else
                                   m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
-    if( DMM_INTRA_MODE_BITS > 1 ) m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
-      }
-      else
-    {
-        m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
-    }
-    }
-    else
-    {
-                                  m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
-    if( DMM_INTRA_MODE_BITS > 1 ) m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
 
     if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && pcCU->getWidth( uiAbsPartIdx ) > 4 )
     {
-      if( DMM_INTRA_MODE_BITS > 2 ) m_pcBinIf->encodeBin( (uiDMMode & 0x04) >> 2, m_cIntraDMMSCModel.get(0, 0, 1) );
+      m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
     }
-  }
-
+#endif
+#if HHI_DMM_WEDGE_INTRA
     if( uiDir == DMM_WEDGE_FULL_IDX )          { xCodeWedgeFullInfo          ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_WEDGE_FULL_D_IDX )        { xCodeWedgeFullDeltaInfo     ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_WEDGE_PREDDIR_IDX )       { xCodeWedgePredDirInfo       ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_WEDGE_PREDDIR_D_IDX )     { xCodeWedgePredDirDeltaInfo  ( pcCU, uiAbsPartIdx ); }
+#endif
+#if HHI_DMM_PRED_TEX
     if( uiDir == DMM_WEDGE_PREDTEX_D_IDX )     { xCodeWedgePredTexDeltaInfo  ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_CONTOUR_PREDTEX_D_IDX )   { xCodeContourPredTexDeltaInfo( pcCU, uiAbsPartIdx ); }
+#endif
   }
   else
 #endif
@@ -1203,8 +1213,8 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiDir = pcCU->getLumaIntraDir( uiAbsPartIdx );
-#if HHI_DMM_INTRA
-  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDepthModelModes() && pcCU->getWidth( uiAbsPartIdx ) < 64 )
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  if ( pcCU->getSlice()->getSPS()->isDepth() && pcCU->getSlice()->getSPS()->getUseDMM() && pcCU->getWidth( uiAbsPartIdx ) < 64 )
   {
     m_pcBinIf->encodeBin( uiDir > MAX_MODE_ID_INTRA_DIR, m_cIntraDMMSCModel.get(0, 0, 0) );
   }
@@ -1213,39 +1223,32 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
     assert( pcCU->getWidth( uiAbsPartIdx ) < 64 );
     UInt uiDMMode = uiDir - (MAX_MODE_ID_INTRA_DIR+1);
 
-    if( !pcCU->getTextureModeAllowance( uiAbsPartIdx ) )
-    {
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+    m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
+    m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
+
       if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && pcCU->getWidth( uiAbsPartIdx ) > 4 )
       {
-        if( uiDMMode > 1 )
-        {
-          uiDMMode -= 4;
+      m_pcBinIf->encodeBin( (uiDMMode & 0x04) >> 2, m_cIntraDMMSCModel.get(0, 0, 1) );
         }
+#else
         m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
-        if( DMM_INTRA_MODE_BITS > 1 ) m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
-      }
-      else
-      {
-        m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
-      }
-    }
-    else
-    {
-      m_pcBinIf->encodeBin( (uiDMMode & 0x01),      m_cIntraDMMSCModel.get(0, 0, 1) );
-      if( DMM_INTRA_MODE_BITS > 1 ) m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
 
       if ( pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN && pcCU->getWidth( uiAbsPartIdx ) > 4 )
       {
-        if( DMM_INTRA_MODE_BITS > 2 ) m_pcBinIf->encodeBin( (uiDMMode & 0x04) >> 2, m_cIntraDMMSCModel.get(0, 0, 1) );
+      m_pcBinIf->encodeBin( (uiDMMode & 0x02) >> 1, m_cIntraDMMSCModel.get(0, 0, 1) );
       }
-    }
-
+#endif
+#if HHI_DMM_WEDGE_INTRA
     if( uiDir == DMM_WEDGE_FULL_IDX )          { xCodeWedgeFullInfo          ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_WEDGE_FULL_D_IDX )        { xCodeWedgeFullDeltaInfo     ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_WEDGE_PREDDIR_IDX )       { xCodeWedgePredDirInfo       ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_WEDGE_PREDDIR_D_IDX )     { xCodeWedgePredDirDeltaInfo  ( pcCU, uiAbsPartIdx ); }
+#endif
+#if HHI_DMM_PRED_TEX
     if( uiDir == DMM_WEDGE_PREDTEX_D_IDX )     { xCodeWedgePredTexDeltaInfo  ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_CONTOUR_PREDTEX_D_IDX )   { xCodeContourPredTexDeltaInfo( pcCU, uiAbsPartIdx ); }
+#endif
   }
   else
 #endif

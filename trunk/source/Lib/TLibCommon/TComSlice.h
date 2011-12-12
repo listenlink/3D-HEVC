@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TComSlice.h
@@ -16,8 +49,12 @@
 #include <math.h>
 
 class TComPic;
+#if DEPTH_MAP_GENERATION
 class TComDepthMapGenerator;
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 class TComResidualGenerator;
+#endif
 
 // ====================================================================================================================
 // Class definition
@@ -37,7 +74,7 @@ private:
   UInt        m_uiMaxCUDepth;
   UInt        m_uiMinTrDepth;
   UInt        m_uiMaxTrDepth;
-  
+
   UInt        m_uiViewId;
   Int         m_iViewOrderIdx;
   Bool        m_bDepth;
@@ -53,13 +90,13 @@ private:
   UInt        m_uiQuadtreeTUMaxDepthIntra;
   Bool        m_bUseALF;
   Bool        m_bUseDQP;
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   Bool        m_bUseLDC;
 #endif
   Bool        m_bUsePAD;
   Bool        m_bUseMRG; // SOPH:
 
-#if LM_CHROMA 
+#if LM_CHROMA
   Bool        m_bUseLMChroma; // JL:
 #endif
 
@@ -67,7 +104,7 @@ private:
   Bool        m_bUseLComb;
   Bool        m_bLCMod;
 #endif
-  
+
 #if HHI_RMP_SWITCH
   Bool        m_bUseRMP;
 #endif
@@ -75,40 +112,52 @@ private:
   AMVP_MODE   m_aeAMVPMode[MAX_CU_DEPTH];
   UInt        m_uiBitDepth;
   UInt        m_uiBitIncrement;
-  
+
   // Max physical transform size
   UInt        m_uiMaxTrSize;
-  
+
   Int m_iAMPAcc[MAX_CU_DEPTH];
 
 #if MTK_NONCROSS_INLOOP_FILTER
   Bool        m_bLFCrossSliceBoundaryFlag;
 #endif
 #if MTK_SAO
-  Bool        m_bUseSAO; 
+  Bool        m_bUseSAO;
 #endif
+#if HHI_MPI
   Bool        m_bUseMVI;
+#endif
 
   UInt m_uiCodedPictureBufferSize ;
 
-#if HHI_DMM_INTRA
-  Bool  m_bUseDepthModelModes;
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  Bool  m_bUseDMM;
 #endif
 
+#if DEPTH_MAP_GENERATION
   UInt  m_uiPredDepthMapGeneration;
-  UInt  m_uiMultiviewMvPredMode;
   UInt  m_uiPdmPrecision;
   Int   m_aiPdmScaleNomDelta[MAX_NUMBER_VIEWS];
   Int   m_aiPdmOffset       [MAX_NUMBER_VIEWS];
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
+  UInt  m_uiMultiviewMvPredMode;
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   UInt  m_uiMultiviewResPredMode;
+#endif
 
+#if DEPTH_MAP_GENERATION
   TComDepthMapGenerator* m_pcDepthMapGenerator;
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator* m_pcResidualGenerator;
+#endif
 
 public:
   TComSPS();
   virtual ~TComSPS();
-  
+
   // structure
   Void setSPSId       ( UInt u ) { m_uiSPSId = u;           }
   UInt getSPSId       ()         { return m_uiSPSId;        }
@@ -139,7 +188,7 @@ public:
   Void setPadY        ( Int  u ) { m_aiPad[1] = u; }
   Int  getPad         ( Int  u ) { assert(u < 2); return m_aiPad[u];}
   Int* getPad         ( )        { return m_aiPad; }
-  
+
   Void        initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
   Void        initMultiviewSPSDepth ( UInt uiViewId, Int iViewOrderIdx );
 
@@ -156,29 +205,29 @@ public:
   // physical transform
   Void setMaxTrSize   ( UInt u ) { m_uiMaxTrSize = u;       }
   UInt getMaxTrSize   ()         { return  m_uiMaxTrSize;   }
-  
+
   // Tool list
   Bool getUseALF      ()         { return m_bUseALF;        }
   Bool getUseDQP      ()         { return m_bUseDQP;        }
-  
-#if !SB_NO_LowDelayCoding
+
+#if !HHI_NO_LowDelayCoding
   Bool getUseLDC      ()         { return m_bUseLDC;        }
 #endif
   Bool getUsePAD      ()         { return m_bUsePAD;        }
   Bool getUseMRG      ()         { return m_bUseMRG;        } // SOPH:
-  
+
   Void setUseALF      ( Bool b ) { m_bUseALF  = b;          }
   Void setUseDQP      ( Bool b ) { m_bUseDQP   = b;         }
-  
-#if !SB_NO_LowDelayCoding
+
+#if !HHI_NO_LowDelayCoding
   Void setUseLDC      ( Bool b ) { m_bUseLDC   = b;         }
 #endif
   Void setUsePAD      ( Bool b ) { m_bUsePAD   = b;         }
   Void setUseMRG      ( Bool b ) { m_bUseMRG  = b;          } // SOPH:
   
-#if HHI_DMM_INTRA
-  Bool getUseDepthModelModes()         { return m_bUseDepthModelModes; }
-  Void setUseDepthModelModes( Bool b ) { m_bUseDepthModelModes = b;    }
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  Bool getUseDMM()         { return m_bUseDMM; }
+  Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
 
 
@@ -193,8 +242,8 @@ public:
   Bool getUseRMP     ()         { return m_bUseRMP; }
   Void setUseRMP     ( Bool b ) { m_bUseRMP = b;    }
 #endif
-  
-#if LM_CHROMA 
+
+#if LM_CHROMA
   Bool getUseLMChroma ()         { return m_bUseLMChroma;        }
   Void setUseLMChroma ( Bool b ) { m_bUseLMChroma  = b;          }
 #endif
@@ -202,7 +251,7 @@ public:
   // AMVP mode (for each depth)
   AMVP_MODE getAMVPMode ( UInt uiDepth ) { assert(uiDepth < g_uiMaxCUDepth);  return m_aeAMVPMode[uiDepth]; }
   Void      setAMVPMode ( UInt uiDepth, AMVP_MODE eMode) { assert(uiDepth < g_uiMaxCUDepth);  m_aeAMVPMode[uiDepth] = eMode; }
-  
+
   // Bit-depth
   UInt      getBitDepth     ()         { return m_uiBitDepth;     }
   Void      setBitDepth     ( UInt u ) { m_uiBitDepth = u;        }
@@ -211,7 +260,7 @@ public:
 
 #if MTK_NONCROSS_INLOOP_FILTER
   Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
-  Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   } 
+  Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
 #endif
 
 #if MTK_SAO
@@ -219,27 +268,42 @@ public:
   Bool getUseSAO                  ()           {return m_bUseSAO;}
 #endif
 
+#if HHI_MPI
   Void setUseMVI                  (Bool bVal)  {m_bUseMVI = bVal;}
   Bool getUseMVI                  ()           {return m_bUseMVI;}
+#endif
 
   Void      setCodedPictureBufferSize( UInt u ) { m_uiCodedPictureBufferSize = u ;}
   UInt      getCodedPictureBufferSize( )        { return m_uiCodedPictureBufferSize ;}
 
+#if DEPTH_MAP_GENERATION
   Void  setPredDepthMapGeneration( UInt uiViewId, Bool bIsDepth, UInt uiPdmGenMode = 0, UInt uiPdmMvPredMode = 0, UInt uiPdmPrec = 0, Int** aaiPdmScaleNomDelta = 0, Int** aaiPdmOffset = 0 );
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Void  setMultiviewResPredMode  ( UInt uiResPrdMode ) { m_uiMultiviewResPredMode = uiResPrdMode; }
-  
+#endif
+
+#if DEPTH_MAP_GENERATION
   UInt  getPredDepthMapGeneration()          { return m_uiPredDepthMapGeneration; }
-  UInt  getMultiviewMvPredMode   ()          { return m_uiMultiviewMvPredMode;    }
   UInt  getPdmPrecision          ()          { return m_uiPdmPrecision;           }
   Int*  getPdmScaleNomDelta      ()          { return m_aiPdmScaleNomDelta;       }
   Int*  getPdmOffset             ()          { return m_aiPdmOffset;              }
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
+  UInt  getMultiviewMvPredMode   ()          { return m_uiMultiviewMvPredMode;    }
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   UInt  getMultiviewResPredMode  ()          { return m_uiMultiviewResPredMode;   }
+#endif
 
+#if DEPTH_MAP_GENERATION
   Void                    setDepthMapGenerator( TComDepthMapGenerator* pcDepthMapGenerator )  { m_pcDepthMapGenerator = pcDepthMapGenerator; }
   TComDepthMapGenerator*  getDepthMapGenerator()                                              { return m_pcDepthMapGenerator; }
-
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
+#endif
 };
 
 /// PPS class
@@ -255,11 +319,11 @@ private:
 #endif
   UInt        m_uiPPSId;
   UInt        m_uiSPSId;
-  
+
 public:
   TComPPS();
   virtual ~TComPPS();
-  
+
   Void      setPPSId                ( UInt u ) { m_uiPPSId = u; }
   UInt      getPPSId                ()         { return m_uiPPSId; }
   Void      setSPSId                ( UInt u ) { m_uiSPSId = u; }
@@ -300,7 +364,7 @@ typedef struct {
 /// slice header class
 class TComSlice
 {
-  
+
 private:
   //  Bitstream writing
   UInt        m_uiPPSId;
@@ -312,7 +376,7 @@ private:
   Int         m_iSliceQp;
   Int         m_iSymbolMode;
   Bool        m_bLoopFilterDisable;
-  
+
 #if DCM_COMB_LIST
   Int         m_aiNumRefIdx   [3];    //  for multiple reference of current slice
 
@@ -325,7 +389,7 @@ private:
   Bool        m_bRefPicListCombinationFlag;
 #else
   Int         m_aiNumRefIdx   [2];    //  for multiple reference of current slice
-#endif  
+#endif
 
   //  Data
   Int         m_iSliceQpDelta;
@@ -333,28 +397,27 @@ private:
   Int         m_aiRefPOCList  [2][MAX_NUM_REF];
   Int         m_iDepth;
   TComPic*    m_pcTexturePic;
-  
+
   // referenced slice?
   Bool        m_bRefenced;
 #ifdef ROUNDING_CONTROL_BIPRED
   Bool        m_bRounding;
 #endif
-  
+
   // access channel
   TComSPS*    m_pcSPS;
   TComPPS*    m_pcPPS;
   TComPic*    m_pcPic;
-  
+
   UInt        m_uiColDir;  // direction to get colocated CUs
-  
+
   Double      m_dLambda;
-  
+
   Bool        m_abEqualRef  [2][MAX_NUM_REF][MAX_NUM_REF];
 
-  // SB
   Int         m_iViewIdx;
   Int         m_aiRefViewList[2][MAX_INPUT_VIEW_NUM];
-  
+
   Bool        m_bNoBackPredFlag;
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
   Bool        m_bRefIdxCombineCoding;
@@ -380,19 +443,19 @@ private:
   wpScalingParam  m_weightPredTable[2][MAX_NUM_REF][3]; // [REF_PIC_LIST_0 or REF_PIC_LIST_1][refIdx][0:Y, 1:U, 2:V]
   wpACDCParam	m_weightACDCParam[3]; // [0:Y, 1:U, 2:V]
 #endif
-  
+
 public:
   TComSlice();
   virtual ~TComSlice();
-  
+
   Void      initSlice       ();
-  
+
   Void      setSPS          ( TComSPS* pcSPS ) { m_pcSPS = pcSPS; }
   TComSPS*  getSPS          () { return m_pcSPS; }
-  
+
   Void      setPPS          ( TComPPS* pcPPS ) { m_pcPPS = pcPPS; }
   TComPPS*  getPPS          () { return m_pcPPS; }
-  
+
   UInt      getPPSId        ()                          { return  m_uiPPSId;            }
   SliceType getSliceType    ()                          { return  m_eSliceType;         }
   Int       getPOC          ()                          { return  m_iPOC;           }
@@ -406,17 +469,17 @@ public:
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
   Int       getDepth            ()                              { return  m_iDepth;                     }
   UInt      getColDir           ()                              { return  m_uiColDir;                   }
-  
-#if DCM_COMB_LIST 
+
+#if DCM_COMB_LIST
   Int       getRefIdxOfLC       (RefPicList e, Int iRefIdx)     { return m_iRefIdxOfLC[e][iRefIdx];           }
   Int       getListIdFromIdxOfLC(Int iRefIdx)                   { return m_eListIdFromIdxOfLC[iRefIdx];       }
   Int       getRefIdxFromIdxOfLC(Int iRefIdx)                   { return m_iRefIdxFromIdxOfLC[iRefIdx];       }
   Int       getRefIdxOfL0FromRefIdxOfL1(Int iRefIdx)            { return m_iRefIdxOfL0FromRefIdxOfL1[iRefIdx];}
   Int       getRefIdxOfL1FromRefIdxOfL0(Int iRefIdx)            { return m_iRefIdxOfL1FromRefIdxOfL0[iRefIdx];}
   Bool      getRefPicListModificationFlagLC()                   {return m_bRefPicListModificationFlagLC;}
-  Void      setRefPicListModificationFlagLC(Bool bflag)         {m_bRefPicListModificationFlagLC=bflag;}     
+  Void      setRefPicListModificationFlagLC(Bool bflag)         {m_bRefPicListModificationFlagLC=bflag;}
   Bool      getRefPicListCombinationFlag()                      {return m_bRefPicListCombinationFlag;}
-  Void      setRefPicListCombinationFlag(Bool bflag)            {m_bRefPicListCombinationFlag=bflag;}     
+  Void      setRefPicListCombinationFlag(Bool bflag)            {m_bRefPicListCombinationFlag=bflag;}
   Void      setListIdFromIdxOfLC(Int  iRefIdx, UInt uiVal)      { m_eListIdFromIdxOfLC[iRefIdx]=uiVal; }
   Void      setRefIdxFromIdxOfLC(Int  iRefIdx, UInt uiVal)      { m_iRefIdxFromIdxOfLC[iRefIdx]=uiVal; }
   Void      setRefIdxOfLC       (RefPicList e, Int iRefIdx, Int RefIdxLC)     { m_iRefIdxOfLC[e][iRefIdx]=RefIdxLC;}
@@ -428,7 +491,7 @@ public:
   Void      setRounding(Bool bRound)                            { m_bRounding = bRound; }
   Bool      isRounding()                                        { return m_bRounding; }
 #endif
-  
+
   Void      setPPSId            ( UInt u )                      { m_uiPPSId           = u;      }
   Void      setPOC              ( Int i )                       { m_iPOC              = i;      }
 #if DCM_DECODING_REFRESH
@@ -441,28 +504,27 @@ public:
   Void      setSliceQpDelta     ( Int i )                       { m_iSliceQpDelta     = i;      }
   Void      setSymbolMode       ( Int b  )                      { m_iSymbolMode       = b;      }
   Void      setLoopFilterDisable( Bool b )                      { m_bLoopFilterDisable= b;      }
-  
+
   Void      setRefPic           ( TComPic* p, RefPicList e, Int iRefIdx ) { m_apcRefPicList[e][iRefIdx] = p; }
   Void      setRefPOC           ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefPOCList[e][iRefIdx] = i; }
   Void      setNumRefIdx        ( RefPicList e, Int i )         { m_aiNumRefIdx[e]    = i;      }
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
-  
+
   Void      setRefPicList       ( TComList<TComPic*>& rcListPic );
   Void      setRefPOCList       ();
   Void      setColDir           ( UInt uiDir ) { m_uiColDir = uiDir; }
-  
+
   Void      setRefPicListFromGOPSTring( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcSpatRefPics );
   Void      setRefPicListExplicitlyDecoderSided( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcSpatRefPics );
 
   Bool      isIntra         ()                          { return  m_eSliceType == I_SLICE;  }
   Bool      isInterB        ()                          { return  m_eSliceType == B_SLICE;  }
   Bool      isInterP        ()                          { return  m_eSliceType == P_SLICE;  }
-  
+
   Void      setLambda( Double d ) { m_dLambda = d; }
   Double    getLambda() { return m_dLambda;        }
-  
-  //SB
+
   Void      setViewIdx(Int i)                           { m_iViewIdx = i; }
   Int       getViewIdx()                                { return m_iViewIdx; }
 
@@ -475,14 +537,14 @@ public:
     if (iRefIdx1 < 0 || iRefIdx2 < 0) return false;
     return m_abEqualRef[e][iRefIdx1][iRefIdx2];
   }
-  
+
   Void setEqualRef( RefPicList e, Int iRefIdx1, Int iRefIdx2, Bool b)
   {
     m_abEqualRef[e][iRefIdx1][iRefIdx2] = m_abEqualRef[e][iRefIdx2][iRefIdx1] = b;
   }
-  
+
   static Void      sortPicList         ( TComList<TComPic*>& rcListPic );
-  
+
   Bool getNoBackPredFlag() { return m_bNoBackPredFlag; }
   Void setNoBackPredFlag( Bool b ) { m_bNoBackPredFlag = b; }
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
@@ -516,8 +578,8 @@ public:
   Void setNextEntropySlice              ( Bool b )          { m_bNextEntropySlice = b;                    }
   Bool isNextEntropySlice               ()                  { return m_bNextEntropySlice;                 }
   Void setSliceBits                     ( UInt uiVal )      { m_uiSliceBits = uiVal;                      }
-  UInt getSliceBits                     ()                  { return m_uiSliceBits;                       }  
-  
+  UInt getSliceBits                     ()                  { return m_uiSliceBits;                       }
+
   Void      initMultiviewSlice    ( Int** aaiScale = 0, Int** aaiOffset = 0 );
 
   Int*      getCodedScale         ()  { return m_aaiCodedScale [0]; }
@@ -536,7 +598,7 @@ public:
   Void  initWpScaling(wpScalingParam  wp[2][MAX_NUM_REF][3]);
   Void  initWpScaling();
   inline Bool applyWP() { return( (m_eSliceType==P_SLICE && m_pcPPS->getUseWP()) || (m_eSliceType==B_SLICE && m_pcPPS->getWPBiPredIdc()) ); }
-  
+
   Void  setWpAcDcParam ( wpACDCParam wp[3] ) { memcpy(m_weightACDCParam, wp, sizeof(wpACDCParam)*3); }
   Void  getWpAcDcParam ( wpACDCParam *&wp );
   Void  initWpAcDcParam();
@@ -551,7 +613,7 @@ protected:
                          RefPicList          eRefPicList,
                          UInt                uiNthRefPic );
 #endif
-  
+
 };// END CLASS DEFINITION TComSlice
 
 

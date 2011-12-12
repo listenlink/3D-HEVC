@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 #include <stdlib.h>
@@ -51,7 +84,6 @@ TAppRendererCfg::~TAppRendererCfg()
       free (m_pchSynthOutputFileList[i]);
   }
 
-
   if ( m_pchVideoInputFileBaseName  ) free( m_pchVideoInputFileBaseName );
   if ( m_pchDepthInputFileBaseName  ) free( m_pchDepthInputFileBaseName );
   if ( m_pchSynthOutputFileBaseName ) free( m_pchSynthOutputFileBaseName);
@@ -59,8 +91,6 @@ TAppRendererCfg::~TAppRendererCfg()
   if ( m_pchBaseViewCameraNumbers   ) free( m_pchBaseViewCameraNumbers  );
   if ( m_pchSynthViewCameraNumbers  ) free( m_pchSynthViewCameraNumbers );
   if ( m_pchViewConfig              ) free( m_pchViewConfig         );
-
-
 }
 
 Void TAppRendererCfg::create()
@@ -116,16 +146,16 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     ("UVup"              ,      m_bUVUp               ,            true, "Up sampling of chroma planes before processing"          )
     ("PreProcMode"       ,      m_iPreProcMode        ,               0, "Depth preprocessing: 0 = None, 1 = Binomial filtering"   )
     ("PreFilterSize"     ,      m_iPreFilterSize      ,               0, "For PreProcMode 1: Half Size of filter kernel"           )
-    ("SimEnhance"        ,      m_bSimEnhance         ,           false, "Similarity enhancement of video" )
+    ("SimEnhance"        ,      m_bSimEnhance         ,           true, "Similarity enhancement of video" )
     ("BlendMode"         ,      m_iBlendMode          ,               0, "Blending of left and right image: 0: average, 1: only holes from right, 2: only holes from left, 3: first view in BaseViewOrder as main view" )
-    ("BlendZThresPerc"   ,      m_iBlendZThresPerc    ,               3, "Z-difference threshold for blending in percent of total Z-range"   )
+    ("BlendZThresPerc"   ,      m_iBlendZThresPerc    ,              30, "Z-difference threshold for blending in percent of total Z-range"   )
     ("BlendUseDistWeight",      m_bBlendUseDistWeight ,            true, "0: blend using average; 1: blend factor depends on view distance"  )
-    ("BlendHoleMargin"   ,      m_iBlendHoleMargin    ,               0, "Margin around holes to fill with other view"                       )
-    ("InterpolationMode" ,      m_iInterpolationMode  ,               0, "0: NN, 1:linear (int), 2:linear (double) , 3:cubic Hermite spline (double), 4: 8-tap (int)" )
+    ("BlendHoleMargin"   ,      m_iBlendHoleMargin    ,               6, "Margin around holes to fill with other view"                       )
+    ("InterpolationMode" ,      m_iInterpolationMode  ,               4, "0: NN, 1:linear (int), 2:linear (double) , 3:cubic Hermite spline (double), 4: 8-tap (int)" )
     ("HoleFillingMode"   ,      m_iHoleFillingMode    ,               1, "0: None, 1: line wise background extension"              )
     ("PostProcMode"      ,      m_iPostProcMode       ,               0, "0: None, 1: horizontal 3-tap median"                     )
     ("RenderMode"        ,      m_iRenderMode         ,               0, "0: Use renderer, 1: use model renderer, 10: create used pels map")
-    ("ShiftPrecision"    ,      m_iShiftPrecision     ,               0, "Shift Precision for Interpolation Mode 4"                )
+    ("ShiftPrecision"    ,      m_iShiftPrecision     ,               2, "Shift Precision for Interpolation Mode 4"                )
     ("TemporalDepthFilter",     m_bTempDepthFilter    ,           false, "Temporal depth filtering"                                )
     ("RenderDirection"   ,      m_iRenderDirection    ,               0, "0: Interpolate, 1: Extrapolate from left, 2: Extrapolate from right")
     ("UsedPelMapMarExt"  ,      m_iUsedPelMapMarExt   ,               0, "Margin Extension in Pels for used pels map generation"   );

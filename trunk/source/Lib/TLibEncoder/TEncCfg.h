@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 /** \file     TEncCfg.h
     \brief    encoder configuration class (header)
@@ -40,7 +73,6 @@ protected:
   Int       m_iGOPSize;
   Int       m_iRateGOPSize;
 
-  // SB
   std::string     m_cInputFormatString ;
 
   Int       m_iQP;                              //  if (AdaptiveQP == OFF)
@@ -74,15 +106,15 @@ protected:
   Int       m_bipredSearchRange;
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
 
-//GT VSO
+#if HHI_VSO
   //====== View Synthesis Optimization ======
   Bool      m_bForceLambdaScale;
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
   Bool      m_bAllowNegDist;
 #endif
   Double    m_dLambdaScaleVSO;
   UInt      m_uiVSOMode;
-//GT VSO end
+#endif
 
   //====== Tool list ========
   Bool      m_bUseSBACRD;
@@ -97,17 +129,15 @@ protected:
   Bool      m_bLCMod;
 #endif
   Bool      m_bUseRDOQ;
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   Bool      m_bUseLDC;
 #endif
   Bool      m_bUsePAD;
   Bool      m_bUseFastEnc;
 
-//GT VSO
+#if HHI_VSO
   Bool      m_bUseVSO;
-//GT VSO end
-
-  Bool      m_bOmitUnusedBlocks;
+#endif  
   Bool      m_bUseMRG; // SOPH:
 #if LM_CHROMA
   Bool      m_bUseLMChroma;
@@ -125,10 +155,12 @@ protected:
 #if CONSTRAINED_INTRA_PRED
   Bool      m_bUseConstrainedIntraPred;
 #endif
-#if HHI_DMM_INTRA
-  Bool m_bUseDepthModelModes;
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  Bool m_bUseDMM;
 #endif
+#if HHI_MPI
   Bool m_bUseMVI;
+#endif
 
   //====== Slice ========
   Int       m_iSliceMode;
@@ -159,21 +191,27 @@ protected:
   Int**       m_aaiCodedScale;
   Int**       m_aaiCodedOffset;
 
+#if DEPTH_MAP_GENERATION
   UInt        m_uiPredDepthMapGeneration;
-  UInt        m_uiMultiviewMvPredMode;
   UInt        m_uiPdmPrecision;
   Int**       m_aaiPdmScaleNomDelta;
   Int**       m_aaiPdmOffset;
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
+  UInt        m_uiMultiviewMvPredMode;
   UInt        m_uiMultiviewMvRegMode;
   Double      m_dMultiviewMvRegLambdaScale;
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   UInt        m_uiMultiviewResPredMode;
+#endif
 
   PicOrderCnt m_iQpChangeFrame;
   Int         m_iQpChangeOffsetVideo;
   Int         m_iQpChangeOffsetDepth;
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   UInt        m_uiInterViewSkip;
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Double      m_dInterViewSkipLambdaScale;
 #endif
 #endif
@@ -204,19 +242,25 @@ public:
   Void      setCodedScale                   ( Int** p )      { m_aaiCodedScale          = p; }
   Void      setCodedOffset                  ( Int** p )      { m_aaiCodedOffset         = p; }
 
+#if DEPTH_MAP_GENERATION
   Void      setPredDepthMapGeneration       ( UInt  u )      { m_uiPredDepthMapGeneration   = u; }
-  Void      setMultiviewMvPredMode          ( UInt  u )      { m_uiMultiviewMvPredMode      = u; }
   Void      setPdmPrecision                 ( UInt  u )      { m_uiPdmPrecision             = u; }
   Void      setPdmScaleNomDelta             ( Int** p )      { m_aaiPdmScaleNomDelta        = p; }
   Void      setPdmOffset                    ( Int** p )      { m_aaiPdmOffset               = p; }
+#endif
+#if HHI_INTER_VIEW_MOTION_PRED
+  Void      setMultiviewMvPredMode          ( UInt  u )      { m_uiMultiviewMvPredMode      = u; }
   Void      setMultiviewMvRegMode           ( UInt  u )      { m_uiMultiviewMvRegMode       = u; }
   Void      setMultiviewMvRegLambdaScale    ( Double d)      { m_dMultiviewMvRegLambdaScale = d; }
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Void      setMultiviewResPredMode         ( UInt  u )      { m_uiMultiviewResPredMode     = u; }
+#endif
 
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   Void      setInterViewSkip            ( UInt  u )       { m_uiInterViewSkip         = u; }
-  Bool      getInterViewSkip            ( )       { return bool(m_uiInterViewSkip) ;}
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+  Bool      getInterViewSkip            ( )       { return (m_uiInterViewSkip?true:false) ;}
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Void      setInterViewSkipLambdaScale ( UInt  u )       { m_dInterViewSkipLambdaScale = u; }
   Double      getInterViewSkipLambdaScale ()                { return m_dInterViewSkipLambdaScale; }
 #endif
@@ -253,15 +297,15 @@ public:
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
   Void      setMaxDeltaQP                   ( Int   i )      { m_iMaxDeltaQP = i; }
 
-//GT VSO
+#if HHI_VSO
  //==== VSO  ==========
   Void      setVSOMode                      ( UInt  ui )    { m_uiVSOMode   = ui; }
   Void      setForceLambdaScaleVSO          ( Bool  b )     { m_bForceLambdaScale = b; };
   Void      setLambdaScaleVSO               ( Double d )    { m_dLambdaScaleVSO   = d; };
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
   Void      setAllowNegDist                 ( Bool b  )     { m_bAllowNegDist     = b; };
 #endif
-//GT VSO end
+#endif
 
   //====== Sequence ========
   Int       getFrameRate                    ()      { return  m_iFrameRate; }
@@ -305,19 +349,20 @@ public:
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
   Int       getMaxDeltaQP                   ()      { return  m_iMaxDeltaQP; }
 
+#if HHI_INTER_VIEW_MOTION_PRED
   UInt      getMultiviewMvRegMode           ()      { return  m_uiMultiviewMvRegMode; }
   Double    getMultiviewMvRegLambdaScale    ()      { return  m_dMultiviewMvRegLambdaScale; }
+#endif
 
-//GT VSO
+#if HHI_VSO
   //==== VSO  ==========
   UInt      getVSOMode                      ()      { return m_uiVSOMode; }
   Bool      getForceLambdaScaleVSO          ()      { return m_bForceLambdaScale; }
   Double    getLambdaScaleVSO               ()      { return m_dLambdaScaleVSO;   }
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
   Bool      getAllowNegDist                 ()      { return m_bAllowNegDist;     }
 #endif
-
-//GT VSO end
+#endif
 
   //==== Tool list ========
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
@@ -329,22 +374,20 @@ public:
   Void      setLCMod                        ( Bool  b )     { m_bLCMod   = b;    }
 #endif
   Void      setUseRDOQ                      ( Bool  b )     { m_bUseRDOQ    = b; }
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   Void      setUseLDC                       ( Bool  b )     { m_bUseLDC     = b; }
 #endif
   Void      setUsePAD                       ( Bool  b )     { m_bUsePAD     = b; }
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
-  //GT VSO
+#if HHI_VSO
   Void      setUseVSO                       ( Bool  b )     { m_bUseVSO     = b; }
-  //GT VSO end
+#endif
   Void      setUseMRG                       ( Bool  b )     { m_bUseMRG     = b; } // SOPH:
 #if CONSTRAINED_INTRA_PRED
   Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
 #endif
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }
   Void      setDeltaQpRD                    ( UInt  u )     {m_uiDeltaQpRD  = u; }
-
-  Void      setOmitUnusedBlocks             ( Bool b )       { m_bOmitUnusedBlocks = b; }
 
   Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
@@ -359,25 +402,23 @@ public:
   Bool      getLCMod                        ()      { return m_bLCMod; }
 #endif
   Bool      getUseRDOQ                      ()      { return m_bUseRDOQ;    }
-#if !SB_NO_LowDelayCoding
+#if !HHI_NO_LowDelayCoding
   Bool      getUseLDC                       ()      { return m_bUseLDC;     }
 #endif
   Bool      getUsePAD                       ()      { return m_bUsePAD;     }
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
 
-//GT VSO
+#if HHI_VSO
   Bool      getUseVSO                       ()      { return m_bUseVSO;     }
-//GT VSO end
+#endif
   Bool      getUseMRG                       ()      { return m_bUseMRG;     } // SOPH:
 #if CONSTRAINED_INTRA_PRED
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
 #endif
-#if HHI_DMM_INTRA
-  Void setUseDepthModelModes( Bool b) { m_bUseDepthModelModes = b;    }
-  Bool getUseDepthModelModes()        { return m_bUseDepthModelModes; }
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  Void setUseDMM( Bool b) { m_bUseDMM = b;    }
+  Bool getUseDMM()        { return m_bUseDMM; }
 #endif
-
-  Bool getOmitUnusedBlocks             ()      { return m_bOmitUnusedBlocks; }
 
 #if LM_CHROMA
   Bool getUseLMChroma                       ()      { return m_bUseLMChroma;        }
@@ -412,7 +453,9 @@ public:
   Void      setUseSAO                  (Bool bVal)     {m_bUseSAO = bVal;}
   Bool      getUseSAO                  ()              {return m_bUseSAO;}
 #endif
+#if HHI_MPI
   Void      setUseMVI                  (Bool bVal)     {m_bUseMVI = bVal;}
+#endif
 
   void setPictureDigestEnabled(bool b) { m_pictureDigestEnabled = b; }
   bool getPictureDigestEnabled() { return m_pictureDigestEnabled; }

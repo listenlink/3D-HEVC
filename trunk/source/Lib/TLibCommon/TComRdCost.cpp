@@ -1,3 +1,36 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.
+ *
+ * Copyright (c) 2010-2011, ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
 
 
 /** \file     TComRdCost.cpp
@@ -45,7 +78,7 @@ Double TComRdCost::calcRdCost( UInt uiBits, Dist uiDistortion, Bool bFlag, DFunc
       break;
   }
   
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   dLambda = m_dLambdaScale * dLambda ;
 #endif
   if (bFlag)
@@ -124,12 +157,14 @@ Void TComRdCost::setLambda( Double dLambda )
   m_uiLambdaMotionSSE = (UInt)floor(65536.0 * m_dLambda   );
 }
 
+#if HHI_INTER_VIEW_MOTION_PRED
 Void
 TComRdCost::setLambdaMVReg( Double dLambda )
 {
   m_uiLambdaMVRegSAD = (UInt)floor( 65536.0 * sqrt( dLambda ) );
   m_uiLambdaMVRegSSE = (UInt)floor( 65536.0 *       dLambda   );
 }
+#endif
 
 
 // Initalize Function Pointer by [eDFunc]
@@ -222,7 +257,7 @@ Void TComRdCost::init()
   m_puiMultiviewRegCostHor      = 0;
   m_puiMultiviewRegCostVer      = 0;
 
-//GT VSO
+#if HHI_VSO
   m_apRefPics               = NULL;
   m_paaiShiftLUTs           = NULL; 
   m_uiNumberRefPics         = 0;
@@ -230,9 +265,9 @@ Void TComRdCost::init()
   m_uiVSOMode               = 0; 
   m_fpDistortFuncVSO        = NULL; 
   m_pcRenModel              = NULL; 
+#endif
 
-//GT VSO end
-#if SB_INTERVIEW_SKIP_LAMBDA_SCALE
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   m_dLambdaScale            = 1;
 #endif
 }
@@ -286,7 +321,7 @@ Void TComRdCost::xUninit()
     m_puiMultiviewRegCostVerOrgP = NULL;
   }
 
-  //GT VSO
+#if HHI_VSO
   if ( m_apRefPics != NULL )
   {
     delete[] m_apRefPics;
@@ -297,7 +332,7 @@ Void TComRdCost::xUninit()
     delete[] m_paaiShiftLUTs; 
     m_paaiShiftLUTs = NULL;
   }; 
-  //GT VSO end
+#endif
 }
 
 UInt TComRdCost::xGetComponentBits( Int iVal )
@@ -377,7 +412,7 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
   
   // initialize
   rcDistParam.iSubShift  = 0;
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   rcDistParam.pUsed       = 0;
   rcDistParam.iStrideUsed = 0;
 #endif
@@ -400,7 +435,7 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
   
   // initialize
   rcDistParam.iSubShift  = 0;
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   rcDistParam.pUsed       = 0;
   rcDistParam.iStrideUsed = 0;
 #endif
@@ -435,7 +470,7 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
   
   // initialize
   rcDistParam.iSubShift  = 0;
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   rcDistParam.pUsed       = 0;
   rcDistParam.iStrideUsed = 0;
 #endif
@@ -453,7 +488,7 @@ TComRdCost::setDistParam( DistParam& rcDP, Pel* p1, Int iStride1, Pel* p2, Int i
   rcDP.iStep      = 1;
   rcDP.iSubShift  = 0;
   rcDP.DistFunc   = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   rcDP.pUsed       = 0;
   rcDP.iStrideUsed = 0;
 #endif
@@ -503,7 +538,7 @@ UInt TComRdCost::calcHAD( Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iW
   
   return ( uiSum >> g_uiBitIncrement );
 }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
 UInt TComRdCost::getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, Pel* piUsed, Int iUsedStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc )
 {
   DistParam cDtParam;
@@ -3366,7 +3401,7 @@ UInt TComRdCost::xGetSSE( DistParam* pcDtParam )
   
   Int iTemp;
   
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
@@ -3399,7 +3434,7 @@ UInt TComRdCost::xGetSSE( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   }
 #endif
   
@@ -3426,7 +3461,7 @@ UInt TComRdCost::xGetSSE4( DistParam* pcDtParam )
   
   Int  iTemp;
   
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
@@ -3457,7 +3492,7 @@ UInt TComRdCost::xGetSSE4( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   }
 #endif
   
@@ -3484,7 +3519,7 @@ UInt TComRdCost::xGetSSE8( DistParam* pcDtParam )
   
   Int  iTemp;
   
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
@@ -3522,7 +3557,7 @@ UInt TComRdCost::xGetSSE8( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   }
 #endif
   
@@ -3549,7 +3584,7 @@ UInt TComRdCost::xGetSSE16( DistParam* pcDtParam )
   
   Int  iTemp;
   
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
@@ -3604,7 +3639,7 @@ UInt TComRdCost::xGetSSE16( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   }
 #endif
   
@@ -3630,7 +3665,7 @@ UInt TComRdCost::xGetSSE16N( DistParam* pcDtParam )
   UInt uiShift = g_uiBitIncrement<<1;
   Int  iTemp;
   
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
@@ -3690,7 +3725,7 @@ UInt TComRdCost::xGetSSE16N( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   }
 #endif
   
@@ -3716,7 +3751,7 @@ UInt TComRdCost::xGetSSE32( DistParam* pcDtParam )
   UInt uiShift = g_uiBitIncrement<<1;
   Int  iTemp;
   
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
@@ -3803,7 +3838,7 @@ UInt TComRdCost::xGetSSE32( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   }
 #endif
   
@@ -3829,7 +3864,7 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
   UInt uiShift = g_uiBitIncrement<<1;
   Int  iTemp;
   
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
@@ -3979,7 +4014,7 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-#if SB_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   }
 #endif
   
@@ -4710,8 +4745,7 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
 }
 
 
-//GT VSO
-
+#if HHI_VSO
 Void TComRdCost::setLambdaVSO( Double dLambdaVSO )
 {
   m_dLambdaVSO           = dLambdaVSO;
@@ -4720,369 +4754,13 @@ Void TComRdCost::setLambdaVSO( Double dLambdaVSO )
   m_uiLambdaMotionSSEVSO = (UInt)floor(65536.0 *       m_dLambdaVSO    );
 }
 
-Dist TComRdCost::xGetDistVSOMode1( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD )
-{ 
-  
-  assert( m_uiVSOMode == 1 );      
-  UInt uiShift = g_uiBitIncrement << 1; 
-
-  UInt uiPlane = 0; 
-
-  Int iRefWidth = m_pcVideoPicYuv->getWidth(); 
-  Int iStrideOrgVid; 
-  UInt uiErr = 0; 
-
-  if (uiPlane > 0)
-  {
-    iStartPosX = iStartPosX >> 1; 
-    iStartPosY = iStartPosY >> 1; 
-    iRefWidth  = iRefWidth  >> 1; 
-    iStrideOrgVid = m_pcVideoPicYuv ->getCStride();
-  }
-  else 
-  {
-    iStrideOrgVid = m_pcVideoPicYuv ->getStride();
-  }
-  
-  UInt uiReferenceNumber  = 0; 
-  for (UInt uiReference = 0; uiReference < 3; uiReference+=2 )
-  {
-    if ( m_paaiShiftLUTs[uiReference] == 0 )
-      continue; 
-
-    uiReferenceNumber++; 
-    
-    Pel* piOrgVid; 
-
-    if (uiPlane == 0)
-    {      
-      piOrgVid = m_pcVideoPicYuv ->getLumaAddr();      
-    }
-    else
-    {
-      if (uiPlane == 1)
-      {        
-        piOrgVid = m_pcVideoPicYuv ->getCbAddr();
-      } 
-      else
-      {       
-        piOrgVid = m_pcVideoPicYuv ->getCrAddr();
-      }      
-    }
-    
-    piOrgVid += iStartPosY * iStrideOrgVid;
-
-    for ( Int iY = 0; iY < uiBlkHeight; iY++ )
-    {
-      Int iPos = iStartPosX;
-
-      for  (Int iX = 0; iX < uiBlkWidth; iX++ ) 
-      {
-        Int iTargetPos;       
-
-        assert( RemoveBitIncrement(piCur[iX]) >= 0 && RemoveBitIncrement(piCur[iX]) <= 256);         
-        assert( RemoveBitIncrement(piOrg[iX]) >= 0 && RemoveBitIncrement(piOrg[iX]) <= 256);         
-
-        iTargetPos = iPos - m_paaiShiftLUTs[uiReference][0][RemoveBitIncrement(piCur[iX])] + m_paaiShiftLUTs[uiReference][0][RemoveBitIncrement(piOrg[iX])];         
-        iTargetPos = iTargetPos >  0         ? iTargetPos  : 0; 
-        iTargetPos = iTargetPos <  iRefWidth ? iTargetPos  : iRefWidth-1; 
-        Int iDiff = piOrgVid[iTargetPos] - piOrgVid[iPos]; 
-
-        if ( bSAD )
-        {
-          uiErr     += abs(iDiff);         
-        }
-        else
-        {
-          uiErr     += ((iDiff * iDiff) >> uiShift );         
-        }
-
-        iPos++; 
-      }
-
-      piOrgVid   += iStrideOrgVid;       
-
-      piCur      += iCurStride;			
-      piOrg      += iOrgStride; 
-
-    } 
-    piCur        -= iCurStride * uiBlkHeight;			
-    piOrg        -= iOrgStride * uiBlkHeight; 
-  }
-
-  if ( bSAD )
-  {
-    uiErr = uiErr >> g_uiBitIncrement; 
-  }
-
-  return ( uiErr + ( uiReferenceNumber >> 1 )) / uiReferenceNumber; 
-}
-
-Dist TComRdCost::xGetDistVSOMode2( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD )
-{ 
-  assert( m_uiVSOMode == 2 );      
-  UInt uiShift = g_uiBitIncrement << 1; 
-  UInt uiPlane = 0; 
-
-  Int iRefWidth = m_pcVideoPicYuv->getWidth(); 
-  Int iStrideOrgVid; 
-  
-  UInt uiErr = 0; 
-
-  if (uiPlane > 0)
-  {
-    iStartPosX = iStartPosX >> 1; 
-    iStartPosY = iStartPosY >> 1; 
-    iRefWidth  = iRefWidth  >> 1; 
-    iStrideOrgVid = m_pcVideoPicYuv ->getCStride();
-  }
-  else 
-  {
-    iStrideOrgVid = m_pcVideoPicYuv ->getStride();
-  }
-
-  for (UInt uiRefPic = 0; uiRefPic < m_uiNumberRefPics; uiRefPic++ )
-  {
-    Pel* piRefVid; 
-    Pel* piOrgVid; 
-    Int  iStrideRefVid;         
-
-    if (uiPlane == 0)
-    {
-      piRefVid = m_apRefPics[uiRefPic]->getLumaAddr();
-      piOrgVid = m_pcVideoPicYuv ->getLumaAddr();
-      iStrideRefVid = m_apRefPics[uiRefPic]->getStride();  
-    }
-    else
-    {
-      if (uiPlane == 1)
-      {
-        piRefVid = m_apRefPics[uiRefPic]->getCbAddr();
-        piOrgVid = m_pcVideoPicYuv ->getCbAddr();
-      } 
-      else
-      {
-        piRefVid = m_apRefPics[uiRefPic]->getCrAddr();
-        piOrgVid = m_pcVideoPicYuv ->getCrAddr();
-      }
-      iStrideRefVid = m_apRefPics[uiRefPic]->getCStride();      
-    }
-
-    piRefVid += iStartPosY * iStrideRefVid;
-    piOrgVid += iStartPosY * iStrideOrgVid;
-
-    for  (Int iY = 0; iY < uiBlkHeight; iY++ ) 
-    {
-      Int iPos = iStartPosX;
-
-      for  (Int iX = 0; iX < uiBlkWidth; iX++ ) 
-      {	
-        int iTargetPos; 
-
-        AOF( RemoveBitIncrement(piCur[iX]) >= 0 && RemoveBitIncrement(piCur[iX]) <= 255);         
-        iTargetPos = iPos - m_paaiShiftLUTs[uiRefPic][0][RemoveBitIncrement(piCur[iX])]; 
-        iTargetPos = iTargetPos >  0         ? iTargetPos  : 0; 
-        iTargetPos = iTargetPos <  iRefWidth ? iTargetPos  : iRefWidth-1; 
-
-        Int iDiff = piRefVid[iTargetPos] - piOrgVid[iPos]; 
-
-        if ( bSAD )
-        {
-          uiErr     += abs(iDiff);         
-        }
-        else
-        {
-          uiErr     += ((iDiff * iDiff) >> uiShift );         
-        }
-
-        iPos++; 
-      }
-
-      piRefVid   += iStrideRefVid;
-      piOrgVid   += iStrideOrgVid;       
-    } 
-    piCur        -= iCurStride * uiBlkHeight;			
-    piOrg        -= iOrgStride * uiBlkHeight; 
-  }
-
-  if ( bSAD )
-  {
-    uiErr = uiErr >> g_uiBitIncrement; 
-  }
-
-
-  return ( uiErr + (m_uiNumberRefPics >> 1)) / m_uiNumberRefPics; 
-}
-
-Dist TComRdCost::xGetDistVSOMode3( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD )
-{
-  assert( m_uiVSOMode == 3 );      
-  UInt uiShift = g_uiBitIncrement << 1; 
-
-  UInt uiPlane = 0; 
-
-  Int iRefWidth = m_pcVideoPicYuv->getWidth(); 
-  Int iStrideOrgVid; 
-
-  UInt uiErr = 0; 
-
-  if (uiPlane > 0)
-  {
-    iStartPosX = iStartPosX >> 1; 
-    iStartPosY = iStartPosY >> 1;
-    iRefWidth  = iRefWidth  >> 1;
-    iStrideOrgVid = m_pcVideoPicYuv ->getCStride();
-  }
-  else 
-  {
-    iStrideOrgVid = m_pcVideoPicYuv ->getStride();
-  }
-
-  for (UInt uiRefPicNum = 0; uiRefPicNum < m_uiNumberRefPics; uiRefPicNum++ )
-  {
-    Pel* piRefVid; 
-    Pel* piOrgVid; 
-    Int  iStrideRefVid;         
-
-    if (uiPlane == 0)
-    {
-      piRefVid = m_apRefPics[uiRefPicNum]->getLumaAddr();
-      piOrgVid = m_pcVideoPicYuv ->getLumaAddr();
-      iStrideRefVid = m_apRefPics[uiRefPicNum]->getStride();  
-    }
-    else
-    {
-      if (uiPlane == 1)
-      {
-        piRefVid = m_apRefPics[uiRefPicNum]->getCbAddr();
-        piOrgVid = m_pcVideoPicYuv ->getCbAddr();
-      } 
-      else
-      {
-        piRefVid = m_apRefPics[uiRefPicNum]->getCrAddr();
-        piOrgVid = m_pcVideoPicYuv ->getCrAddr();
-      }
-      iStrideRefVid = m_apRefPics[uiRefPicNum]->getCStride();      
-    }
-
-
-    piRefVid += iStartPosY * iStrideRefVid;
-    piOrgVid += iStartPosY * iStrideOrgVid;
-
-    for ( Int iY = 0; iY < uiBlkHeight; iY++ )
-    {
-      Int iPos = iStartPosX;
-
-      for  (Int iX = 0; iX < uiBlkWidth; iX++ ) 
-      {	
-        int iTargetPos; 
-
-
-        assert( RemoveBitIncrement(piCur[iX]) >= 0 && RemoveBitIncrement(piCur[iX]) <= 256 );
-        iTargetPos = iPos - m_paaiShiftLUTs[uiRefPicNum][0][RemoveBitIncrement(piCur[iX])]; 
-        iTargetPos = iTargetPos >  0         ? iTargetPos : 0; 
-        iTargetPos = iTargetPos <  iRefWidth ? iTargetPos : iRefWidth-1; 
-
-        int iSourcePos; 
-
-        assert( RemoveBitIncrement(piOrg[iX]) >= 0 && RemoveBitIncrement(piOrg[iX]) <= 256 );
-        iSourcePos = iPos - m_paaiShiftLUTs[uiRefPicNum][0][RemoveBitIncrement(piOrg[iX])]; 
-        iSourcePos = iSourcePos >  0         ? iSourcePos : 0; 
-        iSourcePos = iSourcePos <  iRefWidth ? iSourcePos : iRefWidth-1; 
-
-        Int iDiff = piRefVid[iTargetPos] - piRefVid[iSourcePos]; 
-
-        if ( bSAD )
-        {
-            uiErr     += abs(iDiff);         
-        }
-        else
-        {
-          uiErr     += ((iDiff * iDiff)  >> uiShift) ;         
-        }    
-        iPos++; 
-      }
-
-      piRefVid   += iStrideRefVid;
-      piOrgVid   += iStrideOrgVid;       
-
-      piCur      += iCurStride;			
-      piOrg      += iOrgStride; 
-    } 
-    piCur        -= iCurStride * uiBlkHeight;			
-    piOrg        -= iOrgStride * uiBlkHeight; 
-  }
-
-  if ( bSAD )
-  {
-    uiErr = uiErr >> g_uiBitIncrement; 
-  }
-  UInt uiNumRef = Max( 1, m_uiNumberRefPics );
-  return ( uiErr + (uiNumRef >> 1) ) / uiNumRef; 
-}
-
-
-
-
-#if GERHARD_VQM_XCHECK
-UInt TComRdCost::xGetDistXCheck(  Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD )
-{
-  UInt uiShift = g_uiBitIncrement << 1; 
-
-  UInt uiPlane = 0; 
-  UInt uiErr = 0; 
-  Int iStrideOrgVid = m_pcVideoPicYuv ->getStride();
-
-  Pel* piRefOrg = m_pcVideoPicYuv->getLumaAddr() + iStartPosX + iStrideOrgVid * iStartPosY;
-
-  for ( Int iY = 0; iY < uiBlkHeight; iY++ )
-  {
-    for  (Int iX = 0; iX < uiBlkWidth; iX++ ) 
-    {	
-      Int iDiff;
-      if (uiPlane != 0)
-      {     
-        
-        iDiff = piCur[iX] - piOrg[iX]; 
-      }
-      else
-      {
- //     assert( piOrg[iX] == piRefOrg[iX] ); 
-        iDiff = piCur[iX] - piRefOrg[iX]; 
-      }
-      
-
-      if ( bSAD )
-      {
-        uiErr     += abs(iDiff);         
-      }
-      else
-      {
-        uiErr     += ((iDiff * iDiff)  >> uiShift) ;         
-      }                
-    }
-    piRefOrg   += iStrideOrgVid; 
-    piCur      += iCurStride; 
-    piOrg      += iOrgStride; 
-  } 
-
-  if ( bSAD )     
-  {
-    uiErr >>= g_uiBitIncrement; 
-  }
-  return uiErr; 
-}
-  
-
-#endif
-
 Dist TComRdCost::xGetDistVSOMode4( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD )
 { 
   AOT(bSAD); 
   RMDist iDist = m_pcRenModel->getDist( iStartPosX, iStartPosY, (Int) uiBlkWidth, (Int) uiBlkHeight, iCurStride, piCur );  
 
   RMDist iDistMin = (RMDist) RDO_DIST_MIN; 
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
   iDistMin = m_bAllowNegDist ? RDO_DIST_MIN : 0; 
 #endif
   
@@ -5131,14 +4809,7 @@ Void  TComRdCost::setRefDataFromMVDInfo( TComMVDRefData* pRefInfo )
   {
     pRefInfo->getRefPicYuvAndLUT(m_apRefPics, m_paaiShiftLUTs); 
   }
-  
-
   m_pcVideoPicYuv = pRefInfo->getPicYuvVideo();
-
-#if GERHARD_VQM_XCHECK
-  m_pcVideoPicYuv = pRefInfo->getPicYuvOrgDepth(CURRVIEW);
-#endif
-
 }
 
 Void TComRdCost::setVSOMode( UInt uiIn )
@@ -5146,15 +4817,6 @@ Void TComRdCost::setVSOMode( UInt uiIn )
   m_uiVSOMode = uiIn;
   switch (m_uiVSOMode )
   {
-  case   1:
-    m_fpDistortFuncVSO = &TComRdCost::xGetDistVSOMode1;
-    break;
-  case   2:
-    m_fpDistortFuncVSO = &TComRdCost::xGetDistVSOMode2;
-    break;
-  case   3:
-    m_fpDistortFuncVSO = &TComRdCost::xGetDistVSOMode3;
-    break;
   case   4:
     m_fpDistortFuncVSO = &TComRdCost::xGetDistVSOMode4;
     break;
@@ -5162,9 +4824,6 @@ Void TComRdCost::setVSOMode( UInt uiIn )
     assert(0); 
     break; 
   }
-#if GERHARD_VQM_XCHECK
-  m_fpDistortFuncVSO = &TComRdCost::xGetDistXCheck; 
-#endif
 }
 
 
@@ -5227,11 +4886,11 @@ Void TComRdCost::setRenModelData( TComDataCU* pcCU, UInt uiAbsPartIndex, Pel* pi
   m_pcRenModel->setData( iStartPosX, iStartPosY, iBlkWidth, iBlkHeight, iStride, piData );
 }
 
-#if RDO_DIST_INT
+#if HHI_VSO_DIST_INT
 Void TComRdCost::setAllowNegDist( Bool bAllowNegDist )
 {
   m_bAllowNegDist = bAllowNegDist;
 }
 #endif
 
-//GT VSO end
+#endif 
