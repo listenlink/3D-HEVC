@@ -140,6 +140,10 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setQuadtreeTUMaxDepthIntra      ( m_uiQuadtreeTUMaxDepthIntra );
     m_acTEncTopList[iViewIdx]->setUseFastEnc                   ( m_bUseFastEnc  );
 
+#if POZNAN_NONLINEAR_DEPTH
+    m_acTEncTopList[iViewIdx]->setDepthPower                   ( (Float)m_fDepthPower );
+#endif
+
 #if HHI_VSO
     m_acTEncTopList[iViewIdx]->setUseVSO                       ( false ); //GT: might be enabled later for VSO Mode 4
 #endif
@@ -221,6 +225,13 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setQpChangeFrame( m_iQpChangeFrame );
     m_acTEncTopList[iViewIdx]->setQpChangeOffsetVideo( m_iQpChangeOffsetVideo );
     m_acTEncTopList[iViewIdx]->setQpChangeOffsetDepth( m_iQpChangeOffsetDepth );
+
+    
+ #if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+    m_acTEncTopList[iViewIdx]->setTextureCuDeltaQpOffset( m_dTextureCuDeltaQpOffset );
+    m_acTEncTopList[iViewIdx]->setTextureCuDeltaQpMul( m_dTextureCuDeltaQpMul );
+    m_acTEncTopList[iViewIdx]->setTextureCuDeltaQpTopBottomRow( m_iTextureCuDeltaQpTopBottomRow );  
+#endif
   }
   if( m_bUsingDepthMaps )
   {
@@ -381,6 +392,9 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_MPI
       m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
 #endif
+#if POZNAN_NONLINEAR_DEPTH
+      m_acTEncDepthTopList[iViewIdx]->setDepthPower                   ( (Float)m_fDepthPower );
+#endif
 
       m_acTEncDepthTopList[iViewIdx]->setPictureDigestEnabled(m_pictureDigestEnabled);
 
@@ -434,7 +448,7 @@ Void TAppEncTop::xInitLibCfg()
   }
 #endif
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SYNTH||POZNAN_CU_SKIP
   //m_cAvailabilityRenderer.init(m_iSourceWidth, m_iSourceHeight,true,0,0,true, 0,0,0,0,0,0,0,1,0,0 );  //GT: simplest configuration
   m_cAvailabilityRenderer.init(m_iSourceWidth, m_iSourceHeight,true,0,LOG2_DISP_PREC_LUT,true, 0,0,0,0,0,6,4,1,0,6 );  //GT: simplest configuration
 #endif
@@ -442,6 +456,16 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_INTERVIEW_SKIP
   m_cUsedPelsRenderer.init(m_iSourceWidth, m_iSourceHeight, true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 );
 #endif
+
+#if POZNAN_MP
+#if POZNAN_MP_USE_DEPTH_MAP_GENERATION
+  m_pcMP = new TComMP(m_iSourceHeight, m_iSourceWidth);
+#else
+  //m_pcMP = new TComMP(m_iSourceHeight, m_iSourceWidth, &m_cCameraData);
+  m_pcMP = new TComMP(m_iSourceHeight, m_iSourceWidth, m_cCameraData.getBaseViewShiftLUTI());
+#endif
+#endif
+
 }
 
 Void TAppEncTop::xCreateLib()
@@ -483,12 +507,36 @@ Void TAppEncTop::xCreateLib()
     m_acTVideoIOYuvERFileList[iViewIdx]->open( m_pchERRefFileList[iViewIdx], false, m_uiInputBitDepth, m_uiInternalBitDepth ); // read mode
   }
 #endif
+
+#if POZNAN_STAT_JK
+  for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++)
+  {
+	if(m_pchStatFileList[iViewIdx] != NULL) m_cStatFileList.push_back(fopen(m_pchStatFileList[iViewIdx],"w"));
+	else m_cStatFileList.push_back(NULL);
+
+	if ( m_bUsingDepthMaps && m_pchDepthStatFileList[iViewIdx] != NULL) m_cDepthStatFileList.push_back(fopen(m_pchDepthStatFileList[iViewIdx],"w"));
+	else m_cDepthStatFileList.push_back(NULL);
+  }
+#endif  
+
 }
 
 Void TAppEncTop::xDestroyLib()
 {
 
   m_cTVideoIOBitsFile.closeBits();
+
+#if POZNAN_MP
+  if (m_pcMP) { delete m_pcMP; m_pcMP=NULL; };
+#endif
+
+#if POZNAN_STAT_JK
+  for ( Int iViewIdx = 0; iViewIdx < m_iNumberOfExternalRefs; iViewIdx++ )
+  {
+	  if(m_cStatFileList[iViewIdx]) {fclose(m_cStatFileList[iViewIdx]); m_cStatFileList[iViewIdx]=NULL;}
+	  if(m_cDepthStatFileList[iViewIdx]) {fclose(m_cDepthStatFileList[iViewIdx]); m_cDepthStatFileList[iViewIdx]=NULL;}
+  }
+#endif
 
 #if HHI_VSO
   for ( Int iViewIdx = 0; iViewIdx < m_iNumberOfExternalRefs; iViewIdx++ )
@@ -544,6 +592,12 @@ Void TAppEncTop::xInitLib()
   {
     m_acTEncTopList[iViewIdx]->setTEncTopList( &m_acTEncTopList  );
   }
+#if POZNAN_STAT_JK
+  for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+  {
+    m_acTEncTopList[iViewIdx]->setStatFile(m_cStatFileList[iViewIdx]);//JK
+  }
+#endif
   if ( m_bUsingDepthMaps )
   {
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
@@ -554,6 +608,12 @@ Void TAppEncTop::xInitLib()
     {
       m_acTEncDepthTopList[iViewIdx]->setTEncTopList( &m_acTEncDepthTopList  );
     }
+#if POZNAN_STAT_JK
+  for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+  {
+    m_acTEncDepthTopList[iViewIdx]->setStatFile(m_cDepthStatFileList[iViewIdx]);//JK
+  }
+#endif
   }
 }
 
@@ -644,6 +704,9 @@ Void TAppEncTop::encode()
         if( m_uiMultiviewMvRegMode && iViewIdx )
         {
           m_acTVideoIOYuvDepthInputFileList[iViewIdx]->read( pcPdmDepthOrg, m_aiPad, m_bUsingDepthMaps );
+#if POZNAN_NONLINEAR_DEPTH
+          pcPdmDepthOrg->power(pcPdmDepthOrg, m_fDepthPower);		  
+#endif
         }
 #endif
 
@@ -665,6 +728,9 @@ Void TAppEncTop::encode()
           xGetBuffer( pcPicYuvRec, iViewIdx, m_cListPicYuvDepthRecList ); // ringbuffer of size gopsize -> m_cListPicYuvRec, m_cListBitstream
           // read input YUV file
           m_acTVideoIOYuvDepthInputFileList[iViewIdx]->read( pcDepthPicYuvOrg, m_aiPad  ) ;
+#if POZNAN_NONLINEAR_DEPTH
+          pcDepthPicYuvOrg->power(pcDepthPicYuvOrg, m_fDepthPower);		  
+#endif
           bDepthEos[iViewIdx] = ( m_acTVideoIOYuvDepthInputFileList[iViewIdx]->isEof() == 1 ?   true : false  );
           bDepthEos[iViewIdx] = ( m_iDepthFrameRcvdVector[iViewIdx] == (m_iFrameToBeEncoded - 1) ?    true : bDepthEos[iViewIdx]   );
           bAllDepthEos = bAllDepthEos|bDepthEos[iViewIdx] ;
@@ -696,7 +762,7 @@ Void TAppEncTop::encode()
     //GT: Encode
     for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )     // Start encoding
     {
-#if POZNAN_SYNTH
+#if POZNAN_CU_SYNTH||POZNAN_CU_SKIP
       xStoreSynthPicsInBuffer(iViewIdx,false);
 #endif
       bool bThisViewContinueReadingPics = bContinueReadingPics[iViewIdx];
@@ -715,7 +781,7 @@ Void TAppEncTop::encode()
 
       if( m_bUsingDepthMaps )
       {
-#if POZNAN_SYNTH
+#if POZNAN_CU_SYNTH||POZNAN_CU_SKIP
         xStoreSynthPicsInBuffer(iViewIdx,true);
 #endif
         bool bThisViewContinueReadingDepthPics = bContinueReadingDepthPics[iViewIdx];
@@ -938,6 +1004,18 @@ Void TAppEncTop::xWriteOutput( Int iViewIdx, Bool isDepth )
   while( ! rcMap.empty() && ( i = rcMap.begin() )->first == riNextPocToDump )
   {
     riNextPocToDump++;
+#if POZNAN_NONLINEAR_DEPTH
+    if(isDepth)
+    {
+      TComPicYuv *pcPicOrg = i->second;
+      TComPicYuv *pcPicPow = new TComPicYuv; 
+      //pcPicYuvRec->createCompatibleAs(*iterPicYuvRec);
+      pcPicPow->create( pcPicOrg->getWidth(), pcPicOrg->getHeight(), pcPicOrg->getMaxCuWidth(), pcPicOrg->getMaxCuHeight(), pcPicOrg->getMaxCuDepth() );
+      //cPicPower.create(pcSPS->getWidth(), pcSPS->getHeight(), pcSPS->getMaxCUWidth(), pcSPS->getMaxCUHeight(), pcSPS->getMaxCUDepth() ); 
+      pcPicOrg->power(pcPicPow, (Float)(1.0/m_fDepthPower));		
+      rpcTVideoIOYuvReconFile->write( pcPicPow, m_aiPad );
+    } else
+#endif
     rpcTVideoIOYuvReconFile->write( i->second, m_aiPad );
     rcMap.erase( i );
   }
@@ -1187,8 +1265,8 @@ Void TAppEncTop::xStoreVSORefPicsInBuffer()
 }
 #endif
 
-#if POZNAN_SYNTH
-Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
+#if POZNAN_CU_SYNTH||POZNAN_CU_SKIP
+Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx, Bool bDepth)
 {
   Int iCurPoc;
   if(bDepth)
@@ -1199,9 +1277,8 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
   else
   {
     iCurPoc = m_acTEncTopList[ iCoddedViewIdx ]->getNextFrameId();
-    if (!(m_acTEncTopList[ iCoddedViewIdx ]->currentPocWillBeCoded())) return;
-  }
-  
+  if (!(m_acTEncTopList[ iCoddedViewIdx ]->currentPocWillBeCoded())) return;
+
   Int iNumberOfReferenceViews = 0;
   UInt iSynthViewIdx;
   // Get Left and right view
@@ -1220,25 +1297,32 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
   m_cCameraData.getNearestBaseView(iCoddedViewIdx, iNearestViewIdx, iRelDistToLeft, bRenderFromLeft);
 
   m_cAvailabilityRenderer.setShiftLUTs(
-    m_cCameraData.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],
-    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
-    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
-    m_cCameraData.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],//right
-    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
-    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
-    iRelDistToLeft
-  );
-    
+        m_cCameraData.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],
+        m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+        m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+        m_cCameraData.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],//right
+        m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+        m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+        iRelDistToLeft
+      );
 
   TComPicYuv* pcPicYuvERView = new TComPicYuv;
   pcPicYuvERView->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
-
   TComPic* pcPic = xGetPicFromView( iCoddedViewIdx, iCurPoc, bDepth );
   pcPic->addSynthesisBuffer();
   pcPic->addAvailabilityBuffer();
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+      pcPic->addSynthesisDepthBuffer();
+      TComPicYuv* pcPicYuvSynthDepthView = pcPic->getPicYuvSynthDepth();
+      m_cAvailabilityRenderer.extrapolateAvailabilityView( xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvSynthDepthView, pcPic->getPicYuvAvail(), bRenderFromLeft );
+#if POZNAN_OUTPUT_SYNTH
+      Char acFilenameBaseD[1024];
+      ::sprintf( acFilenameBaseD,  "SynthDepth_%s_V%d.yuv", ( false ? "Dec" : "Enc" ),iCoddedViewIdx );
+      pcPicYuvSynthDepthView->dump(acFilenameBaseD, iCurPoc!=0);
+#endif
+#endif
   TComPicYuv* pcPicYuvSynthView = pcPic->getPicYuvSynth();
   TComPicYuv* pcPicYuvAvailView = pcPic->getPicYuvAvail();
-  
   //m_cAvailabilityRenderer.extrapolateAvailabilityView( xGetPicFromView( iNearestViewIdx, iCurPoc, false )->getPicYuvRec(), xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvERView, pcPicYuvAvailView, bRenderFromLeft );
   m_cAvailabilityRenderer.extrapolateAvailabilityView( xGetPicFromView( iNearestViewIdx, iCurPoc, bDepth )->getPicYuvRec(), xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvSynthView, pcPicYuvAvailView, bRenderFromLeft );
       
@@ -1255,9 +1339,9 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
       
 #if POZNAN_OUTPUT_AVAILABLE_MAP
   {
-  Char acFilenameBase[1024];
-  ::sprintf( acFilenameBase,  "Available_%s_%s_V%d.yuv", (bDepth?"Depth":"Tex"),( false ? "Dec" : "Enc" ),iCoddedViewIdx );
-  pcPicYuvAvailView->dump(acFilenameBase, iCurPoc!=0);
+    Char acFilenameBase[1024];
+    ::sprintf( acFilenameBase,  "Available_%s_%s_V%d.yuv", (bDepth?"Depth":"Tex"),( false ? "Dec" : "Enc" ),iCoddedViewIdx );
+    pcPicYuvAvailView->dump(acFilenameBase, iCurPoc!=0);
   }
 #endif
 #if POZNAN_OUTPUT_SYNTH
@@ -1267,8 +1351,6 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
   pcPicYuvERView->dump(acFilenameBase, iCurPoc!=0);
   }
 #endif
-
-      //Usun pcPicYuvERView i inne bufforki
 }
 #endif
 

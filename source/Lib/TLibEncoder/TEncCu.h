@@ -77,13 +77,13 @@ private:
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
   TComYuv**               m_ppcResPredTmp;  ///< Temporary residual prediction for each depth
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
   TComYuv**               m_ppcAvailYuv;    ///< Avaiability map for each depth  
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   TComYuv**               m_ppcSynthYuv;    ///< Synthetized Yuv for each depth
 #endif
-
+  
   //  Data : encoder control
   Int                     m_iQp;            ///< Last QP
   
@@ -112,6 +112,10 @@ private:
   UChar *m_puhHeightSaved;
 #endif
 
+#if POZNAN_STAT_JK
+  Bool m_bStatFileEnabled;
+#endif
+
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -130,6 +134,10 @@ public:
   
   /// set QP value
   Void  setQpLast           ( Int iQp ) { m_iQp = iQp; }
+  
+#if POZNAN_STAT_JK
+  Void setStatFileEnabled(Bool bStatFileEnabled){m_bStatFileEnabled = bStatFileEnabled;}
+#endif
   
 protected:
   Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
@@ -160,6 +168,14 @@ protected:
   Void  xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UChar uhTextureModeDepth, Bool bSkipResidual, Bool bRecursiveCall );
   Void  xSaveDepthWidthHeight( TComDataCU* pcCU );
   Void  xRestoreDepthWidthHeight( TComDataCU* pcCU );
+#endif
+
+#if POZNAN_EIVD & !POZNAN_EIVD_COMPRESS_ME_DATA
+  Void  xSaveEIVDData(TComDataCU* pcCU) { pcCU->getSlice()->getMP()->saveEIVDData(pcCU);}
+#endif
+
+#if POZNAN_STAT_JK
+  Void	xStatFile			( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
 #endif
 };
 

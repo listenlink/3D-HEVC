@@ -56,6 +56,11 @@ class TComDepthMapGenerator;
 class TComResidualGenerator;
 #endif
 
+#if POZNAN_MP
+//#include "../TLibCommon/TComMP.h"
+class TComMP;
+#endif
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -152,6 +157,18 @@ private:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator* m_pcResidualGenerator;
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+  Float  m_fDepthPower;
+#endif
+
+#if POZNAN_MP
+  TComMP* m_pcMP;
+#endif
+
+#if POZNAN_STAT_JK
+  FILE* m_pcStatFile[MAX_INPUT_VIEW_NUM];
 #endif
 
 public:
@@ -304,6 +321,12 @@ public:
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
 #endif
+#if POZNAN_NONLINEAR_DEPTH
+  inline Void    setDepthPower(Float p)   {m_fDepthPower = p;}
+  inline Float	 getDepthPower()          {return m_fDepthPower;}
+#else
+  inline Float	 getDepthPower()          {return 1.0f;}
+#endif
 };
 
 /// PPS class
@@ -444,9 +467,21 @@ private:
   wpACDCParam	m_weightACDCParam[3]; // [0:Y, 1:U, 2:V]
 #endif
 
+#if POZNAN_MP
+  TComMP* m_pcMP;
+#endif
+
+#if POZNAN_STAT_JK
+  FILE* m_pcStatFile;
+#endif
+
 public:
   TComSlice();
+#if POZNAN_MP
+  ~TComSlice();
+#else
   virtual ~TComSlice();
+#endif
 
   Void      initSlice       ();
 
@@ -602,6 +637,16 @@ public:
   Void  setWpAcDcParam ( wpACDCParam wp[3] ) { memcpy(m_weightACDCParam, wp, sizeof(wpACDCParam)*3); }
   Void  getWpAcDcParam ( wpACDCParam *&wp );
   Void  initWpAcDcParam();
+#endif
+
+#if POZNAN_MP
+  Void setMP(TComMP* pcMP) { m_pcMP = pcMP; }
+  TComMP* getMP() { return m_pcMP; }
+#endif
+
+#if POZNAN_STAT_JK
+  Void setStatFile(FILE* pcStatFile) { m_pcStatFile = pcStatFile; }
+  FILE* getStatFile() { return m_pcStatFile; }
 #endif
 
 protected:

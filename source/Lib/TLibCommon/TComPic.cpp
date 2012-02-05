@@ -49,11 +49,14 @@ TComPic::TComPic()
   m_apcPicSym         = NULL;
   m_apcPicYuv[0]      = NULL;
   m_apcPicYuv[1]      = NULL;
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   m_apcPicYuvAvail     = NULL;
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   m_apcPicYuvSynth     = NULL;
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  m_apcPicYuvSynthDepth= NULL; 
+#endif
 #endif
 #if DEPTH_MAP_GENERATION
   m_pcPredDepthMap    = NULL;
@@ -121,7 +124,7 @@ Void TComPic::destroy()
     delete m_apcPicYuv[1];
     m_apcPicYuv[1]  = NULL;
   }
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   if (m_apcPicYuvAvail)
   {
     m_apcPicYuvAvail->destroy();
@@ -130,13 +133,21 @@ Void TComPic::destroy()
   }
 #endif
 
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   if (m_apcPicYuvSynth)
   {
     m_apcPicYuvSynth->destroy();
     delete m_apcPicYuvSynth;
     m_apcPicYuvSynth  = NULL;
   }
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  if (m_apcPicYuvSynthDepth)
+  {
+    m_apcPicYuvSynthDepth->destroy();
+    delete m_apcPicYuvSynthDepth;
+    m_apcPicYuvSynthDepth  = NULL;
+  }
+#endif
 #endif
   
 #if DEPTH_MAP_GENERATION
@@ -215,7 +226,7 @@ TComPic::addOriginalBuffer()
   m_apcPicYuv[0]      ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
 }
 
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
 Void
 TComPic::addAvailabilityBuffer()
 {
@@ -231,7 +242,7 @@ TComPic::addAvailabilityBuffer()
 }
 #endif
 
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
 Void
 TComPic::addSynthesisBuffer()
 {
@@ -245,6 +256,21 @@ TComPic::addSynthesisBuffer()
   m_apcPicYuvSynth      = new TComPicYuv;
   m_apcPicYuvSynth      ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
 }
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+Void
+TComPic::addSynthesisDepthBuffer()
+{
+  AOT( m_apcPicYuvSynthDepth );
+  AOF( m_apcPicYuv[1] );
+  Int   iWidth        = m_apcPicYuv[1]->getWidth      ();
+  Int   iHeight       = m_apcPicYuv[1]->getHeight     ();
+  UInt  uiMaxCuWidth  = m_apcPicYuv[1]->getMaxCuWidth ();
+  UInt  uiMaxCuHeight = m_apcPicYuv[1]->getMaxCuHeight();
+  UInt  uiMaxCuDepth  = m_apcPicYuv[1]->getMaxCuDepth ();
+  m_apcPicYuvSynthDepth      = new TComPicYuv;
+  m_apcPicYuvSynthDepth      ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
+}
+#endif
 #endif
 
 #if PARALLEL_MERGED_DEBLK
@@ -338,7 +364,7 @@ TComPic::removeOriginalBuffer()
   }
 }
 
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
 Void
 TComPic::removeAvailabilityBuffer()
 {
@@ -351,7 +377,7 @@ TComPic::removeAvailabilityBuffer()
 }
 #endif
 
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
 Void
 TComPic::removeSynthesisBuffer()
 {
@@ -362,6 +388,18 @@ TComPic::removeSynthesisBuffer()
     m_apcPicYuvSynth  = NULL;
   }
 }
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+Void
+TComPic::removeSynthesisDepthBuffer()
+{
+  if( m_apcPicYuvSynthDepth )
+  {
+    m_apcPicYuvSynthDepth->destroy();
+    delete m_apcPicYuvSynthDepth;
+    m_apcPicYuvSynthDepth  = NULL;
+  }
+}
+#endif
 #endif
 
 #if PARALLEL_MERGED_DEBLK
@@ -429,7 +467,7 @@ TComPic::removeUsedPelsMapBuffer()
 }
 #endif
 
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP
 Void TComPic::checkSynthesisAvailability( TComDataCU*& rpcCU, UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth, Bool *&rpbCUSynthesied )
 { 
   rpbCUSynthesied[0] = true;

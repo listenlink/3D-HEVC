@@ -444,7 +444,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   
   //-- Set BS for Intra MB : BS = 4 or 3
   if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) 
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP && POZNAN_CU_SYNTH
      || pcCUP->isCUSkiped(uiPartP) || pcCUQ->isCUSkiped(uiPartQ) 
 #endif
   )
@@ -454,7 +454,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
 
   //-- Set BS for not Intra MB : BS = 2 or 1 or 0
   if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) 
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP && POZNAN_CU_SYNTH
      && !pcCUP->isCUSkiped(uiPartP) && !pcCUQ->isCUSkiped(uiPartQ) 
 #endif
   )
@@ -535,7 +535,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
     }   // enf of "if( one of BCBP == 0 )"
   }   // enf of "if( not Intra )"
 
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU //if one of the block is CUSkipped dont use loop filter
+#if POZNAN_CU_SKIP //if one of the block is CUSkipped dont use loop filter
   if ( pcCUP->isCUSkiped(uiPartP) || pcCUQ->isCUSkiped(uiPartQ))
   {
     uiBs = 0;

@@ -64,18 +64,46 @@
 #define POZNAN_CU_SKIP              1 //Poznan Cu Skip
 #define POZNAN_CU_SYNTH             1 //Poznan Cu Synth
 
-#define POZNAN_AVAIL_MAP            1 //Creates Availibity buffers in all needed classes
+#define POZNAN_NONLINEAR_DEPTH              0	 /// Non-linear depth processing (Maciej Kurc)
+#define POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE 1	 /// Send DepthPower as byte instead of float
 
-#define POZNAN_SYNTH_VIEW           1 //Creates view synthesis buffers in all needed classes
-#define POZNAN_SYNTH_DEPTH          1
+#if POZNAN_CU_SYNTH 
+#define POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH 0 /// increase QP for texture CUs that are in the background (according to proper depth map). This QP change is not encoded in a bitstream
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH     
+ #define POZNAN_TEXTURE_TU_DELTA_QP_NOT_IN_BASE_VIEW 1     /// should not be disabled in current software version - no depth synthesis map is available for base view anyway  
+ #define POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_CU_ROW 1    /// increase of QP param for top and bottom LCU row in frame 
+ #define POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 0 /// used for optimization of function calculating dQP from depth block max value. Standard values set if disabled. If enabled params are set in cfg file for encoder (no decoder is supported in that case).
+  #if !POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+    #define POZNAN_TEXTURE_TU_DELTA_QP_OFFSET (-2.6)
+    #define POZNAN_TEXTURE_TU_DELTA_QP_MUL (1)
+    #define POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_ROW_VAL (2)
+  #endif
+#endif
 
-#define POZNAN_SYNTH                1 //Creates aligned synthesis classes in encoder and decoder
+#define POZNAN_EIVD                                0    // Depth Based Vector Prediction prediction for MERGE
+#if POZNAN_EIVD
+#define POZNAN_EIVD_USE_FOR_TEXTURE                  1    //use Depth Based Vector Prediction in texture pictures (0 - no, 1 -yes)
+#define POZNAN_EIVD_USE_FOR_DEPTH                  1    // use Depth Based Vector Prediction in depth pictures (0 - no, 1 -yes)
 
-#define POZNAN_ENCODE_ONLY_DISOCCLUDED_CU          1 //Poznan CU Skip
-#define POZNAN_FILL_OCCLUDED_CU_WITH_SYNTHESIS     1 //Fills not sended CUs with synthesized data
+#define POZNAN_EIVD_CALC_PRED_DATA 	        1    // Depth Based Vector Prediction motion data used for prediction in other CUs is calculated based on all CU points (otherwise motion data for none-MP points is used for prediction)
+#define POZNAN_EIVD_COMPRESS_ME_DATA	        0    // Depth Based Vector Prediction derives representative motion data from reference CUs even if they are EIVD-based predicted (otherwise motion data is derived with per-point resolution for EIVD-based predicted reference CUs)
+#define POZNAN_EIVD_USE_IN_NONANCHOR_PIC_ONLY     	1    // determines if Depth Based Vector Prediction is used in non-anchor pictures only
+#endif
 
-#define POZNAN_CU_SKIP_PSNR         1 //Poznan Cu Skip Display psnr of the codded CU only
+#endif
+
+// ---------------------------------------
+
+#define POZNAN_STAT_JK	0 // save CU statistics to file
+
+#if POZNAN_STAT_JK
+#define POZNAN_STAT_JK_FLUSH 1 // flush CU statistics to file after each CU
+#endif
+
+#define POZNAN_CU_SKIP_PSNR         1
 //<<<<< Poznan 3DV tools <<<<<<
+
 
 ////////////////////////////
 // AHG18 Weighted Prediction defines section start
@@ -355,6 +383,7 @@ typedef       unsigned int        UInt;
 typedef       long                Long;
 typedef       unsigned long       ULong;
 typedef       double              Double;
+typedef       float               Float;
 
 // ====================================================================================================================
 // 64-bit integer type

@@ -50,6 +50,10 @@
 #include "../../Lib/TLibRenderer/TRenTop.h"
 //GT VSO end
 
+#if POZNAN_MP
+#include "../../Lib/TLibCommon/TComMP.h"
+#endif	
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -91,8 +95,17 @@ private:
   TRenModel                   m_cRendererModel;   
 #endif
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP||POZNAN_CU_SYNTH
   TRenTop                     m_cAvailabilityRenderer;
+#endif
+
+#if POZNAN_MP
+  TComMP*				  m_pcMP;
+#endif
+
+#if POZNAN_STAT_JK
+  std::vector<FILE*>       m_cStatFileList;					    ///< texure statistics file handles
+  std::vector<FILE*>       m_cDepthStatFileList;				///< depth statistics file handles
 #endif
 
 protected:
@@ -148,6 +161,10 @@ public:
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
 #endif
 
+#if POZNAN_MP
+  TComMP* getMP() {return m_pcMP;}
+#endif
+
 #if HHI_VSO
 private:
   std::vector<TVideoIOYuv*>		               m_acTVideoIOYuvERFileList;
@@ -159,7 +176,7 @@ private:
 #endif
 
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SYNTH
 private:
   Void  xStoreSynthPicsInBuffer(Int iCoddedViewIdx, Bool bDepth);
 #endif

@@ -54,6 +54,10 @@
 #include "TDecSbac.h"
 #include "TDecCAVLC.h"
 
+#if POZNAN_MP
+#include "../TLibCommon/TComMP.h"
+#endif
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -70,7 +74,7 @@ public:
   Void  init        ( FILE* pCodedScaleOffsetFile );
   Void  uninit      ();
   Void  setSlice    ( TComSlice* pcSlice );
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
   Double****          getBaseViewShiftLUTD      ()  { return m_adBaseViewShiftLUT;   }
   Int****             getBaseViewShiftLUTI      ()  { return m_aiBaseViewShiftLUT;   }
 
@@ -98,7 +102,7 @@ private:
   Int     m_iLastPOC;
   UInt    m_uiMaxViewId;
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
 
   UInt    m_uiBitDepthForLUT;
   UInt    m_iLog2Precision;
@@ -117,7 +121,7 @@ private:
 #endif
 };
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
   template <class T>
 Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 )
 {
@@ -220,6 +224,10 @@ private:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator   m_cResidualGenerator;
+#endif
+
+#if POZNAN_MP
+  TComMP*				  m_pcMP;
 #endif
 
   Bool                    m_bIsDepth;

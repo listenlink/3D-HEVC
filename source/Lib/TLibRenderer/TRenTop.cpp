@@ -241,7 +241,7 @@ Void TRenTop::setShiftLUTs( Double** ppdShiftLUTLeft, Int** ppiShiftLUTLeft, Int
   {
     for( UInt uiPlane = 0; uiPlane < 2; uiPlane++)
     {
-      for (UInt uiDepthValue = 0; uiDepthValue <= 256; uiDepthValue++)
+      for (UInt uiDepthValue = 0; uiDepthValue <= SizeOfLUT; uiDepthValue++)
       {
         m_ppdShiftLUTRightMirror[uiPlane][uiDepthValue] = - m_ppdShiftLUTRight[uiPlane][uiDepthValue];
         m_ppiShiftLUTRightMirror[uiPlane][uiDepthValue] = - m_ppiShiftLUTRight[uiPlane][uiDepthValue];
@@ -265,9 +265,10 @@ Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDe
   PelImage cInputImage ( pcPicYuvVideo    );
   PelImage cInputDepth ( pcPicYuvDepth    , true);
   PelImage cOutputImage( pcPicYuvSynthOut );
-    
+
   m_pcOutputImage->init();
   m_pcFilled     ->assign(REN_IS_HOLE);
+
   xPreProcessDepth ( &cInputDepth,  &cInputDepth);
   xConvertInputData( &cInputImage, &cInputDepth, m_pcInputImage, m_pcInputDepth, !bRenderFromLeft );
   xShiftPixels(m_pcInputImage, m_pcInputDepth, m_pcOutputImage, m_pcFilled, bRenderFromLeft);
@@ -278,7 +279,7 @@ Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDe
   xCutMargin        ( &cOutputImage );
 };
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP
 Void TRenTop::extrapolateAvailabilityView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDepth, TComPicYuv* pcPicYuvSynthOut, TComPicYuv* pcPicYuvAvailOut, Bool bRenderFromLeft )
 {
   AOF( m_bExtrapolate );
@@ -291,19 +292,28 @@ Void TRenTop::extrapolateAvailabilityView( TComPicYuv* pcPicYuvVideo, TComPicYuv
   PelImage cOutputImage( pcPicYuvSynthOut );
   PelImage cFillImage( pcPicYuvAvailOut );
     
+  printf("0");
   m_pcOutputImage->init();
   m_pcFilled     ->assign(REN_IS_HOLE);
-  
+  printf("1");
   xPreProcessDepth ( &cInputDepth,  &cInputDepth);
+  printf("2");
   xConvertInputData( &cInputImage, &cInputDepth, m_pcInputImage, m_pcInputDepth, !bRenderFromLeft );
+  printf("3");
   xShiftPixels(m_pcInputImage, m_pcInputDepth, m_pcOutputImage, &cFillImage, bRenderFromLeft);
+  printf("4");
   xRemBoundaryNoise ( m_pcOutputImage, &cFillImage, m_pcOutputImage, bRenderFromLeft); // Erode
+  printf("5");
   xFillHoles        ( m_pcOutputImage, &cFillImage, m_pcOutputImage, bRenderFromLeft);
+  printf("6");
   xConvertOutputData( m_pcOutputImage, &cOutputImage, !bRenderFromLeft );
   if (!bRenderFromLeft)  TRenFilter::mirrorHor( &cFillImage );
   //xConvertOutputData( m_pcFilled, &cFillImage, !bRenderFromLeft );
+  printf("7");
   xPostProcessImage (&cOutputImage, &cOutputImage);
+  printf("8");
   xCutMargin        ( &cOutputImage );
+  printf("9");
 };
 #endif
 
@@ -496,7 +506,7 @@ Void TRenTop::xShiftPlanePixelsLinInt( PelImagePlane** apcInputPlanes, PelImageP
       Bool bExtrapolate = false;
 
       // compute disparity and shift
-      iShiftedPos  = ( iPosX << m_iRelShiftLUTPrec ) - m_aiShiftLUTCur[RemoveBitIncrement( pcDepthData[iPosX])];
+      iShiftedPos  = ( iPosX << m_iRelShiftLUTPrec ) - m_aiShiftLUTCur[RemoveBitIncrementLUT( pcDepthData[iPosX])];
 
       if (iPosX == 0)
       {
@@ -650,8 +660,8 @@ Void TRenTop::xShiftPlanePixelsLinReal( PelImagePlane** apcInputPlanes, PelImage
         Bool bExtrapolate = false;
 
         // compute disparity and shift
-        assert( RemoveBitIncrement(pcDepthData[iPosX]) >= 0 && RemoveBitIncrement(pcDepthData[iPosX]) <= 256 );
-        dPrevShiftedPos  = (Double) iPosX - m_adShiftLUTCur[ RemoveBitIncrement(pcDepthData[iPosX])];
+        assert( RemoveBitIncrementLUT(pcDepthData[iPosX]) >= 0 && RemoveBitIncrementLUT(pcDepthData[iPosX]) <= SizeOfLUT );
+        dPrevShiftedPos  = (Double) iPosX - m_adShiftLUTCur[ RemoveBitIncrementLUT(pcDepthData[iPosX])];
 
         if (iPosX == 0)
         {
@@ -831,8 +841,8 @@ Void TRenTop::xShiftPlanePixelsFullPel( PelImagePlane** apcInputPlanes, PelImage
 
     for(Int iPosX = 0; iPosX < iWidth; iPosX++)
     {
-      assert( RemoveBitIncrement(pcDepthData[iPosX]) >= 0 && RemoveBitIncrement(pcDepthData[iPosX]) <= 256 );
-      Int iShiftedPos = iPosX - m_aiShiftLUTCur[ RemoveBitIncrement(pcDepthData[iPosX])] ;
+      assert( RemoveBitIncrementLUT(pcDepthData[iPosX]) >= 0 && RemoveBitIncrementLUT(pcDepthData[iPosX]) <= SizeOfLUT );
+      Int iShiftedPos = iPosX - m_aiShiftLUTCur[ RemoveBitIncrementLUT(pcDepthData[iPosX])] ;
       if (iShiftedPos < iWidth && iShiftedPos >= 0)
       {
         Int iDiff = iShiftedPos - iPrevShiftedPos;
@@ -906,7 +916,7 @@ Void TRenTop::xBackShiftPlanePixels( PelImagePlane** apcInputPlanes, PelImagePla
   {
     for(Int iPosX = 0; iPosX < iOutputWidth; iPosX ++)
     {
-      Int iBackShiftedPos = (iPosX << m_iRelShiftLUTPrec) - m_aiShiftLUTCur[ RemoveBitIncrement( pcDepthData[iPosX] )];
+      Int iBackShiftedPos = (iPosX << m_iRelShiftLUTPrec) - m_aiShiftLUTCur[ RemoveBitIncrementLUT( pcDepthData[iPosX] )];
       if( ( pcFilledData[iPosX] == REN_IS_FILLED )  && (iBackShiftedPos >= 0 ) && ( iBackShiftedPos < iInputWidth ) )
       {
         for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
@@ -979,7 +989,7 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
     for(Int iPosX = 0; iPosX < iInputWidth; iPosX += iStep )
     {
       // compute disparity and shift
-      iShiftedPos  =  iPosX - m_aiShiftLUTCur[RemoveBitIncrement(pcDepthData[iPosX])];
+      iShiftedPos  =  iPosX - m_aiShiftLUTCur[RemoveBitIncrementLUT(pcDepthData[iPosX])];
 
       if ( iPosX == 0 )
       {
@@ -1864,7 +1874,7 @@ Void TRenTop::xBlendPlanesAvg( PelImagePlane** apcLeftPlane, PelImagePlane** apc
       {
         if      (  (pcFilledRightData[uiXPos] != REN_IS_HOLE ) && ( pcFilledLeftData[uiXPos] != REN_IS_HOLE) )
         {
-          Int iDepthDifference  = m_piInvZLUTLeft[RemoveBitIncrement(pcLeftDepthData[uiXPos])] - m_piInvZLUTRight[RemoveBitIncrement(pcRightDepthData[uiXPos])];
+          Int iDepthDifference  = m_piInvZLUTLeft[RemoveBitIncrementLUT(pcLeftDepthData[uiXPos])] - m_piInvZLUTRight[RemoveBitIncrementLUT(pcRightDepthData[uiXPos])];
 
           if ( abs ( iDepthDifference ) <= m_iBlendZThres )
           {
@@ -1893,7 +1903,7 @@ Void TRenTop::xBlendPlanesAvg( PelImagePlane** apcLeftPlane, PelImagePlane** apc
         }
         else if ( (pcFilledRightData[uiXPos] == REN_IS_HOLE) && (pcFilledLeftData[uiXPos] == REN_IS_HOLE))
         {
-          pcOutputData[uiXPos] = m_piInvZLUTLeft[RemoveBitIncrement( pcLeftDepthData[uiXPos])]  < m_piInvZLUTRight[RemoveBitIncrement(pcRightDepthData[uiXPos])] ? pcLeftVideoData[uiXPos] : pcRightVideoData[uiXPos];
+          pcOutputData[uiXPos] = m_piInvZLUTLeft[RemoveBitIncrementLUT( pcLeftDepthData[uiXPos])]  < m_piInvZLUTRight[RemoveBitIncrementLUT(pcRightDepthData[uiXPos])] ? pcLeftVideoData[uiXPos] : pcRightVideoData[uiXPos];
         }
         else
         {
@@ -2057,20 +2067,20 @@ TRenTop::TRenTop()
   m_ppdShiftLUTRight = 0;
 
   m_ppdShiftLUTRightMirror    = new Double*[2];
-  m_ppdShiftLUTRightMirror[0] = new Double [257];
-  m_ppdShiftLUTRightMirror[1] = new Double [257];
+  m_ppdShiftLUTRightMirror[0] = new Double [SizeOfLUT+1];
+  m_ppdShiftLUTRightMirror[1] = new Double [SizeOfLUT+1];
 
   m_adShiftLUTCur    = 0;
 
   m_ppiShiftLUTLeft  = 0;
   m_ppiShiftLUTRight = 0;
   m_ppiShiftLUTRightMirror    = new Int*[2];
-  m_ppiShiftLUTRightMirror[0] = new Int[257];
-  m_ppiShiftLUTRightMirror[1] = new Int[257];
+  m_ppiShiftLUTRightMirror[0] = new Int[SizeOfLUT+1];
+  m_ppiShiftLUTRightMirror[1] = new Int[SizeOfLUT+1];
 
   m_aiShiftLUTCur    = 0;
-  m_piInvZLUTLeft  = new Int[257];
-  m_piInvZLUTRight = new Int[257];
+  m_piInvZLUTLeft  = new Int[SizeOfLUT+1];
+  m_piInvZLUTRight = new Int[SizeOfLUT+1];
 
   // Buffers
   m_pcLeftInputImage   = 0;

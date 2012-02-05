@@ -292,6 +292,18 @@ Void TEncPic::compressPic( TComBitstream* pcBitstreamOut, TComPicYuv cPicOrg, TC
 #endif
 #endif
 
+#if POZNAN_MP    
+#if POZNAN_MP_USE_DEPTH_MAP_GENERATION
+	  pcSlice->getMP()->setDepthMapGenerator(m_pcDepthMapGenerator);
+#else
+      std::vector<TComPic*> apcSpatDepthRefPics = m_pcEncTop->getEncTop()->getSpatialRefPics( pcPic->getViewIdx(), pcSlice->getPOC(), true );
+	  pcSlice->getMP()->setDepthRefPicsList(&apcSpatDepthRefPics);
+#endif
+	  std::vector<TComPic*> apcSpatDataRefPics = m_pcEncTop->getEncTop()->getSpatialRefPics( pcPic->getViewIdx(), pcSlice->getPOC(), m_pcEncTop->isDepthCoder() );
+	  pcSlice->getMP()->setRefPicsList(&apcSpatDataRefPics);
+	  pcSlice->getMP()->pairMultiview(pcPic);
+#endif
+
       while(uiNextCUAddr<pcPic->getPicSym()->getNumberOfCUsInFrame()) // determine slice boundaries
       {
         pcSlice->setNextSlice       ( false );
@@ -614,6 +626,10 @@ Void TEncPic::compressPic( TComBitstream* pcBitstreamOut, TComPicYuv cPicOrg, TC
       pcBitstreamOut->flushBuffer();
       pcBitstreamOut->convertRBSPToPayload(0);
 
+#if POZNAN_MP
+	  pcSlice->getMP()->disable();
+#endif
+
 /*#if AMVP_BUFFERCOMPRESS
       pcPic->compressMotion(); // moved to end of access unit
 #endif */
@@ -821,10 +837,10 @@ Void TEncPic::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, UInt uibits
 #if POZNAN_CU_SKIP_PSNR
   if(pAvail)
   {
-    for( y = 0; y < iHeight; y++ )
+  for( y = 0; y < iHeight; y++ )
+  {
+    for( x = 0; x < iWidth; x++ )
     {
-      for( x = 0; x < iWidth; x++ )
-      {
         if(pAvail[x]==0) //If pixel was codded
         {
           Int iDiff = (Int)( pOrg[x] - pRec[x] );
@@ -846,12 +862,12 @@ Void TEncPic::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, UInt uibits
     {
       for( x = 0; x < iWidth; x++ )
       {
-        Int iDiff = (Int)( pOrg[x] - pRec[x] );
-        uiSSDY   += iDiff * iDiff;
-      }
-      pOrg += iStride;
-      pRec += iStride;
+      Int iDiff = (Int)( pOrg[x] - pRec[x] );
+      uiSSDY   += iDiff * iDiff;
     }
+    pOrg += iStride;
+    pRec += iStride;
+  }
   }
 
 #if HHI_VSO
@@ -868,94 +884,94 @@ Void TEncPic::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, UInt uibits
 #endif
   {
 #if POZNAN_CU_SKIP_PSNR
-    if(pAvail)
+  if(pAvail)
+  {
+    iHeight >>= 1;
+    iWidth  >>= 1;
+    iStride >>= 1;
+  
+    pOrg  = pcPic ->getPicYuvOrg()->getCbAddr();
+    pRec  = pcPicD->getCbAddr();
+    pAvail  = pcPic ->getPicYuvAvail()->getLumaAddr();
+    iPixelsCnt = 0;
+
+    for( y = 0; y < iHeight; y++ )
     {
-      iHeight >>= 1;
-      iWidth  >>= 1;
-      iStride >>= 1;
-    
-      pOrg  = pcPic ->getPicYuvOrg()->getCbAddr();
-      pRec  = pcPicD->getCbAddr();
-      pAvail  = pcPic ->getPicYuvAvail()->getLumaAddr();
-      iPixelsCnt = 0;
-
-      for( y = 0; y < iHeight; y++ )
+      for( x = 0; x < iWidth; x++ )
       {
-        for( x = 0; x < iWidth; x++ )
-        {
-          if(pAvail[x<<1]==0||pAvail[(x<<1)+1]==0||
-             pAvail[(x+iStride)<<1]==0||pAvail[((x+iStride)<<1)+1]==0) //If pixel was codded
-          {
-            Int iDiff = (Int)( pOrg[x] - pRec[x] );
-            uiSSDU   += iDiff * iDiff;
-            iPixelsCnt++;
-          }
-        }
-        pOrg += iStride;
-        pRec += iStride;
-        pAvail+= (iStride<<2);
-      }
-      
-      fRefValueC = (double) maxval * maxval * iPixelsCnt;
-
-      pOrg  = pcPic ->getPicYuvOrg()->getCrAddr();
-      pRec  = pcPicD->getCrAddr();
-      pAvail  = pcPic ->getPicYuvAvail()->getLumaAddr();
-      for( y = 0; y < iHeight; y++ )
-      {
-        for( x = 0; x < iWidth; x++ )
-        {
-          if(pAvail[x<<1]==0||pAvail[(x<<1)+1]==0||
-             pAvail[(x+iStride)<<1]==0||pAvail[((x+iStride)<<1)+1]==0) //If pixel was codded
-          {
-            Int iDiff = (Int)( pOrg[x] - pRec[x] );
-            uiSSDV   += iDiff * iDiff;
-          }
-        }
-        pOrg += iStride;
-        pRec += iStride;
-        pAvail+= iStride<<2;
-      }
-    }
-    else
-#endif
-    {
-      iHeight >>= 1;
-      iWidth  >>= 1;
-      iStride >>= 1;
-
-      pOrg  = pcPic ->getPicYuvOrg()->getCbAddr();
-      pRec  = pcPicD->getCbAddr();
-
-      for( y = 0; y < iHeight; y++ )
-      {
-        for( x = 0; x < iWidth; x++ )
+        if(pAvail[x<<1]==0||pAvail[(x<<1)+1]==0||
+           pAvail[(x+iStride)<<1]==0||pAvail[((x+iStride)<<1)+1]==0) //If pixel was codded
         {
           Int iDiff = (Int)( pOrg[x] - pRec[x] );
           uiSSDU   += iDiff * iDiff;
+          iPixelsCnt++;
         }
-        pOrg += iStride;
-        pRec += iStride;
       }
+      pOrg += iStride;
+      pRec += iStride;
+        pAvail+= (iStride<<2);
+    }
 
-      pOrg  = pcPic ->getPicYuvOrg()->getCrAddr();
-      pRec  = pcPicD->getCrAddr();
+    fRefValueC = (double) maxval * maxval * iPixelsCnt;
 
-      for( y = 0; y < iHeight; y++ )
+    pOrg  = pcPic ->getPicYuvOrg()->getCrAddr();
+    pRec  = pcPicD->getCrAddr();
+    pAvail  = pcPic ->getPicYuvAvail()->getLumaAddr();
+    for( y = 0; y < iHeight; y++ )
+    {
+      for( x = 0; x < iWidth; x++ )
       {
-        for( x = 0; x < iWidth; x++ )
+        if(pAvail[x<<1]==0||pAvail[(x<<1)+1]==0||
+           pAvail[(x+iStride)<<1]==0||pAvail[((x+iStride)<<1)+1]==0) //If pixel was codded
         {
           Int iDiff = (Int)( pOrg[x] - pRec[x] );
           uiSSDV   += iDiff * iDiff;
         }
-        pOrg += iStride;
-        pRec += iStride;
       }
+      pOrg += iStride;
+      pRec += iStride;
+        pAvail+= iStride<<2;
     }
+  }
+  else
+#endif
+  {
+  iHeight >>= 1;
+  iWidth  >>= 1;
+  iStride >>= 1;
 
-    dYPSNR            = ( uiSSDY ? 10.0 * log10( fRefValueY / (Double)uiSSDY ) : 99.99 );
-    dUPSNR            = ( uiSSDU ? 10.0 * log10( fRefValueC / (Double)uiSSDU ) : 99.99 );
-    dVPSNR            = ( uiSSDV ? 10.0 * log10( fRefValueC / (Double)uiSSDV ) : 99.99 );
+  pOrg  = pcPic ->getPicYuvOrg()->getCbAddr();
+  pRec  = pcPicD->getCbAddr();
+
+  for( y = 0; y < iHeight; y++ )
+  {
+    for( x = 0; x < iWidth; x++ )
+    {
+      Int iDiff = (Int)( pOrg[x] - pRec[x] );
+      uiSSDU   += iDiff * iDiff;
+    }
+    pOrg += iStride;
+    pRec += iStride;
+  }
+
+  pOrg  = pcPic ->getPicYuvOrg()->getCrAddr();
+  pRec  = pcPicD->getCrAddr();
+
+  for( y = 0; y < iHeight; y++ )
+  {
+    for( x = 0; x < iWidth; x++ )
+    {
+      Int iDiff = (Int)( pOrg[x] - pRec[x] );
+      uiSSDV   += iDiff * iDiff;
+    }
+    pOrg += iStride;
+    pRec += iStride;
+  }
+  }
+
+  dYPSNR            = ( uiSSDY ? 10.0 * log10( fRefValueY / (Double)uiSSDY ) : 99.99 );
+  dUPSNR            = ( uiSSDU ? 10.0 * log10( fRefValueC / (Double)uiSSDU ) : 99.99 );
+  dVPSNR            = ( uiSSDV ? 10.0 * log10( fRefValueC / (Double)uiSSDV ) : 99.99 );
   }
   // fix: total bits should consider slice size bits (32bit)
   uibits += 32;

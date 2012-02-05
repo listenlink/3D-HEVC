@@ -270,6 +270,22 @@ protected:
   // Ren Model String
   TRenModSetupStrParser       m_cRenModStrParser;
 #endif
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+  Double                      m_dTextureCuDeltaQpOffset;
+  Double                      m_dTextureCuDeltaQpMul;
+  Int                         m_iTextureCuDeltaQpTopBottomRow;
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+  Double    m_fDepthPower;									  ///< Depth power value
+#endif
+
+#if POZNAN_STAT_JK
+  std::vector<char*>	   m_pchStatFileList;					///< texure statistics file names
+  std::vector<char*>	   m_pchDepthStatFileList;				///< depth statistics file names
+#endif
+
 public:
 
   TAppEncCfg();

@@ -474,6 +474,10 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   m_pcEntropyCoder->setAlfCtrl(false);
   m_pcEntropyCoder->setMaxAlfCtrlDepth(0); //unnecessary
 
+#if POZNAN_STAT_JK
+  m_pcCuEncoder->setStatFileEnabled(false);
+#endif
+
   // for every CU in slice
   for(  uiCUAddr = uiStartCUAddr; uiCUAddr < uiBoundingCUAddr; uiCUAddr++  )
   {
@@ -610,6 +614,10 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
   g_bJustDoIt = g_bEncDecTraceDisable;
 #endif
 
+#if POZNAN_STAT_JK
+  m_pcCuEncoder->setStatFileEnabled(true);
+#endif
+
   for(  uiCUAddr = uiStartCUAddr; uiCUAddr<uiBoundingCUAddr; uiCUAddr++  )
   {
     m_pcCuEncoder->setQpLast( pcSlice->getSliceQp() );
@@ -617,6 +625,14 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComBitstream*& rpcBitstream )
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
+
+	// JK {
+	DTRACE_CABAC_V( g_nSymbolCounter++ );
+	DTRACE_CABAC_T( "\tCU: " );
+	DTRACE_CABAC_V( uiCUAddr );
+	DTRACE_CABAC_T( "\n" );
+	// JK }
+
     if ( (m_pcCfg->getSliceMode()!=0 || m_pcCfg->getEntropySliceMode()!=0) && uiCUAddr==uiBoundingCUAddr-1 )
     {
       m_pcCuEncoder->encodeCU( pcCU, true );

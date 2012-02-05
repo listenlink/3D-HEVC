@@ -60,10 +60,10 @@ private:
   TComYuv**           m_ppcYuvResi;       ///< array of residual buffer
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
   TComYuv**           m_ppcYuvResPred;    ///< residual prediction buffer
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
   TComYuv**           m_ppcYuvAvail;      ///< array of available map buffer
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   TComYuv**           m_ppcYuvSynth;      ///< array of synth buffer
 #endif
   TComDataCU**        m_ppcCU;            ///< CU data array

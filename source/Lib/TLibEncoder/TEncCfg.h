@@ -216,6 +216,15 @@ protected:
 #endif
 #endif
 
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 
+  Double      m_dTextureCuDeltaQpOffset;
+  Double      m_dTextureCuDeltaQpMul;
+  Int         m_iTextureCuDeltaQpTopBottomRow; 
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+  Float 	m_fDepthPower;
+#endif
+
 public:
   TEncCfg()          {}
   virtual ~TEncCfg() {}
@@ -225,6 +234,11 @@ public:
   Void      setSourceWidth                  ( Int   i )      { m_iSourceWidth = i; }
   Void      setSourceHeight                 ( Int   i )      { m_iSourceHeight = i; }
   Void      setFrameToBeEncoded             ( Int   i )      { m_iFrameToBeEncoded = i; }
+
+#if POZNAN_STAT_JK
+  FILE* m_pcStatFile;
+  Void setStatFile(FILE* a) {m_pcStatFile = a;}
+#endif
 
   //====== Coding Structure ========
 #if DCM_DECODING_REFRESH
@@ -305,6 +319,13 @@ public:
 #if HHI_VSO_DIST_INT
   Void      setAllowNegDist                 ( Bool b  )     { m_bAllowNegDist     = b; };
 #endif
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+  inline Float   getDepthPower()               { return m_fDepthPower; }
+  inline Void    setDepthPower(Float p)        { m_fDepthPower = p; }
+#else
+ inline Float    getDepthPower()               { return 1.0f; }
 #endif
 
   //====== Sequence ========

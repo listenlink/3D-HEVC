@@ -270,6 +270,19 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       xReadFlag( uiCode );
       pcSPS->setUseMVI( uiCode ? true : false );
 #endif
+#if POZNAN_NONLINEAR_DEPTH
+#if POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE
+      uiCode = 0;
+      xReadCode(8, uiCode);
+      pcSPS->setDepthPower(dequantizeDepthPower(uiCode));
+#else
+      uiCode = 0;
+      xReadCode(sizeof(float)*8, uiCode); // We do not send seign
+      //uiCode &= ~0x80000000;
+      pcSPS->setDepthPower(*((float*)&uiCode));  
+#endif
+      printf("\nfDepthPower = %f", pcSPS->getDepthPower());
+#endif
     }
     else
     {
@@ -330,7 +343,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
     }
   }
-
   return;
 }
 
@@ -2620,7 +2632,7 @@ Void TDecCavlc::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 }
 
 
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_EIVD
 Void 
 TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -2630,6 +2642,10 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
   const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : MRG_MAX_NUM_CANDS;
   if( bMVIAvailable )
     uiNumCand++;
+#endif
+#if POZNAN_EIVD
+  UInt uiModIdx;
+  const Bool bEIVDAvailable = pcCU->getSlice()->getMP()->isEIVDEnabled();
 #endif
   for( UInt uiIdx = 0; uiIdx < MRG_MAX_NUM_CANDS; uiIdx++ )
   {
@@ -2655,17 +2671,45 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
 #if HHI_MPI
     if( uiIdx > uiMviMergePos )
     {
+#if POZNAN_EIVD
+	  if(bEIVDAvailable)
+	  {
+		  if(uiIdx==POZNAN_EIVD_MERGE_POS) uiModIdx = POZNAN_EIVD_MRG_CAND;
+		  else if(uiIdx>POZNAN_EIVD_MERGE_POS) uiModIdx = uiIdx--;
+		  else uiModIdx = uiIdx;
+	  }
+	  else uiModIdx = uiIdx;
+	  if( pcCU->getNeighbourCandIdx( uiModIdx-1, uiAbsPartIdx ) != uiModIdx )
+	  {
+        ruiMergeIndex++;
+      }
+#else
       if( pcCU->getNeighbourCandIdx( uiIdx - 1, uiAbsPartIdx ) != uiIdx )
       {
         ruiMergeIndex++;
       }
+#endif
     }
     else if( uiIdx < uiMviMergePos )
 #endif
+#if POZNAN_EIVD
+	if(bEIVDAvailable)
+	{
+	  if(uiIdx==POZNAN_EIVD_MERGE_POS) uiModIdx = POZNAN_EIVD_MRG_CAND;
+	  else if(uiIdx>POZNAN_EIVD_MERGE_POS) uiModIdx = uiIdx--;
+	  else uiModIdx = uiIdx;
+	}
+	else uiModIdx = uiIdx;
+	if( pcCU->getNeighbourCandIdx( uiModIdx, uiAbsPartIdx ) != uiModIdx + 1 )
+	{
+	  ruiMergeIndex++;
+	}
+#else
     if( pcCU->getNeighbourCandIdx( uiIdx, uiAbsPartIdx ) != uiIdx + 1 )
     {
       ruiMergeIndex++;
     }
+#endif
   }
 #if HHI_MPI
   if( ruiMergeIndex > uiMviMergePos )
@@ -2675,6 +2719,13 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
   else if( ruiMergeIndex == uiMviMergePos )
   {
     pcCU->setTextureModeDepthSubParts( uiDepth, uiAbsPartIdx, uiDepth );
+  }
+#endif
+#if POZNAN_EIVD
+  if(bEIVDAvailable)
+  {	  
+	if(ruiMergeIndex==POZNAN_EIVD_MERGE_POS) ruiMergeIndex = POZNAN_EIVD_MRG_CAND;
+	else if(ruiMergeIndex>POZNAN_EIVD_MERGE_POS) ruiMergeIndex--;
   }
 #endif
 }
@@ -2690,13 +2741,16 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
  */
 Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_EIVD
   if(
 #if HHI_INTER_VIEW_MOTION_PRED
       ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
 #endif
 #if HHI_MPI
       ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ||
+#endif
+#if	POZNAN_EIVD  
+	  ( pcCU->getSlice()->getMP()->isEIVDEnabled() ) ||
 #endif
       0
     )

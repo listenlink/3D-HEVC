@@ -61,12 +61,15 @@ private:
 
   TComPicYuv*           m_apcPicYuv[2];           //  Texture,  0:org / 1:rec
 
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   TComPicYuv*           m_apcPicYuvAvail;         //  Availability Map - Does the given pixel can be synthesised in receiver
 #endif
 
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   TComPicYuv*           m_apcPicYuvSynth;         //  Sythesied image
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  TComPicYuv*           m_apcPicYuvSynthDepth;         //  Sythesied depth image
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -107,6 +110,11 @@ private:
 #if HHI_INTERVIEW_SKIP
   TComPicYuv*           m_pcUsedPelsMap;
 #endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 
+  Double                m_dTextureCuDeltaQpOffset;
+  Double                m_dTextureCuDeltaQpMul;
+  Int                   m_iTextureCuDeltaQpTopBottomRow; 
+#endif
 
 
 public:
@@ -135,12 +143,15 @@ public:
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[0]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[1]; }
 
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   TComPicYuv*   getPicYuvAvail()      { return  m_apcPicYuvAvail; } //Owieczka - returns available map from other pic image
 #endif
 
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   TComPicYuv*   getPicYuvSynth()      { return  m_apcPicYuvSynth; } //Owieczka - returns synth form other pic in image
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  TComPicYuv*   getPicYuvSynthDepth() { return  m_apcPicYuvSynthDepth; };    //  Sythesied depth image
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -212,11 +223,14 @@ public:
   Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
 
   Void          addOriginalBuffer       ();
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   Void          addAvailabilityBuffer   ();
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   Void          addSynthesisBuffer      ();
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Void          addSynthesisDepthBuffer ();
+#endif
 #endif
 #if PARALLEL_MERGED_DEBLK
   Void          addDeblockBuffer        ();
@@ -236,10 +250,13 @@ public:
 #endif
 
   Void          removeOriginalBuffer    ();
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   Void          removeSynthesisBuffer   ();
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Void          removeSynthesisDepthBuffer ();
 #endif
-#if POZNAN_AVAIL_MAP
+#endif
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP || POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   Void          removeAvailabilityBuffer();
 #endif
 #if PARALLEL_MERGED_DEBLK
@@ -258,7 +275,7 @@ public:
   Void          removeUsedPelsMapBuffer ();
 #endif
 
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP
   Void          checkSynthesisAvailability(  TComDataCU*& rpcBestCU, UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth, Bool *&rpbCUSynthesied);
 #endif
 
@@ -279,6 +296,14 @@ public:
    * Pointer is valid until @this->destroy() is called */
   const SEImessages* getSEIs() const { return m_SEIs; }
 
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 
+  Double getTextureCuDeltaQpOffset( )      { return m_dTextureCuDeltaQpOffset;}
+  Double getTextureCuDeltaQpMul( )         { return m_dTextureCuDeltaQpMul;}
+  Int    getTextureCuDeltaQpTopBottomRow( ){ return m_iTextureCuDeltaQpTopBottomRow;}
+  Void   setTextureCuDeltaQpOffset      ( Double dTextureCuDeltaQpOffset    ){ m_dTextureCuDeltaQpOffset       = dTextureCuDeltaQpOffset; }
+  Void   setTextureCuDeltaQpMul         ( Double dTextureCuDeltaQpMul       ){ m_dTextureCuDeltaQpMul          = dTextureCuDeltaQpMul; }
+  Void   setTextureCuDeltaQpTopBottomRow( Int iTextureCuDeltaQpTopBottomRow ){ m_iTextureCuDeltaQpTopBottomRow = iTextureCuDeltaQpTopBottomRow; }  
+#endif 
 };// END CLASS DEFINITION TComPic
 
 
