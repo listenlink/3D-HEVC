@@ -162,6 +162,10 @@ Void TAppDecTop::decode()
 
     if( eNalUnitType == NAL_UNIT_SPS )
     {
+#if POZNAN_SYNTH
+      if(cComSPS.getViewId()==0 && !cComSPS.isDepth()) // it should be called at first view at the begining of the stream
+        initRenderer(cComSPS);
+#endif
       if( cComSPS.isDepth() && (m_bUsingDepth==false) )  // expected not using depth, but bitstream are using depth
       {                                                     // know from sps
         assert( cComSPS.getViewId() == 0 && iViewIdx == 0 && !bIsDepth );
@@ -538,3 +542,76 @@ TComPic* TAppDecTop::getPicFromView( Int iViewIdx, Int iPoc, bool bIsDepth )
   }
   return pcRefPic;
 }
+
+#if POZNAN_SYNTH
+Void TAppDecTop::initRenderer(TComSPS &cComSPS)
+{
+  m_cAvailabilityRenderer.init(cComSPS.getWidth(), cComSPS.getHeight(),true,0,LOG2_DISP_PREC_LUT,true, 0,0,0,0,0,6,4,1,0,6 );  //GT: simplest configuration
+}
+//*
+Void TAppDecTop::storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderIdx, Int iCurPoc, Bool bDepth)
+{
+  Int  iLeftViewIdx  = -1;
+  Int  iRightViewIdx = -1;
+  Int  iNearestViewIdx = -1;
+  Bool bIsBaseView;
+  Bool bRenderFromLeft;
+
+  Int iRelDistToLeft = 128;
+  if(iCoddedViewIdx==0) //First on View Coded List
+  {
+    TComPic* pcPic = getPicFromView( iCoddedViewIdx, iCurPoc, false );
+    return;
+  }
+  iNearestViewIdx = 0;
+  bRenderFromLeft = iCoddedViewOrderIdx>0?true:false;
+  //m_cCamParsCollector.getNearestBaseView(iCoddedViewIdx, iNearestViewIdx, iRelDistToLeft, bRenderFromLeft);
+
+  m_cAvailabilityRenderer.setShiftLUTs(
+    m_cCamParsCollector.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCamParsCollector.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCamParsCollector.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCamParsCollector.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],//right
+    m_cCamParsCollector.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCamParsCollector.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    iRelDistToLeft
+  );
+
+  TComPic* pcPic = getPicFromView( iCoddedViewIdx, iCurPoc, bDepth );
+
+  TComPicYuv* pcPicYuvSynthView = pcPic->getPicYuvSynth();
+  TComPicYuv* pcPicYuvAvailView = pcPic->getPicYuvAvail();
+  if(!pcPicYuvSynthView)
+  {
+    pcPic->addSynthesisBuffer();
+    pcPicYuvSynthView = pcPic->getPicYuvSynth();
+  }
+  if(!pcPicYuvAvailView)
+  {
+    pcPic->addAvailabilityBuffer();
+    pcPicYuvAvailView = pcPic->getPicYuvAvail();
+  }
+
+  //m_cAvailabilityRenderer.extrapolateAvailabilityView( xGetPicFromView( iNearestViewIdx, iCurPoc, false )->getPicYuvRec(), xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvERView, pcPicYuvAvailView, bRenderFromLeft );
+  m_cAvailabilityRenderer.extrapolateAvailabilityView( getPicFromView( iNearestViewIdx, iCurPoc, false )->getPicYuvRec(), getPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvSynthView, pcPicYuvAvailView, bRenderFromLeft );
+
+  pcPicYuvAvailView->setBorderExtension( false );//Needed??
+  pcPicYuvAvailView->extendPicBorder();//Needed??
+
+#if POZNAN_OUTPUT_AVAILABLE_MAP
+  {
+  Char acFilenameBase[1024];
+  ::sprintf( acFilenameBase,  "Available_%s_%s_V%d.yuv", (bDepth ? "Depth":"Tex"),( true ? "Dec" : "Enc" ), iCoddedViewIdx);
+  pcPicYuvAvailView->dump(acFilenameBase, iCurPoc!=0);
+  }
+#endif
+#if POZNAN_OUTPUT_SYNTH
+  {
+  Char acFilenameBase[1024];
+  ::sprintf( acFilenameBase,  "Synth_%s_%s_V%d.yuv", (bDepth ? "Depth":"Tex"),( true ? "Dec" : "Enc" ), iCoddedViewIdx );
+  pcPicYuvSynthView->dump(acFilenameBase, iCurPoc!=0);
+  }
+#endif
+  
+}
+#endif

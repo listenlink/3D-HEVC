@@ -181,6 +181,10 @@ public:
 
   Int                 synthRelNum2Idx           ( Int iRelNum );
   Bool getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int &riRightViewIdx, Int &riRelDistToLeft, Bool& rbIsBaseView );
+#if POZNAN_SYNTH
+  Bool getNearestBaseView( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft);
+#endif
+
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );

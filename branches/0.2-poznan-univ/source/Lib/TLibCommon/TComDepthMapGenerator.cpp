@@ -970,6 +970,12 @@ TComDepthMapGenerator::xPredictCUDepthMap( TComDataCU* pcCU, UInt uiDepth, UInt 
   case MODE_INTER:
     xInterPredictCUDepthMap( pcSubCU, pcSubDM );
     break;
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  case MODE_SYNTH:
+    //What to do? Need Fix!
+    xIntraPredictCUDepthMap( pcSubCU, pcSubDM );
+    break;
+#endif
   default:
     AOT( true );
     break;

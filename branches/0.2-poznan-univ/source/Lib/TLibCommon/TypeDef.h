@@ -60,6 +60,22 @@
 #define HHI_NO_LowDelayCoding           0   // old-fashioned encoder control, should be adapted to hm5.0
 //<<<<< HHI 3DV tools <<<<<
 
+//<<<<< Poznan 3DV tools <<<<<<
+#define POZNAN_CU_SKIP              1 //Poznan Cu Skip
+#define POZNAN_CU_SYNTH             1 //Poznan Cu Synth
+
+#define POZNAN_AVAIL_MAP            1 //Creates Availibity buffers in all needed classes
+
+#define POZNAN_SYNTH_VIEW           1 //Creates view synthesis buffers in all needed classes
+#define POZNAN_SYNTH_DEPTH          1
+
+#define POZNAN_SYNTH                1 //Creates aligned synthesis classes in encoder and decoder
+
+#define POZNAN_ENCODE_ONLY_DISOCCLUDED_CU          1 //Poznan CU Skip
+#define POZNAN_FILL_OCCLUDED_CU_WITH_SYNTHESIS     1 //Fills not sended CUs with synthesized data
+
+#define POZNAN_CU_SKIP_PSNR         1 //Poznan Cu Skip Display psnr of the codded CU only
+//<<<<< Poznan 3DV tools <<<<<<
 
 ////////////////////////////
 // AHG18 Weighted Prediction defines section start
@@ -574,6 +590,9 @@ enum PredMode
   MODE_SKIP,            ///< SKIP mode
   MODE_INTER,           ///< inter-prediction mode
   MODE_INTRA,           ///< intra-prediction mode
+#if POZNAN_CU_SKIP
+  MODE_SYNTH,           ///< synth-mode
+#endif
   MODE_NONE = 15
 };
 

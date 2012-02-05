@@ -2710,7 +2710,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   {
     pcCULeft = NULL;
   }
-  if( pcCULeft && !pcCULeft->isIntra( uiLeftPartIdx ) )
+  if( pcCULeft && !pcCULeft->isIntra( uiLeftPartIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    && !pcCULeft->isCUSkiped( uiLeftPartIdx )
+#endif
+  )
   {
     abCandIsInter[uiLeftAddr] = true;
     puiNeighbourCandIdx[uiLeftAddr] = uiLeftAddr+1;
@@ -2736,7 +2740,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   {
     pcCUAbove = NULL;
   }
-  if ( pcCUAbove && !pcCUAbove->isIntra( uiAbovePartIdx ) )
+  if ( pcCUAbove && !pcCUAbove->isIntra( uiAbovePartIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    && !pcCUAbove->isCUSkiped( uiAbovePartIdx )
+#endif
+  )
   {
     abCandIsInter[uiAboveAddr] = true;
     puiNeighbourCandIdx[uiAboveAddr] = uiAboveAddr+1;
@@ -3270,7 +3278,11 @@ Void TComDataCU::xCheckCornerCand( TComDataCU* pcCorner, UInt uiCornerPUIdx, UIn
 {
   if( uiIter == 0 )
   {
-    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) )
+    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+       && !pcCorner->isCUSkiped( uiCornerPUIdx )
+#endif
+    )
     {
       rbValidCand = true;
       if( getSlice()->isInterB() )
@@ -3305,7 +3317,11 @@ Void TComDataCU::xCheckCornerCand( TComDataCU* pcCorner, UInt uiCornerPUIdx, UIn
   }
   else
   {
-    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) )
+    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+       && !pcCorner->isCUSkiped( uiCornerPUIdx )
+#endif
+    )
     {
       rbValidCand = true;
       if( getSlice()->isInterB() )
@@ -4424,6 +4440,11 @@ Bool TComDataCU::xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, int iRef
   
   if (pColCU->isIntra(uiPartIdxCenter))
     return false;
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  if (pColCU->isSkipped(uiPartIdxCenter))
+    return false;
+#endif
   
   if( m_pcSlice->getRefPic(eRefPicList, iRefIdx)->getViewIdx() != m_pcSlice->getViewIdx() )
     return false;

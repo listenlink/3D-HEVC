@@ -57,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "3.0rc2"                 ///< Current software version
-#define NV_VERSION        "0.2"                   ///< Current software version
+#define NV_VERSION        "0.3"                   ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -136,7 +136,6 @@
 #endif
 #define LOG2_DISP_PREC_LUT   				2		  		///< log2 of disparity precision used in integer disparity LUTs
 
-
 #if ( HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED )
 #define DEPTH_MAP_GENERATION        1
 #else
@@ -170,8 +169,13 @@
 
 #define OUTPUT_RESIDUAL_PICTURES          0         // output residual pictures (for debugging)
 
-#define HHI_MPI_MERGE_POS                     0         // position of mvi in merge list (0..5)
+#define HHI_MPI_MERGE_POS                 0           // position of mvi in merge list (0..5)
 
+// ====================================================================================================================
+// POZNAN DEFINE SECTION
+// ====================================================================================================================
+#define POZNAN_OUTPUT_AVAILABLE_MAP       0           // output available map (for debugging)
+#define POZNAN_OUTPUT_SYNTH               0           // output synthesised view (for debugging)
 
 // ====================================================================================================================
 // Macro functions

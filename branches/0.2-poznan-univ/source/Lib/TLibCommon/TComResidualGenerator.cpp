@@ -305,6 +305,11 @@ TComResidualGenerator::xSetRecResidualCU( TComDataCU* pcCU, UInt uiDepth, UInt u
   case MODE_INTER:
     xSetRecResidualInterCU( pcSubCU, pcSubRes );
     break;
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  case MODE_SYNTH:
+    xSetRecResidualIntraCU( pcSubCU, pcSubRes ); //MayBe it should be seperate function
+    break;
+#endif
   default:
     AOT( true );
     break;

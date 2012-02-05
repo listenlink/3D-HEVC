@@ -1338,7 +1338,6 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
   xSetShiftParametersAndLUT( m_uiFirstFrameId );
 }
 
-
 Void
 TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
 {
@@ -1455,6 +1454,32 @@ TAppComCamPara::getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int
 
   return bExist;
 }
+
+#if POZNAN_SYNTH
+Bool
+TAppComCamPara::getNearestBaseView( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft)
+{
+  riNearestViewIdx = 0;
+
+  Bool bDecencdingVN = ( m_aiSortedBaseViews.size() >= 2 && m_aiSortedBaseViews[ 0 ] > m_aiSortedBaseViews[ 1 ] );
+  Int  iFactor       = ( bDecencdingVN ? -1 : 1 );
+
+  if( ( m_aiBaseId2SortedId[iSynthViewIdx] - m_aiBaseId2SortedId[riNearestViewIdx] ) * iFactor  <= 0 )
+  {
+    rbRenderFromLeft = true;
+  }
+  else
+  {
+    rbRenderFromLeft = false;
+  }
+
+  riRelDistToLeft = 128; //Not used for now;
+
+  return true;
+}
+#endif
+
+
 
 Int TAppComCamPara::getRelDistLeft( Int iSynthViewIdx, Int iLeftViewIdx, Int iRightViewIdx )
 {

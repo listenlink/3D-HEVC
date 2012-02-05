@@ -434,6 +434,11 @@ Void TAppEncTop::xInitLibCfg()
   }
 #endif
 
+#if POZNAN_SYNTH
+  //m_cAvailabilityRenderer.init(m_iSourceWidth, m_iSourceHeight,true,0,0,true, 0,0,0,0,0,0,0,1,0,0 );  //GT: simplest configuration
+  m_cAvailabilityRenderer.init(m_iSourceWidth, m_iSourceHeight,true,0,LOG2_DISP_PREC_LUT,true, 0,0,0,0,0,6,4,1,0,6 );  //GT: simplest configuration
+#endif
+
 #if HHI_INTERVIEW_SKIP
   m_cUsedPelsRenderer.init(m_iSourceWidth, m_iSourceHeight, true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 );
 #endif
@@ -691,6 +696,9 @@ Void TAppEncTop::encode()
     //GT: Encode
     for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )     // Start encoding
     {
+#if POZNAN_SYNTH
+      xStoreSynthPicsInBuffer(iViewIdx,false);
+#endif
       bool bThisViewContinueReadingPics = bContinueReadingPics[iViewIdx];
       m_acTEncTopList[iViewIdx]->encode( bEos[iViewIdx], m_cListPicYuvRecMap[iViewIdx], pcBitstream, bThisViewContinueReadingPics );
       bContinueReadingPics[iViewIdx]=bThisViewContinueReadingPics;
@@ -707,6 +715,9 @@ Void TAppEncTop::encode()
 
       if( m_bUsingDepthMaps )
       {
+#if POZNAN_SYNTH
+        xStoreSynthPicsInBuffer(iViewIdx,true);
+#endif
         bool bThisViewContinueReadingDepthPics = bContinueReadingDepthPics[iViewIdx];
         m_acTEncDepthTopList[iViewIdx]->encode( bDepthEos[iViewIdx], m_cListPicYuvDepthRecMap[iViewIdx], pcBitstream, bThisViewContinueReadingDepthPics );
         bContinueReadingDepthPics[iViewIdx]=bThisViewContinueReadingDepthPics;
@@ -1173,6 +1184,91 @@ Void TAppEncTop::xStoreVSORefPicsInBuffer()
     }
     m_cMapPicExtRefView.erase ( m_cMapPicExtRefView.begin() );
   }
+}
+#endif
+
+#if POZNAN_SYNTH
+Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
+{
+  Int iCurPoc;
+  if(bDepth)
+  {
+    iCurPoc = m_acTEncDepthTopList[ iCoddedViewIdx ]->getNextFrameId();
+    if (!(m_acTEncDepthTopList[ iCoddedViewIdx ]->currentPocWillBeCoded())) return;
+  }
+  else
+  {
+    iCurPoc = m_acTEncTopList[ iCoddedViewIdx ]->getNextFrameId();
+    if (!(m_acTEncTopList[ iCoddedViewIdx ]->currentPocWillBeCoded())) return;
+  }
+  
+  Int iNumberOfReferenceViews = 0;
+  UInt iSynthViewIdx;
+  // Get Left and right view
+  Int  iLeftViewIdx  = -1;
+  Int  iRightViewIdx = -1;
+  Int  iNearestViewIdx = -1;
+  Bool bIsBaseView;
+  Bool bRenderFromLeft;
+
+  Int iRelDistToLeft;
+  if(iCoddedViewIdx==0) //First on View Coded List
+  {
+    //TComPic* pcPic = xGetPicFromView( iCoddedViewIdx, iCurPoc, false );
+    return;
+  }
+  m_cCameraData.getNearestBaseView(iCoddedViewIdx, iNearestViewIdx, iRelDistToLeft, bRenderFromLeft);
+
+  m_cAvailabilityRenderer.setShiftLUTs(
+    m_cCameraData.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCameraData.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],//right
+    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    m_cCameraData.getBaseViewShiftLUTI()[iNearestViewIdx][iCoddedViewIdx],
+    iRelDistToLeft
+  );
+    
+
+  TComPicYuv* pcPicYuvERView = new TComPicYuv;
+  pcPicYuvERView->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+
+  TComPic* pcPic = xGetPicFromView( iCoddedViewIdx, iCurPoc, bDepth );
+  pcPic->addSynthesisBuffer();
+  pcPic->addAvailabilityBuffer();
+  TComPicYuv* pcPicYuvSynthView = pcPic->getPicYuvSynth();
+  TComPicYuv* pcPicYuvAvailView = pcPic->getPicYuvAvail();
+  
+  //m_cAvailabilityRenderer.extrapolateAvailabilityView( xGetPicFromView( iNearestViewIdx, iCurPoc, false )->getPicYuvRec(), xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvERView, pcPicYuvAvailView, bRenderFromLeft );
+  m_cAvailabilityRenderer.extrapolateAvailabilityView( xGetPicFromView( iNearestViewIdx, iCurPoc, bDepth )->getPicYuvRec(), xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvSynthView, pcPicYuvAvailView, bRenderFromLeft );
+      
+  pcPicYuvAvailView->setBorderExtension( false );//Needed??
+  pcPicYuvAvailView->extendPicBorder();//Needed??
+
+  pcPicYuvSynthView->setBorderExtension( false );//Needed??
+  pcPicYuvSynthView->extendPicBorder();//Needed??
+
+  //TComPic* pcPicDepth = xGetPicFromView( iCoddedViewIdx, iCurPoc, true );
+  //pcPicDepth->addAvailabilityBuffer();
+  //pcPicDepth->addSynthesisBuffer();
+  //pcPicYuvAvailView->copyToPic(pcPicDepth->getPicYuvAvail());
+      
+#if POZNAN_OUTPUT_AVAILABLE_MAP
+  {
+  Char acFilenameBase[1024];
+  ::sprintf( acFilenameBase,  "Available_%s_%s_V%d.yuv", (bDepth?"Depth":"Tex"),( false ? "Dec" : "Enc" ),iCoddedViewIdx );
+  pcPicYuvAvailView->dump(acFilenameBase, iCurPoc!=0);
+  }
+#endif
+#if POZNAN_OUTPUT_SYNTH
+  {
+  Char acFilenameBase[1024];
+  ::sprintf( acFilenameBase,  "Synth_%s_%s_V%d.yuv", (bDepth?"Depth":"Tex"),( false ? "Dec" : "Enc" ),iCoddedViewIdx );
+  pcPicYuvERView->dump(acFilenameBase, iCurPoc!=0);
+  }
+#endif
+
+      //Usun pcPicYuvERView i inne bufforki
 }
 #endif
 

@@ -91,6 +91,10 @@ private:
   TRenModel                   m_cRendererModel;   
 #endif
 
+#if POZNAN_SYNTH
+  TRenTop                     m_cAvailabilityRenderer;
+#endif
+
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -153,7 +157,13 @@ private:
   Void  xSetERPicYuvs(  Int iViewIdx, Int iPoc, TComMVDRefData* pcReferenceInfo );    ///< store pic from buffer in pcReferenceInfo    
   Void  xStoreVSORefPicsInBuffer();                                                   ///< read in External Ref pic from file and store in buffer
 #endif
-  
+
+
+#if POZNAN_SYNTH
+private:
+  Void  xStoreSynthPicsInBuffer(Int iCoddedViewIdx, Bool bDepth);
+#endif
+
 };// END CLASS DEFINITION TAppEncTop
 
 #endif // __TAPPENCTOP__

@@ -522,6 +522,14 @@ TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
   {
     Int iTargetStride = m_aiCurDepthStrides[ m_iCurrentView ];
     TRenFilter::copy( piNewData, iStride, iWidth, iHeight,  m_apiCurDepthPel[ m_iCurrentView ] + iStartPosY * iTargetStride + iStartPosX, iTargetStride );
+
+    {
+      printf("%d %d\n",iStartPosX,iStartPosY);
+      TComPicYuv mapPic;
+      mapPic.create( 1920, 1088, 64, 64, 3 );
+      TRenFilter::copy( m_apiCurDepthPel[ m_iCurrentView ], iTargetStride, 1920,1088, mapPic.getLumaAddr(), mapPic.getStride());
+      mapPic.dump("VSO_1920x1088.yuv",true);
+    }
   }
   else
   {

@@ -113,7 +113,6 @@
 				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
 				StringPooling="true"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -241,7 +240,6 @@
 				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
 				StringPooling="true"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>

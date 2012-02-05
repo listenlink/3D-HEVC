@@ -265,10 +265,9 @@ Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDe
   PelImage cInputImage ( pcPicYuvVideo    );
   PelImage cInputDepth ( pcPicYuvDepth    , true);
   PelImage cOutputImage( pcPicYuvSynthOut );
-
+    
   m_pcOutputImage->init();
   m_pcFilled     ->assign(REN_IS_HOLE);
-
   xPreProcessDepth ( &cInputDepth,  &cInputDepth);
   xConvertInputData( &cInputImage, &cInputDepth, m_pcInputImage, m_pcInputDepth, !bRenderFromLeft );
   xShiftPixels(m_pcInputImage, m_pcInputDepth, m_pcOutputImage, m_pcFilled, bRenderFromLeft);
@@ -278,6 +277,35 @@ Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDe
   xPostProcessImage (&cOutputImage, &cOutputImage);
   xCutMargin        ( &cOutputImage );
 };
+
+#if POZNAN_SYNTH
+Void TRenTop::extrapolateAvailabilityView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDepth, TComPicYuv* pcPicYuvSynthOut, TComPicYuv* pcPicYuvAvailOut, Bool bRenderFromLeft )
+{
+  AOF( m_bExtrapolate );
+  AOF( bRenderFromLeft ? m_ppiShiftLUTLeft || m_ppdShiftLUTLeft : m_ppiShiftLUTRight || m_ppdShiftLUTRight );
+  AOF( m_auiInputResolution[0] == pcPicYuvVideo->getWidth ());
+  AOF( m_auiInputResolution[1] == pcPicYuvVideo->getHeight());
+
+  PelImage cInputImage ( pcPicYuvVideo    );
+  PelImage cInputDepth ( pcPicYuvDepth    , true);
+  PelImage cOutputImage( pcPicYuvSynthOut );
+  PelImage cFillImage( pcPicYuvAvailOut );
+    
+  m_pcOutputImage->init();
+  m_pcFilled     ->assign(REN_IS_HOLE);
+  
+  xPreProcessDepth ( &cInputDepth,  &cInputDepth);
+  xConvertInputData( &cInputImage, &cInputDepth, m_pcInputImage, m_pcInputDepth, !bRenderFromLeft );
+  xShiftPixels(m_pcInputImage, m_pcInputDepth, m_pcOutputImage, &cFillImage, bRenderFromLeft);
+  xRemBoundaryNoise ( m_pcOutputImage, &cFillImage, m_pcOutputImage, bRenderFromLeft); // Erode
+  xFillHoles        ( m_pcOutputImage, &cFillImage, m_pcOutputImage, bRenderFromLeft);
+  xConvertOutputData( m_pcOutputImage, &cOutputImage, !bRenderFromLeft );
+  if (!bRenderFromLeft)  TRenFilter::mirrorHor( &cFillImage );
+  //xConvertOutputData( m_pcFilled, &cFillImage, !bRenderFromLeft );
+  xPostProcessImage (&cOutputImage, &cOutputImage);
+  xCutMargin        ( &cOutputImage );
+};
+#endif
 
 Void TRenTop::getUsedSamplesMap( TComPicYuv* pcPicYuvDepth, TComPicYuv* pcUsedSampleMap, Bool bRenderFromLeft )
 {

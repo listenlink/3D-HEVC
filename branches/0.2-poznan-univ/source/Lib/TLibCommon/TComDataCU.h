@@ -528,6 +528,9 @@ public:
   
   Bool          isIntra   ( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Bool          isCUSkiped( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_SYNTH; }
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)
