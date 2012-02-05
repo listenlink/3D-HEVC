@@ -84,10 +84,17 @@ TComSlice::TComSlice()
   resetWpScaling(m_weightPredTable);
   initWpAcDcParam();
 #endif
+
+#if POZNAN_MP
+  m_pcMP = NULL;
+#endif
 }
 
 TComSlice::~TComSlice()
 {
+#if POZNAN_MP
+  m_pcMP = NULL;
+#endif
 }
 
 
@@ -721,6 +728,9 @@ TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecis
       m_aaiCodedOffset[ 1 ][ uiBaseViewId ] = aaiOffset[   m_uiViewId ][ uiBaseViewId ];
     }
   }
+#if POZNAN_NONLINEAR_DEPTH
+  m_fDepthPower = 1.0;
+#endif
 }
 
 Void
@@ -736,6 +746,9 @@ TComSPS::initMultiviewSPSDepth( UInt uiViewId, Int iViewOrderIdx )
   m_bCamParInSliceHeader  = false;
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
+#if POZNAN_NONLINEAR_DEPTH
+  m_fDepthPower = 1.0;
+#endif
 }
 
 

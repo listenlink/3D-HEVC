@@ -198,6 +198,16 @@ Void TDecGop::decompressGop (Bool bEos, TComBitstream* pcBitstream, TComPic*& rp
     }
 #endif
 
+#if POZNAN_MP
+	if( uiStartCUAddr == 0 )
+    {
+#if POZNAN_MP_USE_DEPTH_MAP_GENERATION
+	  pcSlice->getMP()->setDepthMapGenerator(m_pcDepthMapGenerator);
+#endif
+      pcSlice->getMP()->pairMultiview(rpcPic);
+	}
+#endif
+
     // decode slice
     m_pcSliceDecoder->decompressSlice(pcBitstream, rpcPic);
     

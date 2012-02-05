@@ -62,6 +62,11 @@ TEncTop::TEncTop()
 #endif
   m_bSeqFirst = true;
   m_iFrameNumInCodingOrder = 0;
+    
+#if POZNAN_MP
+  m_pcMP=NULL;
+#endif
+
 }
 
 TEncTop::~TEncTop()
@@ -95,6 +100,10 @@ Void TEncTop::create ()
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+#endif
+
+#if POZNAN_MP
+  m_pcMP				= NULL;
 #endif
 
 #if MQT_BA_RA && MQT_ALF_NPASS
@@ -162,6 +171,10 @@ Void TEncTop::destroy ()
   m_cResidualGenerator. destroy();
 #endif
 
+#if POZNAN_MP
+  m_pcMP=NULL;
+#endif
+
   // SBAC RD
   if( m_bUseSBACRD )
   {
@@ -204,6 +217,10 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
 #if CONSTRAINED_INTRA_PRED
   // initialize PPS
   xInitPPS();
+#endif
+
+#if POZNAN_MP
+  m_pcMP = pcTAppEncTop->getMP();
 #endif
 
   // initialize processing unit classes
@@ -415,11 +432,14 @@ TEncTop::deleteExtraPicBuffers( Int iPoc )
   if ( pcPic )
   {
     pcPic->removeOriginalBuffer   ();
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
     pcPic->removeAvailabilityBuffer();
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
     pcPic->removeSynthesisBuffer();
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+    pcPic->removeSynthesisDepthBuffer();
+#endif
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
     pcPic->removeOrgDepthMapBuffer();
@@ -513,6 +533,14 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
 
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+  
+#if POZNAN_MP
+	rpcPic->getSlice(0)->setMP(m_pcMP);
+#endif
+
+#if POZNAN_STAT_JK
+	rpcPic->getSlice(0)->setStatFile(m_pcStatFile);
+#endif
 }
 
 
@@ -623,6 +651,10 @@ Void TEncTop::xInitSPS()
 #endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+  m_cSPS.setDepthPower  ( m_fDepthPower );
 #endif
 
   m_cSPS.setCodedPictureBufferSize( m_uiCodedPictureStoreSize );
@@ -823,4 +855,10 @@ Void TEncTop::xSetPicProperties(TComPic* pcPic)
 #endif
 
   pcPic->setScaleOffset( m_aaiCodedScale, m_aaiCodedOffset );
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 
+  pcPic->setTextureCuDeltaQpOffset( getTextureCuDeltaQpOffset() );
+  pcPic->setTextureCuDeltaQpMul   ( getTextureCuDeltaQpMul() );
+  pcPic->setTextureCuDeltaQpTopBottomRow( getTextureCuDeltaQpTopBottomRow() );  
+#endif
 }

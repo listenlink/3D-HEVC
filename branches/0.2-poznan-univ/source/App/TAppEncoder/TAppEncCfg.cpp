@@ -126,6 +126,20 @@ TAppEncCfg::~TAppEncCfg()
     free (  m_pchVSOConfig );
 #endif
 
+#if POZNAN_STAT_JK
+  for(Int i = 0; i< m_pchStatFileList.size(); i++ )
+  {
+    if ( m_pchStatFileList[i] != NULL )
+      free (m_pchStatFileList[i]);
+  }
+
+  for(Int i = 0; i< m_pchDepthStatFileList.size(); i++ )
+  {
+    if ( m_pchDepthStatFileList[i] != NULL )
+      free (m_pchDepthStatFileList[i]);
+  }
+#endif
+
 }
 
 Void TAppEncCfg::create()
@@ -345,10 +359,24 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InterViewSkipLambdaScale",  m_dInterViewSkipLambdaScale,    (Double)8, "lambda scale for interview skip" )
 #endif
 #endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+  ("textureCuDeltaQpOffset",              m_dTextureCuDeltaQpOffset,       (Double)(-2.6), "texture block QP changing tool based on coresponding depth block values - offset parameter" )
+  ("textureCuDeltaQpMul",                 m_dTextureCuDeltaQpMul,          (Double)(1),    "texture block QP changing tool based on coresponding depth block values - multiplicative parameter" )
+  ("textureCuDeltaQpOffsetTopBottomRow",  m_iTextureCuDeltaQpTopBottomRow, (Int)2,         "texture block QP changing tool - top and bottom CU rows delta QP parameter" )
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+  ("DepthPower,-dpow",    m_fDepthPower,      1.0, "Depth power value (for non-linear processing)")
+#endif
+
 
   /* Compatability with old style -1 FOO or -0 FOO options. */
   ("1", doOldStyleCmdlineOn, "turn option <name> on")
   ("0", doOldStyleCmdlineOff, "turn option <name> off")
+
+#if POZNAN_STAT_JK
+  ("StatFile_%d,sf_%d",       m_pchStatFileList,       (char *) 0 , MAX_INPUT_VIEW_NUM , "Mode selection staticstics file name for view %d")
+  ("DepthStatFile_%d,sf_%d",  m_pchDepthStatFileList,  (char *) 0 , MAX_INPUT_VIEW_NUM , "Mode selection staticstics file name for depth view %d")
+#endif
   ;
 
   po::setDefaults(opts);
@@ -395,6 +423,26 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 // GT FIX END
 
+#if POZNAN_STAT_JK
+  if ( m_bUsingDepthMaps )
+  {
+    for(Int i = 0; i < m_pchDepthStatFileList.size() ; i++)
+    {
+      if ((m_pchDepthInputFileList[i] != NULL) && (m_pchStatFileList[i] != NULL) && (i < m_iNumberOfViews) )
+      {
+        if (m_pchDepthStatFileList[i] == NULL )
+        {
+          xAppendToFileNameEnd( m_pchStatFileList[i], "_depth", m_pchDepthStatFileList[i] );
+        }
+      }
+      else
+      {
+        m_pchDepthStatFileList[i] = NULL;
+      }
+    };
+  }
+#endif  
+
   if (m_iRateGOPSize == -1)
   {
     /* if rateGOPSize has not been specified, the default value is GOPSize */
@@ -430,6 +478,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #if HHI_VSO
   m_bUseVSO = m_bUseVSO && m_bUsingDepthMaps && (m_uiVSOMode != 0);
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+if (m_fDepthPower<=0) 
+  {
+    Float fDepthQP = m_adQP[ m_adQP.size()  < 2 ? 0 : 1];
+    m_fDepthPower = (fDepthQP-30) *0.25/20.0 + 1.25;
+    if (m_fDepthPower<=1.0) m_fDepthPower = 1.0;
+    // QP = 30 = 1.25
+    // QP = 50 = 1.5
+    if (m_fDepthPower>=1.66) m_fDepthPower = 1.66;
+  };
+
+#if POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE
+  m_fDepthPower = dequantizeDepthPower(quantizeDepthPower((Float)m_fDepthPower));
+#endif
+
 #endif
 
   xCleanUpVectors();
@@ -497,7 +562,11 @@ if ( m_bUseVSO && m_uiVSOMode == 4)
                                       m_pchBaseViewCameraNumbers,
                                       NULL,
                                       m_cRenModStrParser.getSynthViews(),
-                                      LOG2_DISP_PREC_LUT );
+                                      LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+                                      ,m_fDepthPower
+#endif
+                                      );
 }
 else if ( m_bUseVSO && m_uiVSOMode != 4 )
 {
@@ -510,7 +579,11 @@ else if ( m_bUseVSO && m_uiVSOMode != 4 )
                                       m_pchBaseViewCameraNumbers,
                                       m_pchVSOConfig,
                                       NULL,
-                                      LOG2_DISP_PREC_LUT );
+                                      LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+                                      ,m_fDepthPower
+#endif                                      
+                                      );
 }
 else
 {
@@ -523,7 +596,11 @@ else
     m_pchBaseViewCameraNumbers,
     NULL,
     NULL,
-    LOG2_DISP_PREC_LUT );
+    LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+    ,m_fDepthPower
+#endif    
+    );
 }
 #else
   m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
@@ -535,7 +612,11 @@ else
     m_pchBaseViewCameraNumbers,
     NULL,
     NULL,
-    LOG2_DISP_PREC_LUT );
+    LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+    ,m_fDepthPower
+#endif    
+    );
 #endif
 
 
@@ -666,6 +747,9 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara( m_iNumberOfExternalRefs               > MAX_ERREF_VIEW_NUM,      "NumberOfExternalRefs must be less than of equal to TAppMVEncCfg::MAX_ERREF_VIEW_NUM" );
       xConfirmPara( Int( m_pchERRefFileList .size() ) < m_iNumberOfExternalRefs,     "Number of ERRefFileFiles  must be greater than or equal to NumberOfExternalRefs" );
     }
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+    printf("Depth map power              : %f\n", m_fDepthPower );
 #endif
   }
 
@@ -819,6 +903,16 @@ Void TAppEncCfg::xPrintParameter()
   {
     printf("Reconstruction Depth File %i  : %s\n", iCounter, m_pchDepthReconFileList[iCounter]);
   }
+#if POZNAN_STAT_JK
+  for( Int iCounter = 0; iCounter<m_iNumberOfViews; iCounter++)
+  {
+    printf("Statistics File %i        : %s\n", iCounter, m_pchStatFileList[iCounter]);
+  }
+  for( Int iCounter = 0; iCounter<m_iNumberOfViews; iCounter++)
+  {
+    printf("Statistics Depth File %i  : %s\n", iCounter, m_pchDepthStatFileList[iCounter]);
+  }
+#endif
   printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_aiPad[0], m_iSourceHeight-m_aiPad[1], m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_iFrameToBeEncoded-1, m_iFrameToBeEncoded );
@@ -911,6 +1005,48 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if MTK_SAO
 #endif
+
+#if POZNAN_MP
+  printf("POZNAN_MP(1){ ");
+
+#if POZNAN_MP_USE_DEPTH_MAP_GENERATION
+  printf("dmg=1 ");
+#else
+  printf("dmg=0 ");
+#endif
+
+#if POZNAN_MP_FILL
+  printf("fill=%d ",POZNAN_MP_FILL_TYPE);
+#else
+  printf("fill=- ");
+#endif
+
+#if POZNAN_EIVD
+  printf("EIVD(1): ");
+  printf("cand=%d ",POZNAN_EIVD_MERGE_POS);
+#if POZNAN_EIVD_CALC_PRED_DATA
+  printf("pr=1 ");
+#else
+  printf("pr=0 ");
+#endif
+#if POZNAN_EIVD_COMPRESS_ME_DATA
+  printf("comp=1 ");
+#else
+  printf("comp=0 ");
+#endif
+#if POZNAN_EIVD_USE_IN_NONANCHOR_PIC_ONLY
+  printf("na=1 ");
+#else
+  printf("na=0 ");
+#endif
+#else
+  printf("EIVD(0) ");
+#endif
+  printf("}");
+#else
+  printf("POZNAN_MP(0) ");
+#endif
+
   printf("\n");
   printf("TOOL CFG VIDEO  : ");
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
@@ -932,6 +1068,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
   printf("\n");
+
+  
+printf("POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH(");
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+printf("1), ");
+#else
+printf("0), ");
+#endif
 
   fflush(stdout);
 }

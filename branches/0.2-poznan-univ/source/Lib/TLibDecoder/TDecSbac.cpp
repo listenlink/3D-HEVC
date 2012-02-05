@@ -578,12 +578,16 @@ Void TDecSbac::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 }
 
 
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_EIVD
 Void TDecSbac::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
 #if HHI_MPI
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
   const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : MRG_MAX_NUM_CANDS;
+#endif
+#if POZNAN_EIVD
+  const Bool bEIVDAvailable = pcCU->getSlice()->getMP()->isEIVDEnabled();
+  Bool bEIVDModifyMergeIdx = true;
 #endif
   //--- set number of candidates and availability ---
   Bool  abAvailable[ MRG_MAX_NUM_CANDS ];
@@ -610,6 +614,34 @@ Void TDecSbac::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
       uiNumCand++;
     }
   }
+
+#if POZNAN_EIVD
+  if(bEIVDAvailable)
+  {
+    UInt uiEIVDMergePos = POZNAN_EIVD_MERGE_POS;
+#if HHI_MPI
+	if(bMVIAvailable && uiEIVDMergePos>=uiMviMergePos) uiEIVDMergePos++;
+#endif
+	for( Int iIdx = MRG_MAX_NUM_CANDS-2; iIdx >= (Int)uiEIVDMergePos; iIdx-- )
+	{
+		Int iWrIdx = iIdx+1;
+#if HHI_MPI
+		if(bMVIAvailable) 
+		{
+			if(iIdx==(Int)uiMviMergePos) continue;
+			if(iWrIdx==(Int)uiMviMergePos) iWrIdx++;
+		}
+#endif
+		if(iWrIdx>=MRG_MAX_NUM_CANDS) continue;
+
+		abAvailable[ iWrIdx ] = abAvailable[ iIdx ];
+	}
+	abAvailable[ uiEIVDMergePos ] = ( pcCU->getNeighbourCandIdx( POZNAN_EIVD_MRG_CAND, uiAbsPartIdx ) == POZNAN_EIVD_MRG_CAND + 1 );
+	
+	uiNumCand = 0; for( UInt uiIdx = 0; uiIdx < MRG_MAX_NUM_CANDS; uiIdx++ ) if(abAvailable[ uiIdx ]) uiNumCand++;
+  }
+#endif
+
   AOF( uiNumCand > 1 );
 
   //--- determine contexts ---
@@ -664,6 +696,17 @@ Void TDecSbac::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
   else if( ruiMergeIndex == uiMviMergePos )
   {
     pcCU->setTextureModeDepthSubParts( uiDepth, uiAbsPartIdx, uiDepth );
+#if POZNAN_EIVD
+	bEIVDModifyMergeIdx = false;
+#endif
+  }
+#endif
+
+#if POZNAN_EIVD
+  if(bEIVDAvailable && bEIVDModifyMergeIdx)
+  {
+	if(ruiMergeIndex==POZNAN_EIVD_MERGE_POS) ruiMergeIndex = POZNAN_EIVD_MRG_CAND;
+	else if(ruiMergeIndex>POZNAN_EIVD_MERGE_POS) ruiMergeIndex--;
   }
 #endif
 
@@ -693,13 +736,16 @@ Void TDecSbac::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
 
 Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_EIVD
   if(
 #if HHI_INTER_VIEW_MOTION_PRED
       ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
 #endif
 #if HHI_MPI
       ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ||
+#endif
+#if	POZNAN_EIVD  
+	  ( pcCU->getSlice()->getMP()->isEIVDEnabled() ) ||
 #endif
       0
     )

@@ -17,6 +17,9 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
   m_uhTotalDepth      = uiMaxDepth;
   m_uiNumPartitions   = 1<<(m_uhTotalDepth<<1);
   
+  m_iPicWidth         = iPicWidth;
+  m_iPicHeight        = iPicHeight;
+
   m_uiMaxCUWidth      = uiMaxWidth;
   m_uiMaxCUHeight     = uiMaxHeight;
   

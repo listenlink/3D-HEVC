@@ -477,13 +477,26 @@ TComDepthMapGenerator::dumpDepthMap( TComPic* pcPic, char* pFilenameBase )
   Int         iDstStride  = m_cTmpPic.getStride   ();
   Pel*        pSrcSamples = pcPicYuv->getLumaAddr ( 0 );
   Pel*        pDstSamples = m_cTmpPic.getLumaAddr ( 0 );
+  Int         iDstStrideC  = m_cTmpPic.getCStride ( );
+  Pel*        pDstSamplesCb = m_cTmpPic.getCbAddr ( 0 );
+  Pel*        pDstSamplesCr = m_cTmpPic.getCrAddr ( 0 );
   Int         iMidOrgDpth = ( 1 << m_uiOrgDepthBitDepth ) >> 1;
   AOF( m_cTmpPic.getWidth () == iWidth  );
   AOF( m_cTmpPic.getHeight() == iHeight );
   for( Int iY = 0; iY < iHeight; iY++, pSrcSamples += iSrcStride, pDstSamples += iDstStride )
   {
+    if((iY%2) == 0 && iY != 0)
+    {
+      pDstSamplesCb += iDstStrideC; 
+      pDstSamplesCr += iDstStrideC;
+    }
     for( Int iX = 0; iX < iWidth; iX++ )
     {
+      if(pSrcSamples[ iX ] < 0)//== PDM_UNDEFINED_DEPTH)
+      {
+        pDstSamplesCb[ iX>>1 ] = 0;
+        pDstSamplesCr[ iX>>1 ] = 0;
+      }
       Int iOrgDepth     = ( pSrcSamples[ iX ] != PDM_UNDEFINED_DEPTH ? xGetOrigDepthFromVirtDepth( uiViewId, pSrcSamples[ iX ] ) : iMidOrgDpth );
       pDstSamples[ iX ] = Max( 0, Min( iMax, iOrgDepth ) );
     }
@@ -493,6 +506,17 @@ TComDepthMapGenerator::dumpDepthMap( TComPic* pcPic, char* pFilenameBase )
   Char  acFilename[1024];
   ::sprintf     ( acFilename, "%s_V%d.yuv", pFilenameBase, uiViewId );
   m_cTmpPic.dump( acFilename, ( pcPic->getPOC() != 0 )  );
+
+  pDstSamplesCb = m_cTmpPic.getCbAddr ( 0 );
+  pDstSamplesCr = m_cTmpPic.getCrAddr ( 0 );
+  for( Int iY = 0; iY < iHeight>>1; iY++, pDstSamplesCb += iDstStrideC, pDstSamplesCr += iDstStrideC)
+  {
+    for( Int iX = 0; iX < iWidth>>1; iX++ )
+    {
+      pDstSamplesCb[ iX ] = iMidOrgDpth;
+      pDstSamplesCr[ iX ] = iMidOrgDpth;
+    }
+  }
 }
 
 
@@ -970,9 +994,9 @@ TComDepthMapGenerator::xPredictCUDepthMap( TComDataCU* pcCU, UInt uiDepth, UInt 
   case MODE_INTER:
     xInterPredictCUDepthMap( pcSubCU, pcSubDM );
     break;
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP
   case MODE_SYNTH:
-    //What to do? Need Fix!
+    //What to do? Need Fix?
     xIntraPredictCUDepthMap( pcSubCU, pcSubDM );
     break;
 #endif

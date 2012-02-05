@@ -65,14 +65,14 @@ Void TRenFilter::setupZLUT( Bool bBlendUseDistWeight, Int iBlendZThresPerc, Int 
   AOT( iRelDistToLeft == -1 );
   riBlendDistWeight = bBlendUseDistWeight ? iRelDistToLeft :  1 << (REN_VDWEIGHT_PREC - 1);
 
-  for (UInt uiDepthValue = 0; uiDepthValue <= 256; uiDepthValue++)
+  for (UInt uiDepthValue = 0; uiDepthValue <= SizeOfLUT; uiDepthValue++)
   {
     //GT: retrieve depth approx from shift
     piInvZLUTLeft [uiDepthValue] = abs( ppiBaseShiftLUTLeft [0][uiDepthValue] );
     piInvZLUTRight[uiDepthValue] = abs( ppiBaseShiftLUTRight[0][uiDepthValue] );
   }
   // Set Threshold
-  riBlendZThres  = ( max( abs(piInvZLUTLeft[0]- piInvZLUTLeft[255]), abs(piInvZLUTRight[0]- piInvZLUTRight[255]) ) * iBlendZThresPerc + 50)  / 100;
+  riBlendZThres  = ( max( abs(piInvZLUTLeft[0]- piInvZLUTLeft[SizeOfLUT-1]), abs(piInvZLUTRight[0]- piInvZLUTRight[SizeOfLUT-1]) ) * iBlendZThresPerc + 50)  / 100;
 }
 
 Void TRenFilter::filledToUsedPelMap( PelImage* pcFilledImage, PelImage* pcUsedPelsImage, Int iUsedPelMapMarExt )

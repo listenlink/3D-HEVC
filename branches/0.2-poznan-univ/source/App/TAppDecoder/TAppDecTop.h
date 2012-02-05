@@ -51,10 +51,14 @@
 #include "../../Lib/TLibCommon/TComBitStream.h"
 #include "../../Lib/TLibCommon/TComDepthMapGenerator.h"
 #include "../../Lib/TLibDecoder/TDecTop.h"
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH
 #include "../../Lib/TLibRenderer/TRenTop.h"
 #endif
 #include "TAppDecCfg.h"
+
+#if POZNAN_MP
+#include "../../Lib/TLibCommon/TComMP.h"
+#endif
 
 // ====================================================================================================================
 // Class definition
@@ -89,10 +93,13 @@ private:
   TComAUPicAccess                 m_cAUPicAccess;
 #endif
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH
   TRenTop                         m_cAvailabilityRenderer;
 #endif
 
+#if POZNAN_MP
+  TComMP*						  m_pcMP;
+#endif
 
 public:
   TAppDecTop();
@@ -104,7 +111,7 @@ public:
   Void  increaseNumberOfViews	(Int iNewNumberOfViews);
   Void  startUsingDepth() ;
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH
   Void  initRenderer(TComSPS &cComSPS);
   Void  storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderIdx,Int iCurPoc,Bool bDepth);
 #endif
@@ -117,6 +124,10 @@ public:
 #if DEPTH_MAP_GENERATION
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
+#endif
+
+#if POZNAN_MP
+  TComMP* getMP() { return m_pcMP; }
 #endif
 
 protected:

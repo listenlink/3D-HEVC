@@ -113,6 +113,12 @@ public:
   Void    copyPartToPartLuma    ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   Void    copyPartToPartChroma  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   
+#if POZNAN_EIVD
+  Void	  copyPartToPartYuv_EIVD	( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY );  
+  Void    copyPartToPartLuma_EIVD   ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY );
+  Void    copyPartToPartChroma_EIVD ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY );
+#endif
+
   // ------------------------------------------------------------------------------------------------------------------
   //  Algebraic operation for YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
@@ -134,6 +140,13 @@ public:
   Void    addAvg            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, Bool bRound );
 #endif
   Void    addAvg            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight );
+
+#if POZNAN_EIVD
+#ifdef ROUNDING_CONTROL_BIPRED
+  Void    addAvg_EIVD            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY, Bool bRound );
+#endif
+  Void    addAvg_EIVD            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY );
+#endif
 
   //   Remove High frequency
   Void    removeHighFreq    ( TComYuv* pcYuvSrc, UInt uiWidht, UInt uiHeight );

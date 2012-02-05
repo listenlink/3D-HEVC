@@ -52,7 +52,7 @@ CamParsCollector::CamParsCollector()
     m_aaiCodedOffset      [ uiId ] = new Int [ MAX_NUMBER_VIEWS ];
     m_aaiCodedScale       [ uiId ] = new Int [ MAX_NUMBER_VIEWS ];
   }
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
   xCreateLUTs   ( (UInt)MAX_NUMBER_VIEWS, (UInt)MAX_NUMBER_VIEWS,  m_adBaseViewShiftLUT,  m_aiBaseViewShiftLUT);
 
   m_iLog2Precision   = LOG2_DISP_PREC_LUT;
@@ -72,7 +72,7 @@ CamParsCollector::~CamParsCollector()
   delete [] m_aiViewOrderIndex;
   delete [] m_aiViewReceived;
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
   xDeleteArray( m_adBaseViewShiftLUT,        MAX_NUMBER_VIEWS, MAX_NUMBER_VIEWS,  2 );
   xDeleteArray( m_aiBaseViewShiftLUT,        MAX_NUMBER_VIEWS, MAX_NUMBER_VIEWS,  2 );
 #endif
@@ -90,7 +90,7 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile )
   m_uiMaxViewId             = 0;
 }
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
 /*
 Void
 CamParsCollector::initLUT(TComSPS &cComSPS)
@@ -293,7 +293,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedOffset() [ uiBaseId ];
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
         xInitLUTs(uiBaseId,uiViewId,m_aaiCodedScale [ uiBaseId ][ uiViewId ],m_aaiCodedOffset[ uiBaseId ][ uiViewId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
         xInitLUTs(uiViewId,uiBaseId,m_aaiCodedScale [ uiViewId ][ uiBaseId ],m_aaiCodedOffset[ uiViewId ][ uiBaseId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
 #endif
@@ -304,7 +304,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getSPS()->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getSPS()->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getSPS()->getInvCodedOffset() [ uiBaseId ];
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
         xInitLUTs(uiBaseId,uiViewId,m_aaiCodedScale [ uiBaseId ][ uiViewId ],m_aaiCodedOffset[ uiBaseId ][ uiViewId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
         xInitLUTs(uiViewId,uiBaseId,m_aaiCodedScale [ uiViewId ][ uiBaseId ],m_aaiCodedOffset[ uiViewId ][ uiBaseId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
 #endif
@@ -322,7 +322,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedOffset() [ uiBaseId ];
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
         xInitLUTs(uiBaseId,uiViewId,m_aaiCodedScale [ uiBaseId ][ uiViewId ],m_aaiCodedOffset[ uiBaseId ][ uiViewId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
         xInitLUTs(uiViewId,uiBaseId,m_aaiCodedScale [ uiViewId ][ uiBaseId ],m_aaiCodedOffset[ uiViewId ][ uiBaseId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
 #endif
@@ -410,6 +410,9 @@ TDecTop::TDecTop()
   m_bFirstSliceInPicture    = true;
   m_bFirstSliceInSequence   = true;
   m_pcCamParsCollector = 0;
+#if POZNAN_MP
+  m_pcMP = NULL;
+#endif
 }
 
 TDecTop::~TDecTop()
@@ -440,6 +443,10 @@ Void TDecTop::destroy()
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.destroy();
+#endif
+
+#if POZNAN_MP
+  m_pcMP = NULL;
 #endif
 }
 
@@ -476,6 +483,10 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
+#endif
+
+#if POZNAN_MP
+  m_pcMP = pcTAppDecTop->getMP();
 #endif
 }
 
@@ -603,11 +614,14 @@ TDecTop::deleteExtraPicBuffers( Int iPoc )
 #if HHI_INTERVIEW_SKIP
     pcPic->removeUsedPelsMapBuffer();
 #endif
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP
     pcPic->removeAvailabilityBuffer();
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
     pcPic->removeSynthesisBuffer();
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+    pcPic->removeSynthesisDepthBuffer();
 #endif
   }
 }
@@ -695,9 +709,18 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       }
       else
       {
+#if POZNAN_NONLINEAR_DEPTH
+        // For texture complete depth power information. Depth power is sended, for example, for base view depth map and it should be available prior non-base texture decoding
+        if(!cTempSPS.isDepth() && cTempSPS.getViewId())
+        {
+          Float fDepthPower = getDecTop()->getPicFromView( 0, pcPic->getPOC(), true )->getSPS()->getDepthPower();
+          cTempSPS.setDepthPower(fDepthPower);
+        }
+#endif
         cComSPS = cTempSPS;
         return false;
       }
+      
 
       // create ALF temporary buffer
       if ( !m_cAdaptiveLoopFilter.isCreated())
@@ -709,6 +732,14 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       m_cLoopFilter.        create( g_uiMaxCUDepth );
       }
       m_uiValidPS |= 1;
+
+#if POZNAN_MP
+#if POZNAN_MP_USE_DEPTH_MAP_GENERATION
+      m_pcMP->init( m_cSPS.getHeight(), m_cSPS.getWidth() );
+#else
+      m_pcMP->init( m_cSPS.getHeight(), m_cSPS.getWidth(), m_pcCamParsCollector->getBaseViewShiftLUTI());
+#endif 
+#endif 
 
       return false;
     }
@@ -820,6 +851,10 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       m_apcSlicePilot = pcPic->getPicSym()->getSlice(m_uiSliceIdx);
       pcPic->getPicSym()->setSlice(pcSlice, m_uiSliceIdx);
 
+#if POZNAN_MP
+	  pcSlice->setMP(m_pcMP);
+#endif
+
       if (bNextSlice)
       {
 #if DCM_DECODING_REFRESH
@@ -874,17 +909,30 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       }
 #endif
 
-#if POZNAN_SYNTH
-      if( m_pcCamParsCollector)
+#if POZNAN_CU_SKIP || POZNAN_CU_SYNTH
+      if( m_pcCamParsCollector )
       {
         m_pcCamParsCollector->setSlice( pcSlice );
       }
       //if(!getIsDepth())
-      getDecTop()->storeSynthPicsInBuffer(pcSlice->getViewIdx(),pcSlice->getSPS()->getViewOrderIdx(),pcSlice->getPOC(),getIsDepth());
+        getDecTop()->storeSynthPicsInBuffer(pcSlice->getViewIdx(),pcSlice->getSPS()->getViewOrderIdx(),pcSlice->getPOC(),getIsDepth());
+#endif
+
+#if POZNAN_MP 
+	std::vector<TComPic*> apcSpatDataRefPics = getDecTop()->getSpatialRefPics( pcPic->getViewIdx(), pcSlice->getPOC(), m_cSPS.isDepth() );
+	pcSlice->getMP()->setRefPicsList(&apcSpatDataRefPics);  
+#if !POZNAN_MP_USE_DEPTH_MAP_GENERATION
+	std::vector<TComPic*> apcSpatDepthRefPics = getDecTop()->getSpatialRefPics( pcPic->getViewIdx(), pcSlice->getPOC(), true );
+	pcSlice->getMP()->setDepthRefPicsList(&apcSpatDepthRefPics);
+#endif
 #endif
 
       //  Decode a picture
       m_cGopDecoder.decompressGop ( bEos, pcBitstream, pcPic, false );
+
+#if POZNAN_MP
+	  pcSlice->getMP()->disable();
+#endif
 
       if( m_pcCamParsCollector )
       {

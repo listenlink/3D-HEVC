@@ -66,10 +66,10 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   m_ppcRecoYuvTemp = new TComYuv*[m_uhTotalDepth-1];
   m_ppcOrigYuv     = new TComYuv*[m_uhTotalDepth-1];
   m_ppcResPredTmp  = new TComYuv*[m_uhTotalDepth-1];
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
   m_ppcAvailYuv    = new TComYuv*[m_uhTotalDepth-1];
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   m_ppcSynthYuv    = new TComYuv*[m_uhTotalDepth-1];
 #endif
   
@@ -99,10 +99,10 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
 
     m_ppcOrigYuv    [i] = new TComYuv; m_ppcOrigYuv    [i]->create(uiWidth, uiHeight);
 
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
     m_ppcAvailYuv   [i] = new TComYuv; m_ppcAvailYuv    [i]->create(uiWidth, uiHeight);
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
     m_ppcSynthYuv   [i] = new TComYuv; m_ppcSynthYuv    [i]->create(uiWidth, uiHeight);
 #endif
 
@@ -164,18 +164,18 @@ Void TEncCu::destroy()
     }
     if(m_ppcOrigYuv[i])
     {
-      m_ppcOrigYuv[i]->destroy();     delete m_ppcOrigYuv[i];     m_ppcOrigYuv[i]     = NULL;
+      m_ppcOrigYuv[i]->destroy();     delete m_ppcOrigYuv[i];     m_ppcOrigYuv[i] = NULL;
     }
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
     if(m_ppcAvailYuv[i])
     {
-      m_ppcAvailYuv[i]->destroy();    delete m_ppcAvailYuv[i];    m_ppcAvailYuv[i]    = NULL;
+      m_ppcAvailYuv[i]->destroy();     delete m_ppcAvailYuv[i];   m_ppcAvailYuv[i] = NULL;
     }
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
     if(m_ppcSynthYuv[i])
     {
-      m_ppcSynthYuv[i]->destroy();    delete m_ppcSynthYuv[i];    m_ppcSynthYuv[i]    = NULL;
+      m_ppcSynthYuv[i]->destroy();     delete m_ppcSynthYuv[i];   m_ppcSynthYuv[i] = NULL;
     }
 #endif
     if(m_ppcResPredTmp[i])
@@ -229,14 +229,14 @@ Void TEncCu::destroy()
     delete [] m_ppcOrigYuv;
     m_ppcOrigYuv = NULL;
   }
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
   if(m_ppcAvailYuv)
   {
     delete [] m_ppcAvailYuv;
     m_ppcAvailYuv = NULL;
   }
 #endif
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   if(m_ppcSynthYuv)
   {
     delete [] m_ppcSynthYuv;
@@ -394,6 +394,12 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
       }
     }
   }
+
+#if POZNAN_EIVD & !POZNAN_EIVD_COMPRESS_ME_DATA
+  //save motion data for every CU point
+  xSaveEIVDData(m_ppcBestCU[0]);
+#endif
+
 }
 
 /** \param  pcCU  pointer of CU data class, bForceTerminate when set to true terminates slice (default is false).
@@ -466,14 +472,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
-#if POZNAN_AVAIL_MAP
+#if POZNAN_CU_SKIP
   if (pcPic->getPicYuvAvail())  m_ppcAvailYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvAvail(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 #endif  
-#if POZNAN_SYNTH_VIEW
+#if POZNAN_CU_SYNTH
   if (pcPic->getPicYuvSynth())  m_ppcSynthYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvSynth(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 #endif
 
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP
   Bool bWholeCUCanBeSynthesized = false;
   Bool bOneSubCUCanNotBeSynthesied = false;
   Bool bSubCUCanBeSynthesized[4];
@@ -568,18 +574,18 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   if( ( uiRPelX < rpcBestCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < rpcBestCU->getSlice()->getSPS()->getHeight() ) )
   {
     // do CU Skip
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP
     if(bWholeCUCanBeSynthesized)
     {
+//      printf("CUSkip %d %d %d\n",rpcBestCU->getCUPelX(),rpcBestCU->getCUPelY(),rpcBestCU->getWidth());
       rpcBestCU->getTotalCost() = 0;       // Cost of synthesised CU is zero
       rpcBestCU->getTotalBits() = 0;       // Cost of synthesised CU is zero
       rpcBestCU->getTotalDistortion() = 0; // Distortion of synthesised CU is zero
       rpcBestCU->setPredModeSubParts( MODE_SYNTH,      0, uiDepth );
       rpcBestCU->setPartSizeSubParts( SIZE_2Nx2N,      0, uiDepth );
-#if POZNAN_FILL_OCCLUDED_CU_WITH_SYNTHESIS
+#if POZNAN_CU_SYNTH
       m_ppcRecoYuvBest[uiDepth]->copyFromPicYuv(pcPic->getPicYuvSynth(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU()); // First copy synthesis YUV part to CU encoder reconstruction YUV structure
-#else
-      m_ppcRecoYuvBest[uiDepth]->copyFromPicYuv(pcPic->getPicYuvAvail(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU()); // First copy synthesis YUV part to CU encoder reconstruction YUV structure
+      //m_ppcRecoYuvBest[uiDepth]->copyFromPicYuv(pcPic->getPicYuvAvail(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU()); // First copy synthesis YUV part to CU encoder reconstruction YUV structure
 #endif
       UInt uiInitTrDepth  = rpcBestCU->getPartitionSize(0) == SIZE_2Nx2N ? 0 : 1;
       rpcBestCU->copyToPic(uiDepth, 0, uiInitTrDepth); 
@@ -1064,7 +1070,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   TComPic* pcPic = pcCU->getPic();
 
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP
   if( pcCU->isCUSkiped( uiAbsPartIdx ) && uiDepth == pcCU->getDepth( uiAbsPartIdx )) //If CU Skiped no information is coded into stream
     return;
 #endif
@@ -1075,7 +1081,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
 
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP
   Bool bDontSendSplitFlag = false;
   if( ( ( uiDepth < pcCU->getDepth( uiAbsPartIdx ) ) && ( uiDepth < (g_uiMaxCUDepth-g_uiAddCUDepth) ) ) || bBoundary ) //check if CU has 3 synthesied subCU - no split flag is send in that case
   {
@@ -1098,7 +1104,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   if( ( uiRPelX < pcCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < pcCU->getSlice()->getSPS()->getHeight() ) )
   {
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP
     if(!bDontSendSplitFlag)
 #endif
 #if HHI_MPI
@@ -1140,6 +1146,11 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       }
 #endif
       xRestoreDepthWidthHeight( pcCU );
+
+#if POZNAN_STAT_JK
+	  if(m_bStatFileEnabled) xStatFile(pcCU, uiAbsPartIdx, uiDepth);
+#endif
+
       return;
     }
 
@@ -1166,6 +1177,10 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
     return;
   }
+
+#if POZNAN_STAT_JK
+  if(m_bStatFileEnabled) xStatFile(pcCU, uiAbsPartIdx, uiDepth);
+#endif
 
 #if TSB_ALF_HEADER
 #else
@@ -1276,6 +1291,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   TComMvField  cMvFieldNeighbours[MRG_MAX_NUM_CANDS << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
   UInt uiNeighbourCandIdx[MRG_MAX_NUM_CANDS]; //MVs with same idx => same cand
+#if POZNAN_EIVD_CALC_PRED_DATA
+  TComMP* pcMP = rpcTempCU->getSlice()->getMP();
+#endif
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Bool  bResPrdAvail  = rpcTempCU->getResPredAvail( 0 );
@@ -1332,8 +1350,18 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
       {
         rpcTempCU->setNeighbourCandIdxSubParts( uiInner, uiNeighbourCandIdx[uiInner], 0, 0,uhDepth );
       }
+#if POZNAN_EIVD_CALC_PRED_DATA
+	  if(uiMergeCand==POZNAN_EIVD_MRG_CAND)
+	  {
+		rpcTempCU->getCUMvField2nd( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand].getMv(), cMvFieldNeighbours[0 + 2*uiMergeCand].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+		rpcTempCU->getCUMvField2nd( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand].getMv(), cMvFieldNeighbours[1 + 2*uiMergeCand].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+	  }
+	  else
+#endif
+	  {
       rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand].getMv(), cMvFieldNeighbours[0 + 2*uiMergeCand].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
       rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand].getMv(), cMvFieldNeighbours[1 + 2*uiMergeCand].getRefIdx(), SIZE_2Nx2N, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+	  }
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
       rpcTempCU->setResPredAvailSubParts( bResPrdAvail, 0, 0, uhDepth );
@@ -1347,7 +1375,20 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
       if ( uiNoResidual == 0 ){
 #endif
+
+#if POZNAN_EIVD
+		if(uiMergeCand==POZNAN_EIVD_MRG_CAND){
+			m_pcPredSearch->motionCompensation_EIVD ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#if POZNAN_EIVD_CALC_PRED_DATA		
+		  pcMP->setEIVDPredMVField(REF_PIC_LIST_0, rpcTempCU);
+		  pcMP->setEIVDPredMVField(REF_PIC_LIST_1, rpcTempCU);
+#endif
+		}
+		else
         m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#else 
+        m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#endif
         // save pred adress
         pcPredYuvTemp = m_ppcPredYuvTemp[uhDepth];
 
@@ -1357,6 +1398,14 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           //adress changes take best (old temp)
           pcPredYuvTemp = m_ppcPredYuvBest[uhDepth];
         }
+#if POZNAN_EIVD_CALC_PRED_DATA
+	    if(uiMergeCand==POZNAN_EIVD_MRG_CAND)
+	    {
+	      //copy motion data representing CU with EIVD for uiNoResidual==0 case		
+	      rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->copyFrom(pcMP->getEIVDPredMVField(REF_PIC_LIST_0),rpcTempCU->getTotalNumPart(),0);
+	      rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->copyFrom(pcMP->getEIVDPredMVField(REF_PIC_LIST_1),rpcTempCU->getTotalNumPart(),0);
+	    }
+#endif
       }
 #if HHI_VSO
       if( m_pcRdCost->getUseRenModel() )
@@ -1380,8 +1429,19 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
                                                 (uiNoResidual? true:false) );
       Bool bQtRootCbf = rpcTempCU->getQtRootCbf(0) == 1;
 #else
+#if POZNAN_EIVD
       // do MC
+	  if(uiMergeCand==POZNAN_EIVD_MRG_CAND){
+		 m_pcPredSearch->motionCompensation_EIVD ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#if POZNAN_EIVD_CALC_PRED_DATA		
+		 pcMP->setEIVDPredMVField(REF_PIC_LIST_0, rpcTempCU);
+		 pcMP->setEIVDPredMVField(REF_PIC_LIST_1, rpcTempCU);
+#endif		
+	  }
+	  else
       m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+
+#endif
 
       // estimate residual and encode everything
       m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU,
@@ -1670,7 +1730,7 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
     for( UInt ui = 0; ui < rpcTempCU->getTotalNumPart(); ui++ )
     {
       if( pcTextureCU->isIntra( rpcTempCU->getZorderIdxInCU() + ui ) 
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+#if POZNAN_CU_SKIP
         || pcTextureCU->isCUSkiped( rpcTempCU->getZorderIdxInCU() + ui )
 #endif
       )

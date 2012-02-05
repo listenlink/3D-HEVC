@@ -42,6 +42,10 @@
 
 
 // Include files
+#if POZNAN_MP
+#include "../TLibCommon/TComMP.h"
+#endif
+
 #include "CommonDef.h"
 #include "TComSlice.h"
 #include "TComDataCU.h"
@@ -57,6 +61,8 @@ private:
   UInt          m_uiWidthInCU;
   UInt          m_uiHeightInCU;
   
+  Int           m_iPicWidth;
+  Int           m_iPicHeight;
   UInt          m_uiMaxCUWidth;
   UInt          m_uiMaxCUHeight;
   UInt          m_uiMinCUWidth;
@@ -92,6 +98,11 @@ public:
   UInt        getNumPartition()         { return m_uiNumPartitions;             }
   UInt        getNumPartInWidth()       { return m_uiNumPartInWidth;            }
   UInt        getNumPartInHeight()      { return m_uiNumPartInHeight;           }
+  Int   getPicWidth    () {return m_iPicWidth;}
+  Int   getPicHeight   () {return m_iPicHeight;}
+  UInt  getMaxCUWidth  () {return m_uiMaxCUWidth;}
+  UInt  getMaxCUHeight () {return m_uiMaxCUHeight;}
+  UChar getTotalDepth  () {return m_uhTotalDepth;}
 };// END CLASS DEFINITION TComPicSym
 
 

@@ -429,12 +429,28 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
   pcCU->setInterDirSubParts( puhInterDirNeighbours[uiMergeIndex], uiAbsPartIdx, uiPartIdx, uiDepth );
 
+#if POZNAN_EIVD_CALC_PRED_DATA
+  Int ref_idx0_EIVD,ref_idx1_EIVD;
+  TComMv cMv0_EIVD( 0, 0 ),cMv1_EIVD( 0, 0 );
+  if(uiMergeIndex==POZNAN_EIVD_MRG_CAND)
+  {	
+    pcCU->getCUMvField2nd( REF_PIC_LIST_0 )->setAllMvField( pcMvFieldNeighbours[ 2*uiMergeIndex ].getMv(), pcMvFieldNeighbours[ 2*uiMergeIndex ].getRefIdx(), eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );
+    pcCU->getCUMvField2nd( REF_PIC_LIST_1 )->setAllMvField( pcMvFieldNeighbours[ 2*uiMergeIndex + 1 ].getMv(), pcMvFieldNeighbours[ 2*uiMergeIndex + 1 ].getRefIdx(), eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );	
+    pcCU->getSlice()->getMP()->calcEIVDPredData(pcCU, uiAbsPartIdx, ref_idx0_EIVD, cMv0_EIVD, ref_idx1_EIVD, cMv1_EIVD);
+  }
+#endif
+
   TComMv cTmpMv( 0, 0 );
   if ( pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_0 ) > 0  ) //if ( ref. frame list0 has at least 1 entry )
   {
     pcCU->setMVPIdxSubParts( 0, REF_PIC_LIST_0, uiAbsPartIdx, uiPartIdx, uiDepth);
     pcCU->setMVPNumSubParts( 0, REF_PIC_LIST_0, uiAbsPartIdx, uiPartIdx, uiDepth);
     pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvd( cTmpMv, eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );
+#if POZNAN_EIVD_CALC_PRED_DATA
+    if(uiMergeIndex==POZNAN_EIVD_MRG_CAND) 
+       pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMv0_EIVD, ref_idx0_EIVD, eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );
+    else
+#endif
     pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( pcMvFieldNeighbours[ 2*uiMergeIndex ].getMv(), pcMvFieldNeighbours[ 2*uiMergeIndex ].getRefIdx(), eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );
 
   }
@@ -443,6 +459,11 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
     pcCU->setMVPIdxSubParts( 0, REF_PIC_LIST_1, uiAbsPartIdx, uiPartIdx, uiDepth);
     pcCU->setMVPNumSubParts( 0, REF_PIC_LIST_1, uiAbsPartIdx, uiPartIdx, uiDepth);
     pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvd( cTmpMv, eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );
+#if POZNAN_EIVD_CALC_PRED_DATA
+    if(uiMergeIndex==POZNAN_EIVD_MRG_CAND)
+       pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMv1_EIVD, ref_idx1_EIVD, eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );
+    else
+#endif
     pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( pcMvFieldNeighbours[ 2*uiMergeIndex + 1 ].getMv(), pcMvFieldNeighbours[ 2*uiMergeIndex + 1 ].getRefIdx(), eCUMode, uiAbsPartIdx, uiPartIdx, uiDepth );
   }
 }

@@ -109,7 +109,7 @@ public:
                            Int         iBlendMode,
                            Int         iSimEnhBaseView );
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP
   Void extrapolateAvailabilityView   
                          ( TComPicYuv* pcPicYuvVideo, 
                            TComPicYuv* pcPicYuvDepth, 

@@ -97,6 +97,14 @@ Void TDecSlice::decompressSlice(TComBitstream* pcBitstream, TComPic*& rpcPic)
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
+
+	// JK {
+	DTRACE_CABAC_V( g_nSymbolCounter++ );
+	DTRACE_CABAC_T( "\tCU: " );
+	DTRACE_CABAC_V( iCUAddr );
+	DTRACE_CABAC_T( "\n" );
+	// JK }
+
     m_pcCuDecoder->decodeCU     ( pcCU, uiIsLast );
     m_pcCuDecoder->decompressCU ( pcCU );
     

@@ -138,8 +138,8 @@ TRenSingleModel::create( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int
 
   if (m_iMode == 2)
   {
-    m_piInvZLUTLeft  = new Int[257];
-    m_piInvZLUTRight = new Int[257];
+    m_piInvZLUTLeft  = new Int[SizeOfLUT+1];
+    m_piInvZLUTRight = new Int[SizeOfLUT+1];
   }
 
   m_iGapTolerance  = ( 2 << iShiftPrec );
@@ -447,7 +447,7 @@ TRenSingleModel::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
       m_iLastOccludedSPos   = iCurSPos + 1;
       m_iLastOccludedSPosFP = xRangeLeftL( m_iLastOccludedSPos );
       xExtrapolateMarginL  ( iCurSPos, iEndChangePos, iError );
-      iMinChangedSPos       = Min( iMinChangedSPos, (iEndChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iEndChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMinChangedSPos       = Min( iMinChangedSPos, (iEndChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrementLUT( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iEndChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
       iLastSPos             = iCurSPos;
       m_iLastDepth          = m_iCurDepth;
       iPosXinNewData--;
@@ -465,7 +465,7 @@ TRenSingleModel::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
     for ( iCurPosX = iEndChangePos; iCurPosX >= iStartChangePos; iCurPosX-- )
     {
       // Get minimal changed sample position
-      iMinChangedSPos = Min( iMinChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMinChangedSPos = Min( iMinChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrementLUT( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
       Int iCurSPos    = xShiftNewData(iCurPosX,iPosXinNewData);
       m_iCurDepth     = m_piNewDepthData[iPosXinNewData];
       xRenderRangeL(iCurSPos, iLastSPos, iCurPosX, iError );
@@ -540,7 +540,7 @@ TRenSingleModel::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
       m_iLastOccludedSPos   = iCurSPos - 1;
       m_iLastOccludedSPosFP = xRangeRightR( m_iLastOccludedSPos );
       xExtrapolateMarginR     ( iCurSPos, iStartChangePos, iError );
-      iMaxChangedSPos       = Max( iMaxChangedSPos, (iStartChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iStartChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMaxChangedSPos       = Max( iMaxChangedSPos, (iStartChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrementLUT( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iStartChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
       iLastSPos             = iCurSPos;
       m_iLastDepth          = m_iCurDepth;
       iPosXinNewData++;
@@ -558,7 +558,7 @@ TRenSingleModel::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
     for ( iCurPosX = iStartChangePos; iCurPosX <= iEndChangePos; iCurPosX++ )
     {
       // Get minimal changed sample position
-      iMaxChangedSPos = Max( iMaxChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMaxChangedSPos = Max( iMaxChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrementLUT( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
       Int iCurSPos    = xShiftNewData(iCurPosX,iPosXinNewData);
       m_iCurDepth     = m_piNewDepthData[iPosXinNewData];
       xRenderRangeR(iCurSPos, iLastSPos, iCurPosX, iError );
@@ -947,7 +947,7 @@ TRenSingleModel::xShiftNewData( Int iPosX, Int iPosInNewData )
   AOT( iPosInNewData <               0 );
   AOF( iPosInNewData < m_iNewDataWidth );
 
-  return (iPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( m_piNewDepthData[iPosInNewData] )];
+  return (iPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrementLUT( m_piNewDepthData[iPosInNewData] )];
 }
 
 __inline Int
@@ -955,7 +955,7 @@ TRenSingleModel::xShift( Int iPosX )
 {
  AOT( iPosX <        0);
  AOF( iPosX < m_iWidth);
- return (iPosX  << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( m_apiBaseDepthPelRow[m_iCurViewPos][iPosX] )];
+ return (iPosX  << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrementLUT( m_apiBaseDepthPelRow[m_iCurViewPos][iPosX] )];
 }
 
 
@@ -1148,8 +1148,8 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
       m_aapiBaseVideoPelRow                                    [0][2][iSourcePos ]  ,
       m_aapiSynthVideoPelRow                                   [1][2][iTargetSPos]  ,
 #endif
-      m_piInvZLUTLeft [RemoveBitIncrement(m_iThisDepth)                            ],
-      m_piInvZLUTRight[RemoveBitIncrement(m_apiSynthDepthPelRow[1]   [iTargetSPos])],
+      m_piInvZLUTLeft [RemoveBitIncrementLUT(m_iThisDepth)                            ],
+      m_piInvZLUTRight[RemoveBitIncrementLUT(m_apiSynthDepthPelRow[1]   [iTargetSPos])],
       iFilled,
       m_apiFilledRow                                           [1]   [iTargetSPos]  ,
       piBlendedValueY
@@ -1170,8 +1170,8 @@ TRenSingleModel::xSetShiftedPelBlend( Int iSourcePos, Int iTargetSPos, Pel iFill
       m_aapiSynthVideoPelRow                                   [0][2][iTargetSPos],
       m_aapiBaseVideoPelRow                                    [1][2][iSourcePos ],
 #endif
-      m_piInvZLUTLeft [RemoveBitIncrement(m_apiSynthDepthPelRow[0]   [iTargetSPos])],
-      m_piInvZLUTRight[RemoveBitIncrement(m_iThisDepth)                            ],
+      m_piInvZLUTLeft [RemoveBitIncrementLUT(m_apiSynthDepthPelRow[0]   [iTargetSPos])],
+      m_piInvZLUTRight[RemoveBitIncrementLUT(m_iThisDepth)                            ],
       m_apiFilledRow                                           [0]   [iTargetSPos],
       iFilled                                                                     ,
       piBlendedValueY

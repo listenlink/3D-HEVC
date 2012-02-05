@@ -51,6 +51,10 @@
   #include "TComWeightPrediction.h"
 #endif
 
+#if POZNAN_MP
+#include "../TLibCommon/TComMP.h"
+#endif
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -112,6 +116,24 @@ protected:
   Void xDCTIF_FilterC_ha ( Pel*  piRefC, Int iRefStride,Pel*  piDstC,Int iDstStride,Int iWidth, Int iHeight,Int iMVyFrac,Int iMVxFrac);
 #endif
 
+#if POZNAN_EIVD
+#if HIGH_ACCURACY_BI
+  Void xPredInterUni_EIVD       ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, Bool bi=false          );
+#else
+  Void xPredInterUni_EIVD       ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap          );
+#endif
+  Void xPredInterBi_EIVD        ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY,                         TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap          );
+  Void xPredInterPrdDepthMap_EIVD( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                     TComYuv*& rpcYuv, UInt uiRShift, UInt uiFilterMode ); // 0:std, 1:bilin, 2:nearest neighbour
+  Void xPredInterLumaBlk_EIVD   ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv );
+  Void xPredInterChromaBlk_EIVD ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv                            );
+  Void xWeightedAverage_EIVD    ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iPosX, Int iPosY, TComYuv*& rpcYuvDst );
+  
+#if HIGH_ACCURACY_BI
+  Void xPredInterLumaBlk_EIVD_ha( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv );
+  Void xPredInterChromaBlk_EIVD_ha( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv                            );
+#endif
+#endif
+
 #if HHI_DMM_WEDGE_INTRA
   Void xPredIntraWedgeFull       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder, Bool bDelta, UInt uiTabIdx, Int iDeltaDC1 = 0, Int iDeltaDC2 = 0 );
 
@@ -146,6 +168,10 @@ public:
   // inter
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false );
   
+#if POZNAN_EIVD
+  Void motionCompensation_EIVD         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false );
+#endif
+
   // motion vector prediction
   Void getMvPredAMVP              ( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMvPred );
   

@@ -63,6 +63,10 @@ TAppDecTop::TAppDecTop()
   m_bUsingDepth = false;
 //  m_iPOCLastDisplay  = -1;
   m_pScaleOffsetFile  = 0;
+
+#if POZNAN_MP
+  m_pcMP = NULL;
+#endif
 }
 
 Void TAppDecTop::create()
@@ -70,6 +74,10 @@ Void TAppDecTop::create()
   m_apcBitstream  = new TComBitstream;
   
   m_apcBitstream->create( BITS_BUF_SIZE );
+
+#if POZNAN_MP
+  m_pcMP = new TComMP();
+#endif
 }
 
 Void TAppDecTop::destroy()
@@ -88,6 +96,10 @@ Void TAppDecTop::destroy()
   {
     free(m_pchReconFile);
   }
+
+#if POZNAN_MP
+  if(m_pcMP) { delete m_pcMP; m_pcMP = NULL; };
+#endif
 }
 
 // ====================================================================================================================
@@ -162,7 +174,7 @@ Void TAppDecTop::decode()
 
     if( eNalUnitType == NAL_UNIT_SPS )
     {
-#if POZNAN_SYNTH
+#if POZNAN_CU_SKIP||POZNAN_CU_SYNTH
       if(cComSPS.getViewId()==0 && !cComSPS.isDepth()) // it should be called at first view at the begining of the stream
         initRenderer(cComSPS);
 #endif
@@ -415,7 +427,21 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic )
         // write to file
         if ( m_pchReconFile )
         {
+
+#if POZNAN_NONLINEAR_DEPTH
+          TComSPS* pcSPS = pcPic->getSlice(0)->getSPS();
+          TComPicYuv cPicPower;
+
+          //pcPic->getPicYuvRec()
+          cPicPower.create(pcSPS->getWidth(), pcSPS->getHeight(), pcSPS->getMaxCUWidth(), pcSPS->getMaxCUHeight(), pcSPS->getMaxCUDepth() ); 
+
+          pcPic->getPicYuvRec()->power(&cPicPower, 1.0f/pcSPS->getDepthPower());
+
+          m_acTVideoIOYuvDepthReconFileList[iViewIdx]->write(&cPicPower, pcSPS->getPad());
+          cPicPower.destroy();		  
+#else
           m_acTVideoIOYuvDepthReconFileList[iViewIdx]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
+#endif
         }
 
         // update POC of display order
@@ -543,7 +569,7 @@ TComPic* TAppDecTop::getPicFromView( Int iViewIdx, Int iPoc, bool bIsDepth )
   return pcRefPic;
 }
 
-#if POZNAN_SYNTH
+#if POZNAN_CU_SYNTH || POZNAN_CU_SKIP
 Void TAppDecTop::initRenderer(TComSPS &cComSPS)
 {
   m_cAvailabilityRenderer.init(cComSPS.getWidth(), cComSPS.getHeight(),true,0,LOG2_DISP_PREC_LUT,true, 0,0,0,0,0,6,4,1,0,6 );  //GT: simplest configuration
@@ -565,7 +591,6 @@ Void TAppDecTop::storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderI
   }
   iNearestViewIdx = 0;
   bRenderFromLeft = iCoddedViewOrderIdx>0?true:false;
-  //m_cCamParsCollector.getNearestBaseView(iCoddedViewIdx, iNearestViewIdx, iRelDistToLeft, bRenderFromLeft);
 
   m_cAvailabilityRenderer.setShiftLUTs(
     m_cCamParsCollector.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],
@@ -591,10 +616,25 @@ Void TAppDecTop::storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderI
     pcPic->addAvailabilityBuffer();
     pcPicYuvAvailView = pcPic->getPicYuvAvail();
   }
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  TComPicYuv* pcPicYuvSynthDepthView = pcPic->getPicYuvSynthDepth();
+  if(!pcPicYuvSynthDepthView)
+  {
+    pcPic->addSynthesisDepthBuffer();
+    pcPicYuvSynthDepthView = pcPic->getPicYuvSynthDepth();
+  }
+  m_cAvailabilityRenderer.extrapolateAvailabilityView( getPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), getPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvSynthDepthView, pcPicYuvAvailView, bRenderFromLeft );
+  
+#if POZNAN_OUTPUT_SYNTH
+      Char acFilenameBaseD[1024];
+      ::sprintf( acFilenameBaseD,  "SynthDepth_%s_V%d.yuv", ( true ? "Dec" : "Enc" ),iCoddedViewIdx );
+      pcPicYuvSynthDepthView->dump(acFilenameBaseD, iCurPoc!=0);
+#endif
+#endif
 
   //m_cAvailabilityRenderer.extrapolateAvailabilityView( xGetPicFromView( iNearestViewIdx, iCurPoc, false )->getPicYuvRec(), xGetPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvERView, pcPicYuvAvailView, bRenderFromLeft );
   m_cAvailabilityRenderer.extrapolateAvailabilityView( getPicFromView( iNearestViewIdx, iCurPoc, false )->getPicYuvRec(), getPicFromView( iNearestViewIdx, iCurPoc, true )->getPicYuvRec(), pcPicYuvSynthView, pcPicYuvAvailView, bRenderFromLeft );
-
+      
   pcPicYuvAvailView->setBorderExtension( false );//Needed??
   pcPicYuvAvailView->extendPicBorder();//Needed??
 
@@ -612,6 +652,6 @@ Void TAppDecTop::storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderI
   pcPicYuvSynthView->dump(acFilenameBase, iCurPoc!=0);
   }
 #endif
-  
-}
+
+}//*/
 #endif

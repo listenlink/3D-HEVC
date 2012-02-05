@@ -63,6 +63,9 @@
 #include <map>
 #include "TEncAnalyze.h"
 
+#if POZNAN_MP
+#include "../TLibCommon/TComMP.h"
+#endif		
 
 // ====================================================================================================================
 // Class definition
@@ -130,6 +133,15 @@ private:
   bool                    m_bPicWaitingForCoding;
 
   PicOrderCnt             m_iFrameNumInCodingOrder;
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 
+  Double                  m_dTextureCuDeltaQpOffset;
+  Double                  m_dTextureCuDeltaQpMul;
+  Int                     m_iTextureCuDeltaQpTopBottomRow; 
+#endif
+
+#if POZNAN_MP
+  TComMP*				  m_pcMP;
+#endif
 
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
@@ -216,6 +228,15 @@ public:
 //GT PRE LOAD ENC BUFFER
   Void encode    ( bool bEos, std::map<PicOrderCnt, TComPicYuv*>& rcMapPicYuvRecOut, TComBitstream* pcBitstreamOut, Bool& bNewPicNeeded );
   Void receivePic( bool bEos, TComPicYuv* pcPicYuvOrg, TComPicYuv* pcPicYuvRec, TComPicYuv* pcOrgPdmDepth = 0 );
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 
+  Double getTextureCuDeltaQpOffset( )      { return m_dTextureCuDeltaQpOffset;}
+  Double getTextureCuDeltaQpMul( )         { return m_dTextureCuDeltaQpMul;}
+  Int    getTextureCuDeltaQpTopBottomRow( ){ return m_iTextureCuDeltaQpTopBottomRow;}
+  Void   setTextureCuDeltaQpOffset      ( Double dTextureCuDeltaQpOffset    ){ m_dTextureCuDeltaQpOffset       = dTextureCuDeltaQpOffset; }
+  Void   setTextureCuDeltaQpMul         ( Double dTextureCuDeltaQpMul       ){ m_dTextureCuDeltaQpMul          = dTextureCuDeltaQpMul; }
+  Void   setTextureCuDeltaQpTopBottomRow( Int iTextureCuDeltaQpTopBottomRow ){ m_iTextureCuDeltaQpTopBottomRow = iTextureCuDeltaQpTopBottomRow; }  
+#endif
 };
 
 #endif // __TENCTOP__
