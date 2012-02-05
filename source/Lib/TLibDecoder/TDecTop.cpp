@@ -52,6 +52,12 @@ CamParsCollector::CamParsCollector()
     m_aaiCodedOffset      [ uiId ] = new Int [ MAX_NUMBER_VIEWS ];
     m_aaiCodedScale       [ uiId ] = new Int [ MAX_NUMBER_VIEWS ];
   }
+#if POZNAN_SYNTH
+  xCreateLUTs   ( (UInt)MAX_NUMBER_VIEWS, (UInt)MAX_NUMBER_VIEWS,  m_adBaseViewShiftLUT,  m_aiBaseViewShiftLUT);
+
+  m_iLog2Precision   = LOG2_DISP_PREC_LUT;
+  m_uiBitDepthForLUT = 8; //fixed
+#endif
 }
 
 CamParsCollector::~CamParsCollector()
@@ -65,6 +71,11 @@ CamParsCollector::~CamParsCollector()
   delete [] m_aaiCodedScale;
   delete [] m_aiViewOrderIndex;
   delete [] m_aiViewReceived;
+
+#if POZNAN_SYNTH
+  xDeleteArray( m_adBaseViewShiftLUT,        MAX_NUMBER_VIEWS, MAX_NUMBER_VIEWS,  2 );
+  xDeleteArray( m_aiBaseViewShiftLUT,        MAX_NUMBER_VIEWS, MAX_NUMBER_VIEWS,  2 );
+#endif
 }
 
 Void
@@ -78,6 +89,128 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile )
   m_iLastPOC                = -1;
   m_uiMaxViewId             = 0;
 }
+
+#if POZNAN_SYNTH
+/*
+Void
+CamParsCollector::initLUT(TComSPS &cComSPS)
+{
+    //===== create arrays =====
+  //xCreateLUTs   ( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_adBaseViewShiftLUT,  m_aiBaseViewShiftLUT,  m_adBaseViewShiftParameter,  m_aiBaseViewShiftParameter  );
+  
+  
+  //xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiCodedScale           );
+  //xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiCodedOffset          );
+  //xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet    );
+  //xInit2dArray  ( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet, 0 );
+
+  //xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmScaleNomDelta     );
+  //xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmOffset            );
+
+  //===== init disparity to virtual depth conversion parameters =====
+  //xSetPdmConversionParams();
+
+  //===== init arrays for first frame =====
+  //xSetShiftParametersAndLUT( m_uiFirstFrameId );
+}//*/
+
+Void
+CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT)
+{
+  //AOF( m_uiBitDepthForLUT == 8 );
+  //AOF(radLUT == NULL && raiLUT == NULL );
+
+  uiNumberSourceViews = Max( 1, uiNumberSourceViews );
+  uiNumberTargetViews = Max( 1, uiNumberTargetViews );
+
+  radLUT         = new Double***[ uiNumberSourceViews ];
+  raiLUT         = new Int   ***[ uiNumberSourceViews ];
+
+  for( UInt uiSourceView = 0; uiSourceView < uiNumberSourceViews; uiSourceView++ )
+  {
+    radLUT        [ uiSourceView ] = new Double**[ uiNumberTargetViews ];
+    raiLUT        [ uiSourceView ] = new Int   **[ uiNumberTargetViews ];
+
+    for( UInt uiTargetView = 0; uiTargetView < uiNumberTargetViews; uiTargetView++ )
+    {
+      radLUT        [ uiSourceView ][ uiTargetView ]      = new Double*[ 2 ];
+      radLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Double [ 257 ];
+      radLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Double [ 257 ];
+
+      raiLUT        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
+      raiLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
+      raiLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
+    }
+  }
+}
+
+Void 
+CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
+{
+  Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_uiCamParsCodedPrecision + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
+  Int     iLog2DivChroma = iLog2DivLuma + 1;
+
+  iOffset <<= m_uiBitDepthForLUT;
+
+  Double dScale  = (Double) iScale  / (( Double ) ( 1 << iLog2DivLuma ));
+  Double dOffset = (Double) iOffset / (( Double ) ( 1 << iLog2DivLuma ));
+
+  // offsets including rounding offsets
+  Int64 iOffsetLuma   = iOffset + ( ( 1 << iLog2DivLuma   ) >> 1 );
+  Int64 iOffsetChroma = iOffset + ( ( 1 << iLog2DivChroma ) >> 1 );
+
+  for( UInt uiDepthValue = 0; uiDepthValue < 256; uiDepthValue++ )
+  {
+    // real-valued look-up tables
+    Double  dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+    Double  dShiftChroma    = dShiftLuma / 2;
+    radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = dShiftLuma;
+    radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = dShiftChroma;
+
+    // integer-valued look-up tables
+    Int64   iTempScale      = (Int64)uiDepthValue * iScale;
+    Int64   iTestScale      = ( iTempScale + iOffset       );   // for checking accuracy of camera parameters
+    Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
+    Int64   iShiftChroma    = ( iTempScale + iOffsetChroma ) >> iLog2DivChroma;
+    raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = (Int)iShiftLuma;
+    raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = (Int)iShiftChroma;
+
+    // maximum deviation
+    //dMaxDispDev     = Max( dMaxDispDev,    fabs( Double( (Int) iTestScale   ) - dShiftLuma * Double( 1 << iLog2DivLuma ) ) / Double( 1 << iLog2DivLuma ) );
+    //dMaxRndDispDvL  = Max( dMaxRndDispDvL, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) );
+    //dMaxRndDispDvC  = Max( dMaxRndDispDvC, fabs( Double( (Int) iShiftChroma ) - dShiftChroma ) );
+  }
+
+  radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+  radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+  raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+  raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+}
+
+Bool
+CamParsCollector::getNearestBaseView( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft)
+{
+  /*
+  riNearestViewIdx = 0;
+
+  Bool bDecencdingVN = ( m_aiSortedBaseViews.size() >= 2 && m_aiSortedBaseViews[ 0 ] > m_aiSortedBaseViews[ 1 ] );
+  Int  iFactor       = ( bDecencdingVN ? -1 : 1 );
+
+  if( ( m_aiBaseId2SortedId[iSynthViewIdx] - m_aiBaseId2SortedId[riNearestViewIdx] ) * iFactor  <= 0 )
+  {
+    rbRenderFromLeft = true;
+  }
+  else
+  {
+    rbRenderFromLeft = false;
+  }
+
+  riRelDistToLeft = 128; //Not used for now;
+//*/
+  return true;
+}
+
+#endif
 
 Void
 CamParsCollector::uninit()
@@ -160,6 +293,10 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedOffset() [ uiBaseId ];
+#if POZNAN_SYNTH
+        xInitLUTs(uiBaseId,uiViewId,m_aaiCodedScale [ uiBaseId ][ uiViewId ],m_aaiCodedOffset[ uiBaseId ][ uiViewId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
+        xInitLUTs(uiViewId,uiBaseId,m_aaiCodedScale [ uiViewId ][ uiBaseId ],m_aaiCodedOffset[ uiViewId ][ uiBaseId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
+#endif
       }
       else
       {
@@ -167,6 +304,10 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getSPS()->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getSPS()->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getSPS()->getInvCodedOffset() [ uiBaseId ];
+#if POZNAN_SYNTH
+        xInitLUTs(uiBaseId,uiViewId,m_aaiCodedScale [ uiBaseId ][ uiViewId ],m_aaiCodedOffset[ uiBaseId ][ uiViewId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
+        xInitLUTs(uiViewId,uiBaseId,m_aaiCodedScale [ uiViewId ][ uiBaseId ],m_aaiCodedOffset[ uiViewId ][ uiBaseId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
+#endif
       }
     }
   }
@@ -181,6 +322,10 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedOffset() [ uiBaseId ];
+#if POZNAN_SYNTH
+        xInitLUTs(uiBaseId,uiViewId,m_aaiCodedScale [ uiBaseId ][ uiViewId ],m_aaiCodedOffset[ uiBaseId ][ uiViewId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
+        xInitLUTs(uiViewId,uiBaseId,m_aaiCodedScale [ uiViewId ][ uiBaseId ],m_aaiCodedOffset[ uiViewId ][ uiBaseId ],m_adBaseViewShiftLUT,m_aiBaseViewShiftLUT);
+#endif
       }
     }
   }
@@ -458,6 +603,12 @@ TDecTop::deleteExtraPicBuffers( Int iPoc )
 #if HHI_INTERVIEW_SKIP
     pcPic->removeUsedPelsMapBuffer();
 #endif
+#if POZNAN_AVAIL_MAP
+    pcPic->removeAvailabilityBuffer();
+#endif
+#if POZNAN_SYNTH_VIEW
+    pcPic->removeSynthesisBuffer();
+#endif
   }
 }
 
@@ -721,6 +872,15 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       {
         initWedgeLists();
       }
+#endif
+
+#if POZNAN_SYNTH
+      if( m_pcCamParsCollector)
+      {
+        m_pcCamParsCollector->setSlice( pcSlice );
+      }
+      //if(!getIsDepth())
+      getDecTop()->storeSynthPicsInBuffer(pcSlice->getViewIdx(),pcSlice->getSPS()->getViewOrderIdx(),pcSlice->getPOC(),getIsDepth());
 #endif
 
       //  Decode a picture

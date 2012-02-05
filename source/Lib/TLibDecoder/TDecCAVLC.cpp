@@ -284,8 +284,8 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       {
         for( UInt uiBaseId = 0; uiBaseId < uiViewId; uiBaseId++ )
         {
-          xReadSvlc( iCode );   m_aaiTempScale [ uiBaseId ][ uiViewId ] = iCode;
-          xReadSvlc( iCode );   m_aaiTempOffset[ uiBaseId ][ uiViewId ] = iCode;
+          xReadSvlc( iCode );   m_aaiTempScale [ uiBaseId ][ uiViewId ] = iCode; //printf("SPS Scale: %d\n",iCode);
+          xReadSvlc( iCode );   m_aaiTempOffset[ uiBaseId ][ uiViewId ] = iCode; //printf("SPS Offset: %d\n",iCode);
           xReadSvlc( iCode );   m_aaiTempScale [ uiViewId ][ uiBaseId ] = iCode - m_aaiTempScale [ uiBaseId ][ uiViewId ];
           xReadSvlc( iCode );   m_aaiTempOffset[ uiViewId ][ uiBaseId ] = iCode - m_aaiTempOffset[ uiBaseId ][ uiViewId ];
         }
@@ -516,8 +516,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice)
       UInt uiViewId = rpcSlice->getSPS()->getViewId();
       for( UInt uiBaseId = 0; uiBaseId < uiViewId; uiBaseId++ )
       {
-        xReadSvlc( iCode );   m_aaiTempScale [ uiBaseId ][ uiViewId ] = iCode;
-        xReadSvlc( iCode );   m_aaiTempOffset[ uiBaseId ][ uiViewId ] = iCode;
+        xReadSvlc( iCode );   m_aaiTempScale [ uiBaseId ][ uiViewId ] = iCode; printf("Scale: %d\n",iCode);
+        xReadSvlc( iCode );   m_aaiTempOffset[ uiBaseId ][ uiViewId ] = iCode; printf("Offset: %d\n",iCode);
         xReadSvlc( iCode );   m_aaiTempScale [ uiViewId ][ uiBaseId ] = iCode - m_aaiTempScale [ uiBaseId ][ uiViewId ];
         xReadSvlc( iCode );   m_aaiTempOffset[ uiViewId ][ uiBaseId ] = iCode - m_aaiTempOffset[ uiBaseId ][ uiViewId ];
       }

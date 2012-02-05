@@ -51,6 +51,9 @@
 #include "../../Lib/TLibCommon/TComBitStream.h"
 #include "../../Lib/TLibCommon/TComDepthMapGenerator.h"
 #include "../../Lib/TLibDecoder/TDecTop.h"
+#if POZNAN_SYNTH
+#include "../../Lib/TLibRenderer/TRenTop.h"
+#endif
 #include "TAppDecCfg.h"
 
 // ====================================================================================================================
@@ -86,6 +89,11 @@ private:
   TComAUPicAccess                 m_cAUPicAccess;
 #endif
 
+#if POZNAN_SYNTH
+  TRenTop                         m_cAvailabilityRenderer;
+#endif
+
+
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
@@ -95,6 +103,11 @@ public:
   Void  decode            (); ///< main decoding function
   Void  increaseNumberOfViews	(Int iNewNumberOfViews);
   Void  startUsingDepth() ;
+
+#if POZNAN_SYNTH
+  Void  initRenderer(TComSPS &cComSPS);
+  Void  storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderIdx,Int iCurPoc,Bool bDepth);
+#endif
 
 // GT FIX
   std::vector<TComPic*> getSpatialRefPics( Int iViewIdx, Int iPoc, Bool bIsDepth );

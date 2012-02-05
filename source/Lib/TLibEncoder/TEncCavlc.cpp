@@ -352,8 +352,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       {
         for( UInt uiId = 0; uiId < pcSPS->getViewId(); uiId++ )
         {
-          xWriteSvlc( pcSPS->getCodedScale    ()[ uiId ] );
-          xWriteSvlc( pcSPS->getCodedOffset   ()[ uiId ] );
+          //printf("From ViewID %d To ViewID: %d\n",pcSPS->getViewId(),uiId);
+          xWriteSvlc( pcSPS->getCodedScale    ()[ uiId ] ); //printf("SPS Scale: %d\n",pcSPS->getCodedScale    ()[ uiId ]);
+          xWriteSvlc( pcSPS->getCodedOffset   ()[ uiId ] ); //printf("SPS Offset: %d\n", pcSPS->getCodedOffset   ()[ uiId ]);
           xWriteSvlc( pcSPS->getInvCodedScale ()[ uiId ] + pcSPS->getCodedScale ()[ uiId ] );
           xWriteSvlc( pcSPS->getInvCodedOffset()[ uiId ] + pcSPS->getCodedOffset()[ uiId ] );
         }
@@ -530,8 +531,9 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       for( UInt uiId = 0; uiId < pcSlice->getSPS()->getViewId(); uiId++ )
       {
-        xWriteSvlc( pcSlice->getCodedScale    ()[ uiId ] );
-        xWriteSvlc( pcSlice->getCodedOffset   ()[ uiId ] );
+        printf("From ViewID %d To ViewID: %d\n",pcSlice->getSPS()->getViewId(),uiId);
+        xWriteSvlc( pcSlice->getCodedScale    ()[ uiId ] ); printf("Slice Scale: %d\n",pcSlice->getCodedScale    ()[ uiId ]);
+        xWriteSvlc( pcSlice->getCodedOffset   ()[ uiId ] ); printf("Slice Offset: %d\n", pcSlice->getCodedOffset   ()[ uiId ]);
         xWriteSvlc( pcSlice->getInvCodedScale ()[ uiId ] + pcSlice->getCodedScale ()[ uiId ] );
         xWriteSvlc( pcSlice->getInvCodedOffset()[ uiId ] + pcSlice->getCodedOffset()[ uiId ] );
       }

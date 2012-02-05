@@ -451,7 +451,7 @@ public:
   Void      initSlice       ();
 
   Void      setSPS          ( TComSPS* pcSPS ) { m_pcSPS = pcSPS; }
-  TComSPS*  getSPS          () { return m_pcSPS; }
+                                                                                               TComSPS*  getSPS          () { return m_pcSPS; }
 
   Void      setPPS          ( TComPPS* pcPPS ) { m_pcPPS = pcPPS; }
   TComPPS*  getPPS          () { return m_pcPPS; }

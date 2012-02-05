@@ -66,6 +66,13 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   m_ppcRecoYuvTemp = new TComYuv*[m_uhTotalDepth-1];
   m_ppcOrigYuv     = new TComYuv*[m_uhTotalDepth-1];
   m_ppcResPredTmp  = new TComYuv*[m_uhTotalDepth-1];
+#if POZNAN_AVAIL_MAP
+  m_ppcAvailYuv    = new TComYuv*[m_uhTotalDepth-1];
+#endif
+#if POZNAN_SYNTH_VIEW
+  m_ppcSynthYuv    = new TComYuv*[m_uhTotalDepth-1];
+#endif
+  
 
 #if HHI_MPI
   m_puhDepthSaved  = new UChar[1ll<<( ( m_uhTotalDepth - 1 )<<1 )];
@@ -91,6 +98,14 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
     m_ppcRecoYuvTemp[i] = new TComYuv; m_ppcRecoYuvTemp[i]->create(uiWidth, uiHeight);
 
     m_ppcOrigYuv    [i] = new TComYuv; m_ppcOrigYuv    [i]->create(uiWidth, uiHeight);
+
+#if POZNAN_AVAIL_MAP
+    m_ppcAvailYuv   [i] = new TComYuv; m_ppcAvailYuv    [i]->create(uiWidth, uiHeight);
+#endif
+#if POZNAN_SYNTH_VIEW
+    m_ppcSynthYuv   [i] = new TComYuv; m_ppcSynthYuv    [i]->create(uiWidth, uiHeight);
+#endif
+
 
     m_ppcResPredTmp [i] = new TComYuv; m_ppcResPredTmp [i]->create(uiWidth, uiHeight);
   }
@@ -149,8 +164,20 @@ Void TEncCu::destroy()
     }
     if(m_ppcOrigYuv[i])
     {
-      m_ppcOrigYuv[i]->destroy();     delete m_ppcOrigYuv[i];     m_ppcOrigYuv[i] = NULL;
+      m_ppcOrigYuv[i]->destroy();     delete m_ppcOrigYuv[i];     m_ppcOrigYuv[i]     = NULL;
     }
+#if POZNAN_AVAIL_MAP
+    if(m_ppcAvailYuv[i])
+    {
+      m_ppcAvailYuv[i]->destroy();    delete m_ppcAvailYuv[i];    m_ppcAvailYuv[i]    = NULL;
+    }
+#endif
+#if POZNAN_SYNTH_VIEW
+    if(m_ppcSynthYuv[i])
+    {
+      m_ppcSynthYuv[i]->destroy();    delete m_ppcSynthYuv[i];    m_ppcSynthYuv[i]    = NULL;
+    }
+#endif
     if(m_ppcResPredTmp[i])
     {
       m_ppcResPredTmp [i]->destroy(); delete m_ppcResPredTmp[i];  m_ppcResPredTmp[i] = NULL;
@@ -202,6 +229,20 @@ Void TEncCu::destroy()
     delete [] m_ppcOrigYuv;
     m_ppcOrigYuv = NULL;
   }
+#if POZNAN_AVAIL_MAP
+  if(m_ppcAvailYuv)
+  {
+    delete [] m_ppcAvailYuv;
+    m_ppcAvailYuv = NULL;
+  }
+#endif
+#if POZNAN_SYNTH_VIEW
+  if(m_ppcSynthYuv)
+  {
+    delete [] m_ppcSynthYuv;
+    m_ppcSynthYuv = NULL;
+  }
+#endif
   if(m_ppcResPredTmp)
   {
     delete [] m_ppcResPredTmp;
@@ -425,7 +466,41 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
+#if POZNAN_AVAIL_MAP
+  if (pcPic->getPicYuvAvail())  m_ppcAvailYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvAvail(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
+#endif  
+#if POZNAN_SYNTH_VIEW
+  if (pcPic->getPicYuvSynth())  m_ppcSynthYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvSynth(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
+#endif
 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Bool bWholeCUCanBeSynthesized = false;
+  Bool bOneSubCUCanNotBeSynthesied = false;
+  Bool bSubCUCanBeSynthesized[4];
+  Bool * pbSubCUCanBeSynthesized = bSubCUCanBeSynthesized;
+  pcPic->checkSynthesisAvailability(rpcBestCU, rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU(), uiDepth, pbSubCUCanBeSynthesized); //KUBA SYNTH
+  Int  iSubCUCanNotBeSynthesized = 0;
+  Int  iSubCUCanBeSynthesizedCnt = 0;
+  for(Int i = 0; i < 4; i++)
+  {
+    if (!bSubCUCanBeSynthesized[i])
+    {
+      iSubCUCanNotBeSynthesized = i;
+    }
+    else
+    {
+      iSubCUCanBeSynthesizedCnt ++;
+    }
+  }
+  if(iSubCUCanBeSynthesizedCnt == 4)
+  {
+    bWholeCUCanBeSynthesized = true;
+  }
+  else if(iSubCUCanBeSynthesizedCnt == 3)
+  {
+    bOneSubCUCanNotBeSynthesied = true;
+  }
+#endif
   // variables for fast encoder decision
   TComDataCU* pcTempCU;
   Bool    bEarlySkip  = false;
@@ -492,6 +567,160 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
   if( ( uiRPelX < rpcBestCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < rpcBestCU->getSlice()->getSPS()->getHeight() ) )
   {
+    // do CU Skip
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    if(bWholeCUCanBeSynthesized)
+    {
+      rpcBestCU->getTotalCost() = 0;       // Cost of synthesised CU is zero
+      rpcBestCU->getTotalBits() = 0;       // Cost of synthesised CU is zero
+      rpcBestCU->getTotalDistortion() = 0; // Distortion of synthesised CU is zero
+      rpcBestCU->setPredModeSubParts( MODE_SYNTH,      0, uiDepth );
+      rpcBestCU->setPartSizeSubParts( SIZE_2Nx2N,      0, uiDepth );
+#if POZNAN_FILL_OCCLUDED_CU_WITH_SYNTHESIS
+      m_ppcRecoYuvBest[uiDepth]->copyFromPicYuv(pcPic->getPicYuvSynth(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU()); // First copy synthesis YUV part to CU encoder reconstruction YUV structure
+#else
+      m_ppcRecoYuvBest[uiDepth]->copyFromPicYuv(pcPic->getPicYuvAvail(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU()); // First copy synthesis YUV part to CU encoder reconstruction YUV structure
+#endif
+      UInt uiInitTrDepth  = rpcBestCU->getPartitionSize(0) == SIZE_2Nx2N ? 0 : 1;
+      rpcBestCU->copyToPic(uiDepth, 0, uiInitTrDepth); 
+      xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU(), uiDepth );   // Next copy it to reconstruction YUV buffer in coded picture
+      assert( rpcBestCU->getPartitionSize ( 0 ) != SIZE_NONE  ); //Not needed any more ??
+      assert( rpcBestCU->getPredictionMode( 0 ) != MODE_NONE  );
+      assert( rpcBestCU->getTotalCost     (   ) != MAX_DOUBLE );
+
+      #if HHI_VSO//??
+      if( m_pcRdCost->getUseRenModel() )
+      {
+        UInt  uiWidth     = rpcBestCU->getWidth ( 0 );
+        UInt  uiHeight    = rpcBestCU->getHeight( 0 );
+        Pel*  piSrc       = m_ppcRecoYuvBest[uiDepth]->getLumaAddr( 0 );
+        UInt  uiSrcStride = m_ppcRecoYuvBest[uiDepth]->getStride();
+        m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+      }
+      #endif
+      return;
+    }
+    else if (bOneSubCUCanNotBeSynthesied && (uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )) // If only one from subCU can not be synthesised than force NxN split but donot signal it in the stream
+    {
+      //printf("CUSkip - OneCanNotBe %d %d %d\n",rpcBestCU->getCUPelX(),rpcBestCU->getCUPelY(),rpcBestCU->getWidth());
+      // further split !!!!go to line 866!!!
+#if HHI_VSO
+    // reset Model
+    if( m_pcRdCost->getUseRenModel() )
+    {
+      UInt  uiWidth     = m_ppcBestCU[uiDepth]->getWidth ( 0 );
+      UInt  uiHeight    = m_ppcBestCU[uiDepth]->getHeight( 0 );
+      Pel*  piSrc       = m_ppcOrigYuv[uiDepth]->getLumaAddr( 0 );
+      UInt  uiSrcStride = m_ppcOrigYuv[uiDepth]->getStride();
+      m_pcRdCost->setRenModelData( m_ppcBestCU[uiDepth], 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+    }
+#endif
+
+      UChar       uhNextDepth         = uiDepth + 1;
+      TComDataCU* pcSubBestPartCU     = m_ppcBestCU[uhNextDepth];
+      TComDataCU* pcSubTempPartCU     = m_ppcTempCU[uhNextDepth];
+      
+      for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++ ) //UInt uiPartUnitIdx = iSubCUNotSynthesied;
+      {
+        pcSubBestPartCU->initSubCU( rpcBestCU, uiPartUnitIdx, uhNextDepth );           // clear sub partition datas or init.
+        pcSubTempPartCU->initSubCU( rpcBestCU, uiPartUnitIdx, uhNextDepth );           // clear sub partition datas or init.
+//        pcSubBestPartCU->setLastCodedQP( rpcBestCU->getLastCodedQP() );
+//        pcSubTempPartCU->setLastCodedQP( rpcBestCU->getLastCodedQP() );
+        
+        if( ( pcSubBestPartCU->getCUPelX() < pcSubBestPartCU->getSlice()->getSPS()->getWidth() ) && ( pcSubBestPartCU->getCUPelY() < pcSubBestPartCU->getSlice()->getSPS()->getHeight() ) )
+        {
+          if( m_bUseSBACRD )
+          {
+            if ( 0 == uiPartUnitIdx) //initialize RD with previous depth buffer
+            {
+              m_pppcRDSbacCoder[uhNextDepth][CI_CURR_BEST]->load(m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST]);
+            }
+            else
+            {
+              m_pppcRDSbacCoder[uhNextDepth][CI_CURR_BEST]->load(m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]);
+            }
+          }
+          
+          xCompressCU( pcSubBestPartCU, pcSubTempPartCU, uhNextDepth ); //Compress SubCU's
+          
+#if HHI_VSO
+          if( m_pcRdCost->getUseRenModel() )
+          {
+            UInt  uiWidth     = pcSubBestPartCU->getWidth ( 0 );
+            UInt  uiHeight    = pcSubBestPartCU->getHeight( 0 );
+            Pel*  piSrc       = m_ppcRecoYuvBest[pcSubBestPartCU->getDepth(0)]->getLumaAddr( 0 );
+            UInt  uiSrcStride = m_ppcRecoYuvBest[pcSubBestPartCU->getDepth(0)]->getStride();
+            m_pcRdCost->setRenModelData( pcSubBestPartCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+          }
+#endif
+          rpcTempCU->copyPartFrom( pcSubBestPartCU, uiPartUnitIdx, uhNextDepth );         // Keep best part data to current temporary data.
+          xCopyYuv2Tmp( pcSubBestPartCU->getTotalNumPart()*uiPartUnitIdx, uhNextDepth );
+        }
+      }
+
+      if( !bBoundary )
+      {
+        m_pcEntropyCoder->resetBits();
+        m_pcEntropyCoder->encodeSplitFlag( rpcTempCU, 0, uiDepth, true );
+
+        rpcTempCU->getTotalBits() += m_pcEntropyCoder->getNumberOfWrittenBits(); // split bits
+      }
+
+#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
+      if( bFullyRenderedSec )
+      {
+        m_pcRdCost->setLambdaScale( m_pcEncCfg->getInterViewSkipLambdaScale() );
+      }
+      else
+      {
+        m_pcRdCost->setLambdaScale( 1 );
+      }
+#endif
+#if HHI_VSO
+      if ( m_pcRdCost->getUseLambdaScaleVSO())
+      {
+        rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCostVSO( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
+      }
+      else
+#endif
+      {
+        rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
+      }    
+
+      if( m_bUseSBACRD )
+      {
+        m_pppcRDSbacCoder[uhNextDepth][CI_NEXT_BEST]->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
+      }
+      //Copy Tmp to Best
+      xCheckBestMode( rpcBestCU, rpcTempCU, uiDepth );  //Roznica z naszym koder                                          // RD compare current larger prediction
+
+#if HHI_VSO
+      if( m_pcRdCost->getUseRenModel() )
+      {
+        UInt  uiWidth     = rpcBestCU->getWidth ( 0 );
+        UInt  uiHeight    = rpcBestCU->getHeight( 0 );
+        Pel*  piSrc       = m_ppcRecoYuvBest[uiDepth]->getLumaAddr( 0 );
+        UInt  uiSrcStride = m_ppcRecoYuvBest[uiDepth]->getStride();
+        m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+      }
+#endif
+      //Copy result to pic
+      rpcBestCU->copyToPic(uiDepth);                                                     // Copy Best data to Picture for next partition prediction.
+      
+      if( bBoundary )
+        return;
+
+      xCopyYuv2Pic( rpcBestCU->getPic(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU(), uiDepth );   // Copy Yuv data to picture Yuv
+      
+      // Assert if Best prediction mode is NONE
+      // Selected mode's RD-cost must be not MAX_DOUBLE.
+      assert( rpcBestCU->getPartitionSize ( 0 ) != SIZE_NONE  ); //Not needed any more?
+      assert( rpcBestCU->getPredictionMode( 0 ) != MODE_NONE  );
+      assert( rpcBestCU->getTotalCost     (   ) != MAX_DOUBLE );
+      return;
+    }
+#endif
+
     // do inter modes
     if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
     {
@@ -835,14 +1064,43 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   TComPic* pcPic = pcCU->getPic();
 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  if( pcCU->isCUSkiped( uiAbsPartIdx ) && uiDepth == pcCU->getDepth( uiAbsPartIdx )) //If CU Skiped no information is coded into stream
+    return;
+#endif
+
   Bool bBoundary = false;
   UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Bool bDontSendSplitFlag = false;
+  if( ( ( uiDepth < pcCU->getDepth( uiAbsPartIdx ) ) && ( uiDepth < (g_uiMaxCUDepth-g_uiAddCUDepth) ) ) || bBoundary ) //check if CU has 3 synthesied subCU - no split flag is send in that case
+  {
+    UInt uiQNumParts = ( pcPic->getNumPartInCU() >> (uiDepth<<1) )>>2;
+    Int iCUSkipCounter = 0;
+    UInt uiAbsPartIdxTmp = uiAbsPartIdx;
+    for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++, uiAbsPartIdxTmp+=uiQNumParts )
+    {
+      if(pcCU->isCUSkiped(uiAbsPartIdxTmp) && (pcCU->getDepth( uiAbsPartIdxTmp ) == uiDepth + 1) )
+      {
+        iCUSkipCounter++;
+      }
+    } 
+    if(iCUSkipCounter == 3)
+    {
+      bDontSendSplitFlag = true;
+    }
+  }
+#endif
+
   if( ( uiRPelX < pcCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < pcCU->getSlice()->getSPS()->getHeight() ) )
   {
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    if(!bDontSendSplitFlag)
+#endif
 #if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 || uiDepth < pcCU->getTextureModeDepth( uiAbsPartIdx ) )
 #endif
@@ -1411,7 +1669,11 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
   {
     for( UInt ui = 0; ui < rpcTempCU->getTotalNumPart(); ui++ )
     {
-      if( pcTextureCU->isIntra( rpcTempCU->getZorderIdxInCU() + ui ) )
+      if( pcTextureCU->isIntra( rpcTempCU->getZorderIdxInCU() + ui ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+        || pcTextureCU->isCUSkiped( rpcTempCU->getZorderIdxInCU() + ui )
+#endif
+      )
       {
         return;
       }

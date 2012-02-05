@@ -3,10 +3,9 @@
 	ProjectType="Visual C++"
 	Version="9,00"
 	Name="TLibRenderer"
-	ProjectGUID="{457993C6-AE2C-4B9B-B5F9-71033279A0B9}"
+	ProjectGUID="{5E87AD84-AC4F-4336-B4EE-549CA210EE4A}"
 	RootNamespace="TLibRenderer"
 	Keyword="Win32Proj"
-	TargetFrameworkVersion="196613"
 	>
 	<Platforms>
 		<Platform
@@ -172,7 +171,6 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -237,7 +235,6 @@
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
-				EnableFunctionLevelLinking="true"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>

@@ -415,6 +415,12 @@ TEncTop::deleteExtraPicBuffers( Int iPoc )
   if ( pcPic )
   {
     pcPic->removeOriginalBuffer   ();
+#if POZNAN_AVAIL_MAP
+    pcPic->removeAvailabilityBuffer();
+#endif
+#if POZNAN_SYNTH_VIEW
+    pcPic->removeSynthesisBuffer();
+#endif
 #if HHI_INTER_VIEW_MOTION_PRED
     pcPic->removeOrgDepthMapBuffer();
 #endif

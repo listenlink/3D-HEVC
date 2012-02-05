@@ -48,6 +48,12 @@ TDecCu::TDecCu()
   m_ppcYuvResi    = NULL;
   m_ppcYuvReco    = NULL;
   m_ppcYuvResPred = NULL;
+#if POZNAN_AVAIL_MAP
+  m_ppcYuvAvail   = NULL;
+#endif
+#if POZNAN_SYNTH_VIEW
+  m_ppcYuvSynth   = NULL;
+#endif
   m_ppcCU         = NULL;
 }
 
@@ -74,6 +80,12 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
   m_ppcYuvResi    = new TComYuv*    [m_uiMaxDepth-1];
   m_ppcYuvReco    = new TComYuv*    [m_uiMaxDepth-1];
   m_ppcYuvResPred = new TComYuv*    [m_uiMaxDepth-1];
+#if POZNAN_AVAIL_MAP
+  m_ppcYuvAvail   = new TComYuv*    [m_uiMaxDepth-1];
+#endif
+#if POZNAN_SYNTH_VIEW
+  m_ppcYuvSynth   = new TComYuv*    [m_uiMaxDepth-1];
+#endif
   m_ppcCU         = new TComDataCU* [m_uiMaxDepth-1];
   
   UInt uiNumPartitions;
@@ -86,6 +98,13 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
     m_ppcYuvResi   [ui] = new TComYuv;    m_ppcYuvResi   [ui]->create( uiWidth, uiHeight );
     m_ppcYuvReco   [ui] = new TComYuv;    m_ppcYuvReco   [ui]->create( uiWidth, uiHeight );
     m_ppcYuvResPred[ui] = new TComYuv;    m_ppcYuvResPred[ui]->create( uiWidth, uiHeight );
+#if POZNAN_AVAIL_MAP
+    m_ppcYuvAvail  [ui] = new TComYuv;    m_ppcYuvAvail  [ui]->create( uiWidth, uiHeight );
+#endif
+#if POZNAN_SYNTH_VIEW
+    m_ppcYuvSynth  [ui] = new TComYuv;    m_ppcYuvSynth  [ui]->create( uiWidth, uiHeight );
+#endif
+
     m_ppcCU        [ui] = new TComDataCU; m_ppcCU        [ui]->create( uiNumPartitions, uiWidth, uiHeight, true );
   }
   
@@ -105,12 +124,25 @@ Void TDecCu::destroy()
     m_ppcYuvResi   [ui]->destroy(); delete m_ppcYuvResi   [ui]; m_ppcYuvResi   [ui] = NULL;
     m_ppcYuvReco   [ui]->destroy(); delete m_ppcYuvReco   [ui]; m_ppcYuvReco   [ui] = NULL;
     m_ppcYuvResPred[ui]->destroy(); delete m_ppcYuvResPred[ui]; m_ppcYuvResPred[ui] = NULL;
+#if POZNAN_AVAIL_MAP
+    m_ppcYuvAvail  [ui]->destroy(); delete m_ppcYuvAvail  [ui]; m_ppcYuvAvail  [ui] = NULL;
+#endif
+#if POZNAN_SYNTH_VIEW
+    m_ppcYuvSynth  [ui]->destroy(); delete m_ppcYuvSynth  [ui]; m_ppcYuvSynth  [ui] = NULL;
+#endif
     m_ppcCU        [ui]->destroy(); delete m_ppcCU        [ui]; m_ppcCU        [ui] = NULL;
   }
   
   delete [] m_ppcYuvResi;    m_ppcYuvResi    = NULL;
   delete [] m_ppcYuvReco;    m_ppcYuvReco    = NULL;
   delete [] m_ppcYuvResPred; m_ppcYuvResPred = NULL;
+#if POZNAN_AVAIL_MAP
+  delete [] m_ppcYuvAvail;   m_ppcYuvAvail   = NULL;
+#endif
+#if POZNAN_SYNTH_VIEW
+  delete [] m_ppcYuvSynth;   m_ppcYuvSynth   = NULL;
+#endif
+
   delete [] m_ppcCU;         m_ppcCU         = NULL;
 }
 
@@ -183,6 +215,46 @@ Void TDecCu::decompressCU( TComDataCU* pcCU )
 Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   TComPic* pcPic = pcCU->getPic();
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Bool bWholeCUCanBeSynthesized = false;
+  Bool bOneSubCUCanNotBeSynthesied = false;
+  Bool bSubCUCanBeSynthesized[4];
+  Bool * pbSubCUCanBeSynthesized = bSubCUCanBeSynthesized;
+  pcPic->checkSynthesisAvailability(pcCU, pcCU->getAddr(), uiAbsPartIdx, uiDepth, pbSubCUCanBeSynthesized); //KUBA SYNTH
+  Int  iSubCUCanNotBeSynthesized = 0;
+  Int  iSubCUCanBeSynthesizedCnt = 0;
+  for(Int i = 0; i < 4; i++)
+  {
+    if (!bSubCUCanBeSynthesized[i])
+    {
+      iSubCUCanNotBeSynthesized = i;
+    }
+    else
+    {
+      iSubCUCanBeSynthesizedCnt ++;
+    }
+  }
+  if(iSubCUCanBeSynthesizedCnt == 4)
+  {
+    bWholeCUCanBeSynthesized = true;
+  }
+  else if(iSubCUCanBeSynthesizedCnt == 3)
+  {
+    bOneSubCUCanNotBeSynthesied = true;
+  }
+
+  if(bWholeCUCanBeSynthesized)
+  {
+    pcCU->setPredModeSubParts( MODE_SYNTH, uiAbsPartIdx, uiDepth );
+    pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
+    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+    //pcCU->setSizeSubParts( pcCU->getSlice()->getSPS()->getMaxCUWidth()>>uiDepth, pcCU->getSlice()->getSPS()->getMaxCUHeight()>>uiDepth, uiAbsPartIdx, uiDepth );
+    return;    
+  }
+#endif
+
   UInt uiCurNumParts    = pcPic->getNumPartInCU() >> (uiDepth<<1);
   UInt uiQNumParts      = uiCurNumParts>>2;
   
@@ -194,6 +266,13 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   if( ( uiRPelX < pcCU->getSlice()->getSPS()->getWidth() ) && ( uiBPelY < pcCU->getSlice()->getSPS()->getHeight() ) )
   {
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    if(bOneSubCUCanNotBeSynthesied && (uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )) // KUBA SYNTH check if CU has 3 synthesied subCU - no split flag is send in that case and CU split is assumed
+    {
+      pcCU->setDepthSubParts( uiDepth + 1, uiAbsPartIdx );
+    }
+    else 
+#endif
 #if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 || uiDepth < pcCU->getTextureModeDepth( uiAbsPartIdx ) )
 #endif
@@ -366,6 +445,12 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPartIdx,  UInt uiDepth )
 {
   TComPic* pcPic = pcCU->getPic();
+#if POZNAN_SYNTH_VIEW
+  if(pcPic->getPicYuvSynth())  m_ppcYuvSynth[uiDepth]->copyFromPicYuv( pcPic->getPicYuvSynth(), pcCU->getAddr(), uiAbsPartIdx );
+#endif
+#if POZNAN_AVAIL_MAP
+  if(pcPic->getPicYuvAvail())  m_ppcYuvAvail[uiDepth]->copyFromPicYuv( pcPic->getPicYuvAvail(), pcCU->getAddr(), uiAbsPartIdx );
+#endif
   
   Bool bBoundary = false;
   UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
@@ -410,6 +495,17 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPar
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
       break;
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    case MODE_SYNTH:
+    //  break;
+#if POZNAN_FILL_OCCLUDED_CU_WITH_SYNTHESIS
+      m_ppcYuvReco[uiDepth]->copyFromPicYuv(pcPic->getPicYuvSynth(), pcCU->getAddr(), uiAbsPartIdx);
+#else
+      m_ppcYuvReco[uiDepth]->copyFromPicYuv(pcPic->getPicYuvAvail(), pcCU->getAddr(), uiAbsPartIdx); //Poprawiæ
+#endif
+      //m_ppcYuvReco[uiDepth]->clear();
+      break;
+#endif
     default:
       assert(0);
       break;
