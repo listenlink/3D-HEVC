@@ -91,8 +91,6 @@
 #define POZNAN_EIVD_USE_IN_NONANCHOR_PIC_ONLY     	1    // determines if Depth Based Vector Prediction is used in non-anchor pictures only
 #endif
 
-#endif
-
 // ---------------------------------------
 
 #define POZNAN_STAT_JK	0 // save CU statistics to file

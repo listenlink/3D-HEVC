@@ -1364,44 +1364,6 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
   xSetShiftParametersAndLUT( m_uiFirstFrameId );
 }
 
-  xReadCameraParameterFile( pchCfgFileName );
-
-  m_bSetupFromCoded         = ( m_aadCameraParameters[ 0 ].size() == 2 );
-
-  if ( m_bSetupFromCoded )
-  {
-    std::cout << "Detected decoded camera parameter file. Overwriting base view settings from cfg file. " << std::endl;
-    xSetupBaseViewsFromCoded();
-  }
-  else
-  {
-    xSetupBaseViews( pchBaseViewNumbers, uiNumBaseViews );
-  }
-
-  //===== set derived parameters =====
-  xGetViewOrderIndices( m_aiBaseId2SortedId, m_aiViewOrderIndex );
-  m_bCamParsVaryOverTime = xGetCamParsChangeFlag();
-
-
-  //===== create arrays =====
-  xCreateLUTs   ( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_adBaseViewShiftLUT,  m_aiBaseViewShiftLUT,  m_adBaseViewShiftParameter,  m_aiBaseViewShiftParameter  );
-  xCreateLUTs   ( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfSynthViews, m_adSynthViewShiftLUT, m_aiSynthViewShiftLUT, m_adSynthViewShiftParameter, m_aiSynthViewShiftParameter );
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiCodedScale           );
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiCodedOffset          );
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet    );
-  xInit2dArray  ( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet, 0 );
-
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmScaleNomDelta     );
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmOffset            );
-
-  //===== init disparity to virtual depth conversion parameters =====
-  xSetPdmConversionParams();
-
-  //===== init arrays for first frame =====
-  xSetShiftParametersAndLUT( m_uiFirstFrameId );
-}
-#endif//*/
-
 Void
 TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
 {
