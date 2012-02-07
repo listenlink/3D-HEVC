@@ -99,7 +99,11 @@
 #define POZNAN_STAT_JK_FLUSH 1 // flush CU statistics to file after each CU
 #endif
 
+#if POZNAN_CU_SKIP
 #define POZNAN_CU_SKIP_PSNR         1
+#else
+#define POZNAN_CU_SKIP_PSNR         0
+#endif
 //<<<<< Poznan 3DV tools <<<<<<
 
 

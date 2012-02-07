@@ -74,7 +74,7 @@ public:
   Void  init        ( FILE* pCodedScaleOffsetFile );
   Void  uninit      ();
   Void  setSlice    ( TComSlice* pcSlice );
-#if POZNAN_CU_SKIP || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
+#if POZNAN_CU_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
   Double****          getBaseViewShiftLUTD      ()  { return m_adBaseViewShiftLUT;   }
   Int****             getBaseViewShiftLUTI      ()  { return m_aiBaseViewShiftLUT;   }
 
