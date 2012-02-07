@@ -1277,8 +1277,8 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx, Bool bDepth)
   else
   {
     iCurPoc = m_acTEncTopList[ iCoddedViewIdx ]->getNextFrameId();
-  if (!(m_acTEncTopList[ iCoddedViewIdx ]->currentPocWillBeCoded())) return;
-
+    if (!(m_acTEncTopList[ iCoddedViewIdx ]->currentPocWillBeCoded())) return;
+  }
   Int iNumberOfReferenceViews = 0;
   UInt iSynthViewIdx;
   // Get Left and right view
