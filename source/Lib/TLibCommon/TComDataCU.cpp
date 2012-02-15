@@ -4212,23 +4212,33 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
 
   RefPicList  eColRefPicList;
   Int iColPOC, iColRefPOC, iCurrPOC, iCurrRefPOC, iScale;
+#if SONY_COLPIC_AVAILABILITY
+	Int iColViewOrderIdx, iColRefViewOrderIdx, iCurrViewOrderIdx, iCurrRefViewOrderIdx;
+#endif
   TComMv cColMv;
 
   iCurrPOC = m_pcSlice->getPOC();    
   iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
-
+#if SONY_COLPIC_AVAILABILITY
+	iCurrViewOrderIdx    = m_pcSlice->getViewOrderIdx();
+	iCurrRefViewOrderIdx = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx();
+#endif
   // use coldir.
   TComPic *pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? getSlice()->getColDir() : 0), 0);
   TComDataCU *pColCU = pColPic->getCU( uiCUAddr );
   iColPOC = pColCU->getSlice()->getPOC();  
+#if SONY_COLPIC_AVAILABILITY
+	iColViewOrderIdx = pColCU->getSlice()->getViewOrderIdx();
+#endif
 
   if (pColCU->isIntra(uiAbsPartAddr))
   {
     return false;
   }
-
+#if !SONY_COLPIC_AVAILABILITY
   if( m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewIdx() != m_pcSlice->getViewIdx() )
     return false;
+#endif
 
   // Prefer a vector crossing us.  Prefer shortest.
   eColRefPicList = REF_PIC_LIST_0;
@@ -4244,10 +4254,26 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
       continue;
     }
     iColRefPOC = pColCU->getSlice()->getRefPOC(RefPicList(l), iColRefIdx);
+#if SONY_COLPIC_AVAILABILITY
+		iColRefViewOrderIdx = pColCU->getSlice()->getRefPic(RefPicList(l), iColRefIdx)->getViewOrderIdx();
+		bool bCrosses;
+		int iColDist;
+		if((iColPOC != iColRefPOC)&&(iCurrPOC != iCurrRefPOC)){
+			iColDist = abs(iColRefPOC - iColPOC);
+			bCrosses = iColPOC < iCurrPOC ? iColRefPOC > iCurrPOC : iColRefPOC < iCurrPOC;
+		}else if((iColPOC == iColRefPOC)&&(iCurrPOC == iCurrRefPOC)){
+			iColDist = abs(iColRefViewOrderIdx - iColViewOrderIdx);
+			bCrosses = iColViewOrderIdx < iCurrViewOrderIdx ? iColRefViewOrderIdx > iCurrViewOrderIdx : iColRefViewOrderIdx < iCurrViewOrderIdx;
+		}else{
+		  continue;
+		}
+#else
     if( pColCU->getSlice()->getRefViewIdx(RefPicList(l), iColRefIdx) != pColCU->getSlice()->getViewIdx() )
       continue;
     int iColDist = abs(iColRefPOC - iColPOC);
     bool bCrosses = iColPOC < iCurrPOC ? iColRefPOC > iCurrPOC : iColRefPOC < iCurrPOC;
+#endif
+
     if (iFirstColDist < 0)
     {
       bSaveIt = true;
@@ -4276,9 +4302,21 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   // Scale the vector.
   iColRefPOC = pColCU->getSlice()->getRefPOC(eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr));
   cColMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiAbsPartAddr);
+#if SONY_COLPIC_AVAILABILITY
+	iColRefViewOrderIdx = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewOrderIdx();
+#endif
 
   iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
+#if SONY_COLPIC_AVAILABILITY
+	iScale = 0;
+	iCurrRefViewOrderIdx = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx();
+	if((iColPOC != iColRefPOC)&&(iCurrPOC != iCurrRefPOC))
   iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
+	else if((iColPOC == iColRefPOC)&&(iCurrPOC == iCurrRefPOC))
+		iScale = xGetDistScaleFactor(iCurrViewOrderIdx, iCurrRefViewOrderIdx, iColViewOrderIdx, iColRefViewOrderIdx);
+#else
+  iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
+#endif
   if (iScale == 1024)
   {
     rcMv = cColMv;

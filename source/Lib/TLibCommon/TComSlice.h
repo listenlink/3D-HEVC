@@ -369,6 +369,9 @@ private:
   //  Bitstream writing
   UInt        m_uiPPSId;
   Int         m_iPOC;
+#if SONY_COLPIC_AVAILABILITY
+  Int         m_iViewOrderIdx;
+#endif
 #if DCM_DECODING_REFRESH
   NalUnitType m_eNalUnitType;         ///< Nal unit type for the slice
 #endif
@@ -459,6 +462,9 @@ public:
   UInt      getPPSId        ()                          { return  m_uiPPSId;            }
   SliceType getSliceType    ()                          { return  m_eSliceType;         }
   Int       getPOC          ()                          { return  m_iPOC;           }
+#if SONY_COLPIC_AVAILABILITY
+  Int       getViewOrderIdx ()                          { return  m_iViewOrderIdx;  }
+#endif
   Int       getSliceQp      ()                          { return  m_iSliceQp;           }
   Int       getSliceQpDelta ()                          { return  m_iSliceQpDelta;      }
   Int       getSymbolMode   ()                          { return  m_iSymbolMode;        }
@@ -494,6 +500,9 @@ public:
 
   Void      setPPSId            ( UInt u )                      { m_uiPPSId           = u;      }
   Void      setPOC              ( Int i )                       { m_iPOC              = i;      }
+#if SONY_COLPIC_AVAILABILITY
+  Void      setViewOrderIdx     ( Int i )                       { m_iViewOrderIdx     = i;      }
+#endif
 #if DCM_DECODING_REFRESH
   Void      setNalUnitType      ( NalUnitType e )               { m_eNalUnitType      = e;      }
   NalUnitType getNalUnitType    ()                              { return m_eNalUnitType;        }

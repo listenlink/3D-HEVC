@@ -431,8 +431,8 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   AOT( uiYPos + uiBlkHeight > uiPicHeight );
 
   //===== get disparity =====
-  Int           iMidPosX    = Int( uiXPos + ( ( uiBlkWidth  - 1 ) >> 1 ) );
-  Int           iMidPosY    = Int( uiYPos + ( ( uiBlkHeight - 1 ) >> 1 ) );
+  Int           iMidPosX    = Int( uiXPos + ( ( uiBlkWidth  - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpX();
+  Int           iMidPosY    = Int( uiYPos + ( ( uiBlkHeight - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpY();
   Int           iDisparity  = m_pcDepthMapGenerator->getDisparity( pcPic, iMidPosX, iMidPosY, uiBaseViewId );
 
   //===== compensate luma =====

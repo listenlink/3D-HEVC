@@ -56,6 +56,8 @@ TComDepthMapGenerator::TComDepthMapGenerator()
   m_pcAUPicAccess       = 0;
   m_uiMaxDepth          = 0;
   m_uiOrgDepthBitDepth  = 0;
+  m_uiSubSampExpX       = 0;
+  m_uiSubSampExpY       = 0;
   m_ppcYuv              = 0;
   m_ppcCU               = 0;
 }
@@ -67,12 +69,14 @@ TComDepthMapGenerator::~TComDepthMapGenerator()
 }
 
 Void
-TComDepthMapGenerator::create( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight, UInt uiMaxCUDepth, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiOrgBitDepth )
+TComDepthMapGenerator::create( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight, UInt uiMaxCUDepth, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiOrgBitDepth, UInt uiSubSampExpX, UInt uiSubSampExpY )
 {
   destroy();
   m_bDecoder            = bDecoder;
   m_uiMaxDepth          = uiMaxCUDepth;
   m_uiOrgDepthBitDepth  = uiOrgBitDepth;
+  m_uiSubSampExpX       = uiSubSampExpX;
+  m_uiSubSampExpY       = uiSubSampExpY;
   m_ppcYuv              = new TComYuv*    [ m_uiMaxDepth ];
   m_ppcCU               = new TComDataCU* [ m_uiMaxDepth ];
   for( UInt uiDepth = 0; uiDepth < m_uiMaxDepth; uiDepth++ )
@@ -81,10 +85,10 @@ TComDepthMapGenerator::create( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight,
     UInt  uiWidth   = uiMaxCUWidth  >> uiDepth;
     UInt  uiHeight  = uiMaxCUHeight >> uiDepth;
 
-    m_ppcYuv[ uiDepth ] = new TComYuv;    m_ppcYuv[ uiDepth ]->create(            uiWidth, uiHeight       );
+    m_ppcYuv[ uiDepth ] = new TComYuv;    m_ppcYuv[ uiDepth ]->create( uiWidth >> m_uiSubSampExpX, uiHeight >> m_uiSubSampExpY );
     m_ppcCU [ uiDepth ] = new TComDataCU; m_ppcCU [ uiDepth ]->create( uiNumPart, uiWidth, uiHeight, true );
   }
-  m_cTmpPic.create( uiPicWidth, uiPicHeight, uiMaxCUWidth, uiMaxCUHeight, uiMaxCUDepth );
+  m_cTmpPic.create( uiPicWidth >> m_uiSubSampExpX, uiPicHeight >> m_uiSubSampExpY, uiMaxCUWidth >> m_uiSubSampExpX, uiMaxCUHeight >> m_uiSubSampExpY, uiMaxCUDepth );
   xSetChroma( &m_cTmpPic, ( 1 << uiOrgBitDepth ) >> 1 );
   m_bCreated    = true;
 }
@@ -105,6 +109,8 @@ TComDepthMapGenerator::destroy()
     m_cTmpPic.destroy();
     m_uiMaxDepth          = 0;
     m_uiOrgDepthBitDepth  = 0;
+    m_uiSubSampExpX       = 0;
+    m_uiSubSampExpY       = 0;
     m_bDecoder            = false;
   }
 }
@@ -371,6 +377,8 @@ TComDepthMapGenerator::predictDepthMap( TComPic* pcPic )
     {
       if( pcBasePic->getPOC() == 0 )
       {
+        pcBasePic->removePrdDepthMapBuffer();
+        pcBasePic->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(m_pcSPSAccess->getPdm()), PDM_SUB_SAMP_EXP_Y(m_pcSPSAccess->getPdm()) );
         xClearDepthMap( pcBasePic );
       }
 #if PDM_OUTPUT_PRED_DEPTH_MAP
@@ -642,11 +650,13 @@ TComDepthMapGenerator::getPdmMvPred( TComDataCU* pcCU, UInt uiPartIdx, RefPicLis
     TComPicYuv* pcBasePdm   = pcBasePic->getPredDepthMap();
     TComPicYuv* pcBaseRec   = pcBasePic->getPicYuvRec   ();
     Int         iDisparity  = xGetDisparityFromVirtDepth( uiBaseId, iPrdDepth );
-    Int         iBasePosX   = Clip3( 0, pcBasePdm->getWidth () - 1, iCurrPosX + ( ( iDisparity + 2 ) >> 2 ) );
+    Int         iShiftX     = m_uiSubSampExpX + 2;
+    Int         iAddX       = ( 1 << iShiftX ) >> 1;
+    Int         iBasePosX   = Clip3( 0, pcBasePdm->getWidth () - 1, iCurrPosX + ( ( iDisparity + iAddX ) >> iShiftX ) );
     Int         iBasePosY   = Clip3( 0, pcBasePdm->getHeight() - 1, iCurrPosY                               );
     Int         iBaseCUAddr;
     Int         iBaseAbsPartIdx;
-    pcBaseRec->getCUAddrAndPartIdx( iBasePosX, iBasePosY, iBaseCUAddr, iBaseAbsPartIdx );
+    pcBaseRec->getCUAddrAndPartIdx( iBasePosX << m_uiSubSampExpX, iBasePosY << m_uiSubSampExpY, iBaseCUAddr, iBaseAbsPartIdx );
     TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
     if( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) != MODE_INTER && pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) != MODE_SKIP )
     {
@@ -743,13 +753,15 @@ TComDepthMapGenerator::xConvertDepthMapCurr2Ref( TComPic* pcRef, TComPic* pcCur 
   Pel*        pCurSamples   =  pcCurDepthMap->getLumaAddr( 0 );
   Pel*        pRefSamples   =  pcRefDepthMap->getLumaAddr( 0 );
   Int         iRefViewIdx   =  pcRef->getViewIdx();
+  Int         iShiftX       = m_uiSubSampExpX + 2;
+  Int         iAddX         = ( 1 << iShiftX ) >> 1;
   for( Int iY = 0; iY < iHeight; iY++, pCurSamples += iCurStride, pRefSamples += iRefStride )
   {
     for( Int iXCur = 0; iXCur < iWidth; iXCur++ )
     {
       Int iDepth = pCurSamples[ iXCur ];
       Int iDisp  = xGetDisparityFromVirtDepth( iRefViewIdx, iDepth );
-      Int iXRef  = iXCur + ( ( iDisp + 2 ) >> 2 );
+      Int iXRef  = iXCur + ( ( iDisp + iAddX ) >> iShiftX );
       if( iXRef >= 0 && iXRef < iWidth && iDepth > pRefSamples[ iXRef ] )
       {
         pRefSamples[ iXRef ] = iDepth;
@@ -783,13 +795,15 @@ TComDepthMapGenerator::xConvertDepthMapRef2Curr( TComPic* pcCur, TComPic* pcRef 
   Pel*        pRefSamples   =  pcRefDepthMap->getLumaAddr( 0 );
   Pel*        pCurSamples   =  pcCurDepthMap->getLumaAddr( 0 );
   Int         iRefViewIdx   =  pcRef->getViewIdx();
+  Int         iShiftX       = m_uiSubSampExpX + 2;
+  Int         iAddX         = ( 1 << iShiftX ) >> 1;
   for( Int iY = 0; iY < iHeight; iY++, pRefSamples += iRefStride, pCurSamples += iCurStride )
   {
     for( Int iXRef = 0; iXRef < iWidth; iXRef++ )
     {
       Int iDepth = pRefSamples[ iXRef ];
       Int iDisp  = xGetDisparityFromVirtDepth( iRefViewIdx, iDepth );
-      Int iXCur  = iXRef - ( ( iDisp + 2 ) >> 2 );
+      Int iXCur  = iXRef - ( ( iDisp + iAddX ) >> iShiftX );
       if( iXCur >= 0 && iXCur < iWidth && iDepth > pCurSamples[ iXCur ] )
       {
         pCurSamples[ iXCur ] = iDepth;
@@ -1021,10 +1035,12 @@ TComDepthMapGenerator::xIntraPredictBlkDepthMap( TComDataCU* pcCU, TComYuv* pcCU
   UInt uiTrMode     = pcCU->getTransformIdx( uiAbsPartIdx );
   if( uiTrMode == uiTrDepth )
   {
-    UInt  uiWidth         = pcCU->getWidth ( 0 ) >> uiTrDepth;
-    UInt  uiHeight        = pcCU->getHeight( 0 ) >> uiTrDepth;
+    UInt  uiWidth         = pcCU->getWidth ( 0 ) >> ( uiTrDepth + m_uiSubSampExpX );
+    UInt  uiHeight        = pcCU->getHeight( 0 ) >> ( uiTrDepth + m_uiSubSampExpY );
     UInt  uiStride        = pcCUDepthMap->getStride  ();
-    Pel*  pDepthMap       = pcCUDepthMap->getLumaAddr( uiAbsPartIdx );
+    UInt  uiBlkX          = g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ] >> m_uiSubSampExpX;
+    UInt  uiBlkY          = g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ] >> m_uiSubSampExpY;
+    Pel*  pDepthMap       = pcCUDepthMap->getLumaAddr() + uiBlkY * pcCUDepthMap->getStride() + uiBlkX;
     UInt  uiLumaPredMode  = pcCU->getLumaIntraDir    ( uiAbsPartIdx );
     Bool  bAboveAvail     = false;
     Bool  bLeftAvail      = false;
@@ -1033,7 +1049,7 @@ TComDepthMapGenerator::xIntraPredictBlkDepthMap( TComDataCU* pcCU, TComYuv* pcCU
                                         m_pcPrediction->getPredicBuf       (),
                                         m_pcPrediction->getPredicBufWidth  (),
                                         m_pcPrediction->getPredicBufHeight (),
-                                        bAboveAvail, bLeftAvail, true );
+                                        bAboveAvail, bLeftAvail, true, m_uiSubSampExpX, m_uiSubSampExpY );
     m_pcPrediction->predIntraDepthAng ( pcCU->getPattern(), uiLumaPredMode, pDepthMap, uiStride, uiWidth, uiHeight ); // could be replaced with directional intra prediction
                                                                                                                       // using "predIntraLumaAng", but note: 
                                                                                                                       //  - need to take care of neighbours with undefined depth
@@ -1105,6 +1121,8 @@ TComDepthMapGenerator::xIViewPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
   Int   iHeight;
   UInt  uiAbsPartIdx;
   pcCU->getPartIndexAndSize( uiPartIdx, uiAbsPartIdx, iWidth, iHeight );
+  iWidth  >>= m_uiSubSampExpX;
+  iHeight >>= m_uiSubSampExpY;
 
   // get depth values
   Int   iDepthValue   = PDM_UNDEFINED_DEPTH;
@@ -1124,7 +1142,7 @@ TComDepthMapGenerator::xIViewPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
   }
   if( aiPrdDepth[ 0 ] != PDM_UNDEFINED_DEPTH && aiPrdDepth[ 1 ] != PDM_UNDEFINED_DEPTH )
   {
-    iDepthValue = ( aiPrdDepth[ 0 ] + aiPrdDepth[ 1 ] + 1 ) >> 2;
+    iDepthValue = ( aiPrdDepth[ 0 ] + aiPrdDepth[ 1 ] + 1 ) >> 1;
   }
   else
   {
@@ -1134,7 +1152,9 @@ TComDepthMapGenerator::xIViewPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
   iDepthValue   = Max( 0, Min( PDM_MAX_ABS_VIRT_DEPTH, iDepthValue ) );
 
   // set depth map for PU
-  Pel*  pDMSamples  = pcCUDepthMap->getLumaAddr( uiAbsPartIdx );
+  UInt  uiBlkX      = g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ] >> m_uiSubSampExpX;
+  UInt  uiBlkY      = g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ] >> m_uiSubSampExpY;
+  Pel*  pDMSamples  = pcCUDepthMap->getLumaAddr() + uiBlkY * pcCUDepthMap->getStride() + uiBlkX;
   Int   iStride     = pcCUDepthMap->getStride  ();
   for( Int iY = 0; iY < iHeight; iY++, pDMSamples += iStride )
   {
@@ -1159,6 +1179,9 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
   UInt            uiCurrViewId      = pcCU->getSlice()->getSPS()->getViewId();  
   Int             iNum4x4BlksY      = iHeight >> 2;
   Int             iNum4x4BlksX      = iWidth  >> 2;
+  iWidth  >>= m_uiSubSampExpX;
+  iHeight >>= m_uiSubSampExpY;
+
   TComPicYuv*     pcCurrDepthMap    = pcCU->getPic()->getPredDepthMap();
   Pel*            piCurrDepthMap    = pcCurrDepthMap->getLumaAddr();
   Int             iCurrStride       = pcCurrDepthMap->getStride();
@@ -1183,6 +1206,10 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
   TComPicYuv*     pcBaseRecPic      = pcBasePic->getPicYuvRec   ();
   Pel*            piBaseDepthMap    = pcBaseDepthMap->getLumaAddr();
   Int             iBaseStride       = pcBaseDepthMap->getStride();
+  Int             iShiftX           = m_uiSubSampExpX + 2;
+  Int             iShiftY           = m_uiSubSampExpY + 2;
+  Int             iAddX             = ( 1 << iShiftX ) >> 1;
+  Int             iAddY             = ( 1 << iShiftY ) >> 1;
 
   //===== initialize 4x4 block arrays =====
   for( Int i4x4BlkY = 0; i4x4BlkY < iNum4x4BlksY; i4x4BlkY++ )
@@ -1201,13 +1228,13 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
     for( Int i4x4BlkX = 0; i4x4BlkX < iNum4x4BlksX; i4x4BlkX++ )
     {
       // position parameters
-      Int               iCurrBlkPosX        = iCurrPUPosX + ( i4x4BlkX << 2 );
-      Int               iCurrBlkPosY        = iCurrPUPosY + ( i4x4BlkY << 2 );
-      Int               iCurrSamplePosX     = iCurrBlkPosX + 1;
-      Int               iCurrSamplePosY     = iCurrBlkPosY + 1;
+      Int               iCurrBlkPosX        = iCurrPUPosX + ( ( i4x4BlkX << 2 ) >> m_uiSubSampExpX );
+      Int               iCurrBlkPosY        = iCurrPUPosY + ( ( i4x4BlkY << 2 ) >> m_uiSubSampExpY );
+      Int               iCurrSamplePosX     = iCurrBlkPosX + ( 1 >> m_uiSubSampExpX );
+      Int               iCurrSamplePosY     = iCurrBlkPosY + ( 1 >> m_uiSubSampExpY );
       Int               iCurrPredDepth      = piCurrDepthMap[ iCurrSamplePosY * iCurrStride + iCurrSamplePosX ];
       Int               iCurrPredDisp       = xGetDisparityFromVirtDepth( uiBaseId, iCurrPredDepth );
-      Int               iBaseSamplePosX     = iCurrSamplePosX + ( ( iCurrPredDisp + 2 ) >> 2 );
+      Int               iBaseSamplePosX     = iCurrSamplePosX + ( ( iCurrPredDisp + iAddX ) >> iShiftX );
       Int               iBaseSamplePosY     = iCurrSamplePosY;
       iBaseSamplePosX                       = Clip3( 0, pcBaseDepthMap->getWidth () - 1, iBaseSamplePosX );
       iBaseSamplePosY                       = Clip3( 0, pcBaseDepthMap->getHeight() - 1, iBaseSamplePosY );
@@ -1221,7 +1248,7 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
       // determine base motion data and check prediction mode
       Int               iBaseCUAddr;
       Int               iBaseAbsPartIdx;
-      pcBaseRecPic->getCUAddrAndPartIdx( iBaseSamplePosX, iBaseSamplePosY, iBaseCUAddr, iBaseAbsPartIdx );
+      pcBaseRecPic->getCUAddrAndPartIdx( iBaseSamplePosX << m_uiSubSampExpX, iBaseSamplePosY << m_uiSubSampExpY, iBaseCUAddr, iBaseAbsPartIdx );
       TComDataCU*       pcBaseCU            = pcBasePic->getCU( iBaseCUAddr );
       if( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) != MODE_INTER && pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) != MODE_SKIP )
       {
@@ -1255,8 +1282,8 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
         Pel*            piCurrRefDMap       = pcCurrRefDMap->getLumaAddr();
         Int             iCurrRefStride      = pcCurrRefDMap->getStride();
         TComMv&         rcCurrMv            = aiCurrMvField[ iCurrRefListId ]->getMv( uiAbsPartIdx );
-        Int             iCurrRefSamplePosX  = iCurrSamplePosX + ( ( rcCurrMv.getHor() + 2 ) >> 2 );
-        Int             iCurrRefSamplePosY  = iCurrSamplePosY + ( ( rcCurrMv.getVer() + 2 ) >> 2 );
+        Int             iCurrRefSamplePosX  = iCurrSamplePosX + ( ( rcCurrMv.getHor() + iAddX ) >> iShiftX );
+        Int             iCurrRefSamplePosY  = iCurrSamplePosY + ( ( rcCurrMv.getVer() + iAddY ) >> iShiftY );
         Int             iCurrRefSamplePosXC = Clip3( 0, pcCurrRefDMap->getWidth () - 1, iCurrRefSamplePosX );
         Int             iCurrRefSamplePosYC = Clip3( 0, pcCurrRefDMap->getHeight() - 1, iCurrRefSamplePosY );
         Int             iCurrRefDepth       = piCurrRefDMap[ iCurrRefSamplePosYC * iCurrRefStride + iCurrRefSamplePosXC ];
@@ -1270,7 +1297,7 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
           {
             // location and depth for path currView/currAU -> currView/refAU -> baseView/refAU
             Int         iCurrRefDisp        = xGetDisparityFromVirtDepth( uiBaseId, iCurrRefDepth );
-            Int         iBaseRefSamplePosX  = iCurrRefSamplePosX + ( ( iCurrRefDisp + 2 ) >> 2 );
+            Int         iBaseRefSamplePosX  = iCurrRefSamplePosX + ( ( iCurrRefDisp + iAddX ) >> iShiftX );
             Int         iBaseRefSamplePosY  = iCurrRefSamplePosY;
             TComPic*    pcBaseRefPic        = pcBaseCU->getSlice()->getRefPic( eBaseRefPicList, aiBaseRefIdx[ iBaseRefListId ] );
             TComPicYuv* pcBaseRefDMap       = pcBaseRefPic->getPredDepthMap();
@@ -1327,8 +1354,8 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
     {
       for( Int i4x4BlkX = 0; i4x4BlkX < iNum4x4BlksX; i4x4BlkX++ )
       {
-        Int             iCurrSamplePosX     = iCurrPUPosX + ( i4x4BlkX << 2 ) + 1;
-        Int             iCurrSamplePosY     = iCurrPUPosY + ( i4x4BlkY << 2 ) + 1;
+        Int             iCurrSamplePosX     = iCurrPUPosX + ( ( ( i4x4BlkX << 2 ) + 1 ) >> m_uiSubSampExpX );
+        Int             iCurrSamplePosY     = iCurrPUPosY + ( ( ( i4x4BlkY << 2 ) + 1 ) >> m_uiSubSampExpY );
         m_aai4x4Depth[i4x4BlkY][i4x4BlkX]   = piCurrDepthMap[ iCurrSamplePosY * iCurrStride + iCurrSamplePosX ];
         m_aabDepthSet[i4x4BlkY][i4x4BlkX]   = true;
         iNum4x4Set++;
@@ -1388,13 +1415,15 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
   }
 
   //===== set depth values =====
-  Pel* piDepthMap = pcCUDepthMap->getLumaAddr( uiAbsPartIdx );
+  UInt uiBlkX     = g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ] >> m_uiSubSampExpX;
+  UInt uiBlkY     = g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ] >> m_uiSubSampExpY;
+  Pel* piDepthMap = pcCUDepthMap->getLumaAddr() + uiBlkY * pcCUDepthMap->getStride() + uiBlkX;
   Int  iCUStride  = pcCUDepthMap->getStride  ();
   for( Int iRow = 0; iRow < iHeight; iRow++, piDepthMap += iCUStride )
   {
     for( Int iCol = 0; iCol < iWidth; iCol++ )
     {
-      piDepthMap[ iCol ] = m_aai4x4Depth[ iRow >> 2 ][ iCol >> 2 ];
+      piDepthMap[ iCol ] = m_aai4x4Depth[ (iRow << m_uiSubSampExpY) >> 2  ][ (iCol << m_uiSubSampExpX) >> 2 ];
     }
   }
 }
@@ -1403,7 +1432,7 @@ TComDepthMapGenerator::xInterPUDepthMapUpdate( TComDataCU* pcCU, TComYuv* pcCUDe
 Void
 TComDepthMapGenerator::xInterPUDepthMapPrediction( TComDataCU* pcCU, TComYuv* pcCUDepthMap, UInt uiPartIdx )
 {
-  m_pcPrediction->motionCompensation( pcCU, pcCUDepthMap, REF_PIC_LIST_X, (Int)uiPartIdx, true );  
+  m_pcPrediction->motionCompensation( pcCU, pcCUDepthMap, REF_PIC_LIST_X, (Int)uiPartIdx, true, m_uiSubSampExpX, m_uiSubSampExpY );  
 }
 
 
@@ -1431,8 +1460,8 @@ TComDepthMapGenerator::xGetPredDepth( TComDataCU* pcCU, UInt uiPartIdx, Int& riP
   Int           iCurrPosX;
   Int           iCurrPosY;
   pcPredDepthMap->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iCurrPosX, iCurrPosY );
-  iCurrPosX  += ( iWidth  - 1 ) >> 1;
-  iCurrPosY  += ( iHeight - 1 ) >> 1;
+  iCurrPosX  += ( ( iWidth  >> m_uiSubSampExpX ) - 1 ) >> 1;
+  iCurrPosY  += ( ( iHeight >> m_uiSubSampExpY ) - 1 ) >> 1;
   riPrdDepth  = piPredDepthMap[ iCurrPosX + iCurrPosY * iCurrStride ];
   if( piPosX )
   {
