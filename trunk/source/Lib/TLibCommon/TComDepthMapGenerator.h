@@ -109,7 +109,7 @@ public:
   TComDepthMapGenerator ();
   ~TComDepthMapGenerator();
 
-  Void  create                ( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight, UInt uiMaxCUDepth, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiOrgBitDepth );
+  Void  create                ( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight, UInt uiMaxCUDepth, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiOrgBitDepth, UInt uiSubSampExpX, UInt uiSubSampExpY );
   Void  destroy               ();
 
   Void  init                  ( TComPrediction* pcPrediction, TComSPSAccess* pcSPSAccess, TComAUPicAccess* pcAUPicAccess );
@@ -125,6 +125,8 @@ public:
 #endif
 
   UInt  getBaseViewId         ( UInt          uiIdx ) { AOF( uiIdx < m_auiBaseIdList.size() );  return m_auiBaseIdList[uiIdx]; }
+  UInt  getSubSampExpX        ()                      { return m_uiSubSampExpX; }
+  UInt  getSubSampExpY        ()                      { return m_uiSubSampExpY; }
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
 #if HHI_INTER_VIEW_MOTION_PRED
   Int   getPdmMergeCandidate  ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
@@ -199,6 +201,8 @@ private:
   TComAUPicAccess*  m_pcAUPicAccess;
   UInt              m_uiMaxDepth;
   UInt              m_uiOrgDepthBitDepth;
+  UInt              m_uiSubSampExpX;
+  UInt              m_uiSubSampExpY;
   TComYuv**         m_ppcYuv;
   TComDataCU**      m_ppcCU;
   TComPicYuv        m_cTmpPic;

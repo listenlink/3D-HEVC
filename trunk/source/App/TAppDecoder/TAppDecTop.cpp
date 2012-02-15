@@ -351,6 +351,9 @@ Void TAppDecTop::xInitDecLib()
   m_acTDecTopList[0]->setViewIdx(0);
   m_acTDecTopList[0]->setPictureDigestEnabled(m_pictureDigestEnabled);
   m_acTDecTopList[0]->setCamParsCollector( &m_cCamParsCollector );
+#if SONY_COLPIC_AVAILABILITY
+  m_acTDecTopList[0]->setViewOrderIdx(0);
+#endif
 }
 
 /** \param pcListPic list of pictures to be written to file

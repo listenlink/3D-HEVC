@@ -354,6 +354,10 @@ public:
   Double    getMultiviewMvRegLambdaScale    ()      { return  m_dMultiviewMvRegLambdaScale; }
 #endif
 
+#if SONY_COLPIC_AVAILABILITY
+  Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }
+#endif
+
 #if HHI_VSO
   //==== VSO  ==========
   UInt      getVSOMode                      ()      { return m_uiVSOMode; }

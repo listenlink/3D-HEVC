@@ -582,12 +582,12 @@ Void TAppEncTop::encode()
 
   //GT: setup and init Bools for Eos and Continue Reading
   Bool  bAllEos = false;
-  Bool  bAllContinueReadingPics;
+  Bool  bAllContinueReadingPics = false;
   std::vector<Bool>  bEos ;
   std::vector<Bool>  bContinueReadingPics ;
 
   Bool  bAllDepthEos = false;
-  Bool  bAllContinueReadingDepthPics;
+  Bool  bAllContinueReadingDepthPics = false;
   std::vector<Bool>  bDepthEos ;
   std::vector<Bool>  bContinueReadingDepthPics ;
 

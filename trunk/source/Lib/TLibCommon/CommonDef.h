@@ -57,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "3.0rc2"                 ///< Current software version
-#define NV_VERSION        "0.2r1"                  ///< Current software version
+#define NV_VERSION        "0.3"                    ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -144,9 +144,8 @@
 #endif
 
 //>>>>> generation and usage of virtual prediction depth maps >>>>>
-#define PDM_DEPTH_MAP_MCP_FILTER          2         // 0: standard filter, 1:bilinear, 2:nearest neighbour
 #define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
-#define PDM_NO_INTER_UPDATE               0         // no update for inter (but not inter-view) predicted blocks
+#define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..5)
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)
 #define PDM_OUTPUT_PRED_DEPTH_MAP         0         // output prediction depth map (for debugging)
@@ -166,6 +165,10 @@
 #define PDM_USE_FOR_IVIEW                 1
 #define PDM_USE_FOR_INTER                 2
 #define PDM_USE_FOR_MERGE                 4
+
+#define PDM_SUBSAMPLING_EXP               2         // subsampling factor is 2^PDM_SUBSAMPLING_EXP 
+#define PDM_SUB_SAMP_EXP_X(Pdm)           ((Pdm)==1?PDM_SUBSAMPLING_EXP:0)
+#define PDM_SUB_SAMP_EXP_Y(Pdm)           ((Pdm)==1?PDM_SUBSAMPLING_EXP:0)
 //<<<<< generation and usage of virtual prediction depth maps <<<<<
 
 #define OUTPUT_RESIDUAL_PICTURES          0         // output residual pictures (for debugging)

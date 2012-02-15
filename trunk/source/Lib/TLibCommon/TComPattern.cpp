@@ -146,12 +146,20 @@ Void TComPatternParam::setPatternParamCU( TComDataCU* pcCU,
 #endif
   if ( iComp == 0 )
   {
+#if DEPTH_MAP_GENERATION
+    m_iPatternStride  = ( bPrdDepthMap ? pcCU->getPic()->getPredDepthMap()->getStride() : pcCU->getPic()->getStride() );
+#else
     m_iPatternStride  = pcCU->getPic()->getStride();
+#endif
     m_piPatternOrigin = pcPic->getLumaAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
   }
   else
   {
+#if DEPTH_MAP_GENERATION
+    m_iPatternStride  = ( bPrdDepthMap ? pcCU->getPic()->getPredDepthMap()->getCStride() : pcCU->getPic()->getCStride() );
+#else
     m_iPatternStride = pcCU->getPic()->getCStride();
+#endif
     if ( iComp == 1 )
       m_piPatternOrigin = pcPic->getCbAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
     else
@@ -241,7 +249,7 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
 
 Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt uiPartDepth, Int* piAdiBuf, Int iOrgBufStride, Int iOrgBufHeight, Bool& bAbove, Bool& bLeft
 #if DEPTH_MAP_GENERATION
-                                , Bool bPrdDepthMap 
+                                , Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY
 #endif
                                 )
 {
@@ -253,7 +261,13 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
   UInt  uiCuHeight2 = uiCuHeight<<1;
   UInt  uiWidth;
   UInt  uiHeight;
+
+#if DEPTH_MAP_GENERATION
+  Int   iPicStride = ( bPrdDepthMap ? pcCU->getPic()->getPredDepthMap()->getStride() : pcCU->getPic()->getStride() );
+#else
   Int   iPicStride = pcCU->getPic()->getStride();
+#endif
+
   Int   iCuAddr;
 #if REFERENCE_SAMPLE_PADDING
   Int   iUnitSize = 0;
@@ -374,8 +388,21 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
   Int iDCValue = ( 1<<( g_uiBitDepth + g_uiBitIncrement - 1) );
 #endif // REFERENCE_SAMPLE_PADDING
   
+#if DEPTH_MAP_GENERATION
+  if ( bPrdDepthMap )
+  {
+    uiWidth  = ( uiCuWidth2  >> uiSubSampExpX ) + 1;
+    uiHeight = ( uiCuHeight2 >> uiSubSampExpY ) + 1;
+  }
+  else
+  {
   uiWidth=uiCuWidth2+1;
   uiHeight=uiCuHeight2+1;
+  }
+#else
+  uiWidth=uiCuWidth2+1;
+  uiHeight=uiCuHeight2+1;
+#endif
   
   if (((uiWidth<<2)>iOrgBufStride)||((uiHeight<<2)>iOrgBufHeight))
     return;
@@ -397,6 +424,9 @@ Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt
 
 #if REFERENCE_SAMPLE_PADDING
 #if DEPTH_MAP_GENERATION
+  if ( bPrdDepthMap )
+    fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize >> uiSubSampExpX, iNumUnitsInCu, iTotalUnits, uiCuWidth >> uiSubSampExpX, uiCuHeight >> uiSubSampExpY, uiWidth, uiHeight, iPicStride, bPrdDepthMap );
+  else
   fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride, bPrdDepthMap );
 #else
   fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride );

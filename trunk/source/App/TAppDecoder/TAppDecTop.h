@@ -104,6 +104,7 @@ public:
 #if DEPTH_MAP_GENERATION
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
+  TDecTop*          getDecTop0    () { return m_acTDecTopList[0]; }
 #endif
 
 protected:

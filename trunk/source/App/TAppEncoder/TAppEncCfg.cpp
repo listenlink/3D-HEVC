@@ -267,7 +267,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     ("VSO",                             m_bUseVSO                 , false         , "Use VSO" )
     // GT: For development, will be removed later
   ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
+#if HHI_VSO_LS_TABLE
+  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1  , "Lambda Scaling for VSO")
+#else
   ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 0.5  , "Lambda Scaling for VSO")
+#endif
     ("ForceLambdaScaleVSO",             m_bForceLambdaScaleVSO    , false         , "Force using Lambda Scale VSO also in non-VSO-Mode")
 #if HHI_VSO_DIST_INT
   ("AllowNegDist",                    m_bAllowNegDist           , true         , "Allow negative Distortion in VSO")
@@ -478,6 +482,20 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       m_aaiBaseViewRefInd .resize( m_iNumberOfViews );
     }
   }
+
+#if HHI_VSO_LS_TABLE
+  // Q&D
+  Double adLambdaScaleTable[] = 
+  {  0.031250, 0.031639, 0.032029, 0.032418, 0.032808, 0.033197, 0.033586, 0.033976, 0.034365, 0.034755, 
+     0.035144, 0.035533, 0.035923, 0.036312, 0.036702, 0.037091, 0.037480, 0.037870, 0.038259, 0.038648, 
+     0.039038, 0.039427, 0.039817, 0.040206, 0.040595, 0.040985, 0.041374, 0.041764, 0.042153, 0.042542, 
+     0.042932, 0.043321, 0.043711, 0.044100, 0.044194, 0.053033, 0.061872, 0.070711, 0.079550, 0.088388, 
+     0.117851, 0.147314, 0.176777, 0.235702, 0.294628, 0.353553, 0.471405, 0.589256, 0.707107, 0.707100, 
+     0.753550, 0.800000  
+  }; 
+  AOT( (m_aiQP[1] < 0) || (m_aiQP[1] > 51));
+  m_dLambdaScaleVSO *= adLambdaScaleTable[m_aiQP[1]]; 
+#endif
 #endif
 
   // set global variables
@@ -628,7 +646,7 @@ Void TAppEncCfg::xCheckParameter()
 
   xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
 #if DEPTH_MAP_GENERATION
-  xConfirmPara    ( m_uiPredDepthMapGeneration > 3,                                   "PredDepthMapGen must be less than or equal to 3" );
+  xConfirmPara    ( m_uiPredDepthMapGeneration > 2,                                   "PredDepthMapGen must be less than or equal to 2" );
   xConfirmPara    ( m_uiPredDepthMapGeneration >= 2 && !m_bUsingDepthMaps,            "PredDepthMapGen >= 2 requires CodeDepthMaps = 1" );
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED

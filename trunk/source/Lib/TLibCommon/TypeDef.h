@@ -39,6 +39,9 @@
 #define _TYPEDEF__
 
 
+
+#define SONY_COLPIC_AVAILABILITY  		  1
+
 //>>>>> HHI 3DV tools >>>>>
 #define HHI_INTER_VIEW_MOTION_PRED      1   // inter-view motion parameter prediction
 #define HHI_INTER_VIEW_RESIDUAL_PRED    1   // inter-view residual prediction
@@ -49,6 +52,7 @@
 #define HHI_VSO                         1   // view synthesis optimization
 #define HHI_VSO_COLOR_PLANES            1   // view synthesis optimization in color planes
 #define HHI_VSO_DIST_INT                1   // view synthesis optimization integer distorition in rdo process
+#define HHI_VSO_LS_TABLE                1   // table based lambda scaling
 
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE && !HHI_INTERVIEW_SKIP
   #error "HHI_INTERVIEW_SKIP_LAMBDA_SCALE cannot be enabled if HHI_INTERVIEW_SKIP is not"
@@ -59,6 +63,7 @@
 
 #define HHI_NO_LowDelayCoding           0   // old-fashioned encoder control, should be adapted to hm5.0
 //<<<<< HHI 3DV tools <<<<<
+
 
 
 ////////////////////////////
