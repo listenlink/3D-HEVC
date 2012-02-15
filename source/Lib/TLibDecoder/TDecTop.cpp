@@ -249,6 +249,9 @@ TDecTop::TDecTop()
   m_uiValidPS = 0;
   m_bIsDepth = false ;
   m_iViewIdx = 0 ;
+#if SONY_COLPIC_AVAILABILITY
+  m_iViewOrderIdx = 0;
+#endif
 #if ENC_DEC_TRACE
   g_hTrace = fopen( "TraceDec.txt", "wb" );
   g_bJustDoIt = g_bEncDecTraceDisable;
@@ -381,7 +384,8 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   m_iMaxRefPicNum = getCodedPictureBufferSize( );
 
 #if DEPTH_MAP_GENERATION
-  Bool bNeedPrdDepthMapBuffer = ( !pcSlice->getSPS()->isDepth() && ( pcSlice->getSPS()->getViewId() == 0 || pcSlice->getSPS()->getPredDepthMapGeneration() > 0 ) );
+  UInt uiPdm                  = ( pcSlice->getSPS()->getViewId() ? pcSlice->getSPS()->getPredDepthMapGeneration() : m_pcTAppDecTop->getSPSAccess()->getPdm() );
+  Bool bNeedPrdDepthMapBuffer = ( !pcSlice->getSPS()->isDepth() && uiPdm > 0 );
 #endif
 
   if (m_cListPic.size() < (UInt)m_iMaxRefPicNum)
@@ -391,7 +395,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 #if DEPTH_MAP_GENERATION
     if( bNeedPrdDepthMapBuffer )
     {
-      rpcPic->addPrdDepthMapBuffer();
+      rpcPic->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
     }
 #endif
     m_cListPic.pushBack( rpcPic );
@@ -425,7 +429,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 #if DEPTH_MAP_GENERATION
   if( bNeedPrdDepthMapBuffer && !rpcPic->getPredDepthMap() )
   {
-    rpcPic->addPrdDepthMapBuffer();
+    rpcPic->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
   }
 #endif
 }
@@ -592,6 +596,9 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       m_apcSlicePilot->setPPS( &m_cPPS );
       m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
       m_apcSlicePilot->setViewIdx( m_cSPS.getViewId() );
+#if SONY_COLPIC_AVAILABILITY
+      m_apcSlicePilot->setViewOrderIdx( m_cSPS.getViewOrderIdx());
+#endif
       if (!m_bFirstSliceInPicture)
       {
         memcpy(m_apcSlicePilot, pcPic->getPicSym()->getSlice(m_uiSliceIdx-1), sizeof(TComSlice));
@@ -632,6 +639,10 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
         pcPic->setViewIdx( m_cSPS.getViewId() );
 
+#if SONY_COLPIC_AVAILABILITY
+        pcPic->setViewOrderIdx( m_cSPS.getViewOrderIdx() );
+#endif
+
         /* transfer any SEI messages that have been received to the picture */
         pcPic->setSEIs(m_SEIs);
         m_SEIs = NULL;
@@ -644,7 +655,13 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
         m_cSliceDecoder.create( m_apcSlicePilot, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
 
 #if DEPTH_MAP_GENERATION
-        m_cDepthMapGenerator.create( true, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+        UInt uiPdm = ( m_cSPS.getViewId() ? m_cSPS.getPredDepthMapGeneration() : getDecTop()->getSPSAccess()->getPdm() );
+        m_cDepthMapGenerator.create( true, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement, PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
+        TComDepthMapGenerator* pcDMG0 = getDecTop()->getDecTop0()->getDepthMapGenerator();
+        if( m_cSPS.getViewId() == 1 && ( pcDMG0->getSubSampExpX() != PDM_SUB_SAMP_EXP_X(uiPdm) || pcDMG0->getSubSampExpY() != PDM_SUB_SAMP_EXP_Y(uiPdm) ) )
+        {
+          pcDMG0->create( true, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement, PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
+        }
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
         m_cResidualGenerator.create( true, m_apcSlicePilot->getSPS()->getWidth(), m_apcSlicePilot->getSPS()->getHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
@@ -682,6 +699,9 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
         assert( ! m_cSPS.isDepth() || pcTexturePic != NULL );
         pcSlice->setTexturePic( pcTexturePic );
         pcSlice->setViewIdx( pcPic->getViewIdx() );
+#if SONY_COLPIC_AVAILABILITY
+        pcSlice->setViewOrderIdx( pcPic->getViewOrderIdx() );
+#endif
         pcSlice->setRefPicListExplicitlyDecoderSided(m_cListPic, apcSpatRefPics) ;// temporary solution
 
 #if DCM_COMB_LIST
