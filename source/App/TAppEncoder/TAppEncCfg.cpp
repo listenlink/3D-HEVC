@@ -783,6 +783,9 @@ Void TAppEncCfg::xSetGlobal()
   g_uiBitIncrement = m_uiInternalBitDepth - g_uiBitDepth;
 #endif
 #endif
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+  g_dDeltaDCsQuantOffset = Double(g_uiBitIncrement) -  2.0;
+#endif
 
   g_uiBASE_MAX     = ((1<<(g_uiBitDepth))-1);
 
