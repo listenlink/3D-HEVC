@@ -89,6 +89,9 @@ private:
   Int                   m_aiNumRefIdx[2];    //  for multiple reference of current slice
 
   Int                   m_iViewIdx;
+#if SONY_COLPIC_AVAILABILITY
+  Int                   m_iViewOrderIdx;
+#endif
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
 
@@ -158,6 +161,10 @@ public:
   Void          setNumRefs( Int i, RefPicList e )             { m_aiNumRefIdx[e] = i; }
   Void          setViewIdx( Int i )                           { m_iViewIdx = i; }
   Int           getViewIdx()                                  { return m_iViewIdx; }
+#if SONY_COLPIC_AVAILABILITY
+  Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }
+  Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }
+#endif
 
   Void          setScaleOffset( Int** pS, Int** pO )  { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
   Int**         getCodedScale ()                      { return m_aaiCodedScale;  }
@@ -199,7 +206,7 @@ public:
   Void          addDeblockBuffer        ();
 #endif
 #if DEPTH_MAP_GENERATION
-  Void          addPrdDepthMapBuffer    ();
+  Void          addPrdDepthMapBuffer    ( UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
   Void          addOrgDepthMapBuffer    ();

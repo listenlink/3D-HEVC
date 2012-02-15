@@ -72,7 +72,9 @@ TComPic::TComPic()
 
   m_aiNumRefIdx[0]    = 0;
   m_aiNumRefIdx[1]    = 0;
-
+#if SONY_COLPIC_AVAILABILITY
+  m_iViewOrderIdx     = 0;
+#endif
   m_iViewIdx          = 0;
   m_aaiCodedScale     = 0;
   m_aaiCodedOffset    = 0;
@@ -210,7 +212,7 @@ TComPic::addDeblockBuffer()
 
 #if DEPTH_MAP_GENERATION
 Void
-TComPic::addPrdDepthMapBuffer()
+TComPic::addPrdDepthMapBuffer( UInt uiSubSampExpX, UInt uiSubSampExpY )
 {
   AOT( m_pcPredDepthMap );
   AOF( m_apcPicYuv[1]   );
@@ -220,7 +222,7 @@ TComPic::addPrdDepthMapBuffer()
   UInt  uiMaxCuHeight = m_apcPicYuv[1]->getMaxCuHeight();
   UInt  uiMaxCuDepth  = m_apcPicYuv[1]->getMaxCuDepth ();
   m_pcPredDepthMap    = new TComPicYuv;
-  m_pcPredDepthMap    ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
+  m_pcPredDepthMap    ->create( iWidth >> uiSubSampExpX, iHeight >> uiSubSampExpY, uiMaxCuWidth >> uiSubSampExpX, uiMaxCuHeight >> uiSubSampExpY, uiMaxCuDepth );
 }
 #endif
 

@@ -148,6 +148,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, TComSlice*& rpcSlice )
   rpcSlice->setPic( pcPic );
   rpcSlice->initSlice();
   rpcSlice->setPOC( pcPic->getPOC() );
+#if SONY_COLPIC_AVAILABILITY
+  rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());
+#endif 
 
   // slice type
   SliceType eSliceType  = pcPic->getSliceType()  ;

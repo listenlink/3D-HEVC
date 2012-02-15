@@ -139,6 +139,9 @@ private:
 
   Bool                    m_bIsDepth;
   Int                     m_iViewIdx;
+#if SONY_COLPIC_AVAILABILITY
+  Int                     m_iViewOrderIdx;
+#endif
   TAppDecTop*             m_pcTAppDecTop;
   CamParsCollector*       m_pcCamParsCollector;
 
@@ -179,6 +182,10 @@ public:
 
   Void setViewIdx(Int i)					{ m_iViewIdx = i ;}
   Int  getViewIdx()								{ return m_iViewIdx ; }
+#if SONY_COLPIC_AVAILABILITY
+  Void setViewOrderIdx(Int i)					{ m_iViewOrderIdx = i ;}
+  Int  getViewOrderIdx()							{ return m_iViewOrderIdx ; }
+#endif
 
   Void setToDepth(Bool b)         { m_bIsDepth = b ;}
   Bool getIsDepth()               { return m_bIsDepth ;}
@@ -186,7 +193,10 @@ public:
   Void setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
 
   TComList<TComPic*>*     getListPic            () { return  &m_cListPic;             }
-  TAppDecTop*             getDecTop           ( ){ return  m_pcTAppDecTop ;};
+  TAppDecTop*             getDecTop           ( ){ return  m_pcTAppDecTop ;}
+#if DEPTH_MAP_GENERATION
+  TComDepthMapGenerator*  getDepthMapGenerator  () { return &m_cDepthMapGenerator; }
+#endif
 
   Void                    setSPS                (TComSPS cSPS );
 

@@ -91,7 +91,7 @@ Void TEncTop::create ()
   m_cAdaptiveLoopFilter.create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
   m_cLoopFilter.        create( g_uiMaxCUDepth );
 #if DEPTH_MAP_GENERATION
-  m_cDepthMapGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+  m_cDepthMapGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement, PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
@@ -303,7 +303,7 @@ Void TEncTop::encode( bool bEos, std::map<PicOrderCnt, TComPicYuv*>& rcMapPicYuv
       Bool  bNeedPrdDepthMapBuf = ( m_uiPredDepthMapGeneration > 0 );
       if( bNeedPrdDepthMapBuf && !pcPic->getPredDepthMap() )
       {
-        pcPic->addPrdDepthMapBuffer();
+        pcPic->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
       }
 #endif
 
@@ -797,6 +797,9 @@ Void TEncTop::xSetPicProperties(TComPic* pcPic)
   const Int  iQpChangeOffset      = bQpChangePointPassed ? ( m_bIsDepth ? getQpChangeOffsetDepth() : getQpChangeOffsetVideo() ) : 0;
   pcPic->setQP(max(MIN_QP,min(MAX_QP, m_iQP+ m_aiTLayerQPOffset[m_cSeqIter.getFrameDescriptor().getTEncSeqStructureLayer(m_uiViewId)] + iQpChangeOffset )) );
   pcPic->setViewIdx( m_uiViewId );
+#if SONY_COLPIC_AVAILABILITY
+  pcPic->setViewOrderIdx(m_iViewOrderIdx);
+#endif
 #if 0
   pcPic->setNumRefs(0, REF_PIC_LIST_0);
   pcPic->setNumRefs(0, REF_PIC_LIST_1);

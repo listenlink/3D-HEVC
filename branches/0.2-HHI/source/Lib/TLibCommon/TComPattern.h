@@ -173,7 +173,10 @@ public:
                                 Bool&       bAbove,
                                 Bool&       bLeft
 #if DEPTH_MAP_GENERATION
-                               ,Bool        bPrdDepthMap = false 
+                               ,
+                               Bool         bPrdDepthMap = false,
+                               UInt         uiSubSampExpX = 0,
+                               UInt         uiSubSampExpY = 0
 #endif
                                );
   

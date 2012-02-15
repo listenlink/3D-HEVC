@@ -65,6 +65,10 @@ TComSlice::TComSlice()
   
   m_iViewIdx = 0 ;
 
+#if SONY_COLPIC_AVAILABILITY
+  m_iViewOrderIdx = 0;
+#endif
+
   initEqualRef();
   m_bNoBackPredFlag = false;
 #if MS_LCEC_LOOKUP_TABLE_EXCEPTION
@@ -439,6 +443,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_iPOC                 = pSrc->m_iPOC;
   m_iViewIdx             = pSrc->m_iViewIdx;
+#if SONY_COLPIC_AVAILABILITY
+  m_iViewOrderIdx        = pSrc->m_iViewOrderIdx;
+#endif
 #if DCM_DECODING_REFRESH
   m_eNalUnitType         = pSrc->m_eNalUnitType;
 #endif  
@@ -675,7 +682,10 @@ TComSPS::TComSPS()
 
   // AMVP parameter
   ::memset( m_aeAMVPMode, 0, sizeof( m_aeAMVPMode ) );
+
+#if ( HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX )
   m_bUseDMM = false;
+#endif
 }
 
 TComSPS::~TComSPS()

@@ -983,7 +983,6 @@ TAppComCamPara::xSetPdmConversionParams()
   AOF( iMinAbsVOIId != 0 && iMinAbsVOI != 0 );
   xGetCameraShifts( 0, iMinAbsVOIId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
   Double  dCamPosShiftVOI01     = dCamPosShift / Double( iMinVOI );
-  Double  dAbsCamPosShiftVOI01  = ( dCamPosShiftVOI01 < 0.0 ? -dCamPosShiftVOI01 : dCamPosShiftVOI01 );
 
   //--- determine maximum absolute camera position shift, precision, and base scale ---
   Double  dMaxAbsCamPosShift = 0.0;
@@ -996,9 +995,13 @@ TAppComCamPara::xSetPdmConversionParams()
       dMaxAbsCamPosShift  = ( dCamPosShift > dMaxAbsCamPosShift ?  dCamPosShift : dMaxAbsCamPosShift );
     }
   }
+  Int     iPrecision  = 0;  
+#if 0 // enabling this lines might be reasonable, but produces different results for the 2 view and 3 view test cases
   Double  dEpsilon    = 1e-15;
+  Double  dAbsCamPosShiftVOI01  = ( dCamPosShiftVOI01 < 0.0 ? -dCamPosShiftVOI01 : dCamPosShiftVOI01 );
   Double  dShiftRatio = dMaxAbsCamPosShift / dAbsCamPosShiftVOI01 - dEpsilon;
-  Int     iPrecision  = 0;  for( ; (Double)( 1 << iPrecision ) < dShiftRatio; iPrecision++ );
+  for( ; (Double)( 1 << iPrecision ) < dShiftRatio; iPrecision++ );
+#endif
   Int     iPrecShift  = iPrecision + PDM_INTER_CALC_SHIFT + PDM_VIRT_DEPTH_PRECISION - 2;
   AOF(    iPrecShift  < PDM_INTERNAL_CALC_BIT_DEPTH );
   Int     iScaleVOI01 = 1 << iPrecShift;
