@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <assert.h>
 #include <memory.h>
+#include <math.h>
 
 #ifdef __APPLE__
 #include <malloc/malloc.h>
@@ -454,3 +455,47 @@ Void TComPicYuv::xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int
     piPelSource += iSourceStride; 
   }
 }
+#if POZNAN_NONLINEAR_DEPTH
+Void TComPicYuv::nonlinearDepthForward(TComPicYuv *pcPicDst, Float p)
+{
+  Int		x,y;
+  TComNonlinearDepthForward cNonlinearDepthFwd(p, g_uiBitIncrement, g_uiBitIncrement);
+
+  // Luma
+  Pel* pPelSrc = getLumaAddr();
+  Pel* pPelDst = pcPicDst->getLumaAddr();
+  for(y=0; y<m_iPicHeight; y++)
+	{
+    for(x=0; x<m_iPicWidth; x++)
+    {
+      pPelDst[x] = (Pel)( cNonlinearDepthFwd(pPelSrc[x]) + 0.5);
+    }
+    pPelDst += pcPicDst->getStride();
+    pPelSrc += getStride();
+  }
+  // Chroma
+  copyToPicCb(pcPicDst);
+  copyToPicCr(pcPicDst);
+}
+Void TComPicYuv::nonlinearDepthBackward(TComPicYuv *pcPicDst, Float p)
+{
+  Int		x,y;
+  TComNonlinearDepthBackward cNonlinearDepthBwd(p, g_uiBitIncrement, g_uiBitIncrement);
+
+  // Luma
+  Pel* pPelSrc = getLumaAddr();
+  Pel* pPelDst = pcPicDst->getLumaAddr();
+  for(y=0; y<m_iPicHeight; y++)
+	{
+    for(x=0; x<m_iPicWidth; x++)
+    {
+      pPelDst[x] = (Pel)( cNonlinearDepthBwd(pPelSrc[x]) + 0.5);
+    }
+    pPelDst += pcPicDst->getStride();
+    pPelSrc += getStride();
+  }
+  // Chroma
+  copyToPicCb(pcPicDst);
+  copyToPicCr(pcPicDst);
+}
+#endif

@@ -42,6 +42,10 @@
 
 
 // Include files
+#if POZNAN_MP
+#include "../TLibCommon/TComMP.h"
+#endif
+
 #include "CommonDef.h"
 #include "TComSlice.h"
 #include "TComDataCU.h"

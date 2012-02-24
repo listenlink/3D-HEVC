@@ -88,10 +88,17 @@ TComSlice::TComSlice()
   resetWpScaling(m_weightPredTable);
   initWpAcDcParam();
 #endif
+
+#if POZNAN_MP
+  m_pcMP = NULL;
+#endif
 }
 
 TComSlice::~TComSlice()
 {
+#if POZNAN_MP
+  m_pcMP = NULL;
+#endif
 }
 
 
@@ -680,6 +687,15 @@ TComSPS::TComSPS()
   m_uiMultiviewResPredMode   = 0;
 #endif
 
+#if POZNAN_DBMP
+  m_uiDBMP = 0;
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  m_uiUseCUSkip = 0;
+#endif
+
+
   // AMVP parameter
   ::memset( m_aeAMVPMode, 0, sizeof( m_aeAMVPMode ) );
 
@@ -729,6 +745,12 @@ TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecis
       m_aaiCodedOffset[ 1 ][ uiBaseViewId ] = aaiOffset[   m_uiViewId ][ uiBaseViewId ];
     }
   }
+#if POZNAN_NONLINEAR_DEPTH
+  m_fDepthPower = 1.0;
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  m_bUseTexDqpAccordingToDepth = false;
+#endif
 }
 
 Void
@@ -744,6 +766,9 @@ TComSPS::initMultiviewSPSDepth( UInt uiViewId, Int iViewOrderIdx )
   m_bCamParInSliceHeader  = false;
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
+#if POZNAN_NONLINEAR_DEPTH
+  m_fDepthPower = 1.0;
+#endif
 }
 
 

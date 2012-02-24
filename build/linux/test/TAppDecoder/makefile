@@ -40,15 +40,15 @@ STAT_LIBS			= -lpthread
 DYN_LIBS			=
 
 
-DYN_DEBUG_LIBS		= -lTLibDecoderd -lTLibCommond -lTLibVideoIOd -lTAppCommond
-DYN_DEBUG_PREREQS		= $(LIB_DIR)/libTLibDecoderd.a $(LIB_DIR)/libTLibCommond.a $(LIB_DIR)/libTLibVideoIOd.a $(LIB_DIR)/libTAppCommond.a
-STAT_DEBUG_LIBS		= -lTLibDecoderStaticd -lTLibCommonStaticd -lTLibVideoIOStaticd -lTAppCommonStaticd
-STAT_DEBUG_PREREQS		= $(LIB_DIR)/libTLibDecoderStaticd.a $(LIB_DIR)/libTLibCommonStaticd.a $(LIB_DIR)/libTLibVideoIOStaticd.a $(LIB_DIR)/libTAppCommonStaticd.a
+DYN_DEBUG_LIBS		= -lTLibDecoderd -lTLibCommond -lTLibVideoIOd -lTAppCommond -lTLibRendererd
+DYN_DEBUG_PREREQS	= $(LIB_DIR)/libTLibDecoderd.a $(LIB_DIR)/libTLibCommond.a $(LIB_DIR)/libTLibVideoIOd.a $(LIB_DIR)/libTAppCommond.a $(LIB_DIR)/libTLibRendererd.a
+STAT_DEBUG_LIBS		= -lTLibDecoderStaticd -lTLibCommonStaticd -lTLibVideoIOStaticd -lTAppCommonStaticd -lTLibRendererStaticd
+STAT_DEBUG_PREREQS	= $(LIB_DIR)/libTLibDecoderStaticd.a $(LIB_DIR)/libTLibCommonStaticd.a $(LIB_DIR)/libTLibVideoIOStaticd.a $(LIB_DIR)/libTAppCommonStaticd.a $(LIB_DIR)/libTLibRendererStaticd.a
 
-DYN_RELEASE_LIBS	= -lTLibDecoder -lTLibCommon -lTLibVideoIO -lTAppCommon
-DYN_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoder.a $(LIB_DIR)/libTLibCommon.a $(LIB_DIR)/libTLibVideoIO.a $(LIB_DIR)/libTAppCommon.a
-STAT_RELEASE_LIBS	= -lTLibDecoderStatic -lTLibCommonStatic -lTLibVideoIOStatic -lTAppCommonStatic
-STAT_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoderStatic.a $(LIB_DIR)/libTLibCommonStatic.a $(LIB_DIR)/libTLibVideoIOStatic.a $(LIB_DIR)/libTAppCommonStatic.a
+DYN_RELEASE_LIBS	= -lTLibDecoder -lTLibCommon -lTLibVideoIO -lTAppCommon -lTLibRenderer
+DYN_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoder.a $(LIB_DIR)/libTLibCommon.a $(LIB_DIR)/libTLibVideoIO.a $(LIB_DIR)/libTAppCommon.a $(LIB_DIR)/libTLibRenderer.a
+STAT_RELEASE_LIBS	= -lTLibDecoderStatic -lTLibCommonStatic -lTLibVideoIOStatic -lTAppCommonStatic -lTLibRendererStatic
+STAT_RELEASE_PREREQS	= $(LIB_DIR)/libTLibDecoderStatic.a $(LIB_DIR)/libTLibCommonStatic.a $(LIB_DIR)/libTLibVideoIOStatic.a $(LIB_DIR)/libTAppCommonStatic.a $(LIB_DIR)/libTLibRendererStatic.a
 
 
 # name of the base makefile

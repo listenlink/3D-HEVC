@@ -104,6 +104,10 @@ private:
   Bool          m_bdQP;               ///< signal if LCU dQP encoded
 #endif//SNY_DQP
   
+#if POZNAN_DBMP_CALC_PRED_DATA
+  TComCUMvField m_acCUMvField2nd[2];              ///< array of motion vectors selected for points with no MP prediction available
+#endif
+  
   // -------------------------------------------------------------------------------------------------------------------
   // neighbour access variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -307,6 +311,10 @@ public:
   Void          setCbfSubParts        ( UInt uiCbf, TextType eTType, UInt uiAbsPartIdx, UInt uiDepth                    );
 #if HHI_MRG_SKIP
   Void          setCbfSubParts        ( UInt uiCbf, TextType eTType, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth    );
+#endif
+  
+#if POZNAN_DBMP_CALC_PRED_DATA
+  TComCUMvField* getCUMvField2nd         ( RefPicList e )          { return  &m_acCUMvField2nd[e];  }
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -528,6 +536,9 @@ public:
   
   Bool          isIntra   ( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Bool          isCUSkiped( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_SYNTH; }
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)
@@ -584,6 +595,21 @@ public:
   UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
 #endif //QC_MDCS
 
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+ Int            CuQpIncrementFunction  ( Pel uiBlockMax );
+ Int            getQpOffsetForTextCU   ( UInt uiPartIdx, Bool bIsIntra );
+ Pel            getDepthLumaCodingBlockMedian    ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Pel            getDepthLumaCodingBlockMax       ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Void           sortDepthLumaCodingBlock         ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx, Pel * pSortTable, Int& TUWidth, Int& TUHeight);
+ Pel            maxDepthLumaCodingBlock          ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Pel            getDepthLumaTransformBlockMedian ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Pel            getDepthLumaTransformBlockMax    ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Void           sortDepthLumaTransformBlock      ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx , Pel * pSortTable, Int& TUWidth, Int& TUHeight);
+ Pel            maxDepthLumaTransformBlock       ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Pel            getDepthLumaPredictionBlockMedian( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Pel            getDepthLumaPredictionBlockMax   ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx );
+ Void           sortDepthLumaPredictionBlock     ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx , Pel * pSortTable, Int& PUWidth, Int& PUHeight);
+#endif
 };
 
 #endif

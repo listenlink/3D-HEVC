@@ -386,6 +386,86 @@ Void TComYuv::copyPartToPartChroma( TComYuv* pcYuvDst, UInt uiPartIdx, UInt iWid
   }
 }
 
+#if POZNAN_DBMP
+
+Void TComYuv::copyPartToPartYuv_DBMP   ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY )
+{
+  copyPartToPartLuma_DBMP   (pcYuvDst, uiPartIdx, uiPosX, uiPosY );
+  copyPartToPartChroma_DBMP (pcYuvDst, uiPartIdx, uiPosX>>1, uiPosY>>1 );
+}
+
+Void TComYuv::copyPartToPartLuma_DBMP  ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY )
+{
+  Pel* pSrc =           getLumaAddr(uiPartIdx);
+  Pel* pDst = pcYuvDst->getLumaAddr(uiPartIdx);
+  if( pSrc == pDst )
+  {
+    //th not a good idea
+    //th best would be to fix the caller 
+    return ;
+  }
+  
+  UInt  iSrcStride = getStride();
+  UInt  iDstStride = pcYuvDst->getStride();
+
+  ::memcpy( pDst+uiPosY*iDstStride+uiPosX, pSrc+uiPosY*iSrcStride+uiPosX, sizeof(Pel) );
+}
+
+Void TComYuv::copyPartToPartChroma_DBMP( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY )
+{
+  Pel*  pSrcU =           getCbAddr(uiPartIdx);
+  Pel*  pSrcV =           getCrAddr(uiPartIdx);
+  Pel*  pDstU = pcYuvDst->getCbAddr(uiPartIdx);
+  Pel*  pDstV = pcYuvDst->getCrAddr(uiPartIdx);
+  
+  if( getCbAddr() == NULL || getCrAddr() == NULL || pcYuvDst->getCbAddr() == NULL || pcYuvDst->getCrAddr() == NULL ) //KUBA CHROMA
+  {
+    return ;
+  }
+  if( pSrcU == pDstU && pSrcV == pDstV)
+  {
+    //th not a good idea
+    //th best would be to fix the caller 
+    return ;
+  }
+  
+  UInt   iSrcStride = getCStride();
+  UInt   iDstStride = pcYuvDst->getCStride();
+
+  ::memcpy( pDstU+uiPosY*iDstStride+uiPosX, pSrcU+uiPosY*iSrcStride+uiPosX, sizeof(Pel) );
+  ::memcpy( pDstV+uiPosY*iDstStride+uiPosX, pSrcV+uiPosY*iSrcStride+uiPosX, sizeof(Pel) );
+}
+
+#if DEPTH_MAP_GENERATION
+Void TComYuv::copyPartToPartYuvPdm_DBMP   ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY, UInt uiSubSampExpX, UInt uiSubSampExpY )
+{
+  copyPartToPartLumaPdm_DBMP   (pcYuvDst, uiPartIdx, uiPosX, uiPosY, uiSubSampExpX, uiSubSampExpY );
+}
+
+Void TComYuv::copyPartToPartLumaPdm_DBMP  ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY, UInt uiSubSampExpX, UInt uiSubSampExpY )
+{
+  UInt uiBlkX = g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartIdx ] ] >> uiSubSampExpX;
+  UInt uiBlkY = g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartIdx ] ] >> uiSubSampExpY;
+  Pel* pSrc   = getLumaAddr(uiPartIdx);
+  Pel* pDst   = pcYuvDst->getLumaAddr() + uiBlkY * pcYuvDst->getStride() + uiBlkX;
+  
+  if( pSrc == pDst )
+  {
+    //th not a good idea
+    //th best would be to fix the caller 
+    return ;
+  }
+  
+  UInt  iSrcStride = getStride();
+  UInt  iDstStride = pcYuvDst->getStride();
+
+  ::memcpy( pDst+uiPosY*iDstStride+uiPosX, pSrc+uiPosY*iSrcStride+uiPosX, sizeof(Pel) );
+}
+
+#endif
+
+#endif
+
 Void TComYuv::addClipPartLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
 {
   Int x, y;
@@ -861,6 +941,124 @@ Void TComYuv::addAvgPdm( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitI
 }
 #endif
 
+#if POZNAN_DBMP
+
+#ifdef ROUNDING_CONTROL_BIPRED
+
+Void TComYuv::addAvg_DBMP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY, Bool bRound )
+{
+  Pel* pSrcY0  = pcYuvSrc0->getLumaAddr( iPartUnitIdx );
+  Pel* pSrcU0  = pcYuvSrc0->getCbAddr  ( iPartUnitIdx );
+  Pel* pSrcV0  = pcYuvSrc0->getCrAddr  ( iPartUnitIdx );
+  
+  Pel* pSrcY1  = pcYuvSrc1->getLumaAddr( iPartUnitIdx );
+  Pel* pSrcU1  = pcYuvSrc1->getCbAddr  ( iPartUnitIdx );
+  Pel* pSrcV1  = pcYuvSrc1->getCrAddr  ( iPartUnitIdx );
+  
+  Pel* pDstY   = getLumaAddr( iPartUnitIdx );
+  Pel* pDstU   = getCbAddr  ( iPartUnitIdx );
+  Pel* pDstV   = getCrAddr  ( iPartUnitIdx );
+  
+  UInt  iSrc0Stride = pcYuvSrc0->getStride();
+  UInt  iSrc1Stride = pcYuvSrc1->getStride();
+  UInt  iDstStride  = getStride();
+
+#if HIGH_ACCURACY_BI
+  Int shiftNum = 15 - (g_uiBitDepth + g_uiBitIncrement);
+  Int offset = (1<<(shiftNum - 1));
+  
+  //Luma
+  (pDstY+iPosY*iDstStride)[iPosX] = Clip(((pSrcY0+iPosY*iSrc0Stride)[iPosX] + (pSrcY1+iPosY*iSrc1Stride)[iPosX] + offset) >> shiftNum );
+   
+  iSrc0Stride = pcYuvSrc0->getCStride();
+  iSrc1Stride = pcYuvSrc1->getCStride();
+  iDstStride  = getCStride();
+
+  //Chroma
+  (pDstU+(iPosY>>1)*iDstStride)[(iPosX>>1)] = Clip(((pSrcU0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcU1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + offset) >> shiftNum );
+  (pDstV+(iPosY>>1)*iDstStride)[(iPosX>>1)] = Clip(((pSrcV0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcV1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + offset) >> shiftNum );
+  
+#else
+
+  //Luma
+  (pDstY+iPosY*iDstStride)[iPosX] = ((pSrcY0+iPosY*iSrc0Stride)[iPosX] + (pSrcY1+iPosY*iSrc1Stride)[iPosX] + bRound) >> 1;
+   
+  iSrc0Stride = pcYuvSrc0->getCStride();
+  iSrc1Stride = pcYuvSrc1->getCStride();
+  iDstStride  = getCStride();
+  
+  //Chroma
+  (pDstU+(iPosY>>1)*iDstStride)[(iPosX>>1)] = ((pSrcU0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcU1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + bRound) >> 1;
+  (pDstV+(iPosY>>1)*iDstStride)[(iPosX>>1)] = ((pSrcV0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcV1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + bRound) >> 1;
+#endif
+}
+
+#endif
+
+Void TComYuv::addAvg_DBMP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY )
+{
+  Pel* pSrcY0  = pcYuvSrc0->getLumaAddr( iPartUnitIdx );
+  Pel* pSrcU0  = pcYuvSrc0->getCbAddr  ( iPartUnitIdx );
+  Pel* pSrcV0  = pcYuvSrc0->getCrAddr  ( iPartUnitIdx );
+  
+  Pel* pSrcY1  = pcYuvSrc1->getLumaAddr( iPartUnitIdx );
+  Pel* pSrcU1  = pcYuvSrc1->getCbAddr  ( iPartUnitIdx );
+  Pel* pSrcV1  = pcYuvSrc1->getCrAddr  ( iPartUnitIdx );
+  
+  Pel* pDstY   = getLumaAddr( iPartUnitIdx );
+  Pel* pDstU   = getCbAddr  ( iPartUnitIdx );
+  Pel* pDstV   = getCrAddr  ( iPartUnitIdx );
+  
+  UInt  iSrc0Stride = pcYuvSrc0->getStride();
+  UInt  iSrc1Stride = pcYuvSrc1->getStride();
+  UInt  iDstStride  = getStride();
+#if HIGH_ACCURACY_BI
+  Int shiftNum = 15 - (g_uiBitDepth + g_uiBitIncrement);
+  Int offset = (1<<(shiftNum - 1));
+  
+  //Luma
+  (pDstY+iPosY*iDstStride)[iPosX] = Clip(((pSrcY0+iPosY*iSrc0Stride)[iPosX] + (pSrcY1+iPosY*iSrc1Stride)[iPosX] + offset) >> shiftNum );
+
+  iSrc0Stride = pcYuvSrc0->getCStride();
+  iSrc1Stride = pcYuvSrc1->getCStride();
+  iDstStride  = getCStride();
+  
+  //Chroma
+  (pDstU+(iPosY>>1)*iDstStride)[(iPosX>>1)] = Clip(((pSrcU0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcU1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + offset) >> shiftNum );
+  (pDstV+(iPosY>>1)*iDstStride)[(iPosX>>1)] = Clip(((pSrcV0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcV1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + offset) >> shiftNum );
+
+#else  
+  //Luma
+  (pDstY+iPosY*iDstStride)[iPosX] = ((pSrcY0+iPosY*iSrc0Stride)[iPosX] + (pSrcY1+iPosY*iSrc1Stride)[iPosX] + 1) >> 1;
+   
+  iSrc0Stride = pcYuvSrc0->getCStride();
+  iSrc1Stride = pcYuvSrc1->getCStride();
+  iDstStride  = getCStride();
+  
+  //Chroma
+  (pDstU+(iPosY>>1)*iDstStride)[(iPosX>>1)] = ((pSrcU0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcU1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + 1) >> 1;
+  (pDstV+(iPosY>>1)*iDstStride)[(iPosX>>1)] = ((pSrcV0+(iPosY>>1)*iSrc0Stride)[(iPosX>>1)] + (pSrcV1+(iPosY>>1)*iSrc1Stride)[(iPosX>>1)] + 1) >> 1;
+#endif
+}
+
+#if DEPTH_MAP_GENERATION
+Void TComYuv::addAvgPdm_DBMP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY, UInt uiSubSampExpX, UInt uiSubSampExpY )
+{
+  UInt uiBlkX  = g_auiRasterToPelX[ g_auiZscanToRaster[ iPartUnitIdx ] ] >> uiSubSampExpX;
+  UInt uiBlkY  = g_auiRasterToPelY[ g_auiZscanToRaster[ iPartUnitIdx ] ] >> uiSubSampExpY;
+  Pel* pSrcY0  = pcYuvSrc0->getLumaAddr( iPartUnitIdx );
+  Pel* pSrcY1  = pcYuvSrc1->getLumaAddr( iPartUnitIdx );
+  Pel* pDstY   = getLumaAddr() + uiBlkY * getStride() + uiBlkX;
+  
+  UInt  iSrc0Stride = pcYuvSrc0->getStride();
+  UInt  iSrc1Stride = pcYuvSrc1->getStride();
+  UInt  iDstStride  = getStride();
+
+  pDstY[iPosY*iDstStride+iPosX] = (pSrcY0[iPosY*iSrc0Stride+iPosX] + pSrcY1[iPosY*iSrc1Stride+iPosX] + 1) >> 1;
+}
+#endif
+
+#endif
 
 Void TComYuv::removeHighFreq( TComYuv* pcYuvSrc, UInt uiWidht, UInt uiHeight )
 {

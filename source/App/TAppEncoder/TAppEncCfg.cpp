@@ -340,6 +340,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MultiviewResPred", m_uiMultiviewResPredMode,   (UInt)0, "usage of inter-view residual prediction" )
 #endif
 
+#if POZNAN_DBMP
+  ("DBMP",  m_uiDBMP,    (UInt)0, "usage of Depth-Based Motion Prediction" )
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  ("CUSkip",  m_uiUseCUSkip,    (UInt)1, "encode only disoccluded CUs in dependend view" )
+#endif
+
   ("QpChangeFrame", m_iQpChangeFrame, PicOrderCnt(0), "start frame for QP change")
   ("QpChangeOffsetVideo", m_iQpChangeOffsetVideo, 0, "QP change offset for video")
   ("QpChangeOffsetDepth", m_iQpChangeOffsetDepth, 0, "QP change offset for depth")
@@ -349,6 +357,18 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InterViewSkipLambdaScale",  m_dInterViewSkipLambdaScale,    (Double)8, "lambda scale for interview skip" )
 #endif
 #endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  ("TDdQP", m_bUseTexDqpAccordingToDepth, false, "texture TU blocks QP param modification according to depth map's values")
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+  ("TDdQPOffset",              m_dTexDqpAccordingToDepthOffset,       (Double)(-2.6), "texture block QP changing tool based on coresponding depth block values - offset parameter" )
+  ("TDdQPMul",                 m_dTexDqpAccordingToDepthMul,          (Double)(1),    "texture block QP changing tool based on coresponding depth block values - multiplicative parameter" )
+  ("TDdQPTopBottomRow",        m_iTexDqpAccordingToDepthTopBottomRow, (Int)2,         "texture block QP changing tool - top and bottom CU rows delta QP parameter" )
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+  ("DepthPower,-dpow",    m_fDepthPower,      (Double)1.0, "Depth power value (for non-linear processing)")
+#endif
+
 
   /* Compatability with old style -1 FOO or -0 FOO options. */
   ("1", doOldStyleCmdlineOn, "turn option <name> on")
@@ -436,6 +456,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_bUseVSO = m_bUseVSO && m_bUsingDepthMaps && (m_uiVSOMode != 0);
 #endif
 
+#if POZNAN_NONLINEAR_DEPTH
+if (m_fDepthPower<=0) 
+  {
+    Float fDepthQP = m_adQP[ m_adQP.size()  < 2 ? 0 : 1];
+    m_fDepthPower = (fDepthQP-30) *0.25/20.0 + 1.25;
+    if (m_fDepthPower<=1.0) m_fDepthPower = 1.0;
+    // QP = 30 = 1.25
+    // QP = 50 = 1.5
+    if (m_fDepthPower>=1.66) m_fDepthPower = 1.66;
+  };
+
+#if POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE
+  m_fDepthPower = dequantizeDepthPower(quantizeDepthPower((Float)m_fDepthPower));
+#endif
+
+#endif
+
   xCleanUpVectors();
 
 #if HHI_VSO
@@ -515,7 +552,11 @@ if ( m_bUseVSO && m_uiVSOMode == 4)
                                       m_pchBaseViewCameraNumbers,
                                       NULL,
                                       m_cRenModStrParser.getSynthViews(),
-                                      LOG2_DISP_PREC_LUT );
+                                      LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+                                      ,m_fDepthPower
+#endif
+                                      );
 }
 else if ( m_bUseVSO && m_uiVSOMode != 4 )
 {
@@ -528,7 +569,11 @@ else if ( m_bUseVSO && m_uiVSOMode != 4 )
                                       m_pchBaseViewCameraNumbers,
                                       m_pchVSOConfig,
                                       NULL,
-                                      LOG2_DISP_PREC_LUT );
+                                      LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+                                      ,m_fDepthPower
+#endif                                      
+                                      );
 }
 else
 {
@@ -541,7 +586,11 @@ else
     m_pchBaseViewCameraNumbers,
     NULL,
     NULL,
-    LOG2_DISP_PREC_LUT );
+    LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+    ,m_fDepthPower
+#endif    
+    );
 }
 #else
   m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
@@ -553,7 +602,11 @@ else
     m_pchBaseViewCameraNumbers,
     NULL,
     NULL,
-    LOG2_DISP_PREC_LUT );
+    LOG2_DISP_PREC_LUT 
+#if POZNAN_NONLINEAR_DEPTH                                      
+    ,m_fDepthPower
+#endif    
+    );
 #endif
 
 
@@ -662,6 +715,14 @@ Void TAppEncCfg::xCheckParameter()
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   xConfirmPara    ( m_uiMultiviewResPredMode > 1,                                     "MultiviewResPred must be less than or equal to 1" );
   xConfirmPara    ( m_uiMultiviewResPredMode > 0 && m_uiPredDepthMapGeneration == 0 , "MultiviewResPred > 0 requires PredDepthMapGen > 0" );
+#endif
+
+#if POZNAN_DBMP
+  xConfirmPara    ( m_uiDBMP > 1,													"DBMP must be less than or equal to 1" );
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  xConfirmPara    ( m_uiUseCUSkip > 1,												"CU-Skip must be less than or equal to 1" );
 #endif
 
 #if HHI_INTERVIEW_SKIP
@@ -932,11 +993,60 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if MTK_SAO
 #endif
+
+#if POZNAN_MP
+  printf("POZNAN_MP(1){ ");
+
+#if POZNAN_MP_USE_DEPTH_MAP_GENERATION
+  printf("dmg=1 ");
+#else
+  printf("dmg=0 ");
+#endif
+
+#if POZNAN_MP_FILL
+  printf("fill=%d ",POZNAN_MP_FILL_TYPE);
+#else
+  printf("fill=- ");
+#endif
+
+#if POZNAN_DBMP
+  printf("DBMP:%d ", m_uiDBMP);
+  if(m_uiDBMP)
+  {    
+	printf("cand=%d ",POZNAN_DBMP_MERGE_POS);
+#if POZNAN_DBMP_CALC_PRED_DATA
+	printf("pr=1 ");
+#else
+	printf("pr=0 ");
+#endif
+#if POZNAN_DBMP_COMPRESS_ME_DATA
+	printf("comp=1 ");
+#else
+	printf("comp=0 ");
+#endif
+#if POZNAN_DBMP_USE_IN_NONANCHOR_PIC_ONLY
+	printf("na=1 ");
+#else
+	printf("na=0 ");
+#endif
+  }
+#endif
+  printf("} ");
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  printf("CU-Skip:%d ", m_uiUseCUSkip);
+#endif
+
   printf("\n");
   printf("TOOL CFG VIDEO  : ");
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
   printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  printf("TDdQP:%d ", m_bUseTexDqpAccordingToDepth);
+#endif
+
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
@@ -951,6 +1061,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+  printf("DepthPower:%f ", m_fDepthPower);
 #endif
   printf("\n");
 

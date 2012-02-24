@@ -117,6 +117,16 @@ public:
   Void    copyPartToPartLumaPdm ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
   
+#if POZNAN_DBMP
+  Void	  copyPartToPartYuv_DBMP	( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY );  
+  Void    copyPartToPartLuma_DBMP   ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY );
+  Void    copyPartToPartChroma_DBMP ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY );
+#if DEPTH_MAP_GENERATION
+  Void    copyPartToPartYuvPdm_DBMP  ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY, UInt uiSubSampExpX, UInt uiSubSampExpY );
+  Void    copyPartToPartLumaPdm_DBMP ( TComYuv* pcYuvDst, UInt uiPartIdx, UInt uiPosX, UInt uiPosY, UInt uiSubSampExpX, UInt uiSubSampExpY );
+#endif
+#endif
+  
   // ------------------------------------------------------------------------------------------------------------------
   //  Algebraic operation for YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
@@ -140,6 +150,16 @@ public:
   Void    addAvg            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight );
 #if DEPTH_MAP_GENERATION
   Void    addAvgPdm         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
+#endif
+
+#if POZNAN_DBMP
+#ifdef ROUNDING_CONTROL_BIPRED
+  Void    addAvg_DBMP            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY, Bool bRound );
+#endif
+  Void    addAvg_DBMP            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY );
+#if DEPTH_MAP_GENERATION
+  Void    addAvgPdm_DBMP         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, UInt iPosY, UInt uiSubSampExpX, UInt uiSubSampExpY );
+#endif
 #endif
 
   //   Remove High frequency

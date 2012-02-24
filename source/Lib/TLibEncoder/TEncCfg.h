@@ -205,6 +205,12 @@ protected:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   UInt        m_uiMultiviewResPredMode;
 #endif
+#if POZNAN_DBMP
+  UInt		  m_uiDBMP;
+#endif
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  UInt		  m_uiUseCUSkip;
+#endif
 
   PicOrderCnt m_iQpChangeFrame;
   Int         m_iQpChangeOffsetVideo;
@@ -214,6 +220,18 @@ protected:
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Double      m_dInterViewSkipLambdaScale;
 #endif
+#endif
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Bool      m_bUseTexDqpAccordingToDepth;
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 
+  Double      m_dTexDqpAccordingToDepthOffset;
+  Double      m_dTexDqpAccordingToDepthMul;
+  Int         m_iTexDqpAccordingToDepthTopBottomRow; 
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+  Float 	m_fDepthPower;
 #endif
 
 public:
@@ -255,6 +273,14 @@ public:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void      setMultiviewResPredMode         ( UInt  u )      { m_uiMultiviewResPredMode     = u; }
+#endif
+
+#if POZNAN_DBMP
+  Void      setDBMP						              ( UInt  u )      { m_uiDBMP     = u; }
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Void      setUseCUSkip                       ( UInt  u )      { m_uiUseCUSkip   = u; }
 #endif
 
 #if HHI_INTERVIEW_SKIP
@@ -305,6 +331,13 @@ public:
 #if HHI_VSO_DIST_INT
   Void      setAllowNegDist                 ( Bool b  )     { m_bAllowNegDist     = b; };
 #endif
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+  inline Float   getDepthPower()               { return m_fDepthPower; }
+  inline Void    setDepthPower(Float p)        { m_fDepthPower = p; }
+#else
+ inline Float    getDepthPower()               { return 1.0f; }
 #endif
 
   //====== Sequence ========
@@ -477,6 +510,11 @@ public:
   Int  getQpChangeOffsetVideo() { return m_iQpChangeOffsetVideo; }
   Void setQpChangeOffsetDepth( Int iOffset ) { m_iQpChangeOffsetDepth = iOffset; }
   Int  getQpChangeOffsetDepth() { return m_iQpChangeOffsetDepth; }
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Bool      getUseTexDqpAccordingToDepth    ()             { return m_bUseTexDqpAccordingToDepth; }
+  Void      setUseTexDqpAccordingToDepth    ( Bool b )     { m_bUseTexDqpAccordingToDepth = b;    }
+#endif
 };
 
 #endif // !defined(AFX_TENCCFG_H__6B99B797_F4DA_4E46_8E78_7656339A6C41__INCLUDED_)

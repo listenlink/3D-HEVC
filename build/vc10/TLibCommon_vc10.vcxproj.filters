@@ -89,7 +89,10 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComRdCostWeightPrediction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\source\Lib\TLibCommon\TComWeightPrediction.cpp.cpp">
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComWeightPrediction.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComMP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -194,6 +197,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComWeightPrediction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComMP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

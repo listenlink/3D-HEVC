@@ -186,6 +186,11 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_acCUMvField[0].create( uiNumPartition );
     m_acCUMvField[1].create( uiNumPartition );
     
+#if POZNAN_DBMP_CALC_PRED_DATA
+    m_acCUMvField2nd[0].create( uiNumPartition );
+    m_acCUMvField2nd[1].create( uiNumPartition );
+#endif
+    
 #if HHI_DMM_WEDGE_INTRA
     m_puiWedgeFullTabIdx       = (UInt*)xMalloc(UInt, uiNumPartition);
     m_piWedgeFullDeltaDC1       = (Int* )xMalloc(Int,  uiNumPartition);
@@ -209,6 +214,11 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
   {
     m_acCUMvField[0].setNumPartition(uiNumPartition );
     m_acCUMvField[1].setNumPartition(uiNumPartition );
+
+#if POZNAN_DBMP_CALC_PRED_DATA
+    m_acCUMvField2nd[0].setNumPartition(uiNumPartition );
+    m_acCUMvField2nd[1].setNumPartition(uiNumPartition );
+#endif
   }
   
   // create pattern memory
@@ -295,6 +305,12 @@ Void TComDataCU::destroy()
     if ( m_piContourPredTexDeltaDC1  ) { xFree(m_piContourPredTexDeltaDC1);  m_piContourPredTexDeltaDC1  = NULL; }
     if ( m_piContourPredTexDeltaDC2  ) { xFree(m_piContourPredTexDeltaDC2);  m_piContourPredTexDeltaDC2  = NULL; }
 #endif    
+    
+#if POZNAN_DBMP_CALC_PRED_DATA
+    m_acCUMvField2nd[0].destroy();
+    m_acCUMvField2nd[1].destroy();
+#endif
+
   }
   
   m_pcCUAboveLeft       = NULL;
@@ -387,6 +403,11 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   
   m_acCUMvField[0].clearMvField();
   m_acCUMvField[1].clearMvField();
+  
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[0].clearMvField();
+  m_acCUMvField2nd[1].clearMvField();
+#endif
   
   UInt uiTmp = m_puhWidth[0]*m_puhHeight[0];
   memset( m_pcTrCoeffY , 0, sizeof( TCoeff ) * uiTmp );
@@ -507,6 +528,11 @@ Void TComDataCU::initEstData()
   m_acCUMvField[0].clearMvField();
   m_acCUMvField[1].clearMvField();
 
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[0].clearMvField();
+  m_acCUMvField2nd[1].clearMvField();
+#endif
+
 #if HHI_DMM_WEDGE_INTRA
   memset( m_puiWedgeFullTabIdx,  0, iSizeInUInt   );
   memset( m_piWedgeFullDeltaDC1,       0, iSizeInInt  );
@@ -616,6 +642,11 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth )
   m_uiSliceStartCU          = pcCU->getSliceStartCU();
   m_uiEntropySliceStartCU   = pcCU->getEntropySliceStartCU();
 
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[0].clearMvField();
+  m_acCUMvField2nd[1].clearMvField();
+#endif
+
 #if HHI_DMM_WEDGE_INTRA
   memset( m_puiWedgeFullTabIdx,  0, iSizeInUInt   );
   memset( m_piWedgeFullDeltaDC1,       0, iSizeInInt  );
@@ -718,6 +749,16 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_acCUMvField[1].setMvPtr(pcCU->getCUMvField(REF_PIC_LIST_1)->getMv()     + uiPart);
   m_acCUMvField[1].setMvdPtr(pcCU->getCUMvField(REF_PIC_LIST_1)->getMvd()    + uiPart);
   m_acCUMvField[1].setRefIdxPtr(pcCU->getCUMvField(REF_PIC_LIST_1)->getRefIdx() + uiPart);
+
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[0].setMvPtr(pcCU->getCUMvField2nd(REF_PIC_LIST_0)->getMv()     + uiPart);
+  m_acCUMvField2nd[0].setMvdPtr(pcCU->getCUMvField2nd(REF_PIC_LIST_0)->getMvd()    + uiPart);
+  m_acCUMvField2nd[0].setRefIdxPtr(pcCU->getCUMvField2nd(REF_PIC_LIST_0)->getRefIdx() + uiPart);
+  m_acCUMvField2nd[1].setMvPtr(pcCU->getCUMvField2nd(REF_PIC_LIST_1)->getMv()     + uiPart);
+  m_acCUMvField2nd[1].setMvdPtr(pcCU->getCUMvField2nd(REF_PIC_LIST_1)->getMvd()    + uiPart);
+  m_acCUMvField2nd[1].setRefIdxPtr(pcCU->getCUMvField2nd(REF_PIC_LIST_1)->getRefIdx() + uiPart);
+#endif
+
   m_uiSliceStartCU        = pcCU->getSliceStartCU();
   m_uiEntropySliceStartCU = pcCU->getEntropySliceStartCU();
 
@@ -786,6 +827,13 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_acCUMvField[eRefPicList].setMvPtr(pcCU->getCUMvField(eRefPicList)->getMv()     + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setMvdPtr(pcCU->getCUMvField(eRefPicList)->getMvd()    + uiAbsPartIdx);
   m_acCUMvField[eRefPicList].setRefIdxPtr(pcCU->getCUMvField(eRefPicList)->getRefIdx() + uiAbsPartIdx);
+
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[eRefPicList].setMvPtr(pcCU->getCUMvField2nd(eRefPicList)->getMv()     + uiAbsPartIdx);
+  m_acCUMvField2nd[eRefPicList].setMvdPtr(pcCU->getCUMvField2nd(eRefPicList)->getMvd()    + uiAbsPartIdx);
+  m_acCUMvField2nd[eRefPicList].setRefIdxPtr(pcCU->getCUMvField2nd(eRefPicList)->getRefIdx() + uiAbsPartIdx);
+#endif
+
 #if HHI_MPI
   m_piTextureModeDepth = pcCU->getTextureModeDepth() + uiAbsPartIdx;
 #endif
@@ -856,6 +904,11 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   m_acCUMvField[0].copyFrom( pcCU->getCUMvField( REF_PIC_LIST_0 ), pcCU->getTotalNumPart(), uiOffset );
   m_acCUMvField[1].copyFrom( pcCU->getCUMvField( REF_PIC_LIST_1 ), pcCU->getTotalNumPart(), uiOffset );
   
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[0].copyFrom( pcCU->getCUMvField2nd( REF_PIC_LIST_0 ), pcCU->getTotalNumPart(), uiOffset );
+  m_acCUMvField2nd[1].copyFrom( pcCU->getCUMvField2nd( REF_PIC_LIST_1 ), pcCU->getTotalNumPart(), uiOffset );
+#endif
+
   UInt uiTmp  = g_uiMaxCUWidth*g_uiMaxCUHeight >> (uiDepth<<1);
   UInt uiTmp2 = uiPartUnitIdx*uiTmp;
   memcpy( m_pcTrCoeffY  + uiTmp2, pcCU->getCoeffY(),  sizeof(TCoeff)*uiTmp );
@@ -943,6 +996,11 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   m_acCUMvField[0].copyTo( rpcCU->getCUMvField( REF_PIC_LIST_0 ), m_uiAbsIdxInLCU );
   m_acCUMvField[1].copyTo( rpcCU->getCUMvField( REF_PIC_LIST_1 ), m_uiAbsIdxInLCU );
   
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[0].copyTo( rpcCU->getCUMvField2nd( REF_PIC_LIST_0 ), m_uiAbsIdxInLCU );
+  m_acCUMvField2nd[1].copyTo( rpcCU->getCUMvField2nd( REF_PIC_LIST_1 ), m_uiAbsIdxInLCU );
+#endif
+  
   UInt uiTmp  = (g_uiMaxCUWidth*g_uiMaxCUHeight)>>(uhDepth<<1);
   UInt uiTmp2 = m_uiAbsIdxInLCU*m_pcPic->getMinCUWidth()*m_pcPic->getMinCUHeight();
   memcpy( rpcCU->getCoeffY()  + uiTmp2, m_pcTrCoeffY,  sizeof(TCoeff)*uiTmp  );
@@ -1029,6 +1087,11 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   memcpy( rpcCU->getMVPNum(REF_PIC_LIST_1) + uiPartOffset, m_apiMVPNum[1], iSizeInInt );
   m_acCUMvField[0].copyTo( rpcCU->getCUMvField( REF_PIC_LIST_0 ), m_uiAbsIdxInLCU, uiPartStart, uiQNumPart );
   m_acCUMvField[1].copyTo( rpcCU->getCUMvField( REF_PIC_LIST_1 ), m_uiAbsIdxInLCU, uiPartStart, uiQNumPart );
+  
+#if POZNAN_DBMP_CALC_PRED_DATA
+  m_acCUMvField2nd[0].copyTo( rpcCU->getCUMvField2nd( REF_PIC_LIST_0 ), m_uiAbsIdxInLCU, uiPartStart, uiQNumPart );
+  m_acCUMvField2nd[1].copyTo( rpcCU->getCUMvField2nd( REF_PIC_LIST_1 ), m_uiAbsIdxInLCU, uiPartStart, uiQNumPart );
+#endif
   
   UInt uiTmp  = (g_uiMaxCUWidth*g_uiMaxCUHeight)>>((uhDepth+uiPartDepth)<<1);
   UInt uiTmp2 = uiPartOffset*m_pcPic->getMinCUWidth()*m_pcPic->getMinCUHeight();
@@ -2696,6 +2759,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   UInt uiCorBLAddr   = 4;
 #endif
   
+#if POZNAN_DBMP
+  Bool bDBMPMerge = getSlice()->getMP()->isDBMPEnabled();
+  UInt uiDBMPAddr = POZNAN_DBMP_MRG_CAND;
+#endif
+  
   bool abCandIsInter[ MRG_MAX_NUM_CANDS ];
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ++ui )
   {
@@ -2710,7 +2778,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   {
     pcCULeft = NULL;
   }
-  if( pcCULeft && !pcCULeft->isIntra( uiLeftPartIdx ) )
+  if( pcCULeft && !pcCULeft->isIntra( uiLeftPartIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    && !pcCULeft->isCUSkiped( uiLeftPartIdx )
+#endif
+  )
   {
     abCandIsInter[uiLeftAddr] = true;
     puiNeighbourCandIdx[uiLeftAddr] = uiLeftAddr+1;
@@ -2736,7 +2808,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   {
     pcCUAbove = NULL;
   }
-  if ( pcCUAbove && !pcCUAbove->isIntra( uiAbovePartIdx ) )
+  if ( pcCUAbove && !pcCUAbove->isIntra( uiAbovePartIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    && !pcCUAbove->isCUSkiped( uiAbovePartIdx )
+#endif
+  )
   {
     abCandIsInter[uiAboveAddr] = true;
     puiNeighbourCandIdx[uiAboveAddr] = uiAboveAddr+1;
@@ -3182,14 +3258,65 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   }
 #endif
 
+#if POZNAN_DBMP
+  //===== add point-to-point merge with depth maps =====
+  if ( bDBMPMerge )
+  {
+    //prediction of motion data for points with disocclusion:
+	UInt uiRefArrayAddr = uiDBMPAddr;
+	for(UInt ui=0; ui<MRG_MAX_NUM_CANDS; ui++) if ( ui!=uiDBMPAddr && abCandIsInter[ui] ) {uiRefArrayAddr = ui; break;}	
+	if(uiRefArrayAddr != uiDBMPAddr)
+	{
+		puhInterDirNeighbours[uiDBMPAddr] = puhInterDirNeighbours[uiRefArrayAddr];
+		pcMvFieldNeighbours[uiDBMPAddr << 1].setMvField(pcMvFieldNeighbours[uiRefArrayAddr << 1].getMv(),pcMvFieldNeighbours[uiRefArrayAddr << 1].getRefIdx());
+		pcMvFieldNeighbours[(uiDBMPAddr << 1)+1].setMvField(pcMvFieldNeighbours[(uiRefArrayAddr << 1)+1].getMv(),pcMvFieldNeighbours[(uiRefArrayAddr << 1)+1].getRefIdx());
+	}
+	else
+	{
+		TComMv cMVzero; cMVzero.setZero();
+		if( getSlice()->isInterB() ) 
+		{
+			puhInterDirNeighbours[uiDBMPAddr] = 3;
+			pcMvFieldNeighbours[uiDBMPAddr << 1].setMvField(cMVzero,0);
+			pcMvFieldNeighbours[(uiDBMPAddr << 1)+1].setMvField(cMVzero,0);
+		}
+		else 
+		{
+			if(getSlice()->getNumRefIdx(REF_PIC_LIST_0)>0) 
+			{
+				puhInterDirNeighbours[uiDBMPAddr] = 1;
+				pcMvFieldNeighbours[uiDBMPAddr << 1].setMvField(cMVzero,0);
+			}
+			else if(getSlice()->getNumRefIdx(REF_PIC_LIST_1)>0) 
+			{
+				puhInterDirNeighbours[uiDBMPAddr] = 2;
+				pcMvFieldNeighbours[(uiDBMPAddr << 1)+1].setMvField(cMVzero,0);
+			}
+			else puhInterDirNeighbours[uiDBMPAddr] = 0;
+		}
+	}	
+	if(puhInterDirNeighbours[uiDBMPAddr])
+	{		
+		abCandIsInter[uiDBMPAddr] = true;
+		puiNeighbourCandIdx[uiDBMPAddr] = uiDBMPAddr + 1;
+	}
+  }
+#endif
+
 
   //===== remove duplicates =====
   for( UInt uiOuter = 0; uiOuter < MRG_MAX_NUM_CANDS; uiOuter++ )
   {
+#if POZNAN_DBMP
+    if(uiOuter==POZNAN_DBMP_MRG_CAND) continue;
+#endif
     if( abCandIsInter[ uiOuter ] && ( puiNeighbourCandIdx[uiOuter] == uiOuter + 1 ) )
     {
       for( UInt uiIter = uiOuter + 1; uiIter < MRG_MAX_NUM_CANDS; uiIter++ )
       {
+#if POZNAN_DBMP
+        if(uiIter==POZNAN_DBMP_MRG_CAND) continue;
+#endif
         if( abCandIsInter[ uiIter ] )
         {
           UInt uiMvFieldNeighIdxCurr = uiOuter << 1;
@@ -3270,7 +3397,11 @@ Void TComDataCU::xCheckCornerCand( TComDataCU* pcCorner, UInt uiCornerPUIdx, UIn
 {
   if( uiIter == 0 )
   {
-    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) )
+    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+       && !pcCorner->isCUSkiped( uiCornerPUIdx )
+#endif
+    )
     {
       rbValidCand = true;
       if( getSlice()->isInterB() )
@@ -3305,7 +3436,11 @@ Void TComDataCU::xCheckCornerCand( TComDataCU* pcCorner, UInt uiCornerPUIdx, UIn
   }
   else
   {
-    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) )
+    if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+       && !pcCorner->isCUSkiped( uiCornerPUIdx )
+#endif
+    )
     {
       rbValidCand = true;
       if( getSlice()->isInterB() )
@@ -4463,6 +4598,11 @@ Bool TComDataCU::xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, int iRef
   if (pColCU->isIntra(uiPartIdxCenter))
     return false;
   
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  if (pColCU->isSkipped(uiPartIdxCenter))
+    return false;
+#endif
+  
   if( m_pcSlice->getRefPic(eRefPicList, iRefIdx)->getViewIdx() != m_pcSlice->getViewIdx() )
     return false;
 
@@ -4820,6 +4960,27 @@ Void TComDataCU::copyTextureMotionDataFrom( TComDataCU* pcCU, UInt uiDepth, UInt
     m_acCUMvField[1].getMvd( uiAbsPartIdxDst + ui ) >>= 2;
   }
 #endif
+
+#if POZNAN_DBMP_CALC_PRED_DATA
+  pcCU->getCUMvField2nd( REF_PIC_LIST_0 )->copyTo( &m_acCUMvField2nd[0], -Int(uiAbsPartIdxSrc) + uiAbsPartIdxDst, uiAbsPartIdxSrc, uiNumPartition );
+  pcCU->getCUMvField2nd( REF_PIC_LIST_1 )->copyTo( &m_acCUMvField2nd[1], -Int(uiAbsPartIdxSrc) + uiAbsPartIdxDst, uiAbsPartIdxSrc, uiNumPartition );
+#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
+  for( UInt ui = 0; ui < uiNumPartition; ui++ )
+  {
+    m_acCUMvField2nd[0].getMv( uiAbsPartIdxDst + ui ) += TComMv( 2, 2 );
+    m_acCUMvField2nd[0].getMv( uiAbsPartIdxDst + ui ) >>= 2;
+
+    m_acCUMvField2nd[1].getMv( uiAbsPartIdxDst + ui ) += TComMv( 2, 2 );
+    m_acCUMvField2nd[1].getMv( uiAbsPartIdxDst + ui ) >>= 2;
+
+    m_acCUMvField2nd[0].getMvd( uiAbsPartIdxDst + ui ) += TComMv( 2, 2 );
+    m_acCUMvField2nd[0].getMvd( uiAbsPartIdxDst + ui ) >>= 2;
+
+    m_acCUMvField2nd[1].getMvd( uiAbsPartIdxDst + ui ) += TComMv( 2, 2 );
+    m_acCUMvField2nd[1].getMvd( uiAbsPartIdxDst + ui ) >>= 2;
+  }
+#endif
+#endif
 }
 #endif
 
@@ -4828,3 +4989,300 @@ Void TComDataCU::getPosInPic( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY )
   riPosX = g_auiRasterToPelX[g_auiZscanToRaster[uiAbsPartIndex]] + getCUPelX();
   riPosY = g_auiRasterToPelY[g_auiZscanToRaster[uiAbsPartIndex]] + getCUPelY();  
 }
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+Int TComDataCU::CuQpIncrementFunction(Pel uiBlockMax)
+{
+  if((uiBlockMax >> g_uiBitIncrement) >= 256 || (uiBlockMax >> g_uiBitIncrement) <0)
+  {
+    fprintf(stderr, "Bitincrement = %d, uiBlockMax = %d\n", g_uiBitIncrement, uiBlockMax);
+    exit(333);
+  }
+  Float fVal = (Float)((255 - (uiBlockMax >> g_uiBitIncrement)) >> 4);
+  fVal = (fVal * fVal);
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+  fVal = (Float)( fVal + getPic()->getTexDqpAccordingToDepthOffset() * 32); // add offset, if offset is negative than objects in front will have smaller QP than originaly - quality in front will be increased and in bacground will be decreased
+  fVal = (Float)( fVal * getPic()->getTexDqpAccordingToDepthMul()); // 
+#else 
+  fVal = (Float)( fVal + POZNAN_TEXTURE_TU_DELTA_QP_OFFSET * 32); // add offset, if offset is negative objects in front will have smaller QP than in original approach - quality in front will be increased and in bacground will be decreased
+  fVal = (Float)( fVal * POZNAN_TEXTURE_TU_DELTA_QP_MUL); // 
+#endif
+  return (Int)fVal >> 5;
+}
+ Int  TComDataCU::getQpOffsetForTextCU(UInt uiPartIdx, Bool bIsIntra)
+ {
+   if(!getPic()->getSlice(0)->getSPS()->getUseTexDqpAccordingToDepth())
+   {
+     return 0;
+   }
+   if(this->getPic()->getSlice(0)->getSPS()->isDepth())
+   {
+     return 0;
+   }
+#if POZNAN_TEXTURE_TU_DELTA_QP_NOT_IN_BASE_VIEW
+   //if(!getPic()->getIsSideView())
+   if(this->getPic()->getViewIdx() == 0)
+   {
+     return 0;
+   }
+#endif
+   UInt iCuAddr = getAddr();
+   //TComPic * pcDepthPic = getPic()->getDepthPic();
+   TComPicYuv * pcDepthPicYUV = getPic()->getPicYuvSynthDepth();
+   if(pcDepthPicYUV /*pcDepthPic*/ == NULL)
+   {
+    char errortext[200];
+    sprintf(errortext, "depth map expected");
+    fprintf(stderr, "%s\n", errortext);
+    exit(123);
+   }
+   //TComDataCU* rpcCUDepth = pcDepthPic->getCU(iCuAddr);
+   Pel uiDepthLumaTransformBlockMax;
+   if(bIsIntra)
+   {
+     // in intra block CU each TU block has QP chosen separatly so dQP is calculated for TU
+     uiDepthLumaTransformBlockMax = getDepthLumaTransformBlockMax( pcDepthPicYUV /*rpcCUDepth*/, iCuAddr, uiPartIdx );
+   }
+   else
+   {
+     // in inter block CU all TU block has the same QP so dQP is calculated for CU
+     uiDepthLumaTransformBlockMax = getDepthLumaCodingBlockMax( pcDepthPicYUV /*rpcCUDepth*/, iCuAddr, uiPartIdx );
+   }
+#if POZNAN_NONLINEAR_DEPTH
+   TComNonlinearDepthBackward cNonlinearDepthBwd(getSlice()->getSPS()->getDepthPower(), g_uiBitIncrement, g_uiBitIncrement); 
+   uiDepthLumaTransformBlockMax = (Pel)( cNonlinearDepthBwd(uiDepthLumaTransformBlockMax) + 0.5);
+#endif
+   Int iDeltaQP = CuQpIncrementFunction(uiDepthLumaTransformBlockMax);
+#if POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_CU_ROW
+   //Int iMaxCUHeight = this->getPic()->getPicSym()->getMaxCUHeight();
+   //Int iPicHeight   = this->getPic()->getPicSym()->getPicHeight();
+   Int iMaxCUHeight = this->getPic()->getPicYuvRec()->getMaxCuHeight();
+   Int iPicHeight   = this->getPic()->getPicYuvRec()->getHeight();
+   Int iLastPelYInFirstCURow = 0 + iMaxCUHeight;
+   Int iFirstPelYInLastCURow = iPicHeight - iMaxCUHeight;
+   Int iCUStartPelY = getCUPelY();
+   if((iCUStartPelY <= iLastPelYInFirstCURow) || (iCUStartPelY >= iFirstPelYInLastCURow))
+   {
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+     iDeltaQP += getPic()->getTexDqpAccordingToDepthTopBottomRow();// POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_CU_ROW;
+#else
+     iDeltaQP += POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_ROW_VAL;// POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_CU_ROW;
+#endif
+   }
+#endif
+   return iDeltaQP;
+ }
+
+Int cmpProc(const Void *arg1, const Void *arg2)
+{
+    return *((Pel*)arg2) - *((Pel*)arg1);
+}
+
+// Function gets median value of depth block that has the same size and position as texture block that calls this function
+Pel  TComDataCU::getDepthLumaCodingBlockMedian( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx )
+{  
+  static Pel pSortTable [64 * 64];
+  Int CUWidth, CUHeight;
+  sortDepthLumaCodingBlock( pcDepthPicYUV /*rpcCUDepth*/, iCuAddr, uiPartIdx, pSortTable, CUWidth, CUHeight );
+  return pSortTable[(CUHeight * CUWidth) / 2];
+}
+
+// Function gets maximal value of depth block that has the same size and position as texture block that calls this function
+Pel TComDataCU::getDepthLumaCodingBlockMax( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx )
+{  
+  return maxDepthLumaCodingBlock( pcDepthPicYUV /*rpcCUDepth*/, iCuAddr, uiPartIdx);  
+}
+Void TComDataCU::sortDepthLumaCodingBlock ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx, Pel * pSortTable, Int& CUWidth, Int& CUHeight )
+{
+  Int x, y;
+  UInt uiAbsZorderIdx  = getZorderIdxInCU() + uiPartIdx;
+  // CU size: 
+  CUHeight = getHeight(uiPartIdx); // Size is based on coded texture block size not on depth picture size
+  CUWidth  = getWidth(uiPartIdx); 
+  // uiAbsZorderIdx is z order idx of one particular base block (4x4 pix) in block that we process
+  // What we need is z-order idx of first Base block (4x4 pix) in this block
+  Int iNumBase4x4InBlock = (CUWidth >> 2) * (CUHeight >> 2);
+
+  UInt uiAbsZorderIdxBlockStart = (uiAbsZorderIdx / iNumBase4x4InBlock) * iNumBase4x4InBlock;
+  // Address of block
+  Pel* pPel   = pcDepthPicYUV/*rpcCUDepth->getPic()->getPicYuvRec()*/->getLumaAddr ( iCuAddr, uiAbsZorderIdxBlockStart );
+
+  Int p =0;
+  Int iStride  = getPic()->getPicYuvRec()->getStride();
+  for ( y = CUHeight - 1; y >= 0; y-- )
+  {
+    for ( x = CUWidth - 1; x >= 0; x-- )
+    {
+      pSortTable[p] = pPel[x]; ++p;
+    }
+    pPel += iStride;
+  }
+  // sort elements
+  qsort(pSortTable, CUHeight * CUWidth, sizeof(Pel), cmpProc);
+}
+
+Pel TComDataCU::maxDepthLumaCodingBlock ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx)
+{
+  Int x, y;
+  UInt uiAbsZorderIdx  = getZorderIdxInCU() + uiPartIdx;
+  // CU size: 
+  Int CUHeight = getHeight(uiPartIdx); // Size is based on coded texture block size not on depth picture size
+  Int CUWidth  = getWidth(uiPartIdx); 
+  // uiAbsZorderIdx is z order idx of one particular base block (4x4 pix) in block that we process
+  // What we need is z-order idx of first Base block (4x4 pix) in this block
+  Int iNumBase4x4InBlock = (CUWidth >> 2) * (CUHeight >> 2);
+
+  UInt uiAbsZorderIdxBlockStart = (uiAbsZorderIdx / iNumBase4x4InBlock) * iNumBase4x4InBlock;
+  // Address of block
+  Pel* pPel   = pcDepthPicYUV/*rpcCUDepth->getPic()->getPicYuvRec()*/->getLumaAddr ( iCuAddr, uiAbsZorderIdxBlockStart );
+
+  Pel  pValue = 0;
+  Int  iStride = getPic()->getPicYuvRec()->getStride();
+  for ( y = CUHeight - 1; y >= 0; y-- )
+  {
+    for ( x = CUWidth - 1; x >= 0; x-- )
+    {
+      if (pPel[x]>pValue) pValue = pPel[x];
+    }
+    pPel += iStride;
+  }
+  return pValue;
+}
+
+// Function gets median value of depth block that has the same size and position as texture block that calls this function
+Pel  TComDataCU::getDepthLumaTransformBlockMedian( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx )
+{  
+  static Pel pSortTable [64 * 64];
+  Int TUWidth, TUHeight;
+  sortDepthLumaTransformBlock( pcDepthPicYUV/*rpcCUDepth*/, iCuAddr, uiPartIdx, pSortTable, TUWidth, TUHeight );
+  return pSortTable[(TUHeight * TUWidth) / 2];
+}
+
+// Function gets maximal value of depth block that has the same size and position as texture block that calls this function
+Pel TComDataCU::getDepthLumaTransformBlockMax( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx )
+{  
+  return maxDepthLumaTransformBlock( pcDepthPicYUV/*rpcCUDepth*/, iCuAddr, uiPartIdx );
+}
+Void TComDataCU::sortDepthLumaTransformBlock ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx, Pel * pSortTable, Int& TUWidth, Int& TUHeight )
+{
+  Int x, y;
+  UInt uiAbsZorderIdx  = getZorderIdxInCU() + uiPartIdx;
+  // CU size: 
+  TUHeight = getHeight(uiPartIdx); // Size is based on coded texture block size not on depth picture size
+  TUWidth  = getWidth(uiPartIdx); 
+  // correct CU size to trnsform size:
+  if( getTransformIdx(uiPartIdx) )
+  {
+    TUWidth  = TUWidth >> 1;
+    TUHeight = TUHeight >> 1;
+  }
+  // uiAbsZorderIdx is z order idx of one particular base block (4x4 pix) in block that we process
+  // What we need is z-order idx of first Base block (4x4 pix) in this block
+  Int iNumBase4x4InBlock = (TUWidth >> 2) * (TUHeight >> 2);
+
+  UInt uiAbsZorderIdxBlockStart = (uiAbsZorderIdx / iNumBase4x4InBlock) * iNumBase4x4InBlock;
+  // Address of block
+  Pel* pPel   = pcDepthPicYUV/*rpcCUDepth->getPic()->getPicYuvRec()*/->getLumaAddr ( iCuAddr, uiAbsZorderIdxBlockStart );
+
+  int p = 0;
+  Int  iStride  = getPic()->getPicYuvRec()->getStride();
+  for ( y = TUHeight - 1; y >= 0; y-- )
+  {
+    for ( x = TUWidth - 1; x >= 0; x-- )
+    {
+      pSortTable[p] = pPel[x];
+    }
+    pPel += iStride;
+  }
+  // sort elements
+  qsort(pSortTable, TUHeight * TUWidth, sizeof(Pel), cmpProc);
+}
+Pel TComDataCU::maxDepthLumaTransformBlock ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx)
+{
+  Int x, y;
+  UInt uiAbsZorderIdx  = getZorderIdxInCU() + uiPartIdx;
+  // CU size: 
+  Int TUHeight = getHeight(uiPartIdx); // Size is based on coded texture block size not on depth picture size
+  Int TUWidth  = getWidth(uiPartIdx); 
+  // correct CU size to trnsform size:
+  if( getTransformIdx(uiPartIdx) )
+  {
+    TUWidth  = TUWidth >> 1;
+    TUHeight = TUHeight >> 1;
+  }
+  // uiAbsZorderIdx is z order idx of one particular base block (4x4 pix) in block that we process
+  // What we need is z-order idx of first Base block (4x4 pix) in this block
+  Int iNumBase4x4InBlock = (TUWidth >> 2) * (TUHeight >> 2);
+
+  UInt uiAbsZorderIdxBlockStart = (uiAbsZorderIdx / iNumBase4x4InBlock) * iNumBase4x4InBlock;
+  // Address of block
+  Pel* pPel   = pcDepthPicYUV/*rpcCUDepth->getPic()->getPicYuvRec()*/->getLumaAddr ( iCuAddr, uiAbsZorderIdxBlockStart );
+
+  Pel pValue = 0;
+  Int iStride  = getPic()->getPicYuvRec()->getStride();
+  for ( y = TUHeight - 1; y >= 0; y-- )
+  {
+    for ( x = TUWidth - 1; x >= 0; x-- )
+    {
+      if (pPel[x]>pValue) pValue = pPel[x];
+    }
+    pPel += iStride;
+  }
+  return pValue;
+}
+// Function gets median value of depth block that has the same size and position as texture block that calls this function
+Pel  TComDataCU::getDepthLumaPredictionBlockMedian( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx )
+{  
+  static Pel pSortTable [64 * 64];
+  Int PUWidth, PUHeight;
+  sortDepthLumaPredictionBlock( pcDepthPicYUV/*rpcCUDepth*/, iCuAddr, uiPartIdx, pSortTable, PUWidth, PUHeight );
+  return pSortTable[(PUHeight * PUWidth) / 2];
+}
+
+// Function gets maximal value of depth block that has the same size and position as texture block that calls this function
+Pel  TComDataCU::getDepthLumaPredictionBlockMax( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx )
+{  
+  static Pel pSortTable [64 * 64];
+  Int PUWidth, PUHeight;
+  sortDepthLumaPredictionBlock( pcDepthPicYUV/*rpcCUDepth*/, iCuAddr, uiPartIdx, pSortTable, PUWidth, PUHeight );
+  return pSortTable[0];
+}
+Void TComDataCU::sortDepthLumaPredictionBlock ( TComPicYuv * pcDepthPicYUV/*TComDataCU* rpcCUDepth*/, UInt iCuAddr, UInt uiPartIdx, Pel * pSortTable, Int& PUWidth, Int& PUHeight )
+{
+  Int x, y;
+  UInt uiAbsZorderIdx  = getZorderIdxInCU() + uiPartIdx;
+  // CU size: 
+  PUHeight = getHeight(uiPartIdx); // Size is based on coded texture block size not on depth picture size
+  PUWidth  = getWidth(uiPartIdx); 
+  // correct CU size to partition size:
+  if( getPartitionSize(uiPartIdx) == SIZE_Nx2N || getPartitionSize(uiPartIdx) == SIZE_NxN )
+  {
+    PUWidth = PUWidth >> 1;
+  }
+  if( getPartitionSize(uiPartIdx) == SIZE_2NxN || getPartitionSize(uiPartIdx) == SIZE_NxN )
+  {
+    PUHeight = PUHeight >> 1;
+  }
+  
+  // uiAbsZorderIdx is z order idx of one particular base block (4x4 pix) in block that we process
+  // What we need is z-order idx of first Base block (4x4 pix) in this block
+  Int iNumBase4x4InBlock = (PUWidth >> 2) * (PUHeight >> 2);
+  if(getPartitionSize(uiPartIdx) == SIZE_Nx2N)
+  {
+    iNumBase4x4InBlock = iNumBase4x4InBlock << 1; // KUBA if PU is Nx2N than to count start z-order idx we need to make such trick
+  }
+  UInt uiAbsZorderIdxBlockStart = (uiAbsZorderIdx / iNumBase4x4InBlock) * iNumBase4x4InBlock;
+  // Address of block
+  Pel* pPel   = pcDepthPicYUV/*rpcCUDepth->getPic()->getPicYuvRec()*/->getLumaAddr ( iCuAddr, uiAbsZorderIdxBlockStart );
+
+  UInt  uiStride  = getPic()->getPicYuvRec()->getStride();
+  for ( y = PUHeight - 1; y >= 0; y-- )
+  {
+    for ( x = PUWidth - 1; x >= 0; x-- )
+    {
+      pSortTable[y*PUWidth + x] = pPel[y*uiStride + x];
+    }
+  }
+  // sort elements
+  qsort(pSortTable, PUHeight * PUWidth, sizeof(Pel), cmpProc);
+}
+#endif

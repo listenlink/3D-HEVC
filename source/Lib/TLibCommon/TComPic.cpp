@@ -49,6 +49,15 @@ TComPic::TComPic()
   m_apcPicSym         = NULL;
   m_apcPicYuv[0]      = NULL;
   m_apcPicYuv[1]      = NULL;
+#if POZNAN_AVAIL_MAP
+  m_apcPicYuvAvail     = NULL;
+#endif
+#if POZNAN_SYNTH_VIEW
+  m_apcPicYuvSynth     = NULL;
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  m_apcPicYuvSynthDepth= NULL; 
+#endif
 #if DEPTH_MAP_GENERATION
   m_pcPredDepthMap    = NULL;
 #endif
@@ -117,6 +126,31 @@ Void TComPic::destroy()
     delete m_apcPicYuv[1];
     m_apcPicYuv[1]  = NULL;
   }
+#if POZNAN_AVAIL_MAP
+  if (m_apcPicYuvAvail)
+  {
+    m_apcPicYuvAvail->destroy();
+    delete m_apcPicYuvAvail;
+    m_apcPicYuvAvail  = NULL;
+  }
+#endif
+
+#if POZNAN_SYNTH_VIEW
+  if (m_apcPicYuvSynth)
+  {
+    m_apcPicYuvSynth->destroy();
+    delete m_apcPicYuvSynth;
+    m_apcPicYuvSynth  = NULL;
+  }
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  if (m_apcPicYuvSynthDepth)
+  {
+    m_apcPicYuvSynthDepth->destroy();
+    delete m_apcPicYuvSynthDepth;
+    m_apcPicYuvSynthDepth  = NULL;
+  }
+#endif
   
 #if DEPTH_MAP_GENERATION
   if( m_pcPredDepthMap )
@@ -193,6 +227,54 @@ TComPic::addOriginalBuffer()
   m_apcPicYuv[0]      = new TComPicYuv;
   m_apcPicYuv[0]      ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
 }
+
+#if POZNAN_AVAIL_MAP
+Void
+TComPic::addAvailabilityBuffer()
+{
+  AOT( m_apcPicYuvAvail );
+  AOF( m_apcPicYuv[1] );
+  Int   iWidth        = m_apcPicYuv[1]->getWidth      ();
+  Int   iHeight       = m_apcPicYuv[1]->getHeight     ();
+  UInt  uiMaxCuWidth  = m_apcPicYuv[1]->getMaxCuWidth ();
+  UInt  uiMaxCuHeight = m_apcPicYuv[1]->getMaxCuHeight();
+  UInt  uiMaxCuDepth  = m_apcPicYuv[1]->getMaxCuDepth ();
+  m_apcPicYuvAvail      = new TComPicYuv;
+  m_apcPicYuvAvail      ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
+}
+#endif
+
+#if POZNAN_SYNTH_VIEW
+Void
+TComPic::addSynthesisBuffer()
+{
+  AOT( m_apcPicYuvSynth );
+  AOF( m_apcPicYuv[1] );
+  Int   iWidth        = m_apcPicYuv[1]->getWidth      ();
+  Int   iHeight       = m_apcPicYuv[1]->getHeight     ();
+  UInt  uiMaxCuWidth  = m_apcPicYuv[1]->getMaxCuWidth ();
+  UInt  uiMaxCuHeight = m_apcPicYuv[1]->getMaxCuHeight();
+  UInt  uiMaxCuDepth  = m_apcPicYuv[1]->getMaxCuDepth ();
+  m_apcPicYuvSynth      = new TComPicYuv;
+  m_apcPicYuvSynth      ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
+}
+#endif
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+Void
+TComPic::addSynthesisDepthBuffer()
+{
+  AOT( m_apcPicYuvSynthDepth );
+  AOF( m_apcPicYuv[1] );
+  Int   iWidth        = m_apcPicYuv[1]->getWidth      ();
+  Int   iHeight       = m_apcPicYuv[1]->getHeight     ();
+  UInt  uiMaxCuWidth  = m_apcPicYuv[1]->getMaxCuWidth ();
+  UInt  uiMaxCuHeight = m_apcPicYuv[1]->getMaxCuHeight();
+  UInt  uiMaxCuDepth  = m_apcPicYuv[1]->getMaxCuDepth ();
+  m_apcPicYuvSynthDepth      = new TComPicYuv;
+  m_apcPicYuvSynthDepth      ->create( iWidth, iHeight, uiMaxCuWidth, uiMaxCuHeight, uiMaxCuDepth );
+}
+#endif
 
 #if PARALLEL_MERGED_DEBLK
 Void
@@ -285,6 +367,45 @@ TComPic::removeOriginalBuffer()
   }
 }
 
+#if POZNAN_AVAIL_MAP
+Void
+TComPic::removeAvailabilityBuffer()
+{
+  if( m_apcPicYuvAvail )
+  {
+    m_apcPicYuvAvail->destroy();
+    delete m_apcPicYuvAvail;
+    m_apcPicYuvAvail  = NULL;
+  }
+}
+#endif
+
+#if POZNAN_SYNTH_VIEW
+Void
+TComPic::removeSynthesisBuffer()
+{
+  if( m_apcPicYuvSynth )
+  {
+    m_apcPicYuvSynth->destroy();
+    delete m_apcPicYuvSynth;
+    m_apcPicYuvSynth  = NULL;
+  }
+}
+#endif
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+Void
+TComPic::removeSynthesisDepthBuffer()
+{
+  if( m_apcPicYuvSynthDepth )
+  {
+    m_apcPicYuvSynthDepth->destroy();
+    delete m_apcPicYuvSynthDepth;
+    m_apcPicYuvSynthDepth  = NULL;
+  }
+}
+#endif
+
 #if PARALLEL_MERGED_DEBLK
 Void
 TComPic::removeDeblockBuffer()
@@ -350,3 +471,59 @@ TComPic::removeUsedPelsMapBuffer()
 }
 #endif
 
+#if POZNAN_AVAIL_MAP
+Void TComPic::checkSynthesisAvailability( TComDataCU*& rpcCU, UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth, Bool *&rpbCUSynthesied )
+{ 
+  rpbCUSynthesied[0] = true;
+  rpbCUSynthesied[1] = true;
+  rpbCUSynthesied[2] = true;
+  rpbCUSynthesied[3] = true;
+
+  if (!getPicYuvAvail())
+  {
+    rpbCUSynthesied[0] = false;
+    rpbCUSynthesied[1] = false;
+    rpbCUSynthesied[2] = false;
+    rpbCUSynthesied[3] = false;
+    return;    
+  }
+  
+  Int x, y;
+  Bool bAvailable = true;
+  Pel* pAvail  = getPicYuvAvail()->getLumaAddr ( iCuAddr, uiAbsZorderIdx );
+  Int CUHeight = g_uiMaxCUHeight >> uiPartDepth; //rpcCU->getHeight(uiAbsZorderIdx);
+  Int CUWidth  = g_uiMaxCUWidth  >> uiPartDepth; //rpcCU->getWidth(uiAbsZorderIdx);
+  
+  Int  iStride  = getPicYuvAvail()->getStride();
+  for ( y = ((CUHeight - 1) >> 1); y >= 0; y-- )
+  {
+    for ( x = ((CUWidth - 1) >> 1); x >= 0; x-- )
+    {
+      rpbCUSynthesied[0] &= (pAvail[x] != 0);
+    }
+    for ( x = CUWidth - 1; x >= ((CUWidth) >> 1); x-- )
+    {
+      rpbCUSynthesied[1] &= (pAvail[x] != 0);
+    }
+    pAvail += iStride;
+  }
+  //for ( y = CUHeight - 1; y >= ((CUHeight) >> 1); y-- )
+  for ( y = ((CUHeight - 1) >> 1); y >= 0; y-- ) //Owieczka
+  {
+    for ( x = ((CUWidth - 1) >> 1); x >= 0; x-- )
+    {
+      rpbCUSynthesied[2] &= (pAvail[x] != 0);
+    }
+    for ( x = CUWidth - 1; x >= ((CUWidth) >> 1); x-- )
+    {
+      rpbCUSynthesied[3] &= (pAvail[x] != 0);
+    }
+    pAvail += iStride;
+  }
+
+  //rpbCUSynthesied[0] = !rpbCUSynthesied[0];
+  //rpbCUSynthesied[1] = !rpbCUSynthesied[1];
+  //rpbCUSynthesied[2] = !rpbCUSynthesied[2];
+  //rpbCUSynthesied[3] = !rpbCUSynthesied[3];
+}
+#endif

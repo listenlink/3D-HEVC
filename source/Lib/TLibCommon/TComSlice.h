@@ -56,6 +56,11 @@ class TComDepthMapGenerator;
 class TComResidualGenerator;
 #endif
 
+#if POZNAN_MP
+//#include "../TLibCommon/TComMP.h"
+class TComMP;
+#endif
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -147,11 +152,30 @@ private:
   UInt  m_uiMultiviewResPredMode;
 #endif
 
+#if POZNAN_DBMP
+  UInt  m_uiDBMP;
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  UInt  m_uiUseCUSkip;
+#endif
+
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator* m_pcDepthMapGenerator;
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator* m_pcResidualGenerator;
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+  Float  m_fDepthPower;
+#endif
+
+#if POZNAN_MP
+  TComMP* m_pcMP;
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Bool   m_bUseTexDqpAccordingToDepth;
 #endif
 
 public:
@@ -207,7 +231,11 @@ public:
   UInt getMaxTrSize   ()         { return  m_uiMaxTrSize;   }
 
   // Tool list
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Bool getUseALF      ()         { return (getViewId()>0)?false:m_bUseALF;}  //todo fix ALF
+#else
   Bool getUseALF      ()         { return m_bUseALF;        }
+#endif
   Bool getUseDQP      ()         { return m_bUseDQP;        }
 
 #if !HHI_NO_LowDelayCoding
@@ -265,7 +293,11 @@ public:
 
 #if MTK_SAO
   Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU //todo fix SAO
+  Bool getUseSAO     ()         { return (getViewId()>0)?false:m_bUseSAO;}
+#else
   Bool getUseSAO                  ()           {return m_bUseSAO;}
+#endif
 #endif
 
 #if HHI_MPI
@@ -283,6 +315,14 @@ public:
   Void  setMultiviewResPredMode  ( UInt uiResPrdMode ) { m_uiMultiviewResPredMode = uiResPrdMode; }
 #endif
 
+#if POZNAN_DBMP
+  Void  setDBMP                  ( UInt uiDBMP )       { m_uiDBMP = uiDBMP; }
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  Void  setUseCUSkip                ( UInt uiUseCUSkip )     { m_uiUseCUSkip = uiUseCUSkip; }
+#endif
+
 #if DEPTH_MAP_GENERATION
   UInt  getPredDepthMapGeneration()          { return m_uiPredDepthMapGeneration; }
   UInt  getPdmPrecision          ()          { return m_uiPdmPrecision;           }
@@ -296,6 +336,14 @@ public:
   UInt  getMultiviewResPredMode  ()          { return m_uiMultiviewResPredMode;   }
 #endif
 
+#if POZNAN_DBMP
+  UInt  getDBMP                  ()          { return m_uiDBMP;   }
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  UInt  getUseCUSkip                ()          { return m_uiUseCUSkip;   }
+#endif
+
 #if DEPTH_MAP_GENERATION
   Void                    setDepthMapGenerator( TComDepthMapGenerator* pcDepthMapGenerator )  { m_pcDepthMapGenerator = pcDepthMapGenerator; }
   TComDepthMapGenerator*  getDepthMapGenerator()                                              { return m_pcDepthMapGenerator; }
@@ -303,6 +351,16 @@ public:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+  inline Void    setDepthPower(Float p)   {m_fDepthPower = p;}
+  inline Float	 getDepthPower()          {return m_fDepthPower;}
+#else
+  inline Float	 getDepthPower()          {return 1.0f;}
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Void setUseTexDqpAccordingToDepth    (Bool bVal)  {m_bUseTexDqpAccordingToDepth = bVal;}
+  Bool getUseTexDqpAccordingToDepth    ()           {return m_bUseTexDqpAccordingToDepth;}
 #endif
 };
 
@@ -447,9 +505,17 @@ private:
   wpACDCParam	m_weightACDCParam[3]; // [0:Y, 1:U, 2:V]
 #endif
 
+#if POZNAN_MP
+  TComMP* m_pcMP;
+#endif
+
 public:
   TComSlice();
+#if POZNAN_MP
+  ~TComSlice();
+#else
   virtual ~TComSlice();
+#endif
 
   Void      initSlice       ();
 
@@ -611,6 +677,11 @@ public:
   Void  setWpAcDcParam ( wpACDCParam wp[3] ) { memcpy(m_weightACDCParam, wp, sizeof(wpACDCParam)*3); }
   Void  getWpAcDcParam ( wpACDCParam *&wp );
   Void  initWpAcDcParam();
+#endif
+
+#if POZNAN_MP
+  Void setMP(TComMP* pcMP) { m_pcMP = pcMP; }
+  TComMP* getMP() { return m_pcMP; }
 #endif
 
 protected:
