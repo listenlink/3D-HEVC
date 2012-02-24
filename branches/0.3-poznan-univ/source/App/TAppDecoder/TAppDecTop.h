@@ -51,7 +51,14 @@
 #include "../../Lib/TLibCommon/TComBitStream.h"
 #include "../../Lib/TLibCommon/TComDepthMapGenerator.h"
 #include "../../Lib/TLibDecoder/TDecTop.h"
+#if POZNAN_SYNTH
+#include "../../Lib/TLibRenderer/TRenTop.h"
+#endif
 #include "TAppDecCfg.h"
+
+#if POZNAN_MP
+#include "../../Lib/TLibCommon/TComMP.h"
+#endif
 
 // ====================================================================================================================
 // Class definition
@@ -86,6 +93,14 @@ private:
   TComAUPicAccess                 m_cAUPicAccess;
 #endif
 
+#if POZNAN_SYNTH
+  TRenTop                         m_cAvailabilityRenderer;
+#endif
+
+#if POZNAN_MP
+  TComMP*						  m_pcMP;
+#endif
+
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
@@ -96,7 +111,16 @@ public:
   Void  increaseNumberOfViews	(Int iNewNumberOfViews);
   Void  startUsingDepth() ;
 
-// GT FIX
+#if POZNAN_SYNTH
+  Void  initRenderer(TComSPS &cComSPS);
+  Void  storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderIdx,Int iCurPoc,Bool bDepth);
+#endif
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Void storeDepthSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderIdx, Int iCurPoc);
+#endif
+
+ // GT FIX
   std::vector<TComPic*> getSpatialRefPics( Int iViewIdx, Int iPoc, Bool bIsDepth );
   TComPic* getPicFromView( Int iViewIdx, Int iPoc, bool bDepth );
 // GT FIX END
@@ -105,6 +129,10 @@ public:
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
   TDecTop*          getDecTop0    () { return m_acTDecTopList[0]; }
+#endif
+
+#if POZNAN_MP
+  TComMP* getMP() { return m_pcMP; }
 #endif
 
 protected:

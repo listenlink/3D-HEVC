@@ -41,6 +41,7 @@ OBJS          	= \
 			$(OBJ_DIR)/TComDepthMapGenerator.o \
 			$(OBJ_DIR)/TComLoopFilter.o \
 			$(OBJ_DIR)/TComMotionInfo.o \
+            $(OBJ_DIR)/TComMP.o \
 			$(OBJ_DIR)/TComPattern.o \
 			$(OBJ_DIR)/TComPic.o \
 			$(OBJ_DIR)/TComPicSym.o \

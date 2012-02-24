@@ -659,7 +659,7 @@ Void TEncSbac::codeMergeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 
 
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_DBMP
 Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   //--- set number of candidates and availability ---
@@ -668,6 +668,9 @@ Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #if HHI_MPI
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
   const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : MRG_MAX_NUM_CANDS;
+#endif
+#if POZNAN_DBMP
+  const Bool bDBMPAvailable = pcCU->getSlice()->getMP()->isDBMPEnabled();
 #endif
   for( UInt uiIdx = 0; uiIdx < MRG_MAX_NUM_CANDS; uiIdx++ )
   {
@@ -691,6 +694,34 @@ Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
       uiNumCand++;
     }
   }
+
+#if POZNAN_DBMP
+  if(bDBMPAvailable)
+  {
+    UInt uiDBMPMergePos = POZNAN_DBMP_MERGE_POS;
+#if HHI_MPI
+	if(bMVIAvailable && uiDBMPMergePos>=uiMviMergePos) uiDBMPMergePos++;
+#endif
+	for( Int iIdx = MRG_MAX_NUM_CANDS-2; iIdx >= (Int)uiDBMPMergePos; iIdx-- )
+	{
+		Int iWrIdx = iIdx+1;
+#if HHI_MPI
+		if(bMVIAvailable) 
+		{
+			if(iIdx==(Int)uiMviMergePos) continue;
+			if(iWrIdx==(Int)uiMviMergePos) iWrIdx++;
+		}
+#endif
+		if(iWrIdx>=MRG_MAX_NUM_CANDS) continue;
+
+		abAvailable[ iWrIdx ] = abAvailable[ iIdx ];
+	}
+	abAvailable[ uiDBMPMergePos ] = ( pcCU->getNeighbourCandIdx( POZNAN_DBMP_MRG_CAND, uiAbsPartIdx ) == POZNAN_DBMP_MRG_CAND + 1 );
+	
+	uiNumCand = 0; for( UInt uiIdx = 0; uiIdx < MRG_MAX_NUM_CANDS; uiIdx++ ) if(abAvailable[ uiIdx ]) uiNumCand++;
+  }
+#endif
+
   AOF( uiNumCand > 1 );
 
   //--- determine contexts ---
@@ -717,6 +748,13 @@ Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
   //--- determine unary index ---
   UInt  uiMergeIdx  = pcCU->getMergeIndex( uiAbsPartIdx );
+#if POZNAN_DBMP
+  if(bDBMPAvailable)
+  {
+	if(uiMergeIdx==POZNAN_DBMP_MRG_CAND)  uiMergeIdx = POZNAN_DBMP_MERGE_POS;
+	else if(uiMergeIdx>=POZNAN_DBMP_MERGE_POS) uiMergeIdx++;
+  }
+#endif
 #if HHI_MPI
   if( bMVIAvailable )
   {
@@ -782,6 +820,7 @@ Void TEncSbac::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+/* todo jacek niech sie wypowie
 #if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
 #if HHI_INTER_VIEW_MOTION_PRED && HHI_MPI
   if( ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
@@ -790,7 +829,20 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
   if( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
 #else
   if( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE )
+#endif//*/
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_DBMP
+  if( 
+#if HHI_INTER_VIEW_MOTION_PRED	  
+	  ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
 #endif
+#if HHI_MPI
+      ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )  ||
+#endif
+#if	POZNAN_DBMP  
+	  ( pcCU->getSlice()->getMP()->isDBMPEnabled() ) ||
+#endif
+	  0
+    )
   {
     codeMergeIndexMV( pcCU, uiAbsPartIdx );
     return;

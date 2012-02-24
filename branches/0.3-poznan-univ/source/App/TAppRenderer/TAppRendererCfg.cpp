@@ -185,7 +185,11 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
   if ( m_iRenderMode == 10 )
   {
     m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, NULL, m_iLog2SamplingFactor+m_iShiftPrecision );
+      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, NULL, m_iLog2SamplingFactor+m_iShiftPrecision
+#if POZNAN_NONLINEAR_DEPTH      
+      ,1.0f 
+#endif
+      );
     m_iNumberOfInputViews  = (Int) m_cCameraData.getBaseViewNumbers() .size();
     m_iNumberOfOutputViews = m_iNumberOfInputViews - 1;
     m_iRenderDirection     = 1;
@@ -204,12 +208,20 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     m_bContOutputFileNumbering = true;
 
   m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, piaTempViews, m_iLog2SamplingFactor+m_iShiftPrecision );
+      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, piaTempViews, m_iLog2SamplingFactor+m_iShiftPrecision
+#if POZNAN_NONLINEAR_DEPTH
+      , 1.0f 
+#endif
+      );
   }
   else
   {
   m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, m_pchSynthViewCameraNumbers, NULL, m_iLog2SamplingFactor+m_iShiftPrecision );
+      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, m_pchSynthViewCameraNumbers, NULL, m_iLog2SamplingFactor+m_iShiftPrecision
+#if POZNAN_NONLINEAR_DEPTH
+      ,1.0f 
+#endif
+      );
   m_iNumberOfOutputViews = (Int) m_cCameraData.getSynthViewNumbers().size();
   m_iNumberOfInputViews  = (Int) m_cCameraData.getBaseViewNumbers() .size();
   }

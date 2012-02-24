@@ -108,6 +108,15 @@ public:
                            TComPicYuv* pcPicYuvSynthOut,
                            Int         iBlendMode,
                            Int         iSimEnhBaseView );
+
+#if POZNAN_SYNTH
+  Void extrapolateAvailabilityView   
+                         ( TComPicYuv* pcPicYuvVideo, 
+                           TComPicYuv* pcPicYuvDepth, 
+                           TComPicYuv* pcPicYuvSynthOut, 
+                           TComPicYuv* pcPicYuvAvailOut, 
+                           Bool bRenderFromLeft );
+#endif
   // Tools
   Void getUsedSamplesMap ( TComPicYuv* pcPicYuvDepth,
                            TComPicYuv* pcUsedSampleMap,

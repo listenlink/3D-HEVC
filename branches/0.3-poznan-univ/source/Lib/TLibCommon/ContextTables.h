@@ -52,7 +52,11 @@
 
 #define NUM_MERGE_FLAG_EXT_CTX        3       ///< number of context models for merge flag of merge extended
 #define NUM_MERGE_IDX_EXT_CTX         4       ///< number of context models for merge index of merge extended
+#if POZNAN_DBMP
+#define NUM_MV_MERGE_IDX_EXT_CTX      6       ///< number of context models for merge index of merge extended
+#else
 #define NUM_MV_MERGE_IDX_EXT_CTX      5       ///< number of context models for merge index of merge extended
+#endif
 #define NUM_RES_PRED_FLAG_CTX         3       ///< number of context for residual prediction flag     
 
 #define NUM_ALF_CTRL_FLAG_CTX         3       ///< number of context models for ALF control flag

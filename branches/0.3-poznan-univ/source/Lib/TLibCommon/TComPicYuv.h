@@ -43,6 +43,56 @@
 #include <stdio.h>
 #include "CommonDef.h"
 
+#if POZNAN_NONLINEAR_DEPTH
+
+#include <math.h>
+
+class TComNonlinearDepthForward // OLGIERD - Z-NL-Power conversion
+{
+private:
+  Double m_fMul;
+  Float m_fPower;
+
+public:
+
+  TComNonlinearDepthForward(Float fPower, Int iInputBitIncrement, Int iOutputBitIncrement)
+  {
+    m_fPower = fPower;
+    Double fPostMul = (1<<(8+iOutputBitIncrement))-1; // OLGIERD ToDo - should be or not?
+    Double fPreMul  = 1.0/((1<<(8+iInputBitIncrement))-1);
+    m_fMul = fPostMul*pow(fPreMul,(Double)fPower);
+  };
+
+  inline Double operator() (Double Value)
+  {    
+    if (Value<0) return -pow( -Value,(Double)m_fPower)*m_fMul;
+    return pow(Value,(Double)m_fPower)*m_fMul;
+  };
+};
+
+class TComNonlinearDepthBackward // OLGIERD - Z-NL-Power conversion
+{
+private:
+  Double m_fMul;
+  Float m_fPower;
+
+public:
+
+  TComNonlinearDepthBackward(Float fPower, Int iInputBitIncrement, Int iOutputBitIncrement) 
+  {     
+    m_fPower = fPower = 1.0/fPower;
+    Double fPostMul = (1<<(8+iOutputBitIncrement))-1; // OLGIERD ToDo - should be or not?
+    Double fPreMul  = 1.0/((1<<(8+iInputBitIncrement))-1);
+    m_fMul = fPostMul*pow(fPreMul,(Double)fPower);
+  };
+
+  inline Double operator() (Double Value)
+  {    
+    if (Value<0) return -pow( -Value,(Double)m_fPower)*m_fMul;
+    return pow(Value,(Double)m_fPower)*m_fMul;
+  };
+};
+#endif
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -174,6 +224,10 @@ public:
   Void  setLumaTo    ( Pel pVal );  
   Void  setChromaTo  ( Pel pVal );  
 
+#if POZNAN_NONLINEAR_DEPTH
+  Void nonlinearDepthForward(TComPicYuv *pcPicDst, Float p);
+  Void nonlinearDepthBackward(TComPicYuv *pcPicDst, Float p);
+#endif
 };// END CLASS DEFINITION TComPicYuv
 
 void calcMD5(TComPicYuv& pic, unsigned char digest[16]);

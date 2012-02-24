@@ -77,6 +77,12 @@ private:
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
   TComYuv**               m_ppcResPredTmp;  ///< Temporary residual prediction for each depth
+#if POZNAN_AVAIL_MAP
+  TComYuv**               m_ppcAvailYuv;    ///< Avaiability map for each depth  
+#endif
+#if POZNAN_SYNTH_VIEW
+  TComYuv**               m_ppcSynthYuv;    ///< Synthetized Yuv for each depth
+#endif
   
   //  Data : encoder control
   Int                     m_iQp;            ///< Last QP
@@ -154,6 +160,10 @@ protected:
   Void  xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UChar uhTextureModeDepth, Bool bSkipResidual, Bool bRecursiveCall );
   Void  xSaveDepthWidthHeight( TComDataCU* pcCU );
   Void  xRestoreDepthWidthHeight( TComDataCU* pcCU );
+#endif
+
+#if POZNAN_DBMP & !POZNAN_DBMP_COMPRESS_ME_DATA
+  Void  xSaveDBMPData(TComDataCU* pcCU) { pcCU->getSlice()->getMP()->saveDBMPData(pcCU);}
 #endif
 };
 

@@ -443,13 +443,21 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
 #endif
   
   //-- Set BS for Intra MB : BS = 4 or 3
-  if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) )
+  if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+     || pcCUP->isCUSkiped(uiPartP) || pcCUQ->isCUSkiped(uiPartQ) 
+#endif
+  )
   {
     uiBs = bAtCUBoundary ? 4 : 3;   // Intra MB && MB boundary
   }
   
   //-- Set BS for not Intra MB : BS = 2 or 1 or 0
-  if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) )
+  if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) 
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+     && !pcCUP->isCUSkiped(uiPartP) && !pcCUQ->isCUSkiped(uiPartQ) 
+#endif
+  )
   {
     if ( pcCUQ->getCbf( uiPartQ, TEXT_LUMA, pcCUQ->getTransformIdx(uiPartQ)) != 0 || pcCUP->getCbf( uiPartP, TEXT_LUMA, pcCUP->getTransformIdx(uiPartP) ) != 0)
     {
@@ -527,6 +535,13 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
     }   // enf of "if( one of BCBP == 0 )"
   }   // enf of "if( not Intra )"
   
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU //if one of the block is CUSkipped dont use loop filter
+  if ( pcCUP->isCUSkiped(uiPartP) || pcCUQ->isCUSkiped(uiPartQ))
+  {
+    uiBs = 0;
+  }
+#endif
+
   m_aapucBS[iDir][0][uiAbsPartIdx] = uiBs;
   if ( bAtCUBoundary || bAtCUHalf )
   {
