@@ -592,10 +592,9 @@ Void TAppDecTop::storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderI
     return;
   }
   iNearestViewIdx = 0;
-  //bRenderFromLeft = iCoddedViewOrderIdx>0?true:false;
+  bRenderFromLeft = iCoddedViewOrderIdx>0?true:false;
   //bRenderFromLeft = iCoddedViewOrderIdx<0?true:false;
   //m_cCamParsCollector.getNearestBaseView(iCoddedViewIdx, iNearestViewIdx, iRelDistToLeft, bRenderFromLeft);
-  bRenderFromLeft = iCoddedViewIdx>1?true:false;
 
   m_cAvailabilityRenderer.setShiftLUTs(
     m_cCamParsCollector.getBaseViewShiftLUTD()[iNearestViewIdx][iCoddedViewIdx],

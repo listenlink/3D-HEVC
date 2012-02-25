@@ -1490,10 +1490,7 @@ TAppComCamPara::getNearestBaseView( Int iSynthViewIdx, Int &riNearestViewIdx, In
 {
   riNearestViewIdx = 0;
 
-  Bool bDecencdingVN = ( m_aiSortedBaseViews.size() >= 2 && m_aiSortedBaseViews[ 0 ] > m_aiSortedBaseViews[ 1 ] );
-  Int  iFactor       = ( bDecencdingVN ? -1 : 1 );
-
-  if( ( m_aiBaseId2SortedId[iSynthViewIdx] - m_aiBaseId2SortedId[riNearestViewIdx] ) * iFactor  <= 0 )
+  if( ( m_aiBaseId2SortedId[iSynthViewIdx] - m_aiBaseId2SortedId[riNearestViewIdx] )  > 0 )
   {
     rbRenderFromLeft = true;
   }

@@ -1302,8 +1302,8 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
   );
     
 
-  TComPicYuv* pcPicYuvERView = new TComPicYuv;
-  pcPicYuvERView->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+  //TComPicYuv* pcPicYuvERView = new TComPicYuv;
+  //pcPicYuvERView->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
 
   TComPic* pcPic = xGetPicFromView( iCoddedViewIdx, iCurPoc, bDepth );
   pcPic->addSynthesisBuffer();
