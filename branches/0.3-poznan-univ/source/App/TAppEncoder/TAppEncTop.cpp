@@ -1354,7 +1354,7 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
   {
   Char acFilenameBase[1024];
   ::sprintf( acFilenameBase,  "Synth_%s_%s_V%d.yuv", (bDepth?"Depth":"Tex"),( false ? "Dec" : "Enc" ),iCoddedViewIdx );
-  pcPicYuvERView->dump(acFilenameBase, iCurPoc!=0);
+  pcPicYuvSynthView->dump(acFilenameBase, iCurPoc!=0);
   }
 #endif
 
