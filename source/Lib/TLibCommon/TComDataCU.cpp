@@ -4370,6 +4370,12 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   {
     return false;
   }
+//#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU //Owieczka
+//  if (pColCU->isSkipped(uiAbsPartAddr))
+//  {
+//    return false;
+//  }
+//#endif
 #if !SONY_COLPIC_AVAILABILITY
   if( m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewIdx() != m_pcSlice->getViewIdx() )
     return false;
