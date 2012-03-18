@@ -686,6 +686,9 @@ TComSPS::TComSPS()
 #if ( HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX )
   m_bUseDMM = false;
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+   m_bUseDMM34 = false;
+#endif
 }
 
 TComSPS::~TComSPS()

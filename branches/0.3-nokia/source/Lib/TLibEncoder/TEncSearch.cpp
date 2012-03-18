@@ -1925,6 +1925,10 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       }
 #endif
 #if HHI_DMM_PRED_TEX
+#if FLEX_CODING_ORDER
+      if ( pcCU->getSlice()->getSPS()->getUseDMM34() )
+      {
+#endif
       TComYuv cTempYuv; cTempYuv.create( uiWidth, uiHeight ); cTempYuv.clear();
       Pel* piTempY      = cTempYuv.getLumaAddr();
 
@@ -1957,8 +1961,10 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         uiRdModeList[ uiNewMaxMode++ ] = DMM_CONTOUR_PREDTEX_IDX;
         uiRdModeList[ uiNewMaxMode++ ] = DMM_CONTOUR_PREDTEX_D_IDX;
       }
-
       cTempYuv.destroy();
+#if FLEX_CODING_ORDER
+      }
+#endif
 #endif
     }
 #endif
@@ -1987,7 +1993,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 #else
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+      if( m_pcEncCfg->isDepthCoder() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getUseDMM34() ) )
+#else
       if( m_pcEncCfg->isDepthCoder() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight ) )
+#endif
         continue;
 #endif
 #endif
@@ -2075,7 +2085,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 #else
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+      if( m_pcEncCfg->isDepthCoder() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getUseDMM34() ) )
+#else
       if( m_pcEncCfg->isDepthCoder() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight ) )
+#endif
         continue;
 #endif
 #endif
@@ -2718,7 +2732,11 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
   xDeltaDCQuantScaleDown( pcCU, riDeltaDC2 );
 }
 
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHeight, Bool bDMMAvailable34 )
+#else
 Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHeight )
+#endif
 {
   if( uiMode <= MAX_MODE_ID_INTRA_DIR ) return true;
 
@@ -2746,6 +2764,12 @@ Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHe
     {
       bDMMAvailable = false;
     }
+#if FLEX_CODING_ORDER
+    if ( !bDMMAvailable34 )
+    {
+      bDMMAvailable = false;
+    }
+#endif
   }
 
 #endif

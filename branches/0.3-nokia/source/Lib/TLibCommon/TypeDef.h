@@ -39,6 +39,7 @@
 #define _TYPEDEF__
 
 
+#define FLEX_CODING_ORDER				        1
 
 #define SONY_COLPIC_AVAILABILITY  		  1
 
@@ -327,6 +328,8 @@ enum MODE_IDX
 #error "E243_CORE_TRANSFORMS should be ON"
 #endif
 #endif
+
+
 
 // ====================================================================================================================
 // Basic type redefinition

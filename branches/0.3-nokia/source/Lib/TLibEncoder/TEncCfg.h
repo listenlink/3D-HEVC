@@ -158,6 +158,9 @@ protected:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool m_bUseDMM;
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool m_bUseDMM34;
+#endif
 #if HHI_MPI
   Bool m_bUseMVI;
 #endif
@@ -423,7 +426,10 @@ public:
   Void setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool getUseDMM()        { return m_bUseDMM; }
 #endif
-
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Void setUseDMM34( Bool b) { m_bUseDMM34 = b;    }
+  Bool getUseDMM34()        { return m_bUseDMM34; }
+#endif
 #if LM_CHROMA
   Bool getUseLMChroma                       ()      { return m_bUseLMChroma;        }
   Void setUseLMChroma                       ( Bool b ) { m_bUseLMChroma  = b;       }
