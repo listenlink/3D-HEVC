@@ -286,8 +286,11 @@ Void TEncTop::encode( bool bEos, std::map<PicOrderCnt, TComPicYuv*>& rcMapPicYuv
   TComPic*        pcPic ;
 
   bool bSomethingCoded = false ;
-
+#if FLEX_CODING_ORDER  
+  if (TEncTop::m_bPicWaitingForCoding )
+#else
   if (m_bPicWaitingForCoding )
+#endif
   {
     std::map<Int, TComPic*>::iterator cIter = m_acInputPicMap.find( (Int)m_cSeqIter.getPoc() );
     const bool bPictureAvailable = cIter != m_acInputPicMap.end();
@@ -614,6 +617,9 @@ Void TEncTop::xInitSPS()
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
+#endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  m_cSPS.setUseDMM34( m_bUseDMM34 );
 #endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
