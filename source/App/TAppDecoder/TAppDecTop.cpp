@@ -125,6 +125,12 @@ Void TAppDecTop::decode()
   TComSPS cComSPS ;
   NalUnitType eNalUnitType;
 
+#if FLEX_CODING_ORDER
+  Int iDepthViewIdx = 0;
+  Bool bCountDepthViewIdx = false;		// a flag which avoid repeating assign a value to iDepthViewIdx   
+  Bool bNewPictureType =true;
+  Bool bFirstDepth = false;
+#endif
   
   while ( !bEos )
   {
@@ -135,13 +141,23 @@ Void TAppDecTop::decode()
       //if (!bFirstSliceDecoded) m_cTDecTop.decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_iPOCLastDisplay);
       if( bIsDepth )
       {
+#if FLEX_CODING_ORDER
+		  if (!bFirstSliceDecoded) m_acTDecDepthTopList[iDepthViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx] ,bNewPictureType);
+		  m_acTDecDepthTopList[iDepthViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx]);
+
+#else
         if (!bFirstSliceDecoded) m_acTDecDepthTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx] );
         m_acTDecDepthTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx]);
+#endif
       }
       else
       {
+#if FLEX_CODING_ORDER
+		  if (!bFirstSliceDecoded) m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx], bNewPictureType);
+#else
         if (!bFirstSliceDecoded) m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx] );
-        m_acTDecTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx]);
+#endif
+		m_acTDecTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx]);
       }
       if( pcListPic )
       {
@@ -155,10 +171,55 @@ Void TAppDecTop::decode()
 #if DCM_SKIP_DECODING_FRAMES
     Bool bNewPicture;
     if( bIsDepth )
+#if FLEX_CODING_ORDER
+		  bNewPicture = m_acTDecDepthTopList[iDepthViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx], bNewPictureType);
+#else
       bNewPicture = m_acTDecDepthTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx] );
+#endif
     else
+#if FLEX_CODING_ORDER
+		bNewPicture = m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx], bNewPictureType );
+#else
       bNewPicture = m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx] );
+#endif
     bFirstSliceDecoded   = true;
+
+#if FLEX_CODING_ORDER
+	  if (eNalUnitType == NAL_UNIT_SPS)
+	  {
+		  if( cComSPS.isDepth() && (m_bUsingDepth==false) )  // expected not using depth, but bitstream are using depth
+		  {                                                     // know from sps
+			  assert( cComSPS.getViewId() == 0 && iDepthViewIdx == 0 && !bIsDepth );
+			  startUsingDepth() ;
+		  }
+		  if (cComSPS.isDepth())
+		  {
+			  if (cComSPS.getViewId() >= m_acTVideoIOYuvDepthReconFileList.size())
+			  {
+				  assert( cComSPS.getViewId() == m_acTVideoIOYuvReconFileList.size() );
+				  increaseNumberOfViews(cComSPS.getViewId()+1);
+			  }
+  			
+			  m_acTDecDepthTopList[cComSPS.getViewId()]->setSPS(cComSPS);
+		  }
+		  else 
+		  {
+			  if (cComSPS.getViewId() >= m_acTVideoIOYuvReconFileList.size())
+			  {
+				  assert( cComSPS.getViewId() == m_acTVideoIOYuvReconFileList.size() );
+				  increaseNumberOfViews(cComSPS.getViewId()+1);
+			  }
+			  m_acTDecTopList[cComSPS.getViewId()]->setSPS(cComSPS);
+		  }
+		  bEos = m_cTVideoIOBitstreamFile.readBits( pcBitstream );
+		  assert( !bEos);
+		  if( cComSPS.isDepth() )
+			  m_acTDecDepthTopList[cComSPS.getViewId()]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[cComSPS.getViewId()], bNewPictureType); // decode PPS
+		  else
+			  m_acTDecTopList[cComSPS.getViewId()]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[cComSPS.getViewId()], bNewPictureType); // decode PPS
+		  assert( eNalUnitType == NAL_UNIT_PPS );
+	  }
+#else
 
     if( eNalUnitType == NAL_UNIT_SPS )
     {
@@ -187,16 +248,93 @@ Void TAppDecTop::decode()
         m_acTDecTopList[cComSPS.getViewId()]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[cComSPS.getViewId()]); // decode PPS
       assert( eNalUnitType == NAL_UNIT_PPS );
     }
+
+#endif
     assert( eNalUnitType != NAL_UNIT_SEI ); // not yet supported for MVC
     if (bNewPicture)
     {
       if( bIsDepth )
+#if FLEX_CODING_ORDER
+        m_acTDecDepthTopList[iDepthViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx]);
+#else
         m_acTDecDepthTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx]);
+#endif
       else
         m_acTDecTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx]);
       if (!m_cTVideoIOBitstreamFile.good()) m_cTVideoIOBitstreamFile.clear();
       m_cTVideoIOBitstreamFile.setFileLocation( lLocation );
       bFirstSliceDecoded = false;
+
+#if FLEX_CODING_ORDER
+      if (m_bUsingDepth)
+      {
+        bIsDepth = bNewPictureType;	  
+
+      }
+      if (bCountDepthViewIdx == false )
+      {
+        bCountDepthViewIdx = true;
+        if (bIsDepth == true)
+        {
+          bFirstDepth = true;
+          bCountDepthViewIdx = true;
+        }
+        if (!bFirstDepth && !bIsDepth)
+        {
+          iViewIdx++;
+          bCountDepthViewIdx = false;
+        }
+
+      }
+      else
+      {
+        if (bIsDepth)
+        {
+          iDepthViewIdx++;
+        }
+        else
+        {
+          iViewIdx ++;
+        }
+
+        if (iViewIdx >= m_acTDecTopList.size() || iDepthViewIdx >= m_acTDecDepthTopList.size())
+        {
+          bFirstDepth = false;
+          iViewIdx = 0;
+          iDepthViewIdx = 0;
+          bCountDepthViewIdx = false;
+          // end of access unit: delete extra pic buffers
+          Int iNumViews = (Int)m_acTVideoIOYuvReconFileList.size();
+          for( Int iVId = 0; iVId < iNumViews; iVId++ )
+          {
+            if( iVId < (Int)m_acTDecTopList.size() &&  m_acTDecTopList[iVId] )
+            {
+              m_acTDecTopList[iVId]->deleteExtraPicBuffers( (Int)uiPOC );
+            }
+            if( iVId < (Int)m_acTDecDepthTopList.size() && m_acTDecDepthTopList[iVId] )
+            {
+              m_acTDecDepthTopList[iVId]->deleteExtraPicBuffers( (Int)uiPOC );
+            }
+          }
+
+#if AMVP_BUFFERCOMPRESS
+          // compress motion for entire access unit
+          for( Int iVId = 0; iVId < iNumViews; iVId++ )
+          {
+            if( iVId < (Int)m_acTDecTopList.size() &&  m_acTDecTopList[iVId] )
+            {
+              m_acTDecTopList[iVId]->compressMotion( (Int)uiPOC );
+            }
+            if( iVId < (Int)m_acTDecDepthTopList.size() && m_acTDecDepthTopList[iVId] )
+            {
+              m_acTDecDepthTopList[iVId]->compressMotion( (Int)uiPOC );
+            }
+          }
+#endif
+        }
+      }
+	  
+#else
 
       if( m_bUsingDepth && !bIsDepth )
       {
@@ -242,7 +380,8 @@ Void TAppDecTop::decode()
           }
 #endif
         }
-      }
+	  }
+#endif
     }
 #else
 #error
@@ -505,7 +644,13 @@ Void  TAppDecTop::increaseNumberOfViews  (Int iNewNumberOfViews)
       m_acTDecDepthTopList.push_back(new TDecTop) ;// at least one decoder
       m_acTDecDepthTopList.back()->create() ;
       m_acTDecDepthTopList.back()->init( this, false );
-      m_acTDecDepthTopList.back()->setViewIdx((Int)m_acTDecTopList.size()-1);
+#if FLEX_CODING_ORDER
+      Int iNumofgen = (Int)m_acTDecDepthTopList.size();
+      m_acTDecDepthTopList.back()->setViewIdx(iNumofgen-1);
+#else
+	  m_acTDecDepthTopList.back()->setViewIdx((Int)m_acTDecTopList.size()-1);
+#endif
+
       m_acTDecDepthTopList.back()->setPictureDigestEnabled(m_pictureDigestEnabled);
       m_acTDecDepthTopList.back()->setToDepth( true );
       m_acTDecDepthTopList.back()->setCamParsCollector( &m_cCamParsCollector );

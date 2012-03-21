@@ -512,7 +512,12 @@ Void TDecTop::executeDeblockAndAlf(Bool bEos, TComBitstream* pcBitstream, UInt& 
 }
 
 #if DCM_SKIP_DECODING_FRAMES
+#if FLEX_CODING_ORDER
+Bool TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame,  Int& iPOCLastDisplay, Bool& bNewPictureType)
+#else
 Bool TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame,  Int& iPOCLastDisplay)
+
+#endif
 #else
 Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS )
 #endif
@@ -540,6 +545,9 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
     {
       TComSPS cTempSPS;
       m_cEntropyDecoder.decodeSPS( &cTempSPS );
+#if FLEX_CODING_ORDER
+      m_cNewSPS = cTempSPS;
+#endif
 
       if( (m_iViewIdx == cTempSPS.getViewId()) && ( m_bIsDepth == cTempSPS.isDepth() ) )
       {
@@ -614,6 +622,9 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       if (m_apcSlicePilot->isNextSlice() && ( m_apcSlicePilot->getPOC()!=m_uiPrevPOC || m_apcSlicePilot->getPPSId() != m_cPPS.getPPSId() ) && !m_bFirstSliceInPicture)
       {
         m_uiPrevPOC = m_apcSlicePilot->getPOC();
+#if FLEX_CODING_ORDER
+        bNewPictureType = m_cNewSPS.isDepth();
+#endif
         return true;
       }
       if (m_apcSlicePilot->isNextSlice())
@@ -696,9 +707,18 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
         // Set reference list
         std::vector<TComPic*> apcSpatRefPics = getDecTop()->getSpatialRefPics( pcPic->getViewIdx(), pcSlice->getPOC(), m_cSPS.isDepth() );
         TComPic * const pcTexturePic = m_cSPS.isDepth() ? getDecTop()->getPicFromView( pcPic->getViewIdx(), pcSlice->getPOC(), false ) : NULL;
+
+#if FLEX_CODING_ORDER
+        if (pcTexturePic != NULL)
+        {
+          assert( ! m_cSPS.isDepth() || pcTexturePic != NULL );
+          pcSlice->setTexturePic( pcTexturePic );
+        }
+#else
         assert( ! m_cSPS.isDepth() || pcTexturePic != NULL );
         pcSlice->setTexturePic( pcTexturePic );
         pcSlice->setViewIdx( pcPic->getViewIdx() );
+#endif
 #if SONY_COLPIC_AVAILABILITY
         pcSlice->setViewOrderIdx( pcPic->getViewOrderIdx() );
 #endif
