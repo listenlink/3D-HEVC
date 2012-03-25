@@ -38,6 +38,7 @@
 */
 
 #include "TEncCavlc.h"
+#include "../TLibCommon/SEI.h"
 #include "SEIwrite.h"
 
 // ====================================================================================================================
@@ -227,14 +228,22 @@ UInt* TEncCavlc::GetLastPosVlcIndexTable()
  */
 void TEncCavlc::codeSEI(const SEI& sei)
 {
+#if BITSTREAM_EXTRACTION
+  codeNALUnitHeader( NAL_UNIT_SEI, NAL_REF_IDC_PRIORITY_LOWEST, 0, sei.getLayerId() );
+#else
   codeNALUnitHeader(NAL_UNIT_SEI, NAL_REF_IDC_PRIORITY_LOWEST);
+#endif
   writeSEImessage(*m_pcBitIf, sei);
 }
 
 Void TEncCavlc::codePPS( TComPPS* pcPPS )
 {
   // uiFirstByte
+#if BITSTREAM_EXTRACTION
+  codeNALUnitHeader( NAL_UNIT_PPS, NAL_REF_IDC_PRIORITY_HIGHEST, 0, pcPPS->getLayerId() );
+#else
   codeNALUnitHeader( NAL_UNIT_PPS, NAL_REF_IDC_PRIORITY_HIGHEST );
+#endif
 
   xWriteUvlc( pcPPS->getPPSId() );
   xWriteUvlc( pcPPS->getSPSId() );
@@ -248,6 +257,18 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   return;
 }
 
+#if BITSTREAM_EXTRACTION
+Void TEncCavlc::codeNALUnitHeader( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId, UInt uiLayerId )
+{
+  // uiFirstByte
+  xWriteCode( 0, 1);                    // forbidden_zero_flag
+  xWriteCode( eNalRefIdc==0 ? 0:1, 1);  // nal_ref_flag
+  xWriteCode( eNalUnitType, 6);         // nal_unit_type
+
+  xWriteCode( TemporalId, 3);           // temporal_id
+  xWriteCode( uiLayerId+1, 5);          // layer_id_plus1
+}
+#else
 Void TEncCavlc::codeNALUnitHeader( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId, Bool bOutputFlag )
 {
   // uiFirstByte
@@ -262,11 +283,16 @@ Void TEncCavlc::codeNALUnitHeader( NalUnitType eNalUnitType, NalRefIdc eNalRefId
     xWriteCode( 1, 4);            // reseved_one_4bits
   }
 }
+#endif
 
 Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 {
   // uiFirstByte
+#if BITSTREAM_EXTRACTION
+  codeNALUnitHeader( NAL_UNIT_SPS, NAL_REF_IDC_PRIORITY_HIGHEST, 0, pcSPS->getLayerId() );
+#else
   codeNALUnitHeader( NAL_UNIT_SPS, NAL_REF_IDC_PRIORITY_HIGHEST );
+#endif
 
   // Structure
   xWriteUvlc  ( pcSPS->getSPSId() );
@@ -384,9 +410,17 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 {
   // here someone can add an appropriated NalRefIdc type
 #if DCM_DECODING_REFRESH
+#if BITSTREAM_EXTRACTION
+  codeNALUnitHeader (pcSlice->getNalUnitType(), NAL_REF_IDC_PRIORITY_HIGHEST, 1, pcSlice->getLayerId());
+#else
   codeNALUnitHeader (pcSlice->getNalUnitType(), NAL_REF_IDC_PRIORITY_HIGHEST, 1, true);
+#endif
+#else
+#if BITSTREAM_EXTRACTION
+  codeNALUnitHeader (NAL_UNIT_CODED_SLICE, NAL_REF_IDC_PRIORITY_HIGHEST, 0, pcSlice->getLayerId());
 #else
   codeNALUnitHeader (NAL_UNIT_CODED_SLICE, NAL_REF_IDC_PRIORITY_HIGHEST);
+#endif
 #endif
 
   Bool bEntropySlice = false;

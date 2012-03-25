@@ -81,6 +81,23 @@ TDecCavlc::~TDecCavlc()
 // Public member functions
 // ====================================================================================================================
 
+#if BITSTREAM_EXTRACTION
+Void  TDecCavlc::parseNalUnitHeader ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId )
+{
+  UInt  uiCode;
+
+  xReadCode ( 1, uiCode ); assert( 0 == uiCode); // forbidden_zero_bit
+  xReadCode ( 1, uiCode );                       // nal_ref_flag
+  xReadCode ( 6, uiCode );                       // nal_unit_type
+  eNalUnitType = (NalUnitType) uiCode;
+
+  xReadCode(3, uiCode); // temporal_id
+  TemporalId = uiCode;
+  xReadCode(5, uiCode); // layer_id_plus1
+  assert( 1 <= uiCode );
+  uiLayerId = uiCode - 1;
+}
+#else
 Void  TDecCavlc::parseNalUnitHeader ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag )
 {
   UInt  uiCode;
@@ -104,6 +121,7 @@ Void  TDecCavlc::parseNalUnitHeader ( NalUnitType& eNalUnitType, UInt& TemporalI
     bOutputFlag = true;
   }
 }
+#endif
 
 /**
  * unmarshal a sequence of SEI messages from bitstream.

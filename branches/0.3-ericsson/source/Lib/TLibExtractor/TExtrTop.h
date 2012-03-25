@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
  * Copyright (c) 2010-2011, ISO/IEC
  * All rights reserved.
@@ -31,90 +31,50 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file     TDecTop.h
+    \brief    decoder class (header)
+*/
 
+#ifndef __TEXTRTOP__
+#define __TEXTRTOP__
 
-#pragma once
+#include "../TLibCommon/TComSlice.h"
+#include "../TLibCommon/TComPrediction.h"
+#include "../TLibDecoder/TDecCAVLC.h"
 
-/**
- * Abstract class representing an SEI message with lightweight RTTI.
- */
-class SEI
+#include <list>
+#include <set>
+
+// ====================================================================================================================
+// Class definition
+// ====================================================================================================================
+
+/// decoder class
+class TExtrTop
 {
-#if BITSTREAM_EXTRACTION
-protected:
-  UInt m_uiLayerId;
-#endif
+private:
+   std::list<TComSPS>      m_acSPSBuffer;
+
+  // functional classes
+  TComPrediction           m_cPrediction;
+  TDecEntropy              m_cEntropyDecoder;
+  TDecCavlc                m_cCavlcDecoder;
 
 public:
-  enum PayloadType {
-    USER_DATA_UNREGISTERED = 5,
-    PICTURE_DIGEST = 256,
-  };
+  TExtrTop();
+  virtual ~TExtrTop();
   
-  SEI() {}
-  virtual ~SEI() {}
+  Void     create  ();
+  Void     destroy ();
+  Void     init();
+
+  Bool     extract( TComBitstream* pcBitstream, std::set<UInt>& rsuiExtractLayerIds );
+  Void     dumpSpsInfo( std::ostream& rcSpsInfoHandle );
   
-  virtual PayloadType payloadType() const = 0;
+  TComSPS *getFirstSPS() { return m_acSPSBuffer.empty() ? 0 : &(m_acSPSBuffer.front()); }
 
-#if BITSTREAM_EXTRACTION
-  Void      setLayerId              ( UInt u )       { m_uiLayerId = u; }
-  UInt      getLayerId              ()         const { return m_uiLayerId; }
-#endif
-};
+};// END CLASS DEFINITION TExtrTop
 
-class SEIuserDataUnregistered : public SEI
-{
-public:
-  PayloadType payloadType() const { return USER_DATA_UNREGISTERED; }
 
-  SEIuserDataUnregistered()
-    : userData(0)
-    {}
+#endif // __TEXTRTOP__
 
-  virtual ~SEIuserDataUnregistered()
-  {
-    delete userData;
-  }
-
-  unsigned char uuid_iso_iec_11578[16];
-  unsigned userDataLength;
-  unsigned char *userData;
-};
-
-class SEIpictureDigest : public SEI
-{
-public:
-  PayloadType payloadType() const { return PICTURE_DIGEST; }
-
-  SEIpictureDigest() {}
-  virtual ~SEIpictureDigest() {}
-  
-  enum Method {
-    MD5,
-    RESERVED,
-  } method;
-
-  unsigned char digest[16];
-};
-
-/**
- * A structure to collate all SEI messages.  This ought to be replaced
- * with a list of std::list<SEI*>.  However, since there is only one
- * user of the SEI framework, this will do initially */
-class SEImessages
-{
-public:
-  SEImessages()
-    : user_data_unregistered(0)
-    , picture_digest(0)
-    {}
-
-  ~SEImessages()
-  {
-    delete user_data_unregistered;
-    delete picture_digest;
-  }
-
-  SEIuserDataUnregistered* user_data_unregistered;
-  SEIpictureDigest* picture_digest;
-};

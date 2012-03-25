@@ -39,6 +39,8 @@
 #define _TYPEDEF__
 
 
+#define BITSTREAM_EXTRACTION            1
+
 #define FLEX_CODING_ORDER				        1
 
 #define SONY_COLPIC_AVAILABILITY  		  1

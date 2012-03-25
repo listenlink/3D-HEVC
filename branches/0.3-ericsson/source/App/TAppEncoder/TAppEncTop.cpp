@@ -144,6 +144,9 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseVSO                       ( false ); //GT: might be enabled later for VSO Mode 4
 #endif
 
+#if BITSTREAM_EXTRACTION
+    m_acTEncTopList[iViewIdx]->setLayerId                      ( ( (UInt)iViewIdx ) << 1 );
+#endif
     m_acTEncTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
     m_acTEncTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
     m_acTEncTopList[iViewIdx]->setIsDepth                      ( false );
@@ -336,6 +339,9 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setVSOMode                      ( m_uiVSOMode );
 #endif
 
+#if BITSTREAM_EXTRACTION
+      m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( ( ( (UInt)iViewIdx ) << 1 ) + 1 );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
       m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
