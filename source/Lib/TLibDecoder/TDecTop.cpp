@@ -534,9 +534,17 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
   NalUnitType eNalUnitType;
   UInt        TemporalId;
+
+#if BITSTREAM_EXTRACTION
+  UInt        uiLayerId;
+
+  m_cEntropyDecoder.decodeNalUnitHeader(eNalUnitType, TemporalId, uiLayerId);
+#else
   Bool        OutputFlag;
 
   m_cEntropyDecoder.decodeNalUnitHeader(eNalUnitType, TemporalId, OutputFlag);
+#endif
+
   reNalUnitType = eNalUnitType;
 
   switch (eNalUnitType)

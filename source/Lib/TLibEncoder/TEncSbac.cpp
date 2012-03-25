@@ -176,7 +176,11 @@ Void TEncSbac::resetEntropy           ()
   return;
 }
 
+#if BITSTREAM_EXTRACTION
+Void TEncSbac::codeNALUnitHeader( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId, UInt uiLayerId )
+#else
 Void TEncSbac::codeNALUnitHeader( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId, Bool bOutputFlag )
+#endif
 {
   assert (0);
   return;

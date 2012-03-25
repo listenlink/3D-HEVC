@@ -638,6 +638,9 @@ Void TEncPic::compressPic( TComBitstream* pcBitstreamOut, TComPicYuv cPicOrg, TC
         TComBitstream seiBs;
         seiBs.create(1024);
         /* write the SEI messages */
+#if BITSTREAM_EXTRACTION
+        sei_recon_picture_digest.setLayerId( pcSlice->getLayerId() );
+#endif
         m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
         m_pcEntropyCoder->setBitstream(&seiBs);
         m_pcEntropyCoder->encodeSEI(sei_recon_picture_digest);
