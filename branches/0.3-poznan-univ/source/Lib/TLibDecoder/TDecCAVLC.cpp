@@ -237,12 +237,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   xReadFlag( uiCode ); pcSPS->setUseSAO       ( uiCode ? true : false );
 #endif
 #if POZNAN_DBMP
-	  xReadFlag( uiCode );
-	  pcSPS->setDBMP  ( uiCode );
+  xReadFlag( uiCode ); pcSPS->setDBMP  ( uiCode );
 #endif
 #if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
-	  xReadFlag( uiCode );
-	  pcSPS->setUseCUSkip ( uiCode );
+  xReadFlag( uiCode ); pcSPS->setUseCUSkip ( uiCode );
 #endif
   xReadFlag( uiCode ); // SPS base view flag
   if( uiCode )
@@ -278,17 +276,24 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setUseMVI( uiCode ? true : false );
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-#if POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE
-      uiCode = 0;
-      xReadCode(8, uiCode);
-      pcSPS->setDepthPower(dequantizeDepthPower(uiCode));
-#else
-      uiCode = 0;
-      xReadCode(sizeof(float)*8, uiCode); // We do not send seign
-      //uiCode &= ~0x80000000;
-      pcSPS->setDepthPower(*((float*)&uiCode));  
-#endif
-      printf("\nfDepthPower = %f", pcSPS->getDepthPower());
+      xReadFlag( uiCode );
+      pcSPS->setUseNonlinearDepth( uiCode ? true : false );
+      pcSPS->getNonlinearDepthModel().Clear();
+      if( uiCode )
+      {
+        uiCode = 0; //Owieczka Necessary??
+        xReadUvlc( uiCode ); 
+        int num = pcSPS->getNonlinearDepthModel().m_iNum = uiCode;
+        for (int i=1; i<=num; ++i)
+        {
+          uiCode = 0;
+          xReadUvlc( uiCode ); 
+          pcSPS->getNonlinearDepthModel().m_aiPoints[i] = uiCode;      
+        }
+        pcSPS->getNonlinearDepthModel().m_aiPoints[0] = 0;
+        pcSPS->getNonlinearDepthModel().m_aiPoints[num+1] = 0;
+        pcSPS->getNonlinearDepthModel().Init();
+      }
 #endif
     }
     else

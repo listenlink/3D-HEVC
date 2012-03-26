@@ -158,6 +158,9 @@ protected:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool m_bUseDMM;
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool m_bUseDMM34;
+#endif
 #if HHI_MPI
   Bool m_bUseMVI;
 #endif
@@ -231,7 +234,8 @@ protected:
   Int         m_iTexDqpAccordingToDepthTopBottomRow; 
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-  Float 	m_fDepthPower;
+  TComNonlinearDepthModel  m_cNonlinearDepthModel;
+  Bool        m_bUseNonlinearDepth;
 #endif
 
 public:
@@ -334,10 +338,11 @@ public:
 #endif
 
 #if POZNAN_NONLINEAR_DEPTH
-  inline Float   getDepthPower()               { return m_fDepthPower; }
-  inline Void    setDepthPower(Float p)        { m_fDepthPower = p; }
-#else
- inline Float    getDepthPower()               { return 1.0f; }
+  inline TComNonlinearDepthModel&   getNonlinearDepthModel()                                    { return m_cNonlinearDepthModel; }
+  inline Void                       setNonlinearDepthModel( TComNonlinearDepthModel &rp )       { m_cNonlinearDepthModel = rp; }
+
+  Void                              setUseNonlinearDepth  ( Bool bVal )                         { m_bUseNonlinearDepth = bVal; }
+  bool                              getUseNonlinearDepth  ()                                    { return m_bUseNonlinearDepth; }
 #endif
 
   //====== Sequence ========
@@ -456,7 +461,10 @@ public:
   Void setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool getUseDMM()        { return m_bUseDMM; }
 #endif
-
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Void setUseDMM34( Bool b) { m_bUseDMM34 = b;    }
+  Bool getUseDMM34()        { return m_bUseDMM34; }
+#endif
 #if LM_CHROMA
   Bool getUseLMChroma                       ()      { return m_bUseLMChroma;        }
   Void setUseLMChroma                       ( Bool b ) { m_bUseLMChroma  = b;       }

@@ -303,8 +303,11 @@ Void TEncTop::encode( bool bEos, std::map<PicOrderCnt, TComPicYuv*>& rcMapPicYuv
   TComPic*        pcPic ;
 
   bool bSomethingCoded = false ;
-
+#if FLEX_CODING_ORDER  
+  if (TEncTop::m_bPicWaitingForCoding )
+#else
   if (m_bPicWaitingForCoding )
+#endif
   {
     std::map<Int, TComPic*>::iterator cIter = m_acInputPicMap.find( (Int)m_cSeqIter.getPoc() );
     const bool bPictureAvailable = cIter != m_acInputPicMap.end();
@@ -658,9 +661,10 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseCUSkip( m_uiUseCUSkip );
 #endif
 
-#if POZNAN_NONLINEAR_DEPTH
-  m_cSPS.setDepthPower  ( m_fDepthPower );
-  // OLGIERD: ToDo - QP-Tex should not use getDepthPower() from texture SPS.
+#if POZNAN_NONLINEAR_DEPTH 
+  m_cSPS.setNonlinearDepthModel  ( m_cNonlinearDepthModel );
+  m_cSPS.setUseNonlinearDepth    ( m_bUseNonlinearDepth );
+  // OLGIERD: ToDo - QP-Tex should not use getNonlinearDepthModel() from texture SPS.
 #endif
 
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH

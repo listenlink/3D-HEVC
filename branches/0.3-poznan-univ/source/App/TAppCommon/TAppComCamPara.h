@@ -104,7 +104,8 @@ private:
   Int****             m_aiSynthViewShiftLUT;									///< Disparity LUT
 
 #if POZNAN_NONLINEAR_DEPTH
-  Float               m_fDepthPower;
+  TComNonlinearDepthModel m_cNonlinearDepthModel;
+  Bool                m_bUseNonlinearDepth;
 #endif
 
 protected:
@@ -165,7 +166,7 @@ public:
                 std::vector<Int>* paiSynthViewNumbers,
                 Int     iLog2Precision 
 #if POZNAN_NONLINEAR_DEPTH
-                ,Float  fDepthPower
+                ,TComNonlinearDepthModel* pcNonlinearDepthModel
 #endif
                 );
 
@@ -177,7 +178,7 @@ public:
                 std::vector<Int>* paiSynthViewNumbers,
                 Int     iLog2Precision
 #if POZNAN_NONLINEAR_DEPTH
-                ,Float  fDepthPower
+                ,TComNonlinearDepthModel* pcNonlinearDepthModel
 #endif
               );
 

@@ -89,7 +89,8 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile )
   m_iLastPOC                = -1;
   m_uiMaxViewId             = 0;
 #if POZNAN_NONLINEAR_DEPTH
-  m_fDepthPower             = 1.0;
+  m_cNonlinearDepthModel.Clear();
+  m_bUseNonlinearDepth      = false;
 #endif
 }
 
@@ -139,32 +140,33 @@ CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, I
   Int64 iOffsetLuma   = iOffset + ( ( 1 << iLog2DivLuma   ) >> 1 );
   Int64 iOffsetChroma = iOffset + ( ( 1 << iLog2DivChroma ) >> 1 );
 
-#if POZNAN_NONLINEAR_DEPTH
-  TComNonlinearDepthBackward cNonlinearDepthBwd(m_fDepthPower, (POZNAN_LUT_INCREASED_PRECISION) ? g_uiBitIncrement : 0, (POZNAN_LUT_INCREASED_PRECISION) ? g_uiBitIncrement : 0);
-#endif
 
   for( UInt uiDepthValue = 0; uiDepthValue < 256; uiDepthValue++ )
   {
-    Double  dDepthValue = (Double)uiDepthValue;
-    Int64   iDepthValue = (Int64)uiDepthValue;
-#if POZNAN_NONLINEAR_DEPTH
-    dDepthValue = cNonlinearDepthBwd(dDepthValue);
-    iDepthValue = (Int64)(dDepthValue+0.5);
-#endif
-#if POZNAN_LUT_INCREASED_PRECISION
-    dDepthValue /= (1<<g_uiBitIncrement);
-#endif
 
     // real-valued look-up tables
-    Double  dShiftLuma      = ( dDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#if POZNAN_NONLINEAR_DEPTH
+    Double  dShiftLuma;
+    if( m_bUseNonlinearDepth )
+      dShiftLuma      = ( m_cNonlinearDepthModel.BackwardD( (Double)uiDepthValue, dScale) + dOffset ) * Double( 1 << m_iLog2Precision );
+    else
+      dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#else
+    Double  dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#endif
     Double  dShiftChroma    = dShiftLuma / 2;
     radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = dShiftLuma;
     radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = dShiftChroma;
 
     // integer-valued look-up tables
-    Int64   iTempScale      = iDepthValue * iScale;
-#if POZNAN_LUT_INCREASED_PRECISION
-    iTempScale >>= g_uiBitIncrement;
+#if POZNAN_NONLINEAR_DEPTH
+    Int64   iTempScale;
+    if( m_bUseNonlinearDepth )
+      iTempScale      = (Int64)m_cNonlinearDepthModel.BackwardI(uiDepthValue, iScale);
+    else
+      iTempScale      = (Int64)uiDepthValue * iScale;
+#else
+    Int64   iTempScale      = (Int64)uiDepthValue * iScale;
 #endif
     Int64   iTestScale      = ( iTempScale + iOffset       );   // for checking accuracy of camera parameters
     Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
@@ -232,14 +234,16 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   if ( pcSlice->getSPS()->isDepth  () )
   {
 #if POZNAN_NONLINEAR_DEPTH
-    m_fDepthPower = pcSlice->getSPS()->getDepthPower();
+    m_bUseNonlinearDepth = pcSlice->getSPS()->getUseNonlinearDepth();
+    m_cNonlinearDepthModel = pcSlice->getSPS()->getNonlinearDepthModel();    
 #endif
     return;
   }
   else
   {
 #if POZNAN_NONLINEAR_DEPTH
-    pcSlice->getSPS()->setDepthPower(m_fDepthPower); // OLGIERD: ToDo - QP-Tex should not use getDepthPower() from texture SPS.
+    pcSlice->getSPS()->setUseNonlinearDepth(m_bUseNonlinearDepth);
+    pcSlice->getSPS()->setNonlinearDepthModel(m_cNonlinearDepthModel); // OLGIERD: ToDo - QP-Tex should not use getDepthPower() from texture SPS.
 #endif
   }
   Bool  bFirstAU          = ( pcSlice->getPOC()               == 0 );
@@ -683,7 +687,11 @@ Void TDecTop::executeDeblockAndAlf(Bool bEos, TComBitstream* pcBitstream, UInt& 
 }
 
 #if DCM_SKIP_DECODING_FRAMES
+#if FLEX_CODING_ORDER
+Bool TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame,  Int& iPOCLastDisplay, Bool& bNewPictureType)
+#else
 Bool TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame,  Int& iPOCLastDisplay)
+#endif
 #else
 Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS )
 #endif
@@ -711,6 +719,9 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
     {
       TComSPS cTempSPS;
       m_cEntropyDecoder.decodeSPS( &cTempSPS );
+#if FLEX_CODING_ORDER
+      m_cNewSPS = cTempSPS;
+#endif
 
       if( (m_iViewIdx == cTempSPS.getViewId()) && ( m_bIsDepth == cTempSPS.isDepth() ) )
       {
@@ -723,8 +734,8 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
         // For texture complete depth power information. Depth power is sended, for example, for base view depth map and it should be available prior non-base texture decoding
         if(!cTempSPS.isDepth() && cTempSPS.getViewId())
         {
-          Float fDepthPower = getDecTop()->getPicFromView( 0, pcPic->getPOC(), true )->getSPS()->getDepthPower();
-          cTempSPS.setDepthPower(fDepthPower);
+          cTempSPS.setUseNonlinearDepth(getDecTop()->getPicFromView( 0, pcPic->getPOC(), true )->getSPS()->getUseNonlinearDepth());
+          cTempSPS.setNonlinearDepthModel(getDecTop()->getPicFromView( 0, pcPic->getPOC(), true )->getSPS()->getNonlinearDepthModel());
         }
 #endif
         cComSPS = cTempSPS;
@@ -801,6 +812,9 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
       if (m_apcSlicePilot->isNextSlice() && ( m_apcSlicePilot->getPOC()!=m_uiPrevPOC || m_apcSlicePilot->getPPSId() != m_cPPS.getPPSId() ) && !m_bFirstSliceInPicture)
       {
         m_uiPrevPOC = m_apcSlicePilot->getPOC();
+#if FLEX_CODING_ORDER
+        bNewPictureType = m_cNewSPS.isDepth();
+#endif
         return true;
       }
       if (m_apcSlicePilot->isNextSlice())
@@ -886,10 +900,25 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
         // Set reference list
         std::vector<TComPic*> apcSpatRefPics = getDecTop()->getSpatialRefPics( pcPic->getViewIdx(), pcSlice->getPOC(), m_cSPS.isDepth() );
-        TComPic * const pcTexturePic = m_cSPS.isDepth() ? getDecTop()->getPicFromView( pcPic->getViewIdx(), pcSlice->getPOC(), false ) : NULL;
+        TComPic * const pcTexturePic = ( m_cSPS.isDepth()) ? getDecTop()->getPicFromView( pcPic->getViewIdx(), pcSlice->getPOC(), false ) : NULL;
+        TComPic * const pcDepthPic   = (!m_cSPS.isDepth()) ? getDecTop()->getPicFromView( pcPic->getViewIdx(), pcSlice->getPOC(), true  ) : NULL; 
+#if FLEX_CODING_ORDER
+        if (pcTexturePic != NULL)
+        {
+          assert( ! m_cSPS.isDepth() || pcTexturePic != NULL );
+          pcSlice->setTexturePic( pcTexturePic );
+        }
+        if (pcDepthPic != NULL)
+        {
+          assert(   m_cSPS.isDepth() || pcDepthPic != NULL );
+          pcSlice->setDepthPic( pcDepthPic );
+        }
+#else
         assert( ! m_cSPS.isDepth() || pcTexturePic != NULL );
         pcSlice->setTexturePic( pcTexturePic );
+        pcSlice->setDepthPic( pcDepthPic );
         pcSlice->setViewIdx( pcPic->getViewIdx() );
+#endif
 #if SONY_COLPIC_AVAILABILITY
         pcSlice->setViewOrderIdx( pcPic->getViewOrderIdx() );
 #endif
@@ -948,7 +977,12 @@ Void TDecTop::decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComL
 
       //*
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+#if FLEX_CODING_ORDER
+      Bool bHaveReconDepth = (pcSlice->getDepthPic() != NULL) && (pcSlice->getDepthPic()->getReconMark());
+      if(!getIsDepth() && pcSlice->getSPS()->getUseTexDqpAccordingToDepth() && !bHaveReconDepth )
+#else
       if(!getIsDepth() && pcSlice->getSPS()->getUseTexDqpAccordingToDepth())
+#endif
       {
         getDecTop()->storeDepthSynthPicsInBuffer(pcSlice->getViewIdx(),pcSlice->getSPS()->getViewOrderIdx(),pcSlice->getPOC());
       }

@@ -497,7 +497,7 @@ Void TRenTop::xShiftPlanePixelsLinInt( PelImagePlane** apcInputPlanes, PelImageP
       Bool bExtrapolate = false;
 
       // compute disparity and shift
-      iShiftedPos  = ( iPosX << m_iRelShiftLUTPrec ) - m_aiShiftLUTCur[RemoveBitIncrementLUT( pcDepthData[iPosX])];
+      iShiftedPos  = ( iPosX << m_iRelShiftLUTPrec ) - m_aiShiftLUTCur[RemoveBitIncrement( pcDepthData[iPosX])];
 
       if (iPosX == 0)
       {
@@ -651,8 +651,8 @@ Void TRenTop::xShiftPlanePixelsLinReal( PelImagePlane** apcInputPlanes, PelImage
         Bool bExtrapolate = false;
 
         // compute disparity and shift
-        assert( RemoveBitIncrementLUT(pcDepthData[iPosX]) >= 0 && RemoveBitIncrementLUT(pcDepthData[iPosX]) <= SizeOfLUT );
-        dPrevShiftedPos  = (Double) iPosX - m_adShiftLUTCur[ RemoveBitIncrementLUT(pcDepthData[iPosX])];
+        assert( RemoveBitIncrement(pcDepthData[iPosX]) >= 0 && RemoveBitIncrement(pcDepthData[iPosX]) <= SizeOfLUT );
+        dPrevShiftedPos  = (Double) iPosX - m_adShiftLUTCur[ RemoveBitIncrement(pcDepthData[iPosX])];
 
         if (iPosX == 0)
         {
@@ -832,8 +832,8 @@ Void TRenTop::xShiftPlanePixelsFullPel( PelImagePlane** apcInputPlanes, PelImage
 
     for(Int iPosX = 0; iPosX < iWidth; iPosX++)
     {
-      assert( RemoveBitIncrementLUT(pcDepthData[iPosX]) >= 0 && RemoveBitIncrementLUT(pcDepthData[iPosX]) <= SizeOfLUT );
-      Int iShiftedPos = iPosX - m_aiShiftLUTCur[ RemoveBitIncrementLUT(pcDepthData[iPosX])] ;
+      assert( RemoveBitIncrement(pcDepthData[iPosX]) >= 0 && RemoveBitIncrement(pcDepthData[iPosX]) <= SizeOfLUT );
+      Int iShiftedPos = iPosX - m_aiShiftLUTCur[ RemoveBitIncrement(pcDepthData[iPosX])] ;
       if (iShiftedPos < iWidth && iShiftedPos >= 0)
       {
         Int iDiff = iShiftedPos - iPrevShiftedPos;
@@ -907,7 +907,7 @@ Void TRenTop::xBackShiftPlanePixels( PelImagePlane** apcInputPlanes, PelImagePla
   {
     for(Int iPosX = 0; iPosX < iOutputWidth; iPosX ++)
     {
-      Int iBackShiftedPos = (iPosX << m_iRelShiftLUTPrec) - m_aiShiftLUTCur[ RemoveBitIncrementLUT( pcDepthData[iPosX] )];
+      Int iBackShiftedPos = (iPosX << m_iRelShiftLUTPrec) - m_aiShiftLUTCur[ RemoveBitIncrement( pcDepthData[iPosX] )];
       if( ( pcFilledData[iPosX] == REN_IS_FILLED )  && (iBackShiftedPos >= 0 ) && ( iBackShiftedPos < iInputWidth ) )
       {
         for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
@@ -980,7 +980,7 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
     for(Int iPosX = 0; iPosX < iInputWidth; iPosX += iStep )
     {
       // compute disparity and shift
-      iShiftedPos  =  iPosX - m_aiShiftLUTCur[RemoveBitIncrementLUT(pcDepthData[iPosX])];
+      iShiftedPos  =  iPosX - m_aiShiftLUTCur[RemoveBitIncrement(pcDepthData[iPosX])];
 
       if ( iPosX == 0 )
       {
@@ -1865,7 +1865,7 @@ Void TRenTop::xBlendPlanesAvg( PelImagePlane** apcLeftPlane, PelImagePlane** apc
       {
         if      (  (pcFilledRightData[uiXPos] != REN_IS_HOLE ) && ( pcFilledLeftData[uiXPos] != REN_IS_HOLE) )
         {
-          Int iDepthDifference  = m_piInvZLUTLeft[RemoveBitIncrementLUT(pcLeftDepthData[uiXPos])] - m_piInvZLUTRight[RemoveBitIncrementLUT(pcRightDepthData[uiXPos])];
+          Int iDepthDifference  = m_piInvZLUTLeft[RemoveBitIncrement(pcLeftDepthData[uiXPos])] - m_piInvZLUTRight[RemoveBitIncrement(pcRightDepthData[uiXPos])];
 
           if ( abs ( iDepthDifference ) <= m_iBlendZThres )
           {
@@ -1894,7 +1894,7 @@ Void TRenTop::xBlendPlanesAvg( PelImagePlane** apcLeftPlane, PelImagePlane** apc
         }
         else if ( (pcFilledRightData[uiXPos] == REN_IS_HOLE) && (pcFilledLeftData[uiXPos] == REN_IS_HOLE))
         {
-          pcOutputData[uiXPos] = m_piInvZLUTLeft[RemoveBitIncrementLUT( pcLeftDepthData[uiXPos])]  < m_piInvZLUTRight[RemoveBitIncrementLUT(pcRightDepthData[uiXPos])] ? pcLeftVideoData[uiXPos] : pcRightVideoData[uiXPos];
+          pcOutputData[uiXPos] = m_piInvZLUTLeft[RemoveBitIncrement( pcLeftDepthData[uiXPos])]  < m_piInvZLUTRight[RemoveBitIncrement(pcRightDepthData[uiXPos])] ? pcLeftVideoData[uiXPos] : pcRightVideoData[uiXPos];
         }
         else
         {

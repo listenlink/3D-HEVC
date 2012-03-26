@@ -39,8 +39,9 @@
 #define _TYPEDEF__
 
 
+#define FLEX_CODING_ORDER               1
 
-#define SONY_COLPIC_AVAILABILITY  		  1
+#define SONY_COLPIC_AVAILABILITY        1
 
 //>>>>> HHI 3DV tools >>>>>
 #define HHI_INTER_VIEW_MOTION_PRED      1   // inter-view motion parameter prediction
@@ -82,8 +83,8 @@
 
 #define POZNAN_CU_SKIP_PSNR         1 //Poznan Cu Skip Display psnr of the codded CUs only
 
-#define POZNAN_NONLINEAR_DEPTH              1	 /// Non-linear depth processing (Maciej Kurc)
-#define POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE 1	 /// Send DepthPower as byte instead of float
+#define POZNAN_NONLINEAR_DEPTH              1	 /// Non-linear depth processing
+#define POZNAN_NONLINEAR_DEPTH_THRESHOLD    1  /// Non-linear depth thrasholding
 
 #if POZNAN_SYNTH 
 #define POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH 1 /// Increase QP for texture CUs that are in the background (according to proper depth map). This QP change is not encoded in a bitstream
@@ -105,6 +106,10 @@
 #define POZNAN_MP_USE_DEPTH_MAP_GENERATION 0 // determines if DEPTH_MAP_GENERATION is used for calculating corresponding pixel position in PUT multiview prediction (POZNAN_MP): 
 										                                                        //			POZNAN_MP_USE_DEPTH_MAP_GENERATION=1 - use DEPTH_MAP_GENERATION, 
 										                                                        //			POZNAN_MP_USE_DEPTH_MAP_GENERATION=0 - use reconstructed depth maps from neighboring views
+
+#if !POZNAN_MP_USE_DEPTH_MAP_GENERATION 
+#define POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE 1 // Depth-Based Multiview Prediction of CU parameters will use depth picture of current view if this picture is available, otherwise reference view depth is utilized
+#endif
 
 #define POZNAN_MP_FILL                             1    // Depth-Based Multiview Prediction of CU parameters with fill option for occluded areas
 #if POZNAN_MP_FILL
@@ -406,7 +411,6 @@ typedef       unsigned int        UInt;
 typedef       long                Long;
 typedef       unsigned long       ULong;
 typedef       double              Double;
-typedef       float               Float;
 
 // ====================================================================================================================
 // 64-bit integer type

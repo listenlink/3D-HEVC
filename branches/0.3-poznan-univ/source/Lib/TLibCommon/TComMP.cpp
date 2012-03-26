@@ -43,6 +43,11 @@ TComMP::TComMP(UInt uiHeight, UInt uiWidth, Int**** aiBaseViewShiftLUT)
 #else
 	//m_pcCameraData = NULL;
 	m_aiBaseViewShiftLUT = NULL;
+#if POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+  m_ppiTempMvPtCorrX = NULL;
+  m_ppiTempMvPtCorrY = NULL;
+  m_ppiTempMvPtCorrZ = NULL;
+#endif
 #endif
 
 #if POZNAN_DBMP_CALC_PRED_DATA
@@ -95,24 +100,6 @@ Void TComMP::init(UInt uiHeight, UInt uiWidth, Int**** aiBaseViewShiftLUT)
 	m_aiBaseViewShiftLUT = aiBaseViewShiftLUT;
 #endif
 
-/*
-	m_ppiMvPtCorrX = new Short*[m_uiHeight];
-	m_ppiMvPtCorrY = new Short*[m_uiHeight];
-	m_ppiMvPtCorrZ = new Short*[m_uiHeight];
-	m_ppiMvPtCorrRefViewIdx = new Short*[m_uiHeight];
-	m_pppcRefCU = new TComDataCU**[m_uiHeight];
-	m_ppuicRefPartAddr = new UShort*[m_uiHeight];	
-	for(Int i=0;i<m_uiHeight;i++)
-	{
-		m_ppiMvPtCorrX[i] = new Short[m_uiWidth];
-		m_ppiMvPtCorrY[i] = new Short[m_uiWidth];
-		m_ppiMvPtCorrZ[i] = new Short[m_uiWidth];
-		m_ppiMvPtCorrRefViewIdx[i] = new Short[m_uiWidth];
-		m_pppcRefCU[i] = new TComDataCU*[m_uiWidth];
-		m_ppuicRefPartAddr[i]  = new UShort[m_uiWidth];
-	}
-//*/
-///*
 	Short* piPtr;
 	UShort* puiPtr;
 	TComDataCU** ppcPtr;
@@ -140,7 +127,21 @@ Void TComMP::init(UInt uiHeight, UInt uiWidth, Int**** aiBaseViewShiftLUT)
 	m_ppuicRefPartAddr = (UShort**)malloc(sizeof(UShort*)*m_uiHeight);
 	puiPtr = (UShort*)malloc(sizeof(UShort)*m_uiHeight*m_uiWidth);
 	for(UInt i=0,addr=0;i<m_uiHeight;i++,addr+=m_uiWidth) m_ppuicRefPartAddr[i] = &(puiPtr[addr]);
-//*/
+
+#if !POZNAN_MP_USE_DEPTH_MAP_GENERATION && POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+	m_ppiTempMvPtCorrX = (Short**)malloc(sizeof(Short*)*m_uiHeight);
+	piPtr = (Short*)malloc(sizeof(Short)*m_uiHeight*m_uiWidth);
+	for(UInt i=0,addr=0;i<m_uiHeight;i++,addr+=m_uiWidth) m_ppiTempMvPtCorrX[i] = &(piPtr[addr]);
+
+	m_ppiTempMvPtCorrY = (Short**)malloc(sizeof(Short*)*m_uiHeight);
+	piPtr = (Short*)malloc(sizeof(Short)*m_uiHeight*m_uiWidth);
+	for(UInt i=0,addr=0;i<m_uiHeight;i++,addr+=m_uiWidth) m_ppiTempMvPtCorrY[i] = &(piPtr[addr]);
+
+	m_ppiTempMvPtCorrZ = (Short**)malloc(sizeof(Short*)*m_uiHeight);
+	piPtr = (Short*)malloc(sizeof(Short)*m_uiHeight*m_uiWidth);
+	for(UInt i=0,addr=0;i<m_uiHeight;i++,addr+=m_uiWidth) m_ppiTempMvPtCorrZ[i] = &(piPtr[addr]);
+#endif
+
 #if POZNAN_DBMP & !POZNAN_DBMP_COMPRESS_ME_DATA
 	m_ppiL0RefPOC.clear();
 	m_ppiL0MvX.clear();
@@ -302,6 +303,36 @@ Void TComMP::uninit()
 		m_ppuicRefPartAddr = NULL;
 	}
 
+#if !POZNAN_MP_USE_DEPTH_MAP_GENERATION && POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+	if(m_ppiTempMvPtCorrX!=NULL)
+	{
+		//for(Int i=0;i<m_uiHeight;i++) delete [] m_ppiTempMvPtCorrX[i];
+		//delete [] m_ppiTempMvPtCorrX;
+		free(m_ppiTempMvPtCorrX[0]);
+		free(m_ppiTempMvPtCorrX);
+		m_ppiTempMvPtCorrX = NULL;
+	}
+
+	if(m_ppiTempMvPtCorrY!=NULL)
+	{
+		//for(Int i=0;i<m_uiHeight;i++) delete [] m_ppiTempMvPtCorrY[i];
+		//delete [] m_ppiTempMvPtCorrY;
+		free(m_ppiTempMvPtCorrY[0]);
+		free(m_ppiTempMvPtCorrY);
+		m_ppiTempMvPtCorrY = NULL;
+	}
+
+	if(m_ppiTempMvPtCorrZ!=NULL)
+	{
+		//for(Int i=0;i<m_uiHeight;i++) delete [] m_ppiTempMvPtCorrZ[i];
+		//delete [] m_ppiTempMvPtCorrZ;
+		free(m_ppiTempMvPtCorrZ[0]);
+		free(m_ppiTempMvPtCorrZ);
+		m_ppiTempMvPtCorrZ = NULL;
+	}
+
+#endif
+
 #if POZNAN_DBMP & !POZNAN_DBMP_COMPRESS_ME_DATA
 	PUT_MP_ARRAY_TYPE** ppiTemp;
 	TComMapppi::const_iterator cMapIter;
@@ -438,6 +469,22 @@ Void TComMP::disable()
 #endif
 }
 
+#if !POZNAN_MP_USE_DEPTH_MAP_GENERATION && POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+Void TComMP::clearTemp()
+{
+	if(!isInit()) return;
+
+	for(Int i=0;i<m_uiHeight;i++)
+		for(Int j=0;j<m_uiWidth;j++)
+		{
+			m_ppiTempMvPtCorrX[i][j] = TComMP::OCCLUSION;
+			m_ppiTempMvPtCorrY[i][j] = TComMP::OCCLUSION;
+			//m_ppiTempMvPtCorrZ[i][j] = 0x7FFF; //Depth
+			m_ppiTempMvPtCorrZ[i][j] = TComMP::OCCLUSION; //Disparity
+		}
+}
+#endif
+
 Bool TComMP::isInit()
 {
 	return m_bInit;
@@ -497,6 +544,9 @@ Bool TComMP::pairMultiview(TComPic* pcPic)
 	Pel* pDepth;
 	//Bool bIsLeft;
 	Int  iDepth;
+#if POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+	Int iSrcX, iSrcY;
+#endif	
 #endif	
 
 	Bool bIsRefNoISliceAvailable = false;
@@ -546,6 +596,115 @@ Bool TComMP::pairMultiview(TComPic* pcPic)
 			}
 	}
 #else
+
+#if POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+	//pcDepthPic = GetPicFromList(m_pcDepthRefPicsList, uiPOC, uiViewId);
+	if(pcPic->getSlice(0)->getDepthPic()!=NULL && pcPic->getSlice(0)->getDepthPic()->getReconMark())
+		pcDepthPic = pcPic->getSlice(0)->getDepthPic();
+	else
+		pcDepthPic = NULL;
+
+	if(pcDepthPic!=NULL)
+	{
+	  pDepth = pcDepthPic->getPicYuvRec()->getLumaAddr();
+	  iStride = pcDepthPic->getPicYuvRec()->getStride();
+
+	  for( UInt uiIdx = 0; uiIdx < uiViewId; uiIdx++ )
+	  //for( UInt uiIdx = uiViewId-1; uiIdx >= uiViewId; uiIdx-- )
+	  {
+	    uiRefViewId = uiIdx;
+
+		pcRefPic = GetPicFromList(m_pcRefPicsList, uiPOC, uiRefViewId);
+		assert(pcRefPic!=NULL);//test
+		if(pcRefPic==NULL) return false; //No ref pic with current POC and RefView found in ref list!!!
+
+		if(!pcRefPic->getSlice(0)->isIntra()) bIsRefNoISliceAvailable = true;
+		else bIsAnchorPicture = true;
+
+		//ppiShiftLUTLeft = m_pcCameraData->getBaseViewShiftLUTI()[uiViewId][uiRefViewId];
+		ppiShiftLUTLeft = m_aiBaseViewShiftLUT[uiViewId][uiRefViewId];
+
+		clearTemp();
+
+		for(iCurY=0; iCurY<(Int)m_uiHeight; iCurY++)
+			for(iCurX=0; iCurX<(Int)m_uiWidth; iCurX++)
+			{
+				//Check if point already has its reference:
+				if(m_ppiMvPtCorrX[iCurY][iCurX]!=TComMP::OCCLUSION && m_ppiMvPtCorrY[iCurY][iCurX]!=TComMP::OCCLUSION) continue;
+
+				iDepth = pDepth[ iCurX + iCurY * iStride ];
+				iDepth = RemoveBitIncrement(iDepth);
+				assert( iDepth >= 0 && iDepth <= 256 );					
+				
+				//if(bIsLeft) iDisparity = ppiShiftLUTLeft[0][iDepth];
+				//else iDisparity = -ppiShiftLUTLeft[0][iDepth];
+				iDisparity = ppiShiftLUTLeft[0][iDepth]; //!!!
+
+				iRefX = iCurX - ( ( iDisparity + 2 ) >> 2 );
+				iRefY = iCurY;
+
+				if(iRefX>=0 && iRefX<m_uiWidth && iRefY>=0 && iRefY<m_uiHeight)
+				{
+					iSrcX = m_ppiTempMvPtCorrX[iRefY][iRefX];
+					iSrcY = m_ppiTempMvPtCorrY[iRefY][iRefX];
+
+					if(iSrcX==TComMP::OCCLUSION || iSrcY==TComMP::OCCLUSION)
+					{
+						m_ppiMvPtCorrRefViewIdx[iCurY][iCurX] = (Short)uiRefViewId;
+						m_ppiMvPtCorrX[iCurY][iCurX] = (Short)iRefX;
+						m_ppiMvPtCorrY[iCurY][iCurX] = (Short)iRefY;
+
+						m_ppiMvPtCorrZ[iCurY][iCurX] = (Short)iDepth;
+						//m_ppiMvPtCorrZ[iCurY][iCurX] = (Short)iDisparity;						
+
+						pcRefCU = pcRefPic->getCU((UInt)(iRefY/pcRefPic->getSlice(0)->getSPS()->getMaxCUHeight()*pcRefPic->getFrameWidthInCU() + iRefX/pcRefPic->getSlice(0)->getSPS()->getMaxCUWidth()));
+
+						m_pppcRefCU[iCurY][iCurX] = pcRefCU;
+						m_ppuicRefPartAddr[iCurY][iCurX] = (UShort)g_auiRasterToZscan[(iRefY-pcRefCU->getCUPelY())/pcRefPic->getMinCUHeight()*pcRefPic->getNumPartInWidth()+(iRefX-pcRefCU->getCUPelX())/pcRefPic->getMinCUWidth()];
+
+						m_ppiTempMvPtCorrX[iRefY][iRefX] = iCurX;
+						m_ppiTempMvPtCorrY[iRefY][iRefX] = iCurY;
+						m_ppiTempMvPtCorrZ[iRefY][iRefX] = (Short)iDepth;
+						//m_ppiTempMvPtCorrZ[iRefY][iRefX] = (Short)iDisparity;
+					}
+					else if((Short)iDepth>m_ppiTempMvPtCorrZ[iRefY][iRefX]) //Point assigned earlier to this location is occluded
+					//else if((Short)iDisparity>m_ppiTempMvPtCorrZ[iRefY][iRefX]) //Point assigned earlier to this location is occluded
+					{
+						m_ppiMvPtCorrRefViewIdx[iCurY][iCurX] = (Short)uiRefViewId;
+						m_ppiMvPtCorrX[iCurY][iCurX] = (Short)iRefX;
+						m_ppiMvPtCorrY[iCurY][iCurX] = (Short)iRefY;
+
+						m_ppiMvPtCorrZ[iCurY][iCurX] = (Short)iDepth;
+						//m_ppiMvPtCorrZ[iCurY][iCurX] = (Short)iDisparity;						
+
+						pcRefCU = pcRefPic->getCU((UInt)(iRefY/pcRefPic->getSlice(0)->getSPS()->getMaxCUHeight()*pcRefPic->getFrameWidthInCU() + iRefX/pcRefPic->getSlice(0)->getSPS()->getMaxCUWidth()));
+
+						m_pppcRefCU[iCurY][iCurX] = pcRefCU;
+						m_ppuicRefPartAddr[iCurY][iCurX] = (UShort)g_auiRasterToZscan[(iRefY-pcRefCU->getCUPelY())/pcRefPic->getMinCUHeight()*pcRefPic->getNumPartInWidth()+(iRefX-pcRefCU->getCUPelX())/pcRefPic->getMinCUWidth()];
+
+						m_ppiTempMvPtCorrX[iRefY][iRefX] = iCurX;
+						m_ppiTempMvPtCorrY[iRefY][iRefX] = iCurY;
+						m_ppiTempMvPtCorrZ[iRefY][iRefX] = (Short)iDepth;
+						//m_ppiTempMvPtCorrZ[iRefY][iRefX] = (Short)iDisparity;
+						
+						//Mark point assigned earlier to this location as occluded:
+						m_ppiMvPtCorrRefViewIdx[iSrcY][iSrcX] = TComMP::OCCLUSION;
+						m_ppiMvPtCorrX[iSrcY][iSrcX] = TComMP::OCCLUSION;
+						m_ppiMvPtCorrY[iSrcY][iSrcX] = TComMP::OCCLUSION;
+
+						//m_ppiMvPtCorrZ[iSrcY][iSrcX] = 0x7FFF;
+						m_ppiMvPtCorrZ[iSrcY][iSrcX] = TComMP::OCCLUSION;						
+
+						m_pppcRefCU[iSrcY][iSrcX] = NULL;
+						m_ppuicRefPartAddr[iSrcY][iSrcX] = 0;						
+					}
+				}
+			}
+	  }
+	}
+	else
+#endif
+	{
 	iSynthViewIdx = uiViewId;
 
 	for( UInt uiIdx = 0; uiIdx < uiViewId; uiIdx++ )
@@ -604,6 +763,7 @@ Bool TComMP::pairMultiview(TComPic* pcPic)
 				}				
 			}
 	}
+      }
 #endif
 
 #if POZNAN_MP_FILL

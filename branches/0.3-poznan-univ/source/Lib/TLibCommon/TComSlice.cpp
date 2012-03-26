@@ -84,6 +84,7 @@ TComSlice::TComSlice()
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
   m_pcTexturePic = NULL;
+  m_pcDepthPic = NULL; 
 #ifdef WEIGHT_PRED
   resetWpScaling(m_weightPredTable);
   initWpAcDcParam();
@@ -112,6 +113,7 @@ Void TComSlice::initSlice()
   ::memset( m_apcRefPicList, 0, sizeof (m_apcRefPicList));
   ::memset( m_aiNumRefIdx,   0, sizeof ( m_aiNumRefIdx ));
   m_pcTexturePic = NULL;
+  m_pcDepthPic = NULL; 
   
   initEqualRef();
   m_bNoBackPredFlag = false;
@@ -702,6 +704,9 @@ TComSPS::TComSPS()
 #if ( HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX )
   m_bUseDMM = false;
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  m_bUseDMM34 = false;
+#endif
 }
 
 TComSPS::~TComSPS()
@@ -746,7 +751,7 @@ TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecis
     }
   }
 #if POZNAN_NONLINEAR_DEPTH
-  m_fDepthPower = 1.0;
+  m_cNonlinearDepthModel.Clear();
 #endif
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   m_bUseTexDqpAccordingToDepth = false;
@@ -767,7 +772,7 @@ TComSPS::initMultiviewSPSDepth( UInt uiViewId, Int iViewOrderIdx )
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
 #if POZNAN_NONLINEAR_DEPTH
-  m_fDepthPower = 1.0;
+  m_cNonlinearDepthModel.Clear();
 #endif
 }
 

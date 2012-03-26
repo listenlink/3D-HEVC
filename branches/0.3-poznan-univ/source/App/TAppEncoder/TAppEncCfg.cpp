@@ -109,6 +109,13 @@ TAppEncCfg::~TAppEncCfg()
   if (m_pchBitstreamFile != NULL)
     free (m_pchBitstreamFile) ;
 
+#if FLEX_CODING_ORDER
+  if (m_pchMVCJointCodingOrder != NULL)
+  {
+    free(m_pchMVCJointCodingOrder) ;
+  }
+#endif
+
   for(Int i = 0; i< m_pchDepthReconFileList.size(); i++ )
   {
     if ( m_pchDepthReconFileList[i] != NULL )
@@ -152,6 +159,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_BitstreamFile;
   string cfg_ReconFile;
   string cfg_dQPFile;
+
+#if FLEX_CODING_ORDER
+  string cfg_JointCodingOrdering;
+#endif
+
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
@@ -190,6 +202,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
 
+#if FLEX_CODING_ORDER
+  ("3DVFlexOrder",          m_b3DVFlexOrder,   false, "flexible coding order flag" )
+  ("3DVCodingOrder",		cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
+#endif
 
   /* Unit definition parameters */
   ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
@@ -366,7 +382,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TDdQPTopBottomRow",        m_iTexDqpAccordingToDepthTopBottomRow, (Int)2,         "texture block QP changing tool - top and bottom CU rows delta QP parameter" )
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-  ("DepthPower,-dpow",    m_fDepthPower,      (Double)1.0, "Depth power value (for non-linear processing)")
+  ("NonlinearDepth",           m_bUseNonlinearDepth,    true, "usage of non-linear depth representation")    
+  ("NonlinearDepthModel",      m_aiNonlinearDepthModel, std::vector<Int>(0,0), "Nodes for definition of non-linear depth representation")    
+#if POZNAN_NONLINEAR_DEPTH_THRESHOLD
+  ("NonlinearDepthThreshold",  m_iNonlinearDepthThreshold, 100, "Threshold for usage of Nonlinear depth representation")    
+#endif
 #endif
 
 
@@ -397,6 +417,38 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
+
+#if FLEX_CODING_ORDER && HHI_VSO
+  m_pchMVCJointCodingOrder	= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
+  // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
+  Bool depthComesFirst = false;
+  if ( m_b3DVFlexOrder )
+  {
+    for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+    {
+      for ( Int ii=1; ii<12; ii+=2 )
+      {
+        Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+        if ( iViewIdxCfg == iViewIdx )
+        {
+          if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+          {
+            depthComesFirst = true;
+            break;
+          }
+          else
+          {
+            assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+          }
+        }
+      }
+    }
+  }
+  if (depthComesFirst)
+  {
+    m_bUseVSO = false;		
+  }
+#endif
 
 
 // GT FIX
@@ -457,20 +509,46 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 
 #if POZNAN_NONLINEAR_DEPTH
-if (m_fDepthPower<=0) 
+#if POZNAN_NONLINEAR_DEPTH_THRESHOLD
+  if(m_bUseNonlinearDepth && m_iNonlinearDepthThreshold>0)
   {
-    Float fDepthQP = m_adQP[ m_adQP.size()  < 2 ? 0 : 1];
-    m_fDepthPower = (fDepthQP-30) *0.25/20.0 + 1.25;
-    if (m_fDepthPower<=1.0) m_fDepthPower = 1.0;
-    // QP = 30 = 1.25
-    // QP = 50 = 1.5
-    if (m_fDepthPower>=1.66) m_fDepthPower = 1.66;
-  };
+    FILE *base_depth_file;
+    unsigned char *depth_buf;
+    int histogram[256];
+    int i, size;
+    float weighted_avg;
+    base_depth_file = fopen(m_pchDepthInputFileList[0], "rb");
+    if (base_depth_file)
+    {
+      size = m_iSourceWidth*m_iSourceHeight;
+      depth_buf = (unsigned char *)malloc(size);
+      fread(depth_buf, 1, size, base_depth_file);
+      fclose(base_depth_file);
+      memset(histogram, 0, sizeof(histogram));
+      for (i=0; i<size;++i) histogram[depth_buf[i]]++;
+      weighted_avg = 0;
+      for (i=0; i<256; ++i) weighted_avg += i*histogram[i];
+      weighted_avg /= size;
 
-#if POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE
-  m_fDepthPower = dequantizeDepthPower(quantizeDepthPower((Float)m_fDepthPower));
+      if (weighted_avg<m_iNonlinearDepthThreshold)
+      {
+        m_bUseNonlinearDepth = 0;
+        printf ("\nWeighted average of depth histogram:%f < %d, turning NonlinearDepthRepresentation OFF\n", weighted_avg, m_iNonlinearDepthThreshold);
+      }
+    }
+  }
 #endif
 
+  if(m_bUseNonlinearDepth)
+  {
+    m_cNonlinearDepthModel.m_iNum = (Int)m_aiNonlinearDepthModel.size();
+    m_cNonlinearDepthModel.m_aiPoints[0]=0;
+    for (int i=0; i<m_cNonlinearDepthModel.m_iNum; ++i)
+      m_cNonlinearDepthModel.m_aiPoints[i+1] = m_aiNonlinearDepthModel[i];
+
+    m_cNonlinearDepthModel.m_aiPoints[m_cNonlinearDepthModel.m_iNum+1]=0;
+    m_cNonlinearDepthModel.Init();
+  }
 #endif
 
   xCleanUpVectors();
@@ -554,7 +632,7 @@ if ( m_bUseVSO && m_uiVSOMode == 4)
                                       m_cRenModStrParser.getSynthViews(),
                                       LOG2_DISP_PREC_LUT 
 #if POZNAN_NONLINEAR_DEPTH                                      
-                                      ,m_fDepthPower
+                                      ,(m_bUseNonlinearDepth ? &m_cNonlinearDepthModel : NULL)
 #endif
                                       );
 }
@@ -571,7 +649,7 @@ else if ( m_bUseVSO && m_uiVSOMode != 4 )
                                       NULL,
                                       LOG2_DISP_PREC_LUT 
 #if POZNAN_NONLINEAR_DEPTH                                      
-                                      ,m_fDepthPower
+                                      ,(m_bUseNonlinearDepth ? &m_cNonlinearDepthModel : NULL)
 #endif                                      
                                       );
 }
@@ -588,7 +666,7 @@ else
     NULL,
     LOG2_DISP_PREC_LUT 
 #if POZNAN_NONLINEAR_DEPTH                                      
-    ,m_fDepthPower
+    ,(m_bUseNonlinearDepth ? &m_cNonlinearDepthModel : NULL)
 #endif    
     );
 }
@@ -604,7 +682,7 @@ else
     NULL,
     LOG2_DISP_PREC_LUT 
 #if POZNAN_NONLINEAR_DEPTH                                      
-    ,m_fDepthPower
+    ,(m_bUseNonlinearDepth ? &m_cNonlinearDepthModel : NULL)
 #endif    
     );
 #endif
@@ -1063,7 +1141,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-  printf("DepthPower:%f ", m_fDepthPower);
+  printf("NLDR:%d ", m_bUseNonlinearDepth ? 1 : 0);
 #endif
   printf("\n");
 

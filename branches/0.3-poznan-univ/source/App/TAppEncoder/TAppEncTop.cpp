@@ -141,7 +141,8 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseFastEnc                   ( m_bUseFastEnc  );
 
 #if POZNAN_NONLINEAR_DEPTH
-    m_acTEncTopList[iViewIdx]->setDepthPower                   ( (Float)m_fDepthPower );
+    m_acTEncTopList[iViewIdx]->setNonlinearDepthModel         ( m_cNonlinearDepthModel );
+    m_acTEncTopList[iViewIdx]->setUseNonlinearDepth           ( m_bUseNonlinearDepth );
 #endif
 
 #if HHI_VSO
@@ -255,6 +256,29 @@ Void TAppEncTop::xInitLibCfg()
 
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
     {
+#if FLEX_CODING_ORDER
+      // Detect whether depth comes before than texture for this view
+      Bool isDepthFirst = false;
+      if ( m_b3DVFlexOrder )
+      {
+        for ( Int ii=1; ii<12; ii+=2 )
+        {
+          Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+          if ( iViewIdxCfg == iViewIdx )
+          {
+            if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+            {
+              isDepthFirst = true;
+            }
+            else
+            {
+              assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+            }
+            break;
+          }
+        }
+      }
+#endif
       m_iDepthFrameRcvdVector.push_back(0) ;
       m_acTEncDepthTopList.push_back(new TEncTop);
 
@@ -374,6 +398,9 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
       m_acTEncDepthTopList[iViewIdx]->setUseDMM( m_bUseDMM );
 #endif
+#if FLEX_CODING_ORDER && HHI_DMM_PRED_TEX
+      m_acTEncDepthTopList[iViewIdx]->setUseDMM34( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseDMM );
+#endif
 #if CONSTRAINED_INTRA_PRED
       m_acTEncDepthTopList[iViewIdx]->setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
 #endif
@@ -400,16 +427,21 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
 #endif
 #if HHI_MPI
+#if FLEX_CODING_ORDER
+      m_acTEncDepthTopList[iViewIdx]->setUseMVI( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseMVI );
+#else
       m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#endif
 #endif
 #if POZNAN_DBMP
       m_acTEncDepthTopList[iViewIdx]->setDBMP                        ( m_uiDBMP );
 #endif
 #if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
-	    m_acTEncDepthTopList[iViewIdx]->setUseCUSkip                      ( m_uiUseCUSkip );
+	    m_acTEncDepthTopList[iViewIdx]->setUseCUSkip                   ( m_uiUseCUSkip );
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-      m_acTEncDepthTopList[iViewIdx]->setDepthPower                   ( (Float)m_fDepthPower );
+      m_acTEncDepthTopList[iViewIdx]->setNonlinearDepthModel         ( m_cNonlinearDepthModel );
+      m_acTEncDepthTopList[iViewIdx]->setUseNonlinearDepth           ( m_bUseNonlinearDepth );
 #endif
 
       m_acTEncDepthTopList[iViewIdx]->setPictureDigestEnabled(m_pictureDigestEnabled);
@@ -689,7 +721,8 @@ Void TAppEncTop::encode()
         {
           m_acTVideoIOYuvDepthInputFileList[iViewIdx]->read( pcPdmDepthOrg, m_aiPad, m_bUsingDepthMaps );
 #if POZNAN_NONLINEAR_DEPTH
-		      pcPdmDepthOrg->nonlinearDepthForward(pcPdmDepthOrg, m_fDepthPower);		  
+          if( m_bUseNonlinearDepth )
+            pcPdmDepthOrg->nonlinearDepthForward(pcPdmDepthOrg, m_cNonlinearDepthModel);		  
 #endif
         }
 #endif
@@ -713,7 +746,8 @@ Void TAppEncTop::encode()
           // read input YUV file
           m_acTVideoIOYuvDepthInputFileList[iViewIdx]->read( pcDepthPicYuvOrg, m_aiPad  ) ;
 #if POZNAN_NONLINEAR_DEPTH
-		      pcDepthPicYuvOrg->nonlinearDepthForward(pcDepthPicYuvOrg, m_fDepthPower);		  
+          if( m_bUseNonlinearDepth )
+            pcDepthPicYuvOrg->nonlinearDepthForward(pcDepthPicYuvOrg, m_cNonlinearDepthModel);		  
 #endif
           bDepthEos[iViewIdx] = ( m_acTVideoIOYuvDepthInputFileList[iViewIdx]->isEof() == 1 ?   true : false  );
           bDepthEos[iViewIdx] = ( m_iDepthFrameRcvdVector[iViewIdx] == (m_iFrameToBeEncoded - 1) ?    true : bDepthEos[iViewIdx]   );
@@ -743,6 +777,73 @@ Void TAppEncTop::encode()
     }
 #endif
 
+#if FLEX_CODING_ORDER
+    if (m_b3DVFlexOrder)
+    {
+      Int i=0;
+      Int iViewIdx = 0;
+      bool bThisViewContinueReadingPics = false;
+      bool bThisViewContinueReadingDepthPics = false;
+      Int iNumberofDepthViews = m_bUsingDepthMaps?m_iNumberOfViews:0;
+      for(Int j=0; j < (m_iNumberOfViews+ iNumberofDepthViews); j++ )     // Start encoding
+      {
+        if (m_pchMVCJointCodingOrder[i]=='T')
+        {
+          i++;
+          assert(isdigit(m_pchMVCJointCodingOrder[i]));
+          iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+          bThisViewContinueReadingPics = bContinueReadingPics[iViewIdx];
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+          // If no depth picture reconstruction for current view and current POC is available sythesize one
+          Int   iCurrPoc         = m_acTEncTopList[ 0 ]->getNextFrameId();
+          Bool  bCurrPicDepthRec = getPicFromView( iViewIdx, iCurrPoc, true ) != NULL && getPicFromView( iViewIdx, iCurrPoc, true )->getReconMark();
+          if(m_bUseTexDqpAccordingToDepth && !bCurrPicDepthRec)
+          {
+            xStoreDepthSynthPicsInBuffer(iViewIdx);
+          }
+#endif
+          m_acTEncTopList[iViewIdx]->encode( bEos[iViewIdx], m_cListPicYuvRecMap[iViewIdx], pcBitstream, bThisViewContinueReadingPics );
+          bContinueReadingPics[iViewIdx]=bThisViewContinueReadingPics;
+          bAllContinueReadingPics = bAllContinueReadingPics||bContinueReadingPics[iViewIdx];
+
+          if(pcBitstream->getNumberOfWrittenBits()!=0)
+          {
+            m_cTVideoIOBitsFile.writeBits( pcBitstream );
+          }
+          pcBitstream->resetBits(); //GT: also done later in ....
+          pcBitstream->rewindStreamPacket( );
+          // write bistream to file if necessary
+          xWriteOutput( iViewIdx ); //GT: Write Reconfiles (when gop is complete?)
+          i++;
+        }
+        else if ( m_pchMVCJointCodingOrder[i] == 'D')
+        {
+          i++;
+          if( m_bUsingDepthMaps )
+          {
+            assert(isdigit(m_pchMVCJointCodingOrder[i]));
+            iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+            bThisViewContinueReadingDepthPics = bContinueReadingDepthPics[iViewIdx];
+            m_acTEncDepthTopList[iViewIdx]->encode( bDepthEos[iViewIdx], m_cListPicYuvDepthRecMap[iViewIdx], pcBitstream, bThisViewContinueReadingDepthPics );
+            bContinueReadingDepthPics[iViewIdx]=bThisViewContinueReadingDepthPics;
+
+            bAllContinueReadingDepthPics = bAllContinueReadingDepthPics||bContinueReadingDepthPics[iViewIdx];
+            if(pcBitstream->getNumberOfWrittenBits()!=0)
+            {
+              m_cTVideoIOBitsFile.writeBits( pcBitstream );
+            }
+            pcBitstream->resetBits();
+            pcBitstream->rewindStreamPacket( );
+            // write bistream to file if necessary
+            xWriteOutput( iViewIdx, true );
+            i++;
+          }
+        }
+      }
+    }
+    else
+    {
+#endif
     //GT: Encode
     for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )     // Start encoding
     {
@@ -754,7 +855,14 @@ Void TAppEncTop::encode()
 #endif
             //*
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+#if FLEX_CODING_ORDER
+      // If no depth picture reconstruction for current view and current POC is available sythesize one
+      Int   iCurrPoc         = m_acTEncTopList[ 0 ]->getNextFrameId();
+      Bool  bCurrPicDepthRec = getPicFromView( iViewIdx, iCurrPoc, true ) != NULL && getPicFromView( iViewIdx, iCurrPoc, true )->getReconMark();
+      if(m_bUseTexDqpAccordingToDepth && !bCurrPicDepthRec)
+#else
       if(m_bUseTexDqpAccordingToDepth)
+#endif
       {
         xStoreDepthSynthPicsInBuffer(iViewIdx);
       }
@@ -797,7 +905,9 @@ Void TAppEncTop::encode()
         xWriteOutput( iViewIdx, true );
       }
     }
-
+#if FLEX_CODING_ORDER
+    }
+#endif
     // delete extra picture buffers
     if( bCurrPocCoded )
     {
@@ -1003,14 +1113,14 @@ Void TAppEncTop::xWriteOutput( Int iViewIdx, Bool isDepth )
   {
     riNextPocToDump++;
 #if POZNAN_NONLINEAR_DEPTH
-    if(isDepth)
+    if(isDepth && m_bUseNonlinearDepth)
     {
       TComPicYuv *pcPicOrg = i->second;
       TComPicYuv *pcPicPow = new TComPicYuv; 
       //pcPicYuvRec->createCompatibleAs(*iterPicYuvRec);
       pcPicPow->create( pcPicOrg->getWidth(), pcPicOrg->getHeight(), pcPicOrg->getMaxCuWidth(), pcPicOrg->getMaxCuHeight(), pcPicOrg->getMaxCuDepth() );
       //cPicPower.create(pcSPS->getWidth(), pcSPS->getHeight(), pcSPS->getMaxCUWidth(), pcSPS->getMaxCUHeight(), pcSPS->getMaxCUDepth() ); 
-      pcPicOrg->nonlinearDepthBackward(pcPicPow, m_fDepthPower);		
+      pcPicOrg->nonlinearDepthBackward(pcPicPow, m_cNonlinearDepthModel);		
       rpcTVideoIOYuvReconFile->write( pcPicPow, m_aiPad );
 // to do destroy pcPicow
     } else

@@ -347,16 +347,18 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       xWriteFlag( pcSPS->getUseMVI() ? 1 : 0 );
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-      // Depth power coefficient
-#if POZNAN_NONLINEAR_DEPTH_SEND_AS_BYTE
-      UInt  uiCode = quantizeDepthPower(pcSPS->getDepthPower());  
-      xWriteCode(uiCode, 8); 
-#else
-      float fCode  = pcSPS->getDepthPower();
-      UInt  uiCode = *((UInt*)&fCode);
-      //uiCode &= ~0x80000000;
-      xWriteCode(uiCode, sizeof(float)*8); // we do not send sign?;
-#endif
+      if( pcSPS->getUseNonlinearDepth() )
+      {
+        xWriteFlag( 1 ); //Nonlinear Depth Representation
+        // Nonlinear Depth Model coefficient
+        xWriteUvlc(pcSPS->getNonlinearDepthModel().m_iNum);
+        for (int i=1; i<=pcSPS->getNonlinearDepthModel().m_iNum; ++i)
+          xWriteUvlc(pcSPS->getNonlinearDepthModel().m_aiPoints[i]);
+      }
+      else
+      {
+        xWriteFlag( 0 ); // Don't use Nonlinear Depth Representation
+      }
 #endif
     }
     else

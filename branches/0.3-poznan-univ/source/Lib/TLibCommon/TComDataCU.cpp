@@ -5003,14 +5003,14 @@ Int TComDataCU::CuQpIncrementFunction(Pel uiBlockMax)
     fprintf(stderr, "Bitincrement = %d, uiBlockMax = %d\n", g_uiBitIncrement, uiBlockMax);
     exit(333);
   }
-  Float fVal = (Float)((255 - (uiBlockMax >> g_uiBitIncrement)) >> 4);
+  Double fVal = (Double)((255 - (uiBlockMax >> g_uiBitIncrement)) >> 4); //Owieczka ?? ToDo Convert Double to Int
   fVal = (fVal * fVal);
 #if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
-  fVal = (Float)( fVal + getPic()->getTexDqpAccordingToDepthOffset() * 32); // add offset, if offset is negative than objects in front will have smaller QP than originaly - quality in front will be increased and in bacground will be decreased
-  fVal = (Float)( fVal * getPic()->getTexDqpAccordingToDepthMul()); // 
+  fVal = (Double)( fVal + getPic()->getTexDqpAccordingToDepthOffset() * 32); // add offset, if offset is negative than objects in front will have smaller QP than originaly - quality in front will be increased and in bacground will be decreased
+  fVal = (Double)( fVal * getPic()->getTexDqpAccordingToDepthMul()); // 
 #else 
-  fVal = (Float)( fVal + POZNAN_TEXTURE_TU_DELTA_QP_OFFSET * 32); // add offset, if offset is negative objects in front will have smaller QP than in original approach - quality in front will be increased and in bacground will be decreased
-  fVal = (Float)( fVal * POZNAN_TEXTURE_TU_DELTA_QP_MUL); // 
+  fVal = (Double)( fVal + POZNAN_TEXTURE_TU_DELTA_QP_OFFSET * 32); // add offset, if offset is negative objects in front will have smaller QP than in original approach - quality in front will be increased and in bacground will be decreased
+  fVal = (Double)( fVal * POZNAN_TEXTURE_TU_DELTA_QP_MUL); // 
 #endif
   return (Int)fVal >> 5;
 }
@@ -5033,7 +5033,20 @@ Int TComDataCU::CuQpIncrementFunction(Pel uiBlockMax)
 #endif
    UInt iCuAddr = getAddr();
    //TComPic * pcDepthPic = getPic()->getDepthPic();
+#if FLEX_CODING_ORDER
+   TComPicYuv * pcDepthPicYUV = NULL;
+   // if depth map reconstruction picture is available use it Use synthesis picture otherwise.
+   if(getPic()->getSlice(0)->getDepthPic() != NULL && getPic()->getSlice(0)->getDepthPic()->getReconMark())
+   {
+     pcDepthPicYUV = getPic()->getSlice(0)->getDepthPic()->getPicYuvRec();
+   }
+   else
+   {
+      pcDepthPicYUV = getPic()->getPicYuvSynthDepth();
+   }
+#else
    TComPicYuv * pcDepthPicYUV = getPic()->getPicYuvSynthDepth();
+#endif
    if(pcDepthPicYUV /*pcDepthPic*/ == NULL)
    {
     char errortext[200];
@@ -5054,8 +5067,8 @@ Int TComDataCU::CuQpIncrementFunction(Pel uiBlockMax)
      uiDepthLumaTransformBlockMax = getDepthLumaCodingBlockMax( pcDepthPicYUV /*rpcCUDepth*/, iCuAddr, uiPartIdx );
    }
 #if POZNAN_NONLINEAR_DEPTH
-   TComNonlinearDepthBackward cNonlinearDepthBwd(getSlice()->getSPS()->getDepthPower(), g_uiBitIncrement, g_uiBitIncrement); 
-   uiDepthLumaTransformBlockMax = (Pel)( cNonlinearDepthBwd(uiDepthLumaTransformBlockMax) + 0.5);
+   if( getSlice()->getSPS()->getUseNonlinearDepth() )
+    uiDepthLumaTransformBlockMax = (Pel)( getSlice()->getSPS()->getNonlinearDepthModel().BackwardI(RemoveBitIncrement(uiDepthLumaTransformBlockMax), 1<<g_uiBitIncrement ) ) ;
 #endif
    Int iDeltaQP = CuQpIncrementFunction(uiDepthLumaTransformBlockMax);
 #if POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_CU_ROW
