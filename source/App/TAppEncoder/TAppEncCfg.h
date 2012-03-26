@@ -80,6 +80,11 @@ protected:
   Int       m_iNumberOfViews;                                ///< number Views to Encode
   Bool      m_bUsingDepthMaps ;
 
+#if FLEX_CODING_ORDER
+  char*		m_pchMVCJointCodingOrder;		///<  texture-depth coding order
+  Bool		m_b3DVFlexOrder;		///<  flexible coding order flag
+#endif
+
 
   // coding structure
 #if DCM_DECODING_REFRESH

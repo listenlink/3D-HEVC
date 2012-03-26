@@ -144,6 +144,9 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseVSO                       ( false ); //GT: might be enabled later for VSO Mode 4
 #endif
 
+#if BITSTREAM_EXTRACTION
+    m_acTEncTopList[iViewIdx]->setLayerId                      ( ( (UInt)iViewIdx ) << 1 );
+#endif
     m_acTEncTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
     m_acTEncTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
     m_acTEncTopList[iViewIdx]->setIsDepth                      ( false );
@@ -234,6 +237,29 @@ Void TAppEncTop::xInitLibCfg()
 
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
     {
+#if FLEX_CODING_ORDER
+      // Detect whether depth comes before than texture for this view
+      Bool isDepthFirst = false;
+      if ( m_b3DVFlexOrder )
+      {
+        for ( Int ii=1; ii<12; ii+=2 )
+        {
+          Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+          if ( iViewIdxCfg == iViewIdx )
+          {
+            if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+            {
+              isDepthFirst = true;
+            }
+            else
+            {
+              assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+            }
+            break;
+          }
+        }
+      }
+#endif
       m_iDepthFrameRcvdVector.push_back(0) ;
       m_acTEncDepthTopList.push_back(new TEncTop);
 
@@ -313,6 +339,9 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setVSOMode                      ( m_uiVSOMode );
 #endif
 
+#if BITSTREAM_EXTRACTION
+      m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( ( ( (UInt)iViewIdx ) << 1 ) + 1 );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
       m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
@@ -353,6 +382,9 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
       m_acTEncDepthTopList[iViewIdx]->setUseDMM( m_bUseDMM );
 #endif
+#if FLEX_CODING_ORDER && HHI_DMM_PRED_TEX
+      m_acTEncDepthTopList[iViewIdx]->setUseDMM34( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseDMM );
+#endif
 #if CONSTRAINED_INTRA_PRED
       m_acTEncDepthTopList[iViewIdx]->setUseConstrainedIntraPred      ( m_bUseConstrainedIntraPred );
 #endif
@@ -379,9 +411,13 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
 #endif
 #if HHI_MPI
+#if FLEX_CODING_ORDER
+      m_acTEncDepthTopList[iViewIdx]->setUseMVI( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseMVI );
+#else
       m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
 #endif
-
+#endif
+      
       m_acTEncDepthTopList[iViewIdx]->setPictureDigestEnabled(m_pictureDigestEnabled);
 
       m_acTEncDepthTopList[iViewIdx]->setQpChangeFrame( m_iQpChangeFrame );
@@ -590,7 +626,6 @@ Void TAppEncTop::encode()
   Bool  bAllContinueReadingDepthPics = false;
   std::vector<Bool>  bDepthEos ;
   std::vector<Bool>  bContinueReadingDepthPics ;
-
   for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
   {
     bEos.push_back( false ) ;
@@ -688,6 +723,64 @@ Void TAppEncTop::encode()
     }
 #endif
 
+#if FLEX_CODING_ORDER
+    if (m_b3DVFlexOrder)
+    {
+      Int i=0;
+      Int iViewIdx = 0;
+      bool bThisViewContinueReadingPics = false;
+      bool bThisViewContinueReadingDepthPics = false;
+      Int iNumberofDepthViews = m_bUsingDepthMaps?m_iNumberOfViews:0;
+      for(Int j=0; j < (m_iNumberOfViews+ iNumberofDepthViews); j++ )     // Start encoding
+      {
+        if (m_pchMVCJointCodingOrder[i]=='T')
+        {
+          i++;
+          assert(isdigit(m_pchMVCJointCodingOrder[i]));
+          iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+          bThisViewContinueReadingPics = bContinueReadingPics[iViewIdx];
+          m_acTEncTopList[iViewIdx]->encode( bEos[iViewIdx], m_cListPicYuvRecMap[iViewIdx], pcBitstream, bThisViewContinueReadingPics );
+          bContinueReadingPics[iViewIdx]=bThisViewContinueReadingPics;
+          bAllContinueReadingPics = bAllContinueReadingPics||bContinueReadingPics[iViewIdx];
+
+          if(pcBitstream->getNumberOfWrittenBits()!=0)
+          {
+            m_cTVideoIOBitsFile.writeBits( pcBitstream );
+          }
+          pcBitstream->resetBits(); //GT: also done later in ....
+          pcBitstream->rewindStreamPacket( );
+          // write bistream to file if necessary
+          xWriteOutput( iViewIdx ); //GT: Write Reconfiles (when gop is complete?)
+          i++;
+        }
+        else if ( m_pchMVCJointCodingOrder[i] == 'D')
+        {
+          i++;
+          if( m_bUsingDepthMaps )
+          {
+            assert(isdigit(m_pchMVCJointCodingOrder[i]));
+            iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+            bThisViewContinueReadingDepthPics = bContinueReadingDepthPics[iViewIdx];
+            m_acTEncDepthTopList[iViewIdx]->encode( bDepthEos[iViewIdx], m_cListPicYuvDepthRecMap[iViewIdx], pcBitstream, bThisViewContinueReadingDepthPics );
+            bContinueReadingDepthPics[iViewIdx]=bThisViewContinueReadingDepthPics;
+
+            bAllContinueReadingDepthPics = bAllContinueReadingDepthPics||bContinueReadingDepthPics[iViewIdx];
+            if(pcBitstream->getNumberOfWrittenBits()!=0)
+            {
+              m_cTVideoIOBitsFile.writeBits( pcBitstream );
+            }
+            pcBitstream->resetBits();
+            pcBitstream->rewindStreamPacket( );
+            // write bistream to file if necessary
+            xWriteOutput( iViewIdx, true );
+            i++;
+          }
+        }
+      }
+    }
+    else
+    {
+#endif
     //GT: Encode
     for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )     // Start encoding
     {
@@ -722,7 +815,9 @@ Void TAppEncTop::encode()
         xWriteOutput( iViewIdx, true );
       }
     }
-
+#if FLEX_CODING_ORDER
+	}
+#endif
     // delete extra picture buffers
     if( bCurrPocCoded )
     {

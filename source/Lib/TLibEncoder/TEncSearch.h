@@ -206,7 +206,12 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool predIntraLumaDMMAvailable( UInt         uiMode, 
                                   UInt         uiWidth, 
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+                                  UInt         uiHeight, 
+                                  Bool         bDMMAvailable34 );
+#else
                                   UInt         uiHeight );
+#endif
 #endif
 #if HHI_DMM_WEDGE_INTRA
   Void findWedgeFullMinDist     ( TComDataCU*  pcCU, 

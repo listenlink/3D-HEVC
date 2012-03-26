@@ -66,7 +66,11 @@ public:
   virtual Void  resetEntropy          (TComSlice* pcSlice)                = 0;
   virtual Void  setBitstream          ( TComBitstream* p )  = 0;
 
+#if BITSTREAM_EXTRACTION
+  virtual Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId )  = 0;
+#else
   virtual Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag )  = 0;
+#endif
 
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
@@ -146,9 +150,13 @@ public:
   Void    setBitstream                ( TComBitstream* p )      { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
 
+#if BITSTREAM_EXTRACTION
+  Void    decodeNalUnitHeader         ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId )
+                                                                { m_pcEntropyDecoderIf->parseNalUnitHeader( eNalUnitType, TemporalId, uiLayerId ); }
+#else
   Void    decodeNalUnitHeader         ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag )
                                                                 { m_pcEntropyDecoderIf->parseNalUnitHeader(eNalUnitType, TemporalId, bOutputFlag ); }
-
+#endif
 
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
   Void    decodePPS                   ( TComPPS* pcPPS     )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
