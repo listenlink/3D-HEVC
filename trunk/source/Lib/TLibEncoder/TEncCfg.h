@@ -158,6 +158,9 @@ protected:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool m_bUseDMM;
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool m_bUseDMM34;
+#endif
 #if HHI_MPI
   Bool m_bUseMVI;
 #endif
@@ -183,6 +186,9 @@ protected:
   TEncSeqStructure m_cSequenceStructure;
   //std::vector<int>  m_aiLayerQPOffset;
 
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
   UInt        m_uiViewId;
   Int         m_iViewOrderIdx;
   Bool        m_bIsDepth;
@@ -234,6 +240,10 @@ public:
   Void      setGOPSize                      ( Int   i )      { m_iGOPSize = i; }
   Void      setRateGOPSize                  ( Int   i )      { m_iRateGOPSize = i; }
 
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId                      ( UInt  u )      { m_uiLayerId              = u; }
+  UInt      getLayerId                      ( )              { return m_uiLayerId; }
+#endif
   Void      setViewId                       ( UInt  u )      { m_uiViewId               = u; }
   Void      setViewOrderIdx                 ( Int   i )      { m_iViewOrderIdx          = i; }
   Void      setIsDepth                      ( Bool  b )      { m_bIsDepth               = b; }
@@ -423,7 +433,10 @@ public:
   Void setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool getUseDMM()        { return m_bUseDMM; }
 #endif
-
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Void setUseDMM34( Bool b) { m_bUseDMM34 = b;    }
+  Bool getUseDMM34()        { return m_bUseDMM34; }
+#endif
 #if LM_CHROMA
   Bool getUseLMChroma                       ()      { return m_bUseLMChroma;        }
   Void setUseLMChroma                       ( Bool b ) { m_bUseLMChroma  = b;       }

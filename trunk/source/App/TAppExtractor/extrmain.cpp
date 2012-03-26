@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
  * Copyright (c) 2010-2011, ISO/IEC
  * All rights reserved.
@@ -31,90 +31,56 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file     extrmain.cpp
+    \brief    Extractor application main
+*/
 
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include "../../Lib/TLibCommon/CommonDef.h"
+#include "TAppExtrTop.h"
 
-#pragma once
+// ====================================================================================================================
+// Main function
+// ====================================================================================================================
 
-/**
- * Abstract class representing an SEI message with lightweight RTTI.
- */
-class SEI
+int main(int argc, char* argv[])
 {
-#if BITSTREAM_EXTRACTION
-protected:
-  UInt m_uiLayerId;
-#endif
+  TAppExtrTop  cTAppExtrTop;
 
-public:
-  enum PayloadType {
-    USER_DATA_UNREGISTERED = 5,
-    PICTURE_DIGEST = 256,
-  };
-  
-  SEI() {}
-  virtual ~SEI() {}
-  
-  virtual PayloadType payloadType() const = 0;
+  // print information
+  fprintf( stdout, "\n" );
+  fprintf( stdout, "HM %s based Multiview Video plus Depth Coder: Extractor Version [%s]", HM_VERSION, NV_VERSION );
+  fprintf( stdout, NVM_ONOS );
+  fprintf( stdout, NVM_COMPILEDBY );
+  fprintf( stdout, NVM_BITS );
+  fprintf( stdout, "\n" );
 
-#if BITSTREAM_EXTRACTION
-  Void      setLayerId              ( UInt u )       { m_uiLayerId = u; }
-  UInt      getLayerId              ()         const { return m_uiLayerId; }
-#endif
-};
-
-class SEIuserDataUnregistered : public SEI
-{
-public:
-  PayloadType payloadType() const { return USER_DATA_UNREGISTERED; }
-
-  SEIuserDataUnregistered()
-    : userData(0)
-    {}
-
-  virtual ~SEIuserDataUnregistered()
+  // parse configuration
+  if(!cTAppExtrTop.parseCfg( argc, argv ))
   {
-    delete userData;
+    return EXIT_FAILURE;
   }
 
-  unsigned char uuid_iso_iec_11578[16];
-  unsigned userDataLength;
-  unsigned char *userData;
-};
+  // create application extractor class
+  cTAppExtrTop.create();
 
-class SEIpictureDigest : public SEI
-{
-public:
-  PayloadType payloadType() const { return PICTURE_DIGEST; }
+  // starting time
+  double dResult;
+  long lBefore = clock();
 
-  SEIpictureDigest() {}
-  virtual ~SEIpictureDigest() {}
-  
-  enum Method {
-    MD5,
-    RESERVED,
-  } method;
+  // call extraction function
+  cTAppExtrTop.extract();
 
-  unsigned char digest[16];
-};
+  // ending time
+  dResult = (double)(clock()-lBefore) / CLOCKS_PER_SEC;
+  printf("\n Total Time: %12.3f sec.\n", dResult);
 
-/**
- * A structure to collate all SEI messages.  This ought to be replaced
- * with a list of std::list<SEI*>.  However, since there is only one
- * user of the SEI framework, this will do initially */
-class SEImessages
-{
-public:
-  SEImessages()
-    : user_data_unregistered(0)
-    , picture_digest(0)
-    {}
+  // destroy application extractor class
+  cTAppExtrTop.destroy();
 
-  ~SEImessages()
-  {
-    delete user_data_unregistered;
-    delete picture_digest;
-  }
+  return EXIT_SUCCESS;
+}
 
-  SEIuserDataUnregistered* user_data_unregistered;
-  SEIpictureDigest* picture_digest;
-};
+

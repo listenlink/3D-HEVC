@@ -109,6 +109,12 @@ TAppEncCfg::~TAppEncCfg()
   if (m_pchBitstreamFile != NULL)
     free (m_pchBitstreamFile) ;
 
+#if FLEX_CODING_ORDER
+  if (m_pchMVCJointCodingOrder != NULL)
+  {
+	  free(m_pchMVCJointCodingOrder) ;
+  }
+#endif
   for(Int i = 0; i< m_pchDepthReconFileList.size(); i++ )
   {
     if ( m_pchDepthReconFileList[i] != NULL )
@@ -152,6 +158,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_BitstreamFile;
   string cfg_ReconFile;
   string cfg_dQPFile;
+
+#if FLEX_CODING_ORDER
+  string cfg_JointCodingOrdering;
+#endif
+
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
@@ -190,6 +201,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
 
+#if FLEX_CODING_ORDER
+  ("FCO",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
+  ("CodingOrder",   		cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
+#endif
 
   /* Unit definition parameters */
   ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
@@ -378,6 +393,41 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
 
+
+#if FLEX_CODING_ORDER
+  m_pchMVCJointCodingOrder	= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
+  // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
+
+#if HHI_VSO && DISABLE_FCO_FOR_VSO
+  Bool depthComesFirst = false;
+  if ( m_b3DVFlexOrder )
+  {
+    for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+    {
+      for ( Int ii=1; ii<12; ii+=2 )
+      {
+        Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+        if ( iViewIdxCfg == iViewIdx )
+        {
+          if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+          {
+            depthComesFirst = true;
+            break;
+          }
+          else
+          {
+            assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+          }
+        }
+      }
+    }
+  }
+  if (depthComesFirst)
+  {
+    m_bUseVSO = false;		
+  }
+#endif
+#endif
 
 // GT FIX
   if ( m_bUsingDepthMaps )

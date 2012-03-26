@@ -75,6 +75,9 @@ private:
   UInt        m_uiMinTrDepth;
   UInt        m_uiMaxTrDepth;
 
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
   UInt        m_uiViewId;
   Int         m_iViewOrderIdx;
   Bool        m_bDepth;
@@ -132,6 +135,9 @@ private:
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool  m_bUseDMM;
+#endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool  m_bUseDMM34;
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -229,7 +235,10 @@ public:
   Bool getUseDMM()         { return m_bUseDMM; }
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
-
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool getUseDMM34()         { return m_bUseDMM34; }
+  Void setUseDMM34( Bool b ) { m_bUseDMM34 = b;    }
+#endif
 
 #if DCM_COMB_LIST
   Void setUseLComb    (Bool b)   { m_bUseLComb = b;         }
@@ -304,6 +313,11 @@ public:
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
 #endif
+
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId              ( UInt u ) { m_uiLayerId = u; }
+  UInt      getLayerId              ()         { return m_uiLayerId; }
+#endif
 };
 
 /// PPS class
@@ -319,6 +333,9 @@ private:
 #endif
   UInt        m_uiPPSId;
   UInt        m_uiSPSId;
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
 
 public:
   TComPPS();
@@ -339,6 +356,11 @@ public:
 
   Void setUseWP                     ( Bool b )  { m_bUseWeightPred = b;       }
   Void setWPBiPredIdc               ( UInt u )  { m_uiBiPredIdc = u;          }
+#endif
+
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId              ( UInt u ) { m_uiLayerId = u; }
+  UInt      getLayerId              ()         { return m_uiLayerId; }
 #endif
 };
 
@@ -369,6 +391,9 @@ private:
   //  Bitstream writing
   UInt        m_uiPPSId;
   Int         m_iPOC;
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
 #if SONY_COLPIC_AVAILABILITY
   Int         m_iViewOrderIdx;
 #endif
@@ -533,6 +558,11 @@ public:
 
   Void      setLambda( Double d ) { m_dLambda = d; }
   Double    getLambda() { return m_dLambda;        }
+
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId( UInt u )                        { m_uiLayerId = u; }
+  UInt      getLayerId()                                { return m_uiLayerId; }
+#endif
 
   Void      setViewIdx(Int i)                           { m_iViewIdx = i; }
   Int       getViewIdx()                                { return m_iViewIdx; }

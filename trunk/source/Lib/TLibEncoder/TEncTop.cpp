@@ -286,8 +286,11 @@ Void TEncTop::encode( bool bEos, std::map<PicOrderCnt, TComPicYuv*>& rcMapPicYuv
   TComPic*        pcPic ;
 
   bool bSomethingCoded = false ;
-
+#if FLEX_CODING_ORDER  
+  if (TEncTop::m_bPicWaitingForCoding )
+#else
   if (m_bPicWaitingForCoding )
+#endif
   {
     std::map<Int, TComPic*>::iterator cIter = m_acInputPicMap.find( (Int)m_cSeqIter.getPoc() );
     const bool bPictureAvailable = cIter != m_acInputPicMap.end();
@@ -542,6 +545,10 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
 
+#if BITSTREAM_EXTRACTION
+  m_cSPS.setLayerId( m_uiLayerId );
+#endif
+
   if( m_bIsDepth )
   {
     m_cSPS.initMultiviewSPSDepth    ( m_uiViewId, m_iViewOrderIdx );
@@ -615,6 +622,9 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  m_cSPS.setUseDMM34( m_bUseDMM34 );
+#endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif
@@ -625,6 +635,10 @@ Void TEncTop::xInitSPS()
 #if CONSTRAINED_INTRA_PRED
 Void TEncTop::xInitPPS()
 {
+#if BITSTREAM_EXTRACTION
+  m_cPPS.setLayerId( m_uiLayerId );
+#endif
+
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   m_cPPS.setPPSId( ( m_uiViewId << 1 ) + ( m_bIsDepth ? 1 : 0 ) );
   m_cPPS.setSPSId( ( m_uiViewId << 1 ) + ( m_bIsDepth ? 1 : 0 ) );

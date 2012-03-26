@@ -39,8 +39,11 @@
 #define _TYPEDEF__
 
 
+#define BITSTREAM_EXTRACTION            1
+#define FLEX_CODING_ORDER               1
+#define DISABLE_FCO_FOR_VSO             0
 
-#define SONY_COLPIC_AVAILABILITY  		  1
+#define SONY_COLPIC_AVAILABILITY        1
 
 //>>>>> HHI 3DV tools >>>>>
 #define HHI_INTER_VIEW_MOTION_PRED      1   // inter-view motion parameter prediction
@@ -53,6 +56,7 @@
 #define HHI_VSO_COLOR_PLANES            1   // view synthesis optimization in color planes
 #define HHI_VSO_DIST_INT                1   // view synthesis optimization integer distorition in rdo process
 #define HHI_VSO_LS_TABLE                1   // table based lambda scaling
+#define HHI_VSO_PRINT_DIST              0   // print VSO distortion instead of depth distrotion
 
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE && !HHI_INTERVIEW_SKIP
   #error "HHI_INTERVIEW_SKIP_LAMBDA_SCALE cannot be enabled if HHI_INTERVIEW_SKIP is not"
@@ -327,6 +331,8 @@ enum MODE_IDX
 #error "E243_CORE_TRANSFORMS should be ON"
 #endif
 #endif
+
+
 
 // ====================================================================================================================
 // Basic type redefinition

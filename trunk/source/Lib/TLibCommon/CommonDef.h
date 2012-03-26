@@ -57,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "3.0rc2"                 ///< Current software version
-#define NV_VERSION        "0.3"                    ///< Current software version
+#define NV_VERSION        "0.4"                    ///< Current software version
 
 // ====================================================================================================================
 // Platform information

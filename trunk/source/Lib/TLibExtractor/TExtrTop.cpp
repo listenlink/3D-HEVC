@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
  * Copyright (c) 2010-2011, ISO/IEC
  * All rights reserved.
@@ -31,90 +31,73 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file     TExtrTop.cpp
+    \brief    extractor class
+*/
 
+#include "TExtrTop.h"
 
-#pragma once
-
-/**
- * Abstract class representing an SEI message with lightweight RTTI.
- */
-class SEI
+TExtrTop::TExtrTop()
 {
-#if BITSTREAM_EXTRACTION
-protected:
-  UInt m_uiLayerId;
-#endif
+}
 
-public:
-  enum PayloadType {
-    USER_DATA_UNREGISTERED = 5,
-    PICTURE_DIGEST = 256,
-  };
-  
-  SEI() {}
-  virtual ~SEI() {}
-  
-  virtual PayloadType payloadType() const = 0;
-
-#if BITSTREAM_EXTRACTION
-  Void      setLayerId              ( UInt u )       { m_uiLayerId = u; }
-  UInt      getLayerId              ()         const { return m_uiLayerId; }
-#endif
-};
-
-class SEIuserDataUnregistered : public SEI
+TExtrTop::~TExtrTop()
 {
-public:
-  PayloadType payloadType() const { return USER_DATA_UNREGISTERED; }
+}
 
-  SEIuserDataUnregistered()
-    : userData(0)
-    {}
+Void TExtrTop::create()
+{
+}
 
-  virtual ~SEIuserDataUnregistered()
+Void TExtrTop::destroy()
+{
+  m_acSPSBuffer.clear();
+}
+
+Void TExtrTop::init()
+{
+  m_cEntropyDecoder.init(&m_cPrediction);
+
+  m_acSPSBuffer.clear();
+}
+
+
+Bool TExtrTop::extract( TComBitstream* pcBitstream, std::set<UInt>& rsuiExtractLayerIds )
+{
+  // Initialize entropy decoder
+  m_cEntropyDecoder.setEntropyDecoder (&m_cCavlcDecoder);
+  m_cEntropyDecoder.setBitstream      (pcBitstream);
+  
+  NalUnitType eNalUnitType;
+  UInt uiTemporalId, uiLayerId;
+
+  m_cEntropyDecoder.decodeNalUnitHeader( eNalUnitType, uiTemporalId, uiLayerId );  
+
+  if ( eNalUnitType == NAL_UNIT_SPS )
   {
-    delete userData;
+     TComSPS cSPS;
+
+     m_cEntropyDecoder.decodeSPS( &cSPS );
+     cSPS.setLayerId( uiLayerId );
+
+     m_acSPSBuffer.push_back( cSPS );
   }
 
-  unsigned char uuid_iso_iec_11578[16];
-  unsigned userDataLength;
-  unsigned char *userData;
-};
+  return ( rsuiExtractLayerIds.find( uiLayerId ) != rsuiExtractLayerIds.end() );
+}
 
-class SEIpictureDigest : public SEI
+
+Void TExtrTop::dumpSpsInfo( std::ostream& rcSpsInfoHandle )
 {
-public:
-  PayloadType payloadType() const { return PICTURE_DIGEST; }
+  rcSpsInfoHandle << "NumSPS = " << m_acSPSBuffer.size() << std::endl;
 
-  SEIpictureDigest() {}
-  virtual ~SEIpictureDigest() {}
-  
-  enum Method {
-    MD5,
-    RESERVED,
-  } method;
-
-  unsigned char digest[16];
-};
-
-/**
- * A structure to collate all SEI messages.  This ought to be replaced
- * with a list of std::list<SEI*>.  However, since there is only one
- * user of the SEI framework, this will do initially */
-class SEImessages
-{
-public:
-  SEImessages()
-    : user_data_unregistered(0)
-    , picture_digest(0)
-    {}
-
-  ~SEImessages()
+  for( std::list<TComSPS>::iterator iterSPS = m_acSPSBuffer.begin(); iterSPS != m_acSPSBuffer.end(); iterSPS++ )
   {
-    delete user_data_unregistered;
-    delete picture_digest;
+     rcSpsInfoHandle << std::endl;
+     rcSpsInfoHandle << "layer_id = "              << iterSPS->getLayerId() << std::endl;
+     rcSpsInfoHandle << "seq_parameter_set_id = "  << iterSPS->getSPSId() << std::endl;
+     rcSpsInfoHandle << "view_id = "               << iterSPS->getViewId() << std::endl;
+     rcSpsInfoHandle << "view_order_idx = "        << iterSPS->getViewOrderIdx() << std::endl;
+     rcSpsInfoHandle << "is_depth = "              << iterSPS->isDepth() << std::endl;
   }
-
-  SEIuserDataUnregistered* user_data_unregistered;
-  SEIpictureDigest* picture_digest;
-};
+}

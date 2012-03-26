@@ -1,7 +1,7 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
  * Copyright (c) 2010-2011, ISO/IEC
  * All rights reserved.
@@ -31,90 +31,53 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/** \file     TAppExtrTop.h
+    \brief    Extractor application class (header)
+*/
 
+#ifndef __TAPPEXTRTOP__
+#define __TAPPEXTRTOP__
 
+#if _MSC_VER > 1000
 #pragma once
+#endif // _MSC_VER > 1000
 
-/**
- * Abstract class representing an SEI message with lightweight RTTI.
- */
-class SEI
+#include "../../Lib/TLibVideoIO/TVideoIOBits.h"
+#include "../../Lib/TLibCommon/TComBitStream.h"
+#include "../../Lib/TLibExtractor/TExtrTop.h"
+#include "TAppExtrCfg.h"
+
+// ====================================================================================================================
+// Class definition
+// ====================================================================================================================
+
+/// extractor application class
+class TAppExtrTop : public TAppExtrCfg
 {
-#if BITSTREAM_EXTRACTION
+private:
+  // class interface
+  TExtrTop                        m_cTExtrTop;                    ///< extractor class
+  TComBitstream*                  m_apcInputBitstream;            ///< bitstream class
+  TComBitstream*                  m_apcOutputBitstream;           ///< bitstream class
+  TVideoIOBitsStartCode           m_cTVideoIOInputBitstreamFile;  ///< file I/O class
+  TVideoIOBitsStartCode           m_cTVideoIOOutputBitstreamFile; ///< file I/O class
+  std::fstream                    m_cSpsInfoFileHandle;           ///< file handle
+
+public:
+  TAppExtrTop();
+  virtual ~TAppExtrTop() {}
+  
+  Void  create                     (); ///< create internal members
+  Void  destroy                    (); ///< destroy internal members
+  Void  extract                    (); ///< main extraction function
+  
 protected:
-  UInt m_uiLayerId;
+  Void  xCreateExtrLib             (); ///< create internal classes
+  Void  xDestroyExtrLib            (); ///< destroy internal classes
+  Void  xInitExtrLib               (); ///< initialize extractor class
+
+  Void  xCopyInputPacketIntoOutput ();
+};
+
 #endif
 
-public:
-  enum PayloadType {
-    USER_DATA_UNREGISTERED = 5,
-    PICTURE_DIGEST = 256,
-  };
-  
-  SEI() {}
-  virtual ~SEI() {}
-  
-  virtual PayloadType payloadType() const = 0;
-
-#if BITSTREAM_EXTRACTION
-  Void      setLayerId              ( UInt u )       { m_uiLayerId = u; }
-  UInt      getLayerId              ()         const { return m_uiLayerId; }
-#endif
-};
-
-class SEIuserDataUnregistered : public SEI
-{
-public:
-  PayloadType payloadType() const { return USER_DATA_UNREGISTERED; }
-
-  SEIuserDataUnregistered()
-    : userData(0)
-    {}
-
-  virtual ~SEIuserDataUnregistered()
-  {
-    delete userData;
-  }
-
-  unsigned char uuid_iso_iec_11578[16];
-  unsigned userDataLength;
-  unsigned char *userData;
-};
-
-class SEIpictureDigest : public SEI
-{
-public:
-  PayloadType payloadType() const { return PICTURE_DIGEST; }
-
-  SEIpictureDigest() {}
-  virtual ~SEIpictureDigest() {}
-  
-  enum Method {
-    MD5,
-    RESERVED,
-  } method;
-
-  unsigned char digest[16];
-};
-
-/**
- * A structure to collate all SEI messages.  This ought to be replaced
- * with a list of std::list<SEI*>.  However, since there is only one
- * user of the SEI framework, this will do initially */
-class SEImessages
-{
-public:
-  SEImessages()
-    : user_data_unregistered(0)
-    , picture_digest(0)
-    {}
-
-  ~SEImessages()
-  {
-    delete user_data_unregistered;
-    delete picture_digest;
-  }
-
-  SEIuserDataUnregistered* user_data_unregistered;
-  SEIpictureDigest* picture_digest;
-};
