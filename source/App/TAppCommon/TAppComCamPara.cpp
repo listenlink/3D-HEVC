@@ -876,32 +876,32 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
       radShiftParams[ uiSourceView][ uiTargetView ][ 0 ] = dScale;
       radShiftParams[ uiSourceView][ uiTargetView ][ 1 ] = dOffset;
 
-#if POZNAN_NONLINEAR_DEPTH
-      TComNonlinearDepthBackward cNonlinearDepthBwd(m_fDepthPower, (POZNAN_LUT_INCREASED_PRECISION) ? g_uiBitIncrement : 0, (POZNAN_LUT_INCREASED_PRECISION) ? g_uiBitIncrement : 0);
-#endif
-
       for( UInt uiDepthValue = 0; uiDepthValue < SizeOfLUT; uiDepthValue++ )
       {
-        Double  dDepthValue = (Double)uiDepthValue;
-        Int64   iDepthValue = (Int64)uiDepthValue;
-#if POZNAN_NONLINEAR_DEPTH
-        dDepthValue = cNonlinearDepthBwd(dDepthValue);
-        iDepthValue = (Int64)(dDepthValue+0.5);
-#endif
-#if POZNAN_LUT_INCREASED_PRECISION
-        dDepthValue /= (1<<g_uiBitIncrement);
-#endif
         // real-valued look-up tables
-
-        Double  dShiftLuma      = ( dDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#if POZNAN_NONLINEAR_DEPTH
+        Double  dShiftLuma;
+        if(m_bUseNonlinearDepth)
+          dShiftLuma      = ( m_cNonlinearDepthModel.BackwardD((Double)uiDepthValue, dScale) + dOffset ) * Double( 1 << m_iLog2Precision );
+        else
+          dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#else
+        Double  dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#endif
         Double  dShiftChroma    = dShiftLuma / 2;
         radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = dShiftLuma;
         radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = dShiftChroma;
 
         // integer-valued look-up tables
-        Int64   iTempScale      = iDepthValue * iScale;
-#if POZNAN_LUT_INCREASED_PRECISION
-        iTempScale >>= g_uiBitIncrement;
+#if POZNAN_NONLINEAR_DEPTH
+        Int64   iTempScale;
+        if(m_bUseNonlinearDepth)
+          iTempScale      = (Int64)m_cNonlinearDepthModel.BackwardI(uiDepthValue, iScale);
+        else
+          iTempScale      = (Int64)uiDepthValue * iScale;
+
+#else
+        Int64   iTempScale      = (Int64)uiDepthValue * iScale;
 #endif
         Int64   iTestScale      = ( iTempScale + iOffset       );   // for checking accuracy of camera parameters
         Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
@@ -1253,7 +1253,7 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
                       std::vector<Int>* paiSynthViewNumbers,
                       Int    iLog2Precision
 #if POZNAN_NONLINEAR_DEPTH
-                      ,Float fDepthPower
+                      ,TComNonlinearDepthModel* pcNonlinearDepthModel
 #endif
                       )
 {
@@ -1265,7 +1265,9 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
   m_iLog2Precision          = iLog2Precision;
 
 #if POZNAN_NONLINEAR_DEPTH
-  m_fDepthPower             = fDepthPower;
+  m_bUseNonlinearDepth = (pcNonlinearDepthModel != NULL) ? true : false;
+  if(pcNonlinearDepthModel != NULL)
+    m_cNonlinearDepthModel    = *pcNonlinearDepthModel;
 #endif
 
   xReadCameraParameterFile( pchCfgFileName );

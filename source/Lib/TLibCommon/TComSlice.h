@@ -138,6 +138,9 @@ private:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool  m_bUseDMM;
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool  m_bUseDMM34;
+#endif
 
 #if DEPTH_MAP_GENERATION
   UInt  m_uiPredDepthMapGeneration;
@@ -168,7 +171,8 @@ private:
 #endif
 
 #if POZNAN_NONLINEAR_DEPTH
-  Float  m_fDepthPower;
+  TComNonlinearDepthModel m_cNonlinearDepthModel;   
+  Bool  m_bUseNonlinearDepth;
 #endif
 
 #if POZNAN_MP
@@ -257,7 +261,10 @@ public:
   Bool getUseDMM()         { return m_bUseDMM; }
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
-
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool getUseDMM34()         { return m_bUseDMM34; }
+  Void setUseDMM34( Bool b ) { m_bUseDMM34 = b;    }
+#endif
 
 #if DCM_COMB_LIST
   Void setUseLComb    (Bool b)   { m_bUseLComb = b;         }
@@ -294,7 +301,7 @@ public:
 #if MTK_SAO
   Void setUseSAO                  (Bool bVal)  {m_bUseSAO = bVal;}
 #if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU //todo fix SAO
-  Bool getUseSAO     ()         { return (getViewId()>0)?false:m_bUseSAO;}
+  Bool getUseSAO     ()           { return (getUseCUSkip() && getViewId()>0)?false:m_bUseSAO;}
 #else
   Bool getUseSAO                  ()           {return m_bUseSAO;}
 #endif
@@ -353,10 +360,10 @@ public:
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-  inline Void    setDepthPower(Float p)   {m_fDepthPower = p;}
-  inline Float	 getDepthPower()          {return m_fDepthPower;}
-#else
-  inline Float	 getDepthPower()          {return 1.0f;}
+  inline Void                            setNonlinearDepthModel( TComNonlinearDepthModel &rp ){ m_cNonlinearDepthModel = rp; }
+  inline TComNonlinearDepthModel&        getNonlinearDepthModel()                             { return m_cNonlinearDepthModel; }
+  Bool                    getUseNonlinearDepth()                                              { return m_bUseNonlinearDepth; }
+  Void                    setUseNonlinearDepth( Bool bVal )                                   { m_bUseNonlinearDepth = bVal; }
 #endif
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
   Void setUseTexDqpAccordingToDepth    (Bool bVal)  {m_bUseTexDqpAccordingToDepth = bVal;}
@@ -458,6 +465,7 @@ private:
   Int         m_aiRefPOCList  [2][MAX_NUM_REF];
   Int         m_iDepth;
   TComPic*    m_pcTexturePic;
+  TComPic*    m_pcDepthPic;
 
   // referenced slice?
   Bool        m_bRefenced;
@@ -663,7 +671,9 @@ public:
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
 
   Void setTexturePic( TComPic *pcTexturePic ) { m_pcTexturePic = pcTexturePic; }
+  Void setDepthPic  ( TComPic *pcDepthPic   ) { m_pcDepthPic   = pcDepthPic;   }
   TComPic *getTexturePic() const { return m_pcTexturePic; }
+  TComPic *getDepthPic()   const { return m_pcDepthPic; }
 
 #ifdef WEIGHT_PRED
   Void  setWpScaling( wpScalingParam  wp[2][MAX_NUM_REF][3] ) { memcpy(m_weightPredTable, wp, sizeof(wpScalingParam)*2*MAX_NUM_REF*3); }

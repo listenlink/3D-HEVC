@@ -1638,6 +1638,11 @@ Void TComPrediction::motionCompensation_DBMP ( TComDataCU* pcCU, TComYuv* pcYuvP
   Int		  ref_frame0_idx_2nd, ref_frame1_idx_2nd;
   TComMv	  mv0_2nd,mv1_2nd;
 
+#if DEPTH_MAP_GENERATION
+  Int		  ref_frame0_idx_1st, ref_frame1_idx_1st;
+  TComMv	  mv0_1st,mv1_1st;
+#endif
+
   Pel* piDstCb;
   Pel* piDstCr;
   Pel aiUTab[MAX_CU_SIZE];
@@ -1683,6 +1688,13 @@ Void TComPrediction::motionCompensation_DBMP ( TComDataCU* pcCU, TComYuv* pcYuvP
     {
       iWidth  >>= uiSubSampExpX;
       iHeight >>= uiSubSampExpY;
+
+      //save orginal motion field of CU (it will be overwritten during the motion compensation)
+      ref_frame0_idx_1st = pcCU->getCUMvField(REF_PIC_LIST_0)->getRefIdx(uiPartAddr);
+      mv0_1st = pcCU->getCUMvField( REF_PIC_LIST_0 )->getMv( uiPartAddr );
+
+      ref_frame1_idx_1st = pcCU->getCUMvField(REF_PIC_LIST_1)->getRefIdx(uiPartAddr);
+      mv1_1st = pcCU->getCUMvField( REF_PIC_LIST_1 )->getMv( uiPartAddr );
     }
 #endif
 
@@ -1803,11 +1815,11 @@ Void TComPrediction::motionCompensation_DBMP ( TComDataCU* pcCU, TComYuv* pcYuvP
 	}
 
 	//set motion data representing CU with DBMP 
+	PartSize ePartSize = pcCU->getPartitionSize( uiPartAddr ); //PartSize ePartSize = pcCU->getPartitionSize( 0 );
 #if DEPTH_MAP_GENERATION
 	if( !bPrdDepthMap )
 #endif
 	{
-		PartSize ePartSize = pcCU->getPartitionSize( uiPartAddr ); //PartSize ePartSize = pcCU->getPartitionSize( 0 );
 #if POZNAN_DBMP_CALC_PRED_DATA
 		pcMP->xCalcDBMPPredData(uiPointCnt, ref_frame0_idx, mv0, ref_frame1_idx, mv1);
 		
@@ -1818,6 +1830,14 @@ Void TComPrediction::motionCompensation_DBMP ( TComDataCU* pcCU, TComYuv* pcYuvP
 		pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( mv1_2nd, ref_frame1_idx_2nd, ePartSize, uiPartAddr, iPartIdx, 0 );
 #endif
 	}
+
+#if DEPTH_MAP_GENERATION
+	if( bPrdDepthMap )
+	{
+		pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( mv0_1st, ref_frame0_idx_1st, ePartSize, uiPartAddr, iPartIdx, 0 );
+		pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( mv1_1st, ref_frame1_idx_1st, ePartSize, uiPartAddr, iPartIdx, 0 );
+	}
+#endif
 
 	if ( iPartIdxOrg >= 0 ) break;
   }

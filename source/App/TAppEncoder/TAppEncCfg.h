@@ -80,6 +80,11 @@ protected:
   Int       m_iNumberOfViews;                                ///< number Views to Encode
   Bool      m_bUsingDepthMaps ;
 
+#if FLEX_CODING_ORDER
+  char*		m_pchMVCJointCodingOrder;		///<  texture-depth coding order
+  Bool		m_b3DVFlexOrder;		///<  flexible coding order flag
+#endif
+
 
   // coding structure
 #if DCM_DECODING_REFRESH
@@ -289,7 +294,10 @@ protected:
 #endif
 
 #if POZNAN_NONLINEAR_DEPTH
-  Double    m_fDepthPower;									  ///< Depth power value
+  std::vector<Int>            m_aiNonlinearDepthModel;
+  TComNonlinearDepthModel     m_cNonlinearDepthModel;
+  Int                         m_iNonlinearDepthThreshold;
+  Bool                        m_bUseNonlinearDepth;
 #endif
 
 public:

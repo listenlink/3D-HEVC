@@ -456,10 +456,13 @@ Void TComPicYuv::xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int
   }
 }
 #if POZNAN_NONLINEAR_DEPTH
-Void TComPicYuv::nonlinearDepthForward(TComPicYuv *pcPicDst, Float p)
+Void TComPicYuv::nonlinearDepthForward(TComPicYuv *pcPicDst, TComNonlinearDepthModel &rcNonlinearDepthModel)
 {
-  Int		x,y;
-  TComNonlinearDepthForward cNonlinearDepthFwd(p, g_uiBitIncrement, g_uiBitIncrement);
+  Int		x,y,i;
+  Int   LUT[256];
+
+  for (i=0; i<256; ++i)
+    LUT[i] = (Int)rcNonlinearDepthModel.ForwardI(i, 1<<g_uiBitIncrement);
 
   // Luma
   Pel* pPelSrc = getLumaAddr();
@@ -468,7 +471,7 @@ Void TComPicYuv::nonlinearDepthForward(TComPicYuv *pcPicDst, Float p)
 	{
     for(x=0; x<m_iPicWidth; x++)
     {
-      pPelDst[x] = (Pel)( cNonlinearDepthFwd(pPelSrc[x]) + 0.5);
+      pPelDst[x] = LUT[RemoveBitIncrement(pPelSrc[x])];
     }
     pPelDst += pcPicDst->getStride();
     pPelSrc += getStride();
@@ -477,10 +480,14 @@ Void TComPicYuv::nonlinearDepthForward(TComPicYuv *pcPicDst, Float p)
   copyToPicCb(pcPicDst);
   copyToPicCr(pcPicDst);
 }
-Void TComPicYuv::nonlinearDepthBackward(TComPicYuv *pcPicDst, Float p)
+
+Void TComPicYuv::nonlinearDepthBackward(TComPicYuv *pcPicDst, TComNonlinearDepthModel &rcNonlinearDepthModel)
 {
-  Int		x,y;
-  TComNonlinearDepthBackward cNonlinearDepthBwd(p, g_uiBitIncrement, g_uiBitIncrement);
+  Int   x,y,i;
+  Int   LUT[256];
+
+  for (i=255; i>=0; --i)
+    LUT[i] = (Int)rcNonlinearDepthModel.BackwardI(i, 1<<g_uiBitIncrement ); // +0.5;
 
   // Luma
   Pel* pPelSrc = getLumaAddr();
@@ -489,7 +496,7 @@ Void TComPicYuv::nonlinearDepthBackward(TComPicYuv *pcPicDst, Float p)
 	{
     for(x=0; x<m_iPicWidth; x++)
     {
-      pPelDst[x] = (Pel)( cNonlinearDepthBwd(pPelSrc[x]) + 0.5);
+      pPelDst[x] = LUT[RemoveBitIncrement(pPelSrc[x])];
     }
     pPelDst += pcPicDst->getStride();
     pPelSrc += getStride();

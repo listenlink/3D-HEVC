@@ -143,12 +143,6 @@
 #define DEPTH_MAP_GENERATION        0
 #endif
 
-#if POZNAN_NONLINEAR_DEPTH
-#define POZNAN_LUT_INCREASED_PRECISION 0 // 1 //to do
-#else
-#define POZNAN_LUT_INCREASED_PRECISION 0
-#endif
-
 //>>>>> generation and usage of virtual prediction depth maps >>>>>
 #define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
@@ -191,21 +185,6 @@
 #define POZNAN_DBMP_MERGE_POS             0         // position of DBMP candidate in merge list for coding (0..6) - overwrites PDM_MERGE_POS settings, is overwritten by HHI_MPI_MERGE_POS settings!!!
 #endif
 
-#if POZNAN_NONLINEAR_DEPTH
-inline UChar quantizeDepthPower(Float fDepthPower)
-{
-  Int r = (Int) ( (fDepthPower-1.0f)*128.0f + 0.5f);
-  if (r<=0) return 0;
-  if (r>255) r=255;  
-  return r;
-};
-
-inline Float dequantizeDepthPower(Int iDepthQuant)
-{
-  return iDepthQuant/128.0f + 1.0f;  
-};
-#endif
-
 // ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
@@ -217,13 +196,7 @@ inline Float dequantizeDepthPower(Int iDepthQuant)
 #define Clip3( MinVal, MaxVal, a)   ( ((a)<(MinVal)) ? (MinVal) : (((a)>(MaxVal)) ? (MaxVal) :(a)) )  ///< general min/max clip
 #define RemoveBitIncrement(x)       ( ((x) + ( (1 << g_uiBitIncrement) >> 1 )) >> g_uiBitIncrement )     ///< Remove Bit increment
 
-#if POZNAN_LUT_INCREASED_PRECISION
-#define RemoveBitIncrementLUT(x)       (x)     ///< Remove Bit increment
-#define SizeOfLUT                      (256 << g_uiBitIncrement)  
-#else
 #define SizeOfLUT                      256
-#define RemoveBitIncrementLUT(x)       ( ((x) + ( (1 << g_uiBitIncrement) >> 1 )) >> g_uiBitIncrement )     ///< Remove Bit increment
-#endif
 
 #define DATA_ALIGN                  1                                                                 ///< use 32-bit aligned malloc/free
 #if     DATA_ALIGN && _WIN32 && ( _MSC_VER > 1300 )
@@ -663,6 +636,70 @@ __inline T gSign(const T& t)
 }
 
 
+
+#if POZNAN_NONLINEAR_DEPTH
+struct TComNonlinearDepthModel // // OS: cannot be stdarray, due to memcpy done on SlicePilot
+{
+  Int m_aiPoints[257];
+  Int m_iNum;
+
+  Int m_aiX[257];
+  Int m_aiY[257];
+
+  Void Clear() { m_iNum=0; m_aiPoints[0]=0; m_aiPoints[1]=0; };
+  Void Init() 
+  { 
+    for (Int k=m_iNum+1; k>=0; --k)
+    {
+      int q = 255*k/(m_iNum+1);
+      m_aiX[k] = q + m_aiPoints[k];
+      m_aiY[k] = q - m_aiPoints[k];
+    }
+  };
+
+  Double xInterpolateD(Int *aiX,Int *aiY, Double x, Double dScale)
+  {
+    Int x1 = 0;
+    Int x2 = m_iNum+1;
+
+    for (;;)
+    {
+      if (x1+1>=x2)
+        return ((x-aiX[x1])*(aiY[x2]-aiY[x1])/(aiX[x2]-aiX[x1]) + aiY[x1])*dScale;
+      Int xm = (x1+x2)>>1;
+      if (x >= aiX[xm]) x1 = xm;
+      else              x2 = xm;
+    }
+  }
+
+  inline Double ForwardD(Double x,  Double dScale) { return xInterpolateD(m_aiX, m_aiY, x, dScale); }
+  inline Double BackwardD(Double x, Double dScale) { return xInterpolateD(m_aiY, m_aiX, x, dScale); }
+
+  Int64 xInterpolateI(Int *aiX,Int *aiY, Int x, Int64 iScale)
+  {
+    Int x1 = 0;
+    Int x2 = m_iNum+1;
+
+    for (;;)
+    {
+      if (x1+1>=x2)
+      {         
+        Int aiXx2x1 = (aiX[x2]-aiX[x1]);
+        Int64 res = (x-aiX[x1])*(aiY[x2]-aiY[x1])*iScale;
+        if (res>0) return (res + (aiXx2x1>>1) )/aiXx2x1 + aiY[x1]*iScale;
+        else       return (res - (aiXx2x1>>1) )/aiXx2x1 + aiY[x1]*iScale; 
+      }
+      Int xm = (x1+x2)>>1;
+      if (x >= aiX[xm]) x1 = xm;
+      else              x2 = xm;
+    }
+  }
+
+  inline Int64  ForwardI (Int x, Int64 iScale) { return xInterpolateI(m_aiX, m_aiY, x, iScale); }
+  inline Int64  BackwardI(Int x, Int64 iScale) { return xInterpolateI(m_aiY, m_aiX, x, iScale); }
+
+};
+#endif
 
 #endif // end of #ifndef  __COMMONDEF__
 

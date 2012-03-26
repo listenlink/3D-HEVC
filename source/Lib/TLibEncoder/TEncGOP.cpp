@@ -174,9 +174,12 @@ Void TEncPic::compressPic( TComBitstream* pcBitstreamOut, TComPicYuv cPicOrg, TC
 
 // GT FIX
   std::vector<TComPic*> apcSpatRefPics = m_pcEncTop->getEncTop()->getSpatialRefPics( pcPic->getViewIdx(), pcSlice->getPOC(), m_pcEncTop->isDepthCoder() );
-  TComPic * const pcTexturePic = m_pcEncTop->isDepthCoder() ? m_pcEncTop->getEncTop()->getPicFromView( pcPic->getViewIdx(), pcSlice->getPOC(), false ) : NULL;
+  TComPic * const pcTexturePic = ( m_pcEncTop->isDepthCoder()) ? m_pcEncTop->getEncTop()->getPicFromView( pcPic->getViewIdx(), pcSlice->getPOC(), false ) : NULL;
+  TComPic * const pcDepthPic   = (!m_pcEncTop->isDepthCoder()) ? m_pcEncTop->getEncTop()->getPicFromView( pcPic->getViewIdx(), pcSlice->getPOC(), true  ) : NULL; 
   assert( ! m_pcEncTop->isDepthCoder() || pcTexturePic != NULL );
+  assert(   m_pcEncTop->isDepthCoder() || pcDepthPic   != NULL );
   pcSlice->setTexturePic( pcTexturePic );
+  pcSlice->setDepthPic  ( pcDepthPic   );
 
   pcSlice->setRefPicListFromGOPSTring( rcListPic, apcSpatRefPics );
 

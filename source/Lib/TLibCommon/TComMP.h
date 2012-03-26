@@ -69,6 +69,12 @@ private:
   Short** m_ppiMvPtCorrZ;
   Short** m_ppiMvPtCorrRefViewIdx;
 
+#if !POZNAN_MP_USE_DEPTH_MAP_GENERATION && POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+  Short** m_ppiTempMvPtCorrX;
+  Short** m_ppiTempMvPtCorrY;
+  Short** m_ppiTempMvPtCorrZ;
+#endif
+
   TComDataCU*** m_pppcRefCU; //XY array of pointers to reference CU for each point of picture
   UShort** m_ppuicRefPartAddr; //XY array of part addresses for each reference CU for each point of picture
 
@@ -116,6 +122,9 @@ public:
 #else
   //Void			init(UInt uiHeight, UInt uiWidth, TAppComCamPara* pcCameraData);
   Void			init(UInt uiHeight, UInt uiWidth, Int**** aiBaseViewShiftLUT);
+#if POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE
+  Void			clearTemp();
+#endif
 #endif
   Void			uninit();
   Void			clear();

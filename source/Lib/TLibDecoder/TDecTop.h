@@ -120,7 +120,8 @@ private:
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
 #endif
 #if POZNAN_NONLINEAR_DEPTH
-  Float               m_fDepthPower;
+  TComNonlinearDepthModel m_cNonlinearDepthModel; 
+  Bool m_bUseNonlinearDepth;
 #endif
 
 
@@ -204,6 +205,9 @@ private:
   UInt                    m_uiValidPS;
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
   TComSPS                 m_cSPS;
+#if FLEX_CODING_ORDER
+  TComSPS                 m_cNewSPS;
+#endif
   TComPPS                 m_cPPS;
   TComSlice*              m_apcSlicePilot;
 
@@ -264,7 +268,11 @@ public:
 
   Void  init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance = true );
 #if DCM_SKIP_DECODING_FRAMES
+#if FLEX_CODING_ORDER
+  Bool  decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame, Int& iPOCLastDisplay, Bool& bNewPictureType);
+#else
   Bool  decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame, Int& iPOCLastDisplay);
+#endif
 #else
   Void  decode ( Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS );
 #endif
