@@ -171,7 +171,7 @@ public:
   Void saveDBMPData(TComDataCU* pcCU);
 #endif
 
-  inline Void getDBMPPredData(TComDataCU* pcCU, Int x, Int y, 
+  Void getDBMPPredData(TComDataCU* pcCU, Int x, Int y, 
 							  Int &ref_frame0, Int &ref_frame0_idx, TComMv &mv0, Int ref_frame0_idx_2nd, TComMv mv0_2nd,
 							  Int &ref_frame1, Int &ref_frame1_idx, TComMv &mv1, Int ref_frame1_idx_2nd, TComMv mv1_2nd);
 #endif
@@ -184,7 +184,7 @@ public:
   Int*			getTempL1MvX() {return m_piTempL1MvX;}
   Int*			getTempL1MvY() {return m_piTempL1MvY;}
   
-  inline Void xCalcDBMPPredData(UInt uiCnt, Int &ref_frame0_idx, TComMv &mv0, Int &ref_frame1_idx, TComMv &mv1);
+  Void xCalcDBMPPredData(UInt uiCnt, Int &ref_frame0_idx, TComMv &mv0, Int &ref_frame1_idx, TComMv &mv1);
 #endif
 
 #if POZNAN_DBMP_CALC_PRED_DATA

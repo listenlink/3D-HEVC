@@ -287,6 +287,7 @@ Void TAppRendererTop::render()
                 iBlendMode        = 1;
                 iLeftBaseViewIdx  = 0;
                 iRightBaseViewIdx = iFillViewIdx;
+                
               }
               else
               {
@@ -297,6 +298,38 @@ Void TAppRendererTop::render()
 
             }
           }
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU 
+          else if ( m_iBlendMode == 4 )
+          {
+            if ( bIsBaseView && (iLeftBaseViewIdx == 0) )
+            {
+              bRender = false;
+            }
+            else
+            {
+              Int iDistLeft  = abs( m_cCameraData.getBaseId2SortedId()[0] - m_cCameraData.getBaseId2SortedId() [iLeftBaseViewIdx ]  );
+              Int iDistRight = abs( m_cCameraData.getBaseId2SortedId()[0] - m_cCameraData.getBaseId2SortedId() [iRightBaseViewIdx]  );
+
+              Int iFillViewIdx = (0!=iLeftBaseViewIdx)? iLeftBaseViewIdx: iRightBaseViewIdx;
+
+              if( m_cCameraData.getBaseId2SortedId()[0] < m_cCameraData.getBaseId2SortedId() [iFillViewIdx] )
+              {
+                iBlendMode        = 0;
+                iLeftBaseViewIdx  = 0;
+                iRightBaseViewIdx = iFillViewIdx;
+                std::cout << "iBlen: " << iBlendMode << "iLeft: " << iLeftBaseViewIdx << "iRight: " << iRightBaseViewIdx <<std::endl;
+              }
+              else
+              {
+                iBlendMode        = 0;
+                iLeftBaseViewIdx  = iFillViewIdx;
+                iRightBaseViewIdx = 0;
+                std::cout << "iBlen: " << iBlendMode << "iLeft: " << iLeftBaseViewIdx << "iRight: " << iRightBaseViewIdx <<std::endl;
+              }
+
+            }
+          }
+#endif
           else
           {
             iBlendMode = m_iBlendMode;

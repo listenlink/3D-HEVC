@@ -933,7 +933,7 @@ Int TComMP::GetRepresentativeVal(UInt &uiCntMax, Int* piIn, UInt uiLen, Int* piT
 }
 
 #if POZNAN_DBMP
-inline Void TComMP::getDBMPPredData(TComDataCU* pcCU, Int x, Int y, 
+Void TComMP::getDBMPPredData(TComDataCU* pcCU, Int x, Int y, 
 											Int &ref_frame0, Int &ref_frame0_idx, TComMv &mv0, Int ref_frame0_idx_2nd, TComMv mv0_2nd,
 											Int &ref_frame1, Int &ref_frame1_idx, TComMv &mv1, Int ref_frame1_idx_2nd, TComMv mv1_2nd)
 {
@@ -1182,7 +1182,7 @@ Void TComMP::setDBMPPredMVField(RefPicList eRefListIdx, TComDataCU* pcCU, Int iN
 #endif
 
 #if POZNAN_DBMP_CALC_PRED_DATA
-inline Void TComMP::xCalcDBMPPredData(UInt uiCnt, Int &ref_frame0_idx, TComMv &mv0, Int &ref_frame1_idx, TComMv &mv1)
+Void TComMP::xCalcDBMPPredData(UInt uiCnt, Int &ref_frame0_idx, TComMv &mv0, Int &ref_frame1_idx, TComMv &mv1)
 {	
 	if(uiCnt==0) return;
 
