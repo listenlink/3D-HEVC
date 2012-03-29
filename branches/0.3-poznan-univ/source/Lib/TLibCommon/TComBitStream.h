@@ -84,6 +84,11 @@ protected:
   UInt        *m_auiSliceByteLocation, m_uiSliceCount;  // used to skip over slice start codes in initParsingConvertPayloadToRBSP()
   UInt        m_uiSliceProcessed;
 
+#if BITSTREAM_EXTRACTION
+  UInt*       m_apulPacketPayloadBuffer;
+  UInt        m_uiPacketPayloadSize;
+#endif  
+
   UInt xSwap ( UInt ui )
   {
     // heiko.schwarz@hhi.fhg.de: support for BSD systems as proposed by Steffen Kamp [kamp@ient.rwth-aachen.de]
@@ -163,6 +168,10 @@ public:
   UInt        getBitsLeft()             { return  m_uiBitsLeft;                         }
 
   void insertAt(const TComBitstream& src, unsigned pos);
+
+#if BITSTREAM_EXTRACTION
+  UInt        reinitParsing();
+#endif  
 };
 
 #endif
