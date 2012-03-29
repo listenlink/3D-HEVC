@@ -65,6 +65,10 @@ TComSlice::TComSlice()
   
   m_iViewIdx = 0 ;
 
+#if BITSTREAM_EXTRACTION
+  m_uiLayerId = 0;
+#endif
+
 #if SONY_COLPIC_AVAILABILITY
   m_iViewOrderIdx = 0;
 #endif
@@ -668,6 +672,9 @@ TComSPS::TComSPS()
   m_bUseMVI = false;
 #endif
   
+#if BITSTREAM_EXTRACTION
+  m_uiLayerId             = 0;
+#endif
   m_uiViewId              = 0;
   m_iViewOrderIdx         = 0;
   m_bDepth                = false;
@@ -715,6 +722,9 @@ TComSPS::~TComSPS()
 
 TComPPS::TComPPS()
 {
+#if BITSTREAM_EXTRACTION
+  m_uiLayerId             = 0;
+#endif
 #if CONSTRAINED_INTRA_PRED
   m_bConstrainedIntraPred = false;
 #endif

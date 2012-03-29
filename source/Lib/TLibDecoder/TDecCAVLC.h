@@ -181,7 +181,12 @@ public:
   Void  parseAoSvlc        ( Int&  riVal  );
 #endif
   
+#if BITSTREAM_EXTRACTION
+  Void  parseNalUnitHeader  ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId );
+#else
   Void  parseNalUnitHeader  ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag );
+#endif
+
   
   Void  parseSPS            ( TComSPS* pcSPS );
   Void  parsePPS            ( TComPPS* pcPPS);

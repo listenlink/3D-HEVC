@@ -80,6 +80,9 @@ private:
   UInt        m_uiMinTrDepth;
   UInt        m_uiMaxTrDepth;
 
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
   UInt        m_uiViewId;
   Int         m_iViewOrderIdx;
   Bool        m_bDepth;
@@ -369,6 +372,10 @@ public:
   Void setUseTexDqpAccordingToDepth    (Bool bVal)  {m_bUseTexDqpAccordingToDepth = bVal;}
   Bool getUseTexDqpAccordingToDepth    ()           {return m_bUseTexDqpAccordingToDepth;}
 #endif
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId              ( UInt u ) { m_uiLayerId = u; }
+  UInt      getLayerId              ()         { return m_uiLayerId; }
+#endif
 };
 
 /// PPS class
@@ -384,6 +391,9 @@ private:
 #endif
   UInt        m_uiPPSId;
   UInt        m_uiSPSId;
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
 
 public:
   TComPPS();
@@ -404,6 +414,11 @@ public:
 
   Void setUseWP                     ( Bool b )  { m_bUseWeightPred = b;       }
   Void setWPBiPredIdc               ( UInt u )  { m_uiBiPredIdc = u;          }
+#endif
+
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId              ( UInt u ) { m_uiLayerId = u; }
+  UInt      getLayerId              ()         { return m_uiLayerId; }
 #endif
 };
 
@@ -434,6 +449,9 @@ private:
   //  Bitstream writing
   UInt        m_uiPPSId;
   Int         m_iPOC;
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
 #if SONY_COLPIC_AVAILABILITY
   Int         m_iViewOrderIdx;
 #endif
@@ -607,6 +625,11 @@ public:
 
   Void      setLambda( Double d ) { m_dLambda = d; }
   Double    getLambda() { return m_dLambda;        }
+
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId( UInt u )                        { m_uiLayerId = u; }
+  UInt      getLayerId()                                { return m_uiLayerId; }
+#endif
 
   Void      setViewIdx(Int i)                           { m_iViewIdx = i; }
   Int       getViewIdx()                                { return m_iViewIdx; }
