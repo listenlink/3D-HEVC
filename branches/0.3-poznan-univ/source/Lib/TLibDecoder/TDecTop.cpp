@@ -168,7 +168,6 @@ CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, I
 #else
     Int64   iTempScale      = (Int64)uiDepthValue * iScale;
 #endif
-    Int64   iTestScale      = ( iTempScale + iOffset       );   // for checking accuracy of camera parameters
     Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
     Int64   iShiftChroma    = ( iTempScale + iOffsetChroma ) >> iLog2DivChroma;
     raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = (Int)iShiftLuma;
@@ -231,15 +230,20 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   }
 
   AOF( pcSlice->getSPS()->getViewId() < MAX_NUMBER_VIEWS );
+
   if ( pcSlice->getSPS()->isDepth  () )
   {
 #if POZNAN_NONLINEAR_DEPTH
     m_bUseNonlinearDepth = pcSlice->getSPS()->getUseNonlinearDepth();
     m_cNonlinearDepthModel = pcSlice->getSPS()->getNonlinearDepthModel();    
 #endif
+#if !FLEX_CODING_ORDER //Owieczka
     return;
+#endif
   }
+#if !FLEX_CODING_ORDER //Owieczka
   else
+#endif
   {
 #if POZNAN_NONLINEAR_DEPTH
     pcSlice->getSPS()->setUseNonlinearDepth(m_bUseNonlinearDepth);
@@ -250,8 +254,10 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   Bool  bFirstSliceInAU   = ( pcSlice->getPOC()               != Int ( m_iLastPOC ) );
   Bool  bFirstSliceInView = ( pcSlice->getSPS()->getViewId()  != UInt( m_iLastViewId ) || bFirstSliceInAU );
   AOT(  bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()  != 0 );
+#if !FLEX_CODING_ORDER //Owieczka  
   AOT( !bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()   < UInt( m_iLastViewId ) );
   AOT( !bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()   > UInt( m_iLastViewId + 1 ) );
+#endif
   AOT( !bFirstAU         &&   pcSlice->getSPS()->getViewId()   > m_uiMaxViewId );
   if ( !bFirstSliceInView )
   {

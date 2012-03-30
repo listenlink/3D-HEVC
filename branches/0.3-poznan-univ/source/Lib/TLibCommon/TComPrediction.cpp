@@ -1639,7 +1639,7 @@ Void TComPrediction::motionCompensation_DBMP ( TComDataCU* pcCU, TComYuv* pcYuvP
   TComMv	  mv0_2nd,mv1_2nd;
 
 #if DEPTH_MAP_GENERATION
-  Int		  ref_frame0_idx_1st, ref_frame1_idx_1st;
+  Int		  ref_frame0_idx_1st = 0, ref_frame1_idx_1st = 0;
   TComMv	  mv0_1st,mv1_1st;
 #endif
 
@@ -1647,8 +1647,8 @@ Void TComPrediction::motionCompensation_DBMP ( TComDataCU* pcCU, TComYuv* pcYuvP
   Pel* piDstCr;
   Pel aiUTab[MAX_CU_SIZE];
   Pel aiVTab[MAX_CU_SIZE];
-  Pel iULast;
-  Pel iVLast;
+  Pel iULast = 0;
+  Pel iVLast = 0;
   Pel iTemp;
 
   TComMP* pcMP = pcCU->getSlice()->getMP();

@@ -738,8 +738,6 @@ Void TAppDecTop::initRenderer(TComSPS &cComSPS)
 //*
 Void TAppDecTop::storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderIdx, Int iCurPoc, Bool bDepth)
 {
-  Int  iLeftViewIdx  = -1;
-  Int  iRightViewIdx = -1;
   Int  iNearestViewIdx = -1;
   Bool bRenderFromLeft;
 
@@ -829,8 +827,6 @@ Void TAppDecTop::storeSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderI
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
 Void TAppDecTop::storeDepthSynthPicsInBuffer(Int iCoddedViewIdx,Int iCoddedViewOrderIdx, Int iCurPoc)
 {
-  Int  iLeftViewIdx  = -1;
-  Int  iRightViewIdx = -1;
   Int  iNearestViewIdx = -1;
   Bool bRenderFromLeft;
 

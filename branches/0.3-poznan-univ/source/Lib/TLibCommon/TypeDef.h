@@ -43,6 +43,8 @@
 
 #define FLEX_CODING_ORDER               1
 
+#define FLEXCO_CAMPARAM_IN_DEPTH        FLEX_CODING_ORDER // encode pamera parameters in depth SPS
+
 #define SONY_COLPIC_AVAILABILITY        1
 
 //>>>>> HHI 3DV tools >>>>>

@@ -575,9 +575,18 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
 
+#if BITSTREAM_EXTRACTION
+  m_cSPS.setLayerId( m_uiLayerId );
+#endif
+
   if( m_bIsDepth )
   {
+#if FLEXCO_CAMPARAM_IN_DEPTH
+    //m_cSPS.initMultiviewSPSDepth    ( m_uiViewId, m_iViewOrderIdx );
+    m_cSPS.initMultiviewSPS         ( m_uiViewId, m_iViewOrderIdx, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset, true );
+#else
     m_cSPS.initMultiviewSPSDepth    ( m_uiViewId, m_iViewOrderIdx );
+#endif
 #if DEPTH_MAP_GENERATION
     m_cSPS.setPredDepthMapGeneration( m_uiViewId, true );
 #endif
@@ -653,6 +662,9 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  m_cSPS.setUseDMM34( m_bUseDMM34 );
+#endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif
@@ -677,6 +689,10 @@ Void TEncTop::xInitSPS()
 #if CONSTRAINED_INTRA_PRED
 Void TEncTop::xInitPPS()
 {
+#if BITSTREAM_EXTRACTION
+  m_cPPS.setLayerId( m_uiLayerId );
+#endif
+
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   m_cPPS.setPPSId( ( m_uiViewId << 1 ) + ( m_bIsDepth ? 1 : 0 ) );
   m_cPPS.setSPSId( ( m_uiViewId << 1 ) + ( m_bIsDepth ? 1 : 0 ) );

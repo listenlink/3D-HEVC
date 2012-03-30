@@ -205,7 +205,11 @@ public:
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
   UInt  getCoeffCost          ()                { return  m_uiCoeffCost;  }
   
+#if BITSTREAM_EXTRACTION
+  Void  codeNALUnitHeader       ( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId = 0, UInt uiLayerId = 0 );
+#else
   Void  codeNALUnitHeader       ( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId = 0, Bool bOutputFlag = true );
+#endif
   
   Void  codeSPS                 ( TComSPS* pcSPS );
   Void  codePPS                 ( TComPPS* pcPPS );

@@ -40,6 +40,11 @@
  */
 class SEI
 {
+#if BITSTREAM_EXTRACTION
+protected:
+  UInt m_uiLayerId;
+#endif
+
 public:
   enum PayloadType {
     USER_DATA_UNREGISTERED = 5,
@@ -50,6 +55,11 @@ public:
   virtual ~SEI() {}
   
   virtual PayloadType payloadType() const = 0;
+
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId              ( UInt u )       { m_uiLayerId = u; }
+  UInt      getLayerId              ()         const { return m_uiLayerId; }
+#endif
 };
 
 class SEIuserDataUnregistered : public SEI

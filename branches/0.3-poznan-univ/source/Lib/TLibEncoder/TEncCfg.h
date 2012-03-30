@@ -186,6 +186,9 @@ protected:
   TEncSeqStructure m_cSequenceStructure;
   //std::vector<int>  m_aiLayerQPOffset;
 
+#if BITSTREAM_EXTRACTION
+  UInt        m_uiLayerId;
+#endif
   UInt        m_uiViewId;
   Int         m_iViewOrderIdx;
   Bool        m_bIsDepth;
@@ -256,6 +259,10 @@ public:
   Void      setGOPSize                      ( Int   i )      { m_iGOPSize = i; }
   Void      setRateGOPSize                  ( Int   i )      { m_iRateGOPSize = i; }
 
+#if BITSTREAM_EXTRACTION
+  Void      setLayerId                      ( UInt  u )      { m_uiLayerId              = u; }
+  UInt      getLayerId                      ( )              { return m_uiLayerId; }
+#endif
   Void      setViewId                       ( UInt  u )      { m_uiViewId               = u; }
   Void      setViewOrderIdx                 ( Int   i )      { m_iViewOrderIdx          = i; }
   Void      setIsDepth                      ( Bool  b )      { m_bIsDepth               = b; }

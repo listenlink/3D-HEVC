@@ -736,8 +736,13 @@ TComPPS::~TComPPS()
 {
 }
 
+#if FLEXCO_CAMPARAM_IN_DEPTH
+Void
+TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecision, Bool bCamParSlice, Int** aaiScale, Int** aaiOffset , Bool bDepth)
+#else
 Void
 TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecision, Bool bCamParSlice, Int** aaiScale, Int** aaiOffset )
+#endif
 {
   AOT( uiViewId == 0 && iViewOrderIdx != 0 );
   AOT( uiViewId != 0 && iViewOrderIdx == 0 );
@@ -745,7 +750,11 @@ TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecis
 
   m_uiViewId              = uiViewId;
   m_iViewOrderIdx         = iViewOrderIdx;
+#if FLEXCO_CAMPARAM_IN_DEPTH
+  m_bDepth                = bDepth;
+#else
   m_bDepth                = false;
+#endif
   m_uiCamParPrecision     = ( m_uiViewId ? uiCamParPrecision : 0 );
   m_bCamParInSliceHeader  = ( m_uiViewId ? bCamParSlice  : false );
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );

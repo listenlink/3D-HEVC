@@ -418,7 +418,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   
   UInt uiPartP;
   TComDataCU* pcCUP;
-  UInt uiBs;
+  UInt uiBs = 0;
   
 #if MTK_NONCROSS_INLOOP_FILTER
   //-- Calculate Block Index

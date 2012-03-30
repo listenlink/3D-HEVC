@@ -522,18 +522,21 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     {
       size = m_iSourceWidth*m_iSourceHeight;
       depth_buf = (unsigned char *)malloc(size);
-      fread(depth_buf, 1, size, base_depth_file);
+      size_t read = fread(depth_buf, 1, size, base_depth_file);
       fclose(base_depth_file);
-      memset(histogram, 0, sizeof(histogram));
-      for (i=0; i<size;++i) histogram[depth_buf[i]]++;
-      weighted_avg = 0;
-      for (i=0; i<256; ++i) weighted_avg += i*histogram[i];
-      weighted_avg /= size;
-
-      if (weighted_avg<m_iNonlinearDepthThreshold)
+      if(read)
       {
-        m_bUseNonlinearDepth = 0;
-        printf ("\nWeighted average of depth histogram:%f < %d, turning NonlinearDepthRepresentation OFF\n", weighted_avg, m_iNonlinearDepthThreshold);
+        memset(histogram, 0, sizeof(histogram));
+        for (i=0; i<size;++i) histogram[depth_buf[i]]++;
+        weighted_avg = 0;
+        for (i=0; i<256; ++i) weighted_avg += i*histogram[i];
+        weighted_avg /= size;
+
+        if (weighted_avg<m_iNonlinearDepthThreshold)
+        {
+          m_bUseNonlinearDepth = 0;
+          printf ("\nWeighted average of depth histogram:%f < %d, turning NonlinearDepthRepresentation OFF\n", weighted_avg, m_iNonlinearDepthThreshold);
+        }
       }
     }
   }
@@ -541,8 +544,21 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   if(m_bUseNonlinearDepth)
   {
+     if((Int)m_aiNonlinearDepthModel.size()== 0)
+     {
+       m_aiNonlinearDepthModel.push_back(10);
+       m_aiNonlinearDepthModel.push_back(19);
+       m_aiNonlinearDepthModel.push_back(24);
+       m_aiNonlinearDepthModel.push_back(27);
+       m_aiNonlinearDepthModel.push_back(26);
+       m_aiNonlinearDepthModel.push_back(22);
+       m_aiNonlinearDepthModel.push_back(13);
+     }
+    //10,19,24,27,26,22,13
     m_cNonlinearDepthModel.m_iNum = (Int)m_aiNonlinearDepthModel.size();
+   
     m_cNonlinearDepthModel.m_aiPoints[0]=0;
+
     for (int i=0; i<m_cNonlinearDepthModel.m_iNum; ++i)
       m_cNonlinearDepthModel.m_aiPoints[i+1] = m_aiNonlinearDepthModel[i];
 
