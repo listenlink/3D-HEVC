@@ -149,6 +149,9 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseVSO                       ( false ); //GT: might be enabled later for VSO Mode 4
 #endif
 
+#if BITSTREAM_EXTRACTION
+    m_acTEncTopList[iViewIdx]->setLayerId                      ( ( (UInt)iViewIdx ) << 1 );
+#endif
     m_acTEncTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
     m_acTEncTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
     m_acTEncTopList[iViewIdx]->setIsDepth                      ( false );
@@ -358,13 +361,23 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setVSOMode                      ( m_uiVSOMode );
 #endif
 
+#if BITSTREAM_EXTRACTION
+      m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( ( ( (UInt)iViewIdx ) << 1 ) + 1 );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( (UInt)iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
       m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
+#if FLEX_CODING_ORDER
+      m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
+      m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
+      m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
+      m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#else
       m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( false );
       m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( 0 );
+#endif
 #if DEPTH_MAP_GENERATION
       m_acTEncDepthTopList[iViewIdx]->setPredDepthMapGeneration       ( 0 );
 #endif
@@ -793,9 +806,15 @@ Void TAppEncTop::encode()
           assert(isdigit(m_pchMVCJointCodingOrder[i]));
           iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
           bThisViewContinueReadingPics = bContinueReadingPics[iViewIdx];
+#if POZNAN_SYNTH
+          if( m_uiUseCUSkip )
+          {
+            xStoreSynthPicsInBuffer(iViewIdx,false);
+          }
+#endif
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
           // If no depth picture reconstruction for current view and current POC is available sythesize one
-          Int   iCurrPoc         = m_acTEncTopList[ 0 ]->getNextFrameId();
+          //Int   iCurrPoc2         = m_acTEncTopList[ 0 ]->getNextFrameId();
           Bool  bCurrPicDepthRec = getPicFromView( iViewIdx, iCurrPoc, true ) != NULL && getPicFromView( iViewIdx, iCurrPoc, true )->getReconMark();
           if(m_bUseTexDqpAccordingToDepth && !bCurrPicDepthRec)
           {
@@ -824,6 +843,12 @@ Void TAppEncTop::encode()
             assert(isdigit(m_pchMVCJointCodingOrder[i]));
             iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
             bThisViewContinueReadingDepthPics = bContinueReadingDepthPics[iViewIdx];
+#if POZNAN_SYNTH
+            if( m_uiUseCUSkip )
+            {
+              xStoreSynthPicsInBuffer(iViewIdx,true);
+            }
+#endif
             m_acTEncDepthTopList[iViewIdx]->encode( bDepthEos[iViewIdx], m_cListPicYuvDepthRecMap[iViewIdx], pcBitstream, bThisViewContinueReadingDepthPics );
             bContinueReadingDepthPics[iViewIdx]=bThisViewContinueReadingDepthPics;
 
@@ -857,7 +882,7 @@ Void TAppEncTop::encode()
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
 #if FLEX_CODING_ORDER
       // If no depth picture reconstruction for current view and current POC is available sythesize one
-      Int   iCurrPoc         = m_acTEncTopList[ 0 ]->getNextFrameId();
+      //Int   iCurrPoc         = m_acTEncTopList[ 0 ]->getNextFrameId();
       Bool  bCurrPicDepthRec = getPicFromView( iViewIdx, iCurrPoc, true ) != NULL && getPicFromView( iViewIdx, iCurrPoc, true )->getReconMark();
       if(m_bUseTexDqpAccordingToDepth && !bCurrPicDepthRec)
 #else
@@ -1389,7 +1414,6 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
     if (!(m_acTEncTopList[ iCoddedViewIdx ]->currentPocWillBeCoded())) return;
   }
   
-  Int iNumberOfReferenceViews = 0;
   Int  iNearestViewIdx = -1;
   Bool bRenderFromLeft;
 
@@ -1476,8 +1500,6 @@ Void TAppEncTop::xStoreSynthPicsInBuffer(Int iCoddedViewIdx,Bool bDepth)
 #if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
 Void TAppEncTop::xStoreDepthSynthPicsInBuffer(Int iCoddedViewIdx)
 {
-  Int  iLeftViewIdx  = -1;
-  Int  iRightViewIdx = -1;
   Int  iNearestViewIdx = -1;
   Bool bRenderFromLeft;
 

@@ -254,12 +254,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if MTK_SAO
   xReadFlag( uiCode ); pcSPS->setUseSAO       ( uiCode ? true : false );
 #endif
-#if POZNAN_DBMP
-  xReadFlag( uiCode ); pcSPS->setDBMP  ( uiCode );
-#endif
-#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
-  xReadFlag( uiCode ); pcSPS->setUseCUSkip ( uiCode );
-#endif
   xReadFlag( uiCode ); // SPS base view flag
   if( uiCode )
   { // baseview SPS -> set standard values
@@ -270,17 +264,59 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     pcSPS->setMultiviewResPredMode  ( 0 );
 #endif
+#if POZNAN_DBMP
+    pcSPS->setDBMP  ( false );
+#endif
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    pcSPS->setUseCUSkip ( false );
+#endif
   }
   else
   {
+#if POZNAN_DBMP
+    xReadFlag( uiCode ); pcSPS->setDBMP  ( uiCode );
+#endif
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+    xReadFlag( uiCode ); pcSPS->setUseCUSkip ( uiCode );
+#endif
     xReadFlag  ( uiCode ); // depth flag
     if( uiCode )
     {
-      xReadUvlc( uiCode ); // view id
+      UInt  uiViewId;
+#if FLEXCO_CAMPARAM_IN_DEPTH
+      UInt  uiCamParPrecision;
+      Int   iVOI;
+      Bool  bCamParSlice;
+      xReadUvlc( uiViewId ); 
+      xReadSvlc( iVOI );
+      if (uiViewId == 0)
+      {
+        pcSPS->initMultiviewSPSDepth    ( uiViewId, iVOI );
+      }
+      else
+      {
+        xReadUvlc( uiCamParPrecision );
+        xReadFlag( uiCode );    bCamParSlice = ( uiCode == 1 );
+        if( !bCamParSlice )
+        {
+          //uiViewId++;
+          for( UInt uiBaseId = 0; uiBaseId < uiViewId; uiBaseId++ )
+          {
+            xReadSvlc( iCode );   m_aaiTempScale [ uiBaseId ][ uiViewId ] = iCode;
+            xReadSvlc( iCode );   m_aaiTempOffset[ uiBaseId ][ uiViewId ] = iCode;
+            xReadSvlc( iCode );   m_aaiTempScale [ uiViewId ][ uiBaseId ] = iCode - m_aaiTempScale [ uiBaseId ][ uiViewId ];
+            xReadSvlc( iCode );   m_aaiTempOffset[ uiViewId ][ uiBaseId ] = iCode - m_aaiTempOffset[ uiBaseId ][ uiViewId ];
+          }
+        }
+        pcSPS->initMultiviewSPS( uiViewId, iVOI, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset, true);
+      }
+#else
+      xReadUvlc( uiViewId ); // view id
       xReadSvlc(  iCode ); // view order index
-      pcSPS->initMultiviewSPSDepth    ( uiCode, iCode );
+      pcSPS->initMultiviewSPSDepth    ( uiViewId, iCode );
+#endif
 #if DEPTH_MAP_GENERATION
-      pcSPS->setPredDepthMapGeneration( uiCode, true );
+      pcSPS->setPredDepthMapGeneration( uiViewId, true );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
       pcSPS->setMultiviewResPredMode  ( 0 );
@@ -2728,17 +2764,20 @@ TDecCavlc::parseMergeIndexMV( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsP
     else if( uiIdx < uiMviMergePos )
 #endif
 #if POZNAN_DBMP
-	if(bDBMPAvailable)
-	{
-	  if(uiIdx==POZNAN_DBMP_MERGE_POS) uiModIdx = POZNAN_DBMP_MRG_CAND;
-	  else if(uiIdx>POZNAN_DBMP_MERGE_POS) uiModIdx = uiIdx--;
-	  else uiModIdx = uiIdx;
-	}
-	else uiModIdx = uiIdx;
-	if( pcCU->getNeighbourCandIdx( uiModIdx, uiAbsPartIdx ) != uiModIdx + 1 )
-	{
-	  ruiMergeIndex++;
-	}
+    {
+      if(bDBMPAvailable)
+      {
+        if(uiIdx==POZNAN_DBMP_MERGE_POS) uiModIdx = POZNAN_DBMP_MRG_CAND;
+        else if(uiIdx>POZNAN_DBMP_MERGE_POS) uiModIdx = uiIdx--;
+        else uiModIdx = uiIdx;
+      }
+      else uiModIdx = uiIdx;
+
+      if( pcCU->getNeighbourCandIdx( uiModIdx, uiAbsPartIdx ) != uiModIdx + 1 )
+      {
+	ruiMergeIndex++;
+      }
+    }
 #else
     if( pcCU->getNeighbourCandIdx( uiIdx, uiAbsPartIdx ) != uiIdx + 1 )
     {

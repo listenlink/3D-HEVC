@@ -220,7 +220,11 @@ public:
   Int  getPad         ( Int  u ) { assert(u < 2); return m_aiPad[u];}
   Int* getPad         ( )        { return m_aiPad; }
 
+#if FLEX_CODING_ORDER 
+  Void        initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0, Bool bDepth = false );
+#else
   Void        initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
+#endif
   Void        initMultiviewSPSDepth ( UInt uiViewId, Int iViewOrderIdx );
 
   UInt        getViewId             ()  { return m_uiViewId; }

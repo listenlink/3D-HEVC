@@ -307,8 +307,8 @@ Void TAppRendererTop::render()
             }
             else
             {
-              Int iDistLeft  = abs( m_cCameraData.getBaseId2SortedId()[0] - m_cCameraData.getBaseId2SortedId() [iLeftBaseViewIdx ]  );
-              Int iDistRight = abs( m_cCameraData.getBaseId2SortedId()[0] - m_cCameraData.getBaseId2SortedId() [iRightBaseViewIdx]  );
+              //Int iDistLeft  = abs( m_cCameraData.getBaseId2SortedId()[0] - m_cCameraData.getBaseId2SortedId() [iLeftBaseViewIdx ]  );
+              //Int iDistRight = abs( m_cCameraData.getBaseId2SortedId()[0] - m_cCameraData.getBaseId2SortedId() [iRightBaseViewIdx]  );
 
               Int iFillViewIdx = (0!=iLeftBaseViewIdx)? iLeftBaseViewIdx: iRightBaseViewIdx;
 

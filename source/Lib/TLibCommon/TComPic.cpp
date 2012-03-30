@@ -489,7 +489,6 @@ Void TComPic::checkSynthesisAvailability( TComDataCU*& rpcCU, UInt iCuAddr, UInt
   }
   
   Int x, y;
-  Bool bAvailable = true;
   Pel* pAvail  = getPicYuvAvail()->getLumaAddr ( iCuAddr, uiAbsZorderIdx );
   Int CUHeight = g_uiMaxCUHeight >> uiPartDepth; //rpcCU->getHeight(uiAbsZorderIdx);
   Int CUWidth  = g_uiMaxCUWidth  >> uiPartDepth; //rpcCU->getWidth(uiAbsZorderIdx);
