@@ -202,10 +202,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
 
 #if FLEX_CODING_ORDER
-  ("3DVFlexOrder",          m_b3DVFlexOrder,   false, "flexible coding order flag" )
-  ("3DVCodingOrder",		cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
-
+  ("FCO",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
+  ("CodingOrder",   		cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
 #endif
+
   /* Unit definition parameters */
   ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
   ("MaxCUHeight",         m_uiMaxCUHeight, 64u)
@@ -393,9 +393,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
 
-#if FLEX_CODING_ORDER && HHI_VSO
+
+#if FLEX_CODING_ORDER
   m_pchMVCJointCodingOrder	= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
   // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
+
+#if HHI_VSO && DISABLE_FCO_FOR_VSO
   Bool depthComesFirst = false;
   if ( m_b3DVFlexOrder )
   {
@@ -424,7 +427,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     m_bUseVSO = false;		
   }
 #endif
-
+#endif
 
 // GT FIX
   if ( m_bUsingDepthMaps )

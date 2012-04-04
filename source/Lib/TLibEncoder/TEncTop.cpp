@@ -545,6 +545,10 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
 
+#if BITSTREAM_EXTRACTION
+  m_cSPS.setLayerId( m_uiLayerId );
+#endif
+
   if( m_bIsDepth )
   {
     m_cSPS.initMultiviewSPSDepth    ( m_uiViewId, m_iViewOrderIdx );
@@ -631,6 +635,10 @@ Void TEncTop::xInitSPS()
 #if CONSTRAINED_INTRA_PRED
 Void TEncTop::xInitPPS()
 {
+#if BITSTREAM_EXTRACTION
+  m_cPPS.setLayerId( m_uiLayerId );
+#endif
+
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   m_cPPS.setPPSId( ( m_uiViewId << 1 ) + ( m_bIsDepth ? 1 : 0 ) );
   m_cPPS.setSPSId( ( m_uiViewId << 1 ) + ( m_bIsDepth ? 1 : 0 ) );
