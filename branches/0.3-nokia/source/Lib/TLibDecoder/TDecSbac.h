@@ -74,7 +74,11 @@ public:
   Void  setAlfCtrl                ( Bool bAlfCtrl          ) { m_bAlfCtrl = bAlfCtrl;                   }
   Void  setMaxAlfCtrlDepth        ( UInt uiMaxAlfCtrlDepth ) { m_uiMaxAlfCtrlDepth = uiMaxAlfCtrlDepth; }
   
+#if BITSTREAM_EXTRACTION
+  Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId ) {}
+#else
   Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag ) {}
+#endif
   
   Void  parseSPS                  ( TComSPS* pcSPS         ) {}
   Void  parsePPS                  ( TComPPS* pcPPS         ) {}

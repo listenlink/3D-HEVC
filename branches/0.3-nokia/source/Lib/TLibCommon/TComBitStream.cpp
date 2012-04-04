@@ -60,11 +60,18 @@ Void TComBitstream::create( UInt uiSizeInBytes )
   m_pulStreamPacket = m_apulStreamPacketBegin;
   m_auiSliceByteLocation = NULL;
   m_uiSliceCount         = 0;
+#if BITSTREAM_EXTRACTION
+  m_apulPacketPayloadBuffer = new UInt[uiSize];
+  m_uiPacketPayloadSize = 0;
+#endif  
 }
 
 Void TComBitstream::destroy()
 {
   delete [] m_apulStreamPacketBegin;     m_apulStreamPacketBegin = NULL;
+#if BITSTREAM_EXTRACTION
+  delete [] m_apulPacketPayloadBuffer;   m_apulPacketPayloadBuffer = NULL;
+#endif
 }
 
 // ====================================================================================================================
@@ -147,6 +154,16 @@ Void TComBitstream::initParsing ( UInt uiNumBytes )
   xReadNextWord();
   xReadNextWord();
 }
+
+#if BITSTREAM_EXTRACTION
+UInt TComBitstream::reinitParsing()
+{
+  rewindStreamPacket();
+  memcpy( m_apulStreamPacketBegin, m_apulPacketPayloadBuffer, m_uiPacketPayloadSize );
+  initParsing( m_uiPacketPayloadSize );
+  return m_uiPacketPayloadSize;
+}
+#endif
 
 #if LCEC_INTRA_MODE || QC_LCEC_INTER_MODE
 Void TComBitstream::pseudoRead ( UInt uiNumberOfBits, UInt& ruiBits )
@@ -318,6 +335,11 @@ Void TComBitstream::initParsingConvertPayloadToRBSP( const UInt uiBytesRead )
   const UChar* pucRead = reinterpret_cast<UChar*> (getBuffer());
   UChar* pucWrite      = reinterpret_cast<UChar*> (getBuffer());
   
+#if BITSTREAM_EXTRACTION
+  memcpy( m_apulPacketPayloadBuffer, m_apulStreamPacketBegin, uiBytesRead );
+  m_uiPacketPayloadSize = uiBytesRead;
+#endif
+
   for( ; uiReadOffset < uiBytesRead; uiReadOffset++ )
   {
     if( 2 == uiZeroCount && 0x03 == pucRead[uiReadOffset] )
