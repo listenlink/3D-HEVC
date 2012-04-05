@@ -182,6 +182,14 @@ protected:
   UInt      m_uiMultiviewResPredMode;                         ///< using multiview residual prediction
 #endif
 
+#if POZNAN_DBMP
+  UInt      m_uiDBMP;							                            ///< using Depth-Based Motion Prediction
+#endif
+
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  UInt      m_uiUseCUSkip;                                       ///< using CU-Skip - Encode only disoccluded CUs in dependend view
+#endif
+
 #if HHI_INTERVIEW_SKIP
   UInt      m_uiInterViewSkip;                            ///< usage of interview skip mode ( do not transmit residual)
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
@@ -250,6 +258,9 @@ protected:
   UInt                    m_uiBiPredIdc;                      ///< Use of Bi-Directional Weighting Prediction (B_SLICE): explicit(1) or implicit(2)
 #endif
 
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  Bool      m_bUseTexDqpAccordingToDepth;                       ///< flag for using texture QP param modyfication according to depth map's values
+#endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
   Void  xCheckParameter ();                                   ///< check validity of configuration values
@@ -275,6 +286,20 @@ protected:
   // Ren Model String
   TRenModSetupStrParser       m_cRenModStrParser;
 #endif
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+  Double                      m_dTexDqpAccordingToDepthOffset;
+  Double                      m_dTexDqpAccordingToDepthMul;
+  Int                         m_iTexDqpAccordingToDepthTopBottomRow;
+#endif
+
+#if POZNAN_NONLINEAR_DEPTH
+  std::vector<Int>            m_aiNonlinearDepthModel;
+  TComNonlinearDepthModel     m_cNonlinearDepthModel;
+  Int                         m_iNonlinearDepthThreshold;
+  Bool                        m_bUseNonlinearDepth;
+#endif
+
 public:
 
   TAppEncCfg();

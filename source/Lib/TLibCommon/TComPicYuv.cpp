@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <assert.h>
 #include <memory.h>
+#include <math.h>
 
 #ifdef __APPLE__
 #include <malloc/malloc.h>
@@ -454,3 +455,54 @@ Void TComPicYuv::xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int
     piPelSource += iSourceStride; 
   }
 }
+#if POZNAN_NONLINEAR_DEPTH
+Void TComPicYuv::nonlinearDepthForward(TComPicYuv *pcPicDst, TComNonlinearDepthModel &rcNonlinearDepthModel)
+{
+  Int		x,y,i;
+  Int   LUT[256];
+
+  for (i=0; i<256; ++i)
+    LUT[i] = (Int)rcNonlinearDepthModel.ForwardI(i, 1<<g_uiBitIncrement);
+
+  // Luma
+  Pel* pPelSrc = getLumaAddr();
+  Pel* pPelDst = pcPicDst->getLumaAddr();
+  for(y=0; y<m_iPicHeight; y++)
+	{
+    for(x=0; x<m_iPicWidth; x++)
+    {
+      pPelDst[x] = LUT[RemoveBitIncrement(pPelSrc[x])];
+    }
+    pPelDst += pcPicDst->getStride();
+    pPelSrc += getStride();
+  }
+  // Chroma
+  copyToPicCb(pcPicDst);
+  copyToPicCr(pcPicDst);
+}
+
+Void TComPicYuv::nonlinearDepthBackward(TComPicYuv *pcPicDst, TComNonlinearDepthModel &rcNonlinearDepthModel)
+{
+  Int   x,y,i;
+  Int   LUT[256];
+
+  for (i=255; i>=0; --i)
+    LUT[i] = (Int)rcNonlinearDepthModel.BackwardI(i, 1<<g_uiBitIncrement ); // +0.5;
+
+  // Luma
+  Pel* pPelSrc = getLumaAddr();
+  Pel* pPelDst = pcPicDst->getLumaAddr();
+  for(y=0; y<m_iPicHeight; y++)
+	{
+    for(x=0; x<m_iPicWidth; x++)
+    {
+      pPelDst[x] = LUT[RemoveBitIncrement(pPelSrc[x])];
+    }
+    pPelDst += pcPicDst->getStride();
+    pPelSrc += getStride();
+  }
+  // Chroma
+  copyToPicCb(pcPicDst);
+  copyToPicCr(pcPicDst);
+}
+#endif

@@ -151,6 +151,7 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComDepthMapGenerator.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComLoopFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComMotionInfo.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComMP.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComMVDRefData.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPattern.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPic.cpp" />
@@ -186,6 +187,7 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComList.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComLoopFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComMotionInfo.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComMP.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComMv.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComMVDRefData.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPattern.h" />

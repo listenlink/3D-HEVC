@@ -36,6 +36,14 @@ public:
   Void  xWeightedPredictionUni( TComDataCU* pcCU, TComYuv* pcYuvSrc, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx );
   Void  xWeightedPredictionBi( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* rpcYuvDst );
 
+#if POZNAN_DBMP
+  Void  addWeightBi_DBMP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iPosX, Int iPosY, wpScalingParam *wp0, wpScalingParam *wp1, TComYuv* rpcYuvDst, Bool bRound=true );
+  Void  addWeightUni_DBMP( TComYuv* pcYuvSrc0, UInt iPartUnitIdx, UInt iPosX, Int iPosY, wpScalingParam *wp0, TComYuv* rpcYuvDst );
+
+  Void  xWeightedPredictionUni_DBMP( TComDataCU* pcCU, TComYuv* pcYuvSrc, UInt uiPartAddr, Int iPosX, Int iPosY, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx );
+  Void  xWeightedPredictionBi_DBMP( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iPosX, Int iPosY, TComYuv* rpcYuvDst );
+#endif
+
   __inline  Pel   xClip  ( Int x );
   __inline  Pel   weightBidir( Int w0, Pel P0, Int w1, Pel P1, Int round, Int shift, Int offset);
   __inline  Pel   weightUnidir( Int w0, Pel P0, Int round, Int shift, Int offset);

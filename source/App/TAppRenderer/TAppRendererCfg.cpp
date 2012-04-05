@@ -182,10 +182,20 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
 
   m_bUseSetupString = ( m_pchViewConfig != NULL ) && ( m_iRenderMode != 0);
 
+#if POZNAN_NONLINEAR_DEPTH      
+  TComNonlinearDepthModel cNonlinearDepthModel;
+  cNonlinearDepthModel.Clear();
+  cNonlinearDepthModel.Init();
+#endif
+
   if ( m_iRenderMode == 10 )
   {
     m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, NULL, m_iLog2SamplingFactor+m_iShiftPrecision );
+      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, NULL, m_iLog2SamplingFactor+m_iShiftPrecision
+#if POZNAN_NONLINEAR_DEPTH      
+      ,&cNonlinearDepthModel 
+#endif
+      );
     m_iNumberOfInputViews  = (Int) m_cCameraData.getBaseViewNumbers() .size();
     m_iNumberOfOutputViews = m_iNumberOfInputViews - 1;
     m_iRenderDirection     = 1;
@@ -204,12 +214,20 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     m_bContOutputFileNumbering = true;
 
   m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, piaTempViews, m_iLog2SamplingFactor+m_iShiftPrecision );
+      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, NULL, piaTempViews, m_iLog2SamplingFactor+m_iShiftPrecision
+#if POZNAN_NONLINEAR_DEPTH
+      , &cNonlinearDepthModel 
+#endif
+      );
   }
   else
   {
   m_cCameraData.init( MAX_INPUT_VIEW_NUM, uiInputBitDepth, uiCamParPrecision, (UInt)m_iFrameSkip, (UInt)m_iFramesToBeRendered,
-      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, m_pchSynthViewCameraNumbers, NULL, m_iLog2SamplingFactor+m_iShiftPrecision );
+      m_pchCameraParameterFile, m_pchBaseViewCameraNumbers, m_pchSynthViewCameraNumbers, NULL, m_iLog2SamplingFactor+m_iShiftPrecision
+#if POZNAN_NONLINEAR_DEPTH
+      ,&cNonlinearDepthModel 
+#endif
+      );
   m_iNumberOfOutputViews = (Int) m_cCameraData.getSynthViewNumbers().size();
   m_iNumberOfInputViews  = (Int) m_cCameraData.getBaseViewNumbers() .size();
   }
@@ -279,7 +297,11 @@ Void TAppRendererCfg::xCheckParameter()
 
 
   xConfirmPara( m_iPreFilterSize      < 0 || m_iPreFilterSize      >  3, "PreFilterSize      must be more than or equal to 0 and less than 4" );
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU 
+  xConfirmPara( m_iBlendMode          < 0 || m_iBlendMode          >  4, "BlendMode          must be more than or equal to 0 and less than 5"  );
+#else
   xConfirmPara( m_iBlendMode          < 0 || m_iBlendMode          >  3, "BlendMode          must be more than or equal to 0 and less than 4"  );
+#endif
   xConfirmPara( m_iBlendZThresPerc    < 0 || m_iBlendZThresPerc    > 100,"BlendZThresPerc    must be more than or equal to 0 and less than 101"  );
   xConfirmPara( m_iBlendHoleMargin    < 0 || m_iBlendHoleMargin    >  20,"BlendHoleMargin    must be more than or equal to 0 and less than 19"  );
   xConfirmPara( m_iInterpolationMode  < 0 || m_iInterpolationMode  >  4, "InterpolationMode  must be more than or equal to 0 and less than 5"  );

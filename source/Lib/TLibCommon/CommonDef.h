@@ -57,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "3.0rc2"                 ///< Current software version
-#define NV_VERSION        "0.4"                    ///< Current software version
+#define NV_VERSION        "0.3"                    ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -137,7 +137,7 @@
 #define LOG2_DISP_PREC_LUT   				2		  		///< log2 of disparity precision used in integer disparity LUTs
 
 
-#if ( HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED )
+#if ( HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED || POZNAN_MP_USE_DEPTH_MAP_GENERATION)
 #define DEPTH_MAP_GENERATION        1
 #else
 #define DEPTH_MAP_GENERATION        0
@@ -173,8 +173,17 @@
 
 #define OUTPUT_RESIDUAL_PICTURES          0         // output residual pictures (for debugging)
 
-#define HHI_MPI_MERGE_POS                     0         // position of mvi in merge list (0..5)
+#define HHI_MPI_MERGE_POS                 0         // position of mvi in merge list (0..5)
 
+// ====================================================================================================================
+// POZNAN DEFINE SECTION
+// ====================================================================================================================
+#define POZNAN_OUTPUT_AVAILABLE_MAP       0           // output available map (for debugging)
+#define POZNAN_OUTPUT_SYNTH               0           // output synthesised view (for debugging)
+
+#if POZNAN_DBMP
+#define POZNAN_DBMP_MERGE_POS             0         // position of DBMP candidate in merge list for coding (0..6) - overwrites PDM_MERGE_POS settings, is overwritten by HHI_MPI_MERGE_POS settings!!!
+#endif
 
 // ====================================================================================================================
 // Macro functions
@@ -185,7 +194,9 @@
 #define Median(a,b,c)               ((a)>(b)?(a)>(c)?(b)>(c)?(b):(c):(a):(b)>(c)?(a)>(c)?(a):(c):(b)) ///< 3-point median
 #define Clip(x)                     ( Min(g_uiIBDI_MAX, Max( 0, (x)) ) )                              ///< clip with bit-depth range
 #define Clip3( MinVal, MaxVal, a)   ( ((a)<(MinVal)) ? (MinVal) : (((a)>(MaxVal)) ? (MaxVal) :(a)) )  ///< general min/max clip
-#define RemoveBitIncrement(x)       ( (x + ( (1 << g_uiBitIncrement) >> 1 )) >> g_uiBitIncrement )     ///< Remove Bit increment
+#define RemoveBitIncrement(x)       ( ((x) + ( (1 << g_uiBitIncrement) >> 1 )) >> g_uiBitIncrement )     ///< Remove Bit increment
+
+#define SizeOfLUT                      256
 
 #define DATA_ALIGN                  1                                                                 ///< use 32-bit aligned malloc/free
 #if     DATA_ALIGN && _WIN32 && ( _MSC_VER > 1300 )
@@ -215,7 +226,12 @@
 // AMVP: advanced motion vector prediction
 #define AMVP_MAX_NUM_CANDS          6           ///< max number of final candidates
 // MERGE
+#if POZNAN_DBMP
+#define MRG_MAX_NUM_CANDS           7
+#define POZNAN_DBMP_MRG_CAND	MRG_MAX_NUM_CANDS-1			// position of DBMP candidate in merge list (0..6)
+#else
 #define MRG_MAX_NUM_CANDS           6
+#endif
 
 // Reference memory management
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
@@ -620,6 +636,70 @@ __inline T gSign(const T& t)
 }
 
 
+
+#if POZNAN_NONLINEAR_DEPTH
+struct TComNonlinearDepthModel // // OS: cannot be stdarray, due to memcpy done on SlicePilot
+{
+  Int m_aiPoints[257];
+  Int m_iNum;
+
+  Int m_aiX[257];
+  Int m_aiY[257];
+
+  Void Clear() { m_iNum=0; m_aiPoints[0]=0; m_aiPoints[1]=0; };
+  Void Init() 
+  { 
+    for (Int k=m_iNum+1; k>=0; --k)
+    {
+      int q = 255*k/(m_iNum+1);
+      m_aiX[k] = q + m_aiPoints[k];
+      m_aiY[k] = q - m_aiPoints[k];
+    }
+  };
+
+  Double xInterpolateD(Int *aiX,Int *aiY, Double x, Double dScale)
+  {
+    Int x1 = 0;
+    Int x2 = m_iNum+1;
+
+    for (;;)
+    {
+      if (x1+1>=x2)
+        return ((x-aiX[x1])*(aiY[x2]-aiY[x1])/(aiX[x2]-aiX[x1]) + aiY[x1])*dScale;
+      Int xm = (x1+x2)>>1;
+      if (x >= aiX[xm]) x1 = xm;
+      else              x2 = xm;
+    }
+  }
+
+  inline Double ForwardD(Double x,  Double dScale) { return xInterpolateD(m_aiX, m_aiY, x, dScale); }
+  inline Double BackwardD(Double x, Double dScale) { return xInterpolateD(m_aiY, m_aiX, x, dScale); }
+
+  Int64 xInterpolateI(Int *aiX,Int *aiY, Int x, Int64 iScale)
+  {
+    Int x1 = 0;
+    Int x2 = m_iNum+1;
+
+    for (;;)
+    {
+      if (x1+1>=x2)
+      {         
+        Int aiXx2x1 = (aiX[x2]-aiX[x1]);
+        Int64 res = (x-aiX[x1])*(aiY[x2]-aiY[x1])*iScale;
+        if (res>0) return (res + (aiXx2x1>>1) )/aiXx2x1 + aiY[x1]*iScale;
+        else       return (res - (aiXx2x1>>1) )/aiXx2x1 + aiY[x1]*iScale; 
+      }
+      Int xm = (x1+x2)>>1;
+      if (x >= aiX[xm]) x1 = xm;
+      else              x2 = xm;
+    }
+  }
+
+  inline Int64  ForwardI (Int x, Int64 iScale) { return xInterpolateI(m_aiX, m_aiY, x, iScale); }
+  inline Int64  BackwardI(Int x, Int64 iScale) { return xInterpolateI(m_aiY, m_aiX, x, iScale); }
+
+};
+#endif
 
 #endif // end of #ifndef  __COMMONDEF__
 

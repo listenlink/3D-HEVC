@@ -51,6 +51,10 @@
   #include "TComWeightPrediction.h"
 #endif
 
+#if POZNAN_MP
+#include "../TLibCommon/TComMP.h"
+#endif
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -123,6 +127,42 @@ protected:
   Void xDCTIF_FilterC_ha ( Pel*  piRefC, Int iRefStride,Pel*  piDstC,Int iDstStride,Int iWidth, Int iHeight,Int iMVyFrac,Int iMVxFrac);
 #endif
 
+#if POZNAN_DBMP
+#if HIGH_ACCURACY_BI
+#if DEPTH_MAP_GENERATION
+  Void xPredInterUni_DBMP       ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0, Bool bi=false          );
+#else
+  Void xPredInterUni_DBMP       ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi=false          );
+#endif
+#else
+#if DEPTH_MAP_GENERATION
+  Void xPredInterUni_DBMP       ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
+#else
+  Void xPredInterUni_DBMP       ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx          );
+#endif
+#endif
+#if DEPTH_MAP_GENERATION
+  Void xPredInterBi_DBMP        ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
+  Void xPredInterPrdDepthMap_DBMP( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift );
+#else
+  Void xPredInterBi_DBMP             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iPosX, Int iPosY,                         TComYuv*& rpcYuvPred, Int iPartIdx );
+  Void xPredInterPrdDepthMap_DBMP    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv, UInt uiRShift );
+#endif
+  
+  Void xPredInterLumaBlk_DBMP   ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv );
+  Void xPredInterChromaBlk_DBMP ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv );
+  
+#if DEPTH_MAP_GENERATION
+  Void xWeightedAveragePdm_DBMP      ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iPosX, Int iPosY, TComYuv*& rpcYuvDst, UInt uiSubSampExpX, UInt uiSubSampExpY );
+#endif
+  Void xWeightedAverage_DBMP         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iPosX, Int iPosY, TComYuv*& rpcYuvDst ); 
+  
+#if HIGH_ACCURACY_BI
+  Void xPredInterLumaBlk_DBMP_ha( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv );
+  Void xPredInterChromaBlk_DBMP_ha( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iPosX, Int iPosY,                         TComYuv*& rpcYuv                            );
+#endif
+#endif
+
 #if HHI_DMM_WEDGE_INTRA
   Void xPredIntraWedgeFull       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder, Bool bDelta, UInt uiTabIdx, Int iDeltaDC1 = 0, Int iDeltaDC2 = 0 );
 
@@ -159,6 +199,15 @@ public:
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
 #else
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
+#endif
+  
+#if POZNAN_DBMP
+#if DEPTH_MAP_GENERATION
+  Void motionCompensation_DBMP         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
+#else
+  Void motionCompensation_DBMP         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
+#endif
+  
 #endif
   
   // motion vector prediction

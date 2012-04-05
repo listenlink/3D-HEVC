@@ -50,6 +50,10 @@
 #include "../../Lib/TLibRenderer/TRenTop.h"
 //GT VSO end
 
+#if POZNAN_MP
+#include "../../Lib/TLibCommon/TComMP.h"
+#endif	
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -91,6 +95,13 @@ private:
   TRenModel                   m_cRendererModel;   
 #endif
 
+#if POZNAN_SYNTH
+  TRenTop                     m_cAvailabilityRenderer;
+#endif
+
+#if POZNAN_MP
+  TComMP*				  m_pcMP;
+#endif
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -144,6 +155,10 @@ public:
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
 #endif
 
+#if POZNAN_MP
+  TComMP* getMP() {return m_pcMP;}
+#endif
+
 #if HHI_VSO
 private:
   std::vector<TVideoIOYuv*>		               m_acTVideoIOYuvERFileList;
@@ -154,6 +169,17 @@ private:
   Void  xStoreVSORefPicsInBuffer();                                                   ///< read in External Ref pic from file and store in buffer
 #endif
   
+
+#if POZNAN_SYNTH
+private:
+  Void  xStoreSynthPicsInBuffer(Int iCoddedViewIdx, Bool bDepth);
+#endif
+
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+private:
+  Void xStoreDepthSynthPicsInBuffer(Int iCoddedViewIdx);
+#endif
+
 };// END CLASS DEFINITION TAppEncTop
 
 #endif // __TAPPENCTOP__

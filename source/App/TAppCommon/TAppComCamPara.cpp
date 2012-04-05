@@ -75,12 +75,12 @@ TAppComCamPara::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews,
       raiShiftParams[ uiSourceView ][ uiTargetView ]      = new Int64  [ 2 ];
 
       radLUT        [ uiSourceView ][ uiTargetView ]      = new Double*[ 2 ];
-      radLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Double [ 257 ];
-      radLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Double [ 257 ];
+      radLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Double [ SizeOfLUT+1 ];
+      radLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Double [ SizeOfLUT+1 ];
 
       raiLUT        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
-      raiLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
-      raiLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
+      raiLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ SizeOfLUT+1 ];
+      raiLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ SizeOfLUT+1 ];
     }
   }
 }
@@ -876,16 +876,33 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
       radShiftParams[ uiSourceView][ uiTargetView ][ 0 ] = dScale;
       radShiftParams[ uiSourceView][ uiTargetView ][ 1 ] = dOffset;
 
-      for( UInt uiDepthValue = 0; uiDepthValue < 256; uiDepthValue++ )
+      for( UInt uiDepthValue = 0; uiDepthValue < SizeOfLUT; uiDepthValue++ )
       {
         // real-valued look-up tables
+#if POZNAN_NONLINEAR_DEPTH
+        Double  dShiftLuma;
+        if(m_bUseNonlinearDepth)
+          dShiftLuma      = ( m_cNonlinearDepthModel.BackwardD((Double)uiDepthValue, dScale) + dOffset ) * Double( 1 << m_iLog2Precision );
+        else
+          dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#else
         Double  dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#endif
         Double  dShiftChroma    = dShiftLuma / 2;
         radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = dShiftLuma;
         radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = dShiftChroma;
 
         // integer-valued look-up tables
+#if POZNAN_NONLINEAR_DEPTH
+        Int64   iTempScale;
+        if(m_bUseNonlinearDepth)
+          iTempScale      = (Int64)m_cNonlinearDepthModel.BackwardI(uiDepthValue, iScale);
+        else
+          iTempScale      = (Int64)uiDepthValue * iScale;
+
+#else
         Int64   iTempScale      = (Int64)uiDepthValue * iScale;
+#endif
         Int64   iTestScale      = ( iTempScale + iOffset       );   // for checking accuracy of camera parameters
         Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
         Int64   iShiftChroma    = ( iTempScale + iOffsetChroma ) >> iLog2DivChroma;
@@ -898,10 +915,10 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
         dMaxRndDispDvC  = Max( dMaxRndDispDvC, fabs( Double( (Int) iShiftChroma ) - dShiftChroma ) );
       }
 
-      radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
-      radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
-      raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
-      raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+      radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ SizeOfLUT ] = radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ SizeOfLUT-1 ];
+      radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ SizeOfLUT ] = radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ SizeOfLUT-1 ];
+      raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ SizeOfLUT ] = raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ SizeOfLUT-1 ];
+      raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ SizeOfLUT ] = raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ SizeOfLUT-1 ];
     }
   }
 
@@ -1234,7 +1251,11 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
                       Char*  pchBaseViewNumbers,
                       Char*  pchSynthViewNumbers,
                       std::vector<Int>* paiSynthViewNumbers,
-                      Int    iLog2Precision )
+                      Int    iLog2Precision
+#if POZNAN_NONLINEAR_DEPTH
+                      ,TComNonlinearDepthModel* pcNonlinearDepthModel
+#endif
+                      )
 {
   //===== set miscellaneous variables =====
   m_uiInputBitDepth         = uiInputBitDepth;
@@ -1242,6 +1263,12 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
   m_uiLastFrameId           = uiStartFrameId + uiNumFrames - 1;
   m_uiCamParsCodedPrecision = uiCodedCamParsPrecision;
   m_iLog2Precision          = iLog2Precision;
+
+#if POZNAN_NONLINEAR_DEPTH
+  m_bUseNonlinearDepth = (pcNonlinearDepthModel != NULL) ? true : false;
+  if(pcNonlinearDepthModel != NULL)
+    m_cNonlinearDepthModel    = *pcNonlinearDepthModel;
+#endif
 
   xReadCameraParameterFile( pchCfgFileName );
 
@@ -1459,6 +1486,29 @@ TAppComCamPara::getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int
   return bExist;
 }
 
+#if POZNAN_SYNTH
+Bool
+TAppComCamPara::getNearestBaseView( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft)
+{
+  riNearestViewIdx = 0;
+
+  if( ( m_aiBaseId2SortedId[iSynthViewIdx] - m_aiBaseId2SortedId[riNearestViewIdx] )  > 0 )
+  {
+    rbRenderFromLeft = true;
+  }
+  else
+  {
+    rbRenderFromLeft = false;
+  }
+
+  riRelDistToLeft = 128; //Not used for now;
+
+  return true;
+}
+#endif
+
+
+
 Int TAppComCamPara::getRelDistLeft( Int iSynthViewIdx, Int iLeftViewIdx, Int iRightViewIdx )
 {
   //GT: Get normalized distance
@@ -1473,3 +1523,16 @@ TAppComCamPara::synthRelNum2Idx( Int iRelNum )
 {
   return xGetViewId(m_aiRelSynthViewsNum, iRelNum );
 }
+
+
+#if POZNAN_MP
+Bool
+TAppComCamPara::isLeftView( Int iSynthViewIdx, Int iNearestViewIdx)
+{
+  Bool bDecencdingVN = ( m_aiSortedBaseViews.size() >= 2 && m_aiSortedBaseViews[ 0 ] > m_aiSortedBaseViews[ 1 ] );
+  Int  iFactor       = ( bDecencdingVN ? -1 : 1 );
+
+  if( ( m_aiBaseId2SortedId[iSynthViewIdx] - m_aiBaseId2SortedId[iNearestViewIdx] ) * iFactor  <= 0 ) return true;
+  else return false;
+}
+#endif

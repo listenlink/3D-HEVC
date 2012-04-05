@@ -231,7 +231,7 @@ public:
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_DBMP
   Void codeMergeIndexMV  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED

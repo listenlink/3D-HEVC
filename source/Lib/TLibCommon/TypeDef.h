@@ -40,8 +40,10 @@
 
 
 #define BITSTREAM_EXTRACTION            1
+
 #define FLEX_CODING_ORDER               1
-#define DISABLE_FCO_FOR_VSO             0
+
+#define FLEXCO_CAMPARAM_IN_DEPTH        FLEX_CODING_ORDER // encode pamera parameters in depth SPS
 
 #define SONY_COLPIC_AVAILABILITY        1
 
@@ -56,7 +58,6 @@
 #define HHI_VSO_COLOR_PLANES            1   // view synthesis optimization in color planes
 #define HHI_VSO_DIST_INT                1   // view synthesis optimization integer distorition in rdo process
 #define HHI_VSO_LS_TABLE                1   // table based lambda scaling
-#define HHI_VSO_PRINT_DIST              0   // print VSO distortion instead of depth distrotion
 
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE && !HHI_INTERVIEW_SKIP
   #error "HHI_INTERVIEW_SKIP_LAMBDA_SCALE cannot be enabled if HHI_INTERVIEW_SKIP is not"
@@ -68,7 +69,73 @@
 #define HHI_NO_LowDelayCoding           0   // old-fashioned encoder control, should be adapted to hm5.0
 //<<<<< HHI 3DV tools <<<<<
 
+//<<<<< Poznan 3DV tools <<<<<<
+#define POZNAN_CU_SKIP              1 //Poznan Cu Skip
+#define POZNAN_CU_SYNTH             1 //Poznan Cu Synth
 
+#define POZNAN_AVAIL_MAP            1 //Creates Availibity buffers in all needed classes
+
+#define POZNAN_SYNTH_VIEW           1 //Creates view synthesis buffers in all needed classes
+#define POZNAN_SYNTH_DEPTH          1
+
+#define POZNAN_SYNTH                1 //Creates aligned synthesis classes in encoder and decoder
+
+#define POZNAN_ENCODE_ONLY_DISOCCLUDED_CU          1 //Poznan CU Skip
+#define POZNAN_FILL_OCCLUDED_CU_WITH_SYNTHESIS     1 //Fill not sended CUs with synthesized data
+
+#define POZNAN_VSO_FIX              0
+
+#define POZNAN_CU_SKIP_PSNR         1 //Poznan Cu Skip Display psnr of the codded CUs only
+
+#define POZNAN_NONLINEAR_DEPTH              1	 /// Non-linear depth processing
+#define POZNAN_NONLINEAR_DEPTH_THRESHOLD    1  /// Non-linear depth thrasholding
+
+#if POZNAN_SYNTH 
+#define POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH 1 /// Increase QP for texture CUs that are in the background (according to proper depth map). This QP change is not encoded in a bitstream
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH     
+ #define POZNAN_TEXTURE_TU_DELTA_QP_NOT_IN_BASE_VIEW 1     /// should not be disabled in current software version - no depth synthesis map is available for base view anyway  
+ #define POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_CU_ROW 1    /// increase of QP param for top and bottom LCU row in frame 
+ #define POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC 0 /// used for optimization of function calculating dQP from depth block max value. Standard values set if disabled. If enabled params are set in cfg file for encoder (no decoder is supported in that case).
+  #if !POZNAN_TEXTURE_TU_DELTA_QP_PARAM_IN_CFG_FOR_ENC
+    #define POZNAN_TEXTURE_TU_DELTA_QP_OFFSET (-2.6)
+    #define POZNAN_TEXTURE_TU_DELTA_QP_MUL (1)
+    #define POZNAN_TEXTURE_TU_DELTA_QP_TOP_BOTTOM_ROW_VAL (0)
+  #endif
+#endif
+
+#define POZNAN_MP                                  1    /// Depth-Based Multiview Prediction of CU parameters
+#if POZNAN_MP
+
+#define POZNAN_MP_USE_DEPTH_MAP_GENERATION 0 // determines if DEPTH_MAP_GENERATION is used for calculating corresponding pixel position in PUT multiview prediction (POZNAN_MP): 
+										                                                        //			POZNAN_MP_USE_DEPTH_MAP_GENERATION=1 - use DEPTH_MAP_GENERATION, 
+										                                                        //			POZNAN_MP_USE_DEPTH_MAP_GENERATION=0 - use reconstructed depth maps from neighboring views
+
+#if !POZNAN_MP_USE_DEPTH_MAP_GENERATION 
+#define POZNAN_MP_USE_CURRENT_VIEW_DEPTH_MAP_IF_AVAILABLE 1 // Depth-Based Multiview Prediction of CU parameters will use depth picture of current view if this picture is available, otherwise reference view depth is utilized
+#endif
+
+#define POZNAN_MP_FILL                             1    // Depth-Based Multiview Prediction of CU parameters with fill option for occluded areas
+#if POZNAN_MP_FILL
+#define POZNAN_MP_FILL_TYPE                        0    // Variant of fill algorithm used for occluded areas (0 - smaller disparity, 1 - larger disparity)
+#endif
+
+// ---------------------------------------
+
+#define POZNAN_DBMP                                1    // Depth Based Motion Prediction prediction for MERGE
+#if POZNAN_DBMP
+#define POZNAN_DBMP_USE_FOR_TEXTURE                  1    //use Depth Based Motion Prediction in texture pictures (0 - no, 1 -yes)
+#define POZNAN_DBMP_USE_FOR_DEPTH                  1    // use Depth Based Motion Prediction in depth pictures (0 - no, 1 -yes)
+
+#define POZNAN_DBMP_CALC_PRED_DATA 	        1    // Depth Based Motion Prediction motion data used for prediction in other CUs is calculated based on all CU points (otherwise motion data for none-MP points is used for prediction)
+#define POZNAN_DBMP_COMPRESS_ME_DATA	        0    // Depth Based Motion Prediction derives representative motion data from reference CUs even if they are DBMP-based predicted (otherwise motion data is derived with per-point resolution for DBMP-based predicted reference CUs)
+#define POZNAN_DBMP_USE_IN_NONANCHOR_PIC_ONLY     	1    // determines if Depth Based Motion Prediction is used in non-anchor pictures only
+#endif
+
+#endif
+
+
+//<<<<< Poznan 3DV tools <<<<<<
 
 ////////////////////////////
 // AHG18 Weighted Prediction defines section start
@@ -332,8 +399,6 @@ enum MODE_IDX
 #endif
 #endif
 
-
-
 // ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================
@@ -585,6 +650,9 @@ enum PredMode
   MODE_SKIP,            ///< SKIP mode
   MODE_INTER,           ///< inter-prediction mode
   MODE_INTRA,           ///< intra-prediction mode
+#if POZNAN_SYNTH
+  MODE_SYNTH,           ///< synth-mode
+#endif
   MODE_NONE = 15
 };
 

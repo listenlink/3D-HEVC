@@ -351,20 +351,56 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if MTK_SAO
   xWriteFlag( pcSPS->getUseSAO() ? 1 : 0);
 #endif
-
   if( pcSPS->getViewId() || pcSPS->isDepth() )
   {
     xWriteFlag( 0 ); // inverse of RBSP stop bit (for backwards compatible extension)
+#if POZNAN_DBMP
+	  xWriteFlag( pcSPS->getDBMP() );
+#endif
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+	  xWriteFlag( pcSPS->getUseCUSkip() );
+#endif
     if( pcSPS->isDepth() )
     {
       xWriteFlag( 1 ); // depth
       xWriteUvlc( pcSPS->getViewId() );
       xWriteSvlc( pcSPS->getViewOrderIdx() );
+#if FLEXCO_CAMPARAM_IN_DEPTH
+      if ( pcSPS->getViewId() != 0) 
+      {
+        xWriteUvlc( pcSPS->getCamParPrecision() );
+        xWriteFlag( pcSPS->hasCamParInSliceHeader() ? 1 : 0 );
+        if( !pcSPS->hasCamParInSliceHeader() )
+        {
+          for( UInt uiId = 0; uiId < pcSPS->getViewId(); uiId++ )
+          {
+            xWriteSvlc( pcSPS->getCodedScale    ()[ uiId ] );
+            xWriteSvlc( pcSPS->getCodedOffset   ()[ uiId ] );
+            xWriteSvlc( pcSPS->getInvCodedScale ()[ uiId ] + pcSPS->getCodedScale ()[ uiId ] );
+            xWriteSvlc( pcSPS->getInvCodedOffset()[ uiId ] + pcSPS->getCodedOffset()[ uiId ] );
+          }
+        }
+      }
+#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
       xWriteFlag( pcSPS->getUseDMM() ? 1 : 0 );
 #endif
 #if HHI_MPI
       xWriteFlag( pcSPS->getUseMVI() ? 1 : 0 );
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+      if( pcSPS->getUseNonlinearDepth() )
+      {
+        xWriteFlag( 1 ); //Nonlinear Depth Representation
+        // Nonlinear Depth Model coefficient
+        xWriteUvlc(pcSPS->getNonlinearDepthModel().m_iNum);
+        for (int i=1; i<=pcSPS->getNonlinearDepthModel().m_iNum; ++i)
+          xWriteUvlc(pcSPS->getNonlinearDepthModel().m_aiPoints[i]);
+      }
+      else
+      {
+        xWriteFlag( 0 ); // Don't use Nonlinear Depth Representation
+      }
 #endif
     }
     else
@@ -401,6 +437,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
         xWriteFlag  ( pcSPS->getMultiviewResPredMode() );
 #endif
       }
+#endif
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+      xWriteFlag  ( pcSPS->getUseTexDqpAccordingToDepth() ? 1 : 0 );
 #endif
     }
   }
@@ -760,12 +799,22 @@ Void TEncCavlc::codeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 
 
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_DBMP
 Void 
 TEncCavlc::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiNumCand  = 0;
   UInt uiMergeIdx = pcCU->getMergeIndex( uiAbsPartIdx );
+
+#if POZNAN_DBMP
+  UInt uiModIdx;
+  const Bool bDBMPAvailable = pcCU->getSlice()->getMP()->isDBMPEnabled();
+  if(bDBMPAvailable)
+  {	  
+	  if(uiMergeIdx==POZNAN_DBMP_MRG_CAND) uiMergeIdx = POZNAN_DBMP_MERGE_POS;
+	  else if(uiMergeIdx>=POZNAN_DBMP_MERGE_POS) uiMergeIdx++;
+  }
+#endif
 #if HHI_MPI
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
   const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : MRG_MAX_NUM_CANDS;
@@ -783,6 +832,23 @@ TEncCavlc::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
   {
     if( uiIdx < uiMviMergePos )
     {
+#if POZNAN_DBMP
+	    if(bDBMPAvailable)
+	    {
+		    if(uiIdx==POZNAN_DBMP_MERGE_POS) uiModIdx = POZNAN_DBMP_MRG_CAND;
+		    else if(uiIdx>POZNAN_DBMP_MERGE_POS) uiModIdx = uiIdx--;
+		    else uiModIdx = uiIdx;
+	    }
+	    else uiModIdx = uiIdx;
+	    if( pcCU->getNeighbourCandIdx( uiModIdx, uiAbsPartIdx ) == uiModIdx + 1 )
+	    {
+        uiNumCand++;
+      }
+      else if( uiIdx < uiMergeIdx )
+      {
+        uiUnaryIdx--;
+      }
+#else
       if( pcCU->getNeighbourCandIdx( uiIdx, uiAbsPartIdx ) == uiIdx + 1 )
       {
         uiNumCand++;
@@ -791,9 +857,27 @@ TEncCavlc::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
       {
         uiUnaryIdx--;
       }
+#endif
     }
     else if( uiIdx > uiMviMergePos )
     {
+#if POZNAN_DBMP
+	  if(bDBMPAvailable)
+	  {
+		  if(uiIdx==POZNAN_DBMP_MERGE_POS) uiModIdx = POZNAN_DBMP_MRG_CAND;
+		  else if(uiIdx>POZNAN_DBMP_MERGE_POS) uiModIdx = uiIdx--;
+		  else uiModIdx = uiIdx;
+	  }
+	  else uiModIdx = uiIdx;
+	  if( pcCU->getNeighbourCandIdx( uiModIdx-1, uiAbsPartIdx ) == uiModIdx )
+	  {
+        uiNumCand++;
+      }
+      else if( uiIdx < uiMergeIdx )
+      {
+        uiUnaryIdx--;
+      }
+#else
       if( pcCU->getNeighbourCandIdx( uiIdx - 1, uiAbsPartIdx ) == uiIdx )
       {
         uiNumCand++;
@@ -802,12 +886,30 @@ TEncCavlc::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
       {
         uiUnaryIdx--;
       }
+#endif
     }
   }
 #else
   UInt uiUnaryIdx = uiMergeIdx;
   for( UInt uiIdx = 0; uiIdx < MRG_MAX_NUM_CANDS; uiIdx++ )
   {
+#if POZNAN_DBMP
+	if(bDBMPAvailable)
+	{
+	  if(uiIdx==POZNAN_DBMP_MERGE_POS) uiModIdx = POZNAN_DBMP_MRG_CAND;
+	  else if(uiIdx>POZNAN_DBMP_MERGE_POS) uiModIdx = uiIdx--;
+	  else uiModIdx = uiIdx;
+	}
+	else uiModIdx = uiIdx;
+	if( pcCU->getNeighbourCandIdx( uiModIdx, uiAbsPartIdx ) == uiModIdx + 1 )
+	{
+	  uiNumCand++;
+	}
+	else if( uiIdx < uiMergeIdx )
+	{
+	  uiUnaryIdx--;
+	}
+#else
     if( pcCU->getNeighbourCandIdx( uiIdx, uiAbsPartIdx ) == uiIdx + 1 )
     {
       uiNumCand++;
@@ -816,6 +918,7 @@ TEncCavlc::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
     {
       uiUnaryIdx--;
     }
+#endif
   }
 #endif
   AOF( uiNumCand > 1 );
@@ -839,6 +942,7 @@ TEncCavlc::codeMergeIndexMV( TComDataCU* pcCU, UInt uiAbsPartIdx )
  */
 Void TEncCavlc::codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+/* todo JAcek sprawdzic co jest zgane
 #if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
 #if HHI_INTER_VIEW_MOTION_PRED && HHI_MPI
   if( ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
@@ -847,7 +951,20 @@ Void TEncCavlc::codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
   if( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
 #else
   if( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE )
+#endif//*/
+#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI || POZNAN_DBMP
+  if( 
+#if HHI_INTER_VIEW_MOTION_PRED
+	  ( pcCU->getSlice()->getSPS()->getViewId() > 0 && ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE ) ||
 #endif
+#if HHI_MPI
+	  ( pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ||
+#endif
+#if	POZNAN_DBMP  
+	  ( pcCU->getSlice()->getMP()->isDBMPEnabled() ) ||
+#endif
+	  0
+    )
   {
     codeMergeIndexMV( pcCU, uiAbsPartIdx );
     return;

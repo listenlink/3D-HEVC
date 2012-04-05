@@ -174,6 +174,10 @@ public:
   Void  setLumaTo    ( Pel pVal );  
   Void  setChromaTo  ( Pel pVal );  
 
+#if POZNAN_NONLINEAR_DEPTH
+  Void nonlinearDepthForward(TComPicYuv *pcPicDst, TComNonlinearDepthModel &rcNonlinearDepthModel);
+  Void nonlinearDepthBackward(TComPicYuv *pcPicDst, TComNonlinearDepthModel &rcNonlinearDepthModel);
+#endif
 };// END CLASS DEFINITION TComPicYuv
 
 void calcMD5(TComPicYuv& pic, unsigned char digest[16]);

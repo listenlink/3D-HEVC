@@ -54,6 +54,10 @@
 #include "TDecSbac.h"
 #include "TDecCAVLC.h"
 
+#if POZNAN_MP
+#include "../TLibCommon/TComMP.h"
+#endif
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -70,6 +74,15 @@ public:
   Void  init        ( FILE* pCodedScaleOffsetFile );
   Void  uninit      ();
   Void  setSlice    ( TComSlice* pcSlice );
+#if POZNAN_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
+  Double****          getBaseViewShiftLUTD      ()  { return m_adBaseViewShiftLUT;   }
+  Int****             getBaseViewShiftLUTI      ()  { return m_aiBaseViewShiftLUT;   }
+
+  Int**               getBaseViewOffsetI        ()  { return m_aaiCodedOffset;   }
+  Int**               getBaseViewScaleI         ()  { return m_aaiCodedScale;   }
+
+  Bool                getNearestBaseView        ( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft);
+#endif
 
 private:
   Bool  xIsComplete ();
@@ -88,7 +101,89 @@ private:
   Int     m_iLastViewId;
   Int     m_iLastPOC;
   UInt    m_uiMaxViewId;
+
+#if POZNAN_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
+
+  UInt    m_uiBitDepthForLUT;
+  UInt    m_iLog2Precision;
+  UInt    m_uiInputBitDepth;
+
+  // look-up tables
+  Double****          m_adBaseViewShiftLUT;										///< Disparity LUT
+  Int****             m_aiBaseViewShiftLUT;									  ///< Disparity LUT
+
+  Void xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT);
+  Void xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT);
+
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 );
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2 );
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
+#endif
+#if POZNAN_NONLINEAR_DEPTH
+  TComNonlinearDepthModel m_cNonlinearDepthModel; 
+  Bool m_bUseNonlinearDepth;
+#endif
+
+
 };
+
+#if POZNAN_SYNTH || (POZNAN_MP && !POZNAN_MP_USE_DEPTH_MAP_GENERATION)
+  template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
+    {
+      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
+      {
+        for( UInt uiM = 0; uiM < uiSize3; uiM++ )
+        {
+          delete[] rpt[ uiK ][ uiL ][ uiM ];
+        }
+        delete[] rpt[ uiK ][ uiL ];
+      }
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+
+
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2 )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
+    {
+      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
+      {
+        delete[] rpt[ uiK ][ uiL ];
+      }
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+
+
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize; uiK++ )
+    {
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+#endif
 
 
 /// decoder class
@@ -140,6 +235,10 @@ private:
   TComResidualGenerator   m_cResidualGenerator;
 #endif
 
+#if POZNAN_MP
+  TComMP*				  m_pcMP;
+#endif
+
   Bool                    m_bIsDepth;
   Int                     m_iViewIdx;
 #if SONY_COLPIC_AVAILABILITY
@@ -173,7 +272,6 @@ public:
   Bool  decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame, Int& iPOCLastDisplay, Bool& bNewPictureType);
 #else
   Bool  decode (Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS, Int& iSkipFrame, Int& iPOCLastDisplay);
-
 #endif
 #else
   Void  decode ( Bool bEos, TComBitstream* pcBitstream, UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, NalUnitType& reNalUnitType, TComSPS& cComSPS );

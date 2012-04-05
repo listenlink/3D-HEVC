@@ -103,6 +103,10 @@ private:
   Double****          m_adSynthViewShiftLUT;									///< Disparity LUT
   Int****             m_aiSynthViewShiftLUT;									///< Disparity LUT
 
+#if POZNAN_NONLINEAR_DEPTH
+  TComNonlinearDepthModel m_cNonlinearDepthModel;
+  Bool                m_bUseNonlinearDepth;
+#endif
 
 protected:
   // create and delete arrays
@@ -160,7 +164,11 @@ public:
                 Char*   pchBaseViewNumbers,
                 Char*   pchSynthViewNumbers,
                 std::vector<Int>* paiSynthViewNumbers,
-                Int     iLog2Precision );
+                Int     iLog2Precision 
+#if POZNAN_NONLINEAR_DEPTH
+                ,TComNonlinearDepthModel* pcNonlinearDepthModel
+#endif
+                );
 
   Void init   ( UInt    uiInputBitDepth,
                 UInt    uiStartFrameId,
@@ -169,6 +177,9 @@ public:
                 Char*   pchSynthViewNumbers,
                 std::vector<Int>* paiSynthViewNumbers,
                 Int     iLog2Precision
+#if POZNAN_NONLINEAR_DEPTH
+                ,TComNonlinearDepthModel* pcNonlinearDepthModel
+#endif
               );
 
 
@@ -181,9 +192,17 @@ public:
 
   Int                 synthRelNum2Idx           ( Int iRelNum );
   Bool getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int &riRightViewIdx, Int &riRelDistToLeft, Bool& rbIsBaseView );
+#if POZNAN_SYNTH
+  Bool getNearestBaseView( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft);
+#endif
+
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
+
+#if POZNAN_MP
+  Bool isLeftView( Int iSynthViewIdx, Int iNearestViewIdx);
+#endif
 
   // function for getting parameters and parameter arrays
   std::vector<Int>&   getBaseViewNumbers        ()  { return m_aiBaseViews;       }

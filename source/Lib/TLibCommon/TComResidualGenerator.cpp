@@ -305,6 +305,11 @@ TComResidualGenerator::xSetRecResidualCU( TComDataCU* pcCU, UInt uiDepth, UInt u
   case MODE_INTER:
     xSetRecResidualInterCU( pcSubCU, pcSubRes );
     break;
+#if POZNAN_ENCODE_ONLY_DISOCCLUDED_CU
+  case MODE_SYNTH:
+    xSetRecResidualIntraCU( pcSubCU, pcSubRes ); //MayBe it should be seperate function
+    break;
+#endif
   default:
     AOT( true );
     break;
@@ -335,14 +340,22 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   Pel*    pRes      = pcCUResidual->getLumaAddr();
   UInt    uiLumaTrMode, uiChromaTrMode;
   pcCU->convertTransIdx             ( 0, pcCU->getTransformIdx( 0 ), uiLumaTrMode, uiChromaTrMode );
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  m_pcTrQuant->setQPforQuant        ( pcCU->getQP( 0 ) + pcCU->getQpOffsetForTextCU(0/*uiAbsPartIdx*/, false), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA );
+#else
   m_pcTrQuant->setQPforQuant        ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA );
+#endif
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_LUMA, pRes, 0, pcCUResidual->getStride(), uiWidth, uiHeight, uiLumaTrMode, 0, piCoeff );
   // chroma Cb
   uiWidth   >>= 1;
   uiHeight  >>= 1;
   piCoeff     = pcCU->getCoeffCb();
   pRes        = pcCUResidual->getCbAddr();
+#if POZNAN_TEXTURE_TU_DELTA_QP_ACCORDING_TO_DEPTH
+  m_pcTrQuant->setQPforQuant        ( pcCU->getQP( 0 ) + pcCU->getQpOffsetForTextCU(0/*uiAbsPartIdx*/, false), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_CHROMA );
+#else
   m_pcTrQuant->setQPforQuant        ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_CHROMA );
+#endif
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_CHROMA_U, pRes, 0, pcCUResidual->getCStride(), uiWidth, uiHeight, uiChromaTrMode, 0, piCoeff );
   // chroma Cr
   piCoeff     = pcCU->getCoeffCr();

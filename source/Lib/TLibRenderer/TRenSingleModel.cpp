@@ -138,8 +138,8 @@ TRenSingleModel::create( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int
 
   if (m_iMode == 2)
   {
-    m_piInvZLUTLeft  = new Int[257];
-    m_piInvZLUTRight = new Int[257];
+    m_piInvZLUTLeft  = new Int[SizeOfLUT+1];
+    m_piInvZLUTRight = new Int[SizeOfLUT+1];
   }
 
   m_iGapTolerance  = ( 2 << iShiftPrec );
