@@ -288,7 +288,7 @@ Void TAppDecTop::decode()
         bIsDepth = bNewPictureType;	  
 
       }
-      if (bCountDepthViewIdx == false )
+       if (m_bUsingDepth && bCountDepthViewIdx == false )
       {
         bCountDepthViewIdx = true;
         if (bIsDepth == true)
@@ -314,7 +314,7 @@ Void TAppDecTop::decode()
           iViewIdx ++;
         }
 
-        if (iViewIdx >= m_acTDecTopList.size() || iDepthViewIdx >= m_acTDecDepthTopList.size())
+         if (iViewIdx >= m_acTDecTopList.size() || (m_bUsingDepth && iDepthViewIdx >= m_acTDecDepthTopList.size()))
         {
           bFirstDepth = false;
           iViewIdx = 0;
