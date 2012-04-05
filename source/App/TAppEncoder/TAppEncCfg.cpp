@@ -203,8 +203,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
 
 #if FLEX_CODING_ORDER
-  ("3DVFlexOrder",          m_b3DVFlexOrder,   false, "flexible coding order flag" )
-  ("3DVCodingOrder",		cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
+  ("FCO",           m_b3DVFlexOrder,   false, "flexible coding order flag" )
+  ("CodingOrder",		cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
 #endif
 
   /* Unit definition parameters */
