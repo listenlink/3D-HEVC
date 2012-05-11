@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,34 +31,27 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     ContextModel3DBuffer.cpp
     \brief    context model 3D buffer class
 */
 
 #include "ContextModel3DBuffer.h"
 
+//! \ingroup TLibCommon
+//! \{
+
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
 
-ContextModel3DBuffer::ContextModel3DBuffer( UInt uiSizeZ, UInt uiSizeY, UInt uiSizeX ) :
-m_pcContextModel( NULL ),
-m_uiSizeX( uiSizeX ),
-m_uiSizeY( uiSizeY ),
-m_uiSizeZ( uiSizeZ )
-
+ContextModel3DBuffer::ContextModel3DBuffer( UInt uiSizeZ, UInt uiSizeY, UInt uiSizeX, ContextModel *basePtr, Int &count )
+: m_sizeX  ( uiSizeX )
+, m_sizeXY ( uiSizeX * uiSizeY )
+, m_sizeXYZ( uiSizeX * uiSizeY * uiSizeZ )
 {
   // allocate 3D buffer
-  m_pcContextModel = new ContextModel[ uiSizeZ * m_uiSizeY * m_uiSizeX ];
-}
-
-ContextModel3DBuffer::~ContextModel3DBuffer()
-{
-  // delete 3D buffer
-  delete [] m_pcContextModel;
-  m_pcContextModel = NULL;
+  m_contextModel = basePtr;
+  count += m_sizeXYZ;
 }
 
 // ====================================================================================================================
@@ -66,34 +59,66 @@ ContextModel3DBuffer::~ContextModel3DBuffer()
 // ====================================================================================================================
 
 /**
- - initialize 3D buffer with respect to slicetype, QP and given initial probability table
- .
- \param  eSliceType      slice type
- \param  iQP             input QP value
- \param  psCtxModel      given probability table
+ * Initialize 3D buffer with respect to slicetype, QP and given initial probability table
+ *
+ * \param  eSliceType      slice type
+ * \param  iQp             input QP value
+ * \param  psCtxModel      given probability table
  */
-Void ContextModel3DBuffer::initBuffer( SliceType eSliceType, Int iQp, Short* psCtxModel )
+Void ContextModel3DBuffer::initBuffer( SliceType sliceType, Int qp, UChar* ctxModel )
 {
-  UInt n, z, offset = 0;
+  ctxModel += sliceType * m_sizeXYZ;
   
-  for ( z = 0; z < m_uiSizeZ; z++ )
+  for ( Int n = 0; n < m_sizeXYZ; n++ )
   {
-    for ( n = 0; n < m_uiSizeY * m_uiSizeX; n++ )
-    {
-      m_pcContextModel[ offset + n ].init( iQp, psCtxModel + eSliceType * 2 * ( m_uiSizeZ * m_uiSizeY * m_uiSizeX ) + 2 * (n + offset) );
-    }
-    offset += n;
+    m_contextModel[ n ].init( qp, ctxModel[ n ] );
+#if CABAC_INIT_FLAG
+    m_contextModel[ n ].setBinsCoded( 0 );
+#endif
   }
-  return;
 }
 
+#if CABAC_INIT_FLAG
 /**
- - copy from given 3D buffer
- .
- \param  pSrc          given 3D buffer
+ * Calculate the cost of choosing a probability table based on the current probability of CABAC at encoder
+ *
+ * \param  sliceType      slice type
+ * \param  qp             input QP value
+ * \param  ctxModel      given probability table
  */
-Void ContextModel3DBuffer::copyFrom( ContextModel3DBuffer* pSrc )
+UInt ContextModel3DBuffer::calcCost( SliceType sliceType, Int qp, UChar* ctxModel )
 {
-  ::memcpy( this->m_pcContextModel, pSrc->m_pcContextModel, sizeof(ContextModel) * m_uiSizeZ * m_uiSizeY * m_uiSizeX );
-}
+  UInt cost = 0;
+  ctxModel += sliceType * m_sizeXYZ;
 
+  for ( Int n = 0; n < m_sizeXYZ; n++ )
+  {
+    ContextModel tmpContextModel;
+    tmpContextModel.init( qp, ctxModel[ n ] );
+
+    // Map the 64 CABAC states to their corresponding probability values
+    static Double aStateToProbLPS[] = {0.50000000, 0.47460857, 0.45050660, 0.42762859, 0.40591239, 0.38529900, 0.36573242, 0.34715948, 0.32952974, 0.31279528, 0.29691064, 0.28183267, 0.26752040, 0.25393496, 0.24103941, 0.22879875, 0.21717969, 0.20615069, 0.19568177, 0.18574449, 0.17631186, 0.16735824, 0.15885931, 0.15079198, 0.14313433, 0.13586556, 0.12896592, 0.12241667, 0.11620000, 0.11029903, 0.10469773, 0.09938088, 0.09433404, 0.08954349, 0.08499621, 0.08067986, 0.07658271, 0.07269362, 0.06900203, 0.06549791, 0.06217174, 0.05901448, 0.05601756, 0.05317283, 0.05047256, 0.04790942, 0.04547644, 0.04316702, 0.04097487, 0.03889405, 0.03691890, 0.03504406, 0.03326442, 0.03157516, 0.02997168, 0.02844963, 0.02700488, 0.02563349, 0.02433175, 0.02309612, 0.02192323, 0.02080991, 0.01975312, 0.01875000};
+
+    Double probLPS          = aStateToProbLPS[ m_contextModel[ n ].getState() ];
+    Double prob0, prob1;
+    if (m_contextModel[ n ].getMps()==1)
+    {
+      prob0 = probLPS;
+      prob1 = 1.0-prob0;
+    }
+    else
+    {
+      prob1 = probLPS;
+      prob0 = 1.0-prob1;
+    }
+
+    if (m_contextModel[ n ].getBinsCoded()>0)
+    {
+      cost += (UInt) (prob0 * tmpContextModel.getEntropyBits( 0 ) + prob1 * tmpContextModel.getEntropyBits( 1 ));
+    }
+  }
+
+  return cost;
+}
+#endif
+//! \}

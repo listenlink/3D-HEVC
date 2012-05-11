@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TComPicYuv.h
     \brief    picture YUV buffer class (header)
 */
@@ -42,6 +40,10 @@
 
 #include <stdio.h>
 #include "CommonDef.h"
+#include "TComRom.h"
+
+//! \ingroup TLibCommon
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -78,6 +80,11 @@ private:
   Int   m_iBaseUnitHeight;      ///< Height of Base Unit (with maximum depth or minimum size, m_iCuHeight >> Max. Depth)
   Int   m_iNumCuInWidth;
   
+  Int*  m_cuOffsetY;
+  Int*  m_cuOffsetC;
+  Int*  m_buOffsetY;
+  Int*  m_buOffsetC;
+  
   Int   m_iLumaMarginX;
   Int   m_iLumaMarginY;
   Int   m_iChromaMarginX;
@@ -109,11 +116,11 @@ public:
   
   Int   getWidth    ()     { return  m_iPicWidth;    }
   Int   getHeight   ()     { return  m_iPicHeight;   }
-
+  
   UInt  getMaxCuWidth ()   { return  (UInt)m_iCuWidth;   }
   UInt  getMaxCuHeight()   { return  (UInt)m_iCuHeight;  }
   UInt  getMaxCuDepth ()   { return  m_uiMaxCuDepth;     }
-  
+
   Int   getStride   ()     { return (m_iPicWidth     ) + (m_iLumaMarginX  <<1); }
   Int   getCStride  ()     { return (m_iPicWidth >> 1) + (m_iChromaMarginX<<1); }
   
@@ -137,21 +144,23 @@ public:
   Pel*  getCrAddr   ()     { return  m_piPicOrgV;    }
   
   //  Access starting position of original picture for specific coding unit (CU) or partition unit (PU)
-  Pel*  getLumaAddr ( Int iCuAddr );
-  Pel*  getCbAddr   ( Int iCuAddr );
-  Pel*  getCrAddr   ( Int iCuAddr );
-  Pel*  getLumaAddr ( Int iCuAddr, Int uiAbsZorderIdx );
-  Pel*  getCbAddr   ( Int iCuAddr, Int uiAbsZorderIdx );
-  Pel*  getCrAddr   ( Int iCuAddr, Int uiAbsZorderIdx );
+  Pel*  getLumaAddr ( Int iCuAddr ) { return m_piPicOrgY + m_cuOffsetY[ iCuAddr ]; }
+  Pel*  getCbAddr   ( Int iCuAddr ) { return m_piPicOrgU + m_cuOffsetC[ iCuAddr ]; }
+  Pel*  getCrAddr   ( Int iCuAddr ) { return m_piPicOrgV + m_cuOffsetC[ iCuAddr ]; }
+  Pel*  getLumaAddr ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgY + m_cuOffsetY[iCuAddr] + m_buOffsetY[g_auiZscanToRaster[uiAbsZorderIdx]]; }
+  Pel*  getCbAddr   ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgU + m_cuOffsetC[iCuAddr] + m_buOffsetC[g_auiZscanToRaster[uiAbsZorderIdx]]; }
+  Pel*  getCrAddr   ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgV + m_cuOffsetC[iCuAddr] + m_buOffsetC[g_auiZscanToRaster[uiAbsZorderIdx]]; }
   
+
   // ------------------------------------------------------------------------------------------------
   //  Miscellaneous
   // ------------------------------------------------------------------------------------------------
-
+  
   // sample to block and block to sample conversion
   Void  getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY );
   Void  getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
-  
+
+
   //  Copy function to picture
   Void  copyToPic       ( TComPicYuv*  pcPicYuvDst );
   Void  copyToPicLuma   ( TComPicYuv*  pcPicYuvDst );
@@ -178,5 +187,6 @@ public:
 
 void calcMD5(TComPicYuv& pic, unsigned char digest[16]);
 
-#endif // __TCOMPICYUV__
+//! \}
 
+#endif // __TCOMPICYUV__

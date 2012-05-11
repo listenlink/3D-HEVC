@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TAppDecCfg.h
     \brief    Decoder configuration class (header)
 */
@@ -44,7 +42,10 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "../../Lib/TLibCommon/CommonDef.h"
+#include "TLibCommon/CommonDef.h"
+
+//! \ingroup TAppDecoder
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -57,11 +58,10 @@ protected:
   char*         m_pchBitstreamFile;                   ///< input bitstream file name
   char*         m_pchReconFile;                       ///< output reconstruction file name
   char*         m_pchScaleOffsetFile;                 ///< output coded scale and offset parameters
-#if DCM_SKIP_DECODING_FRAMES
   Int           m_iSkipFrame;                         ///< counter for frames prior to the random access point to skip
-#endif
   UInt          m_outputBitDepth;                     ///< bit depth used for writing output
 
+  Int           m_iMaxTemporalLayer;                  ///< maximum temporal layer to be decoded
   bool m_pictureDigestEnabled; ///< enable(1)/disable(0) acting on SEI picture_digest message
   Void xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName); ///< create filenames
 
@@ -71,6 +71,8 @@ public:
   
   Bool  parseCfg        ( Int argc, Char* argv[] );   ///< initialize option class from configuration
 };
+
+//! \}
 
 #endif
 

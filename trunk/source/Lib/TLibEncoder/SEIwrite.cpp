@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,12 +31,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-#include "../TLibCommon/TComBitCounter.h"
-#include "../TLibCommon/TComBitStream.h"
-#include "../TLibCommon/SEI.h"
+#include "TLibCommon/TComBitCounter.h"
+#include "TLibCommon/TComBitStream.h"
+#include "TLibCommon/SEI.h"
 #include "SEIwrite.h"
+
+//! \ingroup TLibEncoder
+//! \{
 
 static void writeSEIuserDataUnregistered(TComBitIf& bs, const SEIuserDataUnregistered &sei);
 static void writeSEIpictureDigest(TComBitIf& bs, const SEIpictureDigest& sei);
@@ -57,8 +58,8 @@ void writeSEIpayloadData(TComBitIf& bs, const SEI& sei)
 }
 
 /**
- * marshal a single SEI message @sei, storing the marshalled representation
- * in bitstream @bs.
+ * marshal a single SEI message sei, storing the marshalled representation
+ * in bitstream bs.
  */
 void writeSEImessage(TComBitIf& bs, const SEI& sei)
 {
@@ -85,8 +86,8 @@ void writeSEImessage(TComBitIf& bs, const SEI& sei)
 }
 
 /**
- * marshal a user_data_unregistered SEI message @sei, storing the marshalled
- * representation in bitstream @bs.
+ * marshal a user_data_unregistered SEI message sei, storing the marshalled
+ * representation in bitstream bs.
  */
 static void writeSEIuserDataUnregistered(TComBitIf& bs, const SEIuserDataUnregistered &sei)
 {
@@ -103,7 +104,7 @@ static void writeSEIuserDataUnregistered(TComBitIf& bs, const SEIuserDataUnregis
 
 /**
  * marshal a picture_digest SEI message, storing the marshalled
- * representation in bitstream @bs.
+ * representation in bitstream bs.
  */
 static void writeSEIpictureDigest(TComBitIf& bs, const SEIpictureDigest& sei)
 {
@@ -113,3 +114,4 @@ static void writeSEIpictureDigest(TComBitIf& bs, const SEIpictureDigest& sei)
     bs.write(sei.digest[i], 8);
   }
 }
+//! \}

@@ -32,8 +32,6 @@
  */
 
 
-
-
 #ifndef __TRENSINGLEMODEL__
 #define __TRENSINGLEMODEL__
 
@@ -41,7 +39,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComPicYuv.h"
 #include "../TLibCommon/TypeDef.h"
-#include "../../App/TAppCommon/TAppComCamPara.h"
+#include "../TAppCommon/TAppComCamPara.h"
 
 
 #include <math.h>

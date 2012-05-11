@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TEncSlice.h
     \brief    slice encoder class (header)
 */
@@ -41,17 +39,18 @@
 #define __TENCSLICE__
 
 // Include files
-#include "../TLibCommon/CommonDef.h"
-#include "../TLibCommon/TComList.h"
-#include "../TLibCommon/TComPic.h"
-#include "../TLibCommon/TComPicYuv.h"
+#include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TComList.h"
+#include "TLibCommon/TComPic.h"
+#include "TLibCommon/TComPicYuv.h"
 #include "TEncCu.h"
-#ifdef WEIGHT_PRED
 #include "WeightPredAnalysis.h"
-#endif
+
+//! \ingroup TLibEncoder
+//! \{
 
 class TEncTop;
-class TEncPic;
+class TEncGOP;
 
 // ====================================================================================================================
 // Class definition
@@ -59,9 +58,7 @@ class TEncPic;
 
 /// slice encoder class
 class TEncSlice
-#ifdef WEIGHT_PRED
   : public WeightPredAnalysis
-#endif
 {
 private:
   // encoder configuration
@@ -73,7 +70,7 @@ private:
   TComPicYuv*             m_apcPicYuvResi;                      ///< residual picture buffer
   
   // processing units
-  TEncPic*                m_pcPicEncoder;                       ///< Pic encoder
+  TEncGOP*                m_pcGOPEncoder;                       ///< GOP encoder
   TEncCu*                 m_pcCuEncoder;                        ///< CU encoder
   
   // encoder search
@@ -97,6 +94,10 @@ private:
   Double*                 m_pdRdPicLambda;                      ///< array of lambda candidates
   Double*                 m_pdRdPicQp;                          ///< array of picture QP candidates (double-type for lambda)
   Int*                    m_piRdPicQp;                          ///< array of picture QP candidates (int-type)
+  TEncBinCABAC*           m_pcBufferBinCoderCABACs;       ///< line of bin coder CABAC
+  TEncSbac*               m_pcBufferSbacCoders;                 ///< line to store temporary contexts
+  TEncBinCABAC*           m_pcBufferLowLatBinCoderCABACs;       ///< dependent tiles: line of bin coder CABAC
+  TEncSbac*               m_pcBufferLowLatSbacCoders;           ///< dependent tiles: line to store temporary contexts
   
   UInt                    m_uiSliceIdx;
 public:
@@ -108,12 +109,12 @@ public:
   Void    init                ( TEncTop* pcEncTop );
   
   /// preparation of slice encoding (reference marking, QP and lambda)
-  Void    initEncSlice        ( TComPic* pcPic, TComSlice*& rpcSlice );
-  
+  Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
+
   // compress and encode slice
   Void    precompressSlice    ( TComPic*& rpcPic                                );      ///< precompress slice for multi-loop opt.
   Void    compressSlice       ( TComPic*& rpcPic                                );      ///< analysis stage of slice
-  Void    encodeSlice         ( TComPic*& rpcPic, TComBitstream*& rpcBitstream  );      ///< entropy coding of slice
+  Void    encodeSlice         ( TComPic*& rpcPic, TComOutputBitstream* rpcBitstream, TComOutputBitstream* pcSubstreams  );
   
   // misc. functions
   Void    setSearchRange      ( TComSlice* pcSlice  );                                  ///< set ME range adaptively
@@ -125,6 +126,6 @@ public:
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
 };
 
+//! \}
 
 #endif // __TENCSLICE__
-

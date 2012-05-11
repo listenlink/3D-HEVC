@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="TLibCommon"
 	ProjectGUID="{78018D78-F890-47E3-A0B7-09D273F0B11D}"
 	RootNamespace="TLibCommon"
@@ -43,7 +43,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -108,7 +108,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -169,8 +169,8 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -235,8 +235,8 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_LIB;_CRT_SECURE_NO_WARNINGS"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
 				StringPooling="true"
 				RuntimeLibrary="0"
 				WarningLevel="3"
@@ -312,15 +312,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComInterpolationFilter.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComLoopFilter.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComMotionInfo.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComMVDRefData.cpp"
 				>
 			</File>
 			<File
@@ -344,10 +344,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComPredFilter.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComPrediction.cpp"
 				>
 			</File>
@@ -360,11 +356,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComResidualGenerator.cpp"
+				RelativePath="..\..\source\Lib\TLibCommon\TComRom.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComRom.cpp"
+				RelativePath="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.cpp"
 				>
 			</File>
 			<File
@@ -394,6 +390,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\AccessUnit.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\CommonDef.h"
 				>
 			</File>
@@ -415,6 +415,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\libmd5\MD5.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\NAL.h"
 				>
 			</File>
 			<File
@@ -446,6 +450,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComInterpolationFilter.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComList.h"
 				>
 			</File>
@@ -459,10 +467,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComMv.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComMVDRefData.h"
 				>
 			</File>
 			<File
@@ -482,10 +486,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComPredFilter.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComPrediction.h"
 				>
 			</File>
@@ -498,11 +498,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComResidualGenerator.h"
+				RelativePath="..\..\source\Lib\TLibCommon\TComRom.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComRom.h"
+				RelativePath="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.h"
 				>
 			</File>
 			<File
@@ -511,10 +511,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComTrQuant.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComWedgelet.h"
 				>
 			</File>
 			<File

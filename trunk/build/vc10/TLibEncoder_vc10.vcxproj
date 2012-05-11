@@ -60,13 +60,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
@@ -85,28 +85,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\compat\msvc</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\compat\msvc</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,10 +100,26 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -132,7 +133,8 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -141,36 +143,43 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\Lib\TLibEncoder\NALwrite.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\SEIwrite.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncAdaptiveLoopFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncBinCoderCABAC.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncBinCoderCABACCounter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncCavlc.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncCu.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncEntropy.cpp" />
-    <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncFormattedStringParser.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncGOP.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncPic.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncPreanalyzer.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncSampleAdaptiveOffset.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncSbac.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncSearch.cpp" />
-    <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncSeqStructure.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncSlice.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\TEncTop.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibEncoder\WeightPredAnalysis.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\Lib\TLibEncoder\AnnexBwrite.h" />
+    <ClInclude Include="..\..\source\Lib\TLibEncoder\NALwrite.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\SEIwrite.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncAdaptiveLoopFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncAnalyze.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncBinCoder.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncBinCoderCABAC.h" />
+    <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncBinCoderCABACCounter.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncCavlc.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncCfg.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncCu.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncEntropy.h" />
-    <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncFormattedStringParser.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncGOP.h" />
+    <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncPic.h" />
+    <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncPreanalyzer.h" />
+    <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncSampleAdaptiveOffset.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncSbac.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncSearch.h" />
-    <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncSeqStructure.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncSlice.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\TEncTop.h" />
     <ClInclude Include="..\..\source\Lib\TLibEncoder\WeightPredAnalysis.h" />

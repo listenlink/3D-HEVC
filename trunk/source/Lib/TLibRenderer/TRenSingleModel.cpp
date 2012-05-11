@@ -44,7 +44,7 @@ TRenSingleModel::TRenSingleModel()
   m_iHeight = -1;
   m_iStride = -1;
   m_iMode   = -1;
-  m_iPad    = 12;
+  m_iPad    = PICYUV_PAD;
   m_iGapTolerance = -1;
   m_bUseOrgRef = false;
 
@@ -447,7 +447,7 @@ TRenSingleModel::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
       m_iLastOccludedSPos   = iCurSPos + 1;
       m_iLastOccludedSPosFP = xRangeLeftL( m_iLastOccludedSPos );
       xExtrapolateMarginL  ( iCurSPos, iEndChangePos, iError );
-      iMinChangedSPos       = Min( iMinChangedSPos, (iEndChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iEndChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMinChangedSPos       = Min( iMinChangedSPos, (iEndChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( max(m_apiBaseDepthPelRow[m_iCurViewPos][iEndChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
       iLastSPos             = iCurSPos;
       m_iLastDepth          = m_iCurDepth;
       iPosXinNewData--;
@@ -465,7 +465,7 @@ TRenSingleModel::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
     for ( iCurPosX = iEndChangePos; iCurPosX >= iStartChangePos; iCurPosX-- )
     {
       // Get minimal changed sample position
-      iMinChangedSPos = Min( iMinChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMinChangedSPos = Min( iMinChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
       Int iCurSPos    = xShiftNewData(iCurPosX,iPosXinNewData);
       m_iCurDepth     = m_piNewDepthData[iPosXinNewData];
       xRenderRangeL(iCurSPos, iLastSPos, iCurPosX, iError );
@@ -540,7 +540,7 @@ TRenSingleModel::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
       m_iLastOccludedSPos   = iCurSPos - 1;
       m_iLastOccludedSPosFP = xRangeRightR( m_iLastOccludedSPos );
       xExtrapolateMarginR     ( iCurSPos, iStartChangePos, iError );
-      iMaxChangedSPos       = Max( iMaxChangedSPos, (iStartChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iStartChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMaxChangedSPos       = max( iMaxChangedSPos, (iStartChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( max(m_apiBaseDepthPelRow[m_iCurViewPos][iStartChangePos], m_piNewDepthData[iPosXinNewData] )) ]);
       iLastSPos             = iCurSPos;
       m_iLastDepth          = m_iCurDepth;
       iPosXinNewData++;
@@ -558,7 +558,7 @@ TRenSingleModel::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeig
     for ( iCurPosX = iStartChangePos; iCurPosX <= iEndChangePos; iCurPosX++ )
     {
       // Get minimal changed sample position
-      iMaxChangedSPos = Max( iMaxChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( Max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
+      iMaxChangedSPos = max( iMaxChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RemoveBitIncrement( max(m_apiBaseDepthPelRow[m_iCurViewPos][iCurPosX], m_piNewDepthData[iPosXinNewData] )) ]);
       Int iCurSPos    = xShiftNewData(iCurPosX,iPosXinNewData);
       m_iCurDepth     = m_piNewDepthData[iPosXinNewData];
       xRenderRangeR(iCurSPos, iLastSPos, iCurPosX, iError );
@@ -674,7 +674,7 @@ TRenSingleModel::xRenderShiftedRangeL(Int iCurSPos, Int iLastSPos, Int iCurPos, 
     AOT( iDeltaSPos    > m_iGapTolerance );
 
     m_iThisDepth = m_iCurDepth;
-    for (Int iFillSPos = Max(0, xRangeLeftL(iCurSPos) ); iFillSPos <= min(xRangeRightL( iLastSPos ) ,m_iLastOccludedSPosFP-1); iFillSPos++ )
+    for (Int iFillSPos = max(0, xRangeLeftL(iCurSPos) ); iFillSPos <= min(xRangeRightL( iLastSPos ) ,m_iLastOccludedSPosFP-1); iFillSPos++ )
     {
       Int iDeltaCurSPos  = (iFillSPos << m_iShiftPrec) - iCurSPos;
 
@@ -862,7 +862,7 @@ TRenSingleModel::xFillHoleL( Int iCurSPos, Int iLastSPos, Int iCurPos, RMDist& r
   }
 
   m_iThisDepth = m_iLastDepth;
-  for (Int iFillSPos = Max(iStartFillSPosFP+1,0); iFillSPos <= min(xRangeRightL( iLastSPos ), m_iLastOccludedSPosFP-1 ); iFillSPos++ )
+  for (Int iFillSPos = max(iStartFillSPosFP+1,0); iFillSPos <= min(xRangeRightL( iLastSPos ), m_iLastOccludedSPosFP-1 ); iFillSPos++ )
   {
     xSetShiftedPel( iLastPos << m_iShiftPrec, iFillSPos, REN_IS_HOLE, riError );
   }
@@ -906,7 +906,7 @@ TRenSingleModel::xExtrapolateMarginL(Int iCurSPos, Int iCurPos, RMDist& riError 
 //  if (iLeftSPos < 0 )
 //    return;
 
-  Int iSPosFullPel = Max(0,xRangeLeftL(iCurSPos));
+  Int iSPosFullPel = max(0,xRangeLeftL(iCurSPos));
 
   m_iThisDepth = m_iCurDepth;
   if (iSPosFullPel < m_iWidth)

@@ -39,7 +39,7 @@
 #include <cstring>
 #include <string>
 #include "TAppExtrCfg.h"
-#include "../../App/TAppCommon/program_options_lite.h"
+#include "../../Lib/TAppCommon/program_options_lite.h"
 #include <stdio.h>
 #include <stdlib.h>
 

@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,25 +31,26 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
-/** \file     TEncCU.h
-    \brief    CU encoder class (header)
+/** \file     TEncCu.h
+    \brief    Coding Unit (CU) encoder class (header)
 */
 
 #ifndef __TENCCU__
 #define __TENCCU__
 
 // Include files
-#include "../TLibCommon/CommonDef.h"
-#include "../TLibCommon/TComYuv.h"
-#include "../TLibCommon/TComPrediction.h"
-#include "../TLibCommon/TComTrQuant.h"
-#include "../TLibCommon/TComBitCounter.h"
-#include "../TLibCommon/TComDataCU.h"
+#include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TComYuv.h"
+#include "TLibCommon/TComPrediction.h"
+#include "TLibCommon/TComTrQuant.h"
+#include "TLibCommon/TComBitCounter.h"
+#include "TLibCommon/TComDataCU.h"
 
 #include "TEncEntropy.h"
 #include "TEncSearch.h"
+
+//! \ingroup TLibEncoder
+//! \{
 
 class TEncTop;
 class TEncSbac;
@@ -76,14 +77,18 @@ private:
   TComYuv**               m_ppcResiYuvTemp; ///< Temporary Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComYuv**               m_ppcResPredTmp;  ///< Temporary residual prediction for each depth
+#endif
   
   //  Data : encoder control
-  Int                     m_iQp;            ///< Last QP
-  
+  Bool                    m_bEncodeDQP;
+#if BURST_IPCM
+  Bool                    m_checkBurstIPCMFlag;
+#endif
+
   //  Access channel
   TEncCfg*                m_pcEncCfg;
-  TEncTop*                m_pcEncTop;
   TComPrediction*         m_pcPrediction;
   TEncSearch*             m_pcPredSearch;
   TComTrQuant*            m_pcTrQuant;
@@ -122,41 +127,84 @@ public:
   /// CU encoding function
   Void  encodeCU            ( TComDataCU*    pcCU, Bool bForceTerminate = false  );
   
-  /// set QP value
-  Void  setQpLast           ( Int iQp ) { m_iQp = iQp; }
-  
+  Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
 protected:
+  Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
+#if AMP_ENC_SPEEDUP
+  Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth, PartSize eParentPartSize = SIZE_NONE );
+#else
   Void  xCompressCU         ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
+#endif
   Void  xEncodeCU           ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
   
-  Void  xCheckRDCostAMVPSkip( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
+  Int   xComputeQP          ( TComDataCU* pcCU, UInt uiDepth );
+  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
   
 #if HHI_INTERVIEW_SKIP
   Void xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bFullyRendered ) ;
 #else
   Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                  );
 #endif
-  
-  Void  xCheckRDCostSkip    ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bBSkipRes      );
+#if AMP_MRG
+#if HHI_INTERVIEW_SKIP
+  Void xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFullyRendered, Bool bUseMRG = false  ) ;
+#else
+  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
+#endif
+//  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
+#else
 #if HHI_INTERVIEW_SKIP
   Void xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFullyRendered ) ;
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
+//  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
+#endif
   Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UChar uhDepth       );
+  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
+  Void  xCheckDQP           ( TComDataCU*  pcCU );
   
+  Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
   Void  xCopyAMVPInfo       ( AMVPInfo* pSrc, AMVPInfo* pDst );
-  Void  xCopyYuv2Pic        ( TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsZorderIdx, UInt uiDepth );
+  Void  xCopyYuv2Pic        (TComPic* rpcPic, UInt uiCUAddr, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSrcDepth, TComDataCU* pcCU, UInt uiLPelX, UInt uiTPelY );
   Void  xCopyYuv2Tmp        ( UInt uhPartUnitIdx, UInt uiDepth );
-  Void  xAddMVISignallingBits( TComDataCU* pcCU );
+
+  Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
+  Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
+
+#if BURST_IPCM
+  Bool getCheckBurstIPCMFlag()                        { return m_checkBurstIPCMFlag;   }
+  Void setCheckBurstIPCMFlag( Bool b )                { m_checkBurstIPCMFlag = b;      }
+
+  Bool checkLastCUSucIPCM   ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
+  Int  countNumSucIPCM      ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
+#endif
+
+#if ADAPTIVE_QP_SELECTION
+  // Adaptive reconstruction level (ARL) statistics collection functions
+  Void xLcuCollectARLStats(TComDataCU* rpcCU);
+  Int  xTuCollectARLStats(TCoeff* rpcCoeff, Int* rpcArlCoeff, Int NumCoeffInCU, Double* cSum, UInt* numSamples );
+#endif
+
+#if AMP_ENC_SPEEDUP 
+#if AMP_MRG
+  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver, Bool &bTestMergeAMP_Hor, Bool &bTestMergeAMP_Ver);
+#else
+  Void deriveTestModeAMP (TComDataCU *&rpcBestCU, PartSize eParentPartSize, Bool &bTestAMP_Hor, Bool &bTestAMP_Ver);
+#endif
+#endif
+
+#if LOSSLESS_CODING 
+  Void  xFillPCMBuffer     ( TComDataCU*& pCU, TComYuv* pOrgYuv ); 
+#endif
 #if HHI_MPI
   Void  xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UChar uhTextureModeDepth, Bool bSkipResidual, Bool bRecursiveCall );
   Void  xSaveDepthWidthHeight( TComDataCU* pcCU );
   Void  xRestoreDepthWidthHeight( TComDataCU* pcCU );
+  Void  xAddMVISignallingBits( TComDataCU* pcCU );
 #endif
 };
 
+//! \}
 
 #endif // __TENCMB__
-

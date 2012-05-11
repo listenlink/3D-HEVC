@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -106,7 +106,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -171,7 +171,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -237,7 +237,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -282,6 +282,10 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			>
 			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\NALwrite.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\SEIwrite.cpp"
 				>
 			</File>
@@ -291,6 +295,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\TEncBinCoderCABAC.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncBinCoderCABACCounter.cpp"
 				>
 			</File>
 			<File
@@ -306,11 +314,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncFormattedStringParser.cpp"
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncGOP.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncGOP.cpp"
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncPic.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncPreanalyzer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncSampleAdaptiveOffset.cpp"
 				>
 			</File>
 			<File
@@ -319,10 +335,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\TEncSearch.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncSeqStructure.cpp"
 				>
 			</File>
 			<File
@@ -342,6 +354,14 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\AnnexBwrite.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\NALwrite.h"
+				>
+			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\SEIwrite.h"
 				>
@@ -363,6 +383,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncBinCoderCABACCounter.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\TEncCavlc.h"
 				>
 			</File>
@@ -379,11 +403,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncFormattedStringParser.h"
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncGOP.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncGOP.h"
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncPic.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncPreanalyzer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncSampleAdaptiveOffset.h"
 				>
 			</File>
 			<File
@@ -392,10 +424,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\TEncSearch.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncSeqStructure.h"
 				>
 			</File>
 			<File

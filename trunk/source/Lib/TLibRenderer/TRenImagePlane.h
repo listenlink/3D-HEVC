@@ -32,9 +32,6 @@
  */
 
 
-
-
-
 #ifndef __TRENIMAGEPLANE__
 #define __TRENIMAGEPLANE__
 
@@ -68,7 +65,8 @@ public:
   UInt getPad      () { return m_uiPad;       };
   UInt getStride   () { return m_uiStride; };
 
-  Void setData ( T* pDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad, Bool bClean /*= false*/ );
+  Void setData ( T* pDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad, Bool bClean /*= false*/ ); 
+  
   Void setData ( TRenImagePlane<T>* pcInPlane, Bool bClean );
   Void setClean( Bool bClean );
   Void extendMargin();

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,22 +31,19 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #pragma once
+
+//! \ingroup TLibCommon
+//! \{
 
 /**
  * Abstract class representing an SEI message with lightweight RTTI.
  */
 class SEI
 {
-#if BITSTREAM_EXTRACTION
-protected:
-  UInt m_uiLayerId;
-#endif
-
 public:
-  enum PayloadType {
+  enum PayloadType
+  {
     USER_DATA_UNREGISTERED = 5,
     PICTURE_DIGEST = 256,
   };
@@ -55,11 +52,6 @@ public:
   virtual ~SEI() {}
   
   virtual PayloadType payloadType() const = 0;
-
-#if BITSTREAM_EXTRACTION
-  Void      setLayerId              ( UInt u )       { m_uiLayerId = u; }
-  UInt      getLayerId              ()         const { return m_uiLayerId; }
-#endif
 };
 
 class SEIuserDataUnregistered : public SEI
@@ -89,7 +81,8 @@ public:
   SEIpictureDigest() {}
   virtual ~SEIpictureDigest() {}
   
-  enum Method {
+  enum Method
+  {
     MD5,
     RESERVED,
   } method;
@@ -118,3 +111,4 @@ public:
   SEIuserDataUnregistered* user_data_unregistered;
   SEIpictureDigest* picture_digest;
 };
+//! \}

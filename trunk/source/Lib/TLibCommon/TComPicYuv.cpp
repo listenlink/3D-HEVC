@@ -1,4 +1,35 @@
-
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.  
+ *
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /** \file     TComPicYuv.cpp
     \brief    picture YUV buffer class
@@ -15,6 +46,9 @@
 #endif
 
 #include "TComPicYuv.h"
+
+//! \ingroup TLibCommon
+//! \{
 
 TComPicYuv::TComPicYuv()
 {
@@ -41,16 +75,20 @@ Void TComPicYuv::create( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt 
   // --> After config finished!
   m_iCuWidth        = uiMaxCUWidth;
   m_iCuHeight       = uiMaxCUHeight;
-  m_uiMaxCuDepth    = uiMaxCUDepth;
-  
+
   m_iNumCuInWidth   = m_iPicWidth / m_iCuWidth;
   m_iNumCuInWidth  += ( m_iPicWidth % m_iCuWidth ) ? 1 : 0;
-  
+
+  m_uiMaxCuDepth = uiMaxCUDepth;
+
   m_iBaseUnitWidth  = uiMaxCUWidth  >> uiMaxCUDepth;
   m_iBaseUnitHeight = uiMaxCUHeight >> uiMaxCUDepth;
+
+  Int numCuInWidth  = m_iPicWidth  / m_iCuWidth  + (m_iPicWidth  % m_iCuWidth  != 0);
+  Int numCuInHeight = m_iPicHeight / m_iCuHeight + (m_iPicHeight % m_iCuHeight != 0);
   
-  m_iLumaMarginX    = g_uiMaxCUWidth  + 12; // up to 12-tap DIF
-  m_iLumaMarginY    = g_uiMaxCUHeight + 12; // up to 12-tap DIF
+  m_iLumaMarginX    = g_uiMaxCUWidth  + PICYUV_PAD; // for 16-byte alignment
+  m_iLumaMarginY    = g_uiMaxCUHeight + PICYUV_PAD;  // margin for 8-tap filter and infinite padding
   
   m_iChromaMarginX  = m_iLumaMarginX>>1;
   m_iChromaMarginY  = m_iLumaMarginY>>1;
@@ -65,6 +103,27 @@ Void TComPicYuv::create( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt 
   
   m_bIsBorderExtended = false;
   
+  m_cuOffsetY = new Int[numCuInWidth * numCuInHeight];
+  m_cuOffsetC = new Int[numCuInWidth * numCuInHeight];
+  for (Int cuRow = 0; cuRow < numCuInHeight; cuRow++)
+  {
+    for (Int cuCol = 0; cuCol < numCuInWidth; cuCol++)
+    {
+      m_cuOffsetY[cuRow * numCuInWidth + cuCol] = getStride() * cuRow * m_iCuHeight + cuCol * m_iCuWidth;
+      m_cuOffsetC[cuRow * numCuInWidth + cuCol] = getCStride() * cuRow * (m_iCuHeight / 2) + cuCol * (m_iCuWidth / 2);
+    }
+  }
+  
+  m_buOffsetY = new Int[(size_t)1 << (2 * uiMaxCUDepth)];
+  m_buOffsetC = new Int[(size_t)1 << (2 * uiMaxCUDepth)];
+  for (Int buRow = 0; buRow < (1 << uiMaxCUDepth); buRow++)
+  {
+    for (Int buCol = 0; buCol < (1 << uiMaxCUDepth); buCol++)
+    {
+      m_buOffsetY[(buRow << uiMaxCUDepth) + buCol] = getStride() * buRow * (uiMaxCUHeight >> uiMaxCUDepth) + buCol * (uiMaxCUWidth  >> uiMaxCUDepth);
+      m_buOffsetC[(buRow << uiMaxCUDepth) + buCol] = getCStride() * buRow * (uiMaxCUHeight / 2 >> uiMaxCUDepth) + buCol * (uiMaxCUWidth / 2 >> uiMaxCUDepth);
+    }
+  }
   return;
 }
 
@@ -77,6 +136,11 @@ Void TComPicYuv::destroy()
   if( m_apiPicBufY ){ xFree( m_apiPicBufY );    m_apiPicBufY = NULL; }
   if( m_apiPicBufU ){ xFree( m_apiPicBufU );    m_apiPicBufU = NULL; }
   if( m_apiPicBufV ){ xFree( m_apiPicBufV );    m_apiPicBufV = NULL; }
+
+  delete[] m_cuOffsetY;
+  delete[] m_cuOffsetC;
+  delete[] m_buOffsetY;
+  delete[] m_buOffsetC;
 }
 
 Void TComPicYuv::createLuma( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth )
@@ -88,19 +152,42 @@ Void TComPicYuv::createLuma( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, U
   m_iCuWidth        = uiMaxCUWidth;
   m_iCuHeight       = uiMaxCUHeight;
   m_uiMaxCuDepth    = uiMaxCUDepth;
-  
+
   m_iNumCuInWidth   = m_iPicWidth / m_iCuWidth;
   m_iNumCuInWidth  += ( m_iPicWidth % m_iCuWidth ) ? 1 : 0;
-  
+
   m_iBaseUnitWidth  = uiMaxCUWidth  >> uiMaxCUDepth;
   m_iBaseUnitHeight = uiMaxCUHeight >> uiMaxCUDepth;
+
   
-  m_iLumaMarginX    = g_uiMaxCUWidth  + 12; // up to 12-tap DIF
-  m_iLumaMarginY    = g_uiMaxCUHeight + 12; // up to 12-tap DIF
+  Int numCuInWidth  = m_iPicWidth  / m_iCuWidth  + (m_iPicWidth  % m_iCuWidth  != 0);
+  Int numCuInHeight = m_iPicHeight / m_iCuHeight + (m_iPicHeight % m_iCuHeight != 0);
+  
+  m_iLumaMarginX    = g_uiMaxCUWidth  + PICYUV_PAD; // for 16-byte alignment
+  m_iLumaMarginY    = g_uiMaxCUHeight + PICYUV_PAD;  // margin for 8-tap filter and infinite padding
   
   m_apiPicBufY      = (Pel*)xMalloc( Pel, ( m_iPicWidth       + (m_iLumaMarginX  <<1)) * ( m_iPicHeight       + (m_iLumaMarginY  <<1)));
   m_piPicOrgY       = m_apiPicBufY + m_iLumaMarginY   * getStride()  + m_iLumaMarginX;
   
+  m_cuOffsetY = new Int[numCuInWidth * numCuInHeight];
+  m_cuOffsetC = NULL;
+  for (Int cuRow = 0; cuRow < numCuInHeight; cuRow++)
+  {
+    for (Int cuCol = 0; cuCol < numCuInWidth; cuCol++)
+    {
+      m_cuOffsetY[cuRow * numCuInWidth + cuCol] = getStride() * cuRow * m_iCuHeight + cuCol * m_iCuWidth;
+    }
+  }
+  
+  m_buOffsetY = new Int[(size_t)1 << (2 * uiMaxCUDepth)];
+  m_buOffsetC = NULL;
+  for (Int buRow = 0; buRow < (1 << uiMaxCUDepth); buRow++)
+  {
+    for (Int buCol = 0; buCol < (1 << uiMaxCUDepth); buCol++)
+    {
+      m_buOffsetY[(buRow << uiMaxCUDepth) + buCol] = getStride() * buRow * (uiMaxCUHeight >> uiMaxCUDepth) + buCol * (uiMaxCUWidth  >> uiMaxCUDepth);
+    }
+  }
   return;
 }
 
@@ -109,75 +196,9 @@ Void TComPicYuv::destroyLuma()
   m_piPicOrgY       = NULL;
   
   if( m_apiPicBufY ){ xFree( m_apiPicBufY );    m_apiPicBufY = NULL; }
-}
-
-Pel*  TComPicYuv::getLumaAddr( int iCuAddr )
-{
-  Int iCuX = iCuAddr % m_iNumCuInWidth;
-  Int iCuY = iCuAddr / m_iNumCuInWidth;
   
-  return ( m_piPicOrgY + iCuY*m_iCuHeight*getStride() + iCuX*m_iCuWidth );
-}
-
-Pel*  TComPicYuv::getLumaAddr( Int iCuAddr, Int uiAbsZorderIdx )
-{
-  Int iCuX           = iCuAddr % m_iNumCuInWidth;
-  Int iCuY           = iCuAddr / m_iNumCuInWidth;
-  Int iOffsetCu      = iCuY*m_iCuHeight*getStride() + iCuX*m_iCuWidth;
-  
-  Int iCuSizeInBases = m_iCuWidth / m_iBaseUnitWidth;
-  Int iRastPartIdx   = g_auiZscanToRaster[uiAbsZorderIdx];
-  Int iBaseX         = iRastPartIdx % iCuSizeInBases;
-  Int iBaseY         = iRastPartIdx / iCuSizeInBases;
-  Int iOffsetBase    = iBaseY*m_iBaseUnitHeight*getStride() + iBaseX*m_iBaseUnitWidth;
-  
-  return (m_piPicOrgY + iOffsetCu + iOffsetBase);
-}
-
-Pel*  TComPicYuv::getCbAddr( int iCuAddr )
-{
-  Int iCuX = iCuAddr % m_iNumCuInWidth;
-  Int iCuY = iCuAddr / m_iNumCuInWidth;
-  
-  return ( m_piPicOrgU + ( ( iCuY*m_iCuHeight*getCStride() + iCuX*m_iCuWidth )>>1 ) );
-}
-
-Pel*  TComPicYuv::getCbAddr( Int iCuAddr, Int uiAbsZorderIdx )
-{
-  Int iCuX           = iCuAddr % m_iNumCuInWidth;
-  Int iCuY           = iCuAddr / m_iNumCuInWidth;
-  Int iOffsetCu      = iCuY*m_iCuHeight*getCStride() + iCuX*m_iCuWidth;
-  
-  Int iCuSizeInBases = m_iCuWidth / m_iBaseUnitWidth;
-  Int iRastPartIdx   = g_auiZscanToRaster[uiAbsZorderIdx];
-  Int iBaseX         = iRastPartIdx % iCuSizeInBases;
-  Int iBaseY         = iRastPartIdx / iCuSizeInBases;
-  Int iOffsetBase    = iBaseY*m_iBaseUnitHeight*getCStride() + iBaseX*m_iBaseUnitWidth;
-  
-  return (m_piPicOrgU + ( ( iOffsetCu + iOffsetBase)>>1 ) );
-}
-
-Pel*  TComPicYuv::getCrAddr( int iCuAddr )
-{
-  Int iCuX = iCuAddr % m_iNumCuInWidth;
-  Int iCuY = iCuAddr / m_iNumCuInWidth;
-  
-  return ( m_piPicOrgV + ( ( iCuY*m_iCuHeight*getCStride() + iCuX*m_iCuWidth )>>1 ) );
-}
-
-Pel*  TComPicYuv::getCrAddr( Int iCuAddr, Int uiAbsZorderIdx )
-{
-  Int iCuX           = iCuAddr % m_iNumCuInWidth;
-  Int iCuY           = iCuAddr / m_iNumCuInWidth;
-  Int iOffsetCu      = iCuY*m_iCuHeight*getCStride() + iCuX*m_iCuWidth;
-  
-  Int iCuSizeInBases = m_iCuWidth / m_iBaseUnitWidth;
-  Int iRastPartIdx   = g_auiZscanToRaster[uiAbsZorderIdx];
-  Int iBaseX         = iRastPartIdx % iCuSizeInBases;
-  Int iBaseY         = iRastPartIdx / iCuSizeInBases;
-  Int iOffsetBase    = iBaseY*m_iBaseUnitHeight*getCStride() + iBaseX*m_iBaseUnitWidth;
-  
-  return (m_piPicOrgV + ( ( iOffsetCu + iOffsetBase)>>1 ) );
+  delete[] m_cuOffsetY;
+  delete[] m_buOffsetY;
 }
 
 Void  TComPicYuv::copyToPic (TComPicYuv*  pcPicYuvDst)
@@ -309,7 +330,7 @@ Void TComPicYuv::dump (char* pFileName, Bool bAdd)
   {
     for ( x = 0; x < m_iPicWidth; x++ )
     {
-      uc = (UChar)Clip3(0, iMax, (piY[x]+offset)>>shift);
+      uc = (UChar)Clip3<Pel>(0, iMax, (piY[x]+offset)>>shift);
       
       fwrite( &uc, sizeof(UChar), 1, pFile );
     }
@@ -320,7 +341,7 @@ Void TComPicYuv::dump (char* pFileName, Bool bAdd)
   {
     for ( x = 0; x < m_iPicWidth >> 1; x++ )
     {
-      uc = (UChar)Clip3(0, iMax, (piCb[x]+offset)>>shift);
+      uc = (UChar)Clip3<Pel>(0, iMax, (piCb[x]+offset)>>shift);
       fwrite( &uc, sizeof(UChar), 1, pFile );
     }
     piCb += getCStride();
@@ -330,7 +351,7 @@ Void TComPicYuv::dump (char* pFileName, Bool bAdd)
   {
     for ( x = 0; x < m_iPicWidth >> 1; x++ )
     {
-      uc = (UChar)Clip3(0, iMax, (piCr[x]+offset)>>shift);
+      uc = (UChar)Clip3<Pel>(0, iMax, (piCr[x]+offset)>>shift);
       fwrite( &uc, sizeof(UChar), 1, pFile );
     }
     piCr += getCStride();
@@ -405,7 +426,6 @@ Void TComPicYuv::xFixedRoundingPic()
 }
 #endif
 
-
 Void
 TComPicYuv::getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY )
 {
@@ -416,7 +436,7 @@ TComPicYuv::getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& 
   Int iBaseX          = iRastPartIdx % iCuSizeInBases;
   Int iBaseY          = iRastPartIdx / iCuSizeInBases;
   riX                 = iCuX * m_iCuWidth  + iBaseX * m_iBaseUnitWidth;
-  riY                 = iCuY * m_iCuHeight + iBaseY * m_iBaseUnitHeight;
+  riY                 = iCuY * m_iCuHeight + iBaseY * m_iBaseUnitHeight; 
 }
 
 Void
@@ -454,3 +474,5 @@ Void TComPicYuv::xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int
     piPelSource += iSourceStride; 
   }
 }
+
+//! \}

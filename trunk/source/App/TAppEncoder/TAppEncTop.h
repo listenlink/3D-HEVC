@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TAppEncTop.h
     \brief    Encoder application class (header)
 */
@@ -40,15 +38,20 @@
 #ifndef __TAPPENCTOP__
 #define __TAPPENCTOP__
 
-#include "../../Lib/TLibEncoder/TEncTop.h"
-#include "../../Lib/TLibVideoIO/TVideoIOYuv.h"
-#include "../../Lib/TLibVideoIO/TVideoIOBits.h"
-#include "../../Lib/TLibCommon/TComBitStream.h"
-#include "../../Lib/TLibCommon/TComDepthMapGenerator.h"
+#include <list>
+#include <ostream>
+
+#include "TLibEncoder/TEncTop.h"
+#include "TLibVideoIO/TVideoIOYuv.h"
+#include "TLibCommon/AccessUnit.h"
 #include "TAppEncCfg.h"
-//GT VSO
+#include "TLibCommon/TComDepthMapGenerator.h"
+#if HHI_VSO || HHI_INTERVIEW_SKIP
 #include "../../Lib/TLibRenderer/TRenTop.h"
-//GT VSO end
+#endif
+
+//! \ingroup TAppEncoder
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -59,38 +62,35 @@ class TAppEncTop : public TAppEncCfg
 {
 private:
   // class interface
+  std::vector<TEncTop*>				  m_acTEncTopList ;
+  std::vector<TEncTop*>				  m_acTEncDepthTopList ;
+  std::vector<TVideoIOYuv*>		m_acTVideoIOYuvInputFileList;  ///< input YUV file
+  std::vector<TVideoIOYuv*>  m_acTVideoIOYuvDepthInputFileList;
+  std::vector<TVideoIOYuv*>		m_acTVideoIOYuvReconFileList;  ///< output reconstruction file
+  std::vector<TVideoIOYuv*>  m_acTVideoIOYuvDepthReconFileList;
 
-  std::vector<TEncTop*>				 m_acTEncTopList ;
-  std::vector<TEncTop*>        m_acTEncDepthTopList ;
-  std::vector<TVideoIOYuv*>		 m_acTVideoIOYuvInputFileList;
-  std::vector<TVideoIOYuv*>    m_acTVideoIOYuvDepthInputFileList;
-  std::vector<TVideoIOYuv*>		 m_acTVideoIOYuvReconFileList;
-  std::vector<TVideoIOYuv*>    m_acTVideoIOYuvDepthReconFileList;
+  std::vector< TComList<TComPicYuv*>* >  m_picYuvRec;       ///< list of reconstruction YUV files
+  std::vector< TComList<TComPicYuv*>* >  m_picYuvDepthRec;         
 
-  TVideoIOBitsStartCode      m_cTVideoIOBitsFile;           ///< output bitstream file
-  
-  std::vector< TComList<TComPicYuv*>* >  m_cListPicYuvRecList;              ///< list of reconstruction YUV files
-  std::vector< TComList<TComPicYuv*>* >  m_cListPicYuvDepthRecList;         ///< list of reconstruction YUV files
-  std::vector<PicOrderCnt> m_aiNextPocToDump;
-  std::vector<PicOrderCnt> m_aiNextDepthPocToDump;
-  std::vector< std::map<PicOrderCnt, TComPicYuv*> > m_cListPicYuvRecMap;
-  std::vector< std::map<PicOrderCnt, TComPicYuv*> > m_cListPicYuvDepthRecMap;
+  std::vector<Int>          	m_frameRcvd;                  ///< number of received frames
+  std::vector<Int>          	m_depthFrameRcvd;   
 
-  TComList<TComBitstream*>   m_cListBitstream;              ///< list of bitstreams
-  
-  std::vector<Int>           	m_iFrameRcvdVector;                  ///< number of received frames
-  std::vector<Int>            m_iDepthFrameRcvdVector;             ///< number of received frames
+  unsigned                   m_essentialBytes;
+  unsigned                   m_totalBytes;
 
 #if DEPTH_MAP_GENERATION
   TComSPSAccess               m_cSPSAccess;
   TComAUPicAccess             m_cAUPicAccess;
 #endif
-  
+
 #if HHI_VSO
   TRenTop                     m_cRendererTop; 
   TRenModel                   m_cRendererModel;   
 #endif
 
+#if HHI_INTERVIEW_SKIP
+  TRenTop  m_cUsedPelsRenderer;                               ///< renderer for used pels map
+#endif
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -99,62 +99,54 @@ protected:
   Void  xDestroyLib       ();                               ///< destroy encoder class
   
   /// obtain required buffers
-  Void  xGetBuffer        ( TComPicYuv*& rpcPicYuvRec,			//GT: unused?
-                           TComBitstream*& rpcBitStream );
+  Void xGetBuffer(TComPicYuv*& rpcPicYuvRec, Int iViewIdx, Bool isDepth);
   
-  Void  xGetBuffer        ( TComPicYuv*& rpcPicYuvRec, Int iViewIdx, std::vector< TComList<TComPicYuv*>*>& racBuffer  );
-
   /// delete allocated buffers
   Void  xDeleteBuffer     ();
   
   // file I/O
-  Void  xWriteOutput      ( Int iViewIdx, Bool isDepth = false );              ///< write bitstream to file
-
-
-  // util  
-  TComPic*    xGetPicFromView   ( Int iViewIdx, Int iPoc, Bool bDepth );
+  Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std::list<AccessUnit>& accessUnits, Int iViewIdx, Bool isDepth); ///< write bitstream to file
+  void rateStatsAccum(const AccessUnit& au, const std::vector<unsigned>& stats);
+  // void printRateSummary();
+  
+  TComPic* xGetPicFromView( Int viewId, Int iPoc, Bool isDepth );
   TComPicYuv* xGetPicYuvFromView( Int iViewIdx, Int iPoc, Bool bDepth, Bool bRecon );
-
-
-  // Ref Data
-#if HHI_VSO
-  Void  xSetBaseLUT   ( Int iViewIdxSource, Int iViewIdxTarget, TComMVDRefData* pcRefInfo, InterViewReference eView );
-  Void  xSetBasePicYuv( Int iViewIdx, Int iPoc, TComMVDRefData* pcRefInfo, InterViewReference eView, bool bDepth ); ///< store pics from buffers in pcRefInfo
-#endif
   
 public:
   TAppEncTop();
   virtual ~TAppEncTop();
   
   Void        encode      ();                               ///< main encoding function
+  TEncTop*    getTEncTop( Int viewId, Bool isDepth );   
+
+  std::vector<TComPic*> getInterViewRefPics( Int viewId, Int poc, Bool isDepth, TComSPS* sps );
+  TComPic*              getPicFromView     ( Int viewId, Int poc, Bool isDepth ) { return xGetPicFromView( viewId, poc, isDepth ); }
+  TComPicYuv*           getPicYuvFromView  ( Int iViewIdx, Int iPoc, bool bDepth, Bool bRecon ) { return xGetPicYuvFromView( iViewIdx, iPoc, bDepth, bRecon ); }
+
+#if HHI_INTERVIEW_SKIP
+  Void                  getUsedPelsMap   ( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUsedPelsMap );
+#endif
 #if HHI_VSO
   Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent );
-  Void                  setMVDPic        ( Int iViewIdx, Int iPoc, TComMVDRefData* pcReferenceInfo ); // set MultiView References
 #endif
-  Void                  getUsedPelsMap   ( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUsedPelsMap );
-  std::vector<TComPic*> getSpatialRefPics( Int iViewIdx, Int iPoc, Bool bIsDepthCoder );              // only for mvc functionality yet 
-  TComPic*              getPicFromView   ( Int iViewIdx, Int iPoc, Bool bDepth ) { return xGetPicFromView( iViewIdx, iPoc, bDepth ); }
-
-#if HHI_VSO
-  TRenModel* getRenModel    () { return  &m_cRendererModel ; }; 
-#endif
-
+  
 #if DEPTH_MAP_GENERATION
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
 #endif
 
 #if HHI_VSO
-private:
-  std::vector<TVideoIOYuv*>		               m_acTVideoIOYuvERFileList;
-  std::map< Int, std::vector< TComPicYuv*> > m_cMapPicExtRefView;             /// Buffer for external Reference files
+  TRenModel* getRenModel    () { return  &m_cRendererModel ; }; 
+#endif
 
-  Int                                        m_iLastFramePutInERViewBuffer;   ///< Poc of last frame put to ERView Buffer
-  Void  xSetERPicYuvs(  Int iViewIdx, Int iPoc, TComMVDRefData* pcReferenceInfo );    ///< store pic from buffer in pcReferenceInfo    
+#if HHI_VSO
+private:
   Void  xStoreVSORefPicsInBuffer();                                                   ///< read in External Ref pic from file and store in buffer
 #endif
-  
+
 };// END CLASS DEFINITION TAppEncTop
+
+//! \}
 
 #endif // __TAPPENCTOP__
 

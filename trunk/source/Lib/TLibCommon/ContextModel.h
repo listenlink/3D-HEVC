@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -32,8 +32,6 @@
  */
 
 
-
-
 /** \file     ContextModel.h
     \brief    context model class (header)
 */
@@ -47,6 +45,8 @@
 
 #include "CommonDef.h"
 
+//! \ingroup TLibCommon
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -56,31 +56,63 @@
 class ContextModel
 {
 public:
+#if CABAC_INIT_FLAG
+  ContextModel  ()                        { m_ucState = 0; m_binsCoded = 0; }
+#else
   ContextModel  ()                        { m_ucState = 0;             }
+#endif
   ~ContextModel ()                        {}
   
-  const UChar getState  ()                { return ( m_ucState >> 1 ); }                    ///< get current state
-  const UChar getMps    ()                { return ( m_ucState  & 1 ); }                    ///< get curret MPS
+  UChar getState  ()                { return ( m_ucState >> 1 ); }                    ///< get current state
+  UChar getMps    ()                { return ( m_ucState  & 1 ); }                    ///< get curret MPS
+  Void  setStateAndMps( UChar ucState, UChar ucMPS) { m_ucState = (ucState << 1) + ucMPS; } ///< set state and MPS
   
-  Void        init      ( Int   iQp, 
-                         Short asCtxInit[] );                                              ///< initialize state with initial prob.
+  Void init ( Int qp, Int initValue );   ///< initialize state with initial probability
   
-  Void        updateLPS ()
+  Void updateLPS ()
   {
-    UChar ucMPS = ( m_ucState > 1    ? m_ucState  & 1 :    1   - ( m_ucState & 1 ) );
-    m_ucState   = ( m_aucNextStateLPS[ m_ucState >> 1 ] << 1 ) + ucMPS;
+    m_ucState = m_aucNextStateLPS[ m_ucState ];
   }
   
-  Void        updateMPS ()
+  Void updateMPS ()
   {
-    m_ucState   = ( m_aucNextStateMPS[ m_ucState >> 1 ] << 1 ) + ( m_ucState & 1 );
+    m_ucState = m_aucNextStateMPS[ m_ucState ];
   }
+  
+  Int getEntropyBits(Short val) { return m_entropyBits[m_ucState ^ val]; }
+    
+#if FAST_BIT_EST
+  Void update( Int binVal )
+  {
+    m_ucState = m_nextState[m_ucState][binVal];
+  }
+  static Void buildNextStateTable();
+  static Int getEntropyBitsTrm( Int val ) { return m_entropyBits[126 ^ val]; }
+#endif
+#if CABAC_INIT_FLAG
+  Void setBinsCoded(UInt val)   { m_binsCoded = val;  }
+  UInt getBinsCoded()           { return m_binsCoded;   }
+#endif
   
 private:
   UChar         m_ucState;                                                                  ///< internal state variable
-  static const  UChar m_aucNextStateMPS[ 64 ];
-  static const  UChar m_aucNextStateLPS[ 64 ];
+  static const  UChar m_aucNextStateMPS[ 128 ];
+  static const  UChar m_aucNextStateLPS[ 128 ];
+  static const Int m_entropyBits[ 128 ];
+#if FAST_BIT_EST
+  static UChar m_nextState[128][2];
+#endif
+#if !CABAC_LINEAR_INIT
+  static const Int m_slopes[16];
+  static const Int m_segOffset[8];
+  static const Int m_accumulatedSegOffset[8];
+#endif
+#if CABAC_INIT_FLAG
+  UInt          m_binsCoded;
+#endif
 };
+
+//! \}
 
 #endif
 

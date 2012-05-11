@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TDecSlice.h
     \brief    slice decoder class (header)
 */
@@ -44,11 +42,16 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "../TLibCommon/CommonDef.h"
-#include "../TLibCommon/TComBitStream.h"
-#include "../TLibCommon/TComPic.h"
+#include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TComBitStream.h"
+#include "TLibCommon/TComPic.h"
 #include "TDecEntropy.h"
 #include "TDecCu.h"
+#include "TDecSbac.h"
+#include "TDecBinCoderCABAC.h"
+
+//! \ingroup TLibDecoder
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -63,6 +66,11 @@ private:
   TDecCu*         m_pcCuDecoder;
   UInt            m_uiCurrSliceIdx;
 
+  TDecSbac*       m_pcBufferSbacDecoders;   ///< line to store temporary contexts, one per column of tiles.
+  TDecBinCABAC*   m_pcBufferBinCABACs;
+  TDecSbac*       m_pcBufferLowLatSbacDecoders;   ///< dependent tiles: line to store temporary contexts, one per column of tiles.
+  TDecBinCABAC*   m_pcBufferLowLatBinCABACs;
+  
 public:
   TDecSlice();
   virtual ~TDecSlice();
@@ -71,9 +79,33 @@ public:
   Void  create            ( TComSlice* pcSlice, Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
   Void  destroy           ();
   
-  Void  decompressSlice   ( TComBitstream* pcBitstream, TComPic*& rpcPic );
-
+  Void  decompressSlice   ( TComInputBitstream* pcBitstream, TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
 };
+
+
+class ParameterSetManagerDecoder:public ParameterSetManager
+{
+public:
+  ParameterSetManagerDecoder();
+  virtual ~ParameterSetManagerDecoder();
+
+  Void     storePrefetchedSPS(TComSPS *sps)  { m_spsBuffer.storePS( sps->getSPSId(), sps); };
+  TComSPS* getPrefetchedSPS  (Int spsId);
+  Void     storePrefetchedPPS(TComPPS *pps)  { m_ppsBuffer.storePS( pps->getPPSId(), pps); };
+  TComPPS* getPrefetchedPPS  (Int ppsId);
+  Void     storePrefetchedAPS(TComAPS *aps)  { m_apsBuffer.storePS( aps->getAPSID(), aps); };
+  TComAPS* getPrefetchedAPS  (Int apsId);
+
+  Void     applyPrefetchedPS();
+
+private:
+  ParameterSetMap<TComSPS> m_spsBuffer; 
+  ParameterSetMap<TComPPS> m_ppsBuffer; 
+  ParameterSetMap<TComAPS> m_apsBuffer; 
+};
+
+
+//! \}
 
 #endif
 

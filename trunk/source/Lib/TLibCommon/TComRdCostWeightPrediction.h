@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TComRdCostWeightPrediction.h
     \brief    RD cost computation classes (header)
 */
@@ -45,9 +43,7 @@
 #include "TComPattern.h"
 #include "TComMv.h"
 #include "TComRdCost.h"
-#ifdef WEIGHT_PRED
-  #include "TComSlice.h"
-#endif
+#include "TComSlice.h"
 
 class DistParam;
 class TComPattern;
@@ -75,29 +71,7 @@ protected:
   static inline Void  xSetWPscale(Int w0, Int w1, Int shift, Int offset, Int round);
 
   static UInt xGetSSEw          ( DistParam* pcDtParam );
-  static UInt xGetSSE4w         ( DistParam* pcDtParam );
-  static UInt xGetSSE8w         ( DistParam* pcDtParam );
-  static UInt xGetSSE16w        ( DistParam* pcDtParam );
-  static UInt xGetSSE32w        ( DistParam* pcDtParam );
-  static UInt xGetSSE64w        ( DistParam* pcDtParam );
-  static UInt xGetSSE16Nw       ( DistParam* pcDtParam );
-  
   static UInt xGetSADw          ( DistParam* pcDtParam );
-  static UInt xGetSAD4w         ( DistParam* pcDtParam );
-  static UInt xGetSAD8w         ( DistParam* pcDtParam );
-  static UInt xGetSAD16w        ( DistParam* pcDtParam );
-  static UInt xGetSAD32w        ( DistParam* pcDtParam );
-  static UInt xGetSAD64w        ( DistParam* pcDtParam );
-  static UInt xGetSAD16Nw       ( DistParam* pcDtParam );
-  
-  static UInt xGetSADsw         ( DistParam* pcDtParam );
-  static UInt xGetSADs4w        ( DistParam* pcDtParam );
-  static UInt xGetSADs8w        ( DistParam* pcDtParam );
-  static UInt xGetSADs16w       ( DistParam* pcDtParam );
-  static UInt xGetSADs32w       ( DistParam* pcDtParam );
-  static UInt xGetSADs64w       ( DistParam* pcDtParam );
-  static UInt xGetSADs16Nw      ( DistParam* pcDtParam );
-  
   static UInt xGetHADs4w        ( DistParam* pcDtParam );
   static UInt xGetHADs8w        ( DistParam* pcDtParam );
   static UInt xGetHADsw         ( DistParam* pcDtParam );

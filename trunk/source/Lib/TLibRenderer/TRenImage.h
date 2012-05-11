@@ -32,9 +32,6 @@
  */
 
 
-
-
-
 #ifndef __TRENIMAGE__
 #define __TRENIMAGE__
 
@@ -97,10 +94,6 @@ private:
 
   Void xDeletePlanes();
 };
-
-
-
-
 
 #endif // __TRENIMAGE__
 

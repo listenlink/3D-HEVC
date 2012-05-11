@@ -42,18 +42,11 @@
 
 #include <vector>
 
-
 enum WedgeResolution
 {
   DOUBLE_PEL,
   FULL_PEL,
   HALF_PEL
-};
-
-enum WedgeDist
-{
-  WedgeDist_SAD  = 0,
-  WedgeDist_SSE  = 4,
 };
 
 // ====================================================================================================================
@@ -100,14 +93,16 @@ public:
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes );
 
   Bool  checkNotPlain();
-  Bool  checkNotIdentical( Bool* pbRefPattern );
-  Bool  checkNotInvIdentical( Bool* pbRefPattern );
+  Bool  checkIdentical( Bool* pbRefPattern );
+  Bool  checkInvIdentical( Bool* pbRefPattern );
 
+#if HHI_DMM_WEDGE_INTRA
   Bool  checkPredDirAbovePossible( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffsett );
   Bool  checkPredDirLeftPossible ( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffsett );
 
   Void  getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd );
   Void  getPredDirStartEndLeft ( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd );
+#endif
 };  // END CLASS DEFINITION TComWedgelet
 
 // type definition wedgelet pattern list
@@ -140,6 +135,78 @@ public:
 
 // type definition wedgelet reference list
 typedef std::vector<TComWedgeRef> WedgeRefList;
+
+#if HHI_DMM_PRED_TEX
+enum WedgeDist
+{
+  WedgeDist_SAD  = 0,
+  WedgeDist_SSE  = 4,
+};
+
+class WedgeDistParam;
+typedef UInt (*FpWedgeDistFunc) (WedgeDistParam*);
+
+/// distortion parameter class
+class WedgeDistParam
+{
+public:
+  Pel*  pOrg;
+  Pel*  pCur;
+  Int   iStrideOrg;
+  Int   iStrideCur;
+  Int   iRows;
+  Int   iCols;
+  Int   iStep;
+  FpWedgeDistFunc DistFunc;
+  Int   iSubShift;
+
+  WedgeDistParam()
+  {
+    pOrg = NULL;
+    pCur = NULL;
+    iStrideOrg = 0;
+    iStrideCur = 0;
+    iRows = 0;
+    iCols = 0;
+    iStep = 1;
+    DistFunc = NULL;
+    iSubShift = 0;
+  }
+};
+
+// ====================================================================================================================
+// Class definition TComWedgeDist
+// ====================================================================================================================
+class TComWedgeDist
+{
+private:
+  Int                     m_iBlkWidth;
+  Int                     m_iBlkHeight;
+  FpWedgeDistFunc         m_afpDistortFunc[8];
+
+public:
+  TComWedgeDist();
+  virtual ~TComWedgeDist();
+
+  Void init();
+  Void setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, WedgeDist eWDist, WedgeDistParam& rcDistParam );
+  UInt getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, WedgeDist eWDist = WedgeDist_SAD );
+
+private:
+  static UInt xGetSAD4          ( WedgeDistParam* pcDtParam );
+  static UInt xGetSAD8          ( WedgeDistParam* pcDtParam );
+  static UInt xGetSAD16         ( WedgeDistParam* pcDtParam );
+  static UInt xGetSAD32         ( WedgeDistParam* pcDtParam );
+  //static UInt xGetSAD64         ( WedgeDistParam* pcDtParam );
+
+  static UInt xGetSSE4          ( WedgeDistParam* pcDtParam );
+  static UInt xGetSSE8          ( WedgeDistParam* pcDtParam );
+  static UInt xGetSSE16         ( WedgeDistParam* pcDtParam );
+  static UInt xGetSSE32         ( WedgeDistParam* pcDtParam );
+  //static UInt xGetSSE64         ( WedgeDistParam* pcDtParam );
+
+};// END CLASS DEFINITION TComWedgeDist
+#endif
 
 // ====================================================================================================================
 // Function definition roftoi (mathematically correct rounding of float to int)

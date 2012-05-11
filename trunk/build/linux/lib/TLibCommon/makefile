@@ -3,7 +3,7 @@ CONFIG 			= LIBRARY
 
 # set pathes to the correct directories
 SRC_DIR			= ../../../../source/Lib/TLibCommon
-INC_DIR			= ../../../../source/Lib/TLibCommon
+INC_DIR			= ../../../../source/Lib
 LIB_DIR			= ../../../../lib
 BIN_DIR			= ../../../../bin
 
@@ -36,6 +36,7 @@ OBJS          	= \
 			$(OBJ_DIR)/ContextModel3DBuffer.o \
 			$(OBJ_DIR)/TComCABACTables.o \
 			$(OBJ_DIR)/TComAdaptiveLoopFilter.o \
+			$(OBJ_DIR)/TComSampleAdaptiveOffset.o \
 			$(OBJ_DIR)/TComBitStream.o \
 			$(OBJ_DIR)/TComDataCU.o \
 			$(OBJ_DIR)/TComDepthMapGenerator.o \
@@ -46,19 +47,18 @@ OBJS          	= \
 			$(OBJ_DIR)/TComPicSym.o \
 			$(OBJ_DIR)/TComPicYuv.o \
 			$(OBJ_DIR)/TComPicYuvMD5.o \
-			$(OBJ_DIR)/TComPredFilter.o \
 			$(OBJ_DIR)/TComPrediction.o \
 			$(OBJ_DIR)/TComRdCost.o \
-			$(OBJ_DIR)/TComRdCostWeightPrediction.o \
 			$(OBJ_DIR)/TComResidualGenerator.o \
 			$(OBJ_DIR)/TComRom.o \
 			$(OBJ_DIR)/TComSlice.o \
 			$(OBJ_DIR)/TComTrQuant.o \
 			$(OBJ_DIR)/TComYuv.o \
-			$(OBJ_DIR)/TComMVDRefData.o \
-			$(OBJ_DIR)/TComWedgelet.o \
-			$(OBJ_DIR)/TComWeightPrediction.o \
+			$(OBJ_DIR)/TComInterpolationFilter.o \
 			$(OBJ_DIR)/libmd5.o \
+			$(OBJ_DIR)/TComWeightPrediction.o \
+			$(OBJ_DIR)/TComRdCostWeightPrediction.o \
+			$(OBJ_DIR)/TComWedgelet.o \
 
 LIBS				= -lpthread
 

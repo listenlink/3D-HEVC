@@ -43,9 +43,8 @@
 #ifndef __TAppRENDERERCFG__
 #define __TAppRENDERERCFG__
 
-#include "../TAppCommon/TAppComCamPara.h"
+#include "../../Lib/TAppCommon/TAppComCamPara.h"
 #include "../../Lib/TLibCommon/CommonDef.h"
-#include "../../Lib/TLibCommon/TComMVDRefData.h"
 #include "../../Lib/TLibRenderer/TRenModel.h"
 #include "../../Lib/TLibRenderer/TRenModSetupStrParser.h"
 #include <string>

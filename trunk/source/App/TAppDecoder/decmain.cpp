@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     decmain.cpp
     \brief    Decoder application main
 */
@@ -41,6 +39,9 @@
 #include <stdio.h>
 #include <time.h>
 #include "TAppDecTop.h"
+
+//! \ingroup TAppDecoder
+//! \{
 
 bool g_md5_mismatch = false; ///< top level flag that indicates if there has been a decoding mismatch
 
@@ -54,7 +55,7 @@ int main(int argc, char* argv[])
 
   // print information
   fprintf( stdout, "\n" );
-  fprintf( stdout, "HM %s based Multiview Video plus Depth coder: Decoder Version [%s]", HM_VERSION, NV_VERSION );
+  fprintf( stdout, "3D-HTM Software: Decoder Version [%s] based on HM Version [%s]", NV_VERSION, HM_VERSION );
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );
@@ -92,4 +93,4 @@ int main(int argc, char* argv[])
   return g_md5_mismatch ? EXIT_FAILURE : EXIT_SUCCESS;
 }
 
-
+//! \}

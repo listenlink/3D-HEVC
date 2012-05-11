@@ -3,7 +3,7 @@ CONFIG 			= LIBRARY
 
 # set pathes to the correct directories
 SRC_DIR			= ../../../../source/Lib/TLibEncoder
-INC_DIR			= ../../../../source/Lib/TLibEncoder
+INC_DIR			= ../../../../source/Lib
 LIB_DIR			= ../../../../lib
 BIN_DIR			= ../../../../bin
 
@@ -32,9 +32,12 @@ DEFS			= -DMSYS_LINUX
 
 # set objects
 OBJS          	= \
+			$(OBJ_DIR)/NALwrite.o \
 			$(OBJ_DIR)/SEIwrite.o \
 			$(OBJ_DIR)/TEncBinCoderCABAC.o \
+			$(OBJ_DIR)/TEncBinCoderCABACCounter.o \
 			$(OBJ_DIR)/TEncAdaptiveLoopFilter.o \
+			$(OBJ_DIR)/TEncSampleAdaptiveOffset.o \
 			$(OBJ_DIR)/TEncCavlc.o \
 			$(OBJ_DIR)/TEncCu.o \
 			$(OBJ_DIR)/TEncEntropy.o \
@@ -43,8 +46,8 @@ OBJS          	= \
 			$(OBJ_DIR)/TEncSearch.o \
 			$(OBJ_DIR)/TEncSlice.o \
 			$(OBJ_DIR)/TEncTop.o \
-			$(OBJ_DIR)/TEncFormattedStringParser.o \
-			$(OBJ_DIR)/TEncSeqStructure.o \
+			$(OBJ_DIR)/TEncPic.o \
+			$(OBJ_DIR)/TEncPreanalyzer.o \
 			$(OBJ_DIR)/WeightPredAnalysis.o \
 
 LIBS				= -lpthread

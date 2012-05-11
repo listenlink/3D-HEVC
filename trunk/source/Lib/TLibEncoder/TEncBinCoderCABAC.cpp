@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,18 +31,24 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TEncBinCoderCABAC.cpp
     \brief    binary entropy encoder of CABAC
 */
 
 #include "TEncBinCoderCABAC.h"
+#include "TLibCommon/TComRom.h"
+
+
+//! \ingroup TLibEncoder
+//! \{
 
 
 TEncBinCABAC::TEncBinCABAC()
 : m_pcTComBitIf( 0 )
-, m_bBinCountingEnabled(0)
+, m_binCountIncrement( 0 )
+#if FAST_BIT_EST
+, m_fracBits( 0 )
+#endif
 {
 }
 
@@ -50,202 +56,362 @@ TEncBinCABAC::~TEncBinCABAC()
 {
 }
 
-Void
-TEncBinCABAC::init( TComBitIf* pcTComBitIf )
+Void TEncBinCABAC::init( TComBitIf* pcTComBitIf )
 {
   m_pcTComBitIf = pcTComBitIf;
 }
 
-Void
-TEncBinCABAC::uninit()
+Void TEncBinCABAC::uninit()
 {
   m_pcTComBitIf = 0;
 }
 
-Void
-TEncBinCABAC::start()
+Void TEncBinCABAC::start()
 {
-  m_uiLow           = 0;
-  m_uiRange         = 510;
-  m_uiBitsToFollow  = 0;
-  m_uiByte          = 0;
-  m_uiBitsLeft      = 9;
+  m_uiLow            = 0;
+  m_uiRange          = 510;
+  m_bitsLeft         = 23;
+  m_numBufferedBytes = 0;
+  m_bufferedByte     = 0xff;
 }
 
-Void
-TEncBinCABAC::finish()
+Void TEncBinCABAC::finish()
 {
-  xWriteBitAndBitsToFollow( ( m_uiLow >> 9 ) & 1 );
-  xWriteBit               ( ( m_uiLow >> 8 ) & 1 );
-  // xWriteBit               ( 1 ); // stop bit, already written in TEncGOP::compressGOP
-  if( 8 - m_uiBitsLeft != 0 )
+  if ( m_uiLow >> ( 32 - m_bitsLeft ) )
   {
-    m_pcTComBitIf->write  ( m_uiByte, 8 - m_uiBitsLeft );
+    //assert( m_numBufferedBytes > 0 );
+    //assert( m_bufferedByte != 0xff );
+    m_pcTComBitIf->write( m_bufferedByte + 1, 8 );
+    while ( m_numBufferedBytes > 1 )
+    {
+      m_pcTComBitIf->write( 0x00, 8 );
+      m_numBufferedBytes--;
+    }
+    m_uiLow -= 1 << ( 32 - m_bitsLeft );
+  }
+  else
+  {
+    if ( m_numBufferedBytes > 0 )
+    {
+      m_pcTComBitIf->write( m_bufferedByte, 8 );
+    }
+    while ( m_numBufferedBytes > 1 )
+    {
+      m_pcTComBitIf->write( 0xff, 8 );
+      m_numBufferedBytes--;
+    }    
+  }
+  m_pcTComBitIf->write( m_uiLow >> 8, 24 - m_bitsLeft );
+}
+
+#if OL_FLUSH
+Void TEncBinCABAC::flush()
+{
+  encodeBinTrm(1);
+  finish();
+  m_pcTComBitIf->write(1, 1);
+#if OL_FLUSH_ALIGN
+  m_pcTComBitIf->writeAlignZero();
+#endif
+
+  start();
+}
+#endif
+
+/** Reset BAC register and counter values.
+ * \returns Void
+ */
+Void TEncBinCABAC::resetBac()
+{
+  start();
+}
+
+#if BURST_IPCM
+/** Encode # of subsequent IPCM blocks.
+ * \param numSubseqIPCM 
+ * \returns Void
+ */
+Void TEncBinCABAC::encodeNumSubseqIPCM( Int numSubseqIPCM )
+{
+  finish();
+  m_pcTComBitIf->write( 1, 1 ); // stop bit
+
+  m_pcTComBitIf->write( numSubseqIPCM ? 1 : 0, 1);
+
+  if ( numSubseqIPCM > 0)
+  {
+    Bool bCodeLast = ( 3 > numSubseqIPCM );
+
+    while( --numSubseqIPCM )
+    {
+      m_pcTComBitIf->write( 1, 1 );
+    }
+    if( bCodeLast )
+    {
+      m_pcTComBitIf->write( 0, 1 );
+    }
   }
 }
+#endif
 
-Void
-TEncBinCABAC::copyState( TEncBinIf* pcTEncBinIf )
+/** Encode PCM alignment zero bits.
+ * \returns Void
+ */
+Void TEncBinCABAC::encodePCMAlignBits()
+{
+#if !BURST_IPCM
+  finish();
+  m_pcTComBitIf->write( 1, 1 ); // stop bit
+#endif
+  m_pcTComBitIf->writeAlignZero(); // pcm align zero
+}
+
+/** Write a PCM code.
+ * \param uiCode code value
+ * \param uiLength code bit-depth
+ * \returns Void
+ */
+Void TEncBinCABAC::xWritePCMCode(UInt uiCode, UInt uiLength)
+{
+  m_pcTComBitIf->write(uiCode, uiLength);
+}
+
+Void TEncBinCABAC::copyState( TEncBinIf* pcTEncBinIf )
 {
   TEncBinCABAC* pcTEncBinCABAC = pcTEncBinIf->getTEncBinCABAC();
   m_uiLow           = pcTEncBinCABAC->m_uiLow;
   m_uiRange         = pcTEncBinCABAC->m_uiRange;
-  m_uiBitsToFollow  = pcTEncBinCABAC->m_uiBitsToFollow;
-  m_uiByte          = pcTEncBinCABAC->m_uiByte;
-  m_uiBitsLeft      = pcTEncBinCABAC->m_uiBitsLeft;
+  m_bitsLeft        = pcTEncBinCABAC->m_bitsLeft;
+  m_bufferedByte    = pcTEncBinCABAC->m_bufferedByte;
+  m_numBufferedBytes = pcTEncBinCABAC->m_numBufferedBytes;
+#if FAST_BIT_EST
+  m_fracBits = pcTEncBinCABAC->m_fracBits;
+#endif
 }
 
-Void  
-TEncBinCABAC::resetBits()
+Void TEncBinCABAC::resetBits()
 {
-  m_uiLow          &= 255;
-  m_uiBitsToFollow  = 0;
-  m_uiByte          = 0;
-  m_uiBitsLeft      = 9;
+  m_uiLow            = 0;
+  m_bitsLeft         = 23;
+  m_numBufferedBytes = 0;
+  m_bufferedByte     = 0xff;
+  if ( m_binCountIncrement )
+  {
+    m_uiBinsCoded = 0;
+  }
+#if FAST_BIT_EST
+  m_fracBits &= 32767;
+#endif
 }
 
-UInt
-TEncBinCABAC::getNumWrittenBits()
+UInt TEncBinCABAC::getNumWrittenBits()
 {
-  return m_pcTComBitIf->getNumberOfWrittenBits() + 8 + m_uiBitsToFollow - m_uiBitsLeft + 1;
+  return m_pcTComBitIf->getNumberOfWrittenBits() + 8 * m_numBufferedBytes + 23 - m_bitsLeft;
 }
 
-Void
-TEncBinCABAC::encodeBin( UInt uiBin, ContextModel &rcCtxModel )
+/**
+ * \brief Encode bin
+ *
+ * \param binValue   bin value
+ * \param rcCtxModel context model
+ */
+Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
   {
-    DTRACE_CABAC_V( g_nSymbolCounter++ )
+    DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tstate=" )
     DTRACE_CABAC_V( ( rcCtxModel.getState() << 1 ) + rcCtxModel.getMps() )
     DTRACE_CABAC_T( "\tsymbol=" )
-    DTRACE_CABAC_V( uiBin )
+    DTRACE_CABAC_V( binValue )
     DTRACE_CABAC_T( "\n" )
   }
-  if (m_bBinCountingEnabled) 
-  {
-    m_uiBinsCoded++;
-  }
+  m_uiBinsCoded += m_binCountIncrement;
+#if CABAC_INIT_FLAG
+  rcCtxModel.setBinsCoded( 1 );
+#endif
+  
   UInt  uiLPS   = TComCABACTables::sm_aucLPSTable[ rcCtxModel.getState() ][ ( m_uiRange >> 6 ) & 3 ];
   m_uiRange    -= uiLPS;
-  if( uiBin != rcCtxModel.getMps() )
+  
+  if( binValue != rcCtxModel.getMps() )
   {
-    m_uiLow    += m_uiRange;
-    m_uiRange   = uiLPS;
+    Int numBits = TComCABACTables::sm_aucRenormTable[ uiLPS >> 3 ];
+    m_uiLow     = ( m_uiLow + m_uiRange ) << numBits;
+    m_uiRange   = uiLPS << numBits;
     rcCtxModel.updateLPS();
+    
+    m_bitsLeft -= numBits;
   }
   else
   {
     rcCtxModel.updateMPS();
-  }
-  while( m_uiRange < 256 )
-  {
-    if( m_uiLow >= 512 )
+    if ( m_uiRange >= 256 )
     {
-      xWriteBitAndBitsToFollow( 1 );
-      m_uiLow -= 512;
+      return;
     }
-    else if( m_uiLow < 256 )
-    {
-      xWriteBitAndBitsToFollow( 0 );
-    }
-    else
-    {
-      m_uiBitsToFollow++;
-      m_uiLow         -= 256;
-    }
-    m_uiLow   <<= 1;
+    
+    m_uiLow <<= 1;
     m_uiRange <<= 1;
+    m_bitsLeft--;
   }
+  
+  testAndWriteOut();
 }
 
-Void
-TEncBinCABAC::encodeBinEP( UInt uiBin )
+/**
+ * \brief Encode equiprobable bin
+ *
+ * \param binValue bin value
+ */
+Void TEncBinCABAC::encodeBinEP( UInt binValue )
 {
   {
-    DTRACE_CABAC_V( g_nSymbolCounter++ )
+    DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
-    DTRACE_CABAC_V( uiBin )
+    DTRACE_CABAC_V( binValue )
     DTRACE_CABAC_T( "\n" )
   }
-  if (m_bBinCountingEnabled)
-  {
-    m_uiBinsCoded++;
-  }
+  m_uiBinsCoded += m_binCountIncrement;
   m_uiLow <<= 1;
-  if( uiBin )
+  if( binValue )
   {
     m_uiLow += m_uiRange;
   }
-  if( m_uiLow >= 1024 )
+  m_bitsLeft--;
+  
+  testAndWriteOut();
+}
+
+/**
+ * \brief Encode equiprobable bins
+ *
+ * \param binValues bin values
+ * \param numBins number of bins
+ */
+Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
+{
+  m_uiBinsCoded += numBins & -m_binCountIncrement;
+  
+  for ( Int i = 0; i < numBins; i++ )
   {
-    xWriteBitAndBitsToFollow( 1 );
-    m_uiLow -= 1024;
+    DTRACE_CABAC_VL( g_nSymbolCounter++ )
+    DTRACE_CABAC_T( "\tEPsymbol=" )
+    DTRACE_CABAC_V( ( binValues >> ( numBins - 1 - i ) ) & 1 )
+    DTRACE_CABAC_T( "\n" )
   }
-  else if( m_uiLow < 512 )
+  
+  while ( numBins > 8 )
   {
-    xWriteBitAndBitsToFollow( 0 );
+    numBins -= 8;
+    UInt pattern = binValues >> numBins; 
+    m_uiLow <<= 8;
+    m_uiLow += m_uiRange * pattern;
+    binValues -= pattern << numBins;
+    m_bitsLeft -= 8;
+    
+    testAndWriteOut();
+  }
+  
+  m_uiLow <<= numBins;
+  m_uiLow += m_uiRange * binValues;
+  m_bitsLeft -= numBins;
+  
+  testAndWriteOut();
+}
+
+/**
+ * \brief Encode terminating bin
+ *
+ * \param binValue bin value
+ */
+Void TEncBinCABAC::encodeBinTrm( UInt binValue )
+{
+  m_uiBinsCoded += m_binCountIncrement;
+  m_uiRange -= 2;
+  if( binValue )
+  {
+    m_uiLow  += m_uiRange;
+    m_uiLow <<= 7;
+    m_uiRange = 2 << 7;
+    m_bitsLeft -= 7;
+  }
+  else if ( m_uiRange >= 256 )
+  {
+    return;
   }
   else
   {
-    m_uiBitsToFollow++;
-    m_uiLow         -= 512;
+    m_uiLow   <<= 1;
+    m_uiRange <<= 1;
+    m_bitsLeft--;    
+  }
+  
+  testAndWriteOut();
+}
+
+Void TEncBinCABAC::testAndWriteOut()
+{
+  if ( m_bitsLeft < 12 )
+  {
+    writeOut();
   }
 }
 
-Void
-TEncBinCABAC::encodeBinTrm( UInt uiBin )
+/**
+ * \brief Move bits from register into bitstream
+ */
+Void TEncBinCABAC::writeOut()
 {
-  if (m_bBinCountingEnabled)
+  UInt leadByte = m_uiLow >> (24 - m_bitsLeft);
+  m_bitsLeft += 8;
+  m_uiLow &= 0xffffffffu >> m_bitsLeft;
+  
+  if ( leadByte == 0xff )
   {
-    m_uiBinsCoded++;
+    m_numBufferedBytes++;
   }
-  m_uiRange -= 2;
-  if( uiBin )
+  else
   {
-    m_uiLow  += m_uiRange;
-    m_uiRange = 2;
-  }
-  while( m_uiRange < 256 )
-  {
-    if( m_uiLow >= 512 )
+    if ( m_numBufferedBytes > 0 )
     {
-      xWriteBitAndBitsToFollow( 1 );
-      m_uiLow -= 512;
-    }
-    else if( m_uiLow < 256 )
-    {
-      xWriteBitAndBitsToFollow( 0 );
+      UInt carry = leadByte >> 8;
+      UInt byte = m_bufferedByte + carry;
+      m_bufferedByte = leadByte & 0xff;
+      m_pcTComBitIf->write( byte, 8 );
+      
+      byte = ( 0xff + carry ) & 0xff;
+      while ( m_numBufferedBytes > 1 )
+      {
+        m_pcTComBitIf->write( byte, 8 );
+        m_numBufferedBytes--;
+      }
     }
     else
     {
-      m_uiBitsToFollow++;
-      m_uiLow         -= 256;
-    }
-    m_uiLow   <<= 1;
-    m_uiRange <<= 1;
+      m_numBufferedBytes = 1;
+      m_bufferedByte = leadByte;
+    }      
+  }    
+}
+
+/** flush bits when CABAC termination
+  * \param [in] bEnd true means this flushing happens at the end of RBSP. No need to encode stop bit
+  */
+Void TEncBinCABAC::encodeFlush(Bool bEnd)
+{
+  m_uiRange = 2;
+
+  m_uiLow  += 2;
+  m_uiLow <<= 7;
+  m_uiRange = 2 << 7;
+  m_bitsLeft -= 7;
+  testAndWriteOut();
+  finish();
+
+  if(!bEnd)
+  {
+    m_pcTComBitIf->write( 1, 1 ); // stop bit
   }
 }
 
-Void  
-TEncBinCABAC::xWriteBit( UInt uiBit )
-{
-  m_uiByte += m_uiByte + uiBit;
-  if( ! --m_uiBitsLeft )
-  {
-    m_pcTComBitIf->write( m_uiByte, 8 );
-    m_uiBitsLeft  = 8;
-    m_uiByte      = 0;
-  }
-}
-
-Void  
-TEncBinCABAC::xWriteBitAndBitsToFollow( UInt uiBit )
-{
-  xWriteBit( uiBit );
-  uiBit = 1 - uiBit;
-  while( m_uiBitsToFollow > 0 )
-  {
-    m_uiBitsToFollow--;
-    xWriteBit( uiBit );
-  }
-}
+//! \}

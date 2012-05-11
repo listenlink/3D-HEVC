@@ -33,15 +33,14 @@
 
 
 
-
 #ifndef __TRENFILTER__
 #define __TRENFILTER__
 
-#include "../TLibCommon/CommonDef.h"
+#include "TLibCommon/CommonDef.h"
 #include "TRenImage.h"
-#include "../TLibCommon/TComPredFilter.h"
+#include "TRenInterpFilter.h"
 
-typedef Int (TComPredFilter::*FpChromaIntFilt) ( Pel*, Int );
+typedef Int (TRenInterpFilter::*FpChromaIntFilt) ( Pel*, Int );
 
 class TRenFilter
 {

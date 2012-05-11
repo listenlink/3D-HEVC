@@ -32,7 +32,6 @@
  */
 
 
-
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenModSetupStrParser.h"

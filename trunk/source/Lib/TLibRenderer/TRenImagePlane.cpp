@@ -32,9 +32,9 @@
  */
 
 
-
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
+#include <string.h>
 /////// TRenImagePlane ///////
 
 template<class T>
@@ -79,7 +79,7 @@ TRenImagePlane<T>::TRenImagePlane( T* pcDataOrg, UInt uiWidthOrg, UInt uiHeightO
 }
 
 template<typename T>
-Void TRenImagePlane<T>::setData( T* pDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad, Bool bClean /*= false*/ )
+Void TRenImagePlane<T>::setData( T* pDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad, Bool bClean /*= false*/ ) 
 {
   deleteData();
   m_uiPad       = uiPad;
@@ -491,13 +491,13 @@ Void TRenImagePlane<T>::extendMargin()
   pcData -= (m_uiStride + iPad);
   for ( Int iPosY = 0; iPosY < iPad; iPosY++ )
   {
-    ::memcpy( pcData + (iPosY+1)*m_uiStride, pcData, sizeof(T)*(m_uiWidth + (iPad<<1)) );
+    memcpy( pcData + (iPosY+1)*m_uiStride, pcData, sizeof(T)*(m_uiWidth + (iPad<<1)) );
   }
 
   pcData -= ((m_uiHeight-1) * m_uiStride);
   for ( Int iPosY = 0; iPosY < iPad; iPosY++ )
   {
-    ::memcpy( pcData - (iPosY+1)*m_uiStride, pcData, sizeof(T)*(m_uiWidth + (iPad<<1)) );
+    memcpy( pcData - (iPosY+1)*m_uiStride, pcData, sizeof(T)*(m_uiWidth + (iPad<<1)) );
   }
 }
 

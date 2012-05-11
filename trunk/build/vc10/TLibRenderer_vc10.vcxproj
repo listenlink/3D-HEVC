@@ -91,7 +91,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\compat\msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -106,7 +106,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\compat\msvc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -121,6 +121,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -138,12 +139,14 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Lib\TLibRenderer\TRenFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibRenderer\TRenImagePlane.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibRenderer\TRenImage.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibRenderer\TRenInterpFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibRenderer\TRenModel.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibRenderer\TRenModSetupStrParser.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibRenderer\TRenSingleModel.cpp" />
@@ -153,6 +156,7 @@
     <ClInclude Include="..\..\source\Lib\TLibRenderer\TRenFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibRenderer\TRenImagePlane.h" />
     <ClInclude Include="..\..\source\Lib\TLibRenderer\TRenImage.h" />
+    <ClInclude Include="..\..\source\Lib\TLibRenderer\TRenInterpFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibRenderer\TRenModel.h" />
     <ClInclude Include="..\..\source\Lib\TLibRenderer\TRenModSetupStrParser.h" />
     <ClInclude Include="..\..\source\Lib\TLibRenderer\TRenSingleModel.h" />

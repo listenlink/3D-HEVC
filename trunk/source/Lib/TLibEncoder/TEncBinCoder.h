@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TEncBinCoder.h
     \brief    binary entropy encoder interface
 */
@@ -40,12 +38,13 @@
 #ifndef __TENC_BIN_CODER__
 #define __TENC_BIN_CODER__
 
-#include "../TLibCommon/ContextModel.h"
-#include "../TLibCommon/TComBitStream.h"
+#include "TLibCommon/ContextModel.h"
+#include "TLibCommon/TComBitStream.h"
 
+//! \ingroup TLibEncoder
+//! \{
 
 class TEncBinCABAC;
-
 
 class TEncBinIf
 {
@@ -55,13 +54,26 @@ public:
 
   virtual Void  start             ()                                          = 0;
   virtual Void  finish            ()                                          = 0;
-  virtual Void  copyState         ( TEncBinIf* pcTEncBinIf )                  = 0;    
+  virtual Void  copyState         ( TEncBinIf* pcTEncBinIf )                  = 0;
+#if OL_FLUSH
+  virtual Void  flush            ()                                           = 0;
+#endif
+
+  virtual Void  encodeFlush     (Bool bEnd) = 0;
+
+  virtual Void  resetBac          ()                                          = 0;
+#if BURST_IPCM
+  virtual Void  encodeNumSubseqIPCM( Int numSubseqIPCM )                   = 0;
+#endif
+  virtual Void  encodePCMAlignBits()                                          = 0;
+  virtual Void  xWritePCMCode     ( UInt uiCode, UInt uiLength )              = 0;
 
   virtual Void  resetBits         ()                                          = 0;
   virtual UInt  getNumWrittenBits ()                                          = 0;
 
   virtual Void  encodeBin         ( UInt  uiBin,  ContextModel& rcCtxModel )  = 0;
   virtual Void  encodeBinEP       ( UInt  uiBin                            )  = 0;
+  virtual Void  encodeBinsEP      ( UInt  uiBins, Int numBins              )  = 0;
   virtual Void  encodeBinTrm      ( UInt  uiBin                            )  = 0;
 
   virtual TEncBinCABAC*   getTEncBinCABAC   ()  { return 0; }
@@ -69,6 +81,7 @@ public:
   virtual ~TEncBinIf() {}
 };
 
+//! \}
 
 #endif
 

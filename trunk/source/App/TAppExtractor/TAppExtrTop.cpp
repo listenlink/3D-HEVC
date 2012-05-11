@@ -35,21 +35,13 @@
     \brief    Extractor application class
 */
 
+#include "TAppExtrTop.h"
+#include "../../Lib/TLibDecoder/AnnexBread.h"
+#include <fstream>
 #include <list>
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
-
-#include "TAppExtrTop.h"
-
-// ====================================================================================================================
-// Local constants
-// ====================================================================================================================
-
-/// initial bitstream buffer size
-/// should be large enough for parsing SPS
-/// resized as a function of picture size after parsing SPS
-#define BITS_BUF_SIZE 65536
 
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
@@ -59,37 +51,8 @@ TAppExtrTop::TAppExtrTop()
 {
 }
 
-Void TAppExtrTop::create()
+TAppExtrTop::~TAppExtrTop()
 {
-  m_apcInputBitstream  = new TComBitstream;
-  m_apcInputBitstream->create( BITS_BUF_SIZE );
-
-  if ( m_pchOutputBitstreamFile )
-  {
-     m_apcOutputBitstream  = new TComBitstream;
-     m_apcOutputBitstream->create( BITS_BUF_SIZE );
-  }
-  else
-  {
-     m_apcOutputBitstream  = NULL;
-  }
-}
-
-Void TAppExtrTop::destroy()
-{
-  if ( m_apcInputBitstream )
-  {
-    m_apcInputBitstream->destroy();
-    delete m_apcInputBitstream;
-    m_apcInputBitstream = NULL;
-  }
-
-  if ( m_apcOutputBitstream )
-  {
-    m_apcOutputBitstream->destroy();
-    delete m_apcOutputBitstream;
-    m_apcOutputBitstream = NULL;
-  }
 }
 
 // ====================================================================================================================
@@ -97,132 +60,87 @@ Void TAppExtrTop::destroy()
 // ====================================================================================================================
 
 /**
- - create internal class
- - initialize internal class
  - until the end of the bitstream, call extraction function in TExtrTop class
- - delete allocated buffers
- - destroy internal class
- .
  */
 Void TAppExtrTop::extract()
 {
-  TComBitstream*      pcInputBitstream = m_apcInputBitstream;
-  TComBitstream*      pcOutputBitstream = m_apcOutputBitstream;
 
-  // create & initialize internal classes
-  xCreateExtrLib();
-  xInitExtrLib  ();
-
-  // main extractor loop
-  Bool resizedBitstreamBuffer = false;
-
-  while ( !m_cTVideoIOInputBitstreamFile.readBits( pcInputBitstream ) )
+  ifstream inputBitstreamFile( m_pchInputBitstreamFile, ifstream::in | ifstream::binary );
+  if( inputBitstreamFile.fail() )
   {
-    // decide whether to extract packet or not
-    if ( m_cTExtrTop.extract( pcInputBitstream, m_suiExtractLayerIds ) && pcOutputBitstream )
-    {
-       xCopyInputPacketIntoOutput();
-       m_cTVideoIOOutputBitstreamFile.writeBits( pcOutputBitstream );
-    }
+    fprintf( stderr, "\nfailed to open bitstream file `%s' for reading\n", m_pchInputBitstreamFile );
+    exit( EXIT_FAILURE );
+  }
 
-    if ( !resizedBitstreamBuffer )
+  fstream outputBitstreamFile;
+  if( m_pchOutputBitstreamFile )
+  {
+    outputBitstreamFile.open( m_pchOutputBitstreamFile, fstream::binary | fstream::out );
+    if( outputBitstreamFile.fail() )
     {
-      TComSPS *sps = m_cTExtrTop.getFirstSPS();
-      if ( sps )
+      fprintf( stderr, "\nfailed to open bitstream file `%s' for writing\n", m_pchOutputBitstreamFile );
+      exit( EXIT_FAILURE );
+    }
+  }
+
+  InputByteStream inputBytestream( inputBitstreamFile );
+
+  Bool bEndOfFile = false;
+  while( !bEndOfFile )
+  {
+    streampos location = inputBitstreamFile.tellg();
+    AnnexBStats stats = AnnexBStats();
+    vector<uint8_t> nalUnit;
+    InputNALUnit nalu;
+    bEndOfFile = byteStreamNALUnit( inputBytestream, nalUnit, stats );
+
+    // handle NAL unit
+    if( nalUnit.empty() )
+    {
+      /* this can happen if the following occur:
+       *  - empty input file
+       *  - two back-to-back start_code_prefixes
+       *  - start_code_prefix immediately followed by EOF
+       */
+      fprintf( stderr, "Warning: Attempt to decode an empty NAL unit\n" );
+    }
+    else
+    {
+      read( nalu, nalUnit );
+
+      // decide whether to extract packet or not
+      if ( m_cTExtrTop.extract( nalu, m_suiExtractLayerIds ) && outputBitstreamFile.is_open() )
       {
-        pcInputBitstream->destroy();
-        pcInputBitstream->create(sps->getWidth() * sps->getHeight() * 2);
-        if ( pcOutputBitstream )
+        inputBitstreamFile.clear();
+
+        streampos location2 = inputBitstreamFile.tellg();
+        inputBitstreamFile.seekg( location );
+
+        do
         {
-           pcOutputBitstream->destroy();
-           pcOutputBitstream->create(sps->getWidth() * sps->getHeight() * 2);
-        }
-        resizedBitstreamBuffer = true;
+          outputBitstreamFile.put( inputBitstreamFile.get() );
+        } while( inputBitstreamFile.tellg() != location2 );
       }
     }
   }
 
+  inputBitstreamFile.close();
+  outputBitstreamFile.close();
+
   // write SPS info file
   if ( m_pchSpsInfoFile )
   {
-    m_cTExtrTop.dumpSpsInfo( m_cSpsInfoFileHandle );
+    fstream cSpsInfoFileHandle( m_pchSpsInfoFile, fstream::binary | fstream::out );
+
+    if( cSpsInfoFileHandle.fail() )
+    {
+      fprintf( stderr, "\nfailed writing SPS info file\n" );
+      exit( EXIT_FAILURE );
+    }
+
+    m_cTExtrTop.dumpSpsInfo( cSpsInfoFileHandle );
+
+    cSpsInfoFileHandle.close();
   }
   m_cTExtrTop.dumpSpsInfo( std::cout );
-  
-  // destroy internal classes
-  xDestroyExtrLib();
-}
-
-// ====================================================================================================================
-// Protected member functions
-// ====================================================================================================================
-
-Void TAppExtrTop::xCreateExtrLib()
-{
-  // open bitstream files
-  m_cTVideoIOInputBitstreamFile.openBits( m_pchInputBitstreamFile, false);  // read mode
-  if ( m_pchOutputBitstreamFile )
-  {
-     m_cTVideoIOOutputBitstreamFile.openBits( m_pchOutputBitstreamFile, true);  // write mode
-  }
-
-  // open text file
-  if ( m_pchSpsInfoFile )
-  {
-     m_cSpsInfoFileHandle.open( m_pchSpsInfoFile, ios::binary | ios::out );
-
-    if( m_cSpsInfoFileHandle.fail() )
-    {
-      printf("\nfailed writing SPS info file\n");
-      exit(0);
-    }
-  }
-
-  // create extractor class
-  m_cTExtrTop.create();
-}
-
-Void TAppExtrTop::xDestroyExtrLib()
-{
-  // close bitstream files
-  m_cTVideoIOInputBitstreamFile.closeBits();
-  if ( m_pchOutputBitstreamFile )
-  {
-     m_cTVideoIOOutputBitstreamFile.closeBits();
-  }
-
-  // open text file
-  if ( m_pchSpsInfoFile )
-  {
-     m_cSpsInfoFileHandle.close();
-  }
-
-  // destroy extractor class
-  m_cTExtrTop.destroy();
-}
-
-Void TAppExtrTop::xInitExtrLib()
-{
-  // initialize extractor class
-  m_cTExtrTop.init();
-}
-
-Void TAppExtrTop::xCopyInputPacketIntoOutput()
-{
-  UInt  uiNumBytes = m_apcInputBitstream->reinitParsing();
-  UInt  uiByteCount;
-  UInt  uiByte;
-
-  assert( m_apcOutputBitstream );
-
-  m_apcOutputBitstream->rewindStreamPacket();
-  m_apcOutputBitstream->resetBits();
-
-  for ( uiByteCount = 0; uiByteCount < uiNumBytes; uiByteCount++ )
-  {
-    m_apcInputBitstream->read( 8, uiByte );
-    m_apcOutputBitstream->write( uiByte, 8 );
-  }
-
-  m_apcOutputBitstream->flushBuffer();
 }

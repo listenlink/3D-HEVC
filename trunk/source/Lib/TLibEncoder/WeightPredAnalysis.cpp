@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     WeightedPredAnalysis.cpp
     \brief    encoder class
 */
@@ -43,29 +41,37 @@
 #include "../TLibCommon/TComPicYuv.h"
 #include "WeightPredAnalysis.h"
 
-#ifdef WEIGHT_PRED
-
 #define ABS(a)    ((a) < 0 ? - (a) : (a))
+#define DTHRESH (0.99)
 
 WeightPredAnalysis::WeightPredAnalysis()
 {
-  for ( Int e=0 ; e<2 ; e++ )
-    for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) {
-      for ( int comp=0 ; comp<3 ;comp++ ) {
-        wpScalingParam  *pwp   = &(m_wp[e][iRefIdx][comp]);
+  m_weighted_pred_flag = 0;
+  m_weighted_bipred_idc = 0;
+
+  for ( Int iList =0 ; iList<2 ; iList++ )
+  {
+    for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) 
+    {
+      for ( int comp=0 ; comp<3 ;comp++ ) 
+      {
+        wpScalingParam  *pwp   = &(m_wp[iList][iRefIdx][comp]);
         pwp->bPresentFlag      = false;
-        pwp->uiLog2WeightDenom = 0;
         pwp->uiLog2WeightDenom = 0;
         pwp->iWeight           = 1;
         pwp->iOffset           = 0;
       }
     }
+  }
 }
 
+/** calculate AC and DC values for current original image
+ * \param TComSlice *slice
+ * \returns Void
+ */
 Bool  WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *slice)
 {
   //===== calculate AC/DC value =====
-  //Int iPoc = slice->getPOC();
   TComPicYuv*   pPic = slice->getPic()->getPicYuvOrg();
   Int   iSample  = 0;
 
@@ -101,20 +107,82 @@ Bool  WeightPredAnalysis::xCalcACDCParamSlice(TComSlice *slice)
   slice->setWpAcDcParam(weightACDCParam);
   return (true);
 }
+
+/** store weighted_pred_flag and weighted_bipred_idc values
+ * \param weighted_pred_flag
+ * \param weighted_bipred_idc
+ * \returns Void
+ */
+Void  WeightPredAnalysis::xStoreWPparam(Bool weighted_pred_flag, Int weighted_bipred_idc)
+{
+  m_weighted_pred_flag = weighted_pred_flag;
+  m_weighted_bipred_idc = weighted_bipred_idc;
+}
+
+/** restore weighted_pred_flag and weighted_bipred_idc values
+ * \param TComSlice *slice
+ * \returns Void
+ */
+Void  WeightPredAnalysis::xRestoreWPparam(TComSlice *slice)
+{
+  slice->getPPS()->setUseWP(m_weighted_pred_flag);
+  slice->getPPS()->setWPBiPredIdc(m_weighted_bipred_idc);
+}
+
+/** check weighted pred or non-weighted pred
+ * \param TComSlice *slice
+ * \returns Void
+ */
+Void  WeightPredAnalysis::xCheckWPEnable(TComSlice *slice)
+{
+  Int iPresentCnt = 0;
+  for ( Int iList=0 ; iList<2 ; iList++ )
+  {
+    for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) 
+    {
+      for ( Int iComp=0 ; iComp<3 ;iComp++ ) 
+      {
+        wpScalingParam  *pwp = &(m_wp[iList][iRefIdx][iComp]);
+        iPresentCnt += (Int)pwp->bPresentFlag;
+      }
+    }
+  }
+
+  if(iPresentCnt==0)
+  {
+    slice->getPPS()->setUseWP(false);
+    slice->getPPS()->setWPBiPredIdc(0);
+    for ( Int iList=0 ; iList<2 ; iList++ )
+    {
+      for ( Int iRefIdx=0 ; iRefIdx<MAX_NUM_REF ; iRefIdx++ ) 
+      {
+        for ( Int iComp=0 ; iComp<3 ;iComp++ ) 
+        {
+          wpScalingParam  *pwp = &(m_wp[iList][iRefIdx][iComp]);
+          pwp->bPresentFlag      = false;
+          pwp->uiLog2WeightDenom = 0;
+          pwp->iWeight           = 1;
+          pwp->iOffset           = 0;
+        }
+      }
+    }
+    slice->setWpScaling( m_wp );
+  }
+}
+
+/** estimate wp tables for explicit wp
+ * \param TComSlice *slice
+ * \returns Bool
+ */
 Bool  WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *slice)
 {
-#define wpTable	m_wp //wpScalingParam	weightPredTable[2][MAX_NUM_REF][3];
-
-  //Int iPoc = slice->getPOC();
   Int iDenom  = 6;
-  Int iDefaultWeight = ((Int)1<<iDenom);
   Int iRealDenom = iDenom + (g_uiBitDepth+g_uiBitIncrement-8);
   Int iRealOffset = ((Int)1<<(iRealDenom-1));
 
   if(slice->getNumRefIdx(REF_PIC_LIST_0)>3)
   {
     iDenom  = 7;
-    iDefaultWeight = ((Int)1<<iDenom);
     iRealDenom = iDenom + (g_uiBitDepth+g_uiBitIncrement-8);
     iRealOffset = ((Int)1<<(iRealDenom-1));
   }
@@ -129,10 +197,8 @@ Bool  WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *slice)
       slice->getWpAcDcParam(CurrWeightACDCParam);
       slice->getRefPic(eRefPicList, iRefIdxTemp)->getSlice(0)->getWpAcDcParam(RefWeightACDCParam);
 
-	  //Int64 iSADWP=0, iSADnoWP=0;
       for ( Int iComp = 0; iComp < 3; iComp++ )
       {
-        //Int irefPoc = slice->getRefPOC(eRefPicList, iRefIdxTemp);
         // current frame
         Int64 iCurrDC = CurrWeightACDCParam[iComp].iDC;
         Int64 iCurrAC = CurrWeightACDCParam[iComp].iAC;
@@ -140,29 +206,35 @@ Bool  WeightPredAnalysis::xEstimateWPParamSlice(TComSlice *slice)
         Int64 iRefDC = RefWeightACDCParam[iComp].iDC;
         Int64 iRefAC = RefWeightACDCParam[iComp].iAC;
 
-        // calculating iWeight and iOffset params (these two codes are only "Double")
+        // calculating iWeight and iOffset params
         Double dWeight = (iRefAC==0) ? (Double)1.0 : ( (Double)(iCurrAC) / (Double)iRefAC);
         Int iWeight = (Int)( 0.5 + dWeight * (Double)(1<<iDenom) );
         Int iOffset = (Int)( ((iCurrDC<<iDenom) - ((Int64)iWeight * iRefDC) + (Int64)iRealOffset) >> iRealDenom );
 
-        wpTable[iRefList][iRefIdxTemp][iComp].bPresentFlag = true;
-        wpTable[iRefList][iRefIdxTemp][iComp].iWeight = (Int)iWeight;
-        wpTable[iRefList][iRefIdxTemp][iComp].iOffset = (Int)iOffset;
-        wpTable[iRefList][iRefIdxTemp][iComp].uiLog2WeightDenom = (Int)iDenom;
+        m_wp[iRefList][iRefIdxTemp][iComp].bPresentFlag = true;
+        m_wp[iRefList][iRefIdxTemp][iComp].iWeight = (Int)iWeight;
+        m_wp[iRefList][iRefIdxTemp][iComp].iOffset = (Int)iOffset;
+        m_wp[iRefList][iRefIdxTemp][iComp].uiLog2WeightDenom = (Int)iDenom;
       }
     }
   }
 
   // selecting whether WP is used, or not
-  xSelectWP(slice, wpTable, iDenom);
+  xSelectWP(slice, m_wp, iDenom);
   
-  slice->setWpScaling( wpTable );
+  slice->setWpScaling( m_wp );
 
   return (true);
 }
-Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam	weightPredTable[2][MAX_NUM_REF][3], Int iDenom)
+
+/** select whether weighted pred enables or not. 
+ * \param TComSlice *slice
+ * \param wpScalingParam
+ * \param iDenom
+ * \returns Bool
+ */
+Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam weightPredTable[2][MAX_NUM_REF][3], Int iDenom)
 {
-  //Int iPoc = slice->getPOC();
   TComPicYuv*   pPic = slice->getPic()->getPicYuvOrg();
   Int iWidth  = pPic->getWidth();
   Int iHeight = pPic->getHeight();
@@ -190,17 +262,18 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam	weightPredTa
       iRefStride = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getCStride();
 
       // calculate SAD costs with/without wp for chroma cb
-      iSADWP   += this->xCalcSADvalueWPUV(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][1].iWeight, weightPredTable[iRefList][iRefIdxTemp][1].iOffset);
-      iSADnoWP += this->xCalcSADvalueWPUV(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0);
+      iSADWP   += this->xCalcSADvalueWP(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][1].iWeight, weightPredTable[iRefList][iRefIdxTemp][1].iOffset);
+      iSADnoWP += this->xCalcSADvalueWP(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0);
 
       pOrg = pPic->getCrAddr();
       pRef = slice->getRefPic(eRefPicList, iRefIdxTemp)->getPicYuvRec()->getCrAddr();
 
       // calculate SAD costs with/without wp for chroma cr
-      iSADWP   += this->xCalcSADvalueWPUV(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][2].iWeight, weightPredTable[iRefList][iRefIdxTemp][2].iOffset);
-      iSADnoWP += this->xCalcSADvalueWPUV(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0);
+      iSADWP   += this->xCalcSADvalueWP(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, weightPredTable[iRefList][iRefIdxTemp][2].iWeight, weightPredTable[iRefList][iRefIdxTemp][2].iOffset);
+      iSADnoWP += this->xCalcSADvalueWP(pOrg, pRef, iWidth>>1, iHeight>>1, iOrgStride, iRefStride, iDenom, iDefaultWeight, 0);
 
-      if(iSADWP >= iSADnoWP)
+      Double dRatio = ((Double)iSADWP / (Double)iSADnoWP);
+      if(dRatio >= (Double)DTHRESH)
       {
         for ( Int iComp = 0; iComp < 3; iComp++ )
         {
@@ -214,6 +287,13 @@ Bool WeightPredAnalysis::xSelectWP(TComSlice *slice, wpScalingParam	weightPredTa
   }
   return (true);
 }
+
+/** calculate DC value of original image for luma. 
+ * \param TComSlice *slice
+ * \param Pel *pPel
+ * \param Int *iSample
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcDCValueSlice(TComSlice *slice, Pel *pPel, Int *iSample)
 {
   TComPicYuv* pPic = slice->getPic()->getPicYuvOrg();
@@ -227,6 +307,13 @@ Int64 WeightPredAnalysis::xCalcDCValueSlice(TComSlice *slice, Pel *pPel, Int *iS
 
   return (iDC);
 }
+
+/** calculate AC value of original image for luma. 
+ * \param TComSlice *slice
+ * \param Pel *pPel
+ * \param Int iDC
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcACValueSlice(TComSlice *slice, Pel *pPel, Int64 iDC)
 {
   TComPicYuv* pPic = slice->getPic()->getPicYuvOrg();
@@ -239,6 +326,12 @@ Int64 WeightPredAnalysis::xCalcACValueSlice(TComSlice *slice, Pel *pPel, Int64 i
   return (iAC);
 }
 
+/** calculate DC value of original image for chroma. 
+ * \param TComSlice *slice
+ * \param Pel *pPel
+ * \param Int *iSample
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcDCValueUVSlice(TComSlice *slice, Pel *pPel, Int *iSample)
 {
   TComPicYuv* pPic = slice->getPic()->getPicYuvOrg();
@@ -248,10 +341,17 @@ Int64 WeightPredAnalysis::xCalcDCValueUVSlice(TComSlice *slice, Pel *pPel, Int *
   Int iWidth  = pPic->getWidth()>>1;
   Int iHeight = pPic->getHeight()>>1;
   *iSample = iWidth*iHeight;
-  Int64 iDC = xCalcDCValueUV(pPel, iWidth, iHeight, iCStride);
+  Int64 iDC = xCalcDCValue(pPel, iWidth, iHeight, iCStride);
 
   return (iDC);
 }
+
+/** calculate AC value of original image for chroma. 
+ * \param TComSlice *slice
+ * \param Pel *pPel
+ * \param Int iDC
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcACValueUVSlice(TComSlice *slice, Pel *pPel, Int64 iDC)
 {
   TComPicYuv* pPic = slice->getPic()->getPicYuvOrg();
@@ -259,10 +359,18 @@ Int64 WeightPredAnalysis::xCalcACValueUVSlice(TComSlice *slice, Pel *pPel, Int64
 
   Int iWidth  = pPic->getWidth()>>1;
   Int iHeight = pPic->getHeight()>>1;
-  Int64 iAC = xCalcACValueUV(pPel, iWidth, iHeight, iCStride, iDC);
+  Int64 iAC = xCalcACValue(pPel, iWidth, iHeight, iCStride, iDC);
 
   return (iAC);
 }
+
+/** calculate DC value. 
+ * \param Pel *pPel
+ * \param Int iWidth
+ * \param Int iHeight
+ * \param Int iStride
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcDCValue(Pel *pPel, Int iWidth, Int iHeight, Int iStride)
 {
   Int x, y;
@@ -277,6 +385,15 @@ Int64 WeightPredAnalysis::xCalcDCValue(Pel *pPel, Int iWidth, Int iHeight, Int i
   }
   return (iDC);
 }
+
+/** calculate AC value. 
+ * \param Pel *pPel
+ * \param Int iWidth
+ * \param Int iHeight
+ * \param Int iStride
+ * \param Int iDC
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcACValue(Pel *pPel, Int iWidth, Int iHeight, Int iStride, Int64 iDC)
 {
   Int x, y;
@@ -285,42 +402,25 @@ Int64 WeightPredAnalysis::xCalcACValue(Pel *pPel, Int iWidth, Int iHeight, Int i
   {
     for( x = 0; x < iWidth; x++ )
     {
-      iAC += abs( (Int)pPel[x] - (Int)iDC);
+      iAC += abs( (Int)pPel[x] - (Int)iDC );
     }
     pPel += iStride;
   }
   return (iAC);
 }
-Int64 WeightPredAnalysis::xCalcDCValueUV(Pel *pPel, Int iWidth, Int iHeight, Int iStride)
-{
-  Int x, y;
-  Int64 iDC = 0;
 
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      iDC += (Int)( pPel[x]);
-    }
-    pPel += iStride;
-  }
-  return (iDC);
-}
-Int64 WeightPredAnalysis::xCalcACValueUV(Pel *pPel, Int iWidth, Int iHeight, Int iStride, Int64 iDC)
-{
-  Int x, y;
-  Int64 iAC = 0;
-
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      iAC += abs( (Int)pPel[x] - (Int)iDC);
-    }
-    pPel += iStride;
-  }
-  return (iAC);
-}
+/** calculate SAD values for both WP version and non-WP version. 
+ * \param Pel *pOrgPel
+ * \param Pel *pRefPel
+ * \param Int iWidth
+ * \param Int iHeight
+ * \param Int iOrgStride
+ * \param Int iRefStride
+ * \param Int iDenom
+ * \param Int iWeight
+ * \param Int iOffset
+ * \returns Int64
+ */
 Int64 WeightPredAnalysis::xCalcSADvalueWP(Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset)
 {
   Int x, y;
@@ -336,29 +436,7 @@ Int64 WeightPredAnalysis::xCalcSADvalueWP(Pel *pOrgPel, Pel *pRefPel, Int iWidth
     pOrgPel += iOrgStride;
     pRefPel += iRefStride;
   }
-
-  return (iSAD/iSize);
-}
-Int64 WeightPredAnalysis::xCalcSADvalueWPUV(Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset)
-{
-  Int x, y;
-  //Int64 itmpSAD = 0;
-  Int64	iSAD = 0;
-  Int64 iSize   = iWidth*iHeight;
-  Int64 iRealDenom = iDenom + (g_uiBitDepth+g_uiBitIncrement-8);
-
-  for( y = 0; y < iHeight; y++ )
-  {
-    for( x = 0; x < iWidth; x++ )
-    {
-      iSAD += ABS(( ((Int64)pOrgPel[x]<<(Int64)iDenom) - ( (Int64)pRefPel[x] * (Int64)iWeight + ((Int64)iOffset<<iRealDenom) ) ) );
-    }
-    pOrgPel += iOrgStride;
-    pRefPel += iRefStride;
-  }
-
   return (iSAD/iSize);
 }
 
-#endif	// WEIGHT_PRED
 

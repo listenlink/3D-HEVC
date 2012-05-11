@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     WeightedPredAnalysis.h
     \brief    encoder class
 */
@@ -41,17 +39,12 @@
 
 #include "../TLibCommon/TypeDef.h"
 #include "../TLibCommon/TComSlice.h"
+#include "TEncCavlc.h"
 
-#ifdef WEIGHT_PRED
-
-#ifdef MSYS_LINUX
-  typedef long long LInt;
-#else
-  typedef __int64 LInt;
-#endif
-
-class  WeightPredAnalysis {
-
+class  WeightPredAnalysis
+{
+  Bool m_weighted_pred_flag;
+  Int  m_weighted_bipred_idc;
   wpScalingParam  m_wp[2][MAX_NUM_REF][3];
 
   Int64   xCalcDCValueSlice(TComSlice *slice, Pel *pPel,Int *iSample);
@@ -62,22 +55,22 @@ class  WeightPredAnalysis {
 
   Int64   xCalcDCValue(Pel *pPel, Int iWidth, Int iHeight, Int iStride);
   Int64   xCalcACValue(Pel *pPel, Int iWidth, Int iHeight, Int iStride, Int64 iDC);
-  Int64   xCalcDCValueUV(Pel *pPel, Int iWidth, Int iHeight, Int iStride);
-  Int64   xCalcACValueUV(Pel *pPel, Int iWidth, Int iHeight, Int iStride, Int64 iDC);
   Int64   xCalcSADvalueWP(Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset);
-  Int64   xCalcSADvalueWPUV(Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset);
-  Bool    xSelectWP(TComSlice *slice, wpScalingParam	weightPredTable[2][MAX_NUM_REF][3], Int iDenom);
+  Bool    xSelectWP(TComSlice *slice, wpScalingParam weightPredTable[2][MAX_NUM_REF][3], Int iDenom);
 
 public:
+
   WeightPredAnalysis();
 
   // WP analysis :
   Bool  xCalcACDCParamSlice(TComSlice *slice);
   Bool  xEstimateWPParamSlice(TComSlice *slice);
+
+  Void  xStoreWPparam(Bool weighted_pred_flag, Int weighted_bipred_idc);
+  Void  xRestoreWPparam(TComSlice *slice);
+  Void  xCheckWPEnable(TComSlice *slice);
 };
 
-#endif	// WEIGHT_PRED
-
-#endif	// __WEIGHTPREDANALYSIS__
+#endif // __WEIGHTPREDANALYSIS__
 
 

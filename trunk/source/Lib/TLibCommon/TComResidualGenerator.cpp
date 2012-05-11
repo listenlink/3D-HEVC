@@ -88,8 +88,8 @@ TComResidualGenerator::create( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight,
     UInt  uiWidth   = uiMaxCUWidth  >> uiDepth;
     UInt  uiHeight  = uiMaxCUHeight >> uiDepth;
 
-    m_ppcYuv[ uiDepth ] = new TComYuv;    m_ppcYuv[ uiDepth ]->create(            uiWidth, uiHeight       );
-    m_ppcCU [ uiDepth ] = new TComDataCU; m_ppcCU [ uiDepth ]->create( uiNumPart, uiWidth, uiHeight, true );
+    m_ppcYuv[ uiDepth ] = new TComYuv;    m_ppcYuv[ uiDepth ]->create(            uiWidth, uiHeight                                           );
+    m_ppcCU [ uiDepth ] = new TComDataCU; m_ppcCU [ uiDepth ]->create( uiNumPart, uiWidth, uiHeight, true, uiMaxCUWidth >> (uiMaxCUDepth - 1) );
   }
   m_cTmpPic.create( uiPicWidth, uiPicHeight, uiMaxCUWidth, uiMaxCUHeight, uiMaxCUDepth );
   m_bCreated            = true;
@@ -270,7 +270,7 @@ TComResidualGenerator::xSetRecResidualCU( TComDataCU* pcCU, UInt uiDepth, UInt u
   UInt  uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
   UInt  uiRPelX   = uiLPelX           + ( g_uiMaxCUWidth  >> uiDepth ) - 1;
   UInt  uiBPelY   = uiTPelY           + ( g_uiMaxCUHeight >> uiDepth ) - 1;
-  Bool  bBoundary = ( uiRPelX >= pcCU->getSlice()->getSPS()->getWidth() || uiBPelY >= pcCU->getSlice()->getSPS()->getHeight() );
+  Bool  bBoundary = ( uiRPelX >= pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() || uiBPelY >= pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() );
   Bool  bSplit    = ( ( uiDepth < pcCU->getDepth( uiAbsPartIdx ) && uiDepth < ( g_uiMaxCUDepth - g_uiAddCUDepth ) ) || bBoundary );
   if(   bSplit )
   {
@@ -279,7 +279,7 @@ TComResidualGenerator::xSetRecResidualCU( TComDataCU* pcCU, UInt uiDepth, UInt u
     {
       uiLPelX       = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
       uiTPelY       = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
-      Bool  bInside = ( uiLPelX < pcCU->getSlice()->getSPS()->getWidth() && uiTPelY < pcCU->getSlice()->getSPS()->getHeight() );
+      Bool  bInside = ( uiLPelX < pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() && uiTPelY < pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples() );
       if(   bInside )
       {
         xSetRecResidualCU( pcCU, uiDepth + 1, uiAbsPartIdx );
@@ -335,14 +335,22 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   Pel*    pRes      = pcCUResidual->getLumaAddr();
   UInt    uiLumaTrMode, uiChromaTrMode;
   pcCU->convertTransIdx             ( 0, pcCU->getTransformIdx( 0 ), uiLumaTrMode, uiChromaTrMode );
-  m_pcTrQuant->setQPforQuant        ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA );
+#if H0736_AVC_STYLE_QP_RANGE
+    m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
+#else
+    m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA, 0 );
+#endif
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_LUMA, pRes, 0, pcCUResidual->getStride(), uiWidth, uiHeight, uiLumaTrMode, 0, piCoeff );
   // chroma Cb
   uiWidth   >>= 1;
   uiHeight  >>= 1;
   piCoeff     = pcCU->getCoeffCb();
   pRes        = pcCUResidual->getCbAddr();
-  m_pcTrQuant->setQPforQuant        ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_CHROMA );
+#if H0736_AVC_STYLE_QP_RANGE
+    m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), pcCU->getSlice()->getPPS()->getChromaQpOffset() );
+#else
+    m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC() );
+#endif
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_CHROMA_U, pRes, 0, pcCUResidual->getCStride(), uiWidth, uiHeight, uiChromaTrMode, 0, piCoeff );
   // chroma Cr
   piCoeff     = pcCU->getCoeffCr();

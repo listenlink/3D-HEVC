@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,14 +31,15 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include "TComPicYuv.h"
-#include "../libmd5/MD5.h"
+#include "libmd5/MD5.h"
+
+//! \ingroup TLibCommon
+//! \{
 
 /**
- * Update @md5 using @n samples from @plane, each sample is adjusted to
- * @OUTBIT_BITDEPTH_DIV8.
+ * Update md5 using n samples from plane, each sample is adjusted to
+ * OUTBIT_BITDEPTH_DIV8.
  */
 template<unsigned OUTPUT_BITDEPTH_DIV8>
 static void md5_block(MD5& md5, const Pel* plane, unsigned n)
@@ -58,8 +59,8 @@ static void md5_block(MD5& md5, const Pel* plane, unsigned n)
 }
 
 /**
- * Update @md5 with all samples in @plane in raster order, each sample
- * is adjusted to @OUTBIT_BITDEPTH_DIV8.
+ * Update md5 with all samples in plane in raster order, each sample
+ * is adjusted to OUTBIT_BITDEPTH_DIV8.
  */
 template<unsigned OUTPUT_BITDEPTH_DIV8>
 static void md5_plane(MD5& md5, const Pel* plane, unsigned width, unsigned height, unsigned stride)
@@ -83,7 +84,7 @@ static void md5_plane(MD5& md5, const Pel* plane, unsigned width, unsigned heigh
 }
 
 /**
- * Calculate the MD5sum of @pic, storing the result in @digest.
+ * Calculate the MD5sum of pic, storing the result in digest.
  * MD5 calculation is performed on Y' then Cb, then Cr; each in raster order.
  * Pel data is inserted into the MD5 function in little-endian byte order,
  * using sufficient bytes to represent the picture bitdepth.  Eg, 10bit data
@@ -113,3 +114,4 @@ void calcMD5(TComPicYuv& pic, unsigned char digest[16])
 
   md5.finalize(digest);
 }
+//! \}
