@@ -44,6 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -105,6 +106,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -169,6 +171,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -234,6 +237,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -290,6 +294,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibRenderer\TRenInterpFilter.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibRenderer\TRenModel.cpp"
 				>
 			</File>
@@ -320,6 +328,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibRenderer\TRenImagePlane.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibRenderer\TRenInterpFilter.h"
 				>
 			</File>
 			<File

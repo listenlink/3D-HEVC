@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,27 +31,22 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TAppDecTop.cpp
     \brief    Decoder application class
 */
 
 #include <list>
+#include <vector>
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
 
 #include "TAppDecTop.h"
+#include "TLibDecoder/AnnexBread.h"
+#include "TLibDecoder/NALread.h"
 
-// ====================================================================================================================
-// Local constants
-// ====================================================================================================================
-
-/// initial bitstream buffer size
-/// should be large enough for parsing SPS
-/// resized as a function of picture size after parsing SPS
-#define BITS_BUF_SIZE 65536
+//! \ingroup TAppDecoder
+//! \{
 
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
@@ -60,34 +55,15 @@
 TAppDecTop::TAppDecTop()
 {
   ::memset (m_abDecFlag, 0, sizeof (m_abDecFlag));
-  m_bUsingDepth = false;
-//  m_iPOCLastDisplay  = -1;
-  m_pScaleOffsetFile  = 0;
+  m_useDepth = false;
 }
 
 Void TAppDecTop::create()
 {
-  m_apcBitstream  = new TComBitstream;
-  
-  m_apcBitstream->create( BITS_BUF_SIZE );
 }
 
 Void TAppDecTop::destroy()
 {
-  if ( m_apcBitstream )
-  {
-    m_apcBitstream->destroy();
-    delete m_apcBitstream;
-    m_apcBitstream = NULL;
-  }
-  if( m_pchBitstreamFile )
-  {
-    free(m_pchBitstreamFile);
-  }
-  if( m_pchReconFile )
-  {
-    free(m_pchReconFile);
-  }
 }
 
 // ====================================================================================================================
@@ -104,338 +80,29 @@ Void TAppDecTop::destroy()
  */
 Void TAppDecTop::decode()
 {
-  TComBitstream*      pcBitstream = m_apcBitstream;
-  UInt                uiPOC;
-  TComList<TComPic*>* pcListPic;
-  Bool bFirstSliceDecoded = true;
-
-  // create & initialize internal classes
-  xCreateDecLib();
-  xInitDecLib  ();
-#if DCM_SKIP_DECODING_FRAMES
-//  m_iPOCLastDisplay += m_iSkipFrame;      // set the last displayed POC correctly for skip forward.
+  increaseNumberOfViews( 1 );
+#if SONY_COLPIC_AVAILABILITY
+  m_tDecTop[0]->setViewOrderIdx(0);
 #endif
-
-  // main decoder loop
-  Bool  bEos        = false;
-  Bool resizedBitstreamBuffer = false;
-  
-  Bool bIsDepth = false;
-  Int iViewIdx = 0;
-  TComSPS cComSPS ;
-  NalUnitType eNalUnitType;
-
-#if FLEX_CODING_ORDER
-  Int iDepthViewIdx = 0;
-  Bool bCountDepthViewIdx = false;		// a flag which avoid repeating assign a value to iDepthViewIdx   
-  Bool bNewPictureType =true;
-  Bool bFirstDepth = false;
-#endif
-  
-  while ( !bEos )
+  Int                 viewDepthId = 0;
+  Int                 previousViewDepthId  = 0;
+  UInt                uiPOC[MAX_VIEW_NUM*2];
+  TComList<TComPic*>* pcListPic[MAX_VIEW_NUM*2];
+  Bool                newPicture[MAX_VIEW_NUM*2];
+  Bool                previousPictureDecoded = false;
+  for( Int i = 0; i < MAX_VIEW_NUM*2; i++ )
   {
-    streampos  lLocation = m_cTVideoIOBitstreamFile.getFileLocation();
-    bEos                 = m_cTVideoIOBitstreamFile.readBits( pcBitstream );
-    if (bEos)
-    {
-      //if (!bFirstSliceDecoded) m_cTDecTop.decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_iPOCLastDisplay);
-      if( bIsDepth )
-      {
-#if FLEX_CODING_ORDER
-		  if (!bFirstSliceDecoded) m_acTDecDepthTopList[iDepthViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx] ,bNewPictureType);
-		  m_acTDecDepthTopList[iDepthViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx]);
-
-#else
-        if (!bFirstSliceDecoded) m_acTDecDepthTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx] );
-        m_acTDecDepthTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx]);
-#endif
-      }
-      else
-      {
-#if FLEX_CODING_ORDER
-		  if (!bFirstSliceDecoded) m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx], bNewPictureType);
-#else
-        if (!bFirstSliceDecoded) m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx] );
-#endif
-		m_acTDecTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx]);
-      }
-      if( pcListPic )
-      {
-        // write reconstuction to file
-        xWriteOutput( pcListPic );
-      }
-      break;
-    }
-    
-    // call actual decoding function
-#if DCM_SKIP_DECODING_FRAMES
-    Bool bNewPicture;
-    if( bIsDepth )
-#if FLEX_CODING_ORDER
-		  bNewPicture = m_acTDecDepthTopList[iDepthViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx], bNewPictureType);
-#else
-      bNewPicture = m_acTDecDepthTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx] );
-#endif
-    else
-#if FLEX_CODING_ORDER
-		bNewPicture = m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx], bNewPictureType );
-#else
-      bNewPicture = m_acTDecTopList[iViewIdx]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx] );
-#endif
-    bFirstSliceDecoded   = true;
-
-#if FLEX_CODING_ORDER
-	  if (eNalUnitType == NAL_UNIT_SPS)
-	  {
-		  if( cComSPS.isDepth() && (m_bUsingDepth==false) )  // expected not using depth, but bitstream are using depth
-		  {                                                     // know from sps
-			  assert( cComSPS.getViewId() == 0 && iDepthViewIdx == 0 && !bIsDepth );
-			  startUsingDepth() ;
-		  }
-		  if (cComSPS.isDepth())
-		  {
-			  if (cComSPS.getViewId() >= m_acTVideoIOYuvDepthReconFileList.size())
-			  {
-				  assert( cComSPS.getViewId() == m_acTVideoIOYuvReconFileList.size() );
-				  increaseNumberOfViews(cComSPS.getViewId()+1);
-			  }
-  			
-			  m_acTDecDepthTopList[cComSPS.getViewId()]->setSPS(cComSPS);
-		  }
-		  else 
-		  {
-			  if (cComSPS.getViewId() >= m_acTVideoIOYuvReconFileList.size())
-			  {
-				  assert( cComSPS.getViewId() == m_acTVideoIOYuvReconFileList.size() );
-				  increaseNumberOfViews(cComSPS.getViewId()+1);
-			  }
-			  m_acTDecTopList[cComSPS.getViewId()]->setSPS(cComSPS);
-		  }
-		  bEos = m_cTVideoIOBitstreamFile.readBits( pcBitstream );
-		  assert( !bEos);
-		  if( cComSPS.isDepth() )
-			  m_acTDecDepthTopList[cComSPS.getViewId()]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[cComSPS.getViewId()], bNewPictureType); // decode PPS
-		  else
-			  m_acTDecTopList[cComSPS.getViewId()]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[cComSPS.getViewId()], bNewPictureType); // decode PPS
-		  assert( eNalUnitType == NAL_UNIT_PPS );
-	  }
-#else
-
-    if( eNalUnitType == NAL_UNIT_SPS )
-    {
-      if( cComSPS.isDepth() && (m_bUsingDepth==false) )  // expected not using depth, but bitstream are using depth
-      {                                                     // know from sps
-        assert( cComSPS.getViewId() == 0 && iViewIdx == 0 && !bIsDepth );
-        startUsingDepth() ;
-      }
-      if( cComSPS.isDepth() && !bIsDepth )
-      {
-        assert( cComSPS.getViewId() == iViewIdx );
-        m_acTDecDepthTopList[iViewIdx]->setSPS(cComSPS);
-      }
-      else if( cComSPS.getViewId() >= m_acTVideoIOYuvReconFileList.size() ) // expecting iViewIdx, but got cComSPS.getViewIdx()
-      {
-        assert( cComSPS.getViewId() == m_acTVideoIOYuvReconFileList.size() );
-        assert( !cComSPS.isDepth() );
-        increaseNumberOfViews(cComSPS.getViewId()+1);
-        m_acTDecTopList[cComSPS.getViewId()]->setSPS(cComSPS);
-      }
-      bEos = m_cTVideoIOBitstreamFile.readBits( pcBitstream );
-      assert( !bEos);
-      if( cComSPS.isDepth() )
-        m_acTDecDepthTopList[cComSPS.getViewId()]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiDepthPOCLastDisplayList[cComSPS.getViewId()]); // decode PPS
-      else
-        m_acTDecTopList[cComSPS.getViewId()]->decode( bEos, pcBitstream, uiPOC, pcListPic, eNalUnitType, cComSPS, m_iSkipFrame, m_aiPOCLastDisplayList[cComSPS.getViewId()]); // decode PPS
-      assert( eNalUnitType == NAL_UNIT_PPS );
-    }
-
-#endif
-    assert( eNalUnitType != NAL_UNIT_SEI ); // not yet supported for MVC
-    if (bNewPicture)
-    {
-      if( bIsDepth )
-#if FLEX_CODING_ORDER
-        m_acTDecDepthTopList[iDepthViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iDepthViewIdx]);
-#else
-        m_acTDecDepthTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiDepthPOCLastDisplayList[iViewIdx]);
-#endif
-      else
-        m_acTDecTopList[iViewIdx]->executeDeblockAndAlf( bEos, pcBitstream, uiPOC, pcListPic, m_iSkipFrame, m_aiPOCLastDisplayList[iViewIdx]);
-      if (!m_cTVideoIOBitstreamFile.good()) m_cTVideoIOBitstreamFile.clear();
-      m_cTVideoIOBitstreamFile.setFileLocation( lLocation );
-      bFirstSliceDecoded = false;
-
-#if FLEX_CODING_ORDER
-      if (m_bUsingDepth)
-      {
-        bIsDepth = bNewPictureType;	  
-
-      }
-      if (bCountDepthViewIdx == false )
-      {
-        bCountDepthViewIdx = true;
-        if (bIsDepth == true)
-        {
-          bFirstDepth = true;
-          bCountDepthViewIdx = true;
-        }
-        if (!bFirstDepth && !bIsDepth)
-        {
-          iViewIdx++;
-          bCountDepthViewIdx = false;
-        }
-
-      }
-      else
-      {
-        if (bIsDepth)
-        {
-          iDepthViewIdx++;
-        }
-        else
-        {
-          iViewIdx ++;
-        }
-
-        if (iViewIdx >= m_acTDecTopList.size() || iDepthViewIdx >= m_acTDecDepthTopList.size())
-        {
-          bFirstDepth = false;
-          iViewIdx = 0;
-          iDepthViewIdx = 0;
-          bCountDepthViewIdx = false;
-          // end of access unit: delete extra pic buffers
-          Int iNumViews = (Int)m_acTVideoIOYuvReconFileList.size();
-          for( Int iVId = 0; iVId < iNumViews; iVId++ )
-          {
-            if( iVId < (Int)m_acTDecTopList.size() &&  m_acTDecTopList[iVId] )
-            {
-              m_acTDecTopList[iVId]->deleteExtraPicBuffers( (Int)uiPOC );
-            }
-            if( iVId < (Int)m_acTDecDepthTopList.size() && m_acTDecDepthTopList[iVId] )
-            {
-              m_acTDecDepthTopList[iVId]->deleteExtraPicBuffers( (Int)uiPOC );
-            }
-          }
-
-#if AMVP_BUFFERCOMPRESS
-          // compress motion for entire access unit
-          for( Int iVId = 0; iVId < iNumViews; iVId++ )
-          {
-            if( iVId < (Int)m_acTDecTopList.size() &&  m_acTDecTopList[iVId] )
-            {
-              m_acTDecTopList[iVId]->compressMotion( (Int)uiPOC );
-            }
-            if( iVId < (Int)m_acTDecDepthTopList.size() && m_acTDecDepthTopList[iVId] )
-            {
-              m_acTDecDepthTopList[iVId]->compressMotion( (Int)uiPOC );
-            }
-          }
-#endif
-        }
-      }
-	  
-#else
-
-      if( m_bUsingDepth && !bIsDepth )
-      {
-        bIsDepth = true;
-      }
-      else
-      {
-        bIsDepth = false;
-        if( iViewIdx<m_acTDecTopList.size()-1)
-        {
-          iViewIdx++ ;
-        }
-        else
-        {
-          iViewIdx = 0;
-
-          // end of access unit: delete extra pic buffers
-          Int iNumViews = (Int)m_acTVideoIOYuvReconFileList.size();
-          for( Int iVId = 0; iVId < iNumViews; iVId++ )
-          {
-            if( iVId < (Int)m_acTDecTopList.size() &&  m_acTDecTopList[iVId] )
-            {
-              m_acTDecTopList[iVId]->deleteExtraPicBuffers( (Int)uiPOC );
-            }
-            if( iVId < (Int)m_acTDecDepthTopList.size() && m_acTDecDepthTopList[iVId] )
-            {
-              m_acTDecDepthTopList[iVId]->deleteExtraPicBuffers( (Int)uiPOC );
-            }
-          }
-
-#if AMVP_BUFFERCOMPRESS
-          // compress motion for entire access unit
-          for( Int iVId = 0; iVId < iNumViews; iVId++ )
-          {
-            if( iVId < (Int)m_acTDecTopList.size() &&  m_acTDecTopList[iVId] )
-            {
-              m_acTDecTopList[iVId]->compressMotion( (Int)uiPOC );
-            }
-            if( iVId < (Int)m_acTDecDepthTopList.size() && m_acTDecDepthTopList[iVId] )
-            {
-              m_acTDecDepthTopList[iVId]->compressMotion( (Int)uiPOC );
-            }
-          }
-#endif
-        }
-	  }
-#endif
-    }
-#else
-#error
-    m_cTDecTop.decode( bEos, pcBitstream, uiPOC, pcListPic );
-#endif
-
-    
-    if (!resizedBitstreamBuffer)
-    {
-      TComSPS *sps = m_acTDecTopList[0]->getSPS();
-      if (sps)
-      {
-        pcBitstream->destroy();
-        pcBitstream->create(sps->getWidth() * sps->getHeight() * 2);
-        resizedBitstreamBuffer = true;
-      }
-    }
-    
-    if( pcListPic )
-    {
-      // write reconstuction to file
-      xWriteOutput( pcListPic );
-    }
+    uiPOC[i] = 0;
+    pcListPic[i] = NULL;
+    newPicture[i] = false;
   }
-  
-  // delete buffers
-  for(Int i=0; i<m_acTDecTopList.size(); i++)
-    m_acTDecTopList[i]->deletePicBuffer();
 
-  if (m_bUsingDepth)
+  ifstream bitstreamFile(m_pchBitstreamFile, ifstream::in | ifstream::binary);
+  if (!bitstreamFile)
   {
-    for(Int i=0; i<m_acTDecDepthTopList.size(); i++)
-      m_acTDecDepthTopList[i]->deletePicBuffer();
+    fprintf(stderr, "\nfailed to open bitstream file `%s' for reading\n", m_pchBitstreamFile);
+    exit(EXIT_FAILURE);
   }
-  
-  // destroy internal classes
-  xDestroyDecLib();
-}
-
-// ====================================================================================================================
-// Protected member functions
-// ====================================================================================================================
-
-Void TAppDecTop::xCreateDecLib()
-{
-  // open bitstream file
-  m_cTVideoIOBitstreamFile.openBits( m_pchBitstreamFile, false);  // read mode
-
-  // create decoder class
-//  m_cTDecTop.create();
-  m_acTDecTopList.push_back(new TDecTop) ;// at least one decoder
-  m_acTDecTopList[0]->create() ;
-
-  m_aiPOCLastDisplayList.push_back(-1+m_iSkipFrame) ;
 
   if( m_pchScaleOffsetFile ) 
   { 
@@ -443,246 +110,359 @@ Void TAppDecTop::xCreateDecLib()
     AOF( m_pScaleOffsetFile ); 
   }
   m_cCamParsCollector.init( m_pScaleOffsetFile );
+
+  InputByteStream bytestream(bitstreamFile);
+
+  while (!!bitstreamFile)
+  {
+    /* location serves to work around a design fault in the decoder, whereby
+     * the process of reading a new slice that is the first slice of a new frame
+     * requires the TDecTop::decode() method to be called again with the same
+     * nal unit. */
+    streampos location = bitstreamFile.tellg();
+    AnnexBStats stats = AnnexBStats();
+    vector<uint8_t> nalUnit;
+    InputNALUnit nalu;
+    byteStreamNALUnit(bytestream, nalUnit, stats);
+
+    // call actual decoding function
+    if (nalUnit.empty())
+    {
+      /* this can happen if the following occur:
+       *  - empty input file
+       *  - two back-to-back start_code_prefixes
+       *  - start_code_prefix immediately followed by EOF
+       */
+      fprintf(stderr, "Warning: Attempt to decode an empty NAL unit\n");
+    }
+    else
+    {
+      read(nalu, nalUnit);
+      Int viewId = nalu.m_viewId;
+      Int depth = nalu.m_isDepth ? 1 : 0;
+      viewDepthId = viewId * 2 + depth;   // coding order T0D0T1D1T2D2
+      newPicture[viewDepthId] = false;
+      if( viewDepthId >= m_tDecTop.size() )      
+      {
+        increaseNumberOfViews( viewDepthId +1 );
+      }
+      if(m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer)
+      {
+        previousPictureDecoded = false; 
+      }
+      if(m_tDecTop.size() > 1 && (viewDepthId != previousViewDepthId) && previousPictureDecoded )
+      {
+        m_tDecTop[previousViewDepthId]->executeDeblockAndAlf(uiPOC[previousViewDepthId], pcListPic[previousViewDepthId], m_iSkipFrame, m_pocLastDisplay[previousViewDepthId]);
+      } 
+      if( ( viewDepthId == 0 && (viewDepthId != previousViewDepthId) ) || m_tDecTop.size() == 1 )
+      {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+        for( Int i = 0; i < m_tDecTop.size(); i++ )
+        {
+          m_tDecTop[i]->deleteExtraPicBuffers( uiPOC[i] );
+        }
+#endif
+        for( Int i = 0; i < m_tDecTop.size(); i++ )
+        {
+          m_tDecTop[i]->compressMotion( uiPOC[i] );
+        }
+      }   
+      if( !(m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) )
+      {
+        newPicture[viewDepthId] = m_tDecTop[viewDepthId]->decode(nalu, m_iSkipFrame, m_pocLastDisplay[viewDepthId]);
+        if (newPicture[viewDepthId])
+        {
+          bitstreamFile.clear();
+          /* location points to the current nalunit payload[1] due to the
+           * need for the annexB parser to read three extra bytes.
+           * [1] except for the first NAL unit in the file
+           *     (but bNewPicture doesn't happen then) */
+          bitstreamFile.seekg(location-streamoff(3));
+          bytestream.reset();
+        }
+        if( nalu.isSlice() )
+        {
+          previousPictureDecoded = true;
+        }
+      }
+    }
+    if( ( (newPicture[viewDepthId] || !bitstreamFile) && m_tDecTop.size() == 1) || (!bitstreamFile && previousPictureDecoded == true) )  
+    {
+      m_tDecTop[viewDepthId]->executeDeblockAndAlf(uiPOC[viewDepthId], pcListPic[viewDepthId], m_iSkipFrame, m_pocLastDisplay[viewDepthId]);
+    }
+    if( pcListPic[viewDepthId] )
+    {
+      if( newPicture[viewDepthId] && (nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR || (nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDV && m_tDecTop[viewDepthId]->getNalUnitTypeBaseView() == NAL_UNIT_CODED_SLICE_IDR)) )
+      {
+        xFlushOutput( pcListPic[viewDepthId], viewDepthId );
+      }
+      // write reconstruction to file
+      if(newPicture[viewDepthId])
+      {
+#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
+        xWriteOutput( pcListPic[viewDepthId], viewDepthId, nalu.m_temporalId );
+#else
+        xWriteOutput( pcListPic[viewDepthId], viewDepthId );
+#endif
+      }
+    }
+    previousViewDepthId = viewDepthId;
+  } 
+  // last frame
+  for( Int viewDepthIdx = 0; viewDepthIdx < m_tDecTop.size(); viewDepthIdx++ )
+  {
+    xFlushOutput( pcListPic[viewDepthIdx], viewDepthIdx );
+  }  
+  xDestroyDecLib();
 }
+
+// ====================================================================================================================
+// Protected member functions
+// ====================================================================================================================
 
 Void TAppDecTop::xDestroyDecLib()
 {
-  // close bitstream file
-  m_cTVideoIOBitstreamFile.closeBits();
 
-  for(Int iViewIdx=0; iViewIdx<m_acTVideoIOYuvReconFileList.size() ; iViewIdx++)
+  for(Int viewDepthIdx=0; viewDepthIdx<m_tVideoIOYuvReconFile.size() ; viewDepthIdx++)
   {
-    m_acTVideoIOYuvReconFileList[iViewIdx]->close();
-    delete m_acTVideoIOYuvReconFileList[iViewIdx]; m_acTVideoIOYuvReconFileList[iViewIdx] = NULL ;
+    if( m_tVideoIOYuvReconFile[viewDepthIdx] )
+    {
+      m_tVideoIOYuvReconFile[viewDepthIdx]->close();
+      delete m_tVideoIOYuvReconFile[viewDepthIdx]; 
+      m_tVideoIOYuvReconFile[viewDepthIdx] = NULL ;
+    }
   }
 
-  // destroy decoder class
-//  m_cTDecTop.destroy();
-  for(Int iViewIdx=0; iViewIdx<m_acTDecTopList.size() ; iViewIdx++)
+  for(Int viewDepthIdx=0; viewDepthIdx<m_tDecTop.size() ; viewDepthIdx++)
   {
-    m_acTDecTopList[iViewIdx]->destroy() ;
-    delete m_acTDecTopList[iViewIdx] ; m_acTDecTopList[iViewIdx] = NULL ;
-  }
-
-  for(Int iViewIdx=0; iViewIdx<m_acTVideoIOYuvDepthReconFileList.size() ; iViewIdx++)
-  {
-    m_acTVideoIOYuvDepthReconFileList[iViewIdx]->close();
-    delete m_acTVideoIOYuvDepthReconFileList[iViewIdx]; m_acTVideoIOYuvDepthReconFileList[iViewIdx] = NULL ;
-  }
-
-  for(Int iViewIdx=0; iViewIdx<m_acTDecDepthTopList.size() ; iViewIdx++)
-  {
-    m_acTDecDepthTopList[iViewIdx]->destroy() ;
-    delete m_acTDecDepthTopList[iViewIdx] ; m_acTDecDepthTopList[iViewIdx] = NULL ;
-  }
-
-  m_cCamParsCollector.uninit();
-  if( m_pScaleOffsetFile ) 
-  { 
-    ::fclose( m_pScaleOffsetFile ); 
+    if( m_tDecTop[viewDepthIdx] )
+    {
+      if( !m_useDepth && (viewDepthIdx % 2 == 1) )
+      {
+      }
+      else
+      {
+        m_tDecTop[viewDepthIdx]->deletePicBuffer();
+        m_tDecTop[viewDepthIdx]->destroy() ;
+      }
+      delete m_tDecTop[viewDepthIdx] ; 
+      m_tDecTop[viewDepthIdx] = NULL ;
+    }
   }
 }
 
-Void TAppDecTop::xInitDecLib()
-{
-  // initialize decoder class
-  m_acTDecTopList[0]->init( this );
-  m_acTDecTopList[0]->setViewIdx(0);
-  m_acTDecTopList[0]->setPictureDigestEnabled(m_pictureDigestEnabled);
-  m_acTDecTopList[0]->setCamParsCollector( &m_cCamParsCollector );
-#if SONY_COLPIC_AVAILABILITY
-  m_acTDecTopList[0]->setViewOrderIdx(0);
+#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
+Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int viewDepthId, UInt tId )
+#else
+Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
 #endif
-}
-
-/** \param pcListPic list of pictures to be written to file
-    \param bFirst    first picture?
-    \todo            DYN_REF_FREE should be revised
- */
-Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic )
 {
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
+  Int not_displayed = 0;
 
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
-    Int iViewIdx = pcPic->getViewIdx();
-    Int bIsDepth = pcPic->getSlice(0)->getSPS()->isDepth() ;
-
-    if (!bIsDepth)
+    if(pcPic->getOutputMark() && pcPic->getPOC() > m_pocLastDisplay[viewDepthId])
     {
-      if( m_acTVideoIOYuvReconFileList.size() < iViewIdx+1 )
-            increaseNumberOfViews( iViewIdx+1 ) ;
-
-      if ( pcPic->getReconMark() && pcPic->getPOC() == (m_aiPOCLastDisplayList[iViewIdx] + 1) )
-      {
-        // write to file
-        if ( m_pchReconFile )
-        {
-          m_acTVideoIOYuvReconFileList[iViewIdx]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
-        }
-
-        // update POC of display order
-        m_aiPOCLastDisplayList[iViewIdx] = pcPic->getPOC();
-
-        // erase non-referenced picture in the reference picture list after display
-        if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
-        {
-  #if !DYN_REF_FREE
-          pcPic->setReconMark(false);
-
-          // mark it should be extended later
-          pcPic->getPicYuvRec()->setBorderExtension( false );
-
-  #else
-          pcPic->destroy();
-          pcListPic->erase( iterPic );
-          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
-          continue;
-  #endif
-        }
-      }
-    } /// end !bIsDepth
-    else
+       not_displayed++;
+    }
+    iterPic++;
+  }
+  iterPic   = pcListPic->begin();
+  
+  while (iterPic != pcListPic->end())
+  {
+    TComPic* pcPic = *(iterPic);
+#if PIC_CROPPING
+    TComSPS *sps = pcPic->getSlice(0)->getSPS();
+#endif
+    
+#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
+    if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getSlice(0)->getSPS()->getNumReorderPics(tId) && pcPic->getPOC() > m_pocLastDisplay[viewDepthId]))
+#else
+    if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getSlice(0)->getSPS()->getNumReorderFrames() && pcPic->getPOC() > m_pocLastDisplay[viewDepthId]))
+#endif
     {
-      if( m_acTVideoIOYuvDepthReconFileList.size() < iViewIdx+1 )
-             increaseNumberOfViews( iViewIdx+1 ) ;
-
-      if ( pcPic->getReconMark() && pcPic->getPOC() == (m_aiDepthPOCLastDisplayList[iViewIdx] + 1) )
+      // write to file
+       not_displayed--;
+      if ( m_pchReconFile )
       {
-        // write to file
-        if ( m_pchReconFile )
-        {
-          m_acTVideoIOYuvDepthReconFileList[iViewIdx]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
-        }
-
-        // update POC of display order
-        m_aiDepthPOCLastDisplayList[iViewIdx] = pcPic->getPOC();
-
-        // erase non-referenced picture in the reference picture list after display
-        if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
-        {
-  #if !DYN_REF_FREE
-          pcPic->setReconMark(false);
-
-          // mark it should be extended later
-          pcPic->getPicYuvRec()->setBorderExtension( false );
-
-  #else
-          pcPic->destroy();
-          pcListPic->erase( iterPic );
-          iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
-          continue;
-  #endif
-        }
+#if PIC_CROPPING
+        m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+#else
+        m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
+#endif
       }
-    } // end bIsDepth
-
+      
+      // update POC of display order
+      m_pocLastDisplay[viewDepthId] = pcPic->getPOC();
+      
+      // erase non-referenced picture in the reference picture list after display
+      if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
+      {
+#if !DYN_REF_FREE
+        pcPic->setReconMark(false);
+        
+        // mark it should be extended later
+        pcPic->getPicYuvRec()->setBorderExtension( false );
+        
+#else
+        pcPic->destroy();
+        pcListPic->erase( iterPic );
+        iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+        continue;
+#endif
+      }
+      pcPic->setOutputMark(false);
+    }
+    
     iterPic++;
   }
 }
 
-Void TAppDecTop::startUsingDepth()
+/** \param pcListPic list of pictures to be written to file
+    \todo            DYN_REF_FREE should be revised
+ */
+Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
 {
-  m_bUsingDepth = true ;
-  increaseNumberOfViews( (Int)m_acTVideoIOYuvReconFileList.size() );
-}
-
-Void  TAppDecTop::increaseNumberOfViews  (Int iNewNumberOfViews)
-{
-  while( m_acTVideoIOYuvReconFileList.size() < iNewNumberOfViews)
+  if(!pcListPic)
   {
-    m_acTVideoIOYuvReconFileList.push_back(new TVideoIOYuv);
+    return;
+  } 
+  TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
 
-// GT FIX
-    Char cBuffer[4]  ;
-    sprintf(cBuffer,"_%i",(Int)m_acTVideoIOYuvReconFileList.size()-1 );
-    Char* pchNextFilename;
-    xAppendToFileNameEnd( m_pchReconFile, cBuffer, pchNextFilename);
-// GT FIX END
-    if ( m_outputBitDepth == 0 )
-      m_outputBitDepth = g_uiBitDepth + g_uiBitIncrement;
-    m_acTVideoIOYuvReconFileList.back()->open( pchNextFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
-    free (pchNextFilename);
-  }
-
-  while( m_aiPOCLastDisplayList.size() < iNewNumberOfViews )
-    m_aiPOCLastDisplayList.push_back(-1+m_iSkipFrame) ;
-
-  while( m_acTDecTopList.size() < iNewNumberOfViews)
+  iterPic   = pcListPic->begin();
+  
+  while (iterPic != pcListPic->end())
   {
-    m_acTDecTopList.push_back(new TDecTop) ;// at least one decoder
-    m_acTDecTopList.back()->create() ;
-    m_acTDecTopList.back()->init( this, false );
-    m_acTDecTopList.back()->setViewIdx((Int)m_acTDecTopList.size()-1);
-    m_acTDecTopList.back()->setPictureDigestEnabled(m_pictureDigestEnabled);
-    m_acTDecTopList.back()->setCamParsCollector( &m_cCamParsCollector );
-  }
-  if( m_bUsingDepth )
-  {
-    while( m_acTVideoIOYuvDepthReconFileList.size() < iNewNumberOfViews  )
-    {
-      m_acTVideoIOYuvDepthReconFileList.push_back(new TVideoIOYuv);
-// GT FIX
-      Char* pchTempFilename = NULL;
-      xAppendToFileNameEnd( m_pchReconFile, "_depth", pchTempFilename);
-      Char cBuffer[4]  ;
-      sprintf(cBuffer,"_%i",(Int)m_acTVideoIOYuvDepthReconFileList.size()-1 );
-      Char* pchDepthFilename = NULL;
-      xAppendToFileNameEnd( pchTempFilename, cBuffer, pchDepthFilename);
-// GT FIX END
-      if ( m_outputBitDepth == 0 )
-        m_outputBitDepth = g_uiBitDepth + g_uiBitIncrement;
-      m_acTVideoIOYuvDepthReconFileList.back()->open( pchDepthFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
-      free (pchTempFilename);
-      free( pchDepthFilename );
-    }
-    while( m_aiDepthPOCLastDisplayList.size() < iNewNumberOfViews )
-      m_aiDepthPOCLastDisplayList.push_back(-1+m_iSkipFrame) ;
-    while( m_acTDecDepthTopList.size() < iNewNumberOfViews)
-    {
-      m_acTDecDepthTopList.push_back(new TDecTop) ;// at least one decoder
-      m_acTDecDepthTopList.back()->create() ;
-      m_acTDecDepthTopList.back()->init( this, false );
-#if FLEX_CODING_ORDER
-      Int iNumofgen = (Int)m_acTDecDepthTopList.size();
-      m_acTDecDepthTopList.back()->setViewIdx(iNumofgen-1);
-#else
-	  m_acTDecDepthTopList.back()->setViewIdx((Int)m_acTDecTopList.size()-1);
+    TComPic* pcPic = *(iterPic);
+#if PIC_CROPPING
+    TComSPS *sps = pcPic->getSlice(0)->getSPS();
 #endif
 
-      m_acTDecDepthTopList.back()->setPictureDigestEnabled(m_pictureDigestEnabled);
-      m_acTDecDepthTopList.back()->setToDepth( true );
-      m_acTDecDepthTopList.back()->setCamParsCollector( &m_cCamParsCollector );
+    if ( pcPic->getOutputMark() )
+    {
+      // write to file
+      if ( m_pchReconFile )
+      {
+#if PIC_CROPPING
+        m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+#else
+        m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
+#endif
+      }
+      
+      // update POC of display order
+      m_pocLastDisplay[viewDepthId] = pcPic->getPOC();
+      
+      // erase non-referenced picture in the reference picture list after display
+      if ( !pcPic->getSlice(0)->isReferenced() && pcPic->getReconMark() == true )
+      {
+#if !DYN_REF_FREE
+        pcPic->setReconMark(false);
+        
+        // mark it should be extended later
+        pcPic->getPicYuvRec()->setBorderExtension( false );
+        
+#else
+        pcPic->destroy();
+        pcListPic->erase( iterPic );
+        iterPic = pcListPic->begin(); // to the beginning, non-efficient way, have to be revised!
+        continue;
+#endif
+      }
+      pcPic->setOutputMark(false);
+    }
+    
+    iterPic++;
+  }
+  pcListPic->clear();
+  m_pocLastDisplay[viewDepthId] = -MAX_INT;
+}
+
+Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
+{
+  if ( m_outputBitDepth == 0 )
+  {
+    m_outputBitDepth = g_uiBitDepth + g_uiBitIncrement;
+  }
+  Int viewId = (newNumberOfViewDepth-1)>>1;   // coding order T0D0T1D1T2D2
+  Bool isDepth = ((newNumberOfViewDepth % 2) == 0);  // coding order T0D0T1D1T2D2
+  if( isDepth )
+    m_useDepth = true;
+  while( m_tVideoIOYuvReconFile.size() < newNumberOfViewDepth)
+  {
+    m_tVideoIOYuvReconFile.push_back(new TVideoIOYuv);
+    Char buffer[4];
+    sprintf(buffer,"_%i", (Int)(m_tVideoIOYuvReconFile.size()-1) / 2 );
+    Char* nextFilename = NULL;
+    if( (m_tVideoIOYuvReconFile.size() % 2) == 0 )
+    {
+      Char* pchTempFilename = NULL;
+      xAppendToFileNameEnd( m_pchReconFile, "_depth", pchTempFilename);
+      xAppendToFileNameEnd( pchTempFilename, buffer, nextFilename);
+      free ( pchTempFilename );
+    }
+    else
+    {
+      xAppendToFileNameEnd( m_pchReconFile, buffer, nextFilename);
+    }
+    if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
+    {
+      m_tVideoIOYuvReconFile.back()->open( nextFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
+    }
+      free ( nextFilename );
+  }
+  while( m_pocLastDisplay.size() < newNumberOfViewDepth )
+  {
+    m_pocLastDisplay.push_back(-MAX_INT+m_iSkipFrame);
+  }
+  while( m_tDecTop.size() < newNumberOfViewDepth)
+  {
+    m_tDecTop.push_back(new TDecTop);
+    if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
+    {
+      m_tDecTop.back()->create();
+      m_tDecTop.back()->init( this, newNumberOfViewDepth == 1);
+      m_tDecTop.back()->setViewId( viewId );
+      m_tDecTop.back()->setIsDepth( isDepth );
+      m_tDecTop.back()->setPictureDigestEnabled(m_pictureDigestEnabled);
     }
   }
 }
 
+TDecTop* TAppDecTop::getTDecTop( Int viewId, Bool isDepth )
+{ 
+  return m_tDecTop[(isDepth ? 1 : 0) + viewId * 2];  // coding order T0D0T1D1T2D2
+} 
 
-// GT FIX
-std::vector<TComPic*> TAppDecTop::getSpatialRefPics( Int iViewIdx, Int iPoc, Bool bIsDepth ) // only for mvc functionality yet
+std::vector<TComPic*> TAppDecTop::getInterViewRefPics( Int viewId, Int poc, Bool isDepth, TComSPS* sps )
 {
-  std::vector<TComPic*> apcRefPics( iViewIdx, (TComPic*)NULL );
-  for( int iRefViewIdx = 0; iRefViewIdx < iViewIdx; iRefViewIdx++ )
+  std::vector<TComPic*> apcRefPics( sps->getNumberOfUsableInterViewRefs(), (TComPic*)NULL );
+  for( Int k = 0; k < sps->getNumberOfUsableInterViewRefs(); k++ )
   {
-    TComPic* pcRefPic = getPicFromView( iRefViewIdx, iPoc, bIsDepth );
+    TComPic* pcRefPic = xGetPicFromView( sps->getUsableInterViewRef( k ) + viewId, poc, isDepth );
     assert( pcRefPic != NULL );
-    apcRefPics[iRefViewIdx] = pcRefPic;
+    apcRefPics[k] = pcRefPic;
   }
   return apcRefPics;
 }
 
-TComPic* TAppDecTop::getPicFromView( Int iViewIdx, Int iPoc, bool bIsDepth )
+TComPic* TAppDecTop::xGetPicFromView( Int viewId, Int poc, Bool isDepth )
 {
-  TComList<TComPic*>* apcListPic = (bIsDepth ? m_acTDecDepthTopList[iViewIdx] : m_acTDecTopList[iViewIdx])->getListPic();
-  TComPic* pcRefPic = NULL;
+  assert( ( viewId >= 0 ) );
+
+  TComList<TComPic*>* apcListPic = getTDecTop( viewId, isDepth )->getListPic();
+  TComPic* pcPic = NULL;
   for( TComList<TComPic*>::iterator it=apcListPic->begin(); it!=apcListPic->end(); it++ )
   {
-    if( (*it)->getPOC() == iPoc )
+    if( (*it)->getPOC() == poc )
     {
-      pcRefPic = *it;
+      pcPic = *it;
       break;
     }
   }
-  return pcRefPic;
+  return pcPic;
 }
+//! \}

@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TComYuv.h
     \brief    general YUV buffer class (header)
     \todo     this should be merged with TComPicYuv \n
@@ -44,6 +42,9 @@
 #include <assert.h>
 #include "CommonDef.h"
 #include "TComPicYuv.h"
+
+//! \ingroup TLibCommon
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -70,6 +71,22 @@ private:
   UInt     m_iHeight;
   UInt     m_iCWidth;
   UInt     m_iCHeight;
+  
+  static Int getAddrOffset( UInt uiPartUnitIdx, UInt width )
+  {
+    Int blkX = g_auiRasterToPelX[ g_auiZscanToRaster[ uiPartUnitIdx ] ];
+    Int blkY = g_auiRasterToPelY[ g_auiZscanToRaster[ uiPartUnitIdx ] ];
+    
+    return blkX + blkY * width;
+  }
+
+  static Int getAddrOffset( UInt iTransUnitIdx, UInt iBlkSize, UInt width )
+  {
+    Int blkX = ( iTransUnitIdx * iBlkSize ) &  ( width - 1 );
+    Int blkY = ( iTransUnitIdx * iBlkSize ) &~ ( width - 1 );
+    
+    return blkX + blkY * iBlkSize;
+  }
   
 public:
   
@@ -112,11 +129,12 @@ public:
   Void    copyPartToPartYuv     ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   Void    copyPartToPartLuma    ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   Void    copyPartToPartChroma  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
+
 #if DEPTH_MAP_GENERATION
   Void    copyPartToPartYuvPdm  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
   Void    copyPartToPartLumaPdm ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
-  
+
   // ------------------------------------------------------------------------------------------------------------------
   //  Algebraic operation for YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
@@ -134,18 +152,15 @@ public:
   Void    subtractChroma    ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   
   //  (pcYuvSrc0 + pcYuvSrc1)/2 for YUV partition
-#ifdef ROUNDING_CONTROL_BIPRED
-  Void    addAvg            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, Bool bRound );
-#endif
   Void    addAvg            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight );
+
 #if DEPTH_MAP_GENERATION
   Void    addAvgPdm         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
 
   //   Remove High frequency
-  Void    removeHighFreq    ( TComYuv* pcYuvSrc, UInt uiWidht, UInt uiHeight );
   Void    removeHighFreq    ( TComYuv* pcYuvSrc, UInt uiPartIdx, UInt uiWidht, UInt uiHeight );
-
+  
   Void    add               ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract = false );
   Void    addLuma           ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
   Void    addChroma         ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
@@ -153,7 +168,6 @@ public:
   Void    clip              ( Int iWidth, Int iHeight );
   Void    clipLuma          ( Int iWidth, Int iHeight );
   Void    clipChroma        ( Int iWidth, Int iHeight );
-  
   // ------------------------------------------------------------------------------------------------------------------
   //  Access function for YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
@@ -164,15 +178,15 @@ public:
   Pel*    getCrAddr   ()    { return m_apiBufV; }
   
   //  Access starting position of YUV partition unit buffer
-  Pel*    getLumaAddr       ( UInt iPartUnitIdx );
-  Pel*    getCbAddr         ( UInt iPartUnitIdx );
-  Pel*    getCrAddr         ( UInt iPartUnitIdx );
+  Pel* getLumaAddr( UInt iPartUnitIdx ) { return m_apiBufY +   getAddrOffset( iPartUnitIdx, m_iWidth  )       ; }
+  Pel* getCbAddr  ( UInt iPartUnitIdx ) { return m_apiBufU + ( getAddrOffset( iPartUnitIdx, m_iCWidth ) >> 1 ); }
+  Pel* getCrAddr  ( UInt iPartUnitIdx ) { return m_apiBufV + ( getAddrOffset( iPartUnitIdx, m_iCWidth ) >> 1 ); }
   
   //  Access starting position of YUV transform unit buffer
-  Pel*    getLumaAddr       ( UInt iTransUnitIdx, UInt iBlkSize );
-  Pel*    getCbAddr         ( UInt iTransUnitIdx, UInt iBlkSize );
-  Pel*    getCrAddr         ( UInt iTransUnitIdx, UInt iBlkSize );
-  
+  Pel* getLumaAddr( UInt iTransUnitIdx, UInt iBlkSize ) { return m_apiBufY + getAddrOffset( iTransUnitIdx, iBlkSize, m_iWidth  ); }
+  Pel* getCbAddr  ( UInt iTransUnitIdx, UInt iBlkSize ) { return m_apiBufU + getAddrOffset( iTransUnitIdx, iBlkSize, m_iCWidth ); }
+  Pel* getCrAddr  ( UInt iTransUnitIdx, UInt iBlkSize ) { return m_apiBufV + getAddrOffset( iTransUnitIdx, iBlkSize, m_iCWidth ); }
+
   //  Get stride value of YUV buffer
   UInt    getStride   ()    { return  m_iWidth;   }
   UInt    getCStride  ()    { return  m_iCWidth;  }
@@ -180,17 +194,15 @@ public:
   
   UInt    getWidth    ()    { return  m_iWidth;   }
   UInt    getCHeight  ()    { return  m_iCHeight; }
-  UInt    getCWidth   ()    { return  m_iCWidth;  }
-  
-  Void    printout();
-  
+  UInt    getCWidth   ()    { return  m_iCWidth;  }  
+
   // ------------------------------------------------------------------------------------------------------------------
   //  Miscellaneous
   // ------------------------------------------------------------------------------------------------------------------
-  
+
   __inline Pel  xClip  (Pel x )      { return ( (x < 0) ? 0 : (x > (Pel)g_uiIBDI_MAX) ? (Pel)g_uiIBDI_MAX : x ); }
-  
 };// END CLASS DEFINITION TComYuv
 
-#endif // __TCOMYUV__
+//! \}
 
+#endif // __TCOMYUV__

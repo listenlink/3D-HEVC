@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TDecBinCoderCABAC.h
     \brief    binary entropy decoder of CABAC
 */
@@ -40,35 +38,56 @@
 #ifndef __TDEC_BIN_CODER_CABAC__
 #define __TDEC_BIN_CODER_CABAC__
 
-#include "../TLibCommon/TComCABACTables.h"
+#include "TLibCommon/TComCABACTables.h"
 #include "TDecBinCoder.h"
 
+//! \ingroup TLibDecoder
+//! \{
 
 class TDecBinCABAC : public TDecBinIf
 {
 public:
   TDecBinCABAC ();
   virtual ~TDecBinCABAC();
-
-  Void  init              ( TComBitstream* pcTComBitstream );
+  
+  Void  init              ( TComInputBitstream* pcTComBitstream );
   Void  uninit            ();
-
+  
   Void  start             ();
   Void  finish            ();
-
+#if OL_FLUSH
+  Void  flush             ();
+#endif
+  
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel );
   Void  decodeBinEP       ( UInt& ruiBin                           );
+  Void  decodeBinsEP      ( UInt& ruiBin, Int numBins              );
   Void  decodeBinTrm      ( UInt& ruiBin                           );
+  
+  Void  resetBac          ();
+#if BURST_IPCM
+  Void  decodeNumSubseqIPCM( Int& numSubseqIPCM ) ;
+#endif
+  Void  decodePCMAlignBits();
+  Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
+  
+  Void  copyState         ( TDecBinIf* pcTDecBinIf );
+  TDecBinCABAC* getTDecBinCABAC()  { return this; }
+#if !OL_FLUSH_ALIGN
+  Int   getBitsReadAhead() { return -m_bitsNeeded; }
+#endif
 
 private:
-  Void  xReadBit          ( UInt& ruiVal );
-
-private:
-  TComBitstream*      m_pcTComBitstream;
+  TComInputBitstream* m_pcTComBitstream;
   UInt                m_uiRange;
   UInt                m_uiValue;
+#if OL_FLUSH && !OL_FLUSH_ALIGN
+  UInt                m_uiLastByte;
+#endif
+  Int                 m_bitsNeeded;
 };
 
+//! \}
 
 #endif
 

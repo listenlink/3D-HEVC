@@ -32,10 +32,9 @@
  */
 
 
-
 #include "TRenImage.h"
 #include "TRenFilter.h"
-#include "../TLibCommon/TComPredFilter.h"
+#include "TRenInterpFilter.h"
 
 
 ///// COMMON /////
@@ -72,7 +71,7 @@ Void TRenFilter::setupZLUT( Bool bBlendUseDistWeight, Int iBlendZThresPerc, Int 
     piInvZLUTRight[uiDepthValue] = abs( ppiBaseShiftLUTRight[0][uiDepthValue] );
   }
   // Set Threshold
-  riBlendZThres  = ( max( abs(piInvZLUTLeft[0]- piInvZLUTLeft[255]), abs(piInvZLUTRight[0]- piInvZLUTRight[255]) ) * iBlendZThresPerc + 50)  / 100;
+  riBlendZThres  = ( Max( abs(piInvZLUTLeft[0]- piInvZLUTLeft[255]), abs(piInvZLUTRight[0]- piInvZLUTRight[255]) ) * iBlendZThresPerc + 50)  / 100;
 }
 
 Void TRenFilter::filledToUsedPelMap( PelImage* pcFilledImage, PelImage* pcUsedPelsImage, Int iUsedPelMapMarExt )
@@ -1083,7 +1082,7 @@ Void TRenFilter::conv( PelImage* pcImage, DoubleImage* pcKernel )
 // Horizontal Up sampling luma
 Void TRenFilter::sampleHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
 {
-  TComPredFilter cFilter;
+  TRenInterpFilter cFilter;
   switch ( iLog2HorSampFac )
   {
   case 0:
@@ -1112,13 +1111,13 @@ Void TRenFilter::sampleCHorUp(Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iI
     break;
   case 1:
     xDistributeArray( pcInputPlaneData,   iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                  , iOutputStride, 2 , 1 );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 2 , 1, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 2 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
     break;
   case 2:
     xDistributeArray( pcInputPlaneData,   iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                  , iOutputStride, 4 , 1 );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TComPredFilter::xCTI_Filter_VP04_C_QUA0 );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TComPredFilter::xCTI_Filter_VP04_C_QUA1 );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcInputPlaneData  , iInputStride  , 1, 1, iInputWidth,   iHeight   , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
     break;
   }
 }
@@ -1130,26 +1129,26 @@ Void TRenFilter::sampleCUpHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int
   {
   case 0:
     xDistributeArray( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData                -2, iOutputStride, 2,  2 );
-    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-2, iOutputStride, 2 , 2, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 2, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData+1                , iOutputStride, 2 , 1, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-2, iOutputStride, 2 , 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 2, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData+1                , iOutputStride, 2 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
     break;
   case 1:
     xDistributeArray( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData                -4, iOutputStride, 4 , 2 );
-    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-4, iOutputStride, 4 , 2, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TComPredFilter::xCTI_Filter_VP04_C_QUA0 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TComPredFilter::xCTI_Filter_VP04_C_QUA1 );
+    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-4, iOutputStride, 4 , 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 4, 1, iInputWidth, iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 4 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
     break;
   case 2:
     xDistributeArray( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData                -8, iOutputStride, 8 , 2 );
-    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-8, iOutputStride, 8 , 2, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 8 , 1, &TComPredFilter::xCTI_Filter_VP04_C_OCT0 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 8 , 1, &TComPredFilter::xCTI_Filter_VP04_C_QUA0 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 8 , 1, &TComPredFilter::xCTI_Filter_VP04_C_OCT1 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +4, iOutputStride, 8 , 1, &TComPredFilter::xCTI_Filter_VPS04_C_HAL );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +5, iOutputStride, 8 , 1, &TComPredFilter::xCTI_Filter_VP04_C_OCT2 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +6, iOutputStride, 8 , 1, &TComPredFilter::xCTI_Filter_VP04_C_QUA1 );
-    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +7, iOutputStride, 8 , 1, &TComPredFilter::xCTI_Filter_VP04_C_OCT3 );
+    xInterpVerChroma( pcInputPlaneData-1, iInputStride  , 1, 1, iInputWidth+3, iHeight   , pcOutputPlaneData+1*iOutputStride-8, iOutputStride, 8 , 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +1, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT0 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +2, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +3, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT1 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +4, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +5, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT2 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +6, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
+    xInterpHorChroma( pcOutputPlaneData , iOutputStride , 8, 1, iInputWidth,   iHeight*2 , pcOutputPlaneData                +7, iOutputStride, 8 , 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT3 );
     break;
   }
 }
@@ -1231,7 +1230,7 @@ Void TRenFilter::xInterpHorChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, In
   Int   iSum;
   Pel*  piSrcTmp;
 
-  TComPredFilter cFilter;
+  TRenInterpFilter cFilter;
   for ( Int y = iHeight; y != 0; y-- )
   {
     piSrcTmp = piSrc - iSrcStepX;
@@ -1251,7 +1250,7 @@ Void TRenFilter::xInterpVerChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, In
   Int   iSum;
   Pel*  piSrcTmp;
 
-  TComPredFilter cFilter;
+  TRenInterpFilter cFilter;
   for ( Int y = iHeight; y != 0; y-- )
   {
     piSrcTmp = piSrc - iSrcStepY * iSrcStride;

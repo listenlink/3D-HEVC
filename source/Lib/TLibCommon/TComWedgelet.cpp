@@ -42,6 +42,8 @@
 #include <stdlib.h>
 #include <memory.h>
 
+using namespace std;
+
 
 TComWedgelet::TComWedgelet( UInt uiWidth, UInt uiHeight ) : m_uhXs     ( 0 ),
                                                             m_uhYs     ( 0 ),
@@ -115,28 +117,28 @@ Bool TComWedgelet::checkNotPlain()
   return false;
 }
 
-Bool TComWedgelet::checkNotIdentical( Bool* pbRefPattern )
+Bool TComWedgelet::checkIdentical( Bool* pbRefPattern )
 {
   for( UInt k = 0; k < (m_uiWidth * m_uiHeight); k++ )
   {
     if( m_pbPattern[k] != pbRefPattern[k] )
     {
-      return true;
+      return false;
     }
   }
-  return false;
+  return true;
 }
 
-Bool TComWedgelet::checkNotInvIdentical( Bool* pbRefPattern )
+Bool TComWedgelet::checkInvIdentical( Bool* pbRefPattern )
 {
   for( UInt k = 0; k < (m_uiWidth * m_uiHeight); k++ )
   {
     if( m_pbPattern[k] == pbRefPattern[k] )
     {
-      return true;
+      return false;
     }
   }
-  return false;
+  return true;
 }
 
 #if HHI_DMM_WEDGE_INTRA
@@ -240,7 +242,6 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
   ruhYs = 0;
   ruhXe = 0;
   ruhYe = 0;
-  UInt uiContDOri;
 
   // get start/end of reference (=this) wedgelet
   UInt uiRefStartX = (UInt)getStartX();
@@ -257,6 +258,7 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
   case(   FULL_PEL ): { uiContDStartEndMax =  uiPredDirBlockSize;     uiContDStartEndOffset =  uiPredDirBlockOffset;     break; }
   case(   HALF_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize<<1); uiContDStartEndOffset = (uiPredDirBlockOffset<<1); break; }
   }
+  Int iContDMaxPos = (Int)uiContDStartEndMax - 1;
 
   // swap if start/end if line orientation is not from top to bottom
   if( 2 == (UInt)getOri() )
@@ -287,17 +289,15 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
     Int iXe = iAlignedRefEndX + iDeltaEnd;
     if( iXe < 0 )
     {
-      uiContDOri = 0;
       ruhXe = 0;
-      ruhYe = (UChar)Min( Max( ((uiContDStartEndMax-1) + iXe), 0 ), (uiContDStartEndMax-1) );
+      ruhYe = (UChar)min( max( (iContDMaxPos + iXe), 0 ), iContDMaxPos );
 
       return;
     }
-    else if( iXe > (uiContDStartEndMax-1) )
+    else if( iXe > iContDMaxPos )
     {
-      uiContDOri = 1;
-      ruhXe = (UChar)(uiContDStartEndMax-1);
-      ruhYe = (UChar)Min( Max( ((uiContDStartEndMax-1) - (iXe - (uiContDStartEndMax-1))), 0 ), (uiContDStartEndMax-1) );
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)min( max( (iContDMaxPos - (iXe - iContDMaxPos)), 0 ), iContDMaxPos );
 
       std::swap( ruhXs, ruhXe );
       std::swap( ruhYs, ruhYe );
@@ -305,9 +305,8 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
     }
     else
     {
-      uiContDOri = 4;
       ruhXe = (UChar)iXe;
-      ruhYe = (UChar)(uiContDStartEndMax-1);
+      ruhYe = (UChar)iContDMaxPos;
 
       return;
     }
@@ -320,21 +319,19 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
     {
     case( 2 ):
       {
-        uiContDOri = 0;
         ruhXs = (UChar)(iAlignedRefEndX-1);
         ruhYs = 0;
         ruhXe = 0;
-        ruhYe = (UChar)Min( Max( iDeltaEnd, 0 ), (uiContDStartEndMax-1) );
+        ruhYe = (UChar)min( max( iDeltaEnd, 0 ), iContDMaxPos );
 
         return;
       }
     case( 3 ):
       {
-        uiContDOri = 1;
         ruhXs = (UChar)(iAlignedRefEndX+1);
         ruhYs = 0;
-        ruhXe = (UChar)(uiContDStartEndMax-1);
-        ruhYe = (UChar)Min( Max( -iDeltaEnd, 0 ), (uiContDStartEndMax-1) );
+        ruhXe = (UChar)iContDMaxPos;
+        ruhYe = (UChar)min( max( -iDeltaEnd, 0 ), iContDMaxPos );
 
         std::swap( ruhXs, ruhXe );
         std::swap( ruhYs, ruhYe );
@@ -354,36 +351,33 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
   else                                                             { ruhXs = (UChar)(iAlignedRefEndX);   ruhYs = 0;   }
 
   // calc end point and determine orientation
-  Int iVirtualEndX = (Int)ruhXs + roftoi( (Double)(uiContDStartEndMax-1) * ((Double)iA_DeltaX / (Double)iA_DeltaY) );
+  Int iVirtualEndX = (Int)ruhXs + roftoi( (Double)iContDMaxPos * ((Double)iA_DeltaX / (Double)iA_DeltaY) );
 
   if( iVirtualEndX < 0 )
   {
     Int iYe = roftoi( (Double)(0 - (Int)ruhXs) * ((Double)iA_DeltaY / (Double)iA_DeltaX) ) + iDeltaEnd;
     if( iYe < (Int)uiContDStartEndMax )
     {
-      uiContDOri = 0;
       ruhXe = 0;
-      ruhYe = (UChar)Max( iYe, 0 );
+      ruhYe = (UChar)max( iYe, 0 );
 
       return;
     }
     else
     {
-      uiContDOri = 4;
-      ruhXe = (UChar)Min( (iYe - (uiContDStartEndMax-1)), (uiContDStartEndMax-1) );
-      ruhYe = (UChar)(uiContDStartEndMax-1);
+      ruhXe = (UChar)min( (iYe - iContDMaxPos), iContDMaxPos );
+      ruhYe = (UChar)iContDMaxPos;
 
       return;
     }
   }
-  else if( iVirtualEndX > (uiContDStartEndMax-1) )
+  else if( iVirtualEndX > iContDMaxPos )
   {
-    Int iYe = roftoi( (Double)((Int)(uiContDStartEndMax-1) - (Int)ruhXs) * ((Double)iA_DeltaY / (Double)iA_DeltaX) ) - iDeltaEnd;
+    Int iYe = roftoi( (Double)(iContDMaxPos - (Int)ruhXs) * ((Double)iA_DeltaY / (Double)iA_DeltaX) ) - iDeltaEnd;
     if( iYe < (Int)uiContDStartEndMax )
     {
-      uiContDOri = 1;
-      ruhXe = (UChar)(uiContDStartEndMax-1);
-      ruhYe = (UChar)Max( iYe, 0 );
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)max( iYe, 0 );
 
       std::swap( ruhXs, ruhXe );
       std::swap( ruhYs, ruhYe );
@@ -391,9 +385,8 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
     }
     else
     {
-      uiContDOri = 4;
-      ruhXe = (UChar)Max( ((uiContDStartEndMax-1) - (iYe - (uiContDStartEndMax-1))), 0 );
-      ruhYe = (UChar)(uiContDStartEndMax-1);
+      ruhXe = (UChar)max( (iContDMaxPos - (iYe - iContDMaxPos)), 0 );
+      ruhYe = (UChar)iContDMaxPos;
 
       return;
     }
@@ -403,17 +396,15 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
     Int iXe = iVirtualEndX + iDeltaEnd;
     if( iXe < 0 )
     {
-      uiContDOri = 0;
       ruhXe = 0;
-      ruhYe = (UChar)Max( ((uiContDStartEndMax-1) + iXe), 0 );
+      ruhYe = (UChar)max( (iContDMaxPos + iXe), 0 );
 
       return;
     }
-    else if( iXe > (uiContDStartEndMax-1) )
+    else if( iXe > iContDMaxPos )
     {
-      uiContDOri = 1;
-      ruhXe = (UChar)(uiContDStartEndMax-1);
-      ruhYe = (UChar)Max( ((uiContDStartEndMax-1) - (iXe - (uiContDStartEndMax-1))), 0 );
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)max( (iContDMaxPos - (iXe - iContDMaxPos)), 0 );
 
       std::swap( ruhXs, ruhXe );
       std::swap( ruhYs, ruhYe );
@@ -421,9 +412,8 @@ Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& r
     }
     else
     {
-      uiContDOri = 4;
       ruhXe = (UChar)iXe;
-      ruhYe = (UChar)(uiContDStartEndMax-1);
+      ruhYe = (UChar)iContDMaxPos;
 
       return;
     }
@@ -436,7 +426,6 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
   ruhYs = 0;
   ruhXe = 0;
   ruhYe = 0;
-  UInt uiContDOri;
 
   // get start/end of reference (=this) wedgelet
   UInt uiRefStartX = (UInt)getStartX();
@@ -453,6 +442,7 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
   case(   FULL_PEL ): { uiContDStartEndMax =  uiPredDirBlockSize;     uiContDStartEndOffset =  uiPredDirBlockOffset;     break; }
   case(   HALF_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize<<1); uiContDStartEndOffset = (uiPredDirBlockOffset<<1); break; }
   }
+  Int iContDMaxPos = (Int)uiContDStartEndMax - 1;
 
   // swap if start/end if line orientation is not from left to right
   if( 1 == (UInt)getOri() || 5 == (UInt)getOri() )
@@ -481,26 +471,23 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
     Int iYe = iAlignedRefEndY - iDeltaEnd;
     if( iYe < 0 )
     {
-      uiContDOri = 0;
-      ruhXe = (UChar)Min( Max( ((uiContDStartEndMax-1) + iYe), 0 ), (uiContDStartEndMax-1) );
+      ruhXe = (UChar)min( max( (iContDMaxPos + iYe), 0 ), iContDMaxPos );
       ruhYe = 0;
 
       std::swap( ruhXs, ruhXe );
       std::swap( ruhYs, ruhYe );
       return;
     }
-    else if( iYe > (uiContDStartEndMax-1) )
+    else if( iYe > iContDMaxPos )
     {
-      uiContDOri = 3;
-      ruhXe = (UChar)Min( Max( ((uiContDStartEndMax-1) - (iYe - (uiContDStartEndMax-1))), 0 ), (uiContDStartEndMax-1) );
-      ruhYe = (UChar)(uiContDStartEndMax-1);
+      ruhXe = (UChar)min( max( (iContDMaxPos - (iYe - iContDMaxPos)), 0 ), iContDMaxPos );
+      ruhYe = (UChar)iContDMaxPos;
 
       return;
     }
     else
     {
-      uiContDOri = 5;
-      ruhXe = (UChar)(uiContDStartEndMax-1);
+      ruhXe = (UChar)iContDMaxPos;
       ruhYe = (UChar)iYe;
 
       std::swap( ruhXs, ruhXe );
@@ -516,20 +503,18 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
     {
     case( 1 ):
       {
-        uiContDOri = 3;
         ruhXs = 0;
         ruhYs = (UChar)(iAlignedRefEndY+1);
-        ruhXe = (UChar)Min( Max( iDeltaEnd, 0 ), (uiContDStartEndMax-1) );
-        ruhYe = (UChar)(uiContDStartEndMax-1);
+        ruhXe = (UChar)min( max( iDeltaEnd, 0 ), iContDMaxPos );
+        ruhYe = (UChar)iContDMaxPos;
 
         return;
       }
     case( 2 ):
       {
-        uiContDOri = 0;
         ruhXs = 0;
         ruhYs = (UChar)(iAlignedRefEndY-1);
-        ruhXe = (UChar)Min( Max( -iDeltaEnd, 0 ), (uiContDStartEndMax-1) );
+        ruhXe = (UChar)min( max( -iDeltaEnd, 0 ), iContDMaxPos );
         ruhYe = 0;
 
         std::swap( ruhXs, ruhXe );
@@ -550,15 +535,14 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
   else                                       {                       ruhYs = (UChar)(iAlignedRefEndY);   ruhXs = 0;   }
 
   // calc end point and determine orientation
-  Int iVirtualEndY = (Int)ruhYs + roftoi( (Double)(uiContDStartEndMax-1) * ((Double)iL_DeltaY / (Double)iL_DeltaX) );
+  Int iVirtualEndY = (Int)ruhYs + roftoi( (Double)iContDMaxPos * ((Double)iL_DeltaY / (Double)iL_DeltaX) );
 
   if( iVirtualEndY < 0 )
   {
     Int iXe = roftoi( (Double)(0 - (Int)ruhYs ) * ((Double)iL_DeltaX / (Double)iL_DeltaY) ) - iDeltaEnd;
     if( iXe < (Int)uiContDStartEndMax )
     {
-      uiContDOri = 0;
-      ruhXe = (UChar)Max( iXe, 0 );
+      ruhXe = (UChar)max( iXe, 0 );
       ruhYe = 0;
 
       std::swap( ruhXs, ruhXe );
@@ -567,31 +551,28 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
     }
     else
     {
-      uiContDOri = 5;
-      ruhXe = (UChar)(uiContDStartEndMax-1);
-      ruhYe = (UChar)Min( (iXe - (uiContDStartEndMax-1)), (uiContDStartEndMax-1) );
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)min( (iXe - iContDMaxPos), iContDMaxPos );
 
       std::swap( ruhXs, ruhXe );
       std::swap( ruhYs, ruhYe );
       return;
     }
   }
-  else if( iVirtualEndY > (uiContDStartEndMax-1) )
+  else if( iVirtualEndY > iContDMaxPos )
   {
-    Int iXe = roftoi( (Double)((Int)(uiContDStartEndMax-1) - (Int)ruhYs ) * ((Double)iL_DeltaX / (Double)iL_DeltaY) ) + iDeltaEnd;
+    Int iXe = roftoi( (Double)(iContDMaxPos - (Int)ruhYs ) * ((Double)iL_DeltaX / (Double)iL_DeltaY) ) + iDeltaEnd;
     if( iXe < (Int)uiContDStartEndMax )
     {
-      uiContDOri = 3;
-      ruhXe = (UChar)Max( iXe, 0 );
-      ruhYe = (UChar)(uiContDStartEndMax-1);
+      ruhXe = (UChar)max( iXe, 0 );
+      ruhYe = (UChar)iContDMaxPos;
 
       return;
     }
     else
     {
-      uiContDOri = 5;
-      ruhXe = (UChar)(uiContDStartEndMax-1);
-      ruhYe = (UChar)Max( ((uiContDStartEndMax-1) - (iXe - (uiContDStartEndMax-1))), 0 );
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)max( (iContDMaxPos - (iXe - iContDMaxPos)), 0 );
 
       std::swap( ruhXs, ruhXe );
       std::swap( ruhYs, ruhYe );
@@ -603,26 +584,23 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
     Int iYe = iVirtualEndY - iDeltaEnd;
     if( iYe < 0 )
     {
-      uiContDOri = 0;
-      ruhXe = (UChar)Max( ((uiContDStartEndMax-1) + iYe), 0 );
+      ruhXe = (UChar)max( (iContDMaxPos + iYe), 0 );
       ruhYe = 0;
 
       std::swap( ruhXs, ruhXe );
       std::swap( ruhYs, ruhYe );
       return;
     }
-    else if( iYe > (uiContDStartEndMax-1) )
+    else if( iYe > iContDMaxPos )
     {
-      uiContDOri = 3;
-      ruhXe = (UChar)Max( ((uiContDStartEndMax-1) - (iYe - (uiContDStartEndMax-1))), 0 );
-      ruhYe = (UChar)(uiContDStartEndMax-1);
+      ruhXe = (UChar)max( (iContDMaxPos - (iYe - iContDMaxPos)), 0 );
+      ruhYe = (UChar)iContDMaxPos;
 
       return;
     }
     else
     {
-      uiContDOri = 5;
-      ruhXe = (UChar)(uiContDStartEndMax-1);
+      ruhXe = (UChar)iContDMaxPos;
       ruhYe = (UChar)iYe;
 
       std::swap( ruhXs, ruhXe );
@@ -665,8 +643,8 @@ Void TComWedgelet::xGenerateWedgePattern()
   case( 1 ): { for( UInt iY = 0;                 iY < uhYs;            iY++ ) { UInt iX = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX--; } } } break;
   case( 2 ): { for( UInt iX = uiTempBlockSize-1; iX > uhXs;            iX-- ) { UInt iY = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY--; } } } break;
   case( 3 ): { for( UInt iY = uiTempBlockSize-1; iY > uhYs;            iY-- ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } } break;
-  case( 4 ): { for( UInt iY = 0;                 iY < uiTempBlockSize; iY++ ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } } break;
-  case( 5 ): { for( UInt iX = 0;                 iX < uiTempBlockSize; iX++ ) { UInt iY = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY++; } } } break;
+  case( 4 ): { for( UInt iY = 0;               iY < uiTempBlockSize; iY++ ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } } break;
+  case( 5 ): { for( UInt iX = 0;               iX < uiTempBlockSize; iX++ ) { UInt iY = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY++; } } } break;
   }
 
   clear();
@@ -753,3 +731,357 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
     }
   }
 }
+
+#if HHI_DMM_PRED_TEX
+TComWedgeDist::TComWedgeDist()
+{
+  init();
+}
+
+TComWedgeDist::~TComWedgeDist()
+{
+}
+
+Void TComWedgeDist::init()
+{
+  m_afpDistortFunc[0] = TComWedgeDist::xGetSAD4;
+  m_afpDistortFunc[1] = TComWedgeDist::xGetSAD8;
+  m_afpDistortFunc[2] = TComWedgeDist::xGetSAD16;
+  m_afpDistortFunc[3] = TComWedgeDist::xGetSAD32;
+
+  m_afpDistortFunc[4] = TComWedgeDist::xGetSSE4;
+  m_afpDistortFunc[5] = TComWedgeDist::xGetSSE8;
+  m_afpDistortFunc[6] = TComWedgeDist::xGetSSE16;
+  m_afpDistortFunc[7] = TComWedgeDist::xGetSSE32;
+}
+
+UInt TComWedgeDist::xGetSAD4( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iSubShift  = pcDtParam->iSubShift;
+  Int  iSubStep   = ( 1 << iSubShift );
+  Int  iStrideCur = pcDtParam->iStrideCur*iSubStep;
+  Int  iStrideOrg = pcDtParam->iStrideOrg*iSubStep;
+
+  UInt uiSum = 0;
+
+  for( ; iRows != 0; iRows-=iSubStep )
+  {
+    uiSum += abs( piOrg[0] - piCur[0] );
+    uiSum += abs( piOrg[1] - piCur[1] );
+    uiSum += abs( piOrg[2] - piCur[2] );
+    uiSum += abs( piOrg[3] - piCur[3] );
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  uiSum <<= iSubShift;
+  return ( uiSum >> g_uiBitIncrement );
+}
+
+UInt TComWedgeDist::xGetSAD8( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg      = pcDtParam->pOrg;
+  Pel* piCur      = pcDtParam->pCur;
+  Int  iRows      = pcDtParam->iRows;
+  Int  iSubShift  = pcDtParam->iSubShift;
+  Int  iSubStep   = ( 1 << iSubShift );
+  Int  iStrideCur = pcDtParam->iStrideCur*iSubStep;
+  Int  iStrideOrg = pcDtParam->iStrideOrg*iSubStep;
+
+  UInt uiSum = 0;
+
+  for( ; iRows != 0; iRows-=iSubStep )
+  {
+    uiSum += abs( piOrg[0] - piCur[0] );
+    uiSum += abs( piOrg[1] - piCur[1] );
+    uiSum += abs( piOrg[2] - piCur[2] );
+    uiSum += abs( piOrg[3] - piCur[3] );
+    uiSum += abs( piOrg[4] - piCur[4] );
+    uiSum += abs( piOrg[5] - piCur[5] );
+    uiSum += abs( piOrg[6] - piCur[6] );
+    uiSum += abs( piOrg[7] - piCur[7] );
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  uiSum <<= iSubShift;
+  return ( uiSum >> g_uiBitIncrement );
+}
+
+UInt TComWedgeDist::xGetSAD16( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iSubShift  = pcDtParam->iSubShift;
+  Int  iSubStep   = ( 1 << iSubShift );
+  Int  iStrideCur = pcDtParam->iStrideCur*iSubStep;
+  Int  iStrideOrg = pcDtParam->iStrideOrg*iSubStep;
+
+  UInt uiSum = 0;
+
+  for( ; iRows != 0; iRows-=iSubStep )
+  {
+    uiSum += abs( piOrg[0] - piCur[0] );
+    uiSum += abs( piOrg[1] - piCur[1] );
+    uiSum += abs( piOrg[2] - piCur[2] );
+    uiSum += abs( piOrg[3] - piCur[3] );
+    uiSum += abs( piOrg[4] - piCur[4] );
+    uiSum += abs( piOrg[5] - piCur[5] );
+    uiSum += abs( piOrg[6] - piCur[6] );
+    uiSum += abs( piOrg[7] - piCur[7] );
+    uiSum += abs( piOrg[8] - piCur[8] );
+    uiSum += abs( piOrg[9] - piCur[9] );
+    uiSum += abs( piOrg[10] - piCur[10] );
+    uiSum += abs( piOrg[11] - piCur[11] );
+    uiSum += abs( piOrg[12] - piCur[12] );
+    uiSum += abs( piOrg[13] - piCur[13] );
+    uiSum += abs( piOrg[14] - piCur[14] );
+    uiSum += abs( piOrg[15] - piCur[15] );
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  uiSum <<= iSubShift;
+  return ( uiSum >> g_uiBitIncrement );
+}
+
+UInt TComWedgeDist::xGetSAD32( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iSubShift  = pcDtParam->iSubShift;
+  Int  iSubStep   = ( 1 << iSubShift );
+  Int  iStrideCur = pcDtParam->iStrideCur*iSubStep;
+  Int  iStrideOrg = pcDtParam->iStrideOrg*iSubStep;
+
+  UInt uiSum = 0;
+
+  for( ; iRows != 0; iRows-=iSubStep )
+  {
+    uiSum += abs( piOrg[0] - piCur[0] );
+    uiSum += abs( piOrg[1] - piCur[1] );
+    uiSum += abs( piOrg[2] - piCur[2] );
+    uiSum += abs( piOrg[3] - piCur[3] );
+    uiSum += abs( piOrg[4] - piCur[4] );
+    uiSum += abs( piOrg[5] - piCur[5] );
+    uiSum += abs( piOrg[6] - piCur[6] );
+    uiSum += abs( piOrg[7] - piCur[7] );
+    uiSum += abs( piOrg[8] - piCur[8] );
+    uiSum += abs( piOrg[9] - piCur[9] );
+    uiSum += abs( piOrg[10] - piCur[10] );
+    uiSum += abs( piOrg[11] - piCur[11] );
+    uiSum += abs( piOrg[12] - piCur[12] );
+    uiSum += abs( piOrg[13] - piCur[13] );
+    uiSum += abs( piOrg[14] - piCur[14] );
+    uiSum += abs( piOrg[15] - piCur[15] );
+    uiSum += abs( piOrg[16] - piCur[16] );
+    uiSum += abs( piOrg[17] - piCur[17] );
+    uiSum += abs( piOrg[18] - piCur[18] );
+    uiSum += abs( piOrg[19] - piCur[19] );
+    uiSum += abs( piOrg[20] - piCur[20] );
+    uiSum += abs( piOrg[21] - piCur[21] );
+    uiSum += abs( piOrg[22] - piCur[22] );
+    uiSum += abs( piOrg[23] - piCur[23] );
+    uiSum += abs( piOrg[24] - piCur[24] );
+    uiSum += abs( piOrg[25] - piCur[25] );
+    uiSum += abs( piOrg[26] - piCur[26] );
+    uiSum += abs( piOrg[27] - piCur[27] );
+    uiSum += abs( piOrg[28] - piCur[28] );
+    uiSum += abs( piOrg[29] - piCur[29] );
+    uiSum += abs( piOrg[30] - piCur[30] );
+    uiSum += abs( piOrg[31] - piCur[31] );
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  uiSum <<= iSubShift;
+  return ( uiSum >> g_uiBitIncrement );
+}
+
+UInt TComWedgeDist::xGetSSE4( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int  iTemp;
+
+  for( ; iRows != 0; iRows-- )
+  {
+
+    iTemp = piOrg[0] - piCur[0]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[1] - piCur[1]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[2] - piCur[2]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[3] - piCur[3]; uiSum += ( iTemp * iTemp ) >> uiShift;
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComWedgeDist::xGetSSE8( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int  iTemp;
+
+  for( ; iRows != 0; iRows-- )
+  {
+    iTemp = piOrg[0] - piCur[0]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[1] - piCur[1]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[2] - piCur[2]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[3] - piCur[3]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[4] - piCur[4]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[5] - piCur[5]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[6] - piCur[6]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[7] - piCur[7]; uiSum += ( iTemp * iTemp ) >> uiShift;
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComWedgeDist::xGetSSE16( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int  iTemp;
+
+  for( ; iRows != 0; iRows-- )
+  {
+
+    iTemp = piOrg[ 0] - piCur[ 0]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 1] - piCur[ 1]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 2] - piCur[ 2]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 3] - piCur[ 3]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 4] - piCur[ 4]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 5] - piCur[ 5]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 6] - piCur[ 6]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 7] - piCur[ 7]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 8] - piCur[ 8]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 9] - piCur[ 9]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[10] - piCur[10]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[11] - piCur[11]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[12] - piCur[12]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[13] - piCur[13]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[14] - piCur[14]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[15] - piCur[15]; uiSum += ( iTemp * iTemp ) >> uiShift;
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComWedgeDist::xGetSSE32( WedgeDistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+  Int  iTemp;
+
+  for( ; iRows != 0; iRows-- )
+  {
+
+    iTemp = piOrg[ 0] - piCur[ 0]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 1] - piCur[ 1]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 2] - piCur[ 2]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 3] - piCur[ 3]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 4] - piCur[ 4]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 5] - piCur[ 5]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 6] - piCur[ 6]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 7] - piCur[ 7]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 8] - piCur[ 8]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[ 9] - piCur[ 9]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[10] - piCur[10]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[11] - piCur[11]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[12] - piCur[12]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[13] - piCur[13]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[14] - piCur[14]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[15] - piCur[15]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[16] - piCur[16]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[17] - piCur[17]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[18] - piCur[18]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[19] - piCur[19]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[20] - piCur[20]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[21] - piCur[21]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[22] - piCur[22]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[23] - piCur[23]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[24] - piCur[24]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[25] - piCur[25]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[26] - piCur[26]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[27] - piCur[27]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[28] - piCur[28]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[29] - piCur[29]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[30] - piCur[30]; uiSum += ( iTemp * iTemp ) >> uiShift;
+    iTemp = piOrg[31] - piCur[31]; uiSum += ( iTemp * iTemp ) >> uiShift;
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+Void TComWedgeDist::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, WedgeDist eWDist, WedgeDistParam& rcDistParam )
+{
+  // set Block Width / Height
+  rcDistParam.iCols    = uiBlkWidth;
+  rcDistParam.iRows    = uiBlkHeight;
+  rcDistParam.DistFunc = m_afpDistortFunc[eWDist + g_aucConvertToBit[ rcDistParam.iCols ] ];
+
+  // initialize
+  rcDistParam.iSubShift  = 0;
+}
+
+UInt TComWedgeDist::getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, WedgeDist eWDist )
+{
+  WedgeDistParam cDtParam;
+  setDistParam( uiBlkWidth, uiBlkHeight, eWDist, cDtParam );
+  cDtParam.pOrg       = piOrg;
+  cDtParam.pCur       = piCur;
+  cDtParam.iStrideOrg = iOrgStride;
+  cDtParam.iStrideCur = iCurStride;
+  cDtParam.iStep      = 1;
+
+  return cDtParam.DistFunc( &cDtParam );
+}
+#endif

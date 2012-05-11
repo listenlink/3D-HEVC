@@ -41,7 +41,7 @@
 #include "../TLibCommon/TComSlice.h"
 #include "../TLibCommon/TComPrediction.h"
 #include "../TLibDecoder/TDecCAVLC.h"
-
+#include "../TLibDecoder/NALread.h"
 #include <list>
 #include <set>
 
@@ -64,15 +64,15 @@ public:
   TExtrTop();
   virtual ~TExtrTop();
   
-  Void     create  ();
-  Void     destroy ();
   Void     init();
 
-  Bool     extract( TComBitstream* pcBitstream, std::set<UInt>& rsuiExtractLayerIds );
+  Bool     extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds );
   Void     dumpSpsInfo( std::ostream& rcSpsInfoHandle );
   
   TComSPS *getFirstSPS() { return m_acSPSBuffer.empty() ? 0 : &(m_acSPSBuffer.front()); }
 
+protected:
+   UInt     xGetLayerId( UInt uiViewId, Bool bIsDepth ) { return ( ( uiViewId << 1 ) + ( bIsDepth ? 1 : 0 ) ); }
 };// END CLASS DEFINITION TExtrTop
 
 

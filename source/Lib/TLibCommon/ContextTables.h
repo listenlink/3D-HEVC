@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     ContextTables.h
     \brief    Defines constants and tables for SBAC
     \todo     number of context models is not matched to actual use, should be fixed
@@ -41,51 +39,90 @@
 #ifndef __CONTEXTTABLES__
 #define __CONTEXTTABLES__
 
+//! \ingroup TLibCommon
+//! \{
+
 // ====================================================================================================================
 // Constants
 // ====================================================================================================================
 
+#define MAX_NUM_CTX_MOD             512       ///< maximum number of supported contexts
+
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
 
-#define NUM_ALF_CRTL_FLAG_CTX         3       ///< number of context models for ALF ctrl flag
-
-#define NUM_MERGE_FLAG_EXT_CTX        3       ///< number of context models for merge flag of merge extended
+#define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
+#if MRG_IDX_CTX_RED
+#define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
+#else
 #define NUM_MERGE_IDX_EXT_CTX         4       ///< number of context models for merge index of merge extended
-#define NUM_MV_MERGE_IDX_EXT_CTX      5       ///< number of context models for merge index of merge extended
-#define NUM_RES_PRED_FLAG_CTX         3       ///< number of context for residual prediction flag     
+#endif
 
-#define NUM_ALF_CTRL_FLAG_CTX         3       ///< number of context models for ALF control flag
-#define NUM_PART_SIZE_CTX             5       ///< number of context models for partition size
-#define NUM_PRED_MODE_CTX             2       ///< number of context models for prediction mode
-#if MTK_DCM_MPM
-#define NUM_ADI_CTX                   3       ///< number of context models for intra prediction
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+#define NUM_RES_PRED_FLAG_CTX         4       ///< number of context for residual prediction flag
+#endif
+
+#define NUM_ALF_CTRL_FLAG_CTX         1       ///< number of context models for ALF control flag
+#define NUM_PART_SIZE_CTX             4       ///< number of context models for partition size
+#if AMP_CTX
+#define NUM_CU_AMP_CTX                1       ///< number of context models for partition size (AMP)
 #else
-#define NUM_ADI_CTX                   2
+#define NUM_CU_X_POS_CTX              2       ///< number of context models for partition size (AMP)
+#define NUM_CU_Y_POS_CTX              2       ///< number of context models for partition size (AMP)
 #endif
-#if ADD_PLANAR_MODE
-#define NUM_PLANARFLAG_CTX            2       ///< number of context models for planar mode flag (intra prediction)
-#endif
+#define NUM_PRED_MODE_CTX             1       ///< number of context models for prediction mode
 
-#define NUM_CHROMA_PRED_CTX           4       ///< number of context models for intra prediction (chroma)
+#define NUM_ADI_CTX                   1       ///< number of context models for intra prediction
+
+#define NUM_CHROMA_PRED_CTX           2       ///< number of context models for intra prediction (chroma)
 #define NUM_INTER_DIR_CTX             4       ///< number of context models for inter prediction direction
-#define NUM_MV_RES_CTX                7       ///< number of context models for motion vector difference
+#define NUM_MV_RES_CTX                2       ///< number of context models for motion vector difference
 
-#define NUM_REF_NO_CTX                6       ///< number of context models for reference index
+#define NUM_REF_NO_CTX                4       ///< number of context models for reference index
 #define NUM_TRANS_SUBDIV_FLAG_CTX     10      ///< number of context models for transform subdivision flags
-#define NUM_QT_CBF_CTX                15      ///< number of context models for QT CBF
-#define NUM_QT_ROOT_CBF_CTX           4       ///< number of context models for QT ROOT CBF
-#define NUM_DELTA_QP_CTX              4       ///< number of context models for dQP
-#define NUM_CBF_CTX                   4       ///< number of context models for CBF
+#define NUM_QT_CBF_CTX                5       ///< number of context models for QT CBF
+#define NUM_QT_ROOT_CBF_CTX           1       ///< number of context models for QT ROOT CBF
+#define NUM_DELTA_QP_CTX              3       ///< number of context models for dQP
 
-#define NUM_SIG_FLAG_CTX              16      ///< number of context models for sig flag
-#if PCP_SIGMAP_SIMPLE_LAST
-#define NUM_CTX_LAST_FLAG_XY          26      ///< number of context models for PCP last flag
+#define NUM_SIG_CG_FLAG_CTX           2       ///< number of context models for MULTI_LEVEL_SIGNIFICANCE
+
+#define NUM_SIG_FLAG_CTX              48      ///< number of context models for sig flag
+
+#define NUM_SIG_FLAG_CTX_LUMA         27      ///< number of context models for luma sig flag
+#define NUM_SIG_FLAG_CTX_CHROMA       21      ///< number of context models for chroma sig flag
+#if LAST_CTX_REDUCTION
+#define NUM_CTX_LAST_FLAG_XY          15      ///< number of context models for last coefficient position
 #else
-#define NUM_LAST_FLAG_CTX             16      ///< number of context models for last flag
+#define NUM_CTX_LAST_FLAG_XY          18      ///< number of context models for last coefficient position
 #endif
-#define NUM_ONE_FLAG_CTX              40      ///< number of context models for greater than one
-#define NUM_ABS_FLAG_CTX              40      ///< number of context models for magnitude
+
+#if LEVEL_CTX_LUMA_RED
+#define NUM_ONE_FLAG_CTX              24      ///< number of context models for greater than 1 flag
+#define NUM_ONE_FLAG_CTX_LUMA         16      ///< number of context models for greater than 1 flag of luma
+#define NUM_ONE_FLAG_CTX_CHROMA        8      ///< number of context models for greater than 1 flag of chroma
+#if RESTRICT_GR1GR2FLAG_NUMBER
+#define NUM_ABS_FLAG_CTX               6      ///< number of context models for greater than 2 flag
+#define NUM_ABS_FLAG_CTX_LUMA          4      ///< number of context models for greater than 2 flag of luma
+#define NUM_ABS_FLAG_CTX_CHROMA        2      ///< number of context models for greater than 2 flag of chroma
+#else
+#define NUM_ABS_FLAG_CTX              18      ///< number of context models for greater than 2 flag
+#define NUM_ABS_FLAG_CTX_LUMA         12      ///< number of context models for greater than 2 flag of luma
+#define NUM_ABS_FLAG_CTX_CHROMA        6      ///< number of context models for greater than 2 flag of chroma
+#endif
+#else
+#define NUM_ONE_FLAG_CTX              32      ///< number of context models for greater than 1 flag
+#define NUM_ONE_FLAG_CTX_LUMA         24      ///< number of context models for greater than 1 flag of luma
+#define NUM_ONE_FLAG_CTX_CHROMA        8      ///< number of context models for greater than 1 flag of chroma
+#if RESTRICT_GR1GR2FLAG_NUMBER
+#define NUM_ABS_FLAG_CTX               8      ///< number of context models for greater than 2 flag
+#define NUM_ABS_FLAG_CTX_LUMA          6      ///< number of context models for greater than 2 flag of luma
+#define NUM_ABS_FLAG_CTX_CHROMA        2      ///< number of context models for greater than 2 flag of chroma
+#else
+#define NUM_ABS_FLAG_CTX              24      ///< number of context models for greater than 2 flag
+#define NUM_ABS_FLAG_CTX_LUMA         18      ///< number of context models for greater than 2 flag of luma
+#define NUM_ABS_FLAG_CTX_CHROMA        6      ///< number of context models for greater than 2 flag of chroma
+#endif
+#endif
 
 #define NUM_MVP_IDX_CTX               2       ///< number of context models for MVP index
 
@@ -93,1216 +130,1074 @@
 #define NUM_ALF_UVLC_CTX              2       ///< number of context models for ALF UVLC (filter length)
 #define NUM_ALF_SVLC_CTX              3       ///< number of context models for ALF SVLC (filter coeff.)
 
-#if MTK_SAO
-#define NUM_AO_FLAG_CTX              1       ///< number of context models for AO flag
-#define NUM_AO_UVLC_CTX              2       ///< number of context models for AO UVLC (filter length)
-#define NUM_AO_SVLC_CTX              3       ///< number of context models for AO SVLC (filter coeff.)
+#define NUM_SAO_FLAG_CTX              1       ///< number of context models for SAO flag
+#define NUM_SAO_UVLC_CTX              2       ///< number of context models for SAO UVLC
+#define NUM_SAO_SVLC_CTX              3       ///< number of context models for SAO SVLC
+#if SAO_UNIT_INTERLEAVING
+#define NUM_SAO_RUN_CTX               3       ///< number of context models for AO SVLC (filter coeff.)
+#define NUM_SAO_MERGE_LEFT_FLAG_CTX   3       ///< number of context models for AO SVLC (filter coeff.)
+#define NUM_SAO_MERGE_UP_FLAG_CTX     1       ///< number of context models for AO SVLC (filter coeff.)
+#define NUM_SAO_TYPE_IDX_CTX          2       ///< number of context models for AO SVLC (filter coeff.)
+#endif
+#if CABAC_LINEAR_INIT
+#define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
+#else
+#define CNU                          119      ///< dummy initialization value for unused context models 'Context model Not Used'
 #endif
 
-#define NUM_VIEW_IDX_CTX              6
-
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-#define NUM_DMM_CTX                   2
-#define NUM_WEDGE_CTX                 4
+#define NUM_DMM_FLAG_CTX              1       ///< number of context models for DMM flag
+#define NUM_DMM_MODE_CTX              1       ///< number of context models for DMM mode
+#define NUM_DMM_DATA_CTX              3       ///< number of context models for DMM data
 #endif
 
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
 
-// mapping table for mapping 8x8 sigmap to 4x4 sigmap
-static const int  pos2ctx_map8x8  []  =
-{
-  0,  1,  2,  3,  4,  5,  5,  4,  4,  3,  3,  4,  4,  4,  5,  5,
-  4,  4,  4,  4,  3,  3,  6,  7,  7,  7,  8,  9, 10,  9,  8,  7,
-  7,  6, 11, 12, 13, 11,  6,  7,  8,  9, 14, 10,  9,  8,  6, 11,
-  12, 13, 11,  6,  9, 14, 10,  9, 11, 12, 13, 11 ,14, 10, 12, 14
-};
-
-// mapping table for mapping 8x8 lastbit to 4x4 lastbit
-static const int  pos2ctx_last8x8 []  =
-{
-  0,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,
-  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,  2,
-  3,  3,  3,  3,  3,  3,  3,  3,  4,  4,  4,  4,  4,  4,  4,  4,
-  5,  5,  5,  5,  6,  6,  6,  6,  7,  7,  7,  7,  8,  8,  8,  8
-};
-
-// no-mapping case
-static const int  pos2ctx_nomap   []  =
-{
-  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-};
-
-
 // initial probability for split flag
-static const Short
-INIT_SPLIT_FLAG[3][NUM_SPLIT_FLAG_CTX][2] =
+#if CABAC_LINEAR_INIT
+static const UChar 
+INIT_SPLIT_FLAG[3][NUM_SPLIT_FLAG_CTX] =  
+{
+  { 139,  141,  157, }, 
+  { 107,  139,  126, }, 
+  { 107,  139,  126, }, 
+};
+
+static const UChar 
+INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =  
+{
+  { CNU,  CNU,  CNU, }, 
+  { 197,  185,  201, }, 
+  { 197,  185,  201, }, 
+};
+
+static const UChar 
+INIT_ALF_CTRL_FLAG[3][NUM_ALF_CTRL_FLAG_CTX] = 
+{
+  { 200, }, 
+  { 139, }, 
+  { 169, }, 
+};
+
+static const UChar 
+INIT_MERGE_FLAG_EXT[3][NUM_MERGE_FLAG_EXT_CTX] = 
+{
+  { CNU, }, 
+  { 110, }, 
+  { 154, }, 
+};
+
+static const UChar 
+INIT_MERGE_IDX_EXT[3][NUM_MERGE_IDX_EXT_CTX] =  
+{
+#if MRG_IDX_CTX_RED
+  { CNU, }, 
+  { 122, }, 
+  { 137, }, 
+#else
+  { CNU,  CNU,  CNU,  CNU, }, 
+  { 122,  138,  153,  182, }, 
+  { 137,  139,  154,  139, }, 
+#endif
+};
+
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+static const UChar
+INIT_RES_PRED_FLAG[3][NUM_RES_PRED_FLAG_CTX] =
+{
+    { CNU, CNU, CNU, CNU },
+    { 154, 154, 154, 154 },
+    { 154, 154, 154, 154 },
+};
+#endif
+
+static const UChar 
+INIT_PART_SIZE[3][NUM_PART_SIZE_CTX] =  
+{
+  { 184,  CNU,  CNU,  CNU, }, 
+  { 154,  139,  CNU,  CNU, }, 
+  { 154,  139,  CNU,  CNU, }, 
+};
+
+#if AMP_CTX
+static const UChar 
+INIT_CU_AMP_POS[3][NUM_CU_AMP_CTX] =  
+{
+  { CNU, }, 
+  { 154, }, 
+  { 154, }, 
+};
+#else
+static const UChar 
+INIT_CU_X_POS[3][NUM_CU_X_POS_CTX] =  
+{
+  { CNU,  CNU, }, 
+  { 154,  139, }, 
+  { 154,  139, }, 
+};
+
+static const UChar 
+INIT_CU_Y_POS[3][NUM_CU_Y_POS_CTX] =  
+{
+  { CNU,  CNU, }, 
+  { 154,  154, }, 
+  { 154,  139, }, 
+};
+#endif
+
+static const UChar 
+INIT_PRED_MODE[3][NUM_PRED_MODE_CTX] = 
+{
+  { CNU, }, 
+  { 149, }, 
+  { 134, }, 
+};
+
+static const UChar 
+INIT_INTRA_PRED_MODE[3][NUM_ADI_CTX] = 
+{
+  { 184, }, 
+  { 154, }, 
+  { 183, }, 
+};
+
+static const UChar 
+INIT_CHROMA_PRED_MODE[3][NUM_CHROMA_PRED_CTX] = 
+{
+  {  63,  139, }, 
+  { 152,  139, }, 
+  { 152,  139, }, 
+};
+
+static const UChar 
+INIT_INTER_DIR[3][NUM_INTER_DIR_CTX] = 
+{
+  { CNU,  CNU,  CNU,  CNU, }, 
+#if CABAC_INIT_FLAG
+  {  95,   79,   63,   31, }, 
+#else
+  { CNU,  CNU,  CNU,  CNU, }, 
+#endif
+  {  95,   79,   63,   31, }, 
+};
+
+static const UChar 
+INIT_MVD[3][NUM_MV_RES_CTX] =  
+{
+  { CNU,  CNU, }, 
+  { 140,  198, }, 
+  { 169,  198, }, 
+};
+
+static const UChar 
+INIT_REF_PIC[3][NUM_REF_NO_CTX] =  
+{
+  { CNU,  CNU,  CNU,  CNU, }, 
+  { 153,  153,  139,  CNU, }, 
+  { 153,  153,  168,  CNU, }, 
+};
+
+static const UChar 
+INIT_DQP[3][NUM_DELTA_QP_CTX] = 
+{
+  { 154,  154,  154, }, 
+  { 154,  154,  154, }, 
+  { 154,  154,  154, }, 
+};
+
+static const UChar 
+INIT_QT_CBF[3][2*NUM_QT_CBF_CTX] =  
+{
+  { 111,  141,  CNU,  CNU,  CNU,   94,  138,  182,  CNU,  CNU, }, 
+  { 153,  111,  CNU,  CNU,  CNU,  149,  107,  167,  CNU,  CNU, }, 
+  { 153,  111,  CNU,  CNU,  CNU,  149,   92,  167,  CNU,  CNU, }, 
+};
+
+static const UChar 
+INIT_QT_ROOT_CBF[3][NUM_QT_ROOT_CBF_CTX] = 
+{
+  { CNU, }, 
+  {  79, }, 
+  {  79, }, 
+};
+
+#if LAST_CTX_REDUCTION
+static const UChar 
+INIT_LAST[3][2*NUM_CTX_LAST_FLAG_XY] =  
+{
+  { 110,  110,  124,  110,  140,  111,  125,  111,  127,  111,  111,  156,  127,  127,  111, 
+    108,  123,   63,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, 
+  }, 
+  { 125,  110,   94,  110,  125,  110,  125,  111,  111,  110,  139,  111,  111,  111,  125,  
+    108,  123,  108,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,
+  }, 
+  { 125,  110,  124,  110,  125,  110,  125,  111,  111,  110,  139,  111,  111,  111,  125, 
+    108,  123,   93,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, 
+  }, 
+};
+#else
+static const UChar 
+INIT_LAST[3][2*NUM_CTX_LAST_FLAG_XY] =  
+{
+  { 110,  110,  124,  110,  140,  111,  124,  125,  111,  127,  111,  138,  111,  156,  127,  127,  111,   94,
+    108,  123,   63,   63,  139,  124,   93,  108,  125,  111,  110,   63,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, 
+  }, 
+  { 125,  110,  124,  110,  125,  110,  153,  125,  111,  111,  110,  153,  139,  111,  111,  111,  125,  139, 
+    108,  123,  108,  152,  124,   94,  123,  137,  139,  110,  110,  154,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, 
+  }, 
+  { 125,  110,  124,  110,  125,  110,  153,  125,  111,  111,  110,  153,  139,  111,  111,  111,  125,  139,  
+    108,  123,   93,  152,  124,   94,  123,  152,  139,  110,  110,  154,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, 
+  }, 
+};
+#endif
+
+static const UChar 
+INIT_SIG_CG_FLAG[3][2 * NUM_SIG_CG_FLAG_CTX] =  
+{
+  {  91,  171,  
+    134,  141, 
+  }, 
+  { 121,  140, 
+    61,  154, 
+  }, 
+  { 121,  140,  
+    61,  154, 
+  }, 
+};
+
+static const UChar 
+INIT_SIG_FLAG[3][NUM_SIG_FLAG_CTX] = 
+{
+  { 141,  111,  125,  110,  110,   94,  124,  108,  124,  125,  139,  124,   63,  139,  168,  138,  107,  123,   92,  111,  141,  107,  125,  141,  179,  153,  125,  140,  139,  182,  123,   47,  153,  182,  137,  149,  192,  152,  224,  136,   31,  136,   74,  140,  141,  136,  139,  111, }, 
+  { 170,  154,  139,  153,  139,  123,  123,   63,  153,  168,  153,  152,   92,  152,  152,  137,  122,   92,   61,  155,  185,  166,  183,  140,  136,  153,  154,  155,  153,  123,   63,   61,  167,  153,  167,  136,  149,  107,  136,  121,  122,   91,  149,  170,  185,  151,  183,  140, }, 
+  { 170,  154,  139,  153,  139,  123,  123,   63,  124,  139,  153,  152,   92,  152,  152,  137,  137,   92,   61,  170,  185,  166,  183,  140,  136,  153,  154,  155,  153,  138,  107,   61,  167,  153,  167,  136,  121,  122,  136,  121,  122,   91,  149,  170,  170,  151,  183,  140, }, 
+};
+
+#if LEVEL_CTX_LUMA_RED
+static const UChar 
+INIT_ONE_FLAG[3][NUM_ONE_FLAG_CTX] = 
+{
+  { 140,   92,  137,  138,  140,  152,  138,  139,  153,   74,  149,   92,  139,  107,  122,  152,  140,  179,  166,  182,  140,  227,  122,  197, }, 
+  { 154,  196,  196,  167,  154,  152,  167,  182,  182,  134,  149,  136,  153,  121,  136,  137,  169,  194,  166,  167,  154,  167,  137,  182, }, 
+  { 154,  196,  167,  167,  154,  152,  167,  182,  182,  134,  149,  136,  153,  121,  136,  122,  169,  208,  166,  167,  154,  152,  167,  182, }, 
+};
+
+#if RESTRICT_GR1GR2FLAG_NUMBER
+static const UChar 
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =  
+{
+  { 138,  153,  136,  167,  152,  152, }, 
+  { 107,  167,   91,  122,  107,  167, }, 
+  { 107,  167,   91,  107,  107,  167, }, 
+};
+#else
+static const UChar 
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =  
+{
+  { 138,  139,  111,  153,  139,  111,  136,  167,  139,  167,  153,  139,  152,  139,  140,  152,  184,  141, }, 
+  { 107,  153,  125,  167,  153,  140,   91,  137,  153,  122,  167,  139,  107,  153,  140,  167,  183,  140, }, 
+  { 107,  153,  125,  167,  153,  140,   91,  137,  153,  107,  167,  139,  107,  153,  140,  167,  183,  140, }, 
+};
+#endif
+#else
+static const UChar 
+INIT_ONE_FLAG[3][NUM_ONE_FLAG_CTX] = 
+{
+  { 140,   92,  137,  138,  140,  152,  138,  139,  126,  168,  139,  139,  153,   74,  149,   92,  139,  107,  122,  152,  110,   93,  152,  138,  140,  179,  166,  182,  140,  227,  122,  197, }, 
+  { 154,  196,  196,  167,  154,  152,  167,  182,  155,  139,  139,  139,  182,  134,  149,  136,  153,  121,  136,  137,  139,  122,  152,  167,  169,  194,  166,  167,  154,  167,  137,  182, }, 
+  { 154,  196,  167,  167,  154,  152,  167,  182,  155,  139,  139,  139,  182,  134,  149,  136,  153,  121,  136,  122,  139,  107,  152,  152,  169,  208,  166,  167,  154,  152,  167,  182, }, 
+};
+
+#if RESTRICT_GR1GR2FLAG_NUMBER
+static const UChar 
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =  
+{
+  { 138,  153,  139,  136,  167,  153,  152,  152, }, 
+  { 107,  167,  139,   91,  122,  152,  107,  167, }, 
+  { 107,  167,  139,   91,  107,   93,  107,  167, }, 
+};
+#else
+static const UChar 
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =  
+{
+  { 138,  139,  111,  153,  139,  111,  139,  125,  111,  136,  167,  139,  167,  153,  139,  153,  139,  110,  152,  139,  140,  152,  184,  141, }, 
+  { 107,  153,  125,  167,  153,  140,  139,  154,  155,   91,  137,  153,  122,  167,  139,  152,  138,  139,  107,  153,  140,  167,  183,  140, }, 
+  { 107,  153,  125,  167,  153,  140,  139,  154,  155,   91,  137,  153,  107,  167,  139,   93,  138,  139,  107,  153,  140,  167,  183,  140, }, 
+};
+#endif
+#endif
+
+static const UChar 
+INIT_MVP_IDX[3][NUM_MVP_IDX_CTX] =  
+{
+  { CNU,  CNU, }, 
+  { 168,  CNU, }, 
+  { 168,  CNU, }, 
+};
+
+static const UChar 
+INIT_ALF_FLAG[3][NUM_ALF_FLAG_CTX] = 
+{
+  { 153, }, 
+  { 153, }, 
+  { 153, }, 
+};
+
+static const UChar 
+INIT_ALF_UVLC[3][NUM_ALF_UVLC_CTX] = 
+{
+  { 140,  154, }, 
+  { 154,  154, }, 
+  { 154,  154, }, 
+};
+
+static const UChar 
+INIT_ALF_SVLC[3][NUM_ALF_SVLC_CTX] =  
+{
+  { 187,  154,  159, }, 
+  { 141,  154,  189, }, 
+  { 141,  154,  159, }, 
+};
+
+static const UChar 
+INIT_SAO_FLAG[3][NUM_SAO_FLAG_CTX] =  
+{
+  { 154, }, 
+  { 153, }, 
+  { 153, }, 
+};
+
+static const UChar 
+INIT_SAO_UVLC[3][NUM_SAO_UVLC_CTX] =  
+{
+  { 143,  140, }, 
+  { 185,  140, }, 
+  { 200,  140, }, 
+};
+
+static const UChar 
+INIT_SAO_SVLC[3][NUM_SAO_SVLC_CTX] = 
+{
+  { 247,  154,  244, }, 
+  { 215,  154,  169, }, 
+  { 215,  154,  169, }, 
+};
+
+#if SAO_UNIT_INTERLEAVING 
+static const UChar 
+INIT_SAO_MERGE_LEFT_FLAG[3][NUM_SAO_MERGE_LEFT_FLAG_CTX] = 
+{
+  { 153,  153,  153, }, 
+  { 153,  153,  153, }, 
+  { 153,  153,  153, }, 
+};
+
+static const UChar 
+INIT_SAO_MERGE_UP_FLAG[3][NUM_SAO_MERGE_UP_FLAG_CTX] = 
+{
+  { 175, }, 
+  { 153, }, 
+  { 153, }, 
+};
+
+static const UChar 
+INIT_SAO_TYPE_IDX[3][NUM_SAO_TYPE_IDX_CTX] = 
+{
+  { 160,  140, }, 
+  { 185,  140, }, 
+  { 200,  140, }, 
+};
+#endif
+
+static const UChar 
+INIT_TRANS_SUBDIV_FLAG[3][NUM_TRANS_SUBDIV_FLAG_CTX] = 
+{
+{ CNU,  224,  167,  122,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, }, 
+{ CNU,  124,  138,   94,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, }, 
+{ CNU,  153,  138,  138,  CNU,  CNU,  CNU,  CNU,  CNU,  CNU, }, 
+};
+#else
+static const UChar
+INIT_SPLIT_FLAG[3][NUM_SPLIT_FLAG_CTX] =
 {
   {
-    {   -7,   68 }, {  -10,   87 }, {  -10,  105 }
+     87,  74, 107,
+    
   },
   {
-    {  -14,   71 }, {   -6,   73 }, {   -6,   91 }
+     84, 103, 105,
+    
   },
   {
-    {  -14,   71 }, {   -7,   74 }, {  -10,   92 }
-  }
+     84, 103, 105,
+    
+  },
 };
 
 // initial probability for skip flag
-static const Short
-INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX][2] =
+static const UChar
+INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU, CNU, CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
+    165, 168, 154,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  }
+    165, 168, 154,
+    
+  },
 };
 
 // initial probability for skip flag
-static const Short
-INIT_ALF_CTRL_FLAG[3][NUM_ALF_CTRL_FLAG_CTX][2] =
+static const UChar
+INIT_ALF_CTRL_FLAG[3][NUM_ALF_CTRL_FLAG_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
+    153,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
+     87,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  }
+    135,
+    
+  },
 };
 
 // initial probability for merge flag
-static const Short
-INIT_MERGE_FLAG_EXT[3][NUM_MERGE_FLAG_EXT_CTX][2] =
+static const UChar
+INIT_MERGE_FLAG_EXT[3][NUM_MERGE_FLAG_EXT_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
+    72,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  }
+    119,
+    
+  },
 };
 
-static const Short
-INIT_MERGE_IDX_EXT[3][NUM_MERGE_IDX_EXT_CTX][2] =
+static const UChar
+INIT_MERGE_IDX_EXT[3][NUM_MERGE_IDX_EXT_CTX] =
 {
+#if MRG_IDX_CTX_RED
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+    100,
+    
   },
   {
-    {    1,   65 }, {    6,   42 }, {   -7,   75 }, {   -4,   72 }
-  }
+    116,
+  },
+#else
+  {
+    CNU, CNU, CNU, CNU,
+    
+  },
+  {
+    100,  86, 102, 133,
+    
+  },
+  {
+    116,  87, 119, 103,
+    
+  },
+#endif
 };
-
-
-static const Short
-INIT_MV_MERGE_IDX_EXT[3][NUM_MV_MERGE_IDX_EXT_CTX][2] =
-{
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    1,   65 }, {    6,   42 }, {   -7,   75 }, {   -4,   72 }
-  }
-};
-
-
-static const Short
-INIT_RES_PRED_FLAG[3][NUM_RES_PRED_FLAG_CTX][2] =
-{
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }
-  }
-};
-
 
 // initial probability for PU size
-static const Short
-INIT_PART_SIZE[3][NUM_PART_SIZE_CTX][2] =
+static const UChar
+INIT_PART_SIZE[3][NUM_PART_SIZE_CTX] =
 {
   {
-    {    0,   73 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }
+    167, CNU, CNU, CNU,
+    
   },
   {
-    {   -1,   64 }, {   -3,   63 }, {    6,   78 }, {    0,   64 }, 
-    {    0,   64 }
+    119,  87, CNU, CNU,
+    
   },
   {
-    {    6,   50 }, {   -1,   56 }, {   13,   53 }, {  -11,   76 }, 
-    {  -11,   70 }
-  }
+    119,  87, CNU, CNU,
+    
+  },
+};
+#if AMP_CTX
+static const UChar
+INIT_CU_AMP_POS[3][NUM_CU_AMP_CTX] =
+{
+  {
+    CNU, 
+  },
+  {
+    119, 
+  },
+  {
+    119, 
+  },
+};
+#else
+// initial probability for AMP split position (X)
+static const UChar
+INIT_CU_X_POS[3][NUM_CU_X_POS_CTX] =
+{
+  {
+    CNU, CNU,
+    
+  },
+  {
+    119, 103,
+    
+  },
+  {
+    119, 103,
+    
+  },
 };
 
-// initial probability for prediction mode
-static const Short
-INIT_PRED_MODE[3][NUM_PRED_MODE_CTX][2] =
+// initial probability for AMP split position (Y)
+static const UChar
+INIT_CU_Y_POS[3][NUM_CU_Y_POS_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }
+    CNU, CNU,
+    
   },
   {
-    {    0,   64 }, {  -25,   89 }
+    119, 119,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }
-  }
+    119, 103,
+    
+  },
+};
+#endif
+// initial probability for prediction mode
+static const UChar
+INIT_PRED_MODE[3][NUM_PRED_MODE_CTX] =
+{
+  {
+    CNU,
+    
+  },
+  {
+    114,
+    
+  },
+  {
+    98,
+    
+  },
 };
 
 // initial probability for intra direction of luma
-#if MTK_DCM_MPM
-static const Short
-INIT_INTRA_PRED_MODE[3][NUM_ADI_CTX][2] =
+static const UChar
+INIT_INTRA_PRED_MODE[3][NUM_ADI_CTX] =
 {
   {
-    {    2,   54 }, {  -3,   65  }, {   -3,   65 }
+    167,
+    
   },
   {
-    {    0,   50 }, {  -2,   61  }, {   -2,   61 }
+    119,
+    
   },
   {
-    {    0,   51 }, {  1,   55   }, {    1,   55 }
-  }
+    150,
+    
+  },
 };
-#else
-static const Short
-INIT_INTRA_PRED_MODE[3][NUM_ADI_CTX][2] =
-{
-  {
-    {    2,   54 }, {   -3,   65 }
-  },
-  {
-    {    0,   50 }, {   -2,   61 }
-  },
-  {
-    {    0,   51 }, {    1,   55 }
-  }
-};
-#endif
-
-#if ADD_PLANAR_MODE
-// initial probability for planar mode flag
-static const Short
-INIT_PLANARFLAG[3][NUM_PLANARFLAG_CTX][2] =
-{
-  {
-    {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    0,   64 }
-  },
-  {
-    {    0,   64 }, {    0,   64 }
-  }
-};
-#endif
 
 // initial probability for intra direction of chroma
-static const Short
-INIT_CHROMA_PRED_MODE[3][4][2] =
+static const UChar
+INIT_CHROMA_PRED_MODE[3][NUM_CHROMA_PRED_CTX] =
 {
-#if CHROMA_CODEWORD
   {
-    {  0,   64 }, {   0,   64 }, {  0,  64 }, {  0,  64 }
+    53, 103,
+    
   },
   {
-    {  0,   64 }, {   0,   64 }, {  0,  64 }, {  0,  64 }
+    85,  87,
+    
   },
   {
-    {  0,   64 }, {   0,   64 }, {  0,  64 }, {  0,  64 }
-  }
-#else
-  {
-    {  -14,   78 }, {   -5,   78 }, {  -13,  109 }, {  -13,  100 }
+    101,  87,
+    
   },
-  {
-    {  -26,  113 }, {  -13,   92 }, {  -23,  110 }, {  -11,  105 }
-  },
-  {
-    {  -20,  101 }, {  -25,  111 }, {  -29,  118 }, {  -24,  121 }
-  }
-#endif
 };
 
 // initial probability for temporal direction
-static const Short
-INIT_INTER_DIR[3][4][2] =
+static const UChar
+INIT_INTER_DIR[3][NUM_INTER_DIR_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU, CNU, CNU, CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU, CNU, CNU, CNU,
+    
   },
   {
-    {   -2,   58 }, {   -5,   70 }, {   -9,   85 }, {    1,   61 }
-  }
+    41,  39,  38,  36,
+    
+  },
 };
 
 // initial probability for motion vector difference
-static const Short INIT_MVD[3][14][2] =
+static const UChar
+INIT_MVD[3][NUM_MV_RES_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }
+    CNU, CNU,
+    
   },
   {
-    {   -6,   80 }, {   -6,   84 }, {   -9,   90 }, {    4,   62 }, 
-    {   13,   55 }, {    2,   70 }, {    8,   74 }, {   -6,   77 }, 
-    {   -7,   84 }, {   -9,   89 }, {    5,   59 }, {   10,   62 }, 
-    {    4,   68 }, {    7,   75 }
+    120, 166,
+    
   },
   {
-    {   -4,   75 }, {   -5,   82 }, {  -12,   94 }, {    7,   55 }, 
-    {   11,   59 }, {    6,   63 }, {    8,   71 }, {   -2,   71 }, 
-    {   -5,   81 }, {  -21,  111 }, {    6,   58 }, {   10,   60 }, 
-    {    5,   64 }, {   10,   67 }
-  }
+    135, 166,
+    
+  },
 };
 
 // initial probability for reference frame index
-static const Short
-INIT_REF_PIC[3][NUM_REF_NO_CTX][2] =
+static const UChar
+INIT_REF_PIC[3][NUM_REF_NO_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }
+    CNU, CNU, CNU, CNU,
+    
   },
   {
-    {   -6,   59 }, {  -10,   75 }, {   -8,   75 }, {  -17,   96 }, 
-    {    1,   59 }, {    0,   64 }
+    102, 118, 103, CNU,
+    
   },
   {
-    {   -9,   55 }, {   -9,   71 }, {   -9,   76 }, {  -12,   86 }, 
-    {  -18,   55 }, {    0,   64 }
-  }
-};
-
-
-static const Short
-INIT_VIEW_IDX[3][NUM_VIEW_IDX_CTX][2] =
-{
-    {
-      {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-      {    0,   64 }, {    0,   64 }
-    },
-    {
-      {   -6,   59 }, {  -10,   75 }, {   -8,   75 }, {  -17,   96 },
-      {    1,   59 }, {    0,   64 }
-    },
-    {
-      {   -9,   55 }, {   -9,   71 }, {   -9,   76 }, {  -12,   86 },
-      {  -18,   55 }, {    0,   64 }
-    }
+    118, 118, 134, CNU,
+    
+  },
 };
 
 // initial probability for dQP
-static const Short
-INIT_DQP[3][NUM_DELTA_QP_CTX][2] =
+static const UChar
+INIT_DQP[3][NUM_DELTA_QP_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU, CNU, CNU, 
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU, CNU, CNU, 
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }
-  }
+    CNU, CNU, CNU, 
+    
+  },
 };
 
-static const Short
-INIT_QT_CBF[3][3*NUM_QT_CBF_CTX][2] =
+static const UChar
+INIT_QT_CBF[3][2*NUM_QT_CBF_CTX] =
 {
   {
-    {  -22,  116 }, {   -5,   75 }, {  -16,  112 }, {  -16,  111 }, 
-    {  -32,  165 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {  -35,  116 }, 
-    {  -12,   61 }, {   -9,   73 }, {  -10,   75 }, {  -14,   96 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {  -29,  104 }, {  -12,   59 }, 
-    {   -5,   65 }, {   -6,   67 }, {  -11,   90 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }
+     73,  74, CNU, CNU, CNU,
+     55,  86, 133, CNU, CNU,
+    
   },
   {
-    {  -18,   98 }, {  -41,  120 }, {  -29,  117 }, {  -23,  108 }, 
-    {  -35,  143 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {  -46,  114 }, 
-    {  -42,  119 }, {  -11,   74 }, {  -19,   90 }, {  -42,  139 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {  -43,  107 }, {  -41,  118 }, 
-    {  -17,   86 }, {  -25,  101 }, {  -14,   91 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }
+    102,  89, CNU, CNU, CNU,
+    114,  84, 117, CNU, CNU,
+    
   },
   {
-    {  -11,   80 }, {  -32,   83 }, {  -19,   89 }, {  -16,   85 }, 
-    {  -19,  102 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {  -22,   52 }, 
-    {  -48,  123 }, {   -7,   68 }, {  -37,  121 }, {  -58,  164 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {  -19,   45 }, {  -48,  123 }, 
-    {  -21,   94 }, {   -9,   73 }, {  -42,  138 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }
-  }
+    102,  89, CNU, CNU, CNU,
+    114,  68, 117, CNU, CNU,
+    
+  },
 };
 
-static const Short
-INIT_QT_ROOT_CBF[3][NUM_QT_ROOT_CBF_CTX][2] =
+static const UChar
+INIT_QT_ROOT_CBF[3][NUM_QT_ROOT_CBF_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
+    CNU,
+    
   },
   {
-    {  -22,   85 }, {  -15,   86 }, {  -13,   84 }, {  -23,  116 },
+    39,
+    
   },
   {
-    {  -36,  103 }, {  -21,   95 }, {  -21,   97 }, {  -24,  114 },
-  }
+    39,
+    
+  },
 };
 
-#if PCP_SIGMAP_SIMPLE_LAST
-static const Short
-INIT_LAST_X[3][2*NUM_CTX_LAST_FLAG_XY][2] =
+#if LAST_CTX_REDUCTION
+static const UChar
+INIT_LAST[3][2*NUM_CTX_LAST_FLAG_XY] =
 {
   {
-    {   8,  31 }, {   8,  39 }, {   8,  48 }, {  12,  31 },
-    {   8,  38 }, {   6,  45 }, {   3,  46 }, {  -1,  56 },
-    {  18,  16 }, {  14,  22 }, {  15,  22 }, {  16,  17 },
-    {  16,  16 }, {  12,  24 }, {  -4,  59 }, {  33, -26 },
-    {  18,   1 }, {  20,   2 }, {  22,  -1 }, {  17,  14 },
-    {  11,  21 }, {  31, -24 }, {  38, -38 }, {  12,  11 },
-    {  -4,  47 }, { -13,  69 }, {  32,  11 }, {  25,  27 },
-    {  50,  -1 }, {  32,  20 }, {  12,  38 }, {  18,  32 },
-    {  12,  41 }, {   5,  70 }, {  40,  -6 }, {  14,  29 },
-    {  17,  26 }, {   7,  43 }, {  15,  26 }, {  15,  27 },
-    {   9,  51 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 }
+    72,  72,  71,  72, 104,  89,  88,  89,  59,  73,  89, 106,  60,  59,  43,   
+    54,  70,  53,  CNU, CNU, CNU,  CNU, CNU, CNU,  CNU, CNU, CNU, CNU, CNU, CNU,
   },
   {
-    {   9,  40 }, {   9,  44 }, {  10,  52 }, {  17,  24 },
-    {  21,  15 }, {  20,  20 }, {  14,  29 }, {   8,  46 },
-    {   7,  46 }, {  18,  18 }, {  26,   3 }, {  26,   0 },
-    {  25,   2 }, {  15,  18 }, {   9,  27 }, {  23,  20 },
-    {  19,  16 }, {  27,  -1 }, {  33, -19 }, {  38, -30 },
-    {  41, -39 }, {  40, -36 }, {  26, -12 }, {   3,  20 },
-    {  -7,  33 }, {  -4,  20 }, {  16,  42 }, {  16,  45 },
-    {  49,   7 }, {   6,  61 }, {  17,  36 }, {  24,  24 },
-    {  24,  21 }, {  61, -22 }, { -11, 101 }, {   6,  53 },
-    {  14,  40 }, {  17,  30 }, {  20,  22 }, { -10,  67 },
-    {  -6,  68 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 }
+    57,  72,  55,  72,  57,  72,   88,  73,  73,  72,  103,  73,  89,  73,  57,  
+    54,  70,  54,  CNU, CNU, CNU,  CNU, CNU, CNU,  CNU, CNU, CNU, CNU, CNU, CNU,
   },
   {
-    {   9,  40 }, {   9,  44 }, {  10,  52 }, {  17,  24 },
-    {  21,  15 }, {  20,  20 }, {  14,  29 }, {   8,  46 },
-    {   7,  46 }, {  18,  18 }, {  26,   3 }, {  26,   0 },
-    {  25,   2 }, {  15,  18 }, {   9,  27 }, {  23,  20 },
-    {  19,  16 }, {  27,  -1 }, {  33, -19 }, {  38, -30 },
-    {  41, -39 }, {  40, -36 }, {  26, -12 }, {   3,  20 },
-    {  -7,  33 }, {  -4,  20 }, {  16,  42 }, {  16,  45 },
-    {  49,   7 }, {   6,  61 }, {  17,  36 }, {  24,  24 },
-    {  24,  21 }, {  61, -22 }, { -11, 101 }, {   6,  53 },
-    {  14,  40 }, {  17,  30 }, {  20,  22 }, { -10,  67 },
-    {  -6,  68 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 }
-  }
-};
-
-static const Short
-INIT_LAST_Y[3][2*NUM_CTX_LAST_FLAG_XY][2] =
-{
-  {
-    {  19,  19 }, {  12,  36 }, {  16,  34 }, {  22,  18 },
-    {  12,  35 }, {  12,  35 }, {  12,  32 }, {   5,  46 },
-    {  16,  21 }, {  15,  20 }, {  17,  13 }, {  17,  14 },
-    {  19,  10 }, {  19,  12 }, {   4,  37 }, {  13,  22 },
-    {  22,  -4 }, {  27, -19 }, {  26, -12 }, {  18,   6 },
-    {   6,  27 }, {  12,  10 }, {  34, -33 }, {  38, -42 },
-    {  24, -15 }, {  14,   7 }, {  41,   7 }, {  45,   1 },
-    {  56,  -9 }, {  30,  22 }, {  14,  40 }, {  23,  24 },
-    {  19,  32 }, {  25,  26 }, {  29,  10 }, {  29,   4 },
-    {  19,  20 }, {  10,  37 }, {  12,  38 }, {  -2,  60 },
-    { -37, 114 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 }
+    88,  72,  71,  72,  57,  72,  88,  73,  73,  72,   103,  73,  89,  73,  57,   
+    54,  70,  69,   CNU, CNU, CNU,  CNU, CNU, CNU,  CNU, CNU, CNU, CNU, CNU, CNU,
   },
-  {
-    {  15,  29 }, {  14,  36 }, {  15,  41 }, {  25,   8 },
-    {  26,   4 }, {  25,  10 }, {  21,  16 }, {  12,  34 },
-    {  18,  21 }, {  25,   1 }, {  32, -12 }, {  32, -15 },
-    {  29, -11 }, {  24,  -5 }, {  13,  12 }, {  27,   6 },
-    {  40, -32 }, {  42, -39 }, {  40, -39 }, {  45, -51 },
-    {  43, -51 }, {  45, -56 }, {  38, -46 }, {  15,  -6 },
-    {  11,  -4 }, {  11,  -4 }, {  26,  29 }, {  28,  29 },
-    {  21,  46 }, {  15,  45 }, {  27,  17 }, {  29,  12 },
-    {  23,  15 }, {  -1,  57 }, {   6,  65 }, {  22,  17 },
-    {  31,  -4 }, {  37, -25 }, {  43, -44 }, {  43, -46 },
-    {  48, -44 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 }
-  },
-  {
-    {  15,  29 }, {  14,  36 }, {  15,  41 }, {  25,   8 },
-    {  26,   4 }, {  25,  10 }, {  21,  16 }, {  12,  34 },
-    {  18,  21 }, {  25,   1 }, {  32, -12 }, {  32, -15 },
-    {  29, -11 }, {  24,  -5 }, {  13,  12 }, {  27,   6 },
-    {  40, -32 }, {  42, -39 }, {  40, -39 }, {  45, -51 },
-    {  43, -51 }, {  45, -56 }, {  38, -46 }, {  15,  -6 },
-    {  11,  -4 }, {  11,  -4 }, {  26,  29 }, {  28,  29 },
-    {  21,  46 }, {  15,  45 }, {  27,  17 }, {  29,  12 },
-    {  23,  15 }, {  -1,  57 }, {   6,  65 }, {  22,  17 },
-    {  31,  -4 }, {  37, -25 }, {  43, -44 }, {  43, -46 },
-    {  48, -44 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 },
-    {   0,  64 }, {   0,  64 }, {   0,  64 }, {   0,  64 }
-  }
-};
-#endif
-
-#if SIMPLE_CONTEXT_SIG
-static const Short
-INIT_SIG_FLAG[3][128][2] =
-{
-  {
-    {   -3,  102 }, {  -17,  114 }, {   -7,   97 }, {  -12,   96 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {   -5,   99 }, {   -9,   92 }, {   -5,   90 }, {   -7,   83 },
-    {   -3,   37 }, {   -1,   62 }, {   -5,   81 }, {   -2,   41 },
-    {    1,   64 }, {   -6,   82 }, {    0,   12 }, {    1,   43 },
-    {    0,   57 }, {   -1,   66 }, {   -4,   79 }, {    0,   64 },
-    {   23,   51 }, {    0,   69 }, {   10,   54 }, {    0,   65 },
-    {   -1,   42 }, {    4,   51 }, {   -3,   70 }, {  -12,   61 },
-    {   -4,   50 }, {   -2,   68 }, {   -18,  57 }, {    5,   38 },
-    {    1,   54 }, {   -3,   66 }, {   -9,   80 }, {    0,   64 },
-    {  -10,   91 }, {   -9,   76 }, {   -3,   61 }, {    1,   46 },
-    {  -13,   84 }, {  -13,   81 }, {   -2,   60 }, {   -5,   61 },
-    {  -11,   77 }, {  -10,   76 }, {   -3,   65 }, {   -3,   63 },
-    {   -4,   59 }, {  -14,   79 }, {    1,   61 }, {  -33,  126 },
-    {   19,   45 }, {    8,   48 }, {    2,   40 }, {   -3,   40 },
-    {    8,   46 }, {   16,   31 }, {  -10,   73 }, {  -51,  114 },
-    {    2,   52 }, {   -9,   71 }, {  -37,  118 }, {   -8,   38 },
-    {  -10,   64 }, {  -47,  113 }, { -105,  234 }, {  -32,  123 },
-    {   -4,   94 }, {   -2,   84 }, {   -4,   83 }, {   16,   39 },
-    {    0,   83 }, {   -1,   81 }, {   -4,   82 }, {  -16,   91 },
-    {   -9,   86 }, {   -8,   89 }, {   -2,   82 }, {  -14,   92 },
-    {  -16,   91 }, {   13,   44 }, {  -12,   91 }, {    0,   64 },
-    {   29,   42 }, {    1,   74 }, {   -6,   77 }, {   23,   41 },
-    {   13,   63 }, {   -6,   88 }, {   -8,   80 }, {   35,   17 },
-    {    0,   70 }, {  -17,  100 }, {  -25,  111 }, {  -39,  122 },
-    {   26,   29 }, {  -36,  114 }, {  -41,  130 }, {    0,   64 }
-  },
-  {
-    {   -7,   88 }, {    5,   52 }, {   -4,   74 }, {    5,   56 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   75 }, {    1,   59 }, {   -1,   67 }, {   -3,   67 },
-    {    6,   29 }, {    2,   57 }, {   -5,   77 }, {   -5,   44 },
-    {   -4,   64 }, {   -7,   78 }, {   -9,   34 }, {    2,   43 },
-    {    2,   53 }, {    2,   60 }, {   -8,   83 }, {    0,   64 },
-    {   19,   22 }, {   11,   48 }, {    9,   51 }, {  -24,   95 },
-    {  -27,   82 }, {  -22,   92 }, {  -20,   89 }, {  -25,   82 },
-    {  -15,   77 }, {   24,   32 }, {  -31,   76 }, {  -19,   77 },
-    {  -21,   84 }, {  -23,   95 }, {  -35,  112 }, {    0,   64 },
-    {    2,   69 }, {  -10,   82 }, {   -1,   57 }, {   -7,   59 },
-    {   -5,   71 }, {  -13,   85 }, {  -28,  107 }, {  -29,  100 },
-    {  -21,   93 }, {  -28,  108 }, {   -6,   71 }, {  -48,  136 },
-    {  -35,  111 }, {  -10,   74 }, {    4,   56 }, {    5,   56 },
-    {   -3,   84 }, {  -35,  122 }, {  -42,  111 }, {  101, -147 },
-    {  -14,   87 }, {  -70,  179 }, {    6,   30 }, {    0,   64 },
-    {    8,   32 }, {  -64,  156 }, {    0,   64 }, {    0,   64 },
-    {  -65,  144 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    6,   67 }, {   -1,   72 }, {   -9,   84 }, {  -29,  100 },
-    {    4,   65 }, {    0,   70 }, {   -7,   80 }, {  -34,  117 },
-    {  -11,   79 }, {  -14,   91 }, {  -15,   93 }, {  -34,  119 },
-    {   26,   26 }, {  -34,  111 }, {  -35,  126 }, {    0,   64 },
-    {  -15,  103 }, {   25,   19 }, {   23,   29 }, {  -65,  142 },
-    {  -21,  108 }, {   27,   19 }, {  -34,  111 }, {  -71,  174 },
-    {  -30,  104 }, {   34,   12 }, { -144,  285 }, { -168,  304 },
-    {   43,    6 }, { -125,  248 }, { -129,  252 }, {    0,   64 }
-  },
-  {
-    {   -7,   88 }, {    5,   52 }, {   -4,   74 }, {    5,   56 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    0,   75 }, {    1,   59 }, {   -1,   67 }, {   -3,   67 },
-    {    6,   29 }, {    2,   57 }, {   -5,   77 }, {   -5,   44 },
-    {   -4,   64 }, {   -7,   78 }, {   -9,   34 }, {    2,   43 },
-    {    2,   53 }, {    2,   60 }, {   -8,   83 }, {    0,   64 },
-    {   19,   22 }, {   11,   48 }, {    9,   51 }, {  -24,   95 },
-    {  -27,   82 }, {  -22,   92 }, {  -20,   89 }, {  -25,   82 },
-    {  -15,   77 }, {   24,   32 }, {  -31,   76 }, {  -19,   77 },
-    {  -21,   84 }, {  -23,   95 }, {  -35,  112 }, {    0,   64 },
-    {    2,   69 }, {  -10,   82 }, {   -1,   57 }, {   -7,   59 },
-    {   -5,   71 }, {  -13,   85 }, {  -28,  107 }, {  -29,  100 },
-    {  -21,   93 }, {  -28,  108 }, {   -6,   71 }, {  -48,  136 },
-    {  -35,  111 }, {  -10,   74 }, {    4,   56 }, {    5,   56 },
-    {   -3,   84 }, {  -35,  122 }, {  -42,  111 }, {  101, -147 },
-    {  -14,   87 }, {  -70,  179 }, {    6,   30 }, {    0,   64 },
-    {    8,   32 }, {  -64,  156 }, {    0,   64 }, {    0,   64 },
-    {  -65,  144 }, {    0,   64 }, {    0,   64 }, {    0,   64 },
-    {    6,   67 }, {   -1,   72 }, {   -9,   84 }, {  -29,  100 },
-    {    4,   65 }, {    0,   70 }, {   -7,   80 }, {  -34,  117 },
-    {  -11,   79 }, {  -14,   91 }, {  -15,   93 }, {  -34,  119 },
-    {   26,   26 }, {  -34,  111 }, {  -35,  126 }, {    0,   64 },
-    {  -15,  103 }, {   25,   19 }, {   23,   29 }, {  -65,  142 },
-    {  -21,  108 }, {   27,   19 }, {  -34,  111 }, {  -71,  174 },
-    {  -30,  104 }, {   34,   12 }, { -144,  285 }, { -168,  304 },
-    {   43,    6 }, { -125,  248 }, { -129,  252 }, {    0,   64 }
-  }
 };
 #else
-static const Short
-INIT_SIG_FLAG[3][224][2] =
+static const UChar
+INIT_LAST[3][2*NUM_CTX_LAST_FLAG_XY] =
 {
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {  -24,  145 }, {  -40,  159 }, {  -38,  155 }, {  -44,  159 }, 
-    {   -1,   27 }, {   -4,   68 }, {  -12,  100 }, {  -15,   61 }, 
-    {  -14,   82 }, {  -23,  117 }, {    0,    6 }, {  -11,   54 }, 
-    {    8,   40 }, {   -1,   65 }, {  -18,  104 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {  -31,  151 }, {  -19,  114 }, {  -22,  124 }, {  -14,  100 }, 
-    {   -7,   39 }, {   -1,   61 }, {  -12,   96 }, {  -13,   55 }, 
-    {   -1,   61 }, {  -16,  101 }, {    2,    5 }, {    8,   23 }, 
-    {    6,   43 }, {    1,   62 }, {  -16,   99 }, {    0,   64 }, 
-    {  -19,  119 }, {  -12,   91 }, {  -19,  106 }, {  -25,  108 }, 
-    {   19,   -5 }, {  -24,   96 }, {   -7,   78 }, {   19,    1 }, 
-    {    1,   54 }, {  -10,   82 }, {    1,   15 }, {   -3,   51 }, 
-    {   -4,   62 }, {    1,   61 }, {   -5,   74 }, {    0,   64 }, 
-    {  -10,  107 }, {   -9,   90 }, {   -7,   89 }, {  -12,   87 }, 
-    {   -3,   32 }, {    0,   60 }, {   -3,   75 }, {   -6,   49 }, 
-    {    3,   54 }, {   -5,   78 }, {  -16,   39 }, {   -3,   43 }, 
-    {   -6,   64 }, {   -3,   67 }, {   -6,   80 }, {    0,   64 }, 
-    {  -14,  112 }, {   -6,   78 }, {   -6,   83 }, {    2,   61 }, 
-    {    9,   22 }, {   -6,   65 }, {  -26,  107 }, {    4,   33 }, 
-    {    4,   52 }, {  -27,  110 }, {    9,    4 }, {    5,   38 }, 
-    {    6,   46 }, {    6,   54 }, {   -3,   72 }, {    0,   64 }, 
-    {  -10,   91 }, {   -9,   76 }, {   -3,   61 }, {    1,   46 }, 
-    {  -13,   84 }, {  -13,   81 }, {   -2,   60 }, {   -5,   61 }, 
-    {  -11,   77 }, {  -10,   76 }, {   -3,   65 }, {   -3,   63 }, 
-    {   -4,   59 }, {  -14,   79 }, {    1,   61 }, {  -33,  126 }, 
-    {   19,   45 }, {    8,   48 }, {    2,   40 }, {   -3,   40 }, 
-    {    8,   46 }, {   16,   31 }, {  -10,   73 }, {  -51,  114 }, 
-    {    2,   52 }, {   -9,   71 }, {  -37,  118 }, {   -8,   38 }, 
-    {  -10,   64 }, {  -47,  113 }, { -105,  234 }, {  -32,  123 }, 
-    {  -11,  105 }, {   -8,   84 }, {   -5,   72 }, {   -7,   71 }, 
-    {  -13,   96 }, {   -9,   85 }, {   -4,   75 }, {   -7,   75 }, 
-    {  -10,   84 }, {   -7,   81 }, {    0,   76 }, {   -3,   78 }, 
-    {  -11,   84 }, {   -4,   75 }, {   -1,   83 }, {    0,   64 }, 
-    {   32,   35 }, {    3,   59 }, {   -1,   61 }, {  -31,  104 }, 
-    {   29,   28 }, {   11,   51 }, {   -6,   77 }, {  -41,  125 }, 
-    {    9,   53 }, {   -3,   76 }, {  -34,  130 }, {  -42,  133 }, 
-    {  -29,  109 }, {  -49,  143 }, {  -47,  144 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
+    72,  72,  71,  72, 104,  89,  71,  88,  89,  59,  73,  86,  89, 106,  60,  59,  43,  55,
+    54,  70,  53,  53,  87,  71,  69,  54,  88,  73,  72,  53, CNU, CNU, CNU, CNU, CNU, CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {  -22,  128 }, {  -14,   96 }, {  -17,   99 }, {  -26,  113 }, 
-    {    5,   31 }, {   -2,   65 }, {  -32,  125 }, {  -19,   72 }, 
-    {   -7,   69 }, {  -24,  111 }, {    0,   25 }, {   -1,   49 }, 
-    {    2,   54 }, {    0,   64 }, {  -15,   97 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   -4,   88 }, {    0,   68 }, {   -4,   75 }, {   -5,   74 }, 
-    {   17,    7 }, {    2,   56 }, {   -8,   80 }, {    1,   36 }, 
-    {    2,   52 }, {  -11,   85 }, {    6,   12 }, {    5,   41 }, 
-    {    2,   54 }, {    0,   65 }, {   -8,   82 }, {    0,   64 }, 
-    {   -8,   95 }, {   -7,   77 }, {   -7,   73 }, {   -9,   74 }, 
-    {  -18,   77 }, {   -7,   72 }, {  -11,   81 }, {  -29,   92 }, 
-    {    4,   47 }, {  -14,   83 }, {  -26,   79 }, {    2,   46 }, 
-    {    5,   50 }, {    6,   52 }, {  -22,  104 }, {    0,   64 }, 
-    {   -7,   93 }, {   -5,   79 }, {   -6,   79 }, {   -8,   79 }, 
-    {    5,   36 }, {    3,   56 }, {  -18,   99 }, {  -10,   59 }, 
-    {    0,   56 }, {  -11,   84 }, {   -3,   31 }, {    8,   35 }, 
-    {    4,   51 }, {   -1,   66 }, {   -7,   81 }, {    0,   64 }, 
-    {    1,   80 }, {  -28,  116 }, {  -26,  112 }, {    2,   56 }, 
-    {  -17,   75 }, {    3,   52 }, {  -10,   79 }, {  -26,   91 }, 
-    {   -2,   61 }, {   -3,   66 }, {  -45,  114 }, {  -21,   91 }, 
-    {    1,   59 }, {    2,   62 }, {  -10,   82 }, {    0,   64 }, 
-    {    3,   68 }, {    0,   62 }, {   -8,   69 }, {    1,   43 }, 
-    {   -6,   70 }, {   -4,   66 }, {   -2,   60 }, {   -6,   61 }, 
-    {  -13,   78 }, {   -8,   71 }, {   -6,   71 }, {   -5,   67 }, 
-    {   -7,   63 }, {    0,   56 }, {  -13,   83 }, {   -4,   77 }, 
-    {    6,   70 }, {  -19,   94 }, {  -21,   80 }, {   -7,   30 }, 
-    {  -15,   88 }, {  -19,   95 }, {  -39,  117 }, {  -10,   42 }, 
-    {  -15,   78 }, {  -30,  104 }, {    4,   36 }, {   91, -137 }, 
-    {  -45,  125 }, {    0,   42 }, {   30,    2 }, {    0,   64 }, 
-    {   -3,   84 }, {   -8,   83 }, {  -13,   86 }, {  -12,   75 }, 
-    {   -6,   81 }, {   -9,   83 }, {   -5,   77 }, {   -8,   75 }, 
-    {   -8,   79 }, {   -7,   82 }, {    0,   73 }, {   -7,   83 }, 
-    {  -13,   84 }, {   -4,   73 }, {   -3,   82 }, {    0,   64 }, 
-    {   15,   63 }, {    0,   69 }, {  -28,  110 }, {  -29,  104 }, 
-    {   -1,   74 }, {  -22,  105 }, {  -50,  150 }, {  -57,  151 }, 
-    {  -21,   96 }, {  -29,  113 }, {  -49,  151 }, {  -85,  197 }, 
-    {  -46,  133 }, {  -60,  159 }, {  -84,  198 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
+    57,  72,  71,  72,  57,  72, 102,  88,  73,  73,  72, 102, 103,  73,  89,  73,  57,  87,
+    54,  70,  54, 101,  71,  55,  70, 116, 103,  72,  72, 119, CNU, CNU, CNU, CNU, CNU, CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {  -34,  146 }, {  -20,  108 }, {  -23,  111 }, {  -38,  141 }, 
-    {    3,   34 }, {   -4,   69 }, {  -17,  103 }, {   -9,   50 }, 
-    {   -4,   66 }, {  -16,   97 }, {   -1,   24 }, {    0,   50 }, 
-    {   -1,   61 }, {  -12,   90 }, {  -14,   97 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {  -12,   99 }, {   -4,   75 }, {   -8,   81 }, {   -7,   80 }, 
-    {   15,   13 }, {    2,   57 }, {  -10,   85 }, {    4,   27 }, 
-    {  -10,   75 }, {   -9,   81 }, {   -9,   46 }, {    6,   41 }, 
-    {    3,   56 }, {   -1,   69 }, {  -14,   96 }, {    0,   64 }, 
-    {   -7,   85 }, {  -22,  102 }, {  -12,   79 }, {  -35,  121 }, 
-    {   -5,   55 }, {  -16,   88 }, {   -9,   78 }, {  -26,   73 }, 
-    {  -28,   99 }, {  -38,  123 }, {   -3,   35 }, {  -25,   97 }, 
-    {   -9,   75 }, {    6,   54 }, {  -15,   92 }, {    0,   64 }, 
-    {   -9,   94 }, {  -14,   94 }, {   -4,   74 }, {  -14,   92 }, 
-    {    7,   37 }, {    3,   57 }, {   -7,   78 }, {   -8,   54 }, 
-    {   -7,   70 }, {   -8,   78 }, {   -2,   31 }, {    4,   49 }, 
-    {    1,   60 }, {   -5,   75 }, {  -10,   87 }, {    0,   64 }, 
-    {   -3,   82 }, {  -19,  102 }, {  -14,   91 }, {  -33,  123 }, 
-    {  -46,  124 }, {  -12,   82 }, {  -43,  138 }, {  -46,  121 }, 
-    {  -38,  125 }, {  -44,  138 }, {  -32,   89 }, {   -3,   60 }, 
-    {  -22,  102 }, {  -27,  114 }, {  -37,  128 }, {    0,   64 }, 
-    {    2,   69 }, {  -10,   82 }, {   -1,   57 }, {   -7,   59 }, 
-    {   -5,   71 }, {  -13,   85 }, {  -28,  107 }, {  -29,  100 }, 
-    {  -21,   93 }, {  -28,  108 }, {   -6,   71 }, {  -48,  136 }, 
-    {  -35,  111 }, {  -10,   74 }, {    4,   56 }, {    5,   56 }, 
-    {   -3,   84 }, {  -35,  122 }, {  -42,  111 }, {  101, -147 }, 
-    {  -14,   87 }, {  -70,  179 }, {    6,   30 }, {    0,   64 }, 
-    {    8,   32 }, {  -64,  156 }, {    0,   64 }, {    0,   64 }, 
-    {  -65,  144 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    4,   67 }, {   -5,   77 }, {  -12,   85 }, {  -28,  105 }, 
-    {   -5,   77 }, {   -7,   79 }, {   -7,   79 }, {  -28,  109 }, 
-    {  -17,   94 }, {  -11,   88 }, {   -6,   81 }, {  -32,  125 }, 
-    {  -38,  128 }, {  -40,  136 }, {  -39,  142 }, {    0,   64 }, 
-    {  -35,  148 }, {  -47,  150 }, {  -22,  100 }, {  -73,  176 }, 
-    {  -12,   91 }, {  -54,  155 }, {  -86,  203 }, {  -71,  174 }, 
-    {  -66,  167 }, {  -41,  129 }, { -144,  285 }, { -168,  304 }, 
-    {  -59,  148 }, { -125,  248 }, { -129,  252 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
-  }
-};
-#endif
-#if !PCP_SIGMAP_SIMPLE_LAST
-static const Short
-INIT_LAST_FLAG[3][224][2] =
-{
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   24,  -37 }, {   35,  -52 }, {    8,   -9 }, {   14,  -11 }, 
-    {   14,  -10 }, {   22,  -18 }, {   48,  -64 }, {   -1,   29 }, 
-    {   20,   13 }, {  -15,   51 }, {   77, -101 }, {   22,  -20 }, 
-    {  -34,   89 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   33,  -47 }, {   38,  -54 }, {   25,  -32 }, {   46,  -66 }, 
-    {   24,  -27 }, {   26,  -28 }, {   36,  -39 }, {   -6,   48 }, 
-    {   -2,   51 }, {   -1,   44 }, {    9,   26 }, {  -36,   93 }, 
-    {  -20,   61 }, {  -51,  130 }, {   29,   -2 }, {    0,    0 }, 
-    {   42,  -30 }, {   43,  -46 }, {   61,  -81 }, {   48,  -51 }, 
-    {   21,    5 }, {    8,   22 }, {    5,   38 }, {   23,   12 }, 
-    {  102, -138 }, {  304, -440 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   30,  -24 }, {   24,  -15 }, {   19,   -2 }, {    9,   15 }, 
-    {    9,   16 }, {    5,   27 }, {   19,    6 }, {   11,   29 }, 
-    {   -7,   62 }, {   -9,   66 }, {    7,   41 }, {  -11,   76 }, 
-    {  -42,  130 }, {  -14,   91 }, {   16,   14 }, {    0,   64 }, 
-    {   22,   14 }, {   26,   -1 }, {   13,   18 }, {    4,   37 }, 
-    {    5,   36 }, {   20,   14 }, {   12,   29 }, {   24,   17 }, 
-    {  -50,  133 }, { -165,  315 }, { -160,  301 }, { -217,  408 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   31,  -12 }, {   20,    4 }, {   16,    9 }, {   16,    9 }, 
-    {   17,    8 }, {   20,    4 }, {   23,    4 }, {   17,   18 }, 
-    {    9,   36 }, {   10,   36 }, {   10,   39 }, {    7,   52 }, 
-    {   -3,   75 }, {  -16,  103 }, {    0,   64 }, {    0,   64 }, 
-    {   14,   44 }, {   -2,   64 }, {    3,   51 }, {   18,   22 }, 
-    {   -8,   70 }, {    3,   53 }, {    7,   48 }, {   -6,   70 }, 
-    {  -48,  133 }, {  -22,   96 }, { -111,  240 }, {  -55,  156 }, 
-    {  -92,  215 }, { -347,  585 }, {    0,   64 }, {    0,   64 }, 
-    {   12,   26 }, {   11,   23 }, {   16,   15 }, {   19,   17 }, 
-    {    9,   30 }, {   14,   24 }, {   18,   21 }, {   16,   30 }, 
-    {   13,   27 }, {   12,   33 }, {   13,   37 }, {    9,   54 }, 
-    {   12,   37 }, {   12,   42 }, {   15,   49 }, {    0,   64 }, 
-    {   23,   26 }, {   17,   30 }, {    0,   60 }, {    7,   53 }, 
-    {   18,   33 }, {   15,   39 }, {   10,   48 }, {  -22,  101 }, 
-    {   19,   34 }, {   10,   51 }, {  -35,  124 }, {  -16,   93 }, 
-    {    2,   65 }, {   -9,   83 }, {  -24,  109 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
+    88,  72,  71,  72,  57,  72, 102,  88,  73,  73,  72, 118, 103,  73,  89,  73,  57,  87,
+    54,  70,  69,  85,  71,  55,  70,  85, 103,  72,  72, 119, CNU, CNU, CNU, CNU, CNU, CNU,
+    
   },
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   17,   18 }, {   28,  -21 }, {   40,  -50 }, {    7,   20 }, 
-    {   -9,   47 }, {  -12,   43 }, {    9,   -1 }, {   -7,   52 }, 
-    {  -29,   89 }, {   25,  -20 }, {  -36,   82 }, {  106, -178 }, 
-    {  248, -404 }, {   56,  -38 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   20,   10 }, {   25,   -8 }, {   23,   -5 }, {    2,   32 }, 
-    {    8,   15 }, {   19,   -5 }, {   15,    0 }, {    8,   27 }, 
-    {   -1,   48 }, {    1,   42 }, {    1,   41 }, {  -48,  124 }, 
-    {  -97,  213 }, {   32,  -21 }, {   61,  -47 }, { -480,  845 }, 
-    {   22,   17 }, {   26,   -6 }, {   42,  -38 }, {   33,  -15 }, 
-    {    9,   29 }, {  -19,   70 }, {  -77,  167 }, {  -80,  176 }, 
-    {  -96,  186 }, {  171, -294 }, {    5,   45 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   23,    2 }, {   30,  -12 }, {   20,    9 }, {   16,   16 }, 
-    {   19,    4 }, {    8,   24 }, {   15,   13 }, {   10,   26 }, 
-    {   12,   25 }, {  -12,   66 }, {   -7,   60 }, {   -8,   64 }, 
-    {   -2,   63 }, {   -7,   75 }, { -116,  252 }, {    0,   64 }, 
-    {   -4,   68 }, {   20,   16 }, {   17,   22 }, {   13,   31 }, 
-    {    3,   48 }, {  -21,   84 }, {  -41,  117 }, {  -43,  125 }, 
-    {    5,   40 }, {   29,    4 }, {  -24,   87 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   14,   23 }, {   24,    4 }, {   15,   23 }, {    7,   34 }, 
-    {   19,   14 }, {   19,   12 }, {   17,   18 }, {   11,   33 }, 
-    {    4,   44 }, {   -2,   55 }, {    2,   54 }, {    3,   53 }, 
-    {  -43,  137 }, {  -22,  104 }, {    0,   64 }, {    0,   64 }, 
-    {   -5,   76 }, {    7,   50 }, {    9,   43 }, {    6,   50 }, 
-    {    0,   59 }, {    1,   56 }, {    4,   51 }, {   22,   18 }, 
-    {   21,   21 }, { -105,  242 }, {  -52,  145 }, {  260, -439 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   50 }, {    5,   42 }, {    4,   43 }, {   18,   20 }, 
-    {   17,   23 }, {    0,   55 }, {   10,   39 }, {    6,   46 }, 
-    {   10,   36 }, {    9,   41 }, {   12,   42 }, {    3,   63 }, 
-    {   15,   30 }, {    9,   46 }, {    0,   73 }, {    0,   64 }, 
-    {   12,   47 }, {   11,   43 }, {    5,   50 }, {    5,   53 }, 
-    {   -2,   68 }, {  -11,   83 }, {  -18,   93 }, {  -59,  154 }, 
-    {  -22,   99 }, {  -45,  137 }, {  -63,  167 }, {  -56,  152 }, 
-    {  -34,  117 }, {  -45,  136 }, {  -74,  182 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
-  },
-  {
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   20,    7 }, {   38,  -44 }, {   37,  -43 }, {   -9,   48 }, 
-    {  -45,  104 }, {  -87,  174 }, {   26,  -35 }, {   51,  -63 }, 
-    {  129, -174 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    7,   38 }, {   28,  -14 }, {   25,   -7 }, {    2,   38 }, 
-    {  -13,   53 }, {   11,    2 }, {  -18,   59 }, {   23,   -4 }, 
-    {   46,  -35 }, {   -9,   59 }, {  -32,   97 }, {   -5,   57 }, 
-    {  -98,  215 }, {  -51,  141 }, {  163, -267 }, {    0,    0 }, 
-    {    2,   48 }, {   57,  -65 }, {   70,  -78 }, {   74,  -74 }, 
-    {   38,   -7 }, {   64,  -44 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   12,   24 }, {   17,   17 }, {   11,   31 }, {    6,   35 }, 
-    {    9,   25 }, {   -2,   41 }, {   11,   19 }, {   -3,   51 }, 
-    {  -30,  100 }, {   -4,   55 }, {    2,   49 }, {   38,  -17 }, 
-    {   43,  -28 }, {  -35,  117 }, {  -97,  214 }, {    0,   64 }, 
-    {    7,   41 }, {   29,   -3 }, {   17,   23 }, {    6,   45 }, 
-    {   12,   36 }, {  -22,   85 }, {    2,   54 }, {  -18,   87 }, 
-    {    0,   65 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   -5,   59 }, {   14,   25 }, {   13,   29 }, {    4,   42 }, 
-    {    8,   33 }, {    5,   37 }, {   20,   11 }, {   16,   20 }, 
-    {   15,   22 }, {  -12,   70 }, {   -9,   67 }, {   13,   35 }, 
-    {  -15,   85 }, {  -25,  101 }, {    0,   64 }, {    0,   64 }, 
-    {   -3,   65 }, {    6,   50 }, {    3,   56 }, {   21,   19 }, 
-    {   -1,   64 }, {  -73,  175 }, {  -17,   76 }, {    7,   52 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   12,   22 }, {   15,   20 }, {   18,   14 }, {   13,   28 }, 
-    {   18,   18 }, {    0,   54 }, {  -14,   77 }, {  -34,  113 }, 
-    {    4,   43 }, {    7,   43 }, {    2,   55 }, {   -2,   69 }, 
-    {  -17,   82 }, {   -2,   60 }, {   -8,   81 }, {    0,   64 }, 
-    {  -20,   92 }, {    1,   56 }, {  -35,  114 }, {  -12,   78 }, 
-    {    6,   51 }, {  -48,  141 }, {  -77,  183 }, {  -63,  157 }, 
-    {    7,   46 }, {  -56,  149 }, { -125,  254 }, { -134,  247 }, 
-    {  -49,  134 }, {  -72,  167 }, { -130,  253 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
-  }
 };
 #endif
 
-static const Short
-INIT_ONE_FLAG[3][80][2] =
+static const UChar
+INIT_SIG_CG_FLAG[3][2 * NUM_SIG_CG_FLAG_CTX] = 
 {
   {
-    {  -11,   87 }, {  -20,   64 }, {  -16,   68 }, {  -13,   71 }, 
-    {  -10,   73 }, {   -5,   67 }, {   -8,   26 }, {   -8,   37 }, 
-    {   -3,   36 }, {   -9,   56 }, {    0,   63 }, {   -5,   39 }, 
-    {  -12,   56 }, {   -9,   57 }, {   -1,   52 }, {   -4,   72 }, 
-    {  -19,   73 }, {  -28,   88 }, {  -23,   85 }, {   -3,   59 }, 
-    {   -2,   72 }, {  -27,   97 }, {  -22,   89 }, {  -14,   77 }, 
-    {   -1,   58 }, {  -10,   86 }, {  -22,   74 }, {  -13,   63 }, 
-    {   -6,   57 }, {   -5,   63 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   -4,   70 }, {   16,   -2 }, {    9,   23 }, {    5,   41 }, 
-    {   -7,   67 }, {   -6,   63 }, {   13,   -5 }, {  -12,   42 }, 
-    {  -18,   53 }, {  -14,   59 }, {   -5,   65 }, {   -8,   36 }, 
-    {  -22,   67 }, {  -35,   89 }, {   -3,   47 }, {  -12,   77 }, 
-    {  -20,   66 }, {  -51,  113 }, {  -44,  109 }, {  -23,   84 }, 
-    {   -1,   64 }, {  -58,  127 }, {  -71,  143 }, {  -67,  134 }, 
-    {  -91,  187 }, {   -1,   64 }, {   20,   -3 }, {   13,   21 }, 
-    {    2,   46 }, {    5,   48 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
+    83, 122,
+    98, 121,
+    
   },
   {
-    {   -4,   71 }, {   29,   -5 }, {    1,   45 }, {   -6,   58 }, 
-    {   -9,   67 }, {   -6,   66 }, {   23,   -7 }, {    3,   26 }, 
-    {   -5,   42 }, {    5,   31 }, {  -12,   79 }, {   -2,   45 }, 
-    {  -15,   67 }, {  -11,   62 }, {   -3,   54 }, {   -4,   70 }, 
-    {  -13,   68 }, {  -31,  100 }, {  -26,   91 }, {  -18,   84 }, 
-    {   -9,   83 }, {  -30,  103 }, {  -24,   90 }, {  -43,  122 }, 
-    {   -6,   66 }, {    4,   59 }, {   34,  -11 }, {   21,   10 }, 
-    {   14,   25 }, {    5,   44 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   -4,   69 }, {   40,  -33 }, {   19,    8 }, {  -11,   65 }, 
-    {   -6,   59 }, {  -11,   68 }, {   12,   -2 }, {   17,  -10 }, 
-    {   -6,   34 }, {   11,   14 }, {  -11,   70 }, {    1,   27 }, 
-    {  -26,   71 }, {  -28,   79 }, {   -2,   47 }, {    6,   47 }, 
-    {  -23,   67 }, {  -47,  107 }, {  -55,  117 }, {  -21,   83 }, 
-    {    1,   59 }, {  -38,   82 }, {  -34,   77 }, {  -45,   95 }, 
-    {   10,   25 }, {    9,   46 }, {   41,  -31 }, {   32,  -17 }, 
-    {   14,   19 }, {   17,   18 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
+    99, 120,
+    67, 119,
+    
   },
   {
-    {   -2,   65 }, {   18,   22 }, {   10,   33 }, {   -2,   55 }, 
-    {   -7,   64 }, {   -6,   67 }, {   19,   11 }, {   -5,   50 }, 
-    {   -7,   53 }, {   -4,   54 }, {  -23,   99 }, {   -3,   51 }, 
-    {    2,   41 }, {  -32,  102 }, {  -16,   79 }, {   -8,   77 }, 
-    {  -21,   84 }, {  -26,   91 }, {  -33,  104 }, {   -4,   61 }, 
-    {  -31,  122 }, {  -34,  110 }, {  -25,   96 }, {  -43,  124 }, 
-    {   -6,   70 }, {    3,   60 }, {   23,   12 }, {   12,   30 }, 
-    {   11,   33 }, {    8,   40 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   -2,   66 }, {   40,  -20 }, {    0,   46 }, {   -5,   54 }, 
-    {    7,   37 }, {  -39,  116 }, {   31,  -27 }, {    1,   22 }, 
-    {  -35,   82 }, {  -32,   85 }, {  -15,   72 }, {   16,    0 }, 
-    {  -43,  102 }, {  -75,  152 }, {   -8,   55 }, {   -9,   68 }, 
-    {  -12,   54 }, {  -84,  171 }, {  -93,  186 }, {   25,   12 }, 
-    { -104,  222 }, {  -40,   92 }, {  -51,   93 }, {  110, -169 }, 
-    {    3,   52 }, {   17,   33 }, {   55,  -45 }, {   28,    1 }, 
-    {   -5,   55 }, {   29,   -4 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
-  }
+    99, 120,
+    67, 119,
+    
+  },
 };
 
-static const Short
-INIT_ABS_FLAG[3][80][2] =
+static const UChar
+INIT_SIG_FLAG[3][NUM_SIG_FLAG_CTX] =
 {
   {
-    {  -12,   72 }, {  -10,   79 }, {  -11,   87 }, {  -14,   94 }, 
-    {  -35,  136 }, {  -10,   58 }, {   -1,   54 }, {  -17,   86 }, 
-    {   -5,   70 }, {  -22,  105 }, {  -13,   70 }, {   -2,   59 }, 
-    {  -13,   81 }, {  -21,   96 }, {   -3,   73 }, {  -24,   90 }, 
-    {  -19,   88 }, {   -1,   63 }, {    1,   60 }, {  -17,   97 }, 
-    {   -7,   69 }, {  -20,   95 }, {  -11,   84 }, {  -27,  110 }, 
-    {  -12,   96 }, {   -9,   72 }, {   -8,   76 }, {   -4,   75 }, 
-    {   -3,   76 }, {   -9,   94 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {  -11,   65 }, {   -4,   66 }, {   -9,   82 }, {  -24,  107 }, 
-    {  -24,  111 }, {  -18,   58 }, {  -10,   61 }, {  -19,   82 }, 
-    {  -28,   97 }, {    6,   47 }, {  -12,   50 }, {  -17,   73 }, 
-    {   -8,   66 }, {  -44,  115 }, {  -17,   86 }, {  -26,   74 }, 
-    {   -4,   48 }, {  -43,  115 }, {  -58,  141 }, {  -51,  137 }, 
-    {  -51,  117 }, {  -85,  176 }, {  -47,  120 }, {  -95,  202 }, 
-    {  -65,  159 }, {   -2,   53 }, {    7,   43 }, {   -2,   67 }, 
-    {    3,   62 }, {    4,   67 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
+    74,  73,  88,  72,  72,  55,  71,  54,  71,  88, 103,  71,  53,  87, 134,  86,  84,  70,  68,  89,  90,  84,  88,  74, 130, 118,  88,
+    120,  87, 149,  70,  52, 118, 133, 116, 114, 129, 132, 162, 115,  51, 115,  66, 120,  74, 115,  87,  89,
   },
   {
-    {   -2,   49 }, {  -13,   81 }, {  -11,   82 }, {  -13,   88 }, 
-    {  -24,  112 }, {   -4,   44 }, {  -17,   77 }, {  -16,   82 }, 
-    {  -19,   89 }, {  -28,  110 }, {  -12,   64 }, {  -11,   70 }, 
-    {  -18,   88 }, {   -6,   67 }, {  -19,   97 }, {  -17,   76 }, 
-    {  -27,  100 }, {  -18,   88 }, {  -13,   84 }, {  -17,   94 }, 
-    {  -11,   73 }, {  -15,   83 }, {  -10,   77 }, {  -10,   80 }, 
-    {  -12,   91 }, {   -8,   63 }, {   -7,   71 }, {   -6,   73 }, 
-    {   -8,   80 }, {   -9,   90 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   14,   20 }, {   -7,   68 }, {   -4,   66 }, {   -8,   76 }, 
-    {  -50,  148 }, {    2,   22 }, {   11,   15 }, {   -4,   49 }, 
-    {  -41,  117 }, {  -60,  149 }, {  -12,   49 }, {   -6,   55 }, 
-    {    1,   44 }, {   -5,   58 }, {  -12,   73 }, {   13,    9 }, 
-    {    5,   26 }, {  -29,  101 }, {    0,   46 }, {  -23,   92 }, 
-    {  -12,   57 }, {    6,   30 }, {   35,   -4 }, {   42,  -24 }, 
-    {   22,   24 }, {   24,    0 }, {   11,   34 }, {    2,   61 }, 
-    {   -5,   75 }, {    4,   62 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
+    152, 119, 103, 118,  87,  70,  70,  53, 118, 134, 118, 101,  68,  85, 101, 116, 100,  68,  67, 136, 168, 147, 150, 120, 115, 118, 119,
+    136, 102,  70,  53,  67, 117, 102, 117, 115, 114,  84, 115,  99, 100,  83, 114, 152, 168, 131, 150, 120,
   },
   {
-    {    0,   43 }, {   -6,   65 }, {   -7,   71 }, {  -31,  117 }, 
-    {  -25,  109 }, {  -20,   76 }, {  -14,   73 }, {  -20,   88 }, 
-    {  -21,   92 }, {   -6,   71 }, {  -19,   73 }, {  -34,  108 }, 
-    {  -27,  101 }, {   -7,   69 }, {   -7,   75 }, {  -18,   77 }, 
-    {   -7,   64 }, {  -20,   91 }, {   -9,   75 }, {   -7,   78 }, 
-    {  -26,   98 }, {  -13,   81 }, {   -6,   69 }, {  -12,   83 }, 
-    {   -2,   70 }, {   -3,   50 }, {   -6,   66 }, {   -7,   73 }, 
-    {   -6,   75 }, {  -11,   91 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {   19,   10 }, {    2,   49 }, {    4,   52 }, {   -4,   69 }, 
-    {  -32,  114 }, {   13,   -1 }, {  -29,   85 }, {  -64,  143 }, 
-    {  -90,  186 }, {   26,    4 }, {  -24,   68 }, {    8,   30 }, 
-    {  -10,   61 }, {  -16,   78 }, {  -27,   96 }, {   31,  -16 }, 
-    {  -12,   54 }, {  -15,   70 }, {  -68,  158 }, {   31,   12 }, 
-    {   -8,   44 }, {  -32,   63 }, {  -36,   81 }, {  -53,  106 }, 
-    {   36,   12 }, {   26,   -5 }, {   19,   17 }, {  -22,  101 }, 
-    {    5,   54 }, {    8,   53 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }, {    0,   64 }, {    0,   64 } 
-  }
+    152, 119, 103, 118,  87,  70,  70,  53,  71, 103, 118, 101,  68,  85, 101, 116, 116,  68,  67, 152, 168, 147, 150, 120, 115, 118, 119,
+    136, 102,  86,  84,  67, 117, 102, 117, 115,  99, 100, 115,  99, 100,  83, 114, 152, 152, 131, 150, 120,
+  },
 };
 
+#if LEVEL_CTX_LUMA_RED
+static const UChar
+INIT_ONE_FLAG[3][NUM_ONE_FLAG_CTX] =
+{
+  {
+    104,  68, 116,  86, 104, 132,  86,  87, 102,  66, 114,  68,  87,  84, 100, 101, 
+      104, 130, 147, 149, 104, 196, 100, 165,
+  },
+  {
+    119, 179, 179, 164, 119,  85, 117, 149, 133,  98, 114, 115, 118,  99, 115, 116,
+      135, 146, 147, 164, 119, 148, 116, 133,
+  },
+  {
+    119, 179, 148, 164, 119,  85, 117, 149, 133,  98, 114, 115, 118,  99, 115, 100,
+      135, 177, 147, 164, 119, 132, 148, 149,
+  },
+};
+
+#if RESTRICT_GR1GR2FLAG_NUMBER
+static const UChar
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =
+{
+  {
+    86, 102, 115, 117, 101, 101,
+  },
+  {
+    84, 117, 83, 100, 84, 117,
+  },
+  {
+    84, 117, 83,  84, 84, 117,
+  },
+};
+#else
+static const UChar
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =
+{
+  {
+    86, 103,  73, 102, 103,  73, 115, 117, 103, 117, 118, 103,
+      101, 103, 104, 101, 167, 121,
+  },
+  {
+    84, 102,  88, 117, 118, 104, 83, 116, 118, 100, 117,  87,
+      84, 118, 120, 117, 150, 120,
+    },
+    {
+      84, 102,  88, 117, 118, 104, 83, 116, 118,  84, 117,  87,
+        84, 118, 120, 117, 150, 120,
+    },
+};
+#endif
+#else
+static const UChar
+INIT_ONE_FLAG[3][NUM_ONE_FLAG_CTX] =
+{
+  {
+    104,  68, 116,  86, 104, 132,  86,  87, 105, 134,  87, 103, 102,  66, 114,  68,  87,  84, 100, 101,  72,  69, 101,  86,
+    104, 130, 147, 149, 104, 196, 100, 165,
+  },
+  {
+    119, 179, 179, 164, 119,  85, 117, 149, 136, 103, 103, 103, 133,  98, 114, 115, 118,  99, 115, 116,  87, 100,  85, 117,
+    135, 146, 147, 164, 119, 148, 116, 133,
+  },
+  {
+    119, 179, 148, 164, 119,  85, 117, 149, 136,  87, 103, 103, 133,  98, 114, 115, 118,  99, 115, 100,  87,  84,  85,  85,
+    135, 177, 147, 164, 119, 132, 148, 149,
+  },
+};
+
+#if RESTRICT_GR1GR2FLAG_NUMBER
+static const UChar
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =
+{
+  {
+    86, 102, 103, 115, 117, 102, 101, 101,
+  },
+  {
+    84, 117, 103, 83, 100, 85, 84, 117, 
+  },
+  {
+    84, 117, 87, 83, 84, 69, 84, 117,
+  },
+};
+#else
+static const UChar
+INIT_ABS_FLAG[3][NUM_ABS_FLAG_CTX] =
+{
+  {
+    86, 103,  73, 102, 103,  73, 103,  88,  89, 115, 117, 103, 117, 118, 103, 102, 103,  72,
+    101, 103, 104, 101, 167, 121,
+  },
+  {
+    84, 102,  88, 117, 118, 104, 103, 119, 136,  83, 116, 118, 100, 117,  87,  85,  86, 103,
+    84, 118, 120, 117, 150, 120,
+  },
+  {
+    84, 102,  88, 117, 118, 104,  87, 119, 136,  83, 116, 118,  84, 117,  87,  69,  86,  87,
+    84, 118, 120, 117, 150, 120,
+  },
+};
+#endif
+#endif
 // initial probability for motion vector predictor index
-static const Short
-INIT_MVP_IDX[3][NUM_MVP_IDX_CTX][2] =
+static const UChar
+INIT_MVP_IDX[3][NUM_MVP_IDX_CTX] =
 {
   {
-    {    0,   64 }, {    0,   64 }
+    CNU, CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }
+    134, CNU,
+    
   },
   {
-    {    0,   64 }, {    0,   64 }
-  }
+    134, CNU,
+    
+  },
 };
 
 // initial probability for ALF flag
-static const Short
-INIT_ALF_FLAG[3][NUM_ALF_FLAG_CTX][2] =
+static const UChar
+INIT_ALF_FLAG[3][NUM_ALF_FLAG_CTX] =
 {
   {
-    {   50,  -48 }
+    118,
+    
   },
   {
-    {   27,  -20 }
+    102,
+    
   },
   {
-    {  -12,   68 }
-  }
+    102,
+    
+  },
 };
 
 // initial probability for ALF side information (unsigned)
-static const Short
-INIT_ALF_UVLC[3][NUM_ALF_UVLC_CTX][2] =
+static const UChar
+INIT_ALF_UVLC[3][NUM_ALF_UVLC_CTX] =
 {
   {
-    {    1,   66 }, {   -3,   77 }
+    120, 119,
+    
   },
   {
-    {   -5,   75 }, {  -14,   94 }
+    119, 119,
+    
   },
   {
-    {   -5,   72 }, {  -30,  122 }
-  }
+    119, 119,
+    
+  },
 };
 
 // initial probability for ALF side information (signed)
-static const Short
-INIT_ALF_SVLC[3][NUM_ALF_SVLC_CTX][2] =
+static const UChar
+INIT_ALF_SVLC[3][NUM_ALF_SVLC_CTX] =
 {
   {
-    {   11,   57 }, {   -1,   62 }, {    0,   64 }
+    139, 119, 124,
+    
   },
   {
-    {    6,   66 }, {   -1,   64 }, {    0,   64 }
+     90, 119, 140,
+    
   },
   {
-    {    1,   73 }, {    2,   61 }, {    0,   64 }
-  }
-};
-#if MTK_SAO
-// initial probability for ALF flag
-static const Short
-INIT_AO_FLAG[3][NUM_AO_FLAG_CTX][2] =
-{
-  {
-    {   50,  -48 }
+     90, 119, 124,
+    
   },
-  {
-    {   27,  -20 }
-  },
-  {
-    {  -12,   68 }
-  }
 };
 
-// initial probability for ALF side information (unsigned)
-static const Short
-INIT_AO_UVLC[3][NUM_AO_UVLC_CTX][2] =
+// initial probability for SAO flag
+static const UChar
+INIT_SAO_FLAG[3][NUM_SAO_FLAG_CTX] =
 {
   {
-    {    1,   66 }, {   -3,   77 }
+    119,
+    
   },
   {
-    {   -5,   75 }, {  -14,   94 }
+    102,
+    
   },
   {
-    {   -5,   72 }, {  -30,  122 }
-  }
+    102,
+    
+  },
 };
 
-// initial probability for ALF side information (signed)
+// initial probability for SAO side information (unsigned)
+static const UChar
+INIT_SAO_UVLC[3][NUM_SAO_UVLC_CTX] =
+{
+  {
+     61, 104,
+    
+  },
+  {
+    168, 120,
+    
+  },
+  {
+    184, 120,
+    
+  },
+};
+
+// initial probability for SAO side information (signed)
+static const UChar
+INIT_SAO_SVLC[3][NUM_SAO_SVLC_CTX] =
+{
+  {
+    171, 119, 199,
+    
+  },
+  {
+    169, 119, 151,
+    
+  },
+  {
+    169, 119, 151,
+    
+  },
+};
+
+#if SAO_UNIT_INTERLEAVING
+static const UChar
+INIT_SAO_MERGE_LEFT_FLAG[3][NUM_SAO_MERGE_LEFT_FLAG_CTX] =
+{
+  {
+    118, 118, 118,
+  },
+  {
+    102, 102, 102,
+    },
+    {
+      102, 102, 102,
+    },
+};
+
+static const UChar
+INIT_SAO_MERGE_UP_FLAG[3][NUM_SAO_MERGE_UP_FLAG_CTX] =
+{
+  {
+    109, 
+  },
+  {
+    102,
+  },
+  {
+    102,
+  },
+};
+static const UChar
+INIT_SAO_TYPE_IDX[3][NUM_SAO_TYPE_IDX_CTX] =
+{
+  {
+    64, 104 
+  },
+  {
+  168, 120
+  },
+  {
+    184, 120
+  },
+};
 static const Short
-INIT_AO_SVLC[3][NUM_AO_SVLC_CTX][2] =
+INIT_SAO_RUN[3][NUM_SAO_RUN_CTX][2] =
 {
   {
     {   11,   57 }, {   -1,   62 }, {    0,   64 }
@@ -1316,54 +1211,70 @@ INIT_AO_SVLC[3][NUM_AO_SVLC_CTX][2] =
 };
 #endif
 
-static const Short
-INIT_TRANS_SUBDIV_FLAG[3][NUM_TRANS_SUBDIV_FLAG_CTX][2] =
+static const UChar
+INIT_TRANS_SUBDIV_FLAG[3][NUM_TRANS_SUBDIV_FLAG_CTX] =
 {
   {
-    {    0,    0 }, {   12,   12 }, {   22,    4 }, {   -2,   49 }, 
-    {    4,   46 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }
+    CNU, 162, 148, 100, CNU, CNU, CNU, CNU, CNU, CNU,
+    
   },
   {
-    {    0,   13 }, {  -28,   89 }, {  -30,   99 }, {  -34,  106 }, 
-    {  -19,   76 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }
+    CNU,  71,  86,  55, CNU, CNU, CNU, CNU, CNU, CNU,
+    
   },
   {
-    {  -11,   38 }, {  -31,   88 }, {  -42,  118 }, {  -47,  130 }, 
-    {  -21,   73 }, {    0,   64 }, {    0,   64 }, {    0,   64 }, 
-    {    0,   64 }, {    0,   64 }
-  }
+    CNU, 102,  86,  86, CNU, CNU, CNU, CNU, CNU, CNU,
+    
+  },
 };
+#endif
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 static const Short
-INIT_INTRA_DMM[3][NUM_DMM_CTX][2] =
+INIT_DMM_FLAG[3][NUM_DMM_FLAG_CTX] =
 {
- {
-   {   0,   64 }, {   0,   64 }
- },
- {
-   {   0,   64 }, {   0,   64 }
- },
- {
-   {   0,   64 }, {   0,   64 }
- }
+  {
+    CNU
+  },
+  {
+    CNU
+  },
+  {
+    CNU
+  }
 };
 
 static const Short
-INIT_INTRA_WEDGELET[3][NUM_WEDGE_CTX][2] = 
+INIT_DMM_MODE[3][NUM_DMM_MODE_CTX] =
 {
   {
-    {   0,   64 }, {   0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU
   },
   {
-    {   0,   64 }, {   0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU
   },
   {
-    {   0,   64 }, {   0,   64 }, {    0,   64 }, {    0,   64 }
+    CNU
+  }
+};
+
+static const Short
+INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] = 
+{
+  {
+    CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU
   }
 };
 #endif
+
+//! \}
+
+
 #endif
 

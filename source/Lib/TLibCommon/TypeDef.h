@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -38,302 +38,311 @@
 #ifndef _TYPEDEF__
 #define _TYPEDEF__
 
+//! \ingroup TLibCommon
+//! \{
 
-#define BITSTREAM_EXTRACTION            1
-#define FLEX_CODING_ORDER               1
-#define DISABLE_FCO_FOR_VSO             0
+#define SONY_COLPIC_AVAILABILITY          1
 
-#define SONY_COLPIC_AVAILABILITY        1
+#define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
+#define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
 
-//>>>>> HHI 3DV tools >>>>>
-#define HHI_INTER_VIEW_MOTION_PRED      1   // inter-view motion parameter prediction
-#define HHI_INTER_VIEW_RESIDUAL_PRED    1   // inter-view residual prediction
-#define HHI_FULL_PEL_DEPTH_MAP_MV_ACC   1   // full-pel mv accuracy for depth maps
-#define HHI_MPI                         1   // motion parameter inheritance from texture picture for depth map coding
-#define HHI_INTERVIEW_SKIP              1   // skipping of residual for renderable regions
-#define HHI_INTERVIEW_SKIP_LAMBDA_SCALE 1   // scaling of lambda in cost calculation in rederable regions
-#define HHI_VSO                         1   // view synthesis optimization
-#define HHI_VSO_COLOR_PLANES            1   // view synthesis optimization in color planes
-#define HHI_VSO_DIST_INT                1   // view synthesis optimization integer distorition in rdo process
-#define HHI_VSO_LS_TABLE                1   // table based lambda scaling
-#define HHI_VSO_PRINT_DIST              0   // print VSO distortion instead of depth distrotion
+#define HHI_VSO                           1
+#define HHI_VSO_LS_TABLE                  1
+#define HHI_VSO_DIST_INT                  1
 
-#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE && !HHI_INTERVIEW_SKIP
-  #error "HHI_INTERVIEW_SKIP_LAMBDA_SCALE cannot be enabled if HHI_INTERVIEW_SKIP is not"
+#define HHI_INTERVIEW_SKIP                1
+#define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
+
+#define HHI_DMM_WEDGE_INTRA 1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
+#define HHI_DMM_PRED_TEX    1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
+
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#define DMM_WEDGEMODEL_MIN_SIZE           4
+#define DMM_WEDGEMODEL_MAX_SIZE          32
+#define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
 #endif
 
-#define HHI_DMM_WEDGE_INTRA             1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
-#define HHI_DMM_PRED_TEX                1   // depth model model dependent on texture (inter-component Wedgelet and Contour prediction )
-
-#define HHI_NO_LowDelayCoding           0   // old-fashioned encoder control, should be adapted to hm5.0
-//<<<<< HHI 3DV tools <<<<<
+#define HHI_MPI                         1   // motion parameter inheritance from texture picture for depth map coding
+#define HHI_MPI_MERGE_POS               0
+#define HHI_FULL_PEL_DEPTH_MAP_MV_ACC   1   // full-pel mv accuracy for depth maps
 
 
 
-////////////////////////////
-// AHG18 Weighted Prediction defines section start
-////////////////////////////
-#define WEIGHT_PRED           ///< enable AVC based weighted prediction
-
-//////////////////////////
-// AHG18 Weighted Prediction defines section end
-//////////////////////////
-
-////////////////////////////
-// JCT-VC E start
-////////////////////////////
-
-#define E253                              1
-
-////////////////////////////
-// JCT-VC E end
-////////////////////////////
 
 
+#define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
+#define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point
+#define NO_COMBINED_PARALLEL              1 ///< Disallow any combined usage of parallel tools among Tile, EntropySlice and Wavefont
 
-#define HHI_DISABLE_INTER_NxN_SPLIT       1           ///< TN: disable redundant use of pu-mode NxN for CTBs larger 8x8 (inter only)
-#define HHI_RMP_SWITCH                    0
+#define LOSSLESS_CODING                   1  ///< H0530: lossless and lossy (mixed) coding
+#if LOSSLESS_CODING
+#define SEQUENCE_LEVEL_LOSSLESS           0  ///< H0530: used only for sequence or frame-level lossless coding
+#endif
 
-#define HHI_RQT_FORCE_SPLIT_NxN           0           ///< MSHK: force split flags of residual quadtree for NxN PUs such that transform blocks are guaranteed to not span NxN PUs
-#define HHI_RQT_FORCE_SPLIT_RECT          0           ///< MSHK: force split flags of residual quadtree for rectangular PUs such that transform blocks are guaranteed to not span rectangular PUs
+#define PARALLEL_MERGE  1                   //< H0082 parallel merge/skip
+#define LOG2_PARALLEL_MERGE_LEVEL_MINUS2 0  //< H0082 parallel merge level 0-> 4x4, 1-> 8x8, 2->16x16, 3->32x32, 4->64x64
+#if PARALLEL_MERGE && LOG2_PARALLEL_MERGE_LEVEL_MINUS2
+#define CU_BASED_MRG_CAND_LIST           1  //< H0240: single merge candidate list for all PUs inside a 8x8 CU conditioned on LOG2_PARALLEL_MERGE_LEVEL_MINUS2 > 0
+#endif
+#define MVP_AT_ENTROPYSLICE_BOUNDARY  1     //< H0362 enable motion prediction accross entropy slice boundary
+
+#define FAST_DECISION_FOR_MRG_RD_COST  1 ////< H0178: Fast Decision for Merge 2Nx2N RDCost
+
+#define PIC_CROPPING              1 ///< Picture cropping and size constraints
+#define NAL_REF_FLAG              1 ///< Change nal_ref_idc to nal_ref_flag (JCTVC-F463)
+#define REMOVE_DIV_OPERATION      1 ///< H0238: Simplified intra horizontal and vertical filtering
+#define LOGI_INTRA_NAME_3MPM      1  ///< H0407: logical Intra mode naming (sequential angular mode numbering) and 3 MPM mode coding
+
+#define LEVEL_CTX_LUMA_RED        1  ///<H0130: Luma level context reduction
+#define REMOVE_INFER_SIGGRP       1  ///<H0131: Remove inferred significant_coeff_group_flag
+
+#define SET_MERGE_TMVP_REFIDX     1  ///< H0278/H0199: Setting the merge TMVP refidx to 0 for the non-first partition
+
+#define MULTILEVEL_SIGMAP_EXT     1  ///< H0526: multi-level significance map extended to smaller TUs
+#define MULTIBITS_DATA_HIDING     1  ///< H0481: multiple sign bit hiding
+
+#define DEQUANT_CLIPPING           1  ///< H0312/H0541: transformed coefficients clipping before de-quantization
+
+#define REMOVE_NON_SCALED         1 ///< H0164/H0250: Removal of non-scaled merge candidate
+#define MRG_IDX_CTX_RED           1 ///< H0251: Merge index context reduction
+#define SIMP_MRG_PRUN             1 ///< H0252: simplification of merge pruning process
+
+#define AMVP_PRUNING_SIMPLIFICATION         1     ///H0316: simplify the pruning process of AMVP by exempting the temporal candidate
+#define AMVP_ZERO_CHECKING_REMOVAL          1     ///H0239/H0316: remove zero motion vector checking of AMVP
+
+#define H0111_MVD_L1_ZERO         1  ///< H0111: modification of bi-prediction
+#define DISABLING_CLIP_FOR_BIPREDME         1  ///< Ticket #175
+
+#define CLIPSCALEDMVP               1  ///< H0216: Clipping scaled MV to 16 bit
+
+#define UNIFIED_TRANSFORM_TREE      1   ///< H0123: unified tree structure for TU
+
+#define SIGMAP_CTX_SUBBLOCK       1 ///< H0290: 4x4 sub-block based region for significant_flag context selection
+
+#define SIGMAP_CONST_AT_HIGH_FREQUENCY      1      ///< H0095 method2.1: const significance map at high freaquency
+
+#define LAST_CTX_REDUCTION        1  ///< H0537/H514: contexts reduction for last position coding
+
+#define AMP_CTX                   1 ///<H0545: context reduction for asymmetric partition
+
+#define RESTRICT_GR1GR2FLAG_NUMBER    1 ///< H0554: Throughput improvement of CABAC coefficients level coding
+#if RESTRICT_GR1GR2FLAG_NUMBER    //
+#define C1FLAG_NUMBER               8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
+#define C2FLAG_NUMBER               1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
+#endif
+
+#define EIGHT_BITS_RICE_CODE        1 ///< H0498 : 8 bits rice codes
+
+#define SAO_UNIT_INTERLEAVING      1   ///< H0273
+#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_1 0  ///< disable the encoder constraint that does not test SAO/BO mode for chroma in interleaved mode
+#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_2 0  ///< disable the encoder constraint that reduce the range of SAO/EO for chroma in interleaved mode
+#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3 0  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
+
+#define ALF_SINGLE_FILTER_SHAPE    1     //< !!! H0068: Single filter type : 9x7 cross + 3x3 square
+
+#define ALF_16_BA_GROUPS        1     ///< H0409 16 BA groups
+#define LCU_SYNTAX_ALF          1     ///< H0274 LCU-syntax ALF
+#define ALF_CHROMA_COEF_PRED_HARMONIZATION 1 ///< H0483: ALF chroma coeff pred harmonization
+
+#define CABAC_LINEAR_INIT       1     ///< H0535 : linear CABAC initialization
+
+#define COLLOCATED_REF_IDX      1     ///< H0442: signal collocated reference index
+
+#define UNIFIED_TRANSFORM       1     ///< H0492: unify square and non-square transform
+
+#define MAX_NUM_SPS                32
+#define MAX_NUM_PPS                256
+#define MAX_NUM_APS                32         //< !!!KS: number not defined in WD yet
+
+#define MRG_MAX_NUM_CANDS_SIGNALED         5   //<G091: value of maxNumMergeCand signaled in slice header
+
+#define WEIGHTED_CHROMA_DISTORTION  1   ///< F386: weighting of chroma for RDO
+#define RDOQ_CHROMA_LAMBDA          1   ///< F386: weighting of chroma for RDOQ
+#define ALF_CHROMA_LAMBDA           1   ///< F386: weighting of chroma for ALF
+#define SAO_CHROMA_LAMBDA           1   ///< F386: weighting of chroma for SAO
+
+#define MIN_SCAN_POS_CROSS          4
+
+#define FAST_BIT_EST                1   ///< G763: Table-based bit estimation for CABAC
+
+#define G519_TU_AMP_NSQT_HARMONIZATION  1   ///< G519: Harmonization of implicit TU, AMP and NSQT
+
+#define MLS_GRP_NUM                         64     ///< G644 : Max number of coefficient groups, max(16, 64)
+#define MLS_CG_SIZE                         4      ///< G644 : Coefficient group size of 4x4
+
+#define ADAPTIVE_QP_SELECTION               1      ///< G382: Adaptive reconstruction levels, non-normative part for adaptive QP selection
+#if ADAPTIVE_QP_SELECTION
+#define ARL_C_PRECISION                     7      ///< G382: 7-bit arithmetic precision
+#define LEVEL_RANGE                         30     ///< G382: max coefficient level in statistics collection
+#endif
+
+
+#define CHROMA_MODE_CODING                   1     //H0326/H0475 : 2-length fixed, bypass coding for chroma intra prediction mode
+
+#define NSQT_LFFIX                           1     ///< Bug fix related to NSQT and deblocking filter
+#define NS_HAD                               1
+
+#define APS_BITS_FOR_SAO_BYTE_LENGTH 12
+#define APS_BITS_FOR_ALF_BYTE_LENGTH 8
+
+#define H0736_AVC_STYLE_QP_RANGE             1    ///< H0736: AVC style qp range and wrapping.
+#define H0204_QP_PREDICTION                  1    ///< H0204: improved QP prediction
+
 #define HHI_RQT_INTRA_SPEEDUP             1           ///< tests one best mode with full rqt
 #define HHI_RQT_INTRA_SPEEDUP_MOD         0           ///< tests two best modes with full rqt
 
-#define PART_MRG                          1            // If the number of partitions is two and size > 8, only merging mode is enabled for the first partition & do not code merge_flag for the first partition
-#define HHI_MRG_SKIP                      1            // (JCTVC-E481 - merge skip) replaces the AMVP based skip by merge based skip (E481 - MERGE skip)
+#define BURST_IPCM                        1           ///< H0051: Burst IPCM
 
 #if HHI_RQT_INTRA_SPEEDUP_MOD && !HHI_RQT_INTRA_SPEEDUP
 #error
 #endif
 
-#if ( HHI_RQT_FORCE_SPLIT_NxN || HHI_RQT_FORCE_SPLIT_RECT)
-#define HHI_RQT_FORCE_SPLIT_ACC2_PU       1
-#else
-#define HHI_RQT_FORCE_SPLIT_ACC2_PU       0
+#define H0137_0138_LIST_MODIFICATION      1           // Enabled reference picture lists combination (H0137) and reference picture list modification (H0138) updates
+#if !H0137_0138_LIST_MODIFICATION
+#error "H0137_0138_LIST_MODIFICATION must be enabled for multi-view coding."
 #endif
 
-// COLOCATED PREDICTOR
-// FOR MERGE
-#define MRG_NEIGH_COL                     1           ///< use of colocated MB in MERGE
-#define FT_TCTR_MRG                       1           ///< central colocated in MERGE
-#if !FT_TCTR_MRG
-#define PANASONIC_MERGETEMPORALEXT        1           ///<
-#endif
-#define MTK_TMVP_H_MRG                    1           ///< (JCTVC-E481 - D125 2.1) right-bottom collocated for merge
-#define PANASONIC_MRG_TMVP_REFIDX         1           ///< (JCTVC-E481 - D274 (2) ) refidx derivation for merge TMVP
-// FOR AMVP
-#define AMVP_NEIGH_COL                    1           ///< use of colocated MB in AMVP
-#define FT_TCTR_AMVP                      1           ///< central colocated in AMVP
-#if !FT_TCTR_AMVP
-#define PANASONIC_AMVPTEMPORALEXT         1           ///<
-#endif
-#define MTK_TMVP_H_AMVP                   1           ///< (JCTVC-E481 - D125 2.1) right-bottom collocated for amvp
-// FOR BOTH
-#define PANASONIC_AMVPTEMPORALMOD         1           ///< (JCTVC-E481 - D125 2.4' / D274 3')
-#define AMVP_BUFFERCOMPRESS               1           ///< motion vector buffer compression
+#define VERBOSE_RATE 0                               ///< Print additional rate information in encoder
+
 #define AMVP_DECIMATION_FACTOR            4
-#define MV_COMPRESS_MODE_REFIDX           1           ///< (JCTVC-E147) compress all inter prediction parameters according to 1)
 
-#define HIGH_ACCURACY_BI                  1          // High precision bi-prediction JCTVC-D321
-#define REMOVE_INTERMEDIATE_CLIPPING      1          // No intermediate clipping in bi-prediction JCTVC-E242
-
-////////////////
-// E494 (E227/E338/E344/E489/E494): PCP SIGMAP + REDUCED CONTEXTS
-////////////////
-
-#define PCP_SIGMAP_SIMPLE_LAST            1
-#define SIMPLE_CONTEXT_SIG                1
-
-
-#define QC_MOD_LCEC                       1           // JCTVC-D374: modified LCEC coeff. coding
-#define LCEC_INTRA_MODE                   1           // JCTVC-D366: improved luma intra mode coding
-#define QC_MOD_LCEC_RDOQ                  1           // JCTVC-D374: improved RDOQ
-#define QC_LCEC_INTER_MODE                1
-#define QC_MDIS                           1           // JCTVC-D282: enable mode dependent intra smoothing
-#define QC_MDCS                           1           // JCTVC-D393: mode dependent coefficients coding
-#if QC_MOD_LCEC
-#define RUNLEVEL_TABLE_CUT                1           // JCTVC-E384: Run-Level table size reduction
-#if RUNLEVEL_TABLE_CUT
-#define CAVLC_COEF_LRG_BLK                1           // JCTVC-E383: enable large block coeff. coding
-#endif
-#endif
-
-
-#define ENABLE_FORCECOEFF0  0
-
-/* Rounding control */
-//#define ROUNDING_CONTROL_BIPRED ///< From JCTVC-B074 This part of the code is not needed anymore : KU
-#define TRANS_PRECISION_EXT     ///< From JCTVC-B074
-
-#define HHI_RQT_DISABLE_SUB                   0           ///< disabling subtree whose node size is smaller than partition size
+#define SCAN_SET_SIZE                     16
+#define LOG2_SCAN_SET_SIZE                4
 
 #define FAST_UDI_MAX_RDMODE_NUM               35          ///< maximum number of RD comparison in fast-UDI estimation loop
 
-#define SAMSUNG_FAST_UDI_MODESET              0           ///< 0: {9,9,4,4,5} (default) and 1: {9,9,9,9,5} for {4x4,8x8,16x16,32x32,64x64}
-
 #define ZERO_MVD_EST                          0           ///< Zero Mvd Estimation in normal mode
 
-#define LM_CHROMA                             1           // JCTVC-E266: Chroma intra prediction based on luma signal
+#define NUM_INTRA_MODE 36
+#define LM_CHROMA_IDX  35
 
-#define UNIFY_INTER_TABLE                     1           // JCTVC-E381 CAVLC: Inter pred coding
-
-#define DCM_RDCOST_TEMP_FIX //Enables temporary bug fixes to RD cost computation
-
-#define DCM_DECODING_REFRESH              1           ///< enable/disable decoding refresh (IDR and CDR)
-#if DCM_DECODING_REFRESH
-#define DCM_SKIP_DECODING_FRAMES          1           ///< enable/disable the random access by the decoder
-#endif
-
-#define DCM_SIMPLIFIED_MVP                1           ///< enable/disable the simplified motion vector prediction(D231)
-#if DCM_SIMPLIFIED_MVP
-#define MTK_AMVP_SMVP_DERIVATION          1              ///< (JCTVC-E481 - D125 2.1) amvp spatial candidate derivation
-#define TI_AMVP_SMVP_SIMPLIFIED           1              ///< (JCTVC-E481 - F)amvp spatial candidate simplified scanning
-#endif
-
-#define DCM_COMB_LIST                  1           ///< Use of combined list for uni-prediction in B-slices
-
-#define ADD_PLANAR_MODE                   1           ///< enable/disable Planar mode for intra prediction (JCTVC-E321)
-#if ADD_PLANAR_MODE
-#define NUM_INTRA_MODE                    35
-#define PLANAR_IDX                        (NUM_INTRA_MODE-1)
-#endif
-
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-#define DMM_WEDGEMODEL_MIN_SIZE           4            
-#define DMM_WEDGEMODEL_MAX_SIZE          32
-#define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4            
-
-#if ADD_PLANAR_MODE
-#define  MAX_MODE_ID_INTRA_DIR            34
-#else
-#define  MAX_MODE_ID_INTRA_DIR            33
-#endif
 #if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
 enum MODE_IDX
 {
-  DMM_WEDGE_FULL_IDX         = MAX_MODE_ID_INTRA_DIR+1,
-  DMM_WEDGE_FULL_D_IDX       = MAX_MODE_ID_INTRA_DIR+2,
-  DMM_WEDGE_PREDTEX_IDX      = MAX_MODE_ID_INTRA_DIR+3,
-  DMM_WEDGE_PREDTEX_D_IDX    = MAX_MODE_ID_INTRA_DIR+4,
-  DMM_CONTOUR_PREDTEX_IDX    = MAX_MODE_ID_INTRA_DIR+5,
-  DMM_CONTOUR_PREDTEX_D_IDX  = MAX_MODE_ID_INTRA_DIR+6,
-  DMM_WEDGE_PREDDIR_IDX      = MAX_MODE_ID_INTRA_DIR+7,
-  DMM_WEDGE_PREDDIR_D_IDX    = MAX_MODE_ID_INTRA_DIR+8
+  DMM_WEDGE_FULL_IDX         = NUM_INTRA_MODE,
+  DMM_WEDGE_FULL_D_IDX       = NUM_INTRA_MODE+1,
+  DMM_WEDGE_PREDTEX_IDX      = NUM_INTRA_MODE+2,
+  DMM_WEDGE_PREDTEX_D_IDX    = NUM_INTRA_MODE+3,
+  DMM_CONTOUR_PREDTEX_IDX    = NUM_INTRA_MODE+4,
+  DMM_CONTOUR_PREDTEX_D_IDX  = NUM_INTRA_MODE+5,
+  DMM_WEDGE_PREDDIR_IDX      = NUM_INTRA_MODE+6,
+  DMM_WEDGE_PREDDIR_D_IDX    = NUM_INTRA_MODE+7
 };
+#define NUM_DMM_MODE 8
 #elif HHI_DMM_WEDGE_INTRA && !HHI_DMM_PRED_TEX
 enum MODE_IDX
 {
-  DMM_WEDGE_FULL_IDX         = MAX_MODE_ID_INTRA_DIR+1,
-  DMM_WEDGE_FULL_D_IDX       = MAX_MODE_ID_INTRA_DIR+2,
-  DMM_WEDGE_PREDDIR_IDX      = MAX_MODE_ID_INTRA_DIR+3,
-  DMM_WEDGE_PREDDIR_D_IDX    = MAX_MODE_ID_INTRA_DIR+4
+  DMM_WEDGE_FULL_IDX         = NUM_INTRA_MODE,
+  DMM_WEDGE_FULL_D_IDX       = NUM_INTRA_MODE+1,
+  DMM_WEDGE_PREDDIR_IDX      = NUM_INTRA_MODE+2,
+  DMM_WEDGE_PREDDIR_D_IDX    = NUM_INTRA_MODE+3
 };
+#define NUM_DMM_MODE 4
 #elif !HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
 enum MODE_IDX
 {
-  DMM_WEDGE_PREDTEX_IDX      = MAX_MODE_ID_INTRA_DIR+1,
-  DMM_WEDGE_PREDTEX_D_IDX    = MAX_MODE_ID_INTRA_DIR+2,
-  DMM_CONTOUR_PREDTEX_IDX    = MAX_MODE_ID_INTRA_DIR+3,
-  DMM_CONTOUR_PREDTEX_D_IDX  = MAX_MODE_ID_INTRA_DIR+4,
+  DMM_WEDGE_PREDTEX_IDX      = NUM_INTRA_MODE,
+  DMM_WEDGE_PREDTEX_D_IDX    = NUM_INTRA_MODE+1,
+  DMM_CONTOUR_PREDTEX_IDX    = NUM_INTRA_MODE+2,
+  DMM_CONTOUR_PREDTEX_D_IDX  = NUM_INTRA_MODE+3,
 };
-#endif
+#define NUM_DMM_MODE 4
 #endif
 
-#define TSB_ALF_HEADER                 1           // Send ALF ON/OFF flag in slice header
 #define IBDI_DISTORTION                0           ///< enable/disable SSE modification when IBDI is used (JCTVC-D152)
 #define FIXED_ROUNDING_FRAME_MEMORY    0           ///< enable/disable fixed rounding to 8-bitdepth of frame memory when IBDI is used
 
-#define MS_LCEC_ONE_FRAME               1           // change the initial table in LCEC when there is up to one reference frame in each list, JCTVC-D141
-#define MS_LCEC_LOOKUP_TABLE_MAX_VALUE  1           // use the information of the max position in the lookup table, JCTVC-D141
-#define MS_LCEC_LOOKUP_TABLE_EXCEPTION  1           // deal with the case when the number of reference frames is greater than 2, JCTVC-D141
-#define MS_LCEC_UNI_EXCEPTION_THRES     1           // for GPB case, uni-prediction, > MS_LCEC_UNI_EXCEPTION_THRES is exception
-#define CAVLC_COUNTER_ADAPT             1          // counter based CAVLC adaptation, JCTVC-E143
-#if CAVLC_COUNTER_ADAPT
-#define CAVLC_RQT_CBP                   1           //CAVLC coding of cbf and split flag, JCTVC-E404
-#endif
+#define WRITE_BACK                      1           ///< Enable/disable the encoder to replace the deltaPOC and Used by current from the config file with the values derived by the refIdc parameter.
+#define PRINT_RPS_INFO                  0           ///< Enable/disable the printing of bits used to send the RPS.
+                                                    // using one nearest frame as reference frame, and the other frames are high quality (POC%4==0) frames (1+X)
+                                                    // this should be done with encoder only decision
+                                                    // but because of the absence of reference frame management, the related code was hard coded currently
+#define LTRP_MULT                       1           ///< enable/disable multiple long term reference pictures with same POC LSB
 
+#define OL_FLUSH 1          // Set to 1 to enable Wavefront Flush.
+#define OL_FLUSH_ALIGN 0    // Align flush to byte boundary.  This preserves byte operations in CABAC (faster) but at the expense of an average
+                            // of 4 bits per flush.
+                            // Setting to 0 will slow cabac by an as yet unknown amount.
+                            // This is here just to perform timing tests -- OL_FLUSH_ALIGN should be 0 for WPP.
 
-#define AVOID_ZERO_MERGE_CANDIDATE      1           // (JCTVC-E146/E118) insert zero MV if no merge candidates are available
-#define CHANGE_MERGE_CONTEXT            1           // (JCTVC-E146/E118) change merge flag context derivation
-#define CHANGE_GET_MERGE_CANDIDATE      1           // (JCTVC-E146/E118) merge flag parsing independent of number of merge candidates
-#if CHANGE_GET_MERGE_CANDIDATE && !CHANGE_MERGE_CONTEXT
-#error CHANGE_GET_MERGE_CANDIDATE can only be defined with CHANGE_MERGE_CONTEXT
-#endif
-
-#define MTK_DISABLE_INTRA_NxN_SPLIT       1           ///< Disable use of PUs-mode NxN for CUs larger 8x8 (intra only)
-#define MTK_NONCROSS_INLOOP_FILTER        1           ///< Allow non-cross-slice-boundary in-loop filtering, including DB & ALF (JCTVC-D128)
-
-#define RVM_VCEGAM10 1 // RVM model proposed in VCEG-AM10
-#if RVM_VCEGAM10
 #define RVM_VCEGAM10_M 4
-#endif
 
-#define MTK_DCM_MPM 1 // MostProbableModeSignaling
+#define PLANAR_IDX             0
+#if LOGI_INTRA_NAME_3MPM
+#define VER_IDX                26                    // index for intra VERTICAL   mode
+#define HOR_IDX                10                    // index for intra HORIZONTAL mode
+#define DC_IDX                 1                     // index for intra DC mode
+#else
+#define DC_IDX                 3                     // index for intra DC mode
+#endif
+#define NUM_CHROMA_MODE        6                     // total number of chroma modes
+#define DM_CHROMA_IDX          36                    // chroma mode index for derived from luma intra mode
+
 
 #define FAST_UDI_USE_MPM 1
-#define SONY_SIG_CTX 1
-#define SNY_DQP                          1           ///< syntax change of dQP (JCT-VC D258)
 
-#define TI_ALF_MAX_VSIZE_7 1
-
-#define CHROMA_CODEWORD 1                             ///< enable new intra chroma mode encoding by setting to 1. setting to 0 should yield same results as TMuC 0.9
-#define CHROMA_CODEWORD_SWITCH  1                     ///< Switch the places of the last two codewords
+#define RDO_WITHOUT_DQP_BITS              0           ///< Disable counting dQP bits in RDO-based mode decision
 
 #define FULL_NBIT 0 ///< When enabled, does not use g_uiBitIncrement anymore to support > 8 bit data
 
-/////////////////////////////////
-// AHG SLICES defines section start
-/////////////////////////////////
+#define FIXED_NUMBER_OF_TILES_SLICE_MODE                1
 #define AD_HOC_SLICES_FIXED_NUMBER_OF_LCU_IN_SLICE      1          ///< OPTION IDENTIFIER. mode==1 -> Limit maximum number of largest coding tree blocks in a slice
 #define AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE    2          ///< OPTION IDENTIFIER. mode==2 -> Limit maximum number of bins/bits in a slice
+#if FIXED_NUMBER_OF_TILES_SLICE_MODE
+#define AD_HOC_SLICES_FIXED_NUMBER_OF_TILES_IN_SLICE    3
+#endif
 
 // Entropy slice options
 #define SHARP_FIXED_NUMBER_OF_LCU_IN_ENTROPY_SLICE            1          ///< OPTION IDENTIFIER. Limit maximum number of largest coding tree blocks in an entropy slice
 #define SHARP_MULTIPLE_CONSTRAINT_BASED_ENTROPY_SLICE         2          ///< OPTION IDENTIFIER. Limit maximum number of bins/bits in an entropy slice
-/////////////////////////////////
-// AHG SLICES defines section end
-/////////////////////////////////
 
-#define CONSTRAINED_INTRA_PRED            1           // JCTVC-D086: constrained intra prediction
+#define LOG2_MAX_NUM_COLUMNS_MINUS1        7
+#define LOG2_MAX_NUM_ROWS_MINUS1           7
+#define LOG2_MAX_COLUMN_WIDTH              13
+#define LOG2_MAX_ROW_HEIGHT                13
 
-#define MTK_SAO                           1           // JCTVC-E049: Sample adaptive offset
+#define MAX_MARKER_PER_NALU                 1000
 
-#define MQT_ALF_NPASS                       1
-
-#define MQT_BA_RA                        1  // JCTVC-E323+E046
-#if MQT_BA_RA
-#define VAR_SIZE_H           4
-#define VAR_SIZE_W           4
-#define NO_VAR_BIN          16
-#endif
-
-#if QC_MDIS
-#define MN_MDIS_SIMPLIFICATION       1       ///< JCTVC-E069: simplification of MDIS
-#endif
-#define MN_DC_PRED_FILTER            1       ///< JCTVC-E069: DC prediction samples filtering
-
-#define MVD_CTX            1           // JCTVC-E324: Modified context selection for MVD
-#define PARALLEL_DEBLK_DECISION      1 // JCTC-E224: Parallel decisions
-#define PARALLEL_MERGED_DEBLK        1 // JCTC-E224, JCTVC-E181: Parallel decisions + Parallel filtering
-#define REFERENCE_SAMPLE_PADDING                1   // JCTVC-E488 padding of unavailable reference samples for intra prediction
-
-#define E243_CORE_TRANSFORMS                    1
-#if E243_CORE_TRANSFORMS
 #define MATRIX_MULT                             0   // Brute force matrix multiplication instead of partial butterfly
-#endif
 
-// Discrete Sine Transform (DST) Type - 7
-// Currently DST operates with E-243 only
-#define INTRA_DST_TYPE_7                      1           // JCTVC-E125 4x4 DST
-#if INTRA_DST_TYPE_7
 #define REG_DCT 65535
-#if !E243_CORE_TRANSFORMS                   // E243_CORE_TRANSFORMS should be ON when DST is used
-#error "E243_CORE_TRANSFORMS should be ON"
+
+#define AMP_SAD                               1           ///< dedicated SAD functions for AMP
+#define AMP_ENC_SPEEDUP                       1           ///< encoder only speed-up by AMP mode skipping
+#if AMP_ENC_SPEEDUP
+#define AMP_MRG                               1           ///< encoder only force merge for AMP partition (no motion search for AMP)
 #endif
+
+#define SCALING_LIST_OUTPUT_RESULT    0 //JCTVC-G880/JCTVC-G1016 quantization matrices
+#define SCALING_LIST                  1 //JCTVC-H0230/H0461/H0237
+
+#define DEFAULT_DC                    1 // JCTVC-H0242
+
+#define RPS_IN_SPS                    1 // Adopted during discussion of JCTVC-H0423
+
+#define H0412_REF_PIC_LIST_RESTRICTION 1
+
+#define H0566_TLA                     1
+#if H0566_TLA
+#define H0566_TLA_SET_FOR_SWITCHING_POINTS 1
 #endif
 
+#define H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER 1
 
+#define DBL_H0473_PART_1          1   //Deblocking filtering simplification
+#define DBL_CONTROL               1   //PPS deblocking_filter_control_present_flag (JCTVC-H0398); condition for inherit params flag in SH (JCTVC-H0424)
+#define DBL_STRONG_FILTER_CLIP    1   //Introduction of strong filter clipping in deblocking filter (JCTVC-H0275)
 
+#define CABAC_INIT_FLAG             1 // JCTVC-H0540
+#define CABAC_INIT_PRESENT_FLAG     1
+
+#define H0388                       1 // JCTVC-H0388
+
+#define TILES_WPP_ENTRY_POINT_SIGNALLING        1 // JCTVC-H0556. Assumes either Tiles is ON or WPP is ON (not both simultaneously).
+#define REMOVE_TILE_DEPENDENCE                  1 // remove tile_boundary_independence_flag and dependent tiles
+#define TILES_OR_ENTROPY_SYNC_IDC               1 // tiles_or_entropy_coding_sync_idc flag
+#define COMPLETE_SLICES_IN_TILE     1 // Among the constraints between slices and tiles, all slices within a tile shall be complete (JCTVC-H0348/JCTVC-H0463) for SliceMode 1&2
+#define WPP_SIMPLIFICATION          1 // JCTVC-H0349/JCTVC-0517
 // ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================
@@ -347,8 +356,6 @@ typedef       short               Short;
 typedef       unsigned short      UShort;
 typedef       int                 Int;
 typedef       unsigned int        UInt;
-typedef       long                Long;
-typedef       unsigned long       ULong;
 typedef       double              Double;
 
 // ====================================================================================================================
@@ -380,7 +387,6 @@ typedef       Short           Pel;        ///< 16-bit pixel type
 typedef       Int             TCoeff;     ///< transform coefficient
 
 
-
 // ====================================================================================================================
 // Define Distortion Types
 // ====================================================================================================================
@@ -399,46 +405,51 @@ typedef       UInt             Dist;       ///< RDO distortion
 /// parameters for adaptive loop filter
 class TComPicSym;
 
-#if MTK_SAO
-
 #define NUM_DOWN_PART 4
 
-enum QAOTypeLen
+enum SAOTypeLen
 {
   SAO_EO_LEN    = 4,
-  SAO_EO_LEN_2D = 6,
+#if SAO_UNIT_INTERLEAVING
+  SAO_BO_LEN    = 4,
+  SAO_MAX_BO_CLASSES = 32
+#else
   SAO_BO_LEN    = 16
+#endif
 };
 
-enum QAOType
+enum SAOType
 {
   SAO_EO_0 = 0,
   SAO_EO_1,
   SAO_EO_2,
   SAO_EO_3,
+#if SAO_UNIT_INTERLEAVING
+  SAO_BO,
+#else
   SAO_BO_0,
   SAO_BO_1,
+#endif
   MAX_NUM_SAO_TYPE
 };
 
 typedef struct _SaoQTPart
 {
+#if !SAO_UNIT_INTERLEAVING
   Bool        bEnableFlag;
+#endif
   Int         iBestType;
   Int         iLength;
+#if SAO_UNIT_INTERLEAVING
+  Int         bandPosition ;
+  Int         iOffset[4];
+#else
   Int         iOffset[32];
-
+#endif
   Int         StartCUX;
   Int         StartCUY;
   Int         EndCUX;
   Int         EndCUY;
-
-  Int         part_xs;
-  Int         part_xe;
-  Int         part_ys;
-  Int         part_ye;
-  Int         part_width;
-  Int         part_height;
 
   Int         PartIdx;
   Int         PartLevel;
@@ -448,16 +459,9 @@ typedef struct _SaoQTPart
   Int         DownPartsIdx[NUM_DOWN_PART];
   Int         UpPartIdx;
 
-  Int*        pSubPartList;
-  Int         iLengthSubPartList;
-
-  Bool        bBottomLevel;
   Bool        bSplit;
-  //    Bool        bAvailable;
 
   //---- encoder only start -----//
-  Int64***    pppiCorr; //[filt_type][corr_row][corr_col]
-  Int**       ppCoeff;  //[filt_type][coeff]
   Bool        bProcessed;
   Double      dMinCost;
   Int64       iMinDist;
@@ -465,73 +469,116 @@ typedef struct _SaoQTPart
   //---- encoder only end -----//
 } SAOQTPart;
 
-struct _SaoParam
+#if SAO_UNIT_INTERLEAVING
+typedef struct _SaoLcuParam
 {
-  Bool       bSaoFlag;
-  SAOQTPart* psSaoPart;
+  Bool       mergeUpFlag;
+  Bool       mergeLeftFlag;
+  Int        typeIdx;
+  Int        bandPosition;
+  Int        offset[4];
+  Int        runDiff;
+  Int        run;
+  Int        partIdx;
+  Int        partIdxTmp;
+  Int        length;
+} SaoLcuParam;
+#endif
+
+struct SAOParam
+{
+  Bool       bSaoFlag[3];
+  SAOQTPart* psSaoPart[3];
   Int        iMaxSplitLevel;
   Int        iNumClass[MAX_NUM_SAO_TYPE];
+#if SAO_UNIT_INTERLEAVING
+  Bool         oneUnitFlag[3];
+  SaoLcuParam* saoLcuParam[3];
+  Int          numCuInHeight;
+  Int          numCuInWidth;
+#endif
+  ~SAOParam();
 };
 
-#endif
-
-struct _AlfParam
+struct ALFParam
 {
   Int alf_flag;                           ///< indicates use of ALF
-  Int cu_control_flag;                    ///< coding unit based control flag
+#if !LCU_SYNTAX_ALF
   Int chroma_idc;                         ///< indicates use of ALF for chroma
-#if TI_ALF_MAX_VSIZE_7
-  Int tap;                                ///< number of filter taps - horizontal
-  Int tapV;                               ///< number of filter taps - vertical
-#else
-  Int tap;                                ///< number of filter taps
 #endif
   Int num_coeff;                          ///< number of filter coefficients
-  Int *coeff;                             ///< filter coefficient array
-  Int tap_chroma;                         ///< number of filter taps (chroma)
+  Int filter_shape;
+#if !LCU_SYNTAX_ALF
+  Int filter_shape_chroma;
   Int num_coeff_chroma;                   ///< number of filter coefficients (chroma)
   Int *coeff_chroma;                      ///< filter coefficient array (chroma)
-  //CodeAux related
-  Int realfiltNo;
-  Int filtNo;
-#if MQT_BA_RA
-  Int filterPattern[NO_VAR_BIN];
-#else
-  Int filterPattern[16];
 #endif
+  Int *filterPattern;
   Int startSecondFilter;
-  Int noFilters;
-#if MQT_BA_RA
-  Int varIndTab[NO_VAR_BIN];
-#else
-  Int varIndTab[16];
-#endif
-
-  //Coeff send related
-  Int filters_per_group_diff; //this can be updated using codedVarBins
   Int filters_per_group;
-#if MQT_BA_RA
-  Int codedVarBins[NO_VAR_BIN];
-#else
-  Int codedVarBins[16];
-#endif
-  Int forceCoeff0;
   Int predMethod;
+  Int *nbSPred;
   Int **coeffmulti;
   Int minKStart;
+#if !LCU_SYNTAX_ALF
   Int maxScanVal;
   Int kMinTab[42];
-#if TSB_ALF_HEADER
-  UInt num_alf_cu_flag;
-  UInt num_cus_in_frame;
-  UInt alf_max_depth;
-  UInt *alf_cu_flag;
-#endif
 
-#if MQT_BA_RA
   Int alf_pcr_region_flag;
+  ~ALFParam();
+#endif
+#if LCU_SYNTAX_ALF
+  Int componentID;
+  Int* kMinTab;
+  //constructor, operator
+  ALFParam():componentID(-1){}
+  ALFParam(Int cID){create(cID);}
+  ALFParam(const ALFParam& src) {*this = src;}
+  ~ALFParam(){destroy();}
+  const ALFParam& operator= (const ALFParam& src);
+private:
+  Void create(Int cID);
+  Void destroy();
+  Void copy(const ALFParam& src);
 #endif
 };
+
+#if LCU_SYNTAX_ALF
+struct AlfUnitParam
+{
+  Int   mergeType;
+  Bool  isEnabled;
+  Bool  isNewFilt;
+  Int   storedFiltIdx;
+  ALFParam* alfFiltParam;
+  //constructor, operator
+  AlfUnitParam();
+  AlfUnitParam(const AlfUnitParam& src){ *this = src;}
+  const AlfUnitParam& operator= (const AlfUnitParam& src);
+  Bool operator == (const AlfUnitParam& cmp);
+};
+
+struct AlfParamSet
+{
+  Bool isEnabled[3];
+  Bool isUniParam[3];
+  Int  numLCUInWidth;
+  Int  numLCUInHeight;
+  Int  numLCU;
+  AlfUnitParam* alfUnitParam[3];
+  //constructor, operator
+  AlfParamSet(){create();}
+  ~AlfParamSet(){destroy();}
+  Void create(Int width =0, Int height=0, Int num=0);
+  Void init();
+  Void releaseALFParam();
+  Void createALFParam();
+private:
+  Void destroy();
+};
+#endif
+
+
 
 /// parameters for deblocking filter
 typedef struct _LFCUParam
@@ -540,13 +587,6 @@ typedef struct _LFCUParam
   Bool bLeftEdge;                         ///< indicates left edge
   Bool bTopEdge;                          ///< indicates top edge
 } LFCUParam;
-
-/// parapeters for TENTM coefficient VLC
-typedef struct _LastCoeffStruct
-{
-  int level;
-  int last_pos;
-} LastCoeffStruct;
 
 // ====================================================================================================================
 // Enumeration
@@ -560,6 +600,15 @@ enum SliceType
   B_SLICE
 };
 
+/// chroma formats (according to semantics of chroma_format_idc)
+enum ChromaFormat
+{
+  CHROMA_400  = 0,
+  CHROMA_420  = 1,
+  CHROMA_422  = 2,
+  CHROMA_444  = 3
+};
+
 /// supported partition shape
 enum PartSize
 {
@@ -567,16 +616,11 @@ enum PartSize
   SIZE_2NxN,            ///< symmetric motion partition,  2Nx N
   SIZE_Nx2N,            ///< symmetric motion partition,   Nx2N
   SIZE_NxN,             ///< symmetric motion partition,   Nx N
-
+  SIZE_2NxnU,           ///< asymmetric motion partition, 2Nx( N/2) + 2Nx(3N/2)
+  SIZE_2NxnD,           ///< asymmetric motion partition, 2Nx(3N/2) + 2Nx( N/2)
+  SIZE_nLx2N,           ///< asymmetric motion partition, ( N/2)x2N + (3N/2)x2N
+  SIZE_nRx2N,           ///< asymmetric motion partition, (3N/2)x2N + ( N/2)x2N
   SIZE_NONE = 15
-};
-
-//GT
-enum InterViewReference
-{
-  PREVVIEW = 0,
-  CURRVIEW = 1,
-  NEXTVIEW = 2
 };
 
 /// supported prediction type
@@ -599,22 +643,12 @@ enum TextType
   TEXT_NONE = 15
 };
 
-enum
-{
-  VIEWPOS_INVALID = -1,
-  VIEWPOS_LEFT    = 0,
-  VIEWPOS_RIGHT   = 1,
-  VIEWPOS_MERGED  = 2
-};
-
 /// reference list index
 enum RefPicList
 {
   REF_PIC_LIST_0 = 0,   ///< reference list 0
   REF_PIC_LIST_1 = 1,   ///< reference list 1
-#if DCM_COMB_LIST
   REF_PIC_LIST_C = 2,   ///< combined reference list for uni-prediction in B-Slices
-#endif
   REF_PIC_LIST_X = 100  ///< special mark
 };
 
@@ -654,9 +688,20 @@ enum DFunc
   DF_HADS64   = 27,     ///<  64xM HAD with step
   DF_HADS16N  = 28,     ///< 16NxM HAD with step
 
-  DF_SSE_FRAME = 33     ///< Frame-based SSE
-};
+#if AMP_SAD
+  DF_SAD12    = 43,
+  DF_SAD24    = 44,
+  DF_SAD48    = 45,
 
+  DF_SADS12   = 46,
+  DF_SADS24   = 47,
+  DF_SADS48   = 48,
+
+  DF_SSE_FRAME = 50     ///< Frame-based SSE
+#else
+  DF_SSE_FRAME = 33     ///< Frame-based SSE
+#endif
+};
 
 /// index for SBAC based RD optimization
 enum CI_IDX
@@ -687,24 +732,27 @@ enum AMVP_MODE
   AM_EXPL,              ///< explicit signalling of motion vector index
 };
 
-/// interpolation filter type
-enum InterpFilterType
-{
-  IPF_SAMSUNG_DIF_DEFAULT = 0,          ///< Samsung DCT-based filter
-  IPF_HHI_4TAP_MOMS,                    ///< HHI 4-tap MOMS filter
-  IPF_HHI_6TAP_MOMS,                    ///< HHI 6-tap MOMS filter
-  IPF_LAST
-};
-
-#if QC_MDCS
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE
 {
   SCAN_ZIGZAG = 0,      ///< typical zigzag scan
   SCAN_HOR,             ///< horizontal first scan
-  SCAN_VER              ///< vertical first scan
+  SCAN_VER,              ///< vertical first scan
+  SCAN_DIAG              ///< up-right diagonal scan
 };
-#endif //QC_MDCS
+
+// Renderer
+enum
+{
+  VIEWPOS_INVALID = -1,
+  VIEWPOS_LEFT    = 0,
+  VIEWPOS_RIGHT   = 1,
+  VIEWPOS_MERGED  = 2
+};
+
+
+//! \}
 
 #endif
+
 

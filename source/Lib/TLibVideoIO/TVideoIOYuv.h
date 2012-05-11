@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -30,8 +30,6 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-
-
 
 /** \file     TVideoIOYuv.h
     \brief    YUV file I/O class (header)
@@ -69,10 +67,15 @@ public:
 
   void skipFrames(unsigned int numFrames, unsigned int width, unsigned int height);
   
-  Void  read  ( TComPicYuv*& rpcPicYuv, Int aiPad[2], Bool bRewind = false );     ///< read  one YUV frame with padding parameter
-  Void  write ( TComPicYuv*   pcPicYuv, Int aiPad[2] );     ///< write one YUV frame with padding parameter
+  bool  read  ( TComPicYuv*   pPicYuv, Int aiPad[2], Bool bRewind = false );     ///< read  one YUV frame with padding parameter
+#if PIC_CROPPING
+  Bool  write( TComPicYuv*    pPicYuv, Int cropLeft=0, Int cropRight=0, Int cropTop=0, Int cropBottom=0 );
+#else
+  bool  write ( TComPicYuv*   pPicYuv, Int aiPad[2] );     ///< write one YUV frame with padding parameter
+#endif
   
-  Bool  isEof ();                                           ///< check end-of-file
+  bool  isEof ();                                           ///< check for end-of-file
+  bool  isFail();                                           ///< check for failure
   
 };
 

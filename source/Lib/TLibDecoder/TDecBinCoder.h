@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TDecBinCoder.h
     \brief    binary entropy decoder interface
 */
@@ -40,25 +38,46 @@
 #ifndef __TDEC_BIN_CODER__
 #define __TDEC_BIN_CODER__
 
-#include "../TLibCommon/ContextModel.h"
-#include "../TLibCommon/TComBitStream.h"
+#include "TLibCommon/ContextModel.h"
+#include "TLibCommon/TComBitStream.h"
 
+//! \ingroup TLibDecoder
+//! \{
+class TDecBinCABAC;
 
 class TDecBinIf
 {
 public:
-  virtual Void  init              ( TComBitstream* pcTComBitstream )          = 0;
+  virtual Void  init              ( TComInputBitstream* pcTComBitstream )     = 0;
   virtual Void  uninit            ()                                          = 0;
 
   virtual Void  start             ()                                          = 0;
   virtual Void  finish            ()                                          = 0;
+#if OL_FLUSH
+  virtual Void  flush            ()                                           = 0;
+#endif
 
   virtual Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel )  = 0;
   virtual Void  decodeBinEP       ( UInt& ruiBin                           )  = 0;
+  virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins             )  = 0;
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
   
+  virtual Void  resetBac          ()                                          = 0;
+#if BURST_IPCM
+  virtual Void  decodeNumSubseqIPCM( Int& numSubseqIPCM )                  = 0;
+#endif
+  virtual Void  decodePCMAlignBits()                                          = 0;
+  virtual Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode)              = 0;
+
   virtual ~TDecBinIf() {}
+
+  virtual Void  copyState         ( TDecBinIf* pcTDecBinIf )                  = 0;
+  virtual TDecBinCABAC*   getTDecBinCABAC   ()  { return 0; }
+#if !OL_FLUSH_ALIGN
+  virtual Int   getBitsReadAhead() { return 0; }
+#endif
 };
 
-#endif
+//! \}
 
+#endif

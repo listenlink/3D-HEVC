@@ -3,7 +3,7 @@ CONFIG 			= LIBRARY
 
 # set pathes to the correct directories
 SRC_DIR			= ../../../../source/Lib/TLibRenderer
-INC_DIR			= ../../../../source/Lib/TLibRenderer
+INC_DIR			= ../../../../source/Lib
 LIB_DIR			= ../../../../lib
 BIN_DIR			= ../../../../bin
 
@@ -33,6 +33,7 @@ DEFS			= -DMSYS_LINUX
 # set objects
 OBJS          	= \
 			$(OBJ_DIR)/TRenFilter.o \
+			$(OBJ_DIR)/TRenInterpFilter.o \
 			$(OBJ_DIR)/TRenImage.o \
 			$(OBJ_DIR)/TRenImagePlane.o \
 			$(OBJ_DIR)/TRenTop.o \

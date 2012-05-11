@@ -3,7 +3,7 @@ CONFIG 			= LIBRARY
 
 # set pathes to the correct directories
 SRC_DIR			= ../../../../source/Lib/TLibDecoder
-INC_DIR			= ../../../../source/Lib/TLibDecoder
+INC_DIR			= ../../../../source/Lib
 LIB_DIR			= ../../../../lib
 BIN_DIR			= ../../../../bin
 
@@ -32,6 +32,8 @@ DEFS			= -DMSYS_LINUX
 
 # set objects
 OBJS          	= \
+				$(OBJ_DIR)/AnnexBread.o \
+				$(OBJ_DIR)/NALread.o \
 				$(OBJ_DIR)/SEIread.o \
 				$(OBJ_DIR)/TDecBinCoderCABAC.o \
 				$(OBJ_DIR)/TDecCAVLC.o \

@@ -1,4 +1,35 @@
-
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.  
+ *
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /** \file     TComWeightPrediction.h
     \brief    weighting prediction class (header)
@@ -13,8 +44,7 @@
 #include "TComMotionInfo.h"
 #include "TComPattern.h"
 #include "TComTrQuant.h"
-
-#ifdef WEIGHT_PRED
+#include "TComInterpolationFilter.h"
 
 // ====================================================================================================================
 // Class definition
@@ -33,7 +63,7 @@ public:
   Void  addWeightBi( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, wpScalingParam *wp0, wpScalingParam *wp1, TComYuv* rpcYuvDst, Bool bRound=true );
   Void  addWeightUni( TComYuv* pcYuvSrc0, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, wpScalingParam *wp0, TComYuv* rpcYuvDst );
 
-  Void  xWeightedPredictionUni( TComDataCU* pcCU, TComYuv* pcYuvSrc, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx );
+  Void  xWeightedPredictionUni( TComDataCU* pcCU, TComYuv* pcYuvSrc, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Int iRefIdx=-1 );
   Void  xWeightedPredictionBi( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv* rpcYuvDst );
 
   __inline  Pel   xClip  ( Int x );
@@ -42,26 +72,20 @@ public:
 
 };
 
-
 inline  Pel TComWeightPrediction::xClip( Int x )
 { 
   Int max = (Int)g_uiIBDI_MAX;
   Pel pel = (Pel)( (x < 0) ? 0 : (x > max) ? max : x );
-
   return( pel );
 }
 
 inline  Pel TComWeightPrediction::weightBidir( Int w0, Pel P0, Int w1, Pel P1, Int round, Int shift, Int offset)
 {
-  return xClip( ( (w0*P0 + w1*P1 + round) >> shift ) + offset );
+  return xClip( ( (w0*(P0 + IF_INTERNAL_OFFS) + w1*(P1 + IF_INTERNAL_OFFS) + round + (offset << (shift-1))) >> shift ) );
 }
 inline  Pel TComWeightPrediction::weightUnidir( Int w0, Pel P0, Int round, Int shift, Int offset) 
 {
-  return xClip( ( (w0*P0 + round) >> shift ) + offset );
+  return xClip( ( (w0*(P0 + IF_INTERNAL_OFFS) + round) >> shift ) + offset );
 }
 
-#endif  // WEIGHT_PRED
-
-#endif
-
-
+#endif 

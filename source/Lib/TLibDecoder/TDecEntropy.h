@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TDecEntropy.h
     \brief    entropy decoder class (header)
 */
@@ -46,10 +44,15 @@
 #include "../TLibCommon/TComPic.h"
 #include "../TLibCommon/TComPrediction.h"
 #include "../TLibCommon/TComAdaptiveLoopFilter.h"
+#include "../TLibCommon/TComSampleAdaptiveOffset.h"
 
 class TDecSbac;
 class TDecCavlc;
 class SEImessages;
+class ParameterSetManagerDecoder;
+
+//! \ingroup TLibDecoder
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -60,73 +63,78 @@ class TDecEntropyIf
 {
 public:
   //  Virtual list for SBAC/CAVLC
-  virtual Void setAlfCtrl(Bool bAlfCtrl)  = 0;
-  virtual Void setMaxAlfCtrlDepth(UInt uiMaxAlfCtrlDepth)  = 0;
+  virtual Void  resetEntropy          ( TComSlice* pcSlice )     = 0;
+  virtual Void  setBitstream          ( TComInputBitstream* p )  = 0;
 
-  virtual Void  resetEntropy          (TComSlice* pcSlice)                = 0;
-  virtual Void  setBitstream          ( TComBitstream* p )  = 0;
-
-#if BITSTREAM_EXTRACTION
-  virtual Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId )  = 0;
-#else
-  virtual Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag )  = 0;
+#if OL_FLUSH
+  virtual Void  decodeFlush()                                                                      = 0;
 #endif
 
+#if HHI_MPI
+  virtual Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth )                       = 0;
+#else
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
+#endif
+#if TILES_OR_ENTROPY_SYNC_IDC  
+  virtual Void  parsePPS                  ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet )                                      = 0;
+#else
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
+#endif
+  virtual Void  parseAPS                  ( TComAPS* pAPS  )                                      = 0;
   virtual void parseSEI(SEImessages&) = 0;
-  virtual Void  parseSliceHeader          ( TComSlice*& rpcSlice )                                = 0;
+
+#if LCU_SYNTAX_ALF
+  virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet)       = 0;
+#else
+  virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl )                                = 0;
+#endif
+
   virtual Void  parseTerminatingBit       ( UInt& ruilsLast )                                     = 0;
-
-  virtual Void parseMVPIdx      ( TComDataCU* pcCU, Int& riMVPIdx, Int iMVPNum, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
-
+  
+#if HHI_INTER_VIEW_MOTION_PRED
+  virtual Void parseMVPIdx        ( Int& riMVPIdx, Int iNumAMVPCands ) = 0;
+#else
+  virtual Void parseMVPIdx        ( Int& riMVPIdx ) = 0;
+#endif
+  
 public:
   virtual Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx ) = 0;
   virtual Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   virtual Void parseResPredFlag   ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#endif
   virtual Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-
+  
   virtual Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-
+  
   virtual Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-
+  
   virtual Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
   virtual Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartAddr, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList ) = 0;
-
+  
   virtual Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize ) = 0;
   virtual Void parseQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth ) = 0;
   virtual Void parseQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf ) = 0;
-
+  
   virtual Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-
-  virtual Void parseCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth ) = 0;
-  virtual Void parseBlockCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth, UInt uiQPartNum ) = 0;
-#if CAVLC_RQT_CBP
-  virtual Void parseCbfTrdiv      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiTrDepth, UInt uiDepth, UInt& uiSubdiv ) = 0;
-#endif
+  
+  virtual Void parseIPCMInfo     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth) = 0;
 
   virtual Void parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType ) = 0;
 
-  virtual Void parseAlfFlag       ( UInt& ruiVal           ) = 0;
-  virtual Void parseAlfUvlc       ( UInt& ruiVal           ) = 0;
-  virtual Void parseAlfSvlc       ( Int&  riVal            ) = 0;
-  virtual Void parseAlfCtrlDepth  ( UInt& ruiAlfCtrlDepth  ) = 0;
-  virtual Void parseAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#if TSB_ALF_HEADER
-  virtual Void parseAlfFlagNum    ( UInt& ruiVal, UInt minValue, UInt depth ) = 0;
-  virtual Void parseAlfCtrlFlag   ( UInt &ruiAlfCtrlFlag ) = 0;
-#endif
+  /// set slice granularity
+  virtual Void setSliceGranularity(Int iSliceGranularity) = 0;
 
-#if MTK_SAO
-  virtual Void parseAoFlag       ( UInt& ruiVal           ) = 0;
-  virtual Void parseAoUvlc       ( UInt& ruiVal           ) = 0;
-  virtual Void parseAoSvlc       ( Int&  riVal            ) = 0;
-#endif
-  virtual Void parseViewIdx       ( Int& riViewIdx ) = 0;
+  /// get slice granularity
+  virtual Int  getSliceGranularity()                      = 0;
+
+  virtual Void readTileMarker   ( UInt& uiTileIdx, UInt uiBitsUsed ) = 0;
+  virtual Void updateContextTables( SliceType eSliceType, Int iQp ) = 0;
+  
   virtual ~TDecEntropyIf() {}
 };
 
@@ -136,40 +144,47 @@ class TDecEntropy
 private:
   TDecEntropyIf*  m_pcEntropyDecoderIf;
   TComPrediction* m_pcPrediction;
-
+  UInt    m_uiBakAbsPartIdx;
+  UInt    m_uiBakChromaOffset;
+#if UNIFIED_TRANSFORM_TREE
+  UInt    m_bakAbsPartIdxCU;
+#endif
+  
 public:
   Void init (TComPrediction* p) {m_pcPrediction = p;}
-  Void decodeMVPIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList, TComDataCU* pcSubCU );
   Void decodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU );
   Void decodeInterDirPU   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPartIdx );
   Void decodeRefFrmIdxPU  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList );
   Void decodeMvdPU        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList );
   Void decodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList );
-
+  
   Void    setEntropyDecoder           ( TDecEntropyIf* p );
-  Void    setBitstream                ( TComBitstream* p )      { m_pcEntropyDecoderIf->setBitstream(p);                    }
+  Void    setBitstream                ( TComInputBitstream* p ) { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
 
-#if BITSTREAM_EXTRACTION
-  Void    decodeNalUnitHeader         ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId )
-                                                                { m_pcEntropyDecoderIf->parseNalUnitHeader( eNalUnitType, TemporalId, uiLayerId ); }
+#if HHI_MPI
+  Void    decodeSPS                   ( TComSPS* pcSPS, Bool bIsDepth ) { m_pcEntropyDecoderIf->parseSPS(pcSPS, bIsDepth); }
 #else
-  Void    decodeNalUnitHeader         ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag )
-                                                                { m_pcEntropyDecoderIf->parseNalUnitHeader(eNalUnitType, TemporalId, bOutputFlag ); }
+  Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
+#endif
+#if TILES_OR_ENTROPY_SYNC_IDC
+  Void    decodePPS                   ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet    )    { m_pcEntropyDecoderIf->parsePPS(pcPPS, parameterSet);                    }
+#else
+  Void    decodePPS                   ( TComPPS* pcPPS     )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
+#endif
+  Void    decodeAPS                   ( TComAPS* pAPS      )    { m_pcEntropyDecoderIf->parseAPS(pAPS);}
+  void decodeSEI(SEImessages& seis) { m_pcEntropyDecoderIf->parseSEI(seis); }
+
+#if LCU_SYNTAX_ALF
+  Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, alfCUCtrl, alfParamSet);         }
+#else
+  Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl )  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, alfCUCtrl);         }
 #endif
 
-  Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
-  Void    decodePPS                   ( TComPPS* pcPPS     )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
-  void decodeSEI(SEImessages& seis) { m_pcEntropyDecoderIf->parseSEI(seis); }
-  Void    decodeSliceHeader           ( TComSlice*& rpcSlice )  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice);         }
   Void    decodeTerminatingBit        ( UInt& ruiIsLast )       { m_pcEntropyDecoderIf->parseTerminatingBit(ruiIsLast);     }
-
-  // Adaptive Loop filter
-  Void decodeAlfParam(ALFParam* pAlfParam);
-  //--Adaptive Loop filter
-
+  
   TDecEntropyIf* getEntropyDecoder() { return m_pcEntropyDecoderIf; }
-
+  
 public:
   Void decodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -178,52 +193,59 @@ public:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void decodeResPredFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx );
 #endif
-  Void decodeAlfCtrlFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if TSB_ALF_HEADER
-  Void decodeAlfCtrlParam      ( ALFParam *pAlfParam );
-#endif
-
   Void decodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  
+  Void decodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void decodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU );
-
+  
   Void decodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void decodeInterDir          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void decodeRefFrmIdx         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList );
-  Void decodeMvd               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList );
-  Void decodeRefViewIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList );
-  //
+  
+#if !UNIFIED_TRANSFORM_TREE
   Void decodeTransformIdx      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#if UNIFIED_TRANSFORM_TREE
+  Void decodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#else
   Void decodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-
-  Void decodeViewidx           ( Int& riViewIdx );
-
-
+#endif
+  
+  Void readTileMarker         ( UInt& uiTileIdx, UInt uiBitsUsed )  {  m_pcEntropyDecoderIf->readTileMarker( uiTileIdx, uiBitsUsed ); }
+  Void updateContextTables    ( SliceType eSliceType, Int iQp ) { m_pcEntropyDecoderIf->updateContextTables( eSliceType, iQp ); }
+  
+  
 private:
-  Void xDecodeTransformSubdiv  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiInnerQuadIdx, UInt& uiYCbfFront3, UInt& uiUCbfFront3, UInt& uiVCbfFront3 );
+#if UNIFIED_TRANSFORM_TREE
+  Void xDecodeTransform        ( TComDataCU* pcCU, UInt offsetLuma, UInt offsetChroma, UInt uiAbsPartIdx, UInt absTUPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, UInt uiInnerQuadIdx, UInt& uiYCbfFront3, UInt& uiUCbfFront3, UInt& uiVCbfFront3, Bool& bCodeDQP );
+#else
+  Void xDecodeTransformSubdiv  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt absTUPartIdx, UInt uiDepth, UInt uiInnerQuadIdx, UInt& uiYCbfFront3, UInt& uiUCbfFront3, UInt& uiVCbfFront3 );
+  
+  Void xDecodeCoeff            ( TComDataCU* pcCU, UInt uiLumaOffset, UInt uiChromaOffset, UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, UInt uiTrIdx, UInt uiCurrTrIdx, Bool& bCodeDQP );
+#endif //UNIFIED_TRANSFORM_TREE
 
-  Void xDecodeCoeff            ( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, UInt uiTrIdx, UInt uiCurrTrIdx, TextType eType );
 public:
-  Void decodeCoeff             ( TComDataCU* pcCU                 , UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight );
-
+  Void decodeCoeff             ( TComDataCU* pcCU                 , UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP );
+  
   // ALF-related
-  Void decodeAux(ALFParam* pAlfParam);
-  Void decodeFilt(ALFParam* pAlfParam);
-  Void readFilterCodingParams(ALFParam* pAlfParam);
-  Void readFilterCoeffs(ALFParam* pAlfParam);
-  Void decodeFilterCoeff (ALFParam* pAlfParam);
-  Int golombDecode(Int k);
 
-#if MTK_SAO
-  Void decodeQAOOnePart(SAOParam* pQaoParam, Int part_idx);
-  Void decodeQuadTreeSplitFlag(SAOParam* pQaoParam, Int part_idx);
-  Void decodeSaoParam(SAOParam* pQaoParam) ;
+  /// set slice granularity
+  Void setSliceGranularity (Int iSliceGranularity) {m_pcEntropyDecoderIf->setSliceGranularity(iSliceGranularity);}
+
+#if SAO_UNIT_INTERLEAVING
+  Void decodeSaoParam         (SAOParam* saoParam);
+  void decodeSaoLcu(Int rx, Int ry, Int compIdx, SAOParam* saoParam, Bool &repeatedRow );
+  Void decodeSaoOneLcu(SaoLcuParam* saoLcuParam);
+#endif
+
+#if OL_FLUSH
+  Void decodeFlush() { m_pcEntropyDecoderIf->decodeFlush(); }
 #endif
 
 };// END CLASS DEFINITION TDecEntropy
 
+//! \}
 
 #endif // __TDECENTROPY__
 

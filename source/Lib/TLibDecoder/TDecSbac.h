@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TDecSbac.h
     \brief    SBAC decoder class (header)
 */
@@ -48,9 +46,12 @@
 
 #include "TDecEntropy.h"
 #include "TDecBinCoder.h"
-#include "../TLibCommon/ContextTables.h"
-#include "../TLibCommon/ContextModel.h"
-#include "../TLibCommon/ContextModel3DBuffer.h"
+#include "TLibCommon/ContextTables.h"
+#include "TLibCommon/ContextModel.h"
+#include "TLibCommon/ContextModel3DBuffer.h"
+
+//! \ingroup TLibDecoder
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -68,57 +69,69 @@ public:
   Void  init                      ( TDecBinIf* p )    { m_pcTDecBinIf = p; }
   Void  uninit                    (              )    { m_pcTDecBinIf = 0; }
   
-  Void  resetEntropy              ( TComSlice* pcSlice     );
-  Void  setBitstream              ( TComBitstream* p       ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
-  
-  Void  setAlfCtrl                ( Bool bAlfCtrl          ) { m_bAlfCtrl = bAlfCtrl;                   }
-  Void  setMaxAlfCtrlDepth        ( UInt uiMaxAlfCtrlDepth ) { m_uiMaxAlfCtrlDepth = uiMaxAlfCtrlDepth; }
-  
-#if BITSTREAM_EXTRACTION
-  Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, UInt& uiLayerId ) {}
+  Void load                          ( TDecSbac* pScr );
+  Void loadContexts                  ( TDecSbac* pScr );
+  Void xCopyFrom           ( TDecSbac* pSrc );
+  Void xCopyContextsFrom       ( TDecSbac* pSrc );
+#if OL_FLUSH
+  Void decodeFlush();
+#endif
+
+#if CABAC_INIT_FLAG
+  Void  resetEntropy (TComSlice* pSlice );
 #else
-  Void  parseNalUnitHeader    ( NalUnitType& eNalUnitType, UInt& TemporalId, Bool& bOutputFlag ) {}
+  Void  resetEntropywithQPandInitIDC ( Int  iQp, Int iID);
+  Void  resetEntropy                 ( Int  iQp, Int iID      ) { resetEntropywithQPandInitIDC(iQp, iID);                                      }
+  Void  resetEntropy                 ( TComSlice* pcSlice     ) { resetEntropywithQPandInitIDC(pcSlice->getSliceQp(), pcSlice->getCABACinitIDC());}
+#endif
+  Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
+  
+#if HHI_MPI
+  Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth ) {}
+#else
+  Void  parseSPS                  ( TComSPS* pcSPS         ) {}
+#endif
+#if TILES_OR_ENTROPY_SYNC_IDC  
+  Void  parsePPS                  ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet         ) {}
+#else
+  Void  parsePPS                  ( TComPPS* pcPPS         ) {}
+#endif
+  Void  parseAPS                  ( TComAPS* pAPS          ) {}
+  void parseSEI(SEImessages&) {}
+
+#if LCU_SYNTAX_ALF
+  Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet) {}
+#else
+  Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl ) {}
+#endif
+
+  Void  parseTerminatingBit       ( UInt& ruiBit );
+#if HHI_INTER_VIEW_MOTION_PRED
+  Void  parseMVPIdx               ( Int& riMVPIdx, Int iNumAMVPCands );
+#else
+  Void  parseMVPIdx               ( Int& riMVPIdx          );
 #endif
   
-  Void  parseSPS                  ( TComSPS* pcSPS         ) {}
-  Void  parsePPS                  ( TComPPS* pcPPS         ) {}
-  void parseSEI(SEImessages&) {}
-  Void  parseSliceHeader          ( TComSlice*& rpcSlice   ) {}
-  Void  parseTerminatingBit       ( UInt& ruiBit );
-  Void  parseMVPIdx               ( TComDataCU* pcCU, Int& riMVPIdx, Int iMVPNum, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList );
-  
-  Void  parseAlfFlag              ( UInt& ruiVal           );
-  Void  parseAlfUvlc              ( UInt& ruiVal           );
-  Void  parseAlfSvlc              ( Int&  riVal            );
-  Void  parseAlfCtrlDepth         ( UInt& ruiAlfCtrlDepth  );
-#if MTK_SAO
-  Void  parseAoFlag              ( UInt& ruiVal           );
-  Void  parseAoUvlc              ( UInt& ruiVal           );
-  Void  parseAoSvlc              ( Int&  riVal            );
+#if SAO_UNIT_INTERLEAVING
+  Void  parseSaoUvlc              ( UInt& ruiVal           );
+  Void  parseSaoSvlc              ( Int&  riVal            );
+  Void  parseSaoMergeLeft         ( UInt&  ruiVal, UInt uiCompIdx   );
+  Void  parseSaoMergeUp           ( UInt&  ruiVal  );
+  Void  parseSaoTypeIdx           ( UInt&  ruiVal  );
+  Void  parseSaoUflc              ( UInt& ruiVal           );
+  Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Bool bLFCrossSliceBoundaryFlag);
+  Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam);
 #endif
 private:
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
-#if E253
   Void  xReadGoRiceExGolomb ( UInt &ruiSymbol, UInt &ruiGoRiceParam );
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Void  xReadExGolombLevel  ( UInt& ruiSymbol, ContextModel& rcSCModel  );
 #endif
-#else
-  Void  xReadExGolombLevel  ( UInt& ruiSymbol, ContextModel& rcSCModel  );
-#endif
-  
-#if MVD_CTX
-  Void  xReadMvd            ( Int& riMvdComp, UInt uiAbsSumL, UInt uiAbsSumA, UInt uiCtx );
-#else
-  Void  xReadMvd            ( Int& riMvdComp, UInt uiAbsSum, UInt uiCtx );
-#endif
-
-  Void  xReadExGolombMvd    ( UInt& ruiSymbol, ContextModel* pcSCModel, UInt uiMaxBin );
-  
 #if HHI_DMM_WEDGE_INTRA
-  Void xParseWedgeFullInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void xParseWedgeFullInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void xParseWedgeFullDeltaInfo     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void xParseWedgePredDirInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -130,27 +143,27 @@ private:
 #endif
   
 private:
-  TComBitstream*    m_pcBitstream;
+  TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
   
-  Bool m_bAlfCtrl;
-  UInt m_uiMaxAlfCtrlDepth;
-  
+  Int           m_iSliceGranularity; //!< slice granularity
+
 public:
-  Void parseAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if TSB_ALF_HEADER
-  Void parseAlfFlagNum    ( UInt& ruiVal, UInt minValue, UInt depth );
   Void parseAlfCtrlFlag   ( UInt &ruiAlfCtrlFlag );
-#endif
-  
+
+  /// set slice granularity
+  Void setSliceGranularity(Int iSliceGranularity)  {m_iSliceGranularity = iSliceGranularity;}
+
+  /// get slice granularity
+  Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
+
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
-  Void parseMergeIndexMV  ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Void parseResPredFlag   ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
@@ -168,55 +181,46 @@ public:
   
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
-  Void parseCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth ) {}
-  Void parseBlockCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth, UInt uiQPartNum ) {}
-  
-#if CAVLC_RQT_CBP
-  Void parseCbfTrdiv      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiTrDepth, UInt uiDepth, UInt& uiSubdiv ) {}
-#endif
+  Void parseIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth);
 
-#if PCP_SIGMAP_SIMPLE_LAST
-  __inline Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, const UInt uiWidth, const TextType eTType, const UInt uiCTXIdx, const UInt uiScanIdx );
-#endif
+  Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int width, Int height, TextType eTType, UInt uiScanIdx );
   Void parseCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  Void parseViewIdx       (Int &riViewIdx );
   
+  Void readTileMarker   ( UInt& uiTileIdx, UInt uiBitsUsed );
+  Void updateContextTables( SliceType eSliceType, Int iQp );
+
+  Void  parseScalingList ( TComScalingList* scalingList ) {}
+
 private:
   UInt m_uiLastDQpNonZero;
   UInt m_uiLastQp;
   
-  ContextModel3DBuffer m_cCUSkipFlagSCModel;
+  ContextModel         m_contextModels[MAX_NUM_CTX_MOD];
+  Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
+  ContextModel3DBuffer m_cCUSkipFlagSCModel;
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-  ContextModel3DBuffer m_cCUMVMergeIdxExtSCModel;
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   ContextModel3DBuffer m_cResPredFlagSCModel;
-  ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
+#endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
-  
+  ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;
-#if ADD_PLANAR_MODE
-  ContextModel3DBuffer m_cPlanarFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCUChromaPredSCModel;
+  ContextModel3DBuffer m_cCUDeltaQpSCModel;
   ContextModel3DBuffer m_cCUInterDirSCModel;
   ContextModel3DBuffer m_cCURefPicSCModel;
   ContextModel3DBuffer m_cCUMvdSCModel;
-  
+  ContextModel3DBuffer m_cCUQtCbfSCModel;
   ContextModel3DBuffer m_cCUTransSubdivFlagSCModel;
   ContextModel3DBuffer m_cCUQtRootCbfSCModel;
-  ContextModel3DBuffer m_cCUDeltaQpSCModel;
   
-  ContextModel3DBuffer m_cCUQtCbfSCModel;
-  
+  ContextModel3DBuffer m_cCUSigCoeffGroupSCModel;
   ContextModel3DBuffer m_cCUSigSCModel;
-#if PCP_SIGMAP_SIMPLE_LAST
   ContextModel3DBuffer m_cCuCtxLastX;
   ContextModel3DBuffer m_cCuCtxLastY;
-#else  
-  ContextModel3DBuffer m_cCULastSCModel;
-#endif
   ContextModel3DBuffer m_cCUOneSCModel;
   ContextModel3DBuffer m_cCUAbsSCModel;
   
@@ -225,16 +229,28 @@ private:
   ContextModel3DBuffer m_cALFFlagSCModel;
   ContextModel3DBuffer m_cALFUvlcSCModel;
   ContextModel3DBuffer m_cALFSvlcSCModel;
-#if MTK_SAO
-  ContextModel3DBuffer m_cAOFlagSCModel;
-  ContextModel3DBuffer m_cAOUvlcSCModel;
-  ContextModel3DBuffer m_cAOSvlcSCModel;
+#if AMP_CTX
+  ContextModel3DBuffer m_cCUAMPSCModel;
+#else
+  ContextModel3DBuffer m_cCUXPosiSCModel;
+  ContextModel3DBuffer m_cCUYPosiSCModel;
 #endif
-  ContextModel3DBuffer m_cViewIdxSCModel;
+  ContextModel3DBuffer m_cSaoFlagSCModel;
+  ContextModel3DBuffer m_cSaoUvlcSCModel;
+  ContextModel3DBuffer m_cSaoSvlcSCModel;
+#if SAO_UNIT_INTERLEAVING
+  ContextModel3DBuffer m_cSaoMergeLeftSCModel;
+  ContextModel3DBuffer m_cSaoMergeUpSCModel;
+  ContextModel3DBuffer m_cSaoTypeIdxSCModel;
+#endif
+
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  ContextModel3DBuffer m_cIntraDMMSCModel;
-  ContextModel3DBuffer m_cIntraWedgeSCModel;
+  ContextModel3DBuffer m_cDmmFlagSCModel;
+  ContextModel3DBuffer m_cDmmModeSCModel;
+  ContextModel3DBuffer m_cDmmDataSCModel;
 #endif
 };
+
+//! \}
 
 #endif // !defined(AFX_TDECSBAC_H__CFCAAA19_8110_47F4_9A16_810C4B5499D5__INCLUDED_)

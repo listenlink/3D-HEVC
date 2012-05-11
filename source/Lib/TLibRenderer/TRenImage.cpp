@@ -32,10 +32,10 @@
  */
 
 
-
 #include "TRenImage.h"
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
+#include "assert.h"
 
 template<typename T>
 TRenImage<T>::TRenImage( TRenImage& rcIn )
@@ -247,5 +247,4 @@ template class TRenImage<Bool>;
 
 
 template Void TRenImage<Pel>::assign<Pel>    (TRenImage<Pel>*   );
-
 

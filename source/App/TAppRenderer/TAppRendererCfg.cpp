@@ -42,7 +42,7 @@
 
 
 #include "TAppRendererCfg.h"
-#include "../../App/TAppCommon/program_options_lite.h"
+#include "../../Lib/TAppCommon/program_options_lite.h"
 
 
 using namespace std;
@@ -495,12 +495,12 @@ Void TAppRendererCfg::xGetMaxPrecision( std::vector< Int > aiIn, Int& iPrecBefor
     Int iCurPrec;
     iCurPrec = 0;
     for ( Int iCur = aiIn[uiK]; iCur != 0; iCur /= 10, iCurPrec++ );
-    iPrecBefore = Max(iPrecBefore, iCurPrec - LOG10_VIEW_NUM_PREC );
+    iPrecBefore = max(iPrecBefore, iCurPrec - LOG10_VIEW_NUM_PREC );
 
     iCurPrec = 0;
     for ( Int iCur = 1;  aiIn[uiK] % iCur == 0; iCur *= 10, iCurPrec++);
     iCurPrec = LOG10_VIEW_NUM_PREC - Min(LOG10_VIEW_NUM_PREC, iCurPrec-1 );
-    iPrecAfter = Max(iPrecAfter, iCurPrec );
+    iPrecAfter = max(iPrecAfter, iCurPrec );
   }
 }
 

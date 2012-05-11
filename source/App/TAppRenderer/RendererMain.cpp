@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
   // print information
   fprintf( stdout, "\n" );
-  fprintf( stdout, "Multiview Video plus Depth Renderer: Renderer Version [%s]", NV_VERSION );
+  fprintf( stdout, "3D-HTM software: Renderer Version [%s]", NV_VERSION);  
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );

@@ -60,13 +60,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(SolutionDir)\vc10\$(Platform)\$(Configuration)\$(RootNamespace)\</IntDir>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
@@ -85,28 +85,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\compat\msvc</AdditionalIncludeDirectories>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ClCompile>
-      <Optimization>MaxSpeed</Optimization>
-      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <StringPooling>true</StringPooling>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <WarningLevel>Level3</WarningLevel>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\compat\msvc</AdditionalIncludeDirectories>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,10 +100,26 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -132,7 +133,8 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <IntrinsicFunctions>false</IntrinsicFunctions>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_LIB;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -141,28 +143,28 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\source\Lib\libmd5\libmd5.c" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel3DBuffer.cpp" />
+    <ClCompile Include="..\..\source\Lib\libmd5\libmd5.c" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComBitStream.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComCABACTables.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComDataCU.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComDepthMapGenerator.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComLoopFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComMotionInfo.cpp" />
-    <ClCompile Include="..\..\source\Lib\TLibCommon\TComMVDRefData.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPattern.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPic.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPicSym.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPicYuv.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPicYuvMD5.cpp" />
-    <ClCompile Include="..\..\source\Lib\TLibCommon\TComPredFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPrediction.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComRdCost.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComRdCostWeightPrediction.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComResidualGenerator.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComRom.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComSlice.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComTrQuant.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComWedgelet.cpp" />
@@ -170,12 +172,14 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComYuv.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\source\Lib\libmd5\libmd5.h" />
-    <ClInclude Include="..\..\source\Lib\libmd5\MD5.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\AccessUnit.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\CommonDef.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\ContextModel.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\ContextModel3DBuffer.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\ContextTables.h" />
+    <ClInclude Include="..\..\source\Lib\libmd5\libmd5.h" />
+    <ClInclude Include="..\..\source\Lib\libmd5\MD5.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\NAL.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\SEI.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComBitCounter.h" />
@@ -183,21 +187,21 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComCABACTables.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComDataCU.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComDepthMapGenerator.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComList.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComLoopFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComMotionInfo.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComMv.h" />
-    <ClInclude Include="..\..\source\Lib\TLibCommon\TComMVDRefData.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPattern.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPic.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPicSym.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPicYuv.h" />
-    <ClInclude Include="..\..\source\Lib\TLibCommon\TComPredFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPrediction.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRdCost.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRdCostWeightPrediction.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComResidualGenerator.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRom.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComSlice.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComTrQuant.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComWedgelet.h" />

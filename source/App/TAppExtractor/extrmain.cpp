@@ -38,7 +38,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
-#include "../../Lib/TLibCommon/CommonDef.h"
 #include "TAppExtrTop.h"
 
 // ====================================================================================================================
@@ -51,7 +50,7 @@ int main(int argc, char* argv[])
 
   // print information
   fprintf( stdout, "\n" );
-  fprintf( stdout, "HM %s based Multiview Video plus Depth Coder: Extractor Version [%s]", HM_VERSION, NV_VERSION );
+  fprintf( stdout, "3D-HTM Software: Extractor Version [%s] based on HM Version [%s]", HM_VERSION, NV_VERSION );
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );
@@ -63,9 +62,6 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  // create application extractor class
-  cTAppExtrTop.create();
-
   // starting time
   double dResult;
   long lBefore = clock();
@@ -76,9 +72,6 @@ int main(int argc, char* argv[])
   // ending time
   dResult = (double)(clock()-lBefore) / CLOCKS_PER_SEC;
   printf("\n Total Time: %12.3f sec.\n", dResult);
-
-  // destroy application extractor class
-  cTAppExtrTop.destroy();
 
   return EXIT_SUCCESS;
 }

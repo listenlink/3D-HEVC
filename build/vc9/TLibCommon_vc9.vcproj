@@ -44,7 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -106,7 +106,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;_CRT_SECURE_NO_WARNINGS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -171,7 +171,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -237,7 +237,7 @@
 				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="1"
-				AdditionalIncludeDirectories="&quot;..\..\compat\msvc&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)\..\source\Lib\;$(SolutionDir)\..\compat\msvc"
 				PreprocessorDefinitions="WIN32;_LIB;_CRT_SECURE_NO_WARNINGS"
 				StringPooling="true"
 				RuntimeLibrary="0"
@@ -315,15 +315,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComInterpolationFilter.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComLoopFilter.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComMotionInfo.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComMVDRefData.cpp"
 				>
 			</File>
 			<File
@@ -347,10 +347,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComPredFilter.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComPrediction.cpp"
 				>
 			</File>
@@ -368,6 +364,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComRom.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.cpp"
 				>
 			</File>
 			<File
@@ -397,6 +397,10 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\AccessUnit.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\CommonDef.h"
 				>
 			</File>
@@ -418,6 +422,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\libmd5\MD5.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\NAL.h"
 				>
 			</File>
 			<File
@@ -449,6 +457,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComInterpolationFilter.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComList.h"
 				>
 			</File>
@@ -465,10 +477,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComMVDRefData.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComPattern.h"
 				>
 			</File>
@@ -482,10 +490,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComPicYuv.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComPredFilter.h"
 				>
 			</File>
 			<File
@@ -509,6 +513,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComSlice.h"
 				>
 			</File>
@@ -521,7 +529,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComWeightPrediction.cpp"
+				RelativePath="..\..\source\Lib\TLibCommon\TComWeightPrediction.h"
 				>
 			</File>
 			<File

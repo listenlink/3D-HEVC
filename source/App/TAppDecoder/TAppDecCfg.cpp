@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TAppDecCfg.cpp
     \brief    Decoder configuration class
 */
@@ -41,7 +39,7 @@
 #include <cstring>
 #include <string>
 #include "TAppDecCfg.h"
-#include "../../App/TAppCommon/program_options_lite.h"
+#include "TAppCommon/program_options_lite.h"
 
 #ifdef WIN32
 #define strdup _strdup
@@ -49,6 +47,9 @@
 
 using namespace std;
 namespace po = df::program_options_lite;
+
+//! \ingroup TAppDecoder
+//! \{
 
 // ====================================================================================================================
 // Public member functions
@@ -71,11 +72,10 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("ReconFile,o",     cfg_ReconFile,     string(""), "reconstructed YUV output file name\n"
                                                      "YUV writing is skipped if omitted")
   ("ScaleOffsetFile,p", cfg_ScaleOffsetFile, string(""), "file with coded scales and offsets")
-#if DCM_SKIP_DECODING_FRAMES
   ("SkipFrames,s", m_iSkipFrame, 0, "number of frames to skip before random access")
-#endif
   ("OutputBitDepth,d", m_outputBitDepth, 0u, "bit depth of YUV output file (use 0 for native depth)")
-  ("SEIpictureDigest", m_pictureDigestEnabled, false, "Control handling of picture_digest SEI messages\n"
+  ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
+  ("SEIpictureDigest", m_pictureDigestEnabled, true, "Control handling of picture_digest SEI messages\n"
                                               "\t1: check\n"
                                               "\t0: ignore")
   ;
@@ -98,6 +98,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
   m_pchScaleOffsetFile = cfg_ScaleOffsetFile.empty() ? NULL : strdup(cfg_ScaleOffsetFile.c_str());
+
 
   if (!m_pchBitstreamFile)
   {
@@ -123,3 +124,5 @@ Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchSt
   strncpy(rpchOutputFileName+ iCharsToDot+iAppendLength ,  pchInputFileName+iCharsToDot, iCharsToEnd  );				
   rpchOutputFileName[iInLength+iAppendLength] = '\0'; 				 
 }
+
+//! \}

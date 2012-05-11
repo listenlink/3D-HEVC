@@ -68,7 +68,7 @@ public:
 #endif
 
 private:
-  TComSPS*  m_aacActiveSPS[ 2 ][ MAX_NUMBER_VIEWS ];
+  TComSPS*  m_aacActiveSPS[ 2 ][ MAX_VIEW_NUM ];
 };
 
 
@@ -98,7 +98,7 @@ public:
 private:
   Int       m_iLastPoc;
   UInt      m_uiMaxViewId;
-  TComPic*  m_aacCurrAUPics[ 2 ][ MAX_NUMBER_VIEWS ];
+  TComPic*  m_aacCurrAUPics[ 2 ][ MAX_VIEW_NUM ];
 };
 
 
@@ -211,10 +211,10 @@ private:
   UInt              m_uiCurrViewId;
   Bool              m_bPDMAvailable;
   std::vector<UInt> m_auiBaseIdList;
-  Int               m_aaiConvParsDisparity2VirtDepth[ MAX_NUMBER_VIEWS ][ 3 ];  // disparity      ==> virtual  depth   (0:scale, 1:add, 2:shift)
-  Int               m_aaiConvParsVirtDepth2Disparity[ MAX_NUMBER_VIEWS ][ 3 ];  // virtual  depth ==> disparity        (0:scale, 1:add, 2:shift)
-  Int               m_aaiConvParsOrigDepth2VirtDepth[ MAX_NUMBER_VIEWS ][ 3 ];  // original depth ==> virtual  depth   (0:scale, 1:add, 2:shift)
-  Int               m_aaiConvParsVirtDepth2OrigDepth[ MAX_NUMBER_VIEWS ][ 3 ];  // virtual  depth ==> original depth   (0:scale, 1:add, 2:shift)
+  Int               m_aaiConvParsDisparity2VirtDepth[ MAX_VIEW_NUM ][ 3 ];  // disparity      ==> virtual  depth   (0:scale, 1:add, 2:shift)
+  Int               m_aaiConvParsVirtDepth2Disparity[ MAX_VIEW_NUM ][ 3 ];  // virtual  depth ==> disparity        (0:scale, 1:add, 2:shift)
+  Int               m_aaiConvParsOrigDepth2VirtDepth[ MAX_VIEW_NUM ][ 3 ];  // original depth ==> virtual  depth   (0:scale, 1:add, 2:shift)
+  Int               m_aaiConvParsVirtDepth2OrigDepth[ MAX_VIEW_NUM ][ 3 ];  // virtual  depth ==> original depth   (0:scale, 1:add, 2:shift)
 
   // temporary arrays
   Bool              m_aabDepthSet[ MAX_CU_SIZE >> 2 ][ MAX_CU_SIZE >> 2 ];

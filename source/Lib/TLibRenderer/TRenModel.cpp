@@ -40,7 +40,7 @@
 ///////////  TRENMODEL //////////////////////
 TRenModel::TRenModel()
 {
-  m_iPad               = 12;
+  m_iPad               = PICYUV_PAD;
   m_iWidth             = -1;
   m_iHeight            = -1;
   m_iNumOfBaseViews    = -1;

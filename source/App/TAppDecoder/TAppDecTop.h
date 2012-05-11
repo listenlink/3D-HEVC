@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TAppDecTop.h
     \brief    Decoder application class (header)
 */
@@ -44,14 +42,15 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "../../Lib/TLibVideoIO/TVideoIOYuv.h"
-#include "../../Lib/TLibVideoIO/TVideoIOBits.h"
-#include "../../Lib/TLibCommon/TComList.h"
-#include "../../Lib/TLibCommon/TComPicYuv.h"
-#include "../../Lib/TLibCommon/TComBitStream.h"
-#include "../../Lib/TLibCommon/TComDepthMapGenerator.h"
-#include "../../Lib/TLibDecoder/TDecTop.h"
+#include "TLibVideoIO/TVideoIOYuv.h"
+#include "TLibCommon/TComList.h"
+#include "TLibCommon/TComPicYuv.h"
+#include "TLibCommon/TComDepthMapGenerator.h"
+#include "TLibDecoder/TDecTop.h"
 #include "TAppDecCfg.h"
+
+//! \ingroup TAppDecoder
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -62,22 +61,14 @@ class TAppDecTop : public TAppDecCfg
 {
 private:
   // class interface
-  std::vector<TDecTop*>           m_acTDecTopList;
-  std::vector<TDecTop*>           m_acTDecDepthTopList;
-  TComBitstream*                  m_apcBitstream;                 ///< bitstream class
-  TVideoIOBitsStartCode           m_cTVideoIOBitstreamFile;       ///< file I/O class
-  std::vector<TVideoIOYuv*>       m_acTVideoIOYuvReconFileList;
-  std::vector<TVideoIOYuv*>       m_acTVideoIOYuvDepthReconFileList;
+  std::vector<TDecTop*>           m_tDecTop;                      ///< decoder classes
 
-  Bool m_bUsingDepth;
+  std::vector<TVideoIOYuv*>       m_tVideoIOYuvReconFile;         ///< reconstruction YUV class
 
   // for output control
   Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP
-//  Int                             m_iPOCLastDisplay;              ///< last POC in display order
-
-  std::vector<Bool>               m_abDecFlagList;         ///< decoded flag in one GOP
-  std::vector<Int>                m_aiPOCLastDisplayList;
-  std::vector<Int>                m_aiDepthPOCLastDisplayList;
+  std::vector<Int>                m_pocLastDisplay;               ///< last POC in display order
+  Bool                            m_useDepth;
 
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
@@ -89,31 +80,37 @@ private:
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
-
+  
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
-  Void  increaseNumberOfViews	(Int iNewNumberOfViews);
-  Void  startUsingDepth() ;
+  Void  increaseNumberOfViews	(Int newNumberOfViewDepth);
+  TDecTop* getTDecTop     ( Int viewId, Bool isDepth );
 
-// GT FIX
-  std::vector<TComPic*> getSpatialRefPics( Int iViewIdx, Int iPoc, Bool bIsDepth );
-  TComPic* getPicFromView( Int iViewIdx, Int iPoc, bool bDepth );
-// GT FIX END
+  std::vector<TComPic*> getInterViewRefPics( Int viewId, Int poc, Bool isDepth, TComSPS* sps );
+  TComPic*              getPicFromView     ( Int viewId, Int poc, bool isDepth ) { return xGetPicFromView( viewId, poc, isDepth ); }
 
 #if DEPTH_MAP_GENERATION
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
-  TDecTop*          getDecTop0    () { return m_acTDecTopList[0]; }
+  TDecTop*          getDecTop0    () { return m_tDecTop[0]; }
 #endif
 
 protected:
-  Void  xCreateDecLib     (); ///< create internal classes
+//  Void  xCreateDecLib     (); ///< create internal classes
   Void  xDestroyDecLib    (); ///< destroy internal classes
-  Void  xInitDecLib       (); ///< initialize decoder class
+//  Void  xInitDecLib       (); ///< initialize decoder class
+  
+#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
+  Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId, UInt tId); ///< write YUV to file
+#else
+  Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId ); ///< write YUV to file
+#endif
+  Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId ); ///< flush all remaining decoded pictures to file
 
-  Void  xWriteOutput      ( TComList<TComPic*>* pcListPic ); ///< write YUV to file
+  TComPic* xGetPicFromView( Int viewId, Int poc, Bool isDepth );
 };
 
+//! \}
 #endif
 

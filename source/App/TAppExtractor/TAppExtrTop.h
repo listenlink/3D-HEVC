@@ -42,8 +42,6 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "../../Lib/TLibVideoIO/TVideoIOBits.h"
-#include "../../Lib/TLibCommon/TComBitStream.h"
 #include "../../Lib/TLibExtractor/TExtrTop.h"
 #include "TAppExtrCfg.h"
 
@@ -56,27 +54,13 @@ class TAppExtrTop : public TAppExtrCfg
 {
 private:
   // class interface
-  TExtrTop                        m_cTExtrTop;                    ///< extractor class
-  TComBitstream*                  m_apcInputBitstream;            ///< bitstream class
-  TComBitstream*                  m_apcOutputBitstream;           ///< bitstream class
-  TVideoIOBitsStartCode           m_cTVideoIOInputBitstreamFile;  ///< file I/O class
-  TVideoIOBitsStartCode           m_cTVideoIOOutputBitstreamFile; ///< file I/O class
-  std::fstream                    m_cSpsInfoFileHandle;           ///< file handle
+  TExtrTop                       m_cTExtrTop;         ///< extractor class
 
 public:
   TAppExtrTop();
-  virtual ~TAppExtrTop() {}
+  virtual ~TAppExtrTop();
   
-  Void  create                     (); ///< create internal members
-  Void  destroy                    (); ///< destroy internal members
-  Void  extract                    (); ///< main extraction function
-  
-protected:
-  Void  xCreateExtrLib             (); ///< create internal classes
-  Void  xDestroyExtrLib            (); ///< destroy internal classes
-  Void  xInitExtrLib               (); ///< initialize extractor class
-
-  Void  xCopyInputPacketIntoOutput ();
+  Void  extract                  ();                  ///< main extraction function
 };
 
 #endif

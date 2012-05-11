@@ -45,15 +45,6 @@ TExtrTop::~TExtrTop()
 {
 }
 
-Void TExtrTop::create()
-{
-}
-
-Void TExtrTop::destroy()
-{
-  m_acSPSBuffer.clear();
-}
-
 Void TExtrTop::init()
 {
   m_cEntropyDecoder.init(&m_cPrediction);
@@ -61,24 +52,26 @@ Void TExtrTop::init()
   m_acSPSBuffer.clear();
 }
 
-
-Bool TExtrTop::extract( TComBitstream* pcBitstream, std::set<UInt>& rsuiExtractLayerIds )
+Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds )
 {
+  UInt uiLayerId = xGetLayerId( nalu.m_viewId, nalu.m_isDepth );
+
   // Initialize entropy decoder
-  m_cEntropyDecoder.setEntropyDecoder (&m_cCavlcDecoder);
-  m_cEntropyDecoder.setBitstream      (pcBitstream);
+  m_cEntropyDecoder.setEntropyDecoder( &m_cCavlcDecoder );
+  m_cEntropyDecoder.setBitstream     ( nalu.m_Bitstream );
   
-  NalUnitType eNalUnitType;
-  UInt uiTemporalId, uiLayerId;
-
-  m_cEntropyDecoder.decodeNalUnitHeader( eNalUnitType, uiTemporalId, uiLayerId );  
-
-  if ( eNalUnitType == NAL_UNIT_SPS )
+  if ( nalu.m_nalUnitType == NAL_UNIT_SPS )
   {
      TComSPS cSPS;
-
+#if RPS_IN_SPS
+     TComRPSList cRPS;
+     cSPS.setRPSList( &cRPS );
+#endif
+#if HHI_MPI
+     m_cEntropyDecoder.decodeSPS( &cSPS, nalu.m_isDepth );
+#else
      m_cEntropyDecoder.decodeSPS( &cSPS );
-     cSPS.setLayerId( uiLayerId );
+#endif
 
      m_acSPSBuffer.push_back( cSPS );
   }
@@ -94,7 +87,7 @@ Void TExtrTop::dumpSpsInfo( std::ostream& rcSpsInfoHandle )
   for( std::list<TComSPS>::iterator iterSPS = m_acSPSBuffer.begin(); iterSPS != m_acSPSBuffer.end(); iterSPS++ )
   {
      rcSpsInfoHandle << std::endl;
-     rcSpsInfoHandle << "layer_id = "              << iterSPS->getLayerId() << std::endl;
+     rcSpsInfoHandle << "layer_id = "              << xGetLayerId( iterSPS->getViewId(), iterSPS->isDepth() ) << std::endl;
      rcSpsInfoHandle << "seq_parameter_set_id = "  << iterSPS->getSPSId() << std::endl;
      rcSpsInfoHandle << "view_id = "               << iterSPS->getViewId() << std::endl;
      rcSpsInfoHandle << "view_order_idx = "        << iterSPS->getViewOrderIdx() << std::endl;

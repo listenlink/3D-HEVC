@@ -32,8 +32,6 @@
  */
 
 
-
-
 #ifndef __TRENMODEL__
 #define __TRENMODEL__
 

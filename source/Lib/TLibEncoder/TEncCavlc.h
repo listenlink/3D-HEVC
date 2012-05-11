@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TEncCavlc.h
     \brief    CAVLC encoder class (header)
 */
@@ -44,12 +42,13 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "../TLibCommon/CommonDef.h"
-#include "../TLibCommon/TComBitStream.h"
+#include "TLibCommon/CommonDef.h"
+#include "TLibCommon/TComBitStream.h"
 #include "TEncEntropy.h"
-#if QC_MOD_LCEC
-#include "../TLibCommon/TComRom.h"
-#endif
+#include "TLibCommon/TComRom.h"
+
+//! \ingroup TLibEncoder
+//! \{
 
 class TEncTop;
 
@@ -60,10 +59,6 @@ class TEncTop;
 /// CAVLC encoder class
 class TEncCavlc : public TEncEntropyIf
 {
-private:
-  Bool m_bAdaptFlag;
-  
-  
 public:
   TEncCavlc();
   virtual ~TEncCavlc();
@@ -72,113 +67,30 @@ protected:
   TComBitIf*    m_pcBitIf;
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
-  Bool          m_bRunLengthCoding;
-  UInt          m_uiRun;
   Bool          m_bAlfCtrl;
   UInt          m_uiMaxAlfCtrlDepth;
-  UInt          m_uiLPTableE4[3][32];
-  UInt          m_uiLPTableD4[3][32];
-#if !CAVLC_COEF_LRG_BLK
-  UInt          m_uiLPTableE8[10][128];
-  UInt          m_uiLPTableD8[10][128];
-#endif
-  UInt          m_uiLastPosVlcIndex[10];
-  
-#if LCEC_INTRA_MODE
- #if MTK_DCM_MPM
-  UInt          m_uiIntraModeTableD17[2][16];
-  UInt          m_uiIntraModeTableE17[2][16];
-
-  UInt          m_uiIntraModeTableD34[2][33];
-  UInt          m_uiIntraModeTableE34[2][33];
-#else
-  UInt          m_uiIntraModeTableD17[16];
-  UInt          m_uiIntraModeTableE17[16];
-
-  UInt          m_uiIntraModeTableD34[33];
-  UInt          m_uiIntraModeTableE34[33];
-#endif
-#endif
-  
-#if CAVLC_RQT_CBP
-  UInt          m_uiCBP_YUV_TableE[4][8];
-  UInt          m_uiCBP_YUV_TableD[4][8];
-  UInt          m_uiCBP_YS_TableE[2][4];
-  UInt          m_uiCBP_YS_TableD[2][4];
-  UInt          m_uiCBP_YCS_TableE[2][8];
-  UInt          m_uiCBP_YCS_TableD[2][8];
-  UInt          m_uiCBP_4Y_TableE[2][15];
-  UInt          m_uiCBP_4Y_TableD[2][15];
-  UInt          m_uiCBP_4Y_VlcIdx;
-#else
-  UInt          m_uiCBPTableE[2][8];
-  UInt          m_uiCBPTableD[2][8];
-  UInt          m_uiBlkCBPTableE[2][15];
-  UInt          m_uiBlkCBPTableD[2][15];
-  UInt          m_uiCbpVlcIdx[2];
-  UInt          m_uiBlkCbpVlcIdx;
-#endif
-
-
-  
-#if MS_LCEC_LOOKUP_TABLE_EXCEPTION
-  UInt          m_uiMI1TableE[9];
-  UInt          m_uiMI1TableD[9];
-#else
-  UInt          m_uiMI1TableE[8];
-  UInt          m_uiMI1TableD[8];
-#endif
-  UInt          m_uiMI2TableE[15];
-  UInt          m_uiMI2TableD[15];
-  
-  UInt          m_uiMITableVlcIdx;
-#if QC_LCEC_INTER_MODE
-  UInt          m_uiSplitTableE[4][7];
-  UInt          m_uiSplitTableD[4][7];
-#endif
-
-#if CAVLC_COUNTER_ADAPT
-#if CAVLC_RQT_CBP
-  UChar         m_ucCBP_YUV_TableCounter[4][4];
-  UChar         m_ucCBP_4Y_TableCounter[2][2];
-  UChar         m_ucCBP_YS_TableCounter[2][3];
-  UChar         m_ucCBP_YCS_TableCounter[2][4];
-  UChar         m_ucCBP_YUV_TableCounterSum[4];
-  UChar         m_ucCBP_4Y_TableCounterSum[2];
-  UChar         m_ucCBP_YS_TableCounterSum[2];
-  UChar         m_ucCBP_YCS_TableCounterSum[2];
-#else
-  UChar         m_ucCBFTableCounter    [2][4];
-  UChar         m_ucBlkCBPTableCounter [2][2];
-  UChar         m_ucCBFTableCounterSum[2];
-  UChar         m_ucBlkCBPTableCounterSum[2];
-#endif
-  UChar         m_ucMI1TableCounter       [4];
-  UChar         m_ucSplitTableCounter  [4][4];
-
-  UChar         m_ucSplitTableCounterSum[4];
-  UChar         m_ucMI1TableCounterSum;
-#endif
-
-  Void  xCheckCoeff( TCoeff* pcCoef, UInt uiSize, UInt uiDepth, UInt& uiNumofCoeff, UInt& uiPart );
+  Int           m_iSliceGranularity;  //!< slice granularity
   
   Void  xWriteCode            ( UInt uiCode, UInt uiLength );
   Void  xWriteUvlc            ( UInt uiCode );
-  Void  xWriteSvlc            ( Int iCode   );
+  Void  xWriteSvlc            ( Int  iCode   );
   Void  xWriteFlag            ( UInt uiCode );
+#if ENC_DEC_TRACE
+  Void  xWriteCodeTr          ( UInt value, UInt  length, const Char *pSymbolName);
+  Void  xWriteUvlcTr          ( UInt value,               const Char *pSymbolName);
+  Void  xWriteSvlcTr          ( Int  value,               const Char *pSymbolName);
+  Void  xWriteFlagTr          ( UInt value,               const Char *pSymbolName);
+#endif
+  
+  Void  xWritePCMAlignZero    ();
   Void  xWriteEpExGolomb      ( UInt uiSymbol, UInt uiCount );
   Void  xWriteExGolombLevel    ( UInt uiSymbol );
   Void  xWriteUnaryMaxSymbol  ( UInt uiSymbol, UInt uiMaxSymbol );
-#if !QC_MOD_LCEC_RDOQ
-  UInt  xLeadingZeros         ( UInt uiCode );
-#endif
-  Void  xWriteVlc             ( UInt uiTableNumber, UInt uiCodeNumber );
 
-#if CAVLC_COEF_LRG_BLK
-  Void  xCodeCoeff             ( TCoeff* scoeff, Int n, Int blSize);
+#if RPS_IN_SPS
+  Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS );
 #else
-  Void  xCodeCoeff4x4          ( TCoeff* scoeff, Int iTableNumber );
-  Void  xCodeCoeff8x8          ( TCoeff* scoeff, Int iTableNumber );
+  Void codeShortTermRefPicSet              ( TComPPS* pcPPS, TComReferencePictureSet* pcRPS );
 #endif
   
   UInt  xConvertToUInt        ( Int iValue ) {  return ( iValue <= 0) ? -iValue<<1 : (iValue<<1)-1; }
@@ -186,14 +98,10 @@ protected:
 public:
   
   Void  resetEntropy          ();
+#if CABAC_INIT_FLAG
+  Void  determineCabacInitIdx  () {};
+#endif
 
-#if !CAVLC_COEF_LRG_BLK
-  UInt* GetLP8Table();
-#endif
-  UInt* GetLP4Table();
-#if QC_MOD_LCEC
-  UInt* GetLastPosVlcIndexTable();
-#endif
   Void  setBitstream          ( TComBitIf* p )  { m_pcBitIf = p;  }
   Void  setSlice              ( TComSlice* p )  { m_pcSlice = p;  }
   Bool getAlfCtrl() {return m_bAlfCtrl;}
@@ -205,51 +113,80 @@ public:
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
   UInt  getCoeffCost          ()                { return  m_uiCoeffCost;  }
   
-#if BITSTREAM_EXTRACTION
-  Void  codeNALUnitHeader       ( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId = 0, UInt uiLayerId = 0 );
+#if HHI_MPI
+  Void  codeSPS                 ( TComSPS* pcSPS, Bool bIsDepth );
 #else
-  Void  codeNALUnitHeader       ( NalUnitType eNalUnitType, NalRefIdc eNalRefIdc, UInt TemporalId = 0, Bool bOutputFlag = true );
-#endif
-  
   Void  codeSPS                 ( TComSPS* pcSPS );
+#endif
   Void  codePPS                 ( TComPPS* pcPPS );
   void codeSEI(const SEI&);
   Void  codeSliceHeader         ( TComSlice* pcSlice );
+
+  Void codeTileMarkerFlag(TComSlice* pcSlice);
+
+#if TILES_WPP_ENTRY_POINT_SIGNALLING
+  Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
+#else
+  Void  codeSliceHeaderSubstreamTable( TComSlice* pcSlice );
+#endif
   Void  codeTerminatingBit      ( UInt uilsLast );
   Void  codeSliceFinish         ();
+  Void  codeFlush               () {}
+  Void  encodeStart             () {}
   
+#if HHI_INTER_VIEW_MOTION_PRED
+  Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Int iNum );
+#else
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
+#endif
   Void codeAlfFlag       ( UInt uiCode );
   Void codeAlfUvlc       ( UInt uiCode );
   Void codeAlfSvlc       ( Int   iCode );
   Void codeAlfCtrlDepth();
-#if MTK_SAO
-  Void codeAoFlag       ( UInt uiCode );
-  Void codeAoUvlc       ( UInt uiCode );
-  Void codeAoSvlc       ( Int   iCode );
+#if LCU_SYNTAX_ALF
+  Void codeAPSAlflag(UInt uiCode);
+  Void codeAlfFixedLengthIdx( UInt idx, UInt numFilterSetsInBuffer);
 #endif
+  Void codeSaoFlag       ( UInt uiCode );
+  Void codeSaoUvlc       ( UInt uiCode );
+  Void codeSaoSvlc       ( Int   iCode );
+#if SAO_UNIT_INTERLEAVING
+  Void codeSaoRun        ( UInt uiCode, UInt maxValue  );
+  Void codeSaoMergeLeft  ( UInt uiCode, UInt compIdx ){;}
+  Void codeSaoMergeUp    ( UInt uiCode ){;}
+  Void codeSaoTypeIdx    ( UInt uiCode ){ xWriteUvlc(uiCode   );}
+  Void codeSaoUflc       ( UInt uiCode ){ assert(uiCode < 32); xWriteCode(uiCode, 5);}
+#endif
+
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if HHI_INTER_VIEW_MOTION_PRED || HHI_MPI
-  Void codeMergeIndexMV  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if TSB_ALF_HEADER
-  Void codeAlfFlagNum    ( UInt uiCode, UInt minValue );
+
+  Void codeApsExtensionFlag ();
+
+  /// set slice granularity
+  Void setSliceGranularity(Int iSliceGranularity)  {m_iSliceGranularity = iSliceGranularity;}
+
+  ///get slice granularity
+  Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
+
   Void codeAlfCtrlFlag   ( UInt uiSymbol );
-#endif
-#if QC_LCEC_INTER_MODE
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
-#endif  
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
+#if BURST_IPCM
+  Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag);
+#else
+  Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+
   Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx );
   Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -262,26 +199,26 @@ public:
   Void codeMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   
   Void codeDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  
+  Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
+  
+  Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType);
+  
+  Void xCodePredWeightTable          ( TComSlice* pcSlice );
+  Void updateContextTables           ( SliceType eSliceType, Int iQp, Bool bExecuteFinish=true ) { return;   }
+  Void updateContextTables           ( SliceType eSliceType, Int iQp  )                          { return;   }
+  Void writeTileMarker               ( UInt uiTileIdx, UInt uiBitsUsed );
 
-  Void codeViewIdx       ( Int iViewIdx );
-#if CAVLC_RQT_CBP
-  Void codeCbfTrdiv      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  UInt xGetFlagPattern   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-  Void codeCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
-  Void codeBlockCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiQPartNum, Bool bRD = false);
-  
-  Void codeCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType, Bool bRD = false );
+  Void  codeAPSInitInfo(TComAPS* pcAPS);  //!< code APS flags before encoding SAO and ALF parameters
+  Void  codeFinish(Bool bEnd) { /*do nothing*/}
+  Void codeScalingList  ( TComScalingList* scalingList );
+  Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
+  Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
+  Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
 
-#ifdef WEIGHT_PRED
-  Void codeWeightPredTable( TComSlice* pcSlice );
-#endif
-  
-  Void estBit             (estBitsSbacStruct* pcEstBitsSbac, UInt uiCTXIdx, TextType eTType);
-  
-  Bool  getAdaptFlag          ()          { return m_bAdaptFlag; }
-  Void  setAdaptFlag          ( Bool b )  { m_bAdaptFlag = b;     }
 };
+
+//! \}
 
 #endif // !defined(AFX_TENCCAVLC_H__EE8A0B30_945B_4169_B290_24D3AD52296F__INCLUDED_)
 

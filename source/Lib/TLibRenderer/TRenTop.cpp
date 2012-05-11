@@ -31,7 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
 #include "TRenImage.h"
 #include "TRenTop.h"
 
@@ -151,7 +150,7 @@ Void TRenTop::xConvertInputDepth( PelImage* pcOrgInputImage, PelImage* pcConvInp
     // Quarter Plane
     PelImagePlane* pcTempPlane = new PelImagePlane(pcOrgInputImage->getPlane(0)->getWidth(), ( pcOrgInputImage->getPlane(0)->getHeight() >> 1), REN_LUMA_MARGIN );
 
-    TRenFilter::sampleVerDown2Tap13(pcOrgInputImage->getPlane(0), pcTempPlane, 12);
+    TRenFilter::sampleVerDown2Tap13(pcOrgInputImage->getPlane(0), pcTempPlane, PICYUV_PAD);
     pcConvPlane = pcConvInputImage->getPlane(1);
 
     if ( iLog2SamplingFactor == 0 )
@@ -316,9 +315,9 @@ Void TRenTop::interpolateView( TComPicYuv* pcPicYuvVideoLeft, TComPicYuv* pcPicY
   m_iSimEnhBaseView = iSimEnhBaseView;
 
   PelImage cLeftInputImage   ( pcPicYuvVideoLeft  );
-  PelImage cLeftInputDepth   ( pcPicYuvDepthLeft, true );
+  PelImage cLeftInputDepth   ( pcPicYuvDepthLeft,  true );
   PelImage cRightInputImage  ( pcPicYuvVideoRight );
-  PelImage cRightInputDepth  ( pcPicYuvDepthRight , true );
+  PelImage cRightInputDepth  ( pcPicYuvDepthRight, true );
   PelImage cOutputImage      ( pcPicYuvSynthOut   );
 
   m_pcLeftOutputImage ->init();
@@ -337,7 +336,7 @@ Void TRenTop::interpolateView( TComPicYuv* pcPicYuvVideoLeft, TComPicYuv* pcPicY
   xPreProcessDepth(&cRightInputDepth, &cRightInputDepth);
 
   xConvertInputData( &cLeftInputImage,  &cLeftInputDepth,  m_pcLeftInputImage,  m_pcLeftInputDepth  ,false );
-  xConvertInputData( &cRightInputImage, &cRightInputDepth, m_pcRightInputImage, m_pcRightInputDepth ,true );
+  xConvertInputData( &cRightInputImage, &cRightInputDepth, m_pcRightInputImage, m_pcRightInputDepth ,true  );
 
   // Render from Left View to Right view
   if ( m_iBlendMode != eRenBlendDepthFirst )
@@ -385,8 +384,8 @@ Void TRenTop::interpolateView( TComPicYuv* pcPicYuvVideoLeft, TComPicYuv* pcPicY
   }
 
   xBlend(m_pcLeftOutputImage, m_pcRightOutputImage, m_pcLeftFilled, m_pcRightFilled, m_pcLeftOutputDepth, m_pcRightOutputDepth, m_pcOutputImage);
-
   xConvertOutputData( m_pcOutputImage, &cOutputImage , false );
+
   xPostProcessImage  ( &cOutputImage, &cOutputImage);
   xCutMargin( &cOutputImage );
 };
@@ -2229,4 +2228,3 @@ TRenTop::~TRenTop()
   // Zheijang temporal filter
   if(m_aiBlkMoving         != NULL ) delete[] m_aiBlkMoving;
 }
-

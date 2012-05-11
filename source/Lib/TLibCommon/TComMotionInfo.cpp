@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TComMotionInfo.cpp
     \brief    motion information handling classes
 */
@@ -41,6 +39,9 @@
 #include "TComMotionInfo.h"
 #include "assert.h"
 #include <stdlib.h>
+
+//! \ingroup TLibCommon
+//! \{
 
 // ====================================================================================================================
 // Public member functions
@@ -52,268 +53,324 @@
 
 Void TComCUMvField::create( UInt uiNumPartition )
 {
-  m_pcMv     = ( TComMv* )xMalloc( TComMv, uiNumPartition );
-  m_pcMvd    = ( TComMv* )xMalloc( TComMv, uiNumPartition );
-  m_piRefIdx = (    Int* )xMalloc( Int,    uiNumPartition );
+  assert(m_pcMv     == NULL);
+  assert(m_pcMvd    == NULL);
+  assert(m_piRefIdx == NULL);
+  
+  m_pcMv     = new TComMv[ uiNumPartition ];
+  m_pcMvd    = new TComMv[ uiNumPartition ];
+  m_piRefIdx = new Char  [ uiNumPartition ];
   
   m_uiNumPartition = uiNumPartition;
 }
 
 Void TComCUMvField::destroy()
 {
-  if( m_pcMv )
-  {
-    xFree( m_pcMv );     m_pcMv     = NULL;
-  }
-  if( m_pcMvd )
-  {
-    xFree( m_pcMvd );    m_pcMvd    = NULL;
-  }
-  if( m_piRefIdx )
-  {
-    xFree( m_piRefIdx ); m_piRefIdx = NULL;
-  }
+  assert(m_pcMv     != NULL);
+  assert(m_pcMvd    != NULL);
+  assert(m_piRefIdx != NULL);
+  
+  delete[] m_pcMv;
+  delete[] m_pcMvd;
+  delete[] m_piRefIdx;
+  
+  m_pcMv     = NULL;
+  m_pcMvd    = NULL;
+  m_piRefIdx = NULL;
+  
+  m_uiNumPartition = 0;
 }
 
 // --------------------------------------------------------------------------------------------------------------------
 // Clear / copy
 // --------------------------------------------------------------------------------------------------------------------
 
-Void TComCUMvField::clearMv( Int iPartAddr, UInt uiDepth )
-{
-  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
-  
-  for ( Int i = iNumPartition - 1; i >= 0; i-- )
-  {
-    m_pcMv[ i ].setZero();
-  }
-}
-
-Void TComCUMvField::clearMvd( Int iPartAddr, UInt uiDepth )
-{
-  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
-  
-  for ( Int i = iNumPartition - 1; i >= 0; i-- )
-  {
-    m_pcMvd[ i ].setZero();
-  }
-}
-
 Void TComCUMvField::clearMvField()
 {
-  for ( Int i = m_uiNumPartition - 1; i >= 0; i-- )
+  for ( Int i = 0; i < m_uiNumPartition; i++ )
   {
-    m_pcMv    [ i ].setZero();
-    m_pcMvd   [ i ].setZero();
-    m_piRefIdx[ i ] = NOT_VALID;
+    m_pcMv [ i ].setZero();
+    m_pcMvd[ i ].setZero();      
   }
+  assert( sizeof( *m_piRefIdx ) == 1 );
+  memset( m_piRefIdx, NOT_VALID, m_uiNumPartition * sizeof( *m_piRefIdx ) );
 }
 
-Void TComCUMvField::copyFrom( TComCUMvField* pcCUMvFieldSrc, Int iNumPartSrc, Int iPartAddrDst )
+Void TComCUMvField::copyFrom( TComCUMvField const * pcCUMvFieldSrc, Int iNumPartSrc, Int iPartAddrDst )
 {
   Int iSizeInTComMv = sizeof( TComMv ) * iNumPartSrc;
   
-  memcpy( m_pcMv     + iPartAddrDst, pcCUMvFieldSrc->getMv(),     iSizeInTComMv );
-  memcpy( m_pcMvd    + iPartAddrDst, pcCUMvFieldSrc->getMvd(),    iSizeInTComMv );
-  memcpy( m_piRefIdx + iPartAddrDst, pcCUMvFieldSrc->getRefIdx(), sizeof( Int ) * iNumPartSrc );
+  memcpy( m_pcMv     + iPartAddrDst, pcCUMvFieldSrc->m_pcMv,     iSizeInTComMv );
+  memcpy( m_pcMvd    + iPartAddrDst, pcCUMvFieldSrc->m_pcMvd,    iSizeInTComMv );
+  memcpy( m_piRefIdx + iPartAddrDst, pcCUMvFieldSrc->m_piRefIdx, sizeof( *m_piRefIdx ) * iNumPartSrc );
 }
 
-Void TComCUMvField::copyTo( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst )
+Void TComCUMvField::copyTo( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst ) const
 {
-  Int iSizeInTComMv = sizeof( TComMv ) * m_uiNumPartition;
-  
-  memcpy( pcCUMvFieldDst->getMv()     + iPartAddrDst, m_pcMv,     iSizeInTComMv );
-  memcpy( pcCUMvFieldDst->getMvd()    + iPartAddrDst, m_pcMvd,    iSizeInTComMv );
-  memcpy( pcCUMvFieldDst->getRefIdx() + iPartAddrDst, m_piRefIdx, sizeof( Int ) * m_uiNumPartition );
+  copyTo( pcCUMvFieldDst, iPartAddrDst, 0, m_uiNumPartition );
 }
 
-Void TComCUMvField::copyTo( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst, UInt uiOffset, UInt uiNumPart )
+Void TComCUMvField::copyTo( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst, UInt uiOffset, UInt uiNumPart ) const
 {
   Int iSizeInTComMv = sizeof( TComMv ) * uiNumPart;
   Int iOffset = uiOffset + iPartAddrDst;
   
-  memcpy( pcCUMvFieldDst->getMv()     + iOffset, m_pcMv     + uiOffset, iSizeInTComMv );
-  memcpy( pcCUMvFieldDst->getMvd()    + iOffset, m_pcMvd    + uiOffset, iSizeInTComMv );
-  memcpy( pcCUMvFieldDst->getRefIdx() + iOffset, m_piRefIdx + uiOffset, sizeof( Int ) * uiNumPart );
-}
-
-Void TComCUMvField::copyMvTo( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst )
-{
-  memcpy( pcCUMvFieldDst->getMv() + iPartAddrDst, m_pcMv, sizeof( TComMv ) * m_uiNumPartition );
+  memcpy( pcCUMvFieldDst->m_pcMv     + iOffset, m_pcMv     + uiOffset, iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->m_pcMvd    + iOffset, m_pcMvd    + uiOffset, iSizeInTComMv );
+  memcpy( pcCUMvFieldDst->m_piRefIdx + iOffset, m_piRefIdx + uiOffset, sizeof( *m_piRefIdx ) * uiNumPart );
 }
 
 // --------------------------------------------------------------------------------------------------------------------
 // Set
 // --------------------------------------------------------------------------------------------------------------------
 
-Void TComCUMvField::setAllMv( TComMv& rcMv, PartSize eCUMode, Int iPartAddr, Int iPartIdx, UInt uiDepth )
+template <typename T>
+Void TComCUMvField::setAll( T *p, T const & val, PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx  )
 {
   Int i;
-  TComMv* pcMv = m_pcMv + iPartAddr;
-  register TComMv cMv = rcMv;
-  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
+  p += iPartAddr;
+  Int numElements = m_uiNumPartition >> ( 2 * uiDepth );
   
   switch( eCUMode )
   {
     case SIZE_2Nx2N:
-      for ( i = iNumPartition - 1; i >= 0; i-- )
+      for ( i = 0; i < numElements; i++ )
       {
-        pcMv[ i ] = cMv;
+        p[ i ] = val;
       }
       break;
+      
     case SIZE_2NxN:
-      for ( i = ( iNumPartition >> 1 ) - 1; i >= 0; i-- )
+      numElements >>= 1;
+      for ( i = 0; i < numElements; i++ )
       {
-        pcMv[ i ] = cMv;
+        p[ i ] = val;
       }
       break;
+      
     case SIZE_Nx2N:
-    {
-      UInt uiOffset = iNumPartition >> 1;
-      for ( i = ( iNumPartition >> 2 ) - 1; i >= 0; i-- )
+      numElements >>= 2;
+      for ( i = 0; i < numElements; i++ )
       {
-        pcMv[ i ] = cMv;
-        pcMv[ i + uiOffset ] = cMv;
+        p[ i                   ] = val;
+        p[ i + 2 * numElements ] = val;
+      }
+      break;
+      
+    case SIZE_NxN:
+      numElements >>= 2;
+      for ( i = 0; i < numElements; i++)
+      {
+        p[ i ] = val;
+      }
+      break;
+    case SIZE_2NxnU:
+    {
+      Int iCurrPartNumQ = numElements>>2;
+      if( iPartIdx == 0 )
+      {
+        T *pT  = p;
+        T *pT2 = p + iCurrPartNumQ;
+        for (i = 0; i < (iCurrPartNumQ>>1); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+        }
+      }
+      else
+      {
+        T *pT  = p;
+        for (i = 0; i < (iCurrPartNumQ>>1); i++)
+        {
+          pT[i] = val;
+        }
+
+        pT = p + iCurrPartNumQ;
+        for (i = 0; i < ( (iCurrPartNumQ>>1) + (iCurrPartNumQ<<1) ); i++)
+        {
+          pT[i] = val;
+        }
       }
       break;
     }
-    case SIZE_NxN:
-      for ( i = ( iNumPartition >> 2 ) - 1; i >= 0; i-- )
+  case SIZE_2NxnD:
+    {
+      Int iCurrPartNumQ = numElements>>2;
+      if( iPartIdx == 0 )
       {
-        pcMv[ i ] = cMv;
+        T *pT  = p;
+        for (i = 0; i < ( (iCurrPartNumQ>>1) + (iCurrPartNumQ<<1) ); i++)
+        {
+          pT[i] = val;
+        }
+        pT = p + ( numElements - iCurrPartNumQ );
+        for (i = 0; i < (iCurrPartNumQ>>1); i++)
+        {
+          pT[i] = val;
+        }
+      }
+      else
+      {
+        T *pT  = p;
+        T *pT2 = p + iCurrPartNumQ;
+        for (i = 0; i < (iCurrPartNumQ>>1); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+        }
       }
       break;
+    }
+  case SIZE_nLx2N:
+    {
+      Int iCurrPartNumQ = numElements>>2;
+      if( iPartIdx == 0 )
+      {
+        T *pT  = p;
+        T *pT2 = p + (iCurrPartNumQ<<1);
+        T *pT3 = p + (iCurrPartNumQ>>1);
+        T *pT4 = p + (iCurrPartNumQ<<1) + (iCurrPartNumQ>>1);
+
+        for (i = 0; i < (iCurrPartNumQ>>2); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+          pT3[i] = val;
+          pT4[i] = val;
+        }
+      }
+      else
+      {
+        T *pT  = p;
+        T *pT2 = p + (iCurrPartNumQ<<1);
+        for (i = 0; i < (iCurrPartNumQ>>2); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+        }
+
+        pT  = p + (iCurrPartNumQ>>1);
+        pT2 = p + (iCurrPartNumQ<<1) + (iCurrPartNumQ>>1);
+        for (i = 0; i < ( (iCurrPartNumQ>>2) + iCurrPartNumQ ); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+        }
+      }
+      break;
+    }
+  case SIZE_nRx2N:
+    {
+      Int iCurrPartNumQ = numElements>>2;
+      if( iPartIdx == 0 )
+      {
+        T *pT  = p;
+        T *pT2 = p + (iCurrPartNumQ<<1);
+        for (i = 0; i < ( (iCurrPartNumQ>>2) + iCurrPartNumQ ); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+        }
+
+        pT  = p + iCurrPartNumQ + (iCurrPartNumQ>>1);
+        pT2 = p + numElements - iCurrPartNumQ + (iCurrPartNumQ>>1);
+        for (i = 0; i < (iCurrPartNumQ>>2); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+        }
+      }
+      else
+      {
+        T *pT  = p;
+        T *pT2 = p + (iCurrPartNumQ>>1);
+        T *pT3 = p + (iCurrPartNumQ<<1);
+        T *pT4 = p + (iCurrPartNumQ<<1) + (iCurrPartNumQ>>1);
+        for (i = 0; i < (iCurrPartNumQ>>2); i++)
+        {
+          pT [i] = val;
+          pT2[i] = val;
+          pT3[i] = val;
+          pT4[i] = val;
+        }
+      }
+      break;
+    }
     default:
       assert(0);
       break;
   }
 }
 
-Void TComCUMvField::setAllMvd( TComMv& rcMvd, PartSize eCUMode, Int iPartAddr, Int iPartIdx, UInt uiDepth )
+Void TComCUMvField::setAllMv( TComMv const & mv, PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx )
 {
-  Int i;
-  TComMv* pcMvd = m_pcMvd + iPartAddr;
-  register TComMv cMvd = rcMvd;
-  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
-  
-  switch( eCUMode )
-  {
-    case SIZE_2Nx2N:
-      for ( i = iNumPartition - 1; i >= 0; i-- )
-      {
-        pcMvd[ i ] = cMvd;
-      }
-      break;
-    case SIZE_2NxN:
-      for ( i = ( iNumPartition >> 1 ) - 1; i >= 0; i-- )
-      {
-        pcMvd[ i ] = cMvd;
-      }
-      break;
-    case SIZE_Nx2N:
-    {
-      UInt uiOffset = iNumPartition >> 1;
-      for ( i = ( iNumPartition >> 2 ) - 1; i >= 0; i-- )
-      {
-        pcMvd[ i ] = cMvd;
-        pcMvd[ i + uiOffset ] = cMvd;
-      }
-      break;
-    }
-    case SIZE_NxN:
-      for ( i = ( iNumPartition >> 2 ) - 1; i >= 0; i-- )
-      {
-        pcMvd[ i ] = cMvd;
-      }
-      break;
-    default:
-      assert(0);
-      break;
-  }
+  setAll(m_pcMv, mv, eCUMode, iPartAddr, uiDepth, iPartIdx);
 }
 
-Void TComCUMvField::setAllRefIdx ( Int iRefIdx, PartSize eCUMode, Int iPartAddr, Int iPartIdx, UInt uiDepth )
+Void TComCUMvField::setAllMvd( TComMv const & mvd, PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx )
 {
-  Int i;
-  Int* piRefIdx = m_piRefIdx + iPartAddr;
-  Int iNumPartition = m_uiNumPartition >> (uiDepth<<1);
-  
-  switch( eCUMode )
-  {
-    case SIZE_2Nx2N:
-      for ( i = iNumPartition - 1; i >= 0; i-- )
-      {
-        piRefIdx[ i ] = iRefIdx;
-      }
-      break;
-    case SIZE_2NxN:
-      for ( i = ( iNumPartition >> 1 ) - 1; i >= 0; i-- )
-      {
-        piRefIdx[ i ] = iRefIdx;
-      }
-      break;
-    case SIZE_Nx2N:
-    {
-      UInt uiOffset = iNumPartition >> 1;
-      for ( i = ( iNumPartition >> 2 ) - 1; i >= 0; i-- )
-      {
-        piRefIdx[ i ] = iRefIdx;
-        piRefIdx[ i + uiOffset ] = iRefIdx;
-      }
-      break;
-    }
-    case SIZE_NxN:
-      for ( i = ( iNumPartition >> 2 ) - 1; i >= 0; i-- )
-      {
-        piRefIdx[ i ] = iRefIdx;
-      }
-      break;
-    default:
-      assert(0);
-      break;
-  }
+  setAll(m_pcMvd, mvd, eCUMode, iPartAddr, uiDepth, iPartIdx);
 }
 
-Void TComCUMvField::setAllMvField ( TComMv& rcMv, Int iRefIdx, PartSize eCUMode, Int iPartAddr, Int iPartIdx, UInt uiDepth )
+Void TComCUMvField::setAllRefIdx ( Int iRefIdx, PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx )
 {
-  setAllMv( rcMv, eCUMode, iPartAddr, iPartIdx, uiDepth);
-  setAllRefIdx(iRefIdx, eCUMode,iPartAddr,iPartIdx,uiDepth);
-  return;
+  setAll(m_piRefIdx, static_cast<Char>(iRefIdx), eCUMode, iPartAddr, uiDepth, iPartIdx);
 }
 
-#if AMVP_BUFFERCOMPRESS
+Void TComCUMvField::setAllMvField( TComMvField const & mvField, PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx )
+{
+  setAllMv    ( mvField.getMv(),     eCUMode, iPartAddr, uiDepth, iPartIdx );
+  setAllRefIdx( mvField.getRefIdx(), eCUMode, iPartAddr, uiDepth, iPartIdx );
+}
+
 /**Subsampling of the stored prediction mode, reference index and motion vector
- * \param pePredMode
- * \returns Void
+ * \param pePredMode Pointer to prediction modes
+ * \param scale      Factor by which to subsample motion information
  */
-Void TComCUMvField::compress(PredMode* pePredMode,UChar* puhInterDir)
+#if HHI_MPI
+Void TComCUMvField::compress(Char* pePredMode, UChar* puhInterDir, Int scale)
+#else
+Void TComCUMvField::compress(Char* pePredMode, Int scale)
+#endif
 {
-  Int N = AMVP_DECIMATION_FACTOR;
-  for ( Int uiPartIdx = 0; uiPartIdx <m_uiNumPartition; uiPartIdx+=(N*N) )
+  Int N = scale * scale;
+  assert( N > 0 && N <= m_uiNumPartition);
+  
+  for ( Int uiPartIdx = 0; uiPartIdx < m_uiNumPartition; uiPartIdx += N )
   {
-    Int  jj = uiPartIdx+N*N;
-    
     TComMv cMv(0,0); 
-#if MV_COMPRESS_MODE_REFIDX
     PredMode predMode = MODE_INTRA;
     Int iRefIdx = 0;
-    const UChar uhInterDir = puhInterDir[ uiPartIdx ];
     
     cMv = m_pcMv[ uiPartIdx ];
-    predMode = pePredMode[ uiPartIdx ];
+    predMode = static_cast<PredMode>( pePredMode[ uiPartIdx ] );
     iRefIdx = m_piRefIdx[ uiPartIdx ];
-#else
-    if (pePredMode[uiPartIdx]!=MODE_INTRA) cMv = m_pcMv[ uiPartIdx ]; 
-#endif
-    for ( Int i = jj-1; i >= uiPartIdx; i-- )
+    for ( Int i = 0; i < N; i++ )
     {
-      m_pcMv[ i ] = cMv;
-#if MV_COMPRESS_MODE_REFIDX
-      pePredMode[ i ] = predMode;
-      m_piRefIdx[ i ] = iRefIdx;
-      puhInterDir[ i ] = uhInterDir;
+      m_pcMv[ uiPartIdx + i ] = cMv;
+      pePredMode[ uiPartIdx + i ] = predMode;
+      m_piRefIdx[ uiPartIdx + i ] = iRefIdx;
+#if HHI_MPI
+      puhInterDir[ uiPartIdx + i ] = puhInterDir[ uiPartIdx ];
 #endif
     }
   }
 } 
-#endif 
+
+#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
+Void TComCUMvField::decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift )
+{
+  assert( iShift > 0 );
+  const TComMv cAdd( 1 << ( iShift - 1 ), 1 << ( iShift - 1 ) );
+
+  for ( Int i = 0; i < iNumPart; i++ )
+  {
+    m_pcMv[iPartAddr+i] += cAdd;
+    m_pcMv[iPartAddr+i] >>= iShift;
+
+    m_pcMvd[iPartAddr+i] += cAdd;
+    m_pcMvd[iPartAddr+i] >>= iShift;
+  }
+}
+#endif
+//! \}

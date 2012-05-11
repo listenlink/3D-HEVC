@@ -45,8 +45,6 @@
 
 #include "../../Lib/TLibRenderer/TRenTop.h"
 #include "../../Lib/TLibVideoIO/TVideoIOYuv.h"
-#include "../../Lib/TLibVideoIO/TVideoIOBits.h"
-#include "../../Lib/TLibCommon/TComBitStream.h"
 #include "TAppRendererCfg.h"
 #include "TAppRendererTop.h"
 #include "../../Lib/TLibRenderer/TRenModel.h"

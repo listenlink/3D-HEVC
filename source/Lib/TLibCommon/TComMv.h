@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 /** \file     TComMv.h
     \brief    motion vector class (header)
 */
@@ -40,11 +38,10 @@
 #ifndef __TCOMMV__
 #define __TCOMMV__
 
-#include <math.h>
 #include "CommonDef.h"
 
-#include <cstdlib>
-using namespace std;
+//! \ingroup TLibCommon
+//! \{
 
 // ====================================================================================================================
 // Class definition
@@ -54,8 +51,8 @@ using namespace std;
 class TComMv
 {
 private:
-  Int   m_iHor;     ///< horizontal component of motion vector
-  Int   m_iVer;     ///< vertical component of motion vector
+  Short m_iHor;     ///< horizontal component of motion vector
+  Short m_iVer;     ///< vertical component of motion vector
   
 public:
   
@@ -69,7 +66,7 @@ public:
   {
   }
   
-  TComMv( Int iHor, Int iVer ) :
+  TComMv( Short iHor, Short iVer ) :
   m_iHor(iHor),
   m_iVer(iVer)
   {
@@ -79,30 +76,23 @@ public:
   // set
   // ------------------------------------------------------------------------------------------------------------------
   
-  Void  set       ( Int iHor, Int iVer)     { m_iHor = iHor;  m_iVer = iVer;            }
-  Void  setHor    ( Int i )                 { m_iHor = i;                               }
-  Void  setVer    ( Int i )                 { m_iVer = i;                               }
-  Void  setZero   ()                        { m_iHor = m_iVer = 0;  }
+  Void  set       ( Short iHor, Short iVer)     { m_iHor = iHor;  m_iVer = iVer;            }
+  Void  setHor    ( Short i )                   { m_iHor = i;                               }
+  Void  setVer    ( Short i )                   { m_iVer = i;                               }
+  Void  setZero   ()                            { m_iHor = m_iVer = 0;  }
   
   // ------------------------------------------------------------------------------------------------------------------
   // get
   // ------------------------------------------------------------------------------------------------------------------
   
-  Int   getHor    ()  { return m_iHor;          }
-  Int   getVer    ()  { return m_iVer;          }
-  Int   getAbsHor ()  { return abs( m_iHor );   }
-  Int   getAbsVer ()  { return abs( m_iVer );   }
+  Int   getHor    () const { return m_iHor;          }
+  Int   getVer    () const { return m_iVer;          }
+  Int   getAbsHor () const { return abs( m_iHor );   }
+  Int   getAbsVer () const { return abs( m_iVer );   }
   
   // ------------------------------------------------------------------------------------------------------------------
   // operations
   // ------------------------------------------------------------------------------------------------------------------
-  
-  const TComMv& operator = (const TComMv& rcMv)
-  {
-    m_iHor = rcMv.m_iHor;
-    m_iVer = rcMv.m_iVer;
-    return  *this;
-  }
   
   const TComMv& operator += (const TComMv& rcMv)
   {
@@ -137,27 +127,33 @@ public:
     return TComMv( m_iHor - rcMv.m_iHor, m_iVer - rcMv.m_iVer );
   }
   
-  const TComMv operator + ( const TComMv& rcMv )
+  const TComMv operator + ( const TComMv& rcMv ) const
   {
     return TComMv( m_iHor + rcMv.m_iHor, m_iVer + rcMv.m_iVer );
   }
   
-  Bool operator== ( const TComMv& rcMv )
+  Bool operator== ( const TComMv& rcMv ) const
   {
     return (m_iHor==rcMv.m_iHor && m_iVer==rcMv.m_iVer);
   }
   
-  Bool operator!= ( const TComMv& rcMv )
+  Bool operator!= ( const TComMv& rcMv ) const
   {
     return (m_iHor!=rcMv.m_iHor || m_iVer!=rcMv.m_iVer);
   }
   
-  const TComMv scaleMv( Int iScale )
+  const TComMv scaleMv( Int iScale ) const
   {
-    return TComMv( (iScale * getHor() + 128) >> 8, (iScale * getVer() + 128) >> 8);
+#if CLIPSCALEDMVP
+    Int mvx = Clip3( -32768, 32767, (iScale * getHor() + 127 + (iScale * getHor() < 0)) >> 8 );
+    Int mvy = Clip3( -32768, 32767, (iScale * getVer() + 127 + (iScale * getVer() < 0)) >> 8 );
+    return TComMv( mvx, mvy );
+#else
+    return TComMv( (iScale * getHor() + 127 + (iScale * getHor() < 0)) >> 8, (iScale * getVer() + 127 + (iScale * getVer() < 0)) >> 8);
+#endif
   }
 };// END CLASS DEFINITION TComMV
 
+//! \}
 
 #endif // __TCOMMV__
-

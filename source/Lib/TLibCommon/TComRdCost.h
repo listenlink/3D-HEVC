@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.
+ * granted under this license.  
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -14,7 +14,7 @@
  *  * Redistributions in binary form must reproduce the above copyright notice,
  *    this list of conditions and the following disclaimer in the documentation
  *    and/or other materials provided with the distribution.
- *  * Neither the name of the ISO/IEC nor the names of its contributors may
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
  *    be used to endorse or promote products derived from this software without
  *    specific prior written permission.
  *
@@ -40,21 +40,22 @@
 
 
 #include "CommonDef.h"
-#include "TComMVDRefData.h"
-#include "TComDataCU.h"
 #include "TComPattern.h"
 #include "TComMv.h"
-#ifdef WEIGHT_PRED
-  #include "TComSlice.h"
-  #include "TComRdCostWeightPrediction.h"
-#endif
-#include "TComYuv.h"
-#include "TComMVDRefData.h"
+
+#include "TComRdCost.h"
+#include "TComSlice.h"
+#include "TComRdCostWeightPrediction.h"
 #include "../TLibRenderer/TRenModel.h"
+
+//! \ingroup TLibCommon
+//! \{
+
+#define FIX203 1
 
 class DistParam;
 class TComPattern;
-class TComRdCost;
+class TComRdCost; 
 
 // ====================================================================================================================
 // Type definition
@@ -63,14 +64,9 @@ class TComRdCost;
 // for function pointer
 typedef UInt (*FpDistFunc) (DistParam*);
 
-//GT VSO
+#if HHI_VSO
 typedef Dist (TComRdCost::*FpDistFuncVSO) ( Int, Int, Pel*, Int, Pel*, Int, UInt, UInt, Bool );
-//GT VSO end
-
-#ifdef ROUNDING_CONTROL_BIPRED
-typedef UInt (*FpDistFuncRnd) (DistParam*, Pel*, Bool);
 #endif
-
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -87,24 +83,23 @@ public:
   Int   iCols;
   Int   iStep;
   FpDistFunc DistFunc;
-#ifdef ROUNDING_CONTROL_BIPRED
-  FpDistFuncRnd DistFuncRnd;
-#endif
+
 #if HHI_INTERVIEW_SKIP
   Pel*  pUsed;
   Int   iStrideUsed;
 #endif
-
-#ifdef WEIGHT_PRED
-  Bool            applyWeight;      // whether weithed prediction is used or not
-  wpScalingParam  *wpCur, *wpRef;   // weithed prediction scaling parameters for ref0 (or ref1) and ref1 (resp. ref0)
+  Bool            bApplyWeight;     // whether weithed prediction is used or not
+  wpScalingParam  *wpCur;           // weithed prediction scaling parameters for current ref
   UInt            uiComp;           // uiComp = 0 (luma Y), 1 (chroma U), 2 (chroma V)
+
+#if NS_HAD
+  Bool            bUseNSHAD;
 #endif
 
   // (vertical) subsampling shift (for reducing complexity)
   // - 0 = no subsampling, 1 = even rows, 2 = every 4th, etc.
   Int   iSubShift;
-
+  
   DistParam()
   {
     pOrg = NULL;
@@ -115,51 +110,59 @@ public:
     iCols = 0;
     iStep = 1;
     DistFunc = NULL;
-#ifdef ROUNDING_CONTROL_BIPRED
-    DistFuncRnd = NULL;
-#endif
     iSubShift = 0;
 #if HHI_INTERVIEW_SKIP
     pUsed       = 0;
     iStrideUsed = 0;
+#endif
+#if NS_HAD
+    bUseNSHAD = false;
 #endif
   }
 };
 
 /// RD cost computation class
 class TComRdCost
-#ifdef WEIGHT_PRED
   : public TComRdCostWeightPrediction
-#endif
 {
 private:
   // for distortion
   Int                     m_iBlkWidth;
   Int                     m_iBlkHeight;
-
+  
+#if AMP_SAD
+  FpDistFunc              m_afpDistortFunc[64]; // [eDFunc]
+#else  
   FpDistFunc              m_afpDistortFunc[33]; // [eDFunc]
-#ifdef ROUNDING_CONTROL_BIPRED
-  FpDistFuncRnd           m_afpDistortFuncRnd[33];
+#endif  
+  
+#if WEIGHTED_CHROMA_DISTORTION
+  Double                  m_chromaDistortionWeight;   
 #endif
-
   Double                  m_dLambda;
   Double                  m_sqrtLambda;
   UInt                    m_uiLambdaMotionSAD;
   UInt                    m_uiLambdaMotionSSE;
   Double                  m_dFrameLambda;
-
+  
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Double                  m_dLambdaScale ;
 #endif
   // for motion cost
+#if FIX203
+  TComMv                  m_mvPredictor;
+#else
   UInt*                   m_puiComponentCostOriginP;
   UInt*                   m_puiComponentCost;
   UInt*                   m_puiVerCost;
   UInt*                   m_puiHorCost;
+#endif
   UInt                    m_uiCost;
   Int                     m_iCostScale;
+#if !FIX203
   Int                     m_iSearchLimit;
-
+#endif
+  
   Bool                    m_bUseMultiviewReg;
   UInt                    m_uiLambdaMVReg;
   UInt                    m_uiLambdaMVRegSAD;
@@ -171,62 +174,79 @@ private:
   UInt*                   m_puiHorRegCost;
   UInt*                   m_puiVerRegCost;
   TComMv                  m_cMultiviewOrgMvPred;
-
+  
 public:
   TComRdCost();
   virtual ~TComRdCost();
-
-  Double  calcRdCost  ( UInt   uiBits, Dist   uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
+  
+  Double  calcRdCost  ( UInt   uiBits, UInt   uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
-
+  
+#if WEIGHTED_CHROMA_DISTORTION
+  Void    setChromaDistortionWeight      ( Double chromaDistortionWeight) { m_chromaDistortionWeight = chromaDistortionWeight; };
+#endif
   Void    setLambda      ( Double dLambda );
 #if HHI_INTER_VIEW_MOTION_PRED
   Void    setLambdaMVReg ( Double dLambda );
 #endif
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
-
+  
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Void   setLambdaScale  ( Double dLambdaScale) { m_dLambdaScale = dLambdaScale; }
   Double   getLambdaScale  ( ) { return m_dLambdaScale ; }
 #endif
   Double  getSqrtLambda ()   { return m_sqrtLambda; }
-
+  
   // Distortion Functions
   Void    init();
-
+  
   Void    setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, DistParam& rcDistParam );
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
+#if NS_HAD
+  Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false, Bool bUseNSHAD=false );
+  Void    setDistParam( DistParam& rcDP, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false, Bool bUseNSHAD=false );
+#else
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
   Void    setDistParam( DistParam& rcDP, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
-
-#ifdef ROUNDING_CONTROL_BIPRED
-  Void    setDistParam_Bi( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride,            DistParam& rcDistParam );
-  Void    setDistParam_Bi( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
 #endif
-
+  
   UInt    calcHAD         ( Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
-
+  
   // for motion cost
+#if !FIX203
   Void    initRateDistortionModel( Int iSubPelSearchLimit );
   Void    xUninit();
+#endif
   UInt    xGetComponentBits( Int iVal );
-  Void    getMotionCost( Bool bSad, Int iAdd )
-  {
-    m_uiCost        = ( bSad ? m_uiLambdaMotionSAD + iAdd : m_uiLambdaMotionSSE + iAdd );
-    m_uiLambdaMVReg = ( bSad ? m_uiLambdaMVRegSAD         : m_uiLambdaMVRegSSE         );
-  }
+  Void    getMotionCost( Bool bSad, Int iAdd ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD + iAdd : m_uiLambdaMotionSSE + iAdd); }
   Void    setPredictor( TComMv& rcMv )
   {
+#if FIX203
+    m_mvPredictor = rcMv;
+#else
     m_puiHorCost = m_puiComponentCost - rcMv.getHor();
     m_puiVerCost = m_puiComponentCost - rcMv.getVer();
+#endif
   }
   Void    setCostScale( Int iCostScale )    { m_iCostScale = iCostScale; }
   __inline UInt getCost( Int x, Int y )
   {
+#if FIX203
+    return m_uiCost * getBits(x, y) >> 16;
+#else
     return (( m_uiCost * (m_puiHorCost[ x * (1<<m_iCostScale) ] + m_puiVerCost[ y * (1<<m_iCostScale) ]) ) >> 16);
+#endif
   }
   UInt    getCost( UInt b )                 { return ( m_uiCost * b ) >> 16; }
-  UInt    getBits( Int x, Int y )           { return m_puiHorCost[ x * (1<<m_iCostScale)] + m_puiVerCost[ y * (1<<m_iCostScale) ]; }
+  UInt    getBits( Int x, Int y )          
+  {
+#if FIX203
+    return xGetComponentBits((x << m_iCostScale) - m_mvPredictor.getHor())
+    +      xGetComponentBits((y << m_iCostScale) - m_mvPredictor.getVer());
+#else
+    return m_puiHorCost[ x * (1<<m_iCostScale)] + m_puiVerCost[ y * (1<<m_iCostScale) ];
+#endif
+  }
 
   Void    setMultiviewReg( TComMv* pcMv )
   {
@@ -251,9 +271,9 @@ public:
   {
     return ( ( m_uiLambdaMVReg * ( m_puiHorRegCost[ x * ( 1 << m_iCostScale ) ] + m_puiVerRegCost[ y * ( 1 << m_iCostScale ) ] ) ) >> 16 );
   }
-
+  
 private:
-
+  
   static UInt xGetSSE           ( DistParam* pcDtParam );
   static UInt xGetSSE4          ( DistParam* pcDtParam );
   static UInt xGetSSE8          ( DistParam* pcDtParam );
@@ -261,7 +281,7 @@ private:
   static UInt xGetSSE32         ( DistParam* pcDtParam );
   static UInt xGetSSE64         ( DistParam* pcDtParam );
   static UInt xGetSSE16N        ( DistParam* pcDtParam );
-
+  
   static UInt xGetSAD           ( DistParam* pcDtParam );
   static UInt xGetSAD4          ( DistParam* pcDtParam );
   static UInt xGetSAD8          ( DistParam* pcDtParam );
@@ -269,14 +289,13 @@ private:
   static UInt xGetSAD32         ( DistParam* pcDtParam );
   static UInt xGetSAD64         ( DistParam* pcDtParam );
   static UInt xGetSAD16N        ( DistParam* pcDtParam );
+  
+#if AMP_SAD
+  static UInt xGetSAD12         ( DistParam* pcDtParam );
+  static UInt xGetSAD24         ( DistParam* pcDtParam );
+  static UInt xGetSAD48         ( DistParam* pcDtParam );
 
-  static UInt xGetSADs          ( DistParam* pcDtParam );
-  static UInt xGetSADs4         ( DistParam* pcDtParam );
-  static UInt xGetSADs8         ( DistParam* pcDtParam );
-  static UInt xGetSADs16        ( DistParam* pcDtParam );
-  static UInt xGetSADs32        ( DistParam* pcDtParam );
-  static UInt xGetSADs64        ( DistParam* pcDtParam );
-  static UInt xGetSADs16N       ( DistParam* pcDtParam );
+#endif
 
   static UInt xGetHADs4         ( DistParam* pcDtParam );
   static UInt xGetHADs8         ( DistParam* pcDtParam );
@@ -284,48 +303,21 @@ private:
   static UInt xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-
-#ifdef ROUNDING_CONTROL_BIPRED
-
-  static UInt xGetSSE           ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSSE4          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSSE8          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSSE16         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSSE32         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSSE64         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSSE16N        ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-
-  static UInt xGetSAD           ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSAD4          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSAD8          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSAD16         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSAD32         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSAD64         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSAD16N        ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-
-  static UInt xGetSADs          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSADs4         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSADs8         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSADs16        ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSADs32        ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSADs64        ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetSADs16N       ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-
-  static UInt xGetHADs4         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetHADs8         ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xGetHADs          ( DistParam* pcDtParam, Pel* pRefY, Bool bRound );
-  static UInt xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep, Pel* pRefY, Int refYStride, Bool bRound );
-  static UInt xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep, Pel* pRefY, Int refYStride, Bool bRound );
-  static UInt xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep, Pel* pRefY, Int refYStride, Bool bRound );
-
+#if NS_HAD
+  static UInt xCalcHADs16x4     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+  static UInt xCalcHADs4x16     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
 #endif
-
+  
 public:
 #if HHI_INTERVIEW_SKIP
   UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, Pel* piUsed, Int iUsedStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif
+#if WEIGHTED_CHROMA_DISTORTION
+  UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bWeighted = false, DFunc eDFunc = DF_SSE );
+#else
   UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
-
+#endif
+  
 #if HHI_VSO
 private:
   Double                  m_dLambdaVSO;
@@ -338,15 +330,11 @@ private:
   Bool                    m_bAllowNegDist;
 #endif
 
-  TComPicYuv *            m_pcVideoPicYuv;
-  TComPicYuv**            m_apRefPics;
-  Int      ***            m_paaiShiftLUTs;
-  UInt                    m_uiNumberRefPics;
   Bool                    m_bUseVSO;
   Bool                    m_bUseLambdaScaleVSO;
   UInt                    m_uiVSOMode;
 
-  FpDistFuncVSO m_fpDistortFuncVSO;
+  FpDistFuncVSO           m_fpDistortFuncVSO;
   TRenModel*              m_pcRenModel;
 public:
 
@@ -355,7 +343,6 @@ public:
   Void    setLambdaVSO      ( Double dLambda );
   Void    setFrameLambdaVSO ( Double dLambda ) { m_dFrameLambdaVSO = dLambda; };
 
-  Void    setRefDataFromMVDInfo( TComMVDRefData* pRefInfo );
 
   Void    setUseVSO ( Bool bIn )         { m_bUseVSO = bIn; };
   Bool    getUseVSO ( )                  { return m_bUseVSO;};
@@ -385,6 +372,6 @@ private:
 
 };// END CLASS DEFINITION TComRdCost
 
+//! \}
 
 #endif // __TCOMRDCOST__
-

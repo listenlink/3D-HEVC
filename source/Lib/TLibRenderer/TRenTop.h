@@ -31,8 +31,6 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #ifndef __TRENTOP__
 #define __TRENTOP__
 
