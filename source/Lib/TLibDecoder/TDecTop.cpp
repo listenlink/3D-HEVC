@@ -264,6 +264,7 @@ TDecTop::TDecTop()
   m_prevPOC                = MAX_INT;
   m_bFirstSliceInPicture    = true;
   m_bFirstSliceInSequence   = true;
+  m_pcCamParsCollector = 0;
 }
 
 TDecTop::~TDecTop()
@@ -1037,6 +1038,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 
   //  Decode a picture
   m_cGopDecoder.decompressGop(nalu.m_Bitstream, pcPic, false);
+
+  if( m_pcCamParsCollector )
+  {
+    m_pcCamParsCollector->setSlice( pcSlice );
+  }
 
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;

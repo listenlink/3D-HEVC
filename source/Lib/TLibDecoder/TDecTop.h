@@ -74,6 +74,8 @@ public:
   Void  uninit      ();
   Void  setSlice    ( TComSlice* pcSlice );
 
+  Bool  isInitialized() const { return m_bInitialized; }
+
 private:
   Bool  xIsComplete ();
   Void  xOutput     ( Int iPOC );
@@ -149,6 +151,7 @@ private:
   Int                     m_viewId;
   Bool                    m_isDepth;
   TAppDecTop*             m_tAppDecTop;
+  CamParsCollector*       m_pcCamParsCollector;
   NalUnitType             m_nalUnitTypeBaseView;  
 
 public:
@@ -184,6 +187,8 @@ public:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  getDepthMapGenerator  () { return &m_cDepthMapGenerator; }
 #endif
+
+  Void setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
 
   TComList<TComPic*>* getListPic()                              { return &m_cListPic; }
   Void                setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
