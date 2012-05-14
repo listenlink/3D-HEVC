@@ -56,6 +56,7 @@ TAppDecTop::TAppDecTop()
 {
   ::memset (m_abDecFlag, 0, sizeof (m_abDecFlag));
   m_useDepth = false;
+  m_pScaleOffsetFile  = 0;
 }
 
 Void TAppDecTop::create()
@@ -208,6 +209,10 @@ Void TAppDecTop::decode()
     }
     previousViewDepthId = viewDepthId;
   } 
+  if( m_cCamParsCollector.isInitialized() )
+  {
+    m_cCamParsCollector.setSlice( 0 );
+  }
   // last frame
   for( Int viewDepthIdx = 0; viewDepthIdx < m_tDecTop.size(); viewDepthIdx++ )
   {
@@ -248,6 +253,12 @@ Void TAppDecTop::xDestroyDecLib()
       delete m_tDecTop[viewDepthIdx] ; 
       m_tDecTop[viewDepthIdx] = NULL ;
     }
+  }
+
+  m_cCamParsCollector.uninit();
+  if( m_pScaleOffsetFile ) 
+  { 
+    ::fclose( m_pScaleOffsetFile ); 
   }
 }
 
@@ -428,6 +439,7 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
       m_tDecTop.back()->setViewId( viewId );
       m_tDecTop.back()->setIsDepth( isDepth );
       m_tDecTop.back()->setPictureDigestEnabled(m_pictureDigestEnabled);
+      m_tDecTop.back()->setCamParsCollector( &m_cCamParsCollector );
     }
   }
 }
