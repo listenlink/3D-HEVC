@@ -858,7 +858,7 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara(   m_pchVSOConfig            == 0                             ,   "VSO Setup string must be given");
       xConfirmPara( m_pchBaseViewCameraNumbers  == 0                             ,   "BaseViewCameraNumbers must be given" );
       xConfirmPara( m_iNumberOfViews != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
-      xConfirmPara( m_uiVSOMode < 0 || m_uiVSOMode > 4 ,                             "VSO Mode must be greater than or equal to 0 and less than 5");
+      xConfirmPara( m_uiVSOMode > 4 ,                                                "VSO Mode must be less than 5");
     }
 #endif
   }
