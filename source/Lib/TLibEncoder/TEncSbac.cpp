@@ -745,9 +745,9 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
     const Bool bUseMVI = pcCU->getTextureModeDepth( uiAbsPartIdx ) != -1;
     if( bUseMVI )
     {
-      uiUnaryIdx = HHI_MPI_MERGE_POS;
+      uiUnaryIdx = (UInt)HHI_MPI_MERGE_POS;
     }
-    else if( uiUnaryIdx >= HHI_MPI_MERGE_POS )
+    else if( (Int)uiUnaryIdx >= (Int)HHI_MPI_MERGE_POS )
     {
       uiUnaryIdx++;
     }
