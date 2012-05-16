@@ -2538,7 +2538,7 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
       xAddMVISignallingBits( rpcTempCU );
     }
 
-    // DQP-Scheiße
+    // DQP stuff
     {
       if( (g_uiMaxCUWidth>>uhDepth) == rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() && rpcTempCU->getSlice()->getPPS()->getUseDQP())
       {
