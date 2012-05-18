@@ -334,6 +334,9 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   TCoeff* piCoeff   = pcCU->getCoeffY ();
   Pel*    pRes      = pcCUResidual->getLumaAddr();
   UInt    uiLumaTrMode, uiChromaTrMode;
+#if LG_RESTRICTEDRESPRED_M24766
+  Int     iPUPredResiShift[4];
+#endif
   pcCU->convertTransIdx             ( 0, pcCU->getTransformIdx( 0 ), uiLumaTrMode, uiChromaTrMode );
 #if H0736_AVC_STYLE_QP_RANGE
     m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
@@ -362,7 +365,12 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
     AOF( pcCU->getResPredAvail( 0 ) );
     Bool bOK = pcCU->getResidualSamples( 0, m_ppcYuvTmp[0] );
     AOF( bOK );
+#if LG_RESTRICTEDRESPRED_M24766
+	pcCU->getPUResiPredShift(iPUPredResiShift, 0);
+	pcCUResidual->add(iPUPredResiShift, pcCU->getPartitionSize(0), m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
+#else
     pcCUResidual->add( m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
+#endif
   }
 
   //===== clear inter-view predicted parts =====

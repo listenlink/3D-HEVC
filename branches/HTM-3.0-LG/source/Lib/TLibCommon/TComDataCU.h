@@ -525,8 +525,15 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------
-  
+#if LG_RESTRICTEDRESPRED_M24766
+  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
+#else
   Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
+#endif
+#if LG_RESTRICTEDRESPRED_M24766
+  Int           getResiPredMode(UInt uiPartAddr);
+  Void          getPUResiPredShift (Int *iPUPredResiShift, UInt uiAbsPartIndex);
+#endif
   UChar         getNumPartInter       ();
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
   
