@@ -635,7 +635,11 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( pcCU->getResPredFlag( 0 ) )
   {
     AOF( pcCU->getResPredAvail( 0 ) );
-    Bool bOK = pcCU->getResidualSamples( 0, m_ppcYuvResPred[uiDepth] );
+    Bool bOK = pcCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+      true,
+#endif
+      m_ppcYuvResPred[uiDepth] );
     AOF( bOK );
 #if LG_RESTRICTEDRESPRED_M24766
 	Int iPUResiPredShift[4];

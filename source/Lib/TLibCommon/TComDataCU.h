@@ -520,7 +520,11 @@ public:
   Void          setResPredIndicator     ( Bool bAv, Bool bRP )    { m_pbResPredAvailable[0] = bAv; m_pbResPredFlag[0] = bRP; }
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
-  Bool          getResidualSamples( UInt uiPartIdx, TComYuv* pcYuv = 0 );
+  Bool          getResidualSamples( UInt uiPartIdx, 
+#if QC_SIMPLIFIEDIVRP_M24938
+    Bool bRecon ,
+#endif
+    TComYuv* pcYuv = 0 );
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information

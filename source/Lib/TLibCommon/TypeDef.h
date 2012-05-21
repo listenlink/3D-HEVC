@@ -69,8 +69,10 @@
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
 #define LG_RESTRICTEDRESPRED_M24766     1   // restricted inter-view residual prediction
+#define QC_SIMPLIFIEDIVRP_M24938        1
 #else
 #define LG_RESTRICTEDRESPRED_M24766     0
+#define QC_SIMPLIFIEDIVRP_M24938        0
 #endif
 
 
@@ -753,7 +755,6 @@ enum
   VIEWPOS_RIGHT   = 1,
   VIEWPOS_MERGED  = 2
 };
-
 
 //! \}
 
