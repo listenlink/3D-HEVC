@@ -5951,11 +5951,19 @@ TComDataCU::getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int 
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
 Bool
-TComDataCU::getResidualSamples( UInt uiPartIdx, TComYuv* pcYuv )
+TComDataCU::getResidualSamples( UInt uiPartIdx, 
+#if QC_SIMPLIFIEDIVRP_M24938
+  Bool bRecon ,
+#endif
+  TComYuv* pcYuv )
 {
   TComResidualGenerator*  pcResidualGenerator = m_pcSlice->getSPS()->getResidualGenerator();
   ROFRS( pcResidualGenerator, false );
-  return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv );
+  return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , bRecon 
+#endif
+    );
 }
 #endif
 

@@ -603,7 +603,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getMultiviewResPredMode() );
         if( bResPredAllowed )
         {
-          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, m_ppcResPredTmp[uiDepth] );
+          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+            true ,
+#endif
+            m_ppcResPredTmp[uiDepth] );
         }
 
         for( UInt uiResPrdId = 0; uiResPrdId < ( bResPredAvailable ? 2 : 1 ); uiResPrdId++ )
@@ -697,7 +701,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getMultiviewResPredMode() );
         if( bResPredAllowed )
         {
-          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, m_ppcResPredTmp[uiDepth] );
+          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+            true,
+#endif
+            m_ppcResPredTmp[uiDepth] );
         }
 
         for( UInt uiResPrdId = 0; uiResPrdId < ( bResPredAvailable ? 2 : 1 ); uiResPrdId++ )
