@@ -49,6 +49,7 @@
 #define HHI_VSO                           1
 #define HHI_VSO_LS_TABLE                  1
 #define HHI_VSO_DIST_INT                  1
+#define HHI_VSO_SYNTH_DIST_OUT            0
 
 #define HHI_INTERVIEW_SKIP                1
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
