@@ -1961,6 +1961,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
   
 #if HHI_VSO
+#if HHI_VSO_SYNTH_DIST_OUT
   if ( m_pcRdCost->getUseRenModel() )
   {
     unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
@@ -1974,6 +1975,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     dVPSNR = ( iDistVSOV ? 10.0 * log10( fRefValueC / (Double) iDistVSOV ) : 99.99 );
   }
   else
+#endif
 #endif
   {
   iHeight >>= 1;
