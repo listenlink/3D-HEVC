@@ -2882,6 +2882,50 @@ UChar TComDataCU::getNumPartInter()
   return  iNumPart;
 }
 
+#if LG_RESTRICTEDRESPRED_M24766
+Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx, Bool bLCU)
+{
+	UInt uiNumPartition  = bLCU ? (getWidth(uiAbsPartIdx)*getHeight(uiAbsPartIdx) >> 4) : m_uiNumPartition;
+	UInt uiTmpAbsPartIdx = bLCU ? uiAbsPartIdx : 0;
+
+	switch ( m_pePartSize[uiTmpAbsPartIdx] )
+	{
+	case SIZE_2NxN:
+		riWidth = getWidth(uiTmpAbsPartIdx);      riHeight = getHeight(uiTmpAbsPartIdx) >> 1; ruiPartAddr = ( uiPartIdx == 0 )? 0 : uiNumPartition >> 1;
+		break;
+	case SIZE_Nx2N:
+		riWidth = getWidth(uiTmpAbsPartIdx) >> 1; riHeight = getHeight(uiTmpAbsPartIdx);      ruiPartAddr = ( uiPartIdx == 0 )? 0 : uiNumPartition >> 2;
+		break;
+	case SIZE_NxN:
+		riWidth = getWidth(uiTmpAbsPartIdx) >> 1; riHeight = getHeight(uiTmpAbsPartIdx) >> 1; ruiPartAddr = ( uiNumPartition >> 2 ) * uiPartIdx;
+		break;
+	case SIZE_2NxnU:
+		riWidth     = getWidth(uiTmpAbsPartIdx);
+		riHeight    = ( uiPartIdx == 0 ) ?  getHeight(uiTmpAbsPartIdx) >> 2 : ( getHeight(uiTmpAbsPartIdx) >> 2 ) + ( getHeight(uiTmpAbsPartIdx) >> 1 );
+		ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : uiNumPartition >> 3;
+		break;
+	case SIZE_2NxnD:
+		riWidth     = getWidth(uiTmpAbsPartIdx);
+		riHeight    = ( uiPartIdx == 0 ) ?  ( getHeight(uiTmpAbsPartIdx) >> 2 ) + ( getHeight(uiTmpAbsPartIdx) >> 1 ) : getHeight(uiTmpAbsPartIdx) >> 2;
+		ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : (uiNumPartition >> 1) + (uiNumPartition >> 3);
+		break;
+	case SIZE_nLx2N:
+		riWidth     = ( uiPartIdx == 0 ) ? getWidth(uiTmpAbsPartIdx) >> 2 : ( getWidth(uiTmpAbsPartIdx) >> 2 ) + ( getWidth(uiTmpAbsPartIdx) >> 1 );
+		riHeight    = getHeight(uiTmpAbsPartIdx);
+		ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : uiNumPartition >> 4;
+		break;
+	case SIZE_nRx2N:
+		riWidth     = ( uiPartIdx == 0 ) ? ( getWidth(uiTmpAbsPartIdx) >> 2 ) + ( getWidth(uiTmpAbsPartIdx) >> 1 ) : getWidth(uiTmpAbsPartIdx) >> 2;
+		riHeight    = getHeight(uiTmpAbsPartIdx);
+		ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : (uiNumPartition >> 2) + (uiNumPartition >> 4);
+		break;
+	default:
+		assert ( m_pePartSize[0] == SIZE_2Nx2N );
+		riWidth = getWidth(uiTmpAbsPartIdx);      riHeight = getHeight(uiTmpAbsPartIdx);      ruiPartAddr = 0;
+		break;
+	}
+}
+#else
 Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight )
 {
   switch ( m_pePartSize[0] )
@@ -2921,7 +2965,76 @@ Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& ri
       break;
   }
 }
+#endif
 
+#if LG_RESTRICTEDRESPRED_M24766
+Int TComDataCU::getResiPredMode(UInt uiPartAddr)
+{
+	Int iAddResiShift = -1;
+
+	for(UInt uiRefIdx = 0; uiRefIdx < 2; uiRefIdx++)
+	{
+		RefPicList eRefList = uiRefIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+		Int iBestRefIdx = getCUMvField(eRefList)->getRefIdx(uiPartAddr);
+		if(iBestRefIdx >= 0 && getSlice()->getViewId() == getSlice()->getRefViewId(eRefList, iBestRefIdx))
+			iAddResiShift++;
+	}
+
+	return iAddResiShift;
+}
+
+Void TComDataCU::getPUResiPredShift(Int *iPUResiPredShift, UInt uiAbsPartIndex)
+{
+	UInt uiPartSize = getPartitionSize(uiAbsPartIndex);
+	UInt uiPartAddr;
+	Int iWidth, iHeight;
+	Int iAddResiShift;
+
+	if(uiPartSize == SIZE_2Nx2N)
+	{
+		iAddResiShift = getResiPredMode(uiAbsPartIndex);
+		for(UInt i = 0; i < 4; i++)
+			iPUResiPredShift[i] = (getSlice()->getPPS()->getUseWP() || getInterDir(uiAbsPartIndex) != 3) ? (iAddResiShift >= 0 ? 0 : -1) : (iAddResiShift >= 0 ? 1-iAddResiShift : -1);
+		return;
+	}
+
+	if(uiPartSize == SIZE_2NxN || uiPartSize == SIZE_2NxnU || uiPartSize == SIZE_2NxnD)
+	{
+		for(UInt i = 0; i < 2; i++)
+		{
+			getPartIndexAndSize(i, uiPartAddr, iWidth, iHeight, uiAbsPartIndex, true);
+			uiPartAddr += uiAbsPartIndex;
+			iAddResiShift = getResiPredMode(uiPartAddr);
+			iPUResiPredShift[2*i] = iPUResiPredShift[2*i+1] = (getSlice()->getPPS()->getUseWP() || getInterDir(uiPartAddr) != 3) ? (iAddResiShift >= 0 ? 0 : -1) : (iAddResiShift >= 0 ? 1-iAddResiShift : -1);
+		}
+		return;
+	}
+
+	if(uiPartSize == SIZE_Nx2N || uiPartSize == SIZE_nLx2N || uiPartSize == SIZE_nRx2N)
+	{
+		for(UInt i = 0; i < 2; i++)
+		{
+			getPartIndexAndSize(i, uiPartAddr, iWidth, iHeight, uiAbsPartIndex, true);
+			uiPartAddr += uiAbsPartIndex;
+			iAddResiShift = getResiPredMode(uiPartAddr);
+			iPUResiPredShift[i] = iPUResiPredShift[2+i] = (getSlice()->getPPS()->getUseWP() || getInterDir(uiPartAddr) != 3) ? (iAddResiShift >= 0 ? 0 : -1) : (iAddResiShift >= 0 ? 1-iAddResiShift : -1);
+		}
+		return;
+	}
+
+	if(uiPartSize == SIZE_NxN)
+	{
+		for(UInt i = 0; i < 4; i++)
+		{
+			getPartIndexAndSize(i, uiPartAddr, iWidth, iHeight, uiAbsPartIndex, true);
+			uiPartAddr += uiAbsPartIndex;
+			iAddResiShift = getResiPredMode(uiPartAddr);
+			iPUResiPredShift[i] = (getSlice()->getPPS()->getUseWP() || getInterDir(uiPartAddr) != 3) ? (iAddResiShift >= 0 ? 0 : -1) : (iAddResiShift >= 0 ? 1-iAddResiShift : -1);
+		}
+	}
+
+}
+#endif
 
 Void TComDataCU::getMvField ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField )
 {
@@ -5838,11 +5951,19 @@ TComDataCU::getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int 
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
 Bool
-TComDataCU::getResidualSamples( UInt uiPartIdx, TComYuv* pcYuv )
+TComDataCU::getResidualSamples( UInt uiPartIdx, 
+#if QC_SIMPLIFIEDIVRP_M24938
+  Bool bRecon ,
+#endif
+  TComYuv* pcYuv )
 {
   TComResidualGenerator*  pcResidualGenerator = m_pcSlice->getSPS()->getResidualGenerator();
   ROFRS( pcResidualGenerator, false );
-  return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv );
+  return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , bRecon 
+#endif
+    );
 }
 #endif
 

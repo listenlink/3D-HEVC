@@ -67,7 +67,13 @@
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC   1   // full-pel mv accuracy for depth maps
 
 
-
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+#define LG_RESTRICTEDRESPRED_M24766     1   // restricted inter-view residual prediction
+#define QC_SIMPLIFIEDIVRP_M24938        1
+#else
+#define LG_RESTRICTEDRESPRED_M24766     0
+#define QC_SIMPLIFIEDIVRP_M24938        0
+#endif
 
 
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
@@ -749,7 +755,6 @@ enum
   VIEWPOS_RIGHT   = 1,
   VIEWPOS_MERGED  = 2
 };
-
 
 //! \}
 

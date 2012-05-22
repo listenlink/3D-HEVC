@@ -603,7 +603,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getMultiviewResPredMode() );
         if( bResPredAllowed )
         {
-          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, m_ppcResPredTmp[uiDepth] );
+          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+            true ,
+#endif
+            m_ppcResPredTmp[uiDepth] );
         }
 
         for( UInt uiResPrdId = 0; uiResPrdId < ( bResPredAvailable ? 2 : 1 ); uiResPrdId++ )
@@ -697,7 +701,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getMultiviewResPredMode() );
         if( bResPredAllowed )
         {
-          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, m_ppcResPredTmp[uiDepth] );
+          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+            true,
+#endif
+            m_ppcResPredTmp[uiDepth] );
         }
 
         for( UInt uiResPrdId = 0; uiResPrdId < ( bResPredAvailable ? 2 : 1 ); uiResPrdId++ )
@@ -1902,16 +1910,22 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
   
 #if HHI_INTER_VIEW_RESIDUAL_PRED
+#if !LG_RESTRICTEDRESPRED_M24766
   if( rpcTempCU->getResPredFlag( 0 ) )
   { // subtract residual prediction from original in motion search
     m_ppcOrigYuv[uhDepth]->add( m_ppcResPredTmp [uhDepth], rpcTempCU->getWidth( 0 ), rpcTempCU->getHeight( 0 ), true );
   }
 #endif
+#endif
 
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
   #if HHI_INTERVIEW_SKIP
+#if LG_RESTRICTEDRESPRED_M24766
+  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcResPredTmp[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG  );
+#else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG  );
+#endif
 #else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, bUseMRG );
 #endif
@@ -1924,10 +1938,12 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
+#if !LG_RESTRICTEDRESPRED_M24766
   if( rpcTempCU->getResPredFlag( 0 ) )
   { // add residual prediction to original again
     m_ppcOrigYuv[uhDepth]->add( m_ppcResPredTmp [uhDepth], rpcTempCU->getWidth( 0 ), rpcTempCU->getHeight( 0 ) );
   }
+#endif
 #endif
 
 #if AMP_MRG
