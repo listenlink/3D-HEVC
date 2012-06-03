@@ -808,8 +808,21 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       /* write various header sets. */
       if ( m_bSeqFirst )
       {
+#if VIDYO_VPS_INTEGRATION
+        {
+          OutputNALUnit nalu(NAL_UNIT_VPS, true, m_pcEncTop->getLayerId());
+          m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+          m_pcEntropyCoder->encodeVPS(m_pcEncTop->getEncTop()->getVPS());
+          writeRBSPTrailingBits(nalu.m_Bitstream);
+          accessUnit.push_back(new NALUnitEBSP(nalu));
+        }
+#endif
 #if NAL_REF_FLAG
+#if VIDYO_VPS_INTEGRATION
+        OutputNALUnit nalu(NAL_UNIT_SPS, true, m_pcEncTop->getLayerId());
+#else
         OutputNALUnit nalu(NAL_UNIT_SPS, true, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
+#endif
 #else
         OutputNALUnit nalu(NAL_UNIT_SPS, NAL_REF_IDC_PRIORITY_HIGHEST, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
 #endif
@@ -826,7 +839,11 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
         accessUnit.push_back(new NALUnitEBSP(nalu));
 
 #if NAL_REF_FLAG
+#if VIDYO_VPS_INTEGRATION 
+        nalu = NALUnit(NAL_UNIT_PPS, true, m_pcEncTop->getLayerId());
+#else
         nalu = NALUnit(NAL_UNIT_PPS, true, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
+#endif
 #else
         nalu = NALUnit(NAL_UNIT_PPS, NAL_REF_IDC_PRIORITY_HIGHEST, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
 #endif
@@ -953,13 +970,30 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
         /* start slice NALunit */
 #if H0388
 #if NAL_REF_FLAG
-        OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->isReferenced(), m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth(), pcSlice->getTLayer() );
+        OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->isReferenced(),
+#if !VIDYO_VPS_INTEGRATION
+                           m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth(), pcSlice->getTLayer() );
 #else
-        OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->isReferenced() ? NAL_REF_IDC_PRIORITY_HIGHEST: NAL_REF_IDC_PRIORITY_LOWEST, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth(), pcSlice->getTLayer() );
+                           m_pcEncTop->getLayerId(), pcSlice->getTLayer() );
 #endif
 #else
-        OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->isReferenced() ? NAL_REF_IDC_PRIORITY_HIGHEST: NAL_REF_IDC_PRIORITY_LOWEST, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth(), pcSlice->getTLayer(), true);
+        OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->isReferenced() ? NAL_REF_IDC_PRIORITY_HIGHEST: NAL_REF_IDC_PRIORITY_LOWEST, 
+#if !VIDYO_VPS_INTEGRATION
+                           m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth(), pcSlice->getTLayer() );
+#else
+                           m_pcEncTop->getLayerId(), pcSlice->getTLayer() );
 #endif
+#endif
+#else
+        OutputNALUnit nalu( pcSlice->getNalUnitType(), pcSlice->isReferenced() ? NAL_REF_IDC_PRIORITY_HIGHEST: NAL_REF_IDC_PRIORITY_LOWEST, 
+#if !VIDYO_VPS_INTEGRATION
+                           m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth(), pcSlice->getTLayer(), true );
+#else
+                           m_pcEncTop->getLayerId(), pcSlice->getTLayer(), true );
+#endif
+
+#endif
+            
         Bool bEntropySlice = (!pcSlice->isNextSlice());
         if (!bEntropySlice)
         {
@@ -1413,7 +1447,11 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
         case ENCODE_APS:
           {
 #if NAL_REF_FLAG
+#if VIDYO_VPS_INTEGRATION
+            OutputNALUnit nalu(NAL_UNIT_APS, true, m_pcEncTop->getLayerId());
+#else
             OutputNALUnit nalu(NAL_UNIT_APS, true, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
+#endif
 #else
             OutputNALUnit nalu(NAL_UNIT_APS, NAL_REF_IDC_PRIORITY_HIGHEST, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
 #endif
@@ -1475,7 +1513,11 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
         digestStr = digestToString(sei_recon_picture_digest.digest);
 
 #if NAL_REF_FLAG
+#if VIDYO_VPS_INTEGRATION
+        OutputNALUnit nalu(NAL_UNIT_SEI, false, m_pcEncTop->getLayerId());
+#else
         OutputNALUnit nalu(NAL_UNIT_SEI, false, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
+#endif
 #else
         OutputNALUnit nalu(NAL_UNIT_SEI, NAL_REF_IDC_PRIORITY_LOWEST, m_pcEncTop->getViewId(), m_pcEncTop->getIsDepth());
 #endif

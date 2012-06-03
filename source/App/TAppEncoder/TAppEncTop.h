@@ -83,6 +83,10 @@ private:
   TComAUPicAccess             m_cAUPicAccess;
 #endif
 
+#if VIDYO_VPS_INTEGRATION
+  TComVPS                     m_cVPS;
+#endif
+  
 #if HHI_VSO
   TRenTop                     m_cRendererTop; 
   TRenModel                   m_cRendererModel;   
@@ -128,6 +132,10 @@ public:
 #endif
 #if HHI_VSO
   Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent );
+#endif
+  
+#if VIDYO_VPS_INTEGRATION
+  TComVPS*          getVPS()  { return &m_cVPS; }
 #endif
   
 #if DEPTH_MAP_GENERATION

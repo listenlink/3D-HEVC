@@ -445,6 +445,9 @@ ParameterSetManagerDecoder::ParameterSetManagerDecoder()
 : m_spsBuffer(256)
 , m_ppsBuffer(16)
 , m_apsBuffer(64)
+#if VIDYO_VPS_INTEGRATION 
+, m_vpsBuffer(16)
+#endif
 {
 
 }
@@ -453,6 +456,20 @@ ParameterSetManagerDecoder::~ParameterSetManagerDecoder()
 {
 
 }
+
+#if VIDYO_VPS_INTEGRATION
+TComVPS* ParameterSetManagerDecoder::getPrefetchedVPS  (Int vpsId)
+{
+  if (m_vpsBuffer.getPS(vpsId) != NULL )
+  {
+    return m_vpsBuffer.getPS(vpsId);
+  }
+  else
+  {
+    return getVPS(vpsId);
+  }
+}
+#endif
 
 TComSPS* ParameterSetManagerDecoder::getPrefetchedSPS  (Int spsId)
 {
@@ -495,6 +512,9 @@ Void     ParameterSetManagerDecoder::applyPrefetchedPS()
   m_apsMap.mergePSList(m_apsBuffer);
   m_ppsMap.mergePSList(m_ppsBuffer);
   m_spsMap.mergePSList(m_spsBuffer);
+#if VIDYO_VPS_INTEGRATION
+  m_vpsMap.mergePSList(m_vpsBuffer);
+#endif
 }
 
 //! \}

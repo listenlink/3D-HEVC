@@ -139,9 +139,14 @@ Void TAppDecTop::decode()
     else
     {
       read(nalu, nalUnit);
+#if VIDYO_VPS_INTEGRATION
+      viewDepthId = nalu.m_layerId;   // coding order T0D0T1D1T2D2
+#else
       Int viewId = nalu.m_viewId;
       Int depth = nalu.m_isDepth ? 1 : 0;
       viewDepthId = viewId * 2 + depth;   // coding order T0D0T1D1T2D2
+#endif
+      
       newPicture[viewDepthId] = false;
       if( viewDepthId >= m_tDecTop.size() )      
       {

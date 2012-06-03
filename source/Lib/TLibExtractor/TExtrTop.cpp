@@ -54,12 +54,25 @@ Void TExtrTop::init()
 
 Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds )
 {
+#if VIDYO_VPS_INTEGRATION
+	//extraction now has to be done using layer_id
+  UInt uiLayerId = nalu.m_layerId;
+#else
   UInt uiLayerId = xGetLayerId( nalu.m_viewId, nalu.m_isDepth );
-
+#endif
   // Initialize entropy decoder
   m_cEntropyDecoder.setEntropyDecoder( &m_cCavlcDecoder );
   m_cEntropyDecoder.setBitstream     ( nalu.m_Bitstream );
   
+#if VIDYO_VPS_INTEGRATION
+  if ( nalu.m_nalUnitType == NAL_UNIT_VPS )
+  {
+    // a hack for now assuming there's only one VPS in the bitstream
+    m_cEntropyDecoder.decodeVPS( &m_cVPS );
+      
+  }
+#endif
+
   if ( nalu.m_nalUnitType == NAL_UNIT_SPS )
   {
      TComSPS cSPS;
@@ -68,7 +81,11 @@ Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds 
      cSPS.setRPSList( &cRPS );
 #endif
 #if HHI_MPI
+#if VIDYO_VPS_INTEGRATION
+     m_cEntropyDecoder.decodeSPS( &cSPS, m_cVPS.getDepthFlag(uiLayerId) );
+#else
      m_cEntropyDecoder.decodeSPS( &cSPS, nalu.m_isDepth );
+#endif
 #else
      m_cEntropyDecoder.decodeSPS( &cSPS );
 #endif

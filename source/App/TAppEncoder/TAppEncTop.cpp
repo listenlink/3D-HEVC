@@ -66,6 +66,18 @@ TAppEncTop::~TAppEncTop()
 
 Void TAppEncTop::xInitLibCfg()
 {
+#if VIDYO_VPS_INTEGRATION
+  UInt layerId = 0;
+  // TODO: fix the assumption here that the temporal structures are all equal across all layers???
+  m_cVPS.setMaxTLayers( m_maxTempLayer[0] );
+  m_cVPS.setMaxLayers( m_iNumberOfViews * (m_bUsingDepthMaps ? 2:1) );
+  for(Int i = 0; i < MAX_TLAYER; i++)
+  {
+    m_cVPS.setNumReorderPics( m_numReorderPics[0][i], i );
+    m_cVPS.setMaxDecPicBuffering( m_maxDecPicBuffering[0][i], i );
+  }
+#endif
+  
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
   {
     m_frameRcvd.push_back(0);
@@ -89,6 +101,17 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setViewId                       ( iViewIdx );
     m_acTEncTopList[iViewIdx]->setIsDepth                      ( false );
     m_acTEncTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
+#if VIDYO_VPS_INTEGRATION
+    layerId = iViewIdx * (m_bUsingDepthMaps ? 2:1);
+    m_acTEncTopList[iViewIdx]->setLayerId                      ( layerId );
+    m_cVPS.setDepthFlag                                        ( false, layerId );
+    m_cVPS.setViewId                                           ( iViewIdx, layerId );
+    m_cVPS.setViewOrderIdx                                     ( m_cCameraData.getViewOrderIndex()[ iViewIdx ], layerId );
+    // TODO: set correct dependentFlag and dependentLayer
+    m_cVPS.setDependentFlag                                    ( iViewIdx ? true:false, layerId );
+    m_cVPS.setDependentLayer                                   ( layerId - (m_bUsingDepthMaps ? 2:1), layerId );
+#endif
+    
     m_acTEncTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
     m_acTEncTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
     m_acTEncTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
@@ -363,6 +386,15 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
       m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
+#if VIDYO_VPS_INTEGRATION
+      layerId = iViewIdx * 2 + 1;
+      m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( layerId );
+      m_cVPS.setDepthFlag                                             ( true, layerId );
+      m_cVPS.setViewId                                                ( iViewIdx, layerId );
+      m_cVPS.setViewOrderIdx                                          ( m_cCameraData.getViewOrderIndex()[ iViewIdx ], layerId );
+      m_cVPS.setDependentFlag                                         ( true, layerId );
+      m_cVPS.setDependentLayer                                        ( layerId-1, layerId);
+#endif
       m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( false );
       m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( 0 );
@@ -1133,6 +1165,9 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<unsigned
     case NAL_UNIT_CODED_SLICE_IDR:
     case NAL_UNIT_SPS:
     case NAL_UNIT_PPS:
+#if VIDYO_VPS_INTEGRATION
+    case NAL_UNIT_VPS:
+#endif
       m_essentialBytes += *it_stats;
       break;
     default:
