@@ -245,7 +245,11 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       pcPic->setCurrSliceIdx(0);
 
       std::vector<TComAPS>& vAPS = m_pcEncTop->getAPS();
+#if VIDYO_VPS_INTEGRATION
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getEncTop()->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+#else
       m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+#endif
       pcSlice->setLastIDR(m_iLastIDR);
       pcSlice->setSliceIdx(0);
       pcSlice->setViewId( m_pcEncTop->getViewId() );

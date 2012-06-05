@@ -394,10 +394,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   {
     WRITE_UVLC( pcVPS->getExtensionType(),                        "extension_type" );
     
-    if( pcVPS->getExtensionType() == 0)
-      WRITE_SVLC( pcVPS->getViewOrderIdx(0),                      "view_order_idx[0]" );
-    
-    for(UInt i=0; i <= pcVPS->getMaxLayers()-1; i++)
+    for(UInt i=1; i <= pcVPS->getMaxLayers()-1; i++)
     {
       WRITE_FLAG( pcVPS->getDependentFlag(i),                     "dependent_flag[i]" );
       if( pcVPS->getDependentFlag(i) )

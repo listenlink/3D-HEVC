@@ -1348,7 +1348,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
   READ_CODE( 5, uiCode, "max_layers_minus1" );            pcVPS->setMaxLayers( uiCode + 1 );
   READ_FLAG( uiCode,  "temporal_id_nesting_flag" );       pcVPS->setTemporalNestingFlag( uiCode ? true:false );
   READ_UVLC( uiCode,  "video_parameter_set_id" );         pcVPS->setVPSId( uiCode );
-  for(UInt i=0; i <= pcVPS->getMaxTLayers()-1; i++)
+  for(UInt i = 0; i <= pcVPS->getMaxTLayers()-1; i++)
   {
     READ_UVLC( uiCode,  "max_dec_pic_buffering[i]" );     pcVPS->setMaxDecPicBuffering( uiCode, i );
     READ_UVLC( uiCode,  "num_reorder_pics[i]" );          pcVPS->setNumReorderPics( uiCode, i );
@@ -1361,10 +1361,10 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
   {
     READ_UVLC( uiCode,  "extension_type" );               pcVPS->setExtensionType( uiCode );
     
-    if( pcVPS->getExtensionType() == 0)
-      READ_SVLC( iCode,  "view_order_idx[0]" );           pcVPS->setViewOrderIdx( iCode, 0 );
-    
-    for(UInt i=0; i <= pcVPS->getMaxLayers()-1; i++)
+    pcVPS->setViewOrderIdx( 0, 0 );
+    pcVPS->setViewId( 0, 0 );
+    pcVPS->setDepthFlag( 0, 0 );
+    for(UInt i = 1; i <= pcVPS->getMaxLayers()-1; i++)
     {
       READ_FLAG( uiCode, "dependent_flag[i]" );           pcVPS->setDependentFlag( uiCode ? true:false, i);
       if( pcVPS->getDependentFlag(i) )

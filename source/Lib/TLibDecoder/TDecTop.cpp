@@ -318,7 +318,11 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
   m_cEntropyDecoder.init(&m_cPrediction);
   m_tAppDecTop = pcTAppDecTop;
 #if DEPTH_MAP_GENERATION
+#if VIDYO_VPS_INTEGRATION
+  m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getVPSAccess(), m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
+#else
   m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
+#endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
@@ -573,6 +577,9 @@ Void TDecTop::xActivateParameterSets()
 #if VIDYO_VPS_INTEGRATION
   TComVPS *vps = m_parameterSetManagerDecoder.getVPS(sps->getVPSId());
   assert (vps != 0);
+  if( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )
+    // VPS can only be activated on IDR or CRA...
+    getTAppDecTop()->getVPSAccess()->setActiveVPSId( sps->getVPSId() );
 #endif
   m_apcSlicePilot->setPPS(pps);
   m_apcSlicePilot->setSPS(sps);
@@ -1081,7 +1088,7 @@ Void TDecTop::xDecodeVPS()
   
   m_cEntropyDecoder.decodeVPS( vps );
   m_parameterSetManagerDecoder.storePrefetchedVPS(vps);  
-
+  getTAppDecTop()->getVPSAccess()->addVPS( vps );
 }
 #endif
 
