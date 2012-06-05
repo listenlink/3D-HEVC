@@ -68,8 +68,16 @@ public:
   Void  initViewComponent     ( TComPic*      pcPic );
   Void  setRecResidualPic     ( TComPic*      pcPic );
 
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv );
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv );
+  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , Bool bRecon
+#endif
+    );
+  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , Bool bRecon
+#endif
+    );
 
 private:
   Void  xSetRecResidualPic    ( TComPic*      pcPic );
@@ -79,8 +87,15 @@ private:
   Void  xClearIntViewResidual ( TComDataCU*   pcCU,  TComYuv* pcCUResidual, UInt uiPartIdx    );
   Void  xClearResidual        (                      TComYuv* pcCUResidual, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight );
 
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv );
+  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
+#endif
+    );
   Bool  xIsNonZero            ( TComYuv*      pcYuv, UInt uiBlkWidth, UInt uiBlkHeight );
+#if QC_SIMPLIFIEDIVRP_M24938
+  Bool  xIsNonZeroByCBF       ( UInt uiBaseViewId , UInt uiXPos , UInt uiYPos, UInt uiBlkWidth , UInt uiBlkHeight );
+#endif
 
   Void  xDumpResidual         ( TComPic*      pcPic, char* pFilenameBase );
 

@@ -374,6 +374,51 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( 0, "pps_extension_flag" );
 }
 
+#if VIDYO_VPS_INTEGRATION
+Void TEncCavlc::codeVPS( TComVPS* pcVPS )
+{
+	WRITE_CODE( pcVPS->getMaxTLayers() - 1,     3,        "max_temporal_layers_minus1" );
+  WRITE_CODE( pcVPS->getMaxLayers() - 1,      5,        "max_layers_minus1" );
+  WRITE_FLAG( pcVPS->getTemporalNestingFlag() - 1,      "temporal_id_nesting_flag" );
+  WRITE_UVLC( pcVPS->getVPSId(),                        "video_parameter_set_id" );
+  for(UInt i=0; i <= pcVPS->getMaxTLayers()-1; i++)
+  {
+    WRITE_UVLC( pcVPS->getMaxDecPicBuffering(i),           "max_dec_pic_buffering[i]" );
+    WRITE_UVLC( pcVPS->getNumReorderPics(i),               "num_reorder_pics[i]" );
+    WRITE_UVLC( pcVPS->getMaxLatencyIncrease(i),           "max_latency_increase[i]" );
+  }
+  
+  WRITE_CODE( 1,      1,        "bit_equal_to_one" );
+  
+  if( pcVPS->getMaxLayers() - 1 > 0 )
+  {
+    WRITE_UVLC( pcVPS->getExtensionType(),                        "extension_type" );
+    
+    for(UInt i=1; i <= pcVPS->getMaxLayers()-1; i++)
+    {
+      WRITE_FLAG( pcVPS->getDependentFlag(i),                     "dependent_flag[i]" );
+      if( pcVPS->getDependentFlag(i) )
+      {
+        WRITE_UVLC( i - pcVPS->getDependentLayer(i) - 1,          "delta_reference_layer_id_minus1[i]" );
+        if( pcVPS->getExtensionType() == VPS_EXTENSION_TYPE_MULTI_VIEW )
+        {
+          WRITE_UVLC( pcVPS->getViewId(i),                        "view_id[i]" );
+          WRITE_FLAG( pcVPS->getDepthFlag(i),                     "depth_flag[i]" );
+          WRITE_SVLC( pcVPS->getViewOrderIdx(i),                  "view_order_idx[i]" );
+        }
+        
+      }
+    }
+  }
+  
+  WRITE_FLAG( 0,                     "vps_extension_flag" );
+  
+  //future extensions here..
+  
+  return;
+}
+#endif
+
 #if HHI_MPI
 Void TEncCavlc::codeSPS( TComSPS* pcSPS, Bool bIsDepth )
 #else
@@ -387,6 +432,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   WRITE_CODE( 0,                           8,       "reserved_zero_8bits" );
   WRITE_CODE( pcSPS->getLevelIdc (),       8,       "level_idc" );
   WRITE_UVLC( pcSPS->getSPSId (),                   "seq_parameter_set_id" );
+#if VIDYO_VPS_INTEGRATION
+  WRITE_UVLC( pcSPS->getVPSId (),                   "video_parameter_set_id" );
+#endif
   WRITE_UVLC( pcSPS->getChromaFormatIdc (),         "chroma_format_idc" );
   WRITE_CODE( pcSPS->getMaxTLayers() - 1,  3,       "max_temporal_layers_minus1" );
   WRITE_UVLC( pcSPS->getPicWidthInLumaSamples (),   "pic_width_in_luma_samples" );

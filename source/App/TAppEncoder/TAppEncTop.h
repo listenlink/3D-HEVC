@@ -79,10 +79,17 @@ private:
   unsigned                   m_totalBytes;
 
 #if DEPTH_MAP_GENERATION
+#if VIDYO_VPS_INTEGRATION
+  TComVPSAccess               m_cVPSAccess;
+#endif
   TComSPSAccess               m_cSPSAccess;
   TComAUPicAccess             m_cAUPicAccess;
 #endif
 
+#if VIDYO_VPS_INTEGRATION
+  TComVPS                     m_cVPS;
+#endif
+  
 #if HHI_VSO
   TRenTop                     m_cRendererTop; 
   TRenModel                   m_cRendererModel;   
@@ -128,6 +135,11 @@ public:
 #endif
 #if HHI_VSO
   Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent );
+#endif
+  
+#if VIDYO_VPS_INTEGRATION
+  TComVPS*          getVPS()  { return &m_cVPS; }
+  TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
 #endif
   
 #if DEPTH_MAP_GENERATION

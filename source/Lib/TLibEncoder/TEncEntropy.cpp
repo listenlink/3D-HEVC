@@ -120,6 +120,18 @@ Void TEncEntropy::encodePPS( TComPPS* pcPPS )
   return;
 }
 
+#if VIDYO_VPS_INTEGRATION
+Void TEncEntropy::encodeVPS( TComVPS* pcVPS )
+{
+  m_pcEntropyCoderIf->codeVPS( pcVPS );
+  return;
+}
+#endif
+
+#if VIDYO_VPS_INTEGRATION
+Void  codeVPS                 ( TComVPS* pcVPS );
+#endif
+
 #if HHI_MPI
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Bool bIsDepth )
 {
@@ -470,7 +482,11 @@ TEncEntropy::encodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUId
   ROFVS( pcCU->getSlice()->getSPS()->getMultiviewResPredMode() );
   ROTVS( pcCU->isIntra           ( uiAbsPartIdx )              );
   ROFVS( pcCU->getResPredAvail   ( uiAbsPartIdx )              );
-
+#if LG_RESTRICTEDRESPRED_M24766
+  Int iPUResiPredShift[4];
+  pcCU->getPUResiPredShift(iPUResiPredShift, uiAbsPartIdx);
+  if(iPUResiPredShift[0] >= 0 || iPUResiPredShift[1] >= 0  || iPUResiPredShift[2] >= 0  || iPUResiPredShift[3] >= 0 )
+#endif
   // encode flag
   m_pcEntropyCoderIf->codeResPredFlag( pcCU, uiAbsPartIdx );
 }

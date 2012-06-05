@@ -70,6 +70,9 @@ public:
   virtual Void  decodeFlush()                                                                      = 0;
 #endif
 
+#if VIDYO_VPS_INTEGRATION
+  virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
+#endif
 #if HHI_MPI
   virtual Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth )                       = 0;
 #else
@@ -162,6 +165,10 @@ public:
   Void    setBitstream                ( TComInputBitstream* p ) { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
 
+#if VIDYO_VPS_INTEGRATION
+  Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
+#endif
+  
 #if HHI_MPI
   Void    decodeSPS                   ( TComSPS* pcSPS, Bool bIsDepth ) { m_pcEntropyDecoderIf->parseSPS(pcSPS, bIsDepth); }
 #else

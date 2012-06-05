@@ -318,7 +318,11 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
   m_cEntropyDecoder.init(&m_cPrediction);
   m_tAppDecTop = pcTAppDecTop;
 #if DEPTH_MAP_GENERATION
+#if VIDYO_VPS_INTEGRATION
+  m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getVPSAccess(), m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
+#else
   m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
+#endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
@@ -570,9 +574,18 @@ Void TDecTop::xActivateParameterSets()
 
   TComSPS *sps = m_parameterSetManagerDecoder.getSPS(pps->getSPSId());
   assert (sps != 0);
-
+#if VIDYO_VPS_INTEGRATION
+  TComVPS *vps = m_parameterSetManagerDecoder.getVPS(sps->getVPSId());
+  assert (vps != 0);
+  if( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )
+    // VPS can only be activated on IDR or CRA...
+    getTAppDecTop()->getVPSAccess()->setActiveVPSId( sps->getVPSId() );
+#endif
   m_apcSlicePilot->setPPS(pps);
   m_apcSlicePilot->setSPS(sps);
+#if VIDYO_VPS_INTEGRATION
+  m_apcSlicePilot->setVPS(vps);
+#endif
   pps->setSPS(sps);
 
   if(sps->getUseSAO() || sps->getUseALF()|| sps->getScalingListFlag() || sps->getUseDF())
@@ -612,6 +625,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   m_apcSlicePilot->setPPSId(0);
   m_apcSlicePilot->setPPS(m_parameterSetManagerDecoder.getPrefetchedPPS(0));
   m_apcSlicePilot->setSPS(m_parameterSetManagerDecoder.getPrefetchedSPS(0));
+#if VIDYO_VPS_INTEGRATION
+  m_apcSlicePilot->setVPS(m_parameterSetManagerDecoder.getPrefetchedVPS(0));
+#endif
   m_apcSlicePilot->initTiles();
 
   if (m_bFirstSliceInPicture)
@@ -628,8 +644,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   m_apcSlicePilot->setNalUnitType(nalu.m_nalUnitType);
   if( m_bFirstSliceInPicture )
   {
+#if VIDYO_VPS_INTEGRATION
+    if( m_apcSlicePilot->getVPS()->getViewId(nalu.m_layerId) == 0 ) { m_nalUnitTypeBaseView = nalu.m_nalUnitType; }
+    else { m_nalUnitTypeBaseView = m_tAppDecTop->getTDecTop( 0, m_apcSlicePilot->getVPS()->getDepthFlag(nalu.m_layerId) )->getNalUnitTypeBaseView(); }
+#else
     if( nalu.m_viewId == 0 ) { m_nalUnitTypeBaseView = nalu.m_nalUnitType; }
     else                     { m_nalUnitTypeBaseView = m_tAppDecTop->getTDecTop( 0, nalu.m_isDepth )->getNalUnitTypeBaseView(); }
+#endif
+    
     m_apcSlicePilot->setNalUnitTypeBaseViewMvc( m_nalUnitTypeBaseView );
   }
 
@@ -928,11 +950,20 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     }
 
     // Set reference list 
+#if VIDYO_VPS_INTEGRATION
+    pcSlice->setViewId( pcSlice->getVPS()->getViewId(nalu.m_layerId) );
+    pcSlice->setIsDepth( pcSlice->getVPS()->getDepthFlag(nalu.m_layerId) );
+#else
     pcSlice->setViewId(m_viewId);
     pcSlice->setIsDepth(m_isDepth);
-
+#endif
+    
 #if SONY_COLPIC_AVAILABILITY
+#if VIDYO_VPS_INTEGRATION
+    pcSlice->setViewOrderIdx( pcSlice->getVPS()->getViewOrderIdx(nalu.m_layerId) );
+#else
     pcSlice->setViewOrderIdx( pcPic->getViewOrderIdx() );
+#endif
 #endif
 
     assert( m_tAppDecTop != NULL );
@@ -1050,6 +1081,16 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   return false;
 }
 
+#if VIDYO_VPS_INTEGRATION
+Void TDecTop::xDecodeVPS()
+{
+  TComVPS* vps = new TComVPS();
+  
+  m_cEntropyDecoder.decodeVPS( vps );
+  m_parameterSetManagerDecoder.storePrefetchedVPS(vps);  
+  getTAppDecTop()->getVPSAccess()->addVPS( vps );
+}
+#endif
 
 Void TDecTop::xDecodeSPS()
 {
@@ -1113,6 +1154,11 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 
   switch (nalu.m_nalUnitType)
   {
+#if VIDYO_VPS_INTEGRATION
+    case NAL_UNIT_VPS:
+      xDecodeVPS();
+      return false;
+#endif
     case NAL_UNIT_SPS:
       xDecodeSPS();
       return false;

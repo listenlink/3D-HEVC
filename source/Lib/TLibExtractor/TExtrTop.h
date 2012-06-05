@@ -53,7 +53,10 @@
 class TExtrTop
 {
 private:
-   std::list<TComSPS>      m_acSPSBuffer;
+#if VIDYO_VPS_INTEGRATION
+  TComVPS                 m_cVPS;
+#endif
+  std::list<TComSPS>      m_acSPSBuffer;
 
   // functional classes
   TComPrediction           m_cPrediction;

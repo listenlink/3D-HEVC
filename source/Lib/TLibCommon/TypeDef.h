@@ -49,6 +49,7 @@
 #define HHI_VSO                           1
 #define HHI_VSO_LS_TABLE                  1
 #define HHI_VSO_DIST_INT                  1
+#define HHI_VSO_SYNTH_DIST_OUT            0
 
 #define HHI_INTERVIEW_SKIP                1
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
@@ -67,7 +68,13 @@
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC   1   // full-pel mv accuracy for depth maps
 
 
-
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+#define LG_RESTRICTEDRESPRED_M24766     1   // restricted inter-view residual prediction
+#define QC_SIMPLIFIEDIVRP_M24938        1
+#else
+#define LG_RESTRICTEDRESPRED_M24766     0
+#define QC_SIMPLIFIEDIVRP_M24938        0
+#endif
 
 
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
@@ -343,6 +350,15 @@ enum MODE_IDX
 #define TILES_OR_ENTROPY_SYNC_IDC               1 // tiles_or_entropy_coding_sync_idc flag
 #define COMPLETE_SLICES_IN_TILE     1 // Among the constraints between slices and tiles, all slices within a tile shall be complete (JCTVC-H0348/JCTVC-H0463) for SliceMode 1&2
 #define WPP_SIMPLIFICATION          1 // JCTVC-H0349/JCTVC-0517
+
+// ====================================================================================================================
+// VPS INTEGRATION
+// ====================================================================================================================
+#define VIDYO_VPS_INTEGRATION       1
+#if VIDYO_VPS_INTEGRATION
+#define MAX_NUM_VPS 10
+#endif
+
 // ====================================================================================================================
 // Basic type redefinition
 // ====================================================================================================================
@@ -749,7 +765,6 @@ enum
   VIEWPOS_RIGHT   = 1,
   VIEWPOS_MERGED  = 2
 };
-
 
 //! \}
 

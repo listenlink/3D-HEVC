@@ -167,6 +167,13 @@
 
 #define LOG2_DISP_PREC_LUT   				2		  		///< log2 of disparity precision used in integer disparity LUTs
 
+// ====================================================================================================================
+// VPS constants
+// ====================================================================================================================
+#if VIDYO_VPS_INTEGRATION
+#define MAX_LAYER_NUM                     MAX_VIEW_NUM
+#define VPS_EXTENSION_TYPE_MULTI_VIEW     0
+#endif
 
 // ====================================================================================================================
 // Macro functions
@@ -482,7 +489,11 @@ enum NalUnitType
   NAL_UNIT_RESERVED_22,
   NAL_UNIT_RESERVED_23,
   NAL_UNIT_UNSPECIFIED_24,
+#if VIDYO_VPS_INTEGRATION
+	NAL_UNIT_VPS,
+#else
   NAL_UNIT_UNSPECIFIED_25,
+#endif
   NAL_UNIT_UNSPECIFIED_26,
   NAL_UNIT_UNSPECIFIED_27,
   NAL_UNIT_UNSPECIFIED_28,
