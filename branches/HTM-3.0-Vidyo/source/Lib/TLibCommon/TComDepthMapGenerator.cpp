@@ -121,14 +121,22 @@ TComDepthMapGenerator::destroy()
   }
 }
 
+#if VIDYO_VPS_INTEGRATION
+Void
+TComDepthMapGenerator::init( TComPrediction* pcPrediction, TComVPSAccess* pcVPSAccess, TComSPSAccess* pcSPSAccess, TComAUPicAccess* pcAUPicAccess )
+#else
 Void
 TComDepthMapGenerator::init( TComPrediction* pcPrediction, TComSPSAccess* pcSPSAccess, TComAUPicAccess* pcAUPicAccess )
+#endif
 {
   AOF( pcPrediction  );
   AOF( pcSPSAccess   );
   AOF( pcAUPicAccess );
   uninit();
   m_pcPrediction  = pcPrediction;
+#if VIDYO_VPS_INTEGRATION
+  m_pcVPSAccess   = pcVPSAccess;
+#endif
   m_pcSPSAccess   = pcSPSAccess;
   m_pcAUPicAccess = pcAUPicAccess;
   m_bInit         = true;
@@ -156,6 +164,9 @@ TComDepthMapGenerator::initViewComponent( TComPic* pcPic )
   m_uiCurrViewId  = pcPic->getSPS()->getViewId();
 
   // update SPS list and AU pic list and set depth map generator in SPS
+#if VIDYO_VPS_INTEGRATION
+  m_pcVPSAccess  ->addVPS( pcPic->getVPS() );
+#endif
   m_pcSPSAccess  ->addSPS( pcPic->getSPS() );
   m_pcAUPicAccess->addPic( pcPic );
   pcPic->getSPS()->setDepthMapGenerator( this );

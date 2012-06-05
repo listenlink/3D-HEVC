@@ -81,7 +81,12 @@ Void TAppDecTop::destroy()
  */
 Void TAppDecTop::decode()
 {
+#if VIDYO_VPS_INTEGRATION
+  increaseNumberOfViews( 0, 0, 0 );
+#else
   increaseNumberOfViews( 1 );
+#endif
+  
 #if SONY_COLPIC_AVAILABILITY
   m_tDecTop[0]->setViewOrderIdx(0);
 #endif
@@ -140,6 +145,16 @@ Void TAppDecTop::decode()
     {
       read(nalu, nalUnit);
 #if VIDYO_VPS_INTEGRATION
+      Int viewId = 0;
+      Int depth = 0;
+      
+      if(nalu.m_nalUnitType != NAL_UNIT_VPS || nalu.m_layerId)
+      {
+        // code assumes that the first nal unit is VPS
+        // currently, this is a hack that requires non-first VPSs have non-zero layer_id
+        viewId = getVPSAccess()->getActiveVPS()->getViewId(nalu.m_layerId);
+        depth = getVPSAccess()->getActiveVPS()->getDepthFlag(nalu.m_layerId);
+      }
       viewDepthId = nalu.m_layerId;   // coding order T0D0T1D1T2D2
 #else
       Int viewId = nalu.m_viewId;
@@ -150,7 +165,11 @@ Void TAppDecTop::decode()
       newPicture[viewDepthId] = false;
       if( viewDepthId >= m_tDecTop.size() )      
       {
+#if VIDYO_VPS_INTEGRATION
+        increaseNumberOfViews( viewDepthId, viewId, depth );
+#else
         increaseNumberOfViews( viewDepthId +1 );
+#endif   
       }
       if(m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer)
       {
@@ -396,15 +415,23 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
   pcListPic->clear();
   m_pocLastDisplay[viewDepthId] = -MAX_INT;
 }
-
+#if VIDYO_VPS_INTEGRATION
+Void  TAppDecTop::increaseNumberOfViews  ( UInt layerId, UInt viewId, UInt isDepth )
+#else
 Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
+#endif
 {
+#if VIDYO_VPS_INTEGRATION
+  Int newNumberOfViewDepth = layerId + 1;
+#endif
   if ( m_outputBitDepth == 0 )
   {
     m_outputBitDepth = g_uiBitDepth + g_uiBitIncrement;
   }
+#if !VIDYO_VPS_INTEGRATION
   Int viewId = (newNumberOfViewDepth-1)>>1;   // coding order T0D0T1D1T2D2
   Bool isDepth = ((newNumberOfViewDepth % 2) == 0);  // coding order T0D0T1D1T2D2
+#endif
   if( isDepth )
     m_useDepth = true;
   while( m_tVideoIOYuvReconFile.size() < newNumberOfViewDepth)

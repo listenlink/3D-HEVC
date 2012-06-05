@@ -49,7 +49,23 @@
 
 
 #if DEPTH_MAP_GENERATION
-
+#if VIDYO_VPS_INTEGRATION
+class TComVPSAccess // would be better to have a real VPS buffer
+{
+public:
+  TComVPSAccess ()  { clear(); }
+  ~TComVPSAccess()  {}
+  
+  Void      clear   ()                                { ::memset( m_aacVPS, 0x00, sizeof( m_aacVPS ) ); m_uiActiceVPSId = 0;}
+  Void      addVPS  ( TComVPS* pcVPS )                { m_aacVPS[ pcVPS->getVPSId() ] = pcVPS; }
+  TComVPS*  getVPS  ( UInt uiVPSId )                  { return m_aacVPS[ uiVPSId ]; }
+  TComVPS*  getActiveVPS  ( )                         { return m_aacVPS[ m_uiActiceVPSId ]; }
+  Void      setActiveVPSId  ( UInt activeVPSId )      { m_uiActiceVPSId = activeVPSId; }
+private:
+  TComVPS*  m_aacVPS[ MAX_NUM_VPS ];
+  UInt      m_uiActiceVPSId;
+};
+#endif
 
 class TComSPSAccess // would be better to have a real SPS buffer
 {
@@ -112,6 +128,9 @@ public:
   Void  create                ( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight, UInt uiMaxCUDepth, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiOrgBitDepth, UInt uiSubSampExpX, UInt uiSubSampExpY );
   Void  destroy               ();
 
+#if VIDYO_VPS_INTEGRATION
+  Void  init( TComPrediction* pcPrediction, TComVPSAccess* pcVPSAccess, TComSPSAccess* pcSPSAccess, TComAUPicAccess* pcAUPicAccess );
+#endif
   Void  init                  ( TComPrediction* pcPrediction, TComSPSAccess* pcSPSAccess, TComAUPicAccess* pcAUPicAccess );
   Void  uninit                ();
 
@@ -135,6 +154,9 @@ public:
 #endif
 
   TComPrediction*   getPrediction ()  { return m_pcPrediction;  }
+#if VIDYO_VPS_INTEGRATION
+  TComVPSAccess*    getVPSAccess  ()  { return m_pcVPSAccess;   }
+#endif
   TComSPSAccess*    getSPSAccess  ()  { return m_pcSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess()  { return m_pcAUPicAccess; }
 
@@ -197,6 +219,9 @@ private:
   Bool              m_bInit;
   Bool              m_bDecoder;
   TComPrediction*   m_pcPrediction;
+#if VIDYO_VPS_INTEGRATION
+  TComVPSAccess*    m_pcVPSAccess;
+#endif
   TComSPSAccess*    m_pcSPSAccess;
   TComAUPicAccess*  m_pcAUPicAccess;
   UInt              m_uiMaxDepth;

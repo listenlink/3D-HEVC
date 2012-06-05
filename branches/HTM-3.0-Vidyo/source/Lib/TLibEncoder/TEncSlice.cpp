@@ -160,12 +160,19 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param pSPS          SPS associated with the slice
  \param pPPS          PPS associated with the slice
  */
+#if VIDYO_VPS_INTEGRATION
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS * pVPS, TComSPS* pSPS, TComPPS *pPPS )
+#else
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
+#endif
 {
   Double dQP;
   Double dLambda;
   
   rpcSlice = pcPic->getSlice(0);
+#if VIDYO_VPS_INTEGRATION
+  rpcSlice->setVPS( pVPS );
+#endif
   rpcSlice->setSPS( pSPS );
   rpcSlice->setPPS( pPPS );
   rpcSlice->setSliceBits(0);
