@@ -1478,15 +1478,19 @@ TComDepthMapGenerator::xGetPredDepth( TComDataCU* pcCU, UInt uiPartIdx, Int& riP
   Int           iCurrPosY;
   pcPredDepthMap->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iCurrPosX, iCurrPosY );
 #if SAIT_IMPROV_MOTION_PRED_M24829 // max disparity within PU
-  int DiWidth=iCurrPosX+(iWidth  >> m_uiSubSampExpX);
-  int DiHeight=iCurrPosY+(iHeight >> m_uiSubSampExpY);
-  int maxDepth=INT_MIN;
-  for(int y=iCurrPosY; y<DiHeight ;y++) {
-	  for(int x=iCurrPosX; x<DiWidth; x++) {
-		  if(piPredDepthMap[ x + y * iCurrStride ] > maxDepth) {
-			  maxDepth = piPredDepthMap[ x + y * iCurrStride ];
-		  }
-	  }
+  Int DiWidth  = iCurrPosX+(iWidth  >> m_uiSubSampExpX);
+  Int DiHeight = iCurrPosY+(iHeight >> m_uiSubSampExpY);
+  Int maxDepth = MIN_INT;
+
+  for(Int y=iCurrPosY; y<DiHeight ;y++)
+  {
+    for(Int x=iCurrPosX; x<DiWidth; x++)
+    {
+      if(piPredDepthMap[ x + y * iCurrStride ] > maxDepth)
+      {
+        maxDepth = piPredDepthMap[ x + y * iCurrStride ];
+      }
+    }
   }
   iCurrPosX  += ( ( iWidth  >> m_uiSubSampExpX ) - 1 ) >> 1;
   iCurrPosY  += ( ( iHeight >> m_uiSubSampExpY ) - 1 ) >> 1;
