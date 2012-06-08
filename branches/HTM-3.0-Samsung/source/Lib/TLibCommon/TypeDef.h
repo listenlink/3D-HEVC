@@ -67,6 +67,11 @@
 #define HHI_MPI_MERGE_POS               0
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC   1   // full-pel mv accuracy for depth maps
 
+#if HHI_INTER_VIEW_MOTION_PRED
+#define SAIT_IMPROV_MOTION_PRED_M24829  1   // improved inter-view motion vector prediction
+#else
+#define SAIT_IMPROV_MOTION_PRED_M24829  0   
+#endif 
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
 #define LG_RESTRICTEDRESPRED_M24766     1   // restricted inter-view residual prediction

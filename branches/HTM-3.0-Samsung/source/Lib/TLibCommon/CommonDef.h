@@ -137,7 +137,11 @@
 #define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
+#if SAIT_IMPROV_MOTION_PRED_M24829
+#define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
+#else
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)
+#endif
 #define PDM_OUTPUT_PRED_DEPTH_MAP         0         // output prediction depth map (for debugging)
 
 #define PDM_INTERNAL_CALC_BIT_DEPTH       31        // bit depth for internal calculations (32 - 1 for signed values)
