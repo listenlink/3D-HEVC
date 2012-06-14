@@ -391,22 +391,106 @@ Void TComYuv::addClipPartLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTr
   }
 }
 
-
+#if LG_RESTRICTEDRESPRED_M24766
+Void
+TComYuv::add(Int *iPUResiPredShift, PartSize uhPartitionSize,  TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
+{
+	addLuma   (iPUResiPredShift, uhPartitionSize, pcYuvAdd, iWidth,    iHeight,    bSubtract );
+	addChroma (iPUResiPredShift, uhPartitionSize, pcYuvAdd, iWidth>>1, iHeight>>1, bSubtract );
+}
+#else
 Void
 TComYuv::add( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
 {
   addLuma   ( pcYuvAdd, iWidth,    iHeight,    bSubtract );
   addChroma ( pcYuvAdd, iWidth>>1, iHeight>>1, bSubtract );
 }
+#endif
 
+#if LG_RESTRICTEDRESPRED_M24766
+void
+TComYuv::getPUXYOffset(PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &iXOffset, Int &iYOffset)
+{
+	switch(uhPartitionSize)
+	{	  
+	case SIZE_2NxN:
+		iXOffset = iWidth;      iYOffset = iHeight >> 1;   break;
+	case SIZE_2NxnU:
+		iXOffset = iWidth;      iYOffset = iHeight >> 2;   break;
+	case SIZE_2NxnD: 
+		iXOffset = iWidth;      iYOffset = (iHeight >> 1) + (iHeight >> 2);   break;
+	case SIZE_Nx2N:
+		iXOffset = iWidth >> 1; iYOffset = iHeight; break;
+	case SIZE_nLx2N:
+		iXOffset = iWidth >> 2; iYOffset = iHeight; break;
+	case SIZE_nRx2N:
+		iXOffset = (iWidth >> 1) + (iWidth >> 2); iYOffset = iHeight; break;
+	case SIZE_NxN:
+		iXOffset = iWidth >> 1; iYOffset = iHeight >> 1;  break;
+	default:
+		assert(uhPartitionSize == SIZE_2Nx2N);
+		iXOffset = iWidth; 	  iYOffset = iHeight;	  break;
+	}
+}
+#endif
+
+#if LG_RESTRICTEDRESPRED_M24766
+Void 
+TComYuv::addLuma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
+#else
 Void
 TComYuv::addLuma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
+#endif
 {
   Int   iScale      = ( bSubtract ? -1 : 1 );
   Int   iAddStride  = pcYuvAdd->getStride();
   Int   iDstStride  = getStride();
   Pel*  pAddSamples = pcYuvAdd->getLumaAddr();
   Pel*  pDstSamples = getLumaAddr();
+
+#if LG_RESTRICTEDRESPRED_M24766
+  Int iXOffset, iYOffset;
+
+  getPUXYOffset(uhPartitionSize, iWidth, iHeight, iXOffset, iYOffset);
+
+  for( Int iY = 0; iY < iYOffset; iY++, pDstSamples += iDstStride, pAddSamples += iAddStride )
+  {
+	  if(iPUResiPredShift[0] >= 0)
+	  {
+		  for( Int iX = 0; iX < iXOffset; iX++ )
+		  {
+			  pDstSamples[iX] += iScale * (pAddSamples[iX] >> iPUResiPredShift[0]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[1] >= 0)
+	  {
+		  for( Int iX = iXOffset; iX < iWidth; iX++ )
+		  {
+			  pDstSamples[iX] += iScale * (pAddSamples[iX] >> iPUResiPredShift[1]);
+		  }
+	  }
+  }
+
+  for( Int iY = iYOffset; iY < iHeight; iY++, pDstSamples += iDstStride, pAddSamples += iAddStride )
+  {
+	  if(iPUResiPredShift[2] >= 0)
+	  {
+		  for( Int iX = 0; iX < iXOffset; iX++ )
+		  {
+			  pDstSamples[iX] += iScale * (pAddSamples[iX] >> iPUResiPredShift[2]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[3] >= 0)
+	  {
+		  for( Int iX = iXOffset; iX < iWidth; iX++ )
+		  {
+			  pDstSamples[iX] += iScale * (pAddSamples[iX] >> iPUResiPredShift[3]);
+		  }
+	  }
+  }
+#else
   for( Int iY = 0; iY < iHeight; iY++, pDstSamples += iDstStride, pAddSamples += iAddStride )
   {
     for( Int iX = 0; iX < iWidth; iX++ )
@@ -414,10 +498,16 @@ TComYuv::addLuma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
       pDstSamples[iX] += iScale * pAddSamples[iX];
     }
   }
+#endif
 }
 
+#if LG_RESTRICTEDRESPRED_M24766
+Void 
+TComYuv::addChroma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
+#else
 Void
 TComYuv::addChroma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
+#endif
 {
   Int   iScale        = ( bSubtract ? -1 : 1 );
   Int   iAddStride    = pcYuvAdd->getCStride();
@@ -426,6 +516,56 @@ TComYuv::addChroma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
   Pel*  pAddSamplesCr = pcYuvAdd->getCrAddr();
   Pel*  pDstSamplesCb = getCbAddr();
   Pel*  pDstSamplesCr = getCrAddr();
+
+#if LG_RESTRICTEDRESPRED_M24766
+  Int iXOffset, iYOffset;
+ 
+  getPUXYOffset(uhPartitionSize, iWidth, iHeight, iXOffset, iYOffset);
+
+  for( Int iY = 0; iY < iYOffset; iY++, pDstSamplesCb += iDstStride, pAddSamplesCb += iAddStride,
+	  pDstSamplesCr += iDstStride, pAddSamplesCr += iAddStride  )
+  {
+	  if(iPUResiPredShift[0] >= 0)
+	  {
+		  for( Int iX = 0; iX < iXOffset; iX++ )
+		  {
+			  pDstSamplesCb[iX] += iScale * (pAddSamplesCb[iX] >> iPUResiPredShift[0]);
+			  pDstSamplesCr[iX] += iScale * (pAddSamplesCr[iX] >> iPUResiPredShift[0]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[1] >= 0)
+	  {
+		  for( Int iX = iXOffset; iX < iWidth; iX++ )
+		  {
+			  pDstSamplesCb[iX] += iScale * (pAddSamplesCb[iX] >> iPUResiPredShift[1]);
+			  pDstSamplesCr[iX] += iScale * (pAddSamplesCr[iX] >> iPUResiPredShift[1]);
+		  }
+	  }
+  }
+
+  for( Int iY = iYOffset; iY < iHeight; iY++, pDstSamplesCb += iDstStride, pAddSamplesCb += iAddStride,
+	  pDstSamplesCr += iDstStride, pAddSamplesCr += iAddStride  )
+  {
+	  if(iPUResiPredShift[2] >= 0)
+	  {
+		  for( Int iX = 0; iX < iXOffset; iX++ )
+		  {
+			  pDstSamplesCb[iX] += iScale * (pAddSamplesCb[iX] >> iPUResiPredShift[2]);
+			  pDstSamplesCr[iX] += iScale * (pAddSamplesCr[iX] >> iPUResiPredShift[2]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[3] >= 0)
+	  {
+		  for( Int iX = iXOffset; iX < iWidth; iX++ )
+		  {
+			  pDstSamplesCb[iX] += iScale * (pAddSamplesCb[iX] >> iPUResiPredShift[3]);
+			  pDstSamplesCr[iX] += iScale * (pAddSamplesCr[iX] >> iPUResiPredShift[3]);
+		  }
+	  }
+  }
+#else
   for( Int iY = 0; iY < iHeight; iY++, pDstSamplesCb += iDstStride, pAddSamplesCb += iAddStride,
                                        pDstSamplesCr += iDstStride, pAddSamplesCr += iAddStride  )
   {
@@ -435,6 +575,7 @@ TComYuv::addChroma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
       pDstSamplesCr[iX] += iScale * pAddSamplesCr[iX];
     }
   }
+#endif
 }
 
 Void
@@ -534,13 +675,25 @@ Void TComYuv::addClipChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUn
   }
 }
 
+#if LG_RESTRICTEDRESPRED_M24766
+Void TComYuv::subtract(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+{
+	subtractLuma  (iPUResiPredShift, uhPartitionSize, pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize    );
+	subtractChroma(iPUResiPredShift, uhPartitionSize, pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize>>1 );
+}
+#else
 Void TComYuv::subtract( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
 {
   subtractLuma  ( pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize    );
   subtractChroma( pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize>>1 );
 }
+#endif
 
+#if LG_RESTRICTEDRESPRED_M24766
+Void TComYuv::subtractLuma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+#else
 Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+#endif
 {
   Int x, y;
   
@@ -551,6 +704,57 @@ Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUni
   Int  iSrc0Stride = pcYuvSrc0->getStride();
   Int  iSrc1Stride = pcYuvSrc1->getStride();
   Int  iDstStride  = getStride();
+
+#if LG_RESTRICTEDRESPRED_M24766
+  Int iXOffset, iYOffset;
+
+  getPUXYOffset(uhPartitionSize, uiPartSize, uiPartSize, iXOffset, iYOffset);
+
+  for ( y = uiPartSize-1; y >= iYOffset; y-- )
+  {
+	  if(iPUResiPredShift[3] >= 0)
+	  {
+		  for ( x = uiPartSize-1; x >= iXOffset; x-- )
+		  {
+			  pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[3]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[2] >= 0)
+	  {
+		  for ( x = iXOffset-1; x >= 0; x-- )
+		  {
+			  pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[2]);
+		  }
+	  }
+	  pSrc0 += iSrc0Stride;
+	  pSrc1 += iSrc1Stride;
+	  pDst  += iDstStride;
+  }
+
+  for ( y = iYOffset-1; y >= 0; y-- )
+  {
+	  if(iPUResiPredShift[1] >= 0)
+	  {
+		  for ( x = uiPartSize-1; x >= iXOffset; x-- )
+		  {
+			  pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[3]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[0] >= 0)
+	  {
+		  for ( x = iXOffset-1; x >= 0; x-- )
+		  {
+			  pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[2]);
+		  }
+	  }
+	  pSrc0 += iSrc0Stride;
+	  pSrc1 += iSrc1Stride;
+	  pDst  += iDstStride;
+  }
+
+#else
   for ( y = uiPartSize-1; y >= 0; y-- )
   {
     for ( x = uiPartSize-1; x >= 0; x-- )
@@ -561,9 +765,14 @@ Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUni
     pSrc1 += iSrc1Stride;
     pDst  += iDstStride;
   }
+#endif
 }
 
+#if LG_RESTRICTEDRESPRED_M24766
+Void TComYuv::subtractChroma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+#else
 Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+#endif
 {
   Int x, y;
   
@@ -577,6 +786,65 @@ Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrU
   Int  iSrc0Stride = pcYuvSrc0->getCStride();
   Int  iSrc1Stride = pcYuvSrc1->getCStride();
   Int  iDstStride  = getCStride();
+#if LG_RESTRICTEDRESPRED_M24766
+  Int iXOffset, iYOffset;
+ 
+  getPUXYOffset(uhPartitionSize, uiPartSize, uiPartSize, iXOffset, iYOffset);
+
+  for ( y = uiPartSize-1; y >= iYOffset; y-- )
+  {
+	  if(iPUResiPredShift[3] >= 0)
+	  {
+		  for ( x = uiPartSize-1; x >= iXOffset; x-- )
+		  {
+			  pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[3]);
+			  pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[3]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[2] >= 0)
+	  {
+		  for ( x = iXOffset-1; x >= 0; x-- )
+		  {
+			  pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[2]);
+			  pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[2]);
+		  }
+	  }
+	  pSrcU0 += iSrc0Stride;
+	  pSrcU1 += iSrc1Stride;
+	  pSrcV0 += iSrc0Stride;
+	  pSrcV1 += iSrc1Stride;
+	  pDstU  += iDstStride;
+	  pDstV  += iDstStride;
+  }
+
+  for ( y = iYOffset-1; y >= 0; y-- )
+  {
+	  if(iPUResiPredShift[1] >= 0)
+	  {
+		  for ( x = uiPartSize-1; x >= iXOffset; x-- )
+		  {
+			  pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[1]);
+			  pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[1]);
+		  }
+	  }
+
+	  if(iPUResiPredShift[0] >= 0)
+	  {
+		  for ( x = iXOffset-1; x >= 0; x-- )
+		  {
+			  pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[0]);
+			  pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[0]);
+		  }
+	  }
+	  pSrcU0 += iSrc0Stride;
+	  pSrcU1 += iSrc1Stride;
+	  pSrcV0 += iSrc0Stride;
+	  pSrcV1 += iSrc1Stride;
+	  pDstU  += iDstStride;
+	  pDstV  += iDstStride;
+  }
+#else
   for ( y = uiPartSize-1; y >= 0; y-- )
   {
     for ( x = uiPartSize-1; x >= 0; x-- )
@@ -591,6 +859,7 @@ Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrU
     pDstU  += iDstStride;
     pDstV  += iDstStride;
   }
+#endif
 }
 
 Void TComYuv::addAvg( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight )

@@ -61,13 +61,25 @@ struct OutputNALUnit : public NALUnit
 #else
     NalRefIdc nalRefIDC,
 #endif
+#if VIDYO_VPS_INTEGRATION
+    unsigned layerId,
+#else
     Int viewId,
     Bool isDepth,
+#endif
     unsigned temporalID = 0)
 #if NAL_REF_FLAG
+#if VIDYO_VPS_INTEGRATION
+  : NALUnit(nalUnitType, nalRefFlag, layerId, temporalID)
+#else
   : NALUnit(nalUnitType, nalRefFlag, viewId, isDepth, temporalID)
+#endif
+#else
+#if VIDYO_VPS_INTEGRATION
+  : NALUnit(nalUnitType, nalRefIDC, layerId, temporalID)
 #else
   : NALUnit(nalUnitType, nalRefIDC, viewId, isDepth, temporalID)
+#endif
 #endif
   , m_Bitstream()
   {}

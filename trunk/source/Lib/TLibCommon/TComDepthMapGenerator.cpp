@@ -121,14 +121,22 @@ TComDepthMapGenerator::destroy()
   }
 }
 
+#if VIDYO_VPS_INTEGRATION
+Void
+TComDepthMapGenerator::init( TComPrediction* pcPrediction, TComVPSAccess* pcVPSAccess, TComSPSAccess* pcSPSAccess, TComAUPicAccess* pcAUPicAccess )
+#else
 Void
 TComDepthMapGenerator::init( TComPrediction* pcPrediction, TComSPSAccess* pcSPSAccess, TComAUPicAccess* pcAUPicAccess )
+#endif
 {
   AOF( pcPrediction  );
   AOF( pcSPSAccess   );
   AOF( pcAUPicAccess );
   uninit();
   m_pcPrediction  = pcPrediction;
+#if VIDYO_VPS_INTEGRATION
+  m_pcVPSAccess   = pcVPSAccess;
+#endif
   m_pcSPSAccess   = pcSPSAccess;
   m_pcAUPicAccess = pcAUPicAccess;
   m_bInit         = true;
@@ -156,6 +164,9 @@ TComDepthMapGenerator::initViewComponent( TComPic* pcPic )
   m_uiCurrViewId  = pcPic->getSPS()->getViewId();
 
   // update SPS list and AU pic list and set depth map generator in SPS
+#if VIDYO_VPS_INTEGRATION
+  m_pcVPSAccess  ->addVPS( pcPic->getVPS() );
+#endif
   m_pcSPSAccess  ->addSPS( pcPic->getSPS() );
   m_pcAUPicAccess->addPic( pcPic );
   pcPic->getSPS()->setDepthMapGenerator( this );
@@ -1466,9 +1477,29 @@ TComDepthMapGenerator::xGetPredDepth( TComDataCU* pcCU, UInt uiPartIdx, Int& riP
   Int           iCurrPosX;
   Int           iCurrPosY;
   pcPredDepthMap->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iCurrPosX, iCurrPosY );
+#if SAIT_IMPROV_MOTION_PRED_M24829 // max disparity within PU
+  Int DiWidth  = iCurrPosX+(iWidth  >> m_uiSubSampExpX);
+  Int DiHeight = iCurrPosY+(iHeight >> m_uiSubSampExpY);
+  Int maxDepth = MIN_INT;
+
+  for(Int y=iCurrPosY; y<DiHeight ;y++)
+  {
+    for(Int x=iCurrPosX; x<DiWidth; x++)
+    {
+      if(piPredDepthMap[ x + y * iCurrStride ] > maxDepth)
+      {
+        maxDepth = piPredDepthMap[ x + y * iCurrStride ];
+      }
+    }
+  }
+  iCurrPosX  += ( ( iWidth  >> m_uiSubSampExpX ) - 1 ) >> 1;
+  iCurrPosY  += ( ( iHeight >> m_uiSubSampExpY ) - 1 ) >> 1;
+  riPrdDepth  = maxDepth;
+#else
   iCurrPosX  += ( ( iWidth  >> m_uiSubSampExpX ) - 1 ) >> 1;
   iCurrPosY  += ( ( iHeight >> m_uiSubSampExpY ) - 1 ) >> 1;
   riPrdDepth  = piPredDepthMap[ iCurrPosX + iCurrPosY * iCurrStride ];
+#endif
   if( piPosX )
   {
     *piPosX   = iCurrPosX;

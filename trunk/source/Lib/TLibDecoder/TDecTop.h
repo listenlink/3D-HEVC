@@ -207,6 +207,9 @@ protected:
 #else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
 #endif
+#if VIDYO_VPS_INTEGRATION
+	Void      xDecodeVPS();
+#endif
   Void      xDecodeSPS();
   Void      xDecodePPS();
   Void      xDecodeAPS();

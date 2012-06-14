@@ -356,6 +356,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComResidualGenerator.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComRom.cpp"
 				>
 			</File>
@@ -498,6 +502,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComResidualGenerator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComRom.h"
 				>
 			</File>
@@ -511,6 +519,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComTrQuant.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibCommon\TComWedgelet.h"
 				>
 			</File>
 			<File

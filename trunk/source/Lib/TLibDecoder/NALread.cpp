@@ -135,9 +135,12 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
   nalu.m_temporalId = bs.read(3);
  //  unsigned reserved_one_5bits = bs.read(5);
  //  assert(reserved_one_5bits == 1);
+#if VIDYO_VPS_INTEGRATION
+  nalu.m_layerId  = bs.read(5) - 1;
+#else
   nalu.m_viewId   = bs.read(4)-1;
   nalu.m_isDepth  = bs.read(1);
-
+#endif
 #if H0566_TLA
   if ( nalu.m_temporalId )
   {
@@ -158,11 +161,15 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
 #endif
     {
       nalu.m_temporalId = bs.read(3);
+#if VIDYO_VPS_INTEGRATION
+      nalu.m_layerId    = bs.read(5) - 1;
+#else
       nalu.m_OutputFlag = bs.read(1);
   //    unsigned reserved_one_4bits = bs.read(4);
   //    assert(reserved_one_4bits == 1);
       nalu.m_viewId   = bs.read(3)-1;
       nalu.m_isDepth  = bs.read(1);
+#endif
 
 #if H0566_TLA
       if (nalu.m_temporalId == 0)

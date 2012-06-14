@@ -374,6 +374,51 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( 0, "pps_extension_flag" );
 }
 
+#if VIDYO_VPS_INTEGRATION
+Void TEncCavlc::codeVPS( TComVPS* pcVPS )
+{
+	WRITE_CODE( pcVPS->getMaxTLayers() - 1,     3,        "max_temporal_layers_minus1" );
+  WRITE_CODE( pcVPS->getMaxLayers() - 1,      5,        "max_layers_minus1" );
+  WRITE_FLAG( pcVPS->getTemporalNestingFlag() - 1,      "temporal_id_nesting_flag" );
+  WRITE_UVLC( pcVPS->getVPSId(),                        "video_parameter_set_id" );
+  for(UInt i=0; i <= pcVPS->getMaxTLayers()-1; i++)
+  {
+    WRITE_UVLC( pcVPS->getMaxDecPicBuffering(i),           "max_dec_pic_buffering[i]" );
+    WRITE_UVLC( pcVPS->getNumReorderPics(i),               "num_reorder_pics[i]" );
+    WRITE_UVLC( pcVPS->getMaxLatencyIncrease(i),           "max_latency_increase[i]" );
+  }
+  
+  WRITE_CODE( 1,      1,        "bit_equal_to_one" );
+  
+  if( pcVPS->getMaxLayers() - 1 > 0 )
+  {
+    WRITE_UVLC( pcVPS->getExtensionType(),                        "extension_type" );
+    
+    for(UInt i=1; i <= pcVPS->getMaxLayers()-1; i++)
+    {
+      WRITE_FLAG( pcVPS->getDependentFlag(i),                     "dependent_flag[i]" );
+      if( pcVPS->getDependentFlag(i) )
+      {
+        WRITE_UVLC( i - pcVPS->getDependentLayer(i) - 1,          "delta_reference_layer_id_minus1[i]" );
+        if( pcVPS->getExtensionType() == VPS_EXTENSION_TYPE_MULTI_VIEW )
+        {
+          WRITE_UVLC( pcVPS->getViewId(i),                        "view_id[i]" );
+          WRITE_FLAG( pcVPS->getDepthFlag(i),                     "depth_flag[i]" );
+          WRITE_SVLC( pcVPS->getViewOrderIdx(i),                  "view_order_idx[i]" );
+        }
+        
+      }
+    }
+  }
+  
+  WRITE_FLAG( 0,                     "vps_extension_flag" );
+  
+  //future extensions here..
+  
+  return;
+}
+#endif
+
 #if HHI_MPI
 Void TEncCavlc::codeSPS( TComSPS* pcSPS, Bool bIsDepth )
 #else
@@ -387,6 +432,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   WRITE_CODE( 0,                           8,       "reserved_zero_8bits" );
   WRITE_CODE( pcSPS->getLevelIdc (),       8,       "level_idc" );
   WRITE_UVLC( pcSPS->getSPSId (),                   "seq_parameter_set_id" );
+#if VIDYO_VPS_INTEGRATION
+  WRITE_UVLC( pcSPS->getVPSId (),                   "video_parameter_set_id" );
+#endif
   WRITE_UVLC( pcSPS->getChromaFormatIdc (),         "chroma_format_idc" );
   WRITE_CODE( pcSPS->getMaxTLayers() - 1,  3,       "max_temporal_layers_minus1" );
   WRITE_UVLC( pcSPS->getPicWidthInLumaSamples (),   "pic_width_in_luma_samples" );
@@ -726,8 +774,82 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     else
     {
       WRITE_CODE( (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC()))%(1<<pcSlice->getSPS()->getBitsForPOC()), pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
+#if HHI_FIX
+      if( pcSlice->getPOC() == 0 && pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_IDV )
+      {
+        TComReferencePictureSet* rps = pcSlice->getRPS();
+        if(pcSlice->getRPSidx() < 0)
+        {
+          WRITE_FLAG( 0, "short_term_ref_pic_set_sps_flag");
+#if RPS_IN_SPS
+          codeShortTermRefPicSet(pcSlice->getSPS(), rps);
+#else
+          codeShortTermRefPicSet(pcSlice->getPPS(), rps);
+#endif
+        }
+        else
+        {
+          WRITE_FLAG( 1, "short_term_ref_pic_set_sps_flag");
+          WRITE_UVLC( pcSlice->getRPSidx(), "short_term_ref_pic_set_idx" );
+        }
+#if RPS_IN_SPS
+        if(pcSlice->getSPS()->getLongTermRefsPresent())
+#else
+        if(pcSlice->getPPS()->getLongTermRefsPresent())
+#endif
+        {
+          WRITE_UVLC( rps->getNumberOfLongtermPictures(), "num_long_term_pics");
+          Int maxPocLsb = 1<<pcSlice->getSPS()->getBitsForPOC();
+          Int prev = 0;
+#if LTRP_MULT
+          Int prevDeltaPocLt=0;
+          Int currDeltaPocLt=0;
+#endif
+          for(Int i=rps->getNumberOfPictures()-1 ; i > rps->getNumberOfPictures()-rps->getNumberOfLongtermPictures()-1; i--)
+          {
+            WRITE_UVLC((maxPocLsb-rps->getDeltaPOC(i)+prev)%maxPocLsb, "delta_poc_lsb_lt");
+          
+#if LTRP_MULT
+            currDeltaPocLt=((maxPocLsb-rps->getDeltaPOC(i)+prev)%maxPocLsb)+prevDeltaPocLt;
 
+            Int deltaMsbCycle=0;
+            if( (i==(rps->getNumberOfPictures()-1)) )
+            {
+              deltaMsbCycle=((-rps->getDeltaPOC(i))/maxPocLsb)-1;
+            }
+            else if( prevDeltaPocLt!=currDeltaPocLt )
+            {
+              deltaMsbCycle=((-rps->getDeltaPOC(i))/maxPocLsb)-1;
+              if( ((prevDeltaPocLt==maxPocLsb-1) && (currDeltaPocLt==maxPocLsb+1)) ||  ((prevDeltaPocLt==maxPocLsb-2) && (currDeltaPocLt==maxPocLsb)))
+              {
+                deltaMsbCycle=deltaMsbCycle-1;
+              }
+            }
+            else
+            {
+              deltaMsbCycle=((rps->getDeltaPOC(i+1)-rps->getDeltaPOC(i))/maxPocLsb)-1;
+            }
+
+            if(deltaMsbCycle>=0)
+            {
+              WRITE_FLAG( 1, "delta_poc_msb_present_flag");
+              WRITE_UVLC(deltaMsbCycle, "delta_poc_msb_cycle_lt_minus1");
+            }
+            else
+            {
+              WRITE_FLAG( 0, "delta_poc_msb_present_flag");
+            }
+            prevDeltaPocLt=currDeltaPocLt;
+#endif
+            prev = rps->getDeltaPOC(i);
+            WRITE_FLAG( rps->getUsed(i), "used_by_curr_pic_lt_flag"); 
+          }
+        }
+      }
+      if( pcSlice->getPOC() != 0 )
+#else
       if( pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_IDV )
+#endif
       {
         TComReferencePictureSet* rps = pcSlice->getRPS();
         if(pcSlice->getRPSidx() < 0)

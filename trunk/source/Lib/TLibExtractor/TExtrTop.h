@@ -53,6 +53,9 @@
 class TExtrTop
 {
 private:
+#if VIDYO_VPS_INTEGRATION
+  TComVPS                 m_cVPS;
+#endif
    std::list<TComSPS>      m_acSPSBuffer;
 
   // functional classes

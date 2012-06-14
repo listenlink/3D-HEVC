@@ -97,12 +97,21 @@ TDecEntropy::decodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   // check if supported
   if( bResPredAllowed )
   {
-    bResPredAvailable       = pcSubCU->getResidualSamples( uiPUIdx );
+    bResPredAvailable       = pcSubCU->getResidualSamples( uiPUIdx 
+#if QC_SIMPLIFIEDIVRP_M24938
+      , false
+#endif
+      );
   }
 
   // read from bitstream
   if( bResPredAvailable )
   {
+#if LG_RESTRICTEDRESPRED_M24766
+	  Int iPUResiPredShift[4];
+	  pcCU->getPUResiPredShift(iPUResiPredShift, uiAbsPartIdx);
+	  if(iPUResiPredShift[0] >= 0 || iPUResiPredShift[1] >= 0  || iPUResiPredShift[2] >= 0  || iPUResiPredShift[3] >= 0 )
+#endif
     m_pcEntropyDecoderIf->parseResPredFlag( pcCU, bResPredFlag, uiAbsPartIdx, uiDepth );
   }
 

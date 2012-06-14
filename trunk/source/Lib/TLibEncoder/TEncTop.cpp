@@ -347,7 +347,11 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
   m_pcTAppEncTop = pcTAppEncTop;
 
 #if DEPTH_MAP_GENERATION
+#if VIDYO_VPS_INTEGRATION
+  m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getVPSAccess(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
+#else
   m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
+#endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
@@ -976,7 +980,11 @@ Void TEncTop::xInitRPS()
    // for a specific slice (with POC = POCCurr)
 Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic )
 {
+#if HHI_FIX
+  if( slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && POCCurr == 0 )
+#else
   if( slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV )
+#endif
   {
     TComReferencePictureSet* rps = slice->getLocalRPS();
     rps->setNumberOfNegativePictures(0);
