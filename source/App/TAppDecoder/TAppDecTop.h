@@ -73,6 +73,9 @@ private:
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
 #if DEPTH_MAP_GENERATION
+#if VIDYO_VPS_INTEGRATION
+  TComVPSAccess                   m_cVPSAccess;
+#endif
   TComSPSAccess                   m_cSPSAccess;
   TComAUPicAccess                 m_cAUPicAccess;
 #endif
@@ -84,13 +87,20 @@ public:
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
+#if VIDYO_VPS_INTEGRATION
+  Void  increaseNumberOfViews	(UInt layerId, UInt viewId, UInt isDepth);
+#else
   Void  increaseNumberOfViews	(Int newNumberOfViewDepth);
+#endif
   TDecTop* getTDecTop     ( Int viewId, Bool isDepth );
 
   std::vector<TComPic*> getInterViewRefPics( Int viewId, Int poc, Bool isDepth, TComSPS* sps );
   TComPic*              getPicFromView     ( Int viewId, Int poc, bool isDepth ) { return xGetPicFromView( viewId, poc, isDepth ); }
 
 #if DEPTH_MAP_GENERATION
+#if VIDYO_VPS_INTEGRATION
+  TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
+#endif
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
   TDecTop*          getDecTop0    () { return m_tDecTop[0]; }

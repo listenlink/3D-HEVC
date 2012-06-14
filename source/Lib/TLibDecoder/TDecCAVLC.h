@@ -112,6 +112,9 @@ public:
   Void  parseQtCbf          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
   Void  parseQtRootCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
 
+#if VIDYO_VPS_INTEGRATION
+  Void  parseVPS            ( TComVPS* pcVPS );
+#endif
 #if HHI_MPI
   Void  parseSPS            ( TComSPS* pcSPS, Bool bIsDepth );
 #else

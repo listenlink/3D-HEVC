@@ -220,7 +220,11 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
 
 
 Bool
-TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv )
+TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
+#endif
+  )
 {
   AOF(  pcCU );
   UInt  uiPartAddr;
@@ -230,11 +234,19 @@ TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComY
   iBlkWidth   = pcCU->getWidth  ( 0 );
   iBlkHeight  = pcCU->getHeight ( 0 );
   pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iXPos, iYPos );
-  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv );
+  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , bRecon
+#endif
+    );
 }
   
 Bool
-TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv )
+TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
+#endif
+  )
 {
   UInt  uiBaseViewId  = m_pcDepthMapGenerator->getBaseViewId( 0 );
 
@@ -242,9 +254,49 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
   {
     pcYuv = m_ppcYuvTmp[1];
   }
-  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv );
+#if QC_SIMPLIFIEDIVRP_M24938
+  UInt uiXPosInRefView = uiXPos , uiYPosInRefView = uiYPos;
+#endif
+  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , &uiXPosInRefView , &uiYPosInRefView , bRecon
+#endif
+    );
+
+#if QC_SIMPLIFIEDIVRP_M24938
+  return xIsNonZeroByCBF( uiBaseViewId , uiXPosInRefView , uiYPosInRefView , uiBlkWidth , uiBlkHeight );
+#else
   return xIsNonZero( pcYuv, uiBlkWidth, uiBlkHeight );
+#endif
 }
+
+#if QC_SIMPLIFIEDIVRP_M24938
+Bool TComResidualGenerator::xIsNonZeroByCBF( UInt uiBaseViewId , UInt uiXPos , UInt uiYPos, UInt uiBlkWidth , UInt uiBlkHeight )
+{
+  TComPic* pcBasePic   = m_pcAUPicAccess->getPic( uiBaseViewId );
+  const Int nMaxPicX = pcBasePic->getSPS()->getPicWidthInLumaSamples() - 1;
+  const Int nMaxPicY = pcBasePic->getSPS()->getPicHeightInLumaSamples() - 1;
+  for( UInt y = 0 ; y < uiBlkHeight ; y +=4 )
+  {
+    for( UInt x = 0 ; x <= uiBlkWidth ; x += 4 )
+    {      // to cover both the mapped CU and the 1-pixel-right-shifted mapped CU
+      Int iCuAddr = 0, iAbsZorderIdx = 0;
+      pcBasePic->getPicYuvRec()->getCUAddrAndPartIdx( Min( uiXPos + x , nMaxPicX ) , Min( uiYPos + y , nMaxPicY ) , iCuAddr , iAbsZorderIdx );
+      TComDataCU *pCUInRefView = pcBasePic->getCU( iCuAddr );
+      if( pCUInRefView->isIntra( iAbsZorderIdx ) )
+        // no inter-view residual pred from a intra CU
+        continue;
+      UInt uiTempTrDepth = pCUInRefView->getTransformIdx( iAbsZorderIdx );
+      if( pCUInRefView->getCbf( iAbsZorderIdx , TEXT_LUMA , uiTempTrDepth )
+        || pCUInRefView->getCbf( iAbsZorderIdx , TEXT_CHROMA_U , uiTempTrDepth )
+        || pCUInRefView->getCbf( iAbsZorderIdx , TEXT_CHROMA_V , uiTempTrDepth ) )
+        return( true );
+}
+  }
+
+  return( false );
+}
+#endif
 
 
 
@@ -334,6 +386,9 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   TCoeff* piCoeff   = pcCU->getCoeffY ();
   Pel*    pRes      = pcCUResidual->getLumaAddr();
   UInt    uiLumaTrMode, uiChromaTrMode;
+#if LG_RESTRICTEDRESPRED_M24766
+  Int     iPUPredResiShift[4];
+#endif
   pcCU->convertTransIdx             ( 0, pcCU->getTransformIdx( 0 ), uiLumaTrMode, uiChromaTrMode );
 #if H0736_AVC_STYLE_QP_RANGE
     m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
@@ -360,9 +415,18 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   if( pcCU->getResPredFlag( 0 ) )
   {
     AOF( pcCU->getResPredAvail( 0 ) );
-    Bool bOK = pcCU->getResidualSamples( 0, m_ppcYuvTmp[0] );
+    Bool bOK = pcCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+      true,
+#endif
+      m_ppcYuvTmp[0] );
     AOF( bOK );
+#if LG_RESTRICTEDRESPRED_M24766
+	pcCU->getPUResiPredShift(iPUPredResiShift, 0);
+	pcCUResidual->add(iPUPredResiShift, pcCU->getPartitionSize(0), m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
+#else
     pcCUResidual->add( m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
+#endif
   }
 
   //===== clear inter-view predicted parts =====
@@ -422,7 +486,11 @@ TComResidualGenerator::xClearResidual( TComYuv* pcCUResidual, UInt uiAbsPartIdx,
 
 
 Void  
-TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv )
+TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
+#endif
+  )
 {
   //===== set and check some basic variables =====
   AOF(          pcYuv     );
@@ -455,6 +523,16 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   Int           iDesStrideY = pcYuv    ->getStride   ();
   Pel*          pSrcSamplesY= pcBaseRes->getLumaAddr ( 0 ) + uiYPos * iSrcStrideY;
   Pel*          pDesSamplesY= pcYuv    ->getLumaAddr ();
+
+#if QC_SIMPLIFIEDIVRP_M24938
+  if( puiXPosInRefView != NULL )
+    *puiXPosInRefView = Max( 0, Min( iYMaxPosX, iYRefPosX0 ) );
+  if( puiYPosInRefView != NULL )
+    *puiYPosInRefView = uiYPos;
+  if( bRecon == false )
+    return;
+#endif
+
   for(   Int iY = 0; iY < iYHeight; iY++, pSrcSamplesY += iSrcStrideY, pDesSamplesY += iDesStrideY )
   {
     for( Int iX = 0; iX < iYWidth; iX++ )

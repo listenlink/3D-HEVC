@@ -1338,6 +1338,57 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   }
 }
 
+#if VIDYO_VPS_INTEGRATION
+Void TDecCavlc::parseVPS(TComVPS* pcVPS)
+{
+  UInt  uiCode;
+  Int   iCode;
+  
+  READ_CODE( 3, uiCode, "max_temporal_layers_minus1" );   pcVPS->setMaxTLayers( uiCode + 1 );
+  READ_CODE( 5, uiCode, "max_layers_minus1" );            pcVPS->setMaxLayers( uiCode + 1 );
+  READ_FLAG( uiCode,  "temporal_id_nesting_flag" );       pcVPS->setTemporalNestingFlag( uiCode ? true:false );
+  READ_UVLC( uiCode,  "video_parameter_set_id" );         pcVPS->setVPSId( uiCode );
+  for(UInt i = 0; i <= pcVPS->getMaxTLayers()-1; i++)
+  {
+    READ_UVLC( uiCode,  "max_dec_pic_buffering[i]" );     pcVPS->setMaxDecPicBuffering( uiCode, i );
+    READ_UVLC( uiCode,  "num_reorder_pics[i]" );          pcVPS->setNumReorderPics( uiCode, i );
+    READ_UVLC( uiCode,  "max_latency_increase[i]" );      pcVPS->setMaxLatencyIncrease( uiCode, i );
+  }
+  
+  READ_CODE( 1, uiCode, "bit_equal_to_one" );             assert( uiCode );
+  
+  if( pcVPS->getMaxLayers() - 1 > 0 )
+  {
+    READ_UVLC( uiCode,  "extension_type" );               pcVPS->setExtensionType( uiCode );
+    
+    pcVPS->setViewOrderIdx( 0, 0 );
+    pcVPS->setViewId( 0, 0 );
+    pcVPS->setDepthFlag( 0, 0 );
+    for(UInt i = 1; i <= pcVPS->getMaxLayers()-1; i++)
+    {
+      READ_FLAG( uiCode, "dependent_flag[i]" );           pcVPS->setDependentFlag( uiCode ? true:false, i);
+      if( pcVPS->getDependentFlag(i) )
+      {
+        READ_UVLC( uiCode,  "delta_reference_layer_id_minus1[i]" ); pcVPS->setDependentLayer( i - uiCode + 1, i );
+        if( pcVPS->getExtensionType() == VPS_EXTENSION_TYPE_MULTI_VIEW )
+        {
+          READ_UVLC( uiCode,  "view_id[i]" );             pcVPS->setViewId( uiCode, i );
+          READ_FLAG( uiCode,  "depth_flag[i]" );          pcVPS->setDepthFlag( uiCode ? true:false, i ); 
+          READ_SVLC( iCode,  "view_order_idx[i]" );       pcVPS->setViewOrderIdx( iCode, i );
+        }
+        
+      }
+    }
+  }
+  
+  READ_FLAG( uiCode,  "vps_extension_flag" );          assert(!uiCode);
+  //future extensions go here..
+  
+  return;
+}
+
+#endif
+
 #if HHI_MPI
 Void TDecCavlc::parseSPS(TComSPS* pcSPS, Bool bIsDepth)
 #else
@@ -1355,6 +1406,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_CODE( 8,  uiCode, "reserved_zero_8bits" );
   READ_CODE( 8,  uiCode, "level_idc" );                          pcSPS->setLevelIdc( uiCode );
   READ_UVLC(     uiCode, "seq_parameter_set_id" );               pcSPS->setSPSId( uiCode );
+#if VIDYO_VPS_INTEGRATION
+  READ_UVLC(     uiCode, "video_parameter_set_id" );             pcSPS->setVPSId( uiCode );
+#endif
   READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( uiCode );
   READ_CODE( 3,  uiCode, "max_temporal_layers_minus1" );         pcSPS->setMaxTLayers( uiCode+1 );
   READ_UVLC (    uiCode, "pic_width_in_luma_samples" );          pcSPS->setPicWidthInLumaSamples ( uiCode    );
@@ -1836,7 +1890,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       rpcSlice->setPOC( iPOCmsb+iPOClsb );
 
+#if HHI_FIX
+      if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && rpcSlice->getPOC() == 0 )
+#else
       if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV ) 
+#endif
       {
         TComReferencePictureSet* rps = rpcSlice->getLocalRPS();
         rps->setNumberOfNegativePictures(0);

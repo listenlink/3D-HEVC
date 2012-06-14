@@ -119,6 +119,9 @@ public:
   TComPicSym*   getPicSym()           { return  m_apcPicSym;    }
   TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
   TComSlice*    getCurrSlice()        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx);  }
+#if VIDYO_VPS_INTEGRATION
+  TComVPS*      getVPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getVPS();  }
+#endif
   TComSPS*      getSPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getSPS();  }
   Int           getPOC()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
   Int           getViewId()           { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getViewId(); }

@@ -213,7 +213,10 @@ TRenSingleModel::setup( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppi
   AOT( !m_bUseOrgRef && pcOrgVideo );
   AOT( (ppiShiftLutLeft  == NULL) && (m_iMode == 0 || m_iMode == 2) );
   AOT( (ppiShiftLutRight == NULL) && (m_iMode == 1 || m_iMode == 2) );
+#if HHI_FIX
+#else
   AOT( pcOrgVideo != NULL && bKeepReference );
+#endif
 
   m_appiShiftLut[0] = ppiShiftLutLeft;
   m_appiShiftLut[1] = ppiShiftLutRight;
@@ -221,7 +224,11 @@ TRenSingleModel::setup( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppi
   // Copy Reference
   m_pcPicYuvRef = pcOrgVideo;
 
+#if HHI_FIX
+  if ( pcOrgVideo && !bKeepReference )
+#else
   if ( pcOrgVideo )
+#endif
   {
     TRenFilter::copy(             pcOrgVideo->getLumaAddr(), pcOrgVideo->getStride() , m_iWidth,      m_iHeight,      m_aapiRefVideoPel[0], m_aiRefVideoStrides[0]);
     TRenFilter::sampleCUpHorUp(0, pcOrgVideo->getCbAddr()  , pcOrgVideo->getCStride(), m_iWidth >> 1, m_iHeight >> 1, m_aapiRefVideoPel[1], m_aiRefVideoStrides[1]);

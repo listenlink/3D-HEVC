@@ -86,6 +86,9 @@ public:
 #endif
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
   
+#if VIDYO_VPS_INTEGRATION
+  Void  parseVPS                  ( TComVPS* pcVPS )  {}
+#endif
 #if HHI_MPI
   Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth ) {}
 #else

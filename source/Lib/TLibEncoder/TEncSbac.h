@@ -97,6 +97,10 @@ public:
   UInt  getNumberOfWrittenBits ()                { return m_pcBinIf->getNumWrittenBits(); }
   //--SBAC RD
 
+#if VIDYO_VPS_INTEGRATION
+  Void  codeVPS                 ( TComVPS* pcVPS );
+#endif
+	
 #if HHI_MPI
   Void  codeSPS                 ( TComSPS* pcSPS, Bool bIsDepth );
 #else

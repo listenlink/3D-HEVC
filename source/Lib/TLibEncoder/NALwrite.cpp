@@ -63,6 +63,10 @@ void write(ostream& out, OutputNALUnit& nalu)
   bsNALUHeader.write(nalu.m_nalUnitType, 5); // nal_unit_type
 #endif
 
+#if VIDYO_VPS_INTEGRATION
+  bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
+  bsNALUHeader.write(nalu.m_layerId + 1, 5); // layer_id_plus1
+#else
 #if H0388
   bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
  // bsNALUHeader.write(1, 5); // reserved_one_5bits
@@ -89,6 +93,8 @@ void write(ostream& out, OutputNALUnit& nalu)
   default: break;
   }
 #endif
+#endif
+  
   out.write(bsNALUHeader.getByteStream(), bsNALUHeader.getByteStreamLength());
 
   /* write out rsbp_byte's, inserting any required
@@ -200,11 +206,18 @@ void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
 #else
   naluDest.m_nalRefIDC   = naluSrc.m_nalRefIDC;
 #endif
+#if !VIDYO_VPS_INTEGRATION
   naluDest.m_viewId      = naluSrc.m_viewId;
   naluDest.m_isDepth     = naluSrc.m_isDepth;
+#endif
   naluDest.m_temporalId  = naluSrc.m_temporalId;
+#if VIDYO_VPS_INTEGRATION
+  naluDest.m_layerId = naluSrc.m_layerId;
+#else
+  
 #if !H0388
   naluDest.m_OutputFlag  = naluSrc.m_OutputFlag;
+#endif
 #endif
   naluDest.m_Bitstream   = naluSrc.m_Bitstream;
 }

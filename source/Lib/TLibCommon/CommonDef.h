@@ -57,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "6.1"
-#define NV_VERSION        "3.0"                 ///< Current software version
+#define NV_VERSION        "3.1rc1"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -137,7 +137,11 @@
 #define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
+#if SAIT_IMPROV_MOTION_PRED_M24829
+#define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
+#else
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)
+#endif
 #define PDM_OUTPUT_PRED_DEPTH_MAP         0         // output prediction depth map (for debugging)
 
 #define PDM_INTERNAL_CALC_BIT_DEPTH       31        // bit depth for internal calculations (32 - 1 for signed values)
@@ -167,6 +171,13 @@
 
 #define LOG2_DISP_PREC_LUT   				2		  		///< log2 of disparity precision used in integer disparity LUTs
 
+// ====================================================================================================================
+// VPS constants
+// ====================================================================================================================
+#if VIDYO_VPS_INTEGRATION
+#define MAX_LAYER_NUM                     MAX_VIEW_NUM
+#define VPS_EXTENSION_TYPE_MULTI_VIEW     0
+#endif
 
 // ====================================================================================================================
 // Macro functions
@@ -482,7 +493,11 @@ enum NalUnitType
   NAL_UNIT_RESERVED_22,
   NAL_UNIT_RESERVED_23,
   NAL_UNIT_UNSPECIFIED_24,
+#if VIDYO_VPS_INTEGRATION
+	NAL_UNIT_VPS,
+#else
   NAL_UNIT_UNSPECIFIED_25,
+#endif
   NAL_UNIT_UNSPECIFIED_26,
   NAL_UNIT_UNSPECIFIED_27,
   NAL_UNIT_UNSPECIFIED_28,

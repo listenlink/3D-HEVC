@@ -289,6 +289,10 @@ protected:
   Int       m_signHidingThreshold;
 #endif
 
+#if VIDYO_VPS_INTEGRATION
+  UInt     m_layerId;
+#endif
+  
   Int      m_viewId;
   Bool     m_isDepth;
 
@@ -763,6 +767,10 @@ public:
   Void      setTSIG( Int tsig )                  { m_signHidingThreshold = tsig; }
   Int       getSignHideFlag()                    { return m_signHideFlag; }
   Int       getTSIG()                            { return m_signHidingThreshold; }
+#endif
+#if VIDYO_VPS_INTEGRATION
+  Void      setLayerId             ( UInt layerId )   { m_layerId = layerId; }
+  UInt      getLayerId             ()               { return m_layerId; }
 #endif
 
   Void      setViewId             ( Int viewId )   { m_viewId = viewId; }

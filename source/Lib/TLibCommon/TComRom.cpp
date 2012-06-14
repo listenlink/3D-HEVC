@@ -1187,8 +1187,8 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
 {
   assert( uiWidth == uiHeight );
 
-  UChar    uhStartX,    uhStartY,    uhEndX,    uhEndY;
-  Int   iStepStartX, iStepStartY, iStepEndX, iStepEndY;
+  UChar    uhStartX = 0,    uhStartY = 0,    uhEndX = 0,    uhEndY = 0;
+  Int   iStepStartX = 0, iStepStartY = 0, iStepEndX = 0, iStepEndY = 0;
 
   UInt uiBlockSize = 0;
   switch( eWedgeRes )

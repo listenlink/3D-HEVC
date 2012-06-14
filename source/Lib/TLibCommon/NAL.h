@@ -50,11 +50,16 @@ struct NALUnit
 #else
   NalRefIdc   m_nalRefIDC;   ///< nal_ref_idc
 #endif
+#if VIDYO_VPS_INTEGRATION
+	unsigned    m_layerId;
+  unsigned    m_temporalId;  ///< temporal_id
+#else
   Int         m_viewId;      ///< view_id
   Bool        m_isDepth;     ///< is_depth
   unsigned    m_temporalId;  ///< temporal_id
 #if !H0388
   bool        m_OutputFlag;  ///< output_flag
+#endif
 #endif
 
   /** construct an NALunit structure with given header values. */
@@ -63,13 +68,21 @@ struct NALUnit
   NALUnit(
     NalUnitType nalUnitType,
     Bool        nalRefFlag,
+#if !VIDYO_VPS_INTEGRATION    
     Int         viewId,
     Bool        isDepth,
-    Int         temporalId = 0)
+#else
+    unsigned    layerId,
+#endif
+    unsigned       temporalId = 0)
     :m_nalUnitType (nalUnitType)
     ,m_nalRefFlag  (nalRefFlag)
+#if !VIDYO_VPS_INTEGRATION
     ,m_viewId      (viewId)
     ,m_isDepth     (isDepth)
+#else
+    ,m_layerId     (layerId)
+#endif
     ,m_temporalId  (temporalId)
   {}
 #else
@@ -82,8 +95,12 @@ struct NALUnit
   {
     m_nalUnitType = nalUnitType;
     m_nalRefIDC   = nalRefIDC;
+#if !VIDYO_VPS_INTEGRATION
     m_viewId      = viewId;
     m_isDepth     = isDepth;
+#else
+		m_layerId = layerId;
+#endif
     m_temporalId  = temporalID;
   }
 #endif
@@ -91,15 +108,23 @@ struct NALUnit
   NALUnit(
     NalUnitType  nalUnitType,
     NalRefIdc    nalRefIDC,
+#if !VIDYO_VPS_INTEGRATION    
     Int          viewId,
     Bool         isDepth,
+#else
+    unsigned         layerId,
+#endif
     unsigned     temporalID = 0,
     bool         outputFlag = true)
   {
     m_nalUnitType = nalUnitType;
     m_nalRefIDC   = nalRefIDC;
+#if !VIDYO_VPS_INTEGRATION
     m_viewId      = viewId;
     m_isDepth     = isDepth;
+#else
+		m_layerId = layerId;
+#endif
     m_temporalId  = temporalID;
     m_OutputFlag  = outputFlag;
   }
