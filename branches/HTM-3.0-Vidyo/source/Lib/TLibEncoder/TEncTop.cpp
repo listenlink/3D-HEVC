@@ -350,7 +350,7 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
 #if VIDYO_VPS_INTEGRATION
   m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getVPSAccess(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
 #else
-  m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getVPSAccess(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
+  m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
 #endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
