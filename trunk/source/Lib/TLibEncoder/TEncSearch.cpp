@@ -303,7 +303,13 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   
   // motion cost
   uiSad += m_pcRdCost->getCost( iSearchX, iSearchY );
-  
+#if HHI_FIX  
+  // regularization cost
+  if( m_pcRdCost->useMultiviewReg() )
+  {
+    uiSad += m_pcRdCost->getMultiviewRegCost( iSearchX, iSearchY );
+  }
+#endif
   if( uiSad < rcStruct.uiBestSad )
   {
     rcStruct.uiBestSad      = uiSad;
@@ -3864,7 +3870,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   }
   else
   {
+#if HHI_FIX
+    rcMv = ( m_pcRdCost->useMultiviewReg() ? m_pcRdCost->getMultiviewOrgMvPred() : *pcMvPred );
+#else
     rcMv = *pcMvPred;
+#endif
     xPatternSearchFast  ( pcCU, pcPatternKey, piRefY, iRefStride, &cMvSrchRngLT, &cMvSrchRngRB, rcMv, ruiCost );
   }
   
@@ -3966,6 +3976,14 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
       // motion cost
       uiSad += m_pcRdCost->getCost( x, y );
       
+#if HHI_FIX 
+      // regularization cost
+      if( m_pcRdCost->useMultiviewReg() )
+      {
+        uiSad += m_pcRdCost->getMultiviewRegCost( x, y );
+      }
+#endif
+
       if ( uiSad < uiSadBest )
       {
         uiSadBest = uiSad;

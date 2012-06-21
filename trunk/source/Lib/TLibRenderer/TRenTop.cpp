@@ -1012,6 +1012,20 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
 
           if ((iPrevShiftedPos + (iStep >> 1) ) > iPrevShiftedPosCeiled )
           {
+#if HHI_FIX
+            if ( !((iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth)))
+            {
+
+              for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
+              {
+                apcOutputData[uiCurPlane][iInterPolPos]  = apcInputData[uiCurPlane][iPosX - iStep];
+              }
+              pcFilledData[iInterPolPos]  = REN_IS_FILLED;
+
+            }           
+            iInterPolPos++;
+          }          
+#else
           if ( (iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth))
           {
             // skip Interpolation if Interpolation position is outside frame
@@ -1026,6 +1040,7 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
           pcFilledData[iInterPolPos]  = REN_IS_FILLED;
             iInterPolPos++;
         }
+#endif
 
           // Fill Disocclusion
           if ( m_bInstantHoleFilling )
@@ -1038,7 +1053,6 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
                 {
                   apcOutputData[uiCurPlane][iInterPolPos]  = apcInputData[uiCurPlane][iPosX];
                 }
-
               }
             }
           }
@@ -1049,6 +1063,17 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
         if ( bOcclusion && (iShiftedPos - (iStep >> 1) < iShiftedPosFloor) )
         {
           iInterPolPos = iShiftedPosFloor >> m_iRelShiftLUTPrec;
+#if HHI_FIX
+          if ( !((iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth)))
+          {        
+            for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
+            {
+              apcOutputData[uiCurPlane][iInterPolPos]  = apcInputData[uiCurPlane][iPosX ];
+            }
+
+            pcFilledData[iInterPolPos]  = REN_IS_FILLED;
+          }
+#else
           if ( (iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth))
           {
             // skip Interpolation if Interpolation position is outside frame
@@ -1062,6 +1087,7 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
           }
 
           pcFilledData[iInterPolPos]  = REN_IS_FILLED;
+#endif
         }
       }
       iPrevShiftedPos = iShiftedPos;

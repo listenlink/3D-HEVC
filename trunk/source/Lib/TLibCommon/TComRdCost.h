@@ -218,7 +218,13 @@ public:
   Void    xUninit();
 #endif
   UInt    xGetComponentBits( Int iVal );
-  Void    getMotionCost( Bool bSad, Int iAdd ) { m_uiCost = (bSad ? m_uiLambdaMotionSAD + iAdd : m_uiLambdaMotionSSE + iAdd); }
+  Void    getMotionCost( Bool bSad, Int iAdd ) 
+{ 
+     m_uiCost = (bSad ? m_uiLambdaMotionSAD + iAdd : m_uiLambdaMotionSSE + iAdd); 
+#if HHI_FIX
+    m_uiLambdaMVReg = ( bSad ? m_uiLambdaMVRegSAD         : m_uiLambdaMVRegSSE         );
+#endif
+   }
   Void    setPredictor( TComMv& rcMv )
   {
 #if FIX203
@@ -269,7 +275,11 @@ public:
   __inline TComMv&  getMultiviewOrgMvPred() { return m_cMultiviewOrgMvPred; }
   __inline UInt     getMultiviewRegCost  ( Int x, Int y )
   {
+#if FIX203
+    return m_uiLambdaMVReg * getBits(x, y) >> 16;
+#else
     return ( ( m_uiLambdaMVReg * ( m_puiHorRegCost[ x * ( 1 << m_iCostScale ) ] + m_puiVerRegCost[ y * ( 1 << m_iCostScale ) ] ) ) >> 16 );
+#endif
   }
   
 private:

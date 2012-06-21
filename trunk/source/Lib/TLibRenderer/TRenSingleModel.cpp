@@ -1298,10 +1298,18 @@ TRenSingleModel::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, I
       }
       else
       {
+#if HHI_FIX
+        riY = xBlend( iYL, iYR, m_iBlendDistWeight );
+#if HHI_VSO_COLOR_PLANES    
+        riU = xBlend( iUL, iUR, m_iBlendDistWeight );
+        riV = xBlend( iVL, iVR, m_iBlendDistWeight );
+#endif
+#else
         riY = xBlend( iYR, iYL, m_iBlendDistWeight );
 #if HHI_VSO_COLOR_PLANES
         riU = xBlend( iUR, iUL, m_iBlendDistWeight );
         riV = xBlend( iVR, iVL, m_iBlendDistWeight );
+#endif
 #endif
       }
     }
