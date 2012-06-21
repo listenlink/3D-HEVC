@@ -272,13 +272,25 @@ Void TComRdCost::initRateDistortionModel( Int iSubPelSearchLimit )
     m_iSearchLimit = iSubPelSearchLimit;
     
     m_puiComponentCostOriginP = new UInt[ 4 * iSubPelSearchLimit ];
+#if HHI_FIX
+    m_puiMultiviewRegCostHorOrgP  = new UInt[ 4 * iSubPelSearchLimit ];
+    m_puiMultiviewRegCostVerOrgP  = new UInt[ 4 * iSubPelSearchLimit ];
+#endif
     iSubPelSearchLimit *= 2;
     
     m_puiComponentCost = m_puiComponentCostOriginP + iSubPelSearchLimit;
+#if HHI_FIX
+    m_puiMultiviewRegCostHor = m_puiMultiviewRegCostHorOrgP + iSubPelSearchLimit;
+    m_puiMultiviewRegCostVer = m_puiMultiviewRegCostVerOrgP + iSubPelSearchLimit;
+#endif
     
     for( Int n = -iSubPelSearchLimit; n < iSubPelSearchLimit; n++)
     {
       m_puiComponentCost[n] = xGetComponentBits( n );
+#if HHI_FIX
+      m_puiMultiviewRegCostHor[n] = xGetComponentBits( n );  // first version
+      m_puiMultiviewRegCostVer[n] = xGetComponentBits( n );  // first version
+#endif
     }
   }
 }
@@ -290,6 +302,18 @@ Void TComRdCost::xUninit()
     delete [] m_puiComponentCostOriginP;
     m_puiComponentCostOriginP = NULL;
   }
+#if HHI_FIX
+  if( m_puiMultiviewRegCostHorOrgP )
+    {
+      delete [] m_puiMultiviewRegCostHorOrgP;
+      m_puiMultiviewRegCostHorOrgP = NULL;
+    }
+  if( m_puiMultiviewRegCostVerOrgP )
+  {
+    delete [] m_puiMultiviewRegCostVerOrgP;
+    m_puiMultiviewRegCostVerOrgP = NULL;
+  }
+#endif
 }
 #endif
 

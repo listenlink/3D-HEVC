@@ -438,9 +438,17 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
   {
     m_tVideoIOYuvReconFile.push_back(new TVideoIOYuv);
     Char buffer[4];
+#if VIDYO_VPS_INTEGRATION
+    sprintf(buffer,"_%i", viewId );
+#else
     sprintf(buffer,"_%i", (Int)(m_tVideoIOYuvReconFile.size()-1) / 2 );
+#endif
     Char* nextFilename = NULL;
+#if VIDYO_VPS_INTEGRATION
+    if( isDepth)
+#else
     if( (m_tVideoIOYuvReconFile.size() % 2) == 0 )
+#endif
     {
       Char* pchTempFilename = NULL;
       xAppendToFileNameEnd( m_pchReconFile, "_depth", pchTempFilename);
@@ -451,7 +459,9 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
     {
       xAppendToFileNameEnd( m_pchReconFile, buffer, nextFilename);
     }
+#if !VIDYO_VPS_INTEGRATION
     if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
+#endif
     {
       m_tVideoIOYuvReconFile.back()->open( nextFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
     }
@@ -464,15 +474,19 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
   while( m_tDecTop.size() < newNumberOfViewDepth)
   {
     m_tDecTop.push_back(new TDecTop);
+#if !VIDYO_VPS_INTEGRATION
     if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
     {
+#endif
       m_tDecTop.back()->create();
       m_tDecTop.back()->init( this, newNumberOfViewDepth == 1);
       m_tDecTop.back()->setViewId( viewId );
       m_tDecTop.back()->setIsDepth( isDepth );
       m_tDecTop.back()->setPictureDigestEnabled(m_pictureDigestEnabled);
       m_tDecTop.back()->setCamParsCollector( &m_cCamParsCollector );
+#if !VIDYO_VPS_INTEGRATION
     }
+#endif
   }
 }
 

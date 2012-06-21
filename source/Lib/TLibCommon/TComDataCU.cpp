@@ -2920,7 +2920,11 @@ Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& ri
 		ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : (uiNumPartition >> 2) + (uiNumPartition >> 4);
 		break;
 	default:
+#if HHI_FIX
+    assert ( m_pePartSize[uiTmpAbsPartIdx ] == SIZE_2Nx2N ); 
+#else
 		assert ( m_pePartSize[0] == SIZE_2Nx2N );
+#endif
 		riWidth = getWidth(uiTmpAbsPartIdx);      riHeight = getHeight(uiTmpAbsPartIdx);      ruiPartAddr = 0;
 		break;
 	}
