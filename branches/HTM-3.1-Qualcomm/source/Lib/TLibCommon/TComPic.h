@@ -70,6 +70,9 @@ private:
 
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
+#if QC_MULTI_DIS_CAN
+  Bool					m_checked;
+#endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*           m_pcResidual;             //  residual buffer (coded or inter-view predicted residual)
@@ -139,6 +142,10 @@ public:
 
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
+#if QC_MULTI_DIS_CAN
+  Void			setCandPicCheckedFlag (Bool bchecked)		{ m_checked = bchecked; }
+  Bool          getCandPicCheckedFlag ()					{ return m_checked;}
+#endif
 #endif
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED

@@ -3357,7 +3357,22 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   //===== add merge with predicted depth maps =====
   TComMv  acPdmMv       [2];
   Int     aiPdmRefIdx   [2] = {-1, -1};
+#if QC_MULTI_DIS_CAN
+  DisInfo cDisInfo;
+  cDisInfo.iN = 0;
+  if(!bNoPdmMerge)
+	  getDisMvpCand (uiPUIdx, uiAbsPartIdx, &cDisInfo );
+  if(cDisInfo.iN==0)
+  {
+	  cDisInfo.iN = 1;
+	  cDisInfo.m_acMvCand[0].setHor(0);
+	  cDisInfo.m_acMvCand[0].setVer(0);
+	  cDisInfo.m_aVIdxCan[0] = 0;
+  }
+  Int     iPdmInterDir      = cDisInfo.iN==0? 0:getPdmMergeCandidateDisCan ( uiPUIdx, aiPdmRefIdx, acPdmMv, &cDisInfo  );
+#else
   Int     iPdmInterDir      = getPdmMergeCandidate( uiPUIdx, aiPdmRefIdx, acPdmMv );
+#endif
 
   if( iPdmInterDir && !bNoPdmMerge && PDM_MERGE_POS == 0 )
   {
@@ -4273,6 +4288,332 @@ AMVP_MODE TComDataCU::getAMVPMode(UInt uiIdx)
 {
   return m_pcSlice->getSPS()->getAMVPMode(m_puhDepth[uiIdx]);
 }
+#if QC_MULTI_DIS_CAN
+/** construct a list of disparity motion vectors from the neighbouring PUs **/
+Void TComDataCU::getDisMvpCand ( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo )
+{
+	PartSize eCUMode = getPartitionSize( uiPartAddr );
+	TComDataCU* pcTmpCU = NULL;
+	pDInfo->iN = 0;
+
+	RefPicList eRefPicList = REF_PIC_LIST_0 ;
+	//-- Get Spatial MV
+	UInt uiPartIdxLT, uiPartIdxRT, uiPartIdxLB;
+	UInt uiNumPartInCUWidth = m_pcPic->getNumPartInWidth();
+
+	deriveLeftRightTopIdxGeneral( eCUMode, uiPartAddr, uiPartIdx, uiPartIdxLT, uiPartIdxRT );
+	deriveLeftBottomIdxGeneral( eCUMode, uiPartAddr, uiPartIdx, uiPartIdxLB );
+
+	UInt uiIdx = 0;
+#if MVP_AT_ENTROPYSLICE_BOUNDARY
+      pcTmpCU = getPULeft(uiIdx, uiPartIdxLB, true, false);
+#else
+	  pcTmpCU = getPULeft(uiIdx, uiPartIdxLB);
+#endif
+	if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ) )
+	{
+		for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
+		{
+			eRefPicList = RefPicList(iList);
+			Int refId = pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ;
+			if( refId >= 0)
+			{
+				Int refViewIdx  = pcTmpCU->getSlice()->getRefViewId( eRefPicList, refId);
+				if (refViewIdx!= m_pcSlice->getViewId())
+				{
+				   TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
+				   clipMv(cMvPred);
+				   pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred; 
+				   pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
+				   return;
+				}
+			}
+		}
+	}
+#if MVP_AT_ENTROPYSLICE_BOUNDARY
+      pcTmpCU = getPUAbove(uiIdx, uiPartIdxRT, true, false, true);
+#else
+	  pcTmpCU = getPUAbove(uiIdx, uiPartIdxRT);
+#endif
+
+	if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
+	{
+		for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
+		{
+			eRefPicList = RefPicList(iList);
+			Int refId = pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ;
+			if( refId >= 0)
+			{
+				Int refViewIdx  = pcTmpCU->getSlice()->getRefViewId( eRefPicList, refId);
+				if (refViewIdx!= m_pcSlice->getViewId())
+				{
+				   TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
+				   clipMv(cMvPred);
+				   pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred; 
+				   pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
+				   return;
+				}
+			}
+		}
+	}
+
+#if MVP_AT_ENTROPYSLICE_BOUNDARY
+      pcTmpCU = getPUAboveRight(uiIdx, uiPartIdxRT, true, false, true);
+#else
+      pcTmpCU = getPUAboveRight(uiIdx, uiPartIdxRT, true, true, true);
+#endif
+	if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ) )
+	{
+		for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
+		{
+			eRefPicList = RefPicList(iList);
+			Int refId = pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ;
+			if( refId >= 0)
+			{
+				Int refViewIdx  = pcTmpCU->getSlice()->getRefViewId( eRefPicList, refId);
+				if (refViewIdx!= m_pcSlice->getViewId())
+				{
+				   TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
+				   clipMv(cMvPred);
+				   pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred; 
+				   pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
+				   return;
+				}
+			}
+		}
+	}
+#if MVP_AT_ENTROPYSLICE_BOUNDARY
+      pcTmpCU = getPUBelowLeft(uiIdx, uiPartIdxLB, true, false);
+#else
+      pcTmpCU = getPUBelowLeft(uiIdx, uiPartIdxLB);
+#endif
+	if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
+	{
+		for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
+		{
+			eRefPicList = RefPicList(iList);
+			Int refId = pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ;
+			if( refId >= 0)
+			{
+				Int refViewIdx  = pcTmpCU->getSlice()->getRefViewId( eRefPicList, refId);
+				if (refViewIdx!= m_pcSlice->getViewId())
+				{
+				   TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
+				   clipMv(cMvPred);
+				   pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred; 
+				   pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
+				   return;
+				}
+			}
+		}
+	}
+
+	// Above predictor search
+#if MVP_AT_ENTROPYSLICE_BOUNDARY
+      pcTmpCU = getPUAboveLeft(uiIdx, (m_uiAbsIdxInLCU + uiPartAddr), true, false, true);
+	  assert(uiPartIdxLT == (m_uiAbsIdxInLCU + uiPartAddr));
+#else
+      pcTmpCU = getPUAboveLeft(uiIdx, uiPartIdxLT, true, true, true);
+#endif
+	if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
+	{
+		for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
+		{
+			eRefPicList = RefPicList(iList);
+			Int refId = pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ;
+			if( refId >= 0)
+			{
+				Int refViewIdx  = pcTmpCU->getSlice()->getRefViewId( eRefPicList, refId);
+				if (refViewIdx!= m_pcSlice->getViewId())
+				{
+				   TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
+				   clipMv(cMvPred);
+				   pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred; 
+				   pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
+				   return;
+				}
+			}
+		}
+	}
+	//Get temporal MV
+	TComMv cColMv;
+	Int iTargetViewIdx = 0;
+	Int iTStartViewIdx = 0;
+	UInt uiPartIdxRB, uiBRIdx;
+	Int uiViewIdxCurr= getSlice()->getViewId();
+
+	UInt uiAbsPartAddr;
+	int uiLCUIdx = getAddr();
+	Int uiLCUnew = uiLCUIdx;
+	eCUMode = getPartitionSize( 0 );
+	deriveRightBottomIdx( eCUMode, uiPartIdx, uiPartIdxRB );  
+	uiBRIdx = uiPartIdxLT;
+	UInt uiAbsPartIdxTmp = g_auiZscanToRaster[uiPartIdxRB];
+	if ( (( m_pcPic->getCU(m_uiCUAddr)->getCUPelX() + g_auiRasterToPelX[uiAbsPartIdxTmp] + m_pcPic->getMinCUWidth() ) < m_pcSlice->getSPS()->getPicWidthInLumaSamples() ) &&(( m_pcPic->getCU(m_uiCUAddr)->getCUPelY() + g_auiRasterToPelY[uiAbsPartIdxTmp] + m_pcPic->getMinCUHeight() ) < m_pcSlice->getSPS()->getPicHeightInLumaSamples() ))  // image boundary check
+	{
+		if ( ( uiAbsPartIdxTmp % uiNumPartInCUWidth < uiNumPartInCUWidth - 1 ) &&           // is not at the last column of LCU 
+			( uiAbsPartIdxTmp / uiNumPartInCUWidth < m_pcPic->getNumPartInHeight() - 1 ) ) // is not at the last row    of LCU
+		{
+			uiBRIdx = g_auiRasterToZscan[ uiAbsPartIdxTmp + uiNumPartInCUWidth + 1 ];
+		}
+		else if ( uiAbsPartIdxTmp % uiNumPartInCUWidth < uiNumPartInCUWidth - 1 )           // is not at the last column of LCU But is last row of LCU
+		{
+			uiBRIdx = g_auiRasterToZscan[ (uiAbsPartIdxTmp + uiNumPartInCUWidth + 1) % m_pcPic->getNumPartInCU() ];
+			uiLCUnew = uiLCUIdx + m_pcPic->getFrameWidthInCU();
+		}
+		else if ( uiAbsPartIdxTmp / uiNumPartInCUWidth < m_pcPic->getNumPartInHeight() - 1 ) // is not at the last row of LCU But is last column of LCU
+		{
+			uiBRIdx = g_auiRasterToZscan[ uiAbsPartIdxTmp + 1 ];
+			uiLCUnew = uiLCUIdx + 1;
+		}
+		else //is the right bottom corner of LCU                       
+		{
+			uiBRIdx = 0;
+			uiLCUnew = uiLCUIdx + m_pcPic->getFrameWidthInCU() + 1;
+		}
+	}
+
+	Int MaxRef = getSlice()->getNumRefIdx(RefPicList(0));
+	UInt uiNumPartInCUHeight = m_pcPic->getNumPartInHeight();
+	UInt uiPUVert = (UInt)((Int)g_auiZscanToRaster[uiPartIdxLB]/(Int)(uiNumPartInCUWidth)-(Int)g_auiZscanToRaster[uiPartIdxLT]/(Int)(uiNumPartInCUWidth));
+	UInt uiPUHorStart  = g_auiZscanToRaster[uiPartIdxLT];
+	UInt uiPUHorEnd    = g_auiZscanToRaster[uiPartIdxRT];
+	for( Int i= 0; i< getSlice()->getNumRefIdx(RefPicList(0)); i ++)
+	{
+		getSlice()->getRefPic( RefPicList(0), i)->setCandPicCheckedFlag(0);
+	}
+	for( Int i= 0; i< getSlice()->getNumRefIdx(RefPicList(1)); i ++)
+	{
+		getSlice()->getRefPic( RefPicList(1), i)->setCandPicCheckedFlag(0);
+	}
+	{
+		//check the col-located picture
+		eRefPicList = RefPicList(getSlice()->isInterB() ? getSlice()->getColDir() : 0);
+#if COLLOCATED_REF_IDX
+		Int lpRef = getSlice()->getColRefIdx();
+#else
+		Int lpRef = 0;
+#endif
+		if( m_pcSlice->getViewId() == getSlice()->getRefPic( eRefPicList, lpRef)->getViewId() ) 
+		{
+			if (uiViewIdxCurr > 1)  
+			{
+				if( (uiLCUnew >= 0 && xGetColDisMV( eRefPicList, lpRef, uiLCUnew, uiBRIdx, cColMv, iTargetViewIdx, iTStartViewIdx)) )
+				{
+					clipMv(cColMv);
+					pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+					pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+					return ;
+				}
+			}
+			for(UInt uiLoopVert = 0; uiLoopVert <= uiPUVert; uiLoopVert+=4)
+				for( uiIdx = uiPUHorStart; uiIdx <= uiPUHorEnd; uiIdx +=4 )
+				{
+					uiAbsPartAddr = g_auiRasterToZscan[uiIdx+uiNumPartInCUWidth*uiLoopVert];
+					if ( uiLCUIdx >= 0 && xGetColDisMV( eRefPicList, lpRef, uiLCUIdx, uiAbsPartAddr, cColMv, iTargetViewIdx, iTStartViewIdx ) ) 
+					{
+						clipMv(cColMv);
+						pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+						pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+						return ;
+					}
+				}
+				for(UInt uiIdx_y = 0; uiIdx_y <uiNumPartInCUHeight; uiIdx_y +=4 )
+					for(UInt uiIdx_X = 0; uiIdx_X <uiNumPartInCUWidth; uiIdx_X +=4 )
+					{
+						uiIdx = uiIdx_X + uiIdx_y * uiNumPartInCUWidth;
+						uiAbsPartAddr = g_auiRasterToZscan[uiIdx];
+						if ( uiLCUIdx >= 0 && xGetColDisMV( eRefPicList,  lpRef, uiLCUIdx, uiAbsPartAddr, cColMv, iTargetViewIdx, iTStartViewIdx ) ) 
+						{
+							clipMv(cColMv);
+							pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+							pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+							return ;
+						}
+					}
+					if (uiViewIdxCurr == 1)  
+					{
+						if( (uiLCUnew >= 0 && xGetColDisMV( eRefPicList, lpRef, uiLCUnew, uiBRIdx, cColMv, iTargetViewIdx, iTStartViewIdx)) ) 
+						{
+							clipMv(cColMv);
+							pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+							pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+							return ;
+						}
+					}
+		}
+		getSlice()->getRefPic( eRefPicList, lpRef)->setCandPicCheckedFlag(1);
+	}
+	{
+		//check the remaining reference pictures in list0 and list1
+		if(getSlice()->isInterB())
+		{
+			if(getSlice()->getNumRefIdx(RefPicList(0))< getSlice()->getNumRefIdx(RefPicList(1)))
+				MaxRef = getSlice()->getNumRefIdx(RefPicList(1));
+		}
+		for(Int lpRef = 0; lpRef < MaxRef; lpRef++)
+		{
+			for(Int lpNr = 0; lpNr < (getSlice()->isInterB() ? 2: 1); lpNr ++)
+			{
+				eRefPicList = RefPicList(0);
+				if(getSlice()->isInterB())
+					eRefPicList = RefPicList(lpNr==0 ? (getSlice()->getColDir()): (1-getSlice()->getColDir()));
+				if(getSlice()->getRefPic( eRefPicList, lpRef)->getCandPicCheckedFlag())
+					continue;
+				
+				if(lpRef >= getSlice()->getNumRefIdx(eRefPicList)||(m_pcSlice->getViewId() != getSlice()->getRefPic( eRefPicList, lpRef)->getViewId()))
+					continue;
+				if (uiViewIdxCurr > 1 ) 
+				{
+					if( (uiLCUnew >= 0 && xGetColDisMV( eRefPicList, lpRef, uiLCUnew, uiBRIdx, cColMv, iTargetViewIdx, iTStartViewIdx)) )
+					{
+					clipMv(cColMv);
+					pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+					pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+					return ;
+					}
+				}
+				for(UInt uiLoopVert = 0; uiLoopVert <= uiPUVert; uiLoopVert += 4)
+					for( uiIdx = uiPUHorStart; uiIdx <= uiPUHorEnd; uiIdx += 4 )
+					{
+						uiAbsPartAddr = g_auiRasterToZscan[uiIdx+uiNumPartInCUWidth*uiLoopVert];
+						if ( uiLCUIdx >= 0 && xGetColDisMV( eRefPicList, lpRef, uiLCUIdx, uiAbsPartAddr, cColMv, iTargetViewIdx, iTStartViewIdx ) ) 
+						{
+							clipMv(cColMv);
+							pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+							pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+							return ;
+						}
+					}
+				for(UInt uiIdx_y = 0; uiIdx_y <uiNumPartInCUHeight; uiIdx_y += 4 )
+					for(UInt uiIdx_X = 0; uiIdx_X <uiNumPartInCUWidth; uiIdx_X += 4 )
+					{
+						uiIdx = uiIdx_X + uiIdx_y * uiNumPartInCUWidth;
+						uiAbsPartAddr = g_auiRasterToZscan[uiIdx];
+						if ( uiLCUIdx >= 0 && xGetColDisMV( eRefPicList,  lpRef, uiLCUIdx, uiAbsPartAddr, cColMv, iTargetViewIdx, iTStartViewIdx ) ) 
+						{
+							clipMv(cColMv);
+							pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+							pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+							return ;
+						}
+					}
+				if (uiViewIdxCurr == 1 ) 
+				{
+					if( (uiLCUnew >= 0 && xGetColDisMV( eRefPicList, lpRef, uiLCUnew, uiBRIdx, cColMv, iTargetViewIdx, iTStartViewIdx)) )
+					{
+						clipMv(cColMv);
+						pDInfo->m_acMvCand[pDInfo->iN] = cColMv;
+						pDInfo->m_aVIdxCan[pDInfo->iN++] = iTargetViewIdx;
+						return ;
+					}
+				}
+				getSlice()->getRefPic( eRefPicList, lpRef)->setCandPicCheckedFlag(1);
+			}//reference lists
+		}//reference indices
+	}//remaining pictures
+}
+#endif
 
 /** Constructs a list of candidates for AMVP
  * \param uiPartIdx
@@ -4294,11 +4635,28 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     return;
   }
   
+#if QC_MULTI_DIS_CAN
+  DisInfo cDisInfo;
+  cDisInfo.iN = 0;
+  if(m_pcSlice->getSPS()->getViewId() && m_pcSlice->getSPS()->getMultiviewMvPredMode())
+	 getDisMvpCand (uiPartIdx, uiPartAddr, &cDisInfo );
+  if(cDisInfo.iN==0)
+  {
+	  cDisInfo.iN = 1;
+	  cDisInfo.m_acMvCand[0].setHor(0);
+	  cDisInfo.m_acMvCand[0].setVer(0);
+	  cDisInfo.m_aVIdxCan[0] = 0;
+  }
+#endif 
 #if HHI_INTER_VIEW_MOTION_PRED
 #if ( PDM_AMVP_POS == 0 )
   // get inter-view mv predictor (at position 0)
   TComMv  cPdmMvPred;
+#if QC_MULTI_DIS_CAN
+  if( getPdmMvPredDisCan( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred, &cDisInfo ) )
+#else
   if( getPdmMvPred( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred ) )
+#endif
   {
     clipMv( cPdmMvPred );
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
@@ -4353,7 +4711,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 #if ( PDM_AMVP_POS == 1 )
   // get inter-view mv predictor (at position 1)
   TComMv  cPdmMvPred;
+#if QC_MULTI_DIS_CAN
+  if( getPdmMvPredDisCan( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred, &cDisInfo ) )
+#else
   if( getPdmMvPred( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred ) )
+#endif
   {
     clipMv( cPdmMvPred );
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
@@ -4401,7 +4763,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 #if ( PDM_AMVP_POS == 2 )
   // get inter-view mv predictor (at position 2)
   TComMv  cPdmMvPred;
+#if QC_MULTI_DIS_CAN
+  if( getPdmMvPredDisCan( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred, &cDisInfo ) )
+#else
   if( getPdmMvPred( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred ) )
+#endif
   {
     clipMv( cPdmMvPred );
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
@@ -4417,6 +4783,26 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       pInfo->iN = 1;
     }
   }
+#if  QC_MULTI_DIS_CAN
+  if ( getSlice()->getViewId()!=0 && pInfo->iN == 3 )
+  {
+    if ( pInfo->m_acMvCand[ 1 ] == pInfo->m_acMvCand[ 2 ] )
+    {
+      pInfo->iN = 2;
+	  if( pInfo->m_acMvCand[ 0 ] == pInfo->m_acMvCand[ 1 ] )
+		 pInfo->iN = 1;
+    }else
+	{
+	 if( pInfo->m_acMvCand[ 0 ] == pInfo->m_acMvCand[ 1 ] )
+	  {
+		pInfo->m_acMvCand[1 ] = pInfo->m_acMvCand[ 2 ];
+		pInfo->iN = 2;
+	  }
+	  else if (pInfo->m_acMvCand[ 0 ] == pInfo->m_acMvCand[ 2 ])
+	  	 pInfo->iN = 2;
+	}
+  }
+#endif
 #endif
 
   if ( getSlice()->getPPS()->getEnableTMVPFlag() )
@@ -4487,7 +4873,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 #if ( PDM_AMVP_POS == 3 )
   // get inter-view mv predictor (at position 3)
   TComMv  cPdmMvPred;
+#if QC_MULTI_DIS_CAN
+  if( getPdmMvPredDisCan( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred, &cDisInfo ) )
+#else
   if( getPdmMvPred( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred ) )
+#endif
   {
     clipMv( cPdmMvPred );
     pInfo->m_acMvCand[ pInfo->iN++ ] = cPdmMvPred;
@@ -4907,6 +5297,51 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   return false;
 }
 
+#if QC_MULTI_DIS_CAN
+Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv , Int & iTargetViewIdx, Int & iStartViewIdx )
+{
+
+  UInt uiAbsPartAddr = uiPartUnitIdx;
+
+  RefPicList  eColRefPicList = REF_PIC_LIST_0;
+  Int iColViewIdx, iColRefViewIdx, iCurrViewIdx;
+  iCurrViewIdx     = m_pcSlice->getViewId();
+  TComPic *pColPic = getSlice()->getRefPic( eRefPicList, refidx);
+  TComDataCU *pColCU = pColPic->getCU( uiCUAddr );
+  iColViewIdx = pColCU->getSlice()->getViewId();
+
+  if (pColCU->getPic()==0||pColCU->getPartitionSize(uiPartUnitIdx)==SIZE_NONE||pColCU->isIntra(uiAbsPartAddr))
+  {
+    return false;
+  }
+  for (Int ilist = 0; ilist < (pColCU->getSlice()->isInterB()? 2:1); ilist++) 
+  {
+   if(pColCU->getSlice()->isInterB())
+   {
+		if(ilist == 0 )
+	    	eColRefPicList = getSlice()->getCheckLDC() ? eRefPicList : RefPicList(1-getSlice()->getColDir());
+		else
+		 	eColRefPicList = getSlice()->getCheckLDC() ? (eRefPicList== REF_PIC_LIST_0? REF_PIC_LIST_1:REF_PIC_LIST_0 ): RefPicList(getSlice()->getColDir());
+	}
+    int iColRefIdx = pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr);
+    if (iColRefIdx < 0)
+    {
+      continue;
+    }
+	iColRefViewIdx = pColCU->getSlice()->getRefPic(eColRefPicList, iColRefIdx)->getViewId();
+    if ( iColViewIdx    == iColRefViewIdx ) // temporal vector
+      continue;
+    else 
+    {
+	  rcMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiAbsPartAddr);
+      iTargetViewIdx  = iColRefViewIdx ;
+      iStartViewIdx   = iColViewIdx   ;
+	  return true;    
+    }
+  }
+  return false;
+}
+#endif 
 /** 
  * \param eRefPicList
  * \param uiCUAddr 
@@ -5950,6 +6385,7 @@ Void TComDataCU::copyTextureMotionDataFrom( TComDataCU* pcCU, UInt uiDepth, UInt
 // public functions for Multi-view tools
 // -------------------------------------------------------------------------------------------------------------------
 #if HHI_INTER_VIEW_MOTION_PRED
+#if !QC_MULTI_DIS_CAN
 Int
 TComDataCU::getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv )
 {
@@ -5966,6 +6402,24 @@ TComDataCU::getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, T
   ROFRS( pcDepthMapGenerator, false );
   return pcDepthMapGenerator->getPdmMvPred( this, uiPartIdx, eRefPicList, iRefIdx, rcMv, bMerge );
 }
+#else
+Int
+TComDataCU::getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo )
+{
+  TComDepthMapGenerator* pcDepthMapGenerator = m_pcSlice->getSPS()->getDepthMapGenerator();
+  ROFRS( pcDepthMapGenerator, 0 );
+  return pcDepthMapGenerator->getPdmMergeCandidate( this, uiPartIdx, paiPdmRefIdx, pacPdmMv, pDInfo );
+}
+Bool
+TComDataCU::getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge )
+{
+  TComDepthMapGenerator* pcDepthMapGenerator = m_pcSlice->getSPS()->getDepthMapGenerator();
+  ROFRS( pcDepthMapGenerator, false );
+  if (pDInfo->iN > 0 && pcDepthMapGenerator->getDisCanPdmMvPred(this, uiPartIdx, eRefPicList, iRefIdx, rcMv, pDInfo, bMerge )) //bug fix li
+    return true;
+  return false;
+}
+#endif
 
 
 Bool      
@@ -5987,11 +6441,34 @@ TComDataCU::getResidualSamples( UInt uiPartIdx,
 {
   TComResidualGenerator*  pcResidualGenerator = m_pcSlice->getSPS()->getResidualGenerator();
   ROFRS( pcResidualGenerator, false );
+#if QC_MULTI_DIS_CAN
+   DisInfo cDisInfo;
+   cDisInfo.iN = 0;
+   PartSize m_peSaved =  getPartitionSize( 0 );
+   m_pePartSize[0] =  SIZE_2Nx2N;
+   getDisMvpCand        ( 0, 0,  &cDisInfo );
+   if( cDisInfo.iN == 0)
+   {
+	   m_pePartSize[0] = m_peSaved;
+		return false;
+   }
+   else
+   {
+	   Bool bAvailable = pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, cDisInfo.m_acMvCand[0].getHor() 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , bRecon 
+#endif
+	   );
+	   m_pePartSize[0] = m_peSaved;
+	   return bAvailable;
+   }
+#else
   return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv 
 #if QC_SIMPLIFIEDIVRP_M24938
     , bRecon 
 #endif
     );
+#endif
 }
 #endif
 
