@@ -46,6 +46,11 @@
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
 #define HHI_FIX                           1   // inter-view prediction and other fixes
+#define QC_MULTI_DIS_CAN			1
+#if QC_MULTI_DIS_CAN
+    #define DIS_CANS				1
+#endif
+
 
 #define HHI_VSO                           1
 #define HHI_VSO_LS_TABLE                  1

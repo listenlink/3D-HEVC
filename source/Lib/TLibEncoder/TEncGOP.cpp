@@ -690,10 +690,14 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if DEPTH_MAP_GENERATION
       // init view component and predict virtual depth map
       m_pcDepthMapGenerator->initViewComponent( pcPic );
+#if !QC_MULTI_DIS_CAN
       m_pcDepthMapGenerator->predictDepthMap  ( pcPic );
 #endif
+#endif
 #if HHI_INTER_VIEW_MOTION_PRED
+//#if !QC_MULTI_DIS_CAN
       m_pcDepthMapGenerator->covertOrgDepthMap( pcPic );
+//#endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
       m_pcResidualGenerator->initViewComponent( pcPic );
@@ -757,8 +761,10 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       m_pcResidualGenerator->setRecResidualPic( pcPic );
 #endif
 #if DEPTH_MAP_GENERATION
+#if !QC_MULTI_DIS_CAN
       // update virtual depth map
       m_pcDepthMapGenerator->updateDepthMap( pcPic );
+#endif
 #endif
 
       //-- Loop filter

@@ -137,7 +137,7 @@
 #define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
-#if SAIT_IMPROV_MOTION_PRED_M24829
+#if SAIT_IMPROV_MOTION_PRED_M24829&!QC_MULTI_DIS_CAN
 #define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
 #else
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)

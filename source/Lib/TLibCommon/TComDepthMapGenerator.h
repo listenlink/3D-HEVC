@@ -135,9 +135,11 @@ public:
   Void  uninit                ();
 
   Void  initViewComponent     ( TComPic*      pcPic );
+#if !QC_MULTI_DIS_CAN
   Bool  predictDepthMap       ( TComPic*      pcPic );
   Void  updateDepthMap        ( TComPic*      pcPic );
   Void  dumpDepthMap          ( TComPic*      pcPic, char* pFilenameBase );
+#endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
   Void  covertOrgDepthMap     ( TComPic*      pcPic );
@@ -148,8 +150,14 @@ public:
   UInt  getSubSampExpY        ()                      { return m_uiSubSampExpY; }
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
 #if HHI_INTER_VIEW_MOTION_PRED
+#if QC_MULTI_DIS_CAN
+  Int   getPdmMergeCandidate ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
+  Bool  getPdmMvPredDisCan    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
+  Bool  getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
+#else
   Int   getPdmMergeCandidate  ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool  getPdmMvPred          ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge );
+#endif
   Bool  getIViewOrgDepthMvPred( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
 #endif
 
@@ -162,6 +170,7 @@ public:
 
 private:
   // picture operations
+#if !QC_MULTI_DIS_CAN
   Bool  xConvertDepthMapCurr2Ref  ( TComPic*    pcRef, TComPic* pcCur );
   Bool  xConvertDepthMapRef2Curr  ( TComPic*    pcCur, TComPic* pcRef );
   Bool  xPredictDepthMap          ( TComPic*    pcPic );
@@ -181,7 +190,7 @@ private:
   Void  xInterPUDepthMapUpdate    ( TComDataCU* pcCU, TComYuv* pcCUDepthMap, UInt uiPartIdx );                      // PU inter update
   Void  xInterPUDepthMapPrediction( TComDataCU* pcCU, TComYuv* pcCUDepthMap, UInt uiPartIdx );                      // PU inter prediction
   Bool  xGetPredDepth             ( TComDataCU* pcCU, UInt uiPartIdx, Int& riPrdDepth, Int* piPosX = 0, Int* piPosY = 0 );
-
+#endif
   // conversion functions
   Int   xGetVirtDepthFromDisparity( UInt uiBaseId, Int iDisparity )
   {
