@@ -5304,8 +5304,7 @@ Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr,
   UInt uiAbsPartAddr = uiPartUnitIdx;
 
   RefPicList  eColRefPicList = REF_PIC_LIST_0;
-  Int iColViewIdx, iColRefViewIdx, iCurrViewIdx;
-  iCurrViewIdx     = m_pcSlice->getViewId();
+  Int iColViewIdx, iColRefViewIdx;
   TComPic *pColPic = getSlice()->getRefPic( eRefPicList, refidx);
   TComDataCU *pColCU = pColPic->getCU( uiCUAddr );
   iColViewIdx = pColCU->getSlice()->getViewId();
