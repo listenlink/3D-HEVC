@@ -175,7 +175,12 @@ private:
   Bool  xConvertDepthMapRef2Curr  ( TComPic*    pcCur, TComPic* pcRef );
   Bool  xPredictDepthMap          ( TComPic*    pcPic );
   Bool  xFillDepthMapHoles        ( TComPic*    pcPic );
-  Void  xClearDepthMap            ( TComPic*    pcPic, Int      iVal  = PDM_UNDEFINED_DEPTH );
+  Void  xClearDepthMap            ( TComPic*    pcPic, Int      iVal  = PDM_UNDEFINED_DEPTH
+#if PDM_REMOVE_DEPENDENCE
+  ,
+  Int forFirstNonBaseView = 0
+#endif
+  );
   Void  xSetChroma                ( TComPicYuv* pcPic, Int      iVal  );
 
   // CU operations  
