@@ -129,6 +129,7 @@
 
 #if ( HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED )
 #define DEPTH_MAP_GENERATION        1
+#define PDM_REMOVE_DEPENDENCE       1			//bug-fix for DMDV JCT2-A0095
 #else
 #define DEPTH_MAP_GENERATION        0
 #endif
