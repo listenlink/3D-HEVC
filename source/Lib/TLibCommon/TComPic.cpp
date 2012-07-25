@@ -54,6 +54,9 @@ TComPic::TComPic()
   m_apcPicYuv[1]      = NULL;
 #if DEPTH_MAP_GENERATION
   m_pcPredDepthMap    = NULL;
+#if PDM_REMOVE_DEPENDENCE
+  m_pcPredDepthMap_temp    = NULL;
+#endif
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
   m_pcOrgDepthMap     = NULL;
@@ -135,6 +138,14 @@ Void TComPic::destroy()
     delete m_pcPredDepthMap;
     m_pcPredDepthMap = NULL;
   }
+#if PDM_REMOVE_DEPENDENCE
+  if( m_pcPredDepthMap_temp )         //  estimated depth map
+  {
+    m_pcPredDepthMap_temp->destroy();
+    delete m_pcPredDepthMap_temp;
+    m_pcPredDepthMap_temp = NULL;
+  }                     
+#endif
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
   if( m_pcOrgDepthMap )
@@ -178,6 +189,10 @@ TComPic::addPrdDepthMapBuffer( UInt uiSubSampExpX, UInt uiSubSampExpY )
   UInt  uiMaxCuDepth  = m_apcPicYuv[1]->getMaxCuDepth ();
   m_pcPredDepthMap    = new TComPicYuv;
   m_pcPredDepthMap    ->create( iWidth >> uiSubSampExpX, iHeight >> uiSubSampExpY, uiMaxCuWidth >> uiSubSampExpX, uiMaxCuHeight >> uiSubSampExpY, uiMaxCuDepth );
+#if PDM_REMOVE_DEPENDENCE
+  m_pcPredDepthMap_temp    = new TComPicYuv;
+  m_pcPredDepthMap_temp    ->create( iWidth >> uiSubSampExpX, iHeight >> uiSubSampExpY, uiMaxCuWidth >> uiSubSampExpX, uiMaxCuHeight >> uiSubSampExpY, uiMaxCuDepth );
+#endif
 }
 #endif
 
@@ -223,6 +238,14 @@ TComPic::removePrdDepthMapBuffer()
     delete m_pcPredDepthMap;
     m_pcPredDepthMap = NULL;
   }
+#if PDM_REMOVE_DEPENDENCE
+  if(m_pcPredDepthMap_temp)
+  {
+    m_pcPredDepthMap_temp->destroy();
+    delete m_pcPredDepthMap_temp;
+    m_pcPredDepthMap_temp = NULL;
+  }
+#endif
 }
 #endif
 

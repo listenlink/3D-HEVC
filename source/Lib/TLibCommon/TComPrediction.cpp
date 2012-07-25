@@ -568,6 +568,11 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   if( bPrdDepthMap )
   {
     UInt uiRShift = 0;
+#if PDM_REMOVE_DEPENDENCE
+	if(pcCU->getPic()->getStoredPDMforV2()==1)
+	    xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMapTemp(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
+	else
+#endif
     xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMap(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
     return;
   }
