@@ -66,10 +66,17 @@ private:
   
 #if DEPTH_MAP_GENERATION
   TComPicYuv*           m_pcPredDepthMap;         //  estimated depth map
+#if PDM_REMOVE_DEPENDENCE
+  TComPicYuv*           m_pcPredDepthMap_temp;         //  estimated depth map
+  Bool                  m_bPDMV2;                       
+#endif
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
+#if QC_MULTI_DIS_CAN
+  Bool					m_checked;
+#endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*           m_pcResidual;             //  residual buffer (coded or inter-view predicted residual)
@@ -135,10 +142,19 @@ public:
   
 #if DEPTH_MAP_GENERATION
   TComPicYuv*   getPredDepthMap()     { return  m_pcPredDepthMap; }
+#if PDM_REMOVE_DEPENDENCE
+  TComPicYuv*   getPredDepthMapTemp()         { return  m_pcPredDepthMap_temp; }
+  Void          setStoredPDMforV2(Bool flag)  { m_bPDMV2 = flag;}
+  Bool          getStoredPDMforV2()           { return m_bPDMV2;}
 #endif
 
+#endif
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
+#if QC_MULTI_DIS_CAN
+  Void			setCandPicCheckedFlag (Bool bchecked)		{ m_checked = bchecked; }
+  Bool          getCandPicCheckedFlag ()					{ return m_checked;}
+#endif
 #endif
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
