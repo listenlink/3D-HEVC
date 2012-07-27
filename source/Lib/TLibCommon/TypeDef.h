@@ -51,6 +51,8 @@
     #define DIS_CANS				1
 #endif
 
+#define MTK_INTERVIEW_MERGE_A0049         1 //  JCT2-A0049 second part
+
 
 #define HHI_VSO                           1
 #define HHI_VSO_LS_TABLE                  1

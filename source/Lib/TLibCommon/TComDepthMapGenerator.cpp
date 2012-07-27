@@ -627,6 +627,145 @@ Int
 TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv )
 #endif 
 {
+#if MTK_INTERVIEW_MERGE_A0049
+	AOF  ( m_bCreated && m_bInit );
+
+#if !QC_MULTI_DIS_CAN
+  ROFRS( m_bPDMAvailable, 0 );
+#endif
+
+  TComSlice*    pcSlice     = pcCU->getSlice ();
+  TComSPS*      pcSPS       = pcSlice->getSPS();
+  AOF  ( pcSPS->getViewId() == m_uiCurrViewId );
+  Bool          bPdmMerge   = ( ( pcSPS->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE );
+  ROTRS( !bPdmMerge, 0 );
+
+  Bool abPdmAvailable[2] = {false,false};
+
+  Int iValid = 0;
+  Int iViewId = 0;
+  for( UInt uiBId = 0; uiBId < m_uiCurrViewId && iValid==0; uiBId++ )
+  {
+    UInt        uiBaseId    = m_auiBaseIdList[ uiBId ];
+    TComPic*    pcBasePic   = m_pcAUPicAccess->getPic( uiBaseId );
+    for( Int iRefListId = 0; iRefListId < 2 && iValid==0; iRefListId++ )
+    {
+      RefPicList  eRefPicListTest = RefPicList( iRefListId );
+      Int         iNumRefPics = pcSlice->getNumRefIdx( eRefPicListTest ) ;
+      for( Int iRefIndex = 0; iRefIndex < iNumRefPics; iRefIndex++ )
+      { 
+        if(pcBasePic->getPOC() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getPOC() 
+          && pcBasePic->getViewId() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getViewId())
+        {
+          iValid=1;
+          iViewId = uiBaseId;
+          break;
+        }
+      }
+    }
+  }
+  if (iValid == 0)
+    return 0;
+
+  //--- get base CU/PU and check prediction mode ---
+  TComPic*    pcBasePic   = m_pcAUPicAccess->getPic( iViewId );
+  TComPicYuv* pcBaseRec   = pcBasePic->getPicYuvRec   ();
+
+#if QC_MULTI_DIS_CAN
+  Int  iCurrPosX, iCurrPosY;
+  UInt          uiPartAddr;
+  Int           iWidth;
+  Int           iHeight;
+
+  pcCU->getPartIndexAndSize( uiPartIdx, uiPartAddr, iWidth, iHeight );
+  pcBaseRec->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iCurrPosX, iCurrPosY );
+  iCurrPosX  += ( ( iWidth  - 1 ) >> 1 );
+  iCurrPosY  += ( ( iHeight - 1 ) >> 1 );
+
+  Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (pDInfo->m_acMvCand[0].getHor() + 2 ) >> 2 ) );
+  Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (pDInfo->m_acMvCand[0].getVer() + 2 ) >> 2 )); 
+  Int         iBaseCUAddr;
+  Int         iBaseAbsPartIdx;
+  pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY , iBaseCUAddr, iBaseAbsPartIdx );
+#else
+  Int  iPrdDepth, iCurrPosX, iCurrPosY;
+  Bool bAvailable  = xGetPredDepth( pcCU, uiPartIdx, iPrdDepth, &iCurrPosX, &iCurrPosY );
+  AOF( bAvailable );
+  TComPicYuv* pcBasePdm   = pcBasePic->getPredDepthMap();
+  Int         iDisparity  = xGetDisparityFromVirtDepth( iViewId, iPrdDepth );
+  Int         iShiftX     = m_uiSubSampExpX + 2;
+  Int         iAddX       = ( 1 << iShiftX ) >> 1;
+  Int         iBasePosX   = Clip3( 0, pcBasePdm->getWidth () - 1, iCurrPosX + ( ( iDisparity + iAddX ) >> iShiftX ) );
+  Int         iBasePosY   = Clip3( 0, pcBasePdm->getHeight() - 1, iCurrPosY                               );
+  Int         iBaseCUAddr;
+  Int         iBaseAbsPartIdx;
+  pcBaseRec->getCUAddrAndPartIdx( iBasePosX<< m_uiSubSampExpX , iBasePosY<< m_uiSubSampExpY , iBaseCUAddr, iBaseAbsPartIdx );
+#endif 
+
+  TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
+
+  if( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTER || pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_SKIP )
+  {
+    for( UInt uiBaseRefListId = 0; uiBaseRefListId < 2; uiBaseRefListId++ )
+    {
+      RefPicList  eBaseRefPicList = RefPicList( uiBaseRefListId );
+      TComMvField cBaseMvField;
+      pcBaseCU->getMvField( pcBaseCU, iBaseAbsPartIdx, eBaseRefPicList, cBaseMvField );
+      Int         iBaseRefIdx     = cBaseMvField.getRefIdx();
+
+      if (iBaseRefIdx >= 0)
+      {
+        Int iBaseRefPOC = pcBaseCU->getSlice()->getRefPOC(eBaseRefPicList, iBaseRefIdx);
+        if (iBaseRefPOC != pcSlice->getPOC())		
+        {
+          for (Int iPdmRefIdx = 0; iPdmRefIdx < pcSlice->getNumRefIdx( eBaseRefPicList ); iPdmRefIdx++)
+          {
+            if (iBaseRefPOC == pcSlice->getRefPOC(eBaseRefPicList, iPdmRefIdx))
+            {
+              abPdmAvailable[ uiBaseRefListId ] = true;
+              paiPdmRefIdx  [ uiBaseRefListId ] = iPdmRefIdx;
+              TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
+              pcCU->clipMv( cMv );
+              pacPdmMv      [ uiBaseRefListId ] = cMv;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  Int iPdmInterDir = ( abPdmAvailable[0] ? 1 : 0 ) + ( abPdmAvailable[1] ? 2 : 0 );
+
+  if (iPdmInterDir == 0)
+  {
+    for( Int iRefListId = 0; iRefListId < 2 ; iRefListId++ )
+    {
+      RefPicList  eRefPicList       = RefPicList( iRefListId );
+      Int         iNumRefPics       = pcSlice->getNumRefIdx( eRefPicList );
+      for( Int iPdmRefIdx = 0; iPdmRefIdx < iNumRefPics; iPdmRefIdx++ )
+      {
+        if( pcSlice->getRefPOC( eRefPicList, iPdmRefIdx ) == pcSlice->getPOC())
+        {
+          abPdmAvailable[ iRefListId ] = true;
+          paiPdmRefIdx  [ iRefListId ] = iPdmRefIdx;
+#if QC_MULTI_DIS_CAN
+          TComMv cMv = pDInfo->m_acMvCand[0]; 
+          cMv.setVer(0);
+#else
+          TComMv cMv(iDisparity, 0);
+#endif
+          pcCU->clipMv( cMv );
+          pacPdmMv      [ iRefListId ] = cMv;
+          break;
+        }
+      }
+    }
+    iPdmInterDir = ( abPdmAvailable[0] ? 1 : 0 ) + ( abPdmAvailable[1] ? 2 : 0 ) ;
+  }
+
+  return iPdmInterDir;
+
+#else
   Int  iMaxNumInterPics  = 1;
   Int  iMaxNumAllPics    = 2;
 
@@ -684,6 +823,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
     iPdmInterDir = ( abPdmAvailable[0] ? 1 : 0 ) + ( abPdmAvailable[1] ? 2 : 0 );
   }
   return iPdmInterDir;
+#endif
 }
 
 #if QC_MULTI_DIS_CAN
