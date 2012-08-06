@@ -72,6 +72,10 @@ private:
 #endif
 #endif
 
+#if LG_ZEROINTRADEPTHRESI_M26039
+  Int                   m_uiIntraPeriod;
+#endif
+
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
 #if QC_MULTI_DIS_CAN
@@ -128,6 +132,10 @@ public:
   TComSlice*    getCurrSlice()        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx);  }
 #if VIDYO_VPS_INTEGRATION
   TComVPS*      getVPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getVPS();  }
+#endif
+#if LG_ZEROINTRADEPTHRESI_M26039
+  Int           getIntraPeriod()                           { return  m_uiIntraPeriod; }
+  Void          setIntraPeriod(Int uiIntraPeriod)          { m_uiIntraPeriod = uiIntraPeriod; }
 #endif
   TComSPS*      getSPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getSPS();  }
   Int           getPOC()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }

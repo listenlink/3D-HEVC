@@ -56,6 +56,11 @@ private:
   
 public:
   
+#if USE_DVMCP
+  Bool  m_bDvMcp;       // is dv-mcp ?
+  Int   m_iDvMcpDispX;  // disparity for dv-mcp
+#endif
+
   // ------------------------------------------------------------------------------------------------------------------
   // constructors
   // ------------------------------------------------------------------------------------------------------------------
@@ -63,12 +68,20 @@ public:
   TComMv() :
   m_iHor(0),
   m_iVer(0)
+#if USE_DVMCP
+  , m_bDvMcp(false)
+  , m_iDvMcpDispX(0)
+#endif
   {
   }
   
   TComMv( Short iHor, Short iVer ) :
   m_iHor(iHor),
   m_iVer(iVer)
+#if USE_DVMCP
+  , m_bDvMcp(false)
+  , m_iDvMcpDispX(0)
+#endif
   {
   }
   
