@@ -830,6 +830,9 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
 Bool
 TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge )
 {
+#if USE_DVMCP
+  rcMv.m_bDvMcp = false;
+#endif
   AOF  ( m_bCreated && m_bInit );
   AOF  ( iRefIdx >= 0 );
   AOF  ( pcCU );
@@ -891,6 +894,17 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
       if( iBaseRefIdx >= 0 && iBaseRefPoc == iRefPoc )
       {
         rcMv.set( cBaseMvField.getHor(), cBaseMvField.getVer() );
+#if USE_DVMCP
+        // save disparity vector when a merge candidate for IVMP is set as DV-MCP
+        if( bMerge ) 
+        {
+          rcMv.m_bDvMcp = true;
+          rcMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor(); 
+        }
+        else { // AMVP ?
+          rcMv.m_bDvMcp = false;
+        }
+#endif
         return true;
       }
     }

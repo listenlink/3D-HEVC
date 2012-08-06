@@ -41,6 +41,18 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define LGE_EDGE_INTRA                  1       //JCT2-A0070
+#if LGE_EDGE_INTRA
+#define LGE_EDGE_INTRA_MIN_SIZE         4
+#define LGE_EDGE_INTRA_MAX_SIZE        32
+#define LGE_EDGE_INTRA_THRESHOLD       20
+#define LGE_EDGE_INTRA_MAX_EDGE_NUM_PER_4x4 8
+#define LGE_EDGE_INTRA_DELTA_DC         1 
+#define LGE_EDGE_INTRA_PIXEL_DIFFERENCE 1
+#endif
+
+#define LG_ZEROINTRADEPTHRESI_M26039      1  //JCT2-A0087
+
 #define SONY_COLPIC_AVAILABILITY          1
 
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
@@ -52,6 +64,17 @@
 #endif
 
 #define MTK_INTERVIEW_MERGE_A0049         1 //  JCT2-A0049 second part
+
+#if QC_MULTI_DIS_CAN                    // JCT2-A0126
+#define USE_DVMCP         0 
+
+#define DVFROM_LEFTBELOW  1
+#define DVFROM_LEFT       2
+#define DVFROM_ABOVERIGHT 3
+#define DVFROM_ABOVE      4
+#define DVFROM_ABOVELEFT  5
+#define DVFROM_COL        6
+#endif
 
 
 #define HHI_VSO                           1
@@ -230,7 +253,15 @@
 #define SCAN_SET_SIZE                     16
 #define LOG2_SCAN_SET_SIZE                4
 
+#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_DELTA_DC
+#define FAST_UDI_MAX_RDMODE_NUM               37          ///< maximum number of RD comparison in fast-UDI estimation loop
+#else
+#define FAST_UDI_MAX_RDMODE_NUM               36          ///< maximum number of RD comparison in fast-UDI estimation loop
+#endif
+#else
 #define FAST_UDI_MAX_RDMODE_NUM               35          ///< maximum number of RD comparison in fast-UDI estimation loop
+#endif
 
 #define ZERO_MVD_EST                          0           ///< Zero Mvd Estimation in normal mode
 
@@ -269,6 +300,15 @@ enum MODE_IDX
 };
 #define NUM_DMM_MODE 4
 #endif
+
+#if LGE_EDGE_INTRA
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+#define EDGE_INTRA_IDX  (NUM_INTRA_MODE+NUM_DMM_MODE)
+#endif // HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+#if LGE_EDGE_INTRA_DELTA_DC
+#define EDGE_INTRA_DELTA_IDX          (EDGE_INTRA_IDX+1)
+#endif
+#endif // LGE_EDGE_INTRA
 
 #define IBDI_DISTORTION                0           ///< enable/disable SSE modification when IBDI is used (JCTVC-D152)
 #define FIXED_ROUNDING_FRAME_MEMORY    0           ///< enable/disable fixed rounding to 8-bitdepth of frame memory when IBDI is used

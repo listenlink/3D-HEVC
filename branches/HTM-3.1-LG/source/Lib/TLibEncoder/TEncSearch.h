@@ -253,12 +253,16 @@ protected:
                                     Bool         bRealCoeff );
   
   Void  xIntraCodingLumaBlk       ( TComDataCU*  pcCU,
-                                    UInt         uiTrDepth,
-                                    UInt         uiAbsPartIdx,
-                                    TComYuv*     pcOrgYuv, 
-                                    TComYuv*     pcPredYuv, 
-                                    TComYuv*     pcResiYuv, 
-                                    Dist&        ruiDist );
+	  UInt         uiTrDepth,
+	  UInt         uiAbsPartIdx,
+	  TComYuv*     pcOrgYuv, 
+	  TComYuv*     pcPredYuv, 
+	  TComYuv*     pcResiYuv, 
+	  Dist&        ruiDist 
+#if LG_ZEROINTRADEPTHRESI_M26039
+	  ,Bool        bZeroResi = false
+#endif
+	  );
   Void  xIntraCodingChromaBlk     ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
@@ -268,18 +272,22 @@ protected:
                                     Dist&        ruiDist,
                                     UInt         uiChromaId );
   Void  xRecurIntraCodingQT       ( TComDataCU*  pcCU, 
-                                    UInt         uiTrDepth,
-                                    UInt         uiAbsPartIdx, 
-                                    Bool         bLumaOnly,
-                                    TComYuv*     pcOrgYuv, 
-                                    TComYuv*     pcPredYuv, 
-                                    TComYuv*     pcResiYuv, 
-                                    Dist&        ruiDistY,
-                                    Dist&        ruiDistC,
+	  UInt         uiTrDepth,
+	  UInt         uiAbsPartIdx, 
+	  Bool         bLumaOnly,
+	  TComYuv*     pcOrgYuv, 
+	  TComYuv*     pcPredYuv, 
+	  TComYuv*     pcResiYuv, 
+	  Dist&        ruiDistY,
+	  Dist&        ruiDistC,
 #if HHI_RQT_INTRA_SPEEDUP
-                                   Bool         bCheckFirst,
+	  Bool         bCheckFirst,
 #endif
-                                   Double&      dRDCost );
+	  Double&      dRDCost 
+#if LG_ZEROINTRADEPTHRESI_M26039
+	  ,Bool         bZeroResi = false
+#endif
+	  );
   
   Void  xSetIntraResultQT         ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
@@ -320,6 +328,16 @@ protected:
                                     Bool           bAboveAvail, 
                                     Bool           bLeftAvail );
 #endif
+
+#if LGE_EDGE_INTRA
+  Bool  xEdgePartition       ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );
+  Bool  xCheckTerminatedEdge ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
+  Bool  xConstructChainCode  ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );
+#if LGE_EDGE_INTRA_DELTA_DC
+  Void  xAssignEdgeIntraDeltaDCs( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrig, UInt uiStride, Pel* piPredic, UInt uiWidth, UInt uiHeight );
+#endif
+#endif
+
 #if HHI_DMM_WEDGE_INTRA
   Void findWedgeFullMinDist       ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,

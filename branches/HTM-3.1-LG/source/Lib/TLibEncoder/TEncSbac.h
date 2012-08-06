@@ -174,6 +174,9 @@ private:
   Void  xCodeWedgePredTexDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xCodeContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
+#if LGE_EDGE_INTRA
+  Void  xCodeEdgeIntraInfo( TComDataCU* pcCU, UInt uiPartIdx );
+#endif
 
 protected:
   TComBitIf*    m_pcBitIf;
@@ -305,6 +308,12 @@ private:
   ContextModel3DBuffer m_cDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
   ContextModel3DBuffer m_cDmmDataSCModel;
+#endif
+#if LGE_EDGE_INTRA
+  ContextModel3DBuffer m_cEdgeIntraSCModel;
+#if LGE_EDGE_INTRA_DELTA_DC
+  ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
+#endif
 #endif
 };
 
