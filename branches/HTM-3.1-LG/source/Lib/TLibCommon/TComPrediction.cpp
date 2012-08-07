@@ -538,41 +538,44 @@ Void TComPrediction::xPredIntraEdge( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iW
 
 	// Do prediction
 	{
-		UInt uiSum0 = 0, uiSum1 = 0;
-		UInt uiMean0, uiMean1;
-		UInt uiCount0 = 0, uiCount1 = 0;
+		//UInt uiSum0 = 0, uiSum1 = 0;
+    Int iSum0 = 0, iSum1 = 0;
+		//UInt uiMean0, uiMean1;
+    Int iMean0, iMean1;
+		//UInt uiCount0 = 0, uiCount1 = 0;
+    Int iCount0 = 0, iCount1 = 0;
 		for( UInt ui = 0; ui < iWidth; ui++ )
 		{
 			if( pbRegion[ ui ] == false )
 			{
-				uiSum0 += (pSrc[ ui + 1 ]);
-				uiCount0++;
+				iSum0 += (pSrc[ ui + 1 ]);
+				iCount0++;
 			}
 			else
 			{
-				uiSum1 += (pSrc[ ui + 1 ]);
-				uiCount1++;
+				iSum1 += (pSrc[ ui + 1 ]);
+				iCount1++;
 			}
 		}
 		for( UInt ui = 0; ui < iHeight; ui++ ) // (0,0) recount (to avoid division)
 		{
 			if( pbRegion[ ui * iWidth ] == false )
 			{
-				uiSum0 += (pSrc[ (ui + 1) * srcStride ]);
-				uiCount0++;
+				iSum0 += (pSrc[ (ui + 1) * srcStride ]);
+				iCount0++;
 			}
 			else
 			{
-				uiSum1 += (pSrc[ (ui + 1) * srcStride ]);
-				uiCount1++;
+				iSum1 += (pSrc[ (ui + 1) * srcStride ]);
+				iCount1++;
 			}
 		}
-		if( uiCount0 == 0 )
+		if( iCount0 == 0 )
 			assert(false);
-		if( uiCount1 == 0 )
+		if( iCount1 == 0 )
 			assert(false);
-		uiMean0 = uiSum0 / uiCount0; // TODO : integer op.
-		uiMean1 = uiSum1 / uiCount1;
+		iMean0 = iSum0 / iCount0; // TODO : integer op.
+		iMean1 = iSum1 / iCount1;
 #if LGE_EDGE_INTRA_DELTA_DC
 		if( bDelta ) 
 		{
@@ -580,8 +583,8 @@ Void TComPrediction::xPredIntraEdge( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iW
 			Int iDeltaDC1 = pcCU->getEdgeDeltaDC1( uiAbsPartIdx );
 			xDeltaDCQuantScaleUp( pcCU, iDeltaDC0 );
 			xDeltaDCQuantScaleUp( pcCU, iDeltaDC1 );
-			uiMean0 = Clip( uiMean0 + iDeltaDC0 );
-			uiMean1 = Clip( uiMean1 + iDeltaDC1 );
+			iMean0 = Clip( iMean0 + iDeltaDC0 );
+			iMean1 = Clip( iMean1 + iDeltaDC1 );
 		}
 #endif
 		for( UInt ui = 0; ui < iHeight; ui++ )
@@ -589,9 +592,9 @@ Void TComPrediction::xPredIntraEdge( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iW
 			for( UInt uii = 0; uii < iWidth; uii++ )
 			{
 				if( pbRegion[ uii + ui * iWidth ] == false )
-					pDst[ uii + ui * dstStride ] = uiMean0;
+					pDst[ uii + ui * dstStride ] = iMean0;
 				else
-					pDst[ uii + ui * dstStride ] = uiMean1;
+					pDst[ uii + ui * dstStride ] = iMean1;
 			}
 		}
 	}
