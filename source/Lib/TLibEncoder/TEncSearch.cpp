@@ -6475,18 +6475,18 @@ Bool TEncSearch::xEdgePartition( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 )
 		for( Int x=0; x<iWidth-1; x++ )
 		{
 			UShort usAbs0=0, usAbs1=0, usAbs2=0;  // 0 : left, 1 : current, 2 : right
-			Bool   bSign0=false, bSign1=false, bSign2=false;
+			//Bool   bSign0=false, bSign1=false, bSign2=false;
 			if( x > 0 && *(pbEdgeXPtr-1) == true )
 			{
 				if( *(psDiffXPtr-1) >= 0)
 				{
 					usAbs0 = *(psDiffXPtr-1);
-					bSign0 = true;
+					//bSign0 = true;
 				}
 				else
 				{
 					usAbs0 = (-1) * *(psDiffXPtr-1);
-					bSign0 = false;
+					//bSign0 = false;
 				}
 			}
 			if( *pbEdgeXPtr == true )
@@ -6494,12 +6494,12 @@ Bool TEncSearch::xEdgePartition( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 )
 				if( *(psDiffXPtr) >= 0)
 				{
 					usAbs1 = *(psDiffXPtr);
-					bSign1 = true;
+					//bSign1 = true;
 				}
 				else
 				{
 					usAbs1 = (-1) * *(psDiffXPtr);
-					bSign1 = false;
+					//bSign1 = false;
 				}
 			}
 			if( x < iWidth-2 && *(pbEdgeXPtr+1) == true )
@@ -6507,12 +6507,12 @@ Bool TEncSearch::xEdgePartition( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 )
 				if( *(psDiffXPtr+1) >= 0)
 				{
 					usAbs2 = *(psDiffXPtr+1);
-					bSign2 = true;
+					//bSign2 = true;
 				}
 				else
 				{
 					usAbs2 = (-1) * *(psDiffXPtr+1);
-					bSign2 = false;
+					//bSign2 = false;
 				}
 			}
 
@@ -6554,18 +6554,18 @@ Bool TEncSearch::xEdgePartition( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 )
 		for( Int x=0; x<iWidth; x++ )
 		{
 			UShort usAbs0=0, usAbs1=0, usAbs2=0;  // 0 : upper, 1 : current, 2 : bottom
-			Bool   bSign0=false, bSign1=false, bSign2=false;
+			//Bool   bSign0=false, bSign1=false, bSign2=false;
 			if( y > 0 && *(pbEdgeYPtr-iWidth) == true )
 			{
 				if( *(psDiffYPtr-iWidth) >= 0)
 				{
 					usAbs0 = *(psDiffYPtr-iWidth);
-					bSign0 = true;
+					//bSign0 = true;
 				}
 				else
 				{
 					usAbs0 = (-1) * *(psDiffYPtr-iWidth);
-					bSign0 = false;
+					//bSign0 = false;
 				}
 			}
 			if( *pbEdgeYPtr == true )
@@ -6573,12 +6573,12 @@ Bool TEncSearch::xEdgePartition( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 )
 				if( *(psDiffYPtr) >= 0)
 				{
 					usAbs1 = *(psDiffYPtr);
-					bSign1 = true;
+					//bSign1 = true;
 				}
 				else
 				{
 					usAbs1 = (-1) * *(psDiffYPtr);
-					bSign1 = false;
+					//bSign1 = false;
 				}
 			}
 			if( y < iHeight-2 && *(pbEdgeYPtr+iWidth) == true )
@@ -6586,12 +6586,12 @@ Bool TEncSearch::xEdgePartition( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 )
 				if( *(psDiffYPtr+iWidth) >= 0)
 				{
 					usAbs2 = *(psDiffYPtr+iWidth);
-					bSign2 = true;
+					//bSign2 = true;
 				}
 				else
 				{
 					usAbs2 = (-1) * *(psDiffYPtr+iWidth);
-					bSign2 = false;
+					//bSign2 = false;
 				}
 			}
 
