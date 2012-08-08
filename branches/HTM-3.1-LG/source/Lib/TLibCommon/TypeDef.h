@@ -65,15 +65,14 @@
 
 #define MTK_INTERVIEW_MERGE_A0049         1 //  JCT2-A0049 second part
 
-#if QC_MULTI_DIS_CAN                    // JCT2-A0126
-#define USE_DVMCP         0 
-
-#define DVFROM_LEFTBELOW  1
-#define DVFROM_LEFT       2
-#define DVFROM_ABOVERIGHT 3
-#define DVFROM_ABOVE      4
-#define DVFROM_ABOVELEFT  5
-#define DVFROM_COL        6
+#define LGE_DVMCP                         1 //  JCT2-A0126     
+#if LGE_DVMCP
+#define DVFROM_LEFTBELOW                  1
+#define DVFROM_LEFT                       2
+#define DVFROM_ABOVERIGHT                 3
+#define DVFROM_ABOVE                      4
+#define DVFROM_ABOVELEFT                  5
+#define DVFROM_COL                        6
 #endif
 
 

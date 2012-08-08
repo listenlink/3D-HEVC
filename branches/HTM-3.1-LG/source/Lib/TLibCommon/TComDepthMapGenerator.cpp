@@ -725,6 +725,10 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
               abPdmAvailable[ uiBaseRefListId ] = true;
               paiPdmRefIdx  [ uiBaseRefListId ] = iPdmRefIdx;
               TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
+#if LGE_DVMCP
+              cMv.m_bDvMcp = true;
+              cMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor();
+#endif
               pcCU->clipMv( cMv );
               pacPdmMv      [ uiBaseRefListId ] = cMv;
               break;
@@ -830,7 +834,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
 Bool
 TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge )
 {
-#if USE_DVMCP
+#if LGE_DVMCP
   rcMv.m_bDvMcp = false;
 #endif
   AOF  ( m_bCreated && m_bInit );
@@ -894,7 +898,7 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
       if( iBaseRefIdx >= 0 && iBaseRefPoc == iRefPoc )
       {
         rcMv.set( cBaseMvField.getHor(), cBaseMvField.getVer() );
-#if USE_DVMCP
+#if LGE_DVMCP
         // save disparity vector when a merge candidate for IVMP is set as DV-MCP
         if( bMerge ) 
         {
