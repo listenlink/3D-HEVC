@@ -524,7 +524,7 @@ public:
   Bool          getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
   Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
-#if USE_DVMCP
+#if LGE_DVMCP
   Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1 );
 #endif
 
