@@ -642,9 +642,9 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       m_ppcYuvResPred[uiDepth] );
     AOF( bOK );
 #if LG_RESTRICTEDRESPRED_M24766
-	Int iPUResiPredShift[4];
-	pcCU->getPUResiPredShift(iPUResiPredShift, 0);
-	m_ppcYuvReco[uiDepth]->add(iPUResiPredShift, pcCU->getPartitionSize(0), m_ppcYuvResPred[uiDepth], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
+    Int iPUResiPredShift[4];
+    pcCU->getPUResiPredShift(iPUResiPredShift, 0);
+    m_ppcYuvReco[uiDepth]->add(iPUResiPredShift, pcCU->getPartitionSize(0), m_ppcYuvResPred[uiDepth], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
 #else
     m_ppcYuvReco[uiDepth]->add( m_ppcYuvResPred[uiDepth], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
 #endif
@@ -704,6 +704,17 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
                                      m_pcPrediction->getPredicBufWidth  (),
                                      m_pcPrediction->getPredicBufHeight (),
                                      bAboveAvail, bLeftAvail );
+#if LGE_EDGE_INTRA
+  if( uiLumaPredMode >= EDGE_INTRA_IDX )
+  {
+    m_pcPrediction->predIntraLumaEdge( pcCU, pcCU->getPattern(), uiAbsPartIdx, uiWidth, uiHeight, piPred, uiStride
+#if LGE_EDGE_INTRA_DELTA_DC
+      , uiLumaPredMode == EDGE_INTRA_DELTA_IDX
+#endif
+      );
+  } 
+  else
+#endif
   
   //===== get prediction signal =====
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX

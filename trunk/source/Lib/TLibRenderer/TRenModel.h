@@ -49,23 +49,35 @@ public:
   ~TRenModel();
 
   // Creation
+#if LGE_VSO_EARLY_SKIP_A0093
+  Void  create           ( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeight, Int iShiftPrec, Int iHoleMargin, Bool bEarlySkip );
+#else
   Void  create           ( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeight, Int iShiftPrec, Int iHoleMargin );
+#endif
   Void  createSingleModel( Int iBaseViewNum, Int iContent, Int iModelNum, Int iLeftViewNum, Int iRightViewNum, Bool bUseOrgRef, Int iBlendMode );
 
   // Set new Frame
   Void  setBaseView      ( Int iViewNum, TComPicYuv* pcPicYuvVideoData, TComPicYuv* pcPicYuvDepthData, TComPicYuv* pcPicYuvOrgVideoData, TComPicYuv* pcPicYuvOrgDepthData  );
   Void  setSingleModel   ( Int iModelNum, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight, Int** ppiBaseShiftLutRight, Int iDistToLeft, TComPicYuv* pcPicYuvRefView );
 
+  // Set horizontal offset
+  Void  setHorOffset     ( UInt uiHorOff );
+
   // Set Mode
   Void  setErrorMode     ( Int iView, Int iContent, int iPlane );
 
   // Get Distortion, set Data
+#ifdef LGE_VSO_EARLY_SKIP_A0093
+  Int64 getDist          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel * piOrgData, Int iOrgStride);
+#else
   Int64 getDist          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData  );
+#endif
   Void  setData          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData  );
 
   // Get Rendered View
-  Void  getSynthVideo    ( Int iModelNum, Int iViewNum, TComPicYuv*& rpcPicYuvSynthVideo );
-  Void  getSynthDepth    ( Int iModelNum, Int iViewNum, TComPicYuv*& rpcPicYuvSynthDepth );
+
+  Void  getSynthVideo    ( Int iModelNum, Int iViewNum, TComPicYuv* pcPicYuvSynthVideo );
+  Void  getSynthDepth    ( Int iModelNum, Int iViewNum, TComPicYuv* pcPicYuvSynthDepth );
 
   // Get Total Distortion
   Void  getTotalSSE      (Int64& riSSEY, Int64& riSSEU, Int64& riSSEV );
@@ -73,12 +85,14 @@ public:
 private:
   // helpers
   Void xSetLRViewAndAddModel( Int iModelNum, Int iBaseViewNum, Int iContent, Int iViewPos, Bool bAdd );
-  Void xCopy2PicYuv ( Pel** ppiSrcVideoPel, Int* piStrides, TComPicYuv* rpcPicYuvTarget );
 
   // Settings
   Int    m_iShiftPrec;
   Int**  m_aaaiSubPelShiftLut[2];
   Int    m_iHoleMargin;
+#if LGE_VSO_EARLY_SKIP_A0093
+  Bool   m_bEarlySkip; 
+#endif
 
   /// Size of Video and Depth
   Int m_iWidth;
@@ -87,6 +101,11 @@ private:
   Int m_iPad;
 
   Int m_iNumOfBaseViews;
+
+#if HHI_VSO_SPEEDUP_A033                 
+  // Horizontal Offset in input data
+  UInt m_uiHorOff;          
+#endif
 
   /// Current Error Type ///
   Int m_iCurrentView;

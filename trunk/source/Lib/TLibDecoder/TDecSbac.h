@@ -145,6 +145,10 @@ private:
   Void xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   
+#if LGE_EDGE_INTRA
+  Void xParseEdgeIntraInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+  
 private:
   TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
@@ -251,6 +255,12 @@ private:
   ContextModel3DBuffer m_cDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
   ContextModel3DBuffer m_cDmmDataSCModel;
+#endif
+#if LGE_EDGE_INTRA
+  ContextModel3DBuffer m_cEdgeIntraSCModel;
+#if LGE_EDGE_INTRA_DELTA_DC
+  ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
+#endif
 #endif
 };
 

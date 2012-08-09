@@ -302,7 +302,9 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
     if( uiStartCUAddr == 0 )
     {
       m_pcDepthMapGenerator->initViewComponent( rpcPic );
+#if !QC_MULTI_DIS_CAN
       m_pcDepthMapGenerator->predictDepthMap  ( rpcPic );
+#endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
       m_pcResidualGenerator->initViewComponent( rpcPic );
 #endif
@@ -338,8 +340,10 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
     m_pcResidualGenerator->setRecResidualPic( rpcPic );
 #endif
 #if DEPTH_MAP_GENERATION
+#if !QC_MULTI_DIS_CAN
     // update virtual depth map
     m_pcDepthMapGenerator->updateDepthMap( rpcPic );
+#endif
 #endif
     // deblocking filter
     Bool bLFCrossTileBoundary = (pcSlice->getPPS()->getTileBehaviorControlPresentFlag() == 1)?

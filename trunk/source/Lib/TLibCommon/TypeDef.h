@@ -41,23 +41,59 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define FIXES                           1
+#define LGE_EDGE_INTRA                  1       //JCT2-A0070
+#if LGE_EDGE_INTRA
+#define LGE_EDGE_INTRA_MIN_SIZE         4
+#define LGE_EDGE_INTRA_MAX_SIZE        32
+#define LGE_EDGE_INTRA_THRESHOLD       20
+#define LGE_EDGE_INTRA_MAX_EDGE_NUM_PER_4x4 8
+#define LGE_EDGE_INTRA_DELTA_DC         1 
+#define LGE_EDGE_INTRA_PIXEL_DIFFERENCE 1
+#endif
+
+#define LG_ZEROINTRADEPTHRESI_M26039      1  //JCT2-A0087
+
 #define SONY_COLPIC_AVAILABILITY          1
 
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
-#define HHI_FIX                           1   // inter-view prediction and other fixes
+#define QC_MULTI_DIS_CAN                  1         // JCT2-A0097
+#if QC_MULTI_DIS_CAN
+    #define DIS_CANS                      1
+#endif
+
+#define MTK_INTERVIEW_MERGE_A0049         1 //  JCT2-A0049 second part
+
+#define LGE_DVMCP                         1 //  JCT2-A0126     
+#if LGE_DVMCP
+#define DVFROM_LEFTBELOW                  1
+#define DVFROM_LEFT                       2
+#define DVFROM_ABOVERIGHT                 3
+#define DVFROM_ABOVE                      4
+#define DVFROM_ABOVELEFT                  5
+#define DVFROM_COL                        6
+#endif
+
 
 #define HHI_VSO                           1
-#define HHI_VSO_LS_TABLE                  1
+#define HHI_VSO_LS_TABLE                  1 // m23714
 #define HHI_VSO_DIST_INT                  1
 #define HHI_VSO_SYNTH_DIST_OUT            0
 #define HHI_VSO_COLOR_PLANES              1
+#define HHI_VSO_SPEEDUP_A033              1 // JCT2-A0033 modification 1 (changes classes directly related the renderer model 
+                                            // to are not covered by this define, since nearly the entire class has been changed)
+#define HHI_VSO_RM_ASSERTIONS             0 // output VSO assertions
+#define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
+#define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
+#define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
+
 
 #define HHI_INTERVIEW_SKIP                1
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
 
-#define HHI_DMM_WEDGE_INTRA 1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
-#define HHI_DMM_PRED_TEX    1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
+#define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
+#define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 #define DMM_WEDGEMODEL_MIN_SIZE           4
@@ -223,7 +259,15 @@
 #define SCAN_SET_SIZE                     16
 #define LOG2_SCAN_SET_SIZE                4
 
+#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_DELTA_DC
+#define FAST_UDI_MAX_RDMODE_NUM               37          ///< maximum number of RD comparison in fast-UDI estimation loop
+#else
+#define FAST_UDI_MAX_RDMODE_NUM               36          ///< maximum number of RD comparison in fast-UDI estimation loop
+#endif
+#else
 #define FAST_UDI_MAX_RDMODE_NUM               35          ///< maximum number of RD comparison in fast-UDI estimation loop
+#endif
 
 #define ZERO_MVD_EST                          0           ///< Zero Mvd Estimation in normal mode
 
@@ -262,6 +306,15 @@ enum MODE_IDX
 };
 #define NUM_DMM_MODE 4
 #endif
+
+#if LGE_EDGE_INTRA
+#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+#define EDGE_INTRA_IDX  (NUM_INTRA_MODE+NUM_DMM_MODE)
+#endif // HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+#if LGE_EDGE_INTRA_DELTA_DC
+#define EDGE_INTRA_DELTA_IDX          (EDGE_INTRA_IDX+1)
+#endif
+#endif // LGE_EDGE_INTRA
 
 #define IBDI_DISTORTION                0           ///< enable/disable SSE modification when IBDI is used (JCTVC-D152)
 #define FIXED_ROUNDING_FRAME_MEMORY    0           ///< enable/disable fixed rounding to 8-bitdepth of frame memory when IBDI is used
@@ -646,6 +699,18 @@ enum PartSize
   SIZE_NONE = 15
 };
 
+#if HHI_VSO_SPEEDUP_A033
+
+enum BlenMod
+{
+    BLEND_NONE  = -1,
+    BLEND_AVRG  = 0,
+    BLEND_LEFT  = 1,
+    BLEND_RIGHT = 2,
+    BLEND_GEN   =  3
+};
+#endif
+
 /// supported prediction type
 enum PredMode
 {
@@ -710,6 +775,17 @@ enum DFunc
   DF_HADS32   = 26,     ///<  32xM HAD with step
   DF_HADS64   = 27,     ///<  64xM HAD with step
   DF_HADS16N  = 28,     ///< 16NxM HAD with step
+
+#if SAIT_VSO_EST_A0033
+  DF_VSD      = 29,      ///< general size VSD
+  DF_VSD4     = 30,      ///<   4xM VSD
+  DF_VSD8     = 31,      ///<   8xM VSD
+  DF_VSD16    = 32,      ///<  16xM VSD
+  DF_VSD32    = 33,      ///<  32xM VSD
+  DF_VSD64    = 34,      ///<  64xM VSD
+  DF_VSD16N   = 35,      ///< 16NxM VSD
+#endif
+
 
 #if AMP_SAD
   DF_SAD12    = 43,

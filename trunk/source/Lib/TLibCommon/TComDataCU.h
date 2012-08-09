@@ -213,6 +213,18 @@ private:
   Bool*         m_pbResPredFlag;      ///< array of residual prediction flags
 #endif
 
+#if LGE_EDGE_INTRA
+  UChar*        m_pucEdgeCode;          ///< array of edge code
+  UChar*        m_pucEdgeNumber;        ///< total number of edge
+  UChar*        m_pucEdgeStartPos;      ///< starting point position
+  Bool*         m_pbEdgeLeftFirst;      ///< true if edge should be checked in left boundary first
+  Bool*         m_pbEdgePartition;      ///< true if it belongs to region 1, otherwise, region 0
+#if LGE_EDGE_INTRA_DELTA_DC
+  Int*          m_piEdgeDeltaDC0;
+  Int*          m_piEdgeDeltaDC1;
+#endif
+#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -255,6 +267,9 @@ protected:
 
   Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
+#if QC_MULTI_DIS_CAN
+  Bool          xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+#endif 
   
 #if !AMVP_PRUNING_SIMPLIFICATION
   /// remove redundant candidates
@@ -502,8 +517,18 @@ public:
                                           ,Bool bIndependentTileBoundaryEnabled );
 
 #if HHI_INTER_VIEW_MOTION_PRED
+#if !QC_MULTI_DIS_CAN
   Int           getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
+#else
+  Bool          getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
+  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
+  Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
+#if LGE_DVMCP
+  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1 );
+#endif
+
+#endif
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -658,6 +683,11 @@ public:
   UInt          getSliceStartCU         ( UInt pos )                  { return m_uiSliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
   UInt          getEntropySliceStartCU  ( UInt pos )                  { return m_uiEntropySliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }
+
+#if LGE_EDGE_INTRA
+  UInt          getCtxEdgeIntra ( UInt uiAbsPartIdx );
+#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for RD cost storage
   // -------------------------------------------------------------------------------------------------------------------
@@ -732,6 +762,30 @@ public:
   Int   getContourPredTexDeltaDC2         ( UInt uiIdx )          { return m_piContourPredTexDeltaDC2[uiIdx]; }
   Void  setContourPredTexDeltaDC2         ( UInt uiIdx, Int i )   { m_piContourPredTexDeltaDC2[uiIdx] = i;    }
   Void  setContourPredTexDeltaDC2SubParts ( Int iDC2, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+
+#if LGE_EDGE_INTRA
+  UChar*        getEdgeCode( UInt uiIdx )                 { return &m_pucEdgeCode[uiIdx * LGE_EDGE_INTRA_MAX_EDGE_NUM_PER_4x4]; }
+  UChar*        getEdgeNumber( )                          { return m_pucEdgeNumber;           }
+  UChar         getEdgeNumber( UInt uiIdx )               { return m_pucEdgeNumber[uiIdx];    }
+  Void          setEdgeNumber( UInt uiIdx, UChar val )    { m_pucEdgeNumber[uiIdx] = val;     }
+  UChar*        getEdgeStartPos( )                        { return m_pucEdgeStartPos;         }
+  UChar         getEdgeStartPos( UInt uiIdx )             { return m_pucEdgeStartPos[uiIdx];  }
+  Void          setEdgeStartPos( UInt uiIdx, UChar val )  { m_pucEdgeStartPos[uiIdx] = val;   }
+  Bool*         getEdgeLeftFirst( )                       { return m_pbEdgeLeftFirst;         }
+  Bool          getEdgeLeftFirst( UInt uiIdx )            { return m_pbEdgeLeftFirst[uiIdx];  }
+  Void          setEdgeLeftFirst( UInt uiIdx, Bool val )  { m_pbEdgeLeftFirst[uiIdx] = val;   }
+  Bool*         getEdgePartition( UInt uiIdx )              { return &m_pbEdgePartition[uiIdx * 16]; }
+  Void          reconPartition( UInt uiAbsPartIdx, UInt uiDepth, Bool bLeft, UChar ucStartPos, UChar ucNumEdge, UChar* pucEdgeCode, Bool* pbRegion );
+
+#if LGE_EDGE_INTRA_DELTA_DC
+  Int*          getEdgeDeltaDC0( )                          { return m_piEdgeDeltaDC0; }
+  Int*          getEdgeDeltaDC1( )                          { return m_piEdgeDeltaDC1; }
+  Int           getEdgeDeltaDC0( UInt uiIdx )               { return m_piEdgeDeltaDC0[uiIdx]; }
+  Int           getEdgeDeltaDC1( UInt uiIdx )               { return m_piEdgeDeltaDC1[uiIdx]; }
+  Void          setEdgeDeltaDC0( UInt uiIdx, Int val )      { m_piEdgeDeltaDC0[uiIdx] = val;  }
+  Void          setEdgeDeltaDC1( UInt uiIdx, Int val )      { m_piEdgeDeltaDC1[uiIdx] = val;  }
+#endif
 #endif
 };
 

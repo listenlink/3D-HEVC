@@ -73,6 +73,9 @@ void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg);
 TAppEncCfg::TAppEncCfg()
 {
   m_aidQP = NULL;
+#if FIXES
+  m_aidQPdepth = NULL;
+#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -81,6 +84,14 @@ TAppEncCfg::~TAppEncCfg()
   {
     delete[] m_aidQP; m_aidQP = NULL;
   }
+
+#if FIXES
+  if ( m_aidQPdepth )
+  {
+    delete[] m_aidQPdepth; m_aidQPdepth = NULL;
+  }
+#endif
+
   for(Int i = 0; i< m_pchInputFileList.size(); i++ )
   {
     if ( m_pchInputFileList[i] != NULL )
@@ -305,17 +316,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #if HHI_VSO
   ("VSOConfig",                       m_pchVSOConfig            , (Char *) 0    , "VSO configuration")
-    ("VSO",                             m_bUseVSO                 , false         , "Use VSO" )
-    // GT: For development, will be removed later
+  ("VSO",                             m_bUseVSO                 , false         , "Use VSO" )    
   ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
+  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1    , "Lambda Scaling for VSO")
+
 #if HHI_VSO_LS_TABLE
-  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1  , "Lambda Scaling for VSO")
-#else
-  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 0.5  , "Lambda Scaling for VSO")
+  ("VSOLSTable",                      m_bVSOLSTable             , true          , "Depth QP dependent video/depth rate allocation by Lagrange multiplier" )    
 #endif
-    ("ForceLambdaScaleVSO",             m_bForceLambdaScaleVSO    , false         , "Force using Lambda Scale VSO also in non-VSO-Mode")
+
+#if SAIT_VSO_EST_A0033
+  ("UseEstimatedVSD",                 m_bUseEstimatedVSD        , true          , "Model based VSD estimation instead of rendering based for some encoder decisions" )      
+#endif
+#if LGE_VSO_EARLY_SKIP_A0093
+  ("VSOEarlySkip",                    m_bVSOEarlySkip           , true          , "Early skip of VSO computation if synthesis error assumed to be zero" )      
+#endif
+  ("ForceLambdaScaleVSO",             m_bForceLambdaScaleVSO    , false         , "Force using Lambda Scale VSO also in non-VSO-Mode")
 #if HHI_VSO_DIST_INT
-  ("AllowNegDist",                    m_bAllowNegDist           , true         , "Allow negative Distortion in VSO")
+  ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 
 #endif
@@ -666,8 +683,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
      0.117851, 0.147314, 0.176777, 0.235702, 0.294628, 0.353553, 0.471405, 0.589256, 0.707107, 0.707100, 
      0.753550, 0.800000  
   }; 
-  AOT( (m_aiQP[1] < 0) || (m_aiQP[1] > 51));
-  m_dLambdaScaleVSO *= adLambdaScaleTable[m_aiQP[1]]; 
+  if ( m_bVSOLSTable )
+  {
+    AOT( (m_aiQP[1] < 0) || (m_aiQP[1] > 51));
+    m_dLambdaScaleVSO *= adLambdaScaleTable[m_aiQP[1]]; 
+  }
 #endif
 #endif
 
@@ -1561,6 +1581,16 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if HHI_VSO_DIST_INT
     printf("VSO Negative Distortion      : %d\n",    m_bAllowNegDist ? 1 : 0);
 #endif
+#if HHI_VSO_LS_TABLE
+    printf("VSO LS Table                 : %d\n",    m_bVSOLSTable ? 1 : 0);    
+#endif
+#if SAIT_VSO_EST_A0033
+    printf("VSO Estimated VSD            : %d\n",    m_bUseEstimatedVSD ? 1 : 0);        
+#endif
+#if LGE_VSO_EARLY_SKIP_A0093
+    printf("VSO Early Skip               : %d\n",    m_bVSOEarlySkip ? 1 : 0);    
+#endif
+   
   }
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1657,7 +1687,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
-#endif
+#endif  
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );
 #endif

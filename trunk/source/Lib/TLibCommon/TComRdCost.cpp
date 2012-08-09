@@ -44,6 +44,10 @@
 //! \ingroup TLibCommon
 //! \{
 
+#if SAIT_VSO_EST_A0033
+Double TComRdCost::m_dDisparityCoeff = 1.0;
+#endif
+
 TComRdCost::TComRdCost()
 {
   init();
@@ -231,6 +235,16 @@ Void TComRdCost::init()
   m_afpDistortFunc[27] = TComRdCost::xGetHADs;
   m_afpDistortFunc[28] = TComRdCost::xGetHADs;
   
+#if SAIT_VSO_EST_A0033
+  m_afpDistortFunc[29]  = TComRdCost::xGetVSD;
+  m_afpDistortFunc[30]  = TComRdCost::xGetVSD4;
+  m_afpDistortFunc[31]  = TComRdCost::xGetVSD8;
+  m_afpDistortFunc[32]  = TComRdCost::xGetVSD16;
+  m_afpDistortFunc[33]  = TComRdCost::xGetVSD32;
+  m_afpDistortFunc[34]  = TComRdCost::xGetVSD64;
+  m_afpDistortFunc[35]  = TComRdCost::xGetVSD16N;
+#endif
+
 #if !FIX203
   m_puiComponentCostOriginP = NULL;
   m_puiComponentCost        = NULL;
@@ -247,6 +261,9 @@ Void TComRdCost::init()
   m_paaiShiftLUTs           = NULL; 
   m_uiNumberRefPics         = 0;
   m_bUseVSO                 = false;
+#if SAIT_VSO_EST_A0033
+  m_bUseEstimatedVSD        = false; 
+#endif
   m_uiVSOMode               = 0; 
   m_fpDistortFuncVSO        = NULL; 
   m_pcRenModel              = NULL; 
@@ -272,25 +289,22 @@ Void TComRdCost::initRateDistortionModel( Int iSubPelSearchLimit )
     m_iSearchLimit = iSubPelSearchLimit;
     
     m_puiComponentCostOriginP = new UInt[ 4 * iSubPelSearchLimit ];
-#if HHI_FIX
     m_puiMultiviewRegCostHorOrgP  = new UInt[ 4 * iSubPelSearchLimit ];
     m_puiMultiviewRegCostVerOrgP  = new UInt[ 4 * iSubPelSearchLimit ];
-#endif
+
     iSubPelSearchLimit *= 2;
     
     m_puiComponentCost = m_puiComponentCostOriginP + iSubPelSearchLimit;
-#if HHI_FIX
+
     m_puiMultiviewRegCostHor = m_puiMultiviewRegCostHorOrgP + iSubPelSearchLimit;
     m_puiMultiviewRegCostVer = m_puiMultiviewRegCostVerOrgP + iSubPelSearchLimit;
-#endif
+
     
     for( Int n = -iSubPelSearchLimit; n < iSubPelSearchLimit; n++)
     {
       m_puiComponentCost[n] = xGetComponentBits( n );
-#if HHI_FIX
       m_puiMultiviewRegCostHor[n] = xGetComponentBits( n );  // first version
       m_puiMultiviewRegCostVer[n] = xGetComponentBits( n );  // first version
-#endif
     }
   }
 }
@@ -302,7 +316,7 @@ Void TComRdCost::xUninit()
     delete [] m_puiComponentCostOriginP;
     m_puiComponentCostOriginP = NULL;
   }
-#if HHI_FIX
+
   if( m_puiMultiviewRegCostHorOrgP )
     {
       delete [] m_puiMultiviewRegCostHorOrgP;
@@ -313,7 +327,6 @@ Void TComRdCost::xUninit()
     delete [] m_puiMultiviewRegCostVerOrgP;
     m_puiMultiviewRegCostVerOrgP = NULL;
   }
-#endif
 }
 #endif
 
@@ -564,6 +577,29 @@ UInt TComRdCost::getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgS
 #endif
 }
 
+
+#if SAIT_VSO_EST_A0033
+UInt TComRdCost::getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, Pel* piVirRec, Pel* piVirOrg, Int iVirStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc )
+{
+  AOT( ( m_dDisparityCoeff <= 0 ) || ( m_dDisparityCoeff > 10 ) );
+
+  DistParam cDtParam;
+  setDistParam( uiBlkWidth, uiBlkHeight, eDFunc, cDtParam );
+  cDtParam.pOrg       = piOrg;
+  cDtParam.pCur       = piCur;
+  cDtParam.pVirRec    = piVirRec;
+  cDtParam.pVirOrg    = piVirOrg;
+  cDtParam.iStrideVir = iVirStride;
+  cDtParam.iStrideOrg = iOrgStride;
+  cDtParam.iStrideCur = iCurStride;
+  cDtParam.iStep      = 1;
+
+  cDtParam.bApplyWeight = false;
+  cDtParam.uiComp       = 255;    // just for assert: to be sure it was set before use, since only values 0,1 or 2 are allowed.
+
+  return cDtParam.DistFunc( &cDtParam );
+}
+#endif
 
 
 // ====================================================================================================================
@@ -2025,6 +2061,237 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
 }
 #endif
 
+
+#if SAIT_VSO_EST_A0033
+UInt TComRdCost::getVSDEstimate( Int dDM, Pel* pOrg, Int iOrgStride,  Pel* pVirRec, Pel* pVirOrg, Int iVirStride, Int x, Int y )
+{
+  Double dD;
+  Int iTemp;
+
+  dD = ( (Double) ( dDM >> g_uiBitIncrement ) ) * m_dDisparityCoeff;
+
+  iTemp = (Int) ROUND( 0.5 * fabs(dD) * ( abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x-1+y*iVirStride ] ) + abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x+1+y*iVirStride ] ) ) );
+
+  return (UInt) ( (iTemp*iTemp)>>1 );
+}
+
+UInt TComRdCost::xGetVSD( DistParam* pcDtParam )
+{
+  Pel* piOrg    = pcDtParam->pOrg;
+  Pel* piCur    = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows    = pcDtParam->iRows;
+  Int  iCols    = pcDtParam->iCols;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < iCols; x++ )
+    {
+      dDM = (Int) ( piOrg[x  ] - piCur[x  ] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur; 
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD4( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    dDM = (Int) ( piOrg[0] - piCur[0] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 0, y ) ) >> uiShift;
+    dDM = (Int) ( piOrg[1] - piCur[1] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 1, y ) ) >> uiShift;
+    dDM = (Int) ( piOrg[2] - piCur[2] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 2, y ) ) >> uiShift;
+    dDM = (Int) ( piOrg[3] - piCur[3] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 3, y ) ) >> uiShift;
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD8( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 8; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD16( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 16; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD16N( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iCols   = pcDtParam->iCols;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < iCols; x+=16 )
+    {
+      for ( Int k = 0 ; k < 16 ; k++ )
+      {
+        dDM = (Int) ( piOrg[x+k] - piCur[x+k] );
+        uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x+k, y ) >> uiShift;
+      }
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD32( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 32 ; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD64( DistParam* pcDtParam )
+{
+  Pel* piOrg      = pcDtParam->pOrg;
+  Pel* piCur      = pcDtParam->pCur;
+  Pel* piVirRec   = pcDtParam->pVirRec;
+  Pel* piVirOrg   = pcDtParam->pVirOrg;
+  Int  iRows      = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = g_uiBitIncrement<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 64; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+#endif
+
 // --------------------------------------------------------------------------------------------------------------------
 // HADAMARD with step (used in fractional search)
 // --------------------------------------------------------------------------------------------------------------------
@@ -2667,7 +2934,11 @@ Void TComRdCost::setLambdaVSO( Double dLambdaVSO )
 Dist TComRdCost::xGetDistVSOMode4( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD )
 { 
   AOT(bSAD); 
+#ifdef LGE_VSO_EARLY_SKIP_A0093
+  RMDist iDist = m_pcRenModel->getDist( iStartPosX, iStartPosY, (Int) uiBlkWidth, (Int) uiBlkHeight, iCurStride, piCur, piOrg, iOrgStride);  
+#else
   RMDist iDist = m_pcRenModel->getDist( iStartPosX, iStartPosY, (Int) uiBlkWidth, (Int) uiBlkHeight, iCurStride, piCur );  
+#endif
 
   RMDist iDistMin = (RMDist) RDO_DIST_MIN; 
 #if HHI_VSO_DIST_INT

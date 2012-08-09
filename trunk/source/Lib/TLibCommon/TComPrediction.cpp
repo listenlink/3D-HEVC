@@ -45,6 +45,10 @@
 // Constructor / destructor / initialize
 // ====================================================================================================================
 
+#if LGE_EDGE_INTRA
+#define MAX_DISTANCE_EDGEINTRA 255
+#endif
+
 TComPrediction::TComPrediction()
 : m_pLumaRecBuffer(0)
 {
@@ -418,6 +422,187 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
   return false;
 }
 
+#if LGE_EDGE_INTRA
+Void TComPrediction::predIntraLumaEdge ( TComDataCU* pcCU, TComPattern* pcTComPattern, UInt uiAbsPartIdx, Int iWidth, Int iHeight, Pel* piPred, UInt uiStride, Bool bDelta )
+{
+  Pel *piDst = piPred;
+  Int *piSrc;
+  Int iSrcStride = ( iWidth<<1 ) + 1;
+  Int iDstStride = uiStride;
+
+  piSrc = pcTComPattern->getPredictorPtr( 0, g_aucConvertToBit[ iWidth ] + 2, m_piYuvExt );
+
+  xPredIntraEdge ( pcCU, uiAbsPartIdx, iWidth, iHeight, piSrc, iSrcStride, piDst, iDstStride
+#if LGE_EDGE_INTRA_DELTA_DC
+    , bDelta
+#endif
+    );
+}
+
+Pel  TComPrediction::xGetNearestNeighbor( Int x, Int y, Int* pSrc, Int srcStride, Int iWidth, Int iHeight, Bool* bpRegion )
+{
+  Bool bLeft = (x < y) ? true : false;
+  Bool bFound = false;
+  Int  iFoundX = -1, iFoundY = -1;
+  Int  cResult = 0;
+
+  UChar* piTopDistance = new UChar[iWidth];
+  UChar* piLeftDistance = new UChar[iHeight];
+
+  for( Int i = 0; i < iWidth; i++ )
+  {
+    int Abs = x > i ? x - i : i - x;
+    piTopDistance[ i ] = y + Abs;
+
+    Abs = y > i ? y - i : i - y;
+    piLeftDistance[ i ] = x + Abs;
+  }
+
+  for( Int dist = 0; dist < MAX_DISTANCE_EDGEINTRA && !bFound; dist++ )
+  {
+    if( !bLeft )
+    {
+      for( Int i = 0; i < iWidth; i++ )
+      {
+        if( piTopDistance[ i ] == dist )
+        {
+          if( bpRegion[ i ] == bpRegion[ x + y * iWidth ] )
+          {
+            iFoundX = i;
+            iFoundY = 0;
+            bFound = true;
+          }
+        }
+      }
+      for( Int i = 0; i < iHeight; i++ )
+      {
+        if( piLeftDistance[ i ] == dist )
+        {
+          if( bpRegion[ i * iWidth ] == bpRegion[ x + y * iWidth ] )
+          {
+            iFoundX = 0;
+            iFoundY = i;
+            bFound = true;
+          }
+        }
+      }
+    }
+    else
+    {
+      for( Int i = 0; i < iHeight; i++ )
+      {
+        if( piLeftDistance[ i ] == dist )
+        {
+          if( bpRegion[ i * iWidth ] == bpRegion[ x + y * iWidth ] )
+          {
+            iFoundX = 0;
+            iFoundY = i;
+            bFound = true;
+          }
+        }
+      }
+      for( Int i = 0; i < iWidth; i++ )
+      {
+        if( piTopDistance[ i ] == dist )
+        {
+          if( bpRegion[ i ] == bpRegion[ x + y * iWidth ] )
+          {
+            iFoundX = i;
+            iFoundY = 0;
+            bFound = true;
+          }
+        }
+      }
+    }
+  }
+
+  if( iFoundY == 0 )
+  {
+    cResult = pSrc[ iFoundX + 1 ];
+  }
+  else // iFoundX == 0
+  {
+    cResult = pSrc[ (iFoundY + 1) * srcStride ];
+  }
+
+  delete[] piTopDistance;  piTopDistance = NULL;
+  delete[] piLeftDistance; piLeftDistance = NULL;
+
+  assert( bFound );
+
+  return cResult;
+}
+
+Void TComPrediction::xPredIntraEdge( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iWidth, Int iHeight, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, Bool bDelta )
+{
+  Pel* pDst = rpDst;
+  Bool* pbRegion = pcCU->getEdgePartition( uiAbsPartIdx );
+
+  // Do prediction
+  {
+    //UInt uiSum0 = 0, uiSum1 = 0;
+    Int iSum0 = 0, iSum1 = 0;
+    //UInt uiMean0, uiMean1;
+    Int iMean0, iMean1;
+    //UInt uiCount0 = 0, uiCount1 = 0;
+    Int iCount0 = 0, iCount1 = 0;
+    for( UInt ui = 0; ui < iWidth; ui++ )
+    {
+      if( pbRegion[ ui ] == false )
+      {
+        iSum0 += (pSrc[ ui + 1 ]);
+        iCount0++;
+      }
+      else
+      {
+        iSum1 += (pSrc[ ui + 1 ]);
+        iCount1++;
+      }
+    }
+    for( UInt ui = 0; ui < iHeight; ui++ ) // (0,0) recount (to avoid division)
+    {
+      if( pbRegion[ ui * iWidth ] == false )
+      {
+        iSum0 += (pSrc[ (ui + 1) * srcStride ]);
+        iCount0++;
+      }
+      else
+      {
+        iSum1 += (pSrc[ (ui + 1) * srcStride ]);
+        iCount1++;
+      }
+    }
+    if( iCount0 == 0 )
+      assert(false);
+    if( iCount1 == 0 )
+      assert(false);
+    iMean0 = iSum0 / iCount0; // TODO : integer op.
+    iMean1 = iSum1 / iCount1;
+#if LGE_EDGE_INTRA_DELTA_DC
+    if( bDelta ) 
+    {
+      Int iDeltaDC0 = pcCU->getEdgeDeltaDC0( uiAbsPartIdx );
+      Int iDeltaDC1 = pcCU->getEdgeDeltaDC1( uiAbsPartIdx );
+      xDeltaDCQuantScaleUp( pcCU, iDeltaDC0 );
+      xDeltaDCQuantScaleUp( pcCU, iDeltaDC1 );
+      iMean0 = Clip( iMean0 + iDeltaDC0 );
+      iMean1 = Clip( iMean1 + iDeltaDC1 );
+    }
+#endif
+    for( UInt ui = 0; ui < iHeight; ui++ )
+    {
+      for( UInt uii = 0; uii < iWidth; uii++ )
+      {
+        if( pbRegion[ uii + ui * iWidth ] == false )
+          pDst[ uii + ui * dstStride ] = iMean0;
+        else
+          pDst[ uii + ui * dstStride ] = iMean1;
+      }
+    }
+  }
+}
+#endif
+
 #if DEPTH_MAP_GENERATION
 Void TComPrediction::motionCompensation( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY )
 #else
@@ -568,7 +753,13 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   if( bPrdDepthMap )
   {
     UInt uiRShift = 0;
-    xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMap(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
+#if PDM_REMOVE_DEPENDENCE
+    if( pcCU->getPic()->getStoredPDMforV2() == 1 )
+      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMapTemp(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
+    else
+#endif
+      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMap(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
+
     return;
   }
 #endif

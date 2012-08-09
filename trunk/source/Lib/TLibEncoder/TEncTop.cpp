@@ -596,6 +596,9 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+#if FIXES
+  rpcPic->getPicYuvOrg()->setBorderExtension(false); 
+#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -980,11 +983,7 @@ Void TEncTop::xInitRPS()
    // for a specific slice (with POC = POCCurr)
 Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic )
 {
-#if HHI_FIX
   if( slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && POCCurr == 0 )
-#else
-  if( slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV )
-#endif
   {
     TComReferencePictureSet* rps = slice->getLocalRPS();
     rps->setNumberOfNegativePictures(0);

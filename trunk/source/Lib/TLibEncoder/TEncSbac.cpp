@@ -105,6 +105,12 @@ TEncSbac::TEncSbac()
 , m_cDmmModeSCModel           ( 1,             1,               NUM_DMM_MODE_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmDataSCModel           ( 1,             1,               NUM_DMM_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if LGE_EDGE_INTRA
+, m_cEdgeIntraSCModel         ( 1,             1,               NUM_EDGE_INTRA_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+#if LGE_EDGE_INTRA_DELTA_DC
+, m_cEdgeIntraDeltaDCSCModel  ( 1,             1,               NUM_EDGE_INTRA_DELTA_DC_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
   m_iSliceGranularity = 0;
@@ -179,6 +185,12 @@ Void TEncSbac::resetEntropy           ()
   m_cDmmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_FLAG );
   m_cDmmModeSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_MODE );
   m_cDmmDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_DATA );
+#endif
+#if LGE_EDGE_INTRA
+  m_cEdgeIntraSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_EDGE_INTRA );
+#if LGE_EDGE_INTRA_DELTA_DC
+  m_cEdgeIntraDeltaDCSCModel.initBuffer  ( eSliceType, iQp, (UChar*)INIT_EDGE_INTRA_DELTA_DC );
+#endif
 #endif
 
   // new structure
@@ -344,7 +356,7 @@ void TEncSbac::codeSEI(const SEI&)
 #if VIDYO_VPS_INTEGRATION
 Void TEncSbac::codeVPS( TComVPS* pcVPS )
 {
-	assert (0);
+  assert (0);
   return;
 }
 #endif
@@ -827,6 +839,81 @@ Void TEncSbac::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
   DTRACE_CABAC_V( uiCtx )
   DTRACE_CABAC_T( "\n" )
 }
+
+#if LGE_EDGE_INTRA
+Void TEncSbac::xCodeEdgeIntraInfo( TComDataCU* pcCU, UInt uiPartIdx )
+{
+  UInt   uiDepth        = pcCU->getDepth( uiPartIdx ) + (pcCU->getPartitionSize( uiPartIdx ) == SIZE_NxN ? 1 : 0);
+  UInt   uiCtxEdgeIntra = pcCU->getCtxEdgeIntra( uiPartIdx );
+  UChar* pucSymbolList  = pcCU->getEdgeCode( uiPartIdx );
+  UChar  ucEdgeNumber   = pcCU->getEdgeNumber( uiPartIdx );
+  Bool   bLeft          = pcCU->getEdgeLeftFirst( uiPartIdx );
+  UChar  ucStart        = pcCU->getEdgeStartPos( uiPartIdx );
+  UInt   uiSymbol;
+
+  // 1. Top(0) or Left(1)
+  uiSymbol = (bLeft == false) ? 0 : 1;
+  m_pcBinIf->encodeBinEP( uiSymbol );
+
+  // 2. Start position (lowest bit first)
+  uiSymbol = ucStart;
+  for( UInt ui = 6; ui > uiDepth; ui-- ) // 64(0)->6, 32(1)->5, 16(2)->4, 8(3)->3, 4(4)->2
+  {
+    m_pcBinIf->encodeBinEP( uiSymbol & 0x1 );
+    uiSymbol >>= 1;
+  }
+
+  // 3. Number of edges
+  uiSymbol = ucEdgeNumber > 0 ? ucEdgeNumber - 1 : 0;
+  for( UInt ui = 7; ui > uiDepth; ui-- ) // 64(0)->7, 32(1)->6, 16(2)->5, 8(3)->4, 4(4)->3
+  {
+    m_pcBinIf->encodeBinEP( uiSymbol & 0x1 );
+    uiSymbol >>= 1;
+  }
+
+  if(uiSymbol != 0)
+  {
+    printf(" ucEdgeNumber %d at depth %d\n",ucEdgeNumber, uiDepth);
+    assert(false);
+  }
+
+  // 4. Edges
+  for( Int iPtr2 = 0; iPtr2 < ucEdgeNumber; iPtr2++ )
+  {
+    UInt uiReorderSymbol = pucSymbolList[iPtr2];
+
+    //printf ("Ptr = %d, Symbol = %d\n", iPtr2, uiSymbol);
+
+    // Left-friendly direction (Top start)
+    // 0 (   0deg) => 0
+    // 1 (  45deg) => 10
+    // 2 ( -45deg) => 110
+    // 3 (  90deg) => 1110
+    // 4 ( -90deg) => 11110
+    // 5 ( 135deg) => 111110
+    // 6 (-135deg) => 111111
+    // Right-friendly direction (Left start)
+    // 0 (   0deg) => 0
+    // 2 ( -45deg) => 10
+    // 1 (  45deg) => 110
+    // 4 ( -90deg) => 1110
+    // 3 (  90deg) => 11110
+    // 6 (-135deg) => 111110
+    // 5 ( 135deg) => 111111
+
+    // refer to a paper "An efficient chain code with Huffman coding"
+
+    for( UInt ui = 0; ui < uiReorderSymbol; ui++ )
+    {
+      m_pcBinIf->encodeBin( 1, m_cEdgeIntraSCModel.get( 0, 0, uiCtxEdgeIntra ) );
+    }
+
+    if( uiReorderSymbol != 6 )
+      m_pcBinIf->encodeBin( 0, m_cEdgeIntraSCModel.get( 0, 0, uiCtxEdgeIntra ) );
+  }
+}
+#endif
+
 Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiDir         = pcCU->getLumaIntraDir( uiAbsPartIdx );
@@ -834,9 +921,17 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   if( pcCU->getSlice()->getSPS()->getUseDMM() && pcCU->getWidth( uiAbsPartIdx ) <= DMM_WEDGEMODEL_MAX_SIZE )
   {
+#if LGE_EDGE_INTRA
+    m_pcBinIf->encodeBin( uiDir >= NUM_INTRA_MODE && uiDir < EDGE_INTRA_IDX, m_cDmmFlagSCModel.get(0, 0, 0) );
+#else
     m_pcBinIf->encodeBin( uiDir >= NUM_INTRA_MODE, m_cDmmFlagSCModel.get(0, 0, 0) );
+#endif
   }
+#if LGE_EDGE_INTRA
+  if( uiDir >= NUM_INTRA_MODE && uiDir < EDGE_INTRA_IDX )
+#else
   if( uiDir >= NUM_INTRA_MODE )
+#endif
   {
     assert( pcCU->getWidth( uiAbsPartIdx ) <= DMM_WEDGEMODEL_MAX_SIZE );
     UInt uiDMMode = uiDir - NUM_INTRA_MODE;
@@ -869,10 +964,49 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #endif
   }
   else
+#if LGE_EDGE_INTRA
+    if ( uiDir >= EDGE_INTRA_IDX)
+    {
+      m_pcBinIf->encodeBin( 0, m_cCUIntraPredSCModel.get( 0, 0, 0 ) );
+      m_pcBinIf->encodeBinsEP( 63, 6 );
+      xCodeEdgeIntraInfo( pcCU, uiAbsPartIdx );
+#if LGE_EDGE_INTRA_DELTA_DC
+      m_pcBinIf->encodeBin( (uiDir == EDGE_INTRA_DELTA_IDX), m_cEdgeIntraDeltaDCSCModel.get(0, 0, 0) );
+      if( uiDir == EDGE_INTRA_DELTA_IDX )
+      {
+        Int iDeltaDC0 = pcCU->getEdgeDeltaDC0( uiAbsPartIdx );
+        Int iDeltaDC1 = pcCU->getEdgeDeltaDC1( uiAbsPartIdx );
+
+        xWriteExGolombLevel( UInt( abs( iDeltaDC0 ) ), m_cEdgeIntraDeltaDCSCModel.get(0, 0, 1) );
+        if ( iDeltaDC0 != 0 )
+        {
+          UInt uiSign = iDeltaDC0 > 0 ? 0 : 1;
+          m_pcBinIf->encodeBinEP( uiSign );
+        }
+        xWriteExGolombLevel( UInt( abs( iDeltaDC1 ) ), m_cEdgeIntraDeltaDCSCModel.get(0, 0, 1) );
+        if ( iDeltaDC1 != 0 )
+        {
+          UInt uiSign = iDeltaDC1 > 0 ? 0 : 1;
+          m_pcBinIf->encodeBinEP( uiSign );
+        }
+      }
+#endif
+    }
+    else
+#endif // LGE_EDGE_INTRA
   {
 #endif
 #if !LOGI_INTRA_NAME_3MPM
   Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
+#endif
+#if LGE_EDGE_INTRA
+  Bool bCodeEdgeIntra = false;
+  if( pcCU->getSlice()->getSPS()->isDepth() )
+  {
+    UInt uiPUWidth = pcCU->getWidth( uiAbsPartIdx ) >> (pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 1 : 0);
+    if( uiPUWidth <= LGE_EDGE_INTRA_MAX_SIZE && uiPUWidth >= LGE_EDGE_INTRA_MIN_SIZE )
+      bCodeEdgeIntra = true;
+  }
 #endif
   
 #if LOGI_INTRA_NAME_3MPM
@@ -931,6 +1065,10 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 #if LOGI_INTRA_NAME_3MPM
     m_pcBinIf->encodeBinsEP( uiDir, 5 );
+#if LGE_EDGE_INTRA
+  if (bCodeEdgeIntra)
+    if (uiDir == 31) m_pcBinIf->encodeBinsEP(0,1);
+#endif
 #else
     if ( uiDir < 31 )
     {
@@ -2269,7 +2407,7 @@ Void  TEncSbac::loadContexts ( TEncSbac* pScr)
   this->xCopyContextsFrom(pScr);
 }
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX || (LGE_EDGE_INTRA && LGE_EDGE_INTRA_DELTA_DC)
 Void TEncSbac::xWriteExGolombLevel( UInt uiSymbol, ContextModel& rcSCModel  )
 {
   if( uiSymbol )

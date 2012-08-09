@@ -106,7 +106,7 @@ private:
   ParameterSetMap<TComPPS> m_ppsBuffer; 
   ParameterSetMap<TComAPS> m_apsBuffer; 
 #if VIDYO_VPS_INTEGRATION
-	ParameterSetMap<TComVPS> m_vpsBuffer;
+  ParameterSetMap<TComVPS> m_vpsBuffer;
 #endif
 };
 

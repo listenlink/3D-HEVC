@@ -55,7 +55,7 @@ Void TExtrTop::init()
 Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds )
 {
 #if VIDYO_VPS_INTEGRATION
-	//extraction now has to be done using layer_id
+  //extraction now has to be done using layer_id
   UInt uiLayerId = nalu.m_layerId;
 #else
   UInt uiLayerId = xGetLayerId( nalu.m_viewId, nalu.m_isDepth );

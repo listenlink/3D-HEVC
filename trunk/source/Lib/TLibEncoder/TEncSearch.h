@@ -188,7 +188,7 @@ public:
   Void predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
 #if LG_RESTRICTEDRESPRED_M24766
-								  TComYuv*     rpcResiPredYuv,
+                                  TComYuv*    rpcResiPredYuv,
 #endif
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
@@ -258,7 +258,11 @@ protected:
                                     TComYuv*     pcOrgYuv, 
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
-                                    Dist&        ruiDist );
+                                    Dist&        ruiDist 
+#if LG_ZEROINTRADEPTHRESI_M26039
+                                   ,Bool        bZeroResi = false
+#endif
+                                   );
   Void  xIntraCodingChromaBlk     ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
@@ -277,9 +281,13 @@ protected:
                                     Dist&        ruiDistY,
                                     Dist&        ruiDistC,
 #if HHI_RQT_INTRA_SPEEDUP
-                                   Bool         bCheckFirst,
+                                    Bool         bCheckFirst,
 #endif
-                                   Double&      dRDCost );
+                                    Double&      dRDCost 
+#if LG_ZEROINTRADEPTHRESI_M26039
+                                   ,Bool         bZeroResi = false
+#endif
+                                  );
   
   Void  xSetIntraResultQT         ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
@@ -320,6 +328,16 @@ protected:
                                     Bool           bAboveAvail, 
                                     Bool           bLeftAvail );
 #endif
+
+#if LGE_EDGE_INTRA
+  Bool  xEdgePartition       ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );
+  Bool  xCheckTerminatedEdge ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
+  Bool  xConstructChainCode  ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );
+#if LGE_EDGE_INTRA_DELTA_DC
+  Void  xAssignEdgeIntraDeltaDCs( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piOrig, UInt uiStride, Pel* piPredic, UInt uiWidth, UInt uiHeight );
+#endif
+#endif
+
 #if HHI_DMM_WEDGE_INTRA
   Void findWedgeFullMinDist       ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,
@@ -443,7 +461,7 @@ protected:
   Void xMergeEstimation           ( TComDataCU*     pcCU,
                                     TComYuv*        pcYuvOrg,
 #if LG_RESTRICTEDRESPRED_M24766
-									TComYuv*        rpcResiPredYuv, 
+                                    TComYuv*        rpcResiPredYuv, 
 #endif
                                     Int             iPartIdx,
                                     UInt&           uiInterDir,

@@ -150,11 +150,11 @@ class TComVPS
 {
 private:
   Int         m_VPSId;
-	UInt				m_uiMaxTLayers;
-	UInt				m_uiMaxLayers;
-	Bool				m_bTemporalIdNestingFlag;
+  UInt        m_uiMaxTLayers;
+  UInt        m_uiMaxLayers;
+  Bool        m_bTemporalIdNestingFlag;
 
-	UInt        m_uiExtensionType;
+  UInt        m_uiExtensionType;
   
   Bool        m_bDependentFlag[MAX_LAYER_NUM];
   UInt        m_uiViewId[MAX_LAYER_NUM];
@@ -169,18 +169,18 @@ private:
 public:
   TComVPS();
   virtual ~TComVPS();
-	
+  
   Int     getVPSId       ()                   { return m_VPSId;          }
   Void    setVPSId       (Int i)              { m_VPSId = i;             }
-	
+  
   UInt    getMaxTLayers  ()                   { return m_uiMaxTLayers;   }
   Void    setMaxTLayers  (UInt t)             { m_uiMaxTLayers = t; }
     
   UInt    getMaxLayers   ()                   { return m_uiMaxLayers;   }
-	Void    setMaxLayers   (UInt l)             { m_uiMaxLayers = l; }
-	
+  Void    setMaxLayers   (UInt l)             { m_uiMaxLayers = l; }
+  
   Bool    getTemporalNestingFlag   ()         { return m_uiMaxLayers;   }
-	Void    setTemporalNestingFlag   (UInt t)   { m_bTemporalIdNestingFlag = t; }
+  Void    setTemporalNestingFlag   (UInt t)   { m_bTemporalIdNestingFlag = t; }
   
   Void    setExtensionType(UInt v)                     { m_uiExtensionType = v;    }
   UInt    getExtensionType()                             { return m_uiExtensionType; }
@@ -218,7 +218,7 @@ class TComSPS
 {
 private:
 #if VIDYO_VPS_INTEGRATION
-	Int					m_VPSId;
+  Int          m_VPSId;
 #endif
   Int         m_SPSId;
   Int         m_ProfileIdc;
@@ -378,7 +378,7 @@ public:
   TComSPS();
   virtual ~TComSPS();
 #if VIDYO_VPS_INTEGRATION
-	Int  getVPSId       ()         { return m_VPSId;          }
+  Int  getVPSId       ()         { return m_VPSId;          }
   Void setVPSId       (Int i)    { m_VPSId = i;             }
 #endif
   Int  getSPSId       ()         { return m_SPSId;          }

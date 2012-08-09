@@ -151,6 +151,13 @@
 #define NUM_DMM_DATA_CTX              3       ///< number of context models for DMM data
 #endif
 
+#if LGE_EDGE_INTRA
+#define NUM_EDGE_INTRA_CTX            1
+#if LGE_EDGE_INTRA_DELTA_DC
+#define NUM_EDGE_INTRA_DELTA_DC_CTX   2 // one for Delta_DC flag, another for Delta_DC value
+#endif
+#endif
+
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -1271,10 +1278,42 @@ INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] =
     CNU, CNU, CNU
   }
 };
+
+#if LGE_EDGE_INTRA
+static const Short
+INIT_EDGE_INTRA[3][NUM_EDGE_INTRA_CTX] =
+{
+  {
+    CNU
+  },
+  {
+    CNU
+  },
+  {
+    CNU
+  }
+};
+
+#if LGE_EDGE_INTRA_DELTA_DC
+static const Short
+INIT_EDGE_INTRA_DELTA_DC[3][NUM_EDGE_INTRA_DELTA_DC_CTX] =
+{
+  {
+    CNU, CNU
+  },
+  {
+    CNU, CNU
+  },
+  {
+    CNU, CNU
+  }
+};
+#endif
+#endif
+
 #endif
 
 //! \}
-
 
 #endif
 

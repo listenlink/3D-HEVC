@@ -215,22 +215,22 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Double    m_dMultiviewMvRegLambdaScale;                     ///< lambda scale for multiview motion vectors regularization
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
-  UInt      m_uiMultiviewResPredMode;                         ///< using multiview residual prediction
+  UInt      m_uiMultiviewResPredMode;          ///< using multiview residual prediction
 #endif
 
 #if FAST_DECISION_FOR_MRG_RD_COST
-  Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost 
+  Bool      m_useFastDecisionForMerge;         ///< flag for using Fast Decision Merge RD-Cost 
 #endif
-  Bool      m_bUseCbfFastMode;                              ///< flag for using Cbf Fast PU Mode Decision
-  Int       m_iSliceMode;           ///< 0: Disable all Recon slice limits, 1 : Maximum number of largest coding units per slice, 2: Maximum number of bytes in a slice
-  Int       m_iSliceArgument;       ///< If m_iSliceMode==1, m_iSliceArgument=max. # of largest coding units. If m_iSliceMode==2, m_iSliceArgument=max. # of bytes.
-  Int       m_iEntropySliceMode;    ///< 0: Disable all entropy slice limits, 1 : Maximum number of largest coding units per slice, 2: Constraint based entropy slice
-  Int       m_iEntropySliceArgument;///< If m_iEntropySliceMode==1, m_iEntropySliceArgument=max. # of largest coding units. If m_iEntropySliceMode==2, m_iEntropySliceArgument=max. # of bins.
+  Bool      m_bUseCbfFastMode;                 ///< flag for using Cbf Fast PU Mode Decision
+  Int       m_iSliceMode;                      ///< 0: Disable all Recon slice limits, 1 : Maximum number of largest coding units per slice, 2: Maximum number of bytes in a slice
+  Int       m_iSliceArgument;                  ///< If m_iSliceMode==1, m_iSliceArgument=max. # of largest coding units. If m_iSliceMode==2, m_iSliceArgument=max. # of bytes.
+  Int       m_iEntropySliceMode;               ///< 0: Disable all entropy slice limits, 1 : Maximum number of largest coding units per slice, 2: Constraint based entropy slice
+  Int       m_iEntropySliceArgument;           ///< If m_iEntropySliceMode==1, m_iEntropySliceArgument=max. # of largest coding units. If m_iEntropySliceMode==2, m_iEntropySliceArgument=max. # of bins.
 
-  Int       m_iSliceGranularity;///< 0: Slices always end at LCU borders. 1-3: slices may end at a depth of 1-3 below LCU level.
-  Bool m_bLFCrossSliceBoundaryFlag;  ///< 0: Cross-slice-boundary in-loop filtering 1: non-cross-slice-boundary in-loop filtering
-  Int  m_iTileBehaviorControlPresentFlag; //!< 1: tile behavior control parameters are in PPS 0: tile behavior control parameters are not in PPS
-  Bool m_bLFCrossTileBoundaryFlag;  //!< 1: Cross-tile-boundary in-loop filtering 0: non-cross-tile-boundary in-loop filtering
+  Int       m_iSliceGranularity;               ///< 0: Slices always end at LCU borders. 1-3: slices may end at a depth of 1-3 below LCU level.
+  Bool      m_bLFCrossSliceBoundaryFlag;       ///< 0: Cross-slice-boundary in-loop filtering 1: non-cross-slice-boundary in-loop filtering
+  Int       m_iTileBehaviorControlPresentFlag; //!< 1: tile behavior control parameters are in PPS 0: tile behavior control parameters are not in PPS
+  Bool      m_bLFCrossTileBoundaryFlag;        //!< 1: Cross-tile-boundary in-loop filtering 0: non-cross-tile-boundary in-loop filtering
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
 #if !REMOVE_TILE_DEPENDENCE
@@ -279,7 +279,12 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if HHI_VSO
   Char*     m_pchVSOConfig;
   Bool      m_bUseVSO;                                    ///< flag for using View Synthesis Optimization
-
+#if HHI_VSO_LS_TABLE
+  Bool      m_bVSOLSTable;                                ///< Depth QP dependent Lagrange parameter optimization (m23714)
+#endif
+#if LGE_VSO_EARLY_SKIP_A0093
+  Bool      m_bVSOEarlySkip;                              ///< Early skip of VSO computation (JCT3V-A0093 modification 4)
+#endif
   //// Used for development by GT, might be removed later
   Double    m_dLambdaScaleVSO;                            ///< Scaling factor for Lambda in VSO mode
   Bool      m_bForceLambdaScaleVSO;                       ///< Use Lambda Scale for depth even if VSO is turned off
@@ -287,6 +292,10 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bAllowNegDist;                              ///< Allow negative distortion in VSO
 #endif
   UInt      m_uiVSOMode;                                  ///< Number of VSO Mode, 1 = , 2 = simple, org vs. ren, 3 = simple, ren vs. ren, 4 = full  
+#endif
+#if SAIT_VSO_EST_A0033
+  Bool      m_bUseEstimatedVSD;                           ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)
+  Double    m_dDispCoeff;
 #endif
 
   // coding tools (depth intra modes)

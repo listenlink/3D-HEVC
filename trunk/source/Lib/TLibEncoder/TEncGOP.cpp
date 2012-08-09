@@ -435,6 +435,9 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if HHI_VSO
   Bool bUseVSO = m_pcEncTop->getUseVSO();
   m_pcRdCost->setUseVSO( bUseVSO );
+#if SAIT_VSO_EST_A0033
+  m_pcRdCost->setUseEstimatedVSD( m_pcEncTop->getUseEstimatedVSD() );
+#endif
 
   if ( bUseVSO )
   {
@@ -444,6 +447,8 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     m_pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 #endif
 
+#if HHI_VSO_SPEEDUP_A033
+#else
     if ( iVSOMode == 4 )
     {
       m_pcEncTop->getEncTop()->setupRenModel( pcSlice->getPOC(), pcSlice->getViewId(), m_pcEncTop->isDepthCoder() ? 1 : 0 );
@@ -452,6 +457,14 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     {
       AOT(true); 
     }
+#endif
+
+#if SAIT_VSO_EST_A0033
+    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->xGetPicYuvFromViewTemp( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
+    m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->xGetPicYuvFromViewTemp( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
+#endif
+
+
   }
 #endif
       /////////////////////////////////////////////////////////////////////////////////////////////////// Compress a slice
@@ -690,7 +703,9 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if DEPTH_MAP_GENERATION
       // init view component and predict virtual depth map
       m_pcDepthMapGenerator->initViewComponent( pcPic );
+#if !QC_MULTI_DIS_CAN
       m_pcDepthMapGenerator->predictDepthMap  ( pcPic );
+#endif
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
       m_pcDepthMapGenerator->covertOrgDepthMap( pcPic );
@@ -757,8 +772,10 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       m_pcResidualGenerator->setRecResidualPic( pcPic );
 #endif
 #if DEPTH_MAP_GENERATION
+#if !QC_MULTI_DIS_CAN
       // update virtual depth map
       m_pcDepthMapGenerator->updateDepthMap( pcPic );
+#endif
 #endif
 
       //-- Loop filter
@@ -2474,20 +2491,20 @@ Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr
 
     if( hasModification )
     {
-	    Int temporalRefIdx = 0;
-	    for( Int i = 0; i < pcSlice->getNumRefIdx( REF_PIC_LIST_0 ); i++ )
-	    {
-	      if( tempListEntryL0[i] >= 0 ) 
-	      {
-	        refPicListModification->setRefPicSetIdxL0( i, tempListEntryL0[i] );
-	      }
-	      else
-	      {
-	        refPicListModification->setRefPicSetIdxL0( i, temporalRefIdx );
-	        temporalRefIdx++;
-	      }
-	    }
-	  }
+      Int temporalRefIdx = 0;
+      for( Int i = 0; i < pcSlice->getNumRefIdx( REF_PIC_LIST_0 ); i++ )
+      {
+        if( tempListEntryL0[i] >= 0 ) 
+        {
+          refPicListModification->setRefPicSetIdxL0( i, tempListEntryL0[i] );
+        }
+        else
+        {
+          refPicListModification->setRefPicSetIdxL0( i, temporalRefIdx );
+          temporalRefIdx++;
+        }
+      }
+    }
     else
     {
       refPicListModification->setRefPicListModificationFlagL0( false );
@@ -2519,19 +2536,19 @@ Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr
 
     if( hasModification )
     {
-	    Int temporalRefIdx = 0;
-	    for( Int i = 0; i < pcSlice->getNumRefIdx( REF_PIC_LIST_1 ); i++ )
-	    {
-	      if( tempListEntryL1[i] >= 0 ) 
-	      {
-	        refPicListModification->setRefPicSetIdxL1( i, tempListEntryL1[i] );
-	      }
-	      else
-	      {
-	        refPicListModification->setRefPicSetIdxL1( i, temporalRefIdx );
-	        temporalRefIdx++;
-	      }
-	    }
+      Int temporalRefIdx = 0;
+      for( Int i = 0; i < pcSlice->getNumRefIdx( REF_PIC_LIST_1 ); i++ )
+      {
+        if( tempListEntryL1[i] >= 0 ) 
+        {
+          refPicListModification->setRefPicSetIdxL1( i, tempListEntryL1[i] );
+        }
+        else
+        {
+          refPicListModification->setRefPicSetIdxL1( i, temporalRefIdx );
+          temporalRefIdx++;
+        }
+      }
     } 
     else
     {

@@ -88,9 +88,9 @@ public:
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
 #if VIDYO_VPS_INTEGRATION
-  Void  increaseNumberOfViews	(UInt layerId, UInt viewId, UInt isDepth);
+  Void  increaseNumberOfViews  (UInt layerId, UInt viewId, UInt isDepth);
 #else
-  Void  increaseNumberOfViews	(Int newNumberOfViewDepth);
+  Void  increaseNumberOfViews  (Int newNumberOfViewDepth);
 #endif
   TDecTop* getTDecTop     ( Int viewId, Bool isDepth );
 

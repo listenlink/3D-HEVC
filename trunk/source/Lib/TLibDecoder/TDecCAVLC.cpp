@@ -1890,11 +1890,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       rpcSlice->setPOC( iPOCmsb+iPOClsb );
 
-#if HHI_FIX
       if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && rpcSlice->getPOC() == 0 )
-#else
-      if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV ) 
-#endif
       {
         TComReferencePictureSet* rps = rpcSlice->getLocalRPS();
         rps->setNumberOfNegativePictures(0);

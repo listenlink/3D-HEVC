@@ -114,15 +114,15 @@ Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchSt
   size_t iInLength     = strlen(pchInputFileName);
   size_t iAppendLength = strlen(pchStringToAppend); 
 
-  rpchOutputFileName = (Char*) malloc(iInLength+iAppendLength+1);												
-  Char* pCDot = strrchr(pchInputFileName,'.'); 				
-  pCDot = pCDot ? pCDot : pchInputFileName + iInLength;				
+  rpchOutputFileName = (Char*) malloc(iInLength+iAppendLength+1);                        
+  Char* pCDot = strrchr(pchInputFileName,'.');         
+  pCDot = pCDot ? pCDot : pchInputFileName + iInLength;        
   size_t iCharsToDot = pCDot - pchInputFileName ; 
-  size_t iCharsToEnd = iInLength - iCharsToDot; 				
+  size_t iCharsToEnd = iInLength - iCharsToDot;         
   strncpy(rpchOutputFileName                            ,  pchInputFileName            , iCharsToDot  );
   strncpy(rpchOutputFileName+ iCharsToDot               ,  pchStringToAppend           , iAppendLength); 
-  strncpy(rpchOutputFileName+ iCharsToDot+iAppendLength ,  pchInputFileName+iCharsToDot, iCharsToEnd  );				
-  rpchOutputFileName[iInLength+iAppendLength] = '\0'; 				 
+  strncpy(rpchOutputFileName+ iCharsToDot+iAppendLength ,  pchInputFileName+iCharsToDot, iCharsToEnd  );        
+  rpchOutputFileName[iInLength+iAppendLength] = '\0';          
 }
 
 //! \}

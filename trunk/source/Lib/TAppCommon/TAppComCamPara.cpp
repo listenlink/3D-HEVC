@@ -653,6 +653,9 @@ TAppComCamPara::xGetGeometryData( Int iView, UInt uiFrame, Double& rdFocalLength
   }
 }
 
+#if SAIT_VSO_EST_A0033
+Double g_dDispCoeff;
+#endif
 
 Bool
 TAppComCamPara::xGetShiftParameterReal( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Bool bExternal, Bool bByIdx, Double& rdScale, Double& rdOffset )
@@ -684,6 +687,23 @@ TAppComCamPara::xGetShiftParameterReal( UInt uiSourceView, UInt uiTargetView, UI
     iSourceViewNum = (Int) uiSourceView;
     iTargetViewNum = (Int) uiTargetView;
   }
+
+#if SAIT_VSO_EST_A0033
+  // This part should be modified later.
+  {
+    Double dFL1, dCS1, dCP1, dZN1, dZF1; 
+    Bool   bInterpolated;
+    Double dPos[3];
+    xGetGeometryData( m_aiBaseViews[0], uiFrame, dFL1, dPos[0], dCS1, bInterpolated );
+    xGetGeometryData( m_aiBaseViews[1], uiFrame, dFL1, dPos[1], dCS1, bInterpolated );
+
+    xGetGeometryData( iSourceViewNum, uiFrame, dFL1, dCP1, dCS1, bInterpolated );
+    xGetZNearZFar   ( iSourceViewNum, uiFrame, dZN1, dZF1 );
+
+    Double dBaseLine = dPos[0] - dPos[1]; //Max(Max(dPos[0],dPos[1]),dPos[2]) - Min(Min(dPos[0],dPos[1]),dPos[2]);
+    g_dDispCoeff = fabs( dFL1 * ( dBaseLine / 2.0 ) / 255.0 * ( 1.0/dZN1 - 1.0/dZF1 ) );
+  }
+#endif
 
   xGetGeometryData( iSourceViewNum, uiFrame, dFocalLengthSource, dPositionSource, dIntersectionSource, bInterpolatedSource );
   xGetZNearZFar   ( iSourceViewNum, uiFrame, dMinDepthSource,    dMaxDepthSource );

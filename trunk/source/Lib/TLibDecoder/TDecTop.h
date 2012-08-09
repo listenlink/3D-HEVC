@@ -175,13 +175,13 @@ public:
 
   Void executeDeblockAndAlf(UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame,  Int& iPOCLastDisplay);
 
-  Void setViewId(Int viewId)					{ m_viewId = viewId;}
-  Int  getViewId()								       { return m_viewId  ;}
+  Void setViewId(Int viewId)      { m_viewId = viewId;}
+  Int  getViewId()                { return m_viewId  ;}
   Void setIsDepth( Bool isDepth ) { m_isDepth = isDepth; }
 
 #if SONY_COLPIC_AVAILABILITY
-  Void setViewOrderIdx(Int i)					{ m_iViewOrderIdx = i ;}
-  Int  getViewOrderIdx()							{ return m_iViewOrderIdx ; }
+  Void setViewOrderIdx(Int i)     { m_iViewOrderIdx = i ;}
+  Int  getViewOrderIdx()          { return m_iViewOrderIdx ; }
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -208,7 +208,7 @@ protected:
   Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
 #endif
 #if VIDYO_VPS_INTEGRATION
-	Void      xDecodeVPS();
+  Void      xDecodeVPS();
 #endif
   Void      xDecodeSPS();
   Void      xDecodePPS();

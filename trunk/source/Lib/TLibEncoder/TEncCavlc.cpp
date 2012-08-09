@@ -377,7 +377,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 #if VIDYO_VPS_INTEGRATION
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 {
-	WRITE_CODE( pcVPS->getMaxTLayers() - 1,     3,        "max_temporal_layers_minus1" );
+  WRITE_CODE( pcVPS->getMaxTLayers() - 1,     3,        "max_temporal_layers_minus1" );
   WRITE_CODE( pcVPS->getMaxLayers() - 1,      5,        "max_layers_minus1" );
   WRITE_FLAG( pcVPS->getTemporalNestingFlag() - 1,      "temporal_id_nesting_flag" );
   WRITE_UVLC( pcVPS->getVPSId(),                        "video_parameter_set_id" );
@@ -774,7 +774,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     else
     {
       WRITE_CODE( (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC()))%(1<<pcSlice->getSPS()->getBitsForPOC()), pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
-#if HHI_FIX
       if( pcSlice->getPOC() == 0 && pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_IDV )
       {
         TComReferencePictureSet* rps = pcSlice->getRPS();
@@ -847,9 +846,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         }
       }
       if( pcSlice->getPOC() != 0 )
-#else
-      if( pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_IDV )
-#endif
       {
         TComReferencePictureSet* rps = pcSlice->getRPS();
         if(pcSlice->getRPSidx() < 0)

@@ -79,6 +79,11 @@ public:
   Pel*  pCur;
   Int   iStrideOrg;
   Int   iStrideCur;
+#if SAIT_VSO_EST_A0033
+  Pel*  pVirRec;
+  Pel*  pVirOrg;
+  Int   iStrideVir;
+#endif
   Int   iRows;
   Int   iCols;
   Int   iStep;
@@ -104,6 +109,11 @@ public:
   {
     pOrg = NULL;
     pCur = NULL;
+#if SAIT_VSO_EST_A0033
+    pVirRec = NULL;
+    pVirOrg = NULL;;
+    iStrideVir = 0;
+#endif
     iStrideOrg = 0;
     iStrideCur = 0;
     iRows = 0;
@@ -144,6 +154,9 @@ private:
   UInt                    m_uiLambdaMotionSAD;
   UInt                    m_uiLambdaMotionSSE;
   Double                  m_dFrameLambda;
+#if SAIT_VSO_EST_A0033
+  static Double           m_dDisparityCoeff;
+#endif
   
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Double                  m_dLambdaScale ;
@@ -191,6 +204,11 @@ public:
 #endif
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
   
+#if SAIT_VSO_EST_A0033
+  Void    setDisparityCoeff( Double dDisparityCoeff ) { m_dDisparityCoeff = dDisparityCoeff; }
+  Double  getDisparityCoeff()                         { return m_dDisparityCoeff; }
+#endif
+
 #if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
   Void   setLambdaScale  ( Double dLambdaScale) { m_dLambdaScale = dLambdaScale; }
   Double   getLambdaScale  ( ) { return m_dLambdaScale ; }
@@ -221,9 +239,8 @@ public:
   Void    getMotionCost( Bool bSad, Int iAdd ) 
 { 
      m_uiCost = (bSad ? m_uiLambdaMotionSAD + iAdd : m_uiLambdaMotionSSE + iAdd); 
-#if HHI_FIX
     m_uiLambdaMVReg = ( bSad ? m_uiLambdaMVRegSAD         : m_uiLambdaMVRegSSE         );
-#endif
+
    }
   Void    setPredictor( TComMv& rcMv )
   {
@@ -300,6 +317,16 @@ private:
   static UInt xGetSAD64         ( DistParam* pcDtParam );
   static UInt xGetSAD16N        ( DistParam* pcDtParam );
   
+#if SAIT_VSO_EST_A0033
+  static UInt xGetVSD           ( DistParam* pcDtParam );
+  static UInt xGetVSD4          ( DistParam* pcDtParam );
+  static UInt xGetVSD8          ( DistParam* pcDtParam );
+  static UInt xGetVSD16         ( DistParam* pcDtParam );
+  static UInt xGetVSD32         ( DistParam* pcDtParam );
+  static UInt xGetVSD64         ( DistParam* pcDtParam );
+  static UInt xGetVSD16N        ( DistParam* pcDtParam );
+#endif
+
 #if AMP_SAD
   static UInt xGetSAD12         ( DistParam* pcDtParam );
   static UInt xGetSAD24         ( DistParam* pcDtParam );
@@ -328,6 +355,11 @@ public:
   UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif
   
+#if SAIT_VSO_EST_A0033
+  UInt   getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, Pel* piVirRec, Pel* piVirOrg, Int iVirStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_VSD );
+  static UInt getVSDEstimate( Int dDM, Pel* pOrg, Int iOrgStride,  Pel* pVirRec, Pel* pVirOrg, Int iVirStride, Int x, Int y );
+#endif
+
 #if HHI_VSO
 private:
   Double                  m_dLambdaVSO;
@@ -338,6 +370,11 @@ private:
 
 #if HHI_VSO_DIST_INT
   Bool                    m_bAllowNegDist;
+#endif
+#if SAIT_VSO_EST_A0033
+  TComPicYuv *            m_pcVideoRecPicYuv;
+  TComPicYuv *            m_pcDepthPicYuv;
+  Bool                    m_bUseEstimatedVSD; 
 #endif
 
   Bool                    m_bUseVSO;
@@ -356,6 +393,15 @@ public:
 
   Void    setUseVSO ( Bool bIn )         { m_bUseVSO = bIn; };
   Bool    getUseVSO ( )                  { return m_bUseVSO;};
+#if SAIT_VSO_EST_A0033
+  Bool    getUseEstimatedVSD( )           { return m_bUseEstimatedVSD; };
+  Void    setUseEstimatedVSD( Bool bIn )  { m_bUseEstimatedVSD = bIn; };
+
+  TComPicYuv* getVideoRecPicYuv ()                               { return m_pcVideoRecPicYuv; };
+  Void        setVideoRecPicYuv ( TComPicYuv* pcVideoRecPicYuv ) { m_pcVideoRecPicYuv = pcVideoRecPicYuv; };
+  TComPicYuv* getDepthPicYuv    ()                               { return m_pcDepthPicYuv; };
+  Void        setDepthPicYuv    ( TComPicYuv* pcDepthPicYuv )    { m_pcDepthPicYuv = pcDepthPicYuv; };
+#endif
 
   Bool    getUseRenModel ( )             { return (m_bUseVSO && m_uiVSOMode == 4); };
   Void    setUseLambdaScaleVSO(bool bIn) { m_bUseLambdaScaleVSO = bIn; };
