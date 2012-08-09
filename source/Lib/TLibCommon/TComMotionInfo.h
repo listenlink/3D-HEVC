@@ -58,6 +58,14 @@ typedef struct _AMVPInfo
 } AMVPInfo;
 
 // ====================================================================================================================
+#if QC_MULTI_DIS_CAN
+typedef struct _DisCand
+{
+  TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates
+  Int    m_aVIdxCan[ DIS_CANS ];            ///< array of motion vector predictor candidates
+  Int    iN;                                ///< number of motion vector predictor candidates
+} DisInfo;
+#endif 
 // Class definition
 // ====================================================================================================================
 

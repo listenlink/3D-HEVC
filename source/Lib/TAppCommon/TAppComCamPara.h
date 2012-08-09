@@ -68,8 +68,8 @@ private:
 
   // view lists
   std::vector<Int>    m_aiViewsInCfgFile;                     ///< views for which parameters are specified in cfg file (from left to right)
-  std::vector<Int>    m_aiSynthViews;	                        ///< View numbers of External ViewReferences
-  std::vector<Int>    m_aiRelSynthViewsNum;	              ///< Relative view numbers of External ViewReferences
+  std::vector<Int>    m_aiSynthViews;                         ///< View numbers of External ViewReferences
+  std::vector<Int>    m_aiRelSynthViewsNum;                   ///< Relative view numbers of External ViewReferences
   std::vector<Int>    m_aiBaseViews;                          ///< View numbers of Base View References (in coding order)
   std::vector<Int>    m_aiSortedBaseViews;                    ///< View numbers of Base View References (from left to right)
   std::vector<Int>    m_aiBaseId2SortedId;                    ///< mapping from coding order to left-right order for base views
@@ -91,16 +91,16 @@ private:
   Int**               m_aaiPdmOffset;                         ///< [TargetView][RefView] offset parameter
 
   // scale and offset parameters
-  Double***           m_adBaseViewShiftParameter;							///< ShiftParameters between BaseViews e.g. [2][1][0] shift scale from view 2 to view 1; [2][1][1] shift offset from view 2 to view 1
-  Int64 ***           m_aiBaseViewShiftParameter;   					///< ShiftParameters between BaseViews e.g. [2][1][0] shift scale from view 2 to view 1; [2][1][1] shift offset from view 2 to view 1 		/* do we need 64 bit? */
-  Double***           m_adSynthViewShiftParameter;					  ///< ShiftParameters between BaseViews and ERViews e.g. [2][1][0] shift scale from base view 2 to er view 1;
-  Int64 ***           m_aiSynthViewShiftParameter;			     	///< ShiftParameters between BaseViews and ERViews e.g. [2][1][0] shift scale from base view 2 to er view 1;		/* do we need 64 bit? */
+  Double***           m_adBaseViewShiftParameter;             ///< ShiftParameters between BaseViews e.g. [2][1][0] shift scale from view 2 to view 1; [2][1][1] shift offset from view 2 to view 1
+  Int64 ***           m_aiBaseViewShiftParameter;             ///< ShiftParameters between BaseViews e.g. [2][1][0] shift scale from view 2 to view 1; [2][1][1] shift offset from view 2 to view 1     /* do we need 64 bit? */
+  Double***           m_adSynthViewShiftParameter;            ///< ShiftParameters between BaseViews and ERViews e.g. [2][1][0] shift scale from base view 2 to er view 1;
+  Int64 ***           m_aiSynthViewShiftParameter;            ///< ShiftParameters between BaseViews and ERViews e.g. [2][1][0] shift scale from base view 2 to er view 1;    /* do we need 64 bit? */
 
   // look-up tables
-  Double****          m_adBaseViewShiftLUT;										///< Disparity LUT
-  Int****             m_aiBaseViewShiftLUT;									  ///< Disparity LUT
-  Double****          m_adSynthViewShiftLUT;									///< Disparity LUT
-  Int****             m_aiSynthViewShiftLUT;									///< Disparity LUT
+  Double****          m_adBaseViewShiftLUT;                    ///< Disparity LUT
+  Int****             m_aiBaseViewShiftLUT;                    ///< Disparity LUT
+  Double****          m_adSynthViewShiftLUT;                   ///< Disparity LUT
+  Int****             m_aiSynthViewShiftLUT;                   ///< Disparity LUT
 
 
 protected:

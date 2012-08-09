@@ -57,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "6.1"
-#define NV_VERSION        "3.1rc1"                 ///< Current software version
+#define NV_VERSION        "4.0rc1"                 ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -129,6 +129,7 @@
 
 #if ( HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED )
 #define DEPTH_MAP_GENERATION        1
+#define PDM_REMOVE_DEPENDENCE       1      //bug-fix for DMDV JCT2-A0095
 #else
 #define DEPTH_MAP_GENERATION        0
 #endif
@@ -137,7 +138,7 @@
 #define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
-#if SAIT_IMPROV_MOTION_PRED_M24829
+#if SAIT_IMPROV_MOTION_PRED_M24829&!QC_MULTI_DIS_CAN
 #define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
 #else
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)
@@ -169,7 +170,7 @@
 
 #define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
 
-#define LOG2_DISP_PREC_LUT   				2		  		///< log2 of disparity precision used in integer disparity LUTs
+#define LOG2_DISP_PREC_LUT           2          ///< log2 of disparity precision used in integer disparity LUTs
 
 // ====================================================================================================================
 // VPS constants
@@ -400,6 +401,10 @@ __inline T gSign(const T& t)
 #define Clip3( MinVal, MaxVal, a)   ( ((a)<(MinVal)) ? (MinVal) : (((a)>(MaxVal)) ? (MaxVal) :(a)) )  ///< general min/max clip
 #define RemoveBitIncrement(x)       ( (x + ( (1 << g_uiBitIncrement) >> 1 )) >> g_uiBitIncrement )     ///< Remove Bit increment
 
+#if SAIT_VSO_EST_A0033
+#define ROUND(a)  (((a) < 0)? (int)((a) - 0.5) : (int)((a) + 0.5))
+#endif
+
 // ====================================================================================================================
 // Coding tool configuration
 // ====================================================================================================================
@@ -494,7 +499,7 @@ enum NalUnitType
   NAL_UNIT_RESERVED_23,
   NAL_UNIT_UNSPECIFIED_24,
 #if VIDYO_VPS_INTEGRATION
-	NAL_UNIT_VPS,
+  NAL_UNIT_VPS,
 #else
   NAL_UNIT_UNSPECIFIED_25,
 #endif

@@ -37,7 +37,13 @@
 
 #include "TEncTop.h"
 #include "TEncSlice.h"
+#if HHI_VSO_SPEEDUP_A033
+#include "../../App/TAppEncoder/TAppEncTop.h"
+#endif
 #include <math.h>
+#if SAIT_VSO_EST_A0033
+extern Double g_dDispCoeff;
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -626,6 +632,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   TEncBinCABAC* pppcRDSbacCoder = NULL;
   TComSlice* pcSlice            = rpcPic->getSlice(getSliceIdx());
   xDetermineStartAndBoundingCUAddr ( uiStartCUAddr, uiBoundingCUAddr, rpcPic, false );
+#if LG_ZEROINTRADEPTHRESI_M26039
+  rpcPic->setIntraPeriod(this->m_pcCfg->getIntraPeriod());
+#endif
   
   // initialize cost values
   m_uiPicTotalBits  = 0;
@@ -701,6 +710,31 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   m_pcEntropyCoder->setAlfCtrl(false);
   m_pcEntropyCoder->setMaxAlfCtrlDepth(0); //unnecessary
   
+#if SAIT_VSO_EST_A0033
+ if( m_pcCfg->getUseVSO() )
+ {
+   m_pcRdCost->setDisparityCoeff( g_dDispCoeff );  // Temp. code!!!
+   //printf( "Disp Coeff : %3.4f \n", m_pcRdCost->getDisparityCoeff() );
+
+   Int frameWidth = m_pcCfg->getSourceWidth();
+   Pel* pVideoRec = m_pcRdCost->getVideoRecPicYuv()->getLumaAddr();
+   Int iVideoRecStride = m_pcRdCost->getVideoRecPicYuv()->getStride();
+
+   Pel* pDepthOrg = m_pcRdCost->getDepthPicYuv()->getLumaAddr();
+   Int iDepthOrgStride = m_pcRdCost->getDepthPicYuv()->getStride();
+
+   for( Int y = 0 ; y < m_pcCfg->getSourceHeight() ; y++ )
+   {
+     pVideoRec[-4] = pVideoRec[-3] = pVideoRec[-2] = pVideoRec[-1] = pVideoRec[0];
+     pVideoRec[frameWidth+3] = pVideoRec[frameWidth+2] = pVideoRec[frameWidth+1] = pVideoRec[frameWidth] = pVideoRec[frameWidth-1];
+     pDepthOrg[-4] = pDepthOrg[-3] = pDepthOrg[-2] = pDepthOrg[-1] = pDepthOrg[0];
+     pDepthOrg[frameWidth+3] = pDepthOrg[frameWidth+2] = pDepthOrg[frameWidth+1] = pDepthOrg[frameWidth] = pDepthOrg[frameWidth-1];
+
+     pVideoRec += iVideoRecStride;
+     pDepthOrg += iDepthOrgStride;
+   }
+ }
+#endif
   TEncTop* pcEncTop = (TEncTop*) m_pcCfg;
   TEncSbac**** ppppcRDSbacCoders    = pcEncTop->getRDSbacCoders();
   TComBitCounter* pcBitCounters     = pcEncTop->getBitCounters();
@@ -752,6 +786,10 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
 
+#if HHI_VSO_SPEEDUP_A033
+  Int iLastPosY = -1;
+#endif
+
   // for every CU in slice
   UInt uiEncCUOrder;
   uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU()); 
@@ -762,6 +800,23 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     // initialize CU encoder
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
+
+#if HHI_VSO_SPEEDUP_A033
+    if ( m_pcRdCost->getUseRenModel() )
+    {
+      // updated renderer model if necessary
+      Int iCurPosX;
+      Int iCurPosY; 
+      pcCU->getPosInPic(0, iCurPosX, iCurPosY );
+      if ( iCurPosY != iLastPosY )
+      {
+        iLastPosY = iCurPosY; 
+        
+        m_pcGOPEncoder->getEncTop()->getEncTop()->setupRenModel( rpcPic->getCurrSlice()->getPOC() , rpcPic->getCurrSlice()->getSPS()->getViewId(), rpcPic->getCurrSlice()->getSPS()->isDepth() ? 1 : 0, iCurPosY );
+      }
+    }    
+#endif
+
 
     // inherit from TR if necessary, select substream to use.
     if( m_pcCfg->getUseSBACRD() )

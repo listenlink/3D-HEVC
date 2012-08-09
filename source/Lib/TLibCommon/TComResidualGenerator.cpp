@@ -218,13 +218,21 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
   }
 }
 
-
+#if QC_MULTI_DIS_CAN
+Bool
+TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv, Int iDisp
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
+#endif
+ ) 
+#else
 Bool
 TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv 
 #if QC_SIMPLIFIEDIVRP_M24938
   , Bool bRecon
 #endif
   )
+#endif
 {
   AOF(  pcCU );
   UInt  uiPartAddr;
@@ -234,19 +242,36 @@ TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComY
   iBlkWidth   = pcCU->getWidth  ( 0 );
   iBlkHeight  = pcCU->getHeight ( 0 );
   pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iXPos, iYPos );
+#if QC_MULTI_DIS_CAN
+  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv, iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , bRecon
+#endif
+  );
+#else
   return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv 
 #if QC_SIMPLIFIEDIVRP_M24938
     , bRecon
 #endif
     );
+#endif
 }
   
+#if QC_MULTI_DIS_CAN
+Bool
+TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
+#endif
+)
+#else
 Bool
 TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
 #if QC_SIMPLIFIEDIVRP_M24938
   , Bool bRecon
 #endif
   )
+#endif
 {
   UInt  uiBaseViewId  = m_pcDepthMapGenerator->getBaseViewId( 0 );
 
@@ -257,12 +282,19 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
 #if QC_SIMPLIFIEDIVRP_M24938
   UInt uiXPosInRefView = uiXPos , uiYPosInRefView = uiYPos;
 #endif
+#if QC_MULTI_DIS_CAN
+  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, iDisp
+#if QC_SIMPLIFIEDIVRP_M24938
+    , &uiXPosInRefView , &uiYPosInRefView , bRecon
+#endif  
+  );
+#else
   xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv 
 #if QC_SIMPLIFIEDIVRP_M24938
     , &uiXPosInRefView , &uiYPosInRefView , bRecon
 #endif
     );
-
+#endif
 #if QC_SIMPLIFIEDIVRP_M24938
   return xIsNonZeroByCBF( uiBaseViewId , uiXPosInRefView , uiYPosInRefView , uiBlkWidth , uiBlkHeight );
 #else
@@ -422,8 +454,8 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
       m_ppcYuvTmp[0] );
     AOF( bOK );
 #if LG_RESTRICTEDRESPRED_M24766
-	pcCU->getPUResiPredShift(iPUPredResiShift, 0);
-	pcCUResidual->add(iPUPredResiShift, pcCU->getPartitionSize(0), m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
+    pcCU->getPUResiPredShift(iPUPredResiShift, 0);
+    pcCUResidual->add(iPUPredResiShift, pcCU->getPartitionSize(0), m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
 #else
     pcCUResidual->add( m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
 #endif
@@ -484,13 +516,21 @@ TComResidualGenerator::xClearResidual( TComYuv* pcCUResidual, UInt uiAbsPartIdx,
 }
 
 
-
+#if QC_MULTI_DIS_CAN
+Void  
+TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
+#endif
+)
+#else
 Void  
 TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
 #if QC_SIMPLIFIEDIVRP_M24938
   , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
 #endif
   )
+#endif
 {
   //===== set and check some basic variables =====
   AOF(          pcYuv     );
@@ -507,10 +547,13 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   AOT( uiYPos + uiBlkHeight > uiPicHeight );
 
   //===== get disparity =====
+#if QC_MULTI_DIS_CAN
+  Int iDisparity = iDisp;
+#else
   Int           iMidPosX    = Int( uiXPos + ( ( uiBlkWidth  - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpX();
   Int           iMidPosY    = Int( uiYPos + ( ( uiBlkHeight - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpY();
   Int           iDisparity  = m_pcDepthMapGenerator->getDisparity( pcPic, iMidPosX, iMidPosY, uiBaseViewId );
-
+#endif
   //===== compensate luma =====
   Int           iYWidth     = Int( uiBlkWidth  );
   Int           iYHeight    = Int( uiBlkHeight );

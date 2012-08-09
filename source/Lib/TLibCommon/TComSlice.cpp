@@ -1334,8 +1334,8 @@ TComVPS::TComVPS()
 
 TComVPS::~TComVPS()
 {
-	
-	
+  
+  
 }
 
 #endif

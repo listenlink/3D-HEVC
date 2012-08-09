@@ -100,7 +100,7 @@ public:
 #if VIDYO_VPS_INTEGRATION
   Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
-	
+  
 #if HHI_MPI
   Void  codeSPS                 ( TComSPS* pcSPS, Bool bIsDepth );
 #else
@@ -173,6 +173,9 @@ private:
 #if HHI_DMM_PRED_TEX
   Void  xCodeWedgePredTexDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xCodeContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+#if LGE_EDGE_INTRA
+  Void  xCodeEdgeIntraInfo( TComDataCU* pcCU, UInt uiPartIdx );
 #endif
 
 protected:
@@ -305,6 +308,12 @@ private:
   ContextModel3DBuffer m_cDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
   ContextModel3DBuffer m_cDmmDataSCModel;
+#endif
+#if LGE_EDGE_INTRA
+  ContextModel3DBuffer m_cEdgeIntraSCModel;
+#if LGE_EDGE_INTRA_DELTA_DC
+  ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
+#endif
 #endif
 };
 

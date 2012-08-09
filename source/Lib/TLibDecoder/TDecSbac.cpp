@@ -97,6 +97,12 @@ TDecSbac::TDecSbac()
 , m_cDmmModeSCModel           ( 1,             1,               NUM_DMM_MODE_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmDataSCModel           ( 1,             1,               NUM_DMM_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if LGE_EDGE_INTRA
+, m_cEdgeIntraSCModel         ( 1,             1,               NUM_EDGE_INTRA_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+#if LGE_EDGE_INTRA_DELTA_DC
+, m_cEdgeIntraDeltaDCSCModel  ( 1,             1,               NUM_EDGE_INTRA_DELTA_DC_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
   m_iSliceGranularity = 0;
@@ -181,6 +187,12 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
 #endif
 
   m_cCUTransSubdivFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
+#if LGE_EDGE_INTRA
+  m_cEdgeIntraSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_EDGE_INTRA );
+#if LGE_EDGE_INTRA_DELTA_DC
+  m_cEdgeIntraDeltaDCSCModel.initBuffer  ( sliceType, qp, (UChar*)INIT_EDGE_INTRA_DELTA_DC );
+#endif
+#endif
   m_uiLastDQpNonZero  = 0;
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cDmmFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DMM_FLAG );
@@ -814,7 +826,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
   if( uiFlag )
   {
     UInt uiDMMode;
-  
+
 #if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cDmmModeSCModel.get(0, 0, 0) ); uiDMMode  = uiSymbol;
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cDmmModeSCModel.get(0, 0, 0) ); uiDMMode |= uiSymbol << 1;
@@ -846,71 +858,143 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
   {
 #endif
 #if !LOGI_INTRA_NAME_3MPM
-  Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
+    Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
 #endif
-  
+
+#if LGE_EDGE_INTRA
+    Bool bCodeEdgeIntra = false;
+    if( pcCU->getSlice()->getSPS()->isDepth() )
+    {
+      UInt uiPUWidth = pcCU->getWidth( uiAbsPartIdx ) >> (pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 1 : 0);
+      if( uiPUWidth <= LGE_EDGE_INTRA_MAX_SIZE && uiPUWidth >= LGE_EDGE_INTRA_MIN_SIZE )
+        bCodeEdgeIntra = true;
+    }
+#endif
+
 #if LOGI_INTRA_NAME_3MPM
-  Int uiPreds[3] = {-1, -1, -1};
+    Int uiPreds[3] = {-1, -1, -1};
 #else
-  Int uiPreds[2] = {-1, -1};
+    Int uiPreds[2] = {-1, -1};
 #endif
-  Int uiPredNum = pcCU->getIntraDirLumaPredictor(uiAbsPartIdx, uiPreds);  
- 
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUIntraPredSCModel.get( 0, 0, 0) );
- 
-  if ( uiSymbol )
-  {
-    m_pcTDecBinIf->decodeBinEP( uiSymbol );
-#if LOGI_INTRA_NAME_3MPM
-    if (uiSymbol)
+    Int uiPredNum = pcCU->getIntraDirLumaPredictor(uiAbsPartIdx, uiPreds);  
+#if LGE_EDGE_INTRA
+    UInt uiCheckBit = 0;
+#endif
+
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUIntraPredSCModel.get( 0, 0, 0) );
+
+    if ( uiSymbol )
     {
       m_pcTDecBinIf->decodeBinEP( uiSymbol );
-      uiSymbol++;
-    }
-#endif
-    intraPredMode = uiPreds[uiSymbol];
-  }
-  else
-  {
-    intraPredMode = 0;
-    
 #if LOGI_INTRA_NAME_3MPM
-   
-    m_pcTDecBinIf->decodeBinsEP( uiSymbol, 5 );
-    intraPredMode = uiSymbol;
-    
-   //postponed sorting of MPMs (only in remaining branch)
-    if (uiPreds[0] > uiPreds[1])
-    { 
-      std::swap(uiPreds[0], uiPreds[1]); 
+      if (uiSymbol)
+      {
+        m_pcTDecBinIf->decodeBinEP( uiSymbol );
+        uiSymbol++;
+      }
+#endif
+      intraPredMode = uiPreds[uiSymbol];
     }
-    if (uiPreds[0] > uiPreds[2])
+    else
     {
-      std::swap(uiPreds[0], uiPreds[2]);
-    }
-    if (uiPreds[1] > uiPreds[2])
-    {
-      std::swap(uiPreds[1], uiPreds[2]);
-    }
+      intraPredMode = 0;
+
+#if LOGI_INTRA_NAME_3MPM
+
+      m_pcTDecBinIf->decodeBinsEP( uiSymbol, 5 );
+#if LGE_EDGE_INTRA
+      if (bCodeEdgeIntra)
+      {
+        if (uiSymbol==31)
+        {
+          m_pcTDecBinIf->decodeBinsEP(uiCheckBit,1);
+          if (uiCheckBit)
+            uiSymbol = EDGE_INTRA_IDX;
+        }
+      }
+#endif
+      intraPredMode = uiSymbol;
+
+      //postponed sorting of MPMs (only in remaining branch)
+      if (uiPreds[0] > uiPreds[1])
+      { 
+        std::swap(uiPreds[0], uiPreds[1]); 
+      }
+      if (uiPreds[0] > uiPreds[2])
+      {
+        std::swap(uiPreds[0], uiPreds[2]);
+      }
+      if (uiPreds[1] > uiPreds[2])
+      {
+        std::swap(uiPreds[1], uiPreds[2]);
+      }
 #else
-    m_pcTDecBinIf->decodeBinsEP( uiSymbol, g_aucIntraModeBitsAng[iIntraIdx] - 1 );
-    intraPredMode = uiSymbol;
-    
-    if ( intraPredMode == 31 )
+      m_pcTDecBinIf->decodeBinsEP( uiSymbol, g_aucIntraModeBitsAng[iIntraIdx] - 1 );
+      intraPredMode = uiSymbol;
+
+      if ( intraPredMode == 31 )
+      {
+        m_pcTDecBinIf->decodeBinEP( uiSymbol );
+        intraPredMode += uiSymbol;      
+      }
+#endif
+#if LGE_EDGE_INTRA
+      if ( intraPredMode != EDGE_INTRA_IDX)
+      {
+#endif
+        for ( Int i = 0; i < uiPredNum; i++ )
+        {
+          intraPredMode += ( intraPredMode >= uiPreds[i] );
+        }
+#if LGE_EDGE_INTRA
+      }
+#endif
+    }
+
+#if LGE_EDGE_INTRA
+    if( intraPredMode == EDGE_INTRA_IDX )
     {
-      m_pcTDecBinIf->decodeBinEP( uiSymbol );
-      intraPredMode += uiSymbol;      
+      xParseEdgeIntraInfo( pcCU, uiAbsPartIdx, uiDepth );
+#if LGE_EDGE_INTRA_DELTA_DC
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cEdgeIntraDeltaDCSCModel.get(0, 0, 0) );
+      if( uiSymbol )
+      {
+        intraPredMode = EDGE_INTRA_DELTA_IDX;
+        Int iDeltaDC0;
+        Int iDeltaDC1;
+
+        xReadExGolombLevel( (UInt &) iDeltaDC0, m_cEdgeIntraDeltaDCSCModel.get(0, 0, 1) );
+        if( iDeltaDC0 != 0 )
+        {
+          UInt uiSign;
+          m_pcTDecBinIf->decodeBinEP( uiSign );
+          if ( uiSign )
+          {
+            iDeltaDC0 = -iDeltaDC0;
+          }
+        }
+        xReadExGolombLevel( (UInt &) iDeltaDC1, m_cEdgeIntraDeltaDCSCModel.get(0, 0, 1) );
+        if( iDeltaDC1 != 0 )
+        {
+          UInt uiSign;
+          m_pcTDecBinIf->decodeBinEP( uiSign );
+          if ( uiSign )
+          {
+            iDeltaDC1 = -iDeltaDC1;
+          }
+        }
+
+        pcCU->setEdgeDeltaDC0( uiAbsPartIdx, iDeltaDC0 );
+        pcCU->setEdgeDeltaDC1( uiAbsPartIdx, iDeltaDC1 );
+      }
+#endif
     }
 #endif
-    for ( Int i = 0; i < uiPredNum; i++ )
-    {
-      intraPredMode += ( intraPredMode >= uiPreds[i] );
-    }
-  }
+
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   }
 #endif
-  
+
   pcCU->setLumaIntraDirSubParts( (UChar)intraPredMode, uiAbsPartIdx, uiDepth );
 }
 
@@ -2011,7 +2095,7 @@ Void TDecSbac::decodeFlush ( )
 }
 #endif
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX || (LGE_EDGE_INTRA && LGE_EDGE_INTRA_DELTA_DC)
 Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
 {
   UInt uiSymbol;
@@ -2269,4 +2353,103 @@ Void TDecSbac::xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartId
   pcCU->setContourPredTexDeltaDC2SubParts( iDC2, uiAbsPartIdx, uiDepth );
 }
 #endif
+
+#if LGE_EDGE_INTRA
+Void TDecSbac::xParseEdgeIntraInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiSymbol = 0;
+
+  // 1. Top(0) or Left(1)
+  UChar ucLeft;
+  m_pcTDecBinIf->decodeBinEP( uiSymbol );
+  ucLeft = uiSymbol;
+
+  // 2. Start position (lowest bit first)
+  UChar ucStart = 0;
+  for( UInt ui = 0; ui < 6 - uiDepth; ui++ )
+  {
+    m_pcTDecBinIf->decodeBinEP( uiSymbol );
+    ucStart |= (uiSymbol << ui);
+  }
+
+  // 3. Number of edges
+  UChar ucMax = 0;
+  for( UInt ui = 0; ui < 7 - uiDepth; ui++ )
+  {
+    m_pcTDecBinIf->decodeBinEP( uiSymbol );
+    ucMax |= (uiSymbol << ui);
+  }
+  ucMax++; // +1
+
+  // 4. Edges
+  UChar* pucSymbolList = (UChar*) xMalloc( UChar, 256 * LGE_EDGE_INTRA_MAX_EDGE_NUM_PER_4x4 );
+  UInt uiCtxEdgeIntra = pcCU->getCtxEdgeIntra( uiAbsPartIdx );
+  for( Int iPtr = 0; iPtr < ucMax; iPtr++ )
+  {
+    UChar ucEdge = 0;
+    UInt  uiReorderEdge = 0;
+    // Left-friendly direction
+    // 0 (   0deg) => 0
+    // 1 (  45deg) => 10
+    // 2 ( -45deg) => 110
+    // 3 (  90deg) => 1110
+    // 4 ( -90deg) => 11110
+    // 5 ( 135deg) => 111110
+    // 6 (-135deg) => 111111
+    // Right-friendly direction
+    // 0 (   0deg) => 0
+    // 1 ( -45deg) => 10
+    // 2 (  45deg) => 110
+    // 3 ( -90deg) => 1110
+    // 4 (  90deg) => 11110
+    // 5 (-135deg) => 111110
+    // 6 ( 135deg) => 111111
+    // refer to a paper "An efficient chain code with Huffman coding"
+    for( UInt ui = 0; ui < 6; ui++ )
+    {
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cEdgeIntraSCModel.get( 0, 0, uiCtxEdgeIntra ) );
+      ucEdge <<= 1;
+      ucEdge |= uiSymbol;
+      if( uiSymbol == 0 )
+        break;
+    }
+
+    switch( ucEdge )
+    {
+    case 0 :  // "0"
+      uiReorderEdge = 0;
+      break;
+    case 2 :  // "10"
+      uiReorderEdge = 1;
+      break;
+    case 6 :  // "110"
+      uiReorderEdge = 2;
+      break;
+    case 14 : // "1110"
+      uiReorderEdge = 3;
+      break;
+    case 30 : // "11110"
+      uiReorderEdge = 4;
+      break;
+    case 62 : // "111110"
+      uiReorderEdge = 5;
+      break;
+    case 63 : // "111111"
+      uiReorderEdge = 6;
+      break;
+    default :
+      printf("parseIntraEdgeChain: error (unknown code %d)\n",ucEdge);
+      assert(false);
+      break;
+    }
+    pucSymbolList[iPtr] = uiReorderEdge;
+  }
+  /////////////////////
+  // Edge Reconstruction
+  Bool* pbRegion = pcCU->getEdgePartition( uiAbsPartIdx );
+  pcCU->reconPartition( uiAbsPartIdx, uiDepth, ucLeft == 1, ucStart, ucMax, pucSymbolList, pbRegion );
+  xFree( pucSymbolList );
+}
+#endif
+
 //! \}

@@ -356,16 +356,16 @@ TRenModSetupStrParser::xAddSynthView( Int iViewNum, Char cType, Char cRefType )
   switch ( cType )
   {
   case 'E':
-    iBlendMode = -1;
+    iBlendMode = BLEND_NONE;
     break;
   case 'I':
-    iBlendMode = 0;
+    iBlendMode = BLEND_AVRG;
     break;
   case 'L':
-    iBlendMode = 1;
+    iBlendMode = BLEND_LEFT;
     break;
   case 'R':
-    iBlendMode = 2;
+    iBlendMode = BLEND_RIGHT;
     break;
   default:
     xError(false);

@@ -1012,7 +1012,6 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
 
           if ((iPrevShiftedPos + (iStep >> 1) ) > iPrevShiftedPosCeiled )
           {
-#if HHI_FIX
             if ( !((iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth)))
             {
 
@@ -1025,22 +1024,6 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
             }           
             iInterPolPos++;
           }          
-#else
-          if ( (iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth))
-          {
-            // skip Interpolation if Interpolation position is outside frame
-            iPrevShiftedPos = iShiftedPos;
-            continue;
-          };
-
-          for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
-          {
-              apcOutputData[uiCurPlane][iInterPolPos]  = apcInputData[uiCurPlane][iPosX - iStep];
-          }
-          pcFilledData[iInterPolPos]  = REN_IS_FILLED;
-            iInterPolPos++;
-        }
-#endif
 
           // Fill Disocclusion
           if ( m_bInstantHoleFilling )
@@ -1063,7 +1046,6 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
         if ( bOcclusion && (iShiftedPos - (iStep >> 1) < iShiftedPosFloor) )
         {
           iInterPolPos = iShiftedPosFloor >> m_iRelShiftLUTPrec;
-#if HHI_FIX
           if ( !((iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth)))
           {        
             for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
@@ -1073,21 +1055,6 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
 
             pcFilledData[iInterPolPos]  = REN_IS_FILLED;
           }
-#else
-          if ( (iInterPolPos < (Int) 0) || (iInterPolPos >= iOutputWidth))
-          {
-            // skip Interpolation if Interpolation position is outside frame
-            iPrevShiftedPos = iShiftedPos;
-            continue;
-          };
-
-          for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
-          {
-            apcOutputData[uiCurPlane][iInterPolPos]  = apcInputData[uiCurPlane][iPosX ];
-          }
-
-          pcFilledData[iInterPolPos]  = REN_IS_FILLED;
-#endif
         }
       }
       iPrevShiftedPos = iShiftedPos;
@@ -1958,7 +1925,7 @@ Void TRenTop::temporalFilterVSRS( TComPicYuv* pcPicYuvVideoCur, TComPicYuv* pcPi
         {
           for( Int iCurPosX = 0; iCurPosX < 4; iCurPosX++)
           {
-            iSAD += abs( pcVideoLastDataBlk[iCurPosX] - pcVideoCurDataBlk[iCurPosX] );	 //SAD
+            iSAD += abs( pcVideoLastDataBlk[iCurPosX] - pcVideoCurDataBlk[iCurPosX] );   //SAD
           }
           pcVideoLastDataBlk += iVideoLastStride;
           pcVideoCurDataBlk  += iVideoCurStride;

@@ -79,20 +79,20 @@ protected:
 
   ////camera specification ////
   Char*               m_pchCameraParameterFile;         ///< camera parameter file
-  Char*               m_pchSynthViewCameraNumbers;            ///< numbers of views to synthesize
+  Char*               m_pchSynthViewCameraNumbers;      ///< numbers of views to synthesize
   Char*               m_pchViewConfig;                  ///< String to setup renderer
-  Char*               m_pchBaseViewCameraNumbers;             ///< numbers of base views
+  Char*               m_pchBaseViewCameraNumbers;       ///< numbers of base views
 
   // derived
   TAppComCamPara      m_cCameraData;                    ///< class to store camera parameters
   TRenModSetupStrParser m_cRenModStrParser;             ///< class to manage View to be rendered
   Bool                m_bUseSetupString;                ///< true if setup string is used
 
-  Int                 m_iNumberOfInputViews;						///< number of input Views
-  Int                 m_iNumberOfOutputViews;						///< number views to synthesize
+  Int                 m_iNumberOfInputViews;            ///< number of input Views
+  Int                 m_iNumberOfOutputViews;           ///< number views to synthesize
 
   //// renderer Modes ////
-  Int                 m_iRenderDirection;                  ///< 0: interpolate, 1: extrapolate from left, 2: extrapolate from right
+  Int                 m_iRenderDirection;               ///< 0: interpolate, 1: extrapolate from left, 2: extrapolate from right
 
   Int                 m_iLog2SamplingFactor;            ///< factor for horizontal upsampling before processing
   Bool                m_bUVUp;                          ///< upsampling of chroma planes before processing

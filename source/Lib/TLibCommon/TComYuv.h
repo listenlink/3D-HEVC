@@ -166,7 +166,7 @@ public:
   //   Remove High frequency
   Void    removeHighFreq    ( TComYuv* pcYuvSrc, UInt uiPartIdx, UInt uiWidht, UInt uiHeight );
 #if LG_RESTRICTEDRESPRED_M24766
-  void	  getPUXYOffset     (PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &iXOffset, Int &iYOffset);
+  Void    getPUXYOffset     (PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &iXOffset, Int &iYOffset);
   Void    add               (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract = false );
   Void    addLuma           (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
   Void    addChroma         (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );

@@ -41,7 +41,7 @@
 // ====================================================================================================================
 
 int main(int argc, char* argv[])
-	{
+  {
   TAppRendererTop  cTAppRendererTop;
 
   // print information

@@ -1155,19 +1155,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // reset Model
       if( m_pcRdCost->getUseRenModel() )
       {
-#if HHI_FIX
         UInt  uiWidth     = m_ppcOrigYuv[uiDepth]->getWidth ( );
         UInt  uiHeight    = m_ppcOrigYuv[uiDepth]->getHeight( );
         Pel*  piSrc       = m_ppcOrigYuv[uiDepth]->getLumaAddr( 0 );
         UInt  uiSrcStride = m_ppcOrigYuv[uiDepth]->getStride();
         m_pcRdCost->setRenModelData( m_ppcBestCU[uiDepth], 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-        UInt  uiWidth     = m_ppcBestCU[uiDepth]->getWidth ( 0 );
-        UInt  uiHeight    = m_ppcBestCU[uiDepth]->getHeight( 0 );
-        Pel*  piSrc       = m_ppcOrigYuv[uiDepth]->getLumaAddr( 0 );
-        UInt  uiSrcStride = m_ppcOrigYuv[uiDepth]->getStride();
-        m_pcRdCost->setRenModelData( m_ppcBestCU[uiDepth], 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
       }
 #endif
       UChar       uhNextDepth         = uiDepth+1;
@@ -1211,22 +1203,17 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           xCopyYuv2Tmp( pcSubBestPartCU->getTotalNumPart()*uiPartUnitIdx, uhNextDepth );
 
 #if HHI_VSO
+#if HHI_VSO_SET_OPTIM 
+#else 
           if( m_pcRdCost->getUseRenModel() ) // necessary ??
           {
-#if HHI_FIX
             UInt  uiWidth     = m_ppcRecoYuvBest[uhNextDepth]->getWidth   (  );
             UInt  uiHeight    = m_ppcRecoYuvBest[uhNextDepth]->getHeight  (   );
             Pel*  piSrc       = m_ppcRecoYuvBest[uhNextDepth]->getLumaAddr( 0 );
             UInt  uiSrcStride = m_ppcRecoYuvBest[uhNextDepth]->getStride  (   );
             m_pcRdCost->setRenModelData( pcSubBestPartCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-            UInt  uiWidth     = pcSubBestPartCU->getWidth ( 0 );
-            UInt  uiHeight    = pcSubBestPartCU->getHeight( 0 );
-            Pel*  piSrc       = m_ppcRecoYuvBest[pcSubBestPartCU->getDepth(0)]->getLumaAddr( 0 );
-            UInt  uiSrcStride = m_ppcRecoYuvBest[pcSubBestPartCU->getDepth(0)]->getStride();
-            m_pcRdCost->setRenModelData( pcSubBestPartCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
           }
+#endif
 #endif
         }
         else if (bInSlice)
@@ -1368,19 +1355,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if HHI_VSO
   if( m_pcRdCost->getUseRenModel() )
   {
-#if HHI_FIX
       UInt  uiWidth     = m_ppcRecoYuvBest[uiDepth]->getWidth   ( );
       UInt  uiHeight    = m_ppcRecoYuvBest[uiDepth]->getHeight  ( );
       Pel*  piSrc       = m_ppcRecoYuvBest[uiDepth]->getLumaAddr( 0 );
       UInt  uiSrcStride = m_ppcRecoYuvBest[uiDepth]->getStride  ( );
       m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-    UInt  uiWidth     = rpcBestCU->getWidth ( 0 );
-    UInt  uiHeight    = rpcBestCU->getHeight( 0 );
-    Pel*  piSrc       = m_ppcRecoYuvBest[uiDepth]->getLumaAddr( 0 );
-    UInt  uiSrcStride = m_ppcRecoYuvBest[uiDepth]->getStride();
-    m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
   }
 #endif
 
@@ -1746,19 +1725,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if HHI_VSO
   if( m_pcRdCost->getUseRenModel() )
   {
-#if HHI_FIX
     UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth ( );
     UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight( );
     Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( );
     UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
     m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-    UInt  uiWidth     = rpcTempCU->getWidth ( 0 );
-    UInt  uiHeight    = rpcTempCU->getHeight( 0 );
-    Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( );
-    UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
-    m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
   }
 #endif
 
@@ -1850,19 +1821,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if HHI_VSO
           if( m_pcRdCost->getUseRenModel() )
           { //Reset
-#if HHI_FIX
             UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth    ();
             UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight   ();
             Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr ();
             UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride   ();
             m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-            UInt  uiWidth     = rpcTempCU->getWidth ( 0 );
-            UInt  uiHeight    = rpcTempCU->getHeight( 0 );
-            Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( );
-            UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
-            m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
           }
 #endif
           // estimate residual and encode everything
@@ -1926,19 +1889,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if HHI_VSO
   if( m_pcRdCost->getUseRenModel() )
   {
-#if HHI_FIX
     UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth ( );
     UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight( );
     Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( );
     UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
     m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-    UInt  uiWidth     = rpcTempCU->getWidth ( 0 );
-    UInt  uiHeight    = rpcTempCU->getHeight( 0 );
-    Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( );
-    UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
-    m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
   }
 #endif  
 
@@ -2045,19 +2000,11 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if HHI_VSO
   if( m_pcRdCost->getUseRenModel() )
   {
-#if HHI_FIX
     UInt  uiWidth     = m_ppcOrigYuv[uiDepth]->getWidth   ();
     UInt  uiHeight    = m_ppcOrigYuv[uiDepth]->getHeight  ();
     Pel*  piSrc       = m_ppcOrigYuv[uiDepth]->getLumaAddr();
     UInt  uiSrcStride = m_ppcOrigYuv[uiDepth]->getStride  ();
     m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-    UInt  uiWidth     = rpcTempCU->getWidth ( 0 );
-    UInt  uiHeight    = rpcTempCU->getHeight( 0 );
-    Pel*  piSrc       = m_ppcOrigYuv[uiDepth]->getLumaAddr( );
-    UInt  uiSrcStride = m_ppcOrigYuv[uiDepth]->getStride();
-    m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
   }
 #endif
 
@@ -2556,19 +2503,11 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
 #if HHI_VSO
   if( m_pcRdCost->getUseRenModel() && !bRecursiveCall)
   {
-#if HHI_FIX
     UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth   ();
     UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight  ();
     Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr();
     UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride  ();
     m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-    UInt  uiWidth     = m_ppcTempCU [uhDepth]->getWidth ( 0 );
-    UInt  uiHeight    = m_ppcTempCU [uhDepth]->getHeight( 0 );
-    Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( 0 );
-    UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
-    m_pcRdCost->setRenModelData( m_ppcTempCU[uhDepth], 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
   }
 #endif
 
@@ -2716,19 +2655,11 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
 #if HHI_VSO
   if( !bSplit && bRecursiveCall && m_pcRdCost->getUseRenModel() )
   {
-#if HHI_FIX
     UInt  uiWidth     = m_ppcRecoYuvBest[uhDepth]->getWidth   (   );
     UInt  uiHeight    = m_ppcRecoYuvBest[uhDepth]->getHeight  (   );
     UInt  uiSrcStride = m_ppcRecoYuvBest[uhDepth]->getStride  (   );
     Pel*  piSrc       = m_ppcRecoYuvBest[uhDepth]->getLumaAddr( 0 );
     m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#else
-    UInt  uiWidth     = rpcBestCU->getWidth ( 0 );
-    UInt  uiHeight    = rpcBestCU->getHeight( 0 );
-    Pel*  piSrc       = m_ppcRecoYuvBest[uhDepth]->getLumaAddr( 0 );
-    UInt  uiSrcStride = m_ppcRecoYuvBest[uhDepth]->getStride();
-    m_pcRdCost->setRenModelData( rpcBestCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-#endif
   }
 #endif
 }

@@ -105,6 +105,29 @@ TRenImagePlane<T>** TRenImage<T>::getPlanes() const
   return m_apcPlanes;
 }
 
+#if HHI_VSO_SPEEDUP_A033
+template<typename T>
+Void TRenImage<T>::getDataAndStrides( T** pptData, Int* piStrides )
+{
+  for (UInt uiCurPlane = 0; uiCurPlane < m_uiNumberOfPlanes; uiCurPlane++ )
+  {
+    piStrides[uiCurPlane] = m_apcPlanes[uiCurPlane]->getStride   ();
+    pptData  [uiCurPlane] = m_apcPlanes[uiCurPlane]->getPlaneData();
+  }
+}
+
+
+template<typename T>
+Void TRenImage<T>::getWidthAndHeight( Int* ppiWidths, Int* ppiHeights )
+{
+  for (UInt uiCurPlane = 0; uiCurPlane < m_uiNumberOfPlanes; uiCurPlane++ )
+  {
+    ppiWidths [uiCurPlane] = m_apcPlanes[uiCurPlane]->getWidth ();
+    ppiHeights[uiCurPlane] = m_apcPlanes[uiCurPlane]->getHeight();
+  }
+}
+#endif
+
 template<typename T>
 Void TRenImage<T>::allocatePlanes( UInt uiWidth, UInt uiHeight, UInt uiNumberOfFullPlanes, UInt uiNumberOfQuaterPlanes )
 {

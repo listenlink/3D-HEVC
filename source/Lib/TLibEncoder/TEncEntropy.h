@@ -76,9 +76,9 @@ public:
   virtual UInt  getCoeffCost          ()                = 0;
 
 #if VIDYO_VPS_INTEGRATION
-	virtual Void  codeVPS                 ( TComVPS* pcVPS )                                      = 0;
+  virtual Void  codeVPS                 ( TComVPS* pcVPS )                                      = 0;
 #endif
-	
+
 #if HHI_MPI
   virtual Void  codeSPS                 ( TComSPS* pcSPS, Bool bIsDepth )                       = 0;
 #else
@@ -233,7 +233,7 @@ public:
   
 public:
 #if VIDYO_VPS_INTEGRATION
-	Void encodeVPS               ( TComVPS* pcVPS);
+  Void encodeVPS               ( TComVPS* pcVPS);
 #endif
   // SPS
 #if HHI_MPI

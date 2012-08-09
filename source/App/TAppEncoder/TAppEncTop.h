@@ -62,18 +62,18 @@ class TAppEncTop : public TAppEncCfg
 {
 private:
   // class interface
-  std::vector<TEncTop*>				  m_acTEncTopList ;
-  std::vector<TEncTop*>				  m_acTEncDepthTopList ;
-  std::vector<TVideoIOYuv*>		m_acTVideoIOYuvInputFileList;  ///< input YUV file
+  std::vector<TEncTop*>      m_acTEncTopList ;
+  std::vector<TEncTop*>      m_acTEncDepthTopList ;
+  std::vector<TVideoIOYuv*>  m_acTVideoIOYuvInputFileList;  ///< input YUV file
   std::vector<TVideoIOYuv*>  m_acTVideoIOYuvDepthInputFileList;
-  std::vector<TVideoIOYuv*>		m_acTVideoIOYuvReconFileList;  ///< output reconstruction file
+  std::vector<TVideoIOYuv*>  m_acTVideoIOYuvReconFileList;  ///< output reconstruction file
   std::vector<TVideoIOYuv*>  m_acTVideoIOYuvDepthReconFileList;
 
   std::vector< TComList<TComPicYuv*>* >  m_picYuvRec;       ///< list of reconstruction YUV files
   std::vector< TComList<TComPicYuv*>* >  m_picYuvDepthRec;         
 
-  std::vector<Int>          	m_frameRcvd;                  ///< number of received frames
-  std::vector<Int>          	m_depthFrameRcvd;   
+  std::vector<Int>           m_frameRcvd;                  ///< number of received frames
+  std::vector<Int>           m_depthFrameRcvd;   
 
   unsigned                   m_essentialBytes;
   unsigned                   m_totalBytes;
@@ -123,6 +123,10 @@ public:
   TAppEncTop();
   virtual ~TAppEncTop();
   
+#if SAIT_VSO_EST_A0033
+  TComPicYuv* xGetPicYuvFromViewTemp( Int iViewIdx, Int iPoc, Bool bDepth, Bool bRecon );
+#endif
+
   Void        encode      ();                               ///< main encoding function
   TEncTop*    getTEncTop( Int viewId, Bool isDepth );   
 
@@ -134,7 +138,11 @@ public:
   Void                  getUsedPelsMap   ( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUsedPelsMap );
 #endif
 #if HHI_VSO
+#if HHI_VSO_SPEEDUP_A033
+  Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset );
+#else
   Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent );
+#endif
 #endif
   
 #if VIDYO_VPS_INTEGRATION

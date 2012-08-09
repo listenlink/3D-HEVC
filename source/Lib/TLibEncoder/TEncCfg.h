@@ -204,6 +204,11 @@ protected:
   Double    m_dLambdaScaleVSO;
   UInt      m_uiVSOMode;
 #endif
+#if SAIT_VSO_EST_A0033
+  Bool      m_bUseEstimatedVSD; 
+  Double    m_dDispCoeff;
+#endif
+
 
   //====== Tool list ========
   Bool      m_bUseSBACRD;
@@ -567,6 +572,11 @@ public:
   Void      setUseVSO                       ( Bool  b )     { m_bUseVSO     = b; }
 #endif
 
+#if SAIT_VSO_EST_A0033
+  Void      setUseEstimatedVSD              ( Bool  b )     { m_bUseEstimatedVSD = b; }
+  Void      setDispCoeff                    ( Double  d )   { m_dDispCoeff  = d; }
+#endif
+
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
 #if FAST_DECISION_FOR_MRG_RD_COST
@@ -607,6 +617,11 @@ public:
 #if HHI_VSO
   Bool      getUseVSO                       ()      { return m_bUseVSO;     }
 #endif
+#if SAIT_VSO_EST_A0033
+  Bool      getUseEstimatedVSD              ()      { return m_bUseEstimatedVSD; }
+  Double    getDispCoeff                    ()      { return m_dDispCoeff;    }
+#endif
+
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
 #if FAST_DECISION_FOR_MRG_RD_COST

@@ -205,6 +205,12 @@ __inline Void mapDMMtoIntraMode(   Int& dirMode ) { dirMode = (dirMode >= NUM_IN
 #endif
 #endif
 
+#if LGE_EDGE_INTRA
+__inline Void mapEdgeIntratoDC( UChar& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
+__inline Void mapEdgeIntratoDC(  UInt& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
+__inline Void mapEdgeIntratoDC(   Int& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
+#endif
+
 // ==========================================
 // Mode-Dependent DST Matrices
 extern const short g_as_DST_MAT_4 [4][4];

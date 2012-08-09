@@ -51,7 +51,7 @@ struct NALUnit
   NalRefIdc   m_nalRefIDC;   ///< nal_ref_idc
 #endif
 #if VIDYO_VPS_INTEGRATION
-	unsigned    m_layerId;
+  unsigned    m_layerId;
   unsigned    m_temporalId;  ///< temporal_id
 #else
   Int         m_viewId;      ///< view_id
@@ -99,7 +99,7 @@ struct NALUnit
     m_viewId      = viewId;
     m_isDepth     = isDepth;
 #else
-		m_layerId = layerId;
+    m_layerId = layerId;
 #endif
     m_temporalId  = temporalID;
   }
@@ -123,7 +123,7 @@ struct NALUnit
     m_viewId      = viewId;
     m_isDepth     = isDepth;
 #else
-		m_layerId = layerId;
+    m_layerId = layerId;
 #endif
     m_temporalId  = temporalID;
     m_OutputFlag  = outputFlag;

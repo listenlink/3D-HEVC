@@ -59,9 +59,9 @@ class TAppRendererTop : public TAppRendererCfg
 {
 private:
   // class interface
-  std::vector<TVideoIOYuv*>		 m_apcTVideoIOYuvVideoInput;
+  std::vector<TVideoIOYuv*>     m_apcTVideoIOYuvVideoInput;
   std::vector<TVideoIOYuv*>    m_apcTVideoIOYuvDepthInput;
-  std::vector<TVideoIOYuv*>		 m_apcTVideoIOYuvSynthOutput;
+  std::vector<TVideoIOYuv*>     m_apcTVideoIOYuvSynthOutput;
 
   // RendererInterface
   TRenTop*                     m_pcRenTop;

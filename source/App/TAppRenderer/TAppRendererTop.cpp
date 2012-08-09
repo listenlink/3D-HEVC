@@ -69,10 +69,9 @@ Void TAppRendererTop::xCreateLib()
 
     pcVideoInput->open( m_pchVideoInputFileList[iViewIdx], false, iFileBitDepth, iInteralBitDepth );  // read mode
     pcDepthInput->open( m_pchDepthInputFileList[iViewIdx], false, iFileBitDepth, iInteralBitDepth );  // read mode
-#if HHI_FIX
     pcVideoInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight  );
     pcDepthInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight  );
-#endif
+
     m_apcTVideoIOYuvVideoInput.push_back( pcVideoInput );
     m_apcTVideoIOYuvDepthInput.push_back( pcDepthInput );
   }
@@ -185,37 +184,28 @@ Void TAppRendererTop::render()
 
   while ( ( ( iNumOfRenderedFrames < m_iFramesToBeRendered ) || ( m_iFramesToBeRendered == 0 ) ) && !bAnyEOS )
   {
-
-#if HHI_FIX
     if ( iFrame >= m_iFrameSkip ) 
     {
-#endif
-    // read in depth and video
-    for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
-    {
-      m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
-
-      apcPicYuvBaseVideo[iBaseViewIdx]->extendPicBorder();
-
-      bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
-
-      m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
-      apcPicYuvBaseDepth[iBaseViewIdx]->extendPicBorder();
-      bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
-
-      if ( m_bTempDepthFilter && (iFrame >= m_iFrameSkip) )
+      // read in depth and video
+      for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
       {
-        m_pcRenTop->temporalFilterVSRS( apcPicYuvBaseVideo[iBaseViewIdx], apcPicYuvBaseDepth[iBaseViewIdx], apcPicYuvLastBaseVideo[iBaseViewIdx], apcPicYuvLastBaseDepth[iBaseViewIdx], ( iFrame == m_iFrameSkip) );
+        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+
+        apcPicYuvBaseVideo[iBaseViewIdx]->extendPicBorder();
+
+        bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
+
+        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+        apcPicYuvBaseDepth[iBaseViewIdx]->extendPicBorder();
+        bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
+
+        if ( m_bTempDepthFilter && (iFrame >= m_iFrameSkip) )
+        {
+          m_pcRenTop->temporalFilterVSRS( apcPicYuvBaseVideo[iBaseViewIdx], apcPicYuvBaseDepth[iBaseViewIdx], apcPicYuvLastBaseVideo[iBaseViewIdx], apcPicYuvLastBaseDepth[iBaseViewIdx], ( iFrame == m_iFrameSkip) );
+        }
       }
     }
-
-#if HHI_FIX
-    }
-    else
-#else
-    if ( iFrame < m_iFrameSkip ) // Skip Frames
-#endif
-    
+    else    
     {
       std::cout << "Skipping Frame " << iFrame << std::endl;
 
@@ -535,7 +525,15 @@ Void TAppRendererTop::xRenderModelFromString()
     TRenModel cCurModel;
 
     AOT( m_iLog2SamplingFactor != 0 );
+#if LGE_VSO_EARLY_SKIP_A0093
+    cCurModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin, false );
+#else
     cCurModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin );
+#endif
+
+#if HHI_VSO_SPEEDUP_A033
+    cCurModel.setHorOffset( 0 );
+#endif
 
     for ( Int iViewIdx = 0; iViewIdx < m_iNumberOfInputViews; iViewIdx++ )
     {
@@ -562,29 +560,21 @@ Void TAppRendererTop::xRenderModelFromString()
     while ( ( ( iNumOfRenderedFrames < m_iFramesToBeRendered ) || ( m_iFramesToBeRendered == 0 ) ) && !bAnyEOS )
     {
 
-#if HHI_FIX
       if ( iFrame >= m_iFrameSkip )
       {      
-#endif
-      // read in depth and video
-      for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
-      {
-        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
-        bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
+        // read in depth and video
+        for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
+        {
+          m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+          bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
 
-        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
-        bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
-      }
-#if HHI_FIX
+          m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+          bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
+        }
       }
       else
-#else
-      if ( iFrame < m_iFrameSkip )
-#endif
       {
-#if HHI_FIX
         iFrame++;
-#endif
         continue;
       }
 
@@ -597,17 +587,10 @@ Void TAppRendererTop::xRenderModelFromString()
         cCurModel.setBaseView( iBaseViewSIdx, pcPicYuvVideo, pcPicYuvDepth, NULL, NULL );
       }
 
-#if HHI_FIX
       m_cCameraData.update( (UInt) ( iFrame - m_iFrameSkip ));
-#endif
 
       for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
       {
-#if HHI_FIX
-#else
-        m_cCameraData.update( (UInt)iFrame );
-#endif
-
         // setup virtual views
         Int iBaseViewSIdx = m_cCameraData.getBaseId2SortedId()[iBaseViewIdx];
 
@@ -725,7 +708,14 @@ Void TAppRendererTop::xRenderModelFromNums()
   TRenModel cCurModel;
 
   AOT( m_iLog2SamplingFactor != 0 );
+#if HHI_VSO_SPEEDUP_A033
+  cCurModel.setHorOffset( 0 );
+#endif
+#if LGE_VSO_EARLY_SKIP_A0093
+  cCurModel.create( m_iNumberOfInputViews, m_iNumberOfOutputViews, m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin, false );
+#else
   cCurModel.create( m_iNumberOfInputViews, m_iNumberOfOutputViews, m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin );
+#endif
 
   for ( UInt uiBaseView = 0; uiBaseView < m_iNumberOfInputViews; uiBaseView++ )
   {
@@ -787,43 +777,30 @@ Void TAppRendererTop::xRenderModelFromNums()
   while ( ( ( iNumOfRenderedFrames < m_iFramesToBeRendered ) || ( m_iFramesToBeRendered == 0 ) ) && !bAnyEOS )
   {
 
-#if HHI_FIX
     if ( iFrame >= m_iFrameSkip )
     {      
-#endif
-    // read in depth and video
-    for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
-    {
-      m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
-      bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
-
-      m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
-      bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
-
-      if ( iFrame >= m_iFrameSkip )
+      // read in depth and video
+      for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
       {
-        Int iBaseViewSIdx = m_cCameraData.getBaseId2SortedId()[iBaseViewIdx];
-        cCurModel.setBaseView( iBaseViewSIdx, apcPicYuvBaseVideo[iBaseViewIdx], apcPicYuvBaseDepth[iBaseViewIdx], NULL, NULL );
+        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+        bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
+
+        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+        bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
+
+        if ( iFrame >= m_iFrameSkip )
+        {
+          Int iBaseViewSIdx = m_cCameraData.getBaseId2SortedId()[iBaseViewIdx];
+          cCurModel.setBaseView( iBaseViewSIdx, apcPicYuvBaseVideo[iBaseViewIdx], apcPicYuvBaseDepth[iBaseViewIdx], NULL, NULL );
+        }
       }
     }
-
-#if HHI_FIX
-    }
     else
-#else
-    if ( iFrame < m_iFrameSkip ) // Skip Frames
-#endif
     {
       iFrame++;
       continue;
     }
-
-#if HHI_FIX
     m_cCameraData.update( (UInt) (iFrame - m_iFrameSkip ));
-#else
-    m_cCameraData.update( (UInt)iFrame );
-#endif
-
     for(Int iSynthViewIdx=0; iSynthViewIdx < m_iNumberOfOutputViews; iSynthViewIdx++ )
     {
 
@@ -971,45 +948,34 @@ Void TAppRendererTop::renderUsedPelsMap( )
   while ( ( ( iNumOfRenderedFrames < m_iFramesToBeRendered ) || ( m_iFramesToBeRendered == 0 ) ) && !bAnyEOS )
   {
 
-#if HHI_FIX
+
     if ( iFrame >= m_iFrameSkip )
     {      
-#endif
-    // read in depth and video
-    for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
-    {
-      m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
-      apcPicYuvBaseVideo[iBaseViewIdx]->extendPicBorder();
-      bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
-
-      m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
-      apcPicYuvBaseDepth[iBaseViewIdx]->extendPicBorder();
-      bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
-
-      if ( m_bTempDepthFilter && (iFrame >= m_iFrameSkip) )
+      // read in depth and video
+      for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
       {
-        m_pcRenTop->temporalFilterVSRS( apcPicYuvBaseVideo[iBaseViewIdx], apcPicYuvBaseDepth[iBaseViewIdx], apcPicYuvLastBaseVideo[iBaseViewIdx], apcPicYuvLastBaseDepth[iBaseViewIdx], ( iFrame == m_iFrameSkip) );
+        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+        apcPicYuvBaseVideo[iBaseViewIdx]->extendPicBorder();
+        bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
+
+        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+        apcPicYuvBaseDepth[iBaseViewIdx]->extendPicBorder();
+        bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
+
+        if ( m_bTempDepthFilter && (iFrame >= m_iFrameSkip) )
+        {
+          m_pcRenTop->temporalFilterVSRS( apcPicYuvBaseVideo[iBaseViewIdx], apcPicYuvBaseDepth[iBaseViewIdx], apcPicYuvLastBaseVideo[iBaseViewIdx], apcPicYuvLastBaseDepth[iBaseViewIdx], ( iFrame == m_iFrameSkip) );
+        }
       }
     }
-
-#if HHI_FIX
-    }
     else
-#else
-    if ( iFrame < m_iFrameSkip ) // Skip Frames
-#endif
     {
       std::cout << "Skipping Frame " << iFrame << std::endl;
 
       iFrame++;
       continue;
     }
-
-#if HHI_FIX
     m_cCameraData.update( (UInt) ( iFrame - m_iFrameSkip ) );
-#else
-    m_cCameraData.update( (UInt)iFrame );
-#endif
 
     for(Int iViewIdx=1; iViewIdx < m_iNumberOfInputViews; iViewIdx++ )
     {
