@@ -654,7 +654,7 @@ Void TAppEncTop::xInitLibCfg()
   {
     if ( m_uiVSOMode == 4 )
     {
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
 #if LGE_VSO_EARLY_SKIP_A0093
       m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, g_uiMaxCUHeight , LOG2_DISP_PREC_LUT, 0, m_bVSOEarlySkip );
 #else
@@ -1248,7 +1248,7 @@ Void TAppEncTop::getUsedPelsMap( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUse
 }
 #endif
 #if HHI_VSO
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset )
 {
   m_cRendererModel.setHorOffset( iHorOffset ); 

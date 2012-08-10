@@ -277,6 +277,10 @@ Void TEncSbac::determineCabacInitIdx()
   {
     m_pcSlice->getPPS()->setEncCABACTableIdx( I_SLICE );
   }  
+
+  #if CABAC_INIT_FLAG && POZNAN_CABAC_INIT_FLAG_FIX
+    m_pcSlice->getPPS()->setEncPrevPOC( m_pcSlice->getPOC() );
+  #endif
 }
 #endif
 

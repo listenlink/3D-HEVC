@@ -447,7 +447,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     m_pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 #endif
 
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
 #else
     if ( iVSOMode == 4 )
     {

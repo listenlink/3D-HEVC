@@ -105,7 +105,7 @@ TRenImagePlane<T>** TRenImage<T>::getPlanes() const
   return m_apcPlanes;
 }
 
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
 template<typename T>
 Void TRenImage<T>::getDataAndStrides( T** pptData, Int* piStrides )
 {

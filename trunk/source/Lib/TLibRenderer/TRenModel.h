@@ -102,7 +102,7 @@ private:
 
   Int m_iNumOfBaseViews;
 
-#if HHI_VSO_SPEEDUP_A033                 
+#if HHI_VSO_SPEEDUP_A0033                 
   // Horizontal Offset in input data
   UInt m_uiHorOff;          
 #endif

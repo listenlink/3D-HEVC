@@ -41,32 +41,35 @@
 //! \ingroup TLibCommon
 //! \{
 
-#define FIXES                           1
-#define LGE_EDGE_INTRA                  1       //JCT2-A0070
+#define FIXES                             1
+#define POZNAN_CABAC_INIT_FLAG_FIX        1
+
+
+#define LGE_EDGE_INTRA                    1   // JCT2-A0070
 #if LGE_EDGE_INTRA
-#define LGE_EDGE_INTRA_MIN_SIZE         4
-#define LGE_EDGE_INTRA_MAX_SIZE        32
-#define LGE_EDGE_INTRA_THRESHOLD       20
+#define LGE_EDGE_INTRA_MIN_SIZE           4
+#define LGE_EDGE_INTRA_MAX_SIZE           32
+#define LGE_EDGE_INTRA_THRESHOLD          20
 #define LGE_EDGE_INTRA_MAX_EDGE_NUM_PER_4x4 8
-#define LGE_EDGE_INTRA_DELTA_DC         1 
-#define LGE_EDGE_INTRA_PIXEL_DIFFERENCE 1
+#define LGE_EDGE_INTRA_DELTA_DC           1 
+#define LGE_EDGE_INTRA_PIXEL_DIFFERENCE   1
 #endif
 
-#define LG_ZEROINTRADEPTHRESI_M26039      1  //JCT2-A0087
-
+#define LG_ZEROINTRADEPTHRESI_M26039      1   // JCT2-A0087
+                                        
 #define SONY_COLPIC_AVAILABILITY          1
-
+                                        
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
-#define QC_MULTI_DIS_CAN                  1         // JCT2-A0097
-#if QC_MULTI_DIS_CAN
+#define QC_MULTI_DIS_CAN                  1   // JCT2-A0097
+#if QC_MULTI_DIS_CAN                    
     #define DIS_CANS                      1
-#endif
-
-#define MTK_INTERVIEW_MERGE_A0049         1 //  JCT2-A0049 second part
-
-#define LGE_DVMCP                         1 //  JCT2-A0126     
-#if LGE_DVMCP
+#endif                                  
+                                        
+#define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
+                                        
+#define LGE_DVMCP                         1   //  JCT2-A0126     
+#if LGE_DVMCP                           
 #define DVFROM_LEFTBELOW                  1
 #define DVFROM_LEFT                       2
 #define DVFROM_ABOVERIGHT                 3
@@ -81,7 +84,7 @@
 #define HHI_VSO_DIST_INT                  1
 #define HHI_VSO_SYNTH_DIST_OUT            0
 #define HHI_VSO_COLOR_PLANES              1
-#define HHI_VSO_SPEEDUP_A033              1 // JCT2-A0033 modification 1 (changes classes directly related the renderer model 
+#define HHI_VSO_SPEEDUP_A0033             1 // JCT2-A0033 modification 1 (changes in classes directly related the renderer model 
                                             // to are not covered by this define, since nearly the entire class has been changed)
 #define HHI_VSO_RM_ASSERTIONS             0 // output VSO assertions
 #define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
@@ -101,22 +104,22 @@
 #define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
 #endif
 
-#define HHI_MPI                         1   // motion parameter inheritance from texture picture for depth map coding
-#define HHI_MPI_MERGE_POS               0
-#define HHI_FULL_PEL_DEPTH_MAP_MV_ACC   1   // full-pel mv accuracy for depth maps
-
-#if HHI_INTER_VIEW_MOTION_PRED
-#define SAIT_IMPROV_MOTION_PRED_M24829  1   // improved inter-view motion vector prediction
-#else
-#define SAIT_IMPROV_MOTION_PRED_M24829  0   
-#endif 
-
-#if HHI_INTER_VIEW_RESIDUAL_PRED
-#define LG_RESTRICTEDRESPRED_M24766     1   // restricted inter-view residual prediction
-#define QC_SIMPLIFIEDIVRP_M24938        1
-#else
-#define LG_RESTRICTEDRESPRED_M24766     0
-#define QC_SIMPLIFIEDIVRP_M24938        0
+#define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
+#define HHI_MPI_MERGE_POS                 0
+#define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
+                                       
+#if HHI_INTER_VIEW_MOTION_PRED         
+#define SAIT_IMPROV_MOTION_PRED_M24829    1   // improved inter-view motion vector prediction
+#else                                  
+#define SAIT_IMPROV_MOTION_PRED_M24829    0   
+#endif                                 
+                                       
+#if HHI_INTER_VIEW_RESIDUAL_PRED       
+#define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
+#define QC_SIMPLIFIEDIVRP_M24938          1
+#else                                  
+#define LG_RESTRICTEDRESPRED_M24766       0
+#define QC_SIMPLIFIEDIVRP_M24938          0
 #endif
 
 
@@ -124,19 +127,19 @@
 #define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point
 #define NO_COMBINED_PARALLEL              1 ///< Disallow any combined usage of parallel tools among Tile, EntropySlice and Wavefont
 
-#define LOSSLESS_CODING                   1  ///< H0530: lossless and lossy (mixed) coding
+#define LOSSLESS_CODING                   1 ///< H0530: lossless and lossy (mixed) coding
 #if LOSSLESS_CODING
-#define SEQUENCE_LEVEL_LOSSLESS           0  ///< H0530: used only for sequence or frame-level lossless coding
+#define SEQUENCE_LEVEL_LOSSLESS           0 ///< H0530: used only for sequence or frame-level lossless coding
 #endif
 
 #define PARALLEL_MERGE  1                   //< H0082 parallel merge/skip
-#define LOG2_PARALLEL_MERGE_LEVEL_MINUS2 0  //< H0082 parallel merge level 0-> 4x4, 1-> 8x8, 2->16x16, 3->32x32, 4->64x64
+#define LOG2_PARALLEL_MERGE_LEVEL_MINUS2  0 //< H0082 parallel merge level 0-> 4x4, 1-> 8x8, 2->16x16, 3->32x32, 4->64x64
 #if PARALLEL_MERGE && LOG2_PARALLEL_MERGE_LEVEL_MINUS2
-#define CU_BASED_MRG_CAND_LIST           1  //< H0240: single merge candidate list for all PUs inside a 8x8 CU conditioned on LOG2_PARALLEL_MERGE_LEVEL_MINUS2 > 0
+#define CU_BASED_MRG_CAND_LIST            1  //< H0240: single merge candidate list for all PUs inside a 8x8 CU conditioned on LOG2_PARALLEL_MERGE_LEVEL_MINUS2 > 0
 #endif
-#define MVP_AT_ENTROPYSLICE_BOUNDARY  1     //< H0362 enable motion prediction accross entropy slice boundary
+#define MVP_AT_ENTROPYSLICE_BOUNDARY      1  //< H0362 enable motion prediction accross entropy slice boundary
 
-#define FAST_DECISION_FOR_MRG_RD_COST  1 ////< H0178: Fast Decision for Merge 2Nx2N RDCost
+#define FAST_DECISION_FOR_MRG_RD_COST     1  ////< H0178: Fast Decision for Merge 2Nx2N RDCost
 
 #define PIC_CROPPING              1 ///< Picture cropping and size constraints
 #define NAL_REF_FLAG              1 ///< Change nal_ref_idc to nal_ref_flag (JCTVC-F463)
@@ -699,7 +702,7 @@ enum PartSize
   SIZE_NONE = 15
 };
 
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
 
 enum BlenMod
 {
