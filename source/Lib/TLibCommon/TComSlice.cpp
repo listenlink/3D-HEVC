@@ -1528,6 +1528,9 @@ TComPPS::TComPPS()
 #if CABAC_INIT_FLAG
 , m_cabacInitPresentFlag        (false)
 , m_encCABACTableIdx            (0)
+#if POZNAN_CABAC_INIT_FLAG_FIX
+, m_encPrevPOC            (0)
+#endif
 #endif
 {
 #if !H0566_TLA

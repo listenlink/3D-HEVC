@@ -634,7 +634,7 @@ TRenModel::getSynthVideo( Int iModelNum, Int iViewNum, TComPicYuv* pcPicYuv )
 Void
 TRenModel::getSynthDepth( Int iModelNum, Int iViewNum, TComPicYuv* pcPicYuv )
 {
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
   m_apcRenModels[iModelNum]->getSynthDepth(iViewNum, pcPicYuv, m_uiHorOff );
 #else
   m_apcRenModels[iModelNum]->getSynthDepth(iViewNum, pcPicYuv );

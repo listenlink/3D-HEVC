@@ -37,7 +37,7 @@
 
 #include "TEncTop.h"
 #include "TEncSlice.h"
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
 #include "../../App/TAppEncoder/TAppEncTop.h"
 #endif
 #include <math.h>
@@ -641,6 +641,19 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   m_dPicRdCost      = 0;
   m_uiPicDist       = 0;
   
+#if CABAC_INIT_FLAG && POZNAN_CABAC_INIT_FLAG_FIX
+  Bool bReset =(pcSlice->getPOC() == 0) || 
+    (pcSlice->getPOC() % m_pcCfg->getIntraPeriod() == 0) ||
+    (pcSlice->getPPS()->getEncPrevPOC() % m_pcCfg->getIntraPeriod() == 0) ||
+    (pcSlice->getPOC()/m_pcCfg->getIntraPeriod() > pcSlice->getPPS()->getEncPrevPOC()/m_pcCfg->getIntraPeriod()) ||
+    (m_pcGOPEncoder->getGOPSize() == 0);
+
+  if ( bReset && pcSlice->getPPS()->getCabacInitPresentFlag())
+  {
+    pcSlice->getPPS()->setEncCABACTableIdx(pcSlice->getSliceType()); // reset cabac initialization table index
+  };
+#endif
+
   // set entropy coder
   if( m_pcCfg->getUseSBACRD() )
   {
@@ -786,7 +799,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
 
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
   Int iLastPosY = -1;
 #endif
 
@@ -801,7 +814,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
 
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
     if ( m_pcRdCost->getUseRenModel() )
     {
       // updated renderer model if necessary

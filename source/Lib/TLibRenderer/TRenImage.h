@@ -68,7 +68,7 @@ public:
   TRenImagePlane<T>*  getPlane(UInt uiPlaneNumber) const;
   TRenImagePlane<T>** getPlanes() const;
 
-#if HHI_VSO_SPEEDUP_A033
+#if HHI_VSO_SPEEDUP_A0033
   Void getDataAndStrides( T**    pptData, Int*  piStrides );
   Void getWidthAndHeight( Int*  piWidths, Int*  piHeights );
 #endif

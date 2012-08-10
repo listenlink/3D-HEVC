@@ -853,6 +853,9 @@ private:
 #if CABAC_INIT_FLAG
   Bool     m_cabacInitPresentFlag;
   UInt     m_encCABACTableIdx;           // Used to transmit table selection across slices
+#if POZNAN_CABAC_INIT_FLAG_FIX
+  UInt     m_encPrevPOC;
+#endif
 #endif
 #if DBL_CONTROL
   Bool     m_DeblockingFilterControlPresent;
@@ -985,6 +988,10 @@ public:
   Void     setEncCABACTableIdx( Int idx )           { m_encCABACTableIdx = idx;         }
   Bool     getCabacInitPresentFlag()                { return m_cabacInitPresentFlag;    }
   UInt     getEncCABACTableIdx()                    { return m_encCABACTableIdx;        }
+#if POZNAN_CABAC_INIT_FLAG_FIX
+  Void     setEncPrevPOC(UInt uiPOC)                { m_encPrevPOC = uiPOC;             }
+  UInt     getEncPrevPOC()                          { return m_encPrevPOC;              }
+#endif
 #endif
 #if DBL_CONTROL
   Void setDeblockingFilterControlPresent    ( Bool bValue )       { m_DeblockingFilterControlPresent = bValue; }
