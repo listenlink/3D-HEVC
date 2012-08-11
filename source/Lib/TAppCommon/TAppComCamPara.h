@@ -66,6 +66,10 @@ private:
   Bool                m_bSetupFromCoded;                      ///< setup from coded parameter file
   Bool                m_bCamParsCodedPrecSet;                 ///< Coded Cam Para precision set for current frame;
 
+#if SAIT_VSO_EST_A0033
+  Double              m_dDispCoeff;
+#endif
+
   // view lists
   std::vector<Int>    m_aiViewsInCfgFile;                     ///< views for which parameters are specified in cfg file (from left to right)
   std::vector<Int>    m_aiSynthViews;                         ///< View numbers of External ViewReferences
@@ -183,6 +187,11 @@ public:
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
+
+#if SAIT_VSO_EST_A0033
+  Void xSetDispCoeff( UInt uiStartFrameId, Int iViewIdx );
+  Double getDispCoeff() { return m_dDispCoeff; }
+#endif
 
   // function for getting parameters and parameter arrays
   std::vector<Int>&   getBaseViewNumbers        ()  { return m_aiBaseViews;       }

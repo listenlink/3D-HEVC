@@ -460,8 +460,8 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #endif
 
 #if SAIT_VSO_EST_A0033
-    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->xGetPicYuvFromViewTemp( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
-    m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->xGetPicYuvFromViewTemp( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
+    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
+    m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
 #endif
 
 

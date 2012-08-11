@@ -122,10 +122,7 @@ protected:
 public:
   TAppEncTop();
   virtual ~TAppEncTop();
-  
-#if SAIT_VSO_EST_A0033
-  TComPicYuv* xGetPicYuvFromViewTemp( Int iViewIdx, Int iPoc, Bool bDepth, Bool bRecon );
-#endif
+
 
   Void        encode      ();                               ///< main encoding function
   TEncTop*    getTEncTop( Int viewId, Bool isDepth );   
