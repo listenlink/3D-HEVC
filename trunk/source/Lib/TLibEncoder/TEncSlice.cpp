@@ -41,9 +41,6 @@
 #include "../../App/TAppEncoder/TAppEncTop.h"
 #endif
 #include <math.h>
-#if SAIT_VSO_EST_A0033
-extern Double g_dDispCoeff;
-#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -373,6 +370,10 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
 #if HHI_VSO
   m_pcRdCost->setUseLambdaScaleVSO  ( (m_pcCfg->getUseVSO() ||  m_pcCfg->getForceLambdaScaleVSO()) && m_pcCfg->isDepthCoder()  );
   m_pcRdCost->setLambdaVSO( dLambda * m_pcCfg->getLambdaScaleVSO() );
+#endif
+
+#if SAIT_VSO_EST_A0033
+  m_pcRdCost->setDisparityCoeff( m_pcCfg->getDispCoeff() );
 #endif
 
 #if RDOQ_CHROMA_LAMBDA 
@@ -726,8 +727,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if SAIT_VSO_EST_A0033
  if( m_pcCfg->getUseVSO() )
  {
-   m_pcRdCost->setDisparityCoeff( g_dDispCoeff );  // Temp. code!!!
-   //printf( "Disp Coeff : %3.4f \n", m_pcRdCost->getDisparityCoeff() );
 
    Int frameWidth = m_pcCfg->getSourceWidth();
    Pel* pVideoRec = m_pcRdCost->getVideoRecPicYuv()->getLumaAddr();
@@ -738,16 +737,17 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 
    for( Int y = 0 ; y < m_pcCfg->getSourceHeight() ; y++ )
    {
-     pVideoRec[-4] = pVideoRec[-3] = pVideoRec[-2] = pVideoRec[-1] = pVideoRec[0];
-     pVideoRec[frameWidth+3] = pVideoRec[frameWidth+2] = pVideoRec[frameWidth+1] = pVideoRec[frameWidth] = pVideoRec[frameWidth-1];
-     pDepthOrg[-4] = pDepthOrg[-3] = pDepthOrg[-2] = pDepthOrg[-1] = pDepthOrg[0];
-     pDepthOrg[frameWidth+3] = pDepthOrg[frameWidth+2] = pDepthOrg[frameWidth+1] = pDepthOrg[frameWidth] = pDepthOrg[frameWidth-1];
+     pVideoRec[-1] = pVideoRec[0];
+     pVideoRec[frameWidth] = pVideoRec[frameWidth-1];
+     pDepthOrg[-1] = pDepthOrg[0];
+     pDepthOrg[frameWidth] = pDepthOrg[frameWidth-1];
 
      pVideoRec += iVideoRecStride;
      pDepthOrg += iDepthOrgStride;
    }
  }
 #endif
+
   TEncTop* pcEncTop = (TEncTop*) m_pcCfg;
   TEncSbac**** ppppcRDSbacCoders    = pcEncTop->getRDSbacCoders();
   TComBitCounter* pcBitCounters     = pcEncTop->getBitCounters();

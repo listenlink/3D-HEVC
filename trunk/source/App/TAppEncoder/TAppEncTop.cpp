@@ -921,6 +921,13 @@ Void TAppEncTop::encode()
       }
       for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
+#if SAIT_VSO_EST_A0033
+        if( m_bUseVSO && iNextPoc < m_iFrameToBeEncoded )
+        {
+          m_cCameraData.xSetDispCoeff( iNextPoc, iViewIdx );
+          m_acTEncDepthTopList[iViewIdx]->setDispCoeff( m_cCameraData.getDispCoeff() );
+        }
+#endif
         iNumEncoded = 0;
         // call encoding function for one frame
         m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
@@ -1154,31 +1161,6 @@ TComPicYuv* TAppEncTop::xGetPicYuvFromView( Int iViewIdx, Int iPoc, Bool bDepth,
 
   return pcPicYuv;
 };
-
-#if SAIT_VSO_EST_A0033
-TComPicYuv* TAppEncTop::xGetPicYuvFromViewTemp( Int iViewIdx, Int iPoc, Bool bDepth, Bool bRecon )
-{
-  TComPic*    pcPic = xGetPicFromView( iViewIdx, iPoc, bDepth);
-  TComPicYuv* pcPicYuv = NULL;
-
-  if (pcPic != NULL)
-  {
-    if( bRecon )
-    {
-      if ( pcPic->getReconMark() )
-      {
-        pcPicYuv = pcPic->getPicYuvRec();
-      }
-    }
-    else
-    {
-      pcPicYuv = pcPic->getPicYuvOrg();
-    }
-  };
-
-  return pcPicYuv;
-};
-#endif
 
 /**
  *

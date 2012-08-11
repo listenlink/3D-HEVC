@@ -1455,6 +1455,43 @@ TAppComCamPara::update( UInt uiFrameId )
   }
 }
 
+#if SAIT_VSO_EST_A0033
+Void
+TAppComCamPara::xSetDispCoeff( UInt uiFrameId, Int iViewIdx )
+{
+  UInt uiFrame = m_uiFirstFrameId + uiFrameId;
+  Int  iSourceViewNum = m_aiBaseViews[ iViewIdx ];
+  Double dBaseLine = 0.0;
+  Double dFL1, dCS1, dCP1, dZN1, dZF1; 
+  Bool bInterpolated;
+  double dPos[3];
+
+  if( m_iNumberOfBaseViews == 3 )
+  {
+    xGetGeometryData( m_aiBaseViews[0], uiFrame, dFL1, dPos[0], dCS1, bInterpolated );
+    xGetGeometryData( m_aiBaseViews[1], uiFrame, dFL1, dPos[1], dCS1, bInterpolated );
+    xGetGeometryData( m_aiBaseViews[2], uiFrame, dFL1, dPos[2], dCS1, bInterpolated );
+
+    xGetGeometryData( iSourceViewNum, uiFrame, dFL1, dCP1, dCS1, bInterpolated );
+    xGetZNearZFar   ( iSourceViewNum, uiFrame, dZN1, dZF1 );
+
+    dBaseLine = ( Max( dPos[0], Max( dPos[1], dPos[2] ) ) - Min( dPos[0], Min( dPos[1], dPos[2] ) ) ) / 2.0;
+  }
+  else if( m_iNumberOfBaseViews == 2 )
+  {
+    xGetGeometryData( m_aiBaseViews[0], uiFrame, dFL1, dPos[0], dCS1, bInterpolated );
+    xGetGeometryData( m_aiBaseViews[1], uiFrame, dFL1, dPos[1], dCS1, bInterpolated );
+
+    xGetGeometryData( iSourceViewNum, uiFrame, dFL1, dCP1, dCS1, bInterpolated );
+    xGetZNearZFar   ( iSourceViewNum, uiFrame, dZN1, dZF1 );
+
+    dBaseLine = dPos[0] - dPos[1];
+  }
+
+
+  m_dDispCoeff = fabs( dFL1 * ( dBaseLine / 2.0 ) / 255.0 * ( 1.0/dZN1 - 1.0/dZF1 ) );
+}
+#endif
 
 Bool
 TAppComCamPara::getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int &riRightViewIdx, Int &riRelDistToLeft, Bool& rbIsBaseView )

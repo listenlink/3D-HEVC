@@ -294,8 +294,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   UInt      m_uiVSOMode;                                  ///< Number of VSO Mode, 1 = , 2 = simple, org vs. ren, 3 = simple, ren vs. ren, 4 = full  
 #endif
 #if SAIT_VSO_EST_A0033
-  Bool      m_bUseEstimatedVSD;                           ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)
-  Double    m_dDispCoeff;
+  Bool      m_bUseEstimatedVSD;                           ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)  
 #endif
 
   // coding tools (depth intra modes)
