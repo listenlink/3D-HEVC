@@ -67,6 +67,10 @@ using namespace std;
 class TRenSingleModel
 {
 public: 
+
+#if FIX_VIRT_DESTRUCTOR
+  virtual ~TRenSingleModel() { }  
+#endif
 #if LGE_VSO_EARLY_SKIP_A0093
   virtual Void   create    ( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode, Bool bEarlySkip ) = 0;
 #else

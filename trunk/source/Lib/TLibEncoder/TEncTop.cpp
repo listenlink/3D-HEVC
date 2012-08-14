@@ -90,8 +90,16 @@ TEncTop::~TEncTop()
 Void TEncTop::create ()
 {
   // initialize global variables
-  initROM();
-  
+#if FIX_INIT_ROM
+  if( m_viewId == 0 && m_isDepth == false )
+  {
+#endif
+    initROM();
+#if FIX_INIT_ROM
+  }
+#endif
+
+
   // create processing unit classes
   m_cGOPEncoder.        create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight );
   m_cSliceEncoder.      create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
