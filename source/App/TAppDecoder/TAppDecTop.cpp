@@ -434,39 +434,48 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
 #endif
   if( isDepth )
     m_useDepth = true;
-  while( m_tVideoIOYuvReconFile.size() < newNumberOfViewDepth)
-  {
-    m_tVideoIOYuvReconFile.push_back(new TVideoIOYuv);
-    Char buffer[4];
-#if VIDYO_VPS_INTEGRATION
-    sprintf(buffer,"_%i", viewId );
-#else
-    sprintf(buffer,"_%i", (Int)(m_tVideoIOYuvReconFile.size()-1) / 2 );
+
+#if FIX_DECODING_WO_WRITING
+  if ( m_pchReconFile )
+  { 
 #endif
-    Char* nextFilename = NULL;
+    while( m_tVideoIOYuvReconFile.size() < newNumberOfViewDepth)
+    {
+      m_tVideoIOYuvReconFile.push_back(new TVideoIOYuv);
+      Char buffer[4];
 #if VIDYO_VPS_INTEGRATION
-    if( isDepth)
+      sprintf(buffer,"_%i", viewId );
 #else
-    if( (m_tVideoIOYuvReconFile.size() % 2) == 0 )
+      sprintf(buffer,"_%i", (Int)(m_tVideoIOYuvReconFile.size()-1) / 2 );
 #endif
-    {
-      Char* pchTempFilename = NULL;
-      xAppendToFileNameEnd( m_pchReconFile, "_depth", pchTempFilename);
-      xAppendToFileNameEnd( pchTempFilename, buffer, nextFilename);
-      free ( pchTempFilename );
-    }
-    else
-    {
-      xAppendToFileNameEnd( m_pchReconFile, buffer, nextFilename);
-    }
+      Char* nextFilename = NULL;
+#if VIDYO_VPS_INTEGRATION
+      if( isDepth)
+#else
+      if( (m_tVideoIOYuvReconFile.size() % 2) == 0 )
+#endif
+      {
+        Char* pchTempFilename = NULL;
+        xAppendToFileNameEnd( m_pchReconFile, "_depth", pchTempFilename);
+        xAppendToFileNameEnd( pchTempFilename, buffer, nextFilename);
+        free ( pchTempFilename );
+      }
+      else
+      {
+        xAppendToFileNameEnd( m_pchReconFile, buffer, nextFilename);
+      }
 #if !VIDYO_VPS_INTEGRATION
-    if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
+      if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
 #endif
-    {
-      m_tVideoIOYuvReconFile.back()->open( nextFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
-    }
+      {
+        m_tVideoIOYuvReconFile.back()->open( nextFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
+      }
       free ( nextFilename );
+    }
+#if FIX_DECODING_WO_WRITING
   }
+#endif
+
   while( m_pocLastDisplay.size() < newNumberOfViewDepth )
   {
     m_pocLastDisplay.push_back(-MAX_INT+m_iSkipFrame);
