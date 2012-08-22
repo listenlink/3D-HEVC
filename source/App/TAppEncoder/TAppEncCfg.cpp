@@ -334,6 +334,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if HHI_VSO_DIST_INT
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
+#if LGE_WVSO_A0119
+  ("WVSO",                            m_bWVSO                   , true         , "Use WVSO" )
+  ("VSOWeight",                       m_iVSOWeight              , 10 					 , "VSO Weight" )
+  ("VSDWeight",                       m_iVSDWeight             , 1 					  , "SAIT Weight" )
+  ("DWeight",									        m_iDWeight						    , 1						 , "SSE Weight" )
+#endif
 
 #endif
 
@@ -643,6 +649,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_bUseVSO = m_bUseVSO && m_bUsingDepthMaps && (m_uiVSOMode != 0);
 #endif
 
+#if LGE_WVSO_A0119
+  m_bWVSO = m_bUseVSO && m_bWVSO && m_bUsingDepthMaps;
+#endif
   xCleanUpVectors();
 
 #if HHI_VSO
@@ -1687,12 +1696,18 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
-#endif  
+#endif
+#if LGE_WVSO_A0119
+  printf("WVSO:%d ", m_bWVSO );
+#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );
 #endif
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
+#endif
+#if LGE_WVSO_A0119
+  printf("\nVSO : SAIT : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   
