@@ -463,7 +463,10 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
     m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
 #endif
-
+#if LGE_WVSO_A0119
+    Bool bWVSO  = m_pcEncTop->getWVSO();
+    m_pcRdCost->setWVSO( bWVSO );
+#endif
 
   }
 #endif
