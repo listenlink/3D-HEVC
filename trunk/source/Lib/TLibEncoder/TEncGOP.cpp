@@ -463,7 +463,10 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
     m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
 #endif
-
+#if LGE_WVSO_A0119
+    Bool bWVSO  = m_pcEncTop->getWVSO();
+    m_pcRdCost->setWVSO( bWVSO );
+#endif
 
   }
 #endif
@@ -1132,12 +1135,28 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
         pcSlice->setTileOffstForMultES( uiOneBitstreamPerSliceLength );
         if (!bEntropySlice)
         {
+#if OL_DEPTHLIMIT //start dumping partition information
+		m_pcSliceEncoder->setPartDumpFlag(1);
+//		if(!(pcPic->getSlice(0)->getSPS()->getUseDPL()))
+//		{
+//			m_pcSliceEncoder->setPartDumpFlag(0);
+//		}
+#endif
           pcSlice->setTileLocationCount ( 0 );
           m_pcSliceEncoder->encodeSlice(pcPic, pcBitstreamRedirect, pcSubstreamsOut); // redirect is only used for CAVLC tile position info.
+#if OL_DEPTHLIMIT //stop dumping partition information
+		m_pcSliceEncoder->setPartDumpFlag(0);
+#endif
         }
         else
         {
+#if OL_DEPTHLIMIT //start dumping partition information
+		m_pcSliceEncoder->setPartDumpFlag(1);
+#endif
           m_pcSliceEncoder->encodeSlice(pcPic, &nalu.m_Bitstream, pcSubstreamsOut); // nalu.m_Bitstream is only used for CAVLC tile position info.
+#if OL_DEPTHLIMIT //stop dumping partition information
+		m_pcSliceEncoder->setPartDumpFlag(0);
+#endif
         }
 
         {
