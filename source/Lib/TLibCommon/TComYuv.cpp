@@ -710,6 +710,51 @@ Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUni
 
   getPUXYOffset(uhPartitionSize, uiPartSize, uiPartSize, iXOffset, iYOffset);
 
+#if FIX_LG_RESTRICTEDRESPRED_M24766
+  for ( y = 0; y < iYOffset; y++ )
+  {
+    if(iPUResiPredShift[0] >= 0)
+    {
+      for ( x = 0; x < iXOffset; x++ )
+      {
+        pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[0]);
+      }
+    }
+
+    if(iPUResiPredShift[1] >= 0)
+    {
+      for ( x = iXOffset; x < uiPartSize; x++ )
+      {
+        pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[1]);
+      }
+    }
+    pSrc0 += iSrc0Stride;
+    pSrc1 += iSrc1Stride;
+    pDst  += iDstStride;
+  }
+
+  for ( y = iYOffset; y < uiPartSize; y++ )
+  {
+    if(iPUResiPredShift[2] >= 0)
+    {
+      for ( x = 0; x < iXOffset; x++ )
+      {
+        pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[2]);
+      }
+    }
+
+    if(iPUResiPredShift[3] >= 0)
+    {
+      for ( x = iXOffset; x < uiPartSize; x++ )
+      {
+        pDst[x] = pSrc0[x] - (pSrc1[x] >> iPUResiPredShift[3]);
+      }
+    }
+    pSrc0 += iSrc0Stride;
+    pSrc1 += iSrc1Stride;
+    pDst  += iDstStride;
+  }
+#else
   for ( y = uiPartSize-1; y >= iYOffset; y-- )
   {
     if(iPUResiPredShift[3] >= 0)
@@ -753,7 +798,7 @@ Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUni
     pSrc1 += iSrc1Stride;
     pDst  += iDstStride;
   }
-
+#endif
 #else
   for ( y = uiPartSize-1; y >= 0; y-- )
   {
@@ -791,6 +836,61 @@ Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrU
  
   getPUXYOffset(uhPartitionSize, uiPartSize, uiPartSize, iXOffset, iYOffset);
 
+#if FIX_LG_RESTRICTEDRESPRED_M24766
+  for ( y = 0; y < iYOffset; y++ )
+  {
+    if(iPUResiPredShift[0] >= 0)
+    {
+      for ( x = 0; x < iXOffset; x++ )
+      {
+        pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[0]);
+        pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[0]);
+      }
+    }
+
+    if(iPUResiPredShift[1] >= 0)
+    {
+      for ( x = iXOffset; x < uiPartSize; x++ )
+      {
+        pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[1]);
+        pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[1]);
+      }
+    }
+    pSrcU0 += iSrc0Stride;
+    pSrcU1 += iSrc1Stride;
+    pSrcV0 += iSrc0Stride;
+    pSrcV1 += iSrc1Stride;
+    pDstU  += iDstStride;
+    pDstV  += iDstStride;
+  }
+
+  for ( y = iYOffset; y < uiPartSize; y++ )
+  {
+    if(iPUResiPredShift[2] >= 0)
+    {
+      for ( x = 0; x < iXOffset; x++ )
+      {
+        pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[2]);
+        pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[2]);
+      }
+    }
+
+    if(iPUResiPredShift[3] >= 0)
+    {
+      for ( x = iXOffset; x < uiPartSize; x++ )
+      {
+        pDstU[x] = pSrcU0[x] - (pSrcU1[x]>>iPUResiPredShift[3]);
+        pDstV[x] = pSrcV0[x] - (pSrcV1[x]>>iPUResiPredShift[3]);
+      }
+    }
+    pSrcU0 += iSrc0Stride;
+    pSrcU1 += iSrc1Stride;
+    pSrcV0 += iSrc0Stride;
+    pSrcV1 += iSrc1Stride;
+    pDstU  += iDstStride;
+    pDstV  += iDstStride;
+  }
+#else
   for ( y = uiPartSize-1; y >= iYOffset; y-- )
   {
     if(iPUResiPredShift[3] >= 0)
@@ -844,6 +944,7 @@ Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrU
     pDstU  += iDstStride;
     pDstV  += iDstStride;
   }
+#endif
 #else
   for ( y = uiPartSize-1; y >= 0; y-- )
   {

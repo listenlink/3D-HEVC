@@ -242,7 +242,7 @@ private:
   //a 2D array in uidepth, part_symbol format
   UInt          m_uiPartInfo[OL_PART_BUF_SIZE][2];
   UInt          m_uiPartNum;
-  Bool          b_dumpPartInfo;
+  Bool          m_dumpPartInfo;
 #endif 
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -609,8 +609,8 @@ public:
   Void        incrementPartInfo () {m_uiPartNum ++;};
   Void        updatePartInfo(UInt uiSymbol, UInt uiDepth) { m_uiPartInfo[m_uiPartNum][0] = uiSymbol; m_uiPartInfo[m_uiPartNum][1] = uiDepth;};
   UInt*       readPartInfo()                              { return (UInt*)m_uiPartInfo;};
-  Void        setPartDumpFlag(Bool flag)                  { b_dumpPartInfo = flag; };
-  Bool        getPartDumpFlag()                           { return b_dumpPartInfo; };
+  Void        setPartDumpFlag(Bool flag)                  { m_dumpPartInfo = flag; };
+  Bool        getPartDumpFlag()                           { return m_dumpPartInfo; };
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------
