@@ -207,7 +207,7 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseEstimatedVSD              ( false );
 #endif
 #if LGE_WVSO_A0119
-    m_acTEncTopList[iViewIdx]->setWVSO                         ( false ); 
+    m_acTEncTopList[iViewIdx]->setUseWVSO                      ( false ); 
 #endif
 #endif
 
@@ -530,7 +530,7 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setUseEstimatedVSD              ( m_bUseEstimatedVSD );
 #endif
 #if LGE_WVSO_A0119
-      m_acTEncDepthTopList[iViewIdx]->setWVSO                          ( m_bWVSO      );
+      m_acTEncDepthTopList[iViewIdx]->setUseWVSO                      ( m_bUseWVSO         );
 #endif
 #endif
 
@@ -707,10 +707,10 @@ Void TAppEncTop::xInitLibCfg()
       for (Int iContent = 0; iContent < 2; iContent++ )
       {
         TEncTop* pcEncTop = ( iContent == 0 ) ? m_acTEncTopList[iViewNum] : m_acTEncDepthTopList[iViewNum]; 
-        pcEncTop->setWVSO( m_bWVSO );
+        pcEncTop->setUseWVSO  ( m_bUseWVSO );
         pcEncTop->setVSOWeight( m_iVSOWeight );
         pcEncTop->setVSDWeight( m_iVSDWeight );
-        pcEncTop->setDWeight( m_iDWeight );
+        pcEncTop->setDWeight  ( m_iDWeight );
       }
     }
 #endif

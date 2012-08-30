@@ -204,7 +204,7 @@ protected:
   Double    m_dLambdaScaleVSO;
   UInt      m_uiVSOMode;
 #if LGE_WVSO_A0119
-  Bool      m_bWVSO;
+  Bool      m_bUseWVSO;
   Int       m_iVSOWeight;
   Int       m_iVSDWeight;
   Int       m_iDWeight;
@@ -476,7 +476,7 @@ public:
   Void      setAllowNegDist                 ( Bool b  )     { m_bAllowNegDist     = b; };
 #endif
 #if LGE_WVSO_A0119
-  Void      setWVSO                         ( Bool  b )     { m_bWVSO      = b; }
+  Void      setUseWVSO                      ( Bool  b )     { m_bUseWVSO   = b; }
   Void      setVSOWeight                    ( Int   i )     { m_iVSOWeight = i; }
   Void      setVSDWeight                    ( Int   i )     { m_iVSDWeight = i; }
   Void      setDWeight                      ( Int   i )     { m_iDWeight   = i; }
@@ -562,7 +562,7 @@ public:
   Bool      getAllowNegDist                 ()      { return m_bAllowNegDist;     }
 #endif
 #if LGE_WVSO_A0119
-  Bool      getWVSO                         ()      { return m_bWVSO;     }
+  Bool      getUseWVSO                      ()      { return m_bUseWVSO;     }
   Int       getVSOWeight                    ()      { return m_iVSOWeight;    }
   Int       getVSDWeight                    ()      { return m_iVSDWeight;    }
   Int       getDWeight                      ()      { return m_iDWeight;    }
@@ -678,14 +678,14 @@ public:
   Int   getEntropySliceArgument        ()              { return m_iEntropySliceArgument;}
   Void  setSliceGranularity            ( Int  i )      { m_iSliceGranularity = i;       }
   Int   getSliceGranularity            ()              { return m_iSliceGranularity;    }
-  Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
-  Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
+  Void  setLFCrossSliceBoundaryFlag    ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
+  Bool  getLFCrossSliceBoundaryFlag    ()                    { return m_bLFCrossSliceBoundaryFlag;   }
 
 #if HHI_MPI
-  Void      setUseMVI                  (Bool bVal)     {m_bUseMVI = bVal;}
+  Void  setUseMVI                      ( Bool bVal )   {m_bUseMVI = bVal;}
 #endif
-  Void      setUseSAO                  (Bool bVal)     {m_bUseSAO = bVal;}
-  Bool      getUseSAO                  ()              {return m_bUseSAO;}
+  Void  setUseSAO                      ( Bool bVal )   {m_bUseSAO = bVal;}
+  Bool  getUseSAO                      ()              {return m_bUseSAO;}
 #if SAO_UNIT_INTERLEAVING
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
@@ -816,13 +816,13 @@ public:
   Bool      getIsDepth            ()               { return m_isDepth; }
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  Void setUseDMM( Bool b) { m_bUseDMM = b;    }
-  Bool getUseDMM()        { return m_bUseDMM; }
+  Void      setUseDMM( Bool b) { m_bUseDMM = b;    }
+  Bool      getUseDMM()        { return m_bUseDMM; }
 #endif
 
 #if OL_DEPTHLIMIT_A0044
-  Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
-  Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
+  Void      setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
+  Bool      getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif
 
   Void      setViewOrderIdx       ( Int   i )      { m_iViewOrderIdx          = i; }

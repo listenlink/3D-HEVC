@@ -443,6 +443,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
   {
     Int iVSOMode = m_pcEncTop->getVSOMode();
     m_pcRdCost->setVSOMode( iVSOMode  );
+
 #if HHI_VSO_DIST_INT
     m_pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 #endif
@@ -464,8 +465,8 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
 #endif
 #if LGE_WVSO_A0119
-    Bool bWVSO  = m_pcEncTop->getWVSO();
-    m_pcRdCost->setWVSO( bWVSO );
+    Bool bUseWVSO  = m_pcEncTop->getUseWVSO();
+    m_pcRdCost->setUseWVSO( bUseWVSO );
 #endif
 
   }

@@ -380,7 +380,7 @@ private:
   Int                     m_iDWeight;
   Int                     m_iVSOWeight;
   Int                     m_iVSDWeight;
-  Bool                    m_bWVSO;
+  Bool                    m_bUseWVSO;
 #endif
 
   Bool                    m_bUseVSO;
@@ -416,8 +416,8 @@ public:
   Void    setVSOMode( UInt uiIn);
   UInt    getVSOMode( )                  { return m_uiVSOMode; }
 #if LGE_WVSO_A0119
-  Void    setWVSO ( Bool bIn )            { m_bWVSO = bIn; }; 
-  Bool    getWVSO ( )                     { return m_bWVSO;};
+  Void    setUseWVSO ( Bool bIn )         { m_bUseWVSO = bIn; }; 
+  Bool    getUseWVSO ( )                  { return m_bUseWVSO;};
   Void    setDWeight   ( Int iDWeight   ) { m_iDWeight = iDWeight; };
   Int     getDWeight   ()                 { return m_iDWeight; };
   Void    setVSOWeight ( Int iVSOWeight ) { m_iVSOWeight = iVSOWeight; };

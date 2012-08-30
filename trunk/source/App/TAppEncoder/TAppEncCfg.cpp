@@ -335,14 +335,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 #if LGE_WVSO_A0119
-  ("WVSO",                            m_bWVSO                   , true          , "Use WVSO" )
-  ("VSOWeight",                       m_iVSOWeight              , 10            , "VSO Weight" )
-  ("VSDWeight",                       m_iVSDWeight              , 1             , "SAIT Weight" )
-  ("DWeight",                         m_iDWeight                , 1             , "SSE Weight" )
+  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
+  ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
+  ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
+  ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 #endif
 
 #if OL_DEPTHLIMIT_A0044
-  ("DPL",   m_bDepthPartitionLimiting           , false         , "Use DepthPartitionLimiting" )
+  ("DPL",                             m_bDepthPartitionLimiting , false         , "Use DepthPartitionLimiting" )
 #endif
 
 #endif
@@ -654,7 +654,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 
 #if LGE_WVSO_A0119
-  m_bWVSO = m_bUseVSO && m_bWVSO && m_bUsingDepthMaps;
+  m_bUseWVSO = m_bUseVSO && m_bUseWVSO && m_bUsingDepthMaps;
 #endif
   xCleanUpVectors();
 
@@ -1702,7 +1702,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("VSO:%d ", m_bUseVSO             );
 #endif
 #if LGE_WVSO_A0119
-  printf("WVSO:%d ", m_bWVSO );
+  printf("WVSO:%d ", m_bUseWVSO );
 #endif
 #if OL_DEPTHLIMIT_A0044
   printf("DPL:%d ", m_bDepthPartitionLimiting);
@@ -1714,7 +1714,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
 #if LGE_WVSO_A0119
-  printf("\nVSO : SAIT : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
+  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   

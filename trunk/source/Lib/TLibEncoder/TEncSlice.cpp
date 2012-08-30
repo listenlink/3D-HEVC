@@ -376,17 +376,13 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   m_pcRdCost->setDisparityCoeff( m_pcCfg->getDispCoeff() );
 #endif
 #if LGE_WVSO_A0119
-  if( m_pcCfg->getWVSO() && m_pcCfg->isDepthCoder() )
+  if( m_pcCfg->getUseWVSO() && m_pcCfg->isDepthCoder() )
   {
 
     Int iDWeight, iVSOWeight, iVSDWeight;
     iDWeight = m_pcCfg->getDWeight();
     iVSOWeight = m_pcCfg->getVSOWeight();
     iVSDWeight = m_pcCfg->getVSDWeight();
-    //    if( rpcSlice->getViewId() )  iDWeight = ( iDWeight >> 1 );
-    //    if( rpcSlice->getPOC() % 8 != 0 )  iDWeight = ( iDWeight >> 1 );
-    //    if( rpcSlice->getPOC() % 4 != 0 )  iDWeight = ( iDWeight >> 1 );
-    //    if( rpcSlice->getPOC() % 2 != 0 )  iDWeight = ( iDWeight >> 1 );
 
     m_pcRdCost->setDWeight( iDWeight );
     m_pcRdCost->setVSOWeight( iVSOWeight );
