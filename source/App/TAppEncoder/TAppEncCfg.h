@@ -297,7 +297,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseEstimatedVSD;                           ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)  
 #endif
 #if LGE_WVSO_A0119
-  Bool      m_bWVSO;                                    ///< flag for using View Synthesis Optimization  
+  Bool      m_bUseWVSO;                                    ///< flag for using View Synthesis Optimization  
   Int       m_iVSOWeight;
   Int       m_iVSDWeight;
   Int       m_iDWeight;
