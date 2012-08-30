@@ -1142,8 +1142,8 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
   else
 #endif
   {
-  ruiDist += m_pcRdCost->getDistPart( piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
-}
+    ruiDist += m_pcRdCost->getDistPart( piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
+  }
 }
 
 
@@ -6165,11 +6165,10 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
 #endif
         }
         else       
-#else
+#endif
         {        
           uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPredic, uiStride,  piOrig, uiStride, uiWidth, uiHeight, false, 0 );
         }
-#endif
 
         if( uiActDist < uiBestDist || uiBestDist == RDO_DIST_MAX )
         {
