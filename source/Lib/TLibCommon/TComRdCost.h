@@ -377,8 +377,8 @@ private:
   Bool                    m_bUseEstimatedVSD; 
 #endif
 #if LGE_WVSO_A0119
-  Int											m_iDWeight;
-  Int											m_iVSOWeight;
+  Int                     m_iDWeight;
+  Int                     m_iVSOWeight;
   Int                     m_iVSDWeight;
   Bool                    m_bWVSO;
 #endif
@@ -416,14 +416,14 @@ public:
   Void    setVSOMode( UInt uiIn);
   UInt    getVSOMode( )                  { return m_uiVSOMode; }
 #if LGE_WVSO_A0119
-  Void    setWVSO ( Bool bIn )         { m_bWVSO = bIn; }; 
-  Bool    getWVSO ( )                  { return m_bWVSO;};
-  Void		setDWeight ( Int iDWeight )			{ m_iDWeight = iDWeight; };
-  Int			getDWeight ()										{ return m_iDWeight; };
-  Void		setVSOWeight ( Int iVSOWeight ) { m_iVSOWeight = iVSOWeight; };
-  Int			getVSOWeight ()									{ return m_iVSOWeight; };
-  Void		setVSDWeight ( Int iVSDWeight ) { m_iVSDWeight = iVSDWeight; };
-  Int			getVSDWeight ()									{ return m_iVSDWeight; };
+  Void    setWVSO ( Bool bIn )            { m_bWVSO = bIn; }; 
+  Bool    getWVSO ( )                     { return m_bWVSO;};
+  Void    setDWeight   ( Int iDWeight   ) { m_iDWeight = iDWeight; };
+  Int     getDWeight   ()                 { return m_iDWeight; };
+  Void    setVSOWeight ( Int iVSOWeight ) { m_iVSOWeight = iVSOWeight; };
+  Int     getVSOWeight ()                 { return m_iVSOWeight; };
+  Void    setVSDWeight ( Int iVSDWeight ) { m_iVSDWeight = iVSDWeight; };
+  Int     getVSDWeight ()                 { return m_iVSDWeight; };
 #endif 
 #if HHI_VSO_DIST_INT
   Void    setAllowNegDist ( Bool bAllowNegDist );

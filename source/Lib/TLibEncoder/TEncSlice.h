@@ -100,8 +100,8 @@ private:
   TEncSbac*               m_pcBufferLowLatSbacCoders;           ///< dependent tiles: line to store temporary contexts
   
   UInt                    m_uiSliceIdx;
-#if OL_DEPTHLIMIT //flag to signal to start dumping
-  bool					  b_dumpPartInfo;
+#if OL_DEPTHLIMIT_A0044 //flag to signal to start dumping
+  Bool                    m_bDumpPartInfo;
 #endif
 public:
   TEncSlice();
@@ -130,8 +130,8 @@ public:
   Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& uiBoundingCUAddr, TComPic*& rpcPic, Bool bEncodeSlice );
   UInt    getSliceIdx()         { return m_uiSliceIdx;                    }
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
-#if OL_DEPTHLIMIT //flag to signal to start dumping
-  Void	  setPartDumpFlag(bool flag)	{b_dumpPartInfo = flag;};
+#if OL_DEPTHLIMIT_A0044 //flag to signal to start dumping
+  Void    setPartDumpFlag(Bool flag) { m_bDumpPartInfo = flag;};
 #endif
 };
 

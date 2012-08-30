@@ -1440,7 +1440,7 @@ TComSPS::TComSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_bUseDMM                   (false)
 #endif
-#if OL_DEPTHLIMIT
+#if OL_DEPTHLIMIT_A0044
 , m_bDepthPartitionLimiting   (false)
 #endif
 {

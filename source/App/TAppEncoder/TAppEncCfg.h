@@ -298,16 +298,16 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #endif
 #if LGE_WVSO_A0119
   Bool      m_bWVSO;                                    ///< flag for using View Synthesis Optimization  
-  Int				m_iVSOWeight;
+  Int       m_iVSOWeight;
   Int       m_iVSDWeight;
-  Int				m_iDWeight;
+  Int       m_iDWeight;
 #endif
   // coding tools (depth intra modes)
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool      m_bUseDMM;                                        ///< flag for using DMM
 #endif
 
-#if OL_DEPTHLIMIT
+#if OL_DEPTHLIMIT_A0044
   Bool      m_bDepthPartitionLimiting;
 #endif
 

@@ -1135,27 +1135,23 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
         pcSlice->setTileOffstForMultES( uiOneBitstreamPerSliceLength );
         if (!bEntropySlice)
         {
-#if OL_DEPTHLIMIT //start dumping partition information
-		m_pcSliceEncoder->setPartDumpFlag(1);
-//		if(!(pcPic->getSlice(0)->getSPS()->getUseDPL()))
-//		{
-//			m_pcSliceEncoder->setPartDumpFlag(0);
-//		}
+#if OL_DEPTHLIMIT_A0044 //start dumping partition information
+          m_pcSliceEncoder->setPartDumpFlag(1);
 #endif
           pcSlice->setTileLocationCount ( 0 );
           m_pcSliceEncoder->encodeSlice(pcPic, pcBitstreamRedirect, pcSubstreamsOut); // redirect is only used for CAVLC tile position info.
-#if OL_DEPTHLIMIT //stop dumping partition information
-		m_pcSliceEncoder->setPartDumpFlag(0);
+#if OL_DEPTHLIMIT_A0044 //stop dumping partition information
+          m_pcSliceEncoder->setPartDumpFlag(0);
 #endif
         }
         else
         {
-#if OL_DEPTHLIMIT //start dumping partition information
-		m_pcSliceEncoder->setPartDumpFlag(1);
+#if OL_DEPTHLIMIT_A0044 //start dumping partition information
+          m_pcSliceEncoder->setPartDumpFlag(1);
 #endif
           m_pcSliceEncoder->encodeSlice(pcPic, &nalu.m_Bitstream, pcSubstreamsOut); // nalu.m_Bitstream is only used for CAVLC tile position info.
-#if OL_DEPTHLIMIT //stop dumping partition information
-		m_pcSliceEncoder->setPartDumpFlag(0);
+#if OL_DEPTHLIMIT_A0044 //stop dumping partition information
+          m_pcSliceEncoder->setPartDumpFlag(0);
 #endif
         }
 
