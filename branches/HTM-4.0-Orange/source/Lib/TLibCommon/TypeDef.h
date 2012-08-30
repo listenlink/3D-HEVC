@@ -41,6 +41,13 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define OL_DEPTHLIMIT 1  //JCT2-A0044
+#if OL_DEPTHLIMIT
+#define OL_DO_NOT_LIMIT_INTRA_SLICES_PART 1 //Turn this on to not perform depth limiting for I-SLICES.
+#define OL_END_CU MAX_INT //Default for initialising the partition information buffer
+#define OL_PART_BUF_SIZE 86 //maximum number of possible partition bits in a CU
+#endif
+
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
@@ -93,7 +100,7 @@
 #define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
 #define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
 #define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
-#define LGE_WVSO_A0119                    1 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
+#define LGE_WVSO_A0119                    0 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
 
 #define HHI_INTERVIEW_SKIP                1
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1

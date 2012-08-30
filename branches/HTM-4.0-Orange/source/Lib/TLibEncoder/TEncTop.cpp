@@ -767,6 +767,9 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+#if OL_DEPTHLIMIT
+  m_cSPS.setUseDPL( m_bDepthPartitionLimiting );
+#endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif

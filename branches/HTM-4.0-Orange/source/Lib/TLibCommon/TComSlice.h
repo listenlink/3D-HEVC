@@ -353,6 +353,10 @@ private:
   Bool  m_bUseDMM;
 #endif
 
+#if OL_DEPTHLIMIT
+  Bool m_bDepthPartitionLimiting;
+#endif
+
 #if DEPTH_MAP_GENERATION
   UInt  m_uiPredDepthMapGeneration;
   UInt  m_uiPdmPrecision;
@@ -616,6 +620,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool getUseDMM()         { return m_bUseDMM; }
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
+#endif
+
+#if OL_DEPTHLIMIT
+  Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
+  Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif
 
   Void initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );

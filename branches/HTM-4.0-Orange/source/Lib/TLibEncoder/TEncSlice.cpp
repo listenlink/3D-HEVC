@@ -848,6 +848,10 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }    
 #endif
 
+#if OL_DEPTHLIMIT //stop dumping partition information
+	b_dumpPartInfo = 0;
+	pcCU->setPartDumpFlag(b_dumpPartInfo);
+#endif
 
     // inherit from TR if necessary, select substream to use.
     if( m_pcCfg->getUseSBACRD() )
@@ -1307,6 +1311,10 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
     }
 
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
+#if OL_DEPTHLIMIT
+	pcCU->setPartDumpFlag(b_dumpPartInfo);
+	pcCU->resetPartInfo();
+#endif
 #if !REMOVE_TILE_DEPENDENCE
     if( (rpcPic->getPicSym()->getTileBoundaryIndependenceIdr()==0) && (rpcPic->getPicSym()->getNumColumnsMinus1()!=0) )
     {    
