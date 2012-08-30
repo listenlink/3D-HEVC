@@ -457,7 +457,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   static UInt* texPartInfo;
   static UInt uiTexPartIndex;
   static Bool depthMapDetect =  false;
-  UInt uiPrevTexPartIndex; //kat debug
+  UInt uiPrevTexPartIndex = 0;
 #if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
   static Bool bIntraSliceDetect = false;
 #endif
@@ -638,7 +638,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 		bTrySplit = true;
 		bTryNx2N = true;
 		bTry2NxN = true;
-		uiPrevTexPartIndex = uiTexPartIndex; //kat debug
+		uiPrevTexPartIndex = uiTexPartIndex; 
 		uiTexPartIndex += 2;
 	}
 	else if((UInt)texPartInfo[uiTexPartIndex+0] == 0) //2Nx2N modes
@@ -648,7 +648,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 		bTrySplit = false;
 		//scan ahead till next depth
 		uiTexdepth = (UInt)texPartInfo[uiTexPartIndex+1];
-		uiPrevTexPartIndex = uiTexPartIndex; //kat debug
+		uiPrevTexPartIndex = uiTexPartIndex;
 		uiTexPartIndex+=2;
 		temp_uiTexPartIndex = uiTexPartIndex; //store in case to rewind
 		//temp_uiTexPartIndex+=2;
@@ -683,7 +683,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 		bTrySplit = false;
 		bTryNx2N = false;
 		bTry2NxN = true;
-		uiPrevTexPartIndex = uiTexPartIndex; //kat debug
+		uiPrevTexPartIndex = uiTexPartIndex; 
 		uiTexPartIndex += 2;
 	}
 	else if((UInt)texPartInfo[uiTexPartIndex+0] == 3) //Nx2N case
@@ -691,7 +691,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 		bTrySplit = false;
 		bTryNx2N = true;
 		bTry2NxN = false;
-		uiPrevTexPartIndex = uiTexPartIndex; //kat debug
+		uiPrevTexPartIndex = uiTexPartIndex; 
 		uiTexPartIndex += 2;
 	}
   }
