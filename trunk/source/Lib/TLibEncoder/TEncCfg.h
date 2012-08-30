@@ -205,9 +205,9 @@ protected:
   UInt      m_uiVSOMode;
 #if LGE_WVSO_A0119
   Bool      m_bWVSO;
-  Int				m_iVSOWeight;
+  Int       m_iVSOWeight;
   Int       m_iVSDWeight;
-  Int				m_iDWeight;
+  Int       m_iDWeight;
 #endif
 #endif
 #if SAIT_VSO_EST_A0033
@@ -314,11 +314,11 @@ protected:
 #endif
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  Bool      m_bUseDMM;
+  Bool     m_bUseDMM;
 #endif
 
-#if OL_DEPTHLIMIT
-  Bool      m_bDepthPartitionLimiting;
+#if OL_DEPTHLIMIT_A0044
+  Bool     m_bDepthPartitionLimiting;
 #endif
 
   Int      m_iViewOrderIdx;
@@ -476,10 +476,10 @@ public:
   Void      setAllowNegDist                 ( Bool b  )     { m_bAllowNegDist     = b; };
 #endif
 #if LGE_WVSO_A0119
-  Void      setWVSO													( Bool  b )     { m_bWVSO				= b; }
-  Void      setVSOWeight										( Int   i )     { m_iVSOWeight  = i; }
-  Void      setVSDWeight										( Int   i )     { m_iVSDWeight  = i; }
-  Void      setDWeight											( Int   i )     { m_iDWeight  = i; }
+  Void      setWVSO                         ( Bool  b )     { m_bWVSO      = b; }
+  Void      setVSOWeight                    ( Int   i )     { m_iVSOWeight = i; }
+  Void      setVSDWeight                    ( Int   i )     { m_iVSDWeight = i; }
+  Void      setDWeight                      ( Int   i )     { m_iDWeight   = i; }
 #endif
 #endif
 
@@ -565,7 +565,7 @@ public:
   Bool      getWVSO                         ()      { return m_bWVSO;     }
   Int       getVSOWeight                    ()      { return m_iVSOWeight;    }
   Int       getVSDWeight                    ()      { return m_iVSDWeight;    }
-  Int       getDWeight									    ()      { return m_iDWeight;    }
+  Int       getDWeight                      ()      { return m_iDWeight;    }
 #endif
 #endif
 
@@ -820,7 +820,7 @@ public:
   Bool getUseDMM()        { return m_bUseDMM; }
 #endif
 
-#if OL_DEPTHLIMIT
+#if OL_DEPTHLIMIT_A0044
   Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
   Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif

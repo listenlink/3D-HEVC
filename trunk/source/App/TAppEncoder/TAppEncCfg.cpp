@@ -335,13 +335,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 #if LGE_WVSO_A0119
-  ("WVSO",                            m_bWVSO                   , true         , "Use WVSO" )
-  ("VSOWeight",                       m_iVSOWeight              , 10 					 , "VSO Weight" )
-  ("VSDWeight",                       m_iVSDWeight             , 1 					  , "SAIT Weight" )
-  ("DWeight",									        m_iDWeight						    , 1						 , "SSE Weight" )
+  ("WVSO",                            m_bWVSO                   , true          , "Use WVSO" )
+  ("VSOWeight",                       m_iVSOWeight              , 10            , "VSO Weight" )
+  ("VSDWeight",                       m_iVSDWeight              , 1             , "SAIT Weight" )
+  ("DWeight",                         m_iDWeight                , 1             , "SSE Weight" )
 #endif
 
-#if OL_DEPTHLIMIT
+#if OL_DEPTHLIMIT_A0044
   ("DPL",   m_bDepthPartitionLimiting           , false         , "Use DepthPartitionLimiting" )
 #endif
 
@@ -1704,7 +1704,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if LGE_WVSO_A0119
   printf("WVSO:%d ", m_bWVSO );
 #endif
-#if OL_DEPTHLIMIT
+#if OL_DEPTHLIMIT_A0044
   printf("DPL:%d ", m_bDepthPartitionLimiting);
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
