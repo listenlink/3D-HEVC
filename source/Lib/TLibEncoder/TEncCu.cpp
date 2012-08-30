@@ -450,6 +450,38 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 {
   TComPic* pcPic = rpcBestCU->getPic();
 
+#if OL_DEPTHLIMIT
+  TComSPS *sps = pcPic->getSlice(0)->getSPS();
+  TComPic *pcTexture;
+  TComDataCU *pcTextureCU;
+  static UInt* texPartInfo;
+  static UInt uiTexPartIndex;
+  static Bool depthMapDetect =  false;
+  UInt uiPrevTexPartIndex = 0;
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  static Bool bIntraSliceDetect = false;
+#endif
+  Bool bTry2NxN = false;
+  Bool bTryNx2N = false;
+  if(uiDepth == 0)
+  {
+	pcTexture = rpcBestCU->getSlice()->getTexturePic();
+	if(pcTexture != NULL) //depth map being encoded
+	{
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+		bIntraSliceDetect = (rpcBestCU->getSlice()->getSliceType()==I_SLICE);
+#endif
+		pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() );
+		texPartInfo = pcTextureCU -> readPartInfo();
+		uiTexPartIndex = 0;
+		depthMapDetect = true;
+	}
+	else
+	{
+		depthMapDetect = false;
+	}
+  }
+#endif
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 
@@ -592,6 +624,80 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
       rpcTempCU->initEstData( uiDepth, iQP );
 
+#if OL_DEPTHLIMIT
+  //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect && sps->getUseDPL())
+#else
+  if(depthMapDetect && sps->getUseDPL()) //depth map being encoded
+#endif
+  {
+	assert(uiDepth == (UInt)texPartInfo[uiTexPartIndex+1]);
+	if((UInt)texPartInfo[uiTexPartIndex+0] == 1) //NxN modes
+	{
+		bTrySplit = true;
+		bTryNx2N = true;
+		bTry2NxN = true;
+		uiPrevTexPartIndex = uiTexPartIndex; 
+		uiTexPartIndex += 2;
+	}
+	else if((UInt)texPartInfo[uiTexPartIndex+0] == 0) //2Nx2N modes
+	{
+		UInt uiTexdepth;
+		UInt temp_uiTexPartIndex;
+		bTrySplit = false;
+		//scan ahead till next depth
+		uiTexdepth = (UInt)texPartInfo[uiTexPartIndex+1];
+		uiPrevTexPartIndex = uiTexPartIndex;
+		uiTexPartIndex+=2;
+		temp_uiTexPartIndex = uiTexPartIndex; //store in case to rewind
+		//temp_uiTexPartIndex+=2;
+					while(uiTexdepth != (UInt)texPartInfo[uiTexPartIndex+1] && uiTexdepth != 0)
+					{
+						if((UInt)texPartInfo[uiTexPartIndex+1] < uiTexdepth)
+						{
+							break;
+						}
+						uiTexPartIndex+=2;
+						
+						if((UInt)texPartInfo[uiTexPartIndex+1] == OL_END_CU)
+						{
+							uiTexPartIndex = temp_uiTexPartIndex;
+							uiTexdepth++;
+							if(uiTexdepth >= g_uiMaxCUDepth)
+							{
+								//uiTexPartIndex-=2;
+								break;
+							}
+						}
+					}
+	}
+	else if((UInt)texPartInfo[uiTexPartIndex+0] == OL_END_CU)
+	{
+		bTrySplit = false;
+		bTryNx2N = false;
+		bTry2NxN = false;
+	}
+	else if((UInt)texPartInfo[uiTexPartIndex+0] == 2) //2NxN case
+	{
+		bTrySplit = false;
+		bTryNx2N = false;
+		bTry2NxN = true;
+		uiPrevTexPartIndex = uiTexPartIndex; 
+		uiTexPartIndex += 2;
+	}
+	else if((UInt)texPartInfo[uiTexPartIndex+0] == 3) //Nx2N case
+	{
+		bTrySplit = false;
+		bTryNx2N = true;
+		bTry2NxN = false;
+		uiPrevTexPartIndex = uiTexPartIndex; 
+		uiTexPartIndex += 2;
+	}
+  }
+#endif
+
+
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
@@ -659,6 +765,30 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
       } // != I_SLICE
 
+#if OL_DEPTHLIMIT
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+	  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+	  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+	  {
+		  bTrySplitDQP = bTrySplit;
+	  }
+	  else
+	  {
+		if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
+		{
+			if(iQP == iBaseQP)
+			{
+				bTrySplitDQP = bTrySplit;
+			}
+		}
+		else
+		{
+			bTrySplitDQP = bTrySplit;
+		}
+	  }
+#else
 
       if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
       {
@@ -671,6 +801,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       {
         bTrySplitDQP = bTrySplit;
       }
+#endif
 #if LOSSLESS_CODING
       if (isAddLowestQP && (iQP == lowestQP))
       {
@@ -720,6 +851,31 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && doNotBlockPu)
           {
+#if OL_DEPTHLIMIT //add code here to select 2NxN or Nx2N or none
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTrySplit)
+				{	
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+            rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN, bFullyRenderedSec   );
+#else
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN   );
+#endif
+            rpcTempCU->initEstData( uiDepth, iQP );
+#if OL_DEPTHLIMIT
+				}//bTrySplit
+			}//depthMapDetect
+			else//do things normally
+			{
 #if HHI_INTER_VIEW_RESIDUAL_PRED
             rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
@@ -730,10 +886,23 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
             rpcTempCU->initEstData( uiDepth, iQP );
           }
+#endif
+          } 
         }
         }
 
         { // 2NxN, Nx2N
+#if OL_DEPTHLIMIT //add code here to select 2NxN or Nx2N or none
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTryNx2N)
+				{	
+#endif
           if(doNotBlockPu)
           {
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -750,6 +919,41 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
             }
           }
+#if OL_DEPTHLIMIT
+				}//bTryNx2N
+			}//depthMapDetect
+			else//do things normally
+			{
+          if(doNotBlockPu)
+          {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+            rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N, bFullyRenderedSec   );
+#else
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );
+#endif
+            rpcTempCU->initEstData( uiDepth, iQP );
+            if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_Nx2N )
+            {
+              doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+            }
+          }
+			}
+#endif
+
+#if OL_DEPTHLIMIT //add code here to select 2NxN or Nx2N or none
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTry2NxN)
+				{	
+#endif
           if(doNotBlockPu)
           {
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -766,6 +970,29 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
             }
           }
+#if OL_DEPTHLIMIT
+				}//bTryNx2N
+			}//depthMapDetect
+			else//do things normally
+			{
+				 if(doNotBlockPu)
+          {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+            rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxN, bFullyRenderedSec   );
+#else
+            xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN  );
+#endif
+            rpcTempCU->initEstData( uiDepth, iQP );
+            if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxN)
+            {
+              doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+            }
+          }
+  }
+#endif
         }
 
 #if 1
@@ -786,6 +1013,54 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           //! Do horizontal AMP
           if ( bTestAMP_Hor )
           {
+#if OL_DEPTHLIMIT //add code here to select 2NxN or Nx2N or none
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTry2NxN)
+				{	
+#endif
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFullyRenderedSec );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnU )
+              {
+                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+              }
+            }
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFullyRenderedSec );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnD )
+              {
+                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+              }
+            }
+#if OL_DEPTHLIMIT
+				}//bTry2NxN
+			}//depthMapDetect
+			else//do things normally
+			{
             if(doNotBlockPu)
             {
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -819,9 +1094,22 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               }
             }
           }
+#endif
+          }
 #if AMP_MRG
           else if ( bTestMergeAMP_Hor ) 
           {
+#if OL_DEPTHLIMIT //add code here to select 2NxN or Nx2N or none
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTry2NxN)
+				{	
+#endif
             if(doNotBlockPu)
             {
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -854,12 +1142,96 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
               }
             }
+#if OL_DEPTHLIMIT
+				}//bTry2NxN
+			}//depthMapDetect
+			else//do things normally
+			{
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFullyRenderedSec, true );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, true );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnU )
+              {
+                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+              }
+            }
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFullyRenderedSec, true );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, true );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnD )
+              {
+                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+              }
+            }
+
+			}
+#endif
           }
 #endif
 
           //! Do horizontal AMP
           if ( bTestAMP_Ver )
           {
+#if OL_DEPTHLIMIT //add code here to select 2NxN or Nx2N or none
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTryNx2N)
+				{	
+#endif
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFullyRenderedSec );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_nLx2N )
+              {
+                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+              }
+            }
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFullyRenderedSec );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+            }
+#if OL_DEPTHLIMIT
+				}//bTryNx2N
+			}//depthMapDetect
+			else//do things normally
+			{
             if(doNotBlockPu)
             {
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -889,9 +1261,22 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               rpcTempCU->initEstData( uiDepth, iQP );
             }
           }
+#endif
+          }
 #if AMP_MRG
           else if ( bTestMergeAMP_Ver )
           {
+#if OL_DEPTHLIMIT //add code here to select 2NxN or Nx2N or none
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTryNx2N)
+				{	
+#endif
             if(doNotBlockPu)
             {
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -920,6 +1305,41 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
               rpcTempCU->initEstData( uiDepth, iQP );
             }
+#if OL_DEPTHLIMIT
+				}//bTryNx2N
+			}//depthMapDetect
+			else//do things normally
+			{
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFullyRenderedSec, true );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, true );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+              if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_nLx2N )
+              {
+                doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
+              }
+            }
+            if(doNotBlockPu)
+            {
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+              rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFullyRenderedSec, true );
+#else
+              xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, true );
+#endif
+              rpcTempCU->initEstData( uiDepth, iQP );
+            }
+          }
+#endif
           }
 #endif
 
@@ -993,11 +1413,35 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcTempCU->initEstData( uiDepth, iQP );
           if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
           {
+#if OL_DEPTHLIMIT //add code here to select or deselect NxN mode for Intra
+#if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
+  if(depthMapDetect && !bIntraSliceDetect  && sps->getUseDPL())
+#else
+  if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
+#endif
+			{
+				assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
+				if (bTrySplit)
+				{
+			
+#endif
             if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
             {
               xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   );
               rpcTempCU->initEstData( uiDepth, iQP );
             }
+#if OL_DEPTHLIMIT
+				}//bTrySplit
+			 }//depthMapDetect
+			else
+			{
+				if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
+				{
+					xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   );
+					rpcTempCU->initEstData( uiDepth, iQP );
+				}
+			}
+#endif
           }
         }
       }
@@ -1560,8 +2004,14 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
 #if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 || uiDepth < pcCU->getTextureModeDepth( uiAbsPartIdx ) )
+    {
 #endif
+
     m_pcEntropyCoder->encodeSplitFlag( pcCU, uiAbsPartIdx, uiDepth );
+
+#if HHI_MPI
+    }
+#endif
   }
   else
   {
@@ -1576,7 +2026,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pcCU->setDepthSubParts( uiDepth, uiAbsPartIdx );
 
     if( ( uiRPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiBPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
+	{
       m_pcEntropyCoder->encodeSplitFlag( pcCU, uiAbsPartIdx, uiDepth );
+	}
     if( !pcCU->getSlice()->isIntra() )
     {
       m_pcEntropyCoder->encodeSkipFlag( pcCU, uiAbsPartIdx );
@@ -1630,14 +2082,25 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
 #if HHI_MPI
   if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 )
+{
 #endif
   if( !pcCU->getSlice()->isIntra() )
   {
     m_pcEntropyCoder->encodeSkipFlag( pcCU, uiAbsPartIdx );
   }
+#if HHI_MPI
+}
+#endif
   
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
+#if OL_DEPTHLIMIT
+	if(pcCU->getPartDumpFlag())
+	{
+		pcCU->updatePartInfo(0,uiDepth);
+		pcCU->incrementPartInfo();
+	}
+#endif
     m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, uiAbsPartIdx, 0 );

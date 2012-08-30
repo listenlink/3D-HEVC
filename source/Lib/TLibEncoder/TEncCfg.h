@@ -203,6 +203,12 @@ protected:
 #endif
   Double    m_dLambdaScaleVSO;
   UInt      m_uiVSOMode;
+#if LGE_WVSO_A0119
+  Bool      m_bWVSO;
+  Int				m_iVSOWeight;
+  Int       m_iVSDWeight;
+  Int				m_iDWeight;
+#endif
 #endif
 #if SAIT_VSO_EST_A0033
   Bool      m_bUseEstimatedVSD; 
@@ -309,6 +315,10 @@ protected:
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool      m_bUseDMM;
+#endif
+
+#if OL_DEPTHLIMIT
+  Bool      m_bDepthPartitionLimiting;
 #endif
 
   Int      m_iViewOrderIdx;
@@ -465,6 +475,12 @@ public:
 #if HHI_VSO_DIST_INT
   Void      setAllowNegDist                 ( Bool b  )     { m_bAllowNegDist     = b; };
 #endif
+#if LGE_WVSO_A0119
+  Void      setWVSO													( Bool  b )     { m_bWVSO				= b; }
+  Void      setVSOWeight										( Int   i )     { m_iVSOWeight  = i; }
+  Void      setVSDWeight										( Int   i )     { m_iVSDWeight  = i; }
+  Void      setDWeight											( Int   i )     { m_iDWeight  = i; }
+#endif
 #endif
 
   //====== Quality control ========
@@ -544,6 +560,12 @@ public:
   Double    getLambdaScaleVSO               ()      { return m_dLambdaScaleVSO;   }
 #if HHI_VSO_DIST_INT
   Bool      getAllowNegDist                 ()      { return m_bAllowNegDist;     }
+#endif
+#if LGE_WVSO_A0119
+  Bool      getWVSO                         ()      { return m_bWVSO;     }
+  Int       getVSOWeight                    ()      { return m_iVSOWeight;    }
+  Int       getVSDWeight                    ()      { return m_iVSDWeight;    }
+  Int       getDWeight									    ()      { return m_iDWeight;    }
 #endif
 #endif
 
@@ -796,6 +818,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Void setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool getUseDMM()        { return m_bUseDMM; }
+#endif
+
+#if OL_DEPTHLIMIT
+  Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
+  Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif
 
   Void      setViewOrderIdx       ( Int   i )      { m_iViewOrderIdx          = i; }

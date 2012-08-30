@@ -206,6 +206,9 @@ Void TAppEncTop::xInitLibCfg()
 #if SAIT_VSO_EST_A0033
     m_acTEncTopList[iViewIdx]->setUseEstimatedVSD              ( false );
 #endif
+#if LGE_WVSO_A0119
+    m_acTEncTopList[iViewIdx]->setWVSO												 ( false ); 
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -359,6 +362,9 @@ Void TAppEncTop::xInitLibCfg()
     //====== Depth tools ========
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
+#endif
+#if OL_DEPTHLIMIT
+	m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
 #endif
 #if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
@@ -523,6 +529,9 @@ Void TAppEncTop::xInitLibCfg()
 #if SAIT_VSO_EST_A0033
       m_acTEncDepthTopList[iViewIdx]->setUseEstimatedVSD              ( m_bUseEstimatedVSD );
 #endif
+#if LGE_WVSO_A0119
+      m_acTEncDepthTopList[iViewIdx]->setWVSO                          ( m_bWVSO      );
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -633,6 +642,9 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
+#if OL_DEPTHLIMIT
+	m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
+#endif
 #if HHI_MPI
      m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
 #endif
@@ -689,6 +701,19 @@ Void TAppEncTop::xInitLibCfg()
     {
       AOT(true);
     }
+#if LGE_WVSO_A0119 
+    for ( Int iViewNum = 0; iViewNum < m_iNumberOfViews; iViewNum++ )
+    {
+      for (Int iContent = 0; iContent < 2; iContent++ )
+      {
+        TEncTop* pcEncTop = ( iContent == 0 ) ? m_acTEncTopList[iViewNum] : m_acTEncDepthTopList[iViewNum]; 
+        pcEncTop->setWVSO( m_bWVSO );
+        pcEncTop->setVSOWeight( m_iVSOWeight );
+        pcEncTop->setVSDWeight( m_iVSDWeight );
+        pcEncTop->setDWeight( m_iDWeight );
+      }
+    }
+#endif
   }
 #endif
 
