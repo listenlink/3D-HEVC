@@ -307,6 +307,10 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseDMM;                                        ///< flag for using DMM
 #endif
 
+#if OL_DEPTHLIMIT
+  Bool      m_bDepthPartitionLimiting;
+#endif
+
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
   Void  xCheckParameter ();                                   ///< check validity of configuration values

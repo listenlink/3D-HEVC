@@ -317,6 +317,10 @@ protected:
   Bool      m_bUseDMM;
 #endif
 
+#if OL_DEPTHLIMIT
+  Bool      m_bDepthPartitionLimiting;
+#endif
+
   Int      m_iViewOrderIdx;
 
   UInt     m_uiCamParPrecision;
@@ -814,6 +818,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Void setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool getUseDMM()        { return m_bUseDMM; }
+#endif
+
+#if OL_DEPTHLIMIT
+  Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
+  Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif
 
   Void      setViewOrderIdx       ( Int   i )      { m_iViewOrderIdx          = i; }

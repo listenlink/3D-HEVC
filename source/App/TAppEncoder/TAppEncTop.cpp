@@ -363,6 +363,9 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
 #endif
+#if OL_DEPTHLIMIT
+	m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
+#endif
 #if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
 #endif
@@ -638,6 +641,9 @@ Void TAppEncTop::xInitLibCfg()
   //====== Depth tools ========
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
+#endif
+#if OL_DEPTHLIMIT
+	m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
 #endif
 #if HHI_MPI
      m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
