@@ -237,12 +237,12 @@ private:
   UInt*         m_uiSliceStartCU;    ///< Start CU address of current slice
   UInt*         m_uiEntropySliceStartCU; ///< Start CU address of current slice
 
-#if OL_DEPTHLIMIT 
+#if OL_DEPTHLIMIT_A0044 
   //add a variable to store the partition information
-  //a 2D array in uidepth,part_symbol format
+  //a 2D array in uidepth, part_symbol format
   UInt          m_uiPartInfo[OL_PART_BUF_SIZE][2];
   UInt          m_uiPartNum;
-  Bool	        b_dumpPartInfo;
+  Bool          m_dumpPartInfo;
 #endif 
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -604,16 +604,13 @@ public:
   
   Void          compressMV            ();
 
-#if OL_DEPTHLIMIT
-	Void        resetPartInfo  () {m_uiPartNum = 0;};
-	Void        incrementPartInfo () {m_uiPartNum ++;};
-	Void        updatePartInfo(UInt uiSymbol, UInt uiDepth) {m_uiPartInfo[m_uiPartNum][0] = uiSymbol; m_uiPartInfo
-[m_uiPartNum][1] = uiDepth;};
-	UInt*       readPartInfo() {return (UInt*)m_uiPartInfo;};
-//	UInt		getPartNumIdx() {return m_uiPartNum;}; //added this to get the index
-//flag to signal to start dumping
-	Void		setPartDumpFlag(bool flag)	{b_dumpPartInfo = flag;};
-	Bool		getPartDumpFlag()	{return b_dumpPartInfo;};
+#if OL_DEPTHLIMIT_A0044
+  Void        resetPartInfo     () {m_uiPartNum = 0;};
+  Void        incrementPartInfo () {m_uiPartNum ++;};
+  Void        updatePartInfo(UInt uiSymbol, UInt uiDepth) { m_uiPartInfo[m_uiPartNum][0] = uiSymbol; m_uiPartInfo[m_uiPartNum][1] = uiDepth;};
+  UInt*       readPartInfo()                              { return (UInt*)m_uiPartInfo;};
+  Void        setPartDumpFlag(Bool flag)                  { m_dumpPartInfo = flag; };
+  Bool        getPartDumpFlag()                           { return m_dumpPartInfo; };
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------

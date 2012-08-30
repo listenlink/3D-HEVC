@@ -95,10 +95,10 @@
 #define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
 #define LGE_WVSO_A0119                    1 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
 
-#define OL_DEPTHLIMIT                     1 //JCT2-A0044
-#if OL_DEPTHLIMIT
+#define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
+#if OL_DEPTHLIMIT_A0044
 #define OL_DO_NOT_LIMIT_INTRA_SLICES_PART 1 //Turn this on to not perform depth limiting for I-SLICES.
-#define OL_END_CU                         MAX_INT //Default for initialising the partition information buffer
+#define OL_END_CU                         MAX_INT //Default for initializing the partition information buffer
 #define OL_PART_BUF_SIZE                  86 //maximum number of possible partition bits in a CU
 #endif
 

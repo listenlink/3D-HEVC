@@ -207,7 +207,7 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseEstimatedVSD              ( false );
 #endif
 #if LGE_WVSO_A0119
-    m_acTEncTopList[iViewIdx]->setWVSO												 ( false ); 
+    m_acTEncTopList[iViewIdx]->setWVSO                         ( false ); 
 #endif
 #endif
 
@@ -363,8 +363,8 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
 #endif
-#if OL_DEPTHLIMIT
-	m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
+#if OL_DEPTHLIMIT_A0044
+    m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
 #endif
 #if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
@@ -642,8 +642,8 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT
-	m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
+#if OL_DEPTHLIMIT_A0044
+    m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
 #endif
 #if HHI_MPI
      m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );

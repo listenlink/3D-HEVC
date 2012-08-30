@@ -353,7 +353,7 @@ private:
   Bool  m_bUseDMM;
 #endif
 
-#if OL_DEPTHLIMIT
+#if OL_DEPTHLIMIT_A0044
   Bool m_bDepthPartitionLimiting;
 #endif
 
@@ -622,7 +622,7 @@ public:
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
 
-#if OL_DEPTHLIMIT
+#if OL_DEPTHLIMIT_A0044
   Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
   Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif
