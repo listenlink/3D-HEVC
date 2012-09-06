@@ -98,7 +98,21 @@ TRenSingleModelC<iBM,bBitInc>::~TRenSingleModelC()
 
   if ( m_pcInputSamples [0] ) delete[] m_pcInputSamples [0];
   if ( m_pcInputSamples [1] ) delete[] m_pcInputSamples [1];
+
+#if FIX_MEM_LEAKS
+  if ( m_pcOutputSamples    ) delete[] m_pcOutputSamples   ;
+#else
   if ( m_pcOutputSamples    ) delete   m_pcOutputSamples   ;
+#endif
+
+#if FIX_MEM_LEAKS
+  if ( m_piInvZLUTLeft  ) delete[] m_piInvZLUTLeft ;
+  if ( m_piInvZLUTRight ) delete[] m_piInvZLUTRight;
+
+  if ( m_aapiRefVideoPel[0] ) delete[] ( m_aapiRefVideoPel[0] - ( m_aiRefVideoStrides[0] * m_iPad + m_iPad ) );
+  if ( m_aapiRefVideoPel[1] ) delete[] ( m_aapiRefVideoPel[1] - ( m_aiRefVideoStrides[1] * m_iPad + m_iPad ) );
+  if ( m_aapiRefVideoPel[2] ) delete[] ( m_aapiRefVideoPel[2] - ( m_aiRefVideoStrides[2] * m_iPad + m_iPad ) );
+#endif
 }
 
 template <BlenMod iBM, Bool bBitInc> Void

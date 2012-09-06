@@ -271,7 +271,10 @@ protected:
   Bool      m_bLFCrossTileBoundaryFlag;
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
+#if FIX_REMOVE_TILE_DEPENDENCE
+#else
   Int       m_iTileBoundaryIndependenceIdr;
+#endif
   Int       m_iNumColumnsMinus1;
   UInt*     m_puiColumnWidth;
   Int       m_iNumRowsMinus1;
@@ -286,7 +289,7 @@ protected:
   Int       m_iWaveFrontFlush;
   Int       m_iWaveFrontSubstreams;
 
-  bool m_pictureDigestEnabled; ///< enable(1)/disable(0) md5 computation and SEI signalling
+  Bool      m_pictureDigestEnabled; ///< enable(1)/disable(0) md5 computation and SEI signalling
 
   //====== Weighted Prediction ========
   Bool      m_bUseWeightPred;       //< Use of Weighting Prediction (P_SLICE)

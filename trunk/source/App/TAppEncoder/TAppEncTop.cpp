@@ -999,6 +999,16 @@ Void TAppEncTop::encode()
   delete pcDepthPicYuvOrg;
   pcDepthPicYuvOrg = NULL;
   
+#if FIX_MEM_LEAKS
+  if ( pcPdmDepthOrg != NULL )
+  {
+    pcPdmDepthOrg->destroy();
+    delete pcPdmDepthOrg;     
+    pcPdmDepthOrg = NULL; 
+  };
+#endif
+
+  
   for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
   {
     m_acTEncTopList[iViewIdx]->printOutSummary(m_acTEncTopList[iViewIdx]->getNumAllPicCoded());

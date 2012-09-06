@@ -119,6 +119,27 @@ TAppEncCfg::~TAppEncCfg()
     free (  m_pchVSOConfig );
 #endif
 
+#if FIX_MEM_LEAKS
+ if ( m_pchCameraParameterFile != NULL )
+   free ( m_pchCameraParameterFile ); 
+
+ if ( m_pchBaseViewCameraNumbers != NULL )
+   free ( m_pchBaseViewCameraNumbers ); 
+
+ if ( m_pchdQPFile      != NULL ) 
+   free ( m_pchdQPFile      );
+
+ if ( m_pchColumnWidth  != NULL ) 
+   free ( m_pchColumnWidth  );
+
+ if ( m_pchRowHeight    != NULL ) 
+   free ( m_pchRowHeight    );
+
+ if ( m_scalingListFile != NULL ) 
+   free ( m_scalingListFile );
+
+#endif   
+
 }
 
 Void TAppEncCfg::create()
@@ -227,7 +248,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FrameRate,-fr",         m_iFrameRate,        0, "Frame rate")
   ("FrameSkip,-fs",         m_FrameSkip,         0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",   m_iFrameToBeEncoded, 0, "number of frames to be encoded (default=all)")
-  ("FrameToBeEncoded",      m_iFrameToBeEncoded, 0, "depricated alias of FramesToBeEncoded")
+  ("FrameToBeEncoded",        m_iFrameToBeEncoded, 0, "deprecated alias of FramesToBeEncoded")
   
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
   /* Unit definition parameters */
