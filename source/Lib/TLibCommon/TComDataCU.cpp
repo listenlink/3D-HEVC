@@ -2306,6 +2306,10 @@ UChar TComDataCU::getRefQP( UInt uiCurrAbsIdxInLCU )
 {
 #if H0204_QP_PREDICTION
   UInt        lPartIdx, aPartIdx;
+#if FIX_COMP_WARNING_INIT
+  lPartIdx = 0;
+  aPartIdx = 0;
+#endif
   TComDataCU* cULeft  = getQpMinCuLeft ( lPartIdx, m_uiAbsIdxInLCU + uiCurrAbsIdxInLCU );
   TComDataCU* cUAbove = getQpMinCuAbove( aPartIdx, m_uiAbsIdxInLCU + uiCurrAbsIdxInLCU );
   return (((cULeft? cULeft->getQP( lPartIdx ): getLastCodedQP( uiCurrAbsIdxInLCU )) + (cUAbove? cUAbove->getQP( aPartIdx ): getLastCodedQP( uiCurrAbsIdxInLCU )) + 1) >> 1);

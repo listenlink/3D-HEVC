@@ -472,7 +472,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     {
       pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() );
       pcTexture->setPartInfo(pcTextureCU->readPartInfo());
-      pcTexture->setTexPartIndex(0); //pcTextureCU->setTexPartIndex(0); //uiTexPartIndex = 0;
+      pcTexture->setTexPartIndex(0); 
     }
   }
   else
@@ -657,7 +657,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             {
               break;
             }
-            pcTexture->incrementTexPartIndex(); //uiTexPartIndex+=2;
+            pcTexture->incrementTexPartIndex(); 
 
             if(pcTexture->accessPartInfo(1) == OL_END_CU)
             {
