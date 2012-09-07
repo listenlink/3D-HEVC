@@ -112,6 +112,11 @@ private:
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
 
+#if OL_DEPTHLIMIT_A0044
+  UInt*                 m_texPartInfo;
+  UInt                  m_uiTexPartIndex;
+#endif
+
 public:
   TComPic();
   virtual ~TComPic();
@@ -242,6 +247,15 @@ public:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void          removeResidualBuffer    ();
 #endif
+
+#if OL_DEPTHLIMIT_A0044
+  UInt        accessPartInfo        ( UInt count )   { return m_texPartInfo[m_uiTexPartIndex + count]; };
+  Void        incrementTexPartIndex (            )   { m_uiTexPartIndex += 2;    };
+  UInt        getTexPartIndex       ()               { return m_uiTexPartIndex;  };
+  Void        setTexPartIndex       ( UInt idx   )   { m_uiTexPartIndex = idx; };
+  Void        setPartInfo           ( UInt* texPart) { m_texPartInfo    = texPart;  };
+#endif
+
   Bool          getValidSlice                                  (Int sliceID)  {return m_pbValidSlice[sliceID];}
   Int           getSliceGranularityForNDBFilter                ()             {return m_sliceGranularityForNDBFilter;}
   Bool          getIndependentSliceBoundaryForNDBFilter        ()             {return m_bIndependentSliceBoundaryForNDBFilter;}
