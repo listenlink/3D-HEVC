@@ -1268,7 +1268,11 @@ Void TAppEncTop::getUsedPelsMap( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUse
 #if HHI_VSO_SPEEDUP_A0033
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset )
 {
+#if FIX_VSO_SETUP
+  m_cRendererModel.setupPart( iHorOffset, Min( g_uiMaxCUHeight, m_iSourceHeight - iHorOffset ) ); 
+#else
   m_cRendererModel.setHorOffset( iHorOffset ); 
+#endif
 #else
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent )
 {
