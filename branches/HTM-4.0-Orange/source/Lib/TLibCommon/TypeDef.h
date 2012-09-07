@@ -46,6 +46,7 @@
 #define FIX_DECODING_WO_WRITING           1
 #define FIX_INIT_ROM                      1
 #define FIX_VIRT_DESTRUCTOR               1
+#define FIX_COMP_WARNING_INIT             1
 
 
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
