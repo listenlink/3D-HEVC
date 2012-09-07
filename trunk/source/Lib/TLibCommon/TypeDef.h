@@ -47,6 +47,8 @@
 #define FIX_INIT_ROM                      1
 #define FIX_VIRT_DESTRUCTOR               1
 #define FIX_MEM_LEAKS                     1
+#define FIX_VSO_SETUP                     1
+#define FIX_COMP_WARNING_INIT             1
 
 #define FIX_LG_RESTRICTEDRESPRED_M24766   1
 #define FIX_REMOVE_TILE_DEPENDENCE        1
