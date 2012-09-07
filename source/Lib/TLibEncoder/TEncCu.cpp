@@ -454,35 +454,31 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   TComSPS *sps = pcPic->getSlice(0)->getSPS();
   TComPic *pcTexture;
   TComDataCU * pcTextureCU;
-
-  static UInt* texPartInfo;
-  static UInt  uiTexPartIndex;
-  static Bool  depthMapDetect =  false;
-
+  Bool  depthMapDetect =  false;
   UInt         uiPrevTexPartIndex = 0;
 #if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
-  static Bool bIntraSliceDetect = false;
+  Bool bIntraSliceDetect = false;
 #endif
   Bool bTry2NxN = false;
   Bool bTryNx2N = false;
-  if(uiDepth == 0)
-  {
     pcTexture = rpcBestCU->getSlice()->getTexturePic();
     if(pcTexture != NULL) //depth map being encoded
     {
+    depthMapDetect = true;
 #if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
       bIntraSliceDetect = (rpcBestCU->getSlice()->getSliceType()==I_SLICE);
 #endif
+    if(uiDepth == 0)
+    {
       pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() );
-      texPartInfo = pcTextureCU -> readPartInfo();
-      uiTexPartIndex = 0;
-      depthMapDetect = true;
+      pcTexture->setPartInfo(pcTextureCU->readPartInfo());
+      pcTexture->setTexPartIndex(0); 
+    }
     }
     else
     {
       depthMapDetect = false;
     }
-  }
 #endif
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
@@ -634,38 +630,38 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       if(depthMapDetect && sps->getUseDPL()) //depth map being encoded
 #endif
       {
-        assert(uiDepth == (UInt)texPartInfo[uiTexPartIndex+1]);
-        if((UInt)texPartInfo[uiTexPartIndex] == 1) //NxN modes
+        assert(uiDepth == pcTexture->accessPartInfo(1));
+        if(pcTexture->accessPartInfo(0) == 1) //NxN modes
         {
           bTrySplit = true;
           bTryNx2N = true;
           bTry2NxN = true;
-          uiPrevTexPartIndex = uiTexPartIndex; 
-          uiTexPartIndex += 2;
+          uiPrevTexPartIndex = pcTexture->getTexPartIndex(); 
+          pcTexture->incrementTexPartIndex(); 
         }
-        else if((UInt)texPartInfo[uiTexPartIndex] == 0) //2Nx2N modes
+        else if(pcTexture->accessPartInfo(0) == 0) //2Nx2N modes
         {
           UInt uiTexdepth;
           UInt temp_uiTexPartIndex;
           bTrySplit = false;
 
           //scan ahead till next depth
-          uiTexdepth = (UInt)texPartInfo[uiTexPartIndex+1];
-          uiPrevTexPartIndex = uiTexPartIndex;
-          uiTexPartIndex+=2;
-          temp_uiTexPartIndex = uiTexPartIndex; //store in case to rewind
+          uiTexdepth = pcTexture->accessPartInfo(1);
+          uiPrevTexPartIndex = pcTexture->getTexPartIndex(); 
+          pcTexture->incrementTexPartIndex();
+          temp_uiTexPartIndex = pcTexture->getTexPartIndex(); //store in case to rewind
 
-          while(uiTexdepth != (UInt)texPartInfo[uiTexPartIndex+1] && uiTexdepth != 0)
+          while(uiTexdepth != pcTexture->accessPartInfo(1) && uiTexdepth != 0)
           {
-            if((UInt)texPartInfo[uiTexPartIndex+1] < uiTexdepth)
+            if(pcTexture->accessPartInfo(1) < uiTexdepth)
             {
               break;
             }
-            uiTexPartIndex+=2;
+            pcTexture->incrementTexPartIndex(); 
 
-            if((UInt)texPartInfo[uiTexPartIndex+1] == OL_END_CU)
+            if(pcTexture->accessPartInfo(1) == OL_END_CU)
             {
-              uiTexPartIndex = temp_uiTexPartIndex;
+              pcTexture->setTexPartIndex(temp_uiTexPartIndex); 
               uiTexdepth++;
               if(uiTexdepth >= g_uiMaxCUDepth)
               {      
@@ -674,27 +670,27 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
         }
-        else if((UInt)texPartInfo[uiTexPartIndex] == OL_END_CU)
+        else if(pcTexture->accessPartInfo(0) == OL_END_CU)
         {
           bTrySplit = false;
           bTryNx2N = false;
           bTry2NxN = false;
         }
-        else if((UInt)texPartInfo[uiTexPartIndex] == 2) //2NxN case
+        else if(pcTexture->accessPartInfo(0) == 2) //2NxN case
         {
           bTrySplit = false;
           bTryNx2N = false;
           bTry2NxN = true;
-          uiPrevTexPartIndex = uiTexPartIndex; 
-          uiTexPartIndex += 2;
+          uiPrevTexPartIndex = pcTexture->getTexPartIndex();  
+          pcTexture->incrementTexPartIndex(); ;
         }
-        else if((UInt)texPartInfo[uiTexPartIndex] == 3) //Nx2N case
+        else if(pcTexture->accessPartInfo(0) == 3) //Nx2N case
         {
           bTrySplit = false;
           bTryNx2N = true;
           bTry2NxN = false;
-          uiPrevTexPartIndex = uiTexPartIndex; 
-          uiTexPartIndex += 2;
+          uiPrevTexPartIndex = pcTexture->getTexPartIndex();  
+          pcTexture->incrementTexPartIndex(); ;
         }
       }
 #endif
@@ -860,7 +856,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
                 {
-                  assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
                   if (bTrySplit)
                   {
 #endif
@@ -901,7 +896,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
             {
-              assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
               if (bTryNx2N)
               {
 #endif
@@ -952,7 +946,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
             {
-              assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
               if (bTry2NxN)
               {
 #endif
@@ -1022,7 +1015,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
               {
-                assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
                 if (bTry2NxN)
                 {
 #endif
@@ -1108,7 +1100,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
               {
-                assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
                 if (bTry2NxN)
                 {
 #endif
@@ -1197,7 +1188,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
               {
-                assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
                 if (bTryNx2N)
                 {
 #endif
@@ -1275,7 +1265,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
               {
-                assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
                 if (bTryNx2N)
                 {
 #endif
@@ -1422,7 +1411,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if(depthMapDetect  && sps->getUseDPL()) //depth map being encoded
 #endif
             {
-              assert(uiDepth == (UInt)texPartInfo[uiPrevTexPartIndex+1]);
               if (bTrySplit)
               {
 
