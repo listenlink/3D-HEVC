@@ -532,11 +532,7 @@ Void TAppRendererTop::xRenderModelFromString()
 #endif
 
 #if HHI_VSO_SPEEDUP_A0033
-#if FIX_VSO_SETUP
-    cCurModel.setupPart( 0, m_iSourceHeight  ); 
-#else
     cCurModel.setHorOffset( 0 );
-#endif
 #endif
 
     for ( Int iViewIdx = 0; iViewIdx < m_iNumberOfInputViews; iViewIdx++ )
@@ -713,11 +709,7 @@ Void TAppRendererTop::xRenderModelFromNums()
 
   AOT( m_iLog2SamplingFactor != 0 );
 #if HHI_VSO_SPEEDUP_A0033
-#if FIX_VSO_SETUP
-  cCurModel.setupPart( 0, m_iSourceHeight  ); 
-#else
   cCurModel.setHorOffset( 0 );
-#endif
 #endif
 #if LGE_VSO_EARLY_SKIP_A0093
   cCurModel.create( m_iNumberOfInputViews, m_iNumberOfOutputViews, m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin, false );

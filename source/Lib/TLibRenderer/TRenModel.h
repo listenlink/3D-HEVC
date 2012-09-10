@@ -61,14 +61,10 @@ public:
   Void  setSingleModel   ( Int iModelNum, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight, Int** ppiBaseShiftLutRight, Int iDistToLeft, TComPicYuv* pcPicYuvRefView );
 
   // Set horizontal offset
-#if FIX_VSO_SETUP
-  Void  setupPart        ( UInt uiHorOff, Int iUsedHeight );
-#else
   Void  setHorOffset     ( UInt uiHorOff );
-#endif
 
   // Set Mode
-  Void  setErrorMode     ( Int iView, Int iContent, Int iPlane );
+  Void  setErrorMode     ( Int iView, Int iContent, int iPlane );
 
   // Get Distortion, set Data
 #ifdef LGE_VSO_EARLY_SKIP_A0093
@@ -103,10 +99,6 @@ private:
   Int m_iHeight;
   Int m_iSampledWidth;
   Int m_iPad;
-#if FIX_VSO_SETUP
-  Int m_iUsedHeight;   // height currently used in buffer, whereas m_iHeight is the total height of the buffer
-#endif
-
 
   Int m_iNumOfBaseViews;
 
