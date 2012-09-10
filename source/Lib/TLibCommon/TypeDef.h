@@ -52,6 +52,7 @@
 #define FIX_RDO_MACRO                     1
 #define FIX_LG_RESTRICTEDRESPRED_M24766   1
 #define FIX_REMOVE_TILE_DEPENDENCE        1
+#define FIX_DBL_CONTROL_DEFAULT           1
 
 
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
