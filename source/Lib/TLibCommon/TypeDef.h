@@ -50,7 +50,6 @@
 #define FIX_VSO_SETUP                     1
 #define FIX_COMP_WARNING_INIT             1
 #define FIX_RDO_MACRO                     1
-
 #define FIX_LG_RESTRICTEDRESPRED_M24766   1
 #define FIX_REMOVE_TILE_DEPENDENCE        1
 
