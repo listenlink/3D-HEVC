@@ -305,7 +305,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
   ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
 #if DBL_CONTROL
+#if FIX_DBL_CONTROL_DEFAULT
+  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
+#else
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, false)
+#endif
 #endif
 
   /* Camera Paremetes */
