@@ -1128,26 +1128,13 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
 #if HHI_VSO
   if ( m_pcRdCost->getUseVSO() )
   {
-#if LGE_WVSO_A0119
-    if ( m_pcRdCost->getUseWVSO() )
-    {    
-      Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-      Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-      Dist iD = (Dist) m_pcRdCost->getDistPart( piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
-      Dist iVSO = m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false, 0 );
-      ruiDist += (iDWeight * iD + iVSOWeight * iVSO) / ( iDWeight + iVSOWeight);
-    }
-    else
-#endif
-    {
-      ruiDist += m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false, 0 );
-    }
+    ruiDist += m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false, 0 );
   }
   else
 #endif
   {
-    ruiDist += m_pcRdCost->getDistPart( piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
-  }
+  ruiDist += m_pcRdCost->getDistPart( piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
+}
 }
 
 
@@ -1914,31 +1901,14 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
             TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
 
             uiSad = (Dist) ( m_pcRdCost->getDistPart( piPred, uiStride, piOrg, uiStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiPartOffset), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiPartOffset), pcVirRec->getStride(), uiWidth, uiHeight ) );
-#if LGE_WVSO_A0119
-            if ( m_pcRdCost->getUseWVSO() )
-            {    
-              Int iDWeight = m_pcRdCost->getDWeight();
-              Int iVSDWeight = m_pcRdCost->getVSDWeight();
-              Dist iD = (Dist) m_pcRdCost->calcHAD( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
-              uiSad = (Dist) (iDWeight * iD + iVSDWeight * uiSad) / (iDWeight + iVSDWeight);
-            }
-#endif
           }
           else
 #endif
           {          
             Bool bSad = !m_pcRdCost->getUseRenModel();
             uiSad = m_pcRdCost->getDistVS(pcCU, uiPartOffset, piPred, uiStride, piOrg, uiStride, uiWidth, uiHeight, bSad, 0 );
-#if LGE_WVSO_A0119
-            if ( m_pcRdCost->getUseWVSO() )
-            {    
-              Int iDWeight = m_pcRdCost->getDWeight()*m_pcRdCost->getDWeight();
-              Int iVSDWeight = m_pcRdCost->getVSOWeight()*m_pcRdCost->getVSOWeight();
-              Dist iD = (Dist) m_pcRdCost->getDistPart( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
-              uiSad = (Dist) (iDWeight * iD + iVSDWeight * uiSad) / (iDWeight + iVSDWeight);
-            }
-#endif
           }
+
         }
         else
 #endif
@@ -4420,15 +4390,6 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     if ( m_pcRdCost->getUseVSO() )
     {
       uiDistortion = m_pcRdCost->getDistVS( pcCU, 0, rpcYuvRec->getLumaAddr(), rpcYuvRec->getStride(),  pcYuvOrg->getLumaAddr(), pcYuvOrg->getStride(),  uiWidth,      uiHeight     , false, 0 );
-#if LGE_WVSO_A0119
-      if ( m_pcRdCost->getUseWVSO() )
-      {    
-        Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-        Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-        Dist iD   = (Dist) m_pcRdCost->getDistPart( rpcYuvRec->getLumaAddr(), rpcYuvRec->getStride(),  pcYuvOrg->getLumaAddr(), pcYuvOrg->getStride(),  uiWidth,      uiHeight      );
-        uiDistortion = (iDWeight * iD + iVSOWeight * (Dist)uiDistortion) / ( iDWeight + iVSOWeight);
-      }
-#endif
     }
     else    
     {
@@ -4788,15 +4749,6 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   if ( m_pcRdCost->getUseVSO() )
   {
     uiDistortionBest = m_pcRdCost->getDistVS  ( pcCU, 0, rpcYuvRec->getLumaAddr(), rpcYuvRec->getStride(),  pcYuvOrg->getLumaAddr(), pcYuvOrg->getStride(),  uiWidth,      uiHeight, false, 0    );
-#if LGE_WVSO_A0119
-    if ( m_pcRdCost->getUseWVSO() )
-    {    
-      Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-      Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-      Dist iD        = (Dist) m_pcRdCost->getDistPart( rpcYuvRec->getLumaAddr(), rpcYuvRec->getStride(),  pcYuvOrg->getLumaAddr(), pcYuvOrg->getStride(),  uiWidth,      uiHeight      );
-      uiDistortionBest = (iDWeight * iD + iVSOWeight * (Dist) uiDistortionBest) / ( iDWeight + iVSOWeight);
-    }
-#endif
   }
   else
 #endif
@@ -5032,29 +4984,11 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
         TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
         TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
         uiDistY = m_pcRdCost->getDistPart( m_pTempPel, 1<< uiLog2TrSize, pcResi->getLumaAddr( uiAbsPartIdx ), pcResi->getStride(), pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiAbsPartIdx), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiAbsPartIdx), pcVirRec->getStride(), 1<< uiLog2TrSize, 1<< uiLog2TrSize );
-#if LGE_WVSO_A0119
-        if ( m_pcRdCost->getUseWVSO() )
-        {    
-          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-          Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
-          Dist iD   = (Dist) m_pcRdCost->getDistPart( m_pTempPel, trWidth, pcResi->getLumaAddr( absTUPartIdx ), pcResi->getStride(), trWidth, trHeight );
-          uiDistY = (iDWeight * iD + iVSDWeight * (Dist)uiDistY) / ( iDWeight + iVSDWeight);
-        }
-#endif
       }
       else
 #endif
       {      
         uiDistY = m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, pcPred->getLumaAddr( uiAbsPartIdx ), pcPred->getStride(), pcOrg->getLumaAddr( uiAbsPartIdx), pcOrg->getStride(), 1<< uiLog2TrSize, 1<< uiLog2TrSize, false, 0 ); // initialized with zero residual distortion
-#if LGE_WVSO_A0119
-        if ( m_pcRdCost->getUseWVSO() )
-        {    
-          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-          Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-          Dist iD   = (Dist) m_pcRdCost->getDistPart( m_pTempPel, trWidth, pcResi->getLumaAddr( absTUPartIdx ), pcResi->getStride(), trWidth, trHeight );
-          uiDistY = (iDWeight * iD + iVSOWeight * (Dist)uiDistY) / ( iDWeight + iVSOWeight);
-        }
-#endif
       }
     }
     else
@@ -5100,15 +5034,6 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
           TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
           TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
           uiNonzeroDistY = m_pcRdCost->getDistPart( m_pcQTTempTComYuv[uiQTTempAccessLayer].getLumaAddr( uiAbsPartIdx ), m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(), pcResi->getLumaAddr( uiAbsPartIdx ), pcResi->getStride(), pcVirRec->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiAbsPartIdx ), pcVirOrg->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiAbsPartIdx ), pcVirRec->getStride(), 1<< uiLog2TrSize,    1<< uiLog2TrSize );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( m_pcQTTempTComYuv[uiQTTempAccessLayer].getLumaAddr( absTUPartIdx ), m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(),pcResi->getLumaAddr( absTUPartIdx ), pcResi->getStride(), trWidth,trHeight );
-            uiNonzeroDistY = (iDWeight * iD + iVSDWeight * (Dist) uiNonzeroDistY) / ( iDWeight + iVSDWeight);
-          }
-#endif
         }
         else
 #endif
@@ -5116,15 +5041,6 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
           m_cYuvRecTemp.addClipPartLuma( &m_pcQTTempTComYuv[uiQTTempAccessLayer], pcPred, uiAbsPartIdx, 1<< uiLog2TrSize  );
           uiNonzeroDistY = m_pcRdCost->getDistVS( pcCU, uiAbsPartIdx, m_cYuvRecTemp.getLumaAddr(uiAbsPartIdx), m_cYuvRecTemp.getStride(),
                                                   pcOrg->getLumaAddr( uiAbsPartIdx ), pcOrg->getStride(), 1<< uiLog2TrSize,   1<< uiLog2TrSize, false, 0 );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( m_pcQTTempTComYuv[uiQTTempAccessLayer].getLumaAddr( absTUPartIdx ), m_pcQTTempTComYuv[uiQTTempAccessLayer].getStride(),pcResi->getLumaAddr( absTUPartIdx ), pcResi->getStride(), trWidth,trHeight );
-            uiNonzeroDistY = (iDWeight * iD + iVSOWeight * (Dist) uiNonzeroDistY) / ( iDWeight + iVSOWeight);
-          }
-#endif
         }
       }
       else
@@ -6203,29 +6119,11 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
           TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
           TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
           uiActDist = m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
-            uiActDist = (iDWeight * iD + iVSDWeight * (Dist) uiActDist) / ( iDWeight + iVSDWeight);
-          }
-#endif // LGE_WVSO_A0119
         }
         else       
 #endif // SAIT_VSO_EST_A0033
         {        
           uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPredic, uiStride,  piOrig, uiStride, uiWidth, uiHeight, false, 0 );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
-            uiActDist = (iDWeight * iD + iVSOWeight * (Dist) uiActDist) / ( iDWeight + iVSOWeight);
-          }
-#endif // LGE_WVSO_A0119
         }
 #else // FIX_RDO_MACRO
 #if SAIT_VSO_EST_A0033
@@ -6234,29 +6132,11 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
           TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
           TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
           uiActDist = m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
-            uiActDist = (iDWeight * iD + iVSDWeight * (Dist) uiActDist) / ( iDWeight + iVSDWeight);
-          }
-#endif // LGE_WVSO_A0119
         }
         else       
 #else  // SAIT_VSO_EST_A0033 <-- wrong #else statement should be #endif
         {        
           uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPredic, uiStride,  piOrig, uiStride, uiWidth, uiHeight, false, 0 );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
-            uiActDist = (iDWeight * iD + iVSOWeight * (Dist) uiActDist) / ( iDWeight + iVSOWeight);
-          }
-#endif // LGE_WVSO_A0119
         }
 #endif // SAIT_VSO_EST_A0033 <-- wrong #endif should be removed
 #endif // FIX_RDO_MACRO
@@ -6366,29 +6246,11 @@ Void TEncSearch::xSearchWedgeFullMinDist( TComDataCU* pcCU, UInt uiAbsPtIdx, Wed
         TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
         TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
         uiActDist = m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
-#if LGE_WVSO_A0119
-        if ( m_pcRdCost->getUseWVSO() )
-        {    
-          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-          Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
-          Dist iD = (Dist) m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
-          uiActDist = (iDWeight * iD + iVSDWeight * (Int) uiActDist) / ( iDWeight + iVSDWeight);
-        }
-#endif
       }
       else
 #endif
       {      
         uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, 0 );
-#if LGE_WVSO_A0119
-        if ( m_pcRdCost->getUseWVSO() )
-        {    
-          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-          Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-          Dist iD = (Dist) m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
-          uiActDist = (iDWeight * iD + iVSOWeight * (Int) uiActDist) / ( iDWeight + iVSOWeight);
-        }
-#endif
       }
     }
     else
@@ -6450,29 +6312,11 @@ Void TEncSearch::xSearchWedgePredDirMinDist( TComDataCU* pcCU, UInt uiAbsPtIdx, 
         TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
         TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
         uiActDist = m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiAbsPtIdx), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiAbsPtIdx), pcVirRec->getStride(), uiWidth, uiHeight );
-#if LGE_WVSO_A0119
-        if ( m_pcRdCost->getUseWVSO() )
-        {    
-          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-          Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
-          Dist iD = (Dist) m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
-          uiActDist = (iDWeight * iD + iVSDWeight * (Int) uiActDist) / ( iDWeight + iVSDWeight);
-        }
-#endif
       }
       else
 #endif
       {      
         uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, 0 );
-#if LGE_WVSO_A0119
-        if ( m_pcRdCost->getUseWVSO() )
-        {    
-          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-          Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-          Dist iD = (Dist) m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
-          uiActDist = (iDWeight * iD + iVSOWeight * (Int) uiActDist) / ( iDWeight + iVSOWeight);
-        }
-#endif
       }
     }
     else

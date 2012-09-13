@@ -767,9 +767,6 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT_A0044
-  m_cSPS.setUseDPL( m_bDepthPartitionLimiting );
-#endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif
@@ -1101,11 +1098,7 @@ Void  TEncTop::xInitPPSforTiles()
     m_cPPS.setLFCrossTileBoundaryFlag( m_bLFCrossTileBoundaryFlag );
 
     // # substreams is "per tile" when tiles are independent.
-#if FIX_REMOVE_TILE_DEPENDENCE
-    if ( m_iWaveFrontSynchro )
-#else
     if (m_iTileBoundaryIndependenceIdr && m_iWaveFrontSynchro)
-#endif
     {
       m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams * (m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1));
     }

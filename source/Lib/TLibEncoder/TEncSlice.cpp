@@ -375,21 +375,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
 #if SAIT_VSO_EST_A0033
   m_pcRdCost->setDisparityCoeff( m_pcCfg->getDispCoeff() );
 #endif
-#if LGE_WVSO_A0119
-  if( m_pcCfg->getUseWVSO() && m_pcCfg->isDepthCoder() )
-  {
 
-    Int iDWeight, iVSOWeight, iVSDWeight;
-    iDWeight = m_pcCfg->getDWeight();
-    iVSOWeight = m_pcCfg->getVSOWeight();
-    iVSDWeight = m_pcCfg->getVSDWeight();
-
-    m_pcRdCost->setDWeight( iDWeight );
-    m_pcRdCost->setVSOWeight( iVSOWeight );
-    m_pcRdCost->setVSDWeight( iVSDWeight );
-
-  }
-#endif
 #if RDOQ_CHROMA_LAMBDA 
 // for RDOQ
   m_pcTrQuant->setLambda( dLambda, dLambda / weight );    
@@ -844,10 +830,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }    
 #endif
 
-#if OL_DEPTHLIMIT_A0044 //stop dumping partition information
-    m_bDumpPartInfo = 0;
-    pcCU->setPartDumpFlag(m_bDumpPartInfo);
-#endif
 
     // inherit from TR if necessary, select substream to use.
     if( m_pcCfg->getUseSBACRD() )
@@ -1307,10 +1289,6 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
     }
 
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
-#if OL_DEPTHLIMIT_A0044
-    pcCU->setPartDumpFlag(m_bDumpPartInfo);
-    pcCU->resetPartInfo();
-#endif
 #if !REMOVE_TILE_DEPENDENCE
     if( (rpcPic->getPicSym()->getTileBoundaryIndependenceIdr()==0) && (rpcPic->getPicSym()->getNumColumnsMinus1()!=0) )
     {    
