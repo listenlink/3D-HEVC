@@ -5444,6 +5444,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     }
     if ( uiLCUIdx >= 0 && xGetColMVP( eRefPicList, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx_Col ) )
     {
+#if LGE_DVMCP_BUGFIX
+      cColMv.m_bDvMcp = false;
+#endif 
       pInfo->m_acMvCand[pInfo->iN++] = cColMv;
     }
     else 
@@ -5453,6 +5456,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       xDeriveCenterIdx( eCUMode, uiPartIdx, uiPartIdxCenter );
       if (xGetColMVP( eRefPicList, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx_Col ))
       {
+#if LGE_DVMCP_BUGFIX
+        cColMv.m_bDvMcp = false;
+#endif 
         pInfo->m_acMvCand[pInfo->iN++] = cColMv;
       }
     }

@@ -79,6 +79,7 @@
 #define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
                                         
 #define LGE_DVMCP                         1   //  JCT2-A0126     
+#define LGE_DVMCP_BUGFIX                  1
 #if LGE_DVMCP                           
 #define DVFROM_LEFTBELOW                  1
 #define DVFROM_LEFT                       2
