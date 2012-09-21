@@ -46,13 +46,6 @@
 #define FIX_DECODING_WO_WRITING           1
 #define FIX_INIT_ROM                      1
 #define FIX_VIRT_DESTRUCTOR               1
-#define FIX_MEM_LEAKS                     1
-#define FIX_VSO_SETUP                     1
-#define FIX_COMP_WARNING_INIT             1
-#define FIX_RDO_MACRO                     1
-#define FIX_LG_RESTRICTEDRESPRED_M24766   1
-#define FIX_REMOVE_TILE_DEPENDENCE        1
-#define FIX_DBL_CONTROL_DEFAULT           1
 
 
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
@@ -100,14 +93,7 @@
 #define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
 #define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
 #define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
-#define LGE_WVSO_A0119                    1 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
 
-#define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
-#if OL_DEPTHLIMIT_A0044
-#define OL_DO_NOT_LIMIT_INTRA_SLICES_PART 1 //Turn this on to not perform depth limiting for I-SLICES.
-#define OL_END_CU                         MAX_INT //Default for initializing the partition information buffer
-#define OL_PART_BUF_SIZE                  86 //maximum number of possible partition bits in a CU
-#endif
 
 #define HHI_INTERVIEW_SKIP                1
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1

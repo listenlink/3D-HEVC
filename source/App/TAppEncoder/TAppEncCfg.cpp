@@ -119,27 +119,6 @@ TAppEncCfg::~TAppEncCfg()
     free (  m_pchVSOConfig );
 #endif
 
-#if FIX_MEM_LEAKS
- if ( m_pchCameraParameterFile != NULL )
-   free ( m_pchCameraParameterFile ); 
-
- if ( m_pchBaseViewCameraNumbers != NULL )
-   free ( m_pchBaseViewCameraNumbers ); 
-
- if ( m_pchdQPFile      != NULL ) 
-   free ( m_pchdQPFile      );
-
- if ( m_pchColumnWidth  != NULL ) 
-   free ( m_pchColumnWidth  );
-
- if ( m_pchRowHeight    != NULL ) 
-   free ( m_pchRowHeight    );
-
- if ( m_scalingListFile != NULL ) 
-   free ( m_scalingListFile );
-
-#endif   
-
 }
 
 Void TAppEncCfg::create()
@@ -248,7 +227,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FrameRate,-fr",         m_iFrameRate,        0, "Frame rate")
   ("FrameSkip,-fs",         m_FrameSkip,         0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",   m_iFrameToBeEncoded, 0, "number of frames to be encoded (default=all)")
-  ("FrameToBeEncoded",        m_iFrameToBeEncoded, 0, "deprecated alias of FramesToBeEncoded")
+  ("FrameToBeEncoded",      m_iFrameToBeEncoded, 0, "depricated alias of FramesToBeEncoded")
   
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
   /* Unit definition parameters */
@@ -326,11 +305,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
   ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
 #if DBL_CONTROL
-#if FIX_DBL_CONTROL_DEFAULT
-  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
-#else
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, false)
-#endif
 #endif
 
   /* Camera Paremetes */
@@ -358,16 +333,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ForceLambdaScaleVSO",             m_bForceLambdaScaleVSO    , false         , "Force using Lambda Scale VSO also in non-VSO-Mode")
 #if HHI_VSO_DIST_INT
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
-#endif
-#if LGE_WVSO_A0119
-  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
-  ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
-  ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
-  ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
-#endif
-
-#if OL_DEPTHLIMIT_A0044
-  ("DPL",                             m_bDepthPartitionLimiting , false         , "Use DepthPartitionLimiting" )
 #endif
 
 #endif
@@ -678,9 +643,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_bUseVSO = m_bUseVSO && m_bUsingDepthMaps && (m_uiVSOMode != 0);
 #endif
 
-#if LGE_WVSO_A0119
-  m_bUseWVSO = m_bUseVSO && m_bUseWVSO && m_bUsingDepthMaps;
-#endif
   xCleanUpVectors();
 
 #if HHI_VSO
@@ -1725,21 +1687,12 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
-#endif
-#if LGE_WVSO_A0119
-  printf("WVSO:%d ", m_bUseWVSO );
-#endif
-#if OL_DEPTHLIMIT_A0044
-  printf("DPL:%d ", m_bDepthPartitionLimiting);
-#endif
+#endif  
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );
 #endif
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
-#endif
-#if LGE_WVSO_A0119
-  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   
