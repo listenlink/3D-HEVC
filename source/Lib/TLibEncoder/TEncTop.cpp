@@ -767,6 +767,12 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  m_cSPS.setUseDMM34( m_bUseDMM34 );
+#endif
+
+
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif

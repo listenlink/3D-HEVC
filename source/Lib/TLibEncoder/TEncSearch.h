@@ -314,7 +314,13 @@ protected:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool predIntraLumaDMMAvailable  ( UInt           uiMode, 
                                     UInt           uiWidth, 
-                                    UInt           uiHeight );
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+                                    UInt         uiHeight, 
+                                    Bool         bDMMAvailable34 );
+#else
+                                    UInt         uiHeight );
+#endif
+
   Void xGetWedgeDeltaDCsMinDist   ( TComWedgelet*  pcWedgelet, 
                                     TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 

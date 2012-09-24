@@ -166,6 +166,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
   UInt                  uiOneBitstreamPerSliceLength = 0;
   TEncSbac* pcSbacCoders = NULL;
   TComOutputBitstream* pcSubstreamsOut = NULL;
+  int is_Depth;
 
   {
       UInt uiColDir = 1;
@@ -254,7 +255,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       pcSlice->setSliceIdx(0);
       pcSlice->setViewId( m_pcEncTop->getViewId() );
       pcSlice->setIsDepth( m_pcEncTop->getIsDepth() ); 
-
+      is_Depth = m_pcEncTop->getIsDepth();
       m_pcEncTop->getSPS()->setDisInter4x4(m_pcEncTop->getDisInter4x4());
       pcSlice->setScalingList ( m_pcEncTop->getScalingList()  );
       if(m_pcEncTop->getUseScalingListId() == SCALING_LIST_OFF)
@@ -460,11 +461,15 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #endif
 
 #if SAIT_VSO_EST_A0033
-    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
+    
+{
+Bool flag_rec;
+
+    flag_rec =  ((m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true) == NULL) ? false: true);
+    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, flag_rec ) );
     m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
+}
 #endif
-
-
   }
 #endif
       /////////////////////////////////////////////////////////////////////////////////////////////////// Compress a slice

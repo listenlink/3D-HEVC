@@ -728,7 +728,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
  if( m_pcCfg->getUseVSO() )
  {
 
-   Int frameWidth = m_pcCfg->getSourceWidth();
+ 
+#if 0
+  Int frameWidth = m_pcCfg->getSourceWidth();
    Pel* pVideoRec = m_pcRdCost->getVideoRecPicYuv()->getLumaAddr();
    Int iVideoRecStride = m_pcRdCost->getVideoRecPicYuv()->getStride();
 
@@ -745,6 +747,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
      pVideoRec += iVideoRecStride;
      pDepthOrg += iDepthOrgStride;
    }
+#endif
  }
 #endif
 

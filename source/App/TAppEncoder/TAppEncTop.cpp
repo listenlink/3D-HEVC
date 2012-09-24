@@ -368,6 +368,29 @@ Void TAppEncTop::xInitLibCfg()
   {
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
     {
+#if FLEX_CODING_ORDER
+      // Detect whether depth comes before than texture for this view
+      Bool isDepthFirst = false;
+      if ( m_b3DVFlexOrder )
+      {
+        for ( Int ii=1; ii<12; ii+=2 )
+        {
+          Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+          if ( iViewIdxCfg == iViewIdx )
+          {
+            if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+            {
+              isDepthFirst = true;
+            }
+            else
+            {
+              assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+            }
+            break;
+          }
+        }
+      }
+#endif
       m_depthFrameRcvd.push_back(0);
       m_acTEncDepthTopList.push_back(new TEncTop); 
       m_acTVideoIOYuvDepthInputFileList.push_back(new TVideoIOYuv);
@@ -633,8 +656,19 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
+
+#if FLEX_CODING_ORDER && HHI_DMM_PRED_TEX
+    m_acTEncDepthTopList[iViewIdx]->setUseDMM34( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseDMM );
+#endif
+
+
 #if HHI_MPI
-     m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#if FLEX_CODING_ORDER
+    m_acTEncDepthTopList[iViewIdx]->setUseMVI( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseMVI );
+#else
+    m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#endif
+    // m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
 #endif
     }
   }
@@ -919,6 +953,61 @@ Void TAppEncTop::encode()
       {
       m_cCameraData.update( iNextPoc );
       }
+
+
+
+#if FLEX_CODING_ORDER
+      if (m_b3DVFlexOrder)
+      {
+        Int  iNumDepthEncoded = 0;
+        iNumEncoded = 0;
+        Int i=0;
+        Int iViewIdx=0;
+        Int iNumberofDepthViews = m_bUsingDepthMaps?m_iNumberOfViews:0;
+        for (Int j=0; j < (m_iNumberOfViews+ iNumberofDepthViews); j++ )
+        {
+          if (m_pchMVCJointCodingOrder[i]=='T')
+          {
+
+            i++;
+            assert(isdigit(m_pchMVCJointCodingOrder[i]));
+            iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+
+            m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
+            xWriteOutput(bitstreamFile, iNumEncoded, outputAccessUnits, iViewIdx, false);
+            outputAccessUnits.clear();
+            i++;
+          }
+          else if ( m_pchMVCJointCodingOrder[i] == 'D')
+          {
+
+            i++;
+            if( m_bUsingDepthMaps )
+            {
+              assert(isdigit(m_pchMVCJointCodingOrder[i]));
+              iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+#if SAIT_VSO_EST_A0033
+              if( m_bUseVSO && iNextPoc < m_iFrameToBeEncoded )
+              {
+                m_cCameraData.xSetDispCoeff( iNextPoc, iViewIdx );
+                m_acTEncDepthTopList[iViewIdx]->setDispCoeff( m_cCameraData.getDispCoeff() );
+              }
+#endif
+              m_acTEncDepthTopList[iViewIdx]->encode( depthEos[iViewIdx], pcDepthPicYuvOrg, *m_picYuvDepthRec[iViewIdx], outputAccessUnits, iNumDepthEncoded, gopId );
+              xWriteOutput(bitstreamFile, iNumDepthEncoded, outputAccessUnits, iViewIdx, true);
+              outputAccessUnits.clear();
+              i++;
+            }
+          }
+        }
+      }
+      else
+      {
+
+#endif
+
+//original code
+
       for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
 #if SAIT_VSO_EST_A0033
@@ -942,6 +1031,14 @@ Void TAppEncTop::encode()
           outputAccessUnits.clear();
         }
       }
+
+#if FLEX_CODING_ORDER
+      }
+#endif
+
+
+
+
 #if HHI_INTERVIEW_SKIP || HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED
       for( Int iViewIdx = 0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {

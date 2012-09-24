@@ -1440,6 +1440,11 @@ TComSPS::TComSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_bUseDMM                   (false)
 #endif
+
+#if FLEX_CODING_ORDER && HHI_DMM_PRED_TEX
+, m_bUseDMM34                   (false)
+#endif
+
 {
   // AMVP parameter
   ::memset( m_aeAMVPMode, 0, sizeof( m_aeAMVPMode ) );

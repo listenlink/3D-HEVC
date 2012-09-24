@@ -613,9 +613,11 @@ Void TDecTop::xActivateParameterSets()
 }
 
 #if SKIPFRAME_BUGFIX
-Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay )
+Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay
+)
 #else
-Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay )
+Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay
+                           )
 #endif
 {
   TComPic*&   pcPic         = m_pcPic;
@@ -968,8 +970,24 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 
     assert( m_tAppDecTop != NULL );
     TComPic * const pcTexturePic = m_isDepth ? m_tAppDecTop->getPicFromView(  m_viewId, pcSlice->getPOC(), false ) : NULL;
+
+#if FLEX_CODING_ORDER
+    if (pcTexturePic != NULL)
+    {
+      assert( !m_isDepth || pcTexturePic != NULL );
+      pcSlice->setTexturePic( pcTexturePic );
+    }
+#else
     assert( !m_isDepth || pcTexturePic != NULL );
     pcSlice->setTexturePic( pcTexturePic );
+#endif
+    
+
+//     //original code 
+//     assert( !m_isDepth || pcTexturePic != NULL );
+//     pcSlice->setTexturePic( pcTexturePic );
+
+
 
     std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
     pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics );
@@ -1081,6 +1099,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   return false;
 }
 
+
+
+
+
 #if VIDYO_VPS_INTEGRATION
 Void TDecTop::xDecodeVPS()
 {
@@ -1146,7 +1168,9 @@ Void TDecTop::xDecodeSEI()
   m_cEntropyDecoder.decodeSEI(*m_SEIs);
 }
 
-Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
+Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay
+
+ )
 {
   // Initialize entropy decoder
   m_cEntropyDecoder.setEntropyDecoder (&m_cCavlcDecoder);
@@ -1183,7 +1207,8 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 #else
     case NAL_UNIT_CODED_SLICE_CDR:
 #endif
-      return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
+      return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay
+        );
       break;
     default:
       assert (1);
