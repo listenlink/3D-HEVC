@@ -86,10 +86,18 @@ Void TAppDecTop::decode()
 #else
   increaseNumberOfViews( 1 );
 #endif
-  
+#if FLEX_CODING_ORDER
+  Int iDepthViewIdx = 0;
+  Int iTextureViewIdx=0;
+  Bool first_frame=1;
+  Bool viewid_zero=true;
+  Int FCO_index=0;  //when the current frame is not first frame,use FCO_index stand for viewDepth. 
+#endif
+
 #if SONY_COLPIC_AVAILABILITY
   m_tDecTop[0]->setViewOrderIdx(0);
 #endif
+
   Int                 viewDepthId = 0;
   Int                 previousViewDepthId  = 0;
   UInt                uiPOC[MAX_VIEW_NUM*2];
@@ -101,6 +109,9 @@ Void TAppDecTop::decode()
     uiPOC[i] = 0;
     pcListPic[i] = NULL;
     newPicture[i] = false;
+#if FLEX_CODING_ORDER
+    FCO_Order[i]=NULL;
+#endif
   }
 
   ifstream bitstreamFile(m_pchBitstreamFile, ifstream::in | ifstream::binary);
@@ -155,11 +166,113 @@ Void TAppDecTop::decode()
         viewId = getVPSAccess()->getActiveVPS()->getViewId(nalu.m_layerId);
         depth = getVPSAccess()->getActiveVPS()->getDepthFlag(nalu.m_layerId);
       }
-      viewDepthId = nalu.m_layerId;   // coding order T0D0T1D1T2D2
+#if FLEX_CODING_ORDER
+      if (viewId>0)
+      {
+        viewid_zero=false;
+      }
+      if (viewid_zero==false&&viewId==0)
+      {
+        first_frame=0; //if viewId has been more than zero and now it set to zero again, we can see that it is not the first view
+      }
+      if (first_frame)
+      { // if the current view is first frame, we set the viewDepthId as texture plus depth and get the FCO order 
+        viewDepthId = iDepthViewIdx+iTextureViewIdx;
+        FCO_viewDepthId=viewDepthId;
+      }
+      else
+      {//if current view is not first frame, we set the viewDepthId depended on the FCO order
+        viewDepthId=0;
+        if (depth)
+        {
+          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          {
+            if (FCO_Order[FCO_index]=='D')
+            {
+              if (viewId==viewDepthId)
+                break;
+              else
+                viewDepthId++;
+            }
+          }
+        }
+        else
+        {
+          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          {
+            if (FCO_Order[FCO_index]=='T')
+            {
+              if (viewId==viewDepthId)
+                break;
+              else
+                viewDepthId++;
+            }
+          }
+        }
+
+        viewDepthId=FCO_index;
+
+      }
+
+
+#else
+       viewDepthId = nalu.m_layerId;   // coding order T0D0T1D1T2D2
+#endif
+    
 #else
       Int viewId = nalu.m_viewId;
       Int depth = nalu.m_isDepth ? 1 : 0;
-      viewDepthId = viewId * 2 + depth;   // coding order T0D0T1D1T2D2
+#if FLEX_CODING_ORDER
+      if (viewId>0)
+      {
+        viewid_zero=false;
+      }
+      if (viewid_zero==false&&viewId==0)
+      {
+        first_frame=0;
+      }
+      if (first_frame)
+      {
+        viewDepthId = iDepthViewIdx+iTextureViewIdx;
+        FCO_viewDepthId=viewDepthId;
+      }
+      else
+      {
+        viewDepthId=0;
+        if (depth)
+        {
+          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          {
+            if (FCO_Order[FCO_index]=='D')
+            {
+              if (viewId==viewDepthId)
+                break;
+              else
+                viewDepthId++;
+            }
+          }
+        }
+        else
+        {
+          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          {
+            if (FCO_Order[FCO_index]=='T')
+            {
+              if (viewId==viewDepthId)
+                break;
+              else
+                viewDepthId++;
+            }
+          }
+        }
+
+        viewDepthId=FCO_index;
+
+      }
+#else
+  viewDepthId = viewId * 2 + depth;   // coding order T0D0T1D1T2D2
+#endif
+     
 #endif
       
       newPicture[viewDepthId] = false;
@@ -189,6 +302,9 @@ Void TAppDecTop::decode()
 #endif
         for( Int i = 0; i < m_tDecTop.size(); i++ )
         {
+//#if FLEX_CODING_ORDER
+//        FCO_Order[i]=NULL;
+//#endif
           m_tDecTop[i]->compressMotion( uiPOC[i] );
         }
       }   
@@ -208,12 +324,31 @@ Void TAppDecTop::decode()
         if( nalu.isSlice() )
         {
           previousPictureDecoded = true;
+#if FLEX_CODING_ORDER
+if (first_frame)
+{
+  if (depth)
+  {
+    iDepthViewIdx++;
+    FCO_Order[viewDepthId]='D';
+  }
+  else
+  {
+    iTextureViewIdx++;
+    FCO_Order[viewDepthId]='T';
+  }
+}
+
+
+
+#endif
         }
       }
     }
     if( ( (newPicture[viewDepthId] || !bitstreamFile) && m_tDecTop.size() == 1) || (!bitstreamFile && previousPictureDecoded == true) )  
     {
       m_tDecTop[viewDepthId]->executeDeblockAndAlf(uiPOC[viewDepthId], pcListPic[viewDepthId], m_iSkipFrame, m_pocLastDisplay[viewDepthId]);
+
     }
     if( pcListPic[viewDepthId] )
     {
@@ -233,6 +368,11 @@ Void TAppDecTop::decode()
     }
     previousViewDepthId = viewDepthId;
   } 
+
+
+
+
+
   if( m_cCamParsCollector.isInitialized() )
   {
     m_cCamParsCollector.setSlice( 0 );
@@ -501,7 +641,65 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
 
 TDecTop* TAppDecTop::getTDecTop( Int viewId, Bool isDepth )
 { 
+#if FLEX_CODING_ORDER
+  Int viewnumber=0;
+  Int i=0;
+  Bool FCO_flag=0;
+  if (viewId>FCO_viewDepthId)
+  {
+    return NULL;
+  }
+  else
+  {
+    if (isDepth)
+   {
+      for ( i=0; i<=FCO_viewDepthId;i++)
+      {
+         if (FCO_Order[i]=='D')
+         {
+           if (viewnumber==viewId)
+           {
+             FCO_flag=1;
+             break;
+           }
+           else
+             viewnumber++;
+         }
+      }
+    }
+    else
+    {
+      for ( i=0; i<=FCO_viewDepthId;i++)
+      {
+        if (FCO_Order[i]=='T')
+        {
+          if (viewnumber==viewId)
+          {
+            FCO_flag=1;
+            break;
+          }
+          else
+            viewnumber++;
+        }
+      }
+    }
+    if (FCO_flag)
+    {
+      return m_tDecTop[i];
+    }
+    else
+      return NULL;
+    
+  }
+
+    // coding order T0D0T1D1T2D2
+#else
   return m_tDecTop[(isDepth ? 1 : 0) + viewId * 2];  // coding order T0D0T1D1T2D2
+#endif
+  /*
+  //original code
+  return m_tDecTop[(isDepth ? 1 : 0) + viewId * 2];  // coding order T0D0T1D1T2D2
+  */
 } 
 
 std::vector<TComPic*> TAppDecTop::getInterViewRefPics( Int viewId, Int poc, Bool isDepth, TComSPS* sps )
@@ -519,7 +717,24 @@ std::vector<TComPic*> TAppDecTop::getInterViewRefPics( Int viewId, Int poc, Bool
 TComPic* TAppDecTop::xGetPicFromView( Int viewId, Int poc, Bool isDepth )
 {
   assert( ( viewId >= 0 ) );
-
+#if FLEX_CODING_ORDER
+if (getTDecTop(viewId,isDepth))
+{
+   TComList<TComPic*>* apcListPic = getTDecTop( viewId, isDepth )->getListPic();
+   TComPic* pcPic = NULL;
+   for( TComList<TComPic*>::iterator it=apcListPic->begin(); it!=apcListPic->end(); it++ )
+   {
+     if( (*it)->getPOC() == poc )
+     {
+       pcPic = *it;
+       break;
+     }
+   }
+   return pcPic;
+}
+else
+  return NULL;
+#else
   TComList<TComPic*>* apcListPic = getTDecTop( viewId, isDepth )->getListPic();
   TComPic* pcPic = NULL;
   for( TComList<TComPic*>::iterator it=apcListPic->begin(); it!=apcListPic->end(); it++ )
@@ -531,5 +746,8 @@ TComPic* TAppDecTop::xGetPicFromView( Int viewId, Int poc, Bool isDepth )
     }
   }
   return pcPic;
+#endif
+
+
 }
 //! \}

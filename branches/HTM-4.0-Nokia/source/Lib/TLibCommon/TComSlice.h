@@ -353,6 +353,10 @@ private:
   Bool  m_bUseDMM;
 #endif
 
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool  m_bUseDMM34;
+#endif
+
 #if DEPTH_MAP_GENERATION
   UInt  m_uiPredDepthMapGeneration;
   UInt  m_uiPdmPrecision;
@@ -381,7 +385,8 @@ public:
   Int  getVPSId       ()         { return m_VPSId;          }
   Void setVPSId       (Int i)    { m_VPSId = i;             }
 #endif
-  Int  getSPSId       ()         { return m_SPSId;          }
+  Int  getSPSId       ()         
+  { return m_SPSId;          }
   Void setSPSId       (Int i)    { m_SPSId = i;             }
   Int  getProfileIdc  ()         { return m_ProfileIdc;     }
   Void setProfileIdc  (Int i)    { m_ProfileIdc = i;        }
@@ -616,6 +621,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool getUseDMM()         { return m_bUseDMM; }
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
+#endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool getUseDMM34()         { return m_bUseDMM34; }
+  Void setUseDMM34( Bool b ) { m_bUseDMM34 = b;    }
 #endif
 
   Void initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );

@@ -110,9 +110,11 @@ private:
   UInt                    m_uiValidPS;
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
+
+
   TComRPSList             m_RPSList;
   TComSlice*              m_apcSlicePilot;
-  
+
   SEImessages *m_SEIs; ///< "all" SEI messages.  If not NULL, we own the object.
 
 #if SONY_COLPIC_AVAILABILITY
@@ -164,7 +166,8 @@ public:
   void setPictureDigestEnabled(bool enabled) { m_cGopDecoder.setPictureDigestEnabled(enabled); }
   
   Void  init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance );
-  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
+  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay
+  );
   
   Void  deletePicBuffer();
 
@@ -203,9 +206,11 @@ protected:
   Void      decodeAPS( TComAPS* cAPS) { m_cEntropyDecoder.decodeAPS(cAPS); };
   Void      xActivateParameterSets();
 #if SKIPFRAME_BUGFIX
-  Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
+  Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay
+    );
 #else
-  Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
+  Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay,
+    );
 #endif
 #if VIDYO_VPS_INTEGRATION
   Void      xDecodeVPS();

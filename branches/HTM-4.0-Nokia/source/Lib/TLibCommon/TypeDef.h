@@ -45,7 +45,19 @@
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
 #define FIX_INIT_ROM                      1
+
 #define FIX_VIRT_DESTRUCTOR               1
+
+
+
+
+#define FLEX_CODING_ORDER               1
+#if FLEX_CODING_ORDER
+  #define DISABLE_FCO_FOR_VSO             1
+#else
+  #define DISABLE_FCO_FOR_VSO             0
+#endif
+
 
 
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
