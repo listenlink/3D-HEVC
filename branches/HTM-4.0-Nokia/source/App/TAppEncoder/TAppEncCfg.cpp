@@ -114,6 +114,15 @@ TAppEncCfg::~TAppEncCfg()
   }
   if (m_pchBitstreamFile != NULL)
     free (m_pchBitstreamFile) ;
+
+#if FLEX_CODING_ORDER
+  if (m_pchMVCJointCodingOrder != NULL)
+  {
+    free(m_pchMVCJointCodingOrder) ;
+  }
+#endif
+
+
 #if HHI_VSO
   if (  m_pchVSOConfig != NULL)
     free (  m_pchVSOConfig );
@@ -187,6 +196,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_ColumnWidth;
   string cfg_RowHeight;
   string cfg_ScalingListFile;
+#if FLEX_CODING_ORDER
+  string cfg_JointCodingOrdering;
+#endif
+
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
@@ -231,6 +244,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
   /* Unit definition parameters */
+
+#if FLEX_CODING_ORDER
+  ("3DVFlexOrder",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
+  ("3DVCodingOrder",   cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
+#endif
+
   ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
   ("MaxCUHeight",         m_uiMaxCUHeight, 64u)
   /* todo: remove defaults from MaxCUSize */
@@ -489,7 +508,47 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
-  
+
+#if FLEX_CODING_ORDER
+  m_pchMVCJointCodingOrder= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
+  // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
+#if HHI_VSO && DISABLE_FCO_FOR_VSO
+  Bool depthComesFirst = false;
+  int iter = 0;
+  if ( m_b3DVFlexOrder )
+  {
+    for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+    {
+      iter = 0; 
+      for ( Int ii=1; ii<12; ii+=2 )
+      {
+        Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+        if ( iViewIdxCfg == iViewIdx )
+        {
+          iter ++; 
+          if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+          {
+            if(iter == 1)
+           { 
+            depthComesFirst = true;
+            break;
+           }
+          }
+          else
+          {
+            assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+          }
+        }
+      }
+    }
+  }
+  if (depthComesFirst)
+  {
+    //m_bUseVSO = false;
+  }
+#endif
+#endif
+
   m_pchColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
   m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
