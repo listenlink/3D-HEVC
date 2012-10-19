@@ -89,12 +89,9 @@ TComDataCU::TComDataCU()
   m_pcTrCoeffCb        = NULL;
   m_pcTrCoeffCr        = NULL;
 #if ADAPTIVE_QP_SELECTION  
-#if FIX_MEM_LEAKS
-  m_ArlCoeffIsAliasedAllocation = false;
   m_pcArlCoeffY        = NULL;
   m_pcArlCoeffCb       = NULL;
   m_pcArlCoeffCr       = NULL;
-#endif
 #endif
   
   m_pbIPCMFlag         = NULL;
@@ -153,18 +150,6 @@ TComDataCU::TComDataCU()
   m_piEdgeDeltaDC0      = NULL;
   m_piEdgeDeltaDC1      = NULL;
 #endif
-#endif
-#if OL_DEPTHLIMIT_A0044
-  //add a variable to store the partition information
-  //a 2D array in part_symbol, uidepth format
-  //initialize m_partInfo to OL_END_CU
-  for (Int i=0; i < OL_PART_BUF_SIZE; i++)
-  {
-    for (Int j=0; j < 2; j++)
-    {
-      m_uiPartInfo[i][j] = OL_END_CU;
-    }
-  }
 #endif
 }
 
@@ -249,9 +234,6 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
       m_pcArlCoeffY        = m_pcGlbArlCoeffY;
       m_pcArlCoeffCb       = m_pcGlbArlCoeffCb;
       m_pcArlCoeffCr       = m_pcGlbArlCoeffCr;
-#if FIX_MEM_LEAKS
-      m_ArlCoeffIsAliasedAllocation = true;
-#endif
     }
     else
     {
@@ -367,14 +349,6 @@ Void TComDataCU::destroy()
     if ( m_pcTrCoeffCb        ) { xFree(m_pcTrCoeffCb);         m_pcTrCoeffCb       = NULL; }
     if ( m_pcTrCoeffCr        ) { xFree(m_pcTrCoeffCr);         m_pcTrCoeffCr       = NULL; }
 #if ADAPTIVE_QP_SELECTION
-#if FIX_MEM_LEAKS
-    if (!m_ArlCoeffIsAliasedAllocation)
-    {
-      xFree(m_pcArlCoeffY); m_pcArlCoeffY = 0;
-      xFree(m_pcArlCoeffCb); m_pcArlCoeffCb = 0;
-      xFree(m_pcArlCoeffCr); m_pcArlCoeffCr = 0;
-    }
-#endif
     if ( m_pcGlbArlCoeffY     ) { xFree(m_pcGlbArlCoeffY);      m_pcGlbArlCoeffY    = NULL; }
     if ( m_pcGlbArlCoeffCb    ) { xFree(m_pcGlbArlCoeffCb);     m_pcGlbArlCoeffCb   = NULL; }
     if ( m_pcGlbArlCoeffCr    ) { xFree(m_pcGlbArlCoeffCr);     m_pcGlbArlCoeffCr   = NULL; }
@@ -481,9 +455,6 @@ const NDBFBlockInfo& NDBFBlockInfo::operator= (const NDBFBlockInfo& src)
  */
 Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 {
-#if OL_DEPTHLIMIT_A0044
-  TComDataCU* pcCU     = pcPic->getCU(iCUAddr);
-#endif
 
   m_pcPic              = pcPic;
   m_pcSlice            = pcPic->getSlice(pcPic->getCurrSliceIdx());
@@ -700,9 +671,6 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   {
     m_apcCUColocated[1] = getSlice()->getRefPic( REF_PIC_LIST_1, 0)->getCU( m_uiCUAddr );
   }
-#if OL_DEPTHLIMIT_A0044
-  setPartDumpFlag (pcCU->getPartDumpFlag());
-#endif
 }
 
 #if H0736_AVC_STYLE_QP_RANGE
@@ -1032,9 +1000,6 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   m_apcCUColocated[1] = pcCU->getCUColocated(REF_PIC_LIST_1);
   memcpy(m_uiSliceStartCU,pcCU->m_uiSliceStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
   memcpy(m_uiEntropySliceStartCU,pcCU->m_uiEntropySliceStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
-#if OL_DEPTHLIMIT_A0044
-  setPartDumpFlag (pcCU->getPartDumpFlag());
-#endif
 }
 
 Void TComDataCU::setOutsideCUPart( UInt uiAbsPartIdx, UInt uiDepth )
@@ -2320,10 +2285,6 @@ UChar TComDataCU::getRefQP( UInt uiCurrAbsIdxInLCU )
 {
 #if H0204_QP_PREDICTION
   UInt        lPartIdx, aPartIdx;
-#if FIX_COMP_WARNING_INIT
-  lPartIdx = 0; 
-  aPartIdx = 0;
-#endif
   TComDataCU* cULeft  = getQpMinCuLeft ( lPartIdx, m_uiAbsIdxInLCU + uiCurrAbsIdxInLCU );
   TComDataCU* cUAbove = getQpMinCuAbove( aPartIdx, m_uiAbsIdxInLCU + uiCurrAbsIdxInLCU );
   return (((cULeft? cULeft->getQP( lPartIdx ): getLastCodedQP( uiCurrAbsIdxInLCU )) + (cUAbove? cUAbove->getQP( aPartIdx ): getLastCodedQP( uiCurrAbsIdxInLCU )) + 1) >> 1);
