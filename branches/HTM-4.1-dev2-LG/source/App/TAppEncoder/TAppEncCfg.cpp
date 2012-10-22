@@ -360,7 +360,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 #if LGE_WVSO_A0119
-  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
+  ("WVSO",                            m_bUseWVSO                , true          , "Use depth fidelity term for VSO" )
   ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
   ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
