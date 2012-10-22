@@ -1917,8 +1917,8 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if LGE_WVSO_A0119
             if ( m_pcRdCost->getUseWVSO() )
             {    
-              Int iDWeight = m_pcRdCost->getDWeight();
-              Int iVSDWeight = m_pcRdCost->getVSDWeight();
+              Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+              Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
               Dist iD = (Dist) m_pcRdCost->calcHAD( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
               uiSad = (Dist) (iDWeight * iD + iVSDWeight * uiSad) / (iDWeight + iVSDWeight);
             }
@@ -1932,10 +1932,10 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if LGE_WVSO_A0119
             if ( m_pcRdCost->getUseWVSO() )
             {    
-              Int iDWeight = m_pcRdCost->getDWeight()*m_pcRdCost->getDWeight();
-              Int iVSDWeight = m_pcRdCost->getVSOWeight()*m_pcRdCost->getVSOWeight();
-              Dist iD = (Dist) m_pcRdCost->getDistPart( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
-              uiSad = (Dist) (iDWeight * iD + iVSDWeight * uiSad) / (iDWeight + iVSDWeight);
+              Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+              Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getDWeight();
+              Dist iD = (Dist) m_pcRdCost->calcHAD( piOrg, uiStride, piPred, uiStride, uiWidth, uiHeight );
+              uiSad = (Dist) (iDWeight * iD + iVSOWeight * uiSad) / (iDWeight + iVSOWeight);
             }
 #endif
           }

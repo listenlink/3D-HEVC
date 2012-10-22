@@ -1238,7 +1238,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   pcPPS->setUseWP( uiCode==1 );
   READ_CODE( 2, uiCode, "weighted_bipred_idc" );      // Use of Bi-Directional Weighting Prediction (B_SLICE)
   pcPPS->setWPBiPredIdc( uiCode );
-//printf("TDecCavlc::parsePPS():\tm_bUseWeightPred=%d\tm_uiBiPredIdc=%d\n", pcPPS->getUseWP(), pcPPS->getWPBiPredIdc());
+printf("TDecCavlc::parsePPS():\tm_bUseWeightPred=%d\tm_uiBiPredIdc=%d\n", pcPPS->getUseWP(), pcPPS->getWPBiPredIdc());
 
 #if H0388
   READ_FLAG( uiCode, "output_flag_present_flag" );
