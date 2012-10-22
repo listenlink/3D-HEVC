@@ -1739,7 +1739,8 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
 #if LGE_WVSO_A0119
-  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
+  if ( m_bUseWVSO )
+    printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   

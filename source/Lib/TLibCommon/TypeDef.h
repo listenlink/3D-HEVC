@@ -100,7 +100,7 @@
 #define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
 #define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
 #define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
-#define LGE_WVSO_A0119                    1 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
+#define LGE_WVSO_A0119                    1 // JCT2-A0119 & JCT3V-B0131 Depth Metric with a weighted depth fidelity term 
 
 #define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
 #if OL_DEPTHLIMIT_A0044
