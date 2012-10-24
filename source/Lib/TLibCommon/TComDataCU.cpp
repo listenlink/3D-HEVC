@@ -4822,6 +4822,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
 #else
   pcTmpCU = getPULeft(uiIdx, uiPartIdxLB);
 #endif
+#if DV_DERIVATION_PARALLEL_B0096
+  if ( uiPartIdx == 1 && (eCUMode == SIZE_Nx2N || eCUMode == SIZE_nLx2N || eCUMode == SIZE_nRx2N) )
+  {
+    pcTmpCU = NULL;
+  }
+#endif
 
   pcCULeft = pcTmpCU;
   UInt uiLeftPartIdx = uiIdx;
@@ -4861,6 +4867,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
   pcTmpCU = getPUAbove(uiIdx, uiPartIdxRT, true, false, true);
 #else
   pcTmpCU = getPUAbove(uiIdx, uiPartIdxRT);
+#endif
+#if DV_DERIVATION_PARALLEL_B0096
+  if ( uiPartIdx == 1 && (eCUMode == SIZE_2NxN || eCUMode == SIZE_2NxnU || eCUMode == SIZE_2NxnD) )
+  {
+    pcTmpCU = NULL;
+  }
 #endif
 
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
