@@ -426,7 +426,11 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
     m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx );
 #endif
   }
+#if SHARP_INTERVIEW_DECOUPLE_B0111
+  pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo, iMVPIdx);
+#else
   pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);
+#endif
   pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, uiPartIdx, uiDepth);
   pcSubCU->setMVPIdxSubParts( iMVPIdx, eRefList, uiPartAddr, uiPartIdx, uiDepth );
   if ( iRefIdx >= 0 )

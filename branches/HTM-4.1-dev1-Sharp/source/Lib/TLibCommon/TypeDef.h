@@ -78,7 +78,8 @@
 #endif                                  
                                         
 #define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
-                                        
+#define SHARP_INTERVIEW_DECOUPLE_B0111    1   //  JCT3V-B0111 decoupling inter-view candidate
+
 #define LGE_DVMCP                         1   //  JCT2-A0126     
 #if LGE_DVMCP                           
 #define DVFROM_LEFTBELOW                  1

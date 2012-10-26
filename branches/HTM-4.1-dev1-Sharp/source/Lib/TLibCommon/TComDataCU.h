@@ -585,7 +585,12 @@ public:
   Void          getMvField            ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField );
   
   AMVP_MODE     getAMVPMode           ( UInt uiIdx );
+#if SHARP_INTERVIEW_DECOUPLE_B0111
+  Void          fillMvpCandBase       ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+  Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo , Int iMVPIdx=-1);
+#else
   Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+#endif
 #if PARALLEL_MERGE 
   Bool          isDiffMER             ( Int xN, Int yN, Int xP, Int yP);
   Void          getPartPosition       ( UInt partIdx, Int& xP, Int& yP, Int& nPSW, Int& nPSH);
