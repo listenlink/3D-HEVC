@@ -168,6 +168,27 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
 
+#if LGE_ILLUCOMP_B0045
+Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if (pcCU->isIntra(uiAbsPartIdx) || (pcCU->getSlice()->getViewId() == 0) || pcCU->getSlice()->getSPS()->isDepth())
+  {
+    return;
+  }
+
+  if(!pcCU->getSlice()->getApplyIC())
+    return;
+
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+
+  if(pcCU->isICFlagRequired(uiAbsPartIdx))
+    m_pcEntropyCoderIf->codeICFlag( pcCU, uiAbsPartIdx );
+}
+#endif
+
 Void TEncEntropy::codeFiltCountBit(ALFParam* pAlfParam, Int64* ruiRate)
 {
   resetEntropy();

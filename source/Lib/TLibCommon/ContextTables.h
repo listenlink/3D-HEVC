@@ -51,6 +51,10 @@
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
 
+#if LGE_ILLUCOMP_B0045
+#define NUM_IC_FLAG_CTX               3       ///< number of context models for illumination compensation flag
+#endif
+
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #if MRG_IDX_CTX_RED
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
@@ -179,6 +183,16 @@ INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =
   { 197,  185,  201, }, 
   { 197,  185,  201, }, 
 };
+
+#if LGE_ILLUCOMP_B0045
+static const UChar 
+  INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
+{
+  { CNU,  CNU,  CNU, }, 
+  { 197,  185,  201, }, 
+  { 197,  185,  201, }, 
+};
+#endif
 
 static const UChar 
 INIT_ALF_CTRL_FLAG[3][NUM_ALF_CTRL_FLAG_CTX] = 
