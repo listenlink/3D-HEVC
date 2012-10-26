@@ -111,6 +111,9 @@ TComSlice::TComSlice()
 #if SONY_COLPIC_AVAILABILITY
 , m_iViewOrderIdx                 ( 0 )
 #endif
+#if LGE_ILLUCOMP_B0045
+, m_bApplyIC                      ( false )
+#endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
   
@@ -1303,6 +1306,87 @@ Void TComSlice::copyWPtable(wpScalingParam *&wp_src, wpScalingParam *&wp_dst)
     wp_dst[iComp].iOffset = wp_src[iComp].iOffset;
   }
 }
+
+#if LGE_ILLUCOMP_B0045
+Void TComSlice::xSetApplyIC()
+{
+  Int iMaxPelValue = (1<<g_uiBitDepth); 
+  Int *aiRefOrgHist;
+  Int *aiCurrHist;
+  aiRefOrgHist = new Int;
+  aiCurrHist   = new Int;
+  aiRefOrgHist = (Int *)xMalloc(Int,iMaxPelValue);
+  aiCurrHist   = (Int *)xMalloc(Int,iMaxPelValue);
+  memset(aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
+  memset(aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
+  // Reference Idx Number
+  Int iNumRefIdx = getNumRefIdx( REF_PIC_LIST_0 );
+  TComPic* pcCurrPic = NULL;
+  TComPic* pcRefPic = NULL;
+  TComPicYuv* pcCurrPicYuv = NULL;
+  TComPicYuv* pcRefPicYuvOrg = NULL;
+  pcCurrPic = getPic();
+  pcCurrPicYuv = pcCurrPic->getPicYuvOrg();
+  Int iWidth = pcCurrPicYuv->getWidth();
+  Int iHeight = pcCurrPicYuv->getHeight();
+
+
+  // Get InterView Reference picture
+  // !!!!! Assume only one Interview Reference Picture in L0
+  for (Int i = 0; i < iNumRefIdx; i++)
+  {
+    pcRefPic = getRefPic( REF_PIC_LIST_0, i);
+    if (pcRefPic != NULL)
+    {
+      // Current Picture 
+      if (pcCurrPic->getViewId() != pcRefPic->getViewId())
+      {
+        pcRefPicYuvOrg = pcRefPic->getPicYuvOrg();
+      }
+    }
+  }
+  if (pcRefPicYuvOrg != NULL)
+  {
+    Pel* pCurrY = pcCurrPicYuv ->getLumaAddr();
+    Pel* pRefOrgY = pcRefPicYuvOrg  ->getLumaAddr();
+    Int iCurrStride = pcCurrPicYuv->getStride();
+    Int iRefStride = pcRefPicYuvOrg->getStride();
+    Int iSumOrgSAD = 0;
+    double dThresholdOrgSAD = 0.05;
+    // Histogram building - luminance
+    for ( Int y = 0; y < iHeight; y++)
+    {
+      for ( Int x = 0; x < iWidth; x++)
+      {
+        aiCurrHist[pCurrY[x]]++;
+        aiRefOrgHist[pRefOrgY[x]]++;
+      }
+      pCurrY += iCurrStride;
+      pRefOrgY += iRefStride;
+    }
+    // Calc SAD
+    for (Int i = 0; i < iMaxPelValue; i++)
+    {
+      iSumOrgSAD += abs(aiCurrHist[i] - aiRefOrgHist[i]);
+    }
+    //printf("iSumOrgSAD : %d\n",iSumOrgSAD);
+    // Setting
+    if ( iSumOrgSAD > Int(dThresholdOrgSAD * iWidth * iHeight) )
+    {
+      m_bApplyIC = true;
+      //printf("ApplyIC\n");
+    }
+    else
+    {
+      m_bApplyIC = false;
+    }
+  }
+  xFree(aiCurrHist);
+  xFree(aiRefOrgHist);
+  aiCurrHist = NULL;
+  aiRefOrgHist = NULL;
+}
+#endif
 
 // ------------------------------------------------------------------------------------------------
 // Video parameter set (VPS)

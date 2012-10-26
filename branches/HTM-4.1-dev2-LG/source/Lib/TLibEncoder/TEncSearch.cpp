@@ -299,6 +299,9 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   setDistParamComp(0);  // Y component
 
   // distortion
+#if LGE_ILLUCOMP_B0045
+  m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
   uiSad = m_cDistParam.DistFunc( &m_cDistParam );
   
   // motion cost
@@ -716,6 +719,9 @@ UInt TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
     setDistParamComp(0);  // Y component
 
     m_cDistParam.pCur = piRefPos;
+#if LGE_ILLUCOMP_B0045
+  m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
     uiDist = m_cDistParam.DistFunc( &m_cDistParam );
     uiDist += m_pcRdCost->getCost( cMvTest.getHor(), cMvTest.getVer() );
     
@@ -2624,6 +2630,9 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
 #else
                             iWidth, iHeight, m_pcEncCfg->getUseHADME() );
 #endif
+#if LGE_ILLUCOMP_B0045
+  cDistParam.bUseIC = false;
+#endif
   ruiErr = cDistParam.DistFunc( &cDistParam );
 }
 
@@ -3876,6 +3885,10 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   if( pcCU->getSlice()->getIsDepth() )
     cMvCand <<= 2;
 #endif
+
+#if LGE_ILLUCOMP_B0045
+  Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getViewId() != pcCU->getSlice()->getRefViewId(eRefPicList, iRefIdx));
+#endif
   // prediction pattern
   if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType()==P_SLICE )
   {
@@ -3883,7 +3896,11 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   }
   else
   {
+#if LGE_ILLUCOMP_B0045
+    xPredInterLumaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false, bICFlag );
+#else
     xPredInterLumaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false );
+#endif
   }
 
   if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType()==P_SLICE )
@@ -3937,6 +3954,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   
   pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
   
+#if LGE_ILLUCOMP_B0045
+  Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getViewId() != pcCU->getSlice()->getRefViewId(eRefPicList, iRefIdxPred));
+  pcPatternKey->setICFlag(bICFlag);
+#endif
+
   if ( bBi )
   {
     TComYuv*  pcYuvOther = &m_acYuvPred[1-(Int)eRefPicList];
@@ -4100,6 +4122,9 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
 
       setDistParamComp(0);
 
+#if LGE_ILLUCOMP_B0045
+    m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
       uiSad = m_cDistParam.DistFunc( &m_cDistParam );
       
       // motion cost
@@ -4456,6 +4481,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 #endif
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
+#if LGE_ILLUCOMP_B0045
+  m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+#endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
 #endif
@@ -5821,6 +5849,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->resetBits();
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, 0, true);
+#if LGE_ILLUCOMP_B0045
+  m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+#endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
 #endif
@@ -5841,6 +5872,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if LGE_ILLUCOMP_B0045
+  m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+#endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
 #endif

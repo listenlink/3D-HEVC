@@ -201,6 +201,9 @@ public:
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if LGE_ILLUCOMP_B0045
+  Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -259,6 +262,9 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
+#if LGE_ILLUCOMP_B0045
+  ContextModel3DBuffer m_cCUICFlagSCModel;
+#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
 #if HHI_INTER_VIEW_RESIDUAL_PRED

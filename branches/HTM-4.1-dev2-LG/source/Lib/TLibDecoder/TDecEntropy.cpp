@@ -66,6 +66,23 @@ Void TDecEntropy::decodeMergeFlag( TComDataCU* pcSubCU, UInt uiAbsPartIdx, UInt 
   m_pcEntropyDecoderIf->parseMergeFlag( pcSubCU, uiAbsPartIdx, uiDepth, uiPUIdx );
 }
 
+#if LGE_ILLUCOMP_B0045
+Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  pcCU->setICFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
+
+  if (pcCU->isIntra(uiAbsPartIdx) || (pcCU->getSlice()->getViewId() == 0) || pcCU->getSlice()->getSPS()->isDepth())
+  {
+    return;
+  }
+
+  if(!pcCU->getSlice()->getApplyIC())
+    return;
+
+  if(pcCU->isICFlagRequired(uiAbsPartIdx))
+    m_pcEntropyDecoderIf->parseICFlag( pcCU, uiAbsPartIdx, uiDepth );
+}
+#endif
 /** decode merge index
  * \param pcCU
  * \param uiPartIdx 
