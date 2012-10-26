@@ -455,7 +455,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   TComPic *pcTexture;
   TComDataCU * pcTextureCU;
   Bool  depthMapDetect =  false;
-#if !LG_BUG_FIX
+#if !LGE_CLEAN_UP
   UInt         uiPrevTexPartIndex = 0;
 #endif
 #if OL_DO_NOT_LIMIT_INTRA_SLICES_PART
@@ -644,7 +644,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           bTrySplit = true;
           bTryNx2N = true;
           bTry2NxN = true;
-#if !LG_BUG_FIX
+#if !LGE_CLEAN_UP
           uiPrevTexPartIndex = pcTexture->getTexPartIndex(); 
 #endif
           pcTexture->incrementTexPartIndex(); 
@@ -657,7 +657,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
           //scan ahead till next depth
           uiTexdepth = pcTexture->accessPartInfo(1);
-#if !LG_BUG_FIX
+#if !LGE_CLEAN_UP
           uiPrevTexPartIndex = pcTexture->getTexPartIndex(); 
 #endif
           pcTexture->incrementTexPartIndex();
@@ -693,7 +693,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           bTrySplit = false;
           bTryNx2N = false;
           bTry2NxN = true;
-#if !LG_BUG_FIX
+#if !LGE_CLEAN_UP
           uiPrevTexPartIndex = pcTexture->getTexPartIndex();  
 #endif
           pcTexture->incrementTexPartIndex(); ;
@@ -703,7 +703,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           bTrySplit = false;
           bTryNx2N = true;
           bTry2NxN = false;
-#if !LG_BUG_FIX
+#if !LGE_CLEAN_UP
           uiPrevTexPartIndex = pcTexture->getTexPartIndex();  
 #endif
           pcTexture->incrementTexPartIndex(); ;
