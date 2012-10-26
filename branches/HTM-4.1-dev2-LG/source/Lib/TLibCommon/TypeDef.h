@@ -105,7 +105,7 @@
 #if LGE_ILLUCOMP_B0045
 #define LGE_ILLUCOMP_B0045_ENCSIMP        1
 #endif
-#define LG_BUG_FIX                        1
+#define LGE_CLEAN_UP                      1
 
 #define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
 #if OL_DEPTHLIMIT_A0044
