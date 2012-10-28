@@ -54,6 +54,7 @@
 #define FIX_REMOVE_TILE_DEPENDENCE        1
 #define FIX_DBL_CONTROL_DEFAULT           1
 
+#define DV_DERIVATION_PARALLEL_B0096      1 //JCT3V-B0096, enable parallel derivation of disparity vector
 
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
 #if LGE_EDGE_INTRA
@@ -77,7 +78,8 @@
 #endif                                  
                                         
 #define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
-                                        
+#define SHARP_INTERVIEW_DECOUPLE_B0111    1   //  JCT3V-B0111 decoupling inter-view candidate
+
 #define LGE_DVMCP                         1   //  JCT2-A0126     
 #if LGE_DVMCP                           
 #define DVFROM_LEFTBELOW                  1
