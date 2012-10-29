@@ -720,7 +720,7 @@ UInt TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
 
     m_cDistParam.pCur = piRefPos;
 #if LGE_ILLUCOMP_B0045
-  m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+    m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
     uiDist = m_cDistParam.DistFunc( &m_cDistParam );
     uiDist += m_pcRdCost->getCost( cMvTest.getHor(), cMvTest.getVer() );
@@ -4123,7 +4123,7 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
       setDistParamComp(0);
 
 #if LGE_ILLUCOMP_B0045
-    m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+      m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
       uiSad = m_cDistParam.DistFunc( &m_cDistParam );
       
@@ -4482,7 +4482,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
 #if LGE_ILLUCOMP_B0045
-  m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
@@ -5850,7 +5850,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, 0, true);
 #if LGE_ILLUCOMP_B0045
-  m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
@@ -5873,7 +5873,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
 #if LGE_ILLUCOMP_B0045
-  m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );

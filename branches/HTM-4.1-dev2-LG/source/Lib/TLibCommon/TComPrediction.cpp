@@ -628,7 +628,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     if ( eRefPicList != REF_PIC_LIST_X )
     {
 #if LGE_ILLUCOMP_B0045
-    if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
 #else
       if( pcCU->getSlice()->getPPS()->getUseWP())
 #endif
@@ -648,7 +648,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
 #endif
       }
 #if LGE_ILLUCOMP_B0045
-    if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr) )
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr) )
 #else
       if ( pcCU->getSlice()->getPPS()->getUseWP() )
 #endif
@@ -697,7 +697,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     if ( eRefPicList != REF_PIC_LIST_X )
     {
 #if LGE_ILLUCOMP_B0045
-    if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
 #else
       if( pcCU->getSlice()->getPPS()->getUseWP())
 #endif
@@ -722,7 +722,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
       xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
 #endif  
 #if LGE_ILLUCOMP_B0045
-    if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
 #else
       if ( pcCU->getSlice()->getPPS()->getUseWP() )
 #endif

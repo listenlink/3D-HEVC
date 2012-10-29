@@ -300,7 +300,7 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
     m_acTEncTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[0]     );
 #if LGE_ILLUCOMP_B0045
-  m_acTEncTopList[iViewIdx]->setUseIC                ( m_bUseIC          );
+    m_acTEncTopList[iViewIdx]->setUseIC                ( m_bUseIC          );
 #endif
 #if SAO_UNIT_INTERLEAVING
     m_acTEncTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
@@ -582,7 +582,7 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
 #if LGE_ILLUCOMP_B0045
-    m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
+      m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
 #endif
 #if SAO_UNIT_INTERLEAVING
       m_acTEncDepthTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);

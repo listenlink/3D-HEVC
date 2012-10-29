@@ -1369,12 +1369,10 @@ Void TComSlice::xSetApplyIC()
     {
       iSumOrgSAD += abs(aiCurrHist[i] - aiRefOrgHist[i]);
     }
-    //printf("iSumOrgSAD : %d\n",iSumOrgSAD);
     // Setting
     if ( iSumOrgSAD > Int(dThresholdOrgSAD * iWidth * iHeight) )
     {
       m_bApplyIC = true;
-      //printf("ApplyIC\n");
     }
     else
     {
