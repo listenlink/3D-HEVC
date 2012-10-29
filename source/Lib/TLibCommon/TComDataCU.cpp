@@ -212,7 +212,7 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
 #if LGE_ILLUCOMP_B0045
-  m_pbICFlag           = (Bool*  )xMalloc(Bool,   uiNumPartition);
+    m_pbICFlag           = (Bool*  )xMalloc(Bool,   uiNumPartition);
 #endif
     m_puhMergeIndex      = (UChar* )xMalloc(UChar,  uiNumPartition);
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -361,7 +361,7 @@ Void TComDataCU::destroy()
     if ( m_puhInterDir        ) { xFree(m_puhInterDir);         m_puhInterDir       = NULL; }
     if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag       = NULL; }
 #if LGE_ILLUCOMP_B0045
-  if ( m_pbICFlag           ) { xFree(m_pbICFlag);            m_pbICFlag          = NULL; }
+    if ( m_pbICFlag           ) { xFree(m_pbICFlag);            m_pbICFlag          = NULL; }
 #endif
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex     = NULL; }
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -557,7 +557,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_puiAlfCtrlFlag[ui]=pcFrom->m_puiAlfCtrlFlag[ui];
     m_pbMergeFlag[ui]=pcFrom->m_pbMergeFlag[ui];
 #if LGE_ILLUCOMP_B0045
-  m_pbICFlag[ui]=pcFrom->m_pbICFlag[ui];
+    m_pbICFlag[ui]=pcFrom->m_pbICFlag[ui];
 #endif
     m_puhMergeIndex[ui]=pcFrom->m_puhMergeIndex[ui];
     m_puhLumaIntraDir[ui]=pcFrom->m_puhLumaIntraDir[ui];
@@ -592,7 +592,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_puiAlfCtrlFlag    + firstElement, false,                    numElements * sizeof( *m_puiAlfCtrlFlag ) );
     memset( m_pbMergeFlag       + firstElement, false,                    numElements * sizeof( *m_pbMergeFlag ) );
 #if LGE_ILLUCOMP_B0045
-  memset( m_pbICFlag          + firstElement, false,                    numElements * sizeof( *m_pbICFlag ) );
+    memset( m_pbICFlag          + firstElement, false,                    numElements * sizeof( *m_pbICFlag ) );
 #endif
     memset( m_puhMergeIndex     + firstElement, 0,                        numElements * sizeof( *m_puhMergeIndex ) );
     memset( m_puhLumaIntraDir   + firstElement, 2,                        numElements * sizeof( *m_puhLumaIntraDir ) );
@@ -778,7 +778,7 @@ Void TComDataCU::initEstData( UInt uiDepth, UInt uiQP )
       m_puiAlfCtrlFlag[ui]= false;
       m_pbMergeFlag[ui] = 0;
 #if LGE_ILLUCOMP_B0045
-    m_pbICFlag[ui]    = false;
+      m_pbICFlag[ui]    = false;
 #endif
       m_puhMergeIndex[ui] = 0;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -960,7 +960,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_puiAlfCtrlFlag[ui]=pcCU->m_puiAlfCtrlFlag[uiPartOffset+ui];
       m_pbMergeFlag[ui]=pcCU->m_pbMergeFlag[uiPartOffset+ui];
 #if LGE_ILLUCOMP_B0045
-    m_pbICFlag[ui]=pcCU->m_pbICFlag[uiPartOffset+ui];
+      m_pbICFlag[ui]=pcCU->m_pbICFlag[uiPartOffset+ui];
 #endif
       m_puhMergeIndex[ui]=pcCU->m_puhMergeIndex[uiPartOffset+ui];
       m_puhLumaIntraDir[ui]=pcCU->m_puhLumaIntraDir[uiPartOffset+ui];

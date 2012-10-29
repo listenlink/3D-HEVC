@@ -186,7 +186,7 @@ INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =
 
 #if LGE_ILLUCOMP_B0045
 static const UChar 
-  INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
+INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
 {
   { CNU,  CNU,  CNU, }, 
   { 197,  185,  201, }, 
