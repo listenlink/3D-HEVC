@@ -166,6 +166,9 @@ protected:
   Bool      m_DeblockingFilterControlPresent;
 #endif
   Bool      m_bUseSAO;
+#if LGE_ILLUCOMP_B0045
+  Bool      m_bUseIC;
+#endif
 #if SAO_UNIT_INTERLEAVING
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoInterleavingFlag;
@@ -689,6 +692,10 @@ public:
 #endif
   Void  setUseSAO                      ( Bool bVal )   {m_bUseSAO = bVal;}
   Bool  getUseSAO                      ()              {return m_bUseSAO;}
+#if LGE_ILLUCOMP_B0045
+  Void  setUseIC                       ( Bool bVal )   {m_bUseIC = bVal;}
+  Bool  getUseIC                       ()              {return m_bUseIC;}
+#endif
 #if SAO_UNIT_INTERLEAVING
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }

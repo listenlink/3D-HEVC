@@ -1279,6 +1279,9 @@ private:
 #if SONY_COLPIC_AVAILABILITY
   Int         m_iViewOrderIdx;
 #endif
+#if LGE_ILLUCOMP_B0045
+  Bool        m_bApplyIC;
+#endif
 
 public:
   TComSlice();
@@ -1572,6 +1575,12 @@ public:
   Int*      getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int*      getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+
+#if LGE_ILLUCOMP_B0045
+  Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
+  Bool      getApplyIC            ()  { return m_bApplyIC; }
+  Void      xSetApplyIC           ();
+#endif
 
 protected:
   TComPic*  xGetRefPic        (TComList<TComPic*>& rcListPic, UInt uiPOC);

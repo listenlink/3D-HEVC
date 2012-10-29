@@ -325,6 +325,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterOffsetInAPS", m_loopFilterOffsetInAPS, false)
   ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
   ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
+#if LGE_ILLUCOMP_B0045
+  ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
+#endif
 #if DBL_CONTROL
 #if FIX_DBL_CONTROL_DEFAULT
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
@@ -360,7 +363,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 #if LGE_WVSO_A0119
-  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
+  ("WVSO",                            m_bUseWVSO                , true          , "Use depth fidelity term for VSO" )
   ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
   ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
@@ -1717,6 +1720,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
   printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
+#if LGE_ILLUCOMP_B0045
+  printf("IlluCompEnable: %d ", m_bUseIC);
+#endif
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
@@ -1729,6 +1735,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if LGE_WVSO_A0119
   printf("WVSO:%d ", m_bUseWVSO );
 #endif
+
 #if OL_DEPTHLIMIT_A0044
   printf("DPL:%d ", m_bDepthPartitionLimiting);
 #endif
@@ -1739,7 +1746,8 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
 #if LGE_WVSO_A0119
-  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
+  if ( m_bUseWVSO )
+    printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   
