@@ -2116,7 +2116,6 @@ Void TComPrediction::getBestContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx,
 UInt TComPrediction::getBestWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight )
 {
   assert( uiWidth >= DMM_WEDGEMODEL_MIN_SIZE && uiWidth <= DMM_WEDGEMODEL_MAX_SIZE );
-  WedgeList* pacWedgeList = &g_aacWedgeLists[(g_aucConvertToBit[uiWidth])];
 
   // get copy of co-located texture luma block
   TComYuv cTempYuv; 
@@ -2135,13 +2134,79 @@ UInt TComPrediction::getBestWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 
   UInt uiPredStride = cPredYuv.getStride();
 
-  // regular wedge search
+  // wedge search
   TComWedgeDist cWedgeDist;
   UInt uiBestDist = MAX_UINT;
   UInt uiBestTabIdx = 0;
   Int  iDC1 = 0;
   Int  iDC2 = 0;
+  WedgeList* pacWedgeList = &g_aacWedgeLists[(g_aucConvertToBit[uiWidth])];
 
+#if HHIQC_DMMFASTSEARCH_B0039
+  TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
+  TComDataCU* pcColTexCU = pcPicTex->getCU(pcCU->getAddr());
+  UInt      uiTexPartIdx = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
+  Int   uiColTexIntraDir = pcColTexCU->isIntra( uiTexPartIdx ) ? pcColTexCU->getLumaIntraDir( uiTexPartIdx ) : 255;
+
+  std::vector< std::vector<UInt> > pauiWdgLstSz = g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]];
+  if( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 )
+  {
+    std::vector<UInt>* pauiWdgLst = &pauiWdgLstSz[uiColTexIntraDir-2];
+    for( UInt uiIdxW = 0; uiIdxW < pauiWdgLst->size(); uiIdxW++ )
+    {
+      UInt uiIdx     =   pauiWdgLst->at(uiIdxW);
+      calcWedgeDCs       ( &(pacWedgeList->at(uiIdx)), piRefBlkY, uiWidth,      iDC1, iDC2 );
+      assignWedgeDCs2Pred( &(pacWedgeList->at(uiIdx)), piPred,    uiPredStride, iDC1, iDC2 );
+
+      UInt uiActDist = cWedgeDist.getDistPart( piPred, uiPredStride, piRefBlkY, uiWidth, uiWidth, uiHeight, WedgeDist_SAD );
+
+      if( uiActDist < uiBestDist || uiBestDist == MAX_UINT )
+      {
+        uiBestDist   = uiActDist;
+        uiBestTabIdx = uiIdx;
+      }
+    }
+  }
+  else
+  {
+    WedgeNodeList* pacWedgeNodeList = &g_aacWedgeNodeLists[(g_aucConvertToBit[uiWidth])];
+    UInt uiBestNodeDist = MAX_UINT;
+    UInt uiBestNodeId   = 0;
+    for( UInt uiNodeId = 0; uiNodeId < pacWedgeNodeList->size(); uiNodeId++ )
+    {
+      calcWedgeDCs       ( &(pacWedgeList->at(pacWedgeNodeList->at(uiNodeId).getPatternIdx())), piRefBlkY, uiWidth,      iDC1, iDC2 );
+      assignWedgeDCs2Pred( &(pacWedgeList->at(pacWedgeNodeList->at(uiNodeId).getPatternIdx())), piPred,    uiPredStride, iDC1, iDC2 );
+
+      UInt uiActDist = cWedgeDist.getDistPart( piPred, uiPredStride, piRefBlkY, uiWidth, uiWidth, uiHeight, WedgeDist_SAD );
+
+      if( uiActDist < uiBestNodeDist || uiBestNodeDist == MAX_UINT )
+      {
+        uiBestNodeDist = uiActDist;
+        uiBestNodeId   = uiNodeId;
+      }
+    }
+
+    // refinement
+    uiBestDist   = uiBestNodeDist;
+    uiBestTabIdx = pacWedgeNodeList->at(uiBestNodeId).getPatternIdx();
+    for( UInt uiRefId = 0; uiRefId < NUM_WEDGE_REFINES; uiRefId++ )
+    {
+      if( pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId ) != NO_IDX )
+      {
+        calcWedgeDCs       ( &(pacWedgeList->at(pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId ))), piRefBlkY, uiWidth,      iDC1, iDC2 );
+        assignWedgeDCs2Pred( &(pacWedgeList->at(pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId ))), piPred,    uiPredStride, iDC1, iDC2 );
+
+        UInt uiActDist = cWedgeDist.getDistPart( piPred, uiPredStride, piRefBlkY, uiWidth, uiWidth, uiHeight, WedgeDist_SAD );
+
+        if( uiActDist < uiBestDist || uiBestDist == MAX_UINT )
+        {
+          uiBestDist   = uiActDist;
+          uiBestTabIdx = pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId );
+        }
+      }
+    }
+  }
+#else
   for( UInt uiIdx = 0; uiIdx < pacWedgeList->size(); uiIdx++ )
   {
     calcWedgeDCs       ( &(pacWedgeList->at(uiIdx)), piRefBlkY, uiWidth,      iDC1, iDC2 );
@@ -2155,6 +2220,7 @@ UInt TComPrediction::getBestWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
       uiBestTabIdx = uiIdx;
     }
   }
+#endif
 
   cPredYuv.destroy();
   cTempYuv.destroy();
