@@ -373,6 +373,18 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
+#if HHIQC_DMMFASTSEARCH_B0039
+  Void xSearchWedgeFullMinDistFast( TComDataCU*    pcCU, 
+                                    UInt           uiAbsPtIdx, 
+                                    WedgeNodeList* pacWedgeNodeList, 
+                                    WedgeList*     pacWedgeList, 
+                                    Pel*           piRef, 
+                                    UInt           uiRefStride, 
+                                    UInt           uiWidth, 
+                                    UInt           uiHeight, 
+                                    UInt&          ruiTabIdx, 
+                                    Dist&          riDist );
+#endif
   Void xSearchWedgePredDirMinDist ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeList*     pacWedgeList, 

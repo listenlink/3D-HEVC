@@ -6335,7 +6335,12 @@ Void TEncSearch::findWedgeFullMinDist( TComDataCU*  pcCU,
 
   WedgeList* pacWedgeList = &g_aacWedgeLists[(g_aucConvertToBit[uiWidth])];
   Dist iDist = RDO_DIST_MAX;
+#if HHIQC_DMMFASTSEARCH_B0039
+  WedgeNodeList* pacWedgeNodeList = &g_aacWedgeNodeLists[(g_aucConvertToBit[uiWidth])];
+  xSearchWedgeFullMinDistFast( pcCU, uiAbsPtIdx, pacWedgeNodeList, pacWedgeList, piOrig, uiStride, uiWidth, uiHeight, ruiTabIdx, iDist );
+#else
   xSearchWedgeFullMinDist( pcCU, uiAbsPtIdx, pacWedgeList, piOrig, uiStride, uiWidth, uiHeight, ruiTabIdx, iDist );
+#endif
 
   TComWedgelet* pcBestWedgelet = &(pacWedgeList->at(ruiTabIdx));
   xGetWedgeDeltaDCsMinDist( pcBestWedgelet, pcCU, uiAbsPtIdx, piOrig, piPredic, uiStride, uiWidth, uiHeight, riDeltaDC1, riDeltaDC2, bAboveAvail, bLeftAvail );
@@ -6445,6 +6450,127 @@ Void TEncSearch::xSearchWedgeFullMinDist( TComDataCU* pcCU, UInt uiAbsPtIdx, Wed
   cPredYuv.destroy();
   return;
 }
+
+#if HHIQC_DMMFASTSEARCH_B0039
+Void TEncSearch::xSearchWedgeFullMinDistFast( TComDataCU* pcCU, UInt uiAbsPtIdx, WedgeNodeList* pacWedgeNodeList, WedgeList* pacWedgeList, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Dist& riDist )
+{
+  ruiTabIdx = 0;
+
+  // local pred buffer
+  TComYuv cPredYuv;
+  cPredYuv.create( uiWidth, uiHeight );
+  cPredYuv.clear();
+
+  UInt uiPredStride = cPredYuv.getStride();
+  Pel* piPred       = cPredYuv.getLumaAddr();
+
+  Int  iDC1 = 0;
+  Int  iDC2 = 0;
+
+  // coarse wedge search
+  Dist uiBestDist   = RDO_DIST_MAX;
+  UInt uiBestNodeId = 0;
+  for( UInt uiNodeId = 0; uiNodeId < pacWedgeNodeList->size(); uiNodeId++ )
+  {
+    calcWedgeDCs       ( &(pacWedgeList->at(pacWedgeNodeList->at(uiNodeId).getPatternIdx())), piRef,  uiRefStride,  iDC1, iDC2 );
+    assignWedgeDCs2Pred( &(pacWedgeList->at(pacWedgeNodeList->at(uiNodeId).getPatternIdx())), piPred, uiPredStride, iDC1, iDC2 );
+
+    Dist uiActDist = RDO_DIST_MAX;
+#if HHI_VSO
+    if( m_pcRdCost->getUseVSO() )
+    {
+#if SAIT_VSO_EST_A0033
+      if ( m_pcRdCost->getUseEstimatedVSD() )
+      {          
+        TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
+        TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
+        uiActDist = m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
+#if LGE_WVSO_A0119
+        if ( m_pcRdCost->getUseWVSO() )
+        {    
+          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+          Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
+          Dist iD = (Dist) m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
+          uiActDist = (iDWeight * iD + iVSDWeight * (Int) uiActDist) / ( iDWeight + iVSDWeight);
+        }
+#endif
+      }
+      else
+#endif
+      {
+        uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, 0 );
+#if LGE_WVSO_A0119
+        if ( m_pcRdCost->getUseWVSO() )
+        {    
+          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+          Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
+          Dist iD = (Dist) m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
+          uiActDist = (iDWeight * iD + iVSOWeight * (Int) uiActDist) / ( iDWeight + iVSOWeight);
+        }
+#endif
+      }
+    }
+    else
+    {
+      uiActDist = m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
+    }
+#else
+    uiActDist = m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
+#endif
+    if( uiActDist < uiBestDist || uiBestDist == RDO_DIST_MAX )
+    {
+      uiBestDist   = uiActDist;
+      uiBestNodeId = uiNodeId;
+    }
+  }
+
+  // refinement
+  Dist uiBestDistRef = uiBestDist;
+  UInt uiBestTabIdxRef  = pacWedgeNodeList->at(uiBestNodeId).getPatternIdx();
+  for( UInt uiRefId = 0; uiRefId < NUM_WEDGE_REFINES; uiRefId++ )
+  {
+    if( pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId ) != NO_IDX )
+    {
+      calcWedgeDCs       ( &(pacWedgeList->at(pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId ))), piRef,  uiRefStride,  iDC1, iDC2 );
+      assignWedgeDCs2Pred( &(pacWedgeList->at(pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId ))), piPred, uiPredStride, iDC1, iDC2 );
+
+      Dist uiActDist = RDO_DIST_MAX;
+#if HHI_VSO
+      if( m_pcRdCost->getUseVSO() )
+      {
+        uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, 0 );
+#if LGE_WVSO_A0119
+        if ( m_pcRdCost->getUseWVSO() )
+        {    
+          Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+          Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
+          Dist iD = (Dist) m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
+          uiActDist = (iDWeight * iD + iVSOWeight * (Int) uiActDist) / ( iDWeight + iVSOWeight);
+        }
+#endif
+      }
+      else
+      {
+        uiActDist = m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
+      }
+#else
+      uiActDist = m_pcRdCost->getDistPart( piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false, DF_SAD );
+#endif
+      if( uiActDist < uiBestDistRef || uiBestDistRef == RDO_DIST_MAX )
+      {
+        uiBestDistRef   = uiActDist;
+        uiBestTabIdxRef = pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId );
+      }
+    }
+  }
+
+  riDist    = uiBestDistRef;
+  ruiTabIdx = uiBestTabIdxRef;
+
+  cPredYuv.destroy();
+  return;
+}
+#endif
 
 Void TEncSearch::xSearchWedgePredDirMinDist( TComDataCU* pcCU, UInt uiAbsPtIdx, WedgeList* pacWedgeList, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd )
 {

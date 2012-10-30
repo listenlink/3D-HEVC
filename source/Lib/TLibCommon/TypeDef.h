@@ -126,6 +126,11 @@
 #define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
 #endif
 
+#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
+#if HHIQC_DMMFASTSEARCH_B0039
+#define DMM3_SIMPLIFY_TR                  1
+#endif
+
 #define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
 #define HHI_MPI_MERGE_POS                 0
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
