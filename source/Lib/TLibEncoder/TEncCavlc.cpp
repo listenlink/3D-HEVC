@@ -748,6 +748,18 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   //write slice address
   Int address = (pcSlice->getPic()->getPicSym()->getCUOrderMap(lCUAddress) << reqBitsInner) + innerAddress;
   WRITE_FLAG( address==0, "first_slice_in_pic_flag" );
+
+#if LGE_ILLUCOMP_B0045
+  // IC flag is on only first_slice_in_pic
+  if (address==0)
+  {
+    if( pcSlice->getSPS()->getViewId() && !pcSlice->getIsDepth() )
+    {
+      WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "applying IC flag" );
+    }
+  }
+#endif
+
   if(address>0) 
   {
     WRITE_CODE( address, reqBitsOuter+reqBitsInner, "slice_address" );
@@ -1425,6 +1437,13 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+#if LGE_ILLUCOMP_B0045
+Void TEncCavlc::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {

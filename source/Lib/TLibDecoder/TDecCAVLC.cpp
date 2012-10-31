@@ -1802,6 +1802,20 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   READ_FLAG( uiCode, "first_slice_in_pic_flag" );
   UInt address;
   UInt innerAddress = 0;
+
+#if LGE_ILLUCOMP_B0045
+  // IC flag is on only first_slice_in_pic
+  if (uiCode)
+  {
+    UInt uiCodeTmp = 0;
+    if ( rpcSlice->getSPS()->getViewId() && !rpcSlice->getSPS()->isDepth() )
+    {
+      READ_FLAG (uiCodeTmp, "applying IC flag");
+    }
+    rpcSlice->setApplyIC(uiCodeTmp);
+  }
+#endif
+
   if(!uiCode)
   {
     READ_CODE( reqBitsOuter+reqBitsInner, address, "slice_address" );
@@ -2599,6 +2613,13 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 {
   assert(0);
 }
+
+#if LGE_ILLUCOMP_B0045
+Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
 Void TDecCavlc::parseMVPIdx( Int& riMVPIdx, Int iAMVPCands )
