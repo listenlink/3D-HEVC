@@ -261,6 +261,17 @@ Void TAppDecTop::xDestroyDecLib()
       m_tVideoIOYuvReconFile[viewDepthIdx] = NULL ;
     }
   }
+#if DEBUGIMGOUT
+  for(Int viewDepthIdx=0; viewDepthIdx<m_tVideoIOYuvReconDbgFile.size() ; viewDepthIdx++)
+  {
+    if( m_tVideoIOYuvReconDbgFile[viewDepthIdx] )
+    {
+      m_tVideoIOYuvReconDbgFile[viewDepthIdx]->close();
+      delete m_tVideoIOYuvReconDbgFile[viewDepthIdx]; 
+      m_tVideoIOYuvReconDbgFile[viewDepthIdx] = NULL ;
+    }
+  }
+#endif
 
   for(Int viewDepthIdx=0; viewDepthIdx<m_tDecTop.size() ; viewDepthIdx++)
   {
@@ -329,6 +340,13 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
         m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
 #endif
       }
+#if DEBUGIMGOUT
+#if PIC_CROPPING
+      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+#else
+      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), pcPic->getSlice(0)->getSPS()->getPad() );
+#endif
+#endif   
       
       // update POC of display order
       m_pocLastDisplay[viewDepthId] = pcPic->getPOC();
@@ -387,6 +405,13 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
         m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
 #endif
       }
+#if DEBUGIMGOUT
+#if PIC_CROPPING
+      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
+#else
+      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), pcPic->getSlice(0)->getSPS()->getPad() );
+#endif
+#endif
       
       // update POC of display order
       m_pocLastDisplay[viewDepthId] = pcPic->getPOC();
@@ -475,7 +500,31 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
 #if FIX_DECODING_WO_WRITING
   }
 #endif
-
+#if DEBUGIMGOUT
+  while( m_tVideoIOYuvReconDbgFile.size() < newNumberOfViewDepth)
+  {
+    m_tVideoIOYuvReconDbgFile.push_back(new TVideoIOYuv);
+    Char buffer[4];
+    sprintf(buffer,"_%i", (Int)(m_tVideoIOYuvReconDbgFile.size()-1) / 2 );
+    Char* nextFilename = NULL;
+    if( (m_tVideoIOYuvReconDbgFile.size() % 2) == 0 )
+    {
+      Char* pchTempFilename = NULL;
+      xAppendToFileNameEnd( "DebugImg.yuv", "_depth", pchTempFilename);
+      xAppendToFileNameEnd( pchTempFilename, buffer, nextFilename);
+      free ( pchTempFilename );
+    }
+    else
+    {
+      xAppendToFileNameEnd( "DebugImg.yuv", buffer, nextFilename);
+    }
+    if( isDepth || ( !isDepth && (m_tVideoIOYuvReconDbgFile.size() % 2) == 1 ) )
+    {
+      m_tVideoIOYuvReconDbgFile.back()->open( nextFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
+    }
+    free ( nextFilename );
+  }
+#endif
   while( m_pocLastDisplay.size() < newNumberOfViewDepth )
   {
     m_pocLastDisplay.push_back(-MAX_INT+m_iSkipFrame);
@@ -532,4 +581,98 @@ TComPic* TAppDecTop::xGetPicFromView( Int viewId, Int poc, Bool isDepth )
   }
   return pcPic;
 }
+
+#if VSP_N
+Void TAppDecTop::storeVSPInBuffer(TComPic* pcPicVSP, TComPic* pcPicAvail, Int iCodedViewIdx, Int iCoddedViewOrderIdx, Int iCurPoc, Bool bDepth)
+{
+  //first view does not have VSP 
+#if VSP_TEXT_ONLY
+  if((iCodedViewIdx == 0)||(bDepth))
+#else
+  if((iCodedViewIdx == 0))
+#endif
+    return;
+  pcPicVSP->getSlice(0)->setPOC( iCurPoc );
+  Int iNeighborViewId = 0;
+  Bool bRenderFromLeft;
+  //check if the neighboring view is situated to the left of the current view
+  bRenderFromLeft = ((iCoddedViewOrderIdx)>0);
+  //pointers to buffers   
+  TComPicYuv* pcPicYuvVideo = getPicFromView(iNeighborViewId, iCurPoc, bDepth)->getPicYuvRec();
+  TComPicYuv* pcPicYuvDepth = getPicFromView(iNeighborViewId, iCurPoc, true)->getPicYuvRec();
+  TComPicYuv* pcPicYuvVSP   = pcPicVSP->getPicYuvRec();
+  TComPicYuv* pcPicYuvAvail = pcPicAvail->getPicYuvRec();
+  //verifying buffers
+  AOF(pcPicYuvVideo);
+  AOF(pcPicYuvDepth);
+  AOF(pcPicYuvVSP);
+  AOF(pcPicYuvAvail);
+
+  TComPic* pcPic = getPicFromView( iCodedViewIdx, iCurPoc, bDepth );
+  pcPic->setPicYuvSynth( pcPicYuvVSP );
+  pcPic->setPicYuvAvail( pcPicYuvAvail );
+
+  //setting look-up table
+#if 0
+  m_cVSPRendererTop.setShiftLUTs(
+      m_cCamParsCollector.getBaseViewShiftLUTD()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewShiftLUTD()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx],
+      -1
+      );
+#else
+#if NTT_SUBPEL
+  m_cVSPRendererTop.setShiftLUTs(
+      m_cCamParsCollector.getBaseViewShiftLUTD()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewIPelLUT  ()[iNeighborViewId][iCodedViewIdx],
+      NULL,
+      m_cCamParsCollector.getBaseViewShiftLUTD()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewIPelLUT  ()[iNeighborViewId][iCodedViewIdx],
+      NULL,
+      -1
+      );
+  m_cVSPRendererTop.setFposLUTs( 
+      m_cCamParsCollector.getBaseViewFPosLUT()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewFPosLUT()[iNeighborViewId][iCodedViewIdx]
+      );
+#else
+  m_cVSPRendererTop.setShiftLUTs(
+      m_cCamParsCollector.getBaseViewShiftLUTD()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx],
+      NULL,
+      m_cCamParsCollector.getBaseViewShiftLUTD()[iNeighborViewId][iCodedViewIdx],
+      m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx],
+      NULL,
+      -1
+      );
+#endif
+#endif
+
+#if NTT_SUBPEL
+  m_cVSPRendererTop.setInterpolationMode( (bDepth ? 0 : 5) );
+#endif
+
+  //extrapolate from view iNeighborViewId to the current view, storing in the VSP buffer
+  //m_cVSPRendererTop.extrapolateView(pcPicYuvVideo,pcPicYuvDepth, pcPicYuvVSP, bRenderFromLeft);
+  m_cVSPRendererTop.extrapolateAvailabilityView(pcPicYuvVideo,pcPicYuvDepth, pcPicYuvVSP, pcPicYuvAvail, bRenderFromLeft);
+
+  // mark it should be extended
+  pcPicVSP->getPicYuvRec()->setBorderExtension(false); 
+  pcPicVSP->getPicYuvRec()->extendPicBorder(); //will extend the border for prediction using pixels outside the frame
+  pcPicAvail->getPicYuvRec()->setBorderExtension(false); 
+  pcPicAvail->getPicYuvRec()->extendPicBorder();
+#if VSP_N_DUMP
+  {
+    Char acFilenameBase[1024];
+    ::sprintf(acFilenameBase,"VSP_dec_%sv%d_%dx%d_%04d.yuv",(bDepth?"D":"T"),iCodedViewIdx,pcPicYuvVSP->getWidth(), pcPicYuvVSP->getHeight(), iCurPoc);
+    pcPicYuvVSP->dump(acFilenameBase,0);
+    //pcPicYuvAvail->dump(acFilenameBase,iCurPoc!=0);
+  }
+#endif
+}
+#endif
+
 //! \}

@@ -561,6 +561,14 @@ TComDepthMapGenerator::dumpDepthMap( TComPic* pcPic, char* pFilenameBase )
   ::sprintf     ( acFilename, "%s_V%d.yuv", pFilenameBase, uiViewId );
   m_cTmpPic.dump( acFilename, ( pcPic->getPOC() != 0 )  );
 }
+
+#if VSP_N
+Void
+TComDepthMapGenerator::clearDepthMap( TComPic* pcPic, Int iVal/*=PDM_UNDEFINED_DEPTH*/ )
+{
+  xClearDepthMap( pcPic, iVal );
+}
+#endif
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
@@ -732,7 +740,10 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
       RefPicList  eRefPicList       = RefPicList( iRefListId );
       Int         iNumRefPics       = pcSlice->getNumRefIdx( eRefPicList );
       for( Int iPdmRefIdx = 0; iPdmRefIdx < iNumRefPics; iPdmRefIdx++ )
-{
+      {
+#if VSP_N
+        if( pcSlice->getRefViewId( eRefPicList, iPdmRefIdx ) != NUM_VIEW_VSP )
+#endif
         if( pcSlice->getRefPOC( eRefPicList, iPdmRefIdx ) == pcSlice->getPOC())
         {
           abPdmAvailable[ iRefListId ] = true;
@@ -833,8 +844,19 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
   UInt          uiRefViewId = pcRefPic->getSPS()->getViewId();
   Int           iRefPoc     = pcRefPic->getPOC();
   Bool          bInterview  = ( uiRefViewId < m_uiCurrViewId );
+#if VSP_N
+  Bool          bVsp        = ( pcRefPic->getViewId() == NUM_VIEW_VSP );
+  AOT(  bInterview &&  bVsp && iRefPoc != pcSlice->getPOC() );
+  AOT( !bInterview && !bVsp && iRefPoc == pcSlice->getPOC() );
+#else
   AOT(  bInterview && iRefPoc != pcSlice->getPOC() );
   AOT( !bInterview && iRefPoc == pcSlice->getPOC() );
+#endif
+
+#if FORCE_REF_VSP
+  if( bVsp ) return false;
+#endif
+
   Bool          bPdmIView   = ( ( pcSPS->getMultiviewMvPredMode() & PDM_USE_FOR_IVIEW ) == PDM_USE_FOR_IVIEW );
   Bool          bPdmInter   = ( ( pcSPS->getMultiviewMvPredMode() & PDM_USE_FOR_INTER ) == PDM_USE_FOR_INTER );
   Bool          bPdmMerge   = ( ( pcSPS->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE );
@@ -923,8 +945,18 @@ TComDepthMapGenerator::getPdmMvPred( TComDataCU* pcCU, UInt uiPartIdx, RefPicLis
   UInt          uiRefViewId = pcRefPic->getSPS()->getViewId();
   Int           iRefPoc     = pcRefPic->getPOC();
   Bool          bInterview  = ( uiRefViewId < m_uiCurrViewId );
+#if VSP_N
+  Bool          bVsp        = ( pcRefPic->getViewId() == NUM_VIEW_VSP );
+  AOT(  bInterview &&  bVsp && iRefPoc != pcSlice->getPOC() );
+  AOT( !bInterview && !bVsp && iRefPoc == pcSlice->getPOC() );
+#else
   AOT(  bInterview && iRefPoc != pcSlice->getPOC() );
   AOT( !bInterview && iRefPoc == pcSlice->getPOC() );
+#endif
+
+#if FORCE_REF_VSP
+  if( bVsp ) return false;
+#endif
 
   Bool          bPdmIView   = ( ( pcSPS->getMultiviewMvPredMode() & PDM_USE_FOR_IVIEW ) == PDM_USE_FOR_IVIEW );
   Bool          bPdmInter   = ( ( pcSPS->getMultiviewMvPredMode() & PDM_USE_FOR_INTER ) == PDM_USE_FOR_INTER );
@@ -1350,6 +1382,11 @@ TComDepthMapGenerator::xPredictCUDepthMap( TComDataCU* pcCU, UInt uiDepth, UInt 
   case MODE_INTER:
     xInterPredictCUDepthMap( pcSubCU, pcSubDM );
     break;
+#if FORCE_REF_VSP==1
+  case MODE_SYNTH:
+    xIntraPredictCUDepthMap( pcSubCU, pcSubDM ); //What to do? Need Fix!
+    break;
+#endif
   default:
     AOT( true );
     break;
@@ -1463,6 +1500,16 @@ TComDepthMapGenerator::xInterPredictPUDepthMap( TComDataCU* pcCU, TComYuv* pcCUD
     Bool            abCurrIntView[2]  = { aiCurrRefIdx[0] >= 0 && pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, aiCurrRefIdx[0] )->getSPS()->getViewId() != m_uiCurrViewId,
                                           aiCurrRefIdx[1] >= 0 && pcCU->getSlice()->getRefPic( REF_PIC_LIST_1, aiCurrRefIdx[1] )->getSPS()->getViewId() != m_uiCurrViewId };
     Bool            bUsesInterViewPrd = ( abCurrIntView[0] || abCurrIntView[1] );
+#if VSP_N
+    if(( aiCurrRefIdx[0] >= 0 && pcCU->getSlice()->getRefPic( REF_PIC_LIST_0, aiCurrRefIdx[0] )->getViewId() == NUM_VIEW_VSP ) ||
+       ( aiCurrRefIdx[1] >= 0 && pcCU->getSlice()->getRefPic( REF_PIC_LIST_1, aiCurrRefIdx[1] )->getViewId() == NUM_VIEW_VSP )) {
+      //if refpic is VSP, copy to Original cuurent PDM
+      TComPicYuv* pcPdm = pcCU->getPic()->getPredDepthMap();
+      UInt  uiZOrderIdx = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
+      assert( pcPdm );
+      pcCUDepthMap->copyFromPicYuv( pcPdm, pcCU->getAddr(), uiZOrderIdx );
+    }
+#endif
     if( bUsesInterViewPrd )
     {
       xIViewPUDepthMapUpdate  ( pcCU, pcCUDepthMap, uiPartIdx );

@@ -96,6 +96,10 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
     m_puiCUOrderMap[i] = i;
     m_puiInverseCUOrderMap[i] = i;
   }
+
+#if VSP_N
+  m_apcTComTile = NULL;
+#endif
 }
 
 Void TComPicSym::destroy()

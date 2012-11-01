@@ -163,6 +163,9 @@ public:
 #endif
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if FORCE_REF_VSP==1
+  Void codeVspFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if HHI_INTER_VIEW_RESIDUAL_PRED

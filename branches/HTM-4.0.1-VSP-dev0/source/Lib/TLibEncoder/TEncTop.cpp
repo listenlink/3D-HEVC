@@ -78,6 +78,16 @@ TEncTop::TEncTop()
   m_pcRDGoOnBinCodersCABAC = NULL;
   m_pcBitCounters          = NULL;
   m_pcRdCosts              = NULL;
+
+#if VSP_N
+  m_pcPicVSP = NULL;
+  m_pcPicAvail = NULL;
+#endif
+
+#if VSP_SLICE_HEADER
+  m_bUseVSP = false;
+#endif
+
 }
 
 TEncTop::~TEncTop()
@@ -183,6 +193,20 @@ Void TEncTop::create ()
     initWedgeLists();
   }
 #endif
+
+#if VSP_N
+  m_pcPicVSP = new TComPic;
+  m_pcPicVSP->create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+  //m_pcPicVSP->getCurrSlice()->setViewId( this->getViewId() );
+  m_pcPicVSP->getCurrSlice()->setViewId( NUM_VIEW_VSP );
+  m_pcPicVSP->getCurrSlice()->setViewOrderIdx( m_iViewOrderIdx );
+
+  m_pcPicAvail = new TComPic;
+  m_pcPicAvail->create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+  m_pcPicAvail->getCurrSlice()->setViewId( 99 );
+  m_pcPicAvail->getCurrSlice()->setViewOrderIdx( m_iViewOrderIdx );
+#endif
+
 }
 
 /**
@@ -324,6 +348,21 @@ Void TEncTop::destroy ()
   destroyROM();
   }
   
+#if VSP_N
+  if( m_pcPicVSP )
+  {
+    m_pcPicVSP->destroy();
+    delete m_pcPicVSP;
+    m_pcPicVSP = NULL;
+  }
+  if( m_pcPicAvail )
+  {
+    m_pcPicAvail->destroy();
+    delete m_pcPicAvail;
+    m_pcPicAvail = NULL;
+  }
+#endif
+
   return;
 }
 
@@ -390,6 +429,53 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
   }
 
   m_iMaxRefPicNum = 0;
+
+#if VSP_N
+  m_pcPicVSP->setCurrSliceIdx( 0 );
+  m_pcPicVSP->getCurrSlice()->setSPS( this->getSPS() );
+  m_pcPicVSP->getCurrSlice()->setPPS( this->getPPS() );
+  m_pcPicVSP->getCurrSlice()->setPPSId( this->getPPS()->getPPSId() );
+  //initialize the motion vector field with zeros - How about the RefIdx ????
+  //IS THIS REALLY NECESSARY ????
+  for ( int i=0; i<m_pcPicVSP->getPicSym()->getNumberOfCUsInFrame(); i++ )
+  {
+    m_pcPicVSP->getPicSym()->getCU(i)->getCUMvField(RefPicList(0))->clearMvField();
+    m_pcPicVSP->getPicSym()->getCU(i)->getCUMvField(RefPicList(1))->clearMvField();
+  }
+#if DEPTH_MAP_GENERATION
+#if !QC_MULTI_DIS_CAN
+  // add extra pic buffers
+  Bool  bNeedPrdDepthMapBuf = ( m_uiPredDepthMapGeneration > 0 );
+  if( bNeedPrdDepthMapBuf && !m_pcPicVSP->getPredDepthMap() )
+  {
+    m_pcPicVSP->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
+    m_cDepthMapGenerator.clearDepthMap( m_pcPicVSP );
+  }
+#endif
+#endif
+  m_pcPicAvail->setCurrSliceIdx( 0 );
+  m_pcPicAvail->getCurrSlice()->setSPS( this->getSPS() );
+  m_pcPicAvail->getCurrSlice()->setPPS( this->getPPS() );
+  m_pcPicAvail->getCurrSlice()->setPPSId( this->getPPS()->getPPSId() );
+  //initialize the motion vector field with zeros - How about the RefIdx ????
+  //IS THIS REALLY NECESSARY ????
+  for ( int i=0; i<m_pcPicAvail->getPicSym()->getNumberOfCUsInFrame(); i++ )
+  {
+    m_pcPicAvail->getPicSym()->getCU(i)->getCUMvField(RefPicList(0))->clearMvField();
+    m_pcPicAvail->getPicSym()->getCU(i)->getCUMvField(RefPicList(1))->clearMvField();
+  }
+#if DEPTH_MAP_GENERATION
+#if !QC_MULTI_DIS_CAN
+  // add extra pic buffers
+  bNeedPrdDepthMapBuf = ( m_uiPredDepthMapGeneration > 0 );
+  if( bNeedPrdDepthMapBuf && !m_pcPicVSP->getPredDepthMap() )
+  {
+    m_pcPicAvail->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
+    m_cDepthMapGenerator.clearDepthMap( m_pcPicAvail );
+  }
+#endif
+#endif
+#endif
 }
 
 // ====================================================================================================================

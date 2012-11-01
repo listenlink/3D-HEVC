@@ -98,6 +98,11 @@ private:
 #if HHI_INTERVIEW_SKIP
   TRenTop  m_cUsedPelsRenderer;                               ///< renderer for used pels map
 #endif
+
+#if VSP_N
+  TRenTop                     m_cVSPRendererTop;
+#endif
+
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -161,6 +166,9 @@ private:
   Void  xStoreVSORefPicsInBuffer();                                                   ///< read in External Ref pic from file and store in buffer
 #endif
 
+#if VSP_N
+  Void xStoreVSPInBuffer(TComPic* pcPicVSP, TComPic* pcPicAvail, Int iCodedViewIdx, Bool bDepth, Int gopId);
+#endif
 };// END CLASS DEFINITION TAppEncTop
 
 //! \}

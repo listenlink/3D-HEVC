@@ -143,7 +143,11 @@ protected:
   /// sub-function for motion vector refinement used in fractional-pel accuracy
   UInt  xPatternRefinement( TComPattern* pcPatternKey,
                            TComMv baseRefMv,
-                           Int iFrac, TComMv& rcMvFrac );
+                           Int iFrac, TComMv& rcMvFrac
+#if VSP_MV_ZERO
+                          ,Bool bIsVsp
+#endif
+                          );
   
   typedef struct
   {
@@ -196,6 +200,9 @@ public:
                                   Bool        bUseRes = false
 #if AMP_MRG
                                  ,Bool        bUseMRG = false
+#endif
+#if FORCE_REF_VSP==1
+                                 ,Bool        bForceRefVsp = false
 #endif
                                 );
   
@@ -485,6 +492,9 @@ protected:
                                     TComMv*       pcMvPred,
                                     Int           iRefIdxPred,
                                     TComMv&       rcMv,
+#if VSP_MV_ZERO
+                                    Bool          bIsVsp,
+#endif
                                     UInt&         ruiBits,
                                     UInt&         ruiCost,
                                     Bool          bBi = false  );
@@ -530,6 +540,9 @@ protected:
                                     TComMv&       rcMvQter,
                                     UInt&         ruiCost 
                                    ,Bool biPred
+#if VSP_MV_ZERO
+                                   ,Bool bIsVsp
+#endif
                                    );
   
   Void xExtDIFUpSamplingH( TComPattern* pcPattern, Bool biPred  );

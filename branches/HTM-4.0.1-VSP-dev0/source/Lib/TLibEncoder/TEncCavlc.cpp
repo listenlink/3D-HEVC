@@ -1178,6 +1178,19 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   assert(MRG_MAX_NUM_CANDS_SIGNALED<=MRG_MAX_NUM_CANDS);
   WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "maxNumMergeCand");
 #endif
+
+#if VSP_SLICE_HEADER
+  if( pcSlice->getSPS()->getViewId()!=0 
+#if VSP_TEXT_ONLY
+      && !(pcSlice->getSPS()->isDepth()) 
+#endif
+    )
+  {
+    WRITE_FLAG( pcSlice->getVspFlag()?1:0, "vsp_flag" );
+//    printf("[VSP: %d] ", pcSlice->getVspFlag()?1:0);
+  }
+#endif
+
 }
 
 
@@ -1425,6 +1438,13 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+#if FORCE_REF_VSP==1
+Void TEncCavlc::codeVspFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {

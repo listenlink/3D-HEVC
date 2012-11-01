@@ -106,6 +106,10 @@ private:
   Double****          m_adSynthViewShiftLUT;                   ///< Disparity LUT
   Int****             m_aiSynthViewShiftLUT;                   ///< Disparity LUT
 
+#if NTT_SUBPEL
+  Int****             m_aiBaseViewShiftLUT_ipel;              ///< Disparity LUT
+  Int****             m_aiBaseViewShiftLUT_fpos;              ///< Disparity LUT
+#endif
 
 protected:
   // create and delete arrays
@@ -115,6 +119,10 @@ protected:
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 );
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2 );
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
+
+#if NTT_SUBPEL
+  Void                    xCreateLUTs_Subpel  ( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Int****& raiLUT0, Int****& raiLUT1 );
+#endif
 
   // functions for reading, initialization, sorting, getting data, etc.
   Void  xReadCameraParameterFile  ( Char* pchCfgFileName );
@@ -142,7 +150,9 @@ protected:
   Void  xSetCodedScaleOffset      ( UInt uiFrame );
   Void  xSetShiftParametersAndLUT ( UInt uiNumViewDim1, UInt uiNumViewDim2, UInt uiFrame, Bool bExternalReference, Double****& radLUT, Int****& raiLUT, Double***& radShiftParams, Int64***& raiShiftParams );
   Void  xSetShiftParametersAndLUT ( UInt uiFrame );
-
+#if NTT_SUBPEL
+  Void  xSetShiftParametersAndLUT ( UInt uiNumViewDim1, UInt uiNumViewDim2, UInt uiFrame, Int****& raiLUT_Disp, Int****& raiLUT_Fracpos );
+#endif
 
   // getting conversion parameters for disparity to virtual depth conversion
   Void  xGetCameraShifts          ( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Double& rdCamPosShift, Double& rdPicPosShift );
@@ -210,6 +220,11 @@ public:
   Double****          getBaseViewShiftLUTD      ()  { return m_adBaseViewShiftLUT;   }
   Int****             getSynthViewShiftLUTI     ()  { return m_aiSynthViewShiftLUT;  }
   Int****             getBaseViewShiftLUTI      ()  { return m_aiBaseViewShiftLUT;   }
+
+#if NTT_SUBPEL
+  Int****             getBaseViewIPelLUT        ()  { return m_aiBaseViewShiftLUT_ipel;   }
+  Int****             getBaseViewFPosLUT        ()  { return m_aiBaseViewShiftLUT_fpos;   }
+#endif
 
   Bool                getVaryingCameraParameters()  { return m_bCamParsVaryOverTime;    }
   UInt                getCamParsCodedPrecision  ()  { return m_uiCamParsCodedPrecision; }

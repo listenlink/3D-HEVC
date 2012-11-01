@@ -717,7 +717,11 @@ Void TEncSbac::codeAlfCtrlDepth()
 Void TEncSbac::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
+#if FORCE_REF_VSP==1
+  UInt uiSymbol = (pcCU->isSkipped( uiAbsPartIdx ) || pcCU->isVspMode( uiAbsPartIdx )) ? 1 : 0;
+#else
   UInt uiSymbol = pcCU->isSkipped( uiAbsPartIdx ) ? 1 : 0;
+#endif
   UInt uiCtxSkip = pcCU->getCtxSkipFlag( uiAbsPartIdx ) ;
   m_pcBinIf->encodeBin( uiSymbol, m_cCUSkipFlagSCModel.get( 0, 0, uiCtxSkip ) );
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
@@ -728,6 +732,23 @@ Void TEncSbac::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   DTRACE_CABAC_V( uiSymbol );
   DTRACE_CABAC_T( "\n");
 }
+
+#if FORCE_REF_VSP==1
+Void TEncSbac::codeVspFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  // get context function is here
+  UInt uiSymbol = (UInt)pcCU->isVspMode( uiAbsPartIdx );
+  UInt uiCtxSkip = pcCU->getCtxSkipFlag( uiAbsPartIdx ) ;
+  m_pcBinIf->encodeBin( uiSymbol, m_cCUSkipFlagSCModel.get( 0, 0, uiCtxSkip ) );
+  DTRACE_CABAC_VL( g_nSymbolCounter++ );
+  DTRACE_CABAC_T( "\tVspFlag" );
+  DTRACE_CABAC_T( "\tuiCtxSkip: ");
+  DTRACE_CABAC_V( uiCtxSkip );
+  DTRACE_CABAC_T( "\tuiSymbol: ");
+  DTRACE_CABAC_V( uiSymbol );
+  DTRACE_CABAC_T( "\n");
+}
+#endif
 
 /** code merge flag
  * \param pcCU
@@ -763,7 +784,16 @@ Void TEncSbac::codeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx )
   UInt uiUnaryIdx = pcCU->getMergeIndex( uiAbsPartIdx );
   uiNumCand = pcCU->getSlice()->getMaxNumMergeCand();
 #if HHI_MPI
+#if VSP_TEXT_ONLY
+  TComDataCU* pcTextCU = pcCU->getSlice()->getSPS()->getUseMVI() ? pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() ) : NULL;
+  Int aiRefIdxVsp[2] = { pcTextCU ? pcTextCU->getCUMvField( RefPicList(0) )->getRefIdx( uiAbsPartIdx ) : -1,
+                         pcTextCU ? pcTextCU->getCUMvField( RefPicList(1) )->getRefIdx( uiAbsPartIdx ) : -1 };
+  const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE
+    && !( aiRefIdxVsp[0] >= 0 && pcTextCU->getSlice()->getRefViewId( RefPicList(0), aiRefIdxVsp[0] ) == NUM_VIEW_VSP )
+    && !( aiRefIdxVsp[1] >= 0 && pcTextCU->getSlice()->getRefViewId( RefPicList(1), aiRefIdxVsp[1] ) == NUM_VIEW_VSP );
+#else
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
+#endif
   if( bMVIAvailable )
   {
     const Bool bUseMVI = pcCU->getTextureModeDepth( uiAbsPartIdx ) != -1;

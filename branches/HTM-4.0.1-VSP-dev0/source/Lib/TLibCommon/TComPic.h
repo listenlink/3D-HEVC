@@ -64,6 +64,11 @@ private:
   
   TComPicYuv*           m_apcPicYuv[2];           //  Texture,  0:org / 1:rec
   
+#if VSP_N
+  TComPicYuv*           m_apcPicYuvAvail;         //  Availability Map - Does the given pixel can be synthesised in receiver
+  TComPicYuv*           m_apcPicYuvSynth;         //  Sythesied image
+#endif
+
 #if DEPTH_MAP_GENERATION
   TComPicYuv*           m_pcPredDepthMap;         //  estimated depth map
 #if PDM_REMOVE_DEPENDENCE
@@ -84,6 +89,9 @@ private:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*           m_pcResidual;             //  residual buffer (coded or inter-view predicted residual)
+#endif
+#if DEBUGIMGOUT
+  TComPicYuv*           m_acPicYuvDebug;          //  debug image
 #endif
 
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
@@ -144,6 +152,13 @@ public:
   
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[0]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[1]; }
+#if VSP_N
+  Void          setPicYuvAvail( TComPicYuv* pc ){ m_apcPicYuvAvail = pc; }
+  Void          setPicYuvSynth( TComPicYuv* pc ){ m_apcPicYuvSynth = pc; }
+  TComPicYuv*   getPicYuvAvail()      { return  m_apcPicYuvAvail; }
+  TComPicYuv*   getPicYuvSynth()      { return  m_apcPicYuvSynth; }
+  Void          checkSynthesisAvailability(  /*TComDataCU*& rpcBestCU, */UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth, Bool *&rpbCUSynthesied);
+#endif
 #if HHI_INTERVIEW_SKIP
   TComPicYuv*   getUsedPelsMap()      { return  m_pcUsedPelsMap; }
 #endif
@@ -167,6 +182,10 @@ public:
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*   getResidual()         { return  m_pcResidual; }
+#endif
+
+#if DEBUGIMGOUT
+  TComPicYuv*   getPicYuvRecDbg()     { return  m_acPicYuvDebug; }
 #endif
 
 #if SONY_COLPIC_AVAILABILITY

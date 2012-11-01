@@ -45,6 +45,9 @@
 #include "TLibCommon/TComTrQuant.h"
 #include "TLibCommon/TComPrediction.h"
 #include "TDecEntropy.h"
+#if DEBUGIMGOUT || DEBUGLOGOUT
+#include "TLibCommon/DebugLog.h"
+#endif
 
 //! \ingroup TLibDecoder
 //! \{
@@ -63,6 +66,10 @@ private:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComYuv**           m_ppcYuvResPred;    ///< residual prediction buffer
 #endif
+#if VSP_N
+  TComYuv**           m_ppcYuvAvail;      ///< array of available map buffer
+  TComYuv**           m_ppcYuvSynth;      ///< array of synth buffer
+#endif
   TComDataCU**        m_ppcCU;            ///< CU data array
   
   // access channel
@@ -76,6 +83,10 @@ public:
   TDecCu();
   virtual ~TDecCu();
   
+#if DEBUGLOGOUT
+  DebugLog            m_cDebug;
+#endif
+
   /// initialize access channels
   Void  init                    ( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction );
   
@@ -119,6 +130,10 @@ protected:
   Void setdQPFlag               ( Bool b )                { m_bDecodeDQP = b;           }
 #if LOSSLESS_CODING 
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt absPartIdx, UInt depth);
+#endif
+#if DEBUGIMGOUT
+  Void xColsetToPic             ( TComDataCU* pcCU, TComPicYuv* pcPicYuv, UInt uiZorderIdx, UInt uiDepth );
+  Void xColsetToPicMerge        ( TComDataCU* pcCU, TComPicYuv* pcPicYuv, UInt uiZorderIdx, UInt uiDepth );
 #endif
 };
 

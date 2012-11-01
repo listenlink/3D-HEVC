@@ -76,6 +76,18 @@ public:
 
   Bool  isInitialized() const { return m_bInitialized; }
 
+#if VSP_N
+  Double****          getBaseViewShiftLUTD      ()  { return m_adBaseViewShiftLUT;   }
+  Int****             getBaseViewShiftLUTI      ()  { return m_aiBaseViewShiftLUT;   }
+  Int**               getBaseViewOffsetI        ()  { return m_aaiCodedOffset;   }
+  Int**               getBaseViewScaleI         ()  { return m_aaiCodedScale;   }
+  Bool                getNearestBaseView        ( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft);
+#if NTT_SUBPEL
+  Int****             getBaseViewIPelLUT        ()  { return m_aiBaseViewShiftLUT_ipel;   }
+  Int****             getBaseViewFPosLUT        ()  { return m_aiBaseViewShiftLUT_fpos;   }
+#endif
+#endif
+
 private:
   Bool  xIsComplete ();
   Void  xOutput     ( Int iPOC );
@@ -93,7 +105,86 @@ private:
   Int     m_iLastViewId;
   Int     m_iLastPOC;
   UInt    m_uiMaxViewId;
+
+#if VSP_N
+  UInt    m_uiBitDepthForLUT;
+  UInt    m_iLog2Precision;
+  UInt    m_uiInputBitDepth;
+  // look-up tables
+  Double****          m_adBaseViewShiftLUT;                    ///< Disparity LUT
+  Int****             m_aiBaseViewShiftLUT;                    ///< Disparity LUT
+  Void xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT);
+  Void xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT);
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 );
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2 );
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
+
+#if NTT_SUBPEL
+  Int****             m_aiBaseViewShiftLUT_ipel;              ///< Disparity LUT
+  Int****             m_aiBaseViewShiftLUT_fpos;              ///< Disparity LUT
+  Void xCreateLUTs_Subpel ( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Int****& raiLUT0, Int****& raiLUT1 );
+  Void xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Int****& raiLUT_ipel, Int****& raiLUT_fpos);
+#endif
+#endif
 };
+
+#if VSP_N
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
+    {
+      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
+      {
+        for( UInt uiM = 0; uiM < uiSize3; uiM++ )
+        {
+          delete[] rpt[ uiK ][ uiL ][ uiM ];
+        }
+        delete[] rpt[ uiK ][ uiL ];
+      }
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+
+
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2 )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
+    {
+      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
+      {
+        delete[] rpt[ uiK ][ uiL ];
+      }
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+
+
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize; uiK++ )
+    {
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+#endif
 
 /// decoder class
 class TDecTop
@@ -154,6 +245,11 @@ private:
   CamParsCollector*       m_pcCamParsCollector;
   NalUnitType             m_nalUnitTypeBaseView;  
 
+#if VSP_N
+  TComPic*                m_pcPicVSP; //view synthesis prediction buffer for current POC to be coded
+  TComPic*                m_pcPicAvail;
+#endif
+
 public:
   TDecTop();
   virtual ~TDecTop();
@@ -194,6 +290,10 @@ public:
   Void                setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
   TAppDecTop*         getTAppDecTop()                           { return  m_tAppDecTop; }
   NalUnitType         getNalUnitTypeBaseView()                  { return m_nalUnitTypeBaseView; }
+
+#if VSP_N
+  TComPic*            getVSPBuf()                               { return m_pcPicVSP; }
+#endif
 
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

@@ -55,6 +55,15 @@ CamParsCollector::CamParsCollector()
     m_aaiCodedOffset      [ uiId ] = new Int [ MAX_VIEW_NUM ];
     m_aaiCodedScale       [ uiId ] = new Int [ MAX_VIEW_NUM ];
   }
+
+#if VSP_N
+  xCreateLUTs( (UInt)MAX_VIEW_NUM, (UInt)MAX_VIEW_NUM, m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+  m_iLog2Precision   = LOG2_DISP_PREC_LUT;
+  m_uiBitDepthForLUT = 8; //fixed
+#if NTT_SUBPEL
+  xCreateLUTs_Subpel( (UInt)MAX_VIEW_NUM, (UInt)MAX_VIEW_NUM,  m_aiBaseViewShiftLUT_ipel,  m_aiBaseViewShiftLUT_fpos);
+#endif
+#endif
 }
 
 CamParsCollector::~CamParsCollector()
@@ -68,6 +77,15 @@ CamParsCollector::~CamParsCollector()
   delete [] m_aaiCodedScale;
   delete [] m_aiViewOrderIndex;
   delete [] m_aiViewReceived;
+
+#if VSP_N
+  xDeleteArray( m_adBaseViewShiftLUT, MAX_VIEW_NUM, MAX_VIEW_NUM, 2 );
+  xDeleteArray( m_aiBaseViewShiftLUT, MAX_VIEW_NUM, MAX_VIEW_NUM, 2 );
+#if NTT_SUBPEL
+  xDeleteArray( m_aiBaseViewShiftLUT_ipel, MAX_VIEW_NUM, MAX_VIEW_NUM, 2 );
+  xDeleteArray( m_aiBaseViewShiftLUT_fpos, MAX_VIEW_NUM, MAX_VIEW_NUM, 2 );
+#endif
+#endif
 }
 
 Void
@@ -81,6 +99,186 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile )
   m_iLastPOC                = -1;
   m_uiMaxViewId             = 0;
 }
+
+#if VSP_N
+Void
+CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT)
+{
+  //AOF( m_uiBitDepthForLUT == 8 );
+  //AOF(radLUT == NULL && raiLUT == NULL );
+
+  uiNumberSourceViews = Max( 1, uiNumberSourceViews );
+  uiNumberTargetViews = Max( 1, uiNumberTargetViews );
+
+  radLUT         = new Double***[ uiNumberSourceViews ];
+  raiLUT         = new Int   ***[ uiNumberSourceViews ];
+
+  for( UInt uiSourceView = 0; uiSourceView < uiNumberSourceViews; uiSourceView++ )
+  {
+    radLUT        [ uiSourceView ] = new Double**[ uiNumberTargetViews ];
+    raiLUT        [ uiSourceView ] = new Int   **[ uiNumberTargetViews ];
+
+    for( UInt uiTargetView = 0; uiTargetView < uiNumberTargetViews; uiTargetView++ )
+    {
+      radLUT        [ uiSourceView ][ uiTargetView ]      = new Double*[ 2 ];
+      radLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Double [ 257 ];
+      radLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Double [ 257 ];
+
+      raiLUT        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
+      raiLUT        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
+      raiLUT        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
+    }
+  }
+}
+
+Void 
+CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
+{
+  Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_uiCamParsCodedPrecision + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
+  Int     iLog2DivChroma = iLog2DivLuma + 1;
+
+  iOffset <<= m_uiBitDepthForLUT;
+
+  Double dScale  = (Double) iScale  / (( Double ) ( 1 << iLog2DivLuma ));
+  Double dOffset = (Double) iOffset / (( Double ) ( 1 << iLog2DivLuma ));
+
+  // offsets including rounding offsets
+  Int64 iOffsetLuma   = iOffset + ( ( 1 << iLog2DivLuma   ) >> 1 );
+  Int64 iOffsetChroma = iOffset + ( ( 1 << iLog2DivChroma ) >> 1 );
+
+
+  for( UInt uiDepthValue = 0; uiDepthValue < 256; uiDepthValue++ )
+  {
+
+    // real-valued look-up tables
+#if POZNAN_NONLINEAR_DEPTH
+    Double  dShiftLuma;
+    if( m_bUseNonlinearDepth )
+      dShiftLuma      = ( m_cNonlinearDepthModel.BackwardD( (Double)uiDepthValue, dScale) + dOffset ) * Double( 1 << m_iLog2Precision );
+    else
+      dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#else
+    Double  dShiftLuma      = ( (Double)uiDepthValue * dScale + dOffset ) * Double( 1 << m_iLog2Precision );
+#endif
+    Double  dShiftChroma    = dShiftLuma / 2;
+    radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = dShiftLuma;
+    radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = dShiftChroma;
+
+    // integer-valued look-up tables
+#if POZNAN_NONLINEAR_DEPTH
+    Int64   iTempScale;
+    if( m_bUseNonlinearDepth )
+      iTempScale      = (Int64)m_cNonlinearDepthModel.BackwardI(uiDepthValue, iScale);
+    else
+      iTempScale      = (Int64)uiDepthValue * iScale;
+#else
+    Int64   iTempScale      = (Int64)uiDepthValue * iScale;
+#endif
+    Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
+    Int64   iShiftChroma    = ( iTempScale + iOffsetChroma ) >> iLog2DivChroma;
+    raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = (Int)iShiftLuma;
+    raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = (Int)iShiftChroma;
+
+    // maximum deviation
+    //dMaxDispDev     = Max( dMaxDispDev,    fabs( Double( (Int) iTestScale   ) - dShiftLuma * Double( 1 << iLog2DivLuma ) ) / Double( 1 << iLog2DivLuma ) );
+    //dMaxRndDispDvL  = Max( dMaxRndDispDvL, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) );
+    //dMaxRndDispDvC  = Max( dMaxRndDispDvC, fabs( Double( (Int) iShiftChroma ) - dShiftChroma ) );
+  }
+
+  radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+  radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+  raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+  raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+}
+
+Bool
+CamParsCollector::getNearestBaseView( Int iSynthViewIdx, Int &riNearestViewIdx, Int &riRelDistToLeft, Bool& rbRenderFromLeft)
+{
+  /*
+  riNearestViewIdx = 0;
+
+  Bool bDecencdingVN = ( m_aiSortedBaseViews.size() >= 2 && m_aiSortedBaseViews[ 0 ] > m_aiSortedBaseViews[ 1 ] );
+  Int  iFactor       = ( bDecencdingVN ? -1 : 1 );
+
+  if( ( m_aiBaseId2SortedId[iSynthViewIdx] - m_aiBaseId2SortedId[riNearestViewIdx] ) * iFactor  <= 0 )
+  {
+    rbRenderFromLeft = true;
+  }
+  else
+  {
+    rbRenderFromLeft = false;
+  }
+
+  riRelDistToLeft = 128; //Not used for now;
+//*/
+  return true;
+}
+
+#if NTT_SUBPEL
+Void
+CamParsCollector::xCreateLUTs_Subpel( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Int****& raiLUT0, Int****& raiLUT1 )
+{
+  uiNumberSourceViews = Max( 1, uiNumberSourceViews );
+  uiNumberTargetViews = Max( 1, uiNumberTargetViews );
+
+  raiLUT0         = new Int   ***[ uiNumberSourceViews ];
+  raiLUT1         = new Int   ***[ uiNumberSourceViews ];
+
+  for( UInt uiSourceView = 0; uiSourceView < uiNumberSourceViews; uiSourceView++ )
+  {
+    raiLUT0        [ uiSourceView ] = new Int   **[ uiNumberTargetViews ];
+    raiLUT1        [ uiSourceView ] = new Int   **[ uiNumberTargetViews ];
+
+    for( UInt uiTargetView = 0; uiTargetView < uiNumberTargetViews; uiTargetView++ )
+    {
+      raiLUT0        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
+      raiLUT0        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
+      raiLUT0        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
+      raiLUT1        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
+      raiLUT1        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
+      raiLUT1        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
+    }
+  }
+}
+Void 
+CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Int****& raiLUT_ipel, Int****& raiLUT_fpos)
+{
+  Int   iLog2Div = m_uiBitDepthForLUT + m_uiCamParsCodedPrecision + 1 - m_iLog2Precision;   AOF( iLog2Div > 0 );
+  Int64 iOffset64   = ( Int64(iOffset) << m_uiBitDepthForLUT ) + ( ( 1 << iLog2Div ) >> 1 );
+
+  for( UInt uiDepthValue = 0; uiDepthValue < 256; uiDepthValue++ )
+  {
+    Int64   iTempScale      = (Int64)uiDepthValue * iScale;
+    Int     iShiftSubpel    = (Int) (( iTempScale + iOffset64 ) >> iLog2Div);
+    Int     iShiftPelLuma   = iShiftSubpel >> m_iLog2Precision; // better to have rounding ?
+    Int     iShiftPelChroma = iShiftPelLuma >> 1;
+
+    raiLUT_ipel[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = iShiftPelLuma;
+    raiLUT_ipel[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = iShiftPelChroma;
+    raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = iShiftSubpel - ( iShiftPelLuma << m_iLog2Precision );
+    raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = iShiftSubpel - ( iShiftPelChroma << (m_iLog2Precision+1) );
+
+#if 0 // NTT bugfix
+    if ( raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] < 0 )
+      raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = -4 - raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ];
+    if ( raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] < 0 )
+      raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = -8 - raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ];
+#endif
+
+#if _DEBUG
+    AOF( (raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ]>> m_iLog2Precision   ) == 0 );
+    AOF( (raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ]>>(m_iLog2Precision+1)) == 0 );
+#endif
+  }
+
+  raiLUT_ipel[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT_ipel[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+  raiLUT_ipel[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT_ipel[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+  raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+  raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT_fpos[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+}
+#endif
+
+#endif
 
 Void
 CamParsCollector::uninit()
@@ -163,6 +361,14 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedOffset() [ uiBaseId ];
+#if VSP_N
+        xInitLUTs( uiBaseId, uiViewId, m_aaiCodedScale[ uiBaseId ][ uiViewId ], m_aaiCodedOffset[ uiBaseId ][ uiViewId ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
+        xInitLUTs( uiViewId, uiBaseId, m_aaiCodedScale[ uiViewId ][ uiBaseId ], m_aaiCodedOffset[ uiViewId ][ uiBaseId ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
+#if NTT_SUBPEL
+        xInitLUTs( uiBaseId, uiViewId, m_aaiCodedScale[ uiBaseId ][ uiViewId ], m_aaiCodedOffset[ uiBaseId ][ uiViewId ], m_aiBaseViewShiftLUT_ipel, m_aiBaseViewShiftLUT_fpos );
+        xInitLUTs( uiViewId, uiBaseId, m_aaiCodedScale[ uiViewId ][ uiBaseId ], m_aaiCodedOffset[ uiViewId ][ uiBaseId ], m_aiBaseViewShiftLUT_ipel, m_aiBaseViewShiftLUT_fpos );
+#endif
+#endif  
       }
       else
       {
@@ -170,6 +376,14 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getSPS()->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getSPS()->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getSPS()->getInvCodedOffset() [ uiBaseId ];
+#if VSP_N
+        xInitLUTs( uiBaseId, uiViewId, m_aaiCodedScale[ uiBaseId ][ uiViewId ], m_aaiCodedOffset[ uiBaseId ][ uiViewId ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+        xInitLUTs( uiViewId, uiBaseId, m_aaiCodedScale[ uiViewId ][ uiBaseId ], m_aaiCodedOffset[ uiViewId ][ uiBaseId ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+#if NTT_SUBPEL
+        xInitLUTs( uiBaseId, uiViewId, m_aaiCodedScale[ uiBaseId ][ uiViewId ], m_aaiCodedOffset[ uiBaseId ][ uiViewId ], m_aiBaseViewShiftLUT_ipel, m_aiBaseViewShiftLUT_fpos );
+        xInitLUTs( uiViewId, uiBaseId, m_aaiCodedScale[ uiViewId ][ uiBaseId ], m_aaiCodedOffset[ uiViewId ][ uiBaseId ], m_aiBaseViewShiftLUT_ipel, m_aiBaseViewShiftLUT_fpos );
+#endif
+#endif
       }
     }
   }
@@ -184,6 +398,14 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
         m_aaiCodedOffset[ uiBaseId ][ uiViewId ]  = pcSlice->getCodedOffset   () [ uiBaseId ];
         m_aaiCodedScale [ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedScale () [ uiBaseId ];
         m_aaiCodedOffset[ uiViewId ][ uiBaseId ]  = pcSlice->getInvCodedOffset() [ uiBaseId ];
+#if VSP_N
+        xInitLUTs( uiBaseId, uiViewId, m_aaiCodedScale[ uiBaseId ][ uiViewId ], m_aaiCodedOffset[ uiBaseId ][ uiViewId ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+        xInitLUTs( uiViewId, uiBaseId, m_aaiCodedScale[ uiViewId ][ uiBaseId ], m_aaiCodedOffset[ uiViewId ][ uiBaseId ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+#if NTT_SUBPEL
+        xInitLUTs( uiBaseId, uiViewId, m_aaiCodedScale[ uiBaseId ][ uiViewId ], m_aaiCodedOffset[ uiBaseId ][ uiViewId ], m_aiBaseViewShiftLUT_ipel, m_aiBaseViewShiftLUT_fpos );
+        xInitLUTs( uiViewId, uiBaseId, m_aaiCodedScale[ uiViewId ][ uiBaseId ], m_aaiCodedOffset[ uiViewId ][ uiBaseId ], m_aiBaseViewShiftLUT_ipel, m_aiBaseViewShiftLUT_fpos );
+#endif
+#endif
       }
     }
   }
@@ -254,7 +476,7 @@ TDecTop::TDecTop()
   m_iViewOrderIdx = 0;
 #endif
 #if ENC_DEC_TRACE
-  g_hTrace = fopen( "TraceDec.txt", "wb" );
+  if(!g_hTrace) g_hTrace = fopen( "TraceDec.txt", "wb" );
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
 #endif
@@ -265,12 +487,18 @@ TDecTop::TDecTop()
   m_bFirstSliceInPicture    = true;
   m_bFirstSliceInSequence   = true;
   m_pcCamParsCollector = 0;
+
+#if VSP_N
+  m_pcPicVSP = NULL;
+  m_pcPicAvail = NULL;
+#endif
 }
 
 TDecTop::~TDecTop()
 {
 #if ENC_DEC_TRACE
-  fclose( g_hTrace );
+  if(g_hTrace) fclose( g_hTrace );
+  g_hTrace=NULL;
 #endif
 }
 
@@ -297,6 +525,22 @@ Void TDecTop::destroy()
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_cResidualGenerator.destroy();
 #endif
+
+#if VSP_N
+  if( m_pcPicVSP )
+  {
+    m_pcPicVSP->destroy();
+    delete m_pcPicVSP;
+    m_pcPicVSP = NULL;
+  }
+  if( m_pcPicAvail )
+  {
+    m_pcPicAvail->destroy();
+    delete m_pcPicAvail;
+    m_pcPicAvail = NULL;
+  }
+#endif
+
 }
 
 Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
@@ -731,6 +975,67 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
     //  Get a new picture buffer
     xGetNewPicBuffer (m_apcSlicePilot, pcPic);
+#if VSP_N
+#if VSP_SLICE_HEADER
+    if( m_apcSlicePilot->getVspFlag() )
+#endif
+    {
+      if( m_pcPicVSP == NULL )
+      {
+        m_pcPicVSP = new TComPic;
+        m_pcPicVSP->create( m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+        m_pcPicVSP->setCurrSliceIdx(0);
+        m_pcPicVSP->getCurrSlice()->setViewId( NUM_VIEW_VSP );
+        m_pcPicVSP->getCurrSlice()->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
+        m_pcPicVSP->getCurrSlice()->setSPS( m_apcSlicePilot->getSPS() );
+        m_pcPicVSP->getCurrSlice()->setPPS( m_apcSlicePilot->getPPS() );
+        m_pcPicVSP->getCurrSlice()->setPPSId( m_apcSlicePilot->getPPS()->getPPSId() );
+        m_pcPicVSP->getPicSym()->setNumColumnsMinus1( m_apcSlicePilot->getSPS()->getNumColumnsMinus1() );
+        m_pcPicVSP->getPicSym()->setNumRowsMinus1( m_apcSlicePilot->getSPS()->getNumRowsMinus1() );
+        m_pcPicVSP->getPicSym()->xCreateTComTileArray();
+        for (int i=0;i<m_pcPicVSP->getPicSym()->getNumberOfCUsInFrame();i++)
+        {
+          m_pcPicVSP->getPicSym()->getCU(i)->getCUMvField(RefPicList(0))->clearMvField();
+          m_pcPicVSP->getPicSym()->getCU(i)->getCUMvField(RefPicList(1))->clearMvField();
+        }
+#if DEPTH_MAP_GENERATION
+        UInt uiPdm                  = ( m_viewId ? m_apcSlicePilot->getSPS()->getPredDepthMapGeneration() : m_tAppDecTop->getSPSAccess()->getPdm() );
+        Bool bNeedPrdDepthMapBuffer = ( !m_isDepth && uiPdm > 0 );
+        if( bNeedPrdDepthMapBuffer )
+        {
+          m_pcPicVSP->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
+        }
+#endif
+      }
+      if( m_pcPicAvail == NULL )
+      {
+        m_pcPicAvail = new TComPic;
+        m_pcPicAvail->create( m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+        m_pcPicAvail->setCurrSliceIdx(0);
+        m_pcPicAvail->getCurrSlice()->setViewId( 99 );
+        m_pcPicAvail->getCurrSlice()->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
+        m_pcPicAvail->getCurrSlice()->setSPS( m_apcSlicePilot->getSPS() );
+        m_pcPicAvail->getCurrSlice()->setPPS( m_apcSlicePilot->getPPS() );
+        m_pcPicAvail->getCurrSlice()->setPPSId( m_apcSlicePilot->getPPS()->getPPSId() );
+        m_pcPicAvail->getPicSym()->setNumColumnsMinus1( m_apcSlicePilot->getSPS()->getNumColumnsMinus1() );
+        m_pcPicAvail->getPicSym()->setNumRowsMinus1( m_apcSlicePilot->getSPS()->getNumRowsMinus1() );
+        m_pcPicAvail->getPicSym()->xCreateTComTileArray();
+        for (int i=0;i<m_pcPicAvail->getPicSym()->getNumberOfCUsInFrame();i++)
+        {
+          m_pcPicAvail->getPicSym()->getCU(i)->getCUMvField(RefPicList(0))->clearMvField();
+          m_pcPicAvail->getPicSym()->getCU(i)->getCUMvField(RefPicList(1))->clearMvField();
+        }
+#if DEPTH_MAP_GENERATION
+        UInt uiPdm                  = ( m_viewId ? m_apcSlicePilot->getSPS()->getPredDepthMapGeneration() : m_tAppDecTop->getSPSAccess()->getPdm() );
+        Bool bNeedPrdDepthMapBuffer = ( !m_isDepth && uiPdm > 0 );
+        if( bNeedPrdDepthMapBuffer )
+        {
+          m_pcPicAvail->addPrdDepthMapBuffer( PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
+        }
+#endif
+      }
+    }
+#endif
 
 #if SONY_COLPIC_AVAILABILITY
     pcPic->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
@@ -757,6 +1062,28 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_cResidualGenerator.create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
+#endif
+#if !QC_MULTI_DIS_CAN
+#if VSP_N
+#if VSP_SLICE_HEADER
+    if( m_apcSlicePilot->getVspFlag() )
+#endif
+    {
+      UInt uiPdm                  = ( m_viewId ? m_apcSlicePilot->getSPS()->getPredDepthMapGeneration() : m_tAppDecTop->getSPSAccess()->getPdm() );
+      Bool bNeedPrdDepthMapBuffer = ( !m_isDepth && uiPdm > 0 );
+      if( bNeedPrdDepthMapBuffer )
+      {
+        if( m_pcPicVSP && m_pcPicVSP->getPredDepthMap() )
+        {
+          m_cDepthMapGenerator.clearDepthMap( m_pcPicVSP );
+        }
+        if( m_pcPicAvail && m_pcPicAvail->getPredDepthMap() )
+        {
+          m_cDepthMapGenerator.clearDepthMap( m_pcPicAvail );
+        }
+      }
+    }
+#endif
 #endif
   }
 
@@ -972,7 +1299,25 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     pcSlice->setTexturePic( pcTexturePic );
 
     std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
+#if VSP_N
+    Bool bUseVsp = (m_viewId!=0);
+#if VSP_TEXT_ONLY
+    if( m_isDepth ) bUseVsp = false;
+#endif
+#if VSP_SLICE_HEADER
+    if( !pcSlice->getVspFlag() ) bUseVsp = false;
+#endif
+
+#if VSP_SLICE_HEADER
+    if( bUseVsp )
+#endif
+      m_pcPicVSP->getCurrSlice()->setPOC( pcPic->getPOC() );
+
+    pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics, bUseVsp ? m_pcPicVSP : NULL );
+
+#else
     pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics );
+#endif
 
     // For generalized B
     // note: maybe not existed case (always L0 is copied to L1 if L1 is empty)
@@ -1067,6 +1412,20 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   }
 #endif
 
+#if VSP_N
+  if( m_pcCamParsCollector )
+  {
+    m_pcCamParsCollector->setSlice( pcSlice );
+  }
+#if VSP_SLICE_HEADER
+  if( pcSlice->getVspFlag() )
+#endif
+  if( getTAppDecTop()->getUseDepth() )
+  {
+    getTAppDecTop()->storeVSPInBuffer( m_pcPicVSP, m_pcPicAvail, pcSlice->getViewId(), pcSlice->getSPS()->getViewOrderIdx(), pcSlice->getPOC(), m_isDepth );
+  }
+#endif
+
   //  Decode a picture
   m_cGopDecoder.decompressGop(nalu.m_Bitstream, pcPic, false);
 
@@ -1107,6 +1466,17 @@ Void TDecTop::xDecodeSPS()
   m_parameterSetManagerDecoder.storePrefetchedSPS(sps);
 #if LCU_SYNTAX_ALF
   m_cAdaptiveLoopFilter.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+#endif
+
+#if VSP_N
+  if( !sps->isDepth() && sps->getViewId() == 0 && getTAppDecTop()->getVSPRendererTop() )
+  {
+#if NTT_SUBPEL
+    getTAppDecTop()->getVSPRendererTop()->init( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 5, 1, 0, 6 );
+#else
+    getTAppDecTop()->getVSPRendererTop()->init( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 );
+#endif
+  }
 #endif
 }
 

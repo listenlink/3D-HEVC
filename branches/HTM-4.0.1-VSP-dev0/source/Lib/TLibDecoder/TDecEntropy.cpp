@@ -53,6 +53,13 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 
+#if FORCE_REF_VSP==1
+Void TDecEntropy::decodeVspFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parseVspFlag( pcCU, uiAbsPartIdx, uiDepth );
+}
+#endif
+
 /** decode merge flag
  * \param pcSubCU
  * \param uiAbsPartIdx 
@@ -300,8 +307,23 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
         {
           decodeRefFrmIdxPU( pcCU,    uiSubPartIdx,              uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
+#if VSP_MV_ZERO
+          Int iRefIdx = pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->getRefIdx(uiSubPartIdx);
+          if( pcCU->getSlice()->getViewId() && iRefIdx >= 0 && (pcCU->getSlice()->getRefViewId( RefPicList( uiRefListIdx ), iRefIdx ) == NUM_VIEW_VSP) )
+          {
+            pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( TComMv(0, 0), pcCU->getPartitionSize( uiSubPartIdx ), uiSubPartIdx, uiDepth, uiPartIdx );
+            pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMv ( TComMv(0, 0), pcCU->getPartitionSize( uiSubPartIdx ), uiSubPartIdx, uiDepth, uiPartIdx );
+            pcCU->setMVPIdxSubParts( -1, RefPicList( uiRefListIdx ), uiSubPartIdx, uiPartIdx, pcCU->getDepth(uiSubPartIdx));
+            pcCU->setMVPNumSubParts( -1, RefPicList( uiRefListIdx ), uiSubPartIdx, uiPartIdx, pcCU->getDepth(uiSubPartIdx));
+          }
+          else
+          {
+#endif
           decodeMvdPU      ( pcCU,    uiSubPartIdx,              uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
           decodeMVPIdxPU   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
+#if VSP_MV_ZERO
+          }
+#endif
         }
       }
     }
