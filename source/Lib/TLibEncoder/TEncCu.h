@@ -45,6 +45,9 @@
 #include "TLibCommon/TComTrQuant.h"
 #include "TLibCommon/TComBitCounter.h"
 #include "TLibCommon/TComDataCU.h"
+#if DEBUGLOGOUT
+#include "TLibCommon/DebugLog.h"
+#endif
 
 #include "TEncEntropy.h"
 #include "TEncSearch.h"
@@ -112,6 +115,10 @@ private:
 #endif
 
 public:
+#if DEBUGLOGOUT
+  DebugLog                m_cDebug;
+#endif
+
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
   
@@ -147,7 +154,11 @@ protected:
 #endif
 #if AMP_MRG
 #if HHI_INTERVIEW_SKIP
-  Void xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFullyRendered, Bool bUseMRG = false  ) ;
+  Void xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFullyRendered, Bool bUseMRG = false
+#if FORCE_REF_VSP==1
+    , Bool bForceRefVsp = false
+#endif
+    ) ;
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
 #endif

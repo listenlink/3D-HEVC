@@ -126,6 +126,80 @@ Void TRenTop::xConvertInputVideo( PelImage* pcOrgInputImage, PelImage* pcConvInp
   }
 }
 
+#if NTT_SUBPEL
+Void TRenTop::xConvertInputVideoSubpel( PelImage* pcOrgInputImage, PelImage* pcConvInputImage, PelImage* pcInputDepth, Bool bMirror )
+{
+  PelImagePlane*  pcOrgPlane;
+  PelImagePlane*  pcConvPlane;
+  PelImagePlane*  pcDepthPlane;
+  PelImagePlane*  pcTmpPlane;
+
+  Int    ** ppiFposLUT = bMirror ? m_ppiFposLUTRightMirror : m_ppiFposLUTLeft;
+
+  AOT( m_iLog2SamplingFactor );
+  AOF( m_iInterpolationMode == eRenInt8Tap2 );
+
+  pcDepthPlane = pcInputDepth->getPlane( 0 );
+  pcTmpPlane = pcConvInputImage->getPlane( 0 );
+
+  AOF( m_bUVUp ); // Currently only m_bUVUp=true is supported
+  for (UInt uiPlane = 1; uiPlane < 3; uiPlane++)
+  {
+    pcOrgPlane  = pcOrgInputImage ->getPlane(uiPlane);
+    pcConvPlane = pcConvInputImage->getPlane(uiPlane);
+
+    if ( m_bUVUp )
+    {
+      TRenFilter::sampleCVerUp    (pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight()  , pcTmpPlane ->getPlaneData(), pcTmpPlane ->getStride() );
+      TRenFilter::sampleCConvHorUp(pcTmpPlane->getPlaneData(), pcTmpPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight()*2, pcConvPlane->getPlaneData(), pcConvPlane->getStride(), pcDepthPlane->getPlaneData(), pcDepthPlane->getStride(), ppiFposLUT );
+    }
+    else
+    {
+      TRenFilter::sampleCConv     (pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight()*2, pcConvPlane->getPlaneData(), pcConvPlane->getStride(), pcDepthPlane->getPlaneData(), pcDepthPlane->getStride(), ppiFposLUT );
+    }
+  }
+
+  pcOrgPlane  = pcOrgInputImage ->getPlane(0);
+  pcConvPlane = pcConvInputImage->getPlane(0);
+  TRenFilter::sampleConv(pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride(), pcDepthPlane->getPlaneData(), pcDepthPlane->getStride(), ppiFposLUT);
+}
+
+Void TRenTop::xConvertInputDepthSubpel( PelImage* pcOrgInputImage, PelImage* pcConvInputImage)
+{
+  PelImagePlane*  pcOrgPlane ;
+  PelImagePlane*  pcConvPlane;
+
+  // Full Plane
+  pcOrgPlane  = pcOrgInputImage ->getPlane(0);
+  pcConvPlane = pcConvInputImage->getPlane(0);
+
+  AOT( m_iLog2SamplingFactor );
+  AOF( m_iInterpolationMode == eRenInt8Tap2 );
+
+  TRenFilter::sampleHorUp(m_iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+
+  AOF( m_bUVUp );
+  if ( !m_bUVUp ) //GT: depth down
+  {
+    // Quarter Plane
+    PelImagePlane* pcTempPlane = new PelImagePlane(pcOrgInputImage->getPlane(0)->getWidth(), ( pcOrgInputImage->getPlane(0)->getHeight() >> 1), REN_LUMA_MARGIN );
+
+    TRenFilter::sampleVerDown2Tap13(pcOrgInputImage->getPlane(0), pcTempPlane, PICYUV_PAD);
+    pcConvPlane = pcConvInputImage->getPlane(1);
+
+    if ( m_iLog2SamplingFactor == 0 )
+    {
+      TRenFilter::sampleHorDown2Tap13(pcTempPlane, pcConvPlane, 0 );
+    }
+    else
+    {
+      TRenFilter::sampleHorUp    ( m_iLog2SamplingFactor - 1, pcTempPlane->getPlaneData(), pcTempPlane->getStride(), pcTempPlane->getWidth(), pcTempPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+    }
+    delete pcTempPlane;
+  }
+}
+#endif
+
 Void TRenTop::xConvertInputDepth( PelImage* pcOrgInputImage, PelImage* pcConvInputImage)
 {
   PelImagePlane*  pcOrgPlane ;
@@ -192,6 +266,34 @@ Void TRenTop::xConvertInputData( PelImage* pcOrgInputImage, PelImage* pcOrgInput
   }
 }
 
+#if NTT_SUBPEL
+Void TRenTop::xConvertInputDataSubpel( PelImage* pcOrgInputImage, PelImage* pcOrgInputDepth, PelImage* pcConvInputImage, PelImage* pcConvInputDepth, Bool bMirror )
+{
+  //ToDo: remove unnecessary copying
+  if ( bMirror )
+  {
+    m_pcTempImage->getPlane(0)->assign( pcOrgInputDepth->getPlane(0) );
+    TRenFilter::mirrorHor( m_pcTempImage->getPlane(0) );
+    m_pcTempImage->getPlane(0)->extendMargin();
+    xConvertInputDepthSubpel( m_pcTempImage, pcConvInputDepth );
+
+    m_pcTempImage->assign( pcOrgInputImage );
+    TRenFilter::mirrorHor( m_pcTempImage );
+    m_pcTempImage->extendMargin();
+    xConvertInputVideoSubpel( m_pcTempImage, pcConvInputImage, pcConvInputDepth, bMirror );
+  }
+  else
+  {
+    m_pcTempImage->getPlane(0)->assign( pcOrgInputDepth->getPlane(0) );
+    m_pcTempImage->getPlane(0)->extendMargin();
+    xConvertInputDepthSubpel( m_pcTempImage, pcConvInputDepth );
+
+    m_pcTempImage->assign( pcOrgInputImage );
+    m_pcTempImage->extendMargin();
+    xConvertInputVideoSubpel( m_pcTempImage, pcConvInputImage, pcConvInputDepth, bMirror );
+  }
+}
+#endif
 
 Void TRenTop::xConvertOutputData( PelImage* pcOrgOutputImage, PelImage* pcConvOutputImage, Bool bMirror )
 {
@@ -228,6 +330,26 @@ Void TRenTop::xConvertOutputData( PelImage* pcOrgOutputImage, PelImage* pcConvOu
 
 }
 
+#if VSP_N
+Void TRenTop::xConvertOutputDataPlane0( PelImage* pcOrgOutputImage, PelImage* pcConvOutputImage, Bool bMirror )
+{
+  Int iLog2SamplingFactor = m_iLog2SamplingFactor;
+
+  PelImagePlane* pcOrgPlane  = pcOrgOutputImage ->getPlane(0);
+  PelImagePlane* pcConvPlane = pcConvOutputImage->getPlane(0);
+
+  pcOrgPlane->extendMargin();
+
+  TRenFilter::sampleHorDown( iLog2SamplingFactor, pcOrgPlane->getPlaneData(), pcOrgPlane->getStride(), pcOrgPlane->getWidth(), pcOrgPlane->getHeight(), pcConvPlane->getPlaneData(), pcConvPlane->getStride());
+
+  if ( bMirror )
+  {
+    TRenFilter::mirrorHor( pcConvOutputImage );
+  }
+
+}
+#endif
+
 Void TRenTop::setShiftLUTs( Double** ppdShiftLUTLeft, Int** ppiShiftLUTLeft, Int** ppiBaseShiftLUTLeft, Double** ppdShiftLUTRight, Int** ppiShiftLUTRight, Int** ppiBaseShiftLUTRight,  Int iRelDistToLeft )
 {
   m_ppdShiftLUTLeft  = ppdShiftLUTLeft;
@@ -254,6 +376,25 @@ Void TRenTop::setShiftLUTs( Double** ppdShiftLUTLeft, Int** ppiShiftLUTLeft, Int
   }
 }
 
+#if NTT_SUBPEL
+Void TRenTop::setFposLUTs( Int** ppiFposLUTLeft, Int** ppiFposLUTRight )
+{
+  m_ppiFposLUTLeft  = ppiFposLUTLeft;
+  m_ppiFposLUTRight = ppiFposLUTRight;
+
+  if (  m_ppiFposLUTRight != NULL )
+  {
+    for( UInt uiPlane = 0; uiPlane < 2; uiPlane++)
+    {
+      for (UInt uiDepthValue = 0; uiDepthValue <= 256; uiDepthValue++)
+      {
+        m_ppiFposLUTRightMirror[uiPlane][uiDepthValue] = - m_ppiFposLUTRight[uiPlane][uiDepthValue];
+      }
+    }
+  }
+}
+#endif
+
 Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDepth, TComPicYuv* pcPicYuvSynthOut, Bool bRenderFromLeft )
 {
   AOF( m_bExtrapolate );
@@ -277,6 +418,42 @@ Void TRenTop::extrapolateView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDe
   xPostProcessImage (&cOutputImage, &cOutputImage);
   xCutMargin        ( &cOutputImage );
 };
+
+#if VSP_N
+Void TRenTop::extrapolateAvailabilityView( TComPicYuv* pcPicYuvVideo, TComPicYuv* pcPicYuvDepth, TComPicYuv* pcPicYuvSynthOut, TComPicYuv* pcPicYuvAvailOut, Bool bRenderFromLeft )
+{
+  AOF( m_bExtrapolate );
+  AOF( bRenderFromLeft ? m_ppiShiftLUTLeft || m_ppdShiftLUTLeft : m_ppiShiftLUTRight || m_ppdShiftLUTRight );
+  AOF( m_auiInputResolution[0] == pcPicYuvVideo->getWidth ());
+  AOF( m_auiInputResolution[1] == pcPicYuvVideo->getHeight());
+
+  PelImage cInputImage ( pcPicYuvVideo    );
+  PelImage cInputDepth ( pcPicYuvDepth    , true);
+  PelImage cOutputImage( pcPicYuvSynthOut );
+  PelImage cFillImage  ( pcPicYuvAvailOut );
+
+  m_pcOutputImage->init();
+  m_pcFilled     ->assign(REN_IS_HOLE);
+
+  xPreProcessDepth ( &cInputDepth,  &cInputDepth);
+#if NTT_SUBPEL
+  if( m_iInterpolationMode == eRenInt8Tap2 )
+    xConvertInputDataSubpel(&cInputImage, &cInputDepth, m_pcInputImage, m_pcInputDepth, !bRenderFromLeft );
+  else
+    xConvertInputData( &cInputImage, &cInputDepth, m_pcInputImage, m_pcInputDepth, !bRenderFromLeft );
+#else
+  xConvertInputData( &cInputImage, &cInputDepth, m_pcInputImage, m_pcInputDepth, !bRenderFromLeft );
+#endif
+  xShiftPixels(m_pcInputImage, m_pcInputDepth, m_pcOutputImage, m_pcFilled, bRenderFromLeft);
+  xRemBoundaryNoise ( m_pcOutputImage, m_pcFilled, m_pcOutputImage, bRenderFromLeft); // Erode
+  xFillHoles        ( m_pcOutputImage, m_pcFilled, m_pcOutputImage, bRenderFromLeft);
+  xConvertOutputData( m_pcOutputImage, &cOutputImage, !bRenderFromLeft );
+  //if (!bRenderFromLeft)  TRenFilter::mirrorHor( &cFillImage );
+  xConvertOutputDataPlane0( m_pcFilled, &cFillImage, !bRenderFromLeft );
+  xPostProcessImage (&cOutputImage, &cOutputImage);
+  xCutMargin        ( &cOutputImage );
+};
+#endif
 
 Void TRenTop::getUsedSamplesMap( TComPicYuv* pcPicYuvDepth, TComPicYuv* pcUsedSampleMap, Bool bRenderFromLeft )
 {
@@ -750,6 +927,9 @@ Void TRenTop::xShiftPlanePixels( PelImagePlane** apcInPlane, PelImagePlane* pcDe
   switch ( m_iInterpolationMode)
   {
   case eRenIntFullPel:
+#if NTT_SUBPEL
+  case eRenInt8Tap2:
+#endif
     xShiftPlanePixelsFullPel( apcInPlane, pcDepthPlane, apcOutPlane, pcPlaneFilled, uiNumberOfPlanes);
     break;
   case eRenIntFEM:
@@ -825,10 +1005,39 @@ Void TRenTop::xShiftPlanePixelsFullPel( PelImagePlane** apcInputPlanes, PelImage
             apcOutputData[uiCurPlane][iShiftedPos] = apcInputData[uiCurPlane][iPosX];
           }
           pcFilledData[iShiftedPos] = REN_IS_FILLED;
+
+#if NTT_SUBPEL
+          if(m_bInstantHoleFilling && (iDiff > 0) )
+          {
+            Int iRefPos = (iPrevShiftedPos == -1) ? iShiftedPos : iPrevShiftedPos;
+            
+            for (Int iCurPos = iPrevShiftedPos+1; iCurPos < iShiftedPos; iCurPos++)
+            {
+              for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
+              {
+                apcOutputData[uiCurPlane][iCurPos] =  apcOutputData[uiCurPlane][iRefPos];
+              }
+              pcFilledData[iCurPos] = REN_IS_FILLED;
+            }
+          }
+#endif
         }
         iPrevShiftedPos = iShiftedPos;
       }
     }
+#if NTT_SUBPEL
+    if( (iPrevShiftedPos+1) != iWidth )
+    {
+      for (Int iCurPos = iPrevShiftedPos+1; iCurPos < iWidth; iCurPos++)
+      {
+        for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
+        {
+          apcOutputData[uiCurPlane][iCurPos] =  apcOutputData[uiCurPlane][iPrevShiftedPos];
+        }
+        pcFilledData[iCurPos] = REN_IS_FILLED;
+      }
+    }
+#endif
     for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
     {
       apcOutputData[uiCurPlane] += iOutputStride;
@@ -1449,12 +1658,12 @@ Void TRenTop::xFillPlaneHoles(PelImagePlane** apcInputPlanes,  PelImagePlane* pc
     Int iSourcePos = iXPosSearch;
 
     for( Int iXPos = iSourcePos + 1; iXPos <  iWidth; iXPos++)
-        {
+    {
       for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
-          {
+      {
         apcOutputData[uiCurPlane][iXPos] = apcInputData[uiCurPlane][iSourcePos];
       }
-            }
+    }
 
     // Fill Left Gap
     iXPosSearch = 0;
@@ -1468,8 +1677,8 @@ Void TRenTop::xFillPlaneHoles(PelImagePlane** apcInputPlanes,  PelImagePlane* pc
       for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
       {
         apcOutputData[uiCurPlane][iXPos] = apcInputData[uiCurPlane][iSourcePos];
-          }
-        }
+      }
+    }
 
     // Go to next line
     for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
@@ -2032,6 +2241,14 @@ TRenTop::TRenTop()
   m_ppiShiftLUTRightMirror[0] = new Int[257];
   m_ppiShiftLUTRightMirror[1] = new Int[257];
 
+#if NTT_SUBPEL
+  m_ppiFposLUTLeft   = 0;
+  m_ppiFposLUTRight  = 0;
+  m_ppiFposLUTRightMirror    = new Int*[2];
+  m_ppiFposLUTRightMirror[0] = new Int[257];
+  m_ppiFposLUTRightMirror[1] = new Int[257];
+#endif
+
   m_aiShiftLUTCur    = 0;
   m_piInvZLUTLeft  = new Int[257];
   m_piInvZLUTRight = new Int[257];
@@ -2115,7 +2332,11 @@ Void TRenTop::init(UInt uiImageWidth,
   // Hole Filling
   m_iHoleFillingMode = iHoleFillingMode;
 
+#if NTT_SUBPEL
+  m_bInstantHoleFilling   = (m_iInterpolationMode == eRenInt8Tap || m_iInterpolationMode == eRenInt8Tap2 ) && (m_iHoleFillingMode != 0 );
+#else
   m_bInstantHoleFilling   = (m_iInterpolationMode == eRenInt8Tap ) && (m_iHoleFillingMode != 0 );
+#endif
 
   // PostProcessing
   m_iPostProcMode    = iPostProcMode;
@@ -2153,7 +2374,7 @@ Void TRenTop::init(UInt uiImageWidth,
     for (UInt uiEntry = 0; uiEntry < iNumEntries; uiEntry++)
     {
       m_aaiSubPelShift[uiEntry] = new Int[ iNumEntries ];
-        }
+    }
 
     TRenFilter::setSubPelShiftLUT(m_iRelShiftLUTPrec, m_aaiSubPelShift, -1);
   }
@@ -2182,6 +2403,15 @@ TRenTop::~TRenTop()
     delete[] m_ppiShiftLUTRightMirror[1];
     delete[] m_ppiShiftLUTRightMirror;
   };
+
+#if NTT_SUBPEL
+  if ( m_ppiFposLUTRightMirror != NULL )
+  {
+    delete[] m_ppiFposLUTRightMirror[0];
+    delete[] m_ppiFposLUTRightMirror[1];
+    delete[] m_ppiFposLUTRightMirror;
+  };
+#endif
 
   if (m_piInvZLUTLeft      != NULL ) delete[] m_piInvZLUTLeft   ;
   if (m_piInvZLUTLeft      != NULL ) delete[] m_piInvZLUTRight  ;

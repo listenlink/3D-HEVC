@@ -88,6 +88,36 @@ TAppComCamPara::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews,
   }
 }
 
+#if NTT_SUBPEL
+Void
+TAppComCamPara::xCreateLUTs_Subpel( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Int****& raiLUT0, Int****& raiLUT1 )
+{
+  AOF( m_uiBitDepthForLUT == 8 );
+  AOF( raiLUT0 == NULL && raiLUT1 == NULL );
+
+  uiNumberSourceViews = Max( 1, uiNumberSourceViews );
+  uiNumberTargetViews = Max( 1, uiNumberTargetViews );
+
+  raiLUT0         = new Int   ***[ uiNumberSourceViews ];
+  raiLUT1         = new Int   ***[ uiNumberSourceViews ];
+
+  for( UInt uiSourceView = 0; uiSourceView < uiNumberSourceViews; uiSourceView++ )
+  {
+    raiLUT0        [ uiSourceView ] = new Int   **[ uiNumberTargetViews ];
+    raiLUT1        [ uiSourceView ] = new Int   **[ uiNumberTargetViews ];
+
+    for( UInt uiTargetView = 0; uiTargetView < uiNumberTargetViews; uiTargetView++ )
+    {
+      raiLUT0        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
+      raiLUT0        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
+      raiLUT0        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
+      raiLUT1        [ uiSourceView ][ uiTargetView ]      = new Int*   [ 2 ];
+      raiLUT1        [ uiSourceView ][ uiTargetView ][ 0 ] = new Int    [ 257 ];
+      raiLUT1        [ uiSourceView ][ uiTargetView ][ 1 ] = new Int    [ 257 ];
+    }
+  }
+}
+#endif
 
 Void
 TAppComCamPara::xCreate2dArray( UInt uiNum1Ids, UInt uiNum2Ids, Int**& raaiArray )
@@ -927,6 +957,62 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
   }
 }
 
+#if NTT_SUBPEL
+Void
+TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumberTargetViews, UInt uiFrame, Int****& raiLUT_Disp, Int****& raiLUT_Fracpos )
+{
+  if( uiNumberSourceViews <= 1 || uiNumberTargetViews == 0 )
+  {
+    return;
+  }
+  AOF( raiLUT_Disp != NULL && raiLUT_Fracpos != NULL );
+  AOF( m_uiBitDepthForLUT == 8 );
+
+  Int     iLog2Div = m_uiBitDepthForLUT + m_uiCamParsCodedPrecision + 1 - m_iLog2Precision;   AOF( iLog2Div > 0 );
+  for( UInt uiSourceView = 0; uiSourceView < uiNumberSourceViews; uiSourceView++ )
+  {
+    for( UInt uiTargetView = 0; uiTargetView < uiNumberTargetViews; uiTargetView++ )
+    {
+      // integer-valued scale and offset
+      Int64 iScale, iOffset;
+      xGetShiftParameterInt ( uiSourceView, uiTargetView, uiFrame, false, true, iScale, iOffset );
+
+      // offsets including rounding offsets
+      iOffset += ( 1 << iLog2Div ) >> 1;
+
+      for( UInt uiDepthValue = 0; uiDepthValue < 256; uiDepthValue++ )
+      {
+        Int64   iTempScale      = (Int64)uiDepthValue * iScale;
+        Int     iShiftSubpel    = (Int) (( iTempScale + iOffset ) >> iLog2Div);
+        Int     iShiftPelLuma   = iShiftSubpel >> m_iLog2Precision; // better to have rounding ?
+        Int     iShiftPelChroma = iShiftPelLuma >> 1;
+
+        raiLUT_Disp   [ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = iShiftPelLuma;
+        raiLUT_Disp   [ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = iShiftPelChroma;
+        raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = iShiftSubpel - ( iShiftPelLuma << m_iLog2Precision );
+        raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = iShiftSubpel - ( iShiftPelChroma << (m_iLog2Precision+1) );
+
+#if 0 // NTT bugfix
+        if ( raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] < 0 )
+          raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = -4 - raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ];
+        if ( raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] < 0 )
+          raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = -4 - raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ];
+#endif
+
+#if _DEBUG
+        AOF( (raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ]>> m_iLog2Precision   ) == 0 );
+        AOF( (raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ]>>(m_iLog2Precision+1)) == 0 );
+#endif
+      }
+
+      raiLUT_Disp   [ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT_Disp   [ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+      raiLUT_Disp   [ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT_Disp   [ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+      raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
+      raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 1 ][ 256 ] = raiLUT_Fracpos[ uiSourceView ][ uiTargetView ][ 1 ][ 255 ];
+    }
+  }
+}
+#endif
 
 Void
 TAppComCamPara::xSetShiftParametersAndLUT( UInt uiFrame )
@@ -935,6 +1021,9 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiFrame )
   xSetCodedScaleOffset     (                                                          uiFrame );
   xSetShiftParametersAndLUT( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  uiFrame, false, m_adBaseViewShiftLUT,  m_aiBaseViewShiftLUT,  m_adBaseViewShiftParameter,  m_aiBaseViewShiftParameter  );
   xSetShiftParametersAndLUT( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfSynthViews, uiFrame, true,  m_adSynthViewShiftLUT, m_aiSynthViewShiftLUT, m_adSynthViewShiftParameter, m_aiSynthViewShiftParameter );
+#if NTT_SUBPEL
+  xSetShiftParametersAndLUT( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  uiFrame, m_aiBaseViewShiftLUT_ipel, m_aiBaseViewShiftLUT_fpos );
+#endif
 };
 
 
@@ -1065,6 +1154,11 @@ TAppComCamPara::TAppComCamPara()
   m_adSynthViewShiftLUT       = 0;
   m_aiSynthViewShiftLUT       = 0;
 
+#if NTT_SUBPEL
+  m_aiBaseViewShiftLUT_ipel   = 0;
+  m_aiBaseViewShiftLUT_fpos   = 0;
+#endif
+
   m_bSetupFromCoded           = false;
   m_bCamParsCodedPrecSet      = false;
 
@@ -1090,6 +1184,11 @@ TAppComCamPara::~TAppComCamPara()
 
   xDeleteArray( m_aaiPdmScaleNomDelta,       m_iNumberOfBaseViews );
   xDeleteArray( m_aaiPdmOffset,              m_iNumberOfBaseViews );
+
+#if NTT_SUBPEL
+  xDeleteArray( m_aiBaseViewShiftLUT_ipel,   m_iNumberOfBaseViews, m_iNumberOfBaseViews,  2 );
+  xDeleteArray( m_aiBaseViewShiftLUT_fpos,   m_iNumberOfBaseViews, m_iNumberOfBaseViews,  2 );
+#endif
 }
 
 Void
@@ -1335,6 +1434,10 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
 
   xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmScaleNomDelta     );
   xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmOffset            );
+
+#if NTT_SUBPEL
+  xCreateLUTs_Subpel( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aiBaseViewShiftLUT_ipel,  m_aiBaseViewShiftLUT_fpos);
+#endif
 
   //===== init disparity to virtual depth conversion parameters =====
   xSetPdmConversionParams();

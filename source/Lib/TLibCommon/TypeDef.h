@@ -41,6 +41,25 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define VSP_N                             1
+#if VSP_N
+#define VSP_TEXT_ONLY                     1
+#define NUM_VIEW_VSP                      99
+#define VSP_N_DUMP                        0
+#define FORCE_REF_VSP                     2   // 0=NotUseVSPSKIP 1:VSPSKIPforFlag 2:VSPSKIPforMergeIdx
+#define VSP_MV_ZERO                       0   // use zero vector for VSP
+#if VSP_MV_ZERO
+#define AMVP_VSP_UNAVAILABLE              1
+#endif
+#define VSP_MERGE_POS                     5   // position of vsp in merge list (0..5)
+#define NTT_SUBPEL                        1
+#endif
+#define DEBUGIMGOUT                       0   //Debug YUVImage Out
+#define DEBUGLOGOUT                       0   //Debug Log Out
+
+#define VSP_SLICE_HEADER                  1
+#define VSP_FRAME_INTERVAL                2
+
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
@@ -114,7 +133,7 @@
 #define HHI_MPI_MERGE_POS                 0
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
                                        
-#if HHI_INTER_VIEW_MOTION_PRED         
+#if HHI_INTER_VIEW_MOTION_PRED
 #define SAIT_IMPROV_MOTION_PRED_M24829    1   // improved inter-view motion vector prediction
 #else                                  
 #define SAIT_IMPROV_MOTION_PRED_M24829    0   
@@ -726,6 +745,9 @@ enum PredMode
   MODE_SKIP,            ///< SKIP mode
   MODE_INTER,           ///< inter-prediction mode
   MODE_INTRA,           ///< intra-prediction mode
+#if FORCE_REF_VSP==1
+  MODE_SYNTH,           ///< synth-mode
+#endif
   MODE_NONE = 15
 };
 

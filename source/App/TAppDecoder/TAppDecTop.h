@@ -48,6 +48,9 @@
 #include "TLibCommon/TComDepthMapGenerator.h"
 #include "TLibDecoder/TDecTop.h"
 #include "TAppDecCfg.h"
+#if VSP_N
+#include "../../Lib/TLibRenderer/TRenTop.h"
+#endif
 
 //! \ingroup TAppDecoder
 //! \{
@@ -64,6 +67,9 @@ private:
   std::vector<TDecTop*>           m_tDecTop;                      ///< decoder classes
 
   std::vector<TVideoIOYuv*>       m_tVideoIOYuvReconFile;         ///< reconstruction YUV class
+#if DEBUGIMGOUT
+  std::vector<TVideoIOYuv*>       m_tVideoIOYuvReconDbgFile;      ///< debug YUV class
+#endif
 
   // for output control
   Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP
@@ -78,6 +84,10 @@ private:
 #endif
   TComSPSAccess                   m_cSPSAccess;
   TComAUPicAccess                 m_cAUPicAccess;
+#endif
+
+#if VSP_N
+  TRenTop                         m_cVSPRendererTop;
 #endif
 
 public:
@@ -104,6 +114,12 @@ public:
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
   TDecTop*          getDecTop0    () { return m_tDecTop[0]; }
+#endif
+
+#if VSP_N
+  Bool              getUseDepth   () { return m_useDepth; }
+  TRenTop*          getVSPRendererTop(){ return &m_cVSPRendererTop; }
+  Void              storeVSPInBuffer(TComPic* pcPicVSP, TComPic* pcPicAvail, Int iCodedViewIdx, Int iCoddedViewOrderIdx, Int iCurPoc, Bool bDepth);
 #endif
 
 protected:

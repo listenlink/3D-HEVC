@@ -438,13 +438,21 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   }
   
   //-- Set BS for Intra MB : BS = 4 or 3
-  if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) )
+  if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) 
+#if FORCE_REF_VSP==1
+    || pcCUP->isVspMode(uiPartP) || pcCUQ->isVspMode(uiPartQ) 
+#endif
+  )
   {
     uiBs = 2;
   }
   
   //-- Set BS for not Intra MB : BS = 2 or 1 or 0
-  if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) )
+  if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) 
+#if FORCE_REF_VSP==1
+    && !pcCUP->isVspMode(uiPartP) && !pcCUQ->isVspMode(uiPartQ) 
+#endif
+  )
   {
 #if NSQT_LFFIX
     UInt nsPartQ = uiPartQ;
@@ -541,6 +549,13 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
     }   // enf of "if( one of BCBP == 0 )"
   }   // enf of "if( not Intra )"
   
+#if FORCE_REF_VSP==1
+  if ( pcCUP->isVspMode(uiPartP) || pcCUQ->isVspMode(uiPartQ))
+  {
+    uiBs = 0;
+  }
+#endif
+
   m_aapucBS[iDir][uiAbsPartIdx] = uiBs;
 }
 

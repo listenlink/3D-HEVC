@@ -264,6 +264,10 @@ protected:
   /// add possible motion vector predictor candidates
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
+#if FORCE_REF_VSP==2
+  inline bool   xAddVspSkip(UChar ucVspMergePos, Bool bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
+                            UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int mrgCandIdx);
+#endif
 
   Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
@@ -655,6 +659,12 @@ public:
   
   Bool          isIntra   ( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
+#if FORCE_REF_VSP==1
+  Int           isVspMode ( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_SYNTH; }
+#elif FORCE_REF_VSP==2 
+  Int           isVspMode ( UInt uiPartIdx );
+  Int           isVspMode ( UInt uiPartIdx, TComMv cCompMv );
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)

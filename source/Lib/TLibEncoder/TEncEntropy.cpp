@@ -168,6 +168,22 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
 
+
+#if FORCE_REF_VSP==1
+Void TEncEntropy::encodeVspFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if ( pcCU->getSlice()->isIntra() || pcCU->getSlice()->getViewId() == 0 )
+  {
+    return;
+  }
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  m_pcEntropyCoderIf->codeVspFlag( pcCU, uiAbsPartIdx );
+}
+#endif
+
 Void TEncEntropy::codeFiltCountBit(ALFParam* pAlfParam, Int64* ruiRate)
 {
   resetEntropy();
@@ -1284,6 +1300,13 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     uiAbsPartIdx = 0;
   }
+
+#if FORCE_REF_VSP==1
+  if( pcCU->isVspMode( uiAbsPartIdx ) )
+  {
+    return;
+  }
+#endif
   
   PartSize eSize = pcCU->getPartitionSize( uiAbsPartIdx );
   
@@ -1344,8 +1367,16 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
         if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
         {
           encodeRefFrmIdxPU ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
+#if VSP_MV_ZERO
+          Int iRefIdx = pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->getRefIdx(uiSubPartIdx);
+          if( !(pcCU->getSlice()->getViewId() && iRefIdx >= 0 && pcCU->getSlice()->getRefViewId( RefPicList( uiRefListIdx ), iRefIdx ) == NUM_VIEW_VSP) )
+          {
+#endif
           encodeMvdPU       ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
           encodeMVPIdxPU    ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
+#if VSP_MV_ZERO
+          }
+#endif
         }
       }
     }
@@ -1631,6 +1662,9 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   else
   {
     {
+#if FORCE_REF_VSP==1
+      if( !pcCU->isVspMode( uiAbsPartIdx ) )
+#endif
 #if HHI_MPI
       if( !(pcCU->getMergeFlag( uiAbsPartIdx ) && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N &&
             ( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 || uiDepth == pcCU->getTextureModeDepth( uiAbsPartIdx ) ) ) )

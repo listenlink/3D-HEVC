@@ -139,6 +139,9 @@ public:
   Bool  predictDepthMap       ( TComPic*      pcPic );
   Void  updateDepthMap        ( TComPic*      pcPic );
   Void  dumpDepthMap          ( TComPic*      pcPic, char* pFilenameBase );
+#if VSP_N
+  Void  clearDepthMap         ( TComPic*      pcPic, Int   iVal  = PDM_UNDEFINED_DEPTH);
+#endif
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED

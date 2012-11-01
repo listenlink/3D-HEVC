@@ -102,6 +102,13 @@ public:
   // 420->444 and horizontally
   static Void sampleCUpHorUp    (Int iLog2HorSampFac, Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight,      Pel* pcOutputPlaneData, Int iOutputStride );
 
+#if NTT_SUBPEL
+  static Void sampleConv        (Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride, Pel* pcDepthPlaneData, Int iDepthStride, Int** ppiFposLUT );
+  static Void sampleCVerUp      (Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride );
+  static Void sampleCConv       (Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride, Pel* pcDepthPlaneData, Int iDepthStride, Int** ppiFposLUT );
+  static Void sampleCConvHorUp  (Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride, Pel* pcDepthPlaneData, Int iDepthStride, Int** ppiFposLUT );
+#endif
+
   //// Down sampling (13 tap)
 
   static Void sampleDown2Tap13   ( Pel* pcInputPlaneData, Int iInputStride, Int iWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride );
@@ -129,6 +136,11 @@ private:
   static Void xInterpVerChroma(Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter);
   static Void xInterpHorChroma(Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter);
   static Void xDistributeArray(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* pcDst, Int iDstStride, Int iDstStepX, Int iDstStepY );
+
+#if NTT_SUBPEL
+  static Void xDistributeArrayOnDepthCondition(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* pcDst, Int iDstStride, Int iDstStepX, Int iDstStepY, Pel* pcDep, Int iDepStride, Int iDepStepX, Int iDepStepY, Int** ppiFposLUT);
+  static Void xInterpHorChromaOnDepthCondition(Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, Pel* piDep, Int iDepStride, Int iDepStepX, Int iDepStepY, Int** ppiFposLUT, Int iTargetFpos, FpChromaIntFilt fpFilter );
+#endif
 
   // Binominal Filtering
   static Pel  xFiltBinom3     (Pel* pcInputData, Int iStride );

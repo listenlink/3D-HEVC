@@ -44,7 +44,6 @@
 #include "CommonDef.h"
 #include "TComRom.h"
 #include "TComList.h"
-
 //! \ingroup TLibCommon
 //! \{
 
@@ -1268,7 +1267,15 @@ private:
   Int        m_aaiCodedOffset[2][MAX_VIEW_NUM];
 
 #if SONY_COLPIC_AVAILABILITY
-  Int         m_iViewOrderIdx;
+  Int        m_iViewOrderIdx;
+#endif
+
+#if FORCE_REF_VSP
+  Int        m_iRefIdxVsp[2]; // L0/L1
+#endif
+
+#if VSP_SLICE_HEADER
+  Bool      m_bVspFlag;
 #endif
 
 public:
@@ -1410,7 +1417,11 @@ public:
   
   Int       getNumPocTotalCurr();
   Int       getNumPocTotalCurrMvc();
+#if VSP_N
+  Void      setRefPicListMvc    ( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcInterViewRefPics, TComPic* pcVspPic );
+#else
   Void      setRefPicListMvc    ( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcInterViewRefPics );
+#endif
   Void      setRefPOCnViewListsMvc();
 
   Void      setColDir           ( UInt uiDir ) { m_uiColDir = uiDir; }
@@ -1563,6 +1574,16 @@ public:
   Int*      getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int*      getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+
+#if FORCE_REF_VSP
+  Void      setRefIdxVsp ( Int idx, Int refList ) { m_iRefIdxVsp[refList] = idx; }
+  Int       getRefIdxVsp ( Int refList )          { return m_iRefIdxVsp[refList]; }
+#endif
+
+#if VSP_SLICE_HEADER
+  Void      setVspFlag          ( Bool val )    { m_bVspFlag = val; }
+  Bool      getVspFlag          ()              { return m_bVspFlag; }
+#endif
 
 protected:
   TComPic*  xGetRefPic        (TComList<TComPic*>& rcListPic, UInt uiPOC);

@@ -2347,6 +2347,18 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   assert(rpcSlice->getMaxNumMergeCand()==MRG_MAX_NUM_CANDS_SIGNALED);
 #endif
 
+#if VSP_SLICE_HEADER
+  if( rpcSlice->getSPS()->getViewId()!=0 
+#if VSP_TEXT_ONLY
+      && !(rpcSlice->getSPS()->isDepth()) 
+#endif
+    )
+  {
+    READ_FLAG( uiCode, "vsp_flag" );
+    rpcSlice->setVspFlag( uiCode ? true : false );
+  }
+#endif
+
   if (!bEntropySlice)
   {
     if(sps->getUseALF() && rpcSlice->getAlfEnabledFlag())
@@ -2599,6 +2611,13 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 {
   assert(0);
 }
+
+#if FORCE_REF_VSP==1
+Void TDecCavlc::parseVspFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
 Void TDecCavlc::parseMVPIdx( Int& riMVPIdx, Int iAMVPCands )

@@ -1942,3 +1942,4 @@ TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipR( Int iStartPosX, Int iStartPosY
   return bNoDiff;
 }
 #endif
+

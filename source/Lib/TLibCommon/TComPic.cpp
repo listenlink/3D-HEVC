@@ -52,6 +52,10 @@ TComPic::TComPic()
   m_apcPicSym         = NULL;
   m_apcPicYuv[0]      = NULL;
   m_apcPicYuv[1]      = NULL;
+#if VSP_N
+  m_apcPicYuvAvail     = NULL;
+  m_apcPicYuvSynth     = NULL;
+#endif
 #if DEPTH_MAP_GENERATION
   m_pcPredDepthMap    = NULL;
 #if PDM_REMOVE_DEPENDENCE
@@ -63,6 +67,9 @@ TComPic::TComPic()
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pcResidual        = NULL;
+#endif
+#if DEBUGIMGOUT
+  m_acPicYuvDebug     = NULL;
 #endif
   m_pcPicYuvPred      = NULL;
   m_pcPicYuvResi      = NULL;
@@ -94,7 +101,10 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
     m_apcPicYuv[0]  = new TComPicYuv;  m_apcPicYuv[0]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   }
   m_apcPicYuv[1]  = new TComPicYuv;  m_apcPicYuv[1]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
-  
+#if DEBUGIMGOUT
+  m_acPicYuvDebug    = new TComPicYuv;  m_acPicYuvDebug->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
+#endif
+
   /* there are no SEI messages associated with this picture initially */
   m_SEIs = NULL;
   m_bUsedByCurr = false;
@@ -161,6 +171,14 @@ Void TComPic::destroy()
     m_pcResidual->destroy();
     delete m_pcResidual;
     m_pcResidual = NULL;
+  }
+#endif
+#if DEBUGIMGOUT
+  if (m_acPicYuvDebug)
+  {
+    m_acPicYuvDebug->destroy();
+    delete m_acPicYuvDebug;
+    m_acPicYuvDebug = NULL;
   }
 #endif
   delete m_SEIs;
@@ -622,5 +640,60 @@ Void TComPic::destroyNonDBFilterInfo()
 
 }
 
+#if VSP_N
+Void TComPic::checkSynthesisAvailability( /*TComDataCU*& rpcCU, */UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth, Bool *&rpbCUSynthesied )
+{ 
+  rpbCUSynthesied[0] = true;
+  rpbCUSynthesied[1] = true;
+  rpbCUSynthesied[2] = true;
+  rpbCUSynthesied[3] = true;
+
+  if (!getPicYuvAvail())
+  {
+    rpbCUSynthesied[0] = false;
+    rpbCUSynthesied[1] = false;
+    rpbCUSynthesied[2] = false;
+    rpbCUSynthesied[3] = false;
+    return;    
+  }
+  
+  Int x, y;
+  Pel* pAvail  = getPicYuvAvail()->getLumaAddr ( iCuAddr, uiAbsZorderIdx );
+  Int CUHeight = g_uiMaxCUHeight >> uiPartDepth; //rpcCU->getHeight(uiAbsZorderIdx);
+  Int CUWidth  = g_uiMaxCUWidth  >> uiPartDepth; //rpcCU->getWidth(uiAbsZorderIdx);
+  
+  Int  iStride  = getPicYuvAvail()->getStride();
+  for ( y = ((CUHeight - 1) >> 1); y >= 0; y-- )
+  {
+    for ( x = ((CUWidth - 1) >> 1); x >= 0; x-- )
+    {
+      rpbCUSynthesied[0] &= (pAvail[x] != 0);
+    }
+    for ( x = CUWidth - 1; x >= ((CUWidth) >> 1); x-- )
+    {
+      rpbCUSynthesied[1] &= (pAvail[x] != 0);
+    }
+    pAvail += iStride;
+  }
+  //for ( y = CUHeight - 1; y >= ((CUHeight) >> 1); y-- )
+  for ( y = ((CUHeight - 1) >> 1); y >= 0; y-- ) //Owieczka
+  {
+    for ( x = ((CUWidth - 1) >> 1); x >= 0; x-- )
+    {
+      rpbCUSynthesied[2] &= (pAvail[x] != 0);
+    }
+    for ( x = CUWidth - 1; x >= ((CUWidth) >> 1); x-- )
+    {
+      rpbCUSynthesied[3] &= (pAvail[x] != 0);
+    }
+    pAvail += iStride;
+  }
+
+  //rpbCUSynthesied[0] = !rpbCUSynthesied[0];
+  //rpbCUSynthesied[1] = !rpbCUSynthesied[1];
+  //rpbCUSynthesied[2] = !rpbCUSynthesied[2];
+  //rpbCUSynthesied[3] = !rpbCUSynthesied[3];
+}
+#endif
 
 //! \}

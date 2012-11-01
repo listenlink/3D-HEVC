@@ -49,7 +49,11 @@ class TRenTop
 
   // Interpolation Modes
 
+#if NTT_SUBPEL
+  enum { eRenIntFullPel = 0, eRenIntLinInt = 1, eRenIntLinReal = 2, eRenIntFEM = 3, eRenInt8Tap = 4, eRenInt8Tap2 = 5 };
+#else
   enum { eRenIntFullPel = 0, eRenIntLinInt = 1, eRenIntLinReal = 2, eRenIntFEM = 3, eRenInt8Tap = 4 };
+#endif
 
   // HoleFilling
   enum { eRenHFNone = 0, eRenHFLWBackExt = 1};
@@ -92,12 +96,24 @@ public:
                            Int**    ppiShiftLUTRight,
                            Int**    ppiBaseShiftLUTRight,
                            Int      iRelDistLeft );
+#if NTT_SUBPEL
+  Void setFposLUTs      ( Int**    ppiFposLUTLeft, Int**    ppiFposLUTRight );
+  Void setInterpolationMode ( Int iMode ) { m_iInterpolationMode = iMode; }
+#endif
 
   // View Synthesis
   Void extrapolateView   ( TComPicYuv* pcPicYuvVideo,
                            TComPicYuv* pcPicYuvDepth,
                            TComPicYuv* pcPicYuvSynthOut,
                            Bool bRenderFromLeft );
+
+#if VSP_N
+  Void extrapolateAvailabilityView   ( TComPicYuv* pcPicYuvVideo,
+                                       TComPicYuv* pcPicYuvDepth,
+                                       TComPicYuv* pcPicYuvSynthOut,
+                                       TComPicYuv* pcPicYuvAvailOut,
+                                       Bool bRenderFromLeft );
+#endif
 
   Void interpolateView   ( TComPicYuv* pcPicYuvVideoLeft,
                            TComPicYuv* pcPicYuvDepthLeft,
@@ -165,6 +181,14 @@ private:
   // Input Output Data Conversion
   Void xConvertInputData         ( PelImage* pcOrgInputImage, PelImage* pcOrgInputDepth, PelImage* pcConvInputImage, PelImage* pcConvInputDepth, Bool bMirror);
   Void xConvertOutputData        ( PelImage* pOrgOutputImage, PelImage* pConvOutputImage, Bool bMirror);
+#if VSP_N
+  Void xConvertOutputDataPlane0  ( PelImage* pOrgOutputImage, PelImage* pConvOutputImage, Bool bMirror);
+#endif
+#if NTT_SUBPEL
+  Void xConvertInputDataSubpel   ( PelImage* pcOrgInputImage, PelImage* pcOrgInputDepth, PelImage* pcConvInputImage, PelImage* pcConvInputDepth, Bool bMirror);
+  Void xConvertInputVideoSubpel  ( PelImage* pcOrgInputImage, PelImage* pcConvInputImage, PelImage* pcInputDepth, Bool bMirror );
+  Void xConvertInputDepthSubpel  ( PelImage* pcOrgInputImage, PelImage* pcConvInputImage);
+#endif
 
   Void xGetDataPointers          ( PelImage*& rpcInputImage,  PelImage*& rpcOutputImage, PelImage*& rpcInputDepth, PelImage*& rpcOutputDepth, PelImage*& rpcFilled, Bool bRenderDepth );
   Void xGetDataPointerOutputImage( PelImage*& rpcOutputImage, PelImage*& rpcOutputDepth );
@@ -228,6 +252,11 @@ private:
   Int**    m_ppiShiftLUTRight;
   Int**    m_ppiShiftLUTRightMirror; // For rendering the mirrored view
   Int*     m_aiShiftLUTCur;
+#if NTT_SUBPEL
+  Int**    m_ppiFposLUTLeft;
+  Int**    m_ppiFposLUTRight;
+  Int**    m_ppiFposLUTRightMirror; // For rendering the mirrored view
+#endif
 
   // Look up tables Z
   Int*     m_piInvZLUTLeft;          // Look up table entry is proportional to Z

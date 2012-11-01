@@ -452,6 +452,38 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
+#if FORCE_REF_VSP
+  //Bool bWholeCUCanBeSynthesized = false;
+  //Bool bOneSubCUCanNotBeSynthesied = false;
+  Bool bSubCUCanBeSynthesized[4];
+  if( rpcBestCU->getSlice()->getViewId() )
+  {
+    Bool * pbSubCUCanBeSynthesized = bSubCUCanBeSynthesized;
+    pcPic->checkSynthesisAvailability(/*rpcBestCU, */rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU(), uiDepth, pbSubCUCanBeSynthesized); //KUBA SYNTH
+    //Int  iSubCUCanNotBeSynthesized = 0;  // Dong: Compiling error, set but not used. DONG_CHECK
+    Int  iSubCUCanBeSynthesizedCnt = 0;
+    for(Int i = 0; i < 4; i++)
+    {
+      if (!bSubCUCanBeSynthesized[i])
+      {
+        //iSubCUCanNotBeSynthesized = i;
+      }
+      else
+      {
+        iSubCUCanBeSynthesizedCnt ++;
+      }
+    }
+    if(iSubCUCanBeSynthesizedCnt == 4)
+    {
+      //bWholeCUCanBeSynthesized = true;
+    }
+    //else if(iSubCUCanBeSynthesizedCnt == 3)
+    //{
+    //  bOneSubCUCanNotBeSynthesied = true;
+    //}
+    //bWholeCUCanBeSynthesized = true;
+  }
+#endif
 
   // variables for fast encoder decision
   Bool    bEarlySkip  = false;
@@ -653,6 +685,21 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           {
             doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
           }
+
+#if FORCE_REF_VSP==1
+#if VSP_TEXT_ONLY
+          if( !rpcBestCU->getSlice()->getSPS()->isDepth() )
+#endif
+#if HHI_INTER_VIEW_RESIDUAL_PRED
+            rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
+#endif
+#if HHI_INTERVIEW_SKIP
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFullyRenderedSec, false, true ); // VSP
+#else
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
+#endif
+            rpcTempCU->initEstData( uiDepth, iQP );
+#endif
         }
 #if HHI_INTER_VIEW_RESIDUAL_PRED
         } // uiResPrdId
@@ -1580,12 +1627,28 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     if( !pcCU->getSlice()->isIntra() )
     {
       m_pcEntropyCoder->encodeSkipFlag( pcCU, uiAbsPartIdx );
+
+#if FORCE_REF_VSP==1
+      if( (pcCU->isSkipped( uiAbsPartIdx ) || pcCU->isVspMode( uiAbsPartIdx )) && pcCU->getSlice()->getViewId() != 0 )
+#if VSP_TEXT_ONLY
+      if( !pcCU->getSlice()->getSPS()->isDepth() )
+#endif
+      {
+        m_pcEntropyCoder->encodeVspFlag( pcCU, uiAbsPartIdx );
+      }
+#endif
     }
 
     if( pcCU->isSkipped( uiAbsPartIdx ) )
+#if FORCE_REF_VSP==1
+    if( !pcCU->isVspMode( uiAbsPartIdx ) )
+#endif
     {
       m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
       finishCU(pcCU,uiAbsPartIdx,uiDepth);
+#if DEBUGLOGOUT
+      m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
       xRestoreDepthWidthHeight( pcCU );
       return;
     }
@@ -1634,17 +1697,45 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( !pcCU->getSlice()->isIntra() )
   {
     m_pcEntropyCoder->encodeSkipFlag( pcCU, uiAbsPartIdx );
+
+#if FORCE_REF_VSP==1
+    if( (pcCU->isSkipped( uiAbsPartIdx ) || pcCU->isVspMode( uiAbsPartIdx )) && pcCU->getSlice()->getViewId() != 0 )
+#if VSP_TEXT_ONLY
+    if( !pcCU->getSlice()->getSPS()->isDepth() )
+#endif
+    {
+      m_pcEntropyCoder->encodeVspFlag( pcCU, uiAbsPartIdx );
+    }
+#endif
   }
   
   if( pcCU->isSkipped( uiAbsPartIdx ) )
+#if FORCE_REF_VSP==1
+  if( !pcCU->isVspMode( uiAbsPartIdx ) )
+#endif
   {
     m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, uiAbsPartIdx, 0 );
 #endif
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
+#if DEBUGLOGOUT
+    m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
     return;
   }
+
+#if FORCE_REF_VSP==1
+  if( pcCU->isVspMode( uiAbsPartIdx ) )
+  {
+    finishCU(pcCU,uiAbsPartIdx,uiDepth);
+#if DEBUGLOGOUT
+    m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+    return;
+  }
+#endif
+
 #if HHI_MPI
   if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 )
   {
@@ -1661,6 +1752,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       // Encode slice finish
       finishCU(pcCU,uiAbsPartIdx,uiDepth);
+#if DEBUGLOGOUT
+      m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
       return;
     }
   }
@@ -1684,6 +1778,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // --- write terminating bit ---
   finishCU(pcCU,uiAbsPartIdx,uiDepth);
+#if DEBUGLOGOUT
+  m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
 }
 
 /** check RD costs for a CU block encoded with merge
@@ -1872,7 +1969,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
 #if AMP_MRG
 #if HHI_INTERVIEW_SKIP
-Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bSkipRes, Bool bUseMRG)
+Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bSkipRes, Bool bUseMRG
+#if FORCE_REF_VSP==1
+                               , Bool bForceRefVsp
+#endif
+                               )
 #else
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG)
 #endif
@@ -1909,6 +2010,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setResPredAvailSubParts( bResPrdAvail, 0, 0, uhDepth );
   rpcTempCU->setResPredFlagSubParts ( bResPrdFlag,  0, 0, uhDepth );
 #endif
+#if FORCE_REF_VSP==1
+  if( bForceRefVsp )
+    rpcTempCU->setPredModeSubParts  ( MODE_SYNTH, 0, uhDepth );
+  else
+#endif
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
   
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -1924,7 +2030,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setMergeAMP (true);
   #if HHI_INTERVIEW_SKIP
 #if LG_RESTRICTEDRESPRED_M24766
-  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcResPredTmp[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG  );
+  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcResPredTmp[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG
+#if FORCE_REF_VSP==1
+    , bForceRefVsp
+#endif
+    );
 #else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG  );
 #endif
@@ -2493,10 +2603,34 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
   {
     for( UInt ui = 0; ui < rpcTempCU->getTotalNumPart(); ui++ )
     {
-      if( pcTextureCU->isIntra( rpcTempCU->getZorderIdxInCU() + ui ) )
+      if( pcTextureCU->isIntra( rpcTempCU->getZorderIdxInCU() + ui ) 
+#if FORCE_REF_VSP==1
+       || pcTextureCU->isVspMode( rpcTempCU->getZorderIdxInCU() + ui )
+#endif
+      )
       {
         return;
       }
+#if VSP_N
+#if !(!VSP_TEXT_ONLY && FORCE_REF_VSP==2)
+      else // inter
+      {
+        Int aiRefIdx[2] = {NOT_VALID, NOT_VALID};
+        for( Int iList = 0; iList < 2; iList++ )
+        {
+          aiRefIdx[iList] = pcTextureCU->getCUMvField( RefPicList(iList) )->getRefIdx( rpcTempCU->getZorderIdxInCU() + ui );
+          if( aiRefIdx[iList] >= 0 && pcTextureCU->getSlice()->getRefViewId( RefPicList(iList), aiRefIdx[iList] ) == NUM_VIEW_VSP )
+          {
+            return;
+          }
+        }
+        //if( aiRefIdx[0] == NOT_VALID && aiRefIdx[1] == NOT_VALID )
+        //{
+        //  return;
+        //}
+      }
+#endif
+#endif
     }
   }
 
@@ -2693,8 +2827,18 @@ Void TEncCu::xAddMVISignallingBits( TComDataCU* pcCU )
 
   m_pcEntropyCoder->encodeSplitFlag( pcCU, 0, uhDepth, true );
   m_pcEntropyCoder->encodeSkipFlag( pcCU, 0, true );
+#if FORCE_REF_VSP==1
+  if( (pcCU->isSkipped( 0 ) || pcCU->isVspMode( 0 )) && pcCU->getSlice()->getViewId() != 0 )
+#if VSP_TEXT_ONLY
+  if( !pcCU->getSlice()->getSPS()->isDepth() )
+#endif
+    m_pcEntropyCoder->encodeVspFlag ( pcCU, 0, true );
+#endif
 
   if( pcCU->isSkipped( 0 ) )
+#if FORCE_REF_VSP==1
+  if( !pcCU->isVspMode( 0 ) )
+#endif
   {
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
   }

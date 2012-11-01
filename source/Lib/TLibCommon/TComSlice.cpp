@@ -113,6 +113,10 @@ TComSlice::TComSlice()
 #endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
+
+#if FORCE_REF_VSP
+  m_iRefIdxVsp[0] = m_iRefIdxVsp[1] = NOT_VALID;
+#endif
   
   initEqualRef();
   
@@ -138,6 +142,10 @@ TComSlice::TComSlice()
   resetWpScaling(m_weightPredTable);
   resetWpScalingLC(m_weightPredTableLC);
   initWpAcDcParam();
+
+#if VSP_SLICE_HEADER
+  m_bVspFlag = false;
+#endif
 }
 
 TComSlice::~TComSlice()
@@ -184,6 +192,10 @@ Void TComSlice::initSlice()
 #if TILES_WPP_ENTRY_POINT_SIGNALLING
   m_numEntryPointOffsets = 0;
 #endif
+#if VSP_SLICE_HEADER
+  m_bVspFlag = false;
+#endif
+
 }
 
 Void TComSlice::initTiles()
@@ -406,7 +418,11 @@ Void TComSlice::generateCombinedList()
   }
 }
 
+#if VSP_N
+Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcInterViewRefPics, TComPic* pcVspPic )
+#else
 Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcInterViewRefPics )
+#endif
 {
   if( m_eSliceType == I_SLICE )
   {
@@ -421,11 +437,17 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
   TComPic*  RefPicSetStCurr1[16];
   TComPic*  RefPicSetLtCurr [16];
   TComPic*  RefPicSetIvCurr [16];
+#if VSP_N
+  TComPic*  RefPicSetVspCurr [16] = {NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL}; //for Linux comp
+#endif
 
   UInt NumPocStCurr0 = 0;
   UInt NumPocStCurr1 = 0;
   UInt NumPocLtCurr  = 0;
   UInt NumPocIvCurr  = 0;
+#if VSP_N
+  UInt NumPocVspCurr  = 0;
+#endif
 
   Int i;
   // short term negative
@@ -473,6 +495,16 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
     RefPicSetIvCurr[NumPocIvCurr] = pcRefPic;
     NumPocIvCurr++;
   }
+#if VSP_N
+  if( pcVspPic )
+  {
+    pcRefPic = pcVspPic;
+    pcRefPic->setIsLongTerm( 0 );
+    pcRefPic->getPicYuvRec()->extendPicBorder();
+    RefPicSetVspCurr[NumPocVspCurr] = pcRefPic;
+    NumPocVspCurr++;
+  }
+#endif
 
   // ref_pic_list_init
   UInt cIdx = 0;
@@ -480,8 +512,13 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
   UInt num_ref_idx_l1_active_minus1 = m_aiNumRefIdx[1] - 1;
 
   assert( (NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + NumPocIvCurr) == getNumPocTotalCurrMvc() );
+#if VSP_N
+  Int numRpsCurrTempList0 = max( (num_ref_idx_l0_active_minus1 + 1), (NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + NumPocIvCurr + NumPocVspCurr) );
+  Int numRpsCurrTempList1 = max( (num_ref_idx_l1_active_minus1 + 1), (NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + NumPocIvCurr + NumPocVspCurr) );
+#else
   Int numRpsCurrTempList0 = max( (num_ref_idx_l0_active_minus1 + 1), (NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + NumPocIvCurr) );
   Int numRpsCurrTempList1 = max( (num_ref_idx_l1_active_minus1 + 1), (NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + NumPocIvCurr) );
+#endif
 
   assert( numRpsCurrTempList0 <= 16 );
   TComPic* refPicListTemp0[16];
@@ -508,7 +545,19 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
 
   for( cIdx = 0; cIdx <= num_ref_idx_l0_active_minus1; cIdx ++ )
   {
+#if VSP_N
+    if( pcVspPic && cIdx == num_ref_idx_l0_active_minus1 )
+    {
+      m_apcRefPicList[0][cIdx] = RefPicSetVspCurr[0];
+#if FORCE_REF_VSP
+      m_iRefIdxVsp[0] = cIdx;
+#endif
+    }
+    else
+      m_apcRefPicList[0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdx) ] : refPicListTemp0[cIdx];
+#else
     m_apcRefPicList[0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdx) ] : refPicListTemp0[cIdx];
+#endif
   }
   if( m_eSliceType == P_SLICE )
   {
@@ -519,7 +568,19 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
   {
     for( cIdx = 0; cIdx <= num_ref_idx_l1_active_minus1; cIdx ++ )
     {
+#if VSP_N
+      if( pcVspPic && cIdx == num_ref_idx_l1_active_minus1 )
+      {
+        m_apcRefPicList[1][cIdx] = RefPicSetVspCurr[0];
+#if FORCE_REF_VSP
+        m_iRefIdxVsp[1] = cIdx;
+#endif
+      }
+      else
+        m_apcRefPicList[1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
+#else
       m_apcRefPicList[1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
+#endif
     }
   }
 }

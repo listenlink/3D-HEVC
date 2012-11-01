@@ -71,7 +71,13 @@ public:
   
   __inline Void xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst);
   __inline Void xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst);
-  
+
+#if NTT_SUBPEL
+  __inline Void xCTI_FilterHalfHor    (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst, Pel* piDep, Int iDepStride, Int iDepStep, Int** ppiFposLUT);
+  __inline Void xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst, Pel* piDep, Int iDepStride, Int iDepStep, Int** ppiFposLUT);
+  __inline Void xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst, Pel* piDep, Int iDepStride, Int iDepStep, Int** ppiFposLUT);
+#endif
+
   __inline Void xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst, Int iDstStridePel, Pel*& rpiDstPel );
   __inline Void xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst );
   __inline Void xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst );
@@ -681,6 +687,176 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStrid
   }
   return;
 }
+
+#if NTT_SUBPEL
+__inline Void TRenInterpFilter::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst, Pel* piDep, Int iDepStride, Int iDepStep, Int** ppiFposLUT)
+{
+  Pel*  piDst    = rpiDst;
+  Int   iSum;
+  Pel*  piSrcTmp;
+  Int iSrcStep2 = iSrcStep*2;
+  Int iSrcStep3 = iSrcStep*3;
+  Int iSrcStep4 = iSrcStep*4;
+  Int iSrcStep5 = iSrcStep*5;
+  Int iSrcStep6 = iSrcStep*6;
+  Int iSrcStep7 = iSrcStep*7;
+
+  Int iTmp0, iTmp1, iTmp2, iTmp3, iTmpA;
+
+  Pel *piSrcTmpP, *piSrcTmpN;
+  Int iDepX;
+
+  for ( Int y = iHeight; y != 0; y-- )
+  {
+    piSrcTmpP = &piSrc[ -3*iSrcStep ];
+    piSrcTmpN = &piSrc[ -4*iSrcStep ];
+    iDepX = 0;
+    for ( Int x = 0; x < iWidth; x++ )
+    {
+      // { -1,4,-11,40,40,-11,4,-1   } 
+#if 0 // NTT bugfix
+      if( abs(ppiFposLUT[0][ piDep[ iDepX ] ]) == 2 )
+#else
+      if( ppiFposLUT[0][ piDep[ iDepX ] ] == 2 ||  ppiFposLUT[0][ piDep[ iDepX ] ] == -2 )
+#endif
+      {
+        piSrcTmp = ppiFposLUT[0][ piDep[ iDepX ] ] > 0 ? piSrcTmpP : piSrcTmpN;
+
+        iTmp0 = piSrcTmp[        0]+piSrcTmp[iSrcStep7];
+        iTmp1 = piSrcTmp[iSrcStep]+piSrcTmp[iSrcStep6];
+        iTmp2 = piSrcTmp[iSrcStep2]+piSrcTmp[iSrcStep5];
+        iTmp3 = piSrcTmp[iSrcStep3]+piSrcTmp[iSrcStep4];
+
+        iTmpA = (iTmp3 << 2) - iTmp2;
+
+        iSum  = (   iTmp1          << 2 )
+              + (   iTmpA          << 3 )
+              + (   iTmpA          << 1 )
+              -    iTmp0 -  iTmp2;
+
+        piDst   [x * iDstStep] = Clip( (iSum +  32) >>  6 );
+      }
+      piSrcTmpP += iSrcStep;
+      piSrcTmpN += iSrcStep;
+      iDepX += iDepStep;
+    }
+    piSrc += iSrcStride;
+    piDst += iDstStride;
+    piDep += iDepStride;
+  }
+  return;
+}
+
+__inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst, Pel* piDep, Int iDepStride, Int iDepStep, Int** ppiFposLUT)
+{
+  Pel*  piDst    = rpiDst;
+  Int   iSum;
+  Pel*  piSrcTmp;
+  Int iSrcStep2 = iSrcStep*2;
+  Int iSrcStep3 = iSrcStep*3;
+  Int iSrcStep4 = iSrcStep*4;
+  Int iSrcStep5 = iSrcStep*5;
+  Int iSrcStep6 = iSrcStep*6;
+  Int iSrcStep7 = iSrcStep*7;
+
+  Int iTmp1, iTmp2;
+
+  Pel *piSrcTmpP, *piSrcTmpN;
+  Int iDepX;
+
+  for ( Int y = iHeight; y != 0; y-- )
+  {
+    piSrcTmpP = &piSrc[ -3*iSrcStep ];
+    piSrcTmpN = &piSrc[ -4*iSrcStep ];
+    iDepX = 0;
+    for ( Int x = 0; x < iWidth; x++ )
+    {
+      // {-1,   4,  -10,  57,   19,  -7,   3,   -1  },
+#if 0 // NTT bugfix
+      if( abs(ppiFposLUT[0][ piDep[ iDepX ] ]) == 1 )
+#else
+      if( ppiFposLUT[0][ piDep[ iDepX ] ] == 1 ||  ppiFposLUT[0][ piDep[ iDepX ] ] == -3 )
+#endif
+      {
+        piSrcTmp = ppiFposLUT[0][ piDep[ iDepX ] ] > 0 ? piSrcTmpP : piSrcTmpN;
+
+        iTmp1 = piSrcTmp[iSrcStep3] + piSrcTmp[iSrcStep5];
+        iTmp2 = piSrcTmp[iSrcStep6] + piSrcTmp[iSrcStep4];
+
+        iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStep7]
+               - ( ( piSrcTmp[iSrcStep2] - iTmp2 ) << 1 )
+               + (  piSrcTmp[iSrcStep]             << 2 )
+               - ( ( piSrcTmp[iSrcStep2] + iTmp1 ) << 3 )
+               + (   piSrcTmp[iSrcStep4]           << 4 );
+
+        piDst   [x * iDstStep] = Clip(( (iSum +  32) >>  6 )+ piSrcTmp[iSrcStep3]);
+      }
+      piSrcTmpP += iSrcStep;
+      piSrcTmpN += iSrcStep;
+      iDepX += iDepStep;
+    }
+    piSrc += iSrcStride;
+    piDst += iDstStride;
+    piDep += iDepStride;
+  }
+  return;
+}
+
+__inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst, Pel* piDep, Int iDepStride, Int iDepStep, Int** ppiFposLUT)
+{
+  Pel*  piDst    = rpiDst;
+  Int   iSum;
+  Pel*  piSrcTmp;
+  Int iSrcStep2 = iSrcStep*2;
+  Int iSrcStep3 = iSrcStep*3;
+  Int iSrcStep4 = iSrcStep*4;
+  Int iSrcStep5 = iSrcStep*5;
+  Int iSrcStep6 = iSrcStep*6;
+  Int iSrcStep7 = iSrcStep*7;
+
+  Int  iTmp1, iTmp2;
+
+  Pel *piSrcTmpP, *piSrcTmpN;
+  Int iDepX;
+
+  for ( Int y = iHeight; y != 0; y-- )
+  {
+    piSrcTmpP = &piSrc[ -3*iSrcStep ];
+    piSrcTmpN = &piSrc[ -4*iSrcStep ];
+    iDepX = 0;
+    for ( Int x = 0; x < iWidth; x++ )
+    {
+      // {-1,   3,  -7,  19,   57,  -10,   4,   -1  },
+#if 0 // NTT bugfix
+      if( abs(ppiFposLUT[0][ piDep[ iDepX ] ]) == 3 )
+#else
+      if( ppiFposLUT[0][ piDep[ iDepX ] ] == 3 ||  ppiFposLUT[0][ piDep[ iDepX ] ] == -1 )
+#endif
+      {
+        piSrcTmp = ppiFposLUT[0][ piDep[ iDepX ] ] > 0 ? piSrcTmpP : piSrcTmpN;
+
+        iTmp1 = piSrcTmp[iSrcStep4] + piSrcTmp[iSrcStep2];
+        iTmp2 = piSrcTmp[iSrcStep ] + piSrcTmp[iSrcStep3];
+
+        iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStep7]
+              - ( ( piSrcTmp[iSrcStep5] - iTmp2 ) << 1 )
+              + (   piSrcTmp[iSrcStep6]           << 2 )
+              - ( ( piSrcTmp[iSrcStep5] + iTmp1 ) << 3 )
+              + (   piSrcTmp[iSrcStep3]           << 4 );
+      
+        piDst   [x * iDstStep] = Clip( ((iSum +  32) >>  6) + piSrcTmp[iSrcStep4] );
+      }
+      piSrcTmpP += iSrcStep;
+      piSrcTmpN += iSrcStep;
+      iDepX += iDepStep;
+    }
+    piSrc += iSrcStride;
+    piDst += iDstStride;
+    piDep += iDepStride;
+  }
+  return;
+}
+#endif
 
 __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {

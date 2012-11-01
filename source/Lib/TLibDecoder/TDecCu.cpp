@@ -51,6 +51,10 @@ TDecCu::TDecCu()
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_ppcYuvResPred = NULL;
 #endif
+#if FORCE_REF_VSP
+  m_ppcYuvAvail   = NULL;
+  m_ppcYuvSynth   = NULL;
+#endif
   m_ppcCU      = NULL;
 }
 
@@ -79,6 +83,10 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_ppcYuvResPred = new TComYuv*   [m_uiMaxDepth-1];
 #endif
+#if FORCE_REF_VSP
+  m_ppcYuvAvail   = new TComYuv*    [m_uiMaxDepth-1];
+  m_ppcYuvSynth   = new TComYuv*    [m_uiMaxDepth-1];
+#endif
   m_ppcCU      = new TComDataCU*[m_uiMaxDepth-1];
   
   UInt uiNumPartitions;
@@ -92,6 +100,10 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_ppcYuvResPred[ui] = new TComYuv;    m_ppcYuvResPred[ui]->create( uiWidth, uiHeight );
+#endif
+#if FORCE_REF_VSP
+    m_ppcYuvAvail  [ui] = new TComYuv;    m_ppcYuvAvail  [ui]->create( uiWidth, uiHeight );
+    m_ppcYuvSynth  [ui] = new TComYuv;    m_ppcYuvSynth  [ui]->create( uiWidth, uiHeight );
 #endif
     m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1) );
   }
@@ -117,6 +129,10 @@ Void TDecCu::destroy()
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_ppcYuvResPred[ui]->destroy(); delete m_ppcYuvResPred[ui]; m_ppcYuvResPred[ui] = NULL;
 #endif
+#if FORCE_REF_VSP
+    m_ppcYuvAvail  [ui]->destroy(); delete m_ppcYuvAvail  [ui]; m_ppcYuvAvail  [ui] = NULL;
+    m_ppcYuvSynth  [ui]->destroy(); delete m_ppcYuvSynth  [ui]; m_ppcYuvSynth  [ui] = NULL;
+#endif
     m_ppcCU     [ui]->destroy(); delete m_ppcCU     [ui]; m_ppcCU     [ui] = NULL;
   }
   
@@ -124,6 +140,10 @@ Void TDecCu::destroy()
   delete [] m_ppcYuvReco; m_ppcYuvReco = NULL;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   delete [] m_ppcYuvResPred; m_ppcYuvResPred = NULL;
+#endif
+#if FORCE_REF_VSP
+  delete [] m_ppcYuvAvail;   m_ppcYuvAvail   = NULL;
+  delete [] m_ppcYuvSynth;   m_ppcYuvSynth   = NULL;
 #endif
   delete [] m_ppcCU     ; m_ppcCU      = NULL;
 }
@@ -327,9 +347,22 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
   {
     m_pcEntropyDecoder->decodeSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
+
+#if FORCE_REF_VSP==1
+    if( pcCU->isSkipped(uiAbsPartIdx) && pcCU->getSlice()->getViewId() != 0 )
+#if VSP_TEXT_ONLY
+    if( !pcCU->getSlice()->getSPS()->isDepth() )
+#endif
+    {
+      m_pcEntropyDecoder->decodeVspFlag( pcCU, uiAbsPartIdx, uiDepth );
+    }
+#endif
   }
  
   if( pcCU->isSkipped(uiAbsPartIdx) )
+#if FORCE_REF_VSP==1
+  if( !pcCU->isVspMode(uiAbsPartIdx) )
+#endif
   {
     m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
     m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
@@ -351,8 +384,16 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == uiDepth )
     {
+#if DEBUGLOGOUT
+      PredMode   eOrgPred = pcCU->getPredictionMode( uiAbsPartIdx );
+#endif
       TComDataCU *pcTextureCU = pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() );
       pcCU->copyTextureMotionDataFrom( pcTextureCU, uiDepth, pcCU->getZorderIdxInCU() + uiAbsPartIdx, uiAbsPartIdx );
+#if DEBUGLOGOUT
+      if( eOrgPred == MODE_SKIP )
+        pcCU->setPredModeSubParts( MODE_SKIP, uiAbsPartIdx, uiDepth );
+      m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
 
       UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
       for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
@@ -395,8 +436,47 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_pcEntropyDecoder->decodeResPredFlag( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
 #endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+#if DEBUGLOGOUT
+#if HHI_MPI
+    if( pcCU->getTextureModeDepth( uiAbsPartIdx ) != uiDepth )
+#endif
+      m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
     return;
   }
+
+#if FORCE_REF_VSP==1
+  if( pcCU->isVspMode( uiAbsPartIdx ) )
+  {
+    TComMv cMvZero;
+
+    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+
+    pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvField( TComMvField(), SIZE_2Nx2N, uiAbsPartIdx, uiDepth, 0 );
+    pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvField( TComMvField(), SIZE_2Nx2N, uiAbsPartIdx, uiDepth, 0 );
+    pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvd    ( cMvZero,       SIZE_2Nx2N, uiAbsPartIdx, uiDepth, 0 );
+    pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvd    ( cMvZero,       SIZE_2Nx2N, uiAbsPartIdx, uiDepth, 0 );
+
+    //pcCU->getCUMvField(REF_PIC_LIST_0)->setAllRefIdx ( pcCU->getSlice()->getRefIdxVsp(REF_PIC_LIST_0), SIZE_2Nx2N, 0, pcCU->getDepth(0), 0 );
+    //pcCU->getCUMvField(REF_PIC_LIST_1)->setAllRefIdx ( pcCU->getSlice()->getRefIdxVsp(REF_PIC_LIST_1), SIZE_2Nx2N, 0, pcCU->getDepth(0), 0 );
+
+    pcCU->setMVPIdxSubParts( -1, REF_PIC_LIST_0, uiAbsPartIdx, 0, uiDepth );
+    pcCU->setMVPNumSubParts( -1, REF_PIC_LIST_0, uiAbsPartIdx, 0, uiDepth );
+    pcCU->setMVPIdxSubParts( -1, REF_PIC_LIST_1, uiAbsPartIdx, 0, uiDepth );
+    pcCU->setMVPNumSubParts( -1, REF_PIC_LIST_1, uiAbsPartIdx, 0, uiDepth );
+
+    pcCU->setCbfSubParts( 0, 0, 0, uiAbsPartIdx, uiDepth );
+    pcCU->setTrIdxSubParts( 0 , uiAbsPartIdx, uiDepth );
+    pcCU->setNSQTIdxSubParts( uiAbsPartIdx, uiDepth );
+
+    xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+#if DEBUGLOGOUT
+    m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+    return;
+  }
+#endif
 
 #if HHI_MPI
   if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == -1 )
@@ -427,6 +507,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
       xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+#if DEBUGLOGOUT
+      m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
       return;
     }
   }
@@ -526,6 +609,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
   setdQPFlag( bCodeDQP );
   xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+#if DEBUGLOGOUT
+  m_cDebug.DebugLogOut( pcCU, uiAbsPartIdx, uiDepth );
+#endif
 }
 
 Void TDecCu::xFinishDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& ruiIsLast)
@@ -552,6 +638,10 @@ Void TDecCu::xFinishDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth,
 Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPartIdx,  UInt uiDepth )
 {
   TComPic* pcPic = pcCU->getPic();
+#if FORCE_REF_VSP
+  if(pcPic->getPicYuvSynth())  m_ppcYuvSynth[uiDepth]->copyFromPicYuv( pcPic->getPicYuvSynth(), pcCU->getAddr(), uiAbsPartIdx );
+  if(pcPic->getPicYuvAvail())  m_ppcYuvAvail[uiDepth]->copyFromPicYuv( pcPic->getPicYuvAvail(), pcCU->getAddr(), uiAbsPartIdx );
+#endif
   
   Bool bBoundary = false;
   UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
@@ -602,6 +692,11 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPar
     case MODE_INTRA:
       xReconIntraQT( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
       break;
+#if FORCE_REF_VSP==1
+    case MODE_SYNTH:
+      m_ppcYuvReco[uiDepth]->copyFromPicYuv(pcPic->getPicYuvSynth(), pcCU->getAddr(), uiAbsPartIdx);
+      break;
+#endif
     default:
       assert(0);
       break;
@@ -614,6 +709,9 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPar
 #endif
   
   xCopyToPic( m_ppcCU[uiDepth], pcPic, uiAbsPartIdx, uiDepth );
+#if DEBUGIMGOUT
+  xColsetToPicMerge( m_ppcCU[uiDepth], pcPic->getPicYuvRecDbg(), uiAbsPartIdx, uiDepth );
+#endif
 }
 
 Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
@@ -625,7 +723,6 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // inter prediction
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
-  
 #if HHI_MPI
   if( pcCU->getTextureModeDepth( 0 ) != -1 )
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );

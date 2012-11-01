@@ -144,6 +144,15 @@ private:
   TEncAnalyze             m_cAnalyzeP;
   TEncAnalyze             m_cAnalyzeB;
 
+#if VSP_N
+  TComPic*                m_pcPicVSP;                     ///< view synthesis prediction buffer for current POC to be coded
+  TComPic*                m_pcPicAvail;
+#endif
+
+#if VSP_SLICE_HEADER
+  Bool                    m_bUseVSP;
+#endif
+
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
@@ -235,6 +244,15 @@ public:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator*  getResidualGenerator  () { return  &m_cResidualGenerator;   }
+#endif
+#if VSP_N
+  TComPic*                getVSPBuf             () { return m_pcPicVSP; }
+  TComPic*                getVSPAvailBuf        () { return m_pcPicAvail; }
+#endif
+
+#if VSP_SLICE_HEADER
+  Void                    setUseVSP   ( Bool val ) { m_bUseVSP = val; }
+  Bool                    getUseVSP             () { return m_bUseVSP; }
 #endif
 
   // -------------------------------------------------------------------------------------------------------------------

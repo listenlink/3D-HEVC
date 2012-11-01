@@ -577,6 +577,32 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
 }
 
+#if FORCE_REF_VSP==1
+Void TDecSbac::parseVspFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if( pcCU->getSlice()->isIntra() || pcCU->getSlice()->getViewId()==0 )
+  {
+    return;
+  }
+  
+  UInt uiSymbol = 0;
+  UInt uiCtxSkip = pcCU->getCtxSkipFlag( uiAbsPartIdx );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSkipFlagSCModel.get( 0, 0, uiCtxSkip ) );
+  DTRACE_CABAC_VL( g_nSymbolCounter++ );
+  DTRACE_CABAC_T( "\tVspFlag" );
+  DTRACE_CABAC_T( "\tuiCtxSkip: ");
+  DTRACE_CABAC_V( uiCtxSkip );
+  DTRACE_CABAC_T( "\tuiSymbol: ");
+  DTRACE_CABAC_V( uiSymbol );
+  DTRACE_CABAC_T( "\n");
+  
+  if( uiSymbol )
+  {
+    pcCU->setPredModeSubParts( MODE_SYNTH, uiAbsPartIdx, uiDepth );
+  }
+}
+#endif
+
 /** parse merge flag
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -609,7 +635,16 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
   UInt uiUnaryIdx = 0;
   uiNumCand = pcCU->getSlice()->getMaxNumMergeCand();
 #if HHI_MPI
+#if VSP_TEXT_ONLY
+  TComDataCU* pcTextCU = pcCU->getSlice()->getSPS()->getUseMVI() ? pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() ) : NULL;
+  Int aiRefIdxVsp[2] = { pcTextCU ? pcTextCU->getCUMvField( RefPicList(0) )->getRefIdx( uiAbsPartIdx ) : -1,
+                         pcTextCU ? pcTextCU->getCUMvField( RefPicList(1) )->getRefIdx( uiAbsPartIdx ) : -1 };
+  const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE
+    && !( aiRefIdxVsp[0] >= 0 && pcTextCU->getSlice()->getRefViewId( RefPicList(0), aiRefIdxVsp[0] ) == NUM_VIEW_VSP )
+    && !( aiRefIdxVsp[1] >= 0 && pcTextCU->getSlice()->getRefViewId( RefPicList(1), aiRefIdxVsp[1] ) == NUM_VIEW_VSP );
+#else
   const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
+#endif
   const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : uiNumCand;
 #endif
   if ( uiNumCand > 1 )

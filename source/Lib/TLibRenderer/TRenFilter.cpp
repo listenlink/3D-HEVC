@@ -1153,6 +1153,47 @@ Void TRenFilter::sampleCUpHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int
   }
 }
 
+#if NTT_SUBPEL
+// Convert luma sample
+Void TRenFilter::sampleConv( Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride, Pel* pcDepthPlaneData, Int iDepthStride, Int** ppiFposLUT )
+{
+  TRenInterpFilter cFilter;
+
+  xDistributeArrayOnDepthCondition  ( pcInputPlaneData, iInputStride, 1 , 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 1, 1, pcDepthPlaneData, iDepthStride, 1, 1, ppiFposLUT);
+  cFilter.xCTI_FilterQuarter0Hor    ( pcInputPlaneData, iInputStride, 1, iInputWidth, iHeight, iOutputStride, 1, pcOutputPlaneData, pcDepthPlaneData, iDepthStride, 1, ppiFposLUT );
+  cFilter.xCTI_FilterHalfHor        ( pcInputPlaneData, iInputStride, 1, iInputWidth, iHeight, iOutputStride, 1, pcOutputPlaneData, pcDepthPlaneData, iDepthStride, 1, ppiFposLUT );
+  cFilter.xCTI_FilterQuarter1Hor    ( pcInputPlaneData, iInputStride, 1, iInputWidth, iHeight, iOutputStride, 1, pcOutputPlaneData, pcDepthPlaneData, iDepthStride, 1, ppiFposLUT );
+}
+
+Void TRenFilter::sampleCVerUp( Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
+{
+  xDistributeArray( pcInputPlaneData-3, iInputStride, 1, 1, iInputWidth+6, iHeight, pcOutputPlaneData              -3, iOutputStride, 1, 2 );
+  xInterpVerChroma( pcInputPlaneData-3, iInputStride, 1, 1, iInputWidth+6, iHeight, pcOutputPlaneData+iOutputStride-3, iOutputStride, 1, 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+}
+
+Void TRenFilter::sampleCConv( Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride, Pel* pcDepthPlaneData, Int iDepthStride, Int** ppiFposLUT )
+{
+  // assume quater resolution depth 
+  xDistributeArrayOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 1, 1, pcDepthPlaneData, iDepthStride, 2, 2, ppiFposLUT);
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 1, 1, pcDepthPlaneData, iDepthStride, 2, 2, ppiFposLUT, 1, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 1, 1, pcDepthPlaneData, iDepthStride, 2, 2, ppiFposLUT, 2, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 1, 1, pcDepthPlaneData, iDepthStride, 2, 2, ppiFposLUT, 3, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
+}
+
+Void TRenFilter::sampleCConvHorUp( Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride, Pel* pcDepthPlaneData, Int iDepthStride, Int** ppiFposLUT )
+{
+  xDistributeArrayOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT);
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT, 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT0 );
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT, 2, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA0 );
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT, 3, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT1 );
+
+  pcOutputPlaneData++; pcDepthPlaneData++;
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT, 0, &TRenInterpFilter::xCTI_Filter_VPS04_C_HAL );
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT, 1, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT2 );
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT, 2, &TRenInterpFilter::xCTI_Filter_VP04_C_QUA1 );
+  xInterpHorChromaOnDepthCondition( pcInputPlaneData, iInputStride, 1, 1, iInputWidth, iHeight, pcOutputPlaneData, iOutputStride, 2, 1, pcDepthPlaneData, iDepthStride, 2, 1, ppiFposLUT, 3, &TRenInterpFilter::xCTI_Filter_VP04_C_OCT3 );
+}
+#endif
 
 // Down Sampling
 // Down sample luma
@@ -1223,6 +1264,73 @@ Void TRenFilter::xDistributeArray(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int
     pcSrc  += iSrcStride;
   }
 }
+
+#if NTT_SUBPEL
+Void TRenFilter::xDistributeArrayOnDepthCondition(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* pcDst, Int iDstStride, Int iDstStepX, Int iDstStepY, Pel* pcDep, Int iDepStride, Int iDepStepX, Int iDepStepY, Int** ppiFposLUT)
+{
+  iDstStride *= iDstStepY;
+  iSrcStride *= iSrcStepY;
+  iDepStride *= iDepStepY;
+
+  for (Int iYPos = 0; iYPos < iHeight; iYPos++ )
+  {
+    Pel* pcCurDst = pcDst;
+    Pel* pcCurSrc = pcSrc;
+    Pel* pcCurDep = pcDep;
+
+    for (Int iXPos = 0; iXPos < iWidth; iXPos ++)
+    {
+      if( ppiFposLUT[0][ *pcCurDep ] == 0 )
+      {
+        *pcCurDst = *pcCurSrc;
+      }
+      pcCurDst += iDstStepX;
+      pcCurSrc += iSrcStepX;
+      pcCurDep += iDepStepX;
+    }
+    pcDst  += iDstStride;
+    pcSrc  += iSrcStride;
+    pcDep  += iDepStride;
+  }
+}
+
+Void TRenFilter::xInterpHorChromaOnDepthCondition( Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, Pel* piDep, Int iDepStride, Int iDepStepX, Int iDepStepY, Int** ppiFposLUT, Int iTargetFpos, FpChromaIntFilt fpFilter )
+{
+  Int   iSum;
+  Pel*  piSrcTmpP;
+  Pel*  piSrcTmpN;
+  Pel*  piSrcTmp;
+
+  Int   iDepX;
+
+  TRenInterpFilter cFilter;
+  for ( Int y = 0; y < iHeight; y++ )
+  {
+    piSrcTmpP = piSrc - iSrcStepX;
+    piSrcTmpN = piSrc - iSrcStepX*2;
+    iDepX = 0;
+    for ( Int x = 0; x < iWidth; x++ )
+    {
+#if 0 // NTT bugfix
+      if( abs(ppiFposLUT[0][ piDep[iDepX] ]) == iTargetFpos )
+#else
+      if( ppiFposLUT[0][ piDep[iDepX] ] == iTargetFpos || ppiFposLUT[0][ piDep[iDepX] ]+4 == iTargetFpos )
+#endif
+      {
+        piSrcTmp = ppiFposLUT[0][ piDep[ iDepX ] ] >= 0 ? piSrcTmpP : piSrcTmpN;
+        iSum      = (cFilter.*fpFilter)( piSrcTmp,  iSrcStepX );
+        piDst[x * iDstStepX ] =  Clip ((iSum +  32) >>  6 );
+      }
+      piSrcTmpP += iSrcStepX;
+      piSrcTmpN += iSrcStepX;
+      iDepX += iDepStepX;
+    }
+    piSrc += iSrcStride * iSrcStepY;
+    piDst += iDstStride * iDstStepY;
+    piDep += iDepStride * iDepStepY;
+  }
+}
+#endif
 
 
 Void TRenFilter::xInterpHorChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter )
