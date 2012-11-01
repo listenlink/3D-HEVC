@@ -4806,12 +4806,15 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
   UInt uiPartIdxLT, uiPartIdxRT, uiPartIdxLB;
   UInt uiNumPartInCUWidth = m_pcPic->getNumPartInWidth();
 
-  Int   aiDvMcpDvCand[2][7] = {{0,},    {0,}}; // dummy, 5 spatial + 1 temporal, DV-MCP ﾁﾖｺｯ ｺ昞ｰｿ｡ｼｭ ｻ鄙・ﾈ DVｸｦ ﾀ惕・
+  Int   aiDvMcpDvCand[2][7] = {{0,},    {0,}}; // dummy, 5 spatial + 1 temporal, DV-MCP ﾁﾖｺｯ ｺ昞ｰｿ｡ｼｭ ｻ鄙・?DVｸｦ ﾀ惕・
   Bool  abDvMcpFlag  [2][7] = {{false,},{false,}}; 
   //Int   aiRefPOC     [2][7] = {{-1,},{-1}}; // debug
   TComMv cTmpMvPred, cMv;
   Bool  bTmpIsSkipped = false;
   Bool  bDvMcpIsFound = false;
+#if LGE_DVMCP_MEM_REDUCTION_B0135
+  Int iLCUAddrDiff = 0;
+#endif
 
   deriveLeftRightTopIdxGeneral( eCUMode, uiPartAddr, uiPartIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdxGeneral( eCUMode, uiPartAddr, uiPartIdx, uiPartIdxLB );
@@ -4877,6 +4880,9 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
 
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
   {
+#if LGE_DVMCP_MEM_REDUCTION_B0135
+    iLCUAddrDiff = getAddr() - pcTmpCU->getAddr();
+#endif
     bTmpIsSkipped = pcTmpCU->isSkipped( uiIdx );
     for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
     {
@@ -4893,7 +4899,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           return;
         }
+#if LGE_DVMCP_MEM_REDUCTION_B0135
+        else if(iLCUAddrDiff == 0) //MCP, within same LCU
+#else
         else // MCP 
+#endif
         {
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp  && bTmpIsSkipped )
@@ -4914,6 +4924,9 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
 #endif
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ) )
   {
+#if LGE_DVMCP_MEM_REDUCTION_B0135
+    iLCUAddrDiff = getAddr() - pcTmpCU->getAddr();
+#endif
     bTmpIsSkipped = pcTmpCU->isSkipped( uiIdx );
     for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
     {
@@ -4930,7 +4943,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           return;
         }
+#if LGE_DVMCP_MEM_REDUCTION_B0135
+        else if(iLCUAddrDiff == 0)
+#else
         else  // MCP 
+#endif
         {
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp && bTmpIsSkipped )
@@ -4990,6 +5007,9 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
 #endif
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
   {
+#if LGE_DVMCP_MEM_REDUCTION_B0135
+    iLCUAddrDiff = getAddr() - pcTmpCU->getAddr();
+#endif
     bTmpIsSkipped = pcTmpCU->isSkipped( uiIdx );
     for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
     {
@@ -5006,7 +5026,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           return;
         }
+#if LGE_DVMCP_MEM_REDUCTION_B0135
+        else if(iLCUAddrDiff <= 1)
+#else
         else // MCP 
+#endif
         {
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp && bTmpIsSkipped )
@@ -5519,6 +5543,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     }
     if ( uiLCUIdx >= 0 && xGetColMVP( eRefPicList, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx_Col ) )
     {
+#if FIX_LGE_DVMCP_B0133
+      cColMv.m_bDvMcp = false;
+#endif
       pInfo->m_acMvCand[pInfo->iN++] = cColMv;
     }
     else 
@@ -5528,6 +5555,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       xDeriveCenterIdx( eCUMode, uiPartIdx, uiPartIdxCenter );
       if (xGetColMVP( eRefPicList, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx_Col ))
       {
+#if FIX_LGE_DVMCP_B0133
+        cColMv.m_bDvMcp = false;
+#endif
         pInfo->m_acMvCand[pInfo->iN++] = cColMv;
       }
     }

@@ -89,6 +89,8 @@
 #define DVFROM_ABOVELEFT                  5
 #define DVFROM_COL                        6
 #endif
+#define FIX_LGE_DVMCP_B0133               1
+#define LGE_DVMCP_MEM_REDUCTION_B0135     1 
 
 
 #define HHI_VSO                           1
