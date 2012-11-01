@@ -537,7 +537,11 @@ public:
   Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
 #if LGE_DVMCP
-  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1 );
+  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1
+#if LGE_IVMP_PARALLEL_MERGE_B0136
+    , Bool bParMerg = false
+#endif
+    );
 #endif
 
 #endif
