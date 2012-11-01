@@ -41,6 +41,8 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define MTK_UNCONSTRAINED_MVI             1    //JCT3V-B0083
+
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1

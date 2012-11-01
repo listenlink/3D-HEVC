@@ -3008,6 +3008,7 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
   const Int   iQP      = rpcTempCU->getQP( 0 );
   assert( bRecursiveCall == ( uhDepth != uhTextureModeDepth ) );
 
+#if !MTK_UNCONSTRAINED_MVI
   if( uhDepth == uhTextureModeDepth )
   {
     for( UInt ui = 0; ui < rpcTempCU->getTotalNumPart(); ui++ )
@@ -3018,6 +3019,7 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
       }
     }
   }
+#endif
 
 #if HHI_VSO
   if( m_pcRdCost->getUseRenModel() && !bRecursiveCall)
