@@ -76,7 +76,7 @@
 #if QC_MULTI_DIS_CAN                    
     #define DIS_CANS                      1
 #endif                                  
-                                        
+#define QC_SIMPLE_NBDV_B0047              1   //JCT2-B0047
 #define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   //  JCT3V-B0111 decoupling inter-view candidate
 
