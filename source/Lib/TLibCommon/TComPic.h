@@ -81,6 +81,11 @@ private:
 #if QC_MULTI_DIS_CAN
   Bool          m_checked;
 #endif
+#if QC_SIMPLE_NBDV_B0047
+  UInt        m_uiRapRefIdx;
+  RefPicList  m_eRapRefList;
+  Bool        m_bRapCheck;
+#endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*           m_pcResidual;             //  residual buffer (coded or inter-view predicted residual)
@@ -172,6 +177,15 @@ public:
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*   getResidual()         { return  m_pcResidual; }
+#endif
+#if QC_SIMPLE_NBDV_B0047
+  UInt          getRapRefIdx()                         {return m_uiRapRefIdx;}
+  RefPicList    getRapRefList()                        {return m_eRapRefList;}
+  Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
+  Void          setRapRefList(RefPicList eRefPicList)  {m_eRapRefList = eRefPicList;}
+  Bool          getRapbCheck()                         {return m_bRapCheck;}
+  Void          setRapbCheck(Bool bCheck)              {m_bRapCheck = bCheck;}
+  Bool          getDisCandRefPictures(Int iColPOC);
 #endif
 
 #if SONY_COLPIC_AVAILABILITY
