@@ -194,6 +194,9 @@ private:
   // -------------------------------------------------------------------------------------------------------------------
   
   Bool*         m_pbMergeFlag;        ///< array of merge flags
+#if LGE_ILLUCOMP_B0045
+  Bool*         m_pbICFlag;           ///< array of IC flags
+#endif
   UChar*        m_puhMergeIndex;      ///< array of merge candidate indices
 #if AMP_MRG
   Bool          m_bIsMergeAMP;
@@ -471,6 +474,14 @@ public:
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 
+#if LGE_ILLUCOMP_B0045
+  Bool*         getICFlag             ()                        { return m_pbICFlag;               }
+  Bool          getICFlag             ( UInt uiIdx )            { return m_pbICFlag[uiIdx];        }
+  Void          setICFlag             ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
+  Void          setICFlagSubParts     ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Bool          isICFlagRequired      (UInt uiAbsPartIdx);
+#endif
+
 #if AMP_MRG
   Void          setMergeAMP( Bool b )      { m_bIsMergeAMP = b; }
   Bool          getMergeAMP( )             { return m_bIsMergeAMP; }
@@ -695,6 +706,9 @@ public:
   UInt          getCtxQtCbf                     ( UInt   uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
+#if LGE_ILLUCOMP_B0045
+  UInt          getCtxICFlag                    ( UInt   uiAbsPartIdx                                 );
+#endif
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED

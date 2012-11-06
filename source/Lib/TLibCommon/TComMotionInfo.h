@@ -168,6 +168,10 @@ public:
 #if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
   Void decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift );
 #endif
+
+#if MTK_UNCONSTRAINED_MVI
+  Void setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir );
+#endif
 };
 
 //! \}

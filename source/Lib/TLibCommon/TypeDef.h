@@ -41,6 +41,8 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define MTK_UNCONSTRAINED_MVI             1    //JCT3V-B0083
+
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
@@ -100,7 +102,12 @@
 #define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
 #define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
 #define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
-#define LGE_WVSO_A0119                    1 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
+#define LGE_WVSO_A0119                    1 // JCT2-A0119 & JCT3V-B0131 Depth Metric with a weighted depth fidelity term
+#define LGE_ILLUCOMP_B0045                1 // JCT2-B0045 Illumination compensation for Luma and Chroma
+#if LGE_ILLUCOMP_B0045
+#define LGE_ILLUCOMP_B0045_ENCSIMP        1
+#endif
+#define LGE_CLEAN_UP                      1
 
 #define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
 #if OL_DEPTHLIMIT_A0044
@@ -119,6 +126,11 @@
 #define DMM_WEDGEMODEL_MIN_SIZE           4
 #define DMM_WEDGEMODEL_MAX_SIZE          32
 #define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
+#endif
+
+#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
+#if HHIQC_DMMFASTSEARCH_B0039
+#define DMM3_SIMPLIFY_TR                  1
 #endif
 
 #define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
