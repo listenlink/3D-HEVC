@@ -606,7 +606,11 @@ TComDepthMapGenerator::getDisparity( TComPic* pcPic, Int iPosX, Int iPosY, UInt 
 #if HHI_INTER_VIEW_MOTION_PRED
 #if QC_MULTI_DIS_CAN
 Int
-TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo )
+TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
+#if QC_MRG_CANS_B0048
+  , Int* iPdm
+#endif
+)
 #else
 Int
 TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv )
@@ -625,7 +629,11 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
   Bool          bPdmMerge   = ( ( pcSPS->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) == PDM_USE_FOR_MERGE );
   ROTRS( !bPdmMerge, 0 );
 
+#if QC_MRG_CANS_B0048
+  Bool abPdmAvailable[4] = {false, false, false, false};
+#else
   Bool abPdmAvailable[2] = {false,false};
+#endif
 
   Int iValid = 0;
   Int iViewId = 0;
@@ -724,9 +732,12 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
     }
   }
   Int iPdmInterDir = ( abPdmAvailable[0] ? 1 : 0 ) + ( abPdmAvailable[1] ? 2 : 0 );
-
+#if QC_MRG_CANS_B0048
+  iPdm[0] = iPdmInterDir;
+#else
   if (iPdmInterDir == 0)
   {
+#endif
     for( Int iRefListId = 0; iRefListId < 2 ; iRefListId++ )
     {
       RefPicList  eRefPicList       = RefPicList( iRefListId );
@@ -735,8 +746,13 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
 {
         if( pcSlice->getRefPOC( eRefPicList, iPdmRefIdx ) == pcSlice->getPOC())
         {
+#if QC_MRG_CANS_B0048
+          abPdmAvailable[ iRefListId+2 ] = true;
+          paiPdmRefIdx  [ iRefListId+2 ] = iPdmRefIdx;
+#else
           abPdmAvailable[ iRefListId ] = true;
           paiPdmRefIdx  [ iRefListId ] = iPdmRefIdx;
+#endif
 #if QC_MULTI_DIS_CAN
           TComMv cMv = pDInfo->m_acMvCand[0]; 
           cMv.setVer(0);
@@ -744,13 +760,22 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
           TComMv cMv(iDisparity, 0);
 #endif
           pcCU->clipMv( cMv );
+#if QC_MRG_CANS_B0048
+          pacPdmMv      [ iRefListId + 2] = cMv;
+#else
           pacPdmMv      [ iRefListId ] = cMv;
+#endif
           break;
         }
       }
     }
+#if QC_MRG_CANS_B0048
+    iPdmInterDir = ( abPdmAvailable[2] ? 1 : 0 ) + ( abPdmAvailable[3] ? 2 : 0 ) ;
+    iPdm[1] = iPdmInterDir;
+#else
     iPdmInterDir = ( abPdmAvailable[0] ? 1 : 0 ) + ( abPdmAvailable[1] ? 2 : 0 ) ;
   }
+#endif
 
   return iPdmInterDir;
 
