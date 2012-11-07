@@ -718,6 +718,13 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       m_pcResidualGenerator->initViewComponent( pcPic );
 #endif
 
+#if QC_SIMPLE_NBDV_B0047
+      if(pcSlice->getViewId() && pcSlice->getSPS()->getMultiviewMvPredMode())
+      {
+        Int iColPoc = pcSlice->getRefPOC(RefPicList(pcSlice->getColDir()), pcSlice->getColRefIdx());
+        pcPic->setRapbCheck(pcPic->getDisCandRefPictures(iColPoc));
+      }
+#endif
       while(uiNextCUAddr<uiRealEndAddress) // determine slice boundaries
       {
         pcSlice->setNextSlice       ( false );
