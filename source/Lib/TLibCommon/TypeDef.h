@@ -74,9 +74,13 @@
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
 #define QC_MULTI_DIS_CAN                  1   // JCT2-A0097
 #if QC_MULTI_DIS_CAN                    
-    #define DIS_CANS                      1
+#define DIS_CANS                          1
 #endif                                  
 #define QC_SIMPLE_NBDV_B0047              1   //JCT2-B0047
+#define QC_MRG_CANS_B0048                 1   //JCT2-B0048, B0086, B0069
+#if     QC_MRG_CANS_B0048
+#define OL_DISMV_POS_B0069                1   //different pos for dispairty MV candidate, B0069
+#endif
 #define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   //  JCT3V-B0111 decoupling inter-view candidate
 
