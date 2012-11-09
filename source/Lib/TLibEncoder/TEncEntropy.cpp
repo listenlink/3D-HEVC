@@ -1654,7 +1654,23 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     encodeTransformIdx( pcCU, uiAbsPartIdx, pcCU->getDepth(uiAbsPartIdx) );
 #endif
   }
-  
+
+#if FIX_MPI_B0065
+  if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && pcCU->getMergeFlag( uiAbsPartIdx ) && pcCU->getMergeIndex( uiAbsPartIdx ) == 0 && pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N && pcCU->getTextureModeDepth( uiAbsPartIdx ) != -1 )
+  {
+    TComDataCU *pcTextureCU = pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() );
+    if( uiDepth == pcTextureCU->getDepth(uiAbsPartIdx))
+    {
+      PartSize partSize = pcTextureCU->getPartitionSize(uiAbsPartIdx);
+      pcCU->setPartSizeSubParts( partSize, uiAbsPartIdx, uiDepth );
+    }
+    else
+    {
+      pcCU->setPartSizeSubParts( SIZE_NxN, uiAbsPartIdx, uiDepth );
+    }
+  }
+#endif
+
 #if UNIFIED_TRANSFORM_TREE
   UInt temp = 0;
   UInt temp1 = 0;
@@ -1663,6 +1679,13 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #else // UNIFIED_TRANSFORM_TREE
   xEncodeCoeff( pcCU, uiLumaOffset, uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth, uiHeight, 0, uiLumaTrMode, bCodeDQP );
 #endif // UNIFIED_TRANSFORM_TREE
+
+#if FIX_MPI_B0065
+  if( pcCU->getPredictionMode(uiAbsPartIdx) == MODE_INTER && pcCU->getMergeFlag( uiAbsPartIdx ) && pcCU->getMergeIndex( uiAbsPartIdx ) == 0 && pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N &&  pcCU->getTextureModeDepth( uiAbsPartIdx ) != -1 )
+  {
+    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );  
+  }
+#endif
 }
 
 Void TEncEntropy::encodeCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPartIdx, UInt uiTrWidth, UInt uiTrHeight, UInt uiDepth, TextType eType )

@@ -311,6 +311,13 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
     }
 #endif
 
+#if QC_SIMPLE_NBDV_B0047
+    if(pcSlice->getViewId() && pcSlice->getSPS()->getMultiviewMvPredMode())
+    {
+      Int iColPoc = pcSlice->getRefPOC(RefPicList(pcSlice->getColDir()), pcSlice->getColRefIdx());
+      rpcPic->setRapbCheck(rpcPic->getDisCandRefPictures(iColPoc));
+    }
+#endif
 
     m_pcSbacDecoders[0].load(m_pcSbacDecoder);
     m_pcSliceDecoder->decompressSlice( pcBitstream, ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders);
