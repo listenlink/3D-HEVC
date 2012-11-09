@@ -130,6 +130,9 @@
 #endif
 
 #define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
+#if HHI_MPI
+#define FIX_MPI_B0065                     1   //JCT3V-B0065, fix the MPI bug when RQT is off
+#endif
 #define HHI_MPI_MERGE_POS                 0
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
                                        

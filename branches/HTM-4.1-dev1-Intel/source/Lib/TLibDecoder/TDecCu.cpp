@@ -619,8 +619,24 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, TComDataCU* pcCUCur, UInt uiAbsPar
 Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
 #if HHI_MPI
+#if FIX_MPI_B0065
+  if( pcCU->getTextureModeDepth( 0 ) != -1 )
+  {
+    TComDataCU *pcTextureCU = pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() );
+    if( uiDepth == pcTextureCU->getDepth(uiAbsPartIdx))
+    {
+      PartSize partSize = pcTextureCU->getPartitionSize(uiAbsPartIdx);
+      pcCU->setPartSizeSubParts( partSize, 0, uiDepth );
+    }
+    else
+    {
+      pcCU->setPartSizeSubParts( SIZE_NxN, 0, uiDepth );
+    }
+  }
+#else
   if( pcCU->getTextureModeDepth( 0 ) != -1 )
     pcCU->setPartSizeSubParts( SIZE_NxN, 0, uiDepth );
+#endif
 #endif
   
   // inter prediction
