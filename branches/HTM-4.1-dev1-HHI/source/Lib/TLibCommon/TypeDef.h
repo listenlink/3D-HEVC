@@ -41,6 +41,7 @@
 //! \ingroup TLibCommon
 //! \{
 
+// A
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
@@ -53,6 +54,11 @@
 #define FIX_LG_RESTRICTEDRESPRED_M24766   1
 #define FIX_REMOVE_TILE_DEPENDENCE        1
 #define FIX_DBL_CONTROL_DEFAULT           1
+
+
+// B
+#define FIX_LGE_IVMP_PARALLEL_MERGE_B0136 1
+
 
 #define DV_DERIVATION_PARALLEL_B0096      1 //JCT3V-B0096, enable parallel derivation of disparity vector
 

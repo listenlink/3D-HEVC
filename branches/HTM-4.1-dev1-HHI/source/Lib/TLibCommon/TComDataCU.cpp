@@ -5710,7 +5710,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       cDisInfo.iN = 0;
 #if LGE_DVMCP
 #if QC_SIMPLE_NBDV_B0047
+#if FIX_LGE_IVMP_PARALLEL_MERGE_B0136
+      getDisMvpCand2(uiPartIdx, uiPartAddr, &cDisInfo, false); 
+#else
       getDisMvpCand2(uiPartIdx, uiPartAddr, &cDisInfo); 
+#endif
 #else
       getDisMvpCand2(uiPartIdx, uiPartAddr, &cDisInfo, false, eRefPicList, iRefIdx );
 #endif
@@ -5766,7 +5770,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   {
 #if LGE_DVMCP
 #if QC_SIMPLE_NBDV_B0047 
+#if FIX_LGE_IVMP_PARALLEL_MERGE_B0136
+    getDisMvpCand2(uiPartIdx, uiPartAddr, &cDisInfo, false);
+#else
     getDisMvpCand2(uiPartIdx, uiPartAddr, &cDisInfo);
+#endif
 #else
     getDisMvpCand2(uiPartIdx, uiPartAddr, &cDisInfo, false, eRefPicList, iRefIdx );
 #endif
@@ -7652,7 +7660,11 @@ TComDataCU::getResidualSamples( UInt uiPartIdx,
   m_pePartSize[0] =  SIZE_2Nx2N;
 #if LGE_DVMCP
 #if QC_SIMPLE_NBDV_B0047
+#if FIX_LGE_IVMP_PARALLEL_MERGE_B0136
+  getDisMvpCand2( 0, 0,  &cDisInfo, false);
+#else
   getDisMvpCand2( 0, 0,  &cDisInfo);
+#endif
 #else
   getDisMvpCand2( 0, 0,  &cDisInfo, true );
 #endif
