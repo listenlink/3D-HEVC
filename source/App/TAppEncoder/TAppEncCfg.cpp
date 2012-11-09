@@ -291,8 +291,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxDeltaQP,d",  m_iMaxDeltaQP,        0, "max dQp offset for block")
   ("MaxCuDQPDepth,-dqd",  m_iMaxCuDQPDepth,        0, "max depth for a minimum CuDQP")
 
-    ("ChromaQpOffset,   -cqo",   m_iChromaQpOffset,           0, "ChromaQpOffset")
-    ("ChromaQpOffset2nd,-cqo2",  m_iChromaQpOffset2nd,        0, "ChromaQpOffset2nd")
+  ("ChromaQpOffset,   -cqo",   m_iChromaQpOffset,           0, "ChromaQpOffset")
+  ("ChromaQpOffset2nd,-cqo2",  m_iChromaQpOffset2nd,        0, "ChromaQpOffset2nd")
 
 #if ADAPTIVE_QP_SELECTION
     ("AdaptiveQpSelection,-aqps",   m_bUseAdaptQpSelect,           false, "AdaptiveQpSelection")
@@ -453,7 +453,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                               "\t1: use MD5\n"
                                               "\t0: disable")
 
+#if TMVP_DEPTH_SWITCH
+  ("TMVP", m_enableTMVP, std::vector<Bool>(1,true), "Enable TMVP" )
+#else
   ("TMVP", m_enableTMVP, true, "Enable TMVP" )
+#endif
 
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
   ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
@@ -682,6 +686,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_bUseWVSO = m_bUseVSO && m_bUseWVSO && m_bUsingDepthMaps;
 #endif
   xCleanUpVectors();
+
+
+#if TMVP_DEPTH_SWITCH
+  if ( m_enableTMVP.size() < 2)
+  {
+    m_enableTMVP.push_back( m_enableTMVP[0]  );
+  }
+#endif
+ 
 
 #if HHI_VSO
   if ( m_abUseALF .size() < 2)
@@ -1605,7 +1618,7 @@ Void TAppEncCfg::xPrintParameter()
     printf("DisableInter4x4              : %d\n", m_bDisInter4x4);  
   }
 
-printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 0,  m_abLoopFilterDisable[1] ? 1 : 0 );
+  printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 0,  m_abLoopFilterDisable[1] ? 1 : 0 );
   printf("Coded Camera Param. Precision: %d\n", m_iCodedCamParPrecision);
 
 #if HHI_VSO
@@ -1703,7 +1716,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
           m_iWaveFrontSynchro, m_iWaveFrontFlush, m_iWaveFrontSubstreams);
   printf(" ScalingList:%d ", m_useScalingListId );
 
+#if !TMVP_DEPTH_SWITCH
   printf("TMVP:%d ", m_enableTMVP     );
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   printf("AQpS:%d", m_bUseAdaptQpSelect   );
@@ -1717,12 +1732,18 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
   printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[0] ? 1 : 0) );
+#endif
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
   printf("ALF:%d ", (m_abUseALF [1] ? 1 : 0));
   printf("SAO:%d ", (m_abUseSAO [1] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
+#endif
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
 #endif

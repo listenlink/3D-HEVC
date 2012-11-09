@@ -257,7 +257,12 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseWeightPred;                                 ///< Use of explicit Weighting Prediction for P_SLICE
   UInt      m_uiBiPredIdc;                                    ///< Use of Bi-Directional Weighting Prediction (B_SLICE): explicit(1) or implicit(2)
 
+#if TMVP_DEPTH_SWITCH
+  vector<Bool> m_enableTMVP;                                  ///< Enable TMVP [0] video, [1] depth
+#else
   Bool      m_enableTMVP;
+#endif
+
 #if MULTIBITS_DATA_HIDING
   Int       m_signHideFlag;
   Int       m_signHidingThreshold;
