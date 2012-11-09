@@ -1972,7 +1972,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
         CandNum += xUpdateCandList( uiMode, cost, numModesForFullRD, uiRdModeList, CandCostList );
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if (HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX) && !FIX_DMM_NEG_DIST
         if( bTestDmm ) bTestDmm = uiSad ? true : false;
 #endif
 #if LGE_EDGE_INTRA
