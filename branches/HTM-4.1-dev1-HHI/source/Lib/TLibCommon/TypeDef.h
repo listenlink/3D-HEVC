@@ -59,7 +59,7 @@
 // B
 #define FIX_LGE_IVMP_PARALLEL_MERGE_B0136 1
 #define TMVP_DEPTH_SWITCH                 1 // related to JCT3V-B0092
-
+#define FIX_RDO_NEGDIST                   1
 
 #define DV_DERIVATION_PARALLEL_B0096      1 //JCT3V-B0096, enable parallel derivation of disparity vector
 

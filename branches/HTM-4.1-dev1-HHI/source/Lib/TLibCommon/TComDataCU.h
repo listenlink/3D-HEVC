@@ -235,7 +235,11 @@ private:
   
   Bool          m_bDecSubCu;          ///< indicates decoder-mode
   Double        m_dTotalCost;         ///< sum of partition RD costs
+#if FIX_RDO_NEGDIST
+  Dist          m_uiTotalDistortion;  ///< sum of partition distortion
+#else
   UInt          m_uiTotalDistortion;  ///< sum of partition distortion
+#endif
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;       ///< sum of partition bins
   UInt*         m_uiSliceStartCU;    ///< Start CU address of current slice
@@ -735,7 +739,11 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   
   Double&       getTotalCost()                  { return m_dTotalCost;        }
+#if FIX_RDO_NEGDIST
+  Dist&         getTotalDistortion()            { return m_uiTotalDistortion; }
+#else
   UInt&         getTotalDistortion()            { return m_uiTotalDistortion; }
+#endif
   UInt&         getTotalBits()                  { return m_uiTotalBits;       }
   UInt&         getTotalNumPart()               { return m_uiNumPartition;    }
 
