@@ -322,6 +322,15 @@ private:
 #if HHI_MPI
   Bool        m_bUseMVI;
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool        m_bUseDLT;
+  
+  UInt        m_uiBitsPerDepthValue;
+  UInt        m_uiNumDepthmapValues;
+  UInt*       m_uiDepthValue2Idx;
+  UInt*       m_uiIdx2DepthValue;
+#endif
 
   Bool     m_bLFCrossTileBoundaryFlag;
   Int      m_iUniformSpacingIdr;
@@ -545,6 +554,17 @@ public:
 #if HHI_MPI
   Void setUseMVI                  (Bool bVal)  {m_bUseMVI = bVal;}
   Bool getUseMVI                  ()           {return m_bUseMVI;}
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool getUseDLT      ()          { return m_bUseDLT; }
+  Void setUseDLT      ( Bool b ) { m_bUseDLT  = b;          }
+  
+  UInt getBitsPerDepthValue()       { return m_bUseDLT?m_uiBitsPerDepthValue:g_uiBitDepth; }
+  UInt getNumDepthValues()          { return m_bUseDLT?m_uiNumDepthmapValues:g_uiIBDI_MAX; }
+  UInt depthValue2idx(Pel uiValue)  { return m_bUseDLT?m_uiDepthValue2Idx[uiValue]:uiValue; }
+  Pel  idx2DepthValue(UInt uiIdx)   { return m_bUseDLT?m_uiIdx2DepthValue[uiIdx]:uiIdx; }
+  Void setDepthLUTs   (UInt* uidx2DepthValue = NULL, UInt uiNumDepthValues = 0);
 #endif
 
   UInt      getMaxTLayers()                           { return m_uiMaxTLayers; }

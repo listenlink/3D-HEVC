@@ -144,6 +144,12 @@ public:
   Void  codeSaoUflc       ( UInt  uiCode);
 #endif
   Void  codeScalingList      ( TComScalingList* scalingList     ){ assert (0);  return;};
+  
+#if RWTH_SDC_DLT_B0036
+  Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+  Void codeSDCPredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
@@ -320,6 +326,16 @@ private:
 #if LGE_EDGE_INTRA_DELTA_DC
   ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
 #endif
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  ContextModel3DBuffer m_cSDCFlagSCModel;
+  
+  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSCModel;
+  
+  ContextModel3DBuffer m_cSDCPredModeSCModel;
 #endif
 };
 

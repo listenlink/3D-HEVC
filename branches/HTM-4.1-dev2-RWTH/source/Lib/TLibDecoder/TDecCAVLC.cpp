@@ -1673,8 +1673,38 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setUseMVI( uiCode );
     }
 #endif
+    
+#if RWTH_SDC_DLT_B0036
+    if( bIsDepth )
+    {
+      READ_FLAG( uiCode, "use_dlt_flag" );
+      pcSPS->setUseDLT( uiCode );
+      if( pcSPS->getUseDLT() )
+      {
+        // decode mapping
+        UInt uiNumDepthValues;
+        // parse number of values in DLT
+        xReadUvlc( uiNumDepthValues );
+        
+        // parse actual DLT values
+        UInt* auiIdx2DepthValue = (UInt*) calloc(uiNumDepthValues, sizeof(UInt));
+        for(UInt d=0; d<uiNumDepthValues; d++)
+        {
+          xReadUvlc( uiCode );
+          auiIdx2DepthValue[d] = uiCode;
+        }
+        
+        pcSPS->setDepthLUTs(auiIdx2DepthValue, uiNumDepthValues);
+        
+        // clean memory
+        free(auiIdx2DepthValue);
+      }
+      else
+        pcSPS->setDepthLUTs();
+    }
+#endif
 
-    READ_FLAG( uiCode, "base_view_flag" ); 
+    READ_FLAG( uiCode, "base_view_flag" );
     if( uiCode )
     { // baseview SPS -> set standard values
       pcSPS->initMultiviewSPS         ( 0 );
@@ -2821,6 +2851,21 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
 #if HHI_INTER_VIEW_RESIDUAL_PRED
 Void
 TDecCavlc::parseResPredFlag( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
+
+#if RWTH_SDC_DLT_B0036
+Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+Void TDecCavlc::parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+Void TDecCavlc::parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart )
 {
   assert(0);
 }

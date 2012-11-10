@@ -643,6 +643,22 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( pcSPS->getUseMVI() ? 1 : 0, "use_mvi_flag" );
   }
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  if( bIsDepth )
+  {
+    WRITE_FLAG( pcSPS->getUseDLT() ? 1 : 0, "use_dlt_flag" );
+    if( pcSPS->getUseDLT() )
+    {
+      // code mapping
+      xWriteUvlc  ( pcSPS->getNumDepthValues() );
+      for(UInt i=0; i<pcSPS->getNumDepthValues(); i++)
+      {
+        xWriteUvlc( pcSPS->idx2DepthValue(i) );
+      }
+    }
+  }
+#endif
 
   if( pcSPS->getViewId() || pcSPS->isDepth() )
   {
@@ -2065,4 +2081,21 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   }
   return true;
 }
+
+#if RWTH_SDC_DLT_B0036
+Void TEncCavlc::codeSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeSDCPredMode ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 //! \}

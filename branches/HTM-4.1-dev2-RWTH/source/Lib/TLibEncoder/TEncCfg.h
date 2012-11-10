@@ -249,6 +249,10 @@ protected:
 #if HHI_MPI
   Bool      m_bUseMVI;
 #endif
+#if RWTH_SDC_DLT_B0036
+  Bool      m_bUseDLT;
+  Bool      m_bUseSDC;
+#endif
 
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
@@ -690,6 +694,10 @@ public:
 #if HHI_MPI
   Void  setUseMVI                      ( Bool bVal )   {m_bUseMVI = bVal;}
 #endif
+#if RWTH_SDC_DLT_B0036
+  Void  setUseDLT                       ( Bool  b )     { m_bUseDLT   = b; }
+  Void  setUseSDC                       ( Bool  b )     { m_bUseSDC   = b; }
+#endif
   Void  setUseSAO                      ( Bool bVal )   {m_bUseSAO = bVal;}
   Bool  getUseSAO                      ()              {return m_bUseSAO;}
 #if LGE_ILLUCOMP_B0045
@@ -828,6 +836,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Void      setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool      getUseDMM()        { return m_bUseDMM; }
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool      getUseDLT()      { return m_bUseDLT;     }
+  Bool      getUseSDC()      { return m_bUseSDC;     }
 #endif
 
 #if OL_DEPTHLIMIT_A0044

@@ -222,6 +222,12 @@ public:
   Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
+  
+#if RWTH_SDC_DLT_B0036
+  Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+  Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
 };
 

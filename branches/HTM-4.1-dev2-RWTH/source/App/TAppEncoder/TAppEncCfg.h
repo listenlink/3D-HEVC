@@ -268,6 +268,10 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if HHI_MPI
   Bool      m_bUseMVI;  ///< flag for using Motion Vector Inheritance for depth map coding
 #endif
+#if RWTH_SDC_DLT_B0036
+  Bool      m_bUseDLT;
+  Bool      m_bUseSDC;
+#endif
 
   Int       m_useScalingListId;                               ///< using quantization matrix
   char*     m_scalingListFile;                                ///< quantization matrix file name

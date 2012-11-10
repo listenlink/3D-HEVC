@@ -127,6 +127,12 @@ public:
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   
+#if RWTH_SDC_DLT_B0036
+  virtual Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment ) = 0;
+  virtual Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
+  
 #if BURST_IPCM
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag) = 0;
 #else
@@ -301,6 +307,12 @@ public:
   Void encodeFinish               (Bool bEnd) {m_pcEntropyCoderIf->codeFinish(bEnd);}
   Void encodeScalingList       ( TComScalingList* scalingList );
   Void encodeDFParams          (TComAPS* pcAPS);
+  
+#if RWTH_SDC_DLT_B0036
+  Void encodeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeSDCPredMode   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
 
 private:
 #if UNIFIED_TRANSFORM_TREE

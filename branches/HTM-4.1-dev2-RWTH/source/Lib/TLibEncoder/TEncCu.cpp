@@ -2307,10 +2307,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
           // do MC
 #if HHI_INTERVIEW_SKIP
-      if ( (uiNoResidual == 0) || bSkipRes ){
+      if ( (uiNoResidual == 0) || bSkipRes )
 #else
-      if ( uiNoResidual == 0 ){
+      if ( uiNoResidual == 0 )
 #endif
+        {
             m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
             // save pred adress
             pcPredYuvTemp = m_ppcPredYuvTemp[uhDepth];
@@ -2540,6 +2541,9 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   m_ppcRecoYuvTemp[uiDepth]->copyToPicLuma(rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
   
+#if RWTH_SDC_DLT_B0036
+  if( !rpcTempCU->getSDCFlag( 0 ) )
+#endif
   m_pcPredSearch  ->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC );
   
   m_pcEntropyCoder->resetBits();
