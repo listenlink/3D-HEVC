@@ -476,6 +476,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if HHI_MPI
   ("MVI", m_bUseMVI, false, "use motion vector inheritance for depth map coding")
 #endif
+#if RWTH_SDC_DLT_B0036
+  ("DLT", m_bUseDLT, true, "Enables Depth Lookup Table")
+  ("SDC", m_bUseSDC, true, "Enabled Simplified Depth Coding")
+#endif
   ;
   
   // parse coding structure
@@ -1744,6 +1748,10 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #endif
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
+#endif
+#if RWTH_SDC_DLT_B0036
+  printf("SDC:%d ", m_bUseSDC ? 1 : 0 );
+  printf("DLT:%d ", m_bUseDLT ? 1 : 0 );
 #endif
 #if LGE_WVSO_A0119
   if ( m_bUseWVSO )

@@ -307,6 +307,18 @@ protected:
                                     UInt         uiAbsPartIdx,
                                     TComYuv*     pcRecoYuv );
   
+#if RWTH_SDC_DLT_B0036
+  Void  xAnalyzeSegmentsSDC       ( Pel* pOrig,
+                                   UInt uiStride,
+                                   UInt uiSize,
+                                   Pel* rpSegMeans,
+                                   UInt uiNumSegments,
+                                   Bool* pMask,
+                                   UInt uiMaskStride );
+  
+  Void  xIntraCodingSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bResidual );
+#endif
+  
   // -------------------------------------------------------------------------------------------------------------------
   // DMM intra search
   // -------------------------------------------------------------------------------------------------------------------

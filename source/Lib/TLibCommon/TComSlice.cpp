@@ -1556,6 +1556,15 @@ TComSPS::TComSPS()
 #endif
 
   ::memset( m_aiUsableInterViewRefs, 0, sizeof( m_aiUsableInterViewRefs ) );
+  
+#if RWTH_SDC_DLT_B0036
+  m_bUseDLT = false;
+  
+  m_uiBitsPerDepthValue = g_uiBitDepth;
+  m_uiNumDepthmapValues = 0;
+  m_uiDepthValue2Idx    = NULL;
+  m_uiIdx2DepthValue    = NULL;
+#endif
 }
 
 TComSPS::~TComSPS()
@@ -1571,6 +1580,87 @@ TComSPS::~TComSPS()
     m_puiRowHeight = NULL;
   }
 }
+
+#if RWTH_SDC_DLT_B0036
+Void TComSPS::setDepthLUTs(UInt* uidx2DepthValue, UInt uiNumDepthValues)
+{
+  UInt uiMaxDepthValue = g_uiIBDI_MAX;
+  
+  // allocate some memory
+  if( m_uiNumDepthmapValues == 0 )
+  {
+    m_uiNumDepthmapValues = uiMaxDepthValue+1;
+    m_uiBitsPerDepthValue = (UInt)ceil(log2f(m_uiNumDepthmapValues));
+    
+    m_uiDepthValue2Idx    = (UInt*) xMalloc(UInt, m_uiNumDepthmapValues);
+    m_uiIdx2DepthValue    = (UInt*) xMalloc(UInt, m_uiNumDepthmapValues);
+    
+    //default mapping
+    for (Int i=0; i<m_uiNumDepthmapValues; i++)
+    {
+      m_uiDepthValue2Idx[i] = i;
+      m_uiIdx2DepthValue[i] = i;
+    }
+  }
+  
+  if( uidx2DepthValue == NULL || uiNumDepthValues == 0 ) // default mapping only
+    return;
+  
+  // copy idx2DepthValue to internal array
+  memcpy(m_uiIdx2DepthValue, uidx2DepthValue, uiNumDepthValues*sizeof(UInt));
+  
+  for(Int p=0; p<=uiMaxDepthValue; p++)
+  {
+    Int iIdxDown    = 0;
+    Int iIdxUp      = uiNumDepthValues-1;
+    Bool bFound     = false;
+    
+    // iterate over indices to find lower closest depth
+    Int i = 1;
+    while(!bFound && i<uiNumDepthValues)
+    {
+      if( m_uiIdx2DepthValue[i] > p )
+      {
+        iIdxDown  = i-1;
+        bFound    = true;
+      }
+      
+      i++;
+    }
+    // iterate over indices to find upper closest depth
+    i = uiNumDepthValues-2;
+    bFound = false;
+    while(!bFound && i>=0)
+    {
+      if( m_uiIdx2DepthValue[i] < p )
+      {
+        iIdxUp  = i+1;
+        bFound    = true;
+      }
+      
+      i--;
+    }
+    
+    // assert monotony
+    assert(iIdxDown<=iIdxUp);
+    
+    // assign closer depth value/idx
+    if( abs(p-(Int)m_uiIdx2DepthValue[iIdxDown]) < abs(p-(Int)m_uiIdx2DepthValue[iIdxUp]) )
+    {
+      m_uiDepthValue2Idx[p] = iIdxDown;
+    }
+    else
+    {
+      m_uiDepthValue2Idx[p] = iIdxUp;
+    }
+    
+  }
+  
+  // update globals
+  m_uiNumDepthmapValues = uiNumDepthValues;
+  m_uiBitsPerDepthValue = (UInt)ceil(Log2(m_uiNumDepthmapValues));
+}
+#endif
 
 TComPPS::TComPPS()
 : m_PPSId                       (0)

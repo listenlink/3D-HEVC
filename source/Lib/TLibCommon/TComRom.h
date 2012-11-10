@@ -197,6 +197,11 @@ extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
 extern       std::vector< std::vector<TComWedgeNode> >       g_aacWedgeNodeLists;
 #endif
 
+#if RWTH_SDC_DLT_B0036
+#define RWTH_SDC_NUM_PRED_MODES 4
+extern      UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES];
+#endif
+
 Void initWedgeLists();
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );

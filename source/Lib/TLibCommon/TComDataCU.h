@@ -273,6 +273,11 @@ private:
   Int*          m_piContourPredTexDeltaDC1;
   Int*          m_piContourPredTexDeltaDC2;
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool*         m_pbSDCFlag;
+  Pel*          m_apSegmentDCOffset[2];
+#endif
 
 protected:
   
@@ -821,6 +826,20 @@ public:
   Void          setEdgeDeltaDC0( UInt uiIdx, Int val )      { m_piEdgeDeltaDC0[uiIdx] = val;  }
   Void          setEdgeDeltaDC1( UInt uiIdx, Int val )      { m_piEdgeDeltaDC1[uiIdx] = val;  }
 #endif
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool*         getSDCFlag          ()                        { return m_pbSDCFlag;               }
+  Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
+  Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  
+  UInt          getCtxSDCFlag              ( UInt uiAbsPartIdx );
+  
+  Bool          getSDCAvailable             ( UInt uiAbsPartIdx );
+  
+  Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
+  Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
+  Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
 #endif
 };
 
