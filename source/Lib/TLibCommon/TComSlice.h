@@ -322,6 +322,15 @@ private:
 #if HHI_MPI
   Bool        m_bUseMVI;
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool        m_bUseDLT;
+  
+  UInt        m_uiBitsPerDepthValue;
+  UInt        m_uiNumDepthmapValues;
+  UInt*       m_uiDepthValue2Idx;
+  UInt*       m_uiIdx2DepthValue;
+#endif
 
   Bool     m_bLFCrossTileBoundaryFlag;
   Int      m_iUniformSpacingIdr;
@@ -545,6 +554,17 @@ public:
 #if HHI_MPI
   Void setUseMVI                  (Bool bVal)  {m_bUseMVI = bVal;}
   Bool getUseMVI                  ()           {return m_bUseMVI;}
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool getUseDLT      ()          { return m_bUseDLT; }
+  Void setUseDLT      ( Bool b ) { m_bUseDLT  = b;          }
+  
+  UInt getBitsPerDepthValue()       { return m_bUseDLT?m_uiBitsPerDepthValue:g_uiBitDepth; }
+  UInt getNumDepthValues()          { return m_bUseDLT?m_uiNumDepthmapValues:g_uiIBDI_MAX; }
+  UInt depthValue2idx(Pel uiValue)  { return m_bUseDLT?m_uiDepthValue2Idx[uiValue]:uiValue; }
+  Pel  idx2DepthValue(UInt uiIdx)   { return m_bUseDLT?m_uiIdx2DepthValue[uiIdx]:uiIdx; }
+  Void setDepthLUTs   (UInt* uidx2DepthValue = NULL, UInt uiNumDepthValues = 0);
 #endif
 
   UInt      getMaxTLayers()                           { return m_uiMaxTLayers; }
@@ -1279,6 +1299,9 @@ private:
 #if SONY_COLPIC_AVAILABILITY
   Int         m_iViewOrderIdx;
 #endif
+#if LGE_ILLUCOMP_B0045
+  Bool        m_bApplyIC;
+#endif
 
 public:
   TComSlice();
@@ -1572,6 +1595,12 @@ public:
   Int*      getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int*      getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+
+#if LGE_ILLUCOMP_B0045
+  Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
+  Bool      getApplyIC            ()  { return m_bApplyIC; }
+  Void      xSetApplyIC           ();
+#endif
 
 protected:
   TComPic*  xGetRefPic        (TComList<TComPic*>& rcListPic, UInt uiPOC);

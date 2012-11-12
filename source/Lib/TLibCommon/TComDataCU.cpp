@@ -74,6 +74,9 @@ TComDataCU::TComDataCU()
   m_puhHeight          = NULL;
   m_phQP               = NULL;
   m_pbMergeFlag        = NULL;
+#if LGE_ILLUCOMP_B0045
+  m_pbICFlag           = NULL;
+#endif
   m_puhMergeIndex      = NULL;
   m_puhLumaIntraDir    = NULL;
   m_puhChromaIntraDir  = NULL;
@@ -154,6 +157,11 @@ TComDataCU::TComDataCU()
   m_piEdgeDeltaDC1      = NULL;
 #endif
 #endif
+#if RWTH_SDC_DLT_B0036
+  m_pbSDCFlag           = NULL;
+  m_apSegmentDCOffset[0] = NULL;
+  m_apSegmentDCOffset[1] = NULL;
+#endif
 #if OL_DEPTHLIMIT_A0044
   //add a variable to store the partition information
   //a 2D array in part_symbol, uidepth format
@@ -205,9 +213,18 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     memset( m_pePartSize, SIZE_NONE,uiNumPartition * sizeof( *m_pePartSize ) );
     m_pePredMode         = new Char[ uiNumPartition ];
     
+#if RWTH_SDC_DLT_B0036
+    m_pbSDCFlag          = (Bool*  )xMalloc(Bool,   uiNumPartition);
+    m_apSegmentDCOffset[0] = (Pel*)xMalloc(Pel, uiNumPartition);
+    m_apSegmentDCOffset[1] = (Pel*)xMalloc(Pel, uiNumPartition);
+#endif
+    
     m_puiAlfCtrlFlag     = new Bool[ uiNumPartition ];
     
     m_pbMergeFlag        = (Bool*  )xMalloc(Bool,   uiNumPartition);
+#if LGE_ILLUCOMP_B0045
+    m_pbICFlag           = (Bool*  )xMalloc(Bool,   uiNumPartition);
+#endif
     m_puhMergeIndex      = (UChar* )xMalloc(UChar,  uiNumPartition);
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pbResPredAvailable = (Bool*  )xMalloc(Bool,   uiNumPartition);
@@ -348,12 +365,20 @@ Void TComDataCU::destroy()
     if ( m_pbRenderable        ) { xFree(m_pbRenderable);         m_pbRenderable       = NULL; }
 #endif
     if ( m_pePredMode         ) { delete[] m_pePredMode;        m_pePredMode        = NULL; }
+#if RWTH_SDC_DLT_B0036
+    if ( m_pbSDCFlag          ) { xFree(m_pbSDCFlag);      m_pbSDCFlag    = NULL; }
+    if ( m_apSegmentDCOffset[0]          ) { xFree(m_apSegmentDCOffset[0]);      m_apSegmentDCOffset[0]    = NULL; }
+    if ( m_apSegmentDCOffset[1]          ) { xFree(m_apSegmentDCOffset[1]);      m_apSegmentDCOffset[1]    = NULL; }
+#endif
     if ( m_puhCbf[0]          ) { xFree(m_puhCbf[0]);           m_puhCbf[0]         = NULL; }
     if ( m_puhCbf[1]          ) { xFree(m_puhCbf[1]);           m_puhCbf[1]         = NULL; }
     if ( m_puhCbf[2]          ) { xFree(m_puhCbf[2]);           m_puhCbf[2]         = NULL; }
     if ( m_puiAlfCtrlFlag     ) { delete[] m_puiAlfCtrlFlag;    m_puiAlfCtrlFlag    = NULL; }
     if ( m_puhInterDir        ) { xFree(m_puhInterDir);         m_puhInterDir       = NULL; }
     if ( m_pbMergeFlag        ) { xFree(m_pbMergeFlag);         m_pbMergeFlag       = NULL; }
+#if LGE_ILLUCOMP_B0045
+    if ( m_pbICFlag           ) { xFree(m_pbICFlag);            m_pbICFlag          = NULL; }
+#endif
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex     = NULL; }
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     if ( m_pbResPredAvailable ) { xFree(m_pbResPredAvailable);  m_pbResPredAvailable= NULL; }
@@ -536,6 +561,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #if HHI_MPI
     m_piTextureModeDepth[ui] = pcFrom->getTextureModeDepth(ui);
 #endif
+#if RWTH_SDC_DLT_B0036
+    m_pbSDCFlag[ui] = pcFrom->getSDCFlag(ui);
+#endif
     m_puhWidth  [ui] = pcFrom->getWidth(ui);
     m_puhHeight [ui] = pcFrom->getHeight(ui);
     m_puhTrIdx  [ui] = pcFrom->getTransformIdx(ui);
@@ -547,6 +575,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_phQP[ui]=pcFrom->m_phQP[ui];
     m_puiAlfCtrlFlag[ui]=pcFrom->m_puiAlfCtrlFlag[ui];
     m_pbMergeFlag[ui]=pcFrom->m_pbMergeFlag[ui];
+#if LGE_ILLUCOMP_B0045
+    m_pbICFlag[ui]=pcFrom->m_pbICFlag[ui];
+#endif
     m_puhMergeIndex[ui]=pcFrom->m_puhMergeIndex[ui];
     m_puhLumaIntraDir[ui]=pcFrom->m_puhLumaIntraDir[ui];
     m_puhChromaIntraDir[ui]=pcFrom->m_puhChromaIntraDir[ui];
@@ -568,6 +599,11 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #if HHI_MPI
     memset( m_piTextureModeDepth+ firstElement,-1,                        numElements * sizeof( *m_piTextureModeDepth ) );
 #endif
+#if RWTH_SDC_DLT_B0036
+    memset( m_pbSDCFlag        + firstElement,     0,                     numElements * sizeof( *m_pbSDCFlag ) );
+    memset( m_apSegmentDCOffset[0]        + firstElement,     0,                     numElements * sizeof( *m_apSegmentDCOffset[0] ) );
+    memset( m_apSegmentDCOffset[1]        + firstElement,     0,                     numElements * sizeof( *m_apSegmentDCOffset[1] ) );
+#endif
     memset( m_puhTrIdx          + firstElement, 0,                        numElements * sizeof( *m_puhTrIdx ) );
     memset( m_nsqtPartIdx       + firstElement, 0,                        numElements * sizeof( *m_nsqtPartIdx) );
     memset( m_puhWidth          + firstElement, g_uiMaxCUWidth,           numElements * sizeof( *m_puhWidth ) );
@@ -579,6 +615,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_phQP              + firstElement, getSlice()->getSliceQp(), numElements * sizeof( *m_phQP ) );
     memset( m_puiAlfCtrlFlag    + firstElement, false,                    numElements * sizeof( *m_puiAlfCtrlFlag ) );
     memset( m_pbMergeFlag       + firstElement, false,                    numElements * sizeof( *m_pbMergeFlag ) );
+#if LGE_ILLUCOMP_B0045
+    memset( m_pbICFlag          + firstElement, false,                    numElements * sizeof( *m_pbICFlag ) );
+#endif
     memset( m_puhMergeIndex     + firstElement, 0,                        numElements * sizeof( *m_puhMergeIndex ) );
     memset( m_puhLumaIntraDir   + firstElement, 2,                        numElements * sizeof( *m_puhLumaIntraDir ) );
     memset( m_puhChromaIntraDir + firstElement, 0,                        numElements * sizeof( *m_puhChromaIntraDir ) );
@@ -762,6 +801,9 @@ Void TComDataCU::initEstData( UInt uiDepth, UInt uiQP )
 #endif
       m_puiAlfCtrlFlag[ui]= false;
       m_pbMergeFlag[ui] = 0;
+#if LGE_ILLUCOMP_B0045
+      m_pbICFlag[ui]    = false;
+#endif
       m_puhMergeIndex[ui] = 0;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
       m_pbResPredAvailable[ui] = 0;
@@ -791,6 +833,11 @@ Void TComDataCU::initEstData( UInt uiDepth, UInt uiQP )
     m_piContourPredTexDeltaDC1[ui] = 0;
     m_piContourPredTexDeltaDC2[ui] = 0;
 #endif 
+#if RWTH_SDC_DLT_B0036
+    m_pbSDCFlag[ui] = false;
+    m_apSegmentDCOffset[0][ui] = 0;
+    m_apSegmentDCOffset[1][ui] = 0;
+#endif
     }
   }
 
@@ -863,6 +910,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
   memset( m_puiAlfCtrlFlag,     0, iSizeInBool );
   memset( m_pbMergeFlag,        0, iSizeInBool  );
+#if LGE_ILLUCOMP_B0045
+  memset( m_pbICFlag,           0, iSizeInBool  );
+#endif
 #if HHI_INTERVIEW_SKIP
   memset( m_pbRenderable,        0, iSizeInBool  );
 #endif
@@ -900,7 +950,12 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
   memset( m_piContourPredTexDeltaDC1, 0, sizeof( Int  ) * m_uiNumPartition );
   memset( m_piContourPredTexDeltaDC2, 0, sizeof( Int  ) * m_uiNumPartition );
-#endif    
+#endif   
+#if RWTH_SDC_DLT_B0036
+  memset( m_pbSDCFlag,     0, sizeof(Bool) * m_uiNumPartition  );
+  memset( m_apSegmentDCOffset[0],     0, sizeof(Pel) * m_uiNumPartition);
+  memset( m_apSegmentDCOffset[1],     0, sizeof(Pel) * m_uiNumPartition);
+#endif
 
   UChar uhWidth  = g_uiMaxCUWidth  >> uiDepth;
   UChar uhHeight = g_uiMaxCUHeight >> uiDepth;
@@ -938,6 +993,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_phQP[ui] = pcCU->m_phQP[uiPartOffset+ui];
       m_puiAlfCtrlFlag[ui]=pcCU->m_puiAlfCtrlFlag[uiPartOffset+ui];
       m_pbMergeFlag[ui]=pcCU->m_pbMergeFlag[uiPartOffset+ui];
+#if LGE_ILLUCOMP_B0045
+      m_pbICFlag[ui]=pcCU->m_pbICFlag[uiPartOffset+ui];
+#endif
       m_puhMergeIndex[ui]=pcCU->m_puhMergeIndex[uiPartOffset+ui];
       m_puhLumaIntraDir[ui]=pcCU->m_puhLumaIntraDir[uiPartOffset+ui];
       m_puhChromaIntraDir[ui]=pcCU->m_puhChromaIntraDir[uiPartOffset+ui];
@@ -967,6 +1025,11 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
       m_pbResPredAvailable[ui] = pcCU->m_pbResPredAvailable[ uiPartOffset + ui ];
       m_pbResPredFlag     [ui] = pcCU->m_pbResPredFlag     [ uiPartOffset + ui ];
+#endif
+#if RWTH_SDC_DLT_B0036
+      m_pbSDCFlag         [ui] = pcCU->m_pbSDCFlag         [ uiPartOffset + ui ];
+      m_apSegmentDCOffset[0][ui] = pcCU->m_apSegmentDCOffset[0][ uiPartOffset + ui ];
+      m_apSegmentDCOffset[1][ui] = pcCU->m_apSegmentDCOffset[1][ uiPartOffset + ui ];
 #endif
     }
   }
@@ -1077,6 +1140,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_pePredMode=pcCU->getPredictionMode()  + uiPart;
   
   m_pbMergeFlag         = pcCU->getMergeFlag()        + uiPart;
+#if LGE_ILLUCOMP_B0045
+  m_pbICFlag            = pcCU->getICFlag()           + uiPart;
+#endif
   m_puhMergeIndex       = pcCU->getMergeIndex()       + uiPart;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pbResPredAvailable  = pcCU->getResPredAvail()     + uiPart;
@@ -1174,6 +1240,11 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
   }
 #endif
+#if RWTH_SDC_DLT_B0036
+  m_pbSDCFlag               = pcCU->getSDCFlag()            + uiPart;
+  m_apSegmentDCOffset[0]    = pcCU->getSDCSegmentDCOffset(0) + uiPart;
+  m_apSegmentDCOffset[1]    = pcCU->getSDCSegmentDCOffset(1) + uiPart;
+#endif
 }
 
 // Copy inter prediction info from the biggest CU
@@ -1209,6 +1280,9 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_puhHeight          = pcCU->getHeight()                + uiAbsPartIdx;
   
   m_pbMergeFlag        = pcCU->getMergeFlag()             + uiAbsPartIdx;
+#if LGE_ILLUCOMP_B0045
+  m_pbICFlag           = pcCU->getICFlag()                + uiAbsPartIdx;
+#endif
   m_puhMergeIndex      = pcCU->getMergeIndex()            + uiAbsPartIdx;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pbResPredAvailable = pcCU->getResPredAvail()          + uiAbsPartIdx;
@@ -1255,6 +1329,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
 #endif
   memcpy( m_puiAlfCtrlFlag      + uiOffset, pcCU->getAlfCtrlFlag(),       iSizeInBool  );
   memcpy( m_pbMergeFlag         + uiOffset, pcCU->getMergeFlag(),         iSizeInBool  );
+#if LGE_ILLUCOMP_B0045
+  memcpy( m_pbICFlag            + uiOffset, pcCU->getICFlag(),            iSizeInBool );
+#endif
   memcpy( m_puhMergeIndex       + uiOffset, pcCU->getMergeIndex(),        iSizeInUchar );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   memcpy( m_pbResPredAvailable  + uiOffset, pcCU->getResPredAvail(),      iSizeInBool  );
@@ -1350,6 +1427,11 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
 #if HHI_MPI
   memcpy( m_piTextureModeDepth + uiOffset, pcCU->getTextureModeDepth(), sizeof( Int ) * uiNumPartition );
 #endif
+#if RWTH_SDC_DLT_B0036
+  memcpy( m_pbSDCFlag     + uiOffset, pcCU->getSDCFlag(),      iSizeInBool  );
+  memcpy( m_apSegmentDCOffset[0]     + uiOffset, pcCU->getSDCSegmentDCOffset(0), sizeof( Pel ) * uiNumPartition);
+  memcpy( m_apSegmentDCOffset[1]     + uiOffset, pcCU->getSDCSegmentDCOffset(1), sizeof( Pel ) * uiNumPartition);
+#endif
 }
 
 // Copy current predicted part to a CU in picture.
@@ -1381,6 +1463,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   memcpy( rpcCU->getAlfCtrlFlag()    + m_uiAbsIdxInLCU, m_puiAlfCtrlFlag,    iSizeInBool  );
   
   memcpy( rpcCU->getMergeFlag()         + m_uiAbsIdxInLCU, m_pbMergeFlag,         iSizeInBool  );
+#if LGE_ILLUCOMP_B0045
+  memcpy( rpcCU->getICFlag()            + m_uiAbsIdxInLCU, m_pbICFlag,            iSizeInBool );
+#endif
   memcpy( rpcCU->getMergeIndex()        + m_uiAbsIdxInLCU, m_puhMergeIndex,       iSizeInUchar );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   memcpy( rpcCU->getResPredAvail()      + m_uiAbsIdxInLCU, m_pbResPredAvailable,  iSizeInBool  );
@@ -1468,6 +1553,11 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 #if HHI_MPI
   memcpy( rpcCU->getTextureModeDepth() + m_uiAbsIdxInLCU, m_piTextureModeDepth, sizeof( Int ) * m_uiNumPartition );
 #endif
+#if RWTH_SDC_DLT_B0036
+  memcpy( rpcCU->getSDCFlag() + m_uiAbsIdxInLCU, m_pbSDCFlag,      iSizeInBool  );
+  memcpy( rpcCU->getSDCSegmentDCOffset(0) + m_uiAbsIdxInLCU, m_apSegmentDCOffset[0], sizeof( Pel ) * m_uiNumPartition);
+  memcpy( rpcCU->getSDCSegmentDCOffset(1) + m_uiAbsIdxInLCU, m_apSegmentDCOffset[1], sizeof( Pel ) * m_uiNumPartition);
+#endif
 }
 
 Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
@@ -1499,6 +1589,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   
   memcpy( rpcCU->getAlfCtrlFlag()       + uiPartOffset, m_puiAlfCtrlFlag,      iSizeInBool  );
   memcpy( rpcCU->getMergeFlag()         + uiPartOffset, m_pbMergeFlag,         iSizeInBool  );
+#if LGE_ILLUCOMP_B0045
+  memcpy( rpcCU->getICFlag()            + uiPartOffset, m_pbICFlag,            iSizeInBool );
+#endif
   memcpy( rpcCU->getMergeIndex()        + uiPartOffset, m_puhMergeIndex,       iSizeInUchar );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   memcpy( rpcCU->getResPredAvail()      + uiPartOffset, m_pbResPredAvailable,  iSizeInBool  );
@@ -1586,6 +1679,11 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
 
 #if HHI_MPI
   memcpy( rpcCU->getTextureModeDepth() + uiPartOffset, m_piTextureModeDepth, sizeof( Int ) * uiQNumPart  );
+#endif
+#if RWTH_SDC_DLT_B0036
+  memcpy( rpcCU->getSDCFlag() + uiPartOffset, m_pbSDCFlag,      iSizeInBool  );
+  memcpy( rpcCU->getSDCSegmentDCOffset(0) + uiPartOffset, m_apSegmentDCOffset[0], sizeof( Pel ) * uiQNumPart);
+  memcpy( rpcCU->getSDCSegmentDCOffset(1) + uiPartOffset, m_apSegmentDCOffset[1], sizeof( Pel ) * uiQNumPart);
 #endif
 }
 
@@ -2678,6 +2776,15 @@ UInt TComDataCU::getCtxSkipFlag( UInt uiAbsPartIdx )
   return uiCtx;
 }
 
+#if LGE_ILLUCOMP_B0045
+UInt TComDataCU::getCtxICFlag( UInt uiAbsPartIdx )
+{
+  UInt        uiCtx = 0;
+
+  return uiCtx;
+}
+#endif
+
 UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
 {
   return getDepth( uiAbsPartIdx );
@@ -2907,6 +3014,49 @@ Void TComDataCU::setMergeFlagSubParts ( Bool bMergeFlag, UInt uiAbsPartIdx, UInt
   setSubPart( bMergeFlag, m_pbMergeFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 
+#if RWTH_SDC_DLT_B0036
+Void TComDataCU::setSDCFlagSubParts ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  setSubPart( bSDCFlag, m_pbSDCFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
+}
+
+UInt TComDataCU::getCtxSDCFlag( UInt uiAbsPartIdx )
+{
+  TComDataCU* pcTempCU;
+  UInt        uiTempPartIdx;
+  UInt        uiCtx = 0;
+  
+  // left PU
+  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, false );
+  uiCtx    = ( pcTempCU ) ? pcTempCU->getSDCFlag( uiTempPartIdx ) : 0;
+  
+  // above PU
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx, true, false );
+  uiCtx   += ( pcTempCU ) ? pcTempCU->getSDCFlag( uiTempPartIdx ) : 0;
+  
+  return uiCtx;
+}
+
+Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
+{
+  if( !getSlice()->getSPS()->isDepth() || getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )
+    return false;
+  
+  UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );
+  
+  if(!isIntra(uiAbsPartIdx))
+    return false;
+  
+  for(UInt ui=0; ui<RWTH_SDC_NUM_PRED_MODES; ui++)
+  {
+    if( g_auiSDCPredModes[ui] == uiLumaPredMode )
+      return true;
+  }
+  // else
+  return false;
+}
+#endif
+
 Void TComDataCU::setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   setSubPart<UChar>( uiMergeIndex, m_puhMergeIndex, uiAbsPartIdx, uiDepth, uiPartIdx );
@@ -2935,6 +3085,42 @@ Void TComDataCU::setInterDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiPart
 {
   setSubPart<UChar>( uiDir, m_puhInterDir, uiAbsPartIdx, uiDepth, uiPartIdx );
 }
+
+#if LGE_ILLUCOMP_B0045
+Void TComDataCU::setICFlagSubParts( Bool bICFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  memset( m_pbICFlag + uiAbsPartIdx, bICFlag, (m_pcPic->getNumPartInCU() >> ( 2 * uiDepth ))*sizeof(Bool) );
+}
+
+Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx)
+{
+  UInt uiPartAddr;
+  UInt iNumbPart;
+  Int iWidth, iHeight;
+
+  UInt uiPartMode = getPartitionSize(uiAbsPartIdx);
+
+  iNumbPart = (uiPartMode == SIZE_2Nx2N ? 1 : (uiPartMode == SIZE_NxN ? 4 : 2) );
+
+  for(UInt i = 0; i < iNumbPart; i++)
+  {
+    getPartIndexAndSize(i, uiPartAddr, iWidth, iHeight, uiAbsPartIdx, true);
+    uiPartAddr += uiAbsPartIdx;
+
+    for(UInt uiRefIdx = 0; uiRefIdx < 2; uiRefIdx++)
+    {
+      RefPicList eRefList = uiRefIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+      Int iBestRefIdx = getCUMvField(eRefList)->getRefIdx(uiPartAddr);
+
+      if((getInterDir(uiPartAddr) & (uiRefIdx+1)) && iBestRefIdx >= 0 && getSlice()->getViewId() != getSlice()->getRefViewId(eRefList, iBestRefIdx))
+      {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+#endif
 
 Void TComDataCU::setMVPIdxSubParts( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
@@ -7009,13 +7195,29 @@ Void TComDataCU::copyTextureMotionDataFrom( TComDataCU* pcCU, UInt uiDepth, UInt
   memcpy( m_pePredMode + uiAbsPartIdxDst,  pcCU->getPredictionMode() + uiAbsPartIdxSrc, sizeof( m_pePredMode[0] ) * uiNumPartition );
   memcpy( m_puhInterDir + uiAbsPartIdxDst, pcCU->getInterDir() + uiAbsPartIdxSrc,       sizeof( m_puhInterDir[0] ) * uiNumPartition );
 
+#if !MTK_UNCONSTRAINED_MVI
   memcpy( m_apiMVPIdx[0] + uiAbsPartIdxDst, pcCU->getMVPIdx(REF_PIC_LIST_0) + uiAbsPartIdxSrc, sizeof(*m_apiMVPIdx[0]) * uiNumPartition );
   memcpy( m_apiMVPIdx[1] + uiAbsPartIdxDst, pcCU->getMVPIdx(REF_PIC_LIST_1) + uiAbsPartIdxSrc, sizeof(*m_apiMVPIdx[0]) * uiNumPartition );
   memcpy( m_apiMVPNum[0] + uiAbsPartIdxDst, pcCU->getMVPNum(REF_PIC_LIST_0) + uiAbsPartIdxSrc, sizeof(*m_apiMVPNum[0]) * uiNumPartition );
   memcpy( m_apiMVPNum[1] + uiAbsPartIdxDst, pcCU->getMVPNum(REF_PIC_LIST_1) + uiAbsPartIdxSrc, sizeof(*m_apiMVPNum[0]) * uiNumPartition );
+#endif
 
   pcCU->getCUMvField( REF_PIC_LIST_0 )->copyTo( &m_acCUMvField[0], -Int(uiAbsPartIdxSrc) + uiAbsPartIdxDst, uiAbsPartIdxSrc, uiNumPartition );
   pcCU->getCUMvField( REF_PIC_LIST_1 )->copyTo( &m_acCUMvField[1], -Int(uiAbsPartIdxSrc) + uiAbsPartIdxDst, uiAbsPartIdxSrc, uiNumPartition );
+
+#if MTK_UNCONSTRAINED_MVI
+  if( pcCU->getSlice()->getSliceType() == P_SLICE)
+  {
+    m_acCUMvField[0].setUndefinedMv( uiAbsPartIdxDst, uiNumPartition, m_pePredMode, m_puhInterDir,  0, 1);
+    m_acCUMvField[1].setUndefinedMv( uiAbsPartIdxDst, uiNumPartition, m_pePredMode, m_puhInterDir, -1, 1);
+  }
+  else
+  {
+    m_acCUMvField[0].setUndefinedMv( uiAbsPartIdxDst, uiNumPartition, m_pePredMode, m_puhInterDir,  0, 3);
+    m_acCUMvField[1].setUndefinedMv( uiAbsPartIdxDst, uiNumPartition, m_pePredMode, m_puhInterDir,  0, 3);
+  }
+#endif
+
 
 #if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
   m_acCUMvField[0].decreaseMvAccuracy( uiAbsPartIdxDst, uiNumPartition, 2 );

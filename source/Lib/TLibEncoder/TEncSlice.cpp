@@ -190,7 +190,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
 #if SONY_COLPIC_AVAILABILITY
   rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());
 #endif 
-
+#if LGE_ILLUCOMP_B0045
+  rpcSlice->setApplyIC(false);
+#endif
   // set mutliview parameters
   rpcSlice->initMultiviewSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );
 
@@ -767,6 +769,13 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   TComBitCounter* pcBitCounters     = pcEncTop->getBitCounters();
   Int  iNumSubstreams = 1;
   UInt uiTilesAcross  = 0;
+
+#if LGE_ILLUCOMP_B0045
+  if (pcEncTop->getViewId() != 0 && !pcEncTop->isDepthCoder() && pcEncTop->getUseIC())   // DCP of ViewID 0 is not available
+  {
+    pcSlice ->xSetApplyIC();
+  }
+#endif
 
   if( m_pcCfg->getUseSBACRD() )
   {

@@ -647,6 +647,10 @@ Void TEncTop::xInitSPS()
   }
 #endif
   
+#if RWTH_SDC_DLT_B0036
+  m_cSPS.setUseDLT        ( m_bUseDLT );
+#endif
+  
   m_cSPS.setQuadtreeTULog2MaxSize( m_uiQuadtreeTULog2MaxSize );
   m_cSPS.setQuadtreeTULog2MinSize( m_uiQuadtreeTULog2MinSize );
   m_cSPS.setQuadtreeTUMaxDepthInter( m_uiQuadtreeTUMaxDepthInter    );

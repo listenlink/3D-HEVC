@@ -125,6 +125,12 @@ public:
   Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Bool bLFCrossSliceBoundaryFlag);
   Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam);
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
+#endif
 private:
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
@@ -165,6 +171,9 @@ public:
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
 
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if LGE_ILLUCOMP_B0045
+  Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
@@ -206,6 +215,9 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
+#if LGE_ILLUCOMP_B0045
+  ContextModel3DBuffer m_cCUICFlagSCModel;
+#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -261,6 +273,16 @@ private:
 #if LGE_EDGE_INTRA_DELTA_DC
   ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
 #endif
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  ContextModel3DBuffer m_cSDCFlagSCModel;
+  
+  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSCModel;
+  
+  ContextModel3DBuffer m_cSDCPredModeSCModel;
 #endif
 };
 

@@ -51,6 +51,10 @@
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
 
+#if LGE_ILLUCOMP_B0045
+#define NUM_IC_FLAG_CTX               3       ///< number of context models for illumination compensation flag
+#endif
+
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #if MRG_IDX_CTX_RED
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
@@ -158,6 +162,15 @@
 #endif
 #endif
 
+#if RWTH_SDC_DLT_B0036
+#define SDC_NUM_FLAG_CTX                 3
+#define SDC_NUM_RESIDUAL_FLAG_CTX        1
+#define SDC_NUM_SIGN_FLAG_CTX            1
+#define SDC_NUM_RESIDUAL_CTX             10
+
+#define SDC_NUM_PRED_MODE_CTX            5
+#endif
+
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -179,6 +192,16 @@ INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =
   { 197,  185,  201, }, 
   { 197,  185,  201, }, 
 };
+
+#if LGE_ILLUCOMP_B0045
+static const UChar 
+INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
+{
+  { CNU,  CNU,  CNU, }, 
+  { 197,  185,  201, }, 
+  { 197,  185,  201, }, 
+};
+#endif
 
 static const UChar 
 INIT_ALF_CTRL_FLAG[3][NUM_ALF_CTRL_FLAG_CTX] = 
@@ -1311,6 +1334,98 @@ INIT_EDGE_INTRA_DELTA_DC[3][NUM_EDGE_INTRA_DELTA_DC_CTX] =
 #endif
 #endif
 
+#endif
+
+#if RWTH_SDC_DLT_B0036
+static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
+{
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  },
+  {
+    {    0,   64 }, {    0,   64 }, {    0,   64 }
+  }
+};
+
+static const Short INIT_SDC_RESIDUAL_FLAG[3][3*SDC_NUM_RESIDUAL_FLAG_CTX][2] =
+{
+  {
+    { -5, 35 },
+    { -0, 56 },
+    { -0, 56 }
+    
+  },
+  {
+    { -5, 35 },
+    { -0, 56 },
+    { -0, 56 }
+  },
+  {
+    { -5, 35 },
+    { -0, 56 },
+    { -0, 56 }
+  }
+};
+
+static const Short INIT_SDC_SIGN_FLAG[3][3*SDC_NUM_SIGN_FLAG_CTX][2] =
+{
+  {
+    { -1, 56 },
+    { -4, 55 },
+    { -4, 55 }
+  },
+  {
+    { -1, 56 },
+    { -4, 55 },
+    { -4, 55 }
+  },
+  {
+    { -1, 56 },
+    { -4, 55 },
+    { -4, 55 }
+  }
+};
+
+static const Short INIT_SDC_RESIDUAL[3][3*SDC_NUM_RESIDUAL_CTX][2] =
+{
+  {
+    { -1, 64 }, {  2, 64 }, {  6, 67 }, {  8, 61 }, {  7, 47 }, { 10, 33 }, { 12, 14 }, { 33, -13 }, { 12, 14 }, { 33, -13 },
+    {  2, 66 }, { -0, 63 }, {  1, 64 }, {  6, 65 }, {  7, 59 }, { 12, 50 }, { 14, 27 }, { -0, -17 }, { 14, 27 }, { -0, -17 },
+    {  2, 66 }, { -0, 63 }, {  1, 64 }, {  6, 65 }, {  7, 59 }, { 12, 50 }, { 14, 27 }, { -0, -17 }, { 14, 27 }, { -0, -17 }
+  },
+  {
+    { -1, 64 }, {  2, 64 }, {  6, 67 }, {  8, 61 }, {  7, 47 }, { 10, 33 }, { 12, 14 }, { 33, -13 }, { 12, 14 }, { 33, -13 },
+    {  2, 66 }, { -0, 63 }, {  1, 64 }, {  6, 65 }, {  7, 59 }, { 12, 50 }, { 14, 27 }, { -0, -17 }, { 14, 27 }, { -0, -17 },
+    {  2, 66 }, { -0, 63 }, {  1, 64 }, {  6, 65 }, {  7, 59 }, { 12, 50 }, { 14, 27 }, { -0, -17 }, { 14, 27 }, { -0, -17 }
+  },
+  {
+    { -1, 64 }, {  2, 64 }, {  6, 67 }, {  8, 61 }, {  7, 47 }, { 10, 33 }, { 12, 14 }, { 33, -13 }, { 12, 14 }, { 33, -13 },
+    {  2, 66 }, { -0, 63 }, {  1, 64 }, {  6, 65 }, {  7, 59 }, { 12, 50 }, { 14, 27 }, { -0, -17 }, { 14, 27 }, { -0, -17 },
+    {  2, 66 }, { -0, 63 }, {  1, 64 }, {  6, 65 }, {  7, 59 }, { 12, 50 }, { 14, 27 }, { -0, -17 }, { 14, 27 }, { -0, -17 }
+  }
+};
+
+static const Short INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX][2] =
+{
+  {
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 },
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 },
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 }
+  },
+  {
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 },
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 },
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 }
+  },
+  {
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 },
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 },
+    {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 }
+  }
+};
 #endif
 
 //! \}
