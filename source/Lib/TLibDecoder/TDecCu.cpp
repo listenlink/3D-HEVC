@@ -1012,8 +1012,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool* pbMask = NULL;
   UInt uiMaskStride = 0;
   
-  //if( uiLumaPredMode == DMM_WEDGE_FULL_IDX || uiLumaPredMode == DMM_WEDGE_PREDDIR_IDX )
-  if( 0 )
+  if( uiLumaPredMode == DMM_WEDGE_FULL_IDX || uiLumaPredMode == DMM_WEDGE_PREDDIR_IDX )
   {
     Int uiTabIdx = (uiLumaPredMode == DMM_WEDGE_FULL_IDX)?pcCU->getWedgeFullTabIdx(uiAbsPartIdx):pcCU->getWedgePredDirTabIdx(uiAbsPartIdx);
     
@@ -1355,10 +1354,10 @@ Void TDecCu::xFillPCMBuffer(TComDataCU* pCU, UInt absPartIdx, UInt depth)
 #if RWTH_SDC_DLT_B0036
 Void TDecCu::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride )
 {
-  Int iSumDepth[uiNumSegments];
-  memset(iSumDepth, 0, sizeof(Int)*uiNumSegments);
-  Int iSumPix[uiNumSegments];
-  memset(iSumPix, 0, sizeof(Int)*uiNumSegments);
+  Int iSumDepth[2];
+  memset(iSumDepth, 0, sizeof(Int)*2);
+  Int iSumPix[2];
+  memset(iSumPix, 0, sizeof(Int)*2);
   
   for (Int y=0; y<uiSize; y++)
   {
