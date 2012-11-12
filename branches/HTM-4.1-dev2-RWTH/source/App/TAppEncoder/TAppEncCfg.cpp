@@ -477,8 +477,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MVI", m_bUseMVI, false, "use motion vector inheritance for depth map coding")
 #endif
 #if RWTH_SDC_DLT_B0036
-  ("DLT", m_bUseDLT, true, "Enables Depth Lookup Table")
-  ("SDC", m_bUseSDC, true, "Enabled Simplified Depth Coding")
+  ("DLT", m_bUseDLT, true, "use depth lookup table for depth map coding")
+  ("SDC", m_bUseSDC, true, "use simplified depth coding tree")
 #endif
   ;
   
