@@ -2779,7 +2779,20 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
   {
     rpcTempCU->setTextureModeDepthSubParts( uhTextureModeDepth, 0, uhDepth );
     rpcTempCU->copyTextureMotionDataFrom( pcTextureCU, uhDepth, rpcTempCU->getZorderIdxInCU() );
+#if FIX_MPI_B0065
+    UInt uiAbsPartIdx = rpcTempCU->getZorderIdxInCU();
+    if( rpcTempCU->getDepth(0) > pcTextureCU->getDepth(uiAbsPartIdx))
+    {
+      rpcTempCU->setPartSizeSubParts( SIZE_NxN, 0, uhDepth );
+    }
+    else
+    {
+      PartSize partSize = pcTextureCU->getPartitionSize(uiAbsPartIdx);
+      rpcTempCU->setPartSizeSubParts( partSize, 0, uhDepth );
+    }
+#else
     rpcTempCU->setPartSizeSubParts( SIZE_NxN, 0, uhDepth );
+#endif
     for( UInt ui = 0; ui < rpcTempCU->getTotalNumPart(); ui++ )
     {
       assert( rpcTempCU->getInterDir( ui ) != 0 );

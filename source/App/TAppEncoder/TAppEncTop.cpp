@@ -344,7 +344,11 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setWaveFrontSynchro           ( m_iWaveFrontSynchro );
     m_acTEncTopList[iViewIdx]->setWaveFrontFlush             ( m_iWaveFrontFlush );
     m_acTEncTopList[iViewIdx]->setWaveFrontSubstreams        ( m_iWaveFrontSubstreams );
+#if TMVP_DEPTH_SWITCH
+    m_acTEncTopList[iViewIdx]->setEnableTMVP                 ( m_enableTMVP[0] );
+#else
     m_acTEncTopList[iViewIdx]->setEnableTMVP ( m_enableTMVP );
+#endif
     m_acTEncTopList[iViewIdx]->setUseScalingListId           ( m_useScalingListId  );
     m_acTEncTopList[iViewIdx]->setScalingListFile            ( m_scalingListFile   );
 #if MULTIBITS_DATA_HIDING
@@ -630,7 +634,11 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setWaveFrontSynchro           ( m_iWaveFrontSynchro );
       m_acTEncDepthTopList[iViewIdx]->setWaveFrontFlush             ( m_iWaveFrontFlush );
       m_acTEncDepthTopList[iViewIdx]->setWaveFrontSubstreams        ( m_iWaveFrontSubstreams );
+#if TMVP_DEPTH_SWITCH
+      m_acTEncDepthTopList[iViewIdx]->setEnableTMVP                 ( m_enableTMVP[1] );
+#else
       m_acTEncDepthTopList[iViewIdx]->setEnableTMVP ( m_enableTMVP );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setUseScalingListId           ( m_useScalingListId  );
       m_acTEncDepthTopList[iViewIdx]->setScalingListFile            ( m_scalingListFile   );
 #if MULTIBITS_DATA_HIDING

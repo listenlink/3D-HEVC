@@ -151,7 +151,12 @@ public:
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
 #if HHI_INTER_VIEW_MOTION_PRED
 #if QC_MULTI_DIS_CAN
-  Int   getPdmMergeCandidate ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
+  Int   getPdmMergeCandidate ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
+#if QC_MRG_CANS_B0048
+    , Int* iPdm
+#endif
+    );
+
   Bool  getPdmMvPredDisCan    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
   Bool  getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
 #else

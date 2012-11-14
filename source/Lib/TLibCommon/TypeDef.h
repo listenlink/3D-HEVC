@@ -45,6 +45,7 @@
 
 #define MTK_UNCONSTRAINED_MVI             1    //JCT3V-B0083
 
+// A
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
@@ -58,6 +59,14 @@
 #define FIX_REMOVE_TILE_DEPENDENCE        1
 #define FIX_DBL_CONTROL_DEFAULT           1
 
+
+// B
+#define FIX_LGE_IVMP_PARALLEL_MERGE_B0136 1
+#define TMVP_DEPTH_SWITCH                 1 // related to JCT3V-B0092
+#define FIX_RDO_NEGDIST                   1
+#define FIX_DMM_NEG_DIST                  1
+
+#define DV_DERIVATION_PARALLEL_B0096      1 //JCT3V-B0096, enable parallel derivation of disparity vector
 
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
 #if LGE_EDGE_INTRA
@@ -79,8 +88,13 @@
 #if QC_MULTI_DIS_CAN                    
     #define DIS_CANS                      1
 #endif                                  
-                                        
+#define QC_SIMPLE_NBDV_B0047              1   //JCT2-B0047
+#define QC_MRG_CANS_B0048                 1   //JCT2-B0048, B0086, B0069
+#if     QC_MRG_CANS_B0048
+#define OL_DISMV_POS_B0069                1   //different pos for dispairty MV candidate, B0069
+#endif
 #define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
+#define SHARP_INTERVIEW_DECOUPLE_B0111    1   //  JCT3V-B0111 decoupling inter-view candidate
                                         
 #define LGE_DVMCP                         1   //  JCT2-A0126     
 #if LGE_DVMCP                           
@@ -91,6 +105,8 @@
 #define DVFROM_ABOVELEFT                  5
 #define DVFROM_COL                        6
 #endif
+#define FIX_LGE_DVMCP_B0133               1
+#define LGE_DVMCP_MEM_REDUCTION_B0135     1 
 
 
 #define HHI_VSO                           1
@@ -133,6 +149,9 @@
 #endif
 
 #define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
+#if HHI_MPI
+#define FIX_MPI_B0065                     1   //JCT3V-B0065, fix the MPI bug when RQT is off
+#endif
 #define HHI_MPI_MERGE_POS                 0
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
                                        
@@ -161,9 +180,11 @@
 #endif
 
 #define PARALLEL_MERGE  1                   //< H0082 parallel merge/skip
+#define LGE_IVMP_PARALLEL_MERGE_B0136     1 //< B0136 support of parallel merge/skip in disparity vector derivation
 #define LOG2_PARALLEL_MERGE_LEVEL_MINUS2  0 //< H0082 parallel merge level 0-> 4x4, 1-> 8x8, 2->16x16, 3->32x32, 4->64x64
 #if PARALLEL_MERGE && LOG2_PARALLEL_MERGE_LEVEL_MINUS2
 #define CU_BASED_MRG_CAND_LIST            1  //< H0240: single merge candidate list for all PUs inside a 8x8 CU conditioned on LOG2_PARALLEL_MERGE_LEVEL_MINUS2 > 0
+#define FIX_CU_BASED_MRG_CAND_LIST_B0136  1  //< B0136 bug fix for CU_BASED_MRG_CAND_LIST
 #endif
 #define MVP_AT_ENTROPYSLICE_BOUNDARY      1  //< H0362 enable motion prediction accross entropy slice boundary
 

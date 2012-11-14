@@ -83,6 +83,12 @@ TComPic::TComPic()
 #if OL_QTLIMIT_PREDCODING_B0068
   m_bReduceBitsQTL    = 0;
 #endif
+#if QC_SIMPLE_NBDV_B0047
+  m_bRapCheck = false;
+  m_eRapRefList = REF_PIC_LIST_0;
+  m_uiRapRefIdx = 0;
+#endif
+
 }
 
 TComPic::~TComPic()
@@ -482,6 +488,72 @@ Void TComPic::createNonDBFilterInfo(UInt* pSliceStartAddress, Int numSlices, Int
     m_pNDBFilterYuvTmp->create(picWidth, picHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
   }
 }
+#if QC_SIMPLE_NBDV_B0047
+Bool TComPic::getDisCandRefPictures(Int iColPOC)
+{
+  UInt uiTempLayerCurr=7;
+  TComSlice* currSlice = getCurrSlice();
+  UInt iPOCCurr=currSlice->getPOC();
+  UInt iPOCDiff = 255;
+  Bool  bRAP=false;
+  Bool bCheck = false;
+  Int MaxRef = currSlice->getNumRefIdx(RefPicList(0));
+  RefPicList eRefPicList = REF_PIC_LIST_0 ;
+  if(currSlice->isInterB())
+  {
+    if(currSlice->getNumRefIdx(RefPicList(0))< currSlice->getNumRefIdx(RefPicList(1)))
+      MaxRef = currSlice->getNumRefIdx(RefPicList(1));
+  }
+  for(Int lpRef = 0; lpRef < MaxRef; lpRef++)
+  {
+    for(Int lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr ++)
+    {
+      eRefPicList = RefPicList(0);
+      if(currSlice->isInterB())
+        eRefPicList = RefPicList(lpNr==0 ? (currSlice->getColDir()): (1-currSlice->getColDir()));
+      if(iColPOC == currSlice->getRefPOC(eRefPicList, lpRef))
+        continue;
+      if(lpRef >= currSlice->getNumRefIdx(eRefPicList)||(currSlice->getViewId() != currSlice->getRefPic( eRefPicList, lpRef)->getViewId()))
+        continue;
+      Int iTempPoc = currSlice->getRefPic(eRefPicList, lpRef)->getPOC();
+      UInt uiTempLayer = currSlice->getRefPic(eRefPicList, lpRef)->getCurrSlice()->getTLayer(); 
+      Int iTempDiff = (iTempPoc > iPOCCurr) ? (iTempPoc - iPOCCurr): (iPOCCurr - iTempPoc);
+      bRAP = (currSlice->getRefPic(eRefPicList, lpRef)->getCurrSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV? 1:0);
+      if( bRAP)
+      {
+         bCheck = true;
+         this->setRapRefIdx(lpRef);
+         this->setRapRefList(eRefPicList);
+         return bCheck;
+      }
+      if(uiTempLayerCurr > uiTempLayer)
+      {
+        bCheck = true;
+        if(uiTempLayerCurr == uiTempLayer)
+        {
+          if(iPOCDiff > iTempDiff)
+          {
+            iPOCDiff=iTempDiff;
+            if(iPOCDiff < 255)
+            {
+              this->setRapRefIdx(lpRef);
+              this->setRapRefList(eRefPicList);
+            }
+          }
+        }
+        else
+        {
+          iPOCDiff=iTempDiff;
+          uiTempLayerCurr = uiTempLayer;
+          this->setRapRefIdx(lpRef);
+          this->setRapRefList(eRefPicList);
+        } 
+      }
+    }
+  }
+  return bCheck;
+}
+#endif
 
 #if HHI_INTERVIEW_SKIP
 Void TComPic::addUsedPelsMapBuffer()
