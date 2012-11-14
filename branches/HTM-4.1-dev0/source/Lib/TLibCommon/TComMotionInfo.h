@@ -93,6 +93,12 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
+#if QC_MRG_CANS_B0048
+  Bool operator== ( const TComMvField& rcMv ) const
+  {
+    return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());
+  }
+#endif
 };
 
 /// class for motion information in one CU

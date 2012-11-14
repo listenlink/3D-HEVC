@@ -238,7 +238,11 @@ private:
   
   Bool          m_bDecSubCu;          ///< indicates decoder-mode
   Double        m_dTotalCost;         ///< sum of partition RD costs
+#if FIX_RDO_NEGDIST
+  Dist          m_uiTotalDistortion;  ///< sum of partition distortion
+#else
   UInt          m_uiTotalDistortion;  ///< sum of partition distortion
+#endif
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;       ///< sum of partition bins
   UInt*         m_uiSliceStartCU;    ///< Start CU address of current slice
@@ -542,10 +546,26 @@ public:
   Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
 #else
   Bool          getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
-  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
+  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
+#if QC_MRG_CANS_B0048
+    , Int* iPdm
+#endif
+  );
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
 #if LGE_DVMCP
-  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1 );
+#if QC_SIMPLE_NBDV_B0047
+  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo
+#if LGE_IVMP_PARALLEL_MERGE_B0136
+    , Bool bParMerg = false
+#endif
+    );
+#else
+  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1
+#if LGE_IVMP_PARALLEL_MERGE_B0136
+    , Bool bParMerg = false
+#endif
+    );
+#endif
 #endif
 
 #endif
@@ -593,7 +613,12 @@ public:
   Void          getMvField            ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField );
   
   AMVP_MODE     getAMVPMode           ( UInt uiIdx );
+#if SHARP_INTERVIEW_DECOUPLE_B0111
+  Void          fillMvpCandBase       ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+  Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo , Int iMVPIdx=-1);
+#else
   Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+#endif
 #if PARALLEL_MERGE 
   Bool          isDiffMER             ( Int xN, Int yN, Int xP, Int yP);
   Void          getPartPosition       ( UInt partIdx, Int& xP, Int& yP, Int& nPSW, Int& nPSH);
@@ -716,7 +741,11 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   
   Double&       getTotalCost()                  { return m_dTotalCost;        }
+#if FIX_RDO_NEGDIST
+  Dist&         getTotalDistortion()            { return m_uiTotalDistortion; }
+#else
   UInt&         getTotalDistortion()            { return m_uiTotalDistortion; }
+#endif
   UInt&         getTotalBits()                  { return m_uiTotalBits;       }
   UInt&         getTotalNumPart()               { return m_uiNumPartition;    }
 

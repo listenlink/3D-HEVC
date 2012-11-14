@@ -456,7 +456,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                               "\t1: use MD5\n"
                                               "\t0: disable")
 
+#if TMVP_DEPTH_SWITCH
+  ("TMVP", m_enableTMVP, std::vector<Bool>(1,true), "Enable TMVP" )
+#else
   ("TMVP", m_enableTMVP, true, "Enable TMVP" )
+#endif
 
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
   ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
@@ -689,6 +693,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_bUseWVSO = m_bUseVSO && m_bUseWVSO && m_bUsingDepthMaps;
 #endif
   xCleanUpVectors();
+
+
+#if TMVP_DEPTH_SWITCH
+  if ( m_enableTMVP.size() < 2)
+  {
+    m_enableTMVP.push_back( m_enableTMVP[0]  );
+  }
+#endif
+ 
 
 #if HHI_VSO
   if ( m_abUseALF .size() < 2)
@@ -1710,7 +1723,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
           m_iWaveFrontSynchro, m_iWaveFrontFlush, m_iWaveFrontSubstreams);
   printf(" ScalingList:%d ", m_useScalingListId );
 
+#if !TMVP_DEPTH_SWITCH
   printf("TMVP:%d ", m_enableTMVP     );
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   printf("AQpS:%d", m_bUseAdaptQpSelect   );
@@ -1724,15 +1739,22 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
   printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[0] ? 1 : 0) );
+#endif
 #if LGE_ILLUCOMP_B0045
   printf("IlluCompEnable: %d ", m_bUseIC);
 #endif
+
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
   printf("ALF:%d ", (m_abUseALF [1] ? 1 : 0));
   printf("SAO:%d ", (m_abUseSAO [1] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
+#endif
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
 #endif
