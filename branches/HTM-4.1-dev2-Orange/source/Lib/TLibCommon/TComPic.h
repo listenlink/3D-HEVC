@@ -112,9 +112,8 @@ private:
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
 
-#if OL_DEPTHLIMIT_A0044
-  UInt*                 m_texPartInfo;
-  UInt                  m_uiTexPartIndex;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool                  m_bReduceBitsQTL;
 #endif
 
 public:
@@ -178,6 +177,12 @@ public:
   Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }
   Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }
 #endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
+  Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
+#endif
+
   Void          setScaleOffset( Int** pS, Int** pO )  { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
   Int**         getCodedScale ()                      { return m_aaiCodedScale;  }
   Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
@@ -246,14 +251,6 @@ public:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void          removeResidualBuffer    ();
-#endif
-
-#if OL_DEPTHLIMIT_A0044
-  UInt        accessPartInfo        ( UInt count )   { return m_texPartInfo[m_uiTexPartIndex + count]; };
-  Void        incrementTexPartIndex (            )   { m_uiTexPartIndex += 2;    };
-  UInt        getTexPartIndex       ()               { return m_uiTexPartIndex;  };
-  Void        setTexPartIndex       ( UInt idx   )   { m_uiTexPartIndex = idx; };
-  Void        setPartInfo           ( UInt* texPart) { m_texPartInfo    = texPart;  };
 #endif
 
   Bool          getValidSlice                                  (Int sliceID)  {return m_pbValidSlice[sliceID];}

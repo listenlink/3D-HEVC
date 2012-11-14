@@ -1522,8 +1522,8 @@ TComSPS::TComSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_bUseDMM                   (false)
 #endif
-#if OL_DEPTHLIMIT_A0044
-, m_bDepthPartitionLimiting   (false)
+#if OL_QTLIMIT_PREDCODING_B0068
+, m_bUseQTLPC                 (false)
 #endif
 {
   // AMVP parameter

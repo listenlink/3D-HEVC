@@ -771,8 +771,8 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT_A0044
-  m_cSPS.setUseDPL( m_bDepthPartitionLimiting );
+#if OL_QTLIMIT_PREDCODING_B0068
+  m_cSPS.setUseQTLPC( m_bUseQTLPC );
 #endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );

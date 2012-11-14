@@ -617,30 +617,32 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
-#if OL_DEPTHLIMIT_A0044
-  UInt uiSymbol;
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
+  TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
+  Bool bDepthMapDetect   = (pcTexture != NULL);
+  Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
+ 
+  if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
+  {
+    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
+    UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
+    assert(pcTextureCU->getDepth(uiCUIdx) >= uiDepth);
+    if (pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize( uiCUIdx ) != SIZE_NxN)
+    {
+      assert( eSize == SIZE_2Nx2N );
+      return;
+    }
+  }
 #endif
+
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
     {
       m_pcBinIf->encodeBin( eSize == SIZE_2Nx2N? 1 : 0, m_cCUPartSizeSCModel.get( 0, 0, 0 ) );
-#if OL_DEPTHLIMIT_A0044
-      if(pcCU->getPartDumpFlag())
-      {
-        uiSymbol = (UInt)(eSize == SIZE_2Nx2N? 1 : 0);
-        pcCU->updatePartInfo(uiSymbol?0:1,uiDepth); //0 for 2Nx2N and 1 for NxN
-        pcCU->incrementPartInfo();
-      }
-#endif
     }
-#if OL_DEPTHLIMIT_A0044
-    if(pcCU->getPartDumpFlag() && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth && !pcCU->getSlice()->isIntra())
-    {
-      pcCU->updatePartInfo(0,uiDepth); //0 for 2Nx2N and 1 for NxN
-      pcCU->incrementPartInfo();
-    }
-#endif
     return;
   }
   
@@ -649,13 +651,6 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   case SIZE_2Nx2N:
     {
       m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-#if OL_DEPTHLIMIT_A0044
-      if(pcCU->getPartDumpFlag())
-      {
-        pcCU->updatePartInfo(0,uiDepth); //0 for 2Nx2N
-        pcCU->incrementPartInfo();
-      }
-#endif
       break;
     }
   case SIZE_2NxN:
@@ -685,13 +680,6 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
         }
       }
-#if OL_DEPTHLIMIT_A0044
-      if(pcCU->getPartDumpFlag())
-      {
-        pcCU->updatePartInfo(2,uiDepth); //2 for 2NxN
-        pcCU->incrementPartInfo();
-      }
-#endif
       break;
     }
   case SIZE_Nx2N:
@@ -725,13 +713,6 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
         }
       }
-#if OL_DEPTHLIMIT_A0044
-      if(pcCU->getPartDumpFlag())
-      {
-        pcCU->updatePartInfo(3,uiDepth); //3 for Nx2N
-        pcCU->incrementPartInfo();
-      }
-#endif
       break;
     }
   case SIZE_NxN:
@@ -741,23 +722,6 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
         m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
         m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 2) );
-#if OL_DEPTHLIMIT_A0044
-        if(pcCU->getPartDumpFlag())
-        {
-          pcCU->updatePartInfo(1,uiDepth); //2Nx2N here since we disable NxN in Inter
-          pcCU->incrementPartInfo();         
-        }
-#endif
-      }
-      else
-      {
-#if OL_DEPTHLIMIT_A0044
-        if(pcCU->getPartDumpFlag())
-        {
-          pcCU->updatePartInfo(0,uiDepth); //2Nx2N here since we disable NxN in Inter
-          pcCU->incrementPartInfo();
-        }
-#endif
       }
       break;
     }
@@ -950,17 +914,31 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   UInt uiCurrSplitFlag = ( pcCU->getDepth( uiAbsPartIdx ) > uiDepth ) ? 1 : 0;
   
   assert( uiCtx < 3 );
-  m_pcBinIf->encodeBin( uiCurrSplitFlag, m_cCUSplitFlagSCModel.get( 0, 0, uiCtx ) );
-#if OL_DEPTHLIMIT_A0044
-  if(pcCU->getPartDumpFlag())
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool bCodeSplitFlag    = true;
+
+  TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
+  TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
+  Bool bDepthMapDetect   = (pcTexture != NULL);
+  Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
+
+  if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
   {
-    if(pcCU->getSlice()->isIntra() || (!pcCU->getSlice()->isIntra() && uiCurrSplitFlag!=0))
-    {
-      pcCU->updatePartInfo(uiCurrSplitFlag,uiDepth);
-      pcCU->incrementPartInfo();
-    }
+    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
+    UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
+    assert(pcTextureCU->getDepth(uiCUIdx) >= uiDepth);
+    bCodeSplitFlag          = (pcTextureCU->getDepth(uiCUIdx) > uiDepth);
+  }
+
+  if(!bCodeSplitFlag)
+  {
+    assert(uiCurrSplitFlag == 0);
+    return;
   }
 #endif
+
+  m_pcBinIf->encodeBin( uiCurrSplitFlag, m_cCUSplitFlagSCModel.get( 0, 0, uiCtx ) );
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tSplitFlag\n" )
   return;

@@ -327,8 +327,8 @@ protected:
   Bool     m_bUseDMM;
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Bool     m_bDepthPartitionLimiting;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool     m_bUseQTLPC;
 #endif
 
   Int      m_iViewOrderIdx;
@@ -837,15 +837,15 @@ public:
   Void      setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool      getUseDMM()        { return m_bUseDMM; }
 #endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  Void      setUseQTLPC( Bool b ) { m_bUseQTLPC = b;    }
+  Bool      getUseQTLPC()         { return m_bUseQTLPC; }
+#endif
   
 #if RWTH_SDC_DLT_B0036
   Bool      getUseDLT()      { return m_bUseDLT;     }
   Bool      getUseSDC()      { return m_bUseSDC;     }
-#endif
-
-#if OL_DEPTHLIMIT_A0044
-  Void      setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
-  Bool      getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif
 
   Void      setViewOrderIdx       ( Int   i )      { m_iViewOrderIdx          = i; }

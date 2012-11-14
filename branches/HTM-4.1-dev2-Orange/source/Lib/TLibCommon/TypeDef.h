@@ -41,6 +41,8 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define OL_QTLIMIT_PREDCODING_B0068       1    //JCT3V-B0068
+
 #define MTK_UNCONSTRAINED_MVI             1    //JCT3V-B0083
 
 #define FIXES                             1
@@ -107,14 +109,6 @@
 #if LGE_ILLUCOMP_B0045
 #define LGE_ILLUCOMP_B0045_ENCSIMP        1
 #endif
-#define LGE_CLEAN_UP                      1
-
-#define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
-#if OL_DEPTHLIMIT_A0044
-#define OL_DO_NOT_LIMIT_INTRA_SLICES_PART 1 //Turn this on to not perform depth limiting for I-SLICES.
-#define OL_END_CU                         MAX_INT //Default for initializing the partition information buffer
-#define OL_PART_BUF_SIZE                  86 //maximum number of possible partition bits in a CU
-#endif
 
 #define HHI_INTERVIEW_SKIP                1
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
@@ -133,7 +127,7 @@
 #define DMM3_SIMPLIFY_TR                  1
 #endif
 
-#define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
+#define RWTH_SDC_DLT_B0036                0   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
 #if RWTH_SDC_DLT_B0036
 #define Log2( n ) ( log((double)n) / log(2.0) )
 #endif

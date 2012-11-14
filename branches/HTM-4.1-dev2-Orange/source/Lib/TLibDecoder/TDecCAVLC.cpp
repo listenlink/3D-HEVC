@@ -1673,6 +1673,13 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setUseMVI( uiCode );
     }
 #endif
+#if OL_QTLIMIT_PREDCODING_B0068
+    if( bIsDepth )
+    {
+      READ_FLAG( uiCode, "use_qtlpc_flag" );
+      pcSPS->setUseQTLPC( uiCode );
+    }
+#endif
     
 #if RWTH_SDC_DLT_B0036
     if( bIsDepth )

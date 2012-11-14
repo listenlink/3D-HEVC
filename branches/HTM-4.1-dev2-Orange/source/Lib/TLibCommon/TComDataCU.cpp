@@ -162,18 +162,6 @@ TComDataCU::TComDataCU()
   m_apSegmentDCOffset[0] = NULL;
   m_apSegmentDCOffset[1] = NULL;
 #endif
-#if OL_DEPTHLIMIT_A0044
-  //add a variable to store the partition information
-  //a 2D array in part_symbol, uidepth format
-  //initialize m_partInfo to OL_END_CU
-  for (Int i=0; i < OL_PART_BUF_SIZE; i++)
-  {
-    for (Int j=0; j < 2; j++)
-    {
-      m_uiPartInfo[i][j] = OL_END_CU;
-    }
-  }
-#endif
 }
 
 TComDataCU::~TComDataCU()
@@ -506,10 +494,6 @@ const NDBFBlockInfo& NDBFBlockInfo::operator= (const NDBFBlockInfo& src)
  */
 Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 {
-#if OL_DEPTHLIMIT_A0044
-  TComDataCU* pcCU     = pcPic->getCU(iCUAddr);
-#endif
-
   m_pcPic              = pcPic;
   m_pcSlice            = pcPic->getSlice(pcPic->getCurrSliceIdx());
   m_uiCUAddr           = iCUAddr;
@@ -739,9 +723,6 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   {
     m_apcCUColocated[1] = getSlice()->getRefPic( REF_PIC_LIST_1, 0)->getCU( m_uiCUAddr );
   }
-#if OL_DEPTHLIMIT_A0044
-  setPartDumpFlag (pcCU->getPartDumpFlag());
-#endif
 }
 
 #if H0736_AVC_STYLE_QP_RANGE
@@ -1095,9 +1076,6 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   m_apcCUColocated[1] = pcCU->getCUColocated(REF_PIC_LIST_1);
   memcpy(m_uiSliceStartCU,pcCU->m_uiSliceStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
   memcpy(m_uiEntropySliceStartCU,pcCU->m_uiEntropySliceStartCU+uiPartOffset,sizeof(UInt)*m_uiNumPartition);
-#if OL_DEPTHLIMIT_A0044
-  setPartDumpFlag (pcCU->getPartDumpFlag());
-#endif
 }
 
 Void TComDataCU::setOutsideCUPart( UInt uiAbsPartIdx, UInt uiDepth )

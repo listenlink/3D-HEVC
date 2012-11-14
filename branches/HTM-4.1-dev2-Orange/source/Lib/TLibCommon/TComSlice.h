@@ -362,8 +362,8 @@ private:
   Bool  m_bUseDMM;
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Bool m_bDepthPartitionLimiting;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool m_bUseQTLPC;
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -642,9 +642,9 @@ public:
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
-  Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
+#if OL_QTLIMIT_PREDCODING_B0068
+  Void setUseQTLPC( Bool b ) { m_bUseQTLPC = b;    }
+  Bool getUseQTLPC()         { return m_bUseQTLPC; }
 #endif
 
   Void initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
