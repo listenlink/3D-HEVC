@@ -111,6 +111,9 @@ TComSlice::TComSlice()
 #if SONY_COLPIC_AVAILABILITY
 , m_iViewOrderIdx                 ( 0 )
 #endif
+#if LGE_ILLUCOMP_B0045
+, m_bApplyIC                      ( false )
+#endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
   
@@ -1304,6 +1307,85 @@ Void TComSlice::copyWPtable(wpScalingParam *&wp_src, wpScalingParam *&wp_dst)
   }
 }
 
+#if LGE_ILLUCOMP_B0045
+Void TComSlice::xSetApplyIC()
+{
+  Int iMaxPelValue = (1<<g_uiBitDepth); 
+  Int *aiRefOrgHist;
+  Int *aiCurrHist;
+  aiRefOrgHist = new Int;
+  aiCurrHist   = new Int;
+  aiRefOrgHist = (Int *)xMalloc(Int,iMaxPelValue);
+  aiCurrHist   = (Int *)xMalloc(Int,iMaxPelValue);
+  memset(aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
+  memset(aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
+  // Reference Idx Number
+  Int iNumRefIdx = getNumRefIdx( REF_PIC_LIST_0 );
+  TComPic* pcCurrPic = NULL;
+  TComPic* pcRefPic = NULL;
+  TComPicYuv* pcCurrPicYuv = NULL;
+  TComPicYuv* pcRefPicYuvOrg = NULL;
+  pcCurrPic = getPic();
+  pcCurrPicYuv = pcCurrPic->getPicYuvOrg();
+  Int iWidth = pcCurrPicYuv->getWidth();
+  Int iHeight = pcCurrPicYuv->getHeight();
+
+
+  // Get InterView Reference picture
+  // !!!!! Assume only one Interview Reference Picture in L0
+  for (Int i = 0; i < iNumRefIdx; i++)
+  {
+    pcRefPic = getRefPic( REF_PIC_LIST_0, i);
+    if (pcRefPic != NULL)
+    {
+      // Current Picture 
+      if (pcCurrPic->getViewId() != pcRefPic->getViewId())
+      {
+        pcRefPicYuvOrg = pcRefPic->getPicYuvOrg();
+      }
+    }
+  }
+  if (pcRefPicYuvOrg != NULL)
+  {
+    Pel* pCurrY = pcCurrPicYuv ->getLumaAddr();
+    Pel* pRefOrgY = pcRefPicYuvOrg  ->getLumaAddr();
+    Int iCurrStride = pcCurrPicYuv->getStride();
+    Int iRefStride = pcRefPicYuvOrg->getStride();
+    Int iSumOrgSAD = 0;
+    double dThresholdOrgSAD = 0.05;
+    // Histogram building - luminance
+    for ( Int y = 0; y < iHeight; y++)
+    {
+      for ( Int x = 0; x < iWidth; x++)
+      {
+        aiCurrHist[pCurrY[x]]++;
+        aiRefOrgHist[pRefOrgY[x]]++;
+      }
+      pCurrY += iCurrStride;
+      pRefOrgY += iRefStride;
+    }
+    // Calc SAD
+    for (Int i = 0; i < iMaxPelValue; i++)
+    {
+      iSumOrgSAD += abs(aiCurrHist[i] - aiRefOrgHist[i]);
+    }
+    // Setting
+    if ( iSumOrgSAD > Int(dThresholdOrgSAD * iWidth * iHeight) )
+    {
+      m_bApplyIC = true;
+    }
+    else
+    {
+      m_bApplyIC = false;
+    }
+  }
+  xFree(aiCurrHist);
+  xFree(aiRefOrgHist);
+  aiCurrHist = NULL;
+  aiRefOrgHist = NULL;
+}
+#endif
+
 // ------------------------------------------------------------------------------------------------
 // Video parameter set (VPS)
 // ------------------------------------------------------------------------------------------------
@@ -1440,8 +1522,8 @@ TComSPS::TComSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_bUseDMM                   (false)
 #endif
-#if OL_DEPTHLIMIT_A0044
-, m_bDepthPartitionLimiting   (false)
+#if OL_QTLIMIT_PREDCODING_B0068
+, m_bUseQTLPC                 (false)
 #endif
 {
   // AMVP parameter
@@ -1474,6 +1556,15 @@ TComSPS::TComSPS()
 #endif
 
   ::memset( m_aiUsableInterViewRefs, 0, sizeof( m_aiUsableInterViewRefs ) );
+  
+#if RWTH_SDC_DLT_B0036
+  m_bUseDLT = false;
+  
+  m_uiBitsPerDepthValue = g_uiBitDepth;
+  m_uiNumDepthmapValues = 0;
+  m_uiDepthValue2Idx    = NULL;
+  m_uiIdx2DepthValue    = NULL;
+#endif
 }
 
 TComSPS::~TComSPS()
@@ -1489,6 +1580,87 @@ TComSPS::~TComSPS()
     m_puiRowHeight = NULL;
   }
 }
+
+#if RWTH_SDC_DLT_B0036
+Void TComSPS::setDepthLUTs(UInt* uidx2DepthValue, UInt uiNumDepthValues)
+{
+  UInt uiMaxDepthValue = g_uiIBDI_MAX;
+  
+  // allocate some memory
+  if( m_uiNumDepthmapValues == 0 )
+  {
+    m_uiNumDepthmapValues = uiMaxDepthValue+1;
+    m_uiBitsPerDepthValue = (UInt)ceil(Log2(m_uiNumDepthmapValues));
+    
+    m_uiDepthValue2Idx    = (UInt*) xMalloc(UInt, m_uiNumDepthmapValues);
+    m_uiIdx2DepthValue    = (UInt*) xMalloc(UInt, m_uiNumDepthmapValues);
+    
+    //default mapping
+    for (Int i=0; i<m_uiNumDepthmapValues; i++)
+    {
+      m_uiDepthValue2Idx[i] = i;
+      m_uiIdx2DepthValue[i] = i;
+    }
+  }
+  
+  if( uidx2DepthValue == NULL || uiNumDepthValues == 0 ) // default mapping only
+    return;
+  
+  // copy idx2DepthValue to internal array
+  memcpy(m_uiIdx2DepthValue, uidx2DepthValue, uiNumDepthValues*sizeof(UInt));
+  
+  for(Int p=0; p<=uiMaxDepthValue; p++)
+  {
+    Int iIdxDown    = 0;
+    Int iIdxUp      = uiNumDepthValues-1;
+    Bool bFound     = false;
+    
+    // iterate over indices to find lower closest depth
+    Int i = 1;
+    while(!bFound && i<uiNumDepthValues)
+    {
+      if( m_uiIdx2DepthValue[i] > p )
+      {
+        iIdxDown  = i-1;
+        bFound    = true;
+      }
+      
+      i++;
+    }
+    // iterate over indices to find upper closest depth
+    i = uiNumDepthValues-2;
+    bFound = false;
+    while(!bFound && i>=0)
+    {
+      if( m_uiIdx2DepthValue[i] < p )
+      {
+        iIdxUp  = i+1;
+        bFound    = true;
+      }
+      
+      i--;
+    }
+    
+    // assert monotony
+    assert(iIdxDown<=iIdxUp);
+    
+    // assign closer depth value/idx
+    if( abs(p-(Int)m_uiIdx2DepthValue[iIdxDown]) < abs(p-(Int)m_uiIdx2DepthValue[iIdxUp]) )
+    {
+      m_uiDepthValue2Idx[p] = iIdxDown;
+    }
+    else
+    {
+      m_uiDepthValue2Idx[p] = iIdxUp;
+    }
+    
+  }
+  
+  // update globals
+  m_uiNumDepthmapValues = uiNumDepthValues;
+  m_uiBitsPerDepthValue = (UInt)ceil(Log2(m_uiNumDepthmapValues));
+}
+#endif
 
 TComPPS::TComPPS()
 : m_PPSId                       (0)

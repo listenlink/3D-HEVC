@@ -80,6 +80,9 @@ TComPic::TComPic()
 #endif
   m_aaiCodedScale     = 0;
   m_aaiCodedOffset    = 0;
+#if OL_QTLIMIT_PREDCODING_B0068
+  m_bReduceBitsQTL    = 0;
+#endif
 }
 
 TComPic::~TComPic()

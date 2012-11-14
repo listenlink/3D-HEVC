@@ -41,9 +41,9 @@ guessLambdaModifiersExecutable = guessLambdaModifiers.exe
 all: $(extractBitratesExecutable) $(guessLambdaModifiersExecutable)
 
 $(extractBitratesExecutable): $(extractBitratesObjects)
-	g++ -o $@ $(extractBitratesObjects)
+  g++ -o $@ $(extractBitratesObjects)
 $(guessLambdaModifiersExecutable): $(guessLambdaModifiersObjects)
-	g++ -o $@ $(guessLambdaModifiersObjects)
+  g++ -o $@ $(guessLambdaModifiersObjects)
 
 ExtractBitrates.o: ExtractBitrates.h RuntimeError.h
 ExtractBitratesMain.o: ExtractBitrates.h RuntimeError.h
@@ -51,4 +51,4 @@ GuessLambdaModifiers.o: GuessLambdaModifiers.h RuntimeError.h
 GuessLambdaModifiersMain.o: GuessLambdaModifiers.h RuntimeError.h
 
 clean:
-	rm $(extractBitratesExecutable) $(extractBitratesObjects) $(guessLambdaModifiersExecutable) $(guessLambdaModifiersObjects)
+  rm $(extractBitratesExecutable) $(extractBitratesObjects) $(guessLambdaModifiersExecutable) $(guessLambdaModifiersObjects)

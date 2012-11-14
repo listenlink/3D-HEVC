@@ -644,6 +644,29 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   }
 #endif
 
+#if OL_QTLIMIT_PREDCODING_B0068
+  if( bIsDepth )
+  {
+    WRITE_FLAG( pcSPS->getUseQTLPC() ? 1 : 0, "use_qtlpc_flag");
+  }
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  if( bIsDepth )
+  {
+    WRITE_FLAG( pcSPS->getUseDLT() ? 1 : 0, "use_dlt_flag" );
+    if( pcSPS->getUseDLT() )
+    {
+      // code mapping
+      xWriteUvlc  ( pcSPS->getNumDepthValues() );
+      for(UInt i=0; i<pcSPS->getNumDepthValues(); i++)
+      {
+        xWriteUvlc( pcSPS->idx2DepthValue(i) );
+      }
+    }
+  }
+#endif
+
   if( pcSPS->getViewId() || pcSPS->isDepth() )
   {
     WRITE_FLAG( 0, "base_view_flag" ); 
@@ -748,6 +771,18 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   //write slice address
   Int address = (pcSlice->getPic()->getPicSym()->getCUOrderMap(lCUAddress) << reqBitsInner) + innerAddress;
   WRITE_FLAG( address==0, "first_slice_in_pic_flag" );
+
+#if LGE_ILLUCOMP_B0045
+  // IC flag is on only first_slice_in_pic
+  if (address==0)
+  {
+    if( pcSlice->getSPS()->getViewId() && !pcSlice->getIsDepth() )
+    {
+      WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "applying IC flag" );
+    }
+  }
+#endif
+
   if(address>0) 
   {
     WRITE_CODE( address, reqBitsOuter+reqBitsInner, "slice_address" );
@@ -1426,6 +1461,13 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
+#if LGE_ILLUCOMP_B0045
+Void TEncCavlc::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+
 Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -2046,4 +2088,21 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   }
   return true;
 }
+
+#if RWTH_SDC_DLT_B0036
+Void TEncCavlc::codeSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeSDCPredMode ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 //! \}

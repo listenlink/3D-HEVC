@@ -41,6 +41,10 @@
 //! \ingroup TLibCommon
 //! \{
 
+#define OL_QTLIMIT_PREDCODING_B0068       1    //JCT3V-B0068
+
+#define MTK_UNCONSTRAINED_MVI             1    //JCT3V-B0083
+
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
@@ -100,13 +104,10 @@
 #define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
 #define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
 #define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
-#define LGE_WVSO_A0119                    1 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
-
-#define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
-#if OL_DEPTHLIMIT_A0044
-#define OL_DO_NOT_LIMIT_INTRA_SLICES_PART 1 //Turn this on to not perform depth limiting for I-SLICES.
-#define OL_END_CU                         MAX_INT //Default for initializing the partition information buffer
-#define OL_PART_BUF_SIZE                  86 //maximum number of possible partition bits in a CU
+#define LGE_WVSO_A0119                    1 // JCT2-A0119 & JCT3V-B0131 Depth Metric with a weighted depth fidelity term
+#define LGE_ILLUCOMP_B0045                1 // JCT2-B0045 Illumination compensation for Luma and Chroma
+#if LGE_ILLUCOMP_B0045
+#define LGE_ILLUCOMP_B0045_ENCSIMP        1
 #endif
 
 #define HHI_INTERVIEW_SKIP                1
@@ -119,6 +120,16 @@
 #define DMM_WEDGEMODEL_MIN_SIZE           4
 #define DMM_WEDGEMODEL_MAX_SIZE          32
 #define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
+#endif
+
+#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
+#if HHIQC_DMMFASTSEARCH_B0039
+#define DMM3_SIMPLIFY_TR                  1
+#endif
+
+#define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
+#if RWTH_SDC_DLT_B0036
+#define Log2( n ) ( log((double)n) / log(2.0) )
 #endif
 
 #define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding

@@ -159,6 +159,9 @@ protected:
   Bool      m_useLossless;                                    ///< flag for using lossless coding
 #endif
   vector<Bool> m_abUseSAO;
+#if LGE_ILLUCOMP_B0045
+  Bool      m_bUseIC;                                     ///< flag for using illumination compensation for inter-view prediction
+#endif
 #if SAO_UNIT_INTERLEAVING
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoInterleavingFlag;                            ///< SAO interleaving flag
@@ -265,6 +268,10 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if HHI_MPI
   Bool      m_bUseMVI;  ///< flag for using Motion Vector Inheritance for depth map coding
 #endif
+#if RWTH_SDC_DLT_B0036
+  Bool      m_bUseDLT;
+  Bool      m_bUseSDC;
+#endif
 
   Int       m_useScalingListId;                               ///< using quantization matrix
   char*     m_scalingListFile;                                ///< quantization matrix file name
@@ -307,8 +314,8 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseDMM;                                        ///< flag for using DMM
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Bool      m_bDepthPartitionLimiting;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool      m_bUseQTLPC;                                      ///< flag for using depth QuadTree Limitation + Predictive Coding
 #endif
 
   // internal member functions

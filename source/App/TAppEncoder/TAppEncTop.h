@@ -160,6 +160,10 @@ public:
 private:
   Void  xStoreVSORefPicsInBuffer();                                                   ///< read in External Ref pic from file and store in buffer
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Void  xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames);
+#endif
 
 };// END CLASS DEFINITION TAppEncTop
 

@@ -299,6 +299,9 @@ Void TAppEncTop::xInitLibCfg()
     }
     m_acTEncTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
     m_acTEncTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[0]     );
+#if LGE_ILLUCOMP_B0045
+    m_acTEncTopList[iViewIdx]->setUseIC                ( m_bUseIC          );
+#endif
 #if SAO_UNIT_INTERLEAVING
     m_acTEncTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
     m_acTEncTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
@@ -363,11 +366,15 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
 #endif
-#if OL_DEPTHLIMIT_A0044
-    m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
+#if OL_QTLIMIT_PREDCODING_B0068
+    m_acTEncTopList[iViewIdx]->setUseQTLPC                   ( false );
 #endif
 #if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
+#endif
+#if RWTH_SDC_DLT_B0036
+    m_acTEncTopList[iViewIdx]->setUseDLT                      ( false );
+    m_acTEncTopList[iViewIdx]->setUseSDC                      ( false );
 #endif
   }
   if( m_bUsingDepthMaps )
@@ -578,6 +585,9 @@ Void TAppEncTop::xInitLibCfg()
       }
       m_acTEncDepthTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
+#if LGE_ILLUCOMP_B0045
+      m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
+#endif
 #if SAO_UNIT_INTERLEAVING
       m_acTEncDepthTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
       m_acTEncDepthTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
@@ -642,11 +652,15 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT_A0044
-    m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
+#if OL_QTLIMIT_PREDCODING_B0068
+    m_acTEncDepthTopList[iViewIdx]->setUseQTLPC                   (m_bUseQTLPC);
 #endif
 #if HHI_MPI
      m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#endif
+#if RWTH_SDC_DLT_B0036
+      m_acTEncDepthTopList[iViewIdx]->setUseDLT                   ( m_bUseDLT );
+      m_acTEncDepthTopList[iViewIdx]->setUseSDC                   ( m_bUseSDC );
 #endif
     }
   }
@@ -866,6 +880,11 @@ Void TAppEncTop::encode()
   {
     eos.push_back( false );
     depthEos.push_back( false );
+    
+#if RWTH_SDC_DLT_B0036
+    if( m_bUsingDepthMaps && m_bUseDLT )
+      xAnalyzeInputBaseDepth(iViewIdx, m_iIntraPeriod);
+#endif
   }
 
   // allocate original YUV buffer
@@ -1414,5 +1433,81 @@ TComPic* TAppEncTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
 
   return pcPic;
 };
+  
+#if RWTH_SDC_DLT_B0036
+Void TAppEncTop::xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames)
+{
+  TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
+  // allocate original YUV buffer
+  pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+  
+  TVideoIOYuv* depthVideoFile = new TVideoIOYuv;
+  
+  UInt uiMaxDepthValue = g_uiIBDI_MAX;
+  
+  Bool abValidDepths[256];
+  
+  depthVideoFile->open( m_pchDepthInputFileList[iViewIdx], false, m_uiInputBitDepth, m_uiInternalBitDepth );  // read  mode
+  
+  // initialize boolean array
+  for(Int p=0; p<=uiMaxDepthValue; p++)
+    abValidDepths[p] = false;
+  
+  Int iHeight   = pcDepthPicYuvOrg->getHeight();
+  Int iWidth    = pcDepthPicYuvOrg->getWidth();
+  Int iStride   = pcDepthPicYuvOrg->getStride();
+  
+  Pel* pInDM    = pcDepthPicYuvOrg->getLumaAddr();
+  
+  for(Int uiFrame=0; uiFrame < uiNumFrames; uiFrame++ )
+  {
+    depthVideoFile->read( pcDepthPicYuvOrg, m_aiPad, false );
+    
+    // check all pixel values
+    for (Int i=0; i<iHeight; i++)
+    {
+      Int rowOffset = i*iStride;
+      
+      for (Int j=0; j<iWidth; j++)
+      {
+        Pel depthValue = pInDM[rowOffset+j];
+        abValidDepths[depthValue] = true;
+      }
+    }
+  }
+  
+  depthVideoFile->close();
+  
+  pcDepthPicYuvOrg->destroy();
+  delete pcDepthPicYuvOrg;
+  
+  // convert boolean array to idx2Depth LUT
+  UInt* auiIdx2DepthValue = (UInt*) calloc(uiMaxDepthValue, sizeof(UInt));
+  UInt uiNumDepthValues = 0;
+  for(UInt p=0; p<=uiMaxDepthValue; p++)
+  {
+    if( abValidDepths[p] == true)
+    {
+      auiIdx2DepthValue[uiNumDepthValues++] = p;
+    }
+  }
+  
+  if( uiNumFrames == 0 || ceil(Log2(uiNumDepthValues)) == ceil(Log2(g_uiIBDI_MAX)) )
+  {
+    // don't use DLT
+    m_acTEncDepthTopList[iViewIdx]->setUseDLT(false);
+    m_acTEncDepthTopList[iViewIdx]->getSPS()->setUseDLT(false);
+  }
+  
+  // assign LUT
+  if( m_acTEncDepthTopList[iViewIdx]->getUseDLT() )
+    m_acTEncDepthTopList[iViewIdx]->getSPS()->setDepthLUTs(auiIdx2DepthValue, uiNumDepthValues);
+  else
+    m_acTEncDepthTopList[iViewIdx]->getSPS()->setDepthLUTs();
+  
+  // free temporary memory
+  free(auiIdx2DepthValue);
+}
+#endif
 
 //! \}

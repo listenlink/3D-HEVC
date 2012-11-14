@@ -51,6 +51,9 @@ TComWedgelet::TComWedgelet( UInt uiWidth, UInt uiHeight ) : m_uhXs     ( 0 ),
                                                             m_uhYe     ( 0 ),
                                                             m_uhOri    ( 0 ),
                                                             m_eWedgeRes( FULL_PEL )
+#if HHIQC_DMMFASTSEARCH_B0039
+                                                            , m_bIsCoarse( false )
+#endif
 {
   create( uiWidth, uiHeight );
 }
@@ -61,6 +64,10 @@ TComWedgelet::TComWedgelet( const TComWedgelet &rcWedge ) : m_uhXs     ( rcWedge
                                                             m_uhYe     ( rcWedge.m_uhYe      ),
                                                             m_uhOri    ( rcWedge.m_uhOri     ),
                                                             m_eWedgeRes( rcWedge.m_eWedgeRes ),
+#if HHIQC_DMMFASTSEARCH_B0039
+                                                            m_bIsCoarse( rcWedge.m_bIsCoarse ),
+                                                            m_uiAng    ( rcWedge.m_uiAng     ),
+#endif
                                                             m_uiWidth  ( rcWedge.m_uiWidth   ),
                                                             m_uiHeight ( rcWedge.m_uiHeight  ),
                                                             m_pbPattern( (Bool*)xMalloc( Bool, (m_uiWidth * m_uiHeight) ) )
@@ -93,7 +100,40 @@ Void TComWedgelet::clear()
   ::memset( m_pbPattern, 0, (m_uiWidth * m_uiHeight) * sizeof(Bool) );
 }
 
+#if HHIQC_DMMFASTSEARCH_B0039
+Void TComWedgelet::findClosetAngle()
+{
+  UInt uiAng=0,uiOptAng=0;
+  UInt uiMinD=MAX_UINT;
+  UInt uiTmpD=0;
+  Int angTable[9]    = {0,    2,    5,   9,  13,  17,  21,  26,  32};
+  
+  UChar uhXs = m_uhXs;
+  UChar uhYs = m_uhYs;
+  UChar uhXe = m_uhXe;
+  UChar uhYe = m_uhYe;
+
+  for(uiAng=2; uiAng<=34; uiAng++)
+  {
+    Int iSign    = (uiAng<VER_IDX && uiAng>HOR_IDX ) ? -1 : 1;
+    Int iVer     = uiAng>17 ? 32 : angTable[(uiAng>10) ? (uiAng-10) : (10-uiAng)];
+    Int iHor     = uiAng<19 ? 32 : angTable[(uiAng>26) ? (uiAng-26) : (26-uiAng)];
+
+    uiTmpD  = abs(iVer*iSign*(uhXs-uhXe) - iHor*(uhYe-uhYs));
+    
+    if( uiTmpD < uiMinD )
+    {
+      uiMinD = uiTmpD;
+      uiOptAng = uiAng;
+    }
+  }
+  m_uiAng = uiOptAng;
+}
+
+Void TComWedgelet::setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse )
+#else
 Void TComWedgelet::setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes )
+#endif
 {
   m_uhXs      = uhXs;
   m_uhYs      = uhYs;
@@ -101,6 +141,9 @@ Void TComWedgelet::setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, 
   m_uhYe      = uhYe;
   m_uhOri     = uhOri;
   m_eWedgeRes = eWedgeRes;
+#if HHIQC_DMMFASTSEARCH_B0039
+  m_bIsCoarse = bIsCoarse;
+#endif
 
   xGenerateWedgePattern();
 }
@@ -643,8 +686,22 @@ Void TComWedgelet::xGenerateWedgePattern()
   case( 1 ): { for( UInt iY = 0;                 iY < uhYs;            iY++ ) { UInt iX = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX--; } } } break;
   case( 2 ): { for( UInt iX = uiTempBlockSize-1; iX > uhXs;            iX-- ) { UInt iY = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY--; } } } break;
   case( 3 ): { for( UInt iY = uiTempBlockSize-1; iY > uhYs;            iY-- ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } } break;
+#if HHIQC_DMMFASTSEARCH_B0039
+  case( 4 ): 
+    { 
+      if( (uhXs+uhXe) < uiTempBlockSize ) { for( UInt iY = 0; iY < uiTempBlockSize; iY++ ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } }
+      else                                { for( UInt iY = 0; iY < uiTempBlockSize; iY++ ) { UInt iX = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX--; } } }
+    }
+    break;
+  case( 5 ): 
+    { 
+      if( (uhYs+uhYe) < uiTempBlockSize ) { for( UInt iX = 0; iX < uiTempBlockSize; iX++ ) { UInt iY = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY++; } } }
+      else                                { for( UInt iX = 0; iX < uiTempBlockSize; iX++ ) { UInt iY = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY--; } } }
+    }
+#else
   case( 4 ): { for( UInt iY = 0;               iY < uiTempBlockSize; iY++ ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } } break;
   case( 5 ): { for( UInt iX = 0;               iX < uiTempBlockSize; iX++ ) { UInt iY = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY++; } } } break;
+#endif
   }
 
   clear();
@@ -663,8 +720,23 @@ Void TComWedgelet::xGenerateWedgePattern()
       case( 1 ): { uiOffX = 1; uiOffY = 0; } break;
       case( 2 ): { uiOffX = 1; uiOffY = 1; } break;
       case( 3 ): { uiOffX = 0; uiOffY = 1; } break;
+#if HHIQC_DMMFASTSEARCH_B0039
+      case( 4 ): 
+        { 
+          if( (uhXs+uhXe) < uiTempBlockSize ) { uiOffX = 0; uiOffY = 0; }
+          else                                { uiOffX = 1; uiOffY = 0; }
+        } 
+        break;
+      case( 5 ): 
+        { 
+          if( (uhYs+uhYe) < uiTempBlockSize ) { uiOffX = 0; uiOffY = 0; }
+          else                                { uiOffX = 0; uiOffY = 1; }
+        } 
+        break;
+#else
       case( 4 ): { uiOffX = 0; uiOffY = 0; } break;
       case( 5 ): { uiOffX = 0; uiOffY = 0; } break;
+#endif
       default:   { uiOffX = 0; uiOffY = 0; } break;
       }
 
@@ -731,6 +803,36 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
     }
   }
 }
+
+#if HHIQC_DMMFASTSEARCH_B0039
+TComWedgeNode::TComWedgeNode()
+{
+  m_uiPatternIdx = NO_IDX;
+  for( UInt uiPos = 0; uiPos < NUM_WEDGE_REFINES; uiPos++ )
+  {
+    m_uiRefineIdx[uiPos] = NO_IDX;
+  }
+}
+
+UInt TComWedgeNode::getPatternIdx()
+{
+  return m_uiPatternIdx;
+}
+UInt TComWedgeNode::getRefineIdx( UInt uiPos )
+{
+  assert( uiPos < NUM_WEDGE_REFINES );
+  return m_uiRefineIdx[uiPos];
+}
+Void TComWedgeNode::setPatternIdx( UInt uiIdx )
+{
+  m_uiPatternIdx = uiIdx;
+}
+Void TComWedgeNode::setRefineIdx( UInt uiIdx, UInt uiPos )
+{
+  assert( uiPos < NUM_WEDGE_REFINES );
+  m_uiRefineIdx[uiPos] = uiIdx;  
+}
+#endif
 
 #if HHI_DMM_PRED_TEX
 TComWedgeDist::TComWedgeDist()
