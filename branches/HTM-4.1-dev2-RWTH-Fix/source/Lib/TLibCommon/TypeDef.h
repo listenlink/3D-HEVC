@@ -127,7 +127,7 @@
 #define DMM3_SIMPLIFY_TR                  1
 #endif
 
-#define RWTH_SDC_DLT_B0036                0   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
+#define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
 #if RWTH_SDC_DLT_B0036
 #define Log2( n ) ( log((double)n) / log(2.0) )
 #endif

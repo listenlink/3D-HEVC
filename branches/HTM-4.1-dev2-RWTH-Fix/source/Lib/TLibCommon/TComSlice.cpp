@@ -1590,7 +1590,7 @@ Void TComSPS::setDepthLUTs(UInt* uidx2DepthValue, UInt uiNumDepthValues)
   if( m_uiNumDepthmapValues == 0 )
   {
     m_uiNumDepthmapValues = uiMaxDepthValue+1;
-    m_uiBitsPerDepthValue = (UInt)ceil(log2f(m_uiNumDepthmapValues));
+    m_uiBitsPerDepthValue = (UInt)ceil(Log2(m_uiNumDepthmapValues));
     
     m_uiDepthValue2Idx    = (UInt*) xMalloc(UInt, m_uiNumDepthmapValues);
     m_uiIdx2DepthValue    = (UInt*) xMalloc(UInt, m_uiNumDepthmapValues);
