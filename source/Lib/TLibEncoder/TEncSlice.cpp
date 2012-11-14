@@ -190,7 +190,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
 #if SONY_COLPIC_AVAILABILITY
   rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());
 #endif 
-
+#if LGE_ILLUCOMP_B0045
+  rpcSlice->setApplyIC(false);
+#endif
   // set mutliview parameters
   rpcSlice->initMultiviewSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );
 
@@ -768,6 +770,13 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   Int  iNumSubstreams = 1;
   UInt uiTilesAcross  = 0;
 
+#if LGE_ILLUCOMP_B0045
+  if (pcEncTop->getViewId() != 0 && !pcEncTop->isDepthCoder() && pcEncTop->getUseIC())   // DCP of ViewID 0 is not available
+  {
+    pcSlice ->xSetApplyIC();
+  }
+#endif
+
   if( m_pcCfg->getUseSBACRD() )
   {
     iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
@@ -842,11 +851,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         m_pcGOPEncoder->getEncTop()->getEncTop()->setupRenModel( rpcPic->getCurrSlice()->getPOC() , rpcPic->getCurrSlice()->getSPS()->getViewId(), rpcPic->getCurrSlice()->getSPS()->isDepth() ? 1 : 0, iCurPosY );
       }
     }    
-#endif
-
-#if OL_DEPTHLIMIT_A0044 //stop dumping partition information
-    m_bDumpPartInfo = 0;
-    pcCU->setPartDumpFlag(m_bDumpPartInfo);
 #endif
 
     // inherit from TR if necessary, select substream to use.
@@ -1306,11 +1310,11 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       }
     }
 
-    TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
-#if OL_DEPTHLIMIT_A0044
-    pcCU->setPartDumpFlag(m_bDumpPartInfo);
-    pcCU->resetPartInfo();
+#if OL_QTLIMIT_PREDCODING_B0068
+    rpcPic->setReduceBitsFlag(true);
 #endif
+
+    TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
 #if !REMOVE_TILE_DEPENDENCE
     if( (rpcPic->getPicSym()->getTileBoundaryIndependenceIdr()==0) && (rpcPic->getPicSym()->getNumColumnsMinus1()!=0) )
     {    
@@ -1398,6 +1402,11 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       }
     }
 #endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+    rpcPic->setReduceBitsFlag(false);
+#endif
+
   }
 
 #if ADAPTIVE_QP_SELECTION

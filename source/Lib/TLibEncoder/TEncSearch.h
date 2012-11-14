@@ -307,6 +307,18 @@ protected:
                                     UInt         uiAbsPartIdx,
                                     TComYuv*     pcRecoYuv );
   
+#if RWTH_SDC_DLT_B0036
+  Void  xAnalyzeSegmentsSDC       ( Pel* pOrig,
+                                   UInt uiStride,
+                                   UInt uiSize,
+                                   Pel* rpSegMeans,
+                                   UInt uiNumSegments,
+                                   Bool* pMask,
+                                   UInt uiMaskStride );
+  
+  Void  xIntraCodingSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bResidual );
+#endif
+  
   // -------------------------------------------------------------------------------------------------------------------
   // DMM intra search
   // -------------------------------------------------------------------------------------------------------------------
@@ -373,6 +385,18 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
+#if HHIQC_DMMFASTSEARCH_B0039
+  Void xSearchWedgeFullMinDistFast( TComDataCU*    pcCU, 
+                                    UInt           uiAbsPtIdx, 
+                                    WedgeNodeList* pacWedgeNodeList, 
+                                    WedgeList*     pacWedgeList, 
+                                    Pel*           piRef, 
+                                    UInt           uiRefStride, 
+                                    UInt           uiWidth, 
+                                    UInt           uiHeight, 
+                                    UInt&          ruiTabIdx, 
+                                    Dist&          riDist );
+#endif
   Void xSearchWedgePredDirMinDist ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeList*     pacWedgeList, 

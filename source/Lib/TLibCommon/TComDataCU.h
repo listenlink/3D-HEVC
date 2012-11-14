@@ -194,6 +194,9 @@ private:
   // -------------------------------------------------------------------------------------------------------------------
   
   Bool*         m_pbMergeFlag;        ///< array of merge flags
+#if LGE_ILLUCOMP_B0045
+  Bool*         m_pbICFlag;           ///< array of IC flags
+#endif
   UChar*        m_puhMergeIndex;      ///< array of merge candidate indices
 #if AMP_MRG
   Bool          m_bIsMergeAMP;
@@ -240,14 +243,6 @@ private:
   UInt          m_uiTotalBins;       ///< sum of partition bins
   UInt*         m_uiSliceStartCU;    ///< Start CU address of current slice
   UInt*         m_uiEntropySliceStartCU; ///< Start CU address of current slice
-
-#if OL_DEPTHLIMIT_A0044 
-  //add a variable to store the partition information
-  //a 2D array in uidepth, part_symbol format
-  UInt          m_uiPartInfo[OL_PART_BUF_SIZE][2];
-  UInt          m_uiPartNum;
-  Bool          m_dumpPartInfo;
-#endif 
   
   // -------------------------------------------------------------------------------------------------------------------
   // depth model mode data
@@ -269,6 +264,11 @@ private:
 
   Int*          m_piContourPredTexDeltaDC1;
   Int*          m_piContourPredTexDeltaDC2;
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool*         m_pbSDCFlag;
+  Pel*          m_apSegmentDCOffset[2];
 #endif
 
 protected:
@@ -471,6 +471,14 @@ public:
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 
+#if LGE_ILLUCOMP_B0045
+  Bool*         getICFlag             ()                        { return m_pbICFlag;               }
+  Bool          getICFlag             ( UInt uiIdx )            { return m_pbICFlag[uiIdx];        }
+  Void          setICFlag             ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
+  Void          setICFlagSubParts     ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Bool          isICFlagRequired      (UInt uiAbsPartIdx);
+#endif
+
 #if AMP_MRG
   Void          setMergeAMP( Bool b )      { m_bIsMergeAMP = b; }
   Bool          getMergeAMP( )             { return m_bIsMergeAMP; }
@@ -607,15 +615,6 @@ public:
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
   
   Void          compressMV            ();
-
-#if OL_DEPTHLIMIT_A0044
-  Void        resetPartInfo     () {m_uiPartNum = 0;};
-  Void        incrementPartInfo () {m_uiPartNum ++;};
-  Void        updatePartInfo(UInt uiSymbol, UInt uiDepth) { m_uiPartInfo[m_uiPartNum][0] = uiSymbol; m_uiPartInfo[m_uiPartNum][1] = uiDepth;};
-  UInt*       readPartInfo()                              { return (UInt*)m_uiPartInfo;};
-  Void        setPartDumpFlag(Bool flag)                  { m_dumpPartInfo = flag; };
-  Bool        getPartDumpFlag()                           { return m_dumpPartInfo; };
-#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // utility functions for neighbouring information
@@ -695,6 +694,9 @@ public:
   UInt          getCtxQtCbf                     ( UInt   uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
+#if LGE_ILLUCOMP_B0045
+  UInt          getCtxICFlag                    ( UInt   uiAbsPartIdx                                 );
+#endif
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -807,6 +809,20 @@ public:
   Void          setEdgeDeltaDC0( UInt uiIdx, Int val )      { m_piEdgeDeltaDC0[uiIdx] = val;  }
   Void          setEdgeDeltaDC1( UInt uiIdx, Int val )      { m_piEdgeDeltaDC1[uiIdx] = val;  }
 #endif
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool*         getSDCFlag          ()                        { return m_pbSDCFlag;               }
+  Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
+  Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  
+  UInt          getCtxSDCFlag              ( UInt uiAbsPartIdx );
+  
+  Bool          getSDCAvailable             ( UInt uiAbsPartIdx );
+  
+  Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
+  Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
+  Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
 #endif
 };
 

@@ -325,6 +325,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterOffsetInAPS", m_loopFilterOffsetInAPS, false)
   ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
   ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
+#if LGE_ILLUCOMP_B0045
+  ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
+#endif
 #if DBL_CONTROL
 #if FIX_DBL_CONTROL_DEFAULT
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
@@ -360,14 +363,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 #if LGE_WVSO_A0119
-  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
+  ("WVSO",                            m_bUseWVSO                , true          , "Use depth fidelity term for VSO" )
   ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
   ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  ("DPL",                             m_bDepthPartitionLimiting , false         , "Use DepthPartitionLimiting" )
+#if OL_QTLIMIT_PREDCODING_B0068
+  ("QTLPC",                           m_bUseQTLPC               , true         , "Use depth Quadtree Limitation + Predictive Coding" )
 #endif
 
 #endif
@@ -472,6 +475,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("0", doOldStyleCmdlineOff, "turn option <name> off")
 #if HHI_MPI
   ("MVI", m_bUseMVI, false, "use motion vector inheritance for depth map coding")
+#endif
+#if RWTH_SDC_DLT_B0036
+  ("DLT", m_bUseDLT, true, "Enables Depth Lookup Table")
+  ("SDC", m_bUseSDC, true, "Enabled Simplified Depth Coding")
 #endif
   ;
   
@@ -1717,6 +1724,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
   printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
+#if LGE_ILLUCOMP_B0045
+  printf("IlluCompEnable: %d ", m_bUseIC);
+#endif
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
@@ -1729,8 +1739,8 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if LGE_WVSO_A0119
   printf("WVSO:%d ", m_bUseWVSO );
 #endif
-#if OL_DEPTHLIMIT_A0044
-  printf("DPL:%d ", m_bDepthPartitionLimiting);
+#if OL_QTLIMIT_PREDCODING_B0068
+  printf("QTLPC:%d ", m_bUseQTLPC);
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );
@@ -1738,8 +1748,13 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
+#if RWTH_SDC_DLT_B0036
+  printf("SDC:%d ", m_bUseSDC ? 1 : 0 );
+  printf("DLT:%d ", m_bUseDLT ? 1 : 0 );
+#endif
 #if LGE_WVSO_A0119
-  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
+  if ( m_bUseWVSO )
+    printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   

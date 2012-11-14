@@ -114,6 +114,9 @@ public:
   virtual Void codeApsExtensionFlag () = 0;
   
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if LGE_ILLUCOMP_B0045
+  virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -123,6 +126,12 @@ public:
   
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  
+#if RWTH_SDC_DLT_B0036
+  virtual Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment ) = 0;
+  virtual Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   
 #if BURST_IPCM
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag) = 0;
@@ -249,6 +258,9 @@ public:
   Void setMaxAlfCtrlDepth(UInt uiMaxAlfCtrlDepth) {m_pcEntropyCoderIf->setMaxAlfCtrlDepth(uiMaxAlfCtrlDepth);}
   
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
+#if LGE_ILLUCOMP_B0045
+  Void encodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeInterDirPU   ( TComDataCU* pcSubCU, UInt uiAbsPartIdx  );
@@ -295,6 +307,12 @@ public:
   Void encodeFinish               (Bool bEnd) {m_pcEntropyCoderIf->codeFinish(bEnd);}
   Void encodeScalingList       ( TComScalingList* scalingList );
   Void encodeDFParams          (TComAPS* pcAPS);
+  
+#if RWTH_SDC_DLT_B0036
+  Void encodeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeSDCPredMode   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
 
 private:
 #if UNIFIED_TRANSFORM_TREE
