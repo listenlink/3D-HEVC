@@ -1445,7 +1445,7 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames)
   
   UInt uiMaxDepthValue = g_uiIBDI_MAX;
   
-  Bool abValidDepths[uiMaxDepthValue+1];
+  Bool abValidDepths[256];
   
   depthVideoFile->open( m_pchDepthInputFileList[iViewIdx], false, m_uiInputBitDepth, m_uiInternalBitDepth );  // read  mode
   
