@@ -366,8 +366,8 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
 #endif
-#if OL_DEPTHLIMIT_A0044
-    m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
+#if OL_QTLIMIT_PREDCODING_B0068
+    m_acTEncTopList[iViewIdx]->setUseQTLPC                   ( false );
 #endif
 #if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
@@ -652,8 +652,8 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT_A0044
-    m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
+#if OL_QTLIMIT_PREDCODING_B0068
+    m_acTEncDepthTopList[iViewIdx]->setUseQTLPC                   (m_bUseQTLPC);
 #endif
 #if HHI_MPI
      m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );

@@ -643,6 +643,13 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( pcSPS->getUseMVI() ? 1 : 0, "use_mvi_flag" );
   }
 #endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  if( bIsDepth )
+  {
+    WRITE_FLAG( pcSPS->getUseQTLPC() ? 1 : 0, "use_qtlpc_flag");
+  }
+#endif
   
 #if RWTH_SDC_DLT_B0036
   if( bIsDepth )

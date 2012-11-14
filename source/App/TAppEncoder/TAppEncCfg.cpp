@@ -369,8 +369,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  ("DPL",                             m_bDepthPartitionLimiting , false         , "Use DepthPartitionLimiting" )
+#if OL_QTLIMIT_PREDCODING_B0068
+  ("QTLPC",                           m_bUseQTLPC               , true         , "Use depth Quadtree Limitation + Predictive Coding" )
 #endif
 
 #endif
@@ -1739,9 +1739,8 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if LGE_WVSO_A0119
   printf("WVSO:%d ", m_bUseWVSO );
 #endif
-
-#if OL_DEPTHLIMIT_A0044
-  printf("DPL:%d ", m_bDepthPartitionLimiting);
+#if OL_QTLIMIT_PREDCODING_B0068
+  printf("QTLPC:%d ", m_bUseQTLPC);
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );

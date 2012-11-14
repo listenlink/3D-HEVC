@@ -314,8 +314,8 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseDMM;                                        ///< flag for using DMM
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Bool      m_bDepthPartitionLimiting;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool      m_bUseQTLPC;                                      ///< flag for using depth QuadTree Limitation + Predictive Coding
 #endif
 
   // internal member functions
