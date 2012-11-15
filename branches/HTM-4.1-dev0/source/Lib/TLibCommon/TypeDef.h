@@ -45,6 +45,8 @@
 
 #define MTK_UNCONSTRAINED_MVI             1    //JCT3V-B0083
 
+
+///// ***** FIXES *********
 // A
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
@@ -59,16 +61,105 @@
 #define FIX_REMOVE_TILE_DEPENDENCE        1
 #define FIX_DBL_CONTROL_DEFAULT           1
 
-
 // B
 #define FIX_LGE_IVMP_PARALLEL_MERGE_B0136 1
-#define TMVP_DEPTH_SWITCH                 1 // related to JCT3V-B0092
 #define FIX_RDO_NEGDIST                   1
 #define FIX_DMM_NEG_DIST                  1
+#define FIX_LGE_DVMCP_B0133               1
 
-#define DV_DERIVATION_PARALLEL_B0096      1 //JCT3V-B0096, enable parallel derivation of disparity vector
 
+///// ***** PATCHES *********
+#define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
+
+///// ***** DEPTH MODELING MODES *********
+#define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
+#define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
+#define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
+#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
+
+///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
+#define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
+#define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
+#define QC_MRG_CANS_B0048                 1   // JCT2-B0048, B0086, B0069
+#if     QC_MRG_CANS_B0048
+#define OL_DISMV_POS_B0069                1   // different pos for dispairty MV candidate, B0069
+#endif
+#define MTK_INTERVIEW_MERGE_A0049         1   // JCT2-A0049 second part
+#if HHI_INTER_VIEW_MOTION_PRED         
+#define SAIT_IMPROV_MOTION_PRED_M24829    1   // improved inter-view motion vector prediction
+#else                                  
+#define SAIT_IMPROV_MOTION_PRED_M24829    0   
+#endif                                 
+
+///// ***** INTERVIEW RESIDUAL PREDICTION *********
+#define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
+#if HHI_INTER_VIEW_RESIDUAL_PRED       
+#define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
+#define QC_SIMPLIFIEDIVRP_M24938          1
+#else                                  
+#define LG_RESTRICTEDRESPRED_M24766       0
+#define QC_SIMPLIFIEDIVRP_M24938          0
+#endif
+
+///// ***** DISPARITY VECTOR DERIVATION *********
+#define QC_MULTI_DIS_CAN                  1   // JCT2-A0097
+#define LGE_DVMCP                         1   // JCT2-A0126     
+#define LGE_DVMCP_MEM_REDUCTION_B0135     1 
+#define DV_DERIVATION_PARALLEL_B0096      1   // JCT3V-B0096, enable parallel derivation of disparity vector
+#define QC_SIMPLE_NBDV_B0047              1   // JCT2-B0047
+
+///// ***** MOTION PARAMETER INHERITANCE  *********
+#define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
+#if HHI_MPI
+#define FIX_MPI_B0065                     1   // JCT3V-B0065, fix the MPI bug when RQT is off
+#endif
+
+///// ***** VIEW SYNTHESIS OPTIMIZAION *********
+#define HHI_VSO                           1
+#define HHI_VSO_LS_TABLE                  1   // m23714, enable table base Lagrange multiplier optimization 
+#define HHI_VSO_DIST_INT                  1   // Allow negative synthesized view distortion change
+#define HHI_VSO_SYNTH_DIST_OUT            0   // Output of synthesized view distortion instead of depth distortion in encoder output
+#define HHI_VSO_COLOR_PLANES              1   // Compute VSO distortion on color planes 
+#define HHI_VSO_RM_ASSERTIONS             0   // output VSO assertions
+#define HHI_VSO_SPEEDUP_A0033             1   // JCT2-A0033 modification 1 (changes in classes directly related the renderer model 
+                                              // to are not covered by this define, since nearly the entire class has been changed)
+#define HHI_VSO_SET_OPTIM                 1   // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
+#define SAIT_VSO_EST_A0033                1   // JCT2-A0033 modification 3
+#define LGE_VSO_EARLY_SKIP_A0093          1   // JCT2-A0093 modification 4
+#define LGE_WVSO_A0119                    1   // JCT2-A0119 & JCT3V-B0131 Depth Metric with a weighted depth fidelity term
+
+
+///// ***** ILLUMINATION COMPENSATON *********
+#define LGE_ILLUCOMP_B0045                1   // JCT2-B0045 Illumination compensation for Luma and Chroma
+#if LGE_ILLUCOMP_B0045
+#define LGE_ILLUCOMP_B0045_ENCSIMP        1
+#endif
+
+///// ***** INTERVIEW SKIP *********
+#define HHI_INTERVIEW_SKIP                1
+
+///// ***** OTHERS *********
+#define LG_ZEROINTRADEPTHRESI_M26039      1   // JCT2-A0087
+#define SONY_COLPIC_AVAILABILITY          1
+#define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
+#define VIDYO_VPS_INTEGRATION             1
+
+
+
+///// ***** DEFINED PARAMETERS *********
+#if QC_MULTI_DIS_CAN                    
+#define DIS_CANS                          1
+#endif                                  
+
+#define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
+
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#define DMM_WEDGEMODEL_MIN_SIZE           4
+#define DMM_WEDGEMODEL_MAX_SIZE          32
+#define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
+#endif
+
 #if LGE_EDGE_INTRA
 #define LGE_EDGE_INTRA_MIN_SIZE           4
 #define LGE_EDGE_INTRA_MAX_SIZE           32
@@ -78,25 +169,7 @@
 #define LGE_EDGE_INTRA_PIXEL_DIFFERENCE   1
 #endif
 
-#define LG_ZEROINTRADEPTHRESI_M26039      1   // JCT2-A0087
-                                        
-#define SONY_COLPIC_AVAILABILITY          1
-                                        
-#define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
-#define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
-#define QC_MULTI_DIS_CAN                  1   // JCT2-A0097
-#if QC_MULTI_DIS_CAN                    
-    #define DIS_CANS                      1
-#endif                                  
-#define QC_SIMPLE_NBDV_B0047              1   //JCT2-B0047
-#define QC_MRG_CANS_B0048                 1   //JCT2-B0048, B0086, B0069
-#if     QC_MRG_CANS_B0048
-#define OL_DISMV_POS_B0069                1   //different pos for dispairty MV candidate, B0069
-#endif
-#define MTK_INTERVIEW_MERGE_A0049         1   //  JCT2-A0049 second part
-#define SHARP_INTERVIEW_DECOUPLE_B0111    1   //  JCT3V-B0111 decoupling inter-view candidate
-                                        
-#define LGE_DVMCP                         1   //  JCT2-A0126     
+
 #if LGE_DVMCP                           
 #define DVFROM_LEFTBELOW                  1
 #define DVFROM_LEFT                       2
@@ -105,71 +178,20 @@
 #define DVFROM_ABOVELEFT                  5
 #define DVFROM_COL                        6
 #endif
-#define FIX_LGE_DVMCP_B0133               1
-#define LGE_DVMCP_MEM_REDUCTION_B0135     1 
 
 
-#define HHI_VSO                           1
-#define HHI_VSO_LS_TABLE                  1 // m23714
-#define HHI_VSO_DIST_INT                  1
-#define HHI_VSO_SYNTH_DIST_OUT            0
-#define HHI_VSO_COLOR_PLANES              1
-#define HHI_VSO_SPEEDUP_A0033             1 // JCT2-A0033 modification 1 (changes in classes directly related the renderer model 
-                                            // to are not covered by this define, since nearly the entire class has been changed)
-#define HHI_VSO_RM_ASSERTIONS             0 // output VSO assertions
-#define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
-#define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
-#define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
-#define LGE_WVSO_A0119                    1 // JCT2-A0119 & JCT3V-B0131 Depth Metric with a weighted depth fidelity term
-#define LGE_ILLUCOMP_B0045                1 // JCT2-B0045 Illumination compensation for Luma and Chroma
-#if LGE_ILLUCOMP_B0045
-#define LGE_ILLUCOMP_B0045_ENCSIMP        1
-#endif
-
-#define HHI_INTERVIEW_SKIP                1
-#define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
-
-#define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
-#define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
-
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-#define DMM_WEDGEMODEL_MIN_SIZE           4
-#define DMM_WEDGEMODEL_MAX_SIZE          32
-#define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
-#endif
-
-#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
 #if HHIQC_DMMFASTSEARCH_B0039
 #define DMM3_SIMPLIFY_TR                  1
 #endif
 
-#define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
+
 #if RWTH_SDC_DLT_B0036
 #define Log2( n ) ( log((double)n) / log(2.0) )
 #endif
 
-#define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
-#if HHI_MPI
-#define FIX_MPI_B0065                     1   //JCT3V-B0065, fix the MPI bug when RQT is off
-#endif
 #define HHI_MPI_MERGE_POS                 0
-#define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
-                                       
-#if HHI_INTER_VIEW_MOTION_PRED         
-#define SAIT_IMPROV_MOTION_PRED_M24829    1   // improved inter-view motion vector prediction
-#else                                  
-#define SAIT_IMPROV_MOTION_PRED_M24829    0   
-#endif                                 
-                                       
-#if HHI_INTER_VIEW_RESIDUAL_PRED       
-#define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
-#define QC_SIMPLIFIEDIVRP_M24938          1
-#else                                  
-#define LG_RESTRICTEDRESPRED_M24766       0
-#define QC_SIMPLIFIEDIVRP_M24938          0
-#endif
 
-
+///// ***** HM 6.1 *********
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
 #define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point
 #define NO_COMBINED_PARALLEL              1 ///< Disallow any combined usage of parallel tools among Tile, EntropySlice and Wavefont
@@ -182,17 +204,19 @@
 #define PARALLEL_MERGE  1                   //< H0082 parallel merge/skip
 #define LGE_IVMP_PARALLEL_MERGE_B0136     1 //< B0136 support of parallel merge/skip in disparity vector derivation
 #define LOG2_PARALLEL_MERGE_LEVEL_MINUS2  0 //< H0082 parallel merge level 0-> 4x4, 1-> 8x8, 2->16x16, 3->32x32, 4->64x64
+
 #if PARALLEL_MERGE && LOG2_PARALLEL_MERGE_LEVEL_MINUS2
 #define CU_BASED_MRG_CAND_LIST            1  //< H0240: single merge candidate list for all PUs inside a 8x8 CU conditioned on LOG2_PARALLEL_MERGE_LEVEL_MINUS2 > 0
 #define FIX_CU_BASED_MRG_CAND_LIST_B0136  1  //< B0136 bug fix for CU_BASED_MRG_CAND_LIST
 #endif
+
 #define MVP_AT_ENTROPYSLICE_BOUNDARY      1  //< H0362 enable motion prediction accross entropy slice boundary
 
 #define FAST_DECISION_FOR_MRG_RD_COST     1  ////< H0178: Fast Decision for Merge 2Nx2N RDCost
 
-#define PIC_CROPPING              1 ///< Picture cropping and size constraints
-#define NAL_REF_FLAG              1 ///< Change nal_ref_idc to nal_ref_flag (JCTVC-F463)
-#define REMOVE_DIV_OPERATION      1 ///< H0238: Simplified intra horizontal and vertical filtering
+#define PIC_CROPPING              1  ///< Picture cropping and size constraints
+#define NAL_REF_FLAG              1  ///< Change nal_ref_idc to nal_ref_flag (JCTVC-F463)
+#define REMOVE_DIV_OPERATION      1  ///< H0238: Simplified intra horizontal and vertical filtering
 #define LOGI_INTRA_NAME_3MPM      1  ///< H0407: logical Intra mode naming (sequential angular mode numbering) and 3 MPM mode coding
 
 #define LEVEL_CTX_LUMA_RED        1  ///<H0130: Luma level context reduction
@@ -203,7 +227,7 @@
 #define MULTILEVEL_SIGMAP_EXT     1  ///< H0526: multi-level significance map extended to smaller TUs
 #define MULTIBITS_DATA_HIDING     1  ///< H0481: multiple sign bit hiding
 
-#define DEQUANT_CLIPPING           1  ///< H0312/H0541: transformed coefficients clipping before de-quantization
+#define DEQUANT_CLIPPING          1  ///< H0312/H0541: transformed coefficients clipping before de-quantization
 
 #define REMOVE_NON_SCALED         1 ///< H0164/H0250: Removal of non-scaled merge candidate
 #define MRG_IDX_CTX_RED           1 ///< H0251: Merge index context reduction
@@ -466,7 +490,7 @@ enum MODE_IDX
 // ====================================================================================================================
 // VPS INTEGRATION
 // ====================================================================================================================
-#define VIDYO_VPS_INTEGRATION       1
+
 #if VIDYO_VPS_INTEGRATION
 #define MAX_NUM_VPS 10
 #endif
