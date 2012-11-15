@@ -132,7 +132,7 @@ protected:
   Void xDeltaDCQuantScaleDown    ( TComDataCU* pcCU, Int& riDeltaDC );
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Pel  xGetNearestNeighbor  ( Int x, Int y, Int* pSrc, Int srcStride, Int iWidth, Int iHeight, Bool* bpRegion );
   Void xPredIntraEdge       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iWidth, Int iHeight, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, Bool bDelta = false );
 #endif
@@ -182,7 +182,7 @@ public:
   UInt  getBestContinueWedge    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Int iDeltaEnd = 0 );
   Bool  getWedgePatternIdx      ( WedgeRefList* pcWedgeRefList, UInt& ruiTabIdx, UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe );
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Void predIntraLumaEdge          ( TComDataCU* pcCU, TComPattern* pcTComPattern, UInt uiAbsPartIdx, Int iWidth, Int iHeight, Pel* piPred, UInt uiStride, Bool bDelta = false );
 #endif
 

@@ -45,7 +45,7 @@
 // Constructor / destructor / initialize
 // ====================================================================================================================
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 #define MAX_DISTANCE_EDGEINTRA 255
 #endif
 
@@ -422,7 +422,7 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
   return false;
 }
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 Void TComPrediction::predIntraLumaEdge ( TComDataCU* pcCU, TComPattern* pcTComPattern, UInt uiAbsPartIdx, Int iWidth, Int iHeight, Pel* piPred, UInt uiStride, Bool bDelta )
 {
   Pel *piDst = piPred;

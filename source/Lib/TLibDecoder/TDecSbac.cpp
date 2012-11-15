@@ -105,7 +105,7 @@ TDecSbac::TDecSbac()
 , m_cDmmModeSCModel           ( 1,             1,               NUM_DMM_MODE_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmDataSCModel           ( 1,             1,               NUM_DMM_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 , m_cEdgeIntraSCModel         ( 1,             1,               NUM_EDGE_INTRA_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 #if LGE_EDGE_INTRA_DELTA_DC
 , m_cEdgeIntraDeltaDCSCModel  ( 1,             1,               NUM_EDGE_INTRA_DELTA_DC_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
@@ -205,7 +205,7 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
 #endif
 
   m_cCUTransSubdivFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   m_cEdgeIntraSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_EDGE_INTRA );
 #if LGE_EDGE_INTRA_DELTA_DC
   m_cEdgeIntraDeltaDCSCModel.initBuffer  ( sliceType, qp, (UChar*)INIT_EDGE_INTRA_DELTA_DC );
@@ -979,7 +979,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
     Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
     Bool bCodeEdgeIntra = false;
     if( pcCU->getSlice()->getSPS()->isDepth() )
     {
@@ -995,7 +995,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
     Int uiPreds[2] = {-1, -1};
 #endif
     Int uiPredNum = pcCU->getIntraDirLumaPredictor(uiAbsPartIdx, uiPreds);  
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
     UInt uiCheckBit = 0;
 #endif
 
@@ -1020,7 +1020,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
 #if LOGI_INTRA_NAME_3MPM
 
       m_pcTDecBinIf->decodeBinsEP( uiSymbol, 5 );
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
       if (bCodeEdgeIntra)
       {
         if (uiSymbol==31)
@@ -1056,7 +1056,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
         intraPredMode += uiSymbol;      
       }
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
       if ( intraPredMode != EDGE_INTRA_IDX)
       {
 #endif
@@ -1064,12 +1064,12 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
         {
           intraPredMode += ( intraPredMode >= uiPreds[i] );
         }
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
       }
 #endif
     }
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
     if( intraPredMode == EDGE_INTRA_IDX )
     {
       xParseEdgeIntraInfo( pcCU, uiAbsPartIdx, uiDepth );
@@ -2213,7 +2213,7 @@ Void TDecSbac::decodeFlush ( )
 }
 #endif
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX || (LGE_EDGE_INTRA && LGE_EDGE_INTRA_DELTA_DC)
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX || (LGE_EDGE_INTRA_A0070 && LGE_EDGE_INTRA_DELTA_DC)
 Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
 {
   UInt uiSymbol;
@@ -2472,7 +2472,7 @@ Void TDecSbac::xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartId
 }
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 Void TDecSbac::xParseEdgeIntraInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol = 0;

@@ -649,7 +649,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   TEncBinCABAC* pppcRDSbacCoder = NULL;
   TComSlice* pcSlice            = rpcPic->getSlice(getSliceIdx());
   xDetermineStartAndBoundingCUAddr ( uiStartCUAddr, uiBoundingCUAddr, rpcPic, false );
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
   rpcPic->setIntraPeriod(this->m_pcCfg->getIntraPeriod());
 #endif
   

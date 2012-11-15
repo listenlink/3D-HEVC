@@ -259,7 +259,7 @@ protected:
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
                                     Dist&        ruiDist 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
                                    ,Bool        bZeroResi = false
 #endif
                                    );
@@ -284,7 +284,7 @@ protected:
                                     Bool         bCheckFirst,
 #endif
                                     Double&      dRDCost 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
                                    ,Bool         bZeroResi = false
 #endif
                                   );
@@ -341,7 +341,7 @@ protected:
                                     Bool           bLeftAvail );
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Bool  xEdgePartition       ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );
   Bool  xCheckTerminatedEdge ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
   Bool  xConstructChainCode  ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );

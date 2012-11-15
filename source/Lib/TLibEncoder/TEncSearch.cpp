@@ -964,7 +964,7 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
                                 TComYuv*    pcPredYuv, 
                                 TComYuv*    pcResiYuv, 
                                 Dist&       ruiDist 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
                                 ,Bool        bZeroResi
 #endif
                                 )
@@ -999,7 +999,7 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
   pcCU->getPattern()->initPattern   ( pcCU, uiTrDepth, uiAbsPartIdx );
   pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, uiTrDepth, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail );
   
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   if( uiLumaPredMode >= EDGE_INTRA_IDX )
   {
 #if LGE_EDGE_INTRA_DELTA_DC
@@ -1047,7 +1047,7 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
       pPred += uiStride;
     }
   }
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
   if(bZeroResi)
   {
     Pel* pResi = piResi;
@@ -1364,7 +1364,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
                                 Bool         bCheckFirst,
 #endif
                                 Double&      dRDCost 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
                                ,Bool         bZeroResi
 #endif
                               )
@@ -1386,7 +1386,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
     bCheckSplit = false;
   }
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   if( pcCU->getLumaIntraDir( uiAbsPartIdx ) >= EDGE_INTRA_IDX )
   {
     bCheckSplit = false;
@@ -1408,7 +1408,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
     }
     //----- code luma block with given intra prediction mode and store Cbf-----
     dSingleCost   = 0.0;
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
     xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, uiSingleDistY, bZeroResi ); 
 #else
     xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, uiSingleDistY ); 
@@ -2047,7 +2047,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt uiRdModeList[FAST_UDI_MAX_RDMODE_NUM];
     Int numModesForFullRD = g_aucIntraModeNumFast[ uiWidthBit ];
     
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Bool bTestEdgeIntra = false;
   if ( m_pcEncCfg->isDepthCoder() && uiWidth >= LGE_EDGE_INTRA_MIN_SIZE && uiWidth <= LGE_EDGE_INTRA_MAX_SIZE && uiWidth == uiHeight )
   {
@@ -2151,7 +2151,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if (HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX) && !FIX_DMM_NEG_DIST
         if( bTestDmm ) bTestDmm = uiSad ? true : false;
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
         if ( bTestEdgeIntra ) bTestEdgeIntra = uiSad ? true : false;
 #endif
       }
@@ -2261,7 +2261,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
     }
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   if( bTestEdgeIntra )
   {
     uiRdModeList[ numModesForFullRD++ ] = EDGE_INTRA_IDX;
@@ -2292,7 +2292,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
     for( UInt uiMode = 0; uiMode < numModesForFullRD; uiMode++ )
     {
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
     Bool bAllowZeroResi = pcCU->getSlice()->getIsDepth() && (pcCU->getSlice()->getPOC()%pcCU->getPic()->getIntraPeriod());// && (uiMode < NUM_INTRA_MODE);
     for(UInt uiCnt = 0; uiCnt < (bAllowZeroResi ? 2 : 1); uiCnt++)
     {
@@ -2303,7 +2303,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
       if( m_pcEncCfg->getIsDepth() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight ) 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
         && uiOrgMode < EDGE_INTRA_IDX
 #endif
         )
@@ -2361,7 +2361,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
           {
 #endif
 #if HHI_RQT_INTRA_SPEEDUP
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
       xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost, bZeroResi );
 #else
       xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost );
@@ -2420,7 +2420,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         dSecondBestPUCost = dPUCost;
       }
 #endif
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
     }
 #endif
 #if RWTH_SDC_DLT_B0036
@@ -6990,7 +6990,7 @@ Void TEncSearch::findContourPredTex( TComDataCU*  pcCU,
 }
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 Bool TEncSearch::xCheckTerminatedEdge( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight )
 {
   if( (iY % 2) == 0 ) // vertical edge

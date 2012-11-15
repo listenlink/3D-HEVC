@@ -155,7 +155,7 @@
 #define NUM_DMM_DATA_CTX              3       ///< number of context models for DMM data
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 #define NUM_EDGE_INTRA_CTX            1
 #if LGE_EDGE_INTRA_DELTA_DC
 #define NUM_EDGE_INTRA_DELTA_DC_CTX   2 // one for Delta_DC flag, another for Delta_DC value
@@ -1302,7 +1302,7 @@ INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] =
   }
 };
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 static const Short
 INIT_EDGE_INTRA[3][NUM_EDGE_INTRA_CTX] =
 {

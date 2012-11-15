@@ -215,7 +215,7 @@ __inline Void mapDMMtoIntraMode(   Int& dirMode ) { dirMode = (dirMode >= NUM_IN
 #endif
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 __inline Void mapEdgeIntratoDC( UChar& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
 __inline Void mapEdgeIntratoDC(  UInt& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
 __inline Void mapEdgeIntratoDC(   Int& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }

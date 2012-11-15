@@ -68,7 +68,7 @@ public:
   Void  initViewComponent     ( TComPic*      pcPic );
   Void  setRecResidualPic     ( TComPic*      pcPic );
 
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Int iDisp 
 #if QC_SIMPLIFIEDIVRP_M24938
     , Bool bRecon
@@ -99,7 +99,7 @@ private:
   Void  xSetRecResidualInterCU( TComDataCU*   pcCU,  TComYuv* pcCUResidual );
   Void  xClearIntViewResidual ( TComDataCU*   pcCU,  TComYuv* pcCUResidual, UInt uiPartIdx    );
   Void  xClearResidual        (                      TComYuv* pcCUResidual, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight );
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
 #if QC_SIMPLIFIEDIVRP_M24938
     , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
