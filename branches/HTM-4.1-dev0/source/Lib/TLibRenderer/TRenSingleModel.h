@@ -68,9 +68,7 @@ class TRenSingleModel
 {
 public: 
 
-#if FIX_VIRT_DESTRUCTOR
   virtual ~TRenSingleModel() { }  
-#endif
 #if LGE_VSO_EARLY_SKIP_A0093
   virtual Void   create    ( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode, Bool bEarlySkip ) = 0;
 #else
@@ -79,12 +77,8 @@ public:
 
   // Set Frame dependent data
   virtual Void   setLRView ( Int iViewPos, Pel** apiCurVideoPel, Int* aiCurVideoStride, Pel* piCurDepthPel, Int iCurDepthStride ) = 0;
-#if FIX_VSO_SETUP
   virtual Void   setupPart ( UInt uiHorOffset,       Int iUsedHeight ) = 0;
   virtual Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference ) = 0;
-#else
-  virtual Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference, UInt uiHorOffset ) = 0;
-#endif
 
   // Set Data
 #ifdef LGE_VSO_EARLY_SKIP_A0093
@@ -102,15 +96,9 @@ public:
 #endif
   virtual RMDist getDistVideo  ( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData ) = 0;
 
-#if FIX_VSO_SETUP
   virtual Void   getSynthVideo  ( Int iViewPos, TComPicYuv* pcPicYuv ) = 0;  
   virtual Void   getSynthDepth  ( Int iViewPos, TComPicYuv* pcPicYuv ) = 0;
   virtual Void   getRefVideo    ( Int iViewPos, TComPicYuv* pcPicYuv ) = 0;
-#else
-  virtual Void   getSynthVideo  ( Int iViewPos, TComPicYuv* pcPicYuv, UInt uiHorOffset  ) = 0;  
-  virtual Void   getSynthDepth  ( Int iViewPos, TComPicYuv* pcPicYuv, UInt uiHorOffset  ) = 0;
-  virtual Void   getRefVideo    ( Int iViewPos, TComPicYuv* pcPicYuv, UInt uiHorOffset  ) = 0;
-#endif
 };
 
 template < BlenMod iBM, Bool bBitInc >
@@ -180,12 +168,8 @@ public:
 
   // Set Frame dependent data
   Void   setLRView ( Int iViewPos, Pel** apiCurVideoPel, Int* aiCurVideoStride, Pel* piCurDepthPel, Int iCurDepthStride );
-#if FIX_VSO_SETUP
   Void   setupPart ( UInt uiHorOffset,       Int uiUsedHeight );
   Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference );
-#else
-  Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference, UInt uiHorOffset );
-#endif
 
 #if LGE_VSO_EARLY_SKIP_A0093
   Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel* piOrgData, Int iOrgStride );
@@ -202,15 +186,9 @@ public:
 #endif
   RMDist getDistVideo  ( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
 
-#if FIX_VSO_SETUP
   Void   getSynthVideo  ( Int iViewPos, TComPicYuv* pcPicYuv );  
   Void   getSynthDepth  ( Int iViewPos, TComPicYuv* pcPicYuv );
   Void   getRefVideo    ( Int iViewPos, TComPicYuv* pcPicYuv );
-#else
-  Void   getSynthVideo  ( Int iViewPos, TComPicYuv* pcPicYuv, UInt uiHorOffset );  
-  Void   getSynthDepth  ( Int iViewPos, TComPicYuv* pcPicYuv, UInt uiHorOffset  );
-  Void   getRefVideo    ( Int iViewPos, TComPicYuv* pcPicYuv, UInt uiHorOffset  );
-#endif
 
 private:
   // Set and inc Current Row
@@ -292,21 +270,13 @@ private:
   Void            xResetStructError            ();
   Void            xInitSampleStructs           ();
   Void            xSetStructSynthViewAsRefView ();
-#if FIX_VSO_SETUP
   Void            xCopy2PicYuv                ( Pel** ppiSrcVideoPel, Int* piStrides, TComPicYuv* rpcPicYuvTarget );
-#else
-  Void            xCopy2PicYuv                ( Pel** ppiSrcVideoPel, Int* piStrides, TComPicYuv* rpcPicYuvTarget, UInt uiHorOffset );
-#endif
 
   template< typename S, typename T> 
   Void   xCopyFromSampleStruct ( S* ptSource , Int iSourceStride, T S::* ptSourceElement, T* ptTarget, Int iTargetStride, Int iWidth, Int iHeight )
   {
-#if FIX_VSO_SETUP
     AOT( iWidth != m_iWidth ); 
     for (Int iPosY = 0; iPosY < iHeight; iPosY++)
-#else
-    for (Int iPosY = 0; iPosY < m_iHeight; iPosY++)
-#endif
     {
       for (Int iPosX = 0; iPosX < m_iWidth; iPosX++)
       {
@@ -320,12 +290,8 @@ private:
   template< typename S, typename T> 
   Void   xCopyToSampleStruct ( T* ptSource , Int iSourceStride, S* ptTarget, Int iTargetStride, T S::* ptSourceElement, Int iWidth, Int iHeight )
   {
-#if FIX_VSO_SETUP
     AOT( iWidth != m_iWidth ); 
     for (Int iPosY = 0; iPosY < iHeight; iPosY++)
-#else
-    for (Int iPosY = 0; iPosY < m_iHeight; iPosY++)
-#endif
     {
       for (Int iPosX = 0; iPosX < m_iWidth; iPosX++)
       {
@@ -343,16 +309,10 @@ private:
   Int   m_iHeight;
   Int   m_iStride;
   Int   m_iPad;
-#if FIX_VSO_SETUP
   Int   m_iUsedHeight;
   Int   m_iHorOffset; 
-#endif
 
   Int   m_iSampledWidth;
-#if FIX_VSO_SETUP
-#else
-  Int   m_iSampledHeight;
-#endif
   Int   m_iSampledStride;
 
   RenModelInPels* m_pcInputSamples[2];

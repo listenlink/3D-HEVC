@@ -278,10 +278,6 @@ protected:
   Bool      m_bLFCrossTileBoundaryFlag;
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
-#if FIX_REMOVE_TILE_DEPENDENCE
-#else
-  Int       m_iTileBoundaryIndependenceIdr;
-#endif
   Int       m_iNumColumnsMinus1;
   UInt*     m_puiColumnWidth;
   Int       m_iNumRowsMinus1;

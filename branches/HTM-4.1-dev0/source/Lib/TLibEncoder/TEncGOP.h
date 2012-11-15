@@ -136,9 +136,7 @@ public:
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
   
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
-#if HHI_VSO_SPEEDUP_A0033
   TEncTop* getEncTop() { return m_pcEncTop; }
-#endif
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
   NalUnitType getNalUnitType( UInt uiPOCCurr );

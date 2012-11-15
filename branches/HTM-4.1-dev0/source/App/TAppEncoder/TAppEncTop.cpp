@@ -688,14 +688,10 @@ Void TAppEncTop::xInitLibCfg()
   {
     if ( m_uiVSOMode == 4 )
     {
-#if HHI_VSO_SPEEDUP_A0033
 #if LGE_VSO_EARLY_SKIP_A0093
       m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, g_uiMaxCUHeight , LOG2_DISP_PREC_LUT, 0, m_bVSOEarlySkip );
 #else
       m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, g_uiMaxCUHeight , LOG2_DISP_PREC_LUT, 0 );
-#endif
-#else
-      m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, LOG2_DISP_PREC_LUT, 0 );
 #endif
 
       for ( Int iViewNum = 0; iViewNum < m_iNumberOfViews; iViewNum++ )
@@ -1026,14 +1022,12 @@ Void TAppEncTop::encode()
   delete pcDepthPicYuvOrg;
   pcDepthPicYuvOrg = NULL;
   
-#if FIX_MEM_LEAKS
   if ( pcPdmDepthOrg != NULL )
   {
     pcPdmDepthOrg->destroy();
     delete pcPdmDepthOrg;     
     pcPdmDepthOrg = NULL; 
   };
-#endif
 
   
   for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
@@ -1292,18 +1286,9 @@ Void TAppEncTop::getUsedPelsMap( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUse
 }
 #endif
 #if HHI_VSO
-#if HHI_VSO_SPEEDUP_A0033
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset )
 {
-#if FIX_VSO_SETUP
   m_cRendererModel.setupPart( iHorOffset, Min( g_uiMaxCUHeight, m_iSourceHeight - iHorOffset ) ); 
-#else
-  m_cRendererModel.setHorOffset( iHorOffset ); 
-#endif
-#else
-Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent )
-{
-#endif
   Int iEncViewSIdx = m_cCameraData.getBaseId2SortedId()[ iEncViewIdx ];
 
   // setup base views

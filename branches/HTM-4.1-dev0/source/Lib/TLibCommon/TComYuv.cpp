@@ -408,7 +408,7 @@ TComYuv::add( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
 #endif
 
 #if LG_RESTRICTEDRESPRED_M24766
-void
+Void
 TComYuv::getPUXYOffset(PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &iXOffset, Int &iYOffset)
 {
   switch(uhPartitionSize)

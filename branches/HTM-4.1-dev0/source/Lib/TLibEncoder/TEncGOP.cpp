@@ -448,17 +448,6 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     m_pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 #endif
 
-#if HHI_VSO_SPEEDUP_A0033
-#else
-    if ( iVSOMode == 4 )
-    {
-      m_pcEncTop->getEncTop()->setupRenModel( pcSlice->getPOC(), pcSlice->getViewId(), m_pcEncTop->isDepthCoder() ? 1 : 0 );
-    }
-    else
-    {
-      AOT(true); 
-    }
-#endif
 
 #if SAIT_VSO_EST_A0033
     m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );

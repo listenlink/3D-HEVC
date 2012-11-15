@@ -1347,17 +1347,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           xCopyYuv2Tmp( pcSubBestPartCU->getTotalNumPart()*uiPartUnitIdx, uhNextDepth );
 
 #if HHI_VSO
-#if HHI_VSO_SET_OPTIM 
-#else 
-          if( m_pcRdCost->getUseRenModel() ) // necessary ??
-          {
-            UInt  uiWidth     = m_ppcRecoYuvBest[uhNextDepth]->getWidth   (  );
-            UInt  uiHeight    = m_ppcRecoYuvBest[uhNextDepth]->getHeight  (   );
-            Pel*  piSrc       = m_ppcRecoYuvBest[uhNextDepth]->getLumaAddr( 0 );
-            UInt  uiSrcStride = m_ppcRecoYuvBest[uhNextDepth]->getStride  (   );
-            m_pcRdCost->setRenModelData( pcSubBestPartCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-          }
-#endif
 #endif
         }
         else if (bInSlice)

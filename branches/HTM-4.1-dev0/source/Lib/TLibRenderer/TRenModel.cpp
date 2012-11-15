@@ -41,9 +41,7 @@ TRenModel::TRenModel()
   m_iPad               = PICYUV_PAD;
   m_iWidth             = -1;
   m_iHeight            = -1;
-#if FIX_VSO_SETUP
   m_iUsedHeight        = -1; 
-#endif
   m_iNumOfBaseViews    = -1;
   m_iSampledWidth      = -1;
   m_iShiftPrec         =  0;
@@ -436,27 +434,15 @@ Void
 TRenModel::setBaseView( Int iViewNum, TComPicYuv* pcPicYuvVideoData, TComPicYuv* pcPicYuvDepthData, TComPicYuv* pcPicYuvOrgVideoData, TComPicYuv* pcPicYuvOrgDepthData )
 {
   AOT( iViewNum < 0 || iViewNum > m_iNumOfBaseViews );
-#if FIX_VSO_SETUP
   AOF( pcPicYuvVideoData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvVideoData->getWidth() == m_iWidth );
   AOF( pcPicYuvDepthData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvDepthData->getWidth() == m_iWidth );
-#else
-  AOF( pcPicYuvVideoData->getHeight() <= m_iHeight + m_uiHorOff || pcPicYuvVideoData->getWidth() == m_iWidth );
-  AOF( pcPicYuvDepthData->getHeight() <= m_iHeight + m_uiHorOff || pcPicYuvDepthData->getWidth() == m_iWidth );
-#endif
 
   pcPicYuvVideoData->extendPicBorder();
 
-#if FIX_VSO_SETUP
   TRenFilter::sampleHorUp   ( m_iShiftPrec, pcPicYuvVideoData->getLumaAddr() +  m_uiHorOff        * pcPicYuvVideoData->getStride () , pcPicYuvVideoData->getStride() , m_iWidth,      m_iUsedHeight,      m_aapiCurVideoPel[ iViewNum ][0], m_aaiCurVideoStrides[iViewNum][0] );
   TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getCbAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getCStride() , pcPicYuvVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiCurVideoPel[ iViewNum ][1], m_aaiCurVideoStrides[iViewNum][1] );
   TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getCrAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getCStride() , pcPicYuvVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiCurVideoPel[ iViewNum ][2], m_aaiCurVideoStrides[iViewNum][2] );
   TRenFilter::copy          (               pcPicYuvDepthData->getLumaAddr() +  m_uiHorOff        * pcPicYuvDepthData->getStride () , pcPicYuvDepthData->getStride(),  m_iWidth,      m_iUsedHeight,      m_apiCurDepthPel [ iViewNum],     m_aiCurDepthStrides [iViewNum]    );
-#else
-  TRenFilter::sampleHorUp   ( m_iShiftPrec, pcPicYuvVideoData->getLumaAddr() +  m_uiHorOff        * pcPicYuvVideoData->getStride () , pcPicYuvVideoData->getStride() , m_iWidth,      m_iHeight,      m_aapiCurVideoPel[ iViewNum ][0], m_aaiCurVideoStrides[iViewNum][0] );
-  TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getCbAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getCStride() , pcPicYuvVideoData->getCStride(), m_iWidth >> 1, m_iHeight >> 1, m_aapiCurVideoPel[ iViewNum ][1], m_aaiCurVideoStrides[iViewNum][1] );
-  TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvVideoData->getCrAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvVideoData->getCStride() , pcPicYuvVideoData->getCStride(), m_iWidth >> 1, m_iHeight >> 1, m_aapiCurVideoPel[ iViewNum ][2], m_aaiCurVideoStrides[iViewNum][2] );
-  TRenFilter::copy          (               pcPicYuvDepthData->getLumaAddr() +  m_uiHorOff        * pcPicYuvDepthData->getStride () , pcPicYuvDepthData->getStride(),  m_iWidth,      m_iHeight,      m_apiCurDepthPel [ iViewNum],     m_aiCurDepthStrides [iViewNum]    );
-#endif
 
   // Used for rendering reference pic from original video data
   m_abSetupVideoFromOrgForView[iViewNum] = (pcPicYuvOrgVideoData != NULL);
@@ -464,30 +450,17 @@ TRenModel::setBaseView( Int iViewNum, TComPicYuv* pcPicYuvVideoData, TComPicYuv*
 
   if ( m_abSetupVideoFromOrgForView[iViewNum] )
   {
-#if FIX_VSO_SETUP
     AOF( pcPicYuvOrgVideoData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvOrgVideoData->getWidth() == m_iWidth );
     pcPicYuvOrgVideoData->extendPicBorder();
     TRenFilter::sampleHorUp   ( m_iShiftPrec, pcPicYuvOrgVideoData->getLumaAddr() +  m_uiHorOff        * pcPicYuvOrgVideoData->getStride() , pcPicYuvOrgVideoData->getStride() , m_iWidth,      m_iUsedHeight,      m_aapiOrgVideoPel[ iViewNum ][0], m_aaiOrgVideoStrides[iViewNum][0] );
     TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getCbAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getCStride(), pcPicYuvOrgVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][1], m_aaiOrgVideoStrides[iViewNum][1] );
     TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getCrAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getCStride(), pcPicYuvOrgVideoData->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][2], m_aaiOrgVideoStrides[iViewNum][2] );
-#else
-    AOF( pcPicYuvOrgVideoData->getHeight() <= m_iHeight + m_uiHorOff || pcPicYuvOrgVideoData->getWidth() == m_iWidth );
-    pcPicYuvOrgVideoData->extendPicBorder();
-    TRenFilter::sampleHorUp   ( m_iShiftPrec, pcPicYuvOrgVideoData->getLumaAddr() +  m_uiHorOff        * pcPicYuvOrgVideoData->getStride() , pcPicYuvOrgVideoData->getStride() , m_iWidth,      m_iHeight,      m_aapiOrgVideoPel[ iViewNum ][0], m_aaiOrgVideoStrides[iViewNum][0] );
-    TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getCbAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getCStride(), pcPicYuvOrgVideoData->getCStride(), m_iWidth >> 1, m_iHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][1], m_aaiOrgVideoStrides[iViewNum][1] );
-    TRenFilter::sampleCUpHorUp( m_iShiftPrec, pcPicYuvOrgVideoData->getCrAddr()   + (m_uiHorOff >> 1 ) * pcPicYuvOrgVideoData->getCStride(), pcPicYuvOrgVideoData->getCStride(), m_iWidth >> 1, m_iHeight >> 1, m_aapiOrgVideoPel[ iViewNum ][2], m_aaiOrgVideoStrides[iViewNum][2] );
-#endif
   }
 
   if ( m_abSetupDepthFromOrgForView[iViewNum] )
   {
-#if FIX_VSO_SETUP
     AOF( pcPicYuvOrgDepthData->getHeight() >= m_iUsedHeight + m_uiHorOff && pcPicYuvOrgDepthData->getWidth() == m_iWidth );
     TRenFilter::copy          (               pcPicYuvOrgDepthData->getLumaAddr() +  m_uiHorOff        * pcPicYuvOrgDepthData->getStride() , pcPicYuvOrgDepthData->getStride(),  m_iWidth,     m_iUsedHeight,      m_apiOrgDepthPel [ iViewNum],     m_aiOrgDepthStrides [iViewNum]    );
-#else
-    AOF( pcPicYuvOrgDepthData->getHeight() <= m_iHeight + m_uiHorOff || pcPicYuvOrgDepthData->getWidth() == m_iWidth );
-    TRenFilter::copy          (               pcPicYuvOrgDepthData->getLumaAddr() +  m_uiHorOff        * pcPicYuvOrgDepthData->getStride() , pcPicYuvOrgDepthData->getStride(),  m_iWidth,     m_iHeight,      m_apiOrgDepthPel [ iViewNum],     m_aiOrgDepthStrides [iViewNum]    );
-#endif
   }
 }
 
@@ -496,9 +469,7 @@ TRenModel::setSingleModel( Int iModelNum, Int** ppiShiftLutLeft, Int** ppiBaseSh
 {
   AOT( iModelNum < 0 || iModelNum > m_iNumOfRenModels );
 
-#if FIX_VSO_SETUP
   m_apcRenModels[iModelNum]->setupPart( m_uiHorOff, m_iUsedHeight );
-#endif
 
   // Switch model  to original data for setup if given to render reference
   Bool bAnyRefFromOrg = false;
@@ -519,11 +490,7 @@ TRenModel::setSingleModel( Int iModelNum, Int** ppiShiftLutLeft, Int** ppiBaseSh
     }
   }
 
-#if FIX_VSO_SETUP
   m_apcRenModels[iModelNum]->setup     ( pcPicYuvRefView, ppiShiftLutLeft, ppiBaseShiftLutLeft, ppiShiftLutRight, ppiBaseShiftLutRight, iDistToLeft, false );
-#else
-  m_apcRenModels[iModelNum]->setup     ( pcPicYuvRefView, ppiShiftLutLeft, ppiBaseShiftLutLeft, ppiShiftLutRight, ppiBaseShiftLutRight, iDistToLeft, false, m_uiHorOff );
-#endif
 
   // Setup to Org
   if ( bAnyRefFromOrg )
@@ -544,11 +511,7 @@ TRenModel::setSingleModel( Int iModelNum, Int** ppiShiftLutLeft, Int** ppiBaseSh
     }
 
     // setup keeping reference rendered from original data
-#if FIX_VSO_SETUP
     m_apcRenModels[iModelNum]->setup     ( pcPicYuvRefView, ppiShiftLutLeft, ppiBaseShiftLutLeft, ppiShiftLutRight, ppiBaseShiftLutRight, iDistToLeft, true );
-#else
-    m_apcRenModels[iModelNum]->setup     ( pcPicYuvRefView, ppiShiftLutLeft, ppiBaseShiftLutLeft, ppiShiftLutRight, ppiBaseShiftLutRight, iDistToLeft, true, m_uiHorOff);
-#endif
   }
 }
 
@@ -578,7 +541,6 @@ TRenModel::setErrorMode( Int iView, Int iContent, int iPlane )
 }
 
 
-#if FIX_VSO_SETUP
 Void
 TRenModel::setupPart ( UInt uiHorOff, Int iUsedHeight )
 {
@@ -586,13 +548,6 @@ TRenModel::setupPart ( UInt uiHorOff, Int iUsedHeight )
   m_uiHorOff    = uiHorOff; 
   m_iUsedHeight = iUsedHeight; 
 }
-#else
-Void
-TRenModel::setHorOffset     ( UInt uiHorOff )
-{
-  m_uiHorOff = uiHorOff; 
-}
-#endif
 
 #if LGE_VSO_EARLY_SKIP_A0093
 RMDist
@@ -605,11 +560,7 @@ TRenModel::getDist( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
   iStartPosY -= m_uiHorOff; 
 
   AOT( iWidth  + iStartPosX > m_iWidth  );
-#if FIX_VSO_SETUP
   AOT( iHeight + iStartPosY > m_iUsedHeight );
-#else
-  AOT( iHeight + iStartPosY > m_iHeight );
-#endif
 
   AOT( iStartPosX < 0);
   AOT( iStartPosY < 0);
@@ -643,11 +594,7 @@ TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
   iStartPosY -= m_uiHorOff; 
 
   iWidth  = min(iWidth , m_iWidth  - iStartPosX );
-#if FIX_VSO_SETUP
   iHeight = min(iHeight, m_iUsedHeight - iStartPosY );
-#else
-  iHeight = min(iHeight, m_iHeight - iStartPosY );
-#endif
 
   AOT( iStartPosX < 0);
   AOT( iStartPosY < 0);
@@ -683,39 +630,23 @@ TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
 Void
 TRenModel::getSynthVideo( Int iModelNum, Int iViewNum, TComPicYuv* pcPicYuv )
 {
-#if FIX_VSO_SETUP
   m_apcRenModels[iModelNum]->getSynthVideo(iViewNum, pcPicYuv );
-#else
-  m_apcRenModels[iModelNum]->getSynthVideo(iViewNum, pcPicYuv, m_uiHorOff );
-#endif
 }
 
 Void
 TRenModel::getSynthDepth( Int iModelNum, Int iViewNum, TComPicYuv* pcPicYuv )
 {
-#if HHI_VSO_SPEEDUP_A0033 && !FIX_VSO_SETUP
-  m_apcRenModels[iModelNum]->getSynthDepth(iViewNum, pcPicYuv, m_uiHorOff );
-#else
   m_apcRenModels[iModelNum]->getSynthDepth(iViewNum, pcPicYuv );
-#endif
 }
 
 Void
 TRenModel::getTotalSSE( Int64& riSSEY, Int64& riSSEU, Int64& riSSEV )
 {
   TComPicYuv cPicYuvSynth;
-#if FIX_VSO_SETUP
   cPicYuvSynth.create( m_iWidth, m_iUsedHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-#else
-  cPicYuvSynth.create( m_iWidth, m_iHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-#endif
 
   TComPicYuv cPicYuvTempRef;
-#if FIX_VSO_SETUP
   cPicYuvTempRef.create( m_iWidth, m_iUsedHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
-#else
-  cPicYuvTempRef.create( m_iWidth, m_iHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
-#endif
 
   Int64 iSSEY = 0;
   Int64 iSSEU = 0;
@@ -723,22 +654,12 @@ TRenModel::getTotalSSE( Int64& riSSEY, Int64& riSSEU, Int64& riSSEV )
 
   for (Int iCurModel = 0; iCurModel < m_iNumOfCurRenModels; iCurModel++)
   {
-#if FIX_VSO_SETUP
     m_apcCurRenModels[iCurModel]->getSynthVideo( m_aiCurPosInModels[iCurModel], &cPicYuvSynth );    
     m_apcCurRenModels[iCurModel]->getRefVideo  ( m_aiCurPosInModels[iCurModel], &cPicYuvTempRef   );
 
     iSSEY += TRenFilter::SSE( cPicYuvSynth.getLumaAddr(), cPicYuvSynth.getStride(),  m_iWidth,      m_iUsedHeight     , cPicYuvTempRef.getLumaAddr(), cPicYuvTempRef.getStride() );
     iSSEU += TRenFilter::SSE( cPicYuvSynth.getCbAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCbAddr()  , cPicYuvTempRef.getCStride());
     iSSEV += TRenFilter::SSE( cPicYuvSynth.getCrAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCrAddr()  , cPicYuvTempRef.getCStride());
-#else
-    m_apcCurRenModels[iCurModel]->getSynthVideo( m_aiCurPosInModels[iCurModel], &cPicYuvSynth, 0 );
-    TComPicYuv* pcPicYuvRef = &cPicYuvTempRef;
-    m_apcCurRenModels[iCurModel]->getRefVideo  ( m_aiCurPosInModels[iCurModel], pcPicYuvRef  , 0 );
-
-    iSSEY += TRenFilter::SSE( cPicYuvSynth.getLumaAddr(), cPicYuvSynth.getStride(),  m_iWidth,      m_iHeight     , pcPicYuvRef->getLumaAddr(), pcPicYuvRef->getStride() );
-    iSSEU += TRenFilter::SSE( cPicYuvSynth.getCbAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iHeight >> 1, pcPicYuvRef->getCbAddr()  , pcPicYuvRef->getCStride());
-    iSSEV += TRenFilter::SSE( cPicYuvSynth.getCrAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iHeight >> 1, pcPicYuvRef->getCrAddr()  , pcPicYuvRef->getCStride());
-#endif
   }
 
   riSSEY = ( iSSEY + (m_iNumOfCurRenModels >> 1) ) / m_iNumOfCurRenModels;
