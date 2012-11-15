@@ -43,18 +43,8 @@
 
 ///// ***** FIXES *********
 // A
-#define FIXES                             1
-#define POZNAN_CABAC_INIT_FLAG_FIX        1
-#define FIX_DECODING_WO_WRITING           1
-#define FIX_INIT_ROM                      1
-#define FIX_VIRT_DESTRUCTOR               1
-#define FIX_MEM_LEAKS                     1
-#define FIX_VSO_SETUP                     1
-#define FIX_COMP_WARNING_INIT             1
-#define FIX_RDO_MACRO                     1
+#define FIX_POZNAN_CABAC_INIT_FLAG        1
 #define FIX_LG_RESTRICTEDRESPRED_M24766   1
-#define FIX_REMOVE_TILE_DEPENDENCE        1
-#define FIX_DBL_CONTROL_DEFAULT           1
 
 // B
 #define FIX_LGE_IVMP_PARALLEL_MERGE_B0136 1
@@ -69,7 +59,7 @@
 ///// ***** DEPTH MODELING MODES *********
 #define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
 #define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
-#define LGE_EDGE_INTRA_A0070              1   // JCT2-A0070
+#define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
 #define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
 
@@ -78,9 +68,9 @@
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
 #define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
 #if     QC_MRG_CANS_B0048
-#define OL_DISMV_POS_B0069                1   // different pos for dispairty MV candidate, B0069
+#define OL_DISMV_POS_B0069                1   // different pos for disparity MV candidate, B0069
 #endif
-#define MTK_INTERVIEW_MERGE_A0049         1   // JCT2-A0049 second part
+#define MTK_INTERVIEW_MERGE_A0049         1   // JCT3V-A0049 second part
 #if HHI_INTER_VIEW_MOTION_PRED         
 #define SAIT_IMPROV_MOTION_PRED_M24829    1   // improved inter-view motion vector prediction
 #else                                  
@@ -115,15 +105,12 @@
 #define HHI_VSO                           1
 #define HHI_VSO_LS_TABLE_M23714           1   // m23714, enable table base Lagrange multiplier optimization 
 #define HHI_VSO_DIST_INT                  1   // Allow negative synthesized view distortion change
-#define HHI_VSO_SYNTH_DIST_OUT            0   // Output of synthesized view distortion instead of depth distortion in encoder output
 #define HHI_VSO_COLOR_PLANES              1   // Compute VSO distortion on color planes 
-#define HHI_VSO_RM_ASSERTIONS             0   // output VSO assertions
-#define HHI_VSO_SPEEDUP_A0033             1   // JCT2-A0033 modification 1 (changes in classes directly related the renderer model 
-                                              // to are not covered by this define, since nearly the entire class has been changed)
-#define HHI_VSO_SET_OPTIM                 1   // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
-#define SAIT_VSO_EST_A0033                1   // JCT2-A0033 modification 3
-#define LGE_VSO_EARLY_SKIP_A0093          1   // JCT2-A0093 modification 4
-#define LGE_WVSO_A0119                    1   // JCT2-A0119 & JCT3V-B0131 Depth Metric with a weighted depth fidelity term
+#define HHI_VSO_RM_ASSERTIONS             0   // Output VSO assertions
+#define HHI_VSO_SYNTH_DIST_OUT            0   // Output of synthesized view distortion instead of depth distortion in encoder output
+#define SAIT_VSO_EST_A0033                1   // JCT3V-A0033 modification 3
+#define LGE_VSO_EARLY_SKIP_A0093          1   // JCT3V-A0093 modification 4
+#define LGE_WVSO_A0119                    1   // JCT3V-A0119 & JCT3V-B0131 Depth Metric with a weighted depth fidelity term
 
 
 ///// ***** ILLUMINATION COMPENSATON *********
@@ -407,7 +394,7 @@ enum MODE_IDX
                             // Setting to 0 will slow cabac by an as yet unknown amount.
                             // This is here just to perform timing tests -- OL_FLUSH_ALIGN should be 0 for WPP.
 
-#define RVM_VCEGAM10_M 4
+#define RVM_VCEGAM10_M         4
 
 #define PLANAR_IDX             0
 #if LOGI_INTRA_NAME_3MPM
@@ -774,7 +761,6 @@ enum PartSize
   SIZE_NONE = 15
 };
 
-#if HHI_VSO_SPEEDUP_A0033
 
 enum BlenMod
 {
@@ -784,7 +770,6 @@ enum BlenMod
     BLEND_RIGHT = 2,
     BLEND_GEN   =  3
 };
-#endif
 
 /// supported prediction type
 enum PredMode

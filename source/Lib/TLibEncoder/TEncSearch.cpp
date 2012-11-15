@@ -6512,7 +6512,6 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
         assignWedgeDCs2Pred( pcWedgelet, piPredic, uiStride, iTestDC1, iTestDC2 );
         
         Dist uiActDist = RDO_DIST_MAX;
-#if FIX_RDO_MACRO
 #if SAIT_VSO_EST_A0033
         if ( m_pcRdCost->getUseEstimatedVSD() )
         {          
@@ -6543,39 +6542,6 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
           }
 #endif // LGE_WVSO_A0119
         }
-#else // FIX_RDO_MACRO
-#if SAIT_VSO_EST_A0033
-        if ( m_pcRdCost->getUseEstimatedVSD() )
-        {          
-          TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
-          TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
-          uiActDist = m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
-            uiActDist = (iDWeight * iD + iVSDWeight * (Dist) uiActDist) / ( iDWeight + iVSDWeight);
-          }
-#endif // LGE_WVSO_A0119
-        }
-        else       
-#else  // SAIT_VSO_EST_A0033 <-- wrong #else statement should be #endif
-        {        
-          uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPredic, uiStride,  piOrig, uiStride, uiWidth, uiHeight, false, 0 );
-#if LGE_WVSO_A0119
-          if ( m_pcRdCost->getUseWVSO() )
-          {    
-            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
-            Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
-            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
-            uiActDist = (iDWeight * iD + iVSOWeight * (Dist) uiActDist) / ( iDWeight + iVSOWeight);
-          }
-#endif // LGE_WVSO_A0119
-        }
-#endif // SAIT_VSO_EST_A0033 <-- wrong #endif should be removed
-#endif // FIX_RDO_MACRO
 
         if( uiActDist < uiBestDist || uiBestDist == RDO_DIST_MAX )
         {

@@ -90,14 +90,10 @@ TEncTop::~TEncTop()
 Void TEncTop::create ()
 {
   // initialize global variables
-#if FIX_INIT_ROM
   if( m_viewId == 0 && m_isDepth == false )
   {
-#endif
     initROM();
-#if FIX_INIT_ROM
   }
-#endif
 
 
   // create processing unit classes
@@ -604,9 +600,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
-#if FIXES
   rpcPic->getPicYuvOrg()->setBorderExtension(false); 
-#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -1105,11 +1099,7 @@ Void  TEncTop::xInitPPSforTiles()
     m_cPPS.setLFCrossTileBoundaryFlag( m_bLFCrossTileBoundaryFlag );
 
     // # substreams is "per tile" when tiles are independent.
-#if FIX_REMOVE_TILE_DEPENDENCE
     if ( m_iWaveFrontSynchro )
-#else
-    if (m_iTileBoundaryIndependenceIdr && m_iWaveFrontSynchro)
-#endif
     {
       m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams * (m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1));
     }

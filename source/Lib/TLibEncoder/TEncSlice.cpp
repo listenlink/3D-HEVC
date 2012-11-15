@@ -37,9 +37,7 @@
 
 #include "TEncTop.h"
 #include "TEncSlice.h"
-#if HHI_VSO_SPEEDUP_A0033
 #include "../../App/TAppEncoder/TAppEncTop.h"
-#endif
 #include <math.h>
 
 //! \ingroup TLibEncoder
@@ -658,7 +656,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   m_dPicRdCost      = 0;
   m_uiPicDist       = 0;
   
-#if CABAC_INIT_FLAG && POZNAN_CABAC_INIT_FLAG_FIX
+#if CABAC_INIT_FLAG && FIX_POZNAN_CABAC_INIT_FLAG
   Bool bReset =(pcSlice->getPOC() == 0) || 
     (pcSlice->getPOC() % m_pcCfg->getIntraPeriod() == 0) ||
     (pcSlice->getPPS()->getEncPrevPOC() % m_pcCfg->getIntraPeriod() == 0) ||
@@ -822,9 +820,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
 
-#if HHI_VSO_SPEEDUP_A0033
   Int iLastPosY = -1;
-#endif
 
   // for every CU in slice
   UInt uiEncCUOrder;
@@ -837,7 +833,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
 
-#if HHI_VSO_SPEEDUP_A0033
     if ( m_pcRdCost->getUseRenModel() )
     {
       // updated renderer model if necessary
@@ -851,7 +846,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         m_pcGOPEncoder->getEncTop()->getEncTop()->setupRenModel( rpcPic->getCurrSlice()->getPOC() , rpcPic->getCurrSlice()->getSPS()->getViewId(), rpcPic->getCurrSlice()->getSPS()->isDepth() ? 1 : 0, iCurPosY );
       }
     }    
-#endif
 
     // inherit from TR if necessary, select substream to use.
     if( m_pcCfg->getUseSBACRD() )

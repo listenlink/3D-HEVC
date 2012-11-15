@@ -135,11 +135,7 @@ public:
   Void                  getUsedPelsMap   ( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUsedPelsMap );
 #endif
 #if HHI_VSO
-#if HHI_VSO_SPEEDUP_A0033
   Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset );
-#else
-  Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent );
-#endif
 #endif
   
 #if VIDYO_VPS_INTEGRATION

@@ -73,9 +73,7 @@ void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg);
 TAppEncCfg::TAppEncCfg()
 {
   m_aidQP = NULL;
-#if FIXES
   m_aidQPdepth = NULL;
-#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -85,12 +83,10 @@ TAppEncCfg::~TAppEncCfg()
     delete[] m_aidQP; m_aidQP = NULL;
   }
 
-#if FIXES
   if ( m_aidQPdepth )
   {
     delete[] m_aidQPdepth; m_aidQPdepth = NULL;
   }
-#endif
 
   for(Int i = 0; i< m_pchInputFileList.size(); i++ )
   {
@@ -119,7 +115,6 @@ TAppEncCfg::~TAppEncCfg()
     free (  m_pchVSOConfig );
 #endif
 
-#if FIX_MEM_LEAKS
  if ( m_pchCameraParameterFile != NULL )
    free ( m_pchCameraParameterFile ); 
 
@@ -138,7 +133,6 @@ TAppEncCfg::~TAppEncCfg()
  if ( m_scalingListFile != NULL ) 
    free ( m_scalingListFile );
 
-#endif   
 
 }
 
@@ -329,11 +323,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
 #endif
 #if DBL_CONTROL
-#if FIX_DBL_CONTROL_DEFAULT
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
-#else
-  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, false)
-#endif
 #endif
 
   /* Camera Paremetes */
