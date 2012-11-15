@@ -72,13 +72,13 @@ private:
 #endif
 #endif
 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
   Int                   m_uiIntraPeriod;
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Bool          m_checked;
 #endif
 #if QC_SIMPLE_NBDV_B0047
@@ -142,7 +142,7 @@ public:
 #if VIDYO_VPS_INTEGRATION
   TComVPS*      getVPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getVPS();  }
 #endif
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
   Int           getIntraPeriod()                           { return  m_uiIntraPeriod; }
   Void          setIntraPeriod(Int uiIntraPeriod)          { m_uiIntraPeriod = uiIntraPeriod; }
 #endif
@@ -168,7 +168,7 @@ public:
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Void          setCandPicCheckedFlag (Bool bchecked)   { m_checked = bchecked; }
   Bool          getCandPicCheckedFlag ()                { return m_checked;}
 #endif

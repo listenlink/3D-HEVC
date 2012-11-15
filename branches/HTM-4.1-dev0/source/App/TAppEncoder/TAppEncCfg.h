@@ -291,7 +291,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if HHI_VSO
   Char*     m_pchVSOConfig;
   Bool      m_bUseVSO;                                    ///< flag for using View Synthesis Optimization
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   Bool      m_bVSOLSTable;                                ///< Depth QP dependent Lagrange parameter optimization (m23714)
 #endif
 #if LGE_VSO_EARLY_SKIP_A0093

@@ -41,11 +41,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-#define OL_QTLIMIT_PREDCODING_B0068       1    //JCT3V-B0068
-
-#define MTK_UNCONSTRAINED_MVI             1    //JCT3V-B0083
-
-
 ///// ***** FIXES *********
 // A
 #define FIXES                             1
@@ -74,14 +69,14 @@
 ///// ***** DEPTH MODELING MODES *********
 #define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
 #define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
-#define LGE_EDGE_INTRA                    1   // JCT2-A0070
+#define LGE_EDGE_INTRA_A0070              1   // JCT2-A0070
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
 #define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
 
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
-#define QC_MRG_CANS_B0048                 1   // JCT2-B0048, B0086, B0069
+#define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
 #if     QC_MRG_CANS_B0048
 #define OL_DISMV_POS_B0069                1   // different pos for dispairty MV candidate, B0069
 #endif
@@ -103,21 +98,22 @@
 #endif
 
 ///// ***** DISPARITY VECTOR DERIVATION *********
-#define QC_MULTI_DIS_CAN                  1   // JCT2-A0097
-#define LGE_DVMCP                         1   // JCT2-A0126     
-#define LGE_DVMCP_MEM_REDUCTION_B0135     1 
+#define QC_MULTI_DIS_CAN_A0097            1   // JCT3V-A0097
+#define LGE_DVMCP_A0126                   1   // JCT3V-A0126     
+#define LGE_DVMCP_MEM_REDUCTION_B0135     1   // JCT3V-B0135     
 #define DV_DERIVATION_PARALLEL_B0096      1   // JCT3V-B0096, enable parallel derivation of disparity vector
-#define QC_SIMPLE_NBDV_B0047              1   // JCT2-B0047
+#define QC_SIMPLE_NBDV_B0047              1   // JCT3V-B0047
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
 #if HHI_MPI
 #define FIX_MPI_B0065                     1   // JCT3V-B0065, fix the MPI bug when RQT is off
 #endif
+#define MTK_UNCONSTRAINED_MVI_B0083       1    //JCT3V-B0083
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #define HHI_VSO                           1
-#define HHI_VSO_LS_TABLE                  1   // m23714, enable table base Lagrange multiplier optimization 
+#define HHI_VSO_LS_TABLE_M23714           1   // m23714, enable table base Lagrange multiplier optimization 
 #define HHI_VSO_DIST_INT                  1   // Allow negative synthesized view distortion change
 #define HHI_VSO_SYNTH_DIST_OUT            0   // Output of synthesized view distortion instead of depth distortion in encoder output
 #define HHI_VSO_COLOR_PLANES              1   // Compute VSO distortion on color planes 
@@ -139,8 +135,11 @@
 ///// ***** INTERVIEW SKIP *********
 #define HHI_INTERVIEW_SKIP                1
 
+///// ***** QUADTREE LIMITATION *********
+#define OL_QTLIMIT_PREDCODING_B0068       1    //JCT3V-B0068
+
 ///// ***** OTHERS *********
-#define LG_ZEROINTRADEPTHRESI_M26039      1   // JCT2-A0087
+#define LG_ZEROINTRADEPTHRESI_A0087       1   // JCT2-A0087
 #define SONY_COLPIC_AVAILABILITY          1
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
 #define VIDYO_VPS_INTEGRATION             1
@@ -148,7 +147,7 @@
 
 
 ///// ***** DEFINED PARAMETERS *********
-#if QC_MULTI_DIS_CAN                    
+#if QC_MULTI_DIS_CAN_A0097                    
 #define DIS_CANS                          1
 #endif                                  
 
@@ -160,7 +159,7 @@
 #define DMM_WEDGE_PREDDIR_DELTAEND_MAX    4
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 #define LGE_EDGE_INTRA_MIN_SIZE           4
 #define LGE_EDGE_INTRA_MAX_SIZE           32
 #define LGE_EDGE_INTRA_THRESHOLD          20
@@ -170,7 +169,7 @@
 #endif
 
 
-#if LGE_DVMCP                           
+#if LGE_DVMCP_A0126                           
 #define DVFROM_LEFTBELOW                  1
 #define DVFROM_LEFT                       2
 #define DVFROM_ABOVERIGHT                 3
@@ -335,7 +334,7 @@
 #define SCAN_SET_SIZE                     16
 #define LOG2_SCAN_SET_SIZE                4
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 #if LGE_EDGE_INTRA_DELTA_DC
 #define FAST_UDI_MAX_RDMODE_NUM               37          ///< maximum number of RD comparison in fast-UDI estimation loop
 #else
@@ -383,7 +382,7 @@ enum MODE_IDX
 #define NUM_DMM_MODE 4
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 #if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
 #define EDGE_INTRA_IDX  (NUM_INTRA_MODE+NUM_DMM_MODE)
 #endif // HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX

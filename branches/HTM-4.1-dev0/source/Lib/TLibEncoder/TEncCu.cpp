@@ -2662,7 +2662,7 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
   const Int   iQP      = rpcTempCU->getQP( 0 );
   assert( bRecursiveCall == ( uhDepth != uhTextureModeDepth ) );
 
-#if !MTK_UNCONSTRAINED_MVI
+#if !MTK_UNCONSTRAINED_MVI_B0083
   if( uhDepth == uhTextureModeDepth )
   {
     for( UInt ui = 0; ui < rpcTempCU->getTotalNumPart(); ui++ )

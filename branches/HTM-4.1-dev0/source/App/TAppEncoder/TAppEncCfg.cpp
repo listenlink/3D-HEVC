@@ -348,7 +348,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
   ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1    , "Lambda Scaling for VSO")
 
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   ("VSOLSTable",                      m_bVSOLSTable             , true          , "Depth QP dependent video/depth rate allocation by Lagrange multiplier" )    
 #endif
 
@@ -731,7 +731,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #if HHI_VSO
 
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   // Q&D
   Double adLambdaScaleTable[] = 
   {  0.031250, 0.031639, 0.032029, 0.032418, 0.032808, 0.033197, 0.033586, 0.033976, 0.034365, 0.034755, 
@@ -1639,7 +1639,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if HHI_VSO_DIST_INT
     printf("VSO Negative Distortion      : %d\n",    m_bAllowNegDist ? 1 : 0);
 #endif
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
     printf("VSO LS Table                 : %d\n",    m_bVSOLSTable ? 1 : 0);    
 #endif
 #if SAIT_VSO_EST_A0033

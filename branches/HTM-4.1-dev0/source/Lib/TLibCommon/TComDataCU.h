@@ -220,7 +220,7 @@ private:
   Bool*         m_pbResPredFlag;      ///< array of residual prediction flags
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   UChar*        m_pucEdgeCode;          ///< array of edge code
   UChar*        m_pucEdgeNumber;        ///< total number of edge
   UChar*        m_pucEdgeStartPos;      ///< starting point position
@@ -283,7 +283,7 @@ protected:
 
   Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Bool          xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
 #endif 
   
@@ -541,7 +541,7 @@ public:
                                           ,Bool bIndependentTileBoundaryEnabled );
 
 #if HHI_INTER_VIEW_MOTION_PRED
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
   Int           getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
 #else
@@ -552,7 +552,7 @@ public:
 #endif
   );
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
-#if LGE_DVMCP
+#if LGE_DVMCP_A0126
 #if QC_SIMPLE_NBDV_B0047
   Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo
 #if LGE_IVMP_PARALLEL_MERGE_B0136
@@ -732,7 +732,7 @@ public:
   UInt          getEntropySliceStartCU  ( UInt pos )                  { return m_uiEntropySliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   UInt          getCtxEdgeIntra ( UInt uiAbsPartIdx );
 #endif
 
@@ -816,7 +816,7 @@ public:
   Void  setContourPredTexDeltaDC2SubParts ( Int iDC2, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   UChar*        getEdgeCode( UInt uiIdx )                 { return &m_pucEdgeCode[uiIdx * LGE_EDGE_INTRA_MAX_EDGE_NUM_PER_4x4]; }
   UChar*        getEdgeNumber( )                          { return m_pucEdgeNumber;           }
   UChar         getEdgeNumber( UInt uiIdx )               { return m_pucEdgeNumber[uiIdx];    }

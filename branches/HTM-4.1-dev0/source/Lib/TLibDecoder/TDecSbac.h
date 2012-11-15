@@ -151,7 +151,7 @@ private:
   Void xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Void xParseEdgeIntraInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   
@@ -268,7 +268,7 @@ private:
   ContextModel3DBuffer m_cDmmModeSCModel;
   ContextModel3DBuffer m_cDmmDataSCModel;
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   ContextModel3DBuffer m_cEdgeIntraSCModel;
 #if LGE_EDGE_INTRA_DELTA_DC
   ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;

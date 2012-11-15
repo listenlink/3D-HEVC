@@ -737,7 +737,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
                                      m_pcPrediction->getPredicBufWidth  (),
                                      m_pcPrediction->getPredicBufHeight (),
                                      bAboveAvail, bLeftAvail );
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   if( uiLumaPredMode >= EDGE_INTRA_IDX )
   {
     m_pcPrediction->predIntraLumaEdge( pcCU, pcCU->getPattern(), uiAbsPartIdx, uiWidth, uiHeight, piPred, uiStride
