@@ -448,17 +448,6 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
     m_pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 #endif
 
-#if HHI_VSO_SPEEDUP_A0033
-#else
-    if ( iVSOMode == 4 )
-    {
-      m_pcEncTop->getEncTop()->setupRenModel( pcSlice->getPOC(), pcSlice->getViewId(), m_pcEncTop->isDepthCoder() ? 1 : 0 );
-    }
-    else
-    {
-      AOT(true); 
-    }
-#endif
 
 #if SAIT_VSO_EST_A0033
     m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
@@ -707,7 +696,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if DEPTH_MAP_GENERATION
       // init view component and predict virtual depth map
       m_pcDepthMapGenerator->initViewComponent( pcPic );
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
       m_pcDepthMapGenerator->predictDepthMap  ( pcPic );
 #endif
 #endif
@@ -718,6 +707,13 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       m_pcResidualGenerator->initViewComponent( pcPic );
 #endif
 
+#if QC_SIMPLE_NBDV_B0047
+      if(pcSlice->getViewId() && pcSlice->getSPS()->getMultiviewMvPredMode())
+      {
+        Int iColPoc = pcSlice->getRefPOC(RefPicList(pcSlice->getColDir()), pcSlice->getColRefIdx());
+        pcPic->setRapbCheck(pcPic->getDisCandRefPictures(iColPoc));
+      }
+#endif
       while(uiNextCUAddr<uiRealEndAddress) // determine slice boundaries
       {
         pcSlice->setNextSlice       ( false );
@@ -776,7 +772,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       m_pcResidualGenerator->setRecResidualPic( pcPic );
 #endif
 #if DEPTH_MAP_GENERATION
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
       // update virtual depth map
       m_pcDepthMapGenerator->updateDepthMap( pcPic );
 #endif
@@ -1136,24 +1132,12 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
         pcSlice->setTileOffstForMultES( uiOneBitstreamPerSliceLength );
         if (!bEntropySlice)
         {
-#if OL_DEPTHLIMIT_A0044 //start dumping partition information
-          m_pcSliceEncoder->setPartDumpFlag(1);
-#endif
           pcSlice->setTileLocationCount ( 0 );
           m_pcSliceEncoder->encodeSlice(pcPic, pcBitstreamRedirect, pcSubstreamsOut); // redirect is only used for CAVLC tile position info.
-#if OL_DEPTHLIMIT_A0044 //stop dumping partition information
-          m_pcSliceEncoder->setPartDumpFlag(0);
-#endif
         }
         else
         {
-#if OL_DEPTHLIMIT_A0044 //start dumping partition information
-          m_pcSliceEncoder->setPartDumpFlag(1);
-#endif
           m_pcSliceEncoder->encodeSlice(pcPic, &nalu.m_Bitstream, pcSubstreamsOut); // nalu.m_Bitstream is only used for CAVLC tile position info.
-#if OL_DEPTHLIMIT_A0044 //stop dumping partition information
-          m_pcSliceEncoder->setPartDumpFlag(0);
-#endif
         }
 
         {

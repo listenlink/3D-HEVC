@@ -435,10 +435,8 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
   if( isDepth )
     m_useDepth = true;
 
-#if FIX_DECODING_WO_WRITING
   if ( m_pchReconFile )
   { 
-#endif
     while( m_tVideoIOYuvReconFile.size() < newNumberOfViewDepth)
     {
       m_tVideoIOYuvReconFile.push_back(new TVideoIOYuv);
@@ -472,9 +470,7 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
       }
       free ( nextFilename );
     }
-#if FIX_DECODING_WO_WRITING
   }
-#endif
 
   while( m_pocLastDisplay.size() < newNumberOfViewDepth )
   {

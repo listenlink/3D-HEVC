@@ -322,6 +322,15 @@ private:
 #if HHI_MPI
   Bool        m_bUseMVI;
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool        m_bUseDLT;
+  
+  UInt        m_uiBitsPerDepthValue;
+  UInt        m_uiNumDepthmapValues;
+  UInt*       m_uiDepthValue2Idx;
+  UInt*       m_uiIdx2DepthValue;
+#endif
 
   Bool     m_bLFCrossTileBoundaryFlag;
   Int      m_iUniformSpacingIdr;
@@ -353,8 +362,8 @@ private:
   Bool  m_bUseDMM;
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Bool m_bDepthPartitionLimiting;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool m_bUseQTLPC;
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -546,6 +555,17 @@ public:
   Void setUseMVI                  (Bool bVal)  {m_bUseMVI = bVal;}
   Bool getUseMVI                  ()           {return m_bUseMVI;}
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool getUseDLT      ()          { return m_bUseDLT; }
+  Void setUseDLT      ( Bool b ) { m_bUseDLT  = b;          }
+  
+  UInt getBitsPerDepthValue()       { return m_bUseDLT?m_uiBitsPerDepthValue:g_uiBitDepth; }
+  UInt getNumDepthValues()          { return m_bUseDLT?m_uiNumDepthmapValues:g_uiIBDI_MAX; }
+  UInt depthValue2idx(Pel uiValue)  { return m_bUseDLT?m_uiDepthValue2Idx[uiValue]:uiValue; }
+  Pel  idx2DepthValue(UInt uiIdx)   { return m_bUseDLT?m_uiIdx2DepthValue[uiIdx]:uiIdx; }
+  Void setDepthLUTs   (UInt* uidx2DepthValue = NULL, UInt uiNumDepthValues = 0);
+#endif
 
   UInt      getMaxTLayers()                           { return m_uiMaxTLayers; }
   Void      setMaxTLayers( UInt uiMaxTLayers )        { assert( uiMaxTLayers <= MAX_TLAYER ); m_uiMaxTLayers = uiMaxTLayers; }
@@ -622,9 +642,9 @@ public:
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
-  Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
+#if OL_QTLIMIT_PREDCODING_B0068
+  Void setUseQTLPC( Bool b ) { m_bUseQTLPC = b;    }
+  Bool getUseQTLPC()         { return m_bUseQTLPC; }
 #endif
 
   Void initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
@@ -862,7 +882,7 @@ private:
 #if CABAC_INIT_FLAG
   Bool     m_cabacInitPresentFlag;
   UInt     m_encCABACTableIdx;           // Used to transmit table selection across slices
-#if POZNAN_CABAC_INIT_FLAG_FIX
+#if FIX_POZNAN_CABAC_INIT_FLAG
   UInt     m_encPrevPOC;
 #endif
 #endif
@@ -997,7 +1017,7 @@ public:
   Void     setEncCABACTableIdx( Int idx )           { m_encCABACTableIdx = idx;         }
   Bool     getCabacInitPresentFlag()                { return m_cabacInitPresentFlag;    }
   UInt     getEncCABACTableIdx()                    { return m_encCABACTableIdx;        }
-#if POZNAN_CABAC_INIT_FLAG_FIX
+#if FIX_POZNAN_CABAC_INIT_FLAG
   Void     setEncPrevPOC(UInt uiPOC)                { m_encPrevPOC = uiPOC;             }
   UInt     getEncPrevPOC()                          { return m_encPrevPOC;              }
 #endif
@@ -1278,6 +1298,9 @@ private:
 
 #if SONY_COLPIC_AVAILABILITY
   Int         m_iViewOrderIdx;
+#endif
+#if LGE_ILLUCOMP_B0045
+  Bool        m_bApplyIC;
 #endif
 
 public:
@@ -1572,6 +1595,12 @@ public:
   Int*      getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int*      getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+
+#if LGE_ILLUCOMP_B0045
+  Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
+  Bool      getApplyIC            ()  { return m_bApplyIC; }
+  Void      xSetApplyIC           ();
+#endif
 
 protected:
   TComPic*  xGetRefPic        (TComList<TComPic*>& rcListPic, UInt uiPOC);

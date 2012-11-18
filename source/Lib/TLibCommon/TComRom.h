@@ -192,6 +192,16 @@ extern const UChar           g_aucIntraSizeIdxToWedgeSize[7];
 extern       std::vector< std::vector<TComWedgelet> >  g_aacWedgeLists;
 extern       std::vector< std::vector<TComWedgeRef> >  g_aacWedgeRefLists;
 
+#if HHIQC_DMMFASTSEARCH_B0039
+extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
+extern       std::vector< std::vector<TComWedgeNode> >       g_aacWedgeNodeLists;
+#endif
+
+#if RWTH_SDC_DLT_B0036
+#define RWTH_SDC_NUM_PRED_MODES 4
+extern      UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES];
+#endif
+
 Void initWedgeLists();
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
@@ -205,7 +215,7 @@ __inline Void mapDMMtoIntraMode(   Int& dirMode ) { dirMode = (dirMode >= NUM_IN
 #endif
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 __inline Void mapEdgeIntratoDC( UChar& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
 __inline Void mapEdgeIntratoDC(  UInt& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
 __inline Void mapEdgeIntratoDC(   Int& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }

@@ -159,6 +159,9 @@ protected:
   Bool      m_useLossless;                                    ///< flag for using lossless coding
 #endif
   vector<Bool> m_abUseSAO;
+#if LGE_ILLUCOMP_B0045
+  Bool      m_bUseIC;                                     ///< flag for using illumination compensation for inter-view prediction
+#endif
 #if SAO_UNIT_INTERLEAVING
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoInterleavingFlag;                            ///< SAO interleaving flag
@@ -257,13 +260,22 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseWeightPred;                                 ///< Use of explicit Weighting Prediction for P_SLICE
   UInt      m_uiBiPredIdc;                                    ///< Use of Bi-Directional Weighting Prediction (B_SLICE): explicit(1) or implicit(2)
 
+#if TMVP_DEPTH_SWITCH
+  vector<Bool> m_enableTMVP;                                  ///< Enable TMVP [0] video, [1] depth
+#else
   Bool      m_enableTMVP;
+#endif
+
 #if MULTIBITS_DATA_HIDING
   Int       m_signHideFlag;
   Int       m_signHidingThreshold;
 #endif
 #if HHI_MPI
   Bool      m_bUseMVI;  ///< flag for using Motion Vector Inheritance for depth map coding
+#endif
+#if RWTH_SDC_DLT_B0036
+  Bool      m_bUseDLT;
+  Bool      m_bUseSDC;
 #endif
 
   Int       m_useScalingListId;                               ///< using quantization matrix
@@ -279,7 +291,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if HHI_VSO
   Char*     m_pchVSOConfig;
   Bool      m_bUseVSO;                                    ///< flag for using View Synthesis Optimization
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   Bool      m_bVSOLSTable;                                ///< Depth QP dependent Lagrange parameter optimization (m23714)
 #endif
 #if LGE_VSO_EARLY_SKIP_A0093
@@ -307,8 +319,8 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseDMM;                                        ///< flag for using DMM
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Bool      m_bDepthPartitionLimiting;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool      m_bUseQTLPC;                                      ///< flag for using depth QuadTree Limitation + Predictive Coding
 #endif
 
   // internal member functions

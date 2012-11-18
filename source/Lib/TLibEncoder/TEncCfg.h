@@ -166,6 +166,9 @@ protected:
   Bool      m_DeblockingFilterControlPresent;
 #endif
   Bool      m_bUseSAO;
+#if LGE_ILLUCOMP_B0045
+  Bool      m_bUseIC;
+#endif
 #if SAO_UNIT_INTERLEAVING
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoInterleavingFlag;
@@ -246,6 +249,10 @@ protected:
 #if HHI_MPI
   Bool      m_bUseMVI;
 #endif
+#if RWTH_SDC_DLT_B0036
+  Bool      m_bUseDLT;
+  Bool      m_bUseSDC;
+#endif
 
   Int*      m_aidQP;
   UInt      m_uiDeltaQpRD;
@@ -271,10 +278,6 @@ protected:
   Bool      m_bLFCrossTileBoundaryFlag;
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
-#if FIX_REMOVE_TILE_DEPENDENCE
-#else
-  Int       m_iTileBoundaryIndependenceIdr;
-#endif
   Int       m_iNumColumnsMinus1;
   UInt*     m_puiColumnWidth;
   Int       m_iNumRowsMinus1;
@@ -320,8 +323,8 @@ protected:
   Bool     m_bUseDMM;
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Bool     m_bDepthPartitionLimiting;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool     m_bUseQTLPC;
 #endif
 
   Int      m_iViewOrderIdx;
@@ -687,8 +690,16 @@ public:
 #if HHI_MPI
   Void  setUseMVI                      ( Bool bVal )   {m_bUseMVI = bVal;}
 #endif
+#if RWTH_SDC_DLT_B0036
+  Void  setUseDLT                       ( Bool  b )     { m_bUseDLT   = b; }
+  Void  setUseSDC                       ( Bool  b )     { m_bUseSDC   = b; }
+#endif
   Void  setUseSAO                      ( Bool bVal )   {m_bUseSAO = bVal;}
   Bool  getUseSAO                      ()              {return m_bUseSAO;}
+#if LGE_ILLUCOMP_B0045
+  Void  setUseIC                       ( Bool bVal )   {m_bUseIC = bVal;}
+  Bool  getUseIC                       ()              {return m_bUseIC;}
+#endif
 #if SAO_UNIT_INTERLEAVING
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
@@ -823,9 +834,14 @@ public:
   Bool      getUseDMM()        { return m_bUseDMM; }
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  Void      setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
-  Bool      getUseDPL()       {return m_bDepthPartitionLimiting;}
+#if OL_QTLIMIT_PREDCODING_B0068
+  Void      setUseQTLPC( Bool b ) { m_bUseQTLPC = b;    }
+  Bool      getUseQTLPC()         { return m_bUseQTLPC; }
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool      getUseDLT()      { return m_bUseDLT;     }
+  Bool      getUseSDC()      { return m_bUseSDC;     }
 #endif
 
   Void      setViewOrderIdx       ( Int   i )      { m_iViewOrderIdx          = i; }

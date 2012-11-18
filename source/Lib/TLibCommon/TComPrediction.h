@@ -99,12 +99,20 @@ protected:
   Void xWeightedAveragePdm      ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst, UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
 
+#if LGE_ILLUCOMP_B0045
+  Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi, Bool bICFlag = false );
+  Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi, Bool bICFlag = false );
+#else
   Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi );
+#endif
   Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi );
   Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
   
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );
-
+#if LGE_ILLUCOMP_B0045
+  Void xGetLLSICPrediction(TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift);
+  Void xGetLLSICPredictionChroma(TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift, Int iChromaId);
+#endif
   Void xDCPredFiltering( Int* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight );
   Bool xCheckIdenticalMotion    ( TComDataCU* pcCU, UInt PartAddr);
 
@@ -124,7 +132,7 @@ protected:
   Void xDeltaDCQuantScaleDown    ( TComDataCU* pcCU, Int& riDeltaDC );
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Pel  xGetNearestNeighbor  ( Int x, Int y, Int* pSrc, Int srcStride, Int iWidth, Int iHeight, Bool* bpRegion );
   Void xPredIntraEdge       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iWidth, Int iHeight, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, Bool bDelta = false );
 #endif
@@ -174,7 +182,7 @@ public:
   UInt  getBestContinueWedge    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Int iDeltaEnd = 0 );
   Bool  getWedgePatternIdx      ( WedgeRefList* pcWedgeRefList, UInt& ruiTabIdx, UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe );
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Void predIntraLumaEdge          ( TComDataCU* pcCU, TComPattern* pcTComPattern, UInt uiAbsPartIdx, Int iWidth, Int iHeight, Pel* piPred, UInt uiStride, Bool bDelta = false );
 #endif
 

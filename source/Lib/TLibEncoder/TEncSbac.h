@@ -144,6 +144,12 @@ public:
   Void  codeSaoUflc       ( UInt  uiCode);
 #endif
   Void  codeScalingList      ( TComScalingList* scalingList     ){ assert (0);  return;};
+  
+#if RWTH_SDC_DLT_B0036
+  Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+  Void codeSDCPredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
@@ -174,7 +180,7 @@ private:
   Void  xCodeWedgePredTexDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xCodeContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Void  xCodeEdgeIntraInfo( TComDataCU* pcCU, UInt uiPartIdx );
 #endif
 
@@ -201,6 +207,9 @@ public:
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if LGE_ILLUCOMP_B0045
+  Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -259,6 +268,9 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
+#if LGE_ILLUCOMP_B0045
+  ContextModel3DBuffer m_cCUICFlagSCModel;
+#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -309,11 +321,21 @@ private:
   ContextModel3DBuffer m_cDmmModeSCModel;
   ContextModel3DBuffer m_cDmmDataSCModel;
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   ContextModel3DBuffer m_cEdgeIntraSCModel;
 #if LGE_EDGE_INTRA_DELTA_DC
   ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
 #endif
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  ContextModel3DBuffer m_cSDCFlagSCModel;
+  
+  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSCModel;
+  
+  ContextModel3DBuffer m_cSDCPredModeSCModel;
 #endif
 };
 
