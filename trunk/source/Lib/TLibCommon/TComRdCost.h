@@ -87,6 +87,9 @@ public:
   Int   iRows;
   Int   iCols;
   Int   iStep;
+#if LGE_ILLUCOMP_B0045
+  Bool  bUseIC;
+#endif
   FpDistFunc DistFunc;
 
 #if HHI_INTERVIEW_SKIP
@@ -301,6 +304,15 @@ public:
   
 private:
   
+#if LGE_ILLUCOMP_B0045
+  static UInt xGetSADic         ( DistParam* pcDtParam );
+  static UInt xGetSAD4ic        ( DistParam* pcDtParam );
+  static UInt xGetSAD8ic        ( DistParam* pcDtParam );
+  static UInt xGetSAD16ic       ( DistParam* pcDtParam );
+  static UInt xGetSAD32ic       ( DistParam* pcDtParam );
+  static UInt xGetSAD64ic       ( DistParam* pcDtParam );
+  static UInt xGetSAD16Nic      ( DistParam* pcDtParam );
+#endif
   static UInt xGetSSE           ( DistParam* pcDtParam );
   static UInt xGetSSE4          ( DistParam* pcDtParam );
   static UInt xGetSSE8          ( DistParam* pcDtParam );
@@ -328,15 +340,23 @@ private:
 #endif
 
 #if AMP_SAD
+#if LGE_ILLUCOMP_B0045
+  static UInt xGetSAD12ic       ( DistParam* pcDtParam );
+  static UInt xGetSAD24ic       ( DistParam* pcDtParam );
+  static UInt xGetSAD48ic       ( DistParam* pcDtParam );
+#endif
   static UInt xGetSAD12         ( DistParam* pcDtParam );
   static UInt xGetSAD24         ( DistParam* pcDtParam );
   static UInt xGetSAD48         ( DistParam* pcDtParam );
-
 #endif
 
+#if LGE_ILLUCOMP_B0045
+  static UInt xGetHADsic          ( DistParam* pcDtParam );
+#endif
   static UInt xGetHADs4         ( DistParam* pcDtParam );
   static UInt xGetHADs8         ( DistParam* pcDtParam );
   static UInt xGetHADs          ( DistParam* pcDtParam );
+
   static UInt xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );

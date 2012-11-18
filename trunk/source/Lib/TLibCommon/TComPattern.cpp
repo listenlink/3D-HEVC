@@ -674,7 +674,7 @@ Int* TComPattern::getAdiCrBuf(Int iCuWidth,Int iCuHeight, Int* piAdiBuf)
 Int* TComPattern::getPredictorPtr( UInt uiDirMode, UInt log2BlkSize, Int* piAdiBuf )
 {
   Int* piSrc;
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   mapEdgeIntratoDC( uiDirMode );
 #endif
   assert(log2BlkSize >= 2 && log2BlkSize < 7);

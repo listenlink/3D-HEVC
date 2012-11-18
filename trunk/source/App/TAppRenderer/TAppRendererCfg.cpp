@@ -119,9 +119,9 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     ("c", po::parseConfigFile, "configuration file name")
 
     /* File I/O */
-    ("VideoInputFileBaseName",  m_pchVideoInputFileBaseName,  (Char*) 0, "Basename to generate video input file names")
-    ("DepthInputFileBaseName",  m_pchDepthInputFileBaseName,  (Char*) 0, "Basename to generate depth input file names")
-    ("SynthOutputFileBaseName", m_pchSynthOutputFileBaseName, (Char*) 0, "Basename to generate synthesized output file names")
+    ("VideoInputFileBaseName,v",  m_pchVideoInputFileBaseName,  (Char*) 0, "Basename to generate video input file names")
+    ("DepthInputFileBaseName,d",  m_pchDepthInputFileBaseName,  (Char*) 0, "Basename to generate depth input file names")
+    ("SynthOutputFileBaseName,s", m_pchSynthOutputFileBaseName, (Char*) 0, "Basename to generate synthesized output file names")
     ("ContOutputFileNumbering", m_bContOutputFileNumbering  ,  false   , "Continuous Output File Numbering")
     ("Sweep"                  , m_bSweep                    ,  false   , "Store all views in first Output File")
 
@@ -136,7 +136,7 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     ("FramesToBeRendered,f",    m_iFramesToBeRendered,                0, "Number of frames to be rendered (default=all)")
 
     /* Camera Specification */
-    ("CameraParameterFile,cpf", m_pchCameraParameterFile,          (Char *) 0, "Camera Parameter File Name")
+    ("CameraParameterFile,-cpf", m_pchCameraParameterFile,          (Char *) 0, "Camera Parameter File Name")
     ("BaseViewCameraNumbers"  , m_pchBaseViewCameraNumbers,        (Char *) 0, "Numbers of base views")
     ("SynthViewCameraNumbers" , m_pchSynthViewCameraNumbers,       (Char *) 0, "Numbers of views to synthesis")
     ("ViewConfig"             , m_pchViewConfig,                   (Char *) 0, "View Configuration"               )

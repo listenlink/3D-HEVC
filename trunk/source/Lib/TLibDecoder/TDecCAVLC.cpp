@@ -1673,8 +1673,45 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setUseMVI( uiCode );
     }
 #endif
+#if OL_QTLIMIT_PREDCODING_B0068
+    if( bIsDepth )
+    {
+      READ_FLAG( uiCode, "use_qtlpc_flag" );
+      pcSPS->setUseQTLPC( uiCode );
+    }
+#endif
+    
+#if RWTH_SDC_DLT_B0036
+    if( bIsDepth )
+    {
+      READ_FLAG( uiCode, "use_dlt_flag" );
+      pcSPS->setUseDLT( uiCode );
+      if( pcSPS->getUseDLT() )
+      {
+        // decode mapping
+        UInt uiNumDepthValues;
+        // parse number of values in DLT
+        xReadUvlc( uiNumDepthValues );
+        
+        // parse actual DLT values
+        UInt* auiIdx2DepthValue = (UInt*) calloc(uiNumDepthValues, sizeof(UInt));
+        for(UInt d=0; d<uiNumDepthValues; d++)
+        {
+          xReadUvlc( uiCode );
+          auiIdx2DepthValue[d] = uiCode;
+        }
+        
+        pcSPS->setDepthLUTs(auiIdx2DepthValue, uiNumDepthValues);
+        
+        // clean memory
+        free(auiIdx2DepthValue);
+      }
+      else
+        pcSPS->setDepthLUTs();
+    }
+#endif
 
-    READ_FLAG( uiCode, "base_view_flag" ); 
+    READ_FLAG( uiCode, "base_view_flag" );
     if( uiCode )
     { // baseview SPS -> set standard values
       pcSPS->initMultiviewSPS         ( 0 );
@@ -1802,6 +1839,20 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   READ_FLAG( uiCode, "first_slice_in_pic_flag" );
   UInt address;
   UInt innerAddress = 0;
+
+#if LGE_ILLUCOMP_B0045
+  // IC flag is on only first_slice_in_pic
+  if (uiCode)
+  {
+    UInt uiCodeTmp = 0;
+    if ( rpcSlice->getSPS()->getViewId() && !rpcSlice->getSPS()->isDepth() )
+    {
+      READ_FLAG (uiCodeTmp, "applying IC flag");
+    }
+    rpcSlice->setApplyIC(uiCodeTmp);
+  }
+#endif
+
   if(!uiCode)
   {
     READ_CODE( reqBitsOuter+reqBitsInner, address, "slice_address" );
@@ -2600,6 +2651,13 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   assert(0);
 }
 
+#if LGE_ILLUCOMP_B0045
+Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
+
 #if HHI_INTER_VIEW_MOTION_PRED
 Void TDecCavlc::parseMVPIdx( Int& riMVPIdx, Int iAMVPCands )
 #else
@@ -2800,6 +2858,21 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
 #if HHI_INTER_VIEW_RESIDUAL_PRED
 Void
 TDecCavlc::parseResPredFlag( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
+
+#if RWTH_SDC_DLT_B0036
+Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+Void TDecCavlc::parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+Void TDecCavlc::parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart )
 {
   assert(0);
 }

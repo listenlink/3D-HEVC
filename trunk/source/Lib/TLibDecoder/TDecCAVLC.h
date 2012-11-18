@@ -141,6 +141,9 @@ public:
 #endif
   
   Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if LGE_ILLUCOMP_B0045
+  Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -174,6 +177,11 @@ public:
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
   Void parseDFFlag         ( UInt& ruiVal, const Char *pSymbolName );
   Void parseDFSvlc         ( Int&  riVal,  const Char *pSymbolName  );
+#if RWTH_SDC_DLT_B0036
+  Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
+#endif
 protected:
 #if DBL_CONTROL
   Void  xParseDblParam       ( TComAPS* aps );

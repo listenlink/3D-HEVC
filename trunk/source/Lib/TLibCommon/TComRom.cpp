@@ -173,6 +173,16 @@ Void destroyROM()
     }
     g_aacWedgeRefLists.clear();
   }
+#if HHIQC_DMMFASTSEARCH_B0039
+  if ( !g_aacWedgeNodeLists.empty() )
+  {
+    for ( UInt ui = 0; ui < g_aacWedgeNodeLists.size(); ui++ )
+    {
+      g_aacWedgeNodeLists[ui].clear();
+    }
+    g_aacWedgeNodeLists.clear();
+  }
+#endif
 #endif
 }
 
@@ -294,6 +304,9 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   }
 };
 
+#if RWTH_SDC_DLT_B0036
+UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES] = { DC_IDX, DMM_WEDGE_FULL_IDX, DMM_WEDGE_PREDDIR_IDX, PLANAR_IDX };
+#endif
 
 Int g_quantScales[6] =
 {
@@ -1169,6 +1182,11 @@ Int  g_eTTable[4] = {0,3,1,2};
 std::vector< std::vector<TComWedgelet> > g_aacWedgeLists;
 std::vector< std::vector<TComWedgeRef> > g_aacWedgeRefLists;
 
+#if HHIQC_DMMFASTSEARCH_B0039
+std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
+std::vector< std::vector< TComWedgeNode> >      g_aacWedgeNodeLists;
+#endif
+
 Void initWedgeLists()
 {
   for( UInt ui = g_aucConvertToBit[DMM_WEDGEMODEL_MIN_SIZE]; ui < (g_aucConvertToBit[DMM_WEDGEMODEL_MAX_SIZE]+1); ui++ )
@@ -1179,6 +1197,69 @@ Void initWedgeLists()
     createWedgeList( uiWedgeBlockSize, uiWedgeBlockSize, acWedgeList, acWedgeRefList, g_aeWedgeResolutionList[ui] );
     g_aacWedgeLists.push_back( acWedgeList );
     g_aacWedgeRefLists.push_back( acWedgeRefList );
+
+#if HHIQC_DMMFASTSEARCH_B0039
+    // create WedgeNodeList
+    std::vector<TComWedgeNode> acWedgeNodeList;
+    for( UInt uiPos = 0; uiPos < acWedgeList.size(); uiPos++ )
+    {
+      if( acWedgeList[uiPos].getIsCoarse() )
+      {
+        TComWedgeNode cWedgeNode;
+        cWedgeNode.setPatternIdx( uiPos );
+
+        // set refinement idxs
+        UInt uiRefPos = 0;
+        for( Int iOffS = -1; iOffS <= 1; iOffS++ )
+        {
+          for( Int iOffE = -1; iOffE <= 1; iOffE++ )
+          {
+            if( iOffS == 0 && iOffE == 0 ) { continue; }
+
+            Int iSx = (Int)acWedgeList[uiPos].getStartX();
+            Int iSy = (Int)acWedgeList[uiPos].getStartY();
+            Int iEx = (Int)acWedgeList[uiPos].getEndX();
+            Int iEy = (Int)acWedgeList[uiPos].getEndY();
+
+            switch( acWedgeList[uiPos].getOri() )
+            {
+            case( 0 ): { iSx += iOffS; iEy += iOffE; } break;
+            case( 1 ): { iSy += iOffS; iEx -= iOffE; } break;
+            case( 2 ): { iSx -= iOffS; iEy -= iOffE; } break;
+            case( 3 ): { iSy -= iOffS; iEx += iOffE; } break;
+            case( 4 ): { iSx += iOffS; iEx += iOffE; } break;
+            case( 5 ): { iSy += iOffS; iEy += iOffE; } break;
+            default: assert( 0 );
+            }
+
+            for( UInt k = 0; k < acWedgeRefList.size(); k++ )
+            {
+              if( iSx == (Int)acWedgeRefList[k].getStartX() && 
+                iSy == (Int)acWedgeRefList[k].getStartY() && 
+                iEx == (Int)acWedgeRefList[k].getEndX() && 
+                iEy == (Int)acWedgeRefList[k].getEndY()    )
+              {
+                if( acWedgeRefList[k].getRefIdx() != cWedgeNode.getPatternIdx() )
+                {
+                  Bool bNew = true;
+                  for( UInt m = 0; m < uiRefPos; m++ ) { if( acWedgeRefList[k].getRefIdx() == cWedgeNode.getRefineIdx( m ) ) { bNew = false; break; } }
+
+                  if( bNew ) 
+                  {
+                    cWedgeNode.setRefineIdx( acWedgeRefList[k].getRefIdx(), uiRefPos );
+                    uiRefPos++;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+        acWedgeNodeList.push_back( cWedgeNode );
+      }
+    }
+    g_aacWedgeNodeLists.push_back( acWedgeNodeList );
+#endif
   }
   return;
 }
@@ -1216,11 +1297,34 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     {
       for( Int iL = 0; iL < uiBlockSize; iL++ )
       {
+#if HHIQC_DMMFASTSEARCH_B0039
+        cTempWedgelet.setWedgelet( uhStartX + (iK*iStepStartX) , uhStartY + (iK*iStepStartY), uhEndX + (iL*iStepEndX), uhEndY + (iL*iStepEndY), (UChar)uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
+#else
         cTempWedgelet.setWedgelet( uhStartX + (iK*iStepStartX) , uhStartY + (iK*iStepStartY), uhEndX + (iL*iStepEndX), uhEndY + (iL*iStepEndY), (UChar)uiOri, eWedgeRes );
+#endif
         addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
       }
     }
   }
+#if HHIQC_DMMFASTSEARCH_B0039
+  UInt uiThrSz = DMM3_SIMPLIFY_TR;
+
+  std::vector< std::vector<UInt> > auiWdgListSz;
+  for( Int idxM=2; idxM<=34 ; idxM++)
+  {
+    std::vector<UInt> auiWdgList;
+    for( Int idxW=0; idxW<racWedgeList.size(); idxW++)
+    {
+      UInt uiAbsDiff = abs(idxM-(Int)racWedgeList[idxW].getAng());
+      if( uiAbsDiff <= uiThrSz )
+      {
+        auiWdgList.push_back(idxW);
+      }
+    }
+    auiWdgListSz.push_back(auiWdgList);
+  }
+  g_aauiWdgLstM3.push_back(auiWdgListSz);
+#endif
 }
 
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList )
@@ -1256,6 +1360,9 @@ Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWe
   }
   if( bValid )
   {
+#if HHIQC_DMMFASTSEARCH_B0039
+  cWedgelet.findClosetAngle();
+#endif
     racWedgeList.push_back( cWedgelet );
     TComWedgeRef cWedgeRef;
     cWedgeRef.setWedgeRef( cWedgelet.getStartX(), cWedgelet.getStartY(), cWedgelet.getEndX(), cWedgelet.getEndY(), (UInt)(racWedgeList.size()-1) );

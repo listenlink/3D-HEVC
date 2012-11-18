@@ -58,7 +58,7 @@ typedef struct _AMVPInfo
 } AMVPInfo;
 
 // ====================================================================================================================
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
 typedef struct _DisCand
 {
   TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates
@@ -93,6 +93,12 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
+#if QC_MRG_CANS_B0048
+  Bool operator== ( const TComMvField& rcMv ) const
+  {
+    return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());
+  }
+#endif
 };
 
 /// class for motion information in one CU
@@ -167,6 +173,10 @@ public:
 #endif
 #if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
   Void decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift );
+#endif
+
+#if MTK_UNCONSTRAINED_MVI_B0083
+  Void setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir );
 #endif
 };
 

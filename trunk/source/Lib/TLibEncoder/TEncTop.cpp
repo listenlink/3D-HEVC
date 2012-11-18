@@ -90,14 +90,10 @@ TEncTop::~TEncTop()
 Void TEncTop::create ()
 {
   // initialize global variables
-#if FIX_INIT_ROM
   if( m_viewId == 0 && m_isDepth == false )
   {
-#endif
     initROM();
-#if FIX_INIT_ROM
   }
-#endif
 
 
   // create processing unit classes
@@ -604,9 +600,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
-#if FIXES
   rpcPic->getPicYuvOrg()->setBorderExtension(false); 
-#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -645,6 +639,10 @@ Void TEncTop::xInitSPS()
   {
     m_cSPS.setUseALFCoefInSlice(m_bALFParamInSlice);
   }
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  m_cSPS.setUseDLT        ( m_bUseDLT );
 #endif
   
   m_cSPS.setQuadtreeTULog2MaxSize( m_uiQuadtreeTULog2MaxSize );
@@ -767,8 +765,8 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT_A0044
-  m_cSPS.setUseDPL( m_bDepthPartitionLimiting );
+#if OL_QTLIMIT_PREDCODING_B0068
+  m_cSPS.setUseQTLPC( m_bUseQTLPC );
 #endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
@@ -1101,11 +1099,7 @@ Void  TEncTop::xInitPPSforTiles()
     m_cPPS.setLFCrossTileBoundaryFlag( m_bLFCrossTileBoundaryFlag );
 
     // # substreams is "per tile" when tiles are independent.
-#if FIX_REMOVE_TILE_DEPENDENCE
     if ( m_iWaveFrontSynchro )
-#else
-    if (m_iTileBoundaryIndependenceIdr && m_iWaveFrontSynchro)
-#endif
     {
       m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams * (m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1));
     }

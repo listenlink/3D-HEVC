@@ -73,9 +73,7 @@ void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg);
 TAppEncCfg::TAppEncCfg()
 {
   m_aidQP = NULL;
-#if FIXES
   m_aidQPdepth = NULL;
-#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -85,12 +83,10 @@ TAppEncCfg::~TAppEncCfg()
     delete[] m_aidQP; m_aidQP = NULL;
   }
 
-#if FIXES
   if ( m_aidQPdepth )
   {
     delete[] m_aidQPdepth; m_aidQPdepth = NULL;
   }
-#endif
 
   for(Int i = 0; i< m_pchInputFileList.size(); i++ )
   {
@@ -119,7 +115,6 @@ TAppEncCfg::~TAppEncCfg()
     free (  m_pchVSOConfig );
 #endif
 
-#if FIX_MEM_LEAKS
  if ( m_pchCameraParameterFile != NULL )
    free ( m_pchCameraParameterFile ); 
 
@@ -138,7 +133,6 @@ TAppEncCfg::~TAppEncCfg()
  if ( m_scalingListFile != NULL ) 
    free ( m_scalingListFile );
 
-#endif   
 
 }
 
@@ -325,12 +319,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterOffsetInAPS", m_loopFilterOffsetInAPS, false)
   ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
   ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
-#if DBL_CONTROL
-#if FIX_DBL_CONTROL_DEFAULT
-  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
-#else
-  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, false)
+#if LGE_ILLUCOMP_B0045
+  ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
 #endif
+#if DBL_CONTROL
+  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
 #endif
 
   /* Camera Paremetes */
@@ -345,7 +338,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
   ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1    , "Lambda Scaling for VSO")
 
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   ("VSOLSTable",                      m_bVSOLSTable             , true          , "Depth QP dependent video/depth rate allocation by Lagrange multiplier" )    
 #endif
 
@@ -360,14 +353,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 #if LGE_WVSO_A0119
-  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
+  ("WVSO",                            m_bUseWVSO                , true          , "Use depth fidelity term for VSO" )
   ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
   ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  ("DPL",                             m_bDepthPartitionLimiting , false         , "Use DepthPartitionLimiting" )
+#if OL_QTLIMIT_PREDCODING_B0068
+  ("QTLPC",                           m_bUseQTLPC               , true         , "Use depth Quadtree Limitation + Predictive Coding" )
 #endif
 
 #endif
@@ -453,7 +446,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                               "\t1: use MD5\n"
                                               "\t0: disable")
 
+#if TMVP_DEPTH_SWITCH
+  ("TMVP", m_enableTMVP, std::vector<Bool>(1,true), "Enable TMVP" )
+#else
   ("TMVP", m_enableTMVP, true, "Enable TMVP" )
+#endif
 
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
   ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
@@ -472,6 +469,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("0", doOldStyleCmdlineOff, "turn option <name> off")
 #if HHI_MPI
   ("MVI", m_bUseMVI, false, "use motion vector inheritance for depth map coding")
+#endif
+#if RWTH_SDC_DLT_B0036
+  ("DLT", m_bUseDLT, true, "use depth lookup table for depth map coding")
+  ("SDC", m_bUseSDC, true, "use simplified depth coding tree")
 #endif
   ;
   
@@ -683,6 +684,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   xCleanUpVectors();
 
+
+#if TMVP_DEPTH_SWITCH
+  if ( m_enableTMVP.size() < 2)
+  {
+    m_enableTMVP.push_back( m_enableTMVP[0]  );
+  }
+#endif
+ 
+
 #if HHI_VSO
   if ( m_abUseALF .size() < 2)
     m_abUseALF .push_back( m_bUseVSO ? false : m_abUseALF[0]  );
@@ -711,7 +721,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #if HHI_VSO
 
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   // Q&D
   Double adLambdaScaleTable[] = 
   {  0.031250, 0.031639, 0.032029, 0.032418, 0.032808, 0.033197, 0.033586, 0.033976, 0.034365, 0.034755, 
@@ -1619,7 +1629,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if HHI_VSO_DIST_INT
     printf("VSO Negative Distortion      : %d\n",    m_bAllowNegDist ? 1 : 0);
 #endif
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
     printf("VSO LS Table                 : %d\n",    m_bVSOLSTable ? 1 : 0);    
 #endif
 #if SAIT_VSO_EST_A0033
@@ -1703,7 +1713,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
           m_iWaveFrontSynchro, m_iWaveFrontFlush, m_iWaveFrontSubstreams);
   printf(" ScalingList:%d ", m_useScalingListId );
 
+#if !TMVP_DEPTH_SWITCH
   printf("TMVP:%d ", m_enableTMVP     );
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   printf("AQpS:%d", m_bUseAdaptQpSelect   );
@@ -1717,20 +1729,30 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
   printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[0] ? 1 : 0) );
+#endif
+#if LGE_ILLUCOMP_B0045
+  printf("IlluCompEnable: %d ", m_bUseIC);
+#endif
+
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
   printf("ALF:%d ", (m_abUseALF [1] ? 1 : 0));
   printf("SAO:%d ", (m_abUseSAO [1] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
+#endif
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
 #endif
 #if LGE_WVSO_A0119
   printf("WVSO:%d ", m_bUseWVSO );
 #endif
-#if OL_DEPTHLIMIT_A0044
-  printf("DPL:%d ", m_bDepthPartitionLimiting);
+#if OL_QTLIMIT_PREDCODING_B0068
+  printf("QTLPC:%d ", m_bUseQTLPC);
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );
@@ -1738,8 +1760,13 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
+#if RWTH_SDC_DLT_B0036
+  printf("SDC:%d ", m_bUseSDC ? 1 : 0 );
+  printf("DLT:%d ", m_bUseDLT ? 1 : 0 );
+#endif
 #if LGE_WVSO_A0119
-  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
+  if ( m_bUseWVSO )
+    printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   
