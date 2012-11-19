@@ -86,8 +86,8 @@ TEncTop::TEncTop()
 
 #if VSP_SLICE_HEADER
   m_bUseVSP = false;
+  m_bVSPDepthDisable = false;
 #endif
-
 }
 
 TEncTop::~TEncTop()
@@ -197,16 +197,12 @@ Void TEncTop::create ()
 #if VSP_N
   m_pcPicVSP = new TComPic;
   m_pcPicVSP->create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-  //m_pcPicVSP->getCurrSlice()->setViewId( this->getViewId() );
-  m_pcPicVSP->getCurrSlice()->setViewId( NUM_VIEW_VSP );
   m_pcPicVSP->getCurrSlice()->setViewOrderIdx( m_iViewOrderIdx );
 
   m_pcPicAvail = new TComPic;
   m_pcPicAvail->create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-  m_pcPicAvail->getCurrSlice()->setViewId( 99 );
   m_pcPicAvail->getCurrSlice()->setViewOrderIdx( m_iViewOrderIdx );
 #endif
-
 }
 
 /**
@@ -853,6 +849,9 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+#if OL_DEPTHLIMIT_A0044
+  m_cSPS.setUseDPL( m_bDepthPartitionLimiting );
+#endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif
@@ -893,6 +892,12 @@ Void TEncTop::xInitSPS()
 #endif
     }
   }
+#if VSP_N
+  m_cSPS.setVspPresentFlag( m_bUseVSP );
+#if VSP_CFG
+  m_cSPS.setVspDepthPresentFlag( m_bVSPDepthDisable ? false : true );
+#endif
+#endif
 }
 
 Void TEncTop::xInitPPS()
@@ -1184,7 +1189,11 @@ Void  TEncTop::xInitPPSforTiles()
     m_cPPS.setLFCrossTileBoundaryFlag( m_bLFCrossTileBoundaryFlag );
 
     // # substreams is "per tile" when tiles are independent.
+#if FIX_REMOVE_TILE_DEPENDENCE
+    if ( m_iWaveFrontSynchro )
+#else
     if (m_iTileBoundaryIndependenceIdr && m_iWaveFrontSynchro)
+#endif
     {
       m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams * (m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1));
     }

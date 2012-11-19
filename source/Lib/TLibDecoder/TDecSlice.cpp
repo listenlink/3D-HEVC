@@ -101,11 +101,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream* pcBitstream, TComInputBitstr
   rpcPic->setPicYuvPred( 0 );
   rpcPic->setPicYuvResi( 0 );
   
-#if DEBUGLOGOUT
-  char fname[128];
-  sprintf(fname, "%sV%02d_%05d%s.csv", "DecLog", rpcPic->getSlice(0)->getViewId(), rpcPic->getPOC(), rpcPic->getSlice(0)->getIsDepth() ? "depth":"text");
-  m_pcCuDecoder->m_cDebug.DebugLogFileOpen( fname );
-#endif
 #if ENC_DEC_TRACE
   g_bJustDoIt = g_bEncDecTraceEnable;
 #endif
@@ -443,9 +438,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream* pcBitstream, TComInputBitstr
     }
 #endif
   }
-#if DEBUGLOGOUT
-  m_pcCuDecoder->m_cDebug.DebugLogFileClose();
-#endif
 
 }
 

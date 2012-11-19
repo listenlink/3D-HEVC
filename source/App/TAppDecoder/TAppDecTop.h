@@ -67,9 +67,6 @@ private:
   std::vector<TDecTop*>           m_tDecTop;                      ///< decoder classes
 
   std::vector<TVideoIOYuv*>       m_tVideoIOYuvReconFile;         ///< reconstruction YUV class
-#if DEBUGIMGOUT
-  std::vector<TVideoIOYuv*>       m_tVideoIOYuvReconDbgFile;      ///< debug YUV class
-#endif
 
   // for output control
   Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP

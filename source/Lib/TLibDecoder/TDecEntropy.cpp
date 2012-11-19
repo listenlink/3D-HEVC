@@ -309,7 +309,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           decodeRefFrmIdxPU( pcCU,    uiSubPartIdx,              uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
 #if VSP_MV_ZERO
           Int iRefIdx = pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->getRefIdx(uiSubPartIdx);
-          if( pcCU->getSlice()->getViewId() && iRefIdx >= 0 && (pcCU->getSlice()->getRefViewId( RefPicList( uiRefListIdx ), iRefIdx ) == NUM_VIEW_VSP) )
+          if( pcCU->getSlice()->getViewId() && iRefIdx >= 0 && pcCU->isVspRef( RefPicList( uiRefListIdx ), iRefIdx ) )
           {
             pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( TComMv(0, 0), pcCU->getPartitionSize( uiSubPartIdx ), uiSubPartIdx, uiDepth, uiPartIdx );
             pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMv ( TComMv(0, 0), pcCU->getPartitionSize( uiSubPartIdx ), uiSubPartIdx, uiDepth, uiPartIdx );

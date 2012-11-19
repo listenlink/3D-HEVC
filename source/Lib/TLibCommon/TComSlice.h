@@ -44,6 +44,7 @@
 #include "CommonDef.h"
 #include "TComRom.h"
 #include "TComList.h"
+
 //! \ingroup TLibCommon
 //! \{
 
@@ -352,6 +353,10 @@ private:
   Bool  m_bUseDMM;
 #endif
 
+#if OL_DEPTHLIMIT_A0044
+  Bool m_bDepthPartitionLimiting;
+#endif
+
 #if DEPTH_MAP_GENERATION
   UInt  m_uiPredDepthMapGeneration;
   UInt  m_uiPdmPrecision;
@@ -371,6 +376,13 @@ private:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator* m_pcResidualGenerator;
+#endif
+
+#if VSP_N
+  Bool  m_bVspPresentFlag;
+#if VSP_CFG
+  Bool  m_bVspDepthPresentFlag;
+#endif
 #endif
 
 public:
@@ -617,6 +629,11 @@ public:
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
 
+#if OL_DEPTHLIMIT_A0044
+  Void setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
+  Bool getUseDPL()       {return m_bDepthPartitionLimiting;}
+#endif
+
   Void initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
   Void initMultiviewSPSDepth ( UInt uiViewId, Int iViewOrderIdx );
 
@@ -659,6 +676,15 @@ public:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
+#endif
+
+#if VSP_N
+  Void  setVspPresentFlag( Bool b ) { m_bVspPresentFlag = b; }
+  Bool  getVspPresentFlag()         { return m_bVspPresentFlag; }
+#if VSP_CFG
+  Void  setVspDepthPresentFlag( Bool b ) { m_bVspDepthPresentFlag = b; }
+  Bool  getVspDepthPresentFlag()         { return m_bVspDepthPresentFlag; }
+#endif
 #endif
 };
 
@@ -1276,6 +1302,12 @@ private:
 
 #if VSP_SLICE_HEADER
   Bool      m_bVspFlag;
+#if VSP_CFG
+  UInt      m_uiNumVspRefPics;
+  UInt      m_uiVspRefPos[2][MAX_NUM_REF_PICS];
+#else
+  Bool      m_bVspDepthDisableFlag;
+#endif
 #endif
 
 public:
@@ -1583,6 +1615,15 @@ public:
 #if VSP_SLICE_HEADER
   Void      setVspFlag          ( Bool val )    { m_bVspFlag = val; }
   Bool      getVspFlag          ()              { return m_bVspFlag; }
+#if VSP_CFG
+  Void      setNumVspRefPics( UInt val )        { m_uiNumVspRefPics = val; }
+  UInt      getNumVspRefPics()                  { return m_uiNumVspRefPics; }
+  Void      setVspRefPos( UInt dir, UInt idx, UInt val )  { m_uiVspRefPos[dir][idx] = val; }
+  UInt      getVspRefPos( UInt dir, UInt idx )            { return m_uiVspRefPos[dir][idx]; }
+#else
+  Void      setVspDepthDisableFlag( Bool val )  { m_bVspDepthDisableFlag = val; }
+  Bool      getVspDepthDisableFlag()            { return m_bVspDepthDisableFlag; }
+#endif
 #endif
 
 protected:

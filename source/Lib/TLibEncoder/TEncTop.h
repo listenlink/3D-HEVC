@@ -149,10 +149,6 @@ private:
   TComPic*                m_pcPicAvail;
 #endif
 
-#if VSP_SLICE_HEADER
-  Bool                    m_bUseVSP;
-#endif
-
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
@@ -248,11 +244,6 @@ public:
 #if VSP_N
   TComPic*                getVSPBuf             () { return m_pcPicVSP; }
   TComPic*                getVSPAvailBuf        () { return m_pcPicAvail; }
-#endif
-
-#if VSP_SLICE_HEADER
-  Void                    setUseVSP   ( Bool val ) { m_bUseVSP = val; }
-  Bool                    getUseVSP             () { return m_bUseVSP; }
 #endif
 
   // -------------------------------------------------------------------------------------------------------------------

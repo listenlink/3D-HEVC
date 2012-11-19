@@ -694,6 +694,18 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   {
     WRITE_FLAG( 1, "base_view_flag" );   
   }
+#if VSP_N
+  if( pcSPS->getViewId() )
+  {
+    WRITE_FLAG( pcSPS->getVspPresentFlag(), "vsp_present_flag" );
+#if VSP_CFG
+    if( pcSPS->getVspPresentFlag() )
+    {
+      WRITE_FLAG( pcSPS->getVspDepthPresentFlag(), "vsp_depth_present_flag" );
+    }
+#endif
+  }
+#endif
   WRITE_FLAG( 0, "sps_extension2_flag" );
 }
 
@@ -706,6 +718,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 {
 #if ENC_DEC_TRACE  
   xTraceSliceHeader (pcSlice);
+#endif
+
+#if VSP_CFG
+  Int iNumOfVspRefsL0 = 0;
+  Int iNumOfVspRefsL1 = 0;
 #endif
 
   // if( nal_ref_idc != 0 )
@@ -948,11 +965,44 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_UVLC( pcSlice->getAPS()->getAPSID(), "aps_id");
     }
 
+#if VSP_SLICE_HEADER && VSP_CFG
+    if( pcSlice->getSPS()->getViewId()!=0 
+     && pcSlice->getSliceType() != I_SLICE
+     && pcSlice->getSPS()->getVspPresentFlag()
+      )
+    {
+      if( !pcSlice->getSPS()->isDepth() || pcSlice->getSPS()->getVspDepthPresentFlag() )
+      {
+        WRITE_UVLC( pcSlice->getNumVspRefPics(), "num_vsp_ref_pics");
+        for( UInt i = 0; i < pcSlice->getNumVspRefPics(); i++ )
+        {
+          WRITE_UVLC( pcSlice->getVspRefPos( REF_PIC_LIST_0, i ), "vsp_ref_list0_pos");
+          if( pcSlice->getSliceType() == B_SLICE )
+          {
+            WRITE_UVLC( pcSlice->getVspRefPos( REF_PIC_LIST_1, i ), "vsp_ref_list1_pos");
+          }
+        }
+        iNumOfVspRefsL0 = ( (pcSlice->getSPS()->getViewId()==0 
+                         || (!pcSlice->getSPS()->getVspDepthPresentFlag() && pcSlice->getSPS()->isDepth()) 
+                         || !pcSlice->getVspFlag() 
+                         || pcSlice->getVspRefPos(REF_PIC_LIST_0, 0) == 0 ) ? 0 : 1 );
+        iNumOfVspRefsL1 = ( (pcSlice->getSPS()->getViewId()==0 
+                         || (!pcSlice->getSPS()->getVspDepthPresentFlag() && pcSlice->getSPS()->isDepth()) 
+                         || !pcSlice->getVspFlag() 
+                         || pcSlice->getVspRefPos(REF_PIC_LIST_1, 0) == 0 ) ? 0 : 1 );
+      }
+    }
+#endif
+
     // we always set num_ref_idx_active_override_flag equal to one. this might be done in a more intelligent way 
     if (!pcSlice->isIntra())
     {
       WRITE_FLAG( 1 ,                                             "num_ref_idx_active_override_flag");
+#if VSP_CFG
+      WRITE_CODE( pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) - 1 - iNumOfVspRefsL0, 3, "num_ref_idx_l0_active_minus1" );
+#else
       WRITE_CODE( pcSlice->getNumRefIdx( REF_PIC_LIST_0 ) - 1, 3, "num_ref_idx_l0_active_minus1" );
+#endif
     }
     else
     {
@@ -960,7 +1010,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
     if (pcSlice->isInterB())
     {
+#if VSP_CFG
+      WRITE_CODE( pcSlice->getNumRefIdx( REF_PIC_LIST_1 ) - 1 - iNumOfVspRefsL1, 3, "num_ref_idx_l1_active_minus1" );
+#else
       WRITE_CODE( pcSlice->getNumRefIdx( REF_PIC_LIST_1 ) - 1, 3, "num_ref_idx_l1_active_minus1" );
+#endif
     }
     else
     {
@@ -1049,7 +1103,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     WRITE_FLAG(pcSlice->getRefPicListCombinationFlag() ? 1 : 0,       "ref_pic_list_combination_flag" );
     if(pcSlice->getRefPicListCombinationFlag())
     {
+#if VSP_CFG
+      WRITE_UVLC( pcSlice->getNumRefIdx(REF_PIC_LIST_C) - 1 - iNumOfVspRefsL0,          "num_ref_idx lc_active_minus1");
+#else
       WRITE_UVLC( pcSlice->getNumRefIdx(REF_PIC_LIST_C) - 1,          "num_ref_idx lc_active_minus1");
+#endif
       
 #if H0412_REF_PIC_LIST_RESTRICTION
       if( pcSlice->getSPS()->getListsModificationPresentFlag() )
@@ -1179,18 +1237,21 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "maxNumMergeCand");
 #endif
 
+#if !VSP_CFG
 #if VSP_SLICE_HEADER
   if( pcSlice->getSPS()->getViewId()!=0 
-#if VSP_TEXT_ONLY
-      && !(pcSlice->getSPS()->isDepth()) 
-#endif
+   && pcSlice->getSPS()->getVspPresentFlag()
     )
   {
     WRITE_FLAG( pcSlice->getVspFlag()?1:0, "vsp_flag" );
 //    printf("[VSP: %d] ", pcSlice->getVspFlag()?1:0);
+    if( pcSlice->getVspFlag() )
+    {
+      WRITE_FLAG( pcSlice->getVspDepthDisableFlag()?1:0 , "vsp_depth_disable_flag" );
+    }
   }
 #endif
-
+#endif
 }
 
 

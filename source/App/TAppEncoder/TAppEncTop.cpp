@@ -206,6 +206,9 @@ Void TAppEncTop::xInitLibCfg()
 #if SAIT_VSO_EST_A0033
     m_acTEncTopList[iViewIdx]->setUseEstimatedVSD              ( false );
 #endif
+#if LGE_WVSO_A0119
+    m_acTEncTopList[iViewIdx]->setUseWVSO                      ( false ); 
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -360,8 +363,16 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
 #endif
+#if OL_DEPTHLIMIT_A0044
+    m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
+#endif
 #if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
+#endif
+
+#if VSP_N
+    m_acTEncTopList[iViewIdx]->setUseVSP( m_bUseVSP );
+    m_acTEncTopList[iViewIdx]->setVSPDepthDisable( m_bVSPDepthDisable );
 #endif
   }
   if( m_bUsingDepthMaps )
@@ -523,6 +534,9 @@ Void TAppEncTop::xInitLibCfg()
 #if SAIT_VSO_EST_A0033
       m_acTEncDepthTopList[iViewIdx]->setUseEstimatedVSD              ( m_bUseEstimatedVSD );
 #endif
+#if LGE_WVSO_A0119
+      m_acTEncDepthTopList[iViewIdx]->setUseWVSO                      ( m_bUseWVSO         );
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -633,8 +647,16 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
+#if OL_DEPTHLIMIT_A0044
+    m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
+#endif
 #if HHI_MPI
      m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#endif
+
+#if VSP_N
+      m_acTEncDepthTopList[iViewIdx]->setUseVSP( m_bUseVSP );
+      m_acTEncDepthTopList[iViewIdx]->setVSPDepthDisable( m_bVSPDepthDisable );
 #endif
     }
   }
@@ -689,6 +711,19 @@ Void TAppEncTop::xInitLibCfg()
     {
       AOT(true);
     }
+#if LGE_WVSO_A0119 
+    for ( Int iViewNum = 0; iViewNum < m_iNumberOfViews; iViewNum++ )
+    {
+      for (Int iContent = 0; iContent < 2; iContent++ )
+      {
+        TEncTop* pcEncTop = ( iContent == 0 ) ? m_acTEncTopList[iViewNum] : m_acTEncDepthTopList[iViewNum]; 
+        pcEncTop->setUseWVSO  ( m_bUseWVSO );
+        pcEncTop->setVSOWeight( m_iVSOWeight );
+        pcEncTop->setVSDWeight( m_iVSDWeight );
+        pcEncTop->setDWeight  ( m_iDWeight );
+      }
+    }
+#endif
   }
 #endif
 
@@ -937,9 +972,9 @@ Void TAppEncTop::encode()
 #endif
         iNumEncoded = 0;
 
-#if VSP_SLICE_HEADER
-        m_acTEncTopList     [iViewIdx]->setUseVSP( (gopId%VSP_FRAME_INTERVAL==0) );
-        m_acTEncDepthTopList[iViewIdx]->setUseVSP( (gopId%VSP_FRAME_INTERVAL==0) );
+#if VSP_SLICE_HEADER && !VSP_CFG
+        if( m_acTEncTopList     [iViewIdx]->getUseVSP() ) m_acTEncTopList     [iViewIdx]->setUseVSP( (gopId%VSP_FRAME_INTERVAL==0) );
+        if( m_acTEncDepthTopList[iViewIdx]->getUseVSP() ) m_acTEncDepthTopList[iViewIdx]->setUseVSP( (gopId%VSP_FRAME_INTERVAL==0) );
 #endif
 
 #if VSP_N
@@ -962,6 +997,7 @@ Void TAppEncTop::encode()
 #if VSP_N
 #if VSP_SLICE_HEADER
           if( m_acTEncDepthTopList[iViewIdx]->getUseVSP() )
+          if( !m_acTEncDepthTopList[iViewIdx]->getVSPDepthDisable() )
 #endif
             xStoreVSPInBuffer(m_acTEncDepthTopList[iViewIdx]->getVSPBuf(), m_acTEncDepthTopList[iViewIdx]->getVSPAvailBuf(), iViewIdx, true, gopId);
 #endif
@@ -1002,6 +1038,16 @@ Void TAppEncTop::encode()
   pcDepthPicYuvOrg->destroy();
   delete pcDepthPicYuvOrg;
   pcDepthPicYuvOrg = NULL;
+  
+#if FIX_MEM_LEAKS
+  if ( pcPdmDepthOrg != NULL )
+  {
+    pcPdmDepthOrg->destroy();
+    delete pcPdmDepthOrg;     
+    pcPdmDepthOrg = NULL; 
+  };
+#endif
+
   
   for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
   {
@@ -1262,7 +1308,11 @@ Void TAppEncTop::getUsedPelsMap( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUse
 #if HHI_VSO_SPEEDUP_A0033
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset )
 {
+#if FIX_VSO_SETUP
+  m_cRendererModel.setupPart( iHorOffset, Min( g_uiMaxCUHeight, m_iSourceHeight - iHorOffset ) ); 
+#else
   m_cRendererModel.setHorOffset( iHorOffset ); 
+#endif
 #else
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent )
 {
@@ -1409,11 +1459,7 @@ TComPic* TAppEncTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
 Void TAppEncTop::xStoreVSPInBuffer(TComPic* pcPicVSP, TComPic* pcPicAvail, Int iCodedViewIdx, Bool bDepth, Int gopId)
 {
   //first view does not have VSP 
-#if VSP_TEXT_ONLY
-  if((iCodedViewIdx == 0)||(bDepth))
-#else
   if((iCodedViewIdx == 0))
-#endif
     return;
 
   AOT( iCodedViewIdx <= 0);
@@ -1438,8 +1484,9 @@ Void TAppEncTop::xStoreVSPInBuffer(TComPic* pcPicVSP, TComPic* pcPicAvail, Int i
     //  return;
   }
   pcPicVSP->getSlice(0)->setPOC( iCurPoc );
+  pcPicVSP->getSlice(0)->setViewId( iCodedViewIdx );
 
-  Int iNeighborViewId = 0;
+  Int iNeighborViewId = 0;  //iCodedViewIdx + m_GOPListsMvc[iCodedViewIdx][gopId].m_VSPRefPics[0];
   Bool bRenderFromLeft;
   //check if the neighboring view is situated to the left of the current view
   bRenderFromLeft = ((m_cCameraData.getBaseSortedId2Id()[iCodedViewIdx]-m_cCameraData.getBaseSortedId2Id()[iNeighborViewId])>0);

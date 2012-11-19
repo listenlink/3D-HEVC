@@ -45,9 +45,6 @@
 #include "TLibCommon/TComTrQuant.h"
 #include "TLibCommon/TComBitCounter.h"
 #include "TLibCommon/TComDataCU.h"
-#if DEBUGLOGOUT
-#include "TLibCommon/DebugLog.h"
-#endif
 
 #include "TEncEntropy.h"
 #include "TEncSearch.h"
@@ -115,10 +112,6 @@ private:
 #endif
 
 public:
-#if DEBUGLOGOUT
-  DebugLog                m_cDebug;
-#endif
-
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
   

@@ -102,7 +102,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
   if (!m_pchBitstreamFile)
   {
-    fprintf(stderr, "No input file specifed, aborting\n");
+    fprintf(stderr, "No input file specified, aborting\n");
     return false;
   }
 

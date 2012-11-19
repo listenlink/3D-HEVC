@@ -635,15 +635,22 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
   UInt uiUnaryIdx = 0;
   uiNumCand = pcCU->getSlice()->getMaxNumMergeCand();
 #if HHI_MPI
-#if VSP_TEXT_ONLY
+#if VSP_N
   TComDataCU* pcTextCU = pcCU->getSlice()->getSPS()->getUseMVI() ? pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() ) : NULL;
   Int aiRefIdxVsp[2] = { pcTextCU ? pcTextCU->getCUMvField( RefPicList(0) )->getRefIdx( uiAbsPartIdx ) : -1,
                          pcTextCU ? pcTextCU->getCUMvField( RefPicList(1) )->getRefIdx( uiAbsPartIdx ) : -1 };
-  const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE
-    && !( aiRefIdxVsp[0] >= 0 && pcTextCU->getSlice()->getRefViewId( RefPicList(0), aiRefIdxVsp[0] ) == NUM_VIEW_VSP )
-    && !( aiRefIdxVsp[1] >= 0 && pcTextCU->getSlice()->getRefViewId( RefPicList(1), aiRefIdxVsp[1] ) == NUM_VIEW_VSP );
+#if VSP_CFG
+  const Bool bMVIAvailable = (pcCU->getSlice()->getSPS()->getVspDepthPresentFlag() || pcCU->getSlice()->getViewId()==0) 
+                                ? pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE 
+                                : pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE
+                                  && !( aiRefIdxVsp[0] >= pcCU->getSlice()->getNumRefIdx( RefPicList(0) ) )
+                                  && !( aiRefIdxVsp[1] >= pcCU->getSlice()->getNumRefIdx( RefPicList(1) ) );
 #else
-  const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
+  const Bool bMVIAvailable = pcCU->getSlice()->getVspDepthDisableFlag() ? pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE
+                                                                          && !( aiRefIdxVsp[0] >= 0 && pcTextCU->isVspRef( RefPicList(0), aiRefIdxVsp[0] ) )
+                                                                          && !( aiRefIdxVsp[1] >= 0 && pcTextCU->isVspRef( RefPicList(1), aiRefIdxVsp[1] ) ) 
+                                                                        : pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
+#endif
 #endif
   const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : uiNumCand;
 #endif

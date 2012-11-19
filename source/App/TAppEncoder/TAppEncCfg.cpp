@@ -119,6 +119,27 @@ TAppEncCfg::~TAppEncCfg()
     free (  m_pchVSOConfig );
 #endif
 
+#if FIX_MEM_LEAKS
+ if ( m_pchCameraParameterFile != NULL )
+   free ( m_pchCameraParameterFile ); 
+
+ if ( m_pchBaseViewCameraNumbers != NULL )
+   free ( m_pchBaseViewCameraNumbers ); 
+
+ if ( m_pchdQPFile      != NULL ) 
+   free ( m_pchdQPFile      );
+
+ if ( m_pchColumnWidth  != NULL ) 
+   free ( m_pchColumnWidth  );
+
+ if ( m_pchRowHeight    != NULL ) 
+   free ( m_pchRowHeight    );
+
+ if ( m_scalingListFile != NULL ) 
+   free ( m_scalingListFile );
+
+#endif   
+
 }
 
 Void TAppEncCfg::create()
@@ -167,6 +188,22 @@ std::istringstream &operator>>( std::istringstream &in, GOPEntryMvc &entry )    
   {
     in>>entry.m_interViewRefPosL1[i];
   }
+#if VSP_CFG
+  in>>entry.m_numVSPRefPics;
+  for( Int i = 0; i < entry.m_numVSPRefPics; i++ )
+  {
+    in>>entry.m_VSPRefPics[i];
+  }
+  for( Int i = 0; i < entry.m_numVSPRefPics; i++ )
+  {
+    in>>entry.m_VSPRefPosL0[i];
+  }
+  for( Int i = 0; i < entry.m_numVSPRefPics; i++ )
+  {
+    in>>entry.m_VSPRefPosL1[i];
+  }
+#endif
+
   return in;
 }
 
@@ -338,7 +375,21 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if HHI_VSO_DIST_INT
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
+#if LGE_WVSO_A0119
+  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
+  ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
+  ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
+  ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
+#endif
 
+#if OL_DEPTHLIMIT_A0044
+  ("DPL",                             m_bDepthPartitionLimiting , false         , "Use DepthPartitionLimiting" )
+#endif
+#endif
+
+#if VSP_N
+  ("VSP",                             m_bUseVSP                 , false         , "Use VSP" )    
+  ("VSPDepthDisable",                 m_bVSPDepthDisable        , false         , "Use VSP Depth Disable" )    
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -497,7 +548,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
   m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
-
+  
   if ( m_bUsingDepthMaps )
   {
     for(Int i = 0; i < m_pchDepthReconFileList.size() ; i++)
@@ -647,6 +698,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_bUseVSO = m_bUseVSO && m_bUsingDepthMaps && (m_uiVSOMode != 0);
 #endif
 
+#if LGE_WVSO_A0119
+  m_bUseWVSO = m_bUseVSO && m_bUseWVSO && m_bUsingDepthMaps;
+#endif
   xCleanUpVectors();
 
 #if HHI_VSO
@@ -1106,6 +1160,51 @@ Void TAppEncCfg::xCheckCodingStructureMvc()
     }
   }
   xConfirmPara( bErrorIvpEnhV, "Invalid inter-view coding structure for enhancement views given" );
+
+#if VSP_CFG
+  // validate vsp refs
+  Bool bErrorVspEnhV = false;
+  if( m_iNumberOfViews > 1 )
+  {
+    for( Int k = 1; k < m_iNumberOfViews; k++ )
+    {
+      for( Int i = 0; i < MAX_GOP+1; i++ )
+      {
+        if( m_GOPListsMvc[k][i].m_numVSPRefPics < 0 || m_GOPListsMvc[k][i].m_numVSPRefPics > 1 )
+        {
+          printf( "\nError: m_numVSPRefPics < 0 or m_numVSPRefPics > 1 \n" );
+          bErrorVspEnhV = true;
+        }
+
+        for( Int j = 0; j < m_GOPListsMvc[k][i].m_numVSPRefPics; j++ )
+        {
+          Int iAbsViewId = m_GOPListsMvc[k][i].m_VSPRefPics[j] + k;
+          if( iAbsViewId != 0 )
+          {
+            printf( "\nError: VSP is allowed to reference only base view\n" );
+            bErrorVspEnhV = true;
+          }
+          if( m_GOPListsMvc[k][i].m_sliceType == 'P' && m_GOPListsMvc[k][i].m_VSPRefPosL1[j] != 0 )
+          {
+            printf( "\nError: m_sliceType == P and m_VSPRefPosL1 != 0\n" );
+            bErrorVspEnhV = true;
+          }
+        }
+
+        for( Int j = 0; j < m_GOPListsMvc[k][i].m_numVSPRefPics || j < m_GOPListsMvc[k][i].m_numInterViewRefPics; j++ )
+        {
+          if( (m_GOPListsMvc[k][i].m_VSPRefPosL0[j] != 0 && m_GOPListsMvc[k][i].m_VSPRefPosL0[j] == m_GOPListsMvc[k][i].m_interViewRefPosL0[j]) 
+           || (m_GOPListsMvc[k][i].m_VSPRefPosL1[j] != 0 && m_GOPListsMvc[k][i].m_VSPRefPosL1[j] == m_GOPListsMvc[k][i].m_interViewRefPosL1[j]) )
+          {
+            printf( "\nError: vsp_ref_list_pos[%d] == IV ref list pos[%d]\n", j, j );
+            bErrorVspEnhV = true;
+          }
+        }
+      }
+    }
+  }
+  xConfirmPara( bErrorVspEnhV, "Invalid VSP coding structure for enhancement views given" );
+#endif
 
   // validate temporal coding structure
   if( !bErrorMvePoc && !bErrorIvpBase && !bErrorIvpEnhV )
@@ -1691,12 +1790,21 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
-#endif  
+#endif
+#if LGE_WVSO_A0119
+  printf("WVSO:%d ", m_bUseWVSO );
+#endif
+#if OL_DEPTHLIMIT_A0044
+  printf("DPL:%d ", m_bDepthPartitionLimiting);
+#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );
 #endif
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
+#endif
+#if LGE_WVSO_A0119
+  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   

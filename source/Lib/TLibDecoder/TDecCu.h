@@ -45,9 +45,6 @@
 #include "TLibCommon/TComTrQuant.h"
 #include "TLibCommon/TComPrediction.h"
 #include "TDecEntropy.h"
-#if DEBUGIMGOUT || DEBUGLOGOUT
-#include "TLibCommon/DebugLog.h"
-#endif
 
 //! \ingroup TLibDecoder
 //! \{
@@ -83,10 +80,6 @@ public:
   TDecCu();
   virtual ~TDecCu();
   
-#if DEBUGLOGOUT
-  DebugLog            m_cDebug;
-#endif
-
   /// initialize access channels
   Void  init                    ( TDecEntropy* pcEntropyDecoder, TComTrQuant* pcTrQuant, TComPrediction* pcPrediction );
   
@@ -130,10 +123,6 @@ protected:
   Void setdQPFlag               ( Bool b )                { m_bDecodeDQP = b;           }
 #if LOSSLESS_CODING 
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt absPartIdx, UInt depth);
-#endif
-#if DEBUGIMGOUT
-  Void xColsetToPic             ( TComDataCU* pcCU, TComPicYuv* pcPicYuv, UInt uiZorderIdx, UInt uiDepth );
-  Void xColsetToPicMerge        ( TComDataCU* pcCU, TComPicYuv* pcPicYuv, UInt uiZorderIdx, UInt uiDepth );
 #endif
 };
 

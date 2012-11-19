@@ -43,31 +43,35 @@
 
 #define VSP_N                             1
 #if VSP_N
-#define VSP_TEXT_ONLY                     1
-#define NUM_VIEW_VSP                      99
+#define VSP_BUGFIX                        1
 #define VSP_N_DUMP                        0
 #define FORCE_REF_VSP                     2   // 0=NotUseVSPSKIP 1:VSPSKIPforFlag 2:VSPSKIPforMergeIdx
-#define VSP_MV_ZERO                       0   // use zero vector for VSP
+#define VSP_MV_ZERO                       1   // use zero vector for VSP
 #if VSP_MV_ZERO
 #define AMVP_VSP_UNAVAILABLE              1
 #endif
 #define VSP_MERGE_POS                     5   // position of vsp in merge list (0..5)
 #define NTT_SUBPEL                        1
+#define VSP_CFG                           1
 #endif
-#define DEBUGIMGOUT                       0   //Debug YUVImage Out
-#define DEBUGLOGOUT                       0   //Debug Log Out
 
 #define VSP_SLICE_HEADER                  1
+#if !VSP_CFG
 #define VSP_FRAME_INTERVAL                2
+#endif
 
 #define FIXES                             1
 #define POZNAN_CABAC_INIT_FLAG_FIX        1
 #define FIX_DECODING_WO_WRITING           1
 #define FIX_INIT_ROM                      1
 #define FIX_VIRT_DESTRUCTOR               1
-#define FIX_DBL_CONTROL_DEFAULT           1
+#define FIX_MEM_LEAKS                     1
+#define FIX_VSO_SETUP                     1
+#define FIX_COMP_WARNING_INIT             1
 #define FIX_RDO_MACRO                     1
 #define FIX_LG_RESTRICTEDRESPRED_M24766   1
+#define FIX_REMOVE_TILE_DEPENDENCE        1
+#define FIX_DBL_CONTROL_DEFAULT           1
 
 
 #define LGE_EDGE_INTRA                    1   // JCT2-A0070
@@ -115,7 +119,14 @@
 #define HHI_VSO_SET_OPTIM                 1 // remove unnecessary updates (works only with HHI_VSO_FIX 1 properly)
 #define SAIT_VSO_EST_A0033                1 // JCT2-A0033 modification 3
 #define LGE_VSO_EARLY_SKIP_A0093          1 // JCT2-A0093 modification 4
+#define LGE_WVSO_A0119                    1 // JCT2-A0119 Depth Metric with a weighted depth fidelity term
 
+#define OL_DEPTHLIMIT_A0044               1 //JCT2-A0044
+#if OL_DEPTHLIMIT_A0044
+#define OL_DO_NOT_LIMIT_INTRA_SLICES_PART 1 //Turn this on to not perform depth limiting for I-SLICES.
+#define OL_END_CU                         MAX_INT //Default for initializing the partition information buffer
+#define OL_PART_BUF_SIZE                  86 //maximum number of possible partition bits in a CU
+#endif
 
 #define HHI_INTERVIEW_SKIP                1
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
