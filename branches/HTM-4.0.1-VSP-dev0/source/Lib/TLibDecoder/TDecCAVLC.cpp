@@ -1756,6 +1756,20 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
       }
     }
+#if VSP_N
+    if( pcSPS->getViewId() )
+    {
+      READ_FLAG( uiCode, "vsp_present_flag" );
+      pcSPS->setVspPresentFlag( (Bool)uiCode );
+#if VSP_CFG
+      if( pcSPS->getVspPresentFlag() )
+      {
+        READ_FLAG( uiCode, "vsp_depth_present_flag" );
+        pcSPS->setVspDepthPresentFlag( (Bool)uiCode );
+      }
+#endif
+    }
+#endif
     READ_FLAG( uiCode, "sps_extension2_flag");
     if (uiCode)
     {
@@ -1780,7 +1794,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 {
   UInt  uiCode;
   Int   iCode;
-  
+#if VSP_CFG
+  Int   iNumOfVspRefsL0 = 0;
+  Int   iNumOfVspRefsL1 = 0;
+#endif
 #if ENC_DEC_TRACE
   xTraceSliceHeader(rpcSlice);
 #endif
@@ -2005,15 +2022,62 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       READ_UVLC (    uiCode, "aps_id" );  rpcSlice->setAPSId(uiCode);
     }
+
+#if VSP_SLICE_HEADER && VSP_CFG
+    if( rpcSlice->getSPS()->getViewId()!=0 
+     && rpcSlice->getSliceType() != I_SLICE
+     && rpcSlice->getSPS()->getVspPresentFlag()
+      )
+    {
+      if( !rpcSlice->getSPS()->isDepth() || rpcSlice->getSPS()->getVspDepthPresentFlag() )
+      {
+        READ_UVLC( uiCode, "num_vsp_ref_pics");
+        rpcSlice->setVspFlag( uiCode > 0 ? true : false );
+        rpcSlice->setNumVspRefPics( uiCode );
+        //printf("SH:num_vsp_ref_pics(%d)\n",uiCode);
+        for( UInt i = 0; i < rpcSlice->getNumVspRefPics(); i++ )
+        {
+          READ_UVLC( uiCode, "vsp_ref_list0_pos");
+          rpcSlice->setVspRefPos( REF_PIC_LIST_0, i, uiCode );
+          //printf("SH:vsp_ref_list0_pos(%d)\n",uiCode);
+          if( rpcSlice->getSliceType() == B_SLICE )
+          {
+            READ_UVLC( uiCode, "vsp_ref_list1_pos");
+            rpcSlice->setVspRefPos( REF_PIC_LIST_1, i, uiCode );
+            //printf("SH:vsp_ref_list1_pos(%d)\n",uiCode);
+          }
+        }
+        iNumOfVspRefsL0 = ( (rpcSlice->getSPS()->getViewId()==0 
+                         || (!rpcSlice->getSPS()->getVspDepthPresentFlag() && rpcSlice->getSPS()->isDepth()) 
+                         || !rpcSlice->getVspFlag() 
+                         || rpcSlice->getVspRefPos(REF_PIC_LIST_0, 0) == 0 ) ? 0 : 1 );
+        iNumOfVspRefsL1 = ( (rpcSlice->getSPS()->getViewId()==0 
+                         || (!rpcSlice->getSPS()->getVspDepthPresentFlag() && rpcSlice->getSPS()->isDepth()) 
+                         || !rpcSlice->getVspFlag() 
+                         || rpcSlice->getVspRefPos(REF_PIC_LIST_1, 0) == 0 ) ? 0 : 1 );
+      }
+    }
+#endif
+
     if (!rpcSlice->isIntra())
     {
       READ_FLAG( uiCode, "num_ref_idx_active_override_flag");
       if (uiCode)
       {
-        READ_CODE (3, uiCode, "num_ref_idx_l0_active_minus1" );  rpcSlice->setNumRefIdx( REF_PIC_LIST_0, uiCode + 1 );
+        READ_CODE (3, uiCode, "num_ref_idx_l0_active_minus1" );  
+#if VSP_CFG
+        rpcSlice->setNumRefIdx( REF_PIC_LIST_0, uiCode + 1 + iNumOfVspRefsL0 );
+#else
+        rpcSlice->setNumRefIdx( REF_PIC_LIST_0, uiCode + 1 );
+#endif
         if (rpcSlice->isInterB())
         {
-          READ_CODE (3, uiCode, "num_ref_idx_l1_active_minus1" );  rpcSlice->setNumRefIdx( REF_PIC_LIST_1, uiCode + 1 );
+          READ_CODE (3, uiCode, "num_ref_idx_l1_active_minus1" );  
+#if VSP_CFG
+          rpcSlice->setNumRefIdx( REF_PIC_LIST_1, uiCode + 1 + iNumOfVspRefsL1 );
+#else
+          rpcSlice->setNumRefIdx( REF_PIC_LIST_1, uiCode + 1 );
+#endif
         }
         else
         {
@@ -2182,7 +2246,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     READ_FLAG( uiCode, "ref_pic_list_combination_flag" );       rpcSlice->setRefPicListCombinationFlag( uiCode ? 1 : 0 );
     if(uiCode)
     {
-      READ_UVLC( uiCode, "num_ref_idx_lc_active_minus1" );      rpcSlice->setNumRefIdx( REF_PIC_LIST_C, uiCode + 1 );
+      READ_UVLC( uiCode, "num_ref_idx_lc_active_minus1" );      
+#if VSP_CFG
+      rpcSlice->setNumRefIdx( REF_PIC_LIST_C, uiCode + 1 + iNumOfVspRefsL0 );
+#else
+      rpcSlice->setNumRefIdx( REF_PIC_LIST_C, uiCode + 1 );
+#endif
       
 #if H0412_REF_PIC_LIST_RESTRICTION
       if(rpcSlice->getSPS()->getListsModificationPresentFlag() )
@@ -2347,16 +2416,21 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   assert(rpcSlice->getMaxNumMergeCand()==MRG_MAX_NUM_CANDS_SIGNALED);
 #endif
 
+#if !VSP_CFG
 #if VSP_SLICE_HEADER
   if( rpcSlice->getSPS()->getViewId()!=0 
-#if VSP_TEXT_ONLY
-      && !(rpcSlice->getSPS()->isDepth()) 
-#endif
+   && rpcSlice->getSPS()->getVspPresentFlag()
     )
   {
     READ_FLAG( uiCode, "vsp_flag" );
     rpcSlice->setVspFlag( uiCode ? true : false );
+    if( rpcSlice->getVspFlag() )
+    {
+      READ_FLAG( uiCode, "vsp_depth_disable_flag" );
+      rpcSlice->setVspDepthDisableFlag( uiCode ? true : false );
+    }
   }
+#endif
 #endif
 
   if (!bEntropySlice)

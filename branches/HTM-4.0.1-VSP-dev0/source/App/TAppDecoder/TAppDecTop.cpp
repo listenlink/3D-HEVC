@@ -261,17 +261,6 @@ Void TAppDecTop::xDestroyDecLib()
       m_tVideoIOYuvReconFile[viewDepthIdx] = NULL ;
     }
   }
-#if DEBUGIMGOUT
-  for(Int viewDepthIdx=0; viewDepthIdx<m_tVideoIOYuvReconDbgFile.size() ; viewDepthIdx++)
-  {
-    if( m_tVideoIOYuvReconDbgFile[viewDepthIdx] )
-    {
-      m_tVideoIOYuvReconDbgFile[viewDepthIdx]->close();
-      delete m_tVideoIOYuvReconDbgFile[viewDepthIdx]; 
-      m_tVideoIOYuvReconDbgFile[viewDepthIdx] = NULL ;
-    }
-  }
-#endif
 
   for(Int viewDepthIdx=0; viewDepthIdx<m_tDecTop.size() ; viewDepthIdx++)
   {
@@ -340,13 +329,6 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
         m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
 #endif
       }
-#if DEBUGIMGOUT
-#if PIC_CROPPING
-      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
-#else
-      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), pcPic->getSlice(0)->getSPS()->getPad() );
-#endif
-#endif   
       
       // update POC of display order
       m_pocLastDisplay[viewDepthId] = pcPic->getPOC();
@@ -405,13 +387,6 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
         m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
 #endif
       }
-#if DEBUGIMGOUT
-#if PIC_CROPPING
-      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
-#else
-      m_tVideoIOYuvReconDbgFile[viewDepthId]->write( pcPic->getPicYuvRecDbg(), pcPic->getSlice(0)->getSPS()->getPad() );
-#endif
-#endif
       
       // update POC of display order
       m_pocLastDisplay[viewDepthId] = pcPic->getPOC();
@@ -500,31 +475,7 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
 #if FIX_DECODING_WO_WRITING
   }
 #endif
-#if DEBUGIMGOUT
-  while( m_tVideoIOYuvReconDbgFile.size() < newNumberOfViewDepth)
-  {
-    m_tVideoIOYuvReconDbgFile.push_back(new TVideoIOYuv);
-    Char buffer[4];
-    sprintf(buffer,"_%i", (Int)(m_tVideoIOYuvReconDbgFile.size()-1) / 2 );
-    Char* nextFilename = NULL;
-    if( (m_tVideoIOYuvReconDbgFile.size() % 2) == 0 )
-    {
-      Char* pchTempFilename = NULL;
-      xAppendToFileNameEnd( "DebugImg.yuv", "_depth", pchTempFilename);
-      xAppendToFileNameEnd( pchTempFilename, buffer, nextFilename);
-      free ( pchTempFilename );
-    }
-    else
-    {
-      xAppendToFileNameEnd( "DebugImg.yuv", buffer, nextFilename);
-    }
-    if( isDepth || ( !isDepth && (m_tVideoIOYuvReconDbgFile.size() % 2) == 1 ) )
-    {
-      m_tVideoIOYuvReconDbgFile.back()->open( nextFilename, true, m_outputBitDepth, g_uiBitDepth + g_uiBitIncrement );
-    }
-    free ( nextFilename );
-  }
-#endif
+
   while( m_pocLastDisplay.size() < newNumberOfViewDepth )
   {
     m_pocLastDisplay.push_back(-MAX_INT+m_iSkipFrame);
@@ -586,13 +537,10 @@ TComPic* TAppDecTop::xGetPicFromView( Int viewId, Int poc, Bool isDepth )
 Void TAppDecTop::storeVSPInBuffer(TComPic* pcPicVSP, TComPic* pcPicAvail, Int iCodedViewIdx, Int iCoddedViewOrderIdx, Int iCurPoc, Bool bDepth)
 {
   //first view does not have VSP 
-#if VSP_TEXT_ONLY
-  if((iCodedViewIdx == 0)||(bDepth))
-#else
   if((iCodedViewIdx == 0))
-#endif
     return;
   pcPicVSP->getSlice(0)->setPOC( iCurPoc );
+  pcPicVSP->getSlice(0)->setViewId( iCodedViewIdx );
   Int iNeighborViewId = 0;
   Bool bRenderFromLeft;
   //check if the neighboring view is situated to the left of the current view

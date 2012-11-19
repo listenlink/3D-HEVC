@@ -111,6 +111,9 @@ TComSlice::TComSlice()
 #if SONY_COLPIC_AVAILABILITY
 , m_iViewOrderIdx                 ( 0 )
 #endif
+#if VSP_CFG
+, m_uiNumVspRefPics               ( 0 )
+#endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
 
@@ -145,6 +148,12 @@ TComSlice::TComSlice()
 
 #if VSP_SLICE_HEADER
   m_bVspFlag = false;
+#if VSP_CFG
+  memset( m_uiVspRefPos[0], 0, sizeof(UInt)*MAX_NUM_REF_PICS );
+  memset( m_uiVspRefPos[1], 0, sizeof(UInt)*MAX_NUM_REF_PICS );
+#else
+  m_bVspDepthDisableFlag = false;
+#endif
 #endif
 }
 
@@ -194,6 +203,13 @@ Void TComSlice::initSlice()
 #endif
 #if VSP_SLICE_HEADER
   m_bVspFlag = false;
+#if VSP_CFG
+  m_uiNumVspRefPics = 0;
+  memset( m_uiVspRefPos[0], 0, sizeof(UInt)*MAX_NUM_REF_PICS );
+  memset( m_uiVspRefPos[1], 0, sizeof(UInt)*MAX_NUM_REF_PICS );
+#else
+  m_bVspDepthDisableFlag = false;
+#endif
 #endif
 
 }
@@ -543,10 +559,21 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
     for( i = 0; i < NumPocIvCurr  && cIdx < numRpsCurrTempList1; cIdx++, i++ ) { refPicListTemp1[cIdx] = RefPicSetIvCurr [i]; }
   }
 
+#if VSP_CFG
+  UInt cIdxTmp;
+  for( cIdx = 0, cIdxTmp = 0; cIdx <= num_ref_idx_l0_active_minus1; cIdx ++ )
+#else
   for( cIdx = 0; cIdx <= num_ref_idx_l0_active_minus1; cIdx ++ )
+#endif
   {
 #if VSP_N
+#if VSP_CFG
+    Int iVspRefPos = getVspRefPos(REF_PIC_LIST_0, 0);
+    iVspRefPos = ( iVspRefPos > 0 ? iVspRefPos - 1 : -1 );
+    if( pcVspPic && iVspRefPos != -1 && cIdx == (iVspRefPos >= num_ref_idx_l0_active_minus1 ? num_ref_idx_l0_active_minus1 : iVspRefPos) )
+#else
     if( pcVspPic && cIdx == num_ref_idx_l0_active_minus1 )
+#endif
     {
       m_apcRefPicList[0][cIdx] = RefPicSetVspCurr[0];
 #if FORCE_REF_VSP
@@ -554,7 +581,14 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
 #endif
     }
     else
+    {
+#if VSP_CFG
+      m_apcRefPicList[0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdxTmp) ] : refPicListTemp0[cIdxTmp];
+      cIdxTmp++;
+#else
       m_apcRefPicList[0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdx) ] : refPicListTemp0[cIdx];
+#endif
+    }
 #else
     m_apcRefPicList[0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdx) ] : refPicListTemp0[cIdx];
 #endif
@@ -566,10 +600,20 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
   }
   else
   {
+#if VSP_CFG
+    for( cIdx = 0, cIdxTmp = 0; cIdx <= num_ref_idx_l1_active_minus1; cIdx ++ )
+#else
     for( cIdx = 0; cIdx <= num_ref_idx_l1_active_minus1; cIdx ++ )
+#endif
     {
 #if VSP_N
+#if VSP_CFG
+      Int iVspRefPos = getVspRefPos(REF_PIC_LIST_1, 0);
+      iVspRefPos = ( iVspRefPos > 0 ? iVspRefPos - 1 : -1 );
+      if( pcVspPic && iVspRefPos != -1 && cIdx == (iVspRefPos >= num_ref_idx_l1_active_minus1 ? num_ref_idx_l1_active_minus1 : iVspRefPos) )
+#else
       if( pcVspPic && cIdx == num_ref_idx_l1_active_minus1 )
+#endif
       {
         m_apcRefPicList[1][cIdx] = RefPicSetVspCurr[0];
 #if FORCE_REF_VSP
@@ -577,7 +621,14 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
 #endif
       }
       else
+      {
+#if VSP_CFG
+        m_apcRefPicList[1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdxTmp) ] : refPicListTemp1[cIdxTmp];
+        cIdxTmp++;
+#else
         m_apcRefPicList[1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
+#endif
+      }
 #else
       m_apcRefPicList[1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
 #endif
@@ -1500,6 +1551,15 @@ TComSPS::TComSPS()
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_bUseDMM                   (false)
+#endif
+#if OL_DEPTHLIMIT_A0044
+, m_bDepthPartitionLimiting   (false)
+#endif
+#if VSP_N
+, m_bVspPresentFlag           (false)
+#if VSP_CFG
+, m_bVspDepthPresentFlag      (false)
+#endif
 #endif
 {
   // AMVP parameter

@@ -125,6 +125,17 @@ Void TComPicSym::destroy()
   delete [] m_apcTComDataCU;
   m_apcTComDataCU = NULL;
 
+
+#if FIX_MEM_LEAKS
+  if( m_apcTComTile )
+  {
+    for( i=0; i<(m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1); i++ )
+    {
+      if ( m_apcTComTile[i] )  delete m_apcTComTile[i];
+    }
+  }
+#endif
+
   delete [] m_apcTComTile;
   m_apcTComTile = NULL;
 

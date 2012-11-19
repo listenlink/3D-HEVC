@@ -540,7 +540,6 @@ Void TDecTop::destroy()
     m_pcPicAvail = NULL;
   }
 #endif
-
 }
 
 Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
@@ -985,7 +984,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
         m_pcPicVSP = new TComPic;
         m_pcPicVSP->create( m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
         m_pcPicVSP->setCurrSliceIdx(0);
-        m_pcPicVSP->getCurrSlice()->setViewId( NUM_VIEW_VSP );
         m_pcPicVSP->getCurrSlice()->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
         m_pcPicVSP->getCurrSlice()->setSPS( m_apcSlicePilot->getSPS() );
         m_pcPicVSP->getCurrSlice()->setPPS( m_apcSlicePilot->getPPS() );
@@ -1012,7 +1010,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
         m_pcPicAvail = new TComPic;
         m_pcPicAvail->create( m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
         m_pcPicAvail->setCurrSliceIdx(0);
-        m_pcPicAvail->getCurrSlice()->setViewId( 99 );
         m_pcPicAvail->getCurrSlice()->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
         m_pcPicAvail->getCurrSlice()->setSPS( m_apcSlicePilot->getSPS() );
         m_pcPicAvail->getCurrSlice()->setPPS( m_apcSlicePilot->getPPS() );
@@ -1301,8 +1298,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
 #if VSP_N
     Bool bUseVsp = (m_viewId!=0);
-#if VSP_TEXT_ONLY
-    if( m_isDepth ) bUseVsp = false;
+#if VSP_CFG
+    if( !pcSlice->getSPS()->getVspDepthPresentFlag() && m_isDepth ) bUseVsp = false;
+#else
+    if( pcSlice->getVspDepthDisableFlag() && m_isDepth ) bUseVsp = false;
 #endif
 #if VSP_SLICE_HEADER
     if( !pcSlice->getVspFlag() ) bUseVsp = false;
@@ -1311,7 +1310,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 #if VSP_SLICE_HEADER
     if( bUseVsp )
 #endif
+    {
       m_pcPicVSP->getCurrSlice()->setPOC( pcPic->getPOC() );
+      m_pcPicVSP->getCurrSlice()->setViewId( pcPic->getViewId() );
+    }
 
     pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics, bUseVsp ? m_pcPicVSP : NULL );
 
@@ -1422,7 +1424,19 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 #endif
   if( getTAppDecTop()->getUseDepth() )
   {
-    getTAppDecTop()->storeVSPInBuffer( m_pcPicVSP, m_pcPicAvail, pcSlice->getViewId(), pcSlice->getSPS()->getViewOrderIdx(), pcSlice->getPOC(), m_isDepth );
+#if VSP_CFG
+    if( pcSlice->getSPS()->getVspDepthPresentFlag() || !m_isDepth )
+#else
+    if( !pcSlice->getVspDepthDisableFlag() || !m_isDepth )
+#endif
+      getTAppDecTop()->storeVSPInBuffer( m_pcPicVSP, m_pcPicAvail, pcSlice->getViewId(), pcSlice->getSPS()->getViewOrderIdx(), pcSlice->getPOC(), m_isDepth );
+#if VSP_N_DUMP
+    if( m_pcPicVSP && pcSlice->getViewId() != 0 && pcSlice->getNumRefIdx(REF_PIC_LIST_0)!=0){
+        Char acFilenameBase[1024];
+        ::sprintf(acFilenameBase,"ref_dec_%sv%d_%04d.yuv",(m_isDepth?"D":"T"),pcSlice->getViewId(), pcSlice->getPOC());
+        pcSlice->getRefPic(REF_PIC_LIST_0, pcSlice->getNumRefIdx(REF_PIC_LIST_0)-1)->getPicYuvRec()->dump(acFilenameBase,0);
+    }
+#endif
   }
 #endif
 

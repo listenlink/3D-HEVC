@@ -296,10 +296,24 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if SAIT_VSO_EST_A0033
   Bool      m_bUseEstimatedVSD;                           ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)  
 #endif
+#if LGE_WVSO_A0119
+  Bool      m_bUseWVSO;                                    ///< flag for using View Synthesis Optimization  
+  Int       m_iVSOWeight;
+  Int       m_iVSDWeight;
+  Int       m_iDWeight;
+#endif
+#if VSP_N
+  Bool      m_bUseVSP;
+  Bool      m_bVSPDepthDisable;
+#endif
 
   // coding tools (depth intra modes)
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool      m_bUseDMM;                                        ///< flag for using DMM
+#endif
+
+#if OL_DEPTHLIMIT_A0044
+  Bool      m_bDepthPartitionLimiting;
 #endif
 
   // internal member functions

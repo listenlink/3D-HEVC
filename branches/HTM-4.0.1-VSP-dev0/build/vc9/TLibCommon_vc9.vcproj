@@ -291,10 +291,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\DebugLog.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\libmd5\libmd5.c"
 				>
 			</File>
@@ -418,10 +414,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\ContextTables.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\DebugLog.h"
 				>
 			</File>
 			<File

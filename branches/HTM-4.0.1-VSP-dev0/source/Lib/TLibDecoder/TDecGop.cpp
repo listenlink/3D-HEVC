@@ -462,6 +462,13 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
         {
           printf( "V%d ", pcSlice->getRefViewId( RefPicList(iRefList), iRefIndex ) );
         }
+#if VSP_CFG
+        else if( pcSlice->getViewId() == pcSlice->getRefViewId( RefPicList(iRefList), iRefIndex )
+              && pcSlice->getPOC()    == pcSlice->getRefPOC( RefPicList(iRefList), iRefIndex ) )
+        {
+          printf( "VS " );
+        }
+#endif
         else
         {
           printf ("%d ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
@@ -478,6 +485,13 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
         {
           printf( "V%d ", pcSlice->getRefViewId( (RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex) ) );
         }
+#if VSP_CFG
+        else if( pcSlice->getViewId() == pcSlice->getRefViewId( (RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex) )
+              && pcSlice->getPOC()    == pcSlice->getRefPOC( (RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex) ) )
+        {
+          printf( "VS " );
+        }
+#endif
         else
         {
           printf ("%d ", pcSlice->getRefPOC((RefPicList)pcSlice->getListIdFromIdxOfLC(iRefIndex), pcSlice->getRefIdxFromIdxOfLC(iRefIndex)));

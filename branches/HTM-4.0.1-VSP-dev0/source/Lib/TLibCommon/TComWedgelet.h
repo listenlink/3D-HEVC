@@ -197,13 +197,11 @@ private:
   static UInt xGetSAD8          ( WedgeDistParam* pcDtParam );
   static UInt xGetSAD16         ( WedgeDistParam* pcDtParam );
   static UInt xGetSAD32         ( WedgeDistParam* pcDtParam );
-  //static UInt xGetSAD64         ( WedgeDistParam* pcDtParam );
 
   static UInt xGetSSE4          ( WedgeDistParam* pcDtParam );
   static UInt xGetSSE8          ( WedgeDistParam* pcDtParam );
   static UInt xGetSSE16         ( WedgeDistParam* pcDtParam );
   static UInt xGetSSE32         ( WedgeDistParam* pcDtParam );
-  //static UInt xGetSSE64         ( WedgeDistParam* pcDtParam );
 
 };// END CLASS DEFINITION TComWedgeDist
 #endif

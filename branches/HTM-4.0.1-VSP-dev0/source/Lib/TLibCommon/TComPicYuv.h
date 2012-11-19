@@ -183,15 +183,6 @@ public:
   Void  setLumaTo    ( Pel pVal );  
   Void  setChromaTo  ( Pel pVal );  
 
-#if DEBUGIMGOUT
-  // Degub tools
-public:
-  Void colsetToPicYuv   ( const UChar ucColor[3],                 Int iOffset[2][2], TComPicYuv* pcPicYuvDst, UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth = 0, UInt uiPartIdx = 0 );
-  Void colsetToPicLuma  ( const UChar ucLumaOffCol,               Int iOffset[2][2], TComPicYuv* pcPicYuvDst, UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth = 0, UInt uiPartIdx = 0 );
-  Void colsetToPicChroma( const UChar ucUCol, const UChar ucVCol, Int iOffset[2][2], TComPicYuv* pcPicYuvDst, UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth = 0, UInt uiPartIdx = 0 );
-  Void drawLineToPicYuv ( bool bHor, bool bVer, UInt uiSize,      TComPicYuv* pcPicYuvDst, UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth = 0, UInt uiPartIdx = 0 );
-#endif
-
 };// END CLASS DEFINITION TComPicYuv
 
 void calcMD5(TComPicYuv& pic, unsigned char digest[16]);

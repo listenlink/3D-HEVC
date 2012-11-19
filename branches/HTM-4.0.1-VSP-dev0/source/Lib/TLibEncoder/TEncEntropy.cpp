@@ -1369,7 +1369,7 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
           encodeRefFrmIdxPU ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );
 #if VSP_MV_ZERO
           Int iRefIdx = pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->getRefIdx(uiSubPartIdx);
-          if( !(pcCU->getSlice()->getViewId() && iRefIdx >= 0 && pcCU->getSlice()->getRefViewId( RefPicList( uiRefListIdx ), iRefIdx ) == NUM_VIEW_VSP) )
+          if( !(pcCU->getSlice()->getViewId() && iRefIdx >= 0 && pcCU->isVspRef( RefPicList( uiRefListIdx ), iRefIdx )) )
           {
 #endif
           encodeMvdPU       ( pcCU, uiSubPartIdx, RefPicList( uiRefListIdx ) );

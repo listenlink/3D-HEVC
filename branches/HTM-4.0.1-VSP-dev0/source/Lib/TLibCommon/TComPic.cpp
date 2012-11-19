@@ -68,9 +68,6 @@ TComPic::TComPic()
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pcResidual        = NULL;
 #endif
-#if DEBUGIMGOUT
-  m_acPicYuvDebug     = NULL;
-#endif
   m_pcPicYuvPred      = NULL;
   m_pcPicYuvResi      = NULL;
   m_bIsLongTerm       = false;
@@ -101,10 +98,7 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
     m_apcPicYuv[0]  = new TComPicYuv;  m_apcPicYuv[0]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
   }
   m_apcPicYuv[1]  = new TComPicYuv;  m_apcPicYuv[1]->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
-#if DEBUGIMGOUT
-  m_acPicYuvDebug    = new TComPicYuv;  m_acPicYuvDebug->create( iWidth, iHeight, uiMaxWidth, uiMaxHeight, uiMaxDepth );
-#endif
-
+  
   /* there are no SEI messages associated with this picture initially */
   m_SEIs = NULL;
   m_bUsedByCurr = false;
@@ -171,14 +165,6 @@ Void TComPic::destroy()
     m_pcResidual->destroy();
     delete m_pcResidual;
     m_pcResidual = NULL;
-  }
-#endif
-#if DEBUGIMGOUT
-  if (m_acPicYuvDebug)
-  {
-    m_acPicYuvDebug->destroy();
-    delete m_acPicYuvDebug;
-    m_acPicYuvDebug = NULL;
   }
 #endif
   delete m_SEIs;

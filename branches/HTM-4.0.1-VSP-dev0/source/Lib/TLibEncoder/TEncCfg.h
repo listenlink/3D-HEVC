@@ -66,6 +66,12 @@ struct GOPEntryMvc
   Int m_interViewRefs[MAX_NUM_REF_PICS];
   Int m_interViewRefPosL0[MAX_NUM_REF_PICS];
   Int m_interViewRefPosL1[MAX_NUM_REF_PICS];
+#if VSP_CFG
+  Int m_numVSPRefPics;
+  Int m_VSPRefPics[MAX_NUM_REF_PICS];
+  Int m_VSPRefPosL0[MAX_NUM_REF_PICS];
+  Int m_VSPRefPosL1[MAX_NUM_REF_PICS];
+#endif
  GOPEntryMvc()
   : m_POC(-1)
   , m_QPOffset()
@@ -80,6 +86,9 @@ struct GOPEntryMvc
   , m_deltaRPS()
   , m_numRefIdc()
   , m_numInterViewRefPics()
+#if VSP_CFG
+  , m_numVSPRefPics()
+#endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
     ::memset( m_usedByCurrPic, 0, sizeof(m_usedByCurrPic) );
@@ -87,6 +96,11 @@ struct GOPEntryMvc
     ::memset( m_interViewRefs,   0, sizeof(m_interViewRefs) );
     ::memset( m_interViewRefPosL0, 0, sizeof(m_interViewRefPosL0) );
     ::memset( m_interViewRefPosL1, 0, sizeof(m_interViewRefPosL1) );
+#if VSP_CFG
+    ::memset( m_VSPRefPics,  0, sizeof(m_VSPRefPics) );
+    ::memset( m_VSPRefPosL0, 0, sizeof(m_VSPRefPosL0) );
+    ::memset( m_VSPRefPosL1, 0, sizeof(m_VSPRefPosL1) );
+#endif
   }
 };
 
@@ -203,12 +217,22 @@ protected:
 #endif
   Double    m_dLambdaScaleVSO;
   UInt      m_uiVSOMode;
+#if LGE_WVSO_A0119
+  Bool      m_bUseWVSO;
+  Int       m_iVSOWeight;
+  Int       m_iVSDWeight;
+  Int       m_iDWeight;
+#endif
 #endif
 #if SAIT_VSO_EST_A0033
   Bool      m_bUseEstimatedVSD; 
   Double    m_dDispCoeff;
 #endif
 
+#if VSP_SLICE_HEADER
+  Bool      m_bUseVSP;
+  Bool      m_bVSPDepthDisable;
+#endif
 
   //====== Tool list ========
   Bool      m_bUseSBACRD;
@@ -265,7 +289,10 @@ protected:
   Bool      m_bLFCrossTileBoundaryFlag;
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
+#if FIX_REMOVE_TILE_DEPENDENCE
+#else
   Int       m_iTileBoundaryIndependenceIdr;
+#endif
   Int       m_iNumColumnsMinus1;
   UInt*     m_puiColumnWidth;
   Int       m_iNumRowsMinus1;
@@ -280,7 +307,7 @@ protected:
   Int       m_iWaveFrontFlush;
   Int       m_iWaveFrontSubstreams;
 
-  bool m_pictureDigestEnabled; ///< enable(1)/disable(0) md5 computation and SEI signalling
+  Bool      m_pictureDigestEnabled; ///< enable(1)/disable(0) md5 computation and SEI signalling
 
   //====== Weighted Prediction ========
   Bool      m_bUseWeightPred;       //< Use of Weighting Prediction (P_SLICE)
@@ -308,7 +335,11 @@ protected:
 #endif
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  Bool      m_bUseDMM;
+  Bool     m_bUseDMM;
+#endif
+
+#if OL_DEPTHLIMIT_A0044
+  Bool     m_bDepthPartitionLimiting;
 #endif
 
   Int      m_iViewOrderIdx;
@@ -465,6 +496,12 @@ public:
 #if HHI_VSO_DIST_INT
   Void      setAllowNegDist                 ( Bool b  )     { m_bAllowNegDist     = b; };
 #endif
+#if LGE_WVSO_A0119
+  Void      setUseWVSO                      ( Bool  b )     { m_bUseWVSO   = b; }
+  Void      setVSOWeight                    ( Int   i )     { m_iVSOWeight = i; }
+  Void      setVSDWeight                    ( Int   i )     { m_iVSDWeight = i; }
+  Void      setDWeight                      ( Int   i )     { m_iDWeight   = i; }
+#endif
 #endif
 
   //====== Quality control ========
@@ -545,6 +582,12 @@ public:
 #if HHI_VSO_DIST_INT
   Bool      getAllowNegDist                 ()      { return m_bAllowNegDist;     }
 #endif
+#if LGE_WVSO_A0119
+  Bool      getUseWVSO                      ()      { return m_bUseWVSO;     }
+  Int       getVSOWeight                    ()      { return m_iVSOWeight;    }
+  Int       getVSDWeight                    ()      { return m_iVSDWeight;    }
+  Int       getDWeight                      ()      { return m_iDWeight;    }
+#endif
 #endif
 
   //==== Quality control ========
@@ -570,6 +613,11 @@ public:
 #endif
 #if HHI_VSO
   Void      setUseVSO                       ( Bool  b )     { m_bUseVSO     = b; }
+#endif
+
+#if VSP_SLICE_HEADER
+  Void      setUseVSP                       ( Bool  b )     { m_bUseVSP     = b; }
+  Void      setVSPDepthDisable              ( Bool  b )     { m_bVSPDepthDisable = b; }
 #endif
 
 #if SAIT_VSO_EST_A0033
@@ -622,6 +670,11 @@ public:
   Double    getDispCoeff                    ()      { return m_dDispCoeff;    }
 #endif
 
+#if VSP_SLICE_HEADER
+  Bool      getUseVSP                       ()      { return m_bUseVSP; }
+  Bool      getVSPDepthDisable              ()      { return m_bVSPDepthDisable; }
+#endif
+
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
 #if FAST_DECISION_FOR_MRG_RD_COST
@@ -656,14 +709,14 @@ public:
   Int   getEntropySliceArgument        ()              { return m_iEntropySliceArgument;}
   Void  setSliceGranularity            ( Int  i )      { m_iSliceGranularity = i;       }
   Int   getSliceGranularity            ()              { return m_iSliceGranularity;    }
-  Void      setLFCrossSliceBoundaryFlag     ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
-  Bool      getLFCrossSliceBoundaryFlag     ()                    { return m_bLFCrossSliceBoundaryFlag;   }
+  Void  setLFCrossSliceBoundaryFlag    ( Bool   bValue  )    { m_bLFCrossSliceBoundaryFlag = bValue; }
+  Bool  getLFCrossSliceBoundaryFlag    ()                    { return m_bLFCrossSliceBoundaryFlag;   }
 
 #if HHI_MPI
-  Void      setUseMVI                  (Bool bVal)     {m_bUseMVI = bVal;}
+  Void  setUseMVI                      ( Bool bVal )   {m_bUseMVI = bVal;}
 #endif
-  Void      setUseSAO                  (Bool bVal)     {m_bUseSAO = bVal;}
-  Bool      getUseSAO                  ()              {return m_bUseSAO;}
+  Void  setUseSAO                      ( Bool bVal )   {m_bUseSAO = bVal;}
+  Bool  getUseSAO                      ()              {return m_bUseSAO;}
 #if SAO_UNIT_INTERLEAVING
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
@@ -794,8 +847,13 @@ public:
   Bool      getIsDepth            ()               { return m_isDepth; }
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  Void setUseDMM( Bool b) { m_bUseDMM = b;    }
-  Bool getUseDMM()        { return m_bUseDMM; }
+  Void      setUseDMM( Bool b) { m_bUseDMM = b;    }
+  Bool      getUseDMM()        { return m_bUseDMM; }
+#endif
+
+#if OL_DEPTHLIMIT_A0044
+  Void      setUseDPL(Bool b) {m_bDepthPartitionLimiting = b; }
+  Bool      getUseDPL()       {return m_bDepthPartitionLimiting;}
 #endif
 
   Void      setViewOrderIdx       ( Int   i )      { m_iViewOrderIdx          = i; }
