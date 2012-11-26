@@ -63,6 +63,10 @@ void write(ostream& out, OutputNALUnit& nalu)
   bsNALUHeader.write(nalu.m_nalUnitType, 5); // nal_unit_type
 #endif
 
+#if MVHEVC
+  bsNALUHeader.write(nalu.m_layerId,        5); // when nal_ref_flag is signalled, 5 bits here. otherwise, 6 bits
+  bsNALUHeader.write(nalu.m_temporalId + 1, 3); // temporal_id
+#else
 #if VIDYO_VPS_INTEGRATION
   bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
   bsNALUHeader.write(nalu.m_layerId + 1, 5); // layer_id_plus1
@@ -78,7 +82,9 @@ void write(ostream& out, OutputNALUnit& nalu)
   case NAL_UNIT_CODED_SLICE:
   case NAL_UNIT_CODED_SLICE_IDR:
 #if H0566_TLA
+#if !QC_REM_IDV
   case NAL_UNIT_CODED_SLICE_IDV:
+#endif
   case NAL_UNIT_CODED_SLICE_CRA:
   case NAL_UNIT_CODED_SLICE_TLA:
 #else
@@ -94,7 +100,7 @@ void write(ostream& out, OutputNALUnit& nalu)
   }
 #endif
 #endif
-  
+#endif 
   out.write(bsNALUHeader.getByteStream(), bsNALUHeader.getByteStreamLength());
 
   /* write out rsbp_byte's, inserting any required
@@ -195,6 +201,7 @@ void writeRBSPTrailingBits(TComOutputBitstream& bs)
   bs.writeAlignZero();
 }
 
+#if !MVHEVC
 /**
  * Copy NALU from naluSrc to naluDest
  */
@@ -221,5 +228,6 @@ void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
 #endif
   naluDest.m_Bitstream   = naluSrc.m_Bitstream;
 }
+#endif
 
 //! \}

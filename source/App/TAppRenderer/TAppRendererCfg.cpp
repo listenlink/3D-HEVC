@@ -58,7 +58,7 @@ namespace po = df::program_options_lite;
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
-
+#if !MVHEVC
 TAppRendererCfg::TAppRendererCfg()
 {
 
@@ -515,3 +515,4 @@ Void TAppRendererCfg::xSetGlobal()
   g_uiBASE_MAX     = ((1<<(g_uiBitDepth))-1);
   g_uiIBDI_MAX     = ((1<<(g_uiBitDepth+g_uiBitIncrement))-1);
 }
+#endif

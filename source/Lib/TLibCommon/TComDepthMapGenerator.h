@@ -238,7 +238,7 @@ private:
   Bool              m_bInit;
   Bool              m_bDecoder;
   TComPrediction*   m_pcPrediction;
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   TComVPSAccess*    m_pcVPSAccess;
 #endif
   TComSPSAccess*    m_pcSPSAccess;

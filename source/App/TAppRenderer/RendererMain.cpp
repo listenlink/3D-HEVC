@@ -42,6 +42,7 @@
 
 int main(int argc, char* argv[])
   {
+#if !MVHEVC
   TAppRendererTop  cTAppRendererTop;
 
   // print information
@@ -77,6 +78,7 @@ int main(int argc, char* argv[])
   cTAppRendererTop.destroy();
 
   return 0;
+#endif
 }
 
 

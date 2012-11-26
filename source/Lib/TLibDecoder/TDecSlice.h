@@ -95,7 +95,7 @@ public:
   TComPPS* getPrefetchedPPS  (Int ppsId);
   Void     storePrefetchedAPS(TComAPS *aps)  { m_apsBuffer.storePS( aps->getAPSID(), aps); };
   TComAPS* getPrefetchedAPS  (Int apsId);
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   Void     storePrefetchedVPS(TComVPS *vps)  { m_vpsBuffer.storePS( vps->getVPSId(), vps); };
   TComVPS* getPrefetchedVPS  (Int vpsId);
 #endif
@@ -105,7 +105,7 @@ private:
   ParameterSetMap<TComSPS> m_spsBuffer; 
   ParameterSetMap<TComPPS> m_ppsBuffer; 
   ParameterSetMap<TComAPS> m_apsBuffer; 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC 
   ParameterSetMap<TComVPS> m_vpsBuffer;
 #endif
 };

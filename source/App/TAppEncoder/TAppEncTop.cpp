@@ -66,11 +66,17 @@ TAppEncTop::~TAppEncTop()
 
 Void TAppEncTop::xInitLibCfg()
 {
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if !MVHEVC
   UInt layerId = 0;
+#endif
   // TODO: fix the assumption here that the temporal structures are all equal across all layers???
   m_cVPS.setMaxTLayers( m_maxTempLayer[0] );
+#if MVHEVC
+  m_cVPS.setMaxLayers( m_iNumberOfViews );
+#else
   m_cVPS.setMaxLayers( m_iNumberOfViews * (m_bUsingDepthMaps ? 2:1) );
+#endif
   for(Int i = 0; i < MAX_TLAYER; i++)
   {
     m_cVPS.setNumReorderPics( m_numReorderPics[0][i], i );
@@ -100,6 +106,10 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setFrameToBeEncoded             ( m_iFrameToBeEncoded );
     m_acTEncTopList[iViewIdx]->setViewId                       ( iViewIdx );
     m_acTEncTopList[iViewIdx]->setIsDepth                      ( false );
+#if MVHEVC
+    m_acTEncTopList[iViewIdx]->setLayerId                      ( iViewIdx );
+    m_cVPS.setViewId                                           ( m_aiVId[ iViewIdx ], iViewIdx );
+#else
     m_acTEncTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
 #if VIDYO_VPS_INTEGRATION
     layerId = iViewIdx * (m_bUsingDepthMaps ? 2:1);
@@ -116,6 +126,7 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
     m_acTEncTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
     m_acTEncTopList[iViewIdx]->setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#endif   
 
   //====== Coding Structure ========
     m_acTEncTopList[iViewIdx]->setIntraPeriod                  ( m_iIntraPeriod );
@@ -405,7 +416,11 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setFrameToBeEncoded             ( m_iFrameToBeEncoded );
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
+#if MVHEVC
+      m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( iViewIdx );
+#else
       m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
+#endif
 #if VIDYO_VPS_INTEGRATION
       layerId = iViewIdx * 2 + 1;
       m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( layerId );
@@ -820,6 +835,16 @@ Void TAppEncTop::xInitLib()
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
   {
     m_acTEncTopList[iViewIdx]->init( this );
+#if MVHEVC
+  //set setNumDirectRefLayer
+  Int iNumDirectRef = m_acTEncTopList[iViewIdx]->getSPS()->getNumberOfUsableInterViewRefs();
+  m_acTEncTopList[iViewIdx]->getEncTop()->getVPS()->setNumDirectRefLayer(iNumDirectRef, iViewIdx);
+  for(Int iNumIvRef = 0; iNumIvRef < iNumDirectRef; iNumIvRef ++)
+  {
+    Int iLayerId = m_acTEncTopList[iViewIdx]->getSPS()->getUsableInterViewRef(iNumIvRef);
+    m_acTEncTopList[iViewIdx]->getEncTop()->getVPS()->setDirectRefLayerId( iLayerId + iViewIdx, iViewIdx, iNumIvRef);
+  }
+#endif
   }
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
   {
@@ -861,7 +886,9 @@ Void TAppEncTop::encode()
 
   TComPicYuv*       pcPicYuvOrg = new TComPicYuv;
   TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
+#if !MVHEVC
   TComPicYuv*       pcPdmDepthOrg    = new TComPicYuv;
+#endif
   TComPicYuv*       pcPicYuvRec = NULL;
   TComPicYuv*       pcDepthPicYuvRec = NULL;
   
@@ -962,11 +989,13 @@ Void TAppEncTop::encode()
     for ( Int gopId=0; gopId < gopSize; gopId++ )
     {
       Int  iNumEncoded = 0;
+#if !MVHEVC
       UInt iNextPoc = m_acTEncTopList[0] -> getFrameId( gopId );
       if ( iNextPoc < m_iFrameToBeEncoded )
       {
       m_cCameraData.update( iNextPoc );
       }
+#endif
       for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
 #if SAIT_VSO_EST_A0033
@@ -1021,14 +1050,19 @@ Void TAppEncTop::encode()
   pcDepthPicYuvOrg->destroy();
   delete pcDepthPicYuvOrg;
   pcDepthPicYuvOrg = NULL;
-  
+
+#if !MVHEVC
+#if BUG_FIX_HTM
+  if ( pcPdmDepthOrg != NULL && m_uiMultiviewMvRegMode )
+#else
   if ( pcPdmDepthOrg != NULL )
+#endif
   {
     pcPdmDepthOrg->destroy();
     delete pcPdmDepthOrg;     
     pcPdmDepthOrg = NULL; 
   };
-
+#endif
   
   for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
   {
@@ -1232,7 +1266,9 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<unsigned
     {
     case NAL_UNIT_CODED_SLICE:
 #if H0566_TLA
+#if !QC_REM_IDV
     case NAL_UNIT_CODED_SLICE_IDV:
+#endif
     case NAL_UNIT_CODED_SLICE_TLA:
     case NAL_UNIT_CODED_SLICE_CRA:
 #else

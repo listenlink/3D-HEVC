@@ -1337,7 +1337,85 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     }
   }
 }
+#if MVHEVC
+Void TDecCavlc::parseVPS(TComVPS* pcVPS)
+{
+  UInt  uiCode;
+  READ_CODE( 4, uiCode,  "video_parameter_set_id"   );       pcVPS->setVPSId( uiCode );
+  READ_FLAG( uiCode,     "temporal_id_nesting_flag" );       pcVPS->setTemporalNestingFlag( uiCode ? true:false );
+  READ_CODE( 2, uiCode,  "vps_reserved_zero_2bits" );         assert( !uiCode );
+  READ_CODE( 6, uiCode,  "vps_max_layers_minus1" );               pcVPS->setMaxLayers( uiCode + 1 );
+  READ_CODE( 3, uiCode,  "vps_max_sub_layers_minus1" );      pcVPS->setMaxTLayers( uiCode + 1 );
+  READ_CODE( 12, uiCode, "vps_extension_offset"      );      assert( !uiCode );
+  for(UInt i = 0; i <= pcVPS->getMaxTLayers()-1; i++)
+  {
+    READ_UVLC( uiCode,  "max_dec_pic_buffering[i]" );     pcVPS->setMaxDecPicBuffering( uiCode, i );
+    READ_UVLC( uiCode,  "num_reorder_pics[i]" );          pcVPS->setNumReorderPics( uiCode, i );
+    READ_UVLC( uiCode,  "max_latency_increase[i]" );      pcVPS->setMaxLatencyIncrease( uiCode, i );
+  }
+  READ_UVLC( uiCode,                 "vps_num_hrd_parameters"   ); pcVPS->setNumHRDParameters(uiCode);
+  assert(pcVPS->getNumHRDParameters()==0);
+  for ( UInt i = 0; i < pcVPS->getNumHRDParameters(); i ++)
+  {
+   //   if( i > 0 )  
+    //{
+    //  READ_UVLC (0, "op_num_layer_id_values_minus1[ opIdx ]");
+    //  for( i = 0; i <= op_num_layer_id_values_minus1[ opIdx ]; i++ )  
+    //    READ_UVLC(0, 6, "op_layer_id[ opIdx ][ i ]");
+    //}  
+    //hrd_parameters( i  = =  0, vps_max_sub_layers_minus1 );  
+  }
+ 
+  READ_CODE( 1, uiCode, "bit_equal_to_one" );             assert( uiCode );
+  //vps_extension_byte_alignment_reserved_one_bit
+  xReadVPSAlignOne();
+  READ_CODE( 8, uiCode, "num_additional_layer_operation_points" );     pcVPS->setNumAddiLayerOperationPoints( uiCode );
+  READ_CODE( 8, uiCode, "num_additional_profile_level_sets"     );     pcVPS->setNumAddiProLevelSets( uiCode);
 
+
+  for(UInt i=0; i <= pcVPS->getMaxLayers()-1; i++)
+  {
+    READ_CODE( 4,  uiCode,             "num_types_zero_4bits[i]" );   assert( !uiCode );
+    READ_CODE( 4,  uiCode,             "type_zero_4bits[i]"      );   assert( !uiCode );
+    READ_CODE( 8,  uiCode,             "view_id[i]" );                pcVPS->setViewId(uiCode, i);
+    // WRITE_SVLC( pcVPS->getViewOrderIdx(i),                  "view_order_idx[i]" );
+    if(i)
+    {
+      READ_CODE( 6, uiCode,  "num_direct_ref_layers[ i ]" );    pcVPS->setNumDirectRefLayer(uiCode, i);
+      for (UInt j = 0; j< pcVPS->getNumDirectRefLayer(i); j++)
+      {
+        READ_CODE( 6, uiCode, "ref_layer_id[i][j]" );         pcVPS->setDirectRefLayerId (uiCode, i, j);
+      }
+    }
+  }
+  for( UInt i=1; i<=pcVPS->getNumAddiProLevelSets(); i++)
+  {
+    //profile_tier_level
+  }
+  for( UInt i=1; i<= pcVPS->getNumAddiLayerOperationPoints(); i++)
+  {   
+    if(pcVPS->getMaxLayers() == 3)
+    {
+      pcVPS->setNumOpLayerIdMinus1((i < pcVPS->getNumAddiLayerOperationPoints() ? 1: 2), (i-1)); 
+    }
+    else if( i==1 )
+    {
+      assert(pcVPS->getNumAddiLayerOperationPoints()==1);
+      pcVPS->setNumOpLayerIdMinus1(pcVPS->getMaxLayers()-1, (i-1)); 
+    }
+    READ_UVLC( uiCode,           "op_num_layer_id_values_minus1[ opIdx ]" ); pcVPS->setNumOpLayerIdMinus1(uiCode, i-1);
+    for(UInt j = 0; j <= pcVPS->getNumOpLayerIdMinus1(i-1); j++ )
+    {
+      READ_UVLC( uiCode,           "op_layer_id[ opIdx ][ i ]" ); pcVPS->setNumOpLayerId(uiCode, i-1, j);
+    }
+    if (pcVPS->getNumAddiProLevelSets())
+    {
+      //profile_level_idx[ i ]
+    }
+  }
+  return;
+}
+#else
 #if VIDYO_VPS_INTEGRATION
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 {
@@ -1388,7 +1466,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 }
 
 #endif
-
+#endif
 #if HHI_MPI
 Void TDecCavlc::parseSPS(TComSPS* pcSPS, Bool bIsDepth)
 #else
@@ -1400,8 +1478,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
   
   UInt  uiCode;
+#if !MVHEVC
   Int   iCode;
-
+#endif
   READ_CODE( 8,  uiCode, "profile_idc" );                        pcSPS->setProfileIdc( uiCode );
   READ_CODE( 8,  uiCode, "reserved_zero_8bits" );
   READ_CODE( 8,  uiCode, "level_idc" );                          pcSPS->setLevelIdc( uiCode );
@@ -1644,6 +1723,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 #endif
   READ_FLAG( uiCode, "sps_extension_flag");
+#if !MVHEVC
   if(uiCode)
   {
     READ_FLAG( uiCode, "interview_refs_present_flag");
@@ -1802,6 +1882,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       }
     }
   }
+#endif
 }
 
 Void TDecCavlc::readTileMarker   ( UInt& uiTileIdx, UInt uiBitsUsed )
@@ -1906,7 +1987,15 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPicOutputFlag( true );
     }
 #endif
+#if QC_REM_IDV
+#if !MVHEVC
+  if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR && rpcSlice->getSPS()->getViewId() == 0) 
+#else
+  if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR && rpcSlice->getViewId() == 0) 
+#endif
+#else
     if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR) 
+#endif
     { 
       READ_UVLC( uiCode, "idr_pic_id" );  //ignored
       READ_FLAG( uiCode, "no_output_of_prior_pics_flag" );  //ignored
@@ -1940,8 +2029,15 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         iPOCmsb = iPrevPOCmsb;
       }
       rpcSlice->setPOC( iPOCmsb+iPOClsb );
-
+#if QC_REM_IDV
+#if !MVHEVC
+      if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR &&  rpcSlice->getSPS()->getViewId() && rpcSlice->getPOC() == 0 )
+#else
+      if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR &&  rpcSlice->getViewId() && rpcSlice->getPOC() == 0 )
+#endif
+#else
       if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && rpcSlice->getPOC() == 0 )
+#endif
       {
         TComReferencePictureSet* rps = rpcSlice->getLocalRPS();
         rps->setNumberOfNegativePictures(0);
@@ -2081,7 +2177,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     if( !rpcSlice->isIntra() )
     {
 #if H0412_REF_PIC_LIST_RESTRICTION
+#if MVHEVC
+    if( !rpcSlice->getViewId() || !rpcSlice->getSPS()->getListsModificationPresentFlag() )
+#else
       if( !rpcSlice->getSPS()->getListsModificationPresentFlag() )
+#endif
       {
         refPicListModification->setRefPicListModificationFlagL0( 0 );
       }
@@ -2152,7 +2252,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     if(rpcSlice->isInterB())
     {
 #if H0412_REF_PIC_LIST_RESTRICTION
+#if MVHEVC
+    if( !rpcSlice->getViewId() || !rpcSlice->getSPS()->getListsModificationPresentFlag() )
+#else
       if( !rpcSlice->getSPS()->getListsModificationPresentFlag() )
+#endif
       {
         refPicListModification->setRefPicListModificationFlagL1( 0 );
       }
@@ -2236,7 +2340,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_UVLC( uiCode, "num_ref_idx_lc_active_minus1" );      rpcSlice->setNumRefIdx( REF_PIC_LIST_C, uiCode + 1 );
       
 #if H0412_REF_PIC_LIST_RESTRICTION
-      if(rpcSlice->getSPS()->getListsModificationPresentFlag() )
+#if MVHEVC
+    if( rpcSlice->getViewId() && rpcSlice->getSPS()->getListsModificationPresentFlag() )
+#else
+    if(rpcSlice->getSPS()->getListsModificationPresentFlag() )
+#endif
       {
 #endif
         READ_FLAG( uiCode, "ref_pic_list_modification_flag_lc" ); rpcSlice->setRefPicListModificationFlagLC( uiCode ? 1 : 0 );
@@ -2943,6 +3051,31 @@ Void TDecCavlc::xReadFlag (UInt& ruiCode)
   m_pcBitstream->read( 1, ruiCode );
 }
 
+#if MVHEVC
+/** Parse VPS alignment one bits.
+ * \returns Void
+ */
+Void TDecCavlc::xReadVPSAlignOne( )
+{
+  UInt uiNumberOfBits = m_pcBitstream->getNumBitsUntilByteAligned();
+
+  if(uiNumberOfBits)
+  {
+    UInt uiBits;
+    UInt uiSymbol;
+
+    for(uiBits = 0; uiBits < uiNumberOfBits; uiBits++)
+    {
+      xReadFlag( uiSymbol );
+
+      if(!uiSymbol)
+      {
+        printf("\nWarning! vps_extension_byte_alignment_reserved_one_bit include a non-zero value.\n");
+      }
+    }
+  }
+}
+#endif
 /** Parse PCM alignment zero bits.
  * \returns Void
  */

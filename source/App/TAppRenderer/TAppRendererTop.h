@@ -49,7 +49,7 @@
 #include "TAppRendererTop.h"
 #include "../../Lib/TLibRenderer/TRenModel.h"
 
-
+#if !MVHEVC
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -86,5 +86,6 @@ public:
 
 };// END CLASS DEFINITION TAppRendererTop
 
-#endif // __TAppRendererTOP__
+#endif
 
+#endif

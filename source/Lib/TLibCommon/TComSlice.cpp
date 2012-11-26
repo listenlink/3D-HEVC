@@ -43,7 +43,11 @@
 //! \{
 
 TComSlice::TComSlice()
+#if MVHEVC
+: m_iPPSId                        ( 0  )
+#else
 : m_iPPSId                        ( -1 )
+#endif
 , m_iPOC                          ( 0 )
 , m_iLastIDR                      ( 0 )
 , m_eNalUnitType                  ( NAL_UNIT_CODED_SLICE_IDR )
@@ -141,6 +145,13 @@ TComSlice::TComSlice()
   resetWpScaling(m_weightPredTable);
   resetWpScalingLC(m_weightPredTableLC);
   initWpAcDcParam();
+#if IV_AS_LT
+  for(Int iNumCount = 0; iNumCount < MAX_NUM_REF+1; iNumCount++)
+  {
+     m_bWasLongTerm[0][iNumCount] = false;
+     m_bWasLongTerm[1][iNumCount] = false;
+  }
+#endif
 }
 
 TComSlice::~TComSlice()
@@ -471,7 +482,11 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
   for( i = 0; i < m_pcSPS->getNumberOfUsableInterViewRefs(); i++ )
   {
     pcRefPic = xGetInterViewRefPic( rapcInterViewRefPics, getViewId() + m_pcSPS->getUsableInterViewRef(i) );
+#if IV_AS_LT
+    pcRefPic->setIsLongTerm( 1 );
+#else
     pcRefPic->setIsLongTerm( 0 );
+#endif
     pcRefPic->getPicYuvRec()->extendPicBorder();
     RefPicSetIvCurr[NumPocIvCurr] = pcRefPic;
     NumPocIvCurr++;
@@ -512,6 +527,9 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
   for( cIdx = 0; cIdx <= num_ref_idx_l0_active_minus1; cIdx ++ )
   {
     m_apcRefPicList[0][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? refPicListTemp0[ m_RefPicListModification.getRefPicSetIdxL0(cIdx) ] : refPicListTemp0[cIdx];
+#if IV_AS_LT
+    setWasLongTerm(m_apcRefPicList[0][cIdx]->getIsLongTerm(), REF_PIC_LIST_0, cIdx);
+#endif
   }
   if( m_eSliceType == P_SLICE )
   {
@@ -523,6 +541,9 @@ Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TCo
     for( cIdx = 0; cIdx <= num_ref_idx_l1_active_minus1; cIdx ++ )
     {
       m_apcRefPicList[1][cIdx] = m_RefPicListModification.getRefPicListModificationFlagL1() ? refPicListTemp1[ m_RefPicListModification.getRefPicSetIdxL1(cIdx) ] : refPicListTemp1[cIdx];
+#if IV_AS_LT
+      setWasLongTerm(m_apcRefPicList[1][cIdx]->getIsLongTerm(), REF_PIC_LIST_1, cIdx);
+#endif
     }
   }
 }
@@ -875,7 +896,11 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
     // loop through all pictures in the Reference Picture Set to see if the picture should be kept as reference picture
     for(i=0;i<pReferencePictureSet->getNumberOfPositivePictures()+pReferencePictureSet->getNumberOfNegativePictures();i++)
     {
+#if IV_AS_LT
+       if( rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getPOC() + pReferencePictureSet->getDeltaPOC(i))
+#else
       if(!rpcPic->getIsLongTerm() && rpcPic->getPicSym()->getSlice(0)->getPOC() == this->getPOC() + pReferencePictureSet->getDeltaPOC(i))
+#endif
       {
         isReference = 1;
         rpcPic->setUsedByCurr(pReferencePictureSet->getUsed(i));
@@ -885,7 +910,11 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
     // long term pictures
     for(;i<pReferencePictureSet->getNumberOfPictures();i++)
     {
+#if IV_AS_LT
+     if( (rpcPic->getPicSym()->getSlice(0)->getPOC()%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC())) == pReferencePictureSet->getPOC(i)%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC()))
+#else
       if(rpcPic->getIsLongTerm() && (rpcPic->getPicSym()->getSlice(0)->getPOC()%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC())) == pReferencePictureSet->getPOC(i)%(1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC()))
+#endif
       {
         isReference = 1;
         rpcPic->setUsedByCurr(pReferencePictureSet->getUsed(i));
@@ -1389,6 +1418,44 @@ Void TComSlice::xSetApplyIC()
 // ------------------------------------------------------------------------------------------------
 // Video parameter set (VPS)
 // ------------------------------------------------------------------------------------------------
+#if MVHEVC
+TComVPS::TComVPS()
+: m_VPSId                     (  0)
+, m_uiMaxTLayers              (  1)
+, m_uiMaxLayers               (  1)
+, m_bTemporalIdNestingFlag    (false)
+, m_uiNumHRDParameter         (  0)
+, m_numAddiLayerOperationPoints (2)
+, m_numAddiProLevelSets       (  1)
+{
+  for( Int i = 0; i < MAX_LAYER_NUM; i++)
+  {
+  m_numOpLayerIdMinus1[i] = 0;
+  if(i)
+      m_numDirectRefLayer[i] = 1;
+  else
+    m_numDirectRefLayer[i] = 0;
+  for( Int j = 0; j < MAX_LAYER_NUM; j++)
+  {
+    m_numDirectRefID[i][j] = 0;
+    m_numOpLayerId[i][j]   = 0;
+  }
+    m_uiViewId[i] = 0;
+    m_iViewOrderIdx[i] = 0;
+  }
+  
+  for( Int i = 0; i < MAX_TLAYER; i++)
+  {
+    m_numReorderPics[i] = 0;
+    m_uiMaxDecPicBuffering[i] = 0; 
+    m_uiMaxLatencyIncrease[i] = 0;
+  }
+}
+
+TComVPS::~TComVPS()
+{
+}
+#else
 #if VIDYO_VPS_INTEGRATION
 TComVPS::TComVPS()
 : m_VPSId                     (  0)
@@ -1421,14 +1488,14 @@ TComVPS::~TComVPS()
 }
 
 #endif
-
+#endif
 
 // ------------------------------------------------------------------------------------------------
 // Sequence parameter set (SPS)
 // ------------------------------------------------------------------------------------------------
 
 TComSPS::TComSPS()
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
 : m_VPSId                     (  0)
 , m_SPSId                     (  0)
 #else
@@ -1480,7 +1547,11 @@ TComSPS::TComSPS()
 , m_bUseLComb                 (false)
 , m_bLCMod                    (false)
 #if H0412_REF_PIC_LIST_RESTRICTION
+#if MVHEVC
+, m_restrictedRefPicListsFlag   (  0)
+#else
 , m_restrictedRefPicListsFlag   (  1)
+#endif
 , m_listsModificationPresentFlag(  0)
 #endif
 , m_uiBitDepth                (  8)
@@ -1733,10 +1804,11 @@ TComPPS::~TComPPS()
 Void
 TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecision, Bool bCamParSlice, Int** aaiScale, Int** aaiOffset )
 {
+#if !MVHEVC
   AOT( uiViewId == 0 && iViewOrderIdx != 0 );
   AOT( uiViewId != 0 && iViewOrderIdx == 0 );
   AOT( uiViewId != 0 && !bCamParSlice && ( aaiScale == 0 || aaiOffset == 0 ) );
-
+#endif
   m_uiViewId              = uiViewId;
   m_iViewOrderIdx         = iViewOrderIdx;
   m_bDepth                = false;
@@ -1744,6 +1816,7 @@ TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecis
   m_bCamParInSliceHeader  = ( m_uiViewId ? bCamParSlice  : false );
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
+#if !MVHEVC
   if( !m_bCamParInSliceHeader )
   {
     for( UInt uiBaseViewId = 0; uiBaseViewId < m_uiViewId; uiBaseViewId++ )
@@ -1754,6 +1827,7 @@ TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecis
       m_aaiCodedOffset[ 1 ][ uiBaseViewId ] = aaiOffset[   m_uiViewId ][ uiBaseViewId ];
     }
   }
+#endif
 }
 
 Void
@@ -2373,7 +2447,7 @@ ParameterSetManager::ParameterSetManager()
 : m_spsMap(MAX_NUM_SPS)
 , m_ppsMap(MAX_NUM_PPS)
 , m_apsMap(MAX_NUM_APS)
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
 , m_vpsMap(MAX_NUM_VPS)
 #endif
 {
