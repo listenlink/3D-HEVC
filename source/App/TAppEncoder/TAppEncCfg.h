@@ -108,7 +108,7 @@ protected:
   // coding quality
   std::vector<Double>  m_adQP;                                ///< QP value of key-picture (floating point) [0] video, [1] depth
   std::vector<Int>     m_aiQP;                                ///< QP value of key-picture (integer) [0] video, [1] depth
-#if MVHEVC
+#if QC_MVHEVC_B0046
   std::vector<Int>     m_aiVId;                                ///< view id
 #endif
   Int       m_aiTLayerQPOffset[MAX_TLAYER];                   ///< QP offset corresponding to temporal layer depth
@@ -287,7 +287,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   // camera parameter
   Char*     m_pchCameraParameterFile;                         ///< camera parameter file
   Char*     m_pchBaseViewCameraNumbers;
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   TAppComCamPara m_cCameraData;
 #endif
   Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters

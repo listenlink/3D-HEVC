@@ -73,7 +73,7 @@ private:
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
 #if DEPTH_MAP_GENERATION
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   TComVPSAccess                   m_cVPSAccess;
 #endif
   TComSPSAccess                   m_cSPSAccess;
@@ -87,7 +87,7 @@ public:
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  increaseNumberOfViews  (UInt layerId, UInt viewId, UInt isDepth);
 #else
   Void  increaseNumberOfViews  (Int newNumberOfViewDepth);

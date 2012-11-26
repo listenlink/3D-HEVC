@@ -58,7 +58,7 @@ namespace po = df::program_options_lite;
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
 TAppRendererCfg::TAppRendererCfg()
 {
 

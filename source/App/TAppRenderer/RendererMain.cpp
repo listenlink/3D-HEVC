@@ -42,7 +42,7 @@
 
 int main(int argc, char* argv[])
   {
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   TAppRendererTop  cTAppRendererTop;
 
   // print information

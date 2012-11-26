@@ -923,7 +923,7 @@ TComPrediction::xPredInterPrdDepthMap( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef
     iVer = pcMv->getVer() * 4;
 }
 #endif
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   Int     ixFrac      = iHor & 0x3;
   Int     iyFrac      = iVer & 0x3;
 #endif

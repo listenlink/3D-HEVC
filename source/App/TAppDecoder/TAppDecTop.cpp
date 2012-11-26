@@ -81,7 +81,7 @@ Void TAppDecTop::destroy()
  */
 Void TAppDecTop::decode()
 {
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   increaseNumberOfViews( 0, 0, 0 );
 #else
   increaseNumberOfViews( 1 );
@@ -144,7 +144,7 @@ Void TAppDecTop::decode()
     else
     {
       read(nalu, nalUnit);
-#if MVHEVC
+#if QC_MVHEVC_B0046
     viewDepthId = nalu.m_layerId;
     Int depth = 0;
     Int viewId = viewDepthId;
@@ -170,7 +170,7 @@ Void TAppDecTop::decode()
       newPicture[viewDepthId] = false;
       if( viewDepthId >= m_tDecTop.size() )      
       {
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
         increaseNumberOfViews( viewDepthId, viewId, depth );
 #else
         increaseNumberOfViews( viewDepthId +1 );
@@ -199,7 +199,7 @@ Void TAppDecTop::decode()
       }   
       if( !(m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) )
       {
-#if MVHEVC
+#if QC_MVHEVC_B0046
         if(viewDepthId && m_tDecTop[viewDepthId]->m_bFirstNal== false)
         {
           m_tDecTop[viewDepthId]->m_bFirstNal = true;
@@ -232,7 +232,7 @@ Void TAppDecTop::decode()
     }
     if( pcListPic[viewDepthId] )
     {
-#if QC_REM_IDV
+#if QC_REM_IDV_B0046
       Int iviewId = m_tDecTop[viewDepthId]->getViewId();
       if( newPicture[viewDepthId] && (nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR || ((nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR && iviewId) && m_tDecTop[viewDepthId]->getNalUnitTypeBaseView() == NAL_UNIT_CODED_SLICE_IDR)) )
 #else
@@ -294,7 +294,7 @@ Void TAppDecTop::xDestroyDecLib()
         m_tDecTop[viewDepthIdx]->deletePicBuffer();
         m_tDecTop[viewDepthIdx]->destroy() ;
       }
-#if MVHEVC
+#if QC_MVHEVC_B0046
       if(viewDepthIdx)
       {
          //Call clear function to remove the record, which has been freed during viewDepthIdx = 0 case.
@@ -444,20 +444,20 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
   pcListPic->clear();
   m_pocLastDisplay[viewDepthId] = -MAX_INT;
 }
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
 Void  TAppDecTop::increaseNumberOfViews  ( UInt layerId, UInt viewId, UInt isDepth )
 #else
 Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
 #endif
 {
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Int newNumberOfViewDepth = layerId + 1;
 #endif
   if ( m_outputBitDepth == 0 )
   {
     m_outputBitDepth = g_uiBitDepth + g_uiBitIncrement;
   }
-#if !VIDYO_VPS_INTEGRATION&!MVHEVC
+#if !VIDYO_VPS_INTEGRATION&!QC_MVHEVC_B0046
   Int viewId = (newNumberOfViewDepth-1)>>1;   // coding order T0D0T1D1T2D2
   Bool isDepth = ((newNumberOfViewDepth % 2) == 0);  // coding order T0D0T1D1T2D2
 #endif
@@ -470,13 +470,13 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
     {
       m_tVideoIOYuvReconFile.push_back(new TVideoIOYuv);
       Char buffer[4];
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
       sprintf(buffer,"_%i", viewId );
 #else
       sprintf(buffer,"_%i", (Int)(m_tVideoIOYuvReconFile.size()-1) / 2 );
 #endif
       Char* nextFilename = NULL;
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
       if( isDepth)
 #else
       if( (m_tVideoIOYuvReconFile.size() % 2) == 0 )
@@ -491,7 +491,7 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
       {
         xAppendToFileNameEnd( m_pchReconFile, buffer, nextFilename);
       }
-#if !VIDYO_VPS_INTEGRATION&!MVHEVC
+#if !VIDYO_VPS_INTEGRATION&!QC_MVHEVC_B0046
       if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
 #endif
       {
@@ -508,7 +508,7 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
   while( m_tDecTop.size() < newNumberOfViewDepth)
   {
     m_tDecTop.push_back(new TDecTop);
-#if !VIDYO_VPS_INTEGRATION&!MVHEVC
+#if !VIDYO_VPS_INTEGRATION&!QC_MVHEVC_B0046
     if( isDepth || ( !isDepth && (m_tVideoIOYuvReconFile.size() % 2) == 1 ) )
     {
 #endif
@@ -518,7 +518,7 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
       m_tDecTop.back()->setIsDepth( isDepth );
       m_tDecTop.back()->setPictureDigestEnabled(m_pictureDigestEnabled);
       m_tDecTop.back()->setCamParsCollector( &m_cCamParsCollector );
-#if !VIDYO_VPS_INTEGRATION&!MVHEVC
+#if !VIDYO_VPS_INTEGRATION&!QC_MVHEVC_B0046
     }
 #endif
   }

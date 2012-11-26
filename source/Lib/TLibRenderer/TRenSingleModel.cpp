@@ -35,7 +35,7 @@
 #include "TRenFilter.h"
 #include "TRenSingleModel.h"
 
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
 ////////////// TRENSINGLE MODEL ///////////////
 template <BlenMod iBM, Bool bBitInc>
 TRenSingleModelC<iBM,bBitInc>::TRenSingleModelC()
