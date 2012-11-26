@@ -120,7 +120,7 @@ Void TEncEntropy::encodePPS( TComPPS* pcPPS )
   return;
 }
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
 Void TEncEntropy::encodeVPS( TComVPS* pcVPS )
 {
   m_pcEntropyCoderIf->codeVPS( pcVPS );
@@ -128,7 +128,7 @@ Void TEncEntropy::encodeVPS( TComVPS* pcVPS )
 }
 #endif
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
 Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
 

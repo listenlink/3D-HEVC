@@ -161,7 +161,7 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param pSPS          SPS associated with the slice
  \param pPPS          PPS associated with the slice
  */
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS * pVPS, TComSPS* pSPS, TComPPS *pPPS )
 #else
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
@@ -171,7 +171,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   Double dLambda;
   
   rpcSlice = pcPic->getSlice(0);
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   rpcSlice->setVPS( pVPS );
 #endif
   rpcSlice->setSPS( pSPS );
@@ -819,9 +819,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTileCol      = 0;
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
-
+#if !MVHEVC
   Int iLastPosY = -1;
-
+#endif
   // for every CU in slice
   UInt uiEncCUOrder;
   uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU()); 
@@ -832,7 +832,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     // initialize CU encoder
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
-
+#if !MVHEVC
     if ( m_pcRdCost->getUseRenModel() )
     {
       // updated renderer model if necessary
@@ -846,7 +846,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         m_pcGOPEncoder->getEncTop()->getEncTop()->setupRenModel( rpcPic->getCurrSlice()->getPOC() , rpcPic->getCurrSlice()->getSPS()->getViewId(), rpcPic->getCurrSlice()->getSPS()->isDepth() ? 1 : 0, iCurPosY );
       }
     }    
-
+#endif
     // inherit from TR if necessary, select substream to use.
     if( m_pcCfg->getUseSBACRD() )
     {

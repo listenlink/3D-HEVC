@@ -74,7 +74,9 @@ protected:
   Void  xReadSvlcTr           (               Int& rValue, const Char *pSymbolName);
   Void  xReadFlagTr           (              UInt& rValue, const Char *pSymbolName);
 #endif
-  
+#if MVHEVC
+  Void  xReadVPSAlignOne      ();
+#endif
   Void  xReadPCMAlignZero     ();
 
   UInt  xGetBit             ();
@@ -112,7 +114,7 @@ public:
   Void  parseQtCbf          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
   Void  parseQtRootCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   Void  parseVPS            ( TComVPS* pcVPS );
 #endif
 #if HHI_MPI

@@ -49,7 +49,7 @@
 #include "../../Lib/TLibRenderer/TRenModSetupStrParser.h"
 #include <string>
 #include <vector>
-
+#if !MVHEVC
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -133,6 +133,6 @@ public:
 };// END CLASS DEFINITION TAppRendererCfg
 
 
-
+#endif
 #endif // __TAppRENDERERCFG__
 

@@ -109,7 +109,7 @@ public:
   Void    init                ( TEncTop* pcEncTop );
   
   /// preparation of slice encoding (reference marking, QP and lambda)
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS );
 #else
   Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );

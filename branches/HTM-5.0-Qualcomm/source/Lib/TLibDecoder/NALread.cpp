@@ -131,6 +131,11 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
   nalu.m_nalUnitType = (NalUnitType) bs.read(5);
 #endif
 
+#if MVHEVC
+  //nalu.m_layerId    = bs.read(6);
+  nalu.m_layerId    = bs.read(5);
+  nalu.m_temporalId = bs.read(3) - 1;
+#else
 #if H0388
   nalu.m_temporalId = bs.read(3);
  //  unsigned reserved_one_5bits = bs.read(5);
@@ -144,7 +149,11 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
 #if H0566_TLA
   if ( nalu.m_temporalId )
   {
+#if QC_REM_IDV
+    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_CRA && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR);
+#else
     assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_CRA && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDV );
+#endif
   }
 #endif
 #else
@@ -153,7 +162,9 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
   case NAL_UNIT_CODED_SLICE:
   case NAL_UNIT_CODED_SLICE_IDR:
 #if H0566_TLA
+#if !QC_REM_IDV
   case NAL_UNIT_CODED_SLICE_IDV:
+#endif
   case NAL_UNIT_CODED_SLICE_CRA:
   case NAL_UNIT_CODED_SLICE_TLA:
 #else
@@ -174,7 +185,11 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
 #if H0566_TLA
       if (nalu.m_temporalId == 0)
       {
+#if QC_REM_IDV
+        assert(nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR);
+#else
         assert(nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDV );
+#endif
       }
       else
       {
@@ -188,6 +203,7 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
     nalu.m_OutputFlag = true;
     break;
   }
+#endif
 #endif
 }
 //! \}

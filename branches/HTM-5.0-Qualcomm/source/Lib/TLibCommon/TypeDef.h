@@ -40,7 +40,12 @@
 
 //! \ingroup TLibCommon
 //! \{
-
+#define MVHEVC                            0
+#define            IV_AS_LT               1   //inter-view reference pictures are treated as long-term pictures         
+#define            TMVP_INDEX_MODIFY      1   //the reference index for temporal merging candidate is set to 0, as defined in HEVC
+#define            QC_REM_IDV             1   //nal unit type NAL_UNIT_CODED_SLICE_IDV is removed.
+#define            BUG_FIX_HTM            1
+#if !MVHEVC
 ///// ***** FIXES *********
 // A
 #define FIX_POZNAN_CABAC_INIT_FLAG        1
@@ -176,7 +181,7 @@
 #endif
 
 #define HHI_MPI_MERGE_POS                 0
-
+#endif
 ///// ***** HM 6.1 *********
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
 #define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point
@@ -476,10 +481,14 @@ enum MODE_IDX
 // ====================================================================================================================
 // VPS INTEGRATION
 // ====================================================================================================================
-
+#if !MVHEVC
 #if VIDYO_VPS_INTEGRATION
 #define MAX_NUM_VPS 10
 #endif
+#else
+#define MAX_NUM_VPS 1
+#endif
+
 
 // ====================================================================================================================
 // Basic type redefinition

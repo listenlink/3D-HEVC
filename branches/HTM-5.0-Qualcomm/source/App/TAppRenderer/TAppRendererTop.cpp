@@ -44,7 +44,7 @@
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
-
+#if !MVHEVC
 TAppRendererTop::TAppRendererTop()
 {
 
@@ -1033,3 +1033,4 @@ Void TAppRendererTop::renderUsedPelsMap( )
   xDestroyLib();
 
 }
+#endif

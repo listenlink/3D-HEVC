@@ -54,7 +54,7 @@ Void TExtrTop::init()
 
 Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds )
 {
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   //extraction now has to be done using layer_id
   UInt uiLayerId = nalu.m_layerId;
 #else
@@ -64,7 +64,7 @@ Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds 
   m_cEntropyDecoder.setEntropyDecoder( &m_cCavlcDecoder );
   m_cEntropyDecoder.setBitstream     ( nalu.m_Bitstream );
   
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   if ( nalu.m_nalUnitType == NAL_UNIT_VPS )
   {
     // a hack for now assuming there's only one VPS in the bitstream

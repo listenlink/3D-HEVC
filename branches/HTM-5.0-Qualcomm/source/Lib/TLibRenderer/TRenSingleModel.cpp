@@ -35,6 +35,7 @@
 #include "TRenFilter.h"
 #include "TRenSingleModel.h"
 
+#if !MVHEVC
 ////////////// TRENSINGLE MODEL ///////////////
 template <BlenMod iBM, Bool bBitInc>
 TRenSingleModelC<iBM,bBitInc>::TRenSingleModelC()
@@ -1955,3 +1956,5 @@ TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipR( Int iStartPosX, Int iStartPosY
   return bNoDiff;
 }
 #endif
+#endif
+

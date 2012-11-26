@@ -184,6 +184,9 @@
 // ====================================================================================================================
 // VPS constants
 // ====================================================================================================================
+#if MVHEVC
+#define MAX_LAYER_NUM                     MAX_VIEW_NUM
+#endif
 #if VIDYO_VPS_INTEGRATION
 #define MAX_LAYER_NUM                     MAX_VIEW_NUM
 #define VPS_EXTENSION_TYPE_MULTI_VIEW     0
@@ -479,7 +482,11 @@ enum NalUnitType
   NAL_UNIT_UNSPECIFIED_0 = 0,
   NAL_UNIT_CODED_SLICE,
 #if H0566_TLA
+#if QC_REM_IDV
+  NAL_UNIT_RESERVED,
+#else
   NAL_UNIT_CODED_SLICE_IDV,
+#endif
   NAL_UNIT_CODED_SLICE_TLA,
   NAL_UNIT_CODED_SLICE_CRA,
 #else
@@ -507,7 +514,7 @@ enum NalUnitType
   NAL_UNIT_RESERVED_22,
   NAL_UNIT_RESERVED_23,
   NAL_UNIT_UNSPECIFIED_24,
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   NAL_UNIT_VPS,
 #else
   NAL_UNIT_UNSPECIFIED_25,

@@ -113,7 +113,7 @@ public:
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
   UInt  getCoeffCost          ()                { return  m_uiCoeffCost;  }
   
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
 

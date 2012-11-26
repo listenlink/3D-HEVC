@@ -306,7 +306,7 @@ protected:
   Int       m_signHidingThreshold;
 #endif
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|MVHEVC
   UInt     m_layerId;
 #endif
   
@@ -819,7 +819,7 @@ public:
   Int       getSignHideFlag()                    { return m_signHideFlag; }
   Int       getTSIG()                            { return m_signHidingThreshold; }
 #endif
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION |MVHEVC
   Void      setLayerId             ( UInt layerId )   { m_layerId = layerId; }
   UInt      getLayerId             ()               { return m_layerId; }
 #endif

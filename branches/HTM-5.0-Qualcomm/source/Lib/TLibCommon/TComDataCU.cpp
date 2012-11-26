@@ -4306,6 +4306,7 @@ true
   )
   {
     // col [2]
+#if !TMVP_INDEX_MODIFY
     Int iRefIdxSkip[2] = {-1, -1};
     for (Int i=0; i<2; i++)
     {
@@ -4325,6 +4326,7 @@ true
 #endif
       iRefIdxSkip[i] = (iRefIdxTmp != -1) ? iRefIdxTmp : 0;
     }
+#endif
     //>> MTK colocated-RightBottom
     UInt uiPartIdxRB;
     Int uiLCUIdx = getAddr();
@@ -4336,8 +4338,11 @@ true
     UInt uiNumPartInCUWidth = m_pcPic->getNumPartInWidth();
 
     TComMv cColMv;
+#if TMVP_INDEX_MODIFY
+    Int iRefIdx = 0;
+#else
     Int iRefIdx;
-
+#endif
     if      ( ( m_pcPic->getCU(m_uiCUAddr)->getCUPelX() + g_auiRasterToPelX[uiAbsPartIdxTmp] + m_pcPic->getMinCUWidth() ) >= m_pcSlice->getSPS()->getPicWidthInLumaSamples() )  // image boundary check
     {
       uiLCUIdx = -1;
@@ -4370,8 +4375,11 @@ true
         uiLCUIdx = -1 ; 
       }
     }
+#if !TMVP_INDEX_MODIFY
     iRefIdx = iRefIdxSkip[0];
-
+#else
+    iRefIdx = 0;
+#endif
     Bool bExistMV = false;
     UInt uiPartIdxCenter;
     UInt uiCurLCUIdx = getAddr();
@@ -4389,7 +4397,11 @@ true
 
       if ( getSlice()->isInterB() )
       {       
+#if !TMVP_INDEX_MODIFY
         iRefIdx = iRefIdxSkip[1];
+#else
+        iRefIdx = 0;
+#endif
         bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx);
         if( bExistMV == false )
         {
@@ -6399,12 +6411,19 @@ Bool TComDataCU::xAddMVPCand( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefI
 
   if( pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) >= 0 )
   {
+#if IV_AS_LT
+    Bool bIsCurrRefLongTerm = m_pcSlice->getRefPic( eRefPicList, iRefIdx)->getIsLongTerm();
+    Bool bIsNeibRefLongTerm = m_pcSlice->getRefPic( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx))->getIsLongTerm();
+    iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) );
+    if ( (bIsCurrRefLongTerm == bIsNeibRefLongTerm) && (iNeibRefPOC == iCurrRefPOC) )
+#else
     if( pcTmpCU->getSlice()->getRefViewId( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) ) != m_pcSlice->getRefViewId( eRefPicList, iRefIdx ) )
     {
       return false;
     }
     iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) );
     if( iNeibRefPOC == iCurrRefPOC ) // Same Reference Frame But Diff List//
+#endif
     {
       TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList2nd)->getMv(uiIdx);
 #if LGE_DVMCP_A0126
@@ -6541,12 +6560,21 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   Int iNeibPOC = iCurrPOC;
   Int iNeibRefPOC;
 
+#if IV_AS_LT
+  Bool bIsCurrRefLongTerm = m_pcSlice->getRefPic( eRefPicList, iRefIdx)->getIsLongTerm();
+  Bool bIsNeibRefLongTerm = false;
+#endif
   if( pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) >= 0 )
   {
     iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) );
+#if IV_AS_LT
+    bIsNeibRefLongTerm = m_pcSlice->getRefPic( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx))->getIsLongTerm() ;
+    if ( (bIsCurrRefLongTerm == bIsNeibRefLongTerm) && (iNeibRefPOC == iCurrRefPOC) )
+#else
     if( pcTmpCU->getSlice()->getRefViewId( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) ) != m_pcSlice->getRefViewId( eRefPicList, iRefIdx ) )
       return false;
     if( iNeibRefPOC == iCurrRefPOC ) // Same Reference Frame But Diff List//
+#endif
     {
       TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList2nd)->getMv(uiIdx);
 #if LGE_DVMCP_A0126
@@ -6564,12 +6592,16 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
     iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) );
     TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
     TComMv rcMv;
-
+#if IV_AS_LT
+    bIsNeibRefLongTerm = m_pcSlice->getRefPic( eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx))->getIsLongTerm(); 
+    if ( bIsCurrRefLongTerm == bIsNeibRefLongTerm )
+    {
+#else
     if( pcTmpCU->getSlice()->getRefViewId( eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) ) != m_pcSlice->getRefViewId( eRefPicList, iRefIdx ) )
     {
       return false;
     }
-
+#endif
     Int iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
     if ( iScale == 4096 )
     {
@@ -6584,6 +6616,9 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
 #endif
     pInfo->m_acMvCand[ pInfo->iN++] = rcMv;
     return true;
+#if IV_AS_LT
+    }
+#endif
   }
   //---------------------- V2(END) --------------------//
   if( pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) >= 0)
@@ -6591,12 +6626,16 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
     iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) );
     TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList2nd)->getMv(uiIdx);
     TComMv rcMv;
-
+#if IV_AS_LT
+    bIsNeibRefLongTerm = m_pcSlice->getRefPic( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx))->getIsLongTerm(); ;
+    if ( bIsCurrRefLongTerm == bIsNeibRefLongTerm )
+    {
+#else
     if( pcTmpCU->getSlice()->getRefViewId( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) ) != m_pcSlice->getRefViewId( eRefPicList, iRefIdx ) )
     {
       return false;
     }
-
+#endif
     Int iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
     if ( iScale == 4096 )
     {
@@ -6611,6 +6650,9 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
 #endif
     pInfo->m_acMvCand[ pInfo->iN++] = rcMv;
     return true;
+#if IV_AS_LT
+  }
+#endif
   }
   //---------------------- V3(END) --------------------//
   return false;
@@ -6721,7 +6763,11 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   RefPicList  eColRefPicList;
   Int iColPOC, iColRefPOC, iCurrPOC, iCurrRefPOC, iScale;
 #if SONY_COLPIC_AVAILABILITY
+#if IV_AS_LT
+  Int iColViewOrderIdx, iCurrViewOrderIdx, iCurrRefViewOrderIdx;
+#else
   Int iColViewOrderIdx, iColRefViewOrderIdx, iCurrViewOrderIdx, iCurrRefViewOrderIdx;
+#endif
 #endif
   TComMv cColMv;
 
@@ -6752,7 +6798,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
     return false;
   }
 
-#if !SONY_COLPIC_AVAILABILITY
+#if !SONY_COLPIC_AVAILABILITY&!IV_AS_LT
   if( m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewId() != m_pcSlice->getViewId() )
     return false;
 #endif
@@ -6780,6 +6826,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   // Scale the vector.
   iColRefPOC = pColCU->getSlice()->getRefPOC(eColRefPicList, iColRefIdx);
 
+#if !IV_AS_LT
 #if SONY_COLPIC_AVAILABILITY
   iColRefViewOrderIdx = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewOrderIdx();
 #else
@@ -6788,10 +6835,36 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
     return false;
   }
 #endif
-
+#else
+  Bool bIsCurrRefLongTerm = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getIsLongTerm();
+  Bool bIsColRefLongTerm = pColCU->getSlice()->getWasLongTerm(eColRefPicList, iColRefIdx); 
+  if(bIsCurrRefLongTerm != bIsColRefLongTerm) 
+  {
+    assert( ((iColPOC == iColRefPOC)&&(iCurrPOC != iCurrRefPOC))||((iColPOC != iColRefPOC)&&(iCurrPOC == iCurrRefPOC)));
+    return false;
+  }
+#endif
   cColMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiAbsPartAddr);
 
   iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
+#if IV_AS_LT
+  {
+    assert( ((iColPOC != iColRefPOC)&&(iCurrPOC != iCurrRefPOC))||((iColPOC == iColRefPOC)&&(iCurrPOC == iCurrRefPOC)));
+    if(!bIsCurrRefLongTerm)  //short-term
+    {
+      iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
+      if ( iScale == 4096 )
+      {
+        rcMv = cColMv;
+      }
+      else
+      {
+        rcMv = cColMv.scaleMv( iScale );
+      }
+    }else
+      rcMv = cColMv; //inter-view
+  }
+#else
 #if SONY_COLPIC_AVAILABILITY
   iScale = 0;
   iCurrRefViewOrderIdx = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx();
@@ -6813,7 +6886,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   {
     rcMv = cColMv.scaleMv( iScale );
   }
-
+#endif
   return true;
 }
 
