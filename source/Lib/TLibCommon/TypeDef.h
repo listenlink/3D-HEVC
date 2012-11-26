@@ -40,7 +40,12 @@
 
 //! \ingroup TLibCommon
 //! \{
-
+#define QC_MVHEVC_B0046                   0
+#define QC_IV_AS_LT_B0046                 1   //JCT3V-B0046: Disable 3DHEVC tools 
+#define QC_TMVP_IDX_MOD_B0046             1   //JCT3V-B0046: inter-view reference pictures are treated as long-term pictures, scaling of motion vectors for DCP based on ViewId/ViewOrderIdx is disabled 
+#define QC_REM_IDV_B0046                  1   //JCT3V-B0046: the reference index for temporal merging candidate is set to 0, as defined in HEVC
+#define FIX_DEL_NULLPTR                   1
+#if !QC_MVHEVC_B0046
 ///// ***** FIXES *********
 // A
 #define FIX_POZNAN_CABAC_INIT_FLAG        1
@@ -176,7 +181,7 @@
 #endif
 
 #define HHI_MPI_MERGE_POS                 0
-
+#endif
 ///// ***** HM 6.1 *********
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
 #define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point
@@ -476,10 +481,14 @@ enum MODE_IDX
 // ====================================================================================================================
 // VPS INTEGRATION
 // ====================================================================================================================
-
+#if !QC_MVHEVC_B0046
 #if VIDYO_VPS_INTEGRATION
 #define MAX_NUM_VPS 10
 #endif
+#else
+#define MAX_NUM_VPS 1
+#endif
+
 
 // ====================================================================================================================
 // Basic type redefinition

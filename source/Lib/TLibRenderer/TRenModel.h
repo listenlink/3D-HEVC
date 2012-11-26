@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
+#if !QC_MVHEVC_B0046
 #ifndef __TRENMODEL__
 #define __TRENMODEL__
 
@@ -155,3 +155,5 @@ private:
 };
 
 #endif //__TRENMODEL__
+#endif
+

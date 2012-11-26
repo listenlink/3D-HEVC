@@ -395,7 +395,7 @@ void TEncSbac::codeSEI(const SEI&)
   assert(0);
 }
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
 Void TEncSbac::codeVPS( TComVPS* pcVPS )
 {
   assert (0);

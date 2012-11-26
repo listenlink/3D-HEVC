@@ -34,7 +34,7 @@
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenModel.h"
-
+#if !QC_MVHEVC_B0046
 ///////////  TRENMODEL //////////////////////
 TRenModel::TRenModel()
 {
@@ -696,3 +696,5 @@ TRenModel::xSetLRViewAndAddModel( Int iModelNum, Int iBaseViewNum, Int iContent,
     }
   }
 }
+#endif
+
