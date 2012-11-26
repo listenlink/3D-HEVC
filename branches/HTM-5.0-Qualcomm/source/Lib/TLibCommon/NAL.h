@@ -50,7 +50,7 @@ struct NALUnit
 #else
   NalRefIdc   m_nalRefIDC;   ///< nal_ref_idc
 #endif
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   unsigned    m_layerId;
   unsigned    m_temporalId;  ///< temporal_id
 #else
@@ -68,7 +68,7 @@ struct NALUnit
   NALUnit(
     NalUnitType nalUnitType,
     Bool        nalRefFlag,
-#if !VIDYO_VPS_INTEGRATION & !MVHEVC    
+#if !VIDYO_VPS_INTEGRATION & !QC_MVHEVC_B0046    
     Int         viewId,
     Bool        isDepth,
 #else
@@ -77,7 +77,7 @@ struct NALUnit
     unsigned       temporalId = 0)
     :m_nalUnitType (nalUnitType)
     ,m_nalRefFlag  (nalRefFlag)
-#if !VIDYO_VPS_INTEGRATION & !MVHEVC
+#if !VIDYO_VPS_INTEGRATION & !QC_MVHEVC_B0046
     ,m_viewId      (viewId)
     ,m_isDepth     (isDepth)
 #else
@@ -138,7 +138,7 @@ struct NALUnit
   {
     return m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR
 #if H0566_TLA
-#if !QC_REM_IDV    
+#if !QC_REM_IDV_B0046    
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDV
 #endif
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA

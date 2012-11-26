@@ -49,7 +49,7 @@ CamParsCollector::CamParsCollector()
   m_aaiCodedOffset         = new Int* [ MAX_VIEW_NUM ];
   m_aaiCodedScale          = new Int* [ MAX_VIEW_NUM ];
   m_aiViewOrderIndex       = new Int  [ MAX_VIEW_NUM ];
-#if MVHEVC
+#if QC_MVHEVC_B0046
   m_aiViewId               = new Int  [ MAX_VIEW_NUM ];
 #endif
   m_aiViewReceived         = new Int  [ MAX_VIEW_NUM ];
@@ -268,7 +268,7 @@ TDecTop::TDecTop()
   m_bFirstSliceInPicture    = true;
   m_bFirstSliceInSequence   = true;
   m_pcCamParsCollector = 0;
-#if MVHEVC
+#if QC_MVHEVC_B0046
   m_bFirstNal                  = false;
 #endif
 }
@@ -583,7 +583,7 @@ Void TDecTop::xActivateParameterSets()
 #if VIDYO_VPS_INTEGRATION
   TComVPS *vps = m_parameterSetManagerDecoder.getVPS(sps->getVPSId());
   assert (vps != 0);
-#if !QC_REM_IDV
+#if !QC_REM_IDV_B0046
   if( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )
 #else
   if( (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA) && !sps->getViewId() )
@@ -593,10 +593,10 @@ Void TDecTop::xActivateParameterSets()
 #endif
   m_apcSlicePilot->setPPS(pps);
   m_apcSlicePilot->setSPS(sps);
-#if MVHEVC
+#if QC_MVHEVC_B0046
   TComVPS *vps = m_parameterSetManagerDecoder.getVPS(sps->getVPSId());
 #endif
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   m_apcSlicePilot->setVPS(vps);
 #endif
   pps->setSPS(sps);
@@ -638,14 +638,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   m_apcSlicePilot->setPPSId(0);
   m_apcSlicePilot->setPPS(m_parameterSetManagerDecoder.getPrefetchedPPS(0));
   m_apcSlicePilot->setSPS(m_parameterSetManagerDecoder.getPrefetchedSPS(0));
-#if VIDYO_VPS_INTEGRATION|MVHEVC
-#if MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+#if QC_MVHEVC_B0046
   m_apcSlicePilot->setIsDepth(false);
 #endif
   m_apcSlicePilot->setVPS(m_parameterSetManagerDecoder.getPrefetchedVPS(0));
 #endif
   m_apcSlicePilot->initTiles();
-#if MVHEVC
+#if QC_MVHEVC_B0046
   m_apcSlicePilot->setViewId( nalu.m_layerId );
   m_apcSlicePilot->setViewId( nalu.m_layerId );
   m_apcSlicePilot->setViewOrderIdx(m_apcSlicePilot->getVPS()->getViewId(nalu.m_layerId), nalu.m_layerId);
@@ -671,7 +671,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   m_apcSlicePilot->setNalUnitType(nalu.m_nalUnitType);
   if( m_bFirstSliceInPicture )
   {
-#if MVHEVC
+#if QC_MVHEVC_B0046
     if( nalu.m_layerId == 0 ) { m_nalUnitTypeBaseView = nalu.m_nalUnitType; }
     else                     { m_nalUnitTypeBaseView = m_tAppDecTop->getTDecTop( 0, 0 )->getNalUnitTypeBaseView(); }
 #else
@@ -981,7 +981,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     }
 
     // Set reference list 
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
 #if VIDYO_VPS_INTEGRATION
     pcSlice->setViewId( pcSlice->getVPS()->getViewId(nalu.m_layerId) );
     pcSlice->setIsDepth( pcSlice->getVPS()->getDepthFlag(nalu.m_layerId) );
@@ -1103,7 +1103,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   //  Decode a picture
   m_cGopDecoder.decompressGop(nalu.m_Bitstream, pcPic, false);
 
-#if IV_AS_LT
+#if QC_IV_AS_LT_B0046
   std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
   for( Int k = 0; k < apcInterViewRefPics.size(); k++ )
   {
@@ -1122,14 +1122,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   return false;
 }
 
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
 Void TDecTop::xDecodeVPS()
 {
   TComVPS* vps = new TComVPS();
   
   m_cEntropyDecoder.decodeVPS( vps );
   m_parameterSetManagerDecoder.storePrefetchedVPS(vps);  
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   getTAppDecTop()->getVPSAccess()->addVPS( vps );
 #endif
 }
@@ -1197,7 +1197,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 
   switch (nalu.m_nalUnitType)
   {
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
     case NAL_UNIT_VPS:
       xDecodeVPS();
       return false;
@@ -1220,7 +1220,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE:
     case NAL_UNIT_CODED_SLICE_IDR:
 #if H0566_TLA
-#if !QC_REM_IDV
+#if !QC_REM_IDV_B0046
     case NAL_UNIT_CODED_SLICE_IDV:
 #endif
     case NAL_UNIT_CODED_SLICE_CRA:
@@ -1237,7 +1237,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
   return false;
 }
 
-#if MVHEVC
+#if QC_MVHEVC_B0046
 Void TDecTop::xCopyVPS( TComVPS* pVPSV0 )
 {
   m_parameterSetManagerDecoder.storePrefetchedVPS(pVPSV0);  

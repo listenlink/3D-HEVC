@@ -97,7 +97,7 @@ public:
   UInt  getNumberOfWrittenBits ()                { return m_pcBinIf->getNumWrittenBits(); }
   //--SBAC RD
 
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
   

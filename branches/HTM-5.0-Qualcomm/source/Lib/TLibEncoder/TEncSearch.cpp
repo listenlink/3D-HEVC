@@ -4283,7 +4283,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     }
   }
 #endif
-#if MVHEVC
+#if QC_MVHEVC_B0046
   m_pcRdCost->setMultiviewReg( 0 );
 #endif
   setWpScalingDistParam( pcCU, iRefIdxPred, eRefPicList );

@@ -1337,7 +1337,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     }
   }
 }
-#if MVHEVC
+#if QC_MVHEVC_B0046
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 {
   UInt  uiCode;
@@ -1478,7 +1478,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
   
   UInt  uiCode;
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   Int   iCode;
 #endif
   READ_CODE( 8,  uiCode, "profile_idc" );                        pcSPS->setProfileIdc( uiCode );
@@ -1723,7 +1723,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 #endif
   READ_FLAG( uiCode, "sps_extension_flag");
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   if(uiCode)
   {
     READ_FLAG( uiCode, "interview_refs_present_flag");
@@ -1987,8 +1987,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPicOutputFlag( true );
     }
 #endif
-#if QC_REM_IDV
-#if !MVHEVC
+#if QC_REM_IDV_B0046
+#if !QC_MVHEVC_B0046
   if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR && rpcSlice->getSPS()->getViewId() == 0) 
 #else
   if(rpcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR && rpcSlice->getViewId() == 0) 
@@ -2029,8 +2029,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         iPOCmsb = iPrevPOCmsb;
       }
       rpcSlice->setPOC( iPOCmsb+iPOClsb );
-#if QC_REM_IDV
-#if !MVHEVC
+#if QC_REM_IDV_B0046
+#if !QC_MVHEVC_B0046
       if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR &&  rpcSlice->getSPS()->getViewId() && rpcSlice->getPOC() == 0 )
 #else
       if( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR &&  rpcSlice->getViewId() && rpcSlice->getPOC() == 0 )
@@ -2177,7 +2177,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     if( !rpcSlice->isIntra() )
     {
 #if H0412_REF_PIC_LIST_RESTRICTION
-#if MVHEVC
+#if QC_MVHEVC_B0046
     if( !rpcSlice->getViewId() || !rpcSlice->getSPS()->getListsModificationPresentFlag() )
 #else
       if( !rpcSlice->getSPS()->getListsModificationPresentFlag() )
@@ -2252,7 +2252,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     if(rpcSlice->isInterB())
     {
 #if H0412_REF_PIC_LIST_RESTRICTION
-#if MVHEVC
+#if QC_MVHEVC_B0046
     if( !rpcSlice->getViewId() || !rpcSlice->getSPS()->getListsModificationPresentFlag() )
 #else
       if( !rpcSlice->getSPS()->getListsModificationPresentFlag() )
@@ -2340,7 +2340,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_UVLC( uiCode, "num_ref_idx_lc_active_minus1" );      rpcSlice->setNumRefIdx( REF_PIC_LIST_C, uiCode + 1 );
       
 #if H0412_REF_PIC_LIST_RESTRICTION
-#if MVHEVC
+#if QC_MVHEVC_B0046
     if( rpcSlice->getViewId() && rpcSlice->getSPS()->getListsModificationPresentFlag() )
 #else
     if(rpcSlice->getSPS()->getListsModificationPresentFlag() )
@@ -3051,7 +3051,7 @@ Void TDecCavlc::xReadFlag (UInt& ruiCode)
   m_pcBitstream->read( 1, ruiCode );
 }
 
-#if MVHEVC
+#if QC_MVHEVC_B0046
 /** Parse VPS alignment one bits.
  * \returns Void
  */

@@ -35,7 +35,7 @@
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenModSetupStrParser.h"
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
 Int
 TRenModSetupStrParser::getNumOfModels()
 {

@@ -518,7 +518,7 @@ Bool TComPic::getDisCandRefPictures(Int iColPOC)
       Int iTempPoc = currSlice->getRefPic(eRefPicList, lpRef)->getPOC();
       UInt uiTempLayer = currSlice->getRefPic(eRefPicList, lpRef)->getCurrSlice()->getTLayer(); 
       Int iTempDiff = (iTempPoc > iPOCCurr) ? (iTempPoc - iPOCCurr): (iPOCCurr - iTempPoc);
-#if QC_REM_IDV
+#if QC_REM_IDV_B0046
       TComSlice* refSlice = currSlice->getRefPic(eRefPicList, lpRef)->getCurrSlice();
       bRAP = (refSlice->getSPS()->getViewId() && (refSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || refSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA))? 1: 0;      
 #else

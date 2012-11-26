@@ -63,7 +63,7 @@ void write(ostream& out, OutputNALUnit& nalu)
   bsNALUHeader.write(nalu.m_nalUnitType, 5); // nal_unit_type
 #endif
 
-#if MVHEVC
+#if QC_MVHEVC_B0046
   bsNALUHeader.write(nalu.m_layerId,        5); // when nal_ref_flag is signalled, 5 bits here. otherwise, 6 bits
   bsNALUHeader.write(nalu.m_temporalId + 1, 3); // temporal_id
 #else
@@ -82,7 +82,7 @@ void write(ostream& out, OutputNALUnit& nalu)
   case NAL_UNIT_CODED_SLICE:
   case NAL_UNIT_CODED_SLICE_IDR:
 #if H0566_TLA
-#if !QC_REM_IDV
+#if !QC_REM_IDV_B0046
   case NAL_UNIT_CODED_SLICE_IDV:
 #endif
   case NAL_UNIT_CODED_SLICE_CRA:
@@ -201,7 +201,7 @@ void writeRBSPTrailingBits(TComOutputBitstream& bs)
   bs.writeAlignZero();
 }
 
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
 /**
  * Copy NALU from naluSrc to naluDest
  */

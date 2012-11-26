@@ -34,7 +34,7 @@
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenModel.h"
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
 ///////////  TRENMODEL //////////////////////
 TRenModel::TRenModel()
 {

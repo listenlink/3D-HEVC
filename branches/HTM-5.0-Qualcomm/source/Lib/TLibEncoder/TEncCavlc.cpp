@@ -374,7 +374,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( 0, "pps_extension_flag" );
 }
 
-#if MVHEVC
+#if QC_MVHEVC_B0046
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 {
   WRITE_CODE( pcVPS->getVPSId(),               4,        "video_parameter_set_id"     );
@@ -707,7 +707,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   }
 #endif
   WRITE_FLAG( 1, "sps_extension_flag" );
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   WRITE_FLAG( (pcSPS->getNumberOfUsableInterViewRefs() > 0) ? 1 : 0, "interview_refs_present_flag" );
   if( pcSPS->getNumberOfUsableInterViewRefs() > 0 )
   {
@@ -883,7 +883,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   
   if (!bEntropySlice)
   {
-#if MVHEVC
+#if QC_MVHEVC_B0046
     WRITE_UVLC( 0, "pic_parameter_set_id" );
 #else
     WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "pic_parameter_set_id" );
@@ -894,7 +894,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG( pcSlice->getPicOutputFlag() ? 1 : 0, "pic_output_flag" );
     }
 #endif
-#if QC_REM_IDV
+#if QC_REM_IDV_B0046
     if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR && pcSlice->getViewId() == 0) 
 #else
     if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_IDR) 
@@ -906,7 +906,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     else
     {
       WRITE_CODE( (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC()))%(1<<pcSlice->getSPS()->getBitsForPOC()), pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
-#if QC_REM_IDV
+#if QC_REM_IDV_B0046
       if( pcSlice->getPOC() == 0 && !(pcSlice->getSPS()->getViewId() && (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA)))
 #else
       if( pcSlice->getPOC() == 0 && pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_IDV )

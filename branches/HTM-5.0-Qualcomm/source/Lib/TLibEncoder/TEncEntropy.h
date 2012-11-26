@@ -75,7 +75,7 @@ public:
   virtual UInt  getNumberOfWrittenBits()                = 0;
   virtual UInt  getCoeffCost          ()                = 0;
 
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   virtual Void  codeVPS                 ( TComVPS* pcVPS )                                      = 0;
 #endif
 
@@ -241,7 +241,7 @@ public:
   TEncEntropyIf*      m_pcEntropyCoderIf;
   
 public:
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void encodeVPS               ( TComVPS* pcVPS);
 #endif
   // SPS

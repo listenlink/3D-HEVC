@@ -784,7 +784,7 @@ Void TEncTop::xInitSPS()
   }
   else
   {
-#if MVHEVC
+#if QC_MVHEVC_B0046
     m_cSPS.initMultiviewSPS   ( m_viewId);
 #else
     m_cSPS.initMultiviewSPS           ( m_viewId, m_iViewOrderIdx, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
@@ -996,7 +996,7 @@ Void TEncTop::xInitRPS()
    // for a specific slice (with POC = POCCurr)
 Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic )
 {
-#if QC_REM_IDV
+#if QC_REM_IDV_B0046
   if( (slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR ||slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA) && slice->getSPS()->getViewId() && POCCurr == 0 )
 #else
   if( slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && POCCurr == 0 )

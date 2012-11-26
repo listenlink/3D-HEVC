@@ -328,7 +328,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   /* Camera Paremetes */
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
-#if MVHEVC
+#if QC_MVHEVC_B0046
   ("BaseViewCameraNumbers" ,  m_aiVId,     std::vector<Int>(1, MAX_VIEW_NUM), "Numbers of base views")
 #endif
   ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
@@ -788,7 +788,7 @@ else
     LOG2_DISP_PREC_LUT );
 }
 #else
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
     m_uiInputBitDepth,
     (UInt)m_iCodedCamParPrecision,
@@ -805,7 +805,7 @@ else
 
   // check validity of input parameters
   xCheckParameter();
-#if !MVHEVC
+#if !QC_MVHEVC_B0046
   m_cCameraData.check( false, true );
 #endif
   // print-out parameters

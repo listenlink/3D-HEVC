@@ -87,7 +87,7 @@ private:
   Int**   m_aaiCodedOffset;
   Int**   m_aaiCodedScale;
   Int*    m_aiViewOrderIndex;
-#if MVHEVC
+#if QC_MVHEVC_B0046
   Int*    m_aiViewId;
 #endif
   Int*    m_aiViewReceived;
@@ -170,7 +170,7 @@ public:
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
   
   Void  deletePicBuffer();
-#if MVHEVC
+#if QC_MVHEVC_B0046
   Void      xCopySPS( TComSPS* pSPSV0);
   Void      xCopyPPS( TComPPS* pPPSV0);
   Void      xCopyVPS( TComVPS* pVPSV0);
@@ -201,7 +201,7 @@ public:
   Void                setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
   TAppDecTop*         getTAppDecTop()                           { return  m_tAppDecTop; }
   NalUnitType         getNalUnitTypeBaseView()                  { return m_nalUnitTypeBaseView; }
-#if MVHEVC
+#if QC_MVHEVC_B0046
   bool                m_bFirstNal; //used to copy SPS, PPS, VPS
   ParameterSetManagerDecoder* xGetParaSetDec ()        {return  &m_parameterSetManagerDecoder;}
 #endif
@@ -217,7 +217,7 @@ protected:
 #else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
 #endif
-#if VIDYO_VPS_INTEGRATION|MVHEVC
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void      xDecodeVPS();
 #endif
   Void      xDecodeSPS();
