@@ -180,7 +180,10 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setFastSearch                   ( m_iFastSearch  );
     m_acTEncTopList[iViewIdx]->setSearchRange                  ( m_iSearchRange );
     m_acTEncTopList[iViewIdx]->setBipredSearchRange            ( m_bipredSearchRange );
-
+#if DV_V_RESTRICTION_B0037
+    m_acTEncTopList[iViewIdx]->setUseDisparitySearchRangeRestriction ( m_bUseDisparitySearchRangeRestriction );
+    m_acTEncTopList[iViewIdx]->setVerticalDisparitySearchRange( m_iVerticalDisparitySearchRange );
+#endif
   //====== Quality control ========
     m_acTEncTopList[iViewIdx]->setMaxDeltaQP                   ( m_iMaxDeltaQP  );
     m_acTEncTopList[iViewIdx]->setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );
@@ -487,7 +490,10 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setFastSearch                   ( m_iFastSearch  );
       m_acTEncDepthTopList[iViewIdx]->setSearchRange                  ( m_iSearchRange );
       m_acTEncDepthTopList[iViewIdx]->setBipredSearchRange            ( m_bipredSearchRange );
-
+#if DV_V_RESTRICTION_B0037
+      m_acTEncDepthTopList[iViewIdx]->setUseDisparitySearchRangeRestriction ( m_bUseDisparitySearchRangeRestriction );
+      m_acTEncDepthTopList[iViewIdx]->setVerticalDisparitySearchRange( m_iVerticalDisparitySearchRange );
+#endif
       //====== Quality control ========
       m_acTEncDepthTopList[iViewIdx]->setMaxDeltaQP                   ( m_iMaxDeltaQP  );
       m_acTEncDepthTopList[iViewIdx]->setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );
