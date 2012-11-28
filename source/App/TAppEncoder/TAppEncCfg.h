@@ -108,6 +108,9 @@ protected:
   // coding quality
   std::vector<Double>  m_adQP;                                ///< QP value of key-picture (floating point) [0] video, [1] depth
   std::vector<Int>     m_aiQP;                                ///< QP value of key-picture (integer) [0] video, [1] depth
+#if QC_MVHEVC_B0046
+  std::vector<Int>     m_aiVId;                                ///< view id
+#endif
   Int       m_aiTLayerQPOffset[MAX_TLAYER];                   ///< QP offset corresponding to temporal layer depth
   char*     m_pchdQPFile;                                     ///< QP offset for each slice (initialized from external file)
   Int*      m_aidQP;                                          ///< array of slice QP values
@@ -199,6 +202,10 @@ protected:
 vector<Bool> m_abUseRDOQ;                                   ///< flag for using RD optimized quantization [0]-video, [1]-depth
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
+#if DV_V_RESTRICTION_B0037
+  Bool      m_bUseDisparitySearchRangeRestriction;            ///< restrict vertical search range for inter-view prediction
+  Int       m_iVerticalDisparitySearchRange;                  ///< ME vertical search range for inter-view prediction 
+#endif
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
 #if HHI_INTERVIEW_SKIP
@@ -284,8 +291,9 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   // camera parameter
   Char*     m_pchCameraParameterFile;                         ///< camera parameter file
   Char*     m_pchBaseViewCameraNumbers;
+#if !QC_MVHEVC_B0046
   TAppComCamPara m_cCameraData;
-
+#endif
   Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
 
 #if HHI_VSO

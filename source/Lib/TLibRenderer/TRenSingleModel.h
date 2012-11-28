@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-#ifndef __TRENSINGLEMODEL__
+#if !QC_MVHEVC_B0046
+#ifndef __TRENSINGLEMODEL__ 
 #define __TRENSINGLEMODEL__
 
 #include "TRenImage.h"
@@ -390,3 +390,5 @@ private:
 };
 
 #endif //__TRENSINGLEMODEL__
+#endif
+
