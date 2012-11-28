@@ -374,8 +374,11 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
                   );
   
   // initialize encoder search class
+#if DV_V_RESTRICTION_B0037
+  m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_bUseDisparitySearchRangeRestriction, m_iVerticalDisparitySearchRange, m_iFastSearch, 0, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
+#else
   m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_iFastSearch, 0, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
-
+#endif
   if(m_bUseALF)
   {
     m_cAdaptiveLoopFilter.setALFEncodePassReduction( m_iALFEncodePassReduction );

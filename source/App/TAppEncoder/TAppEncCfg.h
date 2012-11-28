@@ -202,6 +202,10 @@ protected:
 vector<Bool> m_abUseRDOQ;                                   ///< flag for using RD optimized quantization [0]-video, [1]-depth
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
+#if DV_V_RESTRICTION_B0037
+  Bool      m_bUseDisparitySearchRangeRestriction;            ///< restrict vertical search range for inter-view prediction
+  Int       m_iVerticalDisparitySearchRange;                  ///< ME vertical search range for inter-view prediction 
+#endif
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
 #if HHI_INTERVIEW_SKIP

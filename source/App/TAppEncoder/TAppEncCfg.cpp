@@ -275,6 +275,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* motion options */
   ("FastSearch", m_iFastSearch, 1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",m_iSearchRange, 96, "motion search range")
+#if DV_V_RESTRICTION_B0037
+  ("DisparitySearchRangeRestriction",m_bUseDisparitySearchRangeRestriction, false, "restrict disparity search range")
+  ("VerticalDisparitySearchRange",m_iVerticalDisparitySearchRange, 56, "vertical disparity search range")
+#endif
   ("BipredSearchRange", m_bipredSearchRange, 4, "motion search range for bipred refinement")
   ("HadamardME", m_bUseHADME, true, "hadamard ME for fractional-pel")
   ("ASR", m_bUseASR, false, "adaptive motion search range")
@@ -855,6 +859,9 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -13 || m_loopFilterTcOffsetDiv2 > 13,              "Loop Filter Tc Offset div. 2 exceeds supported range (-13 to 13)");
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
+#if DV_V_RESTRICTION_B0037
+  xConfirmPara( m_iVerticalDisparitySearchRange <= 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
+#endif
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
@@ -1600,6 +1607,10 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
+#if DV_V_RESTRICTION_B0037
+  printf("Disp search range restriction: %d\n", m_bUseDisparitySearchRangeRestriction );
+  printf("Vertical disp search range   : %d\n", m_iVerticalDisparitySearchRange );
+#endif
   printf("Intra period                 : %d\n", m_iIntraPeriod );
   printf("Decoding refresh type        : %d\n", m_iDecodingRefreshType );
   printf("QP Texture                   : %5.2f\n", m_adQP[0] );
