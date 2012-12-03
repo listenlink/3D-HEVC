@@ -1593,6 +1593,11 @@ TComSPS::TComSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_bUseDMM                   (false)
 #endif
+
+#if FLEX_CODING_ORDER && HHI_DMM_PRED_TEX
+, m_bUseDMM34                   (false)
+#endif
+
 #if OL_QTLIMIT_PREDCODING_B0068
 , m_bUseQTLPC                 (false)
 #endif

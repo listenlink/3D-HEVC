@@ -326,6 +326,10 @@ protected:
   Bool     m_bUseDMM;
 #endif
 
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Bool m_bUseDMM34;
+#endif
+
 #if OL_QTLIMIT_PREDCODING_B0068
   Bool     m_bUseQTLPC;
 #endif
@@ -841,6 +845,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Void      setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool      getUseDMM()        { return m_bUseDMM; }
+#endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  Void setUseDMM34( Bool b) { m_bUseDMM34 = b;    }
+  Bool getUseDMM34()        { return m_bUseDMM34; }
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068

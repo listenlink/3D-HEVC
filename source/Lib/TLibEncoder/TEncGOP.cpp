@@ -362,10 +362,36 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       TAppEncTop* tAppEncTop = m_pcEncTop->getEncTop();
       assert( tAppEncTop != NULL );
 
+
+#if FLEX_CODING_ORDER
+      TComPic * pcTexturePic; 
+      if(m_pcEncTop->getIsDepth() == 1)
+      {
+        TComPicYuv * recText;
+        recText = tAppEncTop->getPicYuvFromView(m_pcEncTop->getViewId(), pcSlice->getPOC(), false ,true);
+        if(recText == NULL)
+        {
+           pcSlice->setTexturePic(NULL);
+        }
+        else
+        {
+           pcTexturePic = m_pcEncTop->getIsDepth() ? tAppEncTop->getPicFromView( m_pcEncTop->getViewId(), pcSlice->getPOC(), false ) : NULL;
+           pcSlice->setTexturePic( pcTexturePic );
+        }
+      }
+      else
+    {
+        pcTexturePic = m_pcEncTop->getIsDepth() ? tAppEncTop->getPicFromView( m_pcEncTop->getViewId(), pcSlice->getPOC(), false ) : NULL;
+        assert( !m_pcEncTop->getIsDepth() || pcTexturePic != NULL );
+          pcSlice->setTexturePic( pcTexturePic );
+      }
+
+#else
       TComPic * const pcTexturePic = m_pcEncTop->getIsDepth() ? tAppEncTop->getPicFromView( m_pcEncTop->getViewId(), pcSlice->getPOC(), false ) : NULL;
       assert( !m_pcEncTop->getIsDepth() || pcTexturePic != NULL );
       pcSlice->setTexturePic( pcTexturePic );
 
+#endif 
       std::vector<TComPic*> apcInterViewRefPics = tAppEncTop->getInterViewRefPics( m_pcEncTop->getViewId(), pcSlice->getPOC(), m_pcEncTop->getIsDepth(), pcSlice->getSPS() );
       pcSlice->setRefPicListMvc( rcListPic, apcInterViewRefPics );
 
@@ -465,8 +491,12 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 
 
 #if SAIT_VSO_EST_A0033
-    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
+{
+   Bool flag_rec;
+   flag_rec =  ((m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true) == NULL) ? false: true);
+    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, flag_rec ) );
     m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
+}
 #endif
 #if LGE_WVSO_A0119
     Bool bUseWVSO  = m_pcEncTop->getUseWVSO();

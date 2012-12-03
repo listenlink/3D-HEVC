@@ -1001,8 +1001,18 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 
     assert( m_tAppDecTop != NULL );
     TComPic * const pcTexturePic = m_isDepth ? m_tAppDecTop->getPicFromView(  m_viewId, pcSlice->getPOC(), false ) : NULL;
+
+#if FLEX_CODING_ORDER
+    if (pcTexturePic != NULL)
+    {
+      assert( !m_isDepth || pcTexturePic != NULL );
+      pcSlice->setTexturePic( pcTexturePic );
+    }
+#else
     assert( !m_isDepth || pcTexturePic != NULL );
     pcSlice->setTexturePic( pcTexturePic );
+#endif
+
 
     std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
     pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics );

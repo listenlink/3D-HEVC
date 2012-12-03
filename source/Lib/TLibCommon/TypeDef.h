@@ -61,6 +61,12 @@
 #define FIX_LGE_DVMCP_B0133               1
 
 
+// FCO 
+#define FLEX_CODING_ORDER               1
+#if FLEX_CODING_ORDER
+  #define DISABLE_FCO_FOR_VSO             0 // Optional compile settings to disable VSO with FCO.
+#endif
+
 ///// ***** PATCHES *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
 
