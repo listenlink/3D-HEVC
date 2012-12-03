@@ -70,6 +70,11 @@ private:
   std::vector<Int>                m_pocLastDisplay;               ///< last POC in display order
   Bool                            m_useDepth;
 
+#if FLEX_CODING_ORDER
+  Int  FCO_viewDepthId;
+  Char FCO_Order[MAX_VIEW_NUM*2];
+#endif
+
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
 #if DEPTH_MAP_GENERATION

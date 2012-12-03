@@ -2243,6 +2243,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       }
 #endif
 #if HHI_DMM_PRED_TEX
+      
+#if FLEX_CODING_ORDER
+      if ( pcCU->getSlice()->getSPS()->getUseDMM34() )
+      {
+#endif
       UInt uiTexTabIdx  = 0;
       Int  iTexDeltaDC1 = 0;
       Int  iTexDeltaDC2 = 0;
@@ -2266,6 +2271,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         uiRdModeList[ numModesForFullRD++ ] = DMM_CONTOUR_PREDTEX_IDX;
         uiRdModeList[ numModesForFullRD++ ] = DMM_CONTOUR_PREDTEX_D_IDX;
       }
+#if FLEX_CODING_ORDER
+      }
+#endif
 #endif
     }
 #endif
@@ -2310,11 +2318,21 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       UInt uiOrgMode = uiRdModeList[uiMode];
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-      if( m_pcEncCfg->getIsDepth() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight ) 
-#if LGE_EDGE_INTRA_A0070
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+      if( m_pcEncCfg->getIsDepth() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getUseDMM34() ) 
+#if LGE_EDGE_INTRA
         && uiOrgMode < EDGE_INTRA_IDX
 #endif
         )
+
+#else
+
+      if( m_pcEncCfg->getIsDepth() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight ) 
+#if LGE_EDGE_INTRA
+        && uiOrgMode < EDGE_INTRA_IDX
+#endif
+        )
+#endif
       {
         continue;
       }
@@ -6465,7 +6483,11 @@ Void  TEncSearch::setWpScalingDistParam( TComDataCU* pcCU, Int iRefIdx, RefPicLi
 }
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if ((HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX)&&FLEX_CODING_ORDER)
+Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHeight, Bool bDMMAvailable34 )
+#else
 Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHeight )
+#endif
 {
   if( uiMode < NUM_INTRA_MODE ) return true;
 
@@ -6493,6 +6515,14 @@ Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHe
     {
       bDMMAvailable = false;
     }
+
+#if FLEX_CODING_ORDER
+    if ( !bDMMAvailable34 )
+    {
+      bDMMAvailable = false;
+    }
+#endif
+
   }
 #endif
 

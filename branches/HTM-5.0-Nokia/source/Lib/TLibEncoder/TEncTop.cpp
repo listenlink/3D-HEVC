@@ -768,6 +768,11 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+  m_cSPS.setUseDMM34( m_bUseDMM34 );
+#endif
+
 #if OL_QTLIMIT_PREDCODING_B0068
   m_cSPS.setUseQTLPC( m_bUseQTLPC );
 #endif
