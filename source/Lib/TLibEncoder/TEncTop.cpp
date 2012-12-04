@@ -769,7 +769,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
 
-#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
   m_cSPS.setUseDMM34( m_bUseDMM34 );
 #endif
 

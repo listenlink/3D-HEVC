@@ -400,7 +400,7 @@ Void TAppEncTop::xInitLibCfg()
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
     {
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
       // Detect whether depth comes before than texture for this view
       Bool isDepthFirst = false;
       if ( m_b3DVFlexOrder )
@@ -707,7 +707,7 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
 
-#if FLEX_CODING_ORDER && HHI_DMM_PRED_TEX
+#if FLEX_CODING_ORDER_M23723 && HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM34( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseDMM );
 #endif
 
@@ -716,7 +716,7 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 
 #if HHI_MPI
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
     m_acTEncDepthTopList[iViewIdx]->setUseMVI( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseMVI );
 #else
     m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
@@ -1040,7 +1040,7 @@ Void TAppEncTop::encode()
       }
 #endif
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
       if (m_b3DVFlexOrder)
       {
         Int  iNumDepthEncoded = 0;
@@ -1121,7 +1121,7 @@ Void TAppEncTop::encode()
         }
       }
  
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
       }
 #endif
 

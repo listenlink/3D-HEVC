@@ -335,7 +335,7 @@ protected:
 
   Bool predIntraLumaDMMAvailable  ( UInt           uiMode, 
                                     UInt           uiWidth, 
-#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
                                     UInt         uiHeight, 
                                     Bool         bDMMAvailable34 );
 #else

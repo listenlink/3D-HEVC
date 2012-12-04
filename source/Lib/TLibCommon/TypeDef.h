@@ -41,10 +41,10 @@
 //! \ingroup TLibCommon
 //! \{
 #define QC_MVHEVC_B0046                   0   //JCT3V-B0046: disable 3DHEVC tools
-#define QC_IV_AS_LT_B0046                 1   //JCT3V-B0046: inter-view reference pictures are treated as long-term pictures, scaling of motion vectors for DCP based on ViewId/ViewOrderIdx is disabled  
-#define QC_TMVP_IDX_MOD_B0046             1   //JCT3V-B0046: the reference index for temporal merging candidate is set to 0, as defined in HEVC
-#define QC_REM_IDV_B0046                  1   //JCT3V-B0046: removal of IDV NAL unit type
-#define FIX_DEL_NULLPTR                   1
+#define QC_IV_AS_LT_B0046                 0   //JCT3V-B0046: inter-view reference pictures are treated as long-term pictures, scaling of motion vectors for DCP based on ViewId/ViewOrderIdx is disabled  
+#define QC_TMVP_IDX_MOD_B0046             0   //JCT3V-B0046: the reference index for temporal merging candidate is set to 0, as defined in HEVC
+#define QC_REM_IDV_B0046                  0   //JCT3V-B0046: removal of IDV NAL unit type
+#define FIX_DEL_NULLPTR                   0
 
 #define DV_V_RESTRICTION_B0037            1   // JCT3V-B0037 disparity vector vertical range restriction
 
@@ -62,8 +62,8 @@
 
 
 // FCO 
-#define FLEX_CODING_ORDER               1
-#if FLEX_CODING_ORDER
+#define FLEX_CODING_ORDER_M23723          1
+#if FLEX_CODING_ORDER_M23723
   #define DISABLE_FCO_FOR_VSO             0 // Optional compile settings to disable VSO with FCO.
 #endif
 

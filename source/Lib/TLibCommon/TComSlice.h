@@ -393,7 +393,7 @@ private:
   Bool  m_bUseDMM;
 #endif
 
-#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
   Bool  m_bUseDMM34;
 #endif
 
@@ -677,7 +677,7 @@ public:
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
 #endif
 
-#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
   Bool getUseDMM34()         { return m_bUseDMM34; }
   Void setUseDMM34( Bool b ) { m_bUseDMM34 = b;    }
 #endif

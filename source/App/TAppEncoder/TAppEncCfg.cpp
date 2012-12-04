@@ -111,7 +111,7 @@ TAppEncCfg::~TAppEncCfg()
   if (m_pchBitstreamFile != NULL)
     free (m_pchBitstreamFile) ;
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
   if (m_pchMVCJointCodingOrder != NULL)
   {
     free(m_pchMVCJointCodingOrder) ;
@@ -211,7 +211,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_RowHeight;
   string cfg_ScalingListFile;
 
- #if FLEX_CODING_ORDER
+ #if FLEX_CODING_ORDER_M23723
   string cfg_JointCodingOrdering;
 #endif
 
@@ -259,7 +259,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
   ("FCO",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
   ("FCOCodingOrder",   cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
 #endif
@@ -552,7 +552,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
   
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
   m_pchMVCJointCodingOrder= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
   // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
 #if HHI_VSO && DISABLE_FCO_FOR_VSO
@@ -1825,6 +1825,16 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if TMVP_DEPTH_SWITCH
   printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
 #endif
+
+#if FLEX_CODING_ORDER_M23723
+  printf("FCO:%d ",   (m_b3DVFlexOrder ? 1: 0));
+
+  if(m_b3DVFlexOrder)
+  {
+    printf("CodingOrder: %s ", m_pchMVCJointCodingOrder);
+  }
+#endif
+
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
 #endif

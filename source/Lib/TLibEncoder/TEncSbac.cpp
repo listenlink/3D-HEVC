@@ -1076,7 +1076,7 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #endif
 #if HHI_DMM_PRED_TEX
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
     if ( !pcCU->getSlice()->getSPS()->getUseDMM34() )
     {
       assert( uiDir != DMM_WEDGE_PREDTEX_D_IDX );

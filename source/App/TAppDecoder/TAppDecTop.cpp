@@ -87,12 +87,12 @@ Void TAppDecTop::decode()
   increaseNumberOfViews( 1 );
 #endif
   
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
   Int iDepthViewIdx = 0;
   Int iTextureViewIdx=0;
-  Bool first_frame=1;
-  Bool viewid_zero=true;
-  Int FCO_index=0;  //when the current frame is not first frame,use FCO_index stand for viewDepth. 
+  Bool firstFrame=1;
+  Bool viewIdZero=true;
+  Int fcoIndex=0;  //when the current frame is not first frame,use FCO_index stand for viewDepth. 
 #endif
 
 #if SONY_COLPIC_AVAILABILITY
@@ -109,8 +109,8 @@ Void TAppDecTop::decode()
     uiPOC[i] = 0;
     pcListPic[i] = NULL;
     newPicture[i] = false;
-#if FLEX_CODING_ORDER
-    FCO_Order[i]=NULL;
+#if FLEX_CODING_ORDER_M23723
+    m_fcoOrder[i]=NULL;
 #endif
 
   }
@@ -172,28 +172,28 @@ Void TAppDecTop::decode()
         viewId = getVPSAccess()->getActiveVPS()->getViewId(nalu.m_layerId);
         depth = getVPSAccess()->getActiveVPS()->getDepthFlag(nalu.m_layerId);
       }
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
       if (viewId>0)
       {
-        viewid_zero=false;
+        viewIdZero=false;
       }
-      if (viewid_zero==false&&viewId==0)
+      if (viewIdZero==false&&viewId==0)
       {
-        first_frame=0; //if viewId has been more than zero and now it set to zero again, we can see that it is not the first view
+        firstFrame=0; //if viewId has been more than zero and now it set to zero again, we can see that it is not the first view
       }
-      if (first_frame)
+      if (firstFrame)
       { // if the current view is first frame, we set the viewDepthId as texture plus depth and get the FCO order 
         viewDepthId = iDepthViewIdx+iTextureViewIdx;
-        FCO_viewDepthId=viewDepthId;
+        m_fcoViewDepthId=viewDepthId;
       }
       else
       {//if current view is not first frame, we set the viewDepthId depended on the FCO order
         viewDepthId=0;
         if (depth)
         {
-          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          for (fcoIndex=0;fcoIndex<2*MAX_VIEW_NUM;fcoIndex++ )
           {
-            if (FCO_Order[FCO_index]=='D')
+            if (m_fcoOrder[fcoIndex]=='D')
             {
               if (viewId==viewDepthId)
                 break;
@@ -204,9 +204,9 @@ Void TAppDecTop::decode()
         }
         else
         {
-          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          for (fcoIndex=0;fcoIndex<2*MAX_VIEW_NUM;fcoIndex++ )
           {
-            if (FCO_Order[FCO_index]=='T')
+            if (m_fcoOrder[fcoIndex]=='T')
             {
               if (viewId==viewDepthId)
                 break;
@@ -216,7 +216,7 @@ Void TAppDecTop::decode()
           }
         }
 
-        viewDepthId=FCO_index;
+        viewDepthId=fcoIndex;
 
       }
 
@@ -228,28 +228,28 @@ Void TAppDecTop::decode()
 #else
       Int viewId = nalu.m_viewId;
       Int depth = nalu.m_isDepth ? 1 : 0;
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
       if (viewId>0)
       {
-        viewid_zero=false;
+        viewIdZero=false;
       }
-      if (viewid_zero==false&&viewId==0)
+      if (viewIdZero==false&&viewId==0)
       {
-        first_frame=0;
+        firstFrame=0;
       }
-      if (first_frame)
+      if (firstFrame)
       {
         viewDepthId = iDepthViewIdx+iTextureViewIdx;
-        FCO_viewDepthId=viewDepthId;
+        m_fcoViewDepthId=viewDepthId;
       }
       else
       {
         viewDepthId=0;
         if (depth)
         {
-          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          for (fcoIndex=0;fcoIndex<2*MAX_VIEW_NUM;fcoIndex++ )
           {
-            if (FCO_Order[FCO_index]=='D')
+            if (m_fcoOrder[fcoIndex]=='D')
             {
               if (viewId==viewDepthId)
                 break;
@@ -260,9 +260,9 @@ Void TAppDecTop::decode()
         }
         else
         {
-          for (FCO_index=0;FCO_index<2*MAX_VIEW_NUM;FCO_index++ )
+          for (fcoIndex=0;fcoIndex<2*MAX_VIEW_NUM;fcoIndex++ )
           {
-            if (FCO_Order[FCO_index]=='T')
+            if (m_fcoOrder[fcoIndex]=='T')
             {
               if (viewId==viewDepthId)
                 break;
@@ -272,7 +272,7 @@ Void TAppDecTop::decode()
           }
         }
 
-        viewDepthId=FCO_index;
+        viewDepthId=fcoIndex;
 
       }
 #else
@@ -337,18 +337,18 @@ Void TAppDecTop::decode()
         if( nalu.isSlice() )
         {
           previousPictureDecoded = true;
-#if FLEX_CODING_ORDER
-          if (first_frame)
-          {
+#if FLEX_CODING_ORDER_M23723
+        if (firstFrame)
+        {
             if (depth)
             {
                 iDepthViewIdx++;
-                FCO_Order[viewDepthId]='D';
+                m_fcoOrder[viewDepthId]='D';
             }
             else
            {
                 iTextureViewIdx++;
-                FCO_Order[viewDepthId]='T';
+                m_fcoOrder[viewDepthId]='T';
            }
           }
 
@@ -656,11 +656,11 @@ Void  TAppDecTop::increaseNumberOfViews  ( Int newNumberOfViewDepth )
 
 TDecTop* TAppDecTop::getTDecTop( Int viewId, Bool isDepth )
 { 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
   Int viewnumber=0;
   Int i=0;
-  Bool FCO_flag=0;
-  if (viewId>FCO_viewDepthId)
+  Bool fcoFlag=0;
+  if (viewId>m_fcoViewDepthId)
   {
     return NULL;
   }
@@ -668,13 +668,13 @@ TDecTop* TAppDecTop::getTDecTop( Int viewId, Bool isDepth )
   {
     if (isDepth)
    {
-      for ( i=0; i<=FCO_viewDepthId;i++)
+      for ( i=0; i<=m_fcoViewDepthId;i++)
       {
-         if (FCO_Order[i]=='D')
+         if (m_fcoOrder[i]=='D')
          {
            if (viewnumber==viewId)
            {
-             FCO_flag=1;
+             fcoFlag=1;
              break;
            }
            else
@@ -684,13 +684,13 @@ TDecTop* TAppDecTop::getTDecTop( Int viewId, Bool isDepth )
     }
     else
     {
-      for ( i=0; i<=FCO_viewDepthId;i++)
+      for ( i=0; i<=m_fcoViewDepthId;i++)
       {
-        if (FCO_Order[i]=='T')
+        if (m_fcoOrder[i]=='T')
         {
           if (viewnumber==viewId)
           {
-            FCO_flag=1;
+            fcoFlag=1;
             break;
           }
           else
@@ -698,7 +698,7 @@ TDecTop* TAppDecTop::getTDecTop( Int viewId, Bool isDepth )
         }
       }
     }
-    if (FCO_flag)
+    if (fcoFlag)
     {
       return m_tDecTop[i];
     }
@@ -730,7 +730,7 @@ TComPic* TAppDecTop::xGetPicFromView( Int viewId, Int poc, Bool isDepth )
 {
   assert( ( viewId >= 0 ) );
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
 if (getTDecTop(viewId,isDepth))
 {
    TComList<TComPic*>* apcListPic = getTDecTop( viewId, isDepth )->getListPic();
