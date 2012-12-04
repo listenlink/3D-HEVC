@@ -1594,7 +1594,7 @@ TComSPS::TComSPS()
 , m_bUseDMM                   (false)
 #endif
 
-#if FLEX_CODING_ORDER && HHI_DMM_PRED_TEX
+#if FLEX_CODING_ORDER_M23723 && HHI_DMM_PRED_TEX
 , m_bUseDMM34                   (false)
 #endif
 

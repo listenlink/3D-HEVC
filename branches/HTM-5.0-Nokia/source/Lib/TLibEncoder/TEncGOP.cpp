@@ -363,7 +363,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       assert( tAppEncTop != NULL );
 
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
       TComPic * pcTexturePic; 
       if(m_pcEncTop->getIsDepth() == 1)
       {
@@ -491,12 +491,17 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 
 
 #if SAIT_VSO_EST_A0033
+#ifdef FLEX_CODING_ORDER_M23723    
 {
-   Bool flag_rec;
-   flag_rec =  ((m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true) == NULL) ? false: true);
-    m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, flag_rec ) );
-    m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
+  Bool flagRec;
+  flagRec =  ((m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true) == NULL) ? false: true);
+  m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, flagRec ) );
+  m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
 }
+#else
+  m_pcRdCost->setVideoRecPicYuv( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), false, true ) );
+  m_pcRdCost->setDepthPicYuv   ( m_pcEncTop->getEncTop()->getPicYuvFromView( pcSlice->getViewId(), pcSlice->getPOC(), true, false ) );
+#endif
 #endif
 #if LGE_WVSO_A0119
     Bool bUseWVSO  = m_pcEncTop->getUseWVSO();

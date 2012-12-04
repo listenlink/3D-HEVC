@@ -1002,7 +1002,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     assert( m_tAppDecTop != NULL );
     TComPic * const pcTexturePic = m_isDepth ? m_tAppDecTop->getPicFromView(  m_viewId, pcSlice->getPOC(), false ) : NULL;
 
-#if FLEX_CODING_ORDER
+#if FLEX_CODING_ORDER_M23723
     if (pcTexturePic != NULL)
     {
       assert( !m_isDepth || pcTexturePic != NULL );
