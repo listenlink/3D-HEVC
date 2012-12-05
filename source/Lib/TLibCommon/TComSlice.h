@@ -143,7 +143,7 @@ public:
 };
 #endif
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
 /// VPS class
 
 class TComVPS
@@ -155,12 +155,25 @@ private:
   Bool        m_bTemporalIdNestingFlag;
 
   UInt        m_uiExtensionType;
-  
+#if !QC_MVHEVC_B0046  
   Bool        m_bDependentFlag[MAX_LAYER_NUM];
+#else
+  UInt        m_uiNumHRDParameter;
+  UInt        m_numAddiLayerOperationPoints;
+  UInt        m_numAddiProLevelSets;
+  UInt        m_numDirectRefLayer[MAX_LAYER_NUM];
+  UInt        m_numDirectRefID[MAX_LAYER_NUM][MAX_LAYER_NUM];
+  UInt        m_numOpLayerIdMinus1[MAX_LAYER_NUM];
+  UInt        m_numOpLayerId[MAX_LAYER_NUM][MAX_LAYER_NUM];
+#endif
   UInt        m_uiViewId[MAX_LAYER_NUM];
+#if !QC_MVHEVC_B0046  
   Bool        m_bDepthFlag[MAX_LAYER_NUM];
+#endif
   Int         m_iViewOrderIdx[MAX_LAYER_NUM];
+#if !QC_MVHEVC_B0046  
   UInt        m_uiDependentLayer[MAX_LAYER_NUM];
+#endif
 
   UInt        m_numReorderPics[MAX_TLAYER];
   UInt        m_uiMaxDecPicBuffering[MAX_TLAYER]; 
@@ -181,25 +194,25 @@ public:
   
   Bool    getTemporalNestingFlag   ()         { return m_uiMaxLayers;   }
   Void    setTemporalNestingFlag   (UInt t)   { m_bTemporalIdNestingFlag = t; }
-  
+#if !QC_MVHEVC_B0046
   Void    setExtensionType(UInt v)                     { m_uiExtensionType = v;    }
   UInt    getExtensionType()                             { return m_uiExtensionType; }
   
   Void    setDependentFlag(Bool d, UInt layer)              { m_bDependentFlag[layer] = d;    }
   Bool    getDependentFlag(UInt layer)                      { return m_bDependentFlag[layer]; }
-
+#endif
   Void    setViewId(UInt v, UInt layer)                     { m_uiViewId[layer] = v;    }
   UInt    getViewId(UInt layer)                             { return m_uiViewId[layer]; }
-  
+#if !QC_MVHEVC_B0046 
   Void    setDepthFlag(Bool d, UInt layer)                  { m_bDepthFlag[layer] = d;    }
   Bool    getDepthFlag(UInt layer)                          { return m_bDepthFlag[layer]; }
-
+#endif
   Void    setViewOrderIdx(Int v, UInt layer)                { m_iViewOrderIdx[layer] = v;    }
   Int     getViewOrderIdx(UInt layer)                       { return m_iViewOrderIdx[layer]; }
-  
+#if !QC_MVHEVC_B0046   
   Void    setDependentLayer(UInt v, UInt layer)                     { m_uiDependentLayer[layer] = v;    }
   UInt    getDependentLayer(UInt layer)                             { return m_uiDependentLayer[layer]; }
-  
+#endif
   Void    setNumReorderPics(UInt v, UInt tLayer)                { m_numReorderPics[tLayer] = v;    }
   UInt    getNumReorderPics(UInt tLayer)                        { return m_numReorderPics[tLayer]; }
   
@@ -208,7 +221,25 @@ public:
   
   Void    setMaxLatencyIncrease(UInt v, UInt tLayer)                { m_uiMaxLatencyIncrease[tLayer] = v;    }
   UInt    getMaxLatencyIncrease(UInt tLayer)                        { return m_uiMaxLatencyIncrease[tLayer]; }
-  
+#if QC_MVHEVC_B0046
+  Void    setNumHRDParameters(UInt n)                                { m_uiNumHRDParameter = n;    }
+  UInt    getNumHRDParameters()                                      { return m_uiNumHRDParameter; }
+  Void    setNumDirectRefLayer(UInt n, UInt layer)                   { m_numDirectRefLayer[layer] = n;        };
+  UInt    getNumDirectRefLayer(UInt layer)                           { return m_numDirectRefLayer[layer];     };
+  Void    setDirectRefLayerId (UInt n, UInt layer, UInt refId)       { m_numDirectRefID[layer][refId] = n;   assert(refId < MAX_NUM_REF ); };
+  UInt    getDirectRefLayerId (        UInt layer, UInt refId)       { return m_numDirectRefID[layer][refId]; };
+  UInt    getNumAddiLayerOperationPoints(      )               { return m_numAddiLayerOperationPoints;  };
+  Void    setNumAddiLayerOperationPoints(UInt n)                {  m_numAddiLayerOperationPoints = n;  };
+  Void    setNumAddiProLevelSets        (UInt n)                     {  m_numAddiProLevelSets = n;}
+  UInt    getNumAddiProLevelSets        (      )                     { return m_numAddiProLevelSets;}
+
+  Void    setNumOpLayerIdMinus1         (UInt n, UInt layer)                     {  m_numOpLayerIdMinus1[layer] = n;}
+  UInt    getNumOpLayerIdMinus1         (UInt layer      )                       { return m_numOpLayerIdMinus1[layer];}
+
+  Void    setNumOpLayerId               (UInt n, UInt layer, UInt OpId)                     {  m_numOpLayerId[layer][OpId] = n;}
+  UInt    getNumOpLayerId               (UInt layer, UInt OpId        )                     { return m_numOpLayerId[layer][OpId];}
+
+#endif 
 };
 
 #endif
@@ -217,7 +248,7 @@ public:
 class TComSPS
 {
 private:
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Int          m_VPSId;
 #endif
   Int         m_SPSId;
@@ -362,6 +393,10 @@ private:
   Bool  m_bUseDMM;
 #endif
 
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+  Bool  m_bUseDMM34;
+#endif
+
 #if OL_QTLIMIT_PREDCODING_B0068
   Bool m_bUseQTLPC;
 #endif
@@ -390,7 +425,7 @@ private:
 public:
   TComSPS();
   virtual ~TComSPS();
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Int  getVPSId       ()         { return m_VPSId;          }
   Void setVPSId       (Int i)    { m_VPSId = i;             }
 #endif
@@ -640,6 +675,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool getUseDMM()         { return m_bUseDMM; }
   Void setUseDMM( Bool b ) { m_bUseDMM = b;    }
+#endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+  Bool getUseDMM34()         { return m_bUseDMM34; }
+  Void setUseDMM34( Bool b ) { m_bUseDMM34 = b;    }
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068
@@ -1220,8 +1260,11 @@ private:
   Bool        m_bRefenced;
   
   // access channel
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   TComVPS*    m_pcVPS;
+#endif
+#if QC_IV_AS_LT_B0046
+  Bool                  m_bWasLongTerm[2][MAX_NUM_REF+1]; //was long-term picture
 #endif
   TComSPS*    m_pcSPS;
   TComPPS*    m_pcPPS;
@@ -1296,7 +1339,7 @@ private:
   Int        m_aaiCodedScale [2][MAX_VIEW_NUM];
   Int        m_aaiCodedOffset[2][MAX_VIEW_NUM];
 
-#if SONY_COLPIC_AVAILABILITY
+#if SONY_COLPIC_AVAILABILITY|QC_MVHEVC_B0046
   Int         m_iViewOrderIdx;
 #endif
 #if LGE_ILLUCOMP_B0045
@@ -1310,10 +1353,15 @@ public:
   Void      initSlice       ();
   Void      initTiles();
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void      setVPS          ( TComVPS* pcVPS ) { m_pcVPS = pcVPS; }
   TComVPS*  getVPS          () { return m_pcVPS; }
 #endif
+#if QC_IV_AS_LT_B0046
+  Void          setWasLongTerm( Bool lt,  RefPicList e, Int iRefIdx ) { m_bWasLongTerm[e][iRefIdx] = lt; }
+  Bool          getWasLongTerm( RefPicList e, Int iRefIdx           ) { return m_bWasLongTerm[e][iRefIdx] ; }
+#endif
+
   Void      setSPS          ( TComSPS* pcSPS ) { m_pcSPS = pcSPS; }
   TComSPS*  getSPS          () { return m_pcSPS; }
   
@@ -1586,6 +1634,10 @@ public:
 
   Void setViewId( Int viewId )       { m_viewId = viewId;   }
   Int  getViewId()                   { return m_viewId;     }
+#if QC_MVHEVC_B0046
+  Void    setViewOrderIdx(Int v, UInt layer)                { m_iViewOrderIdx = v;    }
+  Int     getViewOrderIdx()                                 { return m_iViewOrderIdx; }
+#endif
   Void setIsDepth( Bool isDepth )    { m_isDepth = isDepth; }
   Bool getIsDepth()                  { return m_isDepth;    }
  
@@ -1654,6 +1706,12 @@ public:
     return (m_paramsetMap.begin() == m_paramsetMap.end() ) ? NULL : m_paramsetMap.begin()->second;
   }
 
+#if QC_MVHEVC_B0046
+  Void clearPSList()
+  {
+    m_paramsetMap.clear();
+  }
+#endif
 private:
   std::map<Int,T *> m_paramsetMap;
   Int               m_maxId;
@@ -1664,12 +1722,17 @@ class ParameterSetManager
 public:
   ParameterSetManager();
   virtual ~ParameterSetManager();
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   //! store video parameter set and take ownership of it 
   Void storeVPS(TComVPS *vps) { m_vpsMap.storePS( vps->getVPSId(), vps); };
   //! get pointer to existing video parameter set  
   TComVPS* getVPS(Int vpsId)  { return m_vpsMap.getPS(vpsId); };
   TComVPS* getFirstVPS()      { return m_vpsMap.getFirstPS(); };
+#if QC_MVHEVC_B0046
+  Void     clearVPS()         { m_vpsMap.clearPSList(); };
+  Void     clearSPS()         { m_spsMap.clearPSList(); };
+  Void     clearPPS()         { m_ppsMap.clearPSList(); };
+#endif
 #endif
   //! store sequence parameter set and take ownership of it 
   Void storeSPS(TComSPS *sps) { m_spsMap.storePS( sps->getSPSId(), sps); };
@@ -1692,7 +1755,7 @@ protected:
   ParameterSetMap<TComSPS> m_spsMap; 
   ParameterSetMap<TComPPS> m_ppsMap; 
   ParameterSetMap<TComAPS> m_apsMap; 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   ParameterSetMap<TComVPS> m_vpsMap; 
 #endif
 };

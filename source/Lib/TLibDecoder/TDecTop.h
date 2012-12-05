@@ -87,6 +87,9 @@ private:
   Int**   m_aaiCodedOffset;
   Int**   m_aaiCodedScale;
   Int*    m_aiViewOrderIndex;
+#if QC_MVHEVC_B0046
+  Int*    m_aiViewId;
+#endif
   Int*    m_aiViewReceived;
   UInt    m_uiCamParsCodedPrecision;
   Bool    m_bCamParsVaryOverTime;
@@ -167,7 +170,11 @@ public:
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
   
   Void  deletePicBuffer();
-
+#if QC_MVHEVC_B0046
+  Void      xCopySPS( TComSPS* pSPSV0);
+  Void      xCopyPPS( TComPPS* pPPSV0);
+  Void      xCopyVPS( TComVPS* pVPSV0);
+#endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void      deleteExtraPicBuffers   ( Int iPoc );
 #endif
@@ -194,7 +201,10 @@ public:
   Void                setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
   TAppDecTop*         getTAppDecTop()                           { return  m_tAppDecTop; }
   NalUnitType         getNalUnitTypeBaseView()                  { return m_nalUnitTypeBaseView; }
-
+#if QC_MVHEVC_B0046
+  bool                m_bFirstNal; //used to copy SPS, PPS, VPS
+  ParameterSetManagerDecoder* xGetParaSetDec ()        {return  &m_parameterSetManagerDecoder;}
+#endif
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
   Void  xUpdateGopSize    (TComSlice* pcSlice);
@@ -207,7 +217,7 @@ protected:
 #else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
 #endif
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void      xDecodeVPS();
 #endif
   Void      xDecodeSPS();

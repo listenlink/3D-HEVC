@@ -182,7 +182,10 @@ protected:
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
-
+#if DV_V_RESTRICTION_B0037
+  Bool      m_bUseDisparitySearchRangeRestriction;
+  Int       m_iVerticalDisparitySearchRange;
+#endif
   //====== Quality control ========
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
   Int       m_iMaxCuDQPDepth;                   //  Max. depth for a minimum CuDQP (0:default)
@@ -306,7 +309,7 @@ protected:
   Int       m_signHidingThreshold;
 #endif
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   UInt     m_layerId;
 #endif
   
@@ -321,6 +324,10 @@ protected:
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool     m_bUseDMM;
+#endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+  Bool m_bUseDMM34;
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068
@@ -467,7 +474,10 @@ public:
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
-
+#if DV_V_RESTRICTION_B0037
+  Void      setUseDisparitySearchRangeRestriction ( Bool   b )      { m_bUseDisparitySearchRangeRestriction = b; }
+  Void      setVerticalDisparitySearchRange ( Int   i )      { m_iVerticalDisparitySearchRange = i; }
+#endif
 #if HHI_INTER_VIEW_MOTION_PRED
   UInt      getMultiviewMvRegMode           ()      { return  m_uiMultiviewMvRegMode; }
   Double    getMultiviewMvRegLambdaScale    ()      { return  m_dMultiviewMvRegLambdaScale; }
@@ -558,7 +568,10 @@ public:
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
-
+#if DV_V_RESTRICTION_B0037
+  Bool      getUseDisparitySearchRangeRestriction ()      { return  m_bUseDisparitySearchRangeRestriction; }
+  Int       getVerticalDisparitySearchRange ()      { return  m_iVerticalDisparitySearchRange; }
+#endif
 #if HHI_VSO
   //==== VSO  ==========
   UInt      getVSOMode                      ()      { return m_uiVSOMode; }
@@ -819,7 +832,7 @@ public:
   Int       getSignHideFlag()                    { return m_signHideFlag; }
   Int       getTSIG()                            { return m_signHidingThreshold; }
 #endif
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION |QC_MVHEVC_B0046
   Void      setLayerId             ( UInt layerId )   { m_layerId = layerId; }
   UInt      getLayerId             ()               { return m_layerId; }
 #endif
@@ -832,6 +845,11 @@ public:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Void      setUseDMM( Bool b) { m_bUseDMM = b;    }
   Bool      getUseDMM()        { return m_bUseDMM; }
+#endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+  Void setUseDMM34( Bool b) { m_bUseDMM34 = b;    }
+  Bool getUseDMM34()        { return m_bUseDMM34; }
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068
