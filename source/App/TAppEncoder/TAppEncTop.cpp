@@ -706,7 +706,6 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
-
 #if FLEX_CODING_ORDER_M23723 && HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM34( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseDMM );
 #endif
@@ -714,7 +713,6 @@ Void TAppEncTop::xInitLibCfg()
 #if OL_QTLIMIT_PREDCODING_B0068
     m_acTEncDepthTopList[iViewIdx]->setUseQTLPC                   (m_bUseQTLPC);
 #endif
-
 #if HHI_MPI
 #if FLEX_CODING_ORDER_M23723
     m_acTEncDepthTopList[iViewIdx]->setUseMVI( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseMVI );
@@ -722,8 +720,6 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
 #endif
 #endif
-
-
 #if RWTH_SDC_DLT_B0036
       m_acTEncDepthTopList[iViewIdx]->setUseDLT                   ( m_bUseDLT );
       m_acTEncDepthTopList[iViewIdx]->setUseSDC                   ( m_bUseSDC );
@@ -1089,14 +1085,6 @@ Void TAppEncTop::encode()
       {
 
 #endif
-
-//original code
-
-
-
-
-
-
       for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
 #if SAIT_VSO_EST_A0033

@@ -110,14 +110,12 @@ TAppEncCfg::~TAppEncCfg()
   }
   if (m_pchBitstreamFile != NULL)
     free (m_pchBitstreamFile) ;
-
 #if FLEX_CODING_ORDER_M23723
   if (m_pchMVCJointCodingOrder != NULL)
   {
     free(m_pchMVCJointCodingOrder) ;
   }
 #endif
-
 #if HHI_VSO
   if (  m_pchVSOConfig != NULL)
     free (  m_pchVSOConfig );
@@ -258,12 +256,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FrameToBeEncoded",        m_iFrameToBeEncoded, 0, "deprecated alias of FramesToBeEncoded")
   
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
-
 #if FLEX_CODING_ORDER_M23723
   ("FCO",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
   ("FCOCodingOrder",   cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
 #endif
-
   /* Unit definition parameters */
   ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
   ("MaxCUHeight",         m_uiMaxCUHeight, 64u)
@@ -551,7 +547,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
-  
 #if FLEX_CODING_ORDER_M23723
   m_pchMVCJointCodingOrder= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
   // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
@@ -591,11 +586,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 #endif
 #endif
-
-
-
-
-  
   m_pchColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
   m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
@@ -1825,7 +1815,6 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if TMVP_DEPTH_SWITCH
   printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
 #endif
-
 #if FLEX_CODING_ORDER_M23723
   printf("FCO:%d ",   (m_b3DVFlexOrder ? 1: 0));
 
@@ -1834,7 +1823,6 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
     printf("CodingOrder: %s ", m_pchMVCJointCodingOrder);
   }
 #endif
-
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
 #endif

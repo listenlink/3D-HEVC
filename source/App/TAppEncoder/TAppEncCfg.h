@@ -89,7 +89,7 @@ protected:
   Bool      m_bUsingDepthMaps;
   
 #if FLEX_CODING_ORDER_M23723
-  char*  m_pchMVCJointCodingOrder;      ///<  texture-depth coding order
+  Char*  m_pchMVCJointCodingOrder;      ///<  texture-depth coding order
   Bool    m_b3DVFlexOrder;    ///<  flexible coding order flag
 #endif
 
