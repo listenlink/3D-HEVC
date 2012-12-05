@@ -271,14 +271,11 @@ Void TAppDecTop::decode()
             }
           }
         }
-
         viewDepthId=fcoIndex;
-
       }
 #else
   viewDepthId = viewId * 2 + depth;   // coding order T0D0T1D1T2D2
 #endif
-     
 #endif
 #endif     
       newPicture[viewDepthId] = false;
