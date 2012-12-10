@@ -110,7 +110,11 @@ Void TAppDecTop::decode()
     pcListPic[i] = NULL;
     newPicture[i] = false;
 #if FLEX_CODING_ORDER_M23723
+#if  FIX_FCO_COMP_WARNING
+    m_fcoOrder[i] = ' ';
+#else
     m_fcoOrder[i]=NULL;
+#endif
 #endif
 
   }
