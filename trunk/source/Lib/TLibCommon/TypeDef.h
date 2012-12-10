@@ -51,6 +51,7 @@
 #define FIX_RDO_NEGDIST                   1
 #define FIX_DMM_NEG_DIST                  1
 #define FIX_LGE_DVMCP_B0133               1
+#define FIX_MISUSE_REFINDEX               1
 
 
 ///// ***** PATCHES *********

@@ -3830,6 +3830,14 @@ true
       {
         bRemoveSpa                      = true;
         abCandIsInter        [ iCount ] = false;
+#if FIX_MISUSE_REFINDEX
+        //reset to the default value for IC, MC
+        puhInterDirNeighbours[iCount]   = 0;
+        TComMv  cZeroMv;
+        pcMvFieldNeighbours[iCount<<1].setMvField( cZeroMv, NOT_VALID );
+        pcMvFieldNeighbours[(iCount<<1)+1].setMvField( cZeroMv, NOT_VALID );
+        break;
+#endif
       }
     }
     if(!bRemoveSpa)
@@ -3949,6 +3957,14 @@ true
       {
         bRemoveSpa                      = true;
         abCandIsInter        [ iCount ] = false;
+#if FIX_MISUSE_REFINDEX
+        //reset to the default value for IC, MC
+        puhInterDirNeighbours[iCount]   = 0;
+        TComMv  cZeroMv;
+        pcMvFieldNeighbours[iCount<<1].setMvField( cZeroMv, NOT_VALID );
+        pcMvFieldNeighbours[(iCount<<1)+1].setMvField( cZeroMv, NOT_VALID );
+        break;
+#endif
       }
     }
     if(!bRemoveSpa)
@@ -4131,6 +4147,14 @@ true
         {
           bRemoveSpa                      = true;
           abCandIsInter        [ iCount ] = false;
+#if FIX_MISUSE_REFINDEX
+          //reset to the default value for IC, MC
+          puhInterDirNeighbours[iCount]   = 0;
+          TComMv  cZeroMv;
+          pcMvFieldNeighbours[iCount<<1].setMvField( cZeroMv, NOT_VALID );
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField( cZeroMv, NOT_VALID );
+          break;
+#endif
         }
       }
       if(!bRemoveSpa)
@@ -6079,6 +6103,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     if ( pInfo->m_acMvCand[ 0 ] == pInfo->m_acMvCand[ 1 ] )
     {
       pInfo->iN = 1;
+#if FIX_MISUSE_REFINDEX
+      pInfo->m_acMvCand[ 1 ].set(0, 0);
+#endif
     }
   }
 #if QC_MULTI_DIS_CAN_A0097 && !SHARP_INTERVIEW_DECOUPLE_B0111
