@@ -61,7 +61,7 @@ struct OutputNALUnit : public NALUnit
 #else
     NalRefIdc nalRefIDC,
 #endif
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
     unsigned layerId,
 #else
     Int viewId,
@@ -69,7 +69,7 @@ struct OutputNALUnit : public NALUnit
 #endif
     unsigned temporalID = 0)
 #if NAL_REF_FLAG
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   : NALUnit(nalUnitType, nalRefFlag, layerId, temporalID)
 #else
   : NALUnit(nalUnitType, nalRefFlag, viewId, isDepth, temporalID)

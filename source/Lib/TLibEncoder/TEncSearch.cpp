@@ -159,6 +159,10 @@ void TEncSearch::init(TEncCfg*      pcEncCfg,
                       TComTrQuant*  pcTrQuant,
                       Int           iSearchRange,
                       Int           bipredSearchRange,
+#if DV_V_RESTRICTION_B0037
+                      Bool          bUseDisparitySearchRangeRestriction,
+                      Int           iVerticalDisparitySearchRange,
+#endif
                       Int           iFastSearch,
                       Int           iMaxDeltaQP,
                       TEncEntropy*  pcEntropyCoder,
@@ -171,6 +175,10 @@ void TEncSearch::init(TEncCfg*      pcEncCfg,
   m_pcTrQuant            = pcTrQuant;
   m_iSearchRange         = iSearchRange;
   m_bipredSearchRange    = bipredSearchRange;
+#if DV_V_RESTRICTION_B0037
+  m_bUseDisparitySearchRangeRestriction = bUseDisparitySearchRangeRestriction;
+  m_iVerticalDisparitySearchRange = iVerticalDisparitySearchRange;
+#endif
   m_iFastSearch          = iFastSearch;
   m_iMaxDeltaQP          = iMaxDeltaQP;
   m_pcEntropyCoder       = pcEntropyCoder;
@@ -2235,6 +2243,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       }
 #endif
 #if HHI_DMM_PRED_TEX
+      
+#if FLEX_CODING_ORDER_M23723
+      if ( pcCU->getSlice()->getSPS()->getUseDMM34() )
+      {
+#endif
       UInt uiTexTabIdx  = 0;
       Int  iTexDeltaDC1 = 0;
       Int  iTexDeltaDC2 = 0;
@@ -2258,6 +2271,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         uiRdModeList[ numModesForFullRD++ ] = DMM_CONTOUR_PREDTEX_IDX;
         uiRdModeList[ numModesForFullRD++ ] = DMM_CONTOUR_PREDTEX_D_IDX;
       }
+#if FLEX_CODING_ORDER_M23723
+      }
+#endif
 #endif
     }
 #endif
@@ -2302,11 +2318,21 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       UInt uiOrgMode = uiRdModeList[uiMode];
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+      if( m_pcEncCfg->getIsDepth() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight, pcCU->getSlice()->getSPS()->getUseDMM34() ) 
+#if LGE_EDGE_INTRA_A0070
+        && uiOrgMode < EDGE_INTRA_IDX
+#endif
+        )
+
+#else
+
       if( m_pcEncCfg->getIsDepth() && !predIntraLumaDMMAvailable( uiOrgMode, uiWidth, uiHeight ) 
 #if LGE_EDGE_INTRA_A0070
         && uiOrgMode < EDGE_INTRA_IDX
 #endif
         )
+#endif
       {
         continue;
       }
@@ -4213,8 +4239,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   
   TComYuv*      pcYuv = pcYuvOrg;
   m_iSearchRange = m_aaiAdaptSR[eRefPicList][iRefIdxPred];
-  
+
   Int           iSrchRng      = ( bBi ? m_bipredSearchRange : m_iSearchRange );
+#if DV_V_RESTRICTION_B0037
+  Int           iVerDispSrchRng = m_iVerticalDisparitySearchRange;  
+#endif
   TComPattern*  pcPatternKey  = pcCU->getPattern        ();
   
   Double        fWeight       = 1.0;
@@ -4251,10 +4280,28 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   Int         iRefStride  = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getPicYuvRec()->getStride();
   
   TComMv      cMvPred = *pcMvPred;
-  
+
+#if DV_V_RESTRICTION_B0037
+  Bool bMv_VRng_Restricted = false;
+  if( pcCU->getSlice()->getViewId() > 0 
+      &&
+      pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getPOC() == pcCU->getSlice()->getPOC()
+      &&
+      m_bUseDisparitySearchRangeRestriction
+     )
+  {
+      bMv_VRng_Restricted = true;
+  }
+#endif
+
+#if DV_V_RESTRICTION_B0037
+  if ( bBi )  xSetSearchRange   ( pcCU, rcMv   , iSrchRng, cMvSrchRngLT, cMvSrchRngRB, bMv_VRng_Restricted, iVerDispSrchRng );
+  else        xSetSearchRange   ( pcCU, cMvPred, iSrchRng, cMvSrchRngLT, cMvSrchRngRB, bMv_VRng_Restricted, iVerDispSrchRng );
+#else
   if ( bBi )  xSetSearchRange   ( pcCU, rcMv   , iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
   else        xSetSearchRange   ( pcCU, cMvPred, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
-  
+#endif
+
   m_pcRdCost->getMotionCost ( 1, 0 );
   
   m_pcRdCost->setPredictor  ( *pcMvPred );
@@ -4279,11 +4326,17 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
     m_pcRdCost->setMultiviewReg( bMultiviewReg ? &cOrgDepthMapMv : 0 );
     if( bMultiviewReg && !bBi )
     {
+#if DV_V_RESTRICTION_B0037
+      xSetSearchRange( pcCU, cOrgDepthMapMv, iSrchRng, cMvSrchRngLT, cMvSrchRngRB, bMv_VRng_Restricted, iVerDispSrchRng  );
+#else
       xSetSearchRange( pcCU, cOrgDepthMapMv, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
+#endif
     }
   }
 #endif
-
+#if QC_MVHEVC_B0046
+  m_pcRdCost->setMultiviewReg( 0 );
+#endif
   setWpScalingDistParam( pcCU, iRefIdxPred, eRefPicList );
   //  Do integer search
   if ( !m_iFastSearch || bBi )
@@ -4329,8 +4382,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   ruiCost       = (UInt)( floor( fWeight * ( (Double)ruiCost - (Double)m_pcRdCost->getCost( uiMvBits ) ) ) + (Double)m_pcRdCost->getCost( ruiBits ) );
 }
 
-
+#if DV_V_RESTRICTION_B0037
+Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB, Bool bMv_VRng_Restricted, Int iVerDispSrchRng )
+#else
 Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
+#endif
 {
   Int  iMvShift = 2;
 #if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
@@ -4345,6 +4401,19 @@ Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchR
   
   rcMvSrchRngRB.setHor( cTmpMvPred.getHor() + (iSrchRng << iMvShift) );
   rcMvSrchRngRB.setVer( cTmpMvPred.getVer() + (iSrchRng << iMvShift) );
+
+#if DV_V_RESTRICTION_B0037
+  if ( bMv_VRng_Restricted ) {
+    Int iRestrictMvVrange = ( iVerDispSrchRng ) << iMvShift;    
+    if ( rcMvSrchRngRB.getVer() >= iRestrictMvVrange  ){
+      rcMvSrchRngRB.setVer( iRestrictMvVrange );
+    }
+    //restrict minus vector too
+    if ( rcMvSrchRngLT.getVer() <= -iRestrictMvVrange ){
+      rcMvSrchRngLT.setVer( -iRestrictMvVrange );
+    }
+  }
+#endif
   pcCU->clipMv        ( rcMvSrchRngLT );
   pcCU->clipMv        ( rcMvSrchRngRB );
   
@@ -6414,7 +6483,11 @@ Void  TEncSearch::setWpScalingDistParam( TComDataCU* pcCU, Int iRefIdx, RefPicLi
 }
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if ((HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX)&&FLEX_CODING_ORDER_M23723)
+Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHeight, Bool bDMMAvailable34 )
+#else
 Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHeight )
+#endif
 {
   if( uiMode < NUM_INTRA_MODE ) return true;
 
@@ -6442,6 +6515,14 @@ Bool TEncSearch::predIntraLumaDMMAvailable( UInt uiMode, UInt uiWidth, UInt uiHe
     {
       bDMMAvailable = false;
     }
+
+#if FLEX_CODING_ORDER_M23723
+    if ( !bDMMAvailable34 )
+    {
+      bDMMAvailable = false;
+    }
+#endif
+
   }
 #endif
 

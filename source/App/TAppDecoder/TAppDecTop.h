@@ -70,10 +70,15 @@ private:
   std::vector<Int>                m_pocLastDisplay;               ///< last POC in display order
   Bool                            m_useDepth;
 
+#if FLEX_CODING_ORDER_M23723
+  Int  m_fcoViewDepthId;
+  Char m_fcoOrder[MAX_VIEW_NUM*2];
+#endif
+
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
 #if DEPTH_MAP_GENERATION
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   TComVPSAccess                   m_cVPSAccess;
 #endif
   TComSPSAccess                   m_cSPSAccess;
@@ -87,7 +92,7 @@ public:
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  increaseNumberOfViews  (UInt layerId, UInt viewId, UInt isDepth);
 #else
   Void  increaseNumberOfViews  (Int newNumberOfViewDepth);

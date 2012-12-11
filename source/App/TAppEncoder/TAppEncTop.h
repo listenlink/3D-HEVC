@@ -86,7 +86,7 @@ private:
   TComAUPicAccess             m_cAUPicAccess;
 #endif
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   TComVPS                     m_cVPS;
 #endif
   
@@ -138,6 +138,9 @@ public:
   Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset );
 #endif
   
+#if QC_MVHEVC_B0046
+  TComVPS*          getVPS()  { return &m_cVPS; }
+#endif
 #if VIDYO_VPS_INTEGRATION
   TComVPS*          getVPS()  { return &m_cVPS; }
   TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }

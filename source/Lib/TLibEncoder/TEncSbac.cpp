@@ -395,7 +395,7 @@ void TEncSbac::codeSEI(const SEI&)
   assert(0);
 }
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
 Void TEncSbac::codeVPS( TComVPS* pcVPS )
 {
   assert (0);
@@ -1075,6 +1075,15 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
     if( uiDir == DMM_WEDGE_PREDDIR_D_IDX )     { xCodeWedgePredDirDeltaInfo  ( pcCU, uiAbsPartIdx ); }
 #endif
 #if HHI_DMM_PRED_TEX
+
+#if FLEX_CODING_ORDER_M23723
+    if ( !pcCU->getSlice()->getSPS()->getUseDMM34() )
+    {
+      assert( uiDir != DMM_WEDGE_PREDTEX_D_IDX );
+      assert( uiDir != DMM_CONTOUR_PREDTEX_D_IDX );
+    }
+#endif
+
     if( uiDir == DMM_WEDGE_PREDTEX_D_IDX )     { xCodeWedgePredTexDeltaInfo  ( pcCU, uiAbsPartIdx ); }
     if( uiDir == DMM_CONTOUR_PREDTEX_D_IDX )   { xCodeContourPredTexDeltaInfo( pcCU, uiAbsPartIdx ); }
 #endif

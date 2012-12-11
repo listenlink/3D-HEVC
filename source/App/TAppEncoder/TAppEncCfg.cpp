@@ -110,6 +110,12 @@ TAppEncCfg::~TAppEncCfg()
   }
   if (m_pchBitstreamFile != NULL)
     free (m_pchBitstreamFile) ;
+#if FLEX_CODING_ORDER_M23723
+  if (m_pchMVCJointCodingOrder != NULL)
+  {
+    free(m_pchMVCJointCodingOrder) ;
+  }
+#endif
 #if HHI_VSO
   if (  m_pchVSOConfig != NULL)
     free (  m_pchVSOConfig );
@@ -202,6 +208,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_ColumnWidth;
   string cfg_RowHeight;
   string cfg_ScalingListFile;
+
+ #if FLEX_CODING_ORDER_M23723
+  string cfg_JointCodingOrdering;
+#endif
+
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
@@ -245,6 +256,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FrameToBeEncoded",        m_iFrameToBeEncoded, 0, "deprecated alias of FramesToBeEncoded")
   
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
+#if FLEX_CODING_ORDER_M23723
+  ("FCO",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
+  ("FCOCodingOrder",   cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
+#endif
   /* Unit definition parameters */
   ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
   ("MaxCUHeight",         m_uiMaxCUHeight, 64u)
@@ -275,6 +290,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* motion options */
   ("FastSearch", m_iFastSearch, 1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",m_iSearchRange, 96, "motion search range")
+#if DV_V_RESTRICTION_B0037
+  ("DisparitySearchRangeRestriction",m_bUseDisparitySearchRangeRestriction, false, "restrict disparity search range")
+  ("VerticalDisparitySearchRange",m_iVerticalDisparitySearchRange, 56, "vertical disparity search range")
+#endif
   ("BipredSearchRange", m_bipredSearchRange, 4, "motion search range for bipred refinement")
   ("HadamardME", m_bUseHADME, true, "hadamard ME for fractional-pel")
   ("ASR", m_bUseASR, false, "adaptive motion search range")
@@ -328,6 +347,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   /* Camera Paremetes */
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
+#if QC_MVHEVC_B0046
+  ("BaseViewCameraNumbers" ,  m_aiVId,     std::vector<Int>(1, MAX_VIEW_NUM), "Numbers of base views")
+#endif
   ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
 
   /* View Synthesis Optimization */
@@ -525,7 +547,45 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
-  
+#if FLEX_CODING_ORDER_M23723
+  m_pchMVCJointCodingOrder= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
+  // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
+#if HHI_VSO && DISABLE_FCO_FOR_VSO
+  Bool depthComesFirst = false;
+  int iter = 0;
+  if ( m_b3DVFlexOrder )
+  {
+    for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+    {
+      iter = 0; 
+      for ( Int ii=1; ii<12; ii+=2 )
+      {
+        Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+        if ( iViewIdxCfg == iViewIdx )
+        {
+          iter ++; 
+          if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+          {
+            if(iter == 1)
+           { 
+            depthComesFirst = true;
+            break;
+           }
+          }
+          else
+          {
+            assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+          }
+        }
+      }
+    }
+  }
+  if (depthComesFirst)
+  {
+    m_bUseVSO = false;
+  }
+#endif
+#endif
   m_pchColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
   m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
@@ -785,6 +845,7 @@ else
     LOG2_DISP_PREC_LUT );
 }
 #else
+#if !QC_MVHEVC_B0046
   m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
     m_uiInputBitDepth,
     (UInt)m_iCodedCamParPrecision,
@@ -796,12 +857,14 @@ else
     NULL,
     LOG2_DISP_PREC_LUT );
 #endif
+#endif
 
 
   // check validity of input parameters
   xCheckParameter();
+#if !QC_MVHEVC_B0046
   m_cCameraData.check( false, true );
-  
+#endif
   // print-out parameters
   xPrintParameter();
   
@@ -849,6 +912,9 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -13 || m_loopFilterTcOffsetDiv2 > 13,              "Loop Filter Tc Offset div. 2 exceeds supported range (-13 to 13)");
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
+#if DV_V_RESTRICTION_B0037
+  xConfirmPara( m_iVerticalDisparitySearchRange <= 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
+#endif
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
@@ -1594,6 +1660,10 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
+#if DV_V_RESTRICTION_B0037
+  printf("Disp search range restriction: %d\n", m_bUseDisparitySearchRangeRestriction );
+  printf("Vertical disp search range   : %d\n", m_iVerticalDisparitySearchRange );
+#endif
   printf("Intra period                 : %d\n", m_iIntraPeriod );
   printf("Decoding refresh type        : %d\n", m_iDecodingRefreshType );
   printf("QP Texture                   : %5.2f\n", m_adQP[0] );
@@ -1744,6 +1814,14 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
 #if TMVP_DEPTH_SWITCH
   printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
+#endif
+#if FLEX_CODING_ORDER_M23723
+  printf("FCO:%d ",   (m_b3DVFlexOrder ? 1: 0));
+
+  if(m_b3DVFlexOrder)
+  {
+    printf("CodingOrder: %s ", m_pchMVCJointCodingOrder);
+  }
 #endif
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
