@@ -93,6 +93,10 @@ protected:
   // ME parameters
   Int             m_iSearchRange;
   Int             m_bipredSearchRange; // Search range for bi-prediction
+#if DV_V_RESTRICTION_B0037
+  Bool            m_bUseDisparitySearchRangeRestriction;
+  Int             m_iVerticalDisparitySearchRange;
+#endif
   Int             m_iFastSearch;
   Int             m_aaiAdaptSR[2][33];
   TComMv          m_cSrchRngLT;
@@ -131,6 +135,10 @@ public:
             TComTrQuant*  pcTrQuant,
             Int           iSearchRange,
             Int           bipredSearchRange,
+#if DV_V_RESTRICTION_B0037
+            Bool          bUseDisparitySearchRangeRestriction,
+            Int           iVerticalDisparitySearchRange,
+#endif
             Int           iFastSearch,
             Int           iMaxDeltaQP,
             TEncEntropy*  pcEntropyCoder,
@@ -324,9 +332,16 @@ protected:
   // -------------------------------------------------------------------------------------------------------------------
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+
   Bool predIntraLumaDMMAvailable  ( UInt           uiMode, 
                                     UInt           uiWidth, 
-                                    UInt           uiHeight );
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+                                    UInt         uiHeight, 
+                                    Bool         bDMMAvailable34 );
+#else
+                                    UInt         uiHeight );
+#endif
+
   Void xGetWedgeDeltaDCsMinDist   ( TComWedgelet*  pcWedgelet, 
                                     TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
@@ -522,11 +537,21 @@ protected:
                                     TComMv&       rcMv,
                                     UInt&         ruiSAD );
   
+#if DV_V_RESTRICTION_B0037
+  Void xSetSearchRange            ( TComDataCU*   pcCU,
+                                    TComMv&       cMvPred,
+                                    Int           iSrchRng,
+                                    TComMv&       rcMvSrchRngLT,
+                                    TComMv&       rcMvSrchRngRB,
+                                    Bool          bDispSrchRngRst,
+                                    Int           iDispVerSrchRng );
+#else
   Void xSetSearchRange            ( TComDataCU*   pcCU,
                                     TComMv&       cMvPred,
                                     Int           iSrchRng,
                                     TComMv&       rcMvSrchRngLT,
                                     TComMv&       rcMvSrchRngRB );
+#endif
   
   Void xPatternSearchFast         ( TComDataCU*   pcCU,
                                     TComPattern*  pcPatternKey,

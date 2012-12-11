@@ -374,8 +374,11 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
                   );
   
   // initialize encoder search class
+#if DV_V_RESTRICTION_B0037
+  m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_bUseDisparitySearchRangeRestriction, m_iVerticalDisparitySearchRange, m_iFastSearch, 0, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
+#else
   m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_iFastSearch, 0, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
-
+#endif
   if(m_bUseALF)
   {
     m_cAdaptiveLoopFilter.setALFEncodePassReduction( m_iALFEncodePassReduction );
@@ -765,6 +768,11 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+  m_cSPS.setUseDMM34( m_bUseDMM34 );
+#endif
+
 #if OL_QTLIMIT_PREDCODING_B0068
   m_cSPS.setUseQTLPC( m_bUseQTLPC );
 #endif
@@ -784,7 +792,11 @@ Void TEncTop::xInitSPS()
   }
   else
   {
+#if QC_MVHEVC_B0046
+    m_cSPS.initMultiviewSPS   ( m_viewId);
+#else
     m_cSPS.initMultiviewSPS           ( m_viewId, m_iViewOrderIdx, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
+#endif
     if( m_viewId )
     {
 #if DEPTH_MAP_GENERATION
@@ -992,7 +1004,11 @@ Void TEncTop::xInitRPS()
    // for a specific slice (with POC = POCCurr)
 Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic )
 {
+#if QC_REM_IDV_B0046
+  if( (slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR ||slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA) && slice->getSPS()->getViewId() && POCCurr == 0 )
+#else
   if( slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && POCCurr == 0 )
+#endif
   {
     TComReferencePictureSet* rps = slice->getLocalRPS();
     rps->setNumberOfNegativePictures(0);
