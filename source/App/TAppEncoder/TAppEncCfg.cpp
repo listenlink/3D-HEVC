@@ -73,9 +73,7 @@ void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg);
 TAppEncCfg::TAppEncCfg()
 {
   m_aidQP = NULL;
-#if FIXES
   m_aidQPdepth = NULL;
-#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -85,12 +83,10 @@ TAppEncCfg::~TAppEncCfg()
     delete[] m_aidQP; m_aidQP = NULL;
   }
 
-#if FIXES
   if ( m_aidQPdepth )
   {
     delete[] m_aidQPdepth; m_aidQPdepth = NULL;
   }
-#endif
 
   for(Int i = 0; i< m_pchInputFileList.size(); i++ )
   {
@@ -114,12 +110,17 @@ TAppEncCfg::~TAppEncCfg()
   }
   if (m_pchBitstreamFile != NULL)
     free (m_pchBitstreamFile) ;
+#if FLEX_CODING_ORDER_M23723
+  if (m_pchMVCJointCodingOrder != NULL)
+  {
+    free(m_pchMVCJointCodingOrder) ;
+  }
+#endif
 #if HHI_VSO
   if (  m_pchVSOConfig != NULL)
     free (  m_pchVSOConfig );
 #endif
 
-#if FIX_MEM_LEAKS
  if ( m_pchCameraParameterFile != NULL )
    free ( m_pchCameraParameterFile ); 
 
@@ -138,7 +139,6 @@ TAppEncCfg::~TAppEncCfg()
  if ( m_scalingListFile != NULL ) 
    free ( m_scalingListFile );
 
-#endif   
 
 }
 
@@ -224,6 +224,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   string cfg_ColumnWidth;
   string cfg_RowHeight;
   string cfg_ScalingListFile;
+
+ #if FLEX_CODING_ORDER_M23723
+  string cfg_JointCodingOrdering;
+#endif
+
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
@@ -267,6 +272,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FrameToBeEncoded",      m_iFrameToBeEncoded, 0, "depricated alias of FramesToBeEncoded")
   
   ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
+#if FLEX_CODING_ORDER_M23723
+  ("FCO",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
+  ("FCOCodingOrder",   cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
+#endif
   /* Unit definition parameters */
   ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
   ("MaxCUHeight",         m_uiMaxCUHeight, 64u)
@@ -297,6 +306,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* motion options */
   ("FastSearch", m_iFastSearch, 1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",m_iSearchRange, 96, "motion search range")
+#if DV_V_RESTRICTION_B0037
+  ("DisparitySearchRangeRestriction",m_bUseDisparitySearchRangeRestriction, false, "restrict disparity search range")
+  ("VerticalDisparitySearchRange",m_iVerticalDisparitySearchRange, 56, "vertical disparity search range")
+#endif
   ("BipredSearchRange", m_bipredSearchRange, 4, "motion search range for bipred refinement")
   ("HadamardME", m_bUseHADME, true, "hadamard ME for fractional-pel")
   ("ASR", m_bUseASR, false, "adaptive motion search range")
@@ -341,16 +354,18 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterOffsetInAPS", m_loopFilterOffsetInAPS, false)
   ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
   ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
-#if DBL_CONTROL
-#if FIX_DBL_CONTROL_DEFAULT
-  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
-#else
-  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, false)
+#if LGE_ILLUCOMP_B0045
+  ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
 #endif
+#if DBL_CONTROL
+  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
 #endif
 
   /* Camera Paremetes */
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
+#if QC_MVHEVC_B0046
+  ("BaseViewCameraNumbers" ,  m_aiVId,     std::vector<Int>(1, MAX_VIEW_NUM), "Numbers of base views")
+#endif
   ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
 
   /* View Synthesis Optimization */
@@ -361,7 +376,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
   ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1    , "Lambda Scaling for VSO")
 
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   ("VSOLSTable",                      m_bVSOLSTable             , true          , "Depth QP dependent video/depth rate allocation by Lagrange multiplier" )    
 #endif
 
@@ -376,15 +391,16 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
 #endif
 #if LGE_WVSO_A0119
-  ("WVSO",                            m_bUseWVSO                , false         , "Use depth fidelity term for VSO" )
+  ("WVSO",                            m_bUseWVSO                , true          , "Use depth fidelity term for VSO" )
   ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
   ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 #endif
 
-#if OL_DEPTHLIMIT_A0044
-  ("DPL",                             m_bDepthPartitionLimiting , false         , "Use DepthPartitionLimiting" )
+#if OL_QTLIMIT_PREDCODING_B0068
+  ("QTLPC",                           m_bUseQTLPC               , true         , "Use depth Quadtree Limitation + Predictive Coding" )
 #endif
+
 #endif
 
 #if VSP_N
@@ -473,7 +489,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
                                               "\t1: use MD5\n"
                                               "\t0: disable")
 
+#if TMVP_DEPTH_SWITCH
+  ("TMVP", m_enableTMVP, std::vector<Bool>(1,true), "Enable TMVP" )
+#else
   ("TMVP", m_enableTMVP, true, "Enable TMVP" )
+#endif
 
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
   ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
@@ -492,6 +512,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("0", doOldStyleCmdlineOff, "turn option <name> off")
 #if HHI_MPI
   ("MVI", m_bUseMVI, false, "use motion vector inheritance for depth map coding")
+#endif
+#if RWTH_SDC_DLT_B0036
+  ("DLT", m_bUseDLT, true, "use depth lookup table for depth map coding")
+  ("SDC", m_bUseSDC, true, "use simplified depth coding tree")
 #endif
   ;
   
@@ -544,7 +568,45 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
-  
+#if FLEX_CODING_ORDER_M23723
+  m_pchMVCJointCodingOrder= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
+  // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
+#if HHI_VSO && DISABLE_FCO_FOR_VSO
+  Bool depthComesFirst = false;
+  int iter = 0;
+  if ( m_b3DVFlexOrder )
+  {
+    for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+    {
+      iter = 0; 
+      for ( Int ii=1; ii<12; ii+=2 )
+      {
+        Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+        if ( iViewIdxCfg == iViewIdx )
+        {
+          iter ++; 
+          if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+          {
+            if(iter == 1)
+           { 
+            depthComesFirst = true;
+            break;
+           }
+          }
+          else
+          {
+            assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+          }
+        }
+      }
+    }
+  }
+  if (depthComesFirst)
+  {
+    m_bUseVSO = false;
+  }
+#endif
+#endif
   m_pchColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
   m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
   m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
@@ -703,6 +765,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   xCleanUpVectors();
 
+
+#if TMVP_DEPTH_SWITCH
+  if ( m_enableTMVP.size() < 2)
+  {
+    m_enableTMVP.push_back( m_enableTMVP[0]  );
+  }
+#endif
+ 
+
 #if HHI_VSO
   if ( m_abUseALF .size() < 2)
     m_abUseALF .push_back( m_bUseVSO ? false : m_abUseALF[0]  );
@@ -731,7 +802,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #if HHI_VSO
 
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
   // Q&D
   Double adLambdaScaleTable[] = 
   {  0.031250, 0.031639, 0.032029, 0.032418, 0.032808, 0.033197, 0.033586, 0.033976, 0.034365, 0.034755, 
@@ -795,6 +866,7 @@ else
     LOG2_DISP_PREC_LUT );
 }
 #else
+#if !QC_MVHEVC_B0046
   m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
     m_uiInputBitDepth,
     (UInt)m_iCodedCamParPrecision,
@@ -806,12 +878,14 @@ else
     NULL,
     LOG2_DISP_PREC_LUT );
 #endif
+#endif
 
 
   // check validity of input parameters
   xCheckParameter();
+#if !QC_MVHEVC_B0046
   m_cCameraData.check( false, true );
-  
+#endif
   // print-out parameters
   xPrintParameter();
   
@@ -859,6 +933,9 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -13 || m_loopFilterTcOffsetDiv2 > 13,              "Loop Filter Tc Offset div. 2 exceeds supported range (-13 to 13)");
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
+#if DV_V_RESTRICTION_B0037
+  xConfirmPara( m_iVerticalDisparitySearchRange <= 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
+#endif
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
@@ -1649,6 +1726,10 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
+#if DV_V_RESTRICTION_B0037
+  printf("Disp search range restriction: %d\n", m_bUseDisparitySearchRangeRestriction );
+  printf("Vertical disp search range   : %d\n", m_iVerticalDisparitySearchRange );
+#endif
   printf("Intra period                 : %d\n", m_iIntraPeriod );
   printf("Decoding refresh type        : %d\n", m_iDecodingRefreshType );
   printf("QP Texture                   : %5.2f\n", m_adQP[0] );
@@ -1684,7 +1765,7 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if HHI_VSO_DIST_INT
     printf("VSO Negative Distortion      : %d\n",    m_bAllowNegDist ? 1 : 0);
 #endif
-#if HHI_VSO_LS_TABLE
+#if HHI_VSO_LS_TABLE_M23714
     printf("VSO LS Table                 : %d\n",    m_bVSOLSTable ? 1 : 0);    
 #endif
 #if SAIT_VSO_EST_A0033
@@ -1768,7 +1849,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
           m_iWaveFrontSynchro, m_iWaveFrontFlush, m_iWaveFrontSubstreams);
   printf(" ScalingList:%d ", m_useScalingListId );
 
+#if !TMVP_DEPTH_SWITCH
   printf("TMVP:%d ", m_enableTMVP     );
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   printf("AQpS:%d", m_bUseAdaptQpSelect   );
@@ -1782,20 +1865,38 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
   printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[0] ? 1 : 0) );
+#endif
+#if LGE_ILLUCOMP_B0045
+  printf("IlluCompEnable: %d ", m_bUseIC);
+#endif
+
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
   printf("ALF:%d ", (m_abUseALF [1] ? 1 : 0));
   printf("SAO:%d ", (m_abUseSAO [1] ? 1 : 0));
   printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
+#if TMVP_DEPTH_SWITCH
+  printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
+#endif
+#if FLEX_CODING_ORDER_M23723
+  printf("FCO:%d ",   (m_b3DVFlexOrder ? 1: 0));
+
+  if(m_b3DVFlexOrder)
+  {
+    printf("CodingOrder: %s ", m_pchMVCJointCodingOrder);
+  }
+#endif
 #if HHI_VSO
   printf("VSO:%d ", m_bUseVSO             );
 #endif
 #if LGE_WVSO_A0119
   printf("WVSO:%d ", m_bUseWVSO );
 #endif
-#if OL_DEPTHLIMIT_A0044
-  printf("DPL:%d ", m_bDepthPartitionLimiting);
+#if OL_QTLIMIT_PREDCODING_B0068
+  printf("QTLPC:%d ", m_bUseQTLPC);
 #endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   printf("DMM:%d ", m_bUseDMM );
@@ -1803,8 +1904,13 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if HHI_MPI
   printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
 #endif
+#if RWTH_SDC_DLT_B0036
+  printf("SDC:%d ", m_bUseSDC ? 1 : 0 );
+  printf("DLT:%d ", m_bUseDLT ? 1 : 0 );
+#endif
 #if LGE_WVSO_A0119
-  printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
+  if ( m_bUseWVSO )
+    printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
   printf("\n\n");
   

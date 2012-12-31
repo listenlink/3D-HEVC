@@ -100,9 +100,6 @@ private:
   TEncSbac*               m_pcBufferLowLatSbacCoders;           ///< dependent tiles: line to store temporary contexts
   
   UInt                    m_uiSliceIdx;
-#if OL_DEPTHLIMIT_A0044 //flag to signal to start dumping
-  Bool                    m_bDumpPartInfo;
-#endif
 public:
   TEncSlice();
   virtual ~TEncSlice();
@@ -112,7 +109,7 @@ public:
   Void    init                ( TEncTop* pcEncTop );
   
   /// preparation of slice encoding (reference marking, QP and lambda)
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS );
 #else
   Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
@@ -130,9 +127,6 @@ public:
   Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& uiBoundingCUAddr, TComPic*& rpcPic, Bool bEncodeSlice );
   UInt    getSliceIdx()         { return m_uiSliceIdx;                    }
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
-#if OL_DEPTHLIMIT_A0044 //flag to signal to start dumping
-  Void    setPartDumpFlag(Bool flag) { m_bDumpPartInfo = flag;};
-#endif
 };
 
 //! \}

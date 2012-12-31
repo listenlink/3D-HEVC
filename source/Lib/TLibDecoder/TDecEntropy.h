@@ -70,7 +70,7 @@ public:
   virtual Void  decodeFlush()                                                                      = 0;
 #endif
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
 #endif
 #if HHI_MPI
@@ -102,6 +102,9 @@ public:
   
 public:
   virtual Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#if LGE_ILLUCOMP_B0045
+  virtual Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#endif
 #if FORCE_REF_VSP==1
   virtual Void parseVspFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
@@ -141,6 +144,12 @@ public:
   virtual Void readTileMarker   ( UInt& uiTileIdx, UInt uiBitsUsed ) = 0;
   virtual Void updateContextTables( SliceType eSliceType, Int iQp ) = 0;
   
+#if RWTH_SDC_DLT_B0036
+  virtual Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+  virtual Void parseSDCPredMode     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+  virtual Void parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart ) = 0;
+#endif
+  
   virtual ~TDecEntropyIf() {}
 };
 
@@ -168,7 +177,7 @@ public:
   Void    setBitstream                ( TComInputBitstream* p ) { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
 #endif
   
@@ -198,6 +207,9 @@ public:
 public:
   Void decodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if LGE_ILLUCOMP_B0045
+  Void decodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 #if FORCE_REF_VSP==1
   Void decodeVspFlag           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
@@ -254,6 +266,12 @@ public:
 
 #if OL_FLUSH
   Void decodeFlush() { m_pcEntropyDecoderIf->decodeFlush(); }
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Void decodeSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void decodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
 };// END CLASS DEFINITION TDecEntropy

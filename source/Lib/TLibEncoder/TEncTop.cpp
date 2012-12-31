@@ -87,6 +87,7 @@ TEncTop::TEncTop()
 #if VSP_SLICE_HEADER
   m_bUseVSP = false;
   m_bVSPDepthDisable = false;
+  m_bIsFirstInView = false;
 #endif
 }
 
@@ -100,14 +101,10 @@ TEncTop::~TEncTop()
 Void TEncTop::create ()
 {
   // initialize global variables
-#if FIX_INIT_ROM
   if( m_viewId == 0 && m_isDepth == false )
   {
-#endif
     initROM();
-#if FIX_INIT_ROM
   }
-#endif
 
 
   // create processing unit classes
@@ -413,8 +410,11 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
                   );
   
   // initialize encoder search class
+#if DV_V_RESTRICTION_B0037
+  m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_bUseDisparitySearchRangeRestriction, m_iVerticalDisparitySearchRange, m_iFastSearch, 0, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
+#else
   m_cSearch.init( this, &m_cTrQuant, m_iSearchRange, m_bipredSearchRange, m_iFastSearch, 0, &m_cEntropyCoder, &m_cRdCost, getRDSbacCoder(), getRDGoOnSbacCoder() );
-
+#endif
   if(m_bUseALF)
   {
     m_cAdaptiveLoopFilter.setALFEncodePassReduction( m_iALFEncodePassReduction );
@@ -427,6 +427,7 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
   m_iMaxRefPicNum = 0;
 
 #if VSP_N
+  m_pcPicVSP->setIsVsp( true );
   m_pcPicVSP->setCurrSliceIdx( 0 );
   m_pcPicVSP->getCurrSlice()->setSPS( this->getSPS() );
   m_pcPicVSP->getCurrSlice()->setPPS( this->getPPS() );
@@ -439,7 +440,7 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
     m_pcPicVSP->getPicSym()->getCU(i)->getCUMvField(RefPicList(1))->clearMvField();
   }
 #if DEPTH_MAP_GENERATION
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
   // add extra pic buffers
   Bool  bNeedPrdDepthMapBuf = ( m_uiPredDepthMapGeneration > 0 );
   if( bNeedPrdDepthMapBuf && !m_pcPicVSP->getPredDepthMap() )
@@ -449,6 +450,7 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
   }
 #endif
 #endif
+  m_pcPicAvail->setIsVsp( true );
   m_pcPicAvail->setCurrSliceIdx( 0 );
   m_pcPicAvail->getCurrSlice()->setSPS( this->getSPS() );
   m_pcPicAvail->getCurrSlice()->setPPS( this->getPPS() );
@@ -461,7 +463,7 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
     m_pcPicAvail->getPicSym()->getCU(i)->getCUMvField(RefPicList(1))->clearMvField();
   }
 #if DEPTH_MAP_GENERATION
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
   // add extra pic buffers
   bNeedPrdDepthMapBuf = ( m_uiPredDepthMapGeneration > 0 );
   if( bNeedPrdDepthMapBuf && !m_pcPicVSP->getPredDepthMap() )
@@ -686,9 +688,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
-#if FIXES
   rpcPic->getPicYuvOrg()->setBorderExtension(false); 
-#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -727,6 +727,10 @@ Void TEncTop::xInitSPS()
   {
     m_cSPS.setUseALFCoefInSlice(m_bALFParamInSlice);
   }
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  m_cSPS.setUseDLT        ( m_bUseDLT );
 #endif
   
   m_cSPS.setQuadtreeTULog2MaxSize( m_uiQuadtreeTULog2MaxSize );
@@ -849,16 +853,32 @@ Void TEncTop::xInitSPS()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cSPS.setUseDMM( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT_A0044
-  m_cSPS.setUseDPL( m_bDepthPartitionLimiting );
+
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+  m_cSPS.setUseDMM34( m_bUseDMM34 );
+#endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  m_cSPS.setUseQTLPC( m_bUseQTLPC );
 #endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif
 
+#if VSP_N
+  m_cSPS.setIsFirstInView( m_bIsFirstInView );
+#endif
+
   if( m_isDepth )
   {
+#if VSP_N
+    if( m_cSPS.getIsFirstInView() )
+      m_cSPS.initMultiviewSPSFlex     ( m_viewId, m_iViewOrderIdx, true, m_cSPS.getIsFirstInView(), m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
+    else
+      m_cSPS.initMultiviewSPSDepth    ( m_viewId, m_iViewOrderIdx );
+#else
     m_cSPS.initMultiviewSPSDepth    ( m_viewId, m_iViewOrderIdx );
+#endif
 #if DEPTH_MAP_GENERATION
     m_cSPS.setPredDepthMapGeneration( m_viewId, true );
 #endif
@@ -868,7 +888,11 @@ Void TEncTop::xInitSPS()
   }
   else
   {
+#if QC_MVHEVC_B0046
+    m_cSPS.initMultiviewSPS   ( m_viewId);
+#else
     m_cSPS.initMultiviewSPS           ( m_viewId, m_iViewOrderIdx, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
+#endif
     if( m_viewId )
     {
 #if DEPTH_MAP_GENERATION
@@ -1082,7 +1106,11 @@ Void TEncTop::xInitRPS()
    // for a specific slice (with POC = POCCurr)
 Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic )
 {
+#if QC_REM_IDV_B0046
+  if( (slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR ||slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA) && slice->getSPS()->getViewId() && POCCurr == 0 )
+#else
   if( slice->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDV && POCCurr == 0 )
+#endif
   {
     TComReferencePictureSet* rps = slice->getLocalRPS();
     rps->setNumberOfNegativePictures(0);
@@ -1189,11 +1217,7 @@ Void  TEncTop::xInitPPSforTiles()
     m_cPPS.setLFCrossTileBoundaryFlag( m_bLFCrossTileBoundaryFlag );
 
     // # substreams is "per tile" when tiles are independent.
-#if FIX_REMOVE_TILE_DEPENDENCE
     if ( m_iWaveFrontSynchro )
-#else
-    if (m_iTileBoundaryIndependenceIdr && m_iWaveFrontSynchro)
-#endif
     {
       m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams * (m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1));
     }

@@ -86,7 +86,7 @@ private:
   TComAUPicAccess             m_cAUPicAccess;
 #endif
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   TComVPS                     m_cVPS;
 #endif
   
@@ -140,13 +140,12 @@ public:
   Void                  getUsedPelsMap   ( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUsedPelsMap );
 #endif
 #if HHI_VSO
-#if HHI_VSO_SPEEDUP_A0033
   Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset );
-#else
-  Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent );
-#endif
 #endif
   
+#if QC_MVHEVC_B0046
+  TComVPS*          getVPS()  { return &m_cVPS; }
+#endif
 #if VIDYO_VPS_INTEGRATION
   TComVPS*          getVPS()  { return &m_cVPS; }
   TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
@@ -164,6 +163,10 @@ public:
 #if HHI_VSO
 private:
   Void  xStoreVSORefPicsInBuffer();                                                   ///< read in External Ref pic from file and store in buffer
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Void  xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames);
 #endif
 
 #if VSP_N

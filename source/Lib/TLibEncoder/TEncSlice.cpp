@@ -37,9 +37,7 @@
 
 #include "TEncTop.h"
 #include "TEncSlice.h"
-#if HHI_VSO_SPEEDUP_A0033
 #include "../../App/TAppEncoder/TAppEncTop.h"
-#endif
 #include <math.h>
 
 //! \ingroup TLibEncoder
@@ -163,7 +161,7 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param pSPS          SPS associated with the slice
  \param pPPS          PPS associated with the slice
  */
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS * pVPS, TComSPS* pSPS, TComPPS *pPPS )
 #else
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
@@ -173,7 +171,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   Double dLambda;
   
   rpcSlice = pcPic->getSlice(0);
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   rpcSlice->setVPS( pVPS );
 #endif
   rpcSlice->setSPS( pSPS );
@@ -190,7 +188,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
 #if SONY_COLPIC_AVAILABILITY
   rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());
 #endif 
-
+#if LGE_ILLUCOMP_B0045
+  rpcSlice->setApplyIC(false);
+#endif
   // set mutliview parameters
   rpcSlice->initMultiviewSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );
 
@@ -647,7 +647,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   TEncBinCABAC* pppcRDSbacCoder = NULL;
   TComSlice* pcSlice            = rpcPic->getSlice(getSliceIdx());
   xDetermineStartAndBoundingCUAddr ( uiStartCUAddr, uiBoundingCUAddr, rpcPic, false );
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
   rpcPic->setIntraPeriod(this->m_pcCfg->getIntraPeriod());
 #endif
   
@@ -656,7 +656,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   m_dPicRdCost      = 0;
   m_uiPicDist       = 0;
   
-#if CABAC_INIT_FLAG && POZNAN_CABAC_INIT_FLAG_FIX
+#if CABAC_INIT_FLAG && FIX_POZNAN_CABAC_INIT_FLAG
   Bool bReset =(pcSlice->getPOC() == 0) || 
     (pcSlice->getPOC() % m_pcCfg->getIntraPeriod() == 0) ||
     (pcSlice->getPPS()->getEncPrevPOC() % m_pcCfg->getIntraPeriod() == 0) ||
@@ -768,6 +768,13 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   Int  iNumSubstreams = 1;
   UInt uiTilesAcross  = 0;
 
+#if LGE_ILLUCOMP_B0045
+  if (pcEncTop->getViewId() != 0 && !pcEncTop->isDepthCoder() && pcEncTop->getUseIC())   // DCP of ViewID 0 is not available
+  {
+    pcSlice ->xSetApplyIC();
+  }
+#endif
+
   if( m_pcCfg->getUseSBACRD() )
   {
     iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
@@ -812,11 +819,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTileCol      = 0;
   UInt uiTileStartLCU = 0;
   UInt uiTileLCUX     = 0;
-
-#if HHI_VSO_SPEEDUP_A0033
+#if !QC_MVHEVC_B0046
   Int iLastPosY = -1;
 #endif
-
   // for every CU in slice
   UInt uiEncCUOrder;
   uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU()); 
@@ -827,8 +832,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     // initialize CU encoder
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
-
-#if HHI_VSO_SPEEDUP_A0033
+#if !QC_MVHEVC_B0046
     if ( m_pcRdCost->getUseRenModel() )
     {
       // updated renderer model if necessary
@@ -843,12 +847,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       }
     }    
 #endif
-
-#if OL_DEPTHLIMIT_A0044 //stop dumping partition information
-    m_bDumpPartInfo = 0;
-    pcCU->setPartDumpFlag(m_bDumpPartInfo);
-#endif
-
     // inherit from TR if necessary, select substream to use.
     if( m_pcCfg->getUseSBACRD() )
     {
@@ -1306,11 +1304,11 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       }
     }
 
-    TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
-#if OL_DEPTHLIMIT_A0044
-    pcCU->setPartDumpFlag(m_bDumpPartInfo);
-    pcCU->resetPartInfo();
+#if OL_QTLIMIT_PREDCODING_B0068
+    rpcPic->setReduceBitsFlag(true);
 #endif
+
+    TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
 #if !REMOVE_TILE_DEPENDENCE
     if( (rpcPic->getPicSym()->getTileBoundaryIndependenceIdr()==0) && (rpcPic->getPicSym()->getNumColumnsMinus1()!=0) )
     {    
@@ -1398,6 +1396,11 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       }
     }
 #endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+    rpcPic->setReduceBitsFlag(false);
+#endif
+
   }
 
 #if ADAPTIVE_QP_SELECTION

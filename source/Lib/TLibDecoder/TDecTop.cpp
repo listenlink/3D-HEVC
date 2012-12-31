@@ -49,6 +49,9 @@ CamParsCollector::CamParsCollector()
   m_aaiCodedOffset         = new Int* [ MAX_VIEW_NUM ];
   m_aaiCodedScale          = new Int* [ MAX_VIEW_NUM ];
   m_aiViewOrderIndex       = new Int  [ MAX_VIEW_NUM ];
+#if QC_MVHEVC_B0046
+  m_aiViewId               = new Int  [ MAX_VIEW_NUM ];
+#endif
   m_aiViewReceived         = new Int  [ MAX_VIEW_NUM ];
   for( UInt uiId = 0; uiId < MAX_VIEW_NUM; uiId++ )
   {
@@ -300,15 +303,24 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   }
 
   AOF( pcSlice->getSPS()->getViewId() < MAX_VIEW_NUM );
+#if VSP_N
+  if ( !pcSlice->getSPS()->getIsFirstInView() )
+  {
+    return;
+  }
+#else
   if ( pcSlice->getSPS()->isDepth  () )
   {
     return;
   }
+#endif
   Bool  bFirstAU          = ( pcSlice->getPOC()               == 0 );
   Bool  bFirstSliceInAU   = ( pcSlice->getPOC()               != Int ( m_iLastPOC ) );
   Bool  bFirstSliceInView = ( pcSlice->getSPS()->getViewId()  != UInt( m_iLastViewId ) || bFirstSliceInAU );
   AOT(  bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()  != 0 );
+#if !VSP_N
   AOT( !bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()   < UInt( m_iLastViewId ) );
+#endif
   AOT( !bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()   > UInt( m_iLastViewId + 1 ) );
   AOT( !bFirstAU         &&   pcSlice->getSPS()->getViewId()   > m_uiMaxViewId );
   if ( !bFirstSliceInView )
@@ -487,6 +499,9 @@ TDecTop::TDecTop()
   m_bFirstSliceInPicture    = true;
   m_bFirstSliceInSequence   = true;
   m_pcCamParsCollector = 0;
+#if QC_MVHEVC_B0046
+  m_bFirstNal                  = false;
+#endif
 
 #if VSP_N
   m_pcPicVSP = NULL;
@@ -820,13 +835,20 @@ Void TDecTop::xActivateParameterSets()
 #if VIDYO_VPS_INTEGRATION
   TComVPS *vps = m_parameterSetManagerDecoder.getVPS(sps->getVPSId());
   assert (vps != 0);
+#if !QC_REM_IDV_B0046
   if( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA )
+#else
+  if( (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA) && !sps->getViewId() )
+#endif
     // VPS can only be activated on IDR or CRA...
     getTAppDecTop()->getVPSAccess()->setActiveVPSId( sps->getVPSId() );
 #endif
   m_apcSlicePilot->setPPS(pps);
   m_apcSlicePilot->setSPS(sps);
-#if VIDYO_VPS_INTEGRATION
+#if QC_MVHEVC_B0046
+  TComVPS *vps = m_parameterSetManagerDecoder.getVPS(sps->getVPSId());
+#endif
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   m_apcSlicePilot->setVPS(vps);
 #endif
   pps->setSPS(sps);
@@ -868,11 +890,25 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   m_apcSlicePilot->setPPSId(0);
   m_apcSlicePilot->setPPS(m_parameterSetManagerDecoder.getPrefetchedPPS(0));
   m_apcSlicePilot->setSPS(m_parameterSetManagerDecoder.getPrefetchedSPS(0));
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+#if QC_MVHEVC_B0046
+  m_apcSlicePilot->setIsDepth(false);
+#endif
   m_apcSlicePilot->setVPS(m_parameterSetManagerDecoder.getPrefetchedVPS(0));
 #endif
   m_apcSlicePilot->initTiles();
-
+#if QC_MVHEVC_B0046
+  m_apcSlicePilot->setViewId( nalu.m_layerId );
+  m_apcSlicePilot->setViewId( nalu.m_layerId );
+  m_apcSlicePilot->setViewOrderIdx(m_apcSlicePilot->getVPS()->getViewId(nalu.m_layerId), nalu.m_layerId);
+  Int iNumDirectRef = m_apcSlicePilot->getVPS()->getNumDirectRefLayer(nalu.m_layerId);
+  m_apcSlicePilot->getSPS()->setNumberOfUsableInterViewRefs(iNumDirectRef);
+  for(Int iNumIvRef = 0; iNumIvRef < iNumDirectRef; iNumIvRef ++)
+  {
+    Int iDeltaLayerId = m_apcSlicePilot->getVPS()->getDirectRefLayerId( nalu.m_layerId, iNumIvRef);
+    m_apcSlicePilot->getSPS()->setUsableInterViewRef(iNumIvRef, (iDeltaLayerId-nalu.m_layerId));
+  }
+#endif
   if (m_bFirstSliceInPicture)
   {
     m_uiSliceIdx     = 0;
@@ -887,6 +923,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   m_apcSlicePilot->setNalUnitType(nalu.m_nalUnitType);
   if( m_bFirstSliceInPicture )
   {
+#if QC_MVHEVC_B0046
+    if( nalu.m_layerId == 0 ) { m_nalUnitTypeBaseView = nalu.m_nalUnitType; }
+    else                     { m_nalUnitTypeBaseView = m_tAppDecTop->getTDecTop( 0, 0 )->getNalUnitTypeBaseView(); }
+#else
 #if VIDYO_VPS_INTEGRATION
     if( m_apcSlicePilot->getVPS()->getViewId(nalu.m_layerId) == 0 ) { m_nalUnitTypeBaseView = nalu.m_nalUnitType; }
     else { m_nalUnitTypeBaseView = m_tAppDecTop->getTDecTop( 0, m_apcSlicePilot->getVPS()->getDepthFlag(nalu.m_layerId) )->getNalUnitTypeBaseView(); }
@@ -894,7 +934,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     if( nalu.m_viewId == 0 ) { m_nalUnitTypeBaseView = nalu.m_nalUnitType; }
     else                     { m_nalUnitTypeBaseView = m_tAppDecTop->getTDecTop( 0, nalu.m_isDepth )->getNalUnitTypeBaseView(); }
 #endif
-    
+#endif
     m_apcSlicePilot->setNalUnitTypeBaseViewMvc( m_nalUnitTypeBaseView );
   }
 
@@ -908,6 +948,20 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   m_apcSlicePilot->setReferenced(nalu.m_nalRefIDC != NAL_REF_IDC_PRIORITY_LOWEST);
 #endif
   m_apcSlicePilot->setTLayerInfo(nalu.m_temporalId);
+
+#if VSP_N
+  if( m_apcSlicePilot->getSPS()->getViewId() )
+  if( !m_apcSlicePilot->getSPS()->getIsFirstInView() && !m_isDepth )
+  {
+    TComSPS* pcSPSDepth = NULL;
+    TComPic* pcPicDepth = getTAppDecTop()->getPicFromView( m_apcSlicePilot->getSPS()->getViewId(), 0, true );
+    if( pcPicDepth )
+    {
+      pcSPSDepth = getTAppDecTop()->getPicFromView( m_apcSlicePilot->getSPS()->getViewId(), 0, !m_isDepth )->getSPS();
+      m_apcSlicePilot->getSPS()->copyCameraParameterPre( pcSPSDepth->getCamParPrecision(), pcSPSDepth->hasCamParInSliceHeader() );
+    }
+  }
+#endif
 
   // ALF CU parameters should be part of the slice header -> needs to be fixed 
 #if LCU_SYNTAX_ALF
@@ -983,6 +1037,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
       {
         m_pcPicVSP = new TComPic;
         m_pcPicVSP->create( m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+        m_pcPicVSP->setIsVsp( true );
         m_pcPicVSP->setCurrSliceIdx(0);
         m_pcPicVSP->getCurrSlice()->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
         m_pcPicVSP->getCurrSlice()->setSPS( m_apcSlicePilot->getSPS() );
@@ -1009,6 +1064,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
       {
         m_pcPicAvail = new TComPic;
         m_pcPicAvail->create( m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+        m_pcPicAvail->setIsVsp( true );
         m_pcPicAvail->setCurrSliceIdx(0);
         m_pcPicAvail->getCurrSlice()->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
         m_pcPicAvail->getCurrSlice()->setSPS( m_apcSlicePilot->getSPS() );
@@ -1060,7 +1116,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_cResidualGenerator.create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
 #endif
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
 #if VSP_N
 #if VSP_SLICE_HEADER
     if( m_apcSlicePilot->getVspFlag() )
@@ -1274,12 +1330,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     }
 
     // Set reference list 
+#if !QC_MVHEVC_B0046
 #if VIDYO_VPS_INTEGRATION
     pcSlice->setViewId( pcSlice->getVPS()->getViewId(nalu.m_layerId) );
     pcSlice->setIsDepth( pcSlice->getVPS()->getDepthFlag(nalu.m_layerId) );
 #else
     pcSlice->setViewId(m_viewId);
     pcSlice->setIsDepth(m_isDepth);
+#endif
 #endif
 
 #if SONY_COLPIC_AVAILABILITY
@@ -1292,8 +1350,17 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 
     assert( m_tAppDecTop != NULL );
     TComPic * const pcTexturePic = m_isDepth ? m_tAppDecTop->getPicFromView(  m_viewId, pcSlice->getPOC(), false ) : NULL;
+
+#if FLEX_CODING_ORDER_M23723
+    if (pcTexturePic != NULL)
+    {
+      assert( !m_isDepth || pcTexturePic != NULL );
+      pcSlice->setTexturePic( pcTexturePic );
+    }
+#else
     assert( !m_isDepth || pcTexturePic != NULL );
     pcSlice->setTexturePic( pcTexturePic );
+#endif
 
     std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
 #if VSP_N
@@ -1316,7 +1383,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     }
 
     pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics, bUseVsp ? m_pcPicVSP : NULL );
-
 #else
     pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics );
 #endif
@@ -1415,6 +1481,20 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 #endif
 
 #if VSP_N
+#if VSP_SLICE_HEADER
+  if( pcSlice->getVspFlag() )
+#endif
+  if( !pcSlice->getSPS()->getIsFirstInView() && !m_isDepth && !pcSlice->getSPS()->hasCamParInSliceHeader() )
+  {
+    TComSPS* pcSPSDepth = NULL;
+    TComPic* pcPicDepth = getTAppDecTop()->getPicFromView( pcSlice->getViewId(), pcSlice->getPOC(), true );
+    if( pcPicDepth )
+    {
+      pcSPSDepth = getTAppDecTop()->getPicFromView( pcSlice->getViewId(), pcSlice->getPOC(), !m_isDepth )->getSPS();
+      pcSlice->getSPS()->copyCameraParameterPost( pcSPSDepth->getCodedScale(), pcSPSDepth->getInvCodedScale(), pcSPSDepth->getCodedOffset(), pcSPSDepth->getInvCodedOffset() );
+    }
+  }
+
   if( m_pcCamParsCollector )
   {
     m_pcCamParsCollector->setSlice( pcSlice );
@@ -1443,6 +1523,14 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   //  Decode a picture
   m_cGopDecoder.decompressGop(nalu.m_Bitstream, pcPic, false);
 
+#if QC_IV_AS_LT_B0046
+  std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
+  for( Int k = 0; k < apcInterViewRefPics.size(); k++ )
+  {
+    TComPic*  pcPicIv = apcInterViewRefPics[k];
+    pcPicIv->setIsLongTerm( 0 );
+  }
+#endif
   if( m_pcCamParsCollector )
   {
     m_pcCamParsCollector->setSlice( pcSlice );
@@ -1454,14 +1542,16 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
   return false;
 }
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
 Void TDecTop::xDecodeVPS()
 {
   TComVPS* vps = new TComVPS();
   
   m_cEntropyDecoder.decodeVPS( vps );
   m_parameterSetManagerDecoder.storePrefetchedVPS(vps);  
+#if !QC_MVHEVC_B0046
   getTAppDecTop()->getVPSAccess()->addVPS( vps );
+#endif
 }
 #endif
 
@@ -1538,7 +1628,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 
   switch (nalu.m_nalUnitType)
   {
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
     case NAL_UNIT_VPS:
       xDecodeVPS();
       return false;
@@ -1561,7 +1651,9 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE:
     case NAL_UNIT_CODED_SLICE_IDR:
 #if H0566_TLA
+#if !QC_REM_IDV_B0046
     case NAL_UNIT_CODED_SLICE_IDV:
+#endif
     case NAL_UNIT_CODED_SLICE_CRA:
     case NAL_UNIT_CODED_SLICE_TLA:
 #else
@@ -1576,6 +1668,32 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
   return false;
 }
 
+#if QC_MVHEVC_B0046
+Void TDecTop::xCopyVPS( TComVPS* pVPSV0 )
+{
+  m_parameterSetManagerDecoder.storePrefetchedVPS(pVPSV0);  
+}
+
+Void TDecTop::xCopySPS( TComSPS* pSPSV0 )
+{
+  TComSPS* sps = new TComSPS();
+  sps = pSPSV0;
+  m_parameterSetManagerDecoder.storePrefetchedSPS(sps);
+#if LCU_SYNTAX_ALF
+  m_cAdaptiveLoopFilter.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+#endif
+}
+
+Void TDecTop::xCopyPPS(TComPPS* pPPSV0 )
+{
+  m_parameterSetManagerDecoder.storePrefetchedPPS( pPPSV0 );
+
+  //!!!KS: Activate parameter sets for parsing APS (unless dependency is resolved)
+  m_apcSlicePilot->setPPSId(pPPSV0->getPPSId());
+  xActivateParameterSets();
+  m_apcSlicePilot->initTiles();
+}
+#endif
 /** Function for checking if picture should be skipped because of random access
  * \param iSkipFrame skip frame counter
  * \param iPOCLastDisplay POC of last picture displayed

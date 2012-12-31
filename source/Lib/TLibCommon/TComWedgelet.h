@@ -49,6 +49,11 @@ enum WedgeResolution
   HALF_PEL
 };
 
+#if HHIQC_DMMFASTSEARCH_B0039
+#define NUM_WEDGE_REFINES 8
+#define NO_IDX MAX_UINT
+#endif
+
 // ====================================================================================================================
 // Class definition TComWedgelet
 // ====================================================================================================================
@@ -61,6 +66,10 @@ private:
   UChar           m_uhYe;                       // line end   Y pos
   UChar           m_uhOri;                      // orientation index
   WedgeResolution m_eWedgeRes;                  // start/end pos resolution
+#if HHIQC_DMMFASTSEARCH_B0039
+  Bool            m_bIsCoarse; 
+  UInt            m_uiAng;
+#endif
 
   UInt  m_uiWidth;
   UInt  m_uiHeight;
@@ -89,8 +98,15 @@ public:
   UChar           getEndX    () { return m_uhXe; }
   UChar           getEndY    () { return m_uhYe; }
   UChar           getOri     () { return m_uhOri; }
+#if HHIQC_DMMFASTSEARCH_B0039
+  Bool            getIsCoarse() { return m_bIsCoarse; }
+  UInt            getAng     () { return m_uiAng; }
+  Void            findClosetAngle();
 
+  Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse = false );
+#else
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes );
+#endif
 
   Bool  checkNotPlain();
   Bool  checkIdentical( Bool* pbRefPattern );
@@ -135,6 +151,31 @@ public:
 
 // type definition wedgelet reference list
 typedef std::vector<TComWedgeRef> WedgeRefList;
+
+#if HHIQC_DMMFASTSEARCH_B0039
+// ====================================================================================================================
+// Class definition TComWedgeNode
+// ====================================================================================================================
+class TComWedgeNode
+{
+private:
+  UInt            m_uiPatternIdx;
+  UInt            m_uiRefineIdx[NUM_WEDGE_REFINES];
+
+public:
+  TComWedgeNode();
+  virtual ~TComWedgeNode() {}
+
+  UInt            getPatternIdx();
+  UInt            getRefineIdx ( UInt uiPos );
+
+  Void            setPatternIdx( UInt uiIdx );
+  Void            setRefineIdx ( UInt uiIdx, UInt uiPos );
+};  // END CLASS DEFINITION TComWedgeNode
+
+// type definition wedgelet node list
+typedef std::vector<TComWedgeNode> WedgeNodeList;
+#endif
 
 #if HHI_DMM_PRED_TEX
 enum WedgeDist

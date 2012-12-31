@@ -67,6 +67,7 @@ private:
 #if VSP_N
   TComPicYuv*           m_apcPicYuvAvail;         //  Availability Map - Does the given pixel can be synthesised in receiver
   TComPicYuv*           m_apcPicYuvSynth;         //  Sythesied image
+  Bool                  m_bIsVsp;
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -77,14 +78,19 @@ private:
 #endif
 #endif
 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
   Int                   m_uiIntraPeriod;
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Bool          m_checked;
+#endif
+#if QC_SIMPLE_NBDV_B0047
+  UInt        m_uiRapRefIdx;
+  RefPicList  m_eRapRefList;
+  Bool        m_bRapCheck;
 #endif
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -111,15 +117,14 @@ private:
 #if HHI_INTERVIEW_SKIP
   TComPicYuv*           m_pcUsedPelsMap;
 #endif
-#if SONY_COLPIC_AVAILABILITY
+#if SONY_COLPIC_AVAILABILITY || VSP_N
   Int                   m_iViewOrderIdx;
 #endif
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
 
-#if OL_DEPTHLIMIT_A0044
-  UInt*                 m_texPartInfo;
-  UInt                  m_uiTexPartIndex;
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool                  m_bReduceBitsQTL;
 #endif
 
 public:
@@ -140,10 +145,10 @@ public:
   TComPicSym*   getPicSym()           { return  m_apcPicSym;    }
   TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
   TComSlice*    getCurrSlice()        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx);  }
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   TComVPS*      getVPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getVPS();  }
 #endif
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
   Int           getIntraPeriod()                           { return  m_uiIntraPeriod; }
   Void          setIntraPeriod(Int uiIntraPeriod)          { m_uiIntraPeriod = uiIntraPeriod; }
 #endif
@@ -160,6 +165,8 @@ public:
   TComPicYuv*   getPicYuvAvail()      { return  m_apcPicYuvAvail; }
   TComPicYuv*   getPicYuvSynth()      { return  m_apcPicYuvSynth; }
   Void          checkSynthesisAvailability(  /*TComDataCU*& rpcBestCU, */UInt iCuAddr, UInt uiAbsZorderIdx, UInt uiPartDepth, Bool *&rpbCUSynthesied);
+  Void          setIsVsp( Bool b )    { m_bIsVsp = b; }
+  Bool          getIsVsp()            { return m_bIsVsp; }
 #endif
 #if HHI_INTERVIEW_SKIP
   TComPicYuv*   getUsedPelsMap()      { return  m_pcUsedPelsMap; }
@@ -176,7 +183,7 @@ public:
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Void          setCandPicCheckedFlag (Bool bchecked)   { m_checked = bchecked; }
   Bool          getCandPicCheckedFlag ()                { return m_checked;}
 #endif
@@ -185,11 +192,26 @@ public:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*   getResidual()         { return  m_pcResidual; }
 #endif
+#if QC_SIMPLE_NBDV_B0047
+  UInt          getRapRefIdx()                         {return m_uiRapRefIdx;}
+  RefPicList    getRapRefList()                        {return m_eRapRefList;}
+  Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
+  Void          setRapRefList(RefPicList eRefPicList)  {m_eRapRefList = eRefPicList;}
+  Bool          getRapbCheck()                         {return m_bRapCheck;}
+  Void          setRapbCheck(Bool bCheck)              {m_bRapCheck = bCheck;}
+  Bool          getDisCandRefPictures(Int iColPOC);
+#endif
 
-#if SONY_COLPIC_AVAILABILITY
+#if SONY_COLPIC_AVAILABILITY || VSP_N
   Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }
   Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }
 #endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
+  Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
+#endif
+
   Void          setScaleOffset( Int** pS, Int** pO )  { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
   Int**         getCodedScale ()                      { return m_aaiCodedScale;  }
   Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
@@ -258,14 +280,6 @@ public:
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void          removeResidualBuffer    ();
-#endif
-
-#if OL_DEPTHLIMIT_A0044
-  UInt        accessPartInfo        ( UInt count )   { return m_texPartInfo[m_uiTexPartIndex + count]; };
-  Void        incrementTexPartIndex (            )   { m_uiTexPartIndex += 2;    };
-  UInt        getTexPartIndex       ()               { return m_uiTexPartIndex;  };
-  Void        setTexPartIndex       ( UInt idx   )   { m_uiTexPartIndex = idx; };
-  Void        setPartInfo           ( UInt* texPart) { m_texPartInfo    = texPart;  };
 #endif
 
   Bool          getValidSlice                                  (Int sliceID)  {return m_pbValidSlice[sliceID];}

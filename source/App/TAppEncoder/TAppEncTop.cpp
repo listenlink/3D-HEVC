@@ -66,11 +66,17 @@ TAppEncTop::~TAppEncTop()
 
 Void TAppEncTop::xInitLibCfg()
 {
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+#if !QC_MVHEVC_B0046
   UInt layerId = 0;
+#endif
   // TODO: fix the assumption here that the temporal structures are all equal across all layers???
   m_cVPS.setMaxTLayers( m_maxTempLayer[0] );
+#if QC_MVHEVC_B0046
+  m_cVPS.setMaxLayers( m_iNumberOfViews );
+#else
   m_cVPS.setMaxLayers( m_iNumberOfViews * (m_bUsingDepthMaps ? 2:1) );
+#endif
   for(Int i = 0; i < MAX_TLAYER; i++)
   {
     m_cVPS.setNumReorderPics( m_numReorderPics[0][i], i );
@@ -80,6 +86,34 @@ Void TAppEncTop::xInitLibCfg()
   
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
   {
+#if VSP_N
+#if FLEX_CODING_ORDER_M23723
+      Bool isTextureFirst = false;
+      if ( m_b3DVFlexOrder )
+      {
+        for ( Int ii=1; ii<12; ii+=2 )
+        {
+          Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+          if ( iViewIdxCfg == iViewIdx )
+          {
+            if ( m_pchMVCJointCodingOrder[ii-1]=='T' )
+            {
+              isTextureFirst = true;
+            }
+            else
+            {
+              assert(m_pchMVCJointCodingOrder[ii-1]=='D');
+            }
+            break;
+          }
+        }
+      }
+      else
+      {
+        isTextureFirst = true;
+      }
+#endif
+#endif
     m_frameRcvd.push_back(0);
     m_acTEncTopList.push_back(new TEncTop); 
     m_acTVideoIOYuvInputFileList.push_back(new TVideoIOYuv);
@@ -100,6 +134,10 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setFrameToBeEncoded             ( m_iFrameToBeEncoded );
     m_acTEncTopList[iViewIdx]->setViewId                       ( iViewIdx );
     m_acTEncTopList[iViewIdx]->setIsDepth                      ( false );
+#if QC_MVHEVC_B0046
+    m_acTEncTopList[iViewIdx]->setLayerId                      ( iViewIdx );
+    m_cVPS.setViewId                                           ( m_aiVId[ iViewIdx ], iViewIdx );
+#else
     m_acTEncTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
 #if VIDYO_VPS_INTEGRATION
     layerId = iViewIdx * (m_bUsingDepthMaps ? 2:1);
@@ -112,10 +150,18 @@ Void TAppEncTop::xInitLibCfg()
     m_cVPS.setDependentLayer                                   ( layerId - (m_bUsingDepthMaps ? 2:1), layerId );
 #endif
     
+#if VSP_N
     m_acTEncTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
     m_acTEncTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
     m_acTEncTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
     m_acTEncTopList[iViewIdx]->setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#else
+    m_acTEncTopList[iViewIdx]->setCamParPrecision              ( 0 );
+    m_acTEncTopList[iViewIdx]->setCamParInSliceHeader          ( false );
+    m_acTEncTopList[iViewIdx]->setCodedScale                   ( 0 );
+    m_acTEncTopList[iViewIdx]->setCodedOffset                  ( 0 );
+#endif
+#endif   
 
   //====== Coding Structure ========
     m_acTEncTopList[iViewIdx]->setIntraPeriod                  ( m_iIntraPeriod );
@@ -169,7 +215,10 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setFastSearch                   ( m_iFastSearch  );
     m_acTEncTopList[iViewIdx]->setSearchRange                  ( m_iSearchRange );
     m_acTEncTopList[iViewIdx]->setBipredSearchRange            ( m_bipredSearchRange );
-
+#if DV_V_RESTRICTION_B0037
+    m_acTEncTopList[iViewIdx]->setUseDisparitySearchRangeRestriction ( m_bUseDisparitySearchRangeRestriction );
+    m_acTEncTopList[iViewIdx]->setVerticalDisparitySearchRange( m_iVerticalDisparitySearchRange );
+#endif
   //====== Quality control ========
     m_acTEncTopList[iViewIdx]->setMaxDeltaQP                   ( m_iMaxDeltaQP  );
     m_acTEncTopList[iViewIdx]->setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );
@@ -299,6 +348,9 @@ Void TAppEncTop::xInitLibCfg()
     }
     m_acTEncTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
     m_acTEncTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[0]     );
+#if LGE_ILLUCOMP_B0045
+    m_acTEncTopList[iViewIdx]->setUseIC                ( m_bUseIC          );
+#endif
 #if SAO_UNIT_INTERLEAVING
     m_acTEncTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
     m_acTEncTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
@@ -341,7 +393,11 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setWaveFrontSynchro           ( m_iWaveFrontSynchro );
     m_acTEncTopList[iViewIdx]->setWaveFrontFlush             ( m_iWaveFrontFlush );
     m_acTEncTopList[iViewIdx]->setWaveFrontSubstreams        ( m_iWaveFrontSubstreams );
+#if TMVP_DEPTH_SWITCH
+    m_acTEncTopList[iViewIdx]->setEnableTMVP                 ( m_enableTMVP[0] );
+#else
     m_acTEncTopList[iViewIdx]->setEnableTMVP ( m_enableTMVP );
+#endif
     m_acTEncTopList[iViewIdx]->setUseScalingListId           ( m_useScalingListId  );
     m_acTEncTopList[iViewIdx]->setScalingListFile            ( m_scalingListFile   );
 #if MULTIBITS_DATA_HIDING
@@ -363,22 +419,56 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
 #endif
-#if OL_DEPTHLIMIT_A0044
-    m_acTEncTopList[iViewIdx]->setUseDPL                     ( false );
+#if OL_QTLIMIT_PREDCODING_B0068
+    m_acTEncTopList[iViewIdx]->setUseQTLPC                   ( false );
 #endif
 #if HHI_MPI
     m_acTEncTopList[iViewIdx]->setUseMVI( false );
+#endif
+#if RWTH_SDC_DLT_B0036
+    m_acTEncTopList[iViewIdx]->setUseDLT                      ( false );
+    m_acTEncTopList[iViewIdx]->setUseSDC                      ( false );
 #endif
 
 #if VSP_N
     m_acTEncTopList[iViewIdx]->setUseVSP( m_bUseVSP );
     m_acTEncTopList[iViewIdx]->setVSPDepthDisable( m_bVSPDepthDisable );
+#if FLEX_CODING_ORDER_M23723
+    m_acTEncTopList[iViewIdx]->setIsFirstInView( isTextureFirst );
+#else
+    m_acTEncTopList[iViewIdx]->setIsFirstInView( true );
+#endif
 #endif
   }
   if( m_bUsingDepthMaps )
   {
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
     {
+
+#if FLEX_CODING_ORDER_M23723
+      // Detect whether depth comes before than texture for this view
+      Bool isDepthFirst = false;
+      if ( m_b3DVFlexOrder )
+      {
+        for ( Int ii=1; ii<12; ii+=2 )
+        {
+          Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
+          if ( iViewIdxCfg == iViewIdx )
+          {
+            if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
+            {
+              isDepthFirst = true;
+            }
+            else
+            {
+              assert(m_pchMVCJointCodingOrder[ii-1]=='T');
+            }
+            break;
+          }
+        }
+      }
+#endif
+
       m_depthFrameRcvd.push_back(0);
       m_acTEncDepthTopList.push_back(new TEncTop); 
       m_acTVideoIOYuvDepthInputFileList.push_back(new TVideoIOYuv);
@@ -399,7 +489,11 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setFrameToBeEncoded             ( m_iFrameToBeEncoded );
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
+#if QC_MVHEVC_B0046
+      m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( iViewIdx );
+#else
       m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
+#endif
 #if VIDYO_VPS_INTEGRATION
       layerId = iViewIdx * 2 + 1;
       m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( layerId );
@@ -409,10 +503,18 @@ Void TAppEncTop::xInitLibCfg()
       m_cVPS.setDependentFlag                                         ( true, layerId );
       m_cVPS.setDependentLayer                                        ( layerId-1, layerId);
 #endif
+
+#if VSP_N
+      m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
+      m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
+      m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
+      m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#else
       m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( false );
       m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( 0 );
+#endif
 
       //====== Coding Structure ========
       m_acTEncDepthTopList[iViewIdx]->setIntraPeriod                  ( m_iIntraPeriod );
@@ -466,7 +568,10 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setFastSearch                   ( m_iFastSearch  );
       m_acTEncDepthTopList[iViewIdx]->setSearchRange                  ( m_iSearchRange );
       m_acTEncDepthTopList[iViewIdx]->setBipredSearchRange            ( m_bipredSearchRange );
-
+#if DV_V_RESTRICTION_B0037
+      m_acTEncDepthTopList[iViewIdx]->setUseDisparitySearchRangeRestriction ( m_bUseDisparitySearchRangeRestriction );
+      m_acTEncDepthTopList[iViewIdx]->setVerticalDisparitySearchRange( m_iVerticalDisparitySearchRange );
+#endif
       //====== Quality control ========
       m_acTEncDepthTopList[iViewIdx]->setMaxDeltaQP                   ( m_iMaxDeltaQP  );
       m_acTEncDepthTopList[iViewIdx]->setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );
@@ -583,6 +688,9 @@ Void TAppEncTop::xInitLibCfg()
       }
       m_acTEncDepthTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
+#if LGE_ILLUCOMP_B0045
+      m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
+#endif
 #if SAO_UNIT_INTERLEAVING
       m_acTEncDepthTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
       m_acTEncDepthTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
@@ -625,7 +733,11 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setWaveFrontSynchro           ( m_iWaveFrontSynchro );
       m_acTEncDepthTopList[iViewIdx]->setWaveFrontFlush             ( m_iWaveFrontFlush );
       m_acTEncDepthTopList[iViewIdx]->setWaveFrontSubstreams        ( m_iWaveFrontSubstreams );
+#if TMVP_DEPTH_SWITCH
+      m_acTEncDepthTopList[iViewIdx]->setEnableTMVP                 ( m_enableTMVP[1] );
+#else
       m_acTEncDepthTopList[iViewIdx]->setEnableTMVP ( m_enableTMVP );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setUseScalingListId           ( m_useScalingListId  );
       m_acTEncDepthTopList[iViewIdx]->setScalingListFile            ( m_scalingListFile   );
 #if MULTIBITS_DATA_HIDING
@@ -647,16 +759,33 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncDepthTopList[iViewIdx]->setUseDMM                     ( m_bUseDMM );
 #endif
-#if OL_DEPTHLIMIT_A0044
-    m_acTEncDepthTopList[iViewIdx]->setUseDPL                      (m_bDepthPartitionLimiting);
+#if FLEX_CODING_ORDER_M23723 && HHI_DMM_PRED_TEX
+    m_acTEncDepthTopList[iViewIdx]->setUseDMM34( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseDMM );
+#endif
+
+#if OL_QTLIMIT_PREDCODING_B0068
+    m_acTEncDepthTopList[iViewIdx]->setUseQTLPC                   (m_bUseQTLPC);
 #endif
 #if HHI_MPI
-     m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#if FLEX_CODING_ORDER_M23723
+    m_acTEncDepthTopList[iViewIdx]->setUseMVI( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseMVI );
+#else
+    m_acTEncDepthTopList[iViewIdx]->setUseMVI( m_bUseMVI );
+#endif
+#endif
+#if RWTH_SDC_DLT_B0036
+      m_acTEncDepthTopList[iViewIdx]->setUseDLT                   ( m_bUseDLT );
+      m_acTEncDepthTopList[iViewIdx]->setUseSDC                   ( m_bUseSDC );
 #endif
 
 #if VSP_N
       m_acTEncDepthTopList[iViewIdx]->setUseVSP( m_bUseVSP );
       m_acTEncDepthTopList[iViewIdx]->setVSPDepthDisable( m_bVSPDepthDisable );
+#if FLEX_CODING_ORDER_M23723
+      m_acTEncDepthTopList[iViewIdx]->setIsFirstInView( isDepthFirst );
+#else
+      m_acTEncDepthTopList[iViewIdx]->setIsFirstInView( false );
+#endif
 #endif
     }
   }
@@ -676,14 +805,10 @@ Void TAppEncTop::xInitLibCfg()
   {
     if ( m_uiVSOMode == 4 )
     {
-#if HHI_VSO_SPEEDUP_A0033
 #if LGE_VSO_EARLY_SKIP_A0093
       m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, g_uiMaxCUHeight , LOG2_DISP_PREC_LUT, 0, m_bVSOEarlySkip );
 #else
       m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, g_uiMaxCUHeight , LOG2_DISP_PREC_LUT, 0 );
-#endif
-#else
-      m_cRendererModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, LOG2_DISP_PREC_LUT, 0 );
 #endif
 
       for ( Int iViewNum = 0; iViewNum < m_iNumberOfViews; iViewNum++ )
@@ -819,6 +944,16 @@ Void TAppEncTop::xInitLib()
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
   {
     m_acTEncTopList[iViewIdx]->init( this );
+#if QC_MVHEVC_B0046
+  //set setNumDirectRefLayer
+  Int iNumDirectRef = m_acTEncTopList[iViewIdx]->getSPS()->getNumberOfUsableInterViewRefs();
+  m_acTEncTopList[iViewIdx]->getEncTop()->getVPS()->setNumDirectRefLayer(iNumDirectRef, iViewIdx);
+  for(Int iNumIvRef = 0; iNumIvRef < iNumDirectRef; iNumIvRef ++)
+  {
+    Int iLayerId = m_acTEncTopList[iViewIdx]->getSPS()->getUsableInterViewRef(iNumIvRef);
+    m_acTEncTopList[iViewIdx]->getEncTop()->getVPS()->setDirectRefLayerId( iLayerId + iViewIdx, iViewIdx, iNumIvRef);
+  }
+#endif
   }
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
   {
@@ -860,10 +995,12 @@ Void TAppEncTop::encode()
 
   TComPicYuv*       pcPicYuvOrg = new TComPicYuv;
   TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
+#if !QC_MVHEVC_B0046
   TComPicYuv*       pcPdmDepthOrg    = new TComPicYuv;
+#endif
   TComPicYuv*       pcPicYuvRec = NULL;
   TComPicYuv*       pcDepthPicYuvRec = NULL;
-
+  
   // initialize internal class & member variables
   xInitLibCfg();
   xCreateLib();
@@ -883,6 +1020,11 @@ Void TAppEncTop::encode()
   {
     eos.push_back( false );
     depthEos.push_back( false );
+    
+#if RWTH_SDC_DLT_B0036
+    if( m_bUsingDepthMaps && m_bUseDLT )
+      xAnalyzeInputBaseDepth(iViewIdx, m_iIntraPeriod);
+#endif
   }
 
   // allocate original YUV buffer
@@ -956,11 +1098,91 @@ Void TAppEncTop::encode()
     for ( Int gopId=0; gopId < gopSize; gopId++ )
     {
       Int  iNumEncoded = 0;
+#if !QC_MVHEVC_B0046
       UInt iNextPoc = m_acTEncTopList[0] -> getFrameId( gopId );
       if ( iNextPoc < m_iFrameToBeEncoded )
       {
         m_cCameraData.update( iNextPoc );
       }
+#endif
+
+#if FLEX_CODING_ORDER_M23723
+      if (m_b3DVFlexOrder)
+      {
+        Int  iNumDepthEncoded = 0;
+        iNumEncoded = 0;
+        Int i=0;
+        Int iViewIdx=0;
+        Int iNumberofDepthViews = m_bUsingDepthMaps?m_iNumberOfViews:0;
+        for (Int j=0; j < (m_iNumberOfViews+ iNumberofDepthViews); j++ )
+        {
+          if (m_pchMVCJointCodingOrder[i]=='T')
+          {
+
+            i++;
+            assert(isdigit(m_pchMVCJointCodingOrder[i]));
+            iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+
+#if VSP_SLICE_HEADER && !VSP_CFG
+            if( m_acTEncTopList[iViewIdx]->getUseVSP() ) m_acTEncTopList[iViewIdx]->setUseVSP( (gopId%VSP_FRAME_INTERVAL==0) );
+#endif
+
+#if VSP_N
+#if VSP_SLICE_HEADER
+            if( m_acTEncTopList[iViewIdx]->getUseVSP() )
+#endif
+            if( m_bUsingDepthMaps )
+            {
+              // Forward Warping
+              xStoreVSPInBuffer( m_acTEncTopList[iViewIdx]->getVSPBuf(), m_acTEncTopList[iViewIdx]->getVSPAvailBuf(), iViewIdx, false, gopId );
+            }
+#endif
+
+            m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
+            xWriteOutput(bitstreamFile, iNumEncoded, outputAccessUnits, iViewIdx, false);
+            outputAccessUnits.clear();
+            i++;
+          }
+          else if ( m_pchMVCJointCodingOrder[i] == 'D')
+          {
+
+            i++;
+            if( m_bUsingDepthMaps )
+            {
+              assert(isdigit(m_pchMVCJointCodingOrder[i]));
+              iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+#if SAIT_VSO_EST_A0033
+              if( m_bUseVSO && iNextPoc < m_iFrameToBeEncoded )
+              {
+                m_cCameraData.xSetDispCoeff( iNextPoc, iViewIdx );
+                m_acTEncDepthTopList[iViewIdx]->setDispCoeff( m_cCameraData.getDispCoeff() );
+              }
+#endif
+
+#if VSP_SLICE_HEADER && !VSP_CFG
+              if( m_acTEncDepthTopList[iViewIdx]->getUseVSP() ) m_acTEncDepthTopList[iViewIdx]->setUseVSP( (gopId%VSP_FRAME_INTERVAL==0) );
+#endif
+
+#if VSP_N
+#if VSP_SLICE_HEADER
+              if( m_acTEncDepthTopList[iViewIdx]->getUseVSP() )
+              if( !m_acTEncDepthTopList[iViewIdx]->getVSPDepthDisable() )
+#endif
+                xStoreVSPInBuffer( m_acTEncDepthTopList[iViewIdx]->getVSPBuf(), m_acTEncDepthTopList[iViewIdx]->getVSPAvailBuf(), iViewIdx, true, gopId );
+#endif
+
+              m_acTEncDepthTopList[iViewIdx]->encode( depthEos[iViewIdx], pcDepthPicYuvOrg, *m_picYuvDepthRec[iViewIdx], outputAccessUnits, iNumDepthEncoded, gopId );
+              xWriteOutput(bitstreamFile, iNumDepthEncoded, outputAccessUnits, iViewIdx, true);
+              outputAccessUnits.clear();
+              i++;
+            }
+          }
+        }
+      }
+      else
+      {
+
+#endif
       for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
 #if SAIT_VSO_EST_A0033
@@ -1007,6 +1229,11 @@ Void TAppEncTop::encode()
           outputAccessUnits.clear();
         }
       }
+ 
+#if FLEX_CODING_ORDER_M23723
+      }
+#endif
+
 #if HHI_INTERVIEW_SKIP || HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED
       for( Int iViewIdx = 0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
@@ -1039,15 +1266,18 @@ Void TAppEncTop::encode()
   delete pcDepthPicYuvOrg;
   pcDepthPicYuvOrg = NULL;
   
-#if FIX_MEM_LEAKS
+#if !QC_MVHEVC_B0046
+#if FIX_DEL_NULLPTR
+  if ( pcPdmDepthOrg != NULL && m_uiMultiviewMvRegMode )
+#else
   if ( pcPdmDepthOrg != NULL )
+#endif
   {
     pcPdmDepthOrg->destroy();
     delete pcPdmDepthOrg;     
     pcPdmDepthOrg = NULL; 
   };
 #endif
-
   
   for(Int iViewIdx=0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
   {
@@ -1251,7 +1481,9 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<unsigned
     {
     case NAL_UNIT_CODED_SLICE:
 #if H0566_TLA
+#if !QC_REM_IDV_B0046
     case NAL_UNIT_CODED_SLICE_IDV:
+#endif
     case NAL_UNIT_CODED_SLICE_TLA:
     case NAL_UNIT_CODED_SLICE_CRA:
 #else
@@ -1305,18 +1537,9 @@ Void TAppEncTop::getUsedPelsMap( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUse
 }
 #endif
 #if HHI_VSO
-#if HHI_VSO_SPEEDUP_A0033
 Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset )
 {
-#if FIX_VSO_SETUP
   m_cRendererModel.setupPart( iHorOffset, Min( g_uiMaxCUHeight, m_iSourceHeight - iHorOffset ) ); 
-#else
-  m_cRendererModel.setHorOffset( iHorOffset ); 
-#endif
-#else
-Void TAppEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent )
-{
-#endif
   Int iEncViewSIdx = m_cCameraData.getBaseId2SortedId()[ iEncViewIdx ];
 
   // setup base views
@@ -1454,6 +1677,82 @@ TComPic* TAppEncTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
 
   return pcPic;
 };
+  
+#if RWTH_SDC_DLT_B0036
+Void TAppEncTop::xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames)
+{
+  TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
+  // allocate original YUV buffer
+  pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+  
+  TVideoIOYuv* depthVideoFile = new TVideoIOYuv;
+  
+  UInt uiMaxDepthValue = g_uiIBDI_MAX;
+  
+  Bool abValidDepths[256];
+  
+  depthVideoFile->open( m_pchDepthInputFileList[iViewIdx], false, m_uiInputBitDepth, m_uiInternalBitDepth );  // read  mode
+  
+  // initialize boolean array
+  for(Int p=0; p<=uiMaxDepthValue; p++)
+    abValidDepths[p] = false;
+  
+  Int iHeight   = pcDepthPicYuvOrg->getHeight();
+  Int iWidth    = pcDepthPicYuvOrg->getWidth();
+  Int iStride   = pcDepthPicYuvOrg->getStride();
+  
+  Pel* pInDM    = pcDepthPicYuvOrg->getLumaAddr();
+  
+  for(Int uiFrame=0; uiFrame < uiNumFrames; uiFrame++ )
+  {
+    depthVideoFile->read( pcDepthPicYuvOrg, m_aiPad, false );
+    
+    // check all pixel values
+    for (Int i=0; i<iHeight; i++)
+    {
+      Int rowOffset = i*iStride;
+      
+      for (Int j=0; j<iWidth; j++)
+      {
+        Pel depthValue = pInDM[rowOffset+j];
+        abValidDepths[depthValue] = true;
+      }
+    }
+  }
+  
+  depthVideoFile->close();
+  
+  pcDepthPicYuvOrg->destroy();
+  delete pcDepthPicYuvOrg;
+  
+  // convert boolean array to idx2Depth LUT
+  UInt* auiIdx2DepthValue = (UInt*) calloc(uiMaxDepthValue, sizeof(UInt));
+  UInt uiNumDepthValues = 0;
+  for(UInt p=0; p<=uiMaxDepthValue; p++)
+  {
+    if( abValidDepths[p] == true)
+    {
+      auiIdx2DepthValue[uiNumDepthValues++] = p;
+    }
+  }
+  
+  if( uiNumFrames == 0 || ceil(Log2(uiNumDepthValues)) == ceil(Log2(g_uiIBDI_MAX)) )
+  {
+    // don't use DLT
+    m_acTEncDepthTopList[iViewIdx]->setUseDLT(false);
+    m_acTEncDepthTopList[iViewIdx]->getSPS()->setUseDLT(false);
+  }
+  
+  // assign LUT
+  if( m_acTEncDepthTopList[iViewIdx]->getUseDLT() )
+    m_acTEncDepthTopList[iViewIdx]->getSPS()->setDepthLUTs(auiIdx2DepthValue, uiNumDepthValues);
+  else
+    m_acTEncDepthTopList[iViewIdx]->getSPS()->setDepthLUTs();
+  
+  // free temporary memory
+  free(auiIdx2DepthValue);
+}
+#endif
 
 #if VSP_N
 Void TAppEncTop::xStoreVSPInBuffer(TComPic* pcPicVSP, TComPic* pcPicAvail, Int iCodedViewIdx, Bool bDepth, Int gopId)

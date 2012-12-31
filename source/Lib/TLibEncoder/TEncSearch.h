@@ -93,6 +93,10 @@ protected:
   // ME parameters
   Int             m_iSearchRange;
   Int             m_bipredSearchRange; // Search range for bi-prediction
+#if DV_V_RESTRICTION_B0037
+  Bool            m_bUseDisparitySearchRangeRestriction;
+  Int             m_iVerticalDisparitySearchRange;
+#endif
   Int             m_iFastSearch;
   Int             m_aaiAdaptSR[2][33];
   TComMv          m_cSrchRngLT;
@@ -131,6 +135,10 @@ public:
             TComTrQuant*  pcTrQuant,
             Int           iSearchRange,
             Int           bipredSearchRange,
+#if DV_V_RESTRICTION_B0037
+            Bool          bUseDisparitySearchRangeRestriction,
+            Int           iVerticalDisparitySearchRange,
+#endif
             Int           iFastSearch,
             Int           iMaxDeltaQP,
             TEncEntropy*  pcEntropyCoder,
@@ -266,7 +274,7 @@ protected:
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
                                     Dist&        ruiDist 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
                                    ,Bool        bZeroResi = false
 #endif
                                    );
@@ -291,7 +299,7 @@ protected:
                                     Bool         bCheckFirst,
 #endif
                                     Double&      dRDCost 
-#if LG_ZEROINTRADEPTHRESI_M26039
+#if LG_ZEROINTRADEPTHRESI_A0087
                                    ,Bool         bZeroResi = false
 #endif
                                   );
@@ -314,6 +322,18 @@ protected:
                                     UInt         uiAbsPartIdx,
                                     TComYuv*     pcRecoYuv );
   
+#if RWTH_SDC_DLT_B0036
+  Void  xAnalyzeSegmentsSDC       ( Pel* pOrig,
+                                   UInt uiStride,
+                                   UInt uiSize,
+                                   Pel* rpSegMeans,
+                                   UInt uiNumSegments,
+                                   Bool* pMask,
+                                   UInt uiMaskStride );
+  
+  Void  xIntraCodingSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bResidual );
+#endif
+  
   // -------------------------------------------------------------------------------------------------------------------
   // DMM intra search
   // -------------------------------------------------------------------------------------------------------------------
@@ -321,7 +341,13 @@ protected:
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Bool predIntraLumaDMMAvailable  ( UInt           uiMode, 
                                     UInt           uiWidth, 
-                                    UInt           uiHeight );
+#if HHI_DMM_PRED_TEX && FLEX_CODING_ORDER_M23723
+                                    UInt         uiHeight, 
+                                    Bool         bDMMAvailable34 );
+#else
+                                    UInt         uiHeight );
+#endif
+
   Void xGetWedgeDeltaDCsMinDist   ( TComWedgelet*  pcWedgelet, 
                                     TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
@@ -336,7 +362,7 @@ protected:
                                     Bool           bLeftAvail );
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Bool  xEdgePartition       ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );
   Bool  xCheckTerminatedEdge ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
   Bool  xConstructChainCode  ( TComDataCU* pcCU, UInt uiPartIdx, Bool bPU4x4 );
@@ -380,6 +406,18 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
+#if HHIQC_DMMFASTSEARCH_B0039
+  Void xSearchWedgeFullMinDistFast( TComDataCU*    pcCU, 
+                                    UInt           uiAbsPtIdx, 
+                                    WedgeNodeList* pacWedgeNodeList, 
+                                    WedgeList*     pacWedgeList, 
+                                    Pel*           piRef, 
+                                    UInt           uiRefStride, 
+                                    UInt           uiWidth, 
+                                    UInt           uiHeight, 
+                                    UInt&          ruiTabIdx, 
+                                    Dist&          riDist );
+#endif
   Void xSearchWedgePredDirMinDist ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeList*     pacWedgeList, 
@@ -508,11 +546,21 @@ protected:
                                     TComMv&       rcMv,
                                     UInt&         ruiSAD );
   
+#if DV_V_RESTRICTION_B0037
+  Void xSetSearchRange            ( TComDataCU*   pcCU,
+                                    TComMv&       cMvPred,
+                                    Int           iSrchRng,
+                                    TComMv&       rcMvSrchRngLT,
+                                    TComMv&       rcMvSrchRngRB,
+                                    Bool          bDispSrchRngRst,
+                                    Int           iDispVerSrchRng );
+#else
   Void xSetSearchRange            ( TComDataCU*   pcCU,
                                     TComMv&       cMvPred,
                                     Int           iSrchRng,
                                     TComMv&       rcMvSrchRngLT,
                                     TComMv&       rcMvSrchRngRB );
+#endif
   
   Void xPatternSearchFast         ( TComDataCU*   pcCU,
                                     TComPattern*  pcPatternKey,
