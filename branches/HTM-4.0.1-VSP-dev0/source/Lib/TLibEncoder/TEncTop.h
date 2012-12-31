@@ -147,6 +147,7 @@ private:
 #if VSP_N
   TComPic*                m_pcPicVSP;                     ///< view synthesis prediction buffer for current POC to be coded
   TComPic*                m_pcPicAvail;
+  Bool                    m_bIsFirstInView;
 #endif
 
 protected:
@@ -244,6 +245,8 @@ public:
 #if VSP_N
   TComPic*                getVSPBuf             () { return m_pcPicVSP; }
   TComPic*                getVSPAvailBuf        () { return m_pcPicAvail; }
+  Void                    setIsFirstInView      ( Bool b ) { m_bIsFirstInView = b; }
+  Bool                    getIsFirstInView      () { return m_bIsFirstInView; }
 #endif
 
   // -------------------------------------------------------------------------------------------------------------------

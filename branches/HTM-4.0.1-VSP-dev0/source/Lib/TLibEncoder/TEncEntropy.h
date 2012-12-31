@@ -75,7 +75,7 @@ public:
   virtual UInt  getNumberOfWrittenBits()                = 0;
   virtual UInt  getCoeffCost          ()                = 0;
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   virtual Void  codeVPS                 ( TComVPS* pcVPS )                                      = 0;
 #endif
 
@@ -114,6 +114,9 @@ public:
   virtual Void codeApsExtensionFlag () = 0;
   
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if LGE_ILLUCOMP_B0045
+  virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
 #if FORCE_REF_VSP==1
   virtual Void codeVspFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
@@ -126,6 +129,12 @@ public:
   
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  
+#if RWTH_SDC_DLT_B0036
+  virtual Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment ) = 0;
+  virtual Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   
 #if BURST_IPCM
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag) = 0;
@@ -235,7 +244,7 @@ public:
   TEncEntropyIf*      m_pcEntropyCoderIf;
   
 public:
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void encodeVPS               ( TComVPS* pcVPS);
 #endif
   // SPS
@@ -252,6 +261,9 @@ public:
   Void setMaxAlfCtrlDepth(UInt uiMaxAlfCtrlDepth) {m_pcEntropyCoderIf->setMaxAlfCtrlDepth(uiMaxAlfCtrlDepth);}
   
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
+#if LGE_ILLUCOMP_B0045
+  Void encodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #if FORCE_REF_VSP==1
   Void encodeVspFlag           ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
@@ -301,6 +313,12 @@ public:
   Void encodeFinish               (Bool bEnd) {m_pcEntropyCoderIf->codeFinish(bEnd);}
   Void encodeScalingList       ( TComScalingList* scalingList );
   Void encodeDFParams          (TComAPS* pcAPS);
+  
+#if RWTH_SDC_DLT_B0036
+  Void encodeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeSDCPredMode   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
 
 private:
 #if UNIFIED_TRANSFORM_TREE

@@ -135,7 +135,7 @@ public:
   Void  uninit                ();
 
   Void  initViewComponent     ( TComPic*      pcPic );
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
   Bool  predictDepthMap       ( TComPic*      pcPic );
   Void  updateDepthMap        ( TComPic*      pcPic );
   Void  dumpDepthMap          ( TComPic*      pcPic, char* pFilenameBase );
@@ -153,8 +153,13 @@ public:
   UInt  getSubSampExpY        ()                      { return m_uiSubSampExpY; }
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
 #if HHI_INTER_VIEW_MOTION_PRED
-#if QC_MULTI_DIS_CAN
-  Int   getPdmMergeCandidate ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
+#if QC_MULTI_DIS_CAN_A0097
+  Int   getPdmMergeCandidate ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
+#if QC_MRG_CANS_B0048
+    , Int* iPdm
+#endif
+    );
+
   Bool  getPdmMvPredDisCan    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
   Bool  getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
 #else
@@ -173,7 +178,7 @@ public:
 
 private:
   // picture operations
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
   Bool  xConvertDepthMapCurr2Ref  ( TComPic*    pcRef, TComPic* pcCur );
   Bool  xConvertDepthMapRef2Curr  ( TComPic*    pcCur, TComPic* pcRef );
   Bool  xPredictDepthMap          ( TComPic*    pcPic );
@@ -236,7 +241,7 @@ private:
   Bool              m_bInit;
   Bool              m_bDecoder;
   TComPrediction*   m_pcPrediction;
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   TComVPSAccess*    m_pcVPSAccess;
 #endif
   TComSPSAccess*    m_pcSPSAccess;

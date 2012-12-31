@@ -86,7 +86,7 @@ public:
 #endif
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
   
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  parseVPS                  ( TComVPS* pcVPS )  {}
 #endif
 #if HHI_MPI
@@ -125,6 +125,12 @@ public:
   Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Bool bLFCrossSliceBoundaryFlag);
   Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam);
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
+#endif
 private:
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
@@ -145,7 +151,7 @@ private:
   Void xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   Void xParseEdgeIntraInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   
@@ -165,6 +171,9 @@ public:
   Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
 
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if LGE_ILLUCOMP_B0045
+  Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 #if FORCE_REF_VSP==1
   Void parseVspFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
@@ -209,6 +218,9 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
+#if LGE_ILLUCOMP_B0045
+  ContextModel3DBuffer m_cCUICFlagSCModel;
+#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -259,11 +271,21 @@ private:
   ContextModel3DBuffer m_cDmmModeSCModel;
   ContextModel3DBuffer m_cDmmDataSCModel;
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   ContextModel3DBuffer m_cEdgeIntraSCModel;
 #if LGE_EDGE_INTRA_DELTA_DC
   ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
 #endif
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  ContextModel3DBuffer m_cSDCFlagSCModel;
+  
+  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSCModel;
+  
+  ContextModel3DBuffer m_cSDCPredModeSCModel;
 #endif
 };
 

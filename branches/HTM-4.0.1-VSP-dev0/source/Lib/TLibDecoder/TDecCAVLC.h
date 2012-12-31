@@ -74,7 +74,9 @@ protected:
   Void  xReadSvlcTr           (               Int& rValue, const Char *pSymbolName);
   Void  xReadFlagTr           (              UInt& rValue, const Char *pSymbolName);
 #endif
-  
+#if QC_MVHEVC_B0046
+  Void  xReadVPSAlignOne      ();
+#endif
   Void  xReadPCMAlignZero     ();
 
   UInt  xGetBit             ();
@@ -112,7 +114,7 @@ public:
   Void  parseQtCbf          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
   Void  parseQtRootCbf      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
 
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  parseVPS            ( TComVPS* pcVPS );
 #endif
 #if HHI_MPI
@@ -141,6 +143,9 @@ public:
 #endif
   
   Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if LGE_ILLUCOMP_B0045
+  Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 #if FORCE_REF_VSP==1
   Void  parseVspFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
@@ -177,6 +182,11 @@ public:
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
   Void parseDFFlag         ( UInt& ruiVal, const Char *pSymbolName );
   Void parseDFSvlc         ( Int&  riVal,  const Char *pSymbolName  );
+#if RWTH_SDC_DLT_B0036
+  Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
+#endif
 protected:
 #if DBL_CONTROL
   Void  xParseDblParam       ( TComAPS* aps );

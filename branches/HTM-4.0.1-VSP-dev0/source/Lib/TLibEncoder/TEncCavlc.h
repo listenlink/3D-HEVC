@@ -113,7 +113,7 @@ public:
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
   UInt  getCoeffCost          ()                { return  m_uiCoeffCost;  }
   
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
 
@@ -163,6 +163,9 @@ public:
 #endif
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if LGE_ILLUCOMP_B0045
+  Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 #if FORCE_REF_VSP==1
   Void codeVspFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
@@ -222,6 +225,12 @@ public:
   Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
+  
+#if RWTH_SDC_DLT_B0036
+  Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+  Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
 };
 

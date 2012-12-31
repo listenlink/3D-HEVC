@@ -57,7 +57,7 @@
 // ====================================================================================================================
 
 #define HM_VERSION        "6.1"
-#define NV_VERSION        "4.1"                  ///< Current software version
+#define NV_VERSION        "5.1"                  ///< Current software version
 
 // ====================================================================================================================
 // Platform information
@@ -143,7 +143,16 @@
 #define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
-#if SAIT_IMPROV_MOTION_PRED_M24829&!QC_MULTI_DIS_CAN
+
+#if QC_MRG_CANS_B0048
+#if OL_DISMV_POS_B0069
+#define DMV_MERGE_POS                     4
+#else
+#define DMV_MERGE_POS                     1
+#endif
+#endif
+
+#if SAIT_IMPROV_MOTION_PRED_M24829&!QC_MULTI_DIS_CAN_A0097
 #define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
 #else
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)
@@ -180,6 +189,9 @@
 // ====================================================================================================================
 // VPS constants
 // ====================================================================================================================
+#if QC_MVHEVC_B0046
+#define MAX_LAYER_NUM                     MAX_VIEW_NUM
+#endif
 #if VIDYO_VPS_INTEGRATION
 #define MAX_LAYER_NUM                     MAX_VIEW_NUM
 #define VPS_EXTENSION_TYPE_MULTI_VIEW     0
@@ -475,7 +487,11 @@ enum NalUnitType
   NAL_UNIT_UNSPECIFIED_0 = 0,
   NAL_UNIT_CODED_SLICE,
 #if H0566_TLA
+#if QC_REM_IDV_B0046
+  NAL_UNIT_RESERVED,
+#else
   NAL_UNIT_CODED_SLICE_IDV,
+#endif
   NAL_UNIT_CODED_SLICE_TLA,
   NAL_UNIT_CODED_SLICE_CRA,
 #else
@@ -503,7 +519,7 @@ enum NalUnitType
   NAL_UNIT_RESERVED_22,
   NAL_UNIT_RESERVED_23,
   NAL_UNIT_UNSPECIFIED_24,
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   NAL_UNIT_VPS,
 #else
   NAL_UNIT_UNSPECIFIED_25,

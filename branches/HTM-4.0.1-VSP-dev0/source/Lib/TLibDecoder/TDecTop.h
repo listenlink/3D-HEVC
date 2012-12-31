@@ -99,6 +99,9 @@ private:
   Int**   m_aaiCodedOffset;
   Int**   m_aaiCodedScale;
   Int*    m_aiViewOrderIndex;
+#if QC_MVHEVC_B0046
+  Int*    m_aiViewId;
+#endif
   Int*    m_aiViewReceived;
   UInt    m_uiCamParsCodedPrecision;
   Bool    m_bCamParsVaryOverTime;
@@ -263,7 +266,11 @@ public:
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
   
   Void  deletePicBuffer();
-
+#if QC_MVHEVC_B0046
+  Void      xCopySPS( TComSPS* pSPSV0);
+  Void      xCopyPPS( TComPPS* pPPSV0);
+  Void      xCopyVPS( TComVPS* pVPSV0);
+#endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Void      deleteExtraPicBuffers   ( Int iPoc );
 #endif
@@ -274,6 +281,7 @@ public:
   Void setViewId(Int viewId)      { m_viewId = viewId;}
   Int  getViewId()                { return m_viewId  ;}
   Void setIsDepth( Bool isDepth ) { m_isDepth = isDepth; }
+  Bool getIsDepth()               { return m_isDepth; }
 
 #if SONY_COLPIC_AVAILABILITY
   Void setViewOrderIdx(Int i)     { m_iViewOrderIdx = i ;}
@@ -290,6 +298,10 @@ public:
   Void                setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
   TAppDecTop*         getTAppDecTop()                           { return  m_tAppDecTop; }
   NalUnitType         getNalUnitTypeBaseView()                  { return m_nalUnitTypeBaseView; }
+#if QC_MVHEVC_B0046
+  bool                m_bFirstNal; //used to copy SPS, PPS, VPS
+  ParameterSetManagerDecoder* xGetParaSetDec ()        {return  &m_parameterSetManagerDecoder;}
+#endif
 
 #if VSP_N
   TComPic*            getVSPBuf()                               { return m_pcPicVSP; }
@@ -307,7 +319,7 @@ protected:
 #else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
 #endif
-#if VIDYO_VPS_INTEGRATION
+#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void      xDecodeVPS();
 #endif
   Void      xDecodeSPS();

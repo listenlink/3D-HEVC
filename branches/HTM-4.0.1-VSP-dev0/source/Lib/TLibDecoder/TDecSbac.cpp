@@ -37,6 +37,11 @@
 
 #include "TDecSbac.h"
 
+#if RWTH_SDC_DLT_B0036
+#define GetNumDepthValues()     (pcCU->getSlice()->getSPS()->getNumDepthValues())
+#define GetBitsPerDepthValue()  (pcCU->getSlice()->getSPS()->getBitsPerDepthValue())
+#endif
+
 //! \ingroup TLibDecoder
 //! \{
 
@@ -51,6 +56,9 @@ TDecSbac::TDecSbac()
 , m_numContextModels          ( 0 )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels )
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if LGE_ILLUCOMP_B0045
+, m_cCUICFlagSCModel          ( 1,             1,               NUM_IC_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -97,11 +105,18 @@ TDecSbac::TDecSbac()
 , m_cDmmModeSCModel           ( 1,             1,               NUM_DMM_MODE_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmDataSCModel           ( 1,             1,               NUM_DMM_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 , m_cEdgeIntraSCModel         ( 1,             1,               NUM_EDGE_INTRA_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
 #if LGE_EDGE_INTRA_DELTA_DC
 , m_cEdgeIntraDeltaDCSCModel  ( 1,             1,               NUM_EDGE_INTRA_DELTA_DC_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#endif
+#if RWTH_SDC_DLT_B0036
+, m_cSDCFlagSCModel             ( 1,             1,                 SDC_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCResidualFlagSCModel     ( 1,             2,  SDC_NUM_RESIDUAL_FLAG_CTX  , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCResidualSignFlagSCModel ( 1,             2,  SDC_NUM_SIGN_FLAG_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCResidualSCModel         ( 1,             2,  SDC_NUM_RESIDUAL_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCPredModeSCModel             ( 1,             3,                 SDC_NUM_PRED_MODE_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
@@ -145,6 +160,9 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
 
   m_cCUSplitFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SKIP_FLAG );
+#if LGE_ILLUCOMP_B0045
+  m_cCUICFlagSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_IC_FLAG );
+#endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -187,7 +205,7 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
 #endif
 
   m_cCUTransSubdivFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   m_cEdgeIntraSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_EDGE_INTRA );
 #if LGE_EDGE_INTRA_DELTA_DC
   m_cEdgeIntraDeltaDCSCModel.initBuffer  ( sliceType, qp, (UChar*)INIT_EDGE_INTRA_DELTA_DC );
@@ -198,6 +216,13 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
   m_cDmmFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DMM_FLAG );
   m_cDmmModeSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DMM_MODE );
   m_cDmmDataSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DMM_DATA );
+#endif
+#if RWTH_SDC_DLT_B0036
+  m_cSDCFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_SDC_FLAG );
+  m_cSDCResidualFlagSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
+  m_cSDCResidualSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL );
+  m_cSDCResidualSignFlagSCModel.initBuffer  ( sliceType, qp, (UChar*)INIT_SDC_SIGN_FLAG );
+  m_cSDCPredModeSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_SDC_PRED_MODE );
 #endif
   
   // new structure
@@ -229,6 +254,9 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
+#if LGE_ILLUCOMP_B0045
+  m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
+#endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -274,6 +302,13 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cDmmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_FLAG );
   m_cDmmModeSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_MODE );
   m_cDmmDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_DATA );
+#endif
+#if RWTH_SDC_DLT_B0036
+  m_cSDCFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
+  m_cSDCResidualFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
+  m_cSDCResidualSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
+  m_cSDCResidualSignFlagSCModel.initBuffer  ( eSliceType, iQp, (UChar*)INIT_SDC_SIGN_FLAG );
+  m_cSDCPredModeSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_SDC_PRED_MODE );
 #endif
 
   m_pcTDecBinIf->start();
@@ -577,6 +612,30 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
 }
 
+#if LGE_ILLUCOMP_B0045
+/** parse illumination compensation flag
+ * \param pcCU
+ * \param uiAbsPartIdx 
+ * \param uiDepth
+ * \returns Void
+ */
+Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{ 
+  UInt uiSymbol = 0;
+  UInt uiCtxIC = pcCU->getCtxICFlag( uiAbsPartIdx );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, uiCtxIC ) );
+  DTRACE_CABAC_VL( g_nSymbolCounter++ );
+  DTRACE_CABAC_T( "\tICFlag" );
+  DTRACE_CABAC_T( "\tuiCtxIC: ");
+  DTRACE_CABAC_V( uiCtxIC );
+  DTRACE_CABAC_T( "\tuiSymbol: ");
+  DTRACE_CABAC_V( uiSymbol );
+  DTRACE_CABAC_T( "\n");
+  
+  pcCU->setICFlagSubParts( uiSymbol ? true : false , uiAbsPartIdx, 0, uiDepth );
+}
+#endif
+
 #if FORCE_REF_VSP==1
 Void TDecSbac::parseVspFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -635,7 +694,7 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
   UInt uiUnaryIdx = 0;
   uiNumCand = pcCU->getSlice()->getMaxNumMergeCand();
 #if HHI_MPI
-#if VSP_N
+#if VSP_N & !MTK_UNCONSTRAINED_MVI_B0083
   TComDataCU* pcTextCU = pcCU->getSlice()->getSPS()->getUseMVI() ? pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() ) : NULL;
   Int aiRefIdxVsp[2] = { pcTextCU ? pcTextCU->getCUMvField( RefPicList(0) )->getRefIdx( uiAbsPartIdx ) : -1,
                          pcTextCU ? pcTextCU->getCUMvField( RefPicList(1) )->getRefIdx( uiAbsPartIdx ) : -1 };
@@ -651,6 +710,8 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
                                                                           && !( aiRefIdxVsp[1] >= 0 && pcTextCU->isVspRef( RefPicList(1), aiRefIdxVsp[1] ) ) 
                                                                         : pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
 #endif
+#else
+  const Bool bMVIAvailable = pcCU->getSlice()->getSPS()->getUseMVI() && pcCU->getSlice()->getSliceType() != I_SLICE;
 #endif
   const UInt uiMviMergePos = bMVIAvailable ? HHI_MPI_MERGE_POS : uiNumCand;
 #endif
@@ -734,9 +795,34 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
   
   UInt uiSymbol;
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSplitFlagSCModel.get( 0, 0, pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth ) ) );
-  DTRACE_CABAC_VL( g_nSymbolCounter++ )
-  DTRACE_CABAC_T( "\tSplitFlag\n" )
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool bParseSplitFlag    = true;
+
+  TComSPS *sps            = pcCU->getPic()->getSlice(0)->getSPS();
+  TComPic *pcTexture      = pcCU->getSlice()->getTexturePic();
+  Bool bDepthMapDetect    = (pcTexture != NULL);
+  Bool bIntraSliceDetect  = (pcCU->getSlice()->getSliceType() == I_SLICE);
+
+  if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC())
+  {
+    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
+    assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
+    bParseSplitFlag         = (pcTextureCU->getDepth(uiAbsPartIdx) > uiDepth);
+  }
+
+  if(bParseSplitFlag)
+  {
+#endif
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSplitFlagSCModel.get( 0, 0, pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth ) ) );
+    DTRACE_CABAC_VL( g_nSymbolCounter++ )
+    DTRACE_CABAC_T( "\tSplitFlag\n" )
+#if OL_QTLIMIT_PREDCODING_B0068
+  }
+  else
+    uiSymbol = 0;
+#endif
+
   pcCU->setDepthSubParts( uiDepth + uiSymbol, uiAbsPartIdx );
   
   return;
@@ -752,15 +838,41 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 {
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
+
+#if OL_QTLIMIT_PREDCODING_B0068
+  Bool bParsePartSize    = true;
+  TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
+  TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
+  Bool bDepthMapDetect   = (pcTexture != NULL);
+  Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
+
+  if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC())
+  {
+    TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
+    assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
+    if (pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth && pcTextureCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN)
+    {
+      bParsePartSize = false;
+      eMode          = SIZE_2Nx2N;
+    }
+  }
+#endif
   
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
-    uiSymbol = 1;
-    if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+#if OL_QTLIMIT_PREDCODING_B0068
+    if(bParsePartSize)
     {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+#endif
+      uiSymbol = 1;
+      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
+      {
+        m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+      }
+      eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
+#if OL_QTLIMIT_PREDCODING_B0068
     }
-    eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
+#endif
     UInt uiTrLevel = 0;    
     UInt uiWidthInBit  = g_aucConvertToBit[pcCU->getWidth(uiAbsPartIdx)]+2;
     UInt uiTrSizeInBit = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxTrSize()]+2;
@@ -776,58 +888,65 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   else
   {
-    UInt uiMaxNumBits = 2;
-    if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getSlice()->getSPS()->getDisInter4x4() && (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
+#if OL_QTLIMIT_PREDCODING_B0068
+    if(bParsePartSize)
     {
-      uiMaxNumBits ++;
-    }
-    for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
-    {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
-      if ( uiSymbol )
+#endif
+      UInt uiMaxNumBits = 2;
+      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getSlice()->getSPS()->getDisInter4x4() && (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
       {
-        break;
+        uiMaxNumBits ++;
       }
-      uiMode++;
-    }
-    eMode = (PartSize) uiMode;
-    if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
-    {
-      if (eMode == SIZE_2NxN)
+      for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
       {
+        m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
+        if ( uiSymbol )
+        {
+          break;
+        }
+        uiMode++;
+      }
+      eMode = (PartSize) uiMode;
+      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+      {
+        if (eMode == SIZE_2NxN)
+        {
+#if AMP_CTX
+            m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUAMPSCModel.get( 0, 0, 0 ));
+#else
+          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 0 ));
+#endif
+          if (uiSymbol == 0)
+          {
+#if AMP_CTX
+            m_pcTDecBinIf->decodeBinEP(uiSymbol);
+#else
+            m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 1 ));
+#endif
+            eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+          }
+        }
+        else if (eMode == SIZE_Nx2N)
+        {
 #if AMP_CTX
           m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUAMPSCModel.get( 0, 0, 0 ));
 #else
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 0 ));
+          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 0 ));
 #endif
-        if (uiSymbol == 0)
-        {
+          if (uiSymbol == 0)
+          {
 #if AMP_CTX
-          m_pcTDecBinIf->decodeBinEP(uiSymbol);
+            m_pcTDecBinIf->decodeBinEP(uiSymbol);
 #else
-          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUYPosiSCModel.get( 0, 0, 1 ));
+            m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 1 ));
 #endif
-          eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+            eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
+          }
         }
       }
-      else if (eMode == SIZE_Nx2N)
-      {
-#if AMP_CTX
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUAMPSCModel.get( 0, 0, 0 ));
-#else
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 0 ));
-#endif
-        if (uiSymbol == 0)
-        {
-#if AMP_CTX
-          m_pcTDecBinIf->decodeBinEP(uiSymbol);
-#else
-          m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUXPosiSCModel.get( 0, 0, 1 ));
-#endif
-          eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
-        }
-      }
+#if OL_QTLIMIT_PREDCODING_B0068
     }
+#endif
   }
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
@@ -903,7 +1022,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
     Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
     Bool bCodeEdgeIntra = false;
     if( pcCU->getSlice()->getSPS()->isDepth() )
     {
@@ -919,7 +1038,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
     Int uiPreds[2] = {-1, -1};
 #endif
     Int uiPredNum = pcCU->getIntraDirLumaPredictor(uiAbsPartIdx, uiPreds);  
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
     UInt uiCheckBit = 0;
 #endif
 
@@ -944,7 +1063,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
 #if LOGI_INTRA_NAME_3MPM
 
       m_pcTDecBinIf->decodeBinsEP( uiSymbol, 5 );
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
       if (bCodeEdgeIntra)
       {
         if (uiSymbol==31)
@@ -980,7 +1099,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
         intraPredMode += uiSymbol;      
       }
 #endif
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
       if ( intraPredMode != EDGE_INTRA_IDX)
       {
 #endif
@@ -988,12 +1107,12 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
         {
           intraPredMode += ( intraPredMode >= uiPreds[i] );
         }
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
       }
 #endif
     }
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
     if( intraPredMode == EDGE_INTRA_IDX )
     {
       xParseEdgeIntraInfo( pcCU, uiAbsPartIdx, uiDepth );
@@ -2137,7 +2256,7 @@ Void TDecSbac::decodeFlush ( )
 }
 #endif
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX || (LGE_EDGE_INTRA && LGE_EDGE_INTRA_DELTA_DC)
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX || (LGE_EDGE_INTRA_A0070 && LGE_EDGE_INTRA_DELTA_DC)
 Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
 {
   UInt uiSymbol;
@@ -2396,7 +2515,7 @@ Void TDecSbac::xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartId
 }
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
 Void TDecSbac::xParseEdgeIntraInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol = 0;
@@ -2491,6 +2610,95 @@ Void TDecSbac::xParseEdgeIntraInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   Bool* pbRegion = pcCU->getEdgePartition( uiAbsPartIdx );
   pcCU->reconPartition( uiAbsPartIdx, uiDepth, ucLeft == 1, ucStart, ucMax, pucSymbolList, pbRegion );
   xFree( pucSymbolList );
+}
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert( pcCU->getSlice()->getSPS()->isDepth() );
+  
+  UInt uiSymbol = 0;
+  UInt uiCtxSDCFlag = pcCU->getCtxSDCFlag( uiAbsPartIdx );
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, uiCtxSDCFlag ) );
+  
+  if( uiSymbol == 1 )
+  {
+    pcCU->setPartSizeSubParts(SIZE_2Nx2N, uiAbsPartIdx, uiDepth);
+    
+    pcCU->setSDCFlagSubParts( true, uiAbsPartIdx, 0, uiDepth);
+    pcCU->setTrIdxSubParts(0, uiAbsPartIdx, uiDepth);
+    pcCU->setCbfSubParts(1, 1, 1, uiAbsPartIdx, uiDepth);
+  }
+}
+
+Void TDecSbac::parseSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert( pcCU->getSlice()->getSPS()->isDepth() );
+  assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
+  
+  assert( pcCU->getSDCFlag(uiAbsPartIdx) );
+  
+  UInt uiCtx            = 0;
+  
+  UInt uiMPModeIdx      = 0;
+  
+  for(Int i=0; i<RWTH_SDC_NUM_PRED_MODES-1; i++)
+  {
+    UInt uiIsMostProb = 0;
+    m_pcTDecBinIf->decodeBin( uiIsMostProb, m_cSDCPredModeSCModel.get( 0, i, uiCtx ) );
+    
+    if ( uiIsMostProb == 1 )
+      break;
+    
+    // else: get next most probable pred mode
+    uiMPModeIdx = (uiMPModeIdx+1)%RWTH_SDC_NUM_PRED_MODES;
+  }
+  
+  Int intraPredMode = g_auiSDCPredModes[uiMPModeIdx];
+  
+#if HHI_DMM_WEDGE_INTRA
+  if( intraPredMode == DMM_WEDGE_FULL_IDX )          { xParseWedgeFullInfo          ( pcCU, uiAbsPartIdx, uiDepth ); }
+  if( intraPredMode == DMM_WEDGE_PREDDIR_IDX )       { xParseWedgePredDirInfo       ( pcCU, uiAbsPartIdx, uiDepth ); }
+#endif
+  
+  pcCU->setLumaIntraDirSubParts((UChar)intraPredMode, uiAbsPartIdx, uiDepth);
+}
+
+Void TDecSbac::parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSegment )
+{
+  assert( pcCU->getSlice()->getSPS()->isDepth() );
+  assert( pcCU->getSDCFlag(uiAbsPartIdx) );
+  assert( uiSegment < 2 );
+  
+  UInt uiResidual = 0;
+  UInt uiBit      = 0;
+  UInt uiAbsIdx   = 0;
+  UInt uiSign     = 0;
+  Int  iIdx       = 0;
+  
+  UInt uiMaxResidualBits  = GetBitsPerDepthValue();
+  assert( uiMaxResidualBits <= g_uiBitDepth );
+  
+  m_pcTDecBinIf->decodeBin(uiResidual, m_cSDCResidualFlagSCModel.get( 0, uiSegment, 0 ) );
+  
+  if (uiResidual)
+  {
+    // decode residual sign bit
+    m_pcTDecBinIf->decodeBin(uiSign, m_cSDCResidualSignFlagSCModel.get( 0, uiSegment, 0 ) );
+    
+    // decode residual magnitude
+    for (Int i=0; i<uiMaxResidualBits; i++)
+    {
+      m_pcTDecBinIf->decodeBin(uiBit, m_cSDCResidualSCModel.get( 0, uiSegment, i ) );
+      uiAbsIdx |= uiBit << i;
+    }
+    
+    uiAbsIdx += 1;
+    iIdx =(Int)(uiSign ? -1 : 1)*uiAbsIdx;
+  }
+  
+  pcCU->setSDCSegmentDCOffset(iIdx, uiSegment, uiAbsPartIdx);
 }
 #endif
 

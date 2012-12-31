@@ -158,13 +158,12 @@ private:
   Int*          m_pcArlCoeffY;        ///< ARL coefficient buffer (Y)
   Int*          m_pcArlCoeffCb;       ///< ARL coefficient buffer (Cb)
   Int*          m_pcArlCoeffCr;       ///< ARL coefficient buffer (Cr)
-#if FIX_MEM_LEAKS
   Bool          m_ArlCoeffIsAliasedAllocation; ///< ARL coefficient buffer is an alias of the global buffer and must not be free()'d
-#endif 
 
   static Int*   m_pcGlbArlCoeffY;     ///< ARL coefficient buffer (Y)
   static Int*   m_pcGlbArlCoeffCb;    ///< ARL coefficient buffer (Cb)
   static Int*   m_pcGlbArlCoeffCr;    ///< ARL coefficient buffer (Cr)
+
 #endif
   
   Pel*          m_pcIPCMSampleY;      ///< PCM sample buffer (Y)
@@ -193,6 +192,9 @@ private:
   // -------------------------------------------------------------------------------------------------------------------
   
   Bool*         m_pbMergeFlag;        ///< array of merge flags
+#if LGE_ILLUCOMP_B0045
+  Bool*         m_pbICFlag;           ///< array of IC flags
+#endif
   UChar*        m_puhMergeIndex;      ///< array of merge candidate indices
 #if AMP_MRG
   Bool          m_bIsMergeAMP;
@@ -216,7 +218,7 @@ private:
   Bool*         m_pbResPredFlag;      ///< array of residual prediction flags
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   UChar*        m_pucEdgeCode;          ///< array of edge code
   UChar*        m_pucEdgeNumber;        ///< total number of edge
   UChar*        m_pucEdgeStartPos;      ///< starting point position
@@ -234,19 +236,15 @@ private:
   
   Bool          m_bDecSubCu;          ///< indicates decoder-mode
   Double        m_dTotalCost;         ///< sum of partition RD costs
+#if FIX_RDO_NEGDIST
+  Dist          m_uiTotalDistortion;  ///< sum of partition distortion
+#else
   UInt          m_uiTotalDistortion;  ///< sum of partition distortion
+#endif
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;       ///< sum of partition bins
   UInt*         m_uiSliceStartCU;    ///< Start CU address of current slice
   UInt*         m_uiEntropySliceStartCU; ///< Start CU address of current slice
-
-#if OL_DEPTHLIMIT_A0044 
-  //add a variable to store the partition information
-  //a 2D array in uidepth, part_symbol format
-  UInt          m_uiPartInfo[OL_PART_BUF_SIZE][2];
-  UInt          m_uiPartNum;
-  Bool          m_dumpPartInfo;
-#endif 
   
   // -------------------------------------------------------------------------------------------------------------------
   // depth model mode data
@@ -269,6 +267,11 @@ private:
   Int*          m_piContourPredTexDeltaDC1;
   Int*          m_piContourPredTexDeltaDC2;
 #endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool*         m_pbSDCFlag;
+  Pel*          m_apSegmentDCOffset[2];
+#endif
 
 protected:
   
@@ -282,7 +285,7 @@ protected:
 
   Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
-#if QC_MULTI_DIS_CAN
+#if QC_MULTI_DIS_CAN_A0097
   Bool          xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
 #endif 
   
@@ -474,6 +477,14 @@ public:
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 
+#if LGE_ILLUCOMP_B0045
+  Bool*         getICFlag             ()                        { return m_pbICFlag;               }
+  Bool          getICFlag             ( UInt uiIdx )            { return m_pbICFlag[uiIdx];        }
+  Void          setICFlag             ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
+  Void          setICFlagSubParts     ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Bool          isICFlagRequired      (UInt uiAbsPartIdx);
+#endif
+
 #if AMP_MRG
   Void          setMergeAMP( Bool b )      { m_bIsMergeAMP = b; }
   Bool          getMergeAMP( )             { return m_bIsMergeAMP; }
@@ -532,15 +543,31 @@ public:
                                           ,Bool bIndependentTileBoundaryEnabled );
 
 #if HHI_INTER_VIEW_MOTION_PRED
-#if !QC_MULTI_DIS_CAN
+#if !QC_MULTI_DIS_CAN_A0097
   Int           getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
 #else
   Bool          getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
-  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo );
+  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
+#if QC_MRG_CANS_B0048
+    , Int* iPdm
+#endif
+  );
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
-#if LGE_DVMCP
-  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1 );
+#if LGE_DVMCP_A0126
+#if QC_SIMPLE_NBDV_B0047
+  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo
+#if LGE_IVMP_PARALLEL_MERGE_B0136
+    , Bool bParMerg = false
+#endif
+    );
+#else
+  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1
+#if LGE_IVMP_PARALLEL_MERGE_B0136
+    , Bool bParMerg = false
+#endif
+    );
+#endif
 #endif
 
 #endif
@@ -588,7 +615,12 @@ public:
   Void          getMvField            ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField );
   
   AMVP_MODE     getAMVPMode           ( UInt uiIdx );
+#if SHARP_INTERVIEW_DECOUPLE_B0111
+  Void          fillMvpCandBase       ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+  Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo , Int iMVPIdx=-1);
+#else
   Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
+#endif
 #if PARALLEL_MERGE 
   Bool          isDiffMER             ( Int xN, Int yN, Int xP, Int yP);
   Void          getPartPosition       ( UInt partIdx, Int& xP, Int& yP, Int& nPSW, Int& nPSH);
@@ -610,15 +642,6 @@ public:
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
   
   Void          compressMV            ();
-
-#if OL_DEPTHLIMIT_A0044
-  Void        resetPartInfo     () {m_uiPartNum = 0;};
-  Void        incrementPartInfo () {m_uiPartNum ++;};
-  Void        updatePartInfo(UInt uiSymbol, UInt uiDepth) { m_uiPartInfo[m_uiPartNum][0] = uiSymbol; m_uiPartInfo[m_uiPartNum][1] = uiDepth;};
-  UInt*       readPartInfo()                              { return (UInt*)m_uiPartInfo;};
-  Void        setPartDumpFlag(Bool flag)                  { m_dumpPartInfo = flag; };
-  Bool        getPartDumpFlag()                           { return m_dumpPartInfo; };
-#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // utility functions for neighbouring information
@@ -705,6 +728,9 @@ public:
   UInt          getCtxQtCbf                     ( UInt   uiAbsPartIdx, TextType eType, UInt uiTrDepth );
 
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
+#if LGE_ILLUCOMP_B0045
+  UInt          getCtxICFlag                    ( UInt   uiAbsPartIdx                                 );
+#endif
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -715,7 +741,7 @@ public:
   UInt          getEntropySliceStartCU  ( UInt pos )                  { return m_uiEntropySliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   UInt          getCtxEdgeIntra ( UInt uiAbsPartIdx );
 #endif
 
@@ -724,7 +750,11 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   
   Double&       getTotalCost()                  { return m_dTotalCost;        }
+#if FIX_RDO_NEGDIST
+  Dist&         getTotalDistortion()            { return m_uiTotalDistortion; }
+#else
   UInt&         getTotalDistortion()            { return m_uiTotalDistortion; }
+#endif
   UInt&         getTotalBits()                  { return m_uiTotalBits;       }
   UInt&         getTotalNumPart()               { return m_uiNumPartition;    }
 
@@ -795,7 +825,7 @@ public:
   Void  setContourPredTexDeltaDC2SubParts ( Int iDC2, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
-#if LGE_EDGE_INTRA
+#if LGE_EDGE_INTRA_A0070
   UChar*        getEdgeCode( UInt uiIdx )                 { return &m_pucEdgeCode[uiIdx * LGE_EDGE_INTRA_MAX_EDGE_NUM_PER_4x4]; }
   UChar*        getEdgeNumber( )                          { return m_pucEdgeNumber;           }
   UChar         getEdgeNumber( UInt uiIdx )               { return m_pucEdgeNumber[uiIdx];    }
@@ -817,6 +847,20 @@ public:
   Void          setEdgeDeltaDC0( UInt uiIdx, Int val )      { m_piEdgeDeltaDC0[uiIdx] = val;  }
   Void          setEdgeDeltaDC1( UInt uiIdx, Int val )      { m_piEdgeDeltaDC1[uiIdx] = val;  }
 #endif
+#endif
+  
+#if RWTH_SDC_DLT_B0036
+  Bool*         getSDCFlag          ()                        { return m_pbSDCFlag;               }
+  Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
+  Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  
+  UInt          getCtxSDCFlag              ( UInt uiAbsPartIdx );
+  
+  Bool          getSDCAvailable             ( UInt uiAbsPartIdx );
+  
+  Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
+  Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
+  Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
 #endif
 };
 

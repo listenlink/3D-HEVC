@@ -124,6 +124,17 @@ protected:
 #if LOSSLESS_CODING 
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt absPartIdx, UInt depth);
 #endif
+#if RWTH_SDC_DLT_B0036
+  Void  xAnalyzeSegmentsSDC       ( Pel* pOrig,
+                                   UInt uiStride,
+                                   UInt uiSize,
+                                   Pel* rpSegMeans,
+                                   UInt uiNumSegments,
+                                   Bool* pMask,
+                                   UInt uiMaskStride );
+  
+  Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 };
 
 //! \}
