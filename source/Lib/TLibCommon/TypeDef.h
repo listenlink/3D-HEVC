@@ -63,7 +63,7 @@
 
 
 // FCO 
-#define FLEX_CODING_ORDER_M23723          0
+#define FLEX_CODING_ORDER_M23723          1
 #if FLEX_CODING_ORDER_M23723
   #define DISABLE_FCO_FOR_VSO             0 // Optional compile settings to disable VSO with FCO.
 #endif
