@@ -61,6 +61,9 @@
 #define FIX_DMM_NEG_DIST                  1
 #define FIX_LGE_DVMCP_B0133               1
 
+// 3rd meeting
+#define FIX_DMM_CTX_INIT_C0034            1    // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
+
 
 // FCO 
 #define FLEX_CODING_ORDER_M23723          1
