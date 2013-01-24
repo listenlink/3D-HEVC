@@ -150,7 +150,7 @@
 #define SONY_COLPIC_AVAILABILITY          1
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
 #define VIDYO_VPS_INTEGRATION             1
-
+#define HHI_DEPTH_INTRA_SEARCH_RAU_C0160  1   // JCT3V-C0160 change 1: full Intra search in depth random access units 
 
 
 ///// ***** DEFINED PARAMETERS *********
