@@ -1102,19 +1102,31 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       rpcTempCU->setIPCMFlagSubParts ( false, 0, uiDepth); //SUB_LCU_DQP
 
       // do normal intra modes
-      if ( !bEarlySkip )
+      if ( !bEarlySkip 
+#if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+        || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR))
+#endif
+        )
       {
         // speedup for inter frames
 #if HHI_INTERVIEW_SKIP
         if( ( rpcBestCU->getSlice()->getSliceType() == I_SLICE ||
           rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
-          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0 ) && !bFullyRenderedSec ) // avoid very complex intra if it is unlikely
+          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0 
+#if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR))
+#endif            
+          ) && !bFullyRenderedSec ) // avoid very complex intra if it is unlikely
 #else
         if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
           rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
-          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     ) // avoid very complex intra if it is unlikely
+          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     
+#if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR))
+#endif     
+          ) // avoid very complex intra if it is unlikely
 #endif
         {
 #if LGE_ILLUCOMP_B0045
