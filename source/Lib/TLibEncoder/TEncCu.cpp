@@ -457,6 +457,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool  depthMapDetect    = (pcTexture != NULL);
   Bool  bIntraSliceDetect = (rpcBestCU->getSlice()->getSliceType() == I_SLICE);
 
+#if HHI_QTLPC_RAU_OFF_C0160
+  Bool rapPic     = (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR);
+#endif
+
   Bool bTry2NxN = true;
   Bool bTryNx2N = true;
 #endif
@@ -611,7 +615,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if OL_QTLIMIT_PREDCODING_B0068
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
+
+#if HHI_QTLPC_RAU_OFF_C0160
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
+#else
       if(depthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC())
+#endif
       {
         TComDataCU* pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() ); //Corresponding texture LCU
         UInt uiCUIdx            = rpcBestCU->getZorderIdxInCU();
@@ -718,7 +727,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068
+
+#if HHI_QTLPC_RAU_OFF_C0160
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
+#else
       if(depthMapDetect && !bIntraSliceDetect  && sps->getUseQTLPC())
+#endif
       {
         bTrySplitDQP = bTrySplit;
       }

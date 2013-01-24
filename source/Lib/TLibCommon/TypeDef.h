@@ -144,6 +144,7 @@
 
 ///// ***** QUADTREE LIMITATION *********
 #define OL_QTLIMIT_PREDCODING_B0068       1    //JCT3V-B0068
+#define HHI_QTLPC_RAU_OFF_C0160           1   // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
 
 ///// ***** OTHERS *********
 #define LG_ZEROINTRADEPTHRESI_A0087       1   // JCT2-A0087
