@@ -761,7 +761,12 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   Bool bDepthMapDetect    = (pcTexture != NULL);
   Bool bIntraSliceDetect  = (pcCU->getSlice()->getSliceType() == I_SLICE);
 
+#if HHI_QTLPC_RAU_OFF_C0160
+  Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR);
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC())
+#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
@@ -803,7 +808,12 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
 
+#if HHI_QTLPC_RAU_OFF_C0160
+  Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR);
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC())
+#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
