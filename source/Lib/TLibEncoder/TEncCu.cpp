@@ -458,7 +458,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool  bIntraSliceDetect = (rpcBestCU->getSlice()->getSliceType() == I_SLICE);
 
 #if HHI_QTLPC_RAU_OFF_C0160
-  Bool rapPic     = (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR);
+  Bool rapPic     = (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 #endif
 
   Bool bTry2NxN = true;
@@ -1118,7 +1118,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // do normal intra modes
       if ( !bEarlySkip 
 #if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
-        || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR))
+        || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA))
 #endif
         )
       {
@@ -1129,7 +1129,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0 
 #if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
-          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR))
+          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA))
 #endif            
           ) && !bFullyRenderedSec ) // avoid very complex intra if it is unlikely
 #else
@@ -1138,7 +1138,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     
 #if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
-          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR))
+          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA))
 #endif     
           ) // avoid very complex intra if it is unlikely
 #endif

@@ -625,7 +625,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
  
 #if HHI_QTLPC_RAU_OFF_C0160
-  Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR);
+  Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
 #else
   if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
@@ -929,7 +929,7 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
 
 #if HHI_QTLPC_RAU_OFF_C0160
-  Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR);
+  Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
 #else
   if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
