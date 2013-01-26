@@ -100,6 +100,15 @@ private:
   TEncSbac*               m_pcBufferLowLatSbacCoders;           ///< dependent tiles: line to store temporary contexts
   
   UInt                    m_uiSliceIdx;
+
+#if MERL_VSP_C0152
+  // Data temporarily stored, will be sent to TComSlice level where the data will be actually used
+  TComPic* m_pPicBaseTxt;
+  TComPic* m_pPicBaseDepth;
+  Int*     m_aiShiftLUT;
+  Int      m_iShiftPrec;
+#endif
+
 public:
   TEncSlice();
   virtual ~TEncSlice();
@@ -127,6 +136,15 @@ public:
   Void    xDetermineStartAndBoundingCUAddr  ( UInt& uiStartCUAddr, UInt& uiBoundingCUAddr, TComPic*& rpcPic, Bool bEncodeSlice );
   UInt    getSliceIdx()         { return m_uiSliceIdx;                    }
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
+
+#if MERL_VSP_C0152
+   Void     setBWVSPLUTParam    ( Int *pShiftLUT, Int iLoG2LUTPrec ) { m_aiShiftLUT = pShiftLUT; m_iShiftPrec = 2-iLoG2LUTPrec; }
+   Void     setRefPicBaseTxt    ( TComPic*pPicTxt   ) { m_pPicBaseTxt = pPicTxt;    }
+   Void     setRefPicBaseDepth  ( TComPic*pPicDepth ) { m_pPicBaseDepth = pPicDepth;}
+   Void     getBWVSPLUTParam    ( Int*& pShiftLUT, Int& iShiftPrec ) { pShiftLUT = m_aiShiftLUT; iShiftPrec = m_iShiftPrec; }
+   TComPic* getRefPicBaseTxt    () { return m_pPicBaseTxt;   }
+   TComPic* getRefPicBaseDepth  () { return m_pPicBaseDepth; }
+#endif
 };
 
 //! \}

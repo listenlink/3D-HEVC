@@ -1346,7 +1346,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     uiAbsPartIdx = 0;
   }
-  
+
 #if RWTH_SDC_DLT_B0036
   if( pcCU->getSDCFlag(uiAbsPartIdx) )
   {
@@ -1354,7 +1354,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 #endif
-  
+
   PartSize eSize = pcCU->getPartitionSize( uiAbsPartIdx );
   
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.

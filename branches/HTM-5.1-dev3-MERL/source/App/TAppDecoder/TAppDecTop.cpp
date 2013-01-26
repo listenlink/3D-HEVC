@@ -763,4 +763,20 @@ else
   return pcPic;
 #endif
 }
+
+#if MERL_VSP_C0152
+Void TAppDecTop::setBWVSPLUT(TComSlice* pcSlice,  Int iCodedViewIdx,  Int iCurPoc)
+{
+  //first view does not have VSP 
+  if((iCodedViewIdx == 0)) return;
+
+  AOT( iCodedViewIdx <= 0);
+  //AOT( iCodedViewIdx >= m_iNumberOfViews );
+  Int iNeighborViewId = 0;
+  //  Int* piShiftLUT = bRenderFromLeft ? m_cCamParsCollector.getBaseViewShiftLUTI()[iCodedViewIdx][iNeighborViewId][0] : m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
+  Int* piShiftLUT = m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
+  pcSlice->setBWVSPLUTParam(piShiftLUT, 2-LOG2_DISP_PREC_LUT );
+}
+#endif
+
 //! \}

@@ -561,6 +561,7 @@ TComDepthMapGenerator::dumpDepthMap( TComPic* pcPic, char* pFilenameBase )
   ::sprintf     ( acFilename, "%s_V%d.yuv", pFilenameBase, uiViewId );
   m_cTmpPic.dump( acFilename, ( pcPic->getPOC() != 0 )  );
 }
+
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
@@ -743,7 +744,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
       RefPicList  eRefPicList       = RefPicList( iRefListId );
       Int         iNumRefPics       = pcSlice->getNumRefIdx( eRefPicList );
       for( Int iPdmRefIdx = 0; iPdmRefIdx < iNumRefPics; iPdmRefIdx++ )
-{
+      {
         if( pcSlice->getRefPOC( eRefPicList, iPdmRefIdx ) == pcSlice->getPOC())
         {
 #if QC_MRG_CANS_B0048

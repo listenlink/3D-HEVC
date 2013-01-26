@@ -53,11 +53,24 @@ TComPrediction::TComPrediction()
 : m_pLumaRecBuffer(0)
 {
   m_piYuvExt = NULL;
+#if MERL_VSP_C0152
+  m_pDepth = (Int*) malloc(64*64*sizeof(Int)); // TODO: Use a smart way to determine the size of the array
+  if (m_pDepth == NULL)
+  {
+      printf("ERROR: UKTGHU, No memory allocated.\n");
+  }
+#endif
 }
 
 TComPrediction::~TComPrediction()
 {
   
+#if MERL_VSP_C0152
+  if (m_pDepth != NULL)
+  {
+      free(m_pDepth);
+  }
+#endif
   delete[] m_piYuvExt;
 
   m_acYuvPred[0].destroy();
@@ -886,6 +899,374 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
   }
 }
 
+#if MERL_VSP_C0152
+#if DEPTH_MAP_GENERATION
+Void TComPrediction::motionCompensationBWVSP( TComDataCU* pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY )
+#else
+Void TComPrediction::motionCompensationBWVSP ( TComDataCU* pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList, Int iPartIdx )
+#endif
+{
+  Int         iWidth;
+  Int         iHeight;
+  UInt        uiPartAddr;
+
+  if ( iPartIdx >= 0 )
+  {
+    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
+
+#if DEPTH_MAP_GENERATION
+    if( bPrdDepthMap )
+    {
+      iWidth  >>= uiSubSampExpX;
+      iHeight >>= uiSubSampExpY;
+    }
+#endif
+
+    if ( eRefPicList != REF_PIC_LIST_X )
+    {
+#if LGE_ILLUCOMP_B0045
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
+#else
+      if( pcCU->getSlice()->getPPS()->getUseWP())
+#endif
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#else
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
+#endif
+      }
+      else
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
+#endif
+      }
+#if LGE_ILLUCOMP_B0045
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
+#else
+      if( pcCU->getSlice()->getPPS()->getUseWP())
+#endif
+      {
+        xWeightedPredictionUni( pcCU, pcYuvPred, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx );
+      }
+    }
+    else
+    {
+#if DEPTH_MAP_GENERATION
+      if( xCheckIdenticalMotion( pcCU, uiPartAddr ) && !bPrdDepthMap )
+#else
+      if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+#endif
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
+#endif
+      }
+      else
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
+#else
+        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, pcYuvPred, iPartIdx );
+#endif
+      }
+    }
+    return;
+  }
+
+  for ( iPartIdx = 0; iPartIdx < pcCU->getNumPartInter(); iPartIdx++ )
+  {
+    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
+
+#if DEPTH_MAP_GENERATION
+    if( bPrdDepthMap )
+    {
+      iWidth  >>= uiSubSampExpX;
+      iHeight >>= uiSubSampExpY;
+    }
+#endif
+
+    if ( eRefPicList != REF_PIC_LIST_X )
+    {
+#if LGE_ILLUCOMP_B0045
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
+#else
+      if( pcCU->getSlice()->getPPS()->getUseWP())
+#endif
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#else
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
+#endif   
+      }
+      else
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
+#endif   
+      }
+#if DEPTH_MAP_GENERATION
+      xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
+      xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
+#endif  
+#if LGE_ILLUCOMP_B0045
+      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
+#else
+      if( pcCU->getSlice()->getPPS()->getUseWP())
+#endif
+      {
+        xWeightedPredictionUni( pcCU, pcYuvPred, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx );
+      }
+    }
+    else
+    {
+      if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
+        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
+#endif 
+      }
+      else
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
+#else
+        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, pcYuvPred, iPartIdx );
+#endif
+      }
+    }
+  }
+
+  return;
+}
+
+
+// Output: rpcYuvPred
+#if DEPTH_MAP_GENERATION
+Void TComPrediction::xPredInterUniBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi )
+#else
+Void TComPrediction::xPredInterUniBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi )
+#endif
+{
+  Int  iRefIdx = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );    
+  Int  vspIdx  = pcCU->getVSPIndex(uiPartAddr);
+  if (vspIdx != 0)
+  {
+    if (iRefIdx >= 0)
+    {
+      printf("vspIdx = %d, iRefIdx = %d\n", vspIdx, iRefIdx);
+    }
+    assert (iRefIdx < 0); // assert (iRefIdx == NOT_VALID);
+  }
+  else
+  {
+    assert (iRefIdx >= 0);
+  }
+
+  TComMv cMv = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
+  pcCU->clipMv(cMv);
+
+#if DEPTH_MAP_GENERATION
+  if( bPrdDepthMap )
+  {
+    UInt uiRShift = 0;
+#if PDM_REMOVE_DEPENDENCE
+    if( pcCU->getPic()->getStoredPDMforV2() == 1 )
+      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMapTemp(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
+    else
+#endif
+      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMap(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
+
+    return;
+  }
+#endif
+
+#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
+  if( pcCU->getSlice()->getSPS()->isDepth() )
+  {
+    if (vspIdx != 0)
+    { // depth, vsp
+      // get depth estimator here
+      TComPic* pRefPicBaseDepth = pcCU->getSlice()->getRefPicBaseDepth();
+      TComPicYuv* pcBaseViewDepthPicYuv = NULL;
+      if (vspIdx < 4) // spatial
+      {
+        pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
+      }
+      Int iBlkX = ( pcCU->getAddr() % pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int iBlkY = ( pcCU->getAddr() / pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int* pShiftLUT;
+      Int iShiftPrec;
+      pcCU->getSlice()->getBWVSPLUTParam(pShiftLUT, iShiftPrec);
+      //using disparity to find the depth block of the base view as the depth block estimator of the current block
+      //using depth block estimator and base view texture to get Backward warping
+      xPredInterLumaBlkFromDM  ( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,     pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+      xPredInterChromaBlkFromDM( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1,  pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+    }
+    else
+    { // depth, non-vsp
+      UInt uiRShift = ( bi ? 14-g_uiBitDepth-g_uiBitIncrement : 0 );
+      UInt uiOffset = bi ? IF_INTERNAL_OFFS : 0;
+#if DEPTH_MAP_GENERATION
+      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, 0, 0, rpcYuvPred, uiRShift, uiOffset );
+#else
+      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, uiRShift, uiOffset );
+#endif
+
+      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
+    }
+  }
+  else // texture
+  {
+#endif
+    if ( vspIdx != 0 && !pcCU->getSlice()->getSPS()->isDepth())
+    { // texture, vsp
+      TComPic*    pRefPicBaseTxt        = pcCU->getSlice()->getRefPicBaseTxt();
+      TComPicYuv* pcBaseViewTxtPicYuv   = pRefPicBaseTxt->getPicYuvRec();
+      TComPicYuv* pcBaseViewDepthPicYuv = NULL;
+      if (vspIdx < 4) // spatial
+      {
+        TComPic* pRefPicBaseDepth = pcCU->getSlice()->getRefPicBaseDepth();
+        pcBaseViewDepthPicYuv     = pRefPicBaseDepth->getPicYuvRec();
+      }
+      Int iBlkX = ( pcCU->getAddr() % pRefPicBaseTxt->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int iBlkY = ( pcCU->getAddr() / pRefPicBaseTxt->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int* pShiftLUT;
+      Int iShiftPrec;
+      pcCU->getSlice()->getBWVSPLUTParam(pShiftLUT, iShiftPrec);
+
+      //using disparity to find the depth block of the base view as the depth block estimator of the current block
+      //using depth block estimator and base view texture to get Backward warping
+      xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+      xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+    }
+    else
+    { // texture, non-vsp
+#if LGE_ILLUCOMP_B0045
+      Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getRefViewId( eRefPicList, iRefIdx ) != pcCU->getSlice()->getViewId());
+
+      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag);
+      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag );
+#else
+      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
+      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
+#endif
+    }
+#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
+  }
+#endif
+}
+
+
+#if DEPTH_MAP_GENERATION
+Void TComPrediction::xPredInterBiBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap )
+#else
+Void TComPrediction::xPredInterBiSDM ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred, Int iPartIdx )
+#endif
+{
+  TComYuv* pcMbYuv;
+  Int      iRefIdx[2] = {-1, -1};
+
+  for ( Int iRefList = 0; iRefList < 2; iRefList++ )
+  {
+    RefPicList eRefPicList = (iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0);
+    iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
+#if MERL_VSP_C0152
+    if(!pcCU->getVSPIndex(uiPartAddr))
+    {
+      if ( iRefIdx[iRefList] < 0 )
+      {
+        continue;
+      }
+    }
+    else
+    {
+      if ( iRefList== REF_PIC_LIST_1 && iRefIdx[iRefList] < 0 ) // iRefIdx[iRefList] ==NOT_VALID
+      {
+        continue;
+      }
+    }
+#else
+    if ( iRefIdx[iRefList] < 0 )
+    {
+      continue;
+    }
+#endif
+    assert( iRefIdx[iRefList] < pcCU->getSlice()->getNumRefIdx(eRefPicList) );
+
+    pcMbYuv = &m_acYuvPred[iRefList];
+    if( pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr ) >= 0 && pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr ) >= 0 )
+    {
+#if DEPTH_MAP_GENERATION
+      xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#else
+      xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+#endif
+    }
+    else
+    {
+      if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#else
+        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+#endif
+      }
+      else
+      {
+#if DEPTH_MAP_GENERATION
+        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
+        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, false );
+#endif
+      }
+    }
+  }
+
+  if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
+  {
+#if MERL_VSP_C0152
+    if(pcCU->getVSPIndex(uiPartAddr))
+      m_acYuvPred[0].copyPartToPartYuv( rpcYuvPred, uiPartAddr, iWidth, iHeight );
+    else
+#endif
+    xWeightedPredictionBi( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
+  }
+  else
+  {
+#if DEPTH_MAP_GENERATION
+    if ( bPrdDepthMap )
+    {
+      xWeightedAveragePdm( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred, uiSubSampExpX, uiSubSampExpY );
+    }
+    else
+    {
+#if MERL_VSP_C0152
+      if(pcCU->getVSPIndex(uiPartAddr))
+        m_acYuvPred[0].copyPartToPartYuv( rpcYuvPred, uiPartAddr, iWidth, iHeight );
+      else
+#endif
+      xWeightedAverage( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
+    }
+#else
+    xWeightedAverage( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
+#endif
+  }
+}
+#endif
+
 Void 
 #if DEPTH_MAP_GENERATION
 TComPrediction::xPredInterPrdDepthMap( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset )
@@ -1117,6 +1498,378 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
   }
 #endif
 }
+
+#if MERL_VSP_C0152
+// Input:
+// refPic: Ref picture. Full picture, with padding
+// posX, posY:     PU position, texture
+// size_x, size_y: PU size
+// partAddr: z-order index
+// mv: disparity vector. derived from neighboring blocks
+//
+// Output: dstPic, PU predictor 64x64
+Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv* mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, Int vspIdx
+                                            , TComYuv *&dstPic )
+{
+  Int widthLuma;
+  Int heightLuma;
+
+  if (isDepth)
+  {
+    widthLuma   =  pPicBaseDepth->getWidth();
+    heightLuma  =  pPicBaseDepth->getHeight();
+  }
+  else
+  {
+    widthLuma   =  refPic->getWidth();
+    heightLuma  =  refPic->getHeight();
+  }
+
+#if MERL_VSP_BLOCKSIZE_C0152 != 1
+  Int widthDepth  = pPicBaseDepth->getWidth();
+  Int heightDepth = pPicBaseDepth->getHeight();
+#endif
+
+  Int nTxtPerDepthX = widthLuma  / ( pPicBaseDepth->getWidth() );  // texture pixel # per depth pixel
+  Int nTxtPerDepthY = heightLuma / ( pPicBaseDepth->getHeight() );
+
+  Int refStride = refPic->getStride();
+  Int dstStride = dstPic->getStride();
+  Int depStride =  pPicBaseDepth->getStride();
+
+  Int depthPosX = Clip3(0,   widthLuma - size_x - 1,  (posX/nTxtPerDepthX) + (mv->getHor()>>2));
+  Int depthPosY = Clip3(0,   heightLuma- size_y - 1,  (posY/nTxtPerDepthY) + (mv->getVer()>>2));
+
+  Pel *ref    = refPic->getLumaAddr() + posX + posY * refStride;
+  Pel *dst    = dstPic->getLumaAddr(partAddr);
+  Pel *depth  = pPicBaseDepth->getLumaAddr() + depthPosX + depthPosY * depStride;
+
+#if MERL_VSP_BLOCKSIZE_C0152 != 1
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+  Int  dW = size_x>>1;
+  Int  dH = size_y>>1;
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+  Int  dW = size_x>>2;
+  Int  dH = size_y>>2;
+#endif
+  {
+    Pel* depthi = depth;
+    for (Int j = 0; j < dH; j++)
+    {
+      for (Int i = 0; i < dW; i++)
+      {
+        Pel* depthTmp;
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+        if (depthPosX + (i<<1) < widthDepth)
+          depthTmp = depthi + (i << 1);
+        else
+          depthTmp = depthi + (widthDepth - depthPosX - 1);
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+        if (depthPosX + (i<<2) < widthDepth)
+          depthTmp = depthi + (i << 2);
+        else
+          depthTmp = depthi + (widthDepth - depthPosX - 1);
+#endif
+        Int maxV = 0;
+        for (Int blockj = 0; blockj < MERL_VSP_BLOCKSIZE_C0152; blockj++)
+        {
+          Int iX = 0;
+          for (Int blocki = 0; blocki < MERL_VSP_BLOCKSIZE_C0152; blocki++)
+          {
+            if (maxV < depthTmp[iX])
+              maxV = depthTmp[iX];
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+            if (depthPosX + (i<<1) + blocki < widthDepth - 1)
+#else // MERL_VSP_BLOCKSIZE_C0152 == 4
+            if (depthPosX + (i<<2) + blocki < widthDepth - 1)
+#endif
+              iX++;
+          }
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+          if (depthPosY + (j<<1) + blockj < heightDepth - 1)
+#else // MERL_VSP_BLOCKSIZE_C0152 == 4
+          if (depthPosY + (j<<2) + blockj < heightDepth - 1)
+#endif
+            depthTmp += depStride;
+        }
+        m_pDepth[i+j*dW] = maxV;
+      } // end of i < dW
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+      if (depthPosY + ((j+1)<<1) < heightDepth)
+        depthi += (depStride << 1);
+      else
+        depthi  = depth + (heightDepth-depthPosY-1)*depStride;
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+      if (depthPosY + ((j+1)<<2) < heightDepth) // heightDepth-1
+        depthi += (depStride << 2);
+      else
+        depthi  = depth + (heightDepth-depthPosY-1)*depStride; // the last line
+#endif
+    }
+  }
+#endif
+  
+#if MERL_VSP_BLOCKSIZE_C0152 != 1
+  Int yDepth = 0;
+#endif
+  for ( Int yTxt = 0; yTxt < size_y; yTxt += nTxtPerDepthY )
+  {
+    for ( Int xTxt = 0, xDepth = 0; xTxt < size_x; xTxt += nTxtPerDepthX, xDepth++ )
+    {
+      Pel rep_depth = 0; // to store the depth value used for warping
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+      rep_depth = depth[xDepth];
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+      rep_depth = m_pDepth[(xTxt>>1) + (yTxt>>1)*dW];
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+      rep_depth = m_pDepth[(xTxt>>2) + (yTxt>>2)*dW];
+#endif
+
+      assert( rep_depth >= 0 && rep_depth <= 255 );
+      Int disparity = pShiftLUT[ rep_depth ] << iShiftPrec;
+      Int refOffset = xTxt + (disparity >> 2);
+      Int xFrac = disparity & 0x3;
+      Int absX  = posX + refOffset;
+
+      if (xFrac == 0)
+        absX = Clip3(0, widthLuma-1, absX);
+      else
+        absX = Clip3(4, widthLuma-5, absX);
+
+      refOffset = absX - posX;
+
+      assert( ref[refOffset] >= 0 && ref[refOffset]<= 255 );
+      m_if.filterHorLuma( &ref[refOffset], refStride, &dst[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, true );
+    }
+    ref   += refStride*nTxtPerDepthY;
+    dst   += dstStride*nTxtPerDepthY;
+    depth += depStride;
+#if MERL_VSP_BLOCKSIZE_C0152 != 1
+    yDepth++;
+#endif
+  }
+}
+
+Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv*mv, UInt partAddr, Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, Int vspIdx
+                                               , TComYuv *&dstPic )
+{
+  Int refStride = refPic->getCStride();
+  Int dstStride = dstPic->getCStride();
+  Int depStride = pPicBaseDepth->getStride();
+
+  Int widthChroma, heightChroma;
+  if( isDepth)
+  {
+     widthChroma   = pPicBaseDepth->getWidth()>>1;
+     heightChroma  = pPicBaseDepth->getHeight()>>1;
+  }
+  else
+  {
+     widthChroma   = refPic->getWidth()>>1;
+     heightChroma  = refPic->getHeight()>>1;
+  }
+
+  // Below is only for Texture chroma component
+
+  Int widthDepth  = pPicBaseDepth->getWidth();
+  Int heightDepth = pPicBaseDepth->getHeight();
+
+  Int nTxtPerDepthX, nTxtPerDepthY;  // Number of texture samples per one depth sample
+  Int nDepthPerTxtX, nDepthPerTxtY;  // Number of depth samples per one texture sample
+
+  Int depthPosX;  // Starting position in depth image
+  Int depthPosY;
+
+  if ( widthChroma > widthDepth )
+  {
+    nTxtPerDepthX = widthChroma / widthDepth;
+    nDepthPerTxtX = 1;
+    depthPosX = posX / nTxtPerDepthX + (mv->getHor()>>2);        //mv denotes the disparity for VSP
+  }
+  else
+  {
+    nTxtPerDepthX = 1;
+    nDepthPerTxtX = widthDepth / widthChroma;
+    depthPosX = posX * nDepthPerTxtX + (mv->getHor()>>2);        //mv denotes the disparity for VSP
+  }
+  depthPosX = Clip3(0, widthDepth - (size_x<<1) - 1, depthPosX);
+  
+  if ( heightChroma > heightDepth )
+  {
+    nTxtPerDepthY = heightChroma / heightDepth;
+    nDepthPerTxtY = 1;
+    depthPosY = posY / nTxtPerDepthY + (mv->getVer()>>2);     //mv denotes the disparity for VSP
+  }
+  else
+  {
+    nTxtPerDepthY = 1;
+    nDepthPerTxtY = heightDepth / heightChroma;
+    depthPosY = posY * nDepthPerTxtY + (mv->getVer()>>2);     //mv denotes the disparity for VSP
+  }
+  depthPosY = Clip3(0, heightDepth - (size_y<<1) - 1, depthPosY);
+
+  Pel *refCb  = refPic->getCbAddr() + posX + posY * refStride;
+  Pel *refCr  = refPic->getCrAddr() + posX + posY * refStride;
+  Pel *dstCb  = dstPic->getCbAddr(partAddr);
+  Pel *dstCr  = dstPic->getCrAddr(partAddr);
+  Pel *depth  = pPicBaseDepth->getLumaAddr() + depthPosX + depthPosY * depStride;  // move the pointer to the current depth pixel position
+  
+  Int refStrideBlock = refStride * nTxtPerDepthY;
+  Int dstStrideBlock = dstStride * nTxtPerDepthY;
+  Int depStrideBlock = depStride * nDepthPerTxtY;
+
+  if (isDepth)
+  {
+     // DT: Since the call for this function is redundant, ..
+     for (Int y = 0; y < size_y; y++)
+     {
+       for (Int x = 0; x < size_x; x++)
+       {
+         dstCb[x] = 128;
+         dstCr[x] = 128;
+       }
+       dstCb += dstStride;
+       dstCr += dstStride;
+     }
+     return;
+  }
+  
+  if ( widthChroma > widthDepth ) // We assume
+  {
+    assert( heightChroma > heightDepth );
+    printf("This branch should never been reached.\n");
+    exit(0);
+  }
+  else
+  {
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+  Int  dW = size_x;
+  Int  dH = size_y;
+  Int  sW = 2; // search window size
+  Int  sH = 2;
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+  Int  dW = size_x;
+  Int  dH = size_y;
+  Int  sW = 2; // search window size
+  Int  sH = 2;
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+  Int  dW = size_x>>1;
+  Int  dH = size_y>>1;
+  Int  sW = 4; // search window size
+  Int  sH = 4;
+#endif
+
+  {
+    Pel* depthi = depth;
+    for (Int j = 0; j < dH; j++)
+    {
+      for (Int i = 0; i < dW; i++)
+      {
+        Pel* depthTmp;
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+        depthTmp = depthi + (i << 1);
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+        if (depthPosX + (i<<1) < widthDepth)
+          depthTmp = depthi + (i << 1);
+        else
+          depthTmp = depthi + (widthDepth - depthPosX - 1);
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+        if (depthPosX + (i<<2) < widthDepth)
+          depthTmp = depthi + (i << 2);
+        else
+          depthTmp = depthi + (widthDepth - depthPosX - 1);
+#endif
+        Int maxV = 0;
+        for (Int blockj = 0; blockj < sH; blockj++)
+        {
+          Int iX = 0;
+          for (Int blocki = 0; blocki < sW; blocki++)
+          {
+            if (maxV < depthTmp[iX])
+              maxV = depthTmp[iX];
+            if (depthPosX + i*sW + blocki < widthDepth - 1)
+              iX++;
+          }
+          if (depthPosY + j*sH + blockj < heightDepth - 1)
+            depthTmp += depStride;
+        }
+        m_pDepth[i+j*dW] = maxV;
+      } // end of i < dW
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+      if (depthPosY + ((j+1)<<1) < heightDepth)
+        depthi += (depStride << 1);
+      else
+        depthi  = depth + (heightDepth-1)*depStride;
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+      if (depthPosY + ((j+1)<<1) < heightDepth)
+        depthi += (depStride << 1);
+      else
+        depthi  = depth + (heightDepth-depthPosY-1)*depStride;
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+      if (depthPosY + ((j+1)<<2) < heightDepth) // heightDepth-1
+        depthi += (depStride << 2);
+      else
+        depthi  = depth + (heightDepth-depthPosY-1)*depStride; // the last line
+#endif
+    }
+  }
+
+
+    // (size_x, size_y) is Chroma block size
+    for ( Int yTxt = 0, yDepth = 0; yTxt < size_y; yTxt += nTxtPerDepthY, yDepth += nDepthPerTxtY )
+    {
+      for ( Int xTxt = 0, xDepth = 0; xTxt < size_x; xTxt += nTxtPerDepthX, xDepth += nDepthPerTxtX )
+      {
+        Pel rep_depth = 0; // to store the depth value used for warping
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+        rep_depth = m_pDepth[(xTxt) + (yTxt)*dW];
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 2
+        rep_depth = m_pDepth[(xTxt) + (yTxt)*dW];
+#endif
+#if MERL_VSP_BLOCKSIZE_C0152 == 4
+        rep_depth = m_pDepth[(xTxt>>1) + (yTxt>>1)*dW];
+#endif
+
+      // calculate the offset in the reference picture
+        Int disparity = pShiftLUT[ rep_depth ] << iShiftPrec;
+        Int refOffset = xTxt + (disparity >> 3); // in integer pixel in chroma image
+        Int xFrac = disparity & 0x7;
+        Int absX  = posX + refOffset;
+
+        if (xFrac == 0)
+          absX = Clip3(0, widthChroma-1, absX);
+        else
+          absX = Clip3(4, widthChroma-5, absX);
+
+        refOffset = absX - posX;
+
+        assert( refCb[refOffset] >= 0 && refCb[refOffset]<= 255 );
+        assert( refCr[refOffset] >= 0 && refCr[refOffset]<= 255 );
+        m_if.filterHorChroma(&refCb[refOffset], refStride, &dstCb[xTxt],  dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, true);
+        m_if.filterHorChroma(&refCr[refOffset], refStride, &dstCr[xTxt],  dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, true);
+      }
+      refCb += refStrideBlock;
+      refCr += refStrideBlock;
+      dstCb += dstStrideBlock;
+      dstCr += dstStrideBlock;
+      depth += depStrideBlock;
+    }
+  }
+}
+
+#endif // MERL_VSP_C0152
 
 #if DEPTH_MAP_GENERATION
 Void TComPrediction::xWeightedAveragePdm( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst, UInt uiSubSampExpX, UInt uiSubSampExpY )

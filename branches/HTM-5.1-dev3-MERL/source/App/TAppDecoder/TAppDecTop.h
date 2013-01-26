@@ -111,6 +111,10 @@ public:
   TDecTop*          getDecTop0    () { return m_tDecTop[0]; }
 #endif
 
+#if MERL_VSP_C0152
+  Void  setBWVSPLUT( TComSlice* pcSlice, Int iCodedViewIdx, Int iCurPoc   );
+#endif
+
 protected:
 //  Void  xCreateDecLib     (); ///< create internal classes
   Void  xDestroyDecLib    (); ///< destroy internal classes

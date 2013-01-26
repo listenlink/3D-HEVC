@@ -360,9 +360,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       pcCU->copyTextureMotionDataFrom( pcTextureCU, uiDepth, pcCU->getZorderIdxInCU() + uiAbsPartIdx, uiAbsPartIdx );
 
       UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
+
       for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
       {
         const UChar uhNewDepth = max<UInt>( uiDepth, pcTextureCU->getDepth( uiAbsPartIdx + ui ) );
+#if MERL_VSP_C0152
+        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
+        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+#endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_SKIP );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );
         pcCU->setDepth( uiAbsPartIdx + ui, uhNewDepth );
@@ -375,7 +380,26 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
 #if SIMP_MRG_PRUN      
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
+#if MERL_VSP_C0152
+    Int iVSPIndexTrue[3] = {-1, -1, -1};
+    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
+    {
+      Int iVSPIdx = 0;
+      Int numVspIdx;
+      numVspIdx = 3;
+      for (Int i = 0; i < numVspIdx; i++)
+      {
+        if (iVSPIndexTrue[i] == uiMergeIndex)
+          {
+            iVSPIdx = i+1;
+            break;
+          }
+      }
+      pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+    }
+#else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#endif
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
@@ -466,9 +490,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       pcCU->copyTextureMotionDataFrom( pcTextureCU, uiDepth, pcCU->getZorderIdxInCU() + uiAbsPartIdx, uiAbsPartIdx );
 
       UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
+
       for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
       {
         const UChar uhNewDepth = max<UInt>( uiDepth, pcTextureCU->getDepth( uiAbsPartIdx + ui ) );
+#if MERL_VSP_C0152
+        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
+        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+#endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_INTER );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );
         pcCU->setDepth( uiAbsPartIdx + ui, uhNewDepth );
@@ -657,8 +686,11 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
   
   // inter prediction
+#if MERL_VSP_C0152
+  m_pcPrediction->motionCompensationBWVSP( pcCU, m_ppcYuvReco[uiDepth], uiAbsPartIdx );
+#else
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
-  
+#endif
 #if HHI_MPI
   if( pcCU->getTextureModeDepth( 0 ) != -1 )
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
@@ -1046,14 +1078,14 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
-  Pel apDCRecoValues[2];
+  //Pel apDCRecoValues[2];
   for( UInt ui = 0; ui < uiNumSegments; ui++ )
   {
     Pel   pPredIdx    = GetDepthValue2Idx( apDCPredValues[ui] );
     Pel   pResiIdx    = pcCU->getSDCSegmentDCOffset(ui, uiAbsPartIdx);
     Pel   pRecoValue  = GetIdx2DepthValue( pPredIdx + pResiIdx );
     
-    apDCRecoValues[ui]  = pRecoValue;
+    //apDCRecoValues[ui]  = pRecoValue;
     apDCResiValues[ui]  = pRecoValue - apDCPredValues[ui];
   }
   

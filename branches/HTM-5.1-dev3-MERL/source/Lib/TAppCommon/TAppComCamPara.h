@@ -106,7 +106,6 @@ private:
   Double****          m_adSynthViewShiftLUT;                   ///< Disparity LUT
   Int****             m_aiSynthViewShiftLUT;                   ///< Disparity LUT
 
-
 protected:
   // create and delete arrays
   Void                    xCreateLUTs   ( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT, Double***& radShiftParams, Int64***& raiShiftParams );
@@ -142,7 +141,6 @@ protected:
   Void  xSetCodedScaleOffset      ( UInt uiFrame );
   Void  xSetShiftParametersAndLUT ( UInt uiNumViewDim1, UInt uiNumViewDim2, UInt uiFrame, Bool bExternalReference, Double****& radLUT, Int****& raiLUT, Double***& radShiftParams, Int64***& raiShiftParams );
   Void  xSetShiftParametersAndLUT ( UInt uiFrame );
-
 
   // getting conversion parameters for disparity to virtual depth conversion
   Void  xGetCameraShifts          ( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Double& rdCamPosShift, Double& rdPicPosShift );
