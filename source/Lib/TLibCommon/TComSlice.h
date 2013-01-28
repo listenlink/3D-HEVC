@@ -1247,6 +1247,9 @@ private:
   Bool        m_bRefPicListCombinationFlag;
 
   Bool        m_bCheckLDC;
+#if QC_TMVP_MRG_REFIDX_C0047
+  Int         m_aiNewRefIdx    [2]; 
+#endif
 
   //  Data
   Int         m_iSliceQpDelta;
@@ -1652,6 +1655,10 @@ public:
   Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
   Bool      getApplyIC            ()  { return m_bApplyIC; }
   Void      xSetApplyIC           ();
+#endif
+#if QC_TMVP_MRG_REFIDX_C0047
+  Int       getNewRefIdx        ( RefPicList e )                { return  m_aiNewRefIdx[e];     }
+  Void      setNewRefIdx        ( RefPicList e, Int i )         { m_aiNewRefIdx[e]    = i;      }
 #endif
 
 protected:

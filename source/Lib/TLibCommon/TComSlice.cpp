@@ -198,6 +198,10 @@ Void TComSlice::initSlice()
 #if TILES_WPP_ENTRY_POINT_SIGNALLING
   m_numEntryPointOffsets = 0;
 #endif
+#if QC_TMVP_MRG_REFIDX_C0047
+  m_aiNewRefIdx[0]                  = -1;
+  m_aiNewRefIdx[1]                  = -1;
+#endif
 }
 
 Void TComSlice::initTiles()
@@ -418,6 +422,26 @@ Void TComSlice::generateCombinedList()
       }
     }
   }
+#if QC_TMVP_MRG_REFIDX_C0047
+  Int  iCurrPOC = this->getPOC();
+  for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )//just to get one updated ref idx for merge in each L0/L1 direction, if it is not avaialbe, it is still -1 
+  {        
+    if ( this->getNumRefIdx( RefPicList( uiRefListIdx ) ) == 0)
+        continue;
+
+    Bool bZeroIdxInterViewFlag =  ( this->getRefPic(RefPicList(uiRefListIdx), 0)->getPOC() == iCurrPOC ) ? true : false;
+    for(Int i = 1; i < this->getNumRefIdx(RefPicList(uiRefListIdx)); i++ )
+    {
+      if ( (bZeroIdxInterViewFlag && this->getRefPic(RefPicList(uiRefListIdx), i)->getPOC() != iCurrPOC ) ||
+           (!bZeroIdxInterViewFlag && this->getRefPic(RefPicList(uiRefListIdx), i)->getPOC() == iCurrPOC ) )
+      {
+        this->setNewRefIdx(RefPicList(uiRefListIdx),i);
+        break;
+      }
+    }
+  }
+
+#endif
 }
 
 Void TComSlice::setRefPicListMvc( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcInterViewRefPics )
