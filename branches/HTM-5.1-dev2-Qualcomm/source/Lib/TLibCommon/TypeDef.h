@@ -81,7 +81,7 @@
 
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
-#define QC_AMVP_MRG_UNIFY_IVCAN_C0051     0
+#define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
 #define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
 #if     QC_MRG_CANS_B0048
