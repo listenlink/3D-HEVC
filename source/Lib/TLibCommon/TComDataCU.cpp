@@ -3705,11 +3705,16 @@ true
 #if QC_MRG_CANS_B0048
   Int iPdmDir[2] = {0, 0};
 #endif
+#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
+  getUnifiedMvPredCan(uiPUIdx, REF_PIC_LIST_0, 0, aiPdmRefIdx, acPdmMv, &cDisInfo, iPdmDir, true);
+  Int iPdmInterDir;
+#else
   Int     iPdmInterDir      = cDisInfo.iN==0? 0:getPdmMergeCandidateDisCan ( uiPUIdx, aiPdmRefIdx, acPdmMv, &cDisInfo  
 #if QC_MRG_CANS_B0048
     , iPdmDir
 #endif
     );
+#endif
 #else
   Int     iPdmInterDir      = getPdmMergeCandidate( uiPUIdx, aiPdmRefIdx, acPdmMv );
 #endif
@@ -4408,10 +4413,18 @@ true
     UInt uiPartIdxCenter;
     UInt uiCurLCUIdx = getAddr();
     xDeriveCenterIdx( eCUMode, uiPUIdx, uiPartIdxCenter );
-    bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_0, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx );
+    bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_0, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx 
+#if QC_TMVP_MRG_REFIDX_C0047
+    , 1
+#endif
+    );
     if( bExistMV == false )
     {
-      bExistMV = xGetColMVP( REF_PIC_LIST_0, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx );
+      bExistMV = xGetColMVP( REF_PIC_LIST_0, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx 
+#if QC_TMVP_MRG_REFIDX_C0047
+    , 1
+#endif
+    );
     }
     if( bExistMV )
     {
@@ -4426,10 +4439,18 @@ true
 #else
         iRefIdx = 0;
 #endif
-        bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx);
+        bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx
+#if QC_TMVP_MRG_REFIDX_C0047
+        , 1
+#endif
+        );
         if( bExistMV == false )
         {
-          bExistMV = xGetColMVP( REF_PIC_LIST_1, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx );
+          bExistMV = xGetColMVP( REF_PIC_LIST_1, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx 
+#if QC_TMVP_MRG_REFIDX_C0047
+        , 1
+#endif  
+        );
         }
         if( bExistMV )
         {
@@ -5920,12 +5941,30 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
         cDisInfo.m_acMvCand[0].setVer(0);
         cDisInfo.m_aVIdxCan[0] = 0;
       }
+#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
+      Int paiPdmRefIdx[4] = {-1, -1, -1, -1};
+      Int iPdmDir[4] = {-1, -1, -1, -1};
+      TComMv cPdmMvPred[2];
+      cPdmMvPred[0].m_bDvMcp = cPdmMvPred[1].m_bDvMcp = false; 
+      if(getUnifiedMvPredCan(uiPartIdx, eRefPicList, iRefIdx, paiPdmRefIdx, cPdmMvPred, &cDisInfo, iPdmDir, false))
+#else
       TComMv  cPdmMvPred;
 #if QC_MULTI_DIS_CAN_A0097
       if( getPdmMvPredDisCan( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred, &cDisInfo ) )
 #else
       if( getPdmMvPred( uiPartIdx, eRefPicList, iRefIdx, cPdmMvPred ) )
 #endif
+#endif
+#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
+      {
+        clipMv( cPdmMvPred[0] );
+        pInfo->m_acMvCand[0] = cPdmMvPred[0];
+      }
+      else
+      {
+        pInfo->m_acMvCand[0].set(0,0);
+      }
+#else
       {
         clipMv( cPdmMvPred );
         pInfo->m_acMvCand[0] = cPdmMvPred;
@@ -5934,6 +5973,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       {
         pInfo->m_acMvCand[0].set(0,0);
       }
+#endif
     }
   }
 }
@@ -6783,7 +6823,12 @@ Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr,
  * \param riRefIdx
  * \returns Bool
  */
-Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx )
+Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
+#if QC_TMVP_MRG_REFIDX_C0047
+  ,
+  Bool bMRG
+#endif
+)
 {
   UInt uiAbsPartAddr = uiPartUnitIdx;
 
@@ -6867,8 +6912,31 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   Bool bIsColRefLongTerm = pColCU->getSlice()->getWasLongTerm(eColRefPicList, iColRefIdx); 
   if(bIsCurrRefLongTerm != bIsColRefLongTerm) 
   {
+#if QC_TMVP_MRG_REFIDX_C0047
+    cColMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiAbsPartAddr);
+    iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
+    if(bMRG )
+    {
+      Int iUpdRefIdx  = m_pcSlice->getNewRefIdx(eRefPicList);
+      if(iUpdRefIdx > 0 )
+      {
+        riRefIdx = iUpdRefIdx;
+        bIsCurrRefLongTerm = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getIsLongTerm();
+        iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
+#if SONY_COLPIC_AVAILABILITY
+        iCurrRefViewOrderIdx = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx();
+#endif
+      }
+      else
+        return false;
+    }else
+    {
+#endif
     assert( ((iColPOC == iColRefPOC)&&(iCurrPOC != iCurrRefPOC))||((iColPOC != iColRefPOC)&&(iCurrPOC == iCurrRefPOC)));
     return false;
+#if QC_TMVP_MRG_REFIDX_C0047
+    }
+#endif
   }
 #endif
   cColMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiAbsPartAddr);
@@ -7898,6 +7966,17 @@ TComDataCU::getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, T
   return pcDepthMapGenerator->getPdmMvPred( this, uiPartIdx, eRefPicList, iRefIdx, rcMv, bMerge );
 }
 #else
+#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
+Bool
+TComDataCU::getUnifiedMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge )
+{
+  TComDepthMapGenerator* pcDepthMapGenerator = m_pcSlice->getSPS()->getDepthMapGenerator();
+  ROFRS( pcDepthMapGenerator, false );
+  if (pDInfo->iN > 0 && pcDepthMapGenerator->getPdmCandidate(this, uiPartIdx, eRefPicList, iRefIdx, paiPdmRefIdx, pacPdmMv, pDInfo, iPdm, bMerge))
+    return true;
+  return false;
+}
+#else
 Int
 TComDataCU::getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
 #if QC_MRG_CANS_B0048
@@ -7923,7 +8002,7 @@ TComDataCU::getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRef
   return false;
 }
 #endif
-
+#endif
 
 Bool      
 TComDataCU::getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv )
