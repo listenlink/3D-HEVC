@@ -1918,9 +1918,25 @@ Void TComPrediction::getWedgePredDCs( TComWedgelet* pcWedgelet, Int* piMask, Int
   Bool* pabWedgePattern = pcWedgelet->getPattern();
   UInt  uiWedgeStride   = pcWedgelet->getStride();
 
+#if HS_REFERENCE_SUBSAMPLE
+  Int subSamplePix;
+  if ( pcWedgelet->getWidth() == 32 )
+  {
+    subSamplePix = 2;
+  }
+  else
+  {
+    subSamplePix = 1;
+  }
+#endif
+
   if( bAbove )
   {
+#if HS_REFERENCE_SUBSAMPLE
+    for( Int k = 0; k < pcWedgelet->getWidth(); k+=subSamplePix )
+#else
     for( Int k = 0; k < pcWedgelet->getWidth(); k++ )
+#endif
     {
       if( true == pabWedgePattern[k] )
       {
@@ -1936,7 +1952,11 @@ Void TComPrediction::getWedgePredDCs( TComWedgelet* pcWedgelet, Int* piMask, Int
   }
   if( bLeft )
   {
+#if HS_REFERENCE_SUBSAMPLE
+    for( Int k = 0; k < pcWedgelet->getHeight(); k+=subSamplePix )
+#else
     for( Int k = 0; k < pcWedgelet->getHeight(); k++ )
+#endif
     {
       if( true == pabWedgePattern[k*uiWedgeStride] )
       {
