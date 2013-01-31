@@ -722,6 +722,9 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
 #if LGE_DVMCP_A0126
               cMv.m_bDvMcp = true;
               cMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor();
+#if MTK_RELEASE_DV_CONSTRAINT
+              cMv.m_iDvMcpDispY = pDInfo->m_acMvCand[0].getVer();
+#endif
 #endif
               pcCU->clipMv( cMv );
               pacPdmMv      [ uiBaseRefListId ] = cMv;
@@ -919,6 +922,9 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
         {
           rcMv.m_bDvMcp = true;
           rcMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor(); 
+#if MTK_RELEASE_DV_CONSTRAINT
+          rcMv.m_iDvMcpDispY = pDInfo->m_acMvCand[0].getVer();
+#endif
         }
         else { // AMVP ?
           rcMv.m_bDvMcp = false;

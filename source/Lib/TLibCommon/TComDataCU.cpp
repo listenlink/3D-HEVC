@@ -5607,7 +5607,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
 
 #if QC_SIMPLE_NBDV_B0047
   const Int iNumofDvMCP = 7;
+#if MTK_RELEASE_DV_CONSTRAINT
+  Int   aiDvMcpDvCandX[2][iNumofDvMCP] = {{0,},    {0,}}; // dummy, 5 spatial + 1 temporal
+  Int   aiDvMcpDvCandY[2][iNumofDvMCP] = {{0,},    {0,}}; // dummy, 5 spatial + 1 temporal
+#else
   Int   aiDvMcpDvCand[2][iNumofDvMCP] = {{0,},    {0,}}; // dummy, 5 spatial + 1 temporal
+#endif
   Bool  abDvMcpFlag  [2][iNumofDvMCP] = {{false,},{false,}}; 
 #else
   Int   aiDvMcpDvCand[2][7] = {{0,},    {0,}}; // dummy, 5 spatial + 1 temporal
@@ -6006,7 +6011,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp && bTmpIsSkipped )
           {
+#if MTK_RELEASE_DV_CONSTRAINT
+            aiDvMcpDvCandX[iList][DVFROM_LEFT] = cTmpMvPred.m_iDvMcpDispX;
+            aiDvMcpDvCandY[iList][DVFROM_LEFT] = cTmpMvPred.m_iDvMcpDispY;
+#else
             aiDvMcpDvCand[iList][DVFROM_LEFT] = cTmpMvPred.m_iDvMcpDispX;
+#endif
             abDvMcpFlag  [iList][DVFROM_LEFT] = true; 
             bDvMcpIsFound = true;
           }
@@ -6092,7 +6102,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp  && bTmpIsSkipped )
           {
+#if MTK_RELEASE_DV_CONSTRAINT
+            aiDvMcpDvCandX[iList][DVFROM_ABOVE] = cTmpMvPred.m_iDvMcpDispX;
+            aiDvMcpDvCandY[iList][DVFROM_ABOVE] = cTmpMvPred.m_iDvMcpDispY;
+#else
             aiDvMcpDvCand[iList][DVFROM_ABOVE] = cTmpMvPred.m_iDvMcpDispX;
+#endif
             abDvMcpFlag  [iList][DVFROM_ABOVE] = true; 
             bDvMcpIsFound = true;
           }
@@ -6172,7 +6187,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp && bTmpIsSkipped )
           {
+#if MTK_RELEASE_DV_CONSTRAINT
+            aiDvMcpDvCandX[iList][DVFROM_ABOVERIGHT] = cTmpMvPred.m_iDvMcpDispX;
+            aiDvMcpDvCandY[iList][DVFROM_ABOVERIGHT] = cTmpMvPred.m_iDvMcpDispY;
+#else
             aiDvMcpDvCand[iList][DVFROM_ABOVERIGHT] = cTmpMvPred.m_iDvMcpDispX;
+#endif
             abDvMcpFlag  [iList][DVFROM_ABOVERIGHT] = true; 
             bDvMcpIsFound = true;
           }
@@ -6244,7 +6264,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp && bTmpIsSkipped )
           {
+#if MTK_RELEASE_DV_CONSTRAINT
+            aiDvMcpDvCandX[iList][DVFROM_LEFTBELOW] = cTmpMvPred.m_iDvMcpDispX;
+            aiDvMcpDvCandY[iList][DVFROM_LEFTBELOW] = cTmpMvPred.m_iDvMcpDispY;
+#else
             aiDvMcpDvCand[iList][DVFROM_LEFTBELOW] = cTmpMvPred.m_iDvMcpDispX;
+#endif
             abDvMcpFlag  [iList][DVFROM_LEFTBELOW] = true; 
             bDvMcpIsFound = true;
           }
@@ -6326,7 +6351,12 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
           cTmpMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
           if( cTmpMvPred.m_bDvMcp && bTmpIsSkipped )
           {
+#if MTK_RELEASE_DV_CONSTRAINT
+            aiDvMcpDvCandX[iList][DVFROM_ABOVELEFT] = cTmpMvPred.m_iDvMcpDispX;
+            aiDvMcpDvCandY[iList][DVFROM_ABOVELEFT] = cTmpMvPred.m_iDvMcpDispY;
+#else
             aiDvMcpDvCand[iList][DVFROM_ABOVELEFT] = cTmpMvPred.m_iDvMcpDispX;
+#endif
             abDvMcpFlag  [iList][DVFROM_ABOVELEFT] = true; 
             bDvMcpIsFound = true;
           }
@@ -6677,7 +6707,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
       {
         if( abDvMcpFlag[iList][i]==true )
         {
+#if MTK_RELEASE_DV_CONSTRAINT
+          TComMv dv( aiDvMcpDvCandX[iList][ i ], aiDvMcpDvCandY[iList][ i ] );
+#else
           TComMv dv( aiDvMcpDvCand[iList][ i ], 0 );
+#endif
           clipMv( dv );
 #if !MERL_MTK_VSP_DVP_REFINE_C0152_C0131
           pDInfo->m_acMvCand[ pDInfo->iN] = dv;
@@ -8842,11 +8876,19 @@ TComDataCU::getResidualSamples( UInt uiPartIdx,
   }
   else
   {
+#if MTK_RELEASE_DV_CONSTRAINT
+    Bool bAvailable = pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, cDisInfo.m_acMvCand[0] 
+#if QC_SIMPLIFIEDIVRP_M24938
+     , bRecon 
+#endif
+     );
+#else
     Bool bAvailable = pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, cDisInfo.m_acMvCand[0].getHor() 
 #if QC_SIMPLIFIEDIVRP_M24938
       , bRecon 
 #endif
       );
+#endif
     m_pePartSize[0] = m_peSaved;
     return bAvailable;
   }
