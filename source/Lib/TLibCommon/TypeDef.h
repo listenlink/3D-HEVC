@@ -143,6 +143,7 @@
 #define DV_DERIVATION_PARALLEL_B0096      1   // JCT3V-B0096, enable parallel derivation of disparity vector
 #define QC_SIMPLE_NBDV_B0047              1   // JCT3V-B0047
 #define MTK_SAIT_TEMPORAL_FIRST_ORDER     1   // JCT3V-C00141/C0097
+#define MTK_SIMPLIFY_DVTC                 1   // JCT3V-C00135
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
 #if HHI_MPI
