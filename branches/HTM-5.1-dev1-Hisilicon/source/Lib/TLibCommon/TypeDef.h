@@ -194,6 +194,7 @@
 
 #if RWTH_SDC_DLT_B0036
 #define Log2( n ) ( log((double)n) / log(2.0) )
+#define HS_REFERENCE_SUBSAMPLE_C0154      1
 #endif
 
 #define HHI_MPI_MERGE_POS                 0

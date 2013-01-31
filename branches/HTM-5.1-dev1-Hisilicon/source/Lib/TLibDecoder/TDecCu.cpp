@@ -1374,7 +1374,7 @@ Void TDecCu::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* r
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
-#if HS_REFERENCE_SUBSAMPLE
+#if HS_REFERENCE_SUBSAMPLE_C0154
   Int subSamplePix;
   if ( uiSize == 64 || uiSize == 32 )
   {
