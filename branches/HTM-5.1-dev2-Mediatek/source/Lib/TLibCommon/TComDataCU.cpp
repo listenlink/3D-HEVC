@@ -5944,7 +5944,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 #if QC_AMVP_MRG_UNIFY_IVCAN_C0051
       Int paiPdmRefIdx[4] = {-1, -1, -1, -1};
       Int iPdmDir[4] = {-1, -1, -1, -1};
+#if QC_C0051_FIXED_BY_MTK
+      TComMv cPdmMvPred[4];
+#else
       TComMv cPdmMvPred[2];
+#endif
       cPdmMvPred[0].m_bDvMcp = cPdmMvPred[1].m_bDvMcp = false; 
       if(getUnifiedMvPredCan(uiPartIdx, eRefPicList, iRefIdx, paiPdmRefIdx, cPdmMvPred, &cDisInfo, iPdmDir, false))
 #else
