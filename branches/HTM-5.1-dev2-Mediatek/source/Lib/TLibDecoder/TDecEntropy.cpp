@@ -99,7 +99,7 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
 Void
 TDecEntropy::decodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx )
 {

@@ -3271,7 +3271,7 @@ Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& ri
 }
 #endif
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
 Int TComDataCU::getResiPredMode(UInt uiPartAddr)
 {
   Int iAddResiShift = -1;
@@ -3675,6 +3675,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #endif
 #endif
 
+#if MTK_MDIVRP_C0138
+  Bool bDVAvail = true;
+#endif
+
 #if QC_MULTI_DIS_CAN_A0097
   DisInfo cDisInfo;
   cDisInfo.iN = 0;
@@ -3701,6 +3705,9 @@ true
     cDisInfo.m_acMvCand[0].setHor(0);
     cDisInfo.m_acMvCand[0].setVer(0);
     cDisInfo.m_aVIdxCan[0] = 0;
+#if MTK_MDIVRP_C0138
+    bDVAvail = false;
+#endif
   }
 #if QC_MRG_CANS_B0048
   Int iPdmDir[2] = {0, 0};
@@ -3718,6 +3725,13 @@ true
 #else
   Int     iPdmInterDir      = getPdmMergeCandidate( uiPUIdx, aiPdmRefIdx, acPdmMv );
 #endif
+#if MTK_MDIVRP_C0138
+  if (m_pcSlice->getSPS()->getMultiviewResPredMode()==1 && iPdmDir[0] && !bNoPdmMerge && cCurPS == SIZE_2Nx2N && bDVAvail)
+  {
+    setResPredAvailSubParts(true, 0, 0, uiDepth);
+  }
+#endif
+
 #if QC_MRG_CANS_B0048
   if( iPdmDir[0] && !bNoPdmMerge && PDM_MERGE_POS == 0 )
 #else

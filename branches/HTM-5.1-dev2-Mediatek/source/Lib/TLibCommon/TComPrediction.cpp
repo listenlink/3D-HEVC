@@ -753,7 +753,28 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
   return;
 }
 
+#if MTK_MDIVRP_C0138
+Void TComPrediction::residualPrediction(TComDataCU* pcCU, TComYuv* pcYuvPred, TComYuv* pcYuvResPred)
+{
+  Int         iWidth;
+  Int         iHeight;
+  UInt        uiPartAddr;
 
+  pcCU->getPartIndexAndSize( 0, uiPartAddr, iWidth, iHeight );
+
+  Bool bResAvail = false;
+
+  bResAvail = pcCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+    true,
+#endif
+    pcYuvResPred );
+
+  assert (bResAvail);
+
+  pcYuvPred->add(pcYuvResPred, iWidth, iHeight);
+}
+#endif
 
 #if DEPTH_MAP_GENERATION
 Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi )

@@ -195,7 +195,7 @@ public:
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
                                   TComYuv*    rpcResiPredYuv,
 #endif
                                   TComYuv*&   rpcPredYuv,
@@ -499,7 +499,7 @@ protected:
   
   Void xMergeEstimation           ( TComDataCU*     pcCU,
                                     TComYuv*        pcYuvOrg,
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
                                     TComYuv*        rpcResiPredYuv, 
 #endif
                                     Int             iPartIdx,
