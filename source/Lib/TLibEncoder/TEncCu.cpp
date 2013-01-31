@@ -457,6 +457,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool  depthMapDetect    = (pcTexture != NULL);
   Bool  bIntraSliceDetect = (rpcBestCU->getSlice()->getSliceType() == I_SLICE);
 
+#if HHI_QTLPC_RAU_OFF_C0160
+  Bool rapPic     = (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
+#endif
+
   Bool bTry2NxN = true;
   Bool bTryNx2N = true;
 #endif
@@ -611,7 +615,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if OL_QTLIMIT_PREDCODING_B0068
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
+
+#if HHI_QTLPC_RAU_OFF_C0160
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
+#else
       if(depthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC())
+#endif
       {
         TComDataCU* pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() ); //Corresponding texture LCU
         UInt uiCUIdx            = rpcBestCU->getZorderIdxInCU();
@@ -718,7 +727,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068
+
+#if HHI_QTLPC_RAU_OFF_C0160
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
+#else
       if(depthMapDetect && !bIntraSliceDetect  && sps->getUseQTLPC())
+#endif
       {
         bTrySplitDQP = bTrySplit;
       }
@@ -1102,19 +1116,31 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       rpcTempCU->setIPCMFlagSubParts ( false, 0, uiDepth); //SUB_LCU_DQP
 
       // do normal intra modes
-      if ( !bEarlySkip )
+      if ( !bEarlySkip 
+#if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+        || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA))
+#endif
+        )
       {
         // speedup for inter frames
 #if HHI_INTERVIEW_SKIP
         if( ( rpcBestCU->getSlice()->getSliceType() == I_SLICE ||
           rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
-          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0 ) && !bFullyRenderedSec ) // avoid very complex intra if it is unlikely
+          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0 
+#if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA))
+#endif            
+          ) && !bFullyRenderedSec ) // avoid very complex intra if it is unlikely
 #else
         if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
           rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
           rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
-          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     ) // avoid very complex intra if it is unlikely
+          rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     
+#if HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+          || ((rpcBestCU->getSlice()->getIsDepth() == true) && (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA))
+#endif     
+          ) // avoid very complex intra if it is unlikely
 #endif
         {
 #if LGE_ILLUCOMP_B0045

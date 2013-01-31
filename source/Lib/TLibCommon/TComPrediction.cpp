@@ -1918,9 +1918,25 @@ Void TComPrediction::getWedgePredDCs( TComWedgelet* pcWedgelet, Int* piMask, Int
   Bool* pabWedgePattern = pcWedgelet->getPattern();
   UInt  uiWedgeStride   = pcWedgelet->getStride();
 
+#if HS_REFERENCE_SUBSAMPLE_C0154
+  Int subSamplePix;
+  if ( pcWedgelet->getWidth() == 32 )
+  {
+    subSamplePix = 2;
+  }
+  else
+  {
+    subSamplePix = 1;
+  }
+#endif
+
   if( bAbove )
   {
+#if HS_REFERENCE_SUBSAMPLE_C0154
+    for( Int k = 0; k < pcWedgelet->getWidth(); k+=subSamplePix )
+#else
     for( Int k = 0; k < pcWedgelet->getWidth(); k++ )
+#endif
     {
       if( true == pabWedgePattern[k] )
       {
@@ -1936,7 +1952,11 @@ Void TComPrediction::getWedgePredDCs( TComWedgelet* pcWedgelet, Int* piMask, Int
   }
   if( bLeft )
   {
+#if HS_REFERENCE_SUBSAMPLE_C0154
+    for( Int k = 0; k < pcWedgelet->getHeight(); k+=subSamplePix )
+#else
     for( Int k = 0; k < pcWedgelet->getHeight(); k++ )
+#endif
     {
       if( true == pabWedgePattern[k*uiWedgeStride] )
       {
@@ -2276,11 +2296,14 @@ Void TComPrediction::xPredIntraWedgeTex( TComDataCU* pcCU, UInt uiAbsPartIdx, Pe
   piMask += iMaskStride+1;
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
+#if HHI_DMM_DELTADC_Q1_C0034
+#else
   if( bDelta ) 
   {
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC1 );
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC2 );
   }
+#endif
 
   // assign wedge pred DCs to prediction
   if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip ( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
@@ -2301,11 +2324,14 @@ Void TComPrediction::xPredIntraContourTex( TComDataCU* pcCU, UInt uiAbsPartIdx, 
   piMask += iMaskStride+1;
   getWedgePredDCs( pcContourWedge, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
+#if HHI_DMM_DELTADC_Q1_C0034
+#else
   if( bDelta ) 
   {
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC1 );
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC2 );
   }
+#endif
 
   // assign wedge pred DCs to prediction
   if( bDelta ) { assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, Clip ( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
@@ -2482,11 +2508,14 @@ Void TComPrediction::xPredIntraWedgeFull( TComDataCU* pcCU, UInt uiAbsPartIdx, P
   piMask += iMaskStride+1;
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
+#if HHI_DMM_DELTADC_Q1_C0034
+#else
   if( bDelta ) 
   {
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC1 );
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC2 );
   }
+#endif
 
   // assign wedge pred DCs to prediction
   if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
@@ -2523,11 +2552,14 @@ Void TComPrediction::xPredIntraWedgeDir( TComDataCU* pcCU, UInt uiAbsPartIdx, Pe
   piMask += iMaskStride+1;
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
+#if HHI_DMM_DELTADC_Q1_C0034
+#else
   if( bDelta ) 
   {
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC1 );
     xDeltaDCQuantScaleUp( pcCU, iDeltaDC2 );
   }
+#endif
 
   // assign wedge pred DCs to prediction
   if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
