@@ -101,7 +101,7 @@ public:
   Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
   
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
   Void  codeSPS                 ( TComSPS* pcSPS, Bool bIsDepth );
 #else
   Void  codeSPS                 ( TComSPS* pcSPS     );

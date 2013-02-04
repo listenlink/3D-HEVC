@@ -507,7 +507,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 }
 #endif
 #endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
 Void TEncCavlc::codeSPS( TComSPS* pcSPS, Bool bIsDepth )
 #else
 Void TEncCavlc::codeSPS( TComSPS* pcSPS )
@@ -1303,6 +1303,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   const int iExtraMergeCandidates = ( pcSlice->getSPS()->getUseMVI() || pcSlice->getSPS()->getMultiviewMvPredMode() ) ? 1 : 0;
   #elif HHI_MPI
   const int iExtraMergeCandidates = pcSlice->getSPS()->getUseMVI() ? 1 : 0;
+  #elif MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  const int iExtraMergeCandidates = ( pcSlice->getIsDepth() || pcSlice->getSPS()->getMultiviewMvPredMode() ) ? 1 : 0;
   #else
   const int iExtraMergeCandidates = pcSlice->getSPS()->getMultiviewMvPredMode() ? 1 : 0;
   #endif

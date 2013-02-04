@@ -114,7 +114,8 @@
 #define QC_SIMPLE_NBDV_B0047              1   // JCT3V-B0047
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
-#define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
+#define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
+#define HHI_MPI                           0   // motion parameter inheritance from texture picture for depth map coding
 #if HHI_MPI
 #define FIX_MPI_B0065                     1   // JCT3V-B0065, fix the MPI bug when RQT is off
 #endif

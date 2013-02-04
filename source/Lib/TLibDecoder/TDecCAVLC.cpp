@@ -1467,7 +1467,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 
 #endif
 #endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
 Void TDecCavlc::parseSPS(TComSPS* pcSPS, Bool bIsDepth)
 #else
 Void TDecCavlc::parseSPS(TComSPS* pcSPS)
@@ -1891,7 +1891,11 @@ Void TDecCavlc::readTileMarker   ( UInt& uiTileIdx, UInt uiBitsUsed )
 }
 
 #if LCU_SYNTAX_ALF
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet, bool isDepth)
+#else
 Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet)
+#endif
 #else
 Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl)
 #endif
@@ -2494,6 +2498,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   const int iExtraMergeCandidates = ( sps->getUseMVI() || sps->getMultiviewMvPredMode() ) ? 1 : 0;
   #elif HHI_MPI
   const int iExtraMergeCandidates = sps->getUseMVI() ? 1 : 0;
+  #elif MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  const int iExtraMergeCandidates = (  (isDepth || sps->getMultiviewMvPredMode()) ) ? 1 : 0;   
   #else
   const int iExtraMergeCandidates = sps->getMultiviewMvPredMode() ? 1 : 0;
   #endif

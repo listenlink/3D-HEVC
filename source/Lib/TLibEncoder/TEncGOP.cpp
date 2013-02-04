@@ -246,7 +246,11 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 
       std::vector<TComAPS>& vAPS = m_pcEncTop->getAPS();
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getEncTop()->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS(), m_pcEncTop->getIsDepth() );
+#else
     m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getEncTop()->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+#endif
 #else
       m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
 #endif
@@ -905,7 +909,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if TILES_WPP_ENTRY_POINT_SIGNALLING
         pcSlice->getSPS()->setNumSubstreams( pcSlice->getPPS()->getNumSubstreams() );
 #endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
         m_pcEntropyCoder->encodeSPS(pcSlice->getSPS(), m_pcEncTop->getIsDepth());
 #else
         m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());
