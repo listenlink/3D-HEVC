@@ -586,6 +586,19 @@ const UChar g_aucWedgeFullBitsListIdx[7] =
   0    // 128x128  
 };
 
+#if LGE_DMM3_SIMP_C0044
+const UChar g_aucWedgeTexPredBitsListIdx[7] =
+{
+  0,   //   2x2
+  6,   //   4x4    
+  9,  //   8x8    
+  9,  //  16x16   
+  9,  //  32x32   
+  0,  //  64x64   
+  0    // 128x128  
+};
+#endif
+
 const UChar g_aucIntraSizeIdxToWedgeSize[7] =
 {
   2,

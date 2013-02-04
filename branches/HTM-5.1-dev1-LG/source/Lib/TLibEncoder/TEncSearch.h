@@ -434,7 +434,11 @@ protected:
                                     Int&           riDeltaDC1,
                                     Int&           riDeltaDC2,
                                     Bool           bAboveAvail,
-                                    Bool           bLeftAvail );
+                                    Bool           bLeftAvail
+#if LGE_DMM3_SIMP_C0044
+                                    ,UInt&         ruiIntraTabIdx
+#endif
+                                    );
   Void findContourPredTex         ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,
                                     Pel*           piOrig,

@@ -2251,7 +2251,13 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       UInt uiTexTabIdx  = 0;
       Int  iTexDeltaDC1 = 0;
       Int  iTexDeltaDC2 = 0;
+#if LGE_DMM3_SIMP_C0044
+      UInt uiTexIntraIdx = 0;
+      findWedgeTexMinDist( pcCU, uiPartOffset, piOrg, piPred, uiStride, uiWidth, uiHeight, uiTexTabIdx, iTexDeltaDC1, iTexDeltaDC2, bAboveAvail, bLeftAvail, uiTexIntraIdx); 
+      pcCU->setWedgePredTexIntraTabIdxSubParts( uiTexIntraIdx, uiPartOffset, uiDepth + uiInitTrDepth );
+#else
       findWedgeTexMinDist( pcCU, uiPartOffset, piOrg, piPred, uiStride, uiWidth, uiHeight, uiTexTabIdx, iTexDeltaDC1, iTexDeltaDC2, bAboveAvail, bLeftAvail ); 
+#endif
       pcCU->setWedgePredTexTabIdxSubParts  ( uiTexTabIdx,  uiPartOffset, uiDepth + uiInitTrDepth );
       pcCU->setWedgePredTexDeltaDC1SubParts( iTexDeltaDC1, uiPartOffset, uiDepth + uiInitTrDepth );
       pcCU->setWedgePredTexDeltaDC2SubParts( iTexDeltaDC2, uiPartOffset, uiDepth + uiInitTrDepth );
@@ -7160,12 +7166,20 @@ Void TEncSearch::findWedgeTexMinDist( TComDataCU*  pcCU,
                                       Int&         riDeltaDC1, 
                                       Int&         riDeltaDC2, 
                                       Bool         bAboveAvail, 
-                                      Bool         bLeftAvail )
+                                      Bool         bLeftAvail
+#if LGE_DMM3_SIMP_C0044
+                                      ,UInt&        ruiIntraTabIdx
+#endif
+                                      )
 {
   assert( uiWidth >= DMM_WEDGEMODEL_MIN_SIZE && uiWidth <= DMM_WEDGEMODEL_MAX_SIZE );
   WedgeList* pacWedgeList = &g_aacWedgeLists[(g_aucConvertToBit[uiWidth])];
 
+#if LGE_DMM3_SIMP_C0044
+  ruiTabIdx = getBestWedgeFromTex( pcCU, uiAbsPtIdx, uiWidth, uiHeight, piOrig, uiStride, ruiIntraTabIdx );
+#else
   ruiTabIdx = getBestWedgeFromTex( pcCU, uiAbsPtIdx, uiWidth, uiHeight );
+#endif
 
   TComWedgelet* pcBestWedgelet = &(pacWedgeList->at(ruiTabIdx));
   xGetWedgeDeltaDCsMinDist( pcBestWedgelet, pcCU, uiAbsPtIdx, piOrig, piPredic, uiStride, uiWidth, uiHeight, riDeltaDC1, riDeltaDC2, bAboveAvail, bLeftAvail );
