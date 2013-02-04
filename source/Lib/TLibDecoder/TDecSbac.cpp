@@ -979,6 +979,9 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
 #endif
 #if HHI_DMM_PRED_TEX
     if( intraPredMode == DMM_WEDGE_PREDTEX_D_IDX )     { xParseWedgePredTexDeltaInfo  ( pcCU, uiAbsPartIdx, uiDepth ); }
+#if LGE_DMM3_SIMP_C0044
+    if( intraPredMode == DMM_WEDGE_PREDTEX_IDX )       { xParseWedgePredTexInfo       ( pcCU, uiAbsPartIdx, uiDepth ); }
+#endif
     if( intraPredMode == DMM_CONTOUR_PREDTEX_D_IDX )   { xParseContourPredTexDeltaInfo( pcCU, uiAbsPartIdx, uiDepth ); }
 #endif
   }
@@ -2421,8 +2424,38 @@ Void TDecSbac::xParseWedgePredDirDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx,
 }
 #endif
 #if HHI_DMM_PRED_TEX
+#if LGE_DMM3_SIMP_C0044
+Void TDecSbac::xParseWedgePredTexInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
+  Int iBits = g_aucWedgeTexPredBitsListIdx[iIntraIdx];
+
+  UInt uiSymbol, uiTabIdx = 0;
+  for ( Int i = 0; i < iBits; i++ )
+  {
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cDmmDataSCModel.get(0, 0, 3) );
+    uiTabIdx += ( uiSymbol && i == 0 ) ? 1 : 0;
+    uiTabIdx += ( uiSymbol && i == 1 ) ? 2 : 0;
+    uiTabIdx += ( uiSymbol && i == 2 ) ? 4 : 0;
+    uiTabIdx += ( uiSymbol && i == 3 ) ? 8 : 0;
+    uiTabIdx += ( uiSymbol && i == 4 ) ? 16 : 0;
+    uiTabIdx += ( uiSymbol && i == 5 ) ? 32 : 0;
+    uiTabIdx += ( uiSymbol && i == 6 ) ? 64 : 0;
+    uiTabIdx += ( uiSymbol && i == 7 ) ? 128 : 0;
+    uiTabIdx += ( uiSymbol && i == 8 ) ? 256 : 0;
+    uiTabIdx += ( uiSymbol && i == 9 ) ? 512 : 0;
+    uiTabIdx += ( uiSymbol && i == 10 ) ? 1024 : 0;
+  }
+
+  pcCU->setWedgePredTexIntraTabIdxSubParts( uiTabIdx, uiAbsPartIdx, uiDepth );
+}
+#endif
+
 Void TDecSbac::xParseWedgePredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if LGE_DMM3_SIMP_C0044
+  xParseWedgePredTexInfo( pcCU, uiAbsPartIdx, uiDepth );
+#endif
   UInt uiDC1, uiDC2;
   xReadExGolombLevel( uiDC1, m_cDmmDataSCModel.get(0, 0, 1) );
   Int iDC1 = uiDC1;

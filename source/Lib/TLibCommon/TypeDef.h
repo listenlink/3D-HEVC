@@ -81,7 +81,9 @@
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
 #define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
 #define HHI_DMM_DELTADC_Q1_C0034          1   // JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
-
+#if HHIQC_DMMFASTSEARCH_B0039 && HHI_DMM_PRED_TEX
+#define LGE_DMM3_SIMP_C0044               1
+#endif
 
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction

@@ -1095,6 +1095,9 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #endif
 
     if( uiDir == DMM_WEDGE_PREDTEX_D_IDX )     { xCodeWedgePredTexDeltaInfo  ( pcCU, uiAbsPartIdx ); }
+#if LGE_DMM3_SIMP_C0044
+    if( uiDir == DMM_WEDGE_PREDTEX_IDX )       { xCodeWedgePredTexInfo       ( pcCU, uiAbsPartIdx ); }
+#endif
     if( uiDir == DMM_CONTOUR_PREDTEX_D_IDX )   { xCodeContourPredTexDeltaInfo( pcCU, uiAbsPartIdx ); }
 #endif
   }
@@ -2670,8 +2673,26 @@ Void TEncSbac::xCodeWedgePredDirDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 #endif
 #if HHI_DMM_PRED_TEX
+#if LGE_DMM3_SIMP_C0044
+Void TEncSbac::xCodeWedgePredTexInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  Int iIntraIdx = pcCU->getIntraSizeIdx(uiAbsPartIdx);
+  Int iBits = g_aucWedgeTexPredBitsListIdx[iIntraIdx];
+
+  UInt uiTabIdx = pcCU->getWedgePredTexIntraTabIdx( uiAbsPartIdx );
+
+  for ( Int i = 0; i < iBits; i++ )
+  {
+    m_pcBinIf->encodeBin( ( uiTabIdx >> i ) & 1, m_cDmmDataSCModel.get(0, 0, 3) );
+  }
+}
+#endif
+
 Void TEncSbac::xCodeWedgePredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if LGE_DMM3_SIMP_C0044
+  xCodeWedgePredTexInfo( pcCU, uiAbsPartIdx );
+#endif
   Int iDeltaDC1 = pcCU->getWedgePredTexDeltaDC1( uiAbsPartIdx );
   Int iDeltaDC2 = pcCU->getWedgePredTexDeltaDC2( uiAbsPartIdx );
 
