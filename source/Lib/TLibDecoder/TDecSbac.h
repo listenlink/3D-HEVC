@@ -147,6 +147,9 @@ private:
   Void xParseWedgePredDirDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if HHI_DMM_PRED_TEX
+#if LGE_DMM3_SIMP_C0044
+  Void xParseWedgePredTexInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void xParseWedgePredTexDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif

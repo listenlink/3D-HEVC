@@ -89,7 +89,11 @@ protected:
 
 #if DEPTH_MAP_GENERATION
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
-  Void xPredInterPrdDepthMap    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset );
+  Void xPredInterPrdDepthMap    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset 
+#if LGE_ILLUCOMP_DEPTH_C0046
+      , Bool bICFlag = false
+#endif
+      );
 #else
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred, Int iPartIdx          );
   Void xPredInterPrdDepthMap    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight,                         TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset );
@@ -175,7 +179,12 @@ public:
 #endif
 #if HHI_DMM_PRED_TEX
   Void  getBestContourFromTex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge );
+#if LGE_DMM3_SIMP_C0044
+  UInt  getBestWedgeFromTex     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Pel * piOrgi, UInt uiStride, UInt &ruiIntraTabIdx);//encoder
+  UInt  getBestWedgeFromTex     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt IntraTabIdx);//decoder
+#else 
   UInt  getBestWedgeFromTex     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight );
+#endif
   Void  copyTextureLumaBlock    ( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piDestBlockY, UInt uiWidth, UInt uiHeight );
 #endif
 #if HHI_DMM_WEDGE_INTRA

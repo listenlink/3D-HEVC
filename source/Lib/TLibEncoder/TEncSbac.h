@@ -177,6 +177,9 @@ private:
   Void  xCodeWedgePredDirDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if HHI_DMM_PRED_TEX
+#if LGE_DMM3_SIMP_C0044
+  Void  xCodeWedgePredTexInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void  xCodeWedgePredTexDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void  xCodeContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif

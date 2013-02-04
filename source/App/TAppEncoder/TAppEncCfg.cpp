@@ -339,7 +339,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
   ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
 #if LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_DEPTH_C0046
+  ("IlluCompEnable", m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation for inter-view prediction")
+#else
   ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
+#endif
 #endif
 #if DBL_CONTROL
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
@@ -1803,7 +1807,11 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("TMVP:%d ", (m_enableTMVP[0] ? 1 : 0) );
 #endif
 #if LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_DEPTH_C0046
+  printf("IlluCompEnable: %d %d", m_abUseIC[0] ? 1 : 0, m_abUseIC[1] ? 1 : 0);
+#else
   printf("IlluCompEnable: %d ", m_bUseIC);
+#endif
 #endif
 
   printf("\n");

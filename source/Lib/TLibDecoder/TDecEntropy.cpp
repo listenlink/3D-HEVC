@@ -71,7 +71,11 @@ Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 {
   pcCU->setICFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
 
-  if (pcCU->isIntra(uiAbsPartIdx) || (pcCU->getSlice()->getViewId() == 0) || pcCU->getSlice()->getSPS()->isDepth())
+  if (pcCU->isIntra(uiAbsPartIdx) || (pcCU->getSlice()->getViewId() == 0) 
+#if !LGE_ILLUCOMP_DEPTH_C0046
+      || pcCU->getSlice()->getSPS()->isDepth()
+#endif
+      )
   {
     return;
   }
@@ -79,7 +83,11 @@ Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   if(!pcCU->getSlice()->getApplyIC())
     return;
 
+#if LGE_ILLUCOMP_DEPTH_C0046
+  if(pcCU->isICFlagRequired(uiAbsPartIdx, uiDepth)) //This modification is not needed after integrating JCT3V-C0137
+#else
   if(pcCU->isICFlagRequired(uiAbsPartIdx))
+#endif
     m_pcEntropyDecoderIf->parseICFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 #endif
