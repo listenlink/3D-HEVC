@@ -481,7 +481,11 @@ public:
   Bool          getICFlag             ( UInt uiIdx )            { return m_pbICFlag[uiIdx];        }
   Void          setICFlag             ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
   Void          setICFlagSubParts     ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+#if LGE_ILLUCOMP_DEPTH_C0046
+  Bool          isICFlagRequired      (UInt uiAbsPartIdx, UInt uiDepth); //This modification is not needed after integrating JCT3V-C0137
+#else
   Bool          isICFlagRequired      (UInt uiAbsPartIdx);
+#endif
 #endif
 
 #if AMP_MRG
