@@ -66,7 +66,8 @@
 #define FLEX_CODING_ORDER_M23723          1
 #if FLEX_CODING_ORDER_M23723
   #define DISABLE_FCO_FOR_VSO             0 // Optional compile settings to disable VSO with FCO.
-#endif
+#endif 
+#define   QC_TMVP_MRG_REFIDX_C0047        1 //only enabled when QC_TMVP_IDX_MOD_B0046 is enabled.
 
 ///// ***** PATCHES *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
@@ -80,6 +81,8 @@
 
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
+#define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
+#define QC_C0051_FIXED_BY_MTK             1   // bug fix for C0051 implementation
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
 #define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
 #if     QC_MRG_CANS_B0048
@@ -95,6 +98,7 @@
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
 #if HHI_INTER_VIEW_RESIDUAL_PRED       
+#define MTK_MDIVRP_C0138                  1   // mode-dependent inter-view residual prediction
 #define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
 #define QC_SIMPLIFIEDIVRP_M24938          1
 #else                                  
@@ -110,7 +114,8 @@
 #define QC_SIMPLE_NBDV_B0047              1   // JCT3V-B0047
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
-#define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
+#define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
+#define HHI_MPI                           0   // motion parameter inheritance from texture picture for depth map coding
 #if HHI_MPI
 #define FIX_MPI_B0065                     1   // JCT3V-B0065, fix the MPI bug when RQT is off
 #endif

@@ -89,7 +89,7 @@ public:
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  parseVPS                  ( TComVPS* pcVPS )  {}
 #endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
   Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth ) {}
 #else
   Void  parseSPS                  ( TComSPS* pcSPS         ) {}
@@ -103,7 +103,11 @@ public:
   void parseSEI(SEImessages&) {}
 
 #if LCU_SYNTAX_ALF
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet, bool isDepth) {}
+#else
   Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet) {}
+#endif
 #else
   Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl ) {}
 #endif

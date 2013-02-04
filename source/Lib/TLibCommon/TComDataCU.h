@@ -280,7 +280,12 @@ protected:
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 
   Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
-  Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx );
+  Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
+#if QC_TMVP_MRG_REFIDX_C0047
+  ,
+  Bool bMRG = 0
+#endif
+  );
 #if QC_MULTI_DIS_CAN_A0097
   Bool          xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
 #endif 
@@ -543,12 +548,16 @@ public:
   Int           getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
 #else
+#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
+  Bool getUnifiedMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
+#else
   Bool          getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
   Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
 #if QC_MRG_CANS_B0048
     , Int* iPdm
 #endif
   );
+#endif
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
 #if LGE_DVMCP_A0126
 #if QC_SIMPLE_NBDV_B0047
@@ -597,7 +606,7 @@ public:
 #else
   Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
 #endif
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
   Int           getResiPredMode(UInt uiPartAddr);
   Void          getPUResiPredShift (Int *iPUPredResiShift, UInt uiAbsPartIndex);
 #endif
