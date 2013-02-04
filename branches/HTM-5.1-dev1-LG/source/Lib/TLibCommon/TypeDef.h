@@ -139,6 +139,8 @@
 #define LGE_ILLUCOMP_B0045                1   // JCT2-B0045 Illumination compensation for Luma and Chroma
 #if LGE_ILLUCOMP_B0045
 #define LGE_ILLUCOMP_B0045_ENCSIMP        1
+#define FIX_LGE_ILLUCOMP_B0045            1
+#define LGE_ILLUCOMP_DEPTH_C0046          1   // JCT2-C0046 Apply illumination compensation to depth
 #endif
 
 ///// ***** INTERVIEW SKIP *********

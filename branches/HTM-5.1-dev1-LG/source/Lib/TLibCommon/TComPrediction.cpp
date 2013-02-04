@@ -785,8 +785,15 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   {
     UInt uiRShift = ( bi ? 14-g_uiBitDepth-g_uiBitIncrement : 0 );
     UInt uiOffset = bi ? IF_INTERNAL_OFFS : 0;
+#if LGE_ILLUCOMP_DEPTH_C0046
+    Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getRefViewId( eRefPicList, iRefIdx ) != pcCU->getSlice()->getViewId());
+#endif
 #if DEPTH_MAP_GENERATION
-    xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, 0, 0, rpcYuvPred, uiRShift, uiOffset );
+    xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, 0, 0, rpcYuvPred, uiRShift, uiOffset 
+#if LGE_ILLUCOMP_DEPTH_C0046
+        , bICFlag
+#endif
+        );
 #else
     xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, uiRShift, uiOffset );
 #endif
@@ -888,7 +895,11 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
 
 Void 
 #if DEPTH_MAP_GENERATION
-TComPrediction::xPredInterPrdDepthMap( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset )
+TComPrediction::xPredInterPrdDepthMap( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset 
+#if LGE_ILLUCOMP_DEPTH_C0046
+, Bool bICFlag
+#endif
+)
 #else
 TComPrediction::xPredInterPrdDepthMap( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset )
 #endif
@@ -940,6 +951,33 @@ TComPrediction::xPredInterPrdDepthMap( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef
       piDstY[ x ] = ( piRefY[ x ] << uiRShift ) - uiOffset;
     }
   }
+
+#if LGE_ILLUCOMP_DEPTH_C0046
+  if(bICFlag)
+  {
+    Int a, b, iShift;
+    TComMv tTmpMV(pcMv->getHor()<<2, pcMv->getVer()<<2);
+
+    piRefY      = pcPicYuvRef->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr ) + iRefOffset;
+    piDstY      = rpcYuv->getLumaAddr( uiPartAddr );
+
+    xGetLLSICPrediction(pcCU, &tTmpMV, pcPicYuvRef, a, b, iShift);
+
+    for( Int y = 0; y < iHeight; y++, piDstY += iDstStride, piRefY += iRefStride )
+    {
+      for( Int x = 0; x < iWidth; x++ )
+      {
+        if(uiOffset)
+        {
+          Int iIFshift = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
+          piDstY[ x ] = ( (a*piDstY[ x ]+a*IF_INTERNAL_OFFS) >> iShift ) + b*(1<<iIFshift) - IF_INTERNAL_OFFS;
+        }
+        else
+          piDstY[ x ] = Clip( ( (a*piDstY[ x ]) >> iShift ) + b );
+      }
+    }
+  }
+#endif
 }
 
 
@@ -1703,8 +1741,13 @@ Void TComPrediction::xGetLLSICPredictionChroma(TComDataCU* pcCU, TComMv *pMv, TC
 
   iCUPelX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
   iCUPelY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
+#if FIX_LGE_ILLUCOMP_B0045
+  iRefX   = iCUPelX + (pMv->getHor() >> 2);
+  iRefY   = iCUPelY + (pMv->getVer() >> 2);
+#else
   iRefX   = iCUPelX + (pMv->getHor() >> 3);
   iRefY   = iCUPelY + (pMv->getVer() >> 3);
+#endif
   uiWidth = pcCU->getWidth(0) >> 1;
   uiHeight = pcCU->getHeight(0) >> 1;
 

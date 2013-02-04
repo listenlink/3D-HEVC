@@ -3095,6 +3095,60 @@ Void TComDataCU::setICFlagSubParts( Bool bICFlag, UInt uiAbsPartIdx, UInt uiPart
   memset( m_pbICFlag + uiAbsPartIdx, bICFlag, (m_pcPic->getNumPartInCU() >> ( 2 * uiDepth ))*sizeof(Bool) );
 }
 
+#if LGE_ILLUCOMP_DEPTH_C0046
+//This modification is not needed after integrating JCT3V-C0137
+Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
+{
+  UInt uiPartAddr;
+  UInt iNumbPart;
+
+  if(!getSlice()->getIsDepth())
+  {
+    Int iWidth, iHeight;
+
+    iNumbPart = ( getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N ? 1 : (getPartitionSize(uiAbsPartIdx) == SIZE_NxN ? 4 : 2) );
+
+    for(UInt i = 0; i < iNumbPart; i++)
+    {
+      getPartIndexAndSize(i, uiPartAddr, iWidth, iHeight, uiAbsPartIdx, true);
+      uiPartAddr += uiAbsPartIdx;
+
+      for(UInt uiRefIdx = 0; uiRefIdx < 2; uiRefIdx++)
+      {
+        RefPicList eRefList = uiRefIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+        Int iBestRefIdx = getCUMvField(eRefList)->getRefIdx(uiPartAddr);
+
+        if((getInterDir(uiPartAddr) & (uiRefIdx+1)) && iBestRefIdx >= 0 && getSlice()->getViewId() != getSlice()->getRefViewId(eRefList, iBestRefIdx))
+        {
+          return true;
+        }
+      }
+    }
+  }
+  else
+  {
+    iNumbPart = getPic()->getNumPartInCU() >> (uiDepth << 1);
+
+    for(UInt i = 0; i < iNumbPart; i++)
+    {
+      uiPartAddr = uiAbsPartIdx + i;
+
+      for(UInt uiRefIdx = 0; uiRefIdx < 2; uiRefIdx++)
+      {
+        RefPicList eRefList = uiRefIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+        Int iBestRefIdx = getCUMvField(eRefList)->getRefIdx(uiPartAddr);
+
+        if((getInterDir(uiPartAddr) & (uiRefIdx+1)) && iBestRefIdx >= 0 && getSlice()->getViewId() != getSlice()->getRefViewId(eRefList, iBestRefIdx))
+        {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+#else
 Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx)
 {
   UInt uiPartAddr;
@@ -3123,6 +3177,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx)
   }
   return false;
 }
+#endif
 #endif
 
 Void TComDataCU::setMVPIdxSubParts( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
