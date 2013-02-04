@@ -3623,7 +3623,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #endif
 {
 #if HHI_INTER_VIEW_MOTION_PRED
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  const Int extraMergeCand = ( ( getSlice()->getIsDepth() || getSlice()->getSPS()->getMultiviewMvPredMode() )? 1 : 0 );
+#else
   const Int extraMergeCand = ( getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
+#endif
 #endif
 
   UInt uiAbsPartAddr = m_uiAbsIdxInLCU + uiAbsPartIdx;
@@ -3650,6 +3654,50 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   PartSize cCurPS = getPartitionSize( uiAbsPartIdx );
   deriveLeftRightTopIdxGeneral( cCurPS, uiAbsPartIdx, uiPUIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdxGeneral( cCurPS, uiAbsPartIdx, uiPUIdx, uiPartIdxLB );
+
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  if( m_pcSlice->getIsDepth())
+  {
+    UInt uiPartIdxCenter;
+    xDeriveCenterIdx( cCurPS, uiPUIdx, uiPartIdxCenter );    
+    TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
+    if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
+    {
+      abCandIsInter[iCount] = true;      
+      puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
+      if( ( puhInterDirNeighbours[iCount] & 1 ) == 1 )
+      {
+        pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
+        TComMv cMvPred = pcMvFieldNeighbours[iCount<<1].getMv();
+        const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
+        cMvPred+=cAdd;
+        cMvPred>>=2;
+        clipMv(cMvPred);
+        pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
+      }
+      if ( getSlice()->isInterB() )
+      {
+        if( ( puhInterDirNeighbours[iCount] & 2 ) == 2 )
+        {
+          pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
+          TComMv cMvPred = pcMvFieldNeighbours[(iCount<<1)+1].getMv();
+          const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
+          cMvPred+=cAdd;
+          cMvPred>>=2;
+          clipMv(cMvPred);
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
+        }
+      }
+#if SIMP_MRG_PRUN
+      if ( mrgCandIdx == iCount )
+      {
+        return;
+      }
+#endif
+      iCount ++;
+    }
+  }
+#endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
   Bool bNoPdmMerge   = ( m_pcSlice->getSPS()->getViewId() == 0 || ( m_pcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) != PDM_USE_FOR_MERGE );

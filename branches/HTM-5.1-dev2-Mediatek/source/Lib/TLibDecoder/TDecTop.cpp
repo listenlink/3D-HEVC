@@ -699,7 +699,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 
   // ALF CU parameters should be part of the slice header -> needs to be fixed 
 #if LCU_SYNTAX_ALF
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder, m_cGopDecoder.getAlfCuCtrlParam(), m_cGopDecoder.getAlfParamSet(),m_apcSlicePilot->getVPS()->getDepthFlag(nalu.m_layerId));
+#else
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder, m_cGopDecoder.getAlfCuCtrlParam(), m_cGopDecoder.getAlfParamSet());
+#endif
 #else
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder, m_cGopDecoder.getAlfCuCtrlParam() );
 #endif
@@ -1152,7 +1156,7 @@ Void TDecTop::xDecodeSPS()
   TComRPSList* rps = new TComRPSList();
   sps->setRPSList(rps);
 #endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
   m_cEntropyDecoder.decodeSPS( sps, m_isDepth );
 #else
   m_cEntropyDecoder.decodeSPS( sps );

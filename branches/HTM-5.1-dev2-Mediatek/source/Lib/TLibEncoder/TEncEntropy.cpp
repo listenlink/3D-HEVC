@@ -132,7 +132,7 @@ Void TEncEntropy::encodeVPS( TComVPS* pcVPS )
 Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
 
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Bool bIsDepth )
 {
   m_pcEntropyCoderIf->codeSPS( pcSPS, bIsDepth );

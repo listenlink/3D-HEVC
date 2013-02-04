@@ -79,7 +79,7 @@ public:
   virtual Void  codeVPS                 ( TComVPS* pcVPS )                                      = 0;
 #endif
 
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
   virtual Void  codeSPS                 ( TComSPS* pcSPS, Bool bIsDepth )                       = 0;
 #else
   virtual Void  codeSPS                 ( TComSPS* pcSPS )                                      = 0;
@@ -245,7 +245,7 @@ public:
   Void encodeVPS               ( TComVPS* pcVPS);
 #endif
   // SPS
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
   Void encodeSPS               ( TComSPS* pcSPS, Bool bIsDepth );
 #else
   Void encodeSPS               ( TComSPS* pcSPS );
