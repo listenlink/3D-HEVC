@@ -617,9 +617,17 @@ Void TComPrediction::xPredIntraEdge( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iW
 #endif
 
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152 
+Void TComPrediction::motionCompensation( TComDataCU* pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY )
+#else
 Void TComPrediction::motionCompensation( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY )
+#endif
+#else
+#if MERL_VSP_C0152
+Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList, Int iPartIdx )
 #else
 Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx )
+#endif
 #endif
 {
   Int         iWidth;
@@ -647,17 +655,33 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
 #endif
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
 #else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
+#endif
 #endif
       }
       else
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else        
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
 #else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
+#endif
 #endif
       }
 #if LGE_ILLUCOMP_B0045
@@ -678,17 +702,33 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
 #endif
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
 #else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
+#endif
 #endif
       }
       else
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterBi  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
+#else
         xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterBi  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, pcYuvPred, iPartIdx );
 #else
         xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred, iPartIdx );
+#endif
 #endif
       }
     }
@@ -716,23 +756,47 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
 #endif
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
 #else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
+#endif
 #endif   
       }
       else
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
 #else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
+#endif
 #endif   
       }
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+      xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
       xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#endif
+#else
+#if MERL_VSP_C0152
+      xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
 #else
       xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
+#endif
 #endif  
 #if LGE_ILLUCOMP_B0045
       if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
@@ -748,17 +812,33 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
       if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
 #else
         xPredInterUni (pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
+#endif
 #endif 
       }
       else
       {
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+        xPredInterBi  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
+#else
         xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterBi  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, pcYuvPred, iPartIdx );
 #else
         xPredInterBi  (pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred, iPartIdx );
+#endif
 #endif
       }
     }
@@ -769,12 +849,38 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
 
 
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi )
+#else
 Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi )
+#endif
+#else
+#if MERL_VSP_C0152
+Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi )
 #else
 Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi )
 #endif
+#endif
 {
+#if MERL_VSP_C0152
+  Int  iRefIdx = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );    
+  Int  vspIdx  = pcCU->getVSPIndex(uiPartAddr);
+  if (vspIdx != 0)
+  {
+    if (iRefIdx >= 0)
+    {
+      printf("vspIdx = %d, iRefIdx = %d\n", vspIdx, iRefIdx);
+    }
+    assert (iRefIdx < 0); // assert (iRefIdx == NOT_VALID);
+  }
+  else
+  {
+    assert (iRefIdx >= 0);
+  }
+#else
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
+#endif
+
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
 
@@ -796,305 +902,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
   if( pcCU->getSlice()->getSPS()->isDepth() )
   {
-    UInt uiRShift = ( bi ? 14-g_uiBitDepth-g_uiBitIncrement : 0 );
-    UInt uiOffset = bi ? IF_INTERNAL_OFFS : 0;
-#if DEPTH_MAP_GENERATION
-    xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, 0, 0, rpcYuvPred, uiRShift, uiOffset );
-#else
-    xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, uiRShift, uiOffset );
-#endif
-  }
-  else
-  {
-#endif
-#if LGE_ILLUCOMP_B0045
-    Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getRefViewId( eRefPicList, iRefIdx ) != pcCU->getSlice()->getViewId());
-
-    xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag);
-#else
-  xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
-#endif
-#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-  }
-#endif
-#if LGE_ILLUCOMP_B0045
-  Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getRefViewId( eRefPicList, iRefIdx ) != pcCU->getSlice()->getViewId());
-
-  xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag );
-#else
-  xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
-#endif
-}
-
-
-#if DEPTH_MAP_GENERATION
-Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap )
-#else
-Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred, Int iPartIdx )
-#endif
-{
-  TComYuv* pcMbYuv;
-  Int      iRefIdx[2] = {-1, -1};
-
-  for ( Int iRefList = 0; iRefList < 2; iRefList++ )
-  {
-    RefPicList eRefPicList = (iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0);
-    iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
-
-    if ( iRefIdx[iRefList] < 0 )
-    {
-      continue;
-    }
-
-    assert( iRefIdx[iRefList] < pcCU->getSlice()->getNumRefIdx(eRefPicList) );
-
-    pcMbYuv = &m_acYuvPred[iRefList];
-    if( pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr ) >= 0 && pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr ) >= 0 )
-    {
-#if DEPTH_MAP_GENERATION
-      xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
-#else
-      xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
-#endif
-    }
-    else
-    {
-      if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
-#else
-        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
-#endif
-      }
-      else
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
-#else
-        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, false );
-#endif
-      }
-    }
-  }
-
-  if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
-  {
-    xWeightedPredictionBi( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
-  }
-  else
-  {
-#if DEPTH_MAP_GENERATION
-    if ( bPrdDepthMap )
-    {
-      xWeightedAveragePdm( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred, uiSubSampExpX, uiSubSampExpY );
-    }
-    else
-    {
-    xWeightedAverage( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
-  }
-#else
-    xWeightedAverage( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
-#endif
-  }
-}
-
 #if MERL_VSP_C0152
-#if DEPTH_MAP_GENERATION
-Void TComPrediction::motionCompensationBWVSP( TComDataCU* pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY )
-#else
-Void TComPrediction::motionCompensationBWVSP ( TComDataCU* pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList, Int iPartIdx )
-#endif
-{
-  Int         iWidth;
-  Int         iHeight;
-  UInt        uiPartAddr;
-
-  if ( iPartIdx >= 0 )
-  {
-    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
-
-#if DEPTH_MAP_GENERATION
-    if( bPrdDepthMap )
-    {
-      iWidth  >>= uiSubSampExpX;
-      iHeight >>= uiSubSampExpY;
-    }
-#endif
-
-    if ( eRefPicList != REF_PIC_LIST_X )
-    {
-#if LGE_ILLUCOMP_B0045
-      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
-#else
-      if( pcCU->getSlice()->getPPS()->getUseWP())
-#endif
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
-#else
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
-#endif
-      }
-      else
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
-#else
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
-#endif
-      }
-#if LGE_ILLUCOMP_B0045
-      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
-#else
-      if( pcCU->getSlice()->getPPS()->getUseWP())
-#endif
-      {
-        xWeightedPredictionUni( pcCU, pcYuvPred, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx );
-      }
-    }
-    else
-    {
-#if DEPTH_MAP_GENERATION
-      if( xCheckIdenticalMotion( pcCU, uiPartAddr ) && !bPrdDepthMap )
-#else
-      if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
-#endif
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
-#else
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
-#endif
-      }
-      else
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
-#else
-        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, pcYuvPred, iPartIdx );
-#endif
-      }
-    }
-    return;
-  }
-
-  for ( iPartIdx = 0; iPartIdx < pcCU->getNumPartInter(); iPartIdx++ )
-  {
-    pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
-
-#if DEPTH_MAP_GENERATION
-    if( bPrdDepthMap )
-    {
-      iWidth  >>= uiSubSampExpX;
-      iHeight >>= uiSubSampExpY;
-    }
-#endif
-
-    if ( eRefPicList != REF_PIC_LIST_X )
-    {
-#if LGE_ILLUCOMP_B0045
-      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
-#else
-      if( pcCU->getSlice()->getPPS()->getUseWP())
-#endif
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr , iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
-#else
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, true );
-#endif   
-      }
-      else
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
-#else
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
-#endif   
-      }
-#if DEPTH_MAP_GENERATION
-      xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
-#else
-      xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx, false );
-#endif  
-#if LGE_ILLUCOMP_B0045
-      if( pcCU->getSlice()->getPPS()->getUseWP() && !pcCU->getICFlag(uiPartAddr))
-#else
-      if( pcCU->getSlice()->getPPS()->getUseWP())
-#endif
-      {
-        xWeightedPredictionUni( pcCU, pcYuvPred, uiPartAddr, iWidth, iHeight, eRefPicList, pcYuvPred, iPartIdx );
-      }
-    }
-    else
-    {
-      if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
-#else
-        xPredInterUniBWVSP (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred, iPartIdx, false );
-#endif 
-      }
-      else
-      {
-#if DEPTH_MAP_GENERATION
-        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, pcYuvPred, iPartIdx, bPrdDepthMap );
-#else
-        xPredInterBiBWVSP  (pcCU, uiPartAddr, uiAbsPartIdx+uiPartAddr, iWidth, iHeight, pcYuvPred, iPartIdx );
-#endif
-      }
-    }
-  }
-
-  return;
-}
-
-
-// Output: rpcYuvPred
-#if DEPTH_MAP_GENERATION
-Void TComPrediction::xPredInterUniBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi )
-#else
-Void TComPrediction::xPredInterUniBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi )
-#endif
-{
-  Int  iRefIdx = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );    
-  Int  vspIdx  = pcCU->getVSPIndex(uiPartAddr);
-  if (vspIdx != 0)
-  {
-    if (iRefIdx >= 0)
-    {
-      printf("vspIdx = %d, iRefIdx = %d\n", vspIdx, iRefIdx);
-    }
-    assert (iRefIdx < 0); // assert (iRefIdx == NOT_VALID);
-  }
-  else
-  {
-    assert (iRefIdx >= 0);
-  }
-
-  TComMv cMv = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
-  pcCU->clipMv(cMv);
-
-#if DEPTH_MAP_GENERATION
-  if( bPrdDepthMap )
-  {
-    UInt uiRShift = 0;
-#if PDM_REMOVE_DEPENDENCE
-    if( pcCU->getPic()->getStoredPDMforV2() == 1 )
-      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMapTemp(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
-    else
-#endif
-      xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPredDepthMap(), uiPartAddr, &cMv, iWidth, iHeight, uiSubSampExpX, uiSubSampExpY, rpcYuvPred, uiRShift, 0 );
-
-    return;
-  }
-#endif
-
-#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-  if( pcCU->getSlice()->getSPS()->isDepth() )
-  {
     if (vspIdx != 0)
     { // depth, vsp
       // get depth estimator here
@@ -1114,8 +922,9 @@ Void TComPrediction::xPredInterUniBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UIn
       xPredInterLumaBlkFromDM  ( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,     pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
       xPredInterChromaBlkFromDM( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1,  pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
     }
-    else
-    { // depth, non-vsp
+   else
+    {
+#endif
       UInt uiRShift = ( bi ? 14-g_uiBitDepth-g_uiBitIncrement : 0 );
       UInt uiOffset = bi ? IF_INTERNAL_OFFS : 0;
 #if DEPTH_MAP_GENERATION
@@ -1123,14 +932,15 @@ Void TComPrediction::xPredInterUniBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UIn
 #else
       xPredInterPrdDepthMap( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, uiRShift, uiOffset );
 #endif
-
-      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
-    }
+#if MERL_VSP_C0152
+     }
+#endif// MERL_VSP_C0152 //else
   }
-  else // texture
+  else
   {
 #endif
-    if ( vspIdx != 0 && !pcCU->getSlice()->getSPS()->isDepth())
+#if MERL_VSP_C0152
+    if ( vspIdx != 0 )
     { // texture, vsp
       TComPic*    pRefPicBaseTxt        = pcCU->getSlice()->getRefPicBaseTxt();
       TComPicYuv* pcBaseViewTxtPicYuv   = pRefPicBaseTxt->getPicYuvRec();
@@ -1151,28 +961,52 @@ Void TComPrediction::xPredInterUniBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UIn
       xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
       xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
     }
-    else
-    { // texture, non-vsp
+    else//texture not VSP
+    {
+#endif //MERL_VSP_C0152
 #if LGE_ILLUCOMP_B0045
-      Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getRefViewId( eRefPicList, iRefIdx ) != pcCU->getSlice()->getViewId());
+    Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getRefViewId( eRefPicList, iRefIdx ) != pcCU->getSlice()->getViewId());
 
-      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag);
-      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag );
+    xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag);
 #else
-      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
-      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
+  xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
 #endif
-    }
+#if MERL_VSP_C0152
+     } //texture not VSP
+#endif 
 #if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
   }
+#endif
+
+#if MERL_VSP_C0152
+  if ( vspIdx == 0 )//Not VSP
+  {
+#endif
+#if LGE_ILLUCOMP_B0045
+  Bool bICFlag = pcCU->getICFlag(uiPartAddr) && (pcCU->getSlice()->getRefViewId( eRefPicList, iRefIdx ) != pcCU->getSlice()->getViewId());
+
+  xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, bICFlag );
+#else
+  xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi );
+#endif
+#if MERL_VSP_C0152
+   }
 #endif
 }
 
 
 #if DEPTH_MAP_GENERATION
-Void TComPrediction::xPredInterBiBWVSP ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap )
+#if MERL_VSP_C0152
+Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap )
 #else
-Void TComPrediction::xPredInterBiSDM ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred, Int iPartIdx )
+Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap )
+#endif
+#else
+#if MERL_VSP_C0152
+Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred, Int iPartIdx )
+#else
+Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred, Int iPartIdx )
+#endif
 #endif
 {
   TComYuv* pcMbYuv;
@@ -1182,6 +1016,7 @@ Void TComPrediction::xPredInterBiSDM ( TComDataCU* pcCU, UInt uiPartAddr, UInt u
   {
     RefPicList eRefPicList = (iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0);
     iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
+
 #if MERL_VSP_C0152
     if(!pcCU->getVSPIndex(uiPartAddr))
     {
@@ -1203,15 +1038,24 @@ Void TComPrediction::xPredInterBiSDM ( TComDataCU* pcCU, UInt uiPartAddr, UInt u
       continue;
     }
 #endif
+
     assert( iRefIdx[iRefList] < pcCU->getSlice()->getNumRefIdx(eRefPicList) );
 
     pcMbYuv = &m_acYuvPred[iRefList];
     if( pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr ) >= 0 && pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr ) >= 0 )
     {
 #if DEPTH_MAP_GENERATION
-      xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#if MERL_VSP_C0152
+      xPredInterUni ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
 #else
-      xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+      xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#endif
+#else
+#if MERL_VSP_C0152
+      xPredInterUni ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+#else
+      xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+#endif
 #endif
     }
     else
@@ -1219,17 +1063,33 @@ Void TComPrediction::xPredInterBiSDM ( TComDataCU* pcCU, UInt uiPartAddr, UInt u
       if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
       {
 #if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#if MERL_VSP_C0152
+        xPredInterUni ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
 #else
-        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, true );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+#else
+        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, true );
+#endif
 #endif
       }
       else
       {
 #if DEPTH_MAP_GENERATION
-        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#if MERL_VSP_C0152
+        xPredInterUni ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
 #else
-        xPredInterUniBWVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, false );
+        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, bPrdDepthMap, uiSubSampExpX, uiSubSampExpY, false );
+#endif
+#else
+#if MERL_VSP_C0152
+        xPredInterUni ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, false );
+#else
+        xPredInterUni ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, iPartIdx, false );
+#endif
 #endif
       }
     }
@@ -1258,14 +1118,15 @@ Void TComPrediction::xPredInterBiSDM ( TComDataCU* pcCU, UInt uiPartAddr, UInt u
         m_acYuvPred[0].copyPartToPartYuv( rpcYuvPred, uiPartAddr, iWidth, iHeight );
       else
 #endif
-      xWeightedAverage( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
-    }
+    xWeightedAverage( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
+  }
 #else
     xWeightedAverage( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
 #endif
   }
 }
-#endif
+
+
 
 Void 
 #if DEPTH_MAP_GENERATION
