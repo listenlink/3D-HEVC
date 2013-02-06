@@ -192,7 +192,6 @@ Void TRenTop::xConvertInputData( PelImage* pcOrgInputImage, PelImage* pcOrgInput
   }
 }
 
-
 Void TRenTop::xConvertOutputData( PelImage* pcOrgOutputImage, PelImage* pcConvOutputImage, Bool bMirror )
 {
   Int iLog2SamplingFactor = m_iLog2SamplingFactor;
@@ -1449,12 +1448,12 @@ Void TRenTop::xFillPlaneHoles(PelImagePlane** apcInputPlanes,  PelImagePlane* pc
     Int iSourcePos = iXPosSearch;
 
     for( Int iXPos = iSourcePos + 1; iXPos <  iWidth; iXPos++)
-        {
+    {
       for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
-          {
+      {
         apcOutputData[uiCurPlane][iXPos] = apcInputData[uiCurPlane][iSourcePos];
       }
-            }
+    }
 
     // Fill Left Gap
     iXPosSearch = 0;
@@ -1468,8 +1467,8 @@ Void TRenTop::xFillPlaneHoles(PelImagePlane** apcInputPlanes,  PelImagePlane* pc
       for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
       {
         apcOutputData[uiCurPlane][iXPos] = apcInputData[uiCurPlane][iSourcePos];
-          }
-        }
+      }
+    }
 
     // Go to next line
     for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
@@ -2153,7 +2152,7 @@ Void TRenTop::init(UInt uiImageWidth,
     for (UInt uiEntry = 0; uiEntry < iNumEntries; uiEntry++)
     {
       m_aaiSubPelShift[uiEntry] = new Int[ iNumEntries ];
-        }
+    }
 
     TRenFilter::setSubPelShiftLUT(m_iRelShiftLUTPrec, m_aaiSubPelShift, -1);
   }

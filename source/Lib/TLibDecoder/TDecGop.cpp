@@ -510,6 +510,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
     m_uiILSliceCount = 0;
     m_vAlfCUCtrlSlices.clear();
   }
+  fflush(stdout);
 }
 
 /**

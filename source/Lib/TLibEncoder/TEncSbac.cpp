@@ -1276,6 +1276,12 @@ Void TEncSbac::codeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eR
     {
       xWriteUnaryMaxSymbol( iRefFrame - 1, pCtx + 1, 1, pcCU->getSlice()->getNumRefIdx( REF_PIC_LIST_C )-2 );
     }
+#if MERL_VSP_C0152
+    else if (iRefFrame < 0) // NOT_VALID
+    {
+      assert(0);
+    }
+#endif
   }
   else
   {
@@ -1287,6 +1293,12 @@ Void TEncSbac::codeRefFrmIdx( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eR
     {
       xWriteUnaryMaxSymbol( iRefFrame - 1, pCtx + 1, 1, pcCU->getSlice()->getNumRefIdx( eRefList )-2 );
     }
+#if MERL_VSP_C0152
+    else if (iRefFrame < 0) // NOT_VALID
+    {
+      assert(0);
+    }
+#endif
   }
   return;
 }

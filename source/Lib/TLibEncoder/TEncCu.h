@@ -80,7 +80,7 @@ private:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComYuv**               m_ppcResPredTmp;  ///< Temporary residual prediction for each depth
 #endif
-  
+
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
 #if BURST_IPCM
@@ -120,7 +120,7 @@ public:
   
   /// destroy internal buffers
   Void  destroy             ();
-  
+
   /// CU analysis function
   Void  compressCU          ( TComDataCU*&  rpcCU );
   

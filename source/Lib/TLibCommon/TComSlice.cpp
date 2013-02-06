@@ -120,7 +120,7 @@ TComSlice::TComSlice()
 #endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
-  
+
   initEqualRef();
   
   for(Int iNumCount = 0; iNumCount < MAX_NUM_REF_LC; iNumCount++)

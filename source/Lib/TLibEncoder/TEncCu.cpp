@@ -1889,8 +1889,12 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
 
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
-  rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
-
+#if MERL_VSP_C0152
+  Int iVSPIndexTrue[3] = {-1, -1, -1};
+  rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue );
+#else
+  rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+#endif
 #if FAST_DECISION_FOR_MRG_RD_COST
   Bool bestIsSkip = false;
 #endif
@@ -1932,6 +1936,22 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setMergeFlagSubParts( true, 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setMergeIndexSubParts( uiMergeCand, 0, 0, uhDepth ); // interprets depth relative to LCU level
+#if MERL_VSP_C0152
+          {
+            Int iVSPIdx = 0;
+            Int numVSPIdx;
+            numVSPIdx = 3;
+            for (Int i = 0; i < numVSPIdx; i++)
+            {
+              if (iVSPIndexTrue[i] == uiMergeCand)
+                {
+                  iVSPIdx = i+1;
+                  break;
+                }
+            }
+            rpcTempCU->setVSPIndexSubParts( iVSPIdx, 0, 0, uhDepth );
+          }
+#endif
           rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
@@ -1951,7 +1971,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
       if ( uiNoResidual == 0 )
 #endif
         {
+#if MERL_VSP_C0152
+            m_pcPredSearch->motionCompensationBWVSP ( rpcTempCU, m_ppcPredYuvTemp[uhDepth],  rpcTempCU->getZorderIdxInCU() );
+#else
             m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#endif
             // save pred adress
             pcPredYuvTemp = m_ppcPredYuvTemp[uhDepth];
 
@@ -1961,7 +1985,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if FAST_DECISION_FOR_MRG_RD_COST
             if( bestIsSkip)
             {
+#if MERL_VSP_C0152
+              m_pcPredSearch->motionCompensationBWVSP ( rpcTempCU, m_ppcPredYuvTemp[uhDepth], rpcTempCU->getZorderIdxInCU() );
+#else
               m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#endif
               // save pred adress
               pcPredYuvTemp = m_ppcPredYuvTemp[uhDepth];
             }
@@ -2064,6 +2092,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
+
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   rpcTempCU->setResPredAvailSubParts( bResPrdAvail, 0, 0, uhDepth );
   rpcTempCU->setResPredFlagSubParts ( bResPrdFlag,  0, 0, uhDepth );
@@ -2083,7 +2112,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setMergeAMP (true);
   #if HHI_INTERVIEW_SKIP
 #if LG_RESTRICTEDRESPRED_M24766
-  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcResPredTmp[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG  );
+  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcResPredTmp[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG);
 #else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG  );
 #endif
@@ -2786,10 +2815,18 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
     {
       assert( rpcTempCU->getInterDir( ui ) != 0 );
       assert( rpcTempCU->getPredictionMode( ui ) != MODE_NONE );
+#if MERL_VSP_C0152
+      Int vspIdx = pcTextureCU->getVSPIndex( rpcTempCU->getZorderIdxInCU() + ui);
+      rpcTempCU->setVSPIndex( ui , vspIdx);
+#endif
     }
-    rpcTempCU->setPredModeSubParts( bSkipResidual ? MODE_SKIP : MODE_INTER, 0, uhDepth );
-    m_pcPredSearch->motionCompensation( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 
+    rpcTempCU->setPredModeSubParts( bSkipResidual ? MODE_SKIP : MODE_INTER, 0, uhDepth );
+#if MERL_VSP_C0152
+    m_pcPredSearch->motionCompensationBWVSP( rpcTempCU, m_ppcPredYuvTemp[uhDepth], rpcTempCU->getZorderIdxInCU()  );
+#else
+    m_pcPredSearch->motionCompensation( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
+#endif
     // get Original YUV data from picture
     m_ppcOrigYuv[uhDepth]->copyFromPicYuv( rpcBestCU->getPic()->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
     m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU,
