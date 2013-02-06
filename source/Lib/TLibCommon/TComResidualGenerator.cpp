@@ -667,7 +667,7 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   Int           iCMaxPosY   = Int( uiPicHeight >> 1 ) - 1;
   Int           iCWeight3   = ( iDisparity_y & 7 );
   Int           iCWeight2   = 8 - iCWeight3;
-  Int           iCRefPosY0  = Max( 0, Min( iCMaxPosY, Int( uiYPos )     + ( iDisparity_y >> 3 )) );
+  Int           iCRefPosY0  = Max( 0, Min( iCMaxPosY, Int( uiYPos >> 1 )     + ( iDisparity_y >> 3 )) );
   Int           iCRefPosY1  = Max( 0, Min( iCMaxPosY, iCRefPosY0 + 1 ));
 #endif
   Int           iCMaxPosX   = Int( uiPicWidth >> 1 ) - 1;
@@ -700,10 +700,10 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
       Pel Temp1,Temp2;
       Temp1 =( iCWeight0 * pSrcSamplesU0[iXPic0] + iCWeight1 * pSrcSamplesU0[iXPic1] + 4 ) >> 3;
       Temp2 =( iCWeight0 * pSrcSamplesU1[iXPic0] + iCWeight1 * pSrcSamplesU1[iXPic1] + 4 ) >> 3;
-      pDesSamplesU[iX]  = ( iCWeight2 * Temp1 + iCWeight3 * Temp2 + 2 ) >> 2;
+      pDesSamplesU[iX]  = ( iCWeight2 * Temp1 + iCWeight3 * Temp2 + 4 ) >> 3;
       Temp1 =( iCWeight0 * pSrcSamplesV0[iXPic0] + iCWeight1 * pSrcSamplesV0[iXPic1] + 4 ) >> 3;
       Temp2 =( iCWeight0 * pSrcSamplesV1[iXPic0] + iCWeight1 * pSrcSamplesV1[iXPic1] + 4 ) >> 3;
-      pDesSamplesV[iX]  = ( iCWeight2 * Temp1 + iCWeight3 * Temp2 + 2 ) >> 2;
+      pDesSamplesV[iX]  = ( iCWeight2 * Temp1 + iCWeight3 * Temp2 + 4 ) >> 3;
 #else
       pDesSamplesU[iX]  = ( iCWeight0 * pSrcSamplesU[iXPic0] + iCWeight1 * pSrcSamplesU[iXPic1] + 4 ) >> 3;
       pDesSamplesV[iX]  = ( iCWeight0 * pSrcSamplesV[iXPic0] + iCWeight1 * pSrcSamplesV[iXPic1] + 4 ) >> 3;
