@@ -6692,7 +6692,12 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   Int iCurrRefPOC = m_pcSlice->getRefPic( eRefPicList, iRefIdx)->getPOC();
   Int iNeibPOC = iCurrPOC;
   Int iNeibRefPOC;
-
+#if INTER_VIEW_VECTOR_SCALING_C0116
+  Int iCurrViewId = m_pcSlice->getViewOrderIdx(); // will be changed to view_id
+  Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, iRefIdx)->getViewOrderIdx(); // will be changed to view_id
+  Int iNeibViewId = iCurrViewId;
+  Int iNeibRefViewId;
+#endif
 #if QC_IV_AS_LT_B0046
   Bool bIsCurrRefLongTerm = m_pcSlice->getRefPic( eRefPicList, iRefIdx)->getIsLongTerm();
   Bool bIsNeibRefLongTerm = false;
@@ -6700,9 +6705,16 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   if( pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) >= 0 )
   {
     iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) );
+#if INTER_VIEW_VECTOR_SCALING_C0116
+    iNeibRefViewId = pcTmpCU->getSlice()->getRefPic(eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx))->getViewOrderIdx(); // will be changed to view_id
+#endif
 #if QC_IV_AS_LT_B0046
     bIsNeibRefLongTerm = m_pcSlice->getRefPic( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx))->getIsLongTerm() ;
+#if INTER_VIEW_VECTOR_SCALING_C0116
+    if ( (bIsCurrRefLongTerm == bIsNeibRefLongTerm) && ((iNeibRefPOC == iCurrRefPOC) && (iNeibRefViewId == iCurrRefViewId)))
+#else
     if ( (bIsCurrRefLongTerm == bIsNeibRefLongTerm) && (iNeibRefPOC == iCurrRefPOC) )
+#endif
 #else
     if( pcTmpCU->getSlice()->getRefViewId( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) ) != m_pcSlice->getRefViewId( eRefPicList, iRefIdx ) )
       return false;
@@ -6723,6 +6735,9 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   if( pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) >= 0)
   {
     iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx) );
+#if INTER_VIEW_VECTOR_SCALING_C0116
+    iNeibRefViewId = pcTmpCU->getSlice()->getRefPic(eRefPicList, pcTmpCU->getCUMvField(eRefPicList)->getRefIdx(uiIdx))->getViewOrderIdx(); // will be changed to view_id
+#endif
     TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList)->getMv(uiIdx);
     TComMv rcMv;
 #if QC_IV_AS_LT_B0046
@@ -6735,7 +6750,15 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
       return false;
     }
 #endif
+#if INTER_VIEW_VECTOR_SCALING_C0116
+    Int iScale = 4096;
+    if((iCurrRefPOC != iNeibRefPOC)  )    // inter & inter
+        iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
+    else if(m_pcSlice->getIVScalingFlag())    // inter-view & inter-view
+        iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iNeibViewId, iNeibRefViewId );
+#else
     Int iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
+#endif
     if ( iScale == 4096 )
     {
       rcMv = cMvPred;
@@ -6757,6 +6780,9 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
   if( pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) >= 0)
   {
     iNeibRefPOC = pcTmpCU->getSlice()->getRefPOC( eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx) );
+#if INTER_VIEW_VECTOR_SCALING_C0116
+    iNeibRefViewId = pcTmpCU->getSlice()->getRefPic(eRefPicList2nd, pcTmpCU->getCUMvField(eRefPicList2nd)->getRefIdx(uiIdx))->getViewOrderIdx(); // will be changed to view_id
+#endif
     TComMv cMvPred = pcTmpCU->getCUMvField(eRefPicList2nd)->getMv(uiIdx);
     TComMv rcMv;
 #if QC_IV_AS_LT_B0046
@@ -6769,7 +6795,15 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
       return false;
     }
 #endif
+#if INTER_VIEW_VECTOR_SCALING_C0116
+    Int iScale = 4096;
+    if((iCurrRefPOC != iNeibRefPOC))    // inter & inter
+        iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
+    else if(m_pcSlice->getIVScalingFlag())    // inter-view & inter-view
+        iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iNeibViewId, iNeibRefViewId );
+#else
     Int iScale = xGetDistScaleFactor( iCurrPOC, iCurrRefPOC, iNeibPOC, iNeibRefPOC );
+#endif
     if ( iScale == 4096 )
     {
       rcMv = cMvPred;
