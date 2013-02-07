@@ -403,8 +403,8 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg, TComPicYuv* pcOrgPdmDepth )
   xGetNewPicBuffer( pcPicCurr );
   pcPicYuvOrg->copyToPic( pcPicCurr->getPicYuvOrg() );
 
-#if SONY_COLPIC_AVAILABILITY
-  pcPicCurr->setViewOrderIdx(m_iViewOrderIdx);
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  pcPicCurr->setViewOrderIdx(m_iViewOrderIdx);    // will be changed to view_id
 #endif
   pcPicCurr->setScaleOffset( m_aaiCodedScale, m_aaiCodedOffset );
 

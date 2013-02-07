@@ -178,7 +178,9 @@ private:
   UInt        m_numReorderPics[MAX_TLAYER];
   UInt        m_uiMaxDecPicBuffering[MAX_TLAYER]; 
   UInt        m_uiMaxLatencyIncrease[MAX_TLAYER];
-  
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Bool          m_bIVScalingFlag;
+#endif
 public:
   TComVPS();
   virtual ~TComVPS();
@@ -212,6 +214,10 @@ public:
 #if !QC_MVHEVC_B0046   
   Void    setDependentLayer(UInt v, UInt layer)                     { m_uiDependentLayer[layer] = v;    }
   UInt    getDependentLayer(UInt layer)                             { return m_uiDependentLayer[layer]; }
+#endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Bool getIVScalingFlag( )                                   { return m_bIVScalingFlag; }
+  Void setIVScalingFlag(Bool b)                              { m_bIVScalingFlag = b;    }
 #endif
   Void    setNumReorderPics(UInt v, UInt tLayer)                { m_numReorderPics[tLayer] = v;    }
   UInt    getNumReorderPics(UInt tLayer)                        { return m_numReorderPics[tLayer]; }
@@ -1342,13 +1348,13 @@ private:
   Int        m_aaiCodedScale [2][MAX_VIEW_NUM];
   Int        m_aaiCodedOffset[2][MAX_VIEW_NUM];
 
-#if SONY_COLPIC_AVAILABILITY|QC_MVHEVC_B0046
-  Int         m_iViewOrderIdx;
-#endif
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
 #endif
-
+#if INTER_VIEW_VECTOR_SCALING_C0115|QC_MVHEVC_B0046
+  Bool       m_bIVScalingFlag;
+  Int        m_iViewOrderIdx;    // will be changed to view_id
+#endif
 public:
   TComSlice();
   virtual ~TComSlice();
@@ -1432,9 +1438,6 @@ public:
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
   Int       getRefViewId        ( RefPicList e, Int iRefIdx)    { return  m_aiRefViewIdList[e][iRefIdx]; }
   TComPic*  getTexturePic       () const                        { return  m_pcTexturePic; }
-#if SONY_COLPIC_AVAILABILITY
-  Int       getViewOrderIdx     ()                                  { return  m_iViewOrderIdx;              }
-#endif
   Int       getDepth            ()                              { return  m_iDepth;                     }
   UInt      getColDir           ()                              { return  m_uiColDir;                   }
 #if COLLOCATED_REF_IDX
@@ -1484,9 +1487,6 @@ public:
   Void      setRefPOC           ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefPOCList[e][iRefIdx] = i; }
   Void      setRefViewId        ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefViewIdList[e][iRefIdx] = i; }
   Void      setTexturePic       ( TComPic *pcTexturePic )       { m_pcTexturePic = pcTexturePic; }
-#if SONY_COLPIC_AVAILABILITY
-  Void      setViewOrderIdx     ( Int i )                       { m_iViewOrderIdx     = i;      }
-#endif
   Void      setNumRefIdx        ( RefPicList e, Int i )         { m_aiNumRefIdx[e]    = i;      }
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
@@ -1660,7 +1660,12 @@ public:
   Int       getNewRefIdx        ( RefPicList e )                { return  m_aiNewRefIdx[e];     }
   Void      setNewRefIdx        ( RefPicList e, Int i )         { m_aiNewRefIdx[e]    = i;      }
 #endif
-
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Void setIVScalingFlag( Bool val )         { m_bIVScalingFlag = val;     }
+  Bool getIVScalingFlag()                   { return m_bIVScalingFlag;    }
+  Void setViewOrderIdx     ( Int i )        { m_iViewOrderIdx     = i;    }   // will be changed to view_id
+  Int  getViewOrderIdx     ()               { return  m_iViewOrderIdx;    }   // will be changed to view_id
+#endif
 protected:
   TComPic*  xGetRefPic        (TComList<TComPic*>& rcListPic, UInt uiPOC);
   TComPic*  xGetLongTermRefPic(TComList<TComPic*>& rcListPic, UInt uiPOC);

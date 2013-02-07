@@ -253,9 +253,6 @@ TDecTop::TDecTop()
   m_bGopSizeSet   = false;
   m_iMaxRefPicNum = 0;
   m_uiValidPS = 0;
-#if SONY_COLPIC_AVAILABILITY
-  m_iViewOrderIdx = 0;
-#endif
 #if ENC_DEC_TRACE
   g_hTrace = fopen( "TraceDec.txt", "wb" );
   g_bJustDoIt = g_bEncDecTraceDisable;
@@ -686,10 +683,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     m_apcSlicePilot->setNalUnitTypeBaseViewMvc( m_nalUnitTypeBaseView );
   }
 
-#if SONY_COLPIC_AVAILABILITY
-  m_apcSlicePilot->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx());
-#endif
-
 #if NAL_REF_FLAG
   m_apcSlicePilot->setReferenced(nalu.m_nalRefFlag);
 #else
@@ -767,10 +760,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     //  Get a new picture buffer
     xGetNewPicBuffer (m_apcSlicePilot, pcPic);
 
-#if SONY_COLPIC_AVAILABILITY
-    pcPic->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
+#if INTER_VIEW_VECTOR_SCALING_C0115
+    pcPic->setViewOrderIdx( m_apcSlicePilot->getVPS()->getViewOrderIdx(nalu.m_layerId) );    // will be changed to view_id
 #endif
-
     /* transfer any SEI messages that have been received to the picture */
     pcPic->setSEIs(m_SEIs);
     m_SEIs = NULL;
@@ -995,12 +987,16 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 #endif
 #endif
 
-#if SONY_COLPIC_AVAILABILITY
+#if INTER_VIEW_VECTOR_SCALING_C0115
 #if VIDYO_VPS_INTEGRATION
-    pcSlice->setViewOrderIdx( pcSlice->getVPS()->getViewOrderIdx(nalu.m_layerId) );
+    pcSlice->setViewOrderIdx( pcSlice->getVPS()->getViewOrderIdx(nalu.m_layerId) );        // will be changed to view_id
 #else
     pcSlice->setViewOrderIdx( pcPic->getViewOrderIdx() );
 #endif
+#endif
+
+#if INTER_VIEW_VECTOR_SCALING_C0115
+    pcSlice->setIVScalingFlag( pcSlice->getVPS()->getIVScalingFlag());
 #endif
 
     assert( m_tAppDecTop != NULL );

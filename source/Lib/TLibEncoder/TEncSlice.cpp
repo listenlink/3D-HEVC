@@ -189,8 +189,8 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
 #endif
   rpcSlice->setPOC( uiPOCCurr );
   
-#if SONY_COLPIC_AVAILABILITY
-  rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());    // will be changed to view_id
 #endif 
 #if LGE_ILLUCOMP_B0045
   rpcSlice->setApplyIC(false);
