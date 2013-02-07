@@ -258,6 +258,9 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       pcSlice->setSliceIdx(0);
       pcSlice->setViewId( m_pcEncTop->getViewId() );
       pcSlice->setIsDepth( m_pcEncTop->getIsDepth() ); 
+#if INTER_VIEW_VECTOR_SCALING_C0115
+      pcSlice->setIVScalingFlag( m_pcEncTop->getUseIVS() );
+#endif
 
       m_pcEncTop->getSPS()->setDisInter4x4(m_pcEncTop->getDisInter4x4());
       pcSlice->setScalingList ( m_pcEncTop->getScalingList()  );

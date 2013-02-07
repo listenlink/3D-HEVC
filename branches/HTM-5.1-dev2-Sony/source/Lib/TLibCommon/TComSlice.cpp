@@ -112,11 +112,12 @@ TComSlice::TComSlice()
 #if TILES_WPP_ENTRY_POINT_SIGNALLING
 , m_numEntryPointOffsets          ( 0 )
 #endif
-#if SONY_COLPIC_AVAILABILITY
-, m_iViewOrderIdx                 ( 0 )
-#endif
 #if LGE_ILLUCOMP_B0045
 , m_bApplyIC                      ( false )
+#endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+, m_bIVScalingFlag                (false)
+, m_iViewOrderIdx                 ( 0 )        // will be changed to view_id
 #endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
@@ -721,8 +722,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_iPOC                 = pSrc->m_iPOC;
   m_viewId               = pSrc->m_viewId;
-#if SONY_COLPIC_AVAILABILITY
-  m_iViewOrderIdx        = pSrc->m_iViewOrderIdx;
+#if INTER_VIEW_VECTOR_SCALING_C0115    
+  m_iViewOrderIdx        = pSrc->m_iViewOrderIdx;// will be changed to view_id
+  m_bIVScalingFlag       = pSrc->m_bIVScalingFlag;
 #endif
   m_eNalUnitType         = pSrc->m_eNalUnitType;
   m_eNalUnitTypeBaseViewMvc = pSrc->m_eNalUnitTypeBaseViewMvc;

@@ -147,7 +147,7 @@
 
 ///// ***** OTHERS *********
 #define LG_ZEROINTRADEPTHRESI_A0087       1   // JCT2-A0087
-#define SONY_COLPIC_AVAILABILITY          1
+#define INTER_VIEW_VECTOR_SCALING_C0115   1   // JCT2-C0115 Inter-view vector scaling for TMVP & flag
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
 #define VIDYO_VPS_INTEGRATION             1
 

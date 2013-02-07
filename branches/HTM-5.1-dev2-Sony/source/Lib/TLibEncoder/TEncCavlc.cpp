@@ -497,6 +497,9 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
         
       }
     }
+#if INTER_VIEW_VECTOR_SCALING_C0115
+      WRITE_FLAG( pcVPS->getIVScalingFlag(),                      "inter_view_vector_scaling_flag" );
+#endif
   }
   
   WRITE_FLAG( 0,                     "vps_extension_flag" );

@@ -6900,19 +6900,11 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
 
   RefPicList  eColRefPicList;
   Int iColPOC, iColRefPOC, iCurrPOC, iCurrRefPOC, iScale;
-#if SONY_COLPIC_AVAILABILITY
-#if QC_IV_AS_LT_B0046
-  Int iColViewOrderIdx, iCurrViewOrderIdx, iCurrRefViewOrderIdx;
-#else
-  Int iColViewOrderIdx, iColRefViewOrderIdx, iCurrViewOrderIdx, iCurrRefViewOrderIdx;
-#endif
-#endif
   TComMv cColMv;
-
-#if SONY_COLPIC_AVAILABILITY
-  iCurrViewOrderIdx    = m_pcSlice->getViewOrderIdx();
-  iCurrRefViewOrderIdx = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx();
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Int iColViewId, iColRefViewId, iCurrViewId, iCurrRefViewId;
 #endif
+
   // use coldir.
 #if COLLOCATED_REF_IDX
   TComPic *pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? getSlice()->getColDir() : 0), getSlice()->getColRefIdx());
@@ -6927,8 +6919,10 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   iCurrPOC = m_pcSlice->getPOC();    
   iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
   iColPOC = pColCU->getSlice()->getPOC();  
-#if SONY_COLPIC_AVAILABILITY
-  iColViewOrderIdx = pColCU->getSlice()->getViewOrderIdx();
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  iCurrViewId = m_pcSlice->getViewOrderIdx(); // will be changed to view_id    
+  iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx(); // will be changed to view_id
+  iColViewId = pColCU->getSlice()->getViewOrderIdx(); // will be changed to view_id
 #endif
 
   if (pColCU->isIntra(uiAbsPartAddr))
@@ -6936,7 +6930,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
     return false;
   }
 
-#if !SONY_COLPIC_AVAILABILITY&!QC_IV_AS_LT_B0046
+#if !INTER_VIEW_VECTOR_SCALING_C0115&!QC_IV_AS_LT_B0046
   if( m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewId() != m_pcSlice->getViewId() )
     return false;
 #endif
@@ -6963,16 +6957,14 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
 
   // Scale the vector.
   iColRefPOC = pColCU->getSlice()->getRefPOC(eColRefPicList, iColRefIdx);
-
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  iColRefViewId = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewOrderIdx(); // will be changed to view_id 
+#endif
 #if !QC_IV_AS_LT_B0046
-#if SONY_COLPIC_AVAILABILITY
-  iColRefViewOrderIdx = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewOrderIdx();
-#else
   if( pColCU->getSlice()->getRefViewId( eColRefPicList, iColRefIdx ) != pColCU->getSlice()->getViewId() )
   {
     return false;
   }
-#endif
 #else
   Bool bIsCurrRefLongTerm = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getIsLongTerm();
   Bool bIsColRefLongTerm = pColCU->getSlice()->getWasLongTerm(eColRefPicList, iColRefIdx); 
@@ -6989,8 +6981,8 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
         riRefIdx = iUpdRefIdx;
         bIsCurrRefLongTerm = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getIsLongTerm();
         iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
-#if SONY_COLPIC_AVAILABILITY
-        iCurrRefViewOrderIdx = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx();
+#if INTER_VIEW_VECTOR_SCALING_C0115
+        iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx(); // will be changed to view_id
 #endif
       }
       else
@@ -7023,50 +7015,27 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
         rcMv = cColMv.scaleMv( iScale );
       }
     }else
-#if QC_MVHEVC_B0046
-      rcMv = cColMv; //inter-view
-#else
+#if INTER_VIEW_VECTOR_SCALING_C0115
     {
-#if SONY_COLPIC_AVAILABILITY
-      Int iColRefViewOrderIdx = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewOrderIdx();
-      iScale = xGetDistScaleFactor(iCurrViewOrderIdx, iCurrRefViewOrderIdx, iColViewOrderIdx, iColRefViewOrderIdx);
-      if ( iScale == 4096 )
-      {
-        rcMv = cColMv;
-      }
-      else
-      {
-        rcMv = cColMv.scaleMv( iScale );
-      }
-#else
-      return false;
-#endif
+        if((iCurrPOC == iCurrRefPOC) && m_pcSlice->getIVScalingFlag())    // inter-view & inter-view
+            iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
+        else
+            iScale = 4096;            // inter & inter
+        if ( iScale == 4096 )
+        {
+          rcMv = cColMv;
+        }
+        else
+        {
+          rcMv = cColMv.scaleMv( iScale );
+        }
     }
+#else
+    rcMv = cColMv; //inter-view
 #endif
   }
-#else
-#if SONY_COLPIC_AVAILABILITY
-  iScale = 0;
-  iCurrRefViewOrderIdx = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewOrderIdx();
-  if((iColPOC != iColRefPOC)&&(iCurrPOC != iCurrRefPOC))
-    iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
-  else if((iColPOC == iColRefPOC)&&(iCurrPOC == iCurrRefPOC))
-    iScale = xGetDistScaleFactor(iCurrViewOrderIdx, iCurrRefViewOrderIdx, iColViewOrderIdx, iColRefViewOrderIdx);
-  else
-    return false; 
+#endif
 
-#else
-  iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
-#endif
-  if ( iScale == 4096 )
-  {
-    rcMv = cColMv;
-  }
-  else
-  {
-    rcMv = cColMv.scaleMv( iScale );
-  }
-#endif
   return true;
 }
 

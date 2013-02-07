@@ -1457,6 +1457,9 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
         
       }
     }
+#if INTER_VIEW_VECTOR_SCALING_C0115
+    READ_FLAG( uiCode,  "inter_view_vector_scaling_flag" );    pcVPS->setIVScalingFlag( uiCode ? true:false); 
+#endif
   }
   
   READ_FLAG( uiCode,  "vps_extension_flag" );          assert(!uiCode);

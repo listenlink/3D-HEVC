@@ -341,6 +341,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if LGE_ILLUCOMP_B0045
   ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
 #endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  ("IVSEnable",                       m_bUseIVS                 , true         , "Use inter-view vector scaling" )
+#endif
 #if DBL_CONTROL
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
 #endif
@@ -1805,7 +1808,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #if LGE_ILLUCOMP_B0045
   printf("IlluCompEnable: %d ", m_bUseIC);
 #endif
-
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  printf("IVSEnable: %d ", m_bUseIVS);
+#endif
   printf("\n");
 
   printf("TOOL CFG DEPTH  : ");
