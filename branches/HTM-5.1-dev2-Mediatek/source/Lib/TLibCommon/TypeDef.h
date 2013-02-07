@@ -99,6 +99,7 @@
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
 #if HHI_INTER_VIEW_RESIDUAL_PRED       
 #define MTK_MDIVRP_C0138                  1   // mode-dependent inter-view residual prediction
+#define MTK_C0138_FIXED                   1
 #define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
 #define QC_SIMPLIFIEDIVRP_M24938          1
 #else                                  
