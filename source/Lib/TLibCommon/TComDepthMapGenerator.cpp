@@ -638,7 +638,11 @@ TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicL
   Int iViewId = 0;
   for( UInt uiBId = 0; uiBId < m_uiCurrViewId && iValid==0; uiBId++ )
   {
+#if MTK_C0138_FIXED
+    UInt        uiBaseId    = uiBId;
+#else
     UInt        uiBaseId    = m_auiBaseIdList[ uiBId ];
+#endif
     TComPic*    pcBasePic   = m_pcAUPicAccess->getPic( uiBaseId );
     for( Int iRefListId = 0; iRefListId < 2 && iValid==0; iRefListId++ )
     {
