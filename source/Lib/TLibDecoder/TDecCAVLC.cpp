@@ -1926,7 +1926,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   if (uiCode)
   {
     UInt uiCodeTmp = 0;
-    if ( rpcSlice->getSPS()->getViewId() && !rpcSlice->getSPS()->isDepth() )
+    if ( rpcSlice->getSPS()->getViewId() 
+#if !LGE_ILLUCOMP_DEPTH_C0046
+        && !rpcSlice->getSPS()->isDepth()
+#endif
+        )
     {
       READ_FLAG (uiCodeTmp, "applying IC flag");
     }
