@@ -63,7 +63,7 @@
 
 // 3rd meeting
 #define FIX_DMM_CTX_INIT_C0034            1    // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
-
+#define FIX_SDC_ENC_C0143                 1    // JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
 
 // FCO 
 #define FLEX_CODING_ORDER_M23723          1
