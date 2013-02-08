@@ -5525,7 +5525,11 @@ Void TComDataCU::getDisMvpCand ( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
 }
 
 #if MERL_VSP_C0152
+#if LGE_SIMP_DVP_REFINE_C0112
+Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT, Int iShiftPrec, Bool bSimpleDvpRefine)
+#else
 Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT, Int iShiftPrec)
+#endif
 {
   Int depStride =  pcBaseViewDepthPicYuv->getStride();
 
@@ -5537,7 +5541,42 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
 
   Pel *depth  = pcBaseViewDepthPicYuv->getLumaAddr() + depthPosX + depthPosY * depStride;
   Pel  maxDepth = 0;
+#if LGE_SIMP_DVP_REFINE_C0112
+  if ( bSimpleDvpRefine )
+  {
+    Int depthStartPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + (mv->getHor()>>2));
+    Int depthStartPosY = Clip3(0,   height- iHeight - 1,  iBlkY + (mv->getVer()>>2));
+    Int depthEndPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + iWidth  + (mv->getHor()>>2));
+    Int depthEndPosY = Clip3(0,   height- iHeight - 1,  iBlkY + iHeight + (mv->getVer()>>2));
+    Int iCenterX = (depthStartPosX + depthEndPosX) >> 1;
+    Int iCenterY = (depthStartPosY + depthEndPosY) >> 1;
 
+    Pel *depthTL  = pcBaseViewDepthPicYuv->getLumaAddr();
+    Int aiDepth[5];
+    aiDepth[0] = depthTL[ (depthStartPosY) * depStride + depthStartPosX ];      // Left Top
+    aiDepth[1] = depthTL[ (depthEndPosY)   * depStride + depthStartPosX ];      // Left Bottom
+    aiDepth[2] = depthTL[ (depthStartPosY) * depStride + depthEndPosX   ];      // Right Top
+    aiDepth[3] = depthTL[ (depthEndPosY)   * depStride + depthEndPosX   ];      // Right Bottom
+    aiDepth[4] = depthTL[ (iCenterY)       * depStride + iCenterX       ];      // Center
+    for (Int i = 0; i < 5; i++)
+    {
+      if (maxDepth < aiDepth[i])
+        maxDepth = aiDepth[i];
+    }
+  }
+  else
+  {
+    for (Int j = 0; j < iHeight; j++)
+    {
+      for (Int i = 0; i < iWidth; i++)
+      {
+        if (maxDepth < depth[i])
+          maxDepth = depth[i];
+      }
+      depth += depStride;
+    }
+  }
+#else
   for (Int j = 0; j < iHeight; j++)
   {
     for (Int i = 0; i < iWidth; i++)
@@ -5547,13 +5586,16 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
     }
     depth += depStride;
   }
-
+#endif
   Int disparity = aiShiftLUT[ maxDepth ] << iShiftPrec;
 
   return disparity;
 }
-
+#if LGE_SIMP_DVP_REFINE_C0112
+Void TComDataCU::estimateDVFromDM(UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred, Bool bSimpleDvpRefine)
+#else
 Void TComDataCU::estimateDVFromDM(UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred)
+#endif
 {
   if (picDepth)
   {
@@ -5567,9 +5609,11 @@ Void TComDataCU::estimateDVFromDM(UInt uiPartIdx, TComPic* picDepth, UInt uiPart
     Int* aiShiftLUT;
     Int  iShiftPrec;
     getSlice()->getBWVSPLUTParam(aiShiftLUT, iShiftPrec);
-    
-    Pel x = getMcpFromDM( pcBaseViewDepthPicYuv, cMvPred, iBlkX, iBlkY, iWidth, iHeight, aiShiftLUT, iShiftPrec );
-
+#if LGE_SIMP_DVP_REFINE_C0112
+    Pel x = getMcpFromDM( pcBaseViewDepthPicYuv, cMvPred, iBlkX, iBlkY, iWidth, iHeight, aiShiftLUT, iShiftPrec, bSimpleDvpRefine );
+#else
+    Pel x = getMcpFromDM( pcBaseViewDepthPicYuv, cMvPred, iBlkX, iBlkY, iWidth, iHeight, aiShiftLUT, iShiftPrec);
+#endif
     cMvPred->setHor(x);
     clipMv(*cMvPred);
   }
@@ -5895,7 +5939,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
               TComPic* picDepth = NULL;
               picDepth = getSlice()->getRefPicBaseDepth();
               if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+                estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv, true);
+#else
                 estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv);
+#endif
 
               pDInfo->m_acMvCand[ pDInfo->iN] = cColMv;
               pDInfo->m_aVIdxCan[ pDInfo->iN++] = iTargetViewIdx;
@@ -5917,7 +5965,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
               TComPic* picDepth = NULL;
               picDepth = getSlice()->getRefPicBaseDepth();
               if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+                estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv, true);
+#else
                 estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv);
+#endif
               pDInfo->m_acMvCand[ pDInfo->iN] = cColMv;
               pDInfo->m_aVIdxCan[ pDInfo->iN++] = iTargetViewIdx;
             }
@@ -5938,7 +5990,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
               TComPic* picDepth = NULL;
               picDepth = getSlice()->getRefPicBaseDepth();
               if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+                estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv, true);
+#else
                 estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv);
+#endif
               pDInfo->m_acMvCand[ pDInfo->iN] = cColMv;
               pDInfo->m_aVIdxCan[ pDInfo->iN++] = iTargetViewIdx;
             }
@@ -6001,7 +6057,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
             TComPic* picDepth = NULL;
             picDepth = getSlice()->getRefPicBaseDepth();
             if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+              estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred, true);
+#else
               estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred);
+#endif
             pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred;
             pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           }
@@ -6088,7 +6148,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
             TComPic* picDepth = NULL;
             picDepth = getSlice()->getRefPicBaseDepth();
             if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+              estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred, true);
+#else
               estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred);
+#endif
             pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred;
             pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           }
@@ -6173,7 +6237,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
             TComPic* picDepth = NULL;
             picDepth = getSlice()->getRefPicBaseDepth();
             if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+              estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred, true);
+#else
               estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred);
+#endif
             pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred;
             pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           }
@@ -6254,7 +6322,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
             TComPic* picDepth = NULL;
             picDepth = getSlice()->getRefPicBaseDepth();
             if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+              estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred, true);
+#else
               estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred);
+#endif
             pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred;
             pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           }
@@ -6337,7 +6409,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
             TComPic* picDepth = NULL;
             picDepth = getSlice()->getRefPicBaseDepth();
             if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+              estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred, true);
+#else
               estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cMvPred);
+#endif
             pDInfo->m_acMvCand[ pDInfo->iN] = cMvPred;
             pDInfo->m_aVIdxCan[ pDInfo->iN++] = refViewIdx;
           }
@@ -6641,7 +6717,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
               TComPic* picDepth = NULL;
               picDepth = getSlice()->getRefPicBaseDepth();
               if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+                estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv, true);
+#else
                 estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv);
+#endif
 
               pDInfo->m_acMvCand[ pDInfo->iN] = cColMv;
               pDInfo->m_aVIdxCan[ pDInfo->iN++] = iTargetViewIdx;
@@ -6663,7 +6743,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
               TComPic* picDepth = NULL;
               picDepth = getSlice()->getRefPicBaseDepth();
               if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+                estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv, true);
+#else
                 estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv);
+#endif
               pDInfo->m_acMvCand[ pDInfo->iN] = cColMv;
               pDInfo->m_aVIdxCan[ pDInfo->iN++] = iTargetViewIdx;
             }
@@ -6684,7 +6768,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
               TComPic* picDepth = NULL;
               picDepth = getSlice()->getRefPicBaseDepth();
               if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+                estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv, true);
+#else
                 estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &cColMv);
+#endif
               pDInfo->m_acMvCand[ pDInfo->iN] = cColMv;
               pDInfo->m_aVIdxCan[ pDInfo->iN++] = iTargetViewIdx;
             }
@@ -6725,7 +6813,11 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
             TComPic* picDepth = NULL;
             picDepth = getSlice()->getRefPicBaseDepth();
             if (picDepth && bDepthRefine)
+#if LGE_SIMP_DVP_REFINE_C0112
+              estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &dv, true);
+#else
               estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &dv);
+#endif
             pDInfo->m_acMvCand[ pDInfo->iN] = dv;
             pDInfo->m_aVIdxCan[ pDInfo->iN++] = 0;
           }
