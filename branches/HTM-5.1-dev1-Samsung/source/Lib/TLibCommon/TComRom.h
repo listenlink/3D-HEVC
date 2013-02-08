@@ -201,7 +201,11 @@ extern       std::vector< std::vector<TComWedgeNode> >       g_aacWedgeNodeLists
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if SAIT_SDC_C0096
+#define RWTH_SDC_NUM_PRED_MODES 3
+#else
 #define RWTH_SDC_NUM_PRED_MODES 4
+#endif
 extern      UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES];
 #endif
 

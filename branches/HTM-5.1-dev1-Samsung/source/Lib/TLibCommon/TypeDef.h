@@ -85,6 +85,10 @@
 #define LGE_DMM3_SIMP_C0044               1
 #endif
 
+#if RWTH_SDC_DLT_B0036
+#define SAIT_SDC_C0096                    1   // JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
+#endif
+
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
