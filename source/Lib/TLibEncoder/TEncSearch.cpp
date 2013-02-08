@@ -2349,7 +2349,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       
       for( UInt uiSDC=0; uiSDC<=uiUseSDC; uiSDC++ )
       {
+#if FIX_SDC_ENC_C0143
+        for( UInt uiRes = 0; uiRes<=uiSDC; uiRes++ )
+#else
         for( UInt uiRes = 0; uiRes<=uiUseSDC; uiRes++ )
+#endif
         {
 #endif
 
