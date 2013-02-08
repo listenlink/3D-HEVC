@@ -77,11 +77,13 @@
 
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
+#define LGE_SIMP_DVP_REFINE_C0112            1 // JCT3V-C0112: 1: simplification of refining disparity vector using a warped depth block
 
 #else // !MERL_VSP_C0152
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
 #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  0 // JCT3V-C0152 && JCT3V-C0131: 1: refine disparity vector using a warped depth block; 0: not to refine
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#define LGE_SIMP_DVP_REFINE_C0112            0 // JCT3V-C0112: 1: simplification of refining disparity vector using a warped depth block
 #endif
 
 ///// ***** FIXES *********
