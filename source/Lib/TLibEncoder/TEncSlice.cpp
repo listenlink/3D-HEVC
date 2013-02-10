@@ -810,6 +810,14 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     for (UInt ui = 0; ui < uiTilesAcross; ui++)
       m_pcBufferLowLatSbacCoders[ui].load(m_pppcRDSbacCoder[0][CI_CURR_BEST]);  //init. state
   }
+
+#if MERL_VSP_C0152
+  // Send Depth/Texture pointers to slice level
+  pcSlice->setBWVSPLUTParam(m_aiShiftLUT, m_iShiftPrec);
+  pcSlice->setRefPicBaseTxt(m_pPicBaseTxt);
+  pcSlice->setRefPicBaseDepth(m_pPicBaseDepth);
+#endif
+
   UInt uiWidthInLCUs  = rpcPic->getPicSym()->getFrameWidthInCU();
   //UInt uiHeightInLCUs = rpcPic->getPicSym()->getFrameHeightInCU();
   UInt uiCol=0, uiLin=0, uiSubStrm=0;
@@ -1137,6 +1145,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
   UInt uiTileLCUX     = 0;
 
   UInt uiEncCUOrder;
+
   uiCUAddr = rpcPic->getPicSym()->getCUOrderMap( uiStartCUAddr /rpcPic->getNumPartInCU());  /*for tiles, uiStartCUAddr is NOT the real raster scan address, it is actually
                                                                                               an encoding order index, so we need to convert the index (uiStartCUAddr)
                                                                                               into the real raster scan address (uiCUAddr) via the CUOrderMap*/

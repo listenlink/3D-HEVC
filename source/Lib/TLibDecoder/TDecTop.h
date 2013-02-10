@@ -76,6 +76,9 @@ public:
 
   Bool  isInitialized() const { return m_bInitialized; }
 
+#if MERL_VSP_C0152
+  Int**** getBaseViewShiftLUTI()  { return m_aiBaseViewShiftLUT;   }
+#endif
 private:
   Bool  xIsComplete ();
   Void  xOutput     ( Int iPOC );
@@ -96,7 +99,81 @@ private:
   Int     m_iLastViewId;
   Int     m_iLastPOC;
   UInt    m_uiMaxViewId;
+
+#if MERL_VSP_C0152
+  UInt    m_uiBitDepthForLUT;
+  UInt    m_iLog2Precision;
+  UInt    m_uiInputBitDepth;
+  // look-up tables
+  Double****   m_adBaseViewShiftLUT;       ///< Disparity LUT
+  Int****      m_aiBaseViewShiftLUT;       ///< Disparity LUT
+  Void xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT);
+  Void xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT);
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 );
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2 );
+  template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
+#endif
+
 };
+
+#if MERL_VSP_C0152
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
+    {
+      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
+      {
+        for( UInt uiM = 0; uiM < uiSize3; uiM++ )
+        {
+          delete[] rpt[ uiK ][ uiL ][ uiM ];
+        }
+        delete[] rpt[ uiK ][ uiL ];
+      }
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+
+
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2 )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize1; uiK++ )
+    {
+      for( UInt uiL = 0; uiL < uiSize2; uiL++ )
+      {
+        delete[] rpt[ uiK ][ uiL ];
+      }
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+
+
+template <class T>
+Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize )
+{
+  if( rpt )
+  {
+    for( UInt uiK = 0; uiK < uiSize; uiK++ )
+    {
+      delete[] rpt[ uiK ];
+    }
+    delete[] rpt;
+  }
+  rpt = NULL;
+};
+
+#endif
 
 /// decoder class
 class TDecTop
@@ -205,6 +282,7 @@ public:
   bool                m_bFirstNal; //used to copy SPS, PPS, VPS
   ParameterSetManagerDecoder* xGetParaSetDec ()        {return  &m_parameterSetManagerDecoder;}
 #endif
+
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
   Void  xUpdateGopSize    (TComSlice* pcSlice);

@@ -702,5 +702,4 @@ Void TComPic::destroyNonDBFilterInfo()
 
 }
 
-
 //! \}

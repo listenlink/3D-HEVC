@@ -151,7 +151,7 @@ protected:
   /// sub-function for motion vector refinement used in fractional-pel accuracy
   UInt  xPatternRefinement( TComPattern* pcPatternKey,
                            TComMv baseRefMv,
-                           Int iFrac, TComMv& rcMvFrac );
+                           Int iFrac, TComMv& rcMvFrac);
   
   typedef struct
   {
@@ -512,6 +512,9 @@ protected:
                                     UChar* uhInterDirNeighbours,
                                     Int& numValidMergeCand
 #endif
+#if MERL_VSP_C0152
+                                  , Int* iVSPIndexTrue
+#endif
                                    );
   // -------------------------------------------------------------------------------------------------------------------
   // motion estimation
@@ -578,8 +581,7 @@ protected:
                                     TComMv&       rcMvHalf,
                                     TComMv&       rcMvQter,
                                     UInt&         ruiCost 
-                                   ,Bool biPred
-                                   );
+                                   ,Bool biPred);
   
   Void xExtDIFUpSamplingH( TComPattern* pcPattern, Bool biPred  );
   Void xExtDIFUpSamplingQ( TComPattern* pcPatternKey, TComMv halfPelRef, Bool biPred );

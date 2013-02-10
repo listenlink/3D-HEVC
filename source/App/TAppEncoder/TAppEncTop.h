@@ -98,6 +98,7 @@ private:
 #if HHI_INTERVIEW_SKIP
   TRenTop  m_cUsedPelsRenderer;                               ///< renderer for used pels map
 #endif
+
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -164,6 +165,9 @@ private:
   Void  xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames);
 #endif
 
+#if MERL_VSP_C0152
+  Void setBWVSPLUT( Int iCodedViewIdx, Int gopId, Bool isDepth);
+#endif
 };// END CLASS DEFINITION TAppEncTop
 
 //! \}
