@@ -305,7 +305,11 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
 };
 
 #if RWTH_SDC_DLT_B0036
+#if SAIT_SDC_C0096
+UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES] = { DC_IDX, DMM_WEDGE_FULL_IDX, PLANAR_IDX };
+#else
 UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES] = { DC_IDX, DMM_WEDGE_FULL_IDX, DMM_WEDGE_PREDDIR_IDX, PLANAR_IDX };
+#endif
 #endif
 
 Int g_quantScales[6] =
@@ -585,6 +589,19 @@ const UChar g_aucWedgeFullBitsListIdx[7] =
   13,  //  64x64   WedgeListSize[DOUBLE_PEL] 6079
   0    // 128x128  
 };
+
+#if LGE_DMM3_SIMP_C0044
+const UChar g_aucWedgeTexPredBitsListIdx[7] =
+{
+  0,   //   2x2
+  6,   //   4x4    
+  9,  //   8x8    
+  9,  //  16x16   
+  9,  //  32x32   
+  0,  //  64x64   
+  0    // 128x128  
+};
+#endif
 
 const UChar g_aucIntraSizeIdxToWedgeSize[7] =
 {

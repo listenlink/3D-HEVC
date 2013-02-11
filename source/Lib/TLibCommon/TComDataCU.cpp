@@ -134,6 +134,9 @@ TComDataCU::TComDataCU()
 #endif
 #if HHI_DMM_PRED_TEX
   m_puiWedgePredTexTabIdx    = NULL;
+#if LGE_DMM3_SIMP_C0044
+  m_puiWedgePredTexIntraTabIdx = NULL;
+#endif
   m_piWedgePredTexDeltaDC1   = NULL;
   m_piWedgePredTexDeltaDC2   = NULL;
 
@@ -282,6 +285,9 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
 #endif
 #if HHI_DMM_PRED_TEX
     m_puiWedgePredTexTabIdx    = (UInt*)xMalloc(UInt, uiNumPartition);
+#if LGE_DMM3_SIMP_C0044
+    m_puiWedgePredTexIntraTabIdx    = (UInt*)xMalloc(UInt, uiNumPartition);
+#endif
     m_piWedgePredTexDeltaDC1   = (Int* )xMalloc(Int,  uiNumPartition);
     m_piWedgePredTexDeltaDC2   = (Int* )xMalloc(Int,  uiNumPartition);
 
@@ -407,6 +413,9 @@ Void TComDataCU::destroy()
 #endif
 #if HHI_DMM_PRED_TEX
     if ( m_puiWedgePredTexTabIdx    ) { xFree(m_puiWedgePredTexTabIdx   ); m_puiWedgePredTexTabIdx    = NULL; }
+#if LGE_DMM3_SIMP_C0044
+    if ( m_puiWedgePredTexIntraTabIdx ) { xFree(m_puiWedgePredTexIntraTabIdx); m_puiWedgePredTexIntraTabIdx    = NULL; }
+#endif
     if ( m_piWedgePredTexDeltaDC1   ) { xFree(m_piWedgePredTexDeltaDC1  ); m_piWedgePredTexDeltaDC1   = NULL; }
     if ( m_piWedgePredTexDeltaDC2   ) { xFree(m_piWedgePredTexDeltaDC2  ); m_piWedgePredTexDeltaDC2   = NULL; }
 
@@ -617,6 +626,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #endif
 #if HHI_DMM_PRED_TEX
     memset( m_puiWedgePredTexTabIdx    + firstElement, 0, sizeof( UInt ) * numElements );
+#if LGE_DMM3_SIMP_C0044
+    memset( m_puiWedgePredTexIntraTabIdx + firstElement, 0, sizeof( UInt ) * numElements );
+#endif
     memset( m_piWedgePredTexDeltaDC1   + firstElement, 0, sizeof( Int  ) * numElements );
     memset( m_piWedgePredTexDeltaDC2   + firstElement, 0, sizeof( Int  ) * numElements );
 
@@ -802,6 +814,9 @@ Void TComDataCU::initEstData( UInt uiDepth, UInt uiQP )
 #endif
 #if HHI_DMM_PRED_TEX
     m_puiWedgePredTexTabIdx   [ui] = 0;
+#if LGE_DMM3_SIMP_C0044
+    m_puiWedgePredTexIntraTabIdx [ui] = 0;
+#endif
     m_piWedgePredTexDeltaDC1  [ui] = 0;
     m_piWedgePredTexDeltaDC2  [ui] = 0;
 
@@ -920,6 +935,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #endif
 #if HHI_DMM_PRED_TEX
   memset( m_puiWedgePredTexTabIdx,    0, sizeof( UInt ) * m_uiNumPartition );
+#if LGE_DMM3_SIMP_C0044
+  memset( m_puiWedgePredTexIntraTabIdx, 0, sizeof( UInt ) * m_uiNumPartition );
+#endif
   memset( m_piWedgePredTexDeltaDC1,   0, sizeof( Int  ) * m_uiNumPartition );
   memset( m_piWedgePredTexDeltaDC2,   0, sizeof( Int  ) * m_uiNumPartition );
 
@@ -991,6 +1009,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #endif
 #if HHI_DMM_PRED_TEX
       m_puiWedgePredTexTabIdx   [ui]=pcCU->getWedgePredTexTabIdx    (uiPartOffset+ui);
+#if LGE_DMM3_SIMP_C0044
+      m_puiWedgePredTexIntraTabIdx [ui]=pcCU->getWedgePredTexIntraTabIdx (uiPartOffset+ui);
+#endif
       m_piWedgePredTexDeltaDC1  [ui]=pcCU->getWedgePredTexDeltaDC1  (uiPartOffset+ui);
       m_piWedgePredTexDeltaDC2  [ui]=pcCU->getWedgePredTexDeltaDC2  (uiPartOffset+ui);
 
@@ -1192,6 +1213,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
 #if HHI_DMM_PRED_TEX
   m_puiWedgePredTexTabIdx    = pcCU->getWedgePredTexTabIdx()     + uiPart;   
+#if LGE_DMM3_SIMP_C0044
+  m_puiWedgePredTexIntraTabIdx = pcCU->getWedgePredTexIntraTabIdx() + uiPart;   
+#endif
   m_piWedgePredTexDeltaDC1   = pcCU->getWedgePredTexDeltaDC1()   + uiPart;   
   m_piWedgePredTexDeltaDC2   = pcCU->getWedgePredTexDeltaDC2()   + uiPart;   
 
@@ -1374,6 +1398,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
 #endif
 #if HHI_DMM_PRED_TEX
   memcpy( m_puiWedgePredTexTabIdx    + uiOffset, pcCU->getWedgePredTexTabIdx(),     sizeof( UInt ) * uiNumPartition );
+#if LGE_DMM3_SIMP_C0044
+  memcpy( m_puiWedgePredTexIntraTabIdx + uiOffset, pcCU->getWedgePredTexIntraTabIdx(), sizeof( UInt ) * uiNumPartition );
+#endif
   memcpy( m_piWedgePredTexDeltaDC1   + uiOffset, pcCU->getWedgePredTexDeltaDC1(),   sizeof( Int  ) * uiNumPartition );
   memcpy( m_piWedgePredTexDeltaDC2   + uiOffset, pcCU->getWedgePredTexDeltaDC2(),   sizeof( Int  ) * uiNumPartition );
 
@@ -1500,6 +1527,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 #endif
 #if HHI_DMM_PRED_TEX
   memcpy( rpcCU->getWedgePredTexTabIdx()     + m_uiAbsIdxInLCU, m_puiWedgePredTexTabIdx,    sizeof( UInt ) * m_uiNumPartition );
+#if LGE_DMM3_SIMP_C0044
+  memcpy( rpcCU->getWedgePredTexIntraTabIdx() + m_uiAbsIdxInLCU, m_puiWedgePredTexIntraTabIdx,    sizeof( UInt ) * m_uiNumPartition );
+#endif
   memcpy( rpcCU->getWedgePredTexDeltaDC1()   + m_uiAbsIdxInLCU, m_piWedgePredTexDeltaDC1,   sizeof( Int  ) * m_uiNumPartition );
   memcpy( rpcCU->getWedgePredTexDeltaDC2()   + m_uiAbsIdxInLCU, m_piWedgePredTexDeltaDC2,   sizeof( Int  ) * m_uiNumPartition );
 
@@ -1627,6 +1657,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
 #endif
 #if HHI_DMM_PRED_TEX
   memcpy( rpcCU->getWedgePredTexTabIdx()     + uiPartOffset, m_puiWedgePredTexTabIdx,    sizeof( UInt ) * uiQNumPart );
+#if LGE_DMM3_SIMP_C0044
+  memcpy( rpcCU->getWedgePredTexIntraTabIdx() + uiPartOffset, m_puiWedgePredTexIntraTabIdx, sizeof( UInt ) * uiQNumPart );
+#endif
   memcpy( rpcCU->getWedgePredTexDeltaDC1()   + uiPartOffset, m_piWedgePredTexDeltaDC1,   sizeof( Int  ) * uiQNumPart );
   memcpy( rpcCU->getWedgePredTexDeltaDC2()   + uiPartOffset, m_piWedgePredTexDeltaDC2,   sizeof( Int  ) * uiQNumPart );
 
@@ -3062,6 +3095,60 @@ Void TComDataCU::setICFlagSubParts( Bool bICFlag, UInt uiAbsPartIdx, UInt uiPart
   memset( m_pbICFlag + uiAbsPartIdx, bICFlag, (m_pcPic->getNumPartInCU() >> ( 2 * uiDepth ))*sizeof(Bool) );
 }
 
+#if LGE_ILLUCOMP_DEPTH_C0046
+//This modification is not needed after integrating JCT3V-C0137
+Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
+{
+  UInt uiPartAddr;
+  UInt iNumbPart;
+
+  if(!getSlice()->getIsDepth())
+  {
+    Int iWidth, iHeight;
+
+    iNumbPart = ( getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N ? 1 : (getPartitionSize(uiAbsPartIdx) == SIZE_NxN ? 4 : 2) );
+
+    for(UInt i = 0; i < iNumbPart; i++)
+    {
+      getPartIndexAndSize(i, uiPartAddr, iWidth, iHeight, uiAbsPartIdx, true);
+      uiPartAddr += uiAbsPartIdx;
+
+      for(UInt uiRefIdx = 0; uiRefIdx < 2; uiRefIdx++)
+      {
+        RefPicList eRefList = uiRefIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+        Int iBestRefIdx = getCUMvField(eRefList)->getRefIdx(uiPartAddr);
+
+        if((getInterDir(uiPartAddr) & (uiRefIdx+1)) && iBestRefIdx >= 0 && getSlice()->getViewId() != getSlice()->getRefViewId(eRefList, iBestRefIdx))
+        {
+          return true;
+        }
+      }
+    }
+  }
+  else
+  {
+    iNumbPart = getPic()->getNumPartInCU() >> (uiDepth << 1);
+
+    for(UInt i = 0; i < iNumbPart; i++)
+    {
+      uiPartAddr = uiAbsPartIdx + i;
+
+      for(UInt uiRefIdx = 0; uiRefIdx < 2; uiRefIdx++)
+      {
+        RefPicList eRefList = uiRefIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+        Int iBestRefIdx = getCUMvField(eRefList)->getRefIdx(uiPartAddr);
+
+        if((getInterDir(uiPartAddr) & (uiRefIdx+1)) && iBestRefIdx >= 0 && getSlice()->getViewId() != getSlice()->getRefViewId(eRefList, iBestRefIdx))
+        {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+#else
 Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx)
 {
   UInt uiPartAddr;
@@ -3090,6 +3177,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx)
   }
   return false;
 }
+#endif
 #endif
 
 Void TComDataCU::setMVPIdxSubParts( Int iMVPIdx, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
@@ -7784,6 +7872,18 @@ Void TComDataCU::setWedgePredTexTabIdxSubParts( UInt uiTIdx, UInt uiAbsPartIdx, 
     m_puiWedgePredTexTabIdx[uiAbsPartIdx+ui] = uiTIdx;
   }
 }
+
+#if LGE_DMM3_SIMP_C0044
+Void TComDataCU::setWedgePredTexIntraTabIdxSubParts( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
+
+  for ( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
+  {
+    m_puiWedgePredTexIntraTabIdx[uiAbsPartIdx+ui] = uiTIdx;
+  }
+}
+#endif
 
 Void TComDataCU::setWedgePredTexDeltaDC1SubParts( Int iDC1, UInt uiAbsPartIdx, UInt uiDepth )
 {
