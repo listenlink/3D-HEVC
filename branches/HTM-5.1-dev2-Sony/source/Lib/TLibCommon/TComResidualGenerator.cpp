@@ -280,8 +280,11 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
   )
 #endif
 {
+#if MTK_C0138_FIXED
+  UInt  uiBaseViewId  = 0;
+#else
   UInt  uiBaseViewId  = m_pcDepthMapGenerator->getBaseViewId( 0 );
-
+#endif
   if( !pcYuv )
   {
     pcYuv = m_ppcYuvTmp[1];
