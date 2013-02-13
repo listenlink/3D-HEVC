@@ -253,7 +253,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       pcSlice->setLastIDR(m_iLastIDR);
       pcSlice->setSliceIdx(0);
       pcSlice->setViewId( m_pcEncTop->getViewId() );
-      pcSlice->setIsDepth( m_pcEncTop->getIsDepth() ); 
+      pcSlice->setIsDepth( m_pcEncTop->getIsDepth() );
 
       m_pcEncTop->getSPS()->setDisInter4x4(m_pcEncTop->getDisInter4x4());
       pcSlice->setScalingList ( m_pcEncTop->getScalingList()  );
@@ -339,13 +339,13 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       pcSlice->setNumRefIdx( REF_PIC_LIST_0, min( m_pcCfg->getGOPEntry( (getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_IDV) ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
       pcSlice->setNumRefIdx( REF_PIC_LIST_1, min( m_pcCfg->getGOPEntry( (getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_IDV) ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
 #else
-
-    Bool bNalRAP = ((getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_CRA) || (getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_IDR)) && (pcSlice->getSPS()->getViewId())  ? 1: 0;
-    pcSlice->setNumRefIdx( REF_PIC_LIST_0, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
-    pcSlice->setNumRefIdx( REF_PIC_LIST_1, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
+      Bool bNalRAP = ((getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_CRA) || (getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_IDR)) && (pcSlice->getSPS()->getViewId())  ? 1: 0;
+      pcSlice->setNumRefIdx( REF_PIC_LIST_0, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
+      pcSlice->setNumRefIdx( REF_PIC_LIST_1, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
 #endif
-    TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
-    refPicListModification->setRefPicListModificationFlagL0( false );
+      
+      TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
+      refPicListModification->setRefPicListModificationFlagL0( false );
 #if !H0137_0138_LIST_MODIFICATION
       refPicListModification->setNumberOfRefPicListModificationsL0(0);
 #endif

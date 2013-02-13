@@ -1264,7 +1264,7 @@ private:
   TComVPS*    m_pcVPS;
 #endif
 #if QC_IV_AS_LT_B0046
-  Bool                  m_bWasLongTerm[2][MAX_NUM_REF+1]; //was long-term picture
+  Bool        m_bWasLongTerm[2][MAX_NUM_REF+1]; //was long-term picture
 #endif
   TComSPS*    m_pcSPS;
   TComPPS*    m_pcPPS;
@@ -1340,10 +1340,17 @@ private:
   Int        m_aaiCodedOffset[2][MAX_VIEW_NUM];
 
 #if SONY_COLPIC_AVAILABILITY|QC_MVHEVC_B0046
-  Int         m_iViewOrderIdx;
+  Int        m_iViewOrderIdx;
 #endif
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
+#endif
+
+#if MERL_VSP_C0152
+  TComPic*     m_apcRefPicBaseTxt;
+  TComPic*     m_apcRefPicBaseDepth;
+  Int*         m_aiShiftLUT;
+  Int          m_iShiftPrec;
 #endif
 
 public:
@@ -1652,6 +1659,16 @@ public:
   Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
   Bool      getApplyIC            ()  { return m_bApplyIC; }
   Void      xSetApplyIC           ();
+#endif
+
+#if MERL_VSP_C0152
+  TComPic*     getRefPicBaseTxt          ()                        { return  m_apcRefPicBaseTxt; }
+  Void         setRefPicBaseTxt          ( TComPic* RefPic)        { m_apcRefPicBaseTxt = RefPic; }
+  TComPic*     getRefPicBaseDepth        ()                        { return  m_apcRefPicBaseDepth; }
+  Void         setRefPicBaseDepth        ( TComPic* RefPic)        { m_apcRefPicBaseDepth = RefPic; }
+
+  Void setBWVSPLUTParam( Int *pShiftLUT, Int iLoG2LUTPrec) { m_aiShiftLUT = pShiftLUT; m_iShiftPrec = iLoG2LUTPrec; }
+  Void getBWVSPLUTParam( Int*&pShiftLUT, Int&iLoG2LUTPrec) { pShiftLUT = m_aiShiftLUT; iLoG2LUTPrec = m_iShiftPrec; }
 #endif
 
 protected:

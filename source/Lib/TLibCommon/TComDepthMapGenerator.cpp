@@ -561,6 +561,7 @@ TComDepthMapGenerator::dumpDepthMap( TComPic* pcPic, char* pFilenameBase )
   ::sprintf     ( acFilename, "%s_V%d.yuv", pFilenameBase, uiViewId );
   m_cTmpPic.dump( acFilename, ( pcPic->getPOC() != 0 )  );
 }
+
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
@@ -721,6 +722,9 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
 #if LGE_DVMCP_A0126
               cMv.m_bDvMcp = true;
               cMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor();
+#if MTK_RELEASE_DV_CONSTRAINT_C0129
+              cMv.m_iDvMcpDispY = pDInfo->m_acMvCand[0].getVer();
+#endif
 #endif
               pcCU->clipMv( cMv );
               pacPdmMv      [ uiBaseRefListId ] = cMv;
@@ -743,7 +747,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
       RefPicList  eRefPicList       = RefPicList( iRefListId );
       Int         iNumRefPics       = pcSlice->getNumRefIdx( eRefPicList );
       for( Int iPdmRefIdx = 0; iPdmRefIdx < iNumRefPics; iPdmRefIdx++ )
-{
+      {
         if( pcSlice->getRefPOC( eRefPicList, iPdmRefIdx ) == pcSlice->getPOC())
         {
 #if QC_MRG_CANS_B0048
@@ -918,6 +922,9 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
         {
           rcMv.m_bDvMcp = true;
           rcMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor(); 
+#if MTK_RELEASE_DV_CONSTRAINT_C0129
+          rcMv.m_iDvMcpDispY = pDInfo->m_acMvCand[0].getVer();
+#endif
         }
         else { // AMVP ?
           rcMv.m_bDvMcp = false;
