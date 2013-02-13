@@ -7708,10 +7708,14 @@ Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr,
   {
     if(pColCU->getSlice()->isInterB())
     {
+#if !QC_NBDV_LDB_FIX_C0055
       if(ilist == 0 )
         eColRefPicList = getSlice()->getCheckLDC() ? eRefPicList : RefPicList(1-getSlice()->getColDir());
       else
         eColRefPicList = getSlice()->getCheckLDC() ? (eRefPicList== REF_PIC_LIST_0? REF_PIC_LIST_1:REF_PIC_LIST_0 ): RefPicList(getSlice()->getColDir());
+#else
+        eColRefPicList = RefPicList(ilist);
+#endif
     }
 
     Int iColRefIdx = pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr);
