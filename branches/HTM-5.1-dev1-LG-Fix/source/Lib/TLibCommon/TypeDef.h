@@ -82,7 +82,7 @@
 #define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
 #define HHI_DMM_DELTADC_Q1_C0034          1   // JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
 #if HHIQC_DMMFASTSEARCH_B0039 && HHI_DMM_PRED_TEX
-#define LGE_DMM3_SIMP_C0044               0
+#define LGE_DMM3_SIMP_C0044               1
 #endif
 
 #if RWTH_SDC_DLT_B0036
@@ -143,7 +143,7 @@
 #define LGE_ILLUCOMP_B0045                1   // JCT2-B0045 Illumination compensation for Luma and Chroma
 #if LGE_ILLUCOMP_B0045
 #define LGE_ILLUCOMP_B0045_ENCSIMP        1
-#define FIX_LGE_ILLUCOMP_B0045            0
+#define FIX_LGE_ILLUCOMP_B0045            1
 #define LGE_ILLUCOMP_DEPTH_C0046          0   // JCT2-C0046 Apply illumination compensation to depth
 #endif
 
