@@ -687,7 +687,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // inter prediction
 #if MERL_VSP_C0152
-  m_pcPrediction->motionCompensationBWVSP( pcCU, m_ppcYuvReco[uiDepth], uiAbsPartIdx );
+  m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth], uiAbsPartIdx );
 #else
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
 #endif

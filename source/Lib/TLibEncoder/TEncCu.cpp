@@ -1972,7 +1972,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
         {
 #if MERL_VSP_C0152
-            m_pcPredSearch->motionCompensationBWVSP ( rpcTempCU, m_ppcPredYuvTemp[uhDepth],  rpcTempCU->getZorderIdxInCU() );
+            m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth],  rpcTempCU->getZorderIdxInCU() );
 #else
             m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 #endif
@@ -1986,7 +1986,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
             if( bestIsSkip)
             {
 #if MERL_VSP_C0152
-              m_pcPredSearch->motionCompensationBWVSP ( rpcTempCU, m_ppcPredYuvTemp[uhDepth], rpcTempCU->getZorderIdxInCU() );
+              m_pcPredSearch->motionCompensation( rpcTempCU, m_ppcPredYuvTemp[uhDepth], rpcTempCU->getZorderIdxInCU() );
 #else
               m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 #endif
@@ -2823,7 +2823,7 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
 
     rpcTempCU->setPredModeSubParts( bSkipResidual ? MODE_SKIP : MODE_INTER, 0, uhDepth );
 #if MERL_VSP_C0152
-    m_pcPredSearch->motionCompensationBWVSP( rpcTempCU, m_ppcPredYuvTemp[uhDepth], rpcTempCU->getZorderIdxInCU()  );
+    m_pcPredSearch->motionCompensation( rpcTempCU, m_ppcPredYuvTemp[uhDepth], rpcTempCU->getZorderIdxInCU()  );
 #else
     m_pcPredSearch->motionCompensation( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 #endif
