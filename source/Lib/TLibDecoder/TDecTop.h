@@ -195,10 +195,6 @@ private:
   
   SEImessages *m_SEIs; ///< "all" SEI messages.  If not NULL, we own the object.
 
-#if SONY_COLPIC_AVAILABILITY
-  Int                     m_iViewOrderIdx;
-#endif
-
   // functional classes
   TComPrediction          m_cPrediction;
   TComTrQuant             m_cTrQuant;
@@ -262,11 +258,6 @@ public:
   Void setViewId(Int viewId)      { m_viewId = viewId;}
   Int  getViewId()                { return m_viewId  ;}
   Void setIsDepth( Bool isDepth ) { m_isDepth = isDepth; }
-
-#if SONY_COLPIC_AVAILABILITY
-  Void setViewOrderIdx(Int i)     { m_iViewOrderIdx = i ;}
-  Int  getViewOrderIdx()          { return m_iViewOrderIdx ; }
-#endif
 
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  getDepthMapGenerator  () { return &m_cDepthMapGenerator; }

@@ -75,8 +75,8 @@ TComPic::TComPic()
 #if HHI_INTERVIEW_SKIP
   m_pcUsedPelsMap     = NULL;
 #endif
-#if SONY_COLPIC_AVAILABILITY
-  m_iViewOrderIdx     = 0;
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  m_iViewOrderIdx     = 0;    // will be changed to view_id
 #endif
   m_aaiCodedScale     = 0;
   m_aaiCodedOffset    = 0;
@@ -701,5 +701,6 @@ Void TComPic::destroyNonDBFilterInfo()
   }
 
 }
+
 
 //! \}

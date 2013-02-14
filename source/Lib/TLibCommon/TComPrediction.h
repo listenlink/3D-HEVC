@@ -188,6 +188,9 @@ public:
 #endif
 #endif
 
+#if MTK_MDIVRP_C0138
+  Void residualPrediction         (TComDataCU* pcCU, TComYuv* pcYuvPred, TComYuv* pcYuvResPred);
+#endif
 
   // motion vector prediction
   Void getMvPredAMVP              ( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMvPred );

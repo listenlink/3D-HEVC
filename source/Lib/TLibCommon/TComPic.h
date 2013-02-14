@@ -111,8 +111,8 @@ private:
 #if HHI_INTERVIEW_SKIP
   TComPicYuv*           m_pcUsedPelsMap;
 #endif
-#if SONY_COLPIC_AVAILABILITY
-  Int                   m_iViewOrderIdx;
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Int                   m_iViewOrderIdx;    // will be changed to view_id
 #endif
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
@@ -187,9 +187,9 @@ public:
   Bool          getDisCandRefPictures(Int iColPOC);
 #endif
 
-#if SONY_COLPIC_AVAILABILITY
-  Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }
-  Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }        // will be changed to view_id
+  Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }    // will be changed to view_id
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068

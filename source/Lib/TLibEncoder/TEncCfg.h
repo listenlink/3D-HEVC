@@ -169,6 +169,9 @@ protected:
 #if LGE_ILLUCOMP_B0045
   Bool      m_bUseIC;
 #endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Bool      m_bUseIVS;
+#endif
 #if SAO_UNIT_INTERLEAVING
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoInterleavingFlag;
@@ -713,6 +716,10 @@ public:
   Void  setUseIC                       ( Bool bVal )   {m_bUseIC = bVal;}
   Bool  getUseIC                       ()              {return m_bUseIC;}
 #endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Void  setUseIVS                       ( Bool bVal )   {m_bUseIVS = bVal;}
+  Bool  getUseIVS                       ()              {return m_bUseIVS;}
+#endif
 #if SAO_UNIT_INTERLEAVING
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
@@ -868,8 +875,8 @@ public:
   Void      setCodedScale                   ( Int** p )      { m_aaiCodedScale          = p; }
   Void      setCodedOffset                  ( Int** p )      { m_aaiCodedOffset         = p; }
 
-#if SONY_COLPIC_AVAILABILITY
-  Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }    // will be changed to view_id
 #endif
 };
 

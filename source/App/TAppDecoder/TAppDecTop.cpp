@@ -95,9 +95,6 @@ Void TAppDecTop::decode()
   Int fcoIndex=0;  //when the current frame is not first frame,use FCO_index stand for viewDepth. 
 #endif
 
-#if SONY_COLPIC_AVAILABILITY
-  m_tDecTop[0]->setViewOrderIdx(0);
-#endif
   Int                 viewDepthId = 0;
   Int                 previousViewDepthId  = 0;
   UInt                uiPOC[MAX_VIEW_NUM*2];

@@ -162,7 +162,11 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param pPPS          PPS associated with the slice
  */
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS * pVPS, TComSPS* pSPS, TComPPS *pPPS, bool isDepth )
+#else
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS * pVPS, TComSPS* pSPS, TComPPS *pPPS )
+#endif
 #else
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
 #endif
@@ -185,8 +189,8 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
 #endif
   rpcSlice->setPOC( uiPOCCurr );
   
-#if SONY_COLPIC_AVAILABILITY
-  rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  rpcSlice->setViewOrderIdx(m_pcCfg->getViewOrderIdx());    // will be changed to view_id
 #endif 
 #if LGE_ILLUCOMP_B0045
   rpcSlice->setApplyIC(false);
@@ -469,6 +473,8 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   const int iExtraMergeCandidates = ( pSPS->getUseMVI() || pSPS->getMultiviewMvPredMode() ) ? 1 : 0;
   #elif HHI_MPI
   const int iExtraMergeCandidates = pSPS->getUseMVI() ? 1 : 0;
+  #elif MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  const int iExtraMergeCandidates = ( isDepth || pSPS->getMultiviewMvPredMode() ) ? 1 : 0;
   #else
   const int iExtraMergeCandidates = pSPS->getMultiviewMvPredMode() ? 1 : 0;
   #endif

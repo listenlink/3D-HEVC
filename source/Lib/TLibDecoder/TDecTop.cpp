@@ -352,9 +352,6 @@ TDecTop::TDecTop()
   m_bGopSizeSet   = false;
   m_iMaxRefPicNum = 0;
   m_uiValidPS = 0;
-#if SONY_COLPIC_AVAILABILITY
-  m_iViewOrderIdx = 0;
-#endif
 #if ENC_DEC_TRACE
   if(!g_hTrace) g_hTrace = fopen( "TraceDec.txt", "wb" );
   g_bJustDoIt = g_bEncDecTraceDisable;
@@ -787,10 +784,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     m_apcSlicePilot->setNalUnitTypeBaseViewMvc( m_nalUnitTypeBaseView );
   }
 
-#if SONY_COLPIC_AVAILABILITY
-  m_apcSlicePilot->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx());
-#endif
-
 #if NAL_REF_FLAG
   m_apcSlicePilot->setReferenced(nalu.m_nalRefFlag);
 #else
@@ -800,7 +793,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 
   // ALF CU parameters should be part of the slice header -> needs to be fixed 
 #if LCU_SYNTAX_ALF
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder, m_cGopDecoder.getAlfCuCtrlParam(), m_cGopDecoder.getAlfParamSet(),m_apcSlicePilot->getVPS()->getDepthFlag(nalu.m_layerId));
+#else
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder, m_cGopDecoder.getAlfCuCtrlParam(), m_cGopDecoder.getAlfParamSet());
+#endif
 #else
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder, m_cGopDecoder.getAlfCuCtrlParam() );
 #endif
@@ -864,10 +861,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
     //  Get a new picture buffer
     xGetNewPicBuffer (m_apcSlicePilot, pcPic);
 
-#if SONY_COLPIC_AVAILABILITY
-    pcPic->setViewOrderIdx( m_apcSlicePilot->getSPS()->getViewOrderIdx() );
+#if INTER_VIEW_VECTOR_SCALING_C0115
+    pcPic->setViewOrderIdx( m_apcSlicePilot->getVPS()->getViewOrderIdx(nalu.m_layerId) );    // will be changed to view_id
 #endif
-
     /* transfer any SEI messages that have been received to the picture */
     pcPic->setSEIs(m_SEIs);
     m_SEIs = NULL;
@@ -1092,12 +1088,16 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDispl
 #endif
 #endif
 
-#if SONY_COLPIC_AVAILABILITY
+#if INTER_VIEW_VECTOR_SCALING_C0115
 #if VIDYO_VPS_INTEGRATION
-    pcSlice->setViewOrderIdx( pcSlice->getVPS()->getViewOrderIdx(nalu.m_layerId) );
+    pcSlice->setViewOrderIdx( pcSlice->getVPS()->getViewOrderIdx(nalu.m_layerId) );        // will be changed to view_id
 #else
     pcSlice->setViewOrderIdx( pcPic->getViewOrderIdx() );
 #endif
+#endif
+
+#if INTER_VIEW_VECTOR_SCALING_C0115
+    pcSlice->setIVScalingFlag( pcSlice->getVPS()->getIVScalingFlag());
 #endif
 
     assert( m_tAppDecTop != NULL );
@@ -1268,7 +1268,7 @@ Void TDecTop::xDecodeSPS()
   TComRPSList* rps = new TComRPSList();
   sps->setRPSList(rps);
 #endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
   m_cEntropyDecoder.decodeSPS( sps, m_isDepth );
 #else
   m_cEntropyDecoder.decodeSPS( sps );

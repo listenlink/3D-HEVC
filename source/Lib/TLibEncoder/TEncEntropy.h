@@ -79,7 +79,7 @@ public:
   virtual Void  codeVPS                 ( TComVPS* pcVPS )                                      = 0;
 #endif
 
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
   virtual Void  codeSPS                 ( TComSPS* pcSPS, Bool bIsDepth )                       = 0;
 #else
   virtual Void  codeSPS                 ( TComSPS* pcSPS )                                      = 0;
@@ -245,7 +245,7 @@ public:
   Void encodeVPS               ( TComVPS* pcVPS);
 #endif
   // SPS
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
   Void encodeSPS               ( TComSPS* pcSPS, Bool bIsDepth );
 #else
   Void encodeSPS               ( TComSPS* pcSPS );
@@ -269,7 +269,7 @@ public:
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx );
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD = false );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
   Void encodeResPredFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD = false );
 #endif
   Void encodeAlfCtrlFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
