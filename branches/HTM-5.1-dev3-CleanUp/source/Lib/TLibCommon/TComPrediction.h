@@ -86,16 +86,32 @@ protected:
   
   // motion compensation functions
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,       UInt uiAbsPartIdx,        Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0, Bool bi=false );
+#else
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0, Bool bi=false );
+#endif
+#else
+#if MERL_VSP_C0152
+  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,       UInt uiAbsPartIdx,        Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi=false          );
 #else
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi=false          );
 #endif
+#endif
 
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,       UInt uiAbsPartIdx,   Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
+#else
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
+#endif
   Void xPredInterPrdDepthMap    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset );
 #else
+#if MERL_VSP_C0152
+  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,     UInt uiAbsPartIdx,     Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred, Int iPartIdx          );
+#else
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred, Int iPartIdx          );
+#endif
   Void xPredInterPrdDepthMap    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight,                         TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset );
 #endif
 #if MERL_VSP_C0152
@@ -159,14 +175,19 @@ public:
   
   // inter
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+  Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
+#else
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
+#endif
+#else
+#if MERL_VSP_C0152
+  Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx,, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
 #else
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
 #endif
-
-#if MERL_VSP_C0152
-   Void motionCompensationBWVSP   ( TComDataCU*  pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
 #endif
+
 
   // motion vector prediction
   Void getMvPredAMVP              ( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMvPred );

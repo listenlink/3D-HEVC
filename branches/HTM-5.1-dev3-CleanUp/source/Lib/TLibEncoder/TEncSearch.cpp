@@ -2905,7 +2905,7 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
   Int iHeight = 0;
   pcCU->getPartIndexAndSize( iPartIdx, uiAbsPartIdx, iWidth, iHeight );
 #if MERL_VSP_C0152
-  motionCompensationBWVSP( pcCU, &m_tmpYuvPred,  pcCU->getZorderIdxInCU(), REF_PIC_LIST_X, iPartIdx );
+  motionCompensation( pcCU, &m_tmpYuvPred,  pcCU->getZorderIdxInCU(), REF_PIC_LIST_X, iPartIdx );
 #endif
   DistParam cDistParam;
 
@@ -3413,12 +3413,20 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
               if ( eRefPicList == REF_PIC_LIST_1 )
               {
                 TComYuv*  pcYuvPred = &m_acYuvPred[iRefList];
+#if MERL_VSP_C0152
+                motionCompensation ( pcCU, pcYuvPred, pcCU->getZorderIdxInCU(),  eRefPicList, iPartIdx );
+#else
                 motionCompensation ( pcCU, pcYuvPred, eRefPicList, iPartIdx );
+#endif
               }
               if ( (pcCU->getSlice()->getNoBackPredFlag() || (pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0 && pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(0)==0 )) && eRefPicList == REF_PIC_LIST_0 )
               {
                 TComYuv*  pcYuvPred = &m_acYuvPred[iRefList];
+#if MERL_VSP_C0152
+                motionCompensation ( pcCU, pcYuvPred, pcCU->getZorderIdxInCU(),  eRefPicList, iPartIdx );
+#else
                 motionCompensation ( pcCU, pcYuvPred, eRefPicList, iPartIdx );
+#endif
               }
 #if H0111_MVD_L1_ZERO
             }
@@ -3459,8 +3467,11 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( cMvBi[1], ePartSize, uiPartAddr, 0, iPartIdx );
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( iRefIdxBi[1], ePartSize, uiPartAddr, 0, iPartIdx );
         TComYuv* pcYuvPred = &m_acYuvPred[1];
+#if MERL_VSP_C0152
+        motionCompensation( pcCU, pcYuvPred, pcCU->getZorderIdxInCU(),  REF_PIC_LIST_1, iPartIdx );
+#else
         motionCompensation( pcCU, pcYuvPred, REF_PIC_LIST_1, iPartIdx );
-
+#endif
         uiMotBits[0] = uiBits[0] - uiMbBits[0];
         uiMotBits[1] = uiMbBits[1];
 
@@ -3599,7 +3610,11 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
               pcCU->getCUMvField( eRefPicList )->setAllRefIdx( iRefIdxBi[iRefList], ePartSize, uiPartAddr, 0, iPartIdx );
 
               TComYuv* pcYuvPred = &m_acYuvPred[iRefList];
+#if MERL_VSP_C0152
+              motionCompensation( pcCU, pcYuvPred, pcCU->getZorderIdxInCU(),  REF_PIC_LIST_1, iPartIdx );
+#else
               motionCompensation( pcCU, pcYuvPred, eRefPicList, iPartIdx );
+#endif
 #if H0111_MVD_L1_ZERO
             }
 #endif
@@ -3940,7 +3955,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 
     //  MC
 #if MERL_VSP_C0152
-    motionCompensationBWVSP ( pcCU, rpcPredYuv, pcCU->getZorderIdxInCU(), REF_PIC_LIST_X, iPartIdx);
+    motionCompensation ( pcCU, rpcPredYuv, pcCU->getZorderIdxInCU(), REF_PIC_LIST_X, iPartIdx);
 #else
     motionCompensation ( pcCU, rpcPredYuv, REF_PIC_LIST_X, iPartIdx );
 #endif
