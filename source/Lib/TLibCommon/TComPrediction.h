@@ -77,22 +77,46 @@ protected:
   Int    m_iLumaRecStride;       ///< stride of #m_pLumaRecBuffer array
   UInt   m_uiaShift[ 63 ];       // Table for multiplication to substitue of division operation
 
+#if MERL_VSP_C0152
+  Int*   m_pDepth; ///< Local variable, to store a depth block, just to prevent allocate memory every time
+#endif
+
   Void xPredIntraAng            ( Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, Bool bFilter );
   Void xPredIntraPlanar         ( Int* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height );
   
   // motion compensation functions
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,       UInt uiAbsPartIdx,        Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0, Bool bi=false );
+#else
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0, Bool bi=false );
+#endif
+#else
+#if MERL_VSP_C0152
+  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,       UInt uiAbsPartIdx,        Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi=false          );
 #else
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi=false          );
 #endif
+#endif
 
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,       UInt uiAbsPartIdx,   Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
+#else
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
+#endif
   Void xPredInterPrdDepthMap    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset );
 #else
+#if MERL_VSP_C0152
+  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,     UInt uiAbsPartIdx,     Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred, Int iPartIdx          );
+#else
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred, Int iPartIdx          );
+#endif
   Void xPredInterPrdDepthMap    ( TComDataCU* pcCU, TComPicYuv* pcPicYuvRef, UInt uiPartAddr, TComMv* pcMv, Int iWidth, Int iHeight,                         TComYuv*& rpcYuv, UInt uiRShift, UInt uiOffset );
+#endif
+#if MERL_VSP_C0152
+  Void xPredInterUniBWVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi=false );
+  Void xPredInterBiBWVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx,               Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
 #endif
 
 #if DEPTH_MAP_GENERATION
@@ -107,7 +131,13 @@ protected:
   Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi );
 #endif
   Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
-  
+
+#if MERL_VSP_C0152
+  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, Int vspIdx
+                                  , TComYuv *&dstPic );
+  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, Int vspIdx
+                                  , TComYuv *&dstPic );
+#endif
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );
 #if LGE_ILLUCOMP_B0045
   Void xGetLLSICPrediction(TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift);
@@ -145,11 +175,20 @@ public:
   
   // inter
 #if DEPTH_MAP_GENERATION
+#if MERL_VSP_C0152
+  Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
+#else
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
+#endif
+#else
+#if MERL_VSP_C0152
+  Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, UInt uiAbsPartIdx,, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
 #else
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1 );
 #endif
-  
+#endif
+
+
   // motion vector prediction
   Void getMvPredAMVP              ( TComDataCU* pcCU, UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMvPred );
   

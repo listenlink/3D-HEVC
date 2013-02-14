@@ -792,7 +792,6 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_INTERVIEW_SKIP
   m_cUsedPelsRenderer.init(m_iSourceWidth, m_iSourceHeight, true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 );
 #endif
-
 }
 
 Void TAppEncTop::xCreateLib()
@@ -930,7 +929,7 @@ Void TAppEncTop::encode()
 #endif
   TComPicYuv*       pcPicYuvRec = NULL;
   TComPicYuv*       pcDepthPicYuvRec = NULL;
-  
+
   // initialize internal class & member variables
   xInitLibCfg();
   xCreateLib();
@@ -1032,7 +1031,7 @@ Void TAppEncTop::encode()
       UInt iNextPoc = m_acTEncTopList[0] -> getFrameId( gopId );
       if ( iNextPoc < m_iFrameToBeEncoded )
       {
-      m_cCameraData.update( iNextPoc );
+        m_cCameraData.update( iNextPoc );
       }
 #endif
 
@@ -1095,6 +1094,19 @@ Void TAppEncTop::encode()
         }
 #endif
         iNumEncoded = 0;
+
+#if MERL_VSP_C0152
+        Int iCurPoc = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
+        if( iCurPoc < m_acTEncDepthTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
+        {
+          TComPic* pcBaseTxtPic   = getPicFromView(  0, m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId), false ); //get base view reconstructed texture
+          TComPic* pcBaseDepthPic = getPicFromView(  0, m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId), true );  //get base view reconstructed depth
+          TEncSlice* pEncSlice = m_acTEncTopList[iViewIdx]->getSliceEncoder();
+          pEncSlice->setRefPicBaseTxt(pcBaseTxtPic);
+          pEncSlice->setRefPicBaseDepth(pcBaseDepthPic);
+        }
+        setBWVSPLUT( iViewIdx, gopId, false);
+#endif
         // call encoding function for one frame
         m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
         xWriteOutput(bitstreamFile, iNumEncoded, outputAccessUnits, iViewIdx, false);
@@ -1102,6 +1114,17 @@ Void TAppEncTop::encode()
         if( m_bUsingDepthMaps )
         {
           Int  iNumDepthEncoded = 0;
+#if MERL_VSP_C0152
+        Int iCurPocDepth = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
+        if( iCurPocDepth < m_acTEncDepthTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
+        {
+          TComPic* pcBaseDepthPic = getPicFromView(  0, m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId), true );
+          TEncSlice* pcSlice = (TEncSlice*) m_acTEncDepthTopList[iViewIdx]->getSliceEncoder();
+          pcSlice->setRefPicBaseDepth(pcBaseDepthPic);
+        }
+        setBWVSPLUT( iViewIdx, gopId, true);
+#endif
+
           // call encoding function for one depth frame
           m_acTEncDepthTopList[iViewIdx]->encode( depthEos[iViewIdx], pcDepthPicYuvOrg, *m_picYuvDepthRec[iViewIdx], outputAccessUnits, iNumDepthEncoded, gopId );
           xWriteOutput(bitstreamFile, iNumDepthEncoded, outputAccessUnits, iViewIdx, true);
@@ -1630,6 +1653,33 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames)
   
   // free temporary memory
   free(auiIdx2DepthValue);
+}
+#endif
+
+#if MERL_VSP_C0152
+Void TAppEncTop::setBWVSPLUT(Int iCodedViewIdx, Int gopId, Bool isDepth)
+{
+  //first view does not have VSP 
+  if((iCodedViewIdx == 0)) return;
+
+  AOT( iCodedViewIdx <= 0);
+  AOT( iCodedViewIdx >= m_iNumberOfViews );
+
+  Int iNeighborViewId = 0;
+  //setting look-up table
+  Int* piShiftLUT = m_cCameraData.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
+
+  if(isDepth)
+  {
+    TEncSlice* pcEncSlice = (TEncSlice*) m_acTEncDepthTopList[iCodedViewIdx]->getSliceEncoder();
+    pcEncSlice->setBWVSPLUTParam(  piShiftLUT, LOG2_DISP_PREC_LUT );
+  }
+  else
+  {
+    TEncSlice* pcEncSlice = (TEncSlice*) m_acTEncTopList[iCodedViewIdx]->getSliceEncoder();
+    pcEncSlice->setBWVSPLUTParam(  piShiftLUT, LOG2_DISP_PREC_LUT );
+  }
+
 }
 #endif
 

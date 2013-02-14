@@ -1153,7 +1153,6 @@ Void TRenFilter::sampleCUpHorUp( Int iLog2HorSampFac, Pel* pcInputPlaneData, Int
   }
 }
 
-
 // Down Sampling
 // Down sample luma
 Void TRenFilter::sampleHorDown(Int iLog2HorSampFac,  Pel* pcInputPlaneData, Int iInputStride, Int iInputWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride  )
@@ -1223,7 +1222,6 @@ Void TRenFilter::xDistributeArray(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int
     pcSrc  += iSrcStride;
   }
 }
-
 
 Void TRenFilter::xInterpHorChroma( Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter )
 {
