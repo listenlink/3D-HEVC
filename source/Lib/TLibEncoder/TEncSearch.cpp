@@ -4824,7 +4824,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
 #if LGE_ILLUCOMP_B0045
-    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true
+#if FIX_ILLUCOMP_DEPTH
+      , pcCU->getDepth( 0 )
+#endif
+      );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
@@ -6207,7 +6211,11 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, 0, true);
 #if LGE_ILLUCOMP_B0045
-    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true
+#if FIX_ILLUCOMP_DEPTH
+      , pcCU->getDepth( 0 )
+#endif
+      );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
@@ -6230,7 +6238,11 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
 #if LGE_ILLUCOMP_B0045
-    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true
+#if FIX_ILLUCOMP_DEPTH
+      , pcCU->getDepth( 0 )
+#endif
+      );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
