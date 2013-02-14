@@ -1238,6 +1238,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
         xCheckRDCostMvInheritance( rpcBestCU, rpcTempCU, uiDepth, false, false );
         rpcTempCU->initEstData( uiDepth, iQP );
+#if FIX_ILLUCOMP_DEPTH
+        rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#endif
         xCheckRDCostMvInheritance( rpcBestCU, rpcTempCU, uiDepth, true, false );
         rpcTempCU->initEstData( uiDepth, iQP );
 #if LGE_ILLUCOMP_DEPTH_C0046
