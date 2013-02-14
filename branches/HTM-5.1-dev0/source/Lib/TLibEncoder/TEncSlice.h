@@ -119,7 +119,11 @@ public:
   
   /// preparation of slice encoding (reference marking, QP and lambda)
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS, bool isDepth );
+#else
   Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS );
+#endif
 #else
   Void    initEncSlice        ( TComPic*  pcPic, Int iPOCLast, UInt uiPOCCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
 #endif

@@ -120,6 +120,9 @@ Void TAppEncTop::xInitLibCfg()
     // TODO: set correct dependentFlag and dependentLayer
     m_cVPS.setDependentFlag                                    ( iViewIdx ? true:false, layerId );
     m_cVPS.setDependentLayer                                   ( layerId - (m_bUsingDepthMaps ? 2:1), layerId );
+#if INTER_VIEW_VECTOR_SCALING_C0115
+    m_cVPS.setIVScalingFlag                                    ( m_bUseIVS );
+#endif
 #endif
     
     m_acTEncTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
@@ -315,6 +318,9 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[0]     );
 #if LGE_ILLUCOMP_B0045
     m_acTEncTopList[iViewIdx]->setUseIC                ( m_bUseIC          );
+#endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+    m_acTEncTopList[iViewIdx]->setUseIVS               ( m_bUseIVS          );
 #endif
 #if SAO_UNIT_INTERLEAVING
     m_acTEncTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
@@ -638,6 +644,9 @@ Void TAppEncTop::xInitLibCfg()
 #if LGE_ILLUCOMP_B0045
       m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
 #endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+     m_acTEncDepthTopList[iViewIdx]->setUseIVS                ( m_bUseIVS );
+#endif
 #if SAO_UNIT_INTERLEAVING
       m_acTEncDepthTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
       m_acTEncDepthTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
@@ -792,6 +801,7 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_INTERVIEW_SKIP
   m_cUsedPelsRenderer.init(m_iSourceWidth, m_iSourceHeight, true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 );
 #endif
+
 }
 
 Void TAppEncTop::xCreateLib()

@@ -99,7 +99,7 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
 Void
 TDecEntropy::decodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx )
 {
@@ -340,6 +340,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       Int iVSPIndexTrue[3] = {-1, -1, -1};
       pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
 
+#if HHI_MPI
       if(pcCU->getTextureModeDepth( uiSubPartIdx ) == uiDepth)//MPI is used
       {
         TComDataCU *pcTextureCU = pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() );
@@ -351,6 +352,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         }
       }
       else // MPI not used
+#endif
       {
         Int iVSPIdx = 0;
         Int numVspIdx;

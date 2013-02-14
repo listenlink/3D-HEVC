@@ -183,6 +183,13 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
   AOF  ( m_bCreated && m_bInit );
   AOF  ( pcPic );
 
+#if MTK_MDIVRP_C0138
+  if (pcPic->getSPS()->getViewId() != 0)
+  {
+    return;
+  }
+#endif
+
   if( pcPic->getPOC() == 0 )
   {
     if( pcPic->getSPS()->getViewId() == 0 || m_pcSPSAccess->getResPrd() != 0 )
@@ -299,8 +306,11 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
   )
 #endif
 {
+#if MTK_C0138_FIXED
+  UInt  uiBaseViewId  = 0;
+#else
   UInt  uiBaseViewId  = m_pcDepthMapGenerator->getBaseViewId( 0 );
-
+#endif
   if( !pcYuv )
   {
     pcYuv = m_ppcYuvTmp[1];
@@ -329,10 +339,14 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
 #endif
     );
 #endif
+#if MTK_MDIVRP_C0138
+  return true;
+#else
 #if QC_SIMPLIFIEDIVRP_M24938
   return xIsNonZeroByCBF( uiBaseViewId , uiXPosInRefView , uiYPosInRefView , uiBlkWidth , uiBlkHeight );
 #else
   return xIsNonZero( pcYuv, uiBlkWidth, uiBlkHeight );
+#endif
 #endif
 }
 
@@ -452,7 +466,7 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   TCoeff* piCoeff   = pcCU->getCoeffY ();
   Pel*    pRes      = pcCUResidual->getLumaAddr();
   UInt    uiLumaTrMode, uiChromaTrMode;
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766  && !MTK_MDIVRP_C0138
   Int     iPUPredResiShift[4];
 #endif
   pcCU->convertTransIdx             ( 0, pcCU->getTransformIdx( 0 ), uiLumaTrMode, uiChromaTrMode );
@@ -478,6 +492,7 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   pRes        = pcCUResidual->getCrAddr();
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_CHROMA_V, pRes, 0, pcCUResidual->getCStride(), uiWidth, uiHeight, uiChromaTrMode, 0, piCoeff );
 
+#if !MTK_MDIVRP_C0138
   if( pcCU->getResPredFlag( 0 ) )
   {
     AOF( pcCU->getResPredAvail( 0 ) );
@@ -494,6 +509,7 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
     pcCUResidual->add( m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
 #endif
   }
+#endif
 
   //===== clear inter-view predicted parts =====
   for( UInt uiPartIdx = 0; uiPartIdx < pcCU->getNumPartInter(); uiPartIdx++ )

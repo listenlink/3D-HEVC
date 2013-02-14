@@ -171,6 +171,9 @@ protected:
 #if LGE_ILLUCOMP_B0045
   Bool      m_bUseIC;                                     ///< flag for using illumination compensation for inter-view prediction
 #endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Bool      m_bUseIVS;                                        ///< flag for using inter-view vector scaling
+#endif
 #if SAO_UNIT_INTERLEAVING
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoInterleavingFlag;                            ///< SAO interleaving flag
