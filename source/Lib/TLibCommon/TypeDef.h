@@ -53,7 +53,7 @@
 
 
 // C TRACK 3
-#define MERL_VSP_C0152                                1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+#define MERL_VSP_C0152                                0 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
 #define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
 #define MTK_SIMPLIFY_DVTC_C0135                       1   // JCT3V-C0135
 #define MTK_RELEASE_DV_CONSTRAINT_C0129               1   // JCT3V-C0129
