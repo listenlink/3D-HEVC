@@ -144,7 +144,10 @@
 #if LGE_ILLUCOMP_B0045
 #define LGE_ILLUCOMP_B0045_ENCSIMP        1
 #define FIX_LGE_ILLUCOMP_B0045            1
-#define LGE_ILLUCOMP_DEPTH_C0046          0   // JCT2-C0046 Apply illumination compensation to depth
+#define LGE_ILLUCOMP_DEPTH_C0046          1   // JCT2-C0046 Apply illumination compensation to depth
+#if LGE_ILLUCOMP_DEPTH_C0046
+#define FIX_ILLUCOMP_DEPTH                1
+#endif
 #endif
 
 ///// ***** INTERVIEW SKIP *********
