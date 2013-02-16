@@ -360,9 +360,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       pcCU->copyTextureMotionDataFrom( pcTextureCU, uiDepth, pcCU->getZorderIdxInCU() + uiAbsPartIdx, uiAbsPartIdx );
 
       UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
+
       for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
       {
         const UChar uhNewDepth = max<UInt>( uiDepth, pcTextureCU->getDepth( uiAbsPartIdx + ui ) );
+#if MERL_VSP_C0152
+        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
+        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+#endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_SKIP );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );
         pcCU->setDepth( uiAbsPartIdx + ui, uhNewDepth );
@@ -375,7 +380,26 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
 #if SIMP_MRG_PRUN      
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
+#if MERL_VSP_C0152
+    Int iVSPIndexTrue[3] = {-1, -1, -1};
+    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
+    {
+      Int iVSPIdx = 0;
+      Int numVspIdx;
+      numVspIdx = 3;
+      for (Int i = 0; i < numVspIdx; i++)
+      {
+        if (iVSPIndexTrue[i] == uiMergeIndex)
+          {
+            iVSPIdx = i+1;
+            break;
+          }
+      }
+      pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+    }
+#else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#endif
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
@@ -399,7 +423,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if HHI_MPI
     }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
     m_pcEntropyDecoder->decodeResPredFlag( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
 #endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
@@ -451,7 +475,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
   if( !pcCU->isIntra( uiAbsPartIdx ) )
   {
     m_pcEntropyDecoder->decodeResPredFlag    ( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
@@ -466,9 +490,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       pcCU->copyTextureMotionDataFrom( pcTextureCU, uiDepth, pcCU->getZorderIdxInCU() + uiAbsPartIdx, uiAbsPartIdx );
 
       UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
+
       for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
       {
         const UChar uhNewDepth = max<UInt>( uiDepth, pcTextureCU->getDepth( uiAbsPartIdx + ui ) );
+#if MERL_VSP_C0152
+        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
+        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+#endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_INTER );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );
         pcCU->setDepth( uiAbsPartIdx + ui, uhNewDepth );
@@ -657,14 +686,24 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
   
   // inter prediction
+#if MERL_VSP_C0152
+  m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth], uiAbsPartIdx );
+#else
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
-  
+#endif
+#if MTK_MDIVRP_C0138
+  if (pcCU->getMergeFlag(0) && pcCU->getMergeIndex(0)==0 && pcCU->getResPredAvail(0))
+  {
+    m_pcPrediction->residualPrediction(pcCU, m_ppcYuvReco[uiDepth], m_ppcYuvResPred[uiDepth]);
+  }
+#endif
+
 #if HHI_MPI
   if( pcCU->getTextureModeDepth( 0 ) != -1 )
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
   if( pcCU->getResPredFlag( 0 ) )
   {
     AOF( pcCU->getResPredAvail( 0 ) );
@@ -695,7 +734,11 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   else
   {
 #if HHI_INTER_VIEW_RESIDUAL_PRED
+#if MTK_MDIVRP_C0138
+    if (pcCU->getMergeFlag(0) && pcCU->getMergeIndex(0)==0 && pcCU->getResPredAvail(0))
+#else
     if( pcCU->getResPredFlag( 0 ) )
+#endif
     {
       m_ppcYuvReco[uiDepth]->clip( pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
     }

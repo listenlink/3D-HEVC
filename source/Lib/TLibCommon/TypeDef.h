@@ -50,6 +50,15 @@
 #define DV_V_RESTRICTION_B0037            1   // JCT3V-B0037 disparity vector vertical range restriction
 
 #if !QC_MVHEVC_B0046
+
+
+// C TRACK 3
+#define MERL_VSP_C0152                                0 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+#define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
+#define MTK_SIMPLIFY_DVTC_C0135                       1   // JCT3V-C0135
+#define MTK_RELEASE_DV_CONSTRAINT_C0129               1   // JCT3V-C0129
+#define QC_NBDV_LDB_FIX_C0055                         1   // JCT3V-C0055
+
 ///// ***** FIXES *********
 // A
 #define FIX_POZNAN_CABAC_INIT_FLAG        1
@@ -67,6 +76,7 @@
 #if FLEX_CODING_ORDER_M23723
   #define DISABLE_FCO_FOR_VSO             0 // Optional compile settings to disable VSO with FCO.
 #endif
+#define   QC_TMVP_MRG_REFIDX_C0047        1 //only enabled when QC_TMVP_IDX_MOD_B0046 is enabled.
 
 ///// ***** PATCHES *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
@@ -80,6 +90,8 @@
 
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
+#define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
+#define QC_C0051_FIXED_BY_MTK             1   // bug fix for C0051 implementation
 #define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
 #define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
 #if     QC_MRG_CANS_B0048
@@ -95,6 +107,8 @@
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
 #if HHI_INTER_VIEW_RESIDUAL_PRED       
+#define MTK_MDIVRP_C0138                  1   // mode-dependent inter-view residual prediction
+#define MTK_C0138_FIXED                   1   // fix for IBP coding structure in view direction (not CTC)
 #define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
 #define QC_SIMPLIFIEDIVRP_M24938          1
 #else                                  
@@ -108,9 +122,9 @@
 #define LGE_DVMCP_MEM_REDUCTION_B0135     1   // JCT3V-B0135     
 #define DV_DERIVATION_PARALLEL_B0096      1   // JCT3V-B0096, enable parallel derivation of disparity vector
 #define QC_SIMPLE_NBDV_B0047              1   // JCT3V-B0047
-
 ///// ***** MOTION PARAMETER INHERITANCE  *********
-#define HHI_MPI                           1   // motion parameter inheritance from texture picture for depth map coding
+#define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
+#define HHI_MPI                           0   // motion parameter inheritance from texture picture for depth map coding
 #if HHI_MPI
 #define FIX_MPI_B0065                     1   // JCT3V-B0065, fix the MPI bug when RQT is off
 #endif
@@ -142,10 +156,44 @@
 
 ///// ***** OTHERS *********
 #define LG_ZEROINTRADEPTHRESI_A0087       1   // JCT2-A0087
-#define SONY_COLPIC_AVAILABILITY          1
+#define INTER_VIEW_VECTOR_SCALING_C0115   1   // JCT2-C0115 Inter-view vector scaling for TMVP & flag
+#define INTER_VIEW_VECTOR_SCALING_C0116   1   // JCT2-C0116 Inter-view vector scaling for AMVP
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
 #define VIDYO_VPS_INTEGRATION             1
 
+///// ***** VSP *********
+
+#if MERL_VSP_C0152
+
+/*
+ * Two macros are used to configure combinations of JCT3V-C0152 and JCT3V-C0131
+ * 
+ *   a) (full) A full JCT3V-C0152 implementation, including JCT3V-C0131 
+ *      #define MERL_VSP_COMPENSATION_C0152          1
+ *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1
+ * 
+ *   b) (mvp2off) For partial JCT3V-C0152 excluding overlaps from JCT3V-C0131
+ *      #define MERL_VSP_COMPENSATION_C0152          1
+ *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  0
+ * 
+ *   c) (nocand) For JCT3V-C0131 only
+ *      #define MERL_VSP_COMPENSATION_C0152          0
+ *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1
+ */
+
+#define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add   (nocand).
+#define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1 // JCT3V-C0152 && JCT3V-C0131: 1: refine disparity vector using a warped depth block; 0: not to refine  (mvp2off).
+
+#define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
+#define LGE_SIMP_DVP_REFINE_C0112            1 // JCT3V-C0112: 1: simplification of refining disparity vector using a warped depth block
+
+#else // !MERL_VSP_C0152
+#define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
+#define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  0 // JCT3V-C0152 && JCT3V-C0131: 1: refine disparity vector using a warped depth block; 0: not to refine
+#define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#define LGE_SIMP_DVP_REFINE_C0112            0 // JCT3V-C0112: 1: simplification of refining disparity vector using a warped depth block
+#endif
 
 
 ///// ***** DEFINED PARAMETERS *********

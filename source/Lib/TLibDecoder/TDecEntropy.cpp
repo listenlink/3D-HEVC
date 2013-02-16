@@ -99,7 +99,7 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
 Void
 TDecEntropy::decodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx )
 {
@@ -336,7 +336,41 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #else
 #if SIMP_MRG_PRUN       
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+#if MERL_VSP_C0152
+      Int iVSPIndexTrue[3] = {-1, -1, -1};
+      pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
+
+#if HHI_MPI
+      if(pcCU->getTextureModeDepth( uiSubPartIdx ) == uiDepth)//MPI is used
+      {
+        TComDataCU *pcTextureCU = pcCU->getSlice()->getTexturePic()->getCU( pcCU->getAddr() );
+        UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
+        for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
+        {
+          Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
+          pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+        }
+      }
+      else // MPI not used
+#endif
+      {
+        Int iVSPIdx = 0;
+        Int numVspIdx;
+        numVspIdx = 3;
+        for (Int i = 0; i < numVspIdx; i++)
+        {
+          if (iVSPIndexTrue[i] == uiMergeIndex)
+            {
+              iVSPIdx = i+1;
+              break;
+            }
+        }
+        pcCU->setVSPIndexSubParts( iVSPIdx, uiSubPartIdx, uiPartIdx, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+      }
+
+#else
       pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#endif
 #else      
       pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);

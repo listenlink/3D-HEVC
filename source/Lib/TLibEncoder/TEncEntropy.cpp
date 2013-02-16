@@ -132,7 +132,7 @@ Void TEncEntropy::encodeVPS( TComVPS* pcVPS )
 Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
 
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Bool bIsDepth )
 {
   m_pcEntropyCoderIf->codeSPS( pcSPS, bIsDepth );
@@ -488,7 +488,7 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
 Void
 TEncEntropy::encodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD )
 {
@@ -1346,7 +1346,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     uiAbsPartIdx = 0;
   }
-  
+
 #if RWTH_SDC_DLT_B0036
   if( pcCU->getSDCFlag(uiAbsPartIdx) )
   {
@@ -1354,7 +1354,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     return;
   }
 #endif
-  
+
   PartSize eSize = pcCU->getPartitionSize( uiAbsPartIdx );
   
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.

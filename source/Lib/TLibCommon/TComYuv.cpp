@@ -391,7 +391,7 @@ Void TComYuv::addClipPartLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTr
   }
 }
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766  && !MTK_MDIVRP_C0138
 Void
 TComYuv::add(Int *iPUResiPredShift, PartSize uhPartitionSize,  TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
 {
@@ -407,7 +407,7 @@ TComYuv::add( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
 }
 #endif
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
 Void
 TComYuv::getPUXYOffset(PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &iXOffset, Int &iYOffset)
 {
@@ -434,7 +434,7 @@ TComYuv::getPUXYOffset(PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &i
 }
 #endif
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
 Void 
 TComYuv::addLuma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
 #else
@@ -448,7 +448,7 @@ TComYuv::addLuma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
   Pel*  pAddSamples = pcYuvAdd->getLumaAddr();
   Pel*  pDstSamples = getLumaAddr();
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
   Int iXOffset, iYOffset;
 
   getPUXYOffset(uhPartitionSize, iWidth, iHeight, iXOffset, iYOffset);
@@ -501,7 +501,7 @@ TComYuv::addLuma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
 #endif
 }
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
 Void 
 TComYuv::addChroma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
 #else
@@ -517,7 +517,7 @@ TComYuv::addChroma( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract )
   Pel*  pDstSamplesCb = getCbAddr();
   Pel*  pDstSamplesCr = getCrAddr();
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
   Int iXOffset, iYOffset;
  
   getPUXYOffset(uhPartitionSize, iWidth, iHeight, iXOffset, iYOffset);
@@ -675,7 +675,7 @@ Void TComYuv::addClipChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUn
   }
 }
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
 Void TComYuv::subtract(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
 {
   subtractLuma  (iPUResiPredShift, uhPartitionSize, pcYuvSrc0, pcYuvSrc1,  uiTrUnitIdx, uiPartSize    );
@@ -689,7 +689,7 @@ Void TComYuv::subtract( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx
 }
 #endif
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
 Void TComYuv::subtractLuma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
 #else
 Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
@@ -705,7 +705,7 @@ Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUni
   Int  iSrc1Stride = pcYuvSrc1->getStride();
   Int  iDstStride  = getStride();
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
   Int iXOffset, iYOffset;
 
   getPUXYOffset(uhPartitionSize, uiPartSize, uiPartSize, iXOffset, iYOffset);
@@ -813,7 +813,7 @@ Void TComYuv::subtractLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUni
 #endif
 }
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
 Void TComYuv::subtractChroma(Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
 #else
 Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
@@ -831,7 +831,7 @@ Void TComYuv::subtractChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrU
   Int  iSrc0Stride = pcYuvSrc0->getCStride();
   Int  iSrc1Stride = pcYuvSrc1->getCStride();
   Int  iDstStride  = getCStride();
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
   Int iXOffset, iYOffset;
  
   getPUXYOffset(uhPartitionSize, uiPartSize, uiPartSize, iXOffset, iYOffset);

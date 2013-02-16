@@ -64,7 +64,7 @@ private:
   TComYuv**           m_ppcYuvResPred;    ///< residual prediction buffer
 #endif
   TComDataCU**        m_ppcCU;            ///< CU data array
-  
+
   // access channel
   TComTrQuant*        m_pcTrQuant;
   TComPrediction*     m_pcPrediction;
@@ -84,7 +84,7 @@ public:
   
   /// destroy internal buffers
   Void  destroy                 ();
-  
+
   /// decode CU information
   Void  decodeCU                ( TComDataCU* pcCU, UInt& ruiIsLast );
   

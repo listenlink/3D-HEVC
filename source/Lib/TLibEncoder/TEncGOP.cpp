@@ -246,14 +246,21 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 
       std::vector<TComAPS>& vAPS = m_pcEncTop->getAPS();
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getEncTop()->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS(), m_pcEncTop->getIsDepth() );
+#else
     m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getEncTop()->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+#endif
 #else
       m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, uiPOCCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
 #endif
       pcSlice->setLastIDR(m_iLastIDR);
       pcSlice->setSliceIdx(0);
       pcSlice->setViewId( m_pcEncTop->getViewId() );
-      pcSlice->setIsDepth( m_pcEncTop->getIsDepth() ); 
+      pcSlice->setIsDepth( m_pcEncTop->getIsDepth() );
+#if INTER_VIEW_VECTOR_SCALING_C0115
+      pcSlice->setIVScalingFlag( m_pcEncTop->getUseIVS() );
+#endif
 
       m_pcEncTop->getSPS()->setDisInter4x4(m_pcEncTop->getDisInter4x4());
       pcSlice->setScalingList ( m_pcEncTop->getScalingList()  );
@@ -340,12 +347,12 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       pcSlice->setNumRefIdx( REF_PIC_LIST_1, min( m_pcCfg->getGOPEntry( (getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_IDV) ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
 #else
 
-    Bool bNalRAP = ((getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_CRA) || (getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_IDR)) && (pcSlice->getSPS()->getViewId())  ? 1: 0;
-    pcSlice->setNumRefIdx( REF_PIC_LIST_0, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
-    pcSlice->setNumRefIdx( REF_PIC_LIST_1, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
+      Bool bNalRAP = ((getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_CRA) || (getNalUnitType(uiPOCCurr) == NAL_UNIT_CODED_SLICE_IDR)) && (pcSlice->getSPS()->getViewId())  ? 1: 0;
+      pcSlice->setNumRefIdx( REF_PIC_LIST_0, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
+      pcSlice->setNumRefIdx( REF_PIC_LIST_1, min( m_pcCfg->getGOPEntry( bNalRAP ? MAX_GOP : iGOPid ).m_numRefPicsActive, (pcSlice->getRPS()->getNumberOfPictures() + pcSlice->getSPS()->getNumberOfUsableInterViewRefs()) ) );
 #endif
-    TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
-    refPicListModification->setRefPicListModificationFlagL0( false );
+      TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
+      refPicListModification->setRefPicListModificationFlagL0( false );
 #if !H0137_0138_LIST_MODIFICATION
       refPicListModification->setNumberOfRefPicListModificationsL0(0);
 #endif
@@ -905,7 +912,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if TILES_WPP_ENTRY_POINT_SIGNALLING
         pcSlice->getSPS()->setNumSubstreams( pcSlice->getPPS()->getNumSubstreams() );
 #endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
         m_pcEntropyCoder->encodeSPS(pcSlice->getSPS(), m_pcEncTop->getIsDepth());
 #else
         m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());
