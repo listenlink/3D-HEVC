@@ -53,7 +53,7 @@
 
 
 // C TRACK 3
-#define MERL_VSP_C0152                                1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+#define MERL_VSP_C0152                                0 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
 #define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
 #define MTK_SIMPLIFY_DVTC_C0135                       1   // JCT3V-C0135
 #define MTK_RELEASE_DV_CONSTRAINT_C0129               1   // JCT3V-C0129
@@ -123,7 +123,7 @@
 #define DV_DERIVATION_PARALLEL_B0096      1   // JCT3V-B0096, enable parallel derivation of disparity vector
 #define QC_SIMPLE_NBDV_B0047              1   // JCT3V-B0047
 ///// ***** MOTION PARAMETER INHERITANCE  *********
-#define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   0   // JCT3V-C0137
+#define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
 #define HHI_MPI                           0   // motion parameter inheritance from texture picture for depth map coding
 #if HHI_MPI
 #define FIX_MPI_B0065                     1   // JCT3V-B0065, fix the MPI bug when RQT is off
