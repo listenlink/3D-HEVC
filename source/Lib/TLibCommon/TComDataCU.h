@@ -265,6 +265,9 @@ private:
 #endif
 #if HHI_DMM_PRED_TEX
   UInt*         m_puiWedgePredTexTabIdx;
+#if LGE_DMM3_SIMP_C0044
+  UInt*         m_puiWedgePredTexIntraTabIdx;
+#endif
   Int*          m_piWedgePredTexDeltaDC1;
   Int*          m_piWedgePredTexDeltaDC2;
 
@@ -499,7 +502,11 @@ public:
   Bool          getICFlag             ( UInt uiIdx )            { return m_pbICFlag[uiIdx];        }
   Void          setICFlag             ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
   Void          setICFlagSubParts     ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+#if LGE_ILLUCOMP_DEPTH_C0046
+  Bool          isICFlagRequired      (UInt uiAbsPartIdx, UInt uiDepth); //This modification is not needed after integrating JCT3V-C0137
+#else
   Bool          isICFlagRequired      (UInt uiAbsPartIdx);
+#endif
 #endif
 
 #if AMP_MRG
@@ -837,6 +844,12 @@ public:
   UInt  getWedgePredTexTabIdx             ( UInt uiIdx )          { return m_puiWedgePredTexTabIdx[uiIdx];    }
   Void  setWedgePredTexTabIdx             ( UInt uiIdx, UInt uh ) { m_puiWedgePredTexTabIdx[uiIdx] = uh;      }
   Void  setWedgePredTexTabIdxSubParts     ( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth );
+#if LGE_DMM3_SIMP_C0044
+  UInt* getWedgePredTexIntraTabIdx             ()                      { return m_puiWedgePredTexIntraTabIdx;           }
+  UInt  getWedgePredTexIntraTabIdx             ( UInt uiIdx )          { return m_puiWedgePredTexIntraTabIdx[uiIdx];    }
+  Void  setWedgePredTexIntraTabIdx             ( UInt uiIdx, UInt uh ) { m_puiWedgePredTexIntraTabIdx[uiIdx] = uh;      }
+  Void  setWedgePredTexIntraTabIdxSubParts     ( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth );
+#endif 
   Int*  getWedgePredTexDeltaDC1           ()                      { return m_piWedgePredTexDeltaDC1;          }
   Int   getWedgePredTexDeltaDC1           ( UInt uiIdx )          { return m_piWedgePredTexDeltaDC1[uiIdx];   }
   Void  setWedgePredTexDeltaDC1           ( UInt uiIdx, Int i )   { m_piWedgePredTexDeltaDC1[uiIdx] = i;      }

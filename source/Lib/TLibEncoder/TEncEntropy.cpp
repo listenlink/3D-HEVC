@@ -169,9 +169,17 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 }
 
 #if LGE_ILLUCOMP_B0045
-Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
+#if LGE_ILLUCOMP_DEPTH_C0046
+    , UInt uiDepth
+#endif
+    )
 {
-  if (pcCU->isIntra(uiAbsPartIdx) || (pcCU->getSlice()->getViewId() == 0) || pcCU->getSlice()->getSPS()->isDepth())
+  if (pcCU->isIntra(uiAbsPartIdx) || (pcCU->getSlice()->getViewId() == 0)
+#if !LGE_ILLUCOMP_DEPTH_C0046
+      || pcCU->getSlice()->getSPS()->isDepth()
+#endif
+      )
   {
     return;
   }
@@ -184,7 +192,11 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
     uiAbsPartIdx = 0;
   }
 
-  if(pcCU->isICFlagRequired(uiAbsPartIdx))
+  if(pcCU->isICFlagRequired(uiAbsPartIdx
+#if LGE_ILLUCOMP_DEPTH_C0046
+      , uiDepth //This modification is not needed after integrating JCT3V-C0137
+#endif
+      ))
     m_pcEntropyCoderIf->codeICFlag( pcCU, uiAbsPartIdx );
 }
 #endif

@@ -775,7 +775,11 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   UInt uiTilesAcross  = 0;
 
 #if LGE_ILLUCOMP_B0045
-  if (pcEncTop->getViewId() != 0 && !pcEncTop->isDepthCoder() && pcEncTop->getUseIC())   // DCP of ViewID 0 is not available
+  if (pcEncTop->getViewId() != 0 
+#if !LGE_ILLUCOMP_DEPTH_C0046
+      && !pcEncTop->isDepthCoder() 
+#endif
+      && pcEncTop->getUseIC())   // DCP of ViewID 0 is not available
   {
     pcSlice ->xSetApplyIC();
   }

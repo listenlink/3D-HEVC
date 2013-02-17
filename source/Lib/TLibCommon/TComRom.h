@@ -187,6 +187,9 @@ extern const UChar g_aucConvertTxtTypeToIdx[4];
 extern       Int             g_iDeltaDCsQuantOffset;
 extern const WedgeResolution g_aeWedgeResolutionList[5];
 extern const UChar           g_aucWedgeFullBitsListIdx[7];
+#if LGE_DMM3_SIMP_C0044
+extern const UChar           g_aucWedgeTexPredBitsListIdx[7];
+#endif
 extern const UChar           g_aucIntraSizeIdxToWedgeSize[7];
 
 extern       std::vector< std::vector<TComWedgelet> >  g_aacWedgeLists;
@@ -198,7 +201,11 @@ extern       std::vector< std::vector<TComWedgeNode> >       g_aacWedgeNodeLists
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if SAIT_SDC_C0096
+#define RWTH_SDC_NUM_PRED_MODES 3
+#else
 #define RWTH_SDC_NUM_PRED_MODES 4
+#endif
 extern      UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES];
 #endif
 

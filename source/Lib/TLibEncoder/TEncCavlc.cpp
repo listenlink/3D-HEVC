@@ -868,7 +868,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   // IC flag is on only first_slice_in_pic
   if (address==0)
   {
-    if( pcSlice->getSPS()->getViewId() && !pcSlice->getIsDepth() )
+    if( pcSlice->getSPS()->getViewId() 
+#if !LGE_ILLUCOMP_DEPTH_C0046
+        && !pcSlice->getIsDepth()
+#endif
+        )
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "applying IC flag" );
     }
