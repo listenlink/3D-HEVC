@@ -169,7 +169,11 @@ protected:
 #endif
   vector<Bool> m_abUseSAO;
 #if LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_DEPTH_C0046
+  vector<Bool> m_abUseIC;                                    ///< flag for using illumination compensation for inter-view prediction
+#else
   Bool      m_bUseIC;                                     ///< flag for using illumination compensation for inter-view prediction
+#endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115
   Bool      m_bUseIVS;                                        ///< flag for using inter-view vector scaling

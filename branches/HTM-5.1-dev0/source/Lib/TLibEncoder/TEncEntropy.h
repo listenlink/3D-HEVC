@@ -259,7 +259,11 @@ public:
   
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
 #if LGE_ILLUCOMP_B0045
-  Void encodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+  Void encodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false 
+#if LGE_ILLUCOMP_DEPTH_C0046
+      , UInt uiDepth = 0
+#endif
+      );
 #endif
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );

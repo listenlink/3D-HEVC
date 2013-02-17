@@ -152,7 +152,11 @@
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 #define NUM_DMM_FLAG_CTX              1       ///< number of context models for DMM flag
 #define NUM_DMM_MODE_CTX              1       ///< number of context models for DMM mode
+#if LGE_DMM3_SIMP_C0044
+#define NUM_DMM_DATA_CTX              4       ///< number of context models for DMM data
+#else
 #define NUM_DMM_DATA_CTX              3       ///< number of context models for DMM data
+#endif
 #endif
 
 #if LGE_EDGE_INTRA_A0070
@@ -1260,7 +1264,11 @@ INIT_TRANS_SUBDIV_FLAG[3][NUM_TRANS_SUBDIV_FLAG_CTX] =
 #endif
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if FIX_DMM_CTX_INIT_C0034
+static const UChar
+#else
 static const Short
+#endif
 INIT_DMM_FLAG[3][NUM_DMM_FLAG_CTX] =
 {
   {
@@ -1274,7 +1282,11 @@ INIT_DMM_FLAG[3][NUM_DMM_FLAG_CTX] =
   }
 };
 
+#if FIX_DMM_CTX_INIT_C0034
+static const UChar
+#else
 static const Short
+#endif
 INIT_DMM_MODE[3][NUM_DMM_MODE_CTX] =
 {
   {
@@ -1288,9 +1300,24 @@ INIT_DMM_MODE[3][NUM_DMM_MODE_CTX] =
   }
 };
 
+#if FIX_DMM_CTX_INIT_C0034
+static const UChar
+#else
 static const Short
+#endif
 INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] = 
 {
+#if LGE_DMM3_SIMP_C0044
+  {
+    CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU
+  }
+#else
   {
     CNU, CNU, CNU
   },
@@ -1300,6 +1327,7 @@ INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] =
   {
     CNU, CNU, CNU
   }
+#endif
 };
 
 #if LGE_EDGE_INTRA_A0070

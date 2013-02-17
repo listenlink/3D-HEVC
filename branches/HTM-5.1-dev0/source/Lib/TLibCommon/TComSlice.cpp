@@ -1407,7 +1407,11 @@ Void TComSlice::xSetApplyIC()
     Int iCurrStride = pcCurrPicYuv->getStride();
     Int iRefStride = pcRefPicYuvOrg->getStride();
     Int iSumOrgSAD = 0;
+#if LGE_ILLUCOMP_DEPTH_C0046
+    Double dThresholdOrgSAD = getIsDepth() ? 0.1 : 0.05;
+#else
     double dThresholdOrgSAD = 0.05;
+#endif
     // Histogram building - luminance
     for ( Int y = 0; y < iHeight; y++)
     {

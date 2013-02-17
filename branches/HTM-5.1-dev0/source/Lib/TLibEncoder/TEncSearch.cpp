@@ -2252,7 +2252,13 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       UInt uiTexTabIdx  = 0;
       Int  iTexDeltaDC1 = 0;
       Int  iTexDeltaDC2 = 0;
+#if LGE_DMM3_SIMP_C0044
+      UInt uiTexIntraIdx = 0;
+      findWedgeTexMinDist( pcCU, uiPartOffset, piOrg, piPred, uiStride, uiWidth, uiHeight, uiTexTabIdx, iTexDeltaDC1, iTexDeltaDC2, bAboveAvail, bLeftAvail, uiTexIntraIdx); 
+      pcCU->setWedgePredTexIntraTabIdxSubParts( uiTexIntraIdx, uiPartOffset, uiDepth + uiInitTrDepth );
+#else
       findWedgeTexMinDist( pcCU, uiPartOffset, piOrg, piPred, uiStride, uiWidth, uiHeight, uiTexTabIdx, iTexDeltaDC1, iTexDeltaDC2, bAboveAvail, bLeftAvail ); 
+#endif
       pcCU->setWedgePredTexTabIdxSubParts  ( uiTexTabIdx,  uiPartOffset, uiDepth + uiInitTrDepth );
       pcCU->setWedgePredTexDeltaDC1SubParts( iTexDeltaDC1, uiPartOffset, uiDepth + uiInitTrDepth );
       pcCU->setWedgePredTexDeltaDC2SubParts( iTexDeltaDC2, uiPartOffset, uiDepth + uiInitTrDepth );
@@ -2344,7 +2350,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       
       for( UInt uiSDC=0; uiSDC<=uiUseSDC; uiSDC++ )
       {
+#if FIX_SDC_ENC_C0143
+        for( UInt uiRes = 0; uiRes<=uiSDC; uiRes++ )
+#else
         for( UInt uiRes = 0; uiRes<=uiUseSDC; uiRes++ )
+#endif
         {
 #endif
 
@@ -4925,7 +4935,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, 0, true );
 #if LGE_ILLUCOMP_B0045
-    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true
+#if FIX_ILLUCOMP_DEPTH
+      , pcCU->getDepth( 0 )
+#endif
+      );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
@@ -6308,7 +6322,11 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, 0, true);
 #if LGE_ILLUCOMP_B0045
-    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true
+#if FIX_ILLUCOMP_DEPTH
+      , pcCU->getDepth( 0 )
+#endif
+      );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
@@ -6331,7 +6349,11 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
 #if LGE_ILLUCOMP_B0045
-    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true);
+    m_pcEntropyCoder->encodeICFlag(pcCU, 0, true
+#if FIX_ILLUCOMP_DEPTH
+      , pcCU->getDepth( 0 )
+#endif
+      );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
@@ -6670,8 +6692,11 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
     Int iFullDeltaDC1 = riDeltaDC1;
     Int iFullDeltaDC2 = riDeltaDC2;
 
+#if HHI_DMM_DELTADC_Q1_C0034
+#else
     xDeltaDCQuantScaleDown( pcCU, iFullDeltaDC1 );
     xDeltaDCQuantScaleDown( pcCU, iFullDeltaDC2 );
+#endif
 
     Dist uiBestDist     = RDO_DIST_MAX;
     UInt  uiBestQStepDC1 = 0;
@@ -6684,6 +6709,154 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
     uiDeltaDC1Max += (uiDeltaDC1Max>>1);
     uiDeltaDC2Max += (uiDeltaDC2Max>>1);
 
+#if HHI_DMM_DELTADC_Q1_C0034
+    // limit search range to [0, IBDI_MAX]
+    if( iFullDeltaDC1 <  0 && uiDeltaDC1Max >                abs(iPredDC1) ) { uiDeltaDC1Max =                abs(iPredDC1); }
+    if( iFullDeltaDC1 >= 0 && uiDeltaDC1Max > g_uiIBDI_MAX - abs(iPredDC1) ) { uiDeltaDC1Max = g_uiIBDI_MAX - abs(iPredDC1); }
+
+    if( iFullDeltaDC2 <  0 && uiDeltaDC2Max >                abs(iPredDC2) ) { uiDeltaDC2Max =                abs(iPredDC2); }
+    if( iFullDeltaDC2 >= 0 && uiDeltaDC2Max > g_uiIBDI_MAX - abs(iPredDC2) ) { uiDeltaDC2Max = g_uiIBDI_MAX - abs(iPredDC2); }
+
+    // init dist with original DCs
+    assignWedgeDCs2Pred( pcWedgelet, piPredic, uiStride, iDC1, iDC2 );
+
+    Dist uiOrgDist = RDO_DIST_MAX;
+#if SAIT_VSO_EST_A0033
+    if ( m_pcRdCost->getUseEstimatedVSD() )
+    {          
+      TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
+      TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
+      uiOrgDist = m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
+#if LGE_WVSO_A0119
+      if ( m_pcRdCost->getUseWVSO() )
+      {    
+        Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+        Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
+        Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
+        uiOrgDist = (iDWeight * iD + iVSDWeight * (Dist) uiOrgDist) / ( iDWeight + iVSDWeight);
+      }
+#endif // LGE_WVSO_A0119
+    }
+    else       
+#endif // SAIT_VSO_EST_A0033
+    {        
+      uiOrgDist = m_pcRdCost->getDistVS( pcCU, 0, piPredic, uiStride,  piOrig, uiStride, uiWidth, uiHeight, false, 0 );
+#if LGE_WVSO_A0119
+      if ( m_pcRdCost->getUseWVSO() )
+      {    
+        Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+        Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
+        Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
+        uiOrgDist = (iDWeight * iD + iVSOWeight * (Dist) uiOrgDist) / ( iDWeight + iVSOWeight);
+      }
+#endif // LGE_WVSO_A0119
+    }
+    uiBestDist     = uiOrgDist;
+    uiBestQStepDC1 = abs(iFullDeltaDC1);
+    uiBestQStepDC2 = abs(iFullDeltaDC2);
+
+    // coarse search with step size 4
+    for( UInt uiQStepDC1 = 0; uiQStepDC1 < uiDeltaDC1Max; uiQStepDC1 += 4 )
+    {
+      Int iTestDC1 = Clip( iPredDC1 + ((Int)(uiQStepDC1) * (Int)(( iFullDeltaDC1 < 0 ) ? -1 : 1)) );
+      for( UInt uiQStepDC2 = 0; uiQStepDC2 < uiDeltaDC2Max; uiQStepDC2 += 4 )
+      {
+        Int iTestDC2 = Clip( iPredDC2 + ((Int)(uiQStepDC2) * (Int)(( iFullDeltaDC2 < 0 ) ? -1 : 1)) );
+
+        assignWedgeDCs2Pred( pcWedgelet, piPredic, uiStride, iTestDC1, iTestDC2 );
+
+        Dist uiAct4Dist = RDO_DIST_MAX;
+#if SAIT_VSO_EST_A0033
+        if ( m_pcRdCost->getUseEstimatedVSD() )
+        {          
+          TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
+          TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
+          uiAct4Dist = m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
+#if LGE_WVSO_A0119
+          if ( m_pcRdCost->getUseWVSO() )
+          {    
+            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+            Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
+            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
+            uiAct4Dist = (iDWeight * iD + iVSDWeight * (Dist) uiAct4Dist) / ( iDWeight + iVSDWeight);
+          }
+#endif // LGE_WVSO_A0119
+        }
+        else       
+#endif // SAIT_VSO_EST_A0033
+        {        
+          uiAct4Dist = m_pcRdCost->getDistVS( pcCU, 0, piPredic, uiStride,  piOrig, uiStride, uiWidth, uiHeight, false, 0 );
+#if LGE_WVSO_A0119
+          if ( m_pcRdCost->getUseWVSO() )
+          {    
+            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+            Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
+            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
+            uiAct4Dist = (iDWeight * iD + iVSOWeight * (Dist) uiAct4Dist) / ( iDWeight + iVSOWeight);
+          }
+#endif // LGE_WVSO_A0119
+        }
+
+        if( uiAct4Dist < uiBestDist || uiBestDist == RDO_DIST_MAX )
+        {
+          uiBestDist     = uiAct4Dist;
+          uiBestQStepDC1 = uiQStepDC1;
+          uiBestQStepDC2 = uiQStepDC2;
+        }
+      }
+    }
+
+    // refinement +-3
+    for( UInt uiQStepDC1 = (UInt)max(0, ((Int)uiBestQStepDC1-3)); uiQStepDC1 <= (uiBestQStepDC1+3); uiQStepDC1++ )
+    {
+      Int iTestDC1 = Clip( iPredDC1 + ((Int)(uiQStepDC1) * (Int)(( iFullDeltaDC1 < 0 ) ? -1 : 1)) );
+      for( UInt uiQStepDC2 = (UInt)max(0, ((Int)uiBestQStepDC2-3)); uiQStepDC2 <= (uiBestQStepDC2+3); uiQStepDC2++ )
+      {
+        Int iTestDC2 = Clip( iPredDC2 + ((Int)(uiQStepDC2) * (Int)(( iFullDeltaDC2 < 0 ) ? -1 : 1)) );
+
+        assignWedgeDCs2Pred( pcWedgelet, piPredic, uiStride, iTestDC1, iTestDC2 );
+
+        Dist uiActDist = RDO_DIST_MAX;
+#if SAIT_VSO_EST_A0033
+        if ( m_pcRdCost->getUseEstimatedVSD() )
+        {          
+          TComPicYuv* pcVirRec = m_pcRdCost->getVideoRecPicYuv();
+          TComPicYuv* pcVirOrg = m_pcRdCost->getDepthPicYuv();
+          uiActDist = m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, pcVirRec->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirOrg->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()), pcVirRec->getStride(), uiWidth, uiHeight );
+#if LGE_WVSO_A0119
+          if ( m_pcRdCost->getUseWVSO() )
+          {    
+            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+            Int iVSDWeight = m_pcRdCost->getVSDWeight() * m_pcRdCost->getVSDWeight();
+            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
+            uiActDist = (iDWeight * iD + iVSDWeight * (Dist) uiActDist) / ( iDWeight + iVSDWeight);
+          }
+#endif // LGE_WVSO_A0119
+        }
+        else       
+#endif // SAIT_VSO_EST_A0033
+        {        
+          uiActDist = m_pcRdCost->getDistVS( pcCU, 0, piPredic, uiStride,  piOrig, uiStride, uiWidth, uiHeight, false, 0 );
+#if LGE_WVSO_A0119
+          if ( m_pcRdCost->getUseWVSO() )
+          {    
+            Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+            Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
+            Dist iD = (Dist) m_pcRdCost->getDistPart( piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false, DF_SAD );
+            uiActDist = (iDWeight * iD + iVSOWeight * (Dist) uiActDist) / ( iDWeight + iVSOWeight);
+          }
+#endif // LGE_WVSO_A0119
+        }
+
+        if( uiActDist < uiBestDist || uiBestDist == RDO_DIST_MAX )
+        {
+          uiBestDist     = uiActDist;
+          uiBestQStepDC1 = uiQStepDC1;
+          uiBestQStepDC2 = uiQStepDC2;
+        }
+      }
+    }
+#else
     for( UInt uiQStepDC1 = 1; uiQStepDC1 <= uiDeltaDC1Max; uiQStepDC1++  )
     {
       Int iLevelDeltaDC1 = (Int)(uiQStepDC1) * (Int)(( iFullDeltaDC1 < 0 ) ? -1 : 1);
@@ -6739,18 +6912,24 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
         }
       }
     }
-
+#endif
     iFullDeltaDC1 = (Int)(uiBestQStepDC1) * (Int)(( iFullDeltaDC1 < 0 ) ? -1 : 1);
     iFullDeltaDC2 = (Int)(uiBestQStepDC2) * (Int)(( iFullDeltaDC2 < 0 ) ? -1 : 1);
+#if HHI_DMM_DELTADC_Q1_C0034
+#else
     xDeltaDCQuantScaleUp( pcCU, iFullDeltaDC1 );
     xDeltaDCQuantScaleUp( pcCU, iFullDeltaDC2 );
+#endif
     riDeltaDC1 = iFullDeltaDC1;
     riDeltaDC2 = iFullDeltaDC2;
   }
 #endif
 
+#if HHI_DMM_DELTADC_Q1_C0034
+#else
   xDeltaDCQuantScaleDown( pcCU, riDeltaDC1 );
   xDeltaDCQuantScaleDown( pcCU, riDeltaDC2 );
+#endif
 }
 #endif
 #if HHI_DMM_WEDGE_INTRA
@@ -7110,12 +7289,20 @@ Void TEncSearch::findWedgeTexMinDist( TComDataCU*  pcCU,
                                       Int&         riDeltaDC1, 
                                       Int&         riDeltaDC2, 
                                       Bool         bAboveAvail, 
-                                      Bool         bLeftAvail )
+                                      Bool         bLeftAvail
+#if LGE_DMM3_SIMP_C0044
+                                      ,UInt&        ruiIntraTabIdx
+#endif
+                                      )
 {
   assert( uiWidth >= DMM_WEDGEMODEL_MIN_SIZE && uiWidth <= DMM_WEDGEMODEL_MAX_SIZE );
   WedgeList* pacWedgeList = &g_aacWedgeLists[(g_aucConvertToBit[uiWidth])];
 
+#if LGE_DMM3_SIMP_C0044
+  ruiTabIdx = getBestWedgeFromTex( pcCU, uiAbsPtIdx, uiWidth, uiHeight, piOrig, uiStride, ruiIntraTabIdx );
+#else
   ruiTabIdx = getBestWedgeFromTex( pcCU, uiAbsPtIdx, uiWidth, uiHeight );
+#endif
 
   TComWedgelet* pcBestWedgelet = &(pacWedgeList->at(ruiTabIdx));
   xGetWedgeDeltaDCsMinDist( pcBestWedgelet, pcCU, uiAbsPtIdx, piOrig, piPredic, uiStride, uiWidth, uiHeight, riDeltaDC1, riDeltaDC2, bAboveAvail, bLeftAvail );
@@ -8260,7 +8447,31 @@ Void TEncSearch::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pe
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
+#if HS_REFERENCE_SUBSAMPLE_C0154
+  Int subSamplePix;
+  if ( uiSize == 64 || uiSize == 32 )
+  {
+    subSamplePix = 2;
+  }
+  else
+  {
+    subSamplePix = 1;
+  }
+  for (Int y=0; y<uiSize; y+=subSamplePix)
+  {
+    for (Int x=0; x<uiSize; x+=subSamplePix)
+    {
+      UChar ucSegment = pMask?(UChar)pMask[x]:0;
+      assert( ucSegment < uiNumSegments );
   
+      iSumDepth[ucSegment] += pOrig[x];
+      iSumPix[ucSegment]   += 1;
+    }
+
+    pOrig  += uiStride*subSamplePix;
+    pMask  += uiMaskStride*subSamplePix;
+  }
+#else
   for (Int y=0; y<uiSize; y++)
   {
     for (Int x=0; x<uiSize; x++)
@@ -8275,7 +8486,7 @@ Void TEncSearch::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pe
     pOrig  += uiStride;
     pMask  += uiMaskStride;
   }
-  
+#endif
   // compute mean for each segment
   for( UChar ucSeg = 0; ucSeg < uiNumSegments; ucSeg++ )
   {

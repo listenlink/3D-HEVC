@@ -374,6 +374,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->setWidth( uiAbsPartIdx + ui, g_uiMaxCUWidth>>uhNewDepth );
         pcCU->setHeight( uiAbsPartIdx + ui, g_uiMaxCUHeight>>uhNewDepth );
       }
+#if LGE_ILLUCOMP_DEPTH_C0046
+      m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
     }
     else
     {
@@ -472,6 +475,10 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
   
 #if LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_DEPTH_C0046 && HHI_MPI
+  if( pcCU->getTextureModeDepth( uiAbsPartIdx ) != uiDepth )
+  {
+#endif
   m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 
@@ -479,6 +486,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   if( !pcCU->isIntra( uiAbsPartIdx ) )
   {
     m_pcEntropyDecoder->decodeResPredFlag    ( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
+  }
+#endif
+#if LGE_ILLUCOMP_DEPTH_C0046 && HHI_MPI
   }
 #endif
 
@@ -504,7 +514,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->setWidth( uiAbsPartIdx + ui, g_uiMaxCUWidth>>uhNewDepth );
         pcCU->setHeight( uiAbsPartIdx + ui, g_uiMaxCUHeight>>uhNewDepth );
       }
-
+#if LGE_ILLUCOMP_DEPTH_C0046
+      m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
       if( ( ( uiDepth < pcCU->getDepth( uiAbsPartIdx ) ) && ( uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth ) ) || bBoundary )
       {
         UInt uiIdx = uiAbsPartIdx;
@@ -1417,7 +1429,30 @@ Void TDecCu::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* r
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
+#if HS_REFERENCE_SUBSAMPLE_C0154
+  Int subSamplePix;
+  if ( uiSize == 64 || uiSize == 32 )
+  {
+    subSamplePix = 2;
+  }
+  else
+  {
+    subSamplePix = 1;
+  }
+  for (Int y=0; y<uiSize; y+=subSamplePix)
+  {
+    for (Int x=0; x<uiSize; x+=subSamplePix)
+    {
+      UChar ucSegment = pMask?(UChar)pMask[x]:0;
+      assert( ucSegment < uiNumSegments );
   
+      iSumDepth[ucSegment] += pOrig[x];
+      iSumPix[ucSegment]   += 1;
+    }
+    pOrig  += uiStride*subSamplePix;
+    pMask  += uiMaskStride*subSamplePix;
+  }
+#else
   for (Int y=0; y<uiSize; y++)
   {
     for (Int x=0; x<uiSize; x++)
@@ -1432,7 +1467,7 @@ Void TDecCu::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* r
     pOrig  += uiStride;
     pMask  += uiMaskStride;
   }
-  
+#endif
   // compute mean for each segment
   for( UChar ucSeg = 0; ucSeg < uiNumSegments; ucSeg++ )
   {

@@ -70,6 +70,9 @@
 #define FIX_DMM_NEG_DIST                  1
 #define FIX_LGE_DVMCP_B0133               1
 
+// 3rd meeting
+#define FIX_DMM_CTX_INIT_C0034            1    // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
+#define FIX_SDC_ENC_C0143                 1    // JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
 
 // FCO 
 #define FLEX_CODING_ORDER_M23723          1
@@ -87,6 +90,14 @@
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
 #define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
+#define HHI_DMM_DELTADC_Q1_C0034          1   // JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
+#if HHIQC_DMMFASTSEARCH_B0039 && HHI_DMM_PRED_TEX
+#define LGE_DMM3_SIMP_C0044               1
+#endif
+
+#if RWTH_SDC_DLT_B0036
+#define SAIT_SDC_C0096                    1   // JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
+#endif
 
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
@@ -146,6 +157,11 @@
 #define LGE_ILLUCOMP_B0045                1   // JCT2-B0045 Illumination compensation for Luma and Chroma
 #if LGE_ILLUCOMP_B0045
 #define LGE_ILLUCOMP_B0045_ENCSIMP        1
+#define FIX_LGE_ILLUCOMP_B0045            1
+#define LGE_ILLUCOMP_DEPTH_C0046          1   // JCT2-C0046 Apply illumination compensation to depth
+#if LGE_ILLUCOMP_DEPTH_C0046
+#define FIX_ILLUCOMP_DEPTH                1
+#endif
 #endif
 
 ///// ***** INTERVIEW SKIP *********
@@ -153,6 +169,7 @@
 
 ///// ***** QUADTREE LIMITATION *********
 #define OL_QTLIMIT_PREDCODING_B0068       1    //JCT3V-B0068
+#define HHI_QTLPC_RAU_OFF_C0160           1   // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
 
 ///// ***** OTHERS *********
 #define LG_ZEROINTRADEPTHRESI_A0087       1   // JCT2-A0087
@@ -160,6 +177,7 @@
 #define INTER_VIEW_VECTOR_SCALING_C0116   1   // JCT2-C0116 Inter-view vector scaling for AMVP
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
 #define VIDYO_VPS_INTEGRATION             1
+#define HHI_DEPTH_INTRA_SEARCH_RAU_C0160  1   // JCT3V-C0160 change 1: full Intra search in depth random access units 
 
 ///// ***** VSP *********
 
@@ -236,6 +254,7 @@
 
 #if RWTH_SDC_DLT_B0036
 #define Log2( n ) ( log((double)n) / log(2.0) )
+#define HS_REFERENCE_SUBSAMPLE_C0154      1
 #endif
 
 #define HHI_MPI_MERGE_POS                 0
