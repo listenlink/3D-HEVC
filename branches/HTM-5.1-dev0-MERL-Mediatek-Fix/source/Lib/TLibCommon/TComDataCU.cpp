@@ -3787,7 +3787,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   PartSize cCurPS = getPartitionSize( uiAbsPartIdx );
   deriveLeftRightTopIdxGeneral( cCurPS, uiAbsPartIdx, uiPUIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdxGeneral( cCurPS, uiAbsPartIdx, uiPUIdx, uiPartIdxLB );
-
+#if !FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
   if( m_pcSlice->getIsDepth())
   {
@@ -3821,6 +3821,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
         }
       }
+#if FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
+      xInheritVspMode( pcTextureCU, uiPartIdxCenter, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo ) ;
+#endif
 #if SIMP_MRG_PRUN
       if ( mrgCandIdx == iCount )
       {
@@ -3830,6 +3833,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       iCount ++;
     }
   }
+#endif
 #endif
 
 #if HHI_INTER_VIEW_MOTION_PRED
@@ -3892,6 +3896,54 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     bDVAvail = false;
 #endif
   }
+#if FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
+#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+  if( m_pcSlice->getIsDepth())
+  {
+    UInt uiPartIdxCenter;
+    xDeriveCenterIdx( cCurPS, uiPUIdx, uiPartIdxCenter );    
+    TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
+    if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
+    {
+      abCandIsInter[iCount] = true;      
+      puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
+      if( ( puhInterDirNeighbours[iCount] & 1 ) == 1 )
+      {
+        pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
+        TComMv cMvPred = pcMvFieldNeighbours[iCount<<1].getMv();
+        const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
+        cMvPred+=cAdd;
+        cMvPred>>=2;
+        clipMv(cMvPred);
+        pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
+      }
+      if ( getSlice()->isInterB() )
+      {
+        if( ( puhInterDirNeighbours[iCount] & 2 ) == 2 )
+        {
+          pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
+          TComMv cMvPred = pcMvFieldNeighbours[(iCount<<1)+1].getMv();
+          const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
+          cMvPred+=cAdd;
+          cMvPred>>=2;
+          clipMv(cMvPred);
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
+        }
+      }
+#if FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
+      xInheritVspMode( pcTextureCU, uiPartIdxCenter, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo ) ;
+#endif
+#if SIMP_MRG_PRUN
+      if ( mrgCandIdx == iCount )
+      {
+        return;
+      }
+#endif
+      iCount ++;
+    }
+  }
+#endif
+#endif
 #if QC_MRG_CANS_B0048
   Int iPdmDir[2] = {0, 0};
 #endif
