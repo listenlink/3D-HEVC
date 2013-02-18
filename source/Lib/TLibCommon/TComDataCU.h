@@ -297,7 +297,7 @@ protected:
   Bool bMRG = 0
 #endif
   );
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
   Bool          xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
 #endif 
   
@@ -567,41 +567,29 @@ public:
                                           ,Bool bIndependentTileBoundaryEnabled );
 
 #if HHI_INTER_VIEW_MOTION_PRED
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
   Int           getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
-#else
+#else //!H3D_NBDV
 #if QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Bool getUnifiedMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
-#else
+#else //QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Bool          getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
   Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
 #if QC_MRG_CANS_B0048
     , Int* iPdm
-#endif
+#endif //QC_MRG_CANS_B0048
   );
-#endif
+#endif //QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
-#if LGE_DVMCP_A0126
-#if QC_SIMPLE_NBDV_B0047
-  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo
-#if LGE_IVMP_PARALLEL_MERGE_B0136
-                              , Bool bParMerg = false
-#endif
+  Void          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
 #if MERL_VSP_C0152
                               , Bool bDepthRefine = false
-#endif
+#endif //MERL_VSP_C0152
     );
-#else
-  Void          getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo, Bool bMerge=false, RefPicList eRefPicList=REF_PIC_LIST_X, Int iRefIdx=-1
-#if LGE_IVMP_PARALLEL_MERGE_B0136
-    , Bool bParMerg = false
-#endif
-    );
-#endif
-#endif
+#endif // !H3D_NBDV
 
-#endif
+
 
 #if MERL_VSP_C0152
 #if LGE_SIMP_DVP_REFINE_C0112

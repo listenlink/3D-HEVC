@@ -135,7 +135,7 @@ public:
   Void  uninit                ();
 
   Void  initViewComponent     ( TComPic*      pcPic );
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
   Bool  predictDepthMap       ( TComPic*      pcPic );
   Void  updateDepthMap        ( TComPic*      pcPic );
   Void  dumpDepthMap          ( TComPic*      pcPic, char* pFilenameBase );
@@ -150,7 +150,7 @@ public:
   UInt  getSubSampExpY        ()                      { return m_uiSubSampExpY; }
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
 #if HHI_INTER_VIEW_MOTION_PRED
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 #if QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Bool getPdmCandidate ( TComDataCU* pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
 #else
@@ -179,7 +179,7 @@ public:
 
 private:
   // picture operations
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
   Bool  xConvertDepthMapCurr2Ref  ( TComPic*    pcRef, TComPic* pcCur );
   Bool  xConvertDepthMapRef2Curr  ( TComPic*    pcCur, TComPic* pcRef );
   Bool  xPredictDepthMap          ( TComPic*    pcPic );

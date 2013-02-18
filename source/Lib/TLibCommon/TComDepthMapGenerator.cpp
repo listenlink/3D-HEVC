@@ -77,7 +77,7 @@ TComDepthMapGenerator::create( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight,
   m_uiOrgDepthBitDepth  = uiOrgBitDepth;
   m_uiSubSampExpX       = uiSubSampExpX;
   m_uiSubSampExpY       = uiSubSampExpY;
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
   m_ppcYuv              = new TComYuv*    [ m_uiMaxDepth ];
   m_ppcCU               = new TComDataCU* [ m_uiMaxDepth ];
   for( UInt uiDepth = 0; uiDepth < m_uiMaxDepth; uiDepth++ )
@@ -91,7 +91,7 @@ TComDepthMapGenerator::create( Bool bDecoder, UInt uiPicWidth, UInt uiPicHeight,
   }
   m_cTmpPic.create( uiPicWidth >> m_uiSubSampExpX, uiPicHeight >> m_uiSubSampExpY, uiMaxCUWidth >> m_uiSubSampExpX, uiMaxCUHeight >> m_uiSubSampExpY, uiMaxCUDepth );
   xSetChroma( &m_cTmpPic, ( 1 << uiOrgBitDepth ) >> 1 );
-#endif
+#endif //!H3D_NBDV
   m_bCreated    = true;
 }
 
@@ -101,7 +101,7 @@ TComDepthMapGenerator::destroy()
   if( m_bCreated )
   {
     m_bCreated    = false;
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
     for( UInt uiDepth = 0; uiDepth < m_uiMaxDepth; uiDepth++ )
     {
       if( m_ppcYuv[ uiDepth ] )
@@ -116,7 +116,7 @@ TComDepthMapGenerator::destroy()
     delete [] m_ppcYuv; m_ppcYuv = 0;
     delete [] m_ppcCU;  m_ppcCU  = 0;
     m_cTmpPic.destroy();
-#endif
+#endif //!H3D_NBDV
     m_uiMaxDepth          = 0;
     m_uiOrgDepthBitDepth  = 0;
     m_uiSubSampExpX       = 0;
@@ -376,7 +376,7 @@ TComDepthMapGenerator::initViewComponent( TComPic* pcPic )
 #endif
 }
 
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
 Bool
 TComDepthMapGenerator::predictDepthMap( TComPic* pcPic )
 {
@@ -562,7 +562,7 @@ TComDepthMapGenerator::dumpDepthMap( TComPic* pcPic, char* pFilenameBase )
   m_cTmpPic.dump( acFilename, ( pcPic->getPOC() != 0 )  );
 }
 
-#endif
+#endif //!H3D_NBDV
 
 #if HHI_INTER_VIEW_MOTION_PRED
 Void  
@@ -669,7 +669,7 @@ TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicL
   TComPicYuv* pcBaseRec   = pcBasePic->getPicYuvRec   ();
   if(bMerge || !bInterview)
   {
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
     Int  iCurrPosX, iCurrPosY;
     UInt          uiPartAddr;
     Int           iWidth;
@@ -685,7 +685,7 @@ TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicL
     Int         iBaseCUAddr;
     Int         iBaseAbsPartIdx;
     pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY , iBaseCUAddr, iBaseAbsPartIdx );
-#else
+#else //H3D_NBDV
     Int  iPrdDepth, iCurrPosX, iCurrPosY;
     Bool bAvailable  = xGetPredDepth( pcCU, uiPartIdx, iPrdDepth, &iCurrPosX, &iCurrPosY );
     AOF( bAvailable );
@@ -698,7 +698,7 @@ TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicL
     Int         iBaseCUAddr;
     Int         iBaseAbsPartIdx;
     pcBaseRec->getCUAddrAndPartIdx( iBasePosX<< m_uiSubSampExpX , iBasePosY<< m_uiSubSampExpY , iBaseCUAddr, iBaseAbsPartIdx );
-#endif 
+#endif // H3D_NBDV
     TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
     if( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTER || pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_SKIP )
     {
@@ -725,7 +725,7 @@ TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicL
                 {
                   abPdmAvailable[ uiCurrRefListId ] = true;
                   TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
                   if( bMerge )
                   {
                     cMv.m_bDvMcp = true;
@@ -771,7 +771,7 @@ TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicL
           abPdmAvailable[ iRefListId ] = true;
           paiPdmRefIdx  [ iRefListId ] = iPdmRefIdx;
 #endif
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
           TComMv cMv = pDInfo->m_acMvCand[0]; 
           cMv.setVer(0);
 #else
@@ -803,7 +803,7 @@ TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicL
   return false;
 }
 #else
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 Int
 TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
 #if QC_MRG_CANS_B0048
@@ -818,7 +818,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
 #if MTK_INTERVIEW_MERGE_A0049
   AOF  ( m_bCreated && m_bInit );
 
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
   ROFRS( m_bPDMAvailable, 0 );
 #endif
 
@@ -863,7 +863,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
   TComPic*    pcBasePic   = m_pcAUPicAccess->getPic( iViewId );
   TComPicYuv* pcBaseRec   = pcBasePic->getPicYuvRec   ();
 
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
   Int  iCurrPosX, iCurrPosY;
   UInt          uiPartAddr;
   Int           iWidth;
@@ -917,13 +917,13 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
               abPdmAvailable[ uiBaseRefListId ] = true;
               paiPdmRefIdx  [ uiBaseRefListId ] = iPdmRefIdx;
               TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
               cMv.m_bDvMcp = true;
               cMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor();
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
               cMv.m_iDvMcpDispY = pDInfo->m_acMvCand[0].getVer();
 #endif
-#endif
+#endif //H3D_NBDV
               pcCU->clipMv( cMv );
               pacPdmMv      [ uiBaseRefListId ] = cMv;
               break;
@@ -955,7 +955,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
           abPdmAvailable[ iRefListId ] = true;
           paiPdmRefIdx  [ iRefListId ] = iPdmRefIdx;
 #endif
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
           TComMv cMv = pDInfo->m_acMvCand[0]; 
           cMv.setVer(0);
 #else
@@ -996,7 +996,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
     {
       if( pcCU->getSlice()->getRefPOC( eRefPicList, iPdmRefIdx ) != pcCU->getSlice()->getPOC() )
       {
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
         if( getDisCanPdmMvPred (pcCU, uiPartIdx, eRefPicList, iPdmRefIdx, cMv, pDInfo, true ) )       
 #else 
         if( getPdmMvPred( pcCU, uiPartIdx, eRefPicList, iPdmRefIdx, cMv, true ) )
@@ -1022,7 +1022,7 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
       TComMv      cMv;
       for( Int iPdmRefIdx = 0; iPdmRefIdx < iNumRefPics; iPdmRefIdx++ )
       {
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
         if ( getDisCanPdmMvPred (pcCU, uiPartIdx, eRefPicList, iPdmRefIdx, cMv, pDInfo, true ) ) 
 #else 
         if( getPdmMvPred( pcCU, uiPartIdx, eRefPicList, iPdmRefIdx, cMv, true ) )
@@ -1042,17 +1042,14 @@ TComDepthMapGenerator::getPdmMergeCandidate( TComDataCU* pcCU, UInt uiPartIdx, I
 #endif
 }
 
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 Bool
 TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge )
 {
-#if LGE_DVMCP_A0126
   rcMv.m_bDvMcp = false;
-#endif
   AOF  ( m_bCreated && m_bInit );
   AOF  ( iRefIdx >= 0 );
   AOF  ( pcCU );
-  //ROFRS( m_bPDMAvailable, false );
   TComSlice*    pcSlice     = pcCU->getSlice ();
   TComSPS*      pcSPS       = pcSlice->getSPS();
   AOF  ( pcSPS->getViewId() == m_uiCurrViewId );
@@ -1079,7 +1076,7 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
   }
   for( UInt uiBId = 0; uiBId < m_uiCurrViewId; uiBId++ )
   {
-    UInt        uiBaseId    = uiBId;  //m_auiBaseIdList[ uiBId ];
+    UInt        uiBaseId    = uiBId; 
 
     if (m_uiCurrViewId >1 && uiBaseId ==1 ) 
       continue;
@@ -1114,7 +1111,6 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
       if( iBaseRefIdx >= 0 && iBaseRefPoc == iRefPoc )
       {
         rcMv.set( cBaseMvField.getHor(), cBaseMvField.getVer() );
-#if LGE_DVMCP_A0126
         // save disparity vector when a merge candidate for IVMP is set as DV-MCP
         if( bMerge ) 
         {
@@ -1127,14 +1123,13 @@ TComDepthMapGenerator::getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartId
         else { // AMVP ?
           rcMv.m_bDvMcp = false;
         }
-#endif
         return true;
       }
     }
   }
   return false;
 }
-#else
+#else // H3D_NBDV
 Bool  
 TComDepthMapGenerator::getPdmMvPred( TComDataCU* pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge )
 {
@@ -1218,7 +1213,7 @@ TComDepthMapGenerator::getPdmMvPred( TComDataCU* pcCU, UInt uiPartIdx, RefPicLis
   }
   return false;
 }
-#endif
+#endif // H3D_NBDV
 #endif
 
 
@@ -1267,7 +1262,7 @@ TComDepthMapGenerator::getIViewOrgDepthMvPred( TComDataCU* pcCU, UInt uiPartIdx,
 
 
 
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
 /*=======================================================*
  *=====                                             =====*
  *=====     p i c t u r e   o p e r a t i o n s     =====*
@@ -2094,7 +2089,7 @@ TComDepthMapGenerator::xGetPredDepth( TComDataCU* pcCU, UInt uiPartIdx, Int& riP
   }
   return        true;
 }
-#endif
+#endif // H3D_NBDV
 
 #endif // DEPTH_MAP_GENERATION
 

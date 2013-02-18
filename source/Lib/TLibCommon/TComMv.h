@@ -56,7 +56,7 @@ private:
   
 public:
   
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
   Bool  m_bDvMcp;       // is dv-mcp ?
   Int   m_iDvMcpDispX;  // disparity for dv-mcp
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
@@ -71,7 +71,7 @@ public:
   TComMv() :
   m_iHor(0),
   m_iVer(0)
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
   , m_bDvMcp(false)
   , m_iDvMcpDispX(0)
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
@@ -84,7 +84,7 @@ public:
   TComMv( Short iHor, Short iVer ) :
   m_iHor(iHor),
   m_iVer(iVer)
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
   , m_bDvMcp(false)
   , m_iDvMcpDispX(0)
 #if MTK_RELEASE_DV_CONSTRAINT_C0129

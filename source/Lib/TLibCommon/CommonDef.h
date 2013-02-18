@@ -147,7 +147,7 @@
 #endif
 #endif
 
-#if SAIT_IMPROV_MOTION_PRED_M24829&!QC_MULTI_DIS_CAN_A0097
+#if SAIT_IMPROV_MOTION_PRED_M24829&!H3D_NBDV
 #define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
 #else
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)

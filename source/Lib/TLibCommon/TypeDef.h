@@ -44,9 +44,6 @@
 #define QC_IV_AS_LT_B0046                 1   //JCT3V-B0046: inter-view reference pictures are treated as long-term pictures 
 #define QC_TMVP_IDX_MOD_B0046             1   //JCT3V-B0046: the reference index for temporal merging candidate is set to 0, as defined in HEVC
 #define QC_REM_IDV_B0046                  1   //JCT3V-B0046: removal of IDV NAL unit type
-#define FIX_DEL_NULLPTR                   1
-#define FIX_MISUSE_REFINDEX               1
-#define FIX_FCO_COMP_WARNING              1
 #define DV_V_RESTRICTION_B0037            1   // JCT3V-B0037 disparity vector vertical range restriction
 
 #if !QC_MVHEVC_B0046
@@ -68,7 +65,7 @@
 #define FIX_LGE_IVMP_PARALLEL_MERGE_B0136 1
 #define FIX_RDO_NEGDIST                   1
 #define FIX_DMM_NEG_DIST                  1
-#define FIX_LGE_DVMCP_B0133               1
+
 
 // 3rd meeting
 #define FIX_DMM_CTX_INIT_C0034            1    // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
@@ -88,9 +85,13 @@
 #define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
 #define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
+
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
-#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3
+
+#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3 // --> weg 
+
 #define HHI_DMM_DELTADC_Q1_C0034          1   // JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
+
 #if HHIQC_DMMFASTSEARCH_B0039 && HHI_DMM_PRED_TEX
 #define LGE_DMM3_SIMP_C0044               1
 #endif
@@ -128,11 +129,15 @@
 #endif
 
 ///// ***** DISPARITY VECTOR DERIVATION *********
-#define QC_MULTI_DIS_CAN_A0097            1   // JCT3V-A0097
-#define LGE_DVMCP_A0126                   1   // JCT3V-A0126     
-#define LGE_DVMCP_MEM_REDUCTION_B0135     1   // JCT3V-B0135     
-#define DV_DERIVATION_PARALLEL_B0096      1   // JCT3V-B0096, enable parallel derivation of disparity vector
-#define QC_SIMPLE_NBDV_B0047              1   // JCT3V-B0047
+#define H3D_NBDV                          1   // Neighboring block disparity derivation 
+                                              // JCT3V-A0097 
+                                              // LGE_DVMCP_A0126
+                                              // LGE_DVMCP_MEM_REDUCTION_B0135     
+                                              // DV_DERIVATION_PARALLEL_B0096, enable parallel derivation of disparity vector
+                                              // QC_SIMPLE_NBDV_B0047
+                                              // FIX_LGE_DVMCP_B0133
+                                              // LGE_IVMP_PARALLEL_MERGE_B0136, B0136 support of parallel merge/skip in disparity vector derivation
+
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
 #define HHI_MPI                           0   // motion parameter inheritance from texture picture for depth map coding
@@ -215,7 +220,7 @@
 
 
 ///// ***** DEFINED PARAMETERS *********
-#if QC_MULTI_DIS_CAN_A0097                    
+#if H3D_NBDV                    
 #define DIS_CANS                          1
 #endif                                  
 
@@ -237,7 +242,7 @@
 #endif
 
 
-#if LGE_DVMCP_A0126                           
+#if H3D_NBDV                           
 #define DVFROM_LEFTBELOW                  1
 #define DVFROM_LEFT                       2
 #define DVFROM_ABOVERIGHT                 3
@@ -270,7 +275,6 @@
 #endif
 
 #define PARALLEL_MERGE  1                   //< H0082 parallel merge/skip
-#define LGE_IVMP_PARALLEL_MERGE_B0136     1 //< B0136 support of parallel merge/skip in disparity vector derivation
 #define LOG2_PARALLEL_MERGE_LEVEL_MINUS2  0 //< H0082 parallel merge level 0-> 4x4, 1-> 8x8, 2->16x16, 3->32x32, 4->64x64
 
 #if PARALLEL_MERGE && LOG2_PARALLEL_MERGE_LEVEL_MINUS2
@@ -452,9 +456,9 @@ enum MODE_IDX
 #endif
 
 #if LGE_EDGE_INTRA_A0070
-#if HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 #define EDGE_INTRA_IDX  (NUM_INTRA_MODE+NUM_DMM_MODE)
-#endif // HHI_DMM_WEDGE_INTRA && HHI_DMM_PRED_TEX
+#endif // HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 #if LGE_EDGE_INTRA_DELTA_DC
 #define EDGE_INTRA_DELTA_IDX          (EDGE_INTRA_IDX+1)
 #endif

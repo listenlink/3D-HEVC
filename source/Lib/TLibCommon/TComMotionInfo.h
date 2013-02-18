@@ -58,7 +58,7 @@ typedef struct _AMVPInfo
 } AMVPInfo;
 
 // ====================================================================================================================
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 typedef struct _DisCand
 {
   TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates

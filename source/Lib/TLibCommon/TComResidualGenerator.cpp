@@ -225,7 +225,7 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
   }
 }
 
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
 Bool
 TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv, TComMv iDisp
@@ -248,7 +248,7 @@ TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComY
   , Bool bRecon
 #endif
   )
-#endif
+#endif //H3D_NBDV
 {
   AOF(  pcCU );
   UInt  uiPartAddr;
@@ -258,7 +258,7 @@ TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComY
   iBlkWidth   = pcCU->getWidth  ( 0 );
   iBlkHeight  = pcCU->getHeight ( 0 );
   pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iXPos, iYPos );
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
   return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv, iDisp 
 #if QC_SIMPLIFIEDIVRP_M24938
@@ -278,10 +278,10 @@ TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComY
     , bRecon
 #endif
     );
-#endif
+#endif // H3D_NBDV
 }
   
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
 Bool
 TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp  
@@ -318,7 +318,7 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
 #if QC_SIMPLIFIEDIVRP_M24938
   UInt uiXPosInRefView = uiXPos , uiYPosInRefView = uiYPos;
 #endif
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
   xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, iDisp
 #if QC_SIMPLIFIEDIVRP_M24938
@@ -566,7 +566,7 @@ TComResidualGenerator::xClearResidual( TComYuv* pcCUResidual, UInt uiAbsPartIdx,
 }
 
 
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
 Void  
 TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp
@@ -574,22 +574,22 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
 #endif
 )
-#else
+#else // MTK_RELEASE_DV_CONSTRAINT_C0129
 Void  
 TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
 #if QC_SIMPLIFIEDIVRP_M24938
   , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
 #endif
 )
-#endif
-#else
+#endif // MTK_RELEASE_DV_CONSTRAINT_C0129
+#else // H3D_NBDV
 Void  
 TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
 #if QC_SIMPLIFIEDIVRP_M24938
   , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
 #endif
   )
-#endif
+#endif // H3D_NBDV
 {
   //===== set and check some basic variables =====
   AOF(          pcYuv     );
@@ -606,18 +606,18 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   AOT( uiYPos + uiBlkHeight > uiPicHeight );
 
   //===== get disparity =====
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
   Int iDisparity_y = iDisp.getVer();
   Int iDisparity   = iDisp.getHor();
 #else
   Int iDisparity = iDisp;
 #endif
-#else
+#else //H3D_NBDV
   Int           iMidPosX    = Int( uiXPos + ( ( uiBlkWidth  - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpX();
   Int           iMidPosY    = Int( uiYPos + ( ( uiBlkHeight - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpY();
   Int           iDisparity  = m_pcDepthMapGenerator->getDisparity( pcPic, iMidPosX, iMidPosY, uiBaseViewId );
-#endif
+#endif //H3D_NBDV
   //===== compensate luma =====
   Int           iYWidth     = Int( uiBlkWidth  );
   Int           iYHeight    = Int( uiBlkHeight );

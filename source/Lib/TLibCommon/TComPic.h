@@ -78,10 +78,8 @@ private:
 
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
   Bool          m_checked;
-#endif
-#if QC_SIMPLE_NBDV_B0047
   UInt        m_uiRapRefIdx;
   RefPicList  m_eRapRefList;
   Bool        m_bRapCheck;
@@ -168,7 +166,7 @@ public:
 #endif
 #if HHI_INTER_VIEW_MOTION_PRED
   TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
   Void          setCandPicCheckedFlag (Bool bchecked)   { m_checked = bchecked; }
   Bool          getCandPicCheckedFlag ()                { return m_checked;}
 #endif
@@ -177,7 +175,7 @@ public:
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   TComPicYuv*   getResidual()         { return  m_pcResidual; }
 #endif
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
   UInt          getRapRefIdx()                         {return m_uiRapRefIdx;}
   RefPicList    getRapRefList()                        {return m_eRapRefList;}
   Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
