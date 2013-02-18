@@ -302,7 +302,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
     if( uiStartCUAddr == 0 )
     {
       m_pcDepthMapGenerator->initViewComponent( rpcPic );
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
       m_pcDepthMapGenerator->predictDepthMap  ( rpcPic );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -311,7 +311,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
     }
 #endif
 
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
     if(pcSlice->getViewId() && pcSlice->getSPS()->getMultiviewMvPredMode())
     {
       Int iColPoc = pcSlice->getRefPOC(RefPicList(pcSlice->getColDir()), pcSlice->getColRefIdx());
@@ -347,7 +347,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
     m_pcResidualGenerator->setRecResidualPic( rpcPic );
 #endif
 #if DEPTH_MAP_GENERATION
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
     // update virtual depth map
     m_pcDepthMapGenerator->updateDepthMap( rpcPic );
 #endif

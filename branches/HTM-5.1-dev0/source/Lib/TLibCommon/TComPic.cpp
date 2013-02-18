@@ -83,7 +83,7 @@ TComPic::TComPic()
 #if OL_QTLIMIT_PREDCODING_B0068
   m_bReduceBitsQTL    = 0;
 #endif
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
   m_bRapCheck = false;
   m_eRapRefList = REF_PIC_LIST_0;
   m_uiRapRefIdx = 0;
@@ -488,7 +488,7 @@ Void TComPic::createNonDBFilterInfo(UInt* pSliceStartAddress, Int numSlices, Int
     m_pNDBFilterYuvTmp->create(picWidth, picHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
   }
 }
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
 Bool TComPic::getDisCandRefPictures(Int iColPOC)
 {
   UInt uiTempLayerCurr=7;

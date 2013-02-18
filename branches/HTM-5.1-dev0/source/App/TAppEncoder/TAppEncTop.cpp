@@ -1183,11 +1183,7 @@ Void TAppEncTop::encode()
   pcDepthPicYuvOrg = NULL;
   
 #if !QC_MVHEVC_B0046
-#if FIX_DEL_NULLPTR
   if ( pcPdmDepthOrg != NULL && m_uiMultiviewMvRegMode )
-#else
-  if ( pcPdmDepthOrg != NULL )
-#endif
   {
     pcPdmDepthOrg->destroy();
     delete pcPdmDepthOrg;     
