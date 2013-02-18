@@ -3852,10 +3852,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   UInt uiAbsPartAddr = m_uiAbsIdxInLCU + uiAbsPartIdx;
   UInt uiIdx = 1;
 #if HHI_INTER_VIEW_MOTION_PRED
-  bool abCandIsInter[ MRG_MAX_NUM_CANDS_MEM ];
+  Bool abCandIsInter[ MRG_MAX_NUM_CANDS_MEM ];
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS_MEM; ++ui )
 #else
-  bool abCandIsInter[ MRG_MAX_NUM_CANDS ];
+  Bool abCandIsInter[ MRG_MAX_NUM_CANDS ];
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ++ui )
 #endif
   {
@@ -6654,16 +6654,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       // Extension part
       DisInfo cDisInfo;
       cDisInfo.iN = 0;
-
-#if FIX_LGE_IVMP_PARALLEL_MERGE_B0136
       getDisMvpCandNBDV(uiPartIdx, uiPartAddr, &cDisInfo, false
 #if MERL_VSP_C0152
             , true
 #endif
               ); 
-#else  // FIX_LGE_IVMP_PARALLEL_MERGE_B0136
-      getDisMvpCandNBDV(uiPartIdx, uiPartAddr, &cDisInfo); 
-#endif // FIX_LGE_IVMP_PARALLEL_MERGE_B0136
       if(cDisInfo.iN==0)
       {
         cDisInfo.iN = 1;
@@ -6734,11 +6729,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   cDisInfo.iN = 0;
   if(m_pcSlice->getSPS()->getViewId() && m_pcSlice->getSPS()->getMultiviewMvPredMode())
   {
-#if FIX_LGE_IVMP_PARALLEL_MERGE_B0136
     getDisMvpCandNBDV(uiPartIdx, uiPartAddr, &cDisInfo, false);
-#else
-    getDisMvpCandNBDV(uiPartIdx, uiPartAddr, &cDisInfo);
-#endif
   }
   if(cDisInfo.iN==0)
   {
@@ -8750,11 +8741,7 @@ TComDataCU::getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int 
 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
 Bool
-TComDataCU::getResidualSamples( UInt uiPartIdx, 
-#if QC_SIMPLIFIEDIVRP_M24938
-  Bool bRecon ,
-#endif
-  TComYuv* pcYuv )
+TComDataCU::getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv )
 {
   TComResidualGenerator*  pcResidualGenerator = m_pcSlice->getSPS()->getResidualGenerator();
   ROFRS( pcResidualGenerator, false );
@@ -8763,11 +8750,7 @@ TComDataCU::getResidualSamples( UInt uiPartIdx,
   cDisInfo.iN = 0;
   PartSize m_peSaved =  getPartitionSize( 0 );
   m_pePartSize[0] =  SIZE_2Nx2N;
-#if FIX_LGE_IVMP_PARALLEL_MERGE_B0136
   getDisMvpCandNBDV( 0, 0,  &cDisInfo, false );
-#else
-  getDisMvpCandNBDV( 0, 0,  &cDisInfo);
-#endif
   if( cDisInfo.iN == 0)
   {
     m_pePartSize[0] = m_peSaved;
@@ -8776,27 +8759,15 @@ TComDataCU::getResidualSamples( UInt uiPartIdx,
   else
   {
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
-    Bool bAvailable = pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, cDisInfo.m_acMvCand[0] 
-#if QC_SIMPLIFIEDIVRP_M24938
-     , bRecon 
-#endif
-     );
+    Bool bAvailable = pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, cDisInfo.m_acMvCand[0], bRecon );       
 #else
-    Bool bAvailable = pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, cDisInfo.m_acMvCand[0].getHor() 
-#if QC_SIMPLIFIEDIVRP_M24938
-      , bRecon 
-#endif
-      );
+    Bool bAvailable = pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, cDisInfo.m_acMvCand[0].getHor(), bRecon ); 
 #endif
     m_pePartSize[0] = m_peSaved;
     return bAvailable;
   }
 #else
-  return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv 
-#if QC_SIMPLIFIEDIVRP_M24938
-    , bRecon 
-#endif
-    );
+  return pcResidualGenerator->getResidualSamples( this, uiPartIdx, pcYuv, bRecon ); 
 #endif
 }
 #endif

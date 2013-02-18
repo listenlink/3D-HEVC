@@ -122,11 +122,7 @@ TDecEntropy::decodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   // check if supported
   if( bResPredAllowed )
   {
-    bResPredAvailable       = pcSubCU->getResidualSamples( uiPUIdx 
-#if QC_SIMPLIFIEDIVRP_M24938
-      , false
-#endif
-      );
+    bResPredAvailable       = pcSubCU->getResidualSamples( uiPUIdx , false  );
   }
 
   // read from bitstream

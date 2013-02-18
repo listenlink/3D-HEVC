@@ -40,93 +40,75 @@
 
 //! \ingroup TLibCommon
 //! \{
-#define QC_MVHEVC_B0046                   0   //JCT3V-B0046: disable 3DHEVC tools
+
+// MV-HEVC
 #define QC_IV_AS_LT_B0046                 1   //JCT3V-B0046: inter-view reference pictures are treated as long-term pictures 
-#define QC_TMVP_IDX_MOD_B0046             1   //JCT3V-B0046: the reference index for temporal merging candidate is set to 0, as defined in HEVC
 #define QC_REM_IDV_B0046                  1   //JCT3V-B0046: removal of IDV NAL unit type
-#define DV_V_RESTRICTION_B0037            1   // JCT3V-B0037 disparity vector vertical range restriction
+#define DV_V_RESTRICTION_B0037            1   //JCT3V-B0037: disparity vector vertical range restriction
+#define QC_TMVP_IDX_MOD_B0046             1   //JCT3V-B0046: the reference index for temporal merging candidate is set to 0, as defined in HEVC
+
+// 3D-HEVC
+#define QC_MVHEVC_B0046                   0   //JCT3V-B0046: disable 3DHEVC tools
 
 #if !QC_MVHEVC_B0046
 
-
-// C TRACK 3
-#define MERL_VSP_C0152                                0 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
-#define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
-#define MTK_SIMPLIFY_DVTC_C0135                       1   // JCT3V-C0135
-#define MTK_RELEASE_DV_CONSTRAINT_C0129               1   // JCT3V-C0129
-#define QC_NBDV_LDB_FIX_C0055                         1   // JCT3V-C0055
-
-///// ***** FIXES *********
-// A
-#define FIX_POZNAN_CABAC_INIT_FLAG        1
-#define FIX_LG_RESTRICTEDRESPRED_M24766   1
-
-// B
-#define FIX_LGE_IVMP_PARALLEL_MERGE_B0136 1
-#define FIX_RDO_NEGDIST                   1
-#define FIX_DMM_NEG_DIST                  1
-
-
-// 3rd meeting
-#define FIX_DMM_CTX_INIT_C0034            1    // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
-#define FIX_SDC_ENC_C0143                 1    // JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
-
-// FCO 
-#define FLEX_CODING_ORDER_M23723          1
-#if FLEX_CODING_ORDER_M23723
-  #define DISABLE_FCO_FOR_VSO             0 // Optional compile settings to disable VSO with FCO.
-#endif
-#define   QC_TMVP_MRG_REFIDX_C0047        1 //only enabled when QC_TMVP_IDX_MOD_B0046 is enabled.
-
-///// ***** PATCHES *********
-#define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
-
-///// ***** DEPTH MODELING MODES *********
+///// ***** DMM *********
 #define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
 #define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 
-#define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
-
 #define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3 // --> weg 
 
 #define HHI_DMM_DELTADC_Q1_C0034          1   // JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
-
 #if HHIQC_DMMFASTSEARCH_B0039 && HHI_DMM_PRED_TEX
 #define LGE_DMM3_SIMP_C0044               1
 #endif
+#define FIX_DMM_CTX_INIT_C0034            1    // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
 
+///// ***** SDC *********
+#define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
 #if RWTH_SDC_DLT_B0036
 #define SAIT_SDC_C0096                    1   // JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
 #endif
+#define FIX_SDC_ENC_C0143                 1    // JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
+
+///// ***** TMVP/AMVP *********
+#define TMVP_DEPTH_SWITCH                 1 // JCT3V-B0092 additional encoder option only 
+#define QC_TMVP_MRG_REFIDX_C0047          1 // only enabled when QC_TMVP_IDX_MOD_B0046 is enabled.
+#define INTER_VIEW_VECTOR_SCALING_C0115   1 // JCT3V-C0115 Inter-view vector scaling for TMVP & flag
+#define INTER_VIEW_VECTOR_SCALING_C0116   1 // JCT3V-C0116 Inter-view vector scaling for AMVP
 
 ///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
 #define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
-#define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
-#define QC_C0051_FIXED_BY_MTK             1   // bug fix for C0051 implementation
-#define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
-#define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
-#if     QC_MRG_CANS_B0048
-#define OL_DISMV_POS_B0069                1   // different pos for disparity MV candidate, B0069
-#endif
-#define MTK_INTERVIEW_MERGE_A0049         1   // JCT3V-A0049 second part
 #if HHI_INTER_VIEW_MOTION_PRED         
 #define SAIT_IMPROV_MOTION_PRED_M24829    1   // improved inter-view motion vector prediction
 #else                                  
 #define SAIT_IMPROV_MOTION_PRED_M24829    0   
 #endif                                 
 
+#define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
+#define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
+#if     QC_MRG_CANS_B0048
+#define OL_DISMV_POS_B0069                1   // different pos for disparity MV candidate, B0069
+#endif
+#define MTK_INTERVIEW_MERGE_A0049         1   // JCT3V-A0049 second part
+#define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
+#define QC_C0051_FIXED_BY_MTK             1   // bug fix for C0051 implementation
+
+
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
 #define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
+                                              // QC_SIMPLIFIEDIVRP_M24938 
 #if HHI_INTER_VIEW_RESIDUAL_PRED       
-#define MTK_MDIVRP_C0138                  1   // mode-dependent inter-view residual prediction
-#define MTK_C0138_FIXED                   1   // fix for IBP coding structure in view direction (not CTC)
 #define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
-#define QC_SIMPLIFIEDIVRP_M24938          1
+#define FIX_LG_RESTRICTEDRESPRED_M24766   1
 #else                                  
 #define LG_RESTRICTEDRESPRED_M24766       0
-#define QC_SIMPLIFIEDIVRP_M24938          0
 #endif
+
+#define MTK_MDIVRP_C0138                  1   // mode-dependent inter-view residual prediction
+#define MTK_C0138_FIXED                   1   // fix for IBP coding structure in view direction (not CTC)
+
 
 ///// ***** DISPARITY VECTOR DERIVATION *********
 #define H3D_NBDV                          1   // Neighboring block disparity derivation 
@@ -137,6 +119,12 @@
                                               // QC_SIMPLE_NBDV_B0047
                                               // FIX_LGE_DVMCP_B0133
                                               // LGE_IVMP_PARALLEL_MERGE_B0136, B0136 support of parallel merge/skip in disparity vector derivation
+                                              // FIX_LGE_IVMP_PARALLEL_MERGE_B0136
+
+#define QC_NBDV_LDB_FIX_C0055             1   // JCT3V-C0055
+#define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
+#define MTK_RELEASE_DV_CONSTRAINT_C0129   1   // JCT3V-C0129
+#define MTK_SIMPLIFY_DVTC_C0135           1   // JCT3V-C0135
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
@@ -178,14 +166,19 @@
 
 ///// ***** OTHERS *********
 #define LG_ZEROINTRADEPTHRESI_A0087       1   // JCT2-A0087
-#define INTER_VIEW_VECTOR_SCALING_C0115   1   // JCT2-C0115 Inter-view vector scaling for TMVP & flag
-#define INTER_VIEW_VECTOR_SCALING_C0116   1   // JCT2-C0116 Inter-view vector scaling for AMVP
 #define HHI_FULL_PEL_DEPTH_MAP_MV_ACC     1   // full-pel mv accuracy for depth maps
-#define VIDYO_VPS_INTEGRATION             1
+#define VIDYO_VPS_INTEGRATION             1   // Integration of VPS
 #define HHI_DEPTH_INTRA_SEARCH_RAU_C0160  1   // JCT3V-C0160 change 1: full Intra search in depth random access units 
+#define FIX_POZNAN_CABAC_INIT_FLAG        1
+
+///// ***** FCO  *********
+#define FLEX_CODING_ORDER_M23723          1
+#if FLEX_CODING_ORDER_M23723
+#define DISABLE_FCO_FOR_VSO               0 // Optional compile settings to disable VSO with FCO.
+#endif
 
 ///// ***** VSP *********
-
+#define MERL_VSP_C0152                    0 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
 #if MERL_VSP_C0152
 
 /*
@@ -219,7 +212,7 @@
 #endif
 
 
-///// ***** DEFINED PARAMETERS *********
+///// ***** DERIVED PARAMETERS *********
 #if H3D_NBDV                    
 #define DIS_CANS                          1
 #endif                                  
@@ -264,6 +257,8 @@
 
 #define HHI_MPI_MERGE_POS                 0
 #endif
+
+
 ///// ***** HM 6.1 *********
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
 #define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point
