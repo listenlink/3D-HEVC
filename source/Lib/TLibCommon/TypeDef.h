@@ -40,6 +40,8 @@
 
 //! \ingroup TLibCommon
 //! \{
+
+#define FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152 1 
 #define QC_MVHEVC_B0046                   0   //JCT3V-B0046: disable 3DHEVC tools
 #define QC_IV_AS_LT_B0046                 1   //JCT3V-B0046: inter-view reference pictures are treated as long-term pictures 
 #define QC_TMVP_IDX_MOD_B0046             1   //JCT3V-B0046: the reference index for temporal merging candidate is set to 0, as defined in HEVC
@@ -53,7 +55,7 @@
 
 
 // C TRACK 3
-#define MERL_VSP_C0152                                0 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+#define MERL_VSP_C0152                                1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
 #define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
 #define MTK_SIMPLIFY_DVTC_C0135                       1   // JCT3V-C0135
 #define MTK_RELEASE_DV_CONSTRAINT_C0129               1   // JCT3V-C0129
