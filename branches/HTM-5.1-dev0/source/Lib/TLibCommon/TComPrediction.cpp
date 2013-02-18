@@ -857,11 +857,7 @@ Void TComPrediction::residualPrediction(TComDataCU* pcCU, TComYuv* pcYuvPred, TC
 
   Bool bResAvail = false;
 
-  bResAvail = pcCU->getResidualSamples( 0, 
-#if QC_SIMPLIFIEDIVRP_M24938
-    true,
-#endif
-    pcYuvResPred );
+  bResAvail = pcCU->getResidualSamples( 0, true, pcYuvResPred );
 
   assert (bResAvail);
 

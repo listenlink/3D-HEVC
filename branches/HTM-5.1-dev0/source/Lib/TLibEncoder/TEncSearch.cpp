@@ -2014,13 +2014,8 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
   UInt    uiHeight       = pcCU->getHeight(0) >> uiInitTrDepth;
   UInt    uiQNumParts    = pcCU->getTotalNumPart() >> 2;
   UInt    uiWidthBit     = pcCU->getIntraSizeIdx(0);
-#if FIX_RDO_NEGDIST
   Dist    uiOverallDistY = 0;
   Dist    uiOverallDistC = 0;
-#else
-  UInt    uiOverallDistY = 0;
-  UInt    uiOverallDistC = 0;
-#endif
   UInt    CandNum;
   Double  CandCostList[ FAST_UDI_MAX_RDMODE_NUM ];
   
@@ -2157,9 +2152,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
         CandNum += xUpdateCandList( uiMode, cost, numModesForFullRD, uiRdModeList, CandCostList );
 
-#if (HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX) && !FIX_DMM_NEG_DIST
-        if( bTestDmm ) bTestDmm = uiSad ? true : false;
-#endif
 #if LGE_EDGE_INTRA_A0070
         if ( bTestEdgeIntra ) bTestEdgeIntra = uiSad ? true : false;
 #endif
@@ -2301,13 +2293,8 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
     
     UInt    uiBestPUMode  = 0;
-#if FIX_RDO_NEGDIST
     Dist    uiBestPUDistY = 0;
     Dist    uiBestPUDistC = 0;
-#else
-    UInt    uiBestPUDistY = 0;
-    UInt    uiBestPUDistC = 0;
-#endif
     Double  dBestPUCost   = MAX_DOUBLE;
 #if RWTH_SDC_DLT_B0036
     Bool    bBestUseSDC   = false;
@@ -5691,13 +5678,9 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
       } 
     }
     
-#if FIX_RDO_NEGDIST
+
     Dist uiDistU = 0;
     Dist uiDistV = 0;
-#else
-    UInt uiDistU = 0;
-    UInt uiDistV = 0;
-#endif
     if( bCodeChroma )
     {
 #if IBDI_DISTORTION
@@ -5735,14 +5718,10 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
         m_pcTrQuant->invtransformNxN( TEXT_CHROMA,REG_DCT, pcResiCurrU, m_pcQTTempTComYuv[uiQTTempAccessLayer].getCStride(), pcCoeffCurrU, trWidthC, trHeightC, scalingListType );
 #endif       
         
-#if FIX_RDO_NEGDIST
+
         const Dist uiNonzeroDistU = m_pcRdCost->getDistPart( m_pcQTTempTComYuv[uiQTTempAccessLayer].getCbAddr( absTUPartIdxC), m_pcQTTempTComYuv[uiQTTempAccessLayer].getCStride(),
           pcResi->getCbAddr( absTUPartIdxC), pcResi->getCStride(), trWidthC, trHeightC
 
-#else
-        const UInt uiNonzeroDistU = m_pcRdCost->getDistPart( m_pcQTTempTComYuv[uiQTTempAccessLayer].getCbAddr( absTUPartIdxC), m_pcQTTempTComYuv[uiQTTempAccessLayer].getCStride(),
-          pcResi->getCbAddr( absTUPartIdxC), pcResi->getCStride(), trWidthC, trHeightC
-#endif
 #if WEIGHTED_CHROMA_DISTORTION
           , true
 #endif
@@ -5827,13 +5806,8 @@ Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt ui
 #else
         m_pcTrQuant->invtransformNxN( TEXT_CHROMA,REG_DCT, pcResiCurrV, m_pcQTTempTComYuv[uiQTTempAccessLayer].getCStride(), pcCoeffCurrV, trWidthC, trHeightC, scalingListType );
 #endif
-#if FIX_RDO_NEGDIST
         const Dist uiNonzeroDistV = m_pcRdCost->getDistPart( m_pcQTTempTComYuv[uiQTTempAccessLayer].getCrAddr( absTUPartIdxC ), m_pcQTTempTComYuv[uiQTTempAccessLayer].getCStride(),
           pcResi->getCrAddr( absTUPartIdxC ), pcResi->getCStride(), trWidthC, trHeightC
-#else
-        const UInt uiNonzeroDistV = m_pcRdCost->getDistPart( m_pcQTTempTComYuv[uiQTTempAccessLayer].getCrAddr( absTUPartIdxC ), m_pcQTTempTComYuv[uiQTTempAccessLayer].getCStride(),
-          pcResi->getCrAddr( absTUPartIdxC ), pcResi->getCStride(), trWidthC, trHeightC
-#endif
 #if WEIGHTED_CHROMA_DISTORTION
                                                    , true
 #endif

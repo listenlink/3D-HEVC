@@ -70,40 +70,16 @@ public:
 
 #if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, TComMv iDisp_x
-#if QC_SIMPLIFIEDIVRP_M24938
-    , Bool bRecon
-#endif
-);
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , TComMv iDisp_x
-#if QC_SIMPLIFIEDIVRP_M24938
-    , Bool bRecon
-#endif  
-  );
+  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, TComMv iDisp_x, Bool bRecon );
+  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , TComMv iDisp_x, Bool bRecon );
 #else
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Int iDisp 
-#if QC_SIMPLIFIEDIVRP_M24938
-    , Bool bRecon
+  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Int iDisp, Bool bRecon ); 
+  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , Int iDisp, Bool bRecon ); 
 #endif
-);
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , Int iDisp 
-#if QC_SIMPLIFIEDIVRP_M24938
-    , Bool bRecon
-#endif  
-  );
-#endif
-#else
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv 
-#if QC_SIMPLIFIEDIVRP_M24938
-    , Bool bRecon
-#endif
-    );
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
-#if QC_SIMPLIFIEDIVRP_M24938
-    , Bool bRecon
-#endif
-    );
-#endif
+#else // H3D_NBDV
+  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Bool bRecon ); 
+  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Bool bRecon ); 
+#endif // H3D_NBDV
 
 private:
   Void  xSetRecResidualPic    ( TComPic*      pcPic );
@@ -114,32 +90,16 @@ private:
   Void  xClearResidual        (                      TComYuv* pcCUResidual, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight );
 #if H3D_NBDV
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp
-#if QC_SIMPLIFIEDIVRP_M24938
-    , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
-#endif
-  );
+  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  );    
 #else
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
-#if QC_SIMPLIFIEDIVRP_M24938
-    , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
-#endif
-  );
+  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  ); 
 #endif
 #else
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
-#if QC_SIMPLIFIEDIVRP_M24938
-    , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
-#endif
-    );
+  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  ); 
 #endif
   Bool  xIsNonZero            ( TComYuv*      pcYuv, UInt uiBlkWidth, UInt uiBlkHeight );
-#if QC_SIMPLIFIEDIVRP_M24938
   Bool  xIsNonZeroByCBF       ( UInt uiBaseViewId , UInt uiXPos , UInt uiYPos, UInt uiBlkWidth , UInt uiBlkHeight );
-#endif
-
   Void  xDumpResidual         ( TComPic*      pcPic, char* pFilenameBase );
-
 private:
   // general parameters
   Bool                    m_bCreated;

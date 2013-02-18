@@ -240,11 +240,7 @@ private:
   
   Bool          m_bDecSubCu;          ///< indicates decoder-mode
   Double        m_dTotalCost;         ///< sum of partition RD costs
-#if FIX_RDO_NEGDIST
   Dist          m_uiTotalDistortion;  ///< sum of partition distortion
-#else
-  UInt          m_uiTotalDistortion;  ///< sum of partition distortion
-#endif
   UInt          m_uiTotalBits;        ///< sum of partition bits
   UInt          m_uiTotalBins;       ///< sum of partition bins
   UInt*         m_uiSliceStartCU;    ///< Start CU address of current slice
@@ -616,11 +612,7 @@ public:
   Void          setResPredIndicator     ( Bool bAv, Bool bRP )    { m_pbResPredAvailable[0] = bAv; m_pbResPredFlag[0] = bRP; }
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
-  Bool          getResidualSamples( UInt uiPartIdx, 
-#if QC_SIMPLIFIEDIVRP_M24938
-    Bool bRecon ,
-#endif
-    TComYuv* pcYuv = 0 );
+  Bool          getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv = 0 );
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
@@ -776,11 +768,7 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   
   Double&       getTotalCost()                  { return m_dTotalCost;        }
-#if FIX_RDO_NEGDIST
   Dist&         getTotalDistortion()            { return m_uiTotalDistortion; }
-#else
-  UInt&         getTotalDistortion()            { return m_uiTotalDistortion; }
-#endif
   UInt&         getTotalBits()                  { return m_uiTotalBits;       }
   UInt&         getTotalNumPart()               { return m_uiNumPartition;    }
 
