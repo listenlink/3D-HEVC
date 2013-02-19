@@ -81,11 +81,7 @@ protected:
 
   UInt  xGetBit             ();
   
-#if RPS_IN_SPS
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
-#else
-  void  parseShortTermRefPicSet            (TComPPS* pcPPS, TComReferencePictureSet* pcRPS, Int idx);
-#endif
 private:
   TComInputBitstream*   m_pcBitstream;
   Int           m_iSliceGranularity; //!< slice granularity
@@ -122,21 +118,13 @@ public:
 #else
   Void  parseSPS            ( TComSPS* pcSPS );
 #endif
-#if TILES_OR_ENTROPY_SYNC_IDC
   Void  parsePPS            ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet);
-#else
-  Void  parsePPS            ( TComPPS* pcPPS);
-#endif
   Void  parseSEI(SEImessages&);
   Void  parseAPS            ( TComAPS* pAPS );
-#if LCU_SYNTAX_ALF
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
   Void  parseSliceHeader    ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet, bool isDepth);
 #else
   Void  parseSliceHeader    ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet);
-#endif
-#else
-  Void  parseSliceHeader    ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl );
 #endif
   Void  parseTerminatingBit ( UInt& ruiBit );
   
@@ -174,9 +162,7 @@ public:
 
   Void readTileMarker     ( UInt& uiTileIdx, UInt uiBitsUsed );
   Void updateContextTables  ( SliceType eSliceType, Int iQp ) { return; }
-#if OL_FLUSH
   Void decodeFlush() {};
-#endif
 
   Void xParsePredWeightTable ( TComSlice* pcSlice );
   Void  parseScalingList               ( TComScalingList* scalingList );
@@ -189,23 +175,14 @@ public:
   Void parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
 protected:
-#if DBL_CONTROL
   Void  xParseDblParam       ( TComAPS* aps );
-#endif
   Void  xParseSaoParam       ( SAOParam* pSaoParam );
-#if SAO_UNIT_INTERLEAVING
   Void  xParseSaoOffset      (SaoLcuParam* saoLcuParam);
   Void  xParseSaoUnit        (Int rx, Int ry, Int compIdx, SAOParam* saoParam, Bool& repeatedRow );
-#else
-  Void  xParseSaoSplitParam  ( SAOParam* pSaoParam, Int iPartIdx, Int iYCbCr );
-  Void  xParseSaoOffsetParam ( SAOParam* pSaoParam, Int iPartIdx, Int iYCbCr );
-#endif
-#if LCU_SYNTAX_ALF 
   Void  xParseAlfParam(AlfParamSet* pAlfParamSet, Bool bSentInAPS = true, Int firstLCUAddr = 0, Bool acrossSlice = true, Int numLCUInWidth= -1, Int numLCUInHeight= -1);
   Void  parseAlfParamSet(AlfParamSet* pAlfParamSet, Int firstLCUAddr, Bool alfAcrossSlice);
   Void  parseAlfFixedLengthRun(UInt& idx, UInt rx, UInt numLCUInWidth);
   Void  parseAlfStoredFilterIdx(UInt& idx, UInt numFilterSetsInBuffer);
-#endif
   Void  xParseAlfParam       ( ALFParam* pAlfParam );
   Void  xParseAlfCuControlParam(AlfCUCtrlInfo& cAlfParam, Int iNumCUsInPic);
   Int   xGolombDecode        ( Int k );

@@ -106,9 +106,7 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   }
   
   m_bEncodeDQP = false;
-#if BURST_IPCM
   m_checkBurstIPCMFlag = false;
-#endif
 
   // initialize partition order.
   UInt* piTmp = &g_auiZscanToRaster[0];
@@ -284,7 +282,6 @@ Void TEncCu::encodeCU ( TComDataCU* pcCU, Bool bForceTerminate )
     setdQPFlag(true);
   }
 
-#if BURST_IPCM
   TComPic* pcPic = pcCU->getPic();
   Bool checkBurstIPCMFlag = (pcPic->getSlice(0)->getSPS()->getUsePCM())? true : false;
 
@@ -292,52 +289,26 @@ Void TEncCu::encodeCU ( TComDataCU* pcCU, Bool bForceTerminate )
 
   pcCU->setNumSucIPCM(0);
   pcCU->setLastCUSucIPCMFlag(false);
-#endif
 
   // Encode CU data
   xEncodeCU( pcCU, 0, 0 );
   
-#if OL_FLUSH
   bool bTerminateSlice = bForceTerminate;
   UInt uiCUAddr = pcCU->getAddr();
     /* If at the end of an LCU line but not at the end of a substream, perform CABAC flush */
-#if WPP_SIMPLIFICATION
     if (!bTerminateSlice && pcCU->getSlice()->getPPS()->getNumSubstreams() > 1)
-#else
-    if (!bTerminateSlice && pcCU->getSlice()->getPPS()->getCabacIstateReset())
-#endif
     {
       Int iNumSubstreams = pcCU->getSlice()->getPPS()->getNumSubstreams();
       UInt uiWidthInLCUs = pcCU->getPic()->getPicSym()->getFrameWidthInCU();
       UInt uiCol     = uiCUAddr % uiWidthInLCUs;
       UInt uiLin     = uiCUAddr / uiWidthInLCUs;
-#if !REMOVE_TILE_DEPENDENCE
-      Int iBreakDep = pcCU->getPic()->getPicSym()->getTileBoundaryIndependenceIdr();
-#endif
       UInt uiTileStartLCU = pcCU->getPic()->getPicSym()->getTComTile(pcCU->getPic()->getPicSym()->getTileIdxMap(uiCUAddr))->getFirstCUAddr();
       UInt uiTileLCUX = uiTileStartLCU % uiWidthInLCUs;
       UInt uiTileLCUY = uiTileStartLCU / uiWidthInLCUs;
       UInt uiTileWidth = pcCU->getPic()->getPicSym()->getTComTile(pcCU->getPic()->getPicSym()->getTileIdxMap(uiCUAddr))->getTileWidth();
       UInt uiTileHeight = pcCU->getPic()->getPicSym()->getTComTile(pcCU->getPic()->getPicSym()->getTileIdxMap(uiCUAddr))->getTileHeight();
       Int iNumSubstreamsPerTile = iNumSubstreams;
-#if !REMOVE_TILE_DEPENDENCE
-#if WPP_SIMPLIFICATION
-      if (iBreakDep && pcCU->getSlice()->getPPS()->getNumSubstreams() > 1)
-#else
-      if (iBreakDep && pcCU->getSlice()->getPPS()->getEntropyCodingSynchro())
-#endif
-        iNumSubstreamsPerTile /= pcCU->getPic()->getPicSym()->getNumTiles();
-      if ((iBreakDep && (uiCol == uiTileLCUX+uiTileWidth-1) && (uiLin+iNumSubstreamsPerTile < uiTileLCUY+uiTileHeight))
-          || (!iBreakDep && (uiCol == uiWidthInLCUs-1) && (uiLin+iNumSubstreams < pcCU->getPic()->getFrameHeightInCU())))
-      {
-        m_pcEntropyCoder->encodeFlush();
-      }
-#else
-#if WPP_SIMPLIFICATION
       if (pcCU->getSlice()->getPPS()->getNumSubstreams() > 1)
-#else
-      if (pcCU->getSlice()->getPPS()->getEntropyCodingSynchro())
-#endif
       {
         iNumSubstreamsPerTile /= pcCU->getPic()->getPicSym()->getNumTiles();
       }
@@ -345,9 +316,7 @@ Void TEncCu::encodeCU ( TComDataCU* pcCU, Bool bForceTerminate )
       {
         m_pcEntropyCoder->encodeFlush();
       }
-#endif
     }
-#endif // OL_FLUSH
 }
 
 // ====================================================================================================================
@@ -555,17 +524,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Int iMaxQP;
 #if LOSSLESS_CODING
   Bool isAddLowestQP = false;
-#if H0736_AVC_STYLE_QP_RANGE
   Int lowestQP = -rpcTempCU->getSlice()->getSPS()->getQpBDOffsetY();
-#else
-  Int lowestQP = 0;
-#endif
 #endif
 
   if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
   {
     Int idQP = m_pcEncCfg->getMaxDeltaQP();
-#if H0736_AVC_STYLE_QP_RANGE
     iMinQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffsetY(), MAX_QP, iBaseQP-idQP );
     iMaxQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffsetY(), MAX_QP, iBaseQP+idQP );
 #if LOSSLESS_CODING
@@ -575,17 +539,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       iMinQP = iMinQP - 1;
 
     }
-#endif
-#else
-    iMinQP = Clip3( MIN_QP, MAX_QP, iBaseQP-idQP );
-    iMaxQP = Clip3( MIN_QP, MAX_QP, iBaseQP+idQP );
-#if LOSSLESS_CODING
-    if ( (rpcTempCU->getSlice()->getSPS()->getUseLossless()) && (lowestQP < iMinQP) && rpcTempCU->getSlice()->getPPS()->getUseDQP() )
-    {
-      isAddLowestQP = true;
-      iMinQP = iMinQP - 1;
-    }
-#endif
 #endif
   }
   else
@@ -1316,7 +1269,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   if( (g_uiMaxCUWidth>>uiDepth) == rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
   {
     Int idQP = m_pcEncCfg->getMaxDeltaQP();
-#if H0736_AVC_STYLE_QP_RANGE
     iMinQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffsetY(), MAX_QP, iBaseQP-idQP );
     iMaxQP = Clip3( -rpcTempCU->getSlice()->getSPS()->getQpBDOffsetY(), MAX_QP, iBaseQP+idQP );
 #if LOSSLESS_CODING
@@ -1325,17 +1277,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       isAddLowestQP = true;
       iMinQP = iMinQP - 1;      
     }
-#endif
-#else
-    iMinQP = Clip3( MIN_QP, MAX_QP, iBaseQP-idQP );
-    iMaxQP = Clip3( MIN_QP, MAX_QP, iBaseQP+idQP );
-#if LOSSLESS_CODING
-    if ( (rpcTempCU->getSlice()->getSPS()->getUseLossless()) && (lowestQP < iMinQP) && rpcTempCU->getSlice()->getPPS()->getUseDQP() )
-    {
-      isAddLowestQP = true;
-      iMinQP = iMinQP - 1;
-    }
-#endif
 #endif
   }
   else if( (g_uiMaxCUWidth>>uiDepth) > rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
@@ -1634,11 +1575,7 @@ Void TEncCu::finishCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool granularityBoundary=((uiPosX+pcCU->getWidth(uiAbsPartIdx))%uiGranularityWidth==0||(uiPosX+pcCU->getWidth(uiAbsPartIdx)==uiWidth))
     &&((uiPosY+pcCU->getHeight(uiAbsPartIdx))%uiGranularityWidth==0||(uiPosY+pcCU->getHeight(uiAbsPartIdx)==uiHeight));
   
-#if BURST_IPCM
   if(granularityBoundary && (!(pcCU->getIPCMFlag(uiAbsPartIdx) && ( pcCU->getNumSucIPCM() > 1 ))))
-#else
-  if(granularityBoundary)
-#endif
   {
     // The 1-terminating bit is added to all streams, so don't add it here when it's 1.
     if (!bTerminateSlice)
@@ -1730,11 +1667,7 @@ Int TEncCu::xComputeQP( TComDataCU* pcCU, UInt uiDepth )
     Double dQpOffset = log(dNormAct) / log(2.0) * 6.0;
     iQpOffset = Int(floor( dQpOffset + 0.49999 ));
   }
-#if H0736_AVC_STYLE_QP_RANGE
   return Clip3(-pcCU->getSlice()->getSPS()->getQpBDOffsetY(), MAX_QP, iBaseQp+iQpOffset );
-#else
-  return Clip3( MIN_QP, MAX_QP, iBaseQp+iQpOffset );
-#endif
 }
 
 /** encode a CU block recursively
@@ -1753,13 +1686,11 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
   
-#if BURST_IPCM
   if( getCheckBurstIPCMFlag() )
   {
     pcCU->setLastCUSucIPCMFlag( checkLastCUSucIPCM( pcCU, uiAbsPartIdx ));
     pcCU->setNumSucIPCM( countNumSucIPCM ( pcCU, uiAbsPartIdx ) );
   }
-#endif
 
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
   // If slice start is within this cu...
@@ -1832,10 +1763,8 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     {
       setdQPFlag(true);
     }
-#if BURST_IPCM
     pcCU->setNumSucIPCM(0);
     pcCU->setLastCUSucIPCMFlag(false);
-#endif
     for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++, uiAbsPartIdx+=uiQNumParts )
     {
       uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
@@ -1990,9 +1919,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   Bool bResPredAvail = rpcTempCU->getResPredAvail(0);
 #endif
 
-#if FAST_DECISION_FOR_MRG_RD_COST
   Bool bestIsSkip = false;
-#endif
   
   for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
   {
@@ -2022,10 +1949,8 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
 #endif
       {
-#if FAST_DECISION_FOR_MRG_RD_COST
         if( !(bestIsSkip && uiNoResidual == 0) )
         {
-#endif
           // set MC parameters
           rpcTempCU->setPredModeSubParts( MODE_SKIP, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
@@ -2087,7 +2012,6 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           }
           else
           {
-#if FAST_DECISION_FOR_MRG_RD_COST
             if( bestIsSkip)
             {
 #if MERL_VSP_C0152
@@ -2106,15 +2030,12 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
             }
             else
             {
-#endif
               if ( pcPredYuvTemp != m_ppcPredYuvTemp[uhDepth])
               {
                 //adress changes take best (old temp)
                 pcPredYuvTemp = m_ppcPredYuvBest[uhDepth];
               }
-#if FAST_DECISION_FOR_MRG_RD_COST
             }
-#endif
           }
 #if HHI_VSO
           if( m_pcRdCost->getUseRenModel() )
@@ -2139,30 +2060,19 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
             (uiNoResidual? true:false) );     
           Bool bQtRootCbf = rpcTempCU->getQtRootCbf(0) == 1;
 
-#if H0736_AVC_STYLE_QP_RANGE
           Int orgQP = rpcTempCU->getQP( 0 );
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
           rpcTempCU->initEstData( uhDepth, orgQP );
-#else
-          UInt uiOrgQP = rpcTempCU->getQP( 0 );
-          xCheckDQP( rpcTempCU );
-          xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
-          rpcTempCU->initEstData( uhDepth, uiOrgQP );
-#endif
 
-#if FAST_DECISION_FOR_MRG_RD_COST
           if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
           {
             bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
           }
-#endif
 
           if (!bQtRootCbf)
             break;
-#if FAST_DECISION_FOR_MRG_RD_COST
         }
-#endif
       }
     }
   }
@@ -2514,7 +2424,6 @@ Void TEncCu::xCheckDQP( TComDataCU* pcCU )
   }
 }
 
-#if BURST_IPCM
 /** Check whether the last CU shares the same root as the current CU and is IPCM or not.  
  * \param pcCU
  * \param uiCurAbsPartIdx
@@ -2606,7 +2515,6 @@ Int TEncCu::countNumSucIPCM ( TComDataCU* pcCU, UInt uiCurAbsPartIdx )
 
   return numSucIPCM;
 }
-#endif
 
 Void TEncCu::xCopyAMVPInfo (AMVPInfo* pSrc, AMVPInfo* pDst)
 {

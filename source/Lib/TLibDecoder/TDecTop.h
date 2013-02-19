@@ -281,11 +281,7 @@ protected:
 
   Void      decodeAPS( TComAPS* cAPS) { m_cEntropyDecoder.decodeAPS(cAPS); };
   Void      xActivateParameterSets();
-#if SKIPFRAME_BUGFIX
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
-#else
-  Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
-#endif
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void      xDecodeVPS();
 #endif

@@ -109,9 +109,7 @@ TComSlice::TComSlice()
 #else
 , m_cabacInitIdc                 ( -1 )
 #endif
-#if TILES_WPP_ENTRY_POINT_SIGNALLING
 , m_numEntryPointOffsets          ( 0 )
-#endif
 #if LGE_ILLUCOMP_B0045
 , m_bApplyIC                      ( false )
 #endif
@@ -196,9 +194,7 @@ Void TComSlice::initSlice()
 #if CABAC_INIT_FLAG
   m_cabacInitFlag        = false;
 #endif
-#if TILES_WPP_ENTRY_POINT_SIGNALLING
   m_numEntryPointOffsets = 0;
-#endif
 #if QC_TMVP_MRG_REFIDX_C0047
   m_aiNewRefIdx[0]                  = -1;
   m_aiNewRefIdx[1]                  = -1;
@@ -645,11 +641,7 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
       assert(pReferencePictureSet->getPOC(i) >= pocCRA);
     }
   }
-#if H0566_TLA
   if( getNalUnitTypeBaseViewMvc() == NAL_UNIT_CODED_SLICE_CRA ) // CRA picture found
-#else
-  if( getNalUnitTypeBaseViewMvc() == NAL_UNIT_CODED_SLICE_CDR ) // CDR picture found
-#endif
   {
     pocCRA = getPOC();
   }
@@ -702,11 +694,7 @@ Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComL
       }
       bRefreshPending = false; 
     }
-#if H0566_TLA
     if( getNalUnitTypeBaseViewMvc() == NAL_UNIT_CODED_SLICE_CRA ) // CRA picture found
-#else
-    if( getNalUnitTypeBaseViewMvc() == NAL_UNIT_CODED_SLICE_CDR ) // CDR picture found
-#endif
     {
       bRefreshPending = true; 
       pocCRA = uiPOCCurr;
@@ -829,21 +817,15 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
       memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(wpScalingParam)*3 );
 
   m_saoEnabledFlag = pSrc->m_saoEnabledFlag; 
-#if SAO_UNIT_INTERLEAVING
   m_saoInterleavingFlag = pSrc->m_saoInterleavingFlag;
   m_saoEnabledFlagCb = pSrc->m_saoEnabledFlagCb;
   m_saoEnabledFlagCr = pSrc->m_saoEnabledFlagCr; 
-#endif 
 #if CABAC_INIT_FLAG
   m_cabacInitFlag                = pSrc->m_cabacInitFlag;
 #endif
-#if TILES_WPP_ENTRY_POINT_SIGNALLING
   m_numEntryPointOffsets  = pSrc->m_numEntryPointOffsets;
-#endif
 
-#if H0111_MVD_L1_ZERO
   m_bLMvdL1Zero = pSrc->m_bLMvdL1Zero;
-#endif
 }
 
 int TComSlice::m_prevPOC = 0;
@@ -855,32 +837,11 @@ int TComSlice::m_prevPOC = 0;
  */
 Void TComSlice::setTLayerInfo( UInt uiTLayer )
 {
-#if !H0566_TLA
-  // If temporal_id_nesting_flag == 1, then num_temporal_layer_switching_point_flags shall be inferred to be 0 and temporal_layer_switching_point_flag shall be inferred to be 1 for all temporal layers
-  if ( m_pcSPS->getTemporalIdNestingFlag() ) 
-  {
-    m_pcPPS->setNumTLayerSwitchingFlags( 0 );
-    for ( UInt i = 0; i < MAX_TLAYER; i++ )
-    {
-      m_pcPPS->setTLayerSwitchingFlag( i, true );
-    }
-  }
-  else 
-  {
-    for ( UInt i = m_pcPPS->getNumTLayerSwitchingFlags(); i < MAX_TLAYER; i++ )
-    {
-      m_pcPPS->setTLayerSwitchingFlag( i, false );
-    }
-  }
-#endif
 
   m_uiTLayer = uiTLayer;
-#if !H0566_TLA
-  m_bTLayerSwitchingFlag = m_pcPPS->getTLayerSwitchingFlag( uiTLayer );
-#endif
 }
 
-#if H0566_TLA && H0566_TLA_SET_FOR_SWITCHING_POINTS
+#if H0566_TLA_SET_FOR_SWITCHING_POINTS
 /** Function for checking if this is a switching-point
 */
 Bool TComSlice::isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet)
@@ -958,11 +919,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
 
 /** Function for applying picture marking based on the Reference Picture Set in pReferencePictureSet.
 */
-#if START_DECODING_AT_CRA
 Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool outputFlag, Int pocRandomAccess)
-#else
-Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool outputFlag)
-#endif
 {
   TComPic* rpcPic;
   Int i, isAvailable, j;
@@ -1008,10 +965,8 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
     // but not available as reference picture
     if(isAvailable == 0)    
     {            
-#if START_DECODING_AT_CRA
       if (this->getPOC() + pReferencePictureSet->getDeltaPOC(i) >= pocRandomAccess)
       {
-#endif
         if(!pReferencePictureSet->getUsed(i) )
         {
           if(outputFlag)
@@ -1025,9 +980,7 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
           atLeastOneLost = 1;
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
-#if START_DECODING_AT_CRA
       }
-#endif
     }
   }  
   // loop through all short-term pictures in the Reference Picture Set
@@ -1052,10 +1005,8 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
     // but not available as reference picture
     if(isAvailable == 0)    
     {            
-#if START_DECODING_AT_CRA
       if (this->getPOC() + pReferencePictureSet->getDeltaPOC(i) >= pocRandomAccess)
       {
-#endif
         if(!pReferencePictureSet->getUsed(i) )
         {
           if(outputFlag)
@@ -1069,9 +1020,7 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
           atLeastOneLost = 1;
           iPocLost=this->getPOC() + pReferencePictureSet->getDeltaPOC(i);
         }
-#if START_DECODING_AT_CRA
       }
-#endif
     }
   }    
   if(atLeastOneLost)
@@ -1137,11 +1086,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
   {
     Int rIdx =  this->getRPSidx() - pReferencePictureSet->getDeltaRIdxMinus1() - 1;
     Int deltaRPS = pReferencePictureSet->getDeltaRPS();
-#if RPS_IN_SPS
     TComReferencePictureSet* pcRefRPS = this->getSPS()->getRPSList()->getReferencePictureSet(rIdx);
-#else
-    TComReferencePictureSet* pcRefRPS = this->getPPS()->getRPSList()->getReferencePictureSet(rIdx);
-#endif
     Int iRefPics = pcRefRPS->getNumberOfPictures();
     Int iNewIdc=0;
     for(i=0; i<= iRefPics; i++) 
@@ -1168,11 +1113,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
     pcRPS->setInterRPSPrediction(true);
     pcRPS->setNumRefIdc(iNewIdc);
     pcRPS->setDeltaRPS(deltaRPS); 
-#if RPS_IN_SPS
     pcRPS->setDeltaRIdxMinus1(pReferencePictureSet->getDeltaRIdxMinus1() + this->getSPS()->getRPSList()->getNumberOfReferencePictureSets() - this->getRPSidx());
-#else
-    pcRPS->setDeltaRIdxMinus1(pReferencePictureSet->getDeltaRIdxMinus1() + this->getPPS()->getRPSList()->getNumberOfReferencePictureSets() - this->getRPSidx());
-#endif
   }
 
   this->setRPS(pcRPS);
@@ -1538,24 +1479,17 @@ TComSPS::TComSPS()
 // Structure
 , m_picWidthInLumaSamples     (352)
 , m_picHeightInLumaSamples    (288)
-#if PIC_CROPPING
 , m_picCroppingFlag           (false)
 , m_picCropLeftOffset         (  0)
 , m_picCropRightOffset        (  0)
 , m_picCropTopOffset          (  0)
 , m_picCropBottomOffset       (  0) 
-#endif
 , m_uiMaxCUWidth              ( 32)
 , m_uiMaxCUHeight             ( 32)
 , m_uiMaxCUDepth              (  3)
 , m_uiMinTrDepth              (  0)
 , m_uiMaxTrDepth              (  1)
-#if RPS_IN_SPS
 , m_bLongTermRefsPresent      (false)
-#endif
-#if !H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
-, m_numReorderFrames          (  0)
-#endif
 , m_iNumberOfUsableInterViewRefs( 0 )
 , m_uiQuadtreeTULog2MaxSize   (  0)
 , m_uiQuadtreeTULog2MinSize   (  0)
@@ -1567,29 +1501,20 @@ TComSPS::TComSPS()
 , m_uiPCMLog2MinSize          (  7)
 , m_bDisInter4x4              (  1)
 , m_bUseALF                   (false)
-#if LCU_SYNTAX_ALF
 , m_bALFCoefInSlice           (false)
-#endif
-#if !PIC_CROPPING
-, m_bUsePAD                   (false)
-#endif
 , m_bUseLMChroma              (false)
 , m_bUseLComb                 (false)
 , m_bLCMod                    (false)
-#if H0412_REF_PIC_LIST_RESTRICTION
 #if QC_MVHEVC_B0046
 , m_restrictedRefPicListsFlag   (  0)
 #else
 , m_restrictedRefPicListsFlag   (  1)
 #endif
 , m_listsModificationPresentFlag(  0)
-#endif
 , m_uiBitDepth                (  8)
 , m_uiBitIncrement            (  0)
-#if H0736_AVC_STYLE_QP_RANGE
 , m_qpBDOffsetY               (  0)
 , m_qpBDOffsetC               (  0)
-#endif
 #if LOSSLESS_CODING
 , m_useLossless               (false)
 #endif
@@ -1612,14 +1537,8 @@ TComSPS::TComSPS()
 , m_puiRowHeight              ( NULL )
 , m_bTemporalIdNestingFlag    (false)
 , m_scalingListEnabledFlag    (false)
-#if !H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
-, m_uiMaxDecFrameBuffering    (  0)
-, m_uiMaxLatencyIncrease      (  0)
-#endif
-#if TILES_WPP_ENTRY_POINT_SIGNALLING
 ,  m_tilesOrEntropyCodingSyncIdc( 0 )
 ,  m_numSubstreams              ( 0 )
-#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_bUseDMM                   (false)
 #endif
@@ -1632,14 +1551,12 @@ TComSPS::TComSPS()
 {
   // AMVP parameter
   ::memset( m_aeAMVPMode, 0, sizeof( m_aeAMVPMode ) );
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   for ( Int i = 0; i < MAX_TLAYER; i++ )
   {
     m_uiMaxLatencyIncrease[i] = 0;
     m_uiMaxDecPicBuffering[i] = 0;
     m_numReorderPics[i]       = 0;
   }
-#endif
 
   m_uiViewId              = 0;
   m_iViewOrderIdx         = 0;
@@ -1777,33 +1694,18 @@ TComPPS::TComPPS()
 , m_uiMinCuDQPSize              (0)
 , m_iChromaQpOffset             (0)
 , m_iChromaQpOffset2nd          (0)
-#if !RPS_IN_SPS
-, m_bLongTermRefsPresent        (false)
-#endif
-#if !H0566_TLA
-, m_uiNumTlayerSwitchingFlags   (0)
-#endif
 , m_iSliceGranularity           (0)
 , m_iTileBehaviorControlPresentFlag (0)
 , m_bLFCrossTileBoundaryFlag     (true)
 , m_iColumnRowInfoPresent        (0)
 , m_iUniformSpacingIdr           (0)
-#if !REMOVE_TILE_DEPENDENCE
-, m_iTileBoundaryIndependenceIdr (0)
-#endif
 , m_iNumColumnsMinus1            (0)
 , m_puiColumnWidth               (NULL)
 , m_iNumRowsMinus1               (0)
 , m_puiRowHeight                 (NULL)
-#if !WPP_SIMPLIFICATION
-,  m_iEntropyCodingSynchro      (0)
-,  m_bCabacIstateReset          (false)
-#endif
 ,  m_iNumSubstreams             (1)
-#if MULTIBITS_DATA_HIDING
 , m_signHideFlag(0)
 , m_signHidingThreshold(0)
-#endif
 #if CABAC_INIT_FLAG
 , m_cabacInitPresentFlag        (false)
 , m_encCABACTableIdx            (0)
@@ -1812,12 +1714,6 @@ TComPPS::TComPPS()
 #endif
 #endif
 {
-#if !H0566_TLA
-  for ( UInt i = 0; i < MAX_TLAYER; i++ )
-  {
-    m_abTLayerSwitchingFlag[i] = false;
-  }
-#endif
 }
 
 TComPPS::~TComPPS()
@@ -2085,18 +1981,8 @@ Void TComRPSList::setNumberOfReferencePictureSets(Int numberOfReferencePictureSe
 TComRefPicListModification::TComRefPicListModification()
 : m_bRefPicListModificationFlagL0 (false)
 , m_bRefPicListModificationFlagL1 (false)
-#if !H0137_0138_LIST_MODIFICATION
-, m_uiNumberOfRefPicListModificationsL0 (0)
-, m_uiNumberOfRefPicListModificationsL1 (0)
-#endif
 {
-#if !H0137_0138_LIST_MODIFICATION
-  ::memset( m_ListIdcL0, 0, sizeof(m_ListIdcL0) );
-#endif
   ::memset( m_RefPicSetIdxL0, 0, sizeof(m_RefPicSetIdxL0) );
-#if !H0137_0138_LIST_MODIFICATION
-  ::memset( m_ListIdcL1, 0, sizeof(m_ListIdcL1) );
-#endif
   ::memset( m_RefPicSetIdxL1, 0, sizeof(m_RefPicSetIdxL1) );
 }
 
@@ -2110,11 +1996,7 @@ TComAPS::TComAPS()
   m_bAlfEnabled = false;
   m_bSaoEnabled = false;
   m_pSaoParam = NULL;
-#if LCU_SYNTAX_ALF
   m_alfParamSet = NULL;
-#else
-  m_pAlfParam = NULL;
-#endif
   m_scalingList = NULL;
   m_scalingListEnabled = false;
 }
@@ -2134,16 +2016,10 @@ TComAPS& TComAPS::operator= (const TComAPS& src)
   m_bAlfEnabled = src.m_bAlfEnabled;
   m_bSaoEnabled = src.m_bSaoEnabled;
   m_pSaoParam   = src.m_pSaoParam; 
-#if LCU_SYNTAX_ALF
   m_alfParamSet    = src.m_alfParamSet;
-#else
-  m_pAlfParam   = src.m_pAlfParam; 
-#endif
   m_scalingList = src.m_scalingList;
   m_scalingListEnabled = src.m_scalingListEnabled;
-#if SAO_UNIT_INTERLEAVING
   m_saoInterleavingFlag = src.m_saoInterleavingFlag;
-#endif
 
   return *this;
 }
@@ -2164,27 +2040,15 @@ Void TComAPS::destroySaoParam()
 
 Void TComAPS::createAlfParam()
 {
-#if LCU_SYNTAX_ALF
   m_alfParamSet = new AlfParamSet;
-#else
-  m_pAlfParam = new ALFParam;
-#endif
 }
 Void TComAPS::destroyAlfParam()
 {
-#if LCU_SYNTAX_ALF
   if(m_alfParamSet != NULL)
   {
     delete m_alfParamSet;
     m_alfParamSet = NULL;
   }
-#else
-  if(m_pAlfParam != NULL)
-  {
-    delete m_pAlfParam;
-    m_pAlfParam = NULL;
-  }
-#endif
 }
 
 Void TComAPS::createScalingList()
@@ -2220,7 +2084,6 @@ Void TComSlice::setDefaultScalingList()
 /** check if use default quantization matrix
  * \returns true if use default quantization matrix in all size
 */
-#if SCALING_LIST
 Bool TComSlice::checkDefaultScalingList()
 {
   UInt defaultCounter=0;
@@ -2237,46 +2100,6 @@ Bool TComSlice::checkDefaultScalingList()
   }
   return (defaultCounter == (SCALING_LIST_NUM * SCALING_LIST_SIZE_NUM - 4)) ? true : false; // -4 for 32x32
 }
-#else
-Bool TComSlice::checkDefaultScalingList()
-{
-  UInt i;
-  Int *dst=0;
-  Int *src=0;
-  UInt defaultCounter=0;
-
-  //4x4
-  for(i=0;i<SCALING_LIST_NUM;i++)
-  {
-    src = (i<3) ? g_quantIntraDefault4x4 : g_quantInterDefault4x4;
-    dst = getScalingList()->getScalingListAddress(SCALING_LIST_4x4,i);
-    if(::memcmp(dst,src,sizeof(UInt)*16) == 0) defaultCounter++;
-  }
-
-  //8x8
-  for(i=0;i<SCALING_LIST_NUM;i++)
-  {
-    src = (i<3) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
-    dst = getScalingList()->getScalingListAddress(SCALING_LIST_8x8,i);
-    if(::memcmp(dst,src,sizeof(UInt)*64) == 0) defaultCounter++;
-  }
-  //16x16
-  for(i=0;i<SCALING_LIST_NUM;i++)
-  {
-    src = (i<3) ? g_quantIntraDefault16x16 : g_quantInterDefault16x16;
-    dst = getScalingList()->getScalingListAddress(SCALING_LIST_16x16,i);
-    if(::memcmp(dst,src,sizeof(UInt)*256) == 0) defaultCounter++;
-  }
-  //32x32
-  for(i=0;i<SCALING_LIST_NUM_32x32;i++)
-  {
-    src = (i<1) ? g_quantIntraDefault32x32 : g_quantInterDefault32x32;
-    dst = getScalingList()->getScalingListAddress(SCALING_LIST_32x32,i*3);
-    if(::memcmp(dst,src,sizeof(UInt)*1024) == 0) defaultCounter++;
-  }
-  return (defaultCounter == (SCALING_LIST_NUM * SCALING_LIST_SIZE_NUM - 4)) ? true : false; // -4 for 32x32
-}
-#endif
 /** get scaling matrix from RefMatrixID
  * \param sizeId size index
  * \param Index of input matrix
@@ -2284,11 +2107,7 @@ Bool TComSlice::checkDefaultScalingList()
  */
 Void TComScalingList::processRefMatrix( UInt sizeId, UInt listId , UInt refListId )
 {
-#if SCALING_LIST
   ::memcpy(getScalingListAddress(sizeId, listId),getScalingListAddress(sizeId, refListId),sizeof(Int)*min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId]));
-#else
-  ::memcpy(getScalingListAddress(sizeId, listId),getScalingListAddress(sizeId, refListId),sizeof(Int)*g_scalingListSize[sizeId]);
-#endif
 }
 /** parse syntax infomation 
  *  \param pchFile syntax infomation
@@ -2312,11 +2131,7 @@ Bool TComScalingList::xParseScalingList(char* pchFile)
 
   for(sizeIdc = 0; sizeIdc < SCALING_LIST_SIZE_NUM; sizeIdc++)
   {
-#if SCALING_LIST
     size = min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeIdc]);
-#else
-    size = g_scalingListSize[sizeIdc];
-#endif
     for(listIdc = 0; listIdc < g_scalingListNum[sizeIdc]; listIdc++)
     {
       src = getScalingListAddress(sizeIdc, listIdc);
@@ -2342,7 +2157,6 @@ Bool TComScalingList::xParseScalingList(char* pchFile)
         }
         src[i] = data;
       }
-#if SCALING_LIST
       //set DC value for default matrix check
       setScalingListDC(sizeIdc,listIdc,src[0]);
 
@@ -2368,7 +2182,6 @@ Bool TComScalingList::xParseScalingList(char* pchFile)
           //overwrite DC value when size of matrix is larger than 16x16
           setScalingListDC(sizeIdc,listIdc,data);
       }
-#endif
     }
   }
   fclose(fp);
@@ -2383,11 +2196,7 @@ Void TComScalingList::init()
   {
     for(UInt listId = 0; listId < g_scalingListNum[sizeId]; listId++)
     {
-#if SCALING_LIST
       m_scalingListCoef[sizeId][listId] = new Int [min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId])];
-#else
-      m_scalingListCoef[sizeId][listId] = new Int [g_scalingListSize[sizeId]];
-#endif
     }
   }
   m_scalingListCoef[SCALING_LIST_32x32][3] = m_scalingListCoef[SCALING_LIST_32x32][1]; // copy address for 32x32
@@ -2420,21 +2229,12 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
     case SCALING_LIST_8x8:
       src = (listId<3) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
       break;
-#if SCALING_LIST
     case SCALING_LIST_16x16:
       src = (listId<3) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
       break;
     case SCALING_LIST_32x32:
       src = (listId<1) ? g_quantIntraDefault8x8 : g_quantInterDefault8x8;
       break;
-#else
-    case SCALING_LIST_16x16:
-      src = (listId<3) ? g_quantIntraDefault16x16 : g_quantInterDefault16x16;
-      break;
-    case SCALING_LIST_32x32:
-      src = (listId<1) ? g_quantIntraDefault32x32 : g_quantInterDefault32x32;
-      break;
-#endif
     default:
       assert(0);
       src = NULL;
@@ -2448,15 +2248,10 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
  */
 Void TComScalingList::processDefaultMarix(UInt sizeId, UInt listId)
 {
-#if SCALING_LIST
   ::memcpy(getScalingListAddress(sizeId, listId),getScalingListDefaultAddress(sizeId,listId),sizeof(Int)*min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId]));
   setUseDefaultScalingMatrixFlag(sizeId,listId,true);
   setScalingListDC(sizeId,listId,SCALING_LIST_DC);
-#else
-  ::memcpy(getScalingListAddress(sizeId, listId),getScalingListDefaultAddress(sizeId,listId),sizeof(Int)*(Int)g_scalingListSize[sizeId]);
-#endif
 }
-#if SCALING_LIST
 /** check DC value of matrix for default matrix signaling
  */
 Void TComScalingList::checkDcOfMatrix()
@@ -2474,7 +2269,6 @@ Void TComScalingList::checkDcOfMatrix()
     }
   }
 }
-#endif
 
 ParameterSetManager::ParameterSetManager()
 : m_spsMap(MAX_NUM_SPS)

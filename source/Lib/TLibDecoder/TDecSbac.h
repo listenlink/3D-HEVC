@@ -73,9 +73,7 @@ public:
   Void loadContexts                  ( TDecSbac* pScr );
   Void xCopyFrom           ( TDecSbac* pSrc );
   Void xCopyContextsFrom       ( TDecSbac* pSrc );
-#if OL_FLUSH
   Void decodeFlush();
-#endif
 
 #if CABAC_INIT_FLAG
   Void  resetEntropy (TComSlice* pSlice );
@@ -94,22 +92,14 @@ public:
 #else
   Void  parseSPS                  ( TComSPS* pcSPS         ) {}
 #endif
-#if TILES_OR_ENTROPY_SYNC_IDC  
   Void  parsePPS                  ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet         ) {}
-#else
-  Void  parsePPS                  ( TComPPS* pcPPS         ) {}
-#endif
   Void  parseAPS                  ( TComAPS* pAPS          ) {}
   void parseSEI(SEImessages&) {}
 
-#if LCU_SYNTAX_ALF
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
   Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet, bool isDepth) {}
 #else
   Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet) {}
-#endif
-#else
-  Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl ) {}
 #endif
 
   Void  parseTerminatingBit       ( UInt& ruiBit );
@@ -119,7 +109,6 @@ public:
   Void  parseMVPIdx               ( Int& riMVPIdx          );
 #endif
   
-#if SAO_UNIT_INTERLEAVING
   Void  parseSaoUvlc              ( UInt& ruiVal           );
   Void  parseSaoSvlc              ( Int&  riVal            );
   Void  parseSaoMergeLeft         ( UInt&  ruiVal, UInt uiCompIdx   );
@@ -128,7 +117,6 @@ public:
   Void  parseSaoUflc              ( UInt& ruiVal           );
   Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Bool bLFCrossSliceBoundaryFlag);
   Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam);
-#endif
   
 #if RWTH_SDC_DLT_B0036
   Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -255,20 +243,13 @@ private:
   ContextModel3DBuffer m_cALFFlagSCModel;
   ContextModel3DBuffer m_cALFUvlcSCModel;
   ContextModel3DBuffer m_cALFSvlcSCModel;
-#if AMP_CTX
   ContextModel3DBuffer m_cCUAMPSCModel;
-#else
-  ContextModel3DBuffer m_cCUXPosiSCModel;
-  ContextModel3DBuffer m_cCUYPosiSCModel;
-#endif
   ContextModel3DBuffer m_cSaoFlagSCModel;
   ContextModel3DBuffer m_cSaoUvlcSCModel;
   ContextModel3DBuffer m_cSaoSvlcSCModel;
-#if SAO_UNIT_INTERLEAVING
   ContextModel3DBuffer m_cSaoMergeLeftSCModel;
   ContextModel3DBuffer m_cSaoMergeUpSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
-#endif
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   ContextModel3DBuffer m_cDmmFlagSCModel;

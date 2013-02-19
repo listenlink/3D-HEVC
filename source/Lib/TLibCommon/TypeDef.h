@@ -256,7 +256,8 @@
 
 ///// ***** HM 6.1 *********
 
-// REMOVED HM 6.1 Macros 
+//// REMOVED HM 6.1 Guard macros 
+/*
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
 #define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point
 #define NO_COMBINED_PARALLEL              1 ///< Disallow any combined usage of parallel tools among Tile, EntropySlice and Wavefont
@@ -318,7 +319,7 @@
 #define TILES_OR_ENTROPY_SYNC_IDC               1 // tiles_or_entropy_coding_sync_idc flag
 #define COMPLETE_SLICES_IN_TILE     1 // Among the constraints between slices and tiles, all slices within a tile shall be complete (JCTVC-H0348/JCTVC-H0463) for SliceMode 1&2
 #define WPP_SIMPLIFICATION          1 // JCTVC-H0349/JCTVC-0517
-
+*/
 
 
 #define LOSSLESS_CODING                   1 ///< H0530: lossless and lossy (mixed) coding
@@ -328,7 +329,7 @@
 
 #define LOG2_PARALLEL_MERGE_LEVEL_MINUS2  0 //< H0082 parallel merge level 0-> 4x4, 1-> 8x8, 2->16x16, 3->32x32, 4->64x64
 
-#if PARALLEL_MERGE && LOG2_PARALLEL_MERGE_LEVEL_MINUS2
+#if LOG2_PARALLEL_MERGE_LEVEL_MINUS2
 #define CU_BASED_MRG_CAND_LIST            1  //< H0240: single merge candidate list for all PUs inside a 8x8 CU conditioned on LOG2_PARALLEL_MERGE_LEVEL_MINUS2 > 0
 #define FIX_CU_BASED_MRG_CAND_LIST_B0136  1  //< B0136 bug fix for CU_BASED_MRG_CAND_LIST
 #endif
@@ -336,10 +337,8 @@
 #define DISABLING_CLIP_FOR_BIPREDME         1  ///< Ticket #175
 #define SIGMAP_CONST_AT_HIGH_FREQUENCY      1      ///< H0095 method2.1: const significance map at high freaquency
 
-#if RESTRICT_GR1GR2FLAG_NUMBER    //
 #define C1FLAG_NUMBER               8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER               1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
-#endif
 
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_1 0  ///< disable the encoder constraint that does not test SAO/BO mode for chroma in interleaved mode
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_2 0  ///< disable the encoder constraint that reduce the range of SAO/EO for chroma in interleaved mode
@@ -390,9 +389,6 @@
 #endif
 
 
-#if !H0137_0138_LIST_MODIFICATION
-#error "H0137_0138_LIST_MODIFICATION must be enabled for multi-view coding."
-#endif
 
 #define VERBOSE_RATE 0                               ///< Print additional rate information in encoder
 
@@ -474,13 +470,9 @@ enum MODE_IDX
 #define RVM_VCEGAM10_M         4
 
 #define PLANAR_IDX             0
-#if LOGI_INTRA_NAME_3MPM
 #define VER_IDX                26                    // index for intra VERTICAL   mode
 #define HOR_IDX                10                    // index for intra HORIZONTAL mode
 #define DC_IDX                 1                     // index for intra DC mode
-#else
-#define DC_IDX                 3                     // index for intra DC mode
-#endif
 #define NUM_CHROMA_MODE        6                     // total number of chroma modes
 #define DM_CHROMA_IDX          36                    // chroma mode index for derived from luma intra mode
 
@@ -494,9 +486,7 @@ enum MODE_IDX
 
 #define AD_HOC_SLICES_FIXED_NUMBER_OF_LCU_IN_SLICE      1          ///< OPTION IDENTIFIER. mode==1 -> Limit maximum number of largest coding tree blocks in a slice
 #define AD_HOC_SLICES_FIXED_NUMBER_OF_BYTES_IN_SLICE    2          ///< OPTION IDENTIFIER. mode==2 -> Limit maximum number of bins/bits in a slice
-#if FIXED_NUMBER_OF_TILES_SLICE_MODE
 #define AD_HOC_SLICES_FIXED_NUMBER_OF_TILES_IN_SLICE    3
-#endif
 
 // Entropy slice options
 #define SHARP_FIXED_NUMBER_OF_LCU_IN_ENTROPY_SLICE            1          ///< OPTION IDENTIFIER. Limit maximum number of largest coding tree blocks in an entropy slice
@@ -520,9 +510,7 @@ enum MODE_IDX
 #endif
 
 #define SCALING_LIST_OUTPUT_RESULT    0 //JCTVC-G880/JCTVC-G1016 quantization matrices
-#if H0566_TLA
 #define H0566_TLA_SET_FOR_SWITCHING_POINTS 1
-#endif
 
 
 #define CABAC_INIT_FLAG             1 // JCTVC-H0540
@@ -608,12 +596,8 @@ class TComPicSym;
 enum SAOTypeLen
 {
   SAO_EO_LEN    = 4,
-#if SAO_UNIT_INTERLEAVING
   SAO_BO_LEN    = 4,
   SAO_MAX_BO_CLASSES = 32
-#else
-  SAO_BO_LEN    = 16
-#endif
 };
 
 enum SAOType
@@ -622,28 +606,16 @@ enum SAOType
   SAO_EO_1,
   SAO_EO_2,
   SAO_EO_3,
-#if SAO_UNIT_INTERLEAVING
   SAO_BO,
-#else
-  SAO_BO_0,
-  SAO_BO_1,
-#endif
   MAX_NUM_SAO_TYPE
 };
 
 typedef struct _SaoQTPart
 {
-#if !SAO_UNIT_INTERLEAVING
-  Bool        bEnableFlag;
-#endif
   Int         iBestType;
   Int         iLength;
-#if SAO_UNIT_INTERLEAVING
   Int         bandPosition ;
   Int         iOffset[4];
-#else
-  Int         iOffset[32];
-#endif
   Int         StartCUX;
   Int         StartCUY;
   Int         EndCUX;
@@ -667,7 +639,6 @@ typedef struct _SaoQTPart
   //---- encoder only end -----//
 } SAOQTPart;
 
-#if SAO_UNIT_INTERLEAVING
 typedef struct _SaoLcuParam
 {
   Bool       mergeUpFlag;
@@ -681,7 +652,6 @@ typedef struct _SaoLcuParam
   Int        partIdxTmp;
   Int        length;
 } SaoLcuParam;
-#endif
 
 struct SAOParam
 {
@@ -689,28 +659,18 @@ struct SAOParam
   SAOQTPart* psSaoPart[3];
   Int        iMaxSplitLevel;
   Int        iNumClass[MAX_NUM_SAO_TYPE];
-#if SAO_UNIT_INTERLEAVING
   Bool         oneUnitFlag[3];
   SaoLcuParam* saoLcuParam[3];
   Int          numCuInHeight;
   Int          numCuInWidth;
-#endif
   ~SAOParam();
 };
 
 struct ALFParam
 {
   Int alf_flag;                           ///< indicates use of ALF
-#if !LCU_SYNTAX_ALF
-  Int chroma_idc;                         ///< indicates use of ALF for chroma
-#endif
   Int num_coeff;                          ///< number of filter coefficients
   Int filter_shape;
-#if !LCU_SYNTAX_ALF
-  Int filter_shape_chroma;
-  Int num_coeff_chroma;                   ///< number of filter coefficients (chroma)
-  Int *coeff_chroma;                      ///< filter coefficient array (chroma)
-#endif
   Int *filterPattern;
   Int startSecondFilter;
   Int filters_per_group;
@@ -718,14 +678,6 @@ struct ALFParam
   Int *nbSPred;
   Int **coeffmulti;
   Int minKStart;
-#if !LCU_SYNTAX_ALF
-  Int maxScanVal;
-  Int kMinTab[42];
-
-  Int alf_pcr_region_flag;
-  ~ALFParam();
-#endif
-#if LCU_SYNTAX_ALF
   Int componentID;
   Int* kMinTab;
   //constructor, operator
@@ -738,10 +690,8 @@ private:
   Void create(Int cID);
   Void destroy();
   Void copy(const ALFParam& src);
-#endif
 };
 
-#if LCU_SYNTAX_ALF
 struct AlfUnitParam
 {
   Int   mergeType;
@@ -774,7 +724,6 @@ struct AlfParamSet
 private:
   Void destroy();
 };
-#endif
 
 
 

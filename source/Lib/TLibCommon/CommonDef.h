@@ -436,11 +436,7 @@ __inline T gSign(const T& t)
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
 
 // Explicit temporal layer QP offset
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
 #define MAX_TLAYER                  8           ///< max number of temporal layer
-#else
-#define MAX_TLAYER                  4           ///< max number of temporal layer
-#endif
 #define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
 
 // Fast estimation of generalized B in low-delay mode
@@ -465,21 +461,11 @@ __inline T gSign(const T& t)
 
 #define MAX_NUM_REF_PICS 16
 
-#if !NAL_REF_FLAG
-enum NalRefIdc
-{
-  NAL_REF_IDC_PRIORITY_LOWEST = 0,
-  NAL_REF_IDC_PRIORITY_LOW,
-  NAL_REF_IDC_PRIORITY_HIGH,
-  NAL_REF_IDC_PRIORITY_HIGHEST
-};
-#endif
 
 enum NalUnitType
 {
   NAL_UNIT_UNSPECIFIED_0 = 0,
   NAL_UNIT_CODED_SLICE,
-#if H0566_TLA
 #if QC_REM_IDV_B0046
   NAL_UNIT_RESERVED,
 #else
@@ -487,11 +473,6 @@ enum NalUnitType
 #endif
   NAL_UNIT_CODED_SLICE_TLA,
   NAL_UNIT_CODED_SLICE_CRA,
-#else
-  NAL_UNIT_CODED_SLICE_DATAPART_A,
-  NAL_UNIT_CODED_SLICE_DATAPART_B,
-  NAL_UNIT_CODED_SLICE_CDR,
-#endif
   NAL_UNIT_CODED_SLICE_IDR,
   NAL_UNIT_SEI,
   NAL_UNIT_SPS,
