@@ -172,7 +172,7 @@ public:
       return m_iPOCLast -m_iNumPicRcvd+ getGOPEntry(iGOPid).m_POC ;
     }
   }
-#if HHI_INTERVIEW_SKIP || HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTERVIEW_SKIP || H3D_IVMP || HHI_INTER_VIEW_RESIDUAL_PRED
   Void      deleteExtraPicBuffers   ( Int iPoc );
 #endif
 

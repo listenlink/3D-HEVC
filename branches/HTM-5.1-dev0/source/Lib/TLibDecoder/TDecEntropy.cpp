@@ -275,7 +275,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
 
 #if CU_BASED_MRG_CAND_LIST
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
   for ( UInt ui = 0; ui < MRG_MAX_NUM_CANDS_MEM; ui++ )
@@ -296,7 +296,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
 #if !CU_BASED_MRG_CAND_LIST
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
     UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
     Int numValidMergeCand = 0;
@@ -522,14 +522,14 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
 
   if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) && (pcSubCU->getAMVPMode(uiPartAddr) == AM_EXPL) )
   {
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     const Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcSubCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
     m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx, iNumAMVPCands );
 #else
     m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx );
 #endif
   }
-#if SHARP_INTERVIEW_DECOUPLE_B0111
+#if H3D_IVMP
   pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo, iMVPIdx);
 #else
   pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);

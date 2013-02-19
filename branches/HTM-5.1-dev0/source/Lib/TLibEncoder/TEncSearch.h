@@ -120,7 +120,7 @@ protected:
 #endif
   
   // AMVP cost computation
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+2][AMVP_MAX_NUM_CANDS+2]; //th array bounds
 #else
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];

@@ -204,7 +204,7 @@ void TEncSearch::init(TEncCfg*      pcEncCfg,
   m_pcRdCost->initRateDistortionModel( m_iSearchRange << 2 );
 #endif
   
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   const Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + 1;
   for( Int iNum = 0; iNum < iNumAMVPCands+1; iNum++)
     for( Int iIdx = 0; iIdx < iNumAMVPCands; iIdx++)
@@ -2962,7 +2962,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
 {
 #if !CU_BASED_MRG_CAND_LIST
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComMvField  cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
   Int numValidMergeCand = 0;
@@ -3008,7 +3008,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
 
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   const int maxNumMergeCand = MRG_MAX_NUM_CANDS_SIGNALED + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #endif
 #if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
@@ -3073,7 +3073,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
       xGetInterPredictionError( pcCU, pcYuvOrg, iPUIdx, uiCostCand, m_pcEncCfg->getUseHADME() );
       uiBitsCand = uiMergeCand + 1;
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
       if (uiMergeCand == maxNumMergeCand - 1 )
 #else
       if (uiMergeCand == MRG_MAX_NUM_CANDS_SIGNALED -1)
@@ -3181,7 +3181,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #endif
 
 #if CU_BASED_MRG_CAND_LIST
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
   Int numValidMergeCand = 0 ;
@@ -3192,7 +3192,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #endif 
 #endif 
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #endif
 
@@ -3298,7 +3298,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
         uiBitsTemp += m_auiMVPIdxCost[aaiMvpIdx[iRefList][iRefIdxTemp]][iNumAMVPCands];
 #else
         uiBitsTemp += m_auiMVPIdxCost[aaiMvpIdx[iRefList][iRefIdxTemp]][AMVP_MAX_NUM_CANDS];
@@ -3485,7 +3485,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
           if ( bestBiPRefIdxL1 == pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_1)-1 ) uiMotBits[1]--;
         }
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
         uiMotBits[1] += m_auiMVPIdxCost[aaiMvpIdxBi[1][bestBiPRefIdxL1]][iNumAMVPCands];
 #else
         uiMotBits[1] += m_auiMVPIdxCost[aaiMvpIdxBi[1][bestBiPRefIdxL1]][AMVP_MAX_NUM_CANDS];
@@ -3550,7 +3550,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
             uiBitsTemp += iRefIdxTemp+1;
             if ( iRefIdxTemp == pcCU->getSlice()->getNumRefIdx(eRefPicList)-1 ) uiBitsTemp--;
           }
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
           uiBitsTemp += m_auiMVPIdxCost[aaiMvpIdxBi[iRefList][iRefIdxTemp]][iNumAMVPCands];
 #else
           uiBitsTemp += m_auiMVPIdxCost[aaiMvpIdxBi[iRefList][iRefIdxTemp]][AMVP_MAX_NUM_CANDS];
@@ -4031,7 +4031,7 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
 #if H0111_MVD_L1_ZERO
     if(pcCU->getSlice()->getMvdL1ZeroFlag() && eRefPicList==REF_PIC_LIST_1)
     {
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
       Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #if ZERO_MVD_EST
       (*puiDistBiP) = xGetTemplateCost( pcCU, uiPartIdx, uiPartAddr, pcOrgYuv, &m_cYuvPredTemp, rcMvPred, 0, iNumAMVPCands, eRefPicList, iRefIdx, iRoiWidth, iRoiHeight, uiDist );
@@ -4067,7 +4067,7 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
     for ( i = 0 ; i < pcAMVPInfo->iN; i++)
     {
       UInt uiTmpCost;
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
       Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #if ZERO_MVD_EST
       uiTmpCost = xGetTemplateCost( pcCU, uiPartIdx, uiPartAddr, pcOrgYuv, &m_cYuvPredTemp, pcAMVPInfo->m_acMvCand[i], i, iNumAMVPCands, eRefPicList, iRefIdx, iRoiWidth, iRoiHeight, uiDist );
@@ -4202,13 +4202,13 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
   
   Int iBestMVPIdx = riMVPIdx;
   
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #endif
   
   m_pcRdCost->setPredictor( rcMvPred );
   Int iOrgMvBits  = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   iOrgMvBits += m_auiMVPIdxCost[riMVPIdx][iNumAMVPCands];
 #else
   iOrgMvBits += m_auiMVPIdxCost[riMVPIdx][AMVP_MAX_NUM_CANDS];
@@ -4222,7 +4222,7 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
     m_pcRdCost->setPredictor( pcAMVPInfo->m_acMvCand[iMVPIdx] );
     
     Int iMvBits = m_pcRdCost->getBits(cMv.getHor(), cMv.getVer());
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     iMvBits += m_auiMVPIdxCost[iMVPIdx][iNumAMVPCands];
 #else
     iMvBits += m_auiMVPIdxCost[iMVPIdx][AMVP_MAX_NUM_CANDS];
@@ -4407,7 +4407,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 #endif
   m_pcRdCost->setCostScale  ( 2 );
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   { // init inter-view regularization
     TComMv  cOrgDepthMapMv;
     Bool    bMultiviewReg = pcCU->getIViewOrgDepthMvPred( iPartIdx, eRefPicList, iRefIdxPred, cOrgDepthMapMv );

@@ -727,7 +727,7 @@ TDecSbac::parseResPredFlag( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPar
 }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void TDecSbac::parseMVPIdx      ( Int& riMVPIdx, Int iNumAMVPCands )
 {
   UInt uiSymbol;

@@ -76,7 +76,7 @@ private:
   Int                   m_uiIntraPeriod;
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
 #if H3D_NBDV
   Bool          m_checked;
@@ -164,7 +164,7 @@ public:
 #endif
 
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
 #if H3D_NBDV
   Void          setCandPicCheckedFlag (Bool bchecked)   { m_checked = bchecked; }
@@ -249,7 +249,7 @@ public:
 #if DEPTH_MAP_GENERATION
   Void          addPrdDepthMapBuffer    ( UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void          addOrgDepthMapBuffer    ();
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -258,7 +258,7 @@ public:
 #if DEPTH_MAP_GENERATION
   Void          removePrdDepthMapBuffer ();
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void          removeOrgDepthMapBuffer ();
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED

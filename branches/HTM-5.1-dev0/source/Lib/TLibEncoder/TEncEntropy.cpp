@@ -1507,7 +1507,7 @@ Void TEncEntropy::encodeMVPIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicLis
 {
   if ( (pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList )) && (pcCU->getAMVPMode(uiAbsPartIdx) == AM_EXPL) )
   {
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     const Int iNumCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
     m_pcEntropyCoderIf->codeMVPIdx( pcCU, uiAbsPartIdx, eRefList, iNumCands );
 #else

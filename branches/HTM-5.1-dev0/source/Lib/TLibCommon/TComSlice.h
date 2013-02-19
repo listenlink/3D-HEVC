@@ -414,7 +414,7 @@ private:
   Int   m_aiPdmOffset       [MAX_VIEW_NUM];
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt  m_uiMultiviewMvPredMode;
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -721,7 +721,7 @@ public:
   Int* getPdmOffset             ()          { return m_aiPdmOffset;              }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt  getMultiviewMvPredMode   ()          { return m_uiMultiviewMvPredMode;    }
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED

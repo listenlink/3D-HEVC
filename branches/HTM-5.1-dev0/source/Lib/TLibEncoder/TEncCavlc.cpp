@@ -794,7 +794,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
           WRITE_SVLC( pcSPS->getPdmScaleNomDelta()[ uiId ], "Pdm_scale_nom_delta" );
           WRITE_SVLC( pcSPS->getPdmOffset       ()[ uiId ], "Pdm_offset" );
         }
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
         WRITE_UVLC( pcSPS->getMultiviewMvPredMode(), "multi_view_mv_pred_mode" );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -1305,8 +1305,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
   }
   
-#if ( HHI_MPI || HHI_INTER_VIEW_MOTION_PRED )
-  #if ( HHI_MPI && HHI_INTER_VIEW_MOTION_PRED )
+#if ( HHI_MPI || H3D_IVMP )
+  #if ( HHI_MPI && H3D_IVMP )
   const int iExtraMergeCandidates = ( pcSlice->getSPS()->getUseMVI() || pcSlice->getSPS()->getMultiviewMvPredMode() ) ? 1 : 0;
   #elif HHI_MPI
   const int iExtraMergeCandidates = pcSlice->getSPS()->getUseMVI() ? 1 : 0;
@@ -1489,7 +1489,7 @@ Void TEncCavlc::codeSliceFinish ()
 {
 }
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void TEncCavlc::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Int iNum )
 #else
 Void TEncCavlc::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )

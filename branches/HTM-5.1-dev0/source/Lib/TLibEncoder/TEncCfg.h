@@ -351,7 +351,7 @@ protected:
   Int**    m_aaiPdmOffset;
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt        m_uiMultiviewMvPredMode;
   UInt        m_uiMultiviewMvRegMode;
   Double      m_dMultiviewMvRegLambdaScale;
@@ -446,7 +446,7 @@ public:
   Void      setPdmOffset                    ( Int** p )      { m_aaiPdmOffset               = p; }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void      setMultiviewMvPredMode          ( UInt  u )      { m_uiMultiviewMvPredMode      = u; }
   Void      setMultiviewMvRegMode           ( UInt  u )      { m_uiMultiviewMvRegMode       = u; }
   Void      setMultiviewMvRegLambdaScale    ( Double d)      { m_dMultiviewMvRegLambdaScale = d; }
@@ -481,7 +481,7 @@ public:
   Void      setUseDisparitySearchRangeRestriction ( Bool   b )      { m_bUseDisparitySearchRangeRestriction = b; }
   Void      setVerticalDisparitySearchRange ( Int   i )      { m_iVerticalDisparitySearchRange = i; }
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt      getMultiviewMvRegMode           ()      { return  m_uiMultiviewMvRegMode; }
   Double    getMultiviewMvRegLambdaScale    ()      { return  m_dMultiviewMvRegLambdaScale; }
 #endif

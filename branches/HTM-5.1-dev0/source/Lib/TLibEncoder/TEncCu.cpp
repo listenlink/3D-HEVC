@@ -1941,7 +1941,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
 {
   assert( rpcTempCU->getSlice()->getSliceType() != I_SLICE );
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComMvField  cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
 #else
@@ -1958,7 +1958,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   Bool  bICFlag = rpcTempCU->getICFlag(0);
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS_MEM; ++ui )
 #else
   for( UInt ui = 0; ui < MRG_MAX_NUM_CANDS; ++ui )

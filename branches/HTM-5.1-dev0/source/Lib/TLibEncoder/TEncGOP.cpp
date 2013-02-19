@@ -757,7 +757,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       m_pcDepthMapGenerator->predictDepthMap  ( pcPic );
 #endif
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
       m_pcDepthMapGenerator->covertOrgDepthMap( pcPic );
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -1581,7 +1581,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       if (pcPic->getUsedPelsMap())
         pcPic->removeUsedPelsMapBuffer() ;
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
       pcPic->removeOrgDepthMapBuffer();
 #endif
    

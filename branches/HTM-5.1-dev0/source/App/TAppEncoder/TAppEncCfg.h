@@ -232,7 +232,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if DEPTH_MAP_GENERATION
   UInt      m_uiPredDepthMapGeneration;                       ///< using of (virtual) depth maps for texture coding
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt      m_uiMultiviewMvPredMode;                          ///< usage of predictors for multi-view mv prediction
   UInt      m_uiMultiviewMvRegMode;                           ///< regularization for multiview motion vectors
   Double    m_dMultiviewMvRegLambdaScale;                     ///< lambda scale for multiview motion vectors regularization
