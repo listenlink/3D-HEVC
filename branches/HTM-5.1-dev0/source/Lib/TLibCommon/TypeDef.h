@@ -178,7 +178,8 @@
 #endif
 
 ///// ***** VSP *********
-#define MERL_VSP_C0152                    0 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+#define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+#define FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152 1 
 #if MERL_VSP_C0152
 
 /*
