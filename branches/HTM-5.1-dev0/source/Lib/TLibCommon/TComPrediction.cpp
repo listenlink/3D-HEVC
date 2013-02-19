@@ -202,18 +202,11 @@ Void TComPrediction::xPredIntraAng( Int* pSrc, Int srcStride, Pel*& rpDst, Int d
   Pel* pDst          = rpDst;
 
   // Map the mode index to main prediction direction and angle
-#if LOGI_INTRA_NAME_3MPM
   assert( dirMode > 0 ); //no planar
   Bool modeDC        = dirMode < 2;
   Bool modeHor       = !modeDC && (dirMode < 18);
   Bool modeVer       = !modeDC && !modeHor;
   Int intraPredAngle = modeVer ? (Int)dirMode - VER_IDX : modeHor ? -((Int)dirMode - HOR_IDX) : 0;
-#else
-  Bool modeDC        = dirMode == 0;
-  Bool modeVer       = !modeDC && (dirMode < 18);
-  Bool modeHor       = !modeDC && !modeVer;
-  Int intraPredAngle = modeVer ? dirMode - 9 : modeHor ? dirMode - 25 : 0;
-#endif
   Int absAng         = abs(intraPredAngle);
   Int signAng        = intraPredAngle < 0 ? -1 : 1;
 
@@ -296,11 +289,7 @@ Void TComPrediction::xPredIntraAng( Int* pSrc, Int srcStride, Pel*& rpDst, Int d
       {
         for (k=0;k<blkSize;k++)
         {
-#if REMOVE_DIV_OPERATION
           pDst[k*dstStride] = Clip ( pDst[k*dstStride] + (( refSide[k+1] - refSide[0] ) >> 1) );
-#else
-          pDst[k*dstStride] = Clip ( pDst[k*dstStride] + ( refSide[k+1] - refSide[0] ) / 2 );
-#endif
         }
       }
     }
@@ -375,11 +364,7 @@ Void TComPrediction::predIntraLumaAng(TComPattern* pcTComPattern, UInt uiDirMode
   }
   else
   {
-#if LOGI_INTRA_NAME_3MPM
     xPredIntraAng( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, uiDirMode, bAbove, bLeft, true );
-#else
-    xPredIntraAng( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, g_aucAngIntraModeOrder[ uiDirMode ], bAbove, bLeft, true );
-#endif
 
     if( (uiDirMode == DC_IDX ) && bAbove && bLeft )
     {
@@ -404,11 +389,7 @@ Void TComPrediction::predIntraChromaAng( TComPattern* pcTComPattern, Int* piSrc,
   else
   {
     // Create the prediction
-#if LOGI_INTRA_NAME_3MPM
     xPredIntraAng( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, uiDirMode, bAbove, bLeft, false );
-#else
-    xPredIntraAng( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, g_aucAngIntraModeOrder[ uiDirMode ], bAbove, bLeft, false );
-#endif
   }
 }
 
@@ -3389,16 +3370,11 @@ Bool TComPrediction::xGetWedgeIntraDirPredData( TComDataCU* pcCU, UInt uiAbsPart
   }
 
   // 2nd step: derive wedge direction
-#if LOGI_INTRA_NAME_3MPM
   Int uiPreds[3] = {-1, -1, -1};
-#else
-  Int uiPreds[2] = {-1, -1};
-#endif
   Int iMode = -1;
   Int iPredNum = pcCU->getIntraDirLumaPredictor( uiAbsPartIdx, uiPreds, &iMode );  
 
   UInt uiDirMode = 0;
-#if LOGI_INTRA_NAME_3MPM
   if( iMode >= 0 ) { iPredNum = iMode; }
   if( iPredNum == 1 ) { uiDirMode = uiPreds[0]; }
   if( iPredNum == 2 ) { uiDirMode = uiPreds[1]; }
@@ -3408,16 +3384,6 @@ Bool TComPrediction::xGetWedgeIntraDirPredData( TComDataCU* pcCU, UInt uiAbsPart
   Bool modeHor       = (uiDirMode < 18);
   Bool modeVer       = !modeHor;
   Int intraPredAngle = modeVer ? (Int)uiDirMode - VER_IDX : modeHor ? -((Int)uiDirMode - HOR_IDX) : 0;
-#else
-  if( iPredNum == 1 ) { uiDirMode = g_aucAngIntraModeOrder[uiPreds[0]]; }
-  if( iPredNum == 2 ) { uiDirMode = g_aucAngIntraModeOrder[uiPreds[1]]; }
-
-  if( uiDirMode == 0 ) {  return false; } // no DC
-
-  Bool modeVer       = (uiDirMode < 18);
-  Bool modeHor       = !modeVer;
-  Int intraPredAngle = modeVer ? uiDirMode - 9 : modeHor ? uiDirMode - 25 : 0;
-#endif
   Int absAng         = abs(intraPredAngle);
   Int signAng        = intraPredAngle < 0 ? -1 : 1;
   Int angTable[9]    = {0,2,5,9,13,17,21,26,32};
@@ -3736,9 +3702,6 @@ TComPrediction::predIntraDepthAng(TComPattern* pcTComPattern, UInt uiDirMode, Pe
   Pel*  pDst    = piPred;
   Int*  ptrSrc  = pcTComPattern->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
   Int   sw      = ( iWidth<<1 ) + 1;
-#if !LOGI_INTRA_NAME_3MPM
-  uiDirMode     = g_aucAngIntraModeOrder[ uiDirMode ];
-#endif
   xPredIntraAngDepth( ptrSrc+sw+1, sw, pDst, uiStride, iWidth, iHeight, uiDirMode );
 }
 

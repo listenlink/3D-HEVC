@@ -100,9 +100,7 @@ private:
 
   bool m_pictureDigestEnabled; ///< if true, handle picture_digest SEI messages
   AlfCUCtrlInfo       m_cAlfCUCtrlOneSlice;
-#if LCU_SYNTAX_ALF
   AlfParamSet           m_alfParamSetPilot;
-#endif
 
 public:
   TDecGop();
@@ -130,14 +128,10 @@ public:
 
   void setPictureDigestEnabled(bool enabled) { m_pictureDigestEnabled = enabled; }
   AlfCUCtrlInfo& getAlfCuCtrlParam() { return m_cAlfCUCtrlOneSlice; }
-#if LCU_SYNTAX_ALF
   AlfParamSet& getAlfParamSet() {return m_alfParamSetPilot;}
-#endif
 
 private:
-#if LCU_SYNTAX_ALF
   Void patchAlfLCUParams(ALFParam*** alfLCUParam, AlfParamSet* alfParamSet, Int firstLCUAddr = 0);
-#endif
 
 
 };
