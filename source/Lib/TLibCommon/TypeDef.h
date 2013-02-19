@@ -78,20 +78,14 @@
 #define INTER_VIEW_VECTOR_SCALING_C0115   1 // JCT3V-C0115 Inter-view vector scaling for TMVP & flag
 #define INTER_VIEW_VECTOR_SCALING_C0116   1 // JCT3V-C0116 Inter-view vector scaling for AMVP
 
-///// ***** INTERVIEW MOTION VECTOR PREDICTION *********
-#define HHI_INTER_VIEW_MOTION_PRED        1   // inter-view motion parameter prediction
-#if HHI_INTER_VIEW_MOTION_PRED         
-#define SAIT_IMPROV_MOTION_PRED_M24829    1   // improved inter-view motion vector prediction
-#else                                  
-#define SAIT_IMPROV_MOTION_PRED_M24829    0   
-#endif                                 
-
-#define SHARP_INTERVIEW_DECOUPLE_B0111    1   // JCT3V-B0111 decoupling inter-view candidate
-#define QC_MRG_CANS_B0048                 1   // JCT3V-B0048, B0086, B0069
-#if     QC_MRG_CANS_B0048
-#define OL_DISMV_POS_B0069                1   // different pos for disparity MV candidate, B0069
-#endif
-#define MTK_INTERVIEW_MERGE_A0049         1   // JCT3V-A0049 second part
+///// ***** INTERVIEW MOTION PARAMETER PREDICTION *********
+#define H3D_IVMP                          1   // inter-view motion parameter prediction
+                                              // HHI_INTER_VIEW_MOTION_PRED
+                                              // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
+                                              // SHARP_INTERVIEW_DECOUPLE_B0111, decoupling inter-view candidate
+                                              // QC_MRG_CANS_B0048             , JCT3V-B0048, B0086, B0069
+                                              // OL_DISMV_POS_B0069            , different pos for disparity MV candidate, B0069
+                                              // MTK_INTERVIEW_MERGE_A0049     ,// JCT3V-A0049 second part
 #define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
 #define QC_C0051_FIXED_BY_MTK             1   // bug fix for C0051 implementation
 

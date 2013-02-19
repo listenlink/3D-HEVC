@@ -562,20 +562,16 @@ public:
                                           ,Bool bTopTileBoundary, Bool bDownTileBoundary, Bool bLeftTileBoundary, Bool bRightTileBoundary
                                           ,Bool bIndependentTileBoundaryEnabled );
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 #if !H3D_NBDV
-  Int           getPdmMergeCandidate( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
-  Bool          getPdmMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
+  Int           getPdmMergeCandidate      ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
+  Bool          getPdmMvPred              ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
 #else //!H3D_NBDV
 #if QC_AMVP_MRG_UNIFY_IVCAN_C0051
-  Bool getUnifiedMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
+  Bool          getUnifiedMvPredCan       ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
 #else //QC_AMVP_MRG_UNIFY_IVCAN_C0051
-  Bool          getPdmMvPredDisCan( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
-  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
-#if QC_MRG_CANS_B0048
-    , Int* iPdm
-#endif //QC_MRG_CANS_B0048
-  );
+  Bool          getPdmMvPredDisCan        ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
+  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm );
 #endif //QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
   Void          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
@@ -597,7 +593,7 @@ public:
 #endif
 #endif
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
-#endif
+#endif // HHI_INTER_VIEW_MOTION_PRED
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Bool*         getResPredAvail         ()                        { return m_pbResPredAvailable;        }
   Bool          getResPredAvail         ( UInt uiIdx )            { return m_pbResPredAvailable[uiIdx]; }
@@ -636,11 +632,9 @@ public:
   Void          getMvField            ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField );
   
   AMVP_MODE     getAMVPMode           ( UInt uiIdx );
-#if SHARP_INTERVIEW_DECOUPLE_B0111
+#if H3D_IVMP
   Void          fillMvpCandBase       ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
   Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo , Int iMVPIdx=-1);
-#else
-  Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
 #endif
 #if PARALLEL_MERGE 
   Bool          isDiffMER             ( Int xN, Int yN, Int xP, Int yP);

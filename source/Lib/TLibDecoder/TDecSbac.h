@@ -113,7 +113,7 @@ public:
 #endif
 
   Void  parseTerminatingBit       ( UInt& ruiBit );
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void  parseMVPIdx               ( Int& riMVPIdx, Int iNumAMVPCands );
 #else
   Void  parseMVPIdx               ( Int& riMVPIdx          );

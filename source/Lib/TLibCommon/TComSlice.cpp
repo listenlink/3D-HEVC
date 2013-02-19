@@ -1655,7 +1655,7 @@ TComSPS::TComSPS()
   ::memset( m_aiPdmScaleNomDelta, 0x00, sizeof( m_aiPdmScaleNomDelta  ) );
   ::memset( m_aiPdmOffset,        0x00, sizeof( m_aiPdmOffset         ) );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   m_uiMultiviewMvPredMode    = 0;
 #endif
 
@@ -1889,7 +1889,7 @@ TComSPS::setPredDepthMapGeneration( UInt uiViewId, Bool bIsDepth, UInt uiPdmGenM
   AOT( uiPdmMvPredMode && uiPdmGenMode == 0 );
 
   m_uiPredDepthMapGeneration = uiPdmGenMode;
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   m_uiMultiviewMvPredMode    = uiPdmMvPredMode;
 #endif
 

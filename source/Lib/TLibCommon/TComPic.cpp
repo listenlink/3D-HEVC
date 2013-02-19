@@ -58,7 +58,7 @@ TComPic::TComPic()
   m_pcPredDepthMap_temp    = NULL;
 #endif
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   m_pcOrgDepthMap     = NULL;
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -156,7 +156,7 @@ Void TComPic::destroy()
   }                     
 #endif
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   if( m_pcOrgDepthMap )
   {
     m_pcOrgDepthMap->destroy();
@@ -205,7 +205,7 @@ TComPic::addPrdDepthMapBuffer( UInt uiSubSampExpX, UInt uiSubSampExpY )
 }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void
 TComPic::addOrgDepthMapBuffer()
 {
@@ -258,7 +258,7 @@ TComPic::removePrdDepthMapBuffer()
 }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void
 TComPic::removeOrgDepthMapBuffer()
 {

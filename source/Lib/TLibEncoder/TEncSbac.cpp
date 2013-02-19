@@ -599,14 +599,14 @@ Void TEncSbac::xCopyFrom( TEncSbac* pSrc )
   memcpy( m_contextModels, pSrc->m_contextModels, m_numContextModels * sizeof( ContextModel ) );
 }
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Int iNum )
 #else
 Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList )
 #endif
 {
   Int iSymbol = pcCU->getMVPIdx(eRefList, uiAbsPartIdx);
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 #else
   Int iNum = AMVP_MAX_NUM_CANDS;
 #endif

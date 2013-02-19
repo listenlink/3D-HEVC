@@ -102,7 +102,7 @@ public:
 #endif
   
   virtual Void codeAlfCtrlDepth() = 0;
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   virtual Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Int iNum ) = 0;
 #else
   virtual Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList ) = 0;

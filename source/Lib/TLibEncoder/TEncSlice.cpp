@@ -408,7 +408,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   rpcSlice   ->setLambda( dLambda );
 #endif
   
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   m_pcRdCost ->setLambdaMVReg ( dLambda * m_pcCfg->getMultiviewMvRegLambdaScale() );
 #endif
   
@@ -468,8 +468,8 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int iPOCLast, UInt uiPOCCurr, Int 
   rpcSlice->setEntropySliceMode     ( m_pcCfg->getEntropySliceMode()     );
   rpcSlice->setEntropySliceArgument ( m_pcCfg->getEntropySliceArgument() );
 
-#if ( HHI_MPI || HHI_INTER_VIEW_MOTION_PRED )
-  #if ( HHI_MPI && HHI_INTER_VIEW_MOTION_PRED )
+#if ( HHI_MPI || H3D_IVMP )
+  #if ( HHI_MPI && H3D_IVMP )
   const int iExtraMergeCandidates = ( pSPS->getUseMVI() || pSPS->getMultiviewMvPredMode() ) ? 1 : 0;
   #elif HHI_MPI
   const int iExtraMergeCandidates = pSPS->getUseMVI() ? 1 : 0;
@@ -581,7 +581,7 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
 #else
     pcSlice       ->setLambda              ( m_pdRdPicLambda[uiQpIdx] );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     m_pcRdCost    ->setLambdaMVReg         ( m_pdRdPicLambda[uiQpIdx] * m_pcCfg->getMultiviewMvRegLambdaScale() );
 #endif
     
@@ -637,7 +637,7 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
 #else
   pcSlice       ->setLambda              ( m_pdRdPicLambda[uiQpIdxBest] );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   m_pcRdCost    ->setLambdaMVReg         ( m_pdRdPicLambda[uiQpIdxBest] * m_pcCfg->getMultiviewMvRegLambdaScale() );
 #endif
 }

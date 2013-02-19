@@ -397,7 +397,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if DEPTH_MAP_GENERATION
   ("PredDepthMapGen",  m_uiPredDepthMapGeneration, (UInt)0, "generation of prediction depth maps for motion data prediction" )
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   ("MultiviewMvPred",  m_uiMultiviewMvPredMode,    (UInt)0, "usage of predicted depth maps" )
   ("MultiviewMvRegMode",        m_uiMultiviewMvRegMode,         (UInt)0, "regularization mode for multiview motion vectors" )
   ("MultiviewMvRegLambdaScale", m_dMultiviewMvRegLambdaScale, (Double)0, "lambda scale for multiview motion vector regularization" )
@@ -973,7 +973,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara    ( m_uiPredDepthMapGeneration > 2,                                   "PredDepthMapGen must be less than or equal to 2" );
   xConfirmPara    ( m_uiPredDepthMapGeneration >= 2 && !m_bUsingDepthMaps,            "PredDepthMapGen >= 2 requires CodeDepthMaps = 1" );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   xConfirmPara    ( m_uiMultiviewMvPredMode > 7,                                      "MultiviewMvPred must be less than or equal to 7" );
   xConfirmPara    ( m_uiMultiviewMvPredMode > 0 && m_uiPredDepthMapGeneration == 0 ,  "MultiviewMvPred > 0 requires PredDepthMapGen > 0" );
   xConfirmPara    ( m_uiMultiviewMvRegMode       > 1,                                 "MultiviewMvRegMode must be less than or equal to 1" );

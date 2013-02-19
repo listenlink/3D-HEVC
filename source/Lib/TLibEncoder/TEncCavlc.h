@@ -138,7 +138,7 @@ public:
   Void  codeFlush               () {}
   Void  encodeStart             () {}
   
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Int iNum );
 #else
   Void codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );

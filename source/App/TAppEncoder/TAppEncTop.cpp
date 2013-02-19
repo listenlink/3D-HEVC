@@ -234,7 +234,7 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setPdmScaleNomDelta             (       m_cCameraData.getPdmScaleNomDelta () );
     m_acTEncTopList[iViewIdx]->setPdmOffset                    (       m_cCameraData.getPdmOffset        () );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     m_acTEncTopList[iViewIdx]->setMultiviewMvPredMode          ( m_uiMultiviewMvPredMode );
     m_acTEncTopList[iViewIdx]->setMultiviewMvRegMode           ( iViewIdx ? m_uiMultiviewMvRegMode       : 0   );
     m_acTEncTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( iViewIdx ? m_dMultiviewMvRegLambdaScale : 0.0 );
@@ -604,7 +604,7 @@ Void TAppEncTop::xInitLibCfg()
 #if DEPTH_MAP_GENERATION
       m_acTEncDepthTopList[iViewIdx]->setPredDepthMapGeneration       ( 0 );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvPredMode          ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegMode           ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( 0.0 );
@@ -740,7 +740,7 @@ Void TAppEncTop::xInitLibCfg()
     }
   }
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   else if( m_uiMultiviewMvRegMode )
   {
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
@@ -827,7 +827,7 @@ Void TAppEncTop::xCreateLib()
         m_acTVideoIOYuvDepthReconFileList[iViewIdx]->open(m_pchDepthReconFileList[iViewIdx], true, m_uiOutputBitDepth, m_uiInternalBitDepth);  // write mode
       m_acTEncDepthTopList[iViewIdx]->create();
     }
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     else if( m_uiMultiviewMvRegMode )
     {
       m_acTVideoIOYuvDepthInputFileList[iViewIdx]->open( m_pchDepthInputFileList[iViewIdx],     false, m_uiInputBitDepth, m_uiInternalBitDepth );  // read  mode
@@ -974,7 +974,7 @@ Void TAppEncTop::encode()
   pcPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
   pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   if( m_uiMultiviewMvRegMode )
   {
     pcPdmDepthOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
@@ -994,14 +994,14 @@ Void TAppEncTop::encode()
         // read input YUV file
         m_acTVideoIOYuvInputFileList[iViewIdx]->read( pcPicYuvOrg, m_aiPad );
       
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
         if( m_uiMultiviewMvRegMode && iViewIdx )
         {
           m_acTVideoIOYuvDepthInputFileList[iViewIdx]->read( pcPdmDepthOrg, m_aiPad, m_bUsingDepthMaps );
         }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
         m_acTEncTopList[iViewIdx]->initNewPic( pcPicYuvOrg, ( m_uiMultiviewMvRegMode && iViewIdx ? pcPdmDepthOrg : 0 ) );
 #else
         m_acTEncTopList[iViewIdx]->initNewPic( pcPicYuvOrg );
@@ -1150,7 +1150,7 @@ Void TAppEncTop::encode()
       }
 #endif
 
-#if HHI_INTERVIEW_SKIP || HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTERVIEW_SKIP || H3D_IVMP || HHI_INTER_VIEW_RESIDUAL_PRED
       for( Int iViewIdx = 0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
         if( iViewIdx < (Int)m_acTEncTopList.size() && m_acTEncTopList[iViewIdx] )

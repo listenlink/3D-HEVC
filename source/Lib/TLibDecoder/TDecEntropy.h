@@ -98,7 +98,7 @@ public:
 
   virtual Void  parseTerminatingBit       ( UInt& ruilsLast )                                     = 0;
   
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   virtual Void parseMVPIdx        ( Int& riMVPIdx, Int iNumAMVPCands ) = 0;
 #else
   virtual Void parseMVPIdx        ( Int& riMVPIdx ) = 0;

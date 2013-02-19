@@ -408,7 +408,7 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg, TComPicYuv* pcOrgPdmDepth )
 #endif
   pcPicCurr->setScaleOffset( m_aaiCodedScale, m_aaiCodedOffset );
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   if( m_uiMultiviewMvRegMode )
   {
     AOF( pcOrgPdmDepth );
@@ -485,7 +485,7 @@ Void TEncTop::encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 }
 
 
-#if HHI_INTERVIEW_SKIP || HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTERVIEW_SKIP || H3D_IVMP || HHI_INTER_VIEW_RESIDUAL_PRED
 Void
 TEncTop::deleteExtraPicBuffers( Int iPoc )
 {
@@ -503,7 +503,7 @@ TEncTop::deleteExtraPicBuffers( Int iPoc )
   AOF( pcPic );
   if ( pcPic )
   {
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
     pcPic->removeOrgDepthMapBuffer();
 #endif
 #if HHI_INTER_VIEW_RESIDUAL_PRED
@@ -593,7 +593,7 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   m_iPOCLast++;
   m_iNumPicRcvd++;
   
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   if( m_uiMultiviewMvRegMode )
   {
     rpcPic->addOrgDepthMapBuffer();
@@ -800,7 +800,7 @@ Void TEncTop::xInitSPS()
     if( m_viewId )
     {
 #if DEPTH_MAP_GENERATION
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
       m_cSPS.setPredDepthMapGeneration( m_viewId, false, m_uiPredDepthMapGeneration, m_uiMultiviewMvPredMode, m_uiPdmPrecision, m_aaiPdmScaleNomDelta, m_aaiPdmOffset );
 #else
       m_cSPS.setPredDepthMapGeneration( m_viewId, false, m_uiPredDepthMapGeneration, 0, m_uiPdmPrecision, m_aaiPdmScaleNomDelta, m_aaiPdmOffset );
