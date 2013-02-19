@@ -397,7 +397,7 @@ Void TDecTop::destroy()
 #if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator.destroy();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_cResidualGenerator.destroy();
 #endif
 
@@ -414,7 +414,7 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
 #if DEPTH_MAP_GENERATION
                     , &m_cDepthMapGenerator
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                     , &m_cResidualGenerator
 #endif
     );
@@ -428,7 +428,7 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
   m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
 #endif
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
 #endif
 }
@@ -464,7 +464,7 @@ Void TDecTop::deletePicBuffer ( )
   }
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void
 TDecTop::deleteExtraPicBuffers( Int iPoc )
 {
@@ -854,7 +854,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       pcDMG0->create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement, PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
     }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     m_cResidualGenerator.create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
 #endif
   }

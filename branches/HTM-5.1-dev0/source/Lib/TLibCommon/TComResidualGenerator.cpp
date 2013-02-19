@@ -43,7 +43,7 @@
 #include "TComResidualGenerator.h"
 
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 
 
 TComResidualGenerator::TComResidualGenerator()
@@ -742,5 +742,5 @@ TComResidualGenerator::xDumpResidual( TComPic* pcPic, char* pFilenameBase )
 }
 
 
-#endif // HHI_INTER_VIEW_RESIDUAL_PRED
+#endif // H3D_IVRP
 

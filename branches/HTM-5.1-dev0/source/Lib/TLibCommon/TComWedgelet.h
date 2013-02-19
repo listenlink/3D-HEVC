@@ -49,7 +49,7 @@ enum WedgeResolution
   HALF_PEL
 };
 
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
 #define NUM_WEDGE_REFINES 8
 #define NO_IDX MAX_UINT
 #endif
@@ -66,7 +66,7 @@ private:
   UChar           m_uhYe;                       // line end   Y pos
   UChar           m_uhOri;                      // orientation index
   WedgeResolution m_eWedgeRes;                  // start/end pos resolution
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
   Bool            m_bIsCoarse; 
   UInt            m_uiAng;
 #endif
@@ -98,7 +98,7 @@ public:
   UChar           getEndX    () { return m_uhXe; }
   UChar           getEndY    () { return m_uhYe; }
   UChar           getOri     () { return m_uhOri; }
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
   Bool            getIsCoarse() { return m_bIsCoarse; }
   UInt            getAng     () { return m_uiAng; }
   Void            findClosetAngle();
@@ -152,7 +152,7 @@ public:
 // type definition wedgelet reference list
 typedef std::vector<TComWedgeRef> WedgeRefList;
 
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
 // ====================================================================================================================
 // Class definition TComWedgeNode
 // ====================================================================================================================

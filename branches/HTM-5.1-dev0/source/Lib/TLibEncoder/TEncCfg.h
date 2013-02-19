@@ -331,7 +331,7 @@ protected:
   UInt        m_uiMultiviewMvRegMode;
   Double      m_dMultiviewMvRegLambdaScale;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt        m_uiMultiviewResPredMode;
 #endif
 
@@ -412,7 +412,7 @@ public:
   Void      setMultiviewMvRegMode           ( UInt  u )      { m_uiMultiviewMvRegMode       = u; }
   Void      setMultiviewMvRegLambdaScale    ( Double d)      { m_dMultiviewMvRegLambdaScale = d; }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void      setMultiviewResPredMode         ( UInt  u )      { m_uiMultiviewResPredMode     = u; }
 #endif
   

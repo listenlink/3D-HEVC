@@ -71,7 +71,7 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   m_ppcResiYuvTemp = new TComYuv*[m_uhTotalDepth-1];
   m_ppcRecoYuvTemp = new TComYuv*[m_uhTotalDepth-1];
   m_ppcOrigYuv     = new TComYuv*[m_uhTotalDepth-1];
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_ppcResPredTmp  = new TComYuv*[m_uhTotalDepth-1];
 #endif
   
@@ -100,7 +100,7 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
     m_ppcRecoYuvTemp[i] = new TComYuv; m_ppcRecoYuvTemp[i]->create(uiWidth, uiHeight);
     
     m_ppcOrigYuv    [i] = new TComYuv; m_ppcOrigYuv    [i]->create(uiWidth, uiHeight);
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     m_ppcResPredTmp [i] = new TComYuv; m_ppcResPredTmp [i]->create(uiWidth, uiHeight);
 #endif
   }
@@ -165,7 +165,7 @@ Void TEncCu::destroy()
     {
       m_ppcOrigYuv[i]->destroy();     delete m_ppcOrigYuv[i];     m_ppcOrigYuv[i] = NULL;
     }
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     if(m_ppcResPredTmp[i])
     {
       m_ppcResPredTmp [i]->destroy(); delete m_ppcResPredTmp[i];  m_ppcResPredTmp[i] = NULL;
@@ -218,7 +218,7 @@ Void TEncCu::destroy()
     delete [] m_ppcOrigYuv;
     m_ppcOrigYuv = NULL;
   }
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   if(m_ppcResPredTmp)
   {
     delete [] m_ppcResPredTmp;
@@ -600,7 +600,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #if MTK_MDIVRP_C0138
         Bool  bResPredAvailable   = false;
         UInt uiResPrdId = 0; 
@@ -626,7 +626,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
           rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
           // SKIP
@@ -657,7 +657,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           // 2Nx2N, NxN
           if ( !bEarlySkip )
           {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
             rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -678,7 +678,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if LGE_ILLUCOMP_B0045
          }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
         } // uiResPrdId
 #endif
       } // != I_SLICE
@@ -737,7 +737,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // do inter modes, NxN, 2NxN, and Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #if MTK_MDIVRP_C0138
         Bool  bResPredAvailable   = false;
         UInt uiResPrdId = 0; 
@@ -775,7 +775,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 if(bTrySplit)
                 {
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -798,7 +798,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
               if(doNotBlockPu)
               {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                 rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -825,7 +825,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
               if(doNotBlockPu)
               {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                 rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -871,7 +871,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -890,7 +890,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -920,7 +920,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -939,7 +939,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -971,7 +971,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -990,7 +990,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -1016,7 +1016,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -1035,7 +1035,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 }
                 if(doNotBlockPu)
                 {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if FIX_LGE_ILLUCOMP_B0045
@@ -1055,7 +1055,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
 #else
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
             rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1064,7 +1064,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
 #endif
             rpcTempCU->initEstData( uiDepth, iQP );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
             rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1073,7 +1073,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
 #endif
             rpcTempCU->initEstData( uiDepth, iQP );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
             rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1082,7 +1082,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
 #endif
             rpcTempCU->initEstData( uiDepth, iQP );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
             rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1098,7 +1098,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if LGE_ILLUCOMP_B0045
          }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
         } // uiResPrdId
 #endif
       } // != I_SLICE
@@ -1804,7 +1804,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
         );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
     m_pcEntropyCoder->encodeResPredFlag( pcCU, uiAbsPartIdx, 0 );
 #endif
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
@@ -1839,7 +1839,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
         );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
     if( !pcCU->isIntra( uiAbsPartIdx ) )
     {
       m_pcEntropyCoder->encodeResPredFlag( pcCU, uiAbsPartIdx, 0 );
@@ -1879,7 +1879,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
   Int numValidMergeCand = 0;
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
   Bool  bResPrdAvail  = rpcTempCU->getResPredAvail( 0 );
   Bool  bResPrdFlag   = rpcTempCU->getResPredFlag ( 0 );
 #endif
@@ -1976,7 +1976,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #if MTK_MDIVRP_C0138
           rpcTempCU->setResPredAvailSubParts(bResPredAvail, 0, 0, uhDepth);
 #else
@@ -2054,7 +2054,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
             m_ppcResiYuvTemp[uhDepth],
             m_ppcResiYuvBest[uhDepth],
             m_ppcRecoYuvTemp[uhDepth],
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                                                      m_ppcResPredTmp [uhDepth],
 #endif
             (uiNoResidual? true:false) );     
@@ -2107,20 +2107,20 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   rpcTempCU->setDepthSubParts( uhDepth, 0 );
   
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Bool  bResPrdAvail  = rpcTempCU->getResPredAvail( 0 );
   Bool  bResPrdFlag   = rpcTempCU->getResPredFlag ( 0 );
 #endif
   
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   rpcTempCU->setResPredAvailSubParts( bResPrdAvail, 0, 0, uhDepth );
   rpcTempCU->setResPredFlagSubParts ( bResPrdFlag,  0, 0, uhDepth );
 #endif
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
   
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #if !LG_RESTRICTEDRESPRED_M24766
   if( rpcTempCU->getResPredFlag( 0 ) )
   { // subtract residual prediction from original in motion search
@@ -2148,7 +2148,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #if !LG_RESTRICTEDRESPRED_M24766
   if( rpcTempCU->getResPredFlag( 0 ) )
   { // add residual prediction to original again
@@ -2171,7 +2171,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
                                              m_ppcResiYuvTemp[uhDepth],
                                              m_ppcResiYuvBest[uhDepth],
                                              m_ppcRecoYuvTemp[uhDepth],
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                                              m_ppcResPredTmp [uhDepth],
 #endif
                                              bSkipRes );
@@ -2182,7 +2182,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
                                              m_ppcResiYuvTemp[uhDepth],
                                              m_ppcResiYuvBest[uhDepth],
                                              m_ppcRecoYuvTemp[uhDepth],
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                                              m_ppcResPredTmp [uhDepth],
 #endif
                                              false );
@@ -2854,7 +2854,7 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
                                                m_ppcResiYuvTemp[uhDepth],
                                                m_ppcResiYuvBest[uhDepth],
                                                m_ppcRecoYuvTemp[uhDepth],
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                                                m_ppcResPredTmp [uhDepth],
 #endif
                                                bSkipResidual );

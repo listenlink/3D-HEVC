@@ -58,7 +58,7 @@
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #define NUM_RES_PRED_FLAG_CTX         4       ///< number of context for residual prediction flag
 #endif
 
@@ -190,7 +190,7 @@ INIT_MERGE_IDX_EXT[3][NUM_MERGE_IDX_EXT_CTX] =
   { 137, }, 
 };
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 static const UChar
 INIT_RES_PRED_FLAG[3][NUM_RES_PRED_FLAG_CTX] =
 {

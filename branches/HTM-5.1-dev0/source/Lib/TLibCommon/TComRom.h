@@ -187,7 +187,7 @@ extern const UChar           g_aucIntraSizeIdxToWedgeSize[7];
 extern       std::vector< std::vector<TComWedgelet> >  g_aacWedgeLists;
 extern       std::vector< std::vector<TComWedgeRef> >  g_aacWedgeRefLists;
 
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
 extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
 extern       std::vector< std::vector<TComWedgeNode> >       g_aacWedgeNodeLists;
 #endif

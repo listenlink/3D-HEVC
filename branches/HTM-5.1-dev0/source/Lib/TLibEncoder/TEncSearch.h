@@ -207,7 +207,7 @@ public:
 #endif
                                 );
   
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   /// encode residual and compute rd-cost for inter mode
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,
                                   TComYuv*    pcYuvOrg,
@@ -400,7 +400,7 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
-#if HHIQC_DMMFASTSEARCH_B0039
+
   Void xSearchWedgeFullMinDistFast( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeNodeList* pacWedgeNodeList, 
@@ -411,7 +411,6 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
-#endif
   Void xSearchWedgePredDirMinDist ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeList*     pacWedgeList, 
@@ -421,7 +420,7 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Int&           riWedgeDeltaEnd );
-#endif
+#endif // HHI_DMM_WEDGE_INTRA
 #if HHI_DMM_PRED_TEX
   Void findWedgeTexMinDist        ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,
@@ -450,7 +449,7 @@ protected:
                                     Int&           riDeltaDC2,
                                     Bool           bAboveAvail,
                                     Bool           bLeftAvail );
-#endif
+#endif // HHI_DMM_PRED_TEX
 
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)

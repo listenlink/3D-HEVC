@@ -119,7 +119,7 @@ Void TEncTop::create ()
 #if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement, PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_cResidualGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
 #endif
 
@@ -250,7 +250,7 @@ Void TEncTop::destroy ()
 #if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator. destroy();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_cResidualGenerator. destroy();
 #endif
 
@@ -346,7 +346,7 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
   m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
 #endif
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
 #endif
 
@@ -472,7 +472,7 @@ Void TEncTop::encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 }
 
 
-#if HHI_INTERVIEW_SKIP || H3D_IVMP || HHI_INTER_VIEW_RESIDUAL_PRED
+#if HHI_INTERVIEW_SKIP || H3D_IVMP || H3D_IVRP
 Void
 TEncTop::deleteExtraPicBuffers( Int iPoc )
 {
@@ -493,7 +493,7 @@ TEncTop::deleteExtraPicBuffers( Int iPoc )
 #if H3D_IVMP
     pcPic->removeOrgDepthMapBuffer();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     pcPic->removeResidualBuffer   ();
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -715,7 +715,7 @@ Void TEncTop::xInitSPS()
 #if DEPTH_MAP_GENERATION
     m_cSPS.setPredDepthMapGeneration( m_viewId, true );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     m_cSPS.setMultiviewResPredMode  ( 0 );
 #endif
   }
@@ -735,7 +735,7 @@ Void TEncTop::xInitSPS()
       m_cSPS.setPredDepthMapGeneration( m_viewId, false, m_uiPredDepthMapGeneration, 0, m_uiPdmPrecision, m_aaiPdmScaleNomDelta, m_aaiPdmOffset );
 #endif
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       m_cSPS.setMultiviewResPredMode  ( m_uiMultiviewResPredMode );
 #endif
     }
@@ -744,7 +744,7 @@ Void TEncTop::xInitSPS()
 #if DEPTH_MAP_GENERATION
       m_cSPS.setPredDepthMapGeneration( m_viewId, false );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       m_cSPS.setMultiviewResPredMode  ( 0 );
 #endif
     }

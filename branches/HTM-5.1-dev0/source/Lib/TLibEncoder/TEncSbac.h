@@ -205,7 +205,7 @@ public:
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -262,7 +262,7 @@ private:
 #endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   ContextModel3DBuffer m_cResPredFlagSCModel;
 #endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;

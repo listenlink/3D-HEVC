@@ -693,7 +693,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if H3D_IVMP
         WRITE_UVLC( pcSPS->getMultiviewMvPredMode(), "multi_view_mv_pred_mode" );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
         WRITE_FLAG  ( pcSPS->getMultiviewResPredMode(), "multi_view_residual_pred_mode" );
 #endif
       }
@@ -1292,7 +1292,7 @@ Void TEncCavlc::codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void
 TEncCavlc::codeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

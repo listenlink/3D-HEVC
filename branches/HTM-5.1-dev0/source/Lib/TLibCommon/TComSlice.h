@@ -53,7 +53,7 @@ class TComTrQuant;
 #if DEPTH_MAP_GENERATION
 class TComDepthMapGenerator;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 class TComResidualGenerator;
 #endif
 // ====================================================================================================================
@@ -388,14 +388,14 @@ private:
 #if H3D_IVMP
   UInt  m_uiMultiviewMvPredMode;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt  m_uiMultiviewResPredMode;
 #endif
 
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator* m_pcDepthMapGenerator;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComResidualGenerator* m_pcResidualGenerator;
 #endif
 
@@ -638,7 +638,7 @@ public:
 #if DEPTH_MAP_GENERATION
   Void setPredDepthMapGeneration( UInt uiViewId, Bool bIsDepth, UInt uiPdmGenMode = 0, UInt uiPdmMvPredMode = 0, UInt uiPdmPrec = 0, Int** aaiPdmScaleNomDelta = 0, Int** aaiPdmOffset = 0 );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void  setMultiviewResPredMode  ( UInt uiResPrdMode ) { m_uiMultiviewResPredMode = uiResPrdMode; }
 #endif
 
@@ -652,7 +652,7 @@ public:
 #if H3D_IVMP
   UInt  getMultiviewMvPredMode   ()          { return m_uiMultiviewMvPredMode;    }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt  getMultiviewResPredMode  ()          { return m_uiMultiviewResPredMode;   }
 #endif
 
@@ -660,7 +660,7 @@ public:
   Void                    setDepthMapGenerator( TComDepthMapGenerator* pcDepthMapGenerator )  { m_pcDepthMapGenerator = pcDepthMapGenerator; }
   TComDepthMapGenerator*  getDepthMapGenerator()                                              { return m_pcDepthMapGenerator; }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
 #endif

@@ -454,7 +454,7 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
 Void
 TEncEntropy::encodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD )
 {

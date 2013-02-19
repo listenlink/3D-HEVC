@@ -213,7 +213,7 @@ TComDataCU::TComDataCU()
   m_piContourPredTexDeltaDC1 = NULL;
   m_piContourPredTexDeltaDC2 = NULL;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_pbResPredAvailable = NULL;
   m_pbResPredFlag      = NULL;
 #endif
@@ -284,7 +284,7 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
 #if MERL_VSP_C0152
     m_piVSPIndex         = (Char*  )xMalloc(Char,   uiNumPartition);
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     m_pbResPredAvailable = (Bool*  )xMalloc(Bool,   uiNumPartition);
     m_pbResPredFlag      = (Bool*  )xMalloc(Bool,   uiNumPartition);
 #endif
@@ -442,7 +442,7 @@ Void TComDataCU::destroy()
     if ( m_piVSPIndex         ) { xFree(m_piVSPIndex);          m_piVSPIndex        = NULL; }
 #endif
     if ( m_puhMergeIndex      ) { xFree(m_puhMergeIndex);       m_puhMergeIndex     = NULL; }
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     if ( m_pbResPredAvailable ) { xFree(m_pbResPredAvailable);  m_pbResPredAvailable= NULL; }
     if ( m_pbResPredFlag      ) { xFree(m_pbResPredFlag);       m_pbResPredFlag     = NULL; }
 #endif
@@ -712,7 +712,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #if HHI_INTERVIEW_SKIP
     memset (m_pbRenderable             + firstElement, false, sizeof( Bool ) * numElements) ;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     memset( m_pbResPredAvailable       + firstElement, 0    , sizeof( Bool ) * numElements );
     memset( m_pbResPredFlag            + firstElement, 0    , sizeof( Bool ) * numElements );
 #endif
@@ -854,7 +854,7 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
 #if MERL_VSP_C0152
       m_piVSPIndex[ui] = 0;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       m_pbResPredAvailable[ui] = 0;
       m_pbResPredFlag[ui]      = 0;
 #endif
@@ -965,7 +965,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #if MERL_VSP_C0152
   memset( m_piVSPIndex,         0, iSizeInChar );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   memset( m_pbResPredAvailable, 0, iSizeInBool  );
   memset( m_pbResPredFlag,      0, iSizeInBool  );
 #endif
@@ -1079,7 +1079,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_piContourPredTexDeltaDC1[ui]=pcCU->getContourPredTexDeltaDC1(uiPartOffset+ui);
       m_piContourPredTexDeltaDC2[ui]=pcCU->getContourPredTexDeltaDC2(uiPartOffset+ui);
 #endif    
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       m_pbResPredAvailable[ui] = pcCU->m_pbResPredAvailable[ uiPartOffset + ui ];
       m_pbResPredFlag     [ui] = pcCU->m_pbResPredFlag     [ uiPartOffset + ui ];
 #endif
@@ -1201,7 +1201,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if MERL_VSP_C0152
   m_piVSPIndex          = pcCU->getVSPIndex()         + uiPart;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_pbResPredAvailable  = pcCU->getResPredAvail()     + uiPart;
   m_pbResPredFlag       = pcCU->getResPredFlag ()     + uiPart;
 #endif
@@ -1347,7 +1347,7 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
 #if MERL_VSP_C0152
   m_piVSPIndex         = pcCU->getVSPIndex()              + uiAbsPartIdx;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_pbResPredAvailable = pcCU->getResPredAvail()          + uiAbsPartIdx;
   m_pbResPredFlag      = pcCU->getResPredFlag ()          + uiAbsPartIdx;
 #endif
@@ -1398,7 +1398,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
 #if MERL_VSP_C0152
   memcpy( m_piVSPIndex          + uiOffset, pcCU->getVSPIndex(),          iSizeInChar );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   memcpy( m_pbResPredAvailable  + uiOffset, pcCU->getResPredAvail(),      iSizeInBool  );
   memcpy( m_pbResPredFlag       + uiOffset, pcCU->getResPredFlag(),       iSizeInBool  );
 #endif
@@ -1537,7 +1537,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 #if MERL_VSP_C0152
   memcpy( rpcCU->getVSPIndex()          + m_uiAbsIdxInLCU, m_piVSPIndex,         iSizeInChar );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   memcpy( rpcCU->getResPredAvail()      + m_uiAbsIdxInLCU, m_pbResPredAvailable,  iSizeInBool  );
   memcpy( rpcCU->getResPredFlag()       + m_uiAbsIdxInLCU, m_pbResPredFlag,       iSizeInBool  );
 #endif
@@ -1668,7 +1668,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
 #if MERL_VSP_C0152
   memcpy( rpcCU->getVSPIndex()          + uiPartOffset, m_piVSPIndex,         iSizeInChar );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   memcpy( rpcCU->getResPredAvail()      + uiPartOffset, m_pbResPredAvailable,  iSizeInBool  );
   memcpy( rpcCU->getResPredFlag()       + uiPartOffset, m_pbResPredFlag,       iSizeInBool  );
 #endif
@@ -2622,7 +2622,7 @@ UInt TComDataCU::getQuadtreeTULog2MinSizeInCU( UInt absPartIdx )
 }
 
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 UInt
 TComDataCU::getCtxResPredFlag( UInt uiAbsPartIdx )
 {
@@ -2948,7 +2948,7 @@ Void TComDataCU::setVSPIndexSubParts ( Char iVSPIdx, UInt uiAbsPartIdx, UInt uiP
 }
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void TComDataCU::setResPredAvailSubParts( Bool bResPredAvailable, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   setSubPart( bResPredAvailable, m_pbResPredAvailable, uiAbsPartIdx, uiDepth, uiPartIdx );
@@ -3627,52 +3627,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   PartSize cCurPS = getPartitionSize( uiAbsPartIdx );
   deriveLeftRightTopIdxGeneral( cCurPS, uiAbsPartIdx, uiPUIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdxGeneral( cCurPS, uiAbsPartIdx, uiPUIdx, uiPartIdxLB );
-#if !FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
-#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
-  if( m_pcSlice->getIsDepth())
-  {
-    UInt uiPartIdxCenter;
-    xDeriveCenterIdx( cCurPS, uiPUIdx, uiPartIdxCenter );    
-    TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
-    if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
-    {
-      abCandIsInter[iCount] = true;      
-      puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
-      if( ( puhInterDirNeighbours[iCount] & 1 ) == 1 )
-      {
-        pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
-        TComMv cMvPred = pcMvFieldNeighbours[iCount<<1].getMv();
-        const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
-        cMvPred+=cAdd;
-        cMvPred>>=2;
-        clipMv(cMvPred);
-        pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
-      }
-      if ( getSlice()->isInterB() )
-      {
-        if( ( puhInterDirNeighbours[iCount] & 2 ) == 2 )
-        {
-          pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
-          TComMv cMvPred = pcMvFieldNeighbours[(iCount<<1)+1].getMv();
-          const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
-          cMvPred+=cAdd;
-          cMvPred>>=2;
-          clipMv(cMvPred);
-          pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
-        }
-      }
-#if FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
-      xInheritVspMode( pcTextureCU, uiPartIdxCenter, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo ) ;
-#endif
-      if ( mrgCandIdx == iCount )
-      {
-        return;
-      }
-      iCount ++;
-    }
-  }
-#endif
-#endif
 
 #if H3D_IVMP
   Bool bNoPdmMerge   = ( m_pcSlice->getSPS()->getViewId() == 0 || ( m_pcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE ) != PDM_USE_FOR_MERGE );
@@ -3712,7 +3666,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     bDVAvail = false;
 #endif
   }
-#if FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
+
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
   if( m_pcSlice->getIsDepth())
   {
@@ -3746,7 +3700,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
         }
       }
-#if FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152
+#if MERL_VSP_C0152
       xInheritVspMode( pcTextureCU, uiPartIdxCenter, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo ) ;
 #endif
       if ( mrgCandIdx == iCount )
@@ -3757,7 +3711,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     }
   }
 #endif
-#endif
+
   Int iPdmDir[2] = {0, 0};
 #if QC_AMVP_MRG_UNIFY_IVCAN_C0051
   getUnifiedMvPredCan(uiPUIdx, REF_PIC_LIST_0, 0, aiPdmRefIdx, acPdmMv, &cDisInfo, iPdmDir, true);
@@ -3995,7 +3949,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     }
 #endif
 #if H3D_IVMP
-    Bool bRemoveSpa = false; //prunign to inter-view candidates
+    Bool bRemoveSpa = false; //pruning to inter-view candidates
     Int  iCnloop    = bLeftAvai? (iCount-2): (iCount-1);
     for(; iCnloop >= 0; iCnloop --)
     {
@@ -7955,7 +7909,7 @@ TComDataCU::getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int 
 }
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Bool
 TComDataCU::getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv )
 {

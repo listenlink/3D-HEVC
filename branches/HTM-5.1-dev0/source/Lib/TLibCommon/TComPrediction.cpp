@@ -2859,7 +2859,6 @@ UInt TComPrediction::getBestWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 #if LGE_DMM3_SIMP_C0044
   ruiIntraTabIdx  = 0;
 #endif
-#if HHIQC_DMMFASTSEARCH_B0039
   TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
   TComDataCU* pcColTexCU = pcPicTex->getCU(pcCU->getAddr());
   UInt      uiTexPartIdx = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
@@ -2948,21 +2947,6 @@ UInt TComPrediction::getBestWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
     }
 #endif
   }
-#else
-  for( UInt uiIdx = 0; uiIdx < pacWedgeList->size(); uiIdx++ )
-  {
-    calcWedgeDCs       ( &(pacWedgeList->at(uiIdx)), piRefBlkY, uiWidth,      iDC1, iDC2 );
-    assignWedgeDCs2Pred( &(pacWedgeList->at(uiIdx)), piPred,    uiPredStride, iDC1, iDC2 );
-
-    UInt uiActDist = cWedgeDist.getDistPart( piPred, uiPredStride, piRefBlkY, uiWidth, uiWidth, uiHeight, WedgeDist_SAD );
-
-    if( uiActDist < uiBestDist || uiBestDist == MAX_UINT )
-    {
-      uiBestDist   = uiActDist;
-      uiBestTabIdx = uiIdx;
-    }
-  }
-#endif
 
   cPredYuv.destroy();
   cTempYuv.destroy();
@@ -3066,7 +3050,7 @@ Void TComPrediction::xPredIntraContourTex( TComDataCU* pcCU, UInt uiAbsPartIdx, 
   pcContourWedge->destroy();
   delete pcContourWedge;
 }
-#endif
+#endif // HHI_DMM_PRED_TEX
 
 #if HHI_DMM_WEDGE_INTRA
 UInt TComPrediction::getBestContinueWedge( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Int iDeltaEnd )

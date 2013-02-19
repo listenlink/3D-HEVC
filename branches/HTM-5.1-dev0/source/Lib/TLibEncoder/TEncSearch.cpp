@@ -4756,7 +4756,7 @@ Void TEncSearch::xPatternSearchFracDIF(TComDataCU* pcCU,
  * \param bSkipRes
  * \returns Void
  */
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg, TComYuv* pcYuvPred, TComYuv*& rpcYuvResi, TComYuv*& rpcYuvResiBest, TComYuv*& rpcYuvRec, TComYuv*& rpcYuvResPrd, Bool bSkipRes )
 #else
 Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg, TComYuv* pcYuvPred, TComYuv*& rpcYuvResi, TComYuv*& rpcYuvResiBest, TComYuv*& rpcYuvRec, Bool bSkipRes )
@@ -4790,7 +4790,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       rpcYuvRec->clip( uiWidth, uiHeight );
     }
 #else
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     // add residual prediction
     if( pcCU->getResPredFlag( 0 ) )
     {
@@ -4852,7 +4852,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 #endif
       );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
 #endif
 #if HHI_MPI
@@ -4927,7 +4927,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 #else
   rpcYuvResi->subtract( pcYuvOrg, pcYuvPred, 0, uiWidth );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
     // subtract residual prediction
     if( pcCU->getResPredFlag( 0 ) )
     {
@@ -4942,7 +4942,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   }
 #else
   rpcYuvResi->subtract( pcYuvOrg, pcYuvPred, 0, uiWidth );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   // add residual prediction
   if( pcCU->getResPredFlag( 0 ) )
   {
@@ -5133,7 +5133,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     ::memcpy( pcCU->getArlCoeffCr(), m_pcQTTempArlCoeffCr, uiWidth * uiHeight * sizeof( Int ) >> 2 );
 #endif
   }
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
   // add residual prediction
   if( pcCU->getResPredFlag( 0 ) )
   {
@@ -6169,7 +6169,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #endif
       );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
 #endif
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
@@ -6196,7 +6196,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #endif
       );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
     m_pcEntropyCoder->encodeResPredFlag( pcCU, 0, 0, true );
 #endif
 #if HHI_MPI
@@ -6791,12 +6791,8 @@ Void TEncSearch::findWedgeFullMinDist( TComDataCU*  pcCU,
 
   WedgeList* pacWedgeList = &g_aacWedgeLists[(g_aucConvertToBit[uiWidth])];
   Dist iDist = RDO_DIST_MAX;
-#if HHIQC_DMMFASTSEARCH_B0039
   WedgeNodeList* pacWedgeNodeList = &g_aacWedgeNodeLists[(g_aucConvertToBit[uiWidth])];
   xSearchWedgeFullMinDistFast( pcCU, uiAbsPtIdx, pacWedgeNodeList, pacWedgeList, piOrig, uiStride, uiWidth, uiHeight, ruiTabIdx, iDist );
-#else
-  xSearchWedgeFullMinDist( pcCU, uiAbsPtIdx, pacWedgeList, piOrig, uiStride, uiWidth, uiHeight, ruiTabIdx, iDist );
-#endif
 
   TComWedgelet* pcBestWedgelet = &(pacWedgeList->at(ruiTabIdx));
   xGetWedgeDeltaDCsMinDist( pcBestWedgelet, pcCU, uiAbsPtIdx, piOrig, piPredic, uiStride, uiWidth, uiHeight, riDeltaDC1, riDeltaDC2, bAboveAvail, bLeftAvail );
@@ -6907,7 +6903,6 @@ Void TEncSearch::xSearchWedgeFullMinDist( TComDataCU* pcCU, UInt uiAbsPtIdx, Wed
   return;
 }
 
-#if HHIQC_DMMFASTSEARCH_B0039
 Void TEncSearch::xSearchWedgeFullMinDistFast( TComDataCU* pcCU, UInt uiAbsPtIdx, WedgeNodeList* pacWedgeNodeList, WedgeList* pacWedgeList, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Dist& riDist )
 {
   ruiTabIdx = 0;
@@ -7026,7 +7021,6 @@ Void TEncSearch::xSearchWedgeFullMinDistFast( TComDataCU* pcCU, UInt uiAbsPtIdx,
   cPredYuv.destroy();
   return;
 }
-#endif
 
 Void TEncSearch::xSearchWedgePredDirMinDist( TComDataCU* pcCU, UInt uiAbsPtIdx, WedgeList* pacWedgeList, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd )
 {
@@ -7117,7 +7111,8 @@ Void TEncSearch::xSearchWedgePredDirMinDist( TComDataCU* pcCU, UInt uiAbsPtIdx, 
   cPredYuv.destroy();
   return;
 }
-#endif
+#endif //  HHI_DMM_WEDGE_INTRA
+
 #if HHI_DMM_PRED_TEX
 Void TEncSearch::findWedgeTexMinDist( TComDataCU*  pcCU, 
                                       UInt         uiAbsPtIdx, 
@@ -7170,7 +7165,7 @@ Void TEncSearch::findContourPredTex( TComDataCU*  pcCU,
   pcContourWedge->destroy();
   delete pcContourWedge;
 }
-#endif
+#endif // HHI_DMM_PRED_TEX
 
 #if LGE_EDGE_INTRA_A0070
 Bool TEncSearch::xCheckTerminatedEdge( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight )
@@ -8270,7 +8265,7 @@ Void TEncSearch::xAssignEdgeIntraDeltaDCs( TComDataCU*   pcCU,
     iDeltaDC0 = iFullDeltaDC0;
     iDeltaDC1 = iFullDeltaDC1;
   }
-#endif
+#endif // HHI_VSO
 
   xDeltaDCQuantScaleDown( pcCU, iDeltaDC0 );
   xDeltaDCQuantScaleDown( pcCU, iDeltaDC1 );
@@ -8278,8 +8273,8 @@ Void TEncSearch::xAssignEdgeIntraDeltaDCs( TComDataCU*   pcCU,
   pcCU->setEdgeDeltaDC0( uiAbsPartIdx, iDeltaDC0 );
   pcCU->setEdgeDeltaDC1( uiAbsPartIdx, iDeltaDC1 );
 }
-#endif
-#endif
+#endif // LGE_EDGE_INTRA_DELTA_DC
+#endif // LGE_EDGE_INTRA_A0070
   
 #if RWTH_SDC_DLT_B0036
 Void TEncSearch::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride )
@@ -8312,7 +8307,7 @@ Void TEncSearch::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pe
     pOrig  += uiStride*subSamplePix;
     pMask  += uiMaskStride*subSamplePix;
   }
-#else
+#else //HS_REFERENCE_SUBSAMPLE_C0154
   for (Int y=0; y<uiSize; y++)
   {
     for (Int x=0; x<uiSize; x++)
@@ -8327,7 +8322,7 @@ Void TEncSearch::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pe
     pOrig  += uiStride;
     pMask  += uiMaskStride;
   }
-#endif
+#endif // HS_REFERENCE_SUBSAMPLE_C0154
   // compute mean for each segment
   for( UChar ucSeg = 0; ucSeg < uiNumSegments; ucSeg++ )
   {
@@ -8337,6 +8332,6 @@ Void TEncSearch::xAnalyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pe
       rpSegMeans[ucSeg] = 0;  // this happens for zero-segments
   }
 }
-#endif
+#endif // RWTH_SDC_DLT_B0036
 
 //! \}
