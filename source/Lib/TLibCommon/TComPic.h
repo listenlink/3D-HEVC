@@ -85,7 +85,7 @@ private:
   Bool        m_bRapCheck;
 #endif
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComPicYuv*           m_pcResidual;             //  residual buffer (coded or inter-view predicted residual)
 #endif
 
@@ -172,7 +172,7 @@ public:
 #endif
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComPicYuv*   getResidual()         { return  m_pcResidual; }
 #endif
 #if H3D_NBDV
@@ -252,7 +252,7 @@ public:
 #if H3D_IVMP
   Void          addOrgDepthMapBuffer    ();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void          addResidualBuffer       ();
 #endif
 #if DEPTH_MAP_GENERATION
@@ -261,7 +261,7 @@ public:
 #if H3D_IVMP
   Void          removeOrgDepthMapBuffer ();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void          removeResidualBuffer    ();
 #endif
 

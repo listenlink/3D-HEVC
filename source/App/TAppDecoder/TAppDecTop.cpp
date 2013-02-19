@@ -294,7 +294,7 @@ Void TAppDecTop::decode()
       } 
       if( ( viewDepthId == 0 && (viewDepthId != previousViewDepthId) ) || m_tDecTop.size() == 1 )
       {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
         for( Int i = 0; i < m_tDecTop.size(); i++ )
         {
           m_tDecTop[i]->deleteExtraPicBuffers( uiPOC[i] );

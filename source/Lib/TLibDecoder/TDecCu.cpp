@@ -53,7 +53,7 @@ TDecCu::TDecCu()
 {
   m_ppcYuvResi = NULL;
   m_ppcYuvReco = NULL;
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_ppcYuvResPred = NULL;
 #endif
   m_ppcCU      = NULL;
@@ -81,7 +81,7 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
   
   m_ppcYuvResi = new TComYuv*[m_uiMaxDepth-1];
   m_ppcYuvReco = new TComYuv*[m_uiMaxDepth-1];
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_ppcYuvResPred = new TComYuv*   [m_uiMaxDepth-1];
 #endif
   m_ppcCU      = new TComDataCU*[m_uiMaxDepth-1];
@@ -95,7 +95,7 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
     
     m_ppcYuvResi[ui] = new TComYuv;    m_ppcYuvResi[ui]->create( uiWidth, uiHeight );
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     m_ppcYuvResPred[ui] = new TComYuv;    m_ppcYuvResPred[ui]->create( uiWidth, uiHeight );
 #endif
     m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1) );
@@ -119,7 +119,7 @@ Void TDecCu::destroy()
   {
     m_ppcYuvResi[ui]->destroy(); delete m_ppcYuvResi[ui]; m_ppcYuvResi[ui] = NULL;
     m_ppcYuvReco[ui]->destroy(); delete m_ppcYuvReco[ui]; m_ppcYuvReco[ui] = NULL;
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     m_ppcYuvResPred[ui]->destroy(); delete m_ppcYuvResPred[ui]; m_ppcYuvResPred[ui] = NULL;
 #endif
     m_ppcCU     [ui]->destroy(); delete m_ppcCU     [ui]; m_ppcCU     [ui] = NULL;
@@ -127,7 +127,7 @@ Void TDecCu::destroy()
   
   delete [] m_ppcYuvResi; m_ppcYuvResi = NULL;
   delete [] m_ppcYuvReco; m_ppcYuvReco = NULL;
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   delete [] m_ppcYuvResPred; m_ppcYuvResPred = NULL;
 #endif
   delete [] m_ppcCU     ; m_ppcCU      = NULL;
@@ -408,7 +408,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if HHI_MPI
     }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
     m_pcEntropyDecoder->decodeResPredFlag( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
 #endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
@@ -459,7 +459,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
   if( !pcCU->isIntra( uiAbsPartIdx ) )
   {
     m_pcEntropyDecoder->decodeResPredFlag    ( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
@@ -690,7 +690,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED && !MTK_MDIVRP_C0138
+#if H3D_IVRP && !MTK_MDIVRP_C0138
   if( pcCU->getResPredFlag( 0 ) )
   {
     AOF( pcCU->getResPredAvail( 0 ) );
@@ -720,7 +720,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
   else
   {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #if MTK_MDIVRP_C0138
     if (pcCU->getMergeFlag(0) && pcCU->getMergeIndex(0)==0 && pcCU->getResPredAvail(0))
 #else

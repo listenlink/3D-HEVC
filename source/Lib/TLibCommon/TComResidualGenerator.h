@@ -49,7 +49,7 @@
 #include "TComTrQuant.h"
 
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 
 class TComResidualGenerator
 {
@@ -120,7 +120,7 @@ private:
 
 #endif // __TCOM_RESIDUAL_GENERATOR__
 
-#endif // HHI_INTER_VIEW_RESIDUAL_PRED
+#endif // H3D_IVRP
 
 
 

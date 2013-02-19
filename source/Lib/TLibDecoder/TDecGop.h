@@ -89,7 +89,7 @@ private:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  m_pcDepthMapGenerator;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComResidualGenerator*  m_pcResidualGenerator;
 #endif
   
@@ -117,7 +117,7 @@ public:
 #if DEPTH_MAP_GENERATION
                  ,TComDepthMapGenerator*  pcDepthMapGenerator
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
                 ,TComResidualGenerator*  pcResidualGenerator
 #endif
                  );

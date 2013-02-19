@@ -77,7 +77,7 @@ TEncGOP::TEncGOP()
 #if DEPTH_MAP_GENERATION
   m_pcDepthMapGenerator = NULL;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_pcResidualGenerator = NULL;
 #endif
   
@@ -130,7 +130,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 #if DEPTH_MAP_GENERATION
   m_pcDepthMapGenerator  = pcTEncTop->getDepthMapGenerator();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_pcResidualGenerator  = pcTEncTop->getResidualGenerator();
 #endif
   
@@ -735,7 +735,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if H3D_IVMP
       m_pcDepthMapGenerator->covertOrgDepthMap( pcPic );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       m_pcResidualGenerator->initViewComponent( pcPic );
 #endif
 
@@ -799,7 +799,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       
       pcSlice = pcPic->getSlice(0);
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       // set residual picture
       m_pcResidualGenerator->setRecResidualPic( pcPic );
 #endif

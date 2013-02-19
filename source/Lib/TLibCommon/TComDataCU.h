@@ -48,7 +48,7 @@
 #include "TComRdCost.h"
 #include "TComPattern.h"
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 #include "TComYuv.h"
 #endif
 
@@ -209,7 +209,7 @@ private:
 
   Int           m_numSucIPCM;         ///< the number of succesive IPCM blocks associated with the current log2CUSize
   Bool          m_lastCUSucIPCMFlag;  ///< True indicates that the last CU is IPCM and shares the same root as the current CU.  
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Bool*         m_pbResPredAvailable; ///< array of residual prediction available flags
   Bool*         m_pbResPredFlag;      ///< array of residual prediction flags
 #endif
@@ -559,7 +559,7 @@ public:
 #endif
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
 #endif //  H3D_IVMP 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Bool*         getResPredAvail         ()                        { return m_pbResPredAvailable;        }
   Bool          getResPredAvail         ( UInt uiIdx )            { return m_pbResPredAvailable[uiIdx]; }
   Void          setResPredAvail         ( UInt uiIdx, Bool b )    { m_pbResPredAvailable[uiIdx] = b;    }
@@ -572,7 +572,7 @@ public:
 
   Void          setResPredIndicator     ( Bool bAv, Bool bRP )    { m_pbResPredAvailable[0] = bAv; m_pbResPredFlag[0] = bRP; }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Bool          getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv = 0 );
 #endif
   // -------------------------------------------------------------------------------------------------------------------
@@ -698,7 +698,7 @@ public:
 #endif
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt          getCtxResPredFlag               ( UInt   uiAbsPartIdx                                 );
 #endif
   

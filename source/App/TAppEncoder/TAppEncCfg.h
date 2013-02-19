@@ -216,7 +216,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   UInt      m_uiMultiviewMvRegMode;                           ///< regularization for multiview motion vectors
   Double    m_dMultiviewMvRegLambdaScale;                     ///< lambda scale for multiview motion vectors regularization
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt      m_uiMultiviewResPredMode;          ///< using multiview residual prediction
 #endif
 

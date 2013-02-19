@@ -156,7 +156,7 @@ public:
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );

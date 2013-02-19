@@ -77,7 +77,7 @@ private:
   TComYuv**               m_ppcResiYuvTemp; ///< Temporary Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComYuv**               m_ppcResPredTmp;  ///< Temporary residual prediction for each depth
 #endif
 

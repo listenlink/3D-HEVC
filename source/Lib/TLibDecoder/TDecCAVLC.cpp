@@ -1491,7 +1491,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if DEPTH_MAP_GENERATION
       pcSPS->setPredDepthMapGeneration( 0, false );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
     pcSPS->setMultiviewResPredMode  ( 0 );
 #endif
     }
@@ -1506,7 +1506,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if DEPTH_MAP_GENERATION
         pcSPS->setPredDepthMapGeneration( uiCode, true );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       pcSPS->setMultiviewResPredMode  ( 0 );
 #endif
       }
@@ -1536,7 +1536,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if H3D_IVMP
         UInt uiMultiviewMvPredMode = 0;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       UInt uiMultiviewResPredMode = 0;
 #endif
         READ_UVLC( uiPredDepthMapGeneration, "Pdm_generation" );
@@ -1551,7 +1551,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if H3D_IVMP
           READ_UVLC( uiMultiviewMvPredMode, "multi_view_mv_pred_mode" );
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
           READ_FLAG( uiMultiviewResPredMode, "multi_view_residual_pred_mode" );
 #endif
         }
@@ -1561,7 +1561,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
         pcSPS->setPredDepthMapGeneration( uiViewId, false, uiPredDepthMapGeneration, 0, uiPdmPrecision, m_aaiTempPdmScaleNomDelta, m_aaiTempPdmOffset );
 #endif
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
       pcSPS->setMultiviewResPredMode  ( uiMultiviewResPredMode );
 #endif
       }
@@ -2380,7 +2380,7 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt ui
   assert(0);
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void
 TDecCavlc::parseResPredFlag( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth )
 {

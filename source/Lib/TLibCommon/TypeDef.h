@@ -55,12 +55,12 @@
 ///// ***** DMM *********
 #define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
 #define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
+                                              // HHIQC_DMMFASTSEARCH_B0039, fast Wedgelet search for DMM modes 1 and 3
+
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 
-#define HHIQC_DMMFASTSEARCH_B0039         1   // JCT3V-B0039: fast Wedgelet search for DMM modes 1 and 3 // --> weg 
-
 #define HHI_DMM_DELTADC_Q1_C0034          1   // JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
-#if HHIQC_DMMFASTSEARCH_B0039 && HHI_DMM_PRED_TEX
+#if ( HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA ) && HHI_DMM_PRED_TEX
 #define LGE_DMM3_SIMP_C0044               1
 #endif
 #define FIX_DMM_CTX_INIT_C0034            1   // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
@@ -85,23 +85,24 @@
                                               // SHARP_INTERVIEW_DECOUPLE_B0111, decoupling inter-view candidate
                                               // QC_MRG_CANS_B0048             , JCT3V-B0048, B0086, B0069
                                               // OL_DISMV_POS_B0069            , different pos for disparity MV candidate, B0069
-                                              // MTK_INTERVIEW_MERGE_A0049     ,// JCT3V-A0049 second part
+                                              // MTK_INTERVIEW_MERGE_A0049     , second part
 #define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
-#define QC_C0051_FIXED_BY_MTK             1   // bug fix for C0051 implementation
+#define QC_C0051_FIXED_BY_MTK             1   // Bug fix for C0051 implementation
 
 
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
-#define HHI_INTER_VIEW_RESIDUAL_PRED      1   // inter-view residual prediction
+#define H3D_IVRP                          1   // Inter-view residual prediction
+                                              // HHI_INTER_VIEW_RESIDUAL_PRED
                                               // QC_SIMPLIFIEDIVRP_M24938 
-#if HHI_INTER_VIEW_RESIDUAL_PRED       
-#define LG_RESTRICTEDRESPRED_M24766       1   // restricted inter-view residual prediction
+#if H3D_IVRP       
+#define LG_RESTRICTEDRESPRED_M24766       1   // Restricted inter-view residual prediction
 #define FIX_LG_RESTRICTEDRESPRED_M24766   1
 #else                                  
 #define LG_RESTRICTEDRESPRED_M24766       0
 #endif
 
-#define MTK_MDIVRP_C0138                  1   // mode-dependent inter-view residual prediction
-#define MTK_C0138_FIXED                   1   // fix for IBP coding structure in view direction (not CTC)
+#define MTK_MDIVRP_C0138                  1   // Mode-dependent inter-view residual prediction
+#define MTK_C0138_FIXED                   1   // Fix for IBP coding structure in view direction (not CTC)
 
 
 ///// ***** DISPARITY VECTOR DERIVATION *********
@@ -173,7 +174,6 @@
 
 ///// ***** VSP *********
 #define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
-#define FIX_TEXTURE_MERGING_CANDIDATE_VSP_C0137_C0152 1 
 #if MERL_VSP_C0152
 
 /*
@@ -240,7 +240,7 @@
 #endif
 
 
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
 #define DMM3_SIMPLIFY_TR                  1
 #endif
 
@@ -256,7 +256,7 @@
 
 ///// ***** HM 6.1 *********
 
-//// REMOVED HM 6.1 Guard macros 
+//// REMOVED HM 6.1 Guard macros (corresponding to macros removed in HM 6.3.1)
 /*
 #define SKIPFRAME_BUGFIX                  1 ///< bug fix to enable skipFrame at decoder
 #define START_DECODING_AT_CRA             1 ///< H0496, start decoding at clear random access point

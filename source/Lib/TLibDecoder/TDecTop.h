@@ -212,7 +212,7 @@ private:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator   m_cDepthMapGenerator;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComResidualGenerator   m_cResidualGenerator;
 #endif
 
@@ -248,7 +248,7 @@ public:
   Void      xCopyPPS( TComPPS* pPPSV0);
   Void      xCopyVPS( TComVPS* pVPSV0);
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void      deleteExtraPicBuffers   ( Int iPoc );
 #endif
   Void  compressMotion       ( Int iPoc );

@@ -127,7 +127,7 @@
 // ====================================================================================================================
 #define MAX_VIEW_NUM                10
 
-#if ( H3D_IVMP || HHI_INTER_VIEW_RESIDUAL_PRED )
+#if ( H3D_IVMP || H3D_IVRP )
 #define DEPTH_MAP_GENERATION        1
 #define PDM_REMOVE_DEPENDENCE       1      //bug-fix for DMDV JCT2-A0095
 #else

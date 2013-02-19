@@ -172,7 +172,7 @@ public:
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void parseResPredFlag   ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -215,7 +215,7 @@ private:
 #endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   ContextModel3DBuffer m_cResPredFlagSCModel;
 #endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;

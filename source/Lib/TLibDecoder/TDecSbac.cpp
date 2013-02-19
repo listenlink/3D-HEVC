@@ -61,7 +61,7 @@ TDecSbac::TDecSbac()
 #endif
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 , m_cResPredFlagSCModel       ( 1,             1,               NUM_RES_PRED_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
@@ -158,7 +158,7 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_RES_PRED_FLAG );
 #endif
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_ALF_CTRL_FLAG );
@@ -245,7 +245,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_RES_PRED_FLAG );
 #endif
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_ALF_CTRL_FLAG );
@@ -669,7 +669,7 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiA
 #endif
 }
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void
 TDecSbac::parseResPredFlag( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth )
 {
