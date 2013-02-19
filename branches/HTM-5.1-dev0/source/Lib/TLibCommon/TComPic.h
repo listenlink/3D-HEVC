@@ -79,7 +79,7 @@ private:
 #if H3D_IVMP
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
 #if H3D_NBDV
-  Bool          m_checked;
+  Bool        m_checked;
   UInt        m_uiRapRefIdx;
   RefPicList  m_eRapRefList;
   Bool        m_bRapCheck;
