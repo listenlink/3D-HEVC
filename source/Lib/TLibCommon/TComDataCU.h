@@ -593,7 +593,7 @@ public:
 #endif
 #endif
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 #if HHI_INTER_VIEW_RESIDUAL_PRED
   Bool*         getResPredAvail         ()                        { return m_pbResPredAvailable;        }
   Bool          getResPredAvail         ( UInt uiIdx )            { return m_pbResPredAvailable[uiIdx]; }

@@ -4093,7 +4093,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       iCount ++;
     }    
   }
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 0 ===== 
@@ -4166,7 +4166,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       {
         bLeftAvai = true;
         iPosLeftAbove[0] = iCount;
-#endif  //HHI_INTER_VIEW_MOTION_PRED
+#endif  // H3D_IVMP 
 #if H3D_NBDV
         pcMvFieldNeighbours[iCount<<1    ].getMv().m_bDvMcp = false;
         pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
@@ -4220,7 +4220,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #endif
     iCount ++;
   }
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 1 =====
@@ -4298,7 +4298,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     if(!bRemoveSpa)
     {
       iPosLeftAbove[1] = iCount;
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 #if H3D_NBDV
     pcMvFieldNeighbours[iCount<<1    ].getMv().m_bDvMcp = false;
     pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
@@ -4354,7 +4354,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #endif
     iCount ++;
   }
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 2 =====
@@ -4502,7 +4502,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       }
     }    
   }
-#endif //HHI_INTER_VIEW_MOTION_PRED
+#endif // H3D_IVMP 
 
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 3 =====
@@ -4618,7 +4618,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #endif
     iCount ++;
   }
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 4 =====
@@ -6715,9 +6715,9 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
 
 
 Void TComDataCU::fillMvpCandBase( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo )
-#else // HHI_INTER_VIEW_MOTION_PRED 
+#else //  H3D_IVMP  
 Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo )
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 {
   PartSize eCUMode = getPartitionSize( 0 );
   

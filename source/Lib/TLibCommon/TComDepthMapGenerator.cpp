@@ -1151,7 +1151,7 @@ TComDepthMapGenerator::getIViewOrgDepthMvPred( TComDataCU* pcCU, UInt uiPartIdx,
   rcMv.set    ( iDisparity, 0 );
   return        true;
 }
-#endif // HHI_INTER_VIEW_MOTION_PRED
+#endif //  H3D_IVMP 
 
 
 
