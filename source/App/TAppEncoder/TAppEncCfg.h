@@ -72,17 +72,12 @@ protected:
   unsigned int m_FrameSkip;                                   ///< number of skipped frames from the beginning
   Int       m_iSourceWidth;                                   ///< source width in pixel
   Int       m_iSourceHeight;                                  ///< source height in pixel
-#if PIC_CROPPING
   Int       m_croppingMode;
   Int       m_cropLeft;
   Int       m_cropRight;
   Int       m_cropTop;
   Int       m_cropBottom;
-#endif
   Int       m_iFrameToBeEncoded;                              ///< number of encoded frames
-#if !PIC_CROPPING
-  Bool      m_bUsePAD;                                        ///< flag for using source padding
-#endif
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
   
   Int       m_iNumberOfViews;                                 ///< number Views to Encode
@@ -99,13 +94,8 @@ protected:
   Int       m_iGOPSize;                                       ///< GOP size of hierarchical structure
   Int       m_extraRPSs[MAX_VIEW_NUM];
   GOPEntryMvc m_GOPListsMvc[MAX_VIEW_NUM][MAX_GOP+1];
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Int       m_numReorderPics[MAX_VIEW_NUM][MAX_TLAYER];       ///< total number of reorder pictures
   Int       m_maxDecPicBuffering[MAX_VIEW_NUM][MAX_TLAYER];   ///< total number of reference pictures needed for decoding
-#else
-  Int       m_numReorderFrames;                               ///< total number of reorder pictures
-  Int       m_maxNumberOfReferencePictures;                   ///< total number of reference pictures needed for decoding
-#endif
   Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)
   Bool      m_bLCMod;                                         ///< flag for specifying whether the combined reference list for uni-prediction in B-slices is uploaded explicitly
   Bool      m_bDisInter4x4;
@@ -135,12 +125,7 @@ protected:
   Bool      m_bUseAdaptiveQP;                                 ///< Flag for enabling QP adaptation based on a psycho-visual model
   Int       m_iQPAdaptationRange;                             ///< dQP range by QP adaptation
   
-#if H0566_TLA
   Int       m_maxTempLayer[MAX_VIEW_NUM];                     ///< Max temporal layer
-#else
-  Bool      m_bTLayering;                                     ///< indicates whether temporal IDs are set based on the hierarchical coding structure
-  Bool      m_abTLayerSwitchingFlag[MAX_TLAYER];              ///< temporal layer switching flags corresponding to each temporal layer
-#endif
 
   // coding unit (CU) definition
   UInt      m_uiMaxCUWidth;                                   ///< max. CU width in pixel
@@ -169,29 +154,30 @@ protected:
 #endif
   vector<Bool> m_abUseSAO;
 #if LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_DEPTH_C0046
+  vector<Bool> m_abUseIC;                                    ///< flag for using illumination compensation for inter-view prediction
+#else
   Bool      m_bUseIC;                                     ///< flag for using illumination compensation for inter-view prediction
 #endif
-#if SAO_UNIT_INTERLEAVING
+#endif
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Bool      m_bUseIVS;                                        ///< flag for using inter-view vector scaling
+#endif
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoInterleavingFlag;                            ///< SAO interleaving flag
-#endif
   // coding tools (loop filter)
   vector<Bool> m_abUseALF;                                    ///< flag for using adaptive loop filter [0] - video, [1] - depth
   Int       m_iALFEncodePassReduction;                        //!< ALF encoding pass, 0 = original 16-pass, 1 = 1-pass, 2 = 2-pass
   
   Int       m_iALFMaxNumberFilters;                           ///< ALF Max Number Filters in one picture
-#if LCU_SYNTAX_ALF
   Bool      m_bALFParamInSlice;
   Bool      m_bALFPicBasedEncode;
-#endif
 
   vector<Bool> m_abLoopFilterDisable;                         ///< flag for using deblocking filter filter [0] - video, [1] - depth
   Bool      m_loopFilterOffsetInAPS;                         ///< offset for deblocking filter in 0 = slice header, 1 = APS
   Int       m_loopFilterBetaOffsetDiv2;                     ///< beta offset for deblocking filter
   Int       m_loopFilterTcOffsetDiv2;                       ///< tc offset for deblocking filter
-#if DBL_CONTROL
   Bool      m_DeblockingFilterControlPresent;                 ///< deblocking filter control present flag in PPS
-#endif
  
   Bool      m_bUseLMChroma;                                  ///< JL: Chroma intra prediction based on luma signal
 
@@ -225,18 +211,16 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
 #if DEPTH_MAP_GENERATION
   UInt      m_uiPredDepthMapGeneration;                       ///< using of (virtual) depth maps for texture coding
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt      m_uiMultiviewMvPredMode;                          ///< usage of predictors for multi-view mv prediction
   UInt      m_uiMultiviewMvRegMode;                           ///< regularization for multiview motion vectors
   Double    m_dMultiviewMvRegLambdaScale;                     ///< lambda scale for multiview motion vectors regularization
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt      m_uiMultiviewResPredMode;          ///< using multiview residual prediction
 #endif
 
-#if FAST_DECISION_FOR_MRG_RD_COST
   Bool      m_useFastDecisionForMerge;         ///< flag for using Fast Decision Merge RD-Cost 
-#endif
   Bool      m_bUseCbfFastMode;                 ///< flag for using Cbf Fast PU Mode Decision
   Int       m_iSliceMode;                      ///< 0: Disable all Recon slice limits, 1 : Maximum number of largest coding units per slice, 2: Maximum number of bytes in a slice
   Int       m_iSliceArgument;                  ///< If m_iSliceMode==1, m_iSliceArgument=max. # of largest coding units. If m_iSliceMode==2, m_iSliceArgument=max. # of bytes.
@@ -249,9 +233,6 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bLFCrossTileBoundaryFlag;        //!< 1: Cross-tile-boundary in-loop filtering 0: non-cross-tile-boundary in-loop filtering
   Int       m_iColumnRowInfoPresent;
   Int       m_iUniformSpacingIdr;
-#if !REMOVE_TILE_DEPENDENCE
-  Int       m_iTileBoundaryIndependenceIdr;
-#endif
   Int       m_iNumColumnsMinus1;
   char*     m_pchColumnWidth;
   Int       m_iNumRowsMinus1;
@@ -279,10 +260,8 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_enableTMVP;
 #endif
 
-#if MULTIBITS_DATA_HIDING
   Int       m_signHideFlag;
   Int       m_signHidingThreshold;
-#endif
 #if HHI_MPI
   Bool      m_bUseMVI;  ///< flag for using Motion Vector Inheritance for depth map coding
 #endif

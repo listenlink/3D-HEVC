@@ -56,9 +56,12 @@ private:
   
 public:
   
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
   Bool  m_bDvMcp;       // is dv-mcp ?
   Int   m_iDvMcpDispX;  // disparity for dv-mcp
+#if MTK_RELEASE_DV_CONSTRAINT_C0129
+  Int   m_iDvMcpDispY;  // disparity for dv-mcp
+#endif
 #endif
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -68,9 +71,12 @@ public:
   TComMv() :
   m_iHor(0),
   m_iVer(0)
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
   , m_bDvMcp(false)
   , m_iDvMcpDispX(0)
+#if MTK_RELEASE_DV_CONSTRAINT_C0129
+  , m_iDvMcpDispY(0)
+#endif
 #endif
   {
   }
@@ -78,9 +84,12 @@ public:
   TComMv( Short iHor, Short iVer ) :
   m_iHor(iHor),
   m_iVer(iVer)
-#if LGE_DVMCP_A0126
+#if H3D_NBDV
   , m_bDvMcp(false)
   , m_iDvMcpDispX(0)
+#if MTK_RELEASE_DV_CONSTRAINT_C0129
+  , m_iDvMcpDispY(0)
+#endif
 #endif
   {
   }
@@ -157,13 +166,9 @@ public:
   
   const TComMv scaleMv( Int iScale ) const
   {
-#if CLIPSCALEDMVP
     Int mvx = Clip3( -32768, 32767, (iScale * getHor() + 127 + (iScale * getHor() < 0)) >> 8 );
     Int mvy = Clip3( -32768, 32767, (iScale * getVer() + 127 + (iScale * getVer() < 0)) >> 8 );
     return TComMv( mvx, mvy );
-#else
-    return TComMv( (iScale * getHor() + 127 + (iScale * getHor() < 0)) >> 8, (iScale * getVer() + 127 + (iScale * getVer() < 0)) >> 8);
-#endif
   }
 };// END CLASS DEFINITION TComMV
 

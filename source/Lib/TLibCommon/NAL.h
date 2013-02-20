@@ -45,11 +45,7 @@ class TComOutputBitstream;
 struct NALUnit
 {
   NalUnitType m_nalUnitType; ///< nal_unit_type
-#if NAL_REF_FLAG
   Bool        m_nalRefFlag;  ///< nal_ref_flag
-#else
-  NalRefIdc   m_nalRefIDC;   ///< nal_ref_idc
-#endif
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   unsigned    m_layerId;
   unsigned    m_temporalId;  ///< temporal_id
@@ -57,14 +53,9 @@ struct NALUnit
   Int         m_viewId;      ///< view_id
   Bool        m_isDepth;     ///< is_depth
   unsigned    m_temporalId;  ///< temporal_id
-#if !H0388
-  bool        m_OutputFlag;  ///< output_flag
-#endif
 #endif
 
   /** construct an NALunit structure with given header values. */
-#if H0388
-#if NAL_REF_FLAG
   NALUnit(
     NalUnitType nalUnitType,
     Bool        nalRefFlag,
@@ -85,50 +76,6 @@ struct NALUnit
 #endif
     ,m_temporalId  (temporalId)
   {}
-#else
-  NALUnit(
-    NalUnitType  nalUnitType,
-    NalRefIdc    nalRefIDC,
-    Int          viewId,
-    Bool         isDepth,
-    unsigned temporalID = 0)
-  {
-    m_nalUnitType = nalUnitType;
-    m_nalRefIDC   = nalRefIDC;
-#if !VIDYO_VPS_INTEGRATION
-    m_viewId      = viewId;
-    m_isDepth     = isDepth;
-#else
-    m_layerId = layerId;
-#endif
-    m_temporalId  = temporalID;
-  }
-#endif
-#else
-  NALUnit(
-    NalUnitType  nalUnitType,
-    NalRefIdc    nalRefIDC,
-#if !VIDYO_VPS_INTEGRATION    
-    Int          viewId,
-    Bool         isDepth,
-#else
-    unsigned         layerId,
-#endif
-    unsigned     temporalID = 0,
-    bool         outputFlag = true)
-  {
-    m_nalUnitType = nalUnitType;
-    m_nalRefIDC   = nalRefIDC;
-#if !VIDYO_VPS_INTEGRATION
-    m_viewId      = viewId;
-    m_isDepth     = isDepth;
-#else
-    m_layerId = layerId;
-#endif
-    m_temporalId  = temporalID;
-    m_OutputFlag  = outputFlag;
-  }
-#endif
 
   /** default constructor - no initialization; must be perfomed by user */
   NALUnit() {}
@@ -137,15 +84,11 @@ struct NALUnit
   bool isSlice()
   {
     return m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR
-#if H0566_TLA
 #if !QC_REM_IDV_B0046    
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDV
 #endif
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_TLA
-#else
-        || m_nalUnitType == NAL_UNIT_CODED_SLICE_CDR
-#endif
         || m_nalUnitType == NAL_UNIT_CODED_SLICE;
   }
 };

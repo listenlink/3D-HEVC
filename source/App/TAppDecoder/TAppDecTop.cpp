@@ -95,9 +95,6 @@ Void TAppDecTop::decode()
   Int fcoIndex=0;  //when the current frame is not first frame,use FCO_index stand for viewDepth. 
 #endif
 
-#if SONY_COLPIC_AVAILABILITY
-  m_tDecTop[0]->setViewOrderIdx(0);
-#endif
   Int                 viewDepthId = 0;
   Int                 previousViewDepthId  = 0;
   UInt                uiPOC[MAX_VIEW_NUM*2];
@@ -110,11 +107,7 @@ Void TAppDecTop::decode()
     pcListPic[i] = NULL;
     newPicture[i] = false;
 #if FLEX_CODING_ORDER_M23723
-#if  FIX_FCO_COMP_WARNING
     m_fcoOrder[i] = ' ';
-#else
-    m_fcoOrder[i]=NULL;
-#endif
 #endif
 
   }
@@ -301,7 +294,7 @@ Void TAppDecTop::decode()
       } 
       if( ( viewDepthId == 0 && (viewDepthId != previousViewDepthId) ) || m_tDecTop.size() == 1 )
       {
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
         for( Int i = 0; i < m_tDecTop.size(); i++ )
         {
           m_tDecTop[i]->deleteExtraPicBuffers( uiPOC[i] );
@@ -375,11 +368,7 @@ Void TAppDecTop::decode()
       // write reconstruction to file
       if(newPicture[viewDepthId])
       {
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
         xWriteOutput( pcListPic[viewDepthId], viewDepthId, nalu.m_temporalId );
-#else
-        xWriteOutput( pcListPic[viewDepthId], viewDepthId );
-#endif
       }
     }
     previousViewDepthId = viewDepthId;
@@ -446,11 +435,7 @@ Void TAppDecTop::xDestroyDecLib()
   }
 }
 
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int viewDepthId, UInt tId )
-#else
-Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
-#endif
 {
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int not_displayed = 0;
@@ -469,25 +454,15 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
-#if PIC_CROPPING
     TComSPS *sps = pcPic->getSlice(0)->getSPS();
-#endif
     
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
     if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getSlice(0)->getSPS()->getNumReorderPics(tId) && pcPic->getPOC() > m_pocLastDisplay[viewDepthId]))
-#else
-    if ( pcPic->getOutputMark() && (not_displayed >  pcPic->getSlice(0)->getSPS()->getNumReorderFrames() && pcPic->getPOC() > m_pocLastDisplay[viewDepthId]))
-#endif
     {
       // write to file
        not_displayed--;
       if ( m_pchReconFile )
       {
-#if PIC_CROPPING
         m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
-#else
-        m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
-#endif
       }
       
       // update POC of display order
@@ -532,20 +507,14 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int viewDepthId )
   while (iterPic != pcListPic->end())
   {
     TComPic* pcPic = *(iterPic);
-#if PIC_CROPPING
     TComSPS *sps = pcPic->getSlice(0)->getSPS();
-#endif
 
     if ( pcPic->getOutputMark() )
     {
       // write to file
       if ( m_pchReconFile )
       {
-#if PIC_CROPPING
         m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), sps->getPicCropLeftOffset(), sps->getPicCropRightOffset(), sps->getPicCropTopOffset(), sps->getPicCropBottomOffset() );
-#else
-        m_tVideoIOYuvReconFile[viewDepthId]->write( pcPic->getPicYuvRec(), pcPic->getSlice(0)->getSPS()->getPad() );
-#endif
       }
       
       // update POC of display order
@@ -763,4 +732,20 @@ else
   return pcPic;
 #endif
 }
+
+#if MERL_VSP_C0152
+Void TAppDecTop::setBWVSPLUT(TComSlice* pcSlice,  Int iCodedViewIdx,  Int iCurPoc)
+{
+  //first view does not have VSP 
+  if((iCodedViewIdx == 0)) return;
+
+  AOT( iCodedViewIdx <= 0);
+  //AOT( iCodedViewIdx >= m_iNumberOfViews );
+  Int iNeighborViewId = 0;
+  //  Int* piShiftLUT = bRenderFromLeft ? m_cCamParsCollector.getBaseViewShiftLUTI()[iCodedViewIdx][iNeighborViewId][0] : m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
+  Int* piShiftLUT = m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
+  pcSlice->setBWVSPLUTParam(piShiftLUT, 2-LOG2_DISP_PREC_LUT );
+}
+#endif
+
 //! \}

@@ -127,7 +127,7 @@
 // ====================================================================================================================
 #define MAX_VIEW_NUM                10
 
-#if ( HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED )
+#if ( H3D_IVMP || H3D_IVRP )
 #define DEPTH_MAP_GENERATION        1
 #define PDM_REMOVE_DEPENDENCE       1      //bug-fix for DMDV JCT2-A0095
 #else
@@ -139,15 +139,13 @@
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
 
-#if QC_MRG_CANS_B0048
-#if OL_DISMV_POS_B0069
+#if H3D_IVMP
 #define DMV_MERGE_POS                     4
 #else
 #define DMV_MERGE_POS                     1
 #endif
-#endif
 
-#if SAIT_IMPROV_MOTION_PRED_M24829&!QC_MULTI_DIS_CAN_A0097
+#if H3D_IVMP&!H3D_NBDV
 #define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
 #else
 #define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)
@@ -423,14 +421,14 @@ __inline T gSign(const T& t)
 
 // AMVP: advanced motion vector prediction
 #define AMVP_MAX_NUM_CANDS          2           ///< max number of final candidates
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 #define AMVP_MAX_NUM_CANDS_MEM      4           ///< max number of candidates
 #else
 #define AMVP_MAX_NUM_CANDS_MEM      3           ///< max number of candidates
 #endif
 // MERGE
 #define MRG_MAX_NUM_CANDS           5
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 #define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
 #endif
 
@@ -438,11 +436,7 @@ __inline T gSign(const T& t)
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
 
 // Explicit temporal layer QP offset
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
 #define MAX_TLAYER                  8           ///< max number of temporal layer
-#else
-#define MAX_TLAYER                  4           ///< max number of temporal layer
-#endif
 #define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
 
 // Fast estimation of generalized B in low-delay mode
@@ -467,21 +461,11 @@ __inline T gSign(const T& t)
 
 #define MAX_NUM_REF_PICS 16
 
-#if !NAL_REF_FLAG
-enum NalRefIdc
-{
-  NAL_REF_IDC_PRIORITY_LOWEST = 0,
-  NAL_REF_IDC_PRIORITY_LOW,
-  NAL_REF_IDC_PRIORITY_HIGH,
-  NAL_REF_IDC_PRIORITY_HIGHEST
-};
-#endif
 
 enum NalUnitType
 {
   NAL_UNIT_UNSPECIFIED_0 = 0,
   NAL_UNIT_CODED_SLICE,
-#if H0566_TLA
 #if QC_REM_IDV_B0046
   NAL_UNIT_RESERVED,
 #else
@@ -489,11 +473,6 @@ enum NalUnitType
 #endif
   NAL_UNIT_CODED_SLICE_TLA,
   NAL_UNIT_CODED_SLICE_CRA,
-#else
-  NAL_UNIT_CODED_SLICE_DATAPART_A,
-  NAL_UNIT_CODED_SLICE_DATAPART_B,
-  NAL_UNIT_CODED_SLICE_CDR,
-#endif
   NAL_UNIT_CODED_SLICE_IDR,
   NAL_UNIT_SEI,
   NAL_UNIT_SPS,

@@ -51,7 +51,7 @@ TComWedgelet::TComWedgelet( UInt uiWidth, UInt uiHeight ) : m_uhXs     ( 0 ),
                                                             m_uhYe     ( 0 ),
                                                             m_uhOri    ( 0 ),
                                                             m_eWedgeRes( FULL_PEL )
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
                                                             , m_bIsCoarse( false )
 #endif
 {
@@ -64,7 +64,7 @@ TComWedgelet::TComWedgelet( const TComWedgelet &rcWedge ) : m_uhXs     ( rcWedge
                                                             m_uhYe     ( rcWedge.m_uhYe      ),
                                                             m_uhOri    ( rcWedge.m_uhOri     ),
                                                             m_eWedgeRes( rcWedge.m_eWedgeRes ),
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
                                                             m_bIsCoarse( rcWedge.m_bIsCoarse ),
                                                             m_uiAng    ( rcWedge.m_uiAng     ),
 #endif
@@ -100,7 +100,7 @@ Void TComWedgelet::clear()
   ::memset( m_pbPattern, 0, (m_uiWidth * m_uiHeight) * sizeof(Bool) );
 }
 
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
 Void TComWedgelet::findClosetAngle()
 {
   UInt uiAng=0,uiOptAng=0;
@@ -141,7 +141,7 @@ Void TComWedgelet::setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, 
   m_uhYe      = uhYe;
   m_uhOri     = uhOri;
   m_eWedgeRes = eWedgeRes;
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
   m_bIsCoarse = bIsCoarse;
 #endif
 
@@ -686,7 +686,7 @@ Void TComWedgelet::xGenerateWedgePattern()
   case( 1 ): { for( UInt iY = 0;                 iY < uhYs;            iY++ ) { UInt iX = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX--; } } } break;
   case( 2 ): { for( UInt iX = uiTempBlockSize-1; iX > uhXs;            iX-- ) { UInt iY = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY--; } } } break;
   case( 3 ): { for( UInt iY = uiTempBlockSize-1; iY > uhYs;            iY-- ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } } break;
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
   case( 4 ): 
     { 
       if( (uhXs+uhXe) < uiTempBlockSize ) { for( UInt iY = 0; iY < uiTempBlockSize; iY++ ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } }
@@ -720,7 +720,7 @@ Void TComWedgelet::xGenerateWedgePattern()
       case( 1 ): { uiOffX = 1; uiOffY = 0; } break;
       case( 2 ): { uiOffX = 1; uiOffY = 1; } break;
       case( 3 ): { uiOffX = 0; uiOffY = 1; } break;
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
       case( 4 ): 
         { 
           if( (uhXs+uhXe) < uiTempBlockSize ) { uiOffX = 0; uiOffY = 0; }
@@ -804,7 +804,7 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
   }
 }
 
-#if HHIQC_DMMFASTSEARCH_B0039
+#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
 TComWedgeNode::TComWedgeNode()
 {
   m_uiPatternIdx = NO_IDX;

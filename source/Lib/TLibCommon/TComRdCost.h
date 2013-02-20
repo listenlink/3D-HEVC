@@ -202,7 +202,7 @@ public:
   Void    setChromaDistortionWeight      ( Double chromaDistortionWeight) { m_chromaDistortionWeight = chromaDistortionWeight; };
 #endif
   Void    setLambda      ( Double dLambda );
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void    setLambdaMVReg ( Double dLambda );
 #endif
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }

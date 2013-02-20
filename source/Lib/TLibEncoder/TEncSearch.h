@@ -120,7 +120,7 @@ protected:
 #endif
   
   // AMVP cost computation
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+2][AMVP_MAX_NUM_CANDS+2]; //th array bounds
 #else
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
@@ -151,7 +151,7 @@ protected:
   /// sub-function for motion vector refinement used in fractional-pel accuracy
   UInt  xPatternRefinement( TComPattern* pcPatternKey,
                            TComMv baseRefMv,
-                           Int iFrac, TComMv& rcMvFrac );
+                           Int iFrac, TComMv& rcMvFrac);
   
   typedef struct
   {
@@ -195,7 +195,7 @@ public:
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
                                   TComYuv*    rpcResiPredYuv,
 #endif
                                   TComYuv*&   rpcPredYuv,
@@ -207,7 +207,7 @@ public:
 #endif
                                 );
   
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   /// encode residual and compute rd-cost for inter mode
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,
                                   TComYuv*    pcYuvOrg,
@@ -400,7 +400,7 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
-#if HHIQC_DMMFASTSEARCH_B0039
+
   Void xSearchWedgeFullMinDistFast( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeNodeList* pacWedgeNodeList, 
@@ -411,7 +411,6 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
-#endif
   Void xSearchWedgePredDirMinDist ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeList*     pacWedgeList, 
@@ -421,7 +420,7 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Int&           riWedgeDeltaEnd );
-#endif
+#endif // HHI_DMM_WEDGE_INTRA
 #if HHI_DMM_PRED_TEX
   Void findWedgeTexMinDist        ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,
@@ -434,7 +433,11 @@ protected:
                                     Int&           riDeltaDC1,
                                     Int&           riDeltaDC2,
                                     Bool           bAboveAvail,
-                                    Bool           bLeftAvail );
+                                    Bool           bLeftAvail
+#if LGE_DMM3_SIMP_C0044
+                                    ,UInt&         ruiIntraTabIdx
+#endif
+                                    );
   Void findContourPredTex         ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,
                                     Pel*           piOrig,
@@ -446,7 +449,7 @@ protected:
                                     Int&           riDeltaDC2,
                                     Bool           bAboveAvail,
                                     Bool           bLeftAvail );
-#endif
+#endif // HHI_DMM_PRED_TEX
 
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)
@@ -459,9 +462,7 @@ protected:
                                     Int         iRefIdx,
                                     TComMv&     rcMvPred,
                                     Bool        bFilled = false
-                                  #if H0111_MVD_L1_ZERO
                                   , UInt*       puiDistBiP = NULL
-                                  #endif
                                   #if ZERO_MVD_EST
                                   , UInt*       puiDist = NULL
                                   #endif
@@ -499,7 +500,7 @@ protected:
   
   Void xMergeEstimation           ( TComDataCU*     pcCU,
                                     TComYuv*        pcYuvOrg,
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
                                     TComYuv*        rpcResiPredYuv, 
 #endif
                                     Int             iPartIdx,
@@ -511,6 +512,9 @@ protected:
                                   , TComMvField* cMvFieldNeighbours,  
                                     UChar* uhInterDirNeighbours,
                                     Int& numValidMergeCand
+#endif
+#if MERL_VSP_C0152
+                                  , Int* iVSPIndexTrue
 #endif
                                    );
   // -------------------------------------------------------------------------------------------------------------------
@@ -578,8 +582,7 @@ protected:
                                     TComMv&       rcMvHalf,
                                     TComMv&       rcMvQter,
                                     UInt&         ruiCost 
-                                   ,Bool biPred
-                                   );
+                                   ,Bool biPred);
   
   Void xExtDIFUpSamplingH( TComPattern* pcPattern, Bool biPred  );
   Void xExtDIFUpSamplingQ( TComPattern* pcPatternKey, TComMv halfPelRef, Bool biPred );

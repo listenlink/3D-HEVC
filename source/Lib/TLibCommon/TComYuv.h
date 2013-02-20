@@ -145,7 +145,7 @@ public:
   Void    addClipChroma     ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    addClipPartLuma   ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize ); //GT
 
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
   //  pcYuvSrc0 - pcYuvSrc1 -> m_apiBuf
   Void    subtract          (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    subtractLuma      (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
@@ -165,7 +165,7 @@ public:
 
   //   Remove High frequency
   Void    removeHighFreq    ( TComYuv* pcYuvSrc, UInt uiPartIdx, UInt uiWidht, UInt uiHeight );
-#if LG_RESTRICTEDRESPRED_M24766
+#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
   Void    getPUXYOffset     (PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &iXOffset, Int &iYOffset);
   Void    add               (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract = false );
   Void    addLuma           (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );

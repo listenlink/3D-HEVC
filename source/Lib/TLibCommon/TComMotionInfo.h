@@ -58,7 +58,7 @@ typedef struct _AMVPInfo
 } AMVPInfo;
 
 // ====================================================================================================================
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
 typedef struct _DisCand
 {
   TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates
@@ -93,7 +93,7 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
-#if QC_MRG_CANS_B0048
+#if H3D_IVMP
   Bool operator== ( const TComMvField& rcMv ) const
   {
     return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());

@@ -58,10 +58,10 @@ TComPic::TComPic()
   m_pcPredDepthMap_temp    = NULL;
 #endif
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   m_pcOrgDepthMap     = NULL;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   m_pcResidual        = NULL;
 #endif
   m_pcPicYuvPred      = NULL;
@@ -75,15 +75,15 @@ TComPic::TComPic()
 #if HHI_INTERVIEW_SKIP
   m_pcUsedPelsMap     = NULL;
 #endif
-#if SONY_COLPIC_AVAILABILITY
-  m_iViewOrderIdx     = 0;
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  m_iViewOrderIdx     = 0;    // will be changed to view_id
 #endif
   m_aaiCodedScale     = 0;
   m_aaiCodedOffset    = 0;
 #if OL_QTLIMIT_PREDCODING_B0068
   m_bReduceBitsQTL    = 0;
 #endif
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
   m_bRapCheck = false;
   m_eRapRefList = REF_PIC_LIST_0;
   m_uiRapRefIdx = 0;
@@ -156,7 +156,7 @@ Void TComPic::destroy()
   }                     
 #endif
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   if( m_pcOrgDepthMap )
   {
     m_pcOrgDepthMap->destroy();
@@ -164,7 +164,7 @@ Void TComPic::destroy()
     m_pcOrgDepthMap = NULL;
   }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   if( m_pcResidual )
   {
     m_pcResidual->destroy();
@@ -205,7 +205,7 @@ TComPic::addPrdDepthMapBuffer( UInt uiSubSampExpX, UInt uiSubSampExpY )
 }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void
 TComPic::addOrgDepthMapBuffer()
 {
@@ -221,7 +221,7 @@ TComPic::addOrgDepthMapBuffer()
 }
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void
 TComPic::addResidualBuffer()
 {
@@ -258,7 +258,7 @@ TComPic::removePrdDepthMapBuffer()
 }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void
 TComPic::removeOrgDepthMapBuffer()
 {
@@ -271,7 +271,7 @@ TComPic::removeOrgDepthMapBuffer()
 }
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
 Void
 TComPic::removeResidualBuffer()
 {
@@ -315,12 +315,6 @@ Void TComPic::createNonDBFilterInfo(UInt* pSliceStartAddress, Int numSlices, Int
   {
     m_pbValidSlice[s] = true;
   }
-#if !LCU_SYNTAX_ALF
-  if( pSliceStartAddress == NULL || (numSlices == 1 && numTiles == 1) )
-  {
-    return;
-  }
-#endif
   m_pSliceSUMap = new Int[maxNumSUInLCU * numLCUInPic];
 
   //initialization
@@ -488,7 +482,7 @@ Void TComPic::createNonDBFilterInfo(UInt* pSliceStartAddress, Int numSlices, Int
     m_pNDBFilterYuvTmp->create(picWidth, picHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
   }
 }
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
 Bool TComPic::getDisCandRefPictures(Int iColPOC)
 {
   UInt uiTempLayerCurr=7;
