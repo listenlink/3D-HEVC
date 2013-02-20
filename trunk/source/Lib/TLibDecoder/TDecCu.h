@@ -60,11 +60,11 @@ private:
   UInt                m_uiMaxDepth;       ///< max. number of depth
   TComYuv**           m_ppcYuvResi;       ///< array of residual buffer
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComYuv**           m_ppcYuvResPred;    ///< residual prediction buffer
 #endif
   TComDataCU**        m_ppcCU;            ///< CU data array
-  
+
   // access channel
   TComTrQuant*        m_pcTrQuant;
   TComPrediction*     m_pcPrediction;
@@ -84,7 +84,7 @@ public:
   
   /// destroy internal buffers
   Void  destroy                 ();
-  
+
   /// decode CU information
   Void  decodeCU                ( TComDataCU* pcCU, UInt& ruiIsLast );
   

@@ -79,7 +79,7 @@ public:
                       Bool     bIsDepth = false ) { return m_aacActiveSPS[ bIsDepth ? 1 : 0 ][ uiViewId ]; }
 
   UInt      getPdm  ()                            { if( m_aacActiveSPS[0][1] ) { return m_aacActiveSPS[0][1]->getPredDepthMapGeneration(); } return 0; }
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt      getResPrd ()                          { if( m_aacActiveSPS[0][1] ) { return m_aacActiveSPS[0][1]->getMultiviewResPredMode  (); } return 0; }
 #endif
 
@@ -135,13 +135,13 @@ public:
   Void  uninit                ();
 
   Void  initViewComponent     ( TComPic*      pcPic );
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
   Bool  predictDepthMap       ( TComPic*      pcPic );
   Void  updateDepthMap        ( TComPic*      pcPic );
   Void  dumpDepthMap          ( TComPic*      pcPic, char* pFilenameBase );
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void  covertOrgDepthMap     ( TComPic*      pcPic );
 #endif
 
@@ -149,16 +149,15 @@ public:
   UInt  getSubSampExpX        ()                      { return m_uiSubSampExpX; }
   UInt  getSubSampExpY        ()                      { return m_uiSubSampExpY; }
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
-#if HHI_INTER_VIEW_MOTION_PRED
-#if QC_MULTI_DIS_CAN_A0097
-  Int   getPdmMergeCandidate ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo 
-#if QC_MRG_CANS_B0048
-    , Int* iPdm
-#endif
-    );
-
+#if H3D_IVMP
+#if H3D_NBDV
+#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
+  Bool  getPdmCandidate       ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
+#else
+  Int   getPdmMergeCandidate  ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm );
   Bool  getPdmMvPredDisCan    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
   Bool  getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
+#endif
 #else
   Int   getPdmMergeCandidate  ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool  getPdmMvPred          ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge );
@@ -175,7 +174,7 @@ public:
 
 private:
   // picture operations
-#if !QC_MULTI_DIS_CAN_A0097
+#if !H3D_NBDV
   Bool  xConvertDepthMapCurr2Ref  ( TComPic*    pcRef, TComPic* pcCur );
   Bool  xConvertDepthMapRef2Curr  ( TComPic*    pcCur, TComPic* pcRef );
   Bool  xPredictDepthMap          ( TComPic*    pcPic );

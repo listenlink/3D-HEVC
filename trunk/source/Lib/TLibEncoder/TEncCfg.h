@@ -108,13 +108,11 @@ protected:
   Int       m_FrameSkip;
   Int       m_iSourceWidth;
   Int       m_iSourceHeight;
-#if PIC_CROPPING
   Int       m_croppingMode;
   Int       m_cropLeft;
   Int       m_cropRight;
   Int       m_cropTop;
   Int       m_cropBottom;
-#endif
   Int       m_iFrameToBeEncoded;
   Double    m_adLambdaModifier[ MAX_TLAYER ];
 
@@ -124,13 +122,8 @@ protected:
   Int       m_iGOPSize;
   GOPEntryMvc m_GOPList[MAX_GOP+1];
   Int       m_extraRPSs;
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Int       m_maxDecPicBuffering[MAX_TLAYER];
   Int       m_numReorderPics[MAX_TLAYER];
-#else
-  Int       m_maxNumberOfReferencePictures;
-  Int       m_numReorderFrames;
-#endif
   
   Int       m_iQP;                              //  if (AdaptiveQP == OFF)
   
@@ -141,12 +134,7 @@ protected:
   Int       m_iMaxRefPicNum;                     ///< this is used to mimic the sliding mechanism used by the decoder
                                                  // TODO: We need to have a common sliding mechanism used by both the encoder and decoder
 
-#if H0566_TLA
   Int       m_maxTempLayer;                      ///< Max temporal layer
-#else
-  Bool      m_bTLayering;                        ///< indicates whether temporal IDs are set based on the hierarchical coding structure
-  Bool      m_abTLayerSwitchingFlag[MAX_TLAYER]; ///< temporal layer switching flags corresponding to temporal layer
-#endif
   Bool      m_bDisInter4x4;
   Bool m_useAMP;
   //======= Transform =============
@@ -162,17 +150,16 @@ protected:
   Bool      m_loopFilterOffsetInAPS;
   Int       m_loopFilterBetaOffsetDiv2;
   Int       m_loopFilterTcOffsetDiv2;
-#if DBL_CONTROL
   Bool      m_DeblockingFilterControlPresent;
-#endif
   Bool      m_bUseSAO;
 #if LGE_ILLUCOMP_B0045
   Bool      m_bUseIC;
 #endif
-#if SAO_UNIT_INTERLEAVING
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Bool      m_bUseIVS;
+#endif
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoInterleavingFlag;
-#endif
 
   //====== Lossless ========
 #if LOSSLESS_CODING
@@ -228,25 +215,18 @@ protected:
   Int       m_iALFEncodePassReduction;
 
   Int       m_iALFMaxNumberFilters;
-#if LCU_SYNTAX_ALF
   Bool      m_bALFParamInSlice;
   Bool      m_bALFPicBasedEncode;
-#endif
 
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
   Bool      m_bUseLComb;
   Bool      m_bLCMod;
   Bool      m_bUseRDOQ;
-#if !PIC_CROPPING
-  Bool      m_bUsePAD;
-#endif
   Bool      m_bUseFastEnc;
   Bool      m_bUseEarlyCU;
 
-#if FAST_DECISION_FOR_MRG_RD_COST
   Bool      m_useFastDecisionForMerge;
-#endif
   Bool      m_bUseCbfFastMode;
   Bool      m_bUseLMChroma; 
 #if HHI_MPI
@@ -304,10 +284,8 @@ protected:
   char*     m_scalingListFile;          ///< quantization matrix file name
 
   Bool      m_bEnableTMVP;
-#if MULTIBITS_DATA_HIDING
   Int       m_signHideFlag;
   Int       m_signHidingThreshold;
-#endif
 
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   UInt     m_layerId;
@@ -348,12 +326,12 @@ protected:
   Int**    m_aaiPdmOffset;
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt        m_uiMultiviewMvPredMode;
   UInt        m_uiMultiviewMvRegMode;
   Double      m_dMultiviewMvRegLambdaScale;
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   UInt        m_uiMultiviewResPredMode;
 #endif
 
@@ -382,13 +360,11 @@ public:
   Void      setFrameSkip                    ( unsigned int i ) { m_FrameSkip = i; }
   Void      setSourceWidth                  ( Int   i )      { m_iSourceWidth = i; }
   Void      setSourceHeight                 ( Int   i )      { m_iSourceHeight = i; }
-#if PIC_CROPPING
   Void      setCroppingMode                 ( Int   i )      { m_croppingMode = i; }
   Void      setCropLeft                     ( Int   i )      { m_cropLeft = i; }
   Void      setCropRight                    ( Int   i )      { m_cropRight = i; }
   Void      setCropTop                      ( Int   i )      { m_cropTop = i; }
   Void      setCropBottom                   ( Int   i )      { m_cropBottom = i; }
-#endif
   Void      setFrameToBeEncoded             ( Int   i )      { m_iFrameToBeEncoded = i; }
   
   //====== Coding Structure ========
@@ -398,13 +374,8 @@ public:
   Void      setGopList                      ( GOPEntryMvc* GOPList ) { for( Int i = 0; i < MAX_GOP+1; i++ ) m_GOPList[i] = GOPList[i]; }
   Void      setExtraRPSs                    ( Int   i )      { m_extraRPSs = i; }
   GOPEntryMvc getGOPEntry                   ( Int   i )      { return m_GOPList[i]; }
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Void      setMaxDecPicBuffering           ( UInt u, UInt tlayer ) { m_maxDecPicBuffering[tlayer] = u;    }
   Void      setNumReorderPics               ( Int  i, UInt tlayer ) { m_numReorderPics[tlayer] = i;    }
-#else
-  Void      setMaxNumberOfReferencePictures ( Int u )       { m_maxNumberOfReferencePictures = u;    }
-  Void      setNumReorderFrames             ( Int  i )       { m_numReorderFrames = i;    }
-#endif
   
 #if HHI_INTERVIEW_SKIP
   Void      setInterViewSkip            ( UInt  u )       { m_bInterViewSkip         = u; }
@@ -422,15 +393,8 @@ public:
   Int       getMaxRefPicNum                 ()                              { return m_iMaxRefPicNum;           }
   Void      setMaxRefPicNum                 ( Int iMaxRefPicNum )           { m_iMaxRefPicNum = iMaxRefPicNum;  }
 
-#if H0566_TLA
   Bool      getMaxTempLayer                 ()                              { return m_maxTempLayer;              } 
   Void      setMaxTempLayer                 ( Int maxTempLayer )            { m_maxTempLayer = maxTempLayer;      }
-#else
-  Bool      getTLayering                    ()                              { return m_bTLayering;              } 
-  Void      setTLayering                    ( Bool bTLayering )             { m_bTLayering = bTLayering;        }
-  Bool      getTLayerSwitchingFlag          ( UInt uiTLayer )               { assert (uiTLayer < MAX_TLAYER ); return  m_abTLayerSwitchingFlag[uiTLayer];                   }
-  Void      setTLayerSwitchingFlag          ( Bool* pbTLayerSwitchingFlag ) { for ( Int i = 0; i < MAX_TLAYER; i++ ) m_abTLayerSwitchingFlag[i] = pbTLayerSwitchingFlag[i]; }
-#endif
 
   Bool      getDisInter4x4                  ()              { return m_bDisInter4x4;        }
   Void      setDisInter4x4                  ( Bool b )      { m_bDisInter4x4  = b;          }
@@ -443,12 +407,12 @@ public:
   Void      setPdmOffset                    ( Int** p )      { m_aaiPdmOffset               = p; }
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void      setMultiviewMvPredMode          ( UInt  u )      { m_uiMultiviewMvPredMode      = u; }
   Void      setMultiviewMvRegMode           ( UInt  u )      { m_uiMultiviewMvRegMode       = u; }
   Void      setMultiviewMvRegLambdaScale    ( Double d)      { m_dMultiviewMvRegLambdaScale = d; }
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void      setMultiviewResPredMode         ( UInt  u )      { m_uiMultiviewResPredMode     = u; }
 #endif
   
@@ -466,9 +430,7 @@ public:
   Void      setLoopFilterOffsetInAPS        ( Bool  b )      { m_loopFilterOffsetInAPS      = b; }
   Void      setLoopFilterBetaOffset         ( Int   i )      { m_loopFilterBetaOffsetDiv2  = i; }
   Void      setLoopFilterTcOffset           ( Int   i )      { m_loopFilterTcOffsetDiv2    = i; }
-#if DBL_CONTROL
   Void      setDeblockingFilterControlPresent ( Bool b ) { m_DeblockingFilterControlPresent = b; }
-#endif
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
@@ -478,7 +440,7 @@ public:
   Void      setUseDisparitySearchRangeRestriction ( Bool   b )      { m_bUseDisparitySearchRangeRestriction = b; }
   Void      setVerticalDisparitySearchRange ( Int   i )      { m_iVerticalDisparitySearchRange = i; }
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   UInt      getMultiviewMvRegMode           ()      { return  m_uiMultiviewMvRegMode; }
   Double    getMultiviewMvRegLambdaScale    ()      { return  m_dMultiviewMvRegLambdaScale; }
 #endif
@@ -523,13 +485,11 @@ public:
   unsigned int getFrameSkip                 ()      { return  m_FrameSkip; }
   Int       getSourceWidth                  ()      { return  m_iSourceWidth; }
   Int       getSourceHeight                 ()      { return  m_iSourceHeight; }
-#if PIC_CROPPING
   Int       getCroppingMode                 ()      { return  m_croppingMode; }
   Int       getCropLeft                     ()      { return  m_cropLeft; }
   Int       getCropRight                    ()      { return  m_cropRight; }
   Int       getCropTop                      ()      { return  m_cropTop; }
   Int       getCropBottom                   ()      { return  m_cropBottom; }
-#endif
   Int       getFrameToBeEncoded             ()      { return  m_iFrameToBeEncoded; }
   void setLambdaModifier                    ( UInt uiIndex, Double dValue ) { m_adLambdaModifier[ uiIndex ] = dValue; }
   Double getLambdaModifier                  ( UInt uiIndex ) const { return m_adLambdaModifier[ uiIndex ]; }
@@ -538,13 +498,8 @@ public:
   UInt      getIntraPeriod                  ()      { return  m_uiIntraPeriod; }
   UInt      getDecodingRefreshType          ()      { return  m_uiDecodingRefreshType; }
   Int       getGOPSize                      ()      { return  m_iGOPSize; }
-#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Int       getMaxDecPicBuffering           (UInt tlayer) { return m_maxDecPicBuffering[tlayer]; }
   Int       getNumReorderPics               (UInt tlayer) { return m_numReorderPics[tlayer]; }
-#else
-  Int      getMaxNumberOfReferencePictures ()      { return m_maxNumberOfReferencePictures; }
-  Int       geNumReorderFrames              ()      { return m_numReorderFrames; }
-#endif
   Int       getQP                           ()      { return  m_iQP; }
   
   Int       getTemporalLayerQPOffset        ( Int i )      { assert (i < MAX_TLAYER ); return  m_aiTLayerQPOffset[i]; }
@@ -561,9 +516,7 @@ public:
   Bool      getLoopFilterOffsetInAPS        ()      { return m_loopFilterOffsetInAPS; }
   Int       getLoopFilterBetaOffset         ()      { return m_loopFilterBetaOffsetDiv2; }
   Int       getLoopFilterTcOffset           ()      { return m_loopFilterTcOffsetDiv2; }
-#if DBL_CONTROL
   Bool      getDeblockingFilterControlPresent()  { return  m_DeblockingFilterControlPresent; }
-#endif
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
@@ -606,9 +559,6 @@ public:
   Void      setUseLComb                     ( Bool  b )     { m_bUseLComb   = b; }
   Void      setLCMod                        ( Bool  b )     { m_bLCMod   = b;    }
   Void      setUseRDOQ                      ( Bool  b )     { m_bUseRDOQ    = b; }
-#if !PIC_CROPPING
-  Void      setUsePAD                       ( Bool  b )     { m_bUsePAD     = b; }
-#endif
 #if HHI_VSO
   Void      setUseVSO                       ( Bool  b )     { m_bUseVSO     = b; }
 #endif
@@ -620,9 +570,7 @@ public:
 
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
-#if FAST_DECISION_FOR_MRG_RD_COST
   Void      setUseFastDecisionForMerge      ( Bool  b )     { m_useFastDecisionForMerge = b; }
-#endif
   Void      setUseCbfFastMode            ( Bool  b )     { m_bUseCbfFastMode = b; }
   Void      setUseConstrainedIntraPred      ( Bool  b )     { m_bUseConstrainedIntraPred = b; }
   Void      setPCMInputBitDepthFlag         ( Bool  b )     { m_bPCMInputBitDepthFlag = b; }
@@ -641,19 +589,14 @@ public:
 
   Void      setALFMaxNumberFilters          (Int i)  { m_iALFMaxNumberFilters = i; } 
   Int       getALFMaxNumberFilters          ()       { return m_iALFMaxNumberFilters; } 
-#if LCU_SYNTAX_ALF
   Void      setALFParamInSlice              (Bool b) {m_bALFParamInSlice = b;}
   Bool      getALFParamInSlice              ()       {return m_bALFParamInSlice;}
   Void      setALFPicBasedEncode            (Bool b) {m_bALFPicBasedEncode = b;}
   Bool      getALFPicBasedEncode            ()       {return m_bALFPicBasedEncode;}
-#endif
 
   Bool      getUseLComb                     ()      { return m_bUseLComb;   }
   Bool      getLCMod                        ()      { return m_bLCMod; }
   Bool      getUseRDOQ                      ()      { return m_bUseRDOQ;    }
-#if !PIC_CROPPING
-  Bool      getUsePAD                       ()      { return m_bUsePAD;     }
-#endif
 
 #if HHI_VSO
   Bool      getUseVSO                       ()      { return m_bUseVSO;     }
@@ -665,9 +608,7 @@ public:
 
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
-#if FAST_DECISION_FOR_MRG_RD_COST
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
-#endif
   Bool      getUseCbfFastMode           ()      { return m_bUseCbfFastMode; }
   Bool      getUseConstrainedIntraPred      ()      { return m_bUseConstrainedIntraPred; }
 #if NS_HAD
@@ -713,12 +654,14 @@ public:
   Void  setUseIC                       ( Bool bVal )   {m_bUseIC = bVal;}
   Bool  getUseIC                       ()              {return m_bUseIC;}
 #endif
-#if SAO_UNIT_INTERLEAVING
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Void  setUseIVS                       ( Bool bVal )   {m_bUseIVS = bVal;}
+  Bool  getUseIVS                       ()              {return m_bUseIVS;}
+#endif
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
   Void  setSaoInterleavingFlag                   (bool bVal)           { m_saoInterleavingFlag = bVal; }
   Bool  getSaoInterleavingFlag                   ()                    { return m_saoInterleavingFlag; }
-#endif
   Void  setTileBehaviorControlPresentFlag        ( Int i )             { m_iTileBehaviorControlPresentFlag = i;    }
   Int   getTileBehaviorControlPresentFlag        ()                    { return m_iTileBehaviorControlPresentFlag; }
   Void  setLFCrossTileBoundaryFlag               ( Bool   bValue  )    { m_bLFCrossTileBoundaryFlag = bValue; }
@@ -727,10 +670,6 @@ public:
   Int   getColumnRowInfoPresent        ()                  { return m_iColumnRowInfoPresent; }
   Void  setUniformSpacingIdr           ( Int i )           { m_iUniformSpacingIdr = i; }
   Int   getUniformSpacingIdr           ()                  { return m_iUniformSpacingIdr; }
-#if !REMOVE_TILE_DEPENDENCE
-  Void  setTileBoundaryIndependenceIdr ( Int i )           { m_iTileBoundaryIndependenceIdr = i; }
-  Int   getTileBoundaryIndependenceIdr ()                  { return m_iTileBoundaryIndependenceIdr; }
-#endif
   Void  setNumColumnsMinus1            ( Int i )           { m_iNumColumnsMinus1 = i; }
   Int   getNumColumnsMinus1            ()                  { return m_iNumColumnsMinus1; }
   Void  setColumnWidth ( char* str )
@@ -826,12 +765,10 @@ public:
 
   Void      setEnableTMVP          ( Bool b )    { m_bEnableTMVP = b;    }
   Bool      getEnableTMVP          ()            { return m_bEnableTMVP; }
-#if MULTIBITS_DATA_HIDING
   Void      setSignHideFlag( Int signHideFlag )  { m_signHideFlag = signHideFlag; }
   Void      setTSIG( Int tsig )                  { m_signHidingThreshold = tsig; }
   Int       getSignHideFlag()                    { return m_signHideFlag; }
   Int       getTSIG()                            { return m_signHidingThreshold; }
-#endif
 #if VIDYO_VPS_INTEGRATION |QC_MVHEVC_B0046
   Void      setLayerId             ( UInt layerId )   { m_layerId = layerId; }
   UInt      getLayerId             ()               { return m_layerId; }
@@ -868,8 +805,8 @@ public:
   Void      setCodedScale                   ( Int** p )      { m_aaiCodedScale          = p; }
   Void      setCodedOffset                  ( Int** p )      { m_aaiCodedOffset         = p; }
 
-#if SONY_COLPIC_AVAILABILITY
-  Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }    // will be changed to view_id
 #endif
 };
 

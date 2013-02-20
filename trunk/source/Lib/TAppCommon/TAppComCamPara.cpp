@@ -88,7 +88,6 @@ TAppComCamPara::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews,
   }
 }
 
-
 Void
 TAppComCamPara::xCreate2dArray( UInt uiNum1Ids, UInt uiNum2Ids, Int**& raaiArray )
 {
@@ -926,7 +925,6 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
     }
   }
 }
-
 
 Void
 TAppComCamPara::xSetShiftParametersAndLUT( UInt uiFrame )

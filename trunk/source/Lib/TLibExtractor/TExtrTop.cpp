@@ -76,11 +76,9 @@ Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds 
   if ( nalu.m_nalUnitType == NAL_UNIT_SPS )
   {
      TComSPS cSPS;
-#if RPS_IN_SPS
      TComRPSList cRPS;
      cSPS.setRPSList( &cRPS );
-#endif
-#if HHI_MPI
+#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
 #if VIDYO_VPS_INTEGRATION
      m_cEntropyDecoder.decodeSPS( &cSPS, m_cVPS.getDepthFlag(uiLayerId) );
 #else

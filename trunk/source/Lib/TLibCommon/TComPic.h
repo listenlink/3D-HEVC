@@ -76,18 +76,16 @@ private:
   Int                   m_uiIntraPeriod;
 #endif
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
-#if QC_MULTI_DIS_CAN_A0097
-  Bool          m_checked;
-#endif
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
+  Bool        m_checked;
   UInt        m_uiRapRefIdx;
   RefPicList  m_eRapRefList;
   Bool        m_bRapCheck;
 #endif
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComPicYuv*           m_pcResidual;             //  residual buffer (coded or inter-view predicted residual)
 #endif
 
@@ -111,8 +109,8 @@ private:
 #if HHI_INTERVIEW_SKIP
   TComPicYuv*           m_pcUsedPelsMap;
 #endif
-#if SONY_COLPIC_AVAILABILITY
-  Int                   m_iViewOrderIdx;
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Int                   m_iViewOrderIdx;    // will be changed to view_id
 #endif
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
@@ -166,18 +164,18 @@ public:
 #endif
 
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
-#if QC_MULTI_DIS_CAN_A0097
+#if H3D_NBDV
   Void          setCandPicCheckedFlag (Bool bchecked)   { m_checked = bchecked; }
   Bool          getCandPicCheckedFlag ()                { return m_checked;}
 #endif
 #endif
 
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   TComPicYuv*   getResidual()         { return  m_pcResidual; }
 #endif
-#if QC_SIMPLE_NBDV_B0047
+#if H3D_NBDV
   UInt          getRapRefIdx()                         {return m_uiRapRefIdx;}
   RefPicList    getRapRefList()                        {return m_eRapRefList;}
   Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
@@ -187,9 +185,9 @@ public:
   Bool          getDisCandRefPictures(Int iColPOC);
 #endif
 
-#if SONY_COLPIC_AVAILABILITY
-  Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }
-  Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }
+#if INTER_VIEW_VECTOR_SCALING_C0115
+  Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }        // will be changed to view_id
+  Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }    // will be changed to view_id
 #endif
 
 #if OL_QTLIMIT_PREDCODING_B0068
@@ -251,19 +249,19 @@ public:
 #if DEPTH_MAP_GENERATION
   Void          addPrdDepthMapBuffer    ( UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void          addOrgDepthMapBuffer    ();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void          addResidualBuffer       ();
 #endif
 #if DEPTH_MAP_GENERATION
   Void          removePrdDepthMapBuffer ();
 #endif
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
   Void          removeOrgDepthMapBuffer ();
 #endif
-#if HHI_INTER_VIEW_RESIDUAL_PRED
+#if H3D_IVRP
   Void          removeResidualBuffer    ();
 #endif
 

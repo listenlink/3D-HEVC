@@ -377,7 +377,8 @@ Void TComCUMvField::decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift 
 
 
 #if MTK_UNCONSTRAINED_MVI_B0083
-Void TComCUMvField::setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir )
+Void TComCUMvField::setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir 
+                                   )
 {
   PredMode predMode = MODE_INTRA;
   TComMv cMv(0,0); 
@@ -385,7 +386,7 @@ Void TComCUMvField::setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMod
   for ( Int i = 0; i < iNumPart; i++ )
   { 
     predMode = static_cast<PredMode>( pePredMode[ iPartAddr+i ] );
-    if( predMode==MODE_INTRA  )
+    if( predMode == MODE_INTRA )
     {
       m_pcMv[iPartAddr+i] = cMv;
       puhInterDir[iPartAddr+i] = InterDir; 

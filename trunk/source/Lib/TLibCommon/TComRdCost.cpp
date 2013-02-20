@@ -180,7 +180,7 @@ Void TComRdCost::setLambda( Double dLambda )
   m_uiLambdaMotionSSE = (UInt)floor(65536.0 * m_dLambda   );
 }
 
-#if HHI_INTER_VIEW_MOTION_PRED
+#if H3D_IVMP
 Void
 TComRdCost::setLambdaMVReg( Double dLambda )
 {
