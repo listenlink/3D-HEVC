@@ -1760,7 +1760,11 @@ TComSPS::initMultiviewSPS( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecis
 }
 
 Void
+#if FCO_FIX_SPS_CHANGE
+TComSPS::initMultiviewSPSDepth( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecision, Bool bCamParSlice, Int** aaiScale, Int** aaiOffset )
+#else
 TComSPS::initMultiviewSPSDepth( UInt uiViewId, Int iViewOrderIdx )
+#endif
 {
   AOT( uiViewId == 0 && iViewOrderIdx != 0 );
   AOT( uiViewId != 0 && iViewOrderIdx == 0 );
@@ -1768,10 +1772,30 @@ TComSPS::initMultiviewSPSDepth( UInt uiViewId, Int iViewOrderIdx )
   m_uiViewId              = uiViewId;
   m_iViewOrderIdx         = iViewOrderIdx;
   m_bDepth                = true;
+#if FCO_FIX_SPS_CHANGE
+  m_uiCamParPrecision     = ( m_uiViewId ? uiCamParPrecision : 0 );
+  m_bCamParInSliceHeader  = ( m_uiViewId ? bCamParSlice  : false );
+#else
   m_uiCamParPrecision     = 0;
   m_bCamParInSliceHeader  = false;
+#endif
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
+#if FCO_FIX_SPS_CHANGE
+#if !QC_MVHEVC_B0046
+  if( !m_bCamParInSliceHeader )
+  {
+    for( UInt uiBaseViewId = 0; uiBaseViewId < m_uiViewId; uiBaseViewId++ )
+    {
+      m_aaiCodedScale [ 0 ][ uiBaseViewId ] = aaiScale [ uiBaseViewId ][   m_uiViewId ];
+      m_aaiCodedScale [ 1 ][ uiBaseViewId ] = aaiScale [   m_uiViewId ][ uiBaseViewId ];
+      m_aaiCodedOffset[ 0 ][ uiBaseViewId ] = aaiOffset[ uiBaseViewId ][   m_uiViewId ];
+      m_aaiCodedOffset[ 1 ][ uiBaseViewId ] = aaiOffset[   m_uiViewId ][ uiBaseViewId ];
+    }
+  }
+#endif
+#endif
+
 }
 
 #if DEPTH_MAP_GENERATION

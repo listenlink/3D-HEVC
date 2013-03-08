@@ -1500,11 +1500,47 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       READ_FLAG( uiCode, "depth_flag" ); 
       if( uiCode )
       {
+#if FCO_FIX_SPS_CHANGE
+        UInt  uiViewId, uiCamParPrecision;
+        Int   iVOI;
+        Bool  bCamParSlice;
+        READ_UVLC( uiCode, "view_id" ); 
+        READ_SVLC( iCode, "view_order_idx" );
+        uiViewId = uiCode;
+        iVOI = iCode;
+
+        if ( uiViewId == 0 )
+        {
+          pcSPS->initMultiviewSPSDepth    ( uiViewId, iVOI );
+        }
+        else
+        {
+          READ_UVLC( uiCamParPrecision, "camera_parameter_precision" );
+          READ_FLAG( uiCode, "camera_parameter_in_slice_header" );    bCamParSlice = ( uiCode == 1 );
+          if( !bCamParSlice )
+          {
+            for( UInt uiBaseId = 0; uiBaseId < uiViewId; uiBaseId++ )
+            {
+              READ_SVLC( iCode, "coded_scale" );   m_aaiTempScale [ uiBaseId ][ uiViewId ] = iCode;
+              READ_SVLC( iCode, "coded_offset" );   m_aaiTempOffset[ uiBaseId ][ uiViewId ] = iCode;
+              READ_SVLC( iCode, "inverse_coded_scale_plus_coded_scale" );   m_aaiTempScale [ uiViewId ][ uiBaseId ] = iCode - m_aaiTempScale [ uiBaseId ][ uiViewId ];
+              READ_SVLC( iCode, "inverse_coded_offset_plus_coded_offset" );   m_aaiTempOffset[ uiViewId ][ uiBaseId ] = iCode - m_aaiTempOffset[ uiBaseId ][ uiViewId ];
+            }
+          }
+          pcSPS->initMultiviewSPSDepth( uiViewId, iVOI, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset );
+
+        }
+#else
         READ_UVLC( uiCode, "view_id" ); 
         READ_SVLC(  iCode, "view_order_idx" ); 
         pcSPS->initMultiviewSPSDepth    ( uiCode, iCode );
+#endif
 #if DEPTH_MAP_GENERATION
+#if FCO_FIX_SPS_CHANGE
+        pcSPS->setPredDepthMapGeneration( uiViewId, true );
+#else
         pcSPS->setPredDepthMapGeneration( uiCode, true );
+#endif
 #endif
 #if H3D_IVRP
       pcSPS->setMultiviewResPredMode  ( 0 );
