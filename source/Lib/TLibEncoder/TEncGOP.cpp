@@ -725,6 +725,24 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       m_uiStoredStartCUAddrForEncodingSlice[uiStartCUAddrSliceIdx++]                = uiNextCUAddr;
       m_uiStoredStartCUAddrForEncodingEntropySlice[uiStartCUAddrEntropySliceIdx++]  = uiNextCUAddr;
 
+#if FCO_DVP_REFINE_C0132_C0170
+      pcPic->setDepthCoded(false);
+
+      if(pcSlice->getViewId() != 0)
+      {
+        if(pcSlice->getSPS()->isDepth() == 0 )
+        {
+          TComPic * recDepthMapBuffer;
+          recDepthMapBuffer = m_pcEncTop->getEncTop()->getPicFromView( pcSlice->getViewId(), pcSlice->getPOC(), true );
+          pcSlice->getPic()->setRecDepthMap(recDepthMapBuffer);
+          if(recDepthMapBuffer->getReconMark())
+          {
+            pcPic->setDepthCoded(true);
+          }
+        }
+      }
+#endif
+
 #if DEPTH_MAP_GENERATION
       // init view component and predict virtual depth map
       m_pcDepthMapGenerator->initViewComponent( pcPic );

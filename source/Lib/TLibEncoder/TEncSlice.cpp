@@ -59,6 +59,10 @@ TEncSlice::TEncSlice()
   m_pcBufferBinCoderCABACs  = NULL;
   m_pcBufferLowLatSbacCoders    = NULL;
   m_pcBufferLowLatBinCoderCABACs  = NULL;
+#if FCO_DVP_REFINE_C0132_C0170
+  m_pPicBaseTxt = NULL;
+  m_pPicBaseDepth = NULL;
+#endif
 }
 
 TEncSlice::~TEncSlice()
