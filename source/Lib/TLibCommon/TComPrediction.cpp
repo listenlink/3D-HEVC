@@ -1433,7 +1433,6 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   Int refStride = refPic->getStride();
   Int dstStride = dstPic->getStride();
   Int depStride =  pPicBaseDepth->getStride();
-
   Int depthPosX = Clip3(0,   widthLuma - size_x - 1,  (posX/nTxtPerDepthX) + (mv->getHor()>>2));
   Int depthPosY = Clip3(0,   heightLuma- size_y - 1,  (posY/nTxtPerDepthY) + (mv->getVer()>>2));
 

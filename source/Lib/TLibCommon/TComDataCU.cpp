@@ -3595,7 +3595,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 {
 #if H3D_IVMP
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+#if FCO_FIX
+  const Int extraMergeCand = ( ( ( getSlice()->getIsDepth() && m_pcSlice->getTexturePic() ) || getSlice()->getSPS()->getMultiviewMvPredMode() )? 1 : 0 );
+#else
   const Int extraMergeCand = ( ( getSlice()->getIsDepth() || getSlice()->getSPS()->getMultiviewMvPredMode() )? 1 : 0 );
+#endif
 #else
   const Int extraMergeCand = ( getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #endif
@@ -3650,12 +3654,31 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   cDisInfo.iN = 0;
   if(!bNoPdmMerge)
   {
+#if FCO_DVP_REFINE_C0132_C0170
+    if( !getPic()->getDepthCoded() )
+#endif
     getDisMvpCandNBDV(uiPUIdx, uiAbsPartIdx, &cDisInfo , true
 #if MERL_VSP_C0152
             , true
 #endif
 );
   }
+#if FCO_DVP_REFINE_C0132_C0170
+  if(getPic()->getDepthCoded() )
+  {
+    TComPic*      pcCodedDepthMap = getPic()->getRecDepthMap();
+    TComMv        cColMv;
+
+    cColMv.setZero();
+    estimateDVFromDM(uiPUIdx, pcCodedDepthMap, uiAbsPartIdx, &cColMv, false);
+
+    cDisInfo.iN = 1;
+    cDisInfo.m_acMvCand[0].setHor( cColMv.getHor() );
+    cDisInfo.m_acMvCand[0].setVer( cColMv.getVer() );
+    cDisInfo.m_aVIdxCan[0] = 0;
+
+  }
+#endif
   if(cDisInfo.iN==0)
   {
     cDisInfo.iN = 1;
@@ -3668,7 +3691,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   }
 
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+#if FCO_FIX
+  if( m_pcSlice->getIsDepth() && m_pcSlice->getTexturePic() )
+#else
   if( m_pcSlice->getIsDepth())
+#endif
   {
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( cCurPS, uiPUIdx, uiPartIdxCenter );    
@@ -6078,11 +6105,29 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       // Extension part
       DisInfo cDisInfo;
       cDisInfo.iN = 0;
+#if FCO_DVP_REFINE_C0132_C0170
+      if( !getPic()->getDepthCoded() )
+#endif
       getDisMvpCandNBDV(uiPartIdx, uiPartAddr, &cDisInfo, false
 #if MERL_VSP_C0152
             , true
 #endif
               ); 
+#if FCO_DVP_REFINE_C0132_C0170
+      if(getPic()->getDepthCoded() )
+      {
+        TComPic*      pcCodedDepthMap = getPic()->getRecDepthMap();
+        TComMv        cColMv;
+
+        cColMv.setZero();
+        estimateDVFromDM(uiPartIdx, pcCodedDepthMap, uiPartAddr, &cColMv, false);
+
+        cDisInfo.iN = 1;
+        cDisInfo.m_acMvCand[0].setHor( cColMv.getHor() );
+        cDisInfo.m_acMvCand[0].setVer( cColMv.getVer() );
+        cDisInfo.m_aVIdxCan[0] = 0;
+      }
+#endif
       if(cDisInfo.iN==0)
       {
         cDisInfo.iN = 1;
@@ -7920,6 +7965,23 @@ TComDataCU::getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv )
   cDisInfo.iN = 0;
   PartSize m_peSaved =  getPartitionSize( 0 );
   m_pePartSize[0] =  SIZE_2Nx2N;
+#if FCO_DVP_REFINE_C0132_C0170
+  if(getPic()->getDepthCoded() )
+  {
+    TComPic*      pcCodedDepthMap = getPic()->getRecDepthMap();
+    TComMv        cColMv;
+
+    cColMv.setZero();
+    estimateDVFromDM(0, pcCodedDepthMap, 0, &cColMv, false);
+
+    cDisInfo.iN = 1;
+    cDisInfo.m_acMvCand[0].setHor( cColMv.getHor() );
+    cDisInfo.m_acMvCand[0].setVer( cColMv.getVer() );
+    cDisInfo.m_aVIdxCan[0] = 0;
+
+  }
+  else
+#endif
   getDisMvpCandNBDV( 0, 0,  &cDisInfo, false );
   if( cDisInfo.iN == 0)
   {

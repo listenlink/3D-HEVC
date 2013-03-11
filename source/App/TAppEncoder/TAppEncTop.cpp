@@ -428,10 +428,17 @@ Void TAppEncTop::xInitLibCfg()
       m_cVPS.setDependentFlag                                         ( true, layerId );
       m_cVPS.setDependentLayer                                        ( layerId-1, layerId);
 #endif
+#if FCO_FIX_SPS_CHANGE
+      m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
+      m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
+      m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
+      m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#else
       m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( false );
       m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( 0 );
+#endif
 
       //====== Coding Structure ========
       m_acTEncDepthTopList[iViewIdx]->setIntraPeriod                  ( m_iIntraPeriod );
@@ -969,6 +976,7 @@ Void TAppEncTop::encode()
     for ( Int gopId=0; gopId < gopSize; gopId++ )
     {
       Int  iNumEncoded = 0;
+
 #if !QC_MVHEVC_B0046
       UInt iNextPoc = m_acTEncTopList[0] -> getFrameId( gopId );
       if ( iNextPoc < m_iFrameToBeEncoded )
@@ -976,6 +984,7 @@ Void TAppEncTop::encode()
         m_cCameraData.update( iNextPoc );
       }
 #endif
+
 
 #if FLEX_CODING_ORDER_M23723
       if (m_b3DVFlexOrder)
@@ -993,6 +1002,18 @@ Void TAppEncTop::encode()
             i++;
             assert(isdigit(m_pchMVCJointCodingOrder[i]));
             iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+#if (FCO_FIX && MERL_VSP_C0152)
+            Int iCurPoc = m_acTEncTopList[iViewIdx]->getFrameId(gopId);
+            if( iCurPoc < m_acTEncTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
+            {
+              TComPic* pcBaseTxtPic   = getPicFromView(  0, m_acTEncTopList[iViewIdx]->getFrameId(gopId), false ); //get base view reconstructed texture
+              TComPic* pcBaseDepthPic = getPicFromView(  0, m_acTEncTopList[iViewIdx]->getFrameId(gopId), true );  //get base view reconstructed depth
+              TEncSlice* pEncSlice = m_acTEncTopList[iViewIdx]->getSliceEncoder();
+              pEncSlice->setRefPicBaseTxt(pcBaseTxtPic);
+              pEncSlice->setRefPicBaseDepth(pcBaseDepthPic);
+            }
+            setBWVSPLUT( iViewIdx, gopId, false);            
+#endif
 
             m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
             xWriteOutput(bitstreamFile, iNumEncoded, outputAccessUnits, iViewIdx, false);
@@ -1007,12 +1028,23 @@ Void TAppEncTop::encode()
             {
               assert(isdigit(m_pchMVCJointCodingOrder[i]));
               iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
+
 #if SAIT_VSO_EST_A0033
               if( m_bUseVSO && iNextPoc < m_iFrameToBeEncoded )
               {
                 m_cCameraData.xSetDispCoeff( iNextPoc, iViewIdx );
                 m_acTEncDepthTopList[iViewIdx]->setDispCoeff( m_cCameraData.getDispCoeff() );
               }
+#endif
+#if (FCO_FIX && MERL_VSP_C0152)
+              Int iCurPocDepth = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
+              if( iCurPocDepth < m_acTEncDepthTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
+              {
+                TComPic* pcBaseDepthPic = getPicFromView(  0, m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId), true );
+                TEncSlice* pcSlice = (TEncSlice*) m_acTEncDepthTopList[iViewIdx]->getSliceEncoder();
+                pcSlice->setRefPicBaseDepth(pcBaseDepthPic);
+              }
+              setBWVSPLUT( iViewIdx, gopId, true);
 #endif
               m_acTEncDepthTopList[iViewIdx]->encode( depthEos[iViewIdx], pcDepthPicYuvOrg, *m_picYuvDepthRec[iViewIdx], outputAccessUnits, iNumDepthEncoded, gopId );
               xWriteOutput(bitstreamFile, iNumDepthEncoded, outputAccessUnits, iViewIdx, true);

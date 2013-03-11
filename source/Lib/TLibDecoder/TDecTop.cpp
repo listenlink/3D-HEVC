@@ -192,15 +192,20 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   }
 
   AOF( pcSlice->getSPS()->getViewId() < MAX_VIEW_NUM );
+#if !FCO_FIX  // Under flexible coding order, depth may need the camera parameters
   if ( pcSlice->getSPS()->isDepth  () )
   {
     return;
   }
+#endif
   Bool  bFirstAU          = ( pcSlice->getPOC()               == 0 );
   Bool  bFirstSliceInAU   = ( pcSlice->getPOC()               != Int ( m_iLastPOC ) );
   Bool  bFirstSliceInView = ( pcSlice->getSPS()->getViewId()  != UInt( m_iLastViewId ) || bFirstSliceInAU );
   AOT(  bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()  != 0 );
+#if FCO_FIX
+#else
   AOT( !bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()   < UInt( m_iLastViewId ) );
+#endif
   AOT( !bFirstSliceInAU  &&   pcSlice->getSPS()->getViewId()   > UInt( m_iLastViewId + 1 ) );
   AOT( !bFirstAU         &&   pcSlice->getSPS()->getViewId()   > m_uiMaxViewId );
   if ( !bFirstSliceInView )
@@ -1170,6 +1175,29 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     initWedgeLists();
   }
 #endif
+
+#if FCO_DVP_REFINE_C0132_C0170
+  if(m_bFirstSliceInPicture)
+  {
+    pcPic->setDepthCoded(false);
+
+    if(m_viewId != 0)
+    {
+      if( m_isDepth == 0)
+      {
+        TComPic * recDepthMapBuffer;
+        recDepthMapBuffer = m_tAppDecTop->getPicFromView( m_viewId, pcSlice->getPOC(), true );
+        pcPic->setRecDepthMap(recDepthMapBuffer);
+
+        if(recDepthMapBuffer != NULL)
+        {
+          pcPic->setDepthCoded(true);
+        }
+      }
+    }
+  }
+#endif
+
 
 #if MERL_VSP_C0152 // set BW LUT 
   if( m_pcCamParsCollector ) // Initialize the LUT elements 
