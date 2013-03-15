@@ -72,6 +72,11 @@ private:
 #endif
 #endif
 
+#if FCO_DVP_REFINE_C0132_C0170
+  Bool                  m_bDepthCoded;
+  TComPic*              m_pcRecDepthMap;   
+#endif
+
 #if LG_ZEROINTRADEPTHRESI_A0087
   Int                   m_uiIntraPeriod;
 #endif
@@ -170,6 +175,13 @@ public:
   Void          setCandPicCheckedFlag (Bool bchecked)   { m_checked = bchecked; }
   Bool          getCandPicCheckedFlag ()                { return m_checked;}
 #endif
+#endif
+
+#if FCO_DVP_REFINE_C0132_C0170
+  void setRecDepthMap(TComPic * pRecPic)                { m_pcRecDepthMap = pRecPic; }
+  TComPic * getRecDepthMap()                            { return m_pcRecDepthMap; }
+  void setDepthCoded(Bool flag)                         { m_bDepthCoded = flag; }
+  Bool getDepthCoded()                                  { return m_bDepthCoded; }
 #endif
 
 #if H3D_IVRP

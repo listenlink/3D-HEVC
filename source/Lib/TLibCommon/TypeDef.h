@@ -165,11 +165,21 @@
 #define VIDYO_VPS_INTEGRATION             1   // Integration of VPS
 #define HHI_DEPTH_INTRA_SEARCH_RAU_C0160  1   // JCT3V-C0160 change 1: full Intra search in depth random access units 
 #define FIX_POZNAN_CABAC_INIT_FLAG        1
+#define FIX_LGE_WP_FOR_3D_C0223           1   // JCT3V-C0223 Weighted Prediction Bug-fix for 3D-HEVC. Caution! There is still crush using WP with Residual Prediction.
+#define FIX_APPENCTOP_T_ONLY              1   // For Texture-only coding
 
 ///// ***** FCO  *********
 #define FLEX_CODING_ORDER_M23723          1
 #if FLEX_CODING_ORDER_M23723
 #define DISABLE_FCO_FOR_VSO               0 // Optional compile settings to disable VSO with FCO.
+#define FCO_DVP_REFINE_C0132_C0170        0 // depth oriented disparity vector prediction from JCT3V-C0132 and JCT3V-C0170
+#define FCO_FIX                           0 // Bug fix for C0137 and C0152 on FCO
+#define FCO_FIX_SPS_CHANGE                0 // Sending camera parameters in SPS of depth for depth to disparity conversion used by VSP and DoDVP
+#else
+#define DISABLE_FCO_FOR_VSO               0 // Optional compile settings to disable VSO with FCO.
+#define FCO_DVP_REFINE_C0132_C0170        0 // depth oriented disparity vector prediction from JCT3V-C0132 and JCT3V-C0170
+#define FCO_FIX                           0 // Fixing bugs from HTM 6.0 which 
+#define FCO_FIX_SPS_CHANGE                0 // Fixing bugs from HTM 6.0 which 
 #endif
 
 ///// ***** VSP *********

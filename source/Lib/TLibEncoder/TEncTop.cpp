@@ -711,7 +711,12 @@ Void TEncTop::xInitSPS()
 
   if( m_isDepth )
   {
+#if FCO_FIX_SPS_CHANGE
+    m_cSPS.initMultiviewSPSDepth    ( m_viewId, m_iViewOrderIdx, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
+#else
     m_cSPS.initMultiviewSPSDepth    ( m_viewId, m_iViewOrderIdx );
+#endif
+
 #if DEPTH_MAP_GENERATION
     m_cSPS.setPredDepthMapGeneration( m_viewId, true );
 #endif

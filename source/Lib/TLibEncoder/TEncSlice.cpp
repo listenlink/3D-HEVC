@@ -59,6 +59,10 @@ TEncSlice::TEncSlice()
   m_pcBufferBinCoderCABACs  = NULL;
   m_pcBufferLowLatSbacCoders    = NULL;
   m_pcBufferLowLatBinCoderCABACs  = NULL;
+#if FCO_DVP_REFINE_C0132_C0170
+  m_pPicBaseTxt = NULL;
+  m_pPicBaseDepth = NULL;
+#endif
 }
 
 TEncSlice::~TEncSlice()
@@ -672,6 +676,26 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   {
     xCalcACDCParamSlice(pcSlice);
   }
+#if FIX_LGE_WP_FOR_3D_C0223
+  Bool bWp_explicit = (pcSlice->getSliceType()==P_SLICE && pcSlice->getPPS()->getUseWP()) || (pcSlice->getSliceType()==B_SLICE && pcSlice->getPPS()->getWPBiPredIdc());
+
+  if ( bWp_explicit )
+  {
+    //------------------------------------------------------------------------------
+    //  Weighted Prediction implemented at Slice level. SliceMode=2 is not supported yet.
+    //------------------------------------------------------------------------------
+    if ( pcSlice->getSliceMode()==2 || pcSlice->getEntropySliceMode()==2 )
+    {
+      printf("Weighted Prediction is not supported with slice mode determined by max number of bins.\n"); exit(0);
+    }
+    xEstimateWPParamSlice( pcSlice );
+    pcSlice->initWpScaling();
+#if !FIX_LGE_WP_FOR_3D_C0223 // Interim fix for encoder/decoder mismatch of non-fade sequence
+    // check WP on/off
+    xCheckWPEnable( pcSlice );
+#endif
+  }
+#else
 
   Bool bWp_explicit = (pcSlice->getSliceType()==P_SLICE && pcSlice->getPPS()->getUseWP()) || (pcSlice->getSliceType()==B_SLICE && pcSlice->getPPS()->getWPBiPredIdc()==1);
   Bool bWp_implicit = (pcSlice->getSliceType()==B_SLICE && pcSlice->getPPS()->getWPBiPredIdc()==2);
@@ -699,7 +723,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       xCheckWPEnable( pcSlice );
     }
   }
-
+#endif
 #if ADAPTIVE_QP_SELECTION
   if( m_pcCfg->getUseAdaptQpSelect() )
   {
