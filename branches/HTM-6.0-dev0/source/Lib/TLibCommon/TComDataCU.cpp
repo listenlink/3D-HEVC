@@ -80,6 +80,13 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
 inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
                                           UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDInfo )
 {
+#if MERL_VSP_C0152_BugFix_ForNoDepthCase
+  TComPic* pRefPicBaseDepth = NULL;
+  pRefPicBaseDepth = getSlice()->getRefPicBaseDepth();
+  if(ucVspMergePos == VSP_MERGE_POS && pRefPicBaseDepth) //VSP can be used only when depth is used as input
+#else
+  if( ucVspMergePos == VSP_MERGE_POS )
+#endif
   if( ucVspMergePos == VSP_MERGE_POS )
   {
     Int idx = vspIdx - 1;

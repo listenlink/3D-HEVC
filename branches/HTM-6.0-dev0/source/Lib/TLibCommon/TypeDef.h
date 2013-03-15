@@ -185,7 +185,7 @@
 ///// ***** VSP *********
 #define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
 #if MERL_VSP_C0152
-
+#define MERL_VSP_C0152_BugFix_ForNoDepthCase     1// MERL bugfix for test condition of no depth
 /*
  * Two macros are used to configure combinations of JCT3V-C0152 and JCT3V-C0131
  * 

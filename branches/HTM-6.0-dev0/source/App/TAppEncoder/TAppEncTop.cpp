@@ -1070,6 +1070,10 @@ Void TAppEncTop::encode()
         iNumEncoded = 0;
 
 #if MERL_VSP_C0152
+#if MERL_VSP_C0152_BugFix_ForNoDepthCase
+        if(m_bUsingDepthMaps) //VSP can be used only when depth is available as input
+        {
+#endif
         Int iCurPoc = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
         if( iCurPoc < m_acTEncDepthTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
         {
@@ -1080,6 +1084,20 @@ Void TAppEncTop::encode()
           pEncSlice->setRefPicBaseDepth(pcBaseDepthPic);
         }
         setBWVSPLUT( iViewIdx, gopId, false);
+#if MERL_VSP_C0152_BugFix_ForNoDepthCase
+        }
+        else
+        {
+          Int iCurPoc = m_acTEncTopList[iViewIdx]->getFrameId(gopId);
+          if( iCurPoc < m_acTEncTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
+          {
+            TEncSlice* pEncSlice = m_acTEncTopList[iViewIdx]->getSliceEncoder();
+            pEncSlice->setRefPicBaseTxt(NULL);//Initialize the base view reconstructed texture buffer
+            pEncSlice->setRefPicBaseDepth(NULL);//Initialize the base view reconstructed depth buffer
+          }
+        }
+#endif
+
 #endif
         // call encoding function for one frame
         m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
