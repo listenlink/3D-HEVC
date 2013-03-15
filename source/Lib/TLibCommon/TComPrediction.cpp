@@ -1119,7 +1119,7 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
   }
 #if FIX_LGE_WP_FOR_3D_C0223
   else if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType() == P_SLICE )
-#endif
+
   {
 #if MERL_VSP_C0152
     if(pcCU->getVSPIndex(uiPartAddr))
@@ -1128,11 +1128,7 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
 #endif
       xWeightedPredictionUni( pcCU, &m_acYuvPred[0], uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, rpcYuvPred, iPartIdx ); 
   }
-
-
-
-
-
+#endif
   else
   {
 #if DEPTH_MAP_GENERATION
