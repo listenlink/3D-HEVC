@@ -613,10 +613,17 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   Int           iSrcStrideC = pcBaseRes->getCStride();
   Int           iDesStrideC = pcYuv    ->getCStride();
 #if MTK_RELEASE_DV_CONSTRAINT_C0129
+#if FIX_CHROMA_RESIDUAL_C0129
+  Pel*          pSrcSamplesU0= pcBaseRes->getCbAddr ( 0 ) + iCRefPosY0 * iSrcStrideC;
+  Pel*          pSrcSamplesU1= pcBaseRes->getCbAddr ( 0 ) + iCRefPosY1 * iSrcStrideC;
+  Pel*          pSrcSamplesV0= pcBaseRes->getCrAddr ( 0 ) + iCRefPosY0 * iSrcStrideC;
+  Pel*          pSrcSamplesV1= pcBaseRes->getCrAddr ( 0 ) + iCRefPosY1 * iSrcStrideC;
+#else
   Pel*          pSrcSamplesU0= pcBaseRes->getCbAddr ( 0 ) + ( iCRefPosY0 >> 1 ) * iSrcStrideC;
   Pel*          pSrcSamplesU1= pcBaseRes->getCbAddr ( 0 ) + ( iCRefPosY1 >> 1 ) * iSrcStrideC;
   Pel*          pSrcSamplesV0= pcBaseRes->getCrAddr ( 0 ) + ( iCRefPosY0 >> 1 ) * iSrcStrideC;
   Pel*          pSrcSamplesV1= pcBaseRes->getCrAddr ( 0 ) + ( iCRefPosY1 >> 1 ) * iSrcStrideC;
+#endif
 #else
   Pel*          pSrcSamplesU= pcBaseRes->getCbAddr ( 0 ) + ( uiYPos >> 1 ) * iSrcStrideC;
   Pel*          pSrcSamplesV= pcBaseRes->getCrAddr ( 0 ) + ( uiYPos >> 1 ) * iSrcStrideC;
