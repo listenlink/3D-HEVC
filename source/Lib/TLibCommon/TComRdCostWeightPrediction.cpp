@@ -105,7 +105,15 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
     piCur += iStrideCur;
       piUsed += iStrideUsed;
   }
-#else
+#if FIX_LGE_WP_FOR_3D_C0223
+  }
+  else
+  {
+#endif
+#if FIX_LGE_WP_FOR_3D_C0223 //comment of #else
+    //#else
+#endif
+#endif
   for( ; iRows != 0; iRows-- )
   {
     for (Int n = 0; n < iCols; n++ )
@@ -117,7 +125,9 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
     piOrg += iStrideOrg;
     piCur += iStrideCur;
   }
-    #endif
+#if FIX_LGE_WP_FOR_3D_C0223 //comment of #endif
+  //#endif
+#endif
     #if HHI_INTERVIEW_SKIP
       }
     #endif

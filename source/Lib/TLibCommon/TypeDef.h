@@ -165,6 +165,8 @@
 #define VIDYO_VPS_INTEGRATION             1   // Integration of VPS
 #define HHI_DEPTH_INTRA_SEARCH_RAU_C0160  1   // JCT3V-C0160 change 1: full Intra search in depth random access units 
 #define FIX_POZNAN_CABAC_INIT_FLAG        1
+#define FIX_LGE_WP_FOR_3D_C0223           1   // JCT3V-C0223 Weighted Prediction Bug-fix for 3D-HEVC. Caution! There is still crush using WP with Residual Prediction.
+#define FIX_APPENCTOP_T_ONLY              1   // For Texture-only coding
 
 ///// ***** FCO  *********
 #define FLEX_CODING_ORDER_M23723          1

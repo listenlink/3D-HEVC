@@ -1065,7 +1065,12 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
     }
     else
     {
+#if FIX_LGE_WP_FOR_3D_C0223
+      if ( ( pcCU->getSlice()->getPPS()->getUseWP()      && pcCU->getSlice()->getSliceType() == P_SLICE ) || 
+         ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() && pcCU->getSlice()->getSliceType() == B_SLICE ) )
+#else
       if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
+#endif
       {
 #if DEPTH_MAP_GENERATION
 #if MERL_VSP_C0152
@@ -1099,8 +1104,11 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
       }
     }
   }
-
+#if FIX_LGE_WP_FOR_3D_C0223
+  if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() && pcCU->getSlice()->getSliceType() == B_SLICE  )
+#else
   if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
+#endif
   {
 #if MERL_VSP_C0152
     if(pcCU->getVSPIndex(uiPartAddr))
@@ -1109,6 +1117,22 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
 #endif
     xWeightedPredictionBi( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
   }
+#if FIX_LGE_WP_FOR_3D_C0223
+  else if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType() == P_SLICE )
+#endif
+  {
+#if MERL_VSP_C0152
+    if(pcCU->getVSPIndex(uiPartAddr))
+      m_acYuvPred[0].copyPartToPartYuv( rpcYuvPred, uiPartAddr, iWidth, iHeight );
+    else
+#endif
+      xWeightedPredictionUni( pcCU, &m_acYuvPred[0], uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, rpcYuvPred, iPartIdx ); 
+  }
+
+
+
+
+
   else
   {
 #if DEPTH_MAP_GENERATION
