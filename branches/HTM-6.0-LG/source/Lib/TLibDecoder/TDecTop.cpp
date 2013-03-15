@@ -1127,10 +1127,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       pcSlice->generateCombinedList();
     }
 
+#if !FIX_LGE_WP_FOR_3D_C0223
     if( pcSlice->getRefPicListCombinationFlag() && pcSlice->getPPS()->getWPBiPredIdc()==1 && pcSlice->getSliceType()==B_SLICE )
     {
       pcSlice->setWpParamforLC();
     }
+#endif
     pcSlice->setNoBackPredFlag( false );
     if ( pcSlice->getSliceType() == B_SLICE && !pcSlice->getRefPicListCombinationFlag())
     {

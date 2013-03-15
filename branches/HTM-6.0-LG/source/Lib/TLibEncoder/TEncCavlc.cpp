@@ -1115,8 +1115,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_UVLC( pcSlice->getColRefIdx(), "collocated_ref_idx" );
     }
 #endif
-  
+
+#if FIX_LGE_WP_FOR_3D_C0223
+    if ( (pcSlice->getPPS()->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pcSlice->getPPS()->getWPBiPredIdc() && pcSlice->getSliceType()==B_SLICE) )
+#else
     if ( (pcSlice->getPPS()->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pcSlice->getPPS()->getWPBiPredIdc()==1 && pcSlice->getSliceType()==B_SLICE) )
+#endif    
     {
       xCodePredWeightTable( pcSlice );
     }
