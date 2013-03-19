@@ -5173,19 +5173,29 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
 
   Int width  = pcBaseViewDepthPicYuv->getWidth();
   Int height = pcBaseViewDepthPicYuv->getHeight();
-
+#if MTK_DVPREFINE_BVSP_BUG_FIX
+  Int depthPosX = Clip3(0,   width - iWidth,  iBlkX + (mv->getHor()>>2));
+  Int depthPosY = Clip3(0,   height - iHeight,  iBlkY + (mv->getVer()>>2));
+#else
   Int depthPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + (mv->getHor()>>2));
   Int depthPosY = Clip3(0,   height- iHeight - 1,  iBlkY + (mv->getVer()>>2));
-
+#endif
   Pel *depth  = pcBaseViewDepthPicYuv->getLumaAddr() + depthPosX + depthPosY * depStride;
   Pel  maxDepth = 0;
 #if LGE_SIMP_DVP_REFINE_C0112
   if ( bSimpleDvpRefine )
   {
+#if MTK_DVPREFINE_BVSP_BUG_FIX
+    Int depthStartPosX = Clip3(0,   width - iWidth,  iBlkX + (mv->getHor()>>2));
+    Int depthStartPosY = Clip3(0,   height - iHeight,  iBlkY + (mv->getVer()>>2));
+    Int depthEndPosX = Clip3(0,   width - 1,  iBlkX + iWidth - 1  + (mv->getHor()>>2));
+    Int depthEndPosY = Clip3(0,   height - 1,  iBlkY + iHeight - 1 + (mv->getVer()>>2));
+#else
     Int depthStartPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + (mv->getHor()>>2));
     Int depthStartPosY = Clip3(0,   height- iHeight - 1,  iBlkY + (mv->getVer()>>2));
     Int depthEndPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + iWidth  + (mv->getHor()>>2));
     Int depthEndPosY = Clip3(0,   height- iHeight - 1,  iBlkY + iHeight + (mv->getVer()>>2));
+#endif
     Int iCenterX = (depthStartPosX + depthEndPosX) >> 1;
     Int iCenterY = (depthStartPosY + depthEndPosY) >> 1;
 
