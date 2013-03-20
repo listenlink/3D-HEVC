@@ -80,6 +80,13 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
 inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
                                           UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDInfo )
 {
+#if MERL_VSP_C0152_BugFix_ForNoDepthCase
+  TComPic* pRefPicBaseDepth = NULL;
+  pRefPicBaseDepth = getSlice()->getRefPicBaseDepth();
+  if(ucVspMergePos == VSP_MERGE_POS && pRefPicBaseDepth) //VSP can be used only when depth is used as input
+#else
+  if( ucVspMergePos == VSP_MERGE_POS )
+#endif
   if( ucVspMergePos == VSP_MERGE_POS )
   {
     Int idx = vspIdx - 1;
@@ -3595,7 +3602,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 {
 #if H3D_IVMP
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+#if FCO_FIX
+  const Int extraMergeCand = ( ( ( getSlice()->getIsDepth() && m_pcSlice->getTexturePic() ) || getSlice()->getSPS()->getMultiviewMvPredMode() )? 1 : 0 );
+#else
   const Int extraMergeCand = ( ( getSlice()->getIsDepth() || getSlice()->getSPS()->getMultiviewMvPredMode() )? 1 : 0 );
+#endif
 #else
   const Int extraMergeCand = ( getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #endif
@@ -3650,12 +3661,31 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   cDisInfo.iN = 0;
   if(!bNoPdmMerge)
   {
+#if FCO_DVP_REFINE_C0132_C0170
+    if( !getPic()->getDepthCoded() )
+#endif
     getDisMvpCandNBDV(uiPUIdx, uiAbsPartIdx, &cDisInfo , true
 #if MERL_VSP_C0152
             , true
 #endif
 );
   }
+#if FCO_DVP_REFINE_C0132_C0170
+  if(getPic()->getDepthCoded() )
+  {
+    TComPic*      pcCodedDepthMap = getPic()->getRecDepthMap();
+    TComMv        cColMv;
+
+    cColMv.setZero();
+    estimateDVFromDM(uiPUIdx, pcCodedDepthMap, uiAbsPartIdx, &cColMv, false);
+
+    cDisInfo.iN = 1;
+    cDisInfo.m_acMvCand[0].setHor( cColMv.getHor() );
+    cDisInfo.m_acMvCand[0].setVer( cColMv.getVer() );
+    cDisInfo.m_aVIdxCan[0] = 0;
+
+  }
+#endif
   if(cDisInfo.iN==0)
   {
     cDisInfo.iN = 1;
@@ -3668,7 +3698,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   }
 
 #if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
+#if FCO_FIX
+  if( m_pcSlice->getIsDepth() && m_pcSlice->getTexturePic() )
+#else
   if( m_pcSlice->getIsDepth())
+#endif
   {
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( cCurPS, uiPUIdx, uiPartIdxCenter );    
@@ -5139,19 +5173,29 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
 
   Int width  = pcBaseViewDepthPicYuv->getWidth();
   Int height = pcBaseViewDepthPicYuv->getHeight();
-
+#if MTK_DVPREFINE_BVSP_BUG_FIX
+  Int depthPosX = Clip3(0,   width - iWidth,  iBlkX + (mv->getHor()>>2));
+  Int depthPosY = Clip3(0,   height - iHeight,  iBlkY + (mv->getVer()>>2));
+#else
   Int depthPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + (mv->getHor()>>2));
   Int depthPosY = Clip3(0,   height- iHeight - 1,  iBlkY + (mv->getVer()>>2));
-
+#endif
   Pel *depth  = pcBaseViewDepthPicYuv->getLumaAddr() + depthPosX + depthPosY * depStride;
   Pel  maxDepth = 0;
 #if LGE_SIMP_DVP_REFINE_C0112
   if ( bSimpleDvpRefine )
   {
+#if MTK_DVPREFINE_BVSP_BUG_FIX
+    Int depthStartPosX = Clip3(0,   width - iWidth,  iBlkX + (mv->getHor()>>2));
+    Int depthStartPosY = Clip3(0,   height - iHeight,  iBlkY + (mv->getVer()>>2));
+    Int depthEndPosX = Clip3(0,   width - 1,  iBlkX + iWidth - 1  + (mv->getHor()>>2));
+    Int depthEndPosY = Clip3(0,   height - 1,  iBlkY + iHeight - 1 + (mv->getVer()>>2));
+#else
     Int depthStartPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + (mv->getHor()>>2));
     Int depthStartPosY = Clip3(0,   height- iHeight - 1,  iBlkY + (mv->getVer()>>2));
     Int depthEndPosX = Clip3(0,   width - iWidth  - 1,  iBlkX + iWidth  + (mv->getHor()>>2));
     Int depthEndPosY = Clip3(0,   height- iHeight - 1,  iBlkY + iHeight + (mv->getVer()>>2));
+#endif
     Int iCenterX = (depthStartPosX + depthEndPosX) >> 1;
     Int iCenterY = (depthStartPosY + depthEndPosY) >> 1;
 
@@ -6078,11 +6122,29 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       // Extension part
       DisInfo cDisInfo;
       cDisInfo.iN = 0;
+#if FCO_DVP_REFINE_C0132_C0170
+      if( !getPic()->getDepthCoded() )
+#endif
       getDisMvpCandNBDV(uiPartIdx, uiPartAddr, &cDisInfo, false
 #if MERL_VSP_C0152
             , true
 #endif
               ); 
+#if FCO_DVP_REFINE_C0132_C0170
+      if(getPic()->getDepthCoded() )
+      {
+        TComPic*      pcCodedDepthMap = getPic()->getRecDepthMap();
+        TComMv        cColMv;
+
+        cColMv.setZero();
+        estimateDVFromDM(uiPartIdx, pcCodedDepthMap, uiPartAddr, &cColMv, false);
+
+        cDisInfo.iN = 1;
+        cDisInfo.m_acMvCand[0].setHor( cColMv.getHor() );
+        cDisInfo.m_acMvCand[0].setVer( cColMv.getVer() );
+        cDisInfo.m_aVIdxCan[0] = 0;
+      }
+#endif
       if(cDisInfo.iN==0)
       {
         cDisInfo.iN = 1;
@@ -7920,6 +7982,23 @@ TComDataCU::getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv )
   cDisInfo.iN = 0;
   PartSize m_peSaved =  getPartitionSize( 0 );
   m_pePartSize[0] =  SIZE_2Nx2N;
+#if FCO_DVP_REFINE_C0132_C0170
+  if(getPic()->getDepthCoded() )
+  {
+    TComPic*      pcCodedDepthMap = getPic()->getRecDepthMap();
+    TComMv        cColMv;
+
+    cColMv.setZero();
+    estimateDVFromDM(0, pcCodedDepthMap, 0, &cColMv, false);
+
+    cDisInfo.iN = 1;
+    cDisInfo.m_acMvCand[0].setHor( cColMv.getHor() );
+    cDisInfo.m_acMvCand[0].setVer( cColMv.getVer() );
+    cDisInfo.m_aVIdxCan[0] = 0;
+
+  }
+  else
+#endif
   getDisMvpCandNBDV( 0, 0,  &cDisInfo, false );
   if( cDisInfo.iN == 0)
   {

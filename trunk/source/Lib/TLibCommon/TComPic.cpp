@@ -58,6 +58,10 @@ TComPic::TComPic()
   m_pcPredDepthMap_temp    = NULL;
 #endif
 #endif
+#if FCO_DVP_REFINE_C0132_C0170
+  m_bDepthCoded       = false;
+  m_pcRecDepthMap     = NULL;
+#endif
 #if H3D_IVMP
   m_pcOrgDepthMap     = NULL;
 #endif

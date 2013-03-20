@@ -80,47 +80,55 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
   assert(uiComp<3);
   wpScalingParam  *wpCur    = &(pcDtParam->wpCur[uiComp]);
   Int   w0      = wpCur->w,
-        offset  = wpCur->offset,
-        shift   = wpCur->shift,
-        round   = wpCur->round;
-  
+    offset  = wpCur->offset,
+    shift   = wpCur->shift,
+    round   = wpCur->round;
+
   UInt uiSum = 0;
-  #if HHI_INTERVIEW_SKIP
+#if HHI_INTERVIEW_SKIP
   if( pcDtParam->pUsed )
   {
     Pel*  piUsed      = pcDtParam->pUsed;
     Int   iStrideUsed = pcDtParam->iStrideUsed;
-  for( ; iRows != 0; iRows-- )
-  {
-    for (Int n = 0; n < iCols; n++ )
+    for( ; iRows != 0; iRows-- )
     {
+      for (Int n = 0; n < iCols; n++ )
+      {
         if( piUsed[n])
         {
-      pred = ( (w0*piCur[n] + round) >> shift ) + offset ;
-      //uiSum += abs( piOrg[n] - piCur[n] );
-      uiSum += abs( piOrg[n] - pred );
-    }
-    }
-    piOrg += iStrideOrg;
-    piCur += iStrideCur;
-      piUsed += iStrideUsed;
-  }
-#else
-  for( ; iRows != 0; iRows-- )
-  {
-    for (Int n = 0; n < iCols; n++ )
-    {
-      pred = ( (w0*piCur[n] + round) >> shift ) + offset ;
-  
-      uiSum += abs( piOrg[n] - pred );
-    }
-    piOrg += iStrideOrg;
-    piCur += iStrideCur;
-  }
-    #endif
-    #if HHI_INTERVIEW_SKIP
+          pred = ( (w0*piCur[n] + round) >> shift ) + offset ;
+          uiSum += abs( piOrg[n] - pred );
+        }
       }
-    #endif
+      piOrg += iStrideOrg;
+      piCur += iStrideCur;
+      piUsed += iStrideUsed;
+    }
+#if FIX_LGE_WP_FOR_3D_C0223
+  }
+  else
+  {
+#endif
+#if FIX_LGE_WP_FOR_3D_C0223 //comment of #else
+    //#else
+#endif
+#endif
+    for( ; iRows != 0; iRows-- )
+    {
+      for (Int n = 0; n < iCols; n++ )
+      {
+        pred = ( (w0*piCur[n] + round) >> shift ) + offset ;
+        uiSum += abs( piOrg[n] - pred );
+      }
+      piOrg += iStrideOrg;
+      piCur += iStrideCur;
+    }
+#if FIX_LGE_WP_FOR_3D_C0223 //comment of #endif
+    //#endif
+#endif
+#if HHI_INTERVIEW_SKIP
+  }
+#endif
   pcDtParam->uiComp = 255;  // reset for DEBUG (assert test)
 
   return ( uiSum >> g_uiBitIncrement );

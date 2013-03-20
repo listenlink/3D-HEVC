@@ -59,7 +59,14 @@ TComPicYuv::TComPicYuv()
   m_piPicOrgY       = NULL;    // m_apiPicBufY + m_iMarginLuma*getStride() + m_iMarginLuma
   m_piPicOrgU       = NULL;
   m_piPicOrgV       = NULL;
-  
+
+#if FIX_APPENCTOP_T_ONLY
+  m_cuOffsetY       = NULL;
+  m_cuOffsetC       = NULL;
+  m_buOffsetY       = NULL;
+  m_buOffsetC       = NULL;
+#endif  
+
   m_bIsBorderExtended = false;
 }
 
@@ -136,11 +143,17 @@ Void TComPicYuv::destroy()
   if( m_apiPicBufY ){ xFree( m_apiPicBufY );    m_apiPicBufY = NULL; }
   if( m_apiPicBufU ){ xFree( m_apiPicBufU );    m_apiPicBufU = NULL; }
   if( m_apiPicBufV ){ xFree( m_apiPicBufV );    m_apiPicBufV = NULL; }
-
+#if FIX_APPENCTOP_T_ONLY
+  if( m_cuOffsetY )
+  {
+#endif
   delete[] m_cuOffsetY;
   delete[] m_cuOffsetC;
   delete[] m_buOffsetY;
   delete[] m_buOffsetC;
+#if FIX_APPENCTOP_T_ONLY
+  }
+#endif
 }
 
 Void TComPicYuv::createLuma( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxCUDepth )

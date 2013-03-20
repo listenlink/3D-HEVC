@@ -1065,7 +1065,12 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
     }
     else
     {
+#if FIX_LGE_WP_FOR_3D_C0223
+      if ( ( pcCU->getSlice()->getPPS()->getUseWP()      && pcCU->getSlice()->getSliceType() == P_SLICE ) || 
+         ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() && pcCU->getSlice()->getSliceType() == B_SLICE ) )
+#else
       if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
+#endif
       {
 #if DEPTH_MAP_GENERATION
 #if MERL_VSP_C0152
@@ -1099,8 +1104,11 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
       }
     }
   }
-
+#if FIX_LGE_WP_FOR_3D_C0223
+  if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() && pcCU->getSlice()->getSliceType() == B_SLICE  )
+#else
   if ( pcCU->getSlice()->getPPS()->getWPBiPredIdc() )
+#endif
   {
 #if MERL_VSP_C0152
     if(pcCU->getVSPIndex(uiPartAddr))
@@ -1109,6 +1117,18 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
 #endif
     xWeightedPredictionBi( pcCU, &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
   }
+#if FIX_LGE_WP_FOR_3D_C0223
+  else if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType() == P_SLICE )
+
+  {
+#if MERL_VSP_C0152
+    if(pcCU->getVSPIndex(uiPartAddr))
+      m_acYuvPred[0].copyPartToPartYuv( rpcYuvPred, uiPartAddr, iWidth, iHeight );
+    else
+#endif
+      xWeightedPredictionUni( pcCU, &m_acYuvPred[0], uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, rpcYuvPred, iPartIdx ); 
+  }
+#endif
   else
   {
 #if DEPTH_MAP_GENERATION
@@ -1433,10 +1453,13 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   Int refStride = refPic->getStride();
   Int dstStride = dstPic->getStride();
   Int depStride =  pPicBaseDepth->getStride();
-
+#if MTK_DVPREFINE_BVSP_BUG_FIX
+  Int depthPosX = Clip3(0,   widthLuma - size_x,  (posX/nTxtPerDepthX) + (mv->getHor()>>2));
+  Int depthPosY = Clip3(0,   heightLuma- size_y,  (posY/nTxtPerDepthY) + (mv->getVer()>>2));
+#else
   Int depthPosX = Clip3(0,   widthLuma - size_x - 1,  (posX/nTxtPerDepthX) + (mv->getHor()>>2));
   Int depthPosY = Clip3(0,   heightLuma- size_y - 1,  (posY/nTxtPerDepthY) + (mv->getVer()>>2));
-
+#endif
   Pel *ref    = refPic->getLumaAddr() + posX + posY * refStride;
   Pel *dst    = dstPic->getLumaAddr(partAddr);
   Pel *depth  = pPicBaseDepth->getLumaAddr() + depthPosX + depthPosY * depStride;
@@ -1594,8 +1617,11 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
     nDepthPerTxtX = widthDepth / widthChroma;
     depthPosX = posX * nDepthPerTxtX + (mv->getHor()>>2);        //mv denotes the disparity for VSP
   }
+#if MTK_DVPREFINE_BVSP_BUG_FIX
+  depthPosX = Clip3(0, widthDepth - (size_x<<1), depthPosX);
+#else
   depthPosX = Clip3(0, widthDepth - (size_x<<1) - 1, depthPosX);
-  
+#endif
   if ( heightChroma > heightDepth )
   {
     nTxtPerDepthY = heightChroma / heightDepth;
@@ -1608,7 +1634,11 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
     nDepthPerTxtY = heightDepth / heightChroma;
     depthPosY = posY * nDepthPerTxtY + (mv->getVer()>>2);     //mv denotes the disparity for VSP
   }
+#if MTK_DVPREFINE_BVSP_BUG_FIX
+  depthPosY = Clip3(0, heightDepth - (size_y<<1), depthPosY);
+#else
   depthPosY = Clip3(0, heightDepth - (size_y<<1) - 1, depthPosY);
+#endif
 
   Pel *refCb  = refPic->getCbAddr() + posX + posY * refStride;
   Pel *refCr  = refPic->getCrAddr() + posX + posY * refStride;

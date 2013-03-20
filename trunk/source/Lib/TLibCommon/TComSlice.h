@@ -622,7 +622,11 @@ public:
 #endif
 
   Void initMultiviewSPS      ( UInt uiViewId, Int iViewOrderIdx = 0, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
+#if FCO_FIX_SPS_CHANGE
+  Void initMultiviewSPSDepth ( UInt uiViewId, Int iViewOrderIdx, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
+#else
   Void initMultiviewSPSDepth ( UInt uiViewId, Int iViewOrderIdx );
+#endif
 
   UInt getViewId             ()  { return m_uiViewId; }
   Int  getViewOrderIdx       ()  { return m_iViewOrderIdx; }

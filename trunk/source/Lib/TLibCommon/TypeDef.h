@@ -120,6 +120,7 @@
 #define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
 #define MTK_RELEASE_DV_CONSTRAINT_C0129   1   // JCT3V-C0129
 #define MTK_SIMPLIFY_DVTC_C0135           1   // JCT3V-C0135
+#define FIX_CHROMA_RESIDUAL_C0129         1 
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
@@ -165,17 +166,27 @@
 #define VIDYO_VPS_INTEGRATION             1   // Integration of VPS
 #define HHI_DEPTH_INTRA_SEARCH_RAU_C0160  1   // JCT3V-C0160 change 1: full Intra search in depth random access units 
 #define FIX_POZNAN_CABAC_INIT_FLAG        1
+#define FIX_LGE_WP_FOR_3D_C0223           1   // JCT3V-C0223 Weighted Prediction Bug-fix for 3D-HEVC. Caution! There is still crush using WP with Residual Prediction.
+#define FIX_APPENCTOP_T_ONLY              1   // For Texture-only coding
 
 ///// ***** FCO  *********
 #define FLEX_CODING_ORDER_M23723          1
 #if FLEX_CODING_ORDER_M23723
 #define DISABLE_FCO_FOR_VSO               0 // Optional compile settings to disable VSO with FCO.
+#define FCO_DVP_REFINE_C0132_C0170        0 // depth oriented disparity vector prediction from JCT3V-C0132 and JCT3V-C0170
+#define FCO_FIX                           0 // Bug fix for C0137 and C0152 on FCO
+#define FCO_FIX_SPS_CHANGE                0 // Sending camera parameters in SPS of depth for depth to disparity conversion used by VSP and DoDVP
+#else
+#define DISABLE_FCO_FOR_VSO               0 // Optional compile settings to disable VSO with FCO.
+#define FCO_DVP_REFINE_C0132_C0170        0 // depth oriented disparity vector prediction from JCT3V-C0132 and JCT3V-C0170
+#define FCO_FIX                           0 // Fixing bugs from HTM 6.0 which 
+#define FCO_FIX_SPS_CHANGE                0 // Fixing bugs from HTM 6.0 which 
 #endif
 
 ///// ***** VSP *********
 #define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
 #if MERL_VSP_C0152
-
+#define MERL_VSP_C0152_BugFix_ForNoDepthCase     1// MERL bugfix for test condition of no depth
 /*
  * Two macros are used to configure combinations of JCT3V-C0152 and JCT3V-C0131
  * 
@@ -198,6 +209,7 @@
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
 #define LGE_SIMP_DVP_REFINE_C0112            1 // JCT3V-C0112: 1: simplification of refining disparity vector using a warped depth block
+#define MTK_DVPREFINE_BVSP_BUG_FIX               1
 
 #else // !MERL_VSP_C0152
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
