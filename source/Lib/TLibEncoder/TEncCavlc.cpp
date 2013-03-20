@@ -662,6 +662,23 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       WRITE_FLAG( 1, "depth_flag" ); 
       WRITE_UVLC( pcSPS->getViewId(), "view_id" );
       WRITE_SVLC( pcSPS->getViewOrderIdx(), "view_order_idx" );
+#if FCO_FIX_SPS_CHANGE
+      if ( pcSPS->getViewId() )
+      {
+        WRITE_UVLC( pcSPS->getCamParPrecision(), "camera_parameter_precision" );
+        WRITE_FLAG( pcSPS->hasCamParInSliceHeader() ? 1 : 0, "camera_parameter_in_slice_header" );
+        if( !pcSPS->hasCamParInSliceHeader() )
+        {
+          for( UInt uiId = 0; uiId < pcSPS->getViewId(); uiId++ )
+          {
+            WRITE_SVLC( pcSPS->getCodedScale    ()[ uiId ], "coded_scale" );
+            WRITE_SVLC( pcSPS->getCodedOffset   ()[ uiId ], "coded_offset" );
+            WRITE_SVLC( pcSPS->getInvCodedScale ()[ uiId ] + pcSPS->getCodedScale ()[ uiId ], "inverse_coded_scale_plus_coded_scale" );
+            WRITE_SVLC( pcSPS->getInvCodedOffset()[ uiId ] + pcSPS->getCodedOffset()[ uiId ], "inverse_coded_offset_plus_coded_offset" );
+          }
+        }      
+      }
+#endif
     }
     else
     {
@@ -1098,8 +1115,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_UVLC( pcSlice->getColRefIdx(), "collocated_ref_idx" );
     }
 #endif
-  
+
+#if FIX_LGE_WP_FOR_3D_C0223
+    if ( (pcSlice->getPPS()->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pcSlice->getPPS()->getWPBiPredIdc() && pcSlice->getSliceType()==B_SLICE) )
+#else
     if ( (pcSlice->getPPS()->getUseWP() && pcSlice->getSliceType()==P_SLICE) || (pcSlice->getPPS()->getWPBiPredIdc()==1 && pcSlice->getSliceType()==B_SLICE) )
+#endif    
     {
       xCodePredWeightTable( pcSlice );
     }
