@@ -5797,7 +5797,9 @@ Void TComDataCU::getDisMvpCand2( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
     Int iTargetViewIdx = 0;
     Int iTStartViewIdx = 0;
     UInt uiPartIdxRB, uiBRIdx;
-    Int uiViewIdxCurr= getSlice()->getViewId();
+#if !MTK_SIMPLIFY_DVTC
+    Int uiViewIdxCurr = getSlice()->getViewId();
+#endif
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( eCUMode, uiPartIdx, uiPartIdxCenter );
 
