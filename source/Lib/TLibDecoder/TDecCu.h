@@ -60,7 +60,7 @@ private:
   UInt                m_uiMaxDepth;       ///< max. number of depth
   TComYuv**           m_ppcYuvResi;       ///< array of residual buffer
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComYuv**           m_ppcYuvResPred;    ///< residual prediction buffer
 #endif
   TComDataCU**        m_ppcCU;            ///< CU data array

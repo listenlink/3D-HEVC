@@ -102,7 +102,7 @@ private:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator   m_cDepthMapGenerator;           ///< depth map generator
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator   m_cResidualGenerator;           ///< generator for residual pictures
 #endif
   // SPS
@@ -172,7 +172,7 @@ public:
       return m_iPOCLast -m_iNumPicRcvd+ getGOPEntry(iGOPid).m_POC ;
     }
   }
-#if HHI_INTERVIEW_SKIP || H3D_IVMP || H3D_IVRP
+#if HHI_INTERVIEW_SKIP || HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED
   Void      deleteExtraPicBuffers   ( Int iPoc );
 #endif
 
@@ -233,7 +233,7 @@ public:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  getDepthMapGenerator  () { return  &m_cDepthMapGenerator;   }
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator*  getResidualGenerator  () { return  &m_cResidualGenerator;   }
 #endif
 

@@ -46,6 +46,7 @@
 // Tables
 // ====================================================================================================================
 
+#if LOGI_INTRA_NAME_3MPM
 const UChar TComPattern::m_aucIntraFilter[5] =
 {
   10, //4x4
@@ -54,6 +55,21 @@ const UChar TComPattern::m_aucIntraFilter[5] =
   0, //32x32
   10, //64x64
 };
+#else
+const UChar TComPattern::m_aucIntraFilter[5][NUM_INTRA_MODE] =
+{
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  }, //4x4
+  {1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  }, //8x8
+  {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 0
+  }, //16x16
+  {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0
+  }, //32x32
+  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  }, //64x64
+};
+#endif
 
 // ====================================================================================================================
 // Public member functions (TComPatternParam)
@@ -665,12 +681,16 @@ Int* TComPattern::getPredictorPtr( UInt uiDirMode, UInt log2BlkSize, Int* piAdiB
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   mapDMMtoIntraMode( uiDirMode );
 #endif
+#if LOGI_INTRA_NAME_3MPM
   Int diff = min<Int>(abs((Int) uiDirMode - HOR_IDX), abs((Int)uiDirMode - VER_IDX));
   UChar ucFiltIdx = diff > m_aucIntraFilter[log2BlkSize - 2] ? 1 : 0;
   if (uiDirMode == DC_IDX || uiDirMode == LM_CHROMA_IDX)
   {
     ucFiltIdx = 0; //no smoothing for DC or LM chroma
   }
+#else
+  UChar ucFiltIdx = m_aucIntraFilter[log2BlkSize - 2][uiDirMode];
+#endif
 
   assert( ucFiltIdx <= 1 );
 

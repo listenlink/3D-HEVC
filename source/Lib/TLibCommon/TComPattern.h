@@ -114,7 +114,11 @@ private:
   Bool              m_bICFlag;
 #endif
 
+#if LOGI_INTRA_NAME_3MPM
   static const UChar m_aucIntraFilter[5];
+#else
+  static const UChar m_aucIntraFilter[5][NUM_INTRA_MODE];
+#endif
   
 public:
   

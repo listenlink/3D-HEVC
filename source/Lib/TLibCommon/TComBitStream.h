@@ -175,7 +175,9 @@ protected:
   unsigned char m_held_bits;
   UInt m_uiTileMarkerLocationCount;
   UInt *m_puiTileMarkerLocation;
+#if TILES_WPP_ENTRY_POINT_SIGNALLING
   UInt  m_numBitsRead;
+#endif
 
 public:
   /**
@@ -189,7 +191,7 @@ public:
   // interface for decoding
   Void        pseudoRead      ( UInt uiNumberOfBits, UInt& ruiBits );
   Void        read            ( UInt uiNumberOfBits, UInt& ruiBits );
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
   Void        readByte        ( UInt &ruiBits )
   {
     // More expensive, but reads "bytes" that are not aligned.
@@ -225,7 +227,9 @@ public:
 #if !OL_FLUSH_ALIGN
   Void                backupByte() { m_fifo_idx--; }
 #endif
+#if TILES_WPP_ENTRY_POINT_SIGNALLING
   UInt  getNumBitsRead() { return m_numBitsRead; }
+#endif
 };
 
 //! \}

@@ -55,7 +55,9 @@ public:
   
   Void  start             ();
   Void  finish            ();
+#if OL_FLUSH
   Void  flush             ();
+#endif
   
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel );
   Void  decodeBinEP       ( UInt& ruiBin                           );
@@ -63,7 +65,9 @@ public:
   Void  decodeBinTrm      ( UInt& ruiBin                           );
   
   Void  resetBac          ();
+#if BURST_IPCM
   Void  decodeNumSubseqIPCM( Int& numSubseqIPCM ) ;
+#endif
   Void  decodePCMAlignBits();
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
   
@@ -77,7 +81,7 @@ private:
   TComInputBitstream* m_pcTComBitstream;
   UInt                m_uiRange;
   UInt                m_uiValue;
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
   UInt                m_uiLastByte;
 #endif
   Int                 m_bitsNeeded;

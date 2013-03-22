@@ -53,9 +53,14 @@ struct OutputNALUnit : public NALUnit
    * storage for a bitstream.  Upon construction the NALunit header is
    * written to the bitstream.
    */
+#if H0388
   OutputNALUnit(
     NalUnitType nalUnitType,
+#if NAL_REF_FLAG
     Bool nalRefFlag,
+#else
+    NalRefIdc nalRefIDC,
+#endif
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
     unsigned layerId,
 #else
@@ -63,13 +68,33 @@ struct OutputNALUnit : public NALUnit
     Bool isDepth,
 #endif
     unsigned temporalID = 0)
+#if NAL_REF_FLAG
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   : NALUnit(nalUnitType, nalRefFlag, layerId, temporalID)
 #else
   : NALUnit(nalUnitType, nalRefFlag, viewId, isDepth, temporalID)
 #endif
+#else
+#if VIDYO_VPS_INTEGRATION
+  : NALUnit(nalUnitType, nalRefIDC, layerId, temporalID)
+#else
+  : NALUnit(nalUnitType, nalRefIDC, viewId, isDepth, temporalID)
+#endif
+#endif
   , m_Bitstream()
   {}
+#else
+  OutputNALUnit(
+    NalUnitType nalUnitType,
+    NalRefIdc nalRefIDC,
+    Int viewId,
+    Bool isDepth,
+    unsigned temporalID = 0,
+    bool outputFlag = true)
+  : NALUnit(nalUnitType, nalRefIDC, viewId, isDepth, temporalID, outputFlag)
+  , m_Bitstream()
+  {}
+#endif
 
   OutputNALUnit(const NALUnit& src)
   {

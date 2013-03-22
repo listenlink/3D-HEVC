@@ -96,11 +96,13 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setFrameSkip                    ( m_FrameSkip );
     m_acTEncTopList[iViewIdx]->setSourceWidth                  ( m_iSourceWidth );
     m_acTEncTopList[iViewIdx]->setSourceHeight                 ( m_iSourceHeight );
+#if PIC_CROPPING
     m_acTEncTopList[iViewIdx]->setCroppingMode                 ( m_croppingMode );
     m_acTEncTopList[iViewIdx]->setCropLeft                     ( m_cropLeft );
     m_acTEncTopList[iViewIdx]->setCropRight                    ( m_cropRight );
     m_acTEncTopList[iViewIdx]->setCropTop                      ( m_cropTop );
     m_acTEncTopList[iViewIdx]->setCropBottom                   ( m_cropBottom );
+#endif
     m_acTEncTopList[iViewIdx]->setFrameToBeEncoded             ( m_iFrameToBeEncoded );
     m_acTEncTopList[iViewIdx]->setViewId                       ( iViewIdx );
     m_acTEncTopList[iViewIdx]->setIsDepth                      ( false );
@@ -118,9 +120,6 @@ Void TAppEncTop::xInitLibCfg()
     // TODO: set correct dependentFlag and dependentLayer
     m_cVPS.setDependentFlag                                    ( iViewIdx ? true:false, layerId );
     m_cVPS.setDependentLayer                                   ( layerId - (m_bUsingDepthMaps ? 2:1), layerId );
-#if INTER_VIEW_VECTOR_SCALING_C0115
-    m_cVPS.setIVScalingFlag                                    ( m_bUseIVS );
-#endif
 #endif
     
     m_acTEncTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
@@ -135,11 +134,16 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setGOPSize                      ( m_iGOPSize );
     m_acTEncTopList[iViewIdx]->setGopList                      ( m_GOPListsMvc[iViewIdx] );
     m_acTEncTopList[iViewIdx]->setExtraRPSs                    ( m_extraRPSs[iViewIdx] );
+#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
     for(Int i = 0; i < MAX_TLAYER; i++)
     {
       m_acTEncTopList[iViewIdx]->setNumReorderPics             ( m_numReorderPics[iViewIdx][i], i );
       m_acTEncTopList[iViewIdx]->setMaxDecPicBuffering         ( m_maxDecPicBuffering[iViewIdx][i], i );
     }
+#else
+    m_acTEncTopList[iViewIdx]->setNumReorderFrames             ( m_numReorderFrames );
+    m_acTEncTopList[iViewIdx]->setMaxNumberOfReferencePictures ( m_maxNumberOfReferencePictures );
+#endif
     for( UInt uiLoop = 0; uiLoop < MAX_TLAYER; ++uiLoop )
     {
       m_acTEncTopList[iViewIdx]->setLambdaModifier( uiLoop, m_adLambdaModifier[ uiLoop ] );
@@ -149,7 +153,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setTemporalLayerQPOffset        ( m_aiTLayerQPOffset );
     m_acTEncTopList[iViewIdx]->setPad                          ( m_aiPad );
     
+#if H0566_TLA
     m_acTEncTopList[iViewIdx]->setMaxTempLayer                 ( m_maxTempLayer[iViewIdx] );
+#else
+    m_acTEncTopList[iViewIdx]->setTLayering                    ( m_bTLayering );
+    m_acTEncTopList[iViewIdx]->setTLayerSwitchingFlag          ( m_abTLayerSwitchingFlag );
+#endif
 
     m_acTEncTopList[iViewIdx]->setDisInter4x4                  ( m_bDisInter4x4);
   
@@ -163,7 +172,9 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setLoopFilterOffsetInAPS        ( m_loopFilterOffsetInAPS );
     m_acTEncTopList[iViewIdx]->setLoopFilterBetaOffset         ( m_loopFilterBetaOffsetDiv2  );
     m_acTEncTopList[iViewIdx]->setLoopFilterTcOffset           ( m_loopFilterTcOffsetDiv2    );
+#if DBL_CONTROL
     m_acTEncTopList[iViewIdx]->setDeblockingFilterControlPresent( m_DeblockingFilterControlPresent);
+#endif
 
   //====== Motion search ========
     m_acTEncTopList[iViewIdx]->setFastSearch                   ( m_iFastSearch  );
@@ -186,7 +197,11 @@ Void TAppEncTop::xInitLibCfg()
 
 #if LOSSLESS_CODING
     Int lowestQP;
+#if H0736_AVC_STYLE_QP_RANGE
     lowestQP =  - ( (Int)(6*(g_uiBitDepth + g_uiBitIncrement - 8)) );
+#else
+    lowestQP = 0;
+#endif
     if ((m_iMaxDeltaQP == 0 ) && (m_aiQP[0] == lowestQP) && (m_useLossless == true))
     {
       m_bUseAdaptiveQP = false;
@@ -216,12 +231,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setPdmScaleNomDelta             (       m_cCameraData.getPdmScaleNomDelta () );
     m_acTEncTopList[iViewIdx]->setPdmOffset                    (       m_cCameraData.getPdmOffset        () );
 #endif
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
     m_acTEncTopList[iViewIdx]->setMultiviewMvPredMode          ( m_uiMultiviewMvPredMode );
     m_acTEncTopList[iViewIdx]->setMultiviewMvRegMode           ( iViewIdx ? m_uiMultiviewMvRegMode       : 0   );
     m_acTEncTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( iViewIdx ? m_dMultiviewMvRegLambdaScale : 0.0 );
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
     m_acTEncTopList[iViewIdx]->setMultiviewResPredMode         ( m_uiMultiviewResPredMode );
 #endif
 
@@ -241,13 +256,18 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setLCMod                        ( m_bLCMod         );
     m_acTEncTopList[iViewIdx]->setdQPs                         ( m_aidQP        );
     m_acTEncTopList[iViewIdx]->setUseRDOQ                      ( m_abUseRDOQ[0] );
+#if !PIC_CROPPING
+    m_acTEncTopList[iViewIdx]->setUsePAD                       ( m_bUsePAD      );
+#endif
     m_acTEncTopList[iViewIdx]->setQuadtreeTULog2MaxSize        ( m_uiQuadtreeTULog2MaxSize );
     m_acTEncTopList[iViewIdx]->setQuadtreeTULog2MinSize        ( m_uiQuadtreeTULog2MinSize );
     m_acTEncTopList[iViewIdx]->setQuadtreeTUMaxDepthInter      ( m_uiQuadtreeTUMaxDepthInter );
     m_acTEncTopList[iViewIdx]->setQuadtreeTUMaxDepthIntra      ( m_uiQuadtreeTUMaxDepthIntra );
     m_acTEncTopList[iViewIdx]->setUseFastEnc                   ( m_bUseFastEnc  );
     m_acTEncTopList[iViewIdx]->setUseEarlyCU                   ( m_bUseEarlyCU  ); 
+#if FAST_DECISION_FOR_MRG_RD_COST
     m_acTEncTopList[iViewIdx]->setUseFastDecisionForMerge      ( m_useFastDecisionForMerge  );
+#endif
     m_acTEncTopList[iViewIdx]->setUseCbfFastMode               ( m_bUseCbfFastMode  );
 #if HHI_INTERVIEW_SKIP
     m_acTEncTopList[iViewIdx]->setInterViewSkip            ( iViewIdx>0 ? m_bInterViewSkip : false );
@@ -280,10 +300,12 @@ Void TAppEncTop::xInitLibCfg()
     {
       m_acTEncTopList[iViewIdx]->setSliceArgument ( m_iSliceArgument * ( iNumPartInCU >> ( m_iSliceGranularity << 1 ) ) );
     }
+#if FIXED_NUMBER_OF_TILES_SLICE_MODE
     if(m_iSliceMode==AD_HOC_SLICES_FIXED_NUMBER_OF_TILES_IN_SLICE)
     {
       m_acTEncTopList[iViewIdx]->setSliceArgument ( m_iSliceArgument );
     }
+#endif
     m_acTEncTopList[iViewIdx]->setSliceGranularity        ( m_iSliceGranularity         );
     if(m_iSliceMode == 0 )
     {
@@ -292,17 +314,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
     m_acTEncTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[0]     );
 #if LGE_ILLUCOMP_B0045
-#if LGE_ILLUCOMP_DEPTH_C0046
-    m_acTEncTopList[iViewIdx]->setUseIC                ( m_abUseIC[0]      );
-#else
     m_acTEncTopList[iViewIdx]->setUseIC                ( m_bUseIC          );
 #endif
-#endif
-#if INTER_VIEW_VECTOR_SCALING_C0115
-    m_acTEncTopList[iViewIdx]->setUseIVS               ( m_bUseIVS          );
-#endif
+#if SAO_UNIT_INTERLEAVING
     m_acTEncTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
     m_acTEncTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
+#endif
     m_acTEncTopList[iViewIdx]->setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
     m_acTEncTopList[iViewIdx]->setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
@@ -310,6 +327,9 @@ Void TAppEncTop::xInitLibCfg()
 
     m_acTEncTopList[iViewIdx]->setColumnRowInfoPresent       ( m_iColumnRowInfoPresent );
     m_acTEncTopList[iViewIdx]->setUniformSpacingIdr          ( m_iUniformSpacingIdr );
+#if !REMOVE_TILE_DEPENDENCE
+    m_acTEncTopList[iViewIdx]->setTileBoundaryIndependenceIdr( m_iTileBoundaryIndependenceIdr );
+#endif
     m_acTEncTopList[iViewIdx]->setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
     m_acTEncTopList[iViewIdx]->setNumRowsMinus1              ( m_iNumRowsMinus1 );
     if(m_iUniformSpacingIdr==0)
@@ -326,7 +346,11 @@ Void TAppEncTop::xInitLibCfg()
     m_dMaxTileMarkerOffset    = ((Double)uiTilesCount) / m_iMaxTileMarkerEntryPoints;
     m_acTEncTopList[iViewIdx]->setMaxTileMarkerOffset         ( m_dMaxTileMarkerOffset );
     m_acTEncTopList[iViewIdx]->setTileBehaviorControlPresentFlag( m_iTileBehaviorControlPresentFlag );
+#if !REMOVE_TILE_DEPENDENCE
+    if(m_iTileBoundaryIndependenceIdr == 0 || uiTilesCount == 1)
+#else
     if(uiTilesCount == 1)
+#endif
     {
       m_bLFCrossTileBoundaryFlag = true; 
     }
@@ -341,9 +365,12 @@ Void TAppEncTop::xInitLibCfg()
 #endif
     m_acTEncTopList[iViewIdx]->setUseScalingListId           ( m_useScalingListId  );
     m_acTEncTopList[iViewIdx]->setScalingListFile            ( m_scalingListFile   );
+#if MULTIBITS_DATA_HIDING
     m_acTEncTopList[iViewIdx]->setSignHideFlag(m_signHideFlag);
     m_acTEncTopList[iViewIdx]->setTSIG(m_signHidingThreshold);
+#endif
 
+#if LCU_SYNTAX_ALF
     if(uiTilesCount > 1)
     {
       m_bALFParamInSlice = false;
@@ -351,6 +378,7 @@ Void TAppEncTop::xInitLibCfg()
     }
     m_acTEncTopList[iViewIdx]->setALFParamInSlice              ( m_bALFParamInSlice);
     m_acTEncTopList[iViewIdx]->setALFPicBasedEncode            ( m_bALFPicBasedEncode);
+#endif
 
     //====== Depth tools ========
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
@@ -406,11 +434,13 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setFrameSkip                    ( m_FrameSkip );
       m_acTEncDepthTopList[iViewIdx]->setSourceWidth                  ( m_iSourceWidth );
       m_acTEncDepthTopList[iViewIdx]->setSourceHeight                 ( m_iSourceHeight );
+#if PIC_CROPPING
       m_acTEncDepthTopList[iViewIdx]->setCroppingMode                 ( m_croppingMode );
       m_acTEncDepthTopList[iViewIdx]->setCropLeft                     ( m_cropLeft );
       m_acTEncDepthTopList[iViewIdx]->setCropRight                    ( m_cropRight );
       m_acTEncDepthTopList[iViewIdx]->setCropTop                      ( m_cropTop );
       m_acTEncDepthTopList[iViewIdx]->setCropBottom                   ( m_cropBottom );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setFrameToBeEncoded             ( m_iFrameToBeEncoded );
       m_acTEncDepthTopList[iViewIdx]->setViewId                       ( iViewIdx );
       m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
@@ -428,17 +458,10 @@ Void TAppEncTop::xInitLibCfg()
       m_cVPS.setDependentFlag                                         ( true, layerId );
       m_cVPS.setDependentLayer                                        ( layerId-1, layerId);
 #endif
-#if FCO_FIX_SPS_CHANGE
-      m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
-      m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
-      m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( m_cCameraData.getCodedScale             () );
-      m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
-#else
       m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( false );
       m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( 0 );
-#endif
 
       //====== Coding Structure ========
       m_acTEncDepthTopList[iViewIdx]->setIntraPeriod                  ( m_iIntraPeriod );
@@ -446,11 +469,16 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setGOPSize                      ( m_iGOPSize );
       m_acTEncDepthTopList[iViewIdx]->setGopList                      ( m_GOPListsMvc[iViewIdx] );
       m_acTEncDepthTopList[iViewIdx]->setExtraRPSs                    ( m_extraRPSs[iViewIdx] );
+#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
       for(Int i = 0; i < MAX_TLAYER; i++)
       {
         m_acTEncDepthTopList[iViewIdx]->setNumReorderPics             ( m_numReorderPics[iViewIdx][i], i );
         m_acTEncDepthTopList[iViewIdx]->setMaxDecPicBuffering         ( m_maxDecPicBuffering[iViewIdx][i], i );
       }
+#else
+      m_acTEncDepthTopList[iViewIdx]->setNumReorderFrames             ( m_numReorderFrames );
+      m_acTEncDepthTopList[iViewIdx]->setMaxNumberOfReferencePictures ( m_maxNumberOfReferencePictures );
+#endif
       for( UInt uiLoop = 0; uiLoop < MAX_TLAYER; ++uiLoop )
       {
         m_acTEncDepthTopList[iViewIdx]->setLambdaModifier( uiLoop, m_adLambdaModifier[ uiLoop ] );
@@ -460,7 +488,12 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setTemporalLayerQPOffset        ( m_aiTLayerQPOffset );
       m_acTEncDepthTopList[iViewIdx]->setPad                          ( m_aiPad );
 
+#if H0566_TLA
       m_acTEncDepthTopList[iViewIdx]->setMaxTempLayer                 ( m_maxTempLayer[iViewIdx] );
+#else
+      m_acTEncDepthTopList[iViewIdx]->setTLayering                    ( m_bTLayering );
+      m_acTEncDepthTopList[iViewIdx]->setTLayerSwitchingFlag          ( m_abTLayerSwitchingFlag );
+#endif
 
       m_acTEncDepthTopList[iViewIdx]->setDisInter4x4                  ( m_bDisInter4x4);
 
@@ -474,7 +507,9 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setLoopFilterOffsetInAPS        ( m_loopFilterOffsetInAPS );
       m_acTEncDepthTopList[iViewIdx]->setLoopFilterBetaOffset         ( m_loopFilterBetaOffsetDiv2  );
       m_acTEncDepthTopList[iViewIdx]->setLoopFilterTcOffset           ( m_loopFilterTcOffsetDiv2    );
+#if DBL_CONTROL
       m_acTEncDepthTopList[iViewIdx]->setDeblockingFilterControlPresent( m_DeblockingFilterControlPresent);
+#endif
 
       //====== Motion search ========
       m_acTEncDepthTopList[iViewIdx]->setFastSearch                   ( m_iFastSearch  );
@@ -514,13 +549,18 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setLCMod                        ( m_bLCMod       );
       m_acTEncDepthTopList[iViewIdx]->setdQPs                         ( m_aidQPdepth   );
       m_acTEncDepthTopList[iViewIdx]->setUseRDOQ                      ( m_abUseRDOQ[1] );
+#if !PIC_CROPPING
+      m_acTEncDepthTopList[iViewIdx]->setUsePAD                       ( m_bUsePAD      );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setQuadtreeTULog2MaxSize        ( m_uiQuadtreeTULog2MaxSize );
       m_acTEncDepthTopList[iViewIdx]->setQuadtreeTULog2MinSize        ( m_uiQuadtreeTULog2MinSize );
       m_acTEncDepthTopList[iViewIdx]->setQuadtreeTUMaxDepthInter      ( m_uiQuadtreeTUMaxDepthInter );
       m_acTEncDepthTopList[iViewIdx]->setQuadtreeTUMaxDepthIntra      ( m_uiQuadtreeTUMaxDepthIntra );
       m_acTEncDepthTopList[iViewIdx]->setUseFastEnc                   ( m_bUseFastEnc  );
       m_acTEncDepthTopList[iViewIdx]->setUseEarlyCU                   ( m_bUseEarlyCU  ); 
+#if FAST_DECISION_FOR_MRG_RD_COST
       m_acTEncDepthTopList[iViewIdx]->setUseFastDecisionForMerge      ( m_useFastDecisionForMerge  );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setUseCbfFastMode               ( m_bUseCbfFastMode  );
 #if HHI_INTERVIEW_SKIP
       m_acTEncDepthTopList[iViewIdx]->setInterViewSkip            ( 0 );
@@ -554,12 +594,12 @@ Void TAppEncTop::xInitLibCfg()
 #if DEPTH_MAP_GENERATION
       m_acTEncDepthTopList[iViewIdx]->setPredDepthMapGeneration       ( 0 );
 #endif
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvPredMode          ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegMode           ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( 0.0 );
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
       m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
 #endif
 
@@ -582,10 +622,12 @@ Void TAppEncTop::xInitLibCfg()
       {
         m_acTEncDepthTopList[iViewIdx]->setSliceArgument ( m_iSliceArgument * ( iNumPartInCU >> ( m_iSliceGranularity << 1 ) ) );
       }
+#if FIXED_NUMBER_OF_TILES_SLICE_MODE
       if(m_iSliceMode==AD_HOC_SLICES_FIXED_NUMBER_OF_TILES_IN_SLICE)
       {
         m_acTEncDepthTopList[iViewIdx]->setSliceArgument ( m_iSliceArgument );
       }
+#endif
       m_acTEncDepthTopList[iViewIdx]->setSliceGranularity        ( m_iSliceGranularity         );
       if(m_iSliceMode == 0 )
       {
@@ -596,11 +638,10 @@ Void TAppEncTop::xInitLibCfg()
 #if LGE_ILLUCOMP_B0045
       m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
 #endif
-#if INTER_VIEW_VECTOR_SCALING_C0115
-     m_acTEncDepthTopList[iViewIdx]->setUseIVS                ( m_bUseIVS );
-#endif
+#if SAO_UNIT_INTERLEAVING
       m_acTEncDepthTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
       m_acTEncDepthTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
+#endif
       m_acTEncDepthTopList[iViewIdx]->setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
       m_acTEncDepthTopList[iViewIdx]->setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
@@ -608,6 +649,9 @@ Void TAppEncTop::xInitLibCfg()
 
       m_acTEncDepthTopList[iViewIdx]->setColumnRowInfoPresent       ( m_iColumnRowInfoPresent );
       m_acTEncDepthTopList[iViewIdx]->setUniformSpacingIdr          ( m_iUniformSpacingIdr );
+#if !REMOVE_TILE_DEPENDENCE
+      m_acTEncDepthTopList[iViewIdx]->setTileBoundaryIndependenceIdr( m_iTileBoundaryIndependenceIdr );
+#endif
       m_acTEncDepthTopList[iViewIdx]->setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
       m_acTEncDepthTopList[iViewIdx]->setNumRowsMinus1              ( m_iNumRowsMinus1 );
       if(m_iUniformSpacingIdr==0)
@@ -624,7 +668,11 @@ Void TAppEncTop::xInitLibCfg()
       m_dMaxTileMarkerOffset    = ((Double)uiTilesCount) / m_iMaxTileMarkerEntryPoints;
       m_acTEncDepthTopList[iViewIdx]->setMaxTileMarkerOffset         ( m_dMaxTileMarkerOffset );
       m_acTEncDepthTopList[iViewIdx]->setTileBehaviorControlPresentFlag( m_iTileBehaviorControlPresentFlag );
+#if !REMOVE_TILE_DEPENDENCE
+      if(m_iTileBoundaryIndependenceIdr == 0 || uiTilesCount == 1)
+#else
       if(uiTilesCount == 1)
+#endif
       {
         m_bLFCrossTileBoundaryFlag = true; 
       }
@@ -639,9 +687,12 @@ Void TAppEncTop::xInitLibCfg()
 #endif
       m_acTEncDepthTopList[iViewIdx]->setUseScalingListId           ( m_useScalingListId  );
       m_acTEncDepthTopList[iViewIdx]->setScalingListFile            ( m_scalingListFile   );
+#if MULTIBITS_DATA_HIDING
       m_acTEncDepthTopList[iViewIdx]->setSignHideFlag(m_signHideFlag);
       m_acTEncDepthTopList[iViewIdx]->setTSIG(m_signHidingThreshold);
+#endif
 
+#if LCU_SYNTAX_ALF
       if(uiTilesCount > 1)
       {
         m_bALFParamInSlice = false;
@@ -649,6 +700,7 @@ Void TAppEncTop::xInitLibCfg()
       }
       m_acTEncDepthTopList[iViewIdx]->setALFParamInSlice              ( m_bALFParamInSlice);
       m_acTEncDepthTopList[iViewIdx]->setALFPicBasedEncode            ( m_bALFPicBasedEncode);
+#endif
 
   //====== Depth tools ========
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
@@ -675,7 +727,7 @@ Void TAppEncTop::xInitLibCfg()
     }
   }
 
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
   else if( m_uiMultiviewMvRegMode )
   {
     for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
@@ -740,7 +792,6 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_INTERVIEW_SKIP
   m_cUsedPelsRenderer.init(m_iSourceWidth, m_iSourceHeight, true, 0, LOG2_DISP_PREC_LUT, true, 0, 0, 0, 0, 0, 6, 4, 1, 0, 6 );
 #endif
-
 }
 
 Void TAppEncTop::xCreateLib()
@@ -762,7 +813,7 @@ Void TAppEncTop::xCreateLib()
         m_acTVideoIOYuvDepthReconFileList[iViewIdx]->open(m_pchDepthReconFileList[iViewIdx], true, m_uiOutputBitDepth, m_uiInternalBitDepth);  // write mode
       m_acTEncDepthTopList[iViewIdx]->create();
     }
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
     else if( m_uiMultiviewMvRegMode )
     {
       m_acTVideoIOYuvDepthInputFileList[iViewIdx]->open( m_pchDepthInputFileList[iViewIdx],     false, m_uiInputBitDepth, m_uiInternalBitDepth );  // read  mode
@@ -909,7 +960,7 @@ Void TAppEncTop::encode()
   pcPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
   pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
 
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
   if( m_uiMultiviewMvRegMode )
   {
     pcPdmDepthOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
@@ -929,14 +980,14 @@ Void TAppEncTop::encode()
         // read input YUV file
         m_acTVideoIOYuvInputFileList[iViewIdx]->read( pcPicYuvOrg, m_aiPad );
       
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
         if( m_uiMultiviewMvRegMode && iViewIdx )
         {
           m_acTVideoIOYuvDepthInputFileList[iViewIdx]->read( pcPdmDepthOrg, m_aiPad, m_bUsingDepthMaps );
         }
 #endif
 
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
         m_acTEncTopList[iViewIdx]->initNewPic( pcPicYuvOrg, ( m_uiMultiviewMvRegMode && iViewIdx ? pcPdmDepthOrg : 0 ) );
 #else
         m_acTEncTopList[iViewIdx]->initNewPic( pcPicYuvOrg );
@@ -976,7 +1027,6 @@ Void TAppEncTop::encode()
     for ( Int gopId=0; gopId < gopSize; gopId++ )
     {
       Int  iNumEncoded = 0;
-
 #if !QC_MVHEVC_B0046
       UInt iNextPoc = m_acTEncTopList[0] -> getFrameId( gopId );
       if ( iNextPoc < m_iFrameToBeEncoded )
@@ -984,7 +1034,6 @@ Void TAppEncTop::encode()
         m_cCameraData.update( iNextPoc );
       }
 #endif
-
 
 #if FLEX_CODING_ORDER_M23723
       if (m_b3DVFlexOrder)
@@ -1002,18 +1051,6 @@ Void TAppEncTop::encode()
             i++;
             assert(isdigit(m_pchMVCJointCodingOrder[i]));
             iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
-#if (FCO_FIX && MERL_VSP_C0152)
-            Int iCurPoc = m_acTEncTopList[iViewIdx]->getFrameId(gopId);
-            if( iCurPoc < m_acTEncTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
-            {
-              TComPic* pcBaseTxtPic   = getPicFromView(  0, m_acTEncTopList[iViewIdx]->getFrameId(gopId), false ); //get base view reconstructed texture
-              TComPic* pcBaseDepthPic = getPicFromView(  0, m_acTEncTopList[iViewIdx]->getFrameId(gopId), true );  //get base view reconstructed depth
-              TEncSlice* pEncSlice = m_acTEncTopList[iViewIdx]->getSliceEncoder();
-              pEncSlice->setRefPicBaseTxt(pcBaseTxtPic);
-              pEncSlice->setRefPicBaseDepth(pcBaseDepthPic);
-            }
-            setBWVSPLUT( iViewIdx, gopId, false);            
-#endif
 
             m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
             xWriteOutput(bitstreamFile, iNumEncoded, outputAccessUnits, iViewIdx, false);
@@ -1028,23 +1065,12 @@ Void TAppEncTop::encode()
             {
               assert(isdigit(m_pchMVCJointCodingOrder[i]));
               iViewIdx = (Int)(m_pchMVCJointCodingOrder[i]-'0');
-
 #if SAIT_VSO_EST_A0033
               if( m_bUseVSO && iNextPoc < m_iFrameToBeEncoded )
               {
                 m_cCameraData.xSetDispCoeff( iNextPoc, iViewIdx );
                 m_acTEncDepthTopList[iViewIdx]->setDispCoeff( m_cCameraData.getDispCoeff() );
               }
-#endif
-#if (FCO_FIX && MERL_VSP_C0152)
-              Int iCurPocDepth = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
-              if( iCurPocDepth < m_acTEncDepthTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
-              {
-                TComPic* pcBaseDepthPic = getPicFromView(  0, m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId), true );
-                TEncSlice* pcSlice = (TEncSlice*) m_acTEncDepthTopList[iViewIdx]->getSliceEncoder();
-                pcSlice->setRefPicBaseDepth(pcBaseDepthPic);
-              }
-              setBWVSPLUT( iViewIdx, gopId, true);
 #endif
               m_acTEncDepthTopList[iViewIdx]->encode( depthEos[iViewIdx], pcDepthPicYuvOrg, *m_picYuvDepthRec[iViewIdx], outputAccessUnits, iNumDepthEncoded, gopId );
               xWriteOutput(bitstreamFile, iNumDepthEncoded, outputAccessUnits, iViewIdx, true);
@@ -1070,10 +1096,6 @@ Void TAppEncTop::encode()
         iNumEncoded = 0;
 
 #if MERL_VSP_C0152
-#if MERL_VSP_C0152_BugFix_ForNoDepthCase
-        if(m_bUsingDepthMaps) //VSP can be used only when depth is available as input
-        {
-#endif
         Int iCurPoc = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
         if( iCurPoc < m_acTEncDepthTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
         {
@@ -1084,20 +1106,6 @@ Void TAppEncTop::encode()
           pEncSlice->setRefPicBaseDepth(pcBaseDepthPic);
         }
         setBWVSPLUT( iViewIdx, gopId, false);
-#if MERL_VSP_C0152_BugFix_ForNoDepthCase
-        }
-        else
-        {
-          Int iCurPoc = m_acTEncTopList[iViewIdx]->getFrameId(gopId);
-          if( iCurPoc < m_acTEncTopList[iViewIdx]->getFrameToBeEncoded() && iViewIdx!=0 )
-          {
-            TEncSlice* pEncSlice = m_acTEncTopList[iViewIdx]->getSliceEncoder();
-            pEncSlice->setRefPicBaseTxt(NULL);//Initialize the base view reconstructed texture buffer
-            pEncSlice->setRefPicBaseDepth(NULL);//Initialize the base view reconstructed depth buffer
-          }
-        }
-#endif
-
 #endif
         // call encoding function for one frame
         m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
@@ -1128,7 +1136,7 @@ Void TAppEncTop::encode()
       }
 #endif
 
-#if HHI_INTERVIEW_SKIP || H3D_IVMP || H3D_IVRP
+#if HHI_INTERVIEW_SKIP || HHI_INTER_VIEW_MOTION_PRED || HHI_INTER_VIEW_RESIDUAL_PRED
       for( Int iViewIdx = 0; iViewIdx < m_iNumberOfViews; iViewIdx++ )
       {
         if( iViewIdx < (Int)m_acTEncTopList.size() && m_acTEncTopList[iViewIdx] )
@@ -1161,7 +1169,11 @@ Void TAppEncTop::encode()
   pcDepthPicYuvOrg = NULL;
   
 #if !QC_MVHEVC_B0046
+#if FIX_DEL_NULLPTR
   if ( pcPdmDepthOrg != NULL && m_uiMultiviewMvRegMode )
+#else
+  if ( pcPdmDepthOrg != NULL )
+#endif
   {
     pcPdmDepthOrg->destroy();
     delete pcPdmDepthOrg;     
@@ -1302,14 +1314,22 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std:
       {
         if (m_pchReconFileList[iViewIdx])
         {
+#if PIC_CROPPING
           m_acTVideoIOYuvReconFileList[iViewIdx]->write( pcPicYuvRec, m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
+#else
+          m_acTVideoIOYuvReconFileList[iViewIdx]->write( pcPicYuvRec, m_aiPad );
+#endif
         }
       }
       else
       {
         if (m_pchDepthReconFileList[iViewIdx])
         {
+#if PIC_CROPPING
           m_acTVideoIOYuvDepthReconFileList[iViewIdx]->write( pcPicYuvRec, m_cropLeft, m_cropRight, m_cropTop, m_cropBottom );
+#else
+          m_acTVideoIOYuvDepthReconFileList[iViewIdx]->write( pcPicYuvRec, m_aiPad );
+#endif
         }
       }
     }
@@ -1362,11 +1382,17 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<unsigned
     switch ((*it_au)->m_nalUnitType)
     {
     case NAL_UNIT_CODED_SLICE:
+#if H0566_TLA
 #if !QC_REM_IDV_B0046
     case NAL_UNIT_CODED_SLICE_IDV:
 #endif
     case NAL_UNIT_CODED_SLICE_TLA:
     case NAL_UNIT_CODED_SLICE_CRA:
+#else
+    case NAL_UNIT_CODED_SLICE_DATAPART_A:
+    case NAL_UNIT_CODED_SLICE_DATAPART_B:
+    case NAL_UNIT_CODED_SLICE_CDR:
+#endif
     case NAL_UNIT_CODED_SLICE_IDR:
     case NAL_UNIT_SPS:
     case NAL_UNIT_PPS:

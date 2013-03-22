@@ -49,7 +49,7 @@
 #include "TComTrQuant.h"
 
 
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 
 class TComResidualGenerator
 {
@@ -68,18 +68,29 @@ public:
   Void  initViewComponent     ( TComPic*      pcPic );
   Void  setRecResidualPic     ( TComPic*      pcPic );
 
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, TComMv iDisp_x, Bool bRecon );
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , TComMv iDisp_x, Bool bRecon );
-#else
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Int iDisp, Bool bRecon ); 
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , Int iDisp, Bool bRecon ); 
+#if QC_MULTI_DIS_CAN_A0097
+  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Int iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , Bool bRecon
 #endif
-#else // H3D_NBDV
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Bool bRecon ); 
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Bool bRecon ); 
-#endif // H3D_NBDV
+);
+  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , Int iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , Bool bRecon
+#endif  
+  );
+#else
+  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , Bool bRecon
+#endif
+    );
+  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , Bool bRecon
+#endif
+    );
+#endif
 
 private:
   Void  xSetRecResidualPic    ( TComPic*      pcPic );
@@ -88,18 +99,26 @@ private:
   Void  xSetRecResidualInterCU( TComDataCU*   pcCU,  TComYuv* pcCUResidual );
   Void  xClearIntViewResidual ( TComDataCU*   pcCU,  TComYuv* pcCUResidual, UInt uiPartIdx    );
   Void  xClearResidual        (                      TComYuv* pcCUResidual, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight );
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  );    
-#else
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  ); 
+#if QC_MULTI_DIS_CAN_A0097
+  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
 #endif
+  );
 #else
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  ); 
+  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
+#endif
+    );
 #endif
   Bool  xIsNonZero            ( TComYuv*      pcYuv, UInt uiBlkWidth, UInt uiBlkHeight );
+#if QC_SIMPLIFIEDIVRP_M24938
   Bool  xIsNonZeroByCBF       ( UInt uiBaseViewId , UInt uiXPos , UInt uiYPos, UInt uiBlkWidth , UInt uiBlkHeight );
+#endif
+
   Void  xDumpResidual         ( TComPic*      pcPic, char* pFilenameBase );
+
 private:
   // general parameters
   Bool                    m_bCreated;
@@ -120,7 +139,7 @@ private:
 
 #endif // __TCOM_RESIDUAL_GENERATOR__
 
-#endif // H3D_IVRP
+#endif // HHI_INTER_VIEW_RESIDUAL_PRED
 
 
 

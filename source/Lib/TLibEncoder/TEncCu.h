@@ -77,13 +77,15 @@ private:
   TComYuv**               m_ppcResiYuvTemp; ///< Temporary Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComYuv**               m_ppcResPredTmp;  ///< Temporary residual prediction for each depth
 #endif
 
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
+#if BURST_IPCM
   Bool                    m_checkBurstIPCMFlag;
+#endif
 
   //  Access channel
   TEncCfg*                m_pcEncCfg;
@@ -170,11 +172,13 @@ protected:
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
 
+#if BURST_IPCM
   Bool getCheckBurstIPCMFlag()                        { return m_checkBurstIPCMFlag;   }
   Void setCheckBurstIPCMFlag( Bool b )                { m_checkBurstIPCMFlag = b;      }
 
   Bool checkLastCUSucIPCM   ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
   Int  countNumSucIPCM      ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
+#endif
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions

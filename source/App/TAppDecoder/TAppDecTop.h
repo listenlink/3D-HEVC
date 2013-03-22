@@ -120,7 +120,11 @@ protected:
   Void  xDestroyDecLib    (); ///< destroy internal classes
 //  Void  xInitDecLib       (); ///< initialize decoder class
   
+#if H0567_DPB_PARAMETERS_PER_TEMPORAL_LAYER
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId, UInt tId); ///< write YUV to file
+#else
+  Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId ); ///< write YUV to file
+#endif
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId ); ///< flush all remaining decoded pictures to file
 
   TComPic* xGetPicFromView( Int viewId, Int poc, Bool isDepth );

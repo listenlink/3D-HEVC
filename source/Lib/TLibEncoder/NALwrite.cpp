@@ -55,8 +55,13 @@ void write(ostream& out, OutputNALUnit& nalu)
   TComOutputBitstream bsNALUHeader;
 
   bsNALUHeader.write(0,1); // forbidden_zero_flag
+#if NAL_REF_FLAG
   bsNALUHeader.write(nalu.m_nalRefFlag? 1 : 0, 1); // nal_ref_flag
   bsNALUHeader.write(nalu.m_nalUnitType, 6);          // nal_unit_type
+#else
+  bsNALUHeader.write(nalu.m_nalRefIDC, 2); // nal_ref_idc
+  bsNALUHeader.write(nalu.m_nalUnitType, 5); // nal_unit_type
+#endif
 
 #if QC_MVHEVC_B0046
   bsNALUHeader.write(nalu.m_layerId,        5); // when nal_ref_flag is signalled, 5 bits here. otherwise, 6 bits
@@ -66,10 +71,34 @@ void write(ostream& out, OutputNALUnit& nalu)
   bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
   bsNALUHeader.write(nalu.m_layerId + 1, 5); // layer_id_plus1
 #else
+#if H0388
   bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
  // bsNALUHeader.write(1, 5); // reserved_one_5bits
   bsNALUHeader.write(nalu.m_viewId+1,4); 
   bsNALUHeader.write(nalu.m_isDepth,1);
+#else
+  switch (nalu.m_nalUnitType)
+  {
+  case NAL_UNIT_CODED_SLICE:
+  case NAL_UNIT_CODED_SLICE_IDR:
+#if H0566_TLA
+#if !QC_REM_IDV_B0046
+  case NAL_UNIT_CODED_SLICE_IDV:
+#endif
+  case NAL_UNIT_CODED_SLICE_CRA:
+  case NAL_UNIT_CODED_SLICE_TLA:
+#else
+  case NAL_UNIT_CODED_SLICE_CDR:
+#endif
+    bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
+    bsNALUHeader.write(nalu.m_OutputFlag, 1); // output_flag
+  //  bsNALUHeader.write(1, 4); // reserved_one_4bits
+    bsNALUHeader.write(nalu.m_viewId+1,3); 
+    bsNALUHeader.write(nalu.m_isDepth,1);
+    break;
+  default: break;
+  }
+#endif
 #endif
 #endif 
   out.write(bsNALUHeader.getByteStream(), bsNALUHeader.getByteStreamLength());
@@ -179,7 +208,11 @@ void writeRBSPTrailingBits(TComOutputBitstream& bs)
 void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
 {
   naluDest.m_nalUnitType = naluSrc.m_nalUnitType;
+#if NAL_REF_FLAG
   naluDest.m_nalRefFlag  = naluSrc.m_nalRefFlag;
+#else
+  naluDest.m_nalRefIDC   = naluSrc.m_nalRefIDC;
+#endif
 #if !VIDYO_VPS_INTEGRATION
   naluDest.m_viewId      = naluSrc.m_viewId;
   naluDest.m_isDepth     = naluSrc.m_isDepth;
@@ -189,6 +222,9 @@ void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
   naluDest.m_layerId = naluSrc.m_layerId;
 #else
   
+#if !H0388
+  naluDest.m_OutputFlag  = naluSrc.m_OutputFlag;
+#endif
 #endif
   naluDest.m_Bitstream   = naluSrc.m_Bitstream;
 }

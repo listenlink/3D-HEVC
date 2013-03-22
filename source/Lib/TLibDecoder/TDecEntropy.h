@@ -66,29 +66,35 @@ public:
   virtual Void  resetEntropy          ( TComSlice* pcSlice )     = 0;
   virtual Void  setBitstream          ( TComInputBitstream* p )  = 0;
 
+#if OL_FLUSH
   virtual Void  decodeFlush()                                                                      = 0;
+#endif
 
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
 #endif
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI
   virtual Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth )                       = 0;
 #else
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
 #endif
+#if TILES_OR_ENTROPY_SYNC_IDC  
   virtual Void  parsePPS                  ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet )                                      = 0;
+#else
+  virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
+#endif
   virtual Void  parseAPS                  ( TComAPS* pAPS  )                                      = 0;
   virtual void parseSEI(SEImessages&) = 0;
 
-#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
-  virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet, bool isDepth)       = 0;
-#else
+#if LCU_SYNTAX_ALF
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet)       = 0;
+#else
+  virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl )                                = 0;
 #endif
 
   virtual Void  parseTerminatingBit       ( UInt& ruilsLast )                                     = 0;
   
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
   virtual Void parseMVPIdx        ( Int& riMVPIdx, Int iNumAMVPCands ) = 0;
 #else
   virtual Void parseMVPIdx        ( Int& riMVPIdx ) = 0;
@@ -102,7 +108,7 @@ public:
   virtual Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx ) = 0;
   virtual Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   virtual Void parseResPredFlag   ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
   virtual Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -152,7 +158,9 @@ private:
   TComPrediction* m_pcPrediction;
   UInt    m_uiBakAbsPartIdx;
   UInt    m_uiBakChromaOffset;
+#if UNIFIED_TRANSFORM_TREE
   UInt    m_bakAbsPartIdxCU;
+#endif
   
 public:
   Void init (TComPrediction* p) {m_pcPrediction = p;}
@@ -170,19 +178,23 @@ public:
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
 #endif
   
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI
   Void    decodeSPS                   ( TComSPS* pcSPS, Bool bIsDepth ) { m_pcEntropyDecoderIf->parseSPS(pcSPS, bIsDepth); }
 #else
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
 #endif
+#if TILES_OR_ENTROPY_SYNC_IDC
   Void    decodePPS                   ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet    )    { m_pcEntropyDecoderIf->parsePPS(pcPPS, parameterSet);                    }
+#else
+  Void    decodePPS                   ( TComPPS* pcPPS     )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
+#endif
   Void    decodeAPS                   ( TComAPS* pAPS      )    { m_pcEntropyDecoderIf->parseAPS(pAPS);}
   void decodeSEI(SEImessages& seis) { m_pcEntropyDecoderIf->parseSEI(seis); }
 
-#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
-  Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet, bool isDepth)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, alfCUCtrl, alfParamSet, isDepth);         }
-#else
+#if LCU_SYNTAX_ALF
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, alfCUCtrl, alfParamSet);         }
+#else
+  Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl )  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, alfCUCtrl);         }
 #endif
 
   Void    decodeTerminatingBit        ( UInt& ruiIsLast )       { m_pcEntropyDecoderIf->parseTerminatingBit(ruiIsLast);     }
@@ -197,7 +209,7 @@ public:
 #endif
   Void decodeMergeFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void decodeMergeIndex        ( TComDataCU* pcSubCU, UInt uiPartIdx, UInt uiPartAddr, PartSize eCUMode, UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, UInt uiDepth );
-#if H3D_IVRP && !MTK_MDIVRP_C0138
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Void decodeResPredFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx );
 #endif
   Void decodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -210,14 +222,27 @@ public:
   Void decodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
+#if !UNIFIED_TRANSFORM_TREE
+  Void decodeTransformIdx      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#if UNIFIED_TRANSFORM_TREE
   Void decodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#else
+  Void decodeQP                ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   
   Void readTileMarker         ( UInt& uiTileIdx, UInt uiBitsUsed )  {  m_pcEntropyDecoderIf->readTileMarker( uiTileIdx, uiBitsUsed ); }
   Void updateContextTables    ( SliceType eSliceType, Int iQp ) { m_pcEntropyDecoderIf->updateContextTables( eSliceType, iQp ); }
   
   
 private:
+#if UNIFIED_TRANSFORM_TREE
   Void xDecodeTransform        ( TComDataCU* pcCU, UInt offsetLuma, UInt offsetChroma, UInt uiAbsPartIdx, UInt absTUPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, UInt uiInnerQuadIdx, UInt& uiYCbfFront3, UInt& uiUCbfFront3, UInt& uiVCbfFront3, Bool& bCodeDQP );
+#else
+  Void xDecodeTransformSubdiv  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt absTUPartIdx, UInt uiDepth, UInt uiInnerQuadIdx, UInt& uiYCbfFront3, UInt& uiUCbfFront3, UInt& uiVCbfFront3 );
+  
+  Void xDecodeCoeff            ( TComDataCU* pcCU, UInt uiLumaOffset, UInt uiChromaOffset, UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, UInt uiTrIdx, UInt uiCurrTrIdx, Bool& bCodeDQP );
+#endif //UNIFIED_TRANSFORM_TREE
 
 public:
   Void decodeCoeff             ( TComDataCU* pcCU                 , UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP );
@@ -227,11 +252,15 @@ public:
   /// set slice granularity
   Void setSliceGranularity (Int iSliceGranularity) {m_pcEntropyDecoderIf->setSliceGranularity(iSliceGranularity);}
 
+#if SAO_UNIT_INTERLEAVING
   Void decodeSaoParam         (SAOParam* saoParam);
   void decodeSaoLcu(Int rx, Int ry, Int compIdx, SAOParam* saoParam, Bool &repeatedRow );
   Void decodeSaoOneLcu(SaoLcuParam* saoLcuParam);
+#endif
 
+#if OL_FLUSH
   Void decodeFlush() { m_pcEntropyDecoderIf->decodeFlush(); }
+#endif
   
 #if RWTH_SDC_DLT_B0036
   Void decodeSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

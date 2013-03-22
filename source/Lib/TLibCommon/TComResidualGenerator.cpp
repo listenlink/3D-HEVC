@@ -43,7 +43,7 @@
 #include "TComResidualGenerator.h"
 
 
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 
 
 TComResidualGenerator::TComResidualGenerator()
@@ -183,13 +183,6 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
   AOF  ( m_bCreated && m_bInit );
   AOF  ( pcPic );
 
-#if MTK_MDIVRP_C0138
-  if (pcPic->getSPS()->getViewId() != 0)
-  {
-    return;
-  }
-#endif
-
   if( pcPic->getPOC() == 0 )
   {
     if( pcPic->getSPS()->getViewId() == 0 || m_pcSPSAccess->getResPrd() != 0 )
@@ -225,18 +218,21 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
   }
 }
 
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
+#if QC_MULTI_DIS_CAN_A0097
 Bool
-TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv, TComMv iDisp, Bool bRecon  ) 
-#else
-Bool
-TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv, Int iDisp, Bool bRecon  ) 
+TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv, Int iDisp
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
 #endif
+ ) 
 #else
 Bool
-TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv, Bool bRecon ) 
-#endif //H3D_NBDV
+TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
+#endif
+  )
+#endif
 {
   AOF(  pcCU );
   UInt  uiPartAddr;
@@ -246,56 +242,67 @@ TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComY
   iBlkWidth   = pcCU->getWidth  ( 0 );
   iBlkHeight  = pcCU->getHeight ( 0 );
   pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiPartAddr, iXPos, iYPos );
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv, iDisp, bRecon);   
-#else
-  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv, iDisp, bRecon); 
+#if QC_MULTI_DIS_CAN_A0097
+  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv, iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , bRecon
 #endif
+  );
 #else
-  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv, bRecon); 
-#endif // H3D_NBDV
+  return getResidualSamples( pcCU->getPic(), (UInt)iXPos, (UInt)iYPos, (UInt)iBlkWidth, (UInt)iBlkHeight, pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , bRecon
+#endif
+    );
+#endif
 }
   
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
+#if QC_MULTI_DIS_CAN_A0097
 Bool
-TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp, Bool bRecon)  
-#else
-Bool
-TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp, Bool bRecon) 
+TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
 #endif
+)
 #else
 Bool
-TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Bool bRecon) 
+TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+  , Bool bRecon
+#endif
+  )
 #endif
 {
-#if MTK_C0138_FIXED
-  UInt  uiBaseViewId  = 0;
-#else
   UInt  uiBaseViewId  = m_pcDepthMapGenerator->getBaseViewId( 0 );
-#endif
+
   if( !pcYuv )
   {
     pcYuv = m_ppcYuvTmp[1];
   }
+#if QC_SIMPLIFIEDIVRP_M24938
   UInt uiXPosInRefView = uiXPos , uiYPosInRefView = uiYPos;
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, iDisp, &uiXPosInRefView , &uiYPosInRefView , bRecon  );
-#else
-  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, iDisp, &uiXPosInRefView , &uiYPosInRefView , bRecon  );
 #endif
+#if QC_MULTI_DIS_CAN_A0097
+  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, iDisp
+#if QC_SIMPLIFIEDIVRP_M24938
+    , &uiXPosInRefView , &uiYPosInRefView , bRecon
+#endif  
+  );
 #else
-  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, &uiXPosInRefView , &uiYPosInRefView , bRecon    );
+  xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv 
+#if QC_SIMPLIFIEDIVRP_M24938
+    , &uiXPosInRefView , &uiYPosInRefView , bRecon
 #endif
-#if MTK_MDIVRP_C0138
-  return true;
-#else
+    );
+#endif
+#if QC_SIMPLIFIEDIVRP_M24938
   return xIsNonZeroByCBF( uiBaseViewId , uiXPosInRefView , uiYPosInRefView , uiBlkWidth , uiBlkHeight );
+#else
+  return xIsNonZero( pcYuv, uiBlkWidth, uiBlkHeight );
 #endif
 }
 
+#if QC_SIMPLIFIEDIVRP_M24938
 Bool TComResidualGenerator::xIsNonZeroByCBF( UInt uiBaseViewId , UInt uiXPos , UInt uiYPos, UInt uiBlkWidth , UInt uiBlkHeight )
 {
   TComPic* pcBasePic   = m_pcAUPicAccess->getPic( uiBaseViewId );
@@ -321,6 +328,7 @@ Bool TComResidualGenerator::xIsNonZeroByCBF( UInt uiBaseViewId , UInt uiXPos , U
 
   return( false );
 }
+#endif
 
 
 
@@ -410,29 +418,40 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   TCoeff* piCoeff   = pcCU->getCoeffY ();
   Pel*    pRes      = pcCUResidual->getLumaAddr();
   UInt    uiLumaTrMode, uiChromaTrMode;
-#if LG_RESTRICTEDRESPRED_M24766  && !MTK_MDIVRP_C0138
+#if LG_RESTRICTEDRESPRED_M24766
   Int     iPUPredResiShift[4];
 #endif
   pcCU->convertTransIdx             ( 0, pcCU->getTransformIdx( 0 ), uiLumaTrMode, uiChromaTrMode );
+#if H0736_AVC_STYLE_QP_RANGE
     m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
+#else
+    m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA, 0 );
+#endif
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_LUMA, pRes, 0, pcCUResidual->getStride(), uiWidth, uiHeight, uiLumaTrMode, 0, piCoeff );
   // chroma Cb
   uiWidth   >>= 1;
   uiHeight  >>= 1;
   piCoeff     = pcCU->getCoeffCb();
   pRes        = pcCUResidual->getCbAddr();
+#if H0736_AVC_STYLE_QP_RANGE
     m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), pcCU->getSlice()->getPPS()->getChromaQpOffset() );
+#else
+    m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_CHROMA, pcCU->getSlice()->getSPS()->getQpBDOffsetC() );
+#endif
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_CHROMA_U, pRes, 0, pcCUResidual->getCStride(), uiWidth, uiHeight, uiChromaTrMode, 0, piCoeff );
   // chroma Cr
   piCoeff     = pcCU->getCoeffCr();
   pRes        = pcCUResidual->getCrAddr();
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_CHROMA_V, pRes, 0, pcCUResidual->getCStride(), uiWidth, uiHeight, uiChromaTrMode, 0, piCoeff );
 
-#if !MTK_MDIVRP_C0138
   if( pcCU->getResPredFlag( 0 ) )
   {
     AOF( pcCU->getResPredAvail( 0 ) );
-    Bool bOK = pcCU->getResidualSamples( 0, true, m_ppcYuvTmp[0] );
+    Bool bOK = pcCU->getResidualSamples( 0, 
+#if QC_SIMPLIFIEDIVRP_M24938
+      true,
+#endif
+      m_ppcYuvTmp[0] );
     AOF( bOK );
 #if LG_RESTRICTEDRESPRED_M24766
     pcCU->getPUResiPredShift(iPUPredResiShift, 0);
@@ -441,7 +460,6 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
     pcCUResidual->add( m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
 #endif
   }
-#endif
 
   //===== clear inter-view predicted parts =====
   for( UInt uiPartIdx = 0; uiPartIdx < pcCU->getNumPartInter(); uiPartIdx++ )
@@ -498,21 +516,21 @@ TComResidualGenerator::xClearResidual( TComYuv* pcCUResidual, UInt uiAbsPartIdx,
 }
 
 
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-Void  
-TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp
-                                             ,UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon )
-#else // MTK_RELEASE_DV_CONSTRAINT_C0129
+#if QC_MULTI_DIS_CAN_A0097
 Void  
 TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp 
-                                             ,UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon)
-#endif // MTK_RELEASE_DV_CONSTRAINT_C0129
-#else // H3D_NBDV
+#if QC_SIMPLIFIEDIVRP_M24938
+  , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
+#endif
+)
+#else
 Void  
 TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv 
-                                             , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  )
-#endif // H3D_NBDV
+#if QC_SIMPLIFIEDIVRP_M24938
+  , UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon
+#endif
+  )
+#endif
 {
   //===== set and check some basic variables =====
   AOF(          pcYuv     );
@@ -529,18 +547,13 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   AOT( uiYPos + uiBlkHeight > uiPicHeight );
 
   //===== get disparity =====
-#if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Int iDisparity_y = iDisp.getVer();
-  Int iDisparity   = iDisp.getHor();
-#else
+#if QC_MULTI_DIS_CAN_A0097
   Int iDisparity = iDisp;
-#endif
-#else //H3D_NBDV
+#else
   Int           iMidPosX    = Int( uiXPos + ( ( uiBlkWidth  - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpX();
   Int           iMidPosY    = Int( uiYPos + ( ( uiBlkHeight - 1 ) >> 1 ) ) >> m_pcDepthMapGenerator->getSubSampExpY();
   Int           iDisparity  = m_pcDepthMapGenerator->getDisparity( pcPic, iMidPosX, iMidPosY, uiBaseViewId );
-#endif //H3D_NBDV
+#endif
   //===== compensate luma =====
   Int           iYWidth     = Int( uiBlkWidth  );
   Int           iYHeight    = Int( uiBlkHeight );
@@ -548,50 +561,28 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   Int           iYWeight0   = 4 - iYWeight1;
   Int           iYRefPosX0  = Int( uiXPos )     + ( iDisparity >> 2 );
   Int           iYRefPosX1  = iYRefPosX0        + 1;
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Int           iYMaxPosY   = Int( uiPicHeight ) - 1;
-  Int           iYWeight3   = ( iDisparity_y & 3 );
-  Int           iYWeight2   = 4 - iYWeight3;
-  Int           iYRefPosY0  = Max( 0, Min( iYMaxPosY, Int( uiYPos )     + ( iDisparity_y >> 2 )) );
-  Int           iYRefPosY1  = Max( 0, Min( iYMaxPosY, iYRefPosY0 + 1 ));
-#endif
   Int           iYMaxPosX   = Int( uiPicWidth ) - 1;
   Int           iSrcStrideY = pcBaseRes->getStride   ();
   Int           iDesStrideY = pcYuv    ->getStride   ();
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Pel*          pSrcSamplesY0= pcBaseRes->getLumaAddr ( 0 ) + iYRefPosY0 * iSrcStrideY;
-  Pel*          pSrcSamplesY1= pcBaseRes->getLumaAddr ( 0 ) + iYRefPosY1 * iSrcStrideY;
-#else
   Pel*          pSrcSamplesY= pcBaseRes->getLumaAddr ( 0 ) + uiYPos * iSrcStrideY;
-#endif
   Pel*          pDesSamplesY= pcYuv    ->getLumaAddr ();
 
-
+#if QC_SIMPLIFIEDIVRP_M24938
   if( puiXPosInRefView != NULL )
     *puiXPosInRefView = Max( 0, Min( iYMaxPosX, iYRefPosX0 ) );
   if( puiYPosInRefView != NULL )
     *puiYPosInRefView = uiYPos;
   if( bRecon == false )
     return;
-
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  for(   Int iY = 0; iY < iYHeight; iY++, pSrcSamplesY0 += iSrcStrideY, pSrcSamplesY1 += iSrcStrideY, pDesSamplesY += iDesStrideY )
-#else
-  for(   Int iY = 0; iY < iYHeight; iY++, pSrcSamplesY += iSrcStrideY, pDesSamplesY += iDesStrideY )
 #endif
+
+  for(   Int iY = 0; iY < iYHeight; iY++, pSrcSamplesY += iSrcStrideY, pDesSamplesY += iDesStrideY )
   {
     for( Int iX = 0; iX < iYWidth; iX++ )
     {
       Int iXPic0        = Max( 0, Min( iYMaxPosX, iYRefPosX0 + iX ) );
       Int iXPic1        = Max( 0, Min( iYMaxPosX, iYRefPosX1 + iX ) );
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-      Pel Temp1,Temp2;
-      Temp1 =( iYWeight0 * pSrcSamplesY0[iXPic0] + iYWeight1 * pSrcSamplesY0[iXPic1] + 2 ) >> 2;
-      Temp2 =( iYWeight0 * pSrcSamplesY1[iXPic0] + iYWeight1 * pSrcSamplesY1[iXPic1] + 2 ) >> 2;
-      pDesSamplesY[iX]  = ( iYWeight2 * Temp1 + iYWeight3 * Temp2 + 2 ) >> 2;
-#else
       pDesSamplesY[iX]  = ( iYWeight0 * pSrcSamplesY[iXPic0] + iYWeight1 * pSrcSamplesY[iXPic1] + 2 ) >> 2;
-#endif
     }
   }
 
@@ -602,58 +593,22 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   Int           iCWeight0   = 8 - iCWeight1;
   Int           iCRefPosX0  = Int( uiXPos     >> 1 ) + ( iDisparity >> 3 );
   Int           iCRefPosX1  = iCRefPosX0             + 1;
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Int           iCMaxPosY   = Int( uiPicHeight >> 1 ) - 1;
-  Int           iCWeight3   = ( iDisparity_y & 7 );
-  Int           iCWeight2   = 8 - iCWeight3;
-  Int           iCRefPosY0  = Max( 0, Min( iCMaxPosY, Int( uiYPos >> 1 )     + ( iDisparity_y >> 3 )) );
-  Int           iCRefPosY1  = Max( 0, Min( iCMaxPosY, iCRefPosY0 + 1 ));
-#endif
   Int           iCMaxPosX   = Int( uiPicWidth >> 1 ) - 1;
   Int           iSrcStrideC = pcBaseRes->getCStride();
   Int           iDesStrideC = pcYuv    ->getCStride();
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-#if FIX_CHROMA_RESIDUAL_C0129
-  Pel*          pSrcSamplesU0= pcBaseRes->getCbAddr ( 0 ) + iCRefPosY0 * iSrcStrideC;
-  Pel*          pSrcSamplesU1= pcBaseRes->getCbAddr ( 0 ) + iCRefPosY1 * iSrcStrideC;
-  Pel*          pSrcSamplesV0= pcBaseRes->getCrAddr ( 0 ) + iCRefPosY0 * iSrcStrideC;
-  Pel*          pSrcSamplesV1= pcBaseRes->getCrAddr ( 0 ) + iCRefPosY1 * iSrcStrideC;
-#else
-  Pel*          pSrcSamplesU0= pcBaseRes->getCbAddr ( 0 ) + ( iCRefPosY0 >> 1 ) * iSrcStrideC;
-  Pel*          pSrcSamplesU1= pcBaseRes->getCbAddr ( 0 ) + ( iCRefPosY1 >> 1 ) * iSrcStrideC;
-  Pel*          pSrcSamplesV0= pcBaseRes->getCrAddr ( 0 ) + ( iCRefPosY0 >> 1 ) * iSrcStrideC;
-  Pel*          pSrcSamplesV1= pcBaseRes->getCrAddr ( 0 ) + ( iCRefPosY1 >> 1 ) * iSrcStrideC;
-#endif
-#else
   Pel*          pSrcSamplesU= pcBaseRes->getCbAddr ( 0 ) + ( uiYPos >> 1 ) * iSrcStrideC;
   Pel*          pSrcSamplesV= pcBaseRes->getCrAddr ( 0 ) + ( uiYPos >> 1 ) * iSrcStrideC;
-#endif
   Pel*          pDesSamplesU= pcYuv    ->getCbAddr ();
   Pel*          pDesSamplesV= pcYuv    ->getCrAddr ();
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  for(   Int iY = 0; iY < iCHeight; iY++, pSrcSamplesU0 += iSrcStrideC, pSrcSamplesU1 += iSrcStrideC, pDesSamplesU += iDesStrideC,
-                                          pSrcSamplesV0 += iSrcStrideC, pSrcSamplesV1 += iSrcStrideC, pDesSamplesV += iDesStrideC )
-#else
   for(   Int iY = 0; iY < iCHeight; iY++, pSrcSamplesU += iSrcStrideC, pDesSamplesU += iDesStrideC,
                                           pSrcSamplesV += iSrcStrideC, pDesSamplesV += iDesStrideC )
-#endif
   {
     for( Int iX = 0; iX < iCWidth; iX++ )
     {
       Int iXPic0        = Max( 0, Min( iCMaxPosX, iCRefPosX0 + iX ) );
       Int iXPic1        = Max( 0, Min( iCMaxPosX, iCRefPosX1 + iX ) );
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-      Pel Temp1,Temp2;
-      Temp1 =( iCWeight0 * pSrcSamplesU0[iXPic0] + iCWeight1 * pSrcSamplesU0[iXPic1] + 4 ) >> 3;
-      Temp2 =( iCWeight0 * pSrcSamplesU1[iXPic0] + iCWeight1 * pSrcSamplesU1[iXPic1] + 4 ) >> 3;
-      pDesSamplesU[iX]  = ( iCWeight2 * Temp1 + iCWeight3 * Temp2 + 4 ) >> 3;
-      Temp1 =( iCWeight0 * pSrcSamplesV0[iXPic0] + iCWeight1 * pSrcSamplesV0[iXPic1] + 4 ) >> 3;
-      Temp2 =( iCWeight0 * pSrcSamplesV1[iXPic0] + iCWeight1 * pSrcSamplesV1[iXPic1] + 4 ) >> 3;
-      pDesSamplesV[iX]  = ( iCWeight2 * Temp1 + iCWeight3 * Temp2 + 4 ) >> 3;
-#else
       pDesSamplesU[iX]  = ( iCWeight0 * pSrcSamplesU[iXPic0] + iCWeight1 * pSrcSamplesU[iXPic1] + 4 ) >> 3;
       pDesSamplesV[iX]  = ( iCWeight0 * pSrcSamplesV[iXPic0] + iCWeight1 * pSrcSamplesV[iXPic1] + 4 ) >> 3;
-#endif
     }
   }
 }
@@ -749,5 +704,5 @@ TComResidualGenerator::xDumpResidual( TComPic* pcPic, char* pFilenameBase )
 }
 
 
-#endif // H3D_IVRP
+#endif // HHI_INTER_VIEW_RESIDUAL_PRED
 

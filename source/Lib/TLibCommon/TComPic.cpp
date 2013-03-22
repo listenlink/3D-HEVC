@@ -58,14 +58,10 @@ TComPic::TComPic()
   m_pcPredDepthMap_temp    = NULL;
 #endif
 #endif
-#if FCO_DVP_REFINE_C0132_C0170
-  m_bDepthCoded       = false;
-  m_pcRecDepthMap     = NULL;
-#endif
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
   m_pcOrgDepthMap     = NULL;
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   m_pcResidual        = NULL;
 #endif
   m_pcPicYuvPred      = NULL;
@@ -79,15 +75,15 @@ TComPic::TComPic()
 #if HHI_INTERVIEW_SKIP
   m_pcUsedPelsMap     = NULL;
 #endif
-#if INTER_VIEW_VECTOR_SCALING_C0115
-  m_iViewOrderIdx     = 0;    // will be changed to view_id
+#if SONY_COLPIC_AVAILABILITY
+  m_iViewOrderIdx     = 0;
 #endif
   m_aaiCodedScale     = 0;
   m_aaiCodedOffset    = 0;
 #if OL_QTLIMIT_PREDCODING_B0068
   m_bReduceBitsQTL    = 0;
 #endif
-#if H3D_NBDV
+#if QC_SIMPLE_NBDV_B0047
   m_bRapCheck = false;
   m_eRapRefList = REF_PIC_LIST_0;
   m_uiRapRefIdx = 0;
@@ -160,7 +156,7 @@ Void TComPic::destroy()
   }                     
 #endif
 #endif
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
   if( m_pcOrgDepthMap )
   {
     m_pcOrgDepthMap->destroy();
@@ -168,7 +164,7 @@ Void TComPic::destroy()
     m_pcOrgDepthMap = NULL;
   }
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   if( m_pcResidual )
   {
     m_pcResidual->destroy();
@@ -209,7 +205,7 @@ TComPic::addPrdDepthMapBuffer( UInt uiSubSampExpX, UInt uiSubSampExpY )
 }
 #endif
 
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
 Void
 TComPic::addOrgDepthMapBuffer()
 {
@@ -225,7 +221,7 @@ TComPic::addOrgDepthMapBuffer()
 }
 #endif
 
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 Void
 TComPic::addResidualBuffer()
 {
@@ -262,7 +258,7 @@ TComPic::removePrdDepthMapBuffer()
 }
 #endif
 
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
 Void
 TComPic::removeOrgDepthMapBuffer()
 {
@@ -275,7 +271,7 @@ TComPic::removeOrgDepthMapBuffer()
 }
 #endif
 
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
 Void
 TComPic::removeResidualBuffer()
 {
@@ -319,6 +315,12 @@ Void TComPic::createNonDBFilterInfo(UInt* pSliceStartAddress, Int numSlices, Int
   {
     m_pbValidSlice[s] = true;
   }
+#if !LCU_SYNTAX_ALF
+  if( pSliceStartAddress == NULL || (numSlices == 1 && numTiles == 1) )
+  {
+    return;
+  }
+#endif
   m_pSliceSUMap = new Int[maxNumSUInLCU * numLCUInPic];
 
   //initialization
@@ -486,7 +488,7 @@ Void TComPic::createNonDBFilterInfo(UInt* pSliceStartAddress, Int numSlices, Int
     m_pNDBFilterYuvTmp->create(picWidth, picHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth);
   }
 }
-#if H3D_NBDV
+#if QC_SIMPLE_NBDV_B0047
 Bool TComPic::getDisCandRefPictures(Int iColPOC)
 {
   UInt uiTempLayerCurr=7;
@@ -699,6 +701,5 @@ Void TComPic::destroyNonDBFilterInfo()
   }
 
 }
-
 
 //! \}

@@ -64,14 +64,14 @@ TDecBinCABAC::uninit()
 Void
 TDecBinCABAC::start()
 {
-#if OL_FLUSH_ALIGN
+#if !OL_FLUSH || OL_FLUSH_ALIGN
   assert( m_pcTComBitstream->getNumBitsUntilByteAligned() == 0 );
 #endif
   
   m_uiRange    = 510;
   m_bitsNeeded = -8;
   m_uiValue    = m_pcTComBitstream->readByte() << 8;
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
   m_uiLastByte = m_pcTComBitstream->readByte();
   m_uiValue   |= m_uiLastByte;
 #else
@@ -84,6 +84,7 @@ TDecBinCABAC::finish()
 {
 }
 
+#if OL_FLUSH
 Void 
 TDecBinCABAC::flush()
 {
@@ -106,6 +107,7 @@ TDecBinCABAC::flush()
   m_bitsNeeded = -8;
 #endif // OL_FLUSH_ALIGN
 }
+#endif // OL_FLUSH
 
 /**
  - Copy CABAC state.
@@ -119,7 +121,7 @@ TDecBinCABAC::copyState( TDecBinIf* pcTDecBinIf )
   m_uiRange   = pcTDecBinCABAC->m_uiRange;
   m_uiValue   = pcTDecBinCABAC->m_uiValue;
   m_bitsNeeded= pcTDecBinCABAC->m_bitsNeeded;
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
   m_uiLastByte= pcTDecBinCABAC->m_uiLastByte;
 #endif
 }
@@ -149,7 +151,7 @@ TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
     if ( ++m_bitsNeeded == 0 )
     {
       m_bitsNeeded = -8;
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
       m_uiLastByte = m_pcTComBitstream->readByte();
       m_uiValue += m_uiLastByte;    
 #else
@@ -170,7 +172,7 @@ TDecBinCABAC::decodeBin( UInt& ruiBin, ContextModel &rcCtxModel )
     
     if ( m_bitsNeeded >= 0 )
     {
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
       m_uiLastByte = m_pcTComBitstream->readByte();
       m_uiValue += m_uiLastByte << m_bitsNeeded;
 #else
@@ -189,7 +191,7 @@ TDecBinCABAC::decodeBinEP( UInt& ruiBin )
   if ( ++m_bitsNeeded >= 0 )
   {
     m_bitsNeeded = -8;
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
     m_uiLastByte = m_pcTComBitstream->readByte();
     m_uiValue += m_uiLastByte;
 #else
@@ -212,7 +214,7 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
   
   while ( numBins > 8 )
   {
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
     m_uiLastByte = m_pcTComBitstream->readByte();
     m_uiValue = ( m_uiValue << 8 ) + ( m_uiLastByte << ( 8 + m_bitsNeeded ) );
 #else
@@ -238,7 +240,7 @@ Void TDecBinCABAC::decodeBinsEP( UInt& ruiBin, Int numBins )
   
   if ( m_bitsNeeded >= 0 )
   {
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
     m_uiLastByte = m_pcTComBitstream->readByte();
     m_uiValue += m_uiLastByte << m_bitsNeeded;
 #else
@@ -282,7 +284,7 @@ TDecBinCABAC::decodeBinTrm( UInt& ruiBin )
       if ( ++m_bitsNeeded == 0 )
       {
         m_bitsNeeded = -8;
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
         m_uiLastByte = m_pcTComBitstream->readByte();
         m_uiValue += m_uiLastByte;    
 #else
@@ -303,6 +305,7 @@ Void TDecBinCABAC::resetBac()
   m_uiValue    = m_pcTComBitstream->read( 16 );
 }
 
+#if BURST_IPCM
 /** Decode subsequent_pcm_num.
  * \param numSubseqIPCM
  * \returns Void
@@ -319,7 +322,7 @@ Void TDecBinCABAC::decodeNumSubseqIPCM( Int& numSubseqIPCM )
     if ( ++m_bitsNeeded >= 0 )
     {
       m_bitsNeeded = -8;
-#if !OL_FLUSH_ALIGN
+#if OL_FLUSH && !OL_FLUSH_ALIGN
       m_uiLastByte = m_pcTComBitstream->readByte();
       m_uiValue += m_uiLastByte;
 #else
@@ -338,6 +341,7 @@ Void TDecBinCABAC::decodeNumSubseqIPCM( Int& numSubseqIPCM )
 
   numSubseqIPCM --;
 }
+#endif
 
 /** Decode PCM alignment zero bits.
  * \returns Void

@@ -195,6 +195,10 @@ private:
   
   SEImessages *m_SEIs; ///< "all" SEI messages.  If not NULL, we own the object.
 
+#if SONY_COLPIC_AVAILABILITY
+  Int                     m_iViewOrderIdx;
+#endif
+
   // functional classes
   TComPrediction          m_cPrediction;
   TComTrQuant             m_cTrQuant;
@@ -212,7 +216,7 @@ private:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator   m_cDepthMapGenerator;
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator   m_cResidualGenerator;
 #endif
 
@@ -248,7 +252,7 @@ public:
   Void      xCopyPPS( TComPPS* pPPSV0);
   Void      xCopyVPS( TComVPS* pVPSV0);
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   Void      deleteExtraPicBuffers   ( Int iPoc );
 #endif
   Void  compressMotion       ( Int iPoc );
@@ -258,6 +262,11 @@ public:
   Void setViewId(Int viewId)      { m_viewId = viewId;}
   Int  getViewId()                { return m_viewId  ;}
   Void setIsDepth( Bool isDepth ) { m_isDepth = isDepth; }
+
+#if SONY_COLPIC_AVAILABILITY
+  Void setViewOrderIdx(Int i)     { m_iViewOrderIdx = i ;}
+  Int  getViewOrderIdx()          { return m_iViewOrderIdx ; }
+#endif
 
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  getDepthMapGenerator  () { return &m_cDepthMapGenerator; }
@@ -281,7 +290,11 @@ protected:
 
   Void      decodeAPS( TComAPS* cAPS) { m_cEntropyDecoder.decodeAPS(cAPS); };
   Void      xActivateParameterSets();
+#if SKIPFRAME_BUGFIX
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
+#else
+  Bool      xDecodeSlice(InputNALUnit &nalu, Int iSkipFrame, Int iPOCLastDisplay);
+#endif
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void      xDecodeVPS();
 #endif

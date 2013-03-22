@@ -96,7 +96,7 @@ private:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  m_pcDepthMapGenerator;
 #endif
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   TComResidualGenerator*  m_pcResidualGenerator;
 #endif
   Int                     m_pocLastCoded;

@@ -120,7 +120,7 @@ protected:
 #endif
   
   // AMVP cost computation
-#if H3D_IVMP
+#if HHI_INTER_VIEW_MOTION_PRED
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+2][AMVP_MAX_NUM_CANDS+2]; //th array bounds
 #else
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
@@ -195,7 +195,7 @@ public:
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
-#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
+#if LG_RESTRICTEDRESPRED_M24766
                                   TComYuv*    rpcResiPredYuv,
 #endif
                                   TComYuv*&   rpcPredYuv,
@@ -207,7 +207,7 @@ public:
 #endif
                                 );
   
-#if H3D_IVRP
+#if HHI_INTER_VIEW_RESIDUAL_PRED
   /// encode residual and compute rd-cost for inter mode
   Void encodeResAndCalcRdInterCU( TComDataCU* pcCU,
                                   TComYuv*    pcYuvOrg,
@@ -400,7 +400,7 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
-
+#if HHIQC_DMMFASTSEARCH_B0039
   Void xSearchWedgeFullMinDistFast( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeNodeList* pacWedgeNodeList, 
@@ -411,6 +411,7 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Dist&          riDist );
+#endif
   Void xSearchWedgePredDirMinDist ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx, 
                                     WedgeList*     pacWedgeList, 
@@ -420,7 +421,7 @@ protected:
                                     UInt           uiHeight, 
                                     UInt&          ruiTabIdx, 
                                     Int&           riWedgeDeltaEnd );
-#endif // HHI_DMM_WEDGE_INTRA
+#endif
 #if HHI_DMM_PRED_TEX
   Void findWedgeTexMinDist        ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,
@@ -433,11 +434,7 @@ protected:
                                     Int&           riDeltaDC1,
                                     Int&           riDeltaDC2,
                                     Bool           bAboveAvail,
-                                    Bool           bLeftAvail
-#if LGE_DMM3_SIMP_C0044
-                                    ,UInt&         ruiIntraTabIdx
-#endif
-                                    );
+                                    Bool           bLeftAvail );
   Void findContourPredTex         ( TComDataCU*    pcCU, 
                                     UInt           uiAbsPtIdx,
                                     Pel*           piOrig,
@@ -449,7 +446,7 @@ protected:
                                     Int&           riDeltaDC2,
                                     Bool           bAboveAvail,
                                     Bool           bLeftAvail );
-#endif // HHI_DMM_PRED_TEX
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)
@@ -462,7 +459,9 @@ protected:
                                     Int         iRefIdx,
                                     TComMv&     rcMvPred,
                                     Bool        bFilled = false
+                                  #if H0111_MVD_L1_ZERO
                                   , UInt*       puiDistBiP = NULL
+                                  #endif
                                   #if ZERO_MVD_EST
                                   , UInt*       puiDist = NULL
                                   #endif
@@ -500,7 +499,7 @@ protected:
   
   Void xMergeEstimation           ( TComDataCU*     pcCU,
                                     TComYuv*        pcYuvOrg,
-#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
+#if LG_RESTRICTEDRESPRED_M24766
                                     TComYuv*        rpcResiPredYuv, 
 #endif
                                     Int             iPartIdx,

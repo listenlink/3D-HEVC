@@ -428,7 +428,11 @@ Void TAppRendererTop::render()
 
       // Write Output
 
+#if PIC_CROPPING
       m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, 0, 0, 0, 0 );
+#else
+      m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, aiPad );
+#endif
     }
     iFrame++;
     iNumOfRenderedFrames++;
@@ -660,7 +664,11 @@ Void TAppRendererTop::xRenderModelFromString()
           cCurModel.getSynthVideo ( iModelNum, iViewPos, pcPicYuvSynthOut );
 
           // Write Output
+#if PIC_CROPPING
           m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iModelNum]->write( pcPicYuvSynthOut, 0 ,0 ,0, 0 );
+#else
+          m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iModelNum]->write( pcPicYuvSynthOut, aiPad );
+#endif
         }
       }
       iFrame++;
@@ -858,7 +866,11 @@ Void TAppRendererTop::xRenderModelFromNums()
       }
 
       // Write Output
+#if PIC_CROPPING
       m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, 0, 0, 0, 0 );
+#else
+      m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, aiPad );
+#endif
     }
     iFrame++;
     iNumOfRenderedFrames++;
@@ -985,7 +997,11 @@ Void TAppRendererTop::renderUsedPelsMap( )
       m_pcRenTop->getUsedSamplesMap( apcPicYuvBaseDepth[0], pcPicYuvSynthOut, bFirstIsLeft );
 
       // Write Output
+#if PIC_CROPPING
       m_apcTVideoIOYuvSynthOutput[iViewIdx-1]->write( pcPicYuvSynthOut, 0, 0, 0 );
+#else
+      m_apcTVideoIOYuvSynthOutput[iViewIdx-1]->write( pcPicYuvSynthOut, aiPad );
+#endif
 
     }
     iFrame++;
