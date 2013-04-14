@@ -65,6 +65,15 @@ typedef struct _DisCand
   Int    m_aVIdxCan[ DIS_CANS ];            ///< array of motion vector predictor candidates
   Int    iN;                                ///< number of motion vector predictor candidates
 } DisInfo;
+
+typedef struct _McpDisCand
+{
+  TComMv m_acMvCand[2][ MCP_DIS_CANS ];            ///< array of motion vector predictor candidates
+  Int    m_aVIdxCan[2][ MCP_DIS_CANS ];            ///< array of motion vector predictor candidates
+  Bool   m_bAvailab[2][ MCP_DIS_CANS ];
+  Bool   m_bFound;                                 ///< number of motion vector predictor candidates
+} McpDisInfo;
+
 #endif 
 // Class definition
 // ====================================================================================================================

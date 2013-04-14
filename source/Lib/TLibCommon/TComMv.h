@@ -59,9 +59,7 @@ public:
 #if H3D_NBDV
   Bool  m_bDvMcp;       // is dv-mcp ?
   Int   m_iDvMcpDispX;  // disparity for dv-mcp
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
   Int   m_iDvMcpDispY;  // disparity for dv-mcp
-#endif
 #endif
 
   // ------------------------------------------------------------------------------------------------------------------
@@ -74,9 +72,7 @@ public:
 #if H3D_NBDV
   , m_bDvMcp(false)
   , m_iDvMcpDispX(0)
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
   , m_iDvMcpDispY(0)
-#endif
 #endif
   {
   }
@@ -87,9 +83,7 @@ public:
 #if H3D_NBDV
   , m_bDvMcp(false)
   , m_iDvMcpDispX(0)
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
   , m_iDvMcpDispY(0)
-#endif
 #endif
   {
   }
