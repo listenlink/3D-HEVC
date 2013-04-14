@@ -116,10 +116,10 @@
                                               // LGE_IVMP_PARALLEL_MERGE_B0136, B0136 support of parallel merge/skip in disparity vector derivation
                                               // FIX_LGE_IVMP_PARALLEL_MERGE_B0136
 
-#define QC_NBDV_LDB_FIX_C0055             1   // JCT3V-C0055
-#define MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097     1   // JCT3V-C0141/C0097
-#define MTK_RELEASE_DV_CONSTRAINT_C0129   1   // JCT3V-C0129
-#define MTK_SIMPLIFY_DVTC_C0135           1   // JCT3V-C0135
+                                              // QC_NBDV_LDB_FIX_C0055
+                                              // MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097
+                                              // MTK_RELEASE_DV_CONSTRAINT_C0129   
+                                              // MTK_SIMPLIFY_DVTC_C0135           
 #define FIX_CHROMA_RESIDUAL_C0129         1 
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
@@ -185,6 +185,8 @@
 
 ///// ***** VSP *********
 #define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+                                            // LGE_SIMP_DVP_REFINE_C0112            
+                                            // MERL_MTK_VSP_DVP_REFINE_C0152_C0131
 #if MERL_VSP_C0152
 #define MERL_VSP_C0152_BugFix_ForNoDepthCase     1// MERL bugfix for test condition of no depth
 /*
@@ -204,24 +206,22 @@
  */
 
 #define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add   (nocand).
-#define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1 // JCT3V-C0152 && JCT3V-C0131: 1: refine disparity vector using a warped depth block; 0: not to refine  (mvp2off).
+
 
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
-#define LGE_SIMP_DVP_REFINE_C0112            1 // JCT3V-C0112: 1: simplification of refining disparity vector using a warped depth block
 #define MTK_DVPREFINE_BVSP_BUG_FIX               1
 
 #else // !MERL_VSP_C0152
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
-#define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  0 // JCT3V-C0152 && JCT3V-C0131: 1: refine disparity vector using a warped depth block; 0: not to refine
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
-#define LGE_SIMP_DVP_REFINE_C0112            0 // JCT3V-C0112: 1: simplification of refining disparity vector using a warped depth block
 #endif
 
 
 ///// ***** DERIVED PARAMETERS *********
 #if H3D_NBDV                    
 #define DIS_CANS                          1
+#define MCP_DIS_CANS                      1
 #endif                                  
 
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
