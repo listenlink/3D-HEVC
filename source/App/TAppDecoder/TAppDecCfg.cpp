@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,10 @@
 #include "TAppDecCfg.h"
 #include "TAppCommon/program_options_lite.h"
 
+#if H_MV
+#include <cassert>
+#endif
+
 #ifdef WIN32
 #define strdup _strdup
 #endif
@@ -60,10 +64,10 @@ namespace po = df::program_options_lite;
  */
 Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 {
-  bool do_help = false;
+  Bool do_help = false;
   string cfg_BitstreamFile;
   string cfg_ReconFile;
-  string cfg_ScaleOffsetFile;
+  string cfg_TargetDecLayerIdSetFile;
 
   po::Options opts;
   opts.addOptions()
@@ -71,19 +75,26 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("BitstreamFile,b", cfg_BitstreamFile, string(""), "bitstream input file name")
   ("ReconFile,o",     cfg_ReconFile,     string(""), "reconstructed YUV output file name\n"
                                                      "YUV writing is skipped if omitted")
-  ("ScaleOffsetFile,p", cfg_ScaleOffsetFile, string(""), "file with coded scales and offsets")
   ("SkipFrames,s", m_iSkipFrame, 0, "number of frames to skip before random access")
-  ("OutputBitDepth,d", m_outputBitDepth, 0u, "bit depth of YUV output file (use 0 for native depth)")
+  ("OutputBitDepth,d", m_outputBitDepthY, 0, "bit depth of YUV output luma component (default: use 0 for native depth)")
+  ("OutputBitDepthC,d", m_outputBitDepthC, 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
+
+#if H_MV
+  ("MaxLayerId,-ls", m_maxLayerId, MAX_NUM_LAYER_IDS-1, "Maximum LayerId to be decoded.")
+#endif
+
   ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
-  ("SEIpictureDigest", m_pictureDigestEnabled, true, "Control handling of picture_digest SEI messages\n"
-                                              "\t1: check\n"
-                                              "\t0: ignore")
+  ("SEIDecodedPictureHash", m_decodedPictureHashSEIEnabled, 1, "Control handling of decoded picture hash SEI messages\n"
+                                              "\t1: check hash in SEI messages if available in the bitstream\n"
+                                              "\t0: ignore SEI message")
+  ("SEIpictureDigest", m_decodedPictureHashSEIEnabled, 1, "deprecated alias for SEIDecodedPictureHash")
+  ("TarDecLayerIdSetFile,l", cfg_TargetDecLayerIdSetFile, string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
+  ("RespectDefDispWindow,w", m_respectDefDispWindow, 0, "Only output content inside the default display window\n")
   ;
-
   po::setDefaults(opts);
-  const list<const char*>& argv_unhandled = po::scanArgv(opts, argc, (const char**) argv);
+  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
 
-  for (list<const char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
+  for (list<const Char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
   {
     fprintf(stderr, "Unhandled argument ignored: `%s'\n", *it);
   }
@@ -96,19 +107,73 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
-  m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
-  m_pchScaleOffsetFile = cfg_ScaleOffsetFile.empty() ? NULL : strdup(cfg_ScaleOffsetFile.c_str());
 
+  m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
 
   if (!m_pchBitstreamFile)
   {
-    fprintf(stderr, "No input file specified, aborting\n");
+    fprintf(stderr, "No input file specifed, aborting\n");
     return false;
   }
+
+  if ( !cfg_TargetDecLayerIdSetFile.empty() )
+  {
+    FILE* targetDecLayerIdSetFile = fopen ( cfg_TargetDecLayerIdSetFile.c_str(), "r" );
+    if ( targetDecLayerIdSetFile )
+    {
+      Bool isLayerIdZeroIncluded = false;
+      while ( !feof(targetDecLayerIdSetFile) )
+      {
+        Int layerIdParsed = 0;
+        if ( fscanf( targetDecLayerIdSetFile, "%d ", &layerIdParsed ) != 1 )
+        {
+          if ( m_targetDecLayerIdSet.size() == 0 )
+          {
+            fprintf(stderr, "No LayerId could be parsed in file %s. Decoding all LayerIds as default.\n", cfg_TargetDecLayerIdSetFile.c_str() );
+          }
+          break;
+        }
+        if ( layerIdParsed  == -1 ) // The file includes a -1, which means all LayerIds are to be decoded.
+        {
+          m_targetDecLayerIdSet.clear(); // Empty set means decoding all layers.
+          break;
+        }
+        if ( layerIdParsed < 0 || layerIdParsed >= MAX_NUM_LAYER_IDS )
+        {
+          fprintf(stderr, "Warning! Parsed LayerId %d is not withing allowed range [0,%d]. Ignoring this value.\n", layerIdParsed, MAX_NUM_LAYER_IDS-1 );
+        }
+        else
+        {
+          isLayerIdZeroIncluded = layerIdParsed == 0 ? true : isLayerIdZeroIncluded;
+          m_targetDecLayerIdSet.push_back ( layerIdParsed );
+        }
+      }
+      fclose (targetDecLayerIdSetFile);
+      if ( m_targetDecLayerIdSet.size() > 0 && !isLayerIdZeroIncluded )
+      {
+        fprintf(stderr, "TargetDecLayerIdSet must contain LayerId=0, aborting" );
+        return false;
+      }
+    }
+    else
+    {
+      fprintf(stderr, "File %s could not be opened. Using all LayerIds as default.\n", cfg_TargetDecLayerIdSetFile.c_str() );
+    }
+  }
+#if H_MV
+  else
+  {
+    for ( Int curLayerId = 0; curLayerId <= m_maxLayerId; curLayerId++ )
+    {
+      m_targetDecLayerIdSet.push_back( curLayerId );
+    }
+  }
+#endif
 
   return true;
 }
 
+#if H_MV
 Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName)
 {
   size_t iInLength     = strlen(pchInputFileName);
@@ -124,5 +189,6 @@ Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchSt
   strncpy(rpchOutputFileName+ iCharsToDot+iAppendLength ,  pchInputFileName+iCharsToDot, iCharsToEnd  );        
   rpchOutputFileName[iInLength+iAppendLength] = '\0';          
 }
+#endif
 
 //! \}

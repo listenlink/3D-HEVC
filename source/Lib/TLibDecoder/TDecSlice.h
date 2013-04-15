@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,16 +70,19 @@ private:
   TDecBinCABAC*   m_pcBufferBinCABACs;
   TDecSbac*       m_pcBufferLowLatSbacDecoders;   ///< dependent tiles: line to store temporary contexts, one per column of tiles.
   TDecBinCABAC*   m_pcBufferLowLatBinCABACs;
+  std::vector<TDecSbac*> CTXMem;
   
 public:
   TDecSlice();
   virtual ~TDecSlice();
   
   Void  init              ( TDecEntropy* pcEntropyDecoder, TDecCu* pcMbDecoder );
-  Void  create            ( TComSlice* pcSlice, Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
+  Void  create            ();
   Void  destroy           ();
   
-  Void  decompressSlice   ( TComInputBitstream* pcBitstream, TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
+  Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
+  Void      initCtxMem(  UInt i );
+  Void      setCtxMem( TDecSbac* sb, Int b )   { CTXMem[b] = sb; }
 };
 
 
@@ -88,26 +91,18 @@ class ParameterSetManagerDecoder:public ParameterSetManager
 public:
   ParameterSetManagerDecoder();
   virtual ~ParameterSetManagerDecoder();
-
+  Void     storePrefetchedVPS(TComVPS *vps)  { m_vpsBuffer.storePS( vps->getVPSId(), vps); };
+  TComVPS* getPrefetchedVPS  (Int vpsId);
   Void     storePrefetchedSPS(TComSPS *sps)  { m_spsBuffer.storePS( sps->getSPSId(), sps); };
   TComSPS* getPrefetchedSPS  (Int spsId);
   Void     storePrefetchedPPS(TComPPS *pps)  { m_ppsBuffer.storePS( pps->getPPSId(), pps); };
   TComPPS* getPrefetchedPPS  (Int ppsId);
-  Void     storePrefetchedAPS(TComAPS *aps)  { m_apsBuffer.storePS( aps->getAPSID(), aps); };
-  TComAPS* getPrefetchedAPS  (Int apsId);
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  Void     storePrefetchedVPS(TComVPS *vps)  { m_vpsBuffer.storePS( vps->getVPSId(), vps); };
-  TComVPS* getPrefetchedVPS  (Int vpsId);
-#endif
   Void     applyPrefetchedPS();
 
 private:
-  ParameterSetMap<TComSPS> m_spsBuffer; 
-  ParameterSetMap<TComPPS> m_ppsBuffer; 
-  ParameterSetMap<TComAPS> m_apsBuffer; 
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046 
   ParameterSetMap<TComVPS> m_vpsBuffer;
-#endif
+  ParameterSetMap<TComSPS> m_spsBuffer; 
+  ParameterSetMap<TComPPS> m_ppsBuffer;
 };
 
 

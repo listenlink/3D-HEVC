@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,10 +48,7 @@
 #include "TLibCommon/TComPicYuv.h"
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComLoopFilter.h"
-#include "TLibCommon/TComAdaptiveLoopFilter.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
-#include "TLibCommon/TComDepthMapGenerator.h"
-#include "../TLibCommon/TComResidualGenerator.h"
 
 #include "TDecEntropy.h"
 #include "TDecSlice.h"
@@ -69,14 +66,8 @@
 class TDecGop
 {
 private:
-  Int                   m_iGopSize;
   TComList<TComPic*>    m_cListPic;         //  Dynamic buffer
   
-  Bool m_first;
-  UInt m_uiILSliceCount;
-  UInt* m_puiILSliceStartLCU;
-  std::vector<AlfCUCtrlInfo> m_vAlfCUCtrlSlices;
-
   //  Access channel
   TDecEntropy*          m_pcEntropyDecoder;
   TDecSbac*             m_pcSbacDecoder;
@@ -86,21 +77,14 @@ private:
   TDecCavlc*            m_pcCavlcDecoder;
   TDecSlice*            m_pcSliceDecoder;
   TComLoopFilter*       m_pcLoopFilter;
-#if DEPTH_MAP_GENERATION
-  TComDepthMapGenerator*  m_pcDepthMapGenerator;
-#endif
-#if H3D_IVRP
-  TComResidualGenerator*  m_pcResidualGenerator;
-#endif
   
-  // Adaptive Loop filter
-  TComAdaptiveLoopFilter*       m_pcAdaptiveLoopFilter;
   TComSampleAdaptiveOffset*     m_pcSAO;
   Double                m_dDecTime;
+  Int                   m_decodedPictureHashSEIEnabled;  ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
 
-  bool m_pictureDigestEnabled; ///< if true, handle picture_digest SEI messages
-  AlfCUCtrlInfo       m_cAlfCUCtrlOneSlice;
-  AlfParamSet           m_alfParamSetPilot;
+  //! list that contains the CU address of each slice plus the end address 
+  std::vector<Int> m_sliceStartCUAddress;
+  std::vector<Bool> m_LFCrossSliceBoundaryFlag;
 
 public:
   TDecGop();
@@ -111,28 +95,15 @@ public:
                  TDecBinCABAC*           pcBinCABAC,
                  TDecCavlc*              pcCavlcDecoder, 
                  TDecSlice*              pcSliceDecoder, 
-                 TComLoopFilter*         pcLoopFilter, 
-                 TComAdaptiveLoopFilter* pcAdaptiveLoopFilter
-                 ,TComSampleAdaptiveOffset* pcSAO
-#if DEPTH_MAP_GENERATION
-                 ,TComDepthMapGenerator*  pcDepthMapGenerator
-#endif
-#if H3D_IVRP
-                ,TComResidualGenerator*  pcResidualGenerator
-#endif
+                 TComLoopFilter*         pcLoopFilter,
+                 TComSampleAdaptiveOffset* pcSAO
                  );
   Void  create  ();
   Void  destroy ();
-  Void  decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, Bool bExecuteDeblockAndAlf );
-  Void  setGopSize( Int i) { m_iGopSize = i; }
+  Void  decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic );
+  Void  filterPicture  (TComPic*& rpcPic );
 
-  void setPictureDigestEnabled(bool enabled) { m_pictureDigestEnabled = enabled; }
-  AlfCUCtrlInfo& getAlfCuCtrlParam() { return m_cAlfCUCtrlOneSlice; }
-  AlfParamSet& getAlfParamSet() {return m_alfParamSetPilot;}
-
-private:
-  Void patchAlfLCUParams(ALFParam*** alfLCUParam, AlfParamSet* alfParamSet, Int firstLCUAddr = 0);
-
+  void setDecodedPictureHashSEIEnabled(Int enabled) { m_decodedPictureHashSEIEnabled = enabled; }
 
 };
 

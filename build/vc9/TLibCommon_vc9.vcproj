@@ -295,7 +295,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.cpp"
+				RelativePath="..\..\source\Lib\TLibCommon\SEI.cpp"
 				>
 			</File>
 			<File
@@ -308,10 +308,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComDataCU.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComDepthMapGenerator.cpp"
 				>
 			</File>
 			<File
@@ -359,10 +355,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComResidualGenerator.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComRom.cpp"
 				>
 			</File>
@@ -376,10 +368,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComTrQuant.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComWedgelet.cpp"
 				>
 			</File>
 			<File
@@ -433,10 +421,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComBitCounter.h"
 				>
 			</File>
@@ -450,10 +434,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComDataCU.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComDepthMapGenerator.h"
 				>
 			</File>
 			<File
@@ -505,10 +485,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComResidualGenerator.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComRom.h"
 				>
 			</File>
@@ -522,10 +498,6 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibCommon\TComTrQuant.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TLibCommon\TComWedgelet.h"
 				>
 			</File>
 			<File

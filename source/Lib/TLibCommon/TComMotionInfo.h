@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -58,14 +58,6 @@ typedef struct _AMVPInfo
 } AMVPInfo;
 
 // ====================================================================================================================
-#if H3D_NBDV
-typedef struct _DisCand
-{
-  TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates
-  Int    m_aVIdxCan[ DIS_CANS ];            ///< array of motion vector predictor candidates
-  Int    iN;                                ///< number of motion vector predictor candidates
-} DisInfo;
-#endif 
 // Class definition
 // ====================================================================================================================
 
@@ -93,12 +85,6 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
-#if H3D_IVMP
-  Bool operator== ( const TComMvField& rcMv ) const
-  {
-    return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());
-  }
-#endif
 };
 
 /// class for motion information in one CU
@@ -166,18 +152,7 @@ public:
     m_piRefIdx = src->m_piRefIdx + offset;
   }
   
-#if HHI_MPI
-  Void compress(Char* pePredMode, UChar* puhInterDir, Int scale);
-#else
   Void compress(Char* pePredMode, Int scale); 
-#endif
-#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-  Void decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift );
-#endif
-
-#if MTK_UNCONSTRAINED_MVI_B0083
-  Void setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir );
-#endif
 };
 
 //! \}

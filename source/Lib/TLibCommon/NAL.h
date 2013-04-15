@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,52 +45,67 @@ class TComOutputBitstream;
 struct NALUnit
 {
   NalUnitType m_nalUnitType; ///< nal_unit_type
-  Bool        m_nalRefFlag;  ///< nal_ref_flag
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  unsigned    m_layerId;
-  unsigned    m_temporalId;  ///< temporal_id
+  UInt        m_temporalId;  ///< temporal_id
+
+#if H_MV
+  Int         m_layerId;     ///< layer id
 #else
-  Int         m_viewId;      ///< view_id
-  Bool        m_isDepth;     ///< is_depth
-  unsigned    m_temporalId;  ///< temporal_id
+  UInt        m_reservedZero6Bits; ///< reserved_zero_6bits
 #endif
 
   /** construct an NALunit structure with given header values. */
   NALUnit(
     NalUnitType nalUnitType,
-    Bool        nalRefFlag,
-#if !VIDYO_VPS_INTEGRATION & !QC_MVHEVC_B0046    
-    Int         viewId,
-    Bool        isDepth,
+    Int         temporalId = 0,
+#if H_MV
+    Int         layerId = 0)
 #else
-    unsigned    layerId,
+    Int         reservedZero6Bits = 0)
 #endif
-    unsigned       temporalId = 0)
     :m_nalUnitType (nalUnitType)
-    ,m_nalRefFlag  (nalRefFlag)
-#if !VIDYO_VPS_INTEGRATION & !QC_MVHEVC_B0046
-    ,m_viewId      (viewId)
-    ,m_isDepth     (isDepth)
-#else
-    ,m_layerId     (layerId)
-#endif
     ,m_temporalId  (temporalId)
+#if H_MV
+    ,m_layerId     (layerId)
+#else
+    ,m_reservedZero6Bits(reservedZero6Bits)
+#endif
   {}
 
   /** default constructor - no initialization; must be perfomed by user */
   NALUnit() {}
 
   /** returns true if the NALunit is a slice NALunit */
-  bool isSlice()
+  Bool isSlice()
   {
-    return m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR
-#if !QC_REM_IDV_B0046    
-        || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDV
-#endif
-        || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA
+    return m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_R
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_N
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_TLA
-        || m_nalUnitType == NAL_UNIT_CODED_SLICE;
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_TSA_N
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_R
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_N
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_BLANT
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_CRA
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_RADL_N
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_DLP
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL_N
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_TFD;
   }
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+  Bool isSei()
+  {
+    return m_nalUnitType == NAL_UNIT_SEI 
+        || m_nalUnitType == NAL_UNIT_SEI_SUFFIX;
+  }
+
+  Bool isVcl()
+  {
+    return ( (UInt)m_nalUnitType < 32 );
+  }
+#endif
 };
 
 struct OutputNALUnit;
