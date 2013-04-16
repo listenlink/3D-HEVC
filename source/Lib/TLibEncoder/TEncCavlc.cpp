@@ -441,7 +441,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 }
 #endif
 #endif
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
+#if HHI_MPI || H3D_QTL 
 Void TEncCavlc::codeSPS( TComSPS* pcSPS, Bool bIsDepth )
 #else
 Void TEncCavlc::codeSPS( TComSPS* pcSPS )
@@ -631,7 +631,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   }
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   if( bIsDepth )
   {
     WRITE_FLAG( pcSPS->getUseQTLPC() ? 1 : 0, "use_qtlpc_flag");

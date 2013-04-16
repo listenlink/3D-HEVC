@@ -375,7 +375,7 @@ Void TEncSbac::codeVPS( TComVPS* pcVPS )
 }
 #endif
 
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
+#if HHI_MPI || H3D_QTL 
 Void TEncSbac::codeSPS( TComSPS* pcSPS, Bool bIsDepth )
 #else
 Void TEncSbac::codeSPS( TComSPS* pcSPS )
@@ -577,18 +577,14 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
  
-#if HHI_QTLPC_RAU_OFF_C0160
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
-#else
-  if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
-#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
@@ -854,7 +850,7 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   
   assert( uiCtx < 3 );
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   Bool bCodeSplitFlag    = true;
 
   TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
@@ -862,12 +858,8 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
 
-#if HHI_QTLPC_RAU_OFF_C0160
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
-#else
-  if(bDepthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC() && pcCU->getPic()->getReduceBitsFlag())
-#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
