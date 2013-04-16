@@ -183,7 +183,7 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
   AOF  ( m_bCreated && m_bInit );
   AOF  ( pcPic );
 
-#if MTK_MDIVRP_C0138
+#if H3D_IVRP
   if (pcPic->getSPS()->getViewId() != 0)
   {
     return;
@@ -256,11 +256,7 @@ Bool
 TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Bool bRecon) 
 #endif
 {
-#if MTK_C0138_FIXED
   UInt  uiBaseViewId  = 0;
-#else
-  UInt  uiBaseViewId  = m_pcDepthMapGenerator->getBaseViewId( 0 );
-#endif
   if( !pcYuv )
   {
     pcYuv = m_ppcYuvTmp[1];
@@ -271,11 +267,7 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
 #else
   xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, &uiXPosInRefView , &uiYPosInRefView , bRecon    );
 #endif
-#if MTK_MDIVRP_C0138
   return true;
-#else
-  return xIsNonZeroByCBF( uiBaseViewId , uiXPosInRefView , uiYPosInRefView , uiBlkWidth , uiBlkHeight );
-#endif
 }
 
 Bool TComResidualGenerator::xIsNonZeroByCBF( UInt uiBaseViewId , UInt uiXPos , UInt uiYPos, UInt uiBlkWidth , UInt uiBlkHeight )
@@ -392,9 +384,6 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   TCoeff* piCoeff   = pcCU->getCoeffY ();
   Pel*    pRes      = pcCUResidual->getLumaAddr();
   UInt    uiLumaTrMode, uiChromaTrMode;
-#if LG_RESTRICTEDRESPRED_M24766  && !MTK_MDIVRP_C0138
-  Int     iPUPredResiShift[4];
-#endif
   pcCU->convertTransIdx             ( 0, pcCU->getTransformIdx( 0 ), uiLumaTrMode, uiChromaTrMode );
     m_pcTrQuant->setQPforQuant      ( pcCU->getQP( 0 ), !pcCU->getSlice()->getDepth(), pcCU->getSlice()->getSliceType(), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_LUMA, pRes, 0, pcCUResidual->getStride(), uiWidth, uiHeight, uiLumaTrMode, 0, piCoeff );
@@ -409,21 +398,6 @@ TComResidualGenerator::xSetRecResidualInterCU( TComDataCU* pcCU, TComYuv* pcCURe
   piCoeff     = pcCU->getCoeffCr();
   pRes        = pcCUResidual->getCrAddr();
   m_pcTrQuant->invRecurTransformNxN ( pcCU, 0, TEXT_CHROMA_V, pRes, 0, pcCUResidual->getCStride(), uiWidth, uiHeight, uiChromaTrMode, 0, piCoeff );
-
-#if !MTK_MDIVRP_C0138
-  if( pcCU->getResPredFlag( 0 ) )
-  {
-    AOF( pcCU->getResPredAvail( 0 ) );
-    Bool bOK = pcCU->getResidualSamples( 0, true, m_ppcYuvTmp[0] );
-    AOF( bOK );
-#if LG_RESTRICTEDRESPRED_M24766
-    pcCU->getPUResiPredShift(iPUPredResiShift, 0);
-    pcCUResidual->add(iPUPredResiShift, pcCU->getPartitionSize(0), m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
-#else
-    pcCUResidual->add( m_ppcYuvTmp[0], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
-#endif
-  }
-#endif
 
   //===== clear inter-view predicted parts =====
   for( UInt uiPartIdx = 0; uiPartIdx < pcCU->getNumPartInter(); uiPartIdx++ )
@@ -569,17 +543,10 @@ TComResidualGenerator::xSetPredResidualBlock( TComPic* pcPic, UInt uiBaseViewId,
   Int           iSrcStrideC = pcBaseRes->getCStride();
   Int           iDesStrideC = pcYuv    ->getCStride();
 
-#if FIX_CHROMA_RESIDUAL_C0129
   Pel*          pSrcSamplesU0= pcBaseRes->getCbAddr ( 0 ) + iCRefPosY0 * iSrcStrideC;
   Pel*          pSrcSamplesU1= pcBaseRes->getCbAddr ( 0 ) + iCRefPosY1 * iSrcStrideC;
   Pel*          pSrcSamplesV0= pcBaseRes->getCrAddr ( 0 ) + iCRefPosY0 * iSrcStrideC;
   Pel*          pSrcSamplesV1= pcBaseRes->getCrAddr ( 0 ) + iCRefPosY1 * iSrcStrideC;
-#else
-  Pel*          pSrcSamplesU0= pcBaseRes->getCbAddr ( 0 ) + ( iCRefPosY0 >> 1 ) * iSrcStrideC;
-  Pel*          pSrcSamplesU1= pcBaseRes->getCbAddr ( 0 ) + ( iCRefPosY1 >> 1 ) * iSrcStrideC;
-  Pel*          pSrcSamplesV0= pcBaseRes->getCrAddr ( 0 ) + ( iCRefPosY0 >> 1 ) * iSrcStrideC;
-  Pel*          pSrcSamplesV1= pcBaseRes->getCrAddr ( 0 ) + ( iCRefPosY1 >> 1 ) * iSrcStrideC;
-#endif
   Pel*          pDesSamplesU= pcYuv    ->getCbAddr ();
   Pel*          pDesSamplesV= pcYuv    ->getCrAddr ();
   for(   Int iY = 0; iY < iCHeight; iY++, pSrcSamplesU0 += iSrcStrideC, pSrcSamplesU1 += iSrcStrideC, pDesSamplesU += iDesStrideC,

@@ -534,12 +534,7 @@ public:
   Int           getPdmMergeCandidate      ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred              ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
 #else //!H3D_NBDV
-#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Bool          getUnifiedMvPredCan       ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
-#else //QC_AMVP_MRG_UNIFY_IVCAN_C0051
-  Bool          getPdmMvPredDisCan        ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
-  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm );
-#endif //QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
   Void          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
 #if MERL_VSP_C0152
@@ -575,14 +570,8 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------
-#if LG_RESTRICTEDRESPRED_M24766
+#if H3D_IVRP
   Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
-#else
-  Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
-#endif
-#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
-  Int           getResiPredMode(UInt uiPartAddr);
-  Void          getPUResiPredShift (Int *iPUPredResiShift, UInt uiAbsPartIndex);
 #endif
   UChar         getNumPartInter       ();
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);

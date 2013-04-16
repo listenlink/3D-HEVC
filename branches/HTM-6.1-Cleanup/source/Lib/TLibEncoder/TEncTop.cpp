@@ -702,7 +702,7 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseDMM34( m_bUseDMM34 );
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   m_cSPS.setUseQTLPC( m_bUseQTLPC );
 #endif
 #if HHI_MPI

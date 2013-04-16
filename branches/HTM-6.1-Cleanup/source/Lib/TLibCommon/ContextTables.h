@@ -433,11 +433,7 @@ INIT_TRANS_SUBDIV_FLAG[3][NUM_TRANS_SUBDIV_FLAG_CTX] =
 };
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-#if FIX_DMM_CTX_INIT_C0034
 static const UChar
-#else
-static const Short
-#endif
 INIT_DMM_FLAG[3][NUM_DMM_FLAG_CTX] =
 {
   {
@@ -451,11 +447,7 @@ INIT_DMM_FLAG[3][NUM_DMM_FLAG_CTX] =
   }
 };
 
-#if FIX_DMM_CTX_INIT_C0034
 static const UChar
-#else
-static const Short
-#endif
 INIT_DMM_MODE[3][NUM_DMM_MODE_CTX] =
 {
   {
@@ -469,11 +461,7 @@ INIT_DMM_MODE[3][NUM_DMM_MODE_CTX] =
   }
 };
 
-#if FIX_DMM_CTX_INIT_C0034
 static const UChar
-#else
-static const Short
-#endif
 INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] = 
 {
 #if LGE_DMM3_SIMP_C0044

@@ -419,16 +419,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 {
   TComPic* pcPic = rpcBestCU->getPic();
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   TComSPS *sps         = pcPic->getSlice(0)->getSPS();
   TComPic *pcTexture   = rpcBestCU->getSlice()->getTexturePic();
 
   Bool  depthMapDetect    = (pcTexture != NULL);
   Bool  bIntraSliceDetect = (rpcBestCU->getSlice()->getSliceType() == I_SLICE);
 
-#if HHI_QTLPC_RAU_OFF_C0160
   Bool rapPic     = (rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || rpcBestCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
-#endif
 
   Bool bTry2NxN = true;
   Bool bTryNx2N = true;
@@ -570,14 +568,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
       rpcTempCU->initEstData( uiDepth, iQP );
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
 
-#if HHI_QTLPC_RAU_OFF_C0160
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
-#else
-      if(depthMapDetect && !bIntraSliceDetect && sps->getUseQTLPC())
-#endif
       {
         TComDataCU* pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() ); //Corresponding texture LCU
         UInt uiCUIdx            = rpcBestCU->getZorderIdxInCU();
@@ -601,22 +595,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
 #if H3D_IVRP
-#if MTK_MDIVRP_C0138
         Bool  bResPredAvailable   = false;
         UInt uiResPrdId = 0; 
-#else
-        // check availability of residual prediction
-        Bool  bResPredAvailable   = false;
-        Bool  bResPredAllowed     =                    (!rpcBestCU->getSlice()->getSPS()->isDepth                () );
-        bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getViewId              () );
-        bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getMultiviewResPredMode() );
-        if( bResPredAllowed )
-        {
-          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, true , m_ppcResPredTmp[uiDepth] );
-        }
-
-        for( UInt uiResPrdId = 0; uiResPrdId < ( bResPredAvailable ? 2 : 1 ); uiResPrdId++ )
-#endif
         {
           Bool bResPredFlag  = ( uiResPrdId > 0 );
 #if LGE_ILLUCOMP_B0045
@@ -647,7 +627,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               bTrySplit  = false;
             }
           }
-#if LGE_ILLUCOMP_B0045_ENCSIMP
+#if LGE_ILLUCOMP_B0045
           if(bICFlag && rpcBestCU->getMergeFlag(0) && !rpcBestCU->getICFlag(0))
           {
              bICEnabled = false;
@@ -660,7 +640,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
             rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -683,17 +663,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
       } // != I_SLICE
 
-#if LGE_ILLUCOMP_B0045_ENCSIMP
+#if LGE_ILLUCOMP_B0045
     bICEnabled = rpcBestCU->getICFlag(0);
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
 
-#if HHI_QTLPC_RAU_OFF_C0160
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTLPC())
-#else
-      if(depthMapDetect && !bIntraSliceDetect  && sps->getUseQTLPC())
-#endif
       {
         bTrySplitDQP = bTrySplit;
       }
@@ -711,7 +687,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           bTrySplitDQP = bTrySplit;
         }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
       }
 #endif
 
@@ -738,22 +714,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
 #if H3D_IVRP
-#if MTK_MDIVRP_C0138
         Bool  bResPredAvailable   = false;
         UInt uiResPrdId = 0; 
-#else
-        // check availability of residual prediction
-        Bool  bResPredAvailable   = false;
-        Bool  bResPredAllowed     =                    (!rpcBestCU->getSlice()->getSPS()->isDepth                () );
-        bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getViewId              () );
-        bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getMultiviewResPredMode() );
-        if( bResPredAllowed )
-        {
-          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, true, m_ppcResPredTmp[uiDepth] );
-        }
-
-        for( UInt uiResPrdId = 0; uiResPrdId < ( bResPredAvailable ? 2 : 1 ); uiResPrdId++ )
-#endif
         {
           Bool bResPredFlag  = ( uiResPrdId > 0 );
 #if LGE_ILLUCOMP_B0045
@@ -771,7 +733,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             {
               if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && doNotBlockPu)
               {
-#if OL_QTLIMIT_PREDCODING_B0068 //try InterNxN
+#if H3D_QTL //try InterNxN
                 if(bTrySplit)
                 {
 #endif
@@ -784,7 +746,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                   xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN   );
 #endif
                   rpcTempCU->initEstData( uiDepth, iQP );
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
                 }
 #endif
               } 
@@ -792,7 +754,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }
 
           { // 2NxN, Nx2N
-#if OL_QTLIMIT_PREDCODING_B0068 //try Nx2N
+#if H3D_QTL //try Nx2N
             if(bTryNx2N)
             {
 #endif
@@ -801,7 +763,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                 rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                 rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -815,11 +777,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                   doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
                 }
               }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
             }
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068 //try 2NxN
+#if H3D_QTL //try 2NxN
             if(bTry2NxN)
             {
 #endif
@@ -828,7 +790,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                 rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                 rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -842,7 +804,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                   doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
                 }
               }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
             }
 #endif
           }
@@ -865,7 +827,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             //! Do horizontal AMP
             if ( bTestAMP_Hor )
             {
-#if OL_QTLIMIT_PREDCODING_B0068 //try 2NxnU & 2NxnD
+#if H3D_QTL //try 2NxnU & 2NxnD
               if(bTry2NxN)
               {
 #endif
@@ -874,7 +836,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -893,7 +855,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -907,14 +869,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                     doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
                   }
                 }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
               }
 #endif
             }
 #if AMP_MRG
             else if ( bTestMergeAMP_Hor ) 
             {
-#if OL_QTLIMIT_PREDCODING_B0068 //try 2NxnU & 2NxnD Merge
+#if H3D_QTL //try 2NxnU & 2NxnD Merge
               if(bTry2NxN)
               {
 #endif
@@ -923,7 +885,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -942,7 +904,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -956,7 +918,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                     doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
                   }
                 }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
               }
 #endif
             }
@@ -965,7 +927,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             //! Do horizontal AMP
             if ( bTestAMP_Ver )
             {
-#if OL_QTLIMIT_PREDCODING_B0068 //try nLx2N & nRx2N
+#if H3D_QTL //try nLx2N & nRx2N
               if(bTryNx2N)
               {
 #endif
@@ -974,7 +936,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -993,7 +955,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1003,14 +965,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                   rpcTempCU->initEstData( uiDepth, iQP );
                 }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
               }
 #endif
             }
 #if AMP_MRG
             else if ( bTestMergeAMP_Ver )
             {
-#if OL_QTLIMIT_PREDCODING_B0068 //try nLx2N & nRx2N (Merge)
+#if H3D_QTL //try nLx2N & nRx2N (Merge)
               if(bTryNx2N)
               {
 #endif
@@ -1019,7 +981,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1038,7 +1000,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H3D_IVRP
                   rpcTempCU->setResPredIndicator( bResPredAvailable, bResPredFlag );
 #endif
-#if FIX_LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_B0045
                   rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
 #if HHI_INTERVIEW_SKIP
@@ -1048,7 +1010,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                   rpcTempCU->initEstData( uiDepth, iQP );
                 }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
               }
 #endif
             }
@@ -1142,7 +1104,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcTempCU->initEstData( uiDepth, iQP );
           if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
           {
-#if OL_QTLIMIT_PREDCODING_B0068 //Try IntraNxN
+#if H3D_QTL //Try IntraNxN
             if(bTrySplit)
             {
 #endif
@@ -1154,7 +1116,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   );
                 rpcTempCU->initEstData( uiDepth, iQP );
               }
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
             }
 #endif
           }
@@ -1804,9 +1766,6 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
         );
 #endif
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-    m_pcEntropyCoder->encodeResPredFlag( pcCU, uiAbsPartIdx, 0 );
-#endif
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
   }
@@ -1838,12 +1797,6 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
         ,false, uiDepth
 #endif
         );
-#endif
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-    if( !pcCU->isIntra( uiAbsPartIdx ) )
-    {
-      m_pcEntropyCoder->encodeResPredFlag( pcCU, uiAbsPartIdx, 0 );
-    }
 #endif
 #if HHI_MPI
   }
@@ -1879,10 +1832,6 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
   Int numValidMergeCand = 0;
 
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-  Bool  bResPrdAvail  = rpcTempCU->getResPredAvail( 0 );
-  Bool  bResPrdFlag   = rpcTempCU->getResPredFlag ( 0 );
-#endif
 #if LGE_ILLUCOMP_B0045
   Bool  bICFlag = rpcTempCU->getICFlag(0);
 #endif
@@ -1915,7 +1864,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 #endif
-#if MTK_MDIVRP_C0138
+#if H3D_IVRP
   Bool bResPredAvail = rpcTempCU->getResPredAvail(0);
 #endif
 
@@ -1977,12 +1926,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
 
 #if H3D_IVRP
-#if MTK_MDIVRP_C0138
           rpcTempCU->setResPredAvailSubParts(bResPredAvail, 0, 0, uhDepth);
-#else
-          rpcTempCU->setResPredAvailSubParts( bResPrdAvail, 0, 0, uhDepth );
-          rpcTempCU->setResPredFlagSubParts ( bResPrdFlag,  0, 0, uhDepth );
-#endif
 #endif
 #if LGE_ILLUCOMP_B0045
           rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uhDepth);
@@ -2000,7 +1944,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
             m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 #endif
-#if MTK_MDIVRP_C0138
+#if H3D_IVRP
             if (uiMergeCand == 0 && rpcTempCU->getResPredAvail(0))
             {
               m_pcPredSearch->residualPrediction(rpcTempCU, m_ppcPredYuvTemp[uhDepth], m_ppcResPredTmp [uhDepth]);
@@ -2019,7 +1963,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
               m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 #endif
-#if MTK_MDIVRP_C0138
+#if H3D_IVRP
               if (uiMergeCand == 0 && rpcTempCU->getResPredAvail(0))
               {
                 m_pcPredSearch->residualPrediction(rpcTempCU, m_ppcPredYuvTemp[uhDepth], m_ppcResPredTmp [uhDepth]);
@@ -2119,24 +2063,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setResPredFlagSubParts ( bResPrdFlag,  0, 0, uhDepth );
 #endif
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
-  
-#if H3D_IVRP
-#if !LG_RESTRICTEDRESPRED_M24766
-  if( rpcTempCU->getResPredFlag( 0 ) )
-  { // subtract residual prediction from original in motion search
-    m_ppcOrigYuv[uhDepth]->add( m_ppcResPredTmp [uhDepth], rpcTempCU->getWidth( 0 ), rpcTempCU->getHeight( 0 ), true );
-  }
-#endif
-#endif
 
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
   #if HHI_INTERVIEW_SKIP
-#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
-  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcResPredTmp[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG);
-#else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes, bUseMRG  );
-#endif
 #else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, bUseMRG );
 #endif
@@ -2145,15 +2076,6 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bSkipRes );
 #else  
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] );
-#endif
-#endif
-
-#if H3D_IVRP
-#if !LG_RESTRICTEDRESPRED_M24766
-  if( rpcTempCU->getResPredFlag( 0 ) )
-  { // add residual prediction to original again
-    m_ppcOrigYuv[uhDepth]->add( m_ppcResPredTmp [uhDepth], rpcTempCU->getWidth( 0 ), rpcTempCU->getHeight( 0 ) );
-  }
 #endif
 #endif
 

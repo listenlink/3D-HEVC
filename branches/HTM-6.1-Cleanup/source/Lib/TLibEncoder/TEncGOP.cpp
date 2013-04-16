@@ -886,7 +886,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #endif
         m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
         pcSlice->getSPS()->setNumSubstreams( pcSlice->getPPS()->getNumSubstreams() );
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI || H3D_QTL
         m_pcEntropyCoder->encodeSPS(pcSlice->getSPS(), m_pcEncTop->getIsDepth());
 #else
         m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());

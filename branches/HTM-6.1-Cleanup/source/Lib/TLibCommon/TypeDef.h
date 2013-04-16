@@ -56,21 +56,16 @@
 #define HHI_DMM_WEDGE_INTRA               1   // depth model modes independent on texture (explicit and intra-predicted Wedgelet prediction)
 #define HHI_DMM_PRED_TEX                  1   // depth model modes dependent on texture (inter-component Wedgelet and Contour prediction )
                                               // HHIQC_DMMFASTSEARCH_B0039, fast Wedgelet search for DMM modes 1 and 3
+                                              // HHI_DMM_DELTADC_Q1_C0034   JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
+                                              // FIX_DMM_CTX_INIT_C0034 JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
 
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
-
-#define HHI_DMM_DELTADC_Q1_C0034          1   // JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
-#if ( HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA ) && HHI_DMM_PRED_TEX
 #define LGE_DMM3_SIMP_C0044               1
-#endif
-#define FIX_DMM_CTX_INIT_C0034            1   // JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
 
 ///// ***** SDC *********
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
-#if RWTH_SDC_DLT_B0036
-#define SAIT_SDC_C0096                    1   // JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
-#endif
-#define FIX_SDC_ENC_C0143                 1   // JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
+                                              // SAIT_SDC_C0096 JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
+                                              // FIX_SDC_ENC_C0143, JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
 
 ///// ***** TMVP/AMVP *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
@@ -86,24 +81,18 @@
                                               // QC_MRG_CANS_B0048             , JCT3V-B0048, B0086, B0069
                                               // OL_DISMV_POS_B0069            , different pos for disparity MV candidate, B0069
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
-#define QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
-#define QC_C0051_FIXED_BY_MTK             1   // Bug fix for C0051 implementation
+                                              // QC_C0051_FIXED_BY_MTK             1   // Bug fix for C0051 implementation
+                                              // QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
 
 
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
 #define H3D_IVRP                          1   // Inter-view residual prediction
                                               // HHI_INTER_VIEW_RESIDUAL_PRED
                                               // QC_SIMPLIFIEDIVRP_M24938 
-#if H3D_IVRP       
-#define LG_RESTRICTEDRESPRED_M24766       1   // Restricted inter-view residual prediction
-#define FIX_LG_RESTRICTEDRESPRED_M24766   1
-#else                                  
-#define LG_RESTRICTEDRESPRED_M24766       0
-#endif
-
-#define MTK_MDIVRP_C0138                  1   // Mode-dependent inter-view residual prediction
-#define MTK_C0138_FIXED                   1   // Fix for IBP coding structure in view direction (not CTC)
-
+                                              // MTK_C0138_FIXED                   // Fix for IBP coding structure in view direction (not CTC)
+                                              // MTK_MDIVRP_C0138
+                                              // LG_RESTRICTEDRESPRED_M24766       1   // Restricted inter-view residual prediction
+                                              // FIX_LG_RESTRICTEDRESPRED_M24766   1
 
 ///// ***** DISPARITY VECTOR DERIVATION *********
 #define H3D_NBDV                          1   // Neighboring block disparity derivation 
@@ -120,7 +109,7 @@
                                               // MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097
                                               // MTK_RELEASE_DV_CONSTRAINT_C0129   
                                               // MTK_SIMPLIFY_DVTC_C0135           
-#define FIX_CHROMA_RESIDUAL_C0129         1 
+                                              // FIX_CHROMA_RESIDUAL_C0129         
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
@@ -144,9 +133,9 @@
 
 ///// ***** ILLUMINATION COMPENSATON *********
 #define LGE_ILLUCOMP_B0045                1   // JCT2-B0045 Illumination compensation for Luma and Chroma
+                                              // LGE_ILLUCOMP_B0045_ENCSIMP
+                                              // FIX_LGE_ILLUCOMP_B0045            
 #if LGE_ILLUCOMP_B0045
-#define LGE_ILLUCOMP_B0045_ENCSIMP        1
-#define FIX_LGE_ILLUCOMP_B0045            1
 #define LGE_ILLUCOMP_DEPTH_C0046          1   // JCT2-C0046 Apply illumination compensation to depth
 #if LGE_ILLUCOMP_DEPTH_C0046
 #define FIX_ILLUCOMP_DEPTH                1
@@ -157,8 +146,8 @@
 #define HHI_INTERVIEW_SKIP                1
 
 ///// ***** QUADTREE LIMITATION *********
-#define OL_QTLIMIT_PREDCODING_B0068       1    //JCT3V-B0068
-#define HHI_QTLPC_RAU_OFF_C0160           1   // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
+#define H3D_QTL                            1 // OL_QTLIMIT_dPREDCODING_B0068 //JCT3V-B0068
+                                             // HHI_QTLPC_RAU_OFF_C0160     // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
 
 ///// ***** OTHERS *********
 #define LG_ZEROINTRADEPTHRESI_A0087       1   // JCT2-A0087
@@ -210,7 +199,7 @@
 
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
-#define MTK_DVPREFINE_BVSP_BUG_FIX               1
+                                               //MTK_DVPREFINE_BVSP_BUG_FIX               1
 
 #else // !MERL_VSP_C0152
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add

@@ -374,7 +374,7 @@ private:
   Bool  m_bUseDMM34;
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   Bool m_bUseQTLPC;
 #endif
 
@@ -616,7 +616,7 @@ public:
   Void setUseDMM34( Bool b ) { m_bUseDMM34 = b;    }
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   Void setUseQTLPC( Bool b ) { m_bUseQTLPC = b;    }
   Bool getUseQTLPC()         { return m_bUseQTLPC; }
 #endif
