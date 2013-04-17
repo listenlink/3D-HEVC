@@ -3598,7 +3598,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     getDisMvpCandNBDV(uiPUIdx, uiAbsPartIdx, &cDisInfo , true
 #if MERL_VSP_C0152
             , true
-#endif
+#endif      
 );
   }
 #if FCO_DVP_REFINE_C0132_C0170
@@ -5004,8 +5004,9 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPart
         }
         else if ( bSearchForMvpDv && cMvPred.m_bDvMcp && bTmpIsSkipped )
         {
-          paMvpDvInfo->m_acMvCand[iList][ uiMvpDvPos ] = cMvPred;
-          paMvpDvInfo->m_aVIdxCan[iList][ uiMvpDvPos ] = refViewIdx;
+          assert( uiMvpDvPos < MCP_DIS_CANS );
+          paMvpDvInfo->m_acMvCand[iList][ uiMvpDvPos ] = TComMv( cMvPred.m_iDvMcpDispX, cMvPred.m_iDvMcpDispY );
+          paMvpDvInfo->m_aVIdxCan[iList][ uiMvpDvPos ] = 0; // works only for CTC
           paMvpDvInfo->m_bAvailab[iList][ uiMvpDvPos ] = true;
           paMvpDvInfo->m_bFound                        = true; 
         }
@@ -5033,46 +5034,47 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPart
 Void TComDataCU::xDeriveRightBottomNbIdx( PartSize eCUMode, UInt uiPartIdx, Int &riLCUIdxRBNb, Int &riPartIdxRBNb )
 {
   UInt uiNumPartInCUWidth = m_pcPic->getNumPartInWidth();  
-    Int uiLCUIdx = getAddr();
-  
-  UInt uiPartIdxRB;
-    deriveRightBottomIdx( eCUMode, uiPartIdx, uiPartIdxRB );  
-    UInt uiAbsPartIdxTmp = g_auiZscanToRaster[uiPartIdxRB];
+  Int uiLCUIdx = getAddr();
 
-    if (( m_pcPic->getCU(m_uiCUAddr)->getCUPelX() + g_auiRasterToPelX[uiAbsPartIdxTmp] + m_pcPic->getMinCUWidth() )>= m_pcSlice->getSPS()->getPicWidthInLumaSamples() )
-    {
+  UInt uiPartIdxRB;
+  deriveRightBottomIdx( eCUMode, uiPartIdx, uiPartIdxRB );  
+  UInt uiAbsPartIdxTmp = g_auiZscanToRaster[uiPartIdxRB];
+
+  if (( m_pcPic->getCU(m_uiCUAddr)->getCUPelX() + g_auiRasterToPelX[uiAbsPartIdxTmp] + m_pcPic->getMinCUWidth() )>= m_pcSlice->getSPS()->getPicWidthInLumaSamples() )
+  {
     riLCUIdxRBNb  = -1;
     riPartIdxRBNb = -1;
-    }
-    else if(( m_pcPic->getCU(m_uiCUAddr)->getCUPelY() + g_auiRasterToPelY[uiAbsPartIdxTmp] + m_pcPic->getMinCUHeight() )>= m_pcSlice->getSPS()->getPicHeightInLumaSamples() )
-    {
+  }
+  else if(( m_pcPic->getCU(m_uiCUAddr)->getCUPelY() + g_auiRasterToPelY[uiAbsPartIdxTmp] + m_pcPic->getMinCUHeight() )>= m_pcSlice->getSPS()->getPicHeightInLumaSamples() )
+  {
     riLCUIdxRBNb  = -1;
     riPartIdxRBNb = -1;
-    }
-    else
-    {
-      if ( ( uiAbsPartIdxTmp % uiNumPartInCUWidth < uiNumPartInCUWidth - 1 ) &&           // is not at the last column of LCU 
+  }
+  else
+  {
+    if ( ( uiAbsPartIdxTmp % uiNumPartInCUWidth < uiNumPartInCUWidth - 1 ) &&           // is not at the last column of LCU 
       ( uiAbsPartIdxTmp / uiNumPartInCUWidth < m_pcPic->getNumPartInHeight() - 1 ) ) // is not at the last row    of LCU
-      {
+    {
       riPartIdxRBNb = g_auiRasterToZscan[ uiAbsPartIdxTmp + uiNumPartInCUWidth + 1 ];
-      }
-      else if ( uiAbsPartIdxTmp % uiNumPartInCUWidth < uiNumPartInCUWidth - 1 )           // is not at the last column of LCU But is last row of LCU
-      {
+      riLCUIdxRBNb  = uiLCUIdx; 
+    }
+    else if ( uiAbsPartIdxTmp % uiNumPartInCUWidth < uiNumPartInCUWidth - 1 )           // is not at the last column of LCU But is last row of LCU
+    {
       riPartIdxRBNb = -1;
       riLCUIdxRBNb  = -1;
-      }
-      else if ( uiAbsPartIdxTmp / uiNumPartInCUWidth < m_pcPic->getNumPartInHeight() - 1 ) // is not at the last row of LCU But is last column of LCU
-      {
+    }
+    else if ( uiAbsPartIdxTmp / uiNumPartInCUWidth < m_pcPic->getNumPartInHeight() - 1 ) // is not at the last row of LCU But is last column of LCU
+    {
       riPartIdxRBNb = g_auiRasterToZscan[ uiAbsPartIdxTmp + 1 ];
       riLCUIdxRBNb = uiLCUIdx + 1;
-      }
-      else //is the right bottom corner of LCU                       
-      {
+    }
+    else //is the right bottom corner of LCU                       
+    {
       riPartIdxRBNb = -1;
       riLCUIdxRBNb  = -1;
-      }
     }
-      }
+  }
+}
 
 
 Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerge
@@ -5083,7 +5085,7 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
 {
   //// ******* Init variables ******* /////
   // Init disparity struct for results
-  pDInfo->iN = 0;  
+  pDInfo->iN = 0;    
 
   // Init struct for disparities from MCP neighboring blocks
   McpDisInfo cMvpDvInfo;
@@ -5287,7 +5289,7 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
   //// ******* Search MCP blocks ******* /////
   if( cMvpDvInfo.m_bFound ) 
   {
-    for( Int curPos = 1 ; curPos < MCP_DIS_CANS - 1 ; curPos++ ) 
+    for( Int curPos = 0 ; curPos < MCP_DIS_CANS ; curPos++ ) 
     {
       for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1); iList ++)
       {
@@ -7180,7 +7182,7 @@ TComDataCU::getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv )
   }
   else
 #endif
-  getDisMvpCandNBDV( 0, 0,  &cDisInfo, false );
+  getDisMvpCandNBDV( 0, 0,  &cDisInfo, false );  
   if( cDisInfo.iN == 0)
   {
     m_pePartSize[0] = m_peSaved;

@@ -210,7 +210,7 @@
 ///// ***** DERIVED PARAMETERS *********
 #if H3D_NBDV                    
 #define DIS_CANS                          1
-#define MCP_DIS_CANS                      1
+#define MCP_DIS_CANS                      7
 #endif                                  
 
 #define HHI_INTERVIEW_SKIP_LAMBDA_SCALE   1
