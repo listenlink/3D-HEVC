@@ -287,7 +287,7 @@ protected:
   );
 #if H3D_NBDV
   Void          xDeriveRightBottomNbIdx( PartSize eCUMode, UInt uiPartIdx, Int &uiLCUIdxRBNb, Int &uiPartIdxRBNb );
-  Bool          xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPartIdx, UInt uiPartAddr, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, McpDisInfo* paMvpDvInfo, UInt uiMvpDvPos );
+  Bool          xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPartIdx, UInt uiPartAddr, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, McpDisInfo* paMvpDvInfo, UInt uiMvpDvPos, Bool bDepthRefine );
   Bool          xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
 #endif 
   
