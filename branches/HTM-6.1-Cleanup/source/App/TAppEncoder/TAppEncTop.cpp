@@ -594,7 +594,11 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
 #if LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_DEPTH_C0046
+      m_acTEncDepthTopList[iViewIdx]->setUseIC                ( m_abUseIC[1] );
+#else
       m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
+#endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115
      m_acTEncDepthTopList[iViewIdx]->setUseIVS                ( m_bUseIVS );
