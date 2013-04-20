@@ -1469,6 +1469,9 @@ TComSPS::TComSPS()
 , m_useStrongIntraSmoothing   (false)
 , m_vuiParametersPresentFlag  (false)
 , m_vuiParameters             ()
+#if H_MV
+, m_interViewMvVertConstraintFlag (false)
+#endif
 {
   for ( Int i = 0; i < MAX_TLAYER; i++ )
   {

@@ -553,7 +553,13 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       codeVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
+#if H_MV
+  WRITE_FLAG( 1, "sps_extension_flag" );
+
+  WRITE_FLAG( pcSPS->getInterViewMvVertConstraintFlag() ? 1 : 0, "inter_view_mv_vert_constraint_flag" );
+#else
   WRITE_FLAG( 0, "sps_extension_flag" );
+#endif
 }
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )

@@ -967,6 +967,11 @@ private:
   static const Int   m_winUnitX[MAX_CHROMA_FORMAT_IDC+1];
   static const Int   m_winUnitY[MAX_CHROMA_FORMAT_IDC+1];
   TComPTL     m_pcPTL;
+
+#if H_MV
+  Bool        m_interViewMvVertConstraintFlag;
+#endif
+
 public:
   TComSPS();
   virtual ~TComSPS();
@@ -1093,6 +1098,11 @@ public:
   Void setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool randomAccess );
 
   TComPTL* getPTL()     { return &m_pcPTL; }
+
+#if H_MV
+  Void setInterViewMvVertConstraintFlag(Bool val) { m_interViewMvVertConstraintFlag = val; }
+  Bool getInterViewMvVertConstraintFlag()         { return m_interViewMvVertConstraintFlag;}
+#endif
 };
 
 /// Reference Picture Lists class
