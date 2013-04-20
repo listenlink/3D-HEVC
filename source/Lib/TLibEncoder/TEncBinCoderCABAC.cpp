@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -109,9 +109,7 @@ Void TEncBinCABAC::flush()
   encodeBinTrm(1);
   finish();
   m_pcTComBitIf->write(1, 1);
-#if OL_FLUSH_ALIGN
   m_pcTComBitIf->writeAlignZero();
-#endif
 
   start();
 }
@@ -124,37 +122,13 @@ Void TEncBinCABAC::resetBac()
   start();
 }
 
-/** Encode # of subsequent IPCM blocks.
- * \param numSubseqIPCM 
- * \returns Void
- */
-Void TEncBinCABAC::encodeNumSubseqIPCM( Int numSubseqIPCM )
-{
-  finish();
-  m_pcTComBitIf->write( 1, 1 ); // stop bit
-
-  m_pcTComBitIf->write( numSubseqIPCM ? 1 : 0, 1);
-
-  if ( numSubseqIPCM > 0)
-  {
-    Bool bCodeLast = ( 3 > numSubseqIPCM );
-
-    while( --numSubseqIPCM )
-    {
-      m_pcTComBitIf->write( 1, 1 );
-    }
-    if( bCodeLast )
-    {
-      m_pcTComBitIf->write( 0, 1 );
-    }
-  }
-}
-
 /** Encode PCM alignment zero bits.
  * \returns Void
  */
 Void TEncBinCABAC::encodePCMAlignBits()
 {
+  finish();
+  m_pcTComBitIf->write(1, 1);
   m_pcTComBitIf->writeAlignZero(); // pcm align zero
 }
 
@@ -218,9 +192,7 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
     DTRACE_CABAC_T( "\n" )
   }
   m_uiBinsCoded += m_binCountIncrement;
-#if CABAC_INIT_FLAG
   rcCtxModel.setBinsCoded( 1 );
-#endif
   
   UInt  uiLPS   = TComCABACTables::sm_aucLPSTable[ rcCtxModel.getState() ][ ( m_uiRange >> 6 ) & 3 ];
   m_uiRange    -= uiLPS;
@@ -384,26 +356,6 @@ Void TEncBinCABAC::writeOut()
       m_bufferedByte = leadByte;
     }      
   }    
-}
-
-/** flush bits when CABAC termination
-  * \param [in] bEnd true means this flushing happens at the end of RBSP. No need to encode stop bit
-  */
-Void TEncBinCABAC::encodeFlush(Bool bEnd)
-{
-  m_uiRange = 2;
-
-  m_uiLow  += 2;
-  m_uiLow <<= 7;
-  m_uiRange = 2 << 7;
-  m_bitsLeft -= 7;
-  testAndWriteOut();
-  finish();
-
-  if(!bEnd)
-  {
-    m_pcTComBitIf->write( 1, 1 ); // stop bit
-  }
 }
 
 //! \}

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,14 +56,6 @@ private:
   
 public:
   
-#if H3D_NBDV
-  Bool  m_bDvMcp;       // is dv-mcp ?
-  Int   m_iDvMcpDispX;  // disparity for dv-mcp
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  Int   m_iDvMcpDispY;  // disparity for dv-mcp
-#endif
-#endif
-
   // ------------------------------------------------------------------------------------------------------------------
   // constructors
   // ------------------------------------------------------------------------------------------------------------------
@@ -71,26 +63,12 @@ public:
   TComMv() :
   m_iHor(0),
   m_iVer(0)
-#if H3D_NBDV
-  , m_bDvMcp(false)
-  , m_iDvMcpDispX(0)
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  , m_iDvMcpDispY(0)
-#endif
-#endif
   {
   }
   
   TComMv( Short iHor, Short iVer ) :
   m_iHor(iHor),
   m_iVer(iVer)
-#if H3D_NBDV
-  , m_bDvMcp(false)
-  , m_iDvMcpDispX(0)
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
-  , m_iDvMcpDispY(0)
-#endif
-#endif
   {
   }
   

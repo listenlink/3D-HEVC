@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,6 +31,12 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ \file     NALread.cpp
+ \brief    reading funtionality for NAL units
+ */
+
+
 #include <vector>
 #include <algorithm>
 #include <ostream>
@@ -43,63 +49,84 @@ using namespace std;
 
 //! \ingroup TLibDecoder
 //! \{
-static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream *pcBitstream)
+static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, Bool isVclNalUnit)
 {
-  unsigned zeroCount = 0;
+  UInt zeroCount = 0;
   vector<uint8_t>::iterator it_read, it_write;
-
-  UInt *auiStoredTileMarkerLocation = new UInt[MAX_MARKER_PER_NALU];
-  // Remove tile markers and note the bitstream location
-  for (it_read = it_write = nalUnitBuf.begin(); it_read != nalUnitBuf.end(); it_read++ )
-  {
-    Bool bTileMarkerFound = false;
-    if ( ( it_read - nalUnitBuf.begin() ) < ( nalUnitBuf.size() - 2 ) )
-    {
-      if ( (*(it_read) == 0x00) && (*(it_read+1) == 0x00) && (*(it_read+2) == 0x02) ) // tile marker detected
-      {
-        it_read += 2;
-        UInt uiDistance  = (UInt) (it_write - nalUnitBuf.begin());
-        UInt uiCount     = pcBitstream->getTileMarkerLocationCount();
-        bTileMarkerFound = true;
-        pcBitstream->setTileMarkerLocation( uiCount, uiDistance );
-        auiStoredTileMarkerLocation[uiCount] = uiDistance;
-        pcBitstream->setTileMarkerLocationCount( uiCount + 1 );
-        
-      }
-    }
-
-    if (!bTileMarkerFound)
-    {
-      *it_write = *it_read;
-      it_write++;
-    }
-  }
-  nalUnitBuf.resize(it_write - nalUnitBuf.begin());
 
   for (it_read = it_write = nalUnitBuf.begin(); it_read != nalUnitBuf.end(); it_read++, it_write++)
   {
+    assert(zeroCount < 2 || *it_read >= 0x03);
     if (zeroCount == 2 && *it_read == 0x03)
     {
-      // update tile marker location
-      UInt uiDistance = (UInt) (it_read - nalUnitBuf.begin());
-      for (UInt uiIdx=0; uiIdx<pcBitstream->getTileMarkerLocationCount(); uiIdx++)
-      {
-        if (auiStoredTileMarkerLocation[ uiIdx ] >= uiDistance)
-        {
-          pcBitstream->setTileMarkerLocation( uiIdx, pcBitstream->getTileMarkerLocation( uiIdx )-1 );
-        }
-      }
       it_read++;
       zeroCount = 0;
+      if (it_read == nalUnitBuf.end())
+      {
+        break;
+      }
     }
     zeroCount = (*it_read == 0x00) ? zeroCount+1 : 0;
     *it_write = *it_read;
   }
+  assert(zeroCount == 0);
+  
+  if (isVclNalUnit)
+  {
+    // Remove cabac_zero_word from payload if present
+    Int n = 0;
+    
+    while (it_write[-1] == 0x00)
+    {
+      it_write--;
+      n++;
+    }
+    
+    if (n > 0)
+    {
+      printf("\nDetected %d instances of cabac_zero_word", n/2);      
+    }
+  }
 
   nalUnitBuf.resize(it_write - nalUnitBuf.begin());
-  delete [] auiStoredTileMarkerLocation;
 }
 
+Void readNalUnitHeader(InputNALUnit& nalu)
+{
+  TComInputBitstream& bs = *nalu.m_Bitstream;
+
+  Bool forbidden_zero_bit = bs.read(1);           // forbidden_zero_bit
+  assert(forbidden_zero_bit == 0);
+  nalu.m_nalUnitType = (NalUnitType) bs.read(6);  // nal_unit_type
+#if H_MV
+  nalu.m_layerId = bs.read(6);                 // layerId
+#else
+  nalu.m_reservedZero6Bits = bs.read(6);       // nuh_reserved_zero_6bits
+  assert(nalu.m_reservedZero6Bits == 0);
+#endif
+  nalu.m_temporalId = bs.read(3) - 1;             // nuh_temporal_id_plus1
+
+  if ( nalu.m_temporalId )
+  {
+    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLA
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLANT
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_BLA_N_LP
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR_N_LP
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_CRA
+         && nalu.m_nalUnitType != NAL_UNIT_VPS
+         && nalu.m_nalUnitType != NAL_UNIT_SPS
+         && nalu.m_nalUnitType != NAL_UNIT_EOS
+         && nalu.m_nalUnitType != NAL_UNIT_EOB );
+  }
+  else
+  {
+    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TLA
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TSA_N
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_R
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_N );
+  }
+}
 /**
  * create a NALunit structure with given header values and storage for
  * a bitstream
@@ -108,46 +135,10 @@ void read(InputNALUnit& nalu, vector<uint8_t>& nalUnitBuf)
 {
   /* perform anti-emulation prevention */
   TComInputBitstream *pcBitstream = new TComInputBitstream(NULL);
-  convertPayloadToRBSP(nalUnitBuf, pcBitstream);
-
+  convertPayloadToRBSP(nalUnitBuf, (nalUnitBuf[0] & 64) == 0);
+  
   nalu.m_Bitstream = new TComInputBitstream(&nalUnitBuf);
-  // copy the tile marker location information
-  nalu.m_Bitstream->setTileMarkerLocationCount( pcBitstream->getTileMarkerLocationCount() );
-  for (UInt uiIdx=0; uiIdx < nalu.m_Bitstream->getTileMarkerLocationCount(); uiIdx++)
-  {
-    nalu.m_Bitstream->setTileMarkerLocation( uiIdx, pcBitstream->getTileMarkerLocation(uiIdx) );
-  }
   delete pcBitstream;
-  TComInputBitstream& bs = *nalu.m_Bitstream;
-
-  bool forbidden_zero_bit = bs.read(1);
-  assert(forbidden_zero_bit == 0);
-
-  nalu.m_nalRefFlag  = (bs.read(1) != 0 );
-  nalu.m_nalUnitType = (NalUnitType) bs.read(6);
-
-#if QC_MVHEVC_B0046
-  //nalu.m_layerId    = bs.read(6);
-  nalu.m_layerId    = bs.read(5);
-  nalu.m_temporalId = bs.read(3) - 1;
-#else
-  nalu.m_temporalId = bs.read(3);
- //  unsigned reserved_one_5bits = bs.read(5);
- //  assert(reserved_one_5bits == 1);
-#if VIDYO_VPS_INTEGRATION
-  nalu.m_layerId  = bs.read(5) - 1;
-#else
-  nalu.m_viewId   = bs.read(4)-1;
-  nalu.m_isDepth  = bs.read(1);
-#endif
-  if ( nalu.m_temporalId )
-  {
-#if QC_REM_IDV_B0046
-    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_CRA && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR);
-#else
-    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_CRA && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDR && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_IDV );
-#endif
-  }
-#endif
+  readNalUnitHeader(nalu);
 }
 //! \}

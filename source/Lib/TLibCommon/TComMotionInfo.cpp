@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -327,11 +327,7 @@ Void TComCUMvField::setAllMvField( TComMvField const & mvField, PartSize eCUMode
  * \param pePredMode Pointer to prediction modes
  * \param scale      Factor by which to subsample motion information
  */
-#if HHI_MPI
-Void TComCUMvField::compress(Char* pePredMode, UChar* puhInterDir, Int scale)
-#else
 Void TComCUMvField::compress(Char* pePredMode, Int scale)
-#endif
 {
   Int N = scale * scale;
   assert( N > 0 && N <= m_uiNumPartition);
@@ -350,50 +346,7 @@ Void TComCUMvField::compress(Char* pePredMode, Int scale)
       m_pcMv[ uiPartIdx + i ] = cMv;
       pePredMode[ uiPartIdx + i ] = predMode;
       m_piRefIdx[ uiPartIdx + i ] = iRefIdx;
-#if HHI_MPI
-      puhInterDir[ uiPartIdx + i ] = puhInterDir[ uiPartIdx ];
-#endif
     }
   }
 } 
-
-#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-Void TComCUMvField::decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift )
-{
-  assert( iShift > 0 );
-  const TComMv cAdd( 1 << ( iShift - 1 ), 1 << ( iShift - 1 ) );
-
-  for ( Int i = 0; i < iNumPart; i++ )
-  {
-    m_pcMv[iPartAddr+i] += cAdd;
-    m_pcMv[iPartAddr+i] >>= iShift;
-
-    m_pcMvd[iPartAddr+i] += cAdd;
-    m_pcMvd[iPartAddr+i] >>= iShift;
-  }
-}
-#endif
-
-
-
-#if MTK_UNCONSTRAINED_MVI_B0083
-Void TComCUMvField::setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir 
-                                   )
-{
-  PredMode predMode = MODE_INTRA;
-  TComMv cMv(0,0); 
-
-  for ( Int i = 0; i < iNumPart; i++ )
-  { 
-    predMode = static_cast<PredMode>( pePredMode[ iPartAddr+i ] );
-    if( predMode == MODE_INTRA )
-    {
-      m_pcMv[iPartAddr+i] = cMv;
-      puhInterDir[iPartAddr+i] = InterDir; 
-      m_piRefIdx[iPartAddr+i] = refIdx;
-    }
-  }
-}
-#endif
-
 //! \}

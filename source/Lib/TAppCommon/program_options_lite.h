@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,16 +33,17 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <list>
 #include <map>
-#include <stdlib.h>
+
+#if H_MV
+#include <vector>
 #include <errno.h>
 #include <cstring>
-#include <math.h>
 
 #ifdef WIN32
 #define strdup _strdup
+#endif
 #endif
 
 //! \ingroup TAppCommon
@@ -55,6 +56,20 @@ namespace df
   {
     struct Options;
     
+    struct ParseFailure : public std::exception
+    {
+      ParseFailure(std::string arg0, std::string val0) throw()
+      : arg(arg0), val(val0)
+      {}
+
+      ~ParseFailure() throw() {};
+
+      std::string arg;
+      std::string val;
+
+      const char* what() const throw() { return "Option Parse Failure"; }
+    };
+
     void doHelp(std::ostream& out, Options& opts, unsigned columns = 80);
     unsigned parseGNU(Options& opts, unsigned argc, const char* argv[]);
     unsigned parseSHORT(Options& opts, unsigned argc, const char* argv[]);
@@ -110,7 +125,15 @@ namespace df
     Option<T>::parse(const std::string& arg)
     {
       std::istringstream arg_ss (arg,std::istringstream::in);
-      arg_ss >> opt_storage;
+      arg_ss.exceptions(std::ios::failbit);
+      try
+      {
+        arg_ss >> opt_storage;
+      }
+      catch (...)
+      {
+        throw ParseFailure(opt_string, arg);
+      }
     }
     
     /* string parsing is specialized -- copy the whole string, not just the
@@ -121,7 +144,8 @@ namespace df
     {
       opt_storage = arg;
     }
-    
+
+#if H_MV    
     template<>
     inline void
       Option<char*>::parse(const std::string& arg)
@@ -257,6 +281,7 @@ namespace df
         pcOldStart = pcNextStart;
       }
     }
+#endif
 
     /** Option class for argument handling using a user provided function */
     struct OptionFunc : public OptionBase
@@ -332,6 +357,7 @@ namespace df
         return *this;
       }
       
+#if H_MV
       template<typename T>
       OptionSpecific&
         operator()(const std::string& name, std::vector<T>& storage, T default_val, unsigned uiMaxNum, const std::string& desc = "" )
@@ -354,6 +380,7 @@ namespace df
 
         return *this;
       }
+#endif
 
       /**
        * Add option described by name to the parent Options list,

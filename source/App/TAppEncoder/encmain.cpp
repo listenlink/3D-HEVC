@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,12 @@
 */
 
 #include <time.h>
+#include <iostream>
 #include "TAppEncTop.h"
+#include "TAppCommon/program_options_lite.h"
+
+using namespace std;
+namespace po = df::program_options_lite;
 
 //! \ingroup TAppEncoder
 //! \{
@@ -51,7 +56,12 @@ int main(int argc, char* argv[])
 
   // print information
   fprintf( stdout, "\n" );
+#if H_MV
   fprintf( stdout, "3D-HTM Software: Encoder Version [%s] based on HM Version [%s]", NV_VERSION, HM_VERSION );  
+#else
+  fprintf( stdout, "HM software: Encoder Version [%s]", NV_VERSION );
+#endif
+
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );
@@ -61,9 +71,17 @@ int main(int argc, char* argv[])
   cTAppEncTop.create();
 
   // parse configuration
-  if(!cTAppEncTop.parseCfg( argc, argv ))
+  try
   {
-    cTAppEncTop.destroy();
+    if(!cTAppEncTop.parseCfg( argc, argv ))
+    {
+      cTAppEncTop.destroy();
+      return 1;
+    }
+  }
+  catch (po::ParseFailure& e)
+  {
+    cerr << "Error parsing option \""<< e.arg <<"\" with argument \""<< e.val <<"\"." << endl;
     return 1;
   }
 
