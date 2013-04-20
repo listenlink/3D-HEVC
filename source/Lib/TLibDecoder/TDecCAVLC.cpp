@@ -709,10 +709,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_FLAG( uiCode, "sps_extension_flag");
   if (uiCode)
   {
+#if H_MV
+    READ_FLAG( uiCode, "inter_view_mv_vert_constraint_flag" );    pcSPS->setInterViewMvVertConstraintFlag(uiCode == 1 ? true : false);
+#else
     while ( xMoreRbspData() )
     {
       READ_FLAG( uiCode, "sps_extension_data_flag");
     }
+#endif
   }
 }
 
