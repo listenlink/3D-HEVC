@@ -408,9 +408,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if HHI_MPI
     }
 #endif
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-    m_pcEntropyDecoder->decodeResPredFlag( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
-#endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
     return;
   }
@@ -459,12 +456,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-  if( !pcCU->isIntra( uiAbsPartIdx ) )
-  {
-    m_pcEntropyDecoder->decodeResPredFlag    ( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth], 0 );
-  }
-#endif
 #if LGE_ILLUCOMP_DEPTH_C0046 && HHI_MPI
   }
 #endif
@@ -678,7 +669,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #else
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
 #endif
-#if MTK_MDIVRP_C0138
+#if H3D_IVRP
   if (pcCU->getMergeFlag(0) && pcCU->getMergeIndex(0)==0 && pcCU->getResPredAvail(0))
   {
     m_pcPrediction->residualPrediction(pcCU, m_ppcYuvReco[uiDepth], m_ppcYuvResPred[uiDepth]);
@@ -688,26 +679,6 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if HHI_MPI
   if( pcCU->getTextureModeDepth( 0 ) != -1 )
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
-#endif
-
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-  if( pcCU->getResPredFlag( 0 ) )
-  {
-    AOF( pcCU->getResPredAvail( 0 ) );
-    Bool bOK = pcCU->getResidualSamples( 0, 
-#if QC_SIMPLIFIEDIVRP_M24938
-      true,
-#endif
-      m_ppcYuvResPred[uiDepth] );
-    AOF( bOK );
-#if LG_RESTRICTEDRESPRED_M24766
-    Int iPUResiPredShift[4];
-    pcCU->getPUResiPredShift(iPUResiPredShift, 0);
-    m_ppcYuvReco[uiDepth]->add(iPUResiPredShift, pcCU->getPartitionSize(0), m_ppcYuvResPred[uiDepth], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
-#else
-    m_ppcYuvReco[uiDepth]->add( m_ppcYuvResPred[uiDepth], pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
-#endif
-  }
 #endif
 
   // inter recon
@@ -721,11 +692,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   else
   {
 #if H3D_IVRP
-#if MTK_MDIVRP_C0138
     if (pcCU->getMergeFlag(0) && pcCU->getMergeIndex(0)==0 && pcCU->getResPredAvail(0))
-#else
-    if( pcCU->getResPredFlag( 0 ) )
-#endif
     {
       m_ppcYuvReco[uiDepth]->clip( pcCU->getWidth( 0 ), pcCU->getHeight( 0 ) );
     }

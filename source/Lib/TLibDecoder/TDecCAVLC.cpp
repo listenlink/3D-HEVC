@@ -1205,7 +1205,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 
 #endif
 #endif
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI || H3D_QTL
 Void TDecCavlc::parseSPS(TComSPS* pcSPS, Bool bIsDepth)
 #else
 Void TDecCavlc::parseSPS(TComSPS* pcSPS)
@@ -1446,7 +1446,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setUseMVI( uiCode );
     }
 #endif
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
     if( bIsDepth )
     {
       READ_FLAG( uiCode, "use_qtlpc_flag" );

@@ -145,16 +145,9 @@ public:
   Void    addClipChroma     ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    addClipPartLuma   ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize ); //GT
 
-#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
-  //  pcYuvSrc0 - pcYuvSrc1 -> m_apiBuf
-  Void    subtract          (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
-  Void    subtractLuma      (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
-  Void    subtractChroma    (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
-#else
   Void    subtract          ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    subtractLuma      ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    subtractChroma    ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
-#endif
   
   //  (pcYuvSrc0 + pcYuvSrc1)/2 for YUV partition
   Void    addAvg            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight );
@@ -165,16 +158,9 @@ public:
 
   //   Remove High frequency
   Void    removeHighFreq    ( TComYuv* pcYuvSrc, UInt uiPartIdx, UInt uiWidht, UInt uiHeight );
-#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
-  Void    getPUXYOffset     (PartSize uhPartitionSize, Int iWidth, Int iHeight, Int &iXOffset, Int &iYOffset);
-  Void    add               (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract = false );
-  Void    addLuma           (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
-  Void    addChroma         (Int *iPUResiPredShift, PartSize uhPartitionSize, TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
-#else
   Void    add               ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract = false );
   Void    addLuma           ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
   Void    addChroma         ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
-#endif
 
   Void    clip              ( Int iWidth, Int iHeight );
   Void    clipLuma          ( Int iWidth, Int iHeight );

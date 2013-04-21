@@ -71,7 +71,7 @@ public:
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
 #endif
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI || H3D_QTL
   virtual Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth )                       = 0;
 #else
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
@@ -170,7 +170,7 @@ public:
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
 #endif
   
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI || H3D_QTL
   Void    decodeSPS                   ( TComSPS* pcSPS, Bool bIsDepth ) { m_pcEntropyDecoderIf->parseSPS(pcSPS, bIsDepth); }
 #else
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
@@ -197,9 +197,6 @@ public:
 #endif
   Void decodeMergeFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void decodeMergeIndex        ( TComDataCU* pcSubCU, UInt uiPartIdx, UInt uiPartAddr, PartSize eCUMode, UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, UInt uiDepth );
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-  Void decodeResPredFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx );
-#endif
   Void decodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   

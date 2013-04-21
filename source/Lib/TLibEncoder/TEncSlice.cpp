@@ -1192,7 +1192,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       }
     }
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
     rpcPic->setReduceBitsFlag(true);
 #endif
 
@@ -1234,7 +1234,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       }
     }
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
     rpcPic->setReduceBitsFlag(false);
 #endif
 

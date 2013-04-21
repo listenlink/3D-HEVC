@@ -286,6 +286,8 @@ protected:
 #endif
   );
 #if H3D_NBDV
+  Void          xDeriveRightBottomNbIdx( PartSize eCUMode, UInt uiPartIdx, Int &uiLCUIdxRBNb, Int &uiPartIdxRBNb );
+  Bool          xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPartIdx, UInt uiPartAddr, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, McpDisInfo* paMvpDvInfo, UInt uiMvpDvPos, Bool bDepthRefine );
   Bool          xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
 #endif 
   
@@ -532,12 +534,7 @@ public:
   Int           getPdmMergeCandidate      ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool          getPdmMvPred              ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge = false );
 #else //!H3D_NBDV
-#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Bool          getUnifiedMvPredCan       ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
-#else //QC_AMVP_MRG_UNIFY_IVCAN_C0051
-  Bool          getPdmMvPredDisCan        ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge = false );
-  Int           getPdmMergeCandidateDisCan( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm );
-#endif //QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
   Void          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
 #if MERL_VSP_C0152
@@ -549,13 +546,8 @@ public:
 
 
 #if MERL_VSP_C0152
-#if LGE_SIMP_DVP_REFINE_C0112
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT, Int iShiftPrec, Bool bSimpleDvpRefine = false);
   Void          estimateDVFromDM(UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred, Bool bSimpleDvpRefine = false);
-#else
-  Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT, Int iShiftPrec);
-  Void          estimateDVFromDM(UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred);
-#endif
 #endif
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
 #endif //  H3D_IVMP 
@@ -578,14 +570,8 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------
-#if LG_RESTRICTEDRESPRED_M24766
+#if H3D_IVRP
   Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
-#else
-  Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
-#endif
-#if LG_RESTRICTEDRESPRED_M24766 && !MTK_MDIVRP_C0138
-  Int           getResiPredMode(UInt uiPartAddr);
-  Void          getPUResiPredShift (Int *iPUPredResiShift, UInt uiAbsPartIndex);
 #endif
   UChar         getNumPartInter       ();
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
@@ -600,8 +586,6 @@ public:
 #if H3D_IVMP
   Void          fillMvpCandBase       ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
   Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo , Int iMVPIdx=-1);
-#else
-  Void          fillMvpCand           ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo );
 #endif
   Bool          isDiffMER             ( Int xN, Int yN, Int xP, Int yP);
   Void          getPartPosition       ( UInt partIdx, Int& xP, Int& yP, Int& nPSW, Int& nPSH);
@@ -830,6 +814,8 @@ public:
   Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
   Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
+ 
+
 #endif
 };
 

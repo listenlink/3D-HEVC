@@ -139,12 +139,6 @@
 #define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
 #define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
 
-#if H3D_IVMP
-#define DMV_MERGE_POS                     4
-#else
-#define DMV_MERGE_POS                     1
-#endif
-
 #if H3D_IVMP&!H3D_NBDV
 #define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
 #else

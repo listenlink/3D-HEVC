@@ -467,7 +467,7 @@ TComPicYuv::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorder
 
 Void TComPicYuv::setLumaTo( Pel pVal )
 {
-  xSetPels( getLumaAddr(), getStride(), getWidth(), getHeight() >> 1, pVal );
+  xSetPels( getLumaAddr(), getStride(), getWidth(), getHeight(), pVal );
 }
 
 Void TComPicYuv::setChromaTo( Pel pVal )
