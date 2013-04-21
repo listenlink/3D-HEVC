@@ -305,11 +305,7 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
 };
 
 #if RWTH_SDC_DLT_B0036
-#if SAIT_SDC_C0096
 UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES] = { DC_IDX, DMM_WEDGE_FULL_IDX, PLANAR_IDX };
-#else
-UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES] = { DC_IDX, DMM_WEDGE_FULL_IDX, DMM_WEDGE_PREDDIR_IDX, PLANAR_IDX };
-#endif
 #endif
 
 Int g_quantScales[6] =

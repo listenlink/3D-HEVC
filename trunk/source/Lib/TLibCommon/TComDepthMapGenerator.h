@@ -151,13 +151,7 @@ public:
   Int   getDisparity          ( TComPic*      pcPic, Int iPosX, Int iPosY, UInt uiRefViewId );
 #if H3D_IVMP
 #if H3D_NBDV
-#if QC_AMVP_MRG_UNIFY_IVCAN_C0051
   Bool  getPdmCandidate       ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
-#else
-  Int   getPdmMergeCandidate  ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm );
-  Bool  getPdmMvPredDisCan    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
-  Bool  getDisCanPdmMvPred    ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, DisInfo* pDInfo, Bool bMerge );
-#endif
 #else
   Int   getPdmMergeCandidate  ( TComDataCU*   pcCU, UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv );
   Bool  getPdmMvPred          ( TComDataCU*   pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv, Bool bMerge );

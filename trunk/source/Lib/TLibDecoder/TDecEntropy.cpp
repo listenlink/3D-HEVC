@@ -107,41 +107,6 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-Void
-TDecEntropy::decodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx )
-{
-  Bool  bResPredAvailable   = false;
-  Bool  bResPredFlag        = false;
-
-  Bool  bResPredAllowed     =                    (!pcCU->getSlice()->getSPS()->isDepth                () );
-  bResPredAllowed           = bResPredAllowed && ( pcCU->getSlice()->getSPS()->getViewId              () );
-  bResPredAllowed           = bResPredAllowed && ( pcCU->getSlice()->getSPS()->getMultiviewResPredMode() );
-  bResPredAllowed           = bResPredAllowed && (!pcCU->isIntra           ( uiAbsPartIdx )              );
-
-  // check if supported
-  if( bResPredAllowed )
-  {
-    bResPredAvailable       = pcSubCU->getResidualSamples( uiPUIdx , false  );
-  }
-
-  // read from bitstream
-  if( bResPredAvailable )
-  {
-#if LG_RESTRICTEDRESPRED_M24766
-    Int iPUResiPredShift[4];
-    pcCU->getPUResiPredShift(iPUResiPredShift, uiAbsPartIdx);
-    if(iPUResiPredShift[0] >= 0 || iPUResiPredShift[1] >= 0  || iPUResiPredShift[2] >= 0  || iPUResiPredShift[3] >= 0 )
-#endif
-    m_pcEntropyDecoderIf->parseResPredFlag( pcCU, bResPredFlag, uiAbsPartIdx, uiDepth );
-  }
-
-  // set data
-  pcCU->setResPredAvailSubParts ( bResPredAvailable, uiAbsPartIdx, uiPUIdx, uiDepth );
-  pcCU->setResPredFlagSubParts  ( bResPredFlag,      uiAbsPartIdx, uiPUIdx, uiDepth );
-}
-#endif
-
 Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseSplitFlag( pcCU, uiAbsPartIdx, uiDepth );

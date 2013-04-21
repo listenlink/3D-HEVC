@@ -356,7 +356,7 @@ Void TAppEncTop::xInitLibCfg()
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
     m_acTEncTopList[iViewIdx]->setUseDMM                     ( false );
 #endif
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
     m_acTEncTopList[iViewIdx]->setUseQTLPC                   ( false );
 #endif
 #if HHI_MPI
@@ -594,7 +594,11 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
       m_acTEncDepthTopList[iViewIdx]->setUseSAO               ( m_abUseSAO[1]     );
 #if LGE_ILLUCOMP_B0045
+#if LGE_ILLUCOMP_DEPTH_C0046
+      m_acTEncDepthTopList[iViewIdx]->setUseIC                ( m_abUseIC[1] );
+#else
       m_acTEncDepthTopList[iViewIdx]->setUseIC                ( false     );
+#endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115
      m_acTEncDepthTopList[iViewIdx]->setUseIVS                ( m_bUseIVS );
@@ -658,7 +662,7 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncDepthTopList[iViewIdx]->setUseDMM34( (m_b3DVFlexOrder && isDepthFirst) ? false : m_bUseDMM );
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
     m_acTEncDepthTopList[iViewIdx]->setUseQTLPC                   (m_bUseQTLPC);
 #endif
 #if HHI_MPI

@@ -1256,7 +1256,7 @@ Void TDecTop::xDecodeSPS()
   TComSPS* sps = new TComSPS();
   TComRPSList* rps = new TComRPSList();
   sps->setRPSList(rps);
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI || H3D_QTL
   m_cEntropyDecoder.decodeSPS( sps, m_isDepth );
 #else
   m_cEntropyDecoder.decodeSPS( sps );

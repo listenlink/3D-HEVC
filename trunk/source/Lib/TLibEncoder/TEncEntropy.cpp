@@ -121,7 +121,7 @@ Void TEncEntropy::encodeVPS( TComVPS* pcVPS )
 Void  codeVPS                 ( TComVPS* pcVPS );
 #endif
 
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068 
+#if HHI_MPI || H3D_QTL 
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Bool bIsDepth )
 {
   m_pcEntropyCoderIf->codeSPS( pcSPS, bIsDepth );
@@ -454,30 +454,6 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 }
 
-#if H3D_IVRP && !MTK_MDIVRP_C0138
-Void
-TEncEntropy::encodeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD )
-{
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-
-  // check whether flag is coded
-  ROTVS( pcCU->getSlice()->getSPS()->isDepth                () );
-  ROFVS( pcCU->getSlice()->getSPS()->getViewId              () );
-  ROFVS( pcCU->getSlice()->getSPS()->getMultiviewResPredMode() );
-  ROTVS( pcCU->isIntra           ( uiAbsPartIdx )              );
-  ROFVS( pcCU->getResPredAvail   ( uiAbsPartIdx )              );
-#if LG_RESTRICTEDRESPRED_M24766
-  Int iPUResiPredShift[4];
-  pcCU->getPUResiPredShift(iPUResiPredShift, uiAbsPartIdx);
-  if(iPUResiPredShift[0] >= 0 || iPUResiPredShift[1] >= 0  || iPUResiPredShift[2] >= 0  || iPUResiPredShift[3] >= 0 )
-#endif
-  // encode flag
-  m_pcEntropyCoderIf->codeResPredFlag( pcCU, uiAbsPartIdx );
-}
-#endif
 
 /** parse the fixed length code (smaller than one max value) in ALF
  * \param run: coded value

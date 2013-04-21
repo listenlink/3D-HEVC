@@ -69,13 +69,8 @@ public:
   Void  setRecResidualPic     ( TComPic*      pcPic );
 
 #if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
   Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, TComMv iDisp_x, Bool bRecon );
   Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , TComMv iDisp_x, Bool bRecon );
-#else
-  Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Int iDisp, Bool bRecon ); 
-  Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv , Int iDisp, Bool bRecon ); 
-#endif
 #else // H3D_NBDV
   Bool  getResidualSamples    ( TComDataCU*   pcCU,  UInt uiPUIdx, TComYuv* pcYuv, Bool bRecon ); 
   Bool  getResidualSamples    ( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Bool bRecon ); 
@@ -89,11 +84,7 @@ private:
   Void  xClearIntViewResidual ( TComDataCU*   pcCU,  TComYuv* pcCUResidual, UInt uiPartIdx    );
   Void  xClearResidual        (                      TComYuv* pcCUResidual, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight );
 #if H3D_NBDV
-#if MTK_RELEASE_DV_CONSTRAINT_C0129
   Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  );    
-#else
-  Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, Int iDisp, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  ); 
-#endif
 #else
   Void  xSetPredResidualBlock ( TComPic*      pcPic, UInt uiBaseViewId, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, UInt * puiXPosInRefView , UInt * puiYPosInRefView , Bool bRecon  ); 
 #endif

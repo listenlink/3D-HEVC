@@ -87,7 +87,7 @@ public:
 #if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   Void  parseVPS                  ( TComVPS* pcVPS )  {}
 #endif
-#if HHI_MPI || OL_QTLIMIT_PREDCODING_B0068
+#if HHI_MPI || H3D_QTL
   Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth ) {}
 #else
   Void  parseSPS                  ( TComSPS* pcSPS         ) {}

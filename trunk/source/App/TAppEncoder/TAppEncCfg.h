@@ -312,7 +312,7 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseDMM;                                        ///< flag for using DMM
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   Bool      m_bUseQTLPC;                                      ///< flag for using depth QuadTree Limitation + Predictive Coding
 #endif
 

@@ -120,7 +120,7 @@ private:
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   Bool                  m_bReduceBitsQTL;
 #endif
 
@@ -202,7 +202,7 @@ public:
   Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }    // will be changed to view_id
 #endif
 
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
   Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
   Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
 #endif

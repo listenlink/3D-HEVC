@@ -1545,7 +1545,7 @@ TComSPS::TComSPS()
 #if FLEX_CODING_ORDER_M23723 && HHI_DMM_PRED_TEX
 , m_bUseDMM34                   (false)
 #endif
-#if OL_QTLIMIT_PREDCODING_B0068
+#if H3D_QTL
 , m_bUseQTLPC                 (false)
 #endif
 {
