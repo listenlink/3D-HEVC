@@ -58,6 +58,7 @@
                                               // HHIQC_DMMFASTSEARCH_B0039, fast Wedgelet search for DMM modes 1 and 3
                                               // HHI_DMM_DELTADC_Q1_C0034   JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
                                               // FIX_DMM_CTX_INIT_C0034 JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
+#define FIX_WEDGE_NOFLOAT_D0036           1   // JCT3V-D0036: Fix for aligning SW and spec (Wedgelet segmentation line generation without float) 
 
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 #define LGE_DMM3_SIMP_C0044               1
