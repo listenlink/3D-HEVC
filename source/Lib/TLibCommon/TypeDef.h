@@ -66,6 +66,9 @@
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
                                               // SAIT_SDC_C0096 JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
                                               // FIX_SDC_ENC_C0143, JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
+#if RWTH_SDC_DLT_B0036
+#define HHI_DELTADC_DLT_D0035             1   // JCT3V-D0035: DLT for DMM deltaDC coding
+#endif
 
 ///// ***** TMVP/AMVP *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
