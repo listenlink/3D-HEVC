@@ -49,6 +49,11 @@
 #define MAX_DISTANCE_EDGEINTRA 255
 #endif
 
+#if HHI_DELTADC_DLT_D0035
+#define GetDepthValue2Idx(val)     (pcCU->getSlice()->getSPS()->depthValue2idx(val))
+#define GetIdx2DepthValue(val)     (pcCU->getSlice()->getSPS()->idx2DepthValue(val))
+#endif
+
 TComPrediction::TComPrediction()
 : m_pLumaRecBuffer(0)
 {
@@ -2872,8 +2877,18 @@ Void TComPrediction::xPredIntraWedgeTex( TComDataCU* pcCU, UInt uiAbsPartIdx, Pe
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip ( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride,        iPredDC1,                   iPredDC2           ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 }
 
 Void TComPrediction::xPredIntraContourTex( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder, Bool bDelta, Int iDeltaDC1, Int iDeltaDC2 )
@@ -2891,8 +2906,18 @@ Void TComPrediction::xPredIntraContourTex( TComDataCU* pcCU, UInt uiAbsPartIdx, 
   getWedgePredDCs( pcContourWedge, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, Clip ( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride,        iPredDC1,                   iPredDC2           ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 
   pcContourWedge->destroy();
   delete pcContourWedge;
@@ -3066,8 +3091,18 @@ Void TComPrediction::xPredIntraWedgeFull( TComDataCU* pcCU, UInt uiAbsPartIdx, P
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1,           iPredDC2           ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 }
 
 Void TComPrediction::xPredIntraWedgeDir( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder, Bool bDelta, Int iWedgeDeltaEnd, Int iDeltaDC1, Int iDeltaDC2 )
@@ -3101,8 +3136,18 @@ Void TComPrediction::xPredIntraWedgeDir( TComDataCU* pcCU, UInt uiAbsPartIdx, Pe
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride,       iPredDC1,                   iPredDC2             ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 }
 
 Void TComPrediction::xGetBlockOffset( TComDataCU* pcCU, UInt uiAbsPartIdx, TComDataCU* pcRefCU, UInt uiRefAbsPartIdx, UInt& ruiOffsetX, UInt& ruiOffsetY )

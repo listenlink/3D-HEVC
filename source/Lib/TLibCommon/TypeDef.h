@@ -58,6 +58,7 @@
                                               // HHIQC_DMMFASTSEARCH_B0039, fast Wedgelet search for DMM modes 1 and 3
                                               // HHI_DMM_DELTADC_Q1_C0034   JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
                                               // FIX_DMM_CTX_INIT_C0034 JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
+#define FIX_WEDGE_NOFLOAT_D0036           1   // JCT3V-D0036: Fix for aligning SW and spec (Wedgelet segmentation line generation without float) 
 
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 #define LGE_DMM3_SIMP_C0044               1
@@ -66,6 +67,9 @@
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
                                               // SAIT_SDC_C0096 JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
                                               // FIX_SDC_ENC_C0143, JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
+#if RWTH_SDC_DLT_B0036
+#define HHI_DELTADC_DLT_D0035             1   // JCT3V-D0035: DLT for DMM deltaDC coding
+#endif
 
 ///// ***** TMVP/AMVP *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
