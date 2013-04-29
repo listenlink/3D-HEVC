@@ -6477,6 +6477,10 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
   }
 #endif
 
+#if HHI_DELTADC_DLT_D0035
+  riDeltaDC1 = (Int)GetDepthValue2Idx( Clip(iPredDC1 + riDeltaDC1) ) - (Int)GetDepthValue2Idx( iPredDC1 );
+  riDeltaDC2 = (Int)GetDepthValue2Idx( Clip(iPredDC2 + riDeltaDC2) ) - (Int)GetDepthValue2Idx( iPredDC2 );
+#endif
 }
 #endif
 #if HHI_DMM_WEDGE_INTRA
