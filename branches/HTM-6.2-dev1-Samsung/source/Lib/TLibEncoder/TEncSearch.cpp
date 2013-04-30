@@ -205,7 +205,11 @@ void TEncSearch::init(TEncCfg*      pcEncCfg,
 #endif
   
 #if H3D_IVMP
+#if SEC_TWO_CANDIDATES_FOR_AMVP_D0122
+  const Int iNumAMVPCands = AMVP_MAX_NUM_CANDS;
+#else
   const Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + 1;
+#endif
   for( Int iNum = 0; iNum < iNumAMVPCands+1; iNum++)
     for( Int iIdx = 0; iIdx < iNumAMVPCands; iIdx++)
 #else
@@ -3108,7 +3112,11 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #endif 
 
 #if H3D_IVMP
+#if SEC_TWO_CANDIDATES_FOR_AMVP_D0122
+  Int iNumAMVPCands = AMVP_MAX_NUM_CANDS;
+#else
   Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
+#endif
 #endif
 
   for ( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx++ )
@@ -3798,7 +3806,11 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
     if(pcCU->getSlice()->getMvdL1ZeroFlag() && eRefPicList==REF_PIC_LIST_1)
     {
 #if H3D_IVMP
+#if SEC_TWO_CANDIDATES_FOR_AMVP_D0122
+      Int iNumAMVPCands = AMVP_MAX_NUM_CANDS;
+#else
       Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
+#endif
 #if ZERO_MVD_EST
       (*puiDistBiP) = xGetTemplateCost( pcCU, uiPartIdx, uiPartAddr, pcOrgYuv, &m_cYuvPredTemp, rcMvPred, 0, iNumAMVPCands, eRefPicList, iRefIdx, iRoiWidth, iRoiHeight, uiDist );
 #else
@@ -3833,7 +3845,11 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
     {
       UInt uiTmpCost;
 #if H3D_IVMP
+#if SEC_TWO_CANDIDATES_FOR_AMVP_D0122
+      Int iNumAMVPCands = AMVP_MAX_NUM_CANDS;
+#else
       Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
+#endif
 #if ZERO_MVD_EST
       uiTmpCost = xGetTemplateCost( pcCU, uiPartIdx, uiPartAddr, pcOrgYuv, &m_cYuvPredTemp, pcAMVPInfo->m_acMvCand[i], i, iNumAMVPCands, eRefPicList, iRefIdx, iRoiWidth, iRoiHeight, uiDist );
 #else
@@ -3966,7 +3982,11 @@ Void TEncSearch::xCheckBestMVP ( TComDataCU* pcCU, RefPicList eRefPicList, TComM
   Int iBestMVPIdx = riMVPIdx;
   
 #if H3D_IVMP
+#if SEC_TWO_CANDIDATES_FOR_AMVP_D0122
+  Int iNumAMVPCands = AMVP_MAX_NUM_CANDS;
+#else
   Int iNumAMVPCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
+#endif
 #endif
   
   m_pcRdCost->setPredictor( rcMvPred );

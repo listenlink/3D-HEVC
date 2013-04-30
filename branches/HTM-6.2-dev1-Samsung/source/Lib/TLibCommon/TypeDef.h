@@ -83,6 +83,7 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_C0051_FIXED_BY_MTK             1   // Bug fix for C0051 implementation
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
+#define SEC_TWO_CANDIDATES_FOR_AMVP_D0122 1   // SEC_TWO_CANDIDATES_FOR_AMVP_D0122, fixing # of AMVP candidates 3 to 2
 
 
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
