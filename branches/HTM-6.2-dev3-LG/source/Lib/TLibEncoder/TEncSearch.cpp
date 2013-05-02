@@ -1734,6 +1734,17 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 #if HHI_VSO
   if ( m_pcRdCost->getUseVSO() )
   {
+#if FIX_SDC_ENC_RD_WVSO_D0163 && LGE_WVSO_A0119
+    if ( m_pcRdCost->getUseWVSO() )
+    {    
+      Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+      Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
+      Dist iD = (Dist) m_pcRdCost->getDistPart( piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
+      Dist iVSO = m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false, 0 );
+      ruiDist += (iDWeight * iD + iVSOWeight * iVSO) / ( iDWeight + iVSOWeight);
+    }
+    else
+#endif
     ruiDist = m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false, 0 );
   }
   else
