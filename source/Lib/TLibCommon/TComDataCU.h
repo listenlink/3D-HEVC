@@ -267,7 +267,9 @@ private:
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
 #endif
-
+#if QC_CU_NBDV_D0181
+  DisInfo*      m_pDvInfo;
+#endif
 protected:
   
   /// add possible motion vector predictor candidates
@@ -325,9 +327,15 @@ public:
   Void          initEstData           ( UInt uiDepth, Int qp );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
-
+#if QC_CU_NBDV_D0181
+  Void          copyDVInfoFrom (TComDataCU* pcCU, UInt uiAbsPartIdx);
+#endif
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
-  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList );
+  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList 
+#if QC_CU_NBDV_D0181
+  , Bool bNBDV = false
+#endif
+  );
   Void          copyPartFrom          ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
   
   Void          copyToPic             ( UChar uiDepth );
@@ -473,6 +481,11 @@ public:
   Bool          isICFlagRequired      (UInt uiAbsPartIdx);
 #endif
 #endif
+#if QC_CU_NBDV_D0181
+  DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                }
+  DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];         }
+  Void          setDvInfoSubParts( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 
 #if AMP_MRG
   Void          setMergeAMP( Bool b )      { m_bIsMergeAMP = b; }
@@ -536,7 +549,11 @@ public:
 #else //!H3D_NBDV
   Bool          getUnifiedMvPredCan       ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
+#if QC_CU_NBDV_D0181
+  Bool          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
+#else
   Void          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
+#endif
 #if MERL_VSP_C0152
                               , Bool bDepthRefine = false
 #endif //MERL_VSP_C0152

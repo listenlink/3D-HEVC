@@ -344,7 +344,9 @@ TComResidualGenerator::xSetRecResidualCU( TComDataCU* pcCU, UInt uiDepth, UInt u
   TComPicYuv* pcPicRes  = pcCU->getPic()->getResidual();
   UInt        uiCUAddr  = pcCU->getAddr();
   pcSubCU->copySubCU( pcCU, uiAbsPartIdx, uiDepth );
-
+#if QC_CU_NBDV_D0181
+  pcSubCU->copyDVInfoFrom( pcCU, uiAbsPartIdx);
+#endif
   //--- set residual ---
   switch( pcSubCU->getPredictionMode( 0 ) )
   {
