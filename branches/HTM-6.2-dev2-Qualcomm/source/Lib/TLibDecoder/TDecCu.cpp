@@ -311,7 +311,41 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     setdQPFlag(true);
     pcCU->setQPSubParts( pcCU->getRefQP(uiAbsPartIdx), uiAbsPartIdx, uiDepth ); // set QP to default QP
   }
-
+#if QC_CU_NBDV_D0181
+      DisInfo DvInfo; 
+      DvInfo.bDV = false;
+      if(!pcCU->getSlice()->isIntra())
+      {
+        if(( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() || pcCU->getSlice()->getSPS()->getMultiviewResPredMode()) && pcCU->getSlice()->getViewId())
+        {  
+          m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, true );
+          m_ppcCU[uiDepth]->copyDVInfoFrom( pcCU, uiAbsPartIdx);
+          PartSize ePartTemp = m_ppcCU[uiDepth]->getPartitionSize(0);
+          UChar cWidTemp     = m_ppcCU[uiDepth]->getWidth(0);
+          UChar cHeightTemp  = m_ppcCU[uiDepth]->getHeight(0);
+          m_ppcCU[uiDepth]->setWidth  ( 0, pcCU->getSlice()->getSPS()->getMaxCUWidth ()/(1<<uiDepth)  );
+          m_ppcCU[uiDepth]->setHeight ( 0, pcCU->getSlice()->getSPS()->getMaxCUHeight()/(1<<uiDepth)  );
+          m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+  #if MERL_VSP_C0152
+          DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(0, 0, &DvInfo, false, true);
+  #else
+          DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(0, 0, &DvInfo, false);
+  #endif
+          pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
+          m_ppcCU[uiDepth]->setPartSizeSubParts( ePartTemp, 0, uiDepth );
+          m_ppcCU[uiDepth]->setWidth  ( 0, cWidTemp );
+          m_ppcCU[uiDepth]->setHeight ( 0, cHeightTemp );
+        }
+        if(DvInfo.bDV==false)
+        {
+          DvInfo.iN=1;
+          DvInfo.m_acMvCand[0].setHor(0);
+          DvInfo.m_acMvCand[0].setVer(0);
+          DvInfo.m_aVIdxCan[0] = 0;
+          pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
+        }
+      }
+#endif
   // decode CU mode and the partition size
   if( !pcCU->getSlice()->isIntra() && pcCU->getNumSucIPCM() == 0 )
 #if HHI_MPI

@@ -590,7 +590,35 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
       }
 #endif
-
+#if QC_CU_NBDV_D0181
+      DisInfo DvInfo; 
+      DvInfo.bDV = false;
+      if( rpcTempCU->getSlice()->getSliceType() != I_SLICE )
+      {
+        if(( rpcTempCU->getSlice()->getSPS()->getMultiviewMvPredMode() || rpcTempCU->getSlice()->getSPS()->getMultiviewResPredMode()) && rpcTempCU->getSlice()->getViewId())
+        {  
+          PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
+          rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+#if MERL_VSP_C0152
+          DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(0, 0, &DvInfo, false, true);
+#else
+          DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(0, 0, &DvInfo, false);
+#endif
+          rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
+        }
+        if(DvInfo.bDV==false)
+        {
+          DvInfo.iN=1;
+          DvInfo.m_acMvCand[0].setHor(0);
+          DvInfo.m_acMvCand[0].setVer(0);
+          DvInfo.m_aVIdxCan[0] = 0;
+          rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+         }
+       }
+#endif
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
