@@ -782,8 +782,13 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
 
   Int deltax = x1 - x0;
   Int deltay = abs(y1 - y0);
+#if FIX_WEDGE_NOFLOAT_D0036
+  Int error = 0;
+  Int deltaerr = (deltay<<1);
+#else
   double error = 0.0;
   double deltaerr = (double)deltay / (double)deltax;
+#endif
 
   Int ystep;
   Int y = y0;
@@ -796,10 +801,18 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
     else        { pbPattern[(y * iPatternStride) + x] = true; }
 
     error += deltaerr;
+#if FIX_WEDGE_NOFLOAT_D0036
+    if( error >= deltax )
+#else
     if( error >= 0.5)
+#endif    
     {
       y += ystep;
+#if FIX_WEDGE_NOFLOAT_D0036
+      error = error - (deltax<<1);
+#else
       error = error - 1.0;
+#endif    
     }
   }
 }
