@@ -2410,6 +2410,9 @@ Void TEncSbac::codeSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
   for(Int i=0; i<RWTH_SDC_NUM_PRED_MODES-1; i++)
   {
     UInt uiBit = (uiPredMode == g_auiSDCPredModes[uiMPModeIdx]) ? 1 : 0;
+#if INTEL_SDC64_D0193
+    if( !(pcCU->getWidth(uiAbsPartIdx) == 64 && i == 1))
+#endif
     m_pcBinIf->encodeBin( uiBit, m_cSDCPredModeSCModel.get( 0, i, uiCtx ) );
     
     // if mode is most probable mode, we are done here
