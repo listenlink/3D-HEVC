@@ -139,7 +139,6 @@ public:
   Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
 #endif
   
-
 #if H_MV    
   TComPic*                getPic                ( Int poc );
   TComList<TComPic*>*     getListPic            ()               { return &m_cListPic;  }  
@@ -155,7 +154,6 @@ public:
   Bool                    getIsDepth            ()               { return m_isDepth;    }
 #endif
 #endif
-  
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
   Void  xCreateLostPicture (Int iLostPOC);

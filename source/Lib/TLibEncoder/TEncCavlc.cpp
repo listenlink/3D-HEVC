@@ -653,7 +653,6 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 #if L0043_TIMING_INFO
   }
 #endif
-
 #if H_MV
   WRITE_FLAG( 1,                                             "vps_extension_flag" );
 

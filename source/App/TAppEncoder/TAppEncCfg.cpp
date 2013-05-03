@@ -1978,9 +1978,7 @@ Void TAppEncCfg::xPrintParameter()
 #else
   printf("Input          File          : %s\n", m_pchInputFile          );
 #endif
-
   printf("Bitstream      File          : %s\n", m_pchBitstreamFile      );
-
 #if H_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++)
   {
@@ -1989,15 +1987,12 @@ Void TAppEncCfg::xPrintParameter()
 #else
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
 #endif
-
 #if H_MV
  xPrintParaVector( "ViewId", m_viewId ); 
 #endif
-
 #if H_3D
  xPrintParaVector( "DepthFlag", m_depthFlag ); 
 #endif
-
 #if H_MV  
   xPrintParaVector( "QP"               , m_fQP                ); 
   xPrintParaVector( "LoopFilterDisable", m_bLoopFilterDisable ); 

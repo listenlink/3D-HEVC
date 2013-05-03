@@ -1542,7 +1542,6 @@ Int TComVPS::getScalabilityId( Int layerIdInVps, ScalabilityType scalType )
   return ( ( layerIdInVps != 0 )&& getScalabilityMask( scalType ) ) ? getDimensionId( layerIdInVps, scalTypeToScalIdx( scalType ) ) : 0;
 }
 #endif
-
 // ------------------------------------------------------------------------------------------------
 // Sequence parameter set (SPS)
 // ------------------------------------------------------------------------------------------------
@@ -2142,7 +2141,6 @@ Void TComSlice::xPrintRefPicList()
   }
 }
 #endif
-
 /** get scaling matrix from RefMatrixID
  * \param sizeId size index
  * \param Index of input matrix
