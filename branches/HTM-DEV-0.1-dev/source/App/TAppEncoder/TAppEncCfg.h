@@ -59,17 +59,13 @@ protected:
 #else
   Char*     m_pchInputFile;                                   ///< source file name
 #endif
-
   Char*     m_pchBitstreamFile;                               ///< output bitstream file
-
 #if H_MV
   std::vector<char*>     m_pchReconFileList;                  ///< output reconstruction file names
   Int                    m_numberOfLayers;                    ///< number of Layers to Encode
 #else
   Char*     m_pchReconFile;                                   ///< output reconstruction file
 #endif
-
-
   // VPS specification
 #if H_MV
   std::vector< std::vector<Int> > m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
@@ -82,8 +78,6 @@ protected:
   Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
   std::vector<Int>       m_dimensionIdLen;                   ///< Length of scalability dimension s 
 #endif
-
-
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
@@ -102,7 +96,6 @@ protected:
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-
 #if L0046_CONSTRAINT_FLAGS
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
@@ -127,6 +120,7 @@ protected:
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of pictures in the decoded picture buffer
 #else
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of reference pictures needed for decoding
+#endif
 #endif
 #if !L0034_COMBINED_LIST_CLEANUP
   Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)
@@ -377,7 +371,6 @@ protected:
   Void  xCheckParameter ();                                   ///< check validity of configuration values
   Void  xPrintParameter ();                                   ///< print configuration values
   Void  xPrintUsage     ();                                   ///< print usage
-
 #if H_MV
   template <typename T>
   Void xResizeVector(  std::vector<T> & rpcVector )
@@ -428,11 +421,9 @@ protected:
   Int*      m_avgPicRate;                                     ///< Indicates avg. picture rate information for various sub-layers
   Int*      m_constantPicRateIdc;                                ///< Indicates constant picture rate idc for various sub-layers
 #endif
-  
 #if H_MV
   Int   getGOPSize() { return m_iGOPSize; }
 #endif
-
 public:
   TAppEncCfg();
   virtual ~TAppEncCfg();

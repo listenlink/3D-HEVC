@@ -420,7 +420,7 @@ Void TComSlice::generateCombinedList()
 #endif
 
 #if H_MV
-Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr,std::vector<TComPic*>& refPicSetInterLayer )
+Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& refPicSetInterLayer , Bool checkNumPocTotalCurr)
 #else
 #if FIX1071
 Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr )

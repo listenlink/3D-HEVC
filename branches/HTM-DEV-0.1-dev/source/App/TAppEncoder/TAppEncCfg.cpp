@@ -77,6 +77,7 @@ TAppEncCfg::TAppEncCfg()
 {
 #if !H_MV
   m_aidQP = NULL;
+#endif
 #if J0149_TONE_MAPPING_SEI
   m_startOfCodedInterval = NULL;
   m_codedPivotValue = NULL;
