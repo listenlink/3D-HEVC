@@ -313,6 +313,9 @@ Void TDecTop::xActivateParameterSets()
 
   m_apcSlicePilot->setPPS(pps);
   m_apcSlicePilot->setSPS(sps);
+#if H_MV
+  m_apcSlicePilot->setVPS( m_parameterSetManagerDecoder.getActiveVPS() );
+#endif
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumColumnsMinus1() + 1) : 1);
   pps->setMinCuDQPSize( sps->getMaxCUWidth() >> ( pps->getMaxCuDQPDepth()) );
