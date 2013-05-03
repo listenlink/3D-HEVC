@@ -2366,6 +2366,9 @@ Void TDecSbac::parseSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   for(Int i=0; i<RWTH_SDC_NUM_PRED_MODES-1; i++)
   {
     UInt uiIsMostProb = 0;
+#if INTEL_SDC64_D0193
+    if( !(pcCU->getWidth(uiAbsPartIdx) == 64 && i == 1))
+#endif
     m_pcTDecBinIf->decodeBin( uiIsMostProb, m_cSDCPredModeSCModel.get( 0, i, uiCtx ) );
     
     if ( uiIsMostProb == 1 )
