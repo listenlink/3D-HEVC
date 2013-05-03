@@ -295,12 +295,11 @@ Void TAppDecTop::decode()
         recon_opened = true;
       }
       if ( bNewPicture && 
-#endif
-           (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR
+           (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
-            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLANT
-            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA ) )
+            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP ) )
       {
 #if H_MV
         xFlushOutput( pcListPic, decIdxLastPic );

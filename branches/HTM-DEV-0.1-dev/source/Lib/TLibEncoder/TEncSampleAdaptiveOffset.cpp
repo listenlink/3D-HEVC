@@ -1676,14 +1676,6 @@ Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambdaLu
 Void TEncSampleAdaptiveOffset::SAOProcess(SAOParam *pcSaoParam, Double dLambda)
 #endif
 {
-#if SAO_CHROMA_LAMBDA 
-  m_dLambdaLuma    = dLambdaLuma;
-  m_dLambdaChroma  = dLambdaChroma;
-#else
-  m_dLambdaLuma    = dLambda;
-  m_dLambdaChroma  = dLambda;
-#endif
-
   if(m_bUseNIF)
   {
     m_pcPic->getPicYuvRec()->copyToPic(m_pcYuvTmp);

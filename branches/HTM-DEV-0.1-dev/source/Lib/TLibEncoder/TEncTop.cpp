@@ -80,7 +80,6 @@ TEncTop::TEncTop()
   m_pcRDGoOnBinCodersCABAC = NULL;
   m_pcBitCounters          = NULL;
   m_pcRdCosts              = NULL;
-
 #if H_MV
   m_ivPicLists = NULL;
 #endif
@@ -95,7 +94,6 @@ TEncTop::~TEncTop()
 
 Void TEncTop::create ()
 {
-
 #if !H_MV
   // initialize global variables
   initROM();
@@ -287,7 +285,6 @@ Void TEncTop::destroy ()
 
 Void TEncTop::init()
 {
-
   // initialize SPS
   xInitSPS();
   
@@ -347,7 +344,6 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
   }
 }
 #endif
-
 Void TEncTop::deletePicBuffer()
 {
   TComList<TComPic*>::iterator iterPic = m_cListPic.begin();
@@ -374,13 +370,13 @@ Void TEncTop::deletePicBuffer()
  \retval  rcListBitstreamOut  list of output bitstreams
  \retval  iNumEncoded         number of encoded pictures
  */
-Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded 
 #if H_MV
-                     , Int gopId 
-#endif               
-                     )
+Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded , Int gopId )
 {
-
+#else
+Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
+{
+#endif
 #if H_3D
   TComPic* picLastCoded = getPic( getGOPEncoder()->getPocLastCoded() );
   if( picLastCoded )
@@ -388,7 +384,6 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
     picLastCoded->compressMotion(); 
   }
 #endif
-
 #if H_MV
   if( gopId == 0)
   {
@@ -546,8 +541,17 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMaxCUWidth    ( g_uiMaxCUWidth      );
   m_cSPS.setMaxCUHeight   ( g_uiMaxCUHeight     );
   m_cSPS.setMaxCUDepth    ( g_uiMaxCUDepth      );
-  m_cSPS.setMinTrDepth    ( 0                   );
-  m_cSPS.setMaxTrDepth    ( 1                   );
+
+  Int minCUSize = m_cSPS.getMaxCUWidth() >> ( m_cSPS.getMaxCUDepth()-g_uiAddCUDepth );
+  Int log2MinCUSize = 0;
+  while(minCUSize > 1)
+  {
+    minCUSize >>= 1;
+    log2MinCUSize++;
+  }
+
+  m_cSPS.setLog2MinCodingBlockSize(log2MinCUSize);
+  m_cSPS.setLog2DiffMaxMinCodingBlockSize(m_cSPS.getMaxCUDepth()-g_uiAddCUDepth);
   
   m_cSPS.setPCMLog2MinSize (m_uiPCMLog2MinSize);
   m_cSPS.setUsePCM        ( m_usePCM           );
@@ -562,8 +566,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseLossless   ( m_useLossless  );
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
-  
+#if !L0034_COMBINED_LIST_CLEANUP
   m_cSPS.setUseLComb    ( m_bUseLComb           );
+#endif
   
   Int i;
   
@@ -715,7 +720,22 @@ Void TEncTop::xInitPPS()
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
   m_cPPS.setSignHideFlag(getSignHideFlag());
+#if L0386_DB_METRIC
+  if ( getDeblockingFilterMetric() )
+  {
+    m_cPPS.setDeblockingFilterControlPresentFlag (true);
+    m_cPPS.setDeblockingFilterOverrideEnabledFlag(true);
+    m_cPPS.setPicDisableDeblockingFilterFlag(false);
+    m_cPPS.setDeblockingFilterBetaOffsetDiv2(0);
+    m_cPPS.setDeblockingFilterTcOffsetDiv2(0);
+  } 
+  else
+  {
   m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
+  }
+#else
+  m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
+#endif
   m_cPPS.setLog2ParallelMergeLevelMinus2   (m_log2ParallelMergeLevelMinus2 );
   m_cPPS.setCabacInitPresentFlag(CABAC_INIT_PRESENT_FLAG);
   m_cPPS.setLoopFilterAcrossSlicesEnabledFlag( m_bLFCrossSliceBoundaryFlag );
@@ -988,6 +1008,38 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
   }
 #endif
 }
+
+#if L0208_SOP_DESCRIPTION_SEI
+Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid )
+{
+  int rpsIdx = GOPid;
+
+  for(Int extraNum=m_iGOPSize; extraNum<m_extraRPSs+m_iGOPSize; extraNum++)
+  {    
+    if(m_uiIntraPeriod > 0 && getDecodingRefreshType() > 0)
+    {
+      Int POCIndex = POCCurr%m_uiIntraPeriod;
+      if(POCIndex == 0)
+      {
+        POCIndex = m_uiIntraPeriod;
+      }
+      if(POCIndex == m_GOPList[extraNum].m_POC)
+      {
+        rpsIdx = extraNum;
+      }
+    }
+    else
+    {
+      if(POCCurr==m_GOPList[extraNum].m_POC)
+      {
+        rpsIdx = extraNum;
+      }
+    }
+  }
+
+  return rpsIdx;
+}
+#endif
 
 Void  TEncTop::xInitPPSforTiles()
 {

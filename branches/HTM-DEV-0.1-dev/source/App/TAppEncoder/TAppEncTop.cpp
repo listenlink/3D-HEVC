@@ -206,6 +206,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setLoopFilterBetaOffset         ( m_loopFilterBetaOffsetDiv2  );
   m_cTEncTop.setLoopFilterTcOffset           ( m_loopFilterTcOffsetDiv2    );
   m_cTEncTop.setDeblockingFilterControlPresent( m_DeblockingFilterControlPresent);
+#if L0386_DB_METRIC
+  m_cTEncTop.setDeblockingFilterMetric       ( m_DeblockingFilterMetric );
+#endif
 
   //====== Motion search ========
   m_cTEncTop.setFastSearch                   ( m_iFastSearch  );
@@ -242,7 +245,9 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
   m_cTEncTop.setUseLossless                  ( m_useLossless );
+#if !L0034_COMBINED_LIST_CLEANUP
   m_cTEncTop.setUseLComb                     ( m_bUseLComb    );
+#endif
 #if H_MV
   m_cTEncTop.setdQPs                         ( m_aidQP[layer]   );
 #else
@@ -320,6 +325,33 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
+#if J0149_TONE_MAPPING_SEI
+  m_cTEncTop.setToneMappingInfoSEIEnabled                 ( m_toneMappingInfoSEIEnabled );
+  m_cTEncTop.setTMISEIToneMapId                           ( m_toneMapId );
+  m_cTEncTop.setTMISEIToneMapCancelFlag                   ( m_toneMapCancelFlag );
+  m_cTEncTop.setTMISEIToneMapPersistenceFlag              ( m_toneMapPersistenceFlag );
+  m_cTEncTop.setTMISEICodedDataBitDepth                   ( m_toneMapCodedDataBitDepth );
+  m_cTEncTop.setTMISEITargetBitDepth                      ( m_toneMapTargetBitDepth );
+  m_cTEncTop.setTMISEIModelID                             ( m_toneMapModelId );
+  m_cTEncTop.setTMISEIMinValue                            ( m_toneMapMinValue );
+  m_cTEncTop.setTMISEIMaxValue                            ( m_toneMapMaxValue );
+  m_cTEncTop.setTMISEISigmoidMidpoint                     ( m_sigmoidMidpoint );
+  m_cTEncTop.setTMISEISigmoidWidth                        ( m_sigmoidWidth );
+  m_cTEncTop.setTMISEIStartOfCodedInterva                 ( m_startOfCodedInterval );
+  m_cTEncTop.setTMISEINumPivots                           ( m_numPivots );
+  m_cTEncTop.setTMISEICodedPivotValue                     ( m_codedPivotValue );
+  m_cTEncTop.setTMISEITargetPivotValue                    ( m_targetPivotValue );
+  m_cTEncTop.setTMISEICameraIsoSpeedIdc                   ( m_cameraIsoSpeedIdc );
+  m_cTEncTop.setTMISEICameraIsoSpeedValue                 ( m_cameraIsoSpeedValue );
+  m_cTEncTop.setTMISEIExposureCompensationValueSignFlag   ( m_exposureCompensationValueSignFlag );
+  m_cTEncTop.setTMISEIExposureCompensationValueNumerator  ( m_exposureCompensationValueNumerator );
+  m_cTEncTop.setTMISEIExposureCompensationValueDenomIdc   ( m_exposureCompensationValueDenomIdc );
+  m_cTEncTop.setTMISEIRefScreenLuminanceWhite             ( m_refScreenLuminanceWhite );
+  m_cTEncTop.setTMISEIExtendedRangeWhiteLevel             ( m_extendedRangeWhiteLevel );
+  m_cTEncTop.setTMISEINominalBlackLevelLumaCodeValue      ( m_nominalBlackLevelLumaCodeValue );
+  m_cTEncTop.setTMISEINominalWhiteLevelLumaCodeValue      ( m_nominalWhiteLevelLumaCodeValue );
+  m_cTEncTop.setTMISEIExtendedWhiteLevelLumaCodeValue     ( m_extendedWhiteLevelLumaCodeValue );
+#endif
   m_cTEncTop.setFramePackingArrangementSEIEnabled( m_framePackingSEIEnabled );
   m_cTEncTop.setFramePackingArrangementSEIType( m_framePackingSEIType );
   m_cTEncTop.setFramePackingArrangementSEIId( m_framePackingSEIId );
@@ -329,6 +361,12 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTemporalLevel0IndexSEIEnabled( m_temporalLevel0IndexSEIEnabled );
   m_cTEncTop.setGradualDecodingRefreshInfoEnabled( m_gradualDecodingRefreshInfoEnabled );
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
+#if L0208_SOP_DESCRIPTION_SEI
+  m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
+#endif
+#if K0180_SCALABLE_NESTING_SEI
+  m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
+#endif
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
   m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );
@@ -831,20 +869,20 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
     {
     case NAL_UNIT_CODED_SLICE_TRAIL_R:
     case NAL_UNIT_CODED_SLICE_TRAIL_N:
-    case NAL_UNIT_CODED_SLICE_TLA:
+    case NAL_UNIT_CODED_SLICE_TLA_R:
     case NAL_UNIT_CODED_SLICE_TSA_N:
     case NAL_UNIT_CODED_SLICE_STSA_R:
     case NAL_UNIT_CODED_SLICE_STSA_N:
-    case NAL_UNIT_CODED_SLICE_BLA:
-    case NAL_UNIT_CODED_SLICE_BLANT:
+    case NAL_UNIT_CODED_SLICE_BLA_W_LP:
+    case NAL_UNIT_CODED_SLICE_BLA_W_RADL:
     case NAL_UNIT_CODED_SLICE_BLA_N_LP:
-    case NAL_UNIT_CODED_SLICE_IDR:
+    case NAL_UNIT_CODED_SLICE_IDR_W_RADL:
     case NAL_UNIT_CODED_SLICE_IDR_N_LP:
     case NAL_UNIT_CODED_SLICE_CRA:
     case NAL_UNIT_CODED_SLICE_RADL_N:
-    case NAL_UNIT_CODED_SLICE_DLP:
+    case NAL_UNIT_CODED_SLICE_RADL_R:
     case NAL_UNIT_CODED_SLICE_RASL_N:
-    case NAL_UNIT_CODED_SLICE_TFD:
+    case NAL_UNIT_CODED_SLICE_RASL_R:
     case NAL_UNIT_VPS:
     case NAL_UNIT_SPS:
     case NAL_UNIT_PPS:
