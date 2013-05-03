@@ -96,7 +96,8 @@ struct GOPEntry
     ::memset( m_refIdc,        0, sizeof(m_refIdc) );
 #if H_MV
     ::memset( m_interViewRefs,   0, sizeof(m_interViewRefs) );
-    ::memset( m_interViewRefPosL[0], -1, sizeof(m_interViewRefPosL[0]) );    ::memset( m_interViewRefPosL[1], -1, sizeof(m_interViewRefPosL[1]) );
+    ::memset( m_interViewRefPosL[0], -1, sizeof(m_interViewRefPosL[0]) );
+    ::memset( m_interViewRefPosL[1], -1, sizeof(m_interViewRefPosL[1]) );
 #endif
   }
 };
