@@ -57,7 +57,6 @@ class TAppDecCfg
 {
 protected:
   Char*         m_pchBitstreamFile;                   ///< input bitstream file name
-
 #if H_MV
   Int           m_maxLayerId;                         ///< maximum nuh_layer_id decoded
   std::vector<Char*> m_pchReconFiles;                 ///< array of output reconstruction file name create from output reconstruction file name
