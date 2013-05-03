@@ -54,30 +54,10 @@ class TAppEncCfg
 {
 protected:
   // file I/O
-#if H_MV
-  std::vector<char*>     m_pchInputFileList;                  ///< source file names
-#else
   Char*     m_pchInputFile;                                   ///< source file name
-#endif
   Char*     m_pchBitstreamFile;                               ///< output bitstream file
-#if H_MV
-  std::vector<char*>     m_pchReconFileList;                  ///< output reconstruction file names
-  Int                    m_numberOfLayers;                    ///< number of Layers to Encode
-#else
   Char*     m_pchReconFile;                                   ///< output reconstruction file
-#endif
   // VPS specification
-#if H_MV
-  std::vector< std::vector<Int> > m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
-  std::vector<Int>       m_viewId;                            ///< view id
-#if H_3D
-  std::vector<Int>       m_depthFlag;                         ///< depth flag
-#endif
-  std::vector<Int>       m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
-  Bool                   m_splittingFlag;                     ///< Splitting Flag
-  Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
-  std::vector<Int>       m_dimensionIdLen;                   ///< Length of scalability dimension s 
-#endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
@@ -107,12 +87,6 @@ protected:
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
   Int       m_iDecodingRefreshType;                           ///< random access type
   Int       m_iGOPSize;                                       ///< GOP size of hierarchical structure
-#if H_MV
-  Int       m_extraRPSsMvc[MAX_NUM_LAYERS];                       ///< extra RPSs added to handle CRA for each layer
-  std::vector< GOPEntry* >  m_GOPListMvc;                            ///< the coding structure entries from the config file for each layer 
-  Int       m_numReorderPicsMvc[MAX_NUM_LAYERS][MAX_TLAYER];      ///< total number of reorder pictures for each layer
-  Int       m_maxDecPicBufferingMvc[MAX_NUM_LAYERS][MAX_TLAYER];  ///< total number of reference pictures needed for decoding for each layer
-#else
   Int       m_extraRPSs;                                      ///< extra RPSs added to handle CRA
   GOPEntry  m_GOPList[MAX_GOP];                               ///< the coding structure entries from the config file
   Int       m_numReorderPics[MAX_TLAYER];                     ///< total number of reorder pictures
@@ -121,7 +95,6 @@ protected:
 #else
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of reference pictures needed for decoding
 #endif
-#endif
 #if !L0034_COMBINED_LIST_CLEANUP
   Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)
 #endif
@@ -129,19 +102,10 @@ protected:
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
   Bool      m_enableAMP;
   // coding quality
-#if H_MV
-  std::vector<Double>  m_fQP;                                 ///< QP value of key-picture (floating point) for each layer
-  std::vector<Int>     m_iQP;                                 ///< QP value of key-picture (integer) for each layer
-#else
   Double    m_fQP;                                            ///< QP value of key-picture (floating point)
   Int       m_iQP;                                            ///< QP value of key-picture (integer)
-#endif
   Char*     m_pchdQPFile;                                     ///< QP offset for each slice (initialized from external file)
-#if H_MV
-  std::vector<Int*> m_aidQP;                                    ///< array of slice QP values for each layer
-#else
   Int*      m_aidQP;                                          ///< array of slice QP values
-#endif
   Int       m_iMaxDeltaQP;                                    ///< max. |delta QP|
   UInt      m_uiDeltaQpRD;                                    ///< dQP range for multi-pass slice QP optimization
   Int       m_iMaxCuDQPDepth;                                 ///< Max. depth for a minimum CuDQPSize (0:default)
@@ -156,11 +120,7 @@ protected:
   Bool      m_bUseAdaptiveQP;                                 ///< Flag for enabling QP adaptation based on a psycho-visual model
   Int       m_iQPAdaptationRange;                             ///< dQP range by QP adaptation
   
-#if H_MV
-  Int       m_maxTempLayerMvc[MAX_NUM_LAYER_IDS];             ///< Max temporal layer for each layer
-#else
   Int       m_maxTempLayer;                                  ///< Max temporal layer
-#endif
 
   // coding unit (CU) definition
   UInt      m_uiMaxCUWidth;                                   ///< max. CU width in pixel
@@ -187,20 +147,12 @@ protected:
 
   // coding tool (lossless)
   Bool      m_useLossless;                                    ///< flag for using lossless coding
-#if H_MV
-  std::vector<Bool> m_bUseSAO; 
-#else
   Bool      m_bUseSAO; 
-#endif
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoLcuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
   Bool      m_saoLcuBasedOptimization;                        ///< SAO LCU-based optimization
   // coding tools (loop filter)
-#if H_MV
-  std::vector<Bool> m_bLoopFilterDisable;                     ///< flag for using deblocking filter for each layer
-#else
   Bool      m_bLoopFilterDisable;                             ///< flag for using deblocking filter
-#endif
   Bool      m_loopFilterOffsetInPPS;                         ///< offset for deblocking filter in 0 = slice header, 1 = PPS
   Int       m_loopFilterBetaOffsetDiv2;                     ///< beta offset for deblocking filter
   Int       m_loopFilterTcOffsetDiv2;                       ///< tc offset for deblocking filter
@@ -371,47 +323,6 @@ protected:
   Void  xCheckParameter ();                                   ///< check validity of configuration values
   Void  xPrintParameter ();                                   ///< print configuration values
   Void  xPrintUsage     ();                                   ///< print usage
-#if H_MV
-  template <typename T>
-  Void xResizeVector(  std::vector<T> & rpcVector )
-  {
-    for( Int layer = 0; rpcVector.size() < m_numberOfLayers; layer++ )
-    {
-      assert( rpcVector.size() > 0 );
-      rpcVector.push_back( rpcVector[layer] );      
-    }
-
-
-    for( ; rpcVector.size() > m_numberOfLayers; )
-    {      
-      rpcVector.pop_back( );      
-    }
-
-  }
-
-  template <typename T>
-  Void xPrintParaVector( std::string description, std::vector<T> & rpcVector )
-  {
-    Int iSpace = max(1, ENC_CFG_CONSOUT_SPACE - (Int) description.length() ); 
-    
-    for ( Int i = 0; i < iSpace; i++ ) 
-      description.append( " " ); 
-      
-    description.append( ":" ); 
-    printf( "%s", description.c_str() ); 
-
-    for(Int i=0;i<rpcVector.size();i++)                
-      xPrintVectorElem( rpcVector[i] );
-
-    printf("\n");
-  }
-  
-  Void xPrintVectorElem( UInt   elem ) { printf(" %d"   , elem            );};
-  Void xPrintVectorElem( Int    elem ) { printf(" %d"   , elem            );};
-  
-  Void xPrintVectorElem( Double elem ) { printf(" %5.2f", elem            );};  
-  Void xPrintVectorElem( Bool   elem ) { printf(" %d"   , ( elem ? 1 : 0 ));};
-#endif
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   Int       m_bitRatePicRateMaxTLayers;                       ///< Indicates max. number of sub-layers for which bit rate is signalled.
   Bool*     m_bitRateInfoPresentFlag;                         ///< Indicates whether bit rate information is signalled
@@ -420,9 +331,6 @@ protected:
   Int*      m_maxBitRate;                                     ///< Indicates max. bit rate information for various sub-layers
   Int*      m_avgPicRate;                                     ///< Indicates avg. picture rate information for various sub-layers
   Int*      m_constantPicRateIdc;                                ///< Indicates constant picture rate idc for various sub-layers
-#endif
-#if H_MV
-  Int   getGOPSize() { return m_iGOPSize; }
 #endif
 public:
   TAppEncCfg();

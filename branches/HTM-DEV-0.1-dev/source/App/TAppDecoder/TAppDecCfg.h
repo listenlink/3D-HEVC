@@ -57,10 +57,6 @@ class TAppDecCfg
 {
 protected:
   Char*         m_pchBitstreamFile;                   ///< input bitstream file name
-#if H_MV
-  Int           m_maxLayerId;                         ///< maximum nuh_layer_id decoded
-  std::vector<Char*> m_pchReconFiles;                 ///< array of output reconstruction file name create from output reconstruction file name
-#endif
   Char*         m_pchReconFile;                       ///< output reconstruction file name
   Int           m_iSkipFrame;                         ///< counter for frames prior to the random access point to skip
   Int           m_outputBitDepthY;                    ///< bit depth used for writing output (luma)
@@ -72,16 +68,9 @@ protected:
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window 
 
-#if H_MV
-  Void xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName); ///< create filenames
-#endif
 public:
   TAppDecCfg()
   : m_pchBitstreamFile(NULL)
-#if H_MV
-  , m_maxLayerId(0)
-  , m_pchReconFiles(NULL) 
-#endif
   , m_pchReconFile(NULL)
   , m_iSkipFrame(0)
   , m_outputBitDepthY(0)

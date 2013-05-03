@@ -38,9 +38,6 @@
 #include "NALread.h"
 #include "TDecTop.h"
 
-#if H_MV
-ParameterSetManagerDecoder TDecTop::m_parameterSetManagerDecoder;
-#endif
 //! \ingroup TLibDecoder
 //! \{
 
@@ -59,13 +56,6 @@ TDecTop::TDecTop()
   m_prevPOC                = MAX_INT;
   m_bFirstSliceInPicture    = true;
   m_bFirstSliceInSequence   = true;
-#if H_MV
-  m_layerId = 0;
-  m_viewId = 0;
-#if H_3D
-  m_isDepth = false;
-#endif
-#endif
 }
 
 TDecTop::~TDecTop()
@@ -95,9 +85,7 @@ Void TDecTop::destroy()
 Void TDecTop::init()
 {
   // initialize ROM
-#if !H_MV
   initROM();
-#endif
   m_cGopDecoder.init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cSAO);
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
   m_cEntropyDecoder.init(&m_cPrediction);
@@ -111,27 +99,18 @@ Void TDecTop::deletePicBuffer ( )
   for (Int i = 0; i < iSize; i++ )
   {
     TComPic* pcPic = *(iterPic++);
-#if H_MV
-    if( pcPic )
-    {
-#endif
     pcPic->destroy();
     
     delete pcPic;
     pcPic = NULL;
-#if H_MV
-    }
-#endif
   }
   
   m_cSAO.destroy();
   
   m_cLoopFilter.        destroy();
   
-#if !H_MV
   // destroy ROM
   destroyROM();
-#endif
 }
 
 Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
@@ -197,11 +176,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
 }
 
-#if H_MV
-Void TDecTop::endPicDecoding(Int& poc, TComList<TComPic*>*& rpcListPic, std::vector<Int>& targetDecLayerIdSet )
-#else
 Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
-#endif
 {
   if (!m_pcPic)
   {
@@ -219,10 +194,6 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
   poc                 = pcPic->getSlice(m_uiSliceIdx-1)->getPOC();
   rpcListPic          = &m_cListPic;  
   m_cCuDecoder.destroy();        
-#if H_MV 
-  TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer );  
-  TComSlice::markIvRefPicsAsUnused   ( m_ivPicLists, targetDecLayerIdSet, m_parameterSetManagerDecoder.getActiveVPS(), m_layerId, poc ); 
-#endif
   m_bFirstSliceInPicture  = true;
 
   return;
@@ -339,15 +310,8 @@ Void TDecTop::xActivateParameterSets()
   m_cLoopFilter.create( sps->getMaxCUDepth() );
 }
 
-#if H_MV
-Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag )
-{
-  assert( nalu.m_layerId == m_layerId ); 
-
-#else
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay )
 {
-#endif
   TComPic*&   pcPic         = m_pcPic;
   m_apcSlicePilot->initSlice();
 
@@ -372,22 +336,8 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_apcSlicePilot->setReferenced(true); // Putting this as true ensures that picture is referenced the first time it is in an RPS
   m_apcSlicePilot->setTLayerInfo(nalu.m_temporalId);
 
-#if H_MV
-  m_apcSlicePilot->setLayerId( nalu.m_layerId );
-#endif
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder);
 
-#if H_MV  
-  TComVPS* vps     = m_apcSlicePilot->getVPS();
-  Int layerIdInVps = vps->getLayerIdInVps( nalu.m_layerId );
-  
-  setViewId(  vps->getViewId( layerIdInVps  ) );
-  m_apcSlicePilot->setViewId( getViewId() );
-#if H_3D
-  setIsDepth( vps->getDepthId( layerIdInVps ) == 1 );
-  m_apcSlicePilot->setIsDepth( getIsDepth() );
-#endif
-#endif
     // Skip pictures due to random access
     if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
     {
@@ -414,12 +364,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     }
     m_prevPOC = m_apcSlicePilot->getPOC();
   }
-#if H_MV
-  if ( newLayerFlag )
-  {
-    return false; 
-  }
-#endif
   // actual decoding starts here
   xActivateParameterSets();
 
@@ -439,9 +383,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     // Buffer initialize for prediction.
     m_cPrediction.initTempBuff();
     m_apcSlicePilot->applyReferencePictureSet(m_cListPic, m_apcSlicePilot->getRPS());
-#if H_MV
-    m_apcSlicePilot->createAndApplyIvReferencePictureSet( m_ivPicLists, m_refPicSetInterLayer ); 
-#endif
     //  Get a new picture buffer
     xGetNewPicBuffer (m_apcSlicePilot, pcPic);
 
@@ -573,27 +514,16 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
   pcPic->setTLayer(nalu.m_temporalId);
 
-#if H_MV
-  pcPic->setLayerId( nalu.m_layerId );
-  pcPic->setViewId ( getViewId() );
-#if H_3D
-  pcPic->setIsDepth( getIsDepth() );
-#endif
-#endif
   if (bNextSlice)
   {
     pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_prevRAPisBLA, m_cListPic );
     // Set reference list
-#if H_MV    
-    pcSlice->setRefPicList( m_cListPic, m_refPicSetInterLayer, true );    
-#else
 #if FIX1071
     pcSlice->setRefPicList( m_cListPic, true );
 #else
     pcSlice->setRefPicList( m_cListPic );
 #endif
 
-#endif
     // For generalized B
     // note: maybe not existed case (always L0 is copied to L1 if L1 is empty)
     if (pcSlice->isInterB() && pcSlice->getNumRefIdx(REF_PIC_LIST_1) == 0)
@@ -731,11 +661,7 @@ Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType 
   }
 }
 
-#if H_MV
-Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayerFlag)
-#else
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
-#endif
 {
   // Initialize entropy decoder
   m_cEntropyDecoder.setEntropyDecoder (&m_cCavlcDecoder);
@@ -776,11 +702,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RADL_R:
     case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_RASL_R:
-#if H_MV
-      return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag);
-#else
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
-#endif
       break;
     default:
       assert (1);
@@ -860,27 +782,4 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
   return false; 
 }
 
-#if H_MV
-TComPic* TDecTop::getPic( Int poc )
-{
-  xGetPic( m_layerId, poc ); 
-  TComList<TComPic*>* listPic = getListPic();
-  TComPic* pcPic = NULL;
-  for(TComList<TComPic*>::iterator it=listPic->begin(); it!=listPic->end(); it++)
-  {
-    if( (*it)->getPOC() == poc )
-    {
-      pcPic = *it ;
-      break ;
-    }
-  }
-  return pcPic;
-}
-
-TComPic* TDecTop::xGetPic( Int layerId, Int poc )
-{ 
-  return m_ivPicLists->getPic( layerId, poc ) ;
-}
-
-#endif
 //! \}

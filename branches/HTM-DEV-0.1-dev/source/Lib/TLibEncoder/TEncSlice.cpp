@@ -218,29 +218,12 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   }
   
   // slice type
-#if H_MV
-  SliceType eSliceTypeBaseView;
-  if( pocLast == 0 || pocCurr % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0 )
-  {
-    eSliceTypeBaseView = I_SLICE;
-  }
-  else
-  {
-    eSliceTypeBaseView = B_SLICE;
-  }
-  SliceType eSliceType = eSliceTypeBaseView;
-  if( eSliceTypeBaseView == I_SLICE && m_pcCfg->getGOPEntry(MAX_GOP).m_POC == 0 && m_pcCfg->getGOPEntry(MAX_GOP).m_sliceType != 'I' )
-  {
-    eSliceType = B_SLICE; 
-  }
-#else
   SliceType eSliceType;
   
   eSliceType=B_SLICE;
   eSliceType = (pocLast == 0 || pocCurr % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
   
   rpcSlice->setSliceType    ( eSliceType );
-#endif
 
   // ------------------------------------------------------------------------------------------------------------------
   // Non-referenced frame marking
@@ -269,11 +252,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   {
     if (!(( m_pcCfg->getMaxDeltaQP() == 0 ) && (dQP == -rpcSlice->getSPS()->getQpBDOffsetY() ) && (rpcSlice->getSPS()->getUseLossless()))) 
     {
-#if H_MV
-      dQP += m_pcCfg->getGOPEntry( (eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid ).m_QPOffset;
-#else
       dQP += m_pcCfg->getGOPEntry(iGOPid).m_QPOffset;
-#endif
     }
   }
   
@@ -316,17 +295,8 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     Double qp_temp_orig = (Double) dQP - SHIFT_QP;
 #endif
     // Case #1: I or P-slices (key-frame)
-#if H_MV
-    Double dQPFactor;
-    if( eSliceType != I_SLICE ) 
-    {
-      dQPFactor = m_pcCfg->getGOPEntry( (eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid ).m_QPFactor;
-    }
-    else
-#else
     Double dQPFactor = m_pcCfg->getGOPEntry(iGOPid).m_QPFactor;
     if ( eSliceType==I_SLICE )
-#endif
     {
       dQPFactor=0.57*dLambda_scale;
     }
@@ -361,11 +331,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   
   if( rpcSlice->getSliceType( ) != I_SLICE )
   {
-#if H_MV
-    dLambda *= m_pcCfg->getLambdaModifier( m_pcCfg->getGOPEntry((eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid).m_temporalId );
-#else
     dLambda *= m_pcCfg->getLambdaModifier( m_pcCfg->getGOPEntry(iGOPid).m_temporalId );
-#endif
   }
 
   // store lambda
@@ -404,15 +370,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   
 #if HB_LAMBDA_FOR_LDC
   // restore original slice type
-#if H_MV
-  eSliceType = eSliceTypeBaseView;
-  if( eSliceTypeBaseView == I_SLICE && m_pcCfg->getGOPEntry(MAX_GOP).m_POC == 0 && m_pcCfg->getGOPEntry(MAX_GOP).m_sliceType != 'I' )
-  {
-    eSliceType = B_SLICE;
-  }
-#else
   eSliceType = (pocLast == 0 || pocCurr % m_pcCfg->getIntraPeriod() == 0 || m_pcGOPEncoder->getGOPSize() == 0) ? I_SLICE : eSliceType;
-#endif
 
   rpcSlice->setSliceType        ( eSliceType );
 #endif
@@ -430,13 +388,8 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceQpDelta     ( 0 );
   rpcSlice->setSliceQpDeltaCb   ( 0 );
   rpcSlice->setSliceQpDeltaCr   ( 0 );
-#if H_MV
-  rpcSlice->setNumRefIdx(REF_PIC_LIST_0,m_pcCfg->getGOPEntry( (eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid ).m_numRefPicsActive);
-  rpcSlice->setNumRefIdx(REF_PIC_LIST_1,m_pcCfg->getGOPEntry( (eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid ).m_numRefPicsActive);
-#else
   rpcSlice->setNumRefIdx(REF_PIC_LIST_0,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
   rpcSlice->setNumRefIdx(REF_PIC_LIST_1,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
-#endif
 
 #if L0386_DB_METRIC
   if ( m_pcCfg->getDeblockingFilterMetric() )
@@ -457,17 +410,10 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     {
       if ( !m_pcCfg->getLoopFilterOffsetInPPS() && eSliceType!=I_SLICE)
       {
-#if H_MV
-        rpcSlice->getPPS()->setDeblockingFilterBetaOffsetDiv2( m_pcCfg->getGOPEntry((eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid).m_betaOffsetDiv2 + m_pcCfg->getLoopFilterBetaOffset() );
-        rpcSlice->getPPS()->setDeblockingFilterTcOffsetDiv2( m_pcCfg->getGOPEntry((eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid).m_tcOffsetDiv2 + m_pcCfg->getLoopFilterTcOffset() );
-        rpcSlice->setDeblockingFilterBetaOffsetDiv2( m_pcCfg->getGOPEntry((eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid).m_betaOffsetDiv2 + m_pcCfg->getLoopFilterBetaOffset()  );
-        rpcSlice->setDeblockingFilterTcOffsetDiv2( m_pcCfg->getGOPEntry((eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid).m_tcOffsetDiv2 + m_pcCfg->getLoopFilterTcOffset() );
-#else
         rpcSlice->getPPS()->setDeblockingFilterBetaOffsetDiv2( m_pcCfg->getGOPEntry(iGOPid).m_betaOffsetDiv2 + m_pcCfg->getLoopFilterBetaOffset() );
         rpcSlice->getPPS()->setDeblockingFilterTcOffsetDiv2( m_pcCfg->getGOPEntry(iGOPid).m_tcOffsetDiv2 + m_pcCfg->getLoopFilterTcOffset() );
         rpcSlice->setDeblockingFilterBetaOffsetDiv2( m_pcCfg->getGOPEntry(iGOPid).m_betaOffsetDiv2 + m_pcCfg->getLoopFilterBetaOffset()  );
         rpcSlice->setDeblockingFilterTcOffsetDiv2( m_pcCfg->getGOPEntry(iGOPid).m_tcOffsetDiv2 + m_pcCfg->getLoopFilterTcOffset() );
-#endif
       }
       else
       {
@@ -488,11 +434,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
 
   rpcSlice->setDepth            ( depth );
   
-#if H_MV
-  pcPic->setTLayer( m_pcCfg->getGOPEntry( (eSliceTypeBaseView == I_SLICE) ? MAX_GOP : iGOPid ).m_temporalId );
-#else
   pcPic->setTLayer( m_pcCfg->getGOPEntry(iGOPid).m_temporalId );
-#endif
   if(eSliceType==I_SLICE)
   {
     pcPic->setTLayer(0);

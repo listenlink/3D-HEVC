@@ -548,32 +548,18 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       codeVUI(pcSPS->getVuiParameters(), pcSPS);
   }
 
-#if H_MV
-  WRITE_FLAG( 1, "sps_extension_flag" );
-
-  WRITE_FLAG( pcSPS->getInterViewMvVertConstraintFlag() ? 1 : 0, "inter_view_mv_vert_constraint_flag" );
-#else
   WRITE_FLAG( 0, "sps_extension_flag" );
-#endif
 }
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 {
   WRITE_CODE( pcVPS->getVPSId(),                    4,        "vps_video_parameter_set_id" );
   WRITE_CODE( 3,                                    2,        "vps_reserved_three_2bits" );
-#if H_MV
-  WRITE_CODE( pcVPS->getMaxLayers() - 1,            6,        "vps_max_layers_minus1" );
-#else
   WRITE_CODE( 0,                                    6,        "vps_reserved_zero_6bits" );
-#endif
   WRITE_CODE( pcVPS->getMaxTLayers() - 1,           3,        "vps_max_sub_layers_minus1" );
   WRITE_FLAG( pcVPS->getTemporalNestingFlag(),                "vps_temporal_id_nesting_flag" );
   assert (pcVPS->getMaxTLayers()>1||pcVPS->getTemporalNestingFlag());
-#if H_MV
-  WRITE_CODE( 0xffff,                              16,        "vps_extension_offset" );
-#else
   WRITE_CODE( 0xffff,                              16,        "vps_reserved_ffff_16bits" );
-#endif
   codePTL( pcVPS->getPTL(), true, pcVPS->getMaxTLayers() - 1 );
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   codeBitratePicRateInfo(pcVPS->getBitratePicrateInfo(), 0, pcVPS->getMaxTLayers() - 1);
@@ -596,23 +582,14 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   }
 
   assert( pcVPS->getNumHrdParameters() <= MAX_VPS_NUM_HRD_PARAMETERS );
-#if H_MV
-  assert( pcVPS->getMaxNuhLayerId() < MAX_VPS_NUH_LAYER_ID_PLUS1 );
-  WRITE_CODE( pcVPS->getMaxNuhLayerId(), 6,                 "vps_max_nuh_layer_id" );
-#else
   assert( pcVPS->getMaxNuhReservedZeroLayerId() < MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 );
   WRITE_CODE( pcVPS->getMaxNuhReservedZeroLayerId(), 6,     "vps_max_nuh_reserved_zero_layer_id" );
-#endif
   pcVPS->setMaxOpSets(1);
   WRITE_UVLC( pcVPS->getMaxOpSets() - 1,                    "vps_max_op_sets_minus1" );
   for( UInt opsIdx = 1; opsIdx <= ( pcVPS->getMaxOpSets() - 1 ); opsIdx ++ )
   {
     // Operation point set
-#if H_MV
-    for( UInt i = 0; i <= pcVPS->getMaxNuhLayerId(); i ++ )
-#else
     for( UInt i = 0; i <= pcVPS->getMaxNuhReservedZeroLayerId(); i ++ )
-#endif
     {
       // Only applicable for version 1
       pcVPS->setLayerIdIncludedFlag( true, opsIdx, i );
@@ -653,71 +630,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 #if L0043_TIMING_INFO
   }
 #endif
-#if H_MV
-  WRITE_FLAG( 1,                                             "vps_extension_flag" );
-
-  m_pcBitIf->writeAlignOne();                        
-
-  WRITE_FLAG( pcVPS->getAvcBaseLayerFlag() ? 1 : 0,          "avc_base_layer_flag" );
-  WRITE_FLAG( pcVPS->getSplittingFlag() ? 1 : 0,             "splitting_flag" );
-  
-  for( Int type = 0; type < MAX_NUM_SCALABILITY_TYPES; type++ )
-  {
-    WRITE_FLAG( pcVPS->getScalabilityMask( type ) ? 1 : 0,   "scalability_mask[i]" );
-  }
-
-  for( Int sIdx = 0; sIdx < pcVPS->getNumScalabilityTypes( ); sIdx++ )
-  {
-    WRITE_CODE( pcVPS->getDimensionIdLen( sIdx ) - 1 , 3,    "dimension_id_len_minus1[j]");    
-  }
-
-  WRITE_FLAG( pcVPS->getVpsNuhLayerIdPresentFlag() ? 1 : 0,  "vps_nuh_layer_id_present_flag");
-
-  for( Int layer = 1; layer <= pcVPS->getMaxLayers() - 1; layer++ )
-  {
-    if (pcVPS->getVpsNuhLayerIdPresentFlag() )
-      WRITE_CODE( pcVPS->getLayerIdInNuh( layer ), 6,          "layer_id_in_nuh[i]");
-    for( Int sIdx = 0; sIdx < pcVPS->getNumScalabilityTypes() ; sIdx++ )
-    {      
-      WRITE_CODE( pcVPS->getDimensionId( layer, sIdx ), pcVPS->getDimensionIdLen( sIdx ), "dimension_id[i][j]");      
-    }
-  }
-
-  for( Int layerSet = 1; layerSet <= pcVPS->getMaxOpSets() - 1; layerSet++ )
-  {
-    WRITE_FLAG( pcVPS->getVpsProfilePresentFlag( layerSet ) ? 1 : 0, "vps_profile_present_flag[lsIdx]" );
-    if( pcVPS->getVpsProfilePresentFlag( layerSet ) == false )
-    {
-      WRITE_UVLC( pcVPS->getProfileLayerSetRefMinus1( layerSet ), "profile_layer_set_ref_minus1[lsIdx]" );
-    }
-    codePTL( pcVPS->getPTL( layerSet ), pcVPS->getVpsProfilePresentFlag( layerSet ), pcVPS->getMaxTLayers() - 1 );
-  }
-
-  WRITE_UVLC( pcVPS->getNumOutputLayerSets(),                "num_output_layer_sets" );
-
-  for( Int layerSet = 0; layerSet < pcVPS->getNumOutputLayerSets(); layerSet++ )
-  {
-    WRITE_UVLC( pcVPS->getOutputLayerSetIdx( layerSet ),      "output_layer_set_idx[i]" );
-    for( Int layer = 0; layer <= pcVPS->getMaxNuhLayerId(); layer++ )
-    {
-      if( pcVPS->getLayerIdIncludedFlag( pcVPS->getOutputLayerSetIdx( layerSet ), layer ) == true )
-      {
-        WRITE_FLAG( pcVPS->getOutputLayerFlag( layerSet, layer ) ? 1 : 0, "output_layer_flag" );
-      }
-    }
-  }
-
-  for( Int i = 1; i <= pcVPS->getMaxLayers() - 1; i++ )
-  {
-    for( Int j = 0; j < i; j++ )
-    {
-      WRITE_FLAG( pcVPS->getDirectDependencyFlag( i, j ),    "direct_dependency_flag[i][j]" );
-    }
-  }
-  WRITE_FLAG( 0,                                             "vps_extension2_flag" );
-#else
   WRITE_FLAG( 0,                     "vps_extension_flag" );
-#endif
   
   //future extensions here..
   
@@ -1090,14 +1003,10 @@ Void TEncCavlc::codePTL( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubL
 #if L0363_BYTE_ALIGN
   for (Int i = 0; i < maxNumSubLayersMinus1; i++)
   {
-#if !H_MV
     if(profilePresentFlag)
     {
-#endif
       WRITE_FLAG( pcPTL->getSubLayerProfilePresentFlag(i), "sub_layer_profile_present_flag[i]" );
-#if !H_MV
     }
-#endif
     
     WRITE_FLAG( pcPTL->getSubLayerLevelPresentFlag(i),   "sub_layer_level_present_flag[i]" );
   }

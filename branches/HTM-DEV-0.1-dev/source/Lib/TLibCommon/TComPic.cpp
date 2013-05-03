@@ -63,13 +63,6 @@ TComPic::TComPic()
 , m_bIndependentTileBoundaryForNDBFilter  (false)
 , m_pNDBFilterYuvTmp                      (NULL)
 , m_bCheckLTMSB                           (false)
-#if H_MV
-, m_layerId                               (0)
-, m_viewId                                (0)
-#if H_3D
-, m_isDepth                               (false)
-#endif
-#endif
 {
   m_apcPicYuv[0]      = NULL;
   m_apcPicYuv[1]      = NULL;
@@ -470,15 +463,6 @@ Void TComPic::destroyNonDBFilterInfo()
   }
 
 }
-#if H_MV
-Void TComPic::print( Bool legend )
-{
-  if ( legend )
-    std::cout  << "LId"        << "\t" << "POC"   << "\t" << "Rec"          << "\t" << "Ref"                       << "\t" << "LT"            << std::endl;
-  else
-    std::cout  << getLayerId() << "\t" << getPOC()<< "\t" << getReconMark() << "\t" << getSlice(0)->isReferenced() << "\t" << getIsLongTerm() << std::endl;
-}
-#endif
 
 
 //! \}
