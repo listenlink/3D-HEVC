@@ -107,7 +107,6 @@ private:
   Bool                    m_isDepth;
 #endif
 #endif
-
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TComBitCounter*         m_pcBitCounter;

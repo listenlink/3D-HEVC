@@ -92,14 +92,12 @@ Void TDecTop::destroy()
   m_cSliceDecoder.destroy();
 }
 
-
 Void TDecTop::init()
 {
   // initialize ROM
 #if !H_MV
   initROM();
 #endif
-
   m_cGopDecoder.init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cSAO);
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
   m_cEntropyDecoder.init(&m_cPrediction);
@@ -221,12 +219,10 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
   poc                 = pcPic->getSlice(m_uiSliceIdx-1)->getPOC();
   rpcListPic          = &m_cListPic;  
   m_cCuDecoder.destroy();        
-
 #if H_MV 
   TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer );  
   TComSlice::markIvRefPicsAsUnused   ( m_ivPicLists, targetDecLayerIdSet, m_parameterSetManagerDecoder.getActiveVPS(), m_layerId, poc ); 
 #endif
-
   m_bFirstSliceInPicture  = true;
 
   return;
@@ -379,7 +375,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #if H_MV
   m_apcSlicePilot->setLayerId( nalu.m_layerId );
 #endif
-
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder);
 
 #if H_MV  

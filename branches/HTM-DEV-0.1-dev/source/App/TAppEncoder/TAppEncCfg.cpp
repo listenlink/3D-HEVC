@@ -106,7 +106,6 @@ TAppEncCfg::~TAppEncCfg()
   {
     delete[] m_aidQP;
   }
-  free(m_pchInputFile);
 #endif
 #if J0149_TONE_MAPPING_SEI
   if ( m_startOfCodedInterval )
@@ -125,8 +124,10 @@ TAppEncCfg::~TAppEncCfg()
     m_targetPivotValue = NULL;
   }
 #endif
+#if !H_MV
+  free(m_pchInputFile);
+#endif
   free(m_pchBitstreamFile);
-
 #if H_MV
   for(Int i = 0; i< m_pchReconFileList.size(); i++ )
   {
@@ -136,7 +137,6 @@ TAppEncCfg::~TAppEncCfg()
 #else
   free(m_pchReconFile);
 #endif
-
   free(m_pchdQPFile);
   free(m_pColumnWidth);
   free(m_pRowHeight);
@@ -336,7 +336,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   cfg_dimensionLength.push_back( 64 ); 
 #endif 
 #endif
-
   string cfg_dQPFile;
   string cfg_ColumnWidth;
   string cfg_RowHeight;
@@ -360,21 +359,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("c", po::parseConfigFile, "configuration file name")
   
   // File, I/O and source parameters
-
 #if H_MV
   ("InputFile_%d,i_%d",       m_pchInputFileList,       (char *) 0 , MAX_NUM_LAYER_IDS , "original Yuv input file name %d")
 #else
   ("InputFile,i",           cfg_InputFile,     string(""), "Original YUV input file name")
 #endif
-
   ("BitstreamFile,b",       cfg_BitstreamFile, string(""), "Bitstream output file name")
-
 #if H_MV
   ("ReconFile_%d,o_%d",       m_pchReconFileList,       (char *) 0 , MAX_NUM_LAYER_IDS , "reconstructed Yuv output file name %d")
 #else
   ("ReconFile,o",           cfg_ReconFile,     string(""), "Reconstructed YUV output file name")
 #endif
-
 #if H_MV
   ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
 #if !H_3D
@@ -412,7 +407,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FramesToBeEncoded,f",   m_framesToBeEncoded,   0, "Number of frames to be encoded (default=all)")
 
   // Profile and level
-
   ("Profile", m_profile,   Profile::NONE, "Profile to be used when encoding (Incomplete)")
   ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1 (Incomplete)")
   ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level")
@@ -729,7 +723,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     opts.addOptions()(cOSS.str(), m_GOPList[i-1], GOPEntry());
   }
 #endif
-
   po::setDefaults(opts);
   const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
 
@@ -759,7 +752,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if !H_MV
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
 #endif
-
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
   
   Char* pColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
@@ -823,7 +815,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   free ( pColumnWidth );
   free ( pRowHeight   ); 
 #endif
-
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   readBoolString(cfg_bitRateInfoPresentFlag, m_bitRatePicRateMaxTLayers, m_bitRateInfoPresentFlag, "bit rate info. present flag" );
   readIntString (cfg_avgBitRate,             m_bitRatePicRateMaxTLayers, m_avgBitRate,             "avg. bit rate"               );
@@ -1141,7 +1132,6 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_inputBitDepthC < 8,                                                     "InputBitDepthC must be at least 8" );
   xConfirmPara( m_iFrameRate <= 0,                                                          "Frame rate must be more than 1" );
   xConfirmPara( m_framesToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
-
 #if H_MV
   xConfirmPara( m_numberOfLayers > MAX_NUM_LAYER_IDS ,                                      "NumberOfLayers must be less than or equal to MAX_NUM_LAYER_IDS");
 
@@ -1154,7 +1144,7 @@ Void TAppEncCfg::xCheckParameter()
 #else
   xConfirmPara( m_scalabilityMask != 1 , "Scalability Mask must be equal to 1. ");
 #endif
-  
+ 
   m_dimIds.push_back( m_viewId ); 
 #if H_3D
   if ( m_scalabilityMask & ( 1 << DEPTH_ID ) )
@@ -1211,8 +1201,6 @@ Void TAppEncCfg::xCheckParameter()
  }
 
 #endif
-
-
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );

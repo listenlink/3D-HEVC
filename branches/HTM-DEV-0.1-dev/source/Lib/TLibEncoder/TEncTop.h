@@ -63,8 +63,6 @@
 // Class definition
 // ====================================================================================================================
 
-
-
 /// encoder class
 class TEncTop : public TEncCfg
 {
@@ -132,7 +130,6 @@ private:
   TEncAnalyze             m_cAnalyzeP;
   TEncAnalyze             m_cAnalyzeB;  
 #endif
-
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
@@ -147,13 +144,10 @@ public:
   
   Void      create          ();
   Void      destroy         ();
-
   Void      init            ();
-
 #if H_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
-
   Void      deletePicBuffer ();
 
   Void      createWPPCoders(Int iNumSubstreams);
@@ -161,7 +155,6 @@ public:
 #if H_MV
   Void      initNewPic(TComPicYuv* pcPicYuvOrg);
 #endif
-
   // -------------------------------------------------------------------------------------------------------------------
   // member access functions
   // -------------------------------------------------------------------------------------------------------------------

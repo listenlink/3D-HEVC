@@ -135,12 +135,10 @@ Void TAppEncTop::xInitLibCfg()
 #endif
     m_cTEncTop.setIvPicLists  ( &m_ivPicLists ); 
 #endif
-
   m_cTEncTop.setVPS(&vps);
 
   m_cTEncTop.setProfile(m_profile);
   m_cTEncTop.setLevel(m_levelTier, m_level);
-
 #if L0046_CONSTRAINT_FLAGS
   m_cTEncTop.setProgressiveSourceFlag(m_progressiveSourceFlag);
   m_cTEncTop.setInterlacedSourceFlag(m_interlacedSourceFlag);
@@ -461,11 +459,9 @@ Void TAppEncTop::xInitLibCfg()
     }
   }
 #endif
-
 #if H_MV
   }
 #endif
-
 }
 
 Void TAppEncTop::xCreateLib()
@@ -720,7 +716,6 @@ TEncTop* TAppEncTop::getTEncTopView( Int viewId, Bool isDepth )
   return encoder;
 }
 #endif
-
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
@@ -794,7 +789,6 @@ Void TAppEncTop::xDeleteBuffer( )
     }
   }
 #endif  
-
 }
 
 /** \param iNumEncoded  number of encoded frames
@@ -824,7 +818,6 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
   for ( i = 0; i < iNumEncoded; i++ )
   {
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
-
 #if H_MV
       if (m_pchReconFileList[layerId])
       {
@@ -852,7 +845,6 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     rateStatsAccum(au, stats);
   }
 #endif
-
 }
 
 /**
@@ -898,14 +890,12 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
 
 void TAppEncTop::printRateSummary()
 {
-
 #if H_MV
   Double time = (Double) m_frameRcvd[0] / m_iFrameRate;
   printf("\n");
 #else
   Double time = (Double) m_iFrameRcvd / m_iFrameRate;
 #endif
-
   printf("Bytes written to file: %u (%.3f kbps)\n", m_totalBytes, 0.008 * m_totalBytes / time);
 #if VERBOSE_RATE
   printf("Bytes for SPS/PPS/Slice (Incl. Annex B): %u (%.3f kbps)\n", m_essentialBytes, 0.008 * m_essentialBytes / time);
