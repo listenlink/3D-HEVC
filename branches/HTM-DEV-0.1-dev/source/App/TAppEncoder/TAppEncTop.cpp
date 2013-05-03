@@ -110,7 +110,6 @@ Void TAppEncTop::xInitLibCfg()
     vps.setMaxDecPicBuffering             ( m_maxDecPicBuffering[i], i );
   }
 #endif
-
 #if H_MV
   xSetLayerIds             ( vps );   
   xSetDimensionIdAndLength ( vps );
@@ -184,7 +183,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setQP                           ( m_iQP );
 #endif
   m_cTEncTop.setPad                          ( m_aiPad );
-    
 #if H_MV
   m_cTEncTop.setMaxTempLayer                 ( m_maxTempLayerMvc[layer] );
 #else
@@ -726,7 +724,6 @@ TEncTop* TAppEncTop::getTEncTopView( Int viewId, Bool isDepth )
  - end of the list has the latest picture
  .
  */
-
 #if H_MV
 Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec, UInt layer)
 #else
@@ -754,7 +751,6 @@ Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec)
     rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
 
   }
-
 #if H_MV
   m_picYuvRec[layer]->pushBack( rpcPicYuvRec );
 #else
@@ -764,7 +760,6 @@ Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec)
 
 Void TAppEncTop::xDeleteBuffer( )
 {
-
 #if H_MV
   for(Int layer=0; layer<m_picYuvRec.size(); layer++)
   {

@@ -141,7 +141,6 @@ TAppEncCfg::~TAppEncCfg()
   free(m_pColumnWidth);
   free(m_pRowHeight);
   free(m_scalingListFile);
-
 #if H_MV
   for( Int i = 0; i < m_GOPListMvc.size(); i++ )
   {
@@ -320,13 +319,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if !H_MV
   string cfg_InputFile;
 #endif
-
   string cfg_BitstreamFile;
-
 #if !H_MV
   string cfg_ReconFile;
 #endif
-
 #if H_MV
   vector<Int>   cfg_dimensionLength; 
 #if H_3D 
@@ -385,7 +381,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
   ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
 #endif
-
   ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
   ("SourceHeight,-hgt",     m_iSourceHeight,       0, "Source picture height")
   ("InputBitDepth",         m_inputBitDepthY,    8, "Bit-depth of input file")
@@ -742,13 +737,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
    * Set any derived parameters
    */
   /* convert std::string to c string for compatability */
-
 #if !H_MV
   m_pchInputFile = cfg_InputFile.empty() ? NULL : strdup(cfg_InputFile.c_str());
 #endif
-
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
-
 #if !H_MV
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
 #endif
@@ -1464,7 +1456,6 @@ Void TAppEncCfg::xCheckParameter()
       Int*      m_maxDecPicBuffering = m_maxDecPicBufferingMvc[layer]; // It is not a member, but this name helps avoiding code duplication !!!
       Int*      m_numReorderPics     = m_numReorderPicsMvc    [layer]; // It is not a member, but this name helps avoiding code duplication !!!
 #endif
-
   /* if this is an intra-only sequence, ie IntraPeriod=1, don't verify the GOP structure
    * This permits the ability to omit a GOP structure specification */
   if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1) {
@@ -1940,7 +1931,6 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_framePackingSEIType < 3 || m_framePackingSEIType > 5 , "SEIFramePackingType must be in rage 3 to 5");
   }
 #endif
-
 #if H_MV
   }
   }

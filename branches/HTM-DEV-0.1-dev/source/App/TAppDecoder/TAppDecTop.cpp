@@ -155,6 +155,7 @@ Void TAppDecTop::decode()
 #if !H_MV
     Bool bPreviousPictureDecoded = false;
 #endif
+
     vector<uint8_t> nalUnit;
     InputNALUnit nalu;
     byteStreamNALUnit(bytestream, nalUnit, stats);
@@ -271,6 +272,7 @@ Void TAppDecTop::decode()
       }
     }
 #endif
+
     if( pcListPic )
     {
 #if H_MV
@@ -281,6 +283,7 @@ Void TAppDecTop::decode()
       {
         if (!m_outputBitDepthY) { m_outputBitDepthY = g_bitDepthY; }
         if (!m_outputBitDepthC) { m_outputBitDepthC = g_bitDepthC; }
+
 #if H_MV
         m_tVideoIOYuvReconFile[decIdxLastPic]->open( m_pchReconFiles[decIdxLastPic], true, m_outputBitDepthY, m_outputBitDepthC, g_bitDepthY, g_bitDepthC ); // write mode
         m_reconOpen[decIdxLastPic] = true;
