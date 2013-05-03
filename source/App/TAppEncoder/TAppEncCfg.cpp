@@ -63,21 +63,15 @@ namespace po = df::program_options_lite;
 // ====================================================================================================================
 
 TAppEncCfg::TAppEncCfg()
-#if H_MV
-: m_pchBitstreamFile()
-#else
 : m_pchInputFile()
 , m_pchBitstreamFile()
 , m_pchReconFile()
-#endif
 , m_pchdQPFile()
 , m_pColumnWidth()
 , m_pRowHeight()
 , m_scalingListFile()
 {
-#if !H_MV
   m_aidQP = NULL;
-#endif
 #if J0149_TONE_MAPPING_SEI
   m_startOfCodedInterval = NULL;
   m_codedPivotValue = NULL;
@@ -87,26 +81,10 @@ TAppEncCfg::TAppEncCfg()
 
 TAppEncCfg::~TAppEncCfg()
 {
-#if H_MV
-  for( Int layer = 0; layer < m_aidQP.size(); layer++ )
-  {
-    if ( m_aidQP[layer] != NULL )
-    {
-      delete[] m_aidQP[layer];
-      m_aidQP[layer] = NULL;
-    }
-  }
-  for(Int i = 0; i< m_pchInputFileList.size(); i++ )
-  {
-    if ( m_pchInputFileList[i] != NULL )
-      free (m_pchInputFileList[i]);
-  }
-#else
   if ( m_aidQP )
   {
     delete[] m_aidQP;
   }
-#endif
 #if J0149_TONE_MAPPING_SEI
   if ( m_startOfCodedInterval )
   {
@@ -124,33 +102,13 @@ TAppEncCfg::~TAppEncCfg()
     m_targetPivotValue = NULL;
   }
 #endif
-#if !H_MV
   free(m_pchInputFile);
-#endif
   free(m_pchBitstreamFile);
-#if H_MV
-  for(Int i = 0; i< m_pchReconFileList.size(); i++ )
-  {
-    if ( m_pchReconFileList[i] != NULL )
-      free (m_pchReconFileList[i]);
-  }
-#else
   free(m_pchReconFile);
-#endif
   free(m_pchdQPFile);
   free(m_pColumnWidth);
   free(m_pRowHeight);
   free(m_scalingListFile);
-#if H_MV
-  for( Int i = 0; i < m_GOPListMvc.size(); i++ )
-  {
-    if( m_GOPListMvc[i] )
-    {
-      delete[] m_GOPListMvc[i];
-      m_GOPListMvc[i] = NULL;
-    }
-  }
-#endif
 }
 
 Void TAppEncCfg::create()
@@ -202,21 +160,6 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
     }
   }
 #endif
-#if H_MV
-  in>>entry.m_numInterViewRefPics;
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
-  {
-    in>>entry.m_interViewRefs[i];
-  }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
-  {
-    in>>entry.m_interViewRefPosL[0][i];
-  }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
-  {
-    in>>entry.m_interViewRefPosL[1][i];
-  }
-#endif
   return in;
 }
 
@@ -228,13 +171,6 @@ static const struct MapStrToProfile {
   {"main", Profile::MAIN},
   {"main10", Profile::MAIN10},
   {"main-still-picture", Profile::MAINSTILLPICTURE},
-#if H_MV
-  {"main-stereo",    Profile::MAINSTEREO},
-  {"main-multiview", Profile::MAINMULTIVIEW},
-#if H_3D
-  {"main-3d"    , Profile::MAIN3D},
-#endif
-#endif
 };
 
 static const struct MapStrToTier {
@@ -316,22 +252,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 {
   Bool do_help = false;
   
-#if !H_MV
   string cfg_InputFile;
-#endif
   string cfg_BitstreamFile;
-#if !H_MV
   string cfg_ReconFile;
-#endif
-#if H_MV
-  vector<Int>   cfg_dimensionLength; 
-#if H_3D 
-  cfg_dimensionLength.push_back( 2  );  // depth
-  cfg_dimensionLength.push_back( 32 );  // texture 
-#else
-  cfg_dimensionLength.push_back( 64 ); 
-#endif 
-#endif
   string cfg_dQPFile;
   string cfg_ColumnWidth;
   string cfg_RowHeight;
@@ -355,32 +278,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("c", po::parseConfigFile, "configuration file name")
   
   // File, I/O and source parameters
-#if H_MV
-  ("InputFile_%d,i_%d",       m_pchInputFileList,       (char *) 0 , MAX_NUM_LAYER_IDS , "original Yuv input file name %d")
-#else
   ("InputFile,i",           cfg_InputFile,     string(""), "Original YUV input file name")
-#endif
   ("BitstreamFile,b",       cfg_BitstreamFile, string(""), "Bitstream output file name")
-#if H_MV
-  ("ReconFile_%d,o_%d",       m_pchReconFileList,       (char *) 0 , MAX_NUM_LAYER_IDS , "reconstructed Yuv output file name %d")
-#else
   ("ReconFile,o",           cfg_ReconFile,     string(""), "Reconstructed YUV output file name")
-#endif
-#if H_MV
-  ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
-#if !H_3D
-  ("ScalabilityMask",       m_scalabilityMask    , 1                    , "Scalability Mask")    
-#else
-  ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
-#endif  
-  ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
-  ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id")
-#if H_3D
-  ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
-#endif
-  ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
-  ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
-#endif
   ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
   ("SourceHeight,-hgt",     m_iSourceHeight,       0, "Source picture height")
   ("InputBitDepth",         m_inputBitDepthY,    8, "Bit-depth of input file")
@@ -452,11 +352,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LambdaModifier7,-LM7", m_adLambdaModifier[ 7 ], ( Double )1.0, "Lambda modifier for temporal layer 7")
 
   /* Quantization parameters */
-#if H_MV
-  ("QP,q",          m_fQP, std::vector<double>(1,30.0), "Qp values for each layer, if value is float, QP is switched once during encoding")
-#else
   ("QP,q",          m_fQP,             30.0, "Qp value, if value is float, QP is switched once during encoding")
-#endif
   ("DeltaQpRD,-dqr",m_uiDeltaQpRD,       0u, "max dQp offset for slice")
   ("MaxDeltaQP,d",  m_iMaxDeltaQP,        0, "max dQp offset for block")
   ("MaxCuDQPDepth,-dqd",  m_iMaxCuDQPDepth,        0, "max depth for a minimum CuDQP")
@@ -480,11 +376,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SBACRD",                         m_bUseSBACRD,                      true, "SBAC based RD estimation")
   
   // Deblocking filter parameters
-#if H_MV
-  ("LoopFilterDisable",              m_bLoopFilterDisable,             std::vector<Bool>(1,false), "Disable Loop Filter per Layer" )
-#else
   ("LoopFilterDisable",              m_bLoopFilterDisable,             false )
-#endif
   ("LoopFilterOffsetInPPS",          m_loopFilterOffsetInPPS,          false )
   ("LoopFilterBetaOffset_div2",      m_loopFilterBetaOffsetDiv2,           0 )
   ("LoopFilterTcOffset_div2",        m_loopFilterTcOffsetDiv2,             0 )
@@ -497,11 +389,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AMP",                      m_enableAMP,                 true,  "Enable asymmetric motion partitions")
   ("TransformSkip",            m_useTransformSkip,          false, "Intra transform skipping")
   ("TransformSkipFast",        m_useTransformSkipFast,      false, "Fast intra transform skipping")
-#if H_MV
-  ("SAO",                      m_bUseSAO, std::vector<Bool>(1,true), "Enable Sample Adaptive Offset per Layer")
-#else
   ("SAO",                      m_bUseSAO,                   true,  "Enable Sample Adaptive Offset")
-#endif
   ("MaxNumOffsetsPerPic",      m_maxNumOffsetsPerPic,       2048,  "Max number of SAO offset per picture (Default: 2048)")   
   ("SAOLcuBoundary",           m_saoLcuBoundary,            false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
   ("SAOLcuBasedOptimization",  m_saoLcuBasedOptimization,   true,  "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
@@ -683,41 +571,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   ;
   
-#if H_MV
-  // parse coding structure
-  for( Int k = 0; k < MAX_NUM_LAYERS; k++ )
-  {
-    m_GOPListMvc.push_back( new GOPEntry[MAX_GOP + 1] );
-    if( k == 0 )
-    {
-      for( Int i = 1; i < MAX_GOP + 1; i++ ) 
-      {
-        std::ostringstream cOSS;
-        cOSS<<"Frame"<<i;
-        opts.addOptions()( cOSS.str(), m_GOPListMvc[k][i-1], GOPEntry() );
-      }
-    }
-    else
-    {
-      std::ostringstream cOSS1;
-      cOSS1<<"FrameI"<<"_l"<<k;
-      opts.addOptions()(cOSS1.str(), m_GOPListMvc[k][MAX_GOP], GOPEntry());
-
-      for( Int i = 1; i < MAX_GOP + 1; i++ ) 
-      {
-        std::ostringstream cOSS2;
-        cOSS2<<"Frame"<<i<<"_l"<<k;
-        opts.addOptions()(cOSS2.str(), m_GOPListMvc[k][i-1], GOPEntry());
-      }
-    }
-  }
-#else
   for(Int i=1; i<MAX_GOP+1; i++) {
     std::ostringstream cOSS;
     cOSS<<"Frame"<<i;
     opts.addOptions()(cOSS.str(), m_GOPList[i-1], GOPEntry());
   }
-#endif
   po::setDefaults(opts);
   const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
 
@@ -737,13 +595,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
    * Set any derived parameters
    */
   /* convert std::string to c string for compatability */
-#if !H_MV
   m_pchInputFile = cfg_InputFile.empty() ? NULL : strdup(cfg_InputFile.c_str());
-#endif
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
-#if !H_MV
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
-#endif
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
   
   Char* pColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
@@ -803,10 +657,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   {
     m_pRowHeight = NULL;
   }
-#if H_MV
-  free ( pColumnWidth );
-  free ( pRowHeight   ); 
-#endif
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   readBoolString(cfg_bitRateInfoPresentFlag, m_bitRatePicRateMaxTLayers, m_bitRateInfoPresentFlag, "bit rate info. present flag" );
   readIntString (cfg_avgBitRate,             m_bitRatePicRateMaxTLayers, m_avgBitRate,             "avg. bit rate"               );
@@ -886,38 +736,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   
   // allocate slice-based dQP values
-#if H_MV
-  xResizeVector( m_viewId    ); 
-#if H_3D
-  xResizeVector( m_depthFlag ); 
-#endif
-
-  xResizeVector( m_fQP ); 
-
-  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
-  {
-    m_aidQP.push_back( new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ] );
-    ::memset( m_aidQP[layer], 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
-
-    // handling of floating-point QP values
-    // if QP is not integer, sequence is split into two sections having QP and QP+1
-    m_iQP.push_back((Int)( m_fQP[layer] ));
-    if ( m_iQP[layer] < m_fQP[layer] )
-    {
-      Int iSwitchPOC = (Int)( m_framesToBeEncoded - (m_fQP[layer] - m_iQP[layer])*m_framesToBeEncoded + 0.5 );
-
-      iSwitchPOC = (Int)( (Double)iSwitchPOC / m_iGOPSize + 0.5 )*m_iGOPSize;
-      for ( Int i=iSwitchPOC; i<m_framesToBeEncoded + m_iGOPSize + 1; i++ )
-      {
-        m_aidQP[layer][i] = 1;
-      }
-    }
-  }
-
-  xResizeVector( m_bLoopFilterDisable ); 
-  xResizeVector( m_bUseSAO );   
-
-#else
   m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
   ::memset( m_aidQP, 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
   
@@ -934,7 +752,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       m_aidQP[i] = 1;
     }
   }
-#endif
   
   // reading external dQP description from file
   if ( m_pchdQPFile )
@@ -942,23 +759,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     FILE* fpt=fopen( m_pchdQPFile, "r" );
     if ( fpt )
     {
-#if H_MV
-      for( Int layer = 0; layer < m_numberOfLayers; layer++ )
-      {
-#endif
       Int iValue;
       Int iPOC = 0;
       while ( iPOC < m_framesToBeEncoded )
       {
         if ( fscanf(fpt, "%d", &iValue ) == EOF ) break;
-#if H_MV
-        m_aidQP[layer][ iPOC ] = iValue;
-        iPOC++;
-      }
-#else
         m_aidQP[ iPOC ] = iValue;
         iPOC++;
-#endif
       }
       fclose(fpt);
     }
@@ -1124,87 +931,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_inputBitDepthC < 8,                                                     "InputBitDepthC must be at least 8" );
   xConfirmPara( m_iFrameRate <= 0,                                                          "Frame rate must be more than 1" );
   xConfirmPara( m_framesToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
-#if H_MV
-  xConfirmPara( m_numberOfLayers > MAX_NUM_LAYER_IDS ,                                      "NumberOfLayers must be less than or equal to MAX_NUM_LAYER_IDS");
-
-
-  xConfirmPara( m_layerIdInNuh[0] != 0      , "LayerIdInNuh must be 0 for the first layer. ");
-  xConfirmPara( (m_layerIdInNuh.size()!=1) && (m_layerIdInNuh.size() < m_numberOfLayers) , "LayerIdInNuh must be given for all layers. ");
-  
-#if H_3D
-  xConfirmPara( m_scalabilityMask != 1 && m_scalabilityMask != 3, "Scalability Mask must be equal to 1 or 3. ");
-#else
-  xConfirmPara( m_scalabilityMask != 1 , "Scalability Mask must be equal to 1. ");
-#endif
- 
-  m_dimIds.push_back( m_viewId ); 
-#if H_3D
-  if ( m_scalabilityMask & ( 1 << DEPTH_ID ) )
-    m_dimIds.push_back( m_depthFlag ); 
-#endif
-
-  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   ); 
-
- for( Int dim = 0; dim < m_dimIds.size(); dim++ )
- {
-   xConfirmPara( m_dimIds[dim].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");
-   xConfirmPara( m_dimIds[dim][0] != 0,                    "DimensionId of layer 0 must be 0 in all dimensions. " );
-   xConfirmPara( m_dimensionIdLen[dim] < 1 || m_dimensionIdLen[dim] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
-   for( Int i = 1; i < m_numberOfLayers; i++ )
-   {     
-     xConfirmPara(  ( m_dimIds[dim][i] < 0 ) || ( m_dimIds[dim][i] > ( ( 1 << m_dimensionIdLen[dim] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
-   }
- }
-
- for( Int i = 0; i < m_numberOfLayers; i++ )
- {
-   for( Int j = 0; j < i; j++ )
-   {     
-     Int numDiff  = 0; 
-     Int lastDiff = -1; 
-     for( Int dim = 0; dim < m_dimIds.size(); dim++ )
-     {
-       if ( m_dimIds[dim][i] != m_dimIds[dim][j] )
-       {
-         numDiff ++; 
-         lastDiff = dim; 
-       }
-     }
-
-     Bool allEqual = ( numDiff == 0 ); 
-
-     if ( allEqual ) 
-     {
-       printf( "\nError: Positions of Layers %d and %d are identical in scalability space\n", i, j);
-     }
-
-     xConfirmPara( allEqual , "Each layer shall have a different position in scalability space." );
-
-     if ( numDiff  == 1 ) 
-     {
-       Bool inc = m_dimIds[ lastDiff ][ i ] > m_dimIds[ lastDiff ][ j ]; 
-       if ( !inc )
-       {       
-         printf( "\nError: Positions of Layers %d and %d is not increasing in dimension %d \n", i, j, lastDiff);        
-       }
-       xConfirmPara( !inc,  "DimensionIds shall be increasing within one dimension. " );
-     }
-   }
- }
-
-#endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
-#if H_MV
-  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
-  {
-    xConfirmPara( m_iQP[layer] <  -6 * (m_internalBitDepthY - 8) || m_iQP[layer] > 51,      "QP exceeds supported range (-QpBDOffsety to 51)" );
-  }
-#else
   xConfirmPara( m_iQP <  -6 * (m_internalBitDepthY - 8) || m_iQP > 51,                    "QP exceeds supported range (-QpBDOffsety to 51)" );
-#endif
   xConfirmPara( m_loopFilterBetaOffsetDiv2 < -13 || m_loopFilterBetaOffsetDiv2 > 13,          "Loop Filter Beta Offset div. 2 exceeds supported range (-13 to 13)");
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -13 || m_loopFilterTcOffsetDiv2 > 13,              "Loop Filter Tc Offset div. 2 exceeds supported range (-13 to 13)");
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
@@ -1248,14 +979,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(  m_maxNumMergeCand > 5,  "MaxNumMergeCand must be 5 or smaller.");
 
 #if ADAPTIVE_QP_SELECTION
-#if H_MV
-  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
-  {
-    xConfirmPara( m_bUseAdaptQpSelect == true && m_iQP[layer] < 0,                                     "AdaptiveQpSelection must be disabled when QP < 0.");
-  }
-#else
   xConfirmPara( m_bUseAdaptQpSelect == true && m_iQP < 0,                                              "AdaptiveQpSelection must be disabled when QP < 0.");
-#endif
   xConfirmPara( m_bUseAdaptQpSelect == true && (m_cbQpOffset !=0 || m_crQpOffset != 0 ),               "AdaptiveQpSelection must be disabled when ChromaQpOffset is not equal to 0.");
 #endif
 
@@ -1309,153 +1033,6 @@ Void TAppEncCfg::xCheckParameter()
       xConfirmPara( ui != 1 , "Height should be 2^n");
   }
 
-#if H_MV
-  // validate that POC of same frame is identical across multiple layers
-  Bool bErrorMvePoc = false;
-  if( m_numberOfLayers > 1 )
-  {
-    for( Int k = 1; k < m_numberOfLayers; k++ )
-    {
-      for( Int i = 0; i < MAX_GOP; i++ )
-      {
-        if( m_GOPListMvc[k][i].m_POC != m_GOPListMvc[0][i].m_POC )
-        {
-          printf( "\nError: Frame%d_l%d POC %d is not identical to Frame%d POC\n", i, k, m_GOPListMvc[k][i].m_POC, i );
-          bErrorMvePoc = true;
-        }
-      }
-    }
-  }
-  xConfirmPara( bErrorMvePoc,  "Invalid inter-layer POC structure given" );
-
-  // validate that baseview has no inter-view refs 
-  Bool bErrorIvpBase = false;
-  for( Int i = 0; i < MAX_GOP; i++ )
-  {
-    if( m_GOPListMvc[0][i].m_numInterViewRefPics != 0 )
-    {
-      printf( "\nError: Frame%d inter_layer refs not available in layer 0\n", i );
-      bErrorIvpBase = true;
-    }
-  }
-  xConfirmPara( bErrorIvpBase, "Inter-layer refs not possible in base layer" );
-
-  // validate inter-view refs
-  Bool bErrorIvpEnhV = false;
-  if( m_numberOfLayers > 1 )
-  {
-    for( Int k = 1; k < m_numberOfLayers; k++ )
-    {
-      for( Int i = 0; i < MAX_GOP+1; i++ )
-      {
-        for( Int j = 0; j < m_GOPListMvc[k][i].m_numInterViewRefPics; j++ )
-        {
-          Int iAbsViewId = m_GOPListMvc[k][i].m_interViewRefs[j] + k;
-          if( iAbsViewId < 0 || iAbsViewId >= k )
-          {
-            printf( "\nError: inter-layer ref pic %d is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interViewRefs[j], i, k );
-            bErrorIvpEnhV = true;
-          }
-          if( m_GOPListMvc[k][i].m_interViewRefPosL[0][j] < -1 || m_GOPListMvc[k][i].m_interViewRefPosL[0][j] > m_GOPListMvc[k][i].m_numRefPicsActive )
-          {
-            printf( "\nError: inter-layer ref pos %d on L0 is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interViewRefPosL[0][j], i, k );
-            bErrorIvpEnhV = true;
-          }
-          if( m_GOPListMvc[k][i].m_interViewRefPosL[1][j] < -1  || m_GOPListMvc[k][i].m_interViewRefPosL[1][j] > m_GOPListMvc[k][i].m_numRefPicsActive )
-          {
-            printf( "\nError: inter-layer ref pos %d on L1 is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interViewRefPosL[1][j], i, k );
-            bErrorIvpEnhV = true;
-          }
-        }
-        if( i == MAX_GOP ) // inter-view refs at I pic position in base view
-        {
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType != 'B' && m_GOPListMvc[k][MAX_GOP].m_sliceType != 'P' && m_GOPListMvc[k][MAX_GOP].m_sliceType != 'I' )
-          {
-            printf( "\nError: slice type of FrameI_l%d must be equal to B or P or I\n", k );
-            bErrorIvpEnhV = true;
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_POC != 0 )
-          {
-            printf( "\nError: POC %d not possible for FrameI_l%d, must be 0\n", m_GOPListMvc[k][MAX_GOP].m_POC, k );
-            bErrorIvpEnhV = true;
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_temporalId != 0 )
-          {
-            printf( "\nWarning: Temporal id of FrameI_l%d must be 0 (cp. I-frame in base layer)\n", k );
-            m_GOPListMvc[k][MAX_GOP].m_temporalId = 0;
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_numRefPics != 0 )
-          {
-            printf( "\nWarning: temporal references not possible for FrameI_l%d\n", k );
-            for( Int j = 0; j < m_GOPListMvc[k][MAX_GOP].m_numRefPics; j++ )
-            {
-              m_GOPListMvc[k][MAX_GOP].m_referencePics[j] = 0;
-            }
-            m_GOPListMvc[k][MAX_GOP].m_numRefPics = 0;
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_interRPSPrediction )
-          {
-            printf( "\nError: inter RPS prediction not possible for FrameI_l%d, must be 0\n", k );
-            bErrorIvpEnhV = true;
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'I' && m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics != 0 )
-          {
-            printf( "\nError: inter-layer prediction not possible for FrameI_l%d with slice type I, #IL_ref_pics must be 0\n", k );
-            bErrorIvpEnhV = true;
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive > m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics )
-          {
-            m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive = m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics;
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'P' )
-          {
-            if( m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
-            {
-              printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type P\n", k );
-              bErrorIvpEnhV = true;
-            }
-            else
-            {
-              for( Int j = 0; j < m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics; j++ )
-              {
-                if( m_GOPListMvc[k][MAX_GOP].m_interViewRefPosL[1][j] != -1 )
-                {
-                  printf( "\nError: inter-layer ref pos %d on L1 not possible for FrameI_l%d with slice type P\n", m_GOPListMvc[k][MAX_GOP].m_interViewRefPosL[1][j], k );
-                  bErrorIvpEnhV = true;
-                }
-              }
-            }
-          }
-
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'B' && m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
-          {
-            printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type B\n", k );
-            bErrorIvpEnhV = true;
-          }
-        }
-      }
-    }
-  }
-  xConfirmPara( bErrorIvpEnhV, "Invalid inter-layer coding structure for enhancement layers given" );
-
-  // validate temporal coding structure
-  if( !bErrorMvePoc && !bErrorIvpBase && !bErrorIvpEnhV )
-  {
-    for( Int layer = 0; layer < m_numberOfLayers; layer++ )
-    {
-      GOPEntry* m_GOPList            = m_GOPListMvc           [layer]; // It is not a member, but this name helps avoiding code duplication !!!
-      Int&      m_extraRPSs          = m_extraRPSsMvc         [layer]; // It is not a member, but this name helps avoiding code duplication !!!
-      Int&      m_maxTempLayer       = m_maxTempLayerMvc      [layer]; // It is not a member, but this name helps avoiding code duplication !!!
-      Int*      m_maxDecPicBuffering = m_maxDecPicBufferingMvc[layer]; // It is not a member, but this name helps avoiding code duplication !!!
-      Int*      m_numReorderPics     = m_numReorderPicsMvc    [layer]; // It is not a member, but this name helps avoiding code duplication !!!
-#endif
   /* if this is an intra-only sequence, ie IntraPeriod=1, don't verify the GOP structure
    * This permits the ability to omit a GOP structure specification */
   if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1) {
@@ -1489,11 +1066,7 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
   
-#if H_MV
-  if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable[layer]) )
-#else
   if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable) )
-#endif
   {
     for(Int i=0; i<m_iGOPSize; i++)
     {
@@ -1509,11 +1082,7 @@ Void TAppEncCfg::xCheckParameter()
     Int curPOC = ((checkGOP-1)/m_iGOPSize)*m_iGOPSize + m_GOPList[curGOP].m_POC;    
     if(m_GOPList[curGOP].m_POC<0) 
     {
-#if H_MV
-      printf("\nError: found fewer Reference Picture Sets than GOPSize for layer %d\n", layer );
-#else
       printf("\nError: found fewer Reference Picture Sets than GOPSize\n");
-#endif
       errorGOP=true;
     }
     else 
@@ -1550,11 +1119,7 @@ Void TAppEncCfg::xCheckParameter()
           }
           if(!found)
           {
-#if H_MV
-            printf("\nError: ref pic %d is not available for GOP frame %d of layer %d\n", m_GOPList[curGOP].m_referencePics[i], curGOP+1, layer);
-#else
             printf("\nError: ref pic %d is not available for GOP frame %d\n",m_GOPList[curGOP].m_referencePics[i],curGOP+1);
-#endif
             errorGOP=true;
           }
         }
@@ -1931,10 +1496,6 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(m_framePackingSEIType < 3 || m_framePackingSEIType > 5 , "SEIFramePackingType must be in rage 3 to 5");
   }
 #endif
-#if H_MV
-  }
-  }
-#endif
 
 #undef xConfirmPara
   if (check_failed)
@@ -1970,34 +1531,9 @@ Void TAppEncCfg::xSetGlobal()
 Void TAppEncCfg::xPrintParameter()
 {
   printf("\n");
-#if H_MV
-  for( Int layer = 0; layer < m_numberOfLayers; layer++)
-  {
-    printf("Input File %i                 : %s\n", layer, m_pchInputFileList[layer]);
-  }
-#else
   printf("Input          File          : %s\n", m_pchInputFile          );
-#endif
   printf("Bitstream      File          : %s\n", m_pchBitstreamFile      );
-#if H_MV
-  for( Int layer = 0; layer < m_numberOfLayers; layer++)
-  {
-    printf("Reconstruction File %i        : %s\n", layer, m_pchReconFileList[layer]);
-  }
-#else
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
-#endif
-#if H_MV
- xPrintParaVector( "ViewId", m_viewId ); 
-#endif
-#if H_3D
- xPrintParaVector( "DepthFlag", m_depthFlag ); 
-#endif
-#if H_MV  
-  xPrintParaVector( "QP"               , m_fQP                ); 
-  xPrintParaVector( "LoopFilterDisable", m_bLoopFilterDisable ); 
-  xPrintParaVector( "SAO"              , m_bUseSAO            ); 
-#endif
   printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
@@ -2009,9 +1545,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Motion search range          : %d\n", m_iSearchRange );
   printf("Intra period                 : %d\n", m_iIntraPeriod );
   printf("Decoding refresh type        : %d\n", m_iDecodingRefreshType );
-#if !H_MV
   printf("QP                           : %5.2f\n", m_fQP );
-#endif
   printf("Max dQP signaling depth      : %d\n", m_iMaxCuDQPDepth);
 
   printf("Cb QP Offset                 : %d\n", m_cbQpOffset   );
@@ -2076,9 +1610,7 @@ Void TAppEncCfg::xPrintParameter()
     printf("A=%d ", m_sliceSegmentArgument);
   }
   printf("CIP:%d ", m_bUseConstrainedIntraPred);
-#if !H_MV
   printf("SAO:%d ", (m_bUseSAO)?(1):(0));
-#endif
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
   printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
 

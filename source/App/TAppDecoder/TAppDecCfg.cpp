@@ -41,9 +41,6 @@
 #include "TAppDecCfg.h"
 #include "TAppCommon/program_options_lite.h"
 
-#if H_MV
-#include <cassert>
-#endif
 #ifdef WIN32
 #define strdup _strdup
 #endif
@@ -77,9 +74,6 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("SkipFrames,s", m_iSkipFrame, 0, "number of frames to skip before random access")
   ("OutputBitDepth,d", m_outputBitDepthY, 0, "bit depth of YUV output luma component (default: use 0 for native depth)")
   ("OutputBitDepthC,d", m_outputBitDepthC, 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
-#if H_MV
-  ("MaxLayerId,-ls", m_maxLayerId, MAX_NUM_LAYER_IDS-1, "Maximum LayerId to be decoded.")
-#endif
   ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
   ("SEIDecodedPictureHash", m_decodedPictureHashSEIEnabled, 1, "Control handling of decoded picture hash SEI messages\n"
                                               "\t1: check hash in SEI messages if available in the bitstream\n"
@@ -156,34 +150,8 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
       fprintf(stderr, "File %s could not be opened. Using all LayerIds as default.\n", cfg_TargetDecLayerIdSetFile.c_str() );
     }
   }
-#if H_MV
-  else
-  {
-    for ( Int curLayerId = 0; curLayerId <= m_maxLayerId; curLayerId++ )
-    {
-      m_targetDecLayerIdSet.push_back( curLayerId );
-    }
-  }
-#endif
 
   return true;
 }
 
-#if H_MV
-Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName)
-{
-  size_t iInLength     = strlen(pchInputFileName);
-  size_t iAppendLength = strlen(pchStringToAppend); 
-
-  rpchOutputFileName = (Char*) malloc(iInLength+iAppendLength+1);                        
-  Char* pCDot = strrchr(pchInputFileName,'.');         
-  pCDot = pCDot ? pCDot : pchInputFileName + iInLength;        
-  size_t iCharsToDot = pCDot - pchInputFileName ; 
-  size_t iCharsToEnd = iInLength - iCharsToDot;         
-  strncpy(rpchOutputFileName                            ,  pchInputFileName            , iCharsToDot  );
-  strncpy(rpchOutputFileName+ iCharsToDot               ,  pchStringToAppend           , iAppendLength); 
-  strncpy(rpchOutputFileName+ iCharsToDot+iAppendLength ,  pchInputFileName+iCharsToDot, iCharsToEnd  );        
-  rpchOutputFileName[iInLength+iAppendLength] = '\0';          
-}
-#endif
 //! \}

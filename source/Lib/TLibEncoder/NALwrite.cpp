@@ -52,11 +52,7 @@ TComOutputBitstream bsNALUHeader;
 
   bsNALUHeader.write(0,1);                    // forbidden_zero_bit
   bsNALUHeader.write(nalu.m_nalUnitType, 6);  // nal_unit_type
-#if H_MV
-  bsNALUHeader.write(nalu.m_layerId, 6);      // layerId       
-#else
   bsNALUHeader.write(nalu.m_reservedZero6Bits, 6);                   // nuh_reserved_zero_6bits
-#endif
   bsNALUHeader.write(nalu.m_temporalId+1, 3); // nuh_temporal_id_plus1
 
   out.write(bsNALUHeader.getByteStream(), bsNALUHeader.getByteStreamLength());
@@ -145,11 +141,7 @@ void writeRBSPTrailingBits(TComOutputBitstream& bs)
 void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
 {
   naluDest.m_nalUnitType = naluSrc.m_nalUnitType;
-#if H_MV
-  naluDest.m_layerId  = naluSrc.m_layerId;
-#else
   naluDest.m_reservedZero6Bits  = naluSrc.m_reservedZero6Bits;
-#endif
   naluDest.m_temporalId  = naluSrc.m_temporalId;
   naluDest.m_Bitstream   = naluSrc.m_Bitstream;
 }

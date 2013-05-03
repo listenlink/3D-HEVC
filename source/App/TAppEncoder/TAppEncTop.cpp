@@ -56,9 +56,7 @@ using namespace std;
 
 TAppEncTop::TAppEncTop()
 {
-#if !H_MV
   m_iFrameRcvd = 0;
-#endif
   m_totalBytes = 0;
   m_essentialBytes = 0;
 }
@@ -71,33 +69,6 @@ Void TAppEncTop::xInitLibCfg()
 {
   TComVPS vps;
   
-#if H_MV
-  Int maxTempLayer = -1; 
-  for (Int j = 0; j < m_numberOfLayers; j++)
-  {
-    maxTempLayer = max( m_maxTempLayerMvc[ j ], maxTempLayer ); 
-  }
-
-  vps.setMaxTLayers                       ( maxTempLayer );
-  if ( maxTempLayer )
-  {
-    vps.setTemporalNestingFlag(true);
-  }
-  vps.setMaxLayers( m_numberOfLayers );
-  for(Int i = 0; i < MAX_TLAYER; i++)
-  {
-    Int maxNumReOrderPics  = 0; 
-    Int maxDecPicBuffering = 0;
-    for (Int j = 0; j < m_numberOfLayers; j++)
-    {
-      maxNumReOrderPics  = max( maxNumReOrderPics,  m_numReorderPicsMvc    [ j ][ i ] );     
-      maxDecPicBuffering = max( maxDecPicBuffering, m_maxDecPicBufferingMvc[ j ][ i ] );     
-    }
-
-    vps.setNumReorderPics                 ( maxNumReOrderPics  ,i );
-    vps.setMaxDecPicBuffering             ( maxDecPicBuffering ,i );
-  }
-#else
   vps.setMaxTLayers                       ( m_maxTempLayer );
   if (m_maxTempLayer == 1)
   {
@@ -109,31 +80,6 @@ Void TAppEncTop::xInitLibCfg()
     vps.setNumReorderPics                 ( m_numReorderPics[i], i );
     vps.setMaxDecPicBuffering             ( m_maxDecPicBuffering[i], i );
   }
-#endif
-#if H_MV
-  xSetLayerIds             ( vps );   
-  xSetDimensionIdAndLength ( vps );
-  xSetDirectDependencyFlags( vps );
-
-  for(Int layer = 0; layer < m_numberOfLayers; layer++)
-  {
-    m_frameRcvd                 .push_back(0);
-    m_acTEncTopList             .push_back(new TEncTop); 
-    m_acTVideoIOYuvInputFileList.push_back(new TVideoIOYuv);
-    m_acTVideoIOYuvReconFileList.push_back(new TVideoIOYuv);
-    m_picYuvRec                 .push_back(new TComList<TComPicYuv*>) ;
-
-    m_ivPicLists.push_back( m_acTEncTopList[ layer ]->getListPic()  ); 
-    TEncTop& m_cTEncTop = *m_acTEncTopList[ layer ];  // It is not a member, but this name helps avoiding code duplication !!!
-    
-    m_cTEncTop.setLayerIdInVps( layer ); 
-    m_cTEncTop.setLayerId     ( vps.getLayerIdInNuh( layer ) );    
-    m_cTEncTop.setViewId      ( vps.getViewId      ( layer ) );
-#if H_3D
-    m_cTEncTop.setIsDepth     ( vps.getDepthId     ( layer ) != 0 );
-#endif
-    m_cTEncTop.setIvPicLists  ( &m_ivPicLists ); 
-#endif
   m_cTEncTop.setVPS(&vps);
 
   m_cTEncTop.setProfile(m_profile);
@@ -156,15 +102,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod );
   m_cTEncTop.setDecodingRefreshType          ( m_iDecodingRefreshType );
   m_cTEncTop.setGOPSize                      ( m_iGOPSize );
-#if H_MV
-  m_cTEncTop.setGopList                      ( m_GOPListMvc[layer] );
-  m_cTEncTop.setExtraRPSs                    ( m_extraRPSsMvc[layer] );
-  for(Int i = 0; i < MAX_TLAYER; i++)
-  {
-    m_cTEncTop.setNumReorderPics             ( m_numReorderPicsMvc[layer][i], i );
-    m_cTEncTop.setMaxDecPicBuffering         ( m_maxDecPicBufferingMvc[layer][i], i );
-  }
-#else
   m_cTEncTop.setGopList                      ( m_GOPList );
   m_cTEncTop.setExtraRPSs                    ( m_extraRPSs );
   for(Int i = 0; i < MAX_TLAYER; i++)
@@ -172,34 +109,21 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setNumReorderPics             ( m_numReorderPics[i], i );
     m_cTEncTop.setMaxDecPicBuffering         ( m_maxDecPicBuffering[i], i );
   }
-#endif
   for( UInt uiLoop = 0; uiLoop < MAX_TLAYER; ++uiLoop )
   {
     m_cTEncTop.setLambdaModifier( uiLoop, m_adLambdaModifier[ uiLoop ] );
   }
-#if H_MV
-  m_cTEncTop.setQP                           ( m_iQP[layer] );
-#else
   m_cTEncTop.setQP                           ( m_iQP );
-#endif
 
   m_cTEncTop.setPad                          ( m_aiPad );
 
-#if H_MV
-  m_cTEncTop.setMaxTempLayer                 ( m_maxTempLayerMvc[layer] );
-#else
   m_cTEncTop.setMaxTempLayer                 ( m_maxTempLayer );
-#endif
   m_cTEncTop.setUseAMP( m_enableAMP );
   
   //===== Slice ========
   
   //====== Loop/Deblock Filter ========
-#if H_MV
-  m_cTEncTop.setLoopFilterDisable            ( m_bLoopFilterDisable[layer]);
-#else
   m_cTEncTop.setLoopFilterDisable            ( m_bLoopFilterDisable       );
-#endif
   m_cTEncTop.setLoopFilterOffsetInPPS        ( m_loopFilterOffsetInPPS );
   m_cTEncTop.setLoopFilterBetaOffset         ( m_loopFilterBetaOffsetDiv2  );
   m_cTEncTop.setLoopFilterTcOffset           ( m_loopFilterTcOffsetDiv2    );
@@ -226,11 +150,7 @@ Void TAppEncTop::xInitLibCfg()
 
   Int lowestQP;
   lowestQP =  - 6*(g_bitDepthY - 8); // XXX: check
-#if H_MV
-  if ((m_iMaxDeltaQP == 0 ) && (m_iQP[layer] == lowestQP) && (m_useLossless == true))
-#else
   if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
-#endif
   {
     m_bUseAdaptiveQP = false;
   }
@@ -246,11 +166,7 @@ Void TAppEncTop::xInitLibCfg()
 #if !L0034_COMBINED_LIST_CLEANUP
   m_cTEncTop.setUseLComb                     ( m_bUseLComb    );
 #endif
-#if H_MV
-  m_cTEncTop.setdQPs                         ( m_aidQP[layer]   );
-#else
   m_cTEncTop.setdQPs                         ( m_aidQP        );
-#endif
   m_cTEncTop.setUseRDOQ                      ( m_useRDOQ     );
   m_cTEncTop.setUseRDOQTS                    ( m_useRDOQTS   );
 #if L0232_RD_PENALTY
@@ -307,11 +223,7 @@ Void TAppEncTop::xInitLibCfg()
     m_bLFCrossSliceBoundaryFlag = true;
   }
   m_cTEncTop.setLFCrossSliceBoundaryFlag( m_bLFCrossSliceBoundaryFlag );
-#if H_MV
-  m_cTEncTop.setUseSAO ( m_bUseSAO[layer] );
-#else
   m_cTEncTop.setUseSAO ( m_bUseSAO );
-#endif
   m_cTEncTop.setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
 
   m_cTEncTop.setSaoLcuBoundary (m_saoLcuBoundary);
@@ -459,29 +371,10 @@ Void TAppEncTop::xInitLibCfg()
     }
   }
 #endif
-#if H_MV
-  }
-#endif
 }
 
 Void TAppEncTop::xCreateLib()
 {
-#if H_MV
-  // initialize global variables
-  initROM();
-
-  for( Int layer=0; layer < m_numberOfLayers; layer++)
-  {
-    m_acTVideoIOYuvInputFileList[layer]->open( m_pchInputFileList[layer],     false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC );  // read  mode
-    m_acTVideoIOYuvInputFileList[layer]->skipFrames( m_FrameSkip, m_iSourceWidth - m_aiPad[0], m_iSourceHeight - m_aiPad[1]);
-
-    if (m_pchReconFileList[layer])
-    {
-      m_acTVideoIOYuvReconFileList[layer]->open( m_pchReconFileList[layer], true, m_outputBitDepthY, m_outputBitDepthC, m_internalBitDepthY, m_internalBitDepthC);  // write mode
-    }
-    m_acTEncTopList[layer]->create();
-  }
-#else
   // Video I/O
   m_cTVideoIOYuvInputFile.open( m_pchInputFile,     false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC );  // read  mode
   m_cTVideoIOYuvInputFile.skipFrames(m_FrameSkip, m_iSourceWidth - m_aiPad[0], m_iSourceHeight - m_aiPad[1]);
@@ -491,50 +384,21 @@ Void TAppEncTop::xCreateLib()
   
   // Neo Decoder
   m_cTEncTop.create();
-#endif
 }
 
 Void TAppEncTop::xDestroyLib()
 {
-#if H_MV
-  // destroy ROM
-  destroyROM();
-
-  for(Int layer=0; layer<m_numberOfLayers; layer++)
-  {
-    m_acTVideoIOYuvInputFileList[layer]->close();
-    m_acTVideoIOYuvReconFileList[layer]->close();
-    delete m_acTVideoIOYuvInputFileList[layer] ; 
-    m_acTVideoIOYuvInputFileList[layer] = NULL;
-    delete m_acTVideoIOYuvReconFileList[layer] ; 
-    m_acTVideoIOYuvReconFileList[layer] = NULL;
-    m_acTEncTopList[layer]->deletePicBuffer();
-    m_acTEncTopList[layer]->destroy();
-    delete m_acTEncTopList[layer] ; 
-    m_acTEncTopList[layer] = NULL;
-    delete m_picYuvRec[layer] ; 
-    m_picYuvRec[layer] = NULL;
-  }
-#else
   // Video I/O
   m_cTVideoIOYuvInputFile.close();
   m_cTVideoIOYuvReconFile.close();
   
   // Neo Decoder
   m_cTEncTop.destroy();
-#endif
 }
 
 Void TAppEncTop::xInitLib()
 {
-#if H_MV
-  for(Int layer=0; layer<m_numberOfLayers; layer++)
-  {
-    m_acTEncTopList[layer]->init( );
-  }
-#else
   m_cTEncTop.init();
-#endif
 }
 
 // ====================================================================================================================
@@ -567,83 +431,14 @@ Void TAppEncTop::encode()
   xInitLib();
   
   // main encoder loop
-#if H_MV
-  Bool  allEos = false;
-  std::vector<Bool>  eos ;
-  std::vector<Bool>  flush ;  
-  
-  Int gopSize    = 1;
-  Int maxGopSize = 0;
-  maxGopSize = (std::max)(maxGopSize, m_acTEncTopList[0]->getGOPSize());  
-  
-  for(Int layer=0; layer < m_numberOfLayers; layer++ )
-  {
-    eos  .push_back( false );
-    flush.push_back( false );
-  }
-#else
   Int   iNumEncoded = 0;
   Bool  bEos = false;
-#endif
  
   list<AccessUnit> outputAccessUnits; ///< list of access units to write out.  is populated by the encoding process
 
   // allocate original YUV buffer
   pcPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
   
-#if H_MV
-  while ( !allEos )
-  {
-    for(Int layer=0; layer < m_numberOfLayers; layer++ )
-    {
-      Int frmCnt = 0;
-      while ( !eos[layer] && !(frmCnt == gopSize))
-      {
-        // get buffers
-        xGetBuffer(pcPicYuvRec, layer);
-
-        // read input YUV file
-        m_acTVideoIOYuvInputFileList[layer]->read      ( pcPicYuvOrg, m_aiPad );
-        m_acTEncTopList             [layer]->initNewPic( pcPicYuvOrg );
-
-        // increase number of received frames
-        m_frameRcvd[layer]++;
-        
-        frmCnt++;
-
-        eos[layer] = (m_frameRcvd[layer] == m_framesToBeEncoded);
-        allEos = allEos|eos[layer];
-
-        // if end of file (which is only detected on a read failure) flush the encoder of any queued pictures
-        if (m_acTVideoIOYuvInputFileList[layer]->isEof())
-        {
-          flush          [layer] = true;
-          eos            [layer]   = true;
-          m_frameRcvd    [layer]--;
-          m_acTEncTopList[layer]->setFramesToBeEncoded(m_frameRcvd[layer]);
-        }
-      }
-    }
-    for ( Int gopId=0; gopId < gopSize; gopId++ )
-    {
-      for(Int layer=0; layer < m_numberOfLayers; layer++ )
-      {
-        Int   iNumEncoded = 0;
-
-        // call encoding function for one frame          
-        m_acTEncTopList[layer]->encode( eos[layer], flush[layer] ? 0 : pcPicYuvOrg, *m_picYuvRec[layer], outputAccessUnits, iNumEncoded, gopId );        
-        xWriteOutput(bitstreamFile, iNumEncoded, outputAccessUnits, layer);
-        outputAccessUnits.clear();
-      }
-
-    }
-    gopSize = maxGopSize;
-  }
-  for(Int layer=0; layer < m_numberOfLayers; layer++ )
-  {
-    m_acTEncTopList[layer]->printSummary( m_acTEncTopList[layer]->getNumAllPicCoded() );
-  }
-#else
   while ( !bEos )
   {
     // get buffers
@@ -679,17 +474,14 @@ Void TAppEncTop::encode()
   }
 
   m_cTEncTop.printSummary();
-#endif
 
   // delete original YUV buffer
   pcPicYuvOrg->destroy();
   delete pcPicYuvOrg;
   pcPicYuvOrg = NULL;
   
-#if !H_MV
   // delete used buffers in encoder class
   m_cTEncTop.deletePicBuffer();
-#endif
 
   // delete buffers & classes
   xDeleteBuffer();
@@ -700,22 +492,6 @@ Void TAppEncTop::encode()
   return;
 }
 
-#if H_3D
-TEncTop* TAppEncTop::getTEncTopView( Int viewId, Bool isDepth )
-{
-  TEncTop* encoder = NULL;
-  for( Int layer = 0; layer < m_acTEncTopList.size(); layer++ )
-  {
-    if( m_acTEncTopList[layer]->getViewId()  == viewId &&
-        m_acTEncTopList[layer]->getIsDepth() == isDepth )
-    {
-      encoder = m_acTEncTopList[layer];
-      break;
-    }
-  }
-  return encoder;
-}
-#endif
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
@@ -726,24 +502,14 @@ TEncTop* TAppEncTop::getTEncTopView( Int viewId, Bool isDepth )
  - end of the list has the latest picture
  .
  */
-#if H_MV
-Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec, UInt layer)
-#else
 Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec)
-#endif
 {
   assert( m_iGOPSize > 0 );
   
   // org. buffer
-#if H_MV
-  if ( m_picYuvRec[layer]->size() == (UInt)m_iGOPSize )
-  {
-    rpcPicYuvRec = m_picYuvRec[layer]->popFront();
-#else
   if ( m_cListPicYuvRec.size() == (UInt)m_iGOPSize )
   {
     rpcPicYuvRec = m_cListPicYuvRec.popFront();
-#endif
 
   }
   else
@@ -753,27 +519,14 @@ Void TAppEncTop::xGetBuffer( TComPicYuv*& rpcPicYuvRec)
     rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
 
   }
-#if H_MV
-  m_picYuvRec[layer]->pushBack( rpcPicYuvRec );
-#else
   m_cListPicYuvRec.pushBack( rpcPicYuvRec );
-#endif
 }
 
 Void TAppEncTop::xDeleteBuffer( )
 {
-#if H_MV
-  for(Int layer=0; layer<m_picYuvRec.size(); layer++)
-  {
-    if(m_picYuvRec[layer])
-    {
-      TComList<TComPicYuv*>::iterator iterPicYuvRec  = m_picYuvRec[layer]->begin();
-      Int iSize = Int( m_picYuvRec[layer]->size() );
-#else
   TComList<TComPicYuv*>::iterator iterPicYuvRec  = m_cListPicYuvRec.begin();
   
   Int iSize = Int( m_cListPicYuvRec.size() );
-#endif
 
   for ( Int i = 0; i < iSize; i++ )
   {
@@ -782,30 +535,16 @@ Void TAppEncTop::xDeleteBuffer( )
     delete pcPicYuvRec; pcPicYuvRec = NULL;
   }
 
-#if H_MV
-    }
-  }
-#endif  
 }
 
 /** \param iNumEncoded  number of encoded frames
  */
-#if H_MV
-Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std::list<AccessUnit>& accessUnits, UInt layerId)
-#else
 Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits)
-#endif
 {
   Int i;
   
-#if H_MV
-  if( iNumEncoded > 0 )
-  {
-    TComList<TComPicYuv*>::iterator iterPicYuvRec = m_picYuvRec[layerId]->end();
-#else
   TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
   list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
-#endif
 
   for ( i = 0; i < iNumEncoded; i++ )
   {
@@ -815,23 +554,6 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
   for ( i = 0; i < iNumEncoded; i++ )
   {
     TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
-#if H_MV
-      if (m_pchReconFileList[layerId])
-      {
-        m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
-      }
-    }
-  }
-  if( ! accessUnits.empty() )
-  {
-    list<AccessUnit>::iterator aUIter;
-    for( aUIter = accessUnits.begin(); aUIter != accessUnits.end(); aUIter++ )
-    {
-      const vector<unsigned>& stats = writeAnnexB(bitstreamFile, *aUIter);
-      rateStatsAccum(*aUIter, stats);
-    }
-  }
-#else
     if (m_pchReconFile)
     {
       m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
@@ -841,7 +563,6 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
     rateStatsAccum(au, stats);
   }
-#endif
 }
 
 /**
@@ -887,79 +608,12 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
 
 void TAppEncTop::printRateSummary()
 {
-#if H_MV
-  Double time = (Double) m_frameRcvd[0] / m_iFrameRate;
-  printf("\n");
-#else
   Double time = (Double) m_iFrameRcvd / m_iFrameRate;
-#endif
   printf("Bytes written to file: %u (%.3f kbps)\n", m_totalBytes, 0.008 * m_totalBytes / time);
 #if VERBOSE_RATE
   printf("Bytes for SPS/PPS/Slice (Incl. Annex B): %u (%.3f kbps)\n", m_essentialBytes, 0.008 * m_essentialBytes / time);
 #endif
 }
 
-#if H_MV
-Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
-{   
-  vps.setScalabilityMask( m_scalabilityMask ); 
-  for( Int dim = 0; dim < m_dimIds.size(); dim++ )
-  {
-      vps.setDimensionIdLen( dim, m_dimensionIdLen[ dim ] );
-      for( Int layer = 1; layer < vps.getMaxLayers(); layer++ )
-      {        
-        vps.setDimensionId( layer, dim, m_dimIds[ dim ][ layer ] );        
-      }  
-  }
-}
-
-Void TAppEncTop::xSetDirectDependencyFlags( TComVPS& vps )
-{
-  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
-  {
-    if( m_GOPListMvc[layer][MAX_GOP].m_POC == -1 )
-    {
-      continue;
-    }
-    for( Int i = 0; i < getGOPSize()+1; i++ ) 
-    {
-      GOPEntry ge = ( i < getGOPSize() ) ? m_GOPListMvc[layer][i] : m_GOPListMvc[layer][MAX_GOP];
-      for( Int j = 0; j < ge.m_numInterViewRefPics; j++ )
-      {
-        Int interLayerRef = layer + ge.m_interViewRefs[j];
-        vps.setDirectDependencyFlag( layer, interLayerRef, true );
-      }
-    }
-  }
-
-  vps.checkVPSExtensionSyntax(); 
-  vps.calcIvRefLayers();
-}
-
-Void TAppEncTop::xSetLayerIds( TComVPS& vps )
-{
-  vps.setSplittingFlag     ( m_splittingFlag );
-
-  Bool nuhLayerIdPresentFlag = !( m_layerIdInNuh.size() == 1 ); 
-  Int  maxNuhLayerId = nuhLayerIdPresentFlag ? xGetMax( m_layerIdInNuh ) : ( m_numberOfLayers - 1 ) ; 
-
-  vps.setMaxNuhLayerId( maxNuhLayerId ); 
-  vps.setVpsNuhLayerIdPresentFlag( nuhLayerIdPresentFlag ); 
-
-  for (Int layer = 0; layer < m_numberOfLayers; layer++ )
-  {
-    vps.setLayerIdInNuh( layer, nuhLayerIdPresentFlag ? m_layerIdInNuh[ layer ] : layer ); 
-    vps.setLayerIdInVps( vps.getLayerIdInNuh( layer ), layer ); 
-  }
-}
-
-Int TAppEncTop::xGetMax( std::vector<Int>& vec )
-{
-  Int maxVec = 0; 
-  for ( Int i = 0; i < vec.size(); i++)    
-    maxVec = max( vec[i], maxVec ); 
-  return maxVec;
-}
-#endif
 
 //! \}

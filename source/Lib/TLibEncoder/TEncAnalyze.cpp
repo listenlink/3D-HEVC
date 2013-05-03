@@ -35,9 +35,7 @@
     \brief    encoder analyzer class
 */
 
-#if !H_MV
 #include "TEncAnalyze.h"
-#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -46,11 +44,9 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-#if !H_MV
 TEncAnalyze             m_gcAnalyzeAll;
 TEncAnalyze             m_gcAnalyzeI;
 TEncAnalyze             m_gcAnalyzeP;
 TEncAnalyze             m_gcAnalyzeB;
-#endif
 
 //! \}

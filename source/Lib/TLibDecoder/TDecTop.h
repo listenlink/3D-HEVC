@@ -60,9 +60,6 @@ struct InputNALUnit;
 // Class definition
 // ====================================================================================================================
 
-#if H_MV
-class TAppDecTop;
-#endif
 /// decoder class
 class TDecTop
 {
@@ -74,11 +71,7 @@ private:
   Int                     m_pocRandomAccess;   ///< POC number of the random access point (the first IDR or CRA picture)
 
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
-#if H_MV
-  static ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
-#else
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
-#endif
   TComSlice*              m_apcSlicePilot;
   
   SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices
@@ -104,16 +97,6 @@ private:
   Int                     m_prevPOC;
   Bool                    m_bFirstSliceInPicture;
   Bool                    m_bFirstSliceInSequence;
-#if H_MV
-  // For H_MV m_bFirstSliceInSequence indicates first slice in sequence of the particular layer  
-  Int                     m_layerId;
-  Int                     m_viewId;
-  TComPicLists*           m_ivPicLists;
-  std::vector<TComPic*>   m_refPicSetInterLayer; 
-#if H_3D
-  Bool                    m_isDepth;
-#endif
-#endif
 
 public:
   TDecTop();
@@ -125,46 +108,18 @@ public:
   void setDecodedPictureHashSEIEnabled(Int enabled) { m_cGopDecoder.setDecodedPictureHashSEIEnabled(enabled); }
 
   Void  init();
-#if H_MV  
-  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer );
-#else  
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
-#endif
   
   Void  deletePicBuffer();
 
-#if H_MV
-  Void endPicDecoding(Int& poc, TComList<TComPic*>*& rpcListPic,  std::vector<Int>& targetDecLayerIdSet);  
-#else
   Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
-#endif
   
-#if H_MV    
-  TComPic*                getPic                ( Int poc );
-  TComList<TComPic*>*     getListPic            ()               { return &m_cListPic;  }  
-  Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
-  
-  Int                     getCurrPoc            ()               { return m_apcSlicePilot->getPOC(); }
-  Void                    setLayerId            ( Int layer)     { m_layerId = layer;   }
-  Int                     getLayerId            ()               { return m_layerId;    }
-  Void                    setViewId             ( Int viewId  )  { m_viewId  = viewId;  }
-  Int                     getViewId             ()               { return m_viewId;     }  
-#if H_3D    
-  Void                    setIsDepth            ( Bool isDepth ) { m_isDepth = isDepth; }
-  Bool                    getIsDepth            ()               { return m_isDepth;    }
-#endif
-#endif
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
   Void  xCreateLostPicture (Int iLostPOC);
 
   Void      xActivateParameterSets();
-#if H_MV  
-  TComPic*  xGetPic( Int layerId, Int poc ); 
-  Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag );  
-#else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
-#endif
   Void      xDecodeVPS();
   Void      xDecodeSPS();
   Void      xDecodePPS();

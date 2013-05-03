@@ -149,12 +149,10 @@ public:
   }
 };
 
-#if !H_MV
 extern TEncAnalyze             m_gcAnalyzeAll;
 extern TEncAnalyze             m_gcAnalyzeI;
 extern TEncAnalyze             m_gcAnalyzeP;
 extern TEncAnalyze             m_gcAnalyzeB;
-#endif
 
 //! \}
 

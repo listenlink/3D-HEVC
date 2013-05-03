@@ -36,15 +36,6 @@
 #include <list>
 #include <map>
 
-#if H_MV
-#include <vector>
-#include <errno.h>
-#include <cstring>
-
-#ifdef WIN32
-#define strdup _strdup
-#endif
-#endif
 //! \ingroup TAppCommon
 //! \{
 
@@ -144,143 +135,6 @@ namespace df
       opt_storage = arg;
     }
 
-#if H_MV    
-    template<>
-    inline void
-      Option<char*>::parse(const std::string& arg)
-    {
-      opt_storage = arg.empty() ? NULL : strdup(arg.c_str()) ;
-    }
-
-    template<>
-    inline void
-      Option< std::vector<char*> >::parse(const std::string& arg)
-    {
-      opt_storage.clear(); 
-
-      char* pcStart = (char*) arg.data();      
-      char* pcEnd = strtok (pcStart," ");
-
-      while (pcEnd != NULL)
-      {
-        size_t uiStringLength = pcEnd - pcStart;
-        char* pcNewStr = (char*) malloc( uiStringLength + 1 );
-        strncpy( pcNewStr, pcStart, uiStringLength); 
-        pcNewStr[uiStringLength] = '\0'; 
-        pcStart = pcEnd+1; 
-        pcEnd = strtok (NULL, " ,.-");
-        opt_storage.push_back( pcNewStr ); 
-      }      
-    }
-
-
-    template<>    
-    inline void
-      Option< std::vector<double> >::parse(const std::string& arg)
-    {
-      char* pcNextStart = (char*) arg.data();
-      char* pcEnd = pcNextStart + arg.length();
-
-      char* pcOldStart = 0; 
-
-      size_t iIdx = 0; 
-
-      while (pcNextStart < pcEnd)
-      {
-        errno = 0; 
-
-        if ( iIdx < opt_storage.size() )
-        {
-          opt_storage[iIdx] = strtod(pcNextStart, &pcNextStart);
-        }
-        else
-        {
-          opt_storage.push_back( strtod(pcNextStart, &pcNextStart)) ;
-        }
-        iIdx++; 
-
-        if ( errno == ERANGE || (pcNextStart == pcOldStart) )
-        {
-          std::cerr << "Error Parsing Doubles: `" << arg << "'" << std::endl;
-          exit(EXIT_FAILURE);    
-        };   
-        while( (pcNextStart < pcEnd) && ( *pcNextStart == ' ' || *pcNextStart == '\t' || *pcNextStart == '\r' ) ) pcNextStart++;  
-        pcOldStart = pcNextStart; 
-
-      }
-    }
-
-    template<>
-    inline void
-      Option< std::vector<int> >::parse(const std::string& arg)
-    {
-      opt_storage.clear();
-
-
-      char* pcNextStart = (char*) arg.data();
-      char* pcEnd = pcNextStart + arg.length();
-
-      char* pcOldStart = 0; 
-
-      size_t iIdx = 0; 
-
-
-      while (pcNextStart < pcEnd)
-      {
-
-        if ( iIdx < opt_storage.size() )
-        {
-          opt_storage[iIdx] = (int) strtol(pcNextStart, &pcNextStart,10);
-        }
-        else
-        {
-          opt_storage.push_back( (int) strtol(pcNextStart, &pcNextStart,10)) ;
-        }
-        iIdx++; 
-        if ( errno == ERANGE || (pcNextStart == pcOldStart) )
-        {
-          std::cerr << "Error Parsing Integers: `" << arg << "'" << std::endl;
-          exit(EXIT_FAILURE);
-        };   
-        while( (pcNextStart < pcEnd) && ( *pcNextStart == ' ' || *pcNextStart == '\t' || *pcNextStart == '\r' ) ) pcNextStart++;  
-        pcOldStart = pcNextStart;
-      }
-    }
-
-
-    template<>
-    inline void
-      Option< std::vector<bool> >::parse(const std::string& arg)
-    {
-      char* pcNextStart = (char*) arg.data();
-      char* pcEnd = pcNextStart + arg.length();
-
-      char* pcOldStart = 0; 
-
-      size_t iIdx = 0; 
-
-      while (pcNextStart < pcEnd)
-      {
-        if ( iIdx < opt_storage.size() )
-        {
-          opt_storage[iIdx] = (strtol(pcNextStart, &pcNextStart,10) != 0);
-        }
-        else
-        {
-          opt_storage.push_back(strtol(pcNextStart, &pcNextStart,10) != 0) ;
-        }
-        iIdx++; 
-
-        if ( errno == ERANGE || (pcNextStart == pcOldStart) )
-        {
-          std::cerr << "Error Parsing Bools: `" << arg << "'" << std::endl;
-          exit(EXIT_FAILURE);
-        };   
-        while( (pcNextStart < pcEnd) && ( *pcNextStart == ' ' || *pcNextStart == '\t' || *pcNextStart == '\r' ) ) pcNextStart++;  
-        pcOldStart = pcNextStart;
-      }
-    }
-#endif
     /** Option class for argument handling using a user provided function */
     struct OptionFunc : public OptionBase
     {
@@ -355,30 +209,6 @@ namespace df
         return *this;
       }
       
-#if H_MV
-      template<typename T>
-      OptionSpecific&
-        operator()(const std::string& name, std::vector<T>& storage, T default_val, unsigned uiMaxNum, const std::string& desc = "" )
-      {
-        std::string cNameBuffer;
-        std::string cDescriptionBuffer;
-
-        cNameBuffer       .resize( name.size() + 10 );
-        cDescriptionBuffer.resize( desc.size() + 10 );
-
-        storage.resize(uiMaxNum);
-        for ( unsigned int uiK = 0; uiK < uiMaxNum; uiK++ )
-        {
-          // isn't there are sprintf function for string??
-          sprintf((char*) cNameBuffer.c_str()       ,name.c_str(),uiK,uiK);
-          sprintf((char*) cDescriptionBuffer.c_str(),desc.c_str(),uiK,uiK);
-
-          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescriptionBuffer ));
-        }
-
-        return *this;
-      }
-#endif
       /**
        * Add option described by name to the parent Options list,
        *   with desc as an optional help description
