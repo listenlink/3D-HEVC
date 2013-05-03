@@ -69,7 +69,7 @@
                                               // FIX_SDC_ENC_C0143, JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
 #if RWTH_SDC_DLT_B0036
 #define HHI_DELTADC_DLT_D0035             1   // JCT3V-D0035: DLT for DMM deltaDC coding
-#define INTEL_SDC64_D0193                 0   // JCT3V-D0193: SDC binary clean up (use a 1 bit binary code to signal sdc_pred_mode when CU size is 64x64)
+#define INTEL_SDC64_D0193                 1   // JCT3V-D0193: SDC binary clean up (use a 1 bit binary code to signal sdc_pred_mode when CU size is 64x64)
 #endif
 #define FIX_SDC_ENC_RD_WVSO_D0163         1   // JCT3V-D0163: fix for SDC encoder rd-cost (VSO -> WVSO)
 
