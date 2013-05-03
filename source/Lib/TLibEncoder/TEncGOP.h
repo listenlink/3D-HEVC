@@ -210,6 +210,7 @@ protected:
     m_nestedPictureTimingSEIPresentInAU      = false;
   }
 #endif
+#endif
 #if H_MV
    Void  xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr, UInt iGOPid );
 #endif

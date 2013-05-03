@@ -114,7 +114,6 @@ Void TAppDecTop::decode()
 #if H_MV
   poc = -1; 
 #endif
-
   TComList<TComPic*>* pcListPic = NULL;
 
   ifstream bitstreamFile(m_pchBitstreamFile, ifstream::in | ifstream::binary);
@@ -146,7 +145,6 @@ Void TAppDecTop::decode()
 
   Bool firstSlice        = true; 
 #endif
-
  
   while (!!bitstreamFile)
   {
@@ -295,6 +293,7 @@ Void TAppDecTop::decode()
         recon_opened = true;
       }
       if ( bNewPicture && 
+#endif
            (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP

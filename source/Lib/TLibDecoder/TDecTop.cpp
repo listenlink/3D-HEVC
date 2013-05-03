@@ -590,7 +590,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_prevRAPisBLA, m_cListPic );
     // Set reference list
 #if H_MV    
-    pcSlice->setRefPicList( m_cListPic, true, m_refPicSetInterLayer );    
+    pcSlice->setRefPicList( m_cListPic, m_refPicSetInterLayer, true );    
 #else
 #if FIX1071
     pcSlice->setRefPicList( m_cListPic, true );
@@ -781,7 +781,11 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RADL_R:
     case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_RASL_R:
+#if H_MV
+      return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag);
+#else
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
+#endif
       break;
     default:
       assert (1);
