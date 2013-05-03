@@ -96,6 +96,17 @@ private:
 
   SEIWriter               m_seiWriter;
   
+#if H_MV
+  TComPicLists*           m_ivPicLists;
+  std::vector<TComPic*>   m_refPicSetInterLayer; 
+
+  Int                     m_pocLastCoded;
+  Int                     m_layerId;  
+  Int                     m_viewId;
+#if H_3D
+  Bool                    m_isDepth;
+#endif
+#endif
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TComBitCounter*         m_pcBitCounter;
@@ -132,15 +143,30 @@ public:
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );
+#if H_MV
+  Void  initGOP     ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP);
+  Void  compressPicInGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid );
+#else
   Void  compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
+#endif
   Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
 
+#if H_MV
+  Int       getPocLastCoded  ()                 { return m_pocLastCoded; }  
+  Int       getLayerId       ()                 { return m_layerId;    }  
+  Int       getViewId        ()                 { return m_viewId;    }
+#if H_3D
+  Bool      getIsDepth       ()                 { return m_isDepth; }
+#endif
+#endif
 
   Int   getGOPSize()          { return  m_iGopSize;  }
   
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
   
+#if !H_MV
   Void  printOutSummary      ( UInt uiNumAllPicCoded );
+#endif
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
@@ -183,6 +209,9 @@ protected:
     m_nestedPictureTimingSEIPresentInAU      = false;
   }
 #endif
+#endif
+#if H_MV
+   Void  xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr, UInt iGOPid );
 #endif
 #if L0386_DB_METRIC
   Void dblMetric( TComPic* pcPic, UInt uiNumSlices );

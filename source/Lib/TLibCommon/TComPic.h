@@ -85,6 +85,13 @@ private:
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
 
+#if H_MV
+  Int                   m_layerId;
+  Int                   m_viewId;
+#if H_3D
+  Bool                  m_isDepth;
+#endif
+#endif
 public:
   TComPic();
   virtual ~TComPic();
@@ -97,6 +104,16 @@ public:
   UInt          getTLayer()                { return m_uiTLayer;   }
   Void          setTLayer( UInt uiTLayer ) { m_uiTLayer = uiTLayer; }
 
+#if H_MV
+  Void          setLayerId            ( Int layerId )    { m_layerId      = layerId; }
+  Int           getLayerId            ()                 { return m_layerId;    }
+  Void          setViewId             ( Int viewId )     { m_viewId = viewId;   }
+  Int           getViewId             ()                 { return m_viewId;     }
+#if H_3D
+  Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
+  Bool          getIsDepth            ()                 { return m_isDepth; }
+#endif
+#endif
   Bool          getUsedByCurr()             { return m_bUsedByCurr; }
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
   Bool          getIsLongTerm()             { return m_bIsLongTerm; }
@@ -163,6 +180,9 @@ public:
   TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
 
+#if H_MV
+  Void          print( Bool legend );
+#endif
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 
@@ -178,6 +198,53 @@ public:
 
 };// END CLASS DEFINITION TComPic
 
+#if H_MV
+class TComPicLists 
+{
+private: 
+  TComList<TComList<TComPic*>*> m_lists; 
+public: 
+  
+  Void push_back( TComList<TComPic*>* list ) { m_lists.push_back( list ); }
+  Int  size     ()                           { return (Int) m_lists.size    (); } 
+
+  TComPic* getPic( Int layerIdInNuh, Int poc )
+  { 
+    TComPic* pcPic = NULL;
+    for(TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin(); ( itL != m_lists.end() && pcPic == NULL ); itL++)
+    {    
+      for(TComList<TComPic*>::iterator itP=(*itL)->begin(); ( itP!=(*itL)->end() && pcPic == NULL ); itP++)
+      {
+        if ( ( (*itP)->getPOC() == poc ) && ( (*itP)->getLayerId() == layerIdInNuh ) )
+        {
+          pcPic = *itP ;      
+        }
+      }
+    }
+    return pcPic;
+  }
+
+  Void print( )
+  { 
+    Bool first = true;     
+    for(TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin(); ( itL != m_lists.end() ); itL++)
+    {    
+      for(TComList<TComPic*>::iterator itP=(*itL)->begin(); ( itP!=(*itL)->end() ); itP++)
+      {
+        if ( first )
+        {
+          (*itP)->print( true );       
+          first = false; 
+        }
+        (*itP)->print( false );       
+      }
+    }
+  }
+
+
+}; // END CLASS DEFINITION TComPicLists
+
+#endif 
 //! \}
 
 #endif // __TCOMPIC__

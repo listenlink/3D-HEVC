@@ -41,6 +41,9 @@
 #if FAST_BIT_EST
 #include "TLibCommon/ContextModel.h"
 #endif
+#if H_MV
+#include "../../App/TAppEncoder/TAppEncTop.h"
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -77,6 +80,9 @@ TEncTop::TEncTop()
   m_pcRDGoOnBinCodersCABAC = NULL;
   m_pcBitCounters          = NULL;
   m_pcRdCosts              = NULL;
+#if H_MV
+  m_ivPicLists = NULL;
+#endif
 }
 
 TEncTop::~TEncTop()
@@ -88,8 +94,10 @@ TEncTop::~TEncTop()
 
 Void TEncTop::create ()
 {
+#if !H_MV
   // initialize global variables
   initROM();
+#endif
   
   // create processing unit classes
   m_cGOPEncoder.        create();
@@ -267,8 +275,10 @@ Void TEncTop::destroy ()
   delete[] m_pcBitCounters;
   delete[] m_pcRdCosts;
   
+#if !H_MV
     // destroy ROM
   destroyROM();
+#endif
 
   return;
 }
@@ -318,6 +328,22 @@ Void TEncTop::init()
 // Public member functions
 // ====================================================================================================================
 
+#if H_MV
+Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
+{
+  TComPic* pcPicCurr = NULL;
+
+  // get original YUV
+  xGetNewPicBuffer( pcPicCurr );
+  pcPicYuvOrg->copyToPic( pcPicCurr->getPicYuvOrg() );
+
+  // compute image characteristics
+  if ( getUseAdaptiveQP() )
+  {
+    m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcPicCurr ) );
+  }
+}
+#endif
 Void TEncTop::deletePicBuffer()
 {
   TComList<TComPic*>::iterator iterPic = m_cListPic.begin();
@@ -344,8 +370,25 @@ Void TEncTop::deletePicBuffer()
  \retval  rcListBitstreamOut  list of output bitstreams
  \retval  iNumEncoded         number of encoded pictures
  */
+#if H_MV
+Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded , Int gopId )
+{
+#else
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
 {
+#endif
+#if H_3D
+  TComPic* picLastCoded = getPic( getGOPEncoder()->getPocLastCoded() );
+  if( picLastCoded )
+  {
+    picLastCoded->compressMotion(); 
+  }
+#endif
+#if H_MV
+  if( gopId == 0)
+  {
+    m_cGOPEncoder.initGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut);  
+#else
   if (pcPicYuvOrg) {
     // get original YUV
     TComPic* pcPicCurr = NULL;
@@ -364,6 +407,7 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
     iNumEncoded = 0;
     return;
   }
+#endif
   
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
@@ -372,8 +416,16 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
   }
 #endif
 
+#if H_MV
+  }
+  m_cGOPEncoder.compressPicInGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, gopId );
+
+  if( gopId + 1 == m_cGOPEncoder.getGOPSize() )
+  {
+#else
   // compress GOP
   m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut);
+#endif
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
@@ -385,6 +437,9 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
   iNumEncoded         = m_iNumPicRcvd;
   m_iNumPicRcvd       = 0;
   m_uiNumAllPicCoded += iNumEncoded;
+#if H_MV
+}
+#endif
 }
 
 // ====================================================================================================================
@@ -449,6 +504,9 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
 
 Void TEncTop::xInitSPS()
 {
+#if H_MV
+  m_cSPS.setSPSId( getLayerIdInVps() );
+#endif
   ProfileTierLevel& profileTierLevel = *m_cSPS.getPTL()->getGeneralPTL();
   profileTierLevel.setLevelIdc(m_level);
   profileTierLevel.setTierFlag(m_levelTier);
@@ -593,6 +651,14 @@ Void TEncTop::xInitSPS()
 
 Void TEncTop::xInitPPS()
 {
+#if H_MV
+  if( m_cVPS.getNumDirectRefLayers( getLayerIdInVps() ) > 0 )
+  {
+    m_cPPS.setListsModificationPresentFlag( true );
+  }
+  m_cPPS.setPPSId( getLayerIdInVps() );
+  m_cPPS.setSPSId( getLayerIdInVps() );
+#endif
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   Bool bUseDQP = (getMaxCuDQPDepth() > 0)? true : false;
 
@@ -896,6 +962,19 @@ Void TEncTop::xInitRPS()
    // for a specific slice (with POC = POCCurr)
 Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid )
 {
+#if H_MV
+  if( slice->getRapPicFlag() == true && getLayerId() > 0 && POCCurr == 0 )
+  {
+    TComReferencePictureSet* rps = slice->getLocalRPS();
+    rps->setNumberOfNegativePictures(0);
+    rps->setNumberOfPositivePictures(0);
+    rps->setNumberOfLongtermPictures(0);
+    rps->setNumberOfPictures(0);
+    slice->setRPS(rps);
+  }
+  else
+  {
+#endif
   slice->setRPSidx(GOPid);
 
   for(Int extraNum=m_iGOPSize; extraNum<m_extraRPSs+m_iGOPSize; extraNum++)
@@ -923,6 +1002,9 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
 
   slice->setRPS(getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
   slice->getRPS()->setNumberOfPictures(slice->getRPS()->getNumberOfNegativePictures()+slice->getRPS()->getNumberOfPositivePictures());
+#if H_MV
+  }
+#endif
 
 }
 
@@ -1037,4 +1119,66 @@ Void  TEncCfg::xCheckGSParameters()
     }
   }
 }
+#if H_MV
+Void TEncTop::printSummary( Int numAllPicCoded )
+{
+  assert (numAllPicCoded == m_cAnalyzeAll.getNumPic());
+
+  //--CFG_KDY
+  m_cAnalyzeAll.setFrmRate( getFrameRate() );
+  m_cAnalyzeI.setFrmRate( getFrameRate() );
+  m_cAnalyzeP.setFrmRate( getFrameRate() );
+  m_cAnalyzeB.setFrmRate( getFrameRate() );
+
+  //-- all
+  printf( "\n\nSUMMARY ------------------------------------------- LayerId %2d\n", m_layerId );
+
+  m_cAnalyzeAll.printOut('a');
+
+  printf( "\n\nI Slices--------------------------------------------------------\n" );
+  m_cAnalyzeI.printOut('i');
+
+  printf( "\n\nP Slices--------------------------------------------------------\n" );
+  m_cAnalyzeP.printOut('p');
+
+  printf( "\n\nB Slices--------------------------------------------------------\n" );
+  m_cAnalyzeB.printOut('b');
+
+#if _SUMMARY_OUT_
+  m_cAnalyzeAll.printSummaryOut();
+#endif
+#if _SUMMARY_PIC_
+  m_cAnalyzeI.printSummary('I');
+  m_cAnalyzeP.printSummary('P');
+  m_cAnalyzeB.printSummary('B');
+#endif
+}
+
+Int TEncTop::getFrameId(Int iGOPid)  
+{
+  if(m_iPOCLast == 0)
+  {
+    return(0 );
+  }
+  else
+  {
+    return m_iPOCLast -m_iNumPicRcvd+ getGOPEntry(iGOPid).m_POC ;
+  }
+}
+
+TComPic* TEncTop::getPic( Int poc )
+{
+  TComList<TComPic*>* listPic = getListPic();
+  TComPic* pcPic = NULL;
+  for(TComList<TComPic*>::iterator it=listPic->begin(); it!=listPic->end(); it++)
+  {
+    if( (*it)->getPOC() == poc )
+    {
+      pcPic = *it ;
+      break ;
+    }
+  }
+  return pcPic;
+}
+#endif
 //! \}

@@ -102,8 +102,12 @@ Void readNalUnitHeader(InputNALUnit& nalu)
   Bool forbidden_zero_bit = bs.read(1);           // forbidden_zero_bit
   assert(forbidden_zero_bit == 0);
   nalu.m_nalUnitType = (NalUnitType) bs.read(6);  // nal_unit_type
+#if H_MV
+  nalu.m_layerId = bs.read(6);                 // layerId
+#else
   nalu.m_reservedZero6Bits = bs.read(6);       // nuh_reserved_zero_6bits
   assert(nalu.m_reservedZero6Bits == 0);
+#endif
   nalu.m_temporalId = bs.read(3) - 1;             // nuh_temporal_id_plus1
 
   if ( nalu.m_temporalId )

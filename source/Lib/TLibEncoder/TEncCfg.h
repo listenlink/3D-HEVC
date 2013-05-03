@@ -68,6 +68,11 @@ struct GOPEntry
   Int m_deltaRPS;
   Int m_numRefIdc;
   Int m_refIdc[MAX_NUM_REF_PICS+1];
+#if H_MV
+  Int m_numInterViewRefPics;
+  Int m_interViewRefs    [MAX_NUM_REF_PICS];
+  Int m_interViewRefPosL[2][MAX_NUM_REF_PICS];  
+#endif
   GOPEntry()
   : m_POC(-1)
   , m_QPOffset(0)
@@ -82,10 +87,17 @@ struct GOPEntry
   , m_interRPSPrediction(false)
   , m_deltaRPS(0)
   , m_numRefIdc(0)
+#if H_MV
+  , m_numInterViewRefPics(0)
+#endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
     ::memset( m_usedByCurrPic, 0, sizeof(m_usedByCurrPic) );
     ::memset( m_refIdc,        0, sizeof(m_refIdc) );
+#if H_MV
+    ::memset( m_interViewRefs,   0, sizeof(m_interViewRefs) );
+    ::memset( m_interViewRefPosL[0], -1, sizeof(m_interViewRefPosL[0]) );    ::memset( m_interViewRefPosL[1], -1, sizeof(m_interViewRefPosL[1]) );
+#endif
   }
 };
 
@@ -126,7 +138,11 @@ protected:
   UInt      m_uiIntraPeriod;
   UInt      m_uiDecodingRefreshType;            ///< the type of decoding refresh employed for the random access.
   Int       m_iGOPSize;
+#if H_MV
+  GOPEntry  m_GOPList[MAX_GOP+1];
+#else
   GOPEntry  m_GOPList[MAX_GOP];
+#endif
   Int       m_extraRPSs;
   Int       m_maxDecPicBuffering[MAX_TLAYER];
   Int       m_numReorderPics[MAX_TLAYER];
@@ -336,10 +352,26 @@ protected:
 
   Bool      m_useStrongIntraSmoothing;                        ///< enable the use of strong intra smoothing (bi_linear interpolation) for 32x32 blocks when reference samples are flat.
 
+#if H_MV
+  Int       m_layerId;
+  Int       m_layerIdInVps;
+  Int       m_viewId;
+#if H_3D
+  Bool      m_isDepth;
+#endif
+#endif
 public:
   TEncCfg()
   : m_puiColumnWidth()
   , m_puiRowHeight()
+#if H_MV
+  , m_layerId(-1)
+  , m_layerIdInVps(-1)
+  , m_viewId(-1)
+#if H_3D
+  , m_isDepth(false)
+#endif
+#endif
   {}
 
   virtual ~TEncCfg()
@@ -361,11 +393,27 @@ public:
 
   Void      setFramesToBeEncoded            ( Int   i )      { m_framesToBeEncoded = i; }
   
+#if H_MV
+  Void      setLayerId                       ( Int layerId )      { m_layerId = layerId; }
+  Int       getLayerId                       ()                   { return m_layerId;    }
+  Int       getLayerIdInVps                  ()                   { return m_layerIdInVps; }
+  Void      setLayerIdInVps                  ( Int layerIdInVps)  { m_layerIdInVps = layerIdInVps; }
+  Void      setViewId                        ( Int viewId  )      { m_viewId  = viewId;  }
+  Int       getViewId                        ()                   { return m_viewId;    }
+#if H_3D
+  Void      setIsDepth                       ( Bool isDepth )   { m_isDepth = isDepth; }
+  Bool      getIsDepth                       ()                 { return m_isDepth; }
+#endif
+#endif
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
   Void      setDecodingRefreshType          ( Int   i )      { m_uiDecodingRefreshType = (UInt)i; }
   Void      setGOPSize                      ( Int   i )      { m_iGOPSize = i; }
+#if H_MV
+  Void      setGopList                      ( GOPEntry*  GOPList ) {  for ( Int i = 0; i < MAX_GOP+1; i++ ) m_GOPList[i] = GOPList[i]; }
+#else
   Void      setGopList                      ( GOPEntry*  GOPList ) {  for ( Int i = 0; i < MAX_GOP; i++ ) m_GOPList[i] = GOPList[i]; }
+#endif
   Void      setExtraRPSs                    ( Int   i )      { m_extraRPSs = i; }
   GOPEntry  getGOPEntry                     ( Int   i )      { return m_GOPList[i]; }
   Void      setMaxDecPicBuffering           ( UInt u, UInt tlayer ) { m_maxDecPicBuffering[tlayer] = u;    }

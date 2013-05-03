@@ -44,6 +44,9 @@
 #define H_MV                        1
 
 
+#if H_MV
+#define H_3D                        0
+#endif
 
 ///// ***** HM 10.1 *********
 #define FIX1071 1 ///< Temporary fix for issue #1071
@@ -87,13 +90,22 @@
 
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #define MAX_VPS_OP_SETS_PLUS1                     1024
+#if H_MV
+#define MAX_VPS_NUH_LAYER_ID_PLUS1  64
+#define MAX_NUM_SCALABILITY_TYPES   16
+#define ENC_CFG_CONSOUT_SPACE       29           
+#else
 #define MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1  1
+#endif
 
 #define RATE_CONTROL_LAMBDA_DOMAIN                  1  ///< JCTVC-K0103, rate control by R-lambda model
 #define L0033_RC_BUGFIX                             1  ///< JCTVC-L0033, bug fix for R-lambda model based rate control
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS               64
+#if H_MV
+#define MAX_NUM_LAYERS                  64
+#endif
 
 #define COEF_REMAIN_BIN_REDUCTION        3 ///< indicates the level at which the VLC 
                                            ///< transitions from Golomb-Rice to TU+EG(k)
@@ -508,6 +520,13 @@ namespace Profile
     MAIN = 1,
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
+#if H_MV
+    MAINSTEREO = 4,
+    MAINMULTIVIEW = 5,
+#if H_3D
+    MAIN3D = 6, 
+#endif
+#endif
   };
 }
 
@@ -539,4 +558,14 @@ namespace Level
 }
 //! \}
 
+#if H_MV
+/// scalability types
+  enum ScalabilityType
+  {
+    VIEW_ID  = 0,
+#if H_3D
+    DEPTH_ID = 1,
+#endif    
+  };
+#endif
 #endif
