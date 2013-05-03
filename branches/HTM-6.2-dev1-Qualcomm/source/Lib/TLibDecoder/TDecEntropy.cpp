@@ -329,6 +329,13 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
             }
         }
         pcCU->setVSPIndexSubParts( iVSPIdx, uiSubPartIdx, uiPartIdx, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+#if QC_BVSP_CleanUP_D0191
+       if(iVSPIdx != 0)
+       {
+         Int iIVCIdx = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==pcCU->getSlice()->getPOC() ? 0: pcCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+         cMvFieldNeighbours[ 2*uiMergeIndex].setRefIdx(iIVCIdx);
+       }
+#endif
       }
 
 #else

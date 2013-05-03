@@ -3001,6 +3001,13 @@ Void TEncSearch::xMergeEstimation( TComDataCU*     pcCU,
             }
         }
         pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+#if QC_BVSP_CleanUP_D0191
+       if(iVSPIdx != 0)
+       {
+        Int iIVCIdx = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==pcCU->getSlice()->getPOC() ? 0: pcCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+        cMvFieldNeighbours[ 2*uiMergeIndex].setRefIdx(iIVCIdx);
+      }
+#endif
       }
 #endif
       xGetInterPredictionError( pcCU, pcYuvOrg, iPUIdx, uiCostCand, m_pcEncCfg->getUseHADME() );
@@ -3723,6 +3730,13 @@ xMergeEstimation( pcCU, pcOrgYuv, iPartIdx, uiMRGInterDir, cMRGMvField, uiMRGInd
               }
           }
           pcCU->setVSPIndexSubParts( iVSPIdx, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+#if QC_BVSP_CleanUP_D0191
+         if(iVSPIdx != 0)
+         {
+           Int iIVCIdx = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==pcCU->getSlice()->getPOC() ? 0: pcCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+           cMRGMvField[ 0].setRefIdx(iIVCIdx);
+         }
+#endif
         }
 #endif
         pcCU->setInterDirSubParts  ( uiMRGInterDir, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );

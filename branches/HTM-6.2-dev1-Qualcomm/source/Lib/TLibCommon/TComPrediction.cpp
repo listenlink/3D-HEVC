@@ -780,11 +780,13 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   Int  vspIdx  = pcCU->getVSPIndex(uiPartAddr);
   if (vspIdx != 0)
   {
+#if !QC_BVSP_CleanUP_D0191
     if (iRefIdx >= 0)
     {
       printf("vspIdx = %d, iRefIdx = %d\n", vspIdx, iRefIdx);
     }
     assert (iRefIdx < 0); // assert (iRefIdx == NOT_VALID);
+#endif
   }
   else
   {
