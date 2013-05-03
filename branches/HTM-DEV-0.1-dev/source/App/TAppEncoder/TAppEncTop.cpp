@@ -962,5 +962,4 @@ Int TAppEncTop::xGetMax( std::vector<Int>& vec )
   return maxVec;
 }
 #endif
-
 //! \}
