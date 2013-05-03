@@ -1919,6 +1919,13 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
                 }
             }
             rpcTempCU->setVSPIndexSubParts( iVSPIdx, 0, 0, uhDepth );
+#if QC_BVSP_CleanUP_D0191
+           if(iVSPIdx != 0)
+           {
+             Int iIVCIdx = rpcTempCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==rpcTempCU->getSlice()->getPOC() ? 0: rpcTempCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+             cMvFieldNeighbours[ 2*uiMergeCand].setRefIdx(iIVCIdx);
+           }
+#endif
           }
 #endif
           rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level

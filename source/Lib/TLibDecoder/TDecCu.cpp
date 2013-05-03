@@ -385,6 +385,13 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
           }
       }
       pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+#if QC_BVSP_CleanUP_D0191
+      if(iVSPIdx != 0)
+      {
+        Int iIVCIdx = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==pcCU->getSlice()->getPOC() ? 0: pcCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+       cMvFieldNeighbours[ 2*uiMergeIndex].setRefIdx(iIVCIdx);
+      }
+#endif
     }
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
