@@ -357,7 +357,6 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
-
 #if H_MV
 Void TEncGOP::initGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP)
 {
@@ -365,7 +364,6 @@ Void TEncGOP::initGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcList
   m_iNumPicCoded = 0;
 }
 #endif
-
 #if H_MV
 Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid)
 #else
@@ -1711,11 +1709,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if !H_3D
       pcPic->compressMotion(); 
 #endif
-
 #if H_MV
       m_pocLastCoded = pcPic->getPOC();
 #endif
-
       //-- For time output for each slice
       Double dEncTime = (Double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
 

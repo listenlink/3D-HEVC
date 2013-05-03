@@ -182,7 +182,9 @@ Void TAppEncTop::xInitLibCfg()
 #else
   m_cTEncTop.setQP                           ( m_iQP );
 #endif
+
   m_cTEncTop.setPad                          ( m_aiPad );
+
 #if H_MV
   m_cTEncTop.setMaxTempLayer                 ( m_maxTempLayerMvc[layer] );
 #else

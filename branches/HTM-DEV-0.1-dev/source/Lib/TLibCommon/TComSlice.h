@@ -247,7 +247,6 @@ public:
 
   ProfileTierLevel* getGeneralPTL()  { return &m_generalPTL; }
   ProfileTierLevel* getSubLayerPTL(Int i)  { return &m_subLayerPTL[i]; }
-
 #if H_MV
   Void copyLevelFrom( TComPTL* source );
 #endif
@@ -535,7 +534,6 @@ private:
   Int         m_refLayerId               [ MAX_NUM_LAYERS ][MAX_NUM_LAYERS];  
 
 #endif
-
 public:
   TComVPS();
   virtual ~TComVPS();
@@ -595,7 +593,6 @@ public:
 #else
   TComPTL* getPTL() { return &m_pcPTL; }
 #endif
-
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *getBitratePicrateInfo() { return &m_bitRatePicRateInfo; }
 #endif
@@ -1584,7 +1581,6 @@ public:
 #else
   Void      setRefPicList       ( TComList<TComPic*>& rcListPic );
 #endif
-
 #endif
   Void      setRefPOCList       ();
   Void      setColFromL0Flag    ( UInt colFromL0 ) { m_colFromL0Flag = colFromL0; }

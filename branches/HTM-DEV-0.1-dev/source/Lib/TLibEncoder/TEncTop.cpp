@@ -1005,6 +1005,7 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
 #if H_MV
   }
 #endif
+
 }
 
 #if L0208_SOP_DESCRIPTION_SEI
@@ -1118,7 +1119,6 @@ Void  TEncCfg::xCheckGSParameters()
     }
   }
 }
-
 #if H_MV
 Void TEncTop::printSummary( Int numAllPicCoded )
 {
@@ -1181,5 +1181,4 @@ TComPic* TEncTop::getPic( Int poc )
   return pcPic;
 }
 #endif
-
 //! \}
