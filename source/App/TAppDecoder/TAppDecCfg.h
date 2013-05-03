@@ -63,7 +63,6 @@ protected:
   std::vector<Char*> m_pchReconFiles;                 ///< array of output reconstruction file name create from output reconstruction file name
 #endif
   Char*         m_pchReconFile;                       ///< output reconstruction file name
-
   Int           m_iSkipFrame;                         ///< counter for frames prior to the random access point to skip
   Int           m_outputBitDepthY;                    ///< bit depth used for writing output (luma)
   Int           m_outputBitDepthC;                    ///< bit depth used for writing output (chroma)t
@@ -77,11 +76,9 @@ protected:
 #if H_MV
   Void xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName); ///< create filenames
 #endif
-
 public:
   TAppDecCfg()
   : m_pchBitstreamFile(NULL)
-
 #if H_MV
   , m_maxLayerId(0)
   , m_pchReconFiles(NULL) 

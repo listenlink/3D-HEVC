@@ -46,7 +46,6 @@ struct NALUnit
 {
   NalUnitType m_nalUnitType; ///< nal_unit_type
   UInt        m_temporalId;  ///< temporal_id
-
 #if H_MV
   Int         m_layerId;     ///< layer id
 #else

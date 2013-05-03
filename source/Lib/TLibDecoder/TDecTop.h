@@ -63,7 +63,6 @@ struct InputNALUnit;
 #if H_MV
 class TAppDecTop;
 #endif
-
 /// decoder class
 class TDecTop
 {
@@ -80,7 +79,6 @@ private:
 #else
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
 #endif
-
   TComSlice*              m_apcSlicePilot;
   
   SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices

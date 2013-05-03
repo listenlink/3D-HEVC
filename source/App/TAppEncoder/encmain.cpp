@@ -61,7 +61,6 @@ int main(int argc, char* argv[])
 #else
   fprintf( stdout, "HM software: Encoder Version [%s]", NV_VERSION );
 #endif
-
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
   fprintf( stdout, NVM_BITS );

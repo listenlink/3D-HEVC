@@ -602,7 +602,6 @@ public:
 #if L0043_TIMING_INFO
   TimingInfo* getTimingInfo() { return &m_timingInfo; }
 #endif
-
 #if H_MV
   Void    setAvcBaseLayerFlag( Bool val )                                  { m_avcBaseLayerFlag = val;  }
   Bool    getAvcBaseLayerFlag()                                            { return m_avcBaseLayerFlag; } 
@@ -970,11 +969,9 @@ private:
   static const Int   m_winUnitX[MAX_CHROMA_FORMAT_IDC+1];
   static const Int   m_winUnitY[MAX_CHROMA_FORMAT_IDC+1];
   TComPTL     m_pcPTL;
-
 #if H_MV
   Bool        m_interViewMvVertConstraintFlag;
 #endif
-
 public:
   TComSPS();
   virtual ~TComSPS();
@@ -1105,7 +1102,6 @@ public:
   Void setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool randomAccess );
 
   TComPTL* getPTL()     { return &m_pcPTL; }
-
 #if H_MV
   Void setInterViewMvVertConstraintFlag(Bool val) { m_interViewMvVertConstraintFlag = val; }
   Bool getInterViewMvVertConstraintFlag()         { return m_interViewMvVertConstraintFlag;}
@@ -1463,7 +1459,6 @@ private:
   Bool       m_LFCrossSliceBoundaryFlag;
 
   Bool       m_enableTMVPFlag;
-
 #if H_MV
   Int        m_layerId; 
   Int        m_viewId;
@@ -1471,7 +1466,6 @@ private:
   Bool       m_isDepth;
 #endif
 #endif
-
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -1638,7 +1632,6 @@ public:
   Void setTLayerInfo( UInt uiTLayer );
   Void decodingMarking( TComList<TComPic*>& rcListPic, Int iGOPSIze, Int& iMaxRefPicNum ); 
   Void applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComReferencePictureSet *RPSList);
-
 #if H_MV
   Void createAndApplyIvReferencePictureSet( TComPicLists* ivPicLists, std::vector<TComPic*>& refPicSetInterLayer );
   static Void markIvRefPicsAsShortTerm    ( std::vector<TComPic*> refPicSetInterLayer );
@@ -1647,7 +1640,6 @@ public:
 
   Void xPrintRefPicList();
 #endif
-
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
   Bool isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
   Int       checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);

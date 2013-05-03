@@ -405,7 +405,6 @@ public:
   Bool      getIsDepth                       ()                 { return m_isDepth; }
 #endif
 #endif
-
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
   Void      setDecodingRefreshType          ( Int   i )      { m_uiDecodingRefreshType = (UInt)i; }

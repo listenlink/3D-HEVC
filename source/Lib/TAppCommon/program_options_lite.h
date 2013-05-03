@@ -45,7 +45,6 @@
 #define strdup _strdup
 #endif
 #endif
-
 //! \ingroup TAppCommon
 //! \{
 
@@ -381,7 +380,6 @@ namespace df
         return *this;
       }
 #endif
-
       /**
        * Add option described by name to the parent Options list,
        *   with desc as an optional help description

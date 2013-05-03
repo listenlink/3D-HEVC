@@ -59,7 +59,6 @@ TAppDecTop::TAppDecTop()
 #else
 : m_numDecoders( 0 )
 #endif
-
 {
   ::memset (m_abDecFlag, 0, sizeof (m_abDecFlag));
 #if H_MV
@@ -78,7 +77,6 @@ Void TAppDecTop::destroy()
     free (m_pchBitstreamFile);
     m_pchBitstreamFile = NULL;
   }
-
 #if H_MV
   for (Int decIdx = 0; decIdx < m_numDecoders; decIdx++)
   {

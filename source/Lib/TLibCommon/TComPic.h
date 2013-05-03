@@ -92,7 +92,6 @@ private:
   Bool                  m_isDepth;
 #endif
 #endif
-
 public:
   TComPic();
   virtual ~TComPic();
@@ -115,7 +114,6 @@ public:
   Bool          getIsDepth            ()                 { return m_isDepth; }
 #endif
 #endif
-
   Bool          getUsedByCurr()             { return m_bUsedByCurr; }
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
   Bool          getIsLongTerm()             { return m_bIsLongTerm; }
@@ -185,9 +183,6 @@ public:
 #if H_MV
   Void          print( Bool legend );
 #endif
-
-
-
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 

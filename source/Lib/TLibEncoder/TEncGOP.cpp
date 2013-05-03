@@ -409,7 +409,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   UInt *accumBitsDU = NULL;
   UInt *accumNalsDU = NULL;
   SEIDecodingUnitInfo decodingUnitInfoSEI;
-
 #if !H_MV
   for ( Int iGOPid=0; iGOPid < m_iGopSize; iGOPid++ )
 #endif
@@ -471,7 +470,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     if(pocCurr>=m_pcCfg->getFramesToBeEncoded())
     {
-
 #if H_MV
       delete pcBitstreamRedirect;
       return;
@@ -2056,7 +2054,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if !H_MV
   assert ( m_iNumPicCoded == iNumPicRcvd );
 #endif
-
 }
 
 #if !H_MV
@@ -2376,7 +2373,6 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
 #else
   m_gcAnalyzeAll.addResult (dYPSNR, dUPSNR, dVPSNR, (Double)uibits);
 #endif
-
   TComSlice*  pcSlice = pcPic->getSlice(0);
   if (pcSlice->isIntra())
   {
@@ -2385,7 +2381,6 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
 #else
     m_gcAnalyzeI.addResult (dYPSNR, dUPSNR, dVPSNR, (Double)uibits);
 #endif
-
   }
   if (pcSlice->isInterP())
   {

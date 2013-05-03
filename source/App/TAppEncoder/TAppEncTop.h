@@ -58,7 +58,6 @@ class TAppEncTop : public TAppEncCfg
 {
 private:
   // class interface
-
 #if H_MV
   std::vector<TEncTop*>      m_acTEncTopList ;              ///< encoder class per layer 
   std::vector<TVideoIOYuv*>  m_acTVideoIOYuvInputFileList;  ///< input YUV file
@@ -99,13 +98,11 @@ protected:
   Void  xDeleteBuffer     ();
   
   // file I/O
-
 #if H_MV
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std::list<AccessUnit>& accessUnits, UInt layerId); ///< write bitstream to file
 #else
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits); ///< write bitstream to file
 #endif
-
   void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
   void printRateSummary();
   
@@ -115,13 +112,11 @@ protected:
   Void xSetDirectDependencyFlags  ( TComVPS& vps );
   Int  xGetMax( std::vector<Int>& vec);
 #endif
-
 public:
   TAppEncTop();
   virtual ~TAppEncTop();
   
   Void        encode      ();                               ///< main encoding function
-
 #if H_MV
   TEncTop*    getTEncTopLayer(UInt layer) { return  m_acTEncTopList[layer]; }  ///< return pointer to encoder class for specific layer
 #if H_3D
@@ -130,7 +125,6 @@ public:
 #else
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
 #endif
-
 };// END CLASS DEFINITION TAppEncTop
 
 //! \}

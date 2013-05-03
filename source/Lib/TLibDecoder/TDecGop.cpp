@@ -207,12 +207,10 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
 #if !H_3D
   rpcPic->compressMotion(); 
 #endif
-
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced()) c += 32;
 
   //-- For time output for each slice
-
 #if H_MV
   printf("\nLayer %2d   POC %4d TId: %1d ( %c-SLICE, QP%3d ) ", pcSlice->getLayerId(),
                                                               pcSlice->getPOC(),
