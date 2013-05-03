@@ -194,8 +194,10 @@ public:
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
+#if L0208_SOP_DESCRIPTION_SEI
+  Int getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid );
+#endif
   TComScalingList*        getScalingList        () { return  &m_scalingList;         }
-
 #if H_MV
   TEncAnalyze*            getAnalyzeAll         () { return &m_cAnalyzeAll; }
   TEncAnalyze*            getAnalyzeI           () { return &m_cAnalyzeI;   }
@@ -209,26 +211,23 @@ public:
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
 #endif
-
-
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------
 
   /// encode several number of pictures until end-of-sequence
-  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
-              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded 
 #if H_MV
-              , Int gopId 
-#endif        
-              );  
+  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded  , Int gopId  );  
+#else
+  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );  
+#endif
 
 #if H_MV
-  void printSummary      ( Int numAllPicCoded ); 
+  Void printSummary      ( Int numAllPicCoded ); 
 #else
   void printSummary() { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded); }
 #endif
-
 };
 
 //! \}

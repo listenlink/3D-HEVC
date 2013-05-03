@@ -60,16 +60,7 @@ public:
   virtual ~TDecCavlc();
   
 protected:
-  Void  xReadEpExGolomb       ( UInt& ruiSymbol, UInt uiCount );
-  Void  xReadExGolombLevel    ( UInt& ruiSymbol );
-  Void  xReadUnaryMaxSymbol   ( UInt& ruiSymbol, UInt uiMaxSymbol );
-  
-  Void  xReadPCMAlignZero     ();
-
-  UInt  xGetBit             ();
-  
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
-private:
   
 public:
 

@@ -3208,6 +3208,13 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     for (Int iNumRef=0; iNumRef < MAX_NUM_REF; iNumRef++) uiCostTempL0[iNumRef] = MAX_UINT;
     UInt          uiBitsTempL0[MAX_NUM_REF];
 
+#if L0034_COMBINED_LIST_CLEANUP
+    TComMv        mvValidList1;
+    Int           refIdxValidList1 = 0;
+    UInt          bitsValidList1 = MAX_UINT;
+    UInt          costValidList1 = MAX_UINT;
+#endif
+
     xGetBlkBits( ePartSize, pcCU->getSlice()->isInterP(), iPartIdx, uiLastMode, uiMbBits);
     
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
@@ -3254,8 +3261,12 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 
         uiBitsTemp += m_auiMVPIdxCost[aaiMvpIdx[iRefList][iRefIdxTemp]][AMVP_MAX_NUM_CANDS];
 #if ZERO_MVD_EST
+#if L0034_COMBINED_LIST_CLEANUP
+        if ( iRefList == 0 || pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp ) < 0 )
+#else
         if ((iRefList != 1 || !pcCU->getSlice()->getNoBackPredFlag()) &&
             (pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) <= 0 || pcCU->getSlice()->getRefIdxOfLC(eRefPicList, iRefIdxTemp)>=0))
+#endif
         {
           uiZeroMvdBitsTemp = uiBitsTemp;
           uiZeroMvdBitsTemp += 2; //zero mvd bits
@@ -3275,6 +3286,31 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #endif
         
 #if GPB_SIMPLE_UNI
+#if L0034_COMBINED_LIST_CLEANUP
+        if ( iRefList == 1 )    // list 1
+        {
+          if ( pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp ) >= 0 )
+          {
+            cMvTemp[1][iRefIdxTemp] = cMvTemp[0][pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp )];
+            uiCostTemp = uiCostTempL0[pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp )];
+            /*first subtract the bit-rate part of the cost of the other list*/
+            uiCostTemp -= m_pcRdCost->getCost( uiBitsTempL0[pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp )] );
+            /*correct the bit-rate part of the current ref*/
+            m_pcRdCost->setPredictor  ( cMvPred[iRefList][iRefIdxTemp] );
+            uiBitsTemp += m_pcRdCost->getBits( cMvTemp[1][iRefIdxTemp].getHor(), cMvTemp[1][iRefIdxTemp].getVer() );
+            /*calculate the correct cost*/
+            uiCostTemp += m_pcRdCost->getCost( uiBitsTemp );
+          }
+          else
+          {
+            xMotionEstimation ( pcCU, pcOrgYuv, iPartIdx, eRefPicList, &cMvPred[iRefList][iRefIdxTemp], iRefIdxTemp, cMvTemp[iRefList][iRefIdxTemp], uiBitsTemp, uiCostTemp );
+          }
+        }
+        else
+        {
+          xMotionEstimation ( pcCU, pcOrgYuv, iPartIdx, eRefPicList, &cMvPred[iRefList][iRefIdxTemp], iRefIdxTemp, cMvTemp[iRefList][iRefIdxTemp], uiBitsTemp, uiCostTemp );
+        }
+#else
         if ( pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0)
         {
           if ( iRefList && ( pcCU->getSlice()->getNoBackPredFlag() || (pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0 && !pcCU->getSlice()->getNoBackPredFlag() && pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(iRefIdxTemp)>=0 ) ) )
@@ -3316,12 +3352,39 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
             xMotionEstimation ( pcCU, pcOrgYuv, iPartIdx, eRefPicList, &cMvPred[iRefList][iRefIdxTemp], iRefIdxTemp, cMvTemp[iRefList][iRefIdxTemp], uiBitsTemp, uiCostTemp );
           }        
         }
+#endif
 #else
         xMotionEstimation ( pcCU, pcOrgYuv, iPartIdx, eRefPicList, &cMvPred[iRefList][iRefIdxTemp], iRefIdxTemp, cMvTemp[iRefList][iRefIdxTemp], uiBitsTemp, uiCostTemp );
 #endif
         xCopyAMVPInfo(pcCU->getCUMvField(eRefPicList)->getAMVPInfo(), &aacAMVPInfo[iRefList][iRefIdxTemp]); // must always be done ( also when AMVP_MODE = AM_NONE )
         xCheckBestMVP(pcCU, eRefPicList, cMvTemp[iRefList][iRefIdxTemp], cMvPred[iRefList][iRefIdxTemp], aaiMvpIdx[iRefList][iRefIdxTemp], uiBitsTemp, uiCostTemp);
 
+#if L0034_COMBINED_LIST_CLEANUP
+        if ( iRefList == 0 )
+        {
+          uiCostTempL0[iRefIdxTemp] = uiCostTemp;
+          uiBitsTempL0[iRefIdxTemp] = uiBitsTemp;
+        }
+        if ( uiCostTemp < uiCost[iRefList] )
+        {
+          uiCost[iRefList] = uiCostTemp;
+          uiBits[iRefList] = uiBitsTemp; // storing for bi-prediction
+
+          // set motion
+          cMv[iRefList]     = cMvTemp[iRefList][iRefIdxTemp];
+          iRefIdx[iRefList] = iRefIdxTemp;
+        }
+
+        if ( iRefList == 1 && uiCostTemp < costValidList1 && pcCU->getSlice()->getList1IdxToList0Idx( iRefIdxTemp ) < 0 )
+        {
+          costValidList1 = uiCostTemp;
+          bitsValidList1 = uiBitsTemp;
+
+          // set motion
+          mvValidList1     = cMvTemp[iRefList][iRefIdxTemp];
+          refIdxValidList1 = iRefIdxTemp;
+        }
+#else
         if(pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0 && !pcCU->getSlice()->getNoBackPredFlag())
         {
           if(iRefList==REF_PIC_LIST_0)
@@ -3371,6 +3434,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
               }
             }
           }
+#endif
       }
     }
     //  Bi-directional prediction
@@ -3434,10 +3498,35 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       {
         
         Int         iRefList    = iIter % 2;
+#if L0034_COMBINED_LIST_CLEANUP
+        if ( m_pcEncCfg->getUseFastEnc() )
+        {
+          if( uiCost[0] <= uiCost[1] )
+          {
+            iRefList = 1;
+          }
+          else
+          {
+            iRefList = 0;
+          }
+        }
+        else if ( iIter == 0 )
+        {
+          iRefList = 0;
+        }
+        if ( iIter == 0 && !pcCU->getSlice()->getMvdL1ZeroFlag())
+        {
+          pcCU->getCUMvField(RefPicList(1-iRefList))->setAllMv( cMv[1-iRefList], ePartSize, uiPartAddr, 0, iPartIdx );
+          pcCU->getCUMvField(RefPicList(1-iRefList))->setAllRefIdx( iRefIdx[1-iRefList], ePartSize, uiPartAddr, 0, iPartIdx );
+          TComYuv*  pcYuvPred = &m_acYuvPred[1-iRefList];
+          motionCompensation ( pcCU, pcYuvPred, RefPicList(1-iRefList), iPartIdx );
+        }
+#else
         if ( m_pcEncCfg->getUseFastEnc() && (pcCU->getSlice()->getNoBackPredFlag() || (pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0 && pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(0)==0 )) )
         {
           iRefList = 1;
         }
+#endif
         RefPicList  eRefPicList = ( iRefList ? REF_PIC_LIST_1 : REF_PIC_LIST_0 );
 
         if(pcCU->getSlice()->getMvdL1ZeroFlag())
@@ -3572,10 +3661,17 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     
     UInt uiMEBits = 0;
     // Set Motion Field_
+#if L0034_COMBINED_LIST_CLEANUP
+    cMv[1] = mvValidList1;
+    iRefIdx[1] = refIdxValidList1;
+    uiBits[1] = bitsValidList1;
+    uiCost[1] = costValidList1;
+#else
     if ( pcCU->getSlice()->getNoBackPredFlag() || (pcCU->getSlice()->getNumRefIdx(REF_PIC_LIST_C) > 0 && pcCU->getSlice()->getRefIdxOfL0FromRefIdxOfL1(0)==0 ) )
     {
       uiCost[1] = MAX_UINT;
     }
+#endif
 #if AMP_MRG
     if (bTestNormalMC)
     {
@@ -4521,7 +4617,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   {
     while( pcCU->getWidth(0) > (pcCU->getSlice()->getSPS()->getMaxTrSize()<<uiTrLevel) ) uiTrLevel++;
   }
-  UInt uiMaxTrMode = pcCU->getSlice()->getSPS()->getMaxTrDepth() + uiTrLevel;
+  UInt uiMaxTrMode = 1 + uiTrLevel;
   
   while((uiWidth>>uiMaxTrMode) < (g_uiMaxCUWidth>>g_uiMaxCUDepth)) uiMaxTrMode--;
   

@@ -437,6 +437,15 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setNumRefIdx(REF_PIC_LIST_1,m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive);
 #endif
 
+#if L0386_DB_METRIC
+  if ( m_pcCfg->getDeblockingFilterMetric() )
+  {
+    rpcSlice->setDeblockingFilterOverrideFlag(true);
+    rpcSlice->setDeblockingFilterDisable(false);
+    rpcSlice->setDeblockingFilterBetaOffsetDiv2( 0 );
+    rpcSlice->setDeblockingFilterTcOffsetDiv2( 0 );
+  } else
+#endif
   if (rpcSlice->getPPS()->getDeblockingFilterControlPresentFlag())
   {
     rpcSlice->getPPS()->setDeblockingFilterOverrideEnabledFlag( !m_pcCfg->getLoopFilterOffsetInPPS() );
@@ -1222,7 +1231,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
  \param  rpcPic        picture class
  \retval rpcBitstream  bitstream class
  */
-Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstream, TComOutputBitstream* pcSubstreams )
+Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstreams )
 {
   UInt       uiCUAddr;
   UInt       uiStartCUAddr;
@@ -1402,39 +1411,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
         }
       }
       {
-          UInt uiCounter = 0;
-          vector<uint8_t>& rbsp   = pcSubstreams[uiSubStrm].getFIFO();
-          for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
-          {
-            /* 1) find the next emulated 00 00 {00,01,02,03}
-             * 2a) if not found, write all remaining bytes out, stop.
-             * 2b) otherwise, write all non-emulated bytes out
-             * 3) insert emulation_prevention_three_byte
-             */
-            vector<uint8_t>::iterator found = it;
-            do
-            {
-              /* NB, end()-1, prevents finding a trailing two byte sequence */
-              found = search_n(found, rbsp.end()-1, 2, 0);
-              found++;
-              /* if not found, found == end, otherwise found = second zero byte */
-              if (found == rbsp.end())
-              {
-                break;
-              }
-              if (*(++found) <= 3)
-              {
-                break;
-              }
-            } while (true);
-            it = found;
-            if (found != rbsp.end())
-            {
-              it++;
-              uiCounter++;
-            }
-          }
-        
+        UInt numStartCodeEmulations = pcSubstreams[uiSubStrm].countStartCodeEmulations();
         UInt uiAccumulatedSubstreamLength = 0;
         for (Int iSubstrmIdx=0; iSubstrmIdx < iNumSubstreams; iSubstrmIdx++)
         {
@@ -1442,7 +1419,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
         }
         // add bits coded in previous dependent slices + bits coded so far
         // add number of emulation prevention byte count in the tile
-        pcSlice->addTileLocation( ((pcSlice->getTileOffstForMultES() + uiAccumulatedSubstreamLength - uiBitsOriginallyInSubstreams) >> 3) + uiCounter );
+        pcSlice->addTileLocation( ((pcSlice->getTileOffstForMultES() + uiAccumulatedSubstreamLength - uiBitsOriginallyInSubstreams) >> 3) + numStartCodeEmulations );
       }
     }
 

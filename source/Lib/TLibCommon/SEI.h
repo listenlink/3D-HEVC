@@ -354,6 +354,60 @@ public:
   Bool m_gdrForegroundFlag;
 };
 
+#if L0208_SOP_DESCRIPTION_SEI
+class SEISOPDescription : public SEI
+{
+public:
+  PayloadType payloadType() const { return SOP_DESCRIPTION; }
+
+  SEISOPDescription() {}
+  virtual ~SEISOPDescription() {}
+
+  UInt m_sopSeqParameterSetId;
+  UInt m_numPicsInSopMinus1;
+
+  UInt m_sopDescVclNaluType[MAX_NUM_PICS_IN_SOP];
+  UInt m_sopDescTemporalId[MAX_NUM_PICS_IN_SOP];
+  UInt m_sopDescStRpsIdx[MAX_NUM_PICS_IN_SOP];
+  Int m_sopDescPocDelta[MAX_NUM_PICS_IN_SOP];
+};
+#endif
+
+#if J0149_TONE_MAPPING_SEI 
+class SEIToneMappingInfo : public SEI
+{
+public:
+  PayloadType payloadType() const { return TONE_MAPPING_INFO; }
+  SEIToneMappingInfo() {}
+  virtual ~SEIToneMappingInfo() {}
+
+  Int    m_toneMapId;
+  Bool   m_toneMapCancelFlag;
+  Bool   m_toneMapPersistenceFlag;
+  Int    m_codedDataBitDepth;
+  Int    m_targetBitDepth;
+  Int    m_modelId;
+  Int    m_minValue;
+  Int    m_maxValue;
+  Int    m_sigmoidMidpoint;
+  Int    m_sigmoidWidth;
+  std::vector<Int> m_startOfCodedInterval;
+  Int    m_numPivots;
+  std::vector<Int> m_codedPivotValue;
+  std::vector<Int> m_targetPivotValue;
+  Int    m_cameraIsoSpeedIdc;
+  Int    m_cameraIsoSpeedValue;
+  Int    m_exposureCompensationValueSignFlag;
+  Int    m_exposureCompensationValueNumerator;
+  Int    m_exposureCompensationValueDenomIdc;
+  Int    m_refScreenLuminanceWhite;
+  Int    m_extendedRangeWhiteLevel;
+  Int    m_nominalBlackLevelLumaCodeValue;
+  Int    m_nominalWhiteLevelLumaCodeValue;
+  Int    m_extendedWhiteLevelLumaCodeValue;
+};
+#endif
+
 typedef std::list<SEI*> SEIMessages;
 
 /// output a selection of SEI messages by payload type. Ownership stays in original message list.
@@ -364,5 +418,37 @@ SEIMessages extractSeisByType(SEIMessages &seiList, SEI::PayloadType seiType);
 
 /// delete list of SEI messages (freeing the referenced objects)
 Void deleteSEIs (SEIMessages &seiList);
+
+#if K0180_SCALABLE_NESTING_SEI
+class SEIScalableNesting : public SEI
+{
+public:
+  PayloadType payloadType() const { return SCALABLE_NESTING; }
+
+  SEIScalableNesting() {}
+  virtual ~SEIScalableNesting()
+  {
+    if (!m_callerOwnsSEIs)
+    {
+      deleteSEIs(m_nestedSEIs);
+    }
+  }
+
+  Bool  m_bitStreamSubsetFlag;
+  Bool  m_nestingOpFlag;
+  Bool  m_defaultOpFlag;                             //value valid if m_nestingOpFlag != 0
+  UInt  m_nestingNumOpsMinus1;                       // -"-
+  UInt  m_nestingMaxTemporalIdPlus1[MAX_TLAYER];     // -"-
+  UInt  m_nestingOpIdx[MAX_NESTING_NUM_OPS];         // -"-
+
+  Bool  m_allLayersFlag;                             //value valid if m_nestingOpFlag == 0
+  UInt  m_nestingNoOpMaxTemporalIdPlus1;             //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0
+  UInt  m_nestingNumLayersMinus1;                    //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0
+  UChar m_nestingLayerId[MAX_NESTING_NUM_LAYER];     //value valid if m_nestingOpFlag == 0 and m_allLayersFlag == 0. This can e.g. be a static array of 64 unsigned char values
+
+  Bool  m_callerOwnsSEIs;
+  SEIMessages m_nestedSEIs;
+};
+#endif
 
 //! \}
