@@ -226,6 +226,7 @@ Void TAppEncTop::xInitLibCfg()
 
   Int lowestQP;
   lowestQP =  - 6*(g_bitDepthY - 8); // XXX: check
+
 #if H_MV
   if ((m_iMaxDeltaQP == 0 ) && (m_iQP[layer] == lowestQP) && (m_useLossless == true))
 #else
