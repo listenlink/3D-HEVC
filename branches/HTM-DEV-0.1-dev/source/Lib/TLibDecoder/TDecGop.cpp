@@ -204,15 +204,25 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     rpcPic->destroyNonDBFilterInfo();
   }
 
+#if !H_3D
   rpcPic->compressMotion(); 
+#endif
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced()) c += 32;
 
   //-- For time output for each slice
+#if H_MV
+  printf("\nLayer %2d   POC %4d TId: %1d ( %c-SLICE, QP%3d ) ", pcSlice->getLayerId(),
+                                                              pcSlice->getPOC(),
+                                                              pcSlice->getTLayer(),
+                                                              c,
+                                                              pcSlice->getSliceQp() );
+#else
   printf("\nPOC %4d TId: %1d ( %c-SLICE, QP%3d ) ", pcSlice->getPOC(),
                                                     pcSlice->getTLayer(),
                                                     c,
                                                     pcSlice->getSliceQp() );
+#endif
 
   m_dDecTime += (Double)(clock()-iBeforeTime) / CLOCKS_PER_SEC;
   printf ("[DT %6.3f] ", m_dDecTime );
@@ -223,7 +233,18 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     printf ("[L%d ", iRefList);
     for (Int iRefIndex = 0; iRefIndex < pcSlice->getNumRefIdx(RefPicList(iRefList)); iRefIndex++)
     {
+#if H_MV
+      if( pcSlice->getLayerId() != pcSlice->getRefLayerId( RefPicList(iRefList), iRefIndex ) )
+      {
+        printf( "V%d ", pcSlice->getRefLayerId( RefPicList(iRefList), iRefIndex ) );
+      }
+      else
+      {
+#endif
       printf ("%d ", pcSlice->getRefPOC(RefPicList(iRefList), iRefIndex));
+#if H_MV
+      }
+#endif
     }
     printf ("] ");
   }

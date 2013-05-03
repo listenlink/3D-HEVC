@@ -73,6 +73,9 @@ private:
   UInt                    m_uiNumAllPicCoded;             ///< number of coded pictures
   TComList<TComPic*>      m_cListPic;                     ///< dynamic list of pictures
   
+#if H_MV
+  TComPicLists*           m_ivPicLists;                   ///< access to picture lists of other layers 
+#endif
   // encoder search
   TEncSearch              m_cSearch;                      ///< encoder search class
   TEncEntropy*            m_pcEntropyCoder;                     ///< entropy encoder 
@@ -121,6 +124,12 @@ private:
   TComScalingList         m_scalingList;                 ///< quantization matrix information
   TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
   
+#if H_MV
+  TEncAnalyze             m_cAnalyzeAll;
+  TEncAnalyze             m_cAnalyzeI;
+  TEncAnalyze             m_cAnalyzeP;
+  TEncAnalyze             m_cAnalyzeB;  
+#endif
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
@@ -136,10 +145,16 @@ public:
   Void      create          ();
   Void      destroy         ();
   Void      init            ();
+#if H_MV  
+  TComPicLists* getIvPicLists() { return m_ivPicLists; }
+#endif
   Void      deletePicBuffer ();
 
   Void      createWPPCoders(Int iNumSubstreams);
   
+#if H_MV
+  Void      initNewPic(TComPicYuv* pcPicYuvOrg);
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member access functions
   // -------------------------------------------------------------------------------------------------------------------
@@ -176,15 +191,36 @@ public:
   Int getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid );
 #endif
   TComScalingList*        getScalingList        () { return  &m_scalingList;         }
+#if H_MV
+  TEncAnalyze*            getAnalyzeAll         () { return &m_cAnalyzeAll; }
+  TEncAnalyze*            getAnalyzeI           () { return &m_cAnalyzeI;   }
+  TEncAnalyze*            getAnalyzeP           () { return &m_cAnalyzeP;   }
+  TEncAnalyze*            getAnalyzeB           () { return &m_cAnalyzeB;   }
+
+  Int                     getNumAllPicCoded     () { return m_uiNumAllPicCoded; }
+ 
+  Int                     getFrameId            (Int iGOPid);
+  
+  TComPic*                getPic                ( Int poc );
+  Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------
 
   /// encode several number of pictures until end-of-sequence
+#if H_MV
+  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded  , Int gopId  );  
+#else
   Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
               std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );  
+#endif
 
+#if H_MV
+  Void printSummary      ( Int numAllPicCoded ); 
+#else
   void printSummary() { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded); }
+#endif
 };
 
 //! \}

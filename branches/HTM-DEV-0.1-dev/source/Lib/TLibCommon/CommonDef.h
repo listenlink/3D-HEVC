@@ -55,7 +55,12 @@
 // Version information
 // ====================================================================================================================
 
+#if H_MV
+#define NV_VERSION        "0.1"                 ///< Current software version
+#define HM_VERSION        "10.1"                ///< 
+#else
 #define NV_VERSION        "10.1"                 ///< Current software version
+#endif
 
 // ====================================================================================================================
 // Platform information
@@ -151,6 +156,17 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
   exit(EXITCODE);                                             \
 }
 
+#if H_MV
+
+#define AOF( exp )                  \
+{                                   \
+  if( !( exp ) )                    \
+{                                 \
+  assert( 0 );                    \
+}                                 \
+}
+
+#endif
 
 // ====================================================================================================================
 // Coding tool configuration
