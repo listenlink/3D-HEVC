@@ -72,6 +72,9 @@ TEncSbac::TEncSbac()
 #if H3D_IVRP
 , m_cResPredFlagSCModel       ( 1,             1,               NUM_RES_PRED_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if QC_ARP_D0177
+, m_cCUPUARPW                 ( 1,             1,               NUM_ARPW_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAlfCtrlFlagSCModel     ( 1,             1,               NUM_ALF_CTRL_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
@@ -156,6 +159,9 @@ Void TEncSbac::resetEntropy           ()
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_RES_PRED_FLAG );
+#endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
@@ -309,6 +315,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_RES_PRED_FLAG );
+#endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
@@ -839,7 +848,24 @@ TEncSbac::codeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcBinIf->encodeBin( uiSymbol, m_cResPredFlagSCModel.get( 0, 0, uiCtx ) );
 }
 #endif
-
+#if QC_ARP_D0177
+Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  Int nW = pcCU->getARPW( uiAbsPartIdx );
+  Int nMaxW = pcCU->getSlice()->getARPStepNum() - 1;
+  assert( 0 <= nW && nW <= nMaxW );
+  assert(nMaxW > 0);
+  if( nMaxW > 0 )
+  {
+    Int nOffset = pcCU->getCTXARPWFlag(uiAbsPartIdx);
+    assert( 0 <= nOffset && nOffset <= 2 );
+    Int nBinNum = nW + ( nW != nMaxW );
+    m_pcBinIf->encodeBin( nW != 0 , m_cCUPUARPW.get( 0, 0, 0 + nOffset ) );
+    if( nBinNum > 1 )
+       m_pcBinIf->encodeBin( nW == nMaxW , m_cCUPUARPW.get( 0, 0, 3 ) );
+  }
+}
+#endif
 Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )

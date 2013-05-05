@@ -455,6 +455,36 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 }
 
 
+#if QC_ARP_D0177
+Void TEncEntropy::encodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD, UInt uiDepth)
+{
+  if( pcCU->getSlice()->getViewId() == 0 || pcCU->getSlice()->getIsDepth() == true || !pcCU->getSlice()->getARPStepNum() )
+  {
+    return;
+  }
+  assert( pcCU->isIntra( uiAbsPartIdx ) == false );
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  bool bSignalflag[2] = {true, true};
+  if (!(pcCU->getPartitionSize(uiAbsPartIdx)==SIZE_2Nx2N || pcCU->isSkipped(uiAbsPartIdx)))
+  {
+    assert(pcCU->getARPW (uiAbsPartIdx) == 0);
+    bSignalflag[0] = false;
+    bSignalflag[1] = false;
+ }
+  if (!(bSignalflag[0]|| bSignalflag[1]))
+  {
+    assert(pcCU->getARPW (uiAbsPartIdx) == 0);
+    if (uiDepth != -1)
+      pcCU->setARPWSubParts(0, uiAbsPartIdx, uiDepth);
+  }
+  else
+     m_pcEntropyCoderIf->codeARPW( pcCU, uiAbsPartIdx );
+ 
+}
+#endif
 /** parse the fixed length code (smaller than one max value) in ALF
  * \param run: coded value
  * \param rx: cur addr
@@ -1232,6 +1262,9 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
     encodePUWise( pcCU, uiAbsPartIdx, bRD );
+#if QC_ARP_D0177
+    encodeARPW( pcCU , uiAbsPartIdx , bRD );
+#endif
   }
 }
 

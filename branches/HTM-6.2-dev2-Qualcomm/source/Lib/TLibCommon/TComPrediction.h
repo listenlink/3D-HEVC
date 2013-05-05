@@ -68,6 +68,10 @@ protected:
   
   TComYuv   m_acYuvPred[2];
   TComYuv   m_cYuvPredTemp;
+#if QC_ARP_D0177
+  TComYuv   m_acYuvPredBase[2];
+  TComYuv   m_acYuvDiff[2];
+#endif
   TComYuv m_filteredBlock[4][4];
   TComYuv m_filteredBlockTmp[4];
   
@@ -85,6 +89,9 @@ protected:
   Void xPredIntraPlanar         ( Int* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height );
   
   // motion compensation functions
+#if QC_ARP_D0177
+  Void xPredInterUniARP       ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bi=false, TComMvField * pNewMvFiled = NULL );
+#endif
 #if MERL_VSP_C0152
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,       UInt uiAbsPartIdx,        Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0, Bool bi=false );
 #else
@@ -112,11 +119,31 @@ protected:
 #endif
 
 #if LGE_ILLUCOMP_B0045
-  Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi, Bool bICFlag = false );
-  Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi, Bool bICFlag = false );
+  Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi, Bool bICFlag = false
+#if QC_ARP_D0177
+    ,
+    Int filterType = 0
+#endif
+    );
+  Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi, Bool bICFlag = false
+#if QC_ARP_D0177
+    ,
+    Int filterType = 0
+#endif
+    );
 #else
-  Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi );
-  Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi );
+  Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi
+#if QC_ARP_D0177
+    ,
+    Int filterType = 0
+#endif
+    );
+  Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi
+#if QC_ARP_D0177
+    ,
+    Int filterType = 0
+#endif
+    );
 #endif
   Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
 
@@ -168,7 +195,7 @@ public:
   Void motionCompensation         ( TComDataCU*  pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList = REF_PIC_LIST_X, Int iPartIdx = -1, Bool bPrdDepthMap = false, UInt uiSubSampExpX = 0, UInt uiSubSampExpY = 0 );
 #endif
 
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   Void residualPrediction         (TComDataCU* pcCU, TComYuv* pcYuvPred, TComYuv* pcYuvResPred);
 #endif
 

@@ -92,7 +92,7 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
 #if DEPTH_MAP_GENERATION
                    ,TComDepthMapGenerator*  pcDepthMapGenerator
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
                   ,TComResidualGenerator*  pcResidualGenerator
 #endif
                    )
@@ -108,7 +108,7 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
 #if DEPTH_MAP_GENERATION
   m_pcDepthMapGenerator   = pcDepthMapGenerator;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_pcResidualGenerator   = pcResidualGenerator;
 #endif
 }
@@ -297,7 +297,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
 #if !H3D_NBDV
       m_pcDepthMapGenerator->predictDepthMap  ( rpcPic );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
       m_pcResidualGenerator->initViewComponent( rpcPic );
 #endif
     }
@@ -330,7 +330,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
   }
   else
   {
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
     // set residual picture
     m_pcResidualGenerator->setRecResidualPic( rpcPic );
 #endif

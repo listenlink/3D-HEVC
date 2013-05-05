@@ -53,7 +53,7 @@ TDecCu::TDecCu()
 {
   m_ppcYuvResi = NULL;
   m_ppcYuvReco = NULL;
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_ppcYuvResPred = NULL;
 #endif
   m_ppcCU      = NULL;
@@ -81,7 +81,7 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
   
   m_ppcYuvResi = new TComYuv*[m_uiMaxDepth-1];
   m_ppcYuvReco = new TComYuv*[m_uiMaxDepth-1];
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_ppcYuvResPred = new TComYuv*   [m_uiMaxDepth-1];
 #endif
   m_ppcCU      = new TComDataCU*[m_uiMaxDepth-1];
@@ -95,7 +95,7 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
     
     m_ppcYuvResi[ui] = new TComYuv;    m_ppcYuvResi[ui]->create( uiWidth, uiHeight );
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight );
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
     m_ppcYuvResPred[ui] = new TComYuv;    m_ppcYuvResPred[ui]->create( uiWidth, uiHeight );
 #endif
     m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1) );
@@ -119,7 +119,7 @@ Void TDecCu::destroy()
   {
     m_ppcYuvResi[ui]->destroy(); delete m_ppcYuvResi[ui]; m_ppcYuvResi[ui] = NULL;
     m_ppcYuvReco[ui]->destroy(); delete m_ppcYuvReco[ui]; m_ppcYuvReco[ui] = NULL;
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
     m_ppcYuvResPred[ui]->destroy(); delete m_ppcYuvResPred[ui]; m_ppcYuvResPred[ui] = NULL;
 #endif
     m_ppcCU     [ui]->destroy(); delete m_ppcCU     [ui]; m_ppcCU     [ui] = NULL;
@@ -127,7 +127,7 @@ Void TDecCu::destroy()
   
   delete [] m_ppcYuvResi; m_ppcYuvResi = NULL;
   delete [] m_ppcYuvReco; m_ppcYuvReco = NULL;
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   delete [] m_ppcYuvResPred; m_ppcYuvResPred = NULL;
 #endif
   delete [] m_ppcCU     ; m_ppcCU      = NULL;
@@ -316,7 +316,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       DvInfo.bDV = false;
       if(!pcCU->getSlice()->isIntra())
       {
+#if QC_ARP_D0177
+        if(( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() || pcCU->getSlice()->getSPS()->getUseAdvRP())             && pcCU->getSlice()->getViewId())
+#else
         if(( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() || pcCU->getSlice()->getSPS()->getMultiviewResPredMode()) && pcCU->getSlice()->getViewId())
+#endif
         {  
           m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, true );
           m_ppcCU[uiDepth]->copyDVInfoFrom( pcCU, uiAbsPartIdx);
@@ -442,6 +446,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if HHI_MPI
     }
 #endif
+#if QC_ARP_D0177
+    if( pcCU->getSlice()->getSPS()->getUseAdvRP() )
+    {
+      pcCU->setResPredAvailSubParts ( false, uiAbsPartIdx, 0, uiDepth );
+      pcCU->setResPredFlagSubParts  ( false, uiAbsPartIdx, 0, uiDepth );
+      m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth, m_ppcCU[uiDepth], 0 );
+    }
+#endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
     return;
   }
@@ -493,7 +505,13 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if LGE_ILLUCOMP_DEPTH_C0046 && HHI_MPI
   }
 #endif
-
+#if QC_ARP_D0177 
+  if (pcCU->getSlice()->getSPS()->getUseAdvRP() && pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    pcCU->setResPredAvailSubParts ( 0, uiAbsPartIdx, 0, uiDepth );
+    pcCU->setResPredFlagSubParts  ( 0, uiAbsPartIdx, 0, uiDepth );
+  }
+#endif
 #if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == uiDepth )
     {
@@ -703,7 +721,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #else
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   if (pcCU->getMergeFlag(0) && pcCU->getMergeIndex(0)==0 && pcCU->getResPredAvail(0))
   {
     m_pcPrediction->residualPrediction(pcCU, m_ppcYuvReco[uiDepth], m_ppcYuvResPred[uiDepth]);

@@ -64,6 +64,9 @@ TDecSbac::TDecSbac()
 #if H3D_IVRP
 , m_cResPredFlagSCModel       ( 1,             1,               NUM_RES_PRED_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if QC_ARP_D0177
+, m_cCUPUARPW                 ( 1,             1,               NUM_ARPW_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAlfCtrlFlagSCModel     ( 1,             1,               NUM_ALF_CTRL_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
@@ -161,6 +164,9 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_RES_PRED_FLAG );
 #endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                ( sliceType, qp, (UChar*)INIT_ARPW );
+#endif
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_ALF_CTRL_FLAG );
   m_cCUPartSizeSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CU_AMP_POS );
@@ -247,6 +253,9 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_RES_PRED_FLAG );
+#endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
 #endif
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_ALF_CTRL_FLAG );
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
@@ -2234,7 +2243,28 @@ Void TDecSbac::xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartId
   pcCU->setContourPredTexDeltaDC2SubParts( iDC2, uiAbsPartIdx, uiDepth );
 }
 #endif
-
+#if QC_ARP_D0177
+Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt nMaxW = pcCU->getSlice()->getARPStepNum() - 1;
+  assert (nMaxW >= 0);
+  UInt nW = 0;
+  if( nMaxW > 0 )
+  {
+    UInt nOffset = pcCU->getCTXARPWFlag(uiAbsPartIdx);
+    assert( 0 <= nOffset && nOffset <= 2 );
+    UInt uiCode = 0;
+    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPW.get( 0, 0, 0 + nOffset ) );
+    nW = uiCode;
+    if( nW == 1 )   
+    {
+      m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPW.get( 0, 0, 3 ) );
+      nW += ( uiCode == 1 );
+    }
+  }
+  pcCU->setARPWSubParts( ( UChar )( nW ) , uiAbsPartIdx, uiDepth );  
+}
+#endif
 #if LGE_EDGE_INTRA_A0070
 Void TDecSbac::xParseEdgeIntraInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {

@@ -175,6 +175,9 @@ public:
 #if H3D_IVRP
   Void parseResPredFlag   ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
+#if QC_ARP_D0177
+  Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
@@ -217,6 +220,9 @@ private:
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
 #if H3D_IVRP
   ContextModel3DBuffer m_cResPredFlagSCModel;
+#endif
+#if QC_ARP_D0177
+  ContextModel3DBuffer m_cCUPUARPW;
 #endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;

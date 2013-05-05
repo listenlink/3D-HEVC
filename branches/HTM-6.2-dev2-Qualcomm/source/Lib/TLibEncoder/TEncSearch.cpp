@@ -4673,6 +4673,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       , pcCU->getDepth( 0 )
 #endif
       );
+#if QC_ARP_D0177
+    m_pcEntropyCoder->encodeARPW       ( pcCU , 0 , true );
+#endif
 #endif
 #if HHI_MPI
     }
@@ -5953,6 +5956,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #endif
       );
 #endif
+#if QC_ARP_D0177
+    m_pcEntropyCoder->encodeARPW( pcCU , 0 , true );
+#endif
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }
   else
@@ -5976,6 +5982,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
       , pcCU->getDepth( 0 )
 #endif
       );
+#if QC_ARP_D0177
+    m_pcEntropyCoder->encodeARPW( pcCU , 0 , true );
+#endif
 #endif
 #if HHI_MPI
     }
