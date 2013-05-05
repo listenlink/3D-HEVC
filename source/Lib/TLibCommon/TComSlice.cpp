@@ -1385,7 +1385,38 @@ Void TComSlice::xSetApplyIC()
   aiRefOrgHist = NULL;
 }
 #endif
-
+#if QC_ARP_D0177
+Void TComSlice::setARPStepNum()                                  
+{
+  Bool bAllIvRef = false;
+  if(!getSPS()->getUseAdvRP())
+    m_nARPStepNum = 0;
+  else
+  {
+    for( Int iRefListId = 0; iRefListId < 2; iRefListId++ )
+    {
+      RefPicList  eRefPicList = RefPicList( iRefListId );
+      Int iNumRefIdx = getNumRefIdx(eRefPicList);
+      if( iNumRefIdx <= 0 )
+        continue;
+      for (Int i = 0; i < iNumRefIdx; i++)
+      {
+        if(getRefPic( REF_PIC_LIST_0, i)->getPOC() != getPOC())
+        {
+          bAllIvRef = true;
+          break;
+        }
+      }
+      if( bAllIvRef == true )
+        break;
+    }
+    if(bAllIvRef== true)
+      m_nARPStepNum = getSPS()->getARPStepNum();
+    else
+      m_nARPStepNum = 0;
+  }
+}
+#endif
 // ------------------------------------------------------------------------------------------------
 // Video parameter set (VPS)
 // ------------------------------------------------------------------------------------------------
@@ -1575,7 +1606,10 @@ TComSPS::TComSPS()
 #if H3D_IVMP
   m_uiMultiviewMvPredMode    = 0;
 #endif
-
+#if QC_ARP_D0177
+  m_nUseAdvResPred           = 0;
+  m_nARPStepNum              = 1;
+#endif
   ::memset( m_aiUsableInterViewRefs, 0, sizeof( m_aiUsableInterViewRefs ) );
   
 #if RWTH_SDC_DLT_B0036

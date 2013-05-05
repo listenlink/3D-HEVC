@@ -94,6 +94,10 @@
                                               // LG_RESTRICTEDRESPRED_M24766       1   // Restricted inter-view residual prediction
                                               // FIX_LG_RESTRICTEDRESPRED_M24766   1
 
+#define QC_ARP_D0177            1      ////< advanced residual prediction
+#if QC_ARP_D0177
+#define QC_ARP_WFNR       3
+#endif
 ///// ***** DISPARITY VECTOR DERIVATION *********
 #define H3D_NBDV                          1   // Neighboring block disparity derivation 
                                               // JCT3V-A0097 
@@ -110,7 +114,7 @@
                                               // MTK_RELEASE_DV_CONSTRAINT_C0129   
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // FIX_CHROMA_RESIDUAL_C0129         
-
+#define QC_CU_NBDV_D0181                  1
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
 #define HHI_MPI                           0   // motion parameter inheritance from texture picture for depth map coding

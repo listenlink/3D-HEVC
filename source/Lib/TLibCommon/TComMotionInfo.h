@@ -63,6 +63,12 @@ typedef struct _DisCand
 {
   TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates
   Int    m_aVIdxCan[ DIS_CANS ];            ///< array of motion vector predictor candidates
+#if QC_CU_NBDV_D0181 
+  Bool bDV;
+#if MERL_VSP_C0152
+  TComMv m_acMvCandNoRef[ DIS_CANS ];
+#endif
+#endif
   Int    iN;                                ///< number of motion vector predictor candidates
 } DisInfo;
 

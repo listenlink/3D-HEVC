@@ -487,5 +487,12 @@ Void TComPicYuv::xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int
     piPelSource += iSourceStride; 
   }
 }
-
+#if QC_ARP_D0177
+Void  TComPicYuv::clearPic()
+{
+  ::memset ( m_apiPicBufY, 0 , sizeof (Pel) * ( m_iPicWidth       + (m_iLumaMarginX   << 1)) * ( m_iPicHeight       + (m_iLumaMarginY   << 1)) );
+  ::memset ( m_apiPicBufU, 0 , sizeof (Pel) * ((m_iPicWidth >> 1) + (m_iChromaMarginX << 1)) * ((m_iPicHeight >> 1) + (m_iChromaMarginY << 1)) );
+  ::memset ( m_apiPicBufV, 0 , sizeof (Pel) * ((m_iPicWidth >> 1) + (m_iChromaMarginX << 1)) * ((m_iPicHeight >> 1) + (m_iChromaMarginY << 1)) );
+}
+#endif
 //! \}
