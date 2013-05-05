@@ -116,6 +116,9 @@ public:
 #if H3D_IVRP
   virtual Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
+#if QC_ARP_D0177
+  virtual Void codeARPW         ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -249,6 +252,9 @@ public:
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx );
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD = false );
+#if QC_ARP_D0177
+  Void encodeARPW              ( TComDataCU* pcCU, UInt uiAbspartIdx , Bool bRD = false, UInt uiDepth = -1);
+#endif
   Void encodeAlfCtrlFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 
   /// set slice granularity

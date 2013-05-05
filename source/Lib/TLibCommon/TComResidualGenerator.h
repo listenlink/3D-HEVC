@@ -49,7 +49,7 @@
 #include "TComTrQuant.h"
 
 
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
 
 class TComResidualGenerator
 {

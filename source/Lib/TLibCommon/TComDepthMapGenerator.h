@@ -79,7 +79,7 @@ public:
                       Bool     bIsDepth = false ) { return m_aacActiveSPS[ bIsDepth ? 1 : 0 ][ uiViewId ]; }
 
   UInt      getPdm  ()                            { if( m_aacActiveSPS[0][1] ) { return m_aacActiveSPS[0][1]->getPredDepthMapGeneration(); } return 0; }
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   UInt      getResPrd ()                          { if( m_aacActiveSPS[0][1] ) { return m_aacActiveSPS[0][1]->getMultiviewResPredMode  (); } return 0; }
 #endif
 

@@ -43,7 +43,7 @@
 #include "TComResidualGenerator.h"
 
 
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
 
 
 TComResidualGenerator::TComResidualGenerator()
@@ -224,7 +224,9 @@ TComResidualGenerator::setRecResidualPic( TComPic* pcPic )
     }
   }
 }
+#endif
 
+#if !QC_ARP_D0177
 #if H3D_NBDV
 Bool
 TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComYuv* pcYuv, TComMv iDisp, Bool bRecon  ) 
@@ -248,7 +250,7 @@ TComResidualGenerator::getResidualSamples( TComDataCU* pcCU, UInt uiPUIdx, TComY
 #endif // H3D_NBDV
 }
   
-#if H3D_NBDV
+#if H3D_NBDV 
 Bool
 TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiYPos, UInt uiBlkWidth, UInt uiBlkHeight, TComYuv* pcYuv, TComMv iDisp, Bool bRecon)  
 #else
@@ -262,12 +264,21 @@ TComResidualGenerator::getResidualSamples( TComPic* pcPic, UInt uiXPos, UInt uiY
     pcYuv = m_ppcYuvTmp[1];
   }
   UInt uiXPosInRefView = uiXPos , uiYPosInRefView = uiYPos;
+#if QC_ARP_D0177
+  if(pcPic->getSPS()->getMultiviewResPredMode())
+  {
+#endif
 #if H3D_NBDV
   xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, iDisp, &uiXPosInRefView , &uiYPosInRefView , bRecon  );
 #else
   xSetPredResidualBlock( pcPic, uiBaseViewId, uiXPos, uiYPos, uiBlkWidth, uiBlkHeight, pcYuv, &uiXPosInRefView , &uiYPosInRefView , bRecon    );
 #endif
   return true;
+#if QC_ARP_D0177
+  }
+  else
+    return true;
+#endif
 }
 
 Bool TComResidualGenerator::xIsNonZeroByCBF( UInt uiBaseViewId , UInt uiXPos , UInt uiYPos, UInt uiBlkWidth , UInt uiBlkHeight )

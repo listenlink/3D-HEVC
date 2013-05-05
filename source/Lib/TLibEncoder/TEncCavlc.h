@@ -159,6 +159,9 @@ public:
 #if H3D_IVRP
   Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
+#if QC_ARP_D0177
+  virtual Void codeARPW ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
   Void codeApsExtensionFlag ();

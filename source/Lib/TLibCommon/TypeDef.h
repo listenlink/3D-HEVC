@@ -94,6 +94,10 @@
                                               // LG_RESTRICTEDRESPRED_M24766       1   // Restricted inter-view residual prediction
                                               // FIX_LG_RESTRICTEDRESPRED_M24766   1
 
+#define QC_ARP_D0177            1      ////< advanced residual prediction
+#if QC_ARP_D0177
+#define QC_ARP_WFNR       3
+#endif
 ///// ***** DISPARITY VECTOR DERIVATION *********
 #define H3D_NBDV                          1   // Neighboring block disparity derivation 
                                               // JCT3V-A0097 
