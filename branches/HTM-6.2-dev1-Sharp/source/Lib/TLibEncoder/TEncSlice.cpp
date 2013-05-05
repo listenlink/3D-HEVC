@@ -777,6 +777,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       && pcEncTop->getUseIC())   // DCP of ViewID 0 is not available
   {
     pcSlice ->xSetApplyIC();
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (pcSlice->getApplyIC())
+    {
+      pcSlice->setIcSkipParseFlag(rpcPic->getCurrSlice()->getPOC() % m_pcCfg->getIntraPeriod() != 0);
+    }
+#endif
   }
 #endif
 

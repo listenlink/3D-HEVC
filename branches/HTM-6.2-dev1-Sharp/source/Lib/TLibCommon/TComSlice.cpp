@@ -112,6 +112,9 @@ TComSlice::TComSlice()
 , m_numEntryPointOffsets          ( 0 )
 #if LGE_ILLUCOMP_B0045
 , m_bApplyIC                      ( false )
+#if SHARP_ILLUCOMP_PARSE_D0060
+, m_icSkipParseFlag               ( false )
+#endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115
 , m_bIVScalingFlag                (false)
@@ -826,6 +829,12 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_numEntryPointOffsets  = pSrc->m_numEntryPointOffsets;
 
   m_bLMvdL1Zero = pSrc->m_bLMvdL1Zero;
+#if LGE_ILLUCOMP_B0045
+  m_bApplyIC = pSrc->m_bApplyIC;
+#if SHARP_ILLUCOMP_PARSE_D0060
+  m_icSkipParseFlag = pSrc->m_icSkipParseFlag;
+#endif
+#endif
 }
 
 int TComSlice::m_prevPOC = 0;

@@ -143,6 +143,8 @@
 #endif
 #endif
 
+#define SHARP_ILLUCOMP_PARSE_D0060        1   // JCT3V-D0060 Removal of IC's parsing dependency
+
 ///// ***** INTERVIEW SKIP *********
 #define HHI_INTERVIEW_SKIP                1
 

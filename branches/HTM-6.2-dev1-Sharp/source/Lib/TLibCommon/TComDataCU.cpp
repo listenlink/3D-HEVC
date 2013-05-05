@@ -3002,8 +3002,27 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
   UInt uiPartAddr;
   UInt iNumbPart;
 
+#if SHARP_ILLUCOMP_PARSE_D0060
+  if (!(getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N))
+  {
+    return false;
+  }
+  if (getSlice()->getIcSkipParseFlag())
+  {
+    if (getMergeFlag(uiAbsPartIdx) && getMergeIndex(uiAbsPartIdx) == 0)
+    {
+      return false;
+    }
+  }
+  if (getMergeFlag(uiAbsPartIdx))
+  {
+    return true;
+  }
+#endif
+#if HHI_MPI
   if(!getSlice()->getIsDepth())
   {
+#endif
     Int iWidth, iHeight;
 
     iNumbPart = ( getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N ? 1 : (getPartitionSize(uiAbsPartIdx) == SIZE_NxN ? 4 : 2) );
@@ -3024,6 +3043,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
         }
       }
     }
+#if HHI_MPI
   }
   else
   {
@@ -3045,6 +3065,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
       }
     }
   }
+#endif
 
   return false;
 }
@@ -3055,6 +3076,23 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx)
   UInt iNumbPart;
   Int iWidth, iHeight;
 
+#if SHARP_ILLUCOMP_PARSE_D0060
+  if (!(getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N))
+  {
+    return false;
+  }
+  if (getSlice()->getIcSkipParseFlag())
+  {
+    if (getMergeFlag(uiAbsPartIdx) && getMergeIndex(uiAbsPartIdx) == 0)
+    {
+      return false;
+    }
+  }
+  if (getMergeFlag(uiAbsPartIdx))
+  {
+    return true;
+  }
+#endif
   UInt uiPartMode = getPartitionSize(uiAbsPartIdx);
 
   iNumbPart = (uiPartMode == SIZE_2Nx2N ? 1 : (uiPartMode == SIZE_NxN ? 4 : 2) );

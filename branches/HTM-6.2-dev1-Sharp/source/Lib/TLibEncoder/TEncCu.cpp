@@ -664,7 +664,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       } // != I_SLICE
 
 #if LGE_ILLUCOMP_B0045
+#if SHARP_ILLUCOMP_PARSE_D0060
+    bICEnabled = false;
+#else
     bICEnabled = rpcBestCU->getICFlag(0);
+#endif
 #endif
 
 #if H3D_QTL
@@ -719,10 +723,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           Bool bResPredFlag  = ( uiResPrdId > 0 );
 #if LGE_ILLUCOMP_B0045
+#if SHARP_ILLUCOMP_PARSE_D0060
+          {
+            Bool bICFlag = false;
+            rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#else
           for(UInt uiICId = 0; uiICId < (bICEnabled ? 2 : 1); uiICId++)
           {
             Bool bICFlag = (uiICId ? true : false);
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#endif
 #endif
 #endif
           // 2Nx2N, NxN
@@ -1874,6 +1884,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   {
     {
       TComYuv* pcPredYuvTemp = NULL;
+#if SHARP_ILLUCOMP_PARSE_D0060
+      if (rpcTempCU->getSlice()->getApplyIC() && rpcTempCU->getSlice()->getIcSkipParseFlag())
+      {
+        if (bICFlag && uiMergeCand == 0) 
+        {
+          continue;
+        }
+      }
+#endif
 #if LOSSLESS_CODING
       UInt iteration;
       if ( rpcTempCU->isLosslessCoded(0))

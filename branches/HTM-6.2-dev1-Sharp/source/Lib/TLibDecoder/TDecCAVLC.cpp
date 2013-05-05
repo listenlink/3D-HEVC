@@ -1664,6 +1664,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_FLAG (uiCodeTmp, "applying IC flag");
     }
     rpcSlice->setApplyIC(uiCodeTmp);
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (rpcSlice->getApplyIC())
+    {
+      READ_FLAG (uiCodeTmp, "ic_skip_mergeidx0");
+      rpcSlice->setIcSkipParseFlag(uiCodeTmp);
+    }
+#endif
   }
 #endif
 
