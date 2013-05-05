@@ -1105,6 +1105,9 @@ private:
 
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Bool        m_icSkipParseFlag;
+#endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115|QC_MVHEVC_B0046
   Bool       m_bIVScalingFlag;
@@ -1400,6 +1403,10 @@ public:
   Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
   Bool      getApplyIC            ()  { return m_bApplyIC; }
   Void      xSetApplyIC           ();
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Void      setIcSkipParseFlag( Bool b ) { m_icSkipParseFlag = b; }
+  Bool      getIcSkipParseFlag() { return m_icSkipParseFlag; }
+#endif
 #endif
 #if QC_TMVP_MRG_REFIDX_C0047
   Int       getNewRefIdx        ( RefPicList e )                { return  m_aiNewRefIdx[e];     }

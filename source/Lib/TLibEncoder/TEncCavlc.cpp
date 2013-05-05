@@ -789,6 +789,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "applying IC flag" );
     }
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (pcSlice->getApplyIC())
+    {
+      WRITE_FLAG( pcSlice->getIcSkipParseFlag() ? 1 : 0, "ic_skip_mergeidx0" );
+    }
+#endif
   }
 #endif
 
