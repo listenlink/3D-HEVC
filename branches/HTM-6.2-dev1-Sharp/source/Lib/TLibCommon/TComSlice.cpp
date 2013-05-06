@@ -829,11 +829,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_numEntryPointOffsets  = pSrc->m_numEntryPointOffsets;
 
   m_bLMvdL1Zero = pSrc->m_bLMvdL1Zero;
-#if LGE_ILLUCOMP_B0045
-  m_bApplyIC = pSrc->m_bApplyIC;
 #if SHARP_ILLUCOMP_PARSE_D0060
+  m_bApplyIC = pSrc->m_bApplyIC;
   m_icSkipParseFlag = pSrc->m_icSkipParseFlag;
-#endif
 #endif
 }
 
