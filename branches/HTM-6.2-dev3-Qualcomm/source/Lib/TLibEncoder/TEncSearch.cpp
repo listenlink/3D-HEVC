@@ -6311,7 +6311,11 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
   Int* piMask = pcCU->getPattern()->getAdiOrgBuf( uiWidth, uiHeight, m_piYuvExt );
   Int iMaskStride = ( uiWidth<<1 ) + 1;
   piMask += iMaskStride+1;
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pcWedgelet->getPattern(), pcWedgelet->getStride(), piMask, iMaskStride, iPredDC1, iPredDC2 );
+#else
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAboveAvail, bLeftAvail );
+#endif
 
   riDeltaDC1 = iDC1 - iPredDC1;
   riDeltaDC2 = iDC2 - iPredDC2;
@@ -7876,6 +7880,9 @@ Void TEncSearch::xAssignEdgeIntraDeltaDCs( TComDataCU*   pcCU,
   }
 
   // PredDC Calculation
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pbRegion, uiWidth, piMask+iMaskStride+1, iMaskStride, iPredDC0, iPredDC1 );
+#else
   {
     UInt uiSum0 = 0;
     UInt uiSum1 = 0;
@@ -7915,6 +7922,7 @@ Void TEncSearch::xAssignEdgeIntraDeltaDCs( TComDataCU*   pcCU,
     iPredDC0 = uiSum0 / uiCount0; // TODO : integer op.
     iPredDC1 = uiSum1 / uiCount1;
   }
+#endif
 
   iDeltaDC0 = iDC0 - iPredDC0;
   iDeltaDC1 = iDC1 - iPredDC1;
