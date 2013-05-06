@@ -3019,7 +3019,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
     return true;
   }
 #endif
-#if HHI_MPI
+#if !SHARP_ILLUCOMP_PARSE_D0060
   if(!getSlice()->getIsDepth())
   {
 #endif
@@ -3043,7 +3043,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
         }
       }
     }
-#if HHI_MPI
+#if !SHARP_ILLUCOMP_PARSE_D0060
   }
   else
   {
