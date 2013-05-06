@@ -63,6 +63,8 @@
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 #define LGE_DMM3_SIMP_C0044               1
 
+#define QC_DC_PREDICTOR_D0183             1   // JCT3V-D0183: Simplified DC predictor for depth intra modes
+
 ///// ***** SDC *********
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
                                               // SAIT_SDC_C0096 JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
