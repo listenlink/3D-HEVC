@@ -122,9 +122,13 @@ public:
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   virtual Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment ) = 0;
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   virtual Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
 #endif
   
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag) = 0;
@@ -132,7 +136,11 @@ public:
   virtual Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx ) = 0;
   virtual Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth ) = 0;
   virtual Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  virtual Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    , Bool bSdcRD = false
+#endif
+    ) = 0;
   
   virtual Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -264,8 +272,16 @@ public:
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-  Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-  Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    ,Bool bSdcRD = false
+#endif
+    );
+  Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+ ,Bool bSdcRD = false 
+#endif
+    );
   
   Void encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   
@@ -283,9 +299,13 @@ public:
   Void encodeDFParams          (TComAPS* pcAPS);
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void encodeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
   Void encodeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void encodeSDCPredMode   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
 #endif
 
 private:
