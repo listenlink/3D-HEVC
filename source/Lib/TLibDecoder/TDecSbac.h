@@ -119,8 +119,10 @@ public:
   Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam);
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
 private:
@@ -177,7 +179,10 @@ public:
 #endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+  Void parseDepthIntraMode  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseDepthModelingTable( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -252,8 +257,10 @@ private:
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   ContextModel3DBuffer m_cDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
+#endif
   ContextModel3DBuffer m_cDmmDataSCModel;
 #endif
 #if LGE_EDGE_INTRA_A0070
@@ -264,7 +271,12 @@ private:
 #endif
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   ContextModel3DBuffer m_cSDCFlagSCModel;
+#else
+  ContextModel3DBuffer m_cDepthModeModel;
+  ContextModel3DBuffer m_cDmmDeltaFlagModel;
+#endif
   
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
   ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
