@@ -75,6 +75,7 @@
 #endif
 #define FIX_SDC_ENC_RD_WVSO_D0163         1   // JCT3V-D0163: fix for SDC encoder rd-cost (VSO -> WVSO)
 
+#define PKU_QC_DEPTH_INTRA_UNI_D0195      1   // JCT3V-D0195: unified syntax table for depth intra coding tools
 ///// ***** TMVP/AMVP *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
 #define QC_TMVP_MRG_REFIDX_C0047          1   // only enabled when QC_TMVP_IDX_MOD_B0046 is enabled.

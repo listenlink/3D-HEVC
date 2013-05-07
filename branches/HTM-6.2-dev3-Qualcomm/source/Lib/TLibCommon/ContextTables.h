@@ -127,7 +127,12 @@
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+#define DEPTH_MODE_NUM_FLAG_CTX          8
+#define DMM_DELTA_NUM_FLAG_CTX           1
+#else
 #define SDC_NUM_FLAG_CTX                 3
+#endif
 #define SDC_NUM_RESIDUAL_FLAG_CTX        1
 #define SDC_NUM_SIGN_FLAG_CTX            1
 #define SDC_NUM_RESIDUAL_CTX             10
@@ -522,6 +527,20 @@ INIT_EDGE_INTRA_DELTA_DC[3][NUM_EDGE_INTRA_DELTA_DC_CTX] =
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+static const UChar INIT_DEPTHMODE_FLAG[3][DEPTH_MODE_NUM_FLAG_CTX]=
+{
+  {0,  0,  64,   0, CNU,   0, CNU, 0},
+  {0, 64,   0, CNU,   0, CNU,   0, 0},
+  {64, 0, CNU,   0, CNU,   0,   0, 0}
+};
+static const UChar INIT_DMMDELTA_FLAG[3][DMM_DELTA_NUM_FLAG_CTX]=
+{
+  {0},
+  {0},
+  {64}
+};
+#else
 static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
 {
   {
@@ -534,6 +553,7 @@ static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
     {    0,   64 }, {    0,   64 }, {    0,   64 }
   }
 };
+#endif
 
 static const Short INIT_SDC_RESIDUAL_FLAG[3][3*SDC_NUM_RESIDUAL_FLAG_CTX][2] =
 {

@@ -907,7 +907,11 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
     {
       if( uiAbsPartIdx == 0 )
       {
-        m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 );
+        m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+         ,true
+#endif
+          );
       }
     }
     else
@@ -1761,8 +1765,11 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
   
   // encode pred direction + residual data
-  m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
-  
+  m_pcEntropyCoder->encodePredInfo( pcCU, 0, true 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    ,true
+#endif
+    );
   UInt   uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
   
 #if HHI_VSO
@@ -5902,12 +5909,19 @@ UInt TEncSearch::xModeBitsIntra( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt 
   {
     // Reload only contexts required for coding intra mode information
     m_pcRDGoOnSbacCoder->loadIntraDirModeLuma( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    m_pcRDGoOnSbacCoder->loadDepthMode( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+#endif
   }
   
   pcCU->setLumaIntraDirSubParts ( uiMode, uiPartOffset, uiDepth + uiInitTrDepth );
   
   m_pcEntropyCoder->resetBits();
-  m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPartOffset);
+  m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPartOffset
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    ,true
+#endif
+    );
   
   return m_pcEntropyCoder->getNumberOfWrittenBits();
 }

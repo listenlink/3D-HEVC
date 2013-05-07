@@ -136,8 +136,10 @@ public:
   virtual Void updateContextTables( SliceType eSliceType, Int iQp ) = 0;
   
 #if RWTH_SDC_DLT_B0036
-  virtual Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
+  virtual Void parseSDCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseSDCPredMode     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#endif
   virtual Void parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart ) = 0;
 #endif
   
@@ -231,8 +233,10 @@ public:
   Void decodeFlush() { m_pcEntropyDecoderIf->decodeFlush(); }
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void decodeSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void decodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
