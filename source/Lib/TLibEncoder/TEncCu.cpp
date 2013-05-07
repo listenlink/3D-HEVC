@@ -664,7 +664,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       } // != I_SLICE
 
 #if LGE_ILLUCOMP_B0045
+#if SHARP_ILLUCOMP_PARSE_D0060
+    bICEnabled = false;
+#else
     bICEnabled = rpcBestCU->getICFlag(0);
+#endif
 #endif
 
 #if H3D_QTL
@@ -719,10 +723,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           Bool bResPredFlag  = ( uiResPrdId > 0 );
 #if LGE_ILLUCOMP_B0045
+#if SHARP_ILLUCOMP_PARSE_D0060
+          {
+            Bool bICFlag = false;
+            rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#else
           for(UInt uiICId = 0; uiICId < (bICEnabled ? 2 : 1); uiICId++)
           {
             Bool bICFlag = (uiICId ? true : false);
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#endif
 #endif
 #endif
           // 2Nx2N, NxN
@@ -1874,6 +1884,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   {
     {
       TComYuv* pcPredYuvTemp = NULL;
+#if SHARP_ILLUCOMP_PARSE_D0060
+      if (rpcTempCU->getSlice()->getApplyIC() && rpcTempCU->getSlice()->getIcSkipParseFlag())
+      {
+        if (bICFlag && uiMergeCand == 0) 
+        {
+          continue;
+        }
+      }
+#endif
 #if LOSSLESS_CODING
       UInt iteration;
       if ( rpcTempCU->isLosslessCoded(0))
@@ -1919,6 +1938,13 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
                 }
             }
             rpcTempCU->setVSPIndexSubParts( iVSPIdx, 0, 0, uhDepth );
+#if QC_BVSP_CleanUP_D0191
+           if(iVSPIdx != 0)
+           {
+             Int iIVCIdx = rpcTempCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==rpcTempCU->getSlice()->getPOC() ? 0: rpcTempCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+             cMvFieldNeighbours[ 2*uiMergeCand].setRefIdx(iIVCIdx);
+           }
+#endif
           }
 #endif
           rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
