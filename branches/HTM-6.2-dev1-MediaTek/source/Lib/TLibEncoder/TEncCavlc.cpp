@@ -715,7 +715,16 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #endif
       }
 #endif
+
     }
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+    WRITE_FLAG( pcSPS->getUseVSPCompensation() ? 1 : 0,              "view_synthesis_pred_flag" );
+#endif
+
+    WRITE_FLAG( pcSPS->getUseDVPRefine() ? 1 : 0,                    "dv_refine_flag" );
+#endif
   }
   else
   {

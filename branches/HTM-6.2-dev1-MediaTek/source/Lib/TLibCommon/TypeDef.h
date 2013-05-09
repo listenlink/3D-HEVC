@@ -175,6 +175,7 @@
 #define FCO_FIX_SPS_CHANGE                0 // Fixing bugs from HTM 6.0 which 
 #endif
 
+
 ///// ***** VSP *********
 #define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
                                             // LGE_SIMP_DVP_REFINE_C0112            
@@ -182,6 +183,8 @@
 #if MERL_VSP_C0152
 #define MERL_VSP_C0152_BugFix_ForNoDepthCase     1// MERL bugfix for test condition of no depth
 #define QC_BVSP_CleanUP_D0191                    1
+
+#define MTK_D0156                 1
 /*
  * Two macros are used to configure combinations of JCT3V-C0152 and JCT3V-C0131
  * 

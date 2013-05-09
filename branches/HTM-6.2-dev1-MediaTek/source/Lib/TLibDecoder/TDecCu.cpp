@@ -372,6 +372,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if MERL_VSP_C0152
     Int iVSPIndexTrue[3] = {-1, -1, -1};
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
+    
+#if MTK_D0156
+    if( !pcCU->getSlice()->getSPS()->getUseVSPCompensation() )
+    {
+        pcCU->setVSPIndexSubParts( 0, uiAbsPartIdx, 0, uiDepth ); 
+    }
+    else
+#endif
     {
       Int iVSPIdx = 0;
       Int numVspIdx;

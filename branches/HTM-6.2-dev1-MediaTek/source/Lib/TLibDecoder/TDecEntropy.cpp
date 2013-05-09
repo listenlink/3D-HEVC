@@ -316,6 +316,13 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       }
       else // MPI not used
 #endif
+#if MTK_D0156
+          if( !pcCU->getSlice()->getSPS()->getUseVSPCompensation() )
+          {
+              pcCU->setVSPIndexSubParts( 0, uiSubPartIdx, uiPartIdx, uiDepth ); 
+          }
+          else
+#endif
       {
         Int iVSPIdx = 0;
         Int numVspIdx;
