@@ -1704,11 +1704,16 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     {
       UChar ucSegment = pMask?(UChar)pMask[uiX]:0;
       assert( ucSegment < uiNumSegments );
+#if MTK_SAMPLE_BASED_SDC_D0110      
+      Pel pResiDC = apDCResiValues[ucSegment];
       
+      pReco    [ uiX ] = Clip( pPred[ uiX ] + pResiDC );
+#else
       Pel pPredVal= apDCPredValues[ucSegment];
       Pel pResiDC = apDCResiValues[ucSegment];
       
       pReco    [ uiX ] = Clip( pPredVal + pResiDC );
+#endif
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
     pPred     += uiStride;
