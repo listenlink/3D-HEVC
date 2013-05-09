@@ -709,6 +709,14 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif
 
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  m_cSPS.setUseVSPCompensation           ( m_bUseVSPCompensation );
+#endif
+  m_cSPS.setUseDVPRefine                 ( m_bUseDVPRefine       );
+#endif
+
   if( m_isDepth )
   {
 #if FCO_FIX_SPS_CHANGE
@@ -743,6 +751,7 @@ Void TEncTop::xInitSPS()
 #if H3D_IVRP
       m_cSPS.setMultiviewResPredMode  ( m_uiMultiviewResPredMode );
 #endif
+
     }
     else
     {

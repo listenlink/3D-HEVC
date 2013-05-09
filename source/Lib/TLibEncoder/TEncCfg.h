@@ -335,6 +335,14 @@ protected:
   UInt        m_uiMultiviewResPredMode;
 #endif
 
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_bUseVSPCompensation;
+#endif
+  Bool      m_bUseDVPRefine;
+#endif
+
 public:
   TEncCfg()          {}
   virtual ~TEncCfg()
@@ -808,6 +816,19 @@ public:
 #if INTER_VIEW_VECTOR_SCALING_C0115
   Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }    // will be changed to view_id
 #endif
+
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( ){  return m_bUseVSPCompensation;}
+  Void    setUseVSPCompensation( Bool bValue ){ m_bUseVSPCompensation = bValue;}
+#endif
+
+
+  Bool    getUseDVPRefine( ){  return m_bUseDVPRefine;}
+  Void    setUseDVPRefine( Bool bValue ){ m_bUseDVPRefine = bValue;}
+#endif
+
 };
 
 //! \}

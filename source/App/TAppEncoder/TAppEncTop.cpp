@@ -225,6 +225,14 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setMultiviewResPredMode         ( m_uiMultiviewResPredMode );
 #endif
 
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+    m_acTEncTopList[iViewIdx]->setUseVSPCompensation           ( iViewIdx ? m_bUseVSPCompensation : 0 );
+#endif
+    m_acTEncTopList[iViewIdx]->setUseDVPRefine                  ( iViewIdx ? m_bUseDVPRefine : 0 );
+#endif
+
   //====== Tool list ========
     m_acTEncTopList[iViewIdx]->setUseSBACRD                    ( m_bUseSBACRD   );
     m_acTEncTopList[iViewIdx]->setDeltaQpRD                    ( m_uiDeltaQpRD  );
@@ -561,6 +569,15 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 #if H3D_IVRP
       m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
+#endif
+
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+      m_acTEncDepthTopList[iViewIdx]->setUseVSPCompensation           ( iViewIdx ? true : false );
+#endif
+
+      m_acTEncDepthTopList[iViewIdx]->setUseDVPRefine                 ( iViewIdx ? true : false );
 #endif
 
       //====== Weighted Prediction ========

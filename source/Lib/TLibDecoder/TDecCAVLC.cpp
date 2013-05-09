@@ -1601,6 +1601,18 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setMultiviewResPredMode  ( uiMultiviewResPredMode );
 #endif
       }
+
+#if MTK_D0156
+
+      pcSPS->setUseVSPCompensation( false );
+      pcSPS->setUseDVPRefine( false );
+
+      //Comments: Currently, BVSP and DoNBDV are not used for depth coding
+#if MERL_VSP_COMPENSATION_C0152
+      READ_FLAG( uiCode, "view_synthesis_pred_flag" );pcSPS->setUseVSPCompensation( uiCode ? true : false );
+#endif
+      READ_FLAG( uiCode, "dv_refine_flag" );          pcSPS->setUseDVPRefine( uiCode ? true : false );
+#endif
     }
     READ_FLAG( uiCode, "sps_extension2_flag");
     if (uiCode)
@@ -1664,6 +1676,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_FLAG (uiCodeTmp, "applying IC flag");
     }
     rpcSlice->setApplyIC(uiCodeTmp);
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (rpcSlice->getApplyIC())
+    {
+      READ_FLAG (uiCodeTmp, "ic_skip_mergeidx0");
+      rpcSlice->setIcSkipParseFlag(uiCodeTmp);
+    }
+#endif
   }
 #endif
 

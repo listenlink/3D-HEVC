@@ -179,6 +179,14 @@ private:
 #if INTER_VIEW_VECTOR_SCALING_C0115
   Bool          m_bIVScalingFlag;
 #endif
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_abUseVSPCompensation[ MAX_TLAYER ];
+#endif
+  Bool      m_abUseDVPRefine[ MAX_TLAYER ];
+#endif
+
 public:
   TComVPS();
   virtual ~TComVPS();
@@ -244,6 +252,15 @@ public:
   UInt    getNumOpLayerId               (UInt layer, UInt OpId        )                     { return m_numOpLayerId[layer][OpId];}
   
 #endif 
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( UInt tLayer ){  return m_abUseVSPCompensation[ tLayer ];}
+  Void    setUseVSPCompensation( Bool bValue, UInt tLayer ){ m_abUseVSPCompensation[ tLayer ] = bValue;}
+#endif
+  Bool    getUseDVPRefine( UInt tLayer ){  return m_abUseDVPRefine[ tLayer ];}
+  Void    setUseDVPRefine( Bool bValue, UInt tLayer ){ m_abUseDVPRefine[ tLayer ] = bValue;}
+#endif
 };
 
 #endif
@@ -397,6 +414,13 @@ private:
 #endif
 #if H3D_IVRP
   TComResidualGenerator* m_pcResidualGenerator;
+#endif
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_bUseVSPCompensation;
+#endif
+  Bool      m_bUseDVPRefine;
 #endif
 
 public:
@@ -667,6 +691,18 @@ public:
 #if H3D_IVRP
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
+#endif
+
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( ){  return m_bUseVSPCompensation;}
+  Void    setUseVSPCompensation( Bool bValue ){ m_bUseVSPCompensation = bValue;}
+#endif
+
+  Bool    getUseDVPRefine( ){  return m_bUseDVPRefine;}
+  Void    setUseDVPRefine( Bool bValue ){ m_bUseDVPRefine = bValue;}
+
 #endif
 };
 
@@ -1105,6 +1141,9 @@ private:
 
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Bool        m_icSkipParseFlag;
+#endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115|QC_MVHEVC_B0046
   Bool       m_bIVScalingFlag;
@@ -1117,6 +1156,7 @@ private:
   Int*         m_aiShiftLUT;
   Int          m_iShiftPrec;
 #endif
+
 
 public:
   TComSlice();
@@ -1400,6 +1440,10 @@ public:
   Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
   Bool      getApplyIC            ()  { return m_bApplyIC; }
   Void      xSetApplyIC           ();
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Void      setIcSkipParseFlag( Bool b ) { m_icSkipParseFlag = b; }
+  Bool      getIcSkipParseFlag() { return m_icSkipParseFlag; }
+#endif
 #endif
 #if QC_TMVP_MRG_REFIDX_C0047
   Int       getNewRefIdx        ( RefPicList e )                { return  m_aiNewRefIdx[e];     }
