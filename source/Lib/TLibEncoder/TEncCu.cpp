@@ -1925,6 +1925,14 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->setMergeFlagSubParts( true, 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setMergeIndexSubParts( uiMergeCand, 0, 0, uhDepth ); // interprets depth relative to LCU level
 #if MERL_VSP_C0152
+
+#if MTK_D0156
+          if( !rpcTempCU->getSlice()->getSPS()->getUseVSPCompensation() )
+          {
+              rpcTempCU->setVSPIndexSubParts( 0, 0, 0, uhDepth );
+          }
+          else
+#endif
           {
             Int iVSPIdx = 0;
             Int numVSPIdx;

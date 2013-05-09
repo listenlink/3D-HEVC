@@ -52,7 +52,11 @@ Int * TComDataCU::m_pcGlbArlCoeffCr = NULL;
 
 #if MERL_VSP_C0152
 
+#if MTK_D0156
+#define CHECK_ADD_YET(pcCURef,uiIdx,vspIdx) && ( (!m_pcSlice->getSPS()->getUseVSPCompensation()) || (!( (pcCURef)->getVSPIndex(uiIdx) == vspIdx && bVspMvZeroDone[vspIdx-1] )))
+#else
 #define CHECK_ADD_YET(pcCURef,uiIdx,vspIdx) && !( (pcCURef)->getVSPIndex(uiIdx) == vspIdx && bVspMvZeroDone[vspIdx-1] )
+#endif
 
 inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo
 #if QC_BVSP_CleanUP_D0191
@@ -60,6 +64,13 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
 #endif
 )
 {
+#if MTK_D0156
+    if( !m_pcSlice->getSPS()->getUseVSPCompensation() )
+    {
+        return;
+    }
+#endif
+
   Int vspIdx = (Int) pcCURef->getVSPIndex(uiIdx);
   if( vspIdx != 0 )
   {
@@ -87,6 +98,13 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
 inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
                                           UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDInfo )
 {
+#if MTK_D0156
+    if( !m_pcSlice->getSPS()->getUseVSPCompensation() )
+    {
+        return true;
+    }
+#endif
+
 #if MERL_VSP_C0152_BugFix_ForNoDepthCase
   TComPic* pRefPicBaseDepth = NULL;
   pRefPicBaseDepth = getSlice()->getRefPicBaseDepth();
@@ -4346,6 +4364,14 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       if (pcMvFieldNeighbours[i<<1].getRefIdx() < 0 || pcMvFieldNeighbours[(j<<1)+1].getRefIdx() < 0) // NOT_VALID
         bValid = false;
 #endif
+
+#if MTK_D0156
+      if( !m_pcSlice->getSPS()->getUseVSPCompensation())
+      {
+          bValid = true;
+      }
+#endif
+
       if (abCandIsInter[i] && abCandIsInter[j]&& (puhInterDirNeighbours[i]&0x1)&&(puhInterDirNeighbours[j]&0x2)
 #if MERL_VSP_C0152
        && bValid
@@ -5168,6 +5194,13 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
       cMvpDvInfo.m_bAvailab[iList][iCurDvMcpCand] = false; 
     }
   }
+
+#if MTK_D0156
+  if( !m_pcSlice->getSPS()->getUseDVPRefine() )
+  {
+      bDepthRefine = false;
+  }
+#endif
 
   // Get Positions  
   PartSize eCUMode    = getPartitionSize( uiPartAddr );    

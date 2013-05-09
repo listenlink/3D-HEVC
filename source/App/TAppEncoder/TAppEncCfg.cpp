@@ -385,6 +385,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MultiviewResPred", m_uiMultiviewResPredMode,   (UInt)0, "usage of inter-view residual prediction" )
 #endif
 
+#if MTK_D0156
+  ("UseVSPCompensation", m_bUseVSPCompensation,   true, "Depth dependent tools: BVSP" )
+  ("UseDVPRefine", m_bUseDVPRefine,   true, "Depth dependent tools: DoNBDV" )
+#endif
+
   /* Coding tools */
   ("LMChroma", m_bUseLMChroma, true, "intra chroma prediction based on recontructed luma")
 
@@ -1707,10 +1712,17 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("SDC:%d ", m_bUseSDC ? 1 : 0 );
   printf("DLT:%d ", m_bUseDLT ? 1 : 0 );
 #endif
+
+#if MTK_D0156
+  printf("BVSP:%d ", m_bUseVSPCompensation ? 1 : 0 );
+  printf("DoNBDV:%d ",  m_bUseDVPRefine ? 1 : 0 );
+#endif
+
 #if LGE_WVSO_A0119
   if ( m_bUseWVSO )
     printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
 #endif
+
   printf("\n\n");
   
   fflush(stdout);

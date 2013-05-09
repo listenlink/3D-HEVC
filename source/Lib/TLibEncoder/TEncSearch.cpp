@@ -2988,6 +2988,13 @@ Void TEncSearch::xMergeEstimation( TComDataCU*     pcCU,
       pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
       pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
 #if MERL_VSP_C0152
+#if MTK_D0156
+      if( !pcCU->getSlice()->getSPS()->getUseVSPCompensation() )
+      {
+          pcCU->setVSPIndexSubParts( 0, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+      }
+      else
+#endif
       {
         Int iVSPIdx = 0;
         Int numVSPIdx;
@@ -3717,6 +3724,14 @@ xMergeEstimation( pcCU, pcOrgYuv, iPartIdx, uiMRGInterDir, cMRGMvField, uiMRGInd
         pcCU->setMergeFlagSubParts ( true,          uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
         pcCU->setMergeIndexSubParts( uiMRGIndex,    uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #if MERL_VSP_C0152
+
+#if MTK_D0156
+        if( !pcCU->getSlice()->getSPS()->getUseVSPCompensation() )
+        {
+            pcCU->setVSPIndexSubParts( 0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+        }
+        else
+#endif
         {
           Int iVSPIdx = 0;
           Int numVSPIdx;

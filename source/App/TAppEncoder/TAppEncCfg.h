@@ -316,6 +316,15 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   Bool      m_bUseQTLPC;                                      ///< flag for using depth QuadTree Limitation + Predictive Coding
 #endif
 
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_bUseVSPCompensation;
+#endif
+
+  Bool      m_bUseDVPRefine;
+#endif
+
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
   Void  xCheckParameter ();                                   ///< check validity of configuration values
