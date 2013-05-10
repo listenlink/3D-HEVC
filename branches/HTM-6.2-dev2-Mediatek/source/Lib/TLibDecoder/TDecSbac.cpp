@@ -2247,12 +2247,16 @@ Void TDecSbac::xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartId
 Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt nMaxW = pcCU->getSlice()->getARPStepNum() - 1;
+#if !QC_ARP_WARNING_FIX
   assert (nMaxW >= 0);
+#endif
   UInt nW = 0;
   if( nMaxW > 0 )
   {
     UInt nOffset = pcCU->getCTXARPWFlag(uiAbsPartIdx);
+#if !QC_ARP_WARNING_FIX
     assert( 0 <= nOffset && nOffset <= 2 );
+#endif
     UInt uiCode = 0;
     m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPW.get( 0, 0, 0 + nOffset ) );
     nW = uiCode;

@@ -1562,10 +1562,18 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
           depthTmp = depthi + (widthDepth - depthPosX - 1);
 #endif
         Int maxV = 0;
+#if MTK_DEPTH_TO_DISP_D0138
+        for (Int blockj = 0; blockj < MERL_VSP_BLOCKSIZE_C0152; blockj+=(MERL_VSP_BLOCKSIZE_C0152-1))
+#else
         for (Int blockj = 0; blockj < MERL_VSP_BLOCKSIZE_C0152; blockj++)
+#endif
         {
           Int iX = 0;
+#if MTK_DEPTH_TO_DISP_D0138
+          for (Int blocki = 0; blocki < MERL_VSP_BLOCKSIZE_C0152; blocki+=(MERL_VSP_BLOCKSIZE_C0152-1))
+#else
           for (Int blocki = 0; blocki < MERL_VSP_BLOCKSIZE_C0152; blocki++)
+#endif
           {
             if (maxV < depthTmp[iX])
               maxV = depthTmp[iX];

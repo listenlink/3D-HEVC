@@ -921,7 +921,11 @@ Void TAppEncCfg::xCheckParameter()
 #endif
 #if H3D_IVRP
 #if QC_ARP_D0177
-  xConfirmPara     ( m_nUseAdvResPred < 0 || m_nUseAdvResPred > 1 , "0<=ARP<=1" );
+#if QC_ARP_WARNING_FIX
+  xConfirmPara    ( m_nUseAdvResPred > 1 , "0<=ARP<=1" );
+#else
+  xConfirmPara    ( m_nUseAdvResPred < 0 || m_nUseAdvResPred > 1 , "0<=ARP<=1" );
+#endif
 #else
   xConfirmPara    ( m_uiMultiviewResPredMode > 1,                                     "MultiviewResPred must be less than or equal to 1" );
   xConfirmPara    ( m_uiMultiviewResPredMode > 0 && m_uiPredDepthMapGeneration == 0 , "MultiviewResPred > 0 requires PredDepthMapGen > 0" );
