@@ -68,10 +68,18 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
     // set MV using checked disparity
     if (vspIdx < 4)
     {
+#if MTK_VSP_USING_NBDV_D0105
+      pcMvFieldNeighbours[ iCount<<1].setMvField ( pDInfo->m_acMvCandNoRef[0],  NOT_VALID );
+#else
       pcMvFieldNeighbours[ iCount<<1].setMvField ( pDInfo->m_acMvCand[0],  NOT_VALID );
+#endif
       if ( pcCURef->getSlice()->isInterB() )
       {
+#if MTK_VSP_USING_NBDV_D0105
+        pcMvFieldNeighbours[(iCount<<1)+1 ].setMvField ( pDInfo->m_acMvCandNoRef[0],  NOT_VALID );
+#else
          pcMvFieldNeighbours[(iCount<<1)+1 ].setMvField ( pDInfo->m_acMvCand[0],  NOT_VALID );
+#endif
       }
     }
   }
@@ -80,6 +88,13 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
 inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
                                           UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDInfo )
 {
+#if MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
+  if (getSlice()->getSPS()->isDepth())
+  {
+    return true;
+  }
+#endif
+
 #if MERL_VSP_C0152_BugFix_ForNoDepthCase
   TComPic* pRefPicBaseDepth = NULL;
   pRefPicBaseDepth = getSlice()->getRefPicBaseDepth();
@@ -104,10 +119,18 @@ inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool*
           // get Mv using checked disparity vector
           if (vspIdx < 4) // spatial
           {
+#if MTK_VSP_USING_NBDV_D0105
+            pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCandNoRef[0], NOT_VALID );
+#else
             pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCand[0], NOT_VALID );
+#endif
             if ( getSlice()->isInterB() )
             {
+#if MTK_VSP_USING_NBDV_D0105
+              pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCandNoRef[0], NOT_VALID );
+#else
               pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCand[0], NOT_VALID );
+#endif
             }
           }
           iVSPIndexTrue[idx] = iCount;
@@ -3714,6 +3737,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       cDisInfo.bDV = getDvInfo(uiAbsPartIdx).bDV;
       cDisInfo.m_acMvCand[0] = getDvInfo(uiAbsPartIdx).m_acMvCand[0];
       cDisInfo.m_aVIdxCan[0] = getDvInfo(uiAbsPartIdx).m_aVIdxCan[0];
+#if MTK_VSP_USING_NBDV_D0105
+      cDisInfo.m_acMvCandNoRef[0] = getDvInfo(uiAbsPartIdx).m_acMvCandNoRef[0];
+#endif
     }
 #else
     getDisMvpCandNBDV(uiPUIdx, uiAbsPartIdx, &cDisInfo , true
@@ -3779,6 +3805,20 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
         cMvPred>>=2;
         clipMv(cMvPred);
         pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
+#if MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
+        if (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0)
+        {
+          assert(pcTextureCU->getVSPIndex(uiPartIdxCenter)!=0);  
+          for (Int i=0; i<getSlice()->getNumRefIdx(REF_PIC_LIST_0); i++)
+          {
+            if (getSlice()->getRefPOC(REF_PIC_LIST_0, i) == getSlice()->getPOC())
+            {
+              pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,i);
+              break;
+            }
+          }
+        }
+#endif
       }
       if ( getSlice()->isInterB() )
       {
@@ -3791,16 +3831,44 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
           cMvPred>>=2;
           clipMv(cMvPred);
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
+#if MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
+          if (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0)
+          {
+            assert(pcTextureCU->getVSPIndex(uiPartIdxCenter)!=0);  
+            for (Int i=0; i<getSlice()->getNumRefIdx(REF_PIC_LIST_1); i++)
+            {
+              if (getSlice()->getRefPOC(REF_PIC_LIST_1, i) == getSlice()->getPOC())
+              {
+                pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,i);
+                break;
+              }
+            }
+          }
+#endif
         }
       }
 #if MERL_VSP_C0152
+#if !MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
       xInheritVspMode( pcTextureCU, uiPartIdxCenter, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo ) ;
 #endif
-      if ( mrgCandIdx == iCount )
+#endif
+#if MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
+      if (!((pcMvFieldNeighbours[iCount<<1].getRefIdx()<0 && !getSlice()->isInterB())
+        || (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0 && pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0 && getSlice()->isInterB())))
       {
-        return;
+#endif
+        if ( mrgCandIdx == iCount )
+        {
+          return;
+        }
+        iCount ++;
+#if MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
       }
-      iCount ++;
+      else
+      {
+        assert(0);
+      }
+#endif
     }
   }
 #endif
@@ -5042,8 +5110,10 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
     Int depthStartPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + (mv->getVer()>>2));
     Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + (mv->getHor()>>2));
     Int depthEndPosY   = Clip3(0,   iPictureHeight - 1,  iBlkY + iBlkHeight - 1 + (mv->getVer()>>2));
+#if !MTK_DEPTH_TO_DISP_D0138
     Int iCenterX = (depthStartPosX + depthEndPosX) >> 1;
     Int iCenterY = (depthStartPosY + depthEndPosY) >> 1;
+#endif
 
     Pel *depthTL  = pcBaseViewDepthPicYuv->getLumaAddr();
     Int aiDepth[5];
@@ -5051,8 +5121,12 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
     aiDepth[1] = depthTL[ (depthEndPosY)   * depStride + depthStartPosX ];      // Left Bottom
     aiDepth[2] = depthTL[ (depthStartPosY) * depStride + depthEndPosX   ];      // Right Top
     aiDepth[3] = depthTL[ (depthEndPosY)   * depStride + depthEndPosX   ];      // Right Bottom
+#if MTK_DEPTH_TO_DISP_D0138
+    for (Int i = 0; i < 4; i++)
+#else
     aiDepth[4] = depthTL[ (iCenterY)       * depStride + iCenterX       ];      // Center
     for (Int i = 0; i < 5; i++)
+#endif
     {
       if (maxDepthVal < aiDepth[i])
         maxDepthVal = aiDepth[i];

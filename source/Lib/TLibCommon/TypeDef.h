@@ -94,9 +94,10 @@
                                               // LG_RESTRICTEDRESPRED_M24766       1   // Restricted inter-view residual prediction
                                               // FIX_LG_RESTRICTEDRESPRED_M24766   1
 
-#define QC_ARP_D0177            1      ////< advanced residual prediction
+#define QC_ARP_D0177            1             ////< advanced residual prediction
 #if QC_ARP_D0177
-#define QC_ARP_WFNR       3
+#define QC_ARP_WFNR                       3 
+#define QC_ARP_WARNING_FIX                1   // Fix warning message for ARP
 #endif
 ///// ***** DISPARITY VECTOR DERIVATION *********
 #define H3D_NBDV                          1   // Neighboring block disparity derivation 
@@ -204,12 +205,15 @@
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
                                                //MTK_DVPREFINE_BVSP_BUG_FIX               1
+#define MTK_DEPTH_TO_DISP_D0138              0 // JCT3V-D0138: Use max among four corners for DoNBDV and BVSP
 
 #else // !MERL_VSP_C0152
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #endif
 
+#define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139             0  // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
+#define MTK_VSP_USING_NBDV_D0105                      0  // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
 
 ///// ***** DERIVED PARAMETERS *********
 #if H3D_NBDV                    
