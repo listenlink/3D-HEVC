@@ -1,0 +1,200 @@
+/* The copyright in this software is being made available under the BSD
+ * License, included below. This software may be subject to other third party
+ * and contributor rights, including patent rights, and no such rights are
+ * granted under this license.  
+ *
+ * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *  * Redistributions of source code must retain the above copyright notice,
+ *    this list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *    this list of conditions and the following disclaimer in the documentation
+ *    and/or other materials provided with the distribution.
+ *  * Neither the name of the ITU/ISO/IEC nor the names of its contributors may
+ *    be used to endorse or promote products derived from this software without
+ *    specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
+ * THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/** \file     TComMotionInfo.h
+    \brief    motion information handling classes (header)
+    \todo     TComMvField seems to be better to be inherited from TComMv
+*/
+
+#ifndef __TCOMMOTIONINFO__
+#define __TCOMMOTIONINFO__
+
+#include <memory.h>
+#include "CommonDef.h"
+#include "TComMv.h"
+
+//! \ingroup TLibCommon
+//! \{
+
+// ====================================================================================================================
+// Type definition
+// ====================================================================================================================
+
+/// parameters for AMVP
+typedef struct _AMVPInfo
+{
+  TComMv m_acMvCand[ AMVP_MAX_NUM_CANDS_MEM ];  ///< array of motion vector predictor candidates
+  Int    iN;                                ///< number of motion vector predictor candidates
+} AMVPInfo;
+
+// ====================================================================================================================
+#if H3D_NBDV
+typedef struct _DisCand
+{
+  TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates
+  Int    m_aVIdxCan[ DIS_CANS ];            ///< array of motion vector predictor candidates
+#if QC_CU_NBDV_D0181 
+  Bool bDV;
+#if MERL_VSP_C0152
+  TComMv m_acMvCandNoRef[ DIS_CANS ];
+#endif
+#endif
+  Int    iN;                                ///< number of motion vector predictor candidates
+} DisInfo;
+
+typedef struct _McpDisCand
+{
+  TComMv m_acMvCand[2][ MCP_DIS_CANS ];            ///< array of motion vector predictor candidates
+  Int    m_aVIdxCan[2][ MCP_DIS_CANS ];            ///< array of motion vector predictor candidates
+  Bool   m_bAvailab[2][ MCP_DIS_CANS ];
+  Bool   m_bFound;                                 ///< number of motion vector predictor candidates
+} McpDisInfo;
+
+#endif 
+// Class definition
+// ====================================================================================================================
+
+/// class for motion vector with reference index
+class TComMvField
+{
+private:
+  TComMv    m_acMv;
+  Int       m_iRefIdx;
+  
+public:
+  TComMvField() : m_iRefIdx( NOT_VALID ) {}
+  
+  Void setMvField( TComMv const & cMv, Int iRefIdx )
+  {
+    m_acMv    = cMv;
+    m_iRefIdx = iRefIdx;
+  }
+  
+  Void setRefIdx( Int refIdx ) { m_iRefIdx = refIdx; }
+  
+  TComMv const & getMv() const { return  m_acMv; }
+  TComMv       & getMv()       { return  m_acMv; }
+  
+  Int getRefIdx() const { return  m_iRefIdx;       }
+  Int getHor   () const { return  m_acMv.getHor(); }
+  Int getVer   () const { return  m_acMv.getVer(); }
+#if H3D_IVMP
+  Bool operator== ( const TComMvField& rcMv ) const
+  {
+    return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());
+  }
+#endif
+};
+
+/// class for motion information in one CU
+class TComCUMvField
+{
+private:
+  TComMv*   m_pcMv;
+  TComMv*   m_pcMvd;
+  Char*     m_piRefIdx;
+  UInt      m_uiNumPartition;
+  AMVPInfo  m_cAMVPInfo;
+    
+  template <typename T>
+  Void setAll( T *p, T const & val, PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx );
+
+public:
+  TComCUMvField() : m_pcMv(NULL), m_pcMvd(NULL), m_piRefIdx(NULL), m_uiNumPartition(0) {}
+  ~TComCUMvField() {}
+
+  // ------------------------------------------------------------------------------------------------------------------
+  // create / destroy
+  // ------------------------------------------------------------------------------------------------------------------
+  
+  Void    create( UInt uiNumPartition );
+  Void    destroy();
+  
+  // ------------------------------------------------------------------------------------------------------------------
+  // clear / copy
+  // ------------------------------------------------------------------------------------------------------------------
+
+  Void    clearMvField();
+  
+  Void    copyFrom( TComCUMvField const * pcCUMvFieldSrc, Int iNumPartSrc, Int iPartAddrDst );
+  Void    copyTo  ( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst ) const;
+  Void    copyTo  ( TComCUMvField* pcCUMvFieldDst, Int iPartAddrDst, UInt uiOffset, UInt uiNumPart ) const;
+  
+  // ------------------------------------------------------------------------------------------------------------------
+  // get
+  // ------------------------------------------------------------------------------------------------------------------
+  
+  TComMv const & getMv    ( Int iIdx ) const { return  m_pcMv    [iIdx]; }
+  TComMv const & getMvd   ( Int iIdx ) const { return  m_pcMvd   [iIdx]; }
+  Int            getRefIdx( Int iIdx ) const { return  m_piRefIdx[iIdx]; }
+  
+  AMVPInfo* getAMVPInfo () { return &m_cAMVPInfo; }
+  
+  // ------------------------------------------------------------------------------------------------------------------
+  // set
+  // ------------------------------------------------------------------------------------------------------------------
+  
+  Void    setAllMv     ( TComMv const & rcMv,         PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
+  Void    setAllMvd    ( TComMv const & rcMvd,        PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
+  Void    setAllRefIdx ( Int iRefIdx,                 PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
+  Void    setAllMvField( TComMvField const & mvField, PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
+
+  Void setNumPartition( Int iNumPart )
+  {
+    m_uiNumPartition = iNumPart;
+  }
+  
+  Void linkToWithOffset( TComCUMvField const * src, Int offset )
+  {
+    m_pcMv     = src->m_pcMv     + offset;
+    m_pcMvd    = src->m_pcMvd    + offset;
+    m_piRefIdx = src->m_piRefIdx + offset;
+  }
+  
+#if HHI_MPI
+  Void compress(Char* pePredMode, UChar* puhInterDir, Int scale);
+#else
+  Void compress(Char* pePredMode, Int scale); 
+#endif
+#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
+  Void decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift );
+#endif
+
+#if MTK_UNCONSTRAINED_MVI_B0083
+  Void setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir );
+#endif
+};
+
+//! \}
+
+#endif // __TCOMMOTIONINFO__
