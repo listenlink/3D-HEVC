@@ -807,7 +807,9 @@ public:
   Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
   Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   
-  UInt          getCtxSDCFlag              ( UInt uiAbsPartIdx );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
+  UInt          getCtxSDCFlag               ( UInt uiAbsPartIdx );
+#endif
   
   Bool          getSDCAvailable             ( UInt uiAbsPartIdx );
   

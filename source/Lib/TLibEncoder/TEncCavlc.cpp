@@ -1405,7 +1405,11 @@ Void TEncCavlc::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, 
   assert(0);
 }
 
-Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncCavlc::codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+                                    , Bool bSdcRD
+#endif
+                                    )
 {
   assert(0);
 }
@@ -1883,19 +1887,21 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
 }
 
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 Void TEncCavlc::codeSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-
+#endif
 Void TEncCavlc::codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
 {
   assert(0);
 }
-
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 Void TEncCavlc::codeSDCPredMode ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+#endif
 #endif
 //! \}

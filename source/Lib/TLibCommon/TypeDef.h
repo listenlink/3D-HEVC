@@ -58,15 +58,25 @@
                                               // HHIQC_DMMFASTSEARCH_B0039, fast Wedgelet search for DMM modes 1 and 3
                                               // HHI_DMM_DELTADC_Q1_C0034   JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
                                               // FIX_DMM_CTX_INIT_C0034 JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
+#define FIX_WEDGE_NOFLOAT_D0036           1   // JCT3V-D0036: Fix for aligning SW and spec (Wedgelet segmentation line generation without float) 
 
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 #define LGE_DMM3_SIMP_C0044               1
+
+#define QC_DC_PREDICTOR_D0183             1   // JCT3V-D0183: Simplified DC predictor for depth intra modes
 
 ///// ***** SDC *********
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
                                               // SAIT_SDC_C0096 JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
                                               // FIX_SDC_ENC_C0143, JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
+#if RWTH_SDC_DLT_B0036
+#define HHI_DELTADC_DLT_D0035             1   // JCT3V-D0035: DLT for DMM deltaDC coding
+#define INTEL_SDC64_D0193                 1   // JCT3V-D0193: SDC binary clean up (use a 1 bit binary code to signal sdc_pred_mode when CU size is 64x64)
+#endif
+#define FIX_SDC_ENC_RD_WVSO_D0163         1   // JCT3V-D0163: fix for SDC encoder rd-cost (VSO -> WVSO)
 
+#define PKU_QC_DEPTH_INTRA_UNI_D0195      1   // JCT3V-D0195: unified syntax table for depth intra coding tools
+#define MTK_SAMPLE_BASED_SDC_D0110        1   // JCT3V-D0110: sample based SDC
 ///// ***** TMVP/AMVP *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
 #define QC_TMVP_MRG_REFIDX_C0047          1   // only enabled when QC_TMVP_IDX_MOD_B0046 is enabled.
