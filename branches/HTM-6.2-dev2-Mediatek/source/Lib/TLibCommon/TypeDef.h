@@ -213,7 +213,7 @@
 #endif
 
 #define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139             1  // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
-#define MTK_VSP_USING_NBDV_D0105                      0  // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
+#define MTK_VSP_USING_NBDV_D0105                      1  // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
 
 ///// ***** DERIVED PARAMETERS *********
 #if H3D_NBDV                    
