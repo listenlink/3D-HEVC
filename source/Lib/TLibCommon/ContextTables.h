@@ -486,6 +486,16 @@ INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] =
   }
 #endif
 };
+#if QC_ARP_D0177
+#define NUM_ARPW_CTX                  4       ///< number of context models for generalized residual prediction weighting factor
+static const UChar 
+INIT_ARPW[3][NUM_ARPW_CTX] = 
+{
+  { 154 , 154 , 154 , 154 }, 
+  { 154 , 154 , 154 , 154 }, 
+  { 154 , 154 , 154 , 154 }, 
+};
+#endif
 
 #if LGE_EDGE_INTRA_A0070
 static const Short

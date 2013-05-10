@@ -43,6 +43,10 @@
 
 //! \ingroup TLibCommon
 //! \{
+#if QC_ARP_D0177
+#define NTAPS_LUMA_ARP    2 ///< Number of taps for luma
+#define NTAPS_CHROMA_ARP  2 ///< Number of taps for chroma
+#endif
 
 #define NTAPS_LUMA        8 ///< Number of taps for luma
 #define NTAPS_CHROMA      4 ///< Number of taps for chroma
@@ -57,7 +61,11 @@ class TComInterpolationFilter
 {
   static const Short m_lumaFilter[4][NTAPS_LUMA];     ///< Luma filter taps
   static const Short m_chromaFilter[8][NTAPS_CHROMA]; ///< Chroma filter taps
-  
+#if QC_ARP_D0177
+  static const Short m_lumaFilterARP  [4][NTAPS_LUMA_ARP];     ///< Luma filter taps
+  static const Short m_chromaFilterARP[8][NTAPS_CHROMA_ARP]; ///< Chroma filter taps
+#endif
+
   static Void filterCopy(const Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast);
   
   template<int N, bool isVertical, bool isFirst, bool isLast>
@@ -72,10 +80,30 @@ public:
   TComInterpolationFilter() {}
   ~TComInterpolationFilter() {}
 
-  Void filterHorLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast );
-  Void filterVerLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast );
-  Void filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast );
-  Void filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast );
+  Void filterHorLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast
+#if QC_ARP_D0177
+    ,
+    Bool filterType = 0
+#endif
+    );
+  Void filterVerLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast 
+#if QC_ARP_D0177
+    ,
+    Bool filterType = 0
+#endif
+    );
+  Void filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast
+#if QC_ARP_D0177
+    ,
+    Bool filterType = 0
+#endif
+    );
+  Void filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast
+#if QC_ARP_D0177
+    ,
+    Bool filterType = 0
+#endif
+    );
 };
 
 //! \}

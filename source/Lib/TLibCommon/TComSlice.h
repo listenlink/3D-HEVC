@@ -53,7 +53,7 @@ class TComTrQuant;
 #if DEPTH_MAP_GENERATION
 class TComDepthMapGenerator;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
 class TComResidualGenerator;
 #endif
 // ====================================================================================================================
@@ -389,13 +389,18 @@ private:
   UInt  m_uiMultiviewMvPredMode;
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+  UInt         m_nUseAdvResPred;
+  UInt         m_nARPStepNum;
+#else
   UInt  m_uiMultiviewResPredMode;
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator* m_pcDepthMapGenerator;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   TComResidualGenerator* m_pcResidualGenerator;
 #endif
 
@@ -642,7 +647,7 @@ public:
 #if DEPTH_MAP_GENERATION
   Void setPredDepthMapGeneration( UInt uiViewId, Bool bIsDepth, UInt uiPdmGenMode = 0, UInt uiPdmMvPredMode = 0, UInt uiPdmPrec = 0, Int** aaiPdmScaleNomDelta = 0, Int** aaiPdmOffset = 0 );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   Void  setMultiviewResPredMode  ( UInt uiResPrdMode ) { m_uiMultiviewResPredMode = uiResPrdMode; }
 #endif
 
@@ -657,14 +662,21 @@ public:
   UInt  getMultiviewMvPredMode   ()          { return m_uiMultiviewMvPredMode;    }
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+  UInt  getUseAdvRP()              { return m_nUseAdvResPred;   }
+  Void  setUseAdvRP(UInt n)        { m_nUseAdvResPred = n;      }
+  UInt  getARPStepNum()            { return m_nARPStepNum;      }
+  Void  setARPStepNum(UInt n)      { m_nARPStepNum = n;         }
+#else
   UInt  getMultiviewResPredMode  ()          { return m_uiMultiviewResPredMode;   }
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
   Void                    setDepthMapGenerator( TComDepthMapGenerator* pcDepthMapGenerator )  { m_pcDepthMapGenerator = pcDepthMapGenerator; }
   TComDepthMapGenerator*  getDepthMapGenerator()                                              { return m_pcDepthMapGenerator; }
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
 #endif
@@ -1106,6 +1118,10 @@ private:
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
 #endif
+#if QC_ARP_D0177
+  TComList<TComPic*> * m_pBaseViewRefPicList[MAX_VIEW_NUM];
+  UInt                 m_nARPStepNum; 
+#endif
 #if INTER_VIEW_VECTOR_SCALING_C0115|QC_MVHEVC_B0046
   Bool       m_bIVScalingFlag;
   Int        m_iViewOrderIdx;    // will be changed to view_id
@@ -1252,7 +1268,12 @@ public:
   Int       getNumPocTotalCurrMvc();
   Void      setRefPicListMvc    ( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcInterViewRefPics );
   Void      setRefPOCnViewListsMvc();
-
+#if QC_ARP_D0177
+  Void      setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic; }
+  TComPic*  getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )                       { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
+  Void      setARPStepNum();                                 
+  UInt      getARPStepNum( )                                      { return m_nARPStepNum;      }  
+#endif
   Void      setColDir           ( UInt uiDir ) { m_uiColDir = uiDir; }
 #if COLLOCATED_REF_IDX
   Void      setColRefIdx        ( UInt refIdx) { m_colRefIdx = refIdx; }

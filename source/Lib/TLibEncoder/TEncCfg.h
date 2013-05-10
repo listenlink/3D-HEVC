@@ -332,7 +332,12 @@ protected:
   Double      m_dMultiviewMvRegLambdaScale;
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+  UInt      m_nUseAdvResPred;
+  UInt      m_nARPStepNum;
+#else
   UInt        m_uiMultiviewResPredMode;
+#endif
 #endif
 
 public:
@@ -413,7 +418,14 @@ public:
   Void      setMultiviewMvRegLambdaScale    ( Double d)      { m_dMultiviewMvRegLambdaScale = d; }
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+  UInt       getUseAdvRP                    ()                  { return m_nUseAdvResPred; }
+  Void       setUseAdvRP                    ( UInt  u )         { m_nUseAdvResPred = u;    }
+  UInt       getARPStepNum                  ()                  { return m_nARPStepNum;    }
+  Void       setARPStepNum                  ( UInt  u )         { m_nARPStepNum = u;       }
+#else
   Void      setMultiviewResPredMode         ( UInt  u )      { m_uiMultiviewResPredMode     = u; }
+#endif
 #endif
   
   //======== Transform =============
@@ -808,6 +820,7 @@ public:
 #if INTER_VIEW_VECTOR_SCALING_C0115
   Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }    // will be changed to view_id
 #endif
+
 };
 
 //! \}
