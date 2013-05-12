@@ -121,10 +121,16 @@ TEncSbac::TEncSbac()
 , m_cDepthModeModel             ( 1,             1,                 DEPTH_MODE_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmDeltaFlagModel             ( 1,             1,                 DMM_DELTA_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if RWTH_SDC_CTX_SIMPL_D0032
+, m_cSDCResidualFlagSCModel     ( 1,             1,  SDC_NUM_RESIDUAL_FLAG_CTX  , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCResidualSCModel         ( 1,             1,  SDC_NUM_RESIDUAL_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCPredModeSCModel             ( 1,             3,                 SDC_NUM_PRED_MODE_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
+#else
 , m_cSDCResidualFlagSCModel     ( 1,             2,  SDC_NUM_RESIDUAL_FLAG_CTX  , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSDCResidualSignFlagSCModel ( 1,             2,  SDC_NUM_SIGN_FLAG_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSDCResidualSCModel         ( 1,             2,  SDC_NUM_RESIDUAL_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSDCPredModeSCModel             ( 1,             3,                 SDC_NUM_PRED_MODE_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
@@ -214,7 +220,9 @@ Void TEncSbac::resetEntropy           ()
 #endif
   m_cSDCResidualFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
   m_cSDCResidualSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
+#if !RWTH_SDC_CTX_SIMPL_D0032
   m_cSDCResidualSignFlagSCModel.initBuffer  ( eSliceType, iQp, (UChar*)INIT_SDC_SIGN_FLAG );
+#endif
   m_cSDCPredModeSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_SDC_PRED_MODE );
 #endif
 
@@ -368,7 +376,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
 #endif
   m_cSDCResidualFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
   m_cSDCResidualSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
+#if !RWTH_SDC_CTX_SIMPL_D0032
   m_cSDCResidualSignFlagSCModel.initBuffer  ( eSliceType, iQp, (UChar*)INIT_SDC_SIGN_FLAG );
+#endif
   m_cSDCPredModeSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_SDC_PRED_MODE );
 #endif
   
@@ -2644,12 +2654,20 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   assert( uiMaxResidualBits <= g_uiBitDepth );
   
   // residual flag
+#if RWTH_SDC_CTX_SIMPL_D0032
+  m_pcBinIf->encodeBin( uiResidual, m_cSDCResidualFlagSCModel.get( 0, 0, 0 ) );
+#else
   m_pcBinIf->encodeBin( uiResidual, m_cSDCResidualFlagSCModel.get( 0, uiSegment, 0 ) ); //TODO depthmap: more sophisticated context selection
+#endif
   
   if (uiResidual)
   {
     // encode sign bit of residual
+#if RWTH_SDC_CTX_SIMPL_D0032
+    m_pcBinIf->encodeBinEP( uiSign );
+#else
     m_pcBinIf->encodeBin( uiSign, m_cSDCResidualSignFlagSCModel.get( 0, uiSegment, 0 ) ); //TODO depthmap: more sophisticated context selection
+#endif
         
     assert(uiAbsIdx < GetNumDepthValues());
     
@@ -2659,7 +2677,11 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     {
       uiBit = (uiAbsIdx & (1<<i))>>i;
       
+#if RWTH_SDC_CTX_SIMPL_D0032
+      m_pcBinIf->encodeBin( uiBit, m_cSDCResidualSCModel.get( 0, 0, i ) );
+#else
       m_pcBinIf->encodeBin( uiBit, m_cSDCResidualSCModel.get( 0, uiSegment, i ) ); //TODO depthmap: more sophisticated context selection
+#endif
     }
     
   }
