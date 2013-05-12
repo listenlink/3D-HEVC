@@ -127,10 +127,21 @@
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+#define DEPTH_MODE_NUM_FLAG_CTX          8
+#define DMM_DELTA_NUM_FLAG_CTX           1
+#else
 #define SDC_NUM_FLAG_CTX                 3
+#endif
 #define SDC_NUM_RESIDUAL_FLAG_CTX        1
+#if !RWTH_SDC_CTX_SIMPL_D0032
 #define SDC_NUM_SIGN_FLAG_CTX            1
+#endif
+#if RWTH_SDC_CTX_SIMPL_D0032
+#define SDC_NUM_RESIDUAL_CTX             8
+#else
 #define SDC_NUM_RESIDUAL_CTX             10
+#endif
 
 #define SDC_NUM_PRED_MODE_CTX            5
 #endif
@@ -522,6 +533,20 @@ INIT_EDGE_INTRA_DELTA_DC[3][NUM_EDGE_INTRA_DELTA_DC_CTX] =
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+static const UChar INIT_DEPTHMODE_FLAG[3][DEPTH_MODE_NUM_FLAG_CTX]=
+{
+  {0,  0,  64,   0, CNU,   0, CNU, 0},
+  {0, 64,   0, CNU,   0, CNU,   0, 0},
+  {64, 0, CNU,   0, CNU,   0,   0, 0}
+};
+static const UChar INIT_DMMDELTA_FLAG[3][DMM_DELTA_NUM_FLAG_CTX]=
+{
+  {0},
+  {0},
+  {64}
+};
+#else
 static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
 {
   {
@@ -534,7 +559,52 @@ static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
     {    0,   64 }, {    0,   64 }, {    0,   64 }
   }
 };
+#endif
 
+#if RWTH_SDC_CTX_SIMPL_D0032
+static const UChar INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
+{
+  {
+    CNU
+    
+  },
+  {
+    CNU
+  },
+  {
+    CNU
+  }
+};
+
+static const UChar INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
+{
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  }
+};
+
+static const UChar INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX] =
+{
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  }
+};
+#else
 static const Short INIT_SDC_RESIDUAL_FLAG[3][3*SDC_NUM_RESIDUAL_FLAG_CTX][2] =
 {
   {
@@ -611,6 +681,7 @@ static const Short INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX][2] =
     {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 }
   }
 };
+#endif
 #endif
 
 //! \}

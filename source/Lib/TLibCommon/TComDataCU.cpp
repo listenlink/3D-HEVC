@@ -2906,6 +2906,7 @@ Void TComDataCU::setSDCFlagSubParts ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiP
   setSubPart( bSDCFlag, m_pbSDCFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 UInt TComDataCU::getCtxSDCFlag( UInt uiAbsPartIdx )
 {
   TComDataCU* pcTempCU;
@@ -2922,6 +2923,7 @@ UInt TComDataCU::getCtxSDCFlag( UInt uiAbsPartIdx )
   
   return uiCtx;
 }
+#endif
 
 Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
 {
