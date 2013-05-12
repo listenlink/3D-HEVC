@@ -279,7 +279,9 @@ private:
 #endif
   
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+#if !RWTH_SDC_CTX_SIMPL_D0032
   ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
+#endif
   ContextModel3DBuffer m_cSDCResidualSCModel;
   
   ContextModel3DBuffer m_cSDCPredModeSCModel;

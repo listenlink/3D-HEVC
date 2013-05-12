@@ -134,8 +134,14 @@
 #define SDC_NUM_FLAG_CTX                 3
 #endif
 #define SDC_NUM_RESIDUAL_FLAG_CTX        1
+#if !RWTH_SDC_CTX_SIMPL_D0032
 #define SDC_NUM_SIGN_FLAG_CTX            1
+#endif
+#if RWTH_SDC_CTX_SIMPL_D0032
+#define SDC_NUM_RESIDUAL_CTX             8
+#else
 #define SDC_NUM_RESIDUAL_CTX             10
+#endif
 
 #define SDC_NUM_PRED_MODE_CTX            5
 #endif
@@ -555,6 +561,50 @@ static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
 };
 #endif
 
+#if RWTH_SDC_CTX_SIMPL_D0032
+static const UChar INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
+{
+  {
+    CNU
+    
+  },
+  {
+    CNU
+  },
+  {
+    CNU
+  }
+};
+
+static const UChar INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
+{
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  }
+};
+
+static const UChar INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX] =
+{
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  }
+};
+#else
 static const Short INIT_SDC_RESIDUAL_FLAG[3][3*SDC_NUM_RESIDUAL_FLAG_CTX][2] =
 {
   {
@@ -631,6 +681,7 @@ static const Short INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX][2] =
     {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 }
   }
 };
+#endif
 #endif
 
 //! \}
