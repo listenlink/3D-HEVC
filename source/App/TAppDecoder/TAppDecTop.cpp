@@ -150,6 +150,11 @@ Void TAppDecTop::decode()
      * requires the TDecTop::decode() method to be called again with the same
      * nal unit. */
     streampos location = bitstreamFile.tellg();
+#if H_MV
+#if ENC_DEC_TRACE
+    Int64 symCount = g_nSymbolCounter;
+#endif
+#endif
     AnnexBStats stats = AnnexBStats();
 #if !H_MV
     Bool bPreviousPictureDecoded = false;
@@ -245,6 +250,12 @@ Void TAppDecTop::decode()
            *     (but bNewPicture doesn't happen then) */
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
+#if H_MV
+#if ENC_DEC_TRACE
+          g_nSymbolCounter = symCount;
+#endif
+#endif
+
         }
 #if !H_MV
         bPreviousPictureDecoded = true; 
@@ -590,4 +601,56 @@ Bool TAppDecTop::isNaluWithinTargetDecLayerIdSet( InputNALUnit* nalu )
   return false;
 }
 
+#if H_MV
+Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
+{
+  Int decIdx = -1; 
+  if ( m_layerIdToDecIdx[ layerId ] != -1 ) 
+  {      
+    decIdx = m_layerIdToDecIdx[ layerId ]; 
+  }
+  else
+  {      
+    assert ( createFlag ); 
+    assert( m_numDecoders < MAX_NUM_LAYERS ); 
+
+    decIdx = m_numDecoders; 
+
+    // Init decoder
+    m_tDecTop[ decIdx ] =  new TDecTop;
+    m_tDecTop[ decIdx ]->create();
+    m_tDecTop[ decIdx ]->init( );
+    m_tDecTop[ decIdx ]->setLayerId( layerId );
+    m_tDecTop[ decIdx ]->setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
+    m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
+
+    // append pic list of new decoder to PicLists 
+    assert( m_ivPicLists.size() == m_numDecoders );
+    m_ivPicLists.push_back( m_tDecTop[ decIdx ]->getListPic() );
+
+    // create recon file related stuff      
+    Char* pchTempFilename = NULL;
+    if ( m_pchReconFile )
+    {      
+      Char buffer[4];      
+      sprintf(buffer,"_%i", layerId );
+      assert ( m_pchReconFile ); 
+      xAppendToFileNameEnd( m_pchReconFile , buffer, pchTempFilename );
+      assert( m_pchReconFiles.size() == m_numDecoders );
+    }
+
+    m_pchReconFiles.push_back( pchTempFilename );   
+
+    m_tVideoIOYuvReconFile[ decIdx ] = new TVideoIOYuv;
+    m_reconOpen           [ decIdx ] = false;
+
+    // set others 
+    m_pocLastDisplay      [ decIdx ] = -MAX_INT;
+    m_layerIdToDecIdx     [ layerId ] = decIdx; 
+
+    m_numDecoders++; 
+  };
+  return decIdx;
+}
+#endif
 //! \}

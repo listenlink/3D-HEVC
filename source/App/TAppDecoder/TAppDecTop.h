@@ -96,56 +96,7 @@ protected:
 #if H_MV
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int layerId, Int tId ); ///< write YUV to file
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int layerId ); ///< flush all remaining decoded pictures to file
-  Int   xGetDecoderIdx    ( Int layerId, Bool createFlag = false )
-  { 
-    Int decIdx = -1; 
-    if ( m_layerIdToDecIdx[ layerId ] != -1 ) 
-    {      
-      decIdx = m_layerIdToDecIdx[ layerId ]; 
-    }
-    else
-    {      
-      assert ( createFlag ); 
-      assert( m_numDecoders < MAX_NUM_LAYERS ); 
-
-      decIdx = m_numDecoders; 
-      
-      // Init decoder
-      m_tDecTop[ decIdx ] =  new TDecTop;
-      m_tDecTop[ decIdx ]->create();
-      m_tDecTop[ decIdx ]->init( );
-      m_tDecTop[ decIdx ]->setLayerId( layerId );
-      m_tDecTop[ decIdx ]->setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
-      m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
-     
-      // append pic list of new decoder to PicLists 
-      assert( m_ivPicLists.size() == m_numDecoders );
-      m_ivPicLists.push_back( m_tDecTop[ decIdx ]->getListPic() );
-
-      // create recon file related stuff      
-      Char* pchTempFilename = NULL;
-      if ( m_pchReconFile )
-      {      
-        Char buffer[4];      
-        sprintf(buffer,"_%i", layerId );
-        assert ( m_pchReconFile ); 
-        xAppendToFileNameEnd( m_pchReconFile , buffer, pchTempFilename );
-        assert( m_pchReconFiles.size() == m_numDecoders );
-      }
-
-      m_pchReconFiles.push_back( pchTempFilename );   
-
-      m_tVideoIOYuvReconFile[ decIdx ] = new TVideoIOYuv;
-      m_reconOpen           [ decIdx ] = false;
-
-      // set others 
-      m_pocLastDisplay      [ decIdx ] = -MAX_INT;
-      m_layerIdToDecIdx     [ layerId ] = decIdx; 
-
-      m_numDecoders++; 
-    };
-    return decIdx; 
-  }
+  Int   xGetDecoderIdx    ( Int layerId, Bool createFlag = false );
 #else
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic , UInt tId); ///< write YUV to file
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic ); ///< flush all remaining decoded pictures to file

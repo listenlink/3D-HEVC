@@ -49,9 +49,16 @@ TDecTop::TDecTop()
   m_pcPic = 0;
   m_iMaxRefPicNum = 0;
 #if ENC_DEC_TRACE
+#if H_MV
+  if ( g_hTrace == NULL )
+  {
+#endif
   g_hTrace = fopen( "TraceDec.txt", "wb" );
   g_bJustDoIt = g_bEncDecTraceDisable;
   g_nSymbolCounter = 0;
+#if H_MV
+  }
+#endif
 #endif
   m_pocCRA = 0;
   m_prevRAPisBLA = false;
