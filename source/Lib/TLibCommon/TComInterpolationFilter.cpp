@@ -71,7 +71,26 @@ const Short TComInterpolationFilter::m_chromaFilter[8][NTAPS_CHROMA] =
   { -2, 16, 54, -4 },
   { -2, 10, 58, -2 }
 };
-
+#if QC_ARP_D0177
+const Short TComInterpolationFilter::m_lumaFilterARP[4][NTAPS_LUMA_ARP] =
+{
+  {64,  0},
+  {48, 16},
+  {32, 32},
+  {16, 48}
+};
+const Short TComInterpolationFilter::m_chromaFilterARP[8][NTAPS_CHROMA_ARP] =
+{
+  {64,  0},
+  {56,  8},
+  {48, 16},
+  {40, 24},
+  {32, 32},
+  {24, 40},
+  {16, 48},
+  {8,  56}
+};
+#endif
 // ====================================================================================================================
 // Private member functions
 // ====================================================================================================================
@@ -319,7 +338,12 @@ Void TComInterpolationFilter::filterVer(Pel *src, Int srcStride, Short *dst, Int
  * \param  frac       Fractional sample offset
  * \param  isLast     Flag indicating whether it is the last filtering operation
  */
-Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast )
+Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast 
+#if QC_ARP_D0177
+    ,
+    Bool filterType
+#endif
+    )
 {
   assert(frac >= 0 && frac < 4);
   
@@ -329,7 +353,12 @@ Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst,
   }
   else
   {
-    filterHor<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
+#if QC_ARP_D0177
+    if(filterType)
+      filterHor<NTAPS_LUMA_ARP>(src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilterARP[frac]);
+    else
+#endif
+      filterHor<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
   }
 }
 
@@ -346,7 +375,12 @@ Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst,
  * \param  isFirst    Flag indicating whether it is the first filtering operation
  * \param  isLast     Flag indicating whether it is the last filtering operation
  */
-Void TComInterpolationFilter::filterVerLuma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast )
+Void TComInterpolationFilter::filterVerLuma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast
+#if QC_ARP_D0177
+    ,
+    Bool filterType
+#endif
+    )
 {
   assert(frac >= 0 && frac < 4);
   
@@ -356,7 +390,12 @@ Void TComInterpolationFilter::filterVerLuma(Pel *src, Int srcStride, Short *dst,
   }
   else
   {
-    filterVer<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);    
+#if QC_ARP_D0177
+    if(filterType)
+      filterVer<NTAPS_LUMA_ARP>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilterARP[frac]);    
+    else
+#endif
+      filterVer<NTAPS_LUMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_lumaFilter[frac]);    
   }
 }
 
@@ -372,7 +411,12 @@ Void TComInterpolationFilter::filterVerLuma(Pel *src, Int srcStride, Short *dst,
  * \param  frac       Fractional sample offset
  * \param  isLast     Flag indicating whether it is the last filtering operation
  */
-Void TComInterpolationFilter::filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast )
+Void TComInterpolationFilter::filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isLast
+#if QC_ARP_D0177
+    ,
+    Bool filterType
+#endif
+    )
 {
   assert(frac >= 0 && frac < 8);
   
@@ -382,6 +426,11 @@ Void TComInterpolationFilter::filterHorChroma(Pel *src, Int srcStride, Short *ds
   }
   else
   {
+#if QC_ARP_D0177
+    if(filterType)
+      filterHor<NTAPS_CHROMA_ARP>(src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilterARP[frac]);   
+    else
+#endif
     filterHor<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac]);
   }
 }
@@ -399,7 +448,12 @@ Void TComInterpolationFilter::filterHorChroma(Pel *src, Int srcStride, Short *ds
  * \param  isFirst    Flag indicating whether it is the first filtering operation
  * \param  isLast     Flag indicating whether it is the last filtering operation
  */
-Void TComInterpolationFilter::filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast )
+Void TComInterpolationFilter::filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast
+#if QC_ARP_D0177
+    ,
+    Bool filterType
+#endif
+    )
 {
   assert(frac >= 0 && frac < 8);
   
@@ -409,7 +463,12 @@ Void TComInterpolationFilter::filterVerChroma(Pel *src, Int srcStride, Short *ds
   }
   else
   {
-    filterVer<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac]);    
+#if QC_ARP_D0177
+    if(filterType)
+      filterVer<NTAPS_CHROMA_ARP>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilterARP[frac]);  
+    else
+#endif
+      filterVer<NTAPS_CHROMA>(src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac]);    
   }
 }
 

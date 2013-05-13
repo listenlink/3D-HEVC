@@ -143,6 +143,9 @@ public:
 #if H3D_IVRP
   Void parseResPredFlag     ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
+#if QC_ARP_D0177
+  Void parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx,UInt uiDepth );
+#endif
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePartSize        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

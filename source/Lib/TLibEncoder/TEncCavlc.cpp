@@ -710,10 +710,13 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if H3D_IVMP
         WRITE_UVLC( pcSPS->getMultiviewMvPredMode(), "multi_view_mv_pred_mode" );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
         WRITE_FLAG  ( pcSPS->getMultiviewResPredMode(), "multi_view_residual_pred_mode" );
 #endif
       }
+#endif
+#if QC_ARP_D0177
+      WRITE_FLAG( pcSPS->getUseAdvRP () ? 1 : 0,       "advanced_residual_pred_flag"  );
 #endif
     }
   }
@@ -1320,7 +1323,12 @@ TEncCavlc::codeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   assert(0);
 }
 #endif
-
+#if QC_ARP_D0177
+Void TEncCavlc::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert( false );
+}
+#endif
 Void TEncCavlc::codeAlfCtrlFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {  
   if (!m_bAlfCtrl)

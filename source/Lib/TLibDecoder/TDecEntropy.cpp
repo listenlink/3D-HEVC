@@ -107,6 +107,19 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
+#if QC_ARP_D0177
+Void TDecEntropy::decodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU, UInt uiPUIdx )
+{
+  if( pcCU->getSlice()->getViewId() == 0 || pcCU->getSlice()->getIsDepth() == true || !pcCU->getSlice()->getARPStepNum() )
+    return;
+  assert( !pcCU->isIntra( uiAbsPartIdx ) );
+  Bool bResPredAvailable = !pcCU->getSlice()->getARPStepNum() ? false: ((pcCU->getPartitionSize(uiAbsPartIdx)==SIZE_2Nx2N || pcCU->isSkipped(uiAbsPartIdx)) ? true: false);
+  if(!bResPredAvailable)
+    pcCU->setARPWSubParts( 0 , uiAbsPartIdx, uiDepth );  
+  else
+    m_pcEntropyDecoderIf->parseARPW( pcCU , uiAbsPartIdx , uiDepth );
+}
+#endif
 Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseSplitFlag( pcCU, uiAbsPartIdx, uiDepth );
@@ -188,6 +201,12 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
     decodePUWise( pcCU, uiAbsPartIdx, uiDepth, pcSubCU );
+#if QC_ARP_D0177
+    if( pcCU->getSlice()->getSPS()->getUseAdvRP() )
+    {
+      decodeARPW( pcCU , uiAbsPartIdx , uiDepth, pcSubCU, 0  );
+    }
+#endif
   }
 }
 

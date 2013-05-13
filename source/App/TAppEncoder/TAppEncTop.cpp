@@ -222,7 +222,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( iViewIdx ? m_dMultiviewMvRegLambdaScale : 0.0 );
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+    m_acTEncTopList[iViewIdx]->setUseAdvRP                     ( iViewIdx ? m_nUseAdvResPred             : 0   );
+    m_acTEncTopList[iViewIdx]->setARPStepNum                   ( iViewIdx ? QC_ARP_WFNR                  : 1   );
+#else
     m_acTEncTopList[iViewIdx]->setMultiviewResPredMode         ( m_uiMultiviewResPredMode );
+#endif
 #endif
 
   //====== Tool list ========
@@ -559,8 +564,13 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegMode           ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( 0.0 );
 #endif
-#if H3D_IVRP
-      m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
+#if H3D_IVRP 
+#if QC_ARP_D0177
+    m_acTEncDepthTopList[iViewIdx]->setUseAdvRP                          ( 0 );
+    m_acTEncDepthTopList[iViewIdx]->setARPStepNum                        ( 1 );
+#else
+    m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
+#endif
 #endif
 
       //====== Weighted Prediction ========

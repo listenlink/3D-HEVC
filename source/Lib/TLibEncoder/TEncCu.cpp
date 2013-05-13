@@ -63,7 +63,9 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   m_uhTotalDepth   = uhTotalDepth + 1;
   m_ppcBestCU      = new TComDataCU*[m_uhTotalDepth-1];
   m_ppcTempCU      = new TComDataCU*[m_uhTotalDepth-1];
-  
+#if QC_ARP_D0177
+  m_ppcWeightedTempCU = new TComDataCU*[m_uhTotalDepth-1];
+#endif 
   m_ppcPredYuvBest = new TComYuv*[m_uhTotalDepth-1];
   m_ppcResiYuvBest = new TComYuv*[m_uhTotalDepth-1];
   m_ppcRecoYuvBest = new TComYuv*[m_uhTotalDepth-1];
@@ -90,7 +92,9 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
     
     m_ppcBestCU[i] = new TComDataCU; m_ppcBestCU[i]->create( uiNumPartitions, uiWidth, uiHeight, false, uiMaxWidth >> (m_uhTotalDepth - 1) );
     m_ppcTempCU[i] = new TComDataCU; m_ppcTempCU[i]->create( uiNumPartitions, uiWidth, uiHeight, false, uiMaxWidth >> (m_uhTotalDepth - 1) );
-    
+#if QC_ARP_D0177
+    m_ppcWeightedTempCU[i] = new TComDataCU; m_ppcWeightedTempCU[i]->create( uiNumPartitions, uiWidth, uiHeight, false, uiMaxWidth >> (m_uhTotalDepth - 1) );
+#endif    
     m_ppcPredYuvBest[i] = new TComYuv; m_ppcPredYuvBest[i]->create(uiWidth, uiHeight);
     m_ppcResiYuvBest[i] = new TComYuv; m_ppcResiYuvBest[i]->create(uiWidth, uiHeight);
     m_ppcRecoYuvBest[i] = new TComYuv; m_ppcRecoYuvBest[i]->create(uiWidth, uiHeight);
@@ -169,6 +173,12 @@ Void TEncCu::destroy()
     if(m_ppcResPredTmp[i])
     {
       m_ppcResPredTmp [i]->destroy(); delete m_ppcResPredTmp[i];  m_ppcResPredTmp[i] = NULL;
+    }
+#endif
+#if QC_ARP_D0177
+    if(m_ppcWeightedTempCU[i])
+    {
+      m_ppcWeightedTempCU[i]->destroy(); delete m_ppcWeightedTempCU[i]; m_ppcWeightedTempCU[i] = NULL;
     }
 #endif
   }
@@ -590,13 +600,58 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
       }
 #endif
-
+#if QC_CU_NBDV_D0181
+      DisInfo DvInfo; 
+      DvInfo.bDV = false;
+      if( rpcTempCU->getSlice()->getSliceType() != I_SLICE )
+      {
+#if QC_ARP_D0177
+        if(( rpcTempCU->getSlice()->getSPS()->getMultiviewMvPredMode() || rpcTempCU->getSlice()->getSPS()->getUseAdvRP()) && rpcTempCU->getSlice()->getViewId())
+#else
+        if(( rpcTempCU->getSlice()->getSPS()->getMultiviewMvPredMode() || rpcTempCU->getSlice()->getSPS()->getMultiviewResPredMode()) && rpcTempCU->getSlice()->getViewId())
+#endif
+        {  
+          PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
+          rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+#if MERL_VSP_C0152
+          DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(0, 0, &DvInfo, false, true);
+#else
+          DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(0, 0, &DvInfo, false);
+#endif
+          rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
+        }
+        if(DvInfo.bDV==false)
+        {
+          DvInfo.iN=1;
+#if !SEC_DEFAULT_DV_D0112
+          DvInfo.m_acMvCand[0].setHor(0);
+          DvInfo.m_acMvCand[0].setVer(0);
+          DvInfo.m_aVIdxCan[0] = 0;
+#endif
+          rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+         }
+       }
+#endif
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
 #if H3D_IVRP
+#if QC_ARP_D0177
+        Bool  bResPredAvailable   = false;
+        Bool  bResPredAllowed     =                    (!rpcBestCU->getSlice()->getSPS()->isDepth                () );
+        bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getViewId              () );
+        if( bResPredAllowed )
+        {
+          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, true, m_ppcResPredTmp[uiDepth] );
+        }
+        for( UInt uiResPrdId = 0; uiResPrdId < (rpcBestCU->getSlice()->getSPS()->getUseAdvRP()? 1: ( bResPredAvailable ? 2 : 1 )); uiResPrdId++ )
+#else
         Bool  bResPredAvailable   = false;
         UInt uiResPrdId = 0; 
+#endif
         {
           Bool bResPredFlag  = ( uiResPrdId > 0 );
 #if LGE_ILLUCOMP_B0045
@@ -714,8 +769,19 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
 #if H3D_IVRP
+#if QC_ARP_D0177
+        Bool  bResPredAvailable   = false;
+        Bool  bResPredAllowed     =                    (!rpcBestCU->getSlice()->getSPS()->isDepth                () );
+        bResPredAllowed           = bResPredAllowed && ( rpcBestCU->getSlice()->getSPS()->getViewId              () );
+        if( bResPredAllowed )
+        {
+          bResPredAvailable       = rpcBestCU->getResidualSamples( 0, true, m_ppcResPredTmp[uiDepth] );
+        }
+        for( UInt uiResPrdId = 0; uiResPrdId < (rpcBestCU->getSlice()->getSPS()->getUseAdvRP()? 1: ( bResPredAvailable ? 2 : 1 )); uiResPrdId++ )
+#else
         Bool  bResPredAvailable   = false;
         UInt uiResPrdId = 0; 
+#endif
         {
           Bool bResPredFlag  = ( uiResPrdId > 0 );
 #if LGE_ILLUCOMP_B0045
@@ -1766,6 +1832,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
         );
 #endif
+#if QC_ARP_D0177
+    m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx, 0, uiDepth);
+#endif
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
   }
@@ -1832,6 +1901,10 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
   Int numValidMergeCand = 0;
 
+#if QC_ARP_D0177
+  Bool  bResPrdAvail  = rpcTempCU->getResPredAvail( 0 );
+  Bool  bResPrdFlag   = rpcTempCU->getResPredFlag ( 0 );
+#endif
 #if LGE_ILLUCOMP_B0045
   Bool  bICFlag = rpcTempCU->getICFlag(0);
 #endif
@@ -1864,12 +1937,18 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   Bool bResPredAvail = rpcTempCU->getResPredAvail(0);
 #endif
 
   Bool bestIsSkip = false;
-  
+#if QC_ARP_D0177
+  Int nGRPW = rpcTempCU->getSlice()->getARPStepNum() - 1;
+  if(nGRPW < 0 || !bResPrdAvail )
+    nGRPW = 0;
+  for( ; nGRPW >= 0 ; nGRPW-- )
+  {
+#endif  
   for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
   {
     {
@@ -1903,6 +1982,10 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           // set MC parameters
           rpcTempCU->setPredModeSubParts( MODE_SKIP, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
+#if QC_ARP_D0177
+          if(rpcTempCU->getSlice()->getSPS()->getUseAdvRP())
+            rpcTempCU->setARPWSubParts( ( UChar )nGRPW , 0 , uhDepth );
+#endif
           rpcTempCU->setMergeFlagSubParts( true, 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setMergeIndexSubParts( uiMergeCand, 0, 0, uhDepth ); // interprets depth relative to LCU level
 #if MERL_VSP_C0152
@@ -1926,12 +2009,33 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
 
 #if H3D_IVRP
+#if !QC_ARP_D0177
           rpcTempCU->setResPredAvailSubParts(bResPredAvail, 0, 0, uhDepth);
+#else
+          rpcTempCU->setResPredAvailSubParts( bResPrdAvail, 0, 0, uhDepth );
+          rpcTempCU->setResPredFlagSubParts ( bResPrdFlag,  0, 0, uhDepth );
+#endif  
 #endif
 #if LGE_ILLUCOMP_B0045
           rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uhDepth);
 #endif
-
+#if QC_ARP_D0177
+          if(rpcTempCU->getSlice()->getSPS()->getUseAdvRP())
+          {
+            bool bSignalflag[2] = {true, true};
+            for(UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx ++ )
+            {
+              Int iRefIdx = cMvFieldNeighbours[uiRefListIdx + 2*uiMergeCand].getRefIdx();
+              RefPicList eRefList = uiRefListIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+              if(iRefIdx < 0 || rpcTempCU->getSlice()->getPOC() == rpcTempCU->getSlice()->getRefPOC(eRefList, iRefIdx))
+                bSignalflag[uiRefListIdx] = false;
+            }
+            if(!bSignalflag[0]&& !bSignalflag[1])
+            {
+              rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
+            }
+          }
+#endif
           // do MC
 #if HHI_INTERVIEW_SKIP
       if ( (uiNoResidual == 0) || bSkipRes )
@@ -1944,7 +2048,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
             m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
             if (uiMergeCand == 0 && rpcTempCU->getResPredAvail(0))
             {
               m_pcPredSearch->residualPrediction(rpcTempCU, m_ppcPredYuvTemp[uhDepth], m_ppcResPredTmp [uhDepth]);
@@ -1963,7 +2067,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
               m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
               if (uiMergeCand == 0 && rpcTempCU->getResPredAvail(0))
               {
                 m_pcPredSearch->residualPrediction(rpcTempCU, m_ppcPredYuvTemp[uhDepth], m_ppcResPredTmp [uhDepth]);
@@ -2020,6 +2124,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
       }
     }
   }
+#if QC_ARP_D0177
+  }
+#endif
 }
 
 #if AMP_MRG
@@ -2037,7 +2144,19 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 {
   UChar uhDepth = rpcTempCU->getDepth( 0 );
-  
+#if QC_ARP_D0177
+  Bool bFirstTime = true;
+  Int nARPWMax = rpcTempCU->getSlice()->getARPStepNum() - 1;
+  if(nARPWMax < 0 || !rpcTempCU->getResPredAvail( 0 ) )
+    nARPWMax = 0;
+  if( ePartSize != SIZE_2Nx2N)
+    nARPWMax = 0;
+  Int nARPWStart = 0 , nARPWStep = 1;
+  for( Int nCount = 0 , nGRPW = nARPWStart ; nCount <= nARPWMax ; nCount++ , nGRPW += nARPWStep )
+  {
+    if( bFirstTime == false && rpcTempCU->getSlice()->getSPS()->getUseAdvRP() )
+      rpcTempCU->initEstData( rpcTempCU->getDepth(0), rpcTempCU->getQP(0) );
+#endif  
 #if HHI_VSO
   if( m_pcRdCost->getUseRenModel() )
   {
@@ -2064,6 +2183,39 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
 
+#if QC_ARP_D0177
+  if(rpcTempCU->getSlice()->getSPS()->getUseAdvRP())
+    rpcTempCU->setARPWSubParts( ( UChar )nGRPW , 0 , uhDepth );
+#endif
+#if QC_ARP_D0177
+  if( bFirstTime == false && rpcTempCU->getSlice()->getSPS()->getUseAdvRP())
+  {
+    assert(!rpcTempCU->getSlice()->getSPS()->isDepth());
+    rpcTempCU->copyPartFrom( m_ppcWeightedTempCU[uhDepth] , 0 , uhDepth, true );
+    rpcTempCU->setARPWSubParts( ( UChar )nGRPW , 0 , uhDepth );
+#if MERL_VSP_C0152
+    m_pcPredSearch->motionCompensation( rpcTempCU , m_ppcPredYuvTemp[uhDepth], 0);
+#else
+    m_pcPredSearch->motionCompensation( rpcTempCU , m_ppcPredYuvTemp[uhDepth] );
+#endif
+    if(rpcTempCU->getPartitionSize(0)==SIZE_2Nx2N)
+    {
+      bool bSignalflag[2] = {true, true};
+      for(UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx ++ )
+      {
+        RefPicList eRefList = uiRefListIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+        Int iRefIdx = rpcTempCU->getCUMvField(eRefList)->getRefIdx(0);
+        if(iRefIdx < 0 || rpcTempCU->getSlice()->getPOC() == rpcTempCU->getSlice()->getRefPOC(eRefList, iRefIdx))
+          bSignalflag[uiRefListIdx] = false;
+      }
+      if(!bSignalflag[0]&& !bSignalflag[1])
+        rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
+    }
+  }
+  else
+  {
+    bFirstTime = false;
+#endif
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
   #if HHI_INTERVIEW_SKIP
@@ -2078,10 +2230,35 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] );
 #endif
 #endif
+#if QC_ARP_D0177
+   if(rpcTempCU->getSlice()->getSPS()->getUseAdvRP())
+   {
+     m_ppcWeightedTempCU[uhDepth]->copyPartFrom( rpcTempCU , 0 , uhDepth );
+     if(rpcTempCU->getSlice()->getSPS()->getUseAdvRP() && rpcTempCU->getPartitionSize(0)==SIZE_2Nx2N)
+     {
+       bool bSignalflag[2] = {true, true};
+       for(UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx ++ )
+       {
+         RefPicList eRefList = uiRefListIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+         Int iRefIdx = rpcTempCU->getCUMvField(eRefList)->getRefIdx(0);
+         if(iRefIdx < 0 || rpcTempCU->getSlice()->getPOC() == rpcTempCU->getSlice()->getRefPOC(eRefList, iRefIdx))
+           bSignalflag[uiRefListIdx] = false;
+       }
+       if(!bSignalflag[0]&& !bSignalflag[1])
+         rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
+     }
+   }
+  }
+#endif
 
 #if AMP_MRG
   if ( !rpcTempCU->getMergeAMP() )
   {
+#if QC_ARP_D0177
+    if(rpcTempCU->getSlice()->getSPS()->getUseAdvRP())
+      continue;
+    else
+#endif
     return;
   }
 #endif
@@ -2122,6 +2299,9 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+#if QC_ARP_D0177
+  }
+#endif
 }
 
 Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize )
