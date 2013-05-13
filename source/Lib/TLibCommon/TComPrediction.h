@@ -83,6 +83,11 @@ protected:
 
 #if MERL_VSP_C0152
   Int*   m_pDepth; ///< Local variable, to store a depth block, just to prevent allocate memory every time
+
+#if MERL_CVSP_D0165
+  static Int m_iRangeLuma[12];
+  static Int m_iRangeChroma[12];
+#endif
 #endif
 
   Void xPredIntraAng            ( Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, Bool bFilter );

@@ -1085,14 +1085,14 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
-  Pel apDCRecoValues[2];
+  //Pel apDCRecoValues[2];
   for( UInt ui = 0; ui < uiNumSegments; ui++ )
   {
     Pel   pPredIdx    = GetDepthValue2Idx( apDCPredValues[ui] );
     Pel   pResiIdx    = pcCU->getSDCSegmentDCOffset(ui, uiAbsPartIdx);
     Pel   pRecoValue  = GetIdx2DepthValue( pPredIdx + pResiIdx );
     
-    apDCRecoValues[ui]  = pRecoValue;
+    //apDCRecoValues[ui]  = pRecoValue;
     apDCResiValues[ui]  = pRecoValue - apDCPredValues[ui];
   }
   

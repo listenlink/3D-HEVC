@@ -1085,7 +1085,7 @@ Void TAppEncTop::encode()
 
 #if MERL_VSP_C0152
 #if MERL_VSP_C0152_BugFix_ForNoDepthCase
-        if(m_bUsingDepthMaps) //VSP can be used only when depth is available as input
+        if(m_bUsingDepthMaps) // VSP can be used only when depth is available as input
         {
 #endif
         Int iCurPoc = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
