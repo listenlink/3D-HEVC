@@ -116,6 +116,9 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // FIX_CHROMA_RESIDUAL_C0129         
 #define QC_CU_NBDV_D0181                  1
+
+#define SEC_DEFAULT_DV_D0112              1
+
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
 #define HHI_MPI                           0   // motion parameter inheritance from texture picture for depth map coding
