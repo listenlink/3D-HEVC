@@ -343,9 +343,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         if(DvInfo.bDV==false)
         {
           DvInfo.iN=1;
+#if !SEC_DEFAULT_DV_D0112
           DvInfo.m_acMvCand[0].setHor(0);
           DvInfo.m_acMvCand[0].setVer(0);
           DvInfo.m_aVIdxCan[0] = 0;
+#endif
           pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
         }
       }

@@ -5553,6 +5553,24 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
       }
     }
   }
+
+#if SEC_DEFAULT_DV_D0112
+  {
+    TComPic* picDepth = NULL;
+    TComMv defaultDV(0, 0);
+
+    picDepth = getSlice()->getRefPicBaseDepth();
+
+    if (picDepth && bDepthRefine)
+    {
+      estimateDVFromDM(uiPartIdx, picDepth, uiPartAddr, &defaultDV, true);
+    }
+
+    pDInfo->m_acMvCand[pDInfo->iN] = defaultDV;
+    pDInfo->m_aVIdxCan[pDInfo->iN] = 0;
+  }
+#endif
+
 #if QC_CU_NBDV_D0181
   return false;
 #else

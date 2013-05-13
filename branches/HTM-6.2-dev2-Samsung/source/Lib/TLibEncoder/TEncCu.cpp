@@ -625,9 +625,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         if(DvInfo.bDV==false)
         {
           DvInfo.iN=1;
+#if !SEC_DEFAULT_DV_D0112
           DvInfo.m_acMvCand[0].setHor(0);
           DvInfo.m_acMvCand[0].setVer(0);
           DvInfo.m_aVIdxCan[0] = 0;
+#endif
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
           rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
          }
