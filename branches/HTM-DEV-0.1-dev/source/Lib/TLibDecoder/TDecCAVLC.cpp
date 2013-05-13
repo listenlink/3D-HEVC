@@ -577,15 +577,27 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
   {
 #if L0323_DPB
+#if H_MV
+    READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1[i]");
+#else
     READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1");
+#endif
     pcSPS->setMaxDecPicBuffering( uiCode + 1, i);
 #else
     READ_UVLC ( uiCode, "sps_max_dec_pic_buffering");
     pcSPS->setMaxDecPicBuffering( uiCode, i);
 #endif
+#if H_MV
+    READ_UVLC ( uiCode, "sps_num_reorder_pics[i]" );
+#else
     READ_UVLC ( uiCode, "sps_num_reorder_pics" );
+#endif
     pcSPS->setNumReorderPics(uiCode, i);
+#if H_MV
+    READ_UVLC ( uiCode, "sps_max_latency_increase[i]");
+#else
     READ_UVLC ( uiCode, "sps_max_latency_increase");
+#endif
     pcSPS->setMaxLatencyIncrease( uiCode, i );
 
     if (!subLayerOrderingInfoPresentFlag)
@@ -693,7 +705,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 {
   UInt  uiCode;
-  
+   
   READ_CODE( 4,  uiCode,  "vps_video_parameter_set_id" );         pcVPS->setVPSId( uiCode );
   READ_CODE( 2,  uiCode,  "vps_reserved_three_2bits" );           assert(uiCode == 3);
 #if H_MV
@@ -1203,8 +1215,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         }
       }
     }
-    // }
+    // } 
     TComRefPicListModification* refPicListModification = rpcSlice->getRefPicListModification();
+
     if(!rpcSlice->isIntra())
     {
       if( !rpcSlice->getPPS()->getListsModificationPresentFlag() || rpcSlice->getNumRpsCurrTempList() <= 1 )

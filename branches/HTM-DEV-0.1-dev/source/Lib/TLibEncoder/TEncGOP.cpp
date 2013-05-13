@@ -2845,20 +2845,19 @@ Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr
   for (Int li = 0; li < 2; li ++) // Loop over lists L0 and L1
   {
     Int numModifications = 0;
-    
+
     for( Int k = 0; k < ge.m_numInterViewRefPics; k++ ) 
     {
       numModifications +=  ( ge.m_interViewRefPosL[li][k] >= 0 ) ? 1 : 0; 
     }
 
     // set inter-view modifications
+    Bool isModified = false;
+    Int tempList[16];
+    for( Int k = 0; k < 16; k++ ) { tempList[k] = -1; }
+
     if( (maxRefListSize > 1) && (numModifications > 0) )
     {
-      refPicListModification->setRefPicListModificationFlagL( li, true );
-      Int tempList[16];
-      for( Int k = 0; k < 16; k++ ) { tempList[k] = -1; }
-
-      Bool isModified = false;
       for( Int k = 0; k < ge.m_numInterViewRefPics; k++ )
       {
         if( ge.m_interViewRefPosL[li][k] >= 0 )
@@ -2877,27 +2876,26 @@ Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr
           }
         }
       }
-      if( isModified )
+    }
+
+    refPicListModification->setRefPicListModificationFlagL( li, isModified );  
+
+    if( isModified )
+    {
+      Int temporalRefIdx = 0;
+      for( Int i = 0; i < pcSlice->getNumRefIdx( ( li == 0 ) ? REF_PIC_LIST_0 : REF_PIC_LIST_1 ); i++ )
       {
-        Int temporalRefIdx = 0;
-        for( Int i = 0; i < pcSlice->getNumRefIdx( ( li == 0 ) ? REF_PIC_LIST_0 : REF_PIC_LIST_1 ); i++ )
+        if( tempList[i] >= 0 ) 
         {
-          if( tempList[i] >= 0 ) 
-          {
-            refPicListModification->setRefPicSetIdxL( li, i, tempList[i] );
-          }
-          else
-          {
-            refPicListModification->setRefPicSetIdxL( li, i, temporalRefIdx );
-            temporalRefIdx++;
-          }
+          refPicListModification->setRefPicSetIdxL( li, i, tempList[i] );
+        }
+        else
+        {
+          refPicListModification->setRefPicSetIdxL( li, i, temporalRefIdx );
+          temporalRefIdx++;
         }
       }
-      else
-      {
-        refPicListModification->setRefPicListModificationFlagL( li, false );
-      }
-    }
+    }    
   }
 }
 #endif
