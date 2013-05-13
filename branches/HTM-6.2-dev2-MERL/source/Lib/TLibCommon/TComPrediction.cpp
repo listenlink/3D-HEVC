@@ -49,6 +49,13 @@
 #define MAX_DISTANCE_EDGEINTRA 255
 #endif
 
+#if MERL_VSP_C0152
+#if MERL_CVSP_D0165
+Int TComPrediction::m_iRangeLuma[12]   = {14, 34, 21, 15, 36, 26, 21, 49, 41, 36, 80, 72};
+Int TComPrediction::m_iRangeChroma[12] = { 2,  8,  5,  4, 11,  9,  8, 19, 17, 15, 34, 32};
+#endif
+#endif
+
 TComPrediction::TComPrediction()
 : m_pLumaRecBuffer(0)
 {
@@ -1521,6 +1528,11 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   Int heightDepth = pPicBaseDepth->getHeight();
 #endif
 
+#if MERL_CVSP_D0165
+  Int widthDepth  = pPicBaseDepth->getWidth();
+  Int heightDepth = pPicBaseDepth->getHeight();
+#endif
+
   Int nTxtPerDepthX = widthLuma  / ( pPicBaseDepth->getWidth() );  // texture pixel # per depth pixel
   Int nTxtPerDepthY = heightLuma / ( pPicBaseDepth->getHeight() );
 
@@ -1609,6 +1621,77 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   }
 #endif
   
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+#if MERL_CVSP_D0165
+  //get LUT based horizontal reference range
+  Int range = 0;
+  if( size_x == 4 && size_y == 8 )
+    range = m_iRangeLuma[0];
+  else if( size_x == 8 && size_y == 4 )
+    range = m_iRangeLuma[1];
+  else if( size_x == 8 && size_y == 8 )
+    range = m_iRangeLuma[2];
+  else if( size_x == 8 && size_y == 16 )
+    range = m_iRangeLuma[3];
+  else if( size_x == 16 && size_y == 8 )
+    range = m_iRangeLuma[4];
+  else if( size_x == 16 && size_y == 16 )
+    range = m_iRangeLuma[5];
+  else if( size_x == 16 && size_y == 32 )
+    range = m_iRangeLuma[6];
+  else if( size_x == 32 && size_y == 16 )
+    range = m_iRangeLuma[7];
+  else if( size_x == 32 && size_y == 32 )
+    range = m_iRangeLuma[8];
+  else if( size_x == 32 && size_y == 64 )
+    range = m_iRangeLuma[9];
+  else if( size_x == 64 && size_y == 32 )
+    range = m_iRangeLuma[10];
+  else if( size_x == 64 && size_y == 64 )
+    range = m_iRangeLuma[11];
+  else 
+    assert(0);
+
+  // The minimum depth value
+  Int min_relative_pos = 5000;
+  Int max_relative_pos = -5000;
+
+  Pel* depth_temp, *depth_initial=depth;
+  for (Int yTxt =0; yTxt<size_y; yTxt++)
+  {
+    for (Int xTxt =0; xTxt<size_x; xTxt++)
+    {
+      if (depthPosX+xTxt < widthDepth)
+        depth_temp = depth_initial + xTxt;
+      else
+        depth_temp = depth_initial + (widthDepth - depthPosX - 1);
+
+      Int disparity = pShiftLUT[ *depth_temp ] << iShiftPrec;
+      Int disparity_int = disparity >> 2;
+
+      if( disparity <= 0)
+      {
+        if (min_relative_pos > disparity_int+xTxt)
+            min_relative_pos = disparity_int+xTxt;
+      }
+      else
+      {
+        if (max_relative_pos < disparity_int+xTxt)
+            max_relative_pos = disparity_int+xTxt;
+      }
+    }
+    if (depthPosY+yTxt < heightDepth)
+      depth_initial = depth_initial + depStride;
+  }
+
+  Int disparity_tmp = pShiftLUT[ *depth ] << iShiftPrec;
+  if (disparity_tmp <= 0)
+    max_relative_pos = min_relative_pos + range -1 ;
+  else
+    min_relative_pos = max_relative_pos - range +1 ;
+#endif
+#endif
+
 #if MERL_VSP_BLOCKSIZE_C0152 != 1
   Int yDepth = 0;
 #endif
@@ -1631,6 +1714,11 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
       Int disparity = pShiftLUT[ rep_depth ] << iShiftPrec;
       Int refOffset = xTxt + (disparity >> 2);
       Int xFrac = disparity & 0x3;
+#if MERL_CVSP_D0165
+      if(refOffset<min_relative_pos || refOffset>max_relative_pos)
+        xFrac = 0;
+      refOffset = Clip3(min_relative_pos, max_relative_pos, refOffset);
+#endif
       Int absX  = posX + refOffset;
 
       if (xFrac == 0)
@@ -1822,6 +1910,73 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
   }
 
 
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+#if MERL_CVSP_D0165
+  //get LUT based horizontal reference range
+  Int range=0;
+  if( size_x == 2 && size_y == 4 )
+    range = m_iRangeChroma[0];
+  else if( size_x == 4 && size_y == 2 )
+    range = m_iRangeChroma[1];
+  else if( size_x == 4 && size_y == 4 )
+    range = m_iRangeChroma[2];
+  else if( size_x == 4 && size_y == 8 )
+    range = m_iRangeChroma[3];
+  else if( size_x == 8 && size_y == 4 )
+    range = m_iRangeChroma[4];
+  else if( size_x == 8 && size_y == 8 )
+    range = m_iRangeChroma[5];
+  else if( size_x == 8 && size_y == 16 )
+    range = m_iRangeChroma[6];
+  else if( size_x == 16 && size_y == 8 )
+    range = m_iRangeChroma[7];
+  else if( size_x == 16 && size_y == 16 )
+    range = m_iRangeChroma[8];
+  else if( size_x == 16 && size_y == 32 )
+    range = m_iRangeChroma[9];
+  else if( size_x == 32 && size_y == 16 )
+    range = m_iRangeChroma[10];
+  else if( size_x == 32 && size_y == 32 )
+    range = m_iRangeChroma[11];
+  else
+    assert(0);
+  
+  // The minimum depth value
+  Int min_relative_pos = 5000;
+  Int max_relative_pos = -5000;
+
+  Int depth_tmp;
+  for (Int yTxt=0; yTxt<size_y; yTxt++)
+  {
+    for (Int xTxt=0; xTxt<size_x; xTxt++)
+    {
+      depth_tmp = m_pDepth[xTxt+yTxt*dW];
+      Int disparity = pShiftLUT[ depth_tmp ] << iShiftPrec;
+      Int disparity_int = disparity >> 3;//in chroma resolution
+
+      if (disparity_int < 0)
+      {
+        if (min_relative_pos > disparity_int+xTxt)
+            min_relative_pos = disparity_int+xTxt;
+      }
+      else
+      {
+        if (max_relative_pos < disparity_int+xTxt)
+            max_relative_pos = disparity_int+xTxt;
+      }
+    }
+  }
+
+  depth_tmp = m_pDepth[0];
+  Int disparity_tmp = pShiftLUT[ depth_tmp ] << iShiftPrec;
+  if ( disparity_tmp < 0 )
+    max_relative_pos = min_relative_pos + range - 1;
+  else
+    min_relative_pos = max_relative_pos - range + 1;
+
+#endif
+#endif
+
     // (size_x, size_y) is Chroma block size
     for ( Int yTxt = 0, yDepth = 0; yTxt < size_y; yTxt += nTxtPerDepthY, yDepth += nDepthPerTxtY )
     {
@@ -1842,6 +1997,11 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
         Int disparity = pShiftLUT[ rep_depth ] << iShiftPrec;
         Int refOffset = xTxt + (disparity >> 3); // in integer pixel in chroma image
         Int xFrac = disparity & 0x7;
+#if MERL_CVSP_D0165
+        if(refOffset < min_relative_pos || refOffset > max_relative_pos)
+          xFrac = 0;
+        refOffset = Clip3(min_relative_pos, max_relative_pos, refOffset);
+#endif
         Int absX  = posX + refOffset;
 
         if (xFrac == 0)

@@ -205,7 +205,11 @@
 #define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add   (nocand).
 
 
-#define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#define MERL_VSP_BLOCKSIZE_C0152             1 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+#define MERL_CVSP_D0165                      1 // JCT3V-D0165: 1:enable CVSP; 0: disable CVSP.
+#endif
+
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
                                                //MTK_DVPREFINE_BVSP_BUG_FIX               1
 #define MTK_DEPTH_TO_DISP_D0138              1 // JCT3V-D0138: Use max among four corners for DoNBDV and BVSP
