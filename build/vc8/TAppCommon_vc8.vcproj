@@ -282,10 +282,6 @@
 				RelativePath="..\..\source\Lib\TAppCommon\program_options_lite.cpp"
 				>
 			</File>
-			<File
-				RelativePath="..\..\source\Lib\TAppCommon\TAppComCamPara.cpp"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -293,10 +289,6 @@
 			>
 			<File
 				RelativePath="..\..\source\Lib\TAppCommon\program_options_lite.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\source\Lib\TAppCommon\TAppComCamPara.h"
 				>
 			</File>
 		</Filter>

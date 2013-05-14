@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,12 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+/**
+ \file     AnnexBread.cpp
+ \brief    reading functions for Annex B byte streams
+ */
+
 
 #include <stdint.h>
 #include <cassert>
@@ -110,7 +116,7 @@ _byteStreamNALUnit(
    * decoded using the NAL unit decoding process
    */
   /* NB, (unsigned)x > 2 implies n!=0 && n!=1 */
-  while (bs.eofBeforeNBytes(24/8) || bs.peekBytes(24/8) > 1) // since 0x000002 tile marker may exist in the bitstream
+  while (bs.eofBeforeNBytes(24/8) || bs.peekBytes(24/8) > 2) 
   {
     nalUnit.push_back(bs.readByte());
   }
@@ -146,13 +152,13 @@ _byteStreamNALUnit(
  * Returns false if EOF was reached (NB, nalunit data may be valid),
  *         otherwise true.
  */
-bool
+Bool
 byteStreamNALUnit(
   InputByteStream& bs,
   vector<uint8_t>& nalUnit,
   AnnexBStats& stats)
 {
-  bool eof = false;
+  Bool eof = false;
   try
   {
     _byteStreamNALUnit(bs, nalUnit, stats);
@@ -161,7 +167,7 @@ byteStreamNALUnit(
   {
     eof = true;
   }
-  stats.m_numBytesInNALUnit = unsigned(nalUnit.size());
+  stats.m_numBytesInNALUnit = UInt(nalUnit.size());
   return eof;
 }
 //! \}
