@@ -320,8 +320,12 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
 #if MERL_VSP_C0152
       Int iVSPIndexTrue[3] = {-1, -1, -1};
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+      Int iVSPDirTrue[3]   = {-1, -1, -1};
+      pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, iVSPDirTrue, uiMergeIndex );
+#else
       pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
-
+#endif
 #if HHI_MPI
       if(pcCU->getTextureModeDepth( uiSubPartIdx ) == uiDepth)//MPI is used
       {
@@ -329,8 +333,12 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         UInt uiCurrPartNumb = pcCU->getPic()->getNumPartInCU() >> (uiDepth << 1);
         for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
         {
-          Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
+          Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui );
           pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+          Int vspDir = pcTextureCU->getVSPDir( uiAbsPartIdx + ui );
+          pcCU->setVSPDir( uiAbsPartIdx + ui, vspDir);
+#endif
         }
       }
       else // MPI not used
@@ -347,7 +355,10 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
               break;
             }
         }
-        pcCU->setVSPIndexSubParts( iVSPIdx, uiSubPartIdx, uiPartIdx, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+        pcCU->setVSPIndexSubParts( iVSPIdx, uiSubPartIdx, uiPartIdx, uiDepth );               // Initialize
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+        pcCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], uiSubPartIdx, uiPartIdx, uiDepth );  // Initialize
+#endif
       }
 
 #else

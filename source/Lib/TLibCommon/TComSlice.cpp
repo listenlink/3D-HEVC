@@ -118,6 +118,10 @@ TComSlice::TComSlice()
 , m_iViewOrderIdx                 ( 0 )        // will be changed to view_id
 #endif
 {
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
+    m_pcListDepthPic[iNumCount] =NULL;
+#endif
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
 
   initEqualRef();
@@ -1385,6 +1389,33 @@ Void TComSlice::xSetApplyIC()
   aiRefOrgHist = NULL;
 }
 #endif
+
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+TComPic* TComSlice::getDepthRefPic(Int viewId, Int poc)
+{
+  TComPic* pPic = NULL;
+
+  if (m_pcListDepthPic[viewId] == NULL)
+    return NULL;
+
+  for( TComList<TComPic*>::iterator it = m_pcListDepthPic[viewId]->begin(); it != m_pcListDepthPic[viewId]->end(); it++ )
+  {
+    TComPic* currPic = *it;
+    TComSlice* currSlice = currPic->getCurrSlice();
+    Bool isDepth = currSlice->getIsDepth();
+    //assert(isDepth);
+    if( isDepth && currPic->getPOC() == poc && currPic->getViewId() == viewId ) // (*it)->getSPS()->isDepth()
+    {
+      pPic = *it;
+      break;
+    }
+  }
+
+  return pPic;
+}
+#endif
+
+
 #if QC_ARP_D0177
 Void TComSlice::setARPStepNum()                                  
 {

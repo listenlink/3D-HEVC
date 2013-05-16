@@ -114,11 +114,6 @@ protected:
 #endif
       );
 
-#if MERL_VSP_C0152
-  Void xPredInterUniBWVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi=false );
-  Void xPredInterBiBWVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx,               Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
-#endif
-
 #if DEPTH_MAP_GENERATION
   Void xWeightedAveragePdm      ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst, UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
@@ -150,13 +145,26 @@ protected:
 #endif
     );
 #endif
-  Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
 
+#if MERL_Bi_VSP_D0166
+  Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst,  Int predDir);
+#else
+  Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
+#endif
 #if MERL_VSP_C0152
-  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, Int vspIdx
-                                  , TComYuv *&dstPic );
-  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, Int vspIdx
-                                  , TComYuv *&dstPic );
+  Void xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi );
+#if MERL_Bi_VSP_D0166
+  TComPic*  xGetVspRefTxt(TComDataCU* pcCU, UInt uiPartAddr, RefPicList eRefPicList);
+  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, 
+    TComYuv *&dstPic, Bool bi);
+  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth,
+    TComYuv *&dstPic, Bool bi);
+#else
+  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, 
+                                  TComYuv *&dstPic );
+  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, 
+                                  TComYuv *&dstPic );
+#endif
 #endif
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );
 #if LGE_ILLUCOMP_B0045

@@ -181,46 +181,42 @@
 #endif
 
 ///// ***** VSP *********
-#define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
-                                            // LGE_SIMP_DVP_REFINE_C0112            
-                                            // MERL_MTK_VSP_DVP_REFINE_C0152_C0131
+#define MERL_VSP_C0152                       1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+                                               // LGE_SIMP_DVP_REFINE_C0112
+                                               // MERL_MTK_VSP_DVP_REFINE_C0152_C0131
 #if MERL_VSP_C0152
-#define MERL_VSP_C0152_BugFix_ForNoDepthCase     1// MERL bugfix for test condition of no depth
-/*
- * Two macros are used to configure combinations of JCT3V-C0152 and JCT3V-C0131
- * 
- *   a) (full) A full JCT3V-C0152 implementation, including JCT3V-C0131 
- *      #define MERL_VSP_COMPENSATION_C0152          1
- *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1
- * 
- *   b) (mvp2off) For partial JCT3V-C0152 excluding overlaps from JCT3V-C0131
- *      #define MERL_VSP_COMPENSATION_C0152          1
- *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  0
- * 
- *   c) (nocand) For JCT3V-C0131 only
- *      #define MERL_VSP_COMPENSATION_C0152          0
- *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1
- */
 
-#define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add   (nocand).
+#define MERL_VSP_C0152_BugFix_ForNoDepthCase 1 // MERL bugfix for test condition of no depth
+#define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add (nocand).
 
-
-#define MERL_VSP_BLOCKSIZE_C0152             1 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #if MERL_VSP_BLOCKSIZE_C0152 == 1
-#define MERL_CVSP_D0165                      1 // JCT3V-D0165: 1:enable CVSP; 0: disable CVSP.
+#define MERL_CVSP_D0165                      1 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
+#else
+#define MERL_CVSP_D0165                      0 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
 #endif
 
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
-                                               //MTK_DVPREFINE_BVSP_BUG_FIX               1
+                                               // MTK_DVPREFINE_BVSP_BUG_FIX               1
 #define MTK_DEPTH_TO_DISP_D0138              1 // JCT3V-D0138: Use max among four corners for DoNBDV and BVSP
+
+#define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139    1 // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
+#define MTK_VSP_USING_NBDV_D0105             1 // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
+
+#define MERL_VSP_NBDV_RefVId_Fix_D0166       1 // JCT3V-D0166: 1: fix the NBDV with ref view selectioin; 0: always use base view with refViewIdx=0
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+#define MERL_Bi_VSP_D0166                    0 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
+#endif
 
 #else // !MERL_VSP_C0152
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#define MERL_VSP_C0152_BugFix_ForNoDepthCase 0 // MERL bugfix for test condition of no depth
+define MERL_CVSP_D0165                       0 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
+#define MERL_VSP_NBDV_RefVId_Fix_D0166       0 // JCT3V-D0166: 1: fix the NBDV with ref view selectioin; 0: always use base view with refViewIdx=0
+#define MERL_Bi_VSP_D0166                    0 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
+#define MTK_VSP_USING_NBDV_D0105             0
 #endif
-
-#define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139             1  // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
-#define MTK_VSP_USING_NBDV_D0105                      1  // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
 
 ///// ***** DERIVED PARAMETERS *********
 #if H3D_NBDV                    

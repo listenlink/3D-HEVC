@@ -70,6 +70,10 @@ typedef struct _DisCand
 #endif
 #endif
   Int    iN;                                ///< number of motion vector predictor candidates
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Int    m_aListIdx[ DIS_CANS ];            ///< array of reference list of derived NBDV
+  Int    m_aRefIdx [ DIS_CANS ];            ///< array of reference frame index corresponding to either RefList0/1
+#endif
 } DisInfo;
 
 typedef struct _McpDisCand

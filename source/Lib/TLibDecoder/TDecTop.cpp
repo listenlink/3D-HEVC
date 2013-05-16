@@ -1221,7 +1221,22 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
      pcSlice->setRefPicBaseTxt(pcBaseTxtPic);
      pcSlice->setRefPicBaseDepth(pcBaseDepthPic);
   }
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
   getTAppDecTop()->setBWVSPLUT( pcSlice, pcSlice->getViewId(),  pcSlice->getPOC() ); // get the LUT for backward warping
+#else
+  if (pcSlice->getViewId() != 0)
+  {
+    Bool isDepth = true;
+    for(Int refviewId = 0; refviewId < (pcSlice->getViewId()); refviewId++)
+    {
+      if (m_tAppDecTop->getTDecTop( refviewId, isDepth ))
+      {
+        pcSlice->setListDepthPic(m_tAppDecTop->getTDecTop( refviewId, isDepth )->getListPic(), refviewId); // The list will store only the depth pictures
+      }
+      getTAppDecTop()->setBWVSPLUT( refviewId, pcSlice, pcSlice->getViewId(),  pcSlice->getPOC() ); // get the LUT for backward warping
+    }
+  }
+#endif
 #endif
 
   //  Decode a picture
