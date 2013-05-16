@@ -1869,7 +1869,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+  Int iVSPIndexTrue[MRG_MAX_NUM_CANDS_MEM];
+  for (Int i=0; i<MRG_MAX_NUM_CANDS_MEM; i++)
+  {
+     iVSPIndexTrue[i] = 0;
+  }
+#else
   Int iVSPIndexTrue[3] = {-1, -1, -1};
+#endif
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue );
 #else
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
@@ -1935,6 +1943,12 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
           {
             Int iVSPIdx = 0;
+#if LGE_VSP_INHERIT_D0092
+            if (iVSPIndexTrue[uiMergeCand] == 1)
+            {
+                iVSPIdx = 1;
+            }
+#else
             Int numVSPIdx;
             numVSPIdx = 3;
             for (Int i = 0; i < numVSPIdx; i++)
@@ -1945,12 +1959,13 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
                   break;
                 }
             }
+#endif
             rpcTempCU->setVSPIndexSubParts( iVSPIdx, 0, 0, uhDepth );
-#if QC_BVSP_CleanUP_D0191
+#if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
            if(iVSPIdx != 0)
            {
              Int iIVCIdx = rpcTempCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==rpcTempCU->getSlice()->getPOC() ? 0: rpcTempCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
-             cMvFieldNeighbours[ 2*uiMergeCand].setRefIdx(iIVCIdx);
+             cMvFieldNeighbours[2*uiMergeCand].setRefIdx(iIVCIdx);
            }
 #endif
           }

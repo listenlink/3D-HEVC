@@ -310,7 +310,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseIVS               ( m_bUseIVS          );
 #endif
     m_acTEncTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
+#if LGE_SAO_MIGRATION_D0091
+    m_acTEncTopList[iViewIdx]->setSaoLcuBoundary (m_saoLcuBoundary);
+    m_acTEncTopList[iViewIdx]->setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
+#else
     m_acTEncTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
+#endif
     m_acTEncTopList[iViewIdx]->setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
     m_acTEncTopList[iViewIdx]->setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
@@ -618,10 +623,15 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115
-     m_acTEncDepthTopList[iViewIdx]->setUseIVS                ( m_bUseIVS );
+      m_acTEncDepthTopList[iViewIdx]->setUseIVS                ( m_bUseIVS );
 #endif
       m_acTEncDepthTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
+#if LGE_SAO_MIGRATION_D0091
+      m_acTEncDepthTopList[iViewIdx]->setSaoLcuBoundary (m_saoLcuBoundary);
+      m_acTEncDepthTopList[iViewIdx]->setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
+#else
       m_acTEncDepthTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
+#endif
       m_acTEncDepthTopList[iViewIdx]->setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
       m_acTEncDepthTopList[iViewIdx]->setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 

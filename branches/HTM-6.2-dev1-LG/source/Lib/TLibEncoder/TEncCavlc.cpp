@@ -971,6 +971,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
       if (pcSlice->getSPS()->getUseSAO())
       {
+#if LGE_SAO_MIGRATION_D0091
+        WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
+        {
+            SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
+            WRITE_FLAG( saoParam->bSaoFlag[1], "slice_sao_chroma_flag" );
+        }
+#else
         WRITE_FLAG( pcSlice->getSaoInterleavingFlag(), "SAO interleaving flag" );
          assert (pcSlice->getSaoEnabledFlag() == pcSlice->getAPS()->getSaoEnabled());
          WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "SAO on/off flag in slice header" );
@@ -979,6 +986,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
            WRITE_FLAG( pcSlice->getAPS()->getSaoParam()->bSaoFlag[1], "SAO on/off flag for Cb in slice header" );
            WRITE_FLAG( pcSlice->getAPS()->getSaoParam()->bSaoFlag[2], "SAO on/off flag for Cr in slice header" );
          }
+#endif
       }
       WRITE_UVLC( pcSlice->getAPS()->getAPSID(), "aps_id");
     }
@@ -1505,7 +1513,7 @@ Void TEncCavlc::codeAlfFixedLengthIdx( UInt idx, UInt maxValue)
     xWriteCode( idx, length );
   }
 }
-
+#if !LGE_SAO_MIGRATION_D0091
 Void TEncCavlc::codeSaoFlag( UInt uiCode )
 {
   xWriteFlag( uiCode );
@@ -1543,6 +1551,7 @@ Void TEncCavlc::codeSaoRun( UInt uiCode, UInt maxValue)
   }
   WRITE_CODE( uiCode, uiLength, "sao_run_diff");
 }
+#endif
 
 Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height, TextType eTType )
 {

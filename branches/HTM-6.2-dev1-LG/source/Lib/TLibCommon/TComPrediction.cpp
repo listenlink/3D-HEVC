@@ -1308,8 +1308,13 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   Int refStride = refPic->getStride();
   Int dstStride = dstPic->getStride();
   Int depStride =  pPicBaseDepth->getStride();
+#if LGE_ROUND_OFFSET_D0135
+  Int depthPosX = Clip3(0,   widthLuma - size_x,  (posX/nTxtPerDepthX) + ((mv->getHor()+2)>>2));
+  Int depthPosY = Clip3(0,   heightLuma- size_y,  (posY/nTxtPerDepthY) + ((mv->getVer()+2)>>2));
+#else
   Int depthPosX = Clip3(0,   widthLuma - size_x,  (posX/nTxtPerDepthX) + (mv->getHor()>>2));
   Int depthPosY = Clip3(0,   heightLuma- size_y,  (posY/nTxtPerDepthY) + (mv->getVer()>>2));
+#endif
   Pel *ref    = refPic->getLumaAddr() + posX + posY * refStride;
   Pel *dst    = dstPic->getLumaAddr(partAddr);
   Pel *depth  = pPicBaseDepth->getLumaAddr() + depthPosX + depthPosY * depStride;
@@ -1459,26 +1464,42 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
   {
     nTxtPerDepthX = widthChroma / widthDepth;
     nDepthPerTxtX = 1;
+#if LGE_ROUND_OFFSET_D0135
+    depthPosX = posX / nTxtPerDepthX + ((mv->getHor()+2)>>2);        //mv denotes the disparity for VSP
+#else
     depthPosX = posX / nTxtPerDepthX + (mv->getHor()>>2);        //mv denotes the disparity for VSP
+#endif
   }
   else
   {
     nTxtPerDepthX = 1;
     nDepthPerTxtX = widthDepth / widthChroma;
+#if LGE_ROUND_OFFSET_D0135
+    depthPosX = posX * nDepthPerTxtX + ((mv->getHor()+2)>>2);        //mv denotes the disparity for VSP
+#else
     depthPosX = posX * nDepthPerTxtX + (mv->getHor()>>2);        //mv denotes the disparity for VSP
+#endif
   }
   depthPosX = Clip3(0, widthDepth - (size_x<<1), depthPosX);
   if ( heightChroma > heightDepth )
   {
     nTxtPerDepthY = heightChroma / heightDepth;
     nDepthPerTxtY = 1;
+#if LGE_ROUND_OFFSET_D0135
+    depthPosY = posY / nTxtPerDepthY + ((mv->getVer()+2)>>2);     //mv denotes the disparity for VSP
+#else
     depthPosY = posY / nTxtPerDepthY + (mv->getVer()>>2);     //mv denotes the disparity for VSP
+#endif
   }
   else
   {
     nTxtPerDepthY = 1;
     nDepthPerTxtY = heightDepth / heightChroma;
+#if LGE_ROUND_OFFSET_D0135
+    depthPosY = posY * nDepthPerTxtY + ((mv->getVer()+2)>>2);     //mv denotes the disparity for VSP
+#else
     depthPosY = posY * nDepthPerTxtY + (mv->getVer()>>2);     //mv denotes the disparity for VSP
+#endif
   }
   depthPosY = Clip3(0, heightDepth - (size_y<<1), depthPosY);
 
@@ -2077,8 +2098,13 @@ Void TComPrediction::xGetLLSICPrediction(TComDataCU* pcCU, TComMv *pMv, TComPicY
 
   iCUPelX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
   iCUPelY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
+#if LGE_ROUND_OFFSET_D0135
+  iRefX   = iCUPelX + ((pMv->getHor()+2) >> 2);
+  iRefY   = iCUPelY + ((pMv->getVer()+2) >> 2);
+#else
   iRefX   = iCUPelX + (pMv->getHor() >> 2);
   iRefY   = iCUPelY + (pMv->getVer() >> 2);
+#endif
   uiWidth = pcCU->getWidth(0);
   uiHeight = pcCU->getHeight(0);
 
@@ -2090,7 +2116,11 @@ Void TComPrediction::xGetLLSICPrediction(TComDataCU* pcCU, TComMv *pMv, TComPicY
 
   if(pcCU->getPUAbove(uiTmpPartIdx, pcCU->getZorderIdxInCU()) && iCUPelY > 0 && iRefY > 0)
   {
+#if LGE_ROUND_OFFSET_D0135
+    iRefOffset = ( (pMv->getHor()+2) >> 2 ) + ( (pMv->getVer()+2) >> 2 ) * iRefStride - iRefStride;
+#else
     iRefOffset = ( pMv->getHor() >> 2 ) + ( pMv->getVer() >> 2 ) * iRefStride - iRefStride;
+#endif
     pRef = pRefPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
     pRec = pRecPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - iRecStride;
 
@@ -2107,7 +2137,11 @@ Void TComPrediction::xGetLLSICPrediction(TComDataCU* pcCU, TComMv *pMv, TComPicY
 
   if(pcCU->getPULeft(uiTmpPartIdx, pcCU->getZorderIdxInCU()) && iCUPelX > 0 && iRefX > 0)
   {
+#if LGE_ROUND_OFFSET_D0135
+    iRefOffset = ( (pMv->getHor()+2) >> 2 ) + ( (pMv->getVer()+2) >> 2 ) * iRefStride - 1;
+#else
     iRefOffset = ( pMv->getHor() >> 2 ) + ( pMv->getVer() >> 2 ) * iRefStride - 1;
+#endif
     pRef = pRefPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
     pRec = pRecPic->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - 1;
 
@@ -2225,8 +2259,13 @@ Void TComPrediction::xGetLLSICPredictionChroma(TComDataCU* pcCU, TComMv *pMv, TC
 
   iCUPelX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
   iCUPelY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
+#if LGE_ROUND_OFFSET_D0135
+  iRefX   = iCUPelX + ((pMv->getHor()+2) >> 2);
+  iRefY   = iCUPelY + ((pMv->getVer()+2) >> 2);
+#else
   iRefX   = iCUPelX + (pMv->getHor() >> 2);
   iRefY   = iCUPelY + (pMv->getVer() >> 2);
+#endif
   uiWidth = pcCU->getWidth(0) >> 1;
   uiHeight = pcCU->getHeight(0) >> 1;
 
@@ -2238,7 +2277,11 @@ Void TComPrediction::xGetLLSICPredictionChroma(TComDataCU* pcCU, TComMv *pMv, TC
 
   if(pcCU->getPUAbove(uiTmpPartIdx, pcCU->getZorderIdxInCU()) && iCUPelY > 0 && iRefY > 0)
   {
+#if LGE_ROUND_OFFSET_D0135
+    iRefOffset = ( (pMv->getHor()+4) >> 3 ) + ( (pMv->getVer()+4) >> 3 ) * iRefStride - iRefStride;
+#else
     iRefOffset = ( pMv->getHor() >> 3 ) + ( pMv->getVer() >> 3 ) * iRefStride - iRefStride;
+#endif
     if (iChromaId == 0) // Cb
     {
       pRef = pRefPic->getCbAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
@@ -2263,7 +2306,11 @@ Void TComPrediction::xGetLLSICPredictionChroma(TComDataCU* pcCU, TComMv *pMv, TC
 
   if(pcCU->getPULeft(uiTmpPartIdx, pcCU->getZorderIdxInCU()) && iCUPelX > 0 && iRefX > 0)
   {
+#if LGE_ROUND_OFFSET_D0135
+    iRefOffset = ( (pMv->getHor()+4) >> 3 ) + ( (pMv->getVer()+4) >> 3 ) * iRefStride - 1;
+#else
     iRefOffset = ( pMv->getHor() >> 3 ) + ( pMv->getVer() >> 3 ) * iRefStride - 1;
+#endif
     if (iChromaId == 0) // Cb
     {
       pRef = pRefPic->getCbAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) + iRefOffset;
