@@ -224,9 +224,11 @@ public:
   /// set slice granularity
   Void setSliceGranularity (Int iSliceGranularity) {m_pcEntropyDecoderIf->setSliceGranularity(iSliceGranularity);}
 
+#if !LGE_SAO_MIGRATION_D0091
   Void decodeSaoParam         (SAOParam* saoParam);
   void decodeSaoLcu(Int rx, Int ry, Int compIdx, SAOParam* saoParam, Bool &repeatedRow );
   Void decodeSaoOneLcu(SaoLcuParam* saoLcuParam);
+#endif
 
   Void decodeFlush() { m_pcEntropyDecoderIf->decodeFlush(); }
   

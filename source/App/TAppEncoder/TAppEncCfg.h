@@ -164,7 +164,12 @@ protected:
   Bool      m_bUseIVS;                                        ///< flag for using inter-view vector scaling
 #endif
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
+#if LGE_SAO_MIGRATION_D0091
+  Bool      m_saoLcuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
+  Bool      m_saoLcuBasedOptimization;                        ///< SAO LCU-based optimization
+#else
   Bool      m_saoInterleavingFlag;                            ///< SAO interleaving flag
+#endif
   // coding tools (loop filter)
   vector<Bool> m_abUseALF;                                    ///< flag for using adaptive loop filter [0] - video, [1] - depth
   Int       m_iALFEncodePassReduction;                        //!< ALF encoding pass, 0 = original 16-pass, 1 = 1-pass, 2 = 2-pass

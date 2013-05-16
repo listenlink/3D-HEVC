@@ -820,9 +820,13 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
       memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(wpScalingParam)*3 );
 
   m_saoEnabledFlag = pSrc->m_saoEnabledFlag; 
+#if LGE_SAO_MIGRATION_D0091
+  m_saoEnabledFlagChroma = pSrc->m_saoEnabledFlagChroma;
+#else
   m_saoInterleavingFlag = pSrc->m_saoInterleavingFlag;
   m_saoEnabledFlagCb = pSrc->m_saoEnabledFlagCb;
   m_saoEnabledFlagCr = pSrc->m_saoEnabledFlagCr; 
+#endif
 #if CABAC_INIT_FLAG
   m_cabacInitFlag                = pSrc->m_cabacInitFlag;
 #endif
@@ -2050,7 +2054,9 @@ TComAPS& TComAPS::operator= (const TComAPS& src)
   m_alfParamSet    = src.m_alfParamSet;
   m_scalingList = src.m_scalingList;
   m_scalingListEnabled = src.m_scalingListEnabled;
+#if !LGE_SAO_MIGRATION_D0091
   m_saoInterleavingFlag = src.m_saoInterleavingFlag;
+#endif
 
   return *this;
 }

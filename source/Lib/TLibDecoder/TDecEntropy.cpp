@@ -300,7 +300,15 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #else
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+      Int iVSPIndexTrue[MRG_MAX_NUM_CANDS_MEM];
+      for (Int i=0; i<MRG_MAX_NUM_CANDS_MEM; i++)
+      {
+          iVSPIndexTrue[i] = 0;
+      }
+#else
       Int iVSPIndexTrue[3] = {-1, -1, -1};
+#endif
       pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
 
 #if HHI_MPI
@@ -325,6 +333,12 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
       {
         Int iVSPIdx = 0;
+#if LGE_VSP_INHERIT_D0092
+        if (iVSPIndexTrue[uiMergeIndex] == 1)
+        {
+            iVSPIdx = 1;
+        }
+#else
         Int numVspIdx;
         numVspIdx = 3;
         for (Int i = 0; i < numVspIdx; i++)
@@ -335,9 +349,10 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
               break;
             }
         }
+#endif
         pcCU->setVSPIndexSubParts( iVSPIdx, uiSubPartIdx, uiPartIdx, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
-#if QC_BVSP_CleanUP_D0191
-       if(iVSPIdx != 0)
+#if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
+       if(iVSPIdx != 0) 
        {
          Int iIVCIdx = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==pcCU->getSlice()->getPOC() ? 0: pcCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
          cMvFieldNeighbours[ 2*uiMergeIndex].setRefIdx(iIVCIdx);

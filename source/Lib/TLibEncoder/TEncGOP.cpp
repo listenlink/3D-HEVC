@@ -1256,7 +1256,9 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
           {
             TComAPS cAPS;
             allocAPS(&cAPS, pcSlice->getSPS());
+#if !LGE_SAO_MIGRATION_D0091
             cAPS.setSaoInterleavingFlag(m_pcCfg->getSaoInterleavingFlag());
+#endif
             // set entropy coder for RD
             m_pcEntropyCoder->setEntropyCoder ( m_pcCavlcCoder, pcSlice );
 
@@ -1264,11 +1266,23 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
             {
               m_pcEntropyCoder->resetEntropy();
               m_pcEntropyCoder->setBitstream( m_pcBitCounter );
+#if LGE_SAO_MIGRATION_D0091
+              m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcEncTop->getRDGoOnSbacCoder());
+#else
               m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), NULL);
+#endif
               SAOParam& cSaoParam = *(cAPS.getSaoParam());
 
 #if SAO_CHROMA_LAMBDA 
+#if LGE_SAO_MIGRATION_D0091
+#if SAO_ENCODING_CHOICE
+              m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma(), pcPic->getSlice(0)->getDepth());
+#else
               m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma());
+#endif
+#else
+              m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma());
+#endif
 #else
 #if ALF_CHROMA_LAMBDA
               m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma());
@@ -1553,7 +1567,9 @@ Void TEncGOP::encodeAPS(TComAPS* pcAPS, TComOutputBitstream& APSbs, TComSlice* p
   {
     m_pcEntropyCoder->encodeDFParams(pcAPS);
   }
+#if !LGE_SAO_MIGRATION_D0091
   m_pcEntropyCoder->encodeSaoParam(pcAPS);
+#endif
   m_pcEntropyCoder->encodeAPSAlfFlag( pcAPS->getAlfEnabled()?1:0);
   if(pcAPS->getAlfEnabled())
   {

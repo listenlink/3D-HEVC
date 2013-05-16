@@ -2972,7 +2972,6 @@ Void TEncSearch::xMergeEstimation( TComDataCU*     pcCU,
 #endif
 #endif
 
-
 #if H3D_IVMP
   const int maxNumMergeCand = MRG_MAX_NUM_CANDS_SIGNALED + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
 #endif
@@ -2997,6 +2996,12 @@ Void TEncSearch::xMergeEstimation( TComDataCU*     pcCU,
 #endif
       {
         Int iVSPIdx = 0;
+#if LGE_VSP_INHERIT_D0092
+        if (iVSPIndexTrue[uiMergeCand] == 1)
+        {
+            iVSPIdx = 1;
+        }
+#else
         Int numVSPIdx;
         numVSPIdx = 3;
         for (Int i = 0; i < numVSPIdx; i++)
@@ -3007,8 +3012,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU*     pcCU,
               break;
             }
         }
+#endif
         pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
-#if QC_BVSP_CleanUP_D0191
+#if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
        if(iVSPIdx != 0)
        {
         Int iIVCIdx = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==pcCU->getSlice()->getPOC() ? 0: pcCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
@@ -3678,7 +3684,15 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       TComMvField cMRGMvField[2];
       UInt uiMRGIndex = 0;
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+      Int iVSPIndexTrue[MRG_MAX_NUM_CANDS_MEM];
+      for (Int i=0; i<MRG_MAX_NUM_CANDS_MEM; i++)
+      {
+          iVSPIndexTrue[i] = 0;
+      }
+#else
       Int iVSPIndexTrue[3] = {-1, -1, -1};
+#endif
 #endif
       UInt uiMEInterDir = 0;
       TComMvField cMEMvField[2];
@@ -3734,6 +3748,12 @@ xMergeEstimation( pcCU, pcOrgYuv, iPartIdx, uiMRGInterDir, cMRGMvField, uiMRGInd
 #endif
         {
           Int iVSPIdx = 0;
+#if LGE_VSP_INHERIT_D0092
+          if (iVSPIndexTrue[uiMRGIndex] == 1)
+          {
+              iVSPIdx = 1;
+          }
+#else
           Int numVSPIdx;
           numVSPIdx = 3;
           for (Int i = 0; i < numVSPIdx; i++)
@@ -3744,8 +3764,9 @@ xMergeEstimation( pcCU, pcOrgYuv, iPartIdx, uiMRGInterDir, cMRGMvField, uiMRGInd
                 break;
               }
           }
+#endif
           pcCU->setVSPIndexSubParts( iVSPIdx, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
-#if QC_BVSP_CleanUP_D0191
+#if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
          if(iVSPIdx != 0)
          {
            Int iIVCIdx = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==pcCU->getSlice()->getPOC() ? 0: pcCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);

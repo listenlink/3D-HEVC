@@ -159,7 +159,12 @@ protected:
   Bool      m_bUseIVS;
 #endif
   Int       m_maxNumOffsetsPerPic;
+#if LGE_SAO_MIGRATION_D0091
+  Bool      m_saoLcuBoundary;
+  Bool      m_saoLcuBasedOptimization;
+#else
   Bool      m_saoInterleavingFlag;
+#endif
 
   //====== Lossless ========
 #if LOSSLESS_CODING
@@ -668,8 +673,15 @@ public:
 #endif
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
+#if LGE_SAO_MIGRATION_D0091
+  Void  setSaoLcuBoundary              (Bool val)      { m_saoLcuBoundary = val; }
+  Bool  getSaoLcuBoundary              ()              { return m_saoLcuBoundary; }
+  Void  setSaoLcuBasedOptimization               (Bool val)            { m_saoLcuBasedOptimization = val; }
+  Bool  getSaoLcuBasedOptimization               ()                    { return m_saoLcuBasedOptimization; }
+#else
   Void  setSaoInterleavingFlag                   (bool bVal)           { m_saoInterleavingFlag = bVal; }
   Bool  getSaoInterleavingFlag                   ()                    { return m_saoInterleavingFlag; }
+#endif
   Void  setTileBehaviorControlPresentFlag        ( Int i )             { m_iTileBehaviorControlPresentFlag = i;    }
   Int   getTileBehaviorControlPresentFlag        ()                    { return m_iTileBehaviorControlPresentFlag; }
   Void  setLFCrossTileBoundaryFlag               ( Bool   bValue  )    { m_bLFCrossTileBoundaryFlag = bValue; }
