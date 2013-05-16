@@ -40,6 +40,10 @@
 #if RWTH_SDC_DLT_B0036
 #define GetNumDepthValues()     (pcCU->getSlice()->getSPS()->getNumDepthValues())
 #define GetBitsPerDepthValue()  (pcCU->getSlice()->getSPS()->getBitsPerDepthValue())
+#if LGE_CONCATENATE
+#define PrefixThreshold ( ((GetNumDepthValues() * 3) >> 2) )
+#define BitsPerSuffix ( (UInt)ceil( Log2(GetNumDepthValues() - PrefixThreshold) ) )
+#endif
 #endif
 
 //! \ingroup TLibDecoder
@@ -2672,6 +2676,30 @@ Void TDecSbac::parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 #endif
     
     // decode residual magnitude
+#if LGE_CONCATENATE
+    //prefix part
+    UInt uiCount = 0;
+    for ( UInt ui = 0; ui < PrefixThreshold; ui++)
+    {
+        m_pcTDecBinIf->decodeBin( uiBit, m_cSDCResidualSCModel.get(0, 0, 0) );
+        if ( uiBit == 0 )
+            break;
+        else
+            uiCount++;
+    }
+    //suffix part
+    if ( uiCount == PrefixThreshold )
+    {
+        for ( UInt ui = 0; ui < BitsPerSuffix; ui++ )
+        {
+            m_pcTDecBinIf->decodeBinEP( uiBit );
+            uiAbsIdx |= uiBit << ui;
+        }
+        uiAbsIdx += uiCount;
+    }
+    else
+        uiAbsIdx = uiCount;
+#else
     for (Int i=0; i<uiMaxResidualBits; i++)
     {
 #if RWTH_SDC_CTX_SIMPL_D0032
@@ -2681,6 +2709,7 @@ Void TDecSbac::parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 #endif
       uiAbsIdx |= uiBit << i;
     }
+#endif
     
     uiAbsIdx += 1;
     iIdx =(Int)(uiSign ? -1 : 1)*uiAbsIdx;

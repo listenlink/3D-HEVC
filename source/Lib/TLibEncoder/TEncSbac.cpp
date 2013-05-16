@@ -44,6 +44,10 @@
 #if RWTH_SDC_DLT_B0036
 #define GetNumDepthValues()     (pcCU->getSlice()->getSPS()->getNumDepthValues())
 #define GetBitsPerDepthValue()  (pcCU->getSlice()->getSPS()->getBitsPerDepthValue())
+#if LGE_CONCATENATE
+#define PrefixThreshold ( ((GetNumDepthValues() * 3) >> 2) )
+#define BitsPerSuffix ( (UInt)ceil( Log2(GetNumDepthValues() - PrefixThreshold) ) )
+#endif
 #endif
 
 //! \ingroup TLibEncoder
@@ -2648,7 +2652,9 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   UInt uiResidual = segmentDCOffset == 0 ? 0 : 1;
   UInt uiSign     = segmentDCOffset < 0 ? 1 : 0;
   UInt uiAbsIdx   = abs(segmentDCOffset);
+#if !LGE_CONCATENATE
   UInt uiBit = 0;
+#endif
   
   UInt uiMaxResidualBits  = GetBitsPerDepthValue();
   assert( uiMaxResidualBits <= g_uiBitDepth );
@@ -2673,6 +2679,36 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     
     // encode residual magnitude
     uiAbsIdx -= 1;
+#if LGE_CONCATENATE
+    //prefix part
+    if ( uiAbsIdx == 0 )
+        m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+    else
+    {
+        UInt l = uiAbsIdx;
+        UInt k = 0;
+        while ( l > 0 && k < PrefixThreshold )
+        {
+            m_pcBinIf->encodeBin( 1, m_cSDCResidualSCModel.get(0, 0, 0) );
+            l--;
+            k++;
+        }
+        if ( uiAbsIdx < PrefixThreshold )
+            m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+        //suffix part
+        else
+        {
+            uiAbsIdx -= PrefixThreshold;
+            UInt uiSuffixLength = BitsPerSuffix;
+            UInt uiBitInfo = 0;
+            for ( Int i = 0; i < uiSuffixLength; i++)
+            {
+                uiBitInfo = ( uiAbsIdx & ( 1 << i ) ) >> i;
+                m_pcBinIf->encodeBinEP( uiBitInfo);
+            }
+        }
+    }
+#else
     for (Int i=0; i<uiMaxResidualBits; i++)
     {
       uiBit = (uiAbsIdx & (1<<i))>>i;
@@ -2683,6 +2719,7 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
       m_pcBinIf->encodeBin( uiBit, m_cSDCResidualSCModel.get( 0, uiSegment, i ) ); //TODO depthmap: more sophisticated context selection
 #endif
     }
+#endif
     
   }
 }
