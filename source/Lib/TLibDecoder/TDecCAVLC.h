@@ -170,8 +170,10 @@ public:
   Void parseDFFlag         ( UInt& ruiVal, const Char *pSymbolName );
   Void parseDFSvlc         ( Int&  riVal,  const Char *pSymbolName  );
 #if RWTH_SDC_DLT_B0036
-  Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
+  Void parseSDCFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
 protected:

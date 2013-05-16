@@ -182,7 +182,11 @@ public:
   Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
-  Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    , Bool bSdcRD = false
+#endif
+    );
   
   Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -208,9 +212,13 @@ public:
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 #endif
 
 };
