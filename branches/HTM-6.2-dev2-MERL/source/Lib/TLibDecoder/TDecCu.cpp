@@ -392,8 +392,12 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       {
         const UChar uhNewDepth = max<UInt>( uiDepth, pcTextureCU->getDepth( uiAbsPartIdx + ui ) );
 #if MERL_VSP_C0152
-        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
-        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui );
+        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx );
+#endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+        Int vspDir = pcTextureCU->getVSPDir( uiAbsPartIdx + ui );
+        pcCU->setVSPDir( uiAbsPartIdx + ui, vspDir );
 #endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_SKIP );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );
@@ -411,7 +415,12 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
 #if MERL_VSP_C0152
     Int iVSPIndexTrue[3] = {-1, -1, -1};
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+    Int iVSPDirTrue[3]   = {-1, -1, -1};
+    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, iVSPDirTrue, uiMergeIndex );
+#else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
+#endif
     {
       Int iVSPIdx = 0;
       Int numVspIdx;
@@ -424,7 +433,10 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
             break;
           }
       }
-      pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+      pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  // Initialize
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+      pcCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], uiAbsPartIdx, 0, uiDepth );
+#endif
     }
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
@@ -529,6 +541,15 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if MERL_VSP_C0152
         Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
         pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+#endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+        if (pcCU->getSlice()->getIsDepth()) {
+          pcCU->setVSPDir( uiAbsPartIdx + ui, 0);
+        }
+        else {
+          Int vspDir = pcTextureCU->getVSPDir( uiAbsPartIdx + ui);
+          pcCU->setVSPDir( uiAbsPartIdx + ui, vspDir);
+        }
 #endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_INTER );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );

@@ -734,17 +734,28 @@ else
 }
 
 #if MERL_VSP_C0152
-Void TAppDecTop::setBWVSPLUT(TComSlice* pcSlice,  Int iCodedViewIdx,  Int iCurPoc)
+Void TAppDecTop::setBWVSPLUT(
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+    Int iNeighborViewId,
+#endif
+    TComSlice* pcSlice,  Int iCodedViewIdx,  Int iCurPoc)
+
 {
   //first view does not have VSP 
   if((iCodedViewIdx == 0)) return;
 
   AOT( iCodedViewIdx <= 0);
   //AOT( iCodedViewIdx >= m_iNumberOfViews );
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
   Int iNeighborViewId = 0;
+#endif
   //  Int* piShiftLUT = bRenderFromLeft ? m_cCamParsCollector.getBaseViewShiftLUTI()[iCodedViewIdx][iNeighborViewId][0] : m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
   Int* piShiftLUT = m_cCamParsCollector.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  pcSlice->setBWVSPLUTParam(piShiftLUT, 2-LOG2_DISP_PREC_LUT, iNeighborViewId );
+#else
   pcSlice->setBWVSPLUTParam(piShiftLUT, 2-LOG2_DISP_PREC_LUT );
+#endif
 }
 #endif
 

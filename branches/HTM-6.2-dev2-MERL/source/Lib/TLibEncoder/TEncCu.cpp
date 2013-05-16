@@ -622,6 +622,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
           rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
         }
+
         if(DvInfo.bDV==false)
         {
           DvInfo.iN=1;
@@ -1713,7 +1714,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
-  
+
   if( getCheckBurstIPCMFlag() )
   {
     pcCU->setLastCUSucIPCMFlag( checkLastCUSucIPCM( pcCU, uiAbsPartIdx ));
@@ -1825,6 +1826,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
     m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx, 0 );
+
 #if LGE_ILLUCOMP_B0045
     m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx
 #if LGE_ILLUCOMP_DEPTH_C0046
@@ -1843,9 +1845,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
 #endif
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
-  
+
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
-  
+
   if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
   {
     m_pcEntropyCoder->encodeIPCMInfo( pcCU, uiAbsPartIdx );
@@ -1860,6 +1862,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
+
 #if LGE_ILLUCOMP_B0045
     m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx
 #if LGE_ILLUCOMP_DEPTH_C0046
@@ -1933,7 +1936,12 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
 #if MERL_VSP_C0152
   Int iVSPIndexTrue[3] = {-1, -1, -1};
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Int iVSPDirTrue[3]   = {-1, -1, -1};
+  rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, iVSPDirTrue );
+#else
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue );
+#endif
 #else
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 #endif
@@ -2002,6 +2010,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
                 }
             }
             rpcTempCU->setVSPIndexSubParts( iVSPIdx, 0, 0, uhDepth );
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+            rpcTempCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], 0, 0, uhDepth ); // interprets depth relative to LCU level
+#endif
           }
 #endif
           rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
@@ -2937,8 +2948,12 @@ Void TEncCu::xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpc
       assert( rpcTempCU->getInterDir( ui ) != 0 );
       assert( rpcTempCU->getPredictionMode( ui ) != MODE_NONE );
 #if MERL_VSP_C0152
-      Int vspIdx = pcTextureCU->getVSPIndex( rpcTempCU->getZorderIdxInCU() + ui);
+      Int vspIdx = pcTextureCU->getVSPIndex( rpcTempCU->getZorderIdxInCU() + ui );
       rpcTempCU->setVSPIndex( ui , vspIdx);
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+      Int vspDir = pcTextureCU->getVSPDir  ( rpcTempCU->getZorderIdxInCU() + ui );
+      rpcTempCU->setVSPDir( ui, vspDir);
+#endif
 #endif
     }
 

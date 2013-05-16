@@ -194,6 +194,9 @@ private:
   Char*         m_piVSPIndex;         ///< array of VSP flags to indicate the current block uses synthetic predictor or not
                                       ///< value 0: non-VSP, value 1: VSP
 #endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Char*         m_piVSPDir;           ///< 0: LIST0; 1: LIST1
+#endif
 #if AMP_MRG
   Bool          m_bIsMergeAMP;
 #endif
@@ -279,8 +282,16 @@ protected:
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if MERL_VSP_C0152
   inline Bool   xAddVspMergeCand      ( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
-                                        UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDisInfo );
-  inline Void   xInheritVspMode       ( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo ) ;
+                                        UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDisInfo
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+                                      , Int*   iVspDirTrue = NULL
+#endif
+                                        );
+  inline Void   xInheritVspMode       ( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+    ,Int *iVSPDirTrue
+#endif
+    ) ;
 #endif
   Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
@@ -477,6 +488,13 @@ public:
   Void          setVSPIndex        ( UInt uiIdx, Int n )     { m_piVSPIndex[uiIdx] = n;    }
   Void          setVSPIndexSubParts( Char bVSPIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 #endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Char*         getVSPDir          ()                        { return m_piVSPDir;                           }
+  Char          getVSPDir          ( UInt uiIdx )            { return m_piVSPDir[uiIdx];                  }
+  Void          setVSPDir          ( UInt uiIdx, Int n )     { m_piVSPDir[uiIdx] = n;  }
+  Void          setVSPDirSubParts  ( Char bVSPDir, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Bool          getRefListAndRefFrmIdx(Int targetRefViewIdx, RefPicList& eRefPicList, Int& refFrmIdx);
+#endif
 
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
@@ -575,7 +593,11 @@ public:
 
 #if MERL_VSP_C0152
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT, Int iShiftPrec, Bool bSimpleDvpRefine = false);
-  Void          estimateDVFromDM(UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred, Bool bSimpleDvpRefine = false);
+  Void          estimateDVFromDM(
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+                Int refViewIdx,
+#endif
+                UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred, Bool bSimpleDvpRefine = false);
 #endif
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
 #endif //  H3D_IVMP 
@@ -681,7 +703,11 @@ public:
   
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
 #if MERL_VSP_C0152
-  Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int* uiVSPIndexTrue, Int mrgCandIdx = -1 );
+  Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int* uiVSPIndexTrue, 
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+                Int* iVSPDir,
+#endif
+                Int mrgCandIdx = -1 );
 #else
   Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
 #endif

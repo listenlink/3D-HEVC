@@ -1118,6 +1118,9 @@ private:
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
 #endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  TComList<TComPic*>*  m_pcListDepthPic[MAX_VIEW_NUM]; // For encoder, the list may also include texture pictures. Three views with ViewIdx = 0, 1, 2
+#endif
 #if QC_ARP_D0177
   TComList<TComPic*> * m_pBaseViewRefPicList[MAX_VIEW_NUM];
   UInt                 m_nARPStepNum; 
@@ -1130,7 +1133,11 @@ private:
 #if MERL_VSP_C0152
   TComPic*     m_apcRefPicBaseTxt;
   TComPic*     m_apcRefPicBaseDepth;
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Int*         m_aiShiftLUT[2]; // For reference views
+#else
   Int*         m_aiShiftLUT;
+#endif
   Int          m_iShiftPrec;
 #endif
 
@@ -1438,9 +1445,20 @@ public:
   Void         setRefPicBaseTxt          ( TComPic* RefPic)        { m_apcRefPicBaseTxt = RefPic; }
   TComPic*     getRefPicBaseDepth        ()                        { return  m_apcRefPicBaseDepth; }
   Void         setRefPicBaseDepth        ( TComPic* RefPic)        { m_apcRefPicBaseDepth = RefPic; }
-
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Void setBWVSPLUTParam( Int *pShiftLUT, Int iLoG2LUTPrec, Int iNeighborViewId) { m_aiShiftLUT[iNeighborViewId] = pShiftLUT; m_iShiftPrec = iLoG2LUTPrec; }
+  Void getBWVSPLUTParam( Int*&pShiftLUT, Int&iLoG2LUTPrec, Int iNeighborViewId) { pShiftLUT = m_aiShiftLUT[iNeighborViewId]; iLoG2LUTPrec = m_iShiftPrec; }
+#else
   Void setBWVSPLUTParam( Int *pShiftLUT, Int iLoG2LUTPrec) { m_aiShiftLUT = pShiftLUT; m_iShiftPrec = iLoG2LUTPrec; }
   Void getBWVSPLUTParam( Int*&pShiftLUT, Int&iLoG2LUTPrec) { pShiftLUT = m_aiShiftLUT; iLoG2LUTPrec = m_iShiftPrec; }
+#endif
+#endif
+
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Void setListDepthPic( TComList<TComPic*>* pListDepthPic, Int viewId) { m_pcListDepthPic[viewId] = pListDepthPic; }
+  TComList<TComPic*>* getListDepthPic(Int viewId) { return m_pcListDepthPic[viewId]; }
+  TComPic*            getDepthRefPic(Int viewId, Int poc);
+  TComPic*            getDepthRefPic(Int refIdx);
 #endif
 
 protected:
