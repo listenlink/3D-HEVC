@@ -137,10 +137,14 @@
 #if !RWTH_SDC_CTX_SIMPL_D0032
 #define SDC_NUM_SIGN_FLAG_CTX            1
 #endif
+#if LGE_CONCATENATE
+#define SDC_NUM_RESIDUAL_CTX             1
+#else
 #if RWTH_SDC_CTX_SIMPL_D0032
 #define SDC_NUM_RESIDUAL_CTX             8
 #else
 #define SDC_NUM_RESIDUAL_CTX             10
+#endif
 #endif
 
 #define SDC_NUM_PRED_MODE_CTX            5
@@ -575,7 +579,21 @@ static const UChar INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
     CNU
   }
 };
-
+    
+#if LGE_CONCATENATE
+static const UChar INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
+{
+    {
+         155
+    },
+    {
+         155
+    },
+    {
+        155
+    }
+};
+#else
 static const UChar INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
 {
   {
@@ -588,6 +606,7 @@ static const UChar INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
     CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
   }
 };
+#endif
 
 static const UChar INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX] =
 {
