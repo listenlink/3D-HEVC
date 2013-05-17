@@ -73,7 +73,7 @@
 #define HHI_DELTADC_DLT_D0035             1   // JCT3V-D0035: DLT for DMM deltaDC coding
 #define INTEL_SDC64_D0193                 1   // JCT3V-D0193: SDC binary clean up (use a 1 bit binary code to signal sdc_pred_mode when CU size is 64x64)
 #define RWTH_SDC_CTX_SIMPL_D0032          1   // JCT3V-D0032: CABAC Context Reduction for Simplified Depth Coding
-#define LGE_CONCATENATE                 1 // JCT3V-D0141: concatenate binarization for residual index coding
+#define LGE_CONCATENATE_D0141                 1 // JCT3V-D0141: concatenate binarization for residual index coding
 #endif
 #define FIX_SDC_ENC_RD_WVSO_D0163         1   // JCT3V-D0163: fix for SDC encoder rd-cost (VSO -> WVSO)
 
