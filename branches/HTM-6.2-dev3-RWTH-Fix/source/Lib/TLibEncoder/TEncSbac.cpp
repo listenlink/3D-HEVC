@@ -41,15 +41,6 @@
 #include <map>
 #include <algorithm>
 
-#if RWTH_SDC_DLT_B0036
-#define GetNumDepthValues()     (pcCU->getSlice()->getSPS()->getNumDepthValues())
-#define GetBitsPerDepthValue()  (pcCU->getSlice()->getSPS()->getBitsPerDepthValue())
-#if LGE_CONCATENATE_D0141
-#define PrefixThreshold ( ((GetNumDepthValues() * 3) >> 2) )
-#define BitsPerSuffix ( (UInt)ceil( Log2(GetNumDepthValues() - PrefixThreshold) ) )
-#endif
-#endif
-
 //! \ingroup TLibEncoder
 //! \{
 
@@ -2656,7 +2647,7 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   UInt uiBit = 0;
 #endif
   
-  UInt uiMaxResidualBits  = GetBitsPerDepthValue();
+  UInt uiMaxResidualBits  = pcCU->getSlice()->getSPS()->getBitsPerDepthValue();
   assert( uiMaxResidualBits <= g_uiBitDepth );
   
   // residual flag
@@ -2674,8 +2665,9 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 #else
     m_pcBinIf->encodeBin( uiSign, m_cSDCResidualSignFlagSCModel.get( 0, uiSegment, 0 ) ); //TODO depthmap: more sophisticated context selection
 #endif
-        
-    assert(uiAbsIdx < GetNumDepthValues());
+    
+    UInt uiNumDepthValues = pcCU->getSlice()->getSPS()->getNumDepthValues();
+    assert(uiAbsIdx < uiNumDepthValues);
     
     // encode residual magnitude
     uiAbsIdx -= 1;
@@ -2687,19 +2679,20 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     {
         UInt l = uiAbsIdx;
         UInt k = 0;
-        while ( l > 0 && k < PrefixThreshold )
+        UInt uiPrefixThreshold = ((uiNumDepthValues * 3) >> 2);
+        while ( l > 0 && k < uiPrefixThreshold )
         {
             m_pcBinIf->encodeBin( 1, m_cSDCResidualSCModel.get(0, 0, 0) );
             l--;
             k++;
         }
-        if ( uiAbsIdx < PrefixThreshold )
+        if ( uiAbsIdx < uiPrefixThreshold )
             m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
         //suffix part
         else
         {
-            uiAbsIdx -= PrefixThreshold;
-            UInt uiSuffixLength = BitsPerSuffix;
+            uiAbsIdx -= uiPrefixThreshold;
+            UInt uiSuffixLength = ( (UInt)ceil( Log2(uiNumDepthValues - uiPrefixThreshold) ) );
             UInt uiBitInfo = 0;
             for ( Int i = 0; i < uiSuffixLength; i++)
             {
