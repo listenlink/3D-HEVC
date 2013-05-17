@@ -44,7 +44,7 @@
 #if RWTH_SDC_DLT_B0036
 #define GetNumDepthValues()     (pcCU->getSlice()->getSPS()->getNumDepthValues())
 #define GetBitsPerDepthValue()  (pcCU->getSlice()->getSPS()->getBitsPerDepthValue())
-#if LGE_CONCATENATE
+#if LGE_CONCATENATE_D0141
 #define PrefixThreshold ( ((GetNumDepthValues() * 3) >> 2) )
 #define BitsPerSuffix ( (UInt)ceil( Log2(GetNumDepthValues() - PrefixThreshold) ) )
 #endif
@@ -2652,7 +2652,7 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   UInt uiResidual = segmentDCOffset == 0 ? 0 : 1;
   UInt uiSign     = segmentDCOffset < 0 ? 1 : 0;
   UInt uiAbsIdx   = abs(segmentDCOffset);
-#if !LGE_CONCATENATE
+#if !LGE_CONCATENATE_D0141
   UInt uiBit = 0;
 #endif
   
@@ -2679,7 +2679,7 @@ Void TEncSbac::codeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     
     // encode residual magnitude
     uiAbsIdx -= 1;
-#if LGE_CONCATENATE
+#if LGE_CONCATENATE_D0141
     //prefix part
     if ( uiAbsIdx == 0 )
         m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );

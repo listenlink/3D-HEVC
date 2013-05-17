@@ -40,7 +40,7 @@
 #if RWTH_SDC_DLT_B0036
 #define GetNumDepthValues()     (pcCU->getSlice()->getSPS()->getNumDepthValues())
 #define GetBitsPerDepthValue()  (pcCU->getSlice()->getSPS()->getBitsPerDepthValue())
-#if LGE_CONCATENATE
+#if LGE_CONCATENATE_D0141
 #define PrefixThreshold ( ((GetNumDepthValues() * 3) >> 2) )
 #define BitsPerSuffix ( (UInt)ceil( Log2(GetNumDepthValues() - PrefixThreshold) ) )
 #endif
@@ -2676,7 +2676,7 @@ Void TDecSbac::parseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 #endif
     
     // decode residual magnitude
-#if LGE_CONCATENATE
+#if LGE_CONCATENATE_D0141
     //prefix part
     UInt uiCount = 0;
     for ( UInt ui = 0; ui < PrefixThreshold; ui++)
