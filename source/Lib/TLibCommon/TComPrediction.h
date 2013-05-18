@@ -155,14 +155,14 @@ protected:
   Void xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi );
 #if MERL_Bi_VSP_D0166
   TComPic*  xGetVspRefTxt(TComDataCU* pcCU, UInt uiPartAddr, RefPicList eRefPicList);
-  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, 
+  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, 
     TComYuv *&dstPic, Bool bi);
-  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth,
+  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth,
     TComYuv *&dstPic, Bool bi);
 #else
-  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, 
+  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, 
                                   TComYuv *&dstPic );
-  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int size_x, Int size_y, Bool isDepth, 
+  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, 
                                   TComYuv *&dstPic );
 #endif
 #endif

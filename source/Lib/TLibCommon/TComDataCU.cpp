@@ -5521,7 +5521,7 @@ Void TComDataCU::xDeriveRightBottomNbIdx( PartSize eCUMode, UInt uiPartIdx, Int 
 Bool TComDataCU::getRefListAndRefFrmIdx(Int targetRefViewIdx, RefPicList& eRefPicList, Int& refFrmIdx)
 {
   Bool isFound  = false;
-  RefPicList privateRefPicList = REF_PIC_LIST_0 ;
+  RefPicList privateRefPicList = REF_PIC_LIST_0;
 
   refFrmIdx = 0;
   for(Int iList = 0; iList < (getSlice()->isInterB() ? 2: 1) && isFound == false; iList++)
@@ -5647,7 +5647,7 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
             Int currPoc = getSlice()->getPOC();
             picDepth = getSlice()->getDepthRefPic(iTargetViewIdx, currPoc);
-            assert(picDepth!=NULL);
+            assert(picDepth != NULL);
 #else
             picDepth = getSlice()->getRefPicBaseDepth();
 #endif
