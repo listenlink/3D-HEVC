@@ -1190,9 +1190,9 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
     //Step 3.  Check the availability of Bi VSP by checking the interview reference availability in the other reference list 
     if(iInterDir == 3)
     {
-      for (Int iRefIdx = 0; iRefIdx <pcCU->getSlice()->getNumRefIdx(otherRefPicList); iRefIdx ++ )
+      for (Int jRefIdx = 0; jRefIdx <pcCU->getSlice()->getNumRefIdx(otherRefPicList); jRefIdx++ )
       {
-        Int refViewIdx  = pcCU->getSlice()->getRefViewId( otherRefPicList, iRefIdx);
+        Int refViewIdx  = pcCU->getSlice()->getRefViewId( otherRefPicList, jRefIdx);
         if ( (refViewIdx != pcCU->getSlice()->getViewId()) && (refViewIdx != viewId ) )
         {
           biVSPAvail = 1;
