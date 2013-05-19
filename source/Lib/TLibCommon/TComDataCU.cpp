@@ -5872,8 +5872,10 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
     picDepth = getSlice()->getRefPicBaseDepth();
 #endif
 
-#if QC_CU_NBDV_D0181 && MERL_VSP_C0152 // TODO: CHECK if the macro is right
+#if MERL_General_Fix
+#if QC_CU_NBDV_D0181 && MERL_VSP_C0152
     pDInfo->m_acMvCandNoRef[pDInfo->iN] = defaultDV;
+#endif
 #endif
 
     if (picDepth && bDepthRefine)
