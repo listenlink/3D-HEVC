@@ -186,6 +186,8 @@
                                                // MERL_MTK_VSP_DVP_REFINE_C0152_C0131
 #if MERL_VSP_C0152
 
+#define MERL_General_Fix                     1 // General fix by MERL
+
 #define MERL_VSP_C0152_BugFix_ForNoDepthCase 1 // MERL bugfix for test condition of no depth
 #define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add (nocand).
 
@@ -200,12 +202,21 @@
                                                // MTK_DVPREFINE_BVSP_BUG_FIX               1
 #define MTK_DEPTH_TO_DISP_D0138              1 // JCT3V-D0138: Use max among four corners for DoNBDV and BVSP
 
+#if MERL_General_Fix
 #define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139    1 // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
 #define MTK_VSP_USING_NBDV_D0105             1 // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
+#endif
 
+#if MERL_General_Fix
 #define MERL_VSP_NBDV_RefVId_Fix_D0166       1 // JCT3V-D0166: 1: fix the NBDV with ref view selectioin; 0: always use base view with refViewIdx=0
+#else
+#define MERL_VSP_NBDV_RefVId_Fix_D0166       0
+#endif
+
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
 #define MERL_Bi_VSP_D0166                    1 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
+#else
+#define MERL_Bi_VSP_D0166                    0 
 #endif
 
 #else // !MERL_VSP_C0152
@@ -216,6 +227,12 @@
 #define MERL_VSP_NBDV_RefVId_Fix_D0166       0 // JCT3V-D0166: 1: fix the NBDV with ref view selectioin; 0: always use base view with refViewIdx=0
 #define MERL_Bi_VSP_D0166                    0 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
 #define MTK_VSP_USING_NBDV_D0105             0
+#define MERL_General_Fix                     0
+#endif
+
+#if !MERL_General_Fix
+#define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139    1 // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
+#define MTK_VSP_USING_NBDV_D0105             1 // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
 #endif
 
 ///// ***** DERIVED PARAMETERS *********

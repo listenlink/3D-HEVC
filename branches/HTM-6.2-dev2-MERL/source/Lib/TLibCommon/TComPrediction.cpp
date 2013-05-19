@@ -787,6 +787,7 @@ Void TComPrediction::residualPrediction(TComDataCU* pcCU, TComYuv* pcYuvPred, TC
 }
 #endif
 
+#if MERL_General_Fix
 #if MERL_VSP_C0152
 // Function to perform VSP block compensation 
 Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
@@ -859,7 +860,7 @@ Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt u
 #endif
 }
 
-
+#endif
 
 #if MERL_Bi_VSP_D0166
 TComPic*  TComPrediction::xGetVspRefTxt(TComDataCU* pcCU, UInt uiPartAddr, RefPicList eRefPicList)
@@ -949,8 +950,10 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #endif
 #if QC_ARP_D0177
   if(
-#if MERL_VSP_C0152       
-       vspIdx == 0 &&   // TODO: Maybe logically redundant, but easier to read. Need verification before being removed
+#if MERL_General_Fix // TODO: Maybe logically redundant, but easier to read. Need verification before being removed
+#if MERL_VSP_C0152
+       vspIdx == 0 &&
+#endif
 #endif
        pcCU->getSlice()->getSPS()->isDepth() == false
     && pcCU->getSlice()->getSPS()->getViewId() > 0
@@ -971,7 +974,26 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #if MERL_VSP_C0152
     if (vspIdx != 0)
     { // depth, vsp compensation 
+#if !MERL_General_Fix
+      // get depth estimator here
+      TComPic* pRefPicBaseDepth = pcCU->getSlice()->getRefPicBaseDepth();
+      TComPicYuv* pcBaseViewDepthPicYuv = NULL;
+      if (vspIdx < 4) // spatial
+      {
+        pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
+      }
+      Int iBlkX = ( pcCU->getAddr() % pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int iBlkY = ( pcCU->getAddr() / pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int* pShiftLUT;
+      Int iShiftPrec;
+      pcCU->getSlice()->getBWVSPLUTParam(pShiftLUT, iShiftPrec);
+      //using disparity to find the depth block of the base view as the depth block estimator of the current block
+      //using depth block estimator and base view texture to get Backward warping
+      xPredInterLumaBlkFromDM  ( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,     pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+      xPredInterChromaBlkFromDM( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1,  pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+#else
       xPredInterVSPBlk(pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, cMv, eRefPicList, rpcYuvPred, bi );
+#endif
     }
     else
     {
@@ -1000,7 +1022,28 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #if MERL_VSP_C0152
     if ( vspIdx != 0 )
     { // texture, vsp compensation
+#if !MERL_General_Fix
+      TComPic*    pRefPicBaseTxt        = pcCU->getSlice()->getRefPicBaseTxt();
+      TComPicYuv* pcBaseViewTxtPicYuv   = pRefPicBaseTxt->getPicYuvRec();
+      TComPicYuv* pcBaseViewDepthPicYuv = NULL;
+      if (vspIdx < 4) // spatial
+      {
+        TComPic* pRefPicBaseDepth = pcCU->getSlice()->getRefPicBaseDepth();
+        pcBaseViewDepthPicYuv     = pRefPicBaseDepth->getPicYuvRec();
+      }
+      Int iBlkX = ( pcCU->getAddr() % pRefPicBaseTxt->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int iBlkY = ( pcCU->getAddr() / pRefPicBaseTxt->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
+      Int* pShiftLUT;
+      Int iShiftPrec;
+      pcCU->getSlice()->getBWVSPLUTParam(pShiftLUT, iShiftPrec);
+
+      //using disparity to find the depth block of the base view as the depth block estimator of the current block
+      //using depth block estimator and base view texture to get Backward warping
+      xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+      xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+#else
       xPredInterVSPBlk(pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, cMv, eRefPicList, rpcYuvPred, bi );
+#endif
     }
     else//texture not VSP
     {
@@ -1685,7 +1728,11 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
 // mv: disparity vector. derived from neighboring blocks
 //
 // Output: dstPic, PU predictor 64x64
-Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv* mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic
+Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv* mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
+#if !MERL_Bi_VSP_D0166
+                                            , Int vspIdx
+#endif
+                                            , TComYuv *&dstPic
 #if MERL_Bi_VSP_D0166
                                             , Bool bi
 #endif          
@@ -1928,7 +1975,11 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   }
 }
 
-Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv*mv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic
+Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv*mv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
+#if !MERL_Bi_VSP_D0166
+                                               , Int vspIdx
+#endif
+                                               , TComYuv *&dstPic
 #if MERL_Bi_VSP_D0166
                                                , Bool bi
 #endif

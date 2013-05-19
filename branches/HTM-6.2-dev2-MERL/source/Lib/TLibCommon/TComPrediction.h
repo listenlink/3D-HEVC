@@ -160,9 +160,9 @@ protected:
   Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth,
     TComYuv *&dstPic, Bool bi);
 #else
-  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, 
+  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, Int vspIdx,
                                   TComYuv *&dstPic );
-  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, 
+  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, Int vspIdx,
                                   TComYuv *&dstPic );
 #endif
 #endif
