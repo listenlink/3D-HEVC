@@ -212,7 +212,7 @@
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
 #define MERL_VSP_C0152_BugFix_ForNoDepthCase 0 // MERL bugfix for test condition of no depth
-define MERL_CVSP_D0165                       0 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
+#define MERL_CVSP_D0165                      0 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
 #define MERL_VSP_NBDV_RefVId_Fix_D0166       0 // JCT3V-D0166: 1: fix the NBDV with ref view selectioin; 0: always use base view with refViewIdx=0
 #define MERL_Bi_VSP_D0166                    0 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
 #define MTK_VSP_USING_NBDV_D0105             0

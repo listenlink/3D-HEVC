@@ -836,7 +836,7 @@ Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt u
   pcBaseViewTxtPicYuv = pRefPicBaseTxt->getPicYuvRec();
   assert(pcBaseViewTxtPicYuv != NULL);
 
-  //initialize the LUT according to the reference view idx
+  // initialize the LUT according to the reference view idx
   pcCU->getSlice()->getBWVSPLUTParam(pShiftLUT, iShiftPrec, pRefPicBaseTxt->getViewId());
 
   // Step 3: Do compensation
