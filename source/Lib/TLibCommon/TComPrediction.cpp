@@ -790,7 +790,12 @@ Void TComPrediction::residualPrediction(TComDataCU* pcCU, TComYuv* pcYuvPred, TC
 #if MERL_General_Fix
 #if MERL_VSP_C0152
 // Function to perform VSP block compensation 
-Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
+Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred
+                                     , Bool bi
+#if !MERL_Bi_VSP_D0166
+                                     , Int vspIdx
+#endif
+                                       )
 {
   TComPic*    pRefPicBaseTxt        = NULL;
   TComPicYuv* pcBaseViewTxtPicYuv   = NULL;
@@ -853,8 +858,8 @@ Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt u
   pcCU->getSlice()->getBWVSPLUTParam(pShiftLUT, iShiftPrec, pRefPicBaseTxt->getViewId());
 
   // Step 3: Do compensation
-  xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getSPS()->isDepth(), rpcYuvPred );
-  xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getSPS()->isDepth(), rpcYuvPred );
+  xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
+  xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
 #endif
 
 #endif
@@ -992,7 +997,11 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
       xPredInterLumaBlkFromDM  ( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,     pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
       xPredInterChromaBlkFromDM( pcBaseViewDepthPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1,  pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
 #else
+#if MERL_Bi_VSP_D0166
       xPredInterVSPBlk(pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, cMv, eRefPicList, rpcYuvPred, bi );
+#else
+      xPredInterVSPBlk(pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, cMv, eRefPicList, rpcYuvPred, bi, vspIdx );
+#endif
 #endif
     }
     else
@@ -1042,7 +1051,11 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
       xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
       xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getSPS()->isDepth(), vspIdx, rpcYuvPred );
 #else
+#if MERL_Bi_VSP_D0166
       xPredInterVSPBlk(pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, cMv, eRefPicList, rpcYuvPred, bi );
+#else
+      xPredInterVSPBlk(pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, cMv, eRefPicList, rpcYuvPred, bi, vspIdx );
+#endif
 #endif
     }
     else//texture not VSP
