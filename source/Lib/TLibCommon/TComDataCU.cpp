@@ -3861,10 +3861,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #if MTK_VSP_USING_NBDV_D0105
       cDisInfo.m_acMvCandNoRef[0] = getDvInfo(uiAbsPartIdx).m_acMvCandNoRef[0];
 #endif
+#if MERL_General_Fix
 #if MERL_VSP_C0152
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
       cDisInfo.m_aListIdx[0] = getDvInfo(uiAbsPartIdx).m_aListIdx[0];
       cDisInfo.m_aRefIdx[0]  = getDvInfo(uiAbsPartIdx).m_aRefIdx[0];
+#endif
 #endif
 #endif
     }
@@ -5379,6 +5381,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPart
           clipMv(cMvPred);
 
           TComPic* picDepth = NULL;
+#if MERL_General_Fix
 #if MERL_VSP_C0152
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
           Int refPOC = getSlice()->getRefPic(eRefPicList, refId)->getPOC();
@@ -5387,6 +5390,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPart
           assert(picDepth != NULL);
 #else
           picDepth = getSlice()->getRefPicBaseDepth();
+#endif
 #endif
 #endif
 
