@@ -1746,7 +1746,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 #if MERL_VSP_C0152
   memcpy( rpcCU->getVSPIndex()          + m_uiAbsIdxInLCU, m_piVSPIndex,         iSizeInChar );
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-  memcpy( rpcCU->getVSPDir  ()           + m_uiAbsIdxInLCU, m_piVSPDir  ,         iSizeInChar );
+  memcpy( rpcCU->getVSPDir  ()          + m_uiAbsIdxInLCU, m_piVSPDir  ,         iSizeInChar );
 #endif
 #endif
 #if H3D_IVRP
@@ -1883,7 +1883,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
 #if MERL_VSP_C0152
   memcpy( rpcCU->getVSPIndex()          + uiPartOffset, m_piVSPIndex,          iSizeInChar );
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-  memcpy( rpcCU->getVSPDir  ()           + uiPartOffset, m_piVSPDir  ,         iSizeInChar );
+  memcpy( rpcCU->getVSPDir  ()          + uiPartOffset, m_piVSPDir  ,          iSizeInChar );
 #endif
 #endif
 #if H3D_IVRP
@@ -3864,7 +3864,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #if MERL_VSP_C0152
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
       cDisInfo.m_aListIdx[0] = getDvInfo(uiAbsPartIdx).m_aListIdx[0];
-      cDisInfo.m_aRefIdx[0] = getDvInfo(uiAbsPartIdx).m_aRefIdx[0];
+      cDisInfo.m_aRefIdx[0]  = getDvInfo(uiAbsPartIdx).m_aRefIdx[0];
 #endif
 #endif
     }
@@ -4379,7 +4379,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
 #endif
 #if MERL_VSP_C0152
-     xInheritVspMode( pcCULeftBottom, uiLeftBottomPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
+    xInheritVspMode( pcCULeftBottom, uiLeftBottomPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
        , iVSPDirTrue
 #endif
@@ -4437,7 +4437,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
 #endif
 #if MERL_VSP_C0152
-     xInheritVspMode( pcCUAboveLeft, uiAboveLeftPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
+      xInheritVspMode( pcCUAboveLeft, uiAboveLeftPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
        , iVSPDirTrue
 #endif
@@ -5520,7 +5520,7 @@ Void TComDataCU::xDeriveRightBottomNbIdx( PartSize eCUMode, UInt uiPartIdx, Int 
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
 Bool TComDataCU::getRefListAndRefFrmIdx(Int targetRefViewIdx, RefPicList& eRefPicList, Int& refFrmIdx)
 {
-  Bool isFound  = false;
+  Bool isFound = false;
   RefPicList privateRefPicList = REF_PIC_LIST_0;
 
   refFrmIdx = 0;
@@ -5893,7 +5893,6 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
     pDInfo->m_aListIdx[ pDInfo->iN ]  = privateRefPicList;
     pDInfo->m_aRefIdx [ pDInfo->iN ]  = -1-refFrmIdx;
     assert(pDInfo->m_aRefIdx [ pDInfo->iN ] < 0);
-
 #endif
     pDInfo->m_acMvCand[pDInfo->iN] = defaultDV;
     pDInfo->m_aVIdxCan[pDInfo->iN] = 0;

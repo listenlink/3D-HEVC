@@ -289,7 +289,7 @@ protected:
                                         );
   inline Void   xInheritVspMode       ( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-    ,Int *iVSPDirTrue
+                                      , Int *iVSPDirTrue
 #endif
     ) ;
 #endif

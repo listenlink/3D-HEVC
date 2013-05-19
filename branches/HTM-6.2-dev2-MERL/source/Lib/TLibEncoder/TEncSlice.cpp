@@ -61,7 +61,7 @@ TEncSlice::TEncSlice()
   m_pcBufferLowLatBinCoderCABACs  = NULL;
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
   for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
-    m_pcListDepthPic[iNumCount] =NULL;
+    m_pcListDepthPic[iNumCount] = NULL;
 #endif
 #if FCO_DVP_REFINE_C0132_C0170
   m_pPicBaseTxt = NULL;
@@ -154,7 +154,7 @@ Void TEncSlice::init( TEncTop* pcEncTop )
 
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
   for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
-    m_pcListDepthPic[iNumCount] =NULL;
+    m_pcListDepthPic[iNumCount] = NULL;
 #endif
 }
 
@@ -833,11 +833,11 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   pcSlice->setRefPicBaseTxt(m_pPicBaseTxt);
   pcSlice->setRefPicBaseDepth(m_pPicBaseDepth);
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-  for (Int refviewId=0; refviewId < pcSlice->getViewId(); refviewId++)
+  for (Int refViewId=0; refViewId < pcSlice->getViewId(); refViewId++)
   {
-    assert( m_pcListDepthPic[refviewId] );
-    pcSlice->setListDepthPic(m_pcListDepthPic[refviewId], refviewId);
-    pcSlice->setBWVSPLUTParam(m_aiShiftLUT[refviewId], m_iShiftPrec, refviewId);
+    assert( m_pcListDepthPic[refViewId] );
+    pcSlice->setListDepthPic(m_pcListDepthPic[refViewId], refViewId);
+    pcSlice->setBWVSPLUTParam(m_aiShiftLUT[refViewId], m_iShiftPrec, refViewId);
   }
 #endif
 #endif
