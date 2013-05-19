@@ -214,7 +214,7 @@
 #endif
 
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-#define MERL_Bi_VSP_D0166                    1 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
+#define MERL_Bi_VSP_D0166                    0 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
 #else
 #define MERL_Bi_VSP_D0166                    0 
 #endif

@@ -152,7 +152,11 @@ protected:
   Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
 #endif
 #if MERL_VSP_C0152
-  Void xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi );
+  Void xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi 
+#if !MERL_Bi_VSP_D0166
+                                     , Int vspIdx
+#endif
+    );
 #if MERL_Bi_VSP_D0166
   TComPic*  xGetVspRefTxt(TComDataCU* pcCU, UInt uiPartAddr, RefPicList eRefPicList);
   Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, 
