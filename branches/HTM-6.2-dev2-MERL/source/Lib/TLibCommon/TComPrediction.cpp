@@ -49,10 +49,12 @@
 #define MAX_DISTANCE_EDGEINTRA 255
 #endif
 
+#if MERL_General_Fix
 #if MERL_VSP_C0152
 #if MERL_CVSP_D0165
 Int TComPrediction::m_iRangeLuma[12]   = {14, 34, 21, 15, 36, 26, 21, 49, 41, 36, 80, 72};
 Int TComPrediction::m_iRangeChroma[12] = { 2,  8,  5,  4, 11,  9,  8, 19, 17, 15, 34, 32};
+#endif
 #endif
 #endif
 
@@ -1863,6 +1865,7 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   }
 #endif
   
+#if MERL_General_Fix
 #if MERL_VSP_BLOCKSIZE_C0152 == 1
 #if MERL_CVSP_D0165
   //get LUT based horizontal reference range
@@ -1931,6 +1934,7 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
     maxRelativePos = minRelativePos + range -1 ;
   else
     minRelativePos = maxRelativePos - range +1 ;
+#endif
 #endif
 #endif
 
@@ -2062,6 +2066,24 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
   Int dstStrideBlock = dstStride * nTxtPerDepthY;
   Int depStrideBlock = depStride * nDepthPerTxtY;
 
+#if !MERL_Bi_VSP_D0166
+  if (isDepth)
+  {
+     // DT: Since the call for this function is redundant, ..
+     for (Int y = 0; y < sizeY; y++)
+     {
+       for (Int x = 0; x < sizeX; x++)
+       {
+         dstCb[x] = 128;
+         dstCr[x] = 128;
+       }
+       dstCb += dstStride;
+       dstCr += dstStride;
+     }
+     return;
+  }
+#endif
+
   if ( widthChroma > widthDepth ) // We assume
   {
     assert( heightChroma > heightDepth );
@@ -2149,6 +2171,7 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
   }
 
 
+#if MERL_General_Fix
 #if MERL_VSP_BLOCKSIZE_C0152 == 1
 #if MERL_CVSP_D0165
   //get LUT based horizontal reference range
@@ -2213,6 +2236,7 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
   else
     minRelativePos = maxRelativePos - range + 1;
 
+#endif
 #endif
 #endif
 

@@ -114,6 +114,13 @@ protected:
 #endif
       );
 
+#if !MERL_General_Fix
+#if MERL_VSP_C0152
+  Void xPredInterUniBWVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY, Bool bi=false );
+  Void xPredInterBiBWVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx,               Int iWidth, Int iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY, TComYuv*& rpcYuvPred, Int iPartIdx, Bool bPrdDepthMap );
+#endif
+#endif
+
 #if DEPTH_MAP_GENERATION
   Void xWeightedAveragePdm      ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst, UInt uiSubSampExpX, UInt uiSubSampExpY );
 #endif
@@ -151,25 +158,22 @@ protected:
 #else
   Void xWeightedAverage         ( TComDataCU* pcCU, TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
 #endif
+
 #if MERL_VSP_C0152
-  Void xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi 
 #if !MERL_Bi_VSP_D0166
-                                     , Int vspIdx
-#endif
-    );
-#if MERL_Bi_VSP_D0166
+  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, Int vspIdx
+                                  , TComYuv *&dstPic );
+  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, Int vspIdx
+                                  , TComYuv *&dstPic );
+#else
   TComPic*  xGetVspRefTxt(TComDataCU* pcCU, UInt uiPartAddr, RefPicList eRefPicList);
   Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, 
     TComYuv *&dstPic, Bool bi);
   Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth,
     TComYuv *&dstPic, Bool bi);
-#else
-  Void xPredInterLumaBlkFromDM    ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, Int vspIdx,
-                                  TComYuv *&dstPic );
-  Void xPredInterChromaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, Int iShiftPrec, TComMv *mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, Int vspIdx,
-                                  TComYuv *&dstPic );
 #endif
 #endif
+
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );
 #if LGE_ILLUCOMP_B0045
   Void xGetLLSICPrediction(TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift);
@@ -177,6 +181,16 @@ protected:
 #endif
   Void xDCPredFiltering( Int* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight );
   Bool xCheckIdenticalMotion    ( TComDataCU* pcCU, UInt PartAddr);
+
+#if MERL_General_Fix
+#if MERL_VSP_C0152
+  Void xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComMv cMv, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi 
+#if !MERL_Bi_VSP_D0166
+                                     , Int vspIdx
+#endif
+    );
+#endif
+#endif
 
 #if HHI_DMM_WEDGE_INTRA
   Void xPredIntraWedgeFull       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder, Bool bDelta, UInt uiTabIdx, Int iDeltaDC1 = 0, Int iDeltaDC2 = 0 );
