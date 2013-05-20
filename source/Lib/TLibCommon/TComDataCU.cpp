@@ -3819,17 +3819,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   
 #endif //  H3D_IVMP 
 
-#if MERL_VSP_COMPENSATION_C0152
-  //===== vsp 0 ===== 
-#if LGE_VSP_INHERIT_D0092
-  if ( !xAddVspMergeCand(0, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#else
-  if( iCount < 4 + extraMergeCand )
-    if ( !xAddVspMergeCand(0, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#endif
-      return;
-#endif
-
   //left
   UInt uiLeftPartIdx = 0;
   TComDataCU* pcCULeft = 0;
@@ -3918,17 +3907,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     }
   }
 
-#if MERL_VSP_COMPENSATION_C0152
-  //===== vsp 1 =====
-#if LGE_VSP_INHERIT_D0092
-    if ( !xAddVspMergeCand(1, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#else
-    if( iCount < 4 + extraMergeCand )
-        if ( !xAddVspMergeCand(1, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#endif
-            return;
-#endif
-
   // above
   UInt uiAbovePartIdx = 0;
   TComDataCU* pcCUAbove = 0;
@@ -4011,17 +3989,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     }
 #endif
   }
-
-#if MERL_VSP_COMPENSATION_C0152
-  //===== vsp 2 =====
-#if LGE_VSP_INHERIT_D0092
-    if ( !xAddVspMergeCand(2, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#else
-    if( iCount < 4 + extraMergeCand )
-        if ( !xAddVspMergeCand(2, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#endif
-            return;
-#endif
 
   // above right
   UInt uiAboveRightPartIdx = 0;
@@ -4212,17 +4179,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #if VSP_MERGE_POS < 4
     }
 #endif
-#endif
-
-#if MERL_VSP_COMPENSATION_C0152
-    //===== vsp 4 =====
-    if( iCount < 4 + extraMergeCand )
-#if LGE_VSP_INHERIT_D0092
-        if ( !xAddVspMergeCand(4, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#else
-        if ( !xAddVspMergeCand(4, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
-#endif
-            return;
 #endif
 
   // above left
