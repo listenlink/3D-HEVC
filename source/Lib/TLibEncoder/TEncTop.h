@@ -102,7 +102,7 @@ private:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator   m_cDepthMapGenerator;           ///< depth map generator
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   TComResidualGenerator   m_cResidualGenerator;           ///< generator for residual pictures
 #endif
   // SPS
@@ -233,7 +233,7 @@ public:
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator*  getDepthMapGenerator  () { return  &m_cDepthMapGenerator;   }
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   TComResidualGenerator*  getResidualGenerator  () { return  &m_cResidualGenerator;   }
 #endif
 

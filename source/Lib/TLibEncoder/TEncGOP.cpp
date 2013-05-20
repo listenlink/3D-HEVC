@@ -77,7 +77,7 @@ TEncGOP::TEncGOP()
 #if DEPTH_MAP_GENERATION
   m_pcDepthMapGenerator = NULL;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_pcResidualGenerator = NULL;
 #endif
   
@@ -130,7 +130,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 #if DEPTH_MAP_GENERATION
   m_pcDepthMapGenerator  = pcTEncTop->getDepthMapGenerator();
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_pcResidualGenerator  = pcTEncTop->getResidualGenerator();
 #endif
   
@@ -389,7 +389,14 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #endif 
       std::vector<TComPic*> apcInterViewRefPics = tAppEncTop->getInterViewRefPics( m_pcEncTop->getViewId(), pcSlice->getPOC(), m_pcEncTop->getIsDepth(), pcSlice->getSPS() );
       pcSlice->setRefPicListMvc( rcListPic, apcInterViewRefPics );
-
+#if QC_ARP_D0177
+      pcSlice->setARPStepNum();
+      if(pcSlice->getARPStepNum() > 1)
+      {
+        for(Int iViewIdx = 0; iViewIdx < pcSlice->getViewId(); iViewIdx ++ )
+          pcSlice->setBaseViewRefPicList( tAppEncTop->getTEncTop( iViewIdx , false )->getListPic(), iViewIdx );
+      }
+#endif
       //  Slice info. refinement
       if( pcSlice->getSliceType() == B_SLICE )
       {
@@ -753,7 +760,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if H3D_IVMP
       m_pcDepthMapGenerator->covertOrgDepthMap( pcPic );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
       m_pcResidualGenerator->initViewComponent( pcPic );
 #endif
 
@@ -817,7 +824,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       
       pcSlice = pcPic->getSlice(0);
 
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
       // set residual picture
       m_pcResidualGenerator->setRecResidualPic( pcPic );
 #endif

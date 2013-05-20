@@ -382,7 +382,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MultiviewMvRegLambdaScale", m_dMultiviewMvRegLambdaScale, (Double)0, "lambda scale for multiview motion vector regularization" )
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+  ("MultiviewResPred", m_nUseAdvResPred,           (UInt)0, "usage of Advanced residual prediction" )
+#else
   ("MultiviewResPred", m_uiMultiviewResPredMode,   (UInt)0, "usage of inter-view residual prediction" )
+#endif
 #endif
 
   /* Coding tools */
@@ -916,8 +920,16 @@ Void TAppEncCfg::xCheckParameter()
   }
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+#if QC_ARP_WARNING_FIX
+  xConfirmPara    ( m_nUseAdvResPred > 1 , "0<=ARP<=1" );
+#else
+  xConfirmPara    ( m_nUseAdvResPred < 0 || m_nUseAdvResPred > 1 , "0<=ARP<=1" );
+#endif
+#else
   xConfirmPara    ( m_uiMultiviewResPredMode > 1,                                     "MultiviewResPred must be less than or equal to 1" );
   xConfirmPara    ( m_uiMultiviewResPredMode > 0 && m_uiPredDepthMapGeneration == 0 , "MultiviewResPred > 0 requires PredDepthMapGen > 0" );
+#endif
 #endif
   if( m_bUsingDepthMaps )
   {
@@ -1670,6 +1682,9 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115
   printf("IVSEnable: %d ", m_bUseIVS);
+#endif
+#if QC_ARP_D0177
+  printf(" ARP:%d  " , m_nUseAdvResPred  );
 #endif
   printf("\n");
 

@@ -118,6 +118,10 @@ TComSlice::TComSlice()
 , m_iViewOrderIdx                 ( 0 )        // will be changed to view_id
 #endif
 {
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
+    m_pcListDepthPic[iNumCount] =NULL;
+#endif
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
 
   initEqualRef();
@@ -1386,6 +1390,64 @@ Void TComSlice::xSetApplyIC()
 }
 #endif
 
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+TComPic* TComSlice::getDepthRefPic(Int viewId, Int poc)
+{
+  TComPic* pPic = NULL;
+
+  if (m_pcListDepthPic[viewId] == NULL)
+    return NULL;
+
+  for( TComList<TComPic*>::iterator it = m_pcListDepthPic[viewId]->begin(); it != m_pcListDepthPic[viewId]->end(); it++ )
+  {
+    TComPic* currPic = *it;
+    TComSlice* currSlice = currPic->getCurrSlice();
+    Bool isDepth = currSlice->getIsDepth();
+    //assert(isDepth);
+    if( isDepth && currPic->getPOC() == poc && currPic->getViewId() == viewId ) // (*it)->getSPS()->isDepth()
+    {
+      pPic = *it;
+      break;
+    }
+  }
+
+  return pPic;
+}
+#endif
+
+
+#if QC_ARP_D0177
+Void TComSlice::setARPStepNum()                                  
+{
+  Bool bAllIvRef = false;
+  if(!getSPS()->getUseAdvRP())
+    m_nARPStepNum = 0;
+  else
+  {
+    for( Int iRefListId = 0; iRefListId < 2; iRefListId++ )
+    {
+      RefPicList  eRefPicList = RefPicList( iRefListId );
+      Int iNumRefIdx = getNumRefIdx(eRefPicList);
+      if( iNumRefIdx <= 0 )
+        continue;
+      for (Int i = 0; i < iNumRefIdx; i++)
+      {
+        if(getRefPic( REF_PIC_LIST_0, i)->getPOC() != getPOC())
+        {
+          bAllIvRef = true;
+          break;
+        }
+      }
+      if( bAllIvRef == true )
+        break;
+    }
+    if(bAllIvRef== true)
+      m_nARPStepNum = getSPS()->getARPStepNum();
+    else
+      m_nARPStepNum = 0;
+  }
+}
+#endif
 // ------------------------------------------------------------------------------------------------
 // Video parameter set (VPS)
 // ------------------------------------------------------------------------------------------------
@@ -1575,7 +1637,10 @@ TComSPS::TComSPS()
 #if H3D_IVMP
   m_uiMultiviewMvPredMode    = 0;
 #endif
-
+#if QC_ARP_D0177
+  m_nUseAdvResPred           = 0;
+  m_nARPStepNum              = 1;
+#endif
   ::memset( m_aiUsableInterViewRefs, 0, sizeof( m_aiUsableInterViewRefs ) );
   
 #if RWTH_SDC_DLT_B0036

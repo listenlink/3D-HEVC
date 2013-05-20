@@ -222,7 +222,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( iViewIdx ? m_dMultiviewMvRegLambdaScale : 0.0 );
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+    m_acTEncTopList[iViewIdx]->setUseAdvRP                     ( iViewIdx ? m_nUseAdvResPred             : 0   );
+    m_acTEncTopList[iViewIdx]->setARPStepNum                   ( iViewIdx ? QC_ARP_WFNR                  : 1   );
+#else
     m_acTEncTopList[iViewIdx]->setMultiviewResPredMode         ( m_uiMultiviewResPredMode );
+#endif
 #endif
 
   //====== Tool list ========
@@ -559,8 +564,13 @@ Void TAppEncTop::xInitLibCfg()
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegMode           ( 0 );
       m_acTEncDepthTopList[iViewIdx]->setMultiviewMvRegLambdaScale    ( 0.0 );
 #endif
-#if H3D_IVRP
-      m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
+#if H3D_IVRP 
+#if QC_ARP_D0177
+    m_acTEncDepthTopList[iViewIdx]->setUseAdvRP                          ( 0 );
+    m_acTEncDepthTopList[iViewIdx]->setARPStepNum                        ( 1 );
+#else
+    m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
+#endif
 #endif
 
       //====== Weighted Prediction ========
@@ -1075,7 +1085,7 @@ Void TAppEncTop::encode()
 
 #if MERL_VSP_C0152
 #if MERL_VSP_C0152_BugFix_ForNoDepthCase
-        if(m_bUsingDepthMaps) //VSP can be used only when depth is available as input
+        if(m_bUsingDepthMaps) // VSP can be used only when depth is available as input
         {
 #endif
         Int iCurPoc = m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId);
@@ -1086,8 +1096,19 @@ Void TAppEncTop::encode()
           TEncSlice* pEncSlice = m_acTEncTopList[iViewIdx]->getSliceEncoder();
           pEncSlice->setRefPicBaseTxt(pcBaseTxtPic);
           pEncSlice->setRefPicBaseDepth(pcBaseDepthPic);
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+          for (Int refViewId=0; refViewId < iViewIdx; refViewId++ )
+          {
+            pEncSlice->setListDepthPic(m_acTEncDepthTopList[refViewId]->getListPic(), refViewId ); // The list will store only the depth pictures
+            setBWVSPLUT(refViewId, iViewIdx, gopId, false);
+          } 
+#endif
         }
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
         setBWVSPLUT( iViewIdx, gopId, false);
+#endif
+#endif
+
 #if MERL_VSP_C0152_BugFix_ForNoDepthCase
         }
         else
@@ -1102,7 +1123,6 @@ Void TAppEncTop::encode()
         }
 #endif
 
-#endif
         // call encoding function for one frame
         m_acTEncTopList[iViewIdx]->encode( eos[iViewIdx], pcPicYuvOrg, *m_picYuvRec[iViewIdx], outputAccessUnits, iNumEncoded, gopId );
         xWriteOutput(bitstreamFile, iNumEncoded, outputAccessUnits, iViewIdx, false);
@@ -1117,8 +1137,17 @@ Void TAppEncTop::encode()
           TComPic* pcBaseDepthPic = getPicFromView(  0, m_acTEncDepthTopList[iViewIdx]->getFrameId(gopId), true );
           TEncSlice* pcSlice = (TEncSlice*) m_acTEncDepthTopList[iViewIdx]->getSliceEncoder();
           pcSlice->setRefPicBaseDepth(pcBaseDepthPic);
+#if  MERL_VSP_NBDV_RefVId_Fix_D0166
+          for (Int refViewId=0; refViewId < iViewIdx; refViewId++ )
+          {
+            pcSlice->setListDepthPic(m_acTEncDepthTopList[refViewId]->getListPic(), refViewId ); // The list will store only the depth pictures
+            setBWVSPLUT( refViewId, iViewIdx, gopId, true);
+          } 
+#endif
         }
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
         setBWVSPLUT( iViewIdx, gopId, true);
+#endif
 #endif
 
           // call encoding function for one depth frame
@@ -1635,27 +1664,41 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames)
 #endif
 
 #if MERL_VSP_C0152
-Void TAppEncTop::setBWVSPLUT(Int iCodedViewIdx, Int gopId, Bool isDepth)
+
+Void TAppEncTop::setBWVSPLUT(
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+        Int iNeighborViewId,
+#endif
+        Int iCodedViewIdx, Int gopId, Bool isDepth)
 {
   //first view does not have VSP 
   if((iCodedViewIdx == 0)) return;
 
   AOT( iCodedViewIdx <= 0);
   AOT( iCodedViewIdx >= m_iNumberOfViews );
-
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
   Int iNeighborViewId = 0;
+#endif
   //setting look-up table
   Int* piShiftLUT = m_cCameraData.getBaseViewShiftLUTI()[iNeighborViewId][iCodedViewIdx][0];
 
   if(isDepth)
   {
     TEncSlice* pcEncSlice = (TEncSlice*) m_acTEncDepthTopList[iCodedViewIdx]->getSliceEncoder();
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+    pcEncSlice->setBWVSPLUTParam(  piShiftLUT, LOG2_DISP_PREC_LUT, iNeighborViewId );
+#else
     pcEncSlice->setBWVSPLUTParam(  piShiftLUT, LOG2_DISP_PREC_LUT );
+#endif
   }
   else
   {
     TEncSlice* pcEncSlice = (TEncSlice*) m_acTEncTopList[iCodedViewIdx]->getSliceEncoder();
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+    pcEncSlice->setBWVSPLUTParam(  piShiftLUT, LOG2_DISP_PREC_LUT, iNeighborViewId );
+#else
     pcEncSlice->setBWVSPLUTParam(  piShiftLUT, LOG2_DISP_PREC_LUT );
+#endif
   }
 
 }

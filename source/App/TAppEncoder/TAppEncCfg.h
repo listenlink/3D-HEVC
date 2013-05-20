@@ -216,8 +216,12 @@ vector<Bool> m_abUseRDOQ;                                   ///< flag for using 
   UInt      m_uiMultiviewMvRegMode;                           ///< regularization for multiview motion vectors
   Double    m_dMultiviewMvRegLambdaScale;                     ///< lambda scale for multiview motion vectors regularization
 #endif
-#if H3D_IVRP
+#if H3D_IVRP 
+#if QC_ARP_D0177
+  UInt      m_nUseAdvResPred;
+#else
   UInt      m_uiMultiviewResPredMode;          ///< using multiview residual prediction
+#endif
 #endif
 
   Bool      m_useFastDecisionForMerge;         ///< flag for using Fast Decision Merge RD-Cost 

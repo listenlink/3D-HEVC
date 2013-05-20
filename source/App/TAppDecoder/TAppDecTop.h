@@ -112,7 +112,11 @@ public:
 #endif
 
 #if MERL_VSP_C0152
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Void  setBWVSPLUT( Int iNeighborViewId, TComSlice* pcSlice, Int iCodedViewIdx, Int iCurPoc );
+#else
   Void  setBWVSPLUT( TComSlice* pcSlice, Int iCodedViewIdx, Int iCurPoc   );
+#endif
 #endif
 
 protected:

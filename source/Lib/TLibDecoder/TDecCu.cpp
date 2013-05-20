@@ -53,7 +53,7 @@ TDecCu::TDecCu()
 {
   m_ppcYuvResi = NULL;
   m_ppcYuvReco = NULL;
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_ppcYuvResPred = NULL;
 #endif
   m_ppcCU      = NULL;
@@ -81,7 +81,7 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
   
   m_ppcYuvResi = new TComYuv*[m_uiMaxDepth-1];
   m_ppcYuvReco = new TComYuv*[m_uiMaxDepth-1];
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_ppcYuvResPred = new TComYuv*   [m_uiMaxDepth-1];
 #endif
   m_ppcCU      = new TComDataCU*[m_uiMaxDepth-1];
@@ -95,7 +95,7 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
     
     m_ppcYuvResi[ui] = new TComYuv;    m_ppcYuvResi[ui]->create( uiWidth, uiHeight );
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight );
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
     m_ppcYuvResPred[ui] = new TComYuv;    m_ppcYuvResPred[ui]->create( uiWidth, uiHeight );
 #endif
     m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1) );
@@ -119,7 +119,7 @@ Void TDecCu::destroy()
   {
     m_ppcYuvResi[ui]->destroy(); delete m_ppcYuvResi[ui]; m_ppcYuvResi[ui] = NULL;
     m_ppcYuvReco[ui]->destroy(); delete m_ppcYuvReco[ui]; m_ppcYuvReco[ui] = NULL;
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
     m_ppcYuvResPred[ui]->destroy(); delete m_ppcYuvResPred[ui]; m_ppcYuvResPred[ui] = NULL;
 #endif
     m_ppcCU     [ui]->destroy(); delete m_ppcCU     [ui]; m_ppcCU     [ui] = NULL;
@@ -127,7 +127,7 @@ Void TDecCu::destroy()
   
   delete [] m_ppcYuvResi; m_ppcYuvResi = NULL;
   delete [] m_ppcYuvReco; m_ppcYuvReco = NULL;
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   delete [] m_ppcYuvResPred; m_ppcYuvResPred = NULL;
 #endif
   delete [] m_ppcCU     ; m_ppcCU      = NULL;
@@ -311,7 +311,47 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     setdQPFlag(true);
     pcCU->setQPSubParts( pcCU->getRefQP(uiAbsPartIdx), uiAbsPartIdx, uiDepth ); // set QP to default QP
   }
-
+#if QC_CU_NBDV_D0181
+      DisInfo DvInfo; 
+      DvInfo.bDV = false;
+      if(!pcCU->getSlice()->isIntra())
+      {
+#if QC_ARP_D0177
+        if(( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() || pcCU->getSlice()->getSPS()->getUseAdvRP())             && pcCU->getSlice()->getViewId())
+#else
+        if(( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() || pcCU->getSlice()->getSPS()->getMultiviewResPredMode()) && pcCU->getSlice()->getViewId())
+#endif
+        {  
+          m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, true );
+          m_ppcCU[uiDepth]->copyDVInfoFrom( pcCU, uiAbsPartIdx);
+          PartSize ePartTemp = m_ppcCU[uiDepth]->getPartitionSize(0);
+          UChar cWidTemp     = m_ppcCU[uiDepth]->getWidth(0);
+          UChar cHeightTemp  = m_ppcCU[uiDepth]->getHeight(0);
+          m_ppcCU[uiDepth]->setWidth  ( 0, pcCU->getSlice()->getSPS()->getMaxCUWidth ()/(1<<uiDepth)  );
+          m_ppcCU[uiDepth]->setHeight ( 0, pcCU->getSlice()->getSPS()->getMaxCUHeight()/(1<<uiDepth)  );
+          m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+  #if MERL_VSP_C0152
+          DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(0, 0, &DvInfo, false, true);
+  #else
+          DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(0, 0, &DvInfo, false);
+  #endif
+          pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
+          m_ppcCU[uiDepth]->setPartSizeSubParts( ePartTemp, 0, uiDepth );
+          m_ppcCU[uiDepth]->setWidth  ( 0, cWidTemp );
+          m_ppcCU[uiDepth]->setHeight ( 0, cHeightTemp );
+        }
+        if(DvInfo.bDV==false)
+        {
+          DvInfo.iN=1;
+#if !SEC_DEFAULT_DV_D0112
+          DvInfo.m_acMvCand[0].setHor(0);
+          DvInfo.m_acMvCand[0].setVer(0);
+          DvInfo.m_aVIdxCan[0] = 0;
+#endif
+          pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
+        }
+      }
+#endif
   // decode CU mode and the partition size
   if( !pcCU->getSlice()->isIntra() && pcCU->getNumSucIPCM() == 0 )
 #if HHI_MPI
@@ -352,8 +392,12 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       {
         const UChar uhNewDepth = max<UInt>( uiDepth, pcTextureCU->getDepth( uiAbsPartIdx + ui ) );
 #if MERL_VSP_C0152
-        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
-        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+        Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui );
+        pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx );
+#endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+        Int vspDir = pcTextureCU->getVSPDir( uiAbsPartIdx + ui );
+        pcCU->setVSPDir( uiAbsPartIdx + ui, vspDir );
 #endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_SKIP );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );
@@ -371,7 +415,12 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
 #if MERL_VSP_C0152
     Int iVSPIndexTrue[3] = {-1, -1, -1};
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+    Int iVSPDirTrue[3]   = {-1, -1, -1};
+    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, iVSPDirTrue, uiMergeIndex );
+#else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, uiMergeIndex );
+#endif
     {
       Int iVSPIdx = 0;
       Int numVspIdx;
@@ -384,7 +433,10 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
             break;
           }
       }
-      pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  //Initialize the VSP, may change later in get InterMergeCandidates()
+      pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  // Initialize
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+      pcCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], uiAbsPartIdx, 0, uiDepth );
+#endif
     }
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, uiDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
@@ -406,6 +458,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 #if HHI_MPI
+    }
+#endif
+#if QC_ARP_D0177
+    if( pcCU->getSlice()->getSPS()->getUseAdvRP() )
+    {
+      pcCU->setResPredAvailSubParts ( false, uiAbsPartIdx, 0, uiDepth );
+      pcCU->setResPredFlagSubParts  ( false, uiAbsPartIdx, 0, uiDepth );
+      m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth, m_ppcCU[uiDepth], 0 );
     }
 #endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
@@ -459,7 +519,13 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if LGE_ILLUCOMP_DEPTH_C0046 && HHI_MPI
   }
 #endif
-
+#if QC_ARP_D0177 
+  if (pcCU->getSlice()->getSPS()->getUseAdvRP() && pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    pcCU->setResPredAvailSubParts ( 0, uiAbsPartIdx, 0, uiDepth );
+    pcCU->setResPredFlagSubParts  ( 0, uiAbsPartIdx, 0, uiDepth );
+  }
+#endif
 #if HHI_MPI
     if( pcCU->getTextureModeDepth( uiAbsPartIdx ) == uiDepth )
     {
@@ -475,6 +541,15 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if MERL_VSP_C0152
         Int vspIdx = pcTextureCU->getVSPIndex( uiAbsPartIdx + ui);
         pcCU->setVSPIndex( uiAbsPartIdx + ui, vspIdx);
+#endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+        if (pcCU->getSlice()->getIsDepth()) {
+          pcCU->setVSPDir( uiAbsPartIdx + ui, 0);
+        }
+        else {
+          Int vspDir = pcTextureCU->getVSPDir( uiAbsPartIdx + ui);
+          pcCU->setVSPDir( uiAbsPartIdx + ui, vspDir);
+        }
 #endif
         pcCU->setPredictionMode( uiAbsPartIdx + ui, MODE_INTER );
         pcCU->setPartitionSize( uiAbsPartIdx + ui, SIZE_2Nx2N );
@@ -669,7 +744,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #else
   m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   if (pcCU->getMergeFlag(0) && pcCU->getMergeIndex(0)==0 && pcCU->getResPredAvail(0))
   {
     m_pcPrediction->residualPrediction(pcCU, m_ppcYuvReco[uiDepth], m_ppcYuvResPred[uiDepth]);
@@ -1031,14 +1106,18 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
+#if !MERL_General_Fix
   Pel apDCRecoValues[2];
+#endif
   for( UInt ui = 0; ui < uiNumSegments; ui++ )
   {
     Pel   pPredIdx    = GetDepthValue2Idx( apDCPredValues[ui] );
     Pel   pResiIdx    = pcCU->getSDCSegmentDCOffset(ui, uiAbsPartIdx);
     Pel   pRecoValue  = GetIdx2DepthValue( pPredIdx + pResiIdx );
     
+#if !MERL_General_Fix
     apDCRecoValues[ui]  = pRecoValue;
+#endif
     apDCResiValues[ui]  = pRecoValue - apDCPredValues[ui];
   }
   

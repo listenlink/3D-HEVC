@@ -59,6 +59,10 @@ TEncSlice::TEncSlice()
   m_pcBufferBinCoderCABACs  = NULL;
   m_pcBufferLowLatSbacCoders    = NULL;
   m_pcBufferLowLatBinCoderCABACs  = NULL;
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
+    m_pcListDepthPic[iNumCount] = NULL;
+#endif
 #if FCO_DVP_REFINE_C0132_C0170
   m_pPicBaseTxt = NULL;
   m_pPicBaseDepth = NULL;
@@ -147,6 +151,11 @@ Void TEncSlice::init( TEncTop* pcEncTop )
   m_pdRdPicLambda     = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_pdRdPicQp         = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_piRdPicQp         = (Int*   )xMalloc( Int,    m_pcCfg->getDeltaQpRD() * 2 + 1 );
+
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
+    m_pcListDepthPic[iNumCount] = NULL;
+#endif
 }
 
 /**
@@ -818,9 +827,19 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 
 #if MERL_VSP_C0152
   // Send Depth/Texture pointers to slice level
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
   pcSlice->setBWVSPLUTParam(m_aiShiftLUT, m_iShiftPrec);
+#endif
   pcSlice->setRefPicBaseTxt(m_pPicBaseTxt);
   pcSlice->setRefPicBaseDepth(m_pPicBaseDepth);
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for (Int refViewId=0; refViewId < pcSlice->getViewId(); refViewId++)
+  {
+    assert( m_pcListDepthPic[refViewId] );
+    pcSlice->setListDepthPic(m_pcListDepthPic[refViewId], refViewId);
+    pcSlice->setBWVSPLUTParam(m_aiShiftLUT[refViewId], m_iShiftPrec, refViewId);
+  }
+#endif
 #endif
 
   UInt uiWidthInLCUs  = rpcPic->getPicSym()->getFrameWidthInCU();
