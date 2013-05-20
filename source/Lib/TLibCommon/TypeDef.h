@@ -161,7 +161,7 @@
 #define FIX_LGE_WP_FOR_3D_C0223           1   // JCT3V-C0223 Weighted Prediction Bug-fix for 3D-HEVC. Caution! There is still crush using WP with Residual Prediction.
 #define FIX_APPENCTOP_T_ONLY              1   // For Texture-only coding
 #define LGE_ROUND_OFFSET_D0135            1   // JCT3V-D0135 Rounding offset
-#define LGE_SAO_MIGRATION_D0091           0
+#define LGE_SAO_MIGRATION_D0091           1
 
 #if LGE_SAO_MIGRATION_D0091
 #define SAO_SKIP_RIGHT                   1  ///< H1101: disallow using unavailable pixel during RDO
