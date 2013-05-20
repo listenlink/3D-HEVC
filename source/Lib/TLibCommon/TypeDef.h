@@ -200,7 +200,7 @@
 #define QC_BVSP_CleanUP_D0191                    1
 
 #define MTK_D0156                 1
-#define LGE_VSP_INHERIT_D0092     0
+#define LGE_VSP_INHERIT_D0092     1
 /*
  * Two macros are used to configure combinations of JCT3V-C0152 and JCT3V-C0131
  * 
