@@ -52,14 +52,28 @@ Int * TComDataCU::m_pcGlbArlCoeffCr = NULL;
 
 #if MERL_VSP_C0152
 
+#if MTK_D0156
+#define CHECK_ADD_YET(pcCURef,uiIdx,vspIdx) && ( (!m_pcSlice->getSPS()->getUseVSPCompensation()) || (!( (pcCURef)->getVSPIndex(uiIdx) == vspIdx && bVspMvZeroDone[vspIdx-1] )))
+#else
 #define CHECK_ADD_YET(pcCURef,uiIdx,vspIdx) && !( (pcCURef)->getVSPIndex(uiIdx) == vspIdx && bVspMvZeroDone[vspIdx-1] )
+#endif
 
 inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo
+#if QC_BVSP_CleanUP_D0191
+  , UChar *puhInterDirNeighbours
+#endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
     , Int*     iVSPDirTrue
 #endif
     )
 {
+#if MTK_D0156
+    if( !m_pcSlice->getSPS()->getUseVSPCompensation() )
+    {
+        return;
+    }
+#endif
+
   Int vspIdx = (Int) pcCURef->getVSPIndex(uiIdx);
   if( vspIdx != 0 )
   {
@@ -72,6 +86,9 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
     // set MV using checked disparity
     if (vspIdx < 4)
     {
+#if QC_BVSP_CleanUP_D0191
+      puhInterDirNeighbours[ iCount] = 1;
+#endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
       if(pDInfo->iN > 0 )
       { // using derived disparity and store corresponding used reference list and ref idx
@@ -125,13 +142,32 @@ inline Void TComDataCU::xInheritVspMode( TComDataCU* pcCURef, UInt uiIdx, Bool* 
   }
 }
 
-inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
-                                          UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDInfo
+inline Bool TComDataCU::xAddVspMergeCand(
+ UChar ucVspMergePos,
+#if !LGE_VSP_INHERIT_D0092
+ Int vspIdx,
+ Bool* bVspMvZeroDone,
+#endif
+ UInt uiDepth,
+ Bool* abCandIsInter,
+ Int& iCount,
+ UChar* puhInterDirNeighbours,
+ TComMvField* pcMvFieldNeighbours,
+ Int* iVSPIndexTrue,
+ Int mrgCandIdx,
+ DisInfo* pDInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-                                        , Int*  iVspDirTrue
+ , Int*  iVspDirTrue
 #endif
                                           )
 {
+#if MTK_D0156
+    if( !m_pcSlice->getSPS()->getUseVSPCompensation() )
+    {
+        return true;
+    }
+#endif
+
 #if MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
   if (getSlice()->getSPS()->isDepth())
   {
@@ -148,18 +184,41 @@ inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool*
 #endif
   if( ucVspMergePos == VSP_MERGE_POS )
   {
+#if !LGE_VSP_INHERIT_D0092
     Int idx = vspIdx - 1;
+#endif
     {
+#if LGE_VSP_INHERIT_D0092
+      if( getSlice()->getSPS()->getViewId() != 0 )
+#else
       if( getSlice()->getSPS()->getViewId() != 0 && bVspMvZeroDone[idx] == false )
+#endif
       {
         {
           abCandIsInter [iCount] = true;
+#if !LGE_VSP_INHERIT_D0092
           bVspMvZeroDone[idx] = true;
+#endif
 
           // get Inter Dir
           Int iInterDir = ((getSlice()->getNumRefIdx(REF_PIC_LIST_0) > 0 && getSlice()->getNumRefIdx(REF_PIC_LIST_1) > 0) ? 3 :
             (getSlice()->getNumRefIdx(REF_PIC_LIST_0) > 0 ? 1 : 2));
           puhInterDirNeighbours[iCount] = iInterDir; // The direction information does not matter
+#if QC_BVSP_CleanUP_D0191
+         puhInterDirNeighbours[iCount] = 1;
+#endif
+#if LGE_VSP_INHERIT_D0092
+         Int iRefIdx = NOT_VALID;
+#if QC_BVSP_CleanUP_D0191
+         iRefIdx = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==getSlice()->getPOC() ? 0: getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+#endif
+         pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCand[0], iRefIdx );
+         if ( getSlice()->isInterB() )
+         {
+             pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCand[0], iRefIdx );
+         }
+         iVSPIndexTrue[iCount] = 1;
+#else
           // get Mv using checked disparity vector
           if (vspIdx < 4) // spatial
           {
@@ -199,6 +258,7 @@ inline Bool TComDataCU::xAddVspMergeCand( UChar ucVspMergePos, Int vspIdx, Bool*
 #endif
           }
           iVSPIndexTrue[idx] = iCount;
+#endif
           if ( mrgCandIdx == iCount )
           {
             return false;
@@ -3238,8 +3298,27 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
   UInt uiPartAddr;
   UInt iNumbPart;
 
+#if SHARP_ILLUCOMP_PARSE_D0060
+  if (!(getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N))
+  {
+    return false;
+  }
+  if (getSlice()->getIcSkipParseFlag())
+  {
+    if (getMergeFlag(uiAbsPartIdx) && getMergeIndex(uiAbsPartIdx) == 0)
+    {
+      return false;
+    }
+  }
+  if (getMergeFlag(uiAbsPartIdx))
+  {
+    return true;
+  }
+#endif
+#if !SHARP_ILLUCOMP_PARSE_D0060
   if(!getSlice()->getIsDepth())
   {
+#endif
     Int iWidth, iHeight;
 
     iNumbPart = ( getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N ? 1 : (getPartitionSize(uiAbsPartIdx) == SIZE_NxN ? 4 : 2) );
@@ -3260,6 +3339,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
         }
       }
     }
+#if !SHARP_ILLUCOMP_PARSE_D0060
   }
   else
   {
@@ -3281,6 +3361,7 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx, UInt uiDepth)
       }
     }
   }
+#endif
 
   return false;
 }
@@ -3291,6 +3372,23 @@ Bool TComDataCU::isICFlagRequired(UInt uiAbsPartIdx)
   UInt iNumbPart;
   Int iWidth, iHeight;
 
+#if SHARP_ILLUCOMP_PARSE_D0060
+  if (!(getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N))
+  {
+    return false;
+  }
+  if (getSlice()->getIcSkipParseFlag())
+  {
+    if (getMergeFlag(uiAbsPartIdx) && getMergeIndex(uiAbsPartIdx) == 0)
+    {
+      return false;
+    }
+  }
+  if (getMergeFlag(uiAbsPartIdx))
+  {
+    return true;
+  }
+#endif
   UInt uiPartMode = getPartitionSize(uiAbsPartIdx);
 
   iNumbPart = (uiPartMode == SIZE_2Nx2N ? 1 : (uiPartMode == SIZE_NxN ? 4 : 2) );
@@ -3809,7 +3907,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   Int xP, yP, nPSW, nPSH;
   this->getPartPosition(uiPUIdx, xP, yP, nPSW, nPSH);
 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 && !LGE_VSP_INHERIT_D0092
   Bool bVspMvZeroDone[3] = {false, false, false};
 #endif
   
@@ -3995,7 +4093,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #endif
         }
       }
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152  && !QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
 #if !MTK_LGE_VSP_DEPTH_OFF_D0105_D0139
       xInheritVspMode( pcTextureCU, uiPartIdxCenter, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
@@ -4076,6 +4174,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   
 #endif //  H3D_IVMP
 
+#if !FIX_MERGE_D
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 0 ===== 
   if( iCount < 4 + extraMergeCand )
@@ -4086,6 +4185,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
             )
        )
       return;
+#endif
 #endif
 
   //left
@@ -4103,7 +4203,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   if (!(uiPUIdx == 1 && (partSize == SIZE_Nx2N || partSize == SIZE_nLx2N || partSize == SIZE_nRx2N)))
   {
     if ( pcCULeft && !pcCULeft->isIntra( uiLeftPartIdx )
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 && !LGE_VSP_INHERIT_D0092
       CHECK_ADD_YET(pcCULeft, uiLeftPartIdx, 1)
 #endif
       )
@@ -4152,11 +4252,21 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
         pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
 #endif
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+        if (pcCULeft->getVSPIndex(uiLeftPartIdx)==1)
+        {
+            iVSPIndexTrue[iCount] = 1;
+        }
+#else
         xInheritVspMode( pcCULeft, uiLeftPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
+#if QC_BVSP_CleanUP_D0191
+        ,puhInterDirNeighbours
+#endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
          , iVSPDirTrue
 #endif
                 );
+#endif
 #endif
         if ( mrgCandIdx == iCount )
         {
@@ -4181,7 +4291,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       }
     }
   if ( pcCUAbove && !pcCUAbove->isIntra( uiAbovePartIdx ) 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 && !LGE_VSP_INHERIT_D0092
     CHECK_ADD_YET(pcCUAbove, uiAbovePartIdx, 1)
 #endif
     && !(uiPUIdx == 1 && (cCurPS == SIZE_2NxN || cCurPS == SIZE_2NxnU || cCurPS == SIZE_2NxnD))
@@ -4229,11 +4339,21 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
 #endif
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+    if (pcCUAbove->getVSPIndex(uiAbovePartIdx)==1)
+    {
+        iVSPIndexTrue[iCount] = 1;
+    }
+#else
      xInheritVspMode( pcCUAbove, uiAbovePartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
+#if QC_BVSP_CleanUP_D0191
+        ,puhInterDirNeighbours
+#endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
        , iVSPDirTrue
 #endif
              ) ;
+#endif
 #endif
     if ( mrgCandIdx == iCount )
     {
@@ -4257,7 +4377,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     }
   }
   if ( pcCUAboveRight && !pcCUAboveRight->isIntra( uiAboveRightPartIdx ) 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 && !LGE_VSP_INHERIT_D0092
     CHECK_ADD_YET(pcCUAboveRight, uiAboveRightPartIdx, 1)
 #endif
     && ( !pcCUAbove || pcCUAbove->isIntra( uiAbovePartIdx ) || !pcCUAbove->hasEqualMotion( uiAbovePartIdx, pcCUAboveRight, uiAboveRightPartIdx ) ) )
@@ -4282,11 +4402,21 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
 #endif
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+    if (pcCUAboveRight->getVSPIndex(uiAboveRightPartIdx)==1)
+    {
+        iVSPIndexTrue[iCount] = 1;
+    }
+#else
     xInheritVspMode( pcCUAboveRight, uiAboveRightPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
+#if QC_BVSP_CleanUP_D0191
+        ,puhInterDirNeighbours
+#endif 
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
        , iVSPDirTrue
 #endif
             ) ;
+#endif
 #endif
     if ( mrgCandIdx == iCount )
     {
@@ -4344,6 +4474,28 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   }
 #endif // H3D_IVMP 
 
+#if MERL_VSP_COMPENSATION_C0152
+  //===== vsp 3 =====
+#if LGE_VSP_INHERIT_D0092
+    if ( !xAddVspMergeCand(3, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
+#else
+    if( iCount < 4 + extraMergeCand )
+        if ( !xAddVspMergeCand(3, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
+#endif
+            return;
+#endif
+
+#if MERL_VSP_C0152
+#if VSP_MERGE_POS < 4
+#if H3D_IVMP
+    if( iCount < 4 + extraMergeCand )
+#else
+    if( iCount < 4 )
+#endif
+    {
+#endif
+#endif
+
   //left bottom
   UInt uiLeftBottomPartIdx = 0;
   TComDataCU* pcCULeftBottom = 0;
@@ -4356,7 +4508,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     }
   }
   if ( pcCULeftBottom && !pcCULeftBottom->isIntra( uiLeftBottomPartIdx ) 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 && !LGE_VSP_INHERIT_D0092
     CHECK_ADD_YET(pcCULeftBottom, uiLeftBottomPartIdx, 1)
 #endif
     && ( !pcCULeft || pcCULeft->isIntra( uiLeftPartIdx ) || !pcCULeft->hasEqualMotion( uiLeftPartIdx, pcCULeftBottom, uiLeftBottomPartIdx ) ) )
@@ -4381,11 +4533,21 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
 #endif
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+    if (pcCULeftBottom->getVSPIndex(uiLeftBottomPartIdx)==1)
+    {
+        iVSPIndexTrue[iCount] = 1;
+    }
+#else
     xInheritVspMode( pcCULeftBottom, uiLeftBottomPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
+#if QC_BVSP_CleanUP_D0191
+        ,puhInterDirNeighbours
+#endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
        , iVSPDirTrue
 #endif
              ) ;
+#endif
 #endif
     if ( mrgCandIdx == iCount )
     {
@@ -4393,6 +4555,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
     }
     iCount ++;
   }
+
+#if MERL_VSP_C0152  // Is this correct here?
+#if VSP_MERGE_POS < 4
+    }
+#endif
+#endif
 
   // above left
 #if H3D_IVMP
@@ -4412,7 +4580,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       }
     }
     if( pcCUAboveLeft && !pcCUAboveLeft->isIntra( uiAboveLeftPartIdx )
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 && !LGE_VSP_INHERIT_D0092
      CHECK_ADD_YET(pcCUAboveLeft, uiAboveLeftPartIdx, 1)
 #endif
      && ( !pcCULeft || pcCULeft->isIntra( uiLeftPartIdx ) || !pcCULeft->hasEqualMotion( uiLeftPartIdx, pcCUAboveLeft, uiAboveLeftPartIdx ) )
@@ -4439,11 +4607,21 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       pcMvFieldNeighbours[(iCount<<1)+1].getMv().m_bDvMcp = false;
 #endif
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+    if (pcCUAboveLeft->getVSPIndex(uiAboveLeftPartIdx)==1)
+    {
+        iVSPIndexTrue[iCount] = 1;
+    }
+#else
       xInheritVspMode( pcCUAboveLeft, uiAboveLeftPartIdx, bVspMvZeroDone, iCount, iVSPIndexTrue, pcMvFieldNeighbours, &cDisInfo
+#if QC_BVSP_CleanUP_D0191
+        ,puhInterDirNeighbours
+#endif 
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
        , iVSPDirTrue
 #endif
              ) ;
+#endif
 #endif
       if ( mrgCandIdx == iCount )
       {
@@ -4456,11 +4634,19 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 5 =====
   if( iCount < 4 + extraMergeCand )
+#if LGE_VSP_INHERIT_D0092
+    if ( !xAddVspMergeCand(5, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) 
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+         , iVSPDirTrue
+#endif
+)
+#else
     if ( !xAddVspMergeCand(5, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
          , iVSPDirTrue
 #endif
-            ) )
+            ) 
+#endif
       return;
 #endif
 
@@ -4650,9 +4836,21 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
       Int i = uiPriorityList0[idx]; Int j = uiPriorityList1[idx];
 #if MERL_VSP_C0152
       Bool bValid = true;
+#if LGE_VSP_INHERIT_D0092
+      if (iVSPIndexTrue[i]==1 || iVSPIndexTrue[j]==1) // NOT_VALID
+#else
       if (pcMvFieldNeighbours[i<<1].getRefIdx() < 0 || pcMvFieldNeighbours[(j<<1)+1].getRefIdx() < 0) // NOT_VALID
+#endif
         bValid = false;
 #endif
+
+#if MTK_D0156
+      if( !m_pcSlice->getSPS()->getUseVSPCompensation())
+      {
+          bValid = true;
+      }
+#endif
+
       if (abCandIsInter[i] && abCandIsInter[j]&& (puhInterDirNeighbours[i]&0x1)&&(puhInterDirNeighbours[j]&0x2)
 #if MERL_VSP_C0152
        && bValid
@@ -4821,7 +5019,7 @@ Void TComDataCU::xCheckCornerCand( TComDataCU* pcCorner, UInt uiCornerPUIdx, UIn
   else
   {
     if( pcCorner && !pcCorner->isIntra( uiCornerPUIdx ) 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
      && !pcCorner->getVSPIndex( uiCornerPUIdx )
 #endif
     )
@@ -4967,7 +5165,7 @@ Void TComDataCU::getDisMvpCand ( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
   UInt uiIdx = 0;
     pcTmpCU = getPULeft(uiIdx, uiPartIdxLB, true, false);
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ) )
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
   if(! pcTmpCU->getVSPIndex(uiIdx))
 #endif
   {
@@ -4992,7 +5190,7 @@ Void TComDataCU::getDisMvpCand ( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
       pcTmpCU = getPUAbove(uiIdx, uiPartIdxRT, true, false, true);
 
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
   if(! pcTmpCU->getVSPIndex(uiIdx))
 #endif
   {
@@ -5017,7 +5215,7 @@ Void TComDataCU::getDisMvpCand ( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
 
       pcTmpCU = getPUAboveRight(uiIdx, uiPartIdxRT, true, false, true);
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ) )
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
   if(! pcTmpCU->getVSPIndex(uiIdx))
 #endif
   {
@@ -5041,7 +5239,7 @@ Void TComDataCU::getDisMvpCand ( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
   }
       pcTmpCU = getPUBelowLeft(uiIdx, uiPartIdxLB, true, false);
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
   if(! pcTmpCU->getVSPIndex(uiIdx))
 #endif
   {
@@ -5068,7 +5266,7 @@ Void TComDataCU::getDisMvpCand ( UInt uiPartIdx, UInt uiPartAddr,DisInfo* pDInfo
       pcTmpCU = getPUAboveLeft(uiIdx, (m_uiAbsIdxInLCU + uiPartAddr), true, false, true);
     assert(uiPartIdxLT == (m_uiAbsIdxInLCU + uiPartAddr));
   if(pcTmpCU != NULL && !pcTmpCU->isIntra( uiIdx ))
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
   if(! pcTmpCU->getVSPIndex(uiIdx))
 #endif
   {
@@ -5276,19 +5474,32 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
 
   Int iPictureWidth  = pcBaseViewDepthPicYuv->getWidth();
   Int iPictureHeight = pcBaseViewDepthPicYuv->getHeight();
-
+#if !QC_BVSP_CleanUP_D0191
+#if LGE_ROUND_OFFSET_D0135
+  Int depthPosX = Clip3(0,   iPictureWidth - iBlkWidth,  iBlkX + ((mv->getHor()+2)>>2));
+  Int depthPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + ((mv->getVer()+2)>>2));
+#else
   Int depthPosX = Clip3(0,   iPictureWidth - iBlkWidth,  iBlkX + (mv->getHor()>>2));
   Int depthPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + (mv->getVer()>>2));
+#endif
 
   Pel *pDepthPel   = pcBaseViewDepthPicYuv->getLumaAddr() + depthPosX + depthPosY * depStride;
+#endif
   Pel  maxDepthVal = 0;
 
   if ( bSimpleDvpRefine )
   {
+#if LGE_ROUND_OFFSET_D0135
+    Int depthStartPosX = Clip3(0,   iPictureWidth - iBlkWidth,  iBlkX + ((mv->getHor()+2)>>2));
+    Int depthStartPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + ((mv->getVer()+2)>>2));
+    Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
+    Int depthEndPosY   = Clip3(0,   iPictureHeight - 1,  iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
+#else
     Int depthStartPosX = Clip3(0,   iPictureWidth - iBlkWidth,  iBlkX + (mv->getHor()>>2));
     Int depthStartPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + (mv->getVer()>>2));
     Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + (mv->getHor()>>2));
     Int depthEndPosY   = Clip3(0,   iPictureHeight - 1,  iBlkY + iBlkHeight - 1 + (mv->getVer()>>2));
+#endif
 #if !MTK_DEPTH_TO_DISP_D0138
     Int iCenterX = (depthStartPosX + depthEndPosX) >> 1;
     Int iCenterY = (depthStartPosY + depthEndPosY) >> 1;
@@ -5311,6 +5522,7 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
         maxDepthVal = aiDepth[i];
     }
   }
+#if !QC_BVSP_CleanUP_D0191
   else
   {
     for (Int j = 0; j < iBlkHeight; j++)
@@ -5323,6 +5535,7 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
       pDepthPel += depStride;
     }
   }
+#endif
 
   Int iDisp = aiShiftLUT[ maxDepthVal ] << iShiftPrec;
 
@@ -5424,7 +5637,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPart
           paMvpDvInfo->m_bFound                        = true; 
         }
       }
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
       else if (pcTmpCU->getVSPIndex(uiIdx) != 0) // is VSP
       { 
         TComPic* picDepth = NULL;
@@ -5574,6 +5787,13 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
       cMvpDvInfo.m_bAvailab[iList][iCurDvMcpCand] = false; 
     }
   }
+
+#if MTK_D0156
+  if( !m_pcSlice->getSPS()->getUseDVPRefine() )
+  {
+      bDepthRefine = false;
+  }
+#endif
 
   // Get Positions  
   PartSize eCUMode    = getPartitionSize( uiPartAddr );    
@@ -5926,8 +6146,15 @@ Void TComDataCU::getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pD
  * \param pInfo
  */
 #if H3D_IVMP
+#if SEC_TWO_CANDIDATES_FOR_AMVP_D0122
 Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo, Int iMVPIdx)
 {
+    fillMvpCandBase(uiPartIdx, uiPartAddr, eRefPicList, iRefIdx, pInfo);
+}
+#else
+Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo, Int iMVPIdx)
+{
+
   if (!m_pcSlice->getSPS()->getViewId() || !m_pcSlice->getSPS()->getMultiviewMvPredMode())
   {
     // HEVC
@@ -6013,6 +6240,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
     }
   }
 }
+#endif
 
 
 Void TComDataCU::fillMvpCandBase( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefPicList, Int iRefIdx, AMVPInfo* pInfo )
@@ -6311,7 +6539,7 @@ Bool TComDataCU::xAddMVPCand( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefI
     }
   }
  
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152&!QC_BVSP_CleanUP_D0191
   if(pcTmpCU != NULL && pcTmpCU->getVSPIndex(uiIdx))
   {
     return false;
@@ -6427,7 +6655,7 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
     return false;
   }
 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 &!QC_BVSP_CleanUP_D0191
   if(pcTmpCU->getVSPIndex(uiIdx))
   {
     return false;
@@ -6590,7 +6818,7 @@ Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr,
   TComPic *pColPic = getSlice()->getRefPic( eRefPicList, refidx);
   TComDataCU *pColCU = pColPic->getCU( uiCUAddr );
   iColViewIdx = pColCU->getSlice()->getViewId();
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
   if( pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr) < 0)
   {
     return false;

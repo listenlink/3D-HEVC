@@ -427,7 +427,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   
   //-- Set BS for Intra MB : BS = 4 or 3
   if ( pcCUP->isIntra(uiPartP) || pcCUQ->isIntra(uiPartQ) 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
     || pcCUP->getVSPIndex(uiPartP) || pcCUQ->getVSPIndex(uiPartQ)
 #endif
      )
@@ -437,7 +437,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
   
   //-- Set BS for not Intra MB : BS = 2 or 1 or 0
   if ( !pcCUP->isIntra(uiPartP) && !pcCUQ->isIntra(uiPartQ) 
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
     && !pcCUP->getVSPIndex(uiPartP) && !pcCUQ->getVSPIndex(uiPartQ)
 #endif
   )
@@ -533,7 +533,7 @@ Void TComLoopFilter::xGetBoundaryStrengthSingle ( TComDataCU* pcCU, UInt uiAbsZo
     }   // enf of "if( one of BCBP == 0 )"
   }   // enf of "if( not Intra )"
   
-#if MERL_VSP_C0152
+#if MERL_VSP_C0152 & !QC_BVSP_CleanUP_D0191
   if ( pcCUP->getVSPIndex(uiPartP) || pcCUQ->getVSPIndex(uiPartQ))
   {
     uiBs = 0;

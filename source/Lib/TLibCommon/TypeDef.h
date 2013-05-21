@@ -83,6 +83,7 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_C0051_FIXED_BY_MTK             1   // Bug fix for C0051 implementation
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
+#define SEC_TWO_CANDIDATES_FOR_AMVP_D0122 1   // SEC_TWO_CANDIDATES_FOR_AMVP_D0122, fixing # of AMVP candidates 3 to 2
 
 
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
@@ -150,6 +151,8 @@
 #endif
 #endif
 
+#define SHARP_ILLUCOMP_PARSE_D0060        1   // JCT3V-D0060 Removal of IC's parsing dependency
+
 ///// ***** INTERVIEW SKIP *********
 #define HHI_INTERVIEW_SKIP                1
 
@@ -165,6 +168,21 @@
 #define FIX_POZNAN_CABAC_INIT_FLAG        1
 #define FIX_LGE_WP_FOR_3D_C0223           1   // JCT3V-C0223 Weighted Prediction Bug-fix for 3D-HEVC. Caution! There is still crush using WP with Residual Prediction.
 #define FIX_APPENCTOP_T_ONLY              1   // For Texture-only coding
+
+#define LGE_ROUND_OFFSET_D0135            1   // JCT3V-D0135 Rounding offset
+#define LGE_SAO_MIGRATION_D0091           1
+#if LGE_SAO_MIGRATION_D0091
+#define SAO_SKIP_RIGHT                   1  ///< H1101: disallow using unavailable pixel during RDO
+#define SAO_ENCODING_CHOICE              1  ///< I0184: picture early termination
+#if SAO_ENCODING_CHOICE
+#define SAO_ENCODING_RATE                0.75
+#define SAO_ENCODING_CHOICE_CHROMA       1 ///< J0044: picture early termination Luma and Chroma are handled separatenly
+#if SAO_ENCODING_CHOICE_CHROMA
+#define SAO_ENCODING_RATE_CHROMA         0.5
+#define SAO_ENCODING_CHOICE_CHROMA_BF    1 ///  K0156: Bug fix for SAO selection consistency
+#endif
+#endif
+#endif
 
 ///// ***** FCO  *********
 #define FLEX_CODING_ORDER_M23723          1
@@ -186,9 +204,18 @@
                                                // MERL_MTK_VSP_DVP_REFINE_C0152_C0131
 #if MERL_VSP_C0152
 
+
+#define FIX_MERGE_D                          1 // Fix for merge
 #define MERL_General_Fix                     1 // General fix by MERL
 
+
+
 #define MERL_VSP_C0152_BugFix_ForNoDepthCase 1 // MERL bugfix for test condition of no depth
+#define QC_BVSP_CleanUP_D0191                    1
+
+#define MTK_D0156                 1
+#define LGE_VSP_INHERIT_D0092     1
+
 #define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add (nocand).
 
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
@@ -197,9 +224,11 @@
 #else
 #define MERL_CVSP_D0165                      0 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
 #endif
-
+#if LGE_VSP_INHERIT_D0092
+#define VSP_MERGE_POS                        3 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 3.
+#else
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
-                                               // MTK_DVPREFINE_BVSP_BUG_FIX               1
+#endif                                               // MTK_DVPREFINE_BVSP_BUG_FIX               1
 #define MTK_DEPTH_TO_DISP_D0138              1 // JCT3V-D0138: Use max among four corners for DoNBDV and BVSP
 
 #if MERL_General_Fix
@@ -369,8 +398,10 @@
 #define C1FLAG_NUMBER               8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER               1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
 
+#if !LGE_SAO_MIGRATION_D0091
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_1 0  ///< disable the encoder constraint that does not test SAO/BO mode for chroma in interleaved mode
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_2 0  ///< disable the encoder constraint that reduce the range of SAO/EO for chroma in interleaved mode
+#endif
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3 0  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
 #define COLLOCATED_REF_IDX      1           ///< H0442: signal collocated reference index
 
@@ -643,7 +674,11 @@ typedef struct _SaoQTPart
 {
   Int         iBestType;
   Int         iLength;
+#if LGE_SAO_MIGRATION_D0091
+  Int         subTypeIdx ;                 ///< indicates EO class or BO band position
+#else
   Int         bandPosition ;
+#endif
   Int         iOffset[4];
   Int         StartCUX;
   Int         StartCUY;
@@ -673,10 +708,16 @@ typedef struct _SaoLcuParam
   Bool       mergeUpFlag;
   Bool       mergeLeftFlag;
   Int        typeIdx;
+#if LGE_SAO_MIGRATION_D0091
+  Int        subTypeIdx;
+#else
   Int        bandPosition;
+#endif
   Int        offset[4];
+#if !LGE_SAO_MIGRATION_D0091
   Int        runDiff;
   Int        run;
+#endif
   Int        partIdx;
   Int        partIdxTmp;
   Int        length;

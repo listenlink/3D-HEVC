@@ -281,13 +281,28 @@ protected:
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if MERL_VSP_C0152
-  inline Bool   xAddVspMergeCand      ( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
-                                        UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDisInfo
+  inline Bool   xAddVspMergeCand      ( 
+ UChar ucVspMergePos,
+#if !LGE_VSP_INHERIT_D0092
+ Int vspIdx,
+ Bool* bVspMvZeroDone,
+#endif
+ UInt uiDepth,
+ Bool* abCandIsInter,
+ Int& iCount,
+ UChar* puhInterDirNeighbours,
+ TComMvField* pcMvFieldNeighbours,
+ Int* iVSPIndexTrue,
+ Int mrgCandIdx,
+ DisInfo* pDisInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-                                      , Int*   iVspDirTrue = NULL
+ , Int*   iVspDirTrue = NULL
 #endif
                                         );
   inline Void   xInheritVspMode       ( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo
+#if QC_BVSP_CleanUP_D0191
+   ,UChar *puhInterDirNeighbours
+#endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
                                       , Int *iVSPDirTrue
 #endif

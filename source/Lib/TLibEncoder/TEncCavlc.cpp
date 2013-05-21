@@ -719,6 +719,14 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       WRITE_FLAG( pcSPS->getUseAdvRP () ? 1 : 0,       "advanced_residual_pred_flag"  );
 #endif
     }
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+    WRITE_FLAG( pcSPS->getUseVSPCompensation() ? 1 : 0,              "view_synthesis_pred_flag" );
+#endif
+
+    WRITE_FLAG( pcSPS->getUseDVPRefine() ? 1 : 0,                    "dv_refine_flag" );
+#endif
   }
   else
   {
@@ -792,6 +800,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "applying IC flag" );
     }
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (pcSlice->getApplyIC())
+    {
+      WRITE_FLAG( pcSlice->getIcSkipParseFlag() ? 1 : 0, "ic_skip_mergeidx0" );
+    }
+#endif
   }
 #endif
 
@@ -959,6 +973,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
       if (pcSlice->getSPS()->getUseSAO())
       {
+#if LGE_SAO_MIGRATION_D0091
+        WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
+        {
+            SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
+            WRITE_FLAG( saoParam->bSaoFlag[1], "slice_sao_chroma_flag" );
+        }
+#else
         WRITE_FLAG( pcSlice->getSaoInterleavingFlag(), "SAO interleaving flag" );
          assert (pcSlice->getSaoEnabledFlag() == pcSlice->getAPS()->getSaoEnabled());
          WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "SAO on/off flag in slice header" );
@@ -967,6 +988,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
            WRITE_FLAG( pcSlice->getAPS()->getSaoParam()->bSaoFlag[1], "SAO on/off flag for Cb in slice header" );
            WRITE_FLAG( pcSlice->getAPS()->getSaoParam()->bSaoFlag[2], "SAO on/off flag for Cr in slice header" );
          }
+#endif
       }
       WRITE_UVLC( pcSlice->getAPS()->getAPSID(), "aps_id");
     }
@@ -1498,7 +1520,7 @@ Void TEncCavlc::codeAlfFixedLengthIdx( UInt idx, UInt maxValue)
     xWriteCode( idx, length );
   }
 }
-
+#if !LGE_SAO_MIGRATION_D0091
 Void TEncCavlc::codeSaoFlag( UInt uiCode )
 {
   xWriteFlag( uiCode );
@@ -1536,6 +1558,7 @@ Void TEncCavlc::codeSaoRun( UInt uiCode, UInt maxValue)
   }
   WRITE_CODE( uiCode, uiLength, "sao_run_diff");
 }
+#endif
 
 Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height, TextType eTType )
 {

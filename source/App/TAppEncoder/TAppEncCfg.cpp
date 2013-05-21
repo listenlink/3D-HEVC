@@ -388,6 +388,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MultiviewResPred", m_uiMultiviewResPredMode,   (UInt)0, "usage of inter-view residual prediction" )
 #endif
 #endif
+#if MTK_D0156
+  ("UseVSPCompensation", m_bUseVSPCompensation,   true, "Depth dependent tools: BVSP" )
+  ("UseDVPRefine", m_bUseDVPRefine,   true, "Depth dependent tools: DoNBDV" )
+#endif
 
   /* Coding tools */
   ("LMChroma", m_bUseLMChroma, true, "intra chroma prediction based on recontructed luma")
@@ -395,7 +399,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ALF", m_abUseALF, std::vector<Bool>(1,true), "Enables ALF")
   ("SAO", m_abUseSAO, std::vector<Bool>(1, true), "SAO")
   ("MaxNumOffsetsPerPic", m_maxNumOffsetsPerPic, 2048, "2048: default")   
+#if LGE_SAO_MIGRATION_D0091
+  ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
+  ("SAOLcuBasedOptimization", m_saoLcuBasedOptimization, true, "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
+#else
   ("SAOInterleaving", m_saoInterleavingFlag, false, "0: SAO Picture Mode, 1: SAO Interleaving ")   
+#endif
 
   ("ALFEncodePassReduction", m_iALFEncodePassReduction, 0, "0:Original 16-pass, 1: 1-pass, 2: 2-pass encoding")
 
@@ -1636,7 +1645,11 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   }
   printf("CIP:%d ", m_bUseConstrainedIntraPred);
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
+#if LGE_SAO_MIGRATION_D0091
+  printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
+#else
   printf("SAOInterleaving:%d ", (m_saoInterleavingFlag)?(1):(0));
+#endif
 #if LOSSLESS_CODING
   printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
 #endif  
@@ -1722,6 +1735,12 @@ printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 
   printf("SDC:%d ", m_bUseSDC ? 1 : 0 );
   printf("DLT:%d ", m_bUseDLT ? 1 : 0 );
 #endif
+
+#if MTK_D0156
+  printf("BVSP:%d ", m_bUseVSPCompensation ? 1 : 0 );
+  printf("DoNBDV:%d ",  m_bUseDVPRefine ? 1 : 0 );
+#endif
+
 #if LGE_WVSO_A0119
   if ( m_bUseWVSO )
     printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );

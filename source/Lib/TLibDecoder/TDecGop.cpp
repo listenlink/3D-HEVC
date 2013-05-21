@@ -371,6 +371,19 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
 
     if( pcSlice->getSPS()->getUseSAO() )
     {
+#if LGE_SAO_MIGRATION_D0091
+        if(pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma())
+        {
+            SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
+            saoParam->bSaoFlag[0] = pcSlice->getSaoEnabledFlag();
+            saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagChroma();
+            m_pcSAO->setSaoLcuBasedOptimization(1);
+            m_pcSAO->createPicSaoInfo(rpcPic, m_uiILSliceCount);
+            m_pcSAO->SAOProcess(rpcPic, saoParam);
+            m_pcSAO->PCMLFDisableProcess(rpcPic);
+            m_pcSAO->destroyPicSaoInfo();
+        }
+#else
       if(pcSlice->getSaoEnabledFlag())
       {
         if (pcSlice->getSaoInterleavingFlag())
@@ -387,6 +400,7 @@ Void TDecGop::decompressGop(TComInputBitstream* pcBitstream, TComPic*& rpcPic, B
         m_pcAdaptiveLoopFilter->PCMLFDisableProcess(rpcPic);
         m_pcSAO->destroyPicSaoInfo();
       }
+#endif
     }
 
     // adaptive loop filter
