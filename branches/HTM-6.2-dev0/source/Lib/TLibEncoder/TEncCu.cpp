@@ -720,7 +720,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       } // != I_SLICE
 
 #if LGE_ILLUCOMP_B0045
+#if SHARP_ILLUCOMP_PARSE_D0060
+    bICEnabled = false;
+#else
     bICEnabled = rpcBestCU->getICFlag(0);
+#endif
 #endif
 
 #if H3D_QTL
@@ -786,10 +790,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           Bool bResPredFlag  = ( uiResPrdId > 0 );
 #if LGE_ILLUCOMP_B0045
+#if SHARP_ILLUCOMP_PARSE_D0060
+          {
+            Bool bICFlag = false;
+            rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#else
           for(UInt uiICId = 0; uiICId < (bICEnabled ? 2 : 1); uiICId++)
           {
             Bool bICFlag = (uiICId ? true : false);
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#endif
 #endif
 #endif
           // 2Nx2N, NxN
@@ -1935,7 +1945,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
 #if MERL_VSP_C0152
+#if LGE_VSP_INHERIT_D0092
+  Int iVSPIndexTrue[MRG_MAX_NUM_CANDS_MEM];
+  for (Int i=0; i<MRG_MAX_NUM_CANDS_MEM; i++)
+  {
+     iVSPIndexTrue[i] = 0;
+  }
+#else
   Int iVSPIndexTrue[3] = {-1, -1, -1};
+#endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
   Int iVSPDirTrue[3]   = {-1, -1, -1};
   rpcTempCU->getInterMergeCandidates( 0, 0, uhDepth, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, iVSPIndexTrue, iVSPDirTrue );
@@ -1961,6 +1979,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   {
     {
       TComYuv* pcPredYuvTemp = NULL;
+#if SHARP_ILLUCOMP_PARSE_D0060
+      if (rpcTempCU->getSlice()->getApplyIC() && rpcTempCU->getSlice()->getIcSkipParseFlag())
+      {
+        if (bICFlag && uiMergeCand == 0) 
+        {
+          continue;
+        }
+      }
+#endif
 #if LOSSLESS_CODING
       UInt iteration;
       if ( rpcTempCU->isLosslessCoded(0))
@@ -1997,8 +2024,22 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->setMergeFlagSubParts( true, 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setMergeIndexSubParts( uiMergeCand, 0, 0, uhDepth ); // interprets depth relative to LCU level
 #if MERL_VSP_C0152
+
+#if MTK_D0156
+          if( !rpcTempCU->getSlice()->getSPS()->getUseVSPCompensation() )
+          {
+              rpcTempCU->setVSPIndexSubParts( 0, 0, 0, uhDepth );
+          }
+          else
+#endif
           {
             Int iVSPIdx = 0;
+#if LGE_VSP_INHERIT_D0092
+            if (iVSPIndexTrue[uiMergeCand] == 1)
+            {
+                iVSPIdx = 1;
+            }
+#else
             Int numVSPIdx;
             numVSPIdx = 3;
             for (Int i = 0; i < numVSPIdx; i++)
@@ -2009,9 +2050,17 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
                   break;
                 }
             }
+#endif
             rpcTempCU->setVSPIndexSubParts( iVSPIdx, 0, 0, uhDepth );
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
             rpcTempCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], 0, 0, uhDepth ); // interprets depth relative to LCU level
+#endif
+#if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
+           if(iVSPIdx != 0)
+           {
+             Int iIVCIdx = rpcTempCU->getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==rpcTempCU->getSlice()->getPOC() ? 0: rpcTempCU->getSlice()->getNewRefIdx(REF_PIC_LIST_0);
+             cMvFieldNeighbours[2*uiMergeCand].setRefIdx(iIVCIdx);
+           }
 #endif
           }
 #endif

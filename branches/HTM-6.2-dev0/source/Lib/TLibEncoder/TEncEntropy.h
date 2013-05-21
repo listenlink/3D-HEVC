@@ -156,6 +156,13 @@ public:
   virtual Int  getSliceGranularity()                      = 0;
 
   virtual Void codeAlfCtrlFlag      ( UInt uiSymbol ) = 0;
+#if LGE_SAO_MIGRATION_D0091
+  virtual Void codeSAOSign          ( UInt code   ) = 0;
+  virtual Void codeSaoMaxUvlc       ( UInt code, UInt maxSymbol ) = 0;
+  virtual Void codeSaoMerge         ( UInt   uiCode  ) = 0;
+  virtual Void codeSaoTypeIdx       ( UInt   uiCode) = 0;
+  virtual Void codeSaoUflc          ( UInt uiLength, UInt   uiCode ) = 0;
+#else
   virtual Void codeSaoFlag          ( UInt uiCode ) = 0;
   virtual Void codeSaoUvlc          ( UInt uiCode ) = 0;
   virtual Void codeSaoSvlc          ( Int   iCode ) = 0;
@@ -164,6 +171,7 @@ public:
   virtual Void codeSaoMergeUp      ( UInt   uiCode) = 0;
   virtual Void codeSaoTypeIdx      ( UInt   uiCode) = 0;
   virtual Void codeSaoUflc         ( UInt   uiCode) = 0;
+#endif
   virtual Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType) = 0;
   
   virtual Void updateContextTables ( SliceType eSliceType, Int iQp, Bool bExecuteFinish )   = 0;
@@ -315,10 +323,15 @@ public:
                         int **FilterCoeff, int kMinTab[]);
   Int golombEncode(int coeff, int k);
   Int lengthGolomb(int coeffVal, int k);
+#if LGE_SAO_MIGRATION_D0091
+  Void    encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx);
+  Void    encodeSaoUnitInterleaving(Int compIdx, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
+#else
   Void    encodeSaoUnit(Int rx, Int ry, Int compIdx, SAOParam* saoParam, Int repeatedRow);
   Void    encodeSaoOffset(SaoLcuParam* saoLcuParam);
   Void    encodeSaoUnitInterleaving(Int rx, Int ry, SAOParam* saoParam, TComDataCU* cu, Int cuAddrInSlice, Int cuAddrUpInSlice, Bool lfCrossSliceBoundaryFlag);
   Void    encodeSaoParam         (TComAPS*  aps);
+#endif
 
   static Int countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize );
 

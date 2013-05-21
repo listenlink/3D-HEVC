@@ -179,9 +179,11 @@ public:
 #endif
 protected:
   Void  xParseDblParam       ( TComAPS* aps );
+#if !LGE_SAO_MIGRATION_D0091
   Void  xParseSaoParam       ( SAOParam* pSaoParam );
   Void  xParseSaoOffset      (SaoLcuParam* saoLcuParam);
   Void  xParseSaoUnit        (Int rx, Int ry, Int compIdx, SAOParam* saoParam, Bool& repeatedRow );
+#endif
   Void  xParseAlfParam(AlfParamSet* pAlfParamSet, Bool bSentInAPS = true, Int firstLCUAddr = 0, Bool acrossSlice = true, Int numLCUInWidth= -1, Int numLCUInHeight= -1);
   Void  parseAlfParamSet(AlfParamSet* pAlfParamSet, Int firstLCUAddr, Bool alfAcrossSlice);
   Void  parseAlfFixedLengthRun(UInt& idx, UInt rx, UInt numLCUInWidth);

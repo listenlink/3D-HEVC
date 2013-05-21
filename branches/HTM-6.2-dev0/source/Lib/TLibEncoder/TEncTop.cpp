@@ -102,7 +102,12 @@ Void TEncTop::create ()
   m_cCuEncoder.         create( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight );
   if (m_bUseSAO)
   {
+#if LGE_SAO_MIGRATION_D0091
+    m_cEncSAO.setSaoLcuBoundary(getSaoLcuBoundary());
+    m_cEncSAO.setSaoLcuBasedOptimization(getSaoLcuBasedOptimization());
+#else
     m_cEncSAO.setSaoInterleavingFlag(getSaoInterleavingFlag());
+#endif
     m_cEncSAO.setMaxNumOffsetsPerPic(getMaxNumOffsetsPerPic());
     m_cEncSAO.create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
     m_cEncSAO.createEncBuffer();
@@ -707,6 +712,14 @@ Void TEncTop::xInitSPS()
 #endif
 #if HHI_MPI
   m_cSPS.setUseMVI( m_bUseMVI );
+#endif
+
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  m_cSPS.setUseVSPCompensation           ( m_bUseVSPCompensation );
+#endif
+  m_cSPS.setUseDVPRefine                 ( m_bUseDVPRefine       );
 #endif
 
   if( m_isDepth )

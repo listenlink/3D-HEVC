@@ -159,7 +159,12 @@ protected:
   Bool      m_bUseIVS;
 #endif
   Int       m_maxNumOffsetsPerPic;
+#if LGE_SAO_MIGRATION_D0091
+  Bool      m_saoLcuBoundary;
+  Bool      m_saoLcuBasedOptimization;
+#else
   Bool      m_saoInterleavingFlag;
+#endif
 
   //====== Lossless ========
 #if LOSSLESS_CODING
@@ -338,6 +343,13 @@ protected:
 #else
   UInt        m_uiMultiviewResPredMode;
 #endif
+#endif
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_bUseVSPCompensation;
+#endif
+  Bool      m_bUseDVPRefine;
 #endif
 
 public:
@@ -672,8 +684,15 @@ public:
 #endif
   Void  setMaxNumOffsetsPerPic                   (Int iVal)            { m_maxNumOffsetsPerPic = iVal; }
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
+#if LGE_SAO_MIGRATION_D0091
+  Void  setSaoLcuBoundary              (Bool val)      { m_saoLcuBoundary = val; }
+  Bool  getSaoLcuBoundary              ()              { return m_saoLcuBoundary; }
+  Void  setSaoLcuBasedOptimization               (Bool val)            { m_saoLcuBasedOptimization = val; }
+  Bool  getSaoLcuBasedOptimization               ()                    { return m_saoLcuBasedOptimization; }
+#else
   Void  setSaoInterleavingFlag                   (bool bVal)           { m_saoInterleavingFlag = bVal; }
   Bool  getSaoInterleavingFlag                   ()                    { return m_saoInterleavingFlag; }
+#endif
   Void  setTileBehaviorControlPresentFlag        ( Int i )             { m_iTileBehaviorControlPresentFlag = i;    }
   Int   getTileBehaviorControlPresentFlag        ()                    { return m_iTileBehaviorControlPresentFlag; }
   Void  setLFCrossTileBoundaryFlag               ( Bool   bValue  )    { m_bLFCrossTileBoundaryFlag = bValue; }
@@ -819,6 +838,18 @@ public:
 
 #if INTER_VIEW_VECTOR_SCALING_C0115
   Int       getViewOrderIdx                 ()      { return  m_iViewOrderIdx; }    // will be changed to view_id
+#endif
+
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( ){  return m_bUseVSPCompensation;}
+  Void    setUseVSPCompensation( Bool bValue ){ m_bUseVSPCompensation = bValue;}
+#endif
+
+
+  Bool    getUseDVPRefine( ){  return m_bUseDVPRefine;}
+  Void    setUseDVPRefine( Bool bValue ){ m_bUseDVPRefine = bValue;}
 #endif
 
 };

@@ -179,6 +179,14 @@ private:
 #if INTER_VIEW_VECTOR_SCALING_C0115
   Bool          m_bIVScalingFlag;
 #endif
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_abUseVSPCompensation[ MAX_TLAYER ];
+#endif
+  Bool      m_abUseDVPRefine[ MAX_TLAYER ];
+#endif
+
 public:
   TComVPS();
   virtual ~TComVPS();
@@ -244,6 +252,15 @@ public:
   UInt    getNumOpLayerId               (UInt layer, UInt OpId        )                     { return m_numOpLayerId[layer][OpId];}
   
 #endif 
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( UInt tLayer ){  return m_abUseVSPCompensation[ tLayer ];}
+  Void    setUseVSPCompensation( Bool bValue, UInt tLayer ){ m_abUseVSPCompensation[ tLayer ] = bValue;}
+#endif
+  Bool    getUseDVPRefine( UInt tLayer ){  return m_abUseDVPRefine[ tLayer ];}
+  Void    setUseDVPRefine( Bool bValue, UInt tLayer ){ m_abUseDVPRefine[ tLayer ] = bValue;}
+#endif
 };
 
 #endif
@@ -402,6 +419,13 @@ private:
 #endif
 #if H3D_IVRP & !QC_ARP_D0177
   TComResidualGenerator* m_pcResidualGenerator;
+#endif
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_bUseVSPCompensation;
+#endif
+  Bool      m_bUseDVPRefine;
 #endif
 
 public:
@@ -680,6 +704,18 @@ public:
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
 #endif
+
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( ){  return m_bUseVSPCompensation;}
+  Void    setUseVSPCompensation( Bool bValue ){ m_bUseVSPCompensation = bValue;}
+#endif
+
+  Bool    getUseDVPRefine( ){  return m_bUseDVPRefine;}
+  Void    setUseDVPRefine( Bool bValue ){ m_bUseDVPRefine = bValue;}
+
+#endif
 };
 
 
@@ -939,8 +975,10 @@ public:
   Void      setScalingListEnabled (Bool bVal) { m_scalingListEnabled = bVal; }  //!< set ScalingList enabled/disabled in APS
   Bool      getScalingListEnabled ()          { return m_scalingListEnabled; }  //!< get ScalingList enabled/disabled in APS
   TComScalingList* getScalingList ()          { return m_scalingList; }         //!< get ScalingList class pointer in APS
+#if !LGE_SAO_MIGRATION_D0091
   Bool     getSaoInterleavingFlag() {return m_saoInterleavingFlag;}             //!< get SAO interleaving flag in APS
   Void     setSaoInterleavingFlag(Bool bVal) {m_saoInterleavingFlag = bVal;}    //!< set SAO interleaving flag in APS
+#endif
 
 private:
   Int         m_apsID;        //!< APS ID
@@ -954,7 +992,9 @@ private:
   Int         m_loopFilterTcOffsetDiv2;      //< tc offset for deblocking filter
   Bool        m_scalingListEnabled;     //!< ScalingList enabled/disabled in APS (true for enabled)
   TComScalingList*     m_scalingList;   //!< ScalingList class pointer
+#if !LGE_SAO_MIGRATION_D0091
   Bool        m_saoInterleavingFlag;    //!< SAO interleaving flag
+#endif
 
 public:
   TComAPS& operator= (const TComAPS& src);  //!< "=" operator for APS object
@@ -986,9 +1026,13 @@ private:
   Int         m_iAPSId; //!< APS ID in slice header
   bool       m_alfEnabledFlag;
   bool       m_saoEnabledFlag;
+#if LGE_SAO_MIGRATION_D0091
+  bool       m_saoEnabledFlagChroma;      ///< SAO Cb&Cr enabled flag
+#else
   bool       m_saoInterleavingFlag;   ///< SAO interleaving flag
   bool       m_saoEnabledFlagCb;      ///< SAO Cb enabled flag
   bool       m_saoEnabledFlagCr;      ///< SAO Cr enabled flag
+#endif
   Int         m_iPPSId;               ///< picture parameter set ID
   Bool        m_PicOutputFlag;        ///< pic_output_flag 
   Int         m_iPOC;
@@ -1117,6 +1161,9 @@ private:
 
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Bool        m_icSkipParseFlag;
+#endif
 #endif
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
   TComList<TComPic*>*  m_pcListDepthPic[MAX_VIEW_NUM]; // For encoder, the list may also include texture pictures. Three views with ViewIdx = 0, 1, 2
@@ -1180,12 +1227,17 @@ public:
   Bool      getAlfEnabledFlag() { return m_alfEnabledFlag; }
   Void      setSaoEnabledFlag(Bool s) {m_saoEnabledFlag =s; }
   Bool      getSaoEnabledFlag() { return m_saoEnabledFlag; }
+#if LGE_SAO_MIGRATION_D0091
+  Void      setSaoEnabledFlagChroma(Bool s) {m_saoEnabledFlagChroma =s; }       //!< set SAO Cb&Cr enabled flag
+  Bool      getSaoEnabledFlagChroma() { return m_saoEnabledFlagChroma; }        //!< get SAO Cb&Cr enabled flag
+#else
   Void      setSaoInterleavingFlag(Bool s) {m_saoInterleavingFlag =s; } //!< set SAO interleaving flag
   Bool      getSaoInterleavingFlag() { return m_saoInterleavingFlag;  } //!< get SAO interleaving flag
   Void      setSaoEnabledFlagCb(Bool s) {m_saoEnabledFlagCb =s; }       //!< set SAO Cb enabled flag
   Bool      getSaoEnabledFlagCb() { return m_saoEnabledFlagCb; }        //!< get SAO Cb enabled flag
   Void      setSaoEnabledFlagCr(Bool s) {m_saoEnabledFlagCr =s; }       //!< set SAO Cr enabled flag
   Bool      getSaoEnabledFlagCr() { return m_saoEnabledFlagCr; }        //!< get SAO Cr enabled flag
+#endif
   Void      setRPS          ( TComReferencePictureSet *pcRPS ) { m_pcRPS = pcRPS; }
   TComReferencePictureSet*  getRPS          () { return m_pcRPS; }
   TComReferencePictureSet*  getLocalRPS     () { return &m_LocalRPS; }
@@ -1428,6 +1480,10 @@ public:
   Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
   Bool      getApplyIC            ()  { return m_bApplyIC; }
   Void      xSetApplyIC           ();
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Void      setIcSkipParseFlag( Bool b ) { m_icSkipParseFlag = b; }
+  Bool      getIcSkipParseFlag() { return m_icSkipParseFlag; }
+#endif
 #endif
 #if QC_TMVP_MRG_REFIDX_C0047
   Int       getNewRefIdx        ( RefPicList e )                { return  m_aiNewRefIdx[e];     }

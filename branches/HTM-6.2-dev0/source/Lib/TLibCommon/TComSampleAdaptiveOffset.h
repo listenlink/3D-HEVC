@@ -64,12 +64,16 @@ protected:
   TComPic*          m_pcPic;
 
   static UInt m_uiMaxDepth;
+#if !LGE_SAO_MIGRATION_D0091
   static const Int m_aiNumPartsInRow[5];
   static const Int m_aiNumPartsLevel[5];
+#endif
   static const Int m_aiNumCulPartsLevel[5];
   static const UInt m_auiEoTable[9];
+#if !LGE_SAO_MIGRATION_D0091
   static const UInt m_auiEoTable2D[9];
   static const UInt m_iWeightSao[MAX_NUM_SAO_TYPE];
+#endif
   Int *m_iOffsetBo;
   Int m_iOffsetEo[LUMA_GROUP_NUM];
 
@@ -106,7 +110,16 @@ protected:
   Pel* m_pTmpL2;
   Int* m_iLcuPartIdx;
   Int     m_maxNumOffsetsPerPic;
+#if LGE_SAO_MIGRATION_D0091
+  Bool    m_saoLcuBoundary;
+  Bool    m_saoLcuBasedOptimization;
+
+  Void xPCMRestoration        (TComPic* pcPic);
+  Void xPCMCURestoration      (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth);
+  Void xPCMSampleRestoration  (TComDataCU* pcCU, UInt uiAbsZorderIdx, UInt uiDepth, TextType ttText);
+#else
   Bool    m_saoInterleavingFlag;
+#endif
 public:
   TComSampleAdaptiveOffset         ();
   virtual ~TComSampleAdaptiveOffset();
@@ -115,17 +128,26 @@ public:
   Void destroy ();
 
   Int  convertLevelRowCol2Idx(int level, int row, int col);
+#if !LGE_SAO_MIGRATION_D0091
   void convertIdx2LevelRowCol(int idx, int *level, int *row, int *col);
+#endif
 
   Void initSAOParam   (SAOParam *pcSaoParam, Int iPartLevel, Int iPartRow, Int iPartCol, Int iParentPartIdx, Int StartCUX, Int EndCUX, Int StartCUY, Int EndCUY, Int iYCbCr);
   Void allocSaoParam  (SAOParam* pcSaoParam);
   Void resetSAOParam  (SAOParam *pcSaoParam);
+#if LGE_SAO_MIGRATION_D0091
+  static Void freeSaoParam   (SAOParam *pcSaoParam);
+#else
   Void freeSaoParam   (SAOParam *pcSaoParam);
+#endif
+  
 
   Void SAOProcess(TComPic* pcPic, SAOParam* pcSaoParam);
   Void processSaoCu(Int iAddr, Int iSaoType, Int iYCbCr);
+#if !LGE_SAO_MIGRATION_D0091
   Void processSaoOnePart(SAOQTPart *psQTPart, UInt uiPartIdx, Int iYCbCr);
   Void processSaoQuadTree(SAOQTPart *psQTPart, UInt uiPartIdx, Int iYCbCr);
+#endif
   Pel* getPicYuvAddr(TComPicYuv* pcPicYuv, Int iYCbCr,Int iAddr = 0);
 
   Void processSaoCuOrg(Int iAddr, Int iPartIdx, Int iYCbCr);  //!< LCU-basd SAO process without slice granularity 
@@ -137,8 +159,18 @@ public:
   Void convertQT2SaoUnit(SAOParam* saoParam, UInt partIdx, Int yCbCr);
   Void convertOnePart2SaoUnit(SAOParam *saoParam, UInt partIdx, Int yCbCr);
   Void processSaoUnitAll(SaoLcuParam* saoLcuParam, Bool oneUnitFlag, Int yCbCr);
+#if LGE_SAO_MIGRATION_D0091
+  Void setSaoLcuBoundary (Bool bVal)  {m_saoLcuBoundary = bVal;}
+  Bool getSaoLcuBoundary ()           {return m_saoLcuBoundary;}
+  Void setSaoLcuBasedOptimization (Bool bVal)  {m_saoLcuBasedOptimization = bVal;}
+  Bool getSaoLcuBasedOptimization ()           {return m_saoLcuBasedOptimization;}
+  Void resetSaoUnit(SaoLcuParam* saoUnit);
+  Void copySaoUnit(SaoLcuParam* saoUnitDst, SaoLcuParam* saoUnitSrc );
+  Void PCMLFDisableProcess    ( TComPic* pcPic);                        ///< interface function for ALF process 
+#else
   Void setSaoInterleavingFlag (Bool bVal)  {m_saoInterleavingFlag = bVal;}
   Bool getSaoInterleavingFlag ()           {return m_saoInterleavingFlag;}
+#endif
 };
 
 //! \}

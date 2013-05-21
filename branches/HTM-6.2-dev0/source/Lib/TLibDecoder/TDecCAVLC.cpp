@@ -264,6 +264,7 @@ Void TDecCavlc::parseAPS(TComAPS* aps)
   {
     xParseDblParam( aps );    
   }
+#if !LGE_SAO_MIGRATION_D0091
   READ_FLAG(uiCode, "aps_sao_interleaving_flag");      aps->setSaoInterleavingFlag( (uiCode==1)?true:false );
   if(!aps->getSaoInterleavingFlag())
   {
@@ -274,6 +275,7 @@ Void TDecCavlc::parseAPS(TComAPS* aps)
     xParseSaoParam( aps->getSaoParam() );
   }
   }
+#endif
   READ_FLAG(uiCode, "aps_adaptive_loop_filter_flag");      aps->setAlfEnabled( (uiCode==1)?true:false );
   if(aps->getAlfEnabled())
   {
@@ -306,6 +308,7 @@ Void  TDecCavlc::xParseDblParam       ( TComAPS* aps )
     aps->setLoopFilterTcOffset(iSymbol);
   }
 }
+#if !LGE_SAO_MIGRATION_D0091
 /** parse SAO parameters
  * \param pSaoParam
  */
@@ -531,7 +534,7 @@ void TDecCavlc::xParseSaoUnit(Int rx, Int ry, Int compIdx, SAOParam* saoParam, B
     }
   }
 }
-
+#endif
 
 Void TDecCavlc::xParseAlfParam(AlfParamSet* pAlfParamSet, Bool bSentInAPS, Int firstLCUAddr, Bool acrossSlice, Int numLCUInWidth, Int numLCUInHeight)
 {
@@ -1622,6 +1625,18 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
 
       }
+
+#if MTK_D0156
+
+      pcSPS->setUseVSPCompensation( false );
+      pcSPS->setUseDVPRefine( false );
+
+      //Comments: Currently, BVSP and DoNBDV are not used for depth coding
+#if MERL_VSP_COMPENSATION_C0152
+      READ_FLAG( uiCode, "view_synthesis_pred_flag" );pcSPS->setUseVSPCompensation( uiCode ? true : false );
+#endif
+      READ_FLAG( uiCode, "dv_refine_flag" );          pcSPS->setUseDVPRefine( uiCode ? true : false );
+#endif
     }
     READ_FLAG( uiCode, "sps_extension2_flag");
     if (uiCode)
@@ -1685,6 +1700,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_FLAG (uiCodeTmp, "applying IC flag");
     }
     rpcSlice->setApplyIC(uiCodeTmp);
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (rpcSlice->getApplyIC())
+    {
+      READ_FLAG (uiCodeTmp, "ic_skip_mergeidx0");
+      rpcSlice->setIcSkipParseFlag(uiCodeTmp);
+    }
+#endif
   }
 #endif
 
@@ -1867,6 +1889,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       if (sps->getUseSAO())
       {
+#if LGE_SAO_MIGRATION_D0091
+        READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
+        READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
+#else
         READ_FLAG(uiCode, "slice_sao_interleaving_flag");        rpcSlice->setSaoInterleavingFlag(uiCode);
         READ_FLAG(uiCode, "slice_sample_adaptive_offset_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
         if (rpcSlice->getSaoEnabledFlag() && rpcSlice->getSaoInterleavingFlag())
@@ -1879,6 +1905,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
           rpcSlice->setSaoEnabledFlagCb(0);
           rpcSlice->setSaoEnabledFlagCr(0);
         }
+#endif
       }
       READ_UVLC (    uiCode, "aps_id" );  rpcSlice->setAPSId(uiCode);
     }

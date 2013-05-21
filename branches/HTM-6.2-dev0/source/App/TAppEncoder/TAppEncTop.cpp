@@ -229,6 +229,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setMultiviewResPredMode         ( m_uiMultiviewResPredMode );
 #endif
 #endif
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+    m_acTEncTopList[iViewIdx]->setUseVSPCompensation           ( iViewIdx ? m_bUseVSPCompensation : 0 );
+#endif
+    m_acTEncTopList[iViewIdx]->setUseDVPRefine                  ( iViewIdx ? m_bUseDVPRefine : 0 );
+#endif
 
   //====== Tool list ========
     m_acTEncTopList[iViewIdx]->setUseSBACRD                    ( m_bUseSBACRD   );
@@ -307,7 +313,12 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncTopList[iViewIdx]->setUseIVS               ( m_bUseIVS          );
 #endif
     m_acTEncTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
+#if LGE_SAO_MIGRATION_D0091
+    m_acTEncTopList[iViewIdx]->setSaoLcuBoundary (m_saoLcuBoundary);
+    m_acTEncTopList[iViewIdx]->setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
+#else
     m_acTEncTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
+#endif
     m_acTEncTopList[iViewIdx]->setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
     m_acTEncTopList[iViewIdx]->setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
@@ -572,6 +583,14 @@ Void TAppEncTop::xInitLibCfg()
     m_acTEncDepthTopList[iViewIdx]->setMultiviewResPredMode         ( 0 );
 #endif
 #endif
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+      m_acTEncDepthTopList[iViewIdx]->setUseVSPCompensation           ( iViewIdx ? true : false );
+#endif
+
+      m_acTEncDepthTopList[iViewIdx]->setUseDVPRefine                 ( iViewIdx ? true : false );
+#endif
 
       //====== Weighted Prediction ========
       m_acTEncDepthTopList[iViewIdx]->setUseWP                        ( m_bUseWeightPred      );
@@ -614,7 +633,12 @@ Void TAppEncTop::xInitLibCfg()
      m_acTEncDepthTopList[iViewIdx]->setUseIVS                ( m_bUseIVS );
 #endif
       m_acTEncDepthTopList[iViewIdx]->setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
+#if LGE_SAO_MIGRATION_D0091
+      m_acTEncDepthTopList[iViewIdx]->setSaoLcuBoundary (m_saoLcuBoundary);
+      m_acTEncDepthTopList[iViewIdx]->setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
+#else
       m_acTEncDepthTopList[iViewIdx]->setSaoInterleavingFlag (m_saoInterleavingFlag);
+#endif
       m_acTEncDepthTopList[iViewIdx]->setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
       m_acTEncDepthTopList[iViewIdx]->setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
