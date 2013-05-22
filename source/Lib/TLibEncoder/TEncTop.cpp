@@ -102,7 +102,12 @@ Void TEncTop::create ()
   m_cCuEncoder.         create( g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight );
   if (m_bUseSAO)
   {
+#if LGE_SAO_MIGRATION_D0091
+    m_cEncSAO.setSaoLcuBoundary(getSaoLcuBoundary());
+    m_cEncSAO.setSaoLcuBasedOptimization(getSaoLcuBasedOptimization());
+#else
     m_cEncSAO.setSaoInterleavingFlag(getSaoInterleavingFlag());
+#endif
     m_cEncSAO.setMaxNumOffsetsPerPic(getMaxNumOffsetsPerPic());
     m_cEncSAO.create( getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
     m_cEncSAO.createEncBuffer();
@@ -119,7 +124,7 @@ Void TEncTop::create ()
 #if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement, PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_cResidualGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
 #endif
 
@@ -250,7 +255,7 @@ Void TEncTop::destroy ()
 #if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator. destroy();
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_cResidualGenerator. destroy();
 #endif
 
@@ -346,7 +351,7 @@ Void TEncTop::init( TAppEncTop* pcTAppEncTop )
   m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
 #endif
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
 #endif
 
@@ -709,6 +714,14 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseMVI( m_bUseMVI );
 #endif
 
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  m_cSPS.setUseVSPCompensation           ( m_bUseVSPCompensation );
+#endif
+  m_cSPS.setUseDVPRefine                 ( m_bUseDVPRefine       );
+#endif
+
   if( m_isDepth )
   {
 #if FCO_FIX_SPS_CHANGE
@@ -721,8 +734,14 @@ Void TEncTop::xInitSPS()
     m_cSPS.setPredDepthMapGeneration( m_viewId, true );
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+    m_cSPS.setUseAdvRP              ( 0 );
+    m_cSPS.setARPStepNum            ( 1 );
+#else
     m_cSPS.setMultiviewResPredMode  ( 0 );
 #endif
+#endif
+
   }
   else
   {
@@ -741,7 +760,12 @@ Void TEncTop::xInitSPS()
 #endif
 #endif
 #if H3D_IVRP
-      m_cSPS.setMultiviewResPredMode  ( m_uiMultiviewResPredMode );
+#if QC_ARP_D0177
+     m_cSPS.setUseAdvRP  ( m_viewId > 0   ? m_nUseAdvResPred : 0 );
+     m_cSPS.setARPStepNum( m_viewId > 0   ? QC_ARP_WFNR      : 1 );
+#else
+     m_cSPS.setMultiviewResPredMode  ( m_uiMultiviewResPredMode );
+#endif
 #endif
     }
     else
@@ -750,7 +774,12 @@ Void TEncTop::xInitSPS()
       m_cSPS.setPredDepthMapGeneration( m_viewId, false );
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+      m_cSPS.setUseAdvRP              ( 0 );
+      m_cSPS.setARPStepNum            ( 1 );
+#else
       m_cSPS.setMultiviewResPredMode  ( 0 );
+#endif
 #endif
     }
   }

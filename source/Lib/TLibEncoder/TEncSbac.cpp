@@ -72,6 +72,9 @@ TEncSbac::TEncSbac()
 #if H3D_IVRP
 , m_cResPredFlagSCModel       ( 1,             1,               NUM_RES_PRED_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if QC_ARP_D0177
+, m_cCUPUARPW                 ( 1,             1,               NUM_ARPW_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAlfCtrlFlagSCModel     ( 1,             1,               NUM_ALF_CTRL_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
@@ -95,12 +98,17 @@ TEncSbac::TEncSbac()
 , m_cALFUvlcSCModel           ( 1,             1,               NUM_ALF_UVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cALFSvlcSCModel           ( 1,             1,               NUM_ALF_SVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAMPSCModel             ( 1,             1,               NUM_CU_AMP_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
+#if LGE_SAO_MIGRATION_D0091
+, m_cSaoMergeSCModel          ( 1,             1,               NUM_SAO_MERGE_FLAG_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSaoTypeIdxSCModel        ( 1,             1,               NUM_SAO_TYPE_IDX_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+#else
 , m_cSaoFlagSCModel           ( 1,             1,               NUM_SAO_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoUvlcSCModel           ( 1,             1,               NUM_SAO_UVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoSvlcSCModel           ( 1,             1,               NUM_SAO_SVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoMergeLeftSCModel      ( 1,             1,               NUM_SAO_MERGE_LEFT_FLAG_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoMergeUpSCModel        ( 1,             1,               NUM_SAO_MERGE_UP_FLAG_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoTypeIdxSCModel        ( 1,             1,               NUM_SAO_TYPE_IDX_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_cDmmFlagSCModel           ( 1,             1,               NUM_DMM_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmModeSCModel           ( 1,             1,               NUM_DMM_MODE_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
@@ -157,6 +165,9 @@ Void TEncSbac::resetEntropy           ()
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_RES_PRED_FLAG );
 #endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
+#endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
@@ -179,12 +190,17 @@ Void TEncSbac::resetEntropy           ()
   m_cALFUvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_ALF_UVLC );
   m_cALFSvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_ALF_SVLC );
   m_cCUTransSubdivFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
+#if LGE_SAO_MIGRATION_D0091
+  m_cSaoMergeSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_FLAG );
+  m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
+#else
   m_cSaoFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_FLAG );
   m_cSaoUvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_UVLC );
   m_cSaoSvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_SVLC );
   m_cSaoMergeLeftSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_LEFT_FLAG );
   m_cSaoMergeUpSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_UP_FLAG );
   m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
+#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cDmmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_FLAG );
   m_cDmmModeSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_MODE );
@@ -265,12 +281,17 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cALFUvlcSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_ALF_UVLC );
       curCost += m_cALFSvlcSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_ALF_SVLC );
       curCost += m_cCUTransSubdivFlagSCModel.calcCost ( curSliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
+#if LGE_SAO_MIGRATION_D0091
+      curCost += m_cSaoMergeSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_SAO_MERGE_FLAG );
+      curCost += m_cSaoTypeIdxSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_SAO_TYPE_IDX );
+#else
       curCost += m_cSaoFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_SAO_FLAG );
       curCost += m_cSaoUvlcSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_SAO_UVLC );
       curCost += m_cSaoSvlcSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_SAO_SVLC );
       curCost += m_cSaoMergeLeftSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_SAO_MERGE_LEFT_FLAG );
       curCost += m_cSaoMergeUpSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_SAO_MERGE_UP_FLAG );
       curCost += m_cSaoTypeIdxSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_SAO_TYPE_IDX );
+#endif
 
       if (curCost < bestCost)
       {
@@ -310,6 +331,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_RES_PRED_FLAG );
 #endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
+#endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
@@ -332,12 +356,17 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cALFUvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_ALF_UVLC );
   m_cALFSvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_ALF_SVLC );
   m_cCUTransSubdivFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
+#if LGE_SAO_MIGRATION_D0091
+  m_cSaoMergeSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_FLAG );
+  m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
+#else
   m_cSaoFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_FLAG );
   m_cSaoUvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_UVLC );
   m_cSaoSvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_SVLC );
   m_cSaoMergeLeftSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_LEFT_FLAG );
   m_cSaoMergeUpSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_UP_FLAG );
   m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
+#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cDmmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_FLAG );
   m_cDmmModeSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_MODE );
@@ -839,7 +868,24 @@ TEncSbac::codeResPredFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcBinIf->encodeBin( uiSymbol, m_cResPredFlagSCModel.get( 0, 0, uiCtx ) );
 }
 #endif
-
+#if QC_ARP_D0177
+Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  Int nW = pcCU->getARPW( uiAbsPartIdx );
+  Int nMaxW = pcCU->getSlice()->getARPStepNum() - 1;
+  assert( 0 <= nW && nW <= nMaxW );
+  assert(nMaxW > 0);
+  if( nMaxW > 0 )
+  {
+    Int nOffset = pcCU->getCTXARPWFlag(uiAbsPartIdx);
+    assert( 0 <= nOffset && nOffset <= 2 );
+    Int nBinNum = nW + ( nW != nMaxW );
+    m_pcBinIf->encodeBin( nW != 0 , m_cCUPUARPW.get( 0, 0, 0 + nOffset ) );
+    if( nBinNum > 1 )
+       m_pcBinIf->encodeBin( nW == nMaxW , m_cCUPUARPW.get( 0, 0, 3 ) );
+  }
+}
+#endif
 Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
@@ -1886,7 +1932,79 @@ Void TEncSbac::codeAlfSvlc       ( Int iCode )
     m_pcBinIf->encodeBin( 0, m_cALFSvlcSCModel.get( 0, 0, 2 ) );
   }
 }
+#if LGE_SAO_MIGRATION_D0091
+Void TEncSbac::codeSAOSign( UInt code )
+{
+  m_pcBinIf->encodeBinEP( code );
+}
 
+Void TEncSbac::codeSaoMaxUvlc    ( UInt code, UInt maxSymbol )
+{
+  if (maxSymbol == 0)
+  {
+    return;
+  }
+
+  Int i;
+  Bool bCodeLast = ( maxSymbol > code );
+
+  if ( code == 0 )
+  {
+    m_pcBinIf->encodeBinEP( 0 );
+  }
+  else
+  {
+    m_pcBinIf->encodeBinEP( 1 );
+    for ( i=0; i<code-1; i++ )
+    {
+      m_pcBinIf->encodeBinEP( 1 );
+    }
+    if( bCodeLast )
+    {
+      m_pcBinIf->encodeBinEP( 0 );
+    }
+  }
+}
+
+/** Code SAO EO class or BO band position 
+ * \param uiLength
+ * \param uiCode
+ */
+Void TEncSbac::codeSaoUflc       ( UInt uiLength, UInt uiCode )
+{
+   m_pcBinIf->encodeBinsEP ( uiCode, uiLength );
+}
+/** Code SAO merge flags
+ * \param uiCode
+ * \param uiCompIdx
+ */
+Void TEncSbac::codeSaoMerge       ( UInt uiCode )
+{
+  if (uiCode == 0)
+  {
+    m_pcBinIf->encodeBin(0,  m_cSaoMergeSCModel.get( 0, 0, 0 ));
+  }
+  else
+  {
+    m_pcBinIf->encodeBin(1,  m_cSaoMergeSCModel.get( 0, 0, 0 ));
+  }
+}
+/** Code SAO type index 
+ * \param uiCode
+ */
+Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
+{
+  if (uiCode == 0)
+  {
+    m_pcBinIf->encodeBin( 0, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
+  }
+  else
+  {
+    m_pcBinIf->encodeBin( 1, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
+    m_pcBinIf->encodeBinEP( uiCode <= 4 ? 1 : 0 ); //determine edge or band
+  }
+}
+#else
 Void TEncSbac::codeSaoFlag       ( UInt uiCode )
 {
   UInt uiSymbol = ( ( uiCode == 0 ) ? 0 : 1 );
@@ -2002,6 +2120,7 @@ Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
     m_pcBinIf->encodeBin( 0, m_cSaoTypeIdxSCModel.get( 0, 0, 1 ) );
   }
 }
+#endif
 /*!
  ****************************************************************************
  * \brief

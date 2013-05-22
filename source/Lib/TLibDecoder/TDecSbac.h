@@ -109,6 +109,14 @@ public:
   Void  parseMVPIdx               ( Int& riMVPIdx          );
 #endif
   
+#if LGE_SAO_MIGRATION_D0091
+  Void  parseSaoMaxUvlc           ( UInt& val, UInt maxSymbol );
+  Void  parseSaoMerge             ( UInt&  ruiVal   );
+  Void  parseSaoTypeIdx           ( UInt&  ruiVal  );
+  Void  parseSaoUflc              ( UInt uiLength, UInt& ruiVal     );
+  Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
+  Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam, UInt compIdx);
+#else
   Void  parseSaoUvlc              ( UInt& ruiVal           );
   Void  parseSaoSvlc              ( Int&  riVal            );
   Void  parseSaoMergeLeft         ( UInt&  ruiVal, UInt uiCompIdx   );
@@ -117,6 +125,7 @@ public:
   Void  parseSaoUflc              ( UInt& ruiVal           );
   Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Bool bLFCrossSliceBoundaryFlag);
   Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam);
+#endif
   
 #if RWTH_SDC_DLT_B0036
   Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -175,6 +184,9 @@ public:
 #if H3D_IVRP
   Void parseResPredFlag   ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
+#if QC_ARP_D0177
+  Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
@@ -218,6 +230,9 @@ private:
 #if H3D_IVRP
   ContextModel3DBuffer m_cResPredFlagSCModel;
 #endif
+#if QC_ARP_D0177
+  ContextModel3DBuffer m_cCUPUARPW;
+#endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
   ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
@@ -244,12 +259,17 @@ private:
   ContextModel3DBuffer m_cALFUvlcSCModel;
   ContextModel3DBuffer m_cALFSvlcSCModel;
   ContextModel3DBuffer m_cCUAMPSCModel;
+#if LGE_SAO_MIGRATION_D0091
+  ContextModel3DBuffer m_cSaoMergeSCModel;
+  ContextModel3DBuffer m_cSaoTypeIdxSCModel;
+#else
   ContextModel3DBuffer m_cSaoFlagSCModel;
   ContextModel3DBuffer m_cSaoUvlcSCModel;
   ContextModel3DBuffer m_cSaoSvlcSCModel;
   ContextModel3DBuffer m_cSaoMergeLeftSCModel;
   ContextModel3DBuffer m_cSaoMergeUpSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
+#endif
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   ContextModel3DBuffer m_cDmmFlagSCModel;

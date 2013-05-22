@@ -141,6 +141,13 @@ public:
   Void codeAlfCtrlDepth();
   Void codeAPSAlflag(UInt uiCode);
   Void codeAlfFixedLengthIdx( UInt idx, UInt numFilterSetsInBuffer);
+#if LGE_SAO_MIGRATION_D0091
+  Void codeSAOSign       ( UInt code   ) { printf("Not supported\n"); assert (0); }
+  Void codeSaoMaxUvlc    ( UInt   code, UInt maxSymbol ){printf("Not supported\n"); assert (0);}
+  Void codeSaoMerge  ( UInt uiCode ){printf("Not supported\n"); assert (0);}
+  Void codeSaoTypeIdx    ( UInt uiCode ){printf("Not supported\n"); assert (0);}
+  Void codeSaoUflc       ( UInt uiLength, UInt   uiCode ){ assert(uiCode < 32); printf("Not supported\n"); assert (0);}
+#else
   Void codeSaoFlag       ( UInt uiCode );
   Void codeSaoUvlc       ( UInt uiCode );
   Void codeSaoSvlc       ( Int   iCode );
@@ -149,6 +156,7 @@ public:
   Void codeSaoMergeUp    ( UInt uiCode ){;}
   Void codeSaoTypeIdx    ( UInt uiCode ){ xWriteUvlc(uiCode   );}
   Void codeSaoUflc       ( UInt uiCode ){ assert(uiCode < 32); xWriteCode(uiCode, 5);}
+#endif
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if LGE_ILLUCOMP_B0045
@@ -158,6 +166,9 @@ public:
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if H3D_IVRP
   Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+#if QC_ARP_D0177
+  virtual Void codeARPW ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 

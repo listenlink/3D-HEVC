@@ -105,10 +105,16 @@ private:
   // Data temporarily stored, will be sent to TComSlice level where the data will be actually used
   TComPic* m_pPicBaseTxt;
   TComPic* m_pPicBaseDepth;
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Int*     m_aiShiftLUT[2]; ///< For reference views from LIST0 and LIST1
+#else
   Int*     m_aiShiftLUT;
+#endif
   Int      m_iShiftPrec;
 #endif
-
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  TComList<TComPic*>*  m_pcListDepthPic[MAX_VIEW_NUM]; ///< For three views in total, indexed as viewId = 0, 1, 2
+#endif
 public:
   TEncSlice();
   virtual ~TEncSlice();
@@ -142,12 +148,24 @@ public:
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
 
 #if MERL_VSP_C0152
-   Void     setBWVSPLUTParam    ( Int *pShiftLUT, Int iLoG2LUTPrec ) { m_aiShiftLUT = pShiftLUT; m_iShiftPrec = 2-iLoG2LUTPrec; }
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Void     setBWVSPLUTParam  ( Int *pShiftLUT, Int iLoG2LUTPrec, Int iNeighborViewId ) { m_aiShiftLUT[iNeighborViewId] = pShiftLUT; m_iShiftPrec = 2-iLoG2LUTPrec; }
+#else
+  Void     setBWVSPLUTParam    ( Int *pShiftLUT, Int iLoG2LUTPrec ) { m_aiShiftLUT = pShiftLUT; m_iShiftPrec = 2-iLoG2LUTPrec; }
+#endif
    Void     setRefPicBaseTxt    ( TComPic*pPicTxt   ) { m_pPicBaseTxt = pPicTxt;    }
    Void     setRefPicBaseDepth  ( TComPic*pPicDepth ) { m_pPicBaseDepth = pPicDepth;}
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+   Void     getBWVSPLUTParam  ( Int*& pShiftLUT, Int& iShiftPrec, Int iNeighborViewId ) { pShiftLUT = m_aiShiftLUT[iNeighborViewId]; iShiftPrec = m_iShiftPrec; }
+#else
    Void     getBWVSPLUTParam    ( Int*& pShiftLUT, Int& iShiftPrec ) { pShiftLUT = m_aiShiftLUT; iShiftPrec = m_iShiftPrec; }
+#endif
    TComPic* getRefPicBaseTxt    () { return m_pPicBaseTxt;   }
    TComPic* getRefPicBaseDepth  () { return m_pPicBaseDepth; }
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+   Void     setListDepthPic     ( TComList<TComPic*>* pListDepthPic, Int viewId ) { m_pcListDepthPic[viewId] = pListDepthPic; }
+   TComList<TComPic*>* getListDepthPic(Int viewId)  { return m_pcListDepthPic[viewId]; }
+#endif
 #endif
 };
 

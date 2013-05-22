@@ -53,6 +53,16 @@ Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )
 {
   if (pcSlice->getSPS()->getUseSAO())
   {
+#if LGE_SAO_MIGRATION_D0091
+    if (pcSlice->getSPS()->getUseSAO())
+    {
+        SAOParam *saoParam = pcSlice->getAPS()->getSaoParam();
+        pcSlice->setSaoEnabledFlag     (saoParam->bSaoFlag[0]);
+        {
+            pcSlice->setSaoEnabledFlagChroma   (saoParam->bSaoFlag[1]);
+        }
+    }
+#else
     pcSlice->setSaoInterleavingFlag(pcSlice->getAPS()->getSaoInterleavingFlag());
     pcSlice->setSaoEnabledFlag     (pcSlice->getAPS()->getSaoParam()->bSaoFlag[0]);
     if (pcSlice->getAPS()->getSaoInterleavingFlag())
@@ -65,6 +75,7 @@ Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )
       pcSlice->setSaoEnabledFlagCb   (0);
       pcSlice->setSaoEnabledFlagCr   (0);
     }
+#endif
   }
 
   m_pcEntropyCoderIf->codeSliceHeader( pcSlice );
@@ -455,6 +466,36 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 }
 
 
+#if QC_ARP_D0177
+Void TEncEntropy::encodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD, UInt uiDepth)
+{
+  if( pcCU->getSlice()->getViewId() == 0 || pcCU->getSlice()->getIsDepth() == true || !pcCU->getSlice()->getARPStepNum() )
+  {
+    return;
+  }
+  assert( pcCU->isIntra( uiAbsPartIdx ) == false );
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  bool bSignalflag[2] = {true, true};
+  if (!(pcCU->getPartitionSize(uiAbsPartIdx)==SIZE_2Nx2N || pcCU->isSkipped(uiAbsPartIdx)))
+  {
+    assert(pcCU->getARPW (uiAbsPartIdx) == 0);
+    bSignalflag[0] = false;
+    bSignalflag[1] = false;
+ }
+  if (!(bSignalflag[0]|| bSignalflag[1]))
+  {
+    assert(pcCU->getARPW (uiAbsPartIdx) == 0);
+    if (uiDepth != -1)
+      pcCU->setARPWSubParts(0, uiAbsPartIdx, uiDepth);
+  }
+  else
+     m_pcEntropyCoderIf->codeARPW( pcCU, uiAbsPartIdx );
+ 
+}
+#endif
 /** parse the fixed length code (smaller than one max value) in ALF
  * \param run: coded value
  * \param rx: cur addr
@@ -1232,6 +1273,9 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
     encodePUWise( pcCU, uiAbsPartIdx, bRD );
+#if QC_ARP_D0177
+    encodeARPW( pcCU , uiAbsPartIdx , bRD );
+#endif
   }
 }
 
@@ -1350,7 +1394,11 @@ Void TEncEntropy::encodeMVPIdxPU( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicLis
   if ( (pcCU->getInterDir( uiAbsPartIdx ) & ( 1 << eRefList )) && (pcCU->getAMVPMode(uiAbsPartIdx) == AM_EXPL) )
   {
 #if H3D_IVMP
+#if SEC_TWO_CANDIDATES_FOR_AMVP_D0122
+    const Int iNumCands = AMVP_MAX_NUM_CANDS;
+#else
     const Int iNumCands = AMVP_MAX_NUM_CANDS + ( pcCU->getSlice()->getSPS()->getMultiviewMvPredMode() ? 1 : 0 );
+#endif
     m_pcEntropyCoderIf->codeMVPIdx( pcCU, uiAbsPartIdx, eRefList, iNumCands );
 #else
     m_pcEntropyCoderIf->codeMVPIdx( pcCU, uiAbsPartIdx, eRefList );
@@ -1494,6 +1542,104 @@ Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int 
   m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, height, eTType );
 }
 
+#if LGE_SAO_MIGRATION_D0091
+Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx)
+{
+    UInt uiSymbol;
+    Int i;
+
+    uiSymbol = saoLcuParam->typeIdx + 1;
+    if (compIdx!=2)
+    {
+        m_pcEntropyCoderIf->codeSaoTypeIdx(uiSymbol);
+    }
+
+    if (uiSymbol)
+    {
+        if (saoLcuParam->typeIdx < 4 && compIdx != 2)
+        {
+            saoLcuParam->subTypeIdx = saoLcuParam->typeIdx;
+        }
+#if FULL_NBIT
+        Int offsetTh = 1 << ( min((Int)(g_uiBitDepth + (g_uiBitDepth-8)-5),5) );
+#else
+        Int offsetTh = 1 << ( min((Int)(g_uiBitDepth + g_uiBitIncrement-5),5) );
+#endif
+        if( saoLcuParam->typeIdx == SAO_BO )
+        {
+            for( i=0; i< saoLcuParam->length; i++)
+            {
+                UInt absOffset = ( (saoLcuParam->offset[i] < 0) ? -saoLcuParam->offset[i] : saoLcuParam->offset[i]);
+                m_pcEntropyCoderIf->codeSaoMaxUvlc(absOffset, offsetTh-1);
+            }  
+            for( i=0; i< saoLcuParam->length; i++)
+            {
+                if (saoLcuParam->offset[i] != 0)
+                {
+                    UInt sign = (saoLcuParam->offset[i] < 0) ? 1 : 0 ;
+                    m_pcEntropyCoderIf->codeSAOSign(sign);
+                }
+            }
+            uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
+            m_pcEntropyCoderIf->codeSaoUflc(5, uiSymbol);
+        }
+        else if( saoLcuParam->typeIdx < 4 )
+        {
+            m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[0], offsetTh-1);
+            m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[1], offsetTh-1);
+            m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[2], offsetTh-1);
+            m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[3], offsetTh-1);
+
+            if (compIdx!=2)
+            {
+                uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
+                m_pcEntropyCoderIf->codeSaoUflc(2, uiSymbol);
+            }
+        }
+    }
+}
+
+/** Encode SAO unit interleaving
+* \param  rx
+* \param  ry
+* \param  pSaoParam
+* \param  pcCU
+* \param  iCUAddrInSlice
+* \param  iCUAddrUpInSlice
+* \param  bLFCrossSliceBoundaryFlag
+ */
+Void TEncEntropy::encodeSaoUnitInterleaving(Int compIdx, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp)
+{
+    if (saoFlag)
+    {
+        if (rx>0 && cuAddrInSlice!=0 && allowMergeLeft)
+        {
+            m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeLeftFlag);
+        }
+        else
+        {
+            saoLcuParam->mergeLeftFlag = 0;
+        }
+        
+        if (saoLcuParam->mergeLeftFlag == 0)
+        {
+            if ( (ry > 0) && (cuAddrUpInSlice>=0) && allowMergeUp )
+            {
+                m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeUpFlag);
+            }
+            else
+            {
+                saoLcuParam->mergeUpFlag = 0;
+            }
+
+            if (!saoLcuParam->mergeUpFlag)
+            {
+                encodeSaoOffset(saoLcuParam, compIdx);
+            }
+        }
+    }
+}
+#else
 /** Encode SAO Offset
  * \param  saoLcuParam SAO LCU paramters
  */
@@ -1681,6 +1827,7 @@ Void TEncEntropy::encodeSaoParam(TComAPS* aps)
     }
   }
 }
+#endif
 
 Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
 {

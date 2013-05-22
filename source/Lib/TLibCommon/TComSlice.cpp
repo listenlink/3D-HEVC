@@ -112,12 +112,19 @@ TComSlice::TComSlice()
 , m_numEntryPointOffsets          ( 0 )
 #if LGE_ILLUCOMP_B0045
 , m_bApplyIC                      ( false )
+#if SHARP_ILLUCOMP_PARSE_D0060
+, m_icSkipParseFlag               ( false )
+#endif
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115
 , m_bIVScalingFlag                (false)
 , m_iViewOrderIdx                 ( 0 )        // will be changed to view_id
 #endif
 {
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
+    m_pcListDepthPic[iNumCount] =NULL;
+#endif
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = m_aiNumRefIdx[2] = 0;
 
   initEqualRef();
@@ -817,15 +824,23 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
       memcpy(m_weightPredTable[e][n], pSrc->m_weightPredTable[e][n], sizeof(wpScalingParam)*3 );
 
   m_saoEnabledFlag = pSrc->m_saoEnabledFlag; 
+#if LGE_SAO_MIGRATION_D0091
+  m_saoEnabledFlagChroma = pSrc->m_saoEnabledFlagChroma;
+#else
   m_saoInterleavingFlag = pSrc->m_saoInterleavingFlag;
   m_saoEnabledFlagCb = pSrc->m_saoEnabledFlagCb;
   m_saoEnabledFlagCr = pSrc->m_saoEnabledFlagCr; 
+#endif
 #if CABAC_INIT_FLAG
   m_cabacInitFlag                = pSrc->m_cabacInitFlag;
 #endif
   m_numEntryPointOffsets  = pSrc->m_numEntryPointOffsets;
 
   m_bLMvdL1Zero = pSrc->m_bLMvdL1Zero;
+#if SHARP_ILLUCOMP_PARSE_D0060
+  m_bApplyIC = pSrc->m_bApplyIC;
+  m_icSkipParseFlag = pSrc->m_icSkipParseFlag;
+#endif
 }
 
 int TComSlice::m_prevPOC = 0;
@@ -1386,6 +1401,64 @@ Void TComSlice::xSetApplyIC()
 }
 #endif
 
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+TComPic* TComSlice::getDepthRefPic(Int viewId, Int poc)
+{
+  TComPic* pPic = NULL;
+
+  if (m_pcListDepthPic[viewId] == NULL)
+    return NULL;
+
+  for( TComList<TComPic*>::iterator it = m_pcListDepthPic[viewId]->begin(); it != m_pcListDepthPic[viewId]->end(); it++ )
+  {
+    TComPic* currPic = *it;
+    TComSlice* currSlice = currPic->getCurrSlice();
+    Bool isDepth = currSlice->getIsDepth();
+    //assert(isDepth);
+    if( isDepth && currPic->getPOC() == poc && currPic->getViewId() == viewId ) // (*it)->getSPS()->isDepth()
+    {
+      pPic = *it;
+      break;
+    }
+  }
+
+  return pPic;
+}
+#endif
+
+
+#if QC_ARP_D0177
+Void TComSlice::setARPStepNum()                                  
+{
+  Bool bAllIvRef = false;
+  if(!getSPS()->getUseAdvRP())
+    m_nARPStepNum = 0;
+  else
+  {
+    for( Int iRefListId = 0; iRefListId < 2; iRefListId++ )
+    {
+      RefPicList  eRefPicList = RefPicList( iRefListId );
+      Int iNumRefIdx = getNumRefIdx(eRefPicList);
+      if( iNumRefIdx <= 0 )
+        continue;
+      for (Int i = 0; i < iNumRefIdx; i++)
+      {
+        if(getRefPic( REF_PIC_LIST_0, i)->getPOC() != getPOC())
+        {
+          bAllIvRef = true;
+          break;
+        }
+      }
+      if( bAllIvRef == true )
+        break;
+    }
+    if(bAllIvRef== true)
+      m_nARPStepNum = getSPS()->getARPStepNum();
+    else
+      m_nARPStepNum = 0;
+  }
+}
+#endif
 // ------------------------------------------------------------------------------------------------
 // Video parameter set (VPS)
 // ------------------------------------------------------------------------------------------------
@@ -1575,7 +1648,10 @@ TComSPS::TComSPS()
 #if H3D_IVMP
   m_uiMultiviewMvPredMode    = 0;
 #endif
-
+#if QC_ARP_D0177
+  m_nUseAdvResPred           = 0;
+  m_nARPStepNum              = 1;
+#endif
   ::memset( m_aiUsableInterViewRefs, 0, sizeof( m_aiUsableInterViewRefs ) );
   
 #if RWTH_SDC_DLT_B0036
@@ -2043,7 +2119,9 @@ TComAPS& TComAPS::operator= (const TComAPS& src)
   m_alfParamSet    = src.m_alfParamSet;
   m_scalingList = src.m_scalingList;
   m_scalingListEnabled = src.m_scalingListEnabled;
+#if !LGE_SAO_MIGRATION_D0091
   m_saoInterleavingFlag = src.m_saoInterleavingFlag;
+#endif
 
   return *this;
 }

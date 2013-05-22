@@ -64,6 +64,9 @@ TDecSbac::TDecSbac()
 #if H3D_IVRP
 , m_cResPredFlagSCModel       ( 1,             1,               NUM_RES_PRED_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if QC_ARP_D0177
+, m_cCUPUARPW                 ( 1,             1,               NUM_ARPW_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAlfCtrlFlagSCModel     ( 1,             1,               NUM_ALF_CTRL_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
@@ -87,12 +90,17 @@ TDecSbac::TDecSbac()
 , m_cALFUvlcSCModel           ( 1,             1,               NUM_ALF_UVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cALFSvlcSCModel           ( 1,             1,               NUM_ALF_SVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAMPSCModel             ( 1,             1,               NUM_CU_AMP_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
+#if LGE_SAO_MIGRATION_D0091
+, m_cSaoMergeSCModel          ( 1,             1,               NUM_SAO_MERGE_FLAG_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSaoTypeIdxSCModel        ( 1,             1,               NUM_SAO_TYPE_IDX_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+#else
 , m_cSaoFlagSCModel           ( 1,             1,               NUM_SAO_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoUvlcSCModel           ( 1,             1,               NUM_SAO_UVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoSvlcSCModel           ( 1,             1,               NUM_SAO_SVLC_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoMergeLeftSCModel      ( 1,             1,               NUM_SAO_MERGE_LEFT_FLAG_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoMergeUpSCModel        ( 1,             1,               NUM_SAO_MERGE_UP_FLAG_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoTypeIdxSCModel        ( 1,             1,               NUM_SAO_TYPE_IDX_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
 , m_cDmmFlagSCModel           ( 1,             1,               NUM_DMM_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDmmModeSCModel           ( 1,             1,               NUM_DMM_MODE_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
@@ -161,6 +169,9 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_RES_PRED_FLAG );
 #endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                ( sliceType, qp, (UChar*)INIT_ARPW );
+#endif
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_ALF_CTRL_FLAG );
   m_cCUPartSizeSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CU_AMP_POS );
@@ -183,12 +194,17 @@ Void TDecSbac::resetEntropywithQPandInitIDC (Int  qp, Int iID)
   m_cALFFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_ALF_FLAG );
   m_cALFUvlcSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_ALF_UVLC );
   m_cALFSvlcSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_ALF_SVLC );
+#if LGE_SAO_MIGRATION_D0091
+  m_cSaoMergeSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_SAO_MERGE_FLAG );
+  m_cSaoTypeIdxSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SAO_TYPE_IDX );
+#else
   m_cSaoFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_SAO_FLAG );
   m_cSaoUvlcSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_SAO_UVLC );
   m_cSaoSvlcSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_SAO_SVLC );
   m_cSaoMergeLeftSCModel.initBuffer      ( sliceType, qp, (UChar*)INIT_SAO_MERGE_LEFT_FLAG );
   m_cSaoMergeUpSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SAO_MERGE_UP_FLAG );
   m_cSaoTypeIdxSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SAO_TYPE_IDX );
+#endif
 
   m_cCUTransSubdivFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
 #if LGE_EDGE_INTRA_A0070
@@ -248,6 +264,9 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 #if H3D_IVRP
   m_cResPredFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_RES_PRED_FLAG );
 #endif
+#if QC_ARP_D0177
+  m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
+#endif
   m_cCUAlfCtrlFlagSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_ALF_CTRL_FLAG );
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
@@ -270,12 +289,17 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cALFFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_ALF_FLAG );
   m_cALFUvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_ALF_UVLC );
   m_cALFSvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_ALF_SVLC );
+#if LGE_SAO_MIGRATION_D0091
+  m_cSaoMergeSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_FLAG );
+  m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
+#else
   m_cSaoFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_FLAG );
   m_cSaoUvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_UVLC );
   m_cSaoSvlcSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_SAO_SVLC );
   m_cSaoMergeLeftSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_LEFT_FLAG );
   m_cSaoMergeUpSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_MERGE_UP_FLAG );
   m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
+#endif
   m_cCUTransSubdivFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   m_cDmmFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DMM_FLAG );
@@ -1671,7 +1695,252 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
   return;
 }
 
+#if LGE_SAO_MIGRATION_D0091
+Void TDecSbac::parseSaoMaxUvlc ( UInt& val, UInt maxSymbol )
+{
+    if (maxSymbol == 0)
+    {
+        val = 0;
+        return;
+    }
 
+    UInt code;
+    Int  i;
+    m_pcTDecBinIf->decodeBinEP( code );
+    if ( code == 0 )
+    {
+        val = 0;
+        return;
+    }
+
+    i=1;
+    while (1)
+    {
+        m_pcTDecBinIf->decodeBinEP( code );
+        if ( code == 0 )
+        {
+            break;
+        }
+        i++;
+        if (i == maxSymbol)
+        {
+            break;
+        }
+    }   
+
+    val = i;
+}
+
+Void TDecSbac::parseSaoUflc (UInt uiLength, UInt&  riVal)
+{
+    m_pcTDecBinIf->decodeBinsEP ( riVal, uiLength );
+}
+
+Void TDecSbac::parseSaoMerge (UInt&  ruiVal)
+{
+    UInt uiCode;
+    m_pcTDecBinIf->decodeBin( uiCode, m_cSaoMergeSCModel.get( 0, 0, 0 ) );
+    ruiVal = (Int)uiCode;
+}
+
+Void TDecSbac::parseSaoTypeIdx (UInt&  ruiVal)
+{
+    UInt uiCode;
+    m_pcTDecBinIf->decodeBin( uiCode, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
+    if (uiCode == 0) 
+    {
+        ruiVal = 0;
+    }
+    else
+    {
+        m_pcTDecBinIf->decodeBinEP( uiCode ); 
+        if (uiCode == 0)
+        {
+            ruiVal = 5;
+        }
+        else
+        {
+            ruiVal = 1;
+        }
+    }
+}
+
+inline Void copySaoOneLcuParam(SaoLcuParam* psDst,  SaoLcuParam* psSrc)
+{
+    Int i;
+    psDst->partIdx = psSrc->partIdx;
+    psDst->typeIdx = psSrc->typeIdx;
+    if (psDst->typeIdx != -1)
+    {
+        psDst->subTypeIdx = psSrc->subTypeIdx ;
+        psDst->length  = psSrc->length;
+        for (i=0;i<psDst->length;i++)
+        {
+            psDst->offset[i] = psSrc->offset[i];
+        }
+    }
+    else
+    {
+        psDst->length  = 0;
+        for (i=0;i<SAO_BO_LEN;i++)
+        {
+            psDst->offset[i] = 0;
+        }
+    }
+}
+
+Void TDecSbac::parseSaoOffset(SaoLcuParam* psSaoLcuParam, UInt compIdx)
+{
+    UInt uiSymbol;
+    static Int iTypeLength[MAX_NUM_SAO_TYPE] =
+    {
+        SAO_EO_LEN,
+        SAO_EO_LEN,
+        SAO_EO_LEN,
+        SAO_EO_LEN,
+        SAO_BO_LEN
+    }; 
+
+    if (compIdx==2)
+    {
+        uiSymbol = (UInt)( psSaoLcuParam->typeIdx + 1);
+    }
+    else
+    {
+        parseSaoTypeIdx(uiSymbol);
+    }
+    psSaoLcuParam->typeIdx = (Int)uiSymbol - 1;
+
+    if (uiSymbol)
+    {
+        psSaoLcuParam->length = iTypeLength[psSaoLcuParam->typeIdx];
+#if FULL_NBIT
+        Int offsetTh = 1 << ( min((Int)(g_uiBitDepth + (g_uiBitDepth-8)-5),5) );
+#else
+        Int offsetTh = 1 << ( min((Int)(g_uiBitDepth + g_uiBitIncrement-5),5) );
+#endif
+
+        if( psSaoLcuParam->typeIdx == SAO_BO )
+        {
+            for(Int i=0; i< psSaoLcuParam->length; i++)
+            {
+                parseSaoMaxUvlc(uiSymbol, offsetTh -1 );
+                psSaoLcuParam->offset[i] = uiSymbol;
+            }   
+            for(Int i=0; i< psSaoLcuParam->length; i++)
+            {
+                if (psSaoLcuParam->offset[i] != 0)
+                {
+                    m_pcTDecBinIf->decodeBinEP ( uiSymbol);
+                    if (uiSymbol)
+                    {
+                        psSaoLcuParam->offset[i] = -psSaoLcuParam->offset[i] ;
+                    }
+                }
+            }
+            parseSaoUflc(5, uiSymbol );
+            psSaoLcuParam->subTypeIdx = uiSymbol;
+        }
+        else if( psSaoLcuParam->typeIdx < 4 )
+        {
+            parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[0] = uiSymbol;   
+            parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[1] = uiSymbol;
+            parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[2] = -(Int)uiSymbol;
+            parseSaoMaxUvlc(uiSymbol, offsetTh -1 ); psSaoLcuParam->offset[3] = -(Int)uiSymbol;
+            if (compIdx != 2)
+            {
+                parseSaoUflc(2, uiSymbol );
+                psSaoLcuParam->subTypeIdx = uiSymbol;
+                psSaoLcuParam->typeIdx += psSaoLcuParam->subTypeIdx;
+            }
+        }
+    }
+    else
+    {
+        psSaoLcuParam->length = 0;
+    }
+}
+
+Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp)
+{
+    Int iAddr = pcCU->getAddr();
+    UInt uiSymbol;
+
+    for (Int iCompIdx=0; iCompIdx<3; iCompIdx++)
+    {
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag    = 0;
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag  = 0;
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].subTypeIdx     = 0;
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].typeIdx        =-1;
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[0]      = 0;
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[1]      = 0;
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[2]      = 0;
+        pSaoParam->saoLcuParam[iCompIdx][iAddr].offset[3]      = 0;
+    }
+    if (pSaoParam->bSaoFlag[0] || pSaoParam->bSaoFlag[1] )
+    {
+        if (rx>0 && iCUAddrInSlice!=0 && allowMergeLeft)
+        {
+            parseSaoMerge(uiSymbol); 
+            pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag = (Bool)uiSymbol;  
+        }
+        if (pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag==0)
+        {
+            if ((ry > 0) && (iCUAddrUpInSlice>=0) && allowMergeUp)
+            {
+                parseSaoMerge(uiSymbol);
+                pSaoParam->saoLcuParam[0][iAddr].mergeUpFlag = (Bool)uiSymbol;
+            }
+        }
+    }
+
+    for (Int iCompIdx=0; iCompIdx<3; iCompIdx++)
+    {
+        if ((iCompIdx == 0  && pSaoParam->bSaoFlag[0]) || (iCompIdx > 0  && pSaoParam->bSaoFlag[1]) )
+        {
+            if (rx>0 && iCUAddrInSlice!=0 && allowMergeLeft)
+            {
+                pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag = pSaoParam->saoLcuParam[0][iAddr].mergeLeftFlag;
+            }
+            else
+            {
+                pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag = 0;
+            }
+
+            if (pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeLeftFlag==0)
+            {
+                if ((ry > 0) && (iCUAddrUpInSlice>=0) && allowMergeUp)
+                {
+                    pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag = pSaoParam->saoLcuParam[0][iAddr].mergeUpFlag;
+                }
+                else
+                {
+                    pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag = 0;
+                }
+    
+                if (!pSaoParam->saoLcuParam[iCompIdx][iAddr].mergeUpFlag)
+                {
+                    pSaoParam->saoLcuParam[2][iAddr].typeIdx = pSaoParam->saoLcuParam[1][iAddr].typeIdx;
+                    parseSaoOffset(&(pSaoParam->saoLcuParam[iCompIdx][iAddr]), iCompIdx);
+                }
+                else
+                {
+                    copySaoOneLcuParam(&pSaoParam->saoLcuParam[iCompIdx][iAddr], &pSaoParam->saoLcuParam[iCompIdx][iAddr-pSaoParam->numCuInWidth]);
+                }
+            }
+            else
+            {
+                copySaoOneLcuParam(&pSaoParam->saoLcuParam[iCompIdx][iAddr],  &pSaoParam->saoLcuParam[iCompIdx][iAddr-1]);
+            }
+        }
+        else
+        {
+            pSaoParam->saoLcuParam[iCompIdx][iAddr].typeIdx    = -1;
+            pSaoParam->saoLcuParam[iCompIdx][iAddr].subTypeIdx = 0;
+        }
+    }
+}
+#else
 Void TDecSbac::parseSaoUvlc (UInt& ruiVal)
 {
   UInt uiCode;
@@ -1908,7 +2177,7 @@ Void TDecSbac::parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, T
     }
   }
 }
-
+#endif
 /**
  - Initialize our contexts from the nominated source.
  .
@@ -2234,7 +2503,32 @@ Void TDecSbac::xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartId
   pcCU->setContourPredTexDeltaDC2SubParts( iDC2, uiAbsPartIdx, uiDepth );
 }
 #endif
-
+#if QC_ARP_D0177
+Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt nMaxW = pcCU->getSlice()->getARPStepNum() - 1;
+#if !QC_ARP_WARNING_FIX
+  assert (nMaxW >= 0);
+#endif
+  UInt nW = 0;
+  if( nMaxW > 0 )
+  {
+    UInt nOffset = pcCU->getCTXARPWFlag(uiAbsPartIdx);
+#if !QC_ARP_WARNING_FIX
+    assert( 0 <= nOffset && nOffset <= 2 );
+#endif
+    UInt uiCode = 0;
+    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPW.get( 0, 0, 0 + nOffset ) );
+    nW = uiCode;
+    if( nW == 1 )   
+    {
+      m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPW.get( 0, 0, 3 ) );
+      nW += ( uiCode == 1 );
+    }
+  }
+  pcCU->setARPWSubParts( ( UChar )( nW ) , uiAbsPartIdx, uiDepth );  
+}
+#endif
 #if LGE_EDGE_INTRA_A0070
 Void TDecSbac::xParseEdgeIntraInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
