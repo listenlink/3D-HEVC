@@ -248,8 +248,8 @@ public:
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
   Void  predIntraLumaDMM        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder );
-
   Void  getWedgePredDCs         ( TComWedgelet* pcWedgelet, Int* piMask, Int iMaskStride, Int& riPredDC1, Int& riPredDC2, Bool bAbove, Bool bLeft );
+#endif
   Void  calcWedgeDCs            ( TComWedgelet* pcWedgelet, Pel* piOrig, UInt uiStride, Int& riDC1, Int& riDC2 );
   Void  assignWedgeDCs2Pred     ( TComWedgelet* pcWedgelet, Pel* piPred,  UInt uiStride, Int   iDC1, Int   iDC2 );
 #endif

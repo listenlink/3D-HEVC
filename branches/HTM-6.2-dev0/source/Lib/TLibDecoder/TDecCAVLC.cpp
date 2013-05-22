@@ -2478,6 +2478,7 @@ Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 #endif
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -2486,6 +2487,7 @@ Void TDecCavlc::parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 {
   assert(0);
 }
+#endif
 Void TDecCavlc::parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart )
 {
   assert(0);

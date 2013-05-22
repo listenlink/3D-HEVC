@@ -911,7 +911,11 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
     {
       if( uiAbsPartIdx == 0 )
       {
-        m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 );
+        m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+         ,true
+#endif
+          );
       }
     }
     else
@@ -1704,11 +1708,16 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     {
       UChar ucSegment = pMask?(UChar)pMask[uiX]:0;
       assert( ucSegment < uiNumSegments );
+#if MTK_SAMPLE_BASED_SDC_D0110      
+      Pel pResiDC = apDCResiValues[ucSegment];
       
+      pReco    [ uiX ] = Clip( pPred[ uiX ] + pResiDC );
+#else
       Pel pPredVal= apDCPredValues[ucSegment];
       Pel pResiDC = apDCResiValues[ucSegment];
       
       pReco    [ uiX ] = Clip( pPredVal + pResiDC );
+#endif
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
     pPred     += uiStride;
@@ -1738,6 +1747,17 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 #if HHI_VSO
   if ( m_pcRdCost->getUseVSO() )
   {
+#if FIX_SDC_ENC_RD_WVSO_D0163 && LGE_WVSO_A0119
+    if ( m_pcRdCost->getUseWVSO() )
+    {    
+      Int iDWeight = m_pcRdCost->getDWeight() * m_pcRdCost->getDWeight();
+      Int iVSOWeight = m_pcRdCost->getVSOWeight() * m_pcRdCost->getVSOWeight();
+      Dist iD = (Dist) m_pcRdCost->getDistPart( piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
+      Dist iVSO = m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false, 0 );
+      ruiDist += (iDWeight * iD + iVSOWeight * iVSO) / ( iDWeight + iVSOWeight);
+    }
+    else
+#endif
     ruiDist = m_pcRdCost->getDistVS  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false, 0 );
   }
   else
@@ -1754,8 +1774,11 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
   
   // encode pred direction + residual data
-  m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
-  
+  m_pcEntropyCoder->encodePredInfo( pcCU, 0, true 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    ,true
+#endif
+    );
   UInt   uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
   
 #if HHI_VSO
@@ -5996,12 +6019,19 @@ UInt TEncSearch::xModeBitsIntra( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt 
   {
     // Reload only contexts required for coding intra mode information
     m_pcRDGoOnSbacCoder->loadIntraDirModeLuma( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    m_pcRDGoOnSbacCoder->loadDepthMode( m_pppcRDSbacCoder[uiDepth][CI_CURR_BEST] );
+#endif
   }
   
   pcCU->setLumaIntraDirSubParts ( uiMode, uiPartOffset, uiDepth + uiInitTrDepth );
   
   m_pcEntropyCoder->resetBits();
-  m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPartOffset);
+  m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPartOffset
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    ,true
+#endif
+    );
   
   return m_pcEntropyCoder->getNumberOfWrittenBits();
 }
@@ -6411,7 +6441,11 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
   Int* piMask = pcCU->getPattern()->getAdiOrgBuf( uiWidth, uiHeight, m_piYuvExt );
   Int iMaskStride = ( uiWidth<<1 ) + 1;
   piMask += iMaskStride+1;
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pcWedgelet->getPattern(), pcWedgelet->getStride(), piMask, iMaskStride, iPredDC1, iPredDC2 );
+#else
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAboveAvail, bLeftAvail );
+#endif
 
   riDeltaDC1 = iDC1 - iPredDC1;
   riDeltaDC2 = iDC2 - iPredDC2;
@@ -6588,6 +6622,10 @@ Void TEncSearch::xGetWedgeDeltaDCsMinDist( TComWedgelet* pcWedgelet,
   }
 #endif
 
+#if HHI_DELTADC_DLT_D0035
+  riDeltaDC1 = (Int)GetDepthValue2Idx( Clip(iPredDC1 + riDeltaDC1) ) - (Int)GetDepthValue2Idx( iPredDC1 );
+  riDeltaDC2 = (Int)GetDepthValue2Idx( Clip(iPredDC2 + riDeltaDC2) ) - (Int)GetDepthValue2Idx( iPredDC2 );
+#endif
 }
 #endif
 #if HHI_DMM_WEDGE_INTRA
@@ -7972,6 +8010,9 @@ Void TEncSearch::xAssignEdgeIntraDeltaDCs( TComDataCU*   pcCU,
   }
 
   // PredDC Calculation
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pbRegion, uiWidth, piMask+iMaskStride+1, iMaskStride, iPredDC0, iPredDC1 );
+#else
   {
     UInt uiSum0 = 0;
     UInt uiSum1 = 0;
@@ -8011,6 +8052,7 @@ Void TEncSearch::xAssignEdgeIntraDeltaDCs( TComDataCU*   pcCU,
     iPredDC0 = uiSum0 / uiCount0; // TODO : integer op.
     iPredDC1 = uiSum1 / uiCount1;
   }
+#endif
 
   iDeltaDC0 = iDC0 - iPredDC0;
   iDeltaDC1 = iDC1 - iPredDC1;
