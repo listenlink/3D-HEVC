@@ -91,6 +91,9 @@ public:
   
   Void  load                   ( TEncSbac* pScr  );
   Void  loadIntraDirModeLuma   ( TEncSbac* pScr  );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+  Void  loadDepthMode          ( TEncSbac* pSrc  );
+#endif
   Void  store                  ( TEncSbac* pDest );
   Void  loadContexts           ( TEncSbac* pScr  );
   Void  resetBits              ()                { m_pcBinIf->resetBits(); m_pcBitIf->resetBits(); }
@@ -144,9 +147,13 @@ public:
   Void  codeScalingList      ( TComScalingList* scalingList     ){ assert (0);  return;};
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCPredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 #endif
 
 private:
@@ -232,8 +239,15 @@ public:
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
   Void codeQtCbf               ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
-  Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+  Void codeDepthIntraMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeDepthModelingTable  ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bSdcRD = false );
+#endif
+  Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    , Bool bSdcRD = false
+#endif
+    );
   
   Void codeIntraDirChroma      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir            ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -318,8 +332,10 @@ private:
 #endif
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   ContextModel3DBuffer m_cDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
+#endif
   ContextModel3DBuffer m_cDmmDataSCModel;
 #endif
 #if LGE_EDGE_INTRA_A0070
@@ -330,10 +346,17 @@ private:
 #endif
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   ContextModel3DBuffer m_cSDCFlagSCModel;
+#else
+  ContextModel3DBuffer m_cDepthModeModel;
+  ContextModel3DBuffer m_cDmmDeltaFlagModel;
+#endif
   
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+#if !RWTH_SDC_CTX_SIMPL_D0032
   ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
+#endif
   ContextModel3DBuffer m_cSDCResidualSCModel;
   
   ContextModel3DBuffer m_cSDCPredModeSCModel;

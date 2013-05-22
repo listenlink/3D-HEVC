@@ -876,6 +876,7 @@ Void TEncEntropy::encodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     encodeSDCFlag(pcCU, uiAbsPartIdx, bRD);
   }
 #endif
+#endif
 }
 
 // Split mode
@@ -916,6 +917,7 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
       return;
     }
   }
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 #if RWTH_SDC_DLT_B0036
   if( !pcCU->getSlice()->isInterB() && pcCU->isIntra(uiAbsPartIdx) && pcCU->getSDCFlag(uiAbsPartIdx)  )
   {
@@ -923,9 +925,11 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     return;
   }
 #endif
+#endif
   
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 #if RWTH_SDC_DLT_B0036
   // code SDC flag now!
   if( pcCU->getSlice()->isInterB() && pcCU->isIntra(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->isDepth() )
@@ -939,6 +943,7 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
       assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
     }
   }
+#endif
 #endif
 }
 
@@ -1219,9 +1224,17 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
 
 
 // Intra direction for Luma
-Void TEncEntropy::encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+Void TEncEntropy::encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+                                           ,Bool bSdcRD
+#endif
+                                           )
 {
-  m_pcEntropyCoderIf->codeIntraDirLumaAng( pcCU, uiAbsPartIdx );
+  m_pcEntropyCoderIf->codeIntraDirLumaAng( pcCU, uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    ,bSdcRD
+#endif
+    );
 }
 
 // Intra direction for Chroma
@@ -1235,19 +1248,25 @@ Void TEncEntropy::encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_pcEntropyCoderIf->codeIntraDirChroma( pcCU, uiAbsPartIdx );
 }
 
-Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+                                 ,Bool bSdcRD
+#endif
+                                 )
 {
   if( bRD )
   {
     uiAbsPartIdx = 0;
   }
 
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 #if RWTH_SDC_DLT_B0036
   if( pcCU->getSDCFlag(uiAbsPartIdx) )
   {
     encodeSDCPredMode(pcCU, uiAbsPartIdx, bRD);
     return;
   }
+#endif
 #endif
 
   PartSize eSize = pcCU->getPartitionSize( uiAbsPartIdx );
@@ -1262,11 +1281,14 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
       encodeIntraDirModeLuma( pcCU, uiAbsPartIdx + uiPartOffset   );
       encodeIntraDirModeLuma( pcCU, uiAbsPartIdx + uiPartOffset*2 );
       encodeIntraDirModeLuma( pcCU, uiAbsPartIdx + uiPartOffset*3 );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+      if(!pcCU->getSDCFlag(uiAbsPartIdx))
+#endif
       encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
     }
     else                                                              // if it is not NxN size, encode 1 intra directions
     {
-      encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx );
+      encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx 
       encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
     }
   }
@@ -1464,8 +1486,8 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
-    
     encodeSDCResidualData(pcCU, uiAbsPartIdx);
+#endif
     return;
   }
 #endif
@@ -1861,6 +1883,7 @@ Void TEncEntropy::encodeDFParams(TComAPS* pcAPS)
 }
 
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 Void TEncEntropy::encodeSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   assert( pcCU->getSlice()->getSPS()->isDepth() );
@@ -1880,7 +1903,6 @@ Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   
   m_pcEntropyCoderIf->codeSDCFlag(pcCU, uiAbsPartIdx);
 }
-
 Void TEncEntropy::encodeSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   assert( pcCU->getSlice()->getSPS()->isDepth() );

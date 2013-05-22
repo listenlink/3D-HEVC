@@ -129,6 +129,7 @@ Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parsePredMode( pcCU, uiAbsPartIdx, uiDepth );
   
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 #if RWTH_SDC_DLT_B0036
   // if B-Slice, code SDC flag later
   if( !pcCU->getSlice()->isInterB() && pcCU->isIntra(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->isDepth() )
@@ -137,10 +138,12 @@ Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     decodeSDCFlag(pcCU, uiAbsPartIdx, uiDepth);
   }
 #endif
+#endif
 }
 
 Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 #if RWTH_SDC_DLT_B0036
   if( !pcCU->getSlice()->isInterB() && pcCU->isIntra(uiAbsPartIdx) && pcCU->getSDCFlag(uiAbsPartIdx)  )
   {
@@ -149,9 +152,11 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     return;
   }
 #endif
+#endif
   
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 #if RWTH_SDC_DLT_B0036
   if( pcCU->getSlice()->isInterB() && pcCU->getSlice()->getSPS()->isDepth() && pcCU->isIntra(uiAbsPartIdx) )
   {
@@ -166,16 +171,19 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     }
   }
 #endif
+#endif
 }
 
 Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU )
 {
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 #if RWTH_SDC_DLT_B0036
   if( pcCU->getSDCFlag(uiAbsPartIdx) )
   {
     decodeSDCPredMode(pcCU, uiAbsPartIdx, uiDepth);
     return;
   }
+#endif
 #endif
   
   PartSize eMode = pcCU->getPartitionSize( uiAbsPartIdx );
@@ -190,11 +198,17 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
       decodeIntraDirModeLuma( pcCU, uiAbsPartIdx + uiPartOffset,   uiDepth+1 );
       decodeIntraDirModeLuma( pcCU, uiAbsPartIdx + uiPartOffset*2, uiDepth+1 );
       decodeIntraDirModeLuma( pcCU, uiAbsPartIdx + uiPartOffset*3, uiDepth+1 );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+      if(!pcCU->getSDCFlag(uiAbsPartIdx))
+#endif
       decodeIntraDirModeChroma( pcCU, uiAbsPartIdx, uiDepth );
     }
     else                                                                // if it is not NxN size, encode 1 intra directions
     {
       decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+      if(!pcCU->getSDCFlag(uiAbsPartIdx))
+#endif
       decodeIntraDirModeChroma( pcCU, uiAbsPartIdx, uiDepth );
     }
   }
@@ -851,8 +865,8 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
-    
     decodeSDCResidualData(pcCU, uiAbsPartIdx, uiDepth);
+#endif
     return;
   }
 #endif
@@ -909,6 +923,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 }
 
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 Void TDecEntropy::decodeSDCPredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert( pcCU->getSlice()->getSPS()->isDepth() );
@@ -923,7 +938,6 @@ Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   
   m_pcEntropyDecoderIf->parseSDCFlag(pcCU, uiAbsPartIdx, uiDepth );
 }
-
 Void TDecEntropy::decodeSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert( pcCU->getSlice()->getSPS()->isDepth() );

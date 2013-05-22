@@ -49,6 +49,11 @@
 #define MAX_DISTANCE_EDGEINTRA 255
 #endif
 
+#if HHI_DELTADC_DLT_D0035
+#define GetDepthValue2Idx(val)     (pcCU->getSlice()->getSPS()->depthValue2idx(val))
+#define GetIdx2DepthValue(val)     (pcCU->getSlice()->getSPS()->idx2DepthValue(val))
+#endif
+
 #if MERL_General_Fix
 #if MERL_VSP_C0152
 #if MERL_CVSP_D0165
@@ -554,6 +559,10 @@ Void TComPrediction::xPredIntraEdge( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iW
 
   // Do prediction
   {
+#if QC_DC_PREDICTOR_D0183
+    Int iMean0, iMean1;
+    getPredDCs( pbRegion, iWidth, pSrc+srcStride+1, srcStride, iMean0, iMean1 );
+#else
     //UInt uiSum0 = 0, uiSum1 = 0;
     Int iSum0 = 0, iSum1 = 0;
     //UInt uiMean0, uiMean1;
@@ -592,6 +601,7 @@ Void TComPrediction::xPredIntraEdge( TComDataCU* pcCU, UInt uiAbsPartIdx, Int iW
       assert(false);
     iMean0 = iSum0 / iCount0; // TODO : integer op.
     iMean1 = iSum1 / iCount1;
+#endif
 #if LGE_EDGE_INTRA_DELTA_DC
     if( bDelta ) 
     {
@@ -3162,6 +3172,34 @@ Void TComPrediction::predIntraLumaDMM( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
 #endif
 }
 
+#if QC_DC_PREDICTOR_D0183
+Void TComPrediction::getPredDCs( Bool* pbPattern, Int iStride, Int* piMask, Int iMaskStride, Int& riPredDC1, Int& riPredDC2 )
+{
+  Int  iDC1, iDC2;
+  const Int  iTR = (   iStride - 1        ) - iMaskStride;
+  const Int  iTM = ( ( iStride - 1 ) >> 1 ) - iMaskStride;
+  const Int  iLB = (   iStride - 1        ) * iMaskStride - 1;
+  const Int  iLM = ( ( iStride - 1 ) >> 1 ) * iMaskStride - 1;
+  const UInt uiBitDepth = g_uiBitDepth + g_uiBitIncrement;
+
+  Bool bL = ( pbPattern[0] != pbPattern[(iStride-1)*iStride] );
+  Bool bT = ( pbPattern[0] != pbPattern[(iStride-1)]         );
+
+  if( bL == bT )
+  {
+    iDC1 = bL ? ( piMask[iTR] + piMask[iLB] )>>1 : 1<<( uiBitDepth - 1 );
+    iDC2 =      ( piMask[ -1] + piMask[-iMaskStride] )>>1;
+  }
+  else
+  {
+    iDC1 = bL ? piMask[iLB] : piMask[iTR];
+    iDC2 = bL ? piMask[iTM] : piMask[iLM];
+  }
+
+  riPredDC1 = pbPattern[0] ? iDC1 : iDC2;
+  riPredDC2 = pbPattern[0] ? iDC2 : iDC1;
+}
+#else
 Void TComPrediction::getWedgePredDCs( TComWedgelet* pcWedgelet, Int* piMask, Int iMaskStride, Int& riPredDC1, Int& riPredDC2, Bool bAbove, Bool bLeft )
 {
   riPredDC1 = ( 1<<( g_uiBitDepth + g_uiBitIncrement - 1) ); //pred val, if no neighbors are available
@@ -3239,6 +3277,7 @@ Void TComPrediction::getWedgePredDCs( TComWedgelet* pcWedgelet, Int* piMask, Int
     riPredDC2 = iPredDC2;
   }
 }
+#endif
 
 Void TComPrediction::calcWedgeDCs( TComWedgelet* pcWedgelet, Pel* piOrig, UInt uiStride, Int& riDC1, Int& riDC2 )
 {
@@ -3606,11 +3645,25 @@ Void TComPrediction::xPredIntraWedgeTex( TComDataCU* pcCU, UInt uiAbsPartIdx, Pe
   Int* piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
   Int iMaskStride = ( iWidth<<1 ) + 1;
   piMask += iMaskStride+1;
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pcWedgelet->getPattern(), pcWedgelet->getStride(), piMask, iMaskStride, iPredDC1, iPredDC2 );
+#else
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
+#endif
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip ( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride,        iPredDC1,                   iPredDC2           ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 }
 
 Void TComPrediction::xPredIntraContourTex( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder, Bool bDelta, Int iDeltaDC1, Int iDeltaDC2 )
@@ -3625,11 +3678,25 @@ Void TComPrediction::xPredIntraContourTex( TComDataCU* pcCU, UInt uiAbsPartIdx, 
   Int* piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
   Int iMaskStride = ( iWidth<<1 ) + 1;
   piMask += iMaskStride+1;
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pcContourWedge->getPattern(), pcContourWedge->getStride(), piMask, iMaskStride, iPredDC1, iPredDC2 );
+#else
   getWedgePredDCs( pcContourWedge, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
+#endif
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, Clip ( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride,        iPredDC1,                   iPredDC2           ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcContourWedge, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 
   pcContourWedge->destroy();
   delete pcContourWedge;
@@ -3800,11 +3867,25 @@ Void TComPrediction::xPredIntraWedgeFull( TComDataCU* pcCU, UInt uiAbsPartIdx, P
   Int* piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
   Int iMaskStride = ( iWidth<<1 ) + 1;
   piMask += iMaskStride+1;
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pcWedgelet->getPattern(), pcWedgelet->getStride(), piMask, iMaskStride, iPredDC1, iPredDC2 );
+#else
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
+#endif
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1,           iPredDC2           ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 }
 
 Void TComPrediction::xPredIntraWedgeDir( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bAbove, Bool bLeft, Bool bEncoder, Bool bDelta, Int iWedgeDeltaEnd, Int iDeltaDC1, Int iDeltaDC2 )
@@ -3835,11 +3916,25 @@ Void TComPrediction::xPredIntraWedgeDir( TComDataCU* pcCU, UInt uiAbsPartIdx, Pe
   Int* piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt );
   Int iMaskStride = ( iWidth<<1 ) + 1;
   piMask += iMaskStride+1;
+#if QC_DC_PREDICTOR_D0183
+  getPredDCs( pcWedgelet->getPattern(), pcWedgelet->getStride(), piMask, iMaskStride, iPredDC1, iPredDC2 );
+#else
   getWedgePredDCs( pcWedgelet, piMask, iMaskStride, iPredDC1, iPredDC2, bAbove, bLeft );
+#endif
 
   // assign wedge pred DCs to prediction
-  if( bDelta ) { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); }
-  else         { assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride,       iPredDC1,                   iPredDC2             ); }
+  if( bDelta ) 
+  { 
+#if HHI_DELTADC_DLT_D0035
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, GetIdx2DepthValue( GetDepthValue2Idx(iPredDC1) + iDeltaDC1 ), GetIdx2DepthValue( GetDepthValue2Idx(iPredDC2) + iDeltaDC2 ) ); 
+#else
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, Clip( iPredDC1+iDeltaDC1 ), Clip( iPredDC2+iDeltaDC2 ) ); 
+#endif
+  }
+  else 
+  { 
+    assignWedgeDCs2Pred( pcWedgelet, piPred, uiStride, iPredDC1, iPredDC2 ); 
+  }
 }
 
 Void TComPrediction::xGetBlockOffset( TComDataCU* pcCU, UInt uiAbsPartIdx, TComDataCU* pcRefCU, UInt uiRefAbsPartIdx, UInt& ruiOffsetX, UInt& ruiOffsetY )
