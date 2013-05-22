@@ -191,6 +191,10 @@ public:
 #endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+  Void parseDepthIntraMode  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void parseDepthModelingTable( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

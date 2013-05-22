@@ -865,6 +865,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
     decodeSDCResidualData(pcCU, uiAbsPartIdx, uiDepth);
 #endif
     return;
@@ -938,6 +939,7 @@ Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   
   m_pcEntropyDecoderIf->parseSDCFlag(pcCU, uiAbsPartIdx, uiDepth );
 }
+#endif
 Void TDecEntropy::decodeSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert( pcCU->getSlice()->getSPS()->isDepth() );
