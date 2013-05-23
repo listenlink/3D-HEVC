@@ -107,6 +107,7 @@ private:
   Bool                    m_isDepth;
 #endif
 #endif
+
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TComBitCounter*         m_pcBitCounter;
@@ -130,10 +131,6 @@ private:
   Bool                    m_activeParameterSetSEIPresentInAU;
   Bool                    m_bufferingPeriodSEIPresentInAU;
   Bool                    m_pictureTimingSEIPresentInAU;
-#if K0180_SCALABLE_NESTING_SEI
-  Bool                    m_nestedBufferingPeriodSEIPresentInAU;
-  Bool                    m_nestedPictureTimingSEIPresentInAU;
-#endif
 #endif
 public:
   TEncGOP();
@@ -143,13 +140,15 @@ public:
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );
+
 #if H_MV
   Void  initGOP     ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP);
   Void  compressPicInGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid );
 #else
   Void  compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
 #endif
-  Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
+
+  Void xWriteTileLocationToSliceHeader (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect, TComSlice*& rpcSlice);
 
 #if H_MV
   Int       getPocLastCoded  ()                 { return m_pocLastCoded; }  
@@ -167,10 +166,11 @@ public:
 #if !H_MV
   Void  printOutSummary      ( UInt uiNumAllPicCoded );
 #endif
+
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
-  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
+  NalUnitType getNalUnitType( Int pocCurr );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
@@ -189,10 +189,6 @@ protected:
   SEIFramePacking*        xCreateSEIFramePacking();
   SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
 
-#if J0149_TONE_MAPPING_SEI
-  SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
-#endif
-
   Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
 #if L0045_NON_NESTED_SEI_RESTRICTIONS
   Int xGetFirstSeiLocation (AccessUnit &accessUnit);
@@ -202,20 +198,12 @@ protected:
     m_bufferingPeriodSEIPresentInAU    = false;
     m_pictureTimingSEIPresentInAU      = false;
   }
-#if K0180_SCALABLE_NESTING_SEI
-  Void xResetNestedSEIPresentFlags()
-  {
-    m_nestedBufferingPeriodSEIPresentInAU    = false;
-    m_nestedPictureTimingSEIPresentInAU      = false;
-  }
 #endif
-#endif
+
 #if H_MV
    Void  xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr, UInt iGOPid );
 #endif
-#if L0386_DB_METRIC
-  Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
-#endif
+
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================

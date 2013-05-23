@@ -586,12 +586,10 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
-#if !H_MV
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tdecodeTransformIdx()\tCUDepth=" )
     DTRACE_CABAC_V( uiDepth )
     DTRACE_CABAC_T( "\n" )
-#endif
   }
   else
   {

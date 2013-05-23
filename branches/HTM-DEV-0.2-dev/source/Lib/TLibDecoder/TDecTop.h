@@ -63,6 +63,7 @@ struct InputNALUnit;
 #if H_MV
 class TAppDecTop;
 #endif
+
 /// decoder class
 class TDecTop
 {
@@ -79,6 +80,7 @@ private:
 #else
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
 #endif
+
   TComSlice*              m_apcSlicePilot;
   
   SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices
@@ -139,6 +141,7 @@ public:
   Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
 #endif
   
+
 #if H_MV    
   TComPic*                getPic                ( Int poc );
   TComList<TComPic*>*     getListPic            ()               { return &m_cListPic;  }  
@@ -154,6 +157,7 @@ public:
   Bool                    getIsDepth            ()               { return m_isDepth;    }
 #endif
 #endif
+  
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
   Void  xCreateLostPicture (Int iLostPOC);

@@ -188,6 +188,14 @@
       <Project>{47e90995-1fc5-4ee4-a94d-ad474169f0e1}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+    <ProjectReference Include="TLibRenderer_vc10.vcxproj">
+      <Project>{2b298be6-dff0-4bd2-8f26-395ffe7f9eb4}</Project>
+      <Private>true</Private>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyLocalSatelliteAssemblies>false</CopyLocalSatelliteAssemblies>
+      <LinkLibraryDependencies>true</LinkLibraryDependencies>
+      <UseLibraryDependencyInputs>false</UseLibraryDependencyInputs>
+    </ProjectReference>
     <ProjectReference Include="TLibVideoIO_vc10.vcxproj">
       <Project>{5280c25a-d316-4be7-ae50-29d72108624f}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>

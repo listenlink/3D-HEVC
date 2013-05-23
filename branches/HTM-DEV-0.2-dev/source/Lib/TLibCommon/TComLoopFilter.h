@@ -98,9 +98,6 @@ protected:
   __inline Int xCalcDP( Pel* piSrc, Int iOffset);
   __inline Int xCalcDQ( Pel* piSrc, Int iOffset);
   
-  static const UChar sm_tcTable[54];
-  static const UChar sm_betaTable[52];
-
 public:
   TComLoopFilter();
   virtual ~TComLoopFilter();
@@ -113,12 +110,6 @@ public:
   
   /// picture-level deblocking filter
   Void loopFilterPic( TComPic* pcPic );
-
-  static Int getBeta( Int qp )
-  {
-    Int indexB = Clip3( 0, MAX_QP, qp );
-    return sm_betaTable[ indexB ];
-  }
 };
 
 //! \}

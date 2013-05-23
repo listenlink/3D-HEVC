@@ -247,6 +247,7 @@ public:
 
   ProfileTierLevel* getGeneralPTL()  { return &m_generalPTL; }
   ProfileTierLevel* getSubLayerPTL(Int i)  { return &m_subLayerPTL[i]; }
+
 #if H_MV
   Void copyLevelFrom( TComPTL* source );
 #endif
@@ -534,6 +535,7 @@ private:
   Int         m_refLayerId               [ MAX_NUM_LAYERS ][MAX_NUM_LAYERS];  
 
 #endif
+
 public:
   TComVPS();
   virtual ~TComVPS();
@@ -593,12 +595,14 @@ public:
 #else
   TComPTL* getPTL() { return &m_pcPTL; }
 #endif
+
 #if SIGNAL_BITRATE_PICRATE_IN_VPS
   TComBitRatePicRateInfo *getBitratePicrateInfo() { return &m_bitRatePicRateInfo; }
 #endif
 #if L0043_TIMING_INFO
   TimingInfo* getTimingInfo() { return &m_timingInfo; }
 #endif
+
 #if H_MV
   Void    setAvcBaseLayerFlag( Bool val )                                  { m_avcBaseLayerFlag = val;  }
   Bool    getAvcBaseLayerFlag()                                            { return m_avcBaseLayerFlag; } 
@@ -900,14 +904,13 @@ private:
   UInt        m_picWidthInLumaSamples;
   UInt        m_picHeightInLumaSamples;
   
-  Int         m_log2MinCodingBlockSize;
-  Int         m_log2DiffMaxMinCodingBlockSize;
+  Window      m_conformanceWindow;
+
   UInt        m_uiMaxCUWidth;
   UInt        m_uiMaxCUHeight;
   UInt        m_uiMaxCUDepth;
-
-  Window      m_conformanceWindow;
-
+  UInt        m_uiMinTrDepth;
+  UInt        m_uiMaxTrDepth;
   TComRPSList m_RPSList;
   Bool        m_bLongTermRefsPresent;
   Bool        m_TMVPFlagsPresent;
@@ -923,9 +926,7 @@ private:
   UInt        m_uiPCMLog2MinSize;
   Bool        m_useAMP;
 
-#if !L0034_COMBINED_LIST_CLEANUP
   Bool        m_bUseLComb;
-#endif
   
   // Parameter
   Int         m_bitDepthY;
@@ -966,9 +967,6 @@ private:
   static const Int   m_winUnitX[MAX_CHROMA_FORMAT_IDC+1];
   static const Int   m_winUnitY[MAX_CHROMA_FORMAT_IDC+1];
   TComPTL     m_pcPTL;
-#if H_MV
-  Bool        m_interViewMvVertConstraintFlag;
-#endif
 public:
   TComSPS();
   virtual ~TComSPS();
@@ -1000,12 +998,6 @@ public:
 
   Bool getUsedByCurrPicLtSPSFlag(Int i)        {return m_usedByCurrPicLtSPSFlag[i];}
   Void setUsedByCurrPicLtSPSFlag(Int i, Bool x)      { m_usedByCurrPicLtSPSFlag[i] = x;}
-
-  Int  getLog2MinCodingBlockSize() const           { return m_log2MinCodingBlockSize; }
-  Void setLog2MinCodingBlockSize(Int val)          { m_log2MinCodingBlockSize = val; }
-  Int  getLog2DiffMaxMinCodingBlockSize() const    { return m_log2DiffMaxMinCodingBlockSize; }
-  Void setLog2DiffMaxMinCodingBlockSize(Int val)   { m_log2DiffMaxMinCodingBlockSize = val; }
-
   Void setMaxCUWidth  ( UInt u ) { m_uiMaxCUWidth = u;      }
   UInt getMaxCUWidth  ()         { return  m_uiMaxCUWidth;  }
   Void setMaxCUHeight ( UInt u ) { m_uiMaxCUHeight = u;     }
@@ -1022,6 +1014,10 @@ public:
   UInt getBitsForPOC  ()         { return m_uiBitsForPOC;   }
   Bool getUseAMP() { return m_useAMP; }
   Void setUseAMP( Bool b ) { m_useAMP = b; }
+  Void setMinTrDepth  ( UInt u ) { m_uiMinTrDepth = u;      }
+  UInt getMinTrDepth  ()         { return  m_uiMinTrDepth;  }
+  Void setMaxTrDepth  ( UInt u ) { m_uiMaxTrDepth = u;      }
+  UInt getMaxTrDepth  ()         { return  m_uiMaxTrDepth;  }
   Void setQuadtreeTULog2MaxSize( UInt u ) { m_uiQuadtreeTULog2MaxSize = u;    }
   UInt getQuadtreeTULog2MaxSize()         { return m_uiQuadtreeTULog2MaxSize; }
   Void setQuadtreeTULog2MinSize( UInt u ) { m_uiQuadtreeTULog2MinSize = u;    }
@@ -1043,10 +1039,8 @@ public:
   UInt getMaxTrSize   ()         { return  m_uiMaxTrSize;   }
   
   // Tool list
-#if !L0034_COMBINED_LIST_CLEANUP
   Void setUseLComb    (Bool b)   { m_bUseLComb = b;         }
   Bool getUseLComb    ()         { return m_bUseLComb;      }
-#endif
 
   Bool getUseLossless ()         { return m_useLossless; }
   Void setUseLossless ( Bool b ) { m_useLossless  = b; }
@@ -1099,10 +1093,6 @@ public:
   Void setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool randomAccess );
 
   TComPTL* getPTL()     { return &m_pcPTL; }
-#if H_MV
-  Void setInterViewMvVertConstraintFlag(Bool val) { m_interViewMvVertConstraintFlag = val; }
-  Bool getInterViewMvVertConstraintFlag()         { return m_interViewMvVertConstraintFlag;}
-#endif
 };
 
 /// Reference Picture Lists class
@@ -1129,6 +1119,7 @@ public:
   UInt       getRefPicSetIdxL0(UInt idx) { return m_RefPicSetIdxL0[idx]; }
   Void       setRefPicSetIdxL1(UInt idx, UInt refPicSetIdx) { m_RefPicSetIdxL1[idx] = refPicSetIdx; }
   UInt       getRefPicSetIdxL1(UInt idx) { return m_RefPicSetIdxL1[idx]; }
+
 #if H_MV
   // Why not an listIdx for all members, would avoid code duplication?? 
   Void       setRefPicSetIdxL(UInt li, UInt idx, UInt refPicSetIdx) {( li==0 ? m_RefPicSetIdxL0[idx] : m_RefPicSetIdxL1[idx] ) = refPicSetIdx; };
@@ -1365,10 +1356,7 @@ private:
   Bool        m_deblockingFilterOverrideFlag;      //< offsets for deblocking filter inherit from PPS
   Int         m_deblockingFilterBetaOffsetDiv2;    //< beta offset for deblocking filter
   Int         m_deblockingFilterTcOffsetDiv2;      //< tc offset for deblocking filter
-#if L0034_COMBINED_LIST_CLEANUP
-  Int         m_list1IdxToList0Idx[MAX_NUM_REF];
-  Int         m_aiNumRefIdx   [2];    //  for multiple reference of current slice
-#else
+  
   Int         m_aiNumRefIdx   [3];    //  for multiple reference of current slice
 
   Int         m_iRefIdxOfLC[2][MAX_NUM_REF_LC];
@@ -1378,7 +1366,6 @@ private:
   Int         m_iRefIdxOfL0FromRefIdxOfL1[MAX_NUM_REF_LC];
   Bool        m_bRefPicListModificationFlagLC;
   Bool        m_bRefPicListCombinationFlag;
-#endif
 
   Bool        m_bCheckLDC;
 
@@ -1419,9 +1406,8 @@ private:
 #endif
 
   Bool        m_abEqualRef  [2][MAX_NUM_REF][MAX_NUM_REF];
-#if !L0034_COMBINED_LIST_CLEANUP
+  
   Bool        m_bNoBackPredFlag;
-#endif
   UInt        m_uiTLayer;
   Bool        m_bTLayerSwitchingFlag;
 
@@ -1456,6 +1442,7 @@ private:
   Bool       m_LFCrossSliceBoundaryFlag;
 
   Bool       m_enableTMVPFlag;
+
 #if H_MV
   Int        m_layerId; 
   Int        m_viewId;
@@ -1463,6 +1450,7 @@ private:
   Bool       m_isDepth;
 #endif
 #endif
+
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -1527,9 +1515,6 @@ public:
   Bool      getCheckLDC     ()                                  { return m_bCheckLDC; }
   Bool      getMvdL1ZeroFlag ()                                  { return m_bLMvdL1Zero;    }
   Int       getNumRpsCurrTempList();
-#if L0034_COMBINED_LIST_CLEANUP
-  Int       getList1IdxToList0Idx ( Int list1Idx )               { return m_list1IdxToList0Idx[list1Idx]; }
-#else
   Int       getRefIdxOfLC       (RefPicList e, Int iRefIdx)     { return m_iRefIdxOfLC[e][iRefIdx];           }
   Int       getListIdFromIdxOfLC(Int iRefIdx)                   { return m_eListIdFromIdxOfLC[iRefIdx];       }
   Int       getRefIdxFromIdxOfLC(Int iRefIdx)                   { return m_iRefIdxFromIdxOfLC[iRefIdx];       }
@@ -1539,16 +1524,14 @@ public:
   Void      setRefPicListModificationFlagLC(Bool bflag)         {m_bRefPicListModificationFlagLC=bflag;}     
   Bool      getRefPicListCombinationFlag()                      {return m_bRefPicListCombinationFlag;}
   Void      setRefPicListCombinationFlag(Bool bflag)            {m_bRefPicListCombinationFlag=bflag;}   
-#endif
   Void      setReferenced(Bool b)                               { m_bRefenced = b; }
   Bool      isReferenced()                                      { return m_bRefenced; }
   Void      setPOC              ( Int i )                       { m_iPOC              = i; if(getTLayer()==0) m_prevPOC=i; }
   Void      setNalUnitType      ( NalUnitType e )               { m_eNalUnitType      = e;      }
-  NalUnitType getNalUnitType    () const                        { return m_eNalUnitType;        }
+  NalUnitType getNalUnitType    ()                              { return m_eNalUnitType;        }
   Bool      getRapPicFlag       ();  
-  Bool      getIdrPicFlag       ()                              { return getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP; }
-  Bool      isIRAP              () const                        { return (getNalUnitType() >= 16) && (getNalUnitType() <= 23); }  
-  Void      checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& pocCRA, Bool& prevRAPisBLA, TComList<TComPic *>& rcListPic);
+  Bool      getIdrPicFlag       ()                              { return getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP; }
+  Void      checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& pocCRA, Bool& prevRAPisBLA);
   Void      decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic);
   Void      setSliceType        ( SliceType e )                 { m_eSliceType        = e;      }
   Void      setSliceQp          ( Int i )                       { m_iSliceQp          = i;      }
@@ -1574,13 +1557,9 @@ public:
   Void      setRefLayerId        ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefLayerIdList[e][iRefIdx] = i; }
 #endif
 #if H_MV
-  Void      setRefPicList       ( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& interLayerRefPicSet , Bool checkNumPocTotalCurr = false );
-#else
-#if FIX1071
-  Void      setRefPicList       ( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr = false );
+  Void      setRefPicList       ( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& interLayerRefPicSet );
 #else
   Void      setRefPicList       ( TComList<TComPic*>& rcListPic );
-#endif
 #endif
   Void      setRefPOCList       ();
   Void      setColFromL0Flag    ( UInt colFromL0 ) { m_colFromL0Flag = colFromL0; }
@@ -1614,13 +1593,10 @@ public:
   }
   
   static Void      sortPicList         ( TComList<TComPic*>& rcListPic );
-#if L0034_COMBINED_LIST_CLEANUP
-  Void setList1IdxToList0Idx();
-#else
+  
   Bool getNoBackPredFlag() { return m_bNoBackPredFlag; }
   Void setNoBackPredFlag( Bool b ) { m_bNoBackPredFlag = b; }
   Void generateCombinedList       ();
-#endif
 
   UInt getTLayer             ()                            { return m_uiTLayer;                      }
   Void setTLayer             ( UInt uiTLayer )             { m_uiTLayer = uiTLayer;                  }
@@ -1628,6 +1604,7 @@ public:
   Void setTLayerInfo( UInt uiTLayer );
   Void decodingMarking( TComList<TComPic*>& rcListPic, Int iGOPSIze, Int& iMaxRefPicNum ); 
   Void applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComReferencePictureSet *RPSList);
+
 #if H_MV
   Void createAndApplyIvReferencePictureSet( TComPicLists* ivPicLists, std::vector<TComPic*>& refPicSetInterLayer );
   static Void markIvRefPicsAsShortTerm    ( std::vector<TComPic*> refPicSetInterLayer );
@@ -1636,6 +1613,7 @@ public:
 
   Void xPrintRefPicList();
 #endif
+
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
   Bool isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
   Int       checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool printErrors, Int pocRandomAccess = 0);
@@ -1676,7 +1654,8 @@ public:
   Void  setWpScaling    ( wpScalingParam  wp[2][MAX_NUM_REF][3] ) { memcpy(m_weightPredTable, wp, sizeof(wpScalingParam)*2*MAX_NUM_REF*3); }
   Void  getWpScaling    ( RefPicList e, Int iRefIdx, wpScalingParam *&wp);
 
-  Void  resetWpScaling  ();
+  Void  resetWpScaling  (wpScalingParam  wp[2][MAX_NUM_REF][3]);
+  Void  initWpScaling    (wpScalingParam  wp[2][MAX_NUM_REF][3]);
   Void  initWpScaling   ();
   inline Bool applyWP   () { return( (m_eSliceType==P_SLICE && m_pcPPS->getUseWP()) || (m_eSliceType==B_SLICE && m_pcPPS->getWPBiPred()) ); }
 
@@ -1722,10 +1701,12 @@ public:
   Bool      getIsDepth            ()                 { return m_isDepth; }
 #endif
 #endif
+
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Int                 poc);
-TComPic*  xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, Bool pocHasMsb);
+  TComPic*  xGetLongTermRefPic  (TComList<TComPic*>& rcListPic,
+                         Int                 poc);
 #if H_MV
   TComPic*  xGetInterLayerRefPic( std::vector<TComPic*>& rcListIlPic, Int layerId );
 #endif
@@ -1812,7 +1793,7 @@ public:
 
   //! activate a PPS and depending on isIDR parameter also SPS and VPS
   //! \returns true, if activation is successful
-  Bool activatePPS(Int ppsId, Bool isIRAP);
+  Bool activatePPS(Int ppsId, Bool isIDR);
 
   TComVPS* getActiveVPS(){ return m_vpsMap.getPS(m_activeVPSId); };
   TComSPS* getActiveSPS(){ return m_spsMap.getPS(m_activeSPSId); };
