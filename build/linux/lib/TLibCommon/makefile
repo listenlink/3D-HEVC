@@ -34,12 +34,11 @@ DEFS			= -DMSYS_LINUX
 OBJS          	= \
 			$(OBJ_DIR)/ContextModel.o \
 			$(OBJ_DIR)/ContextModel3DBuffer.o \
+			$(OBJ_DIR)/SEI.o \
 			$(OBJ_DIR)/TComCABACTables.o \
-			$(OBJ_DIR)/TComAdaptiveLoopFilter.o \
 			$(OBJ_DIR)/TComSampleAdaptiveOffset.o \
 			$(OBJ_DIR)/TComBitStream.o \
 			$(OBJ_DIR)/TComDataCU.o \
-			$(OBJ_DIR)/TComDepthMapGenerator.o \
 			$(OBJ_DIR)/TComLoopFilter.o \
 			$(OBJ_DIR)/TComMotionInfo.o \
 			$(OBJ_DIR)/TComPattern.o \
@@ -49,7 +48,6 @@ OBJS          	= \
 			$(OBJ_DIR)/TComPicYuvMD5.o \
 			$(OBJ_DIR)/TComPrediction.o \
 			$(OBJ_DIR)/TComRdCost.o \
-			$(OBJ_DIR)/TComResidualGenerator.o \
 			$(OBJ_DIR)/TComRom.o \
 			$(OBJ_DIR)/TComSlice.o \
 			$(OBJ_DIR)/TComTrQuant.o \
@@ -58,7 +56,6 @@ OBJS          	= \
 			$(OBJ_DIR)/libmd5.o \
 			$(OBJ_DIR)/TComWeightPrediction.o \
 			$(OBJ_DIR)/TComRdCostWeightPrediction.o \
-			$(OBJ_DIR)/TComWedgelet.o \
 
 LIBS				= -lpthread
 

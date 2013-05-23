@@ -33,7 +33,6 @@ DEFS			= -DMSYS_LINUX
 # set objects
 OBJS          	= \
 			$(OBJ_DIR)/program_options_lite.o \
-			$(OBJ_DIR)/TAppComCamPara.o \
 
 LIBS				= -lpthread
 

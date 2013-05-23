@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,8 +57,6 @@
 // Class definition
 // ====================================================================================================================
 
-class SEImessages;
-
 /// SBAC decoder class
 class TDecSbac : public TDecEntropyIf
 {
@@ -73,108 +71,38 @@ public:
   Void loadContexts                  ( TDecSbac* pScr );
   Void xCopyFrom           ( TDecSbac* pSrc );
   Void xCopyContextsFrom       ( TDecSbac* pSrc );
-  Void decodeFlush();
 
-#if CABAC_INIT_FLAG
   Void  resetEntropy (TComSlice* pSlice );
-#else
-  Void  resetEntropywithQPandInitIDC ( Int  iQp, Int iID);
-  Void  resetEntropy                 ( Int  iQp, Int iID      ) { resetEntropywithQPandInitIDC(iQp, iID);                                      }
-  Void  resetEntropy                 ( TComSlice* pcSlice     ) { resetEntropywithQPandInitIDC(pcSlice->getSliceQp(), pcSlice->getCABACinitIDC());}
-#endif
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
-  
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  Void  parseVPS                  ( TComVPS* pcVPS )  {}
-#endif
-#if HHI_MPI || H3D_QTL
-  Void  parseSPS                  ( TComSPS* pcSPS, Bool bIsDepth ) {}
-#else
-  Void  parseSPS                  ( TComSPS* pcSPS         ) {}
-#endif
-  Void  parsePPS                  ( TComPPS* pcPPS, ParameterSetManagerDecoder *parameterSet         ) {}
-  Void  parseAPS                  ( TComAPS* pAPS          ) {}
-  void parseSEI(SEImessages&) {}
+  Void  parseVPS                  ( TComVPS* /*pcVPS*/ ) {}
+  Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
+  Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}
 
-#if MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137
-  Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet, bool isDepth) {}
-#else
-  Void  parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, AlfCUCtrlInfo &alfCUCtrl, AlfParamSet& alfParamSet) {}
-#endif
-
+  Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/) {}
   Void  parseTerminatingBit       ( UInt& ruiBit );
-#if H3D_IVMP
-  Void  parseMVPIdx               ( Int& riMVPIdx, Int iNumAMVPCands );
-#else
   Void  parseMVPIdx               ( Int& riMVPIdx          );
-#endif
-  
-  Void  parseSaoUvlc              ( UInt& ruiVal           );
-  Void  parseSaoSvlc              ( Int&  riVal            );
-  Void  parseSaoMergeLeft         ( UInt&  ruiVal, UInt uiCompIdx   );
-  Void  parseSaoMergeUp           ( UInt&  ruiVal  );
+  Void  parseSaoMaxUvlc           ( UInt& val, UInt maxSymbol );
+  Void  parseSaoMerge         ( UInt&  ruiVal   );
   Void  parseSaoTypeIdx           ( UInt&  ruiVal  );
-  Void  parseSaoUflc              ( UInt& ruiVal           );
-  Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Bool bLFCrossSliceBoundaryFlag);
-  Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam);
-  
-#if RWTH_SDC_DLT_B0036
-  Void parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
-#endif
+  Void  parseSaoUflc              ( UInt uiLength, UInt& ruiVal     );
+  Void  parseSaoOneLcuInterleaving(Int rx, Int ry, SAOParam* pSaoParam, TComDataCU* pcCU, Int iCUAddrInSlice, Int iCUAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
+  Void  parseSaoOffset            (SaoLcuParam* psSaoLcuParam, UInt compIdx);
 private:
   Void  xReadUnarySymbol    ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset );
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
-  Void  xReadGoRiceExGolomb ( UInt &ruiSymbol, UInt &ruiGoRiceParam );
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  Void  xReadExGolombLevel  ( UInt& ruiSymbol, ContextModel& rcSCModel  );
-#endif
-#if HHI_DMM_WEDGE_INTRA
-  Void xParseWedgeFullInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void xParseWedgeFullDeltaInfo     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-
-  Void xParseWedgePredDirInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void xParseWedgePredDirDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if HHI_DMM_PRED_TEX
-#if LGE_DMM3_SIMP_C0044
-  Void xParseWedgePredTexInfo       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-  Void xParseWedgePredTexDeltaInfo  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-  Void xParseContourPredTexDeltaInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-  
-#if LGE_EDGE_INTRA_A0070
-  Void xParseEdgeIntraInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-  
+  Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam );
 private:
   TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
-  
-  Int           m_iSliceGranularity; //!< slice granularity
-
+ 
 public:
-  Void parseAlfCtrlFlag   ( UInt &ruiAlfCtrlFlag );
-
-  /// set slice granularity
-  Void setSliceGranularity(Int iSliceGranularity)  {m_iSliceGranularity = iSliceGranularity;}
-
-  /// get slice granularity
-  Int  getSliceGranularity()                       {return m_iSliceGranularity;             }
-
+  
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if LGE_ILLUCOMP_B0045
-  Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
+  Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
-  Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex, UInt uiAbsPartIdx, UInt uiDepth );
-#if H3D_IVRP
-  Void parseResPredFlag   ( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
+  Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex );
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
@@ -182,13 +110,13 @@ public:
   
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
-  Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx, UInt uiDepth );
-  Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, UInt uiAbsPartIdx, UInt uiDepth, RefPicList eRefList );
+  Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
+  Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
   
   Void parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize );
   Void parseQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
-  Void parseQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& uiQtRootCbf );
+  Void parseQtRootCbf     ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   
   Void parseDeltaQP       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
@@ -196,11 +124,11 @@ public:
 
   Void parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int width, Int height, TextType eTType, UInt uiScanIdx );
   Void parseCoeffNxN      ( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType );
-  
-  Void readTileMarker   ( UInt& uiTileIdx, UInt uiBitsUsed );
+  Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType);
+
   Void updateContextTables( SliceType eSliceType, Int iQp );
 
-  Void  parseScalingList ( TComScalingList* scalingList ) {}
+  Void  parseScalingList ( TComScalingList* /*scalingList*/ ) {}
 
 private:
   UInt m_uiLastDQpNonZero;
@@ -210,17 +138,10 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
-#if LGE_ILLUCOMP_B0045
-  ContextModel3DBuffer m_cCUICFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-#if H3D_IVRP
-  ContextModel3DBuffer m_cResPredFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
-  ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;
   ContextModel3DBuffer m_cCUChromaPredSCModel;
   ContextModel3DBuffer m_cCUDeltaQpSCModel;
@@ -240,38 +161,11 @@ private:
   
   ContextModel3DBuffer m_cMVPIdxSCModel;
   
-  ContextModel3DBuffer m_cALFFlagSCModel;
-  ContextModel3DBuffer m_cALFUvlcSCModel;
-  ContextModel3DBuffer m_cALFSvlcSCModel;
   ContextModel3DBuffer m_cCUAMPSCModel;
-  ContextModel3DBuffer m_cSaoFlagSCModel;
-  ContextModel3DBuffer m_cSaoUvlcSCModel;
-  ContextModel3DBuffer m_cSaoSvlcSCModel;
-  ContextModel3DBuffer m_cSaoMergeLeftSCModel;
-  ContextModel3DBuffer m_cSaoMergeUpSCModel;
+  ContextModel3DBuffer m_cSaoMergeSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
-
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  ContextModel3DBuffer m_cDmmFlagSCModel;
-  ContextModel3DBuffer m_cDmmModeSCModel;
-  ContextModel3DBuffer m_cDmmDataSCModel;
-#endif
-#if LGE_EDGE_INTRA_A0070
-  ContextModel3DBuffer m_cEdgeIntraSCModel;
-#if LGE_EDGE_INTRA_DELTA_DC
-  ContextModel3DBuffer m_cEdgeIntraDeltaDCSCModel;
-#endif
-#endif
-  
-#if RWTH_SDC_DLT_B0036
-  ContextModel3DBuffer m_cSDCFlagSCModel;
-  
-  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
-  ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
-  ContextModel3DBuffer m_cSDCResidualSCModel;
-  
-  ContextModel3DBuffer m_cSDCPredModeSCModel;
-#endif
+  ContextModel3DBuffer m_cTransformSkipSCModel;
+  ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
 };
 
 //! \}

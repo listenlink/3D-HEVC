@@ -144,11 +144,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\source\Lib\TAppCommon\program_options_lite.cpp" />
-    <ClCompile Include="..\..\source\Lib\TAppCommon\TAppComCamPara.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\source\Lib\TAppCommon\program_options_lite.h" />
-    <ClInclude Include="..\..\source\Lib\TAppCommon\TAppComCamPara.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

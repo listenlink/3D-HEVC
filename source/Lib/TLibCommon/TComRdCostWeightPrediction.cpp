@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -80,58 +80,27 @@ UInt TComRdCostWeightPrediction::xGetSADw( DistParam* pcDtParam )
   assert(uiComp<3);
   wpScalingParam  *wpCur    = &(pcDtParam->wpCur[uiComp]);
   Int   w0      = wpCur->w,
-    offset  = wpCur->offset,
-    shift   = wpCur->shift,
-    round   = wpCur->round;
-
+        offset  = wpCur->offset,
+        shift   = wpCur->shift,
+        round   = wpCur->round;
+  
   UInt uiSum = 0;
-#if HHI_INTERVIEW_SKIP
-  if( pcDtParam->pUsed )
+  
+  for( ; iRows != 0; iRows-- )
   {
-    Pel*  piUsed      = pcDtParam->pUsed;
-    Int   iStrideUsed = pcDtParam->iStrideUsed;
-    for( ; iRows != 0; iRows-- )
+    for (Int n = 0; n < iCols; n++ )
     {
-      for (Int n = 0; n < iCols; n++ )
-      {
-        if( piUsed[n])
-        {
-          pred = ( (w0*piCur[n] + round) >> shift ) + offset ;
-          uiSum += abs( piOrg[n] - pred );
-        }
-      }
-      piOrg += iStrideOrg;
-      piCur += iStrideCur;
-      piUsed += iStrideUsed;
+      pred = ( (w0*piCur[n] + round) >> shift ) + offset ;
+      
+      uiSum += abs( piOrg[n] - pred );
     }
-#if FIX_LGE_WP_FOR_3D_C0223
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
   }
-  else
-  {
-#endif
-#if FIX_LGE_WP_FOR_3D_C0223 //comment of #else
-    //#else
-#endif
-#endif
-    for( ; iRows != 0; iRows-- )
-    {
-      for (Int n = 0; n < iCols; n++ )
-      {
-        pred = ( (w0*piCur[n] + round) >> shift ) + offset ;
-        uiSum += abs( piOrg[n] - pred );
-      }
-      piOrg += iStrideOrg;
-      piCur += iStrideCur;
-    }
-#if FIX_LGE_WP_FOR_3D_C0223 //comment of #endif
-    //#endif
-#endif
-#if HHI_INTERVIEW_SKIP
-  }
-#endif
+  
   pcDtParam->uiComp = 255;  // reset for DEBUG (assert test)
 
-  return ( uiSum >> g_uiBitIncrement );
+  return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
 
 // --------------------------------------------------------------------------------------------------------------------
@@ -162,7 +131,7 @@ UInt TComRdCostWeightPrediction::xGetSSEw( DistParam* pcDtParam )
         round   = wpCur->round;
  
   UInt uiSum = 0;
-  UInt uiShift = g_uiBitIncrement<<1;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT((pcDtParam->bitDepth-8) << 1);
   
   Int iTemp;
   
@@ -443,7 +412,9 @@ UInt TComRdCostWeightPrediction::xCalcHADs8x8w( Pel *piOrg, Pel *piCur, Int iStr
   for (j=0; j < 8; j++)
   {
     for (i=0; i < 8; i++)
+    {
       sad += (abs(m2[j][i]));
+    }
   }
   
   sad=((sad+2)>>2);
@@ -476,7 +447,7 @@ UInt TComRdCostWeightPrediction::xGetHADs4w( DistParam* pcDtParam )
     piCur += iOffsetCur;
   }
   
-  return ( uiSum >> g_uiBitIncrement );
+  return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
 
 /** get weighted Hadamard cost
@@ -512,7 +483,7 @@ UInt TComRdCostWeightPrediction::xGetHADs8w( DistParam* pcDtParam )
     }
   }
   
-  return ( uiSum >> g_uiBitIncrement );
+  return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
 
 /** get weighted Hadamard cost
@@ -534,11 +505,8 @@ UInt TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
   UInt            uiComp    = pcDtParam->uiComp;
   assert(uiComp<3);
   wpScalingParam  *wpCur    = &(pcDtParam->wpCur[uiComp]);
-  Int   w0      = wpCur->w,
-        offset  = wpCur->offset,
-        shift   = wpCur->shift,
-        round   = wpCur->round; 
-  xSetWPscale(w0, 0, shift, offset, round);
+
+  xSetWPscale(wpCur->w, 0, wpCur->shift, wpCur->offset, wpCur->round);
 
   UInt uiSum = 0;
   
@@ -586,5 +554,5 @@ UInt TComRdCostWeightPrediction::xGetHADsw( DistParam* pcDtParam )
   
   m_xSetDone  = false;
 
-  return ( uiSum >> g_uiBitIncrement );
+  return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
