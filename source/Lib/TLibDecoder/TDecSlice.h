@@ -83,7 +83,6 @@ public:
   Void  decompressSlice   ( TComInputBitstream** ppcSubstreams,   TComPic*& rpcPic, TDecSbac* pcSbacDecoder, TDecSbac* pcSbacDecoders );
   Void      initCtxMem(  UInt i );
   Void      setCtxMem( TDecSbac* sb, Int b )   { CTXMem[b] = sb; }
-  Int       getCtxMemSize( )                   { return (Int)CTXMem.size(); }
 };
 
 

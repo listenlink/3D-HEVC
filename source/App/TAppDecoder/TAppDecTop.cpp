@@ -53,11 +53,13 @@
 // ====================================================================================================================
 
 TAppDecTop::TAppDecTop()
+
 #if !H_MV
 : m_iPOCLastDisplay(-MAX_INT)
 #else
 : m_numDecoders( 0 )
 #endif
+
 {
   ::memset (m_abDecFlag, 0, sizeof (m_abDecFlag));
 #if H_MV
@@ -76,6 +78,7 @@ Void TAppDecTop::destroy()
     free (m_pchBitstreamFile);
     m_pchBitstreamFile = NULL;
   }
+
 #if H_MV
   for (Int decIdx = 0; decIdx < m_numDecoders; decIdx++)
   {
@@ -111,6 +114,7 @@ Void TAppDecTop::decode()
 #if H_MV
   poc = -1; 
 #endif
+
   TComList<TComPic*>* pcListPic = NULL;
 
   ifstream bitstreamFile(m_pchBitstreamFile, ifstream::in | ifstream::binary);
@@ -142,6 +146,7 @@ Void TAppDecTop::decode()
 
   Bool firstSlice        = true; 
 #endif
+
  
   while (!!bitstreamFile)
   {
@@ -150,16 +155,10 @@ Void TAppDecTop::decode()
      * requires the TDecTop::decode() method to be called again with the same
      * nal unit. */
     streampos location = bitstreamFile.tellg();
-#if H_MV
-#if ENC_DEC_TRACE
-    Int64 symCount = g_nSymbolCounter;
-#endif
-#endif
     AnnexBStats stats = AnnexBStats();
 #if !H_MV
     Bool bPreviousPictureDecoded = false;
 #endif
-
     vector<uint8_t> nalUnit;
     InputNALUnit nalu;
     byteStreamNALUnit(bytestream, nalUnit, stats);
@@ -250,12 +249,6 @@ Void TAppDecTop::decode()
            *     (but bNewPicture doesn't happen then) */
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
-#if H_MV
-#if ENC_DEC_TRACE
-          g_nSymbolCounter = symCount;
-#endif
-#endif
-
         }
 #if !H_MV
         bPreviousPictureDecoded = true; 
@@ -282,7 +275,6 @@ Void TAppDecTop::decode()
       }
     }
 #endif
-
     if( pcListPic )
     {
 #if H_MV
@@ -293,7 +285,6 @@ Void TAppDecTop::decode()
       {
         if (!m_outputBitDepthY) { m_outputBitDepthY = g_bitDepthY; }
         if (!m_outputBitDepthC) { m_outputBitDepthC = g_bitDepthC; }
-
 #if H_MV
         m_tVideoIOYuvReconFile[decIdxLastPic]->open( m_pchReconFiles[decIdxLastPic], true, m_outputBitDepthY, m_outputBitDepthC, g_bitDepthY, g_bitDepthC ); // write mode
         m_reconOpen[decIdxLastPic] = true;
@@ -305,11 +296,11 @@ Void TAppDecTop::decode()
       }
       if ( bNewPicture && 
 #endif
-           (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_W_RADL
+           (   nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_IDR_N_LP
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
-            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_RADL
-            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP ) )
+            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLANT
+            || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA ) )
       {
 #if H_MV
         xFlushOutput( pcListPic, decIdxLastPic );
@@ -601,56 +592,4 @@ Bool TAppDecTop::isNaluWithinTargetDecLayerIdSet( InputNALUnit* nalu )
   return false;
 }
 
-#if H_MV
-Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
-{
-  Int decIdx = -1; 
-  if ( m_layerIdToDecIdx[ layerId ] != -1 ) 
-  {      
-    decIdx = m_layerIdToDecIdx[ layerId ]; 
-  }
-  else
-  {      
-    assert ( createFlag ); 
-    assert( m_numDecoders < MAX_NUM_LAYERS ); 
-
-    decIdx = m_numDecoders; 
-
-    // Init decoder
-    m_tDecTop[ decIdx ] =  new TDecTop;
-    m_tDecTop[ decIdx ]->create();
-    m_tDecTop[ decIdx ]->init( );
-    m_tDecTop[ decIdx ]->setLayerId( layerId );
-    m_tDecTop[ decIdx ]->setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
-    m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
-
-    // append pic list of new decoder to PicLists 
-    assert( m_ivPicLists.size() == m_numDecoders );
-    m_ivPicLists.push_back( m_tDecTop[ decIdx ]->getListPic() );
-
-    // create recon file related stuff      
-    Char* pchTempFilename = NULL;
-    if ( m_pchReconFile )
-    {      
-      Char buffer[4];      
-      sprintf(buffer,"_%i", layerId );
-      assert ( m_pchReconFile ); 
-      xAppendToFileNameEnd( m_pchReconFile , buffer, pchTempFilename );
-      assert( m_pchReconFiles.size() == m_numDecoders );
-    }
-
-    m_pchReconFiles.push_back( pchTempFilename );   
-
-    m_tVideoIOYuvReconFile[ decIdx ] = new TVideoIOYuv;
-    m_reconOpen           [ decIdx ] = false;
-
-    // set others 
-    m_pocLastDisplay      [ decIdx ] = -MAX_INT;
-    m_layerIdToDecIdx     [ layerId ] = decIdx; 
-
-    m_numDecoders++; 
-  };
-  return decIdx;
-}
-#endif
 //! \}

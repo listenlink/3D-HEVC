@@ -61,6 +61,7 @@ Void initROM()
   }
   g_aucConvertToBit[ i ] = c;
   
+  // g_auiFrameScanXY[ g_aucConvertToBit[ transformSize ] ]: zigzag scan array for transformSize
   c=2;
   for ( i=0; i<MAX_CU_DEPTH; i++ )
   {
@@ -75,7 +76,9 @@ Void initROM()
 
 Void destroyROM()
 {
-  for (Int i=0; i<MAX_CU_DEPTH; i++ )
+  Int i;
+  
+  for ( i=0; i<MAX_CU_DEPTH; i++ )
   {
     delete[] g_auiSigLastScan[0][i];
     delete[] g_auiSigLastScan[1][i];

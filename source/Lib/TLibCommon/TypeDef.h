@@ -48,17 +48,8 @@
 #define H_3D                        0
 #endif
 
-///// ***** HM 10.1 *********
-#define FIX1071 1 ///< Temporary fix for issue #1071
+///// ***** HM 10.0 *********
 
-#define L0208_SOP_DESCRIPTION_SEI     1 ///< L0208: add SOP descrioption SEI
-#define MAX_NUM_PICS_IN_SOP           1024
-
-#define K0180_SCALABLE_NESTING_SEI  1   ///JCTVC-K0180 scalable nesting sei message
-#define MAX_NESTING_NUM_OPS         1024
-#define MAX_NESTING_NUM_LAYER       64
-
-#define J0149_TONE_MAPPING_SEI        1 ///< J0149: Tone mapping information SEI
 #define L0363_DU_BIT_RATE             1 ///< L0363: add bit_rate_du_value_minus1 to HRD parameters
 #define L0328_SPLICING                1 ///< L0328: splicing support in HRD
 #define L0044_DU_DPB_OUTPUT_DELAY_HRD 1 ///< L0044: Include dpb_output_delay_du_length_minus1 in hrd_parameters(), dpb_output_du_delay in
@@ -83,13 +74,10 @@
 #define L0372 1
 #define SIGNAL_BITRATE_PICRATE_IN_VPS               0  ///< K0125: Signal bit_rate and pic_rate in VPS
 #define L0232_RD_PENALTY           1  ///< L0232: RD-penalty for 32x32 TU for intra in non-intra slices
-#define L0386_DB_METRIC            1  ///< L0386: non-normative blockiness metric (automatically configures deblocking parameters in bitstream)
-#define L0323_DPB                     1 ///< L0323: Specification of active reference indices and decoded picture buffer
-
-#define L0034_COMBINED_LIST_CLEANUP 1
 
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #define MAX_VPS_OP_SETS_PLUS1                     1024
+
 #if H_MV
 #define MAX_VPS_NUH_LAYER_ID_PLUS1  64
 #define MAX_NUM_SCALABILITY_TYPES   16
@@ -103,9 +91,7 @@
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS               64
-#if H_MV
 #define MAX_NUM_LAYERS                  64
-#endif
 
 #define COEF_REMAIN_BIN_REDUCTION        3 ///< indicates the level at which the VLC 
                                            ///< transitions from Golomb-Rice to TU+EG(k)
@@ -425,9 +411,7 @@ enum RefPicList
 {
   REF_PIC_LIST_0 = 0,   ///< reference list 0
   REF_PIC_LIST_1 = 1,   ///< reference list 1
-#if !L0034_COMBINED_LIST_CLEANUP
   REF_PIC_LIST_C = 2,   ///< combined reference list for uni-prediction in B-Slices
-#endif
   REF_PIC_LIST_X = 100  ///< special mark
 };
 
@@ -569,3 +553,4 @@ namespace Level
   };
 #endif
 #endif
+

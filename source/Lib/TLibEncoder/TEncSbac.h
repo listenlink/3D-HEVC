@@ -108,6 +108,7 @@ private:
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam );
+  Void  xWriteTerminatingBit ( UInt uiBit );
   
   Void  xCopyFrom            ( TEncSbac* pSrc );
   Void  xCopyContextsFrom    ( TEncSbac* pSrc );  

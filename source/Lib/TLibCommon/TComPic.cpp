@@ -480,5 +480,4 @@ Void TComPic::print( Bool legend )
 }
 #endif
 
-
 //! \}

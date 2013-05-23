@@ -1985,7 +1985,7 @@ Void TComTrQuant::xRateDistOptQuant                 ( TComDataCU*               
             }
           }
           
-          if(piDstCoeff[minPos] == 32767 || piDstCoeff[minPos] == -32768)
+          if(piQCoef[minPos] == 32767 || piQCoef[minPos] == -32768)
           {
             finalChange = -1;
           }

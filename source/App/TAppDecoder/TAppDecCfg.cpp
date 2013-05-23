@@ -44,6 +44,7 @@
 #if H_MV
 #include <cassert>
 #endif
+
 #ifdef WIN32
 #define strdup _strdup
 #endif
@@ -77,9 +78,11 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("SkipFrames,s", m_iSkipFrame, 0, "number of frames to skip before random access")
   ("OutputBitDepth,d", m_outputBitDepthY, 0, "bit depth of YUV output luma component (default: use 0 for native depth)")
   ("OutputBitDepthC,d", m_outputBitDepthC, 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
+
 #if H_MV
   ("MaxLayerId,-ls", m_maxLayerId, MAX_NUM_LAYER_IDS-1, "Maximum LayerId to be decoded.")
 #endif
+
   ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
   ("SEIDecodedPictureHash", m_decodedPictureHashSEIEnabled, 1, "Control handling of decoded picture hash SEI messages\n"
                                               "\t1: check hash in SEI messages if available in the bitstream\n"
@@ -104,6 +107,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
   /* convert std::string to c string for compatability */
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
+
   m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
 
   if (!m_pchBitstreamFile)
@@ -186,4 +190,5 @@ Void TAppDecCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchSt
   rpchOutputFileName[iInLength+iAppendLength] = '\0';          
 }
 #endif
+
 //! \}
