@@ -379,7 +379,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
         pcCU->setVSPIndexSubParts( iVSPIdx, uiSubPartIdx, uiPartIdx, uiDepth );               // Initialize
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-        pcCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], uiSubPartIdx, uiPartIdx, uiDepth );  // Initialize
+        pcCU->setVSPDirSubParts( 0, uiSubPartIdx, uiPartIdx, uiDepth );  // Initialize
 #endif
 #if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
        if(iVSPIdx != 0) 

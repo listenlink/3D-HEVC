@@ -820,15 +820,27 @@ Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt u
   xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, iShiftPrec, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getSPS()->isDepth(), rpcYuvPred );
 
 #else // MERL_VSP_NBDV_RefVId_Fix_D0166
-
+   // Step 1: get depth reference
+#if QC_BVSP_CleanUP_D0191
+  RefPicList privateRefPicList = REF_PIC_LIST_0;
+  Int refIdxList0 = pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr );
+  Int refIdxList1 = pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr );
+  privateRefPicList = refIdxList0 != NOT_VALID ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
+  if(privateRefPicList == REF_PIC_LIST_1 && refIdxList1== NOT_VALID )
+  {
+    assert(0);
+  }
+  Int privateRefIdx = privateRefPicList == REF_PIC_LIST_0 ? refIdxList0 : refIdxList1;
+  Int viewId = pcCU->getSlice()->getRefViewId(privateRefPicList, privateRefIdx);
+  Int refPoc = pcCU->getSlice()->getRefPOC(privateRefPicList, privateRefIdx);
+#else
   //recover VSP reference frame according to negative refIdx number
   RefPicList privateRefPicList = (RefPicList) pcCU->getVSPDir( uiPartAddr );
   assert(privateRefPicList == REF_PIC_LIST_0 || privateRefPicList == REF_PIC_LIST_1);
-
-  // Step 1: get depth reference
   Int  refIdx = -1-pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr ); // texture ref index, a trick when storing refIdx
   Int  viewId = pcCU->getSlice()->getRefViewId(privateRefPicList, refIdx);  // texture view id
   Int  refPoc = pcCU->getSlice()->getRefPOC(privateRefPicList, refIdx);     // texture POC
+#endif
   TComPic* pRefPicBaseDepth = pcCU->getSlice()->getDepthRefPic(viewId, refPoc);
 
   pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
@@ -872,16 +884,33 @@ Void  TComPrediction::xPredInterVSPBlk(TComDataCU* pcCU, UInt uiPartAddr, UInt u
 #if MERL_Bi_VSP_D0166
 TComPic*  TComPrediction::xGetVspRefTxt(TComDataCU* pcCU, UInt uiPartAddr, RefPicList eRefPicList)
 {
+#if QC_BVSP_CleanUP_D0191
+  RefPicList privateRefPicList = REF_PIC_LIST_0;
+  Int refIdxList0 = pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr );
+  Int refIdxList1 = pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr );
+  privateRefPicList = refIdxList0 != NOT_VALID ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
+  if(privateRefPicList == REF_PIC_LIST_1 && refIdxList1==NOT_VALID )
+  {
+    assert(0);
+  }
+  Int privateRefIdx = privateRefPicList == REF_PIC_LIST_0 ? refIdxList0 : refIdxList1;
+  Int viewId = pcCU->getSlice()->getRefViewId(privateRefPicList, privateRefIdx);
+#else
   RefPicList  privateRefPicList = (RefPicList) pcCU->getVSPDir( uiPartAddr );
   Int         refIdx = -1-pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr ); // texture ref index, a trick when storing refIdx
   Int         viewId = pcCU->getSlice()->getRefViewId(privateRefPicList, refIdx);  // texture view id
+#endif
   TComPic*    refPic = NULL;
 
   assert(privateRefPicList == REF_PIC_LIST_0 || privateRefPicList == REF_PIC_LIST_1);
 
   if (privateRefPicList == eRefPicList)
   {
+#if QC_BVSP_CleanUP_D0191
+    Int  refIdxt = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
+#else
     Int  refIdxt = -1-pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
+#endif
     assert(refIdxt>= 0);
     refPic = pcCU->getSlice()->getRefPic(eRefPicList, refIdxt);
   }
@@ -903,7 +932,11 @@ TComPic*  TComPrediction::xGetVspRefTxt(TComDataCU* pcCU, UInt uiPartAddr, RefPi
 
     if (isFound == false)
     {
+#if QC_BVSP_CleanUP_D0191
+      Int  refIdxTxt = pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr );
+#else
       Int  refIdxTxt = -1-pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr );
+#endif
       assert(refIdxTxt >= 0);
       refPic = pcCU->getSlice()->getRefPic(privateRefPicList, refIdxTxt);
     }
@@ -1226,11 +1259,28 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
 #if MERL_Bi_VSP_D0166
   Bool biDecision = 0;
   Int  predDirVSP = 0;
+#if QC_BVSP_CleanUP_D0191
+  RefPicList privateRefPicList = REF_PIC_LIST_0;
+#endif
   if (pcCU->getVSPIndex(uiPartAddr) != 0) // is VSP
   {
     Int biVSPAvail = 0;
     //test whether VSP is Bi or Uni
     //Step1. Get derived DV view id
+#if QC_BVSP_CleanUP_D0191
+    RefPicList otherRefPicList = REF_PIC_LIST_1;
+    Int refIdxList0 = pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr );
+    Int refIdxList1 = pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr );
+    privateRefPicList = refIdxList0 != NOT_VALID ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
+    if(privateRefPicList == REF_PIC_LIST_1 && refIdxList1==NOT_VALID )
+    {
+      assert(0);
+    }
+    Int privateRefIdx = privateRefPicList == REF_PIC_LIST_0 ? refIdxList0 : refIdxList1;
+    Int viewId = pcCU->getSlice()->getRefViewId(privateRefPicList, privateRefIdx);
+    Int refPoc = pcCU->getSlice()->getRefPOC(privateRefPicList, privateRefIdx);
+#else
+    Int  refIdx = pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr );
     RefPicList privateRefPicList = (RefPicList) pcCU->getVSPDir( uiPartAddr );
     RefPicList otherRefPicList = privateRefPicList == REF_PIC_LIST_0 ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
     assert(privateRefPicList == REF_PIC_LIST_0 || privateRefPicList == REF_PIC_LIST_1);
@@ -1238,7 +1288,7 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
     assert(refIdx >= 0);
     Int  viewId = pcCU->getSlice()->getRefViewId(privateRefPicList, refIdx);
     Int  refPoc = pcCU->getSlice()->getRefPOC(privateRefPicList, refIdx);
-
+#endif
     assert(refPoc == pcCU->getSlice()->getPOC());
 //    if(refPoc != pcCU->getSlice()->getPOC() )
 //    {
@@ -1307,7 +1357,11 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
       }
 #else
       //Reference list loop termination
+#if QC_BVSP_CleanUP_D0191
+      RefPicList privateVSPRefPicList = privateRefPicList;
+#else
       RefPicList privateVSPRefPicList = (RefPicList) pcCU->getVSPDir( uiPartAddr );
+#endif
       if( (pcCU->getVSPIndex(uiPartAddr)!=0) &&  iRefList != privateVSPRefPicList && !biDecision  ) 
       {//when VSP mode, if it is uni prediction, the other reference list should skip
         continue;

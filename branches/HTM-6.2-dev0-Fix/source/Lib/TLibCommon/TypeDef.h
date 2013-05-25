@@ -208,7 +208,7 @@
 #define FIX_MERGE_D                          1 // Fix to compile merged version
 
 
-#define MERL_General_Fix                     0 // General fix by MERL
+#define MERL_General_Fix                     1// General fix by MERL
 #define MERL_VSP_C0152_BugFix_ForNoDepthCase 1 // MERL bugfix for test condition of no depth
 #define QC_BVSP_CleanUP_D0191                    1
 
