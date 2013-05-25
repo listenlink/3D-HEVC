@@ -3052,7 +3052,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU*     pcCU,
 #endif
         pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-        pcCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+        pcCU->setVSPDirSubParts(0, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
 #endif
 #if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
        if(iVSPIdx != 0)
@@ -3816,7 +3816,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #endif
           pcCU->setVSPIndexSubParts( iVSPIdx, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-          pcCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+          pcCU->setVSPDirSubParts( 0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
 #if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
          if(iVSPIdx != 0)

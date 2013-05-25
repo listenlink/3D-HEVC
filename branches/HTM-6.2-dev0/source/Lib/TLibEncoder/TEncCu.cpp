@@ -2053,7 +2053,7 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #endif
             rpcTempCU->setVSPIndexSubParts( iVSPIdx, 0, 0, uhDepth );
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-            rpcTempCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], 0, 0, uhDepth ); // interprets depth relative to LCU level
+            rpcTempCU->setVSPDirSubParts(0, 0, 0, uhDepth ); // interprets depth relative to LCU level
 #endif
 #if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
            if(iVSPIdx != 0)
