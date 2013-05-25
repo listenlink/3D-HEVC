@@ -208,16 +208,79 @@ inline Bool TComDataCU::xAddVspMergeCand(
          puhInterDirNeighbours[iCount] = 1;
 #endif
 #if LGE_VSP_INHERIT_D0092
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+         assert(pDInfo->m_aRefIdx[0] < 0);
+         iVspDirTrue[0] = pDInfo->m_aListIdx[0];
+         Int iRefIdxList0 = NOT_VALID;
+         Int iRefIdxList1 = NOT_VALID;
+         iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==getSlice()->getPOC() ? 0 : (getSlice()->getNewRefIdx(REF_PIC_LIST_0)==-1 ? NOT_VALID : getSlice()->getNewRefIdx(REF_PIC_LIST_0));
+         if ( getSlice()->isInterB() )
+         {
+            iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC()==getSlice()->getPOC() ? 0 : (getSlice()->getNewRefIdx(REF_PIC_LIST_1)==-1 ? NOT_VALID : getSlice()->getNewRefIdx(REF_PIC_LIST_1));
+         }
+
+#if MTK_VSP_USING_NBDV_D0105
+        //pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCandNoRef[0], pDInfo->m_aListIdx[0]==REF_PIC_LIST_0 ? iRefIdxList0 :NOT_VALID  );
+        pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCandNoRef[0],  iRefIdxList0 );
+#else
+        pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCand[0],  iRefIdxList0 );
+#endif
+         if ( getSlice()->isInterB() )
+         {
+#if MTK_VSP_USING_NBDV_D0105
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCandNoRef[0], iRefIdxList1 );
+          //pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCandNoRef[0],  iRefIdxList1);
+#else
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCand[0], iRefIdxList1);
+#endif
+         }
+         iVSPIndexTrue[iCount] = 1;
+#else
+
+#if !MERL_General_Fix
+         Int iRefIdxList0 = NOT_VALID;
+         Int iRefIdxList1 = NOT_VALID;
+         iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==getSlice()->getPOC() ? 0 : (getSlice()->getNewRefIdx(REF_PIC_LIST_0)==-1 ? NOT_VALID : getSlice()->getNewRefIdx(REF_PIC_LIST_0));
+         if ( getSlice()->isInterB() )
+         {
+           iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC()==getSlice()->getPOC() ? 0 : (getSlice()->getNewRefIdx(REF_PIC_LIST_1)==-1 ? NOT_VALID : getSlice()->getNewRefIdx(REF_PIC_LIST_1));
+         }
+#if MTK_VSP_USING_NBDV_D0105
+         pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCandNoRef[0],  iRefIdxList0 );
+#else
+         pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCand[0],  iRefIdxList0 );
+#endif
+         if ( getSlice()->isInterB() )
+         {
+#if MTK_VSP_USING_NBDV_D0105
+           pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCandNoRef[0], iRefIdxList1 );
+#else
+           pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCand[0], iRefIdxList1);
+#endif
+         }
+         iVSPIndexTrue[iCount] = 1;
+#else
          Int iRefIdx = NOT_VALID;
+
 #if QC_BVSP_CleanUP_D0191
          iRefIdx = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC()==getSlice()->getPOC() ? 0: getSlice()->getNewRefIdx(REF_PIC_LIST_0);
 #endif
+#if MTK_VSP_USING_NBDV_D0105
+         pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCandNoRef[0], iRefIdx );
+#else
          pcMvFieldNeighbours[iCount<<1].setMvField(pDInfo->m_acMvCand[0], iRefIdx );
+#endif
          if ( getSlice()->isInterB() )
          {
+#if MTK_VSP_USING_NBDV_D0105
+           pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCandNoRef[0], iRefIdx );
+#else
              pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acMvCand[0], iRefIdx );
+#endif
          }
          iVSPIndexTrue[iCount] = 1;
+#endif
+#endif
 #else
           // get Mv using checked disparity vector
           if (vspIdx < 4) // spatial
@@ -4479,10 +4542,18 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
 #if MERL_VSP_COMPENSATION_C0152
   //===== vsp 3 =====
 #if LGE_VSP_INHERIT_D0092
-    if ( !xAddVspMergeCand(3, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
+    if ( !xAddVspMergeCand(3, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+      , iVSPDirTrue
+#endif
+      ) )
 #else
     if( iCount < 4 + extraMergeCand )
-        if ( !xAddVspMergeCand(3, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) )
+        if ( !xAddVspMergeCand(3, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+          , iVSPDirTrue
+#endif   
+          ) )
 #endif
             return;
 #endif
@@ -4637,17 +4708,17 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, UInt 
   //===== vsp 5 =====
   if( iCount < 4 + extraMergeCand )
 #if LGE_VSP_INHERIT_D0092
-    if ( !xAddVspMergeCand(5, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo) 
+    if ( !xAddVspMergeCand(5, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
          , iVSPDirTrue
 #endif
-)
+))
 #else
     if ( !xAddVspMergeCand(5, 1, bVspMvZeroDone, uiDepth, abCandIsInter, iCount, puhInterDirNeighbours, pcMvFieldNeighbours, iVSPIndexTrue, mrgCandIdx, &cDisInfo
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
          , iVSPDirTrue
 #endif
-            ) 
+            )) 
 #endif
       return;
 #endif
@@ -5607,6 +5678,8 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, UInt uiPart
           picDepth = getSlice()->getRefPicBaseDepth();
 #endif
 #endif
+#else
+          picDepth = getSlice()->getRefPicBaseDepth();
 #endif
 
 #if QC_CU_NBDV_D0181 && MERL_VSP_C0152
