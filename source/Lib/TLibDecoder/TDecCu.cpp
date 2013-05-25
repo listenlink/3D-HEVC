@@ -457,7 +457,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
       pcCU->setVSPIndexSubParts( iVSPIdx, uiAbsPartIdx, 0, uiDepth );  // Initialize
 #if MERL_VSP_NBDV_RefVId_Fix_D0166
-      pcCU->setVSPDirSubParts( iVSPDirTrue[iVSPIdx-1], uiAbsPartIdx, 0, uiDepth );
+      pcCU->setVSPDirSubParts( 0, uiAbsPartIdx, 0, uiDepth );
 #endif
 #if QC_BVSP_CleanUP_D0191 && !LGE_VSP_INHERIT_D0092
       if(iVSPIdx != 0)
