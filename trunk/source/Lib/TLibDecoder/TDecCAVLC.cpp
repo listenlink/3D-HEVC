@@ -264,6 +264,7 @@ Void TDecCavlc::parseAPS(TComAPS* aps)
   {
     xParseDblParam( aps );    
   }
+#if !LGE_SAO_MIGRATION_D0091
   READ_FLAG(uiCode, "aps_sao_interleaving_flag");      aps->setSaoInterleavingFlag( (uiCode==1)?true:false );
   if(!aps->getSaoInterleavingFlag())
   {
@@ -274,6 +275,7 @@ Void TDecCavlc::parseAPS(TComAPS* aps)
     xParseSaoParam( aps->getSaoParam() );
   }
   }
+#endif
   READ_FLAG(uiCode, "aps_adaptive_loop_filter_flag");      aps->setAlfEnabled( (uiCode==1)?true:false );
   if(aps->getAlfEnabled())
   {
@@ -306,6 +308,7 @@ Void  TDecCavlc::xParseDblParam       ( TComAPS* aps )
     aps->setLoopFilterTcOffset(iSymbol);
   }
 }
+#if !LGE_SAO_MIGRATION_D0091
 /** parse SAO parameters
  * \param pSaoParam
  */
@@ -531,7 +534,7 @@ void TDecCavlc::xParseSaoUnit(Int rx, Int ry, Int compIdx, SAOParam* saoParam, B
     }
   }
 }
-
+#endif
 
 Void TDecCavlc::xParseAlfParam(AlfParamSet* pAlfParamSet, Bool bSentInAPS, Int firstLCUAddr, Bool acrossSlice, Int numLCUInWidth, Int numLCUInHeight)
 {
@@ -1492,8 +1495,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setPredDepthMapGeneration( 0, false );
 #endif
 #if H3D_IVRP
-    pcSPS->setMultiviewResPredMode  ( 0 );
+#if QC_ARP_D0177
+     pcSPS->setUseAdvRP  ( 0 );
+     pcSPS->setARPStepNum( 1 );
+#else
+     pcSPS->setMultiviewResPredMode  ( 0 );
 #endif
+#endif
+
     }
     else
     {
@@ -1543,8 +1552,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+      pcSPS->setUseAdvRP  ( 0 );
+      pcSPS->setARPStepNum( 1 );
+#else
       pcSPS->setMultiviewResPredMode  ( 0 );
 #endif
+#endif
+
       }
       else
       {
@@ -1572,7 +1587,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if H3D_IVMP
         UInt uiMultiviewMvPredMode = 0;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
       UInt uiMultiviewResPredMode = 0;
 #endif
         READ_UVLC( uiPredDepthMapGeneration, "Pdm_generation" );
@@ -1587,7 +1602,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if H3D_IVMP
           READ_UVLC( uiMultiviewMvPredMode, "multi_view_mv_pred_mode" );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
           READ_FLAG( uiMultiviewResPredMode, "multi_view_residual_pred_mode" );
 #endif
         }
@@ -1598,9 +1613,30 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+      READ_FLAG( uiCode , "advanced_residual_pred_flag" );           pcSPS->setUseAdvRP( uiCode );
+      if( pcSPS->getUseAdvRP()  )
+          pcSPS->setARPStepNum( QC_ARP_WFNR );
+      else
+       pcSPS->setARPStepNum( 1 );
+#else
       pcSPS->setMultiviewResPredMode  ( uiMultiviewResPredMode );
 #endif
+#endif
+
       }
+
+#if MTK_D0156
+
+      pcSPS->setUseVSPCompensation( false );
+      pcSPS->setUseDVPRefine( false );
+
+      //Comments: Currently, BVSP and DoNBDV are not used for depth coding
+#if MERL_VSP_COMPENSATION_C0152
+      READ_FLAG( uiCode, "view_synthesis_pred_flag" );pcSPS->setUseVSPCompensation( uiCode ? true : false );
+#endif
+      READ_FLAG( uiCode, "dv_refine_flag" );          pcSPS->setUseDVPRefine( uiCode ? true : false );
+#endif
     }
     READ_FLAG( uiCode, "sps_extension2_flag");
     if (uiCode)
@@ -1664,6 +1700,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_FLAG (uiCodeTmp, "applying IC flag");
     }
     rpcSlice->setApplyIC(uiCodeTmp);
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (rpcSlice->getApplyIC())
+    {
+      READ_FLAG (uiCodeTmp, "ic_skip_mergeidx0");
+      rpcSlice->setIcSkipParseFlag(uiCodeTmp);
+    }
+#endif
   }
 #endif
 
@@ -1846,6 +1889,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       if (sps->getUseSAO())
       {
+#if LGE_SAO_MIGRATION_D0091
+        READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
+        READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
+#else
         READ_FLAG(uiCode, "slice_sao_interleaving_flag");        rpcSlice->setSaoInterleavingFlag(uiCode);
         READ_FLAG(uiCode, "slice_sample_adaptive_offset_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
         if (rpcSlice->getSaoEnabledFlag() && rpcSlice->getSaoInterleavingFlag())
@@ -1858,6 +1905,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
           rpcSlice->setSaoEnabledFlagCb(0);
           rpcSlice->setSaoEnabledFlagCr(0);
         }
+#endif
       }
       READ_UVLC (    uiCode, "aps_id" );  rpcSlice->setAPSId(uiCode);
     }
@@ -2423,8 +2471,14 @@ TDecCavlc::parseResPredFlag( TComDataCU* pcCU, Bool& rbResPredFlag, UInt uiAbsPa
   assert(0);
 }
 #endif
-
+#if QC_ARP_D0177
+Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert( false );
+}
+#endif
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
 Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -2433,6 +2487,7 @@ Void TDecCavlc::parseSDCPredMode    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 {
   assert(0);
 }
+#endif
 Void TDecCavlc::parseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart )
 {
   assert(0);

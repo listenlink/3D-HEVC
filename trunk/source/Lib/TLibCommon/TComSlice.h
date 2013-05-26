@@ -53,7 +53,7 @@ class TComTrQuant;
 #if DEPTH_MAP_GENERATION
 class TComDepthMapGenerator;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
 class TComResidualGenerator;
 #endif
 // ====================================================================================================================
@@ -179,6 +179,14 @@ private:
 #if INTER_VIEW_VECTOR_SCALING_C0115
   Bool          m_bIVScalingFlag;
 #endif
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_abUseVSPCompensation[ MAX_TLAYER ];
+#endif
+  Bool      m_abUseDVPRefine[ MAX_TLAYER ];
+#endif
+
 public:
   TComVPS();
   virtual ~TComVPS();
@@ -244,6 +252,15 @@ public:
   UInt    getNumOpLayerId               (UInt layer, UInt OpId        )                     { return m_numOpLayerId[layer][OpId];}
   
 #endif 
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( UInt tLayer ){  return m_abUseVSPCompensation[ tLayer ];}
+  Void    setUseVSPCompensation( Bool bValue, UInt tLayer ){ m_abUseVSPCompensation[ tLayer ] = bValue;}
+#endif
+  Bool    getUseDVPRefine( UInt tLayer ){  return m_abUseDVPRefine[ tLayer ];}
+  Void    setUseDVPRefine( Bool bValue, UInt tLayer ){ m_abUseDVPRefine[ tLayer ] = bValue;}
+#endif
 };
 
 #endif
@@ -389,14 +406,26 @@ private:
   UInt  m_uiMultiviewMvPredMode;
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+  UInt         m_nUseAdvResPred;
+  UInt         m_nARPStepNum;
+#else
   UInt  m_uiMultiviewResPredMode;
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
   TComDepthMapGenerator* m_pcDepthMapGenerator;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   TComResidualGenerator* m_pcResidualGenerator;
+#endif
+
+#if MTK_D0156
+#if MERL_VSP_COMPENSATION_C0152
+  Bool      m_bUseVSPCompensation;
+#endif
+  Bool      m_bUseDVPRefine;
 #endif
 
 public:
@@ -642,7 +671,7 @@ public:
 #if DEPTH_MAP_GENERATION
   Void setPredDepthMapGeneration( UInt uiViewId, Bool bIsDepth, UInt uiPdmGenMode = 0, UInt uiPdmMvPredMode = 0, UInt uiPdmPrec = 0, Int** aaiPdmScaleNomDelta = 0, Int** aaiPdmOffset = 0 );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   Void  setMultiviewResPredMode  ( UInt uiResPrdMode ) { m_uiMultiviewResPredMode = uiResPrdMode; }
 #endif
 
@@ -657,16 +686,35 @@ public:
   UInt  getMultiviewMvPredMode   ()          { return m_uiMultiviewMvPredMode;    }
 #endif
 #if H3D_IVRP
+#if QC_ARP_D0177
+  UInt  getUseAdvRP()              { return m_nUseAdvResPred;   }
+  Void  setUseAdvRP(UInt n)        { m_nUseAdvResPred = n;      }
+  UInt  getARPStepNum()            { return m_nARPStepNum;      }
+  Void  setARPStepNum(UInt n)      { m_nARPStepNum = n;         }
+#else
   UInt  getMultiviewResPredMode  ()          { return m_uiMultiviewResPredMode;   }
+#endif
 #endif
 
 #if DEPTH_MAP_GENERATION
   Void                    setDepthMapGenerator( TComDepthMapGenerator* pcDepthMapGenerator )  { m_pcDepthMapGenerator = pcDepthMapGenerator; }
   TComDepthMapGenerator*  getDepthMapGenerator()                                              { return m_pcDepthMapGenerator; }
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   Void                    setResidualGenerator( TComResidualGenerator* pcResidualGenerator )  { m_pcResidualGenerator = pcResidualGenerator; }
   TComResidualGenerator*  getResidualGenerator()                                              { return m_pcResidualGenerator; }
+#endif
+
+#if MTK_D0156
+
+#if MERL_VSP_COMPENSATION_C0152
+  Bool    getUseVSPCompensation( ){  return m_bUseVSPCompensation;}
+  Void    setUseVSPCompensation( Bool bValue ){ m_bUseVSPCompensation = bValue;}
+#endif
+
+  Bool    getUseDVPRefine( ){  return m_bUseDVPRefine;}
+  Void    setUseDVPRefine( Bool bValue ){ m_bUseDVPRefine = bValue;}
+
 #endif
 };
 
@@ -927,8 +975,10 @@ public:
   Void      setScalingListEnabled (Bool bVal) { m_scalingListEnabled = bVal; }  //!< set ScalingList enabled/disabled in APS
   Bool      getScalingListEnabled ()          { return m_scalingListEnabled; }  //!< get ScalingList enabled/disabled in APS
   TComScalingList* getScalingList ()          { return m_scalingList; }         //!< get ScalingList class pointer in APS
+#if !LGE_SAO_MIGRATION_D0091
   Bool     getSaoInterleavingFlag() {return m_saoInterleavingFlag;}             //!< get SAO interleaving flag in APS
   Void     setSaoInterleavingFlag(Bool bVal) {m_saoInterleavingFlag = bVal;}    //!< set SAO interleaving flag in APS
+#endif
 
 private:
   Int         m_apsID;        //!< APS ID
@@ -942,7 +992,9 @@ private:
   Int         m_loopFilterTcOffsetDiv2;      //< tc offset for deblocking filter
   Bool        m_scalingListEnabled;     //!< ScalingList enabled/disabled in APS (true for enabled)
   TComScalingList*     m_scalingList;   //!< ScalingList class pointer
+#if !LGE_SAO_MIGRATION_D0091
   Bool        m_saoInterleavingFlag;    //!< SAO interleaving flag
+#endif
 
 public:
   TComAPS& operator= (const TComAPS& src);  //!< "=" operator for APS object
@@ -974,9 +1026,13 @@ private:
   Int         m_iAPSId; //!< APS ID in slice header
   bool       m_alfEnabledFlag;
   bool       m_saoEnabledFlag;
+#if LGE_SAO_MIGRATION_D0091
+  bool       m_saoEnabledFlagChroma;      ///< SAO Cb&Cr enabled flag
+#else
   bool       m_saoInterleavingFlag;   ///< SAO interleaving flag
   bool       m_saoEnabledFlagCb;      ///< SAO Cb enabled flag
   bool       m_saoEnabledFlagCr;      ///< SAO Cr enabled flag
+#endif
   Int         m_iPPSId;               ///< picture parameter set ID
   Bool        m_PicOutputFlag;        ///< pic_output_flag 
   Int         m_iPOC;
@@ -1105,6 +1161,16 @@ private:
 
 #if LGE_ILLUCOMP_B0045
   Bool        m_bApplyIC;
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Bool        m_icSkipParseFlag;
+#endif
+#endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  TComList<TComPic*>*  m_pcListDepthPic[MAX_VIEW_NUM]; // For encoder, the list may also include texture pictures. Three views with ViewIdx = 0, 1, 2
+#endif
+#if QC_ARP_D0177
+  TComList<TComPic*> * m_pBaseViewRefPicList[MAX_VIEW_NUM];
+  UInt                 m_nARPStepNum; 
 #endif
 #if INTER_VIEW_VECTOR_SCALING_C0115|QC_MVHEVC_B0046
   Bool       m_bIVScalingFlag;
@@ -1114,7 +1180,11 @@ private:
 #if MERL_VSP_C0152
   TComPic*     m_apcRefPicBaseTxt;
   TComPic*     m_apcRefPicBaseDepth;
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Int*         m_aiShiftLUT[2]; // For reference views
+#else
   Int*         m_aiShiftLUT;
+#endif
   Int          m_iShiftPrec;
 #endif
 
@@ -1157,12 +1227,17 @@ public:
   Bool      getAlfEnabledFlag() { return m_alfEnabledFlag; }
   Void      setSaoEnabledFlag(Bool s) {m_saoEnabledFlag =s; }
   Bool      getSaoEnabledFlag() { return m_saoEnabledFlag; }
+#if LGE_SAO_MIGRATION_D0091
+  Void      setSaoEnabledFlagChroma(Bool s) {m_saoEnabledFlagChroma =s; }       //!< set SAO Cb&Cr enabled flag
+  Bool      getSaoEnabledFlagChroma() { return m_saoEnabledFlagChroma; }        //!< get SAO Cb&Cr enabled flag
+#else
   Void      setSaoInterleavingFlag(Bool s) {m_saoInterleavingFlag =s; } //!< set SAO interleaving flag
   Bool      getSaoInterleavingFlag() { return m_saoInterleavingFlag;  } //!< get SAO interleaving flag
   Void      setSaoEnabledFlagCb(Bool s) {m_saoEnabledFlagCb =s; }       //!< set SAO Cb enabled flag
   Bool      getSaoEnabledFlagCb() { return m_saoEnabledFlagCb; }        //!< get SAO Cb enabled flag
   Void      setSaoEnabledFlagCr(Bool s) {m_saoEnabledFlagCr =s; }       //!< set SAO Cr enabled flag
   Bool      getSaoEnabledFlagCr() { return m_saoEnabledFlagCr; }        //!< get SAO Cr enabled flag
+#endif
   Void      setRPS          ( TComReferencePictureSet *pcRPS ) { m_pcRPS = pcRPS; }
   TComReferencePictureSet*  getRPS          () { return m_pcRPS; }
   TComReferencePictureSet*  getLocalRPS     () { return &m_LocalRPS; }
@@ -1252,7 +1327,12 @@ public:
   Int       getNumPocTotalCurrMvc();
   Void      setRefPicListMvc    ( TComList<TComPic*>& rcListPic, std::vector<TComPic*>& rapcInterViewRefPics );
   Void      setRefPOCnViewListsMvc();
-
+#if QC_ARP_D0177
+  Void      setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic; }
+  TComPic*  getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )                       { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
+  Void      setARPStepNum();                                 
+  UInt      getARPStepNum( )                                      { return m_nARPStepNum;      }  
+#endif
   Void      setColDir           ( UInt uiDir ) { m_uiColDir = uiDir; }
 #if COLLOCATED_REF_IDX
   Void      setColRefIdx        ( UInt refIdx) { m_colRefIdx = refIdx; }
@@ -1400,6 +1480,10 @@ public:
   Void      setApplyIC            ( Bool b ) { m_bApplyIC = b; }
   Bool      getApplyIC            ()  { return m_bApplyIC; }
   Void      xSetApplyIC           ();
+#if SHARP_ILLUCOMP_PARSE_D0060
+  Void      setIcSkipParseFlag( Bool b ) { m_icSkipParseFlag = b; }
+  Bool      getIcSkipParseFlag() { return m_icSkipParseFlag; }
+#endif
 #endif
 #if QC_TMVP_MRG_REFIDX_C0047
   Int       getNewRefIdx        ( RefPicList e )                { return  m_aiNewRefIdx[e];     }
@@ -1417,9 +1501,20 @@ public:
   Void         setRefPicBaseTxt          ( TComPic* RefPic)        { m_apcRefPicBaseTxt = RefPic; }
   TComPic*     getRefPicBaseDepth        ()                        { return  m_apcRefPicBaseDepth; }
   Void         setRefPicBaseDepth        ( TComPic* RefPic)        { m_apcRefPicBaseDepth = RefPic; }
-
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Void setBWVSPLUTParam( Int *pShiftLUT, Int iLoG2LUTPrec, Int iNeighborViewId) { m_aiShiftLUT[iNeighborViewId] = pShiftLUT; m_iShiftPrec = iLoG2LUTPrec; }
+  Void getBWVSPLUTParam( Int*&pShiftLUT, Int&iLoG2LUTPrec, Int iNeighborViewId) { pShiftLUT = m_aiShiftLUT[iNeighborViewId]; iLoG2LUTPrec = m_iShiftPrec; }
+#else
   Void setBWVSPLUTParam( Int *pShiftLUT, Int iLoG2LUTPrec) { m_aiShiftLUT = pShiftLUT; m_iShiftPrec = iLoG2LUTPrec; }
   Void getBWVSPLUTParam( Int*&pShiftLUT, Int&iLoG2LUTPrec) { pShiftLUT = m_aiShiftLUT; iLoG2LUTPrec = m_iShiftPrec; }
+#endif
+#endif
+
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Void setListDepthPic( TComList<TComPic*>* pListDepthPic, Int viewId) { m_pcListDepthPic[viewId] = pListDepthPic; }
+  TComList<TComPic*>* getListDepthPic(Int viewId) { return m_pcListDepthPic[viewId]; }
+  TComPic*            getDepthRefPic(Int viewId, Int poc);
+  TComPic*            getDepthRefPic(Int refIdx);
 #endif
 
 protected:

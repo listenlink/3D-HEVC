@@ -77,7 +77,7 @@ TEncGOP::TEncGOP()
 #if DEPTH_MAP_GENERATION
   m_pcDepthMapGenerator = NULL;
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_pcResidualGenerator = NULL;
 #endif
   
@@ -130,7 +130,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 #if DEPTH_MAP_GENERATION
   m_pcDepthMapGenerator  = pcTEncTop->getDepthMapGenerator();
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_pcResidualGenerator  = pcTEncTop->getResidualGenerator();
 #endif
   
@@ -389,7 +389,14 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #endif 
       std::vector<TComPic*> apcInterViewRefPics = tAppEncTop->getInterViewRefPics( m_pcEncTop->getViewId(), pcSlice->getPOC(), m_pcEncTop->getIsDepth(), pcSlice->getSPS() );
       pcSlice->setRefPicListMvc( rcListPic, apcInterViewRefPics );
-
+#if QC_ARP_D0177
+      pcSlice->setARPStepNum();
+      if(pcSlice->getARPStepNum() > 1)
+      {
+        for(Int iViewIdx = 0; iViewIdx < pcSlice->getViewId(); iViewIdx ++ )
+          pcSlice->setBaseViewRefPicList( tAppEncTop->getTEncTop( iViewIdx , false )->getListPic(), iViewIdx );
+      }
+#endif
       //  Slice info. refinement
       if( pcSlice->getSliceType() == B_SLICE )
       {
@@ -753,7 +760,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
 #if H3D_IVMP
       m_pcDepthMapGenerator->covertOrgDepthMap( pcPic );
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
       m_pcResidualGenerator->initViewComponent( pcPic );
 #endif
 
@@ -817,7 +824,7 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
       
       pcSlice = pcPic->getSlice(0);
 
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
       // set residual picture
       m_pcResidualGenerator->setRecResidualPic( pcPic );
 #endif
@@ -1256,7 +1263,9 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
           {
             TComAPS cAPS;
             allocAPS(&cAPS, pcSlice->getSPS());
+#if !LGE_SAO_MIGRATION_D0091
             cAPS.setSaoInterleavingFlag(m_pcCfg->getSaoInterleavingFlag());
+#endif
             // set entropy coder for RD
             m_pcEntropyCoder->setEntropyCoder ( m_pcCavlcCoder, pcSlice );
 
@@ -1264,11 +1273,23 @@ Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*
             {
               m_pcEntropyCoder->resetEntropy();
               m_pcEntropyCoder->setBitstream( m_pcBitCounter );
+#if LGE_SAO_MIGRATION_D0091
+              m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), m_pcEncTop->getRDGoOnSbacCoder());
+#else
               m_pcSAO->startSaoEnc(pcPic, m_pcEntropyCoder, m_pcEncTop->getRDSbacCoder(), NULL);
+#endif
               SAOParam& cSaoParam = *(cAPS.getSaoParam());
 
 #if SAO_CHROMA_LAMBDA 
+#if LGE_SAO_MIGRATION_D0091
+#if SAO_ENCODING_CHOICE
+              m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma(), pcPic->getSlice(0)->getDepth());
+#else
               m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma());
+#endif
+#else
+              m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma(), pcPic->getSlice(0)->getLambdaChroma());
+#endif
 #else
 #if ALF_CHROMA_LAMBDA
               m_pcSAO->SAOProcess(&cSaoParam, pcPic->getSlice(0)->getLambdaLuma());
@@ -1553,7 +1574,9 @@ Void TEncGOP::encodeAPS(TComAPS* pcAPS, TComOutputBitstream& APSbs, TComSlice* p
   {
     m_pcEntropyCoder->encodeDFParams(pcAPS);
   }
+#if !LGE_SAO_MIGRATION_D0091
   m_pcEntropyCoder->encodeSaoParam(pcAPS);
+#endif
   m_pcEntropyCoder->encodeAPSAlfFlag( pcAPS->getAlfEnabled()?1:0);
   if(pcAPS->getAlfEnabled())
   {

@@ -402,7 +402,7 @@ Void TDecTop::destroy()
 #if DEPTH_MAP_GENERATION
   m_cDepthMapGenerator.destroy();
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_cResidualGenerator.destroy();
 #endif
 
@@ -419,7 +419,7 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
 #if DEPTH_MAP_GENERATION
                     , &m_cDepthMapGenerator
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
                     , &m_cResidualGenerator
 #endif
     );
@@ -433,7 +433,7 @@ Void TDecTop::init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance )
   m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
 #endif
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
   m_cResidualGenerator.init( &m_cTrQuant, &m_cDepthMapGenerator );
 #endif
 }
@@ -859,7 +859,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       pcDMG0->create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement, PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
     }
 #endif
-#if H3D_IVRP
+#if H3D_IVRP & !QC_ARP_D0177
     m_cResidualGenerator.create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiBitDepth + g_uiBitIncrement );
 #endif
   }
@@ -1082,7 +1082,15 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     std::vector<TComPic*> apcInterViewRefPics = m_tAppDecTop->getInterViewRefPics( m_viewId, pcSlice->getPOC(), m_isDepth, pcSlice->getSPS() );
     pcSlice->setRefPicListMvc( m_cListPic, apcInterViewRefPics );
-
+#if QC_ARP_D0177
+    //pcSlice->setBaseViewRefPicList( m_tAppDecTop->getTDecTop( 0 , false )->getListPic() );
+    pcSlice->setARPStepNum();
+    if(pcSlice->getARPStepNum() > 1)
+    {
+      for(Int iViewIdx = 0; iViewIdx < pcSlice->getViewId(); iViewIdx ++ )
+        pcSlice->setBaseViewRefPicList( m_tAppDecTop->getTDecTop( iViewIdx, false )->getListPic(), iViewIdx );
+    }
+#endif
     // For generalized B
     // note: maybe not existed case (always L0 is copied to L1 if L1 is empty)
     if (pcSlice->isInterB() && pcSlice->getNumRefIdx(REF_PIC_LIST_1) == 0)
@@ -1213,7 +1221,22 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
      pcSlice->setRefPicBaseTxt(pcBaseTxtPic);
      pcSlice->setRefPicBaseDepth(pcBaseDepthPic);
   }
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
   getTAppDecTop()->setBWVSPLUT( pcSlice, pcSlice->getViewId(),  pcSlice->getPOC() ); // get the LUT for backward warping
+#else
+  if (pcSlice->getViewId() != 0)
+  {
+    Bool isDepth = true;
+    for(Int refviewId = 0; refviewId < (pcSlice->getViewId()); refviewId++)
+    {
+      if (m_tAppDecTop->getTDecTop( refviewId, isDepth ))
+      {
+        pcSlice->setListDepthPic(m_tAppDecTop->getTDecTop( refviewId, isDepth )->getListPic(), refviewId); // The list will store only the depth pictures
+      }
+      getTAppDecTop()->setBWVSPLUT( refviewId, pcSlice, pcSlice->getViewId(),  pcSlice->getPOC() ); // get the LUT for backward warping
+    }
+  }
+#endif
 #endif
 
   //  Decode a picture

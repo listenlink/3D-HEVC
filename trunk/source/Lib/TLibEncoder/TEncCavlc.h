@@ -141,6 +141,13 @@ public:
   Void codeAlfCtrlDepth();
   Void codeAPSAlflag(UInt uiCode);
   Void codeAlfFixedLengthIdx( UInt idx, UInt numFilterSetsInBuffer);
+#if LGE_SAO_MIGRATION_D0091
+  Void codeSAOSign       ( UInt code   ) { printf("Not supported\n"); assert (0); }
+  Void codeSaoMaxUvlc    ( UInt   code, UInt maxSymbol ){printf("Not supported\n"); assert (0);}
+  Void codeSaoMerge  ( UInt uiCode ){printf("Not supported\n"); assert (0);}
+  Void codeSaoTypeIdx    ( UInt uiCode ){printf("Not supported\n"); assert (0);}
+  Void codeSaoUflc       ( UInt uiLength, UInt   uiCode ){ assert(uiCode < 32); printf("Not supported\n"); assert (0);}
+#else
   Void codeSaoFlag       ( UInt uiCode );
   Void codeSaoUvlc       ( UInt uiCode );
   Void codeSaoSvlc       ( Int   iCode );
@@ -149,6 +156,7 @@ public:
   Void codeSaoMergeUp    ( UInt uiCode ){;}
   Void codeSaoTypeIdx    ( UInt uiCode ){ xWriteUvlc(uiCode   );}
   Void codeSaoUflc       ( UInt uiCode ){ assert(uiCode < 32); xWriteCode(uiCode, 5);}
+#endif
 
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if LGE_ILLUCOMP_B0045
@@ -158,6 +166,9 @@ public:
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if H3D_IVRP
   Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
+#if QC_ARP_D0177
+  virtual Void codeARPW ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeAlfCtrlFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
@@ -182,7 +193,11 @@ public:
   Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   
-  Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    , Bool bSdcRD = false
+#endif
+    );
   
   Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -208,9 +223,13 @@ public:
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 #endif
 
 };

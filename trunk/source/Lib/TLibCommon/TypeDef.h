@@ -58,15 +58,27 @@
                                               // HHIQC_DMMFASTSEARCH_B0039, fast Wedgelet search for DMM modes 1 and 3
                                               // HHI_DMM_DELTADC_Q1_C0034   JCT3V-C0034: no quantization and fast encoder search for DMM delta DC values
                                               // FIX_DMM_CTX_INIT_C0034 JCT3V-C0034 fix for wrong init type of DMM contexts (UChar instead of Short)
+#define FIX_WEDGE_NOFLOAT_D0036           1   // JCT3V-D0036: Fix for aligning SW and spec (Wedgelet segmentation line generation without float) 
 
 #define LGE_EDGE_INTRA_A0070              1   // JCT3V-A0070
 #define LGE_DMM3_SIMP_C0044               1
+
+#define QC_DC_PREDICTOR_D0183             1   // JCT3V-D0183: Simplified DC predictor for depth intra modes
 
 ///// ***** SDC *********
 #define RWTH_SDC_DLT_B0036                1   // JCT3V-B0036: Simplified Depth Coding + Depth Lookup Table
                                               // SAIT_SDC_C0096 JCT3V-C0096: Improved Simple Depth Coding(removal of DMM2 among four SDC modes(DC, Planar, DMM1 and DMM2))
                                               // FIX_SDC_ENC_C0143, JCT3V-C0143 fix for unnecessary encoder checks in case of SDC
+#if RWTH_SDC_DLT_B0036
+#define HHI_DELTADC_DLT_D0035             1   // JCT3V-D0035: DLT for DMM deltaDC coding
+#define INTEL_SDC64_D0193                 1   // JCT3V-D0193: SDC binary clean up (use a 1 bit binary code to signal sdc_pred_mode when CU size is 64x64)
+#define RWTH_SDC_CTX_SIMPL_D0032          1   // JCT3V-D0032: CABAC Context Reduction for Simplified Depth Coding
+#define LGE_CONCATENATE_D0141                 1 // JCT3V-D0141: concatenate binarization for residual index coding
+#endif
+#define FIX_SDC_ENC_RD_WVSO_D0163         1   // JCT3V-D0163: fix for SDC encoder rd-cost (VSO -> WVSO)
 
+#define PKU_QC_DEPTH_INTRA_UNI_D0195      1   // JCT3V-D0195: unified syntax table for depth intra coding tools
+#define MTK_SAMPLE_BASED_SDC_D0110        1   // JCT3V-D0110: sample based SDC
 ///// ***** TMVP/AMVP *********
 #define TMVP_DEPTH_SWITCH                 1   // JCT3V-B0092 additional encoder option only 
 #define QC_TMVP_MRG_REFIDX_C0047          1   // only enabled when QC_TMVP_IDX_MOD_B0046 is enabled.
@@ -83,6 +95,7 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_C0051_FIXED_BY_MTK             1   // Bug fix for C0051 implementation
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     1
+#define SEC_TWO_CANDIDATES_FOR_AMVP_D0122 1   // SEC_TWO_CANDIDATES_FOR_AMVP_D0122, fixing # of AMVP candidates 3 to 2
 
 
 ///// ***** INTERVIEW RESIDUAL PREDICTION *********
@@ -94,6 +107,11 @@
                                               // LG_RESTRICTEDRESPRED_M24766       1   // Restricted inter-view residual prediction
                                               // FIX_LG_RESTRICTEDRESPRED_M24766   1
 
+#define QC_ARP_D0177            1             ////< advanced residual prediction
+#if QC_ARP_D0177
+#define QC_ARP_WFNR                       3 
+#define QC_ARP_WARNING_FIX                1   // Fix warning message for ARP
+#endif
 ///// ***** DISPARITY VECTOR DERIVATION *********
 #define H3D_NBDV                          1   // Neighboring block disparity derivation 
                                               // JCT3V-A0097 
@@ -110,6 +128,9 @@
                                               // MTK_RELEASE_DV_CONSTRAINT_C0129   
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // FIX_CHROMA_RESIDUAL_C0129         
+#define QC_CU_NBDV_D0181                  1
+
+#define SEC_DEFAULT_DV_D0112              1
 
 ///// ***** MOTION PARAMETER INHERITANCE  *********
 #define MTK_DEPTH_MERGE_TEXTURE_CANDIDATE_C0137   1   // JCT3V-C0137
@@ -142,6 +163,8 @@
 #endif
 #endif
 
+#define SHARP_ILLUCOMP_PARSE_D0060        1   // JCT3V-D0060 Removal of IC's parsing dependency
+
 ///// ***** INTERVIEW SKIP *********
 #define HHI_INTERVIEW_SKIP                1
 
@@ -158,6 +181,21 @@
 #define FIX_LGE_WP_FOR_3D_C0223           1   // JCT3V-C0223 Weighted Prediction Bug-fix for 3D-HEVC. Caution! There is still crush using WP with Residual Prediction.
 #define FIX_APPENCTOP_T_ONLY              1   // For Texture-only coding
 
+#define LGE_ROUND_OFFSET_D0135            1   // JCT3V-D0135 Rounding offset
+#define LGE_SAO_MIGRATION_D0091           1
+#if LGE_SAO_MIGRATION_D0091
+#define SAO_SKIP_RIGHT                   1  ///< H1101: disallow using unavailable pixel during RDO
+#define SAO_ENCODING_CHOICE              1  ///< I0184: picture early termination
+#if SAO_ENCODING_CHOICE
+#define SAO_ENCODING_RATE                0.75
+#define SAO_ENCODING_CHOICE_CHROMA       1 ///< J0044: picture early termination Luma and Chroma are handled separatenly
+#if SAO_ENCODING_CHOICE_CHROMA
+#define SAO_ENCODING_RATE_CHROMA         0.5
+#define SAO_ENCODING_CHOICE_CHROMA_BF    1 ///  K0156: Bug fix for SAO selection consistency
+#endif
+#endif
+#endif
+
 ///// ***** FCO  *********
 #define FLEX_CODING_ORDER_M23723          1
 #if FLEX_CODING_ORDER_M23723
@@ -173,39 +211,69 @@
 #endif
 
 ///// ***** VSP *********
-#define MERL_VSP_C0152                    1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
-                                            // LGE_SIMP_DVP_REFINE_C0112            
-                                            // MERL_MTK_VSP_DVP_REFINE_C0152_C0131
+#define MERL_VSP_C0152                       1 // JCT3V-C0152: 1: enable VSP-related tools; 0: disable VSP-related tools
+                                               // LGE_SIMP_DVP_REFINE_C0112
+                                               // MERL_MTK_VSP_DVP_REFINE_C0152_C0131
 #if MERL_VSP_C0152
-#define MERL_VSP_C0152_BugFix_ForNoDepthCase     1// MERL bugfix for test condition of no depth
-/*
- * Two macros are used to configure combinations of JCT3V-C0152 and JCT3V-C0131
- * 
- *   a) (full) A full JCT3V-C0152 implementation, including JCT3V-C0131 
- *      #define MERL_VSP_COMPENSATION_C0152          1
- *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1
- * 
- *   b) (mvp2off) For partial JCT3V-C0152 excluding overlaps from JCT3V-C0131
- *      #define MERL_VSP_COMPENSATION_C0152          1
- *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  0
- * 
- *   c) (nocand) For JCT3V-C0131 only
- *      #define MERL_VSP_COMPENSATION_C0152          0
- *      #define MERL_MTK_VSP_DVP_REFINE_C0152_C0131  1
- */
 
-#define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add   (nocand).
 
+#define FIX_MERGE_D                          1 // Fix to compile merged version
+
+
+#define MERL_General_Fix                     1// General fix by MERL
+#define MERL_VSP_C0152_BugFix_ForNoDepthCase 1 // MERL bugfix for test condition of no depth
+#define QC_BVSP_CleanUP_D0191                    1
+
+#define MTK_D0156                 1
+#define LGE_VSP_INHERIT_D0092     1
+
+#define MERL_VSP_COMPENSATION_C0152          1 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add (nocand).
 
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#if MERL_VSP_BLOCKSIZE_C0152 == 1
+#define MERL_CVSP_D0165                      1 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
+#else
+#define MERL_CVSP_D0165                      0 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
+#endif
+#if LGE_VSP_INHERIT_D0092
+#define VSP_MERGE_POS                        3 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 3.
+#else
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
-                                               //MTK_DVPREFINE_BVSP_BUG_FIX               1
+#endif                                               // MTK_DVPREFINE_BVSP_BUG_FIX               1
+#define MTK_DEPTH_TO_DISP_D0138              1 // JCT3V-D0138: Use max among four corners for DoNBDV and BVSP
+
+#if MERL_General_Fix
+#define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139    1 // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
+#define MTK_VSP_USING_NBDV_D0105             1 // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
+#endif
+
+#if MERL_General_Fix
+#define MERL_VSP_NBDV_RefVId_Fix_D0166       1 // JCT3V-D0166: 1: fix the NBDV with ref view selectioin; 0: always use base view with refViewIdx=0
+#else
+#define MERL_VSP_NBDV_RefVId_Fix_D0166       0
+#endif
+
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+#define MERL_Bi_VSP_D0166                    1 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
+#else
+#define MERL_Bi_VSP_D0166                    0 
+#endif
 
 #else // !MERL_VSP_C0152
 #define MERL_VSP_COMPENSATION_C0152          0 // JCT3V-C0152: 1: add VSP merge candidate to merging candidate list; 0: not to add
 #define MERL_VSP_BLOCKSIZE_C0152             4 // JCT3V-C0152: VSP block size, supported values: 1, 2 and 4.
+#define MERL_VSP_C0152_BugFix_ForNoDepthCase 0 // MERL bugfix for test condition of no depth
+#define MERL_CVSP_D0165                      0 // JCT3V-D0165: 1: enable CVSP; 0: disable CVSP.
+#define MERL_VSP_NBDV_RefVId_Fix_D0166       0 // JCT3V-D0166: 1: fix the NBDV with ref view selectioin; 0: always use base view with refViewIdx=0
+#define MERL_Bi_VSP_D0166                    0 // JCT3V-D0166: 1: add supporting for Bi-VSP, the code under the macro can also handle uni-direction VSP
+#define MTK_VSP_USING_NBDV_D0105             0
+#define MERL_General_Fix                     0
 #endif
 
+#if !MERL_General_Fix
+#define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139    1 // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
+#define MTK_VSP_USING_NBDV_D0105             1 // JCT3V-D0105: use NBDV instead of DoNBDV for BVSP
+#endif
 
 ///// ***** DERIVED PARAMETERS *********
 #if H3D_NBDV                    
@@ -341,8 +409,10 @@
 #define C1FLAG_NUMBER               8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER               1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5
 
+#if !LGE_SAO_MIGRATION_D0091
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_1 0  ///< disable the encoder constraint that does not test SAO/BO mode for chroma in interleaved mode
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_2 0  ///< disable the encoder constraint that reduce the range of SAO/EO for chroma in interleaved mode
+#endif
 #define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3 0  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
 #define COLLOCATED_REF_IDX      1           ///< H0442: signal collocated reference index
 
@@ -615,7 +685,11 @@ typedef struct _SaoQTPart
 {
   Int         iBestType;
   Int         iLength;
+#if LGE_SAO_MIGRATION_D0091
+  Int         subTypeIdx ;                 ///< indicates EO class or BO band position
+#else
   Int         bandPosition ;
+#endif
   Int         iOffset[4];
   Int         StartCUX;
   Int         StartCUY;
@@ -645,10 +719,16 @@ typedef struct _SaoLcuParam
   Bool       mergeUpFlag;
   Bool       mergeLeftFlag;
   Int        typeIdx;
+#if LGE_SAO_MIGRATION_D0091
+  Int        subTypeIdx;
+#else
   Int        bandPosition;
+#endif
   Int        offset[4];
+#if !LGE_SAO_MIGRATION_D0091
   Int        runDiff;
   Int        run;
+#endif
   Int        partIdx;
   Int        partIdxTmp;
   Int        length;

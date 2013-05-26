@@ -100,6 +100,10 @@
 #define NUM_ALF_UVLC_CTX              2       ///< number of context models for ALF UVLC (filter length)
 #define NUM_ALF_SVLC_CTX              3       ///< number of context models for ALF SVLC (filter coeff.)
 
+#if LGE_SAO_MIGRATION_D0091
+#define NUM_SAO_MERGE_FLAG_CTX        1       ///< number of context models for SAO merge flags
+#define NUM_SAO_TYPE_IDX_CTX          1       ///< number of context models for SAO type index
+#else
 #define NUM_SAO_FLAG_CTX              1       ///< number of context models for SAO flag
 #define NUM_SAO_UVLC_CTX              2       ///< number of context models for SAO UVLC
 #define NUM_SAO_SVLC_CTX              3       ///< number of context models for SAO SVLC
@@ -107,6 +111,7 @@
 #define NUM_SAO_MERGE_LEFT_FLAG_CTX   3       ///< number of context models for AO SVLC (filter coeff.)
 #define NUM_SAO_MERGE_UP_FLAG_CTX     1       ///< number of context models for AO SVLC (filter coeff.)
 #define NUM_SAO_TYPE_IDX_CTX          2       ///< number of context models for AO SVLC (filter coeff.)
+#endif
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
@@ -127,10 +132,25 @@
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+#define DEPTH_MODE_NUM_FLAG_CTX          8
+#define DMM_DELTA_NUM_FLAG_CTX           1
+#else
 #define SDC_NUM_FLAG_CTX                 3
+#endif
 #define SDC_NUM_RESIDUAL_FLAG_CTX        1
+#if !RWTH_SDC_CTX_SIMPL_D0032
 #define SDC_NUM_SIGN_FLAG_CTX            1
+#endif
+#if LGE_CONCATENATE_D0141
+#define SDC_NUM_RESIDUAL_CTX             1
+#else
+#if RWTH_SDC_CTX_SIMPL_D0032
+#define SDC_NUM_RESIDUAL_CTX             8
+#else
 #define SDC_NUM_RESIDUAL_CTX             10
+#endif
+#endif
 
 #define SDC_NUM_PRED_MODE_CTX            5
 #endif
@@ -375,7 +395,23 @@ INIT_ALF_SVLC[3][NUM_ALF_SVLC_CTX] =
   { 141,  154,  189, }, 
   { 141,  154,  159, }, 
 };
+#if LGE_SAO_MIGRATION_D0091
+static const UChar
+INIT_SAO_MERGE_FLAG[3][NUM_SAO_MERGE_FLAG_CTX] =
+{
+  { 153,  },
+  { 153,  },
+  { 153,  },
+};
 
+static const UChar 
+INIT_SAO_TYPE_IDX[3][NUM_SAO_TYPE_IDX_CTX] = 
+{
+  { 200, },
+  { 185, },
+  { 160, },
+};
+#else
 static const UChar 
 INIT_SAO_FLAG[3][NUM_SAO_FLAG_CTX] =  
 {
@@ -423,6 +459,7 @@ INIT_SAO_TYPE_IDX[3][NUM_SAO_TYPE_IDX_CTX] =
   { 185,  140, }, 
   { 200,  140, }, 
 };
+#endif
 
 static const UChar 
 INIT_TRANS_SUBDIV_FLAG[3][NUM_TRANS_SUBDIV_FLAG_CTX] = 
@@ -486,6 +523,16 @@ INIT_DMM_DATA[3][NUM_DMM_DATA_CTX] =
   }
 #endif
 };
+#if QC_ARP_D0177
+#define NUM_ARPW_CTX                  4       ///< number of context models for generalized residual prediction weighting factor
+static const UChar 
+INIT_ARPW[3][NUM_ARPW_CTX] = 
+{
+  { 154 , 154 , 154 , 154 }, 
+  { 154 , 154 , 154 , 154 }, 
+  { 154 , 154 , 154 , 154 }, 
+};
+#endif
 
 #if LGE_EDGE_INTRA_A0070
 static const Short
@@ -522,6 +569,20 @@ INIT_EDGE_INTRA_DELTA_DC[3][NUM_EDGE_INTRA_DELTA_DC_CTX] =
 #endif
 
 #if RWTH_SDC_DLT_B0036
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+static const UChar INIT_DEPTHMODE_FLAG[3][DEPTH_MODE_NUM_FLAG_CTX]=
+{
+  {0,  0,  64,   0, CNU,   0, CNU, 0},
+  {0, 64,   0, CNU,   0, CNU,   0, 0},
+  {64, 0, CNU,   0, CNU,   0,   0, 0}
+};
+static const UChar INIT_DMMDELTA_FLAG[3][DMM_DELTA_NUM_FLAG_CTX]=
+{
+  {0},
+  {0},
+  {64}
+};
+#else
 static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
 {
   {
@@ -534,7 +595,67 @@ static const Short INIT_SDC_FLAG[3][SDC_NUM_FLAG_CTX][2] =
     {    0,   64 }, {    0,   64 }, {    0,   64 }
   }
 };
+#endif
 
+#if RWTH_SDC_CTX_SIMPL_D0032
+static const UChar INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
+{
+  {
+    CNU
+    
+  },
+  {
+    CNU
+  },
+  {
+    CNU
+  }
+};
+    
+#if LGE_CONCATENATE_D0141
+static const UChar INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
+{
+    {
+         155
+    },
+    {
+         155
+    },
+    {
+        155
+    }
+};
+#else
+static const UChar INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
+{
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  }
+};
+#endif
+
+static const UChar INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX] =
+{
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  },
+  {
+    CNU,    CNU
+    ,CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU, CNU
+  }
+};
+#else
 static const Short INIT_SDC_RESIDUAL_FLAG[3][3*SDC_NUM_RESIDUAL_FLAG_CTX][2] =
 {
   {
@@ -611,6 +732,7 @@ static const Short INIT_SDC_PRED_MODE[3][3*SDC_NUM_PRED_MODE_CTX][2] =
     {  9, 85 }, { -4, 60 }, {  4, 70 }, {  4, 70 }, {  4, 70 }
   }
 };
+#endif
 #endif
 
 //! \}

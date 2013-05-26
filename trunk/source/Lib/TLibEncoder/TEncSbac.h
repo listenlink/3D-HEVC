@@ -91,6 +91,9 @@ public:
   
   Void  load                   ( TEncSbac* pScr  );
   Void  loadIntraDirModeLuma   ( TEncSbac* pScr  );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+  Void  loadDepthMode          ( TEncSbac* pSrc  );
+#endif
   Void  store                  ( TEncSbac* pDest );
   Void  loadContexts           ( TEncSbac* pScr  );
   Void  resetBits              ()                { m_pcBinIf->resetBits(); m_pcBitIf->resetBits(); }
@@ -125,6 +128,13 @@ public:
 
   Void codeAlfCtrlFlag       ( UInt uiSymbol );
   Void  codeApsExtensionFlag () { assert (0); return; };
+#if LGE_SAO_MIGRATION_D0091
+  Void  codeSaoMaxUvlc    ( UInt code, UInt maxSymbol );
+  Void  codeSaoMerge      ( UInt  uiCode );
+  Void  codeSaoTypeIdx    ( UInt  uiCode);
+  Void  codeSaoUflc       ( UInt uiLength, UInt  uiCode );
+  Void  codeSAOSign       ( UInt  uiCode);  //<! code SAO offset sign
+#else
   Void  codeSaoFlag       ( UInt uiCode );
   Void  codeSaoUvlc       ( UInt uiCode );
   Void  codeSaoSvlc       ( Int  uiCode );
@@ -133,12 +143,17 @@ public:
   Void  codeSaoMergeUp    ( UInt  uiCode);
   Void  codeSaoTypeIdx    ( UInt  uiCode);
   Void  codeSaoUflc       ( UInt  uiCode);
+#endif
   Void  codeScalingList      ( TComScalingList* scalingList     ){ assert (0);  return;};
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void codeSDCPredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 #endif
 
 private:
@@ -208,6 +223,9 @@ public:
 #if H3D_IVRP
   Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
+#if QC_ARP_D0177
+  virtual Void codeARPW ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #if H3D_IVMP
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList, Int iNum );
@@ -221,8 +239,15 @@ public:
   Void codeTransformSubdivFlag ( UInt uiSymbol, UInt uiCtx );
   Void codeQtCbf               ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth );
   Void codeQtRootCbf           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  
-  Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+  Void codeDepthIntraMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeDepthModelingTable  ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bSdcRD = false );
+#endif
+  Void codeIntraDirLumaAng     ( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    , Bool bSdcRD = false
+#endif
+    );
   
   Void codeIntraDirChroma      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterDir            ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -265,6 +290,9 @@ private:
 #if H3D_IVRP
   ContextModel3DBuffer m_cResPredFlagSCModel;
 #endif
+#if QC_ARP_D0177
+  ContextModel3DBuffer m_cCUPUARPW;
+#endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
   ContextModel3DBuffer m_cCUAlfCtrlFlagSCModel;
@@ -291,16 +319,23 @@ private:
   ContextModel3DBuffer m_cALFUvlcSCModel;
   ContextModel3DBuffer m_cALFSvlcSCModel;
   ContextModel3DBuffer m_cCUAMPSCModel;
+#if LGE_SAO_MIGRATION_D0091
+  ContextModel3DBuffer m_cSaoMergeSCModel;
+  ContextModel3DBuffer m_cSaoTypeIdxSCModel;
+#else
   ContextModel3DBuffer m_cSaoFlagSCModel;
   ContextModel3DBuffer m_cSaoUvlcSCModel;
   ContextModel3DBuffer m_cSaoSvlcSCModel;
   ContextModel3DBuffer m_cSaoMergeLeftSCModel;
   ContextModel3DBuffer m_cSaoMergeUpSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
+#endif
 
 #if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   ContextModel3DBuffer m_cDmmFlagSCModel;
   ContextModel3DBuffer m_cDmmModeSCModel;
+#endif
   ContextModel3DBuffer m_cDmmDataSCModel;
 #endif
 #if LGE_EDGE_INTRA_A0070
@@ -311,10 +346,17 @@ private:
 #endif
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   ContextModel3DBuffer m_cSDCFlagSCModel;
+#else
+  ContextModel3DBuffer m_cDepthModeModel;
+  ContextModel3DBuffer m_cDmmDeltaFlagModel;
+#endif
   
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+#if !RWTH_SDC_CTX_SIMPL_D0032
   ContextModel3DBuffer m_cSDCResidualSignFlagSCModel;
+#endif
   ContextModel3DBuffer m_cSDCResidualSCModel;
   
   ContextModel3DBuffer m_cSDCPredModeSCModel;
