@@ -89,6 +89,9 @@ private:
   
 protected:
   Void  xExtendPicCompBorder (Pel* piTxt, Int iStride, Int iWidth, Int iHeight, Int iMarginX, Int iMarginY);
+#if H_3D
+  Void  xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Pel iVal );
+#endif
   
 public:
   TComPicYuv         ();
@@ -157,6 +160,11 @@ public:
   
   // Set border extension flag
   Void  setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
+#if H_3D
+  // Set Function 
+  Void  setLumaTo    ( Pel pVal );  
+  Void  setChromaTo  ( Pel pVal );  
+#endif
 };// END CLASS DEFINITION TComPicYuv
 
 void calcChecksum(TComPicYuv& pic, UChar digest[3][16]);

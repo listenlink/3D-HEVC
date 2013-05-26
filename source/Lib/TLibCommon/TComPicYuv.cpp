@@ -323,5 +323,29 @@ Void TComPicYuv::dump (Char* pFileName, Bool bAdd)
   fclose(pFile);
 }
 
+#if H_3D
+Void TComPicYuv::setLumaTo( Pel pVal )
+{
+  xSetPels( getLumaAddr(), getStride(), getWidth(), getHeight(), pVal );
+}
+
+Void TComPicYuv::setChromaTo( Pel pVal )
+{
+  xSetPels( getCbAddr(), getCStride(), getWidth() >> 1, getHeight() >> 1, pVal ); 
+  xSetPels( getCrAddr(), getCStride(), getWidth() >> 1, getHeight() >> 1, pVal );
+}
+
+Void TComPicYuv::xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Pel iVal )
+{
+  for (Int iYPos = 0; iYPos < iHeight; iYPos++)
+  {
+    for (Int iXPos = 0; iXPos < iWidth; iXPos++)
+    {
+      piPelSource[iXPos] = iVal; 
+    }
+    piPelSource += iSourceStride; 
+  }
+}
+#endif
 
 //! \}

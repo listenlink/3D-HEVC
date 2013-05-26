@@ -89,10 +89,12 @@ private:
   Int                   m_layerId;
   Int                   m_viewId;
 #if H_3D
+  Int                   m_viewIndex;
   Bool                  m_isDepth;
+  Int**                 m_aaiCodedScale;
+  Int**                 m_aaiCodedOffset;
 #endif
 #endif
-
 public:
   TComPic();
   virtual ~TComPic();
@@ -111,11 +113,17 @@ public:
   Void          setViewId             ( Int viewId )     { m_viewId = viewId;   }
   Int           getViewId             ()                 { return m_viewId;     }
 #if H_3D
+  Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
+  Int           getViewIndex          ()                 { return m_viewIndex;     }
+
   Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool          getIsDepth            ()                 { return m_isDepth; }
-#endif
-#endif
 
+  Void          setScaleOffset( Int** pS, Int** pO )  { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
+  Int**         getCodedScale ()                      { return m_aaiCodedScale;  }
+  Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
+#endif
+#endif
   Bool          getUsedByCurr()             { return m_bUsedByCurr; }
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
   Bool          getIsLongTerm()             { return m_bIsLongTerm; }
@@ -185,9 +193,6 @@ public:
 #if H_MV
   Void          print( Bool legend );
 #endif
-
-
-
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 
@@ -208,44 +213,21 @@ class TComPicLists
 {
 private: 
   TComList<TComList<TComPic*>*> m_lists; 
+#if H_3D
+  TComVPS*                     m_vps; 
+#endif
 public: 
-  
-  Void push_back( TComList<TComPic*>* list ) { m_lists.push_back( list ); }
-  Int  size     ()                           { return (Int) m_lists.size    (); } 
+  Void        push_back( TComList<TComPic*>* list ) { m_lists.push_back( list );   }
+  Int         size     ()                           { return (Int) m_lists.size(); } 
+  TComPic*    getPic   ( Int layerIdInNuh,              Int poc );    
+  TComPicYuv* getPicYuv( Int layerIdInNuh,              Int poc, Bool recon ); 
+#if H_3D
+  Void        setVPS   ( TComVPS* vps ) { m_vps = vps;  }; 
+  TComPic*    getPic   ( Int viewIndex, Bool depthFlag, Int poc );
+  TComPicYuv* getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon );
+#endif  
 
-  TComPic* getPic( Int layerIdInNuh, Int poc )
-  { 
-    TComPic* pcPic = NULL;
-    for(TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin(); ( itL != m_lists.end() && pcPic == NULL ); itL++)
-    {    
-      for(TComList<TComPic*>::iterator itP=(*itL)->begin(); ( itP!=(*itL)->end() && pcPic == NULL ); itP++)
-      {
-        if ( ( (*itP)->getPOC() == poc ) && ( (*itP)->getLayerId() == layerIdInNuh ) )
-        {
-          pcPic = *itP ;      
-        }
-      }
-    }
-    return pcPic;
-  }
-
-  Void print( )
-  { 
-    Bool first = true;     
-    for(TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin(); ( itL != m_lists.end() ); itL++)
-    {    
-      for(TComList<TComPic*>::iterator itP=(*itL)->begin(); ( itP!=(*itL)->end() ); itP++)
-      {
-        if ( first )
-        {
-          (*itP)->print( true );       
-          first = false; 
-        }
-        (*itP)->print( false );       
-      }
-    }
-  }
-
+  Void print( );  
 
 }; // END CLASS DEFINITION TComPicLists
 

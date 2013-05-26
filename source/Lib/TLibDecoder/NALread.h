@@ -38,9 +38,9 @@
 
 #pragma once
 
-#include "TLibCommon/TypeDef.h"
-#include "TLibCommon/TComBitStream.h"
-#include "TLibCommon/NAL.h"
+#include "../TLibCommon/TypeDef.h"
+#include "../TLibCommon/TComBitStream.h"
+#include "../TLibCommon/NAL.h"
 
 //! \ingroup TLibDecoder
 //! \{

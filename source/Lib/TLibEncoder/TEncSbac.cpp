@@ -245,7 +245,11 @@ Void TEncSbac::codeVPS( TComVPS* pcVPS )
   return;
 }
 
+#if H_3D
+Void TEncSbac::codeSPS( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
+#else
 Void TEncSbac::codeSPS( TComSPS* pcSPS )
+#endif
 {
   assert (0);
   return;

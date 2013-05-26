@@ -179,6 +179,10 @@ public:
   UInt    getWidth    ()    { return  m_iWidth;   }
   UInt    getCHeight  ()    { return  m_iCHeight; }
   UInt    getCWidth   ()    { return  m_iCWidth;  }  
+#if H_3D
+  Void addClipPartLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
+#endif
+
 };// END CLASS DEFINITION TComYuv
 
 //! \}

@@ -45,7 +45,6 @@
 #define strdup _strdup
 #endif
 #endif
-
 //! \ingroup TAppCommon
 //! \{
 
@@ -282,7 +281,6 @@ namespace df
       }
     }
 #endif
-
     /** Option class for argument handling using a user provided function */
     struct OptionFunc : public OptionBase
     {
@@ -381,7 +379,6 @@ namespace df
         return *this;
       }
 #endif
-
       /**
        * Add option described by name to the parent Options list,
        *   with desc as an optional help description

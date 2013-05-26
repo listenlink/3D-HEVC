@@ -42,7 +42,7 @@
 #pragma once
 #endif // _MSC_VER > 1000
 
-#include "TLibCommon/TComRom.h"
+#include "../TLibCommon/TComRom.h"
 
 #if ENC_DEC_TRACE
 

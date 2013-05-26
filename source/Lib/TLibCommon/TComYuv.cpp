@@ -636,4 +636,29 @@ Void TComYuv::removeHighFreq( TComYuv* pcYuvSrc, UInt uiPartIdx, UInt uiWidht, U
     pDstV += iDstStride;
   }
 }
+
+#if H_3D
+Void TComYuv::addClipPartLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize )
+{
+  Int x, y;
+
+  Pel* pSrc0 = pcYuvSrc0->getLumaAddr( uiTrUnitIdx);
+  Pel* pSrc1 = pcYuvSrc1->getLumaAddr( uiTrUnitIdx);
+  Pel* pDst  = getLumaAddr( uiTrUnitIdx);
+
+  UInt iSrc0Stride = pcYuvSrc0->getStride();
+  UInt iSrc1Stride = pcYuvSrc1->getStride();
+  UInt iDstStride  = getStride();
+  for ( y = uiPartSize-1; y >= 0; y-- )
+  {
+    for ( x = uiPartSize-1; x >= 0; x-- )
+    {
+      pDst[x] = ClipY( pSrc0[x] + pSrc1[x] );      
+    }
+    pSrc0 += iSrc0Stride;
+    pSrc1 += iSrc1Stride;
+    pDst  += iDstStride;
+  }
+}
+#endif
 //! \}

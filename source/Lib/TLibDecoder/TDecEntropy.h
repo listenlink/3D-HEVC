@@ -38,12 +38,12 @@
 #ifndef __TDECENTROPY__
 #define __TDECENTROPY__
 
-#include "TLibCommon/CommonDef.h"
-#include "TLibCommon/TComBitStream.h"
-#include "TLibCommon/TComSlice.h"
-#include "TLibCommon/TComPic.h"
-#include "TLibCommon/TComPrediction.h"
-#include "TLibCommon/TComSampleAdaptiveOffset.h"
+#include "../TLibCommon/CommonDef.h"
+#include "../TLibCommon/TComBitStream.h"
+#include "../TLibCommon/TComSlice.h"
+#include "../TLibCommon/TComPic.h"
+#include "../TLibCommon/TComPrediction.h"
+#include "../TLibCommon/TComSampleAdaptiveOffset.h"
 
 class TDecSbac;
 class TDecCavlc;
@@ -65,7 +65,11 @@ public:
   virtual Void  setBitstream          ( TComInputBitstream* p )  = 0;
 
   virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
+#if H_3D
+  virtual Void  parseSPS                  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  )         = 0;
+#else
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
+#endif
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
 
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)       = 0;
@@ -128,7 +132,11 @@ public:
   Void    setBitstream                ( TComInputBitstream* p ) { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
+#if H_3D
+  Void    decodeSPS                   ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )    { m_pcEntropyDecoderIf->parseSPS(pcSPS, viewIndex, depthFlag );                    }
+#else
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
+#endif
   Void    decodePPS                   ( TComPPS* pcPPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager);         }
 

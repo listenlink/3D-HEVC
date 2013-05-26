@@ -35,20 +35,16 @@
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
 #include <string.h>
+#if H_3D
+
 /////// TRenImagePlane ///////
 
 template<class T>
 TRenImagePlane<T>::TRenImagePlane() { m_bClean = true; }
 
 template<class T>
-TRenImagePlane<T>::TRenImagePlane(UInt uiWidth, UInt uiHeight, UInt uiPad, UInt uiBitDepth )
-: m_uiWidth    (uiWidth), 
-  m_uiHeight   (uiHeight),
-  m_uiStride   (uiWidth+2*uiPad), 
-  m_uiWidthOrg (uiWidth+2*uiPad), 
-  m_uiHeightOrg(uiHeight+2*uiPad), 
-  m_uiPad      (uiPad),
-  m_uiBitDepth (uiBitDepth)
+TRenImagePlane<T>::TRenImagePlane(UInt uiWidth, UInt uiHeight, UInt uiPad)
+: m_uiWidth(uiWidth), m_uiHeight(uiHeight), m_uiStride(uiWidth+2*uiPad), m_uiWidthOrg(uiWidth+2*uiPad), m_uiHeightOrg(uiHeight+2*uiPad), m_uiPad(uiPad)
 {
   m_pcDataOrg = new T[ m_uiWidthOrg * m_uiHeightOrg ];
   m_pcData    = m_pcDataOrg + m_uiPad * m_uiStride + m_uiPad;
@@ -57,13 +53,12 @@ TRenImagePlane<T>::TRenImagePlane(UInt uiWidth, UInt uiHeight, UInt uiPad, UInt 
 
 template<class T>
 TRenImagePlane<T>::TRenImagePlane(TRenImagePlane* pcPlane)
-: m_uiWidth    (pcPlane->getWidth   ())
-, m_uiHeight   (pcPlane->getHeight  ())
-, m_uiStride   (pcPlane->getStride  ())
-, m_uiWidthOrg (pcPlane->getWidthOrg())
+: m_uiWidth   (pcPlane->getWidth   ())
+, m_uiHeight  (pcPlane->getHeight  ())
+, m_uiStride  (pcPlane->getStride  ())
+, m_uiWidthOrg(pcPlane->getWidthOrg())
 , m_uiHeightOrg(pcPlane->getHeightOrg())
-, m_uiPad      (pcPlane->getPad     ())
-, m_uiBitDepth (pcPlane->getBitDepth())
+, m_uiPad     (pcPlane->getPad     ())
 {
   m_pcData = new T[m_uiWidthOrg*m_uiHeightOrg];
   m_bClean = true;
@@ -71,7 +66,7 @@ TRenImagePlane<T>::TRenImagePlane(TRenImagePlane* pcPlane)
 }
 
 template<typename T>
-TRenImagePlane<T>::TRenImagePlane( T* pcDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad, UInt uiBitDepth )
+TRenImagePlane<T>::TRenImagePlane( T* pcDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad )
 : m_pcData     (pcDataOrg + uiStride * uiPad + uiPad )
 , m_uiWidth    (uiWidthOrg  - 2* uiPad )
 , m_uiHeight   (uiHeightOrg - 2* uiPad )
@@ -81,7 +76,6 @@ TRenImagePlane<T>::TRenImagePlane( T* pcDataOrg, UInt uiWidthOrg, UInt uiHeightO
 , m_uiHeightOrg(uiHeightOrg)
 , m_uiPad      (uiPad      )
 , m_bClean     (false      )
-, m_uiBitDepth (uiBitDepth )
 {
 
 }
@@ -518,7 +512,7 @@ template class TRenImagePlane<Int>;
 
 template<typename T>
 TRenImagePlanePart<T>::TRenImagePlanePart( TRenImagePlane<T>* pPlane, UInt uHorOff, UInt uVerOff, UInt uWidth, UInt uHeight )
-: TRenImagePlane<T>( pPlane->getPlaneData() + uHorOff + uVerOff * pPlane->getStride(), uWidth, uHeight, pPlane->getStride(),0, pPlane->getBitDepth())
+: TRenImagePlane<T>( pPlane->getPlaneData() + uHorOff + uVerOff * pPlane->getStride(), uWidth, uHeight, pPlane->getStride(),0)
 {
 
 }
@@ -533,3 +527,4 @@ template class TRenImagePlanePart<Pel>;
 template class TRenImagePlanePart<Double>;
 template class TRenImagePlanePart<Bool>;
 template class TRenImagePlanePart<Int>;
+#endif // H_3D

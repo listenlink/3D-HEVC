@@ -90,7 +90,11 @@ public:
   //--SBAC RD
 
   Void  codeVPS                 ( TComVPS* pcVPS );
+#if !H_3D
   Void  codeSPS                 ( TComSPS* pcSPS     );
+#else
+  Void  codeSPS                 ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#endif
   Void  codePPS                 ( TComPPS* pcPPS     );
   Void  codeSliceHeader         ( TComSlice* pcSlice );
   Void  codeTilesWPPEntryPoint( TComSlice* pSlice );
@@ -108,7 +112,6 @@ private:
   Void  xWriteUnaryMaxSymbol ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xWriteEpExGolomb     ( UInt uiSymbol, UInt uiCount );
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam );
-  Void  xWriteTerminatingBit ( UInt uiBit );
   
   Void  xCopyFrom            ( TEncSbac* pSrc );
   Void  xCopyContextsFrom    ( TEncSbac* pSrc );  

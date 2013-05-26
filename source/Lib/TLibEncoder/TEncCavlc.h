@@ -68,11 +68,6 @@ protected:
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
 
-  Void  xWritePCMAlignZero    ();
-  Void  xWriteEpExGolomb      ( UInt uiSymbol, UInt uiCount );
-  Void  xWriteExGolombLevel    ( UInt uiSymbol );
-  Void  xWriteUnaryMaxSymbol  ( UInt uiSymbol, UInt uiMaxSymbol );
-
   Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
   
@@ -89,7 +84,11 @@ public:
   UInt  getCoeffCost          ()                { return  m_uiCoeffCost;  }
   Void  codeVPS                 ( TComVPS* pcVPS );
   Void  codeVUI                 ( TComVUI *pcVUI, TComSPS* pcSPS );
+#if H_3D
+  Void  codeSPS                 ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#else
   Void  codeSPS                 ( TComSPS* pcSPS );
+#endif
   Void  codePPS                 ( TComPPS* pcPPS );
   Void  codeSliceHeader         ( TComSlice* pcSlice );
   Void  codePTL                 ( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);

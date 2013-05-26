@@ -36,6 +36,8 @@
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
 #include "assert.h"
+#if H_3D
+
 
 template<typename T>
 TRenImage<T>::TRenImage( TRenImage& rcIn )
@@ -65,7 +67,7 @@ TRenImage<Pel>::TRenImage( TComPicYuv* pcPicYuv, Bool bFirstPlaneOnly )
     m_uiNumberOfFullPlanes   = 1;
     m_uiNumberOfQuaterPlanes = 0;
     m_apcPlanes    = new TRenImagePlane<Pel>*[ m_uiNumberOfPlanes ];
-    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBufY(), pcPicYuv->getWidth() + (REN_LUMA_MARGIN << 1),   pcPicYuv->getHeight()+ (REN_LUMA_MARGIN << 1), pcPicYuv->getStride (), REN_LUMA_MARGIN, g_uiPCMBitDepthLuma );
+    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBufY(), pcPicYuv->getWidth() + (REN_LUMA_MARGIN << 1),   pcPicYuv->getHeight()+ (REN_LUMA_MARGIN << 1), pcPicYuv->getStride (), REN_LUMA_MARGIN );
   }
   else //420
   {
@@ -74,9 +76,9 @@ TRenImage<Pel>::TRenImage( TComPicYuv* pcPicYuv, Bool bFirstPlaneOnly )
     m_uiNumberOfQuaterPlanes = 2;
 
     m_apcPlanes    = new TRenImagePlane<Pel>*[ m_uiNumberOfPlanes ];
-    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBufY(),   pcPicYuv->getWidth()     + (REN_LUMA_MARGIN << 1),  pcPicYuv->getHeight()      + (REN_LUMA_MARGIN << 1), pcPicYuv->getStride (), REN_LUMA_MARGIN     , g_uiPCMBitDepthLuma   );
-    m_apcPlanes[1] = new TRenImagePlane<Pel>( pcPicYuv->getBufU(),   (pcPicYuv->getWidth()>>1)+  REN_LUMA_MARGIN      ,  (pcPicYuv->getHeight()>>1) +  REN_LUMA_MARGIN      , pcPicYuv->getCStride(), REN_LUMA_MARGIN >> 1, g_uiPCMBitDepthChroma );
-    m_apcPlanes[2] = new TRenImagePlane<Pel>( pcPicYuv->getBufV(),   (pcPicYuv->getWidth()>>1)+  REN_LUMA_MARGIN      ,  (pcPicYuv->getHeight()>>1) +  REN_LUMA_MARGIN      , pcPicYuv->getCStride(), REN_LUMA_MARGIN >> 1, g_uiPCMBitDepthChroma );
+    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBufY(),   pcPicYuv->getWidth()     + (REN_LUMA_MARGIN << 1),  pcPicYuv->getHeight()      + (REN_LUMA_MARGIN << 1), pcPicYuv->getStride (), REN_LUMA_MARGIN );
+    m_apcPlanes[1] = new TRenImagePlane<Pel>( pcPicYuv->getBufU(),   (pcPicYuv->getWidth()>>1)+  REN_LUMA_MARGIN      ,  (pcPicYuv->getHeight()>>1) +  REN_LUMA_MARGIN      , pcPicYuv->getCStride(), REN_LUMA_MARGIN >> 1 );
+    m_apcPlanes[2] = new TRenImagePlane<Pel>( pcPicYuv->getBufV(),   (pcPicYuv->getWidth()>>1)+  REN_LUMA_MARGIN      ,  (pcPicYuv->getHeight()>>1) +  REN_LUMA_MARGIN      , pcPicYuv->getCStride(), REN_LUMA_MARGIN >> 1 );
   }
 }
 
@@ -131,8 +133,8 @@ Void TRenImage<T>::allocatePlanes( UInt uiWidth, UInt uiHeight, UInt uiNumberOfF
 {
   assert( uiNumberOfFullPlanes + uiNumberOfQuaterPlanes);
 
-  UInt uiHalfWidth  = uiWidth  >> 1;
-  UInt uiHalfHeight = uiHeight >> 1;
+  UInt uiHalfWidth  = uiWidth  / 2;
+  UInt uiHalfHeight = uiHeight / 2;
 
   uiHalfWidth  = (uiHalfWidth  == 0) ? 1 : uiHalfWidth ;
   uiHalfHeight = (uiHalfHeight == 0) ? 1 : uiHalfHeight;
@@ -145,12 +147,12 @@ Void TRenImage<T>::allocatePlanes( UInt uiWidth, UInt uiHeight, UInt uiNumberOfF
 
   for (UInt uiCurPlane = 0; uiCurPlane < uiNumberOfFullPlanes; uiCurPlane++)
   {
-    this->m_apcPlanes[uiCurPlane] = new TRenImagePlane<T>(uiWidth, uiHeight, REN_LUMA_MARGIN, g_uiPCMBitDepthLuma );
+    this->m_apcPlanes[uiCurPlane] = new TRenImagePlane<T>(uiWidth, uiHeight, REN_LUMA_MARGIN);
   };
 
   for (UInt uiCurPlane = 0; uiCurPlane < uiNumberOfQuaterPlanes; uiCurPlane++)
   {
-    this->m_apcPlanes[uiCurPlane+uiNumberOfFullPlanes] = new TRenImagePlane<T>(uiHalfWidth, uiHalfHeight, REN_LUMA_MARGIN >> 1, g_uiPCMBitDepthChroma);
+    this->m_apcPlanes[uiCurPlane+uiNumberOfFullPlanes] = new TRenImagePlane<T>(uiHalfWidth, uiHalfHeight, REN_LUMA_MARGIN >> 1);
   };
 }
 
@@ -230,7 +232,7 @@ Void TRenImage<T>::init()
 
   for (UInt uiCurPlane = 1; uiCurPlane < m_uiNumberOfPlanes; uiCurPlane++)
   {
-    m_apcPlanes[uiCurPlane]->assign( (Pel) ((g_uiIBDI_MAX+1) >> 1) );
+    m_apcPlanes[uiCurPlane]->assign( (Pel) ( 1 << ( g_bitDepthC - 1 ) ) );
   }
 }
 
@@ -269,3 +271,4 @@ template class TRenImage<Bool>;
 
 template Void TRenImage<Pel>::assign<Pel>    (TRenImage<Pel>*   );
 
+#endif // H_3D

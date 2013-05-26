@@ -45,6 +45,9 @@
 #include "TLibVideoIO/TVideoIOYuv.h"
 #include "TLibCommon/AccessUnit.h"
 #include "TAppEncCfg.h"
+#if H_3D
+#include "../../Lib/TLibRenderer/TRenTop.h"
+#endif
 
 //! \ingroup TAppEncoder
 //! \{
@@ -58,7 +61,6 @@ class TAppEncTop : public TAppEncCfg
 {
 private:
   // class interface
-
 #if H_MV
   std::vector<TEncTop*>      m_acTEncTopList ;              ///< encoder class per layer 
   std::vector<TVideoIOYuv*>  m_acTVideoIOYuvInputFileList;  ///< input YUV file
@@ -69,6 +71,7 @@ private:
   std::vector<Int>           m_frameRcvd;                   ///< number of received frames 
 
   TComPicLists               m_ivPicLists;                  ///< picture buffers of encoder instances
+  TComVPS                    m_vps;                         ///< vps
 #else
   TEncTop                    m_cTEncTop;                    ///< encoder class
   TVideoIOYuv                m_cTVideoIOYuvInputFile;       ///< input YUV file
@@ -81,6 +84,10 @@ private:
 
   UInt m_essentialBytes;
   UInt m_totalBytes;
+#if H_3D_VSO
+  TRenTop                     m_cRendererTop; 
+  TRenModel                   m_cRendererModel;   
+#endif
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -90,7 +97,7 @@ protected:
   
   /// obtain required buffers
 #if H_MV
-  Void xGetBuffer(TComPicYuv*& rpcPicYuvRec, UInt layer);
+  Void  xGetBuffer(TComPicYuv*& rpcPicYuvRec, UInt layer);
 #else
   Void xGetBuffer(TComPicYuv*& rpcPicYuvRec);
 #endif
@@ -99,13 +106,11 @@ protected:
   Void  xDeleteBuffer     ();
   
   // file I/O
-
 #if H_MV
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std::list<AccessUnit>& accessUnits, UInt layerId); ///< write bitstream to file
 #else
   Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits); ///< write bitstream to file
 #endif
-
   void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
   void printRateSummary();
   
@@ -115,22 +120,16 @@ protected:
   Void xSetDirectDependencyFlags  ( TComVPS& vps );
   Int  xGetMax( std::vector<Int>& vec);
 #endif
-
 public:
   TAppEncTop();
   virtual ~TAppEncTop();
   
   Void        encode      ();                               ///< main encoding function
-
 #if H_MV
-  TEncTop*    getTEncTopLayer(UInt layer) { return  m_acTEncTopList[layer]; }  ///< return pointer to encoder class for specific layer
-#if H_3D
-  TEncTop*    getTEncTopView( Int viewId, Bool isDepth );                      ///< return pointer to encoder class for specific view Id and texture or depth 
-#endif
+  TEncTop*    getTEncTop( UInt layer ) { return  m_acTEncTopList[layer]; }  ///< return pointer to encoder class for specific layer
 #else
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
 #endif
-
 };// END CLASS DEFINITION TAppEncTop
 
 //! \}
