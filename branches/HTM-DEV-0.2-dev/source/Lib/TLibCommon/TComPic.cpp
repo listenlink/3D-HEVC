@@ -67,7 +67,10 @@ TComPic::TComPic()
 , m_layerId                               (0)
 , m_viewId                                (0)
 #if H_3D
+, m_viewIndex                             (0)
 , m_isDepth                               (false)
+, m_aaiCodedScale                         (0)
+, m_aaiCodedOffset                        (0)
 #endif
 #endif
 {
@@ -478,6 +481,75 @@ Void TComPic::print( Bool legend )
   else
     std::cout  << getLayerId() << "\t" << getPOC()<< "\t" << getReconMark() << "\t" << getSlice(0)->isReferenced() << "\t" << getIsLongTerm() << std::endl;
 }
-#endif
 
+TComPic* TComPicLists::getPic( Int layerIdInNuh, Int poc )
+{
+  TComPic* pcPic = NULL;
+  for(TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin(); ( itL != m_lists.end() && pcPic == NULL ); itL++)
+  {    
+    for(TComList<TComPic*>::iterator itP=(*itL)->begin(); ( itP!=(*itL)->end() && pcPic == NULL ); itP++)
+    {
+      TComPic* currPic = (*itP); 
+      if ( ( currPic->getPOC() == poc ) && ( currPic->getLayerId() == layerIdInNuh ) )
+      {
+        pcPic = currPic ;      
+      }
+    }
+  }
+  return pcPic;
+}
+
+#if H_3D
+TComPic* TComPicLists::getPic( Int viewIndex, Bool depthFlag, Int poc )
+{
+  return getPic   ( m_vps->getLayerIdInNuh( viewIndex, depthFlag ), poc );
+}
+
+Void TComPicLists::print()
+{
+  Bool first = true;     
+  for(TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin(); ( itL != m_lists.end() ); itL++)
+  {    
+    for(TComList<TComPic*>::iterator itP=(*itL)->begin(); ( itP!=(*itL)->end() ); itP++)
+    {
+      if ( first )
+      {
+        (*itP)->print( true );       
+        first = false; 
+      }
+      (*itP)->print( false );       
+    }
+  }
+}
+
+TComPicYuv* TComPicLists::getPicYuv( Int layerIdInNuh, Int poc, Bool reconFlag )
+{
+  TComPic*    pcPic = getPic( layerIdInNuh, poc );
+  TComPicYuv* pcPicYuv = NULL;
+
+  if (pcPic != NULL)
+  {
+    if( reconFlag )
+    {
+      if ( pcPic->getReconMark() )
+      {
+        pcPicYuv = pcPic->getPicYuvRec();
+      }
+    }
+    else
+    {
+      pcPicYuv = pcPic->getPicYuvOrg();
+    }
+  };
+
+  return pcPicYuv;
+}
+
+TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon )
+{  
+  Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag ); 
+  return getPicYuv( layerIdInNuh, poc, recon );
+}
+#endif // H_3D
+#endif // H_MV
 //! \}

@@ -56,10 +56,10 @@
 // ====================================================================================================================
 
 #if H_MV
-#define NV_VERSION        "0.3"                 ///< Current software version
+#define NV_VERSION        "0.1"                 ///< Current software version
 #define HM_VERSION        "10.1"                ///< 
 #else
-#define NV_VERSION        "10.0"                 ///< Current software version
+#define NV_VERSION        "10.1"                 ///< Current software version
 #endif
 
 // ====================================================================================================================
@@ -114,10 +114,15 @@
 
 #define MAX_NUM_REF_PICS            16          ///< max. number of pictures used for reference
 #define MAX_NUM_REF                 16          ///< max. number of entries in picture reference list
+#if !L0034_COMBINED_LIST_CLEANUP
 #define MAX_NUM_REF_LC              MAX_NUM_REF_PICS  // TODO: remove this macro definition (leftover from combined list concept)
+#endif
 
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
+#if H_3D
+#define MIN_INT                     (-2147483647-1) // < min. value of signed 32-bit integer
+#endif
 #define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
 #define MAX_DOUBLE                  1.7e+308    ///< max. value of double-type value
 
@@ -135,8 +140,6 @@ extern Int g_bitDepthC;
 /** clip x, such that 0 <= x <= #g_maxLumaVal */
 template <typename T> inline T ClipY(T x) { return std::min<T>(T((1 << g_bitDepthY)-1), std::max<T>( T(0), x)); }
 template <typename T> inline T ClipC(T x) { return std::min<T>(T((1 << g_bitDepthC)-1), std::max<T>( T(0), x)); }
-
-template <typename T> inline T Clip(T x) { return std::min<T>(T((1 << g_bitDepthY)-1), std::max<T>( T(0), x)); }
 
 /** clip a, such that minVal <= a <= maxVal */
 template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
@@ -166,8 +169,26 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 }                                 \
 }
 
-#endif
+#define AOT( exp )            \
+{                             \
+  if( ( exp ) )               \
+{                           \
+  assert( 0 );              \
+}                           \
+}
 
+template <typename T>
+__inline T gSign(const T& t)
+{
+  if( t == 0 )
+    return T(0);
+  else
+    return (t < 0) ? T(-1) : T(1);
+}
+
+#define RemoveBitIncrement( exp ) ( exp >> ( g_bitDepthY - 8 ) )
+
+#endif
 
 // ====================================================================================================================
 // Coding tool configuration
@@ -215,41 +236,41 @@ enum NalUnitType
   NAL_UNIT_CODED_SLICE_TRAIL_R,   // 1
   
   NAL_UNIT_CODED_SLICE_TSA_N,     // 2
-  NAL_UNIT_CODED_SLICE_TLA,       // 3   // Current name in the spec: TSA_R
+  NAL_UNIT_CODED_SLICE_TLA_R,       // 3
   
   NAL_UNIT_CODED_SLICE_STSA_N,    // 4
   NAL_UNIT_CODED_SLICE_STSA_R,    // 5
 
   NAL_UNIT_CODED_SLICE_RADL_N,    // 6
-  NAL_UNIT_CODED_SLICE_DLP,       // 7 // Current name in the spec: RADL_R
+  NAL_UNIT_CODED_SLICE_RADL_R,      // 7
   
   NAL_UNIT_CODED_SLICE_RASL_N,    // 8
-  NAL_UNIT_CODED_SLICE_TFD,       // 9 // Current name in the spec: RASL_R
+  NAL_UNIT_CODED_SLICE_RASL_R,      // 9
 
-  NAL_UNIT_RESERVED_10,
-  NAL_UNIT_RESERVED_11,
-  NAL_UNIT_RESERVED_12,
-  NAL_UNIT_RESERVED_13,
-  NAL_UNIT_RESERVED_14,
-  NAL_UNIT_RESERVED_15,
+  NAL_UNIT_RESERVED_VCL_N10,
+  NAL_UNIT_RESERVED_VCL_R11,
+  NAL_UNIT_RESERVED_VCL_N12,
+  NAL_UNIT_RESERVED_VCL_R13,
+  NAL_UNIT_RESERVED_VCL_N14,
+  NAL_UNIT_RESERVED_VCL_R15,
 
-  NAL_UNIT_CODED_SLICE_BLA,       // 16   // Current name in the spec: BLA_W_LP
-  NAL_UNIT_CODED_SLICE_BLANT,     // 17   // Current name in the spec: BLA_W_DLP
+  NAL_UNIT_CODED_SLICE_BLA_W_LP,    // 16
+  NAL_UNIT_CODED_SLICE_BLA_W_RADL,  // 17
   NAL_UNIT_CODED_SLICE_BLA_N_LP,  // 18
-  NAL_UNIT_CODED_SLICE_IDR,       // 19  // Current name in the spec: IDR_W_DLP
+  NAL_UNIT_CODED_SLICE_IDR_W_RADL,  // 19
   NAL_UNIT_CODED_SLICE_IDR_N_LP,  // 20
   NAL_UNIT_CODED_SLICE_CRA,       // 21
-  NAL_UNIT_RESERVED_22,
-  NAL_UNIT_RESERVED_23,
+  NAL_UNIT_RESERVED_IRAP_VCL22,
+  NAL_UNIT_RESERVED_IRAP_VCL23,
 
-  NAL_UNIT_RESERVED_24,
-  NAL_UNIT_RESERVED_25,
-  NAL_UNIT_RESERVED_26,
-  NAL_UNIT_RESERVED_27,
-  NAL_UNIT_RESERVED_28,
-  NAL_UNIT_RESERVED_29,
-  NAL_UNIT_RESERVED_30,
-  NAL_UNIT_RESERVED_31,
+  NAL_UNIT_RESERVED_VCL24,
+  NAL_UNIT_RESERVED_VCL25,
+  NAL_UNIT_RESERVED_VCL26,
+  NAL_UNIT_RESERVED_VCL27,
+  NAL_UNIT_RESERVED_VCL28,
+  NAL_UNIT_RESERVED_VCL29,
+  NAL_UNIT_RESERVED_VCL30,
+  NAL_UNIT_RESERVED_VCL31,
 
   NAL_UNIT_VPS,                   // 32
   NAL_UNIT_SPS,                   // 33
@@ -258,15 +279,15 @@ enum NalUnitType
   NAL_UNIT_EOS,                   // 36
   NAL_UNIT_EOB,                   // 37
   NAL_UNIT_FILLER_DATA,           // 38
-  NAL_UNIT_SEI,                   // 39 Prefix SEI
-  NAL_UNIT_SEI_SUFFIX,            // 40 Suffix SEI
-  NAL_UNIT_RESERVED_41,
-  NAL_UNIT_RESERVED_42,
-  NAL_UNIT_RESERVED_43,
-  NAL_UNIT_RESERVED_44,
-  NAL_UNIT_RESERVED_45,
-  NAL_UNIT_RESERVED_46,
-  NAL_UNIT_RESERVED_47,
+  NAL_UNIT_PREFIX_SEI,              // 39
+  NAL_UNIT_SUFFIX_SEI,              // 40
+  NAL_UNIT_RESERVED_NVCL41,
+  NAL_UNIT_RESERVED_NVCL42,
+  NAL_UNIT_RESERVED_NVCL43,
+  NAL_UNIT_RESERVED_NVCL44,
+  NAL_UNIT_RESERVED_NVCL45,
+  NAL_UNIT_RESERVED_NVCL46,
+  NAL_UNIT_RESERVED_NVCL47,
   NAL_UNIT_UNSPECIFIED_48,
   NAL_UNIT_UNSPECIFIED_49,
   NAL_UNIT_UNSPECIFIED_50,
@@ -286,6 +307,24 @@ enum NalUnitType
   NAL_UNIT_INVALID,
 };
 
+#if H_3D
+//PICYUV
+#define PICYUV_PAD         16
+
+//RENDERER
+#define REN_LUMA_MARGIN   ( g_uiMaxCUWidth + PICYUV_PAD )
+#define REN_VDWEIGHT_PREC  8
+#define REN_IS_FILLED     ( 1 << REN_VDWEIGHT_PREC )
+#define REN_USED_PEL       ( (1 << g_bitDepthY) - 1 )
+#define REN_UNUSED_PEL     0
+#define REN_IS_HOLE        0
+
+
+// CAMERA PARAMETERS
+#define LOG2_DISP_PREC_LUT           2           ///< log2 of disparity precision used in integer disparity LUTs
+#define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
+
+#endif // end of H_3D
 //! \}
 
 #endif // end of #ifndef  __COMMONDEF__

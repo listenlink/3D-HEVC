@@ -120,7 +120,10 @@ protected:
   Pel*            m_pTempPel;
   const UInt*     m_puiDFilter;
   Int             m_iMaxDeltaQP;
-  
+
+#if H_3D_VSO // M17
+  TComYuv         m_cYuvRecTemp; 
+#endif
   // AMVP cost computation
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS+1]; //th array bounds
@@ -252,7 +255,11 @@ protected:
                                     TComYuv*     pcOrgYuv, 
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
+#if H_3D_VSO
+                                    Dist&        ruiDist,
+#else
                                     UInt&        ruiDist,
+#endif
                                     Int         default0Save1Load2 = 0);
   Void  xIntraCodingChromaBlk     ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
@@ -271,7 +278,11 @@ protected:
                                     TComYuv*     pcOrgYuv, 
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
+#if H_3D_VSO
+                                    Dist&        ruiDistY,
+#else
                                     UInt&        ruiDistY,
+#endif
                                     UInt&        ruiDistC,
 #if HHI_RQT_INTRA_SPEEDUP
                                    Bool         bCheckFirst,
@@ -444,7 +455,11 @@ protected:
   // -------------------------------------------------------------------------------------------------------------------
   
   Void xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const UInt uiDepth, Bool bSubdivAndCbf, TextType eType );
+#if H_3D_VSO // M26
+  Void xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx, UInt absTUPartIdx,TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, const UInt uiDepth, Double &rdCost, UInt &ruiBits, Dist &ruiDist, Dist *puiZeroDist );
+#else
   Void xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx, UInt absTUPartIdx,TComYuv* pcResi, const UInt uiDepth, Double &rdCost, UInt &ruiBits, UInt &ruiDist, UInt *puiZeroDist );
+#endif
   Void xSetResidualQTData( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx,UInt absTUPartIdx, TComYuv* pcResi, UInt uiDepth, Bool bSpatial );
   
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth );

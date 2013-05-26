@@ -86,11 +86,19 @@ Void TEncEntropy::encodePPS( TComPPS* pcPPS )
   return;
 }
 
+#if H_3D
+Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
+{
+  m_pcEntropyCoderIf->codeSPS( pcSPS, viewIndex, depthFlag );
+  return;
+}
+#else
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
 {
   m_pcEntropyCoderIf->codeSPS( pcSPS );
   return;
 }
+#endif
 
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
@@ -586,10 +594,12 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
+#if !H_MV
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tdecodeTransformIdx()\tCUDepth=" )
     DTRACE_CABAC_V( uiDepth )
     DTRACE_CABAC_T( "\n" )
+#endif
   }
   else
   {

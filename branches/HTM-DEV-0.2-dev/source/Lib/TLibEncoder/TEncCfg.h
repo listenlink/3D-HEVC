@@ -45,6 +45,10 @@
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComSlice.h"
 #include <assert.h>
+#if H_3D
+#include "TAppCommon/TAppComCamPara.h"
+#include "TLibRenderer/TRenModSetupStrParser.h"
+#endif
 
 struct GOPEntry
 {
@@ -73,7 +77,6 @@ struct GOPEntry
   Int m_interViewRefs    [MAX_NUM_REF_PICS];
   Int m_interViewRefPosL[2][MAX_NUM_REF_PICS];  
 #endif
-
   GOPEntry()
   : m_POC(-1)
   , m_QPOffset(0)
@@ -171,6 +174,9 @@ protected:
   Int       m_loopFilterBetaOffsetDiv2;
   Int       m_loopFilterTcOffsetDiv2;
   Bool      m_DeblockingFilterControlPresent;
+#if L0386_DB_METRIC
+  Bool      m_DeblockingFilterMetric;
+#endif
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoLcuBoundary;
@@ -201,7 +207,9 @@ protected:
   Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
+#if !L0034_COMBINED_LIST_CLEANUP
   Bool      m_bUseLComb;
+#endif
   Bool      m_useRDOQ;
   Bool      m_useRDOQTS;
 #if L0232_RD_PENALTY
@@ -247,6 +255,33 @@ protected:
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
   Int       m_recoveryPointSEIEnabled;
+#if J0149_TONE_MAPPING_SEI
+  Bool      m_toneMappingInfoSEIEnabled;
+  Int       m_toneMapId;
+  Bool      m_toneMapCancelFlag;
+  Bool      m_toneMapPersistenceFlag;
+  Int       m_codedDataBitDepth;
+  Int       m_targetBitDepth;
+  Int       m_modelId; 
+  Int       m_minValue;
+  Int       m_maxValue;
+  Int       m_sigmoidMidpoint;
+  Int       m_sigmoidWidth;
+  Int       m_numPivots;
+  Int       m_cameraIsoSpeedIdc;
+  Int       m_cameraIsoSpeedValue;
+  Int       m_exposureCompensationValueSignFlag;
+  Int       m_exposureCompensationValueNumerator;
+  Int       m_exposureCompensationValueDenomIdc;
+  Int       m_refScreenLuminanceWhite;
+  Int       m_extendedRangeWhiteLevel;
+  Int       m_nominalBlackLevelLumaCodeValue;
+  Int       m_nominalWhiteLevelLumaCodeValue;
+  Int       m_extendedWhiteLevelLumaCodeValue;
+  Int*      m_startOfCodedInterval;
+  Int*      m_codedPivotValue;
+  Int*      m_targetPivotValue;
+#endif
   Int       m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
@@ -256,6 +291,12 @@ protected:
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
   Int       m_decodingUnitInfoSEIEnabled;
+#if L0208_SOP_DESCRIPTION_SEI
+  Int       m_SOPDescriptionSEIEnabled;
+#endif
+#if K0180_SCALABLE_NESTING_SEI
+  Int       m_scalableNestingSEIEnabled;
+#endif
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -320,9 +361,38 @@ protected:
   Int       m_layerId;
   Int       m_layerIdInVps;
   Int       m_viewId;
+#endif 
+
 #if H_3D
+  Int       m_viewIndex; 
   Bool      m_isDepth;
+
+  //====== Camera Parameters ======
+  UInt      m_uiCamParPrecision;
+  Bool      m_bCamParInSliceHeader;
+  Int**     m_aaiCodedScale;
+  Int**     m_aaiCodedOffset;
+  TAppComCamPara* m_cameraParameters; 
+  
+#if H_3D_VSO
+  //====== View Synthesis Optimization ======
+  TRenModSetupStrParser* m_renderModelParameters; 
+  Bool      m_bUseVSO;
+  Bool      m_bForceLambdaScale;
+  Bool      m_bAllowNegDist;
+  Double    m_dLambdaScaleVSO;
+  UInt      m_uiVSOMode;
+  
+  // LGE_WVSO_A0119
+  Bool      m_bUseWVSO;
+  Int       m_iVSOWeight;
+  Int       m_iVSDWeight;
+  Int       m_iDWeight;
 #endif
+
+  // SAIT_VSO_EST_A0033
+  Bool      m_bUseEstimatedVSD; 
+  Double    m_dDispCoeff;
 #endif
 
 public:
@@ -334,6 +404,7 @@ public:
   , m_layerIdInVps(-1)
   , m_viewId(-1)
 #if H_3D
+  , m_viewIndex(-1)
   , m_isDepth(false)
 #endif
 #endif
@@ -366,11 +437,12 @@ public:
   Void      setViewId                        ( Int viewId  )      { m_viewId  = viewId;  }
   Int       getViewId                        ()                   { return m_viewId;    }
 #if H_3D
+  Void      setViewIndex                     ( Int viewIndex  )   { m_viewIndex  = viewIndex;  }
+  Int       getViewIndex                     ()                   { return m_viewIndex;    }
   Void      setIsDepth                       ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth                       ()                 { return m_isDepth; }
 #endif
 #endif
-
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
   Void      setDecodingRefreshType          ( Int   i )      { m_uiDecodingRefreshType = (UInt)i; }
@@ -408,6 +480,9 @@ public:
   Void      setLoopFilterBetaOffset         ( Int   i )      { m_loopFilterBetaOffsetDiv2  = i; }
   Void      setLoopFilterTcOffset           ( Int   i )      { m_loopFilterTcOffsetDiv2    = i; }
   Void      setDeblockingFilterControlPresent ( Bool b ) { m_DeblockingFilterControlPresent = b; }
+#if L0386_DB_METRIC
+  Void      setDeblockingFilterMetric       ( Bool  b )      { m_DeblockingFilterMetric = b; }
+#endif
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
@@ -462,6 +537,9 @@ public:
   Int       getLoopFilterBetaOffset         ()      { return m_loopFilterBetaOffsetDiv2; }
   Int       getLoopFilterTcOffset           ()      { return m_loopFilterTcOffsetDiv2; }
   Bool      getDeblockingFilterControlPresent()  { return  m_DeblockingFilterControlPresent; }
+#if L0386_DB_METRIC
+  Bool      getDeblockingFilterMetric       ()      { return m_DeblockingFilterMetric; }
+#endif
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
@@ -479,7 +557,9 @@ public:
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
+#if !L0034_COMBINED_LIST_CLEANUP
   Void      setUseLComb                     ( Bool  b )     { m_bUseLComb   = b; }
+#endif
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
   Void      setUseRDOQTS                    ( Bool  b )     { m_useRDOQTS  = b; }
 #if L0232_RD_PENALTY
@@ -501,7 +581,9 @@ public:
   Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
+#if !L0034_COMBINED_LIST_CLEANUP
   Bool      getUseLComb                     ()      { return m_bUseLComb;   }
+#endif
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
 #if L0232_RD_PENALTY
@@ -598,6 +680,58 @@ public:
   Int   getPictureTimingSEIEnabled()                     { return m_pictureTimingSEIEnabled; }
   Void  setRecoveryPointSEIEnabled(Int b)                { m_recoveryPointSEIEnabled = b; }
   Int   getRecoveryPointSEIEnabled()                     { return m_recoveryPointSEIEnabled; }
+#if J0149_TONE_MAPPING_SEI
+  Void  setToneMappingInfoSEIEnabled(Bool b)                 {  m_toneMappingInfoSEIEnabled = b;  }
+  Bool  getToneMappingInfoSEIEnabled()                       {  return m_toneMappingInfoSEIEnabled;  }
+  Void  setTMISEIToneMapId(Int b)                            {  m_toneMapId = b;  }
+  Int   getTMISEIToneMapId()                                 {  return m_toneMapId;  }
+  Void  setTMISEIToneMapCancelFlag(Bool b)                   {  m_toneMapCancelFlag=b;  }
+  Bool  getTMISEIToneMapCancelFlag()                         {  return m_toneMapCancelFlag;  }
+  Void  setTMISEIToneMapPersistenceFlag(Bool b)              {  m_toneMapPersistenceFlag = b;  }
+  Bool   getTMISEIToneMapPersistenceFlag()                   {  return m_toneMapPersistenceFlag;  }
+  Void  setTMISEICodedDataBitDepth(Int b)                    {  m_codedDataBitDepth = b;  }
+  Int   getTMISEICodedDataBitDepth()                         {  return m_codedDataBitDepth;  }
+  Void  setTMISEITargetBitDepth(Int b)                       {  m_targetBitDepth = b;  }
+  Int   getTMISEITargetBitDepth()                            {  return m_targetBitDepth;  }
+  Void  setTMISEIModelID(Int b)                              {  m_modelId = b;  }
+  Int   getTMISEIModelID()                                   {  return m_modelId;  }
+  Void  setTMISEIMinValue(Int b)                             {  m_minValue = b;  }
+  Int   getTMISEIMinValue()                                  {  return m_minValue;  }
+  Void  setTMISEIMaxValue(Int b)                             {  m_maxValue = b;  }
+  Int   getTMISEIMaxValue()                                  {  return m_maxValue;  }
+  Void  setTMISEISigmoidMidpoint(Int b)                      {  m_sigmoidMidpoint = b;  }
+  Int   getTMISEISigmoidMidpoint()                           {  return m_sigmoidMidpoint;  }
+  Void  setTMISEISigmoidWidth(Int b)                         {  m_sigmoidWidth = b;  }
+  Int   getTMISEISigmoidWidth()                              {  return m_sigmoidWidth;  }
+  Void  setTMISEIStartOfCodedInterva( Int*  p )              {  m_startOfCodedInterval = p;  }
+  Int*  getTMISEIStartOfCodedInterva()                       {  return m_startOfCodedInterval;  }
+  Void  setTMISEINumPivots(Int b)                            {  m_numPivots = b;  }
+  Int   getTMISEINumPivots()                                 {  return m_numPivots;  }
+  Void  setTMISEICodedPivotValue( Int*  p )                  {  m_codedPivotValue = p;  }
+  Int*  getTMISEICodedPivotValue()                           {  return m_codedPivotValue;  }
+  Void  setTMISEITargetPivotValue( Int*  p )                 {  m_targetPivotValue = p;  }
+  Int*  getTMISEITargetPivotValue()                          {  return m_targetPivotValue;  }
+  Void  setTMISEICameraIsoSpeedIdc(Int b)                    {  m_cameraIsoSpeedIdc = b;  }
+  Int   getTMISEICameraIsoSpeedIdc()                         {  return m_cameraIsoSpeedIdc;  }
+  Void  setTMISEICameraIsoSpeedValue(Int b)                  {  m_cameraIsoSpeedValue = b;  }
+  Int   getTMISEICameraIsoSpeedValue()                       {  return m_cameraIsoSpeedValue;  }
+  Void  setTMISEIExposureCompensationValueSignFlag(Int b)    {  m_exposureCompensationValueSignFlag = b;  }
+  Int   getTMISEIExposureCompensationValueSignFlag()         {  return m_exposureCompensationValueSignFlag;  }
+  Void  setTMISEIExposureCompensationValueNumerator(Int b)   {  m_exposureCompensationValueNumerator = b;  }
+  Int   getTMISEIExposureCompensationValueNumerator()        {  return m_exposureCompensationValueNumerator;  }
+  Void  setTMISEIExposureCompensationValueDenomIdc(Int b)    {  m_exposureCompensationValueDenomIdc =b;  }
+  Int   getTMISEIExposureCompensationValueDenomIdc()         {  return m_exposureCompensationValueDenomIdc;  }
+  Void  setTMISEIRefScreenLuminanceWhite(Int b)              {  m_refScreenLuminanceWhite = b;  }
+  Int   getTMISEIRefScreenLuminanceWhite()                   {  return m_refScreenLuminanceWhite;  }
+  Void  setTMISEIExtendedRangeWhiteLevel(Int b)              {  m_extendedRangeWhiteLevel = b;  }
+  Int   getTMISEIExtendedRangeWhiteLevel()                   {  return m_extendedRangeWhiteLevel;  }
+  Void  setTMISEINominalBlackLevelLumaCodeValue(Int b)       {  m_nominalBlackLevelLumaCodeValue = b;  }
+  Int   getTMISEINominalBlackLevelLumaCodeValue()            {  return m_nominalBlackLevelLumaCodeValue;  }
+  Void  setTMISEINominalWhiteLevelLumaCodeValue(Int b)       {  m_nominalWhiteLevelLumaCodeValue = b;  }
+  Int   getTMISEINominalWhiteLevelLumaCodeValue()            {  return m_nominalWhiteLevelLumaCodeValue;  }
+  Void  setTMISEIExtendedWhiteLevelLumaCodeValue(Int b)      {  m_extendedWhiteLevelLumaCodeValue =b;  }
+  Int   getTMISEIExtendedWhiteLevelLumaCodeValue()           {  return m_extendedWhiteLevelLumaCodeValue;  }
+#endif
   Void  setFramePackingArrangementSEIEnabled(Int b)      { m_framePackingSEIEnabled = b; }
   Int   getFramePackingArrangementSEIEnabled()           { return m_framePackingSEIEnabled; }
   Void  setFramePackingArrangementSEIType(Int b)         { m_framePackingSEIType = b; }
@@ -616,6 +750,14 @@ public:
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
+#if L0208_SOP_DESCRIPTION_SEI
+  Void  setSOPDescriptionSEIEnabled(Int b)                { m_SOPDescriptionSEIEnabled = b; }
+  Int   getSOPDescriptionSEIEnabled()                     { return m_SOPDescriptionSEIEnabled; }
+#endif
+#if K0180_SCALABLE_NESTING_SEI
+  Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
+  Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
+#endif
   Void      setUseWP               ( Bool b )    { m_useWeightedPred   = b;    }
   Void      setWPBiPred            ( Bool b )    { m_useWeightedBiPred = b;    }
   Bool      getUseWP               ()            { return m_useWeightedPred;   }
@@ -743,6 +885,47 @@ public:
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
 #endif
+#if H_3D
+  /// 3D Tools 
+
+ //==== CAMERA PARAMETERS  ==========
+  Void      setCamParPrecision              ( UInt  u )      { m_uiCamParPrecision      = u; }
+  Void      setCamParInSliceHeader          ( Bool  b )      { m_bCamParInSliceHeader   = b; }
+  Void      setCodedScale                   ( Int** p )      { m_aaiCodedScale          = p; }
+  Void      setCodedOffset                  ( Int** p )      { m_aaiCodedOffset         = p; }
+  Void      setCameraParameters             ( TAppComCamPara* c) { m_cameraParameters   = c; }
+
+#if H_3D_VSO
+ //==== VSO  ==========
+  Void      setRenderModelParameters ( TRenModSetupStrParser* c ) { m_renderModelParameters = c; }
+  Bool      getUseVSO                       ()              { return m_bUseVSO;     }
+  Void      setUseVSO                       ( Bool  b  )    { m_bUseVSO     = b; }
+  UInt      getVSOMode                      ()              { return m_uiVSOMode; }
+  Void      setVSOMode                      ( UInt  ui )    { m_uiVSOMode   = ui; }
+  Bool      getForceLambdaScaleVSO          ()              { return m_bForceLambdaScale; }
+  Void      setForceLambdaScaleVSO          ( Bool   b )    { m_bForceLambdaScale = b; };
+  Double    getLambdaScaleVSO               ()              { return m_dLambdaScaleVSO;   }
+  Void      setLambdaScaleVSO               ( Double d )    { m_dLambdaScaleVSO   = d; };
+  Bool      getAllowNegDist                 ()              { return m_bAllowNegDist;     }
+  Void      setAllowNegDist                 ( Bool   b )    { m_bAllowNegDist     = b; };
+
+  // LGE_WVSO_A0119
+  Bool      getUseWVSO                      ()              { return m_bUseWVSO;     }
+  Void      setUseWVSO                      ( Bool  b )     { m_bUseWVSO   = b; }
+  Int       getVSOWeight                    ()              { return m_iVSOWeight;    }
+  Void      setVSOWeight                    ( Int   i )     { m_iVSOWeight = i; }
+  Int       getVSDWeight                    ()              { return m_iVSDWeight;    }
+  Void      setVSDWeight                    ( Int   i )     { m_iVSDWeight = i; }
+  Int       getDWeight                      ()              { return m_iDWeight;    }
+  Void      setDWeight                      ( Int   i )     { m_iDWeight   = i; }
+
+  // SAIT_VSO_EST_A0033
+  Bool      getUseEstimatedVSD              ()              { return m_bUseEstimatedVSD; }
+  Void      setUseEstimatedVSD              ( Bool  b )     { m_bUseEstimatedVSD = b; }
+  Double    getDispCoeff                    ()              { return m_dDispCoeff;    }
+  Void      setDispCoeff                    ( Double  d )   { m_dDispCoeff  = d; }
+#endif // H_3D_VSO
+#endif // H_3D
 };
 
 //! \}

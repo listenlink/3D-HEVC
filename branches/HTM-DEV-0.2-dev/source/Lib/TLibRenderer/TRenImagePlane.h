@@ -38,6 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComPicYuv.h"
 
+#if H_3D
 #define PelImagePlane     TRenImagePlane<Pel>
 #define DoubleImagePlane  TRenImagePlane<Double>
 #define IntImagePlane     TRenImagePlane<Int>
@@ -48,9 +49,9 @@ class TRenImagePlane
 public:
   // Construction
   TRenImagePlane();
-  TRenImagePlane( UInt uiWidth, UInt uiHeight, UInt uiPad, UInt uiBitDepth );
+  TRenImagePlane( UInt uiWidth, UInt uiHeight, UInt uiPad);
   TRenImagePlane( TRenImagePlane* pcInputPlane );
-  TRenImagePlane( T* pcDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad, UInt uiBitDepth  );
+  TRenImagePlane( T* pcDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad );
 
   ~TRenImagePlane();
 
@@ -63,7 +64,6 @@ public:
   UInt getWidthOrg () { return m_uiWidthOrg;  };
   UInt getHeightOrg() { return m_uiHeightOrg; };
   UInt getPad      () { return m_uiPad;       };
-  UInt getBitDepth () { return m_uiBitDepth; };
   UInt getStride   () { return m_uiStride; };
 
   Void setData ( T* pDataOrg, UInt uiWidthOrg, UInt uiHeightOrg, UInt uiStride, UInt uiPad, Bool bClean /*= false*/ ); 
@@ -105,8 +105,8 @@ protected:
   UInt   m_uiWidthOrg;
   UInt   m_uiHeightOrg;
   UInt   m_uiPad;
-  UInt   m_uiBitDepth; 
 
+  Double m_dRatio;
   Bool   m_bClean;
 
 private:
@@ -121,4 +121,5 @@ public:
   ~TRenImagePlanePart();;
 };
 
+#endif // H_3D
 #endif // __TRENIMAGEPLANE__

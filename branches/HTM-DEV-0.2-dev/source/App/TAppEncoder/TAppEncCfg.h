@@ -42,6 +42,11 @@
 
 #include "TLibEncoder/TEncCfg.h"
 #include <sstream>
+#if H_3D
+#include "TAppCommon/TAppComCamPara.h"
+#include "TLibRenderer/TRenModel.h"
+#include "TLibRenderer/TRenModSetupStrParser.h"
+#endif
 //! \ingroup TAppEncoder
 //! \{
 
@@ -59,19 +64,18 @@ protected:
 #else
   Char*     m_pchInputFile;                                   ///< source file name
 #endif
-
   Char*     m_pchBitstreamFile;                               ///< output bitstream file
-
 #if H_MV
   std::vector<char*>     m_pchReconFileList;                  ///< output reconstruction file names
   Int                    m_numberOfLayers;                    ///< number of Layers to Encode
+#if H_3D
+  Int                    m_iNumberOfViews;                    ///< number of Layers that are views
+#endif
 #else
   Char*     m_pchReconFile;                                   ///< output reconstruction file
 #endif
-
-
-  // VPS specification
-#if H_MV
+  #if H_MV
+// VPS specification
   std::vector< std::vector<Int> > m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
   std::vector<Int>       m_viewId;                            ///< view id
 #if H_3D
@@ -82,8 +86,6 @@ protected:
   Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
   std::vector<Int>       m_dimensionIdLen;                   ///< Length of scalability dimension s 
 #endif
-
-
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
@@ -102,7 +104,6 @@ protected:
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-
 #if L0046_CONSTRAINT_FLAGS
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
@@ -123,9 +124,15 @@ protected:
   Int       m_extraRPSs;                                      ///< extra RPSs added to handle CRA
   GOPEntry  m_GOPList[MAX_GOP];                               ///< the coding structure entries from the config file
   Int       m_numReorderPics[MAX_TLAYER];                     ///< total number of reorder pictures
+#if L0323_DPB
+  Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of pictures in the decoded picture buffer
+#else
   Int       m_maxDecPicBuffering[MAX_TLAYER];                 ///< total number of reference pictures needed for decoding
 #endif
+#endif
+#if !L0034_COMBINED_LIST_CLEANUP
   Bool      m_bUseLComb;                                      ///< flag for using combined reference list for uni-prediction in B-slices (JCTVC-D421)
+#endif
   Bool      m_useTransformSkip;                               ///< flag for enabling intra transform skipping
   Bool      m_useTransformSkipFast;                           ///< flag for enabling fast intra transform skipping
   Bool      m_enableAMP;
@@ -206,6 +213,9 @@ protected:
   Int       m_loopFilterBetaOffsetDiv2;                     ///< beta offset for deblocking filter
   Int       m_loopFilterTcOffsetDiv2;                       ///< tc offset for deblocking filter
   Bool      m_DeblockingFilterControlPresent;                 ///< deblocking filter control present flag in PPS
+#if L0386_DB_METRIC
+  Bool      m_DeblockingFilterMetric;                         ///< blockiness metric in encoder
+#endif
  
   // coding tools (PCM)
   Bool      m_usePCM;                                         ///< flag for using IPCM
@@ -255,6 +265,33 @@ protected:
   Int       m_recoveryPointSEIEnabled;
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
+#if J0149_TONE_MAPPING_SEI
+  Bool      m_toneMappingInfoSEIEnabled;
+  Int       m_toneMapId;
+  Bool      m_toneMapCancelFlag;
+  Bool      m_toneMapPersistenceFlag;
+  Int       m_toneMapCodedDataBitDepth;
+  Int       m_toneMapTargetBitDepth;
+  Int       m_toneMapModelId; 
+  Int       m_toneMapMinValue;
+  Int       m_toneMapMaxValue;
+  Int       m_sigmoidMidpoint;
+  Int       m_sigmoidWidth;
+  Int       m_numPivots;
+  Int       m_cameraIsoSpeedIdc;
+  Int       m_cameraIsoSpeedValue;
+  Int       m_exposureCompensationValueSignFlag;
+  Int       m_exposureCompensationValueNumerator;
+  Int       m_exposureCompensationValueDenomIdc;
+  Int       m_refScreenLuminanceWhite;
+  Int       m_extendedRangeWhiteLevel;
+  Int       m_nominalBlackLevelLumaCodeValue;
+  Int       m_nominalWhiteLevelLumaCodeValue;
+  Int       m_extendedWhiteLevelLumaCodeValue;
+  Int*      m_startOfCodedInterval;
+  Int*      m_codedPivotValue;
+  Int*      m_targetPivotValue;
+#endif
   Int       m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
@@ -264,6 +301,12 @@ protected:
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
   Int       m_decodingUnitInfoSEIEnabled;
+#if L0208_SOP_DESCRIPTION_SEI
+  Int       m_SOPDescriptionSEIEnabled;
+#endif
+#if K0180_SCALABLE_NESTING_SEI
+  Int       m_scalableNestingSEIEnabled;
+#endif
   // weighted prediction
   Bool      m_useWeightedPred;                    ///< Use of weighted prediction in P slices
   Bool      m_useWeightedBiPred;                  ///< Use of bi-directional weighted prediction in B slices
@@ -331,12 +374,42 @@ protected:
   Int       m_log2MaxMvLengthHorizontal;                      ///< Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
 
+#if H_3D
+  // Camera parameters
+  Char*     m_pchCameraParameterFile;                         ///< camera parameter file
+  Char*     m_pchBaseViewCameraNumbers;
+  TAppComCamPara m_cCameraData;
+  Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
+#if H_3D_VSO
+  Char*     m_pchVSOConfig;
+  Bool      m_bUseVSO;                                    ///< flag for using View Synthesis Optimization
+  Bool      m_bVSOLSTable;                                ///< Depth QP dependent Lagrange parameter optimization (m23714)
+  Bool      m_bVSOEarlySkip;                              ///< Early skip of VSO computation (JCT3V-A0093 modification 4)
+
+  //// Used for development by GT, might be removed later
+  Double    m_dLambdaScaleVSO;                            ///< Scaling factor for Lambda in VSO mode
+  Bool      m_bForceLambdaScaleVSO;                       ///< Use Lambda Scale for depth even if VSO is turned off
+  Bool      m_bAllowNegDist;                              ///< Allow negative distortion in VSO
+  UInt      m_uiVSOMode;                                  ///< Number of VSO Mode, 1 = , 2 = simple, org vs. ren, 3 = simple, ren vs. ren, 4 = full  
+
+  // SAIT_VSO_EST_A0033
+  Bool      m_bUseEstimatedVSD;                           ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)  
+
+  // LGE_WVSO_A0119
+  Bool      m_bUseWVSO;                                    ///< flag for using View Synthesis Optimization  
+  Int       m_iVSOWeight;
+  Int       m_iVSDWeight;
+  Int       m_iDWeight;
+
+  // Ren Model String
+  TRenModSetupStrParser       m_cRenModStrParser;
+#endif
+#endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
   Void  xCheckParameter ();                                   ///< check validity of configuration values
   Void  xPrintParameter ();                                   ///< print configuration values
   Void  xPrintUsage     ();                                   ///< print usage
-
 #if H_MV
   template <typename T>
   Void xResizeVector(  std::vector<T> & rpcVector )
@@ -387,7 +460,6 @@ protected:
   Int*      m_avgPicRate;                                     ///< Indicates avg. picture rate information for various sub-layers
   Int*      m_constantPicRateIdc;                                ///< Indicates constant picture rate idc for various sub-layers
 #endif
-  
 #if H_MV
   Int   getGOPSize() { return m_iGOPSize; }
 #endif

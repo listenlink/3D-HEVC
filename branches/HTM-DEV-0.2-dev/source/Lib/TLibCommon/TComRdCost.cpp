@@ -39,9 +39,17 @@
 #include <assert.h>
 #include "TComRom.h"
 #include "TComRdCost.h"
+#if H_3D
+#include "TComDataCU.h"
+#endif
 
 //! \ingroup TLibCommon
 //! \{
+
+#if H_3D_VSO
+// SAIT_VSO_EST_A0033
+Double TComRdCost::m_dDisparityCoeff = 1.0;
+#endif
 
 TComRdCost::TComRdCost()
 {
@@ -56,7 +64,11 @@ TComRdCost::~TComRdCost()
 }
 
 // Calculate RD functions
+#if H_3D_VSO
+Double TComRdCost::calcRdCost( UInt uiBits, Dist uiDistortion, Bool bFlag, DFunc eDFunc )
+#else
 Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc eDFunc )
+#endif
 {
   Double dRdCost = 0.0;
   Double dLambda = 0.0;
@@ -110,7 +122,11 @@ Double TComRdCost::calcRdCost( UInt uiBits, UInt uiDistortion, Bool bFlag, DFunc
   return dRdCost;
 }
 
+#if H_3D_VSO
+Double TComRdCost::calcRdCost64( UInt64 uiBits, Dist64 uiDistortion, Bool bFlag, DFunc eDFunc )
+#else
 Double TComRdCost::calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag, DFunc eDFunc )
+#endif
 {
   Double dRdCost = 0.0;
   Double dLambda = 0.0;
@@ -218,7 +234,17 @@ Void TComRdCost::init()
   m_afpDistortFunc[26] = TComRdCost::xGetHADs;
   m_afpDistortFunc[27] = TComRdCost::xGetHADs;
   m_afpDistortFunc[28] = TComRdCost::xGetHADs;
-  
+
+#if H_3D_VSO
+  // SAIT_VSO_EST_A0033
+  m_afpDistortFunc[29]  = TComRdCost::xGetVSD;
+  m_afpDistortFunc[30]  = TComRdCost::xGetVSD4;
+  m_afpDistortFunc[31]  = TComRdCost::xGetVSD8;
+  m_afpDistortFunc[32]  = TComRdCost::xGetVSD16;
+  m_afpDistortFunc[33]  = TComRdCost::xGetVSD32;
+  m_afpDistortFunc[34]  = TComRdCost::xGetVSD64;
+  m_afpDistortFunc[35]  = TComRdCost::xGetVSD16N;
+#endif
 #if !FIX203
   m_puiComponentCostOriginP = NULL;
   m_puiComponentCost        = NULL;
@@ -229,6 +255,15 @@ Void TComRdCost::init()
   m_iCostScale              = 0;
 #if !FIX203
   m_iSearchLimit            = 0xdeaddead;
+#endif
+#if H_3D_VSO
+  m_bUseVSO                 = false;
+  m_uiVSOMode               = 0; 
+  m_fpDistortFuncVSO        = NULL; 
+  m_pcRenModel              = NULL; 
+
+  // SAIT_VSO_EST_A0033
+  m_bUseEstimatedVSD        = false; 
 #endif
 }
 
@@ -483,6 +518,53 @@ UInt TComRdCost::getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piO
   return cDtParam.DistFunc( &cDtParam );
 #endif
 }
+#if H_3D_VSO
+// SAIT_VSO_EST_A0033
+UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight,  Bool bHAD, DFunc eDFunc )
+{
+  AOT( ( m_dDisparityCoeff <= 0 ) || ( m_dDisparityCoeff > 10 ) );
+
+  Pel* piVirRec  = m_pcVideoRecPicYuv->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiPartOffset); 
+  Pel* piVirOrg  = m_pcDepthPicYuv   ->getLumaAddr(pcCU->getAddr(),pcCU->getZorderIdxInCU()+uiPartOffset); 
+  Int iVirStride = m_pcVideoRecPicYuv->getStride();   
+
+  DistParam cDtParam;
+  setDistParam( uiBlkWidth, uiBlkHeight, eDFunc, cDtParam );
+  cDtParam.pOrg       = piOrg;
+  cDtParam.pCur       = piCur;
+  cDtParam.pVirRec    = piVirRec;
+  cDtParam.pVirOrg    = piVirOrg;
+  cDtParam.iStrideVir = iVirStride;
+  cDtParam.iStrideOrg = iOrgStride;
+  cDtParam.iStrideCur = iCurStride;
+  cDtParam.iStep      = 1;
+
+  cDtParam.bApplyWeight = false;
+  cDtParam.uiComp       = 255;    // just for assert: to be sure it was set before use, since only values 0,1 or 2 are allowed.
+
+  Dist dist = cDtParam.DistFunc( &cDtParam );
+
+  if ( m_bUseWVSO )   
+  {
+    Int iDWeight   = m_iDWeight   * m_iDWeight;
+    Int iVSOWeight = m_iVSDWeight * m_iVSDWeight;
+    Dist distDepth;
+
+    if ( !bHAD )
+    {
+      distDepth = (Dist) getDistPart( g_bitDepthY, piCur, iCurStride, piOrg, iOrgStride, uiBlkWidth, uiBlkHeight);
+    }
+    else
+    {
+      distDepth = (Dist) calcHAD( g_bitDepthY, piCur, iCurStride, piOrg, iOrgStride, uiBlkWidth, uiBlkHeight);
+    }
+
+    dist = (Dist) (iDWeight * distDepth + iVSOWeight * dist ) / ( iDWeight + iVSOWeight);
+  }
+  return dist; 
+
+}
+#endif
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
 UInt TComRdCost::getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height )
@@ -1358,6 +1440,237 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
   
   return ( uiSum );
 }
+#if H_3D_VSO
+//SAIT_VSO_EST_A0033
+UInt TComRdCost::getVSDEstimate( Int dDM, Pel* pOrg, Int iOrgStride,  Pel* pVirRec, Pel* pVirOrg, Int iVirStride, Int x, Int y )
+{
+  Double dD;
+  Int iTemp;
+
+  dD = ( (Double) ( dDM >> DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) ) ) * m_dDisparityCoeff;
+
+  Double dTemp = ( 0.5 * fabs(dD) * ( abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x-1+y*iVirStride ] ) + abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x+1+y*iVirStride ] ) ) );
+  iTemp = (Int) (((dTemp) < 0)? (Int)((dTemp) - 0.5) : (Int)((dTemp) + 0.5));
+
+  return (UInt) ( (iTemp*iTemp)>>1 );
+}
+
+UInt TComRdCost::xGetVSD( DistParam* pcDtParam )
+{
+  Pel* piOrg    = pcDtParam->pOrg;
+  Pel* piCur    = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows    = pcDtParam->iRows;
+  Int  iCols    = pcDtParam->iCols;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8)<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < iCols; x++ )
+    {
+      dDM = (Int) ( piOrg[x  ] - piCur[x  ] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur; 
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD4( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8)<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    dDM = (Int) ( piOrg[0] - piCur[0] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 0, y ) ) >> uiShift;
+    dDM = (Int) ( piOrg[1] - piCur[1] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 1, y ) ) >> uiShift;
+    dDM = (Int) ( piOrg[2] - piCur[2] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 2, y ) ) >> uiShift;
+    dDM = (Int) ( piOrg[3] - piCur[3] );  uiSum += ( getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, 3, y ) ) >> uiShift;
+
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD8( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8)<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 8; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD16( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8)<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 16; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD16N( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iCols   = pcDtParam->iCols;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8)<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < iCols; x+=16 )
+    {
+      for ( Int k = 0 ; k < 16 ; k++ )
+      {
+        dDM = (Int) ( piOrg[x+k] - piCur[x+k] );
+        uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x+k, y ) >> uiShift;
+      }
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD32( DistParam* pcDtParam )
+{
+  Pel* piOrg   = pcDtParam->pOrg;
+  Pel* piCur   = pcDtParam->pCur;
+  Pel* piVirRec = pcDtParam->pVirRec;
+  Pel* piVirOrg = pcDtParam->pVirOrg;
+  Int  iRows   = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8)<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 32 ; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+UInt TComRdCost::xGetVSD64( DistParam* pcDtParam )
+{
+  Pel* piOrg      = pcDtParam->pOrg;
+  Pel* piCur      = pcDtParam->pCur;
+  Pel* piVirRec   = pcDtParam->pVirRec;
+  Pel* piVirOrg   = pcDtParam->pVirOrg;
+  Int  iRows      = pcDtParam->iRows;
+  Int  iStrideOrg = pcDtParam->iStrideOrg;
+  Int  iStrideCur = pcDtParam->iStrideCur;
+  Int  iStrideVir = pcDtParam->iStrideVir;
+
+  UInt uiSum = 0;
+  UInt uiShift = DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8)<<1;
+
+  Int dDM;
+
+  for ( Int y = 0 ; y < iRows ; y++ )
+  {
+    for (Int x = 0; x < 64; x++ )
+    {
+      dDM = (Int) ( piOrg[x] - piCur[x] );
+      uiSum += getVSDEstimate( dDM, piOrg, iStrideOrg, piVirRec, piVirOrg, iStrideVir, x, y ) >> uiShift;
+    }
+    piOrg += iStrideOrg;
+    piCur += iStrideCur;
+  }
+
+  return ( uiSum );
+}
+
+#endif
 
 // --------------------------------------------------------------------------------------------------------------------
 // HADAMARD with step (used in fractional search)
@@ -1988,5 +2301,152 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
   
   return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
+#if H_3D_VSO
+Void TComRdCost::setLambdaVSO( Double dLambdaVSO )
+{
+  m_dLambdaVSO           = dLambdaVSO;
+  m_dSqrtLambdaVSO       = sqrt(m_dLambdaVSO); 
+  m_uiLambdaMotionSADVSO = (UInt)floor(65536.0 *       m_dSqrtLambdaVSO);
+  m_uiLambdaMotionSSEVSO = (UInt)floor(65536.0 *       m_dLambdaVSO    );
+}
+
+Dist TComRdCost::xGetDistVSOMode4( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD )
+{ 
+  AOT(bSAD); 
+#if H_3D_VSO_EARLY_SKIP
+  RMDist iDist = m_pcRenModel->getDist( iStartPosX, iStartPosY, (Int) uiBlkWidth, (Int) uiBlkHeight, iCurStride, piCur, piOrg, iOrgStride);  
+#else
+  RMDist iDist = m_pcRenModel->getDist( iStartPosX, iStartPosY, (Int) uiBlkWidth, (Int) uiBlkHeight, iCurStride, piCur );  
+#endif
+
+  RMDist iDistMin = (RMDist) RDO_DIST_MIN; 
+  iDistMin = m_bAllowNegDist ? RDO_DIST_MIN : 0; 
+  
+  iDist = std::min( iDist, (RMDist) RDO_DIST_MAX);
+  iDist = std::max( iDist, iDistMin);
+  return (Dist) iDist;
+}
+
+
+Dist TComRdCost::getDistPartVSO( TComDataCU* pcCU, UInt uiAbsPartIndex, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bHAD )
+{ 
+  assert( m_bUseVSO );  
+  assert( this->m_fpDistortFuncVSO != 0 );
+
+  Int iPosX;
+  Int iPosY; 
+  
+  pcCU->getPosInPic( uiAbsPartIndex, iPosX, iPosY ); 
+   
+  Dist dist = (this->*m_fpDistortFuncVSO) ( iPosX, iPosY, piCur, iCurStride, piOrg, iOrgStride, uiBlkWidth, uiBlkHeight, bHAD );  
+  
+  if ( m_bUseWVSO )   
+  {
+    Int iDWeight   = m_iDWeight   * m_iDWeight;
+    Int iVSOWeight = m_iVSOWeight * m_iVSOWeight;
+    Dist distDepth;
+    
+    if ( !bHAD )
+    {
+       distDepth = (Dist) getDistPart( g_bitDepthY, piCur, iCurStride, piOrg, iOrgStride, uiBlkWidth, uiBlkHeight);
+    }
+    else
+    {
+       distDepth = (Dist) calcHAD( g_bitDepthY, piCur, iCurStride, piOrg, iOrgStride, uiBlkWidth, uiBlkHeight);
+    }
+    
+    dist = (Dist) (iDWeight * distDepth + iVSOWeight * dist ) / ( iDWeight + iVSOWeight);
+  }
+  return dist; 
+}; 
+
+
+Void TComRdCost::setVSOMode( UInt uiIn )
+{
+  m_uiVSOMode = uiIn;
+  switch (m_uiVSOMode )
+  {
+  case   4:
+    m_fpDistortFuncVSO = &TComRdCost::xGetDistVSOMode4;
+    break;
+  default:
+    assert(0); 
+    break; 
+  }
+}
+
+
+Double TComRdCost::calcRdCostVSO( UInt uiBits, Dist uiDistortion, Bool bFlag, DFunc eDFunc )
+{
+  assert( m_bUseLambdaScaleVSO );   
+
+  Double dRdCost = 0.0;
+  Double dLambda = 0.0;   
+
+  switch ( eDFunc )
+  {
+  case DF_SSE:
+    assert(0);
+    break;
+  case DF_SAD:
+    dLambda = (Double)m_uiLambdaMotionSADVSO;
+    break;
+  case DF_DEFAULT:
+    dLambda =         m_dLambdaVSO;
+    break;
+  case DF_SSE_FRAME:
+    dLambda =         m_dFrameLambdaVSO;
+    break;
+  default:
+    assert (0);
+    break;
+  }
+
+  if (bFlag)
+  {
+    // Intra8x8, Intra4x4 Block only...
+#if SEQUENCE_LEVEL_LOSSLESS
+    dRdCost = (Double)(uiBits);
+#else
+    dRdCost = (((Double)uiDistortion) + ((Double)uiBits * dLambda));
+#endif
+  }
+  else
+  {
+    if (eDFunc == DF_SAD)
+    {
+      dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)>>16));
+      dRdCost = (Double)(Dist)floor(dRdCost);
+    }
+    else
+    {
+#if SEQUENCE_LEVEL_LOSSLESS
+      dRdCost = (Double)(uiBits);
+#else
+      dRdCost = ((Double)uiDistortion + (Double)((Int)(uiBits * dLambda+.5)));
+      dRdCost = (Double)(Dist)floor(dRdCost);
+#endif
+    }
+  }
+
+  return dRdCost;
+}
+
+Void TComRdCost::setRenModelData( TComDataCU* pcCU, UInt uiAbsPartIndex, Pel* piData, Int iStride, Int iBlkWidth, Int iBlkHeight )
+{
+  UInt iBlkX = g_auiRasterToPelX[g_auiZscanToRaster[uiAbsPartIndex]];
+  UInt iBlkY = g_auiRasterToPelY[g_auiZscanToRaster[uiAbsPartIndex]];
+
+  Int iStartPosX = iBlkX + pcCU->getCUPelX();
+  Int iStartPosY = iBlkY + pcCU->getCUPelY();
+
+  m_pcRenModel->setData( iStartPosX, iStartPosY, iBlkWidth, iBlkHeight, iStride, piData );
+}
+
+Void TComRdCost::setAllowNegDist( Bool bAllowNegDist )
+{
+  m_bAllowNegDist = bAllowNegDist;
+}
+#endif
 
 //! \}

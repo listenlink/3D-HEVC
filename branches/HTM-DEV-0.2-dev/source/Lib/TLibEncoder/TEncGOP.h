@@ -104,10 +104,10 @@ private:
   Int                     m_layerId;  
   Int                     m_viewId;
 #if H_3D
+  Int                     m_viewIndex; 
   Bool                    m_isDepth;
 #endif
 #endif
-
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TComBitCounter*         m_pcBitCounter;
@@ -131,6 +131,10 @@ private:
   Bool                    m_activeParameterSetSEIPresentInAU;
   Bool                    m_bufferingPeriodSEIPresentInAU;
   Bool                    m_pictureTimingSEIPresentInAU;
+#if K0180_SCALABLE_NESTING_SEI
+  Bool                    m_nestedBufferingPeriodSEIPresentInAU;
+  Bool                    m_nestedPictureTimingSEIPresentInAU;
+#endif
 #endif
 public:
   TEncGOP();
@@ -140,21 +144,20 @@ public:
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );
-
 #if H_MV
   Void  initGOP     ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP);
   Void  compressPicInGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid );
 #else
   Void  compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
 #endif
-
-  Void xWriteTileLocationToSliceHeader (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect, TComSlice*& rpcSlice);
+  Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
 
 #if H_MV
   Int       getPocLastCoded  ()                 { return m_pocLastCoded; }  
   Int       getLayerId       ()                 { return m_layerId;    }  
   Int       getViewId        ()                 { return m_viewId;    }
 #if H_3D
+  Int       getViewIndex     ()                 { return m_viewIndex;    }
   Bool      getIsDepth       ()                 { return m_isDepth; }
 #endif
 #endif
@@ -166,11 +169,14 @@ public:
 #if !H_MV
   Void  printOutSummary      ( UInt uiNumAllPicCoded );
 #endif
-
+#if H_3D_VSO
+  Void  preLoopFilterPicAll  ( TComPic* pcPic, Dist64& ruiDist, UInt64& ruiBits );
+#else
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
+#endif
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
-  NalUnitType getNalUnitType( Int pocCurr );
+  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
@@ -180,14 +186,21 @@ protected:
   Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, Int pocCurr );
   
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
-  
+#if H_3D_VSO
+  Dist64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
+#else  
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
+#endif
 
   Double xCalculateRVM();
 
   SEIActiveParameterSets* xCreateSEIActiveParameterSets (TComSPS *sps);
   SEIFramePacking*        xCreateSEIFramePacking();
   SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
+
+#if J0149_TONE_MAPPING_SEI
+  SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
+#endif
 
   Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
 #if L0045_NON_NESTED_SEI_RESTRICTIONS
@@ -198,12 +211,20 @@ protected:
     m_bufferingPeriodSEIPresentInAU    = false;
     m_pictureTimingSEIPresentInAU      = false;
   }
+#if K0180_SCALABLE_NESTING_SEI
+  Void xResetNestedSEIPresentFlags()
+  {
+    m_nestedBufferingPeriodSEIPresentInAU    = false;
+    m_nestedPictureTimingSEIPresentInAU      = false;
+  }
 #endif
-
+#endif
 #if H_MV
    Void  xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr, UInt iGOPid );
 #endif
-
+#if L0386_DB_METRIC
+  Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
+#endif
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================

@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !QC_MVHEVC_B0046
+
 #ifndef __TRENMODEL__
 #define __TRENMODEL__
 
@@ -41,6 +41,8 @@
 #include "../TLibCommon/TComPicYuv.h"
 #include "../TLibCommon/TypeDef.h"
 
+#if H_3D_VSO
+
 class TRenModel
 {
 public:
@@ -49,7 +51,7 @@ public:
   ~TRenModel();
 
   // Creation
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Void  create           ( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeight, Int iShiftPrec, Int iHoleMargin, Bool bEarlySkip );
 #else
   Void  create           ( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeight, Int iShiftPrec, Int iHoleMargin );
@@ -67,7 +69,7 @@ public:
   Void  setErrorMode     ( Int iView, Int iContent, Int iPlane );
 
   // Get Distortion, set Data
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Int64 getDist          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel * piOrgData, Int iOrgStride);
 #else
   Int64 getDist          ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData  );
@@ -90,7 +92,7 @@ private:
   Int    m_iShiftPrec;
   Int**  m_aaaiSubPelShiftLut[2];
   Int    m_iHoleMargin;
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Bool   m_bEarlySkip; 
 #endif
 
@@ -154,6 +156,6 @@ private:
   Int*   m_aiOrgDepthStrides ;    // Dim1: ViewPosition
 };
 
+#endif // H_3D
 #endif //__TRENMODEL__
-#endif
 

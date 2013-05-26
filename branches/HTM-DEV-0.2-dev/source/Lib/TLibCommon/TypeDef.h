@@ -41,15 +41,71 @@
 //! \ingroup TLibCommon
 //! \{
 
-#define H_MV                        1
 
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////// EXTENSION SELECTION ///////////////////////////////////  
+/////////////////////////////////////////////////////////////////////////////////////////
 
-#if H_MV
-#define H_3D                        0
+/* HEVC_EXT might be defined by compiler/makefile options.
+   
+   Linux makefiles support the following settings:   
+   make             -> HEVC_EXT not defined    
+   make HEVC_EXT=0  -> H_MV=0 H_3D=0   --> plain HM
+   make HEVC_EXT=1  -> H_MV=1 H_3D=0   --> MV only 
+   make HEVC_EXT=2  -> H_MV=1 H_3D=1   --> full 3D 
+*/
+
+#ifndef HEVC_EXT
+#define HEVC_EXT                    2
 #endif
 
-///// ***** HM 10.0 *********
+#if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
+#error HEVC_EXT must be in the range of 0 to 2, inclusive. 
+#endif
 
+#define H_MV          ( HEVC_EXT != 0)
+#define H_3D          ( HEVC_EXT == 2)
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#if H_3D
+#define H_3D_PDM_CAM_PARAS                0 ///< PDM related parts of camera parameters, should be removed if not used anymore.
+#define H_3D_VSO                          1   // VSO, View synthesis optimization, includes: 
+                                              // HHI_VSO
+                                              // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
+                                              // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
+                                              // LGE_WVSO_A0119
+#endif 
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
+/////////////////////////////////////////////////////////////////////////////////////////
+
+///// ***** VIEW SYNTHESIS OPTIMIZAION *********
+#if H_3D_VSO                                  
+#define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
+#define H_3D_VSO_COLOR_PLANES             1   // Compute VSO distortion on color planes 
+#define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
+#define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
+#define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
+#endif
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#define FIX1071 1 ///< Temporary fix for issue #1071
+
+#define L0208_SOP_DESCRIPTION_SEI     1 ///< L0208: add SOP descrioption SEI
+#define MAX_NUM_PICS_IN_SOP           1024
+
+#define K0180_SCALABLE_NESTING_SEI  1   ///JCTVC-K0180 scalable nesting sei message
+#define MAX_NESTING_NUM_OPS         1024
+#define MAX_NESTING_NUM_LAYER       64
+
+#define J0149_TONE_MAPPING_SEI        1 ///< J0149: Tone mapping information SEI
 #define L0363_DU_BIT_RATE             1 ///< L0363: add bit_rate_du_value_minus1 to HRD parameters
 #define L0328_SPLICING                1 ///< L0328: splicing support in HRD
 #define L0044_DU_DPB_OUTPUT_DELAY_HRD 1 ///< L0044: Include dpb_output_delay_du_length_minus1 in hrd_parameters(), dpb_output_du_delay in
@@ -74,10 +130,13 @@
 #define L0372 1
 #define SIGNAL_BITRATE_PICRATE_IN_VPS               0  ///< K0125: Signal bit_rate and pic_rate in VPS
 #define L0232_RD_PENALTY           1  ///< L0232: RD-penalty for 32x32 TU for intra in non-intra slices
+#define L0386_DB_METRIC            1  ///< L0386: non-normative blockiness metric (automatically configures deblocking parameters in bitstream)
+#define L0323_DPB                     1 ///< L0323: Specification of active reference indices and decoded picture buffer
+
+#define L0034_COMBINED_LIST_CLEANUP 1
 
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #define MAX_VPS_OP_SETS_PLUS1                     1024
-
 #if H_MV
 #define MAX_VPS_NUH_LAYER_ID_PLUS1  64
 #define MAX_NUM_SCALABILITY_TYPES   16
@@ -91,7 +150,9 @@
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS               64
+#if H_MV
 #define MAX_NUM_LAYERS                  64
+#endif
 
 #define COEF_REMAIN_BIN_REDUCTION        3 ///< indicates the level at which the VLC 
                                            ///< transitions from Golomb-Rice to TU+EG(k)
@@ -260,6 +321,24 @@ typedef       UChar           Pxl;        ///< 8-bit pixel type
 typedef       Short           Pel;        ///< 16-bit pixel type
 typedef       Int             TCoeff;     ///< transform coefficient
 
+#if H_3D_VSO
+// ====================================================================================================================
+// Define Distortion Types
+// ====================================================================================================================
+typedef       Int64           RMDist;     ///< renderer model distortion
+
+#if H_3D_VSO_DIST_INT
+typedef       Int              Dist;       ///< RDO distortion
+typedef       Int64            Dist64; 
+#define       RDO_DIST_MIN     MIN_INT
+#define       RDO_DIST_MAX     MAX_INT
+#else
+typedef       UInt             Dist;       ///< RDO distortion
+typedef       UInt64           Dist; 
+#define       RDO_DIST_MIN     0
+#define       RDO_DIST_MAX     MAX_UINT
+#endif
+#endif
 /// parameters for adaptive loop filter
 class TComPicSym;
 
@@ -411,7 +490,9 @@ enum RefPicList
 {
   REF_PIC_LIST_0 = 0,   ///< reference list 0
   REF_PIC_LIST_1 = 1,   ///< reference list 1
+#if !L0034_COMBINED_LIST_CLEANUP
   REF_PIC_LIST_C = 2,   ///< combined reference list for uni-prediction in B-Slices
+#endif
   REF_PIC_LIST_X = 100  ///< special mark
 };
 
@@ -450,7 +531,16 @@ enum DFunc
   DF_HADS32   = 26,     ///<  32xM HAD with step
   DF_HADS64   = 27,     ///<  64xM HAD with step
   DF_HADS16N  = 28,     ///< 16NxM HAD with step
-  
+#if H_3D_VSO
+  DF_VSD      = 29,      ///< general size VSD
+  DF_VSD4     = 30,      ///<   4xM VSD
+  DF_VSD8     = 31,      ///<   8xM VSD
+  DF_VSD16    = 32,      ///<  16xM VSD
+  DF_VSD32    = 33,      ///<  32xM VSD
+  DF_VSD64    = 34,      ///<  64xM VSD
+  DF_VSD16N   = 35,      ///< 16NxM VSD
+#endif
+
 #if AMP_SAD
   DF_SAD12    = 43,
   DF_SAD24    = 44,
@@ -548,9 +638,30 @@ namespace Level
   {
     VIEW_ID  = 0,
 #if H_3D
-    DEPTH_ID = 1,
+    DEPTH_ID = 1,    
 #endif    
   };
 #endif
-#endif
+#if H_3D
+  // Renderer
+  enum BlenMod
+  {
+    BLEND_NONE  = -1,
+    BLEND_AVRG  = 0,
+    BLEND_LEFT  = 1,
+    BLEND_RIGHT = 2,
+    BLEND_GEN   =  3
+  };
 
+  
+  enum
+  {
+    VIEWPOS_INVALID = -1,
+    VIEWPOS_LEFT    = 0,
+    VIEWPOS_RIGHT   = 1,
+    VIEWPOS_MERGED  = 2
+  };
+
+
+#endif
+#endif

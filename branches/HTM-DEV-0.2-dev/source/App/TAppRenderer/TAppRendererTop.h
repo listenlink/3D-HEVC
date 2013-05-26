@@ -31,25 +31,21 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-
 #include <list>
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
 
-
 #ifndef __TAppRendererTOP__
 #define __TAppRendererTOP__
-
-
+#include "../../Lib/TLibCommon/TypeDef.h"
+#if H_3D
 #include "../../Lib/TLibRenderer/TRenTop.h"
 #include "../../Lib/TLibVideoIO/TVideoIOYuv.h"
 #include "TAppRendererCfg.h"
 #include "TAppRendererTop.h"
 #include "../../Lib/TLibRenderer/TRenModel.h"
 
-#if !QC_MVHEVC_B0046
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -71,21 +67,24 @@ protected:
   Void  xCreateLib        ();                               ///< create renderer class and video io
   Void  xInitLib          ();                               ///< initialize renderer class
   Void  xDestroyLib       ();                               ///< destroy renderer class and video io
+#if H_3D_VSO
   Void  xRenderModelFromString();                           ///< render using model using setup string
   Void  xRenderModelFromNums();                             ///< render using model using synth view numbers
-
+#endif
 
 public:
   TAppRendererTop();
   virtual ~TAppRendererTop();
 
   Void  render      ();                               ///< main encoding function
+#if H_3D_VSO
   Void  renderModel ();
+#endif
   Void  go          ();
   Void  renderUsedPelsMap();
 
 };// END CLASS DEFINITION TAppRendererTop
 
-#endif
 
-#endif
+#endif // H_3D
+#endif // __TAppRendererTOP__

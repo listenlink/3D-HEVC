@@ -68,7 +68,11 @@ public:
   virtual UInt  getCoeffCost          ()                = 0;
 
   virtual Void  codeVPS                 ( TComVPS* pcVPS )                                      = 0;
+#if !H_3D
   virtual Void  codeSPS                 ( TComSPS* pcSPS )                                      = 0;
+#else
+  virtual Void  codeSPS                 ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )       = 0;
+#endif
   virtual Void  codePPS                 ( TComPPS* pcPPS )                                      = 0;
   virtual Void  codeSliceHeader         ( TComSlice* pcSlice )                                  = 0;
 
@@ -148,7 +152,11 @@ public:
 public:
   Void encodeVPS               ( TComVPS* pcVPS);
   // SPS
+#if H_3D
+  Void encodeSPS               ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#else
   Void encodeSPS               ( TComSPS* pcSPS );
+#endif
   Void encodePPS               ( TComPPS* pcPPS );
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );

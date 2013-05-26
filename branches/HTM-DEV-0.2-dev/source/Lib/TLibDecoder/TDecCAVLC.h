@@ -60,17 +60,12 @@ public:
   virtual ~TDecCavlc();
   
 protected:
-  Void  xReadEpExGolomb       ( UInt& ruiSymbol, UInt uiCount );
-  Void  xReadExGolombLevel    ( UInt& ruiSymbol );
-  Void  xReadUnaryMaxSymbol   ( UInt& ruiSymbol, UInt uiMaxSymbol );
-  
-  Void  xReadPCMAlignZero     ();
-
-  UInt  xGetBit             ();
-  
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
-private:
   
+#if H_3D
+  Int**    m_aaiTempScale;
+  Int**    m_aaiTempOffset;
+#endif
 public:
 
   /// rest entropy coder by intial QP and IDC in CABAC
@@ -80,7 +75,11 @@ public:
   Void  parseQtCbf          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
   Void  parseQtRootCbf      ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   Void  parseVPS            ( TComVPS* pcVPS );
+#if H_3D
+  Void  parseSPS            ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#else
   Void  parseSPS            ( TComSPS* pcSPS );
+#endif
   Void  parsePPS            ( TComPPS* pcPPS);
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
