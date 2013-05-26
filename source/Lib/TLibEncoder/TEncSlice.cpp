@@ -59,6 +59,10 @@ TEncSlice::TEncSlice()
   m_pcBufferBinCoderCABACs  = NULL;
   m_pcBufferLowLatSbacCoders    = NULL;
   m_pcBufferLowLatBinCoderCABACs  = NULL;
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
+    m_pcListDepthPic[iNumCount] = NULL;
+#endif
 #if FCO_DVP_REFINE_C0132_C0170
   m_pPicBaseTxt = NULL;
   m_pPicBaseDepth = NULL;
@@ -147,6 +151,11 @@ Void TEncSlice::init( TEncTop* pcEncTop )
   m_pdRdPicLambda     = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_pdRdPicQp         = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_piRdPicQp         = (Int*   )xMalloc( Int,    m_pcCfg->getDeltaQpRD() * 2 + 1 );
+
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for(Int iNumCount = 0; iNumCount < MAX_VIEW_NUM; iNumCount++)
+    m_pcListDepthPic[iNumCount] = NULL;
+#endif
 }
 
 /**
@@ -777,6 +786,12 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       && pcEncTop->getUseIC())   // DCP of ViewID 0 is not available
   {
     pcSlice ->xSetApplyIC();
+#if SHARP_ILLUCOMP_PARSE_D0060
+    if (pcSlice->getApplyIC())
+    {
+      pcSlice->setIcSkipParseFlag(rpcPic->getCurrSlice()->getPOC() % m_pcCfg->getIntraPeriod() != 0);
+    }
+#endif
   }
 #endif
 
@@ -818,9 +833,19 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 
 #if MERL_VSP_C0152
   // Send Depth/Texture pointers to slice level
+#if !MERL_VSP_NBDV_RefVId_Fix_D0166
   pcSlice->setBWVSPLUTParam(m_aiShiftLUT, m_iShiftPrec);
+#endif
   pcSlice->setRefPicBaseTxt(m_pPicBaseTxt);
   pcSlice->setRefPicBaseDepth(m_pPicBaseDepth);
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  for (Int refViewId=0; refViewId < pcSlice->getViewId(); refViewId++)
+  {
+    assert( m_pcListDepthPic[refViewId] );
+    pcSlice->setListDepthPic(m_pcListDepthPic[refViewId], refViewId);
+    pcSlice->setBWVSPLUTParam(m_aiShiftLUT[refViewId], m_iShiftPrec, refViewId);
+  }
+#endif
 #endif
 
   UInt uiWidthInLCUs  = rpcPic->getPicSym()->getFrameWidthInCU();
@@ -1198,6 +1223,74 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
 
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
 
+#if LGE_SAO_MIGRATION_D0091
+    if ( pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma()) )
+    {
+        SAOParam *saoParam =  pcSlice->getAPS()->getSaoParam();
+        Int iNumCuInWidth     = saoParam->numCuInWidth;
+        Int iCUAddrInSlice    = uiCUAddr - rpcPic->getPicSym()->getCUOrderMap(pcSlice->getSliceCurStartCUAddr()/rpcPic->getNumPartInCU());
+        Int iCUAddrUpInSlice  = iCUAddrInSlice - iNumCuInWidth;
+        Int rx = uiCUAddr % iNumCuInWidth;
+        Int ry = uiCUAddr / iNumCuInWidth;
+        Int allowMergeLeft = 1;
+        Int allowMergeUp   = 1;
+
+        if (rx!=0)
+        {
+            if (rpcPic->getPicSym()->getTileIdxMap(uiCUAddr-1) != rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))
+            {
+                allowMergeLeft = 0;
+            }
+        }
+        if (ry!=0)
+        {
+            if (rpcPic->getPicSym()->getTileIdxMap(uiCUAddr-iNumCuInWidth) != rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))
+            {
+                allowMergeUp = 0;
+            }
+        }
+
+        Int addr = pcCU->getAddr();
+        allowMergeLeft = allowMergeLeft && (rx>0) && (iCUAddrInSlice!=0);
+        allowMergeUp = allowMergeUp && (ry>0) && (iCUAddrUpInSlice>=0);
+
+        if( saoParam->bSaoFlag[0] || saoParam->bSaoFlag[1] )
+        {
+            Int mergeLeft = saoParam->saoLcuParam[0][addr].mergeLeftFlag;
+            Int mergeUp = saoParam->saoLcuParam[0][addr].mergeUpFlag;
+
+            if (allowMergeLeft)
+            {
+                m_pcEntropyCoder->m_pcEntropyCoderIf->codeSaoMerge(mergeLeft); 
+            }
+            else
+            {
+                mergeLeft = 0;
+            }
+            if(mergeLeft == 0)
+            {
+                if (allowMergeUp)
+                {
+                    m_pcEntropyCoder->m_pcEntropyCoderIf->codeSaoMerge(mergeUp);
+                }
+                else
+                {
+                    mergeUp = 0;
+                }
+                if(mergeUp == 0)
+                {
+                    for (Int compIdx=0;compIdx<3;compIdx++)
+                    {
+                        if( (compIdx == 0 && saoParam->bSaoFlag[0]) || (compIdx > 0 && saoParam->bSaoFlag[1]))
+                        {
+                            m_pcEntropyCoder->encodeSaoOffset(&saoParam->saoLcuParam[compIdx][addr], compIdx);
+                        }
+                    }
+                }
+            }
+        }
+    }
+#else
     if ( pcSlice->getSPS()->getUseSAO() && pcSlice->getAPS()->getSaoInterleavingFlag() && pcSlice->getSaoEnabledFlag() )
     {
       Int iNumCuInWidth     = pcSlice->getAPS()->getSaoParam()->numCuInWidth;
@@ -1207,6 +1300,7 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcBitstre
       Int ry = uiCUAddr / iNumCuInWidth;
       m_pcEntropyCoder->encodeSaoUnitInterleaving( rx, ry, pcSlice->getAPS()->getSaoParam(),pcCU, iCUAddrInSlice, iCUAddrUpInSlice, pcSlice->getSPS()->getLFCrossSliceBoundaryFlag());
     }
+#endif
 #if ENC_DEC_TRACE
     g_bJustDoIt = g_bEncDecTraceEnable;
 #endif

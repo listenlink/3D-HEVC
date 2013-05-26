@@ -116,15 +116,22 @@ public:
 #if H3D_IVRP
   virtual Void codeResPredFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
+#if QC_ARP_D0177
+  virtual Void codeARPW         ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void codePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   virtual Void codeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
   virtual Void codeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment ) = 0;
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   virtual Void codeSDCPredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
 #endif
   
   virtual Void codeIPCMInfo      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Int numIPCM, Bool firstIPCMFlag) = 0;
@@ -132,7 +139,11 @@ public:
   virtual Void codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx ) = 0;
   virtual Void codeQtCbf         ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth ) = 0;
   virtual Void codeQtRootCbf     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  virtual Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    , Bool bSdcRD = false
+#endif
+    ) = 0;
   
   virtual Void codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeInterDir      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -153,6 +164,13 @@ public:
   virtual Int  getSliceGranularity()                      = 0;
 
   virtual Void codeAlfCtrlFlag      ( UInt uiSymbol ) = 0;
+#if LGE_SAO_MIGRATION_D0091
+  virtual Void codeSAOSign          ( UInt code   ) = 0;
+  virtual Void codeSaoMaxUvlc       ( UInt code, UInt maxSymbol ) = 0;
+  virtual Void codeSaoMerge         ( UInt   uiCode  ) = 0;
+  virtual Void codeSaoTypeIdx       ( UInt   uiCode) = 0;
+  virtual Void codeSaoUflc          ( UInt uiLength, UInt   uiCode ) = 0;
+#else
   virtual Void codeSaoFlag          ( UInt uiCode ) = 0;
   virtual Void codeSaoUvlc          ( UInt uiCode ) = 0;
   virtual Void codeSaoSvlc          ( Int   iCode ) = 0;
@@ -161,6 +179,7 @@ public:
   virtual Void codeSaoMergeUp      ( UInt   uiCode) = 0;
   virtual Void codeSaoTypeIdx      ( UInt   uiCode) = 0;
   virtual Void codeSaoUflc         ( UInt   uiCode) = 0;
+#endif
   virtual Void estBit               (estBitsSbacStruct* pcEstBitsSbac, Int width, Int height, TextType eTType) = 0;
   
   virtual Void updateContextTables ( SliceType eSliceType, Int iQp, Bool bExecuteFinish )   = 0;
@@ -249,6 +268,9 @@ public:
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx );
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPUIdx, Bool bRD = false );
+#if QC_ARP_D0177
+  Void encodeARPW              ( TComDataCU* pcCU, UInt uiAbspartIdx , Bool bRD = false, UInt uiDepth = -1);
+#endif
   Void encodeAlfCtrlFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 
   /// set slice granularity
@@ -264,8 +286,16 @@ public:
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-  Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-  Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void encodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+    ,Bool bSdcRD = false
+#endif
+    );
+  Void encodeIntraDirModeLuma  ( TComDataCU* pcCU, UInt uiAbsPartIdx 
+#if PKU_QC_DEPTH_INTRA_UNI_D0195
+ ,Bool bSdcRD = false 
+#endif
+    );
   
   Void encodeIntraDirModeChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   
@@ -283,9 +313,13 @@ public:
   Void encodeDFParams          (TComAPS* pcAPS);
   
 #if RWTH_SDC_DLT_B0036
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void encodeSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
   Void encodeSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   Void encodeSDCPredMode   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#endif
 #endif
 
 private:
@@ -309,10 +343,15 @@ public:
                         int **FilterCoeff, int kMinTab[]);
   Int golombEncode(int coeff, int k);
   Int lengthGolomb(int coeffVal, int k);
+#if LGE_SAO_MIGRATION_D0091
+  Void    encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx);
+  Void    encodeSaoUnitInterleaving(Int compIdx, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp);
+#else
   Void    encodeSaoUnit(Int rx, Int ry, Int compIdx, SAOParam* saoParam, Int repeatedRow);
   Void    encodeSaoOffset(SaoLcuParam* saoLcuParam);
   Void    encodeSaoUnitInterleaving(Int rx, Int ry, SAOParam* saoParam, TComDataCU* cu, Int cuAddrInSlice, Int cuAddrUpInSlice, Bool lfCrossSliceBoundaryFlag);
   Void    encodeSaoParam         (TComAPS*  aps);
+#endif
 
   static Int countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize );
 

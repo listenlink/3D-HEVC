@@ -194,6 +194,9 @@ private:
   Char*         m_piVSPIndex;         ///< array of VSP flags to indicate the current block uses synthetic predictor or not
                                       ///< value 0: non-VSP, value 1: VSP
 #endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Char*         m_piVSPDir;           ///< 0: LIST0; 1: LIST1
+#endif
 #if AMP_MRG
   Bool          m_bIsMergeAMP;
 #endif
@@ -213,7 +216,9 @@ private:
   Bool*         m_pbResPredAvailable; ///< array of residual prediction available flags
   Bool*         m_pbResPredFlag;      ///< array of residual prediction flags
 #endif
-
+#if QC_ARP_D0177
+  UChar*        m_puhARPW;
+#endif
 #if LGE_EDGE_INTRA_A0070
   UChar*        m_pucEdgeCode;          ///< array of edge code
   UChar*        m_pucEdgeNumber;        ///< total number of edge
@@ -267,16 +272,41 @@ private:
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
 #endif
-
+#if QC_CU_NBDV_D0181
+  DisInfo*      m_pDvInfo;
+#endif
 protected:
   
   /// add possible motion vector predictor candidates
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if MERL_VSP_C0152
-  inline Bool   xAddVspMergeCand      ( UChar ucVspMergePos, Int vspIdx, Bool* bVspMvZeroDone, UInt uiDepth, Bool* abCandIsInter, Int& iCount,
-                                        UChar* puhInterDirNeighbours, TComMvField* pcMvFieldNeighbours, Int* iVSPIndexTrue, Int mrgCandIdx, DisInfo* pDisInfo );
-  inline Void   xInheritVspMode       ( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo ) ;
+  inline Bool   xAddVspMergeCand      ( 
+ UChar ucVspMergePos,
+#if !LGE_VSP_INHERIT_D0092
+ Int vspIdx,
+ Bool* bVspMvZeroDone,
+#endif
+ UInt uiDepth,
+ Bool* abCandIsInter,
+ Int& iCount,
+ UChar* puhInterDirNeighbours,
+ TComMvField* pcMvFieldNeighbours,
+ Int* iVSPIndexTrue,
+ Int mrgCandIdx,
+ DisInfo* pDisInfo
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+ , Int*   iVspDirTrue = NULL
+#endif
+                                        );
+  inline Void   xInheritVspMode       ( TComDataCU* pcCURef, UInt uiIdx, Bool* bVspMvZeroDone, Int iCount, Int* iVSPIndexTrue, TComMvField* pcMvFieldNeighbours, DisInfo* pDInfo
+#if QC_BVSP_CleanUP_D0191
+   ,UChar *puhInterDirNeighbours
+#endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+                                      , Int *iVSPDirTrue
+#endif
+    ) ;
 #endif
   Void          deriveRightBottomIdx        ( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
@@ -298,8 +328,9 @@ protected:
   UInt          xGetComponentBits     ( Int iVal );
   
   /// compute scaling factor from POC difference
+#if !QC_ARP_D0177
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
-  
+#endif
   Void xDeriveCenterIdx( PartSize eCUMode, UInt uiPartIdx, UInt& ruiPartIdxCenter );
   Bool xGetCenterCol( UInt uiPartIdx, RefPicList eRefPicList, int iRefIdx, TComMv *pcMv );
   
@@ -313,7 +344,10 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
   // -------------------------------------------------------------------------------------------------------------------
-  
+#if QC_ARP_D0177
+  Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
+#endif  
+
   Void          create                ( UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
 #if ADAPTIVE_QP_SELECTION
     , Bool bGlobalRMARLBuffer = false
@@ -325,10 +359,21 @@ public:
   Void          initEstData           ( UInt uiDepth, Int qp );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
-
+#if QC_CU_NBDV_D0181
+  Void          copyDVInfoFrom (TComDataCU* pcCU, UInt uiAbsPartIdx);
+#endif
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
-  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList );
-  Void          copyPartFrom          ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
+  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList 
+#if QC_CU_NBDV_D0181
+  , Bool bNBDV = false
+#endif
+  );
+  Void          copyPartFrom          ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth 
+#if QC_ARP_D0177
+      ,
+      Bool bRP = false
+#endif
+  );
   
   Void          copyToPic             ( UChar uiDepth );
   Void          copyToPic             ( UChar uiDepth, UInt uiPartIdx, UInt uiPartDepth );
@@ -458,6 +503,13 @@ public:
   Void          setVSPIndex        ( UInt uiIdx, Int n )     { m_piVSPIndex[uiIdx] = n;    }
   Void          setVSPIndexSubParts( Char bVSPIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 #endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Char*         getVSPDir          ()                        { return m_piVSPDir;                           }
+  Char          getVSPDir          ( UInt uiIdx )            { return m_piVSPDir[uiIdx];                  }
+  Void          setVSPDir          ( UInt uiIdx, Int n )     { m_piVSPDir[uiIdx] = n;  }
+  Void          setVSPDirSubParts  ( Char bVSPDir, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Bool          getRefListAndRefFrmIdx(Int targetRefViewIdx, RefPicList& eRefPicList, Int& refFrmIdx);
+#endif
 
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
@@ -472,6 +524,11 @@ public:
 #else
   Bool          isICFlagRequired      (UInt uiAbsPartIdx);
 #endif
+#endif
+#if QC_CU_NBDV_D0181
+  DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                }
+  DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];         }
+  Void          setDvInfoSubParts( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 
 #if AMP_MRG
@@ -536,7 +593,11 @@ public:
 #else //!H3D_NBDV
   Bool          getUnifiedMvPredCan       ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
   Void          getDisMvpCand        ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo );
+#if QC_CU_NBDV_D0181
+  Bool          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
+#else
   Void          getDisMvpCandNBDV( UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDInfo , Bool bParMerg = false
+#endif
 #if MERL_VSP_C0152
                               , Bool bDepthRefine = false
 #endif //MERL_VSP_C0152
@@ -547,7 +608,11 @@ public:
 
 #if MERL_VSP_C0152
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT, Int iShiftPrec, Bool bSimpleDvpRefine = false);
-  Void          estimateDVFromDM(UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred, Bool bSimpleDvpRefine = false);
+  Void          estimateDVFromDM(
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+                Int refViewIdx,
+#endif
+                UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred, Bool bSimpleDvpRefine = false);
 #endif
   Bool          getIViewOrgDepthMvPred( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, TComMv& rcMv );
 #endif //  H3D_IVMP 
@@ -566,6 +631,13 @@ public:
 #endif
 #if H3D_IVRP
   Bool          getResidualSamples( UInt uiPartIdx, Bool bRecon, TComYuv* pcYuv = 0 );
+#endif
+#if QC_ARP_D0177
+  UChar*        getARPW          ()                        { return m_puhARPW;               }
+  UChar         getARPW          ( UInt uiIdx )            { return m_puhARPW[uiIdx];        }
+  Void          setARPW          ( UInt uiIdx, UChar w )   { m_puhARPW[uiIdx] = w;           }
+  Void          setARPWSubParts  ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
+  Double        getARPWFactor    ( UInt uiIdx );
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
@@ -646,7 +718,11 @@ public:
   
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
 #if MERL_VSP_C0152
-  Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int* uiVSPIndexTrue, Int mrgCandIdx = -1 );
+  Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int* uiVSPIndexTrue, 
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+                Int* iVSPDir,
+#endif
+                Int mrgCandIdx = -1 );
 #else
   Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1 );
 #endif
@@ -687,7 +763,9 @@ public:
 #if H3D_IVRP
   UInt          getCtxResPredFlag               ( UInt   uiAbsPartIdx                                 );
 #endif
-  
+#if QC_ARP_D0177
+  UInt          getCTXARPWFlag                 ( UInt   uiAbsPartIdx                                 );
+#endif  
   UInt          getSliceStartCU         ( UInt pos )                  { return m_uiSliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
   UInt          getEntropySliceStartCU  ( UInt pos )                  { return m_uiEntropySliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }
@@ -807,7 +885,9 @@ public:
   Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
   Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   
+#if !PKU_QC_DEPTH_INTRA_UNI_D0195
   UInt          getCtxSDCFlag              ( UInt uiAbsPartIdx );
+#endif
   
   Bool          getSDCAvailable             ( UInt uiAbsPartIdx );
   

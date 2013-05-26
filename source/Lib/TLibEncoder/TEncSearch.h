@@ -510,6 +510,9 @@ protected:
 #if MERL_VSP_C0152
                                   , Int* iVSPIndexTrue
 #endif
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+                                  , Int* iVSPDirTrue
+#endif
                                    );
   // -------------------------------------------------------------------------------------------------------------------
   // motion estimation

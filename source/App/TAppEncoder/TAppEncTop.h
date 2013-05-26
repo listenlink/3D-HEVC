@@ -166,7 +166,11 @@ private:
 #endif
 
 #if MERL_VSP_C0152
+#if MERL_VSP_NBDV_RefVId_Fix_D0166
+  Void setBWVSPLUT( Int refViewIdx, Int iCodedViewIdx, Int gopId, Bool isDepth);
+#else
   Void setBWVSPLUT( Int iCodedViewIdx, Int gopId, Bool isDepth);
+#endif
 #endif
 };// END CLASS DEFINITION TAppEncTop
 
