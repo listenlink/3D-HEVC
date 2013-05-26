@@ -291,6 +291,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\source\Lib\TLibDecoder\SyntaxElementParser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\source\Lib\TLibDecoder\TDecBinCoderCABAC.cpp"
 				>
 			</File>
@@ -337,6 +341,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibDecoder\SEIread.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibDecoder\SyntaxElementParser.h"
 				>
 			</File>
 			<File

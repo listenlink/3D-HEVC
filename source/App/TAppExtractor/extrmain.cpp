@@ -40,6 +40,7 @@
 #include <time.h>
 #include "TAppExtrTop.h"
 
+#if H_MV
 // ====================================================================================================================
 // Main function
 // ====================================================================================================================
@@ -67,7 +68,7 @@ int main(int argc, char* argv[])
   long lBefore = clock();
 
   // call extraction function
-  cTAppExtrTop.extract();
+//  cTAppExtrTop.extract();
 
   // ending time
   dResult = (double)(clock()-lBefore) / CLOCKS_PER_SEC;
@@ -75,5 +76,14 @@ int main(int argc, char* argv[])
 
   return EXIT_SUCCESS;
 }
+#else
 
+#include <iostream>
+int main(int argc, char* argv[])
+{
+  std::cout << "Set H_MV equal to 1 in TypeDef.h to build bitstream extractor. " << std::endl; 
+  return 1; 
+}
+
+#endif
 

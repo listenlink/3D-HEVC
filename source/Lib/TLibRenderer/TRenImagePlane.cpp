@@ -35,6 +35,8 @@
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
 #include <string.h>
+#if H_3D
+
 /////// TRenImagePlane ///////
 
 template<class T>
@@ -525,3 +527,4 @@ template class TRenImagePlanePart<Pel>;
 template class TRenImagePlanePart<Double>;
 template class TRenImagePlanePart<Bool>;
 template class TRenImagePlanePart<Int>;
+#endif // H_3D

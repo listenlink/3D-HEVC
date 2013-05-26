@@ -31,17 +31,13 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
+#ifndef __TAppRENDERERCFG__
+#define __TAppRENDERERCFG__
 
 #include <list>
 #include <stdio.h>
 #include <fcntl.h>
 #include <assert.h>
-
-
-
-#ifndef __TAppRENDERERCFG__
-#define __TAppRENDERERCFG__
 
 #include "../../Lib/TAppCommon/TAppComCamPara.h"
 #include "../../Lib/TLibCommon/CommonDef.h"
@@ -49,7 +45,9 @@
 #include "../../Lib/TLibRenderer/TRenModSetupStrParser.h"
 #include <string>
 #include <vector>
-#if !QC_MVHEVC_B0046
+
+#if H_3D
+
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -65,6 +63,16 @@ protected:
   Char*              m_pchSynthOutputFileBaseName;     ///< output synth file base name, placeholder for numbering $$
   Bool               m_bContOutputFileNumbering;       ///< use continous numbering instead of view numbering
   Bool               m_bSweep;                         ///< 1: Store view range in file
+
+
+  // bit-depth      ( Currently interal luma and chroma bit-depth are required to be equal. )
+  Int                m_inputBitDepthY;                 ///< bit-depth of input file (luma component)
+  Int                m_inputBitDepthC;                 ///< bit-depth of input file (chroma component)
+  Int                m_outputBitDepthY;                ///< bit-depth of output file (luma component)
+  Int                m_outputBitDepthC;                ///< bit-depth of output file (chroma component)
+  Int                m_internalBitDepthY;              ///< bit-depth renderer operates at in luma (input/output files will be converted)
+  Int                m_internalBitDepthC;              ///< bit-depth renderer operates at in chroma (input/output files will be converted)
+
 
   // derived
   std::vector<Char*> m_pchVideoInputFileList;          ///< source file names
@@ -132,7 +140,5 @@ public:
 
 };// END CLASS DEFINITION TAppRendererCfg
 
-
-#endif
 #endif // __TAppRENDERERCFG__
-
+#endif // H_3D

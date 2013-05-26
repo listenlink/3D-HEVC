@@ -32,13 +32,13 @@
  */
 
 
-
 #ifndef __TRENFILTER__
 #define __TRENFILTER__
 
 #include "TLibCommon/CommonDef.h"
 #include "TRenImage.h"
 #include "TRenInterpFilter.h"
+#if H_3D
 
 typedef Int (TRenInterpFilter::*FpChromaIntFilt) ( Pel*, Int );
 
@@ -61,8 +61,8 @@ public:
 
   /////////// Comparison ///////////
 
-  static Int64                          SSE  ( PelImagePlane*     pcInputPlane1, PelImagePlane*      pcInputPlane2 );
-  static Int64                          SSE  ( Pel* piSrc1,       Int iSrcStride1, Int iWidth, Int iHeight,  Pel* piSrc2, Int iSrcStride2 );
+  static Int64                          SSE  ( PelImagePlane*     pcInputPlane1, PelImagePlane*      pcInputPlane2, Bool bLuma );
+  static Int64                          SSE  ( Pel* piSrc1,       Int iSrcStride1, Int iWidth, Int iHeight,  Pel* piSrc2, Int iSrcStride2, Bool bLuma );
 
   template <typename T> static Bool compare  (TRenImage<T> *pcInputImage1     , TRenImage<T> *pcInputImage2);
   //Plane
@@ -137,5 +137,5 @@ private:
   static Pel  xFiltBinom9     (Pel* pcInputData, Int iStride );
 };
 
-
+#endif
 #endif //__TRENFILTER__
