@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,6 @@
 #include "TLibVideoIO/TVideoIOYuv.h"
 #include "TLibCommon/TComList.h"
 #include "TLibCommon/TComPicYuv.h"
-#include "TLibCommon/TComDepthMapGenerator.h"
 #include "TLibDecoder/TDecTop.h"
 #include "TAppDecCfg.h"
 
@@ -61,30 +60,28 @@ class TAppDecTop : public TAppDecCfg
 {
 private:
   // class interface
-  std::vector<TDecTop*>           m_tDecTop;                      ///< decoder classes
-
-  std::vector<TVideoIOYuv*>       m_tVideoIOYuvReconFile;         ///< reconstruction YUV class
-
-  // for output control
-  Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP
-  std::vector<Int>                m_pocLastDisplay;               ///< last POC in display order
-  Bool                            m_useDepth;
-
-#if FLEX_CODING_ORDER_M23723
-  Int  m_fcoViewDepthId;
-  Char m_fcoOrder[MAX_VIEW_NUM*2];
+#if H_MV
+  TDecTop*                        m_tDecTop             [ MAX_NUM_LAYERS ];    ///< decoder classes
+  TVideoIOYuv*                    m_tVideoIOYuvReconFile[ MAX_NUM_LAYERS ];    ///< reconstruction YUV class
+  Int                             m_layerIdToDecIdx     [ MAX_NUM_LAYER_IDS ]; ///< maping from layer id to decoder index
+  Int                             m_numDecoders;                               ///< number of decoder instances
+  TComPicLists                    m_ivPicLists;                                ///< picture buffers of decoder instances
+#else
+  TDecTop                         m_cTDecTop;                     ///< decoder class
+  TVideoIOYuv                     m_cTVideoIOYuvReconFile;        ///< reconstruction YUV class
 #endif
-
+    // for output control
+  Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP
+#if H_MV
+  Int                             m_pocLastDisplay      [ MAX_NUM_LAYERS ]; ///< last POC in display order
+  Bool                            m_reconOpen           [ MAX_NUM_LAYERS ]; ///< reconstruction file opened
+#else
+  Int                             m_iPOCLastDisplay;              ///< last POC in display order
+#endif
+#if H_3D
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
-#if DEPTH_MAP_GENERATION
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  TComVPSAccess                   m_cVPSAccess;
 #endif
-  TComSPSAccess                   m_cSPSAccess;
-  TComAUPicAccess                 m_cAUPicAccess;
-#endif
-
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
@@ -92,44 +89,24 @@ public:
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  Void  increaseNumberOfViews  (UInt layerId, UInt viewId, UInt isDepth);
-#else
-  Void  increaseNumberOfViews  (Int newNumberOfViewDepth);
-#endif
-  TDecTop* getTDecTop     ( Int viewId, Bool isDepth );
-
-  std::vector<TComPic*> getInterViewRefPics( Int viewId, Int poc, Bool isDepth, TComSPS* sps );
-  TComPic*              getPicFromView     ( Int viewId, Int poc, bool isDepth ) { return xGetPicFromView( viewId, poc, isDepth ); }
-
-#if DEPTH_MAP_GENERATION
-#if VIDYO_VPS_INTEGRATION
-  TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
-#endif
-  TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
-  TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
-  TDecTop*          getDecTop0    () { return m_tDecTop[0]; }
-#endif
-
-#if MERL_VSP_C0152
-#if MERL_VSP_NBDV_RefVId_Fix_D0166
-  Void  setBWVSPLUT( Int iNeighborViewId, TComSlice* pcSlice, Int iCodedViewIdx, Int iCurPoc );
-#else
-  Void  setBWVSPLUT( TComSlice* pcSlice, Int iCodedViewIdx, Int iCurPoc   );
-#endif
-#endif
-
+ 
 protected:
-//  Void  xCreateDecLib     (); ///< create internal classes
+  Void  xCreateDecLib     (); ///< create internal classes
   Void  xDestroyDecLib    (); ///< destroy internal classes
-//  Void  xInitDecLib       (); ///< initialize decoder class
+  Void  xInitDecLib       (); ///< initialize decoder class
   
-  Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId, UInt tId); ///< write YUV to file
-  Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int viewDepthId ); ///< flush all remaining decoded pictures to file
-
-  TComPic* xGetPicFromView( Int viewId, Int poc, Bool isDepth );
+#if H_MV
+  Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int layerId, Int tId ); ///< write YUV to file
+  Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int layerId ); ///< flush all remaining decoded pictures to file
+  Int   xGetDecoderIdx    ( Int layerId, Bool createFlag = false );
+#else
+  Void  xWriteOutput      ( TComList<TComPic*>* pcListPic , UInt tId); ///< write YUV to file
+  Void  xFlushOutput      ( TComList<TComPic*>* pcListPic ); ///< flush all remaining decoded pictures to file
+#endif
+  Bool  isNaluWithinTargetDecLayerIdSet ( InputNALUnit* nalu ); ///< check whether given Nalu is within targetDecLayerIdSet
 };
 
 //! \}
+
 #endif
 

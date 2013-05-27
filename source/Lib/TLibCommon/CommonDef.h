@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,6 @@
 #endif // _MSC_VER > 1000
 #include "TypeDef.h"
 
-#include <stdio.h>
 //! \ingroup TLibCommon
 //! \{
 
@@ -56,8 +55,12 @@
 // Version information
 // ====================================================================================================================
 
-#define HM_VERSION        "6.1"
-#define NV_VERSION        "7.0"                  ///< Current software version
+#if H_MV
+#define NV_VERSION        "0.3"                 ///< Current software version
+#define HM_VERSION        "10.1"                ///< 
+#else
+#define NV_VERSION        "10.1"                 ///< Current software version
+#endif
 
 // ====================================================================================================================
 // Platform information
@@ -109,12 +112,18 @@
 
 #define MAX_GOP                     64          ///< max. value of hierarchical GOP size
 
-#define MAX_NUM_REF                 4           ///< max. value of multiple reference frames
-#define MAX_NUM_REF_LC              8           ///< max. value of combined reference frames
+#define MAX_NUM_REF_PICS            16          ///< max. number of pictures used for reference
+#define MAX_NUM_REF                 16          ///< max. number of entries in picture reference list
+#if !L0034_COMBINED_LIST_CLEANUP
+#define MAX_NUM_REF_LC              MAX_NUM_REF_PICS  // TODO: remove this macro definition (leftover from combined list concept)
+#endif
 
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
+#if H_3D
 #define MIN_INT                     (-2147483647-1) // < min. value of signed 32-bit integer
+#endif
+#define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
 #define MAX_DOUBLE                  1.7e+308    ///< max. value of double-type value
 
 #define MIN_QP                      0
@@ -123,74 +132,14 @@
 #define NOT_VALID                   -1
 
 // ====================================================================================================================
-// 3D constants
-// ====================================================================================================================
-#define MAX_VIEW_NUM                10
-
-#if ( H3D_IVMP || H3D_IVRP )
-#define DEPTH_MAP_GENERATION        1
-#define PDM_REMOVE_DEPENDENCE       1      //bug-fix for DMDV JCT2-A0095
-#else
-#define DEPTH_MAP_GENERATION        0
-#endif
-
-//>>>>> generation and usage of virtual prediction depth maps >>>>>
-#define PDM_ONE_DEPTH_PER_PU              1         // use only a single depth for a prediction unit (in update)
-#define PDM_NO_INTER_UPDATE               1         // no update for inter (but not inter-view) predicted blocks
-#define PDM_MERGE_POS                     0         // position of pdm in merge list (0..4)
-
-#if H3D_IVMP&!H3D_NBDV
-#define PDM_AMVP_POS                      0         // position of pdm in amvp list  (0..3)
-#else
-#define PDM_AMVP_POS                      2         // position of pdm in amvp list  (0..3)
-#endif
-#define PDM_OUTPUT_PRED_DEPTH_MAP         0         // output prediction depth map (for debugging)
-
-#define PDM_INTERNAL_CALC_BIT_DEPTH       31        // bit depth for internal calculations (32 - 1 for signed values)
-#define PDM_BITDEPTH_VIRT_DEPTH           15        // bit depth for virtual depth storage (16 - 1 for signed values)
-#define PDM_LOG2_MAX_ABS_NORMAL_DISPARITY 8         // maximum absolute normal disparity = 256 (for setting accuracy)
-#define PDM_VIRT_DEPTH_PRECISION          4         // must be greater than or equal to 2 (since MVs are given in quarter-pel units)
-
-#define PDM_INTER_CALC_SHIFT              ( PDM_INTERNAL_CALC_BIT_DEPTH - PDM_BITDEPTH_VIRT_DEPTH )         // avoids overflow
-#define PDM_LOG4_SCALE_DENOMINATOR        ( PDM_LOG2_MAX_ABS_NORMAL_DISPARITY + PDM_VIRT_DEPTH_PRECISION )  // accuracy of scaling factor
-#define PDM_OFFSET_SHIFT                  ( PDM_LOG2_MAX_ABS_NORMAL_DISPARITY )                             // accuracy of offset
-
-#define PDM_MAX_ABS_VIRT_DEPTH            (  ( 1 << PDM_BITDEPTH_VIRT_DEPTH ) - 1 )
-#define PDM_UNDEFINED_DEPTH               ( -( 1 << PDM_BITDEPTH_VIRT_DEPTH )     )
-
-#define PDM_USE_FOR_IVIEW                 1
-#define PDM_USE_FOR_INTER                 2
-#define PDM_USE_FOR_MERGE                 4
-
-#define PDM_SUBSAMPLING_EXP               2         // subsampling factor is 2^PDM_SUBSAMPLING_EXP
-#define PDM_SUB_SAMP_EXP_X(Pdm)           ((Pdm)==1?PDM_SUBSAMPLING_EXP:0)
-#define PDM_SUB_SAMP_EXP_Y(Pdm)           ((Pdm)==1?PDM_SUBSAMPLING_EXP:0)
-//<<<<< generation and usage of virtual prediction depth maps <<<<<
-
-#define OUTPUT_RESIDUAL_PICTURES          0         // output residual pictures (for debugging)
-
-#define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
-
-#define LOG2_DISP_PREC_LUT           2          ///< log2 of disparity precision used in integer disparity LUTs
-
-// ====================================================================================================================
-// VPS constants
-// ====================================================================================================================
-#if QC_MVHEVC_B0046
-#define MAX_LAYER_NUM                     MAX_VIEW_NUM
-#endif
-#if VIDYO_VPS_INTEGRATION
-#define MAX_LAYER_NUM                     MAX_VIEW_NUM
-#define VPS_EXTENSION_TYPE_MULTI_VIEW     0
-#endif
-
-// ====================================================================================================================
 // Macro functions
 // ====================================================================================================================
-extern UInt g_uiIBDI_MAX;
+extern Int g_bitDepthY;
+extern Int g_bitDepthC;
 
-/** clip x, such that 0 <= x <= #g_uiIBDI_MAX */
-template <typename T> inline T Clip(T x) { return std::min<T>(T(g_uiIBDI_MAX), std::max<T>( T(0), x)); }
+/** clip x, such that 0 <= x <= #g_maxLumaVal */
+template <typename T> inline T ClipY(T x) { return std::min<T>(T((1 << g_bitDepthY)-1), std::max<T>( T(0), x)); }
+template <typename T> inline T ClipC(T x) { return std::min<T>(T((1 << g_bitDepthC)-1), std::max<T>( T(0), x)); }
 
 /** clip a, such that minVal <= a <= maxVal */
 template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min<T> (std::max<T> (minVal, a) , maxVal); }  ///< general min/max clip
@@ -210,168 +159,7 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
   exit(EXITCODE);                                             \
 }
 
-#define ROF( exp )            \
-{                             \
-  if( !( exp ) )              \
-{                           \
-  assert( 0 );              \
-  return -1;                \
-}                           \
-}
-
-#define ROT( exp )            \
-{                             \
-  if( ( exp ) )               \
-{                           \
-  assert( 0 );              \
-  return -1;                \
-}                           \
-}
-
-#define ROFS( exp )           \
-{                             \
-  if( !( exp ) )              \
-{                           \
-  return -1;                \
-}                           \
-}
-
-#define ROTS( exp )           \
-{                             \
-  if( ( exp ) )               \
-{                           \
-  return -1;                \
-}                           \
-}
-
-#define ROFR( exp, retVal )   \
-{                             \
-  if( !( exp ) )              \
-{                           \
-  assert( 0 );              \
-  return retVal;            \
-}                           \
-}
-
-#define ROTR( exp, retVal )   \
-{                             \
-  if( ( exp ) )               \
-{                           \
-  assert( 0 );              \
-  return retVal;            \
-}                           \
-}
-
-#define ROFRS( exp, retVal )  \
-{                             \
-  if( !( exp ) )              \
-{                           \
-  return retVal;            \
-}                           \
-}
-
-#define ROTRS( exp, retVal )  \
-{                             \
-  if( ( exp ) )               \
-{                           \
-  return retVal;            \
-}                           \
-}
-
-#define ROFV( exp )           \
-{                             \
-  if( !( exp ) )              \
-{                           \
-  assert( 0 );              \
-  return;                   \
-}                           \
-}
-
-#define ROTV( exp )           \
-{                             \
-  if( ( exp ) )               \
-{                           \
-  assert( 0 );              \
-  return;                   \
-}                           \
-}
-
-#define ROFVS( exp )          \
-{                             \
-  if( !( exp ) )              \
-{                           \
-  return;                   \
-}                           \
-}
-
-#define ROTVS( exp )          \
-{                             \
-  if( ( exp ) )               \
-{                           \
-  return;                   \
-}                           \
-}
-
-#define RNOK( exp )                   \
-{                                     \
-  const ErrVal nMSysRetVal = ( exp ); \
-  if( 0 != nMSysRetVal )              \
-{                                   \
-  assert( 0 );                      \
-  return nMSysRetVal;               \
-}                                   \
-}
-
-#define RNOKR( exp, retVal )        \
-{                                   \
-  if( 0 != ( exp ) )                \
-{                                 \
-  assert( 0 );                    \
-  return retVal;                  \
-}                                 \
-}
-
-#define RNOKS( exp )                  \
-{                                     \
-  const ErrVal nMSysRetVal = ( exp ); \
-  if( 0 != nMSysRetVal )              \
-{                                   \
-  return nMSysRetVal;               \
-}                                   \
-}
-
-#define RNOKRS( exp, retVal )       \
-{                                   \
-  if( 0 != ( exp ) )                \
-{                                 \
-  return retVal;                  \
-}                                 \
-}
-
-#define RNOKV( exp )                \
-{                                   \
-  if( 0 != ( exp ) )                \
-{                                 \
-  assert( 0 );                    \
-  return;                         \
-}                                 \
-}
-
-#define RNOKVS( exp )               \
-{                                   \
-  if( 0 != ( exp ) )                \
-{                                 \
-  return;                         \
-}                                 \
-}
-
-#define ANOK( exp )                 \
-{                                   \
-  if( 0 != ( exp ) )                \
-{                                 \
-  assert( 0 );                    \
-}                                 \
-}
+#if H_MV
 
 #define AOF( exp )                  \
 {                                   \
@@ -398,15 +186,8 @@ __inline T gSign(const T& t)
     return (t < 0) ? T(-1) : T(1);
 }
 
-#define Max(x, y)                   ((x)>(y)?(x):(y))                                                 ///< max of (x, y)
-#define Min(x, y)                   ((x)<(y)?(x):(y))                                                 ///< min of (x, y)
-#define Median(a,b,c)               ((a)>(b)?(a)>(c)?(b)>(c)?(b):(c):(a):(b)>(c)?(a)>(c)?(a):(c):(b)) ///< 3-point median
-#define Clip(x)                     ( Min(g_uiIBDI_MAX, Max( 0, (x)) ) )                              ///< clip with bit-depth range
-#define Clip3( MinVal, MaxVal, a)   ( ((a)<(MinVal)) ? (MinVal) : (((a)>(MaxVal)) ? (MaxVal) :(a)) )  ///< general min/max clip
-#define RemoveBitIncrement(x)       ( (x + ( (1 << g_uiBitIncrement) >> 1 )) >> g_uiBitIncrement )     ///< Remove Bit increment
+#define RemoveBitIncrement( exp ) ( exp >> ( g_bitDepthY - 8 ) )
 
-#if SAIT_VSO_EST_A0033
-#define ROUND(a)  (((a) < 0)? (int)((a) - 0.5) : (int)((a) + 0.5))
 #endif
 
 // ====================================================================================================================
@@ -415,16 +196,9 @@ __inline T gSign(const T& t)
 
 // AMVP: advanced motion vector prediction
 #define AMVP_MAX_NUM_CANDS          2           ///< max number of final candidates
-#if H3D_IVMP
-#define AMVP_MAX_NUM_CANDS_MEM      4           ///< max number of candidates
-#else
 #define AMVP_MAX_NUM_CANDS_MEM      3           ///< max number of candidates
-#endif
 // MERGE
 #define MRG_MAX_NUM_CANDS           5
-#if H3D_IVMP
-#define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
-#endif
 
 // Reference memory management
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
@@ -447,60 +221,93 @@ __inline T gSign(const T& t)
 
 #define CLIP_TO_709_RANGE           0
 
-// IBDI range restriction for skipping clip
-#define IBDI_NOCLIP_RANGE           0           ///< restrict max. value after IBDI to skip clip
-
 // Early-skip threshold (encoder)
 #define EARLY_SKIP_THRES            1.50        ///< if RD < thres*avg[BestSkipRD]
 
-#define MAX_NUM_REF_PICS 16
 
+#define MAX_CHROMA_FORMAT_IDC      3
 
+// TODO: Existing names used for the different NAL unit types can be altered to better reflect the names in the spec.
+//       However, the names in the spec are not yet stable at this point. Once the names are stable, a cleanup 
+//       effort can be done without use of macros to alter the names used to indicate the different NAL unit types.
 enum NalUnitType
 {
-  NAL_UNIT_UNSPECIFIED_0 = 0,
-  NAL_UNIT_CODED_SLICE,
-#if QC_REM_IDV_B0046
-  NAL_UNIT_RESERVED,
-#else
-  NAL_UNIT_CODED_SLICE_IDV,
-#endif
-  NAL_UNIT_CODED_SLICE_TLA,
-  NAL_UNIT_CODED_SLICE_CRA,
-  NAL_UNIT_CODED_SLICE_IDR,
-  NAL_UNIT_SEI,
-  NAL_UNIT_SPS,
-  NAL_UNIT_PPS,
-  NAL_UNIT_ACCESS_UNIT_DELIMITER,
-  NAL_UNIT_RESERVED_10,
-  NAL_UNIT_RESERVED_11,
-  NAL_UNIT_FILLER_DATA,
-  NAL_UNIT_RESERVED_13,
-  NAL_UNIT_APS,
-  NAL_UNIT_RESERVED_15,
-  NAL_UNIT_RESERVED_16,
-  NAL_UNIT_RESERVED_17,
-  NAL_UNIT_RESERVED_18,
-  NAL_UNIT_RESERVED_19,
-  NAL_UNIT_RESERVED_20,
-  NAL_UNIT_RESERVED_21,
-  NAL_UNIT_RESERVED_22,
-  NAL_UNIT_RESERVED_23,
-  NAL_UNIT_UNSPECIFIED_24,
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  NAL_UNIT_VPS,
-#else
-  NAL_UNIT_UNSPECIFIED_25,
-#endif
-  NAL_UNIT_UNSPECIFIED_26,
-  NAL_UNIT_UNSPECIFIED_27,
-  NAL_UNIT_UNSPECIFIED_28,
-  NAL_UNIT_UNSPECIFIED_29,
-  NAL_UNIT_UNSPECIFIED_30,
-  NAL_UNIT_UNSPECIFIED_31,
+  NAL_UNIT_CODED_SLICE_TRAIL_N = 0,   // 0
+  NAL_UNIT_CODED_SLICE_TRAIL_R,   // 1
+  
+  NAL_UNIT_CODED_SLICE_TSA_N,     // 2
+  NAL_UNIT_CODED_SLICE_TLA_R,       // 3
+  
+  NAL_UNIT_CODED_SLICE_STSA_N,    // 4
+  NAL_UNIT_CODED_SLICE_STSA_R,    // 5
+
+  NAL_UNIT_CODED_SLICE_RADL_N,    // 6
+  NAL_UNIT_CODED_SLICE_RADL_R,      // 7
+  
+  NAL_UNIT_CODED_SLICE_RASL_N,    // 8
+  NAL_UNIT_CODED_SLICE_RASL_R,      // 9
+
+  NAL_UNIT_RESERVED_VCL_N10,
+  NAL_UNIT_RESERVED_VCL_R11,
+  NAL_UNIT_RESERVED_VCL_N12,
+  NAL_UNIT_RESERVED_VCL_R13,
+  NAL_UNIT_RESERVED_VCL_N14,
+  NAL_UNIT_RESERVED_VCL_R15,
+
+  NAL_UNIT_CODED_SLICE_BLA_W_LP,    // 16
+  NAL_UNIT_CODED_SLICE_BLA_W_RADL,  // 17
+  NAL_UNIT_CODED_SLICE_BLA_N_LP,  // 18
+  NAL_UNIT_CODED_SLICE_IDR_W_RADL,  // 19
+  NAL_UNIT_CODED_SLICE_IDR_N_LP,  // 20
+  NAL_UNIT_CODED_SLICE_CRA,       // 21
+  NAL_UNIT_RESERVED_IRAP_VCL22,
+  NAL_UNIT_RESERVED_IRAP_VCL23,
+
+  NAL_UNIT_RESERVED_VCL24,
+  NAL_UNIT_RESERVED_VCL25,
+  NAL_UNIT_RESERVED_VCL26,
+  NAL_UNIT_RESERVED_VCL27,
+  NAL_UNIT_RESERVED_VCL28,
+  NAL_UNIT_RESERVED_VCL29,
+  NAL_UNIT_RESERVED_VCL30,
+  NAL_UNIT_RESERVED_VCL31,
+
+  NAL_UNIT_VPS,                   // 32
+  NAL_UNIT_SPS,                   // 33
+  NAL_UNIT_PPS,                   // 34
+  NAL_UNIT_ACCESS_UNIT_DELIMITER, // 35
+  NAL_UNIT_EOS,                   // 36
+  NAL_UNIT_EOB,                   // 37
+  NAL_UNIT_FILLER_DATA,           // 38
+  NAL_UNIT_PREFIX_SEI,              // 39
+  NAL_UNIT_SUFFIX_SEI,              // 40
+  NAL_UNIT_RESERVED_NVCL41,
+  NAL_UNIT_RESERVED_NVCL42,
+  NAL_UNIT_RESERVED_NVCL43,
+  NAL_UNIT_RESERVED_NVCL44,
+  NAL_UNIT_RESERVED_NVCL45,
+  NAL_UNIT_RESERVED_NVCL46,
+  NAL_UNIT_RESERVED_NVCL47,
+  NAL_UNIT_UNSPECIFIED_48,
+  NAL_UNIT_UNSPECIFIED_49,
+  NAL_UNIT_UNSPECIFIED_50,
+  NAL_UNIT_UNSPECIFIED_51,
+  NAL_UNIT_UNSPECIFIED_52,
+  NAL_UNIT_UNSPECIFIED_53,
+  NAL_UNIT_UNSPECIFIED_54,
+  NAL_UNIT_UNSPECIFIED_55,
+  NAL_UNIT_UNSPECIFIED_56,
+  NAL_UNIT_UNSPECIFIED_57,
+  NAL_UNIT_UNSPECIFIED_58,
+  NAL_UNIT_UNSPECIFIED_59,
+  NAL_UNIT_UNSPECIFIED_60,
+  NAL_UNIT_UNSPECIFIED_61,
+  NAL_UNIT_UNSPECIFIED_62,
+  NAL_UNIT_UNSPECIFIED_63,
   NAL_UNIT_INVALID,
 };
 
+#if H_3D
 //PICYUV
 #define PICYUV_PAD         16
 
@@ -508,13 +315,16 @@ enum NalUnitType
 #define REN_LUMA_MARGIN   ( g_uiMaxCUWidth + PICYUV_PAD )
 #define REN_VDWEIGHT_PREC  8
 #define REN_IS_FILLED     ( 1 << REN_VDWEIGHT_PREC )
-#define REN_USED_PEL       g_uiIBDI_MAX
+#define REN_USED_PEL       ( (1 << g_bitDepthY) - 1 )
 #define REN_UNUSED_PEL     0
 #define REN_IS_HOLE        0
 
 
-typedef Int64 PicOrderCnt;
+// CAMERA PARAMETERS
+#define LOG2_DISP_PREC_LUT           2           ///< log2 of disparity precision used in integer disparity LUTs
+#define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
 
+#endif // end of H_3D
 //! \}
 
 #endif // end of #ifndef  __COMMONDEF__
