@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,11 +60,8 @@ private:
   UInt                m_uiMaxDepth;       ///< max. number of depth
   TComYuv**           m_ppcYuvResi;       ///< array of residual buffer
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
-#if H3D_IVRP & !QC_ARP_D0177
-  TComYuv**           m_ppcYuvResPred;    ///< residual prediction buffer
-#endif
   TComDataCU**        m_ppcCU;            ///< CU data array
-
+  
   // access channel
   TComTrQuant*        m_pcTrQuant;
   TComPrediction*     m_pcPrediction;
@@ -84,7 +81,7 @@ public:
   
   /// destroy internal buffers
   Void  destroy                 ();
-
+  
   /// decode CU information
   Void  decodeCU                ( TComDataCU* pcCU, UInt& ruiIsLast );
   
@@ -96,16 +93,15 @@ protected:
   Void xDecodeCU                ( TComDataCU* pcCU,                       UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
   Void xFinishDecodeCU          ( TComDataCU* pcCU,                       UInt uiAbsPartIdx, UInt uiDepth, UInt &ruiIsLast);
   Bool xDecodeSliceEnd          ( TComDataCU* pcCU,                       UInt uiAbsPartIdx, UInt uiDepth);
-  Void xDecompressCU            ( TComDataCU* pcCU, TComDataCU* pcCUCur,  UInt uiAbsPartIdx, UInt uiDepth );
+  Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
-  Void xReconInter              ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
   
-  Void  xReconIntraQT           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void  xReconIntraQT           ( TComDataCU* pcCU, UInt uiDepth );
   Void  xIntraRecLumaBlk        ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );
   Void  xIntraRecChromaBlk      ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv, UInt uiChromaId );
-  Void  xIntraRecQT             ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );
   
-  Void  xReconPCM               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void  xReconPCM               ( TComDataCU* pcCU, UInt uiDepth );
 
   Void xDecodeInterTexture      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void xDecodePCMTexture        ( TComDataCU* pcCU, UInt uiPartIdx, Pel *piPCM, Pel* piReco, UInt uiStride, UInt uiWidth, UInt uiHeight, TextType ttText);
@@ -117,20 +113,7 @@ protected:
 
   Bool getdQPFlag               ()                        { return m_bDecodeDQP;        }
   Void setdQPFlag               ( Bool b )                { m_bDecodeDQP = b;           }
-#if LOSSLESS_CODING 
-  Void xFillPCMBuffer           (TComDataCU* pCU, UInt absPartIdx, UInt depth);
-#endif
-#if RWTH_SDC_DLT_B0036
-  Void  xAnalyzeSegmentsSDC       ( Pel* pOrig,
-                                   UInt uiStride,
-                                   UInt uiSize,
-                                   Pel* rpSegMeans,
-                                   UInt uiNumSegments,
-                                   Bool* pMask,
-                                   UInt uiMaskStride );
-  
-  Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
+  Void xFillPCMBuffer           (TComDataCU* pCU, UInt depth);
 };
 
 //! \}
