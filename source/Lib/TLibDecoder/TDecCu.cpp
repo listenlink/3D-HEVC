@@ -268,7 +268,42 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     setdQPFlag(true);
     pcCU->setQPSubParts( pcCU->getRefQP(uiAbsPartIdx), uiAbsPartIdx, uiDepth ); // set QP to default QP
   }
+#if H_3D_NBDV 
+  DisInfo DvInfo; 
+  DvInfo.bDV = false;
+  DvInfo.m_acNBDV.setZero();
+  DvInfo.m_aVIdxCan = 0;
+#if H_3D_NBDV_REF  
+  DvInfo.m_acDoNBDV.setZero();
+#endif
+ 
+ 
+  if(!pcCU->getSlice()->isIntra())
+  {
+    if(pcCU->getSlice()->getViewIndex() && !pcCU->getSlice()->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
+    {
+      m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, true );
+      m_ppcCU[uiDepth]->copyDVInfoFrom( pcCU, uiAbsPartIdx);
+      PartSize ePartTemp = m_ppcCU[uiDepth]->getPartitionSize(0);
+      UChar cWidTemp     = m_ppcCU[uiDepth]->getWidth(0);
+      UChar cHeightTemp  = m_ppcCU[uiDepth]->getHeight(0);
+      m_ppcCU[uiDepth]->setWidth  ( 0, pcCU->getSlice()->getSPS()->getMaxCUWidth ()/(1<<uiDepth)  );
+      m_ppcCU[uiDepth]->setHeight ( 0, pcCU->getSlice()->getSPS()->getMaxCUHeight()/(1<<uiDepth)  );
+      m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+#if H_3D_NBDV_REF
+      if(pcCU->getSlice()->getSPS()->getUseDVPRefine())  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
+        DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo, true);
+      else
+#endif
+        DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo);
 
+      pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
+      m_ppcCU[uiDepth]->setPartSizeSubParts( ePartTemp, 0, uiDepth );
+      m_ppcCU[uiDepth]->setWidth  ( 0, cWidTemp );
+      m_ppcCU[uiDepth]->setHeight ( 0, cHeightTemp );
+     }
+  }
+#endif
   if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
   {
     m_pcEntropyDecoder->decodeCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );

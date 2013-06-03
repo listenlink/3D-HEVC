@@ -77,6 +77,17 @@
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
                                               // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
                                               // LGE_WVSO_A0119
+#define H_3D_NBDV                         1   // Neighboring block disparity derivation 
+                                              // JCT3V-A0097 
+                                              // LGE_DVMCP_A0126
+                                              // LGE_DVMCP_MEM_REDUCTION_B0135     
+                                              // QC_SIMPLE_NBDV_B0047
+                                              // FIX_LGE_DVMCP_B0133
+                                              // QC_NBDV_LDB_FIX_C0055
+                                              // MTK_SAIT_TEMPORAL_FIRST_ORDER_C0141_C0097
+                                              // MTK_SIMPLIFY_DVTC_C0135           
+                                              // QC_CU_NBDV_D0181
+                                              // SEC_DEFAULT_DV_D0112
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -91,7 +102,15 @@
 #define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
 #endif
-
+////   ****** Neighbouring block-based Disparity Vector  *********
+#if H_3D_NBDV
+#define IDV_CANDS                         6
+#define DVFROM_LEFTBELOW                  1
+#define DVFROM_LEFT                       2
+#define DVFROM_ABOVERIGHT                 3
+#define DVFROM_ABOVE                      4
+#define DVFROM_ABOVELEFT                  5
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

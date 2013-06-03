@@ -95,6 +95,11 @@ private:
   Int**                 m_aaiCodedOffset;
 #endif
 #endif
+#if H_3D_NBDV
+  UInt        m_uiRapRefIdx;
+  RefPicList  m_eRapRefList;
+  Int         m_iNumDdvCandPics;
+#endif
 public:
   TComPic();
   virtual ~TComPic();
@@ -192,6 +197,15 @@ public:
 
 #if H_MV
   Void          print( Bool legend );
+#endif
+#if H_3D_NBDV
+  Int           getNumDdvCandPics()                    {return m_iNumDdvCandPics;   }
+  Int           getDisCandRefPictures(Int iColPOC);
+  Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
+  Void          setRapRefList(RefPicList eRefPicList)  {m_eRapRefList = eRefPicList;}
+  Void          setNumDdvCandPics (Int i)              {m_iNumDdvCandPics = i;       }
+  UInt          getRapRefIdx()                         {return m_uiRapRefIdx;       }
+  RefPicList    getRapRefList()                        {return m_eRapRefList;       }
 #endif
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }

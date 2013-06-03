@@ -456,7 +456,34 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       fRD_Skip    = MAX_DOUBLE;
 
       rpcTempCU->initEstData( uiDepth, iQP );
+#if H_3D_NBDV
+      DisInfo DvInfo; 
+      DvInfo.bDV = false;
+      DvInfo.m_acNBDV.setZero();
+      DvInfo.m_aVIdxCan = 0;
+#if H_3D_NBDV_REF
+      DvInfo.m_acDoNBDV.setZero();
+#endif
 
+      if( rpcTempCU->getSlice()->getSliceType() != I_SLICE )
+      {
+        if(rpcTempCU->getSlice()->getViewIndex() && !rpcTempCU->getSlice()->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done. Remove this comment once it is done.
+        {
+          PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
+          rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+#if H_3D_NBDV_REF
+          if(m_pcSlice->getSPS()->getUseDVPRefine())  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
+            DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
+          else
+#endif 
+            DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo);
+
+          rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
+          rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
+        }
+      }
+#endif
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
