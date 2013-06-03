@@ -57,6 +57,25 @@ typedef struct _AMVPInfo
   Int    iN;                                ///< number of motion vector predictor candidates
 } AMVPInfo;
 
+#if H_3D_NBDV
+typedef struct _DisCand 
+{
+  Bool bDV;
+  TComMv m_acNBDV;              // DV from NBDV
+#if H_3D_NBDV_REF 
+  TComMv m_acDoNBDV;            // DV from DoNBDV
+#endif  
+  Int    m_aVIdxCan;            // View order index (the same with the NBDV and the DoNBDV)
+} DisInfo;
+
+typedef struct _IDVCand // IDV
+{
+  TComMv m_acMvCand[2][ IDV_CANDS ];            
+  Int    m_aVIdxCan[2][ IDV_CANDS ];            
+  Bool   m_bAvailab[2][ IDV_CANDS ];
+  Bool   m_bFound;                                
+} IDVInfo;
+#endif
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================

@@ -53,7 +53,11 @@ class TComMv
 private:
   Short m_iHor;     ///< horizontal component of motion vector
   Short m_iVer;     ///< vertical component of motion vector
-  
+#if H_3D_NBDV
+  Bool  m_bIDV;       
+  Short m_iIDVHor;    
+  Short m_iIDVVer;   
+#endif
 public:
   
   // ------------------------------------------------------------------------------------------------------------------
@@ -63,12 +67,22 @@ public:
   TComMv() :
   m_iHor(0),
   m_iVer(0)
+#if H_3D_NBDV
+  , m_bIDV(false)
+  , m_iIDVHor(0)
+  , m_iIDVVer(0)
+#endif
   {
   }
   
   TComMv( Short iHor, Short iVer ) :
   m_iHor(iHor),
   m_iVer(iVer)
+ #if H_3D_NBDV
+  , m_bIDV(false)
+  , m_iIDVHor(0)
+  , m_iIDVVer(0)
+#endif
   {
   }
   
@@ -80,7 +94,11 @@ public:
   Void  setHor    ( Short i )                   { m_iHor = i;                               }
   Void  setVer    ( Short i )                   { m_iVer = i;                               }
   Void  setZero   ()                            { m_iHor = m_iVer = 0;  }
-  
+#if H_3D_NBDV
+  Void   setIDVHor  (Short i)                    {m_iIDVHor = i;}
+  Void   setIDVVer  (Short i)                    {m_iIDVVer = i;}
+  Void   setIDVFlag (Bool b )                    {m_bIDV    = b;}
+#endif
   // ------------------------------------------------------------------------------------------------------------------
   // get
   // ------------------------------------------------------------------------------------------------------------------
@@ -89,7 +107,11 @@ public:
   Int   getVer    () const { return m_iVer;          }
   Int   getAbsHor () const { return abs( m_iHor );   }
   Int   getAbsVer () const { return abs( m_iVer );   }
-  
+#if H_3D_NBDV
+  Short getIDVHor () const { return m_iIDVHor;       }
+  Short getIDVVer () const { return m_iIDVVer;       }
+  Bool  getIDVFlag() const { return m_bIDV;          }
+#endif
   // ------------------------------------------------------------------------------------------------------------------
   // operations
   // ------------------------------------------------------------------------------------------------------------------

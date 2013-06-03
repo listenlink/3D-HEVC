@@ -186,7 +186,9 @@ private:
   Char*         m_apiMVPIdx[2];       ///< array of motion vector predictor candidates
   Char*         m_apiMVPNum[2];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
-
+#if H_3D_NBDV
+  DisInfo*      m_pDvInfo;
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -240,9 +242,15 @@ public:
   Void          initEstData           ( UInt uiDepth, Int qp );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
-
+#if H_3D_NBDV
+  Void          copyDVInfoFrom (TComDataCU* pcCU, UInt uiAbsPartIdx);
+#endif
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
-  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList );
+  Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList
+#if H_3D_NBDV
+  , Bool bNBDV = false
+#endif
+  );
   Void          copyPartFrom          ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth );
   
   Void          copyToPic             ( UChar uiDepth );
@@ -390,7 +398,11 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
-
+#if H_3D_NBDV
+  Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
+  DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                 }
+  DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];          }
+#endif
   /// get slice ID for SU
   Int           getSUSliceID          (UInt uiIdx)              {return m_piSliceSUMap[uiIdx];      } 
 
@@ -405,6 +417,22 @@ public:
                                           ,std::vector<Bool>& LFCrossSliceBoundary
                                           ,Bool bTopTileBoundary, Bool bDownTileBoundary, Bool bLeftTileBoundary, Bool bRightTileBoundary
                                           ,Bool bIndependentTileBoundaryEnabled );
+#if H_3D_NBDV
+  Void          xDeriveRightBottomNbIdx(Int &uiLCUIdxRBNb, Int &uiPartIdxRBNb );
+  Bool          xCheckSpatialNBDV (TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, IDVInfo* paMvpDvInfo,
+                                   UInt uiMvpDvPos
+#if H_3D_NBDV_REF
+  , Bool bDepthRefine = false
+#endif
+  );
+  Bool          xGetColDisMV      ( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+  Bool          getDisMvpCandNBDV ( DisInfo* pDInfo
+#if H_3D_NBDV_REF
+   , Bool bDepthRefine = false
+#endif
+   ); 
+   
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------

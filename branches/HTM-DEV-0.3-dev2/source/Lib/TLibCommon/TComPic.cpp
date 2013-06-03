@@ -76,6 +76,11 @@ TComPic::TComPic()
 {
   m_apcPicYuv[0]      = NULL;
   m_apcPicYuv[1]      = NULL;
+#if H_3D_NBDV
+  m_iNumDdvCandPics   = 0;
+  m_eRapRefList       = REF_PIC_LIST_0;
+  m_uiRapRefIdx       = 0;
+#endif
 }
 
 TComPic::~TComPic()
@@ -552,4 +557,71 @@ TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Boo
 }
 #endif // H_3D
 #endif // H_MV
+#if H_3D_NBDV 
+Int TComPic::getDisCandRefPictures(Int iColPOC)
+{
+  UInt uiTempLayerCurr=7;
+  TComSlice* currSlice = getSlice(getCurrSliceIdx());
+  UInt NumDdvCandPics = 0;
+  if ( !currSlice->getEnableTMVPFlag() )
+    return NumDdvCandPics;
+  NumDdvCandPics +=1;
+
+  UInt iPOCCurr=currSlice->getPOC();
+  UInt iPOCDiff = 255;
+  Bool bCheck = false;
+
+  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr ++)
+  {
+    UInt X = lpNr? currSlice->getColFromL0Flag() : 1-currSlice->getColFromL0Flag();
+    for (UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(X)); i++)
+    {
+      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)X, i)->getViewIndex() 
+        && (X == currSlice->getColFromL0Flag()||currSlice->getRefPOC((RefPicList)X, i)!= iColPOC) && NumDdvCandPics!=2)
+      {
+        TComSlice* refSlice = currSlice->getRefPic((RefPicList)X, i)->getSlice(getCurrSliceIdx());
+        Bool bRAP = (refSlice->getViewIndex() && refSlice->isIRAP())? 1: 0; 
+        UInt uiTempLayer = currSlice->getRefPic((RefPicList)X, i)->getSlice(getCurrSliceIdx())->getTLayer(); 
+        Int iTempPoc = currSlice->getRefPic((RefPicList)X, i)->getPOC();
+        Int iTempDiff = (iTempPoc > iPOCCurr) ? (iTempPoc - iPOCCurr): (iPOCCurr - iTempPoc);
+        if(bRAP)
+        {
+          this->setRapRefIdx(i);
+          this->setRapRefList((RefPicList)X);
+          NumDdvCandPics = 2;
+          return NumDdvCandPics;
+        }
+        else if (uiTempLayerCurr > uiTempLayer) 
+           uiTempLayerCurr = uiTempLayer; 
+      }
+    }
+  }
+  UInt Z;
+  UInt idx=0;
+  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr ++)
+  {
+    UInt X = lpNr? currSlice->getColFromL0Flag() : 1-currSlice->getColFromL0Flag();
+    for (UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(X)); i++)
+    {
+      Int iTempPoc = currSlice->getRefPic((RefPicList)X, i)->getPOC();
+      Int iTempDiff = (iTempPoc > iPOCCurr) ? (iTempPoc - iPOCCurr): (iPOCCurr - iTempPoc);
+      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)X, i)->getViewIndex() &&  (X == currSlice->getColFromL0Flag()||currSlice->getRefPOC((RefPicList)X, i)!= iColPOC) 
+        && currSlice->getRefPic((RefPicList)X, i)->getSlice(getCurrSliceIdx())->getTLayer() == uiTempLayerCurr && iPOCDiff > iTempDiff)
+      {
+        iPOCDiff=iTempDiff;
+        Z=X;
+        idx = i;
+      }
+    }
+  }
+  if(iPOCDiff<255)
+  {
+    this->setRapRefIdx(idx);
+    this->setRapRefList((RefPicList)Z);
+    NumDdvCandPics = 2;
+  }
+
+  return NumDdvCandPics;
+}
+#endif
 //! \}
