@@ -3984,7 +3984,6 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           clipMv(cColMv);
           pDInfo->m_acNBDV = cColMv;
           pDInfo->m_aVIdxCan  = iTargetViewIdx;
-          TComPic* picDepth = NULL;
 
 #if H_3D_NBDV_REF
           /*Place DoNBDV*/ 
@@ -4089,7 +4088,6 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     }
   }
 
-  TComPic* picDepth = NULL;
   TComMv defaultDV(0, 0);
   pDInfo->m_acNBDV = defaultDV;
   pDInfo->m_aVIdxCan = 0;
@@ -4124,7 +4122,6 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
           clipMv(cMvPred);
           pNbDvInfo->m_acNBDV = cMvPred;
           pNbDvInfo->m_aVIdxCan = refViewIdx;
-          TComPic* picDepth = NULL;
 #if H_3D_NBDV_REF
           /*Place DoNBDV*/
           
