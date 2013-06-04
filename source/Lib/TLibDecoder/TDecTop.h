@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,27 +43,27 @@
 #include "TLibCommon/TComPicYuv.h"
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComTrQuant.h"
-#include "TLibCommon/TComDepthMapGenerator.h"
 #include "TLibCommon/SEI.h"
 
 #include "TDecGop.h"
 #include "TDecEntropy.h"
 #include "TDecSbac.h"
 #include "TDecCAVLC.h"
+#include "SEIread.h"
 
 struct InputNALUnit;
 
 //! \ingroup TLibDecoder
 //! \{
 
-#define APS_RESERVED_BUFFER_SIZE 2 //!< must be equal to or larger than 2 to handle bitstream parsing
-
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
 
+#if H_MV
 class TAppDecTop;
-
+#endif
+#if H_3D
 class CamParsCollector
 {
 public:
@@ -74,11 +74,9 @@ public:
   Void  uninit      ();
   Void  setSlice    ( TComSlice* pcSlice );
 
-  Bool  isInitialized() const { return m_bInitialized; }
-
-#if MERL_VSP_C0152
+  Bool  isInitialized() const     { return m_bInitialized; }
   Int**** getBaseViewShiftLUTI()  { return m_aiBaseViewShiftLUT;   }
-#endif
+
 private:
   Bool  xIsComplete ();
   Void  xOutput     ( Int iPOC );
@@ -89,21 +87,21 @@ private:
 
   Int**   m_aaiCodedOffset;
   Int**   m_aaiCodedScale;
-  Int*    m_aiViewOrderIndex;
-#if QC_MVHEVC_B0046
-  Int*    m_aiViewId;
-#endif
-  Int*    m_aiViewReceived;
+  Int*    m_aiViewId;  
+  Int*    m_aiLayerIdx;
+
+  Bool*   m_bViewReceived;
   UInt    m_uiCamParsCodedPrecision;
   Bool    m_bCamParsVaryOverTime;
-  Int     m_iLastViewId;
+  Int     m_iLastViewIndex;
   Int     m_iLastPOC;
-  UInt    m_uiMaxViewId;
+  UInt    m_uiMaxViewIndex;
 
-#if MERL_VSP_C0152
+
   UInt    m_uiBitDepthForLUT;
   UInt    m_iLog2Precision;
   UInt    m_uiInputBitDepth;
+
   // look-up tables
   Double****   m_adBaseViewShiftLUT;       ///< Disparity LUT
   Int****      m_aiBaseViewShiftLUT;       ///< Disparity LUT
@@ -112,11 +110,9 @@ private:
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 );
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize1, UInt uiSize2 );
   template<class T> Void  xDeleteArray  ( T*& rpt, UInt uiSize );
-#endif
 
 };
 
-#if MERL_VSP_C0152
 template <class T>
 Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize1, UInt uiSize2, UInt uiSize3 )
 {
@@ -173,27 +169,26 @@ Void CamParsCollector::xDeleteArray( T*& rpt, UInt uiSize )
   rpt = NULL;
 };
 
-#endif
-
+#endif //H_3D
 /// decoder class
 class TDecTop
 {
 private:
-  Int                     m_iGopSize;
-  Bool                    m_bGopSizeSet;
-  int                     m_iMaxRefPicNum;
+  Int                     m_iMaxRefPicNum;
   
-  Bool                    m_bRefreshPending;    ///< refresh pending flag
   Int                     m_pocCRA;            ///< POC number of the latest CRA picture
+  Bool                    m_prevRAPisBLA;      ///< true if the previous RAP (CRA/CRANT/BLA/BLANT/IDR) picture is a BLA/BLANT picture
   Int                     m_pocRandomAccess;   ///< POC number of the random access point (the first IDR or CRA picture)
 
-  UInt                    m_uiValidPS;
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
+#if H_MV
+  static ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
+#else
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
-  TComRPSList             m_RPSList;
+#endif
   TComSlice*              m_apcSlicePilot;
   
-  SEImessages *m_SEIs; ///< "all" SEI messages.  If not NULL, we own the object.
+  SEIMessages             m_SEIs; ///< List of SEI messages that have been received before the first slice and between slices
 
   // functional classes
   TComPrediction          m_cPrediction;
@@ -205,30 +200,29 @@ private:
   TDecCavlc               m_cCavlcDecoder;
   TDecSbac                m_cSbacDecoder;
   TDecBinCABAC            m_cBinCABAC;
+  SEIReader               m_seiReader;
   TComLoopFilter          m_cLoopFilter;
-  TComAdaptiveLoopFilter  m_cAdaptiveLoopFilter;
   TComSampleAdaptiveOffset m_cSAO;
 
-#if DEPTH_MAP_GENERATION
-  TComDepthMapGenerator   m_cDepthMapGenerator;
-#endif
-#if H3D_IVRP & !QC_ARP_D0177
-  TComResidualGenerator   m_cResidualGenerator;
-#endif
-
+  Bool isSkipPictureForBLA(Int& iPOCLastDisplay);
   Bool isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay);
   TComPic*                m_pcPic;
   UInt                    m_uiSliceIdx;
-  UInt                    m_uiLastSliceIdx;
   Int                     m_prevPOC;
   Bool                    m_bFirstSliceInPicture;
   Bool                    m_bFirstSliceInSequence;
-
+#if H_MV
+  // For H_MV m_bFirstSliceInSequence indicates first slice in sequence of the particular layer  
+  Int                     m_layerId;
   Int                     m_viewId;
+  TComPicLists*           m_ivPicLists;
+  std::vector<TComPic*>   m_refPicSetInterLayer; 
+#if H_3D
+  Int                     m_viewIndex; 
   Bool                    m_isDepth;
-  TAppDecTop*             m_tAppDecTop;
   CamParsCollector*       m_pcCamParsCollector;
-  NalUnitType             m_nalUnitTypeBaseView;  
+#endif
+#endif
 
 public:
   TDecTop();
@@ -237,60 +231,57 @@ public:
   Void  create  ();
   Void  destroy ();
 
-  void setPictureDigestEnabled(bool enabled) { m_cGopDecoder.setPictureDigestEnabled(enabled); }
-  
-  Void  init( TAppDecTop* pcTAppDecTop, Bool bFirstInstance );
+  void setDecodedPictureHashSEIEnabled(Int enabled) { m_cGopDecoder.setDecodedPictureHashSEIEnabled(enabled); }
+
+  Void  init();
+#if H_MV  
+  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer );
+#else  
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
+#endif
   
   Void  deletePicBuffer();
-#if QC_MVHEVC_B0046
-  Void      xCopySPS( TComSPS* pSPSV0);
-  Void      xCopyPPS( TComPPS* pPPSV0);
-  Void      xCopyVPS( TComVPS* pVPSV0);
+
+#if H_MV
+  Void endPicDecoding(Int& poc, TComList<TComPic*>*& rpcListPic,  std::vector<Int>& targetDecLayerIdSet);  
+#else
+  Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
 #endif
-#if H3D_IVRP
-  Void      deleteExtraPicBuffers   ( Int iPoc );
+  
+#if H_MV    
+  TComPic*                getPic                ( Int poc );
+  TComList<TComPic*>*     getListPic            ()               { return &m_cListPic;  }  
+  Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
+  
+  Int                     getCurrPoc            ()               { return m_apcSlicePilot->getPOC(); }
+  Void                    setLayerId            ( Int layer)     { m_layerId = layer;   }
+  Int                     getLayerId            ()               { return m_layerId;    }
+  Void                    setViewId             ( Int viewId  )  { m_viewId  = viewId;  }
+  Int                     getViewId             ()               { return m_viewId;     }  
+#if H_3D    
+  Void                    setViewIndex          ( Int viewIndex  )  { m_viewIndex  = viewIndex;  }
+  Int                     getViewIndex          ()               { return m_viewIndex;     }  
+  Void                    setIsDepth            ( Bool isDepth ) { m_isDepth = isDepth; }
+  Bool                    getIsDepth            ()               { return m_isDepth;    }
+  Void                    setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
 #endif
-  Void  compressMotion       ( Int iPoc );
-
-  Void executeDeblockAndAlf(UInt& ruiPOC, TComList<TComPic*>*& rpcListPic, Int& iSkipFrame,  Int& iPOCLastDisplay);
-
-  Void setViewId(Int viewId)      { m_viewId = viewId;}
-  Int  getViewId()                { return m_viewId  ;}
-  Void setIsDepth( Bool isDepth ) { m_isDepth = isDepth; }
-
-#if DEPTH_MAP_GENERATION
-  TComDepthMapGenerator*  getDepthMapGenerator  () { return &m_cDepthMapGenerator; }
 #endif
-
-  Void setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
-
-  TComList<TComPic*>* getListPic()                              { return &m_cListPic; }
-  Void                setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
-  TAppDecTop*         getTAppDecTop()                           { return  m_tAppDecTop; }
-  NalUnitType         getNalUnitTypeBaseView()                  { return m_nalUnitTypeBaseView; }
-#if QC_MVHEVC_B0046
-  bool                m_bFirstNal; //used to copy SPS, PPS, VPS
-  ParameterSetManagerDecoder* xGetParaSetDec ()        {return  &m_parameterSetManagerDecoder;}
-#endif
-
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);
-  Void  xUpdateGopSize    (TComSlice* pcSlice);
   Void  xCreateLostPicture (Int iLostPOC);
 
-  Void      decodeAPS( TComAPS* cAPS) { m_cEntropyDecoder.decodeAPS(cAPS); };
   Void      xActivateParameterSets();
+#if H_MV  
+  TComPic*  xGetPic( Int layerId, Int poc ); 
+  Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag );  
+#else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  Void      xDecodeVPS();
 #endif
+  Void      xDecodeVPS();
   Void      xDecodeSPS();
   Void      xDecodePPS();
-  Void      xDecodeAPS();
-  Void      xDecodeSEI();
+  Void      xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType );
 
-  Void      allocAPS (TComAPS* pAPS); //!< memory allocation for APS
 };// END CLASS DEFINITION TDecTop
 
 

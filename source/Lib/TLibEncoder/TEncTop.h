@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,8 +43,6 @@
 #include "TLibCommon/TComPrediction.h"
 #include "TLibCommon/TComTrQuant.h"
 #include "TLibCommon/AccessUnit.h"
-#include "TLibCommon/TComDepthMapGenerator.h"
-#include "../TLibCommon/TComResidualGenerator.h"
 
 #include "TLibVideoIO/TVideoIOYuv.h"
 
@@ -55,18 +53,15 @@
 #include "TEncCavlc.h"
 #include "TEncSbac.h"
 #include "TEncSearch.h"
-#include "TEncAdaptiveLoopFilter.h"
 #include "TEncSampleAdaptiveOffset.h"
 #include "TEncPreanalyzer.h"
-
+#include "TEncRateCtrl.h"
 //! \ingroup TLibEncoder
 //! \{
 
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-
-class TAppEncTop;
 
 /// encoder class
 class TEncTop : public TEncCfg
@@ -78,6 +73,9 @@ private:
   UInt                    m_uiNumAllPicCoded;             ///< number of coded pictures
   TComList<TComPic*>      m_cListPic;                     ///< dynamic list of pictures
   
+#if H_MV
+  TComPicLists*           m_ivPicLists;                   ///< access to picture lists of other layers 
+#endif
   // encoder search
   TEncSearch              m_cSearch;                      ///< encoder search class
   TEncEntropy*            m_pcEntropyCoder;                     ///< entropy encoder 
@@ -86,7 +84,6 @@ private:
   TComTrQuant             m_cTrQuant;                     ///< transform & quantization class
   TComLoopFilter          m_cLoopFilter;                  ///< deblocking filter class
   TEncSampleAdaptiveOffset m_cEncSAO;                     ///< sample adaptive offset class
-  TEncAdaptiveLoopFilter  m_cAdaptiveLoopFilter;          ///< adaptive loop filter class
   TEncEntropy             m_cEntropyCoder;                ///< entropy encoder
   TEncCavlc               m_cCavlcCoder;                  ///< CAVLC encoder
   TEncSbac                m_cSbacCoder;                   ///< SBAC encoder
@@ -98,19 +95,9 @@ private:
   TEncGOP                 m_cGOPEncoder;                  ///< GOP encoder
   TEncSlice               m_cSliceEncoder;                ///< slice encoder
   TEncCu                  m_cCuEncoder;                   ///< CU encoder
- 
-#if DEPTH_MAP_GENERATION
-  TComDepthMapGenerator   m_cDepthMapGenerator;           ///< depth map generator
-#endif
-#if H3D_IVRP & !QC_ARP_D0177
-  TComResidualGenerator   m_cResidualGenerator;           ///< generator for residual pictures
-#endif
   // SPS
   TComSPS                 m_cSPS;                         ///< SPS
   TComPPS                 m_cPPS;                         ///< PPS
-  std::vector<TComAPS>    m_vAPS;  //!< APS container
-  TComRPSList             m_RPSList;                         ///< RPS
-  
   // RD cost computation
   TComBitCounter          m_cBitCounter;                  ///< bit counter for RD optimization
   TComRdCost              m_cRdCost;                      ///< RD cost computation class
@@ -135,15 +122,14 @@ private:
   TEncPreanalyzer         m_cPreanalyzer;                 ///< image characteristics analyzer for TM5-step3-like adaptive QP
 
   TComScalingList         m_scalingList;                 ///< quantization matrix information
-
-  std::vector<TEncTop*>*  m_pacTEncTopList;
-  TAppEncTop*             m_pcTAppEncTop;
-
+  TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
+  
+#if H_MV
   TEncAnalyze             m_cAnalyzeAll;
   TEncAnalyze             m_cAnalyzeI;
   TEncAnalyze             m_cAnalyzeP;
-  TEncAnalyze             m_cAnalyzeB;
-
+  TEncAnalyze             m_cAnalyzeB;  
+#endif
 protected:
   Void  xGetNewPicBuffer  ( TComPic*& rpcPic );           ///< get picture buffer which will be processed
   Void  xInitSPS          ();                             ///< initialize SPS from encoder options
@@ -151,7 +137,6 @@ protected:
   
   Void  xInitPPSforTiles  ();
   Void  xInitRPS          ();                             ///< initialize PPS from encoder options
-  Void  xInitSPSforInterViewRefs();
 
 public:
   TEncTop();
@@ -159,29 +144,17 @@ public:
   
   Void      create          ();
   Void      destroy         ();
-  Void      init            ( TAppEncTop* pcTAppEncTop );
-  Void      deletePicBuffer ();
-
-  UInt      getFrameId          (Int iGOPid)  {
-    if(m_iPOCLast == 0)
-    {
-      return(0 );
-    }
-    else
-    {
-      return m_iPOCLast -m_iNumPicRcvd+ getGOPEntry(iGOPid).m_POC ;
-    }
-  }
-#if HHI_INTERVIEW_SKIP || H3D_IVMP || H3D_IVRP
-  Void      deleteExtraPicBuffers   ( Int iPoc );
+  Void      init            ();
+#if H_MV  
+  TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
-
-  Void      compressMotion          ( Int iPoc );
-
-  Void      initNewPic(TComPicYuv* pcPicYuvOrg, TComPicYuv* pcOrgPdmDepth = 0);
+  Void      deletePicBuffer ();
 
   Void      createWPPCoders(Int iNumSubstreams);
   
+#if H_MV
+  Void      initNewPic(TComPicYuv* pcPicYuvOrg);
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member access functions
   // -------------------------------------------------------------------------------------------------------------------
@@ -191,7 +164,6 @@ public:
   
   TComTrQuant*            getTrQuant            () { return  &m_cTrQuant;             }
   TComLoopFilter*         getLoopFilter         () { return  &m_cLoopFilter;          }
-  TEncAdaptiveLoopFilter* getAdaptiveLoopFilter () { return  &m_cAdaptiveLoopFilter;  }
   TEncSampleAdaptiveOffset* getSAO              () { return  &m_cEncSAO;              }
   TEncGOP*                getGOPEncoder         () { return  &m_cGOPEncoder;          }
   TEncSlice*              getSliceEncoder       () { return  &m_cSliceEncoder;        }
@@ -211,39 +183,48 @@ public:
   TComRdCost*             getRdCosts            () { return  m_pcRdCosts;             }
   TEncSbac****            getRDSbacCoders       () { return  m_ppppcRDSbacCoders;     }
   TEncSbac*               getRDGoOnSbacCoders   () { return  m_pcRDGoOnSbacCoders;   }
-  
-  Void                    setTEncTopList        ( std::vector<TEncTop*>* pacTEncTopList );
-  TAppEncTop*             getEncTop             () { return m_pcTAppEncTop; }
-  Int                     getNumAllPicCoded     () { return m_uiNumAllPicCoded; }
-  Void                    printOutSummary       ( UInt uiNumAllPicCoded );
-
+  TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
-  std::vector<TComAPS>&   getAPS                () { return m_vAPS; }
-  TComRPSList*            getRPSList            () { return  &m_RPSList;                 }
-  
-  Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid,TComList<TComPic*>& listPic );
+  Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
+#if L0208_SOP_DESCRIPTION_SEI
+  Int getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid );
+#endif
   TComScalingList*        getScalingList        () { return  &m_scalingList;         }
-  
+#if H_MV
   TEncAnalyze*            getAnalyzeAll         () { return &m_cAnalyzeAll; }
   TEncAnalyze*            getAnalyzeI           () { return &m_cAnalyzeI;   }
   TEncAnalyze*            getAnalyzeP           () { return &m_cAnalyzeP;   }
   TEncAnalyze*            getAnalyzeB           () { return &m_cAnalyzeB;   }
 
-#if DEPTH_MAP_GENERATION
-  TComDepthMapGenerator*  getDepthMapGenerator  () { return  &m_cDepthMapGenerator;   }
+  Int                     getNumAllPicCoded     () { return m_uiNumAllPicCoded; }
+ 
+  Int                     getFrameId            (Int iGOPid);
+  
+  TComPic*                getPic                ( Int poc );
+  Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
 #endif
-#if H3D_IVRP & !QC_ARP_D0177
-  TComResidualGenerator*  getResidualGenerator  () { return  &m_cResidualGenerator;   }
-#endif
-
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------
 
   /// encode several number of pictures until end-of-sequence
-  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
-              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, Int gopId );
+#if H_MV
+  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded  , Int gopId  );  
+#else
+  Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );  
+#endif
+
+#if H_MV
+  Void printSummary      ( Int numAllPicCoded ); 
+#else
+  void printSummary() { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded); } 
+#endif
+
+#if H_3D
+   Void setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset );
+#endif
 };
 
 //! \}
