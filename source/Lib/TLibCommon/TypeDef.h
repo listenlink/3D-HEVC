@@ -241,6 +241,7 @@
 #define VSP_MERGE_POS                        5 // JCT3V-C0152: fixed position of VSP candidate in merge list, supported values: 5.
 #endif                                               // MTK_DVPREFINE_BVSP_BUG_FIX               1
 #define MTK_DEPTH_TO_DISP_D0138              1 // JCT3V-D0138: Use max among four corners for DoNBDV and BVSP
+#define NCKU_BUG_FIX                         1 // NCKU bug fix on MTK_DEPTH_TO_DISP_D0138
 
 #if MERL_General_Fix
 #define MTK_LGE_VSP_DEPTH_OFF_D0105_D0139    1 // JCT3V-D0105/JCT3V-D0139: disable VSP for depth map
