@@ -260,7 +260,11 @@ protected:
 #else
                                     UInt&        ruiDist,
 #endif
-                                    Int         default0Save1Load2 = 0);
+                                    Int         default0Save1Load2 = 0
+#if H_3D_DIM_ENC
+                                  , Bool          zeroResi = false
+#endif
+                                    );
   Void  xIntraCodingChromaBlk     ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
@@ -287,7 +291,11 @@ protected:
 #if HHI_RQT_INTRA_SPEEDUP
                                    Bool         bCheckFirst,
 #endif
-                                   Double&      dRDCost );
+                                   Double&      dRDCost
+#if H_3D_DIM_ENC
+                                   , Bool          zeroResi = false
+#endif
+                                   );
   
   Void  xSetIntraResultQT         ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,

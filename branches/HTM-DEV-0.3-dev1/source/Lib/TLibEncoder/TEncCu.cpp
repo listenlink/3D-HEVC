@@ -519,6 +519,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     }
 #endif
 
+#if H_3D_DIM_ENC
+    if( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() )
+    {
+      earlyDetectionSkipMode = false;
+    }
+#endif
+
     if(!earlyDetectionSkipMode)
     {
       for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
@@ -681,13 +688,21 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
 
         // do normal intra modes
+#if H_3D_DIM_ENC
+        if ( !bEarlySkip || ( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() ) )
+#else
         if ( !bEarlySkip )
+#endif
         {
           // speedup for inter frames
           if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
             rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
             rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
-            rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     ) // avoid very complex intra if it is unlikely
+              rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     
+#if H_3D_DIM_ENC
+            || ( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() )
+#endif
+            ) // avoid very complex intra if it is unlikely
           {
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
             rpcTempCU->initEstData( uiDepth, iQP );
