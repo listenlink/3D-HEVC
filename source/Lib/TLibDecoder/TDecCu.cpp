@@ -467,7 +467,18 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
                                      bAboveAvail, bLeftAvail );
   
   //===== get prediction signal =====
+#if H_3D_DIM
+  if( isDimMode( uiLumaPredMode ) )
+  {
+    m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight );
+  }
+  else
+  {
+#endif
   m_pcPrediction->predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
+#if H_3D_DIM
+  }
+#endif
   
   //===== inverse transform =====
   m_pcTrQuant->setQPforQuant  ( pcCU->getQP(0), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
@@ -555,6 +566,9 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
     if( uiChromaPredMode == DM_CHROMA_IDX )
     {
       uiChromaPredMode = pcCU->getLumaIntraDir( 0 );
+#if H_3D_DIM
+      mapDepthModeToIntraDir( uiChromaPredMode );
+#endif
     }
     m_pcPrediction->predIntraChromaAng( pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );  
   }

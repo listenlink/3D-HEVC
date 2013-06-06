@@ -119,6 +119,11 @@ Void TAppEncTop::xInitLibCfg()
   xSetDimensionIdAndLength ( vps );
   xSetDirectDependencyFlags( vps );
 #if H_3D
+  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+  {
+    vps.setVpsDepthModesFlag( layer, ((vps.getDepthId( layer ) != 0) && (m_useDMM || m_useRBC || m_useSDC || m_useDLT)) ? true : false );
+  }
+
   vps.initViewIndex(); 
   m_ivPicLists.setVPS      ( &vps ); 
 #endif
@@ -165,6 +170,14 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
+
+  //========== Depth intra modes ==========
+#if H_3D_DIM
+    m_cTEncTop.setUseDMM                       ( isDepth ? m_useDMM               : false );
+    m_cTEncTop.setUseRBC                       ( isDepth ? m_useRBC               : false );
+    m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
+    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
+#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
@@ -542,6 +555,9 @@ Void TAppEncTop::xCreateLib()
 #if H_MV
   // initialize global variables
   initROM();
+#if H_3D_DIM_DMM
+  initWedgeLists( true );
+#endif
 
   for( Int layer=0; layer < m_numberOfLayers; layer++)
   {

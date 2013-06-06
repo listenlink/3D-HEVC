@@ -404,6 +404,12 @@ protected:
   // Ren Model String
   TRenModSetupStrParser       m_cRenModStrParser;
 #endif
+#if H_3D_DIM
+  Bool      m_useDMM;                                        ///< flag for using DMM
+  Bool      m_useRBC;                                        ///< flag for using RBC
+  Bool      m_useSDC;                                        ///< flag for using SDC
+  Bool      m_useDLT;                                        ///< flag for using DLT
+#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables

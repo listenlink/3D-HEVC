@@ -393,6 +393,14 @@ protected:
   // SAIT_VSO_EST_A0033
   Bool      m_bUseEstimatedVSD; 
   Double    m_dDispCoeff;
+
+  //====== Depth Intra Modes ======
+#if H_3D_DIM
+  Bool      m_useDMM;
+  Bool      m_useRBC;
+  Bool      m_useSDC;
+  Bool      m_useDLT;
+#endif
 #endif
 
 public:
@@ -925,6 +933,18 @@ public:
   Double    getDispCoeff                    ()              { return m_dDispCoeff;    }
   Void      setDispCoeff                    ( Double  d )   { m_dDispCoeff  = d; }
 #endif // H_3D_VSO
+
+ //==== DIM  ==========
+#if H_3D_DIM
+  Bool      getUseDMM                       ()        { return m_useDMM; }
+  Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
+  Bool      getUseRBC                       ()        { return m_useRBC; }
+  Void      setUseRBC                       ( Bool b) { m_useRBC = b;    }
+  Bool      getUseSDC                       ()        { return m_useSDC; }
+  Void      setUseSDC                       ( Bool b) { m_useSDC = b;    }
+  Bool      getUseDLT                       ()        { return m_useDLT; }
+  Void      setUseDLT                       ( Bool b) { m_useDLT = b;    }
+#endif
 #endif // H_3D
 };
 
