@@ -388,6 +388,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id")
 #if H_3D
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
+#if H_3D_DIM
+  ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
+  ("RBC",                   m_useRBC,           true,  "Region boundary chain mode")
+  ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
+  ("DLT",                   m_useDLT,           true,  "Depth lookup table")
+#endif
 #endif
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
   ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
@@ -2276,6 +2282,12 @@ Void TAppEncCfg::xPrintParameter()
 #if H_3D_VSO
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
+#endif
+#if H_3D_DIM
+  printf("DMM:%d ", m_useDMM );
+  printf("RBC:%d ", m_useRBC );
+  printf("SDC:%d ", m_useSDC );
+  printf("DLT:%d ", m_useDLT );
 #endif
   printf("\n\n");  
 

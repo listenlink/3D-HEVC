@@ -72,6 +72,9 @@ TComSlice::TComSlice()
 , m_pcSPS                         ( NULL )
 , m_pcPPS                         ( NULL )
 , m_pcPic                         ( NULL )
+#if H_3D
+, m_picLists                      ( NULL )
+#endif
 , m_colFromL0Flag                 ( 1 )
 , m_colRefIdx                     ( 0 )
 #if SAO_CHROMA_LAMBDA
@@ -912,7 +915,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_iLastIDR             = pSrc->m_iLastIDR;
 
   m_pcPic                = pSrc->m_pcPic;
-
+#if H_3D
+  m_picLists             = pSrc->m_picLists;
+#endif
   m_colFromL0Flag        = pSrc->m_colFromL0Flag;
   m_colRefIdx            = pSrc->m_colRefIdx;
 #if SAO_CHROMA_LAMBDA 
@@ -1473,6 +1478,7 @@ TComVPS::TComVPS()
     m_numDirectRefLayers[i] = 0; 
 #if H_3D
     m_viewIndex         [i] = -1; 
+    m_vpsDepthModesFlag [i] = false;
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )

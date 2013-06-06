@@ -165,6 +165,7 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComSlice.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComTrQuant.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComWedgelet.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComWeightPrediction.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComYuv.cpp" />
   </ItemGroup>
@@ -198,6 +199,7 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComSlice.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComTrQuant.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComWedgelet.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComWeightPrediction.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComYuv.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TypeDef.h" />

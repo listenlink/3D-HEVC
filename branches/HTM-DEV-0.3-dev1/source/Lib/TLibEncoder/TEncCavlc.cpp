@@ -740,7 +740,22 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       WRITE_FLAG( pcVPS->getDirectDependencyFlag( i, j ),    "direct_dependency_flag[i][j]" );
     }
   }
+
+#if H_3D
+  WRITE_FLAG( 1,                                             "vps_extension2_flag" );
+
+  m_pcBitIf->writeAlignOne();                        
+  
+  for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )
+  {
+    if( pcVPS->getDepthId( i ) )
+    {
+      WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ),          "vps_depth_modes_flag[i]" );
+    }
+  }
+#else
   WRITE_FLAG( 0,                                             "vps_extension2_flag" );
+#endif
 #else
   WRITE_FLAG( 0,                     "vps_extension_flag" );
 #endif

@@ -952,10 +952,22 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     READ_FLAG( uiCode,  "vps_extension2_flag" );
     if (uiCode)
     {
+#if H_3D
+      m_pcBitstream->readOutTrailingBits();
+
+      for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )
+      {
+        if( pcVPS->getDepthId( i ) )
+        {
+          READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
+        }
+      }
+#else
       while ( xMoreRbspData() )
       {
         READ_FLAG( uiCode, "vps_extension2_data_flag");
       }
+#endif
     }
 
     pcVPS->checkVPSExtensionSyntax(); 

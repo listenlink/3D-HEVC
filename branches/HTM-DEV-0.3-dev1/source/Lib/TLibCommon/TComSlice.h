@@ -523,6 +523,7 @@ private:
   Int         m_dimensionId              [MAX_NUM_LAYER_IDS][MAX_NUM_SCALABILITY_TYPES];  
 #if H_3D
   Int         m_viewIndex                [MAX_NUM_LAYERS   ];
+  Bool        m_vpsDepthModesFlag        [MAX_NUM_LAYERS   ];
 #endif
 
   
@@ -641,6 +642,9 @@ public:
   Int     getViewIndex    ( Int layerIdInVps )                             { return m_viewIndex[ layerIdInVps ]; }    
   Int     getDepthId      ( Int layerIdInVps )                             { return getScalabilityId( layerIdInVps, DEPTH_ID ); }
   Int     getLayerIdInNuh( Int viewIndex, Bool depthFlag );  
+
+  Void    setVpsDepthModesFlag( Int layerIdInVps, Bool val )               { m_vpsDepthModesFlag[ layerIdInVps ] = val; }
+  Bool    getVpsDepthModesFlag( Int layerIdInVps )                         { return m_vpsDepthModesFlag[ layerIdInVps ]; }
 #endif
 
 
@@ -1423,6 +1427,9 @@ private:
   TComSPS*    m_pcSPS;
   TComPPS*    m_pcPPS;
   TComPic*    m_pcPic;
+#if H_3D
+  TComPicLists* m_picLists;
+#endif
 #if ADAPTIVE_QP_SELECTION
   TComTrQuant* m_pcTrQuant;
 #endif  
@@ -1541,6 +1548,9 @@ public:
 
   Int       getNumRefIdx        ( RefPicList e )                { return  m_aiNumRefIdx[e];             }
   TComPic*  getPic              ()                              { return  m_pcPic;                      }
+#if H_3D
+  TComPicLists* getPicLists     ()                              { return m_picLists; }
+#endif
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
   Int       getDepth            ()                              { return  m_iDepth;                     }
@@ -1595,6 +1605,9 @@ public:
   Void      setRefPOC           ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefPOCList[e][iRefIdx] = i; }
   Void      setNumRefIdx        ( RefPicList e, Int i )         { m_aiNumRefIdx[e]    = i;      }
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
+#if H_3D
+  Void      setPicLists         ( TComPicLists* p )             { m_picLists          = p;      }
+#endif
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
   
 #if H_MV
@@ -1755,6 +1768,8 @@ public:
   Int*      getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int*      getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+
+  Bool      getVpsDepthModesFlag  ()  { return getVPS()->getVpsDepthModesFlag( getVPS()->getLayerIdInVps( m_layerId ) ); }
 #endif
 #endif
 protected:

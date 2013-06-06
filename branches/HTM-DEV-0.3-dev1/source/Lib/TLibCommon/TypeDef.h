@@ -77,6 +77,16 @@
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
                                               // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
                                               // LGE_WVSO_A0119
+#define H_3D_DIM                          1   // DIM, Depth intra modes, includes:
+                                              // HHI_DMM_WEDGE_INTRA
+                                              // HHI_DMM_PRED_TEX
+                                              // FIX_WEDGE_NOFLOAT_D0036
+                                              // LGE_EDGE_INTRA_A0070
+                                              // LGE_DMM3_SIMP_C0044
+                                              // QC_DC_PREDICTOR_D0183
+                                              // HHI_DELTADC_DLT_D0035
+                                              // PKU_QC_DEPTH_INTRA_UNI_D0195
+                                              // ... [PM: add SDC and DLT related]
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +100,14 @@
 #define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
 #define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
+#endif
+
+///// ***** DEPTH INTRA MODES *********
+#if H_3D_DIM
+#define H_3D_DIM_DMM                   1 // Depth Modeling Modes
+#define H_3D_DIM_RBC                   1 // Region Boundary Chain mode
+#define H_3D_DIM_SDC                   0 // Simplified Depth Coding method
+#define H_3D_DIM_DLT                   0 // Depth Lookup Table
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

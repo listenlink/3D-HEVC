@@ -82,6 +82,19 @@ TEncSbac::TEncSbac()
 , m_cSaoTypeIdxSCModel        ( 1,             1,               NUM_SAO_TYPE_IDX_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel     ( 1,             2,               NUM_TRANSFORMSKIP_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
 , m_CUTransquantBypassFlagSCModel( 1,          1,               NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX, m_contextModels + m_numContextModels, m_numContextModels)
+#if H_3D_DIM
+, m_cDepthIntraModeSCModel    ( 1,             1,               NUM_DEPTH_INTRA_MODE_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cDdcFlagSCModel           ( 1,             1,               NUM_DDC_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cDdcDataSCModel           ( 1,             1,               NUM_DDC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
+#if H_3D_DIM_DMM
+, m_cDmm1DataSCModel          ( 1,             1,               NUM_DMM1_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cDmm2DataSCModel          ( 1,             1,               NUM_DMM2_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cDmm3DataSCModel          ( 1,             1,               NUM_DMM3_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+#if H_3D_DIM_RBC
+, m_cRbcDataSCModel           ( 1,             1,               NUM_RBC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -133,6 +146,20 @@ Void TEncSbac::resetEntropy           ()
   m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cTransformSkipSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+
+#if H_3D_DIM
+  m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
+  m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
+  m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
+#if H_3D_DIM_DMM
+  m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
+  m_cDmm2DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM2_DATA );
+  m_cDmm3DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM3_DATA );
+#endif
+#if H_3D_DIM_RBC
+  m_cRbcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_RBC_DATA );
+#endif
+#endif
   // new structure
   m_uiLastQp = iQp;
   
@@ -187,6 +214,22 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cSaoTypeIdxSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_SAO_TYPE_IDX );
       curCost += m_cTransformSkipSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
       curCost += m_CUTransquantBypassFlagSCModel.calcCost( curSliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+#if H_3D_DIM
+    if( m_pcSlice->getVpsDepthModesFlag() )
+    {
+      curCost += m_cDepthIntraModeSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
+      curCost += m_cDdcFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_FLAG );
+      curCost += m_cDdcDataSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_DATA );
+#if H_3D_DIM_DMM
+      curCost += m_cDmm1DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM1_DATA );
+      curCost += m_cDmm2DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM2_DATA );
+      curCost += m_cDmm3DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM3_DATA );
+#endif
+#if H_3D_DIM_RBC
+      curCost += m_cRbcDataSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_RBC_DATA );
+#endif
+    }
+#endif
       if (curCost < bestCost)
       {
         bestSliceType = curSliceType;
@@ -236,6 +279,20 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cTransformSkipSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
+
+#if H_3D_DIM
+  m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
+  m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
+  m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
+#if H_3D_DIM_DMM
+  m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
+  m_cDmm2DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM2_DATA );
+  m_cDmm3DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM3_DATA );
+#endif
+#if H_3D_DIM_RBC
+  m_cRbcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_RBC_DATA );
+#endif
+#endif
   m_pcBinIf->start();
 }
 
@@ -378,6 +435,132 @@ Void TEncSbac::xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam )
   }
 }
 
+#if H_3D_DIM
+Void TEncSbac::xWriteExGolombLevel( UInt uiSymbol, ContextModel& rcSCModel  )
+{
+  if( uiSymbol )
+  {
+    m_pcBinIf->encodeBin( 1, rcSCModel );
+    UInt uiCount = 0;
+    Bool bNoExGo = (uiSymbol < 13);
+
+    while( --uiSymbol && ++uiCount < 13 )
+    {
+      m_pcBinIf->encodeBin( 1, rcSCModel );
+    }
+    if( bNoExGo )
+    {
+      m_pcBinIf->encodeBin( 0, rcSCModel );
+    }
+    else
+    {
+      xWriteEpExGolomb( uiSymbol, 0 );
+    }
+  }
+  else
+  {
+    m_pcBinIf->encodeBin( 0, rcSCModel );
+  }
+
+  return;
+}
+
+Void TEncSbac::xCodeDimDeltaDC( Pel valDeltaDC, UInt dimType )
+{
+  xWriteExGolombLevel( UInt( abs( valDeltaDC ) ), m_cDdcDataSCModel.get(0, 0, (RBC_IDX == dimType) ? 1 : 0) );
+  if( valDeltaDC != 0 )
+  {
+    UInt uiSign = valDeltaDC > 0 ? 0 : 1;
+    m_pcBinIf->encodeBinEP( uiSign );
+  }
+}
+
+#if H_3D_DIM_DMM
+Void TEncSbac::xCodeDmm1WedgeIdx( UInt uiTabIdx, Int iNumBit )
+{
+  for ( Int i = 0; i < iNumBit; i++ )
+  {
+    m_pcBinIf->encodeBin( ( uiTabIdx >> i ) & 1, m_cDmm1DataSCModel.get(0, 0, 0) );
+  }
+}
+
+Void TEncSbac::xCodeDmm2Offset( Int iOffset )
+{
+  if( DMM2_DELTAEND_MAX > 0 )
+  {
+    m_pcBinIf->encodeBin( (iOffset != 0) , m_cDmm2DataSCModel.get(0, 0, 0) );
+    if( iOffset != 0 )
+    {
+      UInt uiAbsValMinus1 = abs(iOffset)-1;
+      m_pcBinIf->encodeBin( (uiAbsValMinus1 & 0x01),      m_cDmm2DataSCModel.get(0, 0, 0) );
+      m_pcBinIf->encodeBin( (uiAbsValMinus1 & 0x02) >> 1, m_cDmm2DataSCModel.get(0, 0, 0) );
+
+      UInt uiSign = (iOffset > 0) ? 0 : 1;
+      m_pcBinIf->encodeBinEP( uiSign );
+    }
+  }
+}
+
+Void TEncSbac::xCodeDmm3WedgeIdx( UInt uiIntraIdx, Int iNumBit )
+{
+  for( Int i = 0; i < iNumBit; i++ )
+  {
+    m_pcBinIf->encodeBin( ( uiIntraIdx >> i ) & 1, m_cDmm3DataSCModel.get(0, 0, 0) );
+  }
+}
+#endif
+#if H_3D_DIM_RBC
+Void TEncSbac::xCodeRbcEdge( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  UInt   uiDepth        = pcCU->getDepth( uiAbsPartIdx ) + (pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 1 : 0);
+  UChar* pucSymbolList  = pcCU->getEdgeCode     ( uiAbsPartIdx );
+  UChar  ucEdgeNumber   = pcCU->getEdgeNumber   ( uiAbsPartIdx );
+  Bool   bLeft          = pcCU->getEdgeLeftFirst( uiAbsPartIdx );
+  UChar  ucStart        = pcCU->getEdgeStartPos ( uiAbsPartIdx );
+  UInt   uiSymbol;
+
+  // 1. Top(0) or Left(1)
+  uiSymbol = (bLeft == false) ? 0 : 1;
+  m_pcBinIf->encodeBinEP( uiSymbol );
+
+  // 2. Start position (lowest bit first)
+  uiSymbol = ucStart;
+  for( UInt ui = 6; ui > uiDepth; ui-- ) // 64(0)->6, 32(1)->5, 16(2)->4, 8(3)->3, 4(4)->2
+  {
+    m_pcBinIf->encodeBinEP( uiSymbol & 0x1 );
+    uiSymbol >>= 1;
+  }
+
+  // 3. Number of edges
+  uiSymbol = ucEdgeNumber > 0 ? ucEdgeNumber - 1 : 0;
+  for( UInt ui = 7; ui > uiDepth; ui-- ) // 64(0)->7, 32(1)->6, 16(2)->5, 8(3)->4, 4(4)->3
+  {
+    m_pcBinIf->encodeBinEP( uiSymbol & 0x1 );
+    uiSymbol >>= 1;
+  }
+
+  if(uiSymbol != 0)
+  {
+    printf(" ucEdgeNumber %d at depth %d\n",ucEdgeNumber, uiDepth);
+    assert(false);
+  }
+
+  // 4. Edges
+  for( Int iPtr2 = 0; iPtr2 < ucEdgeNumber; iPtr2++ )
+  {
+    UInt uiReorderSymbol = pucSymbolList[iPtr2];
+    for( UInt ui = 0; ui < uiReorderSymbol; ui++ )
+    {
+      m_pcBinIf->encodeBin( 1, m_cRbcDataSCModel.get( 0, 0, 0 ) );
+    }
+
+    if( uiReorderSymbol != 6 )
+      m_pcBinIf->encodeBin( 0, m_cRbcDataSCModel.get( 0, 0, 0 ) );
+  }
+}
+#endif
+#endif
+
 // SBAC RD
 Void  TEncSbac::load ( TEncSbac* pSrc)
 {
@@ -390,7 +573,15 @@ Void  TEncSbac::loadIntraDirModeLuma( TEncSbac* pSrc)
   
   this->m_cCUIntraPredSCModel      .copyFrom( &pSrc->m_cCUIntraPredSCModel       );
 }
+#if H_3D_DIM
+Void TEncSbac::loadIntraDepthMode( TEncSbac* pSrc)
+{
+  m_pcBinIf->copyState( pSrc->m_pcBinIf );
 
+  this->m_cDepthIntraModeSCModel .copyFrom( &pSrc->m_cDepthIntraModeSCModel );
+  this->m_cDdcFlagSCModel        .copyFrom( &pSrc->m_cDdcFlagSCModel );
+}
+#endif
 
 Void  TEncSbac::store( TEncSbac* pDest)
 {
@@ -627,6 +818,17 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
   for (j=0;j<partNum;j++)
   {
     dir[j] = pcCU->getLumaIntraDir( absPartIdx+partOffset*j );
+#if H_3D_DIM
+    if( pcCU->getSlice()->getVpsDepthModesFlag() )
+    {
+      codeIntraDepth( pcCU, absPartIdx+partOffset*j );
+    }
+    if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
+#if H_3D_DIM_SDC
+      if( !pcCU->getSDCFlag( absPartIdx+partOffset*j ) )
+#endif
+    {
+#endif
     predNum[j] = pcCU->getIntraDirLumaPredictor(absPartIdx+partOffset*j, preds[j]);  
     for(UInt i = 0; i < predNum[j]; i++)
     {
@@ -636,9 +838,19 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
       }
     }
     m_pcBinIf->encodeBin((predIdx[j] != -1)? 1 : 0, m_cCUIntraPredSCModel.get( 0, 0, 0 ) );
+#if H_3D_DIM
+    }
+#endif
   }  
   for (j=0;j<partNum;j++)
   {
+#if H_3D_DIM
+    if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
+#if H_3D_DIM_SDC
+      if( !pcCU->getSDCFlag( absPartIdx+partOffset*j ) )
+#endif
+    {
+#endif
     if(predIdx[j] != -1)
     {
       m_pcBinIf->encodeBinEP( predIdx[j] ? 1 : 0 );
@@ -667,6 +879,9 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
       }
       m_pcBinIf->encodeBinsEP( dir[j], 5 );
     }
+#if H_3D_DIM
+    }
+#endif
   }
   return;
 }
@@ -698,6 +913,121 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
   return;
 }
+
+#if H_3D_DIM
+Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx, Bool sdcRD )
+{
+  codeIntraDepthMode( pcCU, absPartIdx );
+
+  UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
+  UInt dimType = getDimType( dir );
+
+  switch( dimType )
+  {
+#if H_3D_DIM_DMM
+  case( DMM1_IDX ):
+    {
+      xCodeDmm1WedgeIdx( pcCU->getDmmWedgeTabIdx( dimType, absPartIdx ), g_dmm1TabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
+    } break;
+  case( DMM2_IDX ):
+    {
+      xCodeDmm2Offset( pcCU->getDmm2DeltaEnd( absPartIdx ) );
+    } break;
+  case( DMM3_IDX ):
+    {
+      xCodeDmm3WedgeIdx( pcCU->getDmm3IntraTabIdx( absPartIdx ), g_dmm3IntraTabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
+    } break;
+  case( DMM4_IDX ): break;
+#endif
+#if H_3D_DIM_RBC
+  case( RBC_IDX ):
+    {
+      assert( pcCU->getWidth( absPartIdx ) < 64 );
+      xCodeRbcEdge( pcCU, absPartIdx );
+    } break;
+#endif
+  default: break;
+  }
+
+#if H_3D_DIM_SDC
+  if( pcCU->getSDCFlag( absPartIdx ) )
+  {
+  //  assert(pcCU->getPartitionSize(uiAbsPartIdx)==SIZE_2Nx2N);
+  //  UInt uiNumSegments = ( uiDir == DC_IDX || uiDir == PLANAR_IDX )? 1 : 2;
+  //  if(!bSdcRD)
+  //  {
+  //    for (int uiSeg=0; uiSeg<uiNumSegments; uiSeg++)
+  //    {
+  //      codeSDCResidualData(pcCU, uiAbsPartIdx, uiSeg);
+  //    }
+  //  }
+  }
+  else
+  {
+#endif
+    if( dimType < DIM_NUM_TYPE )
+    {
+      UInt dimDeltaDC = isDimDeltaDC( dir );
+      m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get(0, 0, (RBC_IDX == dimType) ? 1 : 0) );
+      if( dimDeltaDC ) 
+      {
+        for( UInt segment = 0; segment < 2; segment++ )
+        {
+          xCodeDimDeltaDC( pcCU->getDimDeltaDC( dimType, segment, absPartIdx ), dimType );
+        }
+      }
+    }
+#if H_3D_DIM_SDC
+  }
+#endif
+}
+
+Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
+{
+  UInt codeWordTable[3][9] =    {{0, 0, 0, 2, 0,6, 0, 0, 7},{0, 2, 3, 4, 5, 6, 14, 31, 30},{0, 2, 0, 0, 0, 0, 3, 0, 0}};
+  UInt codeWordLenTable[3][9] = {{0, 1, 0, 2, 0,3, 0, 0, 3},{2, 3, 3, 3, 3, 3,  4,  5,  5},{1, 2, 0, 0, 0, 0, 2, 0, 0}};
+  UInt dir = pcCU->getLumaIntraDir( absPartIdx );
+  UInt puIdx = (pcCU->getWidth(absPartIdx) == 64) ? 2 : ( (pcCU->getPartitionSize(absPartIdx) == SIZE_NxN && pcCU->getWidth(absPartIdx) == 8) ? 0 : 1 );
+  UInt codeIdx = 0;
+
+  if( dir < NUM_INTRA_MODE )
+  { 
+    codeIdx = 1; 
+  }
+  if( isDimMode( dir ) )
+  {
+    switch( getDimType( dir ) )
+    {
+    case DMM1_IDX: codeIdx = 3; break;
+    case DMM4_IDX: codeIdx = 4; break;
+    case DMM3_IDX: codeIdx = 5; break;
+    case DMM2_IDX: codeIdx = 7; break;
+    case  RBC_IDX: codeIdx = 8; break;
+    default:                    break;
+    }
+  }
+
+#if H_3D_DIM_SDC
+  if( pcCU->getSDCFlag( absPartIdx ) )
+  { 
+  //  switch( dir )
+  //  {
+  //  case PLANAR_IDX:              codeIdx = 0; break;
+  //  case DC_IDX:                  codeIdx = 6; break;
+  //  case (2*DMM1_IDX+DIM_OFFSET): codeIdx = 2; break;
+  //  default:                                   break;
+  //  }
+  }
+#endif
+  //mode coding
+  for( UInt i = 0; i < codeWordLenTable[puIdx][codeIdx]; i++ )
+  {
+    UInt bit = codeWordTable[puIdx][codeIdx] & ( 1<<(codeWordLenTable[puIdx][codeIdx] - i - 1) );
+    UInt ctxDepthMode = puIdx*3 + ( (i >= 2) ? 2 : i );
+    m_pcBinIf->encodeBin( bit!=0 , m_cDepthIntraModeSCModel.get(0, 0, ctxDepthMode) );
+  }
+}
+#endif
 
 Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

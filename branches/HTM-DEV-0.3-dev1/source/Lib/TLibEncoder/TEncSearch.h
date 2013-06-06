@@ -324,6 +324,27 @@ protected:
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
 
+
+  // -------------------------------------------------------------------------------------------------------------------
+  // Depth intra search
+  // -------------------------------------------------------------------------------------------------------------------
+#if H_3D_DIM
+  Void xCalcBiSegDCs              ( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2 );
+#if H_3D_DIM_DMM
+  Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
+  Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
+  Void xSearchDmm2Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd );
+  Void xSearchDmm3Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx );
+#endif
+#if H_3D_DIM_RBC
+  Void xSearchRbcDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
+  Bool xSearchRbcEdge             ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride,  Int  iWidth,  Int  iHeight );
+  
+  Bool xCheckTerminatedEdge       ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
+  Bool xConstructChainCode        ( TComDataCU* pcCU, UInt uiAbsPtIdx, UInt uiWidth, UInt uiHeight );
+#endif
+#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)
   // -------------------------------------------------------------------------------------------------------------------

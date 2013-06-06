@@ -672,6 +672,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
+#if H_3D
+    pcSlice->setPicLists( m_ivPicLists );
+#endif
 
     //  Slice info. refinement
 #if H_MV

@@ -96,6 +96,18 @@ private:
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam );
+#if H_3D_DIM
+  Void  xReadExGolombLevel   ( UInt& ruiSymbol, ContextModel& rcSCModel  );
+  Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt dimType );
+#if H_3D_DIM_DMM
+  Void  xParseDmm1WedgeIdx   ( UInt& ruiTabIdx, Int iNumBit );
+  Void  xParseDmm2Offset     ( Int& riOffset );
+  Void  xParseDmm3WedgeIdx   ( UInt& ruiIntraIdx, Int iNumBit );
+#endif
+#if H_3D_DIM_RBC
+  Void  xParseRbcEdge        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#endif
 private:
   TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
@@ -114,6 +126,11 @@ public:
   
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
+#if H_3D_DIM
+  Void parseIntraDepth     ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
+  Void parseIntraDepthMode ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
+#endif
+
   Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
@@ -170,6 +187,20 @@ private:
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
+
+#if H_3D_DIM
+  ContextModel3DBuffer m_cDepthIntraModeSCModel;
+  ContextModel3DBuffer m_cDdcFlagSCModel;
+  ContextModel3DBuffer m_cDdcDataSCModel;
+#if H_3D_DIM_DMM
+  ContextModel3DBuffer m_cDmm1DataSCModel;
+  ContextModel3DBuffer m_cDmm2DataSCModel;
+  ContextModel3DBuffer m_cDmm3DataSCModel;
+#endif
+#if H_3D_DIM_RBC
+  ContextModel3DBuffer m_cRbcDataSCModel;
+#endif
+#endif
 };
 
 //! \}
