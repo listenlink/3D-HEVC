@@ -104,10 +104,13 @@
 
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
-#define H_3D_DIM_DMM                   1 // Depth Modeling Modes
-#define H_3D_DIM_RBC                   1 // Region Boundary Chain mode
-#define H_3D_DIM_SDC                   0 // Simplified Depth Coding method
-#define H_3D_DIM_DLT                   0 // Depth Lookup Table
+#define H_3D_DIM_DMM                      1   // Depth Modeling Modes
+#define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
+#define H_3D_DIM_SDC                      0   // Simplified Depth Coding method
+#define H_3D_DIM_DLT                      0   // Depth Lookup Table
+#define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
+                                              // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+                                              // LG_ZEROINTRADEPTHRESI_A0087
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -1012,7 +1012,11 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
 #else
                                 UInt&       ruiDist,
 #endif
-                                Int        default0Save1Load2 )
+                                Int        default0Save1Load2 
+#if H_3D_DIM_ENC
+                                , Bool       zeroResi
+#endif
+                                )
 {
   UInt    uiLumaPredMode    = pcCU     ->getLumaIntraDir     ( uiAbsPartIdx );
   UInt    uiFullDepth       = pcCU     ->getDepth   ( 0 )  + uiTrDepth;
@@ -1098,6 +1102,15 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
     Pel*  pResi   = piResi;
     for( UInt uiY = 0; uiY < uiHeight; uiY++ )
     {
+#if H_3D_DIM_ENC
+      if( zeroResi )
+      {
+        memset( pResi, 0, sizeof( Pel ) * uiWidth );
+        pResi += uiStride;
+      }
+      else
+      {
+#endif
       for( UInt uiX = 0; uiX < uiWidth; uiX++ )
       {
         pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
@@ -1105,6 +1118,9 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
       pOrg  += uiStride;
       pResi += uiStride;
       pPred += uiStride;
+#if H_3D_DIM_ENC
+      }
+#endif
     }
   }
   
@@ -1403,7 +1419,11 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
 #if HHI_RQT_INTRA_SPEEDUP
                                 Bool         bCheckFirst,
 #endif
-                                Double&      dRDCost )
+                                Double&      dRDCost 
+#if H_3D_DIM_ENC
+                                , Bool        zeroResi
+#endif
+                                )
 {
   UInt    uiFullDepth   = pcCU->getDepth( 0 ) +  uiTrDepth;
   UInt    uiLog2TrSize  = g_aucConvertToBit[ pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiFullDepth ] + 2;
@@ -1513,7 +1533,11 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
           default0Save1Load2 = 2;
         }
         //----- code luma block with given intra prediction mode and store Cbf-----
+#if H_3D_DIM_ENC
+        xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, singleDistYTmp, default0Save1Load2, zeroResi );
+#else
         xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, singleDistYTmp,default0Save1Load2); 
+#endif
         singleCbfYTmp = pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth );
         //----- code chroma blocks with given intra prediction mode and store Cbf-----
         if( !bLumaOnly )
@@ -2743,6 +2767,10 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     Double  dBestPUCost   = MAX_DOUBLE;
     for( UInt uiMode = 0; uiMode < numModesForFullRD; uiMode++ )
     {
+#if H_3D_DIM_ENC
+      for( UInt testZeroResi = 0; testZeroResi <= ((pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->isIRAP()) ? 1 : 0 ); testZeroResi++ )
+      {
+#endif
       // set luma prediction mode
       UInt uiOrgMode = uiRdModeList[uiMode];
       
@@ -2769,9 +2797,17 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       }
 #endif
 #if HHI_RQT_INTRA_SPEEDUP
+#if H_3D_DIM_ENC
+      xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost, (testZeroResi != 0) );
+#else
       xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost );
+#endif
+#else
+#if H_3D_DIM_ENC
+      xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, dPUCost, (testZeroResi != 0) );
 #else
       xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, dPUCost );
+#endif
 #endif
       
       // check r-d cost
@@ -2802,6 +2838,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       {
         uiSecondBestMode  = uiOrgMode;
         dSecondBestPUCost = dPUCost;
+      }
+#endif
+#if H_3D_DIM_ENC
       }
 #endif
     } // Mode loop
@@ -6760,7 +6799,7 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
 #if H_3D_VSO
       if( m_pcRdCost->getUseVSO() )
       {
-        if( m_pcRdCost->getUseEstimatedVSD() )
+        if( m_pcRdCost->getUseEstimatedVSD() ) //PM: use VSO instead of VSD here?
         {
           uiActDist = m_pcRdCost->getDistPartVSD( pcCU, uiAbsPtIdx, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false );
         }
