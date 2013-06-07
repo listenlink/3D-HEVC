@@ -1909,14 +1909,23 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
 #else // MERL_VSP_BLOCKSIZE_C0152 == 4
             if (depthPosX + (i<<2) + blocki < widthDepth - 1)
 #endif
-              iX++;
+
+#if NCKU_BUG_FIX
+    iX = (MERL_VSP_BLOCKSIZE_C0152-1);
+#else
+    iX++;
+#endif
           }
 #if MERL_VSP_BLOCKSIZE_C0152 == 2
           if (depthPosY + (j<<1) + blockj < heightDepth - 1)
 #else // MERL_VSP_BLOCKSIZE_C0152 == 4
           if (depthPosY + (j<<2) + blockj < heightDepth - 1)
 #endif
-            depthTmp += depStride;
+#if NCKU_BUG_FIX
+    depthTmp += depStride * (MERL_VSP_BLOCKSIZE_C0152-1);
+#else
+    depthTmp += depStride;
+#endif 
         }
         m_pDepth[i+j*dW] = maxV;
       } // end of i < dW
@@ -2221,18 +2230,34 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
           depthTmp = depthi + (widthDepth - depthPosX - 1);
 #endif
         Int maxV = 0;
+#if NCKU_BUG_FIX
+        for (Int blockj = 0; blockj < sH; blockj+=(sH-1))
+#else
         for (Int blockj = 0; blockj < sH; blockj++)
+#endif
         {
           Int iX = 0;
+#if NCKU_BUG_FIX
+          for (Int blocki = 0; blocki < sW; blocki+=(sW-1))
+#else
           for (Int blocki = 0; blocki < sW; blocki++)
+#endif
           {
             if (maxV < depthTmp[iX])
               maxV = depthTmp[iX];
             if (depthPosX + i*sW + blocki < widthDepth - 1)
-              iX++;
+#if NCKU_BUG_FIX
+                iX = (sW-1);
+#else
+                iX++;
+#endif
           }
           if (depthPosY + j*sH + blockj < heightDepth - 1)
-            depthTmp += depStride;
+#if NCKU_BUG_FIX
+                depthTmp += depStride * (sH-1);
+#else
+                depthTmp += depStride;
+#endif
         }
         m_pDepth[i+j*dW] = maxV;
       } // end of i < dW
