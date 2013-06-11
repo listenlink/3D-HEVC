@@ -393,6 +393,11 @@ protected:
   // SAIT_VSO_EST_A0033
   Bool      m_bUseEstimatedVSD; 
   Double    m_dDispCoeff;
+
+#if H_3D_ARP
+  UInt      m_uiUseAdvResPred;
+  UInt      m_uiARPStepNum;
+#endif
 #endif
 
 public:
@@ -466,6 +471,15 @@ public:
 
   Bool      getMaxTempLayer                 ()                              { return m_maxTempLayer;              } 
   Void      setMaxTempLayer                 ( Int maxTempLayer )            { m_maxTempLayer = maxTempLayer;      }
+
+#if H_3D_ARP
+  UInt       getUseAdvRP                    ( )              { return m_uiUseAdvResPred; }
+  Void       setUseAdvRP                    ( UInt  u )      { m_uiUseAdvResPred = u;    }
+
+  UInt       getARPStepNum                  ()               { return m_uiARPStepNum;    }
+  Void       setARPStepNum                  ( UInt  u )      { m_uiARPStepNum = u;       }
+#endif
+
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }
   Void      setQuadtreeTULog2MinSize        ( UInt  u )      { m_uiQuadtreeTULog2MinSize = u; }

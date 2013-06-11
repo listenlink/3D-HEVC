@@ -121,6 +121,14 @@ Void TAppEncTop::xInitLibCfg()
 #if H_3D
   vps.initViewIndex(); 
   m_ivPicLists.setVPS      ( &vps ); 
+#if H_3D_ARP
+  for(Int i = 0; i < m_numberOfLayers; i++)
+  {
+    Bool isDepth = vps.getDepthId( i );
+    vps.setUseAdvRP        ( i, ( isDepth || 0==i ) ? 0 : m_uiUseAdvResPred );
+    vps.setARPStepNum      ( i, ( isDepth || 0==i ) ? 1 : H_3D_ARP_WFNR     );
+  }
+#endif
 #endif
 
   for(Int layer = 0; layer < m_numberOfLayers; layer++)
@@ -165,6 +173,11 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
+#if H_3D_ARP
+    //====== Advanced Inter-view Residual Prediction =========
+    m_cTEncTop.setUseAdvRP                     ( ( isDepth || 0==layer ) ? 0 : m_uiUseAdvResPred );
+    m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layer ) ? 1 : H_3D_ARP_WFNR     );
+#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
@@ -604,6 +617,9 @@ Void TAppEncTop::xInitLib()
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
     m_acTEncTopList[layer]->init( );
+#if H_3D_ARP
+    m_acTEncTopList[layer]->setTAppEncTop( this );
+#endif
   }
 #else
   m_cTEncTop.init();

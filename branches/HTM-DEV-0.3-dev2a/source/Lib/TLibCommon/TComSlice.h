@@ -523,6 +523,10 @@ private:
   Int         m_dimensionId              [MAX_NUM_LAYER_IDS][MAX_NUM_SCALABILITY_TYPES];  
 #if H_3D
   Int         m_viewIndex                [MAX_NUM_LAYERS   ];
+#if H_3D_ARP
+  UInt        m_uiUseAdvResPred          [MAX_NUM_LAYERS   ];
+  UInt        m_uiARPStepNum             [MAX_NUM_LAYERS   ];
+#endif
 #endif
 
   
@@ -641,6 +645,12 @@ public:
   Int     getViewIndex    ( Int layerIdInVps )                             { return m_viewIndex[ layerIdInVps ]; }    
   Int     getDepthId      ( Int layerIdInVps )                             { return getScalabilityId( layerIdInVps, DEPTH_ID ); }
   Int     getLayerIdInNuh( Int viewIndex, Bool depthFlag );  
+#if H_3D_ARP
+  UInt    getUseAdvRP  ( Int layerIdInVps )                                { return m_uiUseAdvResPred[layerIdInVps];    }
+  UInt    getARPStepNum( Int layerIdInVps )                                { return m_uiARPStepNum[layerIdInVps];       }
+  Void    setUseAdvRP  ( Int layerIdInVps, UInt val )                      { m_uiUseAdvResPred[layerIdInVps] = val;     }
+  Void    setARPStepNum( Int layerIdInVps, UInt val )                      { m_uiARPStepNum[layerIdInVps]    = val;     }
+#endif
 #endif
 
 
@@ -1485,6 +1495,10 @@ private:
   Bool       m_isDepth;
   Int        m_aaiCodedScale [2][MAX_NUM_LAYERS];
   Int        m_aaiCodedOffset[2][MAX_NUM_LAYERS];
+#if H_3D_ARP
+  TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
+  UInt                 m_nARPStepNum; 
+#endif
 #endif
 #endif
 public:
@@ -1610,6 +1624,14 @@ public:
   Void      setRefPicList       ( TComList<TComPic*>& rcListPic );
 #endif
 #endif
+
+#if H_3D_ARP
+  Void      setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic;                   }
+  Void      setARPStepNum();                                 
+  TComPic*  getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )                       { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
+  UInt      getARPStepNum( )                                                         { return m_nARPStepNum;                                         }  
+#endif
+
   Void      setRefPOCList       ();
   Void      setColFromL0Flag    ( UInt colFromL0 ) { m_colFromL0Flag = colFromL0; }
   Void      setColRefIdx        ( UInt refIdx) { m_colRefIdx = refIdx; }

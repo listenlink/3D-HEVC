@@ -740,6 +740,21 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       WRITE_FLAG( pcVPS->getDirectDependencyFlag( i, j ),    "direct_dependency_flag[i][j]" );
     }
   }
+
+#if H_3D_ARP
+  for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
+  {
+    if( ( layer!=0 ) && ( pcVPS->getDepthId(layer)!=1 ) )
+    {
+      WRITE_FLAG( pcVPS->getUseAdvRP ( layer ) ? 1 : 0,      "advanced_residual_pred_flag"  );
+    }
+    else
+    {
+      assert( pcVPS->getUseAdvRP ( layer ) == 0 );
+    }
+  }
+#endif
+
   WRITE_FLAG( 0,                                             "vps_extension2_flag" );
 #else
   WRITE_FLAG( 0,                     "vps_extension_flag" );
@@ -1347,6 +1362,13 @@ Void TEncCavlc::codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+#if H_3D_ARP
+Void TEncCavlc::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode )
 {

@@ -133,6 +133,9 @@ public:
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if H_3D_ARP
+  Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   
@@ -180,6 +183,9 @@ private:
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
+#if H_3D_ARP
+  ContextModel3DBuffer m_cCUPUARPW;
+#endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;

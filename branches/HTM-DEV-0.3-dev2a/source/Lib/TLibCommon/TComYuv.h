@@ -181,6 +181,20 @@ public:
   UInt    getCWidth   ()    { return  m_iCWidth;  }  
 #if H_3D
   Void addClipPartLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
+
+#if H_3D_ARP
+  Void    addARP           ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip );
+  Void    addARPLuma       ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip );
+  Void    addARPChroma     ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip );
+  Void    subtractARP      ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight );
+  Void    subtractARPLuma  ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight );
+  Void    subtractARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight );
+  Void    multiplyARP      ( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW );
+  Void    multiplyARPLuma  ( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW );
+  Void    multiplyARPChroma( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW );
+private:
+  Void    xxMultiplyLine( Pel * pSrcDst , UInt uiWidth , UChar dW );
+#endif
 #endif
 
 };// END CLASS DEFINITION TComYuv

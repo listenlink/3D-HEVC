@@ -280,7 +280,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
  
   if(!pcCU->getSlice()->isIntra())
   {
+#if H_3D_ARP
+    if( pcCU->getSlice()->getVPS()->getUseAdvRP( pcCU->getSlice()->getLayerId() ) )
+#else
     if(pcCU->getSlice()->getViewIndex() && !pcCU->getSlice()->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
+#endif
     {
       m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, true );
       m_ppcCU[uiDepth]->copyDVInfoFrom( pcCU, uiAbsPartIdx);
@@ -342,6 +346,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
       }
     }
+#if H_3D_ARP
+    m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth );
+#endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
     return;
   }
@@ -365,7 +372,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   
   // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-  
+#if H_3D_ARP
+  m_pcEntropyDecoder->decodeARPW    ( pcCU , uiAbsPartIdx , uiDepth );  
+#endif  
   // Coefficient decoding
   Bool bCodeDQP = getdQPFlag();
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );

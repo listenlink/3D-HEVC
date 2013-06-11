@@ -1485,6 +1485,11 @@ TComVPS::TComVPS()
     {
       m_dimensionId[i][j] = 0;
     }
+
+#if H_3D_ARP
+    m_uiUseAdvResPred[i]  = 0;
+    m_uiARPStepNum[i]     = 1;
+#endif
   }
 #endif
 }
@@ -2256,6 +2261,43 @@ Void TComSlice::xPrintRefPicList()
     }
   }
 }
+
+#if H_3D_ARP
+Void TComSlice::setARPStepNum()                                  
+{
+  Bool bAllIvRef = true;
+
+  if(!getVPS()->getUseAdvRP(getLayerId()))
+  {
+    m_nARPStepNum = 0;
+  }
+  else
+  {
+    for( Int iRefListId = 0; iRefListId < 2; iRefListId++ )
+    {
+      RefPicList  eRefPicList = RefPicList( iRefListId );
+      Int iNumRefIdx = getNumRefIdx(eRefPicList);
+      
+      if( iNumRefIdx <= 0 )
+      {
+        continue;
+      }
+
+      for ( Int i = 0; i < iNumRefIdx; i++ )
+      {
+        if( getRefPic( eRefPicList, i)->getPOC() != getPOC() )
+        {
+          bAllIvRef = false;
+          break;
+        }
+      }
+
+      if( bAllIvRef == false ) { break; }
+    }
+    m_nARPStepNum = !bAllIvRef ? getVPS()->getARPStepNum(getLayerId()) : 0;
+  }
+}
+#endif
 #endif
 /** get scaling matrix from RefMatrixID
  * \param sizeId size index

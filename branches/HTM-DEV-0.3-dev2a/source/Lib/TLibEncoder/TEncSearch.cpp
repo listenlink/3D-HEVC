@@ -4740,7 +4740,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, true );
-    
+#if H_3D_ARP
+    m_pcEntropyCoder->encodeARPW( pcCU, 0 );
+#endif
     uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
     pcCU->getTotalBits()       = uiBits;
     pcCU->getTotalDistortion() = uiDistortion;
@@ -6149,6 +6151,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, true);
+#if H_3D_ARP
+    m_pcEntropyCoder->encodeARPW( pcCU, 0 );
+#endif
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }
   else
@@ -6162,6 +6167,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if H_3D_ARP
+    m_pcEntropyCoder->encodeARPW( pcCU , 0 );
+#endif
     Bool bDummy = false;
     m_pcEntropyCoder->encodeCoeff   ( pcCU, 0, pcCU->getDepth(0), pcCU->getWidth(0), pcCU->getHeight(0), bDummy );
     

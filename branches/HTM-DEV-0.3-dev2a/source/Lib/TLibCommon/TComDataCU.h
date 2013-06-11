@@ -48,6 +48,10 @@
 #include "TComRdCost.h"
 #include "TComPattern.h"
 
+#if H_3D_ARP
+#include "TComYuv.h"
+#endif
+
 #include <algorithm>
 #include <vector>
 
@@ -189,6 +193,9 @@ private:
 #if H_3D_NBDV
   DisInfo*      m_pDvInfo;
 #endif
+#if H_3D_ARP
+  UChar*        m_puhARPW;
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -219,8 +226,10 @@ protected:
   UInt          xGetComponentBits     ( Int iVal );
   
   /// compute scaling factor from POC difference
+#if !H_3D_ARP
   Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
-  
+#endif
+
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
 
 public:
@@ -230,7 +239,9 @@ public:
   // -------------------------------------------------------------------------------------------------------------------
   // create / destroy / initialize / copy
   // -------------------------------------------------------------------------------------------------------------------
-  
+#if H_3D_ARP
+  Int           xGetDistScaleFactor   ( Int iCurrPOC, Int iCurrRefPOC, Int iColPOC, Int iColRefPOC );
+#endif 
   Void          create                ( UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool bDecSubCu, Int unitSize
 #if ADAPTIVE_QP_SELECTION
     , Bool bGlobalRMARLBuffer = false
@@ -433,6 +444,14 @@ public:
    ); 
    
 #endif
+
+#if H_3D_ARP
+  UChar*        getARPW            ()                        { return m_puhARPW;               }
+  UChar         getARPW            ( UInt uiIdx )            { return m_puhARPW[uiIdx];        }
+  Void          setARPW            ( UInt uiIdx, UChar w )   { m_puhARPW[uiIdx] = w;           }
+  Void          setARPWSubParts    ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
+  Double        getARPWFactor      ( UInt uiIdx );
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------
@@ -538,6 +557,10 @@ public:
   UInt          getCtxSkipFlag                  ( UInt   uiAbsPartIdx                                 );
   UInt          getCtxInterDir                  ( UInt   uiAbsPartIdx                                 );
   
+#if H_3D_ARP
+  UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
+#endif  
+
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
   UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }

@@ -90,6 +90,10 @@ public:
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
  
+#if H_3D_ARP
+  TDecTop* getTDecTop     ( Int layerId )          { return m_tDecTop[layerId]; }
+#endif
+
 protected:
   Void  xCreateDecLib     (); ///< create internal classes
   Void  xDestroyDecLib    (); ///< destroy internal classes

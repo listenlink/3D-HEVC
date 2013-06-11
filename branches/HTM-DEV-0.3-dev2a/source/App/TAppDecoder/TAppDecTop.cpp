@@ -646,6 +646,9 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
 #if H_3D
    m_tDecTop[ decIdx ]->setCamParsCollector( &m_cCamParsCollector );
+#if H_3D_ARP
+    m_tDecTop[ decIdx ]->setTAppDecTop(this);
+#endif
 #endif
 
     // append pic list of new decoder to PicLists 

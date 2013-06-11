@@ -63,6 +63,10 @@
 // Class definition
 // ====================================================================================================================
 
+#if H_3D_ARP
+class TAppEncTop;
+#endif
+
 /// encoder class
 class TEncTop : public TEncCfg
 {
@@ -123,7 +127,11 @@ private:
 
   TComScalingList         m_scalingList;                 ///< quantization matrix information
   TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
-  
+
+#if H_3D_ARP
+  TAppEncTop*             m_pcTAppEncTop;
+#endif
+
 #if H_MV
   TEncAnalyze             m_cAnalyzeAll;
   TEncAnalyze             m_cAnalyzeI;
@@ -203,6 +211,10 @@ public:
   
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
+#endif
+#if H_3D_ARP
+  Void            setTAppEncTop( TAppEncTop* pcTAppEncTop ) { m_pcTAppEncTop = pcTAppEncTop; }
+  TAppEncTop*     getTAppEncTop()                           { return  m_pcTAppEncTop; }
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function

@@ -86,6 +86,25 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
+#if H_3D_ARP
+Void TDecEntropy::decodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if( !pcCU->getSlice()->getARPStepNum() || pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    return;
+  }
+
+  if( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )
+  {
+    pcCU->setARPWSubParts( 0 , uiAbsPartIdx, uiDepth );
+  }
+  else
+  {
+    m_pcEntropyDecoderIf->parseARPW( pcCU , uiAbsPartIdx , uiDepth );
+  }
+}
+#endif
+
 Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseSplitFlag( pcCU, uiAbsPartIdx, uiDepth );

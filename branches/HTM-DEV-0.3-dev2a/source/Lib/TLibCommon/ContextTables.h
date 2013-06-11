@@ -94,6 +94,11 @@
 
 #define NUM_TRANSFORMSKIP_FLAG_CTX    1       ///< number of context models for transform skipping 
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
+
+#if H_3D_ARP
+#define NUM_ARPW_CTX                  4       ///< number of context models for weighting factor index used by advanced residual prediction
+#endif
+
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 // ====================================================================================================================
@@ -333,6 +338,16 @@ INIT_TRANSFORMSKIP_FLAG[3][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
   { 139,  139}, 
   { 139,  139}, 
 };
+
+#if H_3D_ARP
+static const UChar 
+INIT_ARPW[3][NUM_ARPW_CTX] = 
+{
+  { 154, 154, 154, 154 }, 
+  { 154, 154, 154, 154 }, 
+  { 154, 154, 154, 154 }, 
+};
+#endif
 //! \}
 
 
