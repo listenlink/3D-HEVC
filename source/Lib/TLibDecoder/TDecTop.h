@@ -224,6 +224,10 @@ private:
 #endif
 #endif
 
+#if H_3D_ARP
+  TAppDecTop*             m_tAppDecTop;
+#endif
+
 public:
   TDecTop();
   virtual ~TDecTop();
@@ -264,6 +268,11 @@ public:
   Void                    setIsDepth            ( Bool isDepth ) { m_isDepth = isDepth; }
   Bool                    getIsDepth            ()               { return m_isDepth;    }
   Void                    setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
+
+#if H_3D_ARP
+  Void                    setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
+  TAppDecTop*             getTAppDecTop()                           { return  m_tAppDecTop; }
+#endif
 #endif
 #endif
 protected:

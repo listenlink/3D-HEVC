@@ -88,6 +88,8 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
+
+#define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -114,6 +116,12 @@
 #define DVFROM_ABOVE                      4
 #define DVFROM_ABOVELEFT                  5
 #endif
+
+///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
+#if H_3D_ARP
+#define H_3D_ARP_WFNR                     3
+#endif
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

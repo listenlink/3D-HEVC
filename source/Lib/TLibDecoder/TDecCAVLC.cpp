@@ -949,6 +949,23 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       }
     }
     
+#if H_3D_ARP
+    for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
+    {
+      if( ( layer!=0 ) && ( pcVPS->getDepthId(layer)!=1 ) )
+      {
+        READ_FLAG( uiCode, "advanced_residual_pred_flag"  );
+        pcVPS->setUseAdvRP  ( layer, uiCode );
+        pcVPS->setARPStepNum( layer, uiCode ? H_3D_ARP_WFNR : 1 );
+      }
+      else
+      {
+        pcVPS->setUseAdvRP  ( layer, 0 );
+        pcVPS->setARPStepNum( layer, 1 );
+      }
+    }
+#endif
+
     READ_FLAG( uiCode,  "vps_extension2_flag" );
     if (uiCode)
     {
@@ -1858,6 +1875,13 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* /*pcCU*/, UInt& /*ruiMergeIndex*/ 
 {
   assert(0);
 }
+
+#if H_3D_ARP
+Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
 
 // ====================================================================================================================
 // Protected member functions

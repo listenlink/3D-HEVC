@@ -504,6 +504,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DeblockingFilterMetric",         m_DeblockingFilterMetric,         false )
 #endif
 
+#if H_3D_ARP
+  ("AdvMultiviewResPred",      m_uiUseAdvResPred,           (UInt)1, "Usage of Advanced Residual Prediction" )
+#endif
+
   // Coding tools
   ("AMP",                      m_enableAMP,                 true,  "Enable asymmetric motion partitions")
   ("TransformSkip",            m_useTransformSkip,          false, "Intra transform skipping")
@@ -1386,6 +1390,10 @@ Void TAppEncCfg::xCheckParameter()
   
   xConfirmPara(  m_maxNumMergeCand < 1,  "MaxNumMergeCand must be 1 or greater.");
   xConfirmPara(  m_maxNumMergeCand > 5,  "MaxNumMergeCand must be 5 or smaller.");
+
+#if H_3D_ARP
+  xConfirmPara( ( 0 != m_uiUseAdvResPred ) &&  ( 1 != m_uiUseAdvResPred ), "UseAdvResPred must be 0 or 1." );
+#endif
 
 #if ADAPTIVE_QP_SELECTION
 #if H_MV
@@ -2276,6 +2284,9 @@ Void TAppEncCfg::xPrintParameter()
 #if H_3D_VSO
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
+#endif
+#if H_3D_ARP
+  printf(" ARP:%d  ", m_uiUseAdvResPred  );
 #endif
   printf("\n\n");  
 
