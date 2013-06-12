@@ -176,7 +176,14 @@ Void TEncCu::destroy()
     delete [] m_ppcTempCU;
     m_ppcTempCU = NULL;
   }
-  
+
+#if H_3D_ARP
+  if(m_ppcWeightedTempCU)
+  {
+    delete [] m_ppcWeightedTempCU; 
+    m_ppcWeightedTempCU = NULL; 
+  }
+#endif
   if(m_ppcPredYuvBest)
   {
     delete [] m_ppcPredYuvBest;

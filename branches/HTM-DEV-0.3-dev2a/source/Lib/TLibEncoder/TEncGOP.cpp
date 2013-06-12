@@ -682,6 +682,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
         if( iViewIdx<getViewIndex() && !bIsDepth )
         {
+          //GT (IVREFS): m_tAppEncTop is not needed any more. Reference pictures can be obtained from m_ivPicLists. Should be fixed later. 
           pcSlice->setBaseViewRefPicList( m_pcEncTop->getTAppEncTop()->getTEncTop( iLayerId )->getListPic(), iViewIdx );
         }
       }
