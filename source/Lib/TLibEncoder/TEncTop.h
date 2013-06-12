@@ -213,6 +213,7 @@ public:
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
 #endif
 #if H_3D_ARP
+  //GT (IVREFS): m_tAppDecTop is not needed any more. Reference pictures can be obtained from m_ivPicLists. Should be fixed later. 
   Void            setTAppEncTop( TAppEncTop* pcTAppEncTop ) { m_pcTAppEncTop = pcTAppEncTop; }
   TAppEncTop*     getTAppEncTop()                           { return  m_pcTAppEncTop; }
 #endif

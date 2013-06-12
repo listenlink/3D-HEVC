@@ -90,6 +90,7 @@
                                               // SEC_DEFAULT_DV_D0112
 
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
+#define H_3D_FIX                          1   // Temporary for minor fixes
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////

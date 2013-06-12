@@ -54,7 +54,9 @@ CamParsCollector::CamParsCollector()
   m_aaiCodedOffset         = new Int* [ MAX_NUM_LAYERS ];
   m_aaiCodedScale          = new Int* [ MAX_NUM_LAYERS ];
   m_aiViewId               = new Int  [ MAX_NUM_LAYERS ];
+#if !H_3D_FIX  
   m_aiLayerIdx             = new Int  [ MAX_NUM_LAYERS ];
+#endif
 
   m_bViewReceived          = new Bool [ MAX_NUM_LAYERS ];
   for( UInt uiId = 0; uiId < MAX_NUM_LAYERS; uiId++ )
@@ -898,6 +900,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
         Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
         if( iViewIdx<getViewIndex() && !bIsDepth )
         {
+          //GT (IVREFS): m_tAppDecTop is not needed any more. Reference pictures can be obtained from m_ivPicLists. Should be fixed later. 
           pcSlice->setBaseViewRefPicList( m_tAppDecTop->getTDecTop(iLayerId)->getListPic(), iViewIdx );
         }
       }

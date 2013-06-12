@@ -88,7 +88,9 @@ private:
   Int**   m_aaiCodedOffset;
   Int**   m_aaiCodedScale;
   Int*    m_aiViewId;  
+#if !H_3D_FIX  
   Int*    m_aiLayerIdx;
+#endif
 
   Bool*   m_bViewReceived;
   UInt    m_uiCamParsCodedPrecision;
@@ -224,7 +226,8 @@ private:
 #endif
 #endif
 
-#if H_3D_ARP
+#if H_3D_ARP 
+  //GT (IVREFS): This is not needed any more. Reference picture can be obtained from m_ivPicLists. Should be fixed later. 
   TAppDecTop*             m_tAppDecTop;
 #endif
 
@@ -270,6 +273,7 @@ public:
   Void                    setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
 
 #if H_3D_ARP
+  //GT (IVREFS): This is not needed any more. Reference picture can be obtained from m_ivPicLists. Should be fixed later. 
   Void                    setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
   TAppDecTop*             getTAppDecTop()                           { return  m_tAppDecTop; }
 #endif
