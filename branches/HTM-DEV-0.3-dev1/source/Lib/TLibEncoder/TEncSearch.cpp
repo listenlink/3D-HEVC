@@ -1533,11 +1533,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
           default0Save1Load2 = 2;
         }
         //----- code luma block with given intra prediction mode and store Cbf-----
-#if H_3D_DIM_ENC
-        xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, singleDistYTmp, default0Save1Load2, zeroResi );
-#else
         xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, singleDistYTmp,default0Save1Load2); 
-#endif
         singleCbfYTmp = pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth );
         //----- code chroma blocks with given intra prediction mode and store Cbf-----
         if( !bLumaOnly )
@@ -1642,7 +1638,11 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
       }
       //----- code luma block with given intra prediction mode and store Cbf-----
       dSingleCost   = 0.0;
+#if H_3D_DIM_ENC
+      xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, uiSingleDistY, 0, zeroResi );
+#else
       xIntraCodingLumaBlk( pcCU, uiTrDepth, uiAbsPartIdx, pcOrgYuv, pcPredYuv, pcResiYuv, uiSingleDistY ); 
+#endif
       if( bCheckSplit )
       {
         uiSingleCbfY = pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth );
