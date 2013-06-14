@@ -107,6 +107,9 @@ private:
 #if H_3D_DIM_RBC
   Void  xParseRbcEdge        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
+#if H_3D_DIM_SDC
+  Void  xParseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
+#endif
 #endif
 private:
   TComInputBitstream* m_pcBitstream;
@@ -199,6 +202,10 @@ private:
 #endif
 #if H_3D_DIM_RBC
   ContextModel3DBuffer m_cRbcDataSCModel;
+#endif
+#if H_3D_DIM_SDC  
+  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSCModel;
 #endif
 #endif
 };

@@ -127,7 +127,10 @@ public:
   
 #if H_3D_DIM
   // Depth intra
-  Void predIntraLumaDepth         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc = false );         
+  Void predIntraLumaDepth         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc = false );
+#if H_3D_DIM_SDC
+  Void analyzeSegmentsSDC         ( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride );
+#endif
 #endif
 
   Pel  predIntraGetPredValDC      ( Int* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, Bool bAbove, Bool bLeft );

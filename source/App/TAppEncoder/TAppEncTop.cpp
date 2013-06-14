@@ -122,6 +122,13 @@ Void TAppEncTop::xInitLibCfg()
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
   {
     vps.setVpsDepthModesFlag( layer, ((vps.getDepthId( layer ) != 0) && (m_useDMM || m_useRBC || m_useSDC || m_useDLT)) ? true : false );
+#if H_3D_DIM_DLT
+    vps.setUseDLTFlag( layer , ((vps.getDepthId( layer ) != 0) && m_useDLT) ? true : false );
+    if( vps.getUseDLTFlag( layer ) )
+    {
+      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod, 24), &vps);
+    }
+#endif
   }
 
   vps.initViewIndex(); 
@@ -984,6 +991,79 @@ void TAppEncTop::printRateSummary()
   printf("Bytes for SPS/PPS/Slice (Incl. Annex B): %u (%.3f kbps)\n", m_essentialBytes, 0.008 * m_essentialBytes / time);
 #endif
 }
+
+#if H_3D_DIM_DLT
+Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps)
+{
+  TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
+  // allocate original YUV buffer
+  pcDepthPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+  
+  TVideoIOYuv* depthVideoFile = new TVideoIOYuv;
+  
+  UInt uiMaxDepthValue = ((1 << g_bitDepthY)-1);
+  
+  Bool abValidDepths[256];
+  
+  depthVideoFile->open( m_pchInputFileList[layer], false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC );  // read  mode
+  
+  // initialize boolean array
+  for(Int p=0; p<=uiMaxDepthValue; p++)
+    abValidDepths[p] = false;
+  
+  Int iHeight   = pcDepthPicYuvOrg->getHeight();
+  Int iWidth    = pcDepthPicYuvOrg->getWidth();
+  Int iStride   = pcDepthPicYuvOrg->getStride();
+  
+  Pel* pInDM    = pcDepthPicYuvOrg->getLumaAddr();
+  
+  for(Int uiFrame=0; uiFrame < uiNumFrames; uiFrame++ )
+  {
+    depthVideoFile->read( pcDepthPicYuvOrg, m_aiPad );
+    
+    // check all pixel values
+    for (Int i=0; i<iHeight; i++)
+    {
+      Int rowOffset = i*iStride;
+      
+      for (Int j=0; j<iWidth; j++)
+      {
+        Pel depthValue = pInDM[rowOffset+j];
+        abValidDepths[depthValue] = true;
+      }
+    }
+  }
+  
+  depthVideoFile->close();
+  
+  pcDepthPicYuvOrg->destroy();
+  delete pcDepthPicYuvOrg;
+  
+  // convert boolean array to idx2Depth LUT
+  Int* aiIdx2DepthValue = (Int*) calloc(uiMaxDepthValue, sizeof(Int));
+  Int iNumDepthValues = 0;
+  for(Int p=0; p<=uiMaxDepthValue; p++)
+  {
+    if( abValidDepths[p] == true)
+    {
+      aiIdx2DepthValue[iNumDepthValues++] = p;
+    }
+  }
+  
+  if( uiNumFrames == 0 || (Int)ceil(Log2(iNumDepthValues)) == (Int)ceil(Log2(((1 << g_bitDepthY)-1))) )
+  {
+    // don't use DLT
+    vps->setUseDLTFlag(layer, false);
+  }
+  
+  // assign LUT
+  if( vps->getUseDLTFlag(layer) )
+    vps->setDepthLUTs(layer, aiIdx2DepthValue, iNumDepthValues);
+  
+  // free temporary memory
+  free(aiIdx2DepthValue);
+}
+#endif
 
 #if H_MV
 Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )

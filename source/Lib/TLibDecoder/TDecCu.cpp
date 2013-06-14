@@ -398,6 +398,11 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
       xReconInter( m_ppcCU[uiDepth], uiDepth );
       break;
     case MODE_INTRA:
+#if H_3D_DIM_SDC
+      if( m_ppcCU[uiDepth]->getSDCFlag(0) )
+        xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
+      else
+#endif
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
     default:
@@ -633,6 +638,133 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
   }
 
 }
+
+#if H_3D_DIM_SDC
+Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiWidth        = pcCU->getWidth  ( 0 );
+  UInt uiHeight       = pcCU->getHeight ( 0 );
+  
+  TComYuv* pcRecoYuv  = m_ppcYuvReco[uiDepth];
+  TComYuv* pcPredYuv  = m_ppcYuvReco[uiDepth];
+  TComYuv* pcResiYuv  = m_ppcYuvResi[uiDepth];
+  
+  UInt    uiStride    = pcRecoYuv->getStride  ();
+  Pel*    piReco      = pcRecoYuv->getLumaAddr( uiAbsPartIdx );
+  Pel*    piPred      = pcPredYuv->getLumaAddr( uiAbsPartIdx );
+  Pel*    piResi      = pcResiYuv->getLumaAddr( uiAbsPartIdx );
+  
+  UInt    uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
+  Pel*    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
+  UInt    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
+  
+  UInt    uiLumaPredMode    = pcCU->getLumaIntraDir     ( uiAbsPartIdx );
+  
+  AOF( uiWidth == uiHeight );
+  AOF( uiAbsPartIdx == 0 );
+  AOF( pcCU->getSDCAvailable(uiAbsPartIdx) );
+  AOF( pcCU->getSDCFlag(uiAbsPartIdx) );
+  
+  //===== init availability pattern =====
+  Bool  bAboveAvail = false;
+  Bool  bLeftAvail  = false;
+  pcCU->getPattern()->initPattern   ( pcCU, 0, uiAbsPartIdx );
+  pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, 0, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
+  
+  //===== get prediction signal =====
+#if H_3D_DIM
+  if( isDimMode( uiLumaPredMode ) )
+  {
+    m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight );
+  }
+  else
+  {
+#endif
+    m_pcPrediction->predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
+#if H_3D_DIM
+  }
+#endif
+  
+  // number of segments depends on prediction mode
+  UInt uiNumSegments = 1;
+  Bool* pbMask = NULL;
+  UInt uiMaskStride = 0;
+  
+  if( getDimType( uiLumaPredMode ) == DMM1_IDX )
+  {
+    Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
+    
+    WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+    TComWedgelet* pcWedgelet = &(pacWedgeList->at( uiTabIdx ));
+    
+    uiNumSegments = 2;
+    pbMask = pcWedgelet->getPattern();
+    uiMaskStride = pcWedgelet->getStride();
+  }
+  
+  // get DC prediction for each segment
+  Pel apDCPredValues[2];
+  m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride);
+  
+  // reconstruct residual based on mask + DC residuals
+  Pel apDCResiValues[2];
+  for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
+  {
+#if H_3D_DIM_DLT
+    Pel   pPredIdx    = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
+    Pel   pResiIdx    = pcCU->getSDCSegmentDCOffset(uiSegment, uiAbsPartIdx);
+    Pel   pRecoValue  = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pPredIdx + pResiIdx );
+    
+    apDCResiValues[uiSegment]  = pRecoValue - apDCPredValues[uiSegment];
+#else
+    apDCResiValues[uiSegment]  = pcCU->getSDCSegmentDCOffset(uiSegment, uiAbsPartIdx);
+#endif
+  }
+  
+  //===== reconstruction =====
+  Bool*pMask      = pbMask;
+  Pel* pPred      = piPred;
+  Pel* pResi      = piResi;
+  Pel* pReco      = piReco;
+  Pel* pRecIPred  = piRecIPred;
+  
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      UChar ucSegment = pMask?(UChar)pMask[uiX]:0;
+      assert( ucSegment < uiNumSegments );
+      
+      Pel pResiDC = apDCResiValues[ucSegment];
+      
+      pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResiDC );
+      pRecIPred[ uiX ] = pReco[ uiX ];
+    }
+    pPred     += uiStride;
+    pResi     += uiStride;
+    pReco     += uiStride;
+    pRecIPred += uiRecIPredStride;
+    pMask     += uiMaskStride;
+  }
+  
+  // clear UV
+  UInt  uiStrideC     = pcPredYuv->getCStride();
+  Pel   *pRecCb       = pcPredYuv->getCbAddr();
+  Pel   *pRecCr       = pcPredYuv->getCrAddr();
+  
+  for (Int y=0; y<uiHeight/2; y++)
+  {
+    for (Int x=0; x<uiWidth/2; x++)
+    {
+      pRecCb[x] = 128;
+      pRecCr[x] = 128;
+    }
+    
+    pRecCb += uiStrideC;
+    pRecCr += uiStrideC;
+  }
+}
+#endif
 
 /** Function for deriving recontructed PU/CU Luma sample with QTree structure
  * \param pcCU pointer of current CU

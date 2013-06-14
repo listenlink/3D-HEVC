@@ -94,6 +94,10 @@ TEncSbac::TEncSbac()
 #if H_3D_DIM_RBC
 , m_cRbcDataSCModel           ( 1,             1,               NUM_RBC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if H_3D_DIM_SDC
+, m_cSDCResidualFlagSCModel   ( 1,             1,               SDC_NUM_RESIDUAL_FLAG_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCResidualSCModel       ( 1,             1,               SDC_NUM_RESIDUAL_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
@@ -158,6 +162,10 @@ Void TEncSbac::resetEntropy           ()
 #endif
 #if H_3D_DIM_RBC
   m_cRbcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_RBC_DATA );
+#endif
+#if H_3D_DIM_SDC
+  m_cSDCResidualFlagSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
+  m_cSDCResidualSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
 #endif
 #endif
   // new structure
@@ -291,6 +299,10 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
 #endif
 #if H_3D_DIM_RBC
   m_cRbcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_RBC_DATA );
+#endif
+#if H_3D_DIM_SDC
+  m_cSDCResidualFlagSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
+  m_cSDCResidualSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
 #endif
 #endif
   m_pcBinIf->start();
@@ -559,6 +571,77 @@ Void TEncSbac::xCodeRbcEdge( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 }
 #endif
+#if H_3D_DIM_SDC
+Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
+{
+  assert( pcCU->getSlice()->getIsDepth() );
+  assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
+  assert( pcCU->getSDCFlag(uiAbsPartIdx) );
+  assert( uiSegment < 2 );
+  
+  Pel segmentDCOffset = pcCU->getSDCSegmentDCOffset(uiSegment, uiAbsPartIdx);
+  
+  UInt uiResidual = segmentDCOffset == 0 ? 0 : 1;
+  UInt uiSign     = segmentDCOffset < 0 ? 1 : 0;
+  UInt uiAbsIdx   = abs(segmentDCOffset);
+
+#if H_3D_DIM_DLT
+  UInt uiMaxResidualBits = pcCU->getSlice()->getVPS()->getBitsPerDepthValue( pcCU->getSlice()->getLayerIdInVps() );
+#else
+  UInt uiMaxResidualBits = g_bitDepthY;
+#endif
+  assert( uiMaxResidualBits <= g_bitDepthY );
+  
+  // residual flag
+  m_pcBinIf->encodeBin( uiResidual, m_cSDCResidualFlagSCModel.get( 0, 0, 0 ) );
+  
+  if (uiResidual)
+  {
+    // encode sign bit of residual
+    m_pcBinIf->encodeBinEP( uiSign );
+    
+#if H_3D_DIM_DLT
+    UInt uiNumDepthValues = pcCU->getSlice()->getVPS()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() );
+#else
+    UInt uiNumDepthValues = ((1 << g_bitDepthY)-1);
+#endif
+    assert(uiAbsIdx <= uiNumDepthValues);
+    
+    // encode residual magnitude
+    uiAbsIdx -= 1;
+    // prefix part
+    if ( uiAbsIdx == 0 )
+      m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+    else
+    {
+      UInt l = uiAbsIdx;
+      UInt k = 0;
+      UInt uiPrefixThreshold = ((uiNumDepthValues * 3) >> 2);
+      while ( l > 0 && k < uiPrefixThreshold )
+      {
+        m_pcBinIf->encodeBin( 1, m_cSDCResidualSCModel.get(0, 0, 0) );
+        l--;
+        k++;
+      }
+      if ( uiAbsIdx < uiPrefixThreshold )
+        m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+      // suffix part
+      else
+      {
+        uiAbsIdx -= uiPrefixThreshold;
+        UInt uiSuffixLength = ( (UInt)ceil( Log2(uiNumDepthValues - uiPrefixThreshold) ) );
+        UInt uiBitInfo = 0;
+        for ( Int i = 0; i < uiSuffixLength; i++)
+        {
+          uiBitInfo = ( uiAbsIdx & ( 1 << i ) ) >> i;
+          m_pcBinIf->encodeBinEP( uiBitInfo);
+        }
+      }
+    }
+    
+  }
+}
+#endif
 #endif
 
 // SBAC RD
@@ -694,6 +777,14 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
  */
 Void TEncSbac::codePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if H_3D_DIM_SDC
+  if ( pcCU->getSlice()->isIntra() )
+  {
+    assert( pcCU->isIntra(uiAbsPartIdx) );
+    return;
+  }
+#endif
+  
   // get context function is here
   Int iPredMode = pcCU->getPredictionMode( uiAbsPartIdx );
   m_pcBinIf->encodeBin( iPredMode == MODE_INTER ? 0 : 1, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
@@ -915,7 +1006,7 @@ Void TEncSbac::codeIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 
 #if H_3D_DIM
-Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx, Bool sdcRD )
+Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
 {
   codeIntraDepthMode( pcCU, absPartIdx );
 
@@ -952,15 +1043,12 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx, Bool sdcRD )
 #if H_3D_DIM_SDC
   if( pcCU->getSDCFlag( absPartIdx ) )
   {
-  //  assert(pcCU->getPartitionSize(uiAbsPartIdx)==SIZE_2Nx2N);
-  //  UInt uiNumSegments = ( uiDir == DC_IDX || uiDir == PLANAR_IDX )? 1 : 2;
-  //  if(!bSdcRD)
-  //  {
-  //    for (int uiSeg=0; uiSeg<uiNumSegments; uiSeg++)
-  //    {
-  //      codeSDCResidualData(pcCU, uiAbsPartIdx, uiSeg);
-  //    }
-  //  }
+    assert(pcCU->getPartitionSize(absPartIdx)==SIZE_2Nx2N);
+    UInt uiNumSegments = ( dir == DC_IDX || dir == PLANAR_IDX )? 1 : 2;
+    for(UInt uiSeg=0; uiSeg<uiNumSegments; uiSeg++)
+    {
+      xCodeSDCResidualData(pcCU, absPartIdx, uiSeg);
+    }
   }
   else
   {
@@ -1009,14 +1097,13 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 
 #if H_3D_DIM_SDC
   if( pcCU->getSDCFlag( absPartIdx ) )
-  { 
-  //  switch( dir )
-  //  {
-  //  case PLANAR_IDX:              codeIdx = 0; break;
-  //  case DC_IDX:                  codeIdx = 6; break;
-  //  case (2*DMM1_IDX+DIM_OFFSET): codeIdx = 2; break;
-  //  default:                                   break;
-  //  }
+  {
+    switch( dir )
+    {
+      case PLANAR_IDX:  codeIdx = 0; break;
+      case DC_IDX:      codeIdx = 6; break;
+      default:          codeIdx = 2; break;
+    }
   }
 #endif
   //mode coding

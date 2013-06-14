@@ -751,6 +751,22 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     if( pcVPS->getDepthId( i ) )
     {
       WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ),          "vps_depth_modes_flag[i]" );
+      
+#if H_3D_DIM_DLT
+      if( pcVPS->getVpsDepthModesFlag( i ) )
+      {
+        WRITE_FLAG( pcVPS->getUseDLTFlag( i ) ? 1 : 0, "use_dlt_flag[i]" );
+        if( pcVPS->getUseDLTFlag( i ) )
+        {
+          // code mapping
+          WRITE_UVLC(pcVPS->getNumDepthValues(i), "num_dlt_depth_values[i]");
+          for(Int d=0; d<pcVPS->getNumDepthValues(i); d++)
+          {
+            WRITE_UVLC( pcVPS->idx2DepthValue(i, d), "dlt_depth_value[i][d]" );
+          }
+        }
+      }
+#endif
     }
   }
 #else

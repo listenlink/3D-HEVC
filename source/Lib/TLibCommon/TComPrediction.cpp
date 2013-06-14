@@ -475,8 +475,8 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     if( isDmmMode )
     {
 #if H_3D_DIM_DLT
-      segDC1 = GetIdx2DepthValue( GetDepthValue2Idx( predDC1 ) + deltaDC1 );
-      segDC2 = GetIdx2DepthValue( GetDepthValue2Idx( predDC2 ) + deltaDC2 );
+      segDC1 = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 ) + deltaDC1 );
+      segDC2 = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC2 ) + deltaDC2 );
 #else
       segDC1 = ClipY( predDC1 + deltaDC1 );
       segDC2 = ClipY( predDC2 + deltaDC2 );
@@ -1478,5 +1478,47 @@ Void TComPrediction::xDeltaDCQuantScaleDown( TComDataCU*  pcCU, Pel& rDeltaDC )
   return;
 }
 #endif
+#if H_3D_DIM_SDC
+Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride )
+{
+  Int iSumDepth[2];
+  memset(iSumDepth, 0, sizeof(Int)*2);
+  Int iSumPix[2];
+  memset(iSumPix, 0, sizeof(Int)*2);
+  
+  Int subSamplePix;
+  if ( uiSize == 64 || uiSize == 32 )
+  {
+    subSamplePix = 2;
+  }
+  else
+  {
+    subSamplePix = 1;
+  }
+  for (Int y=0; y<uiSize; y+=subSamplePix)
+  {
+    for (Int x=0; x<uiSize; x+=subSamplePix)
+    {
+      UChar ucSegment = pMask?(UChar)pMask[x]:0;
+      assert( ucSegment < uiNumSegments );
+      
+      iSumDepth[ucSegment] += pOrig[x];
+      iSumPix[ucSegment]   += 1;
+    }
+    
+    pOrig  += uiStride*subSamplePix;
+    pMask  += uiMaskStride*subSamplePix;
+  }
+  
+  // compute mean for each segment
+  for( UChar ucSeg = 0; ucSeg < uiNumSegments; ucSeg++ )
+  {
+    if( iSumPix[ucSeg] > 0 )
+      rpSegMeans[ucSeg] = iSumDepth[ucSeg] / iSumPix[ucSeg];
+    else
+      rpSegMeans[ucSeg] = 0;  // this happens for zero-segments
+  }
+}
+#endif // H_3D_DIM_SDC
 #endif
 //! \}

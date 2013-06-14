@@ -126,6 +126,9 @@ private:
 #if H_3D_DIM_RBC
   Void  xCodeRbcEdge         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
+#if H_3D_DIM_SDC
+  Void  xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#endif
 #endif
   
   Void  xCopyFrom            ( TEncSbac* pSrc );
@@ -164,7 +167,7 @@ public:
   Void codeIntraDirChroma      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 
 #if H_3D_DIM
-  Void codeIntraDepth          ( TComDataCU* pcCU, UInt absPartIdx, Bool sdcRD = false );
+  Void codeIntraDepth          ( TComDataCU* pcCU, UInt absPartIdx );
   Void codeIntraDepthMode      ( TComDataCU* pcCU, UInt absPartIdx );
 #endif
 
@@ -239,6 +242,10 @@ private:
 #endif
 #if H_3D_DIM_RBC
   ContextModel3DBuffer m_cRbcDataSCModel;
+#endif
+#if H_3D_DIM_SDC  
+  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
+  ContextModel3DBuffer m_cSDCResidualSCModel;
 #endif
 #endif
 };

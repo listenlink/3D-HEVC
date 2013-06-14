@@ -120,6 +120,10 @@ protected:
   Void xSetDirectDependencyFlags  ( TComVPS& vps );
   Int  xGetMax( std::vector<Int>& vec);
 #endif
+  
+#if H_3D_DIM_DLT
+  Void  xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps);
+#endif
 public:
   TAppEncTop();
   virtual ~TAppEncTop();
