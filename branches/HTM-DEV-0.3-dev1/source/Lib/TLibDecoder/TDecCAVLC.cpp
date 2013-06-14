@@ -960,6 +960,38 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
         if( pcVPS->getDepthId( i ) )
         {
           READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
+          
+#if H_3D_DIM_DLT
+          if( pcVPS->getVpsDepthModesFlag( i ) )
+          {
+            READ_FLAG( uiCode, "use_dlt_flag[i]" );
+            pcVPS->setUseDLTFlag( i, uiCode == 1 ? true : false );
+            if( pcVPS->getUseDLTFlag( i ) )
+            {
+              // decode mapping
+              UInt uiNumDepthValues;
+              // parse number of values in DLT
+              READ_UVLC(uiNumDepthValues, "num_dlt_depth_values[i]");
+              
+              // parse actual DLT values
+              Int* aiIdx2DepthValue = (Int*) calloc(uiNumDepthValues, sizeof(Int));
+              for(Int d=0; d<uiNumDepthValues; d++)
+              {
+                READ_UVLC(uiCode, "dlt_depth_value[i][d]");
+                aiIdx2DepthValue[d] = (Int)uiCode;
+              }
+              
+              pcVPS->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
+              
+              // clean memory
+              free(aiIdx2DepthValue);
+            }
+            else
+              pcVPS->setDepthLUTs(i);
+          }
+          else
+            pcVPS->setDepthLUTs(i);
+#endif
         }
       }
 #else

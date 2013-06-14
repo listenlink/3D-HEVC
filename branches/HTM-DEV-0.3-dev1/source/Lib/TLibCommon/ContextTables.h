@@ -110,6 +110,10 @@
 #endif
 #endif
 
+#if H_3D_DIM_SDC
+#define SDC_NUM_RESIDUAL_FLAG_CTX        1
+#define SDC_NUM_RESIDUAL_CTX             1
+#endif
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -400,6 +404,22 @@ INIT_RBC_DATA[3][NUM_RBC_DATA_CTX] =
   { CNU }, 
   { CNU }, 
   { CNU }, 
+};
+#endif
+#if H_3D_DIM_SDC
+static const UChar
+INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
+{
+  { CNU },
+  { CNU },
+  { CNU },
+};
+static const UChar
+INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
+{
+  { 155 },
+  { 155 },
+  { 155 },
 };
 #endif
 #endif

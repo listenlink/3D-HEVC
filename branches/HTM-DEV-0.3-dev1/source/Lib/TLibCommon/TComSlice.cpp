@@ -1479,6 +1479,23 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
+#if H_3D_DIM_DLT
+    m_bUseDLTFlag         [i] = false;
+    
+    // allocate some memory and initialize with default mapping
+    m_iNumDepthmapValues[i] = ((1 << g_bitDepthY)-1)+1;
+    m_iBitsPerDepthValue[i] = (Int)ceil(Log2(m_iNumDepthmapValues[i]));
+    
+    m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
+    m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
+    
+    //default mapping
+    for (Int d=0; d<m_iNumDepthmapValues[i]; d++)
+    {
+      m_iDepthValue2Idx[i][d] = d;
+      m_iIdx2DepthValue[i][d] = d;
+    }
+#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
@@ -1501,6 +1518,69 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
   if( m_hrdOpSetIdx      != NULL )     delete[] m_hrdOpSetIdx;
   if( m_cprmsPresentFlag != NULL )     delete[] m_cprmsPresentFlag;
 }
+  
+#if H_3D_DIM_DLT
+  Void TComVPS::setDepthLUTs(Int layerIdInVps, Int* idx2DepthValue, Int iNumDepthValues)
+  {
+    if( idx2DepthValue == NULL || iNumDepthValues == 0 ) // default mapping only
+      return;
+    
+    // copy idx2DepthValue to internal array
+    memcpy(m_iIdx2DepthValue[layerIdInVps], idx2DepthValue, iNumDepthValues*sizeof(UInt));
+    
+    UInt uiMaxDepthValue = ((1 << g_bitDepthY)-1);
+    for(Int p=0; p<=uiMaxDepthValue; p++)
+    {
+      Int iIdxDown    = 0;
+      Int iIdxUp      = iNumDepthValues-1;
+      Bool bFound     = false;
+      
+      // iterate over indices to find lower closest depth
+      Int i = 1;
+      while(!bFound && i<iNumDepthValues)
+      {
+        if( m_iIdx2DepthValue[layerIdInVps][i] > p )
+        {
+          iIdxDown  = i-1;
+          bFound    = true;
+        }
+        
+        i++;
+      }
+      // iterate over indices to find upper closest depth
+      i = iNumDepthValues-2;
+      bFound = false;
+      while(!bFound && i>=0)
+      {
+        if( m_iIdx2DepthValue[layerIdInVps][i] < p )
+        {
+          iIdxUp  = i+1;
+          bFound    = true;
+        }
+        
+        i--;
+      }
+      
+      // assert monotony
+      assert(iIdxDown<=iIdxUp);
+      
+      // assign closer depth value/idx
+      if( abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxDown]) < abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxUp]) )
+      {
+        m_iDepthValue2Idx[layerIdInVps][p] = iIdxDown;
+      }
+      else
+      {
+        m_iDepthValue2Idx[layerIdInVps][p] = iIdxUp;
+      }
+      
+    }
+    
+    // update DLT variables
+    m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
+    m_iBitsPerDepthValue[layerIdInVps] = (Int)ceil(Log2(m_iNumDepthmapValues[layerIdInVps]));
+  }
+#endif
 
 #if H_MV
 

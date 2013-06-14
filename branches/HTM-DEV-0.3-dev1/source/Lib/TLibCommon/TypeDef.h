@@ -86,7 +86,7 @@
                                               // QC_DC_PREDICTOR_D0183
                                               // HHI_DELTADC_DLT_D0035
                                               // PKU_QC_DEPTH_INTRA_UNI_D0195
-                                              // ... [PM: add SDC and DLT related]
+                                              // RWTH_SDC_DLT_B0036
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -106,11 +106,14 @@
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
 #define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
-#define H_3D_DIM_SDC                      0   // Simplified Depth Coding method
-#define H_3D_DIM_DLT                      0   // Depth Lookup Table
+#define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
+#define H_3D_DIM_DLT                      1   // Depth Lookup Table
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#if H_3D_DIM_DLT || H_3D_DIM_SDC
+#define Log2( n ) ( log((double)n) / log(2.0) )
+#endif
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

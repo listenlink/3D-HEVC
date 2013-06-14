@@ -351,6 +351,9 @@ protected:
   Bool xCheckTerminatedEdge       ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
   Bool xConstructChainCode        ( TComDataCU* pcCU, UInt uiAbsPtIdx, UInt uiWidth, UInt uiHeight );
 #endif
+#if H_3D_DIM_SDC
+  Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bResidual );
+#endif
 #endif
 
   // -------------------------------------------------------------------------------------------------------------------

@@ -24,95 +24,95 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
-		78C593B5158721A1004401C5 /* ContextModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5931D158720BB004401C5 /* ContextModel.cpp */; };
-		78C593B6158721A1004401C5 /* ContextModel3DBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5931F158720BB004401C5 /* ContextModel3DBuffer.cpp */; };
-		78C593B7158721A1004401C5 /* TComAdaptiveLoopFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59324158720BB004401C5 /* TComAdaptiveLoopFilter.cpp */; };
-		78C593B8158721A1004401C5 /* TComBitStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59327158720BB004401C5 /* TComBitStream.cpp */; };
-		78C593B9158721A1004401C5 /* TComCABACTables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59329158720BB004401C5 /* TComCABACTables.cpp */; };
-		78C593BA158721A1004401C5 /* TComDataCU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5932B158720BB004401C5 /* TComDataCU.cpp */; };
-		78C593BB158721A1004401C5 /* TComDepthMapGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5932D158720BB004401C5 /* TComDepthMapGenerator.cpp */; };
-		78C593BC158721A1004401C5 /* TComInterpolationFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5932F158720BB004401C5 /* TComInterpolationFilter.cpp */; };
-		78C593BD158721A1004401C5 /* TComLoopFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59332158720BB004401C5 /* TComLoopFilter.cpp */; };
-		78C593BE158721A1004401C5 /* TComMotionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59334158720BB004401C5 /* TComMotionInfo.cpp */; };
-		78C593BF158721A1004401C5 /* TComPattern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59337158720BB004401C5 /* TComPattern.cpp */; };
-		78C593C0158721A1004401C5 /* TComPic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59339158720BB004401C5 /* TComPic.cpp */; };
-		78C593C1158721A1004401C5 /* TComPicSym.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5933B158720BB004401C5 /* TComPicSym.cpp */; };
-		78C593C2158721A1004401C5 /* TComPicYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5933D158720BB004401C5 /* TComPicYuv.cpp */; };
-		78C593C3158721A1004401C5 /* TComPicYuvMD5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5933F158720BB004401C5 /* TComPicYuvMD5.cpp */; };
-		78C593C4158721A1004401C5 /* TComPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59340158720BB004401C5 /* TComPrediction.cpp */; };
-		78C593C5158721A1004401C5 /* TComRdCost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59342158720BB004401C5 /* TComRdCost.cpp */; };
-		78C593C6158721A1004401C5 /* TComRdCostWeightPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59344158720BB004401C5 /* TComRdCostWeightPrediction.cpp */; };
-		78C593C7158721A1004401C5 /* TComResidualGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59346158720BB004401C5 /* TComResidualGenerator.cpp */; };
-		78C593C8158721A1004401C5 /* TComRom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59348158720BB004401C5 /* TComRom.cpp */; };
-		78C593C9158721A1004401C5 /* TComSampleAdaptiveOffset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5934A158720BB004401C5 /* TComSampleAdaptiveOffset.cpp */; };
-		78C593CA158721A1004401C5 /* TComSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5934C158720BB004401C5 /* TComSlice.cpp */; };
-		78C593CB158721A1004401C5 /* TComTrQuant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5934E158720BB004401C5 /* TComTrQuant.cpp */; };
-		78C593CC158721A1004401C5 /* TComWedgelet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59350158720BB004401C5 /* TComWedgelet.cpp */; };
-		78C593CD158721A1004401C5 /* TComWeightPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59352158720BB004401C5 /* TComWeightPrediction.cpp */; };
-		78C593CE158721A1004401C5 /* TComYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59354158720BB004401C5 /* TComYuv.cpp */; };
-		78C593CF158721AD004401C5 /* program_options_lite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59316158720BB004401C5 /* program_options_lite.cpp */; };
-		78C593D0158721AD004401C5 /* TAppComCamPara.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59318158720BB004401C5 /* TAppComCamPara.cpp */; };
-		78C593D1158721BB004401C5 /* AnnexBread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59358158720BB004401C5 /* AnnexBread.cpp */; };
-		78C593D2158721BB004401C5 /* NALread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5935A158720BB004401C5 /* NALread.cpp */; };
-		78C593D3158721BB004401C5 /* SEIread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5935C158720BB004401C5 /* SEIread.cpp */; };
-		78C593D4158721BB004401C5 /* TDecBinCoderCABAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5935F158720BB004401C5 /* TDecBinCoderCABAC.cpp */; };
-		78C593D5158721BB004401C5 /* TDecCAVLC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59361158720BB004401C5 /* TDecCAVLC.cpp */; };
-		78C593D6158721BB004401C5 /* TDecCu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59363158720BB004401C5 /* TDecCu.cpp */; };
-		78C593D7158721BB004401C5 /* TDecEntropy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59365158720BB004401C5 /* TDecEntropy.cpp */; };
-		78C593D8158721BB004401C5 /* TDecGop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59367158720BB004401C5 /* TDecGop.cpp */; };
-		78C593D9158721BB004401C5 /* TDecSbac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59369158720BB004401C5 /* TDecSbac.cpp */; };
-		78C593DA158721BB004401C5 /* TDecSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5936B158720BB004401C5 /* TDecSlice.cpp */; };
-		78C593DB158721BB004401C5 /* TDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5936D158720BB004401C5 /* TDecTop.cpp */; };
-		78C593DC158721CE004401C5 /* NALwrite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59371158720BB004401C5 /* NALwrite.cpp */; };
-		78C593DD158721CE004401C5 /* SEIwrite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59373158720BB004401C5 /* SEIwrite.cpp */; };
-		78C593DE158721CE004401C5 /* TEncAdaptiveLoopFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59375158720BB004401C5 /* TEncAdaptiveLoopFilter.cpp */; };
-		78C593DF158721CE004401C5 /* TEncBinCoderCABAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59379158720BB004401C5 /* TEncBinCoderCABAC.cpp */; };
-		78C593E0158721CE004401C5 /* TEncBinCoderCABACCounter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5937B158720BB004401C5 /* TEncBinCoderCABACCounter.cpp */; };
-		78C593E1158721CE004401C5 /* TEncCavlc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5937D158720BB004401C5 /* TEncCavlc.cpp */; };
-		78C593E2158721CE004401C5 /* TEncCu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59380158720BB004401C5 /* TEncCu.cpp */; };
-		78C593E3158721CE004401C5 /* TEncEntropy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59382158720BB004401C5 /* TEncEntropy.cpp */; };
-		78C593E4158721CE004401C5 /* TEncGOP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59384158720BB004401C5 /* TEncGOP.cpp */; };
-		78C593E5158721CE004401C5 /* TEncPic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59386158720BB004401C5 /* TEncPic.cpp */; };
-		78C593E6158721CE004401C5 /* TEncPreanalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59388158720BB004401C5 /* TEncPreanalyzer.cpp */; };
-		78C593E7158721CE004401C5 /* TEncSampleAdaptiveOffset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5938A158720BB004401C5 /* TEncSampleAdaptiveOffset.cpp */; };
-		78C593E8158721CE004401C5 /* TEncSbac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5938C158720BB004401C5 /* TEncSbac.cpp */; };
-		78C593E9158721CE004401C5 /* TEncSearch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5938E158720BB004401C5 /* TEncSearch.cpp */; };
-		78C593EA158721CE004401C5 /* TEncSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59390158720BB004401C5 /* TEncSlice.cpp */; };
-		78C593EB158721CE004401C5 /* TEncTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59392158720BB004401C5 /* TEncTop.cpp */; };
-		78C593EC158721CE004401C5 /* WeightPredAnalysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59394158720BB004401C5 /* WeightPredAnalysis.cpp */; };
-		78C593ED158721D7004401C5 /* TExtrTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C59397158720BB004401C5 /* TExtrTop.cpp */; };
-		78C593EE158721E2004401C5 /* TRenFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5939A158720BB004401C5 /* TRenFilter.cpp */; };
-		78C593EF158721E2004401C5 /* TRenImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5939C158720BB004401C5 /* TRenImage.cpp */; };
-		78C593F0158721E2004401C5 /* TRenImagePlane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C5939E158720BB004401C5 /* TRenImagePlane.cpp */; };
-		78C593F1158721E2004401C5 /* TRenInterpFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C593A0158720BB004401C5 /* TRenInterpFilter.cpp */; };
-		78C593F2158721E2004401C5 /* TRenModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C593A2158720BB004401C5 /* TRenModel.cpp */; };
-		78C593F3158721E2004401C5 /* TRenModSetupStrParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C593A4158720BB004401C5 /* TRenModSetupStrParser.cpp */; };
-		78C593F4158721E2004401C5 /* TRenSingleModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C593A6158720BB004401C5 /* TRenSingleModel.cpp */; };
-		78C593F5158721E2004401C5 /* TRenTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C593A8158720BB004401C5 /* TRenTop.cpp */; };
-		78C593F6158721E9004401C5 /* TVideoIOYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C593AB158720BB004401C5 /* TVideoIOYuv.cpp */; };
-		78C593F7158721F1004401C5 /* encmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592EF158720BB004401C5 /* encmain.cpp */; };
-		78C593F8158721F1004401C5 /* TAppEncCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592F0158720BB004401C5 /* TAppEncCfg.cpp */; };
-		78C593F9158721F1004401C5 /* TAppEncTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592F2158720BB004401C5 /* TAppEncTop.cpp */; };
-		78C593FA158721F6004401C5 /* decmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592E9158720BB004401C5 /* decmain.cpp */; };
-		78C593FB158721F6004401C5 /* TAppDecCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592EA158720BB004401C5 /* TAppDecCfg.cpp */; };
-		78C593FC158721F6004401C5 /* TAppDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592EC158720BB004401C5 /* TAppDecTop.cpp */; };
-		78C593FD158721FC004401C5 /* extrmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592F5158720BB004401C5 /* extrmain.cpp */; };
-		78C593FE158721FC004401C5 /* TAppExtrCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592F6158720BB004401C5 /* TAppExtrCfg.cpp */; };
-		78C593FF158721FC004401C5 /* TAppExtrTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592F8158720BB004401C5 /* TAppExtrTop.cpp */; };
-		78C5940015872201004401C5 /* RendererMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592FB158720BB004401C5 /* RendererMain.cpp */; };
-		78C5940115872201004401C5 /* TAppRendererCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592FC158720BB004401C5 /* TAppRendererCfg.cpp */; };
-		78C5940215872201004401C5 /* TAppRendererTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78C592FE158720BB004401C5 /* TAppRendererTop.cpp */; };
+		78348EE31760D55800133029 /* ContextModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E511760D51300133029 /* ContextModel.cpp */; };
+		78348EE51760D55800133029 /* ContextModel3DBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E531760D51300133029 /* ContextModel3DBuffer.cpp */; };
+		78348EE91760D55800133029 /* SEI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E571760D51300133029 /* SEI.cpp */; };
+		78348EEC1760D55800133029 /* TComBitStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E5A1760D51300133029 /* TComBitStream.cpp */; };
+		78348EEE1760D55800133029 /* TComCABACTables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E5C1760D51300133029 /* TComCABACTables.cpp */; };
+		78348EF01760D55800133029 /* TComDataCU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E5E1760D51300133029 /* TComDataCU.cpp */; };
+		78348EF21760D55800133029 /* TComInterpolationFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E601760D51300133029 /* TComInterpolationFilter.cpp */; };
+		78348EF51760D55800133029 /* TComLoopFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E631760D51300133029 /* TComLoopFilter.cpp */; };
+		78348EF71760D55800133029 /* TComMotionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E651760D51300133029 /* TComMotionInfo.cpp */; };
+		78348EFA1760D55800133029 /* TComPattern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E681760D51300133029 /* TComPattern.cpp */; };
+		78348EFC1760D55800133029 /* TComPic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E6A1760D51300133029 /* TComPic.cpp */; };
+		78348EFE1760D55800133029 /* TComPicSym.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E6C1760D51300133029 /* TComPicSym.cpp */; };
+		78348F001760D55800133029 /* TComPicYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E6E1760D51300133029 /* TComPicYuv.cpp */; };
+		78348F021760D55800133029 /* TComPicYuvMD5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E701760D51300133029 /* TComPicYuvMD5.cpp */; };
+		78348F031760D55800133029 /* TComPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E711760D51300133029 /* TComPrediction.cpp */; };
+		78348F051760D55800133029 /* TComRdCost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E731760D51300133029 /* TComRdCost.cpp */; };
+		78348F071760D55800133029 /* TComRdCostWeightPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E751760D51300133029 /* TComRdCostWeightPrediction.cpp */; };
+		78348F091760D55800133029 /* TComRom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E771760D51300133029 /* TComRom.cpp */; };
+		78348F0B1760D55800133029 /* TComSampleAdaptiveOffset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E791760D51300133029 /* TComSampleAdaptiveOffset.cpp */; };
+		78348F0D1760D55800133029 /* TComSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E7B1760D51300133029 /* TComSlice.cpp */; };
+		78348F0F1760D55800133029 /* TComTrQuant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E7D1760D51300133029 /* TComTrQuant.cpp */; };
+		78348F111760D55800133029 /* TComWedgelet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E7F1760D51300133029 /* TComWedgelet.cpp */; };
+		78348F131760D55800133029 /* TComWeightPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E811760D51300133029 /* TComWeightPrediction.cpp */; };
+		78348F151760D55800133029 /* TComYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E831760D51300133029 /* TComYuv.cpp */; };
+		78348F181760D57800133029 /* program_options_lite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E4A1760D51300133029 /* program_options_lite.cpp */; };
+		78348F1A1760D57800133029 /* TAppComCamPara.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E4C1760D51300133029 /* TAppComCamPara.cpp */; };
+		78348F1C1760D58100133029 /* AnnexBread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E871760D51300133029 /* AnnexBread.cpp */; };
+		78348F1E1760D58100133029 /* NALread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E891760D51300133029 /* NALread.cpp */; };
+		78348F201760D58100133029 /* SEIread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E8B1760D51300133029 /* SEIread.cpp */; };
+		78348F221760D58100133029 /* SyntaxElementParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E8D1760D51300133029 /* SyntaxElementParser.cpp */; };
+		78348F251760D58100133029 /* TDecBinCoderCABAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E901760D51300133029 /* TDecBinCoderCABAC.cpp */; };
+		78348F271760D58100133029 /* TDecCAVLC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E921760D51300133029 /* TDecCAVLC.cpp */; };
+		78348F291760D58100133029 /* TDecCu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E941760D51300133029 /* TDecCu.cpp */; };
+		78348F2B1760D58100133029 /* TDecEntropy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E961760D51300133029 /* TDecEntropy.cpp */; };
+		78348F2D1760D58100133029 /* TDecGop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E981760D51300133029 /* TDecGop.cpp */; };
+		78348F2F1760D58100133029 /* TDecSbac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E9A1760D51300133029 /* TDecSbac.cpp */; };
+		78348F311760D58100133029 /* TDecSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E9C1760D51300133029 /* TDecSlice.cpp */; };
+		78348F331760D58100133029 /* TDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E9E1760D51300133029 /* TDecTop.cpp */; };
+		78348F361760D58A00133029 /* NALwrite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EA21760D51300133029 /* NALwrite.cpp */; };
+		78348F381760D58A00133029 /* SEIwrite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EA41760D51300133029 /* SEIwrite.cpp */; };
+		78348F3A1760D58A00133029 /* SyntaxElementWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EA61760D51300133029 /* SyntaxElementWriter.cpp */; };
+		78348F3C1760D58A00133029 /* TEncAnalyze.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EA81760D51300133029 /* TEncAnalyze.cpp */; };
+		78348F3F1760D58A00133029 /* TEncBinCoderCABAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EAB1760D51300133029 /* TEncBinCoderCABAC.cpp */; };
+		78348F411760D58A00133029 /* TEncBinCoderCABACCounter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EAD1760D51300133029 /* TEncBinCoderCABACCounter.cpp */; };
+		78348F431760D58A00133029 /* TEncCavlc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EAF1760D51300133029 /* TEncCavlc.cpp */; };
+		78348F461760D58A00133029 /* TEncCu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EB21760D51300133029 /* TEncCu.cpp */; };
+		78348F481760D58A00133029 /* TEncEntropy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EB41760D51300133029 /* TEncEntropy.cpp */; };
+		78348F4A1760D58A00133029 /* TEncGOP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EB61760D51300133029 /* TEncGOP.cpp */; };
+		78348F4C1760D58A00133029 /* TEncPic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EB81760D51300133029 /* TEncPic.cpp */; };
+		78348F4E1760D58A00133029 /* TEncPreanalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EBA1760D51300133029 /* TEncPreanalyzer.cpp */; };
+		78348F501760D58A00133029 /* TEncRateCtrl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EBC1760D51300133029 /* TEncRateCtrl.cpp */; };
+		78348F521760D58A00133029 /* TEncSampleAdaptiveOffset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EBE1760D51300133029 /* TEncSampleAdaptiveOffset.cpp */; };
+		78348F541760D58A00133029 /* TEncSbac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EC01760D51300133029 /* TEncSbac.cpp */; };
+		78348F561760D58A00133029 /* TEncSearch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EC21760D51300133029 /* TEncSearch.cpp */; };
+		78348F581760D58A00133029 /* TEncSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EC41760D51300133029 /* TEncSlice.cpp */; };
+		78348F5A1760D58A00133029 /* TEncTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EC61760D51300133029 /* TEncTop.cpp */; };
+		78348F5C1760D58A00133029 /* WeightPredAnalysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EC81760D51300133029 /* WeightPredAnalysis.cpp */; };
+		78348F5E1760D59300133029 /* TExtrTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348ECB1760D51300133029 /* TExtrTop.cpp */; };
+		78348F601760D59900133029 /* TRenFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348ECE1760D51300133029 /* TRenFilter.cpp */; };
+		78348F621760D59900133029 /* TRenImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348ED01760D51300133029 /* TRenImage.cpp */; };
+		78348F641760D59900133029 /* TRenImagePlane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348ED21760D51300133029 /* TRenImagePlane.cpp */; };
+		78348F661760D59900133029 /* TRenInterpFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348ED41760D51300133029 /* TRenInterpFilter.cpp */; };
+		78348F681760D59900133029 /* TRenModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348ED61760D51300133029 /* TRenModel.cpp */; };
+		78348F6A1760D59900133029 /* TRenModSetupStrParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348ED81760D51300133029 /* TRenModSetupStrParser.cpp */; };
+		78348F6C1760D59900133029 /* TRenSingleModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EDA1760D51300133029 /* TRenSingleModel.cpp */; };
+		78348F6E1760D59900133029 /* TRenTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EDC1760D51300133029 /* TRenTop.cpp */; };
+		78348F701760D5A000133029 /* TVideoIOYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348EDF1760D51300133029 /* TVideoIOYuv.cpp */; };
+		78348F721760D5AE00133029 /* decmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E1D1760D51300133029 /* decmain.cpp */; };
+		78348F731760D5AE00133029 /* TAppDecCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E1E1760D51300133029 /* TAppDecCfg.cpp */; };
+		78348F741760D5AE00133029 /* TAppDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E201760D51300133029 /* TAppDecTop.cpp */; };
+		78348F751760D5B600133029 /* encmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E231760D51300133029 /* encmain.cpp */; };
+		78348F761760D5B600133029 /* TAppEncCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E241760D51300133029 /* TAppEncCfg.cpp */; };
+		78348F771760D5B600133029 /* TAppEncTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E261760D51300133029 /* TAppEncTop.cpp */; };
+		78348F781760D5BB00133029 /* extrmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E291760D51300133029 /* extrmain.cpp */; };
+		78348F791760D5BB00133029 /* TAppExtrCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E2A1760D51300133029 /* TAppExtrCfg.cpp */; };
+		78348F7A1760D5BB00133029 /* TAppExtrTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E2C1760D51300133029 /* TAppExtrTop.cpp */; };
+		78348F7B1760D5C100133029 /* RendererMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E2F1760D51300133029 /* RendererMain.cpp */; };
+		78348F7C1760D5C100133029 /* TAppRendererCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E301760D51300133029 /* TAppRendererCfg.cpp */; };
+		78348F7D1760D5C100133029 /* TAppRendererTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 78348E321760D51300133029 /* TAppRendererTop.cpp */; };
+		78348F7E1760D62800133029 /* libmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 78348E461760D51300133029 /* libmd5.c */; };
 		78C5940D15872233004401C5 /* libTLibCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767959411AD61BB00421804 /* libTLibCommon.a */; };
 		78C5940E15872233004401C5 /* libTLibEncoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767961911AD626F00421804 /* libTLibEncoder.a */; };
 		78C5940F15872233004401C5 /* libTLibVideoIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767964B11AD629200421804 /* libTLibVideoIO.a */; };
 		78C5941015872233004401C5 /* libTLibRenderer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7894E36714890D9A009259F4 /* libTLibRenderer.a */; };
 		78C5941115872233004401C5 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C593B415872152004401C5 /* libTAppCommon.a */; };
-		78C594121587228A004401C5 /* libmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 78C59312158720BB004401C5 /* libmd5.c */; };
 		78C5941B158722B7004401C5 /* libTLibCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767959411AD61BB00421804 /* libTLibCommon.a */; };
 		78C5941C158722BA004401C5 /* libTLibDecoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 676795F411AD621A00421804 /* libTLibDecoder.a */; };
 		78C5941D158722BC004401C5 /* libTLibVideoIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767964B11AD629200421804 /* libTLibVideoIO.a */; };
 		78C5941E158722C0004401C5 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C593B415872152004401C5 /* libTAppCommon.a */; };
-		78C5941F158722D4004401C5 /* libmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 78C59312158720BB004401C5 /* libmd5.c */; };
 		78C59428158722F2004401C5 /* libTLibCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767959411AD61BB00421804 /* libTLibCommon.a */; };
 		78C59429158722F6004401C5 /* libTLibVideoIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767964B11AD629200421804 /* libTLibVideoIO.a */; };
 		78C5942A158722FA004401C5 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C593B415872152004401C5 /* libTAppCommon.a */; };
@@ -288,192 +288,192 @@
 		6767964B11AD629200421804 /* libTLibVideoIO.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibVideoIO.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		6767966A11AD635600421804 /* TAppEncoder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppEncoder; sourceTree = BUILT_PRODUCTS_DIR; };
 		6782E0DE11AD691A00E8FFB8 /* TAppDecoder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppDecoder; sourceTree = BUILT_PRODUCTS_DIR; };
+		78348E1D1760D51300133029 /* decmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = decmain.cpp; sourceTree = "<group>"; };
+		78348E1E1760D51300133029 /* TAppDecCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppDecCfg.cpp; sourceTree = "<group>"; };
+		78348E1F1760D51300133029 /* TAppDecCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppDecCfg.h; sourceTree = "<group>"; };
+		78348E201760D51300133029 /* TAppDecTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppDecTop.cpp; sourceTree = "<group>"; };
+		78348E211760D51300133029 /* TAppDecTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppDecTop.h; sourceTree = "<group>"; };
+		78348E231760D51300133029 /* encmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = encmain.cpp; sourceTree = "<group>"; };
+		78348E241760D51300133029 /* TAppEncCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppEncCfg.cpp; sourceTree = "<group>"; };
+		78348E251760D51300133029 /* TAppEncCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppEncCfg.h; sourceTree = "<group>"; };
+		78348E261760D51300133029 /* TAppEncTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppEncTop.cpp; sourceTree = "<group>"; };
+		78348E271760D51300133029 /* TAppEncTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppEncTop.h; sourceTree = "<group>"; };
+		78348E291760D51300133029 /* extrmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extrmain.cpp; sourceTree = "<group>"; };
+		78348E2A1760D51300133029 /* TAppExtrCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppExtrCfg.cpp; sourceTree = "<group>"; };
+		78348E2B1760D51300133029 /* TAppExtrCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppExtrCfg.h; sourceTree = "<group>"; };
+		78348E2C1760D51300133029 /* TAppExtrTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppExtrTop.cpp; sourceTree = "<group>"; };
+		78348E2D1760D51300133029 /* TAppExtrTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppExtrTop.h; sourceTree = "<group>"; };
+		78348E2F1760D51300133029 /* RendererMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RendererMain.cpp; sourceTree = "<group>"; };
+		78348E301760D51300133029 /* TAppRendererCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppRendererCfg.cpp; sourceTree = "<group>"; };
+		78348E311760D51300133029 /* TAppRendererCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppRendererCfg.h; sourceTree = "<group>"; };
+		78348E321760D51300133029 /* TAppRendererTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppRendererTop.cpp; sourceTree = "<group>"; };
+		78348E331760D51300133029 /* TAppRendererTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppRendererTop.h; sourceTree = "<group>"; };
+		78348E351760D51300133029 /* annexBbytecount.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = annexBbytecount.cpp; sourceTree = "<group>"; };
+		78348E371760D51300133029 /* encode.shl */ = {isa = PBXFileReference; lastKnownFileType = text; path = encode.shl; sourceTree = "<group>"; };
+		78348E381760D51300133029 /* encodeCommand.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = encodeCommand.sh; sourceTree = "<group>"; };
+		78348E391760D51300133029 /* ExtractBitrates.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtractBitrates.cpp; sourceTree = "<group>"; };
+		78348E3A1760D51300133029 /* ExtractBitrates.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtractBitrates.h; sourceTree = "<group>"; };
+		78348E3B1760D51300133029 /* ExtractBitratesMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtractBitratesMain.cpp; sourceTree = "<group>"; };
+		78348E3C1760D51300133029 /* GuessLambdaModifiers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GuessLambdaModifiers.cpp; sourceTree = "<group>"; };
+		78348E3D1760D51300133029 /* GuessLambdaModifiers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GuessLambdaModifiers.h; sourceTree = "<group>"; };
+		78348E3E1760D51300133029 /* GuessLambdaModifiersMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GuessLambdaModifiersMain.cpp; sourceTree = "<group>"; };
+		78348E3F1760D51300133029 /* makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		78348E401760D51300133029 /* QuickStartGuide.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = QuickStartGuide.pdf; sourceTree = "<group>"; };
+		78348E411760D51300133029 /* RuntimeError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RuntimeError.h; sourceTree = "<group>"; };
+		78348E421760D51300133029 /* targetBitrates.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = targetBitrates.sh; sourceTree = "<group>"; };
+		78348E431760D51300133029 /* convert_NtoMbit_YCbCr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = convert_NtoMbit_YCbCr.cpp; sourceTree = "<group>"; };
+		78348E461760D51300133029 /* libmd5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = libmd5.c; sourceTree = "<group>"; };
+		78348E471760D51300133029 /* libmd5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libmd5.h; sourceTree = "<group>"; };
+		78348E481760D51300133029 /* MD5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MD5.h; sourceTree = "<group>"; };
+		78348E4A1760D51300133029 /* program_options_lite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = program_options_lite.cpp; sourceTree = "<group>"; };
+		78348E4B1760D51300133029 /* program_options_lite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = program_options_lite.h; sourceTree = "<group>"; };
+		78348E4C1760D51300133029 /* TAppComCamPara.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppComCamPara.cpp; sourceTree = "<group>"; };
+		78348E4D1760D51300133029 /* TAppComCamPara.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppComCamPara.h; sourceTree = "<group>"; };
+		78348E4F1760D51300133029 /* AccessUnit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AccessUnit.h; sourceTree = "<group>"; };
+		78348E501760D51300133029 /* CommonDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonDef.h; sourceTree = "<group>"; };
+		78348E511760D51300133029 /* ContextModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ContextModel.cpp; sourceTree = "<group>"; };
+		78348E521760D51300133029 /* ContextModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel.h; sourceTree = "<group>"; };
+		78348E531760D51300133029 /* ContextModel3DBuffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ContextModel3DBuffer.cpp; sourceTree = "<group>"; };
+		78348E541760D51300133029 /* ContextModel3DBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel3DBuffer.h; sourceTree = "<group>"; };
+		78348E551760D51300133029 /* ContextTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextTables.h; sourceTree = "<group>"; };
+		78348E561760D51300133029 /* NAL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NAL.h; sourceTree = "<group>"; };
+		78348E571760D51300133029 /* SEI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEI.cpp; sourceTree = "<group>"; };
+		78348E581760D51300133029 /* SEI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEI.h; sourceTree = "<group>"; };
+		78348E591760D51300133029 /* TComBitCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComBitCounter.h; sourceTree = "<group>"; };
+		78348E5A1760D51300133029 /* TComBitStream.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComBitStream.cpp; sourceTree = "<group>"; };
+		78348E5B1760D51300133029 /* TComBitStream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComBitStream.h; sourceTree = "<group>"; };
+		78348E5C1760D51300133029 /* TComCABACTables.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComCABACTables.cpp; sourceTree = "<group>"; };
+		78348E5D1760D51300133029 /* TComCABACTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComCABACTables.h; sourceTree = "<group>"; };
+		78348E5E1760D51300133029 /* TComDataCU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComDataCU.cpp; sourceTree = "<group>"; };
+		78348E5F1760D51300133029 /* TComDataCU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComDataCU.h; sourceTree = "<group>"; };
+		78348E601760D51300133029 /* TComInterpolationFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComInterpolationFilter.cpp; sourceTree = "<group>"; };
+		78348E611760D51300133029 /* TComInterpolationFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComInterpolationFilter.h; sourceTree = "<group>"; };
+		78348E621760D51300133029 /* TComList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComList.h; sourceTree = "<group>"; };
+		78348E631760D51300133029 /* TComLoopFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComLoopFilter.cpp; sourceTree = "<group>"; };
+		78348E641760D51300133029 /* TComLoopFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComLoopFilter.h; sourceTree = "<group>"; };
+		78348E651760D51300133029 /* TComMotionInfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComMotionInfo.cpp; sourceTree = "<group>"; };
+		78348E661760D51300133029 /* TComMotionInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComMotionInfo.h; sourceTree = "<group>"; };
+		78348E671760D51300133029 /* TComMv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComMv.h; sourceTree = "<group>"; };
+		78348E681760D51300133029 /* TComPattern.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPattern.cpp; sourceTree = "<group>"; };
+		78348E691760D51300133029 /* TComPattern.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPattern.h; sourceTree = "<group>"; };
+		78348E6A1760D51300133029 /* TComPic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPic.cpp; sourceTree = "<group>"; };
+		78348E6B1760D51300133029 /* TComPic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPic.h; sourceTree = "<group>"; };
+		78348E6C1760D51300133029 /* TComPicSym.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicSym.cpp; sourceTree = "<group>"; };
+		78348E6D1760D51300133029 /* TComPicSym.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPicSym.h; sourceTree = "<group>"; };
+		78348E6E1760D51300133029 /* TComPicYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuv.cpp; sourceTree = "<group>"; };
+		78348E6F1760D51300133029 /* TComPicYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPicYuv.h; sourceTree = "<group>"; };
+		78348E701760D51300133029 /* TComPicYuvMD5.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuvMD5.cpp; sourceTree = "<group>"; };
+		78348E711760D51300133029 /* TComPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPrediction.cpp; sourceTree = "<group>"; };
+		78348E721760D51300133029 /* TComPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPrediction.h; sourceTree = "<group>"; };
+		78348E731760D51300133029 /* TComRdCost.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCost.cpp; sourceTree = "<group>"; };
+		78348E741760D51300133029 /* TComRdCost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRdCost.h; sourceTree = "<group>"; };
+		78348E751760D51300133029 /* TComRdCostWeightPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCostWeightPrediction.cpp; sourceTree = "<group>"; };
+		78348E761760D51300133029 /* TComRdCostWeightPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRdCostWeightPrediction.h; sourceTree = "<group>"; };
+		78348E771760D51300133029 /* TComRom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRom.cpp; sourceTree = "<group>"; };
+		78348E781760D51300133029 /* TComRom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRom.h; sourceTree = "<group>"; };
+		78348E791760D51300133029 /* TComSampleAdaptiveOffset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComSampleAdaptiveOffset.cpp; sourceTree = "<group>"; };
+		78348E7A1760D51300133029 /* TComSampleAdaptiveOffset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComSampleAdaptiveOffset.h; sourceTree = "<group>"; };
+		78348E7B1760D51300133029 /* TComSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComSlice.cpp; sourceTree = "<group>"; };
+		78348E7C1760D51300133029 /* TComSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComSlice.h; sourceTree = "<group>"; };
+		78348E7D1760D51300133029 /* TComTrQuant.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComTrQuant.cpp; sourceTree = "<group>"; };
+		78348E7E1760D51300133029 /* TComTrQuant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComTrQuant.h; sourceTree = "<group>"; };
+		78348E7F1760D51300133029 /* TComWedgelet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComWedgelet.cpp; sourceTree = "<group>"; };
+		78348E801760D51300133029 /* TComWedgelet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComWedgelet.h; sourceTree = "<group>"; };
+		78348E811760D51300133029 /* TComWeightPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComWeightPrediction.cpp; sourceTree = "<group>"; };
+		78348E821760D51300133029 /* TComWeightPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComWeightPrediction.h; sourceTree = "<group>"; };
+		78348E831760D51300133029 /* TComYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComYuv.cpp; sourceTree = "<group>"; };
+		78348E841760D51300133029 /* TComYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComYuv.h; sourceTree = "<group>"; };
+		78348E851760D51300133029 /* TypeDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TypeDef.h; sourceTree = "<group>"; };
+		78348E871760D51300133029 /* AnnexBread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AnnexBread.cpp; sourceTree = "<group>"; };
+		78348E881760D51300133029 /* AnnexBread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnnexBread.h; sourceTree = "<group>"; };
+		78348E891760D51300133029 /* NALread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NALread.cpp; sourceTree = "<group>"; };
+		78348E8A1760D51300133029 /* NALread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NALread.h; sourceTree = "<group>"; };
+		78348E8B1760D51300133029 /* SEIread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEIread.cpp; sourceTree = "<group>"; };
+		78348E8C1760D51300133029 /* SEIread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEIread.h; sourceTree = "<group>"; };
+		78348E8D1760D51300133029 /* SyntaxElementParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SyntaxElementParser.cpp; sourceTree = "<group>"; };
+		78348E8E1760D51300133029 /* SyntaxElementParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SyntaxElementParser.h; sourceTree = "<group>"; };
+		78348E8F1760D51300133029 /* TDecBinCoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecBinCoder.h; sourceTree = "<group>"; };
+		78348E901760D51300133029 /* TDecBinCoderCABAC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecBinCoderCABAC.cpp; sourceTree = "<group>"; };
+		78348E911760D51300133029 /* TDecBinCoderCABAC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecBinCoderCABAC.h; sourceTree = "<group>"; };
+		78348E921760D51300133029 /* TDecCAVLC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecCAVLC.cpp; sourceTree = "<group>"; };
+		78348E931760D51300133029 /* TDecCAVLC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecCAVLC.h; sourceTree = "<group>"; };
+		78348E941760D51300133029 /* TDecCu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecCu.cpp; sourceTree = "<group>"; };
+		78348E951760D51300133029 /* TDecCu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecCu.h; sourceTree = "<group>"; };
+		78348E961760D51300133029 /* TDecEntropy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecEntropy.cpp; sourceTree = "<group>"; };
+		78348E971760D51300133029 /* TDecEntropy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecEntropy.h; sourceTree = "<group>"; };
+		78348E981760D51300133029 /* TDecGop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecGop.cpp; sourceTree = "<group>"; };
+		78348E991760D51300133029 /* TDecGop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecGop.h; sourceTree = "<group>"; };
+		78348E9A1760D51300133029 /* TDecSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSbac.cpp; sourceTree = "<group>"; };
+		78348E9B1760D51300133029 /* TDecSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSbac.h; sourceTree = "<group>"; };
+		78348E9C1760D51300133029 /* TDecSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSlice.cpp; sourceTree = "<group>"; };
+		78348E9D1760D51300133029 /* TDecSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSlice.h; sourceTree = "<group>"; };
+		78348E9E1760D51300133029 /* TDecTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecTop.cpp; sourceTree = "<group>"; };
+		78348E9F1760D51300133029 /* TDecTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecTop.h; sourceTree = "<group>"; };
+		78348EA11760D51300133029 /* AnnexBwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnnexBwrite.h; sourceTree = "<group>"; };
+		78348EA21760D51300133029 /* NALwrite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NALwrite.cpp; sourceTree = "<group>"; };
+		78348EA31760D51300133029 /* NALwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NALwrite.h; sourceTree = "<group>"; };
+		78348EA41760D51300133029 /* SEIwrite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEIwrite.cpp; sourceTree = "<group>"; };
+		78348EA51760D51300133029 /* SEIwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEIwrite.h; sourceTree = "<group>"; };
+		78348EA61760D51300133029 /* SyntaxElementWriter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SyntaxElementWriter.cpp; sourceTree = "<group>"; };
+		78348EA71760D51300133029 /* SyntaxElementWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SyntaxElementWriter.h; sourceTree = "<group>"; };
+		78348EA81760D51300133029 /* TEncAnalyze.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncAnalyze.cpp; sourceTree = "<group>"; };
+		78348EA91760D51300133029 /* TEncAnalyze.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncAnalyze.h; sourceTree = "<group>"; };
+		78348EAA1760D51300133029 /* TEncBinCoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoder.h; sourceTree = "<group>"; };
+		78348EAB1760D51300133029 /* TEncBinCoderCABAC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncBinCoderCABAC.cpp; sourceTree = "<group>"; };
+		78348EAC1760D51300133029 /* TEncBinCoderCABAC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoderCABAC.h; sourceTree = "<group>"; };
+		78348EAD1760D51300133029 /* TEncBinCoderCABACCounter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncBinCoderCABACCounter.cpp; sourceTree = "<group>"; };
+		78348EAE1760D51300133029 /* TEncBinCoderCABACCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoderCABACCounter.h; sourceTree = "<group>"; };
+		78348EAF1760D51300133029 /* TEncCavlc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncCavlc.cpp; sourceTree = "<group>"; };
+		78348EB01760D51300133029 /* TEncCavlc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCavlc.h; sourceTree = "<group>"; };
+		78348EB11760D51300133029 /* TEncCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCfg.h; sourceTree = "<group>"; };
+		78348EB21760D51300133029 /* TEncCu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncCu.cpp; sourceTree = "<group>"; };
+		78348EB31760D51300133029 /* TEncCu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCu.h; sourceTree = "<group>"; };
+		78348EB41760D51300133029 /* TEncEntropy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncEntropy.cpp; sourceTree = "<group>"; };
+		78348EB51760D51300133029 /* TEncEntropy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncEntropy.h; sourceTree = "<group>"; };
+		78348EB61760D51300133029 /* TEncGOP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncGOP.cpp; sourceTree = "<group>"; };
+		78348EB71760D51300133029 /* TEncGOP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncGOP.h; sourceTree = "<group>"; };
+		78348EB81760D51300133029 /* TEncPic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncPic.cpp; sourceTree = "<group>"; };
+		78348EB91760D51300133029 /* TEncPic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncPic.h; sourceTree = "<group>"; };
+		78348EBA1760D51300133029 /* TEncPreanalyzer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncPreanalyzer.cpp; sourceTree = "<group>"; };
+		78348EBB1760D51300133029 /* TEncPreanalyzer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncPreanalyzer.h; sourceTree = "<group>"; };
+		78348EBC1760D51300133029 /* TEncRateCtrl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncRateCtrl.cpp; sourceTree = "<group>"; };
+		78348EBD1760D51300133029 /* TEncRateCtrl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncRateCtrl.h; sourceTree = "<group>"; };
+		78348EBE1760D51300133029 /* TEncSampleAdaptiveOffset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSampleAdaptiveOffset.cpp; sourceTree = "<group>"; };
+		78348EBF1760D51300133029 /* TEncSampleAdaptiveOffset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSampleAdaptiveOffset.h; sourceTree = "<group>"; };
+		78348EC01760D51300133029 /* TEncSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSbac.cpp; sourceTree = "<group>"; };
+		78348EC11760D51300133029 /* TEncSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSbac.h; sourceTree = "<group>"; };
+		78348EC21760D51300133029 /* TEncSearch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSearch.cpp; sourceTree = "<group>"; };
+		78348EC31760D51300133029 /* TEncSearch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSearch.h; sourceTree = "<group>"; };
+		78348EC41760D51300133029 /* TEncSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSlice.cpp; sourceTree = "<group>"; };
+		78348EC51760D51300133029 /* TEncSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSlice.h; sourceTree = "<group>"; };
+		78348EC61760D51300133029 /* TEncTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncTop.cpp; sourceTree = "<group>"; };
+		78348EC71760D51300133029 /* TEncTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncTop.h; sourceTree = "<group>"; };
+		78348EC81760D51300133029 /* WeightPredAnalysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WeightPredAnalysis.cpp; sourceTree = "<group>"; };
+		78348EC91760D51300133029 /* WeightPredAnalysis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WeightPredAnalysis.h; sourceTree = "<group>"; };
+		78348ECB1760D51300133029 /* TExtrTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TExtrTop.cpp; sourceTree = "<group>"; };
+		78348ECC1760D51300133029 /* TExtrTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TExtrTop.h; sourceTree = "<group>"; };
+		78348ECE1760D51300133029 /* TRenFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenFilter.cpp; sourceTree = "<group>"; };
+		78348ECF1760D51300133029 /* TRenFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenFilter.h; sourceTree = "<group>"; };
+		78348ED01760D51300133029 /* TRenImage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenImage.cpp; sourceTree = "<group>"; };
+		78348ED11760D51300133029 /* TRenImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenImage.h; sourceTree = "<group>"; };
+		78348ED21760D51300133029 /* TRenImagePlane.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenImagePlane.cpp; sourceTree = "<group>"; };
+		78348ED31760D51300133029 /* TRenImagePlane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenImagePlane.h; sourceTree = "<group>"; };
+		78348ED41760D51300133029 /* TRenInterpFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenInterpFilter.cpp; sourceTree = "<group>"; };
+		78348ED51760D51300133029 /* TRenInterpFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenInterpFilter.h; sourceTree = "<group>"; };
+		78348ED61760D51300133029 /* TRenModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenModel.cpp; sourceTree = "<group>"; };
+		78348ED71760D51300133029 /* TRenModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenModel.h; sourceTree = "<group>"; };
+		78348ED81760D51300133029 /* TRenModSetupStrParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenModSetupStrParser.cpp; sourceTree = "<group>"; };
+		78348ED91760D51300133029 /* TRenModSetupStrParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenModSetupStrParser.h; sourceTree = "<group>"; };
+		78348EDA1760D51300133029 /* TRenSingleModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenSingleModel.cpp; sourceTree = "<group>"; };
+		78348EDB1760D51300133029 /* TRenSingleModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenSingleModel.h; sourceTree = "<group>"; };
+		78348EDC1760D51300133029 /* TRenTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenTop.cpp; sourceTree = "<group>"; };
+		78348EDD1760D51300133029 /* TRenTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenTop.h; sourceTree = "<group>"; };
+		78348EDF1760D51300133029 /* TVideoIOYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TVideoIOYuv.cpp; sourceTree = "<group>"; };
+		78348EE01760D51300133029 /* TVideoIOYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVideoIOYuv.h; sourceTree = "<group>"; };
 		7885897D15664E3D00982C12 /* libTLibExtractor.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibExtractor.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7885899415664E6A00982C12 /* TAppExtractor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppExtractor; sourceTree = BUILT_PRODUCTS_DIR; };
 		7894E36714890D9A009259F4 /* libTLibRenderer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibRenderer.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7894E38A14890DD2009259F4 /* TAppRenderer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppRenderer; sourceTree = BUILT_PRODUCTS_DIR; };
-		78C592E9158720BB004401C5 /* decmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = decmain.cpp; sourceTree = "<group>"; };
-		78C592EA158720BB004401C5 /* TAppDecCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppDecCfg.cpp; sourceTree = "<group>"; };
-		78C592EB158720BB004401C5 /* TAppDecCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppDecCfg.h; sourceTree = "<group>"; };
-		78C592EC158720BB004401C5 /* TAppDecTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppDecTop.cpp; sourceTree = "<group>"; };
-		78C592ED158720BB004401C5 /* TAppDecTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppDecTop.h; sourceTree = "<group>"; };
-		78C592EF158720BB004401C5 /* encmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = encmain.cpp; sourceTree = "<group>"; };
-		78C592F0158720BB004401C5 /* TAppEncCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppEncCfg.cpp; sourceTree = "<group>"; };
-		78C592F1158720BB004401C5 /* TAppEncCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppEncCfg.h; sourceTree = "<group>"; };
-		78C592F2158720BB004401C5 /* TAppEncTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppEncTop.cpp; sourceTree = "<group>"; };
-		78C592F3158720BB004401C5 /* TAppEncTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppEncTop.h; sourceTree = "<group>"; };
-		78C592F5158720BB004401C5 /* extrmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extrmain.cpp; sourceTree = "<group>"; };
-		78C592F6158720BB004401C5 /* TAppExtrCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppExtrCfg.cpp; sourceTree = "<group>"; };
-		78C592F7158720BB004401C5 /* TAppExtrCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppExtrCfg.h; sourceTree = "<group>"; };
-		78C592F8158720BB004401C5 /* TAppExtrTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppExtrTop.cpp; sourceTree = "<group>"; };
-		78C592F9158720BB004401C5 /* TAppExtrTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppExtrTop.h; sourceTree = "<group>"; };
-		78C592FB158720BB004401C5 /* RendererMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RendererMain.cpp; sourceTree = "<group>"; };
-		78C592FC158720BB004401C5 /* TAppRendererCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppRendererCfg.cpp; sourceTree = "<group>"; };
-		78C592FD158720BB004401C5 /* TAppRendererCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppRendererCfg.h; sourceTree = "<group>"; };
-		78C592FE158720BB004401C5 /* TAppRendererTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppRendererTop.cpp; sourceTree = "<group>"; };
-		78C592FF158720BB004401C5 /* TAppRendererTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppRendererTop.h; sourceTree = "<group>"; };
-		78C59301158720BB004401C5 /* annexBbytecount.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = annexBbytecount.cpp; sourceTree = "<group>"; };
-		78C59303158720BB004401C5 /* encode.shl */ = {isa = PBXFileReference; lastKnownFileType = text; path = encode.shl; sourceTree = "<group>"; };
-		78C59304158720BB004401C5 /* encodeCommand.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = encodeCommand.sh; sourceTree = "<group>"; };
-		78C59305158720BB004401C5 /* ExtractBitrates.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtractBitrates.cpp; sourceTree = "<group>"; };
-		78C59306158720BB004401C5 /* ExtractBitrates.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtractBitrates.h; sourceTree = "<group>"; };
-		78C59307158720BB004401C5 /* ExtractBitratesMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtractBitratesMain.cpp; sourceTree = "<group>"; };
-		78C59308158720BB004401C5 /* GuessLambdaModifiers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GuessLambdaModifiers.cpp; sourceTree = "<group>"; };
-		78C59309158720BB004401C5 /* GuessLambdaModifiers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GuessLambdaModifiers.h; sourceTree = "<group>"; };
-		78C5930A158720BB004401C5 /* GuessLambdaModifiersMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GuessLambdaModifiersMain.cpp; sourceTree = "<group>"; };
-		78C5930B158720BB004401C5 /* makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
-		78C5930C158720BB004401C5 /* QuickStartGuide.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = QuickStartGuide.pdf; sourceTree = "<group>"; };
-		78C5930D158720BB004401C5 /* RuntimeError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RuntimeError.h; sourceTree = "<group>"; };
-		78C5930E158720BB004401C5 /* targetBitrates.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = targetBitrates.sh; sourceTree = "<group>"; };
-		78C5930F158720BB004401C5 /* convert_NtoMbit_YCbCr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = convert_NtoMbit_YCbCr.cpp; sourceTree = "<group>"; };
-		78C59312158720BB004401C5 /* libmd5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = libmd5.c; sourceTree = "<group>"; };
-		78C59313158720BB004401C5 /* libmd5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libmd5.h; sourceTree = "<group>"; };
-		78C59314158720BB004401C5 /* MD5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MD5.h; sourceTree = "<group>"; };
-		78C59316158720BB004401C5 /* program_options_lite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = program_options_lite.cpp; sourceTree = "<group>"; };
-		78C59317158720BB004401C5 /* program_options_lite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = program_options_lite.h; sourceTree = "<group>"; };
-		78C59318158720BB004401C5 /* TAppComCamPara.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppComCamPara.cpp; sourceTree = "<group>"; };
-		78C59319158720BB004401C5 /* TAppComCamPara.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppComCamPara.h; sourceTree = "<group>"; };
-		78C5931B158720BB004401C5 /* AccessUnit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AccessUnit.h; sourceTree = "<group>"; };
-		78C5931C158720BB004401C5 /* CommonDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonDef.h; sourceTree = "<group>"; };
-		78C5931D158720BB004401C5 /* ContextModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ContextModel.cpp; sourceTree = "<group>"; };
-		78C5931E158720BB004401C5 /* ContextModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel.h; sourceTree = "<group>"; };
-		78C5931F158720BB004401C5 /* ContextModel3DBuffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ContextModel3DBuffer.cpp; sourceTree = "<group>"; };
-		78C59320158720BB004401C5 /* ContextModel3DBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel3DBuffer.h; sourceTree = "<group>"; };
-		78C59321158720BB004401C5 /* ContextTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextTables.h; sourceTree = "<group>"; };
-		78C59322158720BB004401C5 /* NAL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NAL.h; sourceTree = "<group>"; };
-		78C59323158720BB004401C5 /* SEI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEI.h; sourceTree = "<group>"; };
-		78C59324158720BB004401C5 /* TComAdaptiveLoopFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComAdaptiveLoopFilter.cpp; sourceTree = "<group>"; };
-		78C59325158720BB004401C5 /* TComAdaptiveLoopFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComAdaptiveLoopFilter.h; sourceTree = "<group>"; };
-		78C59326158720BB004401C5 /* TComBitCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComBitCounter.h; sourceTree = "<group>"; };
-		78C59327158720BB004401C5 /* TComBitStream.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComBitStream.cpp; sourceTree = "<group>"; };
-		78C59328158720BB004401C5 /* TComBitStream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComBitStream.h; sourceTree = "<group>"; };
-		78C59329158720BB004401C5 /* TComCABACTables.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComCABACTables.cpp; sourceTree = "<group>"; };
-		78C5932A158720BB004401C5 /* TComCABACTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComCABACTables.h; sourceTree = "<group>"; };
-		78C5932B158720BB004401C5 /* TComDataCU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComDataCU.cpp; sourceTree = "<group>"; };
-		78C5932C158720BB004401C5 /* TComDataCU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComDataCU.h; sourceTree = "<group>"; };
-		78C5932D158720BB004401C5 /* TComDepthMapGenerator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComDepthMapGenerator.cpp; sourceTree = "<group>"; };
-		78C5932E158720BB004401C5 /* TComDepthMapGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComDepthMapGenerator.h; sourceTree = "<group>"; };
-		78C5932F158720BB004401C5 /* TComInterpolationFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComInterpolationFilter.cpp; sourceTree = "<group>"; };
-		78C59330158720BB004401C5 /* TComInterpolationFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComInterpolationFilter.h; sourceTree = "<group>"; };
-		78C59331158720BB004401C5 /* TComList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComList.h; sourceTree = "<group>"; };
-		78C59332158720BB004401C5 /* TComLoopFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComLoopFilter.cpp; sourceTree = "<group>"; };
-		78C59333158720BB004401C5 /* TComLoopFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComLoopFilter.h; sourceTree = "<group>"; };
-		78C59334158720BB004401C5 /* TComMotionInfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComMotionInfo.cpp; sourceTree = "<group>"; };
-		78C59335158720BB004401C5 /* TComMotionInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComMotionInfo.h; sourceTree = "<group>"; };
-		78C59336158720BB004401C5 /* TComMv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComMv.h; sourceTree = "<group>"; };
-		78C59337158720BB004401C5 /* TComPattern.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPattern.cpp; sourceTree = "<group>"; };
-		78C59338158720BB004401C5 /* TComPattern.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPattern.h; sourceTree = "<group>"; };
-		78C59339158720BB004401C5 /* TComPic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPic.cpp; sourceTree = "<group>"; };
-		78C5933A158720BB004401C5 /* TComPic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPic.h; sourceTree = "<group>"; };
-		78C5933B158720BB004401C5 /* TComPicSym.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicSym.cpp; sourceTree = "<group>"; };
-		78C5933C158720BB004401C5 /* TComPicSym.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPicSym.h; sourceTree = "<group>"; };
-		78C5933D158720BB004401C5 /* TComPicYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuv.cpp; sourceTree = "<group>"; };
-		78C5933E158720BB004401C5 /* TComPicYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPicYuv.h; sourceTree = "<group>"; };
-		78C5933F158720BB004401C5 /* TComPicYuvMD5.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuvMD5.cpp; sourceTree = "<group>"; };
-		78C59340158720BB004401C5 /* TComPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPrediction.cpp; sourceTree = "<group>"; };
-		78C59341158720BB004401C5 /* TComPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPrediction.h; sourceTree = "<group>"; };
-		78C59342158720BB004401C5 /* TComRdCost.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCost.cpp; sourceTree = "<group>"; };
-		78C59343158720BB004401C5 /* TComRdCost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRdCost.h; sourceTree = "<group>"; };
-		78C59344158720BB004401C5 /* TComRdCostWeightPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCostWeightPrediction.cpp; sourceTree = "<group>"; };
-		78C59345158720BB004401C5 /* TComRdCostWeightPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRdCostWeightPrediction.h; sourceTree = "<group>"; };
-		78C59346158720BB004401C5 /* TComResidualGenerator.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComResidualGenerator.cpp; sourceTree = "<group>"; };
-		78C59347158720BB004401C5 /* TComResidualGenerator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComResidualGenerator.h; sourceTree = "<group>"; };
-		78C59348158720BB004401C5 /* TComRom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRom.cpp; sourceTree = "<group>"; };
-		78C59349158720BB004401C5 /* TComRom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRom.h; sourceTree = "<group>"; };
-		78C5934A158720BB004401C5 /* TComSampleAdaptiveOffset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComSampleAdaptiveOffset.cpp; sourceTree = "<group>"; };
-		78C5934B158720BB004401C5 /* TComSampleAdaptiveOffset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComSampleAdaptiveOffset.h; sourceTree = "<group>"; };
-		78C5934C158720BB004401C5 /* TComSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComSlice.cpp; sourceTree = "<group>"; };
-		78C5934D158720BB004401C5 /* TComSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComSlice.h; sourceTree = "<group>"; };
-		78C5934E158720BB004401C5 /* TComTrQuant.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComTrQuant.cpp; sourceTree = "<group>"; };
-		78C5934F158720BB004401C5 /* TComTrQuant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComTrQuant.h; sourceTree = "<group>"; };
-		78C59350158720BB004401C5 /* TComWedgelet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComWedgelet.cpp; sourceTree = "<group>"; };
-		78C59351158720BB004401C5 /* TComWedgelet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComWedgelet.h; sourceTree = "<group>"; };
-		78C59352158720BB004401C5 /* TComWeightPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComWeightPrediction.cpp; sourceTree = "<group>"; };
-		78C59353158720BB004401C5 /* TComWeightPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComWeightPrediction.h; sourceTree = "<group>"; };
-		78C59354158720BB004401C5 /* TComYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComYuv.cpp; sourceTree = "<group>"; };
-		78C59355158720BB004401C5 /* TComYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComYuv.h; sourceTree = "<group>"; };
-		78C59356158720BB004401C5 /* TypeDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TypeDef.h; sourceTree = "<group>"; };
-		78C59358158720BB004401C5 /* AnnexBread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AnnexBread.cpp; sourceTree = "<group>"; };
-		78C59359158720BB004401C5 /* AnnexBread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnnexBread.h; sourceTree = "<group>"; };
-		78C5935A158720BB004401C5 /* NALread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NALread.cpp; sourceTree = "<group>"; };
-		78C5935B158720BB004401C5 /* NALread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NALread.h; sourceTree = "<group>"; };
-		78C5935C158720BB004401C5 /* SEIread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEIread.cpp; sourceTree = "<group>"; };
-		78C5935D158720BB004401C5 /* SEIread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEIread.h; sourceTree = "<group>"; };
-		78C5935E158720BB004401C5 /* TDecBinCoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecBinCoder.h; sourceTree = "<group>"; };
-		78C5935F158720BB004401C5 /* TDecBinCoderCABAC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecBinCoderCABAC.cpp; sourceTree = "<group>"; };
-		78C59360158720BB004401C5 /* TDecBinCoderCABAC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecBinCoderCABAC.h; sourceTree = "<group>"; };
-		78C59361158720BB004401C5 /* TDecCAVLC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecCAVLC.cpp; sourceTree = "<group>"; };
-		78C59362158720BB004401C5 /* TDecCAVLC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecCAVLC.h; sourceTree = "<group>"; };
-		78C59363158720BB004401C5 /* TDecCu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecCu.cpp; sourceTree = "<group>"; };
-		78C59364158720BB004401C5 /* TDecCu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecCu.h; sourceTree = "<group>"; };
-		78C59365158720BB004401C5 /* TDecEntropy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecEntropy.cpp; sourceTree = "<group>"; };
-		78C59366158720BB004401C5 /* TDecEntropy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecEntropy.h; sourceTree = "<group>"; };
-		78C59367158720BB004401C5 /* TDecGop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecGop.cpp; sourceTree = "<group>"; };
-		78C59368158720BB004401C5 /* TDecGop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecGop.h; sourceTree = "<group>"; };
-		78C59369158720BB004401C5 /* TDecSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSbac.cpp; sourceTree = "<group>"; };
-		78C5936A158720BB004401C5 /* TDecSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSbac.h; sourceTree = "<group>"; };
-		78C5936B158720BB004401C5 /* TDecSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSlice.cpp; sourceTree = "<group>"; };
-		78C5936C158720BB004401C5 /* TDecSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSlice.h; sourceTree = "<group>"; };
-		78C5936D158720BB004401C5 /* TDecTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecTop.cpp; sourceTree = "<group>"; };
-		78C5936E158720BB004401C5 /* TDecTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecTop.h; sourceTree = "<group>"; };
-		78C59370158720BB004401C5 /* AnnexBwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnnexBwrite.h; sourceTree = "<group>"; };
-		78C59371158720BB004401C5 /* NALwrite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NALwrite.cpp; sourceTree = "<group>"; };
-		78C59372158720BB004401C5 /* NALwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NALwrite.h; sourceTree = "<group>"; };
-		78C59373158720BB004401C5 /* SEIwrite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEIwrite.cpp; sourceTree = "<group>"; };
-		78C59374158720BB004401C5 /* SEIwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEIwrite.h; sourceTree = "<group>"; };
-		78C59375158720BB004401C5 /* TEncAdaptiveLoopFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncAdaptiveLoopFilter.cpp; sourceTree = "<group>"; };
-		78C59376158720BB004401C5 /* TEncAdaptiveLoopFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncAdaptiveLoopFilter.h; sourceTree = "<group>"; };
-		78C59377158720BB004401C5 /* TEncAnalyze.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncAnalyze.h; sourceTree = "<group>"; };
-		78C59378158720BB004401C5 /* TEncBinCoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoder.h; sourceTree = "<group>"; };
-		78C59379158720BB004401C5 /* TEncBinCoderCABAC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncBinCoderCABAC.cpp; sourceTree = "<group>"; };
-		78C5937A158720BB004401C5 /* TEncBinCoderCABAC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoderCABAC.h; sourceTree = "<group>"; };
-		78C5937B158720BB004401C5 /* TEncBinCoderCABACCounter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncBinCoderCABACCounter.cpp; sourceTree = "<group>"; };
-		78C5937C158720BB004401C5 /* TEncBinCoderCABACCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoderCABACCounter.h; sourceTree = "<group>"; };
-		78C5937D158720BB004401C5 /* TEncCavlc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncCavlc.cpp; sourceTree = "<group>"; };
-		78C5937E158720BB004401C5 /* TEncCavlc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCavlc.h; sourceTree = "<group>"; };
-		78C5937F158720BB004401C5 /* TEncCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCfg.h; sourceTree = "<group>"; };
-		78C59380158720BB004401C5 /* TEncCu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncCu.cpp; sourceTree = "<group>"; };
-		78C59381158720BB004401C5 /* TEncCu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCu.h; sourceTree = "<group>"; };
-		78C59382158720BB004401C5 /* TEncEntropy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncEntropy.cpp; sourceTree = "<group>"; };
-		78C59383158720BB004401C5 /* TEncEntropy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncEntropy.h; sourceTree = "<group>"; };
-		78C59384158720BB004401C5 /* TEncGOP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncGOP.cpp; sourceTree = "<group>"; };
-		78C59385158720BB004401C5 /* TEncGOP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncGOP.h; sourceTree = "<group>"; };
-		78C59386158720BB004401C5 /* TEncPic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncPic.cpp; sourceTree = "<group>"; };
-		78C59387158720BB004401C5 /* TEncPic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncPic.h; sourceTree = "<group>"; };
-		78C59388158720BB004401C5 /* TEncPreanalyzer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncPreanalyzer.cpp; sourceTree = "<group>"; };
-		78C59389158720BB004401C5 /* TEncPreanalyzer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncPreanalyzer.h; sourceTree = "<group>"; };
-		78C5938A158720BB004401C5 /* TEncSampleAdaptiveOffset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSampleAdaptiveOffset.cpp; sourceTree = "<group>"; };
-		78C5938B158720BB004401C5 /* TEncSampleAdaptiveOffset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSampleAdaptiveOffset.h; sourceTree = "<group>"; };
-		78C5938C158720BB004401C5 /* TEncSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSbac.cpp; sourceTree = "<group>"; };
-		78C5938D158720BB004401C5 /* TEncSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSbac.h; sourceTree = "<group>"; };
-		78C5938E158720BB004401C5 /* TEncSearch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSearch.cpp; sourceTree = "<group>"; };
-		78C5938F158720BB004401C5 /* TEncSearch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSearch.h; sourceTree = "<group>"; };
-		78C59390158720BB004401C5 /* TEncSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSlice.cpp; sourceTree = "<group>"; };
-		78C59391158720BB004401C5 /* TEncSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSlice.h; sourceTree = "<group>"; };
-		78C59392158720BB004401C5 /* TEncTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncTop.cpp; sourceTree = "<group>"; };
-		78C59393158720BB004401C5 /* TEncTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncTop.h; sourceTree = "<group>"; };
-		78C59394158720BB004401C5 /* WeightPredAnalysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WeightPredAnalysis.cpp; sourceTree = "<group>"; };
-		78C59395158720BB004401C5 /* WeightPredAnalysis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WeightPredAnalysis.h; sourceTree = "<group>"; };
-		78C59397158720BB004401C5 /* TExtrTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TExtrTop.cpp; sourceTree = "<group>"; };
-		78C59398158720BB004401C5 /* TExtrTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TExtrTop.h; sourceTree = "<group>"; };
-		78C5939A158720BB004401C5 /* TRenFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenFilter.cpp; sourceTree = "<group>"; };
-		78C5939B158720BB004401C5 /* TRenFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenFilter.h; sourceTree = "<group>"; };
-		78C5939C158720BB004401C5 /* TRenImage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenImage.cpp; sourceTree = "<group>"; };
-		78C5939D158720BB004401C5 /* TRenImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenImage.h; sourceTree = "<group>"; };
-		78C5939E158720BB004401C5 /* TRenImagePlane.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenImagePlane.cpp; sourceTree = "<group>"; };
-		78C5939F158720BB004401C5 /* TRenImagePlane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenImagePlane.h; sourceTree = "<group>"; };
-		78C593A0158720BB004401C5 /* TRenInterpFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenInterpFilter.cpp; sourceTree = "<group>"; };
-		78C593A1158720BB004401C5 /* TRenInterpFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenInterpFilter.h; sourceTree = "<group>"; };
-		78C593A2158720BB004401C5 /* TRenModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenModel.cpp; sourceTree = "<group>"; };
-		78C593A3158720BB004401C5 /* TRenModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenModel.h; sourceTree = "<group>"; };
-		78C593A4158720BB004401C5 /* TRenModSetupStrParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenModSetupStrParser.cpp; sourceTree = "<group>"; };
-		78C593A5158720BB004401C5 /* TRenModSetupStrParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenModSetupStrParser.h; sourceTree = "<group>"; };
-		78C593A6158720BB004401C5 /* TRenSingleModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenSingleModel.cpp; sourceTree = "<group>"; };
-		78C593A7158720BB004401C5 /* TRenSingleModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenSingleModel.h; sourceTree = "<group>"; };
-		78C593A8158720BB004401C5 /* TRenTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenTop.cpp; sourceTree = "<group>"; };
-		78C593A9158720BB004401C5 /* TRenTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenTop.h; sourceTree = "<group>"; };
-		78C593AB158720BB004401C5 /* TVideoIOYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TVideoIOYuv.cpp; sourceTree = "<group>"; };
-		78C593AC158720BB004401C5 /* TVideoIOYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVideoIOYuv.h; sourceTree = "<group>"; };
 		78C593B415872152004401C5 /* libTAppCommon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTAppCommon.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -588,8 +588,8 @@
 		08FB7795FE84155DC02AAC07 /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				78C592E7158720BB004401C5 /* App */,
-				78C59310158720BB004401C5 /* Lib */,
+				78348E1B1760D51300133029 /* App */,
+				78348E441760D51300133029 /* Lib */,
 			);
 			indentWidth = 2;
 			name = Source;
@@ -614,312 +614,312 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		78C592E7158720BB004401C5 /* App */ = {
+		78348E1B1760D51300133029 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				78C592E8158720BB004401C5 /* TAppDecoder */,
-				78C592EE158720BB004401C5 /* TAppEncoder */,
-				78C592F4158720BB004401C5 /* TAppExtractor */,
-				78C592FA158720BB004401C5 /* TAppRenderer */,
-				78C59300158720BB004401C5 /* utils */,
+				78348E1C1760D51300133029 /* TAppDecoder */,
+				78348E221760D51300133029 /* TAppEncoder */,
+				78348E281760D51300133029 /* TAppExtractor */,
+				78348E2E1760D51300133029 /* TAppRenderer */,
+				78348E341760D51300133029 /* utils */,
 			);
 			name = App;
 			path = source/App;
 			sourceTree = "<group>";
 		};
-		78C592E8158720BB004401C5 /* TAppDecoder */ = {
+		78348E1C1760D51300133029 /* TAppDecoder */ = {
 			isa = PBXGroup;
 			children = (
-				78C592E9158720BB004401C5 /* decmain.cpp */,
-				78C592EA158720BB004401C5 /* TAppDecCfg.cpp */,
-				78C592EB158720BB004401C5 /* TAppDecCfg.h */,
-				78C592EC158720BB004401C5 /* TAppDecTop.cpp */,
-				78C592ED158720BB004401C5 /* TAppDecTop.h */,
+				78348E1D1760D51300133029 /* decmain.cpp */,
+				78348E1E1760D51300133029 /* TAppDecCfg.cpp */,
+				78348E1F1760D51300133029 /* TAppDecCfg.h */,
+				78348E201760D51300133029 /* TAppDecTop.cpp */,
+				78348E211760D51300133029 /* TAppDecTop.h */,
 			);
 			path = TAppDecoder;
 			sourceTree = "<group>";
 		};
-		78C592EE158720BB004401C5 /* TAppEncoder */ = {
+		78348E221760D51300133029 /* TAppEncoder */ = {
 			isa = PBXGroup;
 			children = (
-				78C592EF158720BB004401C5 /* encmain.cpp */,
-				78C592F0158720BB004401C5 /* TAppEncCfg.cpp */,
-				78C592F1158720BB004401C5 /* TAppEncCfg.h */,
-				78C592F2158720BB004401C5 /* TAppEncTop.cpp */,
-				78C592F3158720BB004401C5 /* TAppEncTop.h */,
+				78348E231760D51300133029 /* encmain.cpp */,
+				78348E241760D51300133029 /* TAppEncCfg.cpp */,
+				78348E251760D51300133029 /* TAppEncCfg.h */,
+				78348E261760D51300133029 /* TAppEncTop.cpp */,
+				78348E271760D51300133029 /* TAppEncTop.h */,
 			);
 			path = TAppEncoder;
 			sourceTree = "<group>";
 		};
-		78C592F4158720BB004401C5 /* TAppExtractor */ = {
+		78348E281760D51300133029 /* TAppExtractor */ = {
 			isa = PBXGroup;
 			children = (
-				78C592F5158720BB004401C5 /* extrmain.cpp */,
-				78C592F6158720BB004401C5 /* TAppExtrCfg.cpp */,
-				78C592F7158720BB004401C5 /* TAppExtrCfg.h */,
-				78C592F8158720BB004401C5 /* TAppExtrTop.cpp */,
-				78C592F9158720BB004401C5 /* TAppExtrTop.h */,
+				78348E291760D51300133029 /* extrmain.cpp */,
+				78348E2A1760D51300133029 /* TAppExtrCfg.cpp */,
+				78348E2B1760D51300133029 /* TAppExtrCfg.h */,
+				78348E2C1760D51300133029 /* TAppExtrTop.cpp */,
+				78348E2D1760D51300133029 /* TAppExtrTop.h */,
 			);
 			path = TAppExtractor;
 			sourceTree = "<group>";
 		};
-		78C592FA158720BB004401C5 /* TAppRenderer */ = {
+		78348E2E1760D51300133029 /* TAppRenderer */ = {
 			isa = PBXGroup;
 			children = (
-				78C592FB158720BB004401C5 /* RendererMain.cpp */,
-				78C592FC158720BB004401C5 /* TAppRendererCfg.cpp */,
-				78C592FD158720BB004401C5 /* TAppRendererCfg.h */,
-				78C592FE158720BB004401C5 /* TAppRendererTop.cpp */,
-				78C592FF158720BB004401C5 /* TAppRendererTop.h */,
+				78348E2F1760D51300133029 /* RendererMain.cpp */,
+				78348E301760D51300133029 /* TAppRendererCfg.cpp */,
+				78348E311760D51300133029 /* TAppRendererCfg.h */,
+				78348E321760D51300133029 /* TAppRendererTop.cpp */,
+				78348E331760D51300133029 /* TAppRendererTop.h */,
 			);
 			path = TAppRenderer;
 			sourceTree = "<group>";
 		};
-		78C59300158720BB004401C5 /* utils */ = {
+		78348E341760D51300133029 /* utils */ = {
 			isa = PBXGroup;
 			children = (
-				78C59301158720BB004401C5 /* annexBbytecount.cpp */,
-				78C59302158720BB004401C5 /* BitrateTargeting */,
-				78C5930F158720BB004401C5 /* convert_NtoMbit_YCbCr.cpp */,
+				78348E351760D51300133029 /* annexBbytecount.cpp */,
+				78348E361760D51300133029 /* BitrateTargeting */,
+				78348E431760D51300133029 /* convert_NtoMbit_YCbCr.cpp */,
 			);
 			path = utils;
 			sourceTree = "<group>";
 		};
-		78C59302158720BB004401C5 /* BitrateTargeting */ = {
+		78348E361760D51300133029 /* BitrateTargeting */ = {
 			isa = PBXGroup;
 			children = (
-				78C59303158720BB004401C5 /* encode.shl */,
-				78C59304158720BB004401C5 /* encodeCommand.sh */,
-				78C59305158720BB004401C5 /* ExtractBitrates.cpp */,
-				78C59306158720BB004401C5 /* ExtractBitrates.h */,
-				78C59307158720BB004401C5 /* ExtractBitratesMain.cpp */,
-				78C59308158720BB004401C5 /* GuessLambdaModifiers.cpp */,
-				78C59309158720BB004401C5 /* GuessLambdaModifiers.h */,
-				78C5930A158720BB004401C5 /* GuessLambdaModifiersMain.cpp */,
-				78C5930B158720BB004401C5 /* makefile */,
-				78C5930C158720BB004401C5 /* QuickStartGuide.pdf */,
-				78C5930D158720BB004401C5 /* RuntimeError.h */,
-				78C5930E158720BB004401C5 /* targetBitrates.sh */,
+				78348E371760D51300133029 /* encode.shl */,
+				78348E381760D51300133029 /* encodeCommand.sh */,
+				78348E391760D51300133029 /* ExtractBitrates.cpp */,
+				78348E3A1760D51300133029 /* ExtractBitrates.h */,
+				78348E3B1760D51300133029 /* ExtractBitratesMain.cpp */,
+				78348E3C1760D51300133029 /* GuessLambdaModifiers.cpp */,
+				78348E3D1760D51300133029 /* GuessLambdaModifiers.h */,
+				78348E3E1760D51300133029 /* GuessLambdaModifiersMain.cpp */,
+				78348E3F1760D51300133029 /* makefile */,
+				78348E401760D51300133029 /* QuickStartGuide.pdf */,
+				78348E411760D51300133029 /* RuntimeError.h */,
+				78348E421760D51300133029 /* targetBitrates.sh */,
 			);
 			path = BitrateTargeting;
 			sourceTree = "<group>";
 		};
-		78C59310158720BB004401C5 /* Lib */ = {
+		78348E441760D51300133029 /* Lib */ = {
 			isa = PBXGroup;
 			children = (
-				78C59311158720BB004401C5 /* libmd5 */,
-				78C59315158720BB004401C5 /* TAppCommon */,
-				78C5931A158720BB004401C5 /* TLibCommon */,
-				78C59357158720BB004401C5 /* TLibDecoder */,
-				78C5936F158720BB004401C5 /* TLibEncoder */,
-				78C59396158720BB004401C5 /* TLibExtractor */,
-				78C59399158720BB004401C5 /* TLibRenderer */,
-				78C593AA158720BB004401C5 /* TLibVideoIO */,
+				78348E451760D51300133029 /* libmd5 */,
+				78348E491760D51300133029 /* TAppCommon */,
+				78348E4E1760D51300133029 /* TLibCommon */,
+				78348E861760D51300133029 /* TLibDecoder */,
+				78348EA01760D51300133029 /* TLibEncoder */,
+				78348ECA1760D51300133029 /* TLibExtractor */,
+				78348ECD1760D51300133029 /* TLibRenderer */,
+				78348EDE1760D51300133029 /* TLibVideoIO */,
 			);
 			name = Lib;
 			path = source/Lib;
 			sourceTree = "<group>";
 		};
-		78C59311158720BB004401C5 /* libmd5 */ = {
+		78348E451760D51300133029 /* libmd5 */ = {
 			isa = PBXGroup;
 			children = (
-				78C59312158720BB004401C5 /* libmd5.c */,
-				78C59313158720BB004401C5 /* libmd5.h */,
-				78C59314158720BB004401C5 /* MD5.h */,
+				78348E461760D51300133029 /* libmd5.c */,
+				78348E471760D51300133029 /* libmd5.h */,
+				78348E481760D51300133029 /* MD5.h */,
 			);
 			path = libmd5;
 			sourceTree = "<group>";
 		};
-		78C59315158720BB004401C5 /* TAppCommon */ = {
+		78348E491760D51300133029 /* TAppCommon */ = {
 			isa = PBXGroup;
 			children = (
-				78C59316158720BB004401C5 /* program_options_lite.cpp */,
-				78C59317158720BB004401C5 /* program_options_lite.h */,
-				78C59318158720BB004401C5 /* TAppComCamPara.cpp */,
-				78C59319158720BB004401C5 /* TAppComCamPara.h */,
+				78348E4A1760D51300133029 /* program_options_lite.cpp */,
+				78348E4B1760D51300133029 /* program_options_lite.h */,
+				78348E4C1760D51300133029 /* TAppComCamPara.cpp */,
+				78348E4D1760D51300133029 /* TAppComCamPara.h */,
 			);
 			path = TAppCommon;
 			sourceTree = "<group>";
 		};
-		78C5931A158720BB004401C5 /* TLibCommon */ = {
+		78348E4E1760D51300133029 /* TLibCommon */ = {
 			isa = PBXGroup;
 			children = (
-				78C5931B158720BB004401C5 /* AccessUnit.h */,
-				78C5931C158720BB004401C5 /* CommonDef.h */,
-				78C5931D158720BB004401C5 /* ContextModel.cpp */,
-				78C5931E158720BB004401C5 /* ContextModel.h */,
-				78C5931F158720BB004401C5 /* ContextModel3DBuffer.cpp */,
-				78C59320158720BB004401C5 /* ContextModel3DBuffer.h */,
-				78C59321158720BB004401C5 /* ContextTables.h */,
-				78C59322158720BB004401C5 /* NAL.h */,
-				78C59323158720BB004401C5 /* SEI.h */,
-				78C59324158720BB004401C5 /* TComAdaptiveLoopFilter.cpp */,
-				78C59325158720BB004401C5 /* TComAdaptiveLoopFilter.h */,
-				78C59326158720BB004401C5 /* TComBitCounter.h */,
-				78C59327158720BB004401C5 /* TComBitStream.cpp */,
-				78C59328158720BB004401C5 /* TComBitStream.h */,
-				78C59329158720BB004401C5 /* TComCABACTables.cpp */,
-				78C5932A158720BB004401C5 /* TComCABACTables.h */,
-				78C5932B158720BB004401C5 /* TComDataCU.cpp */,
-				78C5932C158720BB004401C5 /* TComDataCU.h */,
-				78C5932D158720BB004401C5 /* TComDepthMapGenerator.cpp */,
-				78C5932E158720BB004401C5 /* TComDepthMapGenerator.h */,
-				78C5932F158720BB004401C5 /* TComInterpolationFilter.cpp */,
-				78C59330158720BB004401C5 /* TComInterpolationFilter.h */,
-				78C59331158720BB004401C5 /* TComList.h */,
-				78C59332158720BB004401C5 /* TComLoopFilter.cpp */,
-				78C59333158720BB004401C5 /* TComLoopFilter.h */,
-				78C59334158720BB004401C5 /* TComMotionInfo.cpp */,
-				78C59335158720BB004401C5 /* TComMotionInfo.h */,
-				78C59336158720BB004401C5 /* TComMv.h */,
-				78C59337158720BB004401C5 /* TComPattern.cpp */,
-				78C59338158720BB004401C5 /* TComPattern.h */,
-				78C59339158720BB004401C5 /* TComPic.cpp */,
-				78C5933A158720BB004401C5 /* TComPic.h */,
-				78C5933B158720BB004401C5 /* TComPicSym.cpp */,
-				78C5933C158720BB004401C5 /* TComPicSym.h */,
-				78C5933D158720BB004401C5 /* TComPicYuv.cpp */,
-				78C5933E158720BB004401C5 /* TComPicYuv.h */,
-				78C5933F158720BB004401C5 /* TComPicYuvMD5.cpp */,
-				78C59340158720BB004401C5 /* TComPrediction.cpp */,
-				78C59341158720BB004401C5 /* TComPrediction.h */,
-				78C59342158720BB004401C5 /* TComRdCost.cpp */,
-				78C59343158720BB004401C5 /* TComRdCost.h */,
-				78C59344158720BB004401C5 /* TComRdCostWeightPrediction.cpp */,
-				78C59345158720BB004401C5 /* TComRdCostWeightPrediction.h */,
-				78C59346158720BB004401C5 /* TComResidualGenerator.cpp */,
-				78C59347158720BB004401C5 /* TComResidualGenerator.h */,
-				78C59348158720BB004401C5 /* TComRom.cpp */,
-				78C59349158720BB004401C5 /* TComRom.h */,
-				78C5934A158720BB004401C5 /* TComSampleAdaptiveOffset.cpp */,
-				78C5934B158720BB004401C5 /* TComSampleAdaptiveOffset.h */,
-				78C5934C158720BB004401C5 /* TComSlice.cpp */,
-				78C5934D158720BB004401C5 /* TComSlice.h */,
-				78C5934E158720BB004401C5 /* TComTrQuant.cpp */,
-				78C5934F158720BB004401C5 /* TComTrQuant.h */,
-				78C59350158720BB004401C5 /* TComWedgelet.cpp */,
-				78C59351158720BB004401C5 /* TComWedgelet.h */,
-				78C59352158720BB004401C5 /* TComWeightPrediction.cpp */,
-				78C59353158720BB004401C5 /* TComWeightPrediction.h */,
-				78C59354158720BB004401C5 /* TComYuv.cpp */,
-				78C59355158720BB004401C5 /* TComYuv.h */,
-				78C59356158720BB004401C5 /* TypeDef.h */,
+				78348E4F1760D51300133029 /* AccessUnit.h */,
+				78348E501760D51300133029 /* CommonDef.h */,
+				78348E511760D51300133029 /* ContextModel.cpp */,
+				78348E521760D51300133029 /* ContextModel.h */,
+				78348E531760D51300133029 /* ContextModel3DBuffer.cpp */,
+				78348E541760D51300133029 /* ContextModel3DBuffer.h */,
+				78348E551760D51300133029 /* ContextTables.h */,
+				78348E561760D51300133029 /* NAL.h */,
+				78348E571760D51300133029 /* SEI.cpp */,
+				78348E581760D51300133029 /* SEI.h */,
+				78348E591760D51300133029 /* TComBitCounter.h */,
+				78348E5A1760D51300133029 /* TComBitStream.cpp */,
+				78348E5B1760D51300133029 /* TComBitStream.h */,
+				78348E5C1760D51300133029 /* TComCABACTables.cpp */,
+				78348E5D1760D51300133029 /* TComCABACTables.h */,
+				78348E5E1760D51300133029 /* TComDataCU.cpp */,
+				78348E5F1760D51300133029 /* TComDataCU.h */,
+				78348E601760D51300133029 /* TComInterpolationFilter.cpp */,
+				78348E611760D51300133029 /* TComInterpolationFilter.h */,
+				78348E621760D51300133029 /* TComList.h */,
+				78348E631760D51300133029 /* TComLoopFilter.cpp */,
+				78348E641760D51300133029 /* TComLoopFilter.h */,
+				78348E651760D51300133029 /* TComMotionInfo.cpp */,
+				78348E661760D51300133029 /* TComMotionInfo.h */,
+				78348E671760D51300133029 /* TComMv.h */,
+				78348E681760D51300133029 /* TComPattern.cpp */,
+				78348E691760D51300133029 /* TComPattern.h */,
+				78348E6A1760D51300133029 /* TComPic.cpp */,
+				78348E6B1760D51300133029 /* TComPic.h */,
+				78348E6C1760D51300133029 /* TComPicSym.cpp */,
+				78348E6D1760D51300133029 /* TComPicSym.h */,
+				78348E6E1760D51300133029 /* TComPicYuv.cpp */,
+				78348E6F1760D51300133029 /* TComPicYuv.h */,
+				78348E701760D51300133029 /* TComPicYuvMD5.cpp */,
+				78348E711760D51300133029 /* TComPrediction.cpp */,
+				78348E721760D51300133029 /* TComPrediction.h */,
+				78348E731760D51300133029 /* TComRdCost.cpp */,
+				78348E741760D51300133029 /* TComRdCost.h */,
+				78348E751760D51300133029 /* TComRdCostWeightPrediction.cpp */,
+				78348E761760D51300133029 /* TComRdCostWeightPrediction.h */,
+				78348E771760D51300133029 /* TComRom.cpp */,
+				78348E781760D51300133029 /* TComRom.h */,
+				78348E791760D51300133029 /* TComSampleAdaptiveOffset.cpp */,
+				78348E7A1760D51300133029 /* TComSampleAdaptiveOffset.h */,
+				78348E7B1760D51300133029 /* TComSlice.cpp */,
+				78348E7C1760D51300133029 /* TComSlice.h */,
+				78348E7D1760D51300133029 /* TComTrQuant.cpp */,
+				78348E7E1760D51300133029 /* TComTrQuant.h */,
+				78348E7F1760D51300133029 /* TComWedgelet.cpp */,
+				78348E801760D51300133029 /* TComWedgelet.h */,
+				78348E811760D51300133029 /* TComWeightPrediction.cpp */,
+				78348E821760D51300133029 /* TComWeightPrediction.h */,
+				78348E831760D51300133029 /* TComYuv.cpp */,
+				78348E841760D51300133029 /* TComYuv.h */,
+				78348E851760D51300133029 /* TypeDef.h */,
 			);
 			path = TLibCommon;
 			sourceTree = "<group>";
 		};
-		78C59357158720BB004401C5 /* TLibDecoder */ = {
+		78348E861760D51300133029 /* TLibDecoder */ = {
 			isa = PBXGroup;
 			children = (
-				78C59358158720BB004401C5 /* AnnexBread.cpp */,
-				78C59359158720BB004401C5 /* AnnexBread.h */,
-				78C5935A158720BB004401C5 /* NALread.cpp */,
-				78C5935B158720BB004401C5 /* NALread.h */,
-				78C5935C158720BB004401C5 /* SEIread.cpp */,
-				78C5935D158720BB004401C5 /* SEIread.h */,
-				78C5935E158720BB004401C5 /* TDecBinCoder.h */,
-				78C5935F158720BB004401C5 /* TDecBinCoderCABAC.cpp */,
-				78C59360158720BB004401C5 /* TDecBinCoderCABAC.h */,
-				78C59361158720BB004401C5 /* TDecCAVLC.cpp */,
-				78C59362158720BB004401C5 /* TDecCAVLC.h */,
-				78C59363158720BB004401C5 /* TDecCu.cpp */,
-				78C59364158720BB004401C5 /* TDecCu.h */,
-				78C59365158720BB004401C5 /* TDecEntropy.cpp */,
-				78C59366158720BB004401C5 /* TDecEntropy.h */,
-				78C59367158720BB004401C5 /* TDecGop.cpp */,
-				78C59368158720BB004401C5 /* TDecGop.h */,
-				78C59369158720BB004401C5 /* TDecSbac.cpp */,
-				78C5936A158720BB004401C5 /* TDecSbac.h */,
-				78C5936B158720BB004401C5 /* TDecSlice.cpp */,
-				78C5936C158720BB004401C5 /* TDecSlice.h */,
-				78C5936D158720BB004401C5 /* TDecTop.cpp */,
-				78C5936E158720BB004401C5 /* TDecTop.h */,
+				78348E871760D51300133029 /* AnnexBread.cpp */,
+				78348E881760D51300133029 /* AnnexBread.h */,
+				78348E891760D51300133029 /* NALread.cpp */,
+				78348E8A1760D51300133029 /* NALread.h */,
+				78348E8B1760D51300133029 /* SEIread.cpp */,
+				78348E8C1760D51300133029 /* SEIread.h */,
+				78348E8D1760D51300133029 /* SyntaxElementParser.cpp */,
+				78348E8E1760D51300133029 /* SyntaxElementParser.h */,
+				78348E8F1760D51300133029 /* TDecBinCoder.h */,
+				78348E901760D51300133029 /* TDecBinCoderCABAC.cpp */,
+				78348E911760D51300133029 /* TDecBinCoderCABAC.h */,
+				78348E921760D51300133029 /* TDecCAVLC.cpp */,
+				78348E931760D51300133029 /* TDecCAVLC.h */,
+				78348E941760D51300133029 /* TDecCu.cpp */,
+				78348E951760D51300133029 /* TDecCu.h */,
+				78348E961760D51300133029 /* TDecEntropy.cpp */,
+				78348E971760D51300133029 /* TDecEntropy.h */,
+				78348E981760D51300133029 /* TDecGop.cpp */,
+				78348E991760D51300133029 /* TDecGop.h */,
+				78348E9A1760D51300133029 /* TDecSbac.cpp */,
+				78348E9B1760D51300133029 /* TDecSbac.h */,
+				78348E9C1760D51300133029 /* TDecSlice.cpp */,
+				78348E9D1760D51300133029 /* TDecSlice.h */,
+				78348E9E1760D51300133029 /* TDecTop.cpp */,
+				78348E9F1760D51300133029 /* TDecTop.h */,
 			);
 			path = TLibDecoder;
 			sourceTree = "<group>";
 		};
-		78C5936F158720BB004401C5 /* TLibEncoder */ = {
+		78348EA01760D51300133029 /* TLibEncoder */ = {
 			isa = PBXGroup;
 			children = (
-				78C59370158720BB004401C5 /* AnnexBwrite.h */,
-				78C59371158720BB004401C5 /* NALwrite.cpp */,
-				78C59372158720BB004401C5 /* NALwrite.h */,
-				78C59373158720BB004401C5 /* SEIwrite.cpp */,
-				78C59374158720BB004401C5 /* SEIwrite.h */,
-				78C59375158720BB004401C5 /* TEncAdaptiveLoopFilter.cpp */,
-				78C59376158720BB004401C5 /* TEncAdaptiveLoopFilter.h */,
-				78C59377158720BB004401C5 /* TEncAnalyze.h */,
-				78C59378158720BB004401C5 /* TEncBinCoder.h */,
-				78C59379158720BB004401C5 /* TEncBinCoderCABAC.cpp */,
-				78C5937A158720BB004401C5 /* TEncBinCoderCABAC.h */,
-				78C5937B158720BB004401C5 /* TEncBinCoderCABACCounter.cpp */,
-				78C5937C158720BB004401C5 /* TEncBinCoderCABACCounter.h */,
-				78C5937D158720BB004401C5 /* TEncCavlc.cpp */,
-				78C5937E158720BB004401C5 /* TEncCavlc.h */,
-				78C5937F158720BB004401C5 /* TEncCfg.h */,
-				78C59380158720BB004401C5 /* TEncCu.cpp */,
-				78C59381158720BB004401C5 /* TEncCu.h */,
-				78C59382158720BB004401C5 /* TEncEntropy.cpp */,
-				78C59383158720BB004401C5 /* TEncEntropy.h */,
-				78C59384158720BB004401C5 /* TEncGOP.cpp */,
-				78C59385158720BB004401C5 /* TEncGOP.h */,
-				78C59386158720BB004401C5 /* TEncPic.cpp */,
-				78C59387158720BB004401C5 /* TEncPic.h */,
-				78C59388158720BB004401C5 /* TEncPreanalyzer.cpp */,
-				78C59389158720BB004401C5 /* TEncPreanalyzer.h */,
-				78C5938A158720BB004401C5 /* TEncSampleAdaptiveOffset.cpp */,
-				78C5938B158720BB004401C5 /* TEncSampleAdaptiveOffset.h */,
-				78C5938C158720BB004401C5 /* TEncSbac.cpp */,
-				78C5938D158720BB004401C5 /* TEncSbac.h */,
-				78C5938E158720BB004401C5 /* TEncSearch.cpp */,
-				78C5938F158720BB004401C5 /* TEncSearch.h */,
-				78C59390158720BB004401C5 /* TEncSlice.cpp */,
-				78C59391158720BB004401C5 /* TEncSlice.h */,
-				78C59392158720BB004401C5 /* TEncTop.cpp */,
-				78C59393158720BB004401C5 /* TEncTop.h */,
-				78C59394158720BB004401C5 /* WeightPredAnalysis.cpp */,
-				78C59395158720BB004401C5 /* WeightPredAnalysis.h */,
+				78348EA11760D51300133029 /* AnnexBwrite.h */,
+				78348EA21760D51300133029 /* NALwrite.cpp */,
+				78348EA31760D51300133029 /* NALwrite.h */,
+				78348EA41760D51300133029 /* SEIwrite.cpp */,
+				78348EA51760D51300133029 /* SEIwrite.h */,
+				78348EA61760D51300133029 /* SyntaxElementWriter.cpp */,
+				78348EA71760D51300133029 /* SyntaxElementWriter.h */,
+				78348EA81760D51300133029 /* TEncAnalyze.cpp */,
+				78348EA91760D51300133029 /* TEncAnalyze.h */,
+				78348EAA1760D51300133029 /* TEncBinCoder.h */,
+				78348EAB1760D51300133029 /* TEncBinCoderCABAC.cpp */,
+				78348EAC1760D51300133029 /* TEncBinCoderCABAC.h */,
+				78348EAD1760D51300133029 /* TEncBinCoderCABACCounter.cpp */,
+				78348EAE1760D51300133029 /* TEncBinCoderCABACCounter.h */,
+				78348EAF1760D51300133029 /* TEncCavlc.cpp */,
+				78348EB01760D51300133029 /* TEncCavlc.h */,
+				78348EB11760D51300133029 /* TEncCfg.h */,
+				78348EB21760D51300133029 /* TEncCu.cpp */,
+				78348EB31760D51300133029 /* TEncCu.h */,
+				78348EB41760D51300133029 /* TEncEntropy.cpp */,
+				78348EB51760D51300133029 /* TEncEntropy.h */,
+				78348EB61760D51300133029 /* TEncGOP.cpp */,
+				78348EB71760D51300133029 /* TEncGOP.h */,
+				78348EB81760D51300133029 /* TEncPic.cpp */,
+				78348EB91760D51300133029 /* TEncPic.h */,
+				78348EBA1760D51300133029 /* TEncPreanalyzer.cpp */,
+				78348EBB1760D51300133029 /* TEncPreanalyzer.h */,
+				78348EBC1760D51300133029 /* TEncRateCtrl.cpp */,
+				78348EBD1760D51300133029 /* TEncRateCtrl.h */,
+				78348EBE1760D51300133029 /* TEncSampleAdaptiveOffset.cpp */,
+				78348EBF1760D51300133029 /* TEncSampleAdaptiveOffset.h */,
+				78348EC01760D51300133029 /* TEncSbac.cpp */,
+				78348EC11760D51300133029 /* TEncSbac.h */,
+				78348EC21760D51300133029 /* TEncSearch.cpp */,
+				78348EC31760D51300133029 /* TEncSearch.h */,
+				78348EC41760D51300133029 /* TEncSlice.cpp */,
+				78348EC51760D51300133029 /* TEncSlice.h */,
+				78348EC61760D51300133029 /* TEncTop.cpp */,
+				78348EC71760D51300133029 /* TEncTop.h */,
+				78348EC81760D51300133029 /* WeightPredAnalysis.cpp */,
+				78348EC91760D51300133029 /* WeightPredAnalysis.h */,
 			);
 			path = TLibEncoder;
 			sourceTree = "<group>";
 		};
-		78C59396158720BB004401C5 /* TLibExtractor */ = {
+		78348ECA1760D51300133029 /* TLibExtractor */ = {
 			isa = PBXGroup;
 			children = (
-				78C59397158720BB004401C5 /* TExtrTop.cpp */,
-				78C59398158720BB004401C5 /* TExtrTop.h */,
+				78348ECB1760D51300133029 /* TExtrTop.cpp */,
+				78348ECC1760D51300133029 /* TExtrTop.h */,
 			);
 			path = TLibExtractor;
 			sourceTree = "<group>";
 		};
-		78C59399158720BB004401C5 /* TLibRenderer */ = {
+		78348ECD1760D51300133029 /* TLibRenderer */ = {
 			isa = PBXGroup;
 			children = (
-				78C5939A158720BB004401C5 /* TRenFilter.cpp */,
-				78C5939B158720BB004401C5 /* TRenFilter.h */,
-				78C5939C158720BB004401C5 /* TRenImage.cpp */,
-				78C5939D158720BB004401C5 /* TRenImage.h */,
-				78C5939E158720BB004401C5 /* TRenImagePlane.cpp */,
-				78C5939F158720BB004401C5 /* TRenImagePlane.h */,
-				78C593A0158720BB004401C5 /* TRenInterpFilter.cpp */,
-				78C593A1158720BB004401C5 /* TRenInterpFilter.h */,
-				78C593A2158720BB004401C5 /* TRenModel.cpp */,
-				78C593A3158720BB004401C5 /* TRenModel.h */,
-				78C593A4158720BB004401C5 /* TRenModSetupStrParser.cpp */,
-				78C593A5158720BB004401C5 /* TRenModSetupStrParser.h */,
-				78C593A6158720BB004401C5 /* TRenSingleModel.cpp */,
-				78C593A7158720BB004401C5 /* TRenSingleModel.h */,
-				78C593A8158720BB004401C5 /* TRenTop.cpp */,
-				78C593A9158720BB004401C5 /* TRenTop.h */,
+				78348ECE1760D51300133029 /* TRenFilter.cpp */,
+				78348ECF1760D51300133029 /* TRenFilter.h */,
+				78348ED01760D51300133029 /* TRenImage.cpp */,
+				78348ED11760D51300133029 /* TRenImage.h */,
+				78348ED21760D51300133029 /* TRenImagePlane.cpp */,
+				78348ED31760D51300133029 /* TRenImagePlane.h */,
+				78348ED41760D51300133029 /* TRenInterpFilter.cpp */,
+				78348ED51760D51300133029 /* TRenInterpFilter.h */,
+				78348ED61760D51300133029 /* TRenModel.cpp */,
+				78348ED71760D51300133029 /* TRenModel.h */,
+				78348ED81760D51300133029 /* TRenModSetupStrParser.cpp */,
+				78348ED91760D51300133029 /* TRenModSetupStrParser.h */,
+				78348EDA1760D51300133029 /* TRenSingleModel.cpp */,
+				78348EDB1760D51300133029 /* TRenSingleModel.h */,
+				78348EDC1760D51300133029 /* TRenTop.cpp */,
+				78348EDD1760D51300133029 /* TRenTop.h */,
 			);
 			path = TLibRenderer;
 			sourceTree = "<group>";
 		};
-		78C593AA158720BB004401C5 /* TLibVideoIO */ = {
+		78348EDE1760D51300133029 /* TLibVideoIO */ = {
 			isa = PBXGroup;
 			children = (
-				78C593AB158720BB004401C5 /* TVideoIOYuv.cpp */,
-				78C593AC158720BB004401C5 /* TVideoIOYuv.h */,
+				78348EDF1760D51300133029 /* TVideoIOYuv.cpp */,
+				78348EE01760D51300133029 /* TVideoIOYuv.h */,
 			);
 			path = TLibVideoIO;
 			sourceTree = "<group>";
@@ -1187,7 +1187,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 0430;
+				LastUpgradeCheck = 0460;
 			};
 			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "HTM" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1224,32 +1224,31 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593B5158721A1004401C5 /* ContextModel.cpp in Sources */,
-				78C593B6158721A1004401C5 /* ContextModel3DBuffer.cpp in Sources */,
-				78C593B7158721A1004401C5 /* TComAdaptiveLoopFilter.cpp in Sources */,
-				78C593B8158721A1004401C5 /* TComBitStream.cpp in Sources */,
-				78C593B9158721A1004401C5 /* TComCABACTables.cpp in Sources */,
-				78C593BA158721A1004401C5 /* TComDataCU.cpp in Sources */,
-				78C593BB158721A1004401C5 /* TComDepthMapGenerator.cpp in Sources */,
-				78C593BC158721A1004401C5 /* TComInterpolationFilter.cpp in Sources */,
-				78C593BD158721A1004401C5 /* TComLoopFilter.cpp in Sources */,
-				78C593BE158721A1004401C5 /* TComMotionInfo.cpp in Sources */,
-				78C593BF158721A1004401C5 /* TComPattern.cpp in Sources */,
-				78C593C0158721A1004401C5 /* TComPic.cpp in Sources */,
-				78C593C1158721A1004401C5 /* TComPicSym.cpp in Sources */,
-				78C593C2158721A1004401C5 /* TComPicYuv.cpp in Sources */,
-				78C593C3158721A1004401C5 /* TComPicYuvMD5.cpp in Sources */,
-				78C593C4158721A1004401C5 /* TComPrediction.cpp in Sources */,
-				78C593C5158721A1004401C5 /* TComRdCost.cpp in Sources */,
-				78C593C6158721A1004401C5 /* TComRdCostWeightPrediction.cpp in Sources */,
-				78C593C7158721A1004401C5 /* TComResidualGenerator.cpp in Sources */,
-				78C593C8158721A1004401C5 /* TComRom.cpp in Sources */,
-				78C593C9158721A1004401C5 /* TComSampleAdaptiveOffset.cpp in Sources */,
-				78C593CA158721A1004401C5 /* TComSlice.cpp in Sources */,
-				78C593CB158721A1004401C5 /* TComTrQuant.cpp in Sources */,
-				78C593CC158721A1004401C5 /* TComWedgelet.cpp in Sources */,
-				78C593CD158721A1004401C5 /* TComWeightPrediction.cpp in Sources */,
-				78C593CE158721A1004401C5 /* TComYuv.cpp in Sources */,
+				78348EE31760D55800133029 /* ContextModel.cpp in Sources */,
+				78348EE51760D55800133029 /* ContextModel3DBuffer.cpp in Sources */,
+				78348EE91760D55800133029 /* SEI.cpp in Sources */,
+				78348EEC1760D55800133029 /* TComBitStream.cpp in Sources */,
+				78348EEE1760D55800133029 /* TComCABACTables.cpp in Sources */,
+				78348EF01760D55800133029 /* TComDataCU.cpp in Sources */,
+				78348EF21760D55800133029 /* TComInterpolationFilter.cpp in Sources */,
+				78348EF51760D55800133029 /* TComLoopFilter.cpp in Sources */,
+				78348EF71760D55800133029 /* TComMotionInfo.cpp in Sources */,
+				78348EFA1760D55800133029 /* TComPattern.cpp in Sources */,
+				78348EFC1760D55800133029 /* TComPic.cpp in Sources */,
+				78348EFE1760D55800133029 /* TComPicSym.cpp in Sources */,
+				78348F001760D55800133029 /* TComPicYuv.cpp in Sources */,
+				78348F021760D55800133029 /* TComPicYuvMD5.cpp in Sources */,
+				78348F031760D55800133029 /* TComPrediction.cpp in Sources */,
+				78348F051760D55800133029 /* TComRdCost.cpp in Sources */,
+				78348F071760D55800133029 /* TComRdCostWeightPrediction.cpp in Sources */,
+				78348F091760D55800133029 /* TComRom.cpp in Sources */,
+				78348F0B1760D55800133029 /* TComSampleAdaptiveOffset.cpp in Sources */,
+				78348F0D1760D55800133029 /* TComSlice.cpp in Sources */,
+				78348F0F1760D55800133029 /* TComTrQuant.cpp in Sources */,
+				78348F111760D55800133029 /* TComWedgelet.cpp in Sources */,
+				78348F131760D55800133029 /* TComWeightPrediction.cpp in Sources */,
+				78348F151760D55800133029 /* TComYuv.cpp in Sources */,
+				78348F7E1760D62800133029 /* libmd5.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1257,17 +1256,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593D1158721BB004401C5 /* AnnexBread.cpp in Sources */,
-				78C593D2158721BB004401C5 /* NALread.cpp in Sources */,
-				78C593D3158721BB004401C5 /* SEIread.cpp in Sources */,
-				78C593D4158721BB004401C5 /* TDecBinCoderCABAC.cpp in Sources */,
-				78C593D5158721BB004401C5 /* TDecCAVLC.cpp in Sources */,
-				78C593D6158721BB004401C5 /* TDecCu.cpp in Sources */,
-				78C593D7158721BB004401C5 /* TDecEntropy.cpp in Sources */,
-				78C593D8158721BB004401C5 /* TDecGop.cpp in Sources */,
-				78C593D9158721BB004401C5 /* TDecSbac.cpp in Sources */,
-				78C593DA158721BB004401C5 /* TDecSlice.cpp in Sources */,
-				78C593DB158721BB004401C5 /* TDecTop.cpp in Sources */,
+				78348F1C1760D58100133029 /* AnnexBread.cpp in Sources */,
+				78348F1E1760D58100133029 /* NALread.cpp in Sources */,
+				78348F201760D58100133029 /* SEIread.cpp in Sources */,
+				78348F221760D58100133029 /* SyntaxElementParser.cpp in Sources */,
+				78348F251760D58100133029 /* TDecBinCoderCABAC.cpp in Sources */,
+				78348F271760D58100133029 /* TDecCAVLC.cpp in Sources */,
+				78348F291760D58100133029 /* TDecCu.cpp in Sources */,
+				78348F2B1760D58100133029 /* TDecEntropy.cpp in Sources */,
+				78348F2D1760D58100133029 /* TDecGop.cpp in Sources */,
+				78348F2F1760D58100133029 /* TDecSbac.cpp in Sources */,
+				78348F311760D58100133029 /* TDecSlice.cpp in Sources */,
+				78348F331760D58100133029 /* TDecTop.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1275,23 +1275,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593DC158721CE004401C5 /* NALwrite.cpp in Sources */,
-				78C593DD158721CE004401C5 /* SEIwrite.cpp in Sources */,
-				78C593DE158721CE004401C5 /* TEncAdaptiveLoopFilter.cpp in Sources */,
-				78C593DF158721CE004401C5 /* TEncBinCoderCABAC.cpp in Sources */,
-				78C593E0158721CE004401C5 /* TEncBinCoderCABACCounter.cpp in Sources */,
-				78C593E1158721CE004401C5 /* TEncCavlc.cpp in Sources */,
-				78C593E2158721CE004401C5 /* TEncCu.cpp in Sources */,
-				78C593E3158721CE004401C5 /* TEncEntropy.cpp in Sources */,
-				78C593E4158721CE004401C5 /* TEncGOP.cpp in Sources */,
-				78C593E5158721CE004401C5 /* TEncPic.cpp in Sources */,
-				78C593E6158721CE004401C5 /* TEncPreanalyzer.cpp in Sources */,
-				78C593E7158721CE004401C5 /* TEncSampleAdaptiveOffset.cpp in Sources */,
-				78C593E8158721CE004401C5 /* TEncSbac.cpp in Sources */,
-				78C593E9158721CE004401C5 /* TEncSearch.cpp in Sources */,
-				78C593EA158721CE004401C5 /* TEncSlice.cpp in Sources */,
-				78C593EB158721CE004401C5 /* TEncTop.cpp in Sources */,
-				78C593EC158721CE004401C5 /* WeightPredAnalysis.cpp in Sources */,
+				78348F361760D58A00133029 /* NALwrite.cpp in Sources */,
+				78348F381760D58A00133029 /* SEIwrite.cpp in Sources */,
+				78348F3A1760D58A00133029 /* SyntaxElementWriter.cpp in Sources */,
+				78348F3C1760D58A00133029 /* TEncAnalyze.cpp in Sources */,
+				78348F3F1760D58A00133029 /* TEncBinCoderCABAC.cpp in Sources */,
+				78348F411760D58A00133029 /* TEncBinCoderCABACCounter.cpp in Sources */,
+				78348F431760D58A00133029 /* TEncCavlc.cpp in Sources */,
+				78348F461760D58A00133029 /* TEncCu.cpp in Sources */,
+				78348F481760D58A00133029 /* TEncEntropy.cpp in Sources */,
+				78348F4A1760D58A00133029 /* TEncGOP.cpp in Sources */,
+				78348F4C1760D58A00133029 /* TEncPic.cpp in Sources */,
+				78348F4E1760D58A00133029 /* TEncPreanalyzer.cpp in Sources */,
+				78348F501760D58A00133029 /* TEncRateCtrl.cpp in Sources */,
+				78348F521760D58A00133029 /* TEncSampleAdaptiveOffset.cpp in Sources */,
+				78348F541760D58A00133029 /* TEncSbac.cpp in Sources */,
+				78348F561760D58A00133029 /* TEncSearch.cpp in Sources */,
+				78348F581760D58A00133029 /* TEncSlice.cpp in Sources */,
+				78348F5A1760D58A00133029 /* TEncTop.cpp in Sources */,
+				78348F5C1760D58A00133029 /* WeightPredAnalysis.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1299,7 +1301,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593F6158721E9004401C5 /* TVideoIOYuv.cpp in Sources */,
+				78348F701760D5A000133029 /* TVideoIOYuv.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1307,10 +1309,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593F7158721F1004401C5 /* encmain.cpp in Sources */,
-				78C593F8158721F1004401C5 /* TAppEncCfg.cpp in Sources */,
-				78C593F9158721F1004401C5 /* TAppEncTop.cpp in Sources */,
-				78C594121587228A004401C5 /* libmd5.c in Sources */,
+				78348F751760D5B600133029 /* encmain.cpp in Sources */,
+				78348F761760D5B600133029 /* TAppEncCfg.cpp in Sources */,
+				78348F771760D5B600133029 /* TAppEncTop.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1318,10 +1319,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593FA158721F6004401C5 /* decmain.cpp in Sources */,
-				78C593FB158721F6004401C5 /* TAppDecCfg.cpp in Sources */,
-				78C593FC158721F6004401C5 /* TAppDecTop.cpp in Sources */,
-				78C5941F158722D4004401C5 /* libmd5.c in Sources */,
+				78348F721760D5AE00133029 /* decmain.cpp in Sources */,
+				78348F731760D5AE00133029 /* TAppDecCfg.cpp in Sources */,
+				78348F741760D5AE00133029 /* TAppDecTop.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1329,7 +1329,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593ED158721D7004401C5 /* TExtrTop.cpp in Sources */,
+				78348F5E1760D59300133029 /* TExtrTop.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1337,9 +1337,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593FD158721FC004401C5 /* extrmain.cpp in Sources */,
-				78C593FE158721FC004401C5 /* TAppExtrCfg.cpp in Sources */,
-				78C593FF158721FC004401C5 /* TAppExtrTop.cpp in Sources */,
+				78348F781760D5BB00133029 /* extrmain.cpp in Sources */,
+				78348F791760D5BB00133029 /* TAppExtrCfg.cpp in Sources */,
+				78348F7A1760D5BB00133029 /* TAppExtrTop.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1347,14 +1347,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593EE158721E2004401C5 /* TRenFilter.cpp in Sources */,
-				78C593EF158721E2004401C5 /* TRenImage.cpp in Sources */,
-				78C593F0158721E2004401C5 /* TRenImagePlane.cpp in Sources */,
-				78C593F1158721E2004401C5 /* TRenInterpFilter.cpp in Sources */,
-				78C593F2158721E2004401C5 /* TRenModel.cpp in Sources */,
-				78C593F3158721E2004401C5 /* TRenModSetupStrParser.cpp in Sources */,
-				78C593F4158721E2004401C5 /* TRenSingleModel.cpp in Sources */,
-				78C593F5158721E2004401C5 /* TRenTop.cpp in Sources */,
+				78348F601760D59900133029 /* TRenFilter.cpp in Sources */,
+				78348F621760D59900133029 /* TRenImage.cpp in Sources */,
+				78348F641760D59900133029 /* TRenImagePlane.cpp in Sources */,
+				78348F661760D59900133029 /* TRenInterpFilter.cpp in Sources */,
+				78348F681760D59900133029 /* TRenModel.cpp in Sources */,
+				78348F6A1760D59900133029 /* TRenModSetupStrParser.cpp in Sources */,
+				78348F6C1760D59900133029 /* TRenSingleModel.cpp in Sources */,
+				78348F6E1760D59900133029 /* TRenTop.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1362,9 +1362,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C5940015872201004401C5 /* RendererMain.cpp in Sources */,
-				78C5940115872201004401C5 /* TAppRendererCfg.cpp in Sources */,
-				78C5940215872201004401C5 /* TAppRendererTop.cpp in Sources */,
+				78348F7B1760D5C100133029 /* RendererMain.cpp in Sources */,
+				78348F7C1760D5C100133029 /* TAppRendererCfg.cpp in Sources */,
+				78348F7D1760D5C100133029 /* TAppRendererTop.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1372,8 +1372,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78C593CF158721AD004401C5 /* program_options_lite.cpp in Sources */,
-				78C593D0158721AD004401C5 /* TAppComCamPara.cpp in Sources */,
+				78348F181760D57800133029 /* program_options_lite.cpp in Sources */,
+				78348F1A1760D57800133029 /* TAppComCamPara.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1526,6 +1526,8 @@
 		6767959511AD61BC00421804 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibCommon;
 			};
@@ -1534,6 +1536,8 @@
 		6767959611AD61BC00421804 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibCommon;
 			};
@@ -1542,6 +1546,8 @@
 		676795F511AD621A00421804 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibDecoder;
 			};
@@ -1550,6 +1556,8 @@
 		676795F611AD621A00421804 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibDecoder;
 			};
@@ -1558,6 +1566,8 @@
 		6767961A11AD626F00421804 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibEncoder;
 			};
@@ -1566,6 +1576,8 @@
 		6767961B11AD626F00421804 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibEncoder;
 			};
@@ -1574,6 +1586,8 @@
 		6767964C11AD629200421804 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibVideoIO;
 			};
@@ -1582,6 +1596,8 @@
 		6767964D11AD629200421804 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibVideoIO;
 			};
@@ -1590,6 +1606,7 @@
 		6767966C11AD635600421804 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppEncoder;
 			};
@@ -1598,6 +1615,7 @@
 		6767966D11AD635600421804 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppEncoder;
 			};
@@ -1606,6 +1624,7 @@
 		6782E0E011AD691B00E8FFB8 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppDecoder;
 			};
@@ -1614,6 +1633,7 @@
 		6782E0E111AD691B00E8FFB8 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppDecoder;
 			};
@@ -1622,6 +1642,8 @@
 		7885897B15664E3D00982C12 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibExtractor;
 			};
@@ -1630,6 +1652,8 @@
 		7885897C15664E3D00982C12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibExtractor;
 			};
@@ -1638,6 +1662,7 @@
 		7885899215664E6A00982C12 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppExtractor;
 			};
@@ -1646,6 +1671,7 @@
 		7885899315664E6A00982C12 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppExtractor;
 			};
@@ -1654,6 +1680,8 @@
 		7894E36514890D9A009259F4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibRenderer;
 			};
@@ -1662,6 +1690,8 @@
 		7894E36614890D9A009259F4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TLibRenderer;
 			};
@@ -1670,6 +1700,7 @@
 		7894E38814890DD2009259F4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppRenderer;
 			};
@@ -1678,6 +1709,7 @@
 		7894E38914890DD2009259F4 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/bin;
 				PRODUCT_NAME = TAppRenderer;
 			};
@@ -1686,6 +1718,8 @@
 		78C593B215872152004401C5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TAppCommon;
 			};
@@ -1694,6 +1728,8 @@
 		78C593B315872152004401C5 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				INSTALL_PATH = /usr/local/lib;
 				PRODUCT_NAME = TAppCommon;
 			};
@@ -1702,6 +1738,8 @@
 		78C9B17D14DAD3E800989162 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -1709,6 +1747,8 @@
 		78C9B17E14DAD3E800989162 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

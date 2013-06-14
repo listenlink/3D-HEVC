@@ -201,6 +201,10 @@ private:
   Bool*         m_pbEdgeLeftFirst;      ///< true if edge should be checked in left boundary first
   Bool*         m_pbEdgePartition;      ///< true if it belongs to region 1, otherwise, region 0
 #endif
+#if H_3D_DIM_SDC
+  Bool*         m_pbSDCFlag;
+  Pel*          m_apSegmentDCOffset[2];
+#endif
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -460,6 +464,17 @@ public:
   Bool*  getEdgePartition( UInt uiIdx )            { return &m_pbEdgePartition[uiIdx * 16]; }
 
   Void   reconPartition( UInt uiAbsPartIdx, UInt uiDepth, Bool bLeft, UChar ucStartPos, UChar ucNumEdge, UChar* pucEdgeCode, Bool* pbRegion );
+#endif
+#if H_3D_DIM_SDC
+  Bool*         getSDCFlag          ()                        { return m_pbSDCFlag;               }
+  Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
+  Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiDepth );
+  
+  Bool          getSDCAvailable             ( UInt uiAbsPartIdx );
+  
+  Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
+  Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
+  Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
 #endif
 #endif
 
