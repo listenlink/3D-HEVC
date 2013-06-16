@@ -1501,6 +1501,11 @@ private:
 #endif
 #endif
 #endif
+#if H_3D_IC
+  Bool      m_bApplyIC;
+  Bool      m_icSkipParseFlag;
+#endif
+
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -1581,6 +1586,13 @@ public:
   Void      setRefPicListModificationFlagLC(Bool bflag)         {m_bRefPicListModificationFlagLC=bflag;}     
   Bool      getRefPicListCombinationFlag()                      {return m_bRefPicListCombinationFlag;}
   Void      setRefPicListCombinationFlag(Bool bflag)            {m_bRefPicListCombinationFlag=bflag;}   
+#endif
+#if H_3D_IC
+  Void      setApplyIC( Bool b )                                { m_bApplyIC = b; }
+  Bool      getApplyIC()                                        { return m_bApplyIC; }
+  Void      xSetApplyIC();
+  Void      setIcSkipParseFlag( Bool b )                        { m_icSkipParseFlag = b; }
+  Bool      getIcSkipParseFlag()                                { return m_icSkipParseFlag; }
 #endif
   Void      setReferenced(Bool b)                               { m_bRefenced = b; }
   Bool      isReferenced()                                      { return m_bRefenced; }

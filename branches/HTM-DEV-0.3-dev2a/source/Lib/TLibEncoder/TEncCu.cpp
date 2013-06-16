@@ -456,7 +456,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMaxQP  = Clip3( MIN_QP, MAX_QP, qp);
   }
 #endif
-
+#if H_3D_IC
+  Bool bICEnabled = rpcTempCU->getSlice()->getViewIndex() && ( rpcTempCU->getSlice()->getSliceType() == P_SLICE || rpcTempCU->getSlice()->getSliceType() == B_SLICE );
+  bICEnabled = bICEnabled && rpcTempCU->getSlice()->getApplyIC();
+#endif
   // If slice start or slice end is within this cu...
   TComSlice * pcSlice = rpcTempCU->getPic()->getSlice(rpcTempCU->getPic()->getCurrSliceIdx());
   Bool bSliceStart = pcSlice->getSliceSegmentCurStartCUAddr()>rpcTempCU->getSCUAddr()&&pcSlice->getSliceSegmentCurStartCUAddr()<rpcTempCU->getSCUAddr()+rpcTempCU->getTotalNumPart();
@@ -512,12 +515,23 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
       {
+#if H_3D_IC
+        for( UInt uiICId = 0; uiICId < ( bICEnabled ? 2 : 1 ); uiICId++ )
+        {
+          Bool bICFlag = uiICId ? true : false;
+#endif
         // 2Nx2N
         if(m_pcEncCfg->getUseEarlySkipDetection())
         {
+#if H_3D_IC
+          rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#endif
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );//by Competition for inter_2Nx2N
         }
         // SKIP
+#if H_3D_IC
+        rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#endif
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU, &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
         rpcTempCU->initEstData( uiDepth, iQP );
 
@@ -537,6 +551,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           // 2Nx2N, NxN
           if ( !bEarlySkip )
           {
+#if H_3D_IC
+            rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
+#endif
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );
             if(m_pcEncCfg->getUseCbfFastMode())
             {
@@ -544,6 +561,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             }
           }
         }
+#if H_3D_IC
+        }
+#endif
       }
 
       if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
@@ -1244,6 +1264,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
     m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx );
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
@@ -1268,6 +1291,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
+#if H_3D_IC
+  m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
+#endif
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
@@ -1298,7 +1324,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
     uhInterDirNeighbours[ui] = 0;
   }
   UChar uhDepth = rpcTempCU->getDepth( 0 );
-
+#if H_3D_IC
+  Bool bICFlag = rpcTempCU->getICFlag( 0 );
+#endif
 #if H_3D_VSO // M1  //nececcary here?
   if( m_pcRdCost->getUseRenModel() )
   {
@@ -1347,6 +1375,15 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
     for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
     {
       {
+#if H_3D_IC
+        if( rpcTempCU->getSlice()->getApplyIC() && rpcTempCU->getSlice()->getIcSkipParseFlag() )
+        {
+          if( bICFlag && uiMergeCand == 0 ) 
+          {
+            continue;
+          }
+        }
+#endif
         if(!(uiNoResidual==1 && mergeCandBuffer[uiMergeCand]==1))
         {
 
@@ -1356,6 +1393,9 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
           rpcTempCU->setPredModeSubParts( MODE_INTER, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(),     0, uhDepth );
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
+#if H_3D_IC
+          rpcTempCU->setICFlagSubParts( bICFlag, 0, 0, uhDepth );
+#endif
 #if H_3D_ARP
           rpcTempCU->setARPWSubParts( (UChar)nARPW , 0 , uhDepth );
 #endif

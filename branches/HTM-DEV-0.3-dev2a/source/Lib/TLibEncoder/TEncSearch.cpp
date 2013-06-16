@@ -316,7 +316,9 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   Pel*  piRefSrch;
   
   piRefSrch = rcStruct.piRefY + iSearchY * rcStruct.iYStride + iSearchX;
-  
+#if H_3D_IC
+  m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefSrch, rcStruct.iYStride,  m_cDistParam );
   
@@ -743,7 +745,9 @@ UInt TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
     cMvTest += rcMvFrac;
 
     setDistParamComp(0);  // Y component
-
+#if H_3D_IC
+    m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
     m_cDistParam.pCur = piRefPos;
     m_cDistParam.bitDepth = g_bitDepthY;
     uiDist = m_cDistParam.DistFunc( &m_cDistParam );
@@ -3147,6 +3151,9 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
 #else
                             iWidth, iHeight, m_pcEncCfg->getUseHADME() );
 #endif
+#if H_3D_IC
+  cDistParam.bUseIC = false;
+#endif
   ruiErr = cDistParam.DistFunc( &cDistParam );
 }
 
@@ -4234,6 +4241,10 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   
   pcCU->clipMv( cMvCand );
 
+#if H_3D_IC
+  Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getViewIndex() != pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getViewIndex() );
+#endif
+
   // prediction pattern
   if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType()==P_SLICE )
   {
@@ -4241,7 +4252,11 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   }
   else
   {
-    xPredInterLumaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false );
+    xPredInterLumaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false 
+#if H_3D_IC
+    , bICFlag
+#endif
+      );
   }
 
   if ( pcCU->getSlice()->getPPS()->getUseWP() && pcCU->getSlice()->getSliceType()==P_SLICE )
@@ -4294,6 +4309,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   
   pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
   
+#if H_3D_IC
+  Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getViewIndex() != pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getViewIndex() );
+  pcPatternKey->setICFlag( bICFlag );
+#endif
+
   if ( bBi )
   {
     TComYuv*  pcYuvOther = &m_acYuvPred[1-(Int)eRefPicList];
@@ -4326,6 +4346,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   m_pcRdCost->getMotionCost ( 1, 0 );
   
   m_pcRdCost->setPredictor  ( *pcMvPred );
+#if H_3D_IC
+  if( pcCU->getSlice()->getIsDepth() )
+    m_pcRdCost->setCostScale  ( 0 );
+  else
+#endif
   m_pcRdCost->setCostScale  ( 2 );
 
   setWpScalingDistParam( pcCU, iRefIdxPred, eRefPicList );
@@ -4341,6 +4366,10 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   }
   
   m_pcRdCost->getMotionCost( 1, 0 );
+#if H_3D_IC
+  if( ! pcCU->getSlice()->getIsDepth() )
+  {
+#endif
   m_pcRdCost->setCostScale ( 1 );
   
   {
@@ -4355,9 +4384,15 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   rcMv <<= 2;
   rcMv += (cMvHalf <<= 1);
   rcMv +=  cMvQter;
+#if H_3D_IC
+  }
+#endif
   
   UInt uiMvBits = m_pcRdCost->getBits( rcMv.getHor(), rcMv.getVer() );
-  
+#if H_3D_IC
+  if( pcCU->getSlice()->getIsDepth() )
+    ruiCost += m_pcRdCost->getCost( uiMvBits );
+#endif
   ruiBits      += uiMvBits;
   ruiCost       = (UInt)( floor( fWeight * ( (Double)ruiCost - (Double)m_pcRdCost->getCost( uiMvBits ) ) ) + (Double)m_pcRdCost->getCost( ruiBits ) );
 }
@@ -4366,6 +4401,10 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
 {
   Int  iMvShift = 2;
+#if H_3D_IC
+  if( pcCU->getSlice()->getIsDepth() )
+    iMvShift = 0;
+#endif
   TComMv cTmpMvPred = cMvPred;
   pcCU->clipMv( cTmpMvPred );
 
@@ -4417,7 +4456,9 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
       m_cDistParam.pCur = piRefSrch;
 
       setDistParamComp(0);
-
+#if H_3D_IC
+      m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
       m_cDistParam.bitDepth = g_bitDepthY;
       uiSad = m_cDistParam.DistFunc( &m_cDistParam );
       
@@ -4468,6 +4509,9 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
   
   UInt uiSearchRange = m_iSearchRange;
   pcCU->clipMv( rcMv );
+#if H_3D_IC
+  if( ! pcCU->getSlice()->getIsDepth() )
+#endif
   rcMv >>= 2;
   // init TZSearchStruct
   IntTZSearchStruct cStruct;
@@ -4485,6 +4529,9 @@ Void TEncSearch::xTZSearch( TComDataCU* pcCU, TComPattern* pcPatternKey, Pel* pi
     {
       TComMv cMv = m_acMvPredictors[index];
       pcCU->clipMv( cMv );
+#if H_3D_IC
+      if( ! pcCU->getSlice()->getIsDepth() )
+#endif
       cMv >>= 2;
       xTZSearchHelp( pcPatternKey, cStruct, cMv.getHor(), cMv.getVer(), 0, 0 );
     }
@@ -4740,6 +4787,9 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, true );
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
@@ -6151,6 +6201,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, true);
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
 #endif
@@ -6167,6 +6220,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0 );
 #endif

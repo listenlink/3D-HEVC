@@ -62,6 +62,9 @@ TEncSbac::TEncSbac()
 #if H_3D_ARP
 , m_cCUPUARPW                 ( 1,             1,               NUM_ARPW_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if H_3D_IC
+, m_cCUICFlagSCModel          ( 1,             1,               NUM_IC_FLAG_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUPartSizeSCModel        ( 1,             1,               NUM_PART_SIZE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUPredModeSCModel        ( 1,             1,               NUM_PRED_MODE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUIntraPredSCModel       ( 1,             1,               NUM_ADI_CTX                   , m_contextModels + m_numContextModels, m_numContextModels)
@@ -115,6 +118,9 @@ Void TEncSbac::resetEntropy           ()
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
 #if H_3D_ARP
   m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
+#endif
+#if H_3D_IC
+  m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
@@ -170,6 +176,9 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cCUSkipFlagSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_SKIP_FLAG );
       curCost += m_cCUMergeFlagExtSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT);
       curCost += m_cCUMergeIdxExtSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_MERGE_IDX_EXT);
+#if H_3D_IC
+      curCost += m_cCUICFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_IC_FLAG );
+#endif
       curCost += m_cCUPartSizeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
       curCost += m_cCUAMPSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CU_AMP_POS );
       curCost += m_cCUPredModeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PRED_MODE );
@@ -221,6 +230,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
 #if H_3D_ARP
   m_cCUPUARPW.initBuffer                 ( eSliceType, iQp, (UChar*)INIT_ARPW );
+#endif
+#if H_3D_IC
+  m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
   m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
@@ -614,6 +626,29 @@ Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 }
 #endif
+
+#if H_3D_IC
+/** code Illumination Compensation flag
+ * \param pcCU
+ * \param uiAbsPartIdx 
+ * \returns Void
+ */
+Void TEncSbac::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  // get context function is here
+  UInt uiSymbol = pcCU->getICFlag( uiAbsPartIdx ) ? 1 : 0;
+  UInt uiCtxIC  = pcCU->getCtxICFlag( uiAbsPartIdx ) ;
+  m_pcBinIf->encodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, uiCtxIC ) );
+  DTRACE_CABAC_VL( g_nSymbolCounter++ );
+  DTRACE_CABAC_T( "\tICFlag" );
+  DTRACE_CABAC_T( "\tuiCtxIC: ");
+  DTRACE_CABAC_V( uiCtxIC );
+  DTRACE_CABAC_T( "\tuiSymbol: ");
+  DTRACE_CABAC_V( uiSymbol );
+  DTRACE_CABAC_T( "\n");
+}
+#endif
+
 
 Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {

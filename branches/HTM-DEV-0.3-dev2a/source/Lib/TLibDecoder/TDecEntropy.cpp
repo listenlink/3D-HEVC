@@ -105,6 +105,24 @@ Void TDecEntropy::decodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 }
 #endif
 
+#if H_3D_IC
+Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  pcCU->setICFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
+
+  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) )
+  {
+    return;
+  }
+
+  if( !pcCU->getSlice()->getApplyIC() )
+    return;
+
+  if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
+    m_pcEntropyDecoderIf->parseICFlag( pcCU, uiAbsPartIdx, uiDepth );
+}
+#endif
+
 Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseSplitFlag( pcCU, uiAbsPartIdx, uiDepth );

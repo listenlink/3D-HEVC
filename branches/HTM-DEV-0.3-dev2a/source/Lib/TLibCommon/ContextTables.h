@@ -99,6 +99,10 @@
 #define NUM_ARPW_CTX                  4       ///< number of context models for weighting factor index used by advanced residual prediction
 #endif
 
+#if H_3D_IC
+#define NUM_IC_FLAG_CTX               3       ///< number of context models for illumination compensation flag
+#endif
+
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 // ====================================================================================================================
@@ -348,6 +352,17 @@ INIT_ARPW[3][NUM_ARPW_CTX] =
   { 154, 154, 154, 154 }, 
 };
 #endif
+
+#if H_3D_IC
+static const UChar 
+INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
+{
+  { CNU,  CNU,  CNU, }, 
+  { 197,  185,  201, }, 
+  { 197,  185,  201, }, 
+};
+#endif
+
 //! \}
 
 

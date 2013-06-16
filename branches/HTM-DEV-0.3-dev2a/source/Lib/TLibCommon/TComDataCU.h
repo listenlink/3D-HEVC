@@ -196,6 +196,9 @@ private:
 #if H_3D_ARP
   UChar*        m_puhARPW;
 #endif
+#if H_3D_IC
+  Bool*         m_pbICFlag;           ///< array of IC flags
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -452,11 +455,20 @@ public:
   Void          setARPWSubParts    ( UChar w, UInt uiAbsPartIdx, UInt uiDepth );
   Double        getARPWFactor      ( UInt uiIdx );
 #endif
+#if H_3D_IC
+  Bool*         getICFlag          ()                        { return m_pbICFlag;               }
+  Bool          getICFlag          ( UInt uiIdx )            { return m_pbICFlag[uiIdx];        }
+  Void          setICFlag          ( UInt uiIdx, Bool  uh )  { m_pbICFlag[uiIdx] = uh;          }
+  Void          setICFlagSubParts  ( Bool bICFlag,  UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  Bool          isICFlagRequired   ( UInt uiAbsPartIdx );
+  Void          getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx = 0, Bool bLCU = false);
+#else
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------
   
   Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
+#endif
   UChar         getNumPartInter       ();
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
   
@@ -560,7 +572,9 @@ public:
 #if H_3D_ARP
   UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
 #endif  
-
+#if H_3D_IC
+  UInt          getCtxICFlag                    ( UInt   uiAbsPartIdx                                 );
+#endif
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
   UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }
