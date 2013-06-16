@@ -398,6 +398,10 @@ protected:
   UInt      m_uiUseAdvResPred;
   UInt      m_uiARPStepNum;
 #endif
+
+#if H_3D_IC
+  Bool      m_bUseIC;
+#endif
 #endif
 
 public:
@@ -480,6 +484,10 @@ public:
   Void       setARPStepNum                  ( UInt  u )      { m_uiARPStepNum = u;       }
 #endif
 
+#if H_3D_IC
+  Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
+  Bool       getUseIC                       ()               { return m_bUseIC; }
+#endif
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }
   Void      setQuadtreeTULog2MinSize        ( UInt  u )      { m_uiQuadtreeTULog2MinSize = u; }

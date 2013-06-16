@@ -1085,6 +1085,16 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       xCodePredWeightTable( pcSlice );
     }
+#if H_3D_IC
+    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) )
+    {
+      WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
+      if( pcSlice->getApplyIC() )
+      {
+        WRITE_FLAG( pcSlice->getIcSkipParseFlag() ? 1 : 0, "ic_skip_mergeidx0" );
+      }
+    }
+#endif
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS);
     if (!pcSlice->isIntra())
     {
@@ -1365,6 +1375,13 @@ Void TEncCavlc::codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 
 #if H_3D_ARP
 Void TEncCavlc::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+
+#if H_3D_IC
+Void TEncCavlc::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }

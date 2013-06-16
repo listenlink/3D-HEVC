@@ -74,7 +74,9 @@ protected:
   
   Pel*   m_pLumaRecBuffer;       ///< array for downsampled reconstructed luma sample 
   Int    m_iLumaRecStride;       ///< stride of #m_pLumaRecBuffer array
-
+#if H_3D_IC
+  UInt   m_uiaShift[ 63 ];       // Table for multiplication to substitue of division operation
+#endif
   Void xPredIntraAng            (Int bitDepth, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, Bool bFilter );
   Void xPredIntraPlanar         ( Int* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height );
   
@@ -88,16 +90,24 @@ protected:
 #if H_3D_ARP
     , Bool filterType = false
 #endif
+#if H_3D_IC
+    , Bool bICFlag    = false
+#endif
     );
   Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi 
 #if H_3D_ARP
     , Bool filterType = false
 #endif
+#if H_3D_IC
+    , Bool bICFlag    = false
+#endif
     );
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
   
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );
-
+#if H_3D_IC
+  Void xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift, TextType eType );
+#endif
   Void xDCPredFiltering( Int* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight );
   Bool xCheckIdenticalMotion    ( TComDataCU* pcCU, UInt PartAddr);
 

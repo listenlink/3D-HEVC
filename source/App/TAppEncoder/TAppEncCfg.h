@@ -242,7 +242,9 @@ protected:
   UInt      m_uiUseAdvResPred;
   UInt      m_uiARPStepNum;
 #endif
-
+#if H_3D_IC
+  vector<Bool> m_abUseIC;                                    ///< flag for using illumination compensation for inter-view prediction
+#endif
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost 
   Bool      m_bUseCbfFastMode;                              ///< flag for using Cbf Fast PU Mode Decision
   Bool      m_useEarlySkipDetection;                         ///< flag for using Early SKIP Detection

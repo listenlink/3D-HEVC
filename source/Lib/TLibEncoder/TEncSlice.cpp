@@ -188,7 +188,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->initSlice();
   rpcSlice->setPicOutputFlag( true );
   rpcSlice->setPOC( pocCurr );
-  
+#if H_3D_IC
+  rpcSlice->setApplyIC( false );
+#endif
   // depth computation based on GOP size
   Int depth;
   {
@@ -932,7 +934,16 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   TComBitCounter* pcBitCounters     = pcEncTop->getBitCounters();
   Int  iNumSubstreams = 1;
   UInt uiTilesAcross  = 0;
-
+#if H_3D_IC
+  if ( pcEncTop->getViewIndex() && pcEncTop->getUseIC() ) // DCP of ViewID 0 is not available
+  {
+    pcSlice ->xSetApplyIC();
+    if ( pcSlice->getApplyIC() )
+    {
+      pcSlice->setIcSkipParseFlag( pcSlice->getPOC() % m_pcCfg->getIntraPeriod() != 0 );
+    }
+  }
+#endif
   if( m_pcCfg->getUseSBACRD() )
   {
     iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();

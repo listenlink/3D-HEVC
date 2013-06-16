@@ -507,7 +507,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_ARP
   ("AdvMultiviewResPred",      m_uiUseAdvResPred,           (UInt)1, "Usage of Advanced Residual Prediction" )
 #endif
-
+#if H_3D_IC
+  ("IlluCompEnable",           m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation")
+#endif
   // Coding tools
   ("AMP",                      m_enableAMP,                 true,  "Enable asymmetric motion partitions")
   ("TransformSkip",            m_useTransformSkip,          false, "Intra transform skipping")
@@ -2287,6 +2289,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_ARP
   printf(" ARP:%d  ", m_uiUseAdvResPred  );
+#endif
+#if H_3D_IC
+  printf( "IlluCompEnable: %d %d ", m_abUseIC[0] ? 1 : 0, m_abUseIC[1] ? 1 : 0 );
 #endif
   printf("\n\n");  
 

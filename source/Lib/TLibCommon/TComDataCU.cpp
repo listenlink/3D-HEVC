@@ -118,6 +118,10 @@ TComDataCU::TComDataCU()
 #if H_3D_ARP
   m_puhARPW              = NULL;
 #endif
+
+#if H_3D_IC
+  m_pbICFlag             = NULL;
+#endif
 }
 
 TComDataCU::~TComDataCU()
@@ -214,6 +218,9 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
 #if H_3D_ARP
     m_puhARPW            = new UChar[ uiNumPartition];
 #endif
+#if H_3D_IC
+    m_pbICFlag           = (Bool* )xMalloc(Bool,   uiNumPartition);
+#endif
   }
   else
   {
@@ -303,7 +310,9 @@ Void TComDataCU::destroy()
 #if H_3D_ARP
     if ( m_puhARPW            ) { delete[] m_puhARPW;           m_puhARPW           = NULL; }
 #endif
-
+#if H_3D_IC
+    if ( m_pbICFlag           ) { xFree(m_pbICFlag);            m_pbICFlag          = NULL; }
+#endif
     m_acCUMvField[0].destroy();
     m_acCUMvField[1].destroy();
     
@@ -436,6 +445,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     m_puhCbf[1][ui]=pcFrom->m_puhCbf[1][ui];
     m_puhCbf[2][ui]=pcFrom->m_puhCbf[2][ui];
     m_pbIPCMFlag[ui] = pcFrom->m_pbIPCMFlag[ui];
+#if H_3D_IC
+    m_pbICFlag[ui]   =  pcFrom->m_pbICFlag[ui];
+#endif
   }
   
   Int firstElement = max<Int>( partStartIdx, 0 );
@@ -471,6 +483,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_pbIPCMFlag        + firstElement, false,                    numElements * sizeof( *m_pbIPCMFlag ) );
 #if H_3D_ARP
     memset( m_puhARPW           + firstElement, 0,                        numElements * sizeof( UChar )         );
+#endif
+#if H_3D_IC
+    memset( m_pbICFlag          + firstElement, false,                    numElements * sizeof( *m_pbICFlag )   );
 #endif
   }
   
@@ -610,6 +625,9 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
 #if H_3D_ARP
       m_puhARPW[ui] = 0;
 #endif
+#if H_3D_IC
+      m_pbICFlag[ui]  = false;
+#endif
     }
   }
 
@@ -691,6 +709,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_puhWidth,          uhWidth,  iSizeInUchar );
   memset( m_puhHeight,         uhHeight, iSizeInUchar );
   memset( m_pbIPCMFlag,        0, iSizeInBool  );
+#if H_3D_IC
+  memset( m_pbICFlag,          0, iSizeInBool  );
+#endif
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
     m_skipFlag[ui]   = false;
@@ -731,6 +752,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 
 #if H_3D_ARP
       m_puhARPW           [ui] = pcCU->getARPW( uiPartOffset+ui );
+#endif
+#if H_3D_IC
+      m_pbICFlag[ui] = pcCU->m_pbICFlag[uiPartOffset+ui];
 #endif
     }
   }
@@ -844,6 +868,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
 #if H_3D_ARP
   m_puhARPW             = pcCU->getARPW()             + uiPart;
+#endif
+#if H_3D_IC
+  m_pbICFlag            = pcCU->getICFlag()           + uiPart;
 #endif
 
   m_puhLumaIntraDir     = pcCU->getLumaIntraDir()     + uiPart;
@@ -973,6 +1000,9 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
 #if H_3D_NBDV
   }
 #endif
+#if H_3D_IC
+  m_pbICFlag           = pcCU->getICFlag()                + uiAbsPartIdx;
+#endif
 }
 
 // Copy small CU to bigger CU.
@@ -1057,6 +1087,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
 #if H_3D_ARP
   memcpy( m_puhARPW             + uiOffset, pcCU->getARPW(),              iSizeInUchar );
 #endif
+#if H_3D_IC
+  memcpy( m_pbICFlag            + uiOffset, pcCU->getICFlag(),            iSizeInBool );
+#endif
 }
 
 // Copy current predicted part to a CU in picture.
@@ -1136,6 +1169,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
 #if H_3D_ARP
   memcpy( rpcCU->getARPW()             + m_uiAbsIdxInLCU, m_puhARPW,             iSizeInUchar );
 #endif
+#if H_3D_IC
+  memcpy( rpcCU->getICFlag()           + m_uiAbsIdxInLCU, m_pbICFlag,            iSizeInBool );
+#endif
 }
 
 Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
@@ -1211,6 +1247,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
 
 #if H_3D_ARP
   memcpy( rpcCU->getARPW()             + uiPartOffset, m_puhARPW,             iSizeInUchar );
+#endif
+#if H_3D_IC
+  memcpy( rpcCU->getICFlag()           + uiPartOffset, m_pbICFlag,            iSizeInBool );
 #endif
 }
 
@@ -1871,6 +1910,15 @@ UInt TComDataCU::getCTXARPWFlag( UInt uiAbsPartIdx )
 }
 #endif
 
+#if H_3D_IC
+UInt TComDataCU::getCtxICFlag( UInt uiAbsPartIdx )
+{
+  UInt        uiCtx = 0;
+
+  return uiCtx;
+}
+#endif
+
 UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
 {
   return getDepth( uiAbsPartIdx );
@@ -2169,6 +2217,50 @@ UChar TComDataCU::getNumPartInter()
   return  iNumPart;
 }
 
+#if H_3D_IC
+Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight, UInt uiAbsPartIdx, Bool bLCU)
+{
+  UInt uiNumPartition  = bLCU ? (getWidth(uiAbsPartIdx)*getHeight(uiAbsPartIdx) >> 4) : m_uiNumPartition;
+  UInt  uiTmpAbsPartIdx  = bLCU ? uiAbsPartIdx : 0;
+
+  switch ( m_pePartSize[uiTmpAbsPartIdx] )
+  {
+  case SIZE_2NxN:
+    riWidth = getWidth( uiTmpAbsPartIdx );      riHeight = getHeight( uiTmpAbsPartIdx ) >> 1; ruiPartAddr = ( uiPartIdx == 0 )? 0 : uiNumPartition >> 1;
+    break;
+  case SIZE_Nx2N:
+    riWidth = getWidth( uiTmpAbsPartIdx ) >> 1; riHeight = getHeight( uiTmpAbsPartIdx );      ruiPartAddr = ( uiPartIdx == 0 )? 0 : uiNumPartition >> 2;
+    break;
+  case SIZE_NxN:
+    riWidth = getWidth( uiTmpAbsPartIdx ) >> 1; riHeight = getHeight( uiTmpAbsPartIdx ) >> 1; ruiPartAddr = ( uiNumPartition >> 2 ) * uiPartIdx;
+    break;
+  case SIZE_2NxnU:
+    riWidth     = getWidth( uiTmpAbsPartIdx );
+    riHeight    = ( uiPartIdx == 0 ) ?  getHeight( uiTmpAbsPartIdx ) >> 2 : ( getHeight( uiTmpAbsPartIdx ) >> 2 ) + ( getHeight( uiTmpAbsPartIdx ) >> 1 );
+    ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : uiNumPartition >> 3;
+    break;
+  case SIZE_2NxnD:
+    riWidth     = getWidth( uiTmpAbsPartIdx );
+    riHeight    = ( uiPartIdx == 0 ) ?  ( getHeight( uiTmpAbsPartIdx ) >> 2 ) + ( getHeight( uiTmpAbsPartIdx ) >> 1 ) : getHeight( uiTmpAbsPartIdx ) >> 2;
+    ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : (uiNumPartition >> 1) + (uiNumPartition >> 3);
+    break;
+  case SIZE_nLx2N:
+    riWidth     = ( uiPartIdx == 0 ) ? getWidth( uiTmpAbsPartIdx ) >> 2 : ( getWidth( uiTmpAbsPartIdx ) >> 2 ) + ( getWidth( uiTmpAbsPartIdx ) >> 1 );
+    riHeight    = getHeight( uiTmpAbsPartIdx );
+    ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : uiNumPartition >> 4;
+    break;
+  case SIZE_nRx2N:
+    riWidth     = ( uiPartIdx == 0 ) ? ( getWidth( uiTmpAbsPartIdx ) >> 2 ) + ( getWidth( uiTmpAbsPartIdx ) >> 1 ) : getWidth( uiTmpAbsPartIdx ) >> 2;
+    riHeight    = getHeight( uiTmpAbsPartIdx );
+    ruiPartAddr = ( uiPartIdx == 0 ) ? 0 : (uiNumPartition >> 2) + (uiNumPartition >> 4);
+    break;
+  default:
+    assert ( m_pePartSize[uiTmpAbsPartIdx] == SIZE_2Nx2N ); 
+    riWidth = getWidth( uiTmpAbsPartIdx );      riHeight = getHeight( uiTmpAbsPartIdx );      ruiPartAddr = 0;
+    break;
+  }
+}
+#else
 Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight )
 {
   switch ( m_pePartSize[0] )
@@ -2208,6 +2300,7 @@ Void TComDataCU::getPartIndexAndSize( UInt uiPartIdx, UInt& ruiPartAddr, Int& ri
       break;
   }
 }
+#endif
 
 
 Void TComDataCU::getMvField ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList, TComMvField& rcMvField )
@@ -3110,6 +3203,10 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
 Void TComDataCU::clipMv    (TComMv&  rcMv)
 {
   Int  iMvShift = 2;
+#if H_3D_IC
+  if( getSlice()->getIsDepth() )
+    iMvShift = 0;
+#endif
   Int iOffset = 8;
   Int iHorMax = ( m_pcSlice->getSPS()->getPicWidthInLumaSamples() + iOffset - m_uiCUPelX - 1 ) << iMvShift;
   Int iHorMin = (       -(Int)g_uiMaxCUWidth - iOffset - (Int)m_uiCUPelX + 1 ) << iMvShift;
@@ -4314,6 +4411,61 @@ Void TComDataCU::setARPWSubParts ( UChar w, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert( sizeof( *m_puhARPW) == 1 );
   memset( m_puhARPW + uiAbsPartIdx, w, m_pcPic->getNumPartInCU() >> ( 2 * uiDepth ) );
+}
+#endif
+
+#if H_3D_IC
+Void TComDataCU::setICFlagSubParts( Bool bICFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
+{
+  memset( m_pbICFlag + uiAbsPartIdx, bICFlag, (m_pcPic->getNumPartInCU() >> ( 2 * uiDepth ))*sizeof(Bool) );
+}
+
+Bool TComDataCU::isICFlagRequired( UInt uiAbsPartIdx )
+{
+  UInt uiPartAddr;
+  UInt iNumbPart;
+
+  if( !( getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) )
+  {
+    return false;
+  }
+
+  if( getSlice()->getIcSkipParseFlag() )
+  {
+    if( getMergeFlag( uiAbsPartIdx ) && getMergeIndex( uiAbsPartIdx ) == 0 )
+    {
+      return false;
+    }
+  }
+
+  if( getMergeFlag( uiAbsPartIdx ) )
+  {
+    return true;
+  }
+
+
+  Int iWidth, iHeight;
+
+  iNumbPart = ( getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ? 1 : ( getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 4 : 2 ) );
+
+  for(UInt i = 0; i < iNumbPart; i++)
+  {
+    getPartIndexAndSize( i, uiPartAddr, iWidth, iHeight, uiAbsPartIdx, true );
+    uiPartAddr += uiAbsPartIdx;
+
+    for(UInt uiRefIdx = 0; uiRefIdx < 2; uiRefIdx++)
+    {
+      RefPicList eRefList = uiRefIdx ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+      Int iBestRefIdx = getCUMvField(eRefList)->getRefIdx(uiPartAddr);
+
+      if( ( getInterDir( uiPartAddr ) & ( uiRefIdx+1 ) ) && iBestRefIdx >= 0 && getSlice()->getViewIndex() != getSlice()->getRefPic( eRefList, iBestRefIdx )->getViewIndex() )
+      {
+        return true;
+      }
+    }
+  }
+
+  return false;
 }
 #endif
 //! \}

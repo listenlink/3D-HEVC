@@ -156,6 +156,27 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bR
   m_pcEntropyCoderIf->codeMergeIndex( pcCU, uiAbsPartIdx );
 }
 
+#if H_3D_IC
+Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) )
+  {
+    return;
+  }
+
+  if( !pcCU->getSlice()->getApplyIC() )
+    return;
+
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+
+  if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
+    m_pcEntropyCoderIf->codeICFlag( pcCU, uiAbsPartIdx );
+}
+#endif
+
 #if H_3D_ARP
 Void TEncEntropy::encodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {

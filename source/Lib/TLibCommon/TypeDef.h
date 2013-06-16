@@ -91,6 +91,9 @@
 
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
 #define H_3D_FIX                          1   // Temporary for minor fixes
+#define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
+                                              // Unifying rounding offset, for IC part, JCT3V-D0135
+                                              // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -178,6 +178,9 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseAdvRP                     ( ( isDepth || 0==layer ) ? 0 : m_uiUseAdvResPred );
     m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layer ) ? 1 : H_3D_ARP_WFNR     );
 #endif
+#if H_3D_IC
+    m_cTEncTop.setUseIC                        ( vps.getViewIndex( layer ) == 0 ? false : m_abUseIC[isDepth ? 1 : 0] );
+#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
