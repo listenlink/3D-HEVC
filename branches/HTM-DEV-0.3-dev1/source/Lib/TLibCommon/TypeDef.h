@@ -87,6 +87,7 @@
                                               // HHI_DELTADC_DLT_D0035
                                               // PKU_QC_DEPTH_INTRA_UNI_D0195
                                               // RWTH_SDC_DLT_B0036
+#define H_3D_FIX                          1   // Temporary for minor fixes
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -100,6 +101,7 @@
 #define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
 #define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
+#define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
 #endif
 
 ///// ***** DEPTH INTRA MODES *********

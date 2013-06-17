@@ -964,7 +964,9 @@ TAppComCamPara::xSetPdmConversionParams()
 
   //--- determine (virtual) camera parameter shift between view order index 1 and base view (view order index 0) ---
   Double        dCamPosShift, dPicPosShift;
+#if H_3D_PDM_CAM_PARAS
   Int           iMinVOI       = (1<<30);
+#endif
   Int           iMinAbsVOI    = (1<<30);
   Int           iMinAbsVOIId  = 0;
   for( Int iBaseId = 1; iBaseId < m_iNumberOfBaseViews; iBaseId++ )
@@ -972,7 +974,9 @@ TAppComCamPara::xSetPdmConversionParams()
     Int iAbsVOI = ( m_aiViewOrderIndex[ iBaseId ] < 0 ? -m_aiViewOrderIndex[ iBaseId ] : m_aiViewOrderIndex[ iBaseId ] );
     if( iAbsVOI < iMinAbsVOI )
     {
+#if H_3D_PDM_CAM_PARAS
       iMinVOI      = m_aiViewOrderIndex[ iBaseId ];
+#endif
       iMinAbsVOI   = iAbsVOI;
       iMinAbsVOIId = iBaseId;
     }
