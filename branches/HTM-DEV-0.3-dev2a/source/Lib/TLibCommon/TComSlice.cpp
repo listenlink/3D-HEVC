@@ -2314,8 +2314,6 @@ Void TComSlice::xSetApplyIC()
   Int iMaxPelValue = ( 1 << g_bitDepthY ); 
   Int *aiRefOrgHist;
   Int *aiCurrHist;
-  aiRefOrgHist = new Int;
-  aiCurrHist   = new Int;
   aiRefOrgHist = (Int *) xMalloc( Int,iMaxPelValue );
   aiCurrHist   = (Int *) xMalloc( Int,iMaxPelValue );
   memset( aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
