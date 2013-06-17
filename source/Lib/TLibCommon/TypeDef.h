@@ -87,6 +87,11 @@
                                               // HHI_DELTADC_DLT_D0035
                                               // PKU_QC_DEPTH_INTRA_UNI_D0195
                                               // RWTH_SDC_DLT_B0036
+                                              // INTEL_SDC64_D0193
+                                              // RWTH_SDC_CTX_SIMPL_D0032
+                                              // LGE_CONCATENATE_D0141
+                                              // FIX_SDC_ENC_RD_WVSO_D0163
+                                              // MTK_SAMPLE_BASED_SDC_D0110
 #define H_3D_FIX                          1   // Temporary for minor fixes
 #endif 
 
