@@ -2786,6 +2786,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
       
 #if H_3D_VSO // M35
+#if H_3D_VSO_FIX // This fix should be enabled after verification 
         Double dLambda;
         if ( m_pcRdCost->getUseLambdaScaleVSO() )
           dLambda = m_pcRdCost->getUseRenModel() ? m_pcRdCost->getLambdaVSO() : m_pcRdCost->getSqrtLambdaVSO();
@@ -2793,6 +2794,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
           dLambda = m_pcRdCost->getSqrtLambda();        
 
         Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
+#else
+        Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
+#endif
 #else
         Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
 #endif

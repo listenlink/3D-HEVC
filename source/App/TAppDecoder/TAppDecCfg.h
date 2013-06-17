@@ -83,7 +83,6 @@ public:
   : m_pchBitstreamFile(NULL)
 #if H_MV
   , m_maxLayerId(0)
-  , m_pchReconFiles(NULL) 
 #endif
   , m_pchReconFile(NULL)
   , m_iSkipFrame(0)

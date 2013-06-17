@@ -1520,13 +1520,13 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
 }
   
 #if H_3D_DIM_DLT
-  Void TComVPS::setDepthLUTs(Int layerIdInVps, Int* idx2DepthValue, Int iNumDepthValues)
+  Void TComVPS::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNumDepthValues)
   {
-    if( idx2DepthValue == NULL || iNumDepthValues == 0 ) // default mapping only
+    if( idxToDepthValueTable == NULL || iNumDepthValues == 0 ) // default mapping only
       return;
     
     // copy idx2DepthValue to internal array
-    memcpy(m_iIdx2DepthValue[layerIdInVps], idx2DepthValue, iNumDepthValues*sizeof(UInt));
+    memcpy(m_iIdx2DepthValue[layerIdInVps], idxToDepthValueTable, iNumDepthValues*sizeof(UInt));
     
     UInt uiMaxDepthValue = ((1 << g_bitDepthY)-1);
     for(Int p=0; p<=uiMaxDepthValue; p++)

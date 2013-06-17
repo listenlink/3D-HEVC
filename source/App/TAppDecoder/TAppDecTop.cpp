@@ -94,6 +94,13 @@ Void TAppDecTop::destroy()
     free (m_pchReconFile);
     m_pchReconFile = NULL;
   }
+#if H_3D_FIX
+  if (m_pchScaleOffsetFile)
+  {
+    free (m_pchScaleOffsetFile);
+    m_pchScaleOffsetFile = NULL; 
+  }
+#endif
 }
 
 // ====================================================================================================================
@@ -145,7 +152,6 @@ Void TAppDecTop::decode()
   Int  pocCurrPic        = -MAX_INT;     
   Int  pocLastPic        = -MAX_INT;   
   
-  Int  layerIdLastPic    = 0; 
   Int  layerIdCurrPic    = 0; 
 
   Int  decIdxLastPic     = 0; 
@@ -222,7 +228,6 @@ Void TAppDecTop::decode()
 
         if ( bNewPicture || !bitstreamFile )
         { 
-          layerIdLastPic    = layerIdCurrPic;  
           layerIdCurrPic    = nalu.m_layerId; 
           
           pocLastPic        = pocCurrPic; 
