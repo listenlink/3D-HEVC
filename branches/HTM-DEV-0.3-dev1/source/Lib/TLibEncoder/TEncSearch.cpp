@@ -1978,44 +1978,28 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   
   //===== determine distortion =====
 #if H_3D_VSO
-  if( m_pcRdCost->getUseVSO() )
-  {
-    if( m_pcRdCost->getUseEstimatedVSD() )
-    {
-      ruiDist = m_pcRdCost->getDistPartVSD( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false );
-    }
-    else
-    {
-      ruiDist = m_pcRdCost->getDistPartVSO( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false );
-    }
-  }
+  if ( m_pcRdCost->getUseVSO() )
+    ruiDist = m_pcRdCost->getDistPartVSO  ( pcCU, uiAbsPartIdx, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight, false );
   else
 #endif
-  {
-    ruiDist = m_pcRdCost->getDistPart( g_bitDepthY, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
-  }
+    ruiDist = m_pcRdCost->getDistPart(g_bitDepthY, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
   
-  //----- determine rate and r-d cost -----
+  //===== determine rate and r-d cost =====
   m_pcEntropyCoder->resetBits();
   
   // encode reduced intra header
-  m_pcEntropyCoder->encodeSkipFlag( pcCU, 0, true );
   m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
   
-  // encode pred direction + residual data
+  // encode pred direction + DC residual data
   m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
-  UInt   uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
+  UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
   
-#if HHI_VSO
+#if H_3D_VSO
   if ( m_pcRdCost->getUseLambdaScaleVSO())
-  {
     dRDCost = m_pcRdCost->calcRdCostVSO( uiBits, ruiDist );
-  }
   else
 #endif
-  {
     dRDCost = m_pcRdCost->calcRdCost( uiBits, ruiDist );
-  }
 }
 #endif
 
