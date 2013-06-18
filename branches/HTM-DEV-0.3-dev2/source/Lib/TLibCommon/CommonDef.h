@@ -210,7 +210,6 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 }                           \
 }
 #endif
-
 template <typename T>
 __inline T gSign(const T& t)
 {
@@ -361,6 +360,7 @@ enum NalUnitType
 #define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
 
 #if H_3D_IV_MERGE
+ // GT: To be checked if all of this is still necessary. 
 #define PDM_USE_FOR_IVIEW                 1
 #define PDM_USE_FOR_INTER                 2
 #define PDM_USE_FOR_MERGE                 4
@@ -380,7 +380,6 @@ enum NalUnitType
 #define PDM_OFFSET_SHIFT                  ( PDM_LOG2_MAX_ABS_NORMAL_DISPARITY )                             // accuracy of offset
 
 #endif
-
 #endif // end of H_3D
 //! \}
 

@@ -91,7 +91,6 @@ private:
   TRenTop                     m_cRendererTop; 
   TRenModel                   m_cRendererModel;   
 #endif
-
 #if H_3D_IV_MERGE
   TComVPSAccess               m_cVPSAccess;
   TComSPSAccess               m_cSPSAccess;
@@ -144,7 +143,6 @@ public:
 #else
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
 #endif
-
 #if H_3D_IV_MERGE
   TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }

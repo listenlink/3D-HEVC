@@ -682,6 +682,7 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
 }
 #endif
 #if H_3D_IV_MERGE
+// GT: This function is not necessary anymore m_ivPicLists should be used instead
 TComPic* TAppDecTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
 {
   assert( ( viewIdx >= 0 ) );
@@ -700,5 +701,4 @@ TComPic* TAppDecTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
   return pcPic;
 }
 #endif
-
 //! \}

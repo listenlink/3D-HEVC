@@ -47,7 +47,7 @@
 #include "TComPrediction.h"
 #include "TComSlice.h"
 
-
+#if H_3D_IV_MERGE
 
 class TComVPSAccess // would be better to have a real VPS buffer
 {
@@ -155,7 +155,7 @@ private:
 
 
 
-
+#endif
 #endif // __TCOM_DEPTH_MAP_GENERATOR__
 
 

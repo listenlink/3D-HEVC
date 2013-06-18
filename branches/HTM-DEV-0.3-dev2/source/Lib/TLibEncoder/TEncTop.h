@@ -56,7 +56,6 @@
 #include "TEncSampleAdaptiveOffset.h"
 #include "TEncPreanalyzer.h"
 #include "TEncRateCtrl.h"
-
 #if H_3D_IV_MERGE
 #include "TLibCommon/TComDepthMapGenerator.h"
 #endif
@@ -70,7 +69,6 @@
 #if H_3D_IV_MERGE
 class TAppEncTop;
 #endif
-
 /// encoder class
 class TEncTop : public TEncCfg
 {
@@ -103,11 +101,9 @@ private:
   TEncGOP                 m_cGOPEncoder;                  ///< GOP encoder
   TEncSlice               m_cSliceEncoder;                ///< slice encoder
   TEncCu                  m_cCuEncoder;                   ///< CU encoder
-
 #if H_3D_IV_MERGE
   TComDepthMapGenerator   m_cDepthMapGenerator;           ///< depth map generator
 #endif
-
   // SPS
   TComSPS                 m_cSPS;                         ///< SPS
   TComPPS                 m_cPPS;                         ///< PPS

@@ -42,7 +42,7 @@
 #include "CommonDef.h"
 #include "TComDepthMapGenerator.h"
 
-
+#if H_3D_IV_MERGE
 
 TComDepthMapGenerator::TComDepthMapGenerator()
 {
@@ -135,8 +135,6 @@ TComDepthMapGenerator::initViewComponent( TComPic* pcPic )
   ROFVS( m_pcSPSAccess->getPdm     () ); 
 }
 
-
-#if H_3D_IV_MERGE
 Bool
 TComDepthMapGenerator::getPdmCandidate(TComDataCU* pcCU, UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge )
 {

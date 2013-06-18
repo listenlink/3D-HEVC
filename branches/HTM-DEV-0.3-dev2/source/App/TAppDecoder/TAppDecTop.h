@@ -75,7 +75,6 @@ private:
 #endif
     // for output control
   Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP
-
 #if H_3D_IV_MERGE
   Int  m_fcoViewDepthId;
   Char m_fcoOrder[MAX_VIEW_NUM*2];
@@ -106,9 +105,6 @@ public:
 #if H_3D_IV_MERGE 
   TDecTop* getTDecTop     ( Int viewIdx, Bool isDepth );
   TComPic*              getPicFromView     ( Int viewIdx, Int poc, bool isDepth ) { return xGetPicFromView( viewIdx, poc, isDepth ); }
-#endif
-
-#if H_3D_IV_MERGE
   TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
   TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
   TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
@@ -123,7 +119,6 @@ protected:
 #if H_3D_IV_MERGE 
   TComPic* xGetPicFromView( Int viewIdx, Int poc, Bool isDepth );
 #endif
-
 #if H_MV
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int layerId, Int tId ); ///< write YUV to file
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int layerId ); ///< flush all remaining decoded pictures to file
@@ -132,7 +127,6 @@ protected:
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic , UInt tId); ///< write YUV to file
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic ); ///< flush all remaining decoded pictures to file
 #endif
-
   Bool  isNaluWithinTargetDecLayerIdSet ( InputNALUnit* nalu ); ///< check whether given Nalu is within targetDecLayerIdSet
 };
 

@@ -1856,7 +1856,6 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     }
   }
 }
-
 #if H_3D_IV_MERGE
 Void
 TComSPS::setPredDepthMapGeneration( UInt uiViewIndex, Bool bIsDepth, UInt uiPdmGenMode, UInt uiPdmMvPredMode)
@@ -1870,7 +1869,6 @@ TComSPS::setPredDepthMapGeneration( UInt uiViewIndex, Bool bIsDepth, UInt uiPdmG
   m_uiMultiviewMvPredMode    = uiPdmMvPredMode;
 }
 #endif
-
 const Int TComSPS::m_winUnitX[]={1,2,2,1};
 const Int TComSPS::m_winUnitY[]={1,2,1,1};
 
@@ -1941,7 +1939,6 @@ TComSPS::initCamParaSPS( UInt uiViewIndex, UInt uiCamParPrecision, Bool bCamParS
   m_uiViewIndex           = uiViewIndex;
   m_bDepth                = false;
 #endif
-
   if( !m_bCamParInSliceHeader )
   {
     for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < uiViewIndex; uiBaseViewIndex++ )
@@ -1953,7 +1950,6 @@ TComSPS::initCamParaSPS( UInt uiViewIndex, UInt uiCamParPrecision, Bool bCamParS
     }
   }
 }
-
 #if H_3D_IV_MERGE
 Void
 TComSPS::initCamParaSPSDepth( UInt uiViewIndex)
