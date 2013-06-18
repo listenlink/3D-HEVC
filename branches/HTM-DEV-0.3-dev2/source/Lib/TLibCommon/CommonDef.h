@@ -177,6 +177,40 @@ template <typename T> inline T Clip3( T minVal, T maxVal, T a) { return std::min
 }                           \
 }
 
+#if H_3D_IV_MERGE
+#define ROFVS( exp )          \
+{                             \
+  if( !( exp ) )              \
+{                           \
+  return;                   \
+}                           \
+}
+
+#define ROTVS( exp )          \
+{                             \
+  if( ( exp ) )               \
+{                           \
+  return;                   \
+}                           \
+}
+
+#define ROTRS( exp, retVal )  \
+{                             \
+  if( ( exp ) )               \
+{                           \
+  return retVal;            \
+}                           \
+}
+
+#define ROFRS( exp, retVal )  \
+{                             \
+  if( !( exp ) )              \
+{                           \
+  return retVal;            \
+}                           \
+}
+#endif
+
 template <typename T>
 __inline T gSign(const T& t)
 {
@@ -199,7 +233,9 @@ __inline T gSign(const T& t)
 #define AMVP_MAX_NUM_CANDS_MEM      3           ///< max number of candidates
 // MERGE
 #define MRG_MAX_NUM_CANDS           5
-
+#if H_3D_IV_MERGE
+#define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
+#endif
 // Reference memory management
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
 
@@ -323,6 +359,27 @@ enum NalUnitType
 // CAMERA PARAMETERS
 #define LOG2_DISP_PREC_LUT           2           ///< log2 of disparity precision used in integer disparity LUTs
 #define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
+
+#if H_3D_IV_MERGE
+#define PDM_USE_FOR_IVIEW                 1
+#define PDM_USE_FOR_INTER                 2
+#define PDM_USE_FOR_MERGE                 4
+
+#define MAX_VIEW_NUM                      10
+#define PDM_SUBSAMPLING_EXP               2         // subsampling factor is 2^PDM_SUBSAMPLING_EXP
+#define PDM_SUB_SAMP_EXP_X(Pdm)           ((Pdm)==1?PDM_SUBSAMPLING_EXP:0)
+#define PDM_SUB_SAMP_EXP_Y(Pdm)           ((Pdm)==1?PDM_SUBSAMPLING_EXP:0)
+
+#define PDM_INTERNAL_CALC_BIT_DEPTH       31        // bit depth for internal calculations (32 - 1 for signed values)
+#define PDM_BITDEPTH_VIRT_DEPTH           15        // bit depth for virtual depth storage (16 - 1 for signed values)
+#define PDM_LOG2_MAX_ABS_NORMAL_DISPARITY 8         // maximum absolute normal disparity = 256 (for setting accuracy)
+#define PDM_VIRT_DEPTH_PRECISION          4         // must be greater than or equal to 2 (since MVs are given in quarter-pel units)
+
+#define PDM_INTER_CALC_SHIFT              ( PDM_INTERNAL_CALC_BIT_DEPTH - PDM_BITDEPTH_VIRT_DEPTH )         // avoids overflow
+#define PDM_LOG4_SCALE_DENOMINATOR        ( PDM_LOG2_MAX_ABS_NORMAL_DISPARITY + PDM_VIRT_DEPTH_PRECISION )  // accuracy of scaling factor
+#define PDM_OFFSET_SHIFT                  ( PDM_LOG2_MAX_ABS_NORMAL_DISPARITY )                             // accuracy of offset
+
+#endif
 
 #endif // end of H_3D
 //! \}

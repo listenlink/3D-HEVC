@@ -716,6 +716,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 
 #endif //HHI_VSO
+
+#if H_3D_IV_MERGE
+  ("PredDepthMapGen",  m_uiPredDepthMapGeneration, (UInt)0, "generation of prediction depth maps for motion data prediction" )
+  ("MultiviewMvPred",  m_uiMultiviewMvPredMode,    (UInt)0, "usage of predicted depth maps" )
+#endif
 #endif //H_3D
   ;
   
@@ -1438,6 +1443,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
   xConfirmPara( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
   xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
+#if H_3D_IV_MERGE
+  xConfirmPara    ( m_uiPredDepthMapGeneration > 2,                                   "PredDepthMapGen must be less than or equal to 2" );
+  xConfirmPara    ( m_uiMultiviewMvPredMode > 7,                                      "MultiviewMvPred must be less than or equal to 7" );  
+  xConfirmPara    ( m_uiMultiviewMvPredMode > 0 && m_uiPredDepthMapGeneration == 0 ,  "MultiviewMvPred > 0 requires PredDepthMapGen > 0" );
+#endif
 #if H_3D_VSO
     if( m_bUseVSO )
     {
@@ -2276,6 +2286,9 @@ Void TAppEncCfg::xPrintParameter()
 #if H_3D_VSO
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
+#endif
+#if H_3D_IV_MERGE
+  printf("MultiviewMvPred:%d", m_uiMultiviewMvPredMode);
 #endif
   printf("\n\n");  
 

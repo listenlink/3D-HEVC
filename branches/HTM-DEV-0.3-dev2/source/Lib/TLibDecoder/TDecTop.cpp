@@ -36,6 +36,9 @@
 */
 
 #include "NALread.h"
+#if H_3D_IV_MERGE
+#include "../../App/TAppDecoder/TAppDecTop.h"
+#endif
 #include "TDecTop.h"
 
 #if H_MV
@@ -388,15 +391,28 @@ Void TDecTop::destroy()
   m_cSliceDecoder.destroy();
 }
 
+#if H_3D_IV_MERGE
+Void TDecTop::init(TAppDecTop* pcTAppDecTop)
+#else
 Void TDecTop::init()
+#endif
 {
   // initialize ROM
 #if !H_MV
   initROM();
 #endif
-  m_cGopDecoder.init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cSAO);
+  m_cGopDecoder.init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cSAO
+#if H_3D_IV_MERGE
+    , &m_cDepthMapGenerator
+#endif
+    );
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
   m_cEntropyDecoder.init(&m_cPrediction);
+
+#if H_3D_IV_MERGE
+  m_tAppDecTop = pcTAppDecTop;
+  m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getVPSAccess(), m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
+#endif
 }
 
 Void TDecTop::deletePicBuffer ( )
@@ -753,6 +769,15 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cTrQuant.init     ( g_uiMaxCUWidth, g_uiMaxCUHeight, m_apcSlicePilot->getSPS()->getMaxTrSize());
 
     m_cSliceDecoder.create();
+#if H_3D_IV_MERGE
+    UInt uiPdm = ( m_apcSlicePilot->getSPS()->getViewIndex() ? m_apcSlicePilot->getSPS()->getPredDepthMapGeneration() : m_tAppDecTop->getSPSAccess()->getPdm() );
+    m_cDepthMapGenerator.create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_bitDepthY, PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
+    TComDepthMapGenerator* pcDMG0 = m_tAppDecTop->getDecTop0()->getDepthMapGenerator();
+    if( m_apcSlicePilot->getSPS()->getViewIndex() == 1 && ( pcDMG0->getSubSampExpX() != PDM_SUB_SAMP_EXP_X(uiPdm) || pcDMG0->getSubSampExpY() != PDM_SUB_SAMP_EXP_Y(uiPdm) ) )
+    {
+      pcDMG0->create( true, m_apcSlicePilot->getSPS()->getPicWidthInLumaSamples(), m_apcSlicePilot->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_bitDepthY, PDM_SUB_SAMP_EXP_X(uiPdm), PDM_SUB_SAMP_EXP_Y(uiPdm) );
+    }
+#endif
   }
   else
   {
@@ -892,6 +917,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->setRefPicList( m_cListPic );
 #endif
 
+#endif
+
+#if H_3D_IV_MERGE
+    TComPic * const pcTexturePic = m_isDepth ? m_tAppDecTop->getPicFromView(  m_viewIndex, pcSlice->getPOC(), false ) : NULL;
+    assert( !m_isDepth || pcTexturePic != NULL );
+    pcSlice->setTexturePic( pcTexturePic );
 #endif
     // For generalized B
     // note: maybe not existed case (always L0 is copied to L1 if L1 is empty)

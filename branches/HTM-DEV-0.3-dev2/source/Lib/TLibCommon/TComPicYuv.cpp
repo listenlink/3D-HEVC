@@ -76,6 +76,14 @@ Void TComPicYuv::create( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt 
   m_iCuWidth        = uiMaxCUWidth;
   m_iCuHeight       = uiMaxCUHeight;
 
+#if H_3D_IV_MERGE
+  m_iNumCuInWidth   = m_iPicWidth / m_iCuWidth;
+  m_iNumCuInWidth  += ( m_iPicWidth % m_iCuWidth ) ? 1 : 0;
+
+  m_iBaseUnitWidth  = uiMaxCUWidth  >> uiMaxCUDepth;
+  m_iBaseUnitHeight = uiMaxCUHeight >> uiMaxCUDepth;
+#endif
+
   Int numCuInWidth  = m_iPicWidth  / m_iCuWidth  + (m_iPicWidth  % m_iCuWidth  != 0);
   Int numCuInHeight = m_iPicHeight / m_iCuHeight + (m_iPicHeight % m_iCuHeight != 0);
   
@@ -324,6 +332,33 @@ Void TComPicYuv::dump (Char* pFileName, Bool bAdd)
 }
 
 #if H_3D
+#if H_3D_IV_MERGE
+Void
+TComPicYuv::getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY )
+{
+  Int iRastPartIdx    = g_auiZscanToRaster[iAbsZorderIdx];
+  Int iCuSizeInBases  = m_iCuWidth   / m_iBaseUnitWidth;
+  Int iCuX            = iCuAddr      % m_iNumCuInWidth;
+  Int iCuY            = iCuAddr      / m_iNumCuInWidth;
+  Int iBaseX          = iRastPartIdx % iCuSizeInBases;
+  Int iBaseY          = iRastPartIdx / iCuSizeInBases;
+  riX                 = iCuX * m_iCuWidth  + iBaseX * m_iBaseUnitWidth;
+  riY                 = iCuY * m_iCuHeight + iBaseY * m_iBaseUnitHeight; 
+}
+
+Void
+TComPicYuv::getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx )
+{
+  Int iCuX            = iX / m_iCuWidth;
+  Int iCuY            = iY / m_iCuHeight;
+  Int iBaseX          = ( iX - iCuX * m_iCuWidth  ) / m_iBaseUnitWidth;
+  Int iBaseY          = ( iY - iCuY * m_iCuHeight ) / m_iBaseUnitHeight;
+  Int iCuSizeInBases  = m_iCuWidth                  / m_iBaseUnitWidth;
+  riCuAddr            = iCuY   * m_iNumCuInWidth + iCuX;
+  Int iRastPartIdx    = iBaseY * iCuSizeInBases  + iBaseX;
+  riAbsZorderIdx      = g_auiRasterToZscan[ iRastPartIdx ];
+}
+#endif
 Void TComPicYuv::setLumaTo( Pel pVal )
 {
   xSetPels( getLumaAddr(), getStride(), getWidth(), getHeight(), pVal );

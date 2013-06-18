@@ -118,7 +118,11 @@ Void TEncTop::create ()
   }
 #endif
   m_cLoopFilter.        create( g_uiMaxCUDepth );
-  
+
+#if H_3D_IV_MERGE
+  m_cDepthMapGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_bitDepthY, PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
+#endif
+
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
@@ -224,6 +228,10 @@ Void TEncTop::destroy ()
   }
   m_cLoopFilter.        destroy();
   m_cRateCtrl.          destroy();
+
+#if H_3D_IV_MERGE
+  m_cDepthMapGenerator. destroy();
+#endif
   // SBAC RD
   if( m_bUseSBACRD )
   {
@@ -283,7 +291,11 @@ Void TEncTop::destroy ()
   return;
 }
 
+#if H_3D_IV_MERGE
+Void TEncTop::init( TAppEncTop* pcTAppEncTop)
+#else
 Void TEncTop::init()
+#endif
 {
   // initialize SPS
   xInitSPS();
@@ -305,6 +317,11 @@ Void TEncTop::init()
   m_cSliceEncoder.init( this );
   m_cCuEncoder.   init( this );
   
+#if H_3D_IV_MERGE
+  m_pcTAppEncTop = pcTAppEncTop;
+  m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getVPSAccess(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
+#endif
+
   // initialize transform & quantization class
   m_pcCavlcCoder = getCavlcCoder();
   
@@ -657,7 +674,24 @@ Void TEncTop::xInitSPS()
   if ( !m_isDepth )
   {
     m_cSPS.initCamParaSPS           ( m_viewIndex, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
+#if H_3D_IV_MERGE
+    if( m_viewIndex )
+    {
+      m_cSPS.setPredDepthMapGeneration( m_viewIndex, false, m_uiPredDepthMapGeneration, m_uiMultiviewMvPredMode);
+    }
+    else
+    {
+      m_cSPS.setPredDepthMapGeneration( m_viewIndex, false );
+    }
+#endif
   }
+#if H_3D_IV_MERGE
+  else
+  {
+    m_cSPS.initCamParaSPSDepth           ( m_viewIndex);
+    m_cSPS.setPredDepthMapGeneration( m_viewIndex, true );
+  }
+#endif
 #endif
 }
 
@@ -1299,4 +1333,6 @@ Void TEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHo
   }
 }
 #endif
+
+
 //! \}

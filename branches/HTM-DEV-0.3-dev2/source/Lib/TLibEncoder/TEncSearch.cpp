@@ -3314,8 +3314,13 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
   Int           iZeroMvdDir = -1;
 #endif
 
+#if H_3D_IV_MERGE
+  TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
+  UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
+#else
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
+#endif
   Int numValidMergeCand = 0 ;
 
   for ( Int iPartIdx = 0; iPartIdx < iNumPart; iPartIdx++ )

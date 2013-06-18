@@ -58,6 +58,9 @@
 #include "TEncRateCtrl.h"
 #include <vector>
 
+#if H_3D_IV_MERGE
+#include "TLibCommon/TComDepthMapGenerator.h"
+#endif
 //! \ingroup TLibEncoder
 //! \{
 
@@ -106,6 +109,11 @@ private:
 #if H_3D
   Int                     m_viewIndex; 
   Bool                    m_isDepth;
+
+#if H_3D_IV_MERGE
+  TComDepthMapGenerator*  m_pcDepthMapGenerator;
+#endif
+
 #endif
 #endif
   //--Adaptive Loop filter
@@ -165,7 +173,9 @@ public:
   Int   getGOPSize()          { return  m_iGopSize;  }
   
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
-  
+#if H_3D_IV_MERGE
+  TEncTop* getEncTop() { return m_pcEncTop; }
+#endif
 #if !H_MV
   Void  printOutSummary      ( UInt uiNumAllPicCoded );
 #endif

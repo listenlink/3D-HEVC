@@ -127,10 +127,31 @@ Void TAppEncTop::xInitLibCfg()
   {
     m_frameRcvd                 .push_back(0);
     m_acTEncTopList             .push_back(new TEncTop); 
+#if H_3D_IV_MERGE
+//    m_acTEncDepthTopList        .push_back(new TEncTop); 
+#endif
     m_acTVideoIOYuvInputFileList.push_back(new TVideoIOYuv);
     m_acTVideoIOYuvReconFileList.push_back(new TVideoIOYuv);
     m_picYuvRec                 .push_back(new TComList<TComPicYuv*>) ;
+#if H_3D_IV_MERGE
+    //m_acTEncDepthTopList[iViewIdx]->setFrameRate                    ( m_iFrameRate );
+    //m_acTEncDepthTopList[iViewIdx]->setFrameSkip                    ( m_FrameSkip );
+    //m_acTEncDepthTopList[iViewIdx]->setSourceWidth                  ( m_iSourceWidth );
+    //m_acTEncDepthTopList[iViewIdx]->setSourceHeight                 ( m_iSourceHeight );
+    //m_acTEncDepthTopList[iViewIdx]->setCroppingMode                 ( m_croppingMode );
+    //m_acTEncDepthTopList[iViewIdx]->setCropLeft                     ( m_cropLeft );
+    //m_acTEncDepthTopList[iViewIdx]->setCropRight                    ( m_cropRight );
+    //m_acTEncDepthTopList[iViewIdx]->setCropTop                      ( m_cropTop );
+    //m_acTEncDepthTopList[iViewIdx]->setCropBottom                   ( m_cropBottom );
+    //m_acTEncDepthTopList[iViewIdx]->setFrameToBeEncoded             ( m_iFrameToBeEncoded );
+    //m_acTEncDepthTopList[iViewIdx]->setViewId                       ( iViewIdx );
+    //m_acTEncDepthTopList[iViewIdx]->setIsDepth                      ( true );
 
+    //m_acTEncDepthTopList[iViewIdx]->setViewOrderIdx                 ( m_cCameraData.getViewOrderIndex()[ iViewIdx ] );
+
+    //m_acTEncDepthTopList[iViewIdx]->setLayerId                      ( layerId );
+
+#endif
     m_ivPicLists.push_back( m_acTEncTopList[ layer ]->getListPic()  ); 
     TEncTop& m_cTEncTop = *m_acTEncTopList[ layer ];  // It is not a member, but this name helps avoiding code duplication !!!
     
@@ -142,6 +163,12 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setViewIndex                    ( vps.getViewIndex   ( layer ) );
     m_cTEncTop.setIsDepth                      ( isDepth );
     //====== Camera Parameters =========
+#if H_3D_IV_MERGE
+      //m_acTEncDepthTopList[iViewIdx]->setCamParPrecision              ( 0 );
+      //m_acTEncDepthTopList[iViewIdx]->setCamParInSliceHeader          ( false );
+      //m_acTEncDepthTopList[iViewIdx]->setCodedScale                   ( 0 );
+      //m_acTEncDepthTopList[iViewIdx]->setCodedOffset                  ( 0 );
+#endif
     m_cTEncTop.setCameraParameters             ( &m_cCameraData );     
     m_cTEncTop.setCamParPrecision              ( isDepth ? false : m_cCameraData.getCamParsCodedPrecision  () );
     m_cTEncTop.setCamParInSliceHeader          ( isDepth ? 0     : m_cCameraData.getVaryingCameraParameters() );
@@ -165,6 +192,10 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
+#if H_3D_IV_MERGE
+    m_cTEncTop.setMultiviewMvPredMode          ( m_uiMultiviewMvPredMode     );
+    m_cTEncTop.setPredDepthMapGeneration       ( m_uiPredDepthMapGeneration );
+#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
@@ -188,6 +219,13 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFramesToBeEncoded            ( m_framesToBeEncoded );
   
   //====== Coding Structure ========
+#if H_3D_IV_MERGE
+      //m_acTEncDepthTopList[iViewIdx]->setIntraPeriod                  ( m_iIntraPeriod );
+      //m_acTEncDepthTopList[iViewIdx]->setDecodingRefreshType          ( m_iDecodingRefreshType );
+      //m_acTEncDepthTopList[iViewIdx]->setGOPSize                      ( m_iGOPSize );
+      //m_acTEncDepthTopList[iViewIdx]->setGopList                      ( m_GOPListsMvc[iViewIdx] );
+      //m_acTEncDepthTopList[iViewIdx]->setExtraRPSs                    ( m_extraRPSs[iViewIdx] );
+#endif
   m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod );
   m_cTEncTop.setDecodingRefreshType          ( m_iDecodingRefreshType );
   m_cTEncTop.setGOPSize                      ( m_iGOPSize );
@@ -206,11 +244,31 @@ Void TAppEncTop::xInitLibCfg()
   {
     m_cTEncTop.setNumReorderPics             ( m_numReorderPics[i], i );
     m_cTEncTop.setMaxDecPicBuffering         ( m_maxDecPicBuffering[i], i );
+#if H_3D_IV_MERGE
+        m_acTEncDepthTopList[iViewIdx]->setNumReorderPics             ( m_numReorderPics[iViewIdx][i], i );
+        m_acTEncDepthTopList[iViewIdx]->setMaxDecPicBuffering         ( m_maxDecPicBuffering[iViewIdx][i], i );
+#endif
   }
+#if H_3D_IV_MERGE
+      m_acTEncDepthTopList[iViewIdx]->setQP                           ( m_aiQP[1] );
+
+      m_acTEncDepthTopList[iViewIdx]->setTemporalLayerQPOffset        ( m_aiTLayerQPOffset );
+      m_acTEncDepthTopList[iViewIdx]->setPad                          ( m_aiPad );
+
+      m_acTEncDepthTopList[iViewIdx]->setMaxTempLayer                 ( m_maxTempLayer[iViewIdx] );
+
+      m_acTEncDepthTopList[iViewIdx]->setDisInter4x4                  ( m_bDisInter4x4);
+
+      m_acTEncDepthTopList[iViewIdx]->setUseNSQT( m_enableNSQT );
+      m_acTEncDepthTopList[iViewIdx]->setUseAMP( m_enableAMP );
+#endif
 #endif
   for( UInt uiLoop = 0; uiLoop < MAX_TLAYER; ++uiLoop )
   {
     m_cTEncTop.setLambdaModifier( uiLoop, m_adLambdaModifier[ uiLoop ] );
+#if H_3D_IV_MERGE
+//        m_acTEncDepthTopList[iViewIdx]->setLambdaModifier( uiLoop, m_adLambdaModifier[ uiLoop ] );
+#endif
   }
 #if H_MV
   m_cTEncTop.setQP                           ( m_iQP[layer] );
@@ -230,6 +288,13 @@ Void TAppEncTop::xInitLibCfg()
   //===== Slice ========
   
   //====== Loop/Deblock Filter ========
+#if H_3D_IV_MERGE
+      //m_acTEncDepthTopList[iViewIdx]->setLoopFilterDisable            ( m_abLoopFilterDisable[1]   );
+      //m_acTEncDepthTopList[iViewIdx]->setLoopFilterOffsetInAPS        ( m_loopFilterOffsetInAPS );
+      //m_acTEncDepthTopList[iViewIdx]->setLoopFilterBetaOffset         ( m_loopFilterBetaOffsetDiv2  );
+      //m_acTEncDepthTopList[iViewIdx]->setLoopFilterTcOffset           ( m_loopFilterTcOffsetDiv2    );
+      //m_acTEncDepthTopList[iViewIdx]->setDeblockingFilterControlPresent( m_DeblockingFilterControlPresent);
+#endif
 #if H_MV
   m_cTEncTop.setLoopFilterDisable            ( m_bLoopFilterDisable[layer]);
 #else
@@ -603,7 +668,11 @@ Void TAppEncTop::xInitLib()
 #if H_MV
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
+#if H_3D_IV_MERGE
+    m_acTEncTopList[layer]->init(this );
+#else
     m_acTEncTopList[layer]->init( );
+#endif
   }
 #else
   m_cTEncTop.init();
@@ -1030,5 +1099,27 @@ Int TAppEncTop::xGetMax( std::vector<Int>& vec )
     maxVec = max( vec[i], maxVec ); 
   return maxVec;
 }
+#endif
+#if H_3D_IV_MERGE
+TComPic* TAppEncTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
+{
+  assert( ( viewIdx >= 0 ) && ( viewIdx < m_iNumberOfViews ) );
+
+  TComList<TComPic*>* apcListPic =  m_acTEncTopList[(isDepth ? 1 : 0) + viewIdx * 2]->getListPic() ;
+
+  
+
+  TComPic* pcPic = NULL;
+  for(TComList<TComPic*>::iterator it=apcListPic->begin(); it!=apcListPic->end(); it++)
+  {
+    if( (*it)->getPOC() == poc )
+    {
+      pcPic = *it ;
+      break ;
+    }
+  }
+
+  return pcPic;
+};
 #endif
 //! \}

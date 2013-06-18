@@ -87,6 +87,11 @@ private:
   
   Bool  m_bIsBorderExtended;
   
+#if H_3D_IV_MERGE
+  Int   m_iBaseUnitWidth;       ///< Width of Base Unit (with maximum depth or minimum size, m_iCuWidth >> Max. Depth)
+  Int   m_iBaseUnitHeight;      ///< Height of Base Unit (with maximum depth or minimum size, m_iCuHeight >> Max. Depth)
+  Int   m_iNumCuInWidth;
+#endif
 protected:
   Void  xExtendPicCompBorder (Pel* piTxt, Int iStride, Int iWidth, Int iHeight, Int iMarginX, Int iMarginY);
 #if H_3D
@@ -164,6 +169,11 @@ public:
   // Set Function 
   Void  setLumaTo    ( Pel pVal );  
   Void  setChromaTo  ( Pel pVal );  
+#if H_3D_IV_MERGE
+  // sample to block and block to sample conversion
+  Void  getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY );
+  Void  getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
+#endif
 #endif
 };// END CLASS DEFINITION TComPicYuv
 
