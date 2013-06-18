@@ -528,7 +528,11 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceArgument        ( m_pcCfg->getSliceArgument()        );
   rpcSlice->setSliceSegmentMode     ( m_pcCfg->getSliceSegmentMode()     );
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
+#if H_3D_IV_MERGE
+  rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()   + ((rpcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE) ? 1:0)      );
+#else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
+#endif
   xStoreWPparam( pPPS->getUseWP(), pPPS->getWPBiPred() );
 }
 

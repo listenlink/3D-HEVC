@@ -41,7 +41,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////// EXTENSION SELECTION ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +87,16 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
+
+#define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
+                                              // HHI_INTER_VIEW_MOTION_PRED 
+                                              // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
+                                              // QC_MRG_CANS_B0048             , JCT3V-B0048, B0086, B0069
+                                              // OL_DISMV_POS_B0069            , different pos for disparity MV candidate, B0069
+                                              // MTK_INTERVIEW_MERGE_A0049     , second part
+                                              // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
+                                              // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
+
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////

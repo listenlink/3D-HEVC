@@ -48,6 +48,9 @@
 #include "TLibDecoder/TDecTop.h"
 #include "TAppDecCfg.h"
 
+#if H_3D_IV_MERGE
+#include "TLibCommon/TComDepthMapGenerator.h"
+#endif
 //! \ingroup TAppDecoder
 //! \{
 
@@ -72,6 +75,11 @@ private:
 #endif
     // for output control
   Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP
+
+#if H_3D_IV_MERGE
+  Int  m_fcoViewDepthId;
+  Char m_fcoOrder[MAX_VIEW_NUM*2];
+#endif
 #if H_MV
   Int                             m_pocLastDisplay      [ MAX_NUM_LAYERS ]; ///< last POC in display order
   Bool                            m_reconOpen           [ MAX_NUM_LAYERS ]; ///< reconstruction file opened
@@ -81,6 +89,11 @@ private:
 #if H_3D
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
+#if H_3D_IV_MERGE
+  TComVPSAccess                   m_cVPSAccess;
+  TComSPSAccess                   m_cSPSAccess;
+  TComAUPicAccess                 m_cAUPicAccess;
+#endif
 #endif
 public:
   TAppDecTop();
@@ -89,12 +102,28 @@ public:
   Void  create            (); ///< create internal members
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
- 
+
+#if H_3D_IV_MERGE 
+  TDecTop* getTDecTop     ( Int viewIdx, Bool isDepth );
+  TComPic*              getPicFromView     ( Int viewIdx, Int poc, bool isDepth ) { return xGetPicFromView( viewIdx, poc, isDepth ); }
+#endif
+
+#if H_3D_IV_MERGE
+  TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
+  TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
+  TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
+  TDecTop*          getDecTop0    () { return m_tDecTop[0]; }
+#endif
+
 protected:
   Void  xCreateDecLib     (); ///< create internal classes
   Void  xDestroyDecLib    (); ///< destroy internal classes
   Void  xInitDecLib       (); ///< initialize decoder class
-  
+
+#if H_3D_IV_MERGE 
+  TComPic* xGetPicFromView( Int viewIdx, Int poc, Bool isDepth );
+#endif
+
 #if H_MV
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int layerId, Int tId ); ///< write YUV to file
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int layerId ); ///< flush all remaining decoded pictures to file
@@ -103,6 +132,7 @@ protected:
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic , UInt tId); ///< write YUV to file
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic ); ///< flush all remaining decoded pictures to file
 #endif
+
   Bool  isNaluWithinTargetDecLayerIdSet ( InputNALUnit* nalu ); ///< check whether given Nalu is within targetDecLayerIdSet
 };
 

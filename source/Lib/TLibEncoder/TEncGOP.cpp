@@ -48,7 +48,9 @@
 #include "NALwrite.h"
 #include <time.h>
 #include <math.h>
-
+#if H_3D_IV_MERGE
+#include "../../App/TAppEncoder/TAppEncTop.h"
+#endif
 using namespace std;
 //! \ingroup TLibEncoder
 //! \{
@@ -106,6 +108,9 @@ TEncGOP::TEncGOP()
 #if H_3D
   m_viewIndex  =   0; 
   m_isDepth = false;
+#if H_3D_IV_MERGE
+  m_pcDepthMapGenerator = NULL;
+#endif
 #endif
 #endif
   return;
@@ -154,6 +159,9 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 #if H_3D
   m_viewIndex            = pcTEncTop->getViewIndex();
   m_isDepth              = pcTEncTop->getIsDepth();
+#if H_3D_IV_MERGE
+  m_pcDepthMapGenerator  = pcTEncTop->getDepthMapGenerator();
+#endif
 #endif
 #endif
 }
@@ -673,6 +681,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPicList ( rcListPic );
 #endif
 
+#if H_3D_IV_MERGE
+    TAppEncTop* tAppEncTop = m_pcEncTop->getEncTop();
+    TComPic * const pcTexturePic = m_pcEncTop->getIsDepth() ? tAppEncTop->getPicFromView( getViewIndex(), pcSlice->getPOC(), false ) : NULL;
+    assert( !m_pcEncTop->getIsDepth() || pcTexturePic != NULL );
+    pcSlice->setTexturePic( pcTexturePic );
+#endif
     //  Slice info. refinement
 #if H_MV
     if ( pcSlice->getSliceType() == B_SLICE )
@@ -1027,6 +1041,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     startCUAddrSliceIdx++;
     m_storedStartCUAddrForEncodingSliceSegment.push_back(nextCUAddr);
     startCUAddrSliceSegmentIdx++;
+
+#if H_3D_IV_MERGE
+    m_pcDepthMapGenerator->initViewComponent( pcPic );
+#endif
+
 #if H_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {
@@ -2477,7 +2496,7 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
 
 #if ADAPTIVE_QP_SELECTION
 #if H_MV
-  printf("Layer %3d   POC %4d TId: %1d ( %c-SLICE, nQP %d QP %d ) %10d bits",
+  printf("Layer %3d   POC %4d TId: %1d ( %c-SLICE, nQP %d QP %d ) %10d  bits",
     pcSlice->getLayerId(),
     pcSlice->getPOC(),
     pcSlice->getTLayer(),

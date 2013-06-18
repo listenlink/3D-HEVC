@@ -580,6 +580,32 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #else
   WRITE_FLAG( 0, "sps_extension_flag" );
 #endif
+
+#if H_3D_IV_MERGE
+  if( pcSPS->getViewIndex() || pcSPS->isDepth() )
+  {
+    WRITE_FLAG( 0, "base_view_flag" ); 
+    if( pcSPS->isDepth() )
+    {
+      WRITE_FLAG( 1, "depth_flag" ); 
+      WRITE_UVLC( pcSPS->getViewIndex(), "view_idx" );
+    }
+    else
+    {
+      WRITE_FLAG( 0, "depth_flag" ); 
+      WRITE_UVLC( pcSPS->getViewIndex() - 1, "view_idx_minus1" );
+      WRITE_UVLC( pcSPS->getPredDepthMapGeneration(), "Pdm_generation" );
+      if( pcSPS->getPredDepthMapGeneration() )
+      {
+        WRITE_UVLC( pcSPS->getMultiviewMvPredMode(), "multi_view_mv_pred_mode" );
+      }
+    }
+  }
+  else
+  {
+    WRITE_FLAG( 1, "base_view_flag" );   
+  }
+#endif
 }
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )
@@ -1070,10 +1096,18 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       xCodePredWeightTable( pcSlice );
     }
+#if H_3D_IV_MERGE
+    assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS_MEM);
+#else
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS);
+#endif
     if (!pcSlice->isIntra())
     {
+#if H_3D_IV_MERGE
+      WRITE_UVLC(((pcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE) == PDM_USE_FOR_MERGE? MRG_MAX_NUM_CANDS_MEM: MRG_MAX_NUM_CANDS) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#endif
     }
     Int iCode = pcSlice->getSliceQp() - ( pcSlice->getPPS()->getPicInitQPMinus26() + 26 );
     WRITE_SVLC( iCode, "slice_qp_delta" ); 

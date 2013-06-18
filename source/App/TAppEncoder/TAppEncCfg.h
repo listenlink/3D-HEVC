@@ -380,6 +380,10 @@ protected:
   Char*     m_pchBaseViewCameraNumbers;
   TAppComCamPara m_cCameraData;
   Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
+#if H_3D_IV_MERGE
+  UInt      m_uiMultiviewMvPredMode;   
+  UInt      m_uiPredDepthMapGeneration;
+#endif
 #if H_3D_VSO
   Char*     m_pchVSOConfig;
   Bool      m_bUseVSO;                                    ///< flag for using View Synthesis Optimization

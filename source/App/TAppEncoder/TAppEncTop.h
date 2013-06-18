@@ -47,6 +47,9 @@
 #include "TAppEncCfg.h"
 #if H_3D
 #include "../../Lib/TLibRenderer/TRenTop.h"
+#if H_3D_IV_MERGE
+#include "TLibCommon/TComDepthMapGenerator.h"
+#endif
 #endif
 
 //! \ingroup TAppEncoder
@@ -88,6 +91,12 @@ private:
   TRenTop                     m_cRendererTop; 
   TRenModel                   m_cRendererModel;   
 #endif
+
+#if H_3D_IV_MERGE
+  TComVPSAccess               m_cVPSAccess;
+  TComSPSAccess               m_cSPSAccess;
+  TComAUPicAccess             m_cAUPicAccess;
+#endif
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -113,7 +122,9 @@ protected:
 #endif
   void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
   void printRateSummary();
-  
+#if H_3D_IV_MERGE
+  TComPic* xGetPicFromView( Int viewIdx, Int iPoc, Bool isDepth );
+#endif
 #if H_MV
   Void xSetLayerIds               ( TComVPS& vps );  
   Void xSetDimensionIdAndLength   ( TComVPS& vps );
@@ -125,10 +136,19 @@ public:
   virtual ~TAppEncTop();
   
   Void        encode      ();                               ///< main encoding function
+#if H_3D_IV_MERGE
+  TComPic*              getPicFromView     ( Int viewIdx, Int poc, Bool isDepth ) { return xGetPicFromView( viewIdx, poc, isDepth ); }
+#endif
 #if H_MV
   TEncTop*    getTEncTop( UInt layer ) { return  m_acTEncTopList[layer]; }  ///< return pointer to encoder class for specific layer
 #else
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
+#endif
+
+#if H_3D_IV_MERGE
+  TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
+  TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
+  TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
 #endif
 };// END CLASS DEFINITION TAppEncTop
 

@@ -56,12 +56,20 @@
 #include "TEncSampleAdaptiveOffset.h"
 #include "TEncPreanalyzer.h"
 #include "TEncRateCtrl.h"
+
+#if H_3D_IV_MERGE
+#include "TLibCommon/TComDepthMapGenerator.h"
+#endif
 //! \ingroup TLibEncoder
 //! \{
 
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
+
+#if H_3D_IV_MERGE
+class TAppEncTop;
+#endif
 
 /// encoder class
 class TEncTop : public TEncCfg
@@ -95,6 +103,11 @@ private:
   TEncGOP                 m_cGOPEncoder;                  ///< GOP encoder
   TEncSlice               m_cSliceEncoder;                ///< slice encoder
   TEncCu                  m_cCuEncoder;                   ///< CU encoder
+
+#if H_3D_IV_MERGE
+  TComDepthMapGenerator   m_cDepthMapGenerator;           ///< depth map generator
+#endif
+
   // SPS
   TComSPS                 m_cSPS;                         ///< SPS
   TComPPS                 m_cPPS;                         ///< PPS
@@ -118,6 +131,9 @@ private:
   TEncBinCABAC****        m_ppppcBinCodersCABAC;           ///< temporal CABAC state storage for RD computation per substream
   TEncBinCABAC*           m_pcRDGoOnBinCodersCABAC;        ///< going on bin coder CABAC for RD stage per substream
 
+#if H_3D_IV_MERGE  
+  TAppEncTop*             m_pcTAppEncTop;
+#endif
   // quality control
   TEncPreanalyzer         m_cPreanalyzer;                 ///< image characteristics analyzer for TM5-step3-like adaptive QP
 
@@ -144,7 +160,11 @@ public:
   
   Void      create          ();
   Void      destroy         ();
+#if H_3D_IV_MERGE
+  Void      init            ( TAppEncTop* pcTAppEncTop );
+#else
   Void      init            ();
+#endif
 #if H_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
@@ -184,6 +204,9 @@ public:
   TEncSbac****            getRDSbacCoders       () { return  m_ppppcRDSbacCoders;     }
   TEncSbac*               getRDGoOnSbacCoders   () { return  m_pcRDGoOnSbacCoders;   }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
+#if H_3D_IV_MERGE
+  TAppEncTop*             getEncTop             () { return m_pcTAppEncTop; }
+#endif
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
@@ -203,6 +226,9 @@ public:
   
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
+#endif
+#if H_3D_IV_MERGE
+  TComDepthMapGenerator*  getDepthMapGenerator  () { return  &m_cDepthMapGenerator;   }
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function

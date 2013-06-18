@@ -433,6 +433,10 @@ public:
    ); 
    
 #endif
+
+#if H_3D_IV_MERGE
+  Bool          getUnifiedMvPredCan       ( UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* iPdm, Bool bMerge );
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for accessing partition information
   // -------------------------------------------------------------------------------------------------------------------
