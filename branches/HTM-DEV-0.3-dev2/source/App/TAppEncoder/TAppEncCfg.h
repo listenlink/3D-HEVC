@@ -84,7 +84,10 @@ protected:
   std::vector<Int>       m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
   Bool                   m_splittingFlag;                     ///< Splitting Flag
   Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
-  std::vector<Int>       m_dimensionIdLen;                   ///< Length of scalability dimension s 
+  std::vector<Int>       m_dimensionIdLen;                    ///< Length of scalability dimension s 
+#if H_3D_IV_MERGE
+  Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
+#endif
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification
@@ -380,10 +383,6 @@ protected:
   Char*     m_pchBaseViewCameraNumbers;
   TAppComCamPara m_cCameraData;
   Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
-#if H_3D_IV_MERGE
-  UInt      m_uiMultiviewMvPredMode;   
-  UInt      m_uiPredDepthMapGeneration;
-#endif
 #if H_3D_VSO
   Char*     m_pchVSOConfig;
   Bool      m_bUseVSO;                                    ///< flag for using View Synthesis Optimization

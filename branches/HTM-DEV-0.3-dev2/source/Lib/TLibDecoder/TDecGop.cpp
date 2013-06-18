@@ -83,9 +83,6 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
                    TDecSlice*              pcSliceDecoder, 
                    TComLoopFilter*         pcLoopFilter,
                    TComSampleAdaptiveOffset* pcSAO
-#if H_3D_IV_MERGE
-                    ,TComDepthMapGenerator*  pcDepthMapGenerator
-#endif
                    )
 {
   m_pcEntropyDecoder      = pcEntropyDecoder;
@@ -95,9 +92,6 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
   m_pcSliceDecoder        = pcSliceDecoder;
   m_pcLoopFilter          = pcLoopFilter;
   m_pcSAO  = pcSAO;
-#if H_3D_IV_MERGE
-  m_pcDepthMapGenerator   = pcDepthMapGenerator;
-#endif
 }
 
 
@@ -157,12 +151,6 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   {
     m_LFCrossSliceBoundaryFlag.push_back( pcSlice->getLFCrossSliceBoundaryFlag());
   }
-#if H_3D_IV_MERGE
-  if( uiStartCUAddr == 0 )
-  {
-    m_pcDepthMapGenerator->initViewComponent( rpcPic );
-  }
-#endif
 #if H_3D_NBDV 
   if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
   {

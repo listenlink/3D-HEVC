@@ -44,9 +44,6 @@
 #include "TLibCommon/TComPic.h"
 #include "TLibCommon/TComTrQuant.h"
 #include "TLibCommon/SEI.h"
-#if H_3D_IV_MERGE
-#include "TLibCommon/TComDepthMapGenerator.h"
-#endif
 
 #include "TDecGop.h"
 #include "TDecEntropy.h"
@@ -224,10 +221,6 @@ private:
   Int                     m_viewIndex; 
   Bool                    m_isDepth;
   CamParsCollector*       m_pcCamParsCollector;
-#if H_3D_IV_MERGE
-  TComDepthMapGenerator   m_cDepthMapGenerator;
-  TAppDecTop*             m_tAppDecTop;
-#endif
 #endif
 #endif
 
@@ -240,11 +233,7 @@ public:
 
   void setDecodedPictureHashSEIEnabled(Int enabled) { m_cGopDecoder.setDecodedPictureHashSEIEnabled(enabled); }
 
-#if H_3D_IV_MERGE
-  Void  init(TAppDecTop* pcTAppDecTop);
-#else
   Void  init();
-#endif
 #if H_MV  
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer );
 #else  
@@ -275,9 +264,6 @@ public:
   Void                    setIsDepth            ( Bool isDepth ) { m_isDepth = isDepth; }
   Bool                    getIsDepth            ()               { return m_isDepth;    }
   Void                    setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
-#if H_3D_IV_MERGE
-  TComDepthMapGenerator*  getDepthMapGenerator  () { return &m_cDepthMapGenerator; }
-#endif
 #endif
 #endif
 protected:

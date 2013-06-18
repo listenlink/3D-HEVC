@@ -120,6 +120,9 @@ Void TAppEncTop::xInitLibCfg()
   xSetDirectDependencyFlags( vps );
 #if H_3D
   vps.initViewIndex(); 
+#if H_3D_GEN
+  xSetVPSExtension2        ( vps ); 
+#endif
   m_ivPicLists.setVPS      ( &vps ); 
 #endif
 
@@ -165,10 +168,6 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
-#if H_3D_IV_MERGE
-    m_cTEncTop.setMultiviewMvPredMode          ( m_uiMultiviewMvPredMode     );
-    m_cTEncTop.setPredDepthMapGeneration       ( m_uiPredDepthMapGeneration );
-#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
@@ -210,24 +209,7 @@ Void TAppEncTop::xInitLibCfg()
   {
     m_cTEncTop.setNumReorderPics             ( m_numReorderPics[i], i );
     m_cTEncTop.setMaxDecPicBuffering         ( m_maxDecPicBuffering[i], i );
-#if H_3D_IV_MERGE
-        m_acTEncDepthTopList[iViewIdx]->setNumReorderPics             ( m_numReorderPics[iViewIdx][i], i );
-        m_acTEncDepthTopList[iViewIdx]->setMaxDecPicBuffering         ( m_maxDecPicBuffering[iViewIdx][i], i );
-#endif
   }
-#if H_3D_IV_MERGE
-      m_acTEncDepthTopList[iViewIdx]->setQP                           ( m_aiQP[1] );
-
-      m_acTEncDepthTopList[iViewIdx]->setTemporalLayerQPOffset        ( m_aiTLayerQPOffset );
-      m_acTEncDepthTopList[iViewIdx]->setPad                          ( m_aiPad );
-
-      m_acTEncDepthTopList[iViewIdx]->setMaxTempLayer                 ( m_maxTempLayer[iViewIdx] );
-
-      m_acTEncDepthTopList[iViewIdx]->setDisInter4x4                  ( m_bDisInter4x4);
-
-      m_acTEncDepthTopList[iViewIdx]->setUseNSQT( m_enableNSQT );
-      m_acTEncDepthTopList[iViewIdx]->setUseAMP( m_enableAMP );
-#endif
 #endif
   for( UInt uiLoop = 0; uiLoop < MAX_TLAYER; ++uiLoop )
   {
@@ -624,11 +606,7 @@ Void TAppEncTop::xInitLib()
 #if H_MV
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
-#if H_3D_IV_MERGE
-    m_acTEncTopList[layer]->init(this );
-#else
     m_acTEncTopList[layer]->init( );
-#endif
   }
 #else
   m_cTEncTop.init();
@@ -1056,27 +1034,21 @@ Int TAppEncTop::xGetMax( std::vector<Int>& vec )
   return maxVec;
 }
 #endif
-#if H_3D_IV_MERGE
- // GT: This function is not necessary anymore m_ivPicLists should be used instead
-TComPic* TAppEncTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
+#if H_3D_GEN
+Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 {
-  assert( ( viewIdx >= 0 ) && ( viewIdx < m_iNumberOfViews ) );
-
-  TComList<TComPic*>* apcListPic =  m_acTEncTopList[(isDepth ? 1 : 0) + viewIdx * 2]->getListPic() ;
-
-  
-
-  TComPic* pcPic = NULL;
-  for(TComList<TComPic*>::iterator it=apcListPic->begin(); it!=apcListPic->end(); it++)
+  for ( Int layer = 0; layer < vps.getMaxLayers(); layer++ )
   {
-    if( (*it)->getPOC() == poc )
-    {
-      pcPic = *it ;
-      break ;
+    if ( layer != 0 ) 
+    {    
+      if( ( vps.getDepthId( layer ) == 0 ) )
+      {
+#if H_3D_IV_MERGE
+        vps.setIvMvPredFlag( layer, m_ivMvPredFlag ); 
+#endif
+      }
     }
   }
-
-  return pcPic;
-};
+}
 #endif
 //! \}

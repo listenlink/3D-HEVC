@@ -96,7 +96,7 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
-
+#define H_3D_GEN                          1   // Some general changes can be removed after merge 
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////

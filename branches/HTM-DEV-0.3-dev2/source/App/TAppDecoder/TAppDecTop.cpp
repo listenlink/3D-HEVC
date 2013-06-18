@@ -640,11 +640,7 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     // Init decoder
     m_tDecTop[ decIdx ] =  new TDecTop;
     m_tDecTop[ decIdx ]->create();
-#if H_3D_IV_MERGE
-    m_tDecTop[ decIdx ]->init(this );
-#else
     m_tDecTop[ decIdx ]->init( );
-#endif
     m_tDecTop[ decIdx ]->setLayerId( layerId );
     m_tDecTop[ decIdx ]->setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
     m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
@@ -679,26 +675,6 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     m_numDecoders++; 
   };
   return decIdx;
-}
-#endif
-#if H_3D_IV_MERGE
-// GT: This function is not necessary anymore m_ivPicLists should be used instead
-TComPic* TAppDecTop::xGetPicFromView( Int viewIdx, Int poc, Bool isDepth )
-{
-  assert( ( viewIdx >= 0 ) );
-
-  TComList<TComPic*>* apcListPic = m_tDecTop[ (isDepth ? 1 : 0) + viewIdx * 2 ]->getListPic();
-
-  TComPic* pcPic = NULL;
-  for( TComList<TComPic*>::iterator it=apcListPic->begin(); it!=apcListPic->end(); it++ )
-  {
-    if( (*it)->getPOC() == poc )
-    {
-      pcPic = *it;
-      break;
-    }
-  }
-  return pcPic;
 }
 #endif
 //! \}

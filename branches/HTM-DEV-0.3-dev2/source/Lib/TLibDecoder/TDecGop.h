@@ -50,9 +50,6 @@
 #include "TLibCommon/TComLoopFilter.h"
 #include "TLibCommon/TComSampleAdaptiveOffset.h"
 
-#if H_3D_IV_MERGE
-#include "TLibCommon/TComDepthMapGenerator.h"
-#endif
 #include "TDecEntropy.h"
 #include "TDecSlice.h"
 #include "TDecBinCoder.h"
@@ -81,9 +78,6 @@ private:
   TDecSlice*            m_pcSliceDecoder;
   TComLoopFilter*       m_pcLoopFilter;
   
-#if H_3D_IV_MERGE
-  TComDepthMapGenerator*  m_pcDepthMapGenerator;
-#endif
   TComSampleAdaptiveOffset*     m_pcSAO;
   Double                m_dDecTime;
   Int                   m_decodedPictureHashSEIEnabled;  ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
@@ -103,9 +97,6 @@ public:
                  TDecSlice*              pcSliceDecoder, 
                  TComLoopFilter*         pcLoopFilter,
                  TComSampleAdaptiveOffset* pcSAO
-#if H_3D_IV_MERGE
-                 ,TComDepthMapGenerator* pcDepthMapGenerator
-#endif
                  );
   Void  create  ();
   Void  destroy ();

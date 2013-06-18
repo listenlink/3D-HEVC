@@ -67,9 +67,6 @@ TComSlice::TComSlice()
 , m_iSliceQpDelta                 ( 0 )
 , m_iSliceQpDeltaCb               ( 0 )
 , m_iSliceQpDeltaCr               ( 0 )
-#if H_3D_IV_MERGE
-, m_pcTexturePic                  ( NULL )
-#endif
 , m_iDepth                        ( 0 )
 , m_bRefenced                     ( false )
 , m_pcSPS                         ( NULL )
@@ -173,9 +170,6 @@ Void TComSlice::initSlice()
   m_colFromL0Flag = 1;
   
   m_colRefIdx = 0;
-#if H_3D_IV_MERGE
-  m_pcTexturePic = NULL;
-#endif
   initEqualRef();
 #if !L0034_COMBINED_LIST_CLEANUP
   m_bNoBackPredFlag = false;
@@ -1496,6 +1490,12 @@ TComVPS::TComVPS()
       m_dimensionId[i][j] = 0;
     }
   }
+#if H_3D_IV_MERGE
+  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {
+    m_ivMvPredFlag[ i ] = false;
+  }
+#endif
 #endif
 }
 
@@ -1856,19 +1856,6 @@ Void TComSPS::setHrdParameters( UInt frameRate, UInt numDU, UInt bitRate, Bool r
     }
   }
 }
-#if H_3D_IV_MERGE
-Void
-TComSPS::setPredDepthMapGeneration( UInt uiViewIndex, Bool bIsDepth, UInt uiPdmGenMode, UInt uiPdmMvPredMode)
-{ 
-  AOF( m_uiViewIndex == uiViewIndex );
-  AOF( m_bDepth   == bIsDepth );
-  AOT( ( uiViewIndex == 0 || bIsDepth ) && uiPdmGenMode );
-  AOT( uiPdmMvPredMode && uiPdmGenMode == 0 );
-
-  m_uiPredDepthMapGeneration = uiPdmGenMode;
-  m_uiMultiviewMvPredMode    = uiPdmMvPredMode;
-}
-#endif
 const Int TComSPS::m_winUnitX[]={1,2,2,1};
 const Int TComSPS::m_winUnitY[]={1,2,1,1};
 
@@ -1935,10 +1922,6 @@ TComSPS::initCamParaSPS( UInt uiViewIndex, UInt uiCamParPrecision, Bool bCamParS
   ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
   ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
 
-#if H_3D_IV_MERGE  
-  m_uiViewIndex           = uiViewIndex;
-  m_bDepth                = false;
-#endif
   if( !m_bCamParInSliceHeader )
   {
     for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < uiViewIndex; uiBaseViewIndex++ )
@@ -1950,20 +1933,6 @@ TComSPS::initCamParaSPS( UInt uiViewIndex, UInt uiCamParPrecision, Bool bCamParS
     }
   }
 }
-#if H_3D_IV_MERGE
-Void
-TComSPS::initCamParaSPSDepth( UInt uiViewIndex)
-{  
-  m_uiCamParPrecision     = 0;
-  m_bCamParInSliceHeader  = false;
-
-  ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
-  ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
-
-  m_uiViewIndex           = uiViewIndex;
-  m_bDepth                = true;
-}
-#endif
 #endif
 
 TComReferencePictureSet::TComReferencePictureSet()
@@ -2297,6 +2266,18 @@ Void TComSlice::xPrintRefPicList()
     }
   }
 }
+#if H_3D_GEN
+Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
+{
+  for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {     
+    for ( Int depthId = 0; depthId < 2; depthId++ )
+    {
+      m_ivPicsCurrPoc[ depthId ][ i ] = ( i <= m_viewIndex ) ? m_ivPicLists->getPic( i, ( depthId == 1) , getPOC() ) : NULL;
+    }        
+  }  
+}
+#endif
 #endif
 /** get scaling matrix from RefMatrixID
  * \param sizeId size index
@@ -2605,4 +2586,5 @@ TComBitRatePicRateInfo::TComBitRatePicRateInfo()
   ::memset(m_avgPicRate,             0, sizeof(m_avgPicRate));
 }
 #endif
+
 //! \}

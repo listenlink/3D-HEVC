@@ -374,10 +374,6 @@ protected:
   Int**     m_aaiCodedOffset;
   TAppComCamPara* m_cameraParameters; 
   
-#if H_3D_IV_MERGE
-  UInt      m_uiPredDepthMapGeneration;
-  UInt      m_uiMultiviewMvPredMode;
-#endif
 #if H_3D_VSO
   //====== View Synthesis Optimization ======
   TRenModSetupStrParser* m_renderModelParameters; 
@@ -929,12 +925,6 @@ public:
   Double    getDispCoeff                    ()              { return m_dDispCoeff;    }
   Void      setDispCoeff                    ( Double  d )   { m_dDispCoeff  = d; }
 #endif // H_3D_VSO
-#if H_3D_IV_MERGE
-  Void      setMultiviewMvPredMode              (UInt ui)   { m_uiMultiviewMvPredMode = ui;}
-  Void      setPredDepthMapGeneration       ( UInt  u )      { m_uiPredDepthMapGeneration   = u; }  
-
-  UInt      getMultiviewMvPredMode          ()              { return m_uiMultiviewMvPredMode;}
-#endif
 #endif // H_3D
 };
 
