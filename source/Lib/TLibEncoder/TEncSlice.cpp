@@ -175,12 +175,19 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param pSPS          SPS associated with the slice
  \param pPPS          PPS associated with the slice
  */
+#if H_3D_GEN
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS )
+#else
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
+#endif
 {
   Double dQP;
   Double dLambda;
   
   rpcSlice = pcPic->getSlice(0);
+#if H_3D_GEN
+  rpcSlice->setVPS( pVPS );
+#endif
   rpcSlice->setSPS( pSPS );
   rpcSlice->setPPS( pPPS );
   rpcSlice->setSliceBits(0);
@@ -529,7 +536,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceSegmentMode     ( m_pcCfg->getSliceSegmentMode()     );
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
 #if H_3D_IV_MERGE
-  rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()   + ((rpcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE) ? 1:0)      );
+  rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ? 1 : 0 ) );
 #else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
 #endif

@@ -140,11 +140,6 @@ public:
   TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
   Int           getPOC()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
   TComDataCU*&  getCU( UInt uiCUAddr )  { return  m_apcPicSym->getCU( uiCUAddr ); }
-#if H_3D_IV_MERGE
-  TComSlice*    getCurrSlice()        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx);  }
-  TComSPS*      getSPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getSPS();  }
-  TComVPS*      getVPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getVPS();  }
-#endif
   
   TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[0]; }
   TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[1]; }

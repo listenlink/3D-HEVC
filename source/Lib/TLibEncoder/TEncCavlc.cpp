@@ -580,31 +580,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #else
   WRITE_FLAG( 0, "sps_extension_flag" );
 #endif
-#if H_3D_IV_MERGE
-  if( pcSPS->getViewIndex() || pcSPS->isDepth() )
-  {
-    WRITE_FLAG( 0, "base_view_flag" ); 
-    if( pcSPS->isDepth() )
-    {
-      WRITE_FLAG( 1, "depth_flag" ); 
-      WRITE_UVLC( pcSPS->getViewIndex(), "view_idx" );
-    }
-    else
-    {
-      WRITE_FLAG( 0, "depth_flag" ); 
-      WRITE_UVLC( pcSPS->getViewIndex() - 1, "view_idx_minus1" );
-      WRITE_UVLC( pcSPS->getPredDepthMapGeneration(), "Pdm_generation" );
-      if( pcSPS->getPredDepthMapGeneration() )
-      {
-        WRITE_UVLC( pcSPS->getMultiviewMvPredMode(), "multi_view_mv_pred_mode" );
-      }
-    }
-  }
-  else
-  {
-    WRITE_FLAG( 1, "base_view_flag" );   
-  }
-#endif
 }
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )
@@ -765,7 +740,23 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       WRITE_FLAG( pcVPS->getDirectDependencyFlag( i, j ),    "direct_dependency_flag[i][j]" );
     }
   }
+#if H_3D_GEN
+  WRITE_FLAG( 1,                                             "vps_extension2_flag" );
+  for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
+  {
+    if (layer != 0)
+    {
+      if ( !( pcVPS->getDepthId( layer ) == 1 ) )
+      {
+#if H_3D_IV_MERGE
+        WRITE_FLAG( pcVPS->getIvMvPredFlag(layer) ? 1 : 0 , "ivMvPredFlag[i]");
+#endif
+      }          
+    }        
+  }
+#else
   WRITE_FLAG( 0,                                             "vps_extension2_flag" );
+#endif
 #else
   WRITE_FLAG( 0,                     "vps_extension_flag" );
 #endif
@@ -1103,7 +1094,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
 #if H_3D_IV_MERGE
-      WRITE_UVLC(((pcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE) == PDM_USE_FOR_MERGE? MRG_MAX_NUM_CANDS_MEM: MRG_MAX_NUM_CANDS) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+      Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
+      WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
 #else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
 #endif

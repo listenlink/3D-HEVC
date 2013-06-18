@@ -53,9 +53,6 @@ class TComTrQuant;
 #if H_MV
 class TComPicLists; 
 #endif
-#if H_3D_IV_MERGE
-class TComDepthMapGenerator;
-#endif
 // ====================================================================================================================
 // Constants
 // ====================================================================================================================
@@ -539,6 +536,9 @@ private:
   Int         m_numDirectRefLayers       [ MAX_NUM_LAYERS ];
   Int         m_refLayerId               [ MAX_NUM_LAYERS ][MAX_NUM_LAYERS];  
 
+#if H_3D_IV_MERGE
+  Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
+#endif
 #endif
 public:
   TComVPS();
@@ -672,6 +672,10 @@ public:
   
   Bool    checkVPSExtensionSyntax(); 
   Int     scalTypeToScalIdx   ( ScalabilityType scalType );
+#if H_3D_IV_MERGE
+  Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
+  Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
+#endif
 #endif
 };
 
@@ -983,14 +987,6 @@ private:
   Bool        m_bCamParInSliceHeader;
   Int         m_aaiCodedScale [2][MAX_NUM_LAYERS];
   Int         m_aaiCodedOffset[2][MAX_NUM_LAYERS];
-#if H_3D_IV_MERGE
-  UInt        m_uiMultiviewMvPredMode;
-  UInt        m_uiPredDepthMapGeneration;
-
-  UInt        m_uiViewIndex;
-  Bool        m_bDepth;
-  TComDepthMapGenerator* m_pcDepthMapGenerator;
-#endif
 #endif
 public:
   TComSPS();
@@ -1134,17 +1130,6 @@ public:
   Int* getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int* getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int* getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
-#if H_3D_IV_MERGE
-  Void  initCamParaSPSDepth      ( UInt uiViewIndex);
-  UInt  getMultiviewMvPredMode   ()          { return m_uiMultiviewMvPredMode;    }
-  UInt  getPredDepthMapGeneration()          { return m_uiPredDepthMapGeneration; }
-
-  UInt  getViewIndex             ()  { return m_uiViewIndex; }
-  Bool  isDepth               ()  { return m_bDepth; }
-  Void  setDepthMapGenerator( TComDepthMapGenerator* pcDepthMapGenerator )  { m_pcDepthMapGenerator = pcDepthMapGenerator; }
-  TComDepthMapGenerator*  getDepthMapGenerator()                                              { return m_pcDepthMapGenerator; }
-  Void setPredDepthMapGeneration( UInt uiViewIndex, Bool bIsDepth, UInt uiPdmGenMode = 0, UInt uiPdmMvPredMode = 0);
-#endif
 #endif
 };
 
@@ -1435,9 +1420,6 @@ private:
   Int         m_aiRefLayerIdList[2][MAX_NUM_REF+1];
 #endif
   Bool        m_bIsUsedAsLongTerm[2][MAX_NUM_REF+1];
-#if H_3D_IV_MERGE
-  TComPic*    m_pcTexturePic;
-#endif
   Int         m_iDepth;
   
   // referenced slice?
@@ -1509,7 +1491,10 @@ private:
   Int        m_viewIndex; 
   Bool       m_isDepth;
   Int        m_aaiCodedScale [2][MAX_NUM_LAYERS];
-  Int        m_aaiCodedOffset[2][MAX_NUM_LAYERS];
+  Int        m_aaiCodedOffset[2][MAX_NUM_LAYERS];  
+#if H_3D_GEN
+  TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
+#endif
 #endif
 #endif
 public:
@@ -1568,8 +1553,11 @@ public:
   TComPic*  getPic              ()                              { return  m_pcPic;                      }
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
+#if H_3D_GEN
+  TComPic*  getIvPic            ( Bool depthFlag, Int viewIndex){ return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ]; }
+#endif
 #if H_3D_IV_MERGE
-  TComPic*  getTexturePic       () const                        { return  m_pcTexturePic; }
+  TComPic*  getTexturePic       ()                              { return  m_ivPicsCurrPoc[0][ m_viewIndex ]; }
 #endif
   Int       getDepth            ()                              { return  m_iDepth;                     }
   UInt      getColFromL0Flag    ()                              { return  m_colFromL0Flag;              }
@@ -1621,9 +1609,6 @@ public:
   
   Void      setRefPic           ( TComPic* p, RefPicList e, Int iRefIdx ) { m_apcRefPicList[e][iRefIdx] = p; }
   Void      setRefPOC           ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefPOCList[e][iRefIdx] = i; }
-#if H_3D_IV_MERGE
-  Void      setTexturePic       ( TComPic *pcTexturePic )       { m_pcTexturePic = pcTexturePic; }
-#endif
   Void      setNumRefIdx        ( RefPicList e, Int i )         { m_aiNumRefIdx[e]    = i;      }
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
@@ -1788,12 +1773,16 @@ public:
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
 #endif
 #endif
+#if H_3D_GEN
+  Void    setIvPicLists( TComPicLists* m_ivPicLists );
+#endif
+
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Int                 poc);
 TComPic*  xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, Bool pocHasMsb);
 #if H_MV
-  TComPic*  xGetInterLayerRefPic( std::vector<TComPic*>& rcListIlPic, Int layerId );
+  TComPic*  xGetInterLayerRefPic( std::vector<TComPic*>& rcListIlPic, Int layerId );  
 #endif
 };// END CLASS DEFINITION TComSlice
 

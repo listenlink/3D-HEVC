@@ -115,8 +115,13 @@ public:
   Void    init                ( TEncTop* pcEncTop );
   
   /// preparation of slice encoding (reference marking, QP and lambda)
+#if H_3D_GEN
+  Void    initEncSlice        ( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, 
+                                Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS ); 
+#else
   Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd,
                                 Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
+#endif
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
 #else

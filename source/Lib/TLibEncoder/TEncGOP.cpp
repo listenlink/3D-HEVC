@@ -48,9 +48,7 @@
 #include "NALwrite.h"
 #include <time.h>
 #include <math.h>
-#if H_3D_IV_MERGE
-#include "../../App/TAppEncoder/TAppEncTop.h"
-#endif
+
 using namespace std;
 //! \ingroup TLibEncoder
 //! \{
@@ -108,9 +106,6 @@ TEncGOP::TEncGOP()
 #if H_3D
   m_viewIndex  =   0; 
   m_isDepth = false;
-#if H_3D_IV_MERGE
-  m_pcDepthMapGenerator = NULL;
-#endif
 #endif
 #endif
   return;
@@ -159,9 +154,6 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 #if H_3D
   m_viewIndex            = pcTEncTop->getViewIndex();
   m_isDepth              = pcTEncTop->getIsDepth();
-#if H_3D_IV_MERGE
-  m_pcDepthMapGenerator  = pcTEncTop->getDepthMapGenerator();
-#endif
 #endif
 #endif
 }
@@ -501,7 +493,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_pcSliceEncoder->setSliceIdx(0);
     pcPic->setCurrSliceIdx(0);
 
+#if H_3D_GEN
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );     
+#else
     m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+#endif
     pcSlice->setLastIDR(m_iLastIDR);
     pcSlice->setSliceIdx(0);
 #if H_MV
@@ -509,15 +505,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic  ->setViewId      ( getViewId()    );    
     pcSlice->setLayerId     ( getLayerId() );
     pcSlice->setViewId      ( getViewId()  );    
+#if !H_3D_GEN
     pcSlice->setVPS         ( m_pcEncTop->getVPS() );
+#endif
 #if H_3D
     pcPic  ->setViewIndex   ( getViewIndex() ); 
     pcPic  ->setIsDepth( getIsDepth() );
     pcSlice->setViewIndex   ( getViewIndex()  );
     pcSlice->setIsDepth( getIsDepth() );    
-    pcSlice->setCamparaSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );
+    pcSlice->setCamparaSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );    
 #endif
-#endif
+#endif 
     //set default slice level flag to the same as SPS level flag
     pcSlice->setLFCrossSliceBoundaryFlag(  pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag()  );
     pcSlice->setScalingList ( m_pcEncTop->getScalingList()  );
@@ -681,11 +679,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPicList ( rcListPic );
 #endif
 
-#if H_3D_IV_MERGE 
-    TAppEncTop* tAppEncTop = m_pcEncTop->getEncTop();
-    TComPic * const pcTexturePic = m_pcEncTop->getIsDepth() ? tAppEncTop->getPicFromView( getViewIndex(), pcSlice->getPOC(), false ) : NULL;
-    assert( !m_pcEncTop->getIsDepth() || pcTexturePic != NULL );
-    pcSlice->setTexturePic( pcTexturePic );
+#if H_3D
+    pcSlice->setIvPicLists( m_ivPicLists );         
+#if H_3D_IV_MERGE    
+    assert( !m_pcEncTop->getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
+#endif    
 #endif
     //  Slice info. refinement
 #if H_MV
@@ -1041,9 +1039,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     startCUAddrSliceIdx++;
     m_storedStartCUAddrForEncodingSliceSegment.push_back(nextCUAddr);
     startCUAddrSliceSegmentIdx++;
-#if H_3D_IV_MERGE
-    m_pcDepthMapGenerator->initViewComponent( pcPic );
-#endif
 #if H_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {

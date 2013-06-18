@@ -758,40 +758,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif // !H_3D
     }
 #endif // !H_MV
-#if H_3D_IV_MERGE
-    READ_FLAG( uiCode, "base_view_flag" );
-    if( uiCode )
-    { // baseview SPS -> set standard values
-      pcSPS->initCamParaSPS         ( 0 );
-      pcSPS->setPredDepthMapGeneration( 0, false );
-    }
-    else
-    {
-      READ_FLAG( uiCode, "depth_flag" ); 
-      if( uiCode )
-      {
-        READ_UVLC( uiCode, "view_idx" ); 
-        pcSPS->initCamParaSPSDepth    ( uiCode );
-        pcSPS->setPredDepthMapGeneration( uiCode, true );
-      }
-      else
-      {
-        UInt  uiViewIndex;
-        READ_UVLC( uiViewIndex, "view_idx" );  uiViewIndex++; 
-        UInt uiPredDepthMapGeneration = 0;
-        UInt uiMultiviewMvPredMode = 0;
-
-        READ_UVLC( uiPredDepthMapGeneration, "Pdm_generation" );
-        if( uiPredDepthMapGeneration )
-        {
-          READ_UVLC( uiMultiviewMvPredMode, "multi_view_mv_pred_mode" );
-        }
-
-        pcSPS->setPredDepthMapGeneration( uiViewIndex, false, uiPredDepthMapGeneration, uiMultiviewMvPredMode);
-
-      }
-    }
-#endif
   }
 }
 
@@ -986,10 +952,25 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     READ_FLAG( uiCode,  "vps_extension2_flag" );
     if (uiCode)
     {
+#if H_3D
+#if H_3D_IV_MERGE
+      for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
+      {
+        if (layer != 0)
+        {
+          if ( !( pcVPS->getDepthId( layer ) == 1 ) )
+          {
+            READ_FLAG( uiCode, "ivMvPredFlag[i]"); pcVPS->setIvMvPredFlag( layer, uiCode == 1 ? true : false );
+          }          
+        }        
+      }
+#endif
+#else
       while ( xMoreRbspData() )
       {
         READ_FLAG( uiCode, "vps_extension2_data_flag");
       }
+#endif
     }
 
     pcVPS->checkVPSExtensionSyntax(); 
@@ -1448,7 +1429,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
 #if H_3D_IV_MERGE
-      rpcSlice->setMaxNumMergeCand(((rpcSlice->getSPS()->getMultiviewMvPredMode() & PDM_USE_FOR_MERGE) == PDM_USE_FOR_MERGE ? MRG_MAX_NUM_CANDS_MEM: MRG_MAX_NUM_CANDS) - uiCode);
+      Bool ivMvPredFlag = rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ;
+      rpcSlice->setMaxNumMergeCand(( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
 #else
       rpcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
 #endif
