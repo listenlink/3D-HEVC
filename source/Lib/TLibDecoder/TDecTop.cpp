@@ -408,7 +408,6 @@ Void TDecTop::init()
     );
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
   m_cEntropyDecoder.init(&m_cPrediction);
-
 #if H_3D_IV_MERGE
   m_tAppDecTop = pcTAppDecTop;
   m_cDepthMapGenerator.init( &m_cPrediction, m_tAppDecTop->getVPSAccess(), m_tAppDecTop->getSPSAccess(), m_tAppDecTop->getAUPicAccess() );
@@ -918,7 +917,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 
 #endif
-
 #if H_3D_IV_MERGE
     TComPic * const pcTexturePic = m_isDepth ? m_tAppDecTop->getPicFromView(  m_viewIndex, pcSlice->getPOC(), false ) : NULL;
     assert( !m_isDepth || pcTexturePic != NULL );

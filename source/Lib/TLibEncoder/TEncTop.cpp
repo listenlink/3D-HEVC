@@ -122,7 +122,6 @@ Void TEncTop::create ()
 #if H_3D_IV_MERGE
   m_cDepthMapGenerator. create( false, getSourceWidth(), getSourceHeight(), g_uiMaxCUDepth, g_uiMaxCUWidth, g_uiMaxCUHeight, g_bitDepthY, PDM_SUB_SAMP_EXP_X(m_uiPredDepthMapGeneration), PDM_SUB_SAMP_EXP_Y(m_uiPredDepthMapGeneration) );
 #endif
-
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
@@ -228,7 +227,6 @@ Void TEncTop::destroy ()
   }
   m_cLoopFilter.        destroy();
   m_cRateCtrl.          destroy();
-
 #if H_3D_IV_MERGE
   m_cDepthMapGenerator. destroy();
 #endif
@@ -321,7 +319,6 @@ Void TEncTop::init()
   m_pcTAppEncTop = pcTAppEncTop;
   m_cDepthMapGenerator.init( (TComPrediction*)this->getPredSearch(), m_pcTAppEncTop->getVPSAccess(), m_pcTAppEncTop->getSPSAccess(), m_pcTAppEncTop->getAUPicAccess() );
 #endif
-
   // initialize transform & quantization class
   m_pcCavlcCoder = getCavlcCoder();
   
@@ -1333,6 +1330,4 @@ Void TEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHo
   }
 }
 #endif
-
-
 //! \}

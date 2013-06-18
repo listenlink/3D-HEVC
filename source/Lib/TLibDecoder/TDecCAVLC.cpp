@@ -758,7 +758,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif // !H_3D
     }
 #endif // !H_MV
-
 #if H_3D_IV_MERGE
     READ_FLAG( uiCode, "base_view_flag" );
     if( uiCode )

@@ -53,7 +53,6 @@ class TComTrQuant;
 #if H_MV
 class TComPicLists; 
 #endif
-
 #if H_3D_IV_MERGE
 class TComDepthMapGenerator;
 #endif

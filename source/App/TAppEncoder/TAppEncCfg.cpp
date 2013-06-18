@@ -716,7 +716,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 
 #endif //HHI_VSO
-
 #if H_3D_IV_MERGE
   ("PredDepthMapGen",  m_uiPredDepthMapGeneration, (UInt)0, "generation of prediction depth maps for motion data prediction" )
   ("MultiviewMvPred",  m_uiMultiviewMvPredMode,    (UInt)0, "usage of predicted depth maps" )

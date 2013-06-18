@@ -83,7 +83,6 @@ Void TComPicYuv::create( Int iPicWidth, Int iPicHeight, UInt uiMaxCUWidth, UInt 
   m_iBaseUnitWidth  = uiMaxCUWidth  >> uiMaxCUDepth;
   m_iBaseUnitHeight = uiMaxCUHeight >> uiMaxCUDepth;
 #endif
-
   Int numCuInWidth  = m_iPicWidth  / m_iCuWidth  + (m_iPicWidth  % m_iCuWidth  != 0);
   Int numCuInHeight = m_iPicHeight / m_iCuHeight + (m_iPicHeight % m_iCuHeight != 0);
   

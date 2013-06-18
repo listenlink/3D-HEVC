@@ -319,8 +319,8 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   {
     m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
     m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
-    m_ppcCU[uiDepth]->copyDVInfoFrom(pcCU, uiAbsPartIdx);
 #if H_3D_IV_MERGE
+    m_ppcCU[uiDepth]->copyDVInfoFrom(pcCU, uiAbsPartIdx);
     TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
     UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
 #else

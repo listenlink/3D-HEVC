@@ -104,7 +104,6 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
-
 #if H_3D_IV_MERGE
   Bool operator== ( const TComMvField& rcMv ) const
   {

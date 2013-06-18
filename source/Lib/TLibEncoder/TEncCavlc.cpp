@@ -580,7 +580,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #else
   WRITE_FLAG( 0, "sps_extension_flag" );
 #endif
-
 #if H_3D_IV_MERGE
   if( pcSPS->getViewIndex() || pcSPS->isDepth() )
   {

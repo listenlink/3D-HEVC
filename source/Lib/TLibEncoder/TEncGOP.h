@@ -109,11 +109,9 @@ private:
 #if H_3D
   Int                     m_viewIndex; 
   Bool                    m_isDepth;
-
 #if H_3D_IV_MERGE
   TComDepthMapGenerator*  m_pcDepthMapGenerator;
 #endif
-
 #endif
 #endif
   //--Adaptive Loop filter

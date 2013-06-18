@@ -681,7 +681,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPicList ( rcListPic );
 #endif
 
-#if H_3D_IV_MERGE
+#if H_3D_IV_MERGE 
     TAppEncTop* tAppEncTop = m_pcEncTop->getEncTop();
     TComPic * const pcTexturePic = m_pcEncTop->getIsDepth() ? tAppEncTop->getPicFromView( getViewIndex(), pcSlice->getPOC(), false ) : NULL;
     assert( !m_pcEncTop->getIsDepth() || pcTexturePic != NULL );
@@ -1041,11 +1041,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     startCUAddrSliceIdx++;
     m_storedStartCUAddrForEncodingSliceSegment.push_back(nextCUAddr);
     startCUAddrSliceSegmentIdx++;
-
 #if H_3D_IV_MERGE
     m_pcDepthMapGenerator->initViewComponent( pcPic );
 #endif
-
 #if H_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {
