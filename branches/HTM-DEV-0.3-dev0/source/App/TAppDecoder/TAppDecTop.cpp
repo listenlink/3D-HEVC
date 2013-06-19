@@ -94,6 +94,13 @@ Void TAppDecTop::destroy()
     free (m_pchReconFile);
     m_pchReconFile = NULL;
   }
+#if H_3D_FIX
+  if (m_pchScaleOffsetFile)
+  {
+    free (m_pchScaleOffsetFile);
+    m_pchScaleOffsetFile = NULL; 
+  }
+#endif
 }
 
 // ====================================================================================================================
