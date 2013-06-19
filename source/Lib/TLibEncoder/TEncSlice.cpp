@@ -935,7 +935,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   Int  iNumSubstreams = 1;
   UInt uiTilesAcross  = 0;
 #if H_3D_IC
-  if ( pcEncTop->getViewIndex() && pcEncTop->getUseIC() ) // DCP of ViewID 0 is not available
+  if ( pcEncTop->getViewIndex() && pcEncTop->getUseIC() &&
+       !( ( pcSlice->getSliceType() == P_SLICE && pcSlice->getPPS()->getUseWP() ) || ( pcSlice->getSliceType() == B_SLICE && pcSlice->getPPS()->getWPBiPred() ) )
+     )
   {
     pcSlice ->xSetApplyIC();
     if ( pcSlice->getApplyIC() )

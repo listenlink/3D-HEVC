@@ -4252,7 +4252,10 @@ UInt TEncSearch::xGetTemplateCost( TComDataCU* pcCU,
   }
   else
   {
-    xPredInterLumaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false 
+    xPredInterLumaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMvCand, iSizeX, iSizeY, pcTemplateCand, false
+#if H_3D_ARP
+      , false
+#endif
 #if H_3D_IC
     , bICFlag
 #endif
