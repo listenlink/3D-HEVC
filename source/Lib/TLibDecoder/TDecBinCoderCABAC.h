@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -63,23 +63,16 @@ public:
   Void  decodeBinTrm      ( UInt& ruiBin                           );
   
   Void  resetBac          ();
-  Void  decodeNumSubseqIPCM( Int& numSubseqIPCM ) ;
   Void  decodePCMAlignBits();
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
   
   Void  copyState         ( TDecBinIf* pcTDecBinIf );
   TDecBinCABAC* getTDecBinCABAC()  { return this; }
-#if !OL_FLUSH_ALIGN
-  Int   getBitsReadAhead() { return -m_bitsNeeded; }
-#endif
 
 private:
   TComInputBitstream* m_pcTComBitstream;
   UInt                m_uiRange;
   UInt                m_uiValue;
-#if !OL_FLUSH_ALIGN
-  UInt                m_uiLastByte;
-#endif
   Int                 m_bitsNeeded;
 };
 

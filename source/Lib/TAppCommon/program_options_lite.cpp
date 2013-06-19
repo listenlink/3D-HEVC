@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -191,7 +191,7 @@ namespace df
             /* newline found, print substring (newline needn't be stripped) */
             newline_pos++;
             line << opt_desc.substr(cur_pos, newline_pos - cur_pos);
-            cur_pos = newline_pos = newline_pos;
+            cur_pos = newline_pos;
             continue;
           }
           if (cur_pos + desc_width > opt_desc.size())

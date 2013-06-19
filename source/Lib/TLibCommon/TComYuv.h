@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -129,11 +129,8 @@ public:
   Void    copyPartToPartYuv     ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   Void    copyPartToPartLuma    ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
   Void    copyPartToPartChroma  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight );
-
-#if DEPTH_MAP_GENERATION
-  Void    copyPartToPartYuvPdm  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
-  Void    copyPartToPartLumaPdm ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt uiWidth, UInt uiHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
-#endif
+  
+  Void    copyPartToPartChroma  ( TComYuv*    pcYuvDst, UInt uiPartIdx, UInt iWidth, UInt iHeight, UInt chromaId);
 
   // ------------------------------------------------------------------------------------------------------------------
   //  Algebraic operation for YUV buffer
@@ -143,8 +140,8 @@ public:
   Void    addClip           ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    addClipLuma       ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    addClipChroma     ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
-  Void    addClipPartLuma   ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize ); //GT
-
+  
+  //  pcYuvSrc0 - pcYuvSrc1 -> m_apiBuf
   Void    subtract          ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    subtractLuma      ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
   Void    subtractChroma    ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
@@ -152,19 +149,9 @@ public:
   //  (pcYuvSrc0 + pcYuvSrc1)/2 for YUV partition
   Void    addAvg            ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight );
 
-#if DEPTH_MAP_GENERATION
-  Void    addAvgPdm         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt iPartUnitIdx, UInt iWidth, UInt iHeight, UInt uiSubSampExpX, UInt uiSubSampExpY );
-#endif
-
   //   Remove High frequency
   Void    removeHighFreq    ( TComYuv* pcYuvSrc, UInt uiPartIdx, UInt uiWidht, UInt uiHeight );
-  Void    add               ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract = false );
-  Void    addLuma           ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
-  Void    addChroma         ( TComYuv* pcYuvAdd, Int iWidth, Int iHeight, Bool bSubtract );
-
-  Void    clip              ( Int iWidth, Int iHeight );
-  Void    clipLuma          ( Int iWidth, Int iHeight );
-  Void    clipChroma        ( Int iWidth, Int iHeight );
+  
   // ------------------------------------------------------------------------------------------------------------------
   //  Access function for YUV buffer
   // ------------------------------------------------------------------------------------------------------------------
@@ -192,25 +179,10 @@ public:
   UInt    getWidth    ()    { return  m_iWidth;   }
   UInt    getCHeight  ()    { return  m_iCHeight; }
   UInt    getCWidth   ()    { return  m_iCWidth;  }  
-
-  // ------------------------------------------------------------------------------------------------------------------
-  //  Miscellaneous
-  // ------------------------------------------------------------------------------------------------------------------
-
-  __inline Pel  xClip  (Pel x )      { return ( (x < 0) ? 0 : (x > (Pel)g_uiIBDI_MAX) ? (Pel)g_uiIBDI_MAX : x ); }
-#if QC_ARP_D0177
-  Void    addARP           ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip );
-  Void    addARPLuma       ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip );
-  Void    addARPChroma     ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight , Bool bClip );
-  Void    subtractARP      ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight );
-  Void    subtractARPLuma  ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight );
-  Void    subtractARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight );
-  Void    multiplyARP      ( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW );
-  Void    multiplyARPLuma  ( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW );
-  Void    multiplyARPChroma( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW );
-private:
-  Void    xxMultiplyLine( Pel * pSrcDst , UInt uiWidth , UChar dW );
+#if H_3D
+  Void addClipPartLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiTrUnitIdx, UInt uiPartSize );
 #endif
+
 };// END CLASS DEFINITION TComYuv
 
 //! \}
