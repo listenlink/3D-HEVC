@@ -494,7 +494,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcPic->setCurrSliceIdx(0);
 
 #if H_3D_GEN
-    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );     
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS(), getLayerId() );     
 #else
     m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
 #endif
@@ -503,16 +503,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if H_MV
     pcPic  ->setLayerId     ( getLayerId()   );
     pcPic  ->setViewId      ( getViewId()    );    
+#if !H_3D_GEN    
     pcSlice->setLayerId     ( getLayerId() );
     pcSlice->setViewId      ( getViewId()  );    
-#if !H_3D_GEN
     pcSlice->setVPS         ( m_pcEncTop->getVPS() );
 #endif
 #if H_3D
     pcPic  ->setViewIndex   ( getViewIndex() ); 
     pcPic  ->setIsDepth( getIsDepth() );
+#if !H_3D_GEN
     pcSlice->setViewIndex   ( getViewIndex()  );
     pcSlice->setIsDepth( getIsDepth() );    
+#endif
     pcSlice->setCamparaSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );    
 #endif
 #endif 

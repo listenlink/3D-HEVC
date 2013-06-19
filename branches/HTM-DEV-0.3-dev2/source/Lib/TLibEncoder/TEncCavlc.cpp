@@ -740,7 +740,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       WRITE_FLAG( pcVPS->getDirectDependencyFlag( i, j ),    "direct_dependency_flag[i][j]" );
     }
   }
-#if H_3D_GEN
+#if H_3D_GEN  
   WRITE_FLAG( 1,                                             "vps_extension2_flag" );
   for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
   {
@@ -753,7 +753,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 #endif
       }          
     }        
-  }
+  }  
 #else
   WRITE_FLAG( 0,                                             "vps_extension2_flag" );
 #endif
