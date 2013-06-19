@@ -77,6 +77,7 @@
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
                                               // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
                                               // LGE_WVSO_A0119
+#define H_3D_FIX                          1   // Temporary for minor fixes
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -90,6 +91,7 @@
 #define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
 #define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
+#define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
