@@ -2552,9 +2552,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }
 
   Int iPdmDir[2] = {0, 0};
-  getInterViewMergeCands(uiPUIdx, aiPdmRefIdx, acPdmMv, &cDisInfo, iPdmDir );
+  
+  if ( ivMvPredFlag )
+  {
+    getInterViewMergeCands(uiPUIdx, aiPdmRefIdx, acPdmMv, &cDisInfo, iPdmDir );
+  }  
+    
   Int iPdmInterDir;
-
   if( iPdmDir[0] && ivMvPredFlag )
   {
     abCandIsInter        [ iCount ] = true;

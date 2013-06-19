@@ -176,7 +176,7 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param pPPS          PPS associated with the slice
  */
 #if H_3D_GEN
-Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS )
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS, Int layerId )
 #else
 Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
 #endif
@@ -185,8 +185,15 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   Double dLambda;
   
   rpcSlice = pcPic->getSlice(0);
-#if H_3D_GEN
+#if H_3D_GEN 
+  // GT: Should also be activated for MV-HEVC at some stage
   rpcSlice->setVPS( pVPS );
+  Int vpsLayerId = pVPS->getLayerIdInNuh( layerId ); 
+
+  rpcSlice->setLayerId     ( layerId );
+  rpcSlice->setViewId      ( pVPS->getViewId      ( vpsLayerId ) );    
+  rpcSlice->setViewIndex   ( pVPS->getViewIndex   ( vpsLayerId ) );
+  rpcSlice->setIsDepth     ( pVPS->getDepthId     ( vpsLayerId ) != 0 );    
 #endif
   rpcSlice->setSPS( pSPS );
   rpcSlice->setPPS( pPPS );
