@@ -4442,7 +4442,7 @@ Void TComDataCU::estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDe
     TComPicYuv* pcBaseViewDepthPicYuv = picDepth->getPicYuvRec();
     Int iBlkX = ( getAddr() % picDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartAddrCurrCU ] ];
     Int iBlkY = ( getAddr() / picDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartAddrCurrCU ] ];
-    
+
     Int* aiShiftLUT = getSlice()->getDepthToDisparityB(refViewIdx );
 
     Pel iDisp = getMcpFromDM( pcBaseViewDepthPicYuv, cMvPred, iBlkX, iBlkY, iWidth, iHeight, aiShiftLUT );
@@ -4662,8 +4662,8 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   depthRefineFlag = m_pcSlice->getVPS()->getDepthRefinementFlag( m_pcSlice->getLayerIdInVps() ); 
 #endif // H_3D_NBDV_REF
 
-  TComMv      cDv = depthRefineFlag ? pDInfo->m_acNBDV : pDInfo->m_acDoNBDV; 
-
+  TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
+  
   Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
   Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
 
@@ -4728,7 +4728,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
         paiPdmRefIdx  [ iRefListId+2 ] = iPdmRefIdx;
 
 #if H_3D_NBDV_REF
-        TComMv cMv = depthRefineFlag ? pDInfo->m_acNBDV : pDInfo->m_acDoNBDV; 
+        TComMv cMv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
 #endif // H_3D_NBDV_REF
         cMv.setVer(0);
         clipMv( cMv );
