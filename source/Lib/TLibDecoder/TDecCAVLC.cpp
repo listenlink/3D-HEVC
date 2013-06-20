@@ -986,11 +986,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
               // clean memory
               free(aiIdx2DepthValue);
             }
-            else
-              pcVPS->setDepthLUTs(i);
           }
-          else
-            pcVPS->setDepthLUTs(i);
 #endif
         }
       }
