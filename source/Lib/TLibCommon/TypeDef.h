@@ -87,6 +87,10 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
+#define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
+                                              // MTK_D0156
+                                              // MERL_VSP_NBDV_RefVId_Fix_D0166
+#define H_3D_VSP                          0   // Depth oriented neighboring block disparity derivation
 
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 

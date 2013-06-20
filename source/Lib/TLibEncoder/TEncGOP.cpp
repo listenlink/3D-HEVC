@@ -1047,6 +1047,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         Int iColPoc = pcSlice->getRefPOC(RefPicList(1-pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
         pcPic->setNumDdvCandPics(pcPic->getDisCandRefPictures(iColPoc));
       }
+#if H_3D_GEN
+      pcSlice->setDepthToDisparityLUTs(); 
+
+#endif
 #endif
     while(nextCUAddr<uiRealEndAddress) // determine slice boundaries
     {

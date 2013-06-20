@@ -717,7 +717,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #endif //HHI_VSO
 #if H_3D_IV_MERGE
-  ("IvMvPred",                       m_ivMvPredFlag,           false           , "inter view motion prediction " )  
+  ("IvMvPred",                        m_ivMvPredFlag,           false           , "inter view motion prediction " )  
+#endif
+#if H_3D_NBDV_REF
+  ("DepthRefinement",                 m_depthRefinementFlag,    false           , "depth refinement by DoNBDV" )  
+#endif
+#if H_3D_VSP
+  ("ViewSynthesisPred",               m_viewSynthesisPredFlag,  false           , "view synthesis prediction " )  
 #endif
 #endif //H_3D
   ;
@@ -2281,7 +2287,13 @@ Void TAppEncCfg::xPrintParameter()
   printf("WVSO:%d ", m_bUseWVSO );  
 #endif
 #if H_3D_IV_MERGE
-  printf("IvMvPred:%d", m_ivMvPredFlag );
+  printf("IvMvPred:%d ", m_ivMvPredFlag );
+#endif
+#if H_3D_NBDV_REF
+  printf("DepthRefinement:%d ", m_depthRefinementFlag );  
+#endif
+#if H_3D_VSP
+  printf("ViewSynthesisPred:%d ", m_viewSynthesisPredFlag );
 #endif
   printf("\n\n");  
 

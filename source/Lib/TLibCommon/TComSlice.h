@@ -539,6 +539,12 @@ private:
 #if H_3D_IV_MERGE
   Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
 #endif
+#if H_3D_VSP
+  Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ]; 
+#endif
+#if H_3D_NBDV_REF
+  Bool        m_depthRefinementFlag      [ MAX_NUM_LAYERS ]; 
+#endif
 #endif
 public:
   TComVPS();
@@ -675,6 +681,14 @@ public:
 #if H_3D_IV_MERGE
   Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
   Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
+#endif
+#if H_3D_VSP
+  Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }
+  Bool    getViewSynthesisPredFlag  ( Int layerIdInVps )            { return m_viewSynthesisPredFlag[ layerIdInVps ]; }; 
+#endif
+#if H_3D_NBDV_REF
+  Void    setDepthRefinementFlag  ( Int layerIdInVps, Bool val )  { m_depthRefinementFlag[ layerIdInVps ] = val; }
+  Bool    getDepthRefinementFlag  ( Int layerIdInVps )            { return m_depthRefinementFlag[ layerIdInVps ]; }; 
 #endif
 #endif
 };
@@ -1494,6 +1508,8 @@ private:
   Int        m_aaiCodedOffset[2][MAX_NUM_LAYERS];  
 #if H_3D_GEN
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
+  Int**      m_depthToDisparityB; 
+  Int**      m_depthToDisparityF; 
 #endif
 #endif
 #endif
@@ -1775,6 +1791,11 @@ public:
 #endif
 #if H_3D_GEN
   Void    setIvPicLists( TComPicLists* m_ivPicLists );
+  Void    setDepthToDisparityLUTs();
+
+  Int* getDepthToDisparityB( Int refViewIdx ) { return m_depthToDisparityB[ refViewIdx ]; }; 
+  Int* getDepthToDisparityF( Int refViewIdx ) { return m_depthToDisparityF[ refViewIdx ]; }; 
+  
 #endif
 
 protected:

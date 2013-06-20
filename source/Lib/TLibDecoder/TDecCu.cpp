@@ -291,7 +291,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       m_ppcCU[uiDepth]->setHeight ( 0, pcCU->getSlice()->getSPS()->getMaxCUHeight()/(1<<uiDepth)  );
       m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
 #if H_3D_NBDV_REF
-      if(pcCU->getSlice()->getSPS()->getUseDVPRefine())  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
+      if(pcCU->getSlice()->getVPS()->getDepthRefinementFlag( pcCU->getSlice()->getLayerIdInVps() ))  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo, true);
       else
 #endif

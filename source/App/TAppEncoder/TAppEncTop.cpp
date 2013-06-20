@@ -1044,7 +1044,13 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
       if( ( vps.getDepthId( layer ) == 0 ) )
       {
 #if H_3D_IV_MERGE
-        vps.setIvMvPredFlag( layer, m_ivMvPredFlag ); 
+        vps.setIvMvPredFlag       ( layer, m_ivMvPredFlag ); 
+#endif
+#if H_3D_NBDV_REF
+        vps.setDepthRefinementFlag( layer, m_depthRefinementFlag );         
+#endif
+#if H_3D_VSP
+        vps.setViewSynthesisPredFlag( layer, m_viewSynthesisPredFlag );         
 #endif
       }
     }

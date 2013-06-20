@@ -472,7 +472,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
 #if H_3D_NBDV_REF
-          if(m_pcSlice->getSPS()->getUseDVPRefine())  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
+          if(rpcTempCU->getSlice()->getVPS()->getDepthRefinementFlag( rpcTempCU->getSlice()->getLayerIdInVps()))
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
           else
 #endif 
