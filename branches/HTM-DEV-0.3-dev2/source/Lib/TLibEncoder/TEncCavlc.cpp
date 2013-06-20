@@ -749,7 +749,13 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       if ( !( pcVPS->getDepthId( layer ) == 1 ) )
       {
 #if H_3D_IV_MERGE
-        WRITE_FLAG( pcVPS->getIvMvPredFlag(layer) ? 1 : 0 , "ivMvPredFlag[i]");
+        WRITE_FLAG( pcVPS->getIvMvPredFlag         (layer) ? 1 : 0 , "iv_mv_pred_flag[i]");
+#endif
+#if H_3D_NBDV_REF
+        WRITE_FLAG( pcVPS->getDepthRefinementFlag  (layer) ? 1 : 0 , "depth_refinement_flag[i]");
+#endif
+#if H_3D_VSP
+        WRITE_FLAG( pcVPS->getViewSynthesisPredFlag(layer) ? 1 : 0 , "view_synthesis_pred_flag[i]");
 #endif
       }          
     }        

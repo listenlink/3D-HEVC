@@ -953,14 +953,22 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     if (uiCode)
     {
 #if H_3D
-#if H_3D_IV_MERGE
+#if H_3D_GEN
       for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
       {
         if (layer != 0)
         {
           if ( !( pcVPS->getDepthId( layer ) == 1 ) )
           {
-            READ_FLAG( uiCode, "ivMvPredFlag[i]"); pcVPS->setIvMvPredFlag( layer, uiCode == 1 ? true : false );
+#if H_3D_IV_MERGE
+            READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( layer, uiCode == 1 ? true : false );
+#endif
+#if H_3D_NBDV_REF
+            READ_FLAG( uiCode, "depth_refinement_flag[i]");    pcVPS->setDepthRefinementFlag  ( layer, uiCode == 1 ? true : false );
+#endif
+#if H_3D_VSP
+            READ_FLAG( uiCode, "view_synthesis_pred_flag[i]"); pcVPS->setViewSynthesisPredFlag( layer, uiCode == 1 ? true : false );
+#endif
           }          
         }        
       }

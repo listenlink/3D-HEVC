@@ -88,6 +88,12 @@ protected:
 #if H_3D_IV_MERGE
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
 #endif
+#if H_3D_NBDV_REF
+  Bool m_depthRefinementFlag;  
+#endif
+#if H_3D_VSP
+  Bool m_viewSynthesisPredFlag;
+#endif
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification

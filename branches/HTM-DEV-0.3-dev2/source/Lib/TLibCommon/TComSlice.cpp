@@ -113,6 +113,10 @@ TComSlice::TComSlice()
 , m_viewIndex                     (0)
 , m_isDepth                       (false)
 #endif
+#if H_3D_GEN
+, m_depthToDisparityB             ( NULL )
+, m_depthToDisparityF             ( NULL )
+#endif
 #endif
 {
 #if L0034_COMBINED_LIST_CLEANUP
@@ -159,6 +163,26 @@ TComSlice::~TComSlice()
 {
   delete[] m_puiSubstreamSizes;
   m_puiSubstreamSizes = NULL;
+#if H_3D_GEN    
+  for( UInt i = 0; i < getViewIndex(); i++ )
+  {
+    if ( m_depthToDisparityB && m_depthToDisparityB[ i ] )
+      delete[] m_depthToDisparityB [ i ];
+
+    if ( m_depthToDisparityF && m_depthToDisparityF[ i ] ) 
+      delete[] m_depthToDisparityF [ i ];
+  }
+
+  if ( m_depthToDisparityF )
+    delete[] m_depthToDisparityF; 
+
+  m_depthToDisparityF = NULL;
+
+  if ( m_depthToDisparityB )
+    delete[] m_depthToDisparityB; 
+
+  m_depthToDisparityB = NULL;
+#endif
 }
 
 
@@ -836,6 +860,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_eNalUnitType         = pSrc->m_eNalUnitType;
 #if H_MV
   m_layerId              = pSrc->m_layerId;
+  // GT: Copying of several other values might be be missing here, or is above not necessary? 
 #endif
   m_eSliceType           = pSrc->m_eSliceType;
   m_iSliceQp             = pSrc->m_iSliceQp;
@@ -1490,10 +1515,17 @@ TComVPS::TComVPS()
       m_dimensionId[i][j] = 0;
     }
   }
+#if H_3D_GEN
+  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )  {
 #if H_3D_IV_MERGE
-  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
-  {
-    m_ivMvPredFlag[ i ] = false;
+    m_ivMvPredFlag         [ i ] = false;
+#endif
+#if H_3D_VSP
+    m_viewSynthesisPredFlag[ i ] = false;
+#endif
+#if H_3D_NBDV_REF
+    m_depthRefinementFlag  [ i ] = false;
+#endif
   }
 #endif
 #endif
@@ -2276,6 +2308,67 @@ Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
       m_ivPicsCurrPoc[ depthId ][ i ] = ( i <= m_viewIndex ) ? m_ivPicLists->getPic( i, ( depthId == 1) , getPOC() ) : NULL;
     }        
   }  
+}
+Void TComSlice::setDepthToDisparityLUTs()
+{ 
+  Bool setupLUT = false; 
+  Int layerIdInVPS = getVPS()->getLayerIdInNuh( m_layerId ); 
+
+#if H_3D_VSP
+  setupLUT = setupLUT || getVPS()->getViewSynthesisPredFlag( layerIdInVPS); 
+#endif
+
+#if H_3D_NBDV_REF
+  setupLUT = setupLUT || getVPS()->getDepthRefinementFlag( layerIdInVPS );
+#endif 
+
+  if( !setupLUT )
+    return; 
+
+  /// GT: Allocation should be moved to a better place later; 
+  if ( m_depthToDisparityB == NULL )
+  {
+    m_depthToDisparityB = new Int*[ getViewIndex() ];
+    for ( Int i = 0; i < getViewIndex(); i++ )
+    {
+      m_depthToDisparityB[ i ] = new Int[ Int(1 << g_bitDepthY) ]; 
+    }
+  }
+
+  if ( m_depthToDisparityF == NULL )
+  {
+    m_depthToDisparityF= new Int*[ getViewIndex() ];
+    for ( Int i = 0; i < getViewIndex(); i++ )
+    {
+      m_depthToDisparityF[ i ] = new Int[ Int(1 << g_bitDepthY) ]; 
+    }
+  }
+
+  assert( m_depthToDisparityB != NULL ); 
+  assert( m_depthToDisparityF != NULL ); 
+
+  TComSPS* sps = getSPS(); 
+
+  Int log2Div = g_bitDepthY - 1 + sps->getCamParPrecision();
+
+  Bool camParaSH = m_pcSPS->hasCamParInSliceHeader();
+
+  Int* codScale     = camParaSH ? m_aaiCodedScale [ 0 ] : sps->getCodedScale    (); 
+  Int* codOffset    = camParaSH ? m_aaiCodedOffset[ 0 ] : sps->getCodedOffset   (); 
+  Int* invCodScale  = camParaSH ? m_aaiCodedScale [ 1 ] : sps->getInvCodedScale (); 
+  Int* invCodOffset = camParaSH ? m_aaiCodedOffset[ 1 ] : sps->getInvCodedOffset(); 
+
+  for (Int i = 0; i <= ( getViewIndex() - 1); i++)
+  {
+    for ( Int d = 0; d <= ( ( 1 << g_bitDepthY ) - 1 ); d++ )
+    {
+      Int offset =    ( codOffset  [ i ] << g_bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
+      m_depthToDisparityB[ i ][ d ] = ( codScale [ i ] * d + offset ) >> log2Div; 
+
+      Int invOffset = ( invCodOffset[ i ] << g_bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
+      m_depthToDisparityF[ i ][ d ] = ( invCodScale[ i ] * d + invOffset ) >> log2Div; 
+    }
+  }
 }
 #endif
 #endif
