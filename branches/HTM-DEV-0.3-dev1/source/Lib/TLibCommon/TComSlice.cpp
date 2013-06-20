@@ -1484,7 +1484,7 @@ TComVPS::TComVPS()
     
     // allocate some memory and initialize with default mapping
     m_iNumDepthmapValues[i] = ((1 << g_bitDepthY)-1)+1;
-    m_iBitsPerDepthValue[i] = (Int)ceil(Log2(m_iNumDepthmapValues[i]));
+    m_iBitsPerDepthValue[i] = numBitsForValue(m_iNumDepthmapValues[i]);
     
     m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
     m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
@@ -1578,7 +1578,7 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
     
     // update DLT variables
     m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
-    m_iBitsPerDepthValue[layerIdInVps] = (Int)ceil(Log2(m_iNumDepthmapValues[layerIdInVps]));
+    m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
   }
 #endif
 

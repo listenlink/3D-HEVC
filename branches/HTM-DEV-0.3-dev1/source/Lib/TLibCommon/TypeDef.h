@@ -118,9 +118,6 @@
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
-#if H_3D_DIM_DLT || H_3D_DIM_SDC
-#define Log2( n ) ( log((double)n) / log(2.0) )
-#endif
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

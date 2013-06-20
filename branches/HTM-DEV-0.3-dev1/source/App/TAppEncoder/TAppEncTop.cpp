@@ -1050,7 +1050,7 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* v
     }
   }
   
-  if( uiNumFrames == 0 || (Int)ceil(Log2(iNumDepthValues)) == (Int)ceil(Log2(((1 << g_bitDepthY)-1))) )
+  if( uiNumFrames == 0 || numBitsForValue(iNumDepthValues) == g_bitDepthY )
   {
     // don't use DLT
     vps->setUseDLTFlag(layer, false);

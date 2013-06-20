@@ -629,7 +629,7 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
       else
       {
         uiAbsIdx -= uiPrefixThreshold;
-        UInt uiSuffixLength = ( (UInt)ceil( Log2(uiNumDepthValues - uiPrefixThreshold) ) );
+        UInt uiSuffixLength = numBitsForValue(uiNumDepthValues - uiPrefixThreshold);
         UInt uiBitInfo = 0;
         for ( Int i = 0; i < uiSuffixLength; i++)
         {

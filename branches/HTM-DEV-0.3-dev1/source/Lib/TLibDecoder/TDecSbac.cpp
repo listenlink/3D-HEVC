@@ -564,7 +564,7 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
     // suffix part
     if ( uiCount == uiPrefixThreshold )
     {
-      for ( UInt ui = 0; ui < ( (UInt)ceil( Log2(uiNumDepthValues - uiPrefixThreshold) ) ); ui++ )
+      for ( UInt ui = 0; ui < numBitsForValue(uiNumDepthValues - uiPrefixThreshold); ui++ )
       {
         m_pcTDecBinIf->decodeBinEP( uiBit );
         uiAbsIdx |= uiBit << ui;

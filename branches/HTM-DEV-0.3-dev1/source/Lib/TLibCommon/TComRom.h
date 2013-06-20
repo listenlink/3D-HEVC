@@ -158,6 +158,10 @@ extern const UChar g_aucConvertTxtTypeToIdx[4];
 __inline Void mapDepthModeToIntraDir( UInt& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
 __inline Void mapDepthModeToIntraDir(  Int& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
 
+#if H_3D_DIM_SDC || H_3D_DIM_DLT
+__inline UInt numBitsForValue( UInt value ) { UInt bits = 0; while (value != 0) { value >>= 1; bits++; } return bits; };
+#endif
+
 #if H_3D_DIM_DMM
 extern const WedgeResolution                                 g_dmmWedgeResolution [6];
 extern const UChar                                           g_dmm1TabIdxBits     [6];
