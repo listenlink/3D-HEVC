@@ -154,6 +154,9 @@
 #define MAX_NUM_LAYER_IDS               64
 #if H_MV
 #define MAX_NUM_LAYERS                  64
+#define MAX_VPS_PROFILE_TIER_LEVEL      64
+#define MAX_VPS_ADD_OUTPUT_LAYER_SETS   1024
+#define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 )
 #endif
 
 #define COEF_REMAIN_BIN_REDUCTION        3 ///< indicates the level at which the VLC 

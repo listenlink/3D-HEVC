@@ -1420,7 +1420,7 @@ TComVPS::TComVPS()
 , m_bTemporalIdNestingFlag    (false)
 , m_numHrdParameters          (  0)
 #if H_MV
-, m_maxNuhLayerId             (  0)
+, m_maxLayerId             (  0)
 #else
 , m_maxNuhReservedZeroLayerId (  0)
 #endif
@@ -1455,7 +1455,7 @@ TComVPS::TComVPS()
   {
     m_vpsProfilePresentFlag   [i] = false;
     m_profileLayerSetRefMinus1[i] = 0;
-    m_outputLayerSetIdx       [i] = 0;
+    m_outputLayerSetIdxMinus1       [i] = 0;
     for( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++ )
     {
       m_outputLayerFlag[i][j] = false;
@@ -1628,6 +1628,7 @@ Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag )
 
   return getLayerIdInNuh( foundlayerId );
 }
+
 #endif // H_3D
 #endif // H_MV
 

@@ -84,7 +84,7 @@ protected:
   std::vector<Int>       m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
   Bool                   m_splittingFlag;                     ///< Splitting Flag
   Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
-  std::vector<Int>       m_dimensionIdLen;                   ///< Length of scalability dimension s 
+  std::vector<Int>       m_dimensionIdLen;                    ///< Length of scalability dimension s 
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification

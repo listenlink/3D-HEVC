@@ -1013,7 +1013,7 @@ Void TAppEncTop::xSetLayerIds( TComVPS& vps )
   Bool nuhLayerIdPresentFlag = !( m_layerIdInNuh.size() == 1 ); 
   Int  maxNuhLayerId = nuhLayerIdPresentFlag ? xGetMax( m_layerIdInNuh ) : ( m_numberOfLayers - 1 ) ; 
 
-  vps.setMaxNuhLayerId( maxNuhLayerId ); 
+  vps.setVpsMaxLayerId( maxNuhLayerId ); 
   vps.setVpsNuhLayerIdPresentFlag( nuhLayerIdPresentFlag ); 
 
   for (Int layer = 0; layer < m_numberOfLayers; layer++ )

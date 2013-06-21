@@ -810,8 +810,8 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 
   assert( pcVPS->getNumHrdParameters() < MAX_VPS_OP_SETS_PLUS1 );
 #if H_MV
-  assert( pcVPS->getMaxNuhLayerId() < MAX_VPS_NUH_LAYER_ID_PLUS1 );
-  READ_CODE( 6, uiCode, "vps_max_nuh_layer_id" );   pcVPS->setMaxNuhLayerId( uiCode );
+  assert( pcVPS->getVpsMaxLayerId() < MAX_VPS_NUH_LAYER_ID_PLUS1 );
+  READ_CODE( 6, uiCode, "vps_max_nuh_layer_id" );   pcVPS->setVpsMaxLayerId( uiCode );
 #else
   assert( pcVPS->getMaxNuhReservedZeroLayerId() < MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 );
   READ_CODE( 6, uiCode, "vps_max_nuh_reserved_zero_layer_id" );   pcVPS->setMaxNuhReservedZeroLayerId( uiCode );
@@ -821,7 +821,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
   {
     // Operation point set
 #if H_MV
-    for( UInt i = 0; i <= pcVPS->getMaxNuhLayerId(); i ++ )
+    for( UInt i = 0; i <= pcVPS->getVpsMaxLayerId(); i ++ )
 #else
     for( UInt i = 0; i <= pcVPS->getMaxNuhReservedZeroLayerId(); i ++ )
 #endif
@@ -931,12 +931,12 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     
     for( Int layerSet = 0; layerSet < pcVPS->getNumOutputLayerSets(); layerSet++ )
     {
-      READ_UVLC( uiCode, "output_layer_set_idx[i]" );              pcVPS->setOutputLayerSetIdx( layerSet, uiCode );
-      for( Int layer = 0; layer <= pcVPS->getMaxNuhLayerId(); layer++ )
+      READ_UVLC( uiCode, "output_layer_set_idx[i]" );              pcVPS->setOutputLayerSetIdxMinus1( layerSet, uiCode );
+      for( Int layer = 0; layer <= pcVPS->getVpsMaxLayerId(); layer++ )
       {
-        if( pcVPS->getLayerIdIncludedFlag( pcVPS->getOutputLayerSetIdx( layerSet ), layer ) == true )
+        if( pcVPS->getLayerIdIncludedFlag( pcVPS->getOutputLayerSetIdxMinus1( layerSet ), layer ) == true )
         {
-          READ_FLAG( uiCode, "output_layer_flag" );                 pcVPS->setOutputLayerFlag( layerSet, layer, uiCode == 1 ? true : false );
+//          READ_FLAG( uiCode, "output_layer_flag" );                 pcVPS->setOutputLayerFlag( layerSet, layer, uiCode == 1 ? true : false );
         }
       }
     }
