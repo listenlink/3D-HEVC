@@ -486,7 +486,7 @@ private:
 
   UInt        m_numHrdParameters;
 #if H_MV
-  UInt        m_maxNuhLayerId;
+  UInt        m_maxLayerId;
 #else
   UInt        m_maxNuhReservedZeroLayerId;
 #endif
@@ -512,6 +512,21 @@ private:
   TimingInfo  m_timingInfo;
 #endif
 
+
+
+Int  m_maxTidIlRefPicPlus1            [ MAX_NUM_LAYERS ];
+Int  m_vpsNumberLayerSetsMinus1;       
+Int  m_vpsNumProfileTierLevelMinus1;   
+Int  m_profileRefMinus1               [ MAX_VPS_PROFILE_TIER_LEVEL ];
+Bool m_vpsMoreOutputLayerSetsThanDefaultFlag;
+Int  m_numAddOutputLayerSetsMinus1;    
+Bool m_defaultOneTargetOutputLayerFlag;
+Int  m_outputLayerSetIdxMinus1        [ MAX_VPS_OUTPUTLAYER_SETS ];  
+Int  m_profileLevelTierIdx            [ MAX_VPS_OUTPUTLAYER_SETS ];
+Bool m_maxOneActiveRefLayerFlag;       
+Int  m_directDepTypeLenMinus2;         
+Int  m_directDependencyType           [ MAX_NUM_LAYERS ] [ MAX_NUM_LAYERS ];
+
 #if H_MV
   Bool        m_avcBaseLayerFlag;
   Bool        m_splittingFlag;
@@ -528,13 +543,20 @@ private:
   
   Bool        m_vpsProfilePresentFlag    [MAX_VPS_OP_SETS_PLUS1];
   Int         m_profileLayerSetRefMinus1 [MAX_VPS_OP_SETS_PLUS1];
-  Int         m_numOutputLayerSets;
-  Int         m_outputLayerSetIdx        [MAX_VPS_OP_SETS_PLUS1];
-  Bool        m_outputLayerFlag          [MAX_VPS_OP_SETS_PLUS1][MAX_VPS_NUH_LAYER_ID_PLUS1];
+  Int         m_numOutputLayerSets;  
+  Bool        m_outputLayerFlag          [MAX_VPS_OUTPUTLAYER_SETS][MAX_VPS_NUH_LAYER_ID_PLUS1];
   Bool        m_directDependencyFlag     [MAX_NUM_LAYER_IDS][MAX_NUM_LAYER_IDS];
 
   Int         m_numDirectRefLayers       [ MAX_NUM_LAYERS ];
   Int         m_refLayerId               [ MAX_NUM_LAYERS ][MAX_NUM_LAYERS];  
+  
+  Int xCeilLog2( Int val )
+  { 
+    assert( val > 0 ); 
+    Int ceilLog2 = 0;
+    while( val > ( 1 << ceilLog2 ) ) ceilLog2++;
+    return ceilLog2; 
+  }
 
 #endif
 public:
@@ -579,8 +601,8 @@ public:
   Void    setNumHrdParameters(UInt v)                           { m_numHrdParameters = v;    }
 
 #if H_MV
-  UInt    getMaxNuhLayerId()                                    { return m_maxNuhLayerId; }
-  Void    setMaxNuhLayerId(UInt v)                              { m_maxNuhLayerId = v;    }
+  UInt    getVpsMaxLayerId()                                    { return m_maxLayerId; }
+  Void    setVpsMaxLayerId(UInt v)                              { m_maxLayerId = v;    }
 #else
   UInt    getMaxNuhReservedZeroLayerId()                        { return m_maxNuhReservedZeroLayerId; }
   Void    setMaxNuhReservedZeroLayerId(UInt v)                  { m_maxNuhReservedZeroLayerId = v;    }
@@ -653,14 +675,8 @@ public:
   Void    setNumOutputLayerSets( Int val )                                 { m_numOutputLayerSets = val;  }
   Int     getNumOutputLayerSets()                                          { return m_numOutputLayerSets; }
 
-  Void    setOutputLayerSetIdx( Int layerSet, Int val )                    { m_outputLayerSetIdx[layerSet] = val;  }
-  Int     getOutputLayerSetIdx( Int layerSet )                             { return m_outputLayerSetIdx[layerSet]; }
-
-  Void    setOutputLayerFlag( Int layerSet, Int layer, Bool val )          { m_outputLayerFlag[layerSet][layer] = val;  }
-  Bool    getOutputLayerFlag( Int layerSet, Int layer )                    { return m_outputLayerFlag[layerSet][layer]; }
-
-  Void    setDirectDependencyFlag( Int layerHigh, Int layerLow, Bool val ) { m_directDependencyFlag[layerHigh][layerLow] = val;  }
-  Bool    getDirectDependencyFlag( Int layerHigh, Int layerLow )           { return m_directDependencyFlag[layerHigh][layerLow]; }
+  Void    setDirectDependencyFlag( Int depLayeridInVps, Int refLayeridInVps, Bool val ) { m_directDependencyFlag[depLayeridInVps][refLayeridInVps] = val;  }
+  Bool    getDirectDependencyFlag( Int depLayeridInVps, Int refLayeridInVps )           { return m_directDependencyFlag[depLayeridInVps][refLayeridInVps]; }
 
   Void    calcIvRefLayers(); 
 
@@ -669,6 +685,61 @@ public:
   
   Bool    checkVPSExtensionSyntax(); 
   Int     scalTypeToScalIdx   ( ScalabilityType scalType );
+  
+  
+  Int  getMaxTidIlRefPicPlus1                  ( Int layerIdInVps )                          { return m_maxTidIlRefPicPlus1          [ layerIdInVps        ]; } 
+  Void setMaxTidIlRefPicPlus1                  ( Int layerIdInVps, Int val )                 { m_maxTidIlRefPicPlus1          [ layerIdInVps        ] = val;  } 
+  
+  Int  getVpsNumberLayerSetsMinus1             ()                                            { return m_vpsNumberLayerSetsMinus1                            ; } 
+  Void setVpsNumberLayerSetsMinus1             ( Int val )                                   { m_vpsNumberLayerSetsMinus1                             = val;  } 
+  
+  Int  getVpsNumProfileTierLevelMinus1         ()                                            { return m_vpsNumProfileTierLevelMinus1                        ; } 
+  Void setVpsNumProfileTierLevelMinus1         ( Int val )                                   { m_vpsNumProfileTierLevelMinus1                         = val;  } 
+
+  Void setProfileRefMinus1                     ( Int profileTierLevelIdx, Int val )          { m_profileRefMinus1             [ profileTierLevelIdx ] = val;  } 
+  Int  getProfileRefMinus1                     ( Int profileTierLevelIdx )                   { return m_profileRefMinus1             [ profileTierLevelIdx ]; } 
+  
+  Bool getVpsMoreOutputLayerSetsThanDefaultFlag()                                            { return m_vpsMoreOutputLayerSetsThanDefaultFlag               ; } 
+  Void setVpsMoreOutputLayerSetsThanDefaultFlag( Bool flag )                                 { m_vpsMoreOutputLayerSetsThanDefaultFlag                = flag; } 
+
+  Int  getNumAddOutputLayerSetsMinus1          ()                                            { return m_numAddOutputLayerSetsMinus1                         ; } 
+  Void setNumAddOutputLayerSetsMinus1          ( Int val )                                   { m_numAddOutputLayerSetsMinus1                          = val;  } 
+  
+  Bool getDefaultOneTargetOutputLayerFlag      ()                                            { return m_defaultOneTargetOutputLayerFlag                     ; } 
+  Void setDefaultOneTargetOutputLayerFlag      ( Bool flag )                                 { m_defaultOneTargetOutputLayerFlag                      = flag; } 
+  
+  Int  getOutputLayerSetIdxMinus1              ( Int outLayerSetIdx )                        { return m_outputLayerSetIdxMinus1      [ outLayerSetIdx ]     ; } 
+  Void setOutputLayerSetIdxMinus1              ( Int outLayerSetIdx, Int val )               { m_outputLayerSetIdxMinus1      [ outLayerSetIdx ]      = val;  } 
+  
+  Int  getProfileLevelTierIdx                  ( Int outLayerSetIdx )                        { return m_profileLevelTierIdx          [ outLayerSetIdx ]     ; } 
+  Void setProfileLevelTierIdx                  ( Int outLayerSetIdx, Int val )               { m_profileLevelTierIdx          [ outLayerSetIdx ]      = val;  } 
+  
+  Bool getMaxOneActiveRefLayerFlag()                                                         { return m_maxOneActiveRefLayerFlag                            ; } 
+  Void setMaxOneActiveRefLayerFlag             ( Bool flag)                                  { m_maxOneActiveRefLayerFlag                             = flag; } 
+  
+  Int  getDirectDepTypeLenMinus2()                                                           { return m_directDepTypeLenMinus2                              ; } 
+  Void setDirectDepTypeLenMinus2               ( Int val)                                    { m_directDepTypeLenMinus2                               = val;  } 
+  
+  Int  getDirectDependencyType                 ( Int depLayeridInVps, Int refLayeridInVps)   { return m_directDependencyType         [ depLayeridInVps ][ refLayeridInVps ]; } 
+  Void setDirectDependencyType                 ( Int depLayeridInVps, Int refLayeridInVps, Int val) { m_directDependencyType         [ depLayeridInVps ][ refLayeridInVps ] = val ; } 
+
+  Int  getProfileLevelTierIdxLen() 
+  { 
+    return xCeilLog2( getVpsNumProfileTierLevelMinus1() + 1 );     
+  };
+
+  Int  getNumLayersInIdList              ( Int lsIdx )
+  {
+    assert( lsIdx > 0 ); 
+    assert( lsIdx <= getMaxOpSets() ); 
+    Int numLayersInIdList = 0; 
+    for (Int layerId = 0; layerId < getVpsMaxLayerId(); layerId++ )
+    {
+      numLayersInIdList += ( getLayerIdIncludedFlag( lsIdx, layerId ) ); 
+    }
+    return numLayersInIdList; 
+  }; 
+  
 #endif
 };
 
