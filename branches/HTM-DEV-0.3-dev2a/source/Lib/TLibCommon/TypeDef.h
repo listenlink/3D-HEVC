@@ -124,6 +124,7 @@
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
+#define H_3D_ARP_FIX                      1   // Fix of using m_ivPicLists to access the reference pictures of other views
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

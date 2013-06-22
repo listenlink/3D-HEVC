@@ -620,7 +620,7 @@ Void TAppEncTop::xInitLib()
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
     m_acTEncTopList[layer]->init( );
-#if H_3D_ARP
+#if H_3D_ARP && !H_3D_ARP_FIX
     //GT (IVREFS): This is not needed any more. Reference pictures can be obtained from m_ivPicLists. Should be fixed later. 
     m_acTEncTopList[layer]->setTAppEncTop( this );
 #endif

@@ -555,6 +555,23 @@ TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Boo
   Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag ); 
   return getPicYuv( layerIdInNuh, poc, recon );
 }
+#if H_3D_ARP_FIX
+TComList<TComPic*>* TComPicLists::getPicList( Int layerIdInNuh )
+{
+  TComList<TComList<TComPic*>*>::iterator itL = m_lists.begin();
+  Int iLayer = 0;
+
+  assert( layerIdInNuh < m_lists.size() );
+
+  while( iLayer != layerIdInNuh )
+  {
+    itL++;
+    iLayer++;
+  }
+
+  return *itL;
+}
+#endif
 #endif // H_3D
 #endif // H_MV
 

@@ -226,7 +226,7 @@ private:
 #endif
 #endif
 
-#if H_3D_ARP 
+#if H_3D_ARP && !H_3D_ARP_FIX
   //GT (IVREFS): This is not needed any more. Reference picture can be obtained from m_ivPicLists. Should be fixed later. 
   TAppDecTop*             m_tAppDecTop;
 #endif
@@ -272,7 +272,7 @@ public:
   Bool                    getIsDepth            ()               { return m_isDepth;    }
   Void                    setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
 
-#if H_3D_ARP
+#if H_3D_ARP && !H_3D_ARP_FIX
   //GT (IVREFS): This is not needed any more. Reference picture can be obtained from m_ivPicLists. Should be fixed later. 
   Void                    setTAppDecTop( TAppDecTop* pcTAppDecTop ) { m_tAppDecTop = pcTAppDecTop; }
   TAppDecTop*             getTAppDecTop()                           { return  m_tAppDecTop; }
