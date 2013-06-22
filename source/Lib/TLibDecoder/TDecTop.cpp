@@ -900,8 +900,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
         Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
         if( iViewIdx<getViewIndex() && !bIsDepth )
         {
+#if H_3D_ARP_FIX
+          pcSlice->setBaseViewRefPicList( m_ivPicLists->getPicList( iLayerId ), iViewIdx );
+#else
           //GT (IVREFS): m_tAppDecTop is not needed any more. Reference pictures can be obtained from m_ivPicLists. Should be fixed later. 
           pcSlice->setBaseViewRefPicList( m_tAppDecTop->getTDecTop(iLayerId)->getListPic(), iViewIdx );
+#endif
         }
       }
     }

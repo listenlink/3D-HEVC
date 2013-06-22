@@ -653,7 +653,7 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
 #if H_3D
    m_tDecTop[ decIdx ]->setCamParsCollector( &m_cCamParsCollector );
-#if H_3D_ARP
+#if H_3D_ARP && !H_3D_ARP_FIX
     m_tDecTop[ decIdx ]->setTAppDecTop(this);
 #endif
 #endif

@@ -90,7 +90,7 @@ public:
   Void  destroy           (); ///< destroy internal members
   Void  decode            (); ///< main decoding function
  
-#if H_3D_ARP              
+#if H_3D_ARP && !H_3D_ARP_FIX              
 //GT (IVREFS): This is not needed any more. Reference picture can be obtained from m_ivPicLists. Should be fixed later.
   TDecTop* getTDecTop     ( Int layerId )          { return m_tDecTop[layerId]; }
 #endif

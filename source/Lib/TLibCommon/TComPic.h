@@ -233,6 +233,9 @@ private:
 public: 
   Void        push_back( TComList<TComPic*>* list ) { m_lists.push_back( list );   }
   Int         size     ()                           { return (Int) m_lists.size(); } 
+#if H_3D_ARP_FIX
+  TComList<TComPic*>*  getPicList   ( Int layerIdInNuh );
+#endif
   TComPic*    getPic   ( Int layerIdInNuh,              Int poc );    
   TComPicYuv* getPicYuv( Int layerIdInNuh,              Int poc, Bool recon ); 
 #if H_3D

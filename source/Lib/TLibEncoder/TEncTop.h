@@ -128,7 +128,7 @@ private:
   TComScalingList         m_scalingList;                 ///< quantization matrix information
   TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
 
-#if H_3D_ARP
+#if H_3D_ARP && !H_3D_ARP_FIX
   TAppEncTop*             m_pcTAppEncTop;
 #endif
 
@@ -212,7 +212,7 @@ public:
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
 #endif
-#if H_3D_ARP
+#if H_3D_ARP && !H_3D_ARP_FIX
   //GT (IVREFS): m_tAppDecTop is not needed any more. Reference pictures can be obtained from m_ivPicLists. Should be fixed later. 
   Void            setTAppEncTop( TAppEncTop* pcTAppEncTop ) { m_pcTAppEncTop = pcTAppEncTop; }
   TAppEncTop*     getTAppEncTop()                           { return  m_pcTAppEncTop; }
