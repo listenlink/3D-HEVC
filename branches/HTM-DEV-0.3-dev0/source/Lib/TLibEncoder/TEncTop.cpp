@@ -511,7 +511,8 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
 Void TEncTop::xInitSPS()
 {
 #if H_MV
-  m_cSPS.setSPSId( getLayerIdInVps() );
+  m_cSPS.setSPSId  ( getLayerIdInVps() ); 
+  m_cSPS.setLayerId( getLayerId() );
 #endif
   ProfileTierLevel& profileTierLevel = *m_cSPS.getPTL()->getGeneralPTL();
   profileTierLevel.setLevelIdc(m_level);

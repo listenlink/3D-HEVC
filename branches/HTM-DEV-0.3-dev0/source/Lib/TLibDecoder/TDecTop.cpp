@@ -1001,8 +1001,11 @@ Void TDecTop::xDecodeVPS()
 Void TDecTop::xDecodeSPS()
 {
   TComSPS* sps = new TComSPS();
+#if H_MV
+  sps->setLayerId( getLayerId() ); 
+#endif
 #if H_3D
-  // Preliminary fix. assuming that all sps refer to the same SPS. 
+  // Preliminary fix. assuming that all sps refer to the same VPS. 
   // Parsing dependency should be resolved!
   TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); 
   assert( vps != 0 ); 
