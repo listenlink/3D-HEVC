@@ -113,6 +113,12 @@ TComSlice::TComSlice()
 , m_viewIndex                     (0)
 , m_isDepth                       (false)
 #endif
+, m_discardableFlag               (false)
+, m_interLayerPredEnabledFlag     (false)
+, m_numInterLayerRefPicsMinus1    (0)
+, m_interLayerSamplePredOnlyFlag  (false)
+, m_altCollocatedIndicationFlag   (0)
+, m_collocatedRefLayerIdx         (0)
 #endif
 {
 #if L0034_COMBINED_LIST_CLEANUP
@@ -153,6 +159,12 @@ TComSlice::TComSlice()
   resetWpScaling();
   initWpAcDcParam();
   m_saoEnabledFlag = false;
+#if H_MV
+  for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {
+   m_interLayerPredLayerIdc[ i ] = 0;
+  }
+#endif
 }
 
 TComSlice::~TComSlice()
@@ -1439,6 +1451,32 @@ TComVPS::TComVPS()
     m_uiMaxLatencyIncrease[i] = 0;
   }
 #if H_MV
+  m_vpsNumberLayerSetsMinus1     = -1; 
+  m_vpsNumProfileTierLevelMinus1 = -1; 
+    
+  for ( Int i = 0; i < MAX_VPS_PROFILE_TIER_LEVEL; i++)
+  {
+    m_profileRefMinus1[ i ] = -1; 
+  }
+    
+  m_moreOutputLayerSetsThanDefaultFlag = false;   
+  m_numAddOutputLayerSetsMinus1        = -1;   
+  m_defaultOneTargetOutputLayerFlag    = false; 
+  
+  for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
+  {
+    m_outputLayerSetIdxMinus1[i]  = -1; 
+    m_profileLevelTierIdx[i]      = -1; 
+    for ( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++)
+    {
+      m_outputLayerFlag[i][j] = false; 
+    }
+  }
+  
+  m_maxOneActiveRefLayerFlag = false; 
+  m_directDepTypeLenMinus2   = -1;         
+  
+
   m_avcBaseLayerFlag = false;
   m_splittingFlag    = false;
   
@@ -1449,12 +1487,11 @@ TComVPS::TComVPS()
   }
 
   m_vpsNuhLayerIdPresentFlag = false;
-  m_numOutputLayerSets       = 0;
-
+  
   for( Int i = 0; i < MAX_VPS_OP_SETS_PLUS1; i++ )
   {
     m_vpsProfilePresentFlag   [i] = false;
-    m_profileLayerSetRefMinus1[i] = 0;
+    m_profileRefMinus1[i] = 0;
     m_outputLayerSetIdxMinus1       [i] = 0;
     for( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++ )
     {
@@ -1469,8 +1506,9 @@ TComVPS::TComVPS()
 
   for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
   {
-    m_layerIdInNuh      [i] = ( i == 0 ) ? 0 : -1; 
-    m_numDirectRefLayers[i] = 0; 
+    m_layerIdInNuh       [i] = ( i == 0 ) ? 0 : -1; 
+    m_numDirectRefLayers [i] = 0; 
+    m_maxTidIlRefPicPlus1[i] = -1; 
 #if H_3D
     m_viewIndex         [i] = -1; 
 #endif
@@ -1478,6 +1516,7 @@ TComVPS::TComVPS()
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
     {
       m_directDependencyFlag[i][j] = false;
+      m_directDependencyType[i][j] = -1; 
       m_refLayerId[i][j]           = -1; 
     }
 
@@ -1559,14 +1598,52 @@ Void TComVPS::setScalabilityMask( UInt val )
     setScalabilityMask( scalType, ( val & (1 << scalType ) ) != 0 );
 }
 
-Void TComVPS::calcIvRefLayers()
+Void TComVPS::setRefLayers()
 {
-  for( Int i = 1; i <= getMaxLayers(); i++ )
-  { 
-    m_numDirectRefLayers[ i ] = 0; 
-    for( Int j = 0 ; j < i; j++ )
-      if( m_directDependencyFlag[ i ][ j ])
-        m_refLayerId[ i ][ m_numDirectRefLayers[ i ]++ ] = m_layerIdInNuh[ j ];    
+  for( Int i = 0; i < MAX_NUM_LAYERS; i++ ) 
+  {
+    m_numSamplePredRefLayers[ i ] = 0;
+    m_numMotionPredRefLayers[ i ] = 0;
+    m_numDirectRefLayers    [ i ] = 0;
+    for( Int j = 0; j < MAX_NUM_LAYERS; j++ ) {
+      m_samplePredEnabledFlag[ i ][ j ] = 0;
+      m_motionPredEnabledFlag[ i ][ j ] = 0;
+      m_refLayerId[ i ][ j ] = 0;
+      m_samplePredRefLayerId[ i ][ j ] = 0;
+      m_motionPredRefLayerId[ i ][ j ] = 0;
+    }
+  }
+
+  for( Int i = 1; i  <= getMaxLayers()- 1; i++ )
+  {
+    for( Int j = 0; j < i; j++ )
+    {
+      if( getDirectDependencyFlag(i,j) )
+      {
+        m_refLayerId[ i ][m_numDirectRefLayers[ i ]++ ] = getLayerIdInNuh( j );
+
+        m_samplePredEnabledFlag [ i ][ j ]  = ( (   getDirectDependencyType( i , j ) + 1 ) & 1 ) == 1;
+        m_numSamplePredRefLayers[ i ]      += m_samplePredEnabledFlag [ i ][ j ] ? 1 : 0; 
+        m_motionPredEnabledFlag [ i ][ j ]  = ( ( ( getDirectDependencyType( i , j ) + 1 ) & 2 ) >> 1 ) == 1;
+        m_numMotionPredRefLayers[ i ]      += m_motionPredEnabledFlag  [ i][ j ] ? 1 : 0; 
+      }
+    }
+  }
+
+  for( Int i = 1, mIdx = 0, sIdx = 0; i <= getMaxLayers()- 1; i++ )
+  {    
+    for( Int j = 0; j < i; j++ )
+    {
+      if( m_motionPredEnabledFlag[ i ][ j ] )
+      {
+        m_motionPredRefLayerId[ i ][ mIdx++ ] = getLayerIdInNuh( j );
+      }
+      
+      if( m_samplePredEnabledFlag[ i ][ j ] )
+      {
+        m_samplePredRefLayerId[ i ][ sIdx++ ] = getLayerIdInNuh( j );
+      }
+    }
   }
 }
 
@@ -1630,6 +1707,15 @@ Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag )
 }
 
 #endif // H_3D
+
+Int TComVPS::xCeilLog2( Int val )
+{
+  assert( val > 0 ); 
+  Int ceilLog2 = 0;
+  while( val > ( 1 << ceilLog2 ) ) ceilLog2++;
+  return ceilLog2;
+}
+
 #endif // H_MV
 
 // ------------------------------------------------------------------------------------------------
@@ -1680,6 +1766,8 @@ TComSPS::TComSPS()
 , m_vuiParameters             ()
 #if H_MV
 , m_interViewMvVertConstraintFlag (false)
+, m_numIlpRestrictedRefLayers ( 0 )
+
 #endif
 #if H_3D
 , m_bCamParInSliceHeader      (false)
@@ -1698,6 +1786,14 @@ TComSPS::TComSPS()
   m_scalingList = new TComScalingList;
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));
   ::memset(m_usedByCurrPicLtSPSFlag, 0, sizeof(m_usedByCurrPicLtSPSFlag));
+#if H_MV
+  for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {
+    m_minSpatialSegmentOffsetPlus1[ i ] = 0;
+    m_ctuBasedOffsetEnabledFlag   [ i ] = false;
+    m_minHorizontalCtuOffsetPlus1 [ i ] = 0;
+  }
+#endif
 }
 
 TComSPS::~TComSPS()
@@ -2257,6 +2353,15 @@ Void TComSlice::xPrintRefPicList()
     }
   }
 }
+
+Int TComSlice::xCeilLog2( Int val )
+{
+  assert( val > 0 ); 
+  Int ceilLog2 = 0;
+  while( val > ( 1 << ceilLog2 ) ) ceilLog2++;
+  return ceilLog2;
+}
+
 #endif
 /** get scaling matrix from RefMatrixID
  * \param sizeId size index

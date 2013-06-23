@@ -1003,7 +1003,7 @@ Void TAppEncTop::xSetDirectDependencyFlags( TComVPS& vps )
   }
 
   vps.checkVPSExtensionSyntax(); 
-  vps.calcIvRefLayers();
+  vps.setRefLayers();
 }
 
 Void TAppEncTop::xSetLayerIds( TComVPS& vps )
