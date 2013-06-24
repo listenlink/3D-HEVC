@@ -391,6 +391,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
   ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
+
+  // Layer Sets + Output Layer Sets + Profile Tier Level
+  ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
+  ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
+  ("DefaultOneTargetOutputLayerFlag", m_defaultOneTargetOutputLayerFlag,  false , "Output highest layer of layer sets by default")      
+  ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(1,0), "Indices of layer sets used as additional output layer sets")  
+  ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(1,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "LayerIds of additional output layers")  
+  ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
 #endif
   ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
   ("SourceHeight,-hgt",     m_iSourceHeight,       0, "Source picture height")
@@ -1282,13 +1290,13 @@ Void TAppEncCfg::xCheckParameter()
 
   xConfirmPara( m_layerIdInNuh[0] != 0      , "LayerIdInNuh must be 0 for the first layer. ");
   xConfirmPara( (m_layerIdInNuh.size()!=1) && (m_layerIdInNuh.size() < m_numberOfLayers) , "LayerIdInNuh must be given for all layers. ");
-  
+
 #if H_3D
   xConfirmPara( m_scalabilityMask != 1 && m_scalabilityMask != 3, "Scalability Mask must be equal to 1 or 3. ");
 #else
   xConfirmPara( m_scalabilityMask != 1 , "Scalability Mask must be equal to 1. ");
 #endif
- 
+
   m_dimIds.push_back( m_viewId ); 
   const Int viewDimPosition = 0; 
 #if H_3D
@@ -1298,54 +1306,90 @@ Void TAppEncCfg::xCheckParameter()
 
   xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   ); 
 
- for( Int dim = 0; dim < m_dimIds.size(); dim++ )
- {
-   xConfirmPara( m_dimIds[dim].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
-   xConfirmPara( ( dim != viewDimPosition ) &&  (m_dimIds[dim][0] != 0), "DimensionId of layer 0 must be 0. " );
-   xConfirmPara( m_dimensionIdLen[dim] < 1 || m_dimensionIdLen[dim] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
-   for( Int i = 1; i < m_numberOfLayers; i++ )
-   {     
-     xConfirmPara(  ( m_dimIds[dim][i] < 0 ) || ( m_dimIds[dim][i] > ( ( 1 << m_dimensionIdLen[dim] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
-   }
- }
+  for( Int dim = 0; dim < m_dimIds.size(); dim++ )
+  {
+    xConfirmPara( m_dimIds[dim].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
+    xConfirmPara( ( dim != viewDimPosition ) &&  (m_dimIds[dim][0] != 0), "DimensionId of layer 0 must be 0. " );
+    xConfirmPara( m_dimensionIdLen[dim] < 1 || m_dimensionIdLen[dim] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
+    for( Int i = 1; i < m_numberOfLayers; i++ )
+    {     
+      xConfirmPara(  ( m_dimIds[dim][i] < 0 ) || ( m_dimIds[dim][i] > ( ( 1 << m_dimensionIdLen[dim] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
+    }
+  }
 
- for( Int i = 0; i < m_numberOfLayers; i++ )
- {
-   for( Int j = 0; j < i; j++ )
-   {     
-     Int numDiff  = 0; 
-     Int lastDiff = -1; 
-     for( Int dim = 0; dim < m_dimIds.size(); dim++ )
-     {
-       if ( m_dimIds[dim][i] != m_dimIds[dim][j] )
-       {
-         numDiff ++; 
-         lastDiff = dim; 
-       }
-     }
+  for( Int i = 0; i < m_numberOfLayers; i++ )
+  {
+    for( Int j = 0; j < i; j++ )
+    {     
+      Int numDiff  = 0; 
+      Int lastDiff = -1; 
+      for( Int dim = 0; dim < m_dimIds.size(); dim++ )
+      {
+        if ( m_dimIds[dim][i] != m_dimIds[dim][j] )
+        {
+          numDiff ++; 
+          lastDiff = dim; 
+        }
+      }
 
-     Bool allEqual = ( numDiff == 0 ); 
+      Bool allEqual = ( numDiff == 0 ); 
 
-     if ( allEqual ) 
-     {
-       printf( "\nError: Positions of Layers %d and %d are identical in scalability space\n", i, j);
-     }
+      if ( allEqual ) 
+      {
+        printf( "\nError: Positions of Layers %d and %d are identical in scalability space\n", i, j);
+      }
 
-     xConfirmPara( allEqual , "Each layer shall have a different position in scalability space." );
+      xConfirmPara( allEqual , "Each layer shall have a different position in scalability space." );
 
-     if ( numDiff  == 1 ) 
-     {
-       Bool inc = m_dimIds[ lastDiff ][ i ] > m_dimIds[ lastDiff ][ j ]; 
-       Bool shallBeButIsNotIncreasing = ( !inc && ( lastDiff != viewDimPosition ) ) ; 
-       if ( shallBeButIsNotIncreasing )
-       {       
-         printf( "\nError: Positions of Layers %d and %d is not increasing in dimension %d \n", i, j, lastDiff);        
-       }
-       xConfirmPara( shallBeButIsNotIncreasing && ( lastDiff != viewDimPosition ),  "DimensionIds shall be increasing within one dimension. " );
-     }
-   }
- }
+      if ( numDiff  == 1 ) 
+      {
+        Bool inc = m_dimIds[ lastDiff ][ i ] > m_dimIds[ lastDiff ][ j ]; 
+        Bool shallBeButIsNotIncreasing = ( !inc && ( lastDiff != viewDimPosition ) ) ; 
+        if ( shallBeButIsNotIncreasing )
+        {       
+          printf( "\nError: Positions of Layers %d and %d is not increasing in dimension %d \n", i, j, lastDiff);        
+        }
+        xConfirmPara( shallBeButIsNotIncreasing && ( lastDiff != viewDimPosition ),  "DimensionIds shall be increasing within one dimension. " );
+      }
+    }
+  }
 
+  /// Layer sets
+  xConfirmPara( m_vpsNumLayerSets < 0 || m_vpsNumLayerSets > 1024, "VpsNumLayerSets must be greater than 0 and less than 1025") ; 
+  for( Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
+  {
+    if (lsIdx == 0)
+    {
+      xConfirmPara( m_layerIdsInSets[lsIdx].size() != 1 || m_layerIdsInSets[lsIdx][0] != 0 , "0-th layer shall only include layer 0. ");
+    }
+    for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
+    {
+      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than 64" ); 
+    }
+  }
+
+  // Output layer sets
+  xConfirmPara( m_outputLayerSetIdx.size() < 0 || m_outputLayerSetIdx.size() > 1024, "The number of output layer set indices must be less than 1025") ;
+  for (Int lsIdx = 0; lsIdx < m_outputLayerSetIdx.size(); lsIdx++)
+  {   
+    Int refLayerSetIdx = m_outputLayerSetIdx[ lsIdx ]; 
+    xConfirmPara(  refLayerSetIdx < 0 || refLayerSetIdx >= m_vpsNumLayerSets, "Output layer set idx must be greater or equal to 0 and less than the VpsNumLayerSets" );
+
+    for (Int i = 0; i < m_layerIdsInAddOutputLayerSet[ lsIdx ].size(); i++)
+    {
+      Bool isAlsoInLayerSet = false; 
+      for (Int j = 0; j < m_layerIdsInSets[ refLayerSetIdx ].size(); j++ )
+      {
+        if ( m_layerIdsInSets[ refLayerSetIdx ][ j ] == m_layerIdsInAddOutputLayerSet[ lsIdx ][ i ] )
+        {
+          isAlsoInLayerSet = true; 
+          break; 
+        }
+        xConfirmPara( !isAlsoInLayerSet, "All output layers must of a output layer set be included in corresponding layer set");
+      }
+    }
+  }
+  xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
 #endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );

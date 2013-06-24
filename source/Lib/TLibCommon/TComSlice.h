@@ -493,10 +493,12 @@ private:
   TComHRD*    m_hrdParameters;
   UInt*       m_hrdOpSetIdx;
   Bool*       m_cprmsPresentFlag;
-  UInt        m_numOpSets;
+  
 #if H_MV
+  UInt        m_vpsNumLayerSetsMinus1;
   Bool        m_layerIdIncludedFlag[MAX_VPS_OP_SETS_PLUS1][MAX_VPS_NUH_LAYER_ID_PLUS1];
 #else
+  UInt        m_numOpSets;
   Bool        m_layerIdIncludedFlag[MAX_VPS_OP_SETS_PLUS1][MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1];
 #endif
 
@@ -606,13 +608,17 @@ public:
 #if H_MV
   UInt    getVpsMaxLayerId()                                    { return m_maxLayerId; }
   Void    setVpsMaxLayerId(UInt v)                              { m_maxLayerId = v;    }
+
+  UInt    getVpsNumLayerSetsMinus1()                            { return m_vpsNumLayerSetsMinus1; }
+  Void    setVpsNumLayerSetsMinus1(UInt v)                      { m_vpsNumLayerSetsMinus1 = v;    }
 #else
   UInt    getMaxNuhReservedZeroLayerId()                        { return m_maxNuhReservedZeroLayerId; }
   Void    setMaxNuhReservedZeroLayerId(UInt v)                  { m_maxNuhReservedZeroLayerId = v;    }
-#endif
 
   UInt    getMaxOpSets()                                        { return m_numOpSets; }
   Void    setMaxOpSets(UInt v)                                  { m_numOpSets = v;    }
+#endif
+
   Bool    getLayerIdIncludedFlag(UInt opsIdx, UInt id)          { return m_layerIdIncludedFlag[opsIdx][id]; }
   Void    setLayerIdIncludedFlag(Bool v, UInt opsIdx, UInt id)  { m_layerIdIncludedFlag[opsIdx][id] = v;    }
 
@@ -728,7 +734,7 @@ public:
   Int     getNumLayersInIdList              ( Int lsIdx )
   {
     assert( lsIdx >= 0 ); 
-    assert( lsIdx < getMaxOpSets() ); 
+    assert( lsIdx <= getVpsNumLayerSetsMinus1() ); 
     Int numLayersInIdList = 0; 
     for (Int layerId = 0; layerId < getVpsMaxLayerId(); layerId++ )
     {
