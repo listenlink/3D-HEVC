@@ -731,19 +731,33 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
         std::ostringstream cOSS;
         cOSS<<"Frame"<<i;
         opts.addOptions()( cOSS.str(), m_GOPListMvc[k][i-1], GOPEntry() );
+        if ( i != 1 )
+        {
+          opts.opt_list.back()->opt->opt_duplicate = true; 
+        }        
       }
     }
     else
     {
       std::ostringstream cOSS1;
       cOSS1<<"FrameI"<<"_l"<<k;
+
       opts.addOptions()(cOSS1.str(), m_GOPListMvc[k][MAX_GOP], GOPEntry());
+      if ( k > 1 )
+      {
+        opts.opt_list.back()->opt->opt_duplicate = true; 
+      }        
+
 
       for( Int i = 1; i < MAX_GOP + 1; i++ ) 
       {
         std::ostringstream cOSS2;
         cOSS2<<"Frame"<<i<<"_l"<<k;
         opts.addOptions()(cOSS2.str(), m_GOPListMvc[k][i-1], GOPEntry());
+        if ( i != 1 || k > 0 )
+        {
+          opts.opt_list.back()->opt->opt_duplicate = true; 
+        }        
       }
     }
   }

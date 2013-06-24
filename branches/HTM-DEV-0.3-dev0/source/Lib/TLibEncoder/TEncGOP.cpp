@@ -497,6 +497,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setLastIDR(m_iLastIDR);
     pcSlice->setSliceIdx(0);
 #if H_MV
+    pcSlice->setRefPicSetInterLayer ( &m_refPicSetInterLayer ); 
     pcPic  ->setLayerId     ( getLayerId()   );
     pcPic  ->setViewId      ( getViewId()    );    
     pcSlice->setLayerId     ( getLayerId() );
@@ -2060,9 +2061,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcPic->getPicYuvRec()->copyToPic(pcPicYuvRecOut);
 
       pcPic->setReconMark   ( true );
-#if H_MV
+#if H_MV      
       TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer );  
       std::vector<Int> temp; 
+      TComSlice::markCurrPic( pcPic ); 
       TComSlice::markIvRefPicsAsUnused   ( m_ivPicLists, temp, pcPic->getSlice(0)->getVPS(), m_layerId, pcPic->getPOC() ); 
 #endif
       m_bFirst = false;

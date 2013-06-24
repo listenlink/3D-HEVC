@@ -38,7 +38,7 @@
 #include <list>
 #include <map>
 #include "program_options_lite.h"
-
+#include  "../TLibCommon/TypeDef.h"
 using namespace std;
 
 //! \ingroup TAppCommon
@@ -145,6 +145,9 @@ namespace df
       unsigned max_width = 0;
       for(Options::NamesPtrList::iterator it = opts.opt_list.begin(); it != opts.opt_list.end(); it++)
       {
+#if H_MV
+        if  ( (*it)->opt->opt_duplicate ) continue; 
+#endif
         ostringstream line(ios_base::out);
         doHelpOpt(line, **it, pad_short);
         max_width = max(max_width, (unsigned) line.tellp());
@@ -160,6 +163,10 @@ namespace df
        */
       for(Options::NamesPtrList::iterator it = opts.opt_list.begin(); it != opts.opt_list.end(); it++)
       {
+#if H_MV
+        if  ( (*it)->opt->opt_duplicate ) continue; 
+#endif
+
         ostringstream line(ios_base::out);
         line << "  ";
         doHelpOpt(line, **it, pad_short);
