@@ -654,10 +654,56 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     refPicListModification->setRefPicListModificationFlagL0(0);
     refPicListModification->setRefPicListModificationFlagL1(0);
 #if H_MV
+
+    if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > 0 )
+    {
+      pcSlice->setDiscardableFlag           ( false );     
+    }    
+
+    TComVPS*           vps = pcSlice->getVPS(); 
+    Int       layerIdInVps = vps    ->getLayerIdInVps( getLayerId()); 
+    Int numDirectRefLayers = vps    ->getNumDirectRefLayers( layerIdInVps ); 
+    GOPEntry gopEntry      = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid );     
+    
+    if ( getLayerId() > 0 && numDirectRefLayers > 0 )
+    {         
+      pcSlice->setInterLayerPredEnabledFlag ( gopEntry.m_numActiveRefLayerPics > 0 );     
+      if ( pcSlice->getInterLayerPredEnabledFlag() && numDirectRefLayers > 1 )
+      {
+        if ( !vps->getMaxOneActiveRefLayerFlag() )
+        {    
+          pcSlice->setNumInterLayerRefPicsMinus1( gopEntry.m_numActiveRefLayerPics - 1 ); 
+        }
+        for (Int i = 0; i < gopEntry.m_numActiveRefLayerPics; i++ )
+        {
+          pcSlice->setInterLayerPredLayerIdc( i, gopEntry.m_interLayerPredLayerIdc[ i ] ); 
+        }
+      }
+    }
+    assert( pcSlice->getNumActiveRefLayerPics() == gopEntry.m_numActiveRefLayerPics ); 
+    
+    if ( vps->getNumSamplePredRefLayers( layerIdInVps ) > 0 && pcSlice->getNumActiveRefLayerPics() > 0)
+    {
+      pcSlice->setInterLayerSamplePredOnlyFlag( gopEntry.m_numRefPics == 0 ); 
+    }    
+
     pcSlice->createAndApplyIvReferencePictureSet( m_ivPicLists, m_refPicSetInterLayer ); 
-    pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid ).m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer.size() ) ) );
-    pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid ).m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer.size() ) ) );
-    xSetRefPicListModificationsMvc( pcSlice, pocCurr, iGOPid );    
+    pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer.size() ) ) );
+    pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer.size() ) ) );
+    xSetRefPicListModificationsMvc( pcSlice, iGOPid );    
+
+    pcSlice->setActiveMotionPredRefLayers( );
+
+    if ( getLayerId() > 0 && pcSlice->getNumActiveMotionPredRefLayers() > 0 && pcSlice->getEnableTMVPFlag() && 
+        ( pcSlice->getSliceType() == B_SLICE || pcSlice->getSliceType() == P_SLICE ))
+    {
+      pcSlice->setAltCollocatedIndicationFlag( gopEntry.m_collocatedRefLayerIdx >= 0 );
+      if ( pcSlice->getNumActiveRefLayerPics() && pcSlice->getNumActiveMotionPredRefLayers() > 0 )
+      {
+        pcSlice->setCollocatedRefLayerIdx( gopEntry.m_collocatedRefLayerIdx );
+      }
+    }
+
 #else
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(m_pcCfg->getGOPEntry(iGOPid).m_numRefPicsActive,pcSlice->getRPS()->getNumberOfPictures()));
@@ -2895,7 +2941,7 @@ Void TEncGOP::dblMetric( TComPic* pcPic, UInt uiNumSlices )
 }
 #endif
 #if H_MV
-Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr, UInt iGOPid )
+Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt iGOPid )
 { 
   TComVPS* vps = pcSlice->getVPS(); 
   Int layer    = pcSlice->getLayerIdInVps( ); 
@@ -2918,7 +2964,7 @@ Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr
   {
     Int numModifications = 0;
     
-    for( Int k = 0; k < ge.m_numInterViewRefPics; k++ ) 
+    for( Int k = 0; k < ge.m_numActiveRefLayerPics; k++ ) 
     {
       numModifications +=  ( ge.m_interViewRefPosL[li][k] >= 0 ) ? 1 : 0; 
     }
@@ -2930,7 +2976,7 @@ Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr
 
     if( (maxRefListSize > 1) && (numModifications > 0) )
     {
-      for( Int k = 0; k < ge.m_numInterViewRefPics; k++ )
+      for( Int k = 0; k < ge.m_numActiveRefLayerPics; k++ )
       {
         if( ge.m_interViewRefPosL[li][k] >= 0 )
         {
@@ -2939,7 +2985,7 @@ Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr
           for( Int idx = 0; idx < vps->getNumDirectRefLayers( layer ); idx++ )
           {            
             Int refLayer  = vps->getLayerIdInVps( vps->getRefLayerId( layer, idx ) );          
-            if( ( layer + ge.m_interViewRefs[ k ]) == refLayer )
+            if( ( layer + ge.m_interLayerPredLayerIdc[ k ]) == refLayer )
             {
               tempList[ targetIdx ] = orgIdx;              
               isModified = ( targetIdx != orgIdx  );

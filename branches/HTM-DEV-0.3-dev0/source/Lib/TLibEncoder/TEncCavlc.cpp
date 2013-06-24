@@ -1053,8 +1053,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }  
     }
 
-    pcSlice->setActiveMotionPredRefLayers( );
-
     if( vps->getNumSamplePredRefLayers( layerIdInVps ) > 0  &&  pcSlice->getNumActiveRefLayerPics() > 0 )
     {
       WRITE_FLAG( pcSlice->getInterLayerSamplePredOnlyFlag( ) ? 1 : 0 , "inter_layer_sample_pred_only_flag" );
