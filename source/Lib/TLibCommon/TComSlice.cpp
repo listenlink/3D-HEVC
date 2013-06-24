@@ -107,6 +107,7 @@ TComSlice::TComSlice()
 , m_temporalLayerNonReferenceFlag ( false )
 , m_enableTMVPFlag                ( true )
 #if H_MV
+, m_refPicSetInterLayer           ( NULL )
 , m_layerId                       (0)
 , m_viewId                        (0)
 #if H_3D
@@ -467,10 +468,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   UInt NumPocStCurr0 = 0;
   UInt NumPocStCurr1 = 0;
   UInt NumPocLtCurr = 0;
-#if H_MV
-  Int numDirectRefLayers  = getVPS()->getNumDirectRefLayers( getLayerIdInVps() );
-  assert( numDirectRefLayers == refPicSetInterLayer.size() ); 
-#endif
   Int i;
   for(i=0; i < m_pcRPS->getNumberOfNegativePictures(); i++)
   {
@@ -518,8 +515,10 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   // ref_pic_list_init
   TComPic*  rpsCurrList0[MAX_NUM_REF+1];
   TComPic*  rpsCurrList1[MAX_NUM_REF+1];
+
 #if H_MV
-  Int numPocTotalCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + numDirectRefLayers;
+  
+  Int numPocTotalCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + getNumActiveRefLayerPics( );
   assert( numPocTotalCurr == getNumRpsCurrTempList() );
 #else
   Int numPocTotalCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr;
@@ -557,6 +556,10 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
 #endif
 
   Int cIdx = 0;
+#if H_MV
+  if ( getInterRefEnabledInRPLFlag() )
+  {  
+#endif
   for ( i=0; i<NumPocStCurr0; i++, cIdx++)
   {
     rpsCurrList0[cIdx] = RefPicSetStCurr0[i];
@@ -570,18 +573,21 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     rpsCurrList0[cIdx] = RefPicSetLtCurr[i];
   }
 #if H_MV
-  for ( i=0; i<numDirectRefLayers;  i++, cIdx++)
+  }
+  for ( i=0; i < getNumActiveRefLayerPics( );  i++, cIdx++)
   {
-    if( cIdx <= MAX_NUM_REF )
-    {
-      rpsCurrList0[cIdx] = refPicSetInterLayer[i];
-    }
+    assert( cIdx < MAX_NUM_REF );    
+    rpsCurrList0[cIdx] = refPicSetInterLayer[i];    
   }
 #endif
 
   if (m_eSliceType==B_SLICE)
   {
     cIdx = 0;
+#if H_MV
+    if ( getInterRefEnabledInRPLFlag() )
+    {  
+#endif
     for ( i=0; i<NumPocStCurr1; i++, cIdx++)
     {
       rpsCurrList1[cIdx] = RefPicSetStCurr1[i];
@@ -595,12 +601,11 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
       rpsCurrList1[cIdx] = RefPicSetLtCurr[i];
     }
 #if H_MV
-    for ( i=0; i<numDirectRefLayers;  i++, cIdx++)
+    }
+    for ( i=0; i < getNumActiveRefLayerPics( );  i++, cIdx++)
     {
-      if( cIdx <= MAX_NUM_REF )
-      {
-        rpsCurrList1[cIdx] = refPicSetInterLayer[i];
-      }
+      assert( cIdx < MAX_NUM_REF );    
+      rpsCurrList1[cIdx] = refPicSetInterLayer[i];    
     }
 #endif
   }
@@ -663,7 +668,7 @@ Int TComSlice::getNumRpsCurrTempList()
     }
   }
 #if H_MV
-  numRpsCurrTempList = numRpsCurrTempList + getVPS()->getNumDirectRefLayers( getLayerIdInVps() );
+  numRpsCurrTempList = numRpsCurrTempList + getNumActiveRefLayerPics();
 #endif
   return numRpsCurrTempList;
 }
@@ -2272,9 +2277,9 @@ Void TComSlice::createAndApplyIvReferencePictureSet( TComPicLists* ivPicLists, s
 {
   refPicSetInterLayer.clear(); 
 
-  for( Int i = 0; i < getVPS()->getNumDirectRefLayers( getLayerIdInVps() ); i++ ) 
+  for( Int i = 0; i < getNumActiveRefLayerPics(); i++ ) 
   {
-    Int layerIdRef = getVPS()->getRefLayerId( getLayerIdInVps(), i ); 
+    Int layerIdRef = getRefPicLayerId( i ); 
     TComPic* picRef = ivPicLists->getPic( layerIdRef, getPOC() ) ; 
     assert ( picRef != 0 ); 
 
@@ -2282,6 +2287,8 @@ Void TComSlice::createAndApplyIvReferencePictureSet( TComPicLists* ivPicLists, s
     picRef->setIsLongTerm( true );        
     picRef->getSlice(0)->setReferenced( true );       
 
+    // Consider to check here: 
+    // "If the current picture is a RADL picture, there shall be no entry in the RefPicSetInterLayer that is a RASL picture. "
     refPicSetInterLayer.push_back( picRef ); 
   }
 }
@@ -2360,6 +2367,40 @@ Int TComSlice::xCeilLog2( Int val )
   Int ceilLog2 = 0;
   while( val > ( 1 << ceilLog2 ) ) ceilLog2++;
   return ceilLog2;
+}
+
+Void TComSlice::markCurrPic( TComPic* currPic )
+{
+  if ( currPic->getSlice(0)->getDiscardableFlag() )
+  {
+    currPic->getSlice(0)->setReferenced( true ) ; 
+    currPic->setIsLongTerm( false ); 
+  }
+  else
+  {
+    currPic->getSlice(0)->setReferenced( false ) ; 
+  }
+}
+
+Void TComSlice::setRefPicSetInterLayer( std::vector<TComPic*>* refPicSetInterLayer )
+{
+  m_refPicSetInterLayer = refPicSetInterLayer; 
+}
+
+TComPic* TComSlice::getPicFromRefPicSetInterLayer( Int layerId )
+{
+  assert( m_refPicSetInterLayer != 0 ); 
+  assert( (*m_refPicSetInterLayer).size() == getNumActiveRefLayerPics() ); 
+  TComPic* pcPic = NULL; 
+  for ( Int i = 0; i < getNumActiveRefLayerPics(); i++ )
+  {
+    if ((*m_refPicSetInterLayer)[ i ]->getLayerId() == layerId)
+    {
+      pcPic = (*m_refPicSetInterLayer)[ i ]; 
+    }
+  }
+  assert(pcPic != NULL); 
+  return pcPic;
 }
 
 #endif

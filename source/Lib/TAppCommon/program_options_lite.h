@@ -35,12 +35,12 @@
 #include <string>
 #include <list>
 #include <map>
+#include  "../TLibCommon/TypeDef.h"
 
 #if H_MV
 #include <vector>
 #include <errno.h>
 #include <cstring>
-
 #ifdef WIN32
 #define strdup _strdup
 #endif
@@ -84,8 +84,13 @@ namespace df
      * information should be stored in a derived class. */
     struct OptionBase
     {
+#if H_MV      
+      OptionBase(const std::string& name, const std::string& desc, bool duplicate = false)
+        : opt_string(name), opt_desc(desc), opt_duplicate(duplicate)
+#else
       OptionBase(const std::string& name, const std::string& desc)
       : opt_string(name), opt_desc(desc)
+#endif
       {};
       
       virtual ~OptionBase() {}
@@ -97,14 +102,22 @@ namespace df
       
       std::string opt_string;
       std::string opt_desc;
+#if H_MV
+      bool        opt_duplicate; 
+#endif
     };
     
     /** Type specific option storage */
     template<typename T>
     struct Option : public OptionBase
     {
+#if H_MV
+      Option(const std::string& name, T& storage, T default_val, const std::string& desc, bool duplicate = false)
+        : OptionBase(name, desc, duplicate), opt_storage(storage), opt_default_val(default_val)
+#else
       Option(const std::string& name, T& storage, T default_val, const std::string& desc)
       : OptionBase(name, desc), opt_storage(storage), opt_default_val(default_val)
+#endif
       {}
       
       void parse(const std::string& arg);
@@ -373,7 +386,7 @@ namespace df
           sprintf((char*) cNameBuffer.c_str()       ,name.c_str(),uiK,uiK);
           sprintf((char*) cDescriptionBuffer.c_str(),desc.c_str(),uiK,uiK);
 
-          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescriptionBuffer ));
+          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescriptionBuffer, uiK != 0 ));
         }
 
         return *this;

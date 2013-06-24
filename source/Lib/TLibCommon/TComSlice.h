@@ -1585,6 +1585,7 @@ private:
 
   Bool       m_enableTMVPFlag;
 #if H_MV
+  std::vector<TComPic*>* m_refPicSetInterLayer; 
   Int        m_layerId; 
   Int        m_viewId;
 #if H_3D
@@ -1780,10 +1781,9 @@ public:
 #if H_MV
   Void createAndApplyIvReferencePictureSet( TComPicLists* ivPicLists, std::vector<TComPic*>& refPicSetInterLayer );
   static Void markIvRefPicsAsShortTerm    ( std::vector<TComPic*> refPicSetInterLayer );
-  static Void markIvRefPicsAsUnused       ( TComPicLists* ivPicLists, std::vector<Int> targetDecLayerIdSet, TComVPS* vps, Int curLayerId, Int curPoc  );
-
-
-  Void xPrintRefPicList();
+  static Void markCurrPic                 ( TComPic* currPic );; 
+  static Void markIvRefPicsAsUnused       ( TComPicLists* ivPicLists, std::vector<Int> targetDecLayerIdSet, TComVPS* vps, Int curLayerId, Int curPoc );
+   Void xPrintRefPicList();
 #endif
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
   Bool isStepwiseTemporalLayerSwitchingPointCandidate( TComList<TComPic*>& rcListPic );
@@ -1961,13 +1961,19 @@ Bool getInterRefEnabledInRPLFlag( )
   }
   return interRefEnabledInRPLFlag; 
 }
+
+Void setRefPicSetInterLayer( std::vector<TComPic*>* m_refPicSetInterLayer );
+
+TComPic* getPicFromRefPicSetInterLayer( Int layerId );
+
 #endif
+
+
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Int                 poc);
 TComPic*  xGetLongTermRefPic(TComList<TComPic*>& rcListPic, Int poc, Bool pocHasMsb);
 #if H_MV
-  TComPic*  xGetInterLayerRefPic( std::vector<TComPic*>& rcListIlPic, Int layerId );
   Int       xCeilLog2( Int val );
 #endif
 };// END CLASS DEFINITION TComSlice
