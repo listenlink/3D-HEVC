@@ -85,6 +85,16 @@ protected:
   Bool                   m_splittingFlag;                     ///< Splitting Flag
   Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
   std::vector<Int>       m_dimensionIdLen;                    ///< Length of scalability dimension s 
+
+  // layer sets 
+  Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
+  std::vector< std::vector<Int> > m_layerIdsInSets;           ///< LayerIds of Layer set
+  Bool                   m_defaultOneTargetOutputLayerFlag;   ///< Output highest layer of layer sets by default
+  Int                    numAddOuputLayerSets;              ///< Number of additional output layer sets
+  std::vector<Int>       m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
+  std::vector< std::vector<Int> > m_layerIdsInAddOutputLayerSet; ///< LayerIds of additional output layers  
+  std::vector<Int>       m_profileLevelTierIdx;               ///< Indices of of profile level tier
+
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification

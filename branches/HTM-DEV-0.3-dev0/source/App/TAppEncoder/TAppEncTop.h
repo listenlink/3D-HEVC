@@ -118,6 +118,7 @@ protected:
   Void xSetLayerIds               ( TComVPS& vps );  
   Void xSetDimensionIdAndLength   ( TComVPS& vps );
   Void xSetDirectDependencyFlags  ( TComVPS& vps );
+  Void xSetLayerSets( TComVPS& vps );
   Int  xGetMax( std::vector<Int>& vec);
 #endif
 public:
@@ -129,6 +130,7 @@ public:
   TEncTop*    getTEncTop( UInt layer ) { return  m_acTEncTopList[layer]; }  ///< return pointer to encoder class for specific layer
 #else
   TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
+ 
 #endif
 };// END CLASS DEFINITION TAppEncTop
 

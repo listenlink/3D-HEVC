@@ -118,6 +118,7 @@ Void TAppEncTop::xInitLibCfg()
   xSetLayerIds             ( vps );   
   xSetDimensionIdAndLength ( vps );
   xSetDirectDependencyFlags( vps );
+  xSetLayerSets            ( vps ); 
 #if H_3D
   vps.initViewIndex(); 
   m_ivPicLists.setVPS      ( &vps ); 
@@ -1029,6 +1030,58 @@ Int TAppEncTop::xGetMax( std::vector<Int>& vec )
   for ( Int i = 0; i < vec.size(); i++)    
     maxVec = max( vec[i], maxVec ); 
   return maxVec;
+}
+
+Void TAppEncTop::xSetLayerSets( TComVPS& vps )
+{   
+  // Layer sets
+  vps.setVpsNumLayerSetsMinus1   ( m_vpsNumLayerSets ); 
+  vps.setVpsNumberLayerSetsMinus1( m_vpsNumLayerSets ); 
+    
+  for (Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
+  {
+    for( Int layerId = 0; layerId < MAX_NUM_LAYER_IDS; layerId++ )
+    {
+      vps.setLayerIdIncludedFlag( false, lsIdx, layerId ); 
+    }
+    for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++)
+    {
+      vps.setLayerIdIncludedFlag( true, lsIdx, m_layerIdsInSets[lsIdx][i] ); 
+    } 
+  }
+
+  Int numAddOuputLayerSets = m_outputLayerSetIdx.size(); 
+  // Additional output layer sets + profileLevelTierIdx
+  vps.setDefaultOneTargetOutputLayerFlag   ( m_defaultOneTargetOutputLayerFlag ); 
+  vps.setMoreOutputLayerSetsThanDefaultFlag( numAddOuputLayerSets       != 0 );   
+  vps.setNumAddOutputLayerSetsMinus1       ( numAddOuputLayerSets - 1        ); 
+
+  for (Int lsIdx = 1; lsIdx < m_vpsNumLayerSets; lsIdx++)
+  {
+    vps.setProfileLevelTierIdx( lsIdx, m_profileLevelTierIdx[ lsIdx ] ); 
+  }
+
+  for (Int addOutLs = 0; addOutLs < numAddOuputLayerSets; addOutLs++ )
+  {
+    vps.setProfileLevelTierIdx( m_vpsNumLayerSets + addOutLs, m_profileLevelTierIdx[ addOutLs ] ); 
+
+    Int refLayerSetIdx = m_outputLayerSetIdx[ addOutLs ];     
+    vps.setOutputLayerSetIdxMinus1( m_vpsNumLayerSets + addOutLs, refLayerSetIdx - 1 ); 
+
+    for (Int i = 0; i < m_layerIdsInSets[ refLayerSetIdx].size(); i++ )
+    {
+      Bool outputLayerFlag = false; 
+      for (Int j = 0; j < m_layerIdsInAddOutputLayerSet[ addOutLs ].size(); j++ )
+      {
+        if (  m_layerIdsInAddOutputLayerSet[addOutLs][ j ] == m_layerIdsInSets[ refLayerSetIdx][ i ] )
+        {
+          outputLayerFlag = true; 
+          break; 
+        }
+      }
+      vps.setOutputLayerFlag( m_vpsNumLayerSets + addOutLs, i, outputLayerFlag );       
+    }
+  }
 }
 #endif
 //! \}

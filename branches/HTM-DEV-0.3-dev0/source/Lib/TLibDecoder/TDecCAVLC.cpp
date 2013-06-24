@@ -839,17 +839,19 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 #if H_MV
   assert( pcVPS->getVpsMaxLayerId() < MAX_VPS_NUH_LAYER_ID_PLUS1 );
   READ_CODE( 6, uiCode, "vps_max_nuh_layer_id" );   pcVPS->setVpsMaxLayerId( uiCode );
+
+  READ_UVLC(    uiCode, "vps_max_num_layer_sets_minus1" );               pcVPS->setVpsNumLayerSetsMinus1( uiCode );
+  for( UInt opsIdx = 1; opsIdx <= pcVPS->getVpsNumLayerSetsMinus1(); opsIdx ++ )
+  {
+    for( UInt i = 0; i <= pcVPS->getVpsMaxLayerId(); i ++ )
 #else
   assert( pcVPS->getMaxNuhReservedZeroLayerId() < MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 );
   READ_CODE( 6, uiCode, "vps_max_nuh_reserved_zero_layer_id" );   pcVPS->setMaxNuhReservedZeroLayerId( uiCode );
-#endif
+
   READ_UVLC(    uiCode, "vps_max_op_sets_minus1" );               pcVPS->setMaxOpSets( uiCode + 1 );
   for( UInt opsIdx = 1; opsIdx <= ( pcVPS->getMaxOpSets() - 1 ); opsIdx ++ )
   {
     // Operation point set
-#if H_MV
-    for( UInt i = 0; i <= pcVPS->getVpsMaxLayerId(); i ++ )
-#else
     for( UInt i = 0; i <= pcVPS->getMaxNuhReservedZeroLayerId(); i ++ )
 #endif
     {
@@ -947,7 +949,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     READ_CODE( 10, uiCode, "vps_number_layer_sets_minus1"      );  pcVPS->setVpsNumberLayerSetsMinus1    ( uiCode ); 
     READ_CODE( 6,  uiCode, "vps_num_profile_tier_level_minus1" );  pcVPS->setVpsNumProfileTierLevelMinus1( uiCode );
 
-    for( Int i = 1; i <= pcVPS->getMaxOpSets() - 1; i++ )
+    for( Int i = 1; i <= pcVPS->getVpsNumberLayerSetsMinus1(); i++ )
     {
       READ_FLAG(  uiCode, "vps_profile_present_flag[i]" );    pcVPS->setVpsProfilePresentFlag( i, uiCode == 1 );
       if( !pcVPS->getVpsProfilePresentFlag( i ) )

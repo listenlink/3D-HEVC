@@ -648,19 +648,22 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   assert( pcVPS->getNumHrdParameters() <= MAX_VPS_NUM_HRD_PARAMETERS );
 #if H_MV
   assert( pcVPS->getVpsMaxLayerId() < MAX_VPS_NUH_LAYER_ID_PLUS1 );
-  WRITE_CODE( pcVPS->getVpsMaxLayerId(), 6,                 "vps_max_layer_id" );
+  WRITE_CODE( pcVPS->getVpsMaxLayerId(), 6,                 "vps_max_layer_id" );  
+  
+  WRITE_UVLC( pcVPS->getVpsNumLayerSetsMinus1(),  "vps_max_num_layer_sets_minus1" );
+  for( UInt opsIdx = 1; opsIdx <= pcVPS->getVpsNumLayerSetsMinus1(); opsIdx ++ )
+  {
+    // Operation point set
+    for( UInt i = 0; i <= pcVPS->getVpsMaxLayerId(); i ++ )
 #else
   assert( pcVPS->getMaxNuhReservedZeroLayerId() < MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 );
   WRITE_CODE( pcVPS->getMaxNuhReservedZeroLayerId(), 6,     "vps_max_nuh_reserved_zero_layer_id" );
-#endif
+
   pcVPS->setMaxOpSets(1);
   WRITE_UVLC( pcVPS->getMaxOpSets() - 1,                    "vps_max_op_sets_minus1" );
   for( UInt opsIdx = 1; opsIdx <= ( pcVPS->getMaxOpSets() - 1 ); opsIdx ++ )
   {
     // Operation point set
-#if H_MV
-    for( UInt i = 0; i <= pcVPS->getVpsMaxLayerId(); i ++ )
-#else
     for( UInt i = 0; i <= pcVPS->getMaxNuhReservedZeroLayerId(); i ++ )
 #endif
     {
