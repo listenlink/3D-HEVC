@@ -117,7 +117,7 @@ Void TAppEncTop::xInitLibCfg()
 #if H_MV
   xSetLayerIds             ( vps );   
   xSetDimensionIdAndLength ( vps );
-  xSetDirectDependencyFlags( vps );
+  xSetDependencies( vps );
   xSetLayerSets            ( vps ); 
 #if H_3D
   vps.initViewIndex(); 
@@ -984,28 +984,65 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
   }
 }
 
-Void TAppEncTop::xSetDirectDependencyFlags( TComVPS& vps )
+Void TAppEncTop::xSetDependencies( TComVPS& vps )
 {
-  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+  // Direct dependency flags + dependency types
+  for( Int depLayer = 1; depLayer < MAX_NUM_LAYERS; depLayer++ )
   {
-    if( m_GOPListMvc[layer][MAX_GOP].m_POC == -1 )
+    for( Int refLayer = 0; refLayer < MAX_NUM_LAYERS; refLayer++ )
     {
-      continue;
+      vps.setDirectDependencyFlag( depLayer, refLayer, false); 
+      vps.setDirectDependencyType( depLayer, refLayer,    0 ); 
     }
-    for( Int i = 0; i < getGOPSize()+1; i++ ) 
+  } 
+  for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
+  {
+    Int numRefLayers = m_directRefLayers[depLayer].size(); 
+    assert(  numRefLayers == m_dependencyTypes[depLayer].size() ); 
+    for( Int i = 0; i < numRefLayers; i++ )
     {
-      GOPEntry ge = ( i < getGOPSize() ) ? m_GOPListMvc[layer][i] : m_GOPListMvc[layer][MAX_GOP];
-      for( Int j = 0; j < ge.m_numInterViewRefPics; j++ )
-      {
-        Int interLayerRef = layer + ge.m_interViewRefs[j];
-        vps.setDirectDependencyFlag( layer, interLayerRef, true );
-      }
+      Int refLayer = m_directRefLayers[depLayer][i]; 
+      vps.setDirectDependencyFlag( depLayer, refLayer, true); 
+      vps.setDirectDependencyType( depLayer, refLayer,m_dependencyTypes[depLayer][i]); 
     }
   }
 
-  vps.checkVPSExtensionSyntax(); 
-  vps.setRefLayers();
-}
+  // Max temporal id for inter layer reference pictures
+  for ( Int refLayerIdInVps = 0; refLayerIdInVps < m_numberOfLayers; refLayerIdInVps++)
+  {  
+    Int maxTid = -1; 
+    for ( Int currLayerIdInVps = 1; currLayerIdInVps < m_numberOfLayers; currLayerIdInVps++)
+    {
+      for( Int i = 0; i < getGOPSize(); i++ ) 
+      {        
+        GOPEntry ge =  m_GOPListMvc[currLayerIdInVps][i];
+        
+        for (Int j = 0; j < ge.m_numRefPicsActive; j++)
+        {        
+          if ( m_directRefLayers[ currLayerIdInVps ][ ge.m_interLayerPredLayerIdc[ j ]] == refLayerIdInVps )
+          {
+            maxTid = std::max( maxTid, ge.m_temporalId ); 
+          }
+        }
+      }            
+    }
+    vps.setMaxTidIlRefPicPlus1( refLayerIdInVps, maxTid + 1 );
+  }
+
+  // Max one active ref layer flag
+  Bool maxOneActiveRefLayerFlag = true;  
+  for ( Int currLayerIdInVps = 1; currLayerIdInVps < m_numberOfLayers && maxOneActiveRefLayerFlag; currLayerIdInVps++)
+  {
+    for( Int i = 0; i < ( getGOPSize() + 1) && maxOneActiveRefLayerFlag; i++ ) 
+    {        
+      GOPEntry ge =  m_GOPListMvc[currLayerIdInVps][ ( i < getGOPSize()  ? i : MAX_GOP ) ]; 
+      maxOneActiveRefLayerFlag =  maxOneActiveRefLayerFlag && (ge.m_numRefPicsActive <= 1); 
+    }            
+  }
+
+  vps.setMaxOneActiveRefLayerFlag( maxOneActiveRefLayerFlag );
+  vps.setRefLayers(); 
+}; 
 
 Void TAppEncTop::xSetLayerIds( TComVPS& vps )
 {
@@ -1045,8 +1082,8 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
       vps.setLayerIdIncludedFlag( false, lsIdx, layerId ); 
     }
     for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++)
-    {
-      vps.setLayerIdIncludedFlag( true, lsIdx, m_layerIdsInSets[lsIdx][i] ); 
+    {       
+      vps.setLayerIdIncludedFlag( true, lsIdx, vps.getLayerIdInNuh( m_layerIdsInSets[lsIdx][i] ) ); 
     } 
   }
 

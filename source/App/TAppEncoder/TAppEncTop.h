@@ -117,7 +117,7 @@ protected:
 #if H_MV
   Void xSetLayerIds               ( TComVPS& vps );  
   Void xSetDimensionIdAndLength   ( TComVPS& vps );
-  Void xSetDirectDependencyFlags  ( TComVPS& vps );
+  Void xSetDependencies           ( TComVPS& vps );
   Void xSetLayerSets( TComVPS& vps );
   Int  xGetMax( std::vector<Int>& vec);
 #endif

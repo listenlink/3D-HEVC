@@ -214,19 +214,20 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   }
 #endif
 #if H_MV
-  in>>entry.m_numInterViewRefPics;
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+  in>>entry.m_numActiveRefLayerPics;
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
   {
-    in>>entry.m_interViewRefs[i];
+    in>>entry.m_interLayerPredLayerIdc[i];
   }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
   {
     in>>entry.m_interViewRefPosL[0][i];
   }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
   {
     in>>entry.m_interViewRefPosL[1][i];
   }
+  in>>entry.m_collocatedRefLayerIdx; 
 #endif
   return in;
 }
@@ -396,9 +397,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
   ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
   ("DefaultOneTargetOutputLayerFlag", m_defaultOneTargetOutputLayerFlag,  false , "Output highest layer of layer sets by default")      
-  ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(1,0), "Indices of layer sets used as additional output layer sets")  
+  ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
   ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(1,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "LayerIds of additional output layers")  
   ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
+  
+  // Layer dependencies
+  ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIds of direct reference layers")
+  ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
 #endif
   ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
   ("SourceHeight,-hgt",     m_iSourceHeight,       0, "Source picture height")
@@ -1390,6 +1395,18 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
   xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
+
+  // Layer Dependencies  
+  for (Int i = 0; i < m_numberOfLayers; i++ )
+  {
+    xConfirmPara( (i == 0)  && m_directRefLayers[0].size() != 0, "Layer 0 shall not have reference layers." ); 
+    xConfirmPara( m_directRefLayers[i].size() == m_dependencyTypes[ i ].size() != 0, "Each reference layer shall have a reference type" ); 
+    for (Int j = 0; j < m_directRefLayers[i].size(); j++)
+    {
+      xConfirmPara( m_directRefLayers[i][j] < 0 || m_directRefLayers[i][j] >= i , "Reference layer id shall be greater than or equal to 0 and less than dependent layer id"); 
+      xConfirmPara( m_dependencyTypes[i][j] < 0 || m_dependencyTypes[i][j] >  2 , "Dependency type shall be greater than or equal to 0 and less than 3"); 
+    }        
+  }  
 #endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
@@ -1543,7 +1560,7 @@ Void TAppEncCfg::xCheckParameter()
   Bool bErrorIvpBase = false;
   for( Int i = 0; i < MAX_GOP; i++ )
   {
-    if( m_GOPListMvc[0][i].m_numInterViewRefPics != 0 )
+    if( m_GOPListMvc[0][i].m_numActiveRefLayerPics != 0 )
     {
       printf( "\nError: Frame%d inter_layer refs not available in layer 0\n", i );
       bErrorIvpBase = true;
@@ -1559,12 +1576,12 @@ Void TAppEncCfg::xCheckParameter()
     {
       for( Int i = 0; i < MAX_GOP+1; i++ )
       {
-        for( Int j = 0; j < m_GOPListMvc[k][i].m_numInterViewRefPics; j++ )
+        for( Int j = 0; j < m_GOPListMvc[k][i].m_numActiveRefLayerPics; j++ )
         {
-          Int iAbsViewId = m_GOPListMvc[k][i].m_interViewRefs[j] + k;
-          if( iAbsViewId < 0 || iAbsViewId >= k )
+          Int ilPredLayerIdc = m_directRefLayers[k][m_GOPListMvc[k][i].m_interLayerPredLayerIdc[j]];
+          if( ilPredLayerIdc < 0 || ilPredLayerIdc >= m_directRefLayers[k].size() )
           {
-            printf( "\nError: inter-layer ref pic %d is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interViewRefs[j], i, k );
+            printf( "\nError: inter-layer ref idc %d is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interLayerPredLayerIdc[j], i, k );
             bErrorIvpEnhV = true;
           }
           if( m_GOPListMvc[k][i].m_interViewRefPosL[0][j] < -1 || m_GOPListMvc[k][i].m_interViewRefPosL[0][j] > m_GOPListMvc[k][i].m_numRefPicsActive )
@@ -1614,27 +1631,27 @@ Void TAppEncCfg::xCheckParameter()
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'I' && m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics != 0 )
+          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'I' && m_GOPListMvc[k][MAX_GOP].m_numActiveRefLayerPics != 0 )
           {
             printf( "\nError: inter-layer prediction not possible for FrameI_l%d with slice type I, #IL_ref_pics must be 0\n", k );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive > m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics )
+          if( m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive > m_GOPListMvc[k][MAX_GOP].m_numActiveRefLayerPics )
           {
-            m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive = m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics;
+            m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive = m_GOPListMvc[k][MAX_GOP].m_numActiveRefLayerPics;
           }
 
           if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'P' )
           {
-            if( m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
+            if( m_GOPListMvc[k][MAX_GOP].m_numActiveRefLayerPics < 1 )
             {
               printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type P\n", k );
               bErrorIvpEnhV = true;
             }
             else
             {
-              for( Int j = 0; j < m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics; j++ )
+              for( Int j = 0; j < m_GOPListMvc[k][MAX_GOP].m_numActiveRefLayerPics; j++ )
               {
                 if( m_GOPListMvc[k][MAX_GOP].m_interViewRefPosL[1][j] != -1 )
                 {
@@ -1645,7 +1662,7 @@ Void TAppEncCfg::xCheckParameter()
             }
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'B' && m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
+          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'B' && m_GOPListMvc[k][MAX_GOP].m_numActiveRefLayerPics < 1 )
           {
             printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type B\n", k );
             bErrorIvpEnhV = true;

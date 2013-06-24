@@ -870,7 +870,7 @@ public:
     ,m_numTicksPocDiffOneMinus1(0)
 #endif
 #if H_MV
-    ,m_tileBoundariesAlignedFlag(false)
+    ,m_tileBoundariesAlignedFlag(true)
 #endif
   {}
 
