@@ -2379,7 +2379,7 @@ Int TComSlice::xCeilLog2( Int val )
 
 Void TComSlice::markCurrPic( TComPic* currPic )
 {
-  if ( currPic->getSlice(0)->getDiscardableFlag() )
+  if ( !currPic->getSlice(0)->getDiscardableFlag() )
   {
     currPic->getSlice(0)->setReferenced( true ) ; 
     currPic->setIsLongTerm( false ); 
