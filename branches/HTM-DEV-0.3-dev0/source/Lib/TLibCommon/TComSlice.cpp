@@ -1456,6 +1456,14 @@ TComVPS::TComVPS()
     m_uiMaxLatencyIncrease[i] = 0;
   }
 #if H_MV
+  for (Int lsIdx = 0; lsIdx < MAX_VPS_OP_SETS_PLUS1; lsIdx++ )
+  {  
+    for( Int layerId = 0; layerId < MAX_VPS_NUH_LAYER_ID_PLUS1; layerId++ )
+    {
+      m_layerIdIncludedFlag[lsIdx][layerId] = false; 
+    }
+  } 
+
   m_vpsNumberLayerSetsMinus1     = -1; 
   m_vpsNumProfileTierLevelMinus1 = -1; 
     
@@ -1471,7 +1479,7 @@ TComVPS::TComVPS()
   for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
   {
     m_outputLayerSetIdxMinus1[i]  = -1; 
-    m_profileLevelTierIdx[i]      = -1; 
+    m_profileLevelTierIdx[i]      = 0; 
     for ( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++)
     {
       m_outputLayerFlag[i][j] = false; 
@@ -1479,7 +1487,7 @@ TComVPS::TComVPS()
   }
   
   m_maxOneActiveRefLayerFlag = false; 
-  m_directDepTypeLenMinus2   = -1;         
+  m_directDepTypeLenMinus2   = 0;         
   
 
   m_avcBaseLayerFlag = false;

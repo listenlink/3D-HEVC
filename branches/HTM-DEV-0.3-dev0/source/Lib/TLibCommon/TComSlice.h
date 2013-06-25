@@ -673,8 +673,8 @@ public:
   Void    setVpsNumProfileTierLevelMinus1( Int val )                       { m_vpsNumProfileTierLevelMinus1 = val;  } 
   Int     getVpsNumProfileTierLevelMinus1( )                               { return m_vpsNumProfileTierLevelMinus1; } 
   
-  Void    setVpsProfilePresentFlag( Int layerSet, Bool val )               { m_vpsProfilePresentFlag[layerSet] = val;  }
-  Bool    getVpsProfilePresentFlag( Int layerSet )                         { return m_vpsProfilePresentFlag[layerSet]; }
+  Void    setVpsProfilePresentFlag( Int idx, Bool val )                    { m_vpsProfilePresentFlag[idx] = val;  }
+  Bool    getVpsProfilePresentFlag( Int idx )                              { return m_vpsProfilePresentFlag[idx]; }
 
   Void    setProfileRefMinus1( Int profileTierLevelIdx, Int val )          { m_profileRefMinus1[ profileTierLevelIdx ] = val;  } 
   Int     getProfileRefMinus1( Int profileTierLevelIdx )                   { return m_profileRefMinus1[ profileTierLevelIdx ]; } 

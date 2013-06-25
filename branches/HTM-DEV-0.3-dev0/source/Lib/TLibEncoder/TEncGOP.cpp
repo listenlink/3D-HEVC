@@ -834,6 +834,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->getSPS()->setTMVPFlagsPresent(0);
       pcSlice->setEnableTMVPFlag(0);
     }
+#if H_MV
+    if( pcSlice->getIdrPicFlag() )
+    {
+      pcSlice->setEnableTMVPFlag(0);
+    }
+#endif
 
 #if H_3D_VSO
   // Should be moved to TEncTop !!! 

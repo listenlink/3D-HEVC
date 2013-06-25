@@ -374,19 +374,28 @@ namespace df
         operator()(const std::string& name, std::vector<T>& storage, T default_val, unsigned uiMaxNum, const std::string& desc = "" )
       {
         std::string cNameBuffer;
-        std::string cDescriptionBuffer;
+        std::string cDescBuffer;
 
-        cNameBuffer       .resize( name.size() + 10 );
-        cDescriptionBuffer.resize( desc.size() + 10 );
+        cNameBuffer.resize( name.size() + 10 );
+        cDescBuffer.resize( desc.size() + 10 );
 
         storage.resize(uiMaxNum);
         for ( unsigned int uiK = 0; uiK < uiMaxNum; uiK++ )
         {
+          Bool duplicate = (uiK != 0); 
           // isn't there are sprintf function for string??
-          sprintf((char*) cNameBuffer.c_str()       ,name.c_str(),uiK,uiK);
-          sprintf((char*) cDescriptionBuffer.c_str(),desc.c_str(),uiK,uiK);
+          sprintf((char*) cNameBuffer.c_str(),name.c_str(),uiK,uiK);
 
-          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescriptionBuffer, uiK != 0 ));
+          if ( !duplicate )
+          {          
+            sprintf((char*) cDescBuffer.c_str(),desc.c_str(),uiK,uiK);
+          }
+
+          cNameBuffer.resize( std::strlen(cNameBuffer.c_str()) );  
+          cDescBuffer.resize( std::strlen(cDescBuffer.c_str()) ); 
+          
+
+          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescBuffer, duplicate ));
         }
 
         return *this;

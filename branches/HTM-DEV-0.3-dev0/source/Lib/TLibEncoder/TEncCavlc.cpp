@@ -448,9 +448,16 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   xTraceSPSHeader (pcSPS);
 #endif
   WRITE_CODE( pcSPS->getVPSId (),          4,       "sps_video_parameter_set_id" );
+#if H_MV
+  if ( pcSPS->getLayerId() == 0 )
+  {
+#endif
   WRITE_CODE( pcSPS->getMaxTLayers() - 1,  3,       "sps_max_sub_layers_minus1" );
   WRITE_FLAG( pcSPS->getTemporalIdNestingFlag() ? 1 : 0,                             "sps_temporal_id_nesting_flag" );
   codePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
+#if H_MV
+}
+#endif
   WRITE_UVLC( pcSPS->getSPSId (),                   "sps_seq_parameter_set_id" );
   WRITE_UVLC( pcSPS->getChromaFormatIdc (),         "chroma_format_idc" );
   assert(pcSPS->getChromaFormatIdc () == 1);
@@ -794,10 +801,13 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     if( i > pcVPS->getVpsNumberLayerSetsMinus1( ) )
     {      
       WRITE_UVLC( pcVPS->getOutputLayerSetIdxMinus1( i ),      "output_layer_set_idx_minus1[i]" );
-      for( Int j = 0; j <= pcVPS->getNumLayersInIdList( j ); j++ )
+      for( Int j = 0; j < pcVPS->getNumLayersInIdList( j ) - 1 ; j++ )
       {
         WRITE_FLAG( pcVPS->getOutputLayerFlag( i, j) ? 1 : 0, "output_layer_flag" );
-      }
+      }      
+    }
+    if ( pcVPS->getProfileLevelTierIdxLen()  > 0 )
+    {      
       WRITE_CODE( pcVPS->getProfileLevelTierIdx( i ), pcVPS->getProfileLevelTierIdxLen() ,"profile_level_tier_idx[ i ]" );   
     }
   }
@@ -809,7 +819,11 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     {
       for( Int j = 0; j < i; j++ )
       {
-        WRITE_CODE( pcVPS->getDirectDependencyType( i, j ),pcVPS->getDirectDepTypeLenMinus2( ) + 2,  "direct_dependency_type[i][j]" );
+        if (pcVPS->getDirectDependencyFlag( i, j) )
+        {        
+          assert ( pcVPS->getDirectDependencyType( i, j ) != -1 ); 
+          WRITE_CODE( pcVPS->getDirectDependencyType( i, j ),pcVPS->getDirectDepTypeLenMinus2( ) + 2,  "direct_dependency_type[i][j]" );
+        }
       }
     }
 
@@ -1170,7 +1184,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if( pcSlice->getLayerId() > 0 && pcSlice->getNumActiveMotionPredRefLayers() > 0 )
       {
         WRITE_FLAG( pcSlice->getAltCollocatedIndicationFlag( ) ? 1 : 0 , "alt_collocated_indication_flag" );
-
         if( pcSlice->getAltCollocatedIndicationFlag() && pcSlice->getNumActiveMotionPredRefLayers() > 1 ) 
         {          
           WRITE_UVLC( pcSlice->getCollocatedRefLayerIdx( ), "collocated_ref_layer_idx" );
