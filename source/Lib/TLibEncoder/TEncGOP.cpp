@@ -690,7 +690,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->createAndApplyIvReferencePictureSet( m_ivPicLists, m_refPicSetInterLayer ); 
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer.size() ) ) );
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer.size() ) ) );
-    xSetRefPicListModificationsMvc( pcSlice, iGOPid );    
+
+    xSetRefPicListModificationsMv( pcSlice, iGOPid );    
 
     pcSlice->setActiveMotionPredRefLayers( );
 
@@ -2947,79 +2948,66 @@ Void TEncGOP::dblMetric( TComPic* pcPic, UInt uiNumSlices )
 }
 #endif
 #if H_MV
-Void TEncGOP::xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt iGOPid )
-{ 
-  TComVPS* vps = pcSlice->getVPS(); 
+Void TEncGOP::xSetRefPicListModificationsMv( TComSlice* pcSlice, UInt iGOPid )
+{   
   Int layer    = pcSlice->getLayerIdInVps( ); 
   
-  if( pcSlice->getSliceType() == I_SLICE || !(pcSlice->getPPS()->getListsModificationPresentFlag()) || vps->getNumDirectRefLayers( layer ) == 0 )
+  if( pcSlice->getSliceType() == I_SLICE || !(pcSlice->getPPS()->getListsModificationPresentFlag()) || pcSlice->getNumActiveRefLayerPics() == 0 )
   {
     return;
   }
 
   // analyze inter-view modifications
   GOPEntry ge = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && ( layer > 0) ) ? MAX_GOP : iGOPid );
+  assert( ge.m_numActiveRefLayerPics == pcSlice->getNumActiveRefLayerPics() ); 
 
-  TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
-  
   Int maxRefListSize  = pcSlice->getNumRpsCurrTempList();
-  Int numTemporalRefs = maxRefListSize - vps->getNumDirectRefLayers( layer );
-
-
+  Int numTemporalRefs = maxRefListSize - pcSlice->getNumActiveRefLayerPics();
+  
   for (Int li = 0; li < 2; li ++) // Loop over lists L0 and L1
   {
-    Int numModifications = 0;
-    
-    for( Int k = 0; k < ge.m_numActiveRefLayerPics; k++ ) 
-    {
-      numModifications +=  ( ge.m_interViewRefPosL[li][k] >= 0 ) ? 1 : 0; 
+    // set inter-view modifications    
+    Int tempList[16];
+    for( Int k = 0; k < 16; k++ )
+    { 
+      tempList[ k ] = -1;
     }
 
-    // set inter-view modifications
     Bool isModified = false;
-      Int tempList[16];
-      for( Int k = 0; k < 16; k++ ) { tempList[k] = -1; }
-
-    if( (maxRefListSize > 1) && (numModifications > 0) )
-    {
-      for( Int k = 0; k < ge.m_numActiveRefLayerPics; k++ )
+    if ( maxRefListSize > 1 )
+    {      
+      for( Int k = 0, orgIdx = numTemporalRefs; k < ge.m_numActiveRefLayerPics; k++, orgIdx++ )
       {
-        if( ge.m_interViewRefPosL[li][k] >= 0 )
+        Int targetIdx = ge.m_interViewRefPosL[ li ][ k ];
+
+        isModified = ( targetIdx != orgIdx ) && ( targetIdx >= 0  );
+        if ( isModified )
         {
-          Int orgIdx    = numTemporalRefs;
-          Int targetIdx = ge.m_interViewRefPosL[ li ][ k ];
-          for( Int idx = 0; idx < vps->getNumDirectRefLayers( layer ); idx++ )
-          {            
-            Int refLayer  = vps->getLayerIdInVps( vps->getRefLayerId( layer, idx ) );          
-            if( ( layer + ge.m_interLayerPredLayerIdc[ k ]) == refLayer )
-            {
-              tempList[ targetIdx ] = orgIdx;              
-              isModified = ( targetIdx != orgIdx  );
-            }
-            orgIdx++;
-          }
+          assert( tempList[ targetIdx ] == -1 ); // Assert when two inter layer reference pictures are sorted to the same position
+          tempList[ targetIdx ] = orgIdx;              
         }
-      }
+      }      
     }
 
+    TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
     refPicListModification->setRefPicListModificationFlagL( li, isModified );  
 
-      if( isModified )
+    if( isModified )
+    {
+      Int temporalRefIdx = 0;
+      for( Int i = 0; i < pcSlice->getNumRefIdx( ( li == 0 ) ? REF_PIC_LIST_0 : REF_PIC_LIST_1 ); i++ )
       {
-        Int temporalRefIdx = 0;
-        for( Int i = 0; i < pcSlice->getNumRefIdx( ( li == 0 ) ? REF_PIC_LIST_0 : REF_PIC_LIST_1 ); i++ )
+        if( tempList[i] >= 0 ) 
         {
-          if( tempList[i] >= 0 ) 
-          {
-            refPicListModification->setRefPicSetIdxL( li, i, tempList[i] );
-          }
-          else
-          {
-            refPicListModification->setRefPicSetIdxL( li, i, temporalRefIdx );
-            temporalRefIdx++;
-          }
+          refPicListModification->setRefPicSetIdxL( li, i, tempList[i] );
+        }
+        else
+        {
+          refPicListModification->setRefPicSetIdxL( li, i, temporalRefIdx );
+          temporalRefIdx++;
         }
       }
+    }
   }
 }
 #endif

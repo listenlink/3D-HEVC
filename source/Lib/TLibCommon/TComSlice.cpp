@@ -516,9 +516,8 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   TComPic*  rpsCurrList0[MAX_NUM_REF+1];
   TComPic*  rpsCurrList1[MAX_NUM_REF+1];
 
-#if H_MV
-  
-  Int numPocTotalCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr + getNumActiveRefLayerPics( );
+#if H_MV  
+  Int numPocTotalCurr = ( getInterRefEnabledInRPLFlag() ? ( NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr ) : 0 ) + getNumActiveRefLayerPics( );
   assert( numPocTotalCurr == getNumRpsCurrTempList() );
 #else
   Int numPocTotalCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr;
@@ -612,6 +611,30 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
 
   ::memset(m_bIsUsedAsLongTerm, 0, sizeof(m_bIsUsedAsLongTerm));
 
+#if H_MV
+  Int numPocSt = getInterRefEnabledInRPLFlag( ) ?  (NumPocStCurr0 + NumPocStCurr1) : 0; 
+
+  for (Int li = 0; li < 2; li++)
+  {
+    if ( m_eSliceType == P_SLICE && li == 1 )
+    {
+      m_aiNumRefIdx[1] = 0;
+      ::memset( m_apcRefPicList[1], 0, sizeof(m_apcRefPicList[1]));
+    } 
+    else
+    {
+      for (Int rIdx = 0; rIdx <= (m_aiNumRefIdx[ li ] - 1 ); rIdx ++)
+      { 
+        Bool listModified             =                m_RefPicListModification.getRefPicListModificationFlagL( li ); 
+        Int orgIdx                    = listModified ? m_RefPicListModification.getRefPicSetIdxL(li, rIdx) : (rIdx % numPocTotalCurr); 
+
+        m_apcRefPicList    [li][rIdx] = ( li == 0 )  ? rpsCurrList0[ orgIdx  ] : rpsCurrList1[ orgIdx  ];
+        m_bIsUsedAsLongTerm[li][rIdx] = ( orgIdx >= numPocSt ) ; 
+      }
+    }
+  }
+#else
+
   for (Int rIdx = 0; rIdx <= (m_aiNumRefIdx[0]-1); rIdx ++)
   {
     m_apcRefPicList[0][rIdx] = m_RefPicListModification.getRefPicListModificationFlagL0() ? rpsCurrList0[ m_RefPicListModification.getRefPicSetIdxL0(rIdx) ] : rpsCurrList0[rIdx % numPocTotalCurr];
@@ -632,6 +655,7 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
                                   (m_RefPicListModification.getRefPicSetIdxL1(rIdx) >= (NumPocStCurr0 + NumPocStCurr1)): ((rIdx % numPocTotalCurr) >= (NumPocStCurr0 + NumPocStCurr1));
     }
   }
+#endif
 }
 
 #if H_MV
@@ -668,7 +692,7 @@ Int TComSlice::getNumRpsCurrTempList()
     }
   }
 #if H_MV
-  numRpsCurrTempList = numRpsCurrTempList + getNumActiveRefLayerPics();
+  numRpsCurrTempList = ( getInterRefEnabledInRPLFlag() ? numRpsCurrTempList : 0 ) + getNumActiveRefLayerPics();
 #endif
   return numRpsCurrTempList;
 }
