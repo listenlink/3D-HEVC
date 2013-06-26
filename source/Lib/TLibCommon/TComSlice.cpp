@@ -220,6 +220,10 @@ Void TComSlice::initSlice()
   m_cabacInitFlag        = false;
   m_numEntryPointOffsets = 0;
   m_enableTMVPFlag = true;
+#if H_3D_TMVP
+  m_aiAlterRefIdx[0]                  = -1;
+  m_aiAlterRefIdx[1]                  = -1;
+#endif
 }
 
 Bool TComSlice::getRapPicFlag()
@@ -698,6 +702,27 @@ Void TComSlice::initEqualRef()
   }
 }
 #if H_3D
+#if H_3D_TMVP
+Void TComSlice::generateAlterRefforTMVP()
+{
+  for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+  {        
+    if ( this->getNumRefIdx( RefPicList( uiRefListIdx ) ) == 0)
+        continue;
+
+    Bool bZeroIdxLtFlag = this->getRefPic(RefPicList(uiRefListIdx), 0)->getIsLongTerm();
+    for(Int i = 1; i < this->getNumRefIdx(RefPicList(uiRefListIdx)); i++ )
+    {
+      if ( ( bZeroIdxLtFlag && !this->getRefPic(RefPicList(uiRefListIdx), i)->getIsLongTerm() ) ||
+           (!bZeroIdxLtFlag &&  this->getRefPic(RefPicList(uiRefListIdx), i)->getIsLongTerm() ) )
+      {
+        this->setAlterRefIdx(RefPicList(uiRefListIdx),i);
+        break;
+      }
+    }
+  }
+}
+#endif
 Void TComSlice::setCamparaSlice( Int** aaiScale, Int** aaiOffset )
 {  
   if( m_pcSPS->hasCamParInSliceHeader() )

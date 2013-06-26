@@ -1099,7 +1099,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
      0.117851, 0.147314, 0.176777, 0.235702, 0.294628, 0.353553, 0.471405, 0.589256, 0.707107, 0.707100, 
      0.753550, 0.800000  
   }; 
+#if H_3D_CLEANUPS
+  if ( m_bUseVSO && m_bVSOLSTable )
+#else
   if ( m_bVSOLSTable )
+#endif
   {
     Int firstDepthLayer = -1; 
     for (Int layer = 0; layer < m_numberOfLayers; layer++ )

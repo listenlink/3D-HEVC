@@ -958,6 +958,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
       }
     }
 #endif
+#if  H_3D_TMVP
+    if(pcSlice->getLayerId())
+      pcSlice->generateAlterRefforTMVP();
+#endif
   }
 
   pcPic->setCurrSliceIdx(m_uiSliceIdx);

@@ -93,7 +93,11 @@ public:
   Void  set       ( Short iHor, Short iVer)     { m_iHor = iHor;  m_iVer = iVer;            }
   Void  setHor    ( Short i )                   { m_iHor = i;                               }
   Void  setVer    ( Short i )                   { m_iVer = i;                               }
-  Void  setZero   ()                            { m_iHor = m_iVer = 0;  }
+  Void  setZero   ()                            { m_iHor = m_iVer = 0;  
+ #if H_3D_NBDV
+   m_bIDV = false; m_iIDVHor = m_iIDVVer = 0;
+#endif
+  }
 #if H_3D_NBDV
   Void   setIDVHor  (Short i)                    {m_iIDVHor = i;}
   Void   setIDVVer  (Short i)                    {m_iIDVVer = i;}
