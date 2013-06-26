@@ -1087,8 +1087,8 @@ Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
 Void TAppEncTop::xSetLayerSets( TComVPS& vps )
 {   
   // Layer sets
-  vps.setVpsNumLayerSetsMinus1   ( m_vpsNumLayerSets ); 
-  vps.setVpsNumberLayerSetsMinus1( m_vpsNumLayerSets ); 
+  vps.setVpsNumLayerSetsMinus1   ( m_vpsNumLayerSets - 1 ); 
+  vps.setVpsNumberLayerSetsMinus1( vps.getVpsNumLayerSetsMinus1() ); 
     
   for (Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
   {

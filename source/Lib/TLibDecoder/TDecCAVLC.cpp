@@ -911,14 +911,18 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 
     for( Int sIdx = 0; sIdx < pcVPS->getNumScalabilityTypes( ) - ( pcVPS->getSplittingFlag() ? 1 : 0 ); sIdx++ )
     {
-        READ_CODE( 3, uiCode, "dimension_id_len_minus1[j]" );       pcVPS->setDimensionIdLen( sIdx, uiCode + 1 );
+        READ_CODE( 3, uiCode, "dimension_id_len_minus1[j]" );       pcVPS->setDimensionIdLen( sIdx, uiCode + 1 );        
     }
-        
+     
+    if ( pcVPS->getSplittingFlag() )
+    {
+      pcVPS->setDimensionIdLen( pcVPS->getNumScalabilityTypes( ) - 1, pcVPS->inferLastDimsionIdLen() );       
+    }    
+
     READ_FLAG( uiCode, "vps_nuh_layer_id_present_flag" );           pcVPS->setVpsNuhLayerIdPresentFlag( uiCode == 1 ? true : false );
 
     for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )
     {
-       
       if ( pcVPS->getVpsNuhLayerIdPresentFlag() && ( i > 0 ) )
       {
         READ_CODE( 6, uiCode, "layer_id_in_nuh[i]" );                pcVPS->setLayerIdInNuh( i, uiCode );
@@ -927,17 +931,22 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       {
         pcVPS->setLayerIdInNuh( i, i );; 
       } 
-      
+
       pcVPS->setLayerIdInVps( pcVPS->getLayerIdInNuh( i ), i ); 
 
-      if ( !pcVPS->getSplittingFlag() )
-      {    
-        for( Int j = 0; j < pcVPS->getNumScalabilityTypes() ; j++ ) 
-        {
+      for( Int j = 0; j < pcVPS->getNumScalabilityTypes() ; j++ ) 
+      {
+        if ( !pcVPS->getSplittingFlag() )
+        {    
           READ_CODE( pcVPS->getDimensionIdLen( j ), uiCode, "dimension_id[i][j]" );  pcVPS->setDimensionId( i, j, uiCode );
+        }
+        else
+        {
+          pcVPS->setDimensionId( i, j, pcVPS->inferDimensionId( i, j)  );
         }
       }
     }
+    
 
     for( Int i = 1; i <= pcVPS->getMaxLayers() - 1; i++ )
     {
@@ -978,7 +987,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     if ( pcVPS->getMoreOutputLayerSetsThanDefaultFlag( ) )
     {
       READ_CODE( 10, uiCode, "num_add_output_layer_sets_minus1"      ); pcVPS->setNumAddOutputLayerSetsMinus1( uiCode );
-      numOutputLayerSets += pcVPS->getNumAddOutputLayerSetsMinus1( ); 
+      numOutputLayerSets += ( pcVPS->getNumAddOutputLayerSetsMinus1( ) + 1); 
     }
 
     if( numOutputLayerSets > 1)

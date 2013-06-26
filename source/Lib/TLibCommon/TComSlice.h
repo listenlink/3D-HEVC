@@ -560,7 +560,8 @@ private:
   Int         m_viewIndex                [MAX_NUM_LAYERS   ];
 #endif
 
-  Int         xCeilLog2( Int val );
+  Int         xCeilLog2       ( Int val );
+  Int         xGetDimBitOffset( Int j );
 
 
 #endif
@@ -729,24 +730,18 @@ public:
   Bool    checkVPSExtensionSyntax(); 
   Int     scalTypeToScalIdx   ( ScalabilityType scalType );
 
-
   Int     getProfileLevelTierIdxLen() { return xCeilLog2( getVpsNumProfileTierLevelMinus1() + 1 ); };       
-  Int     getNumLayersInIdList              ( Int lsIdx )
-  {
-    assert( lsIdx >= 0 ); 
-    assert( lsIdx <= getVpsNumLayerSetsMinus1() ); 
-    Int numLayersInIdList = 0; 
-    for (Int layerId = 0; layerId < getVpsMaxLayerId(); layerId++ )
-    {
-      numLayersInIdList += ( getLayerIdIncludedFlag( lsIdx, layerId ) ); 
-    }
-    return numLayersInIdList; 
-  }; 
+  Int     getNumLayersInIdList              ( Int lsIdx );; 
+
+  // inference
+  Int     inferDimensionId     ( Int i, Int j );
+  Int     inferLastDimsionIdLen();
+
 #if H_3D  
   Void    initViewIndex(); 
   Int     getViewIndex    ( Int layerIdInVps )                             { return m_viewIndex[ layerIdInVps ]; }    
   Int     getDepthId      ( Int layerIdInVps )                             { return getScalabilityId( layerIdInVps, DEPTH_ID ); }
-  Int     getLayerIdInNuh( Int viewIndex, Bool depthFlag );  
+  Int     getLayerIdInNuh( Int viewIndex, Bool depthFlag );   
 #endif  
 #endif
 };
@@ -1910,68 +1905,20 @@ Void setCollocatedRefLayerIdx( Int  val ) { m_collocatedRefLayerIdx = val; }
 Int  getCollocatedRefLayerIdx(  ) { return m_collocatedRefLayerIdx; } 
 
 // Additional variables derived in slice header semantics 
-
 Int  getNumInterLayerRefPicsMinus1Len( ) { return xCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerIdInVps() )); }
 Int  getInterLayerPredLayerIdcLen    ( ) { return xCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerIdInVps() )); }
 
-Int  getNumActiveRefLayerPics( )
-{
-  Int numActiveRefLayerPics; 
+Int  getNumActiveRefLayerPics( );
+Int  getRefPicLayerId               ( Int i );
 
-  if( getLayerId() == 0 || getVPS()->getNumDirectRefLayers( getLayerIdInVps() ) ==  0 || !getInterLayerPredEnabledFlag() )
-  {
-    numActiveRefLayerPics = 0; 
-  }
-  else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerIdInVps() ) == 1 )
-  {
-    numActiveRefLayerPics = 1; 
-  }
-  else
-  {
-    numActiveRefLayerPics = getNumInterLayerRefPicsMinus1() + 1; 
-  }
-  return numActiveRefLayerPics; 
-}
+Void setActiveMotionPredRefLayers   ( );
 
-Int getRefPicLayerId( Int i )
-{  
-  return getVPS()->getRefLayerId( getLayerIdInVps(), getInterLayerPredLayerIdc( i ) );
-}
+Int  getNumActiveMotionPredRefLayers(  )      { return m_numActiveMotionPredRefLayers; } 
+Int  getActiveMotionPredRefLayerId  ( Int i ) { return m_activeMotionPredRefLayerId[i]; } 
 
-Void setActiveMotionPredRefLayers( )
-{
-  Int j = 0; 
-  for( Int i = 0; i < getNumActiveRefLayerPics(); i++)
-  {
-    if( getVPS()->getMotionPredEnabledFlag( getLayerIdInVps(), getInterLayerPredLayerIdc( i ))  )
-    {
-      m_activeMotionPredRefLayerId[ j++ ] = getVPS()->getRefLayerId( getLayerIdInVps(), i ); 
-    }
-  }
-  m_numActiveMotionPredRefLayers = j;
+Bool getInterRefEnabledInRPLFlag( );
 
-  // Consider incorporating bitstream conformance tests on derived variables here. 
-}
-
-Int  getActiveMotionPredRefLayerId( Int i ) { return m_activeMotionPredRefLayerId[i]; } 
-Int  getNumActiveMotionPredRefLayers(  ) { return m_numActiveMotionPredRefLayers; } 
-
-Bool getInterRefEnabledInRPLFlag( ) 
-{
-  Bool interRefEnabledInRPLFlag; 
-  if ( getVPS()->getNumSamplePredRefLayers( getLayerIdInVps() ) > 0 && getNumActiveRefLayerPics() > 0 )
-  {
-    interRefEnabledInRPLFlag = !getInterLayerSamplePredOnlyFlag(); 
-  }
-  else
-  {
-    interRefEnabledInRPLFlag = 1; 
-  }
-  return interRefEnabledInRPLFlag; 
-}
-
-Void setRefPicSetInterLayer( std::vector<TComPic*>* m_refPicSetInterLayer );
-
+Void     setRefPicSetInterLayer       ( std::vector<TComPic*>* m_refPicSetInterLayer );
 TComPic* getPicFromRefPicSetInterLayer( Int layerId );
 
 #endif
