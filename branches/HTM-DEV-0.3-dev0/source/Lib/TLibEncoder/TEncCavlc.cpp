@@ -662,6 +662,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   {
     // Operation point set
     for( UInt i = 0; i <= pcVPS->getVpsMaxLayerId(); i ++ )
+    {
 #else
   assert( pcVPS->getMaxNuhReservedZeroLayerId() < MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 );
   WRITE_CODE( pcVPS->getMaxNuhReservedZeroLayerId(), 6,     "vps_max_nuh_reserved_zero_layer_id" );
@@ -672,10 +673,10 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   {
     // Operation point set
     for( UInt i = 0; i <= pcVPS->getMaxNuhReservedZeroLayerId(); i ++ )
-#endif
     {
       // Only applicable for version 1
       pcVPS->setLayerIdIncludedFlag( true, opsIdx, i );
+#endif
       WRITE_FLAG( pcVPS->getLayerIdIncludedFlag( opsIdx, i ) ? 1 : 0, "layer_id_included_flag[opsIdx][i]" );
     }
   }
@@ -731,6 +732,12 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     WRITE_CODE( pcVPS->getDimensionIdLen( sIdx ) - 1 , 3,    "dimension_id_len_minus1[j]");    
   }
 
+  if ( pcVPS->getSplittingFlag() )
+  { // Ignore old dimension id length
+    pcVPS->setDimensionIdLen( pcVPS->getNumScalabilityTypes( ) - 1 ,pcVPS->inferLastDimsionIdLen() );       
+  }    
+
+
   WRITE_FLAG( pcVPS->getVpsNuhLayerIdPresentFlag() ? 1 : 0,  "vps_nuh_layer_id_present_flag");
   
   for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )
@@ -745,12 +752,16 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
     }
 
     assert(  pcVPS->getLayerIdInVps( pcVPS->getLayerIdInNuh( i ) ) == i ); 
-      
-    if ( !pcVPS->getSplittingFlag() )
-    {    
-      for( Int j = 0; j < pcVPS->getNumScalabilityTypes() ; j++ )
-      {      
+
+    for( Int j = 0; j < pcVPS->getNumScalabilityTypes() ; j++ )
+    {      
+      if ( !pcVPS->getSplittingFlag() )
+      {    
         WRITE_CODE( pcVPS->getDimensionId( i, j ), pcVPS->getDimensionIdLen( j ), "dimension_id[i][j]");      
+      }
+      else
+      {
+        assert( pcVPS->getDimensionId( i, j ) ==  pcVPS->inferDimensionId( i, j )  );
       }
     }
   }
@@ -788,7 +799,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   if ( pcVPS->getMoreOutputLayerSetsThanDefaultFlag( ) )
   {
     WRITE_CODE( pcVPS->getNumAddOutputLayerSetsMinus1( )    , 10,    "num_add_output_layer_sets_minus1"      );
-    numOutputLayerSets += pcVPS->getNumAddOutputLayerSetsMinus1( ); 
+    numOutputLayerSets += ( pcVPS->getNumAddOutputLayerSetsMinus1( ) + 1 ); 
   }
 
   if( numOutputLayerSets > 1)

@@ -408,6 +408,7 @@ public:
 #if H_3D
   , m_viewIndex(-1)
   , m_isDepth(false)
+  , m_bUseVSO(false)
 #endif
 #endif
   {}
