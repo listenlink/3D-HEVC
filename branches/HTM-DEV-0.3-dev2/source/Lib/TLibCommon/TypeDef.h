@@ -77,7 +77,7 @@
                                               // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
                                               // LGE_WVSO_A0119
 #define H_3D_NBDV                         1   // Neighboring block disparity derivation 
-                                              // JCT3V-A0097 
+                                              // QC_JCT3V-A0097 
                                               // LGE_DVMCP_A0126
                                               // LGE_DVMCP_MEM_REDUCTION_B0135     
                                               // QC_SIMPLE_NBDV_B0047
@@ -87,9 +87,12 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
+#if H_3D_NBDV
+#define H_3D_IDV                          1   // LGE_DVMCP_A0126  QC note: this macro will be removed after merging to dev2a
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
                                               // MERL_VSP_NBDV_RefVId_Fix_D0166
+#endif
 #define H_3D_VSP                          0   // Depth oriented neighboring block disparity derivation
 
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
@@ -100,7 +103,10 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
+#define H_3D_TMVP                         1   // QC_TMVP_C0047 
+                                              // Sony_M23639
 #define H_3D_GEN                          1   // Some general changes can be removed after merge 
+#define H_3D_CLEANUPS                     1
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -120,12 +126,21 @@
 #endif
 ////   ****** Neighbouring block-based Disparity Vector  *********
 #if H_3D_NBDV
+#if H_3D_CLEANUPS
+#define DVFROM_LEFTBELOW                  0
+#define DVFROM_LEFT                       1
+#define DVFROM_ABOVERIGHT                 2
+#define DVFROM_ABOVE                      3
+#define DVFROM_ABOVELEFT                  4
+#define IDV_CANDS                         5
+#else
 #define IDV_CANDS                         6
 #define DVFROM_LEFTBELOW                  1
 #define DVFROM_LEFT                       2
 #define DVFROM_ABOVERIGHT                 3
 #define DVFROM_ABOVE                      4
 #define DVFROM_ABOVELEFT                  5
+#endif
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////

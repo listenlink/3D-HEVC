@@ -2462,8 +2462,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   Bool    bLeftAvai         = false;
   Int     iPosLeftAbove[2]  = {-1, -1};
 
-  //Notes from QC: DvMCP related variables.  
-  //acPdmMv[0].m_bDvMcp = acPdmMv[1].m_bDvMcp = acPdmMv[2].m_bDvMcp = acPdmMv[3].m_bDvMcp = false;
 
   DisInfo cDisInfo;
 
@@ -2496,6 +2494,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         //cMvPred>>=2;
         //clipMv(cMvPred);
         //pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
+#if H_3D_CLEANUPS //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
+        pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
+#else
         if (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0)
         {
           for (Int i=0; i<getSlice()->getNumRefIdx(REF_PIC_LIST_0); i++)
@@ -2507,7 +2508,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
             }
           }
         }
-
+#endif
       }
       
       if ( getSlice()->isInterB() )
@@ -2523,6 +2524,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
           //cMvPred>>=2;
           //clipMv(cMvPred);
           //pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
+#if H_3D_CLEANUPS
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
+#else
           if (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0)
           {
             for (Int i=0; i<getSlice()->getNumRefIdx(REF_PIC_LIST_1); i++)
@@ -2534,23 +2538,30 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
               }
             }
           }
-
+#endif
         }
       }
-
+#if !H_3D_CLEANUPS
       if (!((pcMvFieldNeighbours[iCount<<1].getRefIdx()<0 && !getSlice()->isInterB())
         || (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0 && pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0 && getSlice()->isInterB())))
       {
+#endif
+#if H_3D_IDV
+        pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+        pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
         if ( mrgCandIdx == iCount )
         {
           return;
         }
         iCount ++;
+#if !H_3D_CLEANUPS
       }
       else
       {
         assert(0);
       }
+#endif
     }
   }
 
@@ -2562,7 +2573,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }  
     
   Int iPdmInterDir;
+#if H_3D_CLEANUPS
+  if( iPdmDir[0] )
+#else
   if( iPdmDir[0] && ivMvPredFlag )
+#endif
   {
     abCandIsInter        [ iCount ] = true;
     puhInterDirNeighbours[ iCount ] = iPdmDir[0];
@@ -2572,7 +2587,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcMvFieldNeighbours[ iCount<<1    ].setMvField( acPdmMv[ 0 ], aiPdmRefIdx[ 0 ] );
     }
-
     if( ( iPdmInterDir & 2 ) == 2 )
     {
       pcMvFieldNeighbours[(iCount<<1)+1 ].setMvField( acPdmMv[ 1 ], aiPdmRefIdx[ 1 ] );
@@ -2583,7 +2597,14 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       return;
     }
     iCount ++;
-  }  
+  } 
+#if H_3D_CLEANUPS
+  // early termination
+  if (iCount == getSlice()->getMaxNumMergeCand()) 
+  {
+    return;
+  }
+#endif
 #endif
 
 #if !H_3D_IV_MERGE
@@ -2645,7 +2666,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       bLeftAvai = true;
       iPosLeftAbove[0] = iCount;
-
+#if H_3D_IDV
+      pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+      pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
       if ( mrgCandIdx == iCount )
       {
         return;
@@ -2706,7 +2730,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     if(!bRemoveSpa)
     {
       iPosLeftAbove[1] = iCount;
-
+#if H_3D_IDV
+      pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+      pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
       if ( mrgCandIdx == iCount )
       {
         return;
@@ -2745,6 +2772,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCUAboveRight->getMvField( pcCUAboveRight, uiAboveRightPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
+#if H_3D_IDV
+    pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+    pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
     if ( mrgCandIdx == iCount )
     {
       return;
@@ -2758,7 +2789,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }
 
 #if H_3D_IV_MERGE 
+#if H_3D_CLEANUPS
+  if( iPdmDir[1] )
+#else
   if(ivMvPredFlag && iPdmDir[1] )
+#endif
   {
     assert(iCount < getSlice()->getMaxNumMergeCand());
     abCandIsInter        [ iCount ] = true;
@@ -2791,6 +2826,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     }
     if(!bRemoveSpa)
     {
+#if H_3D_IDV
+      pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+      pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
       if ( mrgCandIdx == iCount )
         return;
       iCount ++;
@@ -2822,6 +2861,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       pcCULeftBottom->getMvField( pcCULeftBottom, uiLeftBottomPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
     }
+#if H_3D_IDV
+    pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+    pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
     if ( mrgCandIdx == iCount )
     {
       return;
@@ -2854,6 +2897,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       {
         pcCUAboveLeft->getMvField( pcCUAboveLeft, uiAboveLeftPartIdx, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
       }
+#if H_3D_IDV
+      pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+      pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
       if ( mrgCandIdx == iCount )
       {
         return;
@@ -2931,9 +2978,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       dir |= 1;
       pcMvFieldNeighbours[ 2 * uiArrayAddr ].setMvField( cColMv, iRefIdx );
     }
-    
+
     if ( getSlice()->isInterB() )
     {
+#if H_3D_TMVP
+      iRefIdx = 0;
+#endif
       bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx);
       if( bExistMV == false )
       {
@@ -2950,7 +3000,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       puhInterDirNeighbours[uiArrayAddr] = dir;
       abCandIsInter[uiArrayAddr] = true;
-
+#if H_3D_IDV
+      pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+      pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+#endif
       if ( mrgCandIdx == iCount )
       {
         return;
@@ -3257,7 +3310,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
         uiLCUIdx      = -1 ; 
       }
     }
-    if ( uiLCUIdx >= 0 && xGetColMVP( eRefPicList, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx_Col ) )
+    if ( uiLCUIdx >= 0 && xGetColMVP( eRefPicList, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx_Col 
+#if H_3D_TMVP
+         , 0
+#endif
+    ) )
     {
       pInfo->m_acMvCand[pInfo->iN++] = cColMv;
     }
@@ -3266,7 +3323,11 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       UInt uiPartIdxCenter;
       UInt uiCurLCUIdx = getAddr();
       xDeriveCenterIdx( uiPartIdx, uiPartIdxCenter );
-      if (xGetColMVP( eRefPicList, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx_Col ))
+      if (xGetColMVP( eRefPicList, uiCurLCUIdx, uiPartIdxCenter,  cColMv, iRefIdx_Col 
+#if H_3D_TMVP
+         , 0
+#endif
+      ))
       {
         pInfo->m_acMvCand[pInfo->iN++] = cColMv;
       }
@@ -3581,7 +3642,11 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
  * \param riRefIdx
  * \returns Bool
  */
-Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx )
+Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
+#if H_3D_TMVP
+  , Bool bMRG
+#endif
+  )
 {
   UInt uiAbsPartAddr = uiPartUnitIdx;
 
@@ -3629,12 +3694,43 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
 
   if ( bIsCurrRefLongTerm != bIsColRefLongTerm ) 
   {
-    return false;
+#if H_3D_TMVP
+    Int iAlterRefIdx  = m_pcSlice->getAlterRefIdx(eRefPicList);
+    if(bMRG && iAlterRefIdx > 0)
+    {
+      riRefIdx = iAlterRefIdx;
+      bIsCurrRefLongTerm = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getIsLongTerm();
+      iCurrRefPOC = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getPOC();
+      assert(bIsCurrRefLongTerm == bIsColRefLongTerm);
+    }
+    else
+    {
+#endif
+      return false;
+#if H_3D_TMVP
+    }
+#endif
   }
 
   if ( bIsCurrRefLongTerm || bIsColRefLongTerm )
   {
-    rcMv = cColMv;
+#if H_3D_TMVP
+     Int iCurrViewId    = m_pcSlice->getViewIndex (); 
+     Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewIndex (); 
+     Int iColViewId     = pColCU->getSlice()->getViewIndex(); 
+     Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewIndex(); 
+     iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
+     if ( iScale != 4096 )
+     {
+        rcMv = cColMv.scaleMv( iScale );
+     }
+     else
+     {
+#endif
+       rcMv = cColMv;
+#if H_3D_TMVP
+    }
+#endif
   }
   else
   {
@@ -4353,14 +4449,26 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           TComMv cDispVec = cIDVInfo.m_acMvCand[iList][ curPos ];
           clipMv( cDispVec );
           pDInfo->m_acNBDV = cDispVec;
+#if H_3D_CLEANUPS
+          pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
+          assert(pDInfo->m_aVIdxCan == 0); //Notes from QC: only works for CTC
+#else
           pDInfo->m_aVIdxCan = 0;
+#endif
 #if H_3D_NBDV_REF
+#if H_3D_CLEANUPS
+          TComPic* picDepth = getSlice()->getIvPic( true, pDInfo->m_aVIdxCan );
+#else
           TComPic* picDepth = getSlice()->getIvPic( true, 0 );
+#endif
           assert(picDepth!=NULL);
 
           if (picDepth && bDepthRefine)
+#if H_3D_CLEANUPS
+            estimateDVFromDM (pDInfo->m_aVIdxCan, uiPartIdx, picDepth, uiPartAddr, &cDispVec);
+#else
             estimateDVFromDM(0, uiPartIdx, picDepth, uiPartAddr, &cDispVec ); // from base view
-
+#endif
           pDInfo->m_acDoNBDV = cDispVec;
           
 #if H_3D_VSP
@@ -4483,7 +4591,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
           assert(picDepth != NULL);
 
           UInt uiPartIdx = 0;   //Notes from MTK: Please confirm that using 0 as partition index and partition address is correct for CU-level DoNBDV
-          UInt uiPartAddr = 0;
+          UInt uiPartAddr = 0;  //QC: confirmed
 
           if (picDepth && bDepthRefine)
             estimateDVFromDM(refViewIdx, uiPartIdx, picDepth, uiPartAddr, &cMvPred );
@@ -4614,8 +4722,11 @@ Bool
 TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc )
 {
   TComSlice*    pcSlice         = getSlice ();  
-
+#if H_3D_CLEANUPS //Notes from QC: to be aligned with the spec. 
+  Int iViewIndex = pDInfo->m_aVIdxCan;
+#else
   Bool valid     = false;
+
   Int iViewIndex = 0;
 
   for( UInt uiBIndex = 0; uiBIndex < pcSlice->getViewIndex( ) && !valid; uiBIndex++ )
@@ -4641,7 +4752,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 
   if (!valid)
     return false;
-
+#endif
   //--- get base CU/PU and check prediction mode ---
   TComPic*    pcBasePic   = pcSlice->getIvPic( false, iViewIndex );
   TComPicYuv* pcBaseRec   = pcBasePic->getPicYuvRec   ();
@@ -4674,6 +4785,12 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
 
   Bool abPdmAvailable[4] = {false, false, false, false};
+#if H_3D_IDV
+  for( Int i = 0; i < 4; i++)
+  {
+    pacPdmMv[i].setIDVFlag   (false);
+  }
+#endif
   if(!( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTRA ))
   {
     for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )
@@ -4698,10 +4815,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
               {
                 abPdmAvailable[ uiCurrRefListId ] = true;
                 TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
-
-                //                  cMv.m_bDvMcp = true;
-                //                  cMv.m_iDvMcpDispX = pDInfo->m_acMvCand[0].getHor();                  
-
+#if H_3D_IDV 
+                cMv.setIDVFlag   (true);
+                cMv.setIDVHor    (cDv.getHor());                  
+                cMv.setIDVVer    (cDv.getVer());  
+#endif
                 clipMv( cMv );
                 paiPdmRefIdx  [ uiCurrRefListId ] = iPdmRefIdx;
                 pacPdmMv      [ uiCurrRefListId ] = cMv;
@@ -4715,7 +4833,6 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
     }
   }
   availableMcDc[0] = ( abPdmAvailable[0] ? 1 : 0 ) + ( abPdmAvailable[1] ? 2 : 0 );
-
   for( Int iRefListId = 0; iRefListId < 2 ; iRefListId++ )
   {
     RefPicList  eRefPicListDMV       = RefPicList( iRefListId );

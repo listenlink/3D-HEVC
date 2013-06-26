@@ -777,7 +777,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     pcSlice->generateCombinedList();
 #endif
-
+#if H_3D_TMVP
+    if(pcSlice->getLayerId())
+      pcSlice->generateAlterRefforTMVP();
+#endif
     if (m_pcEncTop->getTMVPModeId() == 2)
     {
       if (iGOPid == 0) // first picture in SOP (i.e. forward B)

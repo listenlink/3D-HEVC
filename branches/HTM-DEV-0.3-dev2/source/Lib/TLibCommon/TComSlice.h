@@ -1505,7 +1505,10 @@ private:
   Int        m_viewIndex; 
   Bool       m_isDepth;
   Int        m_aaiCodedScale [2][MAX_NUM_LAYERS];
-  Int        m_aaiCodedOffset[2][MAX_NUM_LAYERS];  
+  Int        m_aaiCodedOffset[2][MAX_NUM_LAYERS];
+#if H_3D_TMVP
+  Int        m_aiAlterRefIdx   [2]; 
+#endif
 #if H_3D_GEN
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
   Int**      m_depthToDisparityB; 
@@ -1778,6 +1781,11 @@ public:
   Void      setViewId             ( Int viewId )     { m_viewId = viewId;   }
   Int       getViewId             ()                 { return m_viewId;     }
 #if H_3D
+#if H_3D_TMVP
+  Void      generateAlterRefforTMVP ();   
+  Void      setAlterRefIdx          ( RefPicList e, Int i ) { m_aiAlterRefIdx[e]    = i;      }
+  Int       getAlterRefIdx          ( RefPicList e )        { return  m_aiAlterRefIdx[e];     }
+#endif
   Void      setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
   Int       getViewIndex          ()                 { return m_viewIndex;     }
   Void      setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }

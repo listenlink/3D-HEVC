@@ -528,3 +528,4 @@ template class TRenImagePlanePart<Double>;
 template class TRenImagePlanePart<Bool>;
 template class TRenImagePlanePart<Int>;
 #endif // H_3D
+
