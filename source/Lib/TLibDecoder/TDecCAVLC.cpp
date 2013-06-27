@@ -1506,11 +1506,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       if( rpcSlice->getLayerId() > 0 && rpcSlice->getNumActiveMotionPredRefLayers() > 0 )
       {
         READ_FLAG( uiCode, "alt_collocated_indication_flag" ); rpcSlice->setAltCollocatedIndicationFlag( uiCode == 1 );
-        if( rpcSlice->getAltCollocatedIndicationFlag() && rpcSlice->getNumActiveMotionPredRefLayers() > 1 ) 
-        {          
-          READ_UVLC( uiCode, "collocated_ref_layer_idx" ); rpcSlice->setCollocatedRefLayerIdx( uiCode );
-        }
       }
+
+      if( rpcSlice->getAltCollocatedIndicationFlag() && rpcSlice->getNumActiveMotionPredRefLayers() > 1 ) 
+      {          
+        READ_UVLC( uiCode, "collocated_ref_layer_idx" ); rpcSlice->setCollocatedRefLayerIdx( uiCode );
+      }      
       else 
       {
 #endif
