@@ -75,6 +75,7 @@ CamParsCollector::~CamParsCollector()
   delete [] m_aaiCodedOffset;
   delete [] m_aaiCodedScale;
   delete [] m_aiViewId;  
+  delete [] m_aiLayerIdx; 
   delete [] m_bViewReceived;
 
   xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );

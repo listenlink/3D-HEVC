@@ -734,7 +734,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 
   if ( pcVPS->getSplittingFlag() )
   { // Ignore old dimension id length
-    pcVPS->setDimensionIdLen( pcVPS->getNumScalabilityTypes( ) - 1 ,pcVPS->inferLastDimsionIdLen() );       
+    pcVPS->setDimensionIdLen( pcVPS->getNumScalabilityTypes( ) - 1 ,pcVPS->inferLastDimsionIdLenMinus1() + 1 );       
   }    
 
 
@@ -1203,7 +1203,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       else 
       {
 #endif
-
       if ( pcSlice->getSliceType() == B_SLICE )
       {
         WRITE_FLAG( pcSlice->getColFromL0Flag(), "collocated_from_l0_flag" );

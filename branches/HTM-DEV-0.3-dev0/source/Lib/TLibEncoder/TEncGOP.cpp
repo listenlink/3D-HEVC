@@ -654,7 +654,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     refPicListModification->setRefPicListModificationFlagL0(0);
     refPicListModification->setRefPicListModificationFlagL1(0);
 #if H_MV
-
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > 0 )
     {
       pcSlice->setDiscardableFlag           ( false );     
