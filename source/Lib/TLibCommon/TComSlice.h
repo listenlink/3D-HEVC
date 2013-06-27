@@ -493,8 +493,7 @@ private:
   TComHRD*    m_hrdParameters;
   UInt*       m_hrdOpSetIdx;
   Bool*       m_cprmsPresentFlag;
-  
-#if H_MV
+  #if H_MV
   UInt        m_vpsNumLayerSetsMinus1;
   Bool        m_layerIdIncludedFlag[MAX_VPS_OP_SETS_PLUS1][MAX_VPS_NUH_LAYER_ID_PLUS1];
 #else
@@ -513,10 +512,6 @@ private:
 #if L0043_TIMING_INFO
   TimingInfo  m_timingInfo;
 #endif
-
-
-
-
 
 #if H_MV
   /// VPS EXTENSION SYNTAX ELEMENTS
@@ -619,7 +614,6 @@ public:
   UInt    getMaxOpSets()                                        { return m_numOpSets; }
   Void    setMaxOpSets(UInt v)                                  { m_numOpSets = v;    }
 #endif
-
   Bool    getLayerIdIncludedFlag(UInt opsIdx, UInt id)          { return m_layerIdIncludedFlag[opsIdx][id]; }
   Void    setLayerIdIncludedFlag(Bool v, UInt opsIdx, UInt id)  { m_layerIdIncludedFlag[opsIdx][id] = v;    }
 
@@ -735,7 +729,7 @@ public:
 
   // inference
   Int     inferDimensionId     ( Int i, Int j );
-  Int     inferLastDimsionIdLen();
+  Int     inferLastDimsionIdLenMinus1();
 
 #if H_3D  
   Void    initViewIndex(); 

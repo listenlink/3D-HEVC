@@ -1071,7 +1071,6 @@ Int TAppEncTop::xGetMax( std::vector<Int>& vec )
   return maxVec;
 }
 
-
 Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
 { 
   const Int vpsNumProfileTierLevelMinus1 = 0; //TBD

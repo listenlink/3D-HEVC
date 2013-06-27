@@ -166,7 +166,6 @@ namespace df
 #if H_MV
         if  ( (*it)->opt->opt_duplicate ) continue; 
 #endif
-
         ostringstream line(ios_base::out);
         line << "  ";
         doHelpOpt(line, **it, pad_short);

@@ -515,7 +515,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   // ref_pic_list_init
   TComPic*  rpsCurrList0[MAX_NUM_REF+1];
   TComPic*  rpsCurrList1[MAX_NUM_REF+1];
-
 #if H_MV  
   Int numPocTotalCurr = ( getInterRefEnabledInRPLFlag() ? ( NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr ) : 0 ) + getNumActiveRefLayerPics( );
   assert( numPocTotalCurr == getNumRpsCurrTempList() );
@@ -1772,7 +1771,7 @@ Int TComVPS::inferDimensionId( Int i, Int j )
     return ( ( getLayerIdInNuh( i ) & ( (1 << xGetDimBitOffset( j + 1 ) ) - 1) ) >> xGetDimBitOffset( j ) ); 
 }
 
-Int TComVPS::inferLastDimsionIdLen()
+Int TComVPS::inferLastDimsionIdLenMinus1()
 {
   return ( 5 - xGetDimBitOffset( getNumScalabilityTypes() - 1 ) ); 
 }
@@ -2427,7 +2426,6 @@ Void TComSlice::xPrintRefPicList()
     }
   }
 }
-
 Int TComSlice::xCeilLog2( Int val )
 {
   assert( val > 0 ); 

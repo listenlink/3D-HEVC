@@ -1312,16 +1312,34 @@ Void TAppEncCfg::xCheckParameter()
     m_dimIds.push_back( m_depthFlag ); 
 #endif
 
-  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   ); 
+  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
 
-  for( Int dim = 0; dim < m_dimIds.size(); dim++ )
+  dimBitOffset[ 0 ] = 0; 
+  for (Int j = 1; j <= ((Int) m_dimIds.size() - m_splittingFlag ? 1 : 0); j++ )
   {
-    xConfirmPara( m_dimIds[dim].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
-    xConfirmPara( ( dim != viewDimPosition ) &&  (m_dimIds[dim][0] != 0), "DimensionId of layer 0 must be 0. " );
-    xConfirmPara( m_dimensionIdLen[dim] < 1 || m_dimensionIdLen[dim] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
+    dimBitOffset[ j ] = dimBitOffset[ j - 1 ] + m_dimensionIdLen[ j - 1]; 
+  }
+
+  if ( m_splittingFlag )
+  {
+    dimBitOffset[ (Int) m_dimIds.size() ] = 6; 
+  }
+  
+  for( Int j = 0; j < m_dimIds.size(); j++ )
+  {    
+    xConfirmPara( m_dimIds[j].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
+    xConfirmPara( ( j != viewDimPosition ) &&  (m_dimIds[j][0] != 0), "DimensionId of layer 0 must be 0. " );
+    xConfirmPara( m_dimensionIdLen[j] < 1 || m_dimensionIdLen[j] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
+     
+
     for( Int i = 1; i < m_numberOfLayers; i++ )
     {     
-      xConfirmPara(  ( m_dimIds[dim][i] < 0 ) || ( m_dimIds[dim][i] > ( ( 1 << m_dimensionIdLen[dim] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
+      xConfirmPara(  ( m_dimIds[j][i] < 0 ) || ( m_dimIds[j][i] > ( ( 1 << m_dimensionIdLen[j] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
+      if ( m_splittingFlag )
+      {
+        Int layerIdInNuh = (m_layerIdInNuh.size()!=1) ? m_layerIdInNuh[i] :  i; 
+        xConfirmPara( ( ( layerIdInNuh & ( (1 << dimBitOffset[ j + 1 ] ) - 1) ) >> dimBitOffset[ j ] )  != m_dimIds[j][ i ]  , "When Splitting Flag is equal to 1 dimension ids shall match values derived from layer ids. "); 
+      }
     }
   }
 

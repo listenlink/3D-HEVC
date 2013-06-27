@@ -916,7 +916,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
      
     if ( pcVPS->getSplittingFlag() )
     {
-      pcVPS->setDimensionIdLen( pcVPS->getNumScalabilityTypes( ) - 1, pcVPS->inferLastDimsionIdLen() );       
+      pcVPS->setDimensionIdLen( pcVPS->getNumScalabilityTypes( ) - 1, pcVPS->inferLastDimsionIdLenMinus1() );       
     }    
 
     READ_FLAG( uiCode, "vps_nuh_layer_id_present_flag" );           pcVPS->setVpsNuhLayerIdPresentFlag( uiCode == 1 ? true : false );
