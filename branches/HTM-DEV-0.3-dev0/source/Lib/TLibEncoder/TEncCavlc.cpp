@@ -1195,11 +1195,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if( pcSlice->getLayerId() > 0 && pcSlice->getNumActiveMotionPredRefLayers() > 0 )
       {
         WRITE_FLAG( pcSlice->getAltCollocatedIndicationFlag( ) ? 1 : 0 , "alt_collocated_indication_flag" );
-        if( pcSlice->getAltCollocatedIndicationFlag() && pcSlice->getNumActiveMotionPredRefLayers() > 1 ) 
-        {          
-          WRITE_UVLC( pcSlice->getCollocatedRefLayerIdx( ), "collocated_ref_layer_idx" );
-        }
       }
+      if( pcSlice->getAltCollocatedIndicationFlag() && pcSlice->getNumActiveMotionPredRefLayers() > 1 ) 
+      {          
+        WRITE_UVLC( pcSlice->getCollocatedRefLayerIdx( ), "collocated_ref_layer_idx" );
+      }      
       else 
       {
 #endif
