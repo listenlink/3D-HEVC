@@ -38,6 +38,7 @@
 */
 
 #include "TRenInterpFilter.h"
+#if H_3D
 
 // ====================================================================================================================
 // Constructor
@@ -48,3 +49,4 @@ TRenInterpFilter::TRenInterpFilter()
   // initial number of taps for Luma
 }
 
+#endif // H_3D

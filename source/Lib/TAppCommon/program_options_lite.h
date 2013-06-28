@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,18 +33,18 @@
 #include <iostream>
 #include <sstream>
 #include <string>
-#include <vector>
 #include <list>
 #include <map>
-#include <stdlib.h>
+#include  "../TLibCommon/TypeDef.h"
+
+#if H_MV
+#include <vector>
 #include <errno.h>
 #include <cstring>
-#include <math.h>
-
 #ifdef WIN32
 #define strdup _strdup
 #endif
-
+#endif
 //! \ingroup TAppCommon
 //! \{
 
@@ -55,6 +55,20 @@ namespace df
   {
     struct Options;
     
+    struct ParseFailure : public std::exception
+    {
+      ParseFailure(std::string arg0, std::string val0) throw()
+      : arg(arg0), val(val0)
+      {}
+
+      ~ParseFailure() throw() {};
+
+      std::string arg;
+      std::string val;
+
+      const char* what() const throw() { return "Option Parse Failure"; }
+    };
+
     void doHelp(std::ostream& out, Options& opts, unsigned columns = 80);
     unsigned parseGNU(Options& opts, unsigned argc, const char* argv[]);
     unsigned parseSHORT(Options& opts, unsigned argc, const char* argv[]);
@@ -70,8 +84,13 @@ namespace df
      * information should be stored in a derived class. */
     struct OptionBase
     {
+#if H_MV      
+      OptionBase(const std::string& name, const std::string& desc, bool duplicate = false)
+        : opt_string(name), opt_desc(desc), opt_duplicate(duplicate)
+#else
       OptionBase(const std::string& name, const std::string& desc)
       : opt_string(name), opt_desc(desc)
+#endif
       {};
       
       virtual ~OptionBase() {}
@@ -83,14 +102,22 @@ namespace df
       
       std::string opt_string;
       std::string opt_desc;
+#if H_MV
+      bool        opt_duplicate; 
+#endif
     };
     
     /** Type specific option storage */
     template<typename T>
     struct Option : public OptionBase
     {
+#if H_MV
+      Option(const std::string& name, T& storage, T default_val, const std::string& desc, bool duplicate = false)
+        : OptionBase(name, desc, duplicate), opt_storage(storage), opt_default_val(default_val)
+#else
       Option(const std::string& name, T& storage, T default_val, const std::string& desc)
       : OptionBase(name, desc), opt_storage(storage), opt_default_val(default_val)
+#endif
       {}
       
       void parse(const std::string& arg);
@@ -110,7 +137,15 @@ namespace df
     Option<T>::parse(const std::string& arg)
     {
       std::istringstream arg_ss (arg,std::istringstream::in);
-      arg_ss >> opt_storage;
+      arg_ss.exceptions(std::ios::failbit);
+      try
+      {
+        arg_ss >> opt_storage;
+      }
+      catch (...)
+      {
+        throw ParseFailure(opt_string, arg);
+      }
     }
     
     /* string parsing is specialized -- copy the whole string, not just the
@@ -121,7 +156,8 @@ namespace df
     {
       opt_storage = arg;
     }
-    
+
+#if H_MV    
     template<>
     inline void
       Option<char*>::parse(const std::string& arg)
@@ -257,7 +293,7 @@ namespace df
         pcOldStart = pcNextStart;
       }
     }
-
+#endif
     /** Option class for argument handling using a user provided function */
     struct OptionFunc : public OptionBase
     {
@@ -332,29 +368,39 @@ namespace df
         return *this;
       }
       
+#if H_MV
       template<typename T>
       OptionSpecific&
         operator()(const std::string& name, std::vector<T>& storage, T default_val, unsigned uiMaxNum, const std::string& desc = "" )
       {
         std::string cNameBuffer;
-        std::string cDescriptionBuffer;
+        std::string cDescBuffer;
 
-        cNameBuffer       .resize( name.size() + 10 );
-        cDescriptionBuffer.resize( desc.size() + 10 );
+        cNameBuffer.resize( name.size() + 10 );
+        cDescBuffer.resize( desc.size() + 10 );
 
         storage.resize(uiMaxNum);
         for ( unsigned int uiK = 0; uiK < uiMaxNum; uiK++ )
         {
+          Bool duplicate = (uiK != 0); 
           // isn't there are sprintf function for string??
-          sprintf((char*) cNameBuffer.c_str()       ,name.c_str(),uiK,uiK);
-          sprintf((char*) cDescriptionBuffer.c_str(),desc.c_str(),uiK,uiK);
+          sprintf((char*) cNameBuffer.c_str(),name.c_str(),uiK,uiK);
 
-          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescriptionBuffer ));
+          if ( !duplicate )
+          {          
+            sprintf((char*) cDescBuffer.c_str(),desc.c_str(),uiK,uiK);
+          }
+
+          cNameBuffer.resize( std::strlen(cNameBuffer.c_str()) );  
+          cDescBuffer.resize( std::strlen(cDescBuffer.c_str()) ); 
+          
+
+          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescBuffer, duplicate ));
         }
 
         return *this;
       }
-
+#endif
       /**
        * Add option described by name to the parent Options list,
        *   with desc as an optional help description

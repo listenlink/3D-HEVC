@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,8 +45,7 @@
 #include "TLibVideoIO/TVideoIOYuv.h"
 #include "TLibCommon/AccessUnit.h"
 #include "TAppEncCfg.h"
-#include "TLibCommon/TComDepthMapGenerator.h"
-#if HHI_VSO || HHI_INTERVIEW_SKIP
+#if H_3D
 #include "../../Lib/TLibRenderer/TRenTop.h"
 #endif
 
@@ -62,43 +61,33 @@ class TAppEncTop : public TAppEncCfg
 {
 private:
   // class interface
-  std::vector<TEncTop*>      m_acTEncTopList ;
-  std::vector<TEncTop*>      m_acTEncDepthTopList ;
+#if H_MV
+  std::vector<TEncTop*>      m_acTEncTopList ;              ///< encoder class per layer 
   std::vector<TVideoIOYuv*>  m_acTVideoIOYuvInputFileList;  ///< input YUV file
-  std::vector<TVideoIOYuv*>  m_acTVideoIOYuvDepthInputFileList;
   std::vector<TVideoIOYuv*>  m_acTVideoIOYuvReconFileList;  ///< output reconstruction file
-  std::vector<TVideoIOYuv*>  m_acTVideoIOYuvDepthReconFileList;
-
-  std::vector< TComList<TComPicYuv*>* >  m_picYuvRec;       ///< list of reconstruction YUV files
-  std::vector< TComList<TComPicYuv*>* >  m_picYuvDepthRec;         
-
-  std::vector<Int>           m_frameRcvd;                  ///< number of received frames
-  std::vector<Int>           m_depthFrameRcvd;   
-
-  unsigned                   m_essentialBytes;
-  unsigned                   m_totalBytes;
-
-#if DEPTH_MAP_GENERATION
-#if VIDYO_VPS_INTEGRATION
-  TComVPSAccess               m_cVPSAccess;
-#endif
-  TComSPSAccess               m_cSPSAccess;
-  TComAUPicAccess             m_cAUPicAccess;
-#endif
-
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  TComVPS                     m_cVPS;
-#endif
   
-#if HHI_VSO
+  std::vector<TComList<TComPicYuv*>*>  m_picYuvRec;         ///< list of reconstruction YUV files
+
+  std::vector<Int>           m_frameRcvd;                   ///< number of received frames 
+
+  TComPicLists               m_ivPicLists;                  ///< picture buffers of encoder instances
+  TComVPS                    m_vps;                         ///< vps
+#else
+  TEncTop                    m_cTEncTop;                    ///< encoder class
+  TVideoIOYuv                m_cTVideoIOYuvInputFile;       ///< input YUV file
+  TVideoIOYuv                m_cTVideoIOYuvReconFile;       ///< output reconstruction file
+  
+  TComList<TComPicYuv*>      m_cListPicYuvRec;              ///< list of reconstruction YUV files
+  
+  Int                        m_iFrameRcvd;                  ///< number of received frames
+#endif
+
+  UInt m_essentialBytes;
+  UInt m_totalBytes;
+#if H_3D_VSO
   TRenTop                     m_cRendererTop; 
   TRenModel                   m_cRendererModel;   
 #endif
-
-#if HHI_INTERVIEW_SKIP
-  TRenTop  m_cUsedPelsRenderer;                               ///< renderer for used pels map
-#endif
-
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -107,70 +96,41 @@ protected:
   Void  xDestroyLib       ();                               ///< destroy encoder class
   
   /// obtain required buffers
-  Void xGetBuffer(TComPicYuv*& rpcPicYuvRec, Int iViewIdx, Bool isDepth);
-  
+#if H_MV
+  Void  xGetBuffer(TComPicYuv*& rpcPicYuvRec, UInt layer);
+#else
+  Void xGetBuffer(TComPicYuv*& rpcPicYuvRec);
+#endif
+
   /// delete allocated buffers
   Void  xDeleteBuffer     ();
   
   // file I/O
-  Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std::list<AccessUnit>& accessUnits, Int iViewIdx, Bool isDepth); ///< write bitstream to file
-  void rateStatsAccum(const AccessUnit& au, const std::vector<unsigned>& stats);
-  // void printRateSummary();
+#if H_MV
+  Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std::list<AccessUnit>& accessUnits, UInt layerId); ///< write bitstream to file
+#else
+  Void xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits); ///< write bitstream to file
+#endif
+  void rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& stats);
+  void printRateSummary();
   
-  TComPic* xGetPicFromView( Int viewId, Int iPoc, Bool isDepth );
-  TComPicYuv* xGetPicYuvFromView( Int iViewIdx, Int iPoc, Bool bDepth, Bool bRecon );
-  
+#if H_MV
+  Void xSetLayerIds               ( TComVPS& vps );  
+  Void xSetDimensionIdAndLength   ( TComVPS& vps );
+  Void xSetDependencies           ( TComVPS& vps );
+  Void xSetLayerSets              ( TComVPS& vps );
+  Void xSetProfileTierLevel       ( TComVPS& vps );
+  Int  xGetMax( std::vector<Int>& vec);
+#endif
 public:
   TAppEncTop();
   virtual ~TAppEncTop();
-
-
+  
   Void        encode      ();                               ///< main encoding function
-  TEncTop*    getTEncTop( Int viewId, Bool isDepth );   
-
-  std::vector<TComPic*> getInterViewRefPics( Int viewId, Int poc, Bool isDepth, TComSPS* sps );
-  TComPic*              getPicFromView     ( Int viewId, Int poc, Bool isDepth ) { return xGetPicFromView( viewId, poc, isDepth ); }
-  TComPicYuv*           getPicYuvFromView  ( Int iViewIdx, Int iPoc, bool bDepth, Bool bRecon ) { return xGetPicYuvFromView( iViewIdx, iPoc, bDepth, bRecon ); }
-
-#if HHI_INTERVIEW_SKIP
-  Void                  getUsedPelsMap   ( Int iViewIdx, Int iPoc, TComPicYuv* pcPicYuvUsedPelsMap );
-#endif
-#if HHI_VSO
-  Void                  setupRenModel    ( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset );
-#endif
-  
-#if QC_MVHEVC_B0046
-  TComVPS*          getVPS()  { return &m_cVPS; }
-#endif
-#if VIDYO_VPS_INTEGRATION
-  TComVPS*          getVPS()  { return &m_cVPS; }
-  TComVPSAccess*    getVPSAccess  () { return &m_cVPSAccess;   }
-#endif
-  
-#if DEPTH_MAP_GENERATION
-  TComSPSAccess*    getSPSAccess  () { return &m_cSPSAccess;   }
-  TComAUPicAccess*  getAUPicAccess() { return &m_cAUPicAccess; }
-#endif
-
-#if HHI_VSO
-  TRenModel* getRenModel    () { return  &m_cRendererModel ; }; 
-#endif
-
-#if HHI_VSO
-private:
-  Void  xStoreVSORefPicsInBuffer();                                                   ///< read in External Ref pic from file and store in buffer
-#endif
-  
-#if RWTH_SDC_DLT_B0036
-  Void  xAnalyzeInputBaseDepth(Int iViewIdx, UInt uiNumFrames);
-#endif
-
-#if MERL_VSP_C0152
-#if MERL_VSP_NBDV_RefVId_Fix_D0166
-  Void setBWVSPLUT( Int refViewIdx, Int iCodedViewIdx, Int gopId, Bool isDepth);
+#if H_MV
+  TEncTop*    getTEncTop( UInt layer ) { return  m_acTEncTopList[layer]; }  ///< return pointer to encoder class for specific layer
 #else
-  Void setBWVSPLUT( Int iCodedViewIdx, Int gopId, Bool isDepth);
-#endif
+  TEncTop&    getTEncTop  ()   { return  m_cTEncTop; }      ///< return encoder class pointer reference
 #endif
 };// END CLASS DEFINITION TAppEncTop
 

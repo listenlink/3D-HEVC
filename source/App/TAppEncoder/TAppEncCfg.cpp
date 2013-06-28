@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,8 +41,13 @@
 #include <string>
 #include "TLibCommon/TComRom.h"
 #include "TAppEncCfg.h"
-#include "TAppCommon/program_options_lite.h"
 
+static istream& operator>>(istream &, Level::Name &);
+static istream& operator>>(istream &, Level::Tier &);
+static istream& operator>>(istream &, Profile::Name &);
+
+#include "TAppCommon/program_options_lite.h"
+#include "TLibEncoder/TEncRateCtrl.h"
 #ifdef WIN32
 #define strdup _strdup
 #endif
@@ -53,93 +58,110 @@ namespace po = df::program_options_lite;
 //! \ingroup TAppEncoder
 //! \{
 
-/* configuration helper funcs */
-void doOldStyleCmdlineOn(po::Options& opts, const std::string& arg);
-void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg);
-
-// ====================================================================================================================
-// Local constants
-// ====================================================================================================================
-
-/// max value of source padding size
-/** \todo replace it by command line option
- */
-#define MAX_PAD_SIZE                16
-
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
 
 TAppEncCfg::TAppEncCfg()
+#if H_MV
+: m_pchBitstreamFile()
+#else
+: m_pchInputFile()
+, m_pchBitstreamFile()
+, m_pchReconFile()
+#endif
+, m_pchdQPFile()
+, m_pColumnWidth()
+, m_pRowHeight()
+, m_scalingListFile()
 {
+#if !H_MV
   m_aidQP = NULL;
-  m_aidQPdepth = NULL;
+#endif
+#if J0149_TONE_MAPPING_SEI
+  m_startOfCodedInterval = NULL;
+  m_codedPivotValue = NULL;
+  m_targetPivotValue = NULL;
+#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
 {
-  if ( m_aidQP )
+#if H_MV
+  for( Int layer = 0; layer < m_aidQP.size(); layer++ )
   {
-    delete[] m_aidQP; m_aidQP = NULL;
+    if ( m_aidQP[layer] != NULL )
+    {
+      delete[] m_aidQP[layer];
+      m_aidQP[layer] = NULL;
+    }
   }
-
-  if ( m_aidQPdepth )
-  {
-    delete[] m_aidQPdepth; m_aidQPdepth = NULL;
-  }
-
   for(Int i = 0; i< m_pchInputFileList.size(); i++ )
   {
     if ( m_pchInputFileList[i] != NULL )
       free (m_pchInputFileList[i]);
   }
-  for(Int i = 0; i< m_pchDepthInputFileList.size(); i++ )
+#else
+  if ( m_aidQP )
   {
-    if ( m_pchDepthInputFileList[i] != NULL )
-      free (m_pchDepthInputFileList[i]);
+    delete[] m_aidQP;
   }
+#endif
+#if J0149_TONE_MAPPING_SEI
+  if ( m_startOfCodedInterval )
+  {
+    delete[] m_startOfCodedInterval;
+    m_startOfCodedInterval = NULL;
+  }
+   if ( m_codedPivotValue )
+  {
+    delete[] m_codedPivotValue;
+    m_codedPivotValue = NULL;
+  }
+  if ( m_targetPivotValue )
+  {
+    delete[] m_targetPivotValue;
+    m_targetPivotValue = NULL;
+  }
+#endif
+#if !H_MV
+  free(m_pchInputFile);
+#endif
+  free(m_pchBitstreamFile);
+#if H_MV
   for(Int i = 0; i< m_pchReconFileList.size(); i++ )
   {
     if ( m_pchReconFileList[i] != NULL )
       free (m_pchReconFileList[i]);
   }
-  for(Int i = 0; i< m_pchDepthReconFileList.size(); i++ )
+#else
+  free(m_pchReconFile);
+#endif
+  free(m_pchdQPFile);
+  free(m_pColumnWidth);
+  free(m_pRowHeight);
+  free(m_scalingListFile);
+#if H_MV
+  for( Int i = 0; i < m_GOPListMvc.size(); i++ )
   {
-    if ( m_pchDepthReconFileList[i] != NULL )
-      free (m_pchDepthReconFileList[i]);
-  }
-  if (m_pchBitstreamFile != NULL)
-    free (m_pchBitstreamFile) ;
-#if FLEX_CODING_ORDER_M23723
-  if (m_pchMVCJointCodingOrder != NULL)
-  {
-    free(m_pchMVCJointCodingOrder) ;
+    if( m_GOPListMvc[i] )
+    {
+      delete[] m_GOPListMvc[i];
+      m_GOPListMvc[i] = NULL;
+    }
   }
 #endif
-#if HHI_VSO
+#if H_3D
+#if H_3D_VSO
   if (  m_pchVSOConfig != NULL)
     free (  m_pchVSOConfig );
 #endif
+  if ( m_pchCameraParameterFile != NULL )
+    free ( m_pchCameraParameterFile ); 
 
- if ( m_pchCameraParameterFile != NULL )
-   free ( m_pchCameraParameterFile ); 
-
- if ( m_pchBaseViewCameraNumbers != NULL )
-   free ( m_pchBaseViewCameraNumbers ); 
-
- if ( m_pchdQPFile      != NULL ) 
-   free ( m_pchdQPFile      );
-
- if ( m_pchColumnWidth  != NULL ) 
-   free ( m_pchColumnWidth  );
-
- if ( m_pchRowHeight    != NULL ) 
-   free ( m_pchRowHeight    );
-
- if ( m_scalingListFile != NULL ) 
-   free ( m_scalingListFile );
-
-
+  if ( m_pchBaseViewCameraNumbers != NULL )
+    free ( m_pchBaseViewCameraNumbers ); 
+#endif
 }
 
 Void TAppEncCfg::create()
@@ -150,24 +172,25 @@ Void TAppEncCfg::destroy()
 {
 }
 
-std::istringstream &operator>>( std::istringstream &in, GOPEntryMvc &entry )     //input
+std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //input
 {
   in>>entry.m_sliceType;
   in>>entry.m_POC;
   in>>entry.m_QPOffset;
   in>>entry.m_QPFactor;
+  in>>entry.m_tcOffsetDiv2;
+  in>>entry.m_betaOffsetDiv2;
   in>>entry.m_temporalId;
   in>>entry.m_numRefPicsActive;
-  in>>entry.m_refPic;
   in>>entry.m_numRefPics;
   for ( Int i = 0; i < entry.m_numRefPics; i++ )
   {
     in>>entry.m_referencePics[i];
   }
   in>>entry.m_interRPSPrediction;
-  if (entry.m_interRPSPrediction)
+#if AUTO_INTER_RPS
+  if (entry.m_interRPSPrediction==1)
   {
-    in>>entry.m_deltaRIdxMinus1;
     in>>entry.m_deltaRPS;
     in>>entry.m_numRefIdc;
     for ( Int i = 0; i < entry.m_numRefIdc; i++ )
@@ -175,22 +198,127 @@ std::istringstream &operator>>( std::istringstream &in, GOPEntryMvc &entry )    
       in>>entry.m_refIdc[i];
     }
   }
-  in>>entry.m_numInterViewRefPics;
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+  else if (entry.m_interRPSPrediction==2)
   {
-    in>>entry.m_interViewRefs[i];
+    in>>entry.m_deltaRPS;
   }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+#else
+  if (entry.m_interRPSPrediction)
   {
-    in>>entry.m_interViewRefPosL0[i];
+    in>>entry.m_deltaRPS;
+    in>>entry.m_numRefIdc;
+    for ( Int i = 0; i < entry.m_numRefIdc; i++ )
+    {
+      in>>entry.m_refIdc[i];
+    }
   }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+#endif
+#if H_MV
+  in>>entry.m_numActiveRefLayerPics;
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
   {
-    in>>entry.m_interViewRefPosL1[i];
+    in>>entry.m_interLayerPredLayerIdc[i];
   }
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
+  {
+    in>>entry.m_interViewRefPosL[0][i];
+  }
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
+  {
+    in>>entry.m_interViewRefPosL[1][i];
+  }
+  if (entry.m_numActiveRefLayerPics > 0 )
+  {
+    in>>entry.m_collocatedRefLayerIdx; 
+  }
+#endif
   return in;
 }
 
+static const struct MapStrToProfile {
+  const Char* str;
+  Profile::Name value;
+} strToProfile[] = {
+  {"none", Profile::NONE},
+  {"main", Profile::MAIN},
+  {"main10", Profile::MAIN10},
+  {"main-still-picture", Profile::MAINSTILLPICTURE},
+#if H_MV
+  {"main-stereo",    Profile::MAINSTEREO},
+  {"main-multiview", Profile::MAINMULTIVIEW},
+#if H_3D
+  {"main-3d"    , Profile::MAIN3D},
+#endif
+#endif
+};
+
+static const struct MapStrToTier {
+  const Char* str;
+  Level::Tier value;
+} strToTier[] = {
+  {"main", Level::MAIN},
+  {"high", Level::HIGH},
+};
+
+static const struct MapStrToLevel {
+  const Char* str;
+  Level::Name value;
+} strToLevel[] = {
+  {"none",Level::NONE},
+  {"1",   Level::LEVEL1},
+  {"2",   Level::LEVEL2},
+  {"2.1", Level::LEVEL2_1},
+  {"3",   Level::LEVEL3},
+  {"3.1", Level::LEVEL3_1},
+  {"4",   Level::LEVEL4},
+  {"4.1", Level::LEVEL4_1},
+  {"5",   Level::LEVEL5},
+  {"5.1", Level::LEVEL5_1},
+  {"5.2", Level::LEVEL5_2},
+  {"6",   Level::LEVEL6},
+  {"6.1", Level::LEVEL6_1},
+  {"6.2", Level::LEVEL6_2},
+};
+
+template<typename T, typename P>
+static istream& readStrToEnum(P map[], unsigned long mapLen, istream &in, T &val)
+{
+  string str;
+  in >> str;
+
+  for (Int i = 0; i < mapLen; i++)
+  {
+    if (str == map[i].str)
+    {
+      val = map[i].value;
+      goto found;
+    }
+  }
+  /* not found */
+  in.setstate(ios::failbit);
+found:
+  return in;
+}
+
+static istream& operator>>(istream &in, Profile::Name &profile)
+{
+  return readStrToEnum(strToProfile, sizeof(strToProfile)/sizeof(*strToProfile), in, profile);
+}
+
+static istream& operator>>(istream &in, Level::Tier &tier)
+{
+  return readStrToEnum(strToTier, sizeof(strToTier)/sizeof(*strToTier), in, tier);
+}
+
+static istream& operator>>(istream &in, Level::Name &level)
+{
+  return readStrToEnum(strToLevel, sizeof(strToLevel)/sizeof(*strToLevel), in, level);
+}
+
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
+Void readBoolString(const string inpString, const Int numEntries, Bool* &memberArray, const char *elementName);
+Void readIntString(const string inpString, const Int numEntries, Int* &memberArray, const char *elementName);
+#endif
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -201,322 +329,465 @@ std::istringstream &operator>>( std::istringstream &in, GOPEntryMvc &entry )    
  */
 Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 {
-  bool do_help = false;
+  Bool do_help = false;
   
+#if !H_MV
+  string cfg_InputFile;
+#endif
   string cfg_BitstreamFile;
+#if !H_MV
+  string cfg_ReconFile;
+#endif
+#if H_MV
+  vector<Int>   cfg_dimensionLength; 
+#if H_3D 
+  cfg_dimensionLength.push_back( 2  );  // depth
+  cfg_dimensionLength.push_back( 32 );  // texture 
+#else
+  cfg_dimensionLength.push_back( 64 ); 
+#endif 
+#endif
   string cfg_dQPFile;
   string cfg_ColumnWidth;
   string cfg_RowHeight;
   string cfg_ScalingListFile;
-
- #if FLEX_CODING_ORDER_M23723
-  string cfg_JointCodingOrdering;
+#if J0149_TONE_MAPPING_SEI
+  string cfg_startOfCodedInterval;
+  string cfg_codedPivotValue;
+  string cfg_targetPivotValue;
 #endif
-
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
+  string cfg_bitRateInfoPresentFlag;
+  string cfg_picRateInfoPresentFlag;
+  string cfg_avgBitRate;
+  string cfg_maxBitRate;
+  string cfg_avgPicRate;
+  string cfg_constantPicRateIdc;
+#endif
   po::Options opts;
   opts.addOptions()
   ("help", do_help, false, "this help text")
   ("c", po::parseConfigFile, "configuration file name")
   
-  /* File, I/O and source parameters */
-  ("InputFile_%d,i_%d",       m_pchInputFileList,       (char *) 0 , MAX_VIEW_NUM ,   "original Yuv input file name %d")
-  ("DepthInputFile_%d,di_%d", m_pchDepthInputFileList,  (char *) 0 , MAX_VIEW_NUM ,   "original Yuv depth input file name %d")
-  ("ReconFile_%d,o_%d",       m_pchReconFileList,       (char *) 0 , MAX_VIEW_NUM ,   "reconstructed Yuv output file name %d")
-  ("DepthReconFile_%d,do_%d", m_pchDepthReconFileList,  (char *) 0 , MAX_VIEW_NUM ,   "reconstructed Yuv depth output file name %d")
-  ("BitstreamFile,b",         cfg_BitstreamFile,        string(""),                   "bitstream output file name")
-  ("CodeDepthMaps",           m_bUsingDepthMaps,        false,                        "Encode depth maps" )
-  ("CodedCamParsPrecision",   m_iCodedCamParPrecision,  STD_CAM_PARAMETERS_PRECISION, "precision for coding of camera parameters (in units of 2^(-x) luma samples)" )
-  ("LambdaModifier0,-LM0",    m_adLambdaModifier[ 0 ],  ( double )1.0,                "Lambda modifier for temporal layer 0")
-  ("LambdaModifier1,-LM1",    m_adLambdaModifier[ 1 ],  ( double )1.0,                "Lambda modifier for temporal layer 1")
-  ("LambdaModifier2,-LM2",    m_adLambdaModifier[ 2 ],  ( double )1.0,                "Lambda modifier for temporal layer 2")
-  ("LambdaModifier3,-LM3",    m_adLambdaModifier[ 3 ],  ( double )1.0,                "Lambda modifier for temporal layer 3")
-  ("SourceWidth,-wdt",        m_iSourceWidth,           0,                            "Source picture width")
-  ("SourceHeight,-hgt",       m_iSourceHeight,          0,                            "Source picture height")
-  ("CroppingMode",            m_croppingMode,           0,                            "Cropping mode (0: no cropping, 1:automatic padding, 2: padding, 3:cropping")
-  ("CropLeft",                m_cropLeft,               0,                            "Left cropping/padding for cropping mode 3")
-  ("CropRight",               m_cropRight,              0,                            "Right cropping/padding for cropping mode 3")
-  ("CropTop",                 m_cropTop,                0,                            "Top cropping/padding for cropping mode 3")
-  ("CropBottom",              m_cropBottom,             0,                            "Bottom cropping/padding for cropping mode 3")
-  ("HorizontalPadding,-pdx",  m_aiPad[0],               0,                            "horizontal source padding for cropping mode 2")
-  ("VerticalPadding,-pdy",    m_aiPad[1],               0,                            "vertical source padding for cropping mode 2")
-  ("InputBitDepth",         m_uiInputBitDepth, 8u, "bit-depth of input file")
-  ("BitDepth",              m_uiInputBitDepth, 8u, "deprecated alias of InputBitDepth")
-  ("OutputBitDepth",        m_uiOutputBitDepth, 0u, "bit-depth of output file")
-  ("InternalBitDepth",      m_uiInternalBitDepth, 0u, "Internal bit-depth (BitDepth+BitIncrement)")
-  ("FrameRate,-fr",         m_iFrameRate,        0, "Frame rate")
-  ("FrameSkip,-fs",         m_FrameSkip,         0u, "Number of frames to skip at start of input YUV")
-  ("FramesToBeEncoded,f",   m_iFrameToBeEncoded, 0, "number of frames to be encoded (default=all)")
-  ("FrameToBeEncoded",      m_iFrameToBeEncoded, 0, "deprecated alias of FramesToBeEncoded")
-  
-  ("NumberOfViews",         m_iNumberOfViews,    0, "Number of views")
-#if FLEX_CODING_ORDER_M23723
-  ("FCO",               m_b3DVFlexOrder,   false, "flexible coding order flag" )
-  ("FCOCodingOrder",   cfg_JointCodingOrdering,  string(""), "The coding order for joint texture-depth coding")
+  // File, I/O and source parameters
+#if H_MV
+  ("InputFile_%d,i_%d",       m_pchInputFileList,       (char *) 0 , MAX_NUM_LAYER_IDS , "original Yuv input file name %d")
+#else
+  ("InputFile,i",           cfg_InputFile,     string(""), "Original YUV input file name")
 #endif
-  /* Unit definition parameters */
-  ("MaxCUWidth",          m_uiMaxCUWidth,  64u)
-  ("MaxCUHeight",         m_uiMaxCUHeight, 64u)
-  /* todo: remove defaults from MaxCUSize */
-  ("MaxCUSize,s",         m_uiMaxCUWidth,  64u, "max CU size")
-  ("MaxCUSize,s",         m_uiMaxCUHeight, 64u, "max CU size")
-  ("MaxPartitionDepth,h", m_uiMaxCUDepth,   4u, "CU depth")
-  
-  ("QuadtreeTULog2MaxSize", m_uiQuadtreeTULog2MaxSize, 6u)
-  ("QuadtreeTULog2MinSize", m_uiQuadtreeTULog2MinSize, 2u)
-  
-  ("QuadtreeTUMaxDepthIntra", m_uiQuadtreeTUMaxDepthIntra, 1u)
-  ("QuadtreeTUMaxDepthInter", m_uiQuadtreeTUMaxDepthInter, 2u)
-  
-  /* Coding structure paramters */
-  ("IntraPeriod,-ip",m_iIntraPeriod, -1, "intra period in frames, (-1: only first frame)")
-  ("DecodingRefreshType,-dr",m_iDecodingRefreshType, 0, "intra refresh, (0:none 1:CRA 2:IDR)")
-  ("GOPSize,g",      m_iGOPSize,      1, "GOP size of temporal structure")
-  ("ListCombination,-lc", m_bUseLComb, true, "combined reference list flag for uni-prediction in B-slices")
-  ("LCModification", m_bLCMod, false, "enables signalling of combined reference list derivation")
-  ("DisableInter4x4", m_bDisInter4x4, true, "Disable Inter 4x4")
-  ("NSQT", m_enableNSQT, true, "Enable non-square transforms")
-  ("AMP", m_enableAMP, true, "Enable asymmetric motion partitions")
-  /* motion options */
-  ("FastSearch", m_iFastSearch, 1, "0:Full search  1:Diamond  2:PMVFAST")
-  ("SearchRange,-sr",m_iSearchRange, 96, "motion search range")
-#if DV_V_RESTRICTION_B0037
-  ("DisparitySearchRangeRestriction",m_bUseDisparitySearchRangeRestriction, false, "restrict disparity search range")
-  ("VerticalDisparitySearchRange",m_iVerticalDisparitySearchRange, 56, "vertical disparity search range")
+  ("BitstreamFile,b",       cfg_BitstreamFile, string(""), "Bitstream output file name")
+#if H_MV
+  ("ReconFile_%d,o_%d",       m_pchReconFileList,       (char *) 0 , MAX_NUM_LAYER_IDS , "reconstructed Yuv output file name %d")
+#else
+  ("ReconFile,o",           cfg_ReconFile,     string(""), "Reconstructed YUV output file name")
 #endif
-  ("BipredSearchRange", m_bipredSearchRange, 4, "motion search range for bipred refinement")
-  ("HadamardME", m_bUseHADME, true, "hadamard ME for fractional-pel")
-  ("ASR", m_bUseASR, false, "adaptive motion search range")
+#if H_MV
+  ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
+#if !H_3D
+  ("ScalabilityMask",       m_scalabilityMask    , 1                    , "Scalability Mask")    
+#else
+  ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
+#endif  
+  ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
+  ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id")
+#if H_3D
+  ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
+#endif
+  ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
+  ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
+
+  // Layer Sets + Output Layer Sets + Profile Tier Level
+  ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
+  ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
+  ("DefaultOneTargetOutputLayerFlag", m_defaultOneTargetOutputLayerFlag,  false , "Output highest layer of layer sets by default")      
+  ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
+  ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(1,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "LayerIds of additional output layers")  
+  ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
   
+  // Layer dependencies
+  ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIds of direct reference layers")
+  ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
+#endif
+  ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
+  ("SourceHeight,-hgt",     m_iSourceHeight,       0, "Source picture height")
+  ("InputBitDepth",         m_inputBitDepthY,    8, "Bit-depth of input file")
+  ("OutputBitDepth",        m_outputBitDepthY,   0, "Bit-depth of output file (default:InternalBitDepth)")
+  ("InternalBitDepth",      m_internalBitDepthY, 0, "Bit-depth the codec operates at. (default:InputBitDepth)"
+                                                       "If different to InputBitDepth, source data will be converted")
+  ("InputBitDepthC",        m_inputBitDepthC,    0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
+  ("OutputBitDepthC",       m_outputBitDepthC,   0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
+  ("InternalBitDepthC",     m_internalBitDepthC, 0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
+  ("ConformanceMode",       m_conformanceMode,     0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
+  ("HorizontalPadding,-pdx",m_aiPad[0],            0, "Horizontal source padding for conformance window mode 2")
+  ("VerticalPadding,-pdy",  m_aiPad[1],            0, "Vertical source padding for conformance window mode 2")
+  ("ConfLeft",              m_confLeft,            0, "Left offset for window conformance mode 3")
+  ("ConfRight",             m_confRight,           0, "Right offset for window conformance mode 3")
+  ("ConfTop",               m_confTop,             0, "Top offset for window conformance mode 3")
+  ("ConfBottom",            m_confBottom,          0, "Bottom offset for window conformance mode 3")
+  ("FrameRate,-fr",         m_iFrameRate,          0, "Frame rate")
+  ("FrameSkip,-fs",         m_FrameSkip,          0u, "Number of frames to skip at start of input YUV")
+  ("FramesToBeEncoded,f",   m_framesToBeEncoded,   0, "Number of frames to be encoded (default=all)")
+
+  // Profile and level
+  ("Profile", m_profile,   Profile::NONE, "Profile to be used when encoding (Incomplete)")
+  ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1 (Incomplete)")
+  ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level")
+
+#if L0046_CONSTRAINT_FLAGS
+  ("ProgressiveSource", m_progressiveSourceFlag, false, "Indicate that source is progressive")
+  ("InterlacedSource",  m_interlacedSourceFlag,  false, "Indicate that source is interlaced")
+  ("NonPackedSource",   m_nonPackedConstraintFlag, false, "Indicate that source does not contain frame packing")
+  ("FrameOnly",         m_frameOnlyConstraintFlag, false, "Indicate that the bitstream contains only frames")
+#endif
+  
+  // Unit definition parameters
+  ("MaxCUWidth",              m_uiMaxCUWidth,             64u)
+  ("MaxCUHeight",             m_uiMaxCUHeight,            64u)
+  // todo: remove defaults from MaxCUSize
+  ("MaxCUSize,s",             m_uiMaxCUWidth,             64u, "Maximum CU size")
+  ("MaxCUSize,s",             m_uiMaxCUHeight,            64u, "Maximum CU size")
+  ("MaxPartitionDepth,h",     m_uiMaxCUDepth,              4u, "CU depth")
+  
+  ("QuadtreeTULog2MaxSize",   m_uiQuadtreeTULog2MaxSize,   6u, "Maximum TU size in logarithm base 2")
+  ("QuadtreeTULog2MinSize",   m_uiQuadtreeTULog2MinSize,   2u, "Minimum TU size in logarithm base 2")
+  
+  ("QuadtreeTUMaxDepthIntra", m_uiQuadtreeTUMaxDepthIntra, 1u, "Depth of TU tree for intra CUs")
+  ("QuadtreeTUMaxDepthInter", m_uiQuadtreeTUMaxDepthInter, 2u, "Depth of TU tree for inter CUs")
+  
+  // Coding structure paramters
+  ("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
+  ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
+  ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
+#if !L0034_COMBINED_LIST_CLEANUP
+  ("ListCombination,-lc",     m_bUseLComb,               true, "Combined reference list for uni-prediction estimation in B-slices")
+#endif
+  // motion options
+  ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
+  ("SearchRange,-sr",         m_iSearchRange,              96, "Motion search range")
+  ("BipredSearchRange",       m_bipredSearchRange,          4, "Motion search range for bipred refinement")
+  ("HadamardME",              m_bUseHADME,               true, "Hadamard ME for fractional-pel")
+  ("ASR",                     m_bUseASR,                false, "Adaptive motion search range")
+
+  // Mode decision parameters
+  ("LambdaModifier0,-LM0", m_adLambdaModifier[ 0 ], ( Double )1.0, "Lambda modifier for temporal layer 0")
+  ("LambdaModifier1,-LM1", m_adLambdaModifier[ 1 ], ( Double )1.0, "Lambda modifier for temporal layer 1")
+  ("LambdaModifier2,-LM2", m_adLambdaModifier[ 2 ], ( Double )1.0, "Lambda modifier for temporal layer 2")
+  ("LambdaModifier3,-LM3", m_adLambdaModifier[ 3 ], ( Double )1.0, "Lambda modifier for temporal layer 3")
+  ("LambdaModifier4,-LM4", m_adLambdaModifier[ 4 ], ( Double )1.0, "Lambda modifier for temporal layer 4")
+  ("LambdaModifier5,-LM5", m_adLambdaModifier[ 5 ], ( Double )1.0, "Lambda modifier for temporal layer 5")
+  ("LambdaModifier6,-LM6", m_adLambdaModifier[ 6 ], ( Double )1.0, "Lambda modifier for temporal layer 6")
+  ("LambdaModifier7,-LM7", m_adLambdaModifier[ 7 ], ( Double )1.0, "Lambda modifier for temporal layer 7")
+
   /* Quantization parameters */
-  ("QP,q",          m_adQP,     std::vector<double>(1,32), "Qp value, if value is float, QP is switched once during encoding, if two values are given the second is used for depth")
+#if H_MV
+  ("QP,q",          m_fQP, std::vector<double>(1,30.0), "Qp values for each layer, if value is float, QP is switched once during encoding")
+#else
+  ("QP,q",          m_fQP,             30.0, "Qp value, if value is float, QP is switched once during encoding")
+#endif
   ("DeltaQpRD,-dqr",m_uiDeltaQpRD,       0u, "max dQp offset for slice")
   ("MaxDeltaQP,d",  m_iMaxDeltaQP,        0, "max dQp offset for block")
   ("MaxCuDQPDepth,-dqd",  m_iMaxCuDQPDepth,        0, "max depth for a minimum CuDQP")
 
-    ("ChromaQpOffset,   -cqo",   m_iChromaQpOffset,           0, "ChromaQpOffset")
-    ("ChromaQpOffset2nd,-cqo2",  m_iChromaQpOffset2nd,        0, "ChromaQpOffset2nd")
+  ("CbQpOffset,-cbqpofs",  m_cbQpOffset,        0, "Chroma Cb QP Offset")
+  ("CrQpOffset,-crqpofs",  m_crQpOffset,        0, "Chroma Cr QP Offset")
 
 #if ADAPTIVE_QP_SELECTION
-    ("AdaptiveQpSelection,-aqps",   m_bUseAdaptQpSelect,           false, "AdaptiveQpSelection")
+  ("AdaptiveQpSelection,-aqps",   m_bUseAdaptQpSelect,           false, "AdaptiveQpSelection")
 #endif
 
-  ("AdaptiveQP,-aq", m_bUseAdaptiveQP, false, "QP adaptation based on a psycho-visual model")
-  ("MaxQPAdaptationRange,-aqr", m_iQPAdaptationRange, 6, "QP adaptation range")
-  ("dQPFile,m",     cfg_dQPFile, string(""), "dQP file name")
-  ("RDOQ",          m_abUseRDOQ, std::vector<Bool>(1,true), "Enable RDOQ")
-  ("TemporalLayerQPOffset_L0,-tq0", m_aiTLayerQPOffset[0], MAX_QP + 1, "QP offset of temporal layer 0")
-  ("TemporalLayerQPOffset_L1,-tq1", m_aiTLayerQPOffset[1], MAX_QP + 1, "QP offset of temporal layer 1")
-  ("TemporalLayerQPOffset_L2,-tq2", m_aiTLayerQPOffset[2], MAX_QP + 1, "QP offset of temporal layer 2")
-  ("TemporalLayerQPOffset_L3,-tq3", m_aiTLayerQPOffset[3], MAX_QP + 1, "QP offset of temporal layer 3")
+  ("AdaptiveQP,-aq",                m_bUseAdaptiveQP,           false, "QP adaptation based on a psycho-visual model")
+  ("MaxQPAdaptationRange,-aqr",     m_iQPAdaptationRange,           6, "QP adaptation range")
+  ("dQPFile,m",                     cfg_dQPFile,           string(""), "dQP file name")
+  ("RDOQ",                          m_useRDOQ,                  true )
+  ("RDOQTS",                        m_useRDOQTS,                true )
+#if L0232_RD_PENALTY
+  ("RDpenalty",                     m_rdPenalty,                0,  "RD-penalty for 32x32 TU for intra in non-intra slices. 0:disbaled  1:RD-penalty  2:maximum RD-penalty")
+#endif
+  // Entropy coding parameters
+  ("SBACRD",                         m_bUseSBACRD,                      true, "SBAC based RD estimation")
   
-
-  /* Entropy coding parameters */
-  ("SBACRD", m_bUseSBACRD, true, "SBAC based RD estimation")
-  
-  /* Deblocking filter parameters */
-  ("LoopFilterDisable", m_abLoopFilterDisable, std::vector<Bool>(1,false), "Disables LoopFilter")
-
-  ("LoopFilterOffsetInAPS", m_loopFilterOffsetInAPS, false)
-  ("LoopFilterBetaOffset_div2", m_loopFilterBetaOffsetDiv2, 0 )
-  ("LoopFilterTcOffset_div2", m_loopFilterTcOffsetDiv2, 0 )
-#if LGE_ILLUCOMP_B0045
-#if LGE_ILLUCOMP_DEPTH_C0046
-  ("IlluCompEnable", m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation for inter-view prediction")
+  // Deblocking filter parameters
+#if H_MV
+  ("LoopFilterDisable",              m_bLoopFilterDisable,             std::vector<Bool>(1,false), "Disable Loop Filter per Layer" )
 #else
-  ("IlluCompEnable",                  m_bUseIC                  , true         , "Use illumination compensation for inter-view prediction" )
+  ("LoopFilterDisable",              m_bLoopFilterDisable,             false )
 #endif
-#endif
-#if INTER_VIEW_VECTOR_SCALING_C0115
-  ("IVSEnable",                       m_bUseIVS                 , true         , "Use inter-view vector scaling" )
-#endif
-  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, true)
-
-  /* Camera Paremetes */
-  ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
-#if QC_MVHEVC_B0046
-  ("BaseViewCameraNumbers" ,  m_aiVId,     std::vector<Int>(1, MAX_VIEW_NUM), "Numbers of base views")
-#endif
-  ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
-
-  /* View Synthesis Optimization */
-
-#if HHI_VSO
-  ("VSOConfig",                       m_pchVSOConfig            , (Char *) 0    , "VSO configuration")
-  ("VSO",                             m_bUseVSO                 , false         , "Use VSO" )    
-  ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
-  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1    , "Lambda Scaling for VSO")
-
-#if HHI_VSO_LS_TABLE_M23714
-  ("VSOLSTable",                      m_bVSOLSTable             , true          , "Depth QP dependent video/depth rate allocation by Lagrange multiplier" )    
+  ("LoopFilterOffsetInPPS",          m_loopFilterOffsetInPPS,          false )
+  ("LoopFilterBetaOffset_div2",      m_loopFilterBetaOffsetDiv2,           0 )
+  ("LoopFilterTcOffset_div2",        m_loopFilterTcOffsetDiv2,             0 )
+  ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, false )
+#if L0386_DB_METRIC
+  ("DeblockingFilterMetric",         m_DeblockingFilterMetric,         false )
 #endif
 
-#if SAIT_VSO_EST_A0033
-  ("UseEstimatedVSD",                 m_bUseEstimatedVSD        , true          , "Model based VSD estimation instead of rendering based for some encoder decisions" )      
-#endif
-#if LGE_VSO_EARLY_SKIP_A0093
-  ("VSOEarlySkip",                    m_bVSOEarlySkip           , true          , "Early skip of VSO computation if synthesis error assumed to be zero" )      
-#endif
-  ("ForceLambdaScaleVSO",             m_bForceLambdaScaleVSO    , false         , "Force using Lambda Scale VSO also in non-VSO-Mode")
-#if HHI_VSO_DIST_INT
-  ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
-#endif
-#if LGE_WVSO_A0119
-  ("WVSO",                            m_bUseWVSO                , true          , "Use depth fidelity term for VSO" )
-  ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
-  ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
-  ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
-#endif
-
-#if H3D_QTL
-  ("QTLPC",                           m_bUseQTLPC               , true         , "Use depth Quadtree Limitation + Predictive Coding" )
-#endif
-
-#endif
-
-#if DEPTH_MAP_GENERATION
-  ("PredDepthMapGen",  m_uiPredDepthMapGeneration, (UInt)0, "generation of prediction depth maps for motion data prediction" )
-#endif
-#if H3D_IVMP
-  ("MultiviewMvPred",  m_uiMultiviewMvPredMode,    (UInt)0, "usage of predicted depth maps" )
-  ("MultiviewMvRegMode",        m_uiMultiviewMvRegMode,         (UInt)0, "regularization mode for multiview motion vectors" )
-  ("MultiviewMvRegLambdaScale", m_dMultiviewMvRegLambdaScale, (Double)0, "lambda scale for multiview motion vector regularization" )
-#endif
-#if H3D_IVRP
-#if QC_ARP_D0177
-  ("MultiviewResPred", m_nUseAdvResPred,           (UInt)0, "usage of Advanced residual prediction" )
+  // Coding tools
+  ("AMP",                      m_enableAMP,                 true,  "Enable asymmetric motion partitions")
+  ("TransformSkip",            m_useTransformSkip,          false, "Intra transform skipping")
+  ("TransformSkipFast",        m_useTransformSkipFast,      false, "Fast intra transform skipping")
+#if H_MV
+  ("SAO",                      m_bUseSAO, std::vector<Bool>(1,true), "Enable Sample Adaptive Offset per Layer")
 #else
-  ("MultiviewResPred", m_uiMultiviewResPredMode,   (UInt)0, "usage of inter-view residual prediction" )
+  ("SAO",                      m_bUseSAO,                   true,  "Enable Sample Adaptive Offset")
 #endif
-#endif
-#if MTK_D0156
-  ("UseVSPCompensation", m_bUseVSPCompensation,   true, "Depth dependent tools: BVSP" )
-  ("UseDVPRefine", m_bUseDVPRefine,   true, "Depth dependent tools: DoNBDV" )
-#endif
+  ("MaxNumOffsetsPerPic",      m_maxNumOffsetsPerPic,       2048,  "Max number of SAO offset per picture (Default: 2048)")   
+  ("SAOLcuBoundary",           m_saoLcuBoundary,            false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
+  ("SAOLcuBasedOptimization",  m_saoLcuBasedOptimization,   true,  "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
+  ("SliceMode",                m_sliceMode,                0,     "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
+  ("SliceArgument",            m_sliceArgument,            0,     "Depending on SliceMode being:"
+                                                                   "\t1: max number of CTUs per slice"
+                                                                   "\t2: max number of bytes per slice"
+                                                                   "\t3: max number of tiles per slice")
+  ("SliceSegmentMode",         m_sliceSegmentMode,       0,     "0: Disable all slice segment limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
+  ("SliceSegmentArgument",     m_sliceSegmentArgument,   0,     "Depending on SliceSegmentMode being:"
+                                                                   "\t1: max number of CTUs per slice segment"
+                                                                   "\t2: max number of bytes per slice segment"
+                                                                   "\t3: max number of tiles per slice segment")
+  ("LFCrossSliceBoundaryFlag", m_bLFCrossSliceBoundaryFlag, true)
 
-  /* Coding tools */
-  ("LMChroma", m_bUseLMChroma, true, "intra chroma prediction based on recontructed luma")
+  ("ConstrainedIntraPred",     m_bUseConstrainedIntraPred,  false, "Constrained Intra Prediction")
 
-  ("ALF", m_abUseALF, std::vector<Bool>(1,true), "Enables ALF")
-  ("SAO", m_abUseSAO, std::vector<Bool>(1, true), "SAO")
-  ("MaxNumOffsetsPerPic", m_maxNumOffsetsPerPic, 2048, "2048: default")   
-#if LGE_SAO_MIGRATION_D0091
-  ("SAOLcuBoundary",          m_saoLcuBoundary,          false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
-  ("SAOLcuBasedOptimization", m_saoLcuBasedOptimization, true, "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
-#else
-  ("SAOInterleaving", m_saoInterleavingFlag, false, "0: SAO Picture Mode, 1: SAO Interleaving ")   
-#endif
+  ("PCMEnabledFlag",           m_usePCM,                    false)
+  ("PCMLog2MaxSize",           m_pcmLog2MaxSize,            5u)
+  ("PCMLog2MinSize",           m_uiPCMLog2MinSize,          3u)
+  ("PCMInputBitDepthFlag",     m_bPCMInputBitDepthFlag,     true)
+  ("PCMFilterDisableFlag",     m_bPCMFilterDisableFlag,    false)
 
-  ("ALFEncodePassReduction", m_iALFEncodePassReduction, 0, "0:Original 16-pass, 1: 1-pass, 2: 2-pass encoding")
+  ("LosslessCuEnabled",        m_useLossless, false)
 
-  ("ALFMaxNumFilter,-ALFMNF", m_iALFMaxNumberFilters, 16, "16: No Constrained, 1-15: Constrained max number of filter")
-  ("ALFParamInSlice", m_bALFParamInSlice, false, "ALF parameters in 0: APS, 1: slice header")
-  ("ALFPicBasedEncode", m_bALFPicBasedEncode, true, "ALF picture-based encoding 0: false, 1: true")
-
-    ("SliceMode",            m_iSliceMode,           0, "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes")
-    ("SliceArgument",        m_iSliceArgument,       0, "if SliceMode==1 SliceArgument represents max # of LCUs. if SliceMode==2 SliceArgument represents max # of bytes.")
-    ("EntropySliceMode",     m_iEntropySliceMode,    0, "0: Disable all entropy slice limits, 1: Enforce max # of LCUs, 2: Enforce constraint based entropy slices")
-    ("EntropySliceArgument", m_iEntropySliceArgument,0, "if EntropySliceMode==1 SliceArgument represents max # of LCUs. if EntropySliceMode==2 EntropySliceArgument represents max # of bins.")
-    ("SliceGranularity",     m_iSliceGranularity,    0, "0: Slices always end at LCU borders. 1-3: slices may end at a depth of 1-3 below LCU level.")
-    ("LFCrossSliceBoundaryFlag", m_bLFCrossSliceBoundaryFlag, true)
-
-    ("ConstrainedIntraPred", m_bUseConstrainedIntraPred, false, "Constrained Intra Prediction")
-    ("PCMEnabledFlag", m_usePCM         , false)
-    ("PCMLog2MaxSize", m_pcmLog2MaxSize, 5u)
-    ("PCMLog2MinSize", m_uiPCMLog2MinSize, 3u)
-
-    ("PCMInputBitDepthFlag", m_bPCMInputBitDepthFlag, true)
-    ("PCMFilterDisableFlag", m_bPCMFilterDisableFlag, false)
-#if LOSSLESS_CODING
-    ("LosslessCuEnabled", m_useLossless, false)
-#endif
-    ("weighted_pred_flag,-wpP",     m_bUseWeightPred, false, "weighted prediction flag (P-Slices)")
-    ("weighted_bipred_idc,-wpBidc", m_uiBiPredIdc,    0u,    "weighted bipred idc (B-Slices)")
-    ("TileInfoPresentFlag",         m_iColumnRowInfoPresent,         1,          "0: tiles parameters are NOT present in the PPS. 1: tiles parameters are present in the PPS")
-    ("UniformSpacingIdc",           m_iUniformSpacingIdr,            0,          "Indicates if the column and row boundaries are distributed uniformly")
-    ("NumTileColumnsMinus1",        m_iNumColumnsMinus1,             0,          "Number of columns in a picture minus 1")
-    ("ColumnWidthArray",            cfg_ColumnWidth,                 string(""), "Array containing ColumnWidth values in units of LCU")
-    ("NumTileRowsMinus1",           m_iNumRowsMinus1,                0,          "Number of rows in a picture minus 1")
-    ("RowHeightArray",              cfg_RowHeight,                   string(""), "Array containing RowHeight values in units of LCU")
-    ("TileLocationInSliceHeaderFlag", m_iTileLocationInSliceHeaderFlag, 0,       "0: Disable transmission of tile location in slice header. 1: Transmit tile locations in slice header.")
-    ("TileMarkerFlag",                m_iTileMarkerFlag,                0,       "0: Disable transmission of lightweight tile marker. 1: Transmit light weight tile marker.")
-    ("MaxTileMarkerEntryPoints",    m_iMaxTileMarkerEntryPoints,    4,       "Maximum number of uniformly-spaced tile entry points (using light weigh tile markers). Default=4. If number of tiles < MaxTileMarkerEntryPoints then all tiles have entry points.")
-    ("TileControlPresentFlag",       m_iTileBehaviorControlPresentFlag,         1,          "0: tiles behavior control parameters are NOT present in the PPS. 1: tiles behavior control parameters are present in the PPS")
-    ("LFCrossTileBoundaryFlag",      m_bLFCrossTileBoundaryFlag,             true,          "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
-    ("WaveFrontSynchro",            m_iWaveFrontSynchro,             0,          "0: no synchro; 1 synchro with TR; 2 TRR etc")
-    ("WaveFrontFlush",              m_iWaveFrontFlush,               0,          "Flush and terminate CABAC coding for each LCU line")
-    ("WaveFrontSubstreams",         m_iWaveFrontSubstreams,          1,          "# coded substreams wanted; per tile if TileBoundaryIndependenceIdc is 1, otherwise per frame")
-    ("ScalingList",                 m_useScalingListId,              0,          "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
-    ("ScalingListFile",             cfg_ScalingListFile,             string(""), "Scaling list file name")
-    ("SignHideFlag,-SBH",                m_signHideFlag, 1)
-    ("SignHideThreshold,-TSIG",          m_signHidingThreshold,         4)
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  ("DMM",                         m_bUseDMM,                       false,      "depth model modes flag")
-#endif
+  ("WeightedPredP,-wpP",          m_useWeightedPred,               false,      "Use weighted prediction in P slices")
+  ("WeightedPredB,-wpB",          m_useWeightedBiPred,             false,      "Use weighted (bidirectional) prediction in B slices")
+  ("Log2ParallelMergeLevel",      m_log2ParallelMergeLevel,     2u,          "Parallel merge estimation region")
+  ("UniformSpacingIdc",           m_iUniformSpacingIdr,            0,          "Indicates if the column and row boundaries are distributed uniformly")
+  ("NumTileColumnsMinus1",        m_iNumColumnsMinus1,             0,          "Number of columns in a picture minus 1")
+  ("ColumnWidthArray",            cfg_ColumnWidth,                 string(""), "Array containing ColumnWidth values in units of LCU")
+  ("NumTileRowsMinus1",           m_iNumRowsMinus1,                0,          "Number of rows in a picture minus 1")
+  ("RowHeightArray",              cfg_RowHeight,                   string(""), "Array containing RowHeight values in units of LCU")
+  ("LFCrossTileBoundaryFlag",      m_bLFCrossTileBoundaryFlag,             true,          "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
+  ("WaveFrontSynchro",            m_iWaveFrontSynchro,             0,          "0: no synchro; 1 synchro with TR; 2 TRR etc")
+  ("ScalingList",                 m_useScalingListId,              0,          "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
+  ("ScalingListFile",             cfg_ScalingListFile,             string(""), "Scaling list file name")
+  ("SignHideFlag,-SBH",                m_signHideFlag, 1)
+  ("MaxNumMergeCand",             m_maxNumMergeCand,             5u,         "Maximum number of merge candidates")
 
   /* Misc. */
-  ("SEIpictureDigest", m_pictureDigestEnabled, true, "Control generation of picture_digest SEI messages\n"
-                                              "\t1: use MD5\n"
-                                              "\t0: disable")
-
-#if TMVP_DEPTH_SWITCH
-  ("TMVP", m_enableTMVP, std::vector<Bool>(1,true), "Enable TMVP" )
-#else
-  ("TMVP", m_enableTMVP, true, "Enable TMVP" )
-#endif
-
+  ("SEIDecodedPictureHash",       m_decodedPictureHashSEIEnabled, 0, "Control generation of decode picture hash SEI messages\n"
+                                                                    "\t3: checksum\n"
+                                                                    "\t2: CRC\n"
+                                                                    "\t1: use MD5\n"
+                                                                    "\t0: disable")
+  ("SEIpictureDigest",            m_decodedPictureHashSEIEnabled, 0, "deprecated alias for SEIDecodedPictureHash")
+  ("TMVPMode", m_TMVPModeId, 1, "TMVP mode 0: TMVP disable for all slices. 1: TMVP enable for all slices (default) 2: TMVP enable for certain slices only")
   ("FEN", m_bUseFastEnc, false, "fast encoder setting")
   ("ECU", m_bUseEarlyCU, false, "Early CU setting") 
   ("FDM", m_useFastDecisionForMerge, true, "Fast decision for Merge RD Cost") 
   ("CFM", m_bUseCbfFastMode, false, "Cbf fast mode setting")
-#if HHI_INTERVIEW_SKIP
-  ("InterViewSkip",  m_bInterViewSkip,    false, "usage of interview skip" )
-#if HHI_INTERVIEW_SKIP_LAMBDA_SCALE
-  ("InterViewSkipLambdaScale",  m_dInterViewSkipLambdaScale,    (Double)8, "lambda scale for interview skip" )
+  ("ESD", m_useEarlySkipDetection, false, "Early SKIP detection setting")
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  ( "RateControl",         m_RCEnableRateControl,   false, "Rate control: enable rate control" )
+  ( "TargetBitrate",       m_RCTargetBitrate,           0, "Rate control: target bitrate" )
+  ( "KeepHierarchicalBit", m_RCKeepHierarchicalBit, false, "Rate control: keep hierarchical bit allocation in rate control algorithm" )
+  ( "LCULevelRateControl", m_RCLCULevelRC,           true, "Rate control: true: LCU level RC; false: picture level RC" )
+  ( "RCLCUSeparateModel",  m_RCUseLCUSeparateModel,  true, "Rate control: use LCU level separate R-lambda model" )
+  ( "InitialQP",           m_RCInitialQP,               0, "Rate control: initial QP" )
+  ( "RCForceIntraQP",      m_RCForceIntraQP,        false, "Rate control: force intra QP to be equal to initial QP" )
+#else
+  ("RateCtrl,-rc", m_enableRateCtrl, false, "Rate control on/off")
+  ("TargetBitrate,-tbr", m_targetBitrate, 0, "Input target bitrate")
+  ("NumLCUInUnit,-nu", m_numLCUInUnit, 0, "Number of LCUs in an Unit")
 #endif
+
+  ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
+  ("CUTransquantBypassFlagValue", m_CUTransquantBypassFlagValue, false, "Fixed cu_transquant_bypass_flag value, when transquant_bypass_enable_flag is enabled")
+  ("RecalculateQPAccordingToLambda", m_recalculateQPAccordingToLambda, false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
+  ("StrongIntraSmoothing,-sis",      m_useStrongIntraSmoothing,           true, "Enable strong intra smoothing for 32x32 blocks")
+  ("SEIActiveParameterSets",         m_activeParameterSetsSEIEnabled,          0, "Enable generation of active parameter sets SEI messages")
+  ("VuiParametersPresent,-vui",      m_vuiParametersPresentFlag,           false, "Enable generation of vui_parameters()")
+  ("AspectRatioInfoPresent",         m_aspectRatioInfoPresentFlag,         false, "Signals whether aspect_ratio_idc is present")
+  ("AspectRatioIdc",                 m_aspectRatioIdc,                         0, "aspect_ratio_idc")
+  ("SarWidth",                       m_sarWidth,                               0, "horizontal size of the sample aspect ratio")
+  ("SarHeight",                      m_sarHeight,                              0, "vertical size of the sample aspect ratio")
+  ("OverscanInfoPresent",            m_overscanInfoPresentFlag,            false, "Indicates whether conformant decoded pictures are suitable for display using overscan\n")
+  ("OverscanAppropriate",            m_overscanAppropriateFlag,            false, "Indicates whether conformant decoded pictures are suitable for display using overscan\n")
+  ("VideoSignalTypePresent",         m_videoSignalTypePresentFlag,         false, "Signals whether video_format, video_full_range_flag, and colour_description_present_flag are present")
+  ("VideoFormat",                    m_videoFormat,                            5, "Indicates representation of pictures")
+  ("VideoFullRange",                 m_videoFullRangeFlag,                 false, "Indicates the black level and range of luma and chroma signals")
+  ("ColourDescriptionPresent",       m_colourDescriptionPresentFlag,       false, "Signals whether colour_primaries, transfer_characteristics and matrix_coefficients are present")
+  ("ColourPrimaries",                m_colourPrimaries,                        2, "Indicates chromaticity coordinates of the source primaries")
+  ("TransferCharateristics",         m_transferCharacteristics,                2, "Indicates the opto-electronic transfer characteristics of the source")
+  ("MatrixCoefficients",             m_matrixCoefficients,                     2, "Describes the matrix coefficients used in deriving luma and chroma from RGB primaries")
+  ("ChromaLocInfoPresent",           m_chromaLocInfoPresentFlag,           false, "Signals whether chroma_sample_loc_type_top_field and chroma_sample_loc_type_bottom_field are present")
+  ("ChromaSampleLocTypeTopField",    m_chromaSampleLocTypeTopField,            0, "Specifies the location of chroma samples for top field")
+  ("ChromaSampleLocTypeBottomField", m_chromaSampleLocTypeBottomField,         0, "Specifies the location of chroma samples for bottom field")
+  ("NeutralChromaIndication",        m_neutralChromaIndicationFlag,        false, "Indicates that the value of all decoded chroma samples is equal to 1<<(BitDepthCr-1)")
+  ("DefaultDisplayWindowFlag",       m_defaultDisplayWindowFlag,           false, "Indicates the presence of the Default Window parameters")
+  ("DefDispWinLeftOffset",           m_defDispWinLeftOffset,                   0, "Specifies the left offset of the default display window from the conformance window")
+  ("DefDispWinRightOffset",          m_defDispWinRightOffset,                  0, "Specifies the right offset of the default display window from the conformance window")
+  ("DefDispWinTopOffset",            m_defDispWinTopOffset,                    0, "Specifies the top offset of the default display window from the conformance window")
+  ("DefDispWinBottomOffset",         m_defDispWinBottomOffset,                 0, "Specifies the bottom offset of the default display window from the conformance window")
+  ("FrameFieldInfoPresentFlag",      m_frameFieldInfoPresentFlag,               false, "Indicates that pic_struct and field coding related values are present in picture timing SEI messages")
+  ("PocProportionalToTimingFlag",   m_pocProportionalToTimingFlag,         false, "Indicates that the POC value is proportional to the output time w.r.t. first picture in CVS")
+  ("NumTicksPocDiffOneMinus1",      m_numTicksPocDiffOneMinus1,                0, "Number of ticks minus 1 that for a POC difference of one")
+  ("BitstreamRestriction",           m_bitstreamRestrictionFlag,           false, "Signals whether bitstream restriction parameters are present")
+  ("TilesFixedStructure",            m_tilesFixedStructureFlag,            false, "Indicates that each active picture parameter set has the same values of the syntax elements related to tiles")
+  ("MotionVectorsOverPicBoundaries", m_motionVectorsOverPicBoundariesFlag, false, "Indicates that no samples outside the picture boundaries are used for inter prediction")
+  ("MaxBytesPerPicDenom",            m_maxBytesPerPicDenom,                    2, "Indicates a number of bytes not exceeded by the sum of the sizes of the VCL NAL units associated with any coded picture")
+  ("MaxBitsPerMinCuDenom",           m_maxBitsPerMinCuDenom,                   1, "Indicates an upper bound for the number of bits of coding_unit() data")
+  ("Log2MaxMvLengthHorizontal",      m_log2MaxMvLengthHorizontal,             15, "Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units")
+  ("Log2MaxMvLengthVertical",        m_log2MaxMvLengthVertical,               15, "Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units")
+  ("SEIRecoveryPoint",               m_recoveryPointSEIEnabled,                0, "Control generation of recovery point SEI messages")
+  ("SEIBufferingPeriod",             m_bufferingPeriodSEIEnabled,              0, "Control generation of buffering period SEI messages")
+  ("SEIPictureTiming",               m_pictureTimingSEIEnabled,                0, "Control generation of picture timing SEI messages")
+#if J0149_TONE_MAPPING_SEI
+  ("SEIToneMappingInfo",                       m_toneMappingInfoSEIEnabled,    false, "Control generation of Tone Mapping SEI messages")
+  ("SEIToneMapId",                             m_toneMapId,                        0, "Specifies Id of Tone Mapping SEI message for a given session")
+  ("SEIToneMapCancelFlag",                     m_toneMapCancelFlag,            false, "Indicates that Tone Mapping SEI message cancels the persistance or follows")
+  ("SEIToneMapPersistenceFlag",                m_toneMapPersistenceFlag,        true, "Specifies the persistence of the Tone Mapping SEI message")
+  ("SEIToneMapCodedDataBitDepth",              m_toneMapCodedDataBitDepth,         8, "Specifies Coded Data BitDepth of Tone Mapping SEI messages")
+  ("SEIToneMapTargetBitDepth",                 m_toneMapTargetBitDepth,            8, "Specifies Output BitDepth of Tome mapping function")
+  ("SEIToneMapModelId",                        m_toneMapModelId,                   0, "Specifies Model utilized for mapping coded data into target_bit_depth range\n"
+                                                                                      "\t0:  linear mapping with clipping\n"
+                                                                                      "\t1:  sigmoidal mapping\n"
+                                                                                      "\t2:  user-defined table mapping\n"
+                                                                                      "\t3:  piece-wise linear mapping\n"
+                                                                                      "\t4:  luminance dynamic range information ")
+  ("SEIToneMapMinValue",                              m_toneMapMinValue,                          0, "Specifies the minimum value in mode 0")
+  ("SEIToneMapMaxValue",                              m_toneMapMaxValue,                       1023, "Specifies the maxmum value in mode 0")
+  ("SEIToneMapSigmoidMidpoint",                       m_sigmoidMidpoint,                        512, "Specifies the centre point in mode 1")
+  ("SEIToneMapSigmoidWidth",                          m_sigmoidWidth,                           960, "Specifies the distance between 5% and 95% values of the target_bit_depth in mode 1")
+  ("SEIToneMapStartOfCodedInterval",                  cfg_startOfCodedInterval,          string(""), "Array of user-defined mapping table")
+  ("SEIToneMapNumPivots",                             m_numPivots,                                0, "Specifies the number of pivot points in mode 3")
+  ("SEIToneMapCodedPivotValue",                       cfg_codedPivotValue,               string(""), "Array of pivot point")
+  ("SEIToneMapTargetPivotValue",                      cfg_targetPivotValue,              string(""), "Array of pivot point")
+  ("SEIToneMapCameraIsoSpeedIdc",                     m_cameraIsoSpeedIdc,                        0, "Indicates the camera ISO speed for daylight illumination")
+  ("SEIToneMapCameraIsoSpeedValue",                   m_cameraIsoSpeedValue,                    400, "Specifies the camera ISO speed for daylight illumination of Extended_ISO")
+  ("SEIToneMapExposureCompensationValueSignFlag",     m_exposureCompensationValueSignFlag,        0, "Specifies the sign of ExposureCompensationValue")
+  ("SEIToneMapExposureCompensationValueNumerator",    m_exposureCompensationValueNumerator,       0, "Specifies the numerator of ExposureCompensationValue")
+  ("SEIToneMapExposureCompensationValueDenomIdc",     m_exposureCompensationValueDenomIdc,        2, "Specifies the denominator of ExposureCompensationValue")
+  ("SEIToneMapRefScreenLuminanceWhite",               m_refScreenLuminanceWhite,                350, "Specifies reference screen brightness setting in units of candela per square metre")
+  ("SEIToneMapExtendedRangeWhiteLevel",               m_extendedRangeWhiteLevel,                800, "Indicates the luminance dynamic range")
+  ("SEIToneMapNominalBlackLevelLumaCodeValue",        m_nominalBlackLevelLumaCodeValue,          16, "Specifies luma sample value of the nominal black level assigned decoded pictures")
+  ("SEIToneMapNominalWhiteLevelLumaCodeValue",        m_nominalWhiteLevelLumaCodeValue,         235, "Specifies luma sample value of the nominal white level assigned decoded pictures")
+  ("SEIToneMapExtendedWhiteLevelLumaCodeValue",       m_extendedWhiteLevelLumaCodeValue,        300, "Specifies luma sample value of the extended dynamic range assigned decoded pictures")
 #endif
-  /* Compatability with old style -1 FOO or -0 FOO options. */
-  ("1", doOldStyleCmdlineOn, "turn option <name> on")
-  ("0", doOldStyleCmdlineOff, "turn option <name> off")
-#if HHI_MPI
-  ("MVI", m_bUseMVI, false, "use motion vector inheritance for depth map coding")
+  ("SEIFramePacking",                m_framePackingSEIEnabled,                 0, "Control generation of frame packing SEI messages")
+  ("SEIFramePackingType",            m_framePackingSEIType,                    0, "Define frame packing arrangement\n"
+                                                                                  "\t0: checkerboard - pixels alternatively represent either frames\n"
+                                                                                  "\t1: column alternation - frames are interlaced by column\n"
+                                                                                  "\t2: row alternation - frames are interlaced by row\n"
+                                                                                  "\t3: side by side - frames are displayed horizontally\n"
+                                                                                  "\t4: top bottom - frames are displayed vertically\n"
+                                                                                  "\t5: frame alternation - one frame is alternated with the other")
+  ("SEIFramePackingId",              m_framePackingSEIId,                      0, "Id of frame packing SEI message for a given session")
+  ("SEIFramePackingQuincunx",        m_framePackingSEIQuincunx,                0, "Indicate the presence of a Quincunx type video frame")
+  ("SEIFramePackingInterpretation",  m_framePackingSEIInterpretation,          0, "Indicate the interpretation of the frame pair\n"
+                                                                                  "\t0: unspecified\n"
+                                                                                  "\t1: stereo pair, frame0 represents left view\n"
+                                                                                  "\t2: stereo pair, frame0 represents right view")
+  ("SEIDisplayOrientation",          m_displayOrientationSEIAngle,             0, "Control generation of display orientation SEI messages\n"
+                                                              "\tN: 0 < N < (2^16 - 1) enable display orientation SEI message with anticlockwise_rotation = N and display_orientation_repetition_period = 1\n"
+                                                              "\t0: disable")
+  ("SEITemporalLevel0Index",         m_temporalLevel0IndexSEIEnabled,          0, "Control generation of temporal level 0 index SEI messages")
+  ("SEIGradualDecodingRefreshInfo",  m_gradualDecodingRefreshInfoEnabled,      0, "Control generation of gradual decoding refresh information SEI message")
+  ("SEIDecodingUnitInfo",             m_decodingUnitInfoSEIEnabled,                       0, "Control generation of decoding unit information SEI message.")
+#if L0208_SOP_DESCRIPTION_SEI
+  ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,              0, "Control generation of SOP description SEI messages")
 #endif
-#if RWTH_SDC_DLT_B0036
-  ("DLT", m_bUseDLT, true, "use depth lookup table for depth map coding")
-  ("SDC", m_bUseSDC, true, "use simplified depth coding tree")
+#if K0180_SCALABLE_NESTING_SEI
+  ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
 #endif
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
+  ("BitRatePicRateMaxTLayers",   m_bitRatePicRateMaxTLayers,           0, "Maximum number of sub-layers signalled; can be inferred otherwise; here for easy parsing of config. file")
+  ("BitRateInfoPresent",         cfg_bitRateInfoPresentFlag,          string(""), "Control signalling of bit rate information of avg. bit rate and max. bit rate in VPS\n"
+                                                                          "\t0: Do not sent bit rate info\n"
+                                                                          "\tN (N > 0): Send bit rate info for N sub-layers. N should equal maxTempLayers.")                                                                     
+  ("PicRateInfoPresent",         cfg_picRateInfoPresentFlag,          string(""), "Control signalling of picture rate information of avg. bit rate and max. bit rate in VPS\n"
+                                                                          "\t0: Do not sent picture rate info\n"
+                                                                          "\tN (N > 0): Send picture rate info for N sub-layers. N should equal maxTempLayers.")                                                                     
+  ("AvgBitRate",                   cfg_avgBitRate,                    string(""), "List of avg. bit rates for the different sub-layers; include non-negative number even if corresponding flag is 0")
+  ("MaxBitRate",                   cfg_maxBitRate,                    string(""), "List of max. bit rates for the different sub-layers; include non-negative number even if corresponding flag is 0")
+  ("AvgPicRate",                   cfg_avgPicRate,                    string(""), "List of avg. picture rates for the different sub-layers; include non-negative number even if corresponding flag is 0")
+  ("ConstantPicRateIdc",           cfg_constantPicRateIdc,            string(""), "List of constant picture rate IDCs; include non-negative number even if corresponding flag is 0")
+#endif
+#if H_3D
+  ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
+  ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
+  ("CodedCamParsPrecision",   m_iCodedCamParPrecision,  STD_CAM_PARAMETERS_PRECISION, "precision for coding of camera parameters (in units of 2^(-x) luma samples)" )
+/* View Synthesis Optimization */
+
+#if H_3D_VSO
+  ("VSOConfig",                       m_pchVSOConfig            , (Char *) 0    , "VSO configuration")
+  ("VSO",                             m_bUseVSO                 , false         , "Use VSO" )    
+  ("VSOMode",                         m_uiVSOMode               , (UInt)   4    , "VSO Mode")
+  ("LambdaScaleVSO",                  m_dLambdaScaleVSO         , (Double) 1    , "Lambda Scaling for VSO")
+  ("VSOLSTable",                      m_bVSOLSTable             , true          , "Depth QP dependent video/depth rate allocation by Lagrange multiplier" )      
+  ("ForceLambdaScaleVSO",             m_bForceLambdaScaleVSO    , false         , "Force using Lambda Scale VSO also in non-VSO-Mode")
+  ("AllowNegDist",                    m_bAllowNegDist           , true          , "Allow negative Distortion in VSO")
+  
+  ("UseEstimatedVSD",                 m_bUseEstimatedVSD        , true          , "Model based VSD estimation instead of rendering based for some encoder decisions" )      
+  ("VSOEarlySkip",                    m_bVSOEarlySkip           , true          , "Early skip of VSO computation if synthesis error assumed to be zero" )      
+  
+  ("WVSO",                            m_bUseWVSO                , true          , "Use depth fidelity term for VSO" )
+  ("VSOWeight",                       m_iVSOWeight              , 10            , "Synthesized View Distortion Change weight" )
+  ("VSDWeight",                       m_iVSDWeight              , 1             , "View Synthesis Distortion estimate weight" )
+  ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
+
+#endif //HHI_VSO
+#endif //H_3D
   ;
   
+#if H_MV
   // parse coding structure
-  for( Int k = 0; k < MAX_VIEW_NUM; k++ )
+  for( Int k = 0; k < MAX_NUM_LAYERS; k++ )
   {
+    m_GOPListMvc.push_back( new GOPEntry[MAX_GOP + 1] );
     if( k == 0 )
     {
       for( Int i = 1; i < MAX_GOP + 1; i++ ) 
       {
         std::ostringstream cOSS;
         cOSS<<"Frame"<<i;
-        opts.addOptions()( cOSS.str(), m_GOPListsMvc[k][i-1], GOPEntryMvc() );
+        opts.addOptions()( cOSS.str(), m_GOPListMvc[k][i-1], GOPEntry() );
+        if ( i != 1 )
+        {
+          opts.opt_list.back()->opt->opt_duplicate = true; 
+        }        
       }
     }
     else
     {
       std::ostringstream cOSS1;
-      cOSS1<<"FrameI"<<"_v"<<k;
-      opts.addOptions()(cOSS1.str(), m_GOPListsMvc[k][MAX_GOP], GOPEntryMvc());
+      cOSS1<<"FrameI"<<"_l"<<k;
+
+      opts.addOptions()(cOSS1.str(), m_GOPListMvc[k][MAX_GOP], GOPEntry());
+      if ( k > 1 )
+      {
+        opts.opt_list.back()->opt->opt_duplicate = true; 
+      }        
+
 
       for( Int i = 1; i < MAX_GOP + 1; i++ ) 
       {
         std::ostringstream cOSS2;
-        cOSS2<<"Frame"<<i<<"_v"<<k;
-        opts.addOptions()(cOSS2.str(), m_GOPListsMvc[k][i-1], GOPEntryMvc());
+        cOSS2<<"Frame"<<i<<"_l"<<k;
+        opts.addOptions()(cOSS2.str(), m_GOPListMvc[k][i-1], GOPEntry());
+        if ( i != 1 || k > 0 )
+        {
+          opts.opt_list.back()->opt->opt_duplicate = true; 
+        }        
       }
     }
   }
-
+#else
+  for(Int i=1; i<MAX_GOP+1; i++) {
+    std::ostringstream cOSS;
+    cOSS<<"Frame"<<i;
+    opts.addOptions()(cOSS.str(), m_GOPList[i-1], GOPEntry());
+  }
+#endif
   po::setDefaults(opts);
-  const list<const char*>& argv_unhandled = po::scanArgv(opts, argc, (const char**) argv);
+  const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
 
-  for (list<const char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
+  for (list<const Char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
   {
     fprintf(stderr, "Unhandled argument ignored: `%s'\n", *it);
   }
@@ -525,7 +796,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   {
     /* argc == 1: no options have been specified */
     po::doHelp(cout, opts);
-    xPrintUsage();
     return false;
   }
   
@@ -533,83 +803,100 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
    * Set any derived parameters
    */
   /* convert std::string to c string for compatability */
+#if !H_MV
+  m_pchInputFile = cfg_InputFile.empty() ? NULL : strdup(cfg_InputFile.c_str());
+#endif
   m_pchBitstreamFile = cfg_BitstreamFile.empty() ? NULL : strdup(cfg_BitstreamFile.c_str());
+#if !H_MV
+  m_pchReconFile = cfg_ReconFile.empty() ? NULL : strdup(cfg_ReconFile.c_str());
+#endif
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
-#if FLEX_CODING_ORDER_M23723
-  m_pchMVCJointCodingOrder= cfg_JointCodingOrdering.empty()?NULL:strdup(cfg_JointCodingOrdering.c_str());
-  // If flexible order is enabled and if depth comes before the texture for a view, disable VSO
-#if HHI_VSO && DISABLE_FCO_FOR_VSO
-  Bool depthComesFirst = false;
-  int iter = 0;
-  if ( m_b3DVFlexOrder )
+  
+  Char* pColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
+  Char* pRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
+  if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
   {
-    for(Int iViewIdx=0; iViewIdx<m_iNumberOfViews; iViewIdx++)
+    char *columnWidth;
+    int  i=0;
+    m_pColumnWidth = new UInt[m_iNumColumnsMinus1];
+    columnWidth = strtok(pColumnWidth, " ,-");
+    while(columnWidth!=NULL)
     {
-      iter = 0; 
-      for ( Int ii=1; ii<12; ii+=2 )
+      if( i>=m_iNumColumnsMinus1 )
       {
-        Int iViewIdxCfg = (Int)(m_pchMVCJointCodingOrder[ii]-'0');
-        if ( iViewIdxCfg == iViewIdx )
-        {
-          iter ++; 
-          if ( m_pchMVCJointCodingOrder[ii-1]=='D' ) // depth comes first for this view
-          {
-            if(iter == 1)
-           { 
-            depthComesFirst = true;
-            break;
-           }
-          }
-          else
-          {
-            assert(m_pchMVCJointCodingOrder[ii-1]=='T');
-          }
-        }
+        printf( "The number of columns whose width are defined is larger than the allowed number of columns.\n" );
+        exit( EXIT_FAILURE );
       }
+      *( m_pColumnWidth + i ) = atoi( columnWidth );
+      columnWidth = strtok(NULL, " ,-");
+      i++;
+    }
+    if( i<m_iNumColumnsMinus1 )
+    {
+      printf( "The width of some columns is not defined.\n" );
+      exit( EXIT_FAILURE );
     }
   }
-  if (depthComesFirst)
+  else
   {
-    m_bUseVSO = false;
-  }
-#endif
-#endif
-  m_pchColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
-  m_pchRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
-  m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
-  
-  if ( m_bUsingDepthMaps )
-  {
-    for(Int i = 0; i < m_pchDepthReconFileList.size() ; i++)
-    {
-      if ((m_pchDepthInputFileList[i] != NULL) && (m_pchReconFileList[i] != NULL) && (i < m_iNumberOfViews) )
-      {
-        if (m_pchDepthReconFileList[i] == NULL )
-        {
-          xAppendToFileNameEnd( m_pchReconFileList[i], "_depth", m_pchDepthReconFileList[i] );
-        }
-      }
-      else
-      {
-        m_pchDepthReconFileList[i] = NULL;
-      }
-    };
-  }
-  if ( m_adQP.size() < 2 )
-  {
-    m_adQP.push_back( m_adQP[0] );
-  };
-  for (UInt uiK = 0; uiK < m_adQP.size(); uiK++)
-  {
-    m_aiQP.push_back( (Int)( m_adQP[uiK] ) );
+    m_pColumnWidth = NULL;
   }
 
-  switch (m_croppingMode)
+  if( m_iUniformSpacingIdr == 0 && m_iNumRowsMinus1 > 0 )
+  {
+    char *rowHeight;
+    int  i=0;
+    m_pRowHeight = new UInt[m_iNumRowsMinus1];
+    rowHeight = strtok(pRowHeight, " ,-");
+    while(rowHeight!=NULL)
+    {
+      if( i>=m_iNumRowsMinus1 )
+      {
+        printf( "The number of rows whose height are defined is larger than the allowed number of rows.\n" );
+        exit( EXIT_FAILURE );
+      }
+      *( m_pRowHeight + i ) = atoi( rowHeight );
+      rowHeight = strtok(NULL, " ,-");
+      i++;
+    }
+    if( i<m_iNumRowsMinus1 )
+    {
+      printf( "The height of some rows is not defined.\n" );
+      exit( EXIT_FAILURE );
+   }
+  }
+  else
+  {
+    m_pRowHeight = NULL;
+  }
+#if H_MV
+  free ( pColumnWidth );
+  free ( pRowHeight   ); 
+#endif
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
+  readBoolString(cfg_bitRateInfoPresentFlag, m_bitRatePicRateMaxTLayers, m_bitRateInfoPresentFlag, "bit rate info. present flag" );
+  readIntString (cfg_avgBitRate,             m_bitRatePicRateMaxTLayers, m_avgBitRate,             "avg. bit rate"               );
+  readIntString (cfg_maxBitRate,             m_bitRatePicRateMaxTLayers, m_maxBitRate,             "max. bit rate"               );
+  readBoolString(cfg_picRateInfoPresentFlag, m_bitRatePicRateMaxTLayers, m_picRateInfoPresentFlag, "bit rate info. present flag" );
+  readIntString (cfg_avgPicRate,             m_bitRatePicRateMaxTLayers, m_avgPicRate,             "avg. pic rate"               );
+  readIntString (cfg_constantPicRateIdc,     m_bitRatePicRateMaxTLayers, m_constantPicRateIdc,     "constant pic rate Idc"       );
+#endif
+  m_scalingListFile = cfg_ScalingListFile.empty() ? NULL : strdup(cfg_ScalingListFile.c_str());
+  
+  /* rules for input, output and internal bitdepths as per help text */
+  if (!m_internalBitDepthY) { m_internalBitDepthY = m_inputBitDepthY; }
+  if (!m_internalBitDepthC) { m_internalBitDepthC = m_internalBitDepthY; }
+  if (!m_inputBitDepthC) { m_inputBitDepthC = m_inputBitDepthY; }
+  if (!m_outputBitDepthY) { m_outputBitDepthY = m_internalBitDepthY; }
+  if (!m_outputBitDepthC) { m_outputBitDepthC = m_internalBitDepthC; }
+
+  // TODO:ChromaFmt assumes 4:2:0 below
+  switch (m_conformanceMode)
   {
   case 0:
     {
-      // no cropping or padding
-      m_cropLeft = m_cropRight = m_cropTop = m_cropBottom = 0;
+      // no conformance or padding
+      m_confLeft = m_confRight = m_confTop = m_confBottom = 0;
       m_aiPad[1] = m_aiPad[0] = 0;
       break;
     }
@@ -619,13 +906,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       Int minCuSize = m_uiMaxCUHeight >> (m_uiMaxCUDepth - 1);
       if (m_iSourceWidth % minCuSize)
       {
-        m_aiPad[0] = m_cropRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
-        m_iSourceWidth  += m_cropRight;
+        m_aiPad[0] = m_confRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
+        m_iSourceWidth  += m_confRight;
       }
       if (m_iSourceHeight % minCuSize)
       {
-        m_aiPad[1] = m_cropBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
-        m_iSourceHeight += m_cropBottom;
+        m_aiPad[1] = m_confBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
+        m_iSourceHeight += m_confBottom;
+      }
+      if (m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0)
+      {
+        fprintf(stderr, "Error: picture width is not an integer multiple of the specified chroma subsampling\n");
+        exit(EXIT_FAILURE);
+      }
+      if (m_aiPad[1] % TComSPS::getWinUnitY(CHROMA_420) != 0)
+      {
+        fprintf(stderr, "Error: picture height is not an integer multiple of the specified chroma subsampling\n");
+        exit(EXIT_FAILURE);
       }
       break;
     }
@@ -634,20 +931,20 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       //padding
       m_iSourceWidth  += m_aiPad[0];
       m_iSourceHeight += m_aiPad[1];
-      m_cropRight  = m_aiPad[0];
-      m_cropBottom = m_aiPad[1];
+      m_confRight  = m_aiPad[0];
+      m_confBottom = m_aiPad[1];
       break;
     }
   case 3:
     {
-      // cropping
-      if ((m_cropLeft == 0) && (m_cropRight == 0) && (m_cropTop == 0) && (m_cropBottom == 0))
+      // conformance
+      if ((m_confLeft == 0) && (m_confRight == 0) && (m_confTop == 0) && (m_confBottom == 0))
       {
-        fprintf(stderr, "Warning: Cropping enabled, but all cropping parameters set to zero\n");
+        fprintf(stderr, "Warning: Conformance window enabled, but all conformance window parameters set to zero\n");
       }
       if ((m_aiPad[1] != 0) || (m_aiPad[0]!=0))
       {
-        fprintf(stderr, "Warning: Cropping enabled, padding parameters will be ignored\n");
+        fprintf(stderr, "Warning: Conformance window enabled, padding parameters will be ignored\n");
       }
       m_aiPad[1] = m_aiPad[0] = 0;
       break;
@@ -655,102 +952,165 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   
   // allocate slice-based dQP values
-  m_aidQP = new Int[ m_iFrameToBeEncoded + m_iGOPSize + 1 ];
-  m_aidQPdepth =  new Int[ m_iFrameToBeEncoded + m_iGOPSize + 1 ];
-  ::memset( m_aidQP, 0, sizeof(Int)*( m_iFrameToBeEncoded + m_iGOPSize + 1 ) );
-  ::memset( m_aidQPdepth, 0, sizeof(Int)*( m_iFrameToBeEncoded + m_iGOPSize + 1 ) );
+#if H_MV
+  xResizeVector( m_viewId    ); 
+#if H_3D
+  xResizeVector( m_depthFlag ); 
+
+  std::vector<Int> uniqueViewIds; 
+  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+  {    
+    Bool isIn = false; 
+    for ( Int i = 0 ; i < uniqueViewIds.size(); i++ )
+    {
+      isIn = isIn || ( m_viewId[ layer ] == uniqueViewIds[ i ] ); 
+    }
+    if ( !isIn ) 
+    {
+      uniqueViewIds.push_back( m_viewId[ layer ] ); 
+    } 
+  }
+  m_iNumberOfViews = (Int) uniqueViewIds.size(); 
+#endif
+
+  xResizeVector( m_fQP ); 
+
+  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+  {
+    m_aidQP.push_back( new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ] );
+    ::memset( m_aidQP[layer], 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
+
+    // handling of floating-point QP values
+    // if QP is not integer, sequence is split into two sections having QP and QP+1
+    m_iQP.push_back((Int)( m_fQP[layer] ));
+    if ( m_iQP[layer] < m_fQP[layer] )
+    {
+      Int iSwitchPOC = (Int)( m_framesToBeEncoded - (m_fQP[layer] - m_iQP[layer])*m_framesToBeEncoded + 0.5 );
+
+      iSwitchPOC = (Int)( (Double)iSwitchPOC / m_iGOPSize + 0.5 )*m_iGOPSize;
+      for ( Int i=iSwitchPOC; i<m_framesToBeEncoded + m_iGOPSize + 1; i++ )
+      {
+        m_aidQP[layer][i] = 1;
+      }
+    }
+  }
+
+  xResizeVector( m_bLoopFilterDisable ); 
+  xResizeVector( m_bUseSAO );   
+
+#else
+  m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
+  ::memset( m_aidQP, 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
   
   // handling of floating-point QP values
   // if QP is not integer, sequence is split into two sections having QP and QP+1
-  m_aiQP[0] = (Int)( m_adQP[0] );
-  if ( m_aiQP[0] < m_adQP[0] )
+  m_iQP = (Int)( m_fQP );
+  if ( m_iQP < m_fQP )
   {
-    Int iSwitchPOC = (Int)( m_iFrameToBeEncoded - (m_adQP[0] - m_aiQP[0])*m_iFrameToBeEncoded + 0.5 );
+    Int iSwitchPOC = (Int)( m_framesToBeEncoded - (m_fQP - m_iQP)*m_framesToBeEncoded + 0.5 );
     
     iSwitchPOC = (Int)( (Double)iSwitchPOC / m_iGOPSize + 0.5 )*m_iGOPSize;
-    for ( Int i=iSwitchPOC; i<m_iFrameToBeEncoded + m_iGOPSize + 1; i++ )
+    for ( Int i=iSwitchPOC; i<m_framesToBeEncoded + m_iGOPSize + 1; i++ )
     {
       m_aidQP[i] = 1;
     }
   }
-
-  m_aiQP[1] = (Int)( m_adQP[1] );
-  if ( m_aiQP[1] < m_adQP[1] )
-  {
-    Int iSwitchPOC = (Int)( m_iFrameToBeEncoded - (m_adQP[1] - m_aiQP[1])*m_iFrameToBeEncoded + 0.5 );
-
-    iSwitchPOC = (Int)( (Double)iSwitchPOC / m_iGOPSize + 0.5 )*m_iGOPSize;
-    for ( Int i=iSwitchPOC; i<m_iFrameToBeEncoded + m_iGOPSize + 1; i++ )
-    {
-      m_aidQPdepth[i] = 1;
-    }
-  }
-
+#endif
+  
   // reading external dQP description from file
   if ( m_pchdQPFile )
   {
     FILE* fpt=fopen( m_pchdQPFile, "r" );
     if ( fpt )
     {
+#if H_MV
+      for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+      {
+#endif
       Int iValue;
       Int iPOC = 0;
-      while ( iPOC < m_iFrameToBeEncoded )
+      while ( iPOC < m_framesToBeEncoded )
       {
         if ( fscanf(fpt, "%d", &iValue ) == EOF ) break;
+#if H_MV
+        m_aidQP[layer][ iPOC ] = iValue;
+        iPOC++;
+      }
+#else
         m_aidQP[ iPOC ] = iValue;
         iPOC++;
+#endif
       }
       fclose(fpt);
     }
   }
+  m_iWaveFrontSubstreams = m_iWaveFrontSynchro ? (m_iSourceHeight + m_uiMaxCUHeight - 1) / m_uiMaxCUHeight : 1;
 
-#if HHI_VSO
-  m_bUseVSO = m_bUseVSO && m_bUsingDepthMaps && (m_uiVSOMode != 0);
-#endif
-
-#if LGE_WVSO_A0119
-  m_bUseWVSO = m_bUseVSO && m_bUseWVSO && m_bUsingDepthMaps;
-#endif
-  xCleanUpVectors();
-
-
-#if TMVP_DEPTH_SWITCH
-  if ( m_enableTMVP.size() < 2)
+#if J0149_TONE_MAPPING_SEI
+  if( m_toneMappingInfoSEIEnabled && !m_toneMapCancelFlag )
   {
-    m_enableTMVP.push_back( m_enableTMVP[0]  );
+    Char* pcStartOfCodedInterval = cfg_startOfCodedInterval.empty() ? NULL: strdup(cfg_startOfCodedInterval.c_str());
+    Char* pcCodedPivotValue = cfg_codedPivotValue.empty() ? NULL: strdup(cfg_codedPivotValue.c_str());
+    Char* pcTargetPivotValue = cfg_targetPivotValue.empty() ? NULL: strdup(cfg_targetPivotValue.c_str());
+    if( m_toneMapModelId == 2 && pcStartOfCodedInterval )
+    {
+      char *startOfCodedInterval;
+      UInt num = 1u<< m_toneMapTargetBitDepth;
+      m_startOfCodedInterval = new Int[num];
+      ::memset( m_startOfCodedInterval, 0, sizeof(Int)*num );
+      startOfCodedInterval = strtok(pcStartOfCodedInterval, " .");
+      int i = 0;
+      while( startOfCodedInterval && ( i < num ) )
+      {
+        m_startOfCodedInterval[i] = atoi( startOfCodedInterval );
+        startOfCodedInterval = strtok(NULL, " .");
+        i++;
+      }
+    } 
+    else
+    {
+      m_startOfCodedInterval = NULL;
+    }
+    if( ( m_toneMapModelId == 3 ) && ( m_numPivots > 0 ) )
+    {
+      if( pcCodedPivotValue && pcTargetPivotValue )
+      {
+        char *codedPivotValue;
+        char *targetPivotValue;
+        m_codedPivotValue = new Int[m_numPivots];
+        m_targetPivotValue = new Int[m_numPivots];
+        ::memset( m_codedPivotValue, 0, sizeof(Int)*( m_numPivots ) );
+        ::memset( m_targetPivotValue, 0, sizeof(Int)*( m_numPivots ) );
+        codedPivotValue = strtok(pcCodedPivotValue, " .");
+        int i=0;
+        while(codedPivotValue&&i<m_numPivots)
+        {
+          m_codedPivotValue[i] = atoi( codedPivotValue );
+          codedPivotValue = strtok(NULL, " .");
+          i++;
+        }
+        i=0;
+        targetPivotValue = strtok(pcTargetPivotValue, " .");
+        while(targetPivotValue&&i<m_numPivots)
+        {
+          m_targetPivotValue[i]= atoi( targetPivotValue );
+          targetPivotValue = strtok(NULL, " .");
+          i++;
+        }
+      }
+    }
+    else
+    {
+      m_codedPivotValue = NULL;
+      m_targetPivotValue = NULL;
+    }
   }
 #endif
- 
-
-#if HHI_VSO
-  if ( m_abUseALF .size() < 2)
-    m_abUseALF .push_back( m_bUseVSO ? false : m_abUseALF[0]  );
-
-  if ( m_abUseRDOQ.size() < 2)
-    m_abUseRDOQ.push_back( m_bUseVSO ? true : m_abUseRDOQ[0] );
-
-  if ( m_abLoopFilterDisable.size() < 2)
-    m_abLoopFilterDisable.push_back( m_bUseVSO ? true : m_abLoopFilterDisable[0]  );
-
-  if (m_abUseSAO.size() < 2)
-    m_abUseSAO.push_back            ( m_bUseVSO ? false : m_abUseSAO[0] );
-#else
-  if ( m_abUseALF .size() < 2)
-    m_abUseALF .push_back( m_abUseALF[0]  );
-
-  if ( m_abUseRDOQ.size() < 2)
-    m_abUseRDOQ.push_back( m_abUseRDOQ[0] );
-
-  if ( m_abLoopFilterDisable.size() < 2)
-    m_abLoopFilterDisable.push_back( m_abLoopFilterDisable[0]  );
-
-  if (m_abUseSAO.size() < 2)
-    m_abUseSAO.push_back            ( m_abUseSAO[0] );
-#endif
-
-#if HHI_VSO
-
-#if HHI_VSO_LS_TABLE_M23714
+#if H_3D
+  // set global varibles
+  xSetGlobal();
+#if H_3D_VSO
+// Table base optimization 
   // Q&D
   Double adLambdaScaleTable[] = 
   {  0.031250, 0.031639, 0.032029, 0.032418, 0.032808, 0.033197, 0.033586, 0.033976, 0.034365, 0.034755, 
@@ -762,25 +1122,29 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }; 
   if ( m_bVSOLSTable )
   {
-    AOT( (m_aiQP[1] < 0) || (m_aiQP[1] > 51));
-    m_dLambdaScaleVSO *= adLambdaScaleTable[m_aiQP[1]]; 
+    Int firstDepthLayer = -1; 
+    for (Int layer = 0; layer < m_numberOfLayers; layer++ )
+    {
+      if ( m_depthFlag[ layer ])
+      {
+        firstDepthLayer = layer;
+        break; 
+      }
+    }
+    AOT( firstDepthLayer == -1 );
+    AOT( (m_iQP[firstDepthLayer] < 0) || (m_iQP[firstDepthLayer] > 51));
+    m_dLambdaScaleVSO *= adLambdaScaleTable[m_iQP[firstDepthLayer]]; 
   }
 #endif
-#endif
-
- // set global variables
-  xSetGlobal();
-
-  // read and check camera parameters
-#if HHI_VSO
+#if H_3D_VSO
 if ( m_bUseVSO && m_uiVSOMode == 4)
 {
   m_cRenModStrParser.setString( m_iNumberOfViews, m_pchVSOConfig );
-  m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
-                                      m_uiInputBitDepth,
+  m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
+                                      g_bitDepthY,
                                 (UInt)m_iCodedCamParPrecision,
                                       m_FrameSkip,
-                                (UInt)m_iFrameToBeEncoded,
+                                (UInt)m_framesToBeEncoded,
                                       m_pchCameraParameterFile,
                                       m_pchBaseViewCameraNumbers,
                                       NULL,
@@ -789,11 +1153,11 @@ if ( m_bUseVSO && m_uiVSOMode == 4)
 }
 else if ( m_bUseVSO && m_uiVSOMode != 4 )
 {
-  m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
-                                      m_uiInputBitDepth,
+  m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
+                                      g_bitDepthY,
                                 (UInt)m_iCodedCamParPrecision,
                                       m_FrameSkip,
-                                (UInt)m_iFrameToBeEncoded,
+                                (UInt)m_framesToBeEncoded,
                                       m_pchCameraParameterFile,
                                       m_pchBaseViewCameraNumbers,
                                       m_pchVSOConfig,
@@ -802,11 +1166,11 @@ else if ( m_bUseVSO && m_uiVSOMode != 4 )
 }
 else
 {
-  m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
-    m_uiInputBitDepth,
-    (UInt)m_iCodedCamParPrecision,
+  m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
+    g_bitDepthY,
+    (UInt) m_iCodedCamParPrecision,
     m_FrameSkip,
-    (UInt)m_iFrameToBeEncoded,
+    (UInt) m_framesToBeEncoded,
     m_pchCameraParameterFile,
     m_pchBaseViewCameraNumbers,
     NULL,
@@ -814,72 +1178,281 @@ else
     LOG2_DISP_PREC_LUT );
 }
 #else
-#if !QC_MVHEVC_B0046
-  m_cCameraData     .init     ( (UInt)m_iNumberOfViews,
-    m_uiInputBitDepth,
-    (UInt)m_iCodedCamParPrecision,
+  m_cCameraData     .init     ( ((UInt) m_iNumberOfViews ), 
+    g_bitDepthY,
+    (UInt) m_iCodedCamParPrecision,
     m_FrameSkip,
-    (UInt)m_iFrameToBeEncoded,
+    (UInt) m_framesToBeEncoded,
     m_pchCameraParameterFile,
     m_pchBaseViewCameraNumbers,
     NULL,
     NULL,
     LOG2_DISP_PREC_LUT );
 #endif
-#endif
-
-
-  // check validity of input parameters
-  xCheckParameter();
-#if !QC_MVHEVC_B0046
   m_cCameraData.check( false, true );
 #endif
+  // check validity of input parameters
+  xCheckParameter();
+
+#if !H_3D
+  // set global varibles
+  xSetGlobal();
+#endif
+  
   // print-out parameters
   xPrintParameter();
   
   return true;
 }
+#if SIGNAL_BITRATE_PICRATE_IN_VPS
+Void readBoolString(const string inpString, const Int numEntries, Bool* &memberArray, const char *elementName)
+{
+  Char* inpArray = inpString.empty() ? NULL : strdup(inpString.c_str());
+  Int i = 0;
+  if(numEntries)
+  {
+    Char* tempArray = strtok(inpArray, " ,-");
+    memberArray = new Bool[numEntries];
+    while( tempArray != NULL )
+    {
+      if( i >= numEntries )
+      {
+        printf( "The number of %s defined is larger than the allowed number\n", elementName );
+        exit( EXIT_FAILURE );
+      }
+      assert( (atoi(tempArray) == 0) || (atoi(tempArray) == 1) );
+      *( memberArray + i ) = atoi(tempArray);
+      tempArray = strtok(NULL, " ,-");
+      i++;
+    }
+    if( i < numEntries )
+    {
+      printf( "Some %s are not defined\n", elementName );
+      exit( EXIT_FAILURE );
+    }
+  }
+  else
+  {
+    memberArray = NULL;
+  }
+}
 
+Void readIntString(const string inpString, const Int numEntries, Int* &memberArray, const char *elementName)
+{
+  Char* inpArray = inpString.empty() ? NULL : strdup(inpString.c_str());
+  Int i = 0;
+  if(numEntries)
+  {
+    Char* tempArray = strtok(inpArray, " ,-");
+    memberArray = new Int[numEntries];
+    while( tempArray != NULL )
+    {
+      if( i >= numEntries )
+      {
+        printf( "The number of %s defined is larger than the allowed number\n", elementName );
+        exit( EXIT_FAILURE );
+      }
+      *( memberArray + i ) = atoi(tempArray);
+      tempArray = strtok(NULL, " ,-");
+      i++;
+    }
+    if( i < numEntries )
+    {
+      printf( "Some %s are not defined\n", elementName );
+      exit( EXIT_FAILURE );
+    }
+  }
+  else
+  {
+    memberArray = NULL;
+  }
+}
+#endif
 // ====================================================================================================================
 // Private member functions
 // ====================================================================================================================
 
-Bool confirmPara(Bool bflag, const char* message);
+Bool confirmPara(Bool bflag, const Char* message);
 
 Void TAppEncCfg::xCheckParameter()
 {
-  bool check_failed = false; /* abort if there is a fatal configuration problem */
+  if (!m_decodedPictureHashSEIEnabled)
+  {
+    fprintf(stderr, "******************************************************************\n");
+    fprintf(stderr, "** WARNING: --SEIDecodedPictureHash is now disabled by default. **\n");
+    fprintf(stderr, "**          Automatic verification of decoded pictures by a     **\n");
+    fprintf(stderr, "**          decoder requires this option to be enabled.         **\n");
+    fprintf(stderr, "******************************************************************\n");
+  }
+
+  Bool check_failed = false; /* abort if there is a fatal configuration problem */
 #define xConfirmPara(a,b) check_failed |= confirmPara(a,b)
   // check range of parameters
-  xConfirmPara( m_uiInputBitDepth < 8,                                                      "InputBitDepth must be at least 8" );
+  xConfirmPara( m_inputBitDepthY < 8,                                                     "InputBitDepth must be at least 8" );
+  xConfirmPara( m_inputBitDepthC < 8,                                                     "InputBitDepthC must be at least 8" );
   xConfirmPara( m_iFrameRate <= 0,                                                          "Frame rate must be more than 1" );
-  xConfirmPara( m_iFrameToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
+  xConfirmPara( m_framesToBeEncoded <= 0,                                                   "Total Number Of Frames encoded must be more than 0" );
+#if H_MV
+  xConfirmPara( m_numberOfLayers > MAX_NUM_LAYER_IDS ,                                      "NumberOfLayers must be less than or equal to MAX_NUM_LAYER_IDS");
+
+
+  xConfirmPara( m_layerIdInNuh[0] != 0      , "LayerIdInNuh must be 0 for the first layer. ");
+  xConfirmPara( (m_layerIdInNuh.size()!=1) && (m_layerIdInNuh.size() < m_numberOfLayers) , "LayerIdInNuh must be given for all layers. ");
+
+#if H_3D
+  xConfirmPara( m_scalabilityMask != 1 && m_scalabilityMask != 3, "Scalability Mask must be equal to 1 or 3. ");
+#else
+  xConfirmPara( m_scalabilityMask != 1 , "Scalability Mask must be equal to 1. ");
+#endif
+
+  m_dimIds.push_back( m_viewId ); 
+  const Int viewDimPosition = 0; 
+#if H_3D
+  if ( m_scalabilityMask & ( 1 << DEPTH_ID ) )
+    m_dimIds.push_back( m_depthFlag ); 
+#endif
+
+  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
+
+  dimBitOffset[ 0 ] = 0; 
+  for (Int j = 1; j <= ((Int) m_dimIds.size() - m_splittingFlag ? 1 : 0); j++ )
+  {
+    dimBitOffset[ j ] = dimBitOffset[ j - 1 ] + m_dimensionIdLen[ j - 1]; 
+  }
+
+  if ( m_splittingFlag )
+  {
+    dimBitOffset[ (Int) m_dimIds.size() ] = 6; 
+  }
+  
+  for( Int j = 0; j < m_dimIds.size(); j++ )
+  {    
+    xConfirmPara( m_dimIds[j].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
+    xConfirmPara( ( j != viewDimPosition ) &&  (m_dimIds[j][0] != 0), "DimensionId of layer 0 must be 0. " );
+    xConfirmPara( m_dimensionIdLen[j] < 1 || m_dimensionIdLen[j] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
+     
+
+    for( Int i = 1; i < m_numberOfLayers; i++ )
+    {     
+      xConfirmPara(  ( m_dimIds[j][i] < 0 ) || ( m_dimIds[j][i] > ( ( 1 << m_dimensionIdLen[j] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
+      if ( m_splittingFlag )
+      {
+        Int layerIdInNuh = (m_layerIdInNuh.size()!=1) ? m_layerIdInNuh[i] :  i; 
+        xConfirmPara( ( ( layerIdInNuh & ( (1 << dimBitOffset[ j + 1 ] ) - 1) ) >> dimBitOffset[ j ] )  != m_dimIds[j][ i ]  , "When Splitting Flag is equal to 1 dimension ids shall match values derived from layer ids. "); 
+      }
+    }
+  }
+
+  for( Int i = 0; i < m_numberOfLayers; i++ )
+  {
+    for( Int j = 0; j < i; j++ )
+    {     
+      Int numDiff  = 0; 
+      Int lastDiff = -1; 
+      for( Int dim = 0; dim < m_dimIds.size(); dim++ )
+      {
+        if ( m_dimIds[dim][i] != m_dimIds[dim][j] )
+        {
+          numDiff ++; 
+          lastDiff = dim; 
+        }
+      }
+
+      Bool allEqual = ( numDiff == 0 ); 
+
+      if ( allEqual ) 
+      {
+        printf( "\nError: Positions of Layers %d and %d are identical in scalability space\n", i, j);
+      }
+
+      xConfirmPara( allEqual , "Each layer shall have a different position in scalability space." );
+
+      if ( numDiff  == 1 ) 
+      {
+        Bool inc = m_dimIds[ lastDiff ][ i ] > m_dimIds[ lastDiff ][ j ]; 
+        Bool shallBeButIsNotIncreasing = ( !inc && ( lastDiff != viewDimPosition ) ) ; 
+        if ( shallBeButIsNotIncreasing )
+        {       
+          printf( "\nError: Positions of Layers %d and %d is not increasing in dimension %d \n", i, j, lastDiff);        
+        }
+        xConfirmPara( shallBeButIsNotIncreasing && ( lastDiff != viewDimPosition ),  "DimensionIds shall be increasing within one dimension. " );
+      }
+    }
+  }
+
+  /// Layer sets
+  xConfirmPara( m_vpsNumLayerSets < 0 || m_vpsNumLayerSets > 1024, "VpsNumLayerSets must be greater than 0 and less than 1025") ; 
+  for( Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
+  {
+    if (lsIdx == 0)
+    {
+      xConfirmPara( m_layerIdsInSets[lsIdx].size() != 1 || m_layerIdsInSets[lsIdx][0] != 0 , "0-th layer shall only include layer 0. ");
+    }
+    for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
+    {
+      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than 64" ); 
+    }
+  }
+
+  // Output layer sets
+  xConfirmPara( m_outputLayerSetIdx.size() > 1024, "The number of output layer set indices must be less than 1025.") ;
+  for (Int lsIdx = 0; lsIdx < m_outputLayerSetIdx.size(); lsIdx++)
+  {   
+    Int refLayerSetIdx = m_outputLayerSetIdx[ lsIdx ]; 
+    xConfirmPara(  refLayerSetIdx < 0 || refLayerSetIdx >= m_vpsNumLayerSets, "Output layer set idx must be greater or equal to 0 and less than the VpsNumLayerSets." );
+
+    for (Int i = 0; i < m_layerIdsInAddOutputLayerSet[ lsIdx ].size(); i++)
+    {
+      Bool isAlsoInLayerSet = false; 
+      for (Int j = 0; j < m_layerIdsInSets[ refLayerSetIdx ].size(); j++ )
+      {
+        if ( m_layerIdsInSets[ refLayerSetIdx ][ j ] == m_layerIdsInAddOutputLayerSet[ lsIdx ][ i ] )
+        {
+          isAlsoInLayerSet = true; 
+          break; 
+        }        
+      }
+      xConfirmPara( !isAlsoInLayerSet, "All output layers of a output layer set be included in corresponding layer set.");
+    }
+  }
+  xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
+
+  // Layer Dependencies  
+  for (Int i = 0; i < m_numberOfLayers; i++ )
+  {
+    xConfirmPara( (i == 0)  && m_directRefLayers[0].size() != 0, "Layer 0 shall not have reference layers." ); 
+    xConfirmPara( m_directRefLayers[i].size() != m_dependencyTypes[ i ].size(), "Each reference layer shall have a reference type." ); 
+    for (Int j = 0; j < m_directRefLayers[i].size(); j++)
+    {
+      xConfirmPara( m_directRefLayers[i][j] < 0 || m_directRefLayers[i][j] >= i , "Reference layer id shall be greater than or equal to 0 and less than dependent layer id"); 
+      xConfirmPara( m_dependencyTypes[i][j] < 0 || m_dependencyTypes[i][j] >  2 , "Dependency type shall be greater than or equal to 0 and less than 3"); 
+    }        
+  }  
+#endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
-  xConfirmPara( m_aiQP[0] < -6 * ((Int)m_uiInternalBitDepth - 8) || m_aiQP[0] > 51,         "QP exceeds supported range (-QpBDOffsety to 51)" );
-  if ( m_aiQP.size() >= 2 )
+#if H_MV
+  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
   {
-    xConfirmPara( m_aiQP[1] < -6 * ((Int)m_uiInternalBitDepth - 8) || m_aiQP[1] > 51,       "QP depth exceeds supported range (-QpBDOffsety to 51)" );
+    xConfirmPara( m_iQP[layer] <  -6 * (m_internalBitDepthY - 8) || m_iQP[layer] > 51,      "QP exceeds supported range (-QpBDOffsety to 51)" );
   }
-  xConfirmPara( m_iALFEncodePassReduction < 0 || m_iALFEncodePassReduction > 2,             "ALFEncodePassReduction must be equal to 0, 1 or 2");
-  xConfirmPara( m_iALFMaxNumberFilters < 1,                                                 "ALFMaxNumFilter should be larger than 1");  
+#else
+  xConfirmPara( m_iQP <  -6 * (m_internalBitDepthY - 8) || m_iQP > 51,                    "QP exceeds supported range (-QpBDOffsety to 51)" );
+#endif
   xConfirmPara( m_loopFilterBetaOffsetDiv2 < -13 || m_loopFilterBetaOffsetDiv2 > 13,          "Loop Filter Beta Offset div. 2 exceeds supported range (-13 to 13)");
   xConfirmPara( m_loopFilterTcOffsetDiv2 < -13 || m_loopFilterTcOffsetDiv2 > 13,              "Loop Filter Tc Offset div. 2 exceeds supported range (-13 to 13)");
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
-#if DV_V_RESTRICTION_B0037
-  xConfirmPara( m_iVerticalDisparitySearchRange <= 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
-#endif
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
 
-  xConfirmPara( m_iChromaQpOffset    < -12,   "Min. Chroma Qp Offset is -12"     );
-  xConfirmPara( m_iChromaQpOffset    >  12,   "Max. Chroma Qp Offset is  12"     );
-  xConfirmPara( m_iChromaQpOffset2nd < -12,   "Min. Chroma Qp Offset 2nd is -12" );
-  xConfirmPara( m_iChromaQpOffset2nd >  12,   "Max. Chroma Qp Offset 2nd is  12" );
+  xConfirmPara( m_cbQpOffset < -12,   "Min. Chroma Cb QP Offset is -12" );
+  xConfirmPara( m_cbQpOffset >  12,   "Max. Chroma Cb QP Offset is  12" );
+  xConfirmPara( m_crQpOffset < -12,   "Min. Chroma Cr QP Offset is -12" );
+  xConfirmPara( m_crQpOffset >  12,   "Max. Chroma Cr QP Offset is  12" );
 
   xConfirmPara( m_iQPAdaptationRange <= 0,                                                  "QP Adaptation Range must be more than 0" );
   if (m_iDecodingRefreshType == 2)
@@ -894,72 +1467,32 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( (m_iSourceHeight % (m_uiMaxCUHeight >> (m_uiMaxCUDepth-1)))!=0,             "Resulting coded frame height must be a multiple of the minimum CU size");
   
   xConfirmPara( m_uiQuadtreeTULog2MinSize < 2,                                        "QuadtreeTULog2MinSize must be 2 or greater.");
-  xConfirmPara( m_uiQuadtreeTULog2MinSize > 5,                                        "QuadtreeTULog2MinSize must be 5 or smaller.");
-  xConfirmPara( m_uiQuadtreeTULog2MaxSize < 2,                                        "QuadtreeTULog2MaxSize must be 2 or greater.");
   xConfirmPara( m_uiQuadtreeTULog2MaxSize > 5,                                        "QuadtreeTULog2MaxSize must be 5 or smaller.");
+  xConfirmPara( (1<<m_uiQuadtreeTULog2MaxSize) > m_uiMaxCUWidth,                                        "QuadtreeTULog2MaxSize must be log2(maxCUSize) or smaller.");
+  
   xConfirmPara( m_uiQuadtreeTULog2MaxSize < m_uiQuadtreeTULog2MinSize,                "QuadtreeTULog2MaxSize must be greater than or equal to m_uiQuadtreeTULog2MinSize.");
   xConfirmPara( (1<<m_uiQuadtreeTULog2MinSize)>(m_uiMaxCUWidth >>(m_uiMaxCUDepth-1)), "QuadtreeTULog2MinSize must not be greater than minimum CU size" ); // HS
   xConfirmPara( (1<<m_uiQuadtreeTULog2MinSize)>(m_uiMaxCUHeight>>(m_uiMaxCUDepth-1)), "QuadtreeTULog2MinSize must not be greater than minimum CU size" ); // HS
   xConfirmPara( ( 1 << m_uiQuadtreeTULog2MinSize ) > ( m_uiMaxCUWidth  >> m_uiMaxCUDepth ), "Minimum CU width must be greater than minimum transform size." );
   xConfirmPara( ( 1 << m_uiQuadtreeTULog2MinSize ) > ( m_uiMaxCUHeight >> m_uiMaxCUDepth ), "Minimum CU height must be greater than minimum transform size." );
   xConfirmPara( m_uiQuadtreeTUMaxDepthInter < 1,                                                         "QuadtreeTUMaxDepthInter must be greater than or equal to 1" );
-  xConfirmPara( m_uiQuadtreeTUMaxDepthInter > m_uiQuadtreeTULog2MaxSize - m_uiQuadtreeTULog2MinSize + 1, "QuadtreeTUMaxDepthInter must be less than or equal to the difference between QuadtreeTULog2MaxSize and QuadtreeTULog2MinSize plus 1" );
+  xConfirmPara( m_uiMaxCUWidth < ( 1 << (m_uiQuadtreeTULog2MinSize + m_uiQuadtreeTUMaxDepthInter - 1) ), "QuadtreeTUMaxDepthInter must be less than or equal to the difference between log2(maxCUSize) and QuadtreeTULog2MinSize plus 1" );
   xConfirmPara( m_uiQuadtreeTUMaxDepthIntra < 1,                                                         "QuadtreeTUMaxDepthIntra must be greater than or equal to 1" );
-  xConfirmPara( m_uiQuadtreeTUMaxDepthIntra > m_uiQuadtreeTULog2MaxSize - m_uiQuadtreeTULog2MinSize + 1, "QuadtreeTUMaxDepthIntra must be less than or equal to the difference between QuadtreeTULog2MaxSize and QuadtreeTULog2MinSize plus 1" );
+  xConfirmPara( m_uiMaxCUWidth < ( 1 << (m_uiQuadtreeTULog2MinSize + m_uiQuadtreeTUMaxDepthIntra - 1) ), "QuadtreeTUMaxDepthInter must be less than or equal to the difference between log2(maxCUSize) and QuadtreeTULog2MinSize plus 1" );
+  
+  xConfirmPara(  m_maxNumMergeCand < 1,  "MaxNumMergeCand must be 1 or greater.");
+  xConfirmPara(  m_maxNumMergeCand > 5,  "MaxNumMergeCand must be 5 or smaller.");
 
-  xConfirmPara( m_iNumberOfViews > MAX_VIEW_NUM ,                                     "NumberOfViews must be less than or equal to MAX_VIEW_NUM");
-  xConfirmPara    ( Int( m_pchInputFileList.size() ) < m_iNumberOfViews,              "Number of InputFiles must be greater than or equal to NumberOfViews" );
-  xConfirmPara    ( Int( m_pchReconFileList.size() ) < m_iNumberOfViews,              "Number of ReconFiles must be greater than or equal to NumberOfViews" );
-  xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
-#if HHI_INTERVIEW_SKIP
-  xConfirmPara    ( m_bInterViewSkip && !m_bUsingDepthMaps,                       "RenderingSkipMode requires CodeDepthMaps = 1" );
-#endif
-#if DEPTH_MAP_GENERATION
-  xConfirmPara    ( m_uiPredDepthMapGeneration > 2,                                   "PredDepthMapGen must be less than or equal to 2" );
-  xConfirmPara    ( m_uiPredDepthMapGeneration >= 2 && !m_bUsingDepthMaps,            "PredDepthMapGen >= 2 requires CodeDepthMaps = 1" );
-#endif
-#if H3D_IVMP
-  xConfirmPara    ( m_uiMultiviewMvPredMode > 7,                                      "MultiviewMvPred must be less than or equal to 7" );
-  xConfirmPara    ( m_uiMultiviewMvPredMode > 0 && m_uiPredDepthMapGeneration == 0 ,  "MultiviewMvPred > 0 requires PredDepthMapGen > 0" );
-  xConfirmPara    ( m_uiMultiviewMvRegMode       > 1,                                 "MultiviewMvRegMode must be less than or equal to 1" );
-  xConfirmPara    ( m_dMultiviewMvRegLambdaScale < 0.0,                               "MultiviewMvRegLambdaScale must not be negative" );
-  if( m_uiMultiviewMvRegMode )
-  {
-    xConfirmPara  ( Int( m_pchDepthInputFileList.size() ) < m_iNumberOfViews,         "MultiviewMvRegMode > 0 requires the presence of input depth maps" );
-  }
-#endif
-#if H3D_IVRP
-#if QC_ARP_D0177
-#if QC_ARP_WARNING_FIX
-  xConfirmPara    ( m_nUseAdvResPred > 1 , "0<=ARP<=1" );
-#else
-  xConfirmPara    ( m_nUseAdvResPred < 0 || m_nUseAdvResPred > 1 , "0<=ARP<=1" );
-#endif
-#else
-  xConfirmPara    ( m_uiMultiviewResPredMode > 1,                                     "MultiviewResPred must be less than or equal to 1" );
-  xConfirmPara    ( m_uiMultiviewResPredMode > 0 && m_uiPredDepthMapGeneration == 0 , "MultiviewResPred > 0 requires PredDepthMapGen > 0" );
-#endif
-#endif
-  if( m_bUsingDepthMaps )
-  {
-    xConfirmPara  ( Int( m_pchDepthInputFileList.size() ) < m_iNumberOfViews,         "Number of DepthInputFiles must be greater than or equal to NumberOfViews" );
-    xConfirmPara  ( Int( m_pchDepthReconFileList.size() ) < m_iNumberOfViews,         "Number of DepthReconFiles must be greater than or equal to NumberOfViews" );
-
-#if HHI_VSO
-    if( m_bUseVSO )
-    {
-      xConfirmPara( m_pchCameraParameterFile    == 0                             ,   "CameraParameterFile must be given");
-      xConfirmPara(   m_pchVSOConfig            == 0                             ,   "VSO Setup string must be given");
-      xConfirmPara( m_pchBaseViewCameraNumbers  == 0                             ,   "BaseViewCameraNumbers must be given" );
-      xConfirmPara( m_iNumberOfViews != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
-      xConfirmPara( m_uiVSOMode > 4 ,                                                "VSO Mode must be less than 5");
-    }
-#endif
-  }
 #if ADAPTIVE_QP_SELECTION
-  xConfirmPara( m_bUseAdaptQpSelect == true && m_aiQP[0] < 0,                                              "AdaptiveQpSelection must be disabled when QP < 0.");
-  xConfirmPara( m_bUseAdaptQpSelect == true && m_aiQP[1] < 0,                                              "AdaptiveQpSelection must be disabled when QP < 0.");
-  xConfirmPara( m_bUseAdaptQpSelect == true && (m_iChromaQpOffset !=0 || m_iChromaQpOffset2nd != 0 ),  "AdaptiveQpSelection must be disabled when ChromaQpOffset is not equal to 0.");
+#if H_MV
+  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+  {
+    xConfirmPara( m_bUseAdaptQpSelect == true && m_iQP[layer] < 0,                                     "AdaptiveQpSelection must be disabled when QP < 0.");
+  }
+#else
+  xConfirmPara( m_bUseAdaptQpSelect == true && m_iQP < 0,                                              "AdaptiveQpSelection must be disabled when QP < 0.");
+#endif
+  xConfirmPara( m_bUseAdaptQpSelect == true && (m_cbQpOffset !=0 || m_crQpOffset != 0 ),               "AdaptiveQpSelection must be disabled when ChromaQpOffset is not equal to 0.");
 #endif
 
   if( m_usePCM)
@@ -970,29 +1503,45 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara(  m_pcmLog2MaxSize < m_uiPCMLog2MinSize,                       "PCMLog2MaxSize must be equal to or greater than m_uiPCMLog2MinSize.");
   }
 
-  xConfirmPara( m_iSliceMode < 0 || m_iSliceMode > 3, "SliceMode exceeds supported range (0 to 3)" );
-  if (m_iSliceMode!=0)
+  xConfirmPara( m_sliceMode < 0 || m_sliceMode > 3, "SliceMode exceeds supported range (0 to 3)" );
+  if (m_sliceMode!=0)
   {
-    xConfirmPara( m_iSliceArgument < 1 ,         "SliceArgument should be larger than or equal to 1" );
+    xConfirmPara( m_sliceArgument < 1 ,         "SliceArgument should be larger than or equal to 1" );
   }
-  if (m_iSliceMode==3)
+  xConfirmPara( m_sliceSegmentMode < 0 || m_sliceSegmentMode > 3, "SliceSegmentMode exceeds supported range (0 to 3)" );
+  if (m_sliceSegmentMode!=0)
   {
-    xConfirmPara( m_iSliceGranularity > 0 ,      "When SliceMode == 3 is chosen, the SliceGranularity must be 0" );
+    xConfirmPara( m_sliceSegmentArgument < 1 ,         "SliceSegmentArgument should be larger than or equal to 1" );
   }
-  xConfirmPara( m_iEntropySliceMode < 0 || m_iEntropySliceMode > 2, "EntropySliceMode exceeds supported range (0 to 2)" );
-  if (m_iEntropySliceMode!=0)
-  {
-    xConfirmPara( m_iEntropySliceArgument < 1 ,         "EntropySliceArgument should be larger than or equal to 1" );
-  }
-  xConfirmPara( m_iSliceGranularity >= m_uiMaxCUDepth, "SliceGranularity must be smaller than maximum cu depth");
-  xConfirmPara( m_iSliceGranularity <0 || m_iSliceGranularity > 3, "SliceGranularity exceeds supported range (0 to 3)" );
-  xConfirmPara( m_iSliceGranularity > m_iMaxCuDQPDepth, "SliceGranularity must be smaller smaller than or equal to maximum dqp depth" );
-
-  bool tileFlag = (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0 );
-  xConfirmPara( tileFlag && m_iEntropySliceMode,            "Tile and Entropy Slice can not be applied together");
+  
+  Bool tileFlag = (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0 );
   xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
-  xConfirmPara( m_iWaveFrontSynchro && m_iEntropySliceMode, "Wavefront and Entropy Slice can not be applied together");  
 
+  //TODO:ChromaFmt assumes 4:2:0 below
+  xConfirmPara( m_iSourceWidth  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Picture width must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_iSourceHeight % TComSPS::getWinUnitY(CHROMA_420) != 0, "Picture height must be an integer multiple of the specified chroma subsampling");
+
+  xConfirmPara( m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_aiPad[1] % TComSPS::getWinUnitY(CHROMA_420) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
+
+  xConfirmPara( m_confLeft   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confRight  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confTop    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confBottom % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
+
+#if H_3D
+  xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
+  xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
+  xConfirmPara( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+  xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
+#if H_3D_VSO
+    if( m_bUseVSO )
+    {
+      xConfirmPara(   m_pchVSOConfig            == 0                             ,   "VSO Setup string must be given");
+      xConfirmPara( m_uiVSOMode > 4 ,                                                "VSO Mode must be less than 5");
+    }
+#endif
+#endif
   // max CU width and height should be power of 2
   UInt ui = m_uiMaxCUWidth;
   while(ui)
@@ -1008,473 +1557,640 @@ Void TAppEncCfg::xCheckParameter()
     if( (ui & 1) == 1)
       xConfirmPara( ui != 1 , "Height should be 2^n");
   }
-  
-  xConfirmPara( m_iWaveFrontSynchro < 0, "WaveFrontSynchro cannot be negative" );
-  xConfirmPara( m_iWaveFrontFlush < 0, "WaveFrontFlush cannot be negative" );
-  xConfirmPara( m_iWaveFrontSubstreams <= 0, "WaveFrontSubstreams must be positive" );
-  xConfirmPara( m_iWaveFrontSubstreams > 1 && !m_iWaveFrontSynchro, "Must have WaveFrontSynchro > 0 in order to have WaveFrontSubstreams > 1" );
 
-#undef xConfirmPara
-  if (check_failed)
-  {
-    exit(EXIT_FAILURE);
-  }
-
-  xCheckCodingStructureMvc();
-}
-
-Void TAppEncCfg::xCheckCodingStructureMvc()
-{
-  bool check_failed = false; /* abort if there is a fatal configuration problem */
-#define xConfirmPara(a,b) check_failed |= confirmPara(a,b)
-
-  // validate that POC of same frame is identical across multiple views
+#if H_MV
+  // validate that POC of same frame is identical across multiple layers
   Bool bErrorMvePoc = false;
-  if( m_iNumberOfViews > 1 )
+  if( m_numberOfLayers > 1 )
   {
-    for( Int k = 1; k < m_iNumberOfViews; k++ )
+    for( Int k = 1; k < m_numberOfLayers; k++ )
     {
       for( Int i = 0; i < MAX_GOP; i++ )
       {
-        if( m_GOPListsMvc[k][i].m_POC != m_GOPListsMvc[0][i].m_POC )
+        if( m_GOPListMvc[k][i].m_POC != m_GOPListMvc[0][i].m_POC )
         {
-          printf( "\nError: Frame%d_v%d POC %d is not identical to Frame%d POC\n", i, k, m_GOPListsMvc[k][i].m_POC, i );
+          printf( "\nError: Frame%d_l%d POC %d is not identical to Frame%d POC\n", i, k, m_GOPListMvc[k][i].m_POC, i );
           bErrorMvePoc = true;
         }
       }
     }
   }
-  xConfirmPara( bErrorMvePoc,  "Invalid inter-view POC structure given" );
+  xConfirmPara( bErrorMvePoc,  "Invalid inter-layer POC structure given" );
 
   // validate that baseview has no inter-view refs 
   Bool bErrorIvpBase = false;
   for( Int i = 0; i < MAX_GOP; i++ )
   {
-    if( m_GOPListsMvc[0][i].m_numInterViewRefPics != 0 )
+    if( m_GOPListMvc[0][i].m_numActiveRefLayerPics != 0 )
     {
-      printf( "\nError: Frame%d inter_view refs not available in view 0\n", i );
+      printf( "\nError: Frame%d inter_layer refs not available in layer 0\n", i );
       bErrorIvpBase = true;
     }
   }
-  xConfirmPara( bErrorIvpBase, "Inter-view refs not possible in base view" );
+  xConfirmPara( bErrorIvpBase, "Inter-layer refs not possible in base layer" );
 
   // validate inter-view refs
   Bool bErrorIvpEnhV = false;
-  if( m_iNumberOfViews > 1 )
+  if( m_numberOfLayers > 1 )
   {
-    for( Int k = 1; k < m_iNumberOfViews; k++ )
+    for( Int layer = 1; layer < m_numberOfLayers; layer++ )
     {
       for( Int i = 0; i < MAX_GOP+1; i++ )
       {
-        for( Int j = 0; j < m_GOPListsMvc[k][i].m_numInterViewRefPics; j++ )
+        GOPEntry gopEntry = m_GOPListMvc[layer][i];  
+        for( Int j = 0; j < gopEntry.m_numActiveRefLayerPics; j++ )
         {
-          Int iAbsViewId = m_GOPListsMvc[k][i].m_interViewRefs[j] + k;
-          if( iAbsViewId < 0 || iAbsViewId >= k )
+          Int ilPredLayerIdc = gopEntry.m_interLayerPredLayerIdc[j];
+          if( ilPredLayerIdc < 0 || ilPredLayerIdc >= m_directRefLayers[layer].size() )
           {
-            printf( "\nError: inter-view ref pic %d is not available for Frame%d_v%d\n", m_GOPListsMvc[k][i].m_interViewRefs[j], i, k );
+            printf( "\nError: inter-layer ref idc %d is not available for Frame%d_l%d\n", gopEntry.m_interLayerPredLayerIdc[j], i, layer );
             bErrorIvpEnhV = true;
           }
-          if( m_GOPListsMvc[k][i].m_interViewRefPosL0[j] < 0 || m_GOPListsMvc[k][i].m_interViewRefPosL0[j] > m_GOPListsMvc[k][i].m_numRefPicsActive )
+          if( gopEntry.m_interViewRefPosL[0][j] < -1 || gopEntry.m_interViewRefPosL[0][j] > gopEntry.m_numRefPicsActive )
           {
-            printf( "\nError: inter-view ref pos %d on L0 is not available for Frame%d_v%d\n", m_GOPListsMvc[k][i].m_interViewRefPosL0[j], i, k );
+            printf( "\nError: inter-layer ref pos %d on L0 is not available for Frame%d_l%d\n", gopEntry.m_interViewRefPosL[0][j], i, layer );
             bErrorIvpEnhV = true;
           }
-          if( m_GOPListsMvc[k][i].m_interViewRefPosL1[j] < 0 || m_GOPListsMvc[k][i].m_interViewRefPosL1[j] > m_GOPListsMvc[k][i].m_numRefPicsActive )
+          if( gopEntry.m_interViewRefPosL[1][j] < -1  || gopEntry.m_interViewRefPosL[1][j] > gopEntry.m_numRefPicsActive )
           {
-            printf( "\nError: inter-view ref pos %d on L1 is not available for Frame%d_v%d\n", m_GOPListsMvc[k][i].m_interViewRefPosL1[j], i, k );
+            printf( "\nError: inter-layer ref pos %d on L1 is not available for Frame%d_l%d\n", gopEntry.m_interViewRefPosL[1][j], i, layer );
             bErrorIvpEnhV = true;
           }
         }
         if( i == MAX_GOP ) // inter-view refs at I pic position in base view
         {
-          if( m_GOPListsMvc[k][MAX_GOP].m_sliceType != 'B' && m_GOPListsMvc[k][MAX_GOP].m_sliceType != 'P' && m_GOPListsMvc[k][MAX_GOP].m_sliceType != 'I' )
+          if( gopEntry.m_sliceType != 'B' && gopEntry.m_sliceType != 'P' && gopEntry.m_sliceType != 'I' )
           {
-            printf( "\nError: slice type of FrameI_v%d must be equal to B or P or I\n", k );
+            printf( "\nError: slice type of FrameI_l%d must be equal to B or P or I\n", layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListsMvc[k][MAX_GOP].m_POC != 0 )
+          if( gopEntry.m_POC != 0 )
           {
-            printf( "\nError: POC %d not possible for FrameI_v%d, must be 0\n", m_GOPListsMvc[k][MAX_GOP].m_POC, k );
+            printf( "\nError: POC %d not possible for FrameI_l%d, must be 0\n", gopEntry.m_POC, layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListsMvc[k][MAX_GOP].m_temporalId != 0 )
+          if( gopEntry.m_temporalId != 0 )
           {
-            printf( "\nWarning: Temporal id of FrameI_v%d must be 0 (cp. I-frame in base view)\n", k );
-            m_GOPListsMvc[k][MAX_GOP].m_temporalId = 0;
+            printf( "\nWarning: Temporal id of FrameI_l%d must be 0 (cp. I-frame in base layer)\n", layer );
+            gopEntry.m_temporalId = 0;
           }
 
-          if( !(m_GOPListsMvc[k][MAX_GOP].m_refPic) )
+          if( gopEntry.m_numRefPics != 0 )
           {
-            printf( "\nWarning: FrameI_v%d must be ref pic (cp. I-frame in base view)\n", k );
-            m_GOPListsMvc[k][MAX_GOP].m_refPic = true;
-          }
-
-          if( m_GOPListsMvc[k][MAX_GOP].m_numRefPics != 0 )
-          {
-            printf( "\nWarning: temporal references not possible for FrameI_v%d\n", k );
-            for( Int j = 0; j < m_GOPListsMvc[k][MAX_GOP].m_numRefPics; j++ )
+            printf( "\nWarning: temporal references not possible for FrameI_l%d\n", layer );
+            for( Int j = 0; j < m_GOPListMvc[layer][MAX_GOP].m_numRefPics; j++ )
             {
-              m_GOPListsMvc[k][MAX_GOP].m_referencePics[j] = 0;
+              gopEntry.m_referencePics[j] = 0;
             }
-            m_GOPListsMvc[k][MAX_GOP].m_numRefPics = 0;
+            gopEntry.m_numRefPics = 0;
           }
 
-          if( m_GOPListsMvc[k][MAX_GOP].m_interRPSPrediction )
+          if( gopEntry.m_interRPSPrediction )
           {
-            printf( "\nError: inter RPS prediction not possible for FrameI_v%d, must be 0\n", k );
+            printf( "\nError: inter RPS prediction not possible for FrameI_l%d, must be 0\n", layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListsMvc[k][MAX_GOP].m_sliceType == 'I' && m_GOPListsMvc[k][MAX_GOP].m_numInterViewRefPics != 0 )
+          if( gopEntry.m_sliceType == 'I' && gopEntry.m_numActiveRefLayerPics != 0 )
           {
-            printf( "\nError: inter-view prediction not possible for FrameI_v%d with slice type I, #IV_ref_pics must be 0\n", k );
+            printf( "\nError: inter-layer prediction not possible for FrameI_l%d with slice type I, #IL_ref_pics must be 0\n", layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListsMvc[k][MAX_GOP].m_numRefPicsActive > m_GOPListsMvc[k][MAX_GOP].m_numInterViewRefPics )
+          if( gopEntry.m_numRefPicsActive > gopEntry.m_numActiveRefLayerPics )
           {
-            m_GOPListsMvc[k][MAX_GOP].m_numRefPicsActive = m_GOPListsMvc[k][MAX_GOP].m_numInterViewRefPics;
+            gopEntry.m_numRefPicsActive = gopEntry.m_numActiveRefLayerPics;
           }
 
-          if( m_GOPListsMvc[k][MAX_GOP].m_sliceType == 'P' )
+          if( gopEntry.m_sliceType == 'P' )
           {
-            if( m_GOPListsMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
+            if( gopEntry.m_numActiveRefLayerPics < 1 )
             {
-              printf( "\nError: #IV_ref_pics must be at least one for FrameI_v%d with slice type P\n", k );
+              printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type P\n", layer );
               bErrorIvpEnhV = true;
             }
             else
             {
-              for( Int j = 0; j < m_GOPListsMvc[k][MAX_GOP].m_numInterViewRefPics; j++ )
+              for( Int j = 0; j < gopEntry.m_numActiveRefLayerPics; j++ )
               {
-                if( m_GOPListsMvc[k][MAX_GOP].m_interViewRefPosL1[j] != 0 )
+                if( gopEntry.m_interViewRefPosL[1][j] != -1 )
                 {
-                  printf( "\nError: inter-view ref pos %d on L1 not possible for FrameI_v%d with slice type P\n", m_GOPListsMvc[k][MAX_GOP].m_interViewRefPosL1[j], k );
+                  printf( "\nError: inter-layer ref pos %d on L1 not possible for FrameI_l%d with slice type P\n", gopEntry.m_interViewRefPosL[1][j], layer );
                   bErrorIvpEnhV = true;
                 }
               }
             }
           }
 
-          if( m_GOPListsMvc[k][MAX_GOP].m_sliceType == 'B' && m_GOPListsMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
+          if( gopEntry.m_sliceType == 'B' && gopEntry.m_numActiveRefLayerPics < 1 )
           {
-            printf( "\nError: #IV_ref_pics must be at least one for FrameI_v%d with slice type B\n", k );
+            printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type B\n", layer );
             bErrorIvpEnhV = true;
           }
         }
       }
     }
   }
-  xConfirmPara( bErrorIvpEnhV, "Invalid inter-view coding structure for enhancement views given" );
+  xConfirmPara( bErrorIvpEnhV, "Invalid inter-layer coding structure for enhancement layers given" );
 
   // validate temporal coding structure
   if( !bErrorMvePoc && !bErrorIvpBase && !bErrorIvpEnhV )
   {
-    for( Int viewId = 0; viewId < m_iNumberOfViews; viewId++ )
+    for( Int layer = 0; layer < m_numberOfLayers; layer++ )
     {
-      Bool verifiedGOP = false;
-      Bool errorGOP    = false;
-      Int  checkGOP    = 1;
-      Int  numRefs     = 1;
-      Int refList[MAX_NUM_REF_PICS+1];
-      refList[0] = 0;
-      Bool isOK[MAX_GOP];
-      for( Int i = 0; i < MAX_GOP; i++ ) { isOK[i] = false; }
-      Int numOK = 0;
-      m_extraRPSs[viewId] = 0;
-      //start looping through frames in coding order until we can verify that the GOP structure is correct.
-      while( !verifiedGOP && !errorGOP )
+      GOPEntry* m_GOPList            = m_GOPListMvc           [layer]; // It is not a member, but this name helps avoiding code duplication !!!
+      Int&      m_extraRPSs          = m_extraRPSsMvc         [layer]; // It is not a member, but this name helps avoiding code duplication !!!
+      Int&      m_maxTempLayer       = m_maxTempLayerMvc      [layer]; // It is not a member, but this name helps avoiding code duplication !!!
+      Int*      m_maxDecPicBuffering = m_maxDecPicBufferingMvc[layer]; // It is not a member, but this name helps avoiding code duplication !!!
+      Int*      m_numReorderPics     = m_numReorderPicsMvc    [layer]; // It is not a member, but this name helps avoiding code duplication !!!
+#endif
+  /* if this is an intra-only sequence, ie IntraPeriod=1, don't verify the GOP structure
+   * This permits the ability to omit a GOP structure specification */
+  if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1) {
+    m_GOPList[0] = GOPEntry();
+    m_GOPList[0].m_QPFactor = 1;
+    m_GOPList[0].m_betaOffsetDiv2 = 0;
+    m_GOPList[0].m_tcOffsetDiv2 = 0;
+    m_GOPList[0].m_POC = 1;
+    m_GOPList[0].m_numRefPicsActive = 4;
+  }
+  
+  Bool verifiedGOP=false;
+  Bool errorGOP=false;
+  Int checkGOP=1;
+  Int numRefs = 1;
+  Int refList[MAX_NUM_REF_PICS+1];
+  refList[0]=0;
+  Bool isOK[MAX_GOP];
+  for(Int i=0; i<MAX_GOP; i++) 
+  {
+    isOK[i]=false;
+  }
+  Int numOK=0;
+  xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" );
+
+  for(Int i=0; i<m_iGOPSize; i++)
+  {
+    if(m_GOPList[i].m_POC==m_iGOPSize)
+    {
+      xConfirmPara( m_GOPList[i].m_temporalId!=0 , "The last frame in each GOP must have temporal ID = 0 " );
+    }
+  }
+  
+#if H_MV
+  if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable[layer]) )
+#else
+  if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable) )
+#endif
+  {
+    for(Int i=0; i<m_iGOPSize; i++)
+    {
+      xConfirmPara( (m_GOPList[i].m_betaOffsetDiv2 + m_loopFilterBetaOffsetDiv2) < -6 || (m_GOPList[i].m_betaOffsetDiv2 + m_loopFilterBetaOffsetDiv2) > 6, "Loop Filter Beta Offset div. 2 for one of the GOP entries exceeds supported range (-6 to 6)" );
+      xConfirmPara( (m_GOPList[i].m_tcOffsetDiv2 + m_loopFilterTcOffsetDiv2) < -6 || (m_GOPList[i].m_tcOffsetDiv2 + m_loopFilterTcOffsetDiv2) > 6, "Loop Filter Tc Offset div. 2 for one of the GOP entries exceeds supported range (-6 to 6)" );
+    }
+  }
+  m_extraRPSs=0;
+  //start looping through frames in coding order until we can verify that the GOP structure is correct.
+  while(!verifiedGOP&&!errorGOP) 
+  {
+    Int curGOP = (checkGOP-1)%m_iGOPSize;
+    Int curPOC = ((checkGOP-1)/m_iGOPSize)*m_iGOPSize + m_GOPList[curGOP].m_POC;    
+    if(m_GOPList[curGOP].m_POC<0) 
+    {
+#if H_MV
+      printf("\nError: found fewer Reference Picture Sets than GOPSize for layer %d\n", layer );
+#else
+      printf("\nError: found fewer Reference Picture Sets than GOPSize\n");
+#endif
+      errorGOP=true;
+    }
+    else 
+    {
+      //check that all reference pictures are available, or have a POC < 0 meaning they might be available in the next GOP.
+      Bool beforeI = false;
+      for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++) 
       {
-        Int curGOP = (checkGOP-1)%m_iGOPSize;
-        Int curPOC = ((checkGOP-1)/m_iGOPSize)*m_iGOPSize + m_GOPListsMvc[viewId][curGOP].m_POC;    
-        if( m_GOPListsMvc[viewId][curGOP].m_POC < 0 )
+        Int absPOC = curPOC+m_GOPList[curGOP].m_referencePics[i];
+        if(absPOC < 0)
         {
-          printf( "\nError: found fewer Reference Picture Sets than GOPSize for view %d\n", viewId );
-          errorGOP = true;
+          beforeI=true;
         }
         else 
         {
-          //check that all reference pictures are available, or have a POC < 0 meaning they might be available in the next GOP.
-          Bool beforeI = false;
-          for( Int i = 0; i < m_GOPListsMvc[viewId][curGOP].m_numRefPics; i++ ) 
+          Bool found=false;
+          for(Int j=0; j<numRefs; j++) 
           {
-            Int absPOC = curPOC + m_GOPListsMvc[viewId][curGOP].m_referencePics[i];
-            if( absPOC < 0 )
+            if(refList[j]==absPOC) 
             {
-              beforeI = true;
-            }
-            else 
-            {
-              Bool found = false;
-              for( Int j = 0; j < numRefs; j++ )
+              found=true;
+              for(Int k=0; k<m_iGOPSize; k++)
               {
-                if( refList[j] == absPOC ) 
+                if(absPOC%m_iGOPSize == m_GOPList[k].m_POC%m_iGOPSize)
                 {
-                  found = true;
-                  for( Int k = 0; k < m_iGOPSize; k++ )
+                  if(m_GOPList[k].m_temporalId==m_GOPList[curGOP].m_temporalId)
                   {
-                    if( absPOC%m_iGOPSize == m_GOPListsMvc[viewId][k].m_POC%m_iGOPSize )
-                    {
-                      m_GOPListsMvc[viewId][curGOP].m_usedByCurrPic[i] = (m_GOPListsMvc[viewId][k].m_temporalId <= m_GOPListsMvc[viewId][curGOP].m_temporalId);
-                    }
+                    m_GOPList[k].m_refPic = true;
                   }
+                  m_GOPList[curGOP].m_usedByCurrPic[i]=m_GOPList[k].m_temporalId<=m_GOPList[curGOP].m_temporalId;
                 }
-              }
-              if( !found )
-              {
-                printf("\nError: ref pic %d is not available for GOP frame %d of view %d\n", m_GOPListsMvc[viewId][curGOP].m_referencePics[i], curGOP+1, viewId );
-                errorGOP = true;
               }
             }
           }
-          if( !beforeI && !errorGOP )
+          if(!found)
           {
-            //all ref frames were present
-            if( !isOK[curGOP] ) 
+#if H_MV
+            printf("\nError: ref pic %d is not available for GOP frame %d of layer %d\n", m_GOPList[curGOP].m_referencePics[i], curGOP+1, layer);
+#else
+            printf("\nError: ref pic %d is not available for GOP frame %d\n",m_GOPList[curGOP].m_referencePics[i],curGOP+1);
+#endif
+            errorGOP=true;
+          }
+        }
+      }
+      if(!beforeI&&!errorGOP)
+      {
+        //all ref frames were present
+        if(!isOK[curGOP]) 
+        {
+          numOK++;
+          isOK[curGOP]=true;
+          if(numOK==m_iGOPSize)
+          {
+            verifiedGOP=true;
+          }
+        }
+      }
+      else 
+      {
+        //create a new GOPEntry for this frame containing all the reference pictures that were available (POC > 0)
+        m_GOPList[m_iGOPSize+m_extraRPSs]=m_GOPList[curGOP];
+        Int newRefs=0;
+        for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++) 
+        {
+          Int absPOC = curPOC+m_GOPList[curGOP].m_referencePics[i];
+          if(absPOC>=0)
+          {
+            m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[newRefs]=m_GOPList[curGOP].m_referencePics[i];
+            m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[newRefs]=m_GOPList[curGOP].m_usedByCurrPic[i];
+            newRefs++;
+          }
+        }
+        Int numPrefRefs = m_GOPList[curGOP].m_numRefPicsActive;
+        
+        for(Int offset = -1; offset>-checkGOP; offset--)
+        {
+          //step backwards in coding order and include any extra available pictures we might find useful to replace the ones with POC < 0.
+          Int offGOP = (checkGOP-1+offset)%m_iGOPSize;
+          Int offPOC = ((checkGOP-1+offset)/m_iGOPSize)*m_iGOPSize + m_GOPList[offGOP].m_POC;
+          if(offPOC>=0&&m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId)
+          {
+            Bool newRef=false;
+            for(Int i=0; i<numRefs; i++)
             {
-              numOK++;
-              isOK[curGOP] = true;
-              if( numOK == m_iGOPSize )
+              if(refList[i]==offPOC)
               {
-                verifiedGOP = true;
+                newRef=true;
               }
+            }
+            for(Int i=0; i<newRefs; i++) 
+            {
+              if(m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[i]==offPOC-curPOC)
+              {
+                newRef=false;
+              }
+            }
+            if(newRef) 
+            {
+              Int insertPoint=newRefs;
+              //this picture can be added, find appropriate place in list and insert it.
+              if(m_GOPList[offGOP].m_temporalId==m_GOPList[curGOP].m_temporalId)
+              {
+                m_GOPList[offGOP].m_refPic = true;
+              }
+              for(Int j=0; j<newRefs; j++)
+              {
+                if(m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]<offPOC-curPOC||m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]>0)
+                {
+                  insertPoint = j;
+                  break;
+                }
+              }
+              Int prev = offPOC-curPOC;
+              Int prevUsed = m_GOPList[offGOP].m_temporalId<=m_GOPList[curGOP].m_temporalId;
+              for(Int j=insertPoint; j<newRefs+1; j++)
+              {
+                Int newPrev = m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j];
+                Int newUsed = m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[j];
+                m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j]=prev;
+                m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[j]=prevUsed;
+                prevUsed=newUsed;
+                prev=newPrev;
+              }
+              newRefs++;
             }
           }
-          else 
+          if(newRefs>=numPrefRefs)
           {
-            //create a new GOPEntry for this frame containing all the reference pictures that were available (POC > 0)
-            m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]] = m_GOPListsMvc[viewId][curGOP];
-            Int newRefs = 0;
-            for( Int i = 0; i < m_GOPListsMvc[viewId][curGOP].m_numRefPics; i++ )
-            {
-              Int absPOC = curPOC + m_GOPListsMvc[viewId][curGOP].m_referencePics[i];
-              if( absPOC >= 0 )
-              {
-                m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_referencePics[newRefs] = m_GOPListsMvc[viewId][curGOP].m_referencePics[i];
-                m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_usedByCurrPic[newRefs] = m_GOPListsMvc[viewId][curGOP].m_usedByCurrPic[i];
-                newRefs++;
-              }
-            }
-            Int numPrefRefs = m_GOPListsMvc[viewId][curGOP].m_numRefPicsActive;
-
-            for( Int offset = -1; offset > -checkGOP; offset-- )
-            {
-              //step backwards in coding order and include any extra available pictures we might find useful to replace the ones with POC < 0.
-              Int offGOP =  (checkGOP - 1 + offset)%m_iGOPSize;
-              Int offPOC = ((checkGOP - 1 + offset)/m_iGOPSize) * m_iGOPSize + m_GOPListsMvc[viewId][offGOP].m_POC;
-              if( offPOC >= 0 && m_GOPListsMvc[viewId][offGOP].m_refPic && m_GOPListsMvc[viewId][offGOP].m_temporalId <= m_GOPListsMvc[viewId][curGOP].m_temporalId )
-              {
-                Bool newRef = false;
-                for( Int i = 0; i < numRefs; i++ )
-                {
-                  if( refList[i] == offPOC )
-                  {
-                    newRef = true;
-                  }
-                }
-                for( Int i = 0; i < newRefs; i++ ) 
-                {
-                  if( m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_referencePics[i] == (offPOC - curPOC) )
-                  {
-                    newRef = false;
-                  }
-                }
-                if( newRef ) 
-                {
-                  Int insertPoint = newRefs;
-                  //this picture can be added, find appropriate place in list and insert it.
-                  for( Int j = 0; j < newRefs; j++ )
-                  {
-                    if( m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_referencePics[j] < (offPOC - curPOC) || 
-                        m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_referencePics[j] > 0 )
-                    {
-                      insertPoint = j;
-                      break;
-                    }
-                  }
-                  Int prev = offPOC - curPOC;
-                  Int prevUsed = (m_GOPListsMvc[viewId][offGOP].m_temporalId <= m_GOPListsMvc[viewId][curGOP].m_temporalId);
-                  for( Int j = insertPoint; j < newRefs+1; j++ )
-                  {
-                    Int newPrev = m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_referencePics[j];
-                    Int newUsed = m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_usedByCurrPic[j];
-                    m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_referencePics[j] = prev;
-                    m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_usedByCurrPic[j] = prevUsed;
-                    prevUsed = newUsed;
-                    prev = newPrev;
-                  }
-                  newRefs++;
-                }
-              }
-              if( newRefs >= numPrefRefs )
-              {
-                break;
-              }
-            }
-            m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_numRefPics = newRefs;
-            m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_POC = curPOC;
-            if( m_extraRPSs[viewId] == 0 )
-            {
-              m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_interRPSPrediction = 0;
-              m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_numRefIdc = 0;
-            }
-            else
-            {
-              Int rIdx =  m_iGOPSize + m_extraRPSs[viewId] - 1;
-              Int refPOC = m_GOPListsMvc[viewId][rIdx].m_POC;
-              Int refPics = m_GOPListsMvc[viewId][rIdx].m_numRefPics;
-              Int newIdc = 0;
-              for( Int i = 0; i <= refPics; i++ )
-              {
-                Int deltaPOC = ((i != refPics)? m_GOPListsMvc[viewId][rIdx].m_referencePics[i] : 0);  // check if the reference abs POC is >= 0
-                Int absPOCref = refPOC + deltaPOC;
-                Int refIdc = 0;
-                for( Int j = 0; j < m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_numRefPics; j++ )
-                {
-                  if( (absPOCref - curPOC) == m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_referencePics[j] )
-                  {
-                    if( m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_usedByCurrPic[j] )
-                    {
-                      refIdc = 1;
-                    }
-                    else
-                    {
-                      refIdc = 2;
-                    }
-                  }
-                }
-                m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_refIdc[newIdc] = refIdc;
-                newIdc++;
-              }
-              m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_interRPSPrediction = 1;  
-              m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_numRefIdc = newIdc;
-              m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_deltaRPS = refPOC - m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_POC; 
-              m_GOPListsMvc[viewId][m_iGOPSize+m_extraRPSs[viewId]].m_deltaRIdxMinus1 = 0; 
-            }
-            curGOP = m_iGOPSize + m_extraRPSs[viewId];
-            m_extraRPSs[viewId]++;
+            break;
           }
-          numRefs = 0;
-          for( Int i = 0; i < m_GOPListsMvc[viewId][curGOP].m_numRefPics; i++ )
+        }
+        m_GOPList[m_iGOPSize+m_extraRPSs].m_numRefPics=newRefs;
+        m_GOPList[m_iGOPSize+m_extraRPSs].m_POC = curPOC;
+        if (m_extraRPSs == 0)
+        {
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_interRPSPrediction = 0;
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_numRefIdc = 0;
+        }
+        else
+        {
+          Int rIdx =  m_iGOPSize + m_extraRPSs - 1;
+          Int refPOC = m_GOPList[rIdx].m_POC;
+          Int refPics = m_GOPList[rIdx].m_numRefPics;
+          Int newIdc=0;
+          for(Int i = 0; i<= refPics; i++) 
           {
-            Int absPOC = curPOC + m_GOPListsMvc[viewId][curGOP].m_referencePics[i];
-            if( absPOC >= 0 )
+            Int deltaPOC = ((i != refPics)? m_GOPList[rIdx].m_referencePics[i] : 0);  // check if the reference abs POC is >= 0
+            Int absPOCref = refPOC+deltaPOC;
+            Int refIdc = 0;
+            for (Int j = 0; j < m_GOPList[m_iGOPSize+m_extraRPSs].m_numRefPics; j++)
             {
-              refList[numRefs] = absPOC;
-              numRefs++;
+              if ( (absPOCref - curPOC) == m_GOPList[m_iGOPSize+m_extraRPSs].m_referencePics[j])
+              {
+                if (m_GOPList[m_iGOPSize+m_extraRPSs].m_usedByCurrPic[j])
+                {
+                  refIdc = 1;
+                }
+                else
+                {
+                  refIdc = 2;
+                }
+              }
             }
+            m_GOPList[m_iGOPSize+m_extraRPSs].m_refIdc[newIdc]=refIdc;
+            newIdc++;
           }
-          refList[numRefs] = curPOC;
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_interRPSPrediction = 1;  
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_numRefIdc = newIdc;
+          m_GOPList[m_iGOPSize+m_extraRPSs].m_deltaRPS = refPOC - m_GOPList[m_iGOPSize+m_extraRPSs].m_POC; 
+        }
+        curGOP=m_iGOPSize+m_extraRPSs;
+        m_extraRPSs++;
+      }
+      numRefs=0;
+      for(Int i = 0; i< m_GOPList[curGOP].m_numRefPics; i++) 
+      {
+        Int absPOC = curPOC+m_GOPList[curGOP].m_referencePics[i];
+        if(absPOC >= 0) 
+        {
+          refList[numRefs]=absPOC;
           numRefs++;
         }
-        checkGOP++;
       }
-      xConfirmPara( errorGOP, "Invalid GOP structure given" );
-      m_maxTempLayer[viewId] = 1;
-      for( Int i = 0; i < m_iGOPSize; i++ ) 
+      refList[numRefs]=curPOC;
+      numRefs++;
+    }
+    checkGOP++;
+  }
+  xConfirmPara(errorGOP,"Invalid GOP structure given");
+  m_maxTempLayer = 1;
+  for(Int i=0; i<m_iGOPSize; i++) 
+  {
+    if(m_GOPList[i].m_temporalId >= m_maxTempLayer)
+    {
+      m_maxTempLayer = m_GOPList[i].m_temporalId+1;
+    }
+    xConfirmPara(m_GOPList[i].m_sliceType!='B'&&m_GOPList[i].m_sliceType!='P', "Slice type must be equal to B or P");
+  }
+  for(Int i=0; i<MAX_TLAYER; i++)
+  {
+    m_numReorderPics[i] = 0;
+#if L0323_DPB
+    m_maxDecPicBuffering[i] = 1;
+#else
+    m_maxDecPicBuffering[i] = 0;
+#endif
+  }
+  for(Int i=0; i<m_iGOPSize; i++) 
+  {
+#if L0323_DPB
+    if(m_GOPList[i].m_numRefPics+1 > m_maxDecPicBuffering[m_GOPList[i].m_temporalId])
+#else
+    if(m_GOPList[i].m_numRefPics > m_maxDecPicBuffering[m_GOPList[i].m_temporalId])
+#endif
+    {
+#if L0323_DPB
+      m_maxDecPicBuffering[m_GOPList[i].m_temporalId] = m_GOPList[i].m_numRefPics + 1;
+#else
+      m_maxDecPicBuffering[m_GOPList[i].m_temporalId] = m_GOPList[i].m_numRefPics;
+#endif
+    }
+    Int highestDecodingNumberWithLowerPOC = 0; 
+    for(Int j=0; j<m_iGOPSize; j++)
+    {
+      if(m_GOPList[j].m_POC <= m_GOPList[i].m_POC)
       {
-        if( m_GOPListsMvc[viewId][i].m_temporalId >= m_maxTempLayer[viewId] )
-        {
-          m_maxTempLayer[viewId] = m_GOPListsMvc[viewId][i].m_temporalId + 1;
-        }
-        xConfirmPara( m_GOPListsMvc[viewId][i].m_sliceType != 'B' && m_GOPListsMvc[viewId][i].m_sliceType != 'P', "Slice type must be equal to B or P" );
+        highestDecodingNumberWithLowerPOC = j;
       }
-
-      for( Int i = 0; i < MAX_TLAYER; i++ )
+    }
+    Int numReorder = 0;
+    for(Int j=0; j<highestDecodingNumberWithLowerPOC; j++)
+    {
+      if(m_GOPList[j].m_temporalId <= m_GOPList[i].m_temporalId && 
+        m_GOPList[j].m_POC > m_GOPList[i].m_POC)
       {
-        m_numReorderPics[viewId][i] = 0;
-        m_maxDecPicBuffering[viewId][i] = 0;
+        numReorder++;
       }
-      for( Int i = 0; i < m_iGOPSize; i++ ) 
-      {
-        if( m_GOPListsMvc[viewId][i].m_numRefPics > m_maxDecPicBuffering[viewId][m_GOPListsMvc[viewId][i].m_temporalId] )
-        {
-          m_maxDecPicBuffering[viewId][m_GOPListsMvc[viewId][i].m_temporalId] = m_GOPListsMvc[viewId][i].m_numRefPics;
-        }
-        Int highestDecodingNumberWithLowerPOC = 0; 
-        for( Int j = 0; j < m_iGOPSize; j++ )
-        {
-          if( m_GOPListsMvc[viewId][j].m_POC <= m_GOPListsMvc[viewId][i].m_POC )
-          {
-            highestDecodingNumberWithLowerPOC = j;
-          }
-        }
-        Int numReorder = 0;
-        for( Int j = 0; j < highestDecodingNumberWithLowerPOC; j++ )
-        {
-          if( m_GOPListsMvc[viewId][j].m_temporalId <= m_GOPListsMvc[viewId][i].m_temporalId && 
-              m_GOPListsMvc[viewId][j].m_POC        >  m_GOPListsMvc[viewId][i].m_POC )
-          {
-            numReorder++;
-          }
-        }    
-        if( numReorder > m_numReorderPics[viewId][m_GOPListsMvc[viewId][i].m_temporalId] )
-        {
-          m_numReorderPics[viewId][m_GOPListsMvc[viewId][i].m_temporalId] = numReorder;
-        }
-      }
-      for( Int i = 0; i < MAX_TLAYER-1; i++ ) 
-      {
-        // a lower layer can not have higher value of m_numReorderPics than a higher layer
-        if( m_numReorderPics[viewId][i+1] < m_numReorderPics[viewId][i] )
-        {
-          m_numReorderPics[viewId][i+1] = m_numReorderPics[viewId][i];
-        }
-        // the value of num_reorder_pics[ i ] shall be in the range of 0 to max_dec_pic_buffering[ i ], inclusive
-        if( m_numReorderPics[viewId][i] > m_maxDecPicBuffering[viewId][i] )
-        {
-          m_maxDecPicBuffering[viewId][i] = m_numReorderPics[viewId][i];
-        }
-        // a lower layer can not have higher value of m_uiMaxDecPicBuffering than a higher layer
-        if( m_maxDecPicBuffering[viewId][i+1] < m_maxDecPicBuffering[viewId][i] )
-        {
-          m_maxDecPicBuffering[viewId][i+1] = m_maxDecPicBuffering[viewId][i];
-        }
-      }
-      // the value of num_reorder_pics[ i ] shall be in the range of 0 to max_dec_pic_buffering[ i ], inclusive
-      if( m_numReorderPics[viewId][MAX_TLAYER-1] > m_maxDecPicBuffering[viewId][MAX_TLAYER-1] )
-      {
-        m_maxDecPicBuffering[viewId][MAX_TLAYER-1] = m_numReorderPics[viewId][MAX_TLAYER-1];
-      }
-
-      xConfirmPara( m_bUseLComb == false && m_numReorderPics[viewId][MAX_TLAYER-1] != 0, "ListCombination can only be 0 in low delay coding (more precisely when L0 and L1 are identical)" );  // Note however this is not the full necessary condition as ref_pic_list_combination_flag can only be 0 if L0 == L1.
+    }    
+    if(numReorder > m_numReorderPics[m_GOPList[i].m_temporalId])
+    {
+      m_numReorderPics[m_GOPList[i].m_temporalId] = numReorder;
     }
   }
+  for(Int i=0; i<MAX_TLAYER-1; i++) 
+  {
+    // a lower layer can not have higher value of m_numReorderPics than a higher layer
+    if(m_numReorderPics[i+1] < m_numReorderPics[i])
+    {
+      m_numReorderPics[i+1] = m_numReorderPics[i];
+    }
+#if L0323_DPB
+    // the value of num_reorder_pics[ i ] shall be in the range of 0 to max_dec_pic_buffering[ i ] - 1, inclusive
+    if(m_numReorderPics[i] > m_maxDecPicBuffering[i] - 1)
+    {
+      m_maxDecPicBuffering[i] = m_numReorderPics[i] + 1;
+    }
+#else
+    // the value of num_reorder_pics[ i ] shall be in the range of 0 to max_dec_pic_buffering[ i ], inclusive
+    if(m_numReorderPics[i] > m_maxDecPicBuffering[i])
+    {
+      m_maxDecPicBuffering[i] = m_numReorderPics[i];
+    }
+#endif
+    // a lower layer can not have higher value of m_uiMaxDecPicBuffering than a higher layer
+    if(m_maxDecPicBuffering[i+1] < m_maxDecPicBuffering[i])
+    {
+      m_maxDecPicBuffering[i+1] = m_maxDecPicBuffering[i];
+    }
+  }
+
+
+#if L0323_DPB
+  // the value of num_reorder_pics[ i ] shall be in the range of 0 to max_dec_pic_buffering[ i ] -  1, inclusive
+  if(m_numReorderPics[MAX_TLAYER-1] > m_maxDecPicBuffering[MAX_TLAYER-1] - 1)
+  {
+    m_maxDecPicBuffering[MAX_TLAYER-1] = m_numReorderPics[MAX_TLAYER-1] + 1;
+  }
+#else
+  // the value of num_reorder_pics[ i ] shall be in the range of 0 to max_dec_pic_buffering[ i ], inclusive
+  if(m_numReorderPics[MAX_TLAYER-1] > m_maxDecPicBuffering[MAX_TLAYER-1])
+  {
+    m_maxDecPicBuffering[MAX_TLAYER-1] = m_numReorderPics[MAX_TLAYER-1];
+  }
+#endif
+
+  if(m_vuiParametersPresentFlag && m_bitstreamRestrictionFlag)
+  { 
+    Int PicSizeInSamplesY =  m_iSourceWidth * m_iSourceHeight;
+    if(tileFlag)
+    {
+      Int maxTileWidth = 0;
+      Int maxTileHeight = 0;
+      Int widthInCU = (m_iSourceWidth % m_uiMaxCUWidth) ? m_iSourceWidth/m_uiMaxCUWidth + 1: m_iSourceWidth/m_uiMaxCUWidth;
+      Int heightInCU = (m_iSourceHeight % m_uiMaxCUHeight) ? m_iSourceHeight/m_uiMaxCUHeight + 1: m_iSourceHeight/m_uiMaxCUHeight;
+      if(m_iUniformSpacingIdr)
+      {
+        maxTileWidth = m_uiMaxCUWidth*((widthInCU+m_iNumColumnsMinus1)/(m_iNumColumnsMinus1+1));
+        maxTileHeight = m_uiMaxCUHeight*((heightInCU+m_iNumRowsMinus1)/(m_iNumRowsMinus1+1));
+        // if only the last tile-row is one treeblock higher than the others 
+        // the maxTileHeight becomes smaller if the last row of treeblocks has lower height than the others
+        if(!((heightInCU-1)%(m_iNumRowsMinus1+1)))
+        {
+          maxTileHeight = maxTileHeight - m_uiMaxCUHeight + (m_iSourceHeight % m_uiMaxCUHeight);
+        }     
+        // if only the last tile-column is one treeblock wider than the others 
+        // the maxTileWidth becomes smaller if the last column of treeblocks has lower width than the others   
+        if(!((widthInCU-1)%(m_iNumColumnsMinus1+1)))
+        {
+          maxTileWidth = maxTileWidth - m_uiMaxCUWidth + (m_iSourceWidth % m_uiMaxCUWidth);
+        }
+      }
+      else // not uniform spacing
+      {
+        if(m_iNumColumnsMinus1<1)
+        {
+          maxTileWidth = m_iSourceWidth;
+        }
+        else
+        {
+          Int accColumnWidth = 0;
+          for(Int col=0; col<(m_iNumColumnsMinus1); col++)
+          {
+            maxTileWidth = m_pColumnWidth[col]>maxTileWidth ? m_pColumnWidth[col]:maxTileWidth;
+            accColumnWidth += m_pColumnWidth[col];
+          }
+          maxTileWidth = (widthInCU-accColumnWidth)>maxTileWidth ? m_uiMaxCUWidth*(widthInCU-accColumnWidth):m_uiMaxCUWidth*maxTileWidth;
+        }
+        if(m_iNumRowsMinus1<1)
+        {
+          maxTileHeight = m_iSourceHeight;
+        }
+        else
+        {
+          Int accRowHeight = 0;
+          for(Int row=0; row<(m_iNumRowsMinus1); row++)
+          {
+            maxTileHeight = m_pRowHeight[row]>maxTileHeight ? m_pRowHeight[row]:maxTileHeight;
+            accRowHeight += m_pRowHeight[row];
+          }
+          maxTileHeight = (heightInCU-accRowHeight)>maxTileHeight ? m_uiMaxCUHeight*(heightInCU-accRowHeight):m_uiMaxCUHeight*maxTileHeight;
+        }
+      }
+      Int maxSizeInSamplesY = maxTileWidth*maxTileHeight;
+      m_minSpatialSegmentationIdc = 4*PicSizeInSamplesY/maxSizeInSamplesY-4;
+    }
+    else if(m_iWaveFrontSynchro)
+    {
+      m_minSpatialSegmentationIdc = 4*PicSizeInSamplesY/((2*m_iSourceHeight+m_iSourceWidth)*m_uiMaxCUHeight)-4;
+    }
+    else if(m_sliceMode == 1)
+    {
+      m_minSpatialSegmentationIdc = 4*PicSizeInSamplesY/(m_sliceArgument*m_uiMaxCUWidth*m_uiMaxCUHeight)-4;
+    }
+    else
+    {
+      m_minSpatialSegmentationIdc = 0;
+    }
+  }
+#if !L0034_COMBINED_LIST_CLEANUP
+  xConfirmPara( m_bUseLComb==false && m_numReorderPics[MAX_TLAYER-1]!=0, "ListCombination can only be 0 in low delay coding (more precisely when L0 and L1 are identical)" );  // Note however this is not the full necessary condition as ref_pic_list_combination_flag can only be 0 if L0 == L1.
+#endif
+  xConfirmPara( m_iWaveFrontSynchro < 0, "WaveFrontSynchro cannot be negative" );
+  xConfirmPara( m_iWaveFrontSubstreams <= 0, "WaveFrontSubstreams must be positive" );
+  xConfirmPara( m_iWaveFrontSubstreams > 1 && !m_iWaveFrontSynchro, "Must have WaveFrontSynchro > 0 in order to have WaveFrontSubstreams > 1" );
+
+  xConfirmPara( m_decodedPictureHashSEIEnabled<0 || m_decodedPictureHashSEIEnabled>3, "this hash type is not correct!\n");
+
+#if J0149_TONE_MAPPING_SEI
+  if (m_toneMappingInfoSEIEnabled)
+  {
+    xConfirmPara( m_toneMapCodedDataBitDepth < 8 || m_toneMapCodedDataBitDepth > 14 , "SEIToneMapCodedDataBitDepth must be in rage 8 to 14");
+    xConfirmPara( m_toneMapTargetBitDepth < 1 || (m_toneMapTargetBitDepth > 16 && m_toneMapTargetBitDepth < 255) , "SEIToneMapTargetBitDepth must be in rage 1 to 16 or equal to 255");
+    xConfirmPara( m_toneMapModelId < 0 || m_toneMapModelId > 4 , "SEIToneMapModelId must be in rage 0 to 4");
+    xConfirmPara( m_cameraIsoSpeedValue == 0, "SEIToneMapCameraIsoSpeedValue shall not be equal to 0");
+    xConfirmPara( m_extendedRangeWhiteLevel < 100, "SEIToneMapExtendedRangeWhiteLevel should be greater than or equal to 100");
+    xConfirmPara( m_nominalBlackLevelLumaCodeValue >= m_nominalWhiteLevelLumaCodeValue, "SEIToneMapNominalWhiteLevelLumaCodeValue shall be greater than SEIToneMapNominalBlackLevelLumaCodeValue");
+    xConfirmPara( m_extendedWhiteLevelLumaCodeValue < m_nominalWhiteLevelLumaCodeValue, "SEIToneMapExtendedWhiteLevelLumaCodeValue shall be greater than or equal to SEIToneMapNominalWhiteLevelLumaCodeValue");
+  }
+#endif
+
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  if ( m_RCEnableRateControl )
+  {
+    if ( m_RCForceIntraQP )
+    {
+      if ( m_RCInitialQP == 0 )
+      {
+        printf( "\nInitial QP for rate control is not specified. Reset not to use force intra QP!" );
+        m_RCForceIntraQP = false;
+      }
+    }
+    xConfirmPara( m_uiDeltaQpRD > 0, "Rate control cannot be used together with slice level multiple-QP optimization!\n" );
+  }
+#else
+  if(m_enableRateCtrl)
+  {
+    Int numLCUInWidth  = (m_iSourceWidth  / m_uiMaxCUWidth) + (( m_iSourceWidth  %  m_uiMaxCUWidth ) ? 1 : 0);
+    Int numLCUInHeight = (m_iSourceHeight / m_uiMaxCUHeight)+ (( m_iSourceHeight %  m_uiMaxCUHeight) ? 1 : 0);
+    Int numLCUInPic    =  numLCUInWidth * numLCUInHeight;
+
+    xConfirmPara( (numLCUInPic % m_numLCUInUnit) != 0, "total number of LCUs in a frame should be completely divided by NumLCUInUnit" );
+
+    m_iMaxDeltaQP       = MAX_DELTA_QP;
+    m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;
+  }
+#endif
+
+  xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagValue, "CUTransquantBypassFlagValue cannot be 1 when TransquantBypassEnableFlag is 0");
+
+  xConfirmPara(m_log2ParallelMergeLevel < 2, "Log2ParallelMergeLevel should be larger than or equal to 2");
+#if L0444_FPA_TYPE
+  if (m_framePackingSEIEnabled)
+  {
+    xConfirmPara(m_framePackingSEIType < 3 || m_framePackingSEIType > 5 , "SEIFramePackingType must be in rage 3 to 5");
+  }
+#endif
+#if H_MV
+  }
+  }
+#endif
+
 #undef xConfirmPara
-  if( check_failed )
+  if (check_failed)
   {
     exit(EXIT_FAILURE);
   }
-}
-
-template <class T>
-Void
-TAppEncCfg::xCleanUpVector( std::vector<T>& rcVec, const T& rcInvalid )
-{
-  Int iFirstInv = (Int)rcVec.size();
-  for( Int iIdx = 0; iIdx < (Int)rcVec.size(); iIdx++ )
-  {
-    if( rcVec[ iIdx ] == rcInvalid )
-    {
-      iFirstInv = iIdx;
-      break;
-    }
-  }
-  while( (Int)rcVec.size() > iFirstInv )
-  {
-    rcVec.pop_back();
-  }
-}
-
-Void
-TAppEncCfg::xCleanUpVectors()
-{
-  xCleanUpVector( m_pchInputFileList,       (char*)0 );
-  xCleanUpVector( m_pchDepthInputFileList,  (char*)0 );
-  xCleanUpVector( m_pchReconFileList,       (char*)0 );
-  xCleanUpVector( m_pchDepthReconFileList,  (char*)0 );
 }
 
 /** \todo use of global variables should be removed later
@@ -1494,358 +2210,182 @@ Void TAppEncCfg::xSetGlobal()
   g_uiMaxCUDepth = m_uiMaxCUDepth;
   
   // set internal bit-depth and constants
-#if FULL_NBIT
-  g_uiBitDepth = m_uiInternalBitDepth;
-  g_uiBitIncrement = 0;
-#else
-  g_uiBitDepth = 8;
-  g_uiBitIncrement = m_uiInternalBitDepth - g_uiBitDepth;
-#endif
-
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  g_iDeltaDCsQuantOffset = g_uiBitIncrement - 2;
-#endif
-
-  g_uiBASE_MAX     = ((1<<(g_uiBitDepth))-1);
+  g_bitDepthY = m_internalBitDepthY;
+  g_bitDepthC = m_internalBitDepthC;
   
-#if IBDI_NOCLIP_RANGE
-  g_uiIBDI_MAX     = g_uiBASE_MAX << g_uiBitIncrement;
-#else
-  g_uiIBDI_MAX     = ((1<<(g_uiBitDepth+g_uiBitIncrement))-1);
-#endif
-  
-  if (m_uiOutputBitDepth == 0)
-  {
-    m_uiOutputBitDepth = m_uiInternalBitDepth;
-  }
-
-  g_uiPCMBitDepthLuma = m_uiPCMBitDepthLuma = ((m_bPCMInputBitDepthFlag)? m_uiInputBitDepth : m_uiInternalBitDepth);
-  g_uiPCMBitDepthChroma = ((m_bPCMInputBitDepthFlag)? m_uiInputBitDepth : m_uiInternalBitDepth);
+  g_uiPCMBitDepthLuma = m_bPCMInputBitDepthFlag ? m_inputBitDepthY : m_internalBitDepthY;
+  g_uiPCMBitDepthChroma = m_bPCMInputBitDepthFlag ? m_inputBitDepthC : m_internalBitDepthC;
 }
 
 Void TAppEncCfg::xPrintParameter()
 {
   printf("\n");
-  for( Int iCounter = 0; iCounter< m_iNumberOfViews; iCounter++)
+#if H_MV
+  for( Int layer = 0; layer < m_numberOfLayers; layer++)
   {
-    printf("Texture Input File %i            : %s\n", iCounter, m_pchInputFileList[iCounter]);
+    printf("Input File %i                 : %s\n", layer, m_pchInputFileList[layer]);
   }
-  if( m_bUsingDepthMaps )
+#else
+  printf("Input          File          : %s\n", m_pchInputFile          );
+#endif
+  printf("Bitstream      File          : %s\n", m_pchBitstreamFile      );
+#if H_MV
+  for( Int layer = 0; layer < m_numberOfLayers; layer++)
   {
-    for( Int iCounter = 0; iCounter < m_iNumberOfViews; iCounter++)
-    {
-      printf("Depth Input File %i              : %s\n", iCounter, m_pchDepthInputFileList[iCounter]);
-    }
+    printf("Reconstruction File %i        : %s\n", layer, m_pchReconFileList[layer]);
   }
-  printf("Bitstream File                  : %s\n", m_pchBitstreamFile      );
-  for( Int iCounter = 0; iCounter< m_iNumberOfViews; iCounter++)
-  {
-    printf("Texture Reconstruction File %i   : %s\n", iCounter, m_pchReconFileList[iCounter]);
-  }
-  if( m_bUsingDepthMaps )
-  {
-    for( Int iCounter = 0; iCounter< m_iNumberOfViews; iCounter++)
-    {
-      printf("Depth Reconstruction File %i     : %s\n", iCounter, m_pchDepthReconFileList[iCounter]);
-    }
-  }
-  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_cropLeft - m_cropRight, m_iSourceHeight - m_cropTop - m_cropBottom, m_iFrameRate );
+#else
+  printf("Reconstruction File          : %s\n", m_pchReconFile          );
+#endif
+#if H_MV
+  xPrintParaVector( "ViewId", m_viewId ); 
+#endif
+#if H_3D
+  xPrintParaVector( "DepthFlag", m_depthFlag ); 
+  printf("Coded Camera Param. Precision: %d\n", m_iCodedCamParPrecision);
+#endif
+#if H_MV  
+  xPrintParaVector( "QP"               , m_fQP                ); 
+  xPrintParaVector( "LoopFilterDisable", m_bLoopFilterDisable ); 
+  xPrintParaVector( "SAO"              , m_bUseSAO            ); 
+#endif
+  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
-  printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_iFrameToBeEncoded-1, m_iFrameToBeEncoded );
+  printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
   printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
   printf("RQT trans. size (min / max)  : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
   printf("Max RQT depth inter          : %d\n", m_uiQuadtreeTUMaxDepthInter);
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
-#if DV_V_RESTRICTION_B0037
-  printf("Disp search range restriction: %d\n", m_bUseDisparitySearchRangeRestriction );
-  printf("Vertical disp search range   : %d\n", m_iVerticalDisparitySearchRange );
-#endif
   printf("Intra period                 : %d\n", m_iIntraPeriod );
   printf("Decoding refresh type        : %d\n", m_iDecodingRefreshType );
-  printf("QP Texture                   : %5.2f\n", m_adQP[0] );
-  if( m_bUsingDepthMaps )
-  {
-    printf("QP Depth                     : %5.2f\n", m_adQP[ m_adQP.size()  < 2 ? 0 : 1] );
-  }
+#if !H_MV
+  printf("QP                           : %5.2f\n", m_fQP );
+#endif
   printf("Max dQP signaling depth      : %d\n", m_iMaxCuDQPDepth);
 
-  printf("Chroma Qp Offset             : %d\n", m_iChromaQpOffset   );
-  printf("Chroma Qp Offset 2nd         : %d\n", m_iChromaQpOffset2nd);
+  printf("Cb QP Offset                 : %d\n", m_cbQpOffset   );
+  printf("Cr QP Offset                 : %d\n", m_crQpOffset);
 
   printf("QP adaptation                : %d (range=%d)\n", m_bUseAdaptiveQP, (m_bUseAdaptiveQP ? m_iQPAdaptationRange : 0) );
   printf("GOP size                     : %d\n", m_iGOPSize );
-  printf("Internal bit depth           : %d\n", m_uiInternalBitDepth );
-  printf("PCM sample bit depth         : %d\n", m_uiPCMBitDepthLuma );
-  if((m_uiMaxCUWidth >> m_uiMaxCUDepth) == 4)
+  printf("Internal bit depth           : (Y:%d, C:%d)\n", m_internalBitDepthY, m_internalBitDepthC );
+  printf("PCM sample bit depth         : (Y:%d, C:%d)\n", g_uiPCMBitDepthLuma, g_uiPCMBitDepthChroma );
+#if RATE_CONTROL_LAMBDA_DOMAIN
+  printf("RateControl                  : %d\n", m_RCEnableRateControl );
+  if(m_RCEnableRateControl)
   {
-    printf("DisableInter4x4              : %d\n", m_bDisInter4x4);  
+    printf("TargetBitrate                : %d\n", m_RCTargetBitrate );
+    printf("KeepHierarchicalBit          : %d\n", m_RCKeepHierarchicalBit );
+    printf("LCULevelRC                   : %d\n", m_RCLCULevelRC );
+    printf("UseLCUSeparateModel          : %d\n", m_RCUseLCUSeparateModel );
+    printf("InitialQP                    : %d\n", m_RCInitialQP );
+    printf("ForceIntraQP                 : %d\n", m_RCForceIntraQP );
   }
-
-printf("Loop Filter Disabled         : %d %d\n", m_abLoopFilterDisable[0] ? 1 : 0,  m_abLoopFilterDisable[1] ? 1 : 0 );
+#else
+  printf("RateControl                  : %d\n", m_enableRateCtrl);
+  if(m_enableRateCtrl)
+  {
+    printf("TargetBitrate                : %d\n", m_targetBitrate);
+    printf("NumLCUInUnit                 : %d\n", m_numLCUInUnit);
+  }
+#endif
+  printf("Max Num Merge Candidates     : %d\n", m_maxNumMergeCand);
+#if H_3D
+  printf("BaseViewCameraNumbers        : %s\n", m_pchBaseViewCameraNumbers ); 
   printf("Coded Camera Param. Precision: %d\n", m_iCodedCamParPrecision);
-
-#if HHI_VSO
+#if H_3D_VSO
   printf("Force use of Lambda Scale    : %d\n", m_bForceLambdaScaleVSO );
 
   if ( m_bUseVSO )
-  {
+  {    
     printf("VSO Lambda Scale             : %5.2f\n", m_dLambdaScaleVSO );
     printf("VSO Mode                     : %d\n",    m_uiVSOMode       );
     printf("VSO Config                   : %s\n",    m_pchVSOConfig    );
-#if HHI_VSO_DIST_INT
     printf("VSO Negative Distortion      : %d\n",    m_bAllowNegDist ? 1 : 0);
-#endif
-#if HHI_VSO_LS_TABLE_M23714
-    printf("VSO LS Table                 : %d\n",    m_bVSOLSTable ? 1 : 0);    
-#endif
-#if SAIT_VSO_EST_A0033
-    printf("VSO Estimated VSD            : %d\n",    m_bUseEstimatedVSD ? 1 : 0);        
-#endif
-#if LGE_VSO_EARLY_SKIP_A0093
-    printf("VSO Early Skip               : %d\n",    m_bVSOEarlySkip ? 1 : 0);    
-#endif
-   
+    printf("VSO LS Table                 : %d\n",    m_bVSOLSTable ? 1 : 0);
+    printf("VSO Estimated VSD            : %d\n",    m_bUseEstimatedVSD ? 1 : 0);
+    printf("VSO Early Skip               : %d\n",    m_bVSOEarlySkip ? 1 : 0);   
+    if ( m_bUseWVSO )
+    printf("Dist. Weights (VSO/VSD/SAD)  : %d/%d/%d\n ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
   }
-#endif
-#if HHI_INTERVIEW_SKIP
-    printf("InterView Skip:              : %d\n",    m_bInterViewSkip ? 1:0 );
-    printf("InterView Skip Lambda Scale  : %f\n",    m_dInterViewSkipLambdaScale );
-#endif
-
+#endif //HHI_VSO
+#endif //H_3D
   printf("\n");
-  
-  printf("TOOL CFG General: ");  
-  printf("ALFMNF:%d ", m_iALFMaxNumberFilters);
-  printf("ALFInSlice:%d ", m_bALFParamInSlice);
-  printf("ALFPicEnc:%d ", m_bALFPicBasedEncode);
-  printf("IBD:%d ", !!g_uiBitIncrement);
+#if H_MV
+  printf("TOOL CFG General: ");
+#else
+  printf("TOOL CFG: ");
+#endif
+  printf("IBD:%d ", g_bitDepthY > m_inputBitDepthY || g_bitDepthC > m_inputBitDepthC);
   printf("HAD:%d ", m_bUseHADME           );
   printf("SRD:%d ", m_bUseSBACRD          );
+  printf("RDQ:%d ", m_useRDOQ            );
+  printf("RDQTS:%d ", m_useRDOQTS        );
+#if L0232_RD_PENALTY
+  printf("RDpenalty:%d ", m_rdPenalty  );
+#endif
   printf("SQP:%d ", m_uiDeltaQpRD         );
   printf("ASR:%d ", m_bUseASR             );
+#if !L0034_COMBINED_LIST_CLEANUP
   printf("LComb:%d ", m_bUseLComb         );
-  printf("LCMod:%d ", m_bLCMod         );
+#endif
   printf("FEN:%d ", m_bUseFastEnc         );
   printf("ECU:%d ", m_bUseEarlyCU         );
   printf("FDM:%d ", m_useFastDecisionForMerge );
   printf("CFM:%d ", m_bUseCbfFastMode         );
+  printf("ESD:%d ", m_useEarlySkipDetection  );
   printf("RQT:%d ", 1     );
-  printf("LMC:%d ", m_bUseLMChroma        ); 
-  printf("Slice: G=%d M=%d ", m_iSliceGranularity, m_iSliceMode);
-  if (m_iSliceMode!=0)
+  printf("TransformSkip:%d ",     m_useTransformSkip              );
+  printf("TransformSkipFast:%d ", m_useTransformSkipFast       );
+  printf("Slice: M=%d ", m_sliceMode);
+  if (m_sliceMode!=0)
   {
-    printf("A=%d ", m_iSliceArgument);
+    printf("A=%d ", m_sliceArgument);
   }
-  printf("EntropySlice: M=%d ",m_iEntropySliceMode);
-  if (m_iEntropySliceMode!=0)
+  printf("SliceSegment: M=%d ",m_sliceSegmentMode);
+  if (m_sliceSegmentMode!=0)
   {
-    printf("A=%d ", m_iEntropySliceArgument);
+    printf("A=%d ", m_sliceSegmentArgument);
   }
   printf("CIP:%d ", m_bUseConstrainedIntraPred);
+#if !H_MV
+  printf("SAO:%d ", (m_bUseSAO)?(1):(0));
+#endif
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
-#if LGE_SAO_MIGRATION_D0091
   printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
-#else
-  printf("SAOInterleaving:%d ", (m_saoInterleavingFlag)?(1):(0));
-#endif
-#if LOSSLESS_CODING
+
   printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
-#endif  
-  printf("WPP:%d ", (Int)m_bUseWeightPred);
-  printf("WPB:%d ", m_uiBiPredIdc);
-  printf("TileLocationInSliceHdr:%d ", m_iTileLocationInSliceHeaderFlag);
-  printf("TileMarker:%d", m_iTileMarkerFlag);
-  if (m_iTileMarkerFlag)
-  {
-    printf("[%d] ", m_iMaxTileMarkerEntryPoints);
-  }
-  else
-  {
-    printf(" ");
-  }
-  printf(" WaveFrontSynchro:%d WaveFrontFlush:%d WaveFrontSubstreams:%d",
-          m_iWaveFrontSynchro, m_iWaveFrontFlush, m_iWaveFrontSubstreams);
+  printf("WPP:%d ", (Int)m_useWeightedPred);
+  printf("WPB:%d ", (Int)m_useWeightedBiPred);
+  printf("PME:%d ", m_log2ParallelMergeLevel);
+  printf(" WaveFrontSynchro:%d WaveFrontSubstreams:%d",
+          m_iWaveFrontSynchro, m_iWaveFrontSubstreams);
   printf(" ScalingList:%d ", m_useScalingListId );
-
-#if !TMVP_DEPTH_SWITCH
-  printf("TMVP:%d ", m_enableTMVP     );
-#endif
-
+  printf("TMVPMode:%d ", m_TMVPModeId     );
 #if ADAPTIVE_QP_SELECTION
-  printf("AQpS:%d", m_bUseAdaptQpSelect   );
+  printf("AQpS:%d ", m_bUseAdaptQpSelect   );
 #endif
 
-  printf(" SignBitHidingFlag:%d SignBitHidingThreshold:%d", m_signHideFlag, m_signHidingThreshold);
-  printf("\n");
-  printf("TOOL CFG VIDEO  : ");
-  printf("ALF:%d ", (m_abUseALF [0] ? 1 : 0) );
-  printf("SAO:%d ", (m_abUseSAO [0] ? 1 : 0));
-  printf("RDQ:%d ", (m_abUseRDOQ[0] ? 1 : 0) );
-#if TMVP_DEPTH_SWITCH
-  printf("TMVP:%d ", (m_enableTMVP[0] ? 1 : 0) );
+  printf(" SignBitHidingFlag:%d ", m_signHideFlag);
+  printf("RecalQP:%d ", m_recalculateQPAccordingToLambda ? 1 : 0 );
+#if H_3D_VSO
+  printf("VSO:%d ", m_bUseVSO   );
+  printf("WVSO:%d ", m_bUseWVSO );  
 #endif
-#if LGE_ILLUCOMP_B0045
-#if LGE_ILLUCOMP_DEPTH_C0046
-  printf("IlluCompEnable: %d %d", m_abUseIC[0] ? 1 : 0, m_abUseIC[1] ? 1 : 0);
-#else
-  printf("IlluCompEnable: %d ", m_bUseIC);
-#endif
-#endif
-#if INTER_VIEW_VECTOR_SCALING_C0115
-  printf("IVSEnable: %d ", m_bUseIVS);
-#endif
-#if QC_ARP_D0177
-  printf(" ARP:%d  " , m_nUseAdvResPred  );
-#endif
-  printf("\n");
+  printf("\n\n");  
 
-  printf("TOOL CFG DEPTH  : ");
-  printf("ALF:%d ", (m_abUseALF [1] ? 1 : 0));
-  printf("SAO:%d ", (m_abUseSAO [1] ? 1 : 0));
-  printf("RDQ:%d ", (m_abUseRDOQ[1] ? 1 : 0));
-#if TMVP_DEPTH_SWITCH
-  printf("TMVP:%d ", (m_enableTMVP[1] ? 1 : 0) );
-#endif
-#if FLEX_CODING_ORDER_M23723
-  printf("FCO:%d ",   (m_b3DVFlexOrder ? 1: 0));
-
-  if(m_b3DVFlexOrder)
-  {
-    printf("CodingOrder: %s ", m_pchMVCJointCodingOrder);
-  }
-#endif
-#if HHI_VSO
-  printf("VSO:%d ", m_bUseVSO             );
-#endif
-#if LGE_WVSO_A0119
-  printf("WVSO:%d ", m_bUseWVSO );
-#endif
-#if H3D_QTL
-  printf("QTLPC:%d ", m_bUseQTLPC);
-#endif
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  printf("DMM:%d ", m_bUseDMM );
-#endif
-#if HHI_MPI
-  printf("MVI:%d ", m_bUseMVI ? 1 : 0 );
-#endif
-#if RWTH_SDC_DLT_B0036
-  printf("SDC:%d ", m_bUseSDC ? 1 : 0 );
-  printf("DLT:%d ", m_bUseDLT ? 1 : 0 );
-#endif
-
-#if MTK_D0156
-  printf("BVSP:%d ", m_bUseVSPCompensation ? 1 : 0 );
-  printf("DoNBDV:%d ",  m_bUseDVPRefine ? 1 : 0 );
-#endif
-
-#if LGE_WVSO_A0119
-  if ( m_bUseWVSO )
-    printf("\nVSO : VSD : SAD weight = %d : %d : %d ", m_iVSOWeight, m_iVSDWeight, m_iDWeight );
-#endif
-  printf("\n\n");
-  
   fflush(stdout);
 }
 
-Void TAppEncCfg::xPrintUsage()
-{
-  printf( "          <name> = ALF - adaptive loop filter\n");
-  printf( "                   IBD - bit-depth increasement\n");
-  printf( "                   GPB - generalized B instead of P in low-delay mode\n");
-  printf( "                   HAD - hadamard ME for fractional-pel\n");
-  printf( "                   SRD - SBAC based RD estimation\n");
-  printf( "                   RDQ - RDOQ\n");
-  printf( "                   LDC - low-delay mode\n");
-  printf( "                   NRF - non-reference frame marking in last layer\n");
-  printf( "                   BQP - hier-P style QP assignment in low-delay mode\n");
-  printf( "                   PAD - automatic source padding of multiple of 16\n");
-  printf( "                   ASR - adaptive motion search range\n");
-  printf( "                   FEN - fast encoder setting\n");  
-  printf( "                   ECU - Early CU setting\n");
-  printf( "                   CFM - Cbf fast mode setting\n");
-  printf( "                   LMC - intra chroma prediction based on luma\n");
-  printf( "\n" );
-  printf( "  Example 1) TAppEncoder.exe -c test.cfg -q 32 -g 8 -f 9 -s 64 -h 4\n");
-  printf("              -> QP 32, hierarchical-B GOP 8, 9 frames, 64x64-8x8 CU (~4x4 PU)\n\n");
-  printf( "  Example 2) TAppEncoder.exe -c test.cfg -q 32 -g 4 -f 9 -s 64 -h 4 -1 LDC\n");
-  printf("              -> QP 32, hierarchical-P GOP 4, 9 frames, 64x64-8x8 CU (~4x4 PU)\n\n");
-}
-
-Bool confirmPara(Bool bflag, const char* message)
+Bool confirmPara(Bool bflag, const Char* message)
 {
   if (!bflag)
     return false;
   
   printf("Error: %s\n",message);
   return true;
-}
-
-/* helper function */
-/* for handling "-1/-0 FOO" */
-void translateOldStyleCmdline(const char* value, po::Options& opts, const std::string& arg)
-{
-  const char* argv[] = {arg.c_str(), value};
-  /* replace some short names with their long name varients */
-  if (arg == "LDC")
-  {
-    argv[0] = "LowDelayCoding";
-  }
-  else if (arg == "RDQ")
-  {
-    argv[0] = "RDOQ";
-  }
-  else if (arg == "HAD")
-  {
-    argv[0] = "HadamardME";
-  }
-  else if (arg == "SRD")
-  {
-    argv[0] = "SBACRD";
-  }
-  else if (arg == "IBD")
-  {
-    argv[0] = "BitIncrement";
-  }
-  /* issue a warning for change in FEN behaviour */
-  if (arg == "FEN")
-  {
-    /* xxx todo */
-  }
-  po::storePair(opts, argv[0], argv[1]);
-}
-
-void doOldStyleCmdlineOn(po::Options& opts, const std::string& arg)
-{
-  if (arg == "IBD")
-  {
-    translateOldStyleCmdline("4", opts, arg);
-    return;
-  }
-  translateOldStyleCmdline("1", opts, arg);
-}
-
-void doOldStyleCmdlineOff(po::Options& opts, const std::string& arg)
-{
-  translateOldStyleCmdline("0", opts, arg);
-}
-
-Void TAppEncCfg::xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName)
-{
-  size_t iInLength     = strlen(pchInputFileName);
-  size_t iAppendLength = strlen(pchStringToAppend);
-
-  rpchOutputFileName = (Char*) malloc(iInLength+iAppendLength+1);
-  Char* pCDot = strrchr(pchInputFileName,'.');
-  pCDot = pCDot ? pCDot : pchInputFileName + iInLength;
-  size_t iCharsToDot = pCDot - pchInputFileName ;
-  size_t iCharsToEnd = iInLength - iCharsToDot;
-  strncpy(rpchOutputFileName                            ,  pchInputFileName            , iCharsToDot  );
-  strncpy(rpchOutputFileName+ iCharsToDot               ,  pchStringToAppend           , iAppendLength);
-  strncpy(rpchOutputFileName+ iCharsToDot+iAppendLength ,  pchInputFileName+iCharsToDot, iCharsToEnd  );
-  rpchOutputFileName[iInLength+iAppendLength] = '\0';
 }
 
 //! \}

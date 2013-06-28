@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -47,17 +47,15 @@
 #include "TLibCommon/TComBitCounter.h"
 #include "TLibCommon/TComLoopFilter.h"
 #include "TLibCommon/AccessUnit.h"
-#include "TLibCommon/TComDepthMapGenerator.h"
-#include "TLibCommon/TComResidualGenerator.h"
-#include "TEncAdaptiveLoopFilter.h"
 #include "TEncSampleAdaptiveOffset.h"
 #include "TEncSlice.h"
 #include "TEncEntropy.h"
 #include "TEncCavlc.h"
 #include "TEncSbac.h"
+#include "SEIwrite.h"
 
 #include "TEncAnalyze.h"
-
+#include "TEncRateCtrl.h"
 #include <vector>
 
 //! \ingroup TLibEncoder
@@ -76,6 +74,9 @@ private:
   //  Data
   Bool                    m_bLongtermTestPictureHasBeenCoded;
   Bool                    m_bLongtermTestPictureHasBeenCoded2;
+  UInt            m_numLongTermRefPicSPS;
+  UInt            m_ltRefPicPocLsbSps[33];
+  Bool            m_ltRefPicUsedByCurrPicFlag[33];
   Int                     m_iLastIDR;
   Int                     m_iGopSize;
   Int                     m_iNumPicCoded;
@@ -92,73 +93,138 @@ private:
   TEncSbac*               m_pcSbacCoder;
   TEncBinCABAC*           m_pcBinCABAC;
   TComLoopFilter*         m_pcLoopFilter;
-  
-#if DEPTH_MAP_GENERATION
-  TComDepthMapGenerator*  m_pcDepthMapGenerator;
-#endif
-#if H3D_IVRP & !QC_ARP_D0177
-  TComResidualGenerator*  m_pcResidualGenerator;
-#endif
-  Int                     m_pocLastCoded;
 
-  // Adaptive Loop filter
-  TEncAdaptiveLoopFilter* m_pcAdaptiveLoopFilter;
+  SEIWriter               m_seiWriter;
+  
+#if H_MV
+  TComPicLists*           m_ivPicLists;
+  std::vector<TComPic*>   m_refPicSetInterLayer; 
+
+  Int                     m_pocLastCoded;
+  Int                     m_layerId;  
+  Int                     m_viewId;
+#if H_3D
+  Int                     m_viewIndex; 
+  Bool                    m_isDepth;
+#endif
+#endif
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
   TComBitCounter*         m_pcBitCounter;
-  TComRdCost*             m_pcRdCost;                           ///< RD cost computation
+  TEncRateCtrl*           m_pcRateCtrl;
   // indicate sequence first
   Bool                    m_bSeqFirst;
   
   // clean decoding refresh
   Bool                    m_bRefreshPending;
   Int                     m_pocCRA;
-  UInt*                   m_uiStoredStartCUAddrForEncodingSlice;
-  UInt*                   m_uiStoredStartCUAddrForEncodingEntropySlice;
+  std::vector<Int>        m_storedStartCUAddrForEncodingSlice;
+  std::vector<Int>        m_storedStartCUAddrForEncodingSliceSegment;
 
   std::vector<Int> m_vRVM_RP;
-
+  UInt                    m_lastBPSEI;
+  UInt                    m_totalCoded;
+  UInt                    m_cpbRemovalDelay;
+  UInt                    m_tl0Idx;
+  UInt                    m_rapIdx;
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+  Bool                    m_activeParameterSetSEIPresentInAU;
+  Bool                    m_bufferingPeriodSEIPresentInAU;
+  Bool                    m_pictureTimingSEIPresentInAU;
+#if K0180_SCALABLE_NESTING_SEI
+  Bool                    m_nestedBufferingPeriodSEIPresentInAU;
+  Bool                    m_nestedPictureTimingSEIPresentInAU;
+#endif
+#endif
 public:
   TEncGOP();
   virtual ~TEncGOP();
   
-  Void  create      ( Int iWidth, Int iHeight, UInt iMaxCUWidth, UInt iMaxCUHeight );
+  Void  create      ();
   Void  destroy     ();
   
   Void  init        ( TEncTop* pcTEncTop );
+#if H_MV
   Void  initGOP     ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP);
-  Void  compressPicInGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid );
-  Void  xWriteTileLocationToSliceHeader (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect, TComSlice*& rpcSlice);
+  Void  compressPicInGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid );
+#else
+  Void  compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
+#endif
+  Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
 
-  Int   getPocLastCoded()       { return  m_pocLastCoded; }
+#if H_MV
+  Int       getPocLastCoded  ()                 { return m_pocLastCoded; }  
+  Int       getLayerId       ()                 { return m_layerId;    }  
+  Int       getViewId        ()                 { return m_viewId;    }
+#if H_3D
+  Int       getViewIndex     ()                 { return m_viewIndex;    }
+  Bool      getIsDepth       ()                 { return m_isDepth; }
+#endif
+#endif
+
   Int   getGOPSize()          { return  m_iGopSize;  }
   
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
   
+#if !H_MV
+  Void  printOutSummary      ( UInt uiNumAllPicCoded );
+#endif
+#if H_3D_VSO
+  Void  preLoopFilterPicAll  ( TComPic* pcPic, Dist64& ruiDist, UInt64& ruiBits );
+#else
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
-  TEncTop* getEncTop() { return m_pcEncTop; }
+#endif
   
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
-  NalUnitType getNalUnitType( UInt uiPOCCurr );
-  NalUnitType getNalUnitTypeBaseViewMvc( UInt uiPOCCurr );
-  Void freeAPS     (TComAPS* pAPS, TComSPS* pSPS);
-  Void allocAPS    (TComAPS* pAPS, TComSPS* pSPS);
+  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
+  Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 protected:
-  Void encodeAPS   (TComAPS* pcAPS, TComOutputBitstream& APSbs, TComSlice* pcSlice);            //!< encode APS syntax elements
-  Void assignNewAPS(TComAPS& cAPS, Int apsID, std::vector<TComAPS>& vAPS, TComSlice* pcSlice);  //!< Assign APS object into APS container
-  
+  TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 
 protected:
   Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
-  Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, UInt uiPOCCurr );
+  Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, Int pocCurr );
   
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
-  
+#if H_3D_VSO
+  Dist64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
+#else  
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
+#endif
 
   Double xCalculateRVM();
 
-  Void  xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr, UInt iGOPid );
+  SEIActiveParameterSets* xCreateSEIActiveParameterSets (TComSPS *sps);
+  SEIFramePacking*        xCreateSEIFramePacking();
+  SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
+
+#if J0149_TONE_MAPPING_SEI
+  SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
+#endif
+
+  Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
+#if L0045_NON_NESTED_SEI_RESTRICTIONS
+  Int xGetFirstSeiLocation (AccessUnit &accessUnit);
+  Void xResetNonNestedSEIPresentFlags()
+  {
+    m_activeParameterSetSEIPresentInAU = false;
+    m_bufferingPeriodSEIPresentInAU    = false;
+    m_pictureTimingSEIPresentInAU      = false;
+  }
+#if K0180_SCALABLE_NESTING_SEI
+  Void xResetNestedSEIPresentFlags()
+  {
+    m_nestedBufferingPeriodSEIPresentInAU    = false;
+    m_nestedPictureTimingSEIPresentInAU      = false;
+  }
+#endif
+#endif
+#if H_MV
+   Void  xSetRefPicListModificationsMv( TComSlice* pcSlice, UInt iGOPid );
+#endif
+#if L0386_DB_METRIC
+  Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
+#endif
 };// END CLASS DEFINITION TEncGOP
 
 // ====================================================================================================================
@@ -167,7 +233,6 @@ protected:
 enum PROCESSING_STATE
 {
   EXECUTE_INLOOPFILTER,
-  ENCODE_APS,
   ENCODE_SLICE
 };
 
