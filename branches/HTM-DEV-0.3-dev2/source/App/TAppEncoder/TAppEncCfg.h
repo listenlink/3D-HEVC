@@ -88,6 +88,13 @@ protected:
 #if H_3D_IV_MERGE
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
 #endif
+#if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
+  UInt                   m_uiUseAdvResPred;
+  UInt                   m_uiARPStepNum;
+#endif
+#if H_3D_IC
+  vector<Bool> m_abUseIC;                                    ///< flag for using illumination compensation for inter-view prediction
+#endif
 #if H_3D_NBDV_REF
   Bool m_depthRefinementFlag;  
 #endif

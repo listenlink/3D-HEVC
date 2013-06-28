@@ -677,6 +677,21 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     //  Set reference list
 #if H_MV    
     pcSlice->setRefPicList( rcListPic, m_refPicSetInterLayer );
+#if H_3D_ARP
+    pcSlice->setARPStepNum();
+    if(pcSlice->getARPStepNum() > 1)
+    {
+      for(Int iLayerId = 0; iLayerId < getLayerId(); iLayerId ++ )
+      {
+        Int  iViewIdx =   pcSlice->getVPS()->getViewIndex(iLayerId);
+        Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
+        if( iViewIdx<getViewIndex() && !bIsDepth )
+        {
+          pcSlice->setBaseViewRefPicList( m_ivPicLists->getPicList( iLayerId ), iViewIdx );
+        }
+      }
+    }
+#endif
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
