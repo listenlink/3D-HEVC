@@ -1395,7 +1395,7 @@ Void TAppEncCfg::xCheckParameter()
   }
 
   // Output layer sets
-  xConfirmPara( m_outputLayerSetIdx.size() < 0 || m_outputLayerSetIdx.size() > 1024, "The number of output layer set indices must be less than 1025.") ;
+  xConfirmPara( m_outputLayerSetIdx.size() > 1024, "The number of output layer set indices must be less than 1025.") ;
   for (Int lsIdx = 0; lsIdx < m_outputLayerSetIdx.size(); lsIdx++)
   {   
     Int refLayerSetIdx = m_outputLayerSetIdx[ lsIdx ]; 
