@@ -751,6 +751,9 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 #if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getIvMvPredFlag         (layer) ? 1 : 0 , "iv_mv_pred_flag[i]");
 #endif
+#if H_3D_ARP
+        WRITE_FLAG( pcVPS->getUseAdvRP             (layer) ? 1 : 0,  "advanced_residual_pred_flag"  );
+#endif
 #if H_3D_NBDV_REF
         WRITE_FLAG( pcVPS->getDepthRefinementFlag  (layer) ? 1 : 0 , "depth_refinement_flag[i]");
 #endif
@@ -1092,6 +1095,17 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       xCodePredWeightTable( pcSlice );
     }
+#if H_3D_IC
+    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) )
+    {
+      WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
+      if( pcSlice->getApplyIC() )
+      {
+        WRITE_FLAG( pcSlice->getIcSkipParseFlag() ? 1 : 0, "ic_skip_mergeidx0" );
+      }
+    }
+#endif
+
 #if H_3D_IV_MERGE
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS_MEM);
 #else
@@ -1378,6 +1392,20 @@ Void TEncCavlc::codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+#if H_3D_ARP
+Void TEncCavlc::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
+
+#if H_3D_IC
+Void TEncCavlc::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 
 Void TEncCavlc::codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode )
 {

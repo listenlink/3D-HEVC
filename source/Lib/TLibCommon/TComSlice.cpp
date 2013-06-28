@@ -113,6 +113,10 @@ TComSlice::TComSlice()
 , m_viewIndex                     (0)
 , m_isDepth                       (false)
 #endif
+#if H_3D_IC
+, m_bApplyIC                      ( false )
+, m_icSkipParseFlag               ( false )
+#endif
 #if H_3D_GEN
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
@@ -1019,6 +1023,10 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_LFCrossSliceBoundaryFlag = pSrc->m_LFCrossSliceBoundaryFlag;
   m_enableTMVPFlag                = pSrc->m_enableTMVPFlag;
   m_maxNumMergeCand               = pSrc->m_maxNumMergeCand;
+#if H_3D_IC
+  m_bApplyIC = pSrc->m_bApplyIC;
+  m_icSkipParseFlag = pSrc->m_icSkipParseFlag;
+#endif
 }
 
 Int TComSlice::m_prevPOC = 0;
@@ -1539,6 +1547,10 @@ TComVPS::TComVPS()
     {
       m_dimensionId[i][j] = 0;
     }
+#if H_3D_ARP
+    m_uiUseAdvResPred[i]  = 0;
+    m_uiARPStepNum[i]     = 1;
+#endif
   }
 #if H_3D_GEN
   for( Int i = 0; i < MAX_NUM_LAYERS; i++ )  {
@@ -2323,6 +2335,120 @@ Void TComSlice::xPrintRefPicList()
     }
   }
 }
+#if H_3D_ARP
+Void TComSlice::setARPStepNum()                                  
+{
+  Bool bAllIvRef = true;
+
+  if(!getVPS()->getUseAdvRP(getLayerId()))
+  {
+    m_nARPStepNum = 0;
+  }
+  else
+  {
+    for( Int iRefListId = 0; iRefListId < 2; iRefListId++ )
+    {
+      RefPicList  eRefPicList = RefPicList( iRefListId );
+      Int iNumRefIdx = getNumRefIdx(eRefPicList);
+      
+      if( iNumRefIdx <= 0 )
+      {
+        continue;
+      }
+
+      for ( Int i = 0; i < iNumRefIdx; i++ )
+      {
+        if( getRefPic( eRefPicList, i)->getPOC() != getPOC() )
+        {
+          bAllIvRef = false;
+          break;
+        }
+      }
+
+      if( bAllIvRef == false ) { break; }
+    }
+    m_nARPStepNum = !bAllIvRef ? getVPS()->getARPStepNum(getLayerId()) : 0;
+  }
+}
+#endif
+#if H_3D_IC
+Void TComSlice::xSetApplyIC()
+{
+  Int iMaxPelValue = ( 1 << g_bitDepthY ); 
+  Int *aiRefOrgHist;
+  Int *aiCurrHist;
+  aiRefOrgHist = (Int *) xMalloc( Int,iMaxPelValue );
+  aiCurrHist   = (Int *) xMalloc( Int,iMaxPelValue );
+  memset( aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
+  memset( aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
+  // Reference Idx Number
+  Int iNumRefIdx = getNumRefIdx( REF_PIC_LIST_0 );
+  TComPic* pcCurrPic = NULL;
+  TComPic* pcRefPic = NULL;
+  TComPicYuv* pcCurrPicYuv = NULL;
+  TComPicYuv* pcRefPicYuvOrg = NULL;
+  pcCurrPic = getPic();
+  pcCurrPicYuv = pcCurrPic->getPicYuvOrg();
+  Int iWidth = pcCurrPicYuv->getWidth();
+  Int iHeight = pcCurrPicYuv->getHeight();
+
+
+  // Get InterView Reference picture
+  // !!!!! Assume only one Interview Reference Picture in L0
+  for ( Int i = 0; i < iNumRefIdx; i++ )
+  {
+    pcRefPic = getRefPic( REF_PIC_LIST_0, i );
+    if ( pcRefPic != NULL )
+    {
+      if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
+      {
+        pcRefPicYuvOrg = pcRefPic->getPicYuvOrg();
+      }
+    }
+  }
+
+  if ( pcRefPicYuvOrg != NULL )
+  {
+    Pel* pCurrY = pcCurrPicYuv ->getLumaAddr();
+    Pel* pRefOrgY = pcRefPicYuvOrg  ->getLumaAddr();
+    Int iCurrStride = pcCurrPicYuv->getStride();
+    Int iRefStride = pcRefPicYuvOrg->getStride();
+    Int iSumOrgSAD = 0;
+    Double dThresholdOrgSAD = getIsDepth() ? 0.1 : 0.05;
+
+    // Histogram building - luminance
+    for ( Int y = 0; y < iHeight; y++ )
+    {
+      for ( Int x = 0; x < iWidth; x++ )
+      {
+        aiCurrHist[pCurrY[x]]++;
+        aiRefOrgHist[pRefOrgY[x]]++;
+      }
+      pCurrY += iCurrStride;
+      pRefOrgY += iRefStride;
+    }
+    // Histogram SAD
+    for ( Int i = 0; i < iMaxPelValue; i++ )
+    {
+      iSumOrgSAD += abs( aiCurrHist[i] - aiRefOrgHist[i] );
+    }
+    // Setting
+    if ( iSumOrgSAD > Int( dThresholdOrgSAD * iWidth * iHeight ) )
+    {
+      m_bApplyIC = true;
+    }
+    else
+    {
+      m_bApplyIC = false;
+    }
+  }
+
+  xFree( aiCurrHist   );
+  xFree( aiRefOrgHist );
+  aiCurrHist = NULL;
+  aiRefOrgHist = NULL;
+}
+#endif
 #if H_3D_GEN
 Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
 {

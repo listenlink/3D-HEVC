@@ -87,8 +87,11 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
+#define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
+#define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
+                                              // Unifying rounding offset, for IC part, JCT3V-D0135
+                                              // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
 #if H_3D_NBDV
-#define H_3D_IDV                          1   // LGE_DVMCP_A0126  QC note: this macro will be removed after merging to dev2a
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
                                               // MERL_VSP_NBDV_RefVId_Fix_D0166
@@ -107,6 +110,7 @@
                                               // Sony_M23639
 #define H_3D_GEN                          1   // Some general changes can be removed after merge 
 #define H_3D_CLEANUPS                     1
+#define H_3D_FIX                          1   // Temporary for minor fixes
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +146,11 @@
 #define DVFROM_ABOVELEFT                  5
 #endif
 #endif
+///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
+#if H_3D_ARP
+#define H_3D_ARP_WFNR                     3
+#endif
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -956,12 +956,20 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 #if H_3D_GEN
       for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
       {
+#if H_3D_ARP
+        pcVPS->setUseAdvRP  ( layer, 0 );
+        pcVPS->setARPStepNum( layer, 1 );
+#endif  
         if (layer != 0)
         {
           if ( !( pcVPS->getDepthId( layer ) == 1 ) )
           {
 #if H_3D_IV_MERGE
             READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( layer, uiCode == 1 ? true : false );
+#endif
+#if H_3D_ARP
+            READ_FLAG( uiCode, "advanced_residual_pred_flag"  );  pcVPS->setUseAdvRP  ( layer, uiCode ); pcVPS->setARPStepNum( layer, uiCode ? H_3D_ARP_WFNR : 1 );
+
 #endif
 #if H_3D_NBDV_REF
             READ_FLAG( uiCode, "depth_refinement_flag[i]");    pcVPS->setDepthRefinementFlag  ( layer, uiCode == 1 ? true : false );
@@ -1433,6 +1441,21 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       xParsePredWeightTable(rpcSlice);
       rpcSlice->initWpScaling();
     }
+#if H_3D_IC
+    else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) )
+    {
+      UInt uiCodeTmp = 0;
+
+      READ_FLAG ( uiCodeTmp, "slice_ic_enable_flag" );
+      rpcSlice->setApplyIC( uiCodeTmp );
+
+      if ( uiCodeTmp )
+      {
+        READ_FLAG ( uiCodeTmp, "ic_skip_mergeidx0" );
+        rpcSlice->setIcSkipParseFlag( uiCodeTmp );
+      }
+    }
+#endif
     if (!rpcSlice->isIntra())
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
@@ -1886,6 +1909,20 @@ Void TDecCavlc::parseMergeIndex ( TComDataCU* /*pcCU*/, UInt& /*ruiMergeIndex*/ 
 {
   assert(0);
 }
+
+#if H_3D_ARP
+Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
+
+#if H_3D_IC
+Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
 
 // ====================================================================================================================
 // Protected member functions

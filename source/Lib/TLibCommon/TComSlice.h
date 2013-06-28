@@ -523,6 +523,19 @@ private:
   Int         m_dimensionId              [MAX_NUM_LAYER_IDS][MAX_NUM_SCALABILITY_TYPES];  
 #if H_3D
   Int         m_viewIndex                [MAX_NUM_LAYERS   ];
+#if H_3D_ARP
+  UInt        m_uiUseAdvResPred          [MAX_NUM_LAYERS   ];
+  UInt        m_uiARPStepNum             [MAX_NUM_LAYERS   ];
+#endif
+#if H_3D_IV_MERGE
+  Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
+#endif
+#if H_3D_VSP
+  Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ]; 
+#endif
+#if H_3D_NBDV_REF
+  Bool        m_depthRefinementFlag      [ MAX_NUM_LAYERS ]; 
+#endif
 #endif
 
   
@@ -536,15 +549,6 @@ private:
   Int         m_numDirectRefLayers       [ MAX_NUM_LAYERS ];
   Int         m_refLayerId               [ MAX_NUM_LAYERS ][MAX_NUM_LAYERS];  
 
-#if H_3D_IV_MERGE
-  Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
-#endif
-#if H_3D_VSP
-  Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ]; 
-#endif
-#if H_3D_NBDV_REF
-  Bool        m_depthRefinementFlag      [ MAX_NUM_LAYERS ]; 
-#endif
 #endif
 public:
   TComVPS();
@@ -650,6 +654,24 @@ public:
   Int     getViewIndex    ( Int layerIdInVps )                             { return m_viewIndex[ layerIdInVps ]; }    
   Int     getDepthId      ( Int layerIdInVps )                             { return getScalabilityId( layerIdInVps, DEPTH_ID ); }
   Int     getLayerIdInNuh( Int viewIndex, Bool depthFlag );  
+#if H_3D_ARP
+  UInt    getUseAdvRP  ( Int layerIdInVps )                                { return m_uiUseAdvResPred[layerIdInVps];    }
+  UInt    getARPStepNum( Int layerIdInVps )                                { return m_uiARPStepNum[layerIdInVps];       }
+  Void    setUseAdvRP  ( Int layerIdInVps, UInt val )                      { m_uiUseAdvResPred[layerIdInVps] = val;     }
+  Void    setARPStepNum( Int layerIdInVps, UInt val )                      { m_uiARPStepNum[layerIdInVps]    = val;     }
+#endif
+#if H_3D_IV_MERGE
+  Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
+  Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
+#endif
+#if H_3D_VSP
+  Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }
+  Bool    getViewSynthesisPredFlag  ( Int layerIdInVps )            { return m_viewSynthesisPredFlag[ layerIdInVps ]; }; 
+#endif
+#if H_3D_NBDV_REF
+  Void    setDepthRefinementFlag  ( Int layerIdInVps, Bool val )  { m_depthRefinementFlag[ layerIdInVps ] = val; }
+  Bool    getDepthRefinementFlag  ( Int layerIdInVps )            { return m_depthRefinementFlag[ layerIdInVps ]; }; 
+#endif
 #endif
 
 
@@ -678,18 +700,6 @@ public:
   
   Bool    checkVPSExtensionSyntax(); 
   Int     scalTypeToScalIdx   ( ScalabilityType scalType );
-#if H_3D_IV_MERGE
-  Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
-  Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
-#endif
-#if H_3D_VSP
-  Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }
-  Bool    getViewSynthesisPredFlag  ( Int layerIdInVps )            { return m_viewSynthesisPredFlag[ layerIdInVps ]; }; 
-#endif
-#if H_3D_NBDV_REF
-  Void    setDepthRefinementFlag  ( Int layerIdInVps, Bool val )  { m_depthRefinementFlag[ layerIdInVps ] = val; }
-  Bool    getDepthRefinementFlag  ( Int layerIdInVps )            { return m_depthRefinementFlag[ layerIdInVps ]; }; 
-#endif
 #endif
 };
 
@@ -1509,6 +1519,15 @@ private:
 #if H_3D_TMVP
   Int        m_aiAlterRefIdx   [2]; 
 #endif
+#if H_3D_ARP
+  TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
+  UInt                 m_nARPStepNum; 
+#endif
+#if H_3D_IC
+  Bool      m_bApplyIC;
+  Bool      m_icSkipParseFlag;
+#endif
+
 #if H_3D_GEN
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
   Int**      m_depthToDisparityB; 
@@ -1578,6 +1597,20 @@ public:
 #if H_3D_IV_MERGE
   TComPic*  getTexturePic       ()                              { return  m_ivPicsCurrPoc[0][ m_viewIndex ]; }
 #endif
+#if H_3D_IC
+  Void      setApplyIC( Bool b )                                { m_bApplyIC = b; }
+  Bool      getApplyIC()                                        { return m_bApplyIC; }
+  Void      xSetApplyIC();
+  Void      setIcSkipParseFlag( Bool b )                        { m_icSkipParseFlag = b; }
+  Bool      getIcSkipParseFlag()                                { return m_icSkipParseFlag; }
+#endif
+#if H_3D_ARP
+  Void      setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic;                   }
+  Void      setARPStepNum();                                 
+  TComPic*  getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )                       { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
+  UInt      getARPStepNum( )                                                         { return m_nARPStepNum;                                         }  
+#endif
+
   Int       getDepth            ()                              { return  m_iDepth;                     }
   UInt      getColFromL0Flag    ()                              { return  m_colFromL0Flag;              }
   UInt      getColRefIdx        ()                              { return  m_colRefIdx;                  }
