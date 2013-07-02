@@ -820,6 +820,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setEnableTMVPFlag(0);
     }
 
+    // A bug fix provided by Gerhard to deal with IBP configuration. NEED futher study
+#if H_MV
+    if( pcSlice->getIdrPicFlag() )
+    {
+      pcSlice->setEnableTMVPFlag(0);
+    }
+#endif
+
 #if H_3D_VSO
   // Should be moved to TEncTop !!! 
   Bool bUseVSO = m_pcEncTop->getUseVSO();

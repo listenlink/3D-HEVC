@@ -77,16 +77,29 @@ protected:
 #if H_3D_IC
   UInt   m_uiaShift[ 63 ];       // Table for multiplication to substitue of division operation
 #endif
+
+#if H_3D_VSP
+  Int*   m_pDepthBlock; ///< Local variable, to store a depth block, just to prevent allocate memory every time
+#if H_3D_VSP_CONSTRAINED
+  Int  xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma = true);
+#endif
+#endif
+
   Void xPredIntraAng            (Int bitDepth, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, Bool bFilter );
   Void xPredIntraPlanar         ( Int* pSrc, Int srcStride, Pel* rpDst, Int dstStride, UInt width, UInt height );
   
   // motion compensation functions
 #if H_3D_ARP
-  Void xPredInterUniARP         ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false, TComMvField * pNewMvFiled = NULL );
+  Void xPredInterUniARP         ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false, TComMvField * pNewMvFiled = NULL );
 #endif
-  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
-  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
-  Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi 
+  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
+  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
+#if H_3D_VSP
+  Void xPredInterUniVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
+  Void xPredInterBiVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
+#endif
+
+  Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi
 #if H_3D_ARP
     , Bool filterType = false
 #endif
@@ -94,7 +107,8 @@ protected:
     , Bool bICFlag    = false
 #endif
     );
-  Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi 
+  Void xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi
+
 #if H_3D_ARP
     , Bool filterType = false
 #endif
@@ -102,6 +116,16 @@ protected:
     , Bool bICFlag    = false
 #endif
     );
+
+#if H_3D_VSP
+  Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
+                                , TComYuv *&dstPic
+                                , Bool bi );
+  Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv*mv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
+                                , TComYuv *&dstPic
+                                , Bool bi );
+#endif
+
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
   
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );

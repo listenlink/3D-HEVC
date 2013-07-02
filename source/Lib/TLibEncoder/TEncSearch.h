@@ -379,8 +379,11 @@ protected:
                                     UInt&           uiMergeIndex,
                                     UInt&           ruiCost
                                   , TComMvField* cMvFieldNeighbours,  
-                                    UChar* uhInterDirNeighbours,
-                                    Int& numValidMergeCand
+                                    UChar* uhInterDirNeighbours
+#if H_3D_VSP
+                                  , Int* vspFlag
+#endif
+                                  , Int& numValidMergeCand
                                    );
 
   Void xRestrictBipredMergeCand   ( TComDataCU*     pcCU,

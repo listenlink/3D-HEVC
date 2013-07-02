@@ -531,7 +531,7 @@ private:
   Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
 #endif
 #if H_3D_VSP
-  Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ]; 
+  Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ];
 #endif
 #if H_3D_NBDV_REF
   Bool        m_depthRefinementFlag      [ MAX_NUM_LAYERS ]; 
