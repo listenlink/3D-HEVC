@@ -1509,9 +1509,9 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   Int maxRelativePos = MIN_INT;
 
   Pel* depthTemp, *depthInitial=depth;
-  for (Int yTxt =0; yTxt<sizeY; yTxt++)
+  for (Int yTxt = 0; yTxt < sizeY; yTxt++)
   {
-    for (Int xTxt =0; xTxt<sizeX; xTxt++)
+    for (Int xTxt = 0; xTxt < sizeX; xTxt++)
     {
       if (depthPosX+xTxt < widthDepth)
         depthTemp = depthInitial + xTxt;

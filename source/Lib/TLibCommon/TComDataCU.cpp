@@ -2682,10 +2682,6 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
   
   if(ucVspMergePos == H_3D_VSP_POSITION && picDepth != NULL && 0 != m_pcSlice->getViewIndex() ) // VSP can be used only when depth is used as input
   {
-    abCandIsInter[iCount] = true;
-    puhInterDirNeighbours[iCount] = 0;
-    vspFlag[iCount] = 1;
-
     Bool refViewAvailFlag = false;
     UChar predFlag[2] = {0, 0};
     Int  iRefListIdX = 0;
@@ -2731,7 +2727,9 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
       }
     }
 
+    abCandIsInter[iCount] = true;
     puhInterDirNeighbours[iCount] = (predFlag[0] | (predFlag[1] << 1));
+    vspFlag[iCount] = 1;
 
     if ( mrgCandIdx == iCount )
       return true;
