@@ -2645,7 +2645,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
 {
   if ( pDInfo->bDV == false || ucVspMergePos != H_3D_VSP_POSITION || 0 == m_pcSlice->getViewIndex() || 
       !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) || // Not to add the candidate if VSP is turned off
-       m_pcSlice->getIsDepth() // VSP is disabled for depth layers
+       m_pcSlice->getIsDepth() ) // VSP is disabled for depth layers
     return false;
 
   Int refViewIdx = pDInfo->m_aVIdxCan;
