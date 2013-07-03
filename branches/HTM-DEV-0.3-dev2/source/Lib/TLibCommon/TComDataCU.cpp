@@ -2685,23 +2685,20 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
   UChar predFlag[2] = {0, 0};
   Int  iRefListIdX = 0;
   Int  iRefListIdY = 0;
+  Int  i;
 
   for( iRefListIdX = 0; iRefListIdX < 2 && !refViewAvailFlag; iRefListIdX++ )
   {
     RefPicList eRefPicList = RefPicList( iRefListIdX );
-    for (Int i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++)
+    for ( i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++ )
     {
       Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
       if (refViewIdx == viewIdxRefInList)
       {
-        Int iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC() == getSlice()->getPOC() ? 
-                           0 : getSlice()->getAlterRefIdx(REF_PIC_LIST_0);
-
         refViewAvailFlag = true;
-        predFlag[0] = 1; // iRefListIdX
+        predFlag[iRefListIdX] = 1;
         iRefListIdY = 1 - iRefListIdX;
-        pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
-        // pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i ); // Buggy code
+        pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i );
       }
     }
   }
@@ -2710,18 +2707,18 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
   {
     RefPicList eRefPicList = RefPicList( iRefListIdY );
     refViewAvailFlag = false;
-    for (Int i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++)
+    for ( i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++ )
     {
-      Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
-      if (refViewIdx != viewIdxRefInList)
+      TComPic* refPic = m_pcSlice->getRefPic(eRefPicList, i);
+      if ( refPic->getPOC() == m_pcSlice->getPOC() ) // is inter-view reference
       {
-        Int iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC() == getSlice()->getPOC() ? 
-                           0 : getSlice()->getAlterRefIdx(REF_PIC_LIST_1);
-
-        refViewAvailFlag = true;
-        predFlag[1] = 1; // iRefListIdY
-        pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
-        //pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );  // Buggy code
+        Int viewIdxRefInList = refPic->getViewIndex();
+        if (refViewIdx != viewIdxRefInList)
+        {
+          refViewAvailFlag = true;
+          predFlag[iRefListIdY] = 1;
+          pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );
+        }
       }
     }
   }
