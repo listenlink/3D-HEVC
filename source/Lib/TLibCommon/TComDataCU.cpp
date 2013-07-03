@@ -2643,16 +2643,16 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
 inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
                                      Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag )
 {
-  if( !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) ) // Not to add the candidate if VSP is turned off
-    return false;
-  if( m_pcSlice->getIsDepth() ) // VSP is turned off for depth layers
+  if ( pDInfo->bDV == false || ucVspMergePos != H_3D_VSP_POSITION || 0 == m_pcSlice->getViewIndex() || 
+      !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) || // Not to add the candidate if VSP is turned off
+       m_pcSlice->getIsDepth() // VSP is disabled for depth layers
     return false;
 
   Int refViewIdx = pDInfo->m_aVIdxCan;
-  TComPic* picDepth = NULL;
-  //assert(getSlice()->getRefPic(eRefPicList, refId)->getPOC() == getSlice()->getPOC());
-  picDepth = getSlice()->getIvPic( true, refViewIdx );
-
+  TComPic* picDepth = getSlice()->getIvPic( true, refViewIdx );
+  if( picDepth == NULL ) // No depth reference avail
+    return false;
+  
   //////////
   // Code if simply re-writing
 //  if(ucVspMergePos == H_3D_VSPPOSITION && picDepth != NULL && 0 != m_pcSlice->getViewIndex() ) // VSP can be used only when depth is used as input
@@ -2680,62 +2680,61 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
 //  }
   /////////////
   
-  if(ucVspMergePos == H_3D_VSP_POSITION && picDepth != NULL && 0 != m_pcSlice->getViewIndex() ) // VSP can be used only when depth is used as input
+  
+  Bool refViewAvailFlag = false;
+  UChar predFlag[2] = {0, 0};
+  Int  iRefListIdX = 0;
+  Int  iRefListIdY = 0;
+
+  for( iRefListIdX = 0; iRefListIdX < 2 && !refViewAvailFlag; iRefListIdX++ )
   {
-    Bool refViewAvailFlag = false;
-    UChar predFlag[2] = {0, 0};
-    Int  iRefListIdX = 0;
-    Int  iRefListIdY = 0;
-
-    for( iRefListIdX = 0; iRefListIdX < 2 && !refViewAvailFlag; iRefListIdX++ )
+    RefPicList eRefPicList = RefPicList( iRefListIdX );
+    for (Int i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++)
     {
-      RefPicList eRefPicList = RefPicList( iRefListIdX );
-      for (Int i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++)
+      Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
+      if (refViewIdx == viewIdxRefInList)
       {
-        Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
-        if (refViewIdx == viewIdxRefInList)
-        {
-          Int iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC() == getSlice()->getPOC() ? 0 :
-                            (getSlice()->getAlterRefIdx(REF_PIC_LIST_0) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_0));
+        Int iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC() == getSlice()->getPOC() ? 
+                           0 : getSlice()->getAlterRefIdx(REF_PIC_LIST_0);
 
-          refViewAvailFlag = true;
-          predFlag[0] = 1; // iRefListIdX
-          iRefListIdY = 1 - iRefListIdX;
-          pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
-          // pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i ); // Buggy code
-        }
+        refViewAvailFlag = true;
+        predFlag[0] = 1; // iRefListIdX
+        iRefListIdY = 1 - iRefListIdX;
+        pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
+        // pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i ); // Buggy code
       }
     }
-
-    if (m_pcSlice->isInterB() && refViewAvailFlag)
-    {
-      RefPicList eRefPicList = RefPicList( iRefListIdY );
-      refViewAvailFlag = false;
-      for (Int i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++)
-      {
-        Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
-        if (refViewIdx != viewIdxRefInList)
-        {
-          Int iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC() == getSlice()->getPOC() ? 0 :
-                            (getSlice()->getAlterRefIdx(REF_PIC_LIST_1) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_1));
-
-          refViewAvailFlag = true;
-          predFlag[1] = 1; // iRefListIdY
-          pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
-          //pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );  // Buggy code
-        }
-      }
-    }
-
-    abCandIsInter[iCount] = true;
-    puhInterDirNeighbours[iCount] = (predFlag[0] | (predFlag[1] << 1));
-    vspFlag[iCount] = 1;
-
-    if ( mrgCandIdx == iCount )
-      return true;
-
-    iCount++;
   }
+
+  if (m_pcSlice->isInterB() && refViewAvailFlag)
+  {
+    RefPicList eRefPicList = RefPicList( iRefListIdY );
+    refViewAvailFlag = false;
+    for (Int i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++)
+    {
+      Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
+      if (refViewIdx != viewIdxRefInList)
+      {
+        Int iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC() == getSlice()->getPOC() ? 
+                           0 : getSlice()->getAlterRefIdx(REF_PIC_LIST_1);
+
+        refViewAvailFlag = true;
+        predFlag[1] = 1; // iRefListIdY
+        pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
+        //pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );  // Buggy code
+      }
+    }
+  }
+
+  // Set values to be returned
+  abCandIsInter[iCount] = true;
+  puhInterDirNeighbours[iCount] = (predFlag[0] | (predFlag[1] << 1));
+  vspFlag[iCount] = 1;
+
+  if ( mrgCandIdx == iCount )
+    return true;
+
+  iCount++;
 
   return false;
 }
