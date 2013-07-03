@@ -593,7 +593,7 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, UInt u
   Int* pShiftLUT    = pcCU->getSlice()->getDepthToDisparityB( txtRefViewIdx );
 
   // Step 4: Do compensation
-  TComMv cMv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
+  TComMv cMv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cMv is the disparity vector derived from the neighbors
   pcCU->clipMv(cMv);
   Int iBlkX = ( pcCU->getAddr() % pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
   Int iBlkY = ( pcCU->getAddr() / pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];

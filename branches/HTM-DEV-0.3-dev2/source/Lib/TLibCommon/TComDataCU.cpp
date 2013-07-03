@@ -2653,32 +2653,33 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
   //assert(getSlice()->getRefPic(eRefPicList, refId)->getPOC() == getSlice()->getPOC());
   picDepth = getSlice()->getIvPic( true, refViewIdx );
 
-  /*
+  //////////
   // Code if simply re-writing
-  if(ucVspMergePos == H_3D_VSPPOSITION && picDepth != NULL && 0 != m_pcSlice->getViewIndex() ) // VSP can be used only when depth is used as input
-  {
-    abCandIsInter[iCount] = true;
-    puhInterDirNeighbours[iCount] = 1;
-    vspFlag[iCount] = 1;
-    vspDirTrue[iCount] = 0; // TODO: Check if this is really useful!!!!
-
-    Int iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC() == getSlice()->getPOC() ? 0 :
-                      (getSlice()->getAlterRefIdx(REF_PIC_LIST_0) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_0));
-    pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
-    if (getSlice()->isInterB())
-    {
-      puhInterDirNeighbours[iCount] = xGetVspDirection(uiPUIdx);
-      Int iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC() == getSlice()->getPOC() ? 0 :
-                        (getSlice()->getAlterRefIdx(REF_PIC_LIST_1) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_1));
-      pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
-    }
-
-    if ( mrgCandIdx == iCount )
-      return true;
-
-    iCount++;
-  }
-  */
+//  if(ucVspMergePos == H_3D_VSPPOSITION && picDepth != NULL && 0 != m_pcSlice->getViewIndex() ) // VSP can be used only when depth is used as input
+//  {
+//    abCandIsInter[iCount] = true;
+//    puhInterDirNeighbours[iCount] = 1;
+//    vspFlag[iCount] = 1;
+//    vspDirTrue[iCount] = 0; // TODO: Check if this is really useful!!!!
+//
+//    Int iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC() == getSlice()->getPOC() ? 0 :
+//                      (getSlice()->getAlterRefIdx(REF_PIC_LIST_0) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_0));
+//    pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
+//    if (getSlice()->isInterB())
+//    {
+//      puhInterDirNeighbours[iCount] = xGetVspDirection(uiPUIdx);
+//      Int iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC() == getSlice()->getPOC() ? 0 :
+//                        (getSlice()->getAlterRefIdx(REF_PIC_LIST_1) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_1));
+//      pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
+//    }
+//
+//    if ( mrgCandIdx == iCount )
+//      return true;
+//
+//    iCount++;
+//  }
+  /////////////
+  
   if(ucVspMergePos == H_3D_VSP_POSITION && picDepth != NULL && 0 != m_pcSlice->getViewIndex() ) // VSP can be used only when depth is used as input
   {
     abCandIsInter[iCount] = true;
@@ -2698,10 +2699,14 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
         if (refViewIdx == viewIdxRefInList)
         {
+          Int iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC() == getSlice()->getPOC() ? 0 :
+                            (getSlice()->getAlterRefIdx(REF_PIC_LIST_0) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_0));
+
           refViewAvailFlag = true;
           predFlag[iRefListIdX] = 1;
           iRefListIdY = 1 - iRefListIdX;
-          pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i );
+          pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
+          // pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i ); // Buggy code
         }
       }
     }
@@ -2715,9 +2720,13 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
         if (refViewIdx != viewIdxRefInList)
         {
+          Int iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC() == getSlice()->getPOC() ? 0 :
+                            (getSlice()->getAlterRefIdx(REF_PIC_LIST_1) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_1));
+
           refViewAvailFlag = true;
           predFlag[iRefListIdY] = 1;
-          pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
+          //pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );  // Buggy code
         }
       }
     }
