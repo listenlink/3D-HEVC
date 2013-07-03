@@ -2699,7 +2699,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
                             (getSlice()->getAlterRefIdx(REF_PIC_LIST_0) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_0));
 
           refViewAvailFlag = true;
-          predFlag[iRefListIdX] = 1;
+          predFlag[0] = 1; // iRefListIdX
           iRefListIdY = 1 - iRefListIdX;
           pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
           // pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i ); // Buggy code
@@ -2720,7 +2720,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
                             (getSlice()->getAlterRefIdx(REF_PIC_LIST_1) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_1));
 
           refViewAvailFlag = true;
-          predFlag[iRefListIdY] = 1;
+          predFlag[1] = 1; // iRefListIdY
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
           //pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );  // Buggy code
         }
