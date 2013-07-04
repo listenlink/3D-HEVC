@@ -717,6 +717,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     return false; 
   }
+#if ENC_DEC_TRACE
+#if H_MV_ENC_DEC_TRAC
+  // parse remainder of SH
+   g_disableHLSTrace = false; 
+#endif
+#endif
 #endif
   // actual decoding starts here
   xActivateParameterSets();

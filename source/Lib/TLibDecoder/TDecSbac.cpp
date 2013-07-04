@@ -330,6 +330,9 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
     m_pcTDecBinIf->decodeBinTrm(uiSymbol);
 
+#if H_MV_ENC_DEC_TRAC
+      DTRACE_CU("pcm_flag", uiSymbol)
+#endif
     if (uiSymbol)
     {
       readPCMSampleFlag = true;
@@ -411,6 +414,9 @@ Void TDecSbac::parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx,
 {
   UInt uiSymbol;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_CUTransquantBypassFlagSCModel.get( 0, 0, 0 ) );
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("cu_transquant_bypass_flag", uiSymbol); 
+#endif
   pcCU->setCUTransquantBypassSubParts(uiSymbol ? true : false, uiAbsPartIdx, uiDepth);
 }
 
@@ -430,6 +436,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   UInt uiSymbol = 0;
   UInt uiCtxSkip = pcCU->getCtxSkipFlag( uiAbsPartIdx );
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSkipFlagSCModel.get( 0, 0, uiCtxSkip ) );
+#if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tSkipFlag" );
   DTRACE_CABAC_T( "\tuiCtxSkip: ");
@@ -437,6 +444,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   DTRACE_CABAC_T( "\tuiSymbol: ");
   DTRACE_CABAC_V( uiSymbol );
   DTRACE_CABAC_T( "\n");
+#endif
   
   if( uiSymbol )
   {
@@ -446,6 +454,9 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
     pcCU->setMergeFlagSubParts( true , uiAbsPartIdx, 0, uiDepth );
   }
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("cu_skip_flag", uiSymbol); 
+#endif
 }
 
 /** parse merge flag
@@ -459,8 +470,12 @@ Void TDecSbac::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 {
   UInt uiSymbol;
   m_pcTDecBinIf->decodeBin( uiSymbol, *m_cCUMergeFlagExtSCModel.get( 0 ) );
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_PU("merge_flag", uiSymbol)
+#endif
   pcCU->setMergeFlagSubParts( uiSymbol ? true : false, uiAbsPartIdx, uiPUIdx, uiDepth );
 
+#if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tMergeFlag: " );
   DTRACE_CABAC_V( uiSymbol );
@@ -469,6 +484,7 @@ Void TDecSbac::parseMergeFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   DTRACE_CABAC_T( "\tuiAbsPartIdx: " );
   DTRACE_CABAC_V( uiAbsPartIdx );
   DTRACE_CABAC_T( "\n" );
+#endif
 }
 
 Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex )
@@ -493,14 +509,19 @@ Void TDecSbac::parseMergeIndex ( TComDataCU* pcCU, UInt& ruiMergeIndex )
         break;
       }
     }
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_PU("merge_idx", uiUnaryIdx)
+#endif
   }
   ruiMergeIndex = uiUnaryIdx;
 
+#if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tparseMergeIndex()" )
   DTRACE_CABAC_T( "\tuiMRGIdx= " )
   DTRACE_CABAC_V( ruiMergeIndex )
   DTRACE_CABAC_T( "\n" )
+#endif
 }
 
 Void TDecSbac::parseMVPIdx      ( Int& riMVPIdx )
@@ -520,8 +541,12 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   
   UInt uiSymbol;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSplitFlagSCModel.get( 0, 0, pcCU->getCtxSplitFlag( uiAbsPartIdx, uiDepth ) ) );
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("split_cu_flag", uiSymbol); 
+#else
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tSplitFlag\n" )
+#endif
   pcCU->setDepthSubParts( uiDepth + uiSymbol, uiAbsPartIdx );
   
   return;
@@ -544,6 +569,9 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
     {
       m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+#if H_MV_ENC_DEC_TRAC          
+      DTRACE_CU("part_mode", uiSymbol)
+#endif        
     }
     eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
     UInt uiTrLevel = 0;    
@@ -597,6 +625,9 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
         }
       }
     }
+#if H_MV_ENC_DEC_TRAC          
+    DTRACE_CU("part_mode", eMode )
+#endif        
   }
   pcCU->setPartSizeSubParts( eMode, uiAbsPartIdx, uiDepth );
   pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
@@ -620,6 +651,9 @@ Void TDecSbac::parsePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   Int  iPredMode = MODE_INTER;
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPredModeSCModel.get( 0, 0, 0 ) );
   iPredMode += uiSymbol;
+#if H_MV_ENC_DEC_TRAC          
+  DTRACE_CU("pred_mode_flag", uiSymbol)
+#endif        
   pcCU->setPredModeSubParts( (PredMode)iPredMode, uiAbsPartIdx, uiDepth );
 }
 
@@ -638,6 +672,9 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
   {
     m_pcTDecBinIf->decodeBin( symbol, m_cCUIntraPredSCModel.get( 0, 0, 0) );
     mpmPred[j] = symbol;
+#if H_MV_ENC_DEC_TRAC          
+    DTRACE_CU("prev_intra_luma_pred_flag", symbol)
+#endif
   }
   for (j=0;j<partNum;j++)
   {
@@ -651,6 +688,9 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
         m_pcTDecBinIf->decodeBinEP( symbol );
         symbol++;
       }
+#if H_MV_ENC_DEC_TRAC          
+      DTRACE_CU("mpm_idx", symbol)
+#endif
       intraPredMode = preds[symbol];
     }
     else
@@ -658,7 +698,9 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
       intraPredMode = 0;
       m_pcTDecBinIf->decodeBinsEP( symbol, 5 );
       intraPredMode = symbol;
-        
+#if H_MV_ENC_DEC_TRAC          
+      DTRACE_CU("rem_intra_luma_pred_mode", symbol)
+#endif        
       //postponed sorting of MPMs (only in remaining branch)
       if (preds[0] > preds[1])
       { 
@@ -689,6 +731,9 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 
   if( uiSymbol == 0 )
   {
+#if H_MV_ENC_DEC_TRAC          
+    DTRACE_CU("intra_chroma_pred_mode", uiSymbol )
+#endif        
     uiSymbol = DM_CHROMA_IDX;
   } 
   else 
@@ -696,6 +741,9 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
     {
       UInt uiIPredMode;
       m_pcTDecBinIf->decodeBinsEP( uiIPredMode, 2 );
+#if H_MV_ENC_DEC_TRAC          
+      DTRACE_CU("intra_chroma_pred_mode", uiIPredMode )
+#endif        
       UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
       pcCU->getAllowedChromaDir( uiAbsPartIdx, uiAllowedChromaDir );
       uiSymbol = uiAllowedChromaDir[ uiIPredMode ];
@@ -728,6 +776,10 @@ Void TDecSbac::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPar
 
   uiSymbol++;
   ruiInterDir = uiSymbol;
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_PU("inter_pred_idc", ruiInterDir - 1 )    
+#endif
+
   return;
 }
 
@@ -763,6 +815,18 @@ Void TDecSbac::parseRefFrmIdx( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eR
     riRefFrmIdx = uiSymbol;
   }
 
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+  if ( eRefList == REF_PIC_LIST_0 )
+  {
+    DTRACE_PU("ref_idx_l0", uiSymbol)
+  }
+  else
+  {
+    DTRACE_PU("ref_idx_l1", uiSymbol)
+  }
+#endif
+#endif
   return;
 }
 
@@ -834,6 +898,7 @@ Void TDecSbac::parseMvd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UI
 Void TDecSbac::parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2TransformBlockSize )
 {
   m_pcTDecBinIf->decodeBin( ruiSubdivFlag, m_cCUTransSubdivFlagSCModel.get( 0, 0, uiLog2TransformBlockSize ) );
+#if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tparseTransformSubdivFlag()" )
   DTRACE_CABAC_T( "\tsymbol=" )
@@ -841,6 +906,7 @@ Void TDecSbac::parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2Transfo
   DTRACE_CABAC_T( "\tctx=" )
   DTRACE_CABAC_V( uiLog2TransformBlockSize )
   DTRACE_CABAC_T( "\n" )
+#endif
 }
 
 Void TDecSbac::parseQtRootCbf( UInt uiAbsPartIdx, UInt& uiQtRootCbf )
@@ -848,6 +914,7 @@ Void TDecSbac::parseQtRootCbf( UInt uiAbsPartIdx, UInt& uiQtRootCbf )
   UInt uiSymbol;
   const UInt uiCtx = 0;
   m_pcTDecBinIf->decodeBin( uiSymbol , m_cCUQtRootCbfSCModel.get( 0, 0, uiCtx ) );
+#if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tparseQtRootCbf()" )
   DTRACE_CABAC_T( "\tsymbol=" )
@@ -857,6 +924,9 @@ Void TDecSbac::parseQtRootCbf( UInt uiAbsPartIdx, UInt& uiQtRootCbf )
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
+#else
+  DTRACE_CU( "rqt_root_cbf", uiSymbol )
+#endif
   
   uiQtRootCbf = uiSymbol;
 }
@@ -903,7 +973,7 @@ Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, 
   UInt uiSymbol;
   const UInt uiCtx = pcCU->getCtxQtCbf( eType, uiTrDepth );
   m_pcTDecBinIf->decodeBin( uiSymbol , m_cCUQtCbfSCModel.get( 0, eType ? TEXT_CHROMA: eType, uiCtx ) );
-  
+#if !H_MV_ENC_DEC_TRAC  
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tparseQtCbf()" )
   DTRACE_CABAC_T( "\tsymbol=" )
@@ -915,6 +985,7 @@ Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, 
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
+#endif
   
   pcCU->setCbfSubParts( uiSymbol << uiTrDepth, eType, uiAbsPartIdx, uiDepth );
 }
@@ -940,6 +1011,7 @@ void TDecSbac::parseTransformSkipFlags (TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
       uiDepth --;
     }
   }
+#if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T("\tparseTransformSkip()");
   DTRACE_CABAC_T( "\tsymbol=" )
@@ -951,6 +1023,7 @@ void TDecSbac::parseTransformSkipFlags (TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
+#endif
 
   pcCU->setTransformSkipSubParts( useTransformSkip, eTType, uiAbsPartIdx, uiDepth);
 }
@@ -1026,6 +1099,7 @@ Void TDecSbac::parseLastSignificantXY( UInt& uiPosLastX, UInt& uiPosLastY, Int w
 
 Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt uiDepth, TextType eTType )
 {
+#if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ )
   DTRACE_CABAC_T( "\tparseCoeffNxN()\teType=" )
   DTRACE_CABAC_V( eTType )
@@ -1050,6 +1124,7 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
   DTRACE_CABAC_T( "\tpredmode=" )
   DTRACE_CABAC_V(  pcCU->getPredictionMode( uiAbsPartIdx ) )
   DTRACE_CABAC_T( "\n" )
+#endif
   
   if( uiWidth > pcCU->getSlice()->getSPS()->getMaxTrSize() )
   {
@@ -1587,6 +1662,9 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 3 ) );
     uiW += ( 1 == uiCode ? 1 : 0 );
   }
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("iv_res_pred_weight_idx", uiW )
+#endif
   pcCU->setARPWSubParts( ( UChar )( uiW ) , uiAbsPartIdx, uiDepth );  
 }
 #endif
@@ -1603,6 +1681,7 @@ Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiSymbol = 0;
   UInt uiCtxIC = pcCU->getCtxICFlag( uiAbsPartIdx );
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, uiCtxIC ) );
+#if !H_MV_ENC_DEC_TRAC 
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tICFlag" );
   DTRACE_CABAC_T( "\tuiCtxIC: ");
@@ -1610,6 +1689,9 @@ Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   DTRACE_CABAC_T( "\tuiSymbol: ");
   DTRACE_CABAC_V( uiSymbol );
   DTRACE_CABAC_T( "\n");
+#else
+  DTRACE_CU("ic_flag", uiSymbol)
+#endif
   
   pcCU->setICFlagSubParts( uiSymbol ? true : false , uiAbsPartIdx, 0, uiDepth );
 }

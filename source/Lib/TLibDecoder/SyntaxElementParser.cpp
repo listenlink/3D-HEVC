@@ -48,6 +48,12 @@
 Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, const Char *pSymbolName)
 {
   xReadCode (length, rValue);
+#if H_MV_ENC_DEC_TRAC
+  if ( g_disableHLSTrace )
+  {
+    return; 
+  }
+#endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
   if (length < 10)
   {
@@ -63,6 +69,12 @@ Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, con
 Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const Char *pSymbolName)
 {
   xReadUvlc (rValue);
+#if H_MV_ENC_DEC_TRAC
+  if ( g_disableHLSTrace )
+  {
+    return; 
+  }
+#endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
   fprintf( g_hTrace, "%-50s ue(v) : %d\n", pSymbolName, rValue ); 
   fflush ( g_hTrace );
@@ -71,6 +83,12 @@ Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const Char *pSym
 Void  SyntaxElementParser::xReadSvlcTr           (Int& rValue, const Char *pSymbolName)
 {
   xReadSvlc(rValue);
+#if H_MV_ENC_DEC_TRAC
+  if ( g_disableHLSTrace )
+  {
+    return; 
+  }
+#endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
   fprintf( g_hTrace, "%-50s se(v) : %d\n", pSymbolName, rValue ); 
   fflush ( g_hTrace );
@@ -79,6 +97,12 @@ Void  SyntaxElementParser::xReadSvlcTr           (Int& rValue, const Char *pSymb
 Void  SyntaxElementParser::xReadFlagTr           (UInt& rValue, const Char *pSymbolName)
 {
   xReadFlag(rValue);
+#if H_MV_ENC_DEC_TRAC
+  if ( g_disableHLSTrace )
+  {
+    return; 
+  }
+#endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
   fprintf( g_hTrace, "%-50s u(1)  : %d\n", pSymbolName, rValue ); 
   fflush ( g_hTrace );

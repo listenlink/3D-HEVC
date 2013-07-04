@@ -36,6 +36,7 @@
 */
 
 #include "TDecBinCoderCABAC.h"
+#include "../TLibCommon/TComRom.h"
 
 //! \ingroup TLibDecoder
 //! \{
@@ -259,6 +260,9 @@ Void TDecBinCABAC::decodePCMAlignBits()
   
   UInt uiBit = 0;
   m_pcTComBitstream->read( iNum, uiBit );
+#if H_MV_ENC_DEC_TRAC          
+  DTRACE_CU("Number of pcm_alignment_zero_bit", iNum)
+#endif
 }
 
 /** Read a PCM code.

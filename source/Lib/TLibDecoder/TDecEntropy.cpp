@@ -214,6 +214,12 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_PU_S("=========== prediction_unit ===========\n")
+    // ToDo: 
+    //DTRACE_PU("x0", uiLPelX)
+    //DTRACE_PU("x1", uiTPelY)
+#endif
     decodeMergeFlag( pcCU, uiSubPartIdx, uiDepth, uiPartIdx );
     if ( pcCU->getMergeFlag( uiSubPartIdx ) )
     {
@@ -363,6 +369,18 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) )
   {
     m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx );
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+    if ( eRefList == REF_PIC_LIST_0 )
+    {
+      DTRACE_PU("mvp_l0_flag", iMVPIdx)
+    }
+    else
+    {
+      DTRACE_PU("mvp_l1_flag", iMVPIdx)
+    }
+#endif
+#endif
   }
   pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);
   pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, uiPartIdx, uiDepth);
@@ -483,6 +501,7 @@ Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offs
     assert( uiDepth >= pcCU->getDepth( uiAbsPartIdx ) );
     pcCU->setTrIdxSubParts( uiTrDepth, uiAbsPartIdx, uiDepth );
     
+#if !H_MV_ENC_DEC_TRAC
     {
       DTRACE_CABAC_VL( g_nSymbolCounter++ );
       DTRACE_CABAC_T( "\tTrIdx: abspart=" );
@@ -493,6 +512,7 @@ Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offs
       DTRACE_CABAC_V( uiTrDepth );
       DTRACE_CABAC_T( "\n" );
     }
+#endif
     
     pcCU->setCbfSubParts ( 0, TEXT_LUMA, uiAbsPartIdx, uiDepth );
     if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, 0 ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, 0 ) )

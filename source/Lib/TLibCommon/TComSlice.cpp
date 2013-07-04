@@ -653,21 +653,20 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   }
 }
 
-#if H_MV
+#if H_MV && !H_MV_FIX1071
 // Temporary fix for FIX1071 should be removed later
 Int TComSlice::getNumRpsCurrTempList( TComReferencePictureSet* rps /* = 0 */)
 #else
 Int TComSlice::getNumRpsCurrTempList()
 #endif
 {
-
   Int numRpsCurrTempList = 0;
 
   if (m_eSliceType == I_SLICE) 
   {
     return 0;
   }
-#if H_MV
+#if H_MV && !H_MV_FIX1071
 // Temporary fix for FIX1071 should be removed later
   if (rps == NULL)
   {
@@ -1301,7 +1300,11 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
 
 /** Function for constructing an explicit Reference Picture Set out of the available pictures in a referenced Reference Picture Set
 */
+#if FIX1071 && H_MV_FIX1071
+Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP)
+#else
 Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet)
+#endif
 {
   TComPic* rpcPic;
   Int i, j;
@@ -1326,7 +1329,11 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
         // This picture exists as a reference picture
         // and should be added to the explicit Reference Picture Set
         pcRPS->setDeltaPOC(k, pReferencePictureSet->getDeltaPOC(i));
+#if FIX1071 && H_MV_FIX1071
+        pcRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isRAP));
+#else
         pcRPS->setUsed(k, pReferencePictureSet->getUsed(i));
+#endif
         if(pcRPS->getDeltaPOC(k) < 0)
         {
           nrOfNegativePictures++;

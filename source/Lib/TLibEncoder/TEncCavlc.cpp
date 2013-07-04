@@ -38,6 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "TEncCavlc.h"
 #include "SEIwrite.h"
+#include "../TLibCommon/TypeDef.h"
 
 //! \ingroup TLibEncoder
 //! \{
@@ -46,12 +47,20 @@
 
 Void  xTraceSPSHeader (TComSPS *pSPS)
 {
+#if H_MV_ENC_DEC_TRAC
+  fprintf( g_hTrace, "=========== Sequence Parameter Set ===========\n" );
+#else
   fprintf( g_hTrace, "=========== Sequence Parameter Set ID: %d ===========\n", pSPS->getSPSId() );
+#endif
 }
 
 Void  xTracePPSHeader (TComPPS *pPPS)
 {
+#if H_MV_ENC_DEC_TRAC
+  fprintf( g_hTrace, "=========== Picture Parameter Set ===========\n" );
+#else
   fprintf( g_hTrace, "=========== Picture Parameter Set ID: %d ===========\n", pPPS->getPPSId() );
+#endif
 }
 
 Void  xTraceSliceHeader (TComSlice *pSlice)
@@ -837,7 +846,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
 
-#if H_MV
+#if H_MV && !H_MV_FIX1071
     // Temporary fix for FIX1071 should be removed later
     TComReferencePictureSet* rps = pcSlice->getRPS();
 #endif      
@@ -845,11 +854,22 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC()))%(1<<pcSlice->getSPS()->getBitsForPOC());
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
-#if !H_MV
-      // Temporary fix for FIX1071 should be removed later
+#if !H_MV || H_MV_FIX1071
       TComReferencePictureSet* rps = pcSlice->getRPS();
 #endif      
-#if FIX1071
+#if FIX1071 && H_MV_FIX1071
+      // check for bitstream restriction stating that:
+      // If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
+      // Ideally this process should not be repeated for each slice in a picture
+      if (pcSlice->isIRAP())
+      {
+          for (Int picIdx = 0; picIdx < rps->getNumberOfPictures(); picIdx++)
+          {
+          assert (!rps->getUsed(picIdx));
+          }
+        }
+#endif
+#if FIX1071 && !H_MV_FIX1071
       // Deal with bitstream restriction stating that:
       // – If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
       // Ideally this process should not be repeated for each slice in a picture
@@ -871,7 +891,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           }
         }
       }
-
       if(pcSlice->getRPSidx() < 0 || useAltRps)
 #else
       if(pcSlice->getRPSidx() < 0)
@@ -1008,7 +1027,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       pcSlice->setNumRefIdx(REF_PIC_LIST_0, 0);
       pcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
     }
-#if H_MV
+#if H_MV && !H_MV_FIX1071
     // Temporary fix for FIX1071 should be removed later
     if( pcSlice->getPPS()->getListsModificationPresentFlag() && pcSlice->getNumRpsCurrTempList( rps ) > 1)
 #else

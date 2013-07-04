@@ -1222,6 +1222,14 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
   
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU_S("=========== coding_quadtree ===========\n")
+  DTRACE_CU("x0", uiLPelX)
+  DTRACE_CU("x1", uiTPelY)
+  DTRACE_CU("log2CbSize", g_uiMaxCUWidth>>uiDepth)
+  DTRACE_CU("cqtDepth"  , uiDepth)
+#endif
+
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
   // If slice start is within this cu...
   Bool bSliceStart = pcSlice->getSliceSegmentCurStartCUAddr() > pcPic->getPicSym()->getInverseCUOrderMap(pcCU->getAddr())*pcCU->getPic()->getNumPartInCU()+uiAbsPartIdx && 
@@ -1256,6 +1264,10 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     return;
   }
   
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU_S("=========== coding_unit ===========\n")
+#endif
+
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
   {
     setdQPFlag(true);
@@ -1271,6 +1283,11 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   if( pcCU->isSkipped( uiAbsPartIdx ) )
   {
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_PU_S("=========== prediction_unit ===========\n")
+    DTRACE_PU("x0", uiLPelX)
+    DTRACE_PU("x1", uiTPelY)
+#endif
     m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx );
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );

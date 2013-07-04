@@ -1331,6 +1331,10 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tPOC: " );
   DTRACE_CABAC_V( rpcPic->getPOC() );
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CABAC_T( " Layer: " );
+  DTRACE_CABAC_V( rpcPic->getLayerId() );
+#endif
   DTRACE_CABAC_T( "\n" );
 #if ENC_DEC_TRACE
   g_bJustDoIt = g_bEncDecTraceDisable;
