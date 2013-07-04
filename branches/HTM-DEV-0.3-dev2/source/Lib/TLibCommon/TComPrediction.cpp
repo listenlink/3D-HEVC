@@ -436,9 +436,6 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
   Int         iWidth;
   Int         iHeight;
   UInt        uiPartAddr;
-#if H_3D_VSP
-  UInt        uiAbsPartIdx = pcCU->getZorderIdxInCU();
-#endif
 
   if ( iPartIdx >= 0 )
   {
@@ -478,9 +475,9 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     else
     {
       if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
-        xPredInterUniVSP( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+        xPredInterUniVSP( pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
       else
-        xPredInterBiVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, pcYuvPred );
+        xPredInterBiVSP ( pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
     }
 #endif
     return;
@@ -525,9 +522,9 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     else
     {
       if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
-        xPredInterUniVSP( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+        xPredInterUniVSP( pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
       else
-        xPredInterBiVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, pcYuvPred );
+        xPredInterBiVSP ( pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
     }
 #endif
   }
@@ -572,8 +569,10 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 }
 
 #if H_3D_VSP
-Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
+Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
+  UInt uiAbsPartIdx = pcCU->getZorderIdxInCU();
+
   // Step 1: get depth reference
   Int depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
   TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
@@ -591,14 +590,15 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, UInt u
   // Step 3: initialize the LUT according to the reference viewIdx
   Int txtRefViewIdx = pRefPicBaseTxt->getViewIndex();
   Int* pShiftLUT    = pcCU->getSlice()->getDepthToDisparityB( txtRefViewIdx );
+  assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
 
   // Step 4: Do compensation
-  TComMv cMv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cMv is the disparity vector derived from the neighbors
-  pcCU->clipMv(cMv);
+  TComMv cDv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cDv is the disparity vector derived from the neighbors
+  pcCU->clipMv(cDv);
   Int iBlkX = ( pcCU->getAddr() % pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
   Int iBlkY = ( pcCU->getAddr() / pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
-  xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, &cMv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
-  xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, &cMv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
+  xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, &cDv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
+  xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, &cDv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
 }
 #endif
 
@@ -747,7 +747,7 @@ Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidt
 
 #if H_3D_VSP
 
-Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred )
+Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred )
 {
   TComYuv* pcMbYuv;
   Int      iRefIdx[2] = {-1, -1};
@@ -764,9 +764,9 @@ Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, UInt ui
 
     pcMbYuv = &m_acYuvPred[iRefList];
     if( pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr ) >= 0 && pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr ) >= 0 )
-      xPredInterUniVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv, true );
+      xPredInterUniVSP ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, true );
     else
-      xPredInterUniVSP ( pcCU, uiPartAddr, uiAbsPartIdx, iWidth, iHeight, eRefPicList, pcMbYuv );
+      xPredInterUniVSP ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv );
   }
 
   xWeightedAverage( &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
@@ -1389,10 +1389,10 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 // posX, posY:     PU position, texture
 // sizeX, sizeY: PU size
 // partAddr: z-order index
-// mv: disparity vector. derived from neighboring blocks
+// dv: disparity vector. derived from neighboring blocks
 //
 // Output: dstPic, PU predictor 64x64
-Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* mv, UInt partAddr,Int posX, Int posY
+Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr,Int posX, Int posY
                                             , Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi )
 {
   Int widthLuma;
@@ -1425,8 +1425,8 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   Int refStride = refPic->getStride();
   Int dstStride = dstPic->getStride();
   Int depStride =  pPicBaseDepth->getStride();
-  Int depthPosX = Clip3(0,   widthLuma - sizeX,  (posX/nTxtPerDepthX) + ((mv->getHor()+2)>>2));
-  Int depthPosY = Clip3(0,   heightLuma- sizeY,  (posY/nTxtPerDepthY) + ((mv->getVer()+2)>>2));
+  Int depthPosX = Clip3(0,   widthLuma - sizeX,  (posX/nTxtPerDepthX) + ((dv->getHor()+2)>>2));
+  Int depthPosY = Clip3(0,   heightLuma- sizeY,  (posY/nTxtPerDepthY) + ((dv->getVer()+2)>>2));
   Pel *ref    = refPic->getLumaAddr() + posX + posY * refStride;
   Pel *dst    = dstPic->getLumaAddr(partAddr);
   Pel *depth  = pPicBaseDepth->getLumaAddr() + depthPosX + depthPosY * depStride;
@@ -1594,7 +1594,7 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
   }
 }
 
-Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv*mv, UInt partAddr, Int posX, Int posY
+Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv*dv, UInt partAddr, Int posX, Int posY
                                                , Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi)
 {
   Int refStride = refPic->getCStride();
@@ -1628,26 +1628,26 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
   {
     nTxtPerDepthX = widthChroma / widthDepth;
     nDepthPerTxtX = 1;
-    depthPosX = posX / nTxtPerDepthX + ((mv->getHor()+2)>>2);
+    depthPosX = posX / nTxtPerDepthX + ((dv->getHor()+2)>>2);
   }
   else
   {
     nTxtPerDepthX = 1;
     nDepthPerTxtX = widthDepth / widthChroma;
-    depthPosX = posX * nDepthPerTxtX + ((mv->getHor()+2)>>2);
+    depthPosX = posX * nDepthPerTxtX + ((dv->getHor()+2)>>2);
   }
   depthPosX = Clip3(0, widthDepth - (sizeX<<1), depthPosX);
   if ( heightChroma > heightDepth )
   {
     nTxtPerDepthY = heightChroma / heightDepth;
     nDepthPerTxtY = 1;
-    depthPosY = posY / nTxtPerDepthY + ((mv->getVer()+2)>>2);
+    depthPosY = posY / nTxtPerDepthY + ((dv->getVer()+2)>>2);
   }
   else
   {
     nTxtPerDepthY = 1;
     nDepthPerTxtY = heightDepth / heightChroma;
-    depthPosY = posY * nDepthPerTxtY + ((mv->getVer()+2)>>2);
+    depthPosY = posY * nDepthPerTxtY + ((dv->getVer()+2)>>2);
   }
   depthPosY = Clip3(0, heightDepth - (sizeY<<1), depthPosY);
 
