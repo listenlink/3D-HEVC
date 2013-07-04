@@ -2188,6 +2188,7 @@ Void TComDataCU::setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPa
 {
   setSubPart<Char>( iVSPFlag, m_piVSPFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
 }
+
 #endif
 
 Void TComDataCU::setChromIntraDirSubParts( UInt uiDir, UInt uiAbsPartIdx, UInt uiDepth )
@@ -2631,9 +2632,10 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
  * \Outputs
  * \param uiCount: The next position to add merge candidate. Will be updated if VSP is successfully added
  * \param abCandIsInter: abCandIsInter[iCount] tells that VSP candidate is an Inter candidate, if VSP is successfully added
- * \param pcMvFieldNeighbours:   Return the "disparity vector". Type 1 MV. To be used to fetch a depth block. A "global" variable
- * \param puhInterDirNeighbours: Tells the VSP prediction direction. TODO: The value does NOT matter for VSP, as the direction will be determined based on availability later
- *                                Having it as output is mainly for coding beauty
+ * \param pcMvFieldNeighbours:   Return combined motion information, then stored to a global buffer
+ *                                    1) the "disparity vector". Type 1 MV. To be used to fetch a depth block.
+ *                                    2) the ref index /list.    Type 2 reference picture pointer, typically for texture
+ * \param puhInterDirNeighbours: Indicate the VSP prediction direction.
  * \param vspFlag: vspFlag[iCount] will be set (equal to 1), if VSP is successfully added. To be used to indicate the actual position of the VSP candidate
  *
  * \Return
@@ -2652,34 +2654,6 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
   TComPic* picDepth = getSlice()->getIvPic( true, refViewIdx );
   if( picDepth == NULL ) // No depth reference avail
     return false;
-  
-  //////////
-  // Code if simply re-writing
-//  if(ucVspMergePos == H_3D_VSPPOSITION && picDepth != NULL && 0 != m_pcSlice->getViewIndex() ) // VSP can be used only when depth is used as input
-//  {
-//    abCandIsInter[iCount] = true;
-//    puhInterDirNeighbours[iCount] = 1;
-//    vspFlag[iCount] = 1;
-//    vspDirTrue[iCount] = 0; // TODO: Check if this is really useful!!!!
-//
-//    Int iRefIdxList0 = getSlice()->getRefPic(REF_PIC_LIST_0, 0)->getPOC() == getSlice()->getPOC() ? 0 :
-//                      (getSlice()->getAlterRefIdx(REF_PIC_LIST_0) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_0));
-//    pcMvFieldNeighbours[iCount<<1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList0 );
-//    if (getSlice()->isInterB())
-//    {
-//      puhInterDirNeighbours[iCount] = xGetVspDirection(uiPUIdx);
-//      Int iRefIdxList1 = getSlice()->getRefPic(REF_PIC_LIST_1, 0)->getPOC() == getSlice()->getPOC() ? 0 :
-//                        (getSlice()->getAlterRefIdx(REF_PIC_LIST_1) == -1 ? NOT_VALID : getSlice()->getAlterRefIdx(REF_PIC_LIST_1));
-//      pcMvFieldNeighbours[(iCount<<1)+1].setMvField( pDInfo->m_acDoNBDV, iRefIdxList1 );
-//    }
-//
-//    if ( mrgCandIdx == iCount )
-//      return true;
-//
-//    iCount++;
-//  }
-  /////////////
-  
   
   Bool refViewAvailFlag = false;
   UChar predFlag[2] = {0, 0};
@@ -2710,7 +2684,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
     for ( i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++ )
     {
       TComPic* refPic = m_pcSlice->getRefPic(eRefPicList, i);
-      if ( refPic->getPOC() == m_pcSlice->getPOC() ) // is inter-view reference
+      if ( refPic->getPOC() == m_pcSlice->getPOC() ) // inter-view reference
       {
         Int viewIdxRefInList = refPic->getViewIndex();
         if (refViewIdx != viewIdxRefInList)
@@ -2735,6 +2709,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
 
   return false;
 }
+
 #endif
 
 /** Constructs a list of merging candidates
@@ -4725,15 +4700,6 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           if (picDepth && bDepthRefine)
             estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
 
-#if 0 // H_3D_VSP
-          Int refFrmIdx = 0;
-          RefPicList privateRefPicList = REF_PIC_LIST_0;
-          //getRefListAndRefFrmIdx(iTargetViewIdx, privateRefPicList, refFrmIdx);
-
-          //pDInfo->m_aListIdx[ pDInfo->iN ]  = privateRefPicList;
-          //pDInfo->m_aRefIdx [ pDInfo->iN ]  = -1-refFrmIdx;
-          assert(pDInfo->m_aRefIdx [ pDInfo->iN ] < 0);
-#endif //H_3D_VSP
           pDInfo->m_acDoNBDV  = cColMv;
 #endif //H_3D_NBDV_REF
           return true;
@@ -4843,17 +4809,6 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
             estimateDVFromDM(0, uiPartIdx, picDepth, uiPartAddr, &cDispVec ); // from base view
 #endif
           pDInfo->m_acDoNBDV = cDispVec;
-          
-#if 0 // H_3D_VSP
-          Int refFrmIdx = 0;
-          RefPicList privateRefPicList = REF_PIC_LIST_0 ;
-          getRefListAndRefFrmIdx(0, privateRefPicList, refFrmIdx); // find the reference picture from base view
-
-          pDInfo->m_aListIdx[ pDInfo->iN ]  = privateRefPicList;
-          pDInfo->m_aRefIdx [ pDInfo->iN ]  = -1-refFrmIdx;
-          assert(pDInfo->m_aRefIdx [ pDInfo->iN ] < 0);
-#endif //H_3D_VSP
-          
 #endif
           return true;
         }
@@ -4874,17 +4829,8 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     estimateDVFromDM(0, uiPartIdx, picDepth, uiPartAddr, &defaultDV ); // from base view
   }
   pDInfo->m_acDoNBDV = defaultDV;
-
-#if 0 // H_3D_VSP
-  Int refFrmIdx = 0;
-  RefPicList privateRefPicList = REF_PIC_LIST_0 ;
-  getRefListAndRefFrmIdx(0, privateRefPicList, refFrmIdx); // find the reference picture from base view
-
-  pDInfo->m_aListIdx[ pDInfo->iN ]  = privateRefPicList;
-  pDInfo->m_aRefIdx [ pDInfo->iN ]  = -1-refFrmIdx;
-  assert(pDInfo->m_aRefIdx [ pDInfo->iN ] < 0);
 #endif
-#endif
+
   return false; 
 }
 
@@ -4967,12 +4913,6 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
 
           if (picDepth && bDepthRefine)
             estimateDVFromDM(refViewIdx, uiPartIdx, picDepth, uiPartAddr, &cMvPred );
-
-#if 0 // H_3D_VSP
-          pNbDvInfo->m_aListIdx[ pNbDvInfo->iN ] = eRefPicList;
-          pNbDvInfo->m_aRefIdx [ pNbDvInfo->iN ] = -1-refId;
-          assert(pNbDvInfo->m_aRefIdx [ pNbDvInfo->iN ] < 0);
-#endif
 
           pNbDvInfo->m_acDoNBDV = cMvPred;
 #endif

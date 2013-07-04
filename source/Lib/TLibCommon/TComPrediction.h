@@ -95,8 +95,8 @@ protected:
   Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
   Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
 #if H_3D_VSP
-  Void xPredInterUniVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
-  Void xPredInterBiVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr, UInt uiAbsPartIdx, Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
+  Void xPredInterUniVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
+  Void xPredInterBiVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
 #endif
 
   Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi
@@ -118,10 +118,10 @@ protected:
     );
 
 #if H_3D_VSP
-  Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* mv, UInt partAddr,Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
+  Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
                                 , TComYuv *&dstPic
                                 , Bool bi );
-  Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv*mv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
+  Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
                                 , TComYuv *&dstPic
                                 , Bool bi );
 #endif

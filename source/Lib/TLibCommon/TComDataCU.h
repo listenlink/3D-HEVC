@@ -563,9 +563,9 @@ public:
                                             , Int& numValidMergeCand
                                             , Int mrgCandIdx = -1 );
 #if H_3D_VSP
-  Char*         getVSPFlag        ()                        { return m_piVSPFlag;        }
-  Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx]; }
-  Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;    }
+  Char*         getVSPFlag        ()                        { return m_piVSPFlag;          }
+  Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
+  Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }
   Void          setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
 #endif
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
