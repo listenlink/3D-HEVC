@@ -323,6 +323,13 @@ const Bool g_bEncDecTraceDisable = false;
 Bool   g_HLSTraceEnable = true;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
+#if H_MV_ENC_DEC_TRAC
+Bool g_traceCU = true; 
+Bool g_tracePU = true; 
+Bool g_traceTU = true; 
+Bool g_disableHLSTrace = false; 
+UInt64 g_stopAtCounter   = 10803; 
+#endif
 #endif
 // ====================================================================================================================
 // Scanning order & context model mapping
@@ -517,4 +524,33 @@ UInt g_scalingListSizeX  [4] = { 4, 8, 16,  32};
 UInt g_scalingListNum[SCALING_LIST_SIZE_NUM]={6,6,6,2};
 Int  g_eTTable[4] = {0,3,1,2};
 
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+Void writeToTraceFile( Char* symbolName, Int val, Bool doIt )
+{
+  if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
+  {
+    if ( g_stopAtCounter == g_nSymbolCounter )
+    {
+      std::cout << "Break point here." << std::endl; 
+    }
+    fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+    fprintf( g_hTrace, "%-50s       : %d\n", symbolName, val );     
+    fflush ( g_hTrace );
+    g_nSymbolCounter++; 
+  }
+}
+
+Void writeToTraceFile( Char* symbolName, Bool doIt )
+{
+  if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
+  {
+    fprintf( g_hTrace, "%s", symbolName );    
+    fflush ( g_hTrace );
+    g_nSymbolCounter++; 
+  }
+}
+
+#endif
+#endif
 //! \}

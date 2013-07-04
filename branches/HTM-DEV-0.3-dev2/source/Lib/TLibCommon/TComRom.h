@@ -39,6 +39,7 @@
 #define __TCOMROM__
 
 #include "CommonDef.h"
+#include "TypeDef.h"
 
 #include<stdio.h>
 #include<iostream>
@@ -183,6 +184,24 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_R( x,y ) if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, x,    y );
 #define DTRACE_CABAC_N        if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, "\n"    );
 
+#if H_MV_ENC_DEC_TRAC
+ extern Bool   g_traceCU; 
+ extern Bool   g_tracePU; 
+ extern Bool   g_traceTU; 
+ extern Bool   g_disableHLSTrace; 
+ extern UInt64 g_stopAtCounter; 
+
+#define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
+#define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );
+#define DTRACE_TU(x,y)             writeToTraceFile( x,y, g_traceTU );
+#define DTRACE_CU_S(x)             writeToTraceFile( x,   g_traceCU );
+#define DTRACE_PU_S(x)             writeToTraceFile( x,   g_tracePU );
+#define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
+
+
+ Void           writeToTraceFile( Char* symbolName, Int val, Bool doIt );
+ Void           writeToTraceFile( Char* symbolName, Bool doIt );
+#endif
 #else
 
 #define DTRACE_CABAC_F(x)
@@ -193,6 +212,16 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_R( x,y )
 #define DTRACE_CABAC_N
 
+#if H_MV_ENC_DEC_TRAC
+#define DTRACE_CU(x,y)             
+#define DTRACE_PU(x,y)             
+#define DTRACE_TU(x,y)             
+
+#define DTRACE_CU_S(x)             
+#define DTRACE_PU_S(x)             
+#define DTRACE_TU_S(x)             
+
+#endif
 #endif
 
 

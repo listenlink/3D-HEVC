@@ -68,6 +68,10 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
+#if H_MV
+#define H_MV_FIX1071                      1  //< Fix on Fix1071, same as in HTM 11
+#define H_MV_ENC_DEC_TRAC                 0  //< CU/PU level tracking
+#endif
 
 #if H_3D
 #define H_3D_PDM_CAM_PARAS                0 ///< PDM related parts of camera parameters, should be removed if not used anymore.
@@ -128,8 +132,9 @@
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 #define H_3D_GEN                          1   // Some general changes can be removed after merge 
-#define H_3D_CLEANUPS                     1
-#define H_3D_FIX                          1   // Temporary for minor fixes
+#define H_3D_CLEANUPS                     1   // Temporary for minor fixes can be removed after merge 
+#define H_3D_FIX                          1   // Temporary for minor fixes can be removed after merge 
+#define H_3D_VSO_FIX_BORDRE_EXTENSION     1   // Temporary for minor fixes can be removed after merge 
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -594,10 +594,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     m_pcEncTop->selectReferencePictureSet(pcSlice, pocCurr, iGOPid);
     pcSlice->getRPS()->setNumberOfLongtermPictures(0);
 
+#if FIX1071 && H_MV_FIX1071
+    if ((pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0) || (pcSlice->isIRAP()))
+    {
+      pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS(), pcSlice->isIRAP());
+    }
+#else
     if(pcSlice->checkThatAllRefPicsAreAvailable(rcListPic, pcSlice->getRPS(), false) != 0)
     {
       pcSlice->createExplicitReferencePictureSetFromReference(rcListPic, pcSlice->getRPS());
     }
+#endif
     pcSlice->applyReferencePictureSet(rcListPic, pcSlice->getRPS());
 
     if(pcSlice->getTLayer() > 0)

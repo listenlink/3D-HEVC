@@ -367,6 +367,7 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
   }
   else
   {
+#if !H_MV_ENC_DEC_TRAC
     {
       DTRACE_CABAC_VL( g_nSymbolCounter++ );
       DTRACE_CABAC_T( "\tTrIdx: abspart=" );
@@ -377,6 +378,7 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
       DTRACE_CABAC_V( pcCU->getTransformIdx( uiAbsPartIdx ) );
       DTRACE_CABAC_T( "\n" );
     }
+#endif
     
     if( pcCU->getPredictionMode(uiAbsPartIdx) != MODE_INTRA && uiDepth == pcCU->getDepth( uiAbsPartIdx ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, 0 ) && !pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, 0 ) )
     {
@@ -494,6 +496,12 @@ Void TEncEntropy::encodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_PU_S("=========== prediction_unit ===========\n")
+       //Todo: 
+      //DTRACE_PU("x0", uiLPelX)
+      //DTRACE_PU("x1", uiTPelY)
+#endif
     encodeMergeFlag( pcCU, uiSubPartIdx );
     if ( pcCU->getMergeFlag( uiSubPartIdx ) )
     {

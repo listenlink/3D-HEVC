@@ -46,16 +46,39 @@
 
 Void  xTraceSPSHeader (TComSPS *pSPS)
 {
+#if H_MV_ENC_DEC_TRAC
+  if ( g_disableHLSTrace )
+  {
+    return; 
+  }
+  // To avoid mismatches
+  fprintf( g_hTrace, "=========== Sequence Parameter Set ===========\n" );
+#else
   fprintf( g_hTrace, "=========== Sequence Parameter Set ID: %d ===========\n", pSPS->getSPSId() );
+#endif
 }
 
 Void  xTracePPSHeader (TComPPS *pPPS)
 {
+#if H_MV_ENC_DEC_TRAC
+  if ( g_disableHLSTrace )
+  {
+    return; 
+  }
+  fprintf( g_hTrace, "=========== Picture Parameter Set ===========\n" );
+#else
   fprintf( g_hTrace, "=========== Picture Parameter Set ID: %d ===========\n", pPPS->getPPSId() );
+#endif
 }
 
 Void  xTraceSliceHeader (TComSlice *pSlice)
 {
+#if H_MV_ENC_DEC_TRAC
+  if ( g_disableHLSTrace )
+  {
+    return; 
+  }
+#endif
   fprintf( g_hTrace, "=========== Slice ===========\n");
 }
 

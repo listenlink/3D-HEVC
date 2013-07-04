@@ -506,6 +506,9 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+#if H_3D_VSO_FIX_BORDRE_EXTENSION
+  rpcPic->getPicYuvOrg()->setBorderExtension(false);
+#endif
 }
 
 Void TEncTop::xInitSPS()
