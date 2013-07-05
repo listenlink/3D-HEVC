@@ -119,6 +119,7 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
+#define H_3D_VSP_FIX                      1   // Temporary, to be removed soon
 #endif
 
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
