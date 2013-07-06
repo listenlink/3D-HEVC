@@ -2790,12 +2790,14 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
  
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
     {
+#if H_3D_VSP_FIX
+      Bool bSet[2] = {false, false}; // TODO: Find a better variable name   -Dong
+#endif
       abCandIsInter[iCount] = true;      
       puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
       if( ( puhInterDirNeighbours[iCount] & 1 ) == 1 )
       {
         pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
-        
         TComMv cMvPred = pcMvFieldNeighbours[iCount<<1].getMv();
 
 #if H_3D_IC
@@ -2806,16 +2808,17 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
         //pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
 #if H_3D_CLEANUPS //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
-#if !H_3D_VSP_FIX
         pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
-#else
+#if H_3D_VSP_FIX
         if ( pcTextureCU->getVSPFlag( uiPartIdxCenter ) != 0 ) // Texture coded using VSP mode
         {
+          bSet[0] = true;
           for ( Int i = 0; i < m_pcSlice->getNumRefIdx( REF_PIC_LIST_0 ); i++ )
           {
             if (m_pcSlice->getRefPOC( REF_PIC_LIST_0, i ) == m_pcSlice->getPOC())
             {
               pcMvFieldNeighbours[ iCount<<1 ].setMvField(cMvPred, i);
+              bSet[0] = false;
               break;
             }
           }
@@ -2851,16 +2854,17 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
           //pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
 #if H_3D_CLEANUPS //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
-#if !H_3D_VSP_FIX
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
-#else
+#if H_3D_VSP_FIX
           if ( pcTextureCU->getVSPFlag( uiPartIdxCenter ) != 0 ) // Texture coded using VSP mode
           {
+            bSet[1] = true;
             for ( Int i = 0; i < m_pcSlice->getNumRefIdx( REF_PIC_LIST_1 ); i++ )
             {
               if (m_pcSlice->getRefPOC( REF_PIC_LIST_1, i ) == m_pcSlice->getPOC())
               {
                 pcMvFieldNeighbours[ (iCount<<1)+1 ].setMvField(cMvPred, i);
+                bSet[1] = false;
                 break;
               }
             }
@@ -2887,7 +2891,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       {
 #endif
 #if H_3D_VSP_FIX
-      if ( pcTextureCU->getVSPFlag( uiPartIdxCenter ) == 0 ) // MERL Question: When texture coded using nonVSP mode????????
+      assert( !bSet[0] || (!bSet[1] && m_pcSlice->isInterB()) );
       {
 #endif
 #if H_3D_NBDV
@@ -2901,8 +2905,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         iCount ++;
 #if H_3D_VSP_FIX
       }
-//      else
-//        assert(0);  // MERL Question: Should the assert be kept???
 #endif
 #if !H_3D_CLEANUPS
       }
