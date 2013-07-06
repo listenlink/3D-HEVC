@@ -2791,7 +2791,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
     {
 #if H_3D_VSP_FIX
-      Bool bSet[2] = {false, false}; // TODO: Find a better variable name   -Dong
+      Bool bVspRef[2] = {false, false}; // TODO: Find a better variable name   -Dong
 #endif
       abCandIsInter[iCount] = true;      
       puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
@@ -2812,13 +2812,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_VSP_FIX
         if ( pcTextureCU->getVSPFlag( uiPartIdxCenter ) != 0 ) // Texture coded using VSP mode
         {
-          bSet[0] = true;
+          bVspRef[0] = true;
           for ( Int i = 0; i < m_pcSlice->getNumRefIdx( REF_PIC_LIST_0 ); i++ )
           {
             if (m_pcSlice->getRefPOC( REF_PIC_LIST_0, i ) == m_pcSlice->getPOC())
             {
               pcMvFieldNeighbours[ iCount<<1 ].setMvField(cMvPred, i);
-              bSet[0] = false;
+              bVspRef[0] = false;
               break;
             }
           }
@@ -2858,13 +2858,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_VSP_FIX
           if ( pcTextureCU->getVSPFlag( uiPartIdxCenter ) != 0 ) // Texture coded using VSP mode
           {
-            bSet[1] = true;
+            bVspRef[1] = true;
             for ( Int i = 0; i < m_pcSlice->getNumRefIdx( REF_PIC_LIST_1 ); i++ )
             {
               if (m_pcSlice->getRefPOC( REF_PIC_LIST_1, i ) == m_pcSlice->getPOC())
               {
                 pcMvFieldNeighbours[ (iCount<<1)+1 ].setMvField(cMvPred, i);
-                bSet[1] = false;
+                bVspRef[1] = false;
                 break;
               }
             }
@@ -2891,7 +2891,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       {
 #endif
 #if H_3D_VSP_FIX
-      assert( !bSet[0] || (!bSet[1] && m_pcSlice->isInterB()) );
+      assert( !bVspRef[0] || (!bVspRef[1] && m_pcSlice->isInterB()) );
       {
 #endif
 #if H_3D_NBDV
