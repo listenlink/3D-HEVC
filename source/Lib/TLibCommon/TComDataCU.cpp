@@ -2686,19 +2686,16 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
     refViewAvailFlag = false;
     for ( i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++ )
     {
-      TComPic* refPic = m_pcSlice->getRefPic(eRefPicList, i);
-      if ( refPic->getPOC() == m_pcSlice->getPOC() ) // inter-view reference
+      TComPic* refPicInList = m_pcSlice->getRefPic(eRefPicList, i);
+      Int viewIdxRefInList = refPicInList->getViewIndex();
+      if ( viewIdxRefInList != m_pcSlice->getViewIndex() && viewIdxRefInList != refViewIdx )
       {
-        Int viewIdxRefInList = refPic->getViewIndex();
-        if (refViewIdx != viewIdxRefInList)
-        {
-          refViewAvailFlag = true;
-          predFlag[iRefListIdY] = 1;
-          pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );
+        refViewAvailFlag = true;
+        predFlag[iRefListIdY] = 1;
+        pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );
 #if H_3D_NBDV
-          pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].getMv().setIDVFlag (false);
+        pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].getMv().setIDVFlag (false);
 #endif
-        }
       }
     }
   }
@@ -4923,11 +4920,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
 #endif
           return true;
         }
-#if 0 // H_3D_VSP  // MERL: To be confirmed
-        else if ( bSearchForMvpDv && (cMvPred.getIDVFlag() || pcTmpCU->getVSPFlag( uiIdx )) && bTmpIsSkipped )
-#else
         else if ( bSearchForMvpDv && cMvPred.getIDVFlag() && bTmpIsSkipped )
-#endif
         {
           assert( uiMvpDvPos < IDV_CANDS );
           paIDVInfo->m_acMvCand[iList][ uiMvpDvPos ] = TComMv( cMvPred.getIDVHor(), cMvPred.getIDVVer() );
