@@ -3164,7 +3164,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 
 #if H_3D_VSP
-  if ( xAddVspCand( 3, mrgCandIdx, &cDisInfo, iCount, abCandIsInter, pcMvFieldNeighbours, puhInterDirNeighbours, vspFlag ) )
+  if ( xAddVspCand( H_3D_VSP_POSITION, mrgCandIdx, &cDisInfo, iCount, abCandIsInter, pcMvFieldNeighbours, puhInterDirNeighbours, vspFlag ) )
     return;
   // early termination
   if (iCount == getSlice()->getMaxNumMergeCand())
