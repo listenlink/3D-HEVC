@@ -2667,7 +2667,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
     for ( i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++ )
     {
       Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
-      if (refViewIdx == viewIdxRefInList)
+      if ( viewIdxRefInList == refViewIdx )
       {
         refViewAvailFlag = true;
         predFlag[iRefListIdX] = 1;
@@ -2686,9 +2686,8 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
     refViewAvailFlag = false;
     for ( i = 0; i < m_pcSlice->getNumRefIdx(eRefPicList) && !refViewAvailFlag; i++ )
     {
-      TComPic* refPicInList = m_pcSlice->getRefPic(eRefPicList, i);
-      Int viewIdxRefInList = refPicInList->getViewIndex();
-      if ( viewIdxRefInList != m_pcSlice->getViewIndex() && viewIdxRefInList != refViewIdx )
+      Int viewIdxRefInList = m_pcSlice->getRefPic(eRefPicList, i)->getViewIndex();
+      if ( viewIdxRefInList != refViewIdx && viewIdxRefInList != m_pcSlice->getViewIndex() )
       {
         refViewAvailFlag = true;
         predFlag[iRefListIdY] = 1;
