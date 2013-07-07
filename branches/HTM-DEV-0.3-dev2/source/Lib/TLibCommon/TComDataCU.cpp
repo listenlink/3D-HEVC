@@ -2790,9 +2790,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
  
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
     {
-#if H_3D_VSP_FIX
-      Bool bVspRef[2] = {false, false}; // TODO: Find a better variable name   -Dong
-#endif
       abCandIsInter[iCount] = true;      
       puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
       if( ( puhInterDirNeighbours[iCount] & 1 ) == 1 )
@@ -2809,21 +2806,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         //pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
 #if H_3D_CLEANUPS //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
         pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
-#if H_3D_VSP_FIX
-        if ( pcTextureCU->getVSPFlag( uiPartIdxCenter ) != 0 ) // Texture coded using VSP mode
-        {
-          bVspRef[0] = true;
-          for ( Int i = 0; i < m_pcSlice->getNumRefIdx( REF_PIC_LIST_0 ); i++ )
-          {
-            if (m_pcSlice->getRefPOC( REF_PIC_LIST_0, i ) == m_pcSlice->getPOC())
-            {
-              pcMvFieldNeighbours[ iCount<<1 ].setMvField(cMvPred, i);
-              bVspRef[0] = false;
-              break;
-            }
-          }
-        }
-#endif
 #else
         if (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0)
         {
@@ -2855,21 +2837,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
           //pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
 #if H_3D_CLEANUPS //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
-#if H_3D_VSP_FIX
-          if ( pcTextureCU->getVSPFlag( uiPartIdxCenter ) != 0 ) // Texture coded using VSP mode
-          {
-            bVspRef[1] = true;
-            for ( Int i = 0; i < m_pcSlice->getNumRefIdx( REF_PIC_LIST_1 ); i++ )
-            {
-              if (m_pcSlice->getRefPOC( REF_PIC_LIST_1, i ) == m_pcSlice->getPOC())
-              {
-                pcMvFieldNeighbours[ (iCount<<1)+1 ].setMvField(cMvPred, i);
-                bVspRef[1] = false;
-                break;
-              }
-            }
-          }
-#endif
 #else
           if (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0)
           {
@@ -2890,22 +2857,15 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         || (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0 && pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0 && getSlice()->isInterB())))
       {
 #endif
-#if H_3D_VSP_FIX
-      assert( !bVspRef[0] || (!bVspRef[1] && m_pcSlice->isInterB()) );
-      {
-#endif
 #if H_3D_NBDV
-        pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
-        pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
+      pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
+      pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
 #endif
-        if ( mrgCandIdx == iCount )
-        {
-          return;
-        }
-        iCount ++;
-#if H_3D_VSP_FIX
+      if ( mrgCandIdx == iCount )
+      {
+        return;
       }
-#endif
+      iCount ++;
 #if !H_3D_CLEANUPS
       }
       else
