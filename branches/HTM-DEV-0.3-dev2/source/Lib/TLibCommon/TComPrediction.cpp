@@ -571,30 +571,29 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #if H_3D_VSP
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
-  UInt uiAbsPartIdx = pcCU->getZorderIdxInCU();
-
-  // Step 1: get depth reference
+  // Get depth reference
   Int depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
   TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
   assert(pRefPicBaseDepth != NULL);
   TComPicYuv* pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
   assert(pcBaseViewDepthPicYuv != NULL);
 
-  // Step 2: get texture reference
+  // Get texture reference
   Int iRefIdx = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
   assert(iRefIdx >= 0);
   TComPic* pRefPicBaseTxt = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx );
   TComPicYuv* pcBaseViewTxtPicYuv = pRefPicBaseTxt->getPicYuvRec();
   assert(pcBaseViewTxtPicYuv != NULL);
 
-  // Step 3: initialize the LUT according to the reference viewIdx
+  // Initialize LUT according to the reference viewIdx
   Int txtRefViewIdx = pRefPicBaseTxt->getViewIndex();
   Int* pShiftLUT    = pcCU->getSlice()->getDepthToDisparityB( txtRefViewIdx );
   assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
 
-  // Step 4: Do compensation
+  // Do compensation
   TComMv cDv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cDv is the disparity vector derived from the neighbors
   pcCU->clipMv(cDv);
+  UInt uiAbsPartIdx = pcCU->getZorderIdxInCU();
   Int iBlkX = ( pcCU->getAddr() % pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
   Int iBlkY = ( pcCU->getAddr() / pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
   xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, &cDv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
@@ -751,6 +750,7 @@ Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWi
 {
   TComYuv* pcMbYuv;
   Int      iRefIdx[2] = {-1, -1};
+  Bool     bi = (pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr ) >= 0 && pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr ) >= 0);
 
   for ( Int iRefList = 0; iRefList < 2; iRefList++ )
   {
@@ -759,14 +759,10 @@ Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWi
 
     if ( iRefIdx[iRefList] < 0 )
       continue;
-
     assert( iRefIdx[iRefList] < pcCU->getSlice()->getNumRefIdx(eRefPicList) );
 
     pcMbYuv = &m_acYuvPred[iRefList];
-    if( pcCU->getCUMvField( REF_PIC_LIST_0 )->getRefIdx( uiPartAddr ) >= 0 && pcCU->getCUMvField( REF_PIC_LIST_1 )->getRefIdx( uiPartAddr ) >= 0 )
-      xPredInterUniVSP ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, true );
-    else
-      xPredInterUniVSP ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv );
+    xPredInterUniVSP ( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, pcMbYuv, bi );
   }
 
   xWeightedAverage( &m_acYuvPred[0], &m_acYuvPred[1], iRefIdx[0], iRefIdx[1], uiPartAddr, iWidth, iHeight, rpcYuvPred );
@@ -1582,7 +1578,6 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pP
 
       assert( ref[refOffset] >= 0 && ref[refOffset]<= 255 );
       m_if.filterHorLuma( &ref[refOffset], refStride, &dst[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, !bi );
-
     }
     ref   += refStride*nTxtPerDepthY;
     dst   += dstStride*nTxtPerDepthY;
