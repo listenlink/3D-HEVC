@@ -226,7 +226,7 @@ protected:
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if H_3D_VSP
   Bool          xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
-                             Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspIdxTrue );
+                             Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag );
 #endif
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
@@ -560,8 +560,7 @@ public:
 #if H_3D_VSP
                                             , Int* vspFlag
 #endif
-                                            , Int& numValidMergeCand
-                                            , Int mrgCandIdx = -1 );
+                                            , Int& numValidMergeCand, Int mrgCandIdx = -1 );
 #if H_3D_VSP
   Char*         getVSPFlag        ()                        { return m_piVSPFlag;          }
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }

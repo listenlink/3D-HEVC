@@ -1834,7 +1834,6 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
 }
 
 #if H_3D_VSP_CONSTRAINED
-
 Int TComPrediction::xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma)
 {
   Int iSize = 0;
@@ -1852,11 +1851,8 @@ Int TComPrediction::xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma)
   }
   return iSize;
 }
+#endif // H_3D_VSP_CONSTRAINED
 
-#endif
-
-
-#endif
-
+#endif // H_3D_VSP
 
 //! \}
