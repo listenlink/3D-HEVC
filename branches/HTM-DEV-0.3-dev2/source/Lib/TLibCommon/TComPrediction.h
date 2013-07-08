@@ -79,7 +79,7 @@ protected:
 #endif
 
 #if H_3D_VSP
-  Int*   m_pDepthBlock; ///< Local variable, to store a depth block, just to prevent allocate memory every time
+  Int*   m_pDepthBlock;         ///< Store a depth block, local variable, to prevent memory allocation every time
 #if H_3D_VSP_CONSTRAINED
   Int  xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma = true);
 #endif
@@ -90,13 +90,13 @@ protected:
   
   // motion compensation functions
 #if H_3D_ARP
-  Void xPredInterUniARP         ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false, TComMvField * pNewMvFiled = NULL );
+  Void xPredInterUniARP         ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false, TComMvField * pNewMvFiled = NULL );
 #endif
-  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
-  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
+  Void xPredInterUni            ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
+  Void xPredInterBi             ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
 #if H_3D_VSP
-  Void xPredInterUniVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
-  Void xPredInterBiVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr,                    Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
+  Void xPredInterUniVSP         ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi=false          );
+  Void xPredInterBiVSP          ( TComDataCU* pcCU,                          UInt uiPartAddr,               Int iWidth, Int iHeight,                         TComYuv*& rpcYuvPred );
 #endif
 
   Void xPredInterLumaBlk  ( TComDataCU *cu, TComPicYuv *refPic, UInt partAddr, TComMv *mv, Int width, Int height, TComYuv *&dstPic, Bool bi
@@ -118,12 +118,8 @@ protected:
     );
 
 #if H_3D_VSP
-  Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
-                                , TComYuv *&dstPic
-                                , Bool bi );
-  Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth
-                                , TComYuv *&dstPic
-                                , Bool bi );
+  Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
+  Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
 #endif
 
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );

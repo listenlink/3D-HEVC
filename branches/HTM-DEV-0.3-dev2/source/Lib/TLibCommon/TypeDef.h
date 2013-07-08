@@ -98,22 +98,19 @@
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
-                                              // MERL_VSP_NBDV_RefVId_Fix_D0166
-                                              // MERL_C0152
-#endif
-#define H_3D_VSP                          1   // View syntheis prediction, C0152, D0166, D0092, 
-                                              // MTK_D0105, LG_D0139: No VSP for depth
-                                              // MTK_D0156,
+                                              // MERL_D0166: Reference view selection in NBDV & Bi-VSP
                                               // MERL_C0152: Basic VSP
+#endif
+#define H_3D_VSP                          1   // View synthesis prediction
+                                              // MERL_C0152: Basic VSP
+                                              // MERL_D0166: Reference view selection in NBDV & Bi-VSP
+                                              // MTK_D0105, LG_D0139: No VSP for depth
                                               // QC_D0191: Clean up
                                               // LG_D0092: Multiple VSP candidate allowed
-                                              // MTK_D0105: No VSP for depth. Single depth fetching for DoNBDV and VSP
-                                              //
-                                              //
 
 #if H_3D_VSP
 #define H_3D_VSP_POSITION                 3   // The only supported position
-#define H_3D_VSP_BLOCKSIZE                1   // Supported values: 1, 2, and 4
+#define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
 #if H_3D_VSP_BLOCKSIZE == 1
 #define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
 #else

@@ -827,7 +827,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       pcSlice->setEnableTMVPFlag(0);
     }
 
-    // A bug fix provided by Gerhard to deal with IBP configuration. NEED futher study
 #if H_MV
     if( pcSlice->getIdrPicFlag() )
     {

@@ -2644,9 +2644,7 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
 inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
                                      Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag )
 {
-  if ( pDInfo->bDV == false || ucVspMergePos != H_3D_VSP_POSITION || 0 == m_pcSlice->getViewIndex() || 
-      !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) || // Not to add the candidate if VSP is turned off
-       m_pcSlice->getIsDepth() ) // VSP is disabled for depth layers
+  if ( ucVspMergePos != H_3D_VSP_POSITION || 0 == m_pcSlice->getViewIndex() || !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) || m_pcSlice->getIsDepth() )
     return false;
 
   Int refViewIdx = pDInfo->m_aVIdxCan;
@@ -2725,8 +2723,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_VSP
       , Int* vspFlag
 #endif
-      , Int& numValidMergeCand
-      , Int mrgCandIdx
+      , Int& numValidMergeCand, Int mrgCandIdx
 )
 {
   UInt uiAbsPartAddr = m_uiAbsIdxInLCU + uiAbsPartIdx;
@@ -2830,7 +2827,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
           clipMv(cMvPred);
 #endif
           //pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
-#if H_3D_CLEANUPS //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
+#if H_3D_CLEANUPS
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
 #else
           if (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0)
