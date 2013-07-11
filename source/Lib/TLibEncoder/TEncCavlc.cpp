@@ -751,26 +751,47 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   }
 #if H_3D_GEN  
   WRITE_FLAG( 1,                                             "vps_extension2_flag" );
-  for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
+  for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )
   {
-    if (layer != 0)
+    if (i!= 0)
     {
-      if ( !( pcVPS->getDepthId( layer ) == 1 ) )
+      if ( !( pcVPS->getDepthId( i ) == 1 ) )
       {
 #if H_3D_IV_MERGE
-        WRITE_FLAG( pcVPS->getIvMvPredFlag         (layer) ? 1 : 0 , "iv_mv_pred_flag[i]");
+        WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
 #endif
 #if H_3D_ARP
-        WRITE_FLAG( pcVPS->getUseAdvRP             (layer) ? 1 : 0,  "advanced_residual_pred_flag"  );
+        WRITE_FLAG( pcVPS->getUseAdvRP             ( i ) ? 1 : 0,  "advanced_residual_pred_flag"  );
 #endif
 #if H_3D_NBDV_REF
-        WRITE_FLAG( pcVPS->getDepthRefinementFlag  (layer) ? 1 : 0 , "depth_refinement_flag[i]");
+        WRITE_FLAG( pcVPS->getDepthRefinementFlag  ( i ) ? 1 : 0 , "depth_refinement_flag[i]");
 #endif
 #if H_3D_VSP
-        WRITE_FLAG( pcVPS->getViewSynthesisPredFlag(layer) ? 1 : 0 , "view_synthesis_pred_flag[i]");
+        WRITE_FLAG( pcVPS->getViewSynthesisPredFlag( i ) ? 1 : 0 , "view_synthesis_pred_flag[i]");
 #endif
       }          
     }        
+    if( pcVPS->getDepthId( i ) )
+    {
+      WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ),          "vps_depth_modes_flag[i]" );
+      
+#if H_3D_DIM_DLT
+      if( pcVPS->getVpsDepthModesFlag( i ) )
+      {
+        WRITE_FLAG( pcVPS->getUseDLTFlag( i ) ? 1 : 0, "use_dlt_flag[i]" );
+        if( pcVPS->getUseDLTFlag( i ) )
+        {
+          // code mapping
+          WRITE_UVLC(pcVPS->getNumDepthValues(i), "num_dlt_depth_values[i]");
+          for(Int d=0; d<pcVPS->getNumDepthValues(i); d++)
+          {
+            WRITE_UVLC( pcVPS->idx2DepthValue(i, d), "dlt_depth_value[i][d]" );
+          }
+        }
+      }
+#endif
+    }
+
   }  
 #else
   WRITE_FLAG( 0,                                             "vps_extension2_flag" );

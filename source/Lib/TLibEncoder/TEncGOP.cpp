@@ -705,6 +705,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
 #if H_3D
     pcSlice->setIvPicLists( m_ivPicLists );         
+#if H_3D
+    pcSlice->setPicLists( m_ivPicLists );
+#endif
 #if H_3D_IV_MERGE    
     assert( !m_pcEncTop->getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
 #endif    

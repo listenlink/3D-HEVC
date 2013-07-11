@@ -385,6 +385,9 @@ Void TAppDecTop::xCreateDecLib()
 #if H_MV
   // initialize global variables
   initROM();  
+#if H_3D_DIM_DMM
+  initWedgeLists();
+#endif
 #else
   // create decoder class
   m_cTDecTop.create();

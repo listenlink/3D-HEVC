@@ -81,6 +81,25 @@ Void destroyROM()
     delete[] g_auiSigLastScan[1][i];
     delete[] g_auiSigLastScan[2][i];
   }
+
+#if H_3D_DIM_DMM
+  if( !g_dmmWedgeLists.empty() ) 
+  {
+    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ ) { g_dmmWedgeLists[ui].clear(); }
+    g_dmmWedgeLists.clear();
+  }
+  if( !g_dmmWedgeRefLists.empty() )
+  {
+    for( UInt ui = 0; ui < g_dmmWedgeRefLists.size(); ui++ ) { g_dmmWedgeRefLists[ui].clear(); }
+    g_dmmWedgeRefLists.clear();
+  }
+
+  if( !g_dmmWedgeNodeLists.empty() )
+  {
+    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ ) { g_dmmWedgeNodeLists[ui].clear(); }
+    g_dmmWedgeNodeLists.clear();
+  }
+#endif
 }
 
 // ====================================================================================================================
@@ -309,6 +328,32 @@ Int  g_bitDepthC = 8;
 
 UInt g_uiPCMBitDepthLuma     = 8;    // PCM bit-depth
 UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
+
+// ====================================================================================================================
+// Depth coding modes
+// ====================================================================================================================
+#if H_3D_DIM_DMM
+const WedgeResolution g_dmmWedgeResolution[6] = 
+{
+  HALF_PEL,    //   4x4
+  HALF_PEL,    //   8x8
+  FULL_PEL,    //  16x16
+  DOUBLE_PEL,  //  32x32
+  DOUBLE_PEL,  //  64x64
+  DOUBLE_PEL   // 128x128
+};
+
+const UChar g_dmm1TabIdxBits[6] =
+{ //2x2   4x4   8x8 16x16 32x32 64x64
+     0,    7,   10,   11,   11,   13 };
+const UChar g_dmm3IntraTabIdxBits[6] =
+{ //2x2   4x4   8x8 16x16 32x32 64x64
+     0,    6,    9,    9,    9,    0 };
+
+extern std::vector< std::vector<TComWedgelet> >   g_dmmWedgeLists;
+extern std::vector< std::vector<TComWedgeRef> >   g_dmmWedgeRefLists;
+extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
+#endif
 
 // ====================================================================================================================
 // Misc.
@@ -553,4 +598,188 @@ Void writeToTraceFile( Char* symbolName, Bool doIt )
 
 #endif
 #endif
+#if H_3D_DIM_DMM
+std::vector< std::vector<TComWedgelet>  > g_dmmWedgeLists;
+std::vector< std::vector<TComWedgeRef>  > g_dmmWedgeRefLists;
+std::vector< std::vector<TComWedgeNode> > g_dmmWedgeNodeLists;
+std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
+
+Void initWedgeLists( Bool initRefinements )
+{
+  if( !g_dmmWedgeLists.empty() ) return;
+
+  for( UInt ui = g_aucConvertToBit[DIM_MIN_SIZE]; ui < (g_aucConvertToBit[DIM_MAX_SIZE]+1); ui++ )
+  {
+    UInt uiWedgeBlockSize = ((UInt)DIM_MIN_SIZE)<<ui;
+    std::vector<TComWedgelet> acWedgeList;
+    std::vector<TComWedgeRef> acWedgeRefList;
+    createWedgeList( uiWedgeBlockSize, uiWedgeBlockSize, acWedgeList, acWedgeRefList, g_dmmWedgeResolution[ui] );
+    g_dmmWedgeLists.push_back( acWedgeList );
+    g_dmmWedgeRefLists.push_back( acWedgeRefList );
+
+    // create WedgeNodeList
+    std::vector<TComWedgeNode> acWedgeNodeList;
+    for( UInt uiPos = 0; uiPos < acWedgeList.size(); uiPos++ )
+    {
+      if( acWedgeList[uiPos].getIsCoarse() )
+      {
+        TComWedgeNode cWedgeNode;
+        cWedgeNode.setPatternIdx( uiPos );
+
+        if( initRefinements )
+        {
+          UInt uiRefPos = 0;
+          for( Int iOffS = -1; iOffS <= 1; iOffS++ )
+          {
+            for( Int iOffE = -1; iOffE <= 1; iOffE++ )
+            {
+              if( iOffS == 0 && iOffE == 0 ) { continue; }
+
+              Int iSx = (Int)acWedgeList[uiPos].getStartX();
+              Int iSy = (Int)acWedgeList[uiPos].getStartY();
+              Int iEx = (Int)acWedgeList[uiPos].getEndX();
+              Int iEy = (Int)acWedgeList[uiPos].getEndY();
+
+              switch( acWedgeList[uiPos].getOri() )
+              {
+              case( 0 ): { iSx += iOffS; iEy += iOffE; } break;
+              case( 1 ): { iSy += iOffS; iEx -= iOffE; } break;
+              case( 2 ): { iSx -= iOffS; iEy -= iOffE; } break;
+              case( 3 ): { iSy -= iOffS; iEx += iOffE; } break;
+              case( 4 ): { iSx += iOffS; iEx += iOffE; } break;
+              case( 5 ): { iSy += iOffS; iEy += iOffE; } break;
+              default: assert( 0 );
+              }
+
+              for( UInt k = 0; k < acWedgeRefList.size(); k++ )
+              {
+                if( iSx == (Int)acWedgeRefList[k].getStartX() && 
+                    iSy == (Int)acWedgeRefList[k].getStartY() && 
+                    iEx == (Int)acWedgeRefList[k].getEndX()   && 
+                    iEy == (Int)acWedgeRefList[k].getEndY()      )
+                {
+                  if( acWedgeRefList[k].getRefIdx() != cWedgeNode.getPatternIdx() )
+                  {
+                    Bool bNew = true;
+                    for( UInt m = 0; m < uiRefPos; m++ ) { if( acWedgeRefList[k].getRefIdx() == cWedgeNode.getRefineIdx( m ) ) { bNew = false; break; } }
+
+                    if( bNew ) 
+                    {
+                      cWedgeNode.setRefineIdx( acWedgeRefList[k].getRefIdx(), uiRefPos );
+                      uiRefPos++;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        acWedgeNodeList.push_back( cWedgeNode );
+      }
+    }
+    g_dmmWedgeNodeLists.push_back( acWedgeNodeList );
+  }
+  return;
+}
+
+Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes )
+{
+  assert( uiWidth == uiHeight );
+
+  UChar    uhStartX = 0,    uhStartY = 0,    uhEndX = 0,    uhEndY = 0;
+  Int   iStepStartX = 0, iStepStartY = 0, iStepEndX = 0, iStepEndY = 0;
+
+  UInt uiBlockSize = 0;
+  switch( eWedgeRes )
+  {
+  case( DOUBLE_PEL ): { uiBlockSize = (uiWidth>>1); break; }
+  case(   FULL_PEL ): { uiBlockSize =  uiWidth;     break; }
+  case(   HALF_PEL ): { uiBlockSize = (uiWidth<<1); break; }
+  }
+
+  TComWedgelet cTempWedgelet( uiWidth, uiHeight );
+  for( UInt uiOri = 0; uiOri < 6; uiOri++ )
+  {
+    // init the edge line parameters for each of the 6 wedgelet types
+    switch( uiOri )
+    {
+    case( 0 ): {  uhStartX = 0;               uhStartY = 0;               uhEndX = 0;               uhEndY = 0;               iStepStartX = +1; iStepStartY =  0; iStepEndX =  0; iStepEndY = +1; break; }
+    case( 1 ): {  uhStartX = (uiBlockSize-1); uhStartY = 0;               uhEndX = (uiBlockSize-1); uhEndY = 0;               iStepStartX =  0; iStepStartY = +1; iStepEndX = -1; iStepEndY =  0; break; }
+    case( 2 ): {  uhStartX = (uiBlockSize-1); uhStartY = (uiBlockSize-1); uhEndX = (uiBlockSize-1); uhEndY = (uiBlockSize-1); iStepStartX = -1; iStepStartY =  0; iStepEndX =  0; iStepEndY = -1; break; }
+    case( 3 ): {  uhStartX = 0;               uhStartY = (uiBlockSize-1); uhEndX = 0;               uhEndY = (uiBlockSize-1); iStepStartX =  0; iStepStartY = -1; iStepEndX = +1; iStepEndY =  0; break; }
+    case( 4 ): {  uhStartX = 0;               uhStartY = 0;               uhEndX = 0;               uhEndY = (uiBlockSize-1); iStepStartX = +1; iStepStartY =  0; iStepEndX = +1; iStepEndY =  0; break; }
+    case( 5 ): {  uhStartX = (uiBlockSize-1); uhStartY = 0;               uhEndX = 0;               uhEndY = 0;               iStepStartX =  0; iStepStartY = +1; iStepEndX =  0; iStepEndY = +1; break; }
+    }
+
+    for( Int iK = 0; iK < uiBlockSize; iK++ )
+    {
+      for( Int iL = 0; iL < uiBlockSize; iL++ )
+      {
+        cTempWedgelet.setWedgelet( uhStartX + (iK*iStepStartX) , uhStartY + (iK*iStepStartY), uhEndX + (iL*iStepEndX), uhEndY + (iL*iStepEndY), (UChar)uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
+        addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
+      }
+    }
+  }
+
+  UInt uiThrSz = DMM3_SIMPLIFY_TR;
+  std::vector< std::vector<UInt> > auiWdgListSz;
+  for( Int idxM=2; idxM<=34 ; idxM++)
+  {
+    std::vector<UInt> auiWdgList;
+    for( Int idxW=0; idxW<racWedgeList.size(); idxW++)
+    {
+      UInt uiAbsDiff = abs(idxM-(Int)racWedgeList[idxW].getAng());
+      if( uiAbsDiff <= uiThrSz )
+      {
+        auiWdgList.push_back(idxW);
+      }
+    }
+    auiWdgListSz.push_back(auiWdgList);
+  }
+  g_aauiWdgLstM3.push_back(auiWdgListSz);
+}
+
+Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList )
+{
+  Bool bValid = cWedgelet.checkNotPlain();
+  if( bValid )
+  {
+    for( UInt uiPos = 0; uiPos < racWedgeList.size(); uiPos++ )
+    {
+      if( cWedgelet.checkIdentical( racWedgeList[uiPos].getPattern() ) )
+      {
+        TComWedgeRef cWedgeRef;
+        cWedgeRef.setWedgeRef( cWedgelet.getStartX(), cWedgelet.getStartY(), cWedgelet.getEndX(), cWedgelet.getEndY(), uiPos );
+        racWedgeRefList.push_back( cWedgeRef );
+        bValid = false;
+        return;
+      }
+    }
+  }
+  if( bValid )
+  {
+    for( UInt uiPos = 0; uiPos < racWedgeList.size(); uiPos++ )
+    {
+      if( cWedgelet.checkInvIdentical( racWedgeList[uiPos].getPattern() ) )
+      {
+        TComWedgeRef cWedgeRef;
+        cWedgeRef.setWedgeRef( cWedgelet.getStartX(), cWedgelet.getStartY(), cWedgelet.getEndX(), cWedgelet.getEndY(), uiPos );
+        racWedgeRefList.push_back( cWedgeRef );
+        bValid = false;
+        return;
+      }
+    }
+  }
+  if( bValid )
+  {
+    cWedgelet.findClosestAngle();
+    racWedgeList.push_back( cWedgelet );
+    TComWedgeRef cWedgeRef;
+    cWedgeRef.setWedgeRef( cWedgelet.getStartX(), cWedgelet.getStartY(), cWedgelet.getEndX(), cWedgelet.getEndY(), (UInt)(racWedgeList.size()-1) );
+    racWedgeRefList.push_back( cWedgeRef );
+  }
+}
+#endif //H_3D_DIM_DMM
+
 //! \}

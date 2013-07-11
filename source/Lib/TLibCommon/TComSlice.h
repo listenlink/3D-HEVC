@@ -536,6 +536,16 @@ private:
 #if H_3D_NBDV_REF
   Bool        m_depthRefinementFlag      [ MAX_NUM_LAYERS ]; 
 #endif
+  Bool        m_vpsDepthModesFlag        [MAX_NUM_LAYERS   ];
+#if H_3D_DIM_DLT
+  Bool        m_bUseDLTFlag              [MAX_NUM_LAYERS   ];
+  
+  Int         m_iBitsPerDepthValue       [MAX_NUM_LAYERS   ];
+  Int         m_iNumDepthmapValues       [MAX_NUM_LAYERS   ];
+  Int*        m_iDepthValue2Idx          [MAX_NUM_LAYERS   ];
+  Int*        m_iIdx2DepthValue          [MAX_NUM_LAYERS   ];
+#endif
+
 #endif
 
   
@@ -672,6 +682,19 @@ public:
   Void    setDepthRefinementFlag  ( Int layerIdInVps, Bool val )  { m_depthRefinementFlag[ layerIdInVps ] = val; }
   Bool    getDepthRefinementFlag  ( Int layerIdInVps )            { return m_depthRefinementFlag[ layerIdInVps ]; }; 
 #endif
+  Void    setVpsDepthModesFlag( Int layerIdInVps, Bool val )               { m_vpsDepthModesFlag[ layerIdInVps ] = val; }
+  Bool    getVpsDepthModesFlag( Int layerIdInVps )                         { return m_vpsDepthModesFlag[ layerIdInVps ]; }
+#if H_3D_DIM_DLT
+  Bool    getUseDLTFlag      ( Int layerIdInVps )                         { return m_bUseDLTFlag[ layerIdInVps ]; }
+  Void    setUseDLTFlag      ( Int layerIdInVps, Bool b ) { m_bUseDLTFlag[ layerIdInVps ]  = b;          }
+  
+  Int     getBitsPerDepthValue( Int layerIdInVps )        { return getUseDLTFlag(layerIdInVps)?m_iBitsPerDepthValue[layerIdInVps]:g_bitDepthY; }
+  Int     getNumDepthValues( Int layerIdInVps )           { return getUseDLTFlag(layerIdInVps)?m_iNumDepthmapValues[layerIdInVps]:((1 << g_bitDepthY)-1); }
+  Int     depthValue2idx( Int layerIdInVps, Pel value )   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
+  Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][uiIdx]:uiIdx; }
+  Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
+#endif
+
 #endif
 
 
@@ -1454,6 +1477,9 @@ private:
   TComSPS*    m_pcSPS;
   TComPPS*    m_pcPPS;
   TComPic*    m_pcPic;
+#if H_3D
+  TComPicLists* m_picLists;
+#endif
 #if ADAPTIVE_QP_SELECTION
   TComTrQuant* m_pcTrQuant;
 #endif  
@@ -1589,6 +1615,9 @@ public:
 
   Int       getNumRefIdx        ( RefPicList e )                { return  m_aiNumRefIdx[e];             }
   TComPic*  getPic              ()                              { return  m_pcPic;                      }
+#if H_3D
+  TComPicLists* getPicLists     ()                              { return m_picLists; }
+#endif
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
 #if H_3D_GEN
@@ -1663,6 +1692,9 @@ public:
   Void      setRefPOC           ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefPOCList[e][iRefIdx] = i; }
   Void      setNumRefIdx        ( RefPicList e, Int i )         { m_aiNumRefIdx[e]    = i;      }
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
+#if H_3D
+  Void      setPicLists         ( TComPicLists* p )             { m_picLists          = p;      }
+#endif
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
   
 #if H_MV
@@ -1840,7 +1872,8 @@ public:
 
   Int* getDepthToDisparityB( Int refViewIdx ) { return m_depthToDisparityB[ refViewIdx ]; }; 
   Int* getDepthToDisparityF( Int refViewIdx ) { return m_depthToDisparityF[ refViewIdx ]; }; 
-  
+  Bool getVpsDepthModesFlag  ()  { return getVPS()->getVpsDepthModesFlag( getVPS()->getLayerIdInVps( m_layerId ) ); }
+
 #endif
 
 protected:

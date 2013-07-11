@@ -260,7 +260,11 @@ protected:
 #else
                                     UInt&        ruiDist,
 #endif
-                                    Int         default0Save1Load2 = 0);
+                                    Int         default0Save1Load2 = 0
+#if H_3D_DIM_ENC
+                                  , Bool          zeroResi = false
+#endif
+                                    );
   Void  xIntraCodingChromaBlk     ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
@@ -287,7 +291,11 @@ protected:
 #if HHI_RQT_INTRA_SPEEDUP
                                    Bool         bCheckFirst,
 #endif
-                                   Double&      dRDCost );
+                                   Double&      dRDCost
+#if H_3D_DIM_ENC
+                                   , Bool          zeroResi = false
+#endif
+                                   );
   
   Void  xSetIntraResultQT         ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
@@ -323,6 +331,30 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
+
+
+  // -------------------------------------------------------------------------------------------------------------------
+  // Depth intra search
+  // -------------------------------------------------------------------------------------------------------------------
+#if H_3D_DIM
+  Void xCalcBiSegDCs              ( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2 );
+#if H_3D_DIM_DMM
+  Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
+  Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
+  Void xSearchDmm2Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd );
+  Void xSearchDmm3Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx );
+#endif
+#if H_3D_DIM_RBC
+  Void xSearchRbcDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
+  Bool xSearchRbcEdge             ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride,  Int  iWidth,  Int  iHeight );
+  
+  Bool xCheckTerminatedEdge       ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
+  Bool xConstructChainCode        ( TComDataCU* pcCU, UInt uiAbsPtIdx, UInt uiWidth, UInt uiHeight );
+#endif
+#if H_3D_DIM_SDC
+  Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bResidual );
+#endif
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)

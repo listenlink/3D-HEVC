@@ -105,6 +105,24 @@
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
+#if H_3D_DIM
+#define NUM_DEPTH_INTRA_MODE_CTX      8       ///< number of context models for depth intra modes
+#define NUM_DDC_FLAG_CTX              2       ///< number of context models for deltaDC flag (DMM or RBC)
+#define NUM_DDC_DATA_CTX              2       ///< number of context models for deltaDC data (DMM or RBC)
+#if H_3D_DIM_DMM
+#define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
+#define NUM_DMM2_DATA_CTX             1       ///< number of context models for DMM2 data
+#define NUM_DMM3_DATA_CTX             1       ///< number of context models for DMM3 data
+#endif
+#if H_3D_DIM_RBC
+#define NUM_RBC_DATA_CTX              1       ///< number of context models for RBC data
+#endif
+#endif
+
+#if H_3D_DIM_SDC
+#define SDC_NUM_RESIDUAL_FLAG_CTX        1
+#define SDC_NUM_RESIDUAL_CTX             1
+#endif
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -361,6 +379,77 @@ INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =
   { 197,  185,  201, }, 
   { 197,  185,  201, }, 
 };
+#endif
+#if H_3D_DIM
+static const UChar 
+INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
+{
+  {0,  0,  64,   0, CNU,   0, CNU, 0},
+  {0, 64,   0, CNU,   0, CNU,   0, 0},
+  {64, 0, CNU,   0, CNU,   0,   0, 0}
+};
+static const UChar 
+INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =
+{
+  {0 , CNU},
+  {0 , CNU},
+  {64, CNU}
+};
+static const UChar
+INIT_DDC_DATA[3][NUM_DDC_DATA_CTX] = 
+{
+  { CNU, CNU }, 
+  { CNU, CNU }, 
+  { CNU, CNU }, 
+};
+#if H_3D_DIM_DMM
+static const UChar
+INIT_DMM1_DATA[3][NUM_DMM1_DATA_CTX] = 
+{
+  { CNU }, 
+  { CNU }, 
+  { CNU }, 
+};
+static const UChar
+INIT_DMM2_DATA[3][NUM_DMM2_DATA_CTX] = 
+{
+  { CNU }, 
+  { CNU }, 
+  { CNU }, 
+};
+static const UChar
+INIT_DMM3_DATA[3][NUM_DMM3_DATA_CTX] = 
+{
+  { CNU }, 
+  { CNU }, 
+  { CNU }, 
+};
+#endif
+#if H_3D_DIM_RBC
+static const UChar
+INIT_RBC_DATA[3][NUM_RBC_DATA_CTX] = 
+{
+  { CNU }, 
+  { CNU }, 
+  { CNU }, 
+};
+#endif
+#if H_3D_DIM_SDC
+static const UChar
+INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
+{
+  { CNU },
+  { CNU },
+  { CNU },
+};
+static const UChar
+INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
+{
+  { 155 },
+  { 155 },
+  { 155 },
+};
+#endif
 #endif
 
 //! \}

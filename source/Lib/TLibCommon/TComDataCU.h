@@ -203,6 +203,26 @@ private:
 #if H_3D_IC
   Bool*         m_pbICFlag;           ///< array of IC flags
 #endif
+#if H_3D_DIM
+  Pel*          m_dimDeltaDC[DIM_NUM_TYPE][2];
+#if H_3D_DIM_DMM
+  UInt*         m_dmmWedgeTabIdx[DMM_NUM_TYPE]; 
+  Int*          m_dmm2DeltaEnd;
+  UInt*         m_dmm3IntraTabIdx;
+#endif
+#if H_3D_DIM_RBC
+  UChar*        m_pucEdgeCode;          ///< array of edge code
+  UChar*        m_pucEdgeNumber;        ///< total number of edge
+  UChar*        m_pucEdgeStartPos;      ///< starting point position
+  Bool*         m_pbEdgeLeftFirst;      ///< true if edge should be checked in left boundary first
+  Bool*         m_pbEdgePartition;      ///< true if it belongs to region 1, otherwise, region 0
+#endif
+#if H_3D_DIM_SDC
+  Bool*         m_pbSDCFlag;
+  Pel*          m_apSegmentDCOffset[2];
+#endif
+#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -490,6 +510,58 @@ public:
 #endif
   UChar         getNumPartInter       ();
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
+
+#if H_3D_DIM
+  Pel*  getDimDeltaDC                 ( UInt dimType, UInt segId )                      { return m_dimDeltaDC[dimType][segId];        } 
+  Pel   getDimDeltaDC                 ( UInt dimType, UInt segId, UInt uiIdx )          { return m_dimDeltaDC[dimType][segId][uiIdx]; } 
+  Void  setDimDeltaDC                 ( UInt dimType, UInt segId, UInt uiIdx, Pel val ) { m_dimDeltaDC[dimType][segId][uiIdx] = val;  }
+#if H_3D_DIM_DMM
+  UInt* getDmmWedgeTabIdx             ( UInt dmmType )                          { return m_dmmWedgeTabIdx[dmmType];          }        
+  UInt  getDmmWedgeTabIdx             ( UInt dmmType, UInt uiIdx )              { return m_dmmWedgeTabIdx[dmmType][uiIdx];   }
+  Void  setDmmWedgeTabIdx             ( UInt dmmType, UInt uiIdx, UInt tabIdx ) { m_dmmWedgeTabIdx[dmmType][uiIdx] = tabIdx; }
+  Void  setDmmWedgeTabIdxSubParts     ( UInt tabIdx, UInt dmmType, UInt uiAbsPartIdx, UInt uiDepth );
+
+  Int*  getDmm2DeltaEnd               ()                      { return m_dmm2DeltaEnd;        }
+  Int   getDmm2DeltaEnd               ( UInt uiIdx )          { return m_dmm2DeltaEnd[uiIdx]; }
+  Void  setDmm2DeltaEnd               ( UInt uiIdx, Int iD )  { m_dmm2DeltaEnd[uiIdx] = iD;   }
+  Void  setDmm2DeltaEndSubParts       ( Int iDelta, UInt uiAbsPartIdx, UInt uiDepth );
+
+  UInt* getDmm3IntraTabIdx            ()                      { return m_dmm3IntraTabIdx;        }
+  UInt  getDmm3IntraTabIdx            ( UInt uiIdx )          { return m_dmm3IntraTabIdx[uiIdx]; }
+  Void  setDmm3IntraTabIdx            ( UInt uiIdx, UInt uh ) { m_dmm3IntraTabIdx[uiIdx] = uh;   }
+  Void  setDmm3IntraTabIdxSubParts    ( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+#if H_3D_DIM_RBC
+  UChar* getEdgeCode( UInt uiIdx )                 { return &m_pucEdgeCode[uiIdx * RBC_MAX_EDGE_NUM_PER_4x4]; }
+
+  UChar* getEdgeNumber( )                          { return m_pucEdgeNumber;           }
+  UChar  getEdgeNumber( UInt uiIdx )               { return m_pucEdgeNumber[uiIdx];    }
+  Void   setEdgeNumber( UInt uiIdx, UChar val )    { m_pucEdgeNumber[uiIdx] = val;     }
+
+  UChar* getEdgeStartPos( )                        { return m_pucEdgeStartPos;         }
+  UChar  getEdgeStartPos( UInt uiIdx )             { return m_pucEdgeStartPos[uiIdx];  }
+  Void   setEdgeStartPos( UInt uiIdx, UChar val )  { m_pucEdgeStartPos[uiIdx] = val;   }
+
+  Bool*  getEdgeLeftFirst( )                       { return m_pbEdgeLeftFirst;         }
+  Bool   getEdgeLeftFirst( UInt uiIdx )            { return m_pbEdgeLeftFirst[uiIdx];  }
+  Void   setEdgeLeftFirst( UInt uiIdx, Bool val )  { m_pbEdgeLeftFirst[uiIdx] = val;   }
+
+  Bool*  getEdgePartition( UInt uiIdx )            { return &m_pbEdgePartition[uiIdx * 16]; }
+
+  Void   reconPartition( UInt uiAbsPartIdx, UInt uiDepth, Bool bLeft, UChar ucStartPos, UChar ucNumEdge, UChar* pucEdgeCode, Bool* pbRegion );
+#endif
+#if H_3D_DIM_SDC
+  Bool*         getSDCFlag          ()                        { return m_pbSDCFlag;               }
+  Bool          getSDCFlag          ( UInt uiIdx )            { return m_pbSDCFlag[uiIdx];        }
+  Void          setSDCFlagSubParts  ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiDepth );
+  
+  Bool          getSDCAvailable             ( UInt uiAbsPartIdx );
+  
+  Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
+  Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
+  Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
+#endif
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for motion vector
