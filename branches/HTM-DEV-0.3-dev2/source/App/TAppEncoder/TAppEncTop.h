@@ -123,6 +123,9 @@ protected:
 #if H_3D_GEN
   Void xSetVPSExtension2( TComVPS& vps );
 #endif
+#if H_3D_DIM_DLT
+  Void  xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps);
+#endif
 public:
   TAppEncTop();
   virtual ~TAppEncTop();

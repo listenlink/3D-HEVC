@@ -132,6 +132,22 @@
 #define H_3D_CLEANUPS                     1   // Temporary for minor fixes can be removed after merge 
 #define H_3D_FIX                          1   // Temporary for minor fixes can be removed after merge 
 #define H_3D_VSO_FIX_BORDRE_EXTENSION     1   // Temporary for minor fixes can be removed after merge 
+#define H_3D_DIM                          1   // DIM, Depth intra modes, includes:
+                                              // HHI_DMM_WEDGE_INTRA
+                                              // HHI_DMM_PRED_TEX
+                                              // FIX_WEDGE_NOFLOAT_D0036
+                                              // LGE_EDGE_INTRA_A0070
+                                              // LGE_DMM3_SIMP_C0044
+                                              // QC_DC_PREDICTOR_D0183
+                                              // HHI_DELTADC_DLT_D0035
+                                              // PKU_QC_DEPTH_INTRA_UNI_D0195
+                                              // RWTH_SDC_DLT_B0036
+                                              // INTEL_SDC64_D0193
+                                              // RWTH_SDC_CTX_SIMPL_D0032
+                                              // LGE_CONCATENATE_D0141
+                                              // FIX_SDC_ENC_RD_WVSO_D0163
+                                              // MTK_SAMPLE_BASED_SDC_D0110
+
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +186,16 @@
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
+#endif
+///// ***** DEPTH INTRA MODES *********
+#if H_3D_DIM
+#define H_3D_DIM_DMM                      1   // Depth Modeling Modes
+#define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
+#define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
+#define H_3D_DIM_DLT                      1   // Depth Lookup Table
+#define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
+                                              // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+                                              // LG_ZEROINTRADEPTHRESI_A0087
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

@@ -44,6 +44,10 @@
 #include<stdio.h>
 #include<iostream>
 
+#if H_3D_DIM
+#include "TComWedgelet.h"
+#endif
+
 //! \ingroup TLibCommon
 //! \{
 
@@ -147,6 +151,33 @@ extern       UInt g_uiPCMBitDepthChroma;
 // ====================================================================================================================
 
 extern const UChar g_aucConvertTxtTypeToIdx[4];
+
+#if H_3D_DIM
+// ====================================================================================================================
+// Depth coding modes
+// ====================================================================================================================
+__inline Void mapDepthModeToIntraDir( UInt& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
+__inline Void mapDepthModeToIntraDir(  Int& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
+
+#if H_3D_DIM_SDC || H_3D_DIM_DLT
+__inline UInt numBitsForValue( UInt value ) { UInt bits = 0; while (value != 0) { value >>= 1; bits++; } return bits; };
+#endif
+
+#if H_3D_DIM_DMM
+extern const WedgeResolution                                 g_dmmWedgeResolution [6];
+extern const UChar                                           g_dmm1TabIdxBits     [6];
+extern const UChar                                           g_dmm3IntraTabIdxBits[6];
+
+extern       std::vector< std::vector<TComWedgelet> >        g_dmmWedgeLists;
+extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
+extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
+extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
+
+Void initWedgeLists( Bool initRefinements = false );
+Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
+Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
+#endif
+#endif
 
 // ==========================================
 // Mode-Dependent DST Matrices

@@ -504,7 +504,6 @@ UInt TComRdCost::getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piO
 #if H_3D_IC
   cDtParam.bUseIC       = false;
 #endif
-
 #if WEIGHTED_CHROMA_DISTORTION
   if (eText == TEXT_CHROMA_U)
   {
@@ -602,14 +601,12 @@ UInt TComRdCost::xGetSAD( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSADic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;

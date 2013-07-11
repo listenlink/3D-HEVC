@@ -143,6 +143,9 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
+#if H_3D_DIM_SDC
+    if(!pcCU->getSDCFlag(uiAbsPartIdx))
+#endif
     decodeIntraDirModeChroma( pcCU, uiAbsPartIdx, uiDepth );
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
@@ -165,6 +168,12 @@ Void TDecEntropy::decodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     return;
   }
+#if H_3D_DIM_SDC
+  if( pcCU->getSDCFlag(uiAbsPartIdx) )
+  {
+    return;
+  }
+#endif
   
   m_pcEntropyDecoderIf->parseIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
 }
@@ -612,6 +621,18 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
   UInt uiLumaOffset   = uiMinCoeffSize*uiAbsPartIdx;
   UInt uiChromaOffset = uiLumaOffset>>2;
+  
+#if H_3D_DIM_SDC
+  if( pcCU->getSDCFlag( uiAbsPartIdx ) )
+  {
+    assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
+    assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
+    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
+    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
+    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+    return;
+  }
+#endif
   
   if( pcCU->isIntra(uiAbsPartIdx) )
   {

@@ -51,7 +51,9 @@ CamParsCollector::CamParsCollector()
   m_aaiCodedOffset         = new Int* [ MAX_NUM_LAYERS ];
   m_aaiCodedScale          = new Int* [ MAX_NUM_LAYERS ];
   m_aiViewId               = new Int  [ MAX_NUM_LAYERS ];
+#if !H_3D_FIX  
   m_aiLayerIdx             = new Int  [ MAX_NUM_LAYERS ];
+#endif
 
   m_bViewReceived          = new Bool [ MAX_NUM_LAYERS ];
   for( UInt uiId = 0; uiId < MAX_NUM_LAYERS; uiId++ )
@@ -914,6 +916,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 
 #endif
+#if H_3D
+    pcSlice->setPicLists( m_ivPicLists );
+#endif
+
 #if H_3D_GEN
     pcSlice->setIvPicLists( m_ivPicLists );         
 #if H_3D_IV_MERGE    
