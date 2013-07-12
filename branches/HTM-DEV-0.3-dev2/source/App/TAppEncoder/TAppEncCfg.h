@@ -101,6 +101,9 @@ protected:
 #if H_3D_VSP
   Bool m_viewSynthesisPredFlag;
 #endif
+#if H_3D_TMVP
+  Bool m_ivMvScalingFlag; 
+#endif
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification

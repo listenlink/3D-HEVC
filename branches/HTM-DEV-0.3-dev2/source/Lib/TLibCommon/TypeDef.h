@@ -70,7 +70,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 #if H_MV
 #define H_MV_FIX1071                      1  //< Fix on Fix1071, same as in HTM 11
-#define H_MV_ENC_DEC_TRAC                 0  //< CU/PU level tracking
+#define H_MV_FIX_VPS_POINTER              1  //< Changed m_vps in TEncCfg to pointer to avoid mismatches between layers and avoid erroneous shallow copy. 
+#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
 #endif
 
 #if H_3D

@@ -119,32 +119,11 @@ Void TAppEncTop::xInitLibCfg()
   xSetDimensionIdAndLength ( vps );
   xSetDirectDependencyFlags( vps );
 #if H_3D
-#if H_3D_DIM
-  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
-  {
-    vps.setVpsDepthModesFlag( layer, ((vps.getDepthId( layer ) != 0) && (m_useDMM || m_useRBC || m_useSDC || m_useDLT)) ? true : false );
-#if H_3D_DIM_DLT
-    vps.setUseDLTFlag( layer , ((vps.getDepthId( layer ) != 0) && m_useDLT) ? true : false );
-    if( vps.getUseDLTFlag( layer ) )
-    {
-      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod, 24), &vps);
-    }
-#endif
-  }
-#endif
   vps.initViewIndex(); 
 #if H_3D_GEN
   xSetVPSExtension2        ( vps ); 
 #endif
   m_ivPicLists.setVPS      ( &vps ); 
-#if H_3D_ARP
-  for(Int i = 0; i < m_numberOfLayers; i++)
-  {
-    Bool isDepth = vps.getDepthId( i );
-    vps.setUseAdvRP        ( i, ( isDepth || 0==i ) ? 0 : m_uiUseAdvResPred );
-    vps.setARPStepNum      ( i, ( isDepth || 0==i ) ? 1 : H_3D_ARP_WFNR     );
-  }
-#endif  
 #endif
 
   for(Int layer = 0; layer < m_numberOfLayers; layer++)
@@ -1054,6 +1033,7 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* v
   }
   
   depthVideoFile->close();
+  delete depthVideoFile; 
   
   pcDepthPicYuvOrg->destroy();
   delete pcDepthPicYuvOrg;
@@ -1151,22 +1131,38 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 {
   for ( Int layer = 0; layer < vps.getMaxLayers(); layer++ )
   {
-    if ( layer != 0 ) 
-    {    
-      if( ( vps.getDepthId( layer ) == 0 ) )
-      {
+    Bool isDepth      = ( vps.getDepthId( layer ) == 1 ) ;
+    Bool isLayerZero  = ( layer == 0 ); 
+
+#if H_3D_ARP
+    vps.setUseAdvRP        ( layer, ( isDepth || isLayerZero ) ? 0 : m_uiUseAdvResPred );
+    vps.setARPStepNum      ( layer, ( isDepth || isLayerZero ) ? 1 : H_3D_ARP_WFNR     );
+#endif  
+
+#if H_3D_DIM
+    vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useRBC || m_useSDC || m_useDLT ) );
+#if H_3D_DIM_DLT
+    vps.setUseDLTFlag( layer , isDepth && m_useDLT );
+    if( vps.getUseDLTFlag( layer ) )
+    {
+      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod, 24), &vps);
+    }
+#endif
+#endif
+
 #if H_3D_IV_MERGE
-        vps.setIvMvPredFlag       ( layer, m_ivMvPredFlag ); 
+    vps.setIvMvPredFlag         ( layer, !isLayerZero && !isDepth && m_ivMvPredFlag ); 
 #endif
 #if H_3D_NBDV_REF
-        vps.setDepthRefinementFlag( layer, m_depthRefinementFlag );         
+    vps.setDepthRefinementFlag  ( layer, !isLayerZero && !isDepth && m_depthRefinementFlag );         
 #endif
 #if H_3D_VSP
-        vps.setViewSynthesisPredFlag( layer, m_viewSynthesisPredFlag );         
+    vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && m_viewSynthesisPredFlag );         
+#endif      
+  }  
+#if H_3D_TMVP
+  vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
 #endif
-      }
-    }
-  }
 }
 #endif
 //! \}

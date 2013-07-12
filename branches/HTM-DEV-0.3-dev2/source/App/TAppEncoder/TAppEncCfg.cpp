@@ -729,13 +729,16 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #endif //HHI_VSO
 #if H_3D_IV_MERGE
-  ("IvMvPred",                        m_ivMvPredFlag,           false           , "inter view motion prediction " )  
+  ("IvMvPred",                        m_ivMvPredFlag,           true            , "inter view motion prediction " )  
 #endif
 #if H_3D_NBDV_REF
-  ("DepthRefinement",                 m_depthRefinementFlag,    false           , "depth refinement by DoNBDV" )  
+  ("DepthRefinement",                 m_depthRefinementFlag,    true           , "depth refinement by DoNBDV" )  
 #endif
 #if H_3D_VSP
-  ("ViewSynthesisPred",               m_viewSynthesisPredFlag,  false           , "view synthesis prediction " )  
+  ("ViewSynthesisPred",               m_viewSynthesisPredFlag,  true           , "view synthesis prediction " )  
+#endif
+#if H_3D_TMVP
+  ("IvMvScaling",                     m_ivMvScalingFlag      ,  true            , "inter view motion vector scaling" )    
 #endif
 #endif //H_3D
   ;
@@ -987,7 +990,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 
   xResizeVector( m_bLoopFilterDisable ); 
-  xResizeVector( m_bUseSAO );   
+  xResizeVector( m_bUseSAO ); 
 
 #else
   m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
@@ -2320,6 +2323,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_VSP
   printf("ViewSynthesisPred:%d ", m_viewSynthesisPredFlag );
+#endif
+#if H_3D_TMVP
+  printf("IvMvScaling:%d ", m_ivMvScalingFlag ? 1 : 0  );
 #endif
 #if H_3D_DIM
   printf("DMM:%d ", m_useDMM );

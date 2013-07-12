@@ -4380,17 +4380,17 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   if ( bIsCurrRefLongTerm || bIsColRefLongTerm )
   {
 #if H_3D_TMVP
-     Int iCurrViewId    = m_pcSlice->getViewIndex (); 
-     Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewIndex (); 
-     Int iColViewId     = pColCU->getSlice()->getViewIndex(); 
-     Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewIndex(); 
-     iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
-     if ( iScale != 4096 )
-     {
-        rcMv = cColMv.scaleMv( iScale );
-     }
-     else
-     {
+    Int iCurrViewId    = m_pcSlice->getViewIndex (); 
+    Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewIndex (); 
+    Int iColViewId     = pColCU->getSlice()->getViewIndex(); 
+    Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewIndex(); 
+    iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
+    if ( iScale != 4096 && m_pcSlice->getVPS()->getIvMvScalingFlag() ) 
+    {
+      rcMv = cColMv.scaleMv( iScale );
+    }
+    else
+    {
 #endif
        rcMv = cColMv;
 #if H_3D_TMVP

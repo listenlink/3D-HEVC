@@ -980,22 +980,46 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 
       for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )
       {
-        if( pcVPS->getDepthId( i ) )
+
+#if H_3D_ARP
+        pcVPS->setUseAdvRP  ( i, 0 );
+        pcVPS->setARPStepNum( i, 1 );
+#endif  
+        if ( i != 0 )
         {
-          READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
-          
-#if H_3D_DIM_DLT
-          if( pcVPS->getVpsDepthModesFlag( i ) )
+          if( !( pcVPS->getDepthId( i ) == 1 ) )
           {
-            READ_FLAG( uiCode, "use_dlt_flag[i]" );
-            pcVPS->setUseDLTFlag( i, uiCode == 1 ? true : false );
+#if H_3D_IV_MERGE
+                READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#endif
+#if H_3D_ARP
+                READ_FLAG( uiCode, "iv_res_pred_flag[i]"  );  pcVPS->setUseAdvRP  ( i, uiCode ); pcVPS->setARPStepNum( i, uiCode ? H_3D_ARP_WFNR : 1 );
+
+#endif
+#if H_3D_NBDV_REF
+                READ_FLAG( uiCode, "depth_refinement_flag[i]");    pcVPS->setDepthRefinementFlag  ( i, uiCode == 1 ? true : false );
+#endif
+#if H_3D_VSP
+                READ_FLAG( uiCode, "view_synthesis_pred_flag[i]"); pcVPS->setViewSynthesisPredFlag( i, uiCode == 1 ? true : false );
+#endif
+          }
+          else
+          {
+
+            READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
+            //          READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPreFlag     ( i, uiCode == 1 ? true : false ); 
+#if H_3D_DIM_DLT
+            if( pcVPS->getVpsDepthModesFlag( i ) )
+            {
+              READ_FLAG( uiCode, "dlt_flag[i]" );                       pcVPS->setUseDLTFlag( i, uiCode == 1 ? true : false );
+            }
             if( pcVPS->getUseDLTFlag( i ) )
             {
               // decode mapping
               UInt uiNumDepthValues;
               // parse number of values in DLT
-              READ_UVLC(uiNumDepthValues, "num_dlt_depth_values[i]");
-              
+              READ_UVLC(uiNumDepthValues, "num_depth_values_in_dlt[i]");
+
               // parse actual DLT values
               Int* aiIdx2DepthValue = (Int*) calloc(uiNumDepthValues, sizeof(Int));
               for(Int d=0; d<uiNumDepthValues; d++)
@@ -1003,45 +1027,17 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
                 READ_UVLC(uiCode, "dlt_depth_value[i][d]");
                 aiIdx2DepthValue[d] = (Int)uiCode;
               }
-              
+
               pcVPS->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
-              
+
               // clean memory
               free(aiIdx2DepthValue);
             }
-          }
 #endif
+          }
         }
       }
-
-#if H_3D_GEN
-      for( Int layer = 0; layer <= pcVPS->getMaxLayers() - 1; layer++ )
-      {
-#if H_3D_ARP
-        pcVPS->setUseAdvRP  ( layer, 0 );
-        pcVPS->setARPStepNum( layer, 1 );
-#endif  
-        if (layer != 0)
-        {
-          if ( !( pcVPS->getDepthId( layer ) == 1 ) )
-          {
-#if H_3D_IV_MERGE
-            READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( layer, uiCode == 1 ? true : false );
-#endif
-#if H_3D_ARP
-            READ_FLAG( uiCode, "advanced_residual_pred_flag"  );  pcVPS->setUseAdvRP  ( layer, uiCode ); pcVPS->setARPStepNum( layer, uiCode ? H_3D_ARP_WFNR : 1 );
-
-#endif
-#if H_3D_NBDV_REF
-            READ_FLAG( uiCode, "depth_refinement_flag[i]");    pcVPS->setDepthRefinementFlag  ( layer, uiCode == 1 ? true : false );
-#endif
-#if H_3D_VSP
-            READ_FLAG( uiCode, "view_synthesis_pred_flag[i]"); pcVPS->setViewSynthesisPredFlag( layer, uiCode == 1 ? true : false );
-#endif
-          }          
-        }        
-      }
-#endif
+      READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
 #else
       while ( xMoreRbspData() )
       {

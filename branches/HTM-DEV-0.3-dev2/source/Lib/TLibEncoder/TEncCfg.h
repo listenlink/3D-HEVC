@@ -321,7 +321,11 @@ protected:
 #endif
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+#if H_MV_FIX_VPS_POINTER
+  TComVPS*  m_cVPS;                                           ///< pointer to VPS, same for all layers
+#else
   TComVPS                    m_cVPS;
+#endif
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
   Bool      m_vuiParametersPresentFlag;                       ///< enable generation of VUI parameters
@@ -832,8 +836,13 @@ public:
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }
   Bool      getCUTransquantBypassFlagValue()          { return m_CUTransquantBypassFlagValue; }
   Void      setCUTransquantBypassFlagValue(Bool flag) { m_CUTransquantBypassFlagValue = flag; }
+#if H_MV_FIX_VPS_POINTER
+  Void      setVPS           ( TComVPS *p ) { m_cVPS = p;    }
+  TComVPS*  getVPS           ()             { return m_cVPS; }
+#else
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
+#endif
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }
   Bool      getUseRecalculateQPAccordingToLambda ()         { return m_recalculateQPAccordingToLambda; }
 

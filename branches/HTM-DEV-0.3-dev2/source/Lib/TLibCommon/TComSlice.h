@@ -545,6 +545,9 @@ private:
   Int*        m_iDepthValue2Idx          [MAX_NUM_LAYERS   ];
   Int*        m_iIdx2DepthValue          [MAX_NUM_LAYERS   ];
 #endif
+#if H_3D_TMVP
+  Bool        m_ivMvScalingFlag; 
+#endif
 
 #endif
 
@@ -695,8 +698,11 @@ public:
   Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
 #endif
 
+#if H_3D_TMVP
+  Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
+  Void    setIvMvScalingFlag   ( Bool b )                 { m_ivMvScalingFlag = b;    }  
 #endif
-
+#endif
 
   Void    setVpsProfilePresentFlag( Int layerSet, Bool val )               { m_vpsProfilePresentFlag[layerSet] = val;  }
   Bool    getVpsProfilePresentFlag( Int layerSet )                         { return m_vpsProfilePresentFlag[layerSet]; }
@@ -1477,9 +1483,6 @@ private:
   TComSPS*    m_pcSPS;
   TComPPS*    m_pcPPS;
   TComPic*    m_pcPic;
-#if H_3D
-  TComPicLists* m_picLists;
-#endif
 #if ADAPTIVE_QP_SELECTION
   TComTrQuant* m_pcTrQuant;
 #endif  
@@ -1615,9 +1618,6 @@ public:
 
   Int       getNumRefIdx        ( RefPicList e )                { return  m_aiNumRefIdx[e];             }
   TComPic*  getPic              ()                              { return  m_pcPic;                      }
-#if H_3D
-  TComPicLists* getPicLists     ()                              { return m_picLists; }
-#endif
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
 #if H_3D_GEN
@@ -1692,9 +1692,6 @@ public:
   Void      setRefPOC           ( Int i, RefPicList e, Int iRefIdx ) { m_aiRefPOCList[e][iRefIdx] = i; }
   Void      setNumRefIdx        ( RefPicList e, Int i )         { m_aiNumRefIdx[e]    = i;      }
   Void      setPic              ( TComPic* p )                  { m_pcPic             = p;      }
-#if H_3D
-  Void      setPicLists         ( TComPicLists* p )             { m_picLists          = p;      }
-#endif
   Void      setDepth            ( Int iDepth )                  { m_iDepth            = iDepth; }
   
 #if H_MV

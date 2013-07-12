@@ -761,7 +761,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
         WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
 #endif
 #if H_3D_ARP
-        WRITE_FLAG( pcVPS->getUseAdvRP             ( i ) ? 1 : 0,  "advanced_residual_pred_flag"  );
+        WRITE_FLAG( pcVPS->getUseAdvRP             ( i ) ? 1 : 0,  "iv_res_pred_flag[i]"  );
 #endif
 #if H_3D_NBDV_REF
         WRITE_FLAG( pcVPS->getDepthRefinementFlag  ( i ) ? 1 : 0 , "depth_refinement_flag[i]");
@@ -770,29 +770,31 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
         WRITE_FLAG( pcVPS->getViewSynthesisPredFlag( i ) ? 1 : 0 , "view_synthesis_pred_flag[i]");
 #endif
       }          
-    }        
-    if( pcVPS->getDepthId( i ) )
-    {
-      WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ),          "vps_depth_modes_flag[i]" );
-      
-#if H_3D_DIM_DLT
-      if( pcVPS->getVpsDepthModesFlag( i ) )
+      else
       {
-        WRITE_FLAG( pcVPS->getUseDLTFlag( i ) ? 1 : 0, "use_dlt_flag[i]" );
+        WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ) ? 1 : 0 ,          "vps_depth_modes_flag[i]" );
+        //WRITE_FLAG( pcVPS->getLimQtPredFlag    ( i ) ? 1 : 0 ,          "lim_qt_pred_flag[i]"     ); 
+#if H_3D_DIM_DLT
+        if( pcVPS->getVpsDepthModesFlag( i ) )
+        {
+          WRITE_FLAG( pcVPS->getUseDLTFlag( i ) ? 1 : 0, "dlt_flag[i]" );
+        }
         if( pcVPS->getUseDLTFlag( i ) )
         {
           // code mapping
-          WRITE_UVLC(pcVPS->getNumDepthValues(i), "num_dlt_depth_values[i]");
+          WRITE_UVLC(pcVPS->getNumDepthValues(i), "num_depth_values_in_dlt[i]");
           for(Int d=0; d<pcVPS->getNumDepthValues(i); d++)
           {
             WRITE_UVLC( pcVPS->idx2DepthValue(i, d), "dlt_depth_value[i][d]" );
           }
-        }
-      }
+        }        
 #endif
-    }
-
-  }  
+      }
+    }  
+  }
+#if H_3D_TMVP
+  WRITE_FLAG( pcVPS->getIvMvScalingFlag( ) ? 1 : 0 ,          "iv_mv_scaling_flag" );
+#endif
 #else
   WRITE_FLAG( 0,                                             "vps_extension2_flag" );
 #endif
