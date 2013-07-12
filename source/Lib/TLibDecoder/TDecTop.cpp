@@ -916,9 +916,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 
 #endif
-#if H_3D
-    pcSlice->setPicLists( m_ivPicLists );
-#endif
 
 #if H_3D_GEN
     pcSlice->setIvPicLists( m_ivPicLists );         

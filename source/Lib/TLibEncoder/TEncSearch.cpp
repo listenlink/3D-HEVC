@@ -7276,7 +7276,7 @@ Void TEncSearch::xSearchDmm3Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
   Pel refDC1 = 0; Pel refDC2 = 0;
 
-  TComPic*      pcPicTex = pcCU->getSlice()->getPicLists()->getPic( pcCU->getSlice()->getViewIndex(), false, pcCU->getSlice()->getPOC() );
+  TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
   assert( pcPicTex != NULL );
   TComDataCU* pcColTexCU = pcPicTex->getCU(pcCU->getAddr());
   UInt      uiTexPartIdx = pcCU->getZorderIdxInCU() + uiAbsPtIdx;

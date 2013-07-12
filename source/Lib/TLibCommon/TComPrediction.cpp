@@ -2103,7 +2103,7 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 
 UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt intraTabIdx )
 {
-  TComPic*      pcPicTex = pcCU->getSlice()->getPicLists()->getPic( pcCU->getSlice()->getViewIndex(), false, pcCU->getSlice()->getPOC() );
+  TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
   assert( pcPicTex != NULL );
   TComDataCU*   pcColTexCU = pcPicTex->getCU(pcCU->getAddr());
   UInt          uiTexPartIdx = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
@@ -2146,7 +2146,7 @@ Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 
 Void TComPrediction::xCopyTextureLumaBlock( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piDestBlockY, UInt uiWidth, UInt uiHeight )
 {
-  TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getPicLists()->getPic( pcCU->getSlice()->getViewIndex(), false, pcCU->getSlice()->getPOC() )->getPicYuvRec();
+  TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getTexturePic()->getPicYuvRec();
   assert( pcPicYuvRef != NULL );
   Int         iRefStride = pcPicYuvRef->getStride();
   Pel*        piRefY = pcPicYuvRef->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiAbsPartIdx );

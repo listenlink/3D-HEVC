@@ -72,9 +72,6 @@ TComSlice::TComSlice()
 , m_pcSPS                         ( NULL )
 , m_pcPPS                         ( NULL )
 , m_pcPic                         ( NULL )
-#if H_3D
-, m_picLists                      ( NULL )
-#endif
 , m_colFromL0Flag                 ( 1 )
 , m_colRefIdx                     ( 0 )
 #if SAO_CHROMA_LAMBDA
@@ -972,9 +969,6 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   m_iLastIDR             = pSrc->m_iLastIDR;
 
   m_pcPic                = pSrc->m_pcPic;
-#if H_3D
-  m_picLists             = pSrc->m_picLists;
-#endif
   m_colFromL0Flag        = pSrc->m_colFromL0Flag;
   m_colRefIdx            = pSrc->m_colRefIdx;
 #if SAO_CHROMA_LAMBDA 
@@ -1565,6 +1559,7 @@ TComVPS::TComVPS()
       m_iIdx2DepthValue[i][d] = d;
     }
 #endif
+    m_ivMvScalingFlag = true; 
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
@@ -1583,7 +1578,8 @@ TComVPS::TComVPS()
 #endif
   }
 #if H_3D_GEN
-  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )  {
+  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {
 #if H_3D_IV_MERGE
     m_ivMvPredFlag         [ i ] = false;
 #endif
@@ -1593,7 +1589,7 @@ TComVPS::TComVPS()
 #if H_3D_NBDV_REF
     m_depthRefinementFlag  [ i ] = false;
 #endif
-  }
+  }  
 #endif
 #endif
 }
@@ -1603,6 +1599,23 @@ TComVPS::~TComVPS()
 if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
   if( m_hrdOpSetIdx      != NULL )     delete[] m_hrdOpSetIdx;
   if( m_cprmsPresentFlag != NULL )     delete[] m_cprmsPresentFlag;
+#if H_3D_DIM_DLT
+  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {
+    if ( m_iDepthValue2Idx[i] != 0 ) 
+    {
+       xFree( m_iDepthValue2Idx[i] );
+       m_iDepthValue2Idx[i] = 0; 
+    }
+
+    if ( m_iIdx2DepthValue[i] != 0 ) 
+    {
+      xFree( m_iIdx2DepthValue[i] );
+      m_iIdx2DepthValue[i] = 0; 
+
+    }
+  }
+#endif
 }
 
 #if H_3D_DIM_DLT
