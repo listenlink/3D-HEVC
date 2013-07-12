@@ -751,6 +751,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   }
 #if H_3D_GEN  
   WRITE_FLAG( 1,                                             "vps_extension2_flag" );
+  m_pcBitIf->writeAlignOne();      
   for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )
   {
     if (i!= 0)
