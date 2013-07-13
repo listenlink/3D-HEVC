@@ -1651,6 +1651,20 @@ private:
 #if H_3D
   Int        m_viewIndex; 
   Bool       m_isDepth;
+#endif
+
+// Additional slice header syntax elements 
+  Bool       m_discardableFlag;
+  Bool       m_interLayerPredEnabledFlag;
+  Int        m_numInterLayerRefPicsMinus1;
+  Int        m_interLayerPredLayerIdc       [MAX_NUM_LAYERS];
+  Bool       m_interLayerSamplePredOnlyFlag;
+  Bool       m_altCollocatedIndicationFlag;
+  Int        m_collocatedRefLayerIdx;
+// Additional slice header semantics variables
+  Int        m_numActiveMotionPredRefLayers;
+  Int        m_activeMotionPredRefLayerId   [ MAX_NUM_LAYER_IDS ];
+
   Int        m_aaiCodedScale [2][MAX_NUM_LAYERS];
   Int        m_aaiCodedOffset[2][MAX_NUM_LAYERS];
 #if H_3D_TMVP
@@ -1664,27 +1678,11 @@ private:
   Bool      m_bApplyIC;
   Bool      m_icSkipParseFlag;
 #endif
-
 #if H_3D_GEN
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
   Int**      m_depthToDisparityB; 
   Int**      m_depthToDisparityF; 
 #endif
-#endif
-#endif
-#if H_MV
-// Additional slice header syntax elements 
-  Bool       m_discardableFlag;
-  Bool       m_interLayerPredEnabledFlag;
-  Int        m_numInterLayerRefPicsMinus1;
-  Int        m_interLayerPredLayerIdc       [MAX_NUM_LAYERS];
-  Bool       m_interLayerSamplePredOnlyFlag;
-  Bool       m_altCollocatedIndicationFlag;
-  Int        m_collocatedRefLayerIdx;
-// Additional slice header semantics variables
-  Int        m_numActiveMotionPredRefLayers;
-  Int        m_activeMotionPredRefLayerId   [ MAX_NUM_LAYER_IDS ];
-
 #endif
 
 public:
