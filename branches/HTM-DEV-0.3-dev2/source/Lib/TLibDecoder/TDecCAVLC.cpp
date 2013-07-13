@@ -876,7 +876,6 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 #else
   assert( pcVPS->getMaxNuhReservedZeroLayerId() < MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1 );
   READ_CODE( 6, uiCode, "vps_max_nuh_reserved_zero_layer_id" );   pcVPS->setMaxNuhReservedZeroLayerId( uiCode );
-
   READ_UVLC(    uiCode, "vps_max_op_sets_minus1" );               pcVPS->setMaxOpSets( uiCode + 1 );
   for( UInt opsIdx = 1; opsIdx <= ( pcVPS->getMaxOpSets() - 1 ); opsIdx ++ )
   {
@@ -1116,9 +1115,8 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
         }
       }
       READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
-#endif
     }
-
+#endif
     pcVPS->checkVPSExtensionSyntax(); 
 
     pcVPS->setRefLayers(); 
@@ -1134,7 +1132,6 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 #if H_3D
   pcVPS->initViewIndex(); 
 #endif
-
   return;
 }
 
@@ -2100,14 +2097,12 @@ Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   assert(0);
 }
 #endif
-
 #if H_3D_IC
 Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
 }
 #endif
-
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
