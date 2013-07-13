@@ -85,6 +85,19 @@ protected:
   Bool                   m_splittingFlag;                     ///< Splitting Flag
   Int                    m_scalabilityMask;                   ///< Mask indicating scalabilities, 1: texture; 3: texture + depth                                                                
   std::vector<Int>       m_dimensionIdLen;                    ///< Length of scalability dimension s 
+  
+// layer sets   
+  Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
+  std::vector< std::vector<Int> > m_layerIdsInSets;           ///< LayerIds in vps of layer set 
+  Bool                   m_defaultOneTargetOutputLayerFlag;   ///< Output highest layer of layer sets by default  
+  std::vector<Int>       m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
+  std::vector< std::vector<Int> > m_layerIdsInAddOutputLayerSet; ///< LayerIds in vps of additional output layers
+  std::vector<Int>       m_profileLevelTierIdx;               ///< Indices of of profile level tier
+  
+  // Dependencies
+  std::vector< std::vector<Int> > m_directRefLayers;          ///< LayerIds of direct reference layers
+  std::vector< std::vector<Int> > m_dependencyTypes;          ///< Dependency types of direct reference layers
+
 #if H_3D_IV_MERGE
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
 #endif

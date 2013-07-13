@@ -73,9 +73,10 @@ struct GOPEntry
   Int m_numRefIdc;
   Int m_refIdc[MAX_NUM_REF_PICS+1];
 #if H_MV
-  Int m_numInterViewRefPics;
-  Int m_interViewRefs    [MAX_NUM_REF_PICS];
+  Int m_numActiveRefLayerPics;
+  Int m_interLayerPredLayerIdc [MAX_NUM_REF_PICS];
   Int m_interViewRefPosL[2][MAX_NUM_REF_PICS];  
+  Int m_collocatedRefLayerIdx; 
 #endif
   GOPEntry()
   : m_POC(-1)
@@ -92,14 +93,15 @@ struct GOPEntry
   , m_deltaRPS(0)
   , m_numRefIdc(0)
 #if H_MV
-  , m_numInterViewRefPics(0)
+  , m_numActiveRefLayerPics(0)
+  , m_collocatedRefLayerIdx(-1)
 #endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
     ::memset( m_usedByCurrPic, 0, sizeof(m_usedByCurrPic) );
     ::memset( m_refIdc,        0, sizeof(m_refIdc) );
 #if H_MV
-    ::memset( m_interViewRefs,   0, sizeof(m_interViewRefs) );
+    ::memset( m_interLayerPredLayerIdc,   0, sizeof(m_interLayerPredLayerIdc) );
     ::memset( m_interViewRefPosL[0], -1, sizeof(m_interViewRefPosL[0]) );
     ::memset( m_interViewRefPosL[1], -1, sizeof(m_interViewRefPosL[1]) );
 #endif
@@ -428,6 +430,7 @@ public:
 #if H_3D
   , m_viewIndex(-1)
   , m_isDepth(false)
+  , m_bUseVSO(false)
 #endif
 #endif
   {}

@@ -51,9 +51,6 @@ CamParsCollector::CamParsCollector()
   m_aaiCodedOffset         = new Int* [ MAX_NUM_LAYERS ];
   m_aaiCodedScale          = new Int* [ MAX_NUM_LAYERS ];
   m_aiViewId               = new Int  [ MAX_NUM_LAYERS ];
-#if !H_3D_FIX  
-  m_aiLayerIdx             = new Int  [ MAX_NUM_LAYERS ];
-#endif
 
   m_bViewReceived          = new Bool [ MAX_NUM_LAYERS ];
   for( UInt uiId = 0; uiId < MAX_NUM_LAYERS; uiId++ )
@@ -519,6 +516,7 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
   m_cCuDecoder.destroy();        
 #if H_MV 
   TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer );  
+  TComSlice::markCurrPic( pcPic ); 
   TComSlice::markIvRefPicsAsUnused   ( m_ivPicLists, targetDecLayerIdSet, m_parameterSetManagerDecoder.getActiveVPS(), m_layerId, poc ); 
 #endif
   m_bFirstSliceInPicture  = true;
@@ -674,6 +672,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_apcSlicePilot->setTLayerInfo(nalu.m_temporalId);
 
 #if H_MV
+  m_apcSlicePilot->setRefPicSetInterLayer( & m_refPicSetInterLayer ); 
   m_apcSlicePilot->setLayerId( nalu.m_layerId );
 #endif
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder);
@@ -1035,6 +1034,9 @@ Void TDecTop::xDecodeVPS()
 Void TDecTop::xDecodeSPS()
 {
   TComSPS* sps = new TComSPS();
+#if H_MV
+  sps->setLayerId( getLayerId() ); 
+#endif
 #if H_3D
   // Preliminary fix. assuming that all sps refer to the same SPS. 
   // Parsing dependency should be resolved!

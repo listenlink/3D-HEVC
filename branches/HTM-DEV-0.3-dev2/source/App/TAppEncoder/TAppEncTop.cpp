@@ -117,7 +117,9 @@ Void TAppEncTop::xInitLibCfg()
 #if H_MV
   xSetLayerIds             ( vps );   
   xSetDimensionIdAndLength ( vps );
-  xSetDirectDependencyFlags( vps );
+  xSetDependencies( vps );
+  xSetProfileTierLevel     ( vps ); 
+  xSetLayerSets            ( vps ); 
 #if H_3D
   vps.initViewIndex(); 
 #if H_3D_GEN
@@ -1078,28 +1080,66 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
   }
 }
 
-Void TAppEncTop::xSetDirectDependencyFlags( TComVPS& vps )
+Void TAppEncTop::xSetDependencies( TComVPS& vps )
 {
-  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+  // Direct dependency flags + dependency types
+  for( Int depLayer = 1; depLayer < MAX_NUM_LAYERS; depLayer++ )
   {
-    if( m_GOPListMvc[layer][MAX_GOP].m_POC == -1 )
+    for( Int refLayer = 0; refLayer < MAX_NUM_LAYERS; refLayer++ )
     {
-      continue;
+      vps.setDirectDependencyFlag( depLayer, refLayer, false); 
+      vps.setDirectDependencyType( depLayer, refLayer,    -1 ); 
     }
-    for( Int i = 0; i < getGOPSize()+1; i++ ) 
+    }
+  for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
+  {
+    Int numRefLayers = (Int) m_directRefLayers[depLayer].size(); 
+    assert(  numRefLayers == (Int) m_dependencyTypes[depLayer].size() ); 
+    for( Int i = 0; i < numRefLayers; i++ )
     {
-      GOPEntry ge = ( i < getGOPSize() ) ? m_GOPListMvc[layer][i] : m_GOPListMvc[layer][MAX_GOP];
-      for( Int j = 0; j < ge.m_numInterViewRefPics; j++ )
-      {
-        Int interLayerRef = layer + ge.m_interViewRefs[j];
-        vps.setDirectDependencyFlag( layer, interLayerRef, true );
-      }
+      Int refLayer = m_directRefLayers[depLayer][i]; 
+      vps.setDirectDependencyFlag( depLayer, refLayer, true); 
+      vps.setDirectDependencyType( depLayer, refLayer,m_dependencyTypes[depLayer][i]); 
     }
   }
 
-  vps.checkVPSExtensionSyntax(); 
-  vps.calcIvRefLayers();
+  // Max temporal id for inter layer reference pictures
+  for ( Int refLayerIdInVps = 0; refLayerIdInVps < m_numberOfLayers; refLayerIdInVps++)
+    {
+    Int maxTid = -1; 
+    for ( Int curLayerIdInVps = 1; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++)
+      {
+      for( Int i = 0; i < getGOPSize(); i++ ) 
+      {        
+        GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][i];
+        GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][i];
+        
+        for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++)
+        {        
+          if ( m_directRefLayers[ curLayerIdInVps ][ geCur.m_interLayerPredLayerIdc[ j ]] == refLayerIdInVps )
+          {
+            maxTid = std::max( maxTid, geRef.m_temporalId ); 
+          }
+        }
+      }
+    }
+    vps.setMaxTidIlRefPicPlus1( refLayerIdInVps, maxTid + 1 );
+  }
+
+  // Max one active ref layer flag
+  Bool maxOneActiveRefLayerFlag = true;  
+  for ( Int currLayerIdInVps = 1; currLayerIdInVps < m_numberOfLayers && maxOneActiveRefLayerFlag; currLayerIdInVps++)
+  {
+    for( Int i = 0; i < ( getGOPSize() + 1) && maxOneActiveRefLayerFlag; i++ ) 
+    {        
+      GOPEntry ge =  m_GOPListMvc[currLayerIdInVps][ ( i < getGOPSize()  ? i : MAX_GOP ) ]; 
+      maxOneActiveRefLayerFlag =  maxOneActiveRefLayerFlag && (ge.m_numActiveRefLayerPics <= 1); 
+    }            
 }
+
+  vps.setMaxOneActiveRefLayerFlag( maxOneActiveRefLayerFlag );
+  vps.setRefLayers(); 
+}; 
 
 Void TAppEncTop::xSetLayerIds( TComVPS& vps )
 {
@@ -1108,7 +1148,7 @@ Void TAppEncTop::xSetLayerIds( TComVPS& vps )
   Bool nuhLayerIdPresentFlag = !( m_layerIdInNuh.size() == 1 ); 
   Int  maxNuhLayerId = nuhLayerIdPresentFlag ? xGetMax( m_layerIdInNuh ) : ( m_numberOfLayers - 1 ) ; 
 
-  vps.setMaxNuhLayerId( maxNuhLayerId ); 
+  vps.setVpsMaxLayerId( maxNuhLayerId ); 
   vps.setVpsNuhLayerIdPresentFlag( nuhLayerIdPresentFlag ); 
 
   for (Int layer = 0; layer < m_numberOfLayers; layer++ )
@@ -1124,6 +1164,70 @@ Int TAppEncTop::xGetMax( std::vector<Int>& vec )
   for ( Int i = 0; i < vec.size(); i++)    
     maxVec = max( vec[i], maxVec ); 
   return maxVec;
+}
+
+Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
+{ 
+  const Int vpsNumProfileTierLevelMinus1 = 0; //TBD
+  vps.setVpsNumProfileTierLevelMinus1( vpsNumProfileTierLevelMinus1 ); 
+  
+  for (Int i = 0; i <= vps.getVpsNumProfileTierLevelMinus1(); i++ )
+  {
+    vps.setVpsProfilePresentFlag( i, true ); 
+  }
+}
+
+
+Void TAppEncTop::xSetLayerSets( TComVPS& vps )
+{   
+  // Layer sets
+  vps.setVpsNumLayerSetsMinus1   ( m_vpsNumLayerSets - 1 ); 
+  vps.setVpsNumberLayerSetsMinus1( vps.getVpsNumLayerSetsMinus1() ); 
+    
+  for (Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
+  {
+    for( Int layerId = 0; layerId < MAX_NUM_LAYER_IDS; layerId++ )
+    {
+      vps.setLayerIdIncludedFlag( false, lsIdx, layerId ); 
+    }
+    for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++)
+    {       
+      vps.setLayerIdIncludedFlag( true, lsIdx, vps.getLayerIdInNuh( m_layerIdsInSets[lsIdx][i] ) ); 
+    } 
+  }
+
+  Int numAddOuputLayerSets = (Int) m_outputLayerSetIdx.size(); 
+  // Additional output layer sets + profileLevelTierIdx
+  vps.setDefaultOneTargetOutputLayerFlag   ( m_defaultOneTargetOutputLayerFlag ); 
+  vps.setMoreOutputLayerSetsThanDefaultFlag( numAddOuputLayerSets       != 0 );   
+  vps.setNumAddOutputLayerSetsMinus1       ( numAddOuputLayerSets - 1        ); 
+
+  for (Int lsIdx = 1; lsIdx < m_vpsNumLayerSets; lsIdx++)
+  {
+    vps.setProfileLevelTierIdx( lsIdx, m_profileLevelTierIdx[ lsIdx ] ); 
+  }
+
+  for (Int addOutLs = 0; addOutLs < numAddOuputLayerSets; addOutLs++ )
+  {
+    vps.setProfileLevelTierIdx( m_vpsNumLayerSets + addOutLs, m_profileLevelTierIdx[ addOutLs ] ); 
+
+    Int refLayerSetIdx = m_outputLayerSetIdx[ addOutLs ];     
+    vps.setOutputLayerSetIdxMinus1( m_vpsNumLayerSets + addOutLs, refLayerSetIdx - 1 ); 
+
+    for (Int i = 0; i < m_layerIdsInSets[ refLayerSetIdx].size(); i++ )
+    {
+      Bool outputLayerFlag = false; 
+      for (Int j = 0; j < m_layerIdsInAddOutputLayerSet[ addOutLs ].size(); j++ )
+      {
+        if (  m_layerIdsInAddOutputLayerSet[addOutLs][ j ] == m_layerIdsInSets[ refLayerSetIdx][ i ] )
+        {
+          outputLayerFlag = true; 
+          break; 
+        }
+      }
+      vps.setOutputLayerFlag( m_vpsNumLayerSets + addOutLs, i, outputLayerFlag );       
+    }
+  }
 }
 #endif
 #if H_3D_GEN

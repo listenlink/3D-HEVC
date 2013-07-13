@@ -100,7 +100,7 @@ Void TExtrTop::dumpSpsInfo( std::ostream& rcSpsInfoHandle )
 Void TExtrTop::dumpVpsInfo( std::ostream& rcVpsInfoHandle )
 { 
   rcVpsInfoHandle << "MaxLayers = "     << m_cVPS.getMaxLayers()     << std::endl; 
-  rcVpsInfoHandle << "MaxNuhLayerId = " << m_cVPS.getMaxNuhLayerId() << std::endl; 
+  rcVpsInfoHandle << "MaxNuhLayerId = " << m_cVPS.getVpsMaxLayerId() << std::endl; 
   
   for ( Int layerIdxInVps = 0; layerIdxInVps < m_cVPS.getMaxLayers(); layerIdxInVps++ )
   {  
