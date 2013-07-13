@@ -524,6 +524,7 @@ Void TEncTop::xInitSPS()
 {
 #if H_MV
   m_cSPS.setSPSId( getLayerIdInVps() );
+  m_cSPS.setLayerId( getLayerId() );
 #endif
   ProfileTierLevel& profileTierLevel = *m_cSPS.getPTL()->getGeneralPTL();
   profileTierLevel.setLevelIdc(m_level);
@@ -745,6 +746,9 @@ Void TEncTop::xInitPPS()
   m_cPPS.setUseWP( m_useWeightedPred );
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
+#if H_MV
+  m_cPPS.setNumExtraSliceHeaderBits( 1 ); 
+#endif
   m_cPPS.setSignHideFlag(getSignHideFlag());
 #if L0386_DB_METRIC
   if ( getDeblockingFilterMetric() )

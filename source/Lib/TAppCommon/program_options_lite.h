@@ -35,6 +35,7 @@
 #include <string>
 #include <list>
 #include <map>
+#include  "../TLibCommon/TypeDef.h"
 
 #if H_MV
 #include <vector>
@@ -84,8 +85,13 @@ namespace df
      * information should be stored in a derived class. */
     struct OptionBase
     {
+#if H_MV      
+      OptionBase(const std::string& name, const std::string& desc, bool duplicate = false)
+        : opt_string(name), opt_desc(desc), opt_duplicate(duplicate)
+#else
       OptionBase(const std::string& name, const std::string& desc)
       : opt_string(name), opt_desc(desc)
+#endif
       {};
       
       virtual ~OptionBase() {}
@@ -97,14 +103,22 @@ namespace df
       
       std::string opt_string;
       std::string opt_desc;
+#if H_MV
+      bool        opt_duplicate; 
+#endif
     };
     
     /** Type specific option storage */
     template<typename T>
     struct Option : public OptionBase
     {
+#if H_MV
+      Option(const std::string& name, T& storage, T default_val, const std::string& desc, bool duplicate = false)
+        : OptionBase(name, desc, duplicate), opt_storage(storage), opt_default_val(default_val)
+#else
       Option(const std::string& name, T& storage, T default_val, const std::string& desc)
       : OptionBase(name, desc), opt_storage(storage), opt_default_val(default_val)
+#endif
       {}
       
       void parse(const std::string& arg);
@@ -361,19 +375,28 @@ namespace df
         operator()(const std::string& name, std::vector<T>& storage, T default_val, unsigned uiMaxNum, const std::string& desc = "" )
       {
         std::string cNameBuffer;
-        std::string cDescriptionBuffer;
+        std::string cDescBuffer;
 
         cNameBuffer       .resize( name.size() + 10 );
-        cDescriptionBuffer.resize( desc.size() + 10 );
+        cDescBuffer.resize( desc.size() + 10 );
 
         storage.resize(uiMaxNum);
         for ( unsigned int uiK = 0; uiK < uiMaxNum; uiK++ )
         {
+          Bool duplicate = (uiK != 0); 
           // isn't there are sprintf function for string??
           sprintf((char*) cNameBuffer.c_str()       ,name.c_str(),uiK,uiK);
-          sprintf((char*) cDescriptionBuffer.c_str(),desc.c_str(),uiK,uiK);
 
-          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescriptionBuffer ));
+          if ( !duplicate )
+          {          
+            sprintf((char*) cDescBuffer.c_str(),desc.c_str(),uiK,uiK);
+          }
+
+          cNameBuffer.resize( std::strlen(cNameBuffer.c_str()) );  
+          cDescBuffer.resize( std::strlen(cDescBuffer.c_str()) ); 
+          
+
+          parent.addOption(new Option<T>( cNameBuffer, (storage[uiK]), default_val, cDescBuffer, duplicate ));
         }
 
         return *this;

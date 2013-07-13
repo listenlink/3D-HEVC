@@ -214,18 +214,22 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   }
 #endif
 #if H_MV
-  in>>entry.m_numInterViewRefPics;
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+  in>>entry.m_numActiveRefLayerPics;
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
   {
-    in>>entry.m_interViewRefs[i];
+    in>>entry.m_interLayerPredLayerIdc[i];
   }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
   {
     in>>entry.m_interViewRefPosL[0][i];
   }
-  for( Int i = 0; i < entry.m_numInterViewRefPics; i++ )
+  for( Int i = 0; i < entry.m_numActiveRefLayerPics; i++ )
   {
     in>>entry.m_interViewRefPosL[1][i];
+  }
+  if (entry.m_numActiveRefLayerPics > 0 )
+  {
+    in>>entry.m_collocatedRefLayerIdx; 
   }
 #endif
   return in;
@@ -397,6 +401,18 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
   ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
+
+  // Layer Sets + Output Layer Sets + Profile Tier Level
+  ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
+  ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
+  ("DefaultOneTargetOutputLayerFlag", m_defaultOneTargetOutputLayerFlag,  false , "Output highest layer of layer sets by default")      
+  ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
+  ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(1,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "LayerIds of additional output layers")  
+  ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
+  
+  // Layer dependencies
+  ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIds of direct reference layers")
+  ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
 #endif
   ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
   ("SourceHeight,-hgt",     m_iSourceHeight,       0, "Source picture height")
@@ -755,19 +771,33 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
         std::ostringstream cOSS;
         cOSS<<"Frame"<<i;
         opts.addOptions()( cOSS.str(), m_GOPListMvc[k][i-1], GOPEntry() );
+        if ( i != 1 )
+        {
+          opts.opt_list.back()->opt->opt_duplicate = true; 
+        }        
       }
     }
     else
     {
       std::ostringstream cOSS1;
       cOSS1<<"FrameI"<<"_l"<<k;
+
       opts.addOptions()(cOSS1.str(), m_GOPListMvc[k][MAX_GOP], GOPEntry());
+      if ( k > 1 )
+      {
+        opts.opt_list.back()->opt->opt_duplicate = true; 
+      }        
+
 
       for( Int i = 1; i < MAX_GOP + 1; i++ ) 
       {
         std::ostringstream cOSS2;
         cOSS2<<"Frame"<<i<<"_l"<<k;
         opts.addOptions()(cOSS2.str(), m_GOPListMvc[k][i-1], GOPEntry());
+        if ( i != 1 || k > 0 )
+        {
+          opts.opt_list.back()->opt->opt_duplicate = true; 
+        }        
       }
     }
   }
@@ -1310,16 +1340,34 @@ Void TAppEncCfg::xCheckParameter()
     m_dimIds.push_back( m_depthFlag ); 
 #endif
 
-  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   ); 
+  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
 
- for( Int dim = 0; dim < m_dimIds.size(); dim++ )
+  dimBitOffset[ 0 ] = 0; 
+  for (Int j = 1; j <= ((Int) m_dimIds.size() - m_splittingFlag ? 1 : 0); j++ )
  {
-   xConfirmPara( m_dimIds[dim].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
-   xConfirmPara( ( dim != viewDimPosition ) &&  (m_dimIds[dim][0] != 0), "DimensionId of layer 0 must be 0. " );
-   xConfirmPara( m_dimensionIdLen[dim] < 1 || m_dimensionIdLen[dim] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
+    dimBitOffset[ j ] = dimBitOffset[ j - 1 ] + m_dimensionIdLen[ j - 1]; 
+  }
+
+  if ( m_splittingFlag )
+  {
+    dimBitOffset[ (Int) m_dimIds.size() ] = 6; 
+  }
+  
+  for( Int j = 0; j < m_dimIds.size(); j++ )
+  {    
+    xConfirmPara( m_dimIds[j].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
+    xConfirmPara( ( j != viewDimPosition ) &&  (m_dimIds[j][0] != 0), "DimensionId of layer 0 must be 0. " );
+    xConfirmPara( m_dimensionIdLen[j] < 1 || m_dimensionIdLen[j] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
+     
+
    for( Int i = 1; i < m_numberOfLayers; i++ )
    {     
-     xConfirmPara(  ( m_dimIds[dim][i] < 0 ) || ( m_dimIds[dim][i] > ( ( 1 << m_dimensionIdLen[dim] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
+      xConfirmPara(  ( m_dimIds[j][i] < 0 ) || ( m_dimIds[j][i] > ( ( 1 << m_dimensionIdLen[j] ) - 1 ) )   , "DimensionId shall be in the range of 0 to 2^DimensionIdLen - 1. " );
+      if ( m_splittingFlag )
+      {
+        Int layerIdInNuh = (m_layerIdInNuh.size()!=1) ? m_layerIdInNuh[i] :  i; 
+        xConfirmPara( ( ( layerIdInNuh & ( (1 << dimBitOffset[ j + 1 ] ) - 1) ) >> dimBitOffset[ j ] )  != m_dimIds[j][ i ]  , "When Splitting Flag is equal to 1 dimension ids shall match values derived from layer ids. "); 
+      }
    }
  }
 
@@ -1360,6 +1408,54 @@ Void TAppEncCfg::xCheckParameter()
    }
  }
 
+  /// Layer sets
+  xConfirmPara( m_vpsNumLayerSets < 0 || m_vpsNumLayerSets > 1024, "VpsNumLayerSets must be greater than 0 and less than 1025") ; 
+  for( Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
+  {
+    if (lsIdx == 0)
+    {
+      xConfirmPara( m_layerIdsInSets[lsIdx].size() != 1 || m_layerIdsInSets[lsIdx][0] != 0 , "0-th layer shall only include layer 0. ");
+    }
+    for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
+    {
+      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than 64" ); 
+    }
+  }
+
+  // Output layer sets
+  xConfirmPara( m_outputLayerSetIdx.size() > 1024, "The number of output layer set indices must be less than 1025.") ;
+  for (Int lsIdx = 0; lsIdx < m_outputLayerSetIdx.size(); lsIdx++)
+  {   
+    Int refLayerSetIdx = m_outputLayerSetIdx[ lsIdx ]; 
+    xConfirmPara(  refLayerSetIdx < 0 || refLayerSetIdx >= m_vpsNumLayerSets, "Output layer set idx must be greater or equal to 0 and less than the VpsNumLayerSets." );
+
+    for (Int i = 0; i < m_layerIdsInAddOutputLayerSet[ lsIdx ].size(); i++)
+    {
+      Bool isAlsoInLayerSet = false; 
+      for (Int j = 0; j < m_layerIdsInSets[ refLayerSetIdx ].size(); j++ )
+      {
+        if ( m_layerIdsInSets[ refLayerSetIdx ][ j ] == m_layerIdsInAddOutputLayerSet[ lsIdx ][ i ] )
+        {
+          isAlsoInLayerSet = true; 
+          break; 
+        }        
+      }
+      xConfirmPara( !isAlsoInLayerSet, "All output layers of a output layer set be included in corresponding layer set.");
+    }
+  }
+  xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
+
+  // Layer Dependencies  
+  for (Int i = 0; i < m_numberOfLayers; i++ )
+  {
+    xConfirmPara( (i == 0)  && m_directRefLayers[0].size() != 0, "Layer 0 shall not have reference layers." ); 
+    xConfirmPara( m_directRefLayers[i].size() != m_dependencyTypes[ i ].size(), "Each reference layer shall have a reference type." ); 
+    for (Int j = 0; j < m_directRefLayers[i].size(); j++)
+    {
+      xConfirmPara( m_directRefLayers[i][j] < 0 || m_directRefLayers[i][j] >= i , "Reference layer id shall be greater than or equal to 0 and less than dependent layer id"); 
+      xConfirmPara( m_dependencyTypes[i][j] < 0 || m_dependencyTypes[i][j] >  2 , "Dependency type shall be greater than or equal to 0 and less than 3"); 
+    }        
+  }  
 #endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
@@ -1517,7 +1613,7 @@ Void TAppEncCfg::xCheckParameter()
   Bool bErrorIvpBase = false;
   for( Int i = 0; i < MAX_GOP; i++ )
   {
-    if( m_GOPListMvc[0][i].m_numInterViewRefPics != 0 )
+    if( m_GOPListMvc[0][i].m_numActiveRefLayerPics != 0 )
     {
       printf( "\nError: Frame%d inter_layer refs not available in layer 0\n", i );
       bErrorIvpBase = true;
@@ -1529,99 +1625,100 @@ Void TAppEncCfg::xCheckParameter()
   Bool bErrorIvpEnhV = false;
   if( m_numberOfLayers > 1 )
   {
-    for( Int k = 1; k < m_numberOfLayers; k++ )
+    for( Int layer = 1; layer < m_numberOfLayers; layer++ )
     {
       for( Int i = 0; i < MAX_GOP+1; i++ )
       {
-        for( Int j = 0; j < m_GOPListMvc[k][i].m_numInterViewRefPics; j++ )
+        GOPEntry gopEntry = m_GOPListMvc[layer][i];  
+        for( Int j = 0; j < gopEntry.m_numActiveRefLayerPics; j++ )
         {
-          Int iAbsViewId = m_GOPListMvc[k][i].m_interViewRefs[j] + k;
-          if( iAbsViewId < 0 || iAbsViewId >= k )
+          Int ilPredLayerIdc = gopEntry.m_interLayerPredLayerIdc[j];
+          if( ilPredLayerIdc < 0 || ilPredLayerIdc >= m_directRefLayers[layer].size() )
           {
-            printf( "\nError: inter-layer ref pic %d is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interViewRefs[j], i, k );
+            printf( "\nError: inter-layer ref idc %d is not available for Frame%d_l%d\n", gopEntry.m_interLayerPredLayerIdc[j], i, layer );
             bErrorIvpEnhV = true;
           }
-          if( m_GOPListMvc[k][i].m_interViewRefPosL[0][j] < -1 || m_GOPListMvc[k][i].m_interViewRefPosL[0][j] > m_GOPListMvc[k][i].m_numRefPicsActive )
+          if( gopEntry.m_interViewRefPosL[0][j] < -1 || gopEntry.m_interViewRefPosL[0][j] > gopEntry.m_numRefPicsActive )
           {
-            printf( "\nError: inter-layer ref pos %d on L0 is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interViewRefPosL[0][j], i, k );
+            printf( "\nError: inter-layer ref pos %d on L0 is not available for Frame%d_l%d\n", gopEntry.m_interViewRefPosL[0][j], i, layer );
             bErrorIvpEnhV = true;
           }
-          if( m_GOPListMvc[k][i].m_interViewRefPosL[1][j] < -1  || m_GOPListMvc[k][i].m_interViewRefPosL[1][j] > m_GOPListMvc[k][i].m_numRefPicsActive )
+          if( gopEntry.m_interViewRefPosL[1][j] < -1  || gopEntry.m_interViewRefPosL[1][j] > gopEntry.m_numRefPicsActive )
           {
-            printf( "\nError: inter-layer ref pos %d on L1 is not available for Frame%d_l%d\n", m_GOPListMvc[k][i].m_interViewRefPosL[1][j], i, k );
+            printf( "\nError: inter-layer ref pos %d on L1 is not available for Frame%d_l%d\n", gopEntry.m_interViewRefPosL[1][j], i, layer );
             bErrorIvpEnhV = true;
           }
         }
         if( i == MAX_GOP ) // inter-view refs at I pic position in base view
         {
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType != 'B' && m_GOPListMvc[k][MAX_GOP].m_sliceType != 'P' && m_GOPListMvc[k][MAX_GOP].m_sliceType != 'I' )
+          if( gopEntry.m_sliceType != 'B' && gopEntry.m_sliceType != 'P' && gopEntry.m_sliceType != 'I' )
           {
-            printf( "\nError: slice type of FrameI_l%d must be equal to B or P or I\n", k );
+            printf( "\nError: slice type of FrameI_l%d must be equal to B or P or I\n", layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_POC != 0 )
+          if( gopEntry.m_POC != 0 )
           {
-            printf( "\nError: POC %d not possible for FrameI_l%d, must be 0\n", m_GOPListMvc[k][MAX_GOP].m_POC, k );
+            printf( "\nError: POC %d not possible for FrameI_l%d, must be 0\n", gopEntry.m_POC, layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_temporalId != 0 )
+          if( gopEntry.m_temporalId != 0 )
           {
-            printf( "\nWarning: Temporal id of FrameI_l%d must be 0 (cp. I-frame in base layer)\n", k );
-            m_GOPListMvc[k][MAX_GOP].m_temporalId = 0;
+            printf( "\nWarning: Temporal id of FrameI_l%d must be 0 (cp. I-frame in base layer)\n", layer );
+            gopEntry.m_temporalId = 0;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_numRefPics != 0 )
+          if( gopEntry.m_numRefPics != 0 )
           {
-            printf( "\nWarning: temporal references not possible for FrameI_l%d\n", k );
-            for( Int j = 0; j < m_GOPListMvc[k][MAX_GOP].m_numRefPics; j++ )
+            printf( "\nWarning: temporal references not possible for FrameI_l%d\n", layer );
+            for( Int j = 0; j < m_GOPListMvc[layer][MAX_GOP].m_numRefPics; j++ )
             {
-              m_GOPListMvc[k][MAX_GOP].m_referencePics[j] = 0;
+              gopEntry.m_referencePics[j] = 0;
             }
-            m_GOPListMvc[k][MAX_GOP].m_numRefPics = 0;
+            gopEntry.m_numRefPics = 0;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_interRPSPrediction )
+          if( gopEntry.m_interRPSPrediction )
           {
-            printf( "\nError: inter RPS prediction not possible for FrameI_l%d, must be 0\n", k );
+            printf( "\nError: inter RPS prediction not possible for FrameI_l%d, must be 0\n", layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'I' && m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics != 0 )
+          if( gopEntry.m_sliceType == 'I' && gopEntry.m_numActiveRefLayerPics != 0 )
           {
-            printf( "\nError: inter-layer prediction not possible for FrameI_l%d with slice type I, #IL_ref_pics must be 0\n", k );
+            printf( "\nError: inter-layer prediction not possible for FrameI_l%d with slice type I, #IL_ref_pics must be 0\n", layer );
             bErrorIvpEnhV = true;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive > m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics )
+          if( gopEntry.m_numRefPicsActive > gopEntry.m_numActiveRefLayerPics )
           {
-            m_GOPListMvc[k][MAX_GOP].m_numRefPicsActive = m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics;
+            gopEntry.m_numRefPicsActive = gopEntry.m_numActiveRefLayerPics;
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'P' )
+          if( gopEntry.m_sliceType == 'P' )
           {
-            if( m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
+            if( gopEntry.m_numActiveRefLayerPics < 1 )
             {
-              printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type P\n", k );
+              printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type P\n", layer );
               bErrorIvpEnhV = true;
             }
             else
             {
-              for( Int j = 0; j < m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics; j++ )
+              for( Int j = 0; j < gopEntry.m_numActiveRefLayerPics; j++ )
               {
-                if( m_GOPListMvc[k][MAX_GOP].m_interViewRefPosL[1][j] != -1 )
+                if( gopEntry.m_interViewRefPosL[1][j] != -1 )
                 {
-                  printf( "\nError: inter-layer ref pos %d on L1 not possible for FrameI_l%d with slice type P\n", m_GOPListMvc[k][MAX_GOP].m_interViewRefPosL[1][j], k );
+                  printf( "\nError: inter-layer ref pos %d on L1 not possible for FrameI_l%d with slice type P\n", gopEntry.m_interViewRefPosL[1][j], layer );
                   bErrorIvpEnhV = true;
                 }
               }
             }
           }
 
-          if( m_GOPListMvc[k][MAX_GOP].m_sliceType == 'B' && m_GOPListMvc[k][MAX_GOP].m_numInterViewRefPics < 1 )
+          if( gopEntry.m_sliceType == 'B' && gopEntry.m_numActiveRefLayerPics < 1 )
           {
-            printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type B\n", k );
+            printf( "\nError: #IL_ref_pics must be at least one for FrameI_l%d with slice type B\n", layer );
             bErrorIvpEnhV = true;
           }
         }

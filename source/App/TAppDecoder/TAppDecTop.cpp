@@ -149,8 +149,10 @@ Void TAppDecTop::decode()
   // main decoder loop
   Bool recon_opened = false; // reconstruction file not yet opened. (must be performed after SPS is seen)
 #else
+#if H_3D
   Int  pocCurrPic        = -MAX_INT;     
   Int  pocLastPic        = -MAX_INT;   
+#endif
 
   Int  layerIdCurrPic    = 0; 
 
@@ -186,7 +188,9 @@ Void TAppDecTop::decode()
 #if H_MV
     Bool newSliceDiffPoc   = false;
     Bool newSliceDiffLayer = false;
+#if H_3D
     Bool allLayersDecoded  = false;     
+#endif
 #endif
     if (nalUnit.empty())
     {
@@ -221,7 +225,9 @@ Void TAppDecTop::decode()
         if ( nalu.isSlice() && firstSlice )
         {
           layerIdCurrPic = nalu.m_layerId; 
+#if H_3D
           pocCurrPic     = m_tDecTop[decIdx]->getCurrPoc(); 
+#endif
           decIdxCurrPic  = decIdx; 
           firstSlice     = false; 
         }
@@ -229,14 +235,15 @@ Void TAppDecTop::decode()
         if ( bNewPicture || !bitstreamFile )
         { 
           layerIdCurrPic    = nalu.m_layerId; 
-          
+#if H_3D          
           pocLastPic        = pocCurrPic; 
           pocCurrPic        = m_tDecTop[decIdx]->getCurrPoc(); 
-          
+#endif          
           decIdxLastPic     = decIdxCurrPic; 
           decIdxCurrPic     = decIdx; 
-
+#if H_3D
           allLayersDecoded = ( pocCurrPic != pocLastPic );
+#endif
         }
 
         

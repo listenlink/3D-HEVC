@@ -220,7 +220,7 @@ protected:
 #endif
 #endif
 #if H_MV
-   Void  xSetRefPicListModificationsMvc( TComSlice* pcSlice, UInt uiPOCCurr, UInt iGOPid );
+   Void  xSetRefPicListModificationsMv( TComSlice* pcSlice, UInt iGOPid );
 #endif
 #if L0386_DB_METRIC
   Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
