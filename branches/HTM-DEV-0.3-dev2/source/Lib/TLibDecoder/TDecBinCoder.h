@@ -53,15 +53,12 @@ public:
 
   virtual Void  start             ()                                          = 0;
   virtual Void  finish            ()                                          = 0;
-  virtual Void  flush            ()                                           = 0;
 
   virtual Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel )  = 0;
   virtual Void  decodeBinEP       ( UInt& ruiBin                           )  = 0;
   virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins             )  = 0;
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
   
-  virtual Void  resetBac          ()                                          = 0;
-  virtual Void  decodePCMAlignBits()                                          = 0;
   virtual Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode)              = 0;
 
   virtual ~TDecBinIf() {}

@@ -83,21 +83,15 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::DECODING_UNIT_INFO:
     fprintf( g_hTrace, "=========== Decoding Unit Information SEI message ===========\n");
     break;
-#if J0149_TONE_MAPPING_SEI
   case SEI::TONE_MAPPING_INFO:
     fprintf( g_hTrace, "=========== Tone Mapping Info SEI message ===========\n");
     break;
-#endif
-#if L0208_SOP_DESCRIPTION_SEI
   case SEI::SOP_DESCRIPTION:
     fprintf( g_hTrace, "=========== SOP Description SEI message ===========\n");
     break;
-#endif
-#if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
-#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -105,11 +99,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
 }
 #endif
 
-#if K0180_SCALABLE_NESTING_SEI
 void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps)
-#else
-void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
-#endif
 {
   switch (sei.payloadType())
   {
@@ -146,21 +136,15 @@ void SEIWriter::xWriteSEIpayloadData(const SEI& sei, TComSPS *sps)
   case SEI::REGION_REFRESH_INFO:
     xWriteSEIGradualDecodingRefreshInfo(*static_cast<const SEIGradualDecodingRefreshInfo*>(&sei));
     break;
-#if J0149_TONE_MAPPING_SEI
   case SEI::TONE_MAPPING_INFO:
     xWriteSEIToneMappingInfo(*static_cast<const SEIToneMappingInfo*>(&sei));
     break;
-#endif
-#if L0208_SOP_DESCRIPTION_SEI
   case SEI::SOP_DESCRIPTION:
     xWriteSEISOPDescription(*static_cast<const SEISOPDescription*>(&sei));
     break;
-#endif
-#if K0180_SCALABLE_NESTING_SEI
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
-#endif
   default:
     assert(!"Unhandled SEI message");
   }
@@ -179,8 +163,6 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
   setBitstream(&bs_count);
 
 
-#if K0180_SCALABLE_NESTING_SEI
-
 #if ENC_DEC_TRACE
   Bool traceEnable = g_HLSTraceEnable;
   g_HLSTraceEnable = false;
@@ -190,27 +172,13 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
   g_HLSTraceEnable = traceEnable;
 #endif
 
-#else
-
-#if ENC_DEC_TRACE
-  g_HLSTraceEnable = false;
-#endif
-  xWriteSEIpayloadData(sei, sps);
-#if ENC_DEC_TRACE
-  g_HLSTraceEnable = true;
-#endif
-
-#endif
-
   UInt payload_data_num_bits = bs_count.getNumberOfWrittenBits();
   assert(0 == payload_data_num_bits % 8);
 
   setBitstream(&bs);
 
 #if ENC_DEC_TRACE
-#if K0180_SCALABLE_NESTING_SEI
   if (g_HLSTraceEnable)
-#endif
   xTraceSEIHeader();
 #endif
 
@@ -230,17 +198,11 @@ Void SEIWriter::writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps)
 
   /* payloadData */
 #if ENC_DEC_TRACE
-#if K0180_SCALABLE_NESTING_SEI
   if (g_HLSTraceEnable)
-#endif
   xTraceSEIMessageType(sei.payloadType());
 #endif
 
-#if K0180_SCALABLE_NESTING_SEI
   xWriteSEIpayloadData(bs, sei, sps);
-#else
-  xWriteSEIpayloadData(sei, sps);
-#endif
 }
 
 /**
@@ -295,10 +257,8 @@ Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
 Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
 {
   WRITE_CODE(sei.activeVPSId,     4, "active_vps_id");
-#if L0047_APS_FLAGS
   WRITE_FLAG(sei.m_fullRandomAccessFlag, "full_random_access_flag");
   WRITE_FLAG(sei.m_noParamSetUpdateFlag, "no_param_set_update_flag");
-#endif
   WRITE_UVLC(sei.numSpsIdsMinus1,    "num_sps_ids_minus1");
 
   assert (sei.activeSeqParamSetId.size() == (sei.numSpsIdsMinus1 + 1));
@@ -329,13 +289,11 @@ Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, TComSP
   {
     WRITE_CODE( sei.m_duSptCpbRemovalDelay, (vui->getHrdParameters()->getDuCpbRemovalDelayLengthMinus1() + 1), "du_spt_cpb_removal_delay");
   }
-#if L0044_DU_DPB_OUTPUT_DELAY_HRD
   WRITE_FLAG( sei.m_dpbOutputDuDelayPresentFlag, "dpb_output_du_delay_present_flag");
   if(sei.m_dpbOutputDuDelayPresentFlag)
   {
     WRITE_CODE(sei.m_picSptDpbOutputDuDelay, vui->getHrdParameters()->getDpbOutputDelayDuLengthMinus1() + 1, "pic_spt_dpb_output_du_delay");
   }
-#endif
   xWriteByteAlign();
 }
 
@@ -350,17 +308,13 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS 
   {
     WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "rap_cpb_params_present_flag" );
   }
-#if L0328_SPLICING
   WRITE_FLAG( sei.m_concatenationFlag, "concatenation_flag");
   WRITE_CODE( sei.m_auCpbRemovalDelayDelta - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), "au_cpb_removal_delay_delta_minus1" );
-#endif
-#if L0044_CPB_DPB_DELAY_OFFSET
   if( sei.m_rapCpbParamsPresentFlag )
   {
     WRITE_CODE( sei.m_cpbDelayOffset, hrd->getCpbRemovalDelayLengthMinus1() + 1, "cpb_delay_offset" );
     WRITE_CODE( sei.m_dpbDelayOffset, hrd->getDpbOutputDelayLengthMinus1()  + 1, "dpb_delay_offset" );
   }
-#endif
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
     if( ( ( nalOrVcl == 0 ) && ( hrd->getNalHrdParametersPresentFlag() ) ) ||
@@ -386,34 +340,21 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei,  TComSPS *sp
   TComVUI *vui = sps->getVuiParameters();
   TComHRD *hrd = vui->getHrdParameters();
 
-#if !L0045_CONDITION_SIGNALLING
-  // This condition was probably OK before the pic_struct, progressive_source_idc, duplicate_flag were added
-  if( !hrd->getNalHrdParametersPresentFlag() && !hrd->getVclHrdParametersPresentFlag() )
-    return;
-#endif
   if( vui->getFrameFieldInfoPresentFlag() )
   {
     WRITE_CODE( sei.m_picStruct, 4,              "pic_struct" );
-#if L0046_RENAME_PROG_SRC_IDC
     WRITE_CODE( sei.m_sourceScanType, 2,         "source_scan_type" );
-#else
-    WRITE_CODE( sei.m_progressiveSourceIdc, 2,   "progressive_source_idc" );
-#endif
     WRITE_FLAG( sei.m_duplicateFlag ? 1 : 0,     "duplicate_flag" );
   }
 
-#if L0045_CONDITION_SIGNALLING
   if( hrd->getCpbDpbDelaysPresentFlag() )
   {
-#endif
     WRITE_CODE( sei.m_auCpbRemovalDelay - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ),                                         "au_cpb_removal_delay_minus1" );
     WRITE_CODE( sei.m_picDpbOutputDelay, ( hrd->getDpbOutputDelayLengthMinus1() + 1 ),                                          "pic_dpb_output_delay" );
-#if L0044_DU_DPB_OUTPUT_DELAY_HRD
     if(hrd->getSubPicCpbParamsPresentFlag())
     {
       WRITE_CODE(sei.m_picDpbOutputDuDelay, hrd->getDpbOutputDelayDuLengthMinus1()+1, "pic_dpb_output_du_delay" );
     }
-#endif
     if( hrd->getSubPicCpbParamsPresentFlag() && hrd->getSubPicCpbParamsInPicTimingSEIFlag() )
     {
       WRITE_UVLC( sei.m_numDecodingUnitsMinus1,     "num_decoding_units_minus1" );
@@ -431,9 +372,7 @@ Void SEIWriter::xWriteSEIPictureTiming(const SEIPictureTiming& sei,  TComSPS *sp
         }
       }
     }
-#if L0045_CONDITION_SIGNALLING
   }
-#endif
   xWriteByteAlign();
 }
 Void SEIWriter::xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei)
@@ -470,11 +409,7 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
     }
 
     WRITE_CODE( sei.m_arrangementReservedByte, 8,   "frame_packing_arrangement_reserved_byte" );
-#if L0045_PERSISTENCE_FLAGS
     WRITE_FLAG( sei.m_arrangementPersistenceFlag,   "frame_packing_arrangement_persistence_flag" );
-#else
-    WRITE_UVLC( sei.m_arrangementRepetetionPeriod,  "frame_packing_arrangement_repetition_period" );
-#endif
   }
 
   WRITE_FLAG( sei.m_upsampledAspectRatio,           "upsampled_aspect_ratio" );
@@ -482,7 +417,6 @@ Void SEIWriter::xWriteSEIFramePacking(const SEIFramePacking& sei)
   xWriteByteAlign();
 }
 
-#if J0149_TONE_MAPPING_SEI
 Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
 {
   Int i;
@@ -554,7 +488,6 @@ Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
 
   xWriteByteAlign();
 }
-#endif
 
 Void SEIWriter::xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei)
 {
@@ -564,15 +497,7 @@ Void SEIWriter::xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei)
     WRITE_FLAG( sei.horFlip,                   "hor_flip" );
     WRITE_FLAG( sei.verFlip,                   "ver_flip" );
     WRITE_CODE( sei.anticlockwiseRotation, 16, "anticlockwise_rotation" );
-#if L0045_PERSISTENCE_FLAGS
     WRITE_FLAG( sei.persistenceFlag,          "display_orientation_persistence_flag" );
-#else
-    WRITE_UVLC( sei.repetitionPeriod,          "display_orientation_repetition_period" );
-#endif
-#if !REMOVE_SINGLE_SEI_EXTENSION_FLAGS
-    WRITE_FLAG( sei.extensionFlag,             "display_orientation_extension_flag" );
-    assert( !sei.extensionFlag );
-#endif
   }
   xWriteByteAlign();
 }
@@ -590,7 +515,6 @@ Void SEIWriter::xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefr
   xWriteByteAlign();
 }
 
-#if L0208_SOP_DESCRIPTION_SEI
 Void SEIWriter::xWriteSEISOPDescription(const SEISOPDescription& sei)
 {
   WRITE_UVLC( sei.m_sopSeqParameterSetId,           "sop_seq_parameter_set_id"               );
@@ -611,9 +535,7 @@ Void SEIWriter::xWriteSEISOPDescription(const SEISOPDescription& sei)
 
   xWriteByteAlign();
 }
-#endif
 
-#if K0180_SCALABLE_NESTING_SEI
 Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps)
 {
   WRITE_FLAG( sei.m_bitStreamSubsetFlag,             "bitstream_subset_flag"         );
@@ -655,7 +577,6 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
     writeSEImessage(bs, *(*it), sps);
   }
 }
-#endif
 
 Void SEIWriter::xWriteByteAlign()
 {

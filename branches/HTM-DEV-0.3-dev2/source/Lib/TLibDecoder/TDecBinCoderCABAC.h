@@ -55,15 +55,12 @@ public:
   
   Void  start             ();
   Void  finish            ();
-  Void  flush             ();
   
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel );
   Void  decodeBinEP       ( UInt& ruiBin                           );
   Void  decodeBinsEP      ( UInt& ruiBin, Int numBins              );
   Void  decodeBinTrm      ( UInt& ruiBin                           );
   
-  Void  resetBac          ();
-  Void  decodePCMAlignBits();
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
   
   Void  copyState         ( TDecBinIf* pcTDecBinIf );
