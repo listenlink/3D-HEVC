@@ -292,15 +292,10 @@ Void TEncTop::init()
 #if H_MV_FIX_VPS_POINTER
   // This seems to be incorrect, but irrelevant for the MV-HEVC
   *(m_cVPS->getPTL()) = *m_cSPS.getPTL();
-#if L0043_TIMING_INFO
   m_cVPS->getTimingInfo()->setTimingInfoPresentFlag       ( false );
-#endif
 #else
   *m_cVPS.getPTL() = *m_cSPS.getPTL();
-
-#if L0043_TIMING_INFO
   m_cVPS.getTimingInfo()->setTimingInfoPresentFlag       ( false );
-#endif
 #endif
   // initialize PPS
   m_cPPS.setSPS(&m_cSPS);
@@ -531,12 +526,10 @@ Void TEncTop::xInitSPS()
   profileTierLevel.setTierFlag(m_levelTier);
   profileTierLevel.setProfileIdc(m_profile);
   profileTierLevel.setProfileCompatibilityFlag(m_profile, 1);
-#if L0046_CONSTRAINT_FLAGS
   profileTierLevel.setProgressiveSourceFlag(m_progressiveSourceFlag);
   profileTierLevel.setInterlacedSourceFlag(m_interlacedSourceFlag);
   profileTierLevel.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
   profileTierLevel.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
-#endif
   
   if (m_profile == Profile::MAIN10 && g_bitDepthY == 8 && g_bitDepthC == 8)
   {
@@ -583,9 +576,6 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseLossless   ( m_useLossless  );
 
   m_cSPS.setMaxTrSize   ( 1 << m_uiQuadtreeTULog2MaxSize );
-#if !L0034_COMBINED_LIST_CLEANUP
-  m_cSPS.setUseLComb    ( m_bUseLComb           );
-#endif
   
   Int i;
   
@@ -650,13 +640,8 @@ Void TEncTop::xInitSPS()
     pcVUI->setFrameFieldInfoPresentFlag(getFrameFieldInfoPresentFlag());
     pcVUI->setFieldSeqFlag(false);
     pcVUI->setHrdParametersPresentFlag(false);
-#if L0043_TIMING_INFO
     pcVUI->getTimingInfo()->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
     pcVUI->getTimingInfo()->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
-#else
-    pcVUI->setPocProportionalToTimingFlag(getPocProportionalToTimingFlag());
-    pcVUI->setNumTicksPocDiffOneMinus1   (getNumTicksPocDiffOneMinus1()   );
-#endif
     pcVUI->setBitstreamRestrictionFlag(getBitstreamRestrictionFlag());
     pcVUI->setTilesFixedStructureFlag(getTilesFixedStructureFlag());
     pcVUI->setMotionVectorsOverPicBoundariesFlag(getMotionVectorsOverPicBoundariesFlag());
@@ -789,9 +774,7 @@ Void TEncTop::xInitPPS()
       bestPos=i;
     }
   }
-#if L0323_LIMIT_DEFAULT_LIST_SIZE
   assert(bestPos <= 15);
-#endif
   m_cPPS.setNumRefIdxL0DefaultActive(bestPos);
   m_cPPS.setNumRefIdxL1DefaultActive(bestPos);
   m_cPPS.setTransquantBypassEnableFlag(getTransquantBypassEnableFlag());
@@ -1046,7 +1029,6 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
 
 }
 
-#if L0208_SOP_DESCRIPTION_SEI
 Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid )
 {
   int rpsIdx = GOPid;
@@ -1076,7 +1058,6 @@ Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int 
 
   return rpsIdx;
 }
-#endif
 
 Void  TEncTop::xInitPPSforTiles()
 {

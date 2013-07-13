@@ -75,7 +75,6 @@ TComPrediction::~TComPrediction()
   m_acYuvPredBase[0].destroy();
   m_acYuvPredBase[1].destroy();
 #endif
-
   if( m_pLumaRecBuffer )
   {
     delete [] m_pLumaRecBuffer;
@@ -145,6 +144,7 @@ Void TComPrediction::initTempBuff()
 // Function for calculating DC value of the reference samples used in Intra prediction
 Pel TComPrediction::predIntraGetPredValDC( Int* pSrc, Int iSrcStride, UInt iWidth, UInt iHeight, Bool bAbove, Bool bLeft )
 {
+  assert(iWidth > 0 && iHeight > 0);
   Int iInd, iSum = 0;
   Pel pDcVal;
 
@@ -933,7 +933,6 @@ Void TComPrediction::xPredInterLumaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt
     yFrac     = 0;
   }
 #endif
-
   if ( yFrac == 0 )
   {
     m_if.filterHorLuma( ref, refStride, dst, dstStride, width, height, xFrac,       !bi 
@@ -1245,7 +1244,6 @@ Void TComPrediction::xDCPredFiltering( Int* pSrc, Int iSrcStride, Pel*& rpDst, I
 
   return;
 }
-
 #if H_3D_IC
 /** Function for deriving the position of first non-zero binary bit of a value
  * \param x input value

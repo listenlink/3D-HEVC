@@ -165,7 +165,6 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCUTransSubdivFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_TRANS_SUBDIV_FLAG );
   m_cTransformSkipSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( sliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-
 #if H_3D_DIM
   m_cDepthIntraModeSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
   m_cDdcFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DDC_FLAG );
@@ -183,7 +182,6 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cSDCResidualSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL );
 #endif
 #endif
-
   m_uiLastDQpNonZero  = 0;
   
   // new structure
@@ -199,6 +197,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 {
   UInt uiBit;
   m_pcTDecBinIf->decodeBinTrm(uiBit);
+  assert(uiBit); // end_of_sub_stream_one_bit must be equal to 1
   m_pcTDecBinIf->finish();  
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
@@ -258,6 +257,10 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
 Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 {
   m_pcTDecBinIf->decodeBinTrm( ruiBit );
+  if ( ruiBit )
+  {
+    m_pcTDecBinIf->finish();
+  }
 }
 
 
@@ -612,7 +615,6 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
 Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol;
-  Bool readPCMSampleFlag = false;
 
     m_pcTDecBinIf->decodeBinTrm(uiSymbol);
 
@@ -621,12 +623,6 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 #endif
     if (uiSymbol)
     {
-      readPCMSampleFlag = true;
-      m_pcTDecBinIf->decodePCMAlignBits();
-    }
-
-  if (readPCMSampleFlag == true)
-  {
     Bool bIpcmFlag = true;
 
     pcCU->setPartSizeSubParts  ( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
@@ -692,7 +688,7 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       piPCMSample += uiWidth;
     }
 
-      m_pcTDecBinIf->resetBac();
+    m_pcTDecBinIf->start();
   }
 }
 
@@ -1002,7 +998,6 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
     }
     else
     {
-      intraPredMode = 0;
       m_pcTDecBinIf->decodeBinsEP( symbol, 5 );
       intraPredMode = symbol;
 #if H_MV_ENC_DEC_TRAC          
@@ -1443,7 +1438,6 @@ Void TDecSbac::parseDeltaQP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
   else 
   {
-    iDQp=0;
     qp = pcCU->getRefQP(uiAbsPartIdx);
   }
   pcCU->setQPSubParts(qp, uiAbsPartIdx, uiDepth);  
@@ -1633,7 +1627,7 @@ Void TDecSbac::parseCoeffNxN( TComDataCU* pcCU, TCoeff* pcCoef, UInt uiAbsPartId
   pcCoef[ uiBlkPosLast ] = 1;
 
   //===== decode significance flags =====
-  UInt uiScanPosLast = uiBlkPosLast;
+  UInt uiScanPosLast;
   const UInt *scan   = g_auiSigLastScan[ uiScanIdx ][ uiLog2BlockSize-1 ];
   for( uiScanPosLast = 0; uiScanPosLast < uiMaxNumCoeffM1; uiScanPosLast++ )
   {

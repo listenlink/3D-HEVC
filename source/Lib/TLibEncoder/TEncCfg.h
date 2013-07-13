@@ -134,12 +134,10 @@ protected:
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
-#if L0046_CONSTRAINT_FLAGS
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
   Bool m_nonPackedConstraintFlag;
   Bool m_frameOnlyConstraintFlag;
-#endif
 
   //====== Coding Structure ========
   UInt      m_uiIntraPeriod;
@@ -176,9 +174,7 @@ protected:
   Int       m_loopFilterBetaOffsetDiv2;
   Int       m_loopFilterTcOffsetDiv2;
   Bool      m_DeblockingFilterControlPresent;
-#if L0386_DB_METRIC
   Bool      m_DeblockingFilterMetric;
-#endif
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoLcuBoundary;
@@ -209,14 +205,9 @@ protected:
   Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
-#if !L0034_COMBINED_LIST_CLEANUP
-  Bool      m_bUseLComb;
-#endif
   Bool      m_useRDOQ;
   Bool      m_useRDOQTS;
-#if L0232_RD_PENALTY
   UInt      m_rdPenalty;
-#endif
   Bool      m_bUseFastEnc;
   Bool      m_bUseEarlyCU;
   Bool      m_useFastDecisionForMerge;
@@ -257,7 +248,6 @@ protected:
   Int       m_bufferingPeriodSEIEnabled;
   Int       m_pictureTimingSEIEnabled;
   Int       m_recoveryPointSEIEnabled;
-#if J0149_TONE_MAPPING_SEI
   Bool      m_toneMappingInfoSEIEnabled;
   Int       m_toneMapId;
   Bool      m_toneMapCancelFlag;
@@ -283,7 +273,6 @@ protected:
   Int*      m_startOfCodedInterval;
   Int*      m_codedPivotValue;
   Int*      m_targetPivotValue;
-#endif
   Int       m_framePackingSEIEnabled;
   Int       m_framePackingSEIType;
   Int       m_framePackingSEIId;
@@ -293,12 +282,8 @@ protected:
   Int       m_temporalLevel0IndexSEIEnabled;
   Int       m_gradualDecodingRefreshInfoEnabled;
   Int       m_decodingUnitInfoSEIEnabled;
-#if L0208_SOP_DESCRIPTION_SEI
   Int       m_SOPDescriptionSEIEnabled;
-#endif
-#if K0180_SCALABLE_NESTING_SEI
   Int       m_scalableNestingSEIEnabled;
-#endif
   //====== Weighted Prediction ========
   Bool      m_useWeightedPred;       //< Use of Weighting Prediction (P_SLICE)
   Bool      m_useWeightedBiPred;    //< Use of Bi-directional Weighting Prediction (B_SLICE)
@@ -311,7 +296,11 @@ protected:
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Bool      m_RCEnableRateControl;
   Int       m_RCTargetBitrate;
+#if M0036_RC_IMPROVEMENT
+  Int       m_RCKeepHierarchicalBit;
+#else
   Bool      m_RCKeepHierarchicalBit;
+#endif
   Bool      m_RCLCULevelRC;
   Bool      m_RCUseLCUSeparateModel;
   Int       m_RCInitialQP;
@@ -388,27 +377,22 @@ protected:
   Bool      m_bAllowNegDist;
   Double    m_dLambdaScaleVSO;
   UInt      m_uiVSOMode;
-  
   // LGE_WVSO_A0119
   Bool      m_bUseWVSO;
   Int       m_iVSOWeight;
   Int       m_iVSDWeight;
   Int       m_iDWeight;
-#endif
-
   // SAIT_VSO_EST_A0033
   Bool      m_bUseEstimatedVSD; 
   Double    m_dDispCoeff;
-
+#endif
 #if H_3D_ARP
   UInt      m_uiUseAdvResPred;
   UInt      m_uiARPStepNum;
 #endif
-
 #if H_3D_IC
   Bool      m_bUseIC;
 #endif
-
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
@@ -416,9 +400,7 @@ protected:
   Bool      m_useSDC;
   Bool      m_useDLT;
 #endif
-
 #endif
-
 public:
   TEncCfg()
   : m_puiColumnWidth()
@@ -518,9 +500,7 @@ public:
   Void      setLoopFilterBetaOffset         ( Int   i )      { m_loopFilterBetaOffsetDiv2  = i; }
   Void      setLoopFilterTcOffset           ( Int   i )      { m_loopFilterTcOffsetDiv2    = i; }
   Void      setDeblockingFilterControlPresent ( Bool b ) { m_DeblockingFilterControlPresent = b; }
-#if L0386_DB_METRIC
   Void      setDeblockingFilterMetric       ( Bool  b )      { m_DeblockingFilterMetric = b; }
-#endif
 
   //====== Motion search ========
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
@@ -575,9 +555,7 @@ public:
   Int       getLoopFilterBetaOffset         ()      { return m_loopFilterBetaOffsetDiv2; }
   Int       getLoopFilterTcOffset           ()      { return m_loopFilterTcOffsetDiv2; }
   Bool      getDeblockingFilterControlPresent()  { return  m_DeblockingFilterControlPresent; }
-#if L0386_DB_METRIC
   Bool      getDeblockingFilterMetric       ()      { return m_DeblockingFilterMetric; }
-#endif
 
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
@@ -595,14 +573,9 @@ public:
   Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
-#if !L0034_COMBINED_LIST_CLEANUP
-  Void      setUseLComb                     ( Bool  b )     { m_bUseLComb   = b; }
-#endif
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
   Void      setUseRDOQTS                    ( Bool  b )     { m_useRDOQTS  = b; }
-#if L0232_RD_PENALTY
   Void      setRDpenalty                 ( UInt  b )     { m_rdPenalty  = b; }
-#endif
   Void      setUseFastEnc                   ( Bool  b )     { m_bUseFastEnc = b; }
   Void      setUseEarlyCU                   ( Bool  b )     { m_bUseEarlyCU = b; }
   Void      setUseFastDecisionForMerge      ( Bool  b )     { m_useFastDecisionForMerge = b; }
@@ -619,14 +592,9 @@ public:
   Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
-#if !L0034_COMBINED_LIST_CLEANUP
-  Bool      getUseLComb                     ()      { return m_bUseLComb;   }
-#endif
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
   Bool      getUseRDOQTS                    ()      { return m_useRDOQTS;  }
-#if L0232_RD_PENALTY
   Int      getRDpenalty                  ()      { return m_rdPenalty;  }
-#endif
   Bool      getUseFastEnc                   ()      { return m_bUseFastEnc; }
   Bool      getUseEarlyCU                   ()      { return m_bUseEarlyCU; }
   Bool      getUseFastDecisionForMerge      ()      { return m_useFastDecisionForMerge; }
@@ -718,7 +686,6 @@ public:
   Int   getPictureTimingSEIEnabled()                     { return m_pictureTimingSEIEnabled; }
   Void  setRecoveryPointSEIEnabled(Int b)                { m_recoveryPointSEIEnabled = b; }
   Int   getRecoveryPointSEIEnabled()                     { return m_recoveryPointSEIEnabled; }
-#if J0149_TONE_MAPPING_SEI
   Void  setToneMappingInfoSEIEnabled(Bool b)                 {  m_toneMappingInfoSEIEnabled = b;  }
   Bool  getToneMappingInfoSEIEnabled()                       {  return m_toneMappingInfoSEIEnabled;  }
   Void  setTMISEIToneMapId(Int b)                            {  m_toneMapId = b;  }
@@ -769,7 +736,6 @@ public:
   Int   getTMISEINominalWhiteLevelLumaCodeValue()            {  return m_nominalWhiteLevelLumaCodeValue;  }
   Void  setTMISEIExtendedWhiteLevelLumaCodeValue(Int b)      {  m_extendedWhiteLevelLumaCodeValue =b;  }
   Int   getTMISEIExtendedWhiteLevelLumaCodeValue()           {  return m_extendedWhiteLevelLumaCodeValue;  }
-#endif
   Void  setFramePackingArrangementSEIEnabled(Int b)      { m_framePackingSEIEnabled = b; }
   Int   getFramePackingArrangementSEIEnabled()           { return m_framePackingSEIEnabled; }
   Void  setFramePackingArrangementSEIType(Int b)         { m_framePackingSEIType = b; }
@@ -788,14 +754,10 @@ public:
   Int   getGradualDecodingRefreshInfoEnabled()           { return m_gradualDecodingRefreshInfoEnabled; }
   Void  setDecodingUnitInfoSEIEnabled(Int b)                { m_decodingUnitInfoSEIEnabled = b;    }
   Int   getDecodingUnitInfoSEIEnabled()                     { return m_decodingUnitInfoSEIEnabled; }
-#if L0208_SOP_DESCRIPTION_SEI
   Void  setSOPDescriptionSEIEnabled(Int b)                { m_SOPDescriptionSEIEnabled = b; }
   Int   getSOPDescriptionSEIEnabled()                     { return m_SOPDescriptionSEIEnabled; }
-#endif
-#if K0180_SCALABLE_NESTING_SEI
   Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
   Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
-#endif
   Void      setUseWP               ( Bool b )    { m_useWeightedPred   = b;    }
   Void      setWPBiPred            ( Bool b )    { m_useWeightedBiPred = b;    }
   Bool      getUseWP               ()            { return m_useWeightedPred;   }
@@ -817,8 +779,13 @@ public:
   Void      setUseRateCtrl         ( Bool b )      { m_RCEnableRateControl = b;      }
   Int       getTargetBitrate       ()              { return m_RCTargetBitrate;       }
   Void      setTargetBitrate       ( Int bitrate ) { m_RCTargetBitrate  = bitrate;   }
+#if M0036_RC_IMPROVEMENT
+  Int       getKeepHierBit         ()              { return m_RCKeepHierarchicalBit; }
+  Void      setKeepHierBit         ( Int i )       { m_RCKeepHierarchicalBit = i;    }
+#else
   Bool      getKeepHierBit         ()              { return m_RCKeepHierarchicalBit; }
   Void      setKeepHierBit         ( Bool b )      { m_RCKeepHierarchicalBit = b;    }
+#endif
   Bool      getLCULevelRC          ()              { return m_RCLCULevelRC; }
   Void      setLCULevelRC          ( Bool b )      { m_RCLCULevelRC = b; }
   Bool      getUseLCUSeparateModel ()              { return m_RCUseLCUSeparateModel; }
@@ -915,7 +882,6 @@ public:
   Int       getLog2MaxMvLengthVertical()                  { return m_log2MaxMvLengthVertical; }
   Void      setLog2MaxMvLengthVertical(Int i)             { m_log2MaxMvLengthVertical = i; }
   
-#if L0046_CONSTRAINT_FLAGS
   Bool getProgressiveSourceFlag() const { return m_progressiveSourceFlag; }
   Void setProgressiveSourceFlag(Bool b) { m_progressiveSourceFlag = b; }
   
@@ -927,7 +893,6 @@ public:
   
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
-#endif
 #if H_3D
   /// 3D Tools 
 

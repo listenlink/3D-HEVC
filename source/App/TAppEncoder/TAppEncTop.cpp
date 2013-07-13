@@ -193,12 +193,10 @@ Void TAppEncTop::xInitLibCfg()
 
   m_cTEncTop.setProfile(m_profile);
   m_cTEncTop.setLevel(m_levelTier, m_level);
-#if L0046_CONSTRAINT_FLAGS
   m_cTEncTop.setProgressiveSourceFlag(m_progressiveSourceFlag);
   m_cTEncTop.setInterlacedSourceFlag(m_interlacedSourceFlag);
   m_cTEncTop.setNonPackedConstraintFlag(m_nonPackedConstraintFlag);
   m_cTEncTop.setFrameOnlyConstraintFlag(m_frameOnlyConstraintFlag);
-#endif
   
   m_cTEncTop.setFrameRate                    ( m_iFrameRate );
   m_cTEncTop.setFrameSkip                    ( m_FrameSkip );
@@ -259,9 +257,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setLoopFilterBetaOffset         ( m_loopFilterBetaOffsetDiv2  );
   m_cTEncTop.setLoopFilterTcOffset           ( m_loopFilterTcOffsetDiv2    );
   m_cTEncTop.setDeblockingFilterControlPresent( m_DeblockingFilterControlPresent);
-#if L0386_DB_METRIC
   m_cTEncTop.setDeblockingFilterMetric       ( m_DeblockingFilterMetric );
-#endif
 
   //====== Motion search ========
   m_cTEncTop.setFastSearch                   ( m_iFastSearch  );
@@ -299,9 +295,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
   m_cTEncTop.setUseLossless                  ( m_useLossless );
-#if !L0034_COMBINED_LIST_CLEANUP
-  m_cTEncTop.setUseLComb                     ( m_bUseLComb    );
-#endif
 #if H_MV
   m_cTEncTop.setdQPs                         ( m_aidQP[layer]   );
 #else
@@ -309,9 +302,7 @@ Void TAppEncTop::xInitLibCfg()
 #endif
   m_cTEncTop.setUseRDOQ                      ( m_useRDOQ     );
   m_cTEncTop.setUseRDOQTS                    ( m_useRDOQTS   );
-#if L0232_RD_PENALTY
   m_cTEncTop.setRDpenalty                 ( m_rdPenalty );
-#endif
   m_cTEncTop.setQuadtreeTULog2MaxSize        ( m_uiQuadtreeTULog2MaxSize );
   m_cTEncTop.setQuadtreeTULog2MinSize        ( m_uiQuadtreeTULog2MinSize );
   m_cTEncTop.setQuadtreeTUMaxDepthInter      ( m_uiQuadtreeTUMaxDepthInter );
@@ -379,7 +370,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setRecoveryPointSEIEnabled( m_recoveryPointSEIEnabled );
   m_cTEncTop.setBufferingPeriodSEIEnabled( m_bufferingPeriodSEIEnabled );
   m_cTEncTop.setPictureTimingSEIEnabled( m_pictureTimingSEIEnabled );
-#if J0149_TONE_MAPPING_SEI
   m_cTEncTop.setToneMappingInfoSEIEnabled                 ( m_toneMappingInfoSEIEnabled );
   m_cTEncTop.setTMISEIToneMapId                           ( m_toneMapId );
   m_cTEncTop.setTMISEIToneMapCancelFlag                   ( m_toneMapCancelFlag );
@@ -405,7 +395,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTMISEINominalBlackLevelLumaCodeValue      ( m_nominalBlackLevelLumaCodeValue );
   m_cTEncTop.setTMISEINominalWhiteLevelLumaCodeValue      ( m_nominalWhiteLevelLumaCodeValue );
   m_cTEncTop.setTMISEIExtendedWhiteLevelLumaCodeValue     ( m_extendedWhiteLevelLumaCodeValue );
-#endif
   m_cTEncTop.setFramePackingArrangementSEIEnabled( m_framePackingSEIEnabled );
   m_cTEncTop.setFramePackingArrangementSEIType( m_framePackingSEIType );
   m_cTEncTop.setFramePackingArrangementSEIId( m_framePackingSEIId );
@@ -415,12 +404,8 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setTemporalLevel0IndexSEIEnabled( m_temporalLevel0IndexSEIEnabled );
   m_cTEncTop.setGradualDecodingRefreshInfoEnabled( m_gradualDecodingRefreshInfoEnabled );
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
-#if L0208_SOP_DESCRIPTION_SEI
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
-#endif
-#if K0180_SCALABLE_NESTING_SEI
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
-#endif
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
   m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );
@@ -489,32 +474,6 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setMaxBitsPerMinCuDenom( m_maxBitsPerMinCuDenom );
   m_cTEncTop.setLog2MaxMvLengthHorizontal( m_log2MaxMvLengthHorizontal );
   m_cTEncTop.setLog2MaxMvLengthVertical( m_log2MaxMvLengthVertical );
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
-  TComBitRatePicRateInfo *bitRatePicRateInfo = m_cTEncTop.getVPS()->getBitratePicrateInfo();
-  // The number of bit rate/pic rate have to equal to number of sub-layers.
-  if(m_bitRatePicRateMaxTLayers)
-  {
-    assert(m_bitRatePicRateMaxTLayers == m_cTEncTop.getVPS()->getMaxTLayers());
-  }
-  for(Int i = 0; i < m_bitRatePicRateMaxTLayers; i++)
-  {
-    bitRatePicRateInfo->setBitRateInfoPresentFlag( i, m_bitRateInfoPresentFlag[i] );
-    if( bitRatePicRateInfo->getBitRateInfoPresentFlag(i) )
-    {
-      bitRatePicRateInfo->setAvgBitRate(i, m_avgBitRate[i]);
-      bitRatePicRateInfo->setMaxBitRate(i, m_maxBitRate[i]);
-    }
-  }
-  for(Int i = 0; i < m_bitRatePicRateMaxTLayers; i++)
-  {
-    bitRatePicRateInfo->setPicRateInfoPresentFlag( i, m_picRateInfoPresentFlag[i] );
-    if( bitRatePicRateInfo->getPicRateInfoPresentFlag(i) )
-    {
-      bitRatePicRateInfo->setAvgPicRate     (i, m_avgPicRate[i]);
-      bitRatePicRateInfo->setConstantPicRateIdc(i, m_constantPicRateIdc[i]);
-    }
-  }
-#endif
 #if H_MV
   }
 #endif

@@ -569,7 +569,7 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Pel* piCur
 }
 #endif
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
 UInt TComRdCost::getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height )
 {
   UInt SAD = 0;
@@ -635,14 +635,12 @@ UInt TComRdCost::xGetSAD4( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD4ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -674,14 +672,12 @@ UInt TComRdCost::xGetSAD8( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD8ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg      = pcDtParam->pOrg;
   Pel* piCur      = pcDtParam->pCur;
   Int  iRows      = pcDtParam->iRows;
@@ -717,14 +713,12 @@ UInt TComRdCost::xGetSAD16( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD16ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -769,14 +763,12 @@ UInt TComRdCost::xGetSAD12( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD12ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -819,7 +811,6 @@ UInt TComRdCost::xGetSAD16N( DistParam* pcDtParam )
     return xGetSAD16Nic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -866,14 +857,12 @@ UInt TComRdCost::xGetSAD32( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD32ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -934,14 +923,12 @@ UInt TComRdCost::xGetSAD24( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD24ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -995,14 +982,12 @@ UInt TComRdCost::xGetSAD64( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD64ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -1095,14 +1080,12 @@ UInt TComRdCost::xGetSAD48( DistParam* pcDtParam )
   {
     return xGetSADw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetSAD48ic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -3419,14 +3402,12 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
   {
     return xGetHADsw( pcDtParam );
   }
-
 #if H_3D_IC
   if( pcDtParam->bUseIC )
   {
     return xGetHADsic( pcDtParam );
   }
 #endif
-
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;

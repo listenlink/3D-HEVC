@@ -371,6 +371,16 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
 #endif
     pcSbacDecoders[uiSubStrm].load(pcSbacDecoder);
 
+    if ( uiCol == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getRightEdgePosInCU()
+        && pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag()
+        && !uiIsLast )
+    {
+      // Parse end_of_substream_one_bit for WPP case
+      UInt binVal;
+      pcSbacDecoder->parseTerminatingBit( binVal );
+      assert( binVal );
+    }
+
     //Store probabilities of second LCU in line into buffer
     if ( (uiCol == uiTileLCUX+1)&& (depSliceSegmentsEnabled || (pcSlice->getPPS()->getNumSubstreams() > 1)) && (pcSlice->getPPS()->getEntropyCodingSyncEnabledFlag()) )
     {

@@ -75,17 +75,11 @@ TDecBinCABAC::start()
 Void
 TDecBinCABAC::finish()
 {
-}
+  UInt lastByte;
 
-Void 
-TDecBinCABAC::flush()
-{
-  while (m_pcTComBitstream->getNumBitsLeft() > 0 && m_pcTComBitstream->getNumBitsUntilByteAligned() != 0)
-  {
-    UInt uiBits;
-    m_pcTComBitstream->read ( 1, uiBits );
-  }
-  start();
+  m_pcTComBitstream->peekPreviousByte( lastByte );
+  // Check for proper stop/alignment pattern
+  assert( ((lastByte << (8 + m_bitsNeeded)) & 0xff) == 0x80 );
 }
 
 /**
@@ -239,30 +233,6 @@ TDecBinCABAC::decodeBinTrm( UInt& ruiBin )
       }
     }
   }
-}
-
-/** Reset BAC register values.
- * \returns Void
- */
-Void TDecBinCABAC::resetBac()
-{
-  m_uiRange    = 510;
-  m_bitsNeeded = -8;
-  m_uiValue    = m_pcTComBitstream->read( 16 );
-}
-
-/** Decode PCM alignment zero bits.
- * \returns Void
- */
-Void TDecBinCABAC::decodePCMAlignBits()
-{
-  Int iNum = m_pcTComBitstream->getNumBitsUntilByteAligned();
-  
-  UInt uiBit = 0;
-  m_pcTComBitstream->read( iNum, uiBit );
-#if H_MV_ENC_DEC_TRAC          
-  DTRACE_CU("Number of pcm_alignment_zero_bit", iNum)
-#endif
 }
 
 /** Read a PCM code.
