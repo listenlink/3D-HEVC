@@ -733,7 +733,17 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
           }
         }  
       }  
-    }  
+    }
+
+#if H_3D_QTLPC
+    if( depthFlag )
+    {
+      READ_FLAG( uiCode, "use_qtl_flag" );
+      pcSPS->setUseQTL( uiCode );
+      READ_FLAG( uiCode, "use_pc_flag" );
+      pcSPS->setUsePC( uiCode );
+    }
+#endif
 
     ////   sps_extension_vui_parameters( ) END
     READ_UVLC( uiCode, "sps_shvc_reserved_zero_idc" ); 

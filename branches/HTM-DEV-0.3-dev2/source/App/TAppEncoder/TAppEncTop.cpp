@@ -185,6 +185,10 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
+#if H_3D_QTLPC
+    m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL               : false );
+    m_cTEncTop.setUsePC                        ( isDepth ? m_bUsePC                : false );
+#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
