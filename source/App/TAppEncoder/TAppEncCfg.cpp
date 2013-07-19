@@ -702,6 +702,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 
 #endif //HHI_VSO
+#if H_3D_QTLPC
+  ("QTL",                             m_bUseQTL                 , true          , "Use depth Quadtree Limitation" )
+  ("PC",                              m_bUsePC                  , true          , "Use Predictive Coding with QTL" )
+#endif
 #if H_3D_IV_MERGE
   ("IvMvPred",                        m_ivMvPredFlag,           true            , "inter view motion prediction " )  
 #endif
@@ -2259,6 +2263,10 @@ Void TAppEncCfg::xPrintParameter()
 #if H_3D_VSO
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
+#endif
+#if H_3D_QTLPC
+  printf("QTL:%d ", m_bUseQTL);
+  printf("PC:%d " , m_bUsePC );
 #endif
 #if H_3D_IV_MERGE
   printf("IvMvPred:%d ", m_ivMvPredFlag );

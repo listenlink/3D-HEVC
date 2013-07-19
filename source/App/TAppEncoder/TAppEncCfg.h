@@ -427,6 +427,10 @@ protected:
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif
+#if H_3D_QTLPC
+  Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
+  Bool      m_bUsePC;                                         ///< flag for using Predictive Coding with QTL
+#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables

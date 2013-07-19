@@ -1879,6 +1879,10 @@ TComSPS::TComSPS()
 #if H_3D
 , m_bCamParInSliceHeader      (false)
 #endif
+#if H_3D_QTLPC
+, m_bUseQTL                   (false)
+, m_bUsePC                    (false)
+#endif
 {
   for ( Int i = 0; i < MAX_TLAYER; i++ )
   {
