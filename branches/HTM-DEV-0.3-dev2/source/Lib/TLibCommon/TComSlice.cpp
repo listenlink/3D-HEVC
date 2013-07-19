@@ -1854,6 +1854,10 @@ TComSPS::TComSPS()
 , m_usePCM                   (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
+#if H_3D_QTLPC
+, m_bUseQTL                   (false)
+, m_bUsePC                    (false)
+#endif
 , m_bitDepthY                 (  8)
 , m_bitDepthC                 (  8)
 , m_qpBDOffsetY               (  0)
@@ -1874,14 +1878,9 @@ TComSPS::TComSPS()
 #if H_MV
 , m_interViewMvVertConstraintFlag (false)
 , m_numIlpRestrictedRefLayers ( 0 )
-
 #endif
 #if H_3D
 , m_bCamParInSliceHeader      (false)
-#endif
-#if H_3D_QTLPC
-, m_bUseQTL                   (false)
-, m_bUsePC                    (false)
 #endif
 {
   for ( Int i = 0; i < MAX_TLAYER; i++ )
