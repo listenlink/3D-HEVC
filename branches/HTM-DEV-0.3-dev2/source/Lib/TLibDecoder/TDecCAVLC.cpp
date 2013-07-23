@@ -744,7 +744,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       pcSPS->setUsePC( uiCode );
     }
 #endif
-
     ////   sps_extension_vui_parameters( ) END
     READ_UVLC( uiCode, "sps_shvc_reserved_zero_idc" ); 
     READ_FLAG( uiCode, "sps_extension2_flag");

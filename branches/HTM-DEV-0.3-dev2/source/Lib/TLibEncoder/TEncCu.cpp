@@ -399,7 +399,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool bTry2NxN           = true;
   Bool bTryNx2N           = true;
 #endif
-
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 
@@ -493,7 +492,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       fRD_Skip    = MAX_DOUBLE;
 
       rpcTempCU->initEstData( uiDepth, iQP );
-
 #if H_3D_QTLPC
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
 

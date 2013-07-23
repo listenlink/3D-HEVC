@@ -1616,7 +1616,6 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
 #if H_3D_QTLPC
     rpcPic->setReduceBitsFlag(true);
 #endif
-
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
     if ( pcSlice->getSPS()->getUseSAO() && (pcSlice->getSaoEnabledFlag()||pcSlice->getSaoEnabledFlagChroma()) )
     {

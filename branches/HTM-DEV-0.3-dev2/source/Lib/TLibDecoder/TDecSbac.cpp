@@ -822,7 +822,6 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 
   UInt uiSymbol;
-
 #if H_3D_QTLPC
   Bool bParseSplitFlag    = true;
 

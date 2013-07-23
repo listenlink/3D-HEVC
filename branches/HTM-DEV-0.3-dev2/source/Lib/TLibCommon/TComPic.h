@@ -132,12 +132,10 @@ public:
   Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
 #endif
 #endif
-
 #if H_3D_QTLPC
   Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
   Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
 #endif
-
   Bool          getUsedByCurr()             { return m_bUsedByCurr; }
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
   Bool          getIsLongTerm()             { return m_bIsLongTerm; }
