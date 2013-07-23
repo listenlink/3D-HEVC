@@ -729,7 +729,6 @@ Void TEncSbac::codeMVPIdx ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRef
 Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
-
 #if H_3D_QTLPC
   TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
@@ -750,7 +749,6 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
   }
 #endif
-
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
     if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
@@ -1010,7 +1008,6 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   UInt uiCurrSplitFlag = ( pcCU->getDepth( uiAbsPartIdx ) > uiDepth ) ? 1 : 0;
   
   assert( uiCtx < 3 );
-
 #if H_3D_QTLPC
   Bool bCodeSplitFlag    = true;
 
@@ -1035,7 +1032,6 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
     return;
   }
 #endif
-
   m_pcBinIf->encodeBin( uiCurrSplitFlag, m_cCUSplitFlagSCModel.get( 0, 0, uiCtx ) );
 #if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ )

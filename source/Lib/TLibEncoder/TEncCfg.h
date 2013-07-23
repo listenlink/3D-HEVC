@@ -312,7 +312,7 @@ protected:
 #endif
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
-#if H_MV_FIX_VPS_POINTER
+#if H_MV
   TComVPS*  m_cVPS;                                           ///< pointer to VPS, same for all layers
 #else
   TComVPS                    m_cVPS;
@@ -400,12 +400,10 @@ protected:
   Bool      m_useSDC;
   Bool      m_useDLT;
 #endif
-
 #if H_3D_QTLPC
   Bool      m_bUseQTL;
   Bool      m_bUsePC;
 #endif
-
 #endif
 public:
   TEncCfg()
@@ -812,7 +810,7 @@ public:
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }
   Bool      getCUTransquantBypassFlagValue()          { return m_CUTransquantBypassFlagValue; }
   Void      setCUTransquantBypassFlagValue(Bool flag) { m_CUTransquantBypassFlagValue = flag; }
-#if H_MV_FIX_VPS_POINTER
+#if H_MV
   Void      setVPS           ( TComVPS *p ) { m_cVPS = p;    }
   TComVPS*  getVPS           ()             { return m_cVPS; }
 #else
@@ -951,14 +949,12 @@ public:
   Bool      getUseDLT                       ()        { return m_useDLT; }
   Void      setUseDLT                       ( Bool b) { m_useDLT = b;    }
 #endif
-
 #if H_3D_QTLPC
   Void      setUseQTL                       ( Bool b ) { m_bUseQTL = b;    }
   Bool      getUseQTL                       ()         { return m_bUseQTL; }
   Void      setUsePC                        ( Bool b ) { m_bUsePC  = b;    }
   Bool      getUsePC                        ()         { return m_bUsePC;  }
 #endif
-
 #endif // H_3D
 };
 

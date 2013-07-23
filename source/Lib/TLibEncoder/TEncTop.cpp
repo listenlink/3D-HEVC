@@ -289,7 +289,7 @@ Void TEncTop::init()
   xInitSPS();
   
   /* set the VPS profile information */
-#if H_MV_FIX_VPS_POINTER
+#if H_MV
   // This seems to be incorrect, but irrelevant for the MV-HEVC
   *(m_cVPS->getPTL()) = *m_cSPS.getPTL();
   m_cVPS->getTimingInfo()->setTimingInfoPresentFlag       ( false );
@@ -667,11 +667,7 @@ Void TEncTop::xInitSPS()
 Void TEncTop::xInitPPS()
 {
 #if H_MV
-#if H_MV_FIX_VPS_POINTER
   if( getVPS()->getNumDirectRefLayers( getLayerIdInVps() ) > 0 )
-#else
-  if( m_cVPS.getNumDirectRefLayers( getLayerIdInVps() ) > 0 )
-#endif
   {
     m_cPPS.setListsModificationPresentFlag( true );
   }

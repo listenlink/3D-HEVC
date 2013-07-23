@@ -976,7 +976,6 @@ private:
   Bool        m_bUseQTL;
   Bool        m_bUsePC;
 #endif
-
   // Parameter
   Int         m_bitDepthY;
   Int         m_bitDepthC;
@@ -1174,14 +1173,12 @@ public:
   Void setMinHorizontalCtuOffsetPlus1 ( Int i, Int val )   { m_minHorizontalCtuOffsetPlus1 [ i ] = val;}
   Int  getMinHorizontalCtuOffsetPlus1 ( Int i )            { return m_minHorizontalCtuOffsetPlus1 [ i ];}
 #endif
-
 #if H_3D_QTLPC
   Void setUseQTL( Bool b ) { m_bUseQTL = b;    }
   Bool getUseQTL()         { return m_bUseQTL; }
   Void setUsePC ( Bool b ) { m_bUsePC  = b;    }
   Bool getUsePC ()         { return m_bUsePC;  }
 #endif
-
 #if H_3D
   Void initCamParaSPS      (  UInt uiViewIndex, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
   UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }

@@ -550,7 +550,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
       }  
     }  
   } 
-
 #if H_3D_QTLPC
   if( depthFlag )
   {
@@ -558,7 +557,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( pcSPS->getUsePC()  ? 1 : 0, "use_pc_flag");
   }
 #endif
-
   ////   sps_extension_vui_parameters( ) END
   WRITE_UVLC( 0, "sps_shvc_reserved_zero_idc" ); 
 #if !H_3D
