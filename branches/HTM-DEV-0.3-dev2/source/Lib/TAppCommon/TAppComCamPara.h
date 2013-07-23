@@ -88,13 +88,6 @@ private:
   Int**               m_aaiCodedOffset;                       ///< array of coded offset  parameters [RefView][TargetView]
   Int**               m_aaiScaleAndOffsetSet;                 ///< array indicating whether scale and offset have been set
 
-#if H_3D_PDM_CAM_PARAS
-  // parameters for virtual depth map generation
-  Int                 m_iPdmPrecision;                        ///< additional precision for disparity - virtual depth conversion
-  Int**               m_aaiPdmScaleNomDelta;                  ///< [TargetView][RefView] delta for nominator of scale factor
-  Int**               m_aaiPdmOffset;                         ///< [TargetView][RefView] offset parameter
-#endif
-
   // scale and offset parameters
   Double***           m_adBaseViewShiftParameter;             ///< ShiftParameters between BaseViews e.g. [2][1][0] shift scale from view 2 to view 1; [2][1][1] shift offset from view 2 to view 1
   Int64 ***           m_aiBaseViewShiftParameter;             ///< ShiftParameters between BaseViews e.g. [2][1][0] shift scale from view 2 to view 1; [2][1][1] shift offset from view 2 to view 1     /* do we need 64 bit? */
@@ -216,13 +209,6 @@ public:
   std::vector<Int>&   getViewOrderIndex         ()  { return m_aiViewOrderIndex;        }
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
-
-#if H_3D_PDM_CAM_PARAS
-  // parameters for virtual depth map generation
-  Int                 getPdmPrecision           ()  { return m_iPdmPrecision;           }
-  Int**               getPdmScaleNomDelta       ()  { return m_aaiPdmScaleNomDelta;     }
-  Int**               getPdmOffset              ()  { return m_aaiPdmOffset;            }
-#endif
 };
 
 

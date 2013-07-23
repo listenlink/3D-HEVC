@@ -122,7 +122,7 @@ protected:
   Void xSetProfileTierLevel       ( TComVPS& vps );
   Int  xGetMax( std::vector<Int>& vec);
 #endif
-#if H_3D_GEN
+#if H_3D
   Void xSetVPSExtension2( TComVPS& vps );
 #endif
 #if H_3D_DIM_DLT

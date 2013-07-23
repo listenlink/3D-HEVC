@@ -122,9 +122,7 @@ Void TAppEncTop::xInitLibCfg()
   xSetLayerSets            ( vps ); 
 #if H_3D
   vps.initViewIndex(); 
-#if H_3D_GEN
   xSetVPSExtension2        ( vps ); 
-#endif
   m_ivPicLists.setVPS      ( &vps ); 
 #endif
 
@@ -1193,7 +1191,7 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
   }
 }
 #endif
-#if H_3D_GEN
+#if H_3D
 Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 {
   for ( Int layer = 0; layer < vps.getMaxLayers(); layer++ )

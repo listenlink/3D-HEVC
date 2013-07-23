@@ -800,7 +800,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 
     WRITE_FLAG ( 0,                    "vps_shvc_reserved_zero_flag" ); 
 
-#if H_3D_GEN  
+#if H_3D
   WRITE_FLAG( 1,                                             "vps_extension2_flag" );
   m_pcBitIf->writeAlignOne();      
   for( Int i = 0; i <= pcVPS->getMaxLayers() - 1; i++ )

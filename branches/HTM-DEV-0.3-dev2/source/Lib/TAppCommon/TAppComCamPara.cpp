@@ -964,9 +964,6 @@ TAppComCamPara::xSetPdmConversionParams()
 
   //--- determine (virtual) camera parameter shift between view order index 1 and base view (view order index 0) ---
   Double        dCamPosShift, dPicPosShift;
-#if H_3D_PDM_CAM_PARAS
-  Int           iMinVOI       = (1<<30);
-#endif
   Int           iMinAbsVOI    = (1<<30);
   Int           iMinAbsVOIId  = 0;
   for( Int iBaseId = 1; iBaseId < m_iNumberOfBaseViews; iBaseId++ )
@@ -974,18 +971,12 @@ TAppComCamPara::xSetPdmConversionParams()
     Int iAbsVOI = ( m_aiViewOrderIndex[ iBaseId ] < 0 ? -m_aiViewOrderIndex[ iBaseId ] : m_aiViewOrderIndex[ iBaseId ] );
     if( iAbsVOI < iMinAbsVOI )
     {
-#if H_3D_PDM_CAM_PARAS
-      iMinVOI      = m_aiViewOrderIndex[ iBaseId ];
-#endif
       iMinAbsVOI   = iAbsVOI;
       iMinAbsVOIId = iBaseId;
     }
   }
   AOF( iMinAbsVOIId != 0 && iMinAbsVOI != 0 );
   xGetCameraShifts( 0, iMinAbsVOIId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
-#if H_3D_PDM_CAM_PARAS
-  Double  dCamPosShiftVOI01     = dCamPosShift / Double( iMinVOI );
-#endif
 
   //--- determine maximum absolute camera position shift, precision, and base scale ---
   Double  dMaxAbsCamPosShift = 0.0;
@@ -998,43 +989,6 @@ TAppComCamPara::xSetPdmConversionParams()
       dMaxAbsCamPosShift  = ( dCamPosShift > dMaxAbsCamPosShift ?  dCamPosShift : dMaxAbsCamPosShift );
     }
   }
-
-#if H_3D_PDM_CAM_PARAS
-  Int     iPrecision  = 0;
-#if 0 // enabling this lines might be reasonable, but produces different results for the 2 view and 3 view test cases
-  Double  dEpsilon    = 1e-15;
-  Double  dAbsCamPosShiftVOI01  = ( dCamPosShiftVOI01 < 0.0 ? -dCamPosShiftVOI01 : dCamPosShiftVOI01 );
-  Double  dShiftRatio = dMaxAbsCamPosShift / dAbsCamPosShiftVOI01 - dEpsilon;
-  for( ; (Double)( 1 << iPrecision ) < dShiftRatio; iPrecision++ );
-#endif
-  Int     iPrecShift  = iPrecision + PDM_INTER_CALC_SHIFT + PDM_VIRT_DEPTH_PRECISION - 2;
-  AOF(    iPrecShift  < PDM_INTERNAL_CALC_BIT_DEPTH );
-  Int     iScaleVOI01 = 1 << iPrecShift;
-  m_iPdmPrecision     = iPrecision;
-
-  //--- loop over target views ---
-  for( Int iTargetId = 1; iTargetId < m_iNumberOfBaseViews; iTargetId++ )
-  {
-    // set scale and offset parameters for other views
-    for( Int iBaseId = 0; iBaseId < iTargetId; iBaseId++ )
-    {
-      xGetCameraShifts( (UInt)iBaseId, (UInt)iTargetId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
-      Double  dScale      = Double( iScaleVOI01 ) * dCamPosShiftVOI01 / dCamPosShift;
-      Int     iDiv        = m_aiViewOrderIndex[ iTargetId ] - m_aiViewOrderIndex[ iBaseId ];
-      Int     iAdd        = ( iDiv > 0 ? iDiv / 2 : -iDiv / 2 );
-      Int     iScalePred  = ( iScaleVOI01 + iAdd ) / iDiv;
-      Double  dFactor     = dScale / (Double)iScalePred * pow( 2.0, PDM_LOG4_SCALE_DENOMINATOR );
-      Int     iNominator  = (Int)floor( dFactor + .5 );
-      Int     iNomDelta   = iNominator - ( 1 << PDM_LOG4_SCALE_DENOMINATOR );
-      Int     iScale      = Int( ( (Int64)iNominator * (Int64)iScalePred + (Int64)( ( 1 << PDM_LOG4_SCALE_DENOMINATOR ) >> 1 ) ) >> PDM_LOG4_SCALE_DENOMINATOR );
-      Double  dOffset     = -dPicPosShift * Double( iScale ) * pow( 2.0, 2 - PDM_OFFSET_SHIFT );
-      Int     iOffset     = (Int)floor( dOffset + .5 );
-
-      m_aaiPdmScaleNomDelta [ iTargetId ][ iBaseId ]  = iNomDelta;
-      m_aaiPdmOffset        [ iTargetId ][ iBaseId ]  = iOffset;
-    }
-  }
-#endif
 }
 
 
@@ -1057,12 +1011,6 @@ TAppComCamPara::TAppComCamPara()
   m_aaiCodedScale             = 0;
   m_aaiCodedOffset            = 0;
   m_aaiScaleAndOffsetSet      = 0;
-
-#if H_3D_PDM_CAM_PARAS
-  m_iPdmPrecision             = 0;
-  m_aaiPdmScaleNomDelta       = 0;
-  m_aaiPdmOffset              = 0;
-#endif
 
   m_adBaseViewShiftParameter  = 0;
   m_aiBaseViewShiftParameter  = 0;
@@ -1097,10 +1045,6 @@ TAppComCamPara::~TAppComCamPara()
   xDeleteArray( m_aaiCodedOffset,            m_iNumberOfBaseViews );
   xDeleteArray( m_aaiScaleAndOffsetSet,      m_iNumberOfBaseViews );
 
-#if H_3D_PDM_CAM_PARAS
-  xDeleteArray( m_aaiPdmScaleNomDelta,       m_iNumberOfBaseViews );
-  xDeleteArray( m_aaiPdmOffset,              m_iNumberOfBaseViews );
-#endif
 }
 
 Void
@@ -1342,14 +1286,6 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
   xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiCodedOffset          );
   xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet    );
   xInit2dArray  ( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet, 0 );
-
-#if H_3D_PDM_CAM_PARAS
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmScaleNomDelta     );
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmOffset            );
-
-  //===== init disparity to virtual depth conversion parameters =====
-  xSetPdmConversionParams();
-#endif
 
   //===== init arrays for first frame =====
   xSetShiftParametersAndLUT( m_uiFirstFrameId );

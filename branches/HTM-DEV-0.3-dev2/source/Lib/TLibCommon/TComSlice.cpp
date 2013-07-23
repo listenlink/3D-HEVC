@@ -117,7 +117,7 @@ TComSlice::TComSlice()
 , m_bApplyIC                      ( false )
 , m_icSkipParseFlag               ( false )
 #endif
-#if H_3D_GEN
+#if H_3D
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
 #endif
@@ -157,7 +157,7 @@ TComSlice::~TComSlice()
 {
   delete[] m_puiSubstreamSizes;
   m_puiSubstreamSizes = NULL;
-#if H_3D_GEN    
+#if H_3D
   for( UInt i = 0; i < getViewIndex(); i++ )
   {
     if ( m_depthToDisparityB && m_depthToDisparityB[ i ] )
@@ -1528,7 +1528,7 @@ TComVPS::TComVPS()
     m_uiARPStepNum[i]     = 1;
 #endif
   }
-#if H_3D_GEN
+#if H_3D
   for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
   {
 #if H_3D_IV_MERGE
@@ -2635,7 +2635,7 @@ Void TComSlice::xSetApplyIC()
   aiRefOrgHist = NULL;
 }
 #endif
-#if H_3D_GEN
+#if H_3D
 Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
 {
   for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
