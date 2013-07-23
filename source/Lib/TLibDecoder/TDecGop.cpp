@@ -158,7 +158,7 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
     rpcPic->setNumDdvCandPics(rpcPic->getDisCandRefPictures(iColPoc));
   }
 #endif
-#if H_3D_GEN
+#if H_3D
   pcSlice->setDepthToDisparityLUTs(); 
 #endif
   m_pcSbacDecoders[0].load(m_pcSbacDecoder);

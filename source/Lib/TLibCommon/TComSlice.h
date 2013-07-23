@@ -1567,7 +1567,7 @@ private:
   Bool      m_bApplyIC;
   Bool      m_icSkipParseFlag;
 #endif
-#if H_3D_GEN
+#if H_3D
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
   Int**      m_depthToDisparityB; 
   Int**      m_depthToDisparityF; 
@@ -1629,7 +1629,7 @@ public:
   TComPic*  getPic              ()                              { return  m_pcPic;                      }
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
-#if H_3D_GEN
+#if H_3D
   TComPic*  getIvPic            ( Bool depthFlag, Int viewIndex){ return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ]; }
 #endif
 #if H_3D_IV_MERGE
@@ -1848,7 +1848,7 @@ public:
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
 #endif
 #endif
-#if H_3D_GEN
+#if H_3D
   Void    setIvPicLists( TComPicLists* m_ivPicLists );
   Void    setDepthToDisparityLUTs();
 

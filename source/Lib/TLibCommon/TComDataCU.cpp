@@ -3094,20 +3094,8 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         clipMv(cMvPred);
 #endif
         //pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
-#if H_3D_CLEANUPS //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
+#if H_3D //Notes from QC: for BVSP coded blocks, the reference index shall not be equal to -1 due to the adoption of JCT3V-D0191
         pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,pcMvFieldNeighbours[iCount<<1].getRefIdx());
-#else
-        if (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0)
-        {
-          for (Int i=0; i<getSlice()->getNumRefIdx(REF_PIC_LIST_0); i++)
-          {
-            if (getSlice()->getRefPOC(REF_PIC_LIST_0, i) == getSlice()->getPOC())
-            {
-              pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,i);
-              break;
-            }
-          }
-        }
 #endif
       }
       
@@ -3123,29 +3111,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
           cMvPred>>=2;
           clipMv(cMvPred);
 #endif
-          //pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
-#if H_3D_CLEANUPS
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
-#else
-          if (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0)
-          {
-            for (Int i=0; i<getSlice()->getNumRefIdx(REF_PIC_LIST_1); i++)
-            {
-              if (getSlice()->getRefPOC(REF_PIC_LIST_1, i) == getSlice()->getPOC())
-              {
-                pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,i);
-                break;
-              }
-            }
-          }
-#endif
         }
       }
-#if !H_3D_CLEANUPS
-      if (!((pcMvFieldNeighbours[iCount<<1].getRefIdx()<0 && !getSlice()->isInterB())
-        || (pcMvFieldNeighbours[iCount<<1].getRefIdx()<0 && pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()<0 && getSlice()->isInterB())))
-      {
-#endif
 #if H_3D_NBDV
       pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
       pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
@@ -3155,13 +3123,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         return;
       }
       iCount ++;
-#if !H_3D_CLEANUPS
-      }
-      else
-      {
-        assert(0);
-      }
-#endif
     }
   }
 
@@ -3173,11 +3134,8 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }  
     
   Int iPdmInterDir;
-#if H_3D_CLEANUPS
+
   if( iPdmDir[0] )
-#else
-  if( iPdmDir[0] && ivMvPredFlag )
-#endif
   {
     abCandIsInter        [ iCount ] = true;
     puhInterDirNeighbours[ iCount ] = iPdmDir[0];
@@ -3198,34 +3156,13 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     }
     iCount ++;
   } 
-#if H_3D_CLEANUPS
   // early termination
   if (iCount == getSlice()->getMaxNumMergeCand()) 
   {
     return;
   }
 #endif
-#endif
 
-#if !H_3D_IV_MERGE
-#if H_3D_NBDV //Notes from QC: DvMCP related variables.  
-  //acPdmMv[0].m_bDvMcp = acPdmMv[1].m_bDvMcp = acPdmMv[2].m_bDvMcp = acPdmMv[3].m_bDvMcp = false; 
-#endif
-
-#if H_3D_NBDV //Notes from QC: Some examples to show how to use the NBDV and DoNBDV variables. Remove this comment once it is done 
-  DisInfo cDisInfo;
-  cDisInfo.bDV = false; 
-  //if(!bNoPdmMerge) 
-  //{
-    //cDisInfo.bDV = getDvInfo(uiAbsPartIdx).bDV;
-    //cDisInfo.m_aVIdxCan = getDvInfo(uiAbsPartIdx).m_aVIdxCan;
-    //cDisInfo.m_acNBDV = getDvInfo(uiAbsPartIdx).m_acNBDV;
-//#if H_3D_NBDV_REF
-    //cDisInfo.m_acDoNBDV = getDvInfo(uiAbsPartIdx).m_acDoNBDV;
-//#endif
-  //}
-#endif
-#endif
   //left
   UInt uiLeftPartIdx = 0;
   TComDataCU* pcCULeft = 0;
@@ -3401,11 +3338,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }
 
 #if H_3D_IV_MERGE 
-#if H_3D_CLEANUPS
   if( iPdmDir[1] )
-#else
-  if(ivMvPredFlag && iPdmDir[1] )
-#endif
   {
     assert(iCount < getSlice()->getMaxNumMergeCand());
     abCandIsInter        [ iCount ] = true;
@@ -5086,26 +5019,16 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           TComMv cDispVec = cIDVInfo.m_acMvCand[iList][ curPos ];
           clipMv( cDispVec );
           pDInfo->m_acNBDV = cDispVec;
-#if H_3D_CLEANUPS
           pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
           assert(pDInfo->m_aVIdxCan == 0); //Notes from QC: only works for CTC
-#else
-          pDInfo->m_aVIdxCan = 0;
-#endif
 #if H_3D_NBDV_REF
-#if H_3D_CLEANUPS
           TComPic* picDepth = getSlice()->getIvPic( true, pDInfo->m_aVIdxCan );
-#else
-          TComPic* picDepth = getSlice()->getIvPic( true, 0 );
-#endif
           assert(picDepth!=NULL);
 
           if (picDepth && bDepthRefine)
-#if H_3D_CLEANUPS
+          {
             estimateDVFromDM (pDInfo->m_aVIdxCan, uiPartIdx, picDepth, uiPartAddr, &cDispVec);
-#else
-            estimateDVFromDM(0, uiPartIdx, picDepth, uiPartAddr, &cDispVec ); // from base view
-#endif
+          }
           pDInfo->m_acDoNBDV = cDispVec;
 #endif
           return true;
@@ -5337,37 +5260,7 @@ Bool
 TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc )
 {
   TComSlice*    pcSlice         = getSlice ();  
-#if H_3D_CLEANUPS //Notes from QC: to be aligned with the spec. 
   Int iViewIndex = pDInfo->m_aVIdxCan;
-#else
-  Bool valid     = false;
-
-  Int iViewIndex = 0;
-
-  for( UInt uiBIndex = 0; uiBIndex < pcSlice->getViewIndex( ) && !valid; uiBIndex++ )
-  {
-    UInt        uiBaseIndex = uiBIndex;    
-    TComPic*    pcBasePic   = pcSlice->getIvPic( false, uiBaseIndex );
-    for( Int iRefListId = 0; iRefListId < 2 && !valid; iRefListId++ )
-    {
-      RefPicList  eRefPicListTest = RefPicList( iRefListId );
-      Int         iNumRefPics = pcSlice->getNumRefIdx( eRefPicListTest ) ;
-      for( Int iRefIndex = 0; iRefIndex < iNumRefPics; iRefIndex++ )
-      { 
-        if(pcBasePic->getPOC() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getPOC() 
-          && pcBasePic->getViewIndex() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getViewIndex())
-        {
-          valid = true;
-          iViewIndex = uiBaseIndex;
-          break;
-        }
-      }
-    }
-  }
-
-  if (!valid)
-    return false;
-#endif
   //--- get base CU/PU and check prediction mode ---
   TComPic*    pcBasePic   = pcSlice->getIvPic( false, iViewIndex );
   TComPicYuv* pcBaseRec   = pcBasePic->getPicYuvRec   ();

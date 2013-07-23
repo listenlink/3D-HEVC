@@ -88,9 +88,6 @@ private:
   Int**   m_aaiCodedOffset;
   Int**   m_aaiCodedScale;
   Int*    m_aiViewId;  
-#if !H_3D_FIX  
-  Int*    m_aiLayerIdx;
-#endif
 
   Bool*   m_bViewReceived;
   UInt    m_uiCamParsCodedPrecision;

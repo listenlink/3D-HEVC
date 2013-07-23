@@ -54,7 +54,7 @@
 */
 
 #ifndef HEVC_EXT
-#define HEVC_EXT                    2
+#define HEVC_EXT                    1
 #endif
 
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
@@ -75,7 +75,6 @@
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160     // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
 
-#define H_3D_PDM_CAM_PARAS                0 ///< PDM related parts of camera parameters, should be removed if not used anymore.
 #define H_3D_VSO                          1   // VSO, View synthesis optimization, includes: 
                                               // HHI_VSO
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
@@ -109,16 +108,6 @@
                                               // QC_D0191: Clean up
                                               // LG_D0092: Multiple VSP candidate allowed
 
-#if H_3D_VSP
-#define H_3D_VSP_POSITION                 3   // The only supported position
-#define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
-#if H_3D_VSP_BLOCKSIZE == 1
-#define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
-#else
-#define H_3D_VSP_CONSTRAINED              0
-#endif
-#endif
-
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
                                               // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
@@ -129,10 +118,7 @@
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
-#define H_3D_GEN                          1   // Some general changes can be removed after merge 
-#define H_3D_CLEANUPS                     1   // Temporary for minor fixes can be removed after merge 
-#define H_3D_FIX                          1   // Temporary for minor fixes can be removed after merge 
-#define H_3D_VSO_FIX_BORDRE_EXTENSION     1   // Temporary for minor fixes can be removed after merge 
+
 #define H_3D_DIM                          1   // DIM, Depth intra modes, includes:
                                               // HHI_DMM_WEDGE_INTRA
                                               // HHI_DMM_PRED_TEX
@@ -155,6 +141,7 @@
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 
+
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
 #define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
@@ -168,21 +155,12 @@
 #endif
 ////   ****** Neighbouring block-based Disparity Vector  *********
 #if H_3D_NBDV
-#if H_3D_CLEANUPS
 #define DVFROM_LEFTBELOW                  0
 #define DVFROM_LEFT                       1
 #define DVFROM_ABOVERIGHT                 2
 #define DVFROM_ABOVE                      3
 #define DVFROM_ABOVELEFT                  4
 #define IDV_CANDS                         5
-#else
-#define IDV_CANDS                         6
-#define DVFROM_LEFTBELOW                  1
-#define DVFROM_LEFT                       2
-#define DVFROM_ABOVERIGHT                 3
-#define DVFROM_ABOVE                      4
-#define DVFROM_ABOVELEFT                  5
-#endif
 #endif
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
@@ -197,6 +175,17 @@
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#endif
+
+///// ***** VIEW SYNTHESIS PREDICTION *********
+#if H_3D_VSP
+#define H_3D_VSP_POSITION                 3   // The only supported position
+#define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
+#if H_3D_VSP_BLOCKSIZE == 1
+#define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
+#else
+#define H_3D_VSP_CONSTRAINED              0
+#endif
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
