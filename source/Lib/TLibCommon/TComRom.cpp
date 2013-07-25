@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -61,128 +61,44 @@ Void initROM()
   }
   g_aucConvertToBit[ i ] = c;
   
-  // g_auiFrameScanXY[ g_aucConvertToBit[ transformSize ] ]: zigzag scan array for transformSize
   c=2;
   for ( i=0; i<MAX_CU_DEPTH; i++ )
   {
-    g_auiFrameScanXY[ i ] = new UInt[ c*c ];
-    g_auiFrameScanX [ i ] = new UInt[ c*c ];
-    g_auiFrameScanY [ i ] = new UInt[ c*c ];
-    initFrameScanXY( g_auiFrameScanXY[i], g_auiFrameScanX[i], g_auiFrameScanY[i], c, c );
     g_auiSigLastScan[0][i] = new UInt[ c*c ];
     g_auiSigLastScan[1][i] = new UInt[ c*c ];
     g_auiSigLastScan[2][i] = new UInt[ c*c ];
-    g_auiSigLastScan[3][i] = new UInt[ c*c ];
-    initSigLastScan( g_auiSigLastScan[0][i], g_auiSigLastScan[1][i], g_auiSigLastScan[2][i], g_auiSigLastScan[3][i], c, c, i);
+    initSigLastScan( g_auiSigLastScan[0][i], g_auiSigLastScan[1][i], g_auiSigLastScan[2][i], c, c);
 
     c <<= 1;
   }  
-
-  g_sigScanNSQT[0] = new UInt[ 64 ];  // 4x16
-  g_sigScanNSQT[1] = new UInt[ 256 ]; // 8x32
-  g_sigScanNSQT[2] = new UInt[ 64 ];  // 16x4
-  g_sigScanNSQT[3] = new UInt[ 256 ]; // 32x8
-  
-  static int diagScanX[ 16 ] =
-  {
-    0, 0, 1, 0, 1, 2, 0, 1, 2, 3, 1, 2, 3, 2, 3, 3
-  };
-  static int diagScanY[ 16 ] =
-  {
-    0, 1, 0, 2, 1, 0, 3, 2, 1, 0, 3, 2, 1, 3, 2, 3
-  };
-  
-  Int j;
-  // 4x16 scan
-  for (i = 0; i < 4; i++)
-  {
-    for (j = 0; j < 16; j++)
-    {
-      g_sigScanNSQT[ 0 ][ 16 * i + j ] = 16 * i + 4 * diagScanY[ j ] + diagScanX[ j ];
-    }
-  }
-  
-  // 8x32 scan
-  for (i = 0; i < 16; i++)
-  {
-    Int x = g_sigCGScanNSQT[ 1 ][ i ] & 1;
-    Int y = g_sigCGScanNSQT[ 1 ][ i ] >> 1;
-    
-    for (j = 0; j < 16; j++)
-    {
-      g_sigScanNSQT[ 1 ][ 16 * i + j ] = 32 * y + 4 * x + 8 * diagScanY[ j ] + diagScanX[ j ];
-    }
-  }
-  
-  // 16x4 scan
-  for (i = 0; i < 4; i++)
-  {
-    for (j = 0; j < 16; j++)
-    {
-      g_sigScanNSQT[ 2 ][ 16 * i + j ] = 4 * i + 16 * diagScanY[ j ] + diagScanX[ j ];
-    }
-  }
-  
-  // 32x8 scan
-  for (i = 0; i < 16; i++)
-  {
-    Int x = g_sigCGScanNSQT[ 3 ][ i ] & 7;
-    Int y = g_sigCGScanNSQT[ 3 ][ i ] >> 3;
-    
-    for (j = 0; j < 16; j++)
-    {
-      g_sigScanNSQT[ 3 ][ 16 * i + j ] = 128 * y + 4 * x + 32 * diagScanY[ j ] + diagScanX[ j ];
-    }
-  }
 }
 
 Void destroyROM()
 {
-  Int i;
-  
-  for ( i=0; i<MAX_CU_DEPTH; i++ )
+  for (Int i=0; i<MAX_CU_DEPTH; i++ )
   {
-    delete[] g_auiFrameScanXY[i];
-    delete[] g_auiFrameScanX [i];
-    delete[] g_auiFrameScanY [i];
     delete[] g_auiSigLastScan[0][i];
     delete[] g_auiSigLastScan[1][i];
     delete[] g_auiSigLastScan[2][i];
-    delete[] g_auiSigLastScan[3][i];
-  }
-  for (i = 0; i < 4; i++)
-  {
-    delete[] g_sigScanNSQT[ i ];    
   }
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  if ( !g_aacWedgeLists.empty() )
+#if H_3D_DIM_DMM
+  if( !g_dmmWedgeLists.empty() ) 
   {
-    for ( UInt ui = 0; ui < g_aacWedgeLists.size(); ui++ )
-    {
-      g_aacWedgeLists[ui].clear();
-    }
-    g_aacWedgeLists.clear();
+    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ ) { g_dmmWedgeLists[ui].clear(); }
+    g_dmmWedgeLists.clear();
+  }
+  if( !g_dmmWedgeRefLists.empty() )
+  {
+    for( UInt ui = 0; ui < g_dmmWedgeRefLists.size(); ui++ ) { g_dmmWedgeRefLists[ui].clear(); }
+    g_dmmWedgeRefLists.clear();
   }
 
-  if ( !g_aacWedgeRefLists.empty() )
+  if( !g_dmmWedgeNodeLists.empty() )
   {
-    for ( UInt ui = 0; ui < g_aacWedgeRefLists.size(); ui++ )
-    {
-      g_aacWedgeRefLists[ui].clear();
-    }
-    g_aacWedgeRefLists.clear();
+    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ ) { g_dmmWedgeNodeLists[ui].clear(); }
+    g_dmmWedgeNodeLists.clear();
   }
-
-  if ( !g_aacWedgeNodeLists.empty() )
-  {
-    for ( UInt ui = 0; ui < g_aacWedgeNodeLists.size(); ui++ )
-    {
-      g_aacWedgeNodeLists[ui].clear();
-    }
-    g_aacWedgeNodeLists.clear();
-  }
-
 #endif
 }
 
@@ -194,12 +110,10 @@ UInt g_uiMaxCUWidth  = MAX_CU_SIZE;
 UInt g_uiMaxCUHeight = MAX_CU_SIZE;
 UInt g_uiMaxCUDepth  = MAX_CU_DEPTH;
 UInt g_uiAddCUDepth  = 0;
-
 UInt g_auiZscanToRaster [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToZscan [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelX  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
 UInt g_auiRasterToPelY  [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, };
-UInt g_motionRefer   [ MAX_NUM_SPU_W*MAX_NUM_SPU_W ] = { 0, }; 
 
 UInt g_auiPUOffset[8] = { 0, 8, 4, 4, 2, 10, 1, 5};
 
@@ -236,44 +150,6 @@ Void initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   }
 }
 
-/** generate motion data compression mapping table
-* \param uiMaxCUWidth, width of LCU
-* \param uiMaxCUHeight, hight of LCU
-* \param uiMaxDepth, max depth of LCU
-* \returns Void
-*/
-Void initMotionReferIdx ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
-{
-  Int  minCUWidth  = (Int)uiMaxCUWidth  >> ( (Int)uiMaxDepth - 1 );
-  Int  minCUHeight = (Int)uiMaxCUHeight >> ( (Int)uiMaxDepth - 1 );
-
-  Int  numPartInWidth  = (Int)uiMaxCUWidth  / (Int)minCUWidth;
-  Int  numPartInHeight = (Int)uiMaxCUHeight / (Int)minCUHeight;
-
-  for ( Int i = 0; i < numPartInWidth*numPartInHeight; i++ )
-  {
-    g_motionRefer[i] = i;
-  }
-
-  Int compressionNum = 2;
-
-  for ( Int i = numPartInWidth*(numPartInHeight-1); i < numPartInWidth*numPartInHeight; i += compressionNum*2)
-  {
-    for ( Int j = 1; j < compressionNum; j++ )
-    {
-      g_motionRefer[g_auiRasterToZscan[i+j]] = g_auiRasterToZscan[i];
-    }
-  }
-
-  for ( Int i = numPartInWidth*(numPartInHeight-1)+compressionNum*2-1; i < numPartInWidth*numPartInHeight; i += compressionNum*2)
-  {
-    for ( Int j = 1; j < compressionNum; j++ )
-    {
-      g_motionRefer[g_auiRasterToZscan[i-j]] = g_auiRasterToZscan[i];
-    }
-  }
-}
-
 Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth )
 {
   UInt    i;
@@ -304,9 +180,6 @@ Void initRasterToPelXY ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth 
   }
 };
 
-#if RWTH_SDC_DLT_B0036
-UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES] = { DC_IDX, DMM_WEDGE_FULL_IDX, PLANAR_IDX };
-#endif
 
 Int g_quantScales[6] =
 {
@@ -318,7 +191,7 @@ Int g_invQuantScales[6] =
   40,45,51,57,64,72
 };
 
-const short g_aiT4[4][4] =
+const Short g_aiT4[4][4] =
 {
   { 64, 64, 64, 64},
   { 83, 36,-36,-83},
@@ -326,7 +199,7 @@ const short g_aiT4[4][4] =
   { 36,-83, 83,-36}
 };
 
-const short g_aiT8[8][8] =
+const Short g_aiT8[8][8] =
 {
   { 64, 64, 64, 64, 64, 64, 64, 64},
   { 89, 75, 50, 18,-18,-50,-75,-89},
@@ -338,7 +211,7 @@ const short g_aiT8[8][8] =
   { 18,-50, 75,-89, 89,-75, 50,-18}
 };
 
-const short g_aiT16[16][16] =
+const Short g_aiT16[16][16] =
 {
   { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64},
   { 90, 87, 80, 70, 57, 43, 25,  9, -9,-25,-43,-57,-70,-80,-87,-90},
@@ -358,7 +231,7 @@ const short g_aiT16[16][16] =
   {  9,-25, 43,-57, 70,-80, 87,-90, 90,-87, 80,-70, 57,-43, 25, -9}
 };
 
-const short g_aiT32[32][32] =
+const Short g_aiT32[32][32] =
 {
   { 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64},
   { 90, 90, 88, 85, 82, 78, 73, 67, 61, 54, 46, 38, 31, 22, 13,  4, -4,-13,-22,-31,-38,-46,-54,-61,-67,-73,-78,-82,-85,-88,-90,-90},
@@ -394,24 +267,23 @@ const short g_aiT32[32][32] =
   {  4,-13, 22,-31, 38,-46, 54,-61, 67,-73, 78,-82, 85,-88, 90,-90, 90,-90, 88,-85, 82,-78, 73,-67, 61,-54, 46,-38, 31,-22, 13, -4}
 };
 
-const UChar g_aucChromaScale[52]=
+const UChar g_aucChromaScale[58]=
 {
-  0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,
-  12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,
-  28,29,29,30,31,32,32,33,34,34,35,35,36,36,37,37,
-  37,38,38,38,39,39,39,39
+   0, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,
+  17,18,19,20,21,22,23,24,25,26,27,28,29,29,30,31,32,
+  33,33,34,34,35,35,36,36,37,37,38,39,40,41,42,43,44,
+  45,46,47,48,49,50,51
 };
 
 
 // Mode-Dependent DCT/DST 
-const short g_as_DST_MAT_4 [4][4]=
+const Short g_as_DST_MAT_4 [4][4]=
 {
   {29,   55,    74,   84},
   {74,   74,    0 ,  -74},
   {84,  -29,   -74,   55},
   {55,  -84,    74,  -29},
 };
-
 
 
 // ====================================================================================================================
@@ -451,63 +323,36 @@ const UChar g_aucConvertTxtTypeToIdx[4] = { 0, 1, 1, 2 };
 // Bit-depth
 // ====================================================================================================================
 
-UInt g_uiBitDepth     = 8;    // base bit-depth
-UInt g_uiBitIncrement = 0;    // increments
-UInt g_uiIBDI_MAX     = 255;  // max. value after  IBDI
-UInt g_uiBASE_MAX     = 255;  // max. value before IBDI
+Int  g_bitDepthY = 8;
+Int  g_bitDepthC = 8;
 
 UInt g_uiPCMBitDepthLuma     = 8;    // PCM bit-depth
 UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
 
 // ====================================================================================================================
-// Depth model modes
+// Depth coding modes
 // ====================================================================================================================
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-Int g_iDeltaDCsQuantOffset = 0;
-
-const WedgeResolution g_aeWedgeResolutionList[5] = 
+#if H_3D_DIM_DMM
+const WedgeResolution g_dmmWedgeResolution[6] = 
 {
-  HALF_PEL,    //  4x4
-  HALF_PEL,    //  8x8
-  FULL_PEL,    // 16x16
-  DOUBLE_PEL,  // 32x32
-  DOUBLE_PEL   // 64x64
+  HALF_PEL,    //   4x4
+  HALF_PEL,    //   8x8
+  FULL_PEL,    //  16x16
+  DOUBLE_PEL,  //  32x32
+  DOUBLE_PEL,  //  64x64
+  DOUBLE_PEL   // 128x128
 };
 
-const UChar g_aucWedgeFullBitsListIdx[7] =
-{
-  0,   //   2x2
-  7,   //   4x4    WedgeListSize[  HALF_PEL]   86
-  10,  //   8x8    WedgeListSize[  HALF_PEL]  782
-  11,  //  16x16   WedgeListSize[  FULL_PEL] 1394
-  11,  //  32x32   WedgeListSize[DOUBLE_PEL] 1503
-  13,  //  64x64   WedgeListSize[DOUBLE_PEL] 6079
-  0    // 128x128  
-};
+const UChar g_dmm1TabIdxBits[6] =
+{ //2x2   4x4   8x8 16x16 32x32 64x64
+     0,    7,   10,   11,   11,   13 };
+const UChar g_dmm3IntraTabIdxBits[6] =
+{ //2x2   4x4   8x8 16x16 32x32 64x64
+     0,    6,    9,    9,    9,    0 };
 
-#if LGE_DMM3_SIMP_C0044
-const UChar g_aucWedgeTexPredBitsListIdx[7] =
-{
-  0,   //   2x2
-  6,   //   4x4    
-  9,  //   8x8    
-  9,  //  16x16   
-  9,  //  32x32   
-  0,  //  64x64   
-  0    // 128x128  
-};
-#endif
-
-const UChar g_aucIntraSizeIdxToWedgeSize[7] =
-{
-  2,
-  4,
-  8,
-  16,
-  32,
-  64,
-  128
-};
+extern std::vector< std::vector<TComWedgelet> >   g_dmmWedgeLists;
+extern std::vector< std::vector<TComWedgeRef> >   g_dmmWedgeRefLists;
+extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
 #endif
 
 // ====================================================================================================================
@@ -520,47 +365,34 @@ Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 FILE*  g_hTrace = NULL;
 const Bool g_bEncDecTraceEnable  = true;
 const Bool g_bEncDecTraceDisable = false;
+Bool   g_HLSTraceEnable = true;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
+#if H_MV_ENC_DEC_TRAC
+Bool g_traceCU = true; 
+Bool g_tracePU = true; 
+Bool g_traceTU = true; 
+Bool g_disableHLSTrace = false; 
+UInt64 g_stopAtCounter   = 10803; 
+#endif
 #endif
 // ====================================================================================================================
 // Scanning order & context model mapping
 // ====================================================================================================================
 
 // scanning order table
-UInt* g_auiFrameScanXY[ MAX_CU_DEPTH  ];
-UInt* g_auiFrameScanX [ MAX_CU_DEPTH  ];
-UInt* g_auiFrameScanY [ MAX_CU_DEPTH  ];
-UInt* g_auiSigLastScan[4][ MAX_CU_DEPTH ];
-UInt *g_sigScanNSQT[ 4 ]; // scan for non-square partitions
-UInt g_sigCGScanNSQT[ 4 ][ 16 ] =
-{
-  { 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  { 0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 15 },
-  { 0, 1, 2, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-  { 0, 8, 1, 9, 2, 10, 3, 11, 4, 12, 5, 13, 6, 14, 7, 15 }
-};
+UInt* g_auiSigLastScan[ 3 ][ MAX_CU_DEPTH ];
 
-const UInt g_sigLastScan8x8[ 4 ][ 4 ] =
+const UInt g_sigLastScan8x8[ 3 ][ 4 ] =
 {
-  {0, 1, 2, 3},
-  {0, 1, 2, 3},
+  {0, 2, 1, 3},
   {0, 1, 2, 3},
   {0, 2, 1, 3}
 };
 UInt g_sigLastScanCG32x32[ 64 ];
 
-UInt* g_auiNonSquareSigLastScan[ 4 ];
-
 const UInt g_uiMinInGroup[ 10 ] = {0,1,2,3,4,6,8,12,16,24};
 const UInt g_uiGroupIdx[ 32 ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
-const UInt g_uiLastCtx[ 28 ]    = 
-{
-  0,   1,  2,  2,                         // 4x4    4
-  3,   4,  5,  5, 2,  2,                  // 8x8    6  
-  6,   7,  8,  8, 9,  9, 2, 2,            // 16x16  8
-  10, 11, 12, 12, 13, 13, 14, 14, 2, 2    // 32x32  10
-};
 
 // Rice parameters for absolute transform levels
 const UInt g_auiGoRiceRange[5] =
@@ -573,71 +405,7 @@ const UInt g_auiGoRicePrefixLen[5] =
   8, 7, 6, 5, 4
 };
 
-const UInt g_aauiGoRiceUpdate[5][24] =
-{
-  {
-    0, 0, 0, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4
-  },
-  {
-    1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4
-  },
-  {
-    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4
-  },
-  {
-    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4
-  },
-  {
-    4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4
-  }
-};
-
-// initialize g_auiFrameScanXY
-Void initFrameScanXY( UInt* pBuff, UInt* pBuffX, UInt* pBuffY, Int iWidth, Int iHeight )
-{
-  Int x, y, c = 0;
-  
-  // starting point
-  pBuffX[ c ] = 0;
-  pBuffY[ c ] = 0;
-  pBuff[ c++ ] = 0;
-  
-  // loop
-  x=1; y=0;
-  while (1)
-  {
-    // decrease loop
-    while ( x>=0 )
-    {
-      if ( x >= 0 && x < iWidth && y >= 0 && y < iHeight )
-      {
-        pBuffX[ c ] = x;
-        pBuffY[ c ] = y;
-        pBuff[ c++ ] = x+y*iWidth;
-      }
-      x--; y++;
-    }
-    x=0;
-    
-    // increase loop
-    while ( y>=0 )
-    {
-      if ( x >= 0 && x < iWidth && y >= 0 && y < iHeight )
-      {
-        pBuffX[ c ] = x;
-        pBuffY[ c ] = y;
-        pBuff[ c++ ] = x+y*iWidth;
-      }
-      x++; y--;
-    }
-    y=0;
-    
-    // termination condition
-    if ( c >= iWidth*iHeight ) break;
-  }  
-}
-
-Void initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, UInt* pBuffD, Int iWidth, Int iHeight, Int iDepth)
+Void initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight)
 {
   const UInt  uiNumScanPos  = UInt( iWidth * iWidth );
   UInt        uiNextScanPos = 0;
@@ -651,8 +419,8 @@ Void initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, UInt* pBuffD, Int
   }
   for( UInt uiScanLine = 0; uiNextScanPos < uiNumScanPos; uiScanLine++ )
   {
-    int    iPrimDim  = int( uiScanLine );
-    int    iScndDim  = 0;
+    Int    iPrimDim  = Int( uiScanLine );
+    Int    iScndDim  = 0;
     while( iPrimDim >= iWidth )
     {
       iScndDim++;
@@ -687,8 +455,8 @@ Void initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, UInt* pBuffD, Int
       UInt offsetScan = 16 * uiBlk;
       for( UInt uiScanLine = 0; uiNextScanPos < 16; uiScanLine++ )
       {
-        int    iPrimDim  = int( uiScanLine );
-        int    iScndDim  = 0;
+        Int    iPrimDim  = Int( uiScanLine );
+        Int    iScndDim  = 0;
         while( iPrimDim >= 4 )
         {
           iScndDim++;
@@ -705,9 +473,45 @@ Void initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, UInt* pBuffD, Int
     }
   }
   
-  memcpy(pBuffZ, g_auiFrameScanXY[iDepth], sizeof(UInt)*iWidth*iHeight);
-
   UInt uiCnt = 0;
+  if( iWidth > 2 )
+  {
+    UInt numBlkSide = iWidth >> 2;
+    for(Int blkY=0; blkY < numBlkSide; blkY++)
+    {
+      for(Int blkX=0; blkX < numBlkSide; blkX++)
+      {
+        UInt offset    = blkY * 4 * iWidth + blkX * 4;
+        for(Int y=0; y < 4; y++)
+        {
+          for(Int x=0; x < 4; x++)
+          {
+            pBuffH[uiCnt] = y*iWidth + x + offset;
+            uiCnt ++;
+          }
+        }
+      }
+    }
+
+    uiCnt = 0;
+    for(Int blkX=0; blkX < numBlkSide; blkX++)
+    {
+      for(Int blkY=0; blkY < numBlkSide; blkY++)
+      {
+        UInt offset    = blkY * 4 * iWidth + blkX * 4;
+        for(Int x=0; x < 4; x++)
+        {
+          for(Int y=0; y < 4; y++)
+          {
+            pBuffV[uiCnt] = y*iWidth + x + offset;
+            uiCnt ++;
+          }
+        }
+      }
+    }
+  }
+  else
+  {
   for(Int iY=0; iY < iHeight; iY++)
   {
     for(Int iX=0; iX < iWidth; iX++)
@@ -726,100 +530,15 @@ Void initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, UInt* pBuffD, Int
       uiCnt ++;
     }
   }    
-}
-
-Void initNonSquareSigLastScan(UInt* pBuffZ, UInt uiWidth, UInt uiHeight)
-{
-
-  Int x, y, c = 0;
-
-  // starting point
-  pBuffZ[ c++ ] = 0;
-
-  // loop
-  if ( uiWidth > uiHeight )
-  {
-    x=0; y=1;
-    while (1)
-    {
-      // increase loop
-      while ( y>=0 )
-      {
-        if ( x >= 0 && x < uiWidth && y >= 0 && y < uiHeight )
-        {
-          pBuffZ[ c++ ] = x + y * uiWidth;
-        }
-        x++;
-        y--;
-      }
-      y=0;
-
-      // decrease loop
-      while ( x>=0 )
-      {
-        if ( x >= 0 && x < uiWidth && y >= 0 && y < uiHeight )
-        {
-          pBuffZ[ c++ ] = x + y * uiWidth;
-        }
-        x--;
-        y++;
-      }
-      x=0;
-
-      // termination condition
-      if ( c >= uiWidth * uiHeight ) 
-        break;
-    }
-  }
-  else
-  {
-    x=1; y=0;
-    while (1)
-    {
-      // increase loop
-      while ( x>=0 )
-      {
-        if ( x >= 0 && x < uiWidth && y >= 0 && y < uiHeight )
-        {
-          pBuffZ[ c++ ] = x + y * uiWidth;
-        }
-        x--;
-        y++;
-      }
-      x=0;
-
-      // decrease loop
-      while ( y>=0 )
-      {
-        if ( x >= 0 && x < uiWidth && y >= 0 && y < uiHeight )
-        {
-          pBuffZ[ c++ ] = x + y * uiWidth;
-        }
-        x++;
-        y--;
-      }
-      y=0;
-
-      // termination condition
-      if ( c >= uiWidth * uiHeight ) 
-        break;
-    }
   }
 }
 
-Int g_quantIntraDefault4x4[16] =
+Int g_quantTSDefault4x4[16] =
 {
-  16,16,17,21,
-  16,17,20,25,
-  17,20,30,41,
-  21,25,41,70
-};
-Int g_quantInterDefault4x4[16] =
-{
-  16,16,17,21,
-  16,17,21,24,
-  17,21,24,36,
-  21,24,36,57
+  16,16,16,16,
+  16,16,16,16,
+  16,16,16,16,
+  16,16,16,16
 };
 
 Int g_quantIntraDefault8x8[64] =
@@ -850,23 +569,53 @@ UInt g_scalingListSizeX  [4] = { 4, 8, 16,  32};
 UInt g_scalingListNum[SCALING_LIST_SIZE_NUM]={6,6,6,2};
 Int  g_eTTable[4] = {0,3,1,2};
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-std::vector< std::vector<TComWedgelet> > g_aacWedgeLists;
-std::vector< std::vector<TComWedgeRef> > g_aacWedgeRefLists;
-
-std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
-std::vector< std::vector< TComWedgeNode> >      g_aacWedgeNodeLists;
-
-Void initWedgeLists()
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+Void writeToTraceFile( Char* symbolName, Int val, Bool doIt )
 {
-  for( UInt ui = g_aucConvertToBit[DMM_WEDGEMODEL_MIN_SIZE]; ui < (g_aucConvertToBit[DMM_WEDGEMODEL_MAX_SIZE]+1); ui++ )
+  if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
-    UInt uiWedgeBlockSize = ((UInt)DMM_WEDGEMODEL_MIN_SIZE)<<ui;
+    if ( g_stopAtCounter == g_nSymbolCounter )
+    {
+      std::cout << "Break point here." << std::endl; 
+    }
+    fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+    fprintf( g_hTrace, "%-50s       : %d\n", symbolName, val );     
+    fflush ( g_hTrace );
+    g_nSymbolCounter++; 
+  }
+}
+
+Void writeToTraceFile( Char* symbolName, Bool doIt )
+{
+  if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
+  {
+    fprintf( g_hTrace, "%s", symbolName );    
+    fflush ( g_hTrace );
+    g_nSymbolCounter++; 
+  }
+}
+
+#endif
+#endif
+#if H_3D_DIM_DMM
+std::vector< std::vector<TComWedgelet>  > g_dmmWedgeLists;
+std::vector< std::vector<TComWedgeRef>  > g_dmmWedgeRefLists;
+std::vector< std::vector<TComWedgeNode> > g_dmmWedgeNodeLists;
+std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
+
+Void initWedgeLists( Bool initRefinements )
+{
+  if( !g_dmmWedgeLists.empty() ) return;
+
+  for( UInt ui = g_aucConvertToBit[DIM_MIN_SIZE]; ui < (g_aucConvertToBit[DIM_MAX_SIZE]+1); ui++ )
+  {
+    UInt uiWedgeBlockSize = ((UInt)DIM_MIN_SIZE)<<ui;
     std::vector<TComWedgelet> acWedgeList;
     std::vector<TComWedgeRef> acWedgeRefList;
-    createWedgeList( uiWedgeBlockSize, uiWedgeBlockSize, acWedgeList, acWedgeRefList, g_aeWedgeResolutionList[ui] );
-    g_aacWedgeLists.push_back( acWedgeList );
-    g_aacWedgeRefLists.push_back( acWedgeRefList );
+    createWedgeList( uiWedgeBlockSize, uiWedgeBlockSize, acWedgeList, acWedgeRefList, g_dmmWedgeResolution[ui] );
+    g_dmmWedgeLists.push_back( acWedgeList );
+    g_dmmWedgeRefLists.push_back( acWedgeRefList );
 
     // create WedgeNodeList
     std::vector<TComWedgeNode> acWedgeNodeList;
@@ -877,47 +626,49 @@ Void initWedgeLists()
         TComWedgeNode cWedgeNode;
         cWedgeNode.setPatternIdx( uiPos );
 
-        // set refinement idxs
-        UInt uiRefPos = 0;
-        for( Int iOffS = -1; iOffS <= 1; iOffS++ )
+        if( initRefinements )
         {
-          for( Int iOffE = -1; iOffE <= 1; iOffE++ )
+          UInt uiRefPos = 0;
+          for( Int iOffS = -1; iOffS <= 1; iOffS++ )
           {
-            if( iOffS == 0 && iOffE == 0 ) { continue; }
-
-            Int iSx = (Int)acWedgeList[uiPos].getStartX();
-            Int iSy = (Int)acWedgeList[uiPos].getStartY();
-            Int iEx = (Int)acWedgeList[uiPos].getEndX();
-            Int iEy = (Int)acWedgeList[uiPos].getEndY();
-
-            switch( acWedgeList[uiPos].getOri() )
+            for( Int iOffE = -1; iOffE <= 1; iOffE++ )
             {
-            case( 0 ): { iSx += iOffS; iEy += iOffE; } break;
-            case( 1 ): { iSy += iOffS; iEx -= iOffE; } break;
-            case( 2 ): { iSx -= iOffS; iEy -= iOffE; } break;
-            case( 3 ): { iSy -= iOffS; iEx += iOffE; } break;
-            case( 4 ): { iSx += iOffS; iEx += iOffE; } break;
-            case( 5 ): { iSy += iOffS; iEy += iOffE; } break;
-            default: assert( 0 );
-            }
+              if( iOffS == 0 && iOffE == 0 ) { continue; }
 
-            for( UInt k = 0; k < acWedgeRefList.size(); k++ )
-            {
-              if( iSx == (Int)acWedgeRefList[k].getStartX() && 
-                iSy == (Int)acWedgeRefList[k].getStartY() && 
-                iEx == (Int)acWedgeRefList[k].getEndX() && 
-                iEy == (Int)acWedgeRefList[k].getEndY()    )
+              Int iSx = (Int)acWedgeList[uiPos].getStartX();
+              Int iSy = (Int)acWedgeList[uiPos].getStartY();
+              Int iEx = (Int)acWedgeList[uiPos].getEndX();
+              Int iEy = (Int)acWedgeList[uiPos].getEndY();
+
+              switch( acWedgeList[uiPos].getOri() )
               {
-                if( acWedgeRefList[k].getRefIdx() != cWedgeNode.getPatternIdx() )
-                {
-                  Bool bNew = true;
-                  for( UInt m = 0; m < uiRefPos; m++ ) { if( acWedgeRefList[k].getRefIdx() == cWedgeNode.getRefineIdx( m ) ) { bNew = false; break; } }
+              case( 0 ): { iSx += iOffS; iEy += iOffE; } break;
+              case( 1 ): { iSy += iOffS; iEx -= iOffE; } break;
+              case( 2 ): { iSx -= iOffS; iEy -= iOffE; } break;
+              case( 3 ): { iSy -= iOffS; iEx += iOffE; } break;
+              case( 4 ): { iSx += iOffS; iEx += iOffE; } break;
+              case( 5 ): { iSy += iOffS; iEy += iOffE; } break;
+              default: assert( 0 );
+              }
 
-                  if( bNew ) 
+              for( UInt k = 0; k < acWedgeRefList.size(); k++ )
+              {
+                if( iSx == (Int)acWedgeRefList[k].getStartX() && 
+                    iSy == (Int)acWedgeRefList[k].getStartY() && 
+                    iEx == (Int)acWedgeRefList[k].getEndX()   && 
+                    iEy == (Int)acWedgeRefList[k].getEndY()      )
+                {
+                  if( acWedgeRefList[k].getRefIdx() != cWedgeNode.getPatternIdx() )
                   {
-                    cWedgeNode.setRefineIdx( acWedgeRefList[k].getRefIdx(), uiRefPos );
-                    uiRefPos++;
-                    break;
+                    Bool bNew = true;
+                    for( UInt m = 0; m < uiRefPos; m++ ) { if( acWedgeRefList[k].getRefIdx() == cWedgeNode.getRefineIdx( m ) ) { bNew = false; break; } }
+
+                    if( bNew ) 
+                    {
+                      cWedgeNode.setRefineIdx( acWedgeRefList[k].getRefIdx(), uiRefPos );
+                      uiRefPos++;
+                      break;
+                    }
                   }
                 }
               }
@@ -927,8 +678,7 @@ Void initWedgeLists()
         acWedgeNodeList.push_back( cWedgeNode );
       }
     }
-    g_aacWedgeNodeLists.push_back( acWedgeNodeList );
-
+    g_dmmWedgeNodeLists.push_back( acWedgeNodeList );
   }
   return;
 }
@@ -971,8 +721,8 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
       }
     }
   }
-  UInt uiThrSz = DMM3_SIMPLIFY_TR;
 
+  UInt uiThrSz = DMM3_SIMPLIFY_TR;
   std::vector< std::vector<UInt> > auiWdgListSz;
   for( Int idxM=2; idxM<=34 ; idxM++)
   {
@@ -1023,13 +773,13 @@ Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWe
   }
   if( bValid )
   {
-    cWedgelet.findClosetAngle();
+    cWedgelet.findClosestAngle();
     racWedgeList.push_back( cWedgelet );
     TComWedgeRef cWedgeRef;
     cWedgeRef.setWedgeRef( cWedgelet.getStartX(), cWedgelet.getStartY(), cWedgelet.getEndX(), cWedgelet.getEndY(), (UInt)(racWedgeList.size()-1) );
     racWedgeRefList.push_back( cWedgeRef );
   }
 }
-#endif //HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#endif //H_3D_DIM_DMM
 
 //! \}
