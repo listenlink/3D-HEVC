@@ -146,6 +146,7 @@
     <ClCompile Include="..\..\source\Lib\TLibDecoder\AnnexBread.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibDecoder\NALread.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibDecoder\SEIread.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibDecoder\SyntaxElementParser.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibDecoder\TDecBinCoderCABAC.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibDecoder\TDecCAVLC.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibDecoder\TDecCu.cpp" />
@@ -159,6 +160,7 @@
     <ClInclude Include="..\..\source\Lib\TLibDecoder\AnnexBread.h" />
     <ClInclude Include="..\..\source\Lib\TLibDecoder\NALread.h" />
     <ClInclude Include="..\..\source\Lib\TLibDecoder\SEIread.h" />
+    <ClInclude Include="..\..\source\Lib\TLibDecoder\SyntaxElementParser.h" />
     <ClInclude Include="..\..\source\Lib\TLibDecoder\TDecBinCoder.h" />
     <ClInclude Include="..\..\source\Lib\TLibDecoder\TDecBinCoderCABAC.h" />
     <ClInclude Include="..\..\source\Lib\TLibDecoder\TDecCAVLC.h" />
