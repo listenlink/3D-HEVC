@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,12 +33,39 @@
 
 #pragma once
 
+#include "SyntaxElementWriter.h"
+#include "TLibCommon/SEI.h"
+
 class TComBitIf;
-class SEI;
 
 //! \ingroup TLibEncoder
 //! \{
+class SEIWriter:public SyntaxElementWriter
+{
+public:
+  SEIWriter() {};
+  virtual ~SEIWriter() {};
 
-void writeSEImessage(TComBitIf& bs, const SEI& sei);
+  void writeSEImessage(TComBitIf& bs, const SEI& sei, TComSPS *sps);
+
+protected:
+  Void xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps);
+  Void xWriteSEIuserDataUnregistered(const SEIuserDataUnregistered &sei);
+  Void xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei);
+  Void xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, TComSPS *sps);
+  Void xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei);
+  Void xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS *sps);
+  Void xWriteSEIPictureTiming(const SEIPictureTiming& sei, TComSPS *sps);
+  TComSPS *m_pSPS;
+  Void xWriteSEIRecoveryPoint(const SEIRecoveryPoint& sei);
+  Void xWriteSEIFramePacking(const SEIFramePacking& sei);
+  Void xWriteSEIDisplayOrientation(const SEIDisplayOrientation &sei);
+  Void xWriteSEITemporalLevel0Index(const SEITemporalLevel0Index &sei);
+  Void xWriteSEIGradualDecodingRefreshInfo(const SEIGradualDecodingRefreshInfo &sei);
+  Void xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei);
+  Void xWriteSEISOPDescription(const SEISOPDescription& sei);
+  Void xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps);
+  Void xWriteByteAlign();
+};
 
 //! \}

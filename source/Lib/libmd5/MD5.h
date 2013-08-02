@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,8 @@
 //! \ingroup libMD5
 //! \{
 
-class MD5 {
+class MD5
+{
 public:
   /**
    * initialize digest state
@@ -67,21 +68,29 @@ private:
   context_md5_t m_state;
 };
 
+
 /**
- * Produce an ascii(hex) representation of the 128bit digest.
+ * Produce an ascii(hex) representation of picture digest.
  *
  * Returns: a statically allocated null-terminated string.  DO NOT FREE.
  */
 inline const char*
-digestToString(unsigned char digest[16])
+digestToString(const unsigned char digest[3][16], int numChar)
 {
   const char* hex = "0123456789abcdef";
-  static char string[33];
-  for (int i = 0; i < 16; i++)
+  static char string[99];
+  int cnt=0;
+  for(int yuvIdx=0; yuvIdx<3; yuvIdx++)
   {
-    string[i*2+0] = hex[digest[i] >> 4];
-    string[i*2+1] = hex[digest[i] & 0xf];
+    for (int i = 0; i < numChar; i++)
+    {
+      string[cnt++] = hex[digest[yuvIdx][i] >> 4];
+      string[cnt++] = hex[digest[yuvIdx][i] & 0xf];
+    }
+    string[cnt++] = ',';
   }
+
+  string[cnt-1] = '\0';
   return string;
 }
 //! \}

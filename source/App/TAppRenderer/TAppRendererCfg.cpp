@@ -33,17 +33,17 @@
 
 
 
+
 #include <stdlib.h>
 #include <math.h>
 #include <cassert>
 #include <cstring>
 #include <string>
 
-
-
 #include "TAppRendererCfg.h"
 #include "../../Lib/TAppCommon/program_options_lite.h"
 
+#if H_3D
 
 using namespace std;
 namespace po = df::program_options_lite;
@@ -58,10 +58,11 @@ namespace po = df::program_options_lite;
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
-#if !QC_MVHEVC_B0046
+
+
 TAppRendererCfg::TAppRendererCfg()
 {
-
+  
 }
 
 TAppRendererCfg::~TAppRendererCfg()
@@ -129,6 +130,14 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
     ("DepthInputFile_%d,d_%d",  m_pchDepthInputFileList ,    (Char *) 0, MAX_INPUT_VIEW_NUM , "Original Yuv depth input file name %d")
     ("SynthOutputFile_%d,s_%d", m_pchSynthOutputFileList,    (Char *) 0, MAX_OUTPUT_VIEW_NUM, "Synthesized Yuv output file name %d")
 
+    ("InputBitDepth",           m_inputBitDepthY,                     8, "Bit-depth of input file")
+    ("OutputBitDepth",          m_outputBitDepthY,                    0, "Bit-depth of output file (default:InternalBitDepth)")
+    ("InternalBitDepth",        m_internalBitDepthY,                  0, "Bit-depth the renderer operates at. (default:InputBitDepth)"                                                                          "If different to InputBitDepth, source data will be converted")
+
+    ("InputBitDepthC",        m_inputBitDepthC,    0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
+    ("OutputBitDepthC",       m_outputBitDepthC,   0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
+    ("InternalBitDepthC",     m_internalBitDepthC, 0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
+
     /* Source Specification */
     ("SourceWidth,-wdt",        m_iSourceWidth,                       0, "Source picture width")
     ("SourceHeight,-hgt",       m_iSourceHeight,                      0, "Source picture height")
@@ -174,6 +183,13 @@ Bool TAppRendererCfg::parseCfg( Int argc, Char* argv[] )
   /*
   * Set any derived parameters before checking
   */
+
+  /* rules for input, output and internal bitdepths as per help text */
+  if (!m_internalBitDepthY) { m_internalBitDepthY = m_inputBitDepthY; }
+  if (!m_internalBitDepthC) { m_internalBitDepthC = m_internalBitDepthY; }
+  if (!m_inputBitDepthC)    { m_inputBitDepthC    = m_inputBitDepthY; }
+  if (!m_outputBitDepthY)   { m_outputBitDepthY   = m_internalBitDepthY; }
+  if (!m_outputBitDepthC)   { m_outputBitDepthC   = m_internalBitDepthC; }
 
   xSetGlobal();
 
@@ -257,6 +273,10 @@ Void TAppRendererCfg::xCheckParameter()
   xConfirmPara( m_iFrameSkip          <  0,                   "Frame Skipping must be more than or equal to 0" );
   xConfirmPara( m_iFramesToBeRendered <  0,                   "Total Number Of Frames rendered must be more than 1" );
 
+  // bit depth 
+  xConfirmPara( m_internalBitDepthC != m_internalBitDepthY,  "InternalBitDepth for luma and chroma must be equal. "); 
+  xConfirmPara( m_inputBitDepthY < 8,                        "InputBitDepth must be at least 8" );
+  xConfirmPara( m_inputBitDepthC < 8,                        "InputBitDepthC must be at least 8" );
 
   // camera specification
   xConfirmPara( m_iNumberOfInputViews  > MAX_INPUT_VIEW_NUM , "NumberOfInputViews must be less than of equal to MAX_INPUT_VIEW_NUM");
@@ -499,20 +519,16 @@ Void TAppRendererCfg::xGetMaxPrecision( std::vector< Int > aiIn, Int& iPrecBefor
 
     iCurPrec = 0;
     for ( Int iCur = 1;  aiIn[uiK] % iCur == 0; iCur *= 10, iCurPrec++);
-    iCurPrec = LOG10_VIEW_NUM_PREC - Min(LOG10_VIEW_NUM_PREC, iCurPrec-1 );
+    iCurPrec = LOG10_VIEW_NUM_PREC - std::min((Int) LOG10_VIEW_NUM_PREC, iCurPrec-1 );
     iPrecAfter = max(iPrecAfter, iCurPrec );
   }
 }
 
 Void TAppRendererCfg::xSetGlobal()
 {
-  // set max CU width & height
-  Int iInternalBitDepth = 8;
+  // set max CU width & height  
   g_uiMaxCUWidth   = 0;
-  g_uiMaxCUHeight  = 0;
-  g_uiBitDepth     = 8;
-  g_uiBitIncrement = iInternalBitDepth - g_uiBitDepth;
-  g_uiBASE_MAX     = ((1<<(g_uiBitDepth))-1);
-  g_uiIBDI_MAX     = ((1<<(g_uiBitDepth+g_uiBitIncrement))-1);
+  g_uiMaxCUHeight  = 0;  
 }
+
 #endif
