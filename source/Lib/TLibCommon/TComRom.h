@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,11 +39,12 @@
 #define __TCOMROM__
 
 #include "CommonDef.h"
+#include "TypeDef.h"
 
 #include<stdio.h>
 #include<iostream>
 
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
+#if H_3D_DIM
 #include "TComWedgelet.h"
 #endif
 
@@ -65,9 +66,7 @@
 
 Void         initROM();
 Void         destroyROM();
-Void         initFrameScanXY( UInt* pBuff, UInt* pBuffX, UInt* pBuffY, Int iWidth, Int iHeight );
-Void         initSigLastScan(UInt* pBuffZ, UInt* pBuffH, UInt* pBuffV, UInt* pBuffD, Int iWidth, Int iHeight, Int iDepth);
-Void         initNonSquareSigLastScan(UInt* pBuffZ, UInt uiWidth, UInt uiHeight);
+Void         initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight);
 // ====================================================================================================================
 // Data structure related table & variable
 // ====================================================================================================================
@@ -75,12 +74,9 @@ Void         initNonSquareSigLastScan(UInt* pBuffZ, UInt uiWidth, UInt uiHeight)
 // flexible conversion from relative to absolute index
 extern       UInt   g_auiZscanToRaster[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 extern       UInt   g_auiRasterToZscan[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
-extern       UInt   g_motionRefer[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 
 Void         initZscanToRaster ( Int iMaxDepth, Int iDepth, UInt uiStartVal, UInt*& rpuiCurrIdx );
 Void         initRasterToZscan ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth         );
-
-Void          initMotionReferIdx ( UInt uiMaxCUWidth, UInt uiMaxCUHeight, UInt uiMaxDepth );
 
 // conversion of partition index to picture pel position
 extern       UInt   g_auiRasterToPelX[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
@@ -94,6 +90,9 @@ extern       UInt g_uiMaxCUHeight;
 extern       UInt g_uiMaxCUDepth;
 extern       UInt g_uiAddCUDepth;
 
+#define MAX_TS_WIDTH  4
+#define MAX_TS_HEIGHT 4
+
 extern       UInt g_auiPUOffset[8];
 
 #define QUANT_IQUANT_SHIFT    20 // Q(QP%6) * IQ(QP%6) = 2^20
@@ -106,39 +105,30 @@ extern       UInt g_auiPUOffset[8];
 
 extern Int g_quantScales[6];             // Q(QP%6)  
 extern Int g_invQuantScales[6];          // IQ(QP%6)
-extern const short g_aiT4[4][4];
-extern const short g_aiT8[8][8];
-extern const short g_aiT16[16][16];
-extern const short g_aiT32[32][32];
+extern const Short g_aiT4[4][4];
+extern const Short g_aiT8[8][8];
+extern const Short g_aiT16[16][16];
+extern const Short g_aiT32[32][32];
 
 // ====================================================================================================================
 // Luma QP to Chroma QP mapping
 // ====================================================================================================================
 
-extern const UChar  g_aucChromaScale      [52];
+extern const UChar  g_aucChromaScale      [58];
 
 // ====================================================================================================================
 // Scanning order & context mapping table
 // ====================================================================================================================
 
-extern       UInt*  g_auiFrameScanXY[ MAX_CU_DEPTH  ];    // raster index     from scanning index
-extern       UInt*  g_auiFrameScanX [ MAX_CU_DEPTH  ];    // raster index (x) from scanning index
-extern       UInt*  g_auiFrameScanY [ MAX_CU_DEPTH  ];    // raster index (y) from scanning index
-extern       UInt*  g_auiSigLastScan[4][ MAX_CU_DEPTH ];  // raster index from scanning index (zigzag, hor, ver, diag)
-extern UInt *g_sigScanNSQT[ 4 ]; // scan for non-square partitions
-extern UInt g_sigCGScanNSQT[ 4 ][ 16 ]; // coarse-grain scan for non-square partitions
-
-extern       UInt*  g_auiNonSquareSigLastScan[ 4 ];      // raster index from scanning index (zigzag)
+extern       UInt*  g_auiSigLastScan[ 3 ][ MAX_CU_DEPTH ];  // raster index from scanning index (diag, hor, ver)
 
 extern const UInt   g_uiGroupIdx[ 32 ];
 extern const UInt   g_uiMinInGroup[ 10 ];
-extern const UInt   g_uiLastCtx[ 28 ];
 
 extern const UInt   g_auiGoRiceRange[5];                  //!< maximum value coded with Rice codes
 extern const UInt   g_auiGoRicePrefixLen[5];              //!< prefix length for each maximum value
-extern const UInt   g_aauiGoRiceUpdate[5][24];            //!< parameter update rules for Rice codes
   
-extern const UInt   g_sigLastScan8x8[ 4 ][ 4 ];           //!< coefficient group scan order for 8x8 TUs
+extern const UInt   g_sigLastScan8x8[ 3 ][ 4 ];           //!< coefficient group scan order for 8x8 TUs
 extern       UInt   g_sigLastScanCG32x32[ 64 ];
 
 // ====================================================================================================================
@@ -148,21 +138,11 @@ extern       UInt   g_sigLastScanCG32x32[ 64 ];
 extern const UChar  g_aucIntraModeNumFast[7];
 
 // ====================================================================================================================
-// Angular Intra table
-// ====================================================================================================================
-
-extern const UChar g_aucIntraModeNumAng[7];
-extern const UChar g_aucIntraModeBitsAng[7];
-extern const UChar g_aucAngIntraModeOrder[NUM_INTRA_MODE];
-
-// ====================================================================================================================
 // Bit-depth
 // ====================================================================================================================
 
-extern       UInt g_uiBitDepth;
-extern       UInt g_uiBitIncrement;
-extern       UInt g_uiIBDI_MAX;
-extern       UInt g_uiBASE_MAX;
+extern        Int g_bitDepthY;
+extern        Int g_bitDepthC;
 extern       UInt g_uiPCMBitDepthLuma;
 extern       UInt g_uiPCMBitDepthChroma;
 
@@ -172,55 +152,38 @@ extern       UInt g_uiPCMBitDepthChroma;
 
 extern const UChar g_aucConvertTxtTypeToIdx[4];
 
+#if H_3D_DIM
 // ====================================================================================================================
-// Depth model modes
+// Depth coding modes
 // ====================================================================================================================
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-extern       Int             g_iDeltaDCsQuantOffset;
-extern const WedgeResolution g_aeWedgeResolutionList[5];
-extern const UChar           g_aucWedgeFullBitsListIdx[7];
-#if LGE_DMM3_SIMP_C0044
-extern const UChar           g_aucWedgeTexPredBitsListIdx[7];
+__inline Void mapDepthModeToIntraDir( UInt& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
+__inline Void mapDepthModeToIntraDir(  Int& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
+
+#if H_3D_DIM_SDC || H_3D_DIM_DLT
+__inline UInt numBitsForValue( UInt value ) { UInt bits = 0; while (value != 0) { value >>= 1; bits++; } return bits; };
 #endif
-extern const UChar           g_aucIntraSizeIdxToWedgeSize[7];
 
-extern       std::vector< std::vector<TComWedgelet> >  g_aacWedgeLists;
-extern       std::vector< std::vector<TComWedgeRef> >  g_aacWedgeRefLists;
+#if H_3D_DIM_DMM
+extern const WedgeResolution                                 g_dmmWedgeResolution [6];
+extern const UChar                                           g_dmm1TabIdxBits     [6];
+extern const UChar                                           g_dmm3IntraTabIdxBits[6];
 
-#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
+extern       std::vector< std::vector<TComWedgelet> >        g_dmmWedgeLists;
+extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
+extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
 extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
-extern       std::vector< std::vector<TComWedgeNode> >       g_aacWedgeNodeLists;
-#endif
 
-#if RWTH_SDC_DLT_B0036
-#define RWTH_SDC_NUM_PRED_MODES 3
-extern      UInt g_auiSDCPredModes[RWTH_SDC_NUM_PRED_MODES];
-#endif
-
-Void initWedgeLists();
+Void initWedgeLists( Bool initRefinements = false );
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
-
-__inline Void mapDMMtoIntraMode(  UInt& dirMode ) { dirMode = (dirMode >= NUM_INTRA_MODE) ? DC_IDX : dirMode; }
-__inline Void mapDMMtoIntraMode(   Int& dirMode ) { dirMode = (dirMode >= NUM_INTRA_MODE) ? DC_IDX : dirMode; }
 #endif
-
-#if LGE_EDGE_INTRA_A0070
-__inline Void mapEdgeIntratoDC( UChar& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
-__inline Void mapEdgeIntratoDC(  UInt& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
-__inline Void mapEdgeIntratoDC(   Int& curDir ) { curDir = (curDir >= EDGE_INTRA_IDX) ? DC_IDX : curDir; }
 #endif
 
 // ==========================================
 // Mode-Dependent DST Matrices
-extern const short g_as_DST_MAT_4 [4][4];
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-extern const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE+NUM_DMM_MODE];
-extern const UChar g_aucDCTDSTMode_Hor [NUM_INTRA_MODE+NUM_DMM_MODE];
-#else
+extern const Short g_as_DST_MAT_4 [4][4];
 extern const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE];
 extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE];
-#endif
 // ==========================================
 
 // ====================================================================================================================
@@ -229,14 +192,16 @@ extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE];
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 
-#define ENC_DEC_TRACE 0
-
+#ifndef ENC_DEC_TRACE
+# define ENC_DEC_TRACE 0
+#endif
 
 #if ENC_DEC_TRACE
 extern FILE*  g_hTrace;
 extern Bool   g_bJustDoIt;
 extern const Bool g_bEncDecTraceEnable;
 extern const Bool g_bEncDecTraceDisable;
+extern Bool   g_HLSTraceEnable;
 extern UInt64 g_nSymbolCounter;
 
 #define COUNTER_START    1
@@ -250,6 +215,24 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_R( x,y ) if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, x,    y );
 #define DTRACE_CABAC_N        if ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) fprintf( g_hTrace, "\n"    );
 
+#if H_MV_ENC_DEC_TRAC
+ extern Bool   g_traceCU; 
+ extern Bool   g_tracePU; 
+ extern Bool   g_traceTU; 
+ extern Bool   g_disableHLSTrace; 
+ extern UInt64 g_stopAtCounter; 
+
+#define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
+#define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );
+#define DTRACE_TU(x,y)             writeToTraceFile( x,y, g_traceTU );
+#define DTRACE_CU_S(x)             writeToTraceFile( x,   g_traceCU );
+#define DTRACE_PU_S(x)             writeToTraceFile( x,   g_tracePU );
+#define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
+
+
+ Void           writeToTraceFile( Char* symbolName, Int val, Bool doIt );
+ Void           writeToTraceFile( Char* symbolName, Bool doIt );
+#endif
 #else
 
 #define DTRACE_CABAC_F(x)
@@ -260,6 +243,16 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_R( x,y )
 #define DTRACE_CABAC_N
 
+#if H_MV_ENC_DEC_TRAC
+#define DTRACE_CU(x,y)             
+#define DTRACE_PU(x,y)             
+#define DTRACE_TU(x,y)             
+
+#define DTRACE_CU_S(x)             
+#define DTRACE_PU_S(x)             
+#define DTRACE_TU_S(x)             
+
+#endif
 #endif
 
 
@@ -270,13 +263,6 @@ extern UInt64 g_nSymbolCounter;
 #define MAX_MATRIX_COEF_NUM 64     ///< max coefficient number for quantization matrix
 #define MAX_MATRIX_SIZE_NUM 8      ///< max size number for quantization matrix
 #define SCALING_LIST_DC 16         ///< default DC value
-enum ScalingListDIR
-{
-  SCALING_LIST_SQT = 0,
-  SCALING_LIST_VER,
-  SCALING_LIST_HOR,
-  SCALING_LIST_DIR_NUM
-};
 enum ScalingListSize
 {
   SCALING_LIST_4x4 = 0,
@@ -285,7 +271,7 @@ enum ScalingListSize
   SCALING_LIST_32x32,
   SCALING_LIST_SIZE_NUM
 };
-static const char MatrixType[4][6][20] =
+static const Char MatrixType[4][6][20] =
 {
   {
   "INTRA4X4_LUMA",
@@ -316,7 +302,7 @@ static const char MatrixType[4][6][20] =
   "INTER32X32_LUMA",
   },
 };
-static const char MatrixType_DC[4][12][22] =
+static const Char MatrixType_DC[4][12][22] =
 {
   {
   },
@@ -335,14 +321,13 @@ static const char MatrixType_DC[4][12][22] =
   "INTER32X32_LUMA_DC",
   },
 };
-extern Int g_quantIntraDefault4x4[16];
 extern Int g_quantIntraDefault8x8[64];
 extern Int g_quantIntraDefault16x16[256];
 extern Int g_quantIntraDefault32x32[1024];
-extern Int g_quantInterDefault4x4[16];
 extern Int g_quantInterDefault8x8[64];
 extern Int g_quantInterDefault16x16[256];
 extern Int g_quantInterDefault32x32[1024];
+extern Int g_quantTSDefault4x4[16];
 extern UInt g_scalingListSize [SCALING_LIST_SIZE_NUM];
 extern UInt g_scalingListSizeX[SCALING_LIST_SIZE_NUM];
 extern UInt g_scalingListNum  [SCALING_LIST_SIZE_NUM];
