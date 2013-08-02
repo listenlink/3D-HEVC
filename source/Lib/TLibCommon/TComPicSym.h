@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,6 +43,7 @@
 #include "CommonDef.h"
 #include "TComSlice.h"
 #include "TComDataCU.h"
+class TComSampleAdaptiveOffset;
 
 //! \ingroup TLibCommon
 //! \{
@@ -105,23 +106,18 @@ private:
   UInt*         m_puiCUOrderMap;       //the map of LCU raster scan address relative to LCU encoding order 
   UInt*         m_puiTileIdxMap;       //the map of the tile index relative to LCU raster scan address 
   UInt*         m_puiInverseCUOrderMap;
-  UInt          m_uiBitsUsedByTileIdx;
 
+  SAOParam *m_saoParam;
 public:
   Void        create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth );
   Void        destroy ();
-  
-  TComPicSym  ()                        { m_uiNumAllocatedSlice = 0;            }
+
+  TComPicSym  ();
   TComSlice*  getSlice(UInt i)          { return  m_apcTComSlice[i];            }
   UInt        getFrameWidthInCU()       { return m_uiWidthInCU;                 }
   UInt        getFrameHeightInCU()      { return m_uiHeightInCU;                }
   UInt        getMinCUWidth()           { return m_uiMinCUWidth;                }
   UInt        getMinCUHeight()          { return m_uiMinCUHeight;               }
-#if HHI_INTERVIEW_SKIP
-  UInt        getMaxCUWidth()           { return m_uiMaxCUWidth;                }
-  UInt        getMaxCUHeight()          { return m_uiMaxCUHeight;               }
-  UInt        getMaxCUDepth()           { return m_uhTotalDepth;                }
-#endif
   UInt        getNumberOfCUsInFrame()   { return m_uiNumCUsInFrame;  }
   TComDataCU*&  getCU( UInt uiCUAddr )  { return m_apcTComDataCU[uiCUAddr];     }
   
@@ -148,7 +144,8 @@ public:
   Void         xCreateTComTileArray();
   Void         xInitTiles();
   UInt         xCalculateNxtCUAddr( UInt uiCurrCUAddr );
-  UInt         getBitsUsedByTileIdx()                                { return m_uiBitsUsedByTileIdx; }
+  Void allocSaoParam(TComSampleAdaptiveOffset *sao);
+  SAOParam *getSaoParam() { return m_saoParam; }
 };// END CLASS DEFINITION TComPicSym
 
 //! \}

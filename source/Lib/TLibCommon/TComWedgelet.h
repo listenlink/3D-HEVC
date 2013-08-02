@@ -42,6 +42,41 @@
 
 #include <vector>
 
+#if H_3D_DIM
+#define DIM_OFFSET     (NUM_INTRA_MODE+1) // offset for DMM and RBC mode numbers (PM: not consistent with spec, but non-overlapping with chroma, see DM_CHROMA_IDX)
+#define DIM_MIN_SIZE                   4  // min. block size for DMM and RBC modes
+#define DIM_MAX_SIZE                  32  // max. block size for DMM and RBC modes
+
+enum DIM_IDX
+{
+  DMM1_IDX = 0,
+  DMM2_IDX = 3,
+  DMM3_IDX = 1,
+  DMM4_IDX = 2,
+  RBC_IDX  = 4
+};
+#define DMM_NUM_TYPE   4
+#define RBC_NUM_TYPE   1
+#define DIM_NUM_TYPE   (DMM_NUM_TYPE+RBC_NUM_TYPE)
+#define DIM_NO_IDX     MAX_UINT
+
+__inline UInt getDimType  ( Int intraMode ) { Int dimType = (intraMode-DIM_OFFSET)/2; return (dimType >= 0 && dimType < DIM_NUM_TYPE) ? (UInt)dimType : DIM_NO_IDX; }
+__inline Bool isDimMode   ( Int intraMode ) { return (getDimType( intraMode ) < DIM_NUM_TYPE); }
+__inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && ((intraMode-DIM_OFFSET)%2) == 1); }
+#endif
+
+#if H_3D_DIM_RBC
+#define RBC_THRESHOLD              20
+#define RBC_MAX_EDGE_NUM_PER_4x4   8
+#define RBC_MAX_DISTANCE           255
+#endif
+
+#if H_3D_DIM_DMM
+#define DMM_NO_WEDGEINDEX       MAX_UINT
+#define DMM_NUM_WEDGE_REFINES   8
+#define DMM2_DELTAEND_MAX       4
+#define DMM3_SIMPLIFY_TR        1
+
 enum WedgeResolution
 {
   DOUBLE_PEL,
@@ -49,10 +84,6 @@ enum WedgeResolution
   HALF_PEL
 };
 
-#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
-#define NUM_WEDGE_REFINES 8
-#define NO_IDX MAX_UINT
-#endif
 
 // ====================================================================================================================
 // Class definition TComWedgelet
@@ -66,10 +97,8 @@ private:
   UChar           m_uhYe;                       // line end   Y pos
   UChar           m_uhOri;                      // orientation index
   WedgeResolution m_eWedgeRes;                  // start/end pos resolution
-#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
   Bool            m_bIsCoarse; 
   UInt            m_uiAng;
-#endif
 
   UInt  m_uiWidth;
   UInt  m_uiHeight;
@@ -98,27 +127,21 @@ public:
   UChar           getEndX    () { return m_uhXe; }
   UChar           getEndY    () { return m_uhYe; }
   UChar           getOri     () { return m_uhOri; }
-#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
   Bool            getIsCoarse() { return m_bIsCoarse; }
   UInt            getAng     () { return m_uiAng; }
-  Void            findClosetAngle();
 
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse = false );
-#else
-  Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes );
-#endif
+  Void  findClosestAngle();
 
   Bool  checkNotPlain();
   Bool  checkIdentical( Bool* pbRefPattern );
   Bool  checkInvIdentical( Bool* pbRefPattern );
 
-#if HHI_DMM_WEDGE_INTRA
+  // functions for DMM2 prediction
   Bool  checkPredDirAbovePossible( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffsett );
   Bool  checkPredDirLeftPossible ( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffsett );
-
   Void  getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd );
   Void  getPredDirStartEndLeft ( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd );
-#endif
 };  // END CLASS DEFINITION TComWedgelet
 
 // type definition wedgelet pattern list
@@ -152,7 +175,6 @@ public:
 // type definition wedgelet reference list
 typedef std::vector<TComWedgeRef> WedgeRefList;
 
-#if HHI_DMM_PRED_TEX || HHI_DMM_WEDGE_INTRA
 // ====================================================================================================================
 // Class definition TComWedgeNode
 // ====================================================================================================================
@@ -160,7 +182,7 @@ class TComWedgeNode
 {
 private:
   UInt            m_uiPatternIdx;
-  UInt            m_uiRefineIdx[NUM_WEDGE_REFINES];
+  UInt            m_uiRefineIdx[DMM_NUM_WEDGE_REFINES];
 
 public:
   TComWedgeNode();
@@ -175,77 +197,8 @@ public:
 
 // type definition wedgelet node list
 typedef std::vector<TComWedgeNode> WedgeNodeList;
-#endif
+#endif //H_3D_DIM_DMM
 
-#if HHI_DMM_PRED_TEX
-enum WedgeDist
-{
-  WedgeDist_SAD  = 0,
-  WedgeDist_SSE  = 4,
-};
-
-class WedgeDistParam;
-typedef UInt (*FpWedgeDistFunc) (WedgeDistParam*);
-
-/// distortion parameter class
-class WedgeDistParam
-{
-public:
-  Pel*  pOrg;
-  Pel*  pCur;
-  Int   iStrideOrg;
-  Int   iStrideCur;
-  Int   iRows;
-  Int   iCols;
-  Int   iStep;
-  FpWedgeDistFunc DistFunc;
-  Int   iSubShift;
-
-  WedgeDistParam()
-  {
-    pOrg = NULL;
-    pCur = NULL;
-    iStrideOrg = 0;
-    iStrideCur = 0;
-    iRows = 0;
-    iCols = 0;
-    iStep = 1;
-    DistFunc = NULL;
-    iSubShift = 0;
-  }
-};
-
-// ====================================================================================================================
-// Class definition TComWedgeDist
-// ====================================================================================================================
-class TComWedgeDist
-{
-private:
-  Int                     m_iBlkWidth;
-  Int                     m_iBlkHeight;
-  FpWedgeDistFunc         m_afpDistortFunc[8];
-
-public:
-  TComWedgeDist();
-  virtual ~TComWedgeDist();
-
-  Void init();
-  Void setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, WedgeDist eWDist, WedgeDistParam& rcDistParam );
-  UInt getDistPart( Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, WedgeDist eWDist = WedgeDist_SAD );
-
-private:
-  static UInt xGetSAD4          ( WedgeDistParam* pcDtParam );
-  static UInt xGetSAD8          ( WedgeDistParam* pcDtParam );
-  static UInt xGetSAD16         ( WedgeDistParam* pcDtParam );
-  static UInt xGetSAD32         ( WedgeDistParam* pcDtParam );
-
-  static UInt xGetSSE4          ( WedgeDistParam* pcDtParam );
-  static UInt xGetSSE8          ( WedgeDistParam* pcDtParam );
-  static UInt xGetSSE16         ( WedgeDistParam* pcDtParam );
-  static UInt xGetSSE32         ( WedgeDistParam* pcDtParam );
-
-};// END CLASS DEFINITION TComWedgeDist
-#endif
 
 // ====================================================================================================================
 // Function definition roftoi (mathematically correct rounding of float to int)
