@@ -38,6 +38,12 @@
 #include <memory.h>
 #include "TComPrediction.h"
 
+#if SHARP_ILLUCOMP_REFINE_E0046
+#define IC_REG_COST_SHIFT 7
+#define IC_CONST_SHIFT 5
+#define IC_SHIFT_DIFF 12
+#endif
+
 //! \ingroup TLibCommon
 //! \{
 
@@ -130,10 +136,18 @@ Void TComPrediction::initTempBuff()
     }
   }
 #if H_3D_IC
+#if SHARP_ILLUCOMP_REFINE_E0046
+  m_uiaShift[0] = 0;
+  for( Int i = 1; i < 64; i++ )
+  {
+    m_uiaShift[i] = ( (1 << 15) + i/2 ) / i;
+  }
+#else
   for( Int i = 1; i < 64; i++ )
   {
     m_uiaShift[i-1] = ( (1 << 15) + i/2 ) / i;
   }
+#endif
 #endif
 }
 
@@ -678,6 +692,9 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
       , false
 #endif
       , bICFlag );
+#if SHARP_ILLUCOMP_REFINE_E0046
+    bICFlag = bICFlag && (iWidth > 8);
+#endif
     xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec(), uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi
 #if H_3D_ARP
       , false
@@ -972,9 +989,17 @@ Void TComPrediction::xPredInterLumaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt
 #if H_3D_IC
   if( bICFlag )
   {
+#if SHARP_ILLUCOMP_REFINE_E0046
+    Int a, b, i, j;
+    const Int iShift = IC_CONST_SHIFT;
+
+    xGetLLSICPrediction( cu, mv, refPic, a, b, TEXT_LUMA );
+#else
     Int a, b, iShift, i, j;
 
     xGetLLSICPrediction( cu, mv, refPic, a, b, iShift, TEXT_LUMA );
+#endif
+
 
     for ( i = 0; i < height; i++ )
     {
@@ -1092,8 +1117,14 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
 #if H_3D_IC
   if( bICFlag )
   {
+#if SHARP_ILLUCOMP_REFINE_E0046
+    Int a, b, i, j;
+    const Int iShift = IC_CONST_SHIFT;
+    xGetLLSICPrediction( cu, mv, refPic, a, b, TEXT_CHROMA_U ); // Cb
+#else
     Int a, b, iShift, i, j;
     xGetLLSICPrediction( cu, mv, refPic, a, b, iShift, TEXT_CHROMA_U ); // Cb
+#endif
     for ( i = 0; i < cxHeight; i++ )
     {
       for ( j = 0; j < cxWidth; j++ )
@@ -1108,7 +1139,11 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
       }
       dstCb += dstStride;
     }
+#if SHARP_ILLUCOMP_REFINE_E0046
+    xGetLLSICPrediction( cu, mv, refPic, a, b, TEXT_CHROMA_V ); // Cr
+#else
     xGetLLSICPrediction( cu, mv, refPic, a, b, iShift, TEXT_CHROMA_V ); // Cr
+#endif
     for ( i = 0; i < cxHeight; i++ )
     {
       for ( j = 0; j < cxWidth; j++ )
@@ -1315,7 +1350,11 @@ Short CountLeadingZerosOnes (Short x)
 
 /** Function for deriving LM illumination compensation.
  */
+#if SHARP_ILLUCOMP_REFINE_E0046
+Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, TextType eType )
+#else
 Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift, TextType eType )
+#endif
 {
   TComPicYuv *pRecPic = pcCU->getPic()->getPicYuvRec();
   Pel *pRec = NULL, *pRef = NULL;
@@ -1343,6 +1382,9 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
   // LLS parameters estimation -->
 
   Int x = 0, y = 0, xx = 0, xy = 0;
+#if SHARP_ILLUCOMP_REFINE_E0046
+  Int precShift = std::max(0, (( eType == TEXT_LUMA ) ? g_bitDepthY : g_bitDepthC) - 12);
+#endif
 
   if( pcCU->getPUAbove( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) && iCUPelY > 0 && iRefY > 0 )
   {
@@ -1364,14 +1406,27 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
       pRec = pRecPic->getCrAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - iRecStride;
     }
 
+#if SHARP_ILLUCOMP_REFINE_E0046
+    for( j = 0; j < uiWidth; j+=2 )
+#else
     for( j = 0; j < uiWidth; j++ )
+#endif
     {
       x += pRef[j];
       y += pRec[j];
+#if SHARP_ILLUCOMP_REFINE_E0046
+      xx += (pRef[j] * pRef[j])>>precShift;
+      xy += (pRef[j] * pRec[j])>>precShift;
+#else
       xx += pRef[j] * pRef[j];
       xy += pRef[j] * pRec[j];
+#endif
     }
+#if SHARP_ILLUCOMP_REFINE_E0046
+    iCountShift += g_aucConvertToBit[ uiWidth ] + 1;
+#else
     iCountShift += g_aucConvertToBit[ uiWidth ] + 2;
+#endif
   }
 
 
@@ -1395,19 +1450,43 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
       pRec = pRecPic->getCrAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() ) - 1;
     }
 
+#if SHARP_ILLUCOMP_REFINE_E0046
+    for( i = 0; i < uiHeight; i+=2 )
+#else
     for( i = 0; i < uiHeight; i++ )
+#endif
     {
       x += pRef[0];
       y += pRec[0];
+#if SHARP_ILLUCOMP_REFINE_E0046
+      xx += (pRef[0] * pRef[0])>>precShift;
+      xy += (pRef[0] * pRec[0])>>precShift;
+
+      pRef += iRefStride*2;
+      pRec += iRecStride*2;
+#else
       xx += pRef[0] * pRef[0];
       xy += pRef[0] * pRec[0];
 
       pRef += iRefStride;
       pRec += iRecStride;
+#endif
     }
+#if SHARP_ILLUCOMP_REFINE_E0046
+    iCountShift += iCountShift > 0 ? 1 : ( g_aucConvertToBit[ uiWidth ] + 1 );
+#else
     iCountShift += iCountShift > 0 ? 1 : ( g_aucConvertToBit[ uiWidth ] + 2 );
+#endif
   }
 
+#if SHARP_ILLUCOMP_REFINE_E0046
+  xy += xx >> IC_REG_COST_SHIFT;
+  xx += xx >> IC_REG_COST_SHIFT;
+  Int a1 = ( xy << iCountShift ) - ((y * x) >> precShift);
+  Int a2 = ( xx << iCountShift ) - ((x * x) >> precShift);
+  const Int iShift = IC_CONST_SHIFT;
+  {
+#else
   Int iTempShift = ( ( eType == TEXT_LUMA ) ? g_bitDepthY : g_bitDepthC ) + g_aucConvertToBit[ uiWidth ] + 3 - 15;
 
   if( iTempShift > 0 )
@@ -1431,10 +1510,12 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
   {
     Int a1 = ( xy << iCountShift ) - y * x;
     Int a2 = ( xx << iCountShift ) - x * x;              
-
+#endif
     {
       const Int iShiftA2 = 6;
+#if !SHARP_ILLUCOMP_REFINE_E0046
       const Int iShiftA1 = 15;
+#endif
       const Int iAccuracyShift = 15;
 
       Int iScaleShiftA2 = 0;
@@ -1442,8 +1523,14 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
       Int a1s = a1;
       Int a2s = a2;
 
+#if SHARP_ILLUCOMP_REFINE_E0046
+      a1 = Clip3(0, 2*a2, a1);
+      iScaleShiftA2 = GetMSB( abs( a2 ) ) - iShiftA2;
+      iScaleShiftA1 = iScaleShiftA2 - IC_SHIFT_DIFF;
+#else
       iScaleShiftA1 = GetMSB( abs( a1 ) ) - iShiftA1;
       iScaleShiftA2 = GetMSB( abs( a2 ) ) - iShiftA2;  
+#endif
 
       if( iScaleShiftA1 < 0 )
       {
@@ -1457,10 +1544,15 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 
       Int iScaleShiftA = iScaleShiftA2 + iAccuracyShift - iShift - iScaleShiftA1;
 
+
       a2s = a2 >> iScaleShiftA2;
 
       a1s = a1 >> iScaleShiftA1;
 
+#if SHARP_ILLUCOMP_REFINE_E0046
+      a = a1s * m_uiaShift[ a2s ];
+      a = a >> iScaleShiftA;
+#else
       if (a2s >= 1)
       {
         a = a1s * m_uiaShift[ a2s - 1];
@@ -1493,7 +1585,7 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
         a = a >> (9-n);
         iShift -= (9-n);
       }
-
+#endif
       b = (  y - ( ( a * x ) >> iShift ) + ( 1 << ( iCountShift - 1 ) ) ) >> iCountShift;
     }
   }   
