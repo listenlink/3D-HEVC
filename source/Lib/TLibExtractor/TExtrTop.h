@@ -45,6 +45,7 @@
 #include <list>
 #include <set>
 
+#if H_MV
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -53,10 +54,10 @@
 class TExtrTop
 {
 private:
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
+
   TComVPS                 m_cVPS;
-#endif
-   std::list<TComSPS>      m_acSPSBuffer;
+  std::list<TComSPS>      m_acSPSBuffer;
+  std::list<Int    >      m_aiSPSLayerIdBuffer; 
 
   // functional classes
   TComPrediction           m_cPrediction;
@@ -71,13 +72,14 @@ public:
 
   Bool     extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds );
   Void     dumpSpsInfo( std::ostream& rcSpsInfoHandle );
+  Void     dumpVpsInfo( std::ostream& rcVpsInfoHandle ); 
   
   TComSPS *getFirstSPS() { return m_acSPSBuffer.empty() ? 0 : &(m_acSPSBuffer.front()); }
 
 protected:
-   UInt     xGetLayerId( UInt uiViewId, Bool bIsDepth ) { return ( ( uiViewId << 1 ) + ( bIsDepth ? 1 : 0 ) ); }
+
 };// END CLASS DEFINITION TExtrTop
 
 
 #endif // __TEXTRTOP__
-
+#endif

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,36 +44,30 @@ using namespace std;
 //! \ingroup TLibEncoder
 //! \{
 
-static const char emulation_prevention_three_byte[] = {3};
+static const Char emulation_prevention_three_byte[] = {3};
 
+Void writeNalUnitHeader(ostream& out, OutputNALUnit& nalu)       // nal_unit_header()
+{
+TComOutputBitstream bsNALUHeader;
+
+  bsNALUHeader.write(0,1);                    // forbidden_zero_bit
+  bsNALUHeader.write(nalu.m_nalUnitType, 6);  // nal_unit_type
+#if H_MV
+  bsNALUHeader.write(nalu.m_layerId, 6);      // layerId       
+#else
+  bsNALUHeader.write(nalu.m_reservedZero6Bits, 6);                   // nuh_reserved_zero_6bits
+#endif
+  bsNALUHeader.write(nalu.m_temporalId+1, 3); // nuh_temporal_id_plus1
+
+  out.write(bsNALUHeader.getByteStream(), bsNALUHeader.getByteStreamLength());
+}
 /**
  * write nalu to bytestream out, performing RBSP anti startcode
  * emulation as required.  nalu.m_RBSPayload must be byte aligned.
  */
 void write(ostream& out, OutputNALUnit& nalu)
 {
-  TComOutputBitstream bsNALUHeader;
-
-  bsNALUHeader.write(0,1); // forbidden_zero_flag
-  bsNALUHeader.write(nalu.m_nalRefFlag? 1 : 0, 1); // nal_ref_flag
-  bsNALUHeader.write(nalu.m_nalUnitType, 6);          // nal_unit_type
-
-#if QC_MVHEVC_B0046
-  bsNALUHeader.write(nalu.m_layerId,        5); // when nal_ref_flag is signalled, 5 bits here. otherwise, 6 bits
-  bsNALUHeader.write(nalu.m_temporalId + 1, 3); // temporal_id
-#else
-#if VIDYO_VPS_INTEGRATION
-  bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
-  bsNALUHeader.write(nalu.m_layerId + 1, 5); // layer_id_plus1
-#else
-  bsNALUHeader.write(nalu.m_temporalId, 3); // temporal_id
- // bsNALUHeader.write(1, 5); // reserved_one_5bits
-  bsNALUHeader.write(nalu.m_viewId+1,4); 
-  bsNALUHeader.write(nalu.m_isDepth,1);
-#endif
-#endif 
-  out.write(bsNALUHeader.getByteStream(), bsNALUHeader.getByteStreamLength());
-
+  writeNalUnitHeader(out, nalu);
   /* write out rsbp_byte's, inserting any required
    * emulation_prevention_three_byte's */
   /* 7.4.1 ...
@@ -95,7 +89,6 @@ void write(ostream& out, OutputNALUnit& nalu)
    *  - 0x00000303
    */
   vector<uint8_t>& rbsp   = nalu.m_Bitstream.getFIFO();
-  UInt uiTileMarkerCount  = nalu.m_Bitstream.getTileMarkerLocationCount();
 
   for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
   {
@@ -117,15 +110,6 @@ void write(ostream& out, OutputNALUnit& nalu)
         break;
     } while (true);
 
-    UInt uiDistance = (UInt)(found - rbsp.begin());
-    for ( UInt uiMrkrIdx = 0; uiMrkrIdx < uiTileMarkerCount ; uiMrkrIdx++ )
-    {    
-      UInt uiByteLocation   = nalu.m_Bitstream.getTileMarkerLocation( uiMrkrIdx );
-      if (found != rbsp.end() && uiByteLocation > (uiDistance - 2) )
-      {
-        nalu.m_Bitstream.setTileMarkerLocation( uiMrkrIdx, uiByteLocation+1 );
-      }
-    }
     it = found;
     if (found != rbsp.end())
     {
@@ -133,24 +117,7 @@ void write(ostream& out, OutputNALUnit& nalu)
     }
   }
 
-  // Insert tile markers
-  TComOutputBitstream cTileMarker;
-  UInt uiMarker = 0x000002;
-  cTileMarker.write(uiMarker, 24);
-  for ( UInt uiInsertIdx   = 0; uiInsertIdx < uiTileMarkerCount ; uiInsertIdx++ )
-  {
-    UInt uiByteLocation   = nalu.m_Bitstream.getTileMarkerLocation( uiInsertIdx );
-    nalu.m_Bitstream.insertAt( cTileMarker, uiByteLocation ); // 0x000002
-
-    // update tile marker byte locations of yet to be written markers
-    for ( UInt uiUpdateLOCIdx = uiInsertIdx+1; uiUpdateLOCIdx < uiTileMarkerCount; uiUpdateLOCIdx++ )
-    {
-      UInt uiLocation = nalu.m_Bitstream.getTileMarkerLocation( uiUpdateLOCIdx );
-      nalu.m_Bitstream.setTileMarkerLocation( uiUpdateLOCIdx, uiLocation + 3 );
-    }
-  }
-  out.write((char*)&(*rbsp.begin()), rbsp.end() - rbsp.begin());
-
+  out.write((Char*)&(*rbsp.begin()), rbsp.end() - rbsp.begin());
 
   /* 7.4.1.1
    * ... when the last byte of the RBSP data is equal to 0x00 (which can
@@ -172,26 +139,19 @@ void writeRBSPTrailingBits(TComOutputBitstream& bs)
   bs.writeAlignZero();
 }
 
-#if !QC_MVHEVC_B0046
 /**
  * Copy NALU from naluSrc to naluDest
  */
 void copyNaluData(OutputNALUnit& naluDest, const OutputNALUnit& naluSrc)
 {
   naluDest.m_nalUnitType = naluSrc.m_nalUnitType;
-  naluDest.m_nalRefFlag  = naluSrc.m_nalRefFlag;
-#if !VIDYO_VPS_INTEGRATION
-  naluDest.m_viewId      = naluSrc.m_viewId;
-  naluDest.m_isDepth     = naluSrc.m_isDepth;
+#if H_MV
+  naluDest.m_layerId  = naluSrc.m_layerId;
+#else
+  naluDest.m_reservedZero6Bits  = naluSrc.m_reservedZero6Bits;
 #endif
   naluDest.m_temporalId  = naluSrc.m_temporalId;
-#if VIDYO_VPS_INTEGRATION
-  naluDest.m_layerId = naluSrc.m_layerId;
-#else
-  
-#endif
   naluDest.m_Bitstream   = naluSrc.m_Bitstream;
 }
-#endif
 
 //! \}

@@ -43,6 +43,8 @@
 // Include files
 #include "TLibCommon/CommonDef.h"
 #include "assert.h"
+#if H_3D
+
 // ====================================================================================================================
 // Constants
 // ====================================================================================================================
@@ -102,460 +104,8 @@ public:
    __inline Int xCTI_Filter_VP04_C_OCT3( Pel* pSrc, Int iStride );
    __inline Int xCTI_Filter_VI04_C_OCT3( Int* pSrc, Int iStride );
 
-#if HIGH_ACCURACY_BI
-  __inline Void xCTI_FilterHalfHor_ha(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst); //
-  __inline Void xCTI_FilterHalfHor_ha(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst);//
-  
-    
-  __inline Void xCTI_FilterQuarter0Hor_ha(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst); //
-  __inline Void xCTI_FilterQuarter0Hor_ha(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst); //
-  
-  __inline Void xCTI_FilterQuarter1Hor_ha(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst); //
-  __inline Void xCTI_FilterQuarter1Hor_ha(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst); //
-  
-  __inline Void xCTI_FilterHalfVer_ha (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst ); //
-  
-  __inline Void xCTI_FilterQuarter0Ver_ha (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst );
-  __inline Void xCTI_FilterQuarter1Ver_ha (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst );
-  
-  __inline Void xCTI_Filter1DHorC_ha (Pel* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV);
-  __inline Void xCTI_Filter1DVerC_ha (Pel* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV);
-  __inline Void xCTI_Filter2DHorC_ha (Int* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV);
-
-#endif
 };
 
-#if HIGH_ACCURACY_BI
-__inline Void TRenInterpFilter::xCTI_FilterHalfHor_ha(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-
-  Int iSrcStep2 = iSrcStep*2;
-  Int iSrcStep3 = iSrcStep*3;
-  Int iSrcStep4 = iSrcStep*4;
-  Int iSrcStep5 = iSrcStep*5;
-  Int iSrcStep6 = iSrcStep*6;
-  Int iSrcStep7 = iSrcStep*7;
-
-  Int iTmp0, iTmp1, iTmp2, iTmp3, iTmpA;
-  Int shiftNum = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStep ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // { -1,4,-11,40,40,-11,4,-1   } 
-      iTmp0 = piSrcTmp[        0]+piSrcTmp[iSrcStep7];
-      iTmp1 = piSrcTmp[iSrcStep]+piSrcTmp[iSrcStep6];
-      iTmp2 = piSrcTmp[iSrcStep2]+piSrcTmp[iSrcStep5];
-      iTmp3 = piSrcTmp[iSrcStep3]+piSrcTmp[iSrcStep4];
-
-      iTmpA = (iTmp3 << 2) - iTmp2;
-
-      iSum  = (   iTmp1          << 2 )
-            + (   iTmpA          << 3 )
-            + (   iTmpA          << 1 )
-            -    iTmp0 -  iTmp2;
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-      
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-}
-
-__inline Void TRenInterpFilter::xCTI_FilterHalfHor_ha(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Int*  piSrcTmp;
- 
-  Int iSrcStep2 = iSrcStep*2;
-  Int iSrcStep3 = iSrcStep*3;
-  Int iSrcStep4 = iSrcStep*4;
-  Int iSrcStep5 = iSrcStep*5;
-  Int iSrcStep6 = iSrcStep*6;
-  Int iSrcStep7 = iSrcStep*7;
-
-  Int iTmp0, iTmp1, iTmp2, iTmp3, iTmpA;
-  Int shiftNum = 6 + g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStep ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // { -1,4,-11,40,40,-11,4,-1   } 
-      iTmp0 = piSrcTmp[        0]+piSrcTmp[iSrcStep7];
-      iTmp1 = piSrcTmp[iSrcStep ]+piSrcTmp[iSrcStep6];
-      iTmp2 = piSrcTmp[iSrcStep2]+piSrcTmp[iSrcStep5];
-      iTmp3 = piSrcTmp[iSrcStep3]+piSrcTmp[iSrcStep4];
-      
-      iTmpA = (iTmp3 << 2) - iTmp2;
-      
-      iSum  = (   iTmp1          << 2 )
-            + (   iTmpA          << 3 )
-            + (   iTmpA          << 1 )
-            -    iTmp0 -  iTmp2;
-      
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-}
-
-
-__inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor_ha(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-
-  Int iSrcStep2 = iSrcStep*2;
-  Int iSrcStep3 = iSrcStep*3;
-  Int iSrcStep4 = iSrcStep*4;
-  Int iSrcStep5 = iSrcStep*5;
-  Int iSrcStep6 = iSrcStep*6;
-  Int iSrcStep7 = iSrcStep*7;
-
-  Int  iTmp1, iTmp2;
-  Int shiftNum = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStep ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // {-1,   4,  -10,  57,   19,  -7,   3,   -1  },
-      
-      iTmp1 = piSrcTmp[iSrcStep3] + piSrcTmp[iSrcStep5];
-      iTmp2 = piSrcTmp[iSrcStep6] + piSrcTmp[iSrcStep4];
-      
-      iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStep7]
-            - ( ( piSrcTmp[iSrcStep2] - iTmp2 ) << 1 )
-            + (  piSrcTmp[iSrcStep]             << 2 )
-            - ( ( piSrcTmp[iSrcStep2] + iTmp1 ) << 3 )
-            + (   piSrcTmp[iSrcStep4]           << 4 )
-            + ( piSrcTmp[iSrcStep3]             << 6);
-      
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum + shiftOffset) >> shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0,16383, (iSum + shiftOffset) >> shiftNum );
-#endif
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-}
-
-__inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor_ha(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Int*  piSrcTmp;
-  
-  Int iSrcStep2 = iSrcStep*2;
-  Int iSrcStep3 = iSrcStep*3;
-  Int iSrcStep4 = iSrcStep*4;
-  Int iSrcStep5 = iSrcStep*5;
-  Int iSrcStep6 = iSrcStep*6;
-  Int iSrcStep7 = iSrcStep*7;
-  Int shiftNum = 6 + g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  Int  iTmp1, iTmp2;
-
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStep ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // {-1,   4,  -10,  57,   19,  -7,   3,   -1  },
-    
-      iTmp1 = piSrcTmp[iSrcStep3] + piSrcTmp[iSrcStep5];
-      iTmp2 = piSrcTmp[iSrcStep6] + piSrcTmp[iSrcStep4];
-      
-      iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStep7]
-            - ( ( piSrcTmp[iSrcStep2] - iTmp2 ) << 1 )
-            + (  piSrcTmp[iSrcStep]             << 2 )
-            - ( ( piSrcTmp[iSrcStep2] + iTmp1 ) << 3 )
-            + (   piSrcTmp[iSrcStep4]           << 4 )
-            + (   piSrcTmp[iSrcStep3]           << 6 );
-      
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0, 16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-}
-
-
-__inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor_ha(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-
-  Int iSrcStep2 = iSrcStep*2;
-  Int iSrcStep3 = iSrcStep*3;
-  Int iSrcStep4 = iSrcStep*4;
-  Int iSrcStep5 = iSrcStep*5;
-  Int iSrcStep6 = iSrcStep*6;
-  Int iSrcStep7 = iSrcStep*7;
-  Int shiftNum = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-
-  Int  iTmp1, iTmp2;
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStep ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // {-1,   3,  -7,  19,   57,  -10,   4,   -1  },
-      
-      iTmp1 = piSrcTmp[iSrcStep4] + piSrcTmp[iSrcStep2];
-      iTmp2 = piSrcTmp[iSrcStep ] + piSrcTmp[iSrcStep3];
-      
-      iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStep7]
-            - ( ( piSrcTmp[iSrcStep5] - iTmp2 ) << 1 )
-            + (   piSrcTmp[iSrcStep6]           << 2 )
-            - ( ( piSrcTmp[iSrcStep5] + iTmp1 ) << 3 )
-            + (   piSrcTmp[iSrcStep3]           << 4 )
-            + (   piSrcTmp[iSrcStep4]           << 6 );
-
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0, 16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-
-}
-
-__inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor_ha(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Int*  piSrcTmp;
-
-  Int iSrcStep2 = iSrcStep*2;
-  Int iSrcStep3 = iSrcStep*3;
-  Int iSrcStep4 = iSrcStep*4;
-  Int iSrcStep5 = iSrcStep*5;
-  Int iSrcStep6 = iSrcStep*6;
-  Int iSrcStep7 = iSrcStep*7;
-  Int shiftNum = 6+g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  Int  iTmp1, iTmp2;
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStep ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // {-1,   3,  -7,  19,   57,  -10,   4,   -1  },
-      
-      iTmp1 = piSrcTmp[iSrcStep4] + piSrcTmp[iSrcStep2];
-      iTmp2 = piSrcTmp[iSrcStep ] + piSrcTmp[iSrcStep3];
-      
-      iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStep7]
-            - ( ( piSrcTmp[iSrcStep5] - iTmp2 ) << 1 )
-            + (   piSrcTmp[iSrcStep6]           << 2 )
-            - ( ( piSrcTmp[iSrcStep5] + iTmp1 ) << 3 )
-            + (   piSrcTmp[iSrcStep3]           << 4 )
-            + (   piSrcTmp[iSrcStep4]           << 6 );
-      
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0, 16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-}
-
-
-
-__inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver_ha (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-  
-  Int iSrcStride2 = iSrcStride*2;
-  Int iSrcStride3 = iSrcStride*3;
-  Int iSrcStride4 = iSrcStride*4;
-  Int iSrcStride5 = iSrcStride*5;
-  Int iSrcStride6 = iSrcStride*6;
-  Int iSrcStride7 = iSrcStride*7;
-  Int shiftNum = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  Int  iTmp1, iTmp2;
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStride ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // {-1,   4,  -10,  57,   19,  -7,   3,   -1  },
-      
-      iTmp1 = piSrcTmp[iSrcStride3] + piSrcTmp[iSrcStride5];
-      iTmp2 = piSrcTmp[iSrcStride6] + piSrcTmp[iSrcStride4];
-      
-      iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStride7]
-            - ( ( piSrcTmp[iSrcStride2] - iTmp2 ) << 1 )
-            + (  piSrcTmp[iSrcStride]             << 2 )
-            - ( ( piSrcTmp[iSrcStride2] + iTmp1 ) << 3 )
-            + (   piSrcTmp[iSrcStride4]           << 4 )
-            + (   piSrcTmp[iSrcStride3]           << 6);
-      
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0, 16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-}
-
-
-__inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver_ha (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-
-  Int iSrcStride2 = iSrcStride*2;
-  Int iSrcStride3 = iSrcStride*3;
-  Int iSrcStride4 = iSrcStride*4;
-  Int iSrcStride5 = iSrcStride*5;
-  Int iSrcStride6 = iSrcStride*6;
-  Int iSrcStride7 = iSrcStride*7;
-  Int shiftNum = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  Int  iTmp1, iTmp2;
-
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStride ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      /// {-1,   3,  -7,  19,   57,  -10,   4,   -1  },
-      iTmp1 = piSrcTmp[iSrcStride4] + piSrcTmp[iSrcStride2];
-      iTmp2 = piSrcTmp[iSrcStride ] + piSrcTmp[iSrcStride3];
-      
-      iSum  =  iTmp1 + iTmp2 - piSrcTmp[0] - piSrcTmp[iSrcStride7]
-            - ( ( piSrcTmp[iSrcStride5] - iTmp2 ) << 1 )
-            + (   piSrcTmp[iSrcStride6]           << 2 )
-            - ( ( piSrcTmp[iSrcStride5] + iTmp1 ) << 3 )
-            + (   piSrcTmp[iSrcStride3]           << 4 )
-            + (   piSrcTmp[iSrcStride4]           << 6 );
-            
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0, 16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-}
-
-__inline Void TRenInterpFilter::xCTI_FilterHalfVer_ha  (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  Pel*  piDst = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-  
-  Int iSrcStride2 = iSrcStride*2;
-  Int iSrcStride3 = iSrcStride*3;
-  Int iSrcStride4 = iSrcStride*4;
-  Int iSrcStride5 = iSrcStride*5;
-  Int iSrcStride6 = iSrcStride*6;
-  Int iSrcStride7 = iSrcStride*7;
-  Int shiftNum = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-  Int  iTmp0, iTmp1, iTmp2, iTmp3, iTmpA;
-  for ( Int y = iHeight; y != 0; y-- )
-  {
-    piSrcTmp = &piSrc[ -3*iSrcStride ];
-    for ( Int x = 0; x < iWidth; x++ )
-    {
-      // { -1,4,-11,40,40,-11,4,-1   } 
-      iTmp0 = piSrcTmp[          0]+piSrcTmp[iSrcStride7];
-      iTmp1 = piSrcTmp[iSrcStride ]+piSrcTmp[iSrcStride6];
-      iTmp2 = piSrcTmp[iSrcStride2]+piSrcTmp[iSrcStride5];
-      iTmp3 = piSrcTmp[iSrcStride3]+piSrcTmp[iSrcStride4];
-      
-      iTmpA = (iTmp3 << 2) - iTmp2;
-      
-      iSum  = (   iTmp1          << 2 )
-            + (   iTmpA          << 3 )
-            + (   iTmpA          << 1 )
-            -    iTmp0 -  iTmp2;        
-      
-#if REMOVE_INTERMEDIATE_CLIPPING
-      piDst   [x * iDstStep] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-      piDst   [x * iDstStep] = Clip3(0, 16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-      piSrcTmp += iSrcStep;
-    }
-    piSrc += iSrcStride;
-    piDst += iDstStride;
-  }
-  return;
-
-}
-
-
-#endif
 
 // ------------------------------------------------------------------------------------------------
 // DCTIF filters
@@ -563,6 +113,8 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer_ha  (Pel* piSrc, Int iSrcStri
 
 __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
+
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -593,7 +145,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, I
             + (   iTmpA          << 1 )
             -    iTmp0 -  iTmp2;
 
-      piDst   [x * iDstStep] = Clip( (iSum +  32) >>  6 );
+      piDst   [x * iDstStep] = ClipY( (iSum +  32) >>  6 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -604,6 +156,8 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, I
 
 __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
+
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -634,7 +188,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Int* piSrc, Int iSrcStride, I
             + (   iTmpA          << 1 )
             -    iTmp0 -  iTmp2;
       
-      piDst   [x * iDstStep] = Clip( (iSum +  2048) >>  12 );
+      piDst   [x * iDstStep] = ClipY( (iSum +  2048) >>  12 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -645,6 +199,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Int* piSrc, Int iSrcStride, I
 
 __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -673,7 +228,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStrid
              - ( ( piSrcTmp[iSrcStep2] + iTmp1 ) << 3 )
              + (   piSrcTmp[iSrcStep4]           << 4 );
       
-      piDst   [x * iDstStep] = Clip(( (iSum +  32) >>  6 )+ piSrcTmp[iSrcStep3]);
+      piDst   [x * iDstStep] = ClipY(( (iSum +  32) >>  6 )+ piSrcTmp[iSrcStep3]);
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -684,6 +239,8 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStrid
 
 __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
+
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -713,7 +270,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStrid
             + (   piSrcTmp[iSrcStep4]           << 4 )
             + (   piSrcTmp[iSrcStep3]           << 6 );
       
-      piDst   [x * iDstStep] = Clip( (iSum +  2048) >>  12 );
+      piDst   [x * iDstStep] = ClipY( (iSum +  2048) >>  12 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -724,6 +281,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStrid
 
 __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -751,7 +309,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStrid
             - ( ( piSrcTmp[iSrcStep5] + iTmp1 ) << 3 )
             + (   piSrcTmp[iSrcStep3]           << 4 );
       
-      piDst   [x * iDstStep] = Clip( ((iSum +  32) >>  6) + piSrcTmp[iSrcStep4] );
+      piDst   [x * iDstStep] = ClipY( ((iSum +  32) >>  6) + piSrcTmp[iSrcStep4] );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -762,6 +320,8 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStrid
 
 __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
+
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -790,7 +350,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStrid
             + (   piSrcTmp[iSrcStep3]           << 4 )
             + (   piSrcTmp[iSrcStep4]           << 6 );
       
-      piDst   [x * iDstStep] = Clip( (iSum +  2048) >>  12 );
+      piDst   [x * iDstStep] = ClipY( (iSum +  2048) >>  12 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -801,6 +361,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStrid
 
 __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst, Int iDstStridePel, Pel*& rpiDstPel )
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Int*  piDst = rpiDst;
   Pel*  piDstPel = rpiDstPel;
   Int   iSum;
@@ -832,7 +393,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
             -    iTmp0 -  iTmp2;
       
       piDst[x * iDstStep]    = iSum;
-      piDstPel[x * iDstStep] = Clip( (iSum +  32) >>  6 );
+      piDstPel[x * iDstStep] = ClipY( (iSum +  32) >>  6 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -884,6 +445,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
 
 __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -914,7 +476,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
             + (   iTmpA          << 1 )
             -    iTmp0 -  iTmp2;        
       
-      piDst[x * iDstStep] = Clip( (iSum +  32) >>  6 );
+      piDst[x * iDstStep] = ClipY( (iSum +  32) >>  6 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -964,6 +526,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStri
 
 __inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY );  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -992,7 +555,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStri
             - ( ( piSrcTmp[iSrcStride2] + iTmp1 ) << 3 )
             + (   piSrcTmp[iSrcStride4]           << 4 );
       
-      piDst[x * iDstStep] = Clip( ((iSum +  32) >>  6) + piSrcTmp[iSrcStride3] );
+      piDst[x * iDstStep] = ClipY( ((iSum +  32) >>  6) + piSrcTmp[iSrcStride3] );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -1042,6 +605,8 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStri
 
 __inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
+
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -1069,7 +634,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStri
             - ( ( piSrcTmp[iSrcStride5] + iTmp1 ) << 3 )
             + (   piSrcTmp[iSrcStride3]           << 4 );
             
-      piDst[x * iDstStep] = Clip( ((iSum +  32) >>  6) +  piSrcTmp[iSrcStride4] );
+      piDst[x * iDstStep] = ClipY( ((iSum +  32) >>  6) +  piSrcTmp[iSrcStride4] );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -1210,6 +775,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DVerC (Pel* piSrc, Int iSrcStride,  
 
 __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -1224,7 +790,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT0( piSrcTmp, 1 );
-          piDst   [x ] = Clip ((iSum +  2048) >>  12 );
+          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1240,7 +806,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_QUA0( piSrcTmp, 1 );
-          piDst   [x ] = Clip ((iSum +  2048) >>  12 );
+          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1256,7 +822,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_QUA1( piSrcTmp, 1 );
-          piDst   [x ] = Clip ((iSum +  2048) >>  12 );
+          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1272,7 +838,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT1( piSrcTmp, 1 );
-          piDst   [x ] = Clip ((iSum +  2048) >>  12 );
+          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1288,7 +854,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT2( piSrcTmp, 1 );
-          piDst   [x ] = Clip ((iSum +  2048) >>  12 );
+          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1304,7 +870,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT3( piSrcTmp, 1 );
-          piDst   [x ] = Clip ((iSum +  2048) >>  12 );
+          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1320,7 +886,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VIS04_C_HAL( piSrcTmp, 1 );
-          piDst   [x ] = Clip ((iSum +  2048) >>  12 );
+          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1337,6 +903,8 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
 
 __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
 {
+  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
+
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -1351,7 +919,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT0( piSrcTmp,  iSrcStride );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1367,7 +935,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_QUA0( piSrcTmp,  iSrcStride );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1383,7 +951,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_QUA1( piSrcTmp,  iSrcStride );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1399,7 +967,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT1( piSrcTmp,  iSrcStride );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1415,7 +983,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT2( piSrcTmp,  iSrcStride );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1431,7 +999,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT3( piSrcTmp,  iSrcStride );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1447,7 +1015,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VPS04_C_HAL( piSrcTmp, iSrcStride );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1477,7 +1045,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT0( piSrcTmp,  1 );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1493,7 +1061,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_QUA0( piSrcTmp,  1 );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1509,7 +1077,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_QUA1( piSrcTmp,  1 );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1525,7 +1093,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT1( piSrcTmp,  1 );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1541,7 +1109,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT2( piSrcTmp,  1 );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1557,7 +1125,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT3( piSrcTmp,  1 );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1573,7 +1141,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VPS04_C_HAL( piSrcTmp,  1 );
-          piDst[x ] = Clip ((iSum +  32) >>  6 );
+          piDst[x ] = ClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1586,479 +1154,6 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
  }
   return;
 }
-
-#if HIGH_ACCURACY_BI
-__inline Void TRenInterpFilter::xCTI_Filter2DHorC_ha(Int* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Int*  piSrcTmp;
-  Int shiftNum  = 6 + g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-
-  switch (iMV)
-  {
-  case 1:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VI04_C_OCT0( piSrcTmp, 1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 2:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VI04_C_QUA0( piSrcTmp, 1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 6:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VI04_C_QUA1( piSrcTmp, 1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 3:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VI04_C_OCT1( piSrcTmp, 1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 5:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VI04_C_OCT2( piSrcTmp, 1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 7:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VI04_C_OCT3( piSrcTmp, 1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 4:
-  {
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VIS04_C_HAL( piSrcTmp, 1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  default:
-    assert( 0 );
-  }
-
-  return;
-}
-
-__inline Void TRenInterpFilter::xCTI_Filter1DVerC_ha (Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
-{
-  Pel*  piDst = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-  Int shiftNum  = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-    
-  switch (iMV)
-  {
-  case 1:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -iSrcStride ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_OCT0( piSrcTmp,  iSrcStride );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 2:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -iSrcStride ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_QUA0( piSrcTmp,  iSrcStride );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 6:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -iSrcStride ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_QUA1( piSrcTmp,  iSrcStride );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 3:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -iSrcStride ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_OCT1( piSrcTmp,  iSrcStride );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 5:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -iSrcStride ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_OCT2( piSrcTmp,  iSrcStride );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 7:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -iSrcStride ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_OCT3( piSrcTmp,  iSrcStride );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 4:
-  {
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[-iSrcStride ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VPS04_C_HAL( piSrcTmp, iSrcStride );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  default:
-    assert( 0 );
-  }    
-  return;
-}
-
-__inline Void TRenInterpFilter::xCTI_Filter1DHorC_ha(Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Int iDstStride, Pel*& rpiDst, Int iMV)
-{
-  Pel*  piDst    = rpiDst;
-  Int   iSum;
-  Pel*  piSrcTmp;
-  Int shiftNum  = g_uiBitIncrement + g_uiBitDepth - 8;
-  Int shiftOffset = (shiftNum > 0) ? ( 1 << (shiftNum - 1)) : 0 ;
-
-  switch (iMV)
-  {
-  case 1:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_OCT0( piSrcTmp,  1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 2:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_QUA0( piSrcTmp,  1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 6:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VP04_C_QUA1( piSrcTmp,  1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 3:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum      = xCTI_Filter_VP04_C_OCT1( piSrcTmp,  1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 5:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VP04_C_OCT2( piSrcTmp,  1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 7:
-  {  
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum         = xCTI_Filter_VP04_C_OCT3( piSrcTmp,  1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  case 4:
-  {
-      for ( Int y = iHeight; y != 0; y-- )
-      {
-        piSrcTmp = &piSrc[ -1 ];
-        for ( Int x = 0; x < iWidth; x++ )
-        {
-          iSum    = xCTI_Filter_VPS04_C_HAL( piSrcTmp,  1 );
-#if REMOVE_INTERMEDIATE_CLIPPING
-          piDst[x ] = (iSum +  shiftOffset) >>  shiftNum;
-#else
-          piDst[x ] = Clip3(0,16383, (iSum +  shiftOffset) >>  shiftNum );
-#endif
-          piSrcTmp++;
-        }
-        piSrc += iSrcStride;
-        piDst += iDstStride;
-      }
-  }
-  break;
-  default:
-    assert( 0 );
-
- }
-  return;
-}
-#endif
-
 
 __inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT0( Pel* pSrc,  Int iStride )
 {// {  -3,  60,   8,   -1,} // 1/8
@@ -2230,5 +1325,5 @@ __inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT3( Int* pSrc, Int iStride )
 
   return iSum;
 }
-
+#endif // H_3D
 #endif // __TRENINTERP__
