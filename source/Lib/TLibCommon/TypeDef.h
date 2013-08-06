@@ -169,6 +169,9 @@
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
+#if H_3D_DIM
+#define SEC_DMM2_E0146                    1   // Removal of DMM2 from DMMs
+#endif
 #define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
