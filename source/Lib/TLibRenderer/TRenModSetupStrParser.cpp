@@ -35,7 +35,8 @@
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenModSetupStrParser.h"
-#if !QC_MVHEVC_B0046
+
+#if H_3D
 Int
 TRenModSetupStrParser::getNumOfModels()
 {
@@ -449,5 +450,5 @@ TRenModSetupStrParser::xGetNextChar( Char& rcNextChar )
   while ( ( m_pchSetStr[iPos] == ' ' || m_pchSetStr[iPos] == ',' ) && m_pchSetStr[iPos] != '\0' ) iPos++;
   rcNextChar = m_pchSetStr[iPos];
 }
-#endif
+#endif // H_3D
 

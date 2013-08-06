@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,7 +48,7 @@
 
 #include "TEncEntropy.h"
 #include "TEncSearch.h"
-
+#include "TEncRateCtrl.h"
 //! \ingroup TLibEncoder
 //! \{
 
@@ -68,8 +68,8 @@ private:
   
   TComDataCU**            m_ppcBestCU;      ///< Best CUs in each depth
   TComDataCU**            m_ppcTempCU;      ///< Temporary CUs in each depth
-#if QC_ARP_D0177
-  TComDataCU**            m_ppcWeightedTempCU;   
+#if H_3D_ARP
+  TComDataCU**            m_ppcWeightedTempCU;
 #endif
   UChar                   m_uhTotalDepth;
   
@@ -80,17 +80,12 @@ private:
   TComYuv**               m_ppcResiYuvTemp; ///< Temporary Residual Yuv for each depth
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
-#if H3D_IVRP
-  TComYuv**               m_ppcResPredTmp;  ///< Temporary residual prediction for each depth
-#endif
-
+  
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
-  Bool                    m_checkBurstIPCMFlag;
-
+  
   //  Access channel
   TEncCfg*                m_pcEncCfg;
-  TComPrediction*         m_pcPrediction;
   TEncSearch*             m_pcPredSearch;
   TComTrQuant*            m_pcTrQuant;
   TComBitCounter*         m_pcBitCounter;
@@ -105,13 +100,12 @@ private:
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
-  
-#if HHI_MPI
-  UChar *m_puhDepthSaved;
-  UChar *m_puhWidthSaved;
-  UChar *m_puhHeightSaved;
+  TEncRateCtrl*           m_pcRateCtrl;
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+  UInt                    m_LCUPredictionSAD;
+  Int                     m_addSADDepth;
+  Int                     m_temporalSAD;
 #endif
-
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -121,14 +115,20 @@ public:
   
   /// destroy internal buffers
   Void  destroy             ();
-
+  
   /// CU analysis function
   Void  compressCU          ( TComDataCU*&  rpcCU );
   
   /// CU encoding function
-  Void  encodeCU            ( TComDataCU*    pcCU, Bool bForceTerminate = false  );
+  Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+  UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
+#endif
+#if RATE_CONTROL_INTRA
+  Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
+#endif
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
 #if AMP_ENC_SPEEDUP
@@ -141,28 +141,14 @@ protected:
   Int   xComputeQP          ( TComDataCU* pcCU, UInt uiDepth );
   Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt uiDepth        );
   
-#if HHI_INTERVIEW_SKIP
-  Void xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bFullyRendered ) ;
-#else
-  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                  );
-#endif
+  Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool *earlyDetectionSkipMode);
+
 #if AMP_MRG
-#if HHI_INTERVIEW_SKIP
-  Void xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFullyRendered, Bool bUseMRG = false  ) ;
-#else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
-#endif
-//  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
-#else
-#if HHI_INTERVIEW_SKIP
-  Void xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFullyRendered ) ;
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
-//  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#endif
   Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-  Void  xCheckBestMode      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
   Void  xCheckDQP           ( TComDataCU*  pcCU );
   
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );
@@ -172,12 +158,6 @@ protected:
 
   Bool getdQPFlag           ()                        { return m_bEncodeDQP;        }
   Void setdQPFlag           ( Bool b )                { m_bEncodeDQP = b;           }
-
-  Bool getCheckBurstIPCMFlag()                        { return m_checkBurstIPCMFlag;   }
-  Void setCheckBurstIPCMFlag( Bool b )                { m_checkBurstIPCMFlag = b;      }
-
-  Bool checkLastCUSucIPCM   ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
-  Int  countNumSucIPCM      ( TComDataCU* pcCU, UInt uiCurAbsPartIdx );
 
 #if ADAPTIVE_QP_SELECTION
   // Adaptive reconstruction level (ARL) statistics collection functions
@@ -193,15 +173,7 @@ protected:
 #endif
 #endif
 
-#if LOSSLESS_CODING 
   Void  xFillPCMBuffer     ( TComDataCU*& pCU, TComYuv* pOrgYuv ); 
-#endif
-#if HHI_MPI
-  Void  xCheckRDCostMvInheritance( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UChar uhTextureModeDepth, Bool bSkipResidual, Bool bRecursiveCall );
-  Void  xSaveDepthWidthHeight( TComDataCU* pcCU );
-  Void  xRestoreDepthWidthHeight( TComDataCU* pcCU );
-  Void  xAddMVISignallingBits( TComDataCU* pcCU );
-#endif
 };
 
 //! \}
