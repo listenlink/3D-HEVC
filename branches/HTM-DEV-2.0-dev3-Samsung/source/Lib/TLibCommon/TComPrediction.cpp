@@ -435,6 +435,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       {
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
       } break;
+#if !SEC_DMM2_E0146
     case( DMM2_IDX ):
       {
         UInt uiTabIdx = 0;
@@ -446,6 +447,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
         }
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ uiTabIdx ]);
       } break;
+#endif
     case( DMM3_IDX ): 
       {
         UInt uiTabIdx = 0;
@@ -2041,7 +2043,11 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType =  getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
+#if SEC_DMM2_E0146
+    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
+#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
+#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;
@@ -2066,7 +2072,11 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType = getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
+#if SEC_DMM2_E0146
+    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
+#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
+#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;

@@ -207,7 +207,9 @@ private:
   Pel*          m_dimDeltaDC[DIM_NUM_TYPE][2];
 #if H_3D_DIM_DMM
   UInt*         m_dmmWedgeTabIdx[DMM_NUM_TYPE]; 
+#if !SEC_DMM2_E0146
   Int*          m_dmm2DeltaEnd;
+#endif
   UInt*         m_dmm3IntraTabIdx;
 #endif
 #if H_3D_DIM_RBC
@@ -521,10 +523,12 @@ public:
   Void  setDmmWedgeTabIdx             ( UInt dmmType, UInt uiIdx, UInt tabIdx ) { m_dmmWedgeTabIdx[dmmType][uiIdx] = tabIdx; }
   Void  setDmmWedgeTabIdxSubParts     ( UInt tabIdx, UInt dmmType, UInt uiAbsPartIdx, UInt uiDepth );
 
+#if !SEC_DMM2_E0146
   Int*  getDmm2DeltaEnd               ()                      { return m_dmm2DeltaEnd;        }
   Int   getDmm2DeltaEnd               ( UInt uiIdx )          { return m_dmm2DeltaEnd[uiIdx]; }
   Void  setDmm2DeltaEnd               ( UInt uiIdx, Int iD )  { m_dmm2DeltaEnd[uiIdx] = iD;   }
   Void  setDmm2DeltaEndSubParts       ( Int iDelta, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 
   UInt* getDmm3IntraTabIdx            ()                      { return m_dmm3IntraTabIdx;        }
   UInt  getDmm3IntraTabIdx            ( UInt uiIdx )          { return m_dmm3IntraTabIdx[uiIdx]; }
