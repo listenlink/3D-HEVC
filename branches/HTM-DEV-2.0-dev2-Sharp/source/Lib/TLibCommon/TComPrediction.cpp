@@ -1306,6 +1306,7 @@ Int GetMSB( UInt x )
   return iMSB;
 }
 
+#if !SHARP_ILLUCOMP_REFINE_E0046
 /** Function for counting leading number of zeros/ones
  * \param x input value
  \ This function counts leading number of zeros for positive numbers and
@@ -1347,6 +1348,7 @@ Short CountLeadingZerosOnes (Short x)
   }
   return clz;
 }
+#endif
 
 /** Function for deriving LM illumination compensation.
  */
