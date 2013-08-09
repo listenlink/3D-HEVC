@@ -484,6 +484,9 @@ public:
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
 #endif //H_3D_NBDV_REF
 #endif
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+  Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);
+#endif
 #if H_3D_IV_MERGE
   Bool          getInterViewMergeCands          ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc );   
 #endif

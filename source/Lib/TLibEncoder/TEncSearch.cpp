@@ -3653,7 +3653,11 @@ Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvF
  * \returns Void
  */
 #if AMP_MRG
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv, Bool bFMD, Bool bUseRes, Bool bUseMRG )
+#else
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv, Bool bUseRes, Bool bUseMRG )
+#endif
 #else
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv, Bool bUseRes )
 #endif
@@ -3761,8 +3765,11 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     
 #if AMP_MRG
     Bool bTestNormalMC = true;
-    
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+    if (bFMD||( bUseMRG && pcCU->getWidth( 0 ) > 8 && iNumPart == 2 ))
+#else            
     if ( bUseMRG && pcCU->getWidth( 0 ) > 8 && iNumPart == 2 )
+#endif
     {
       bTestNormalMC = false;
     }

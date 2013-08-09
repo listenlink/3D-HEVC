@@ -195,6 +195,9 @@ public:
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv,
+#if MTK_FAST_TEXTURE_ENCODING_E0173
+                                  Bool        bFMD,
+#endif
                                   Bool        bUseRes = false
 #if AMP_MRG
                                  ,Bool        bUseMRG = false
