@@ -1260,12 +1260,22 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
 
 Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 {
+#if LGE_SDC_REMOVE_DC_E0158
+#if SEC_DMM2_E0146
+  UInt codeWordTable[3][7] =    {{0, 0, 0, 2, 0,6, 7},{0, 2, 3, 4, 5, 6, 7},{0, 1, 0, 0, 0, 0, 0}};
+  UInt codeWordLenTable[3][7] = {{0, 1, 0, 2, 0,3, 3},{2, 3, 3, 3, 3, 3, 3},{1, 1, 0, 0, 0, 0, 0}};
+#else
+  UInt codeWordTable[3][8] =    { { 0, 0, 0, 2, 0, 6, 0, 7 }, { 0, 2, 3, 4, 5, 6, 15, 14 }, { 0, 1, 0, 0, 0, 0, 0, 0 } };
+  UInt codeWordLenTable[3][8] = { { 0, 1, 0, 2, 0, 3, 0, 3 }, { 2, 3, 3, 3, 3, 3,  4,  4 }, { 1, 1, 0, 0, 0, 0, 0, 0 } };
+#endif
+#else
 #if SEC_DMM2_E0146
   UInt codeWordTable[3][8] =    {{0, 0, 0, 2, 0,6, 0, 7},{0, 2, 3, 4, 5, 6, 14, 15},{0, 2, 0, 0, 0, 0, 3, 0}};
   UInt codeWordLenTable[3][8] = {{0, 1, 0, 2, 0,3, 0, 3},{2, 3, 3, 3, 3, 3,  4,  4},{1, 2, 0, 0, 0, 0, 2, 0}};
 #else
   UInt codeWordTable[3][9] =    {{0, 0, 0, 2, 0,6, 0, 0, 7},{0, 2, 3, 4, 5, 6, 14, 31, 30},{0, 2, 0, 0, 0, 0, 3, 0, 0}};
   UInt codeWordLenTable[3][9] = {{0, 1, 0, 2, 0,3, 0, 0, 3},{2, 3, 3, 3, 3, 3,  4,  5,  5},{1, 2, 0, 0, 0, 0, 2, 0, 0}};
+#endif
 #endif
   UInt dir = pcCU->getLumaIntraDir( absPartIdx );
   UInt puIdx = (pcCU->getWidth(absPartIdx) == 64) ? 2 : ( (pcCU->getPartitionSize(absPartIdx) == SIZE_NxN && pcCU->getWidth(absPartIdx) == 8) ? 0 : 1 );
@@ -1282,11 +1292,20 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     case DMM1_IDX: codeIdx = 3; break;
     case DMM4_IDX: codeIdx = 4; break;
     case DMM3_IDX: codeIdx = 5; break;
+#if LGE_SDC_REMOVE_DC_E0158
+#if SEC_DMM2_E0146
+    case  RBC_IDX: codeIdx = 6; break;
+#else
+    case DMM2_IDX: codeIdx = 6; break;
+    case  RBC_IDX: codeIdx = 7; break;
+#endif
+#else
 #if SEC_DMM2_E0146
     case  RBC_IDX: codeIdx = 7; break;
 #else
     case DMM2_IDX: codeIdx = 7; break;
     case  RBC_IDX: codeIdx = 8; break;
+#endif
 #endif
     default:                    break;
     }
@@ -1298,7 +1317,9 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     switch( dir )
     {
       case PLANAR_IDX:  codeIdx = 0; break;
+#if !LGE_SDC_REMOVE_DC_E0158
       case DC_IDX:      codeIdx = 6; break;
+#endif
       default:          codeIdx = 2; break;
     }
   }
