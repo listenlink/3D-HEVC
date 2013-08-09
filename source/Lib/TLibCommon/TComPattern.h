@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,9 +56,7 @@ class TComPatternParam
 {
 private:
   Int   m_iOffsetLeft;
-  Int   m_iOffsetRight;
   Int   m_iOffsetAbove;
-  Int   m_iOffsetBottom;
   Pel*  m_piPatternOrigin;
   
 public:
@@ -81,9 +79,7 @@ public:
                            Int         iRoiHeight,
                            Int         iStride,
                            Int         iOffsetLeft,
-                           Int         iOffsetRight,
-                           Int         iOffsetAbove,
-                           Int         iOffsetBottom );
+                           Int         iOffsetAbove );
   
   /// set parameters of one color component from CU data for accessing neighbouring pixels
   Void setPatternParamCU  ( TComDataCU* pcCU,
@@ -91,15 +87,8 @@ public:
                            UChar       iRoiWidth,
                            UChar       iRoiHeight,
                            Int         iOffsetLeft,
-                           Int         iOffsetRight,
                            Int         iOffsetAbove,
-                           Int         iOffsetBottom,
-                           UInt        uiPartDepth,
-                           UInt        uiAbsZorderIdx 
-#if DEPTH_MAP_GENERATION
-                           ,Bool        bPrdDepthMap = false 
-#endif  
-                           );
+                           UInt        uiAbsZorderIdx );
 };
 
 /// neighbouring pixel access class for all components
@@ -109,11 +98,9 @@ private:
   TComPatternParam  m_cPatternY;
   TComPatternParam  m_cPatternCb;
   TComPatternParam  m_cPatternCr;
-  
-#if LGE_ILLUCOMP_B0045
+#if H_3D_IC
   Bool              m_bICFlag;
 #endif
-
   static const UChar m_aucIntraFilter[5];
   
 public:
@@ -124,9 +111,9 @@ public:
   Int   getROIYHeight()           { return m_cPatternY.m_iROIHeight;      }
   Int   getPatternLStride()       { return m_cPatternY.m_iPatternStride;  }
 
-#if LGE_ILLUCOMP_B0045
+#if H_3D_IC
   Bool  getICFlag()               { return m_bICFlag; }
-  Void  setICFlag(Bool bICFlag)   { m_bICFlag = bICFlag; }
+  Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
 #endif
 
   // access functions of ADI buffers
@@ -147,18 +134,12 @@ public:
                                Int         iRoiHeight,
                                Int         iStride,
                                Int         iOffsetLeft,
-                               Int         iOffsetRight,
-                               Int         iOffsetAbove,
-                               Int         iOffsetBottom );
+                               Int         iOffsetAbove );
   
   /// set parameters from CU data for accessing neighbouring pixels
   Void  initPattern           ( TComDataCU* pcCU,
                                UInt        uiPartDepth,
-                               UInt        uiAbsPartIdx 
-#if DEPTH_MAP_GENERATION
-                               ,Bool        bPrdDepthMap = false 
-#endif
-                               );
+                               UInt        uiAbsPartIdx );
   
   /// set luma parameters from CU data for accessing ADI data
   Void  initAdiPattern        ( TComDataCU* pcCU,
@@ -170,12 +151,6 @@ public:
                                Bool&       bAbove,
                                Bool&       bLeft
                               ,Bool        bLMmode = false // using for LM chroma or not
-#if DEPTH_MAP_GENERATION
-                              ,
-                              Bool         bPrdDepthMap = false,
-                              UInt         uiSubSampExpX = 0,
-                              UInt         uiSubSampExpY = 0
-#endif
                                );
   
   /// set chroma parameters from CU data for accessing ADI data
@@ -191,11 +166,7 @@ public:
 private:
 
   /// padding of unavailable reference samples for intra prediction
-  Void  fillReferenceSamples        ( TComDataCU* pcCU, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, Bool bLMmode = false
-#if DEPTH_MAP_GENERATION
-                                    , Bool bPrdDepthMap = false 
-#endif
-                                    );
+  Void  fillReferenceSamples        (Int bitDepth, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, Bool bLMmode = false);
   
 
   /// constrained intra prediction

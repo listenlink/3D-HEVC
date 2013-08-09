@@ -34,10 +34,11 @@ DEFS			= -DMSYS_LINUX
 OBJS          	= \
 			$(OBJ_DIR)/NALwrite.o \
 			$(OBJ_DIR)/SEIwrite.o \
+			$(OBJ_DIR)/SyntaxElementWriter.o \
 			$(OBJ_DIR)/TEncBinCoderCABAC.o \
 			$(OBJ_DIR)/TEncBinCoderCABACCounter.o \
-			$(OBJ_DIR)/TEncAdaptiveLoopFilter.o \
 			$(OBJ_DIR)/TEncSampleAdaptiveOffset.o \
+			$(OBJ_DIR)/TEncAnalyze.o \
 			$(OBJ_DIR)/TEncCavlc.o \
 			$(OBJ_DIR)/TEncCu.o \
 			$(OBJ_DIR)/TEncEntropy.o \
@@ -49,6 +50,7 @@ OBJS          	= \
 			$(OBJ_DIR)/TEncPic.o \
 			$(OBJ_DIR)/TEncPreanalyzer.o \
 			$(OBJ_DIR)/WeightPredAnalysis.o \
+			$(OBJ_DIR)/TEncRateCtrl.o \
 
 LIBS				= -lpthread
 

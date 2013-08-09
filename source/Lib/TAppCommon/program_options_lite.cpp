@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,7 @@
 #include <list>
 #include <map>
 #include "program_options_lite.h"
-
+#include  "../TLibCommon/TypeDef.h"
 using namespace std;
 
 //! \ingroup TAppCommon
@@ -145,6 +145,9 @@ namespace df
       unsigned max_width = 0;
       for(Options::NamesPtrList::iterator it = opts.opt_list.begin(); it != opts.opt_list.end(); it++)
       {
+#if H_MV
+        if  ( (*it)->opt->opt_duplicate ) continue; 
+#endif
         ostringstream line(ios_base::out);
         doHelpOpt(line, **it, pad_short);
         max_width = max(max_width, (unsigned) line.tellp());
@@ -160,6 +163,9 @@ namespace df
        */
       for(Options::NamesPtrList::iterator it = opts.opt_list.begin(); it != opts.opt_list.end(); it++)
       {
+#if H_MV
+        if  ( (*it)->opt->opt_duplicate ) continue; 
+#endif
         ostringstream line(ios_base::out);
         line << "  ";
         doHelpOpt(line, **it, pad_short);
@@ -191,7 +197,7 @@ namespace df
             /* newline found, print substring (newline needn't be stripped) */
             newline_pos++;
             line << opt_desc.substr(cur_pos, newline_pos - cur_pos);
-            cur_pos = newline_pos = newline_pos;
+            cur_pos = newline_pos;
             continue;
           }
           if (cur_pos + desc_width > opt_desc.size())
