@@ -5255,6 +5255,79 @@ Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr,
   return false;
 }
 #endif 
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+Void 
+TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge, Int& iIVFMaxD)
+{
+  TComSlice*    pcSlice         = getSlice ();  
+  Int iViewIndex = pDInfo->m_aVIdxCan;
+  //--- get base CU/PU and check prediction mode ---
+  TComPic*    pcBasePic   = pcSlice->getIvPic( false, iViewIndex );
+  TComPicYuv* pcBaseRec   = pcBasePic->getPicYuvRec   ();
+
+  UInt          uiPartAddr;
+  Int           iWidth;
+  Int           iHeight;
+  getPartIndexAndSize( uiPartIdx, uiPartAddr, iWidth, iHeight );
+
+  Int  iCurrPosX, iCurrPosY;
+  pcBaseRec->getTopLeftSamplePos( getAddr(), getZorderIdxInCU() + uiPartAddr, iCurrPosX, iCurrPosY );
+
+  iCurrPosX  += ( ( iWidth  - 1 ) >> 1 );
+  iCurrPosY  += ( ( iHeight - 1 ) >> 1 );
+
+  Bool depthRefineFlag = false; 
+#if H_3D_NBDV_REF
+  depthRefineFlag = m_pcSlice->getVPS()->getDepthRefinementFlag( m_pcSlice->getLayerIdInVps() ); 
+#endif // H_3D_NBDV_REF
+
+  TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
+
+  Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseLPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX - (iWidth >> 1) + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseLPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseRPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + (iWidth >> 1) + 1 + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseRPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseUPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseUPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY - (iHeight >> 1) + ( (cDv.getVer() + 2 ) >> 2 )); 
+  Int         iBaseDPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int         iBaseDPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + (iHeight >> 1) + 1 + ( (cDv.getVer() + 2 ) >> 2 )); 
+
+  Int         iBaseCUAddr;
+  Int         iBaseAbsPartIdx;
+  Int         iBaseLCUAddr;
+  Int         iBaseLAbsPartIdx;
+  Int         iBaseRCUAddr;
+  Int         iBaseRAbsPartIdx;
+  Int         iBaseUCUAddr;
+  Int         iBaseUAbsPartIdx;
+  Int         iBaseDCUAddr;
+  Int         iBaseDAbsPartIdx;
+  pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY , iBaseCUAddr, iBaseAbsPartIdx );
+  pcBaseRec->getCUAddrAndPartIdx( iBaseLPosX , iBaseLPosY , iBaseLCUAddr, iBaseLAbsPartIdx );
+  pcBaseRec->getCUAddrAndPartIdx( iBaseRPosX , iBaseRPosY , iBaseRCUAddr, iBaseRAbsPartIdx );
+  pcBaseRec->getCUAddrAndPartIdx( iBaseUPosX , iBaseUPosY , iBaseUCUAddr, iBaseUAbsPartIdx );
+  pcBaseRec->getCUAddrAndPartIdx( iBaseDPosX , iBaseDPosY , iBaseDCUAddr, iBaseDAbsPartIdx );
+  TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
+  TComDataCU* pcBaseLCU    = pcBasePic->getCU( iBaseLCUAddr );
+  TComDataCU* pcBaseRCU    = pcBasePic->getCU( iBaseRCUAddr );
+  TComDataCU* pcBaseUCU    = pcBasePic->getCU( iBaseUCUAddr );
+  TComDataCU* pcBaseDCU    = pcBasePic->getCU( iBaseDCUAddr );
+  bIVFMerge = pcBaseLCU->getMergeFlag( iBaseLAbsPartIdx ) && pcBaseCU->getMergeFlag( iBaseAbsPartIdx ) && pcBaseRCU->getMergeFlag( iBaseRAbsPartIdx ) && pcBaseUCU->getMergeFlag( iBaseUAbsPartIdx ) && pcBaseDCU->getMergeFlag( iBaseDAbsPartIdx );
+  Int aiDepthL[5]; //depth level
+  aiDepthL[0] = pcBaseCU->getDepth(iBaseAbsPartIdx);
+  aiDepthL[1] = pcBaseLCU->getDepth(iBaseLAbsPartIdx);
+  aiDepthL[2] = pcBaseRCU->getDepth(iBaseRAbsPartIdx);
+  aiDepthL[3] = pcBaseUCU->getDepth(iBaseUAbsPartIdx);
+  aiDepthL[4] = pcBaseDCU->getDepth(iBaseDAbsPartIdx);
+  for (Int i = 0; i < 5; i++)
+  {
+    if (iIVFMaxD < aiDepthL[i])
+      iIVFMaxD = aiDepthL[i];
+  }
+}
+#endif
 #if H_3D_IV_MERGE
 Bool
 TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc )
