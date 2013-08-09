@@ -2863,11 +2863,23 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
           case( DMM3_IDX ):
             {
+#if LGE_PKU_DMM3_OVERLAP_E0159
+              TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
+              TComDataCU* pcColTexCU = pcPicTex->getCU( pcCU->getAddr() );
+              UInt      uiTexPartIdx = pcCU->getZorderIdxInCU() + uiPartOffset;
+              Int   uiColTexIntraDir = pcColTexCU->isIntra( uiTexPartIdx ) ? pcColTexCU->getLumaIntraDir( uiTexPartIdx ) : 255;
+
+              if( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 )
+              {
+#endif
               UInt uiIntraTabIdx = 0;
               xSearchDmm3Wedge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight, uiTabIdx, uiIntraTabIdx );
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType, uiPartOffset, uiDepth + uiInitTrDepth );
               pcCU->setDmm3IntraTabIdxSubParts( uiIntraTabIdx, uiPartOffset, uiDepth + uiInitTrDepth );
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
+#if LGE_PKU_DMM3_OVERLAP_E0159
+              }
+#endif
             } break;
           case( DMM4_IDX ):
             {

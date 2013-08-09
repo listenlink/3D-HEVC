@@ -2488,7 +2488,11 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
   
   // check prediction mode
   UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
+#if LGE_SDC_REMOVE_DC_E0158
+  if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
+#else
   if( uiLumaPredMode == DC_IDX || uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
+#endif
     return true;
   
   // else

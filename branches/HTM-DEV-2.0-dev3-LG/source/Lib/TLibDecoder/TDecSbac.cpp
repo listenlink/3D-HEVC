@@ -1221,7 +1221,9 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
 
   if( puIdx == 2 )
   {
+#if !LGE_SDC_REMOVE_DC_E0158
     while( binNum < 2 && symbol )
+#endif
     {
       ctxDepthMode = puIdx*3 + binNum;
       m_pcTDecBinIf->decodeBin( symbol, m_cDepthIntraModeSCModel.get(0,0,ctxDepthMode) );
@@ -1229,8 +1231,12 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
       binNum++;
     }
          if( modeCode == 0 ) { dir = PLANAR_IDX; sdcFlag = 1;}
+#if LGE_SDC_REMOVE_DC_E0158
+    else if( modeCode == 1 ) { dir = 0;          sdcFlag = 0;}
+#else
     else if( modeCode == 2 ) { dir = 0;          sdcFlag = 0;}
     else if( modeCode == 3 ) { dir =     DC_IDX; sdcFlag = 1;}
+#endif
   }
   else if( puIdx == 0 )
   {
@@ -1277,10 +1283,16 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
       else
       {
         binNum = 0;
+#if LGE_SDC_REMOVE_DC_E0158
+#if !SEC_DMM2_E0146
+        while( symbol && binNum < 2 )
+#endif
+#else
 #if SEC_DMM2_E0146
         while( symbol && binNum < 2 )
 #else
         while( symbol && binNum < 3 )
+#endif
 #endif
         {
           ctxDepthMode = puIdx*3 + 2;
@@ -1296,12 +1308,21 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
     else if( modeCode == 4  ) { dir = (2*DMM1_IDX+DIM_OFFSET); sdcFlag = 0;}
     else if( modeCode == 5  ) { dir = (2*DMM4_IDX+DIM_OFFSET); sdcFlag = 0;}
     else if( modeCode == 6  ) { dir = (2*DMM3_IDX+DIM_OFFSET); sdcFlag = 0;}
+#if LGE_SDC_REMOVE_DC_E0158
+#if SEC_DMM2_E0146
+    else if( modeCode == 7 )  { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
+#else
+    else if( modeCode == 14 ) { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
+    else if( modeCode == 15 ) { dir = (2*DMM2_IDX+DIM_OFFSET); sdcFlag = 0;}
+#endif
+#else
     else if( modeCode == 14 ) { dir =      DC_IDX;             sdcFlag = 1;}
 #if SEC_DMM2_E0146
     else if( modeCode == 15 ) { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
 #else
     else if( modeCode == 30 ) { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
     else if( modeCode == 31 ) { dir = (2*DMM2_IDX+DIM_OFFSET); sdcFlag = 0;}
+#endif
 #endif
   }
   pcCU->setLumaIntraDirSubParts( (UChar)dir, absPartIdx, depth );
