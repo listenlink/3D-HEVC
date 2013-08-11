@@ -1254,6 +1254,39 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
   }
   else
   {
+#if ZJU_DEPTH_INTRA_MODE_E0204
+      UInt maxBinNum = 0;
+      m_pcTDecBinIf->decodeBinEP(symbol);
+      if( symbol == 1 )
+      {
+          maxBinNum = 3;
+      }
+      else
+      {
+          maxBinNum = 2;
+          symbol = 1;
+      }
+      while( binNum<maxBinNum && symbol )
+      {
+          ctxDepthMode = puIdx*3 + ( binNum >= 2 ? 2 : binNum );
+          m_pcTDecBinIf->decodeBin(symbol,m_cDepthIntraModeSCModel.get(0,0,ctxDepthMode));
+          modeCode = (modeCode<<1)+symbol;
+          binNum++;
+      }
+      if( maxBinNum == 3 )
+      {
+          if ( modeCode == 0 )       { dir =  PLANAR_IDX;             sdcFlag = 1;}
+          else if ( modeCode == 2 )  { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
+          else if ( modeCode == 6 )  { dir = (2*DMM3_IDX+DIM_OFFSET); sdcFlag = 0;}
+          else if ( modeCode == 7 )  { dir = (2*DMM1_IDX+DIM_OFFSET); sdcFlag = 0;}
+      }
+      else
+      {
+          if ( modeCode == 0 )       { dir = 5;                       sdcFlag = 0;}
+          else if ( modeCode == 2 )  { dir = (2*DMM1_IDX+DIM_OFFSET); sdcFlag = 1;}
+          else if ( modeCode == 3 )  { dir = (2*DMM4_IDX+DIM_OFFSET); sdcFlag = 0;}
+      }
+#else
     ctxDepthMode = puIdx*3 ;
     m_pcTDecBinIf->decodeBin( symbol, m_cDepthIntraModeSCModel.get(0,0,ctxDepthMode) );
     modeCode = (modeCode<<1) + symbol;
@@ -1322,6 +1355,7 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
 #else
     else if( modeCode == 30 ) { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
     else if( modeCode == 31 ) { dir = (2*DMM2_IDX+DIM_OFFSET); sdcFlag = 0;}
+#endif
 #endif
 #endif
   }

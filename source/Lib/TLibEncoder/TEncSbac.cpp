@@ -1260,6 +1260,10 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
 
 Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 {
+#if ZJU_DEPTH_INTRA_MODE_E0204
+    UInt codeWordTable[3][7] =    {{0, 0, 0, 2, 0,6, 7},{0, 0, 2, 7, 3, 6, 2},{0, 1, 0, 0, 0, 0, 0}};
+    UInt codeWordLenTable[3][7] = {{0, 1, 0, 2, 0,3, 3},{1, 1, 2, 3, 2, 3, 2},{1, 1, 0, 0, 0, 0, 0}};
+#else
 #if LGE_SDC_REMOVE_DC_E0158
 #if SEC_DMM2_E0146
   UInt codeWordTable[3][7] =    {{0, 0, 0, 2, 0,6, 7},{0, 2, 3, 4, 5, 6, 7},{0, 1, 0, 0, 0, 0, 0}};
@@ -1275,6 +1279,7 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 #else
   UInt codeWordTable[3][9] =    {{0, 0, 0, 2, 0,6, 0, 0, 7},{0, 2, 3, 4, 5, 6, 14, 31, 30},{0, 2, 0, 0, 0, 0, 3, 0, 0}};
   UInt codeWordLenTable[3][9] = {{0, 1, 0, 2, 0,3, 0, 0, 3},{2, 3, 3, 3, 3, 3,  4,  5,  5},{1, 2, 0, 0, 0, 0, 2, 0, 0}};
+#endif
 #endif
 #endif
   UInt dir = pcCU->getLumaIntraDir( absPartIdx );
@@ -1322,6 +1327,19 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 #endif
       default:          codeIdx = 2; break;
     }
+  }
+#endif
+#if ZJU_DEPTH_INTRA_MODE_E0204
+  if( puIdx==1 )
+  {
+      if( codeIdx==1 || codeIdx==2 || codeIdx==4 )
+      {
+          m_pcBinIf->encodeBinEP( 0 );
+      }
+      else
+      {
+          m_pcBinIf->encodeBinEP( 1 );
+      }
   }
 #endif
   //mode coding
