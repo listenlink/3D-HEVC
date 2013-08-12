@@ -164,6 +164,12 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
     rpcPic->checkTemporalIVRef();
   }
 #endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+  if(pcSlice->getIsDepth())
+  {
+    rpcPic->checkTextureRef();
+  }
+#endif
 #if H_3D
   pcSlice->setDepthToDisparityLUTs(); 
 #endif

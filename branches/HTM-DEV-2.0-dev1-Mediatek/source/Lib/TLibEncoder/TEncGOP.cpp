@@ -1083,6 +1083,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcPic->checkTemporalIVRef();
       }
 #endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+      if(pcSlice->getIsDepth())
+      {
+        pcPic->checkTextureRef();
+      }
+#endif
     while(nextCUAddr<uiRealEndAddress) // determine slice boundaries
     {
       pcSlice->setNextSlice       ( false );

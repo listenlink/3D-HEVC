@@ -709,4 +709,37 @@ Bool TComPic::isTempIVRefValid(Int currCandPic, Int iColRefDir, Int iColRefIdx)
   return m_abTIVRINCurrRL[currCandPic][iColRefDir][iColRefIdx];
 }
 #endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+Void TComPic::checkTextureRef(  )
+{
+  TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
+  TComPic* pcTextPic = pcCurrSlice->getTexturePic();
+  TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
+
+  for( Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB()? 2:1) ) && !pcTextSlice->isIntra(); iTextRefDir ++ )
+  {
+    for( Int iTextRefIdx =0; iTextRefIdx<pcTextSlice->getNumRefIdx(( RefPicList )iTextRefDir ); iTextRefIdx++)
+    {
+      Int iTextRefPOC    = pcTextSlice->getRefPOC( ( RefPicList )iTextRefDir, iTextRefIdx);
+      Int iTextRefViewId = pcTextSlice->getRefPic( ( RefPicList )iTextRefDir, iTextRefIdx)->getViewIndex();
+      m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = -1;
+      Int iCurrRefDir = iTextRefDir;
+      for( Int iCurrRefIdx =0; ( iCurrRefIdx<pcCurrSlice->getNumRefIdx(( RefPicList )iCurrRefDir ) ) && ( m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0 ) ; iCurrRefIdx++)
+      {
+        if( pcCurrSlice->getRefPOC( ( RefPicList )iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
+          pcCurrSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId )
+        {  
+          m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = iCurrRefIdx;
+        }
+      }
+    }
+
+  }
+}
+
+Int TComPic::isTextRefValid(Int iTextRefDir, Int iTextRefIdx)
+{
+  return m_aiTexToDepRef[iTextRefDir][iTextRefIdx];
+}
+#endif
 //! \}
