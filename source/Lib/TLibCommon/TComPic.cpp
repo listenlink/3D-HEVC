@@ -654,4 +654,59 @@ Int TComPic::getDisCandRefPictures( Int iColPOC )
   return numDdvCandPics;
 }
 #endif
+#if MTK_NBDV_TN_FIX_E0172
+Void TComPic::checkTemporalIVRef()
+{
+  TComSlice* currSlice = getSlice(getCurrSliceIdx());
+  const Int numCandPics = this->getNumDdvCandPics();
+  for(Int curCandPic = 0; curCandPic < numCandPics; curCandPic++)
+  {
+    RefPicList eCurRefPicList   = REF_PIC_LIST_0 ;
+    Int        curCandPicRefIdx = 0;
+    if( curCandPic == 0 ) 
+    { 
+      eCurRefPicList   = RefPicList(currSlice->isInterB() ? 1-currSlice->getColFromL0Flag() : 0);
+      curCandPicRefIdx = currSlice->getColRefIdx();
+    }
+    else                 
+    {
+      eCurRefPicList   = this->getRapRefList();
+      curCandPicRefIdx = this->getRapRefIdx();
+    }
+    TComPic* pcCandColPic = currSlice->getRefPic( eCurRefPicList, curCandPicRefIdx);
+    TComSlice* pcCandColSlice = pcCandColPic->getSlice(0);// currently only support single slice
+
+    if(!pcCandColSlice->isIntra())
+    {
+      for( Int iColRefDir = 0; iColRefDir < (pcCandColSlice->isInterB() ? 2: 1); iColRefDir ++ )
+      {
+        for( Int iColRefIdx =0; iColRefIdx < pcCandColSlice->getNumRefIdx(( RefPicList )iColRefDir ); iColRefIdx++)
+        {
+          m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = false;
+          Int iColViewIdx    = pcCandColSlice->getViewIndex();
+          Int iColRefViewIdx = pcCandColSlice->getRefPic( ( RefPicList )iColRefDir, iColRefIdx)->getViewIndex();
+          if(iColViewIdx == iColRefViewIdx)
+            continue;
+
+          for(Int iCurrRefDir = 0;(iCurrRefDir < (currSlice->isInterB() ? 2: 1)) && (m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] == false ); iCurrRefDir++)
+          {
+            for( Int iCurrRefIdx =0; iCurrRefIdx < currSlice->getNumRefIdx(( RefPicList )iCurrRefDir ); iCurrRefIdx++)
+            {
+              if( currSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx )->getViewIndex() == iColRefViewIdx )
+              {  
+                m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+Bool TComPic::isTempIVRefValid(Int currCandPic, Int iColRefDir, Int iColRefIdx)
+{
+  return m_abTIVRINCurrRL[currCandPic][iColRefDir][iColRefIdx];
+}
+#endif
 //! \}

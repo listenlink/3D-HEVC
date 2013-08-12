@@ -696,7 +696,14 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
   // Get depth reference
+#if MTK_VSP_FIX_E0172 
+  Int vspDir = pcCU->getVSPDir( uiPartAddr );
+  RefPicList privateRefPicList = (vspDir == 0) ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
+  Int privateRefIdx = pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr );
+  Int depthRefViewIdx = pcCU->getSlice()->getRefPic(privateRefPicList, privateRefIdx)->getViewIndex();
+#else
   Int depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
+#endif
   TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
   assert(pRefPicBaseDepth != NULL);
   TComPicYuv* pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
@@ -715,7 +722,11 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
 
   // Do compensation
+#if MTK_VSP_FIX_E0172 
+  TComMv cDv  = pcCU->getCUMvField( privateRefPicList )->getMv( uiPartAddr );
+#else
   TComMv cDv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cDv is the disparity vector derived from the neighbors
+#endif
   pcCU->clipMv(cDv);
   UInt uiAbsPartIdx = pcCU->getZorderIdxInCU();
   Int iBlkX = ( pcCU->getAddr() % pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
