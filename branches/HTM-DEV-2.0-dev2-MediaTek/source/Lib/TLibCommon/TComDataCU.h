@@ -590,9 +590,11 @@ public:
   Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
   Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
-  
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+  Void          compressMV            (int scale);
+#else            
   Void          compressMV            ();
-  
+#endif  
   // -------------------------------------------------------------------------------------------------------------------
   // utility functions for neighbouring information
   // -------------------------------------------------------------------------------------------------------------------

@@ -3082,9 +3082,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     {
       abCandIsInter[iCount] = true;      
       puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+      pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
+      if (pcMvFieldNeighbours[iCount<<1].getRefIdx()>=0)
+#else
       if( ( puhInterDirNeighbours[iCount] & 1 ) == 1 )
+#endif
       {
+#if !MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
         pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
+#endif
         TComMv cMvPred = pcMvFieldNeighbours[iCount<<1].getMv();
 
 #if H_3D_IC
@@ -3101,9 +3108,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       
       if ( getSlice()->isInterB() )
       {
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+        pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
+        if (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()>=0)
+#else
         if( ( puhInterDirNeighbours[iCount] & 2 ) == 2 )
+#endif
         {
+#if !MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
           pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
+#endif
           TComMv cMvPred = pcMvFieldNeighbours[(iCount<<1)+1].getMv();
 #if H_3D_IC
           const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
@@ -3114,6 +3128,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
           pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx());
         }
       }
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+      puhInterDirNeighbours[iCount] = (pcMvFieldNeighbours[iCount<<1].getRefIdx()>=0)?1:0;
+      puhInterDirNeighbours[iCount] += (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()>=0)?2:0;
+#endif
 #if H_3D_NBDV
       pcMvFieldNeighbours[iCount<<1    ].getMv().setIDVFlag (false);
       pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
@@ -4380,10 +4398,17 @@ Void TComDataCU::xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter )
                                         + ( iPartHeight/m_pcPic->getMinCUHeight()  )/2*m_pcPic->getNumPartInWidth()
                                         + ( iPartWidth/m_pcPic->getMinCUWidth()  )/2];
 }
-
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+Void TComDataCU::compressMV(int scale)
+#else
 Void TComDataCU::compressMV()
+#endif
 {
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+  Int scaleFactor = (4 / scale ) * AMVP_DECIMATION_FACTOR / m_unitSize;
+#else
   Int scaleFactor = 4 * AMVP_DECIMATION_FACTOR / m_unitSize;
+#endif
   if (scaleFactor > 0)
   {
     m_acCUMvField[0].compress(m_pePredMode, scaleFactor);

@@ -1767,7 +1767,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
         pcPic->destroyNonDBFilterInfo();
       }
-
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+      pcPic->compressMotion(2); 
+#endif
 #if !H_3D
       pcPic->compressMotion(); 
 #endif

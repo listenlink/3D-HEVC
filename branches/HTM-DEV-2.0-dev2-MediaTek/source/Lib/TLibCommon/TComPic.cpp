@@ -145,14 +145,21 @@ Void TComPic::destroy()
   
   deleteSEIs(m_SEIs);
 }
-
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+Void TComPic::compressMotion(int scale)
+#else
 Void TComPic::compressMotion()
+#endif
 {
   TComPicSym* pPicSym = getPicSym(); 
   for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getFrameHeightInCU()*pPicSym->getFrameWidthInCU(); uiCUAddr++ )
   {
     TComDataCU* pcCU = pPicSym->getCU(uiCUAddr);
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+    pcCU->compressMV(scale); 
+#else
     pcCU->compressMV(); 
+#endif
   } 
 }
 

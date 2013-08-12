@@ -310,7 +310,11 @@ Void TAppDecTop::decode()
       {
         TComPic* picLastCoded = m_ivPicLists.getPic( m_tDecTop[dI]->getLayerId(), pocLastPic );
         assert( picLastCoded != NULL );        
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+        picLastCoded->compressMotion(1);
+#else
         picLastCoded->compressMotion();         
+#endif
       }
     }
 #endif
