@@ -97,6 +97,7 @@
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
 #define SHARP_ILLUCOMP_REFINE_E0046       1
 #define MTK_FAST_TEXTURE_ENCODING_E0173   1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
+#define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation

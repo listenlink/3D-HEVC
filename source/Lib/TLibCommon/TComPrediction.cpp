@@ -952,7 +952,11 @@ Void TComPrediction::xPredInterLumaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt
 #endif
   if ( yFrac == 0 )
   {
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterHorLuma( ref, refStride, dst, dstStride, width, height, xFrac,       !bi || bICFlag
+#else
     m_if.filterHorLuma( ref, refStride, dst, dstStride, width, height, xFrac,       !bi 
+#endif
 #if H_3D_ARP
     , filterType
 #endif
@@ -960,7 +964,11 @@ Void TComPrediction::xPredInterLumaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt
   }
   else if ( xFrac == 0 )
   {
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterVerLuma( ref, refStride, dst, dstStride, width, height, yFrac, true, !bi || bICFlag
+#else
     m_if.filterVerLuma( ref, refStride, dst, dstStride, width, height, yFrac, true, !bi 
+#endif
 #if H_3D_ARP
     , filterType
 #endif
@@ -979,7 +987,11 @@ Void TComPrediction::xPredInterLumaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt
     , filterType
 #endif 
       );
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterVerLuma(tmp + (halfFilterSize-1)*tmpStride, tmpStride, dst, dstStride, width, height,              yFrac, false, !bi || bICFlag
+#else
     m_if.filterVerLuma(tmp + (halfFilterSize-1)*tmpStride, tmpStride, dst, dstStride, width, height,              yFrac, false, !bi
+#endif
 #if H_3D_ARP
     , filterType
 #endif 
@@ -1005,16 +1017,34 @@ Void TComPrediction::xPredInterLumaBlk( TComDataCU *cu, TComPicYuv *refPic, UInt
     {
       for ( j = 0; j < width; j++ )
       {
+#if !MTK_CLIPPING_ALIGN_IC_E0168
         if( bi )
         {
           Int iIFshift = IF_INTERNAL_PREC - g_bitDepthY;
           dst[j] = ( ( a*dst[j] + a*IF_INTERNAL_OFFS ) >> iShift ) + b*( 1 << iIFshift ) - IF_INTERNAL_OFFS;
         }
         else
+#endif
           dst[j] = Clip3( 0, ( 1 << g_bitDepthY ) - 1, ( ( a*dst[j] ) >> iShift ) + b );
       }
       dst += dstStride;
     }
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    if(bi)
+    {
+      Pel *dst2      = dstPic->getLumaAddr( partAddr );
+      Int shift = IF_INTERNAL_PREC - g_bitDepthY;
+      for (i = 0; i < height; i++)
+      {
+        for (j = 0; j < width; j++)
+        {
+          Short val = dst2[j] << shift;
+          dst2[j] = val - (Short)IF_INTERNAL_OFFS;
+        }
+        dst2 += dstStride;
+      }
+    }
+#endif
   }
 #endif
 }
@@ -1065,12 +1095,20 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
   
   if ( yFrac == 0 )
   {
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterHorChroma(refCb, refStride, dstCb,  dstStride, cxWidth, cxHeight, xFrac, !bi || bICFlag
+#else
     m_if.filterHorChroma(refCb, refStride, dstCb,  dstStride, cxWidth, cxHeight, xFrac, !bi
+#endif
 #if H_3D_ARP
     , filterType
 #endif
     );    
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterHorChroma(refCr, refStride, dstCr,  dstStride, cxWidth, cxHeight, xFrac, !bi || bICFlag
+#else
     m_if.filterHorChroma(refCr, refStride, dstCr,  dstStride, cxWidth, cxHeight, xFrac, !bi
+#endif
 #if H_3D_ARP
     , filterType
 #endif
@@ -1078,12 +1116,20 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
   }
   else if ( xFrac == 0 )
   {
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterVerChroma(refCb, refStride, dstCb, dstStride, cxWidth, cxHeight, yFrac, true, !bi || bICFlag
+#else
     m_if.filterVerChroma(refCb, refStride, dstCb, dstStride, cxWidth, cxHeight, yFrac, true, !bi
+#endif
 #if H_3D_ARP
     , filterType
 #endif
     );
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterVerChroma(refCr, refStride, dstCr, dstStride, cxWidth, cxHeight, yFrac, true, !bi || bICFlag
+#else
     m_if.filterVerChroma(refCr, refStride, dstCr, dstStride, cxWidth, cxHeight, yFrac, true, !bi
+#endif
 #if H_3D_ARP
     , filterType
 #endif
@@ -1096,7 +1142,11 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
     , filterType
 #endif  
       );
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterVerChroma(extY  + (halfFilterSize-1)*extStride, extStride, dstCb, dstStride, cxWidth, cxHeight  , yFrac, false, !bi || bICFlag
+#else
     m_if.filterVerChroma(extY  + (halfFilterSize-1)*extStride, extStride, dstCb, dstStride, cxWidth, cxHeight  , yFrac, false, !bi
+#endif
 #if H_3D_ARP
     , filterType
 #endif 
@@ -1107,7 +1157,11 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
     , filterType
 #endif 
       );
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    m_if.filterVerChroma(extY  + (halfFilterSize-1)*extStride, extStride, dstCr, dstStride, cxWidth, cxHeight  , yFrac, false, !bi || bICFlag
+#else
     m_if.filterVerChroma(extY  + (halfFilterSize-1)*extStride, extStride, dstCr, dstStride, cxWidth, cxHeight  , yFrac, false, !bi
+#endif
 #if H_3D_ARP
     , filterType
 #endif 
@@ -1129,12 +1183,14 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
     {
       for ( j = 0; j < cxWidth; j++ )
       {
+#if !MTK_CLIPPING_ALIGN_IC_E0168
         if( bi )
         {
           Int iIFshift = IF_INTERNAL_PREC - g_bitDepthC;
           dstCb[j] = ( ( a*dstCb[j] + a*IF_INTERNAL_OFFS ) >> iShift ) + b*( 1<<iIFshift ) - IF_INTERNAL_OFFS;
         }
         else
+#endif
           dstCb[j] = Clip3(  0, ( 1 << g_bitDepthC ) - 1, ( ( a*dstCb[j] ) >> iShift ) + b );
       }
       dstCb += dstStride;
@@ -1148,16 +1204,39 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
     {
       for ( j = 0; j < cxWidth; j++ )
       {
+#if !MTK_CLIPPING_ALIGN_IC_E0168
         if( bi )
         {
           Int iIFshift = IF_INTERNAL_PREC - g_bitDepthC;
           dstCr[j] = ( ( a*dstCr[j] + a*IF_INTERNAL_OFFS ) >> iShift ) + b*( 1<<iIFshift ) - IF_INTERNAL_OFFS;
         }
         else
+#endif
           dstCr[j] = Clip3( 0, ( 1 << g_bitDepthC ) - 1, ( ( a*dstCr[j] ) >> iShift ) + b );
       }
       dstCr += dstStride;
     }
+#if MTK_CLIPPING_ALIGN_IC_E0168
+    if(bi)
+    {
+      Pel* dstCb2 = dstPic->getCbAddr( partAddr );
+      Pel* dstCr2 = dstPic->getCrAddr( partAddr );
+      Int shift = IF_INTERNAL_PREC - g_bitDepthC;
+      for (i = 0; i < cxHeight; i++)
+      {
+        for (j = 0; j < cxWidth; j++)
+        {
+          Short val = dstCb2[j] << shift;
+          dstCb2[j] = val - (Short)IF_INTERNAL_OFFS;
+
+          val = dstCr2[j] << shift;
+          dstCr2[j] = val - (Short)IF_INTERNAL_OFFS;
+        }
+        dstCb2 += dstStride;
+        dstCr2 += dstStride;
+      }
+    }
+#endif
   }
 #endif
 }
