@@ -1077,6 +1077,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
 #endif
 #endif
+#if MTK_NBDV_TN_FIX_E0172 
+      if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
+      {
+        pcPic->checkTemporalIVRef();
+      }
+#endif
     while(nextCUAddr<uiRealEndAddress) // determine slice boundaries
     {
       pcSlice->setNextSlice       ( false );

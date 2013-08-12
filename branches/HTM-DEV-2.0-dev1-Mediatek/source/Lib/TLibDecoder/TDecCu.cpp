@@ -365,8 +365,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_VSP
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-
+#if MTK_VSP_FIX_E0172
+    Int vspDir[MRG_MAX_NUM_CANDS_MEM];
+    memset(vspDir, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag,vspDir, numValidMergeCand, uiMergeIndex );
+    pcCU->setVSPDirSubParts( vspDir[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
+#else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, numValidMergeCand, uiMergeIndex );
+#endif
     pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );

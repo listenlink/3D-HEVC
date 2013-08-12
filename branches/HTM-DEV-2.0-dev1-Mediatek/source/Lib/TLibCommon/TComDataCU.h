@@ -196,6 +196,9 @@ private:
 #if H_3D_VSP
   Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not
                                       ///< 0: non-VSP; 1: VSP
+#if MTK_VSP_FIX_E0172
+  Char*         m_piVSPDir;           ///< 0: LIST0; 1: LIST1
+#endif
 #endif
 #if H_3D_ARP
   UChar*        m_puhARPW;
@@ -245,8 +248,13 @@ protected:
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if H_3D_VSP
+#if MTK_VSP_FIX_E0172
+  Bool          xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
+                             Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag, Int* vspDir );
+#else
   Bool          xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
                              Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag );
+#endif
 #endif
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
@@ -472,7 +480,11 @@ public:
   , Bool bDepthRefine = false
 #endif
   );
+#if MTK_NBDV_TN_FIX_E0172
+  Bool          xGetColDisMV      ( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+#else
   Bool          xGetColDisMV      ( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+#endif
   Bool          getDisMvpCandNBDV ( DisInfo* pDInfo
 #if H_3D_NBDV_REF
    , Bool bDepthRefine = false
@@ -631,6 +643,9 @@ public:
   Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #if H_3D_VSP
                                             , Int* vspFlag
+#if MTK_VSP_FIX_E0172
+                                            , Int* vspDir
+#endif
 #endif
                                             , Int& numValidMergeCand, Int mrgCandIdx = -1 );
 #if H_3D_VSP
@@ -638,6 +653,12 @@ public:
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
   Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }
   Void          setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+#if MTK_VSP_FIX_E0172
+  Char*         getVSPDir          ()                        { return m_piVSPDir;                           }
+  Char          getVSPDir          ( UInt uiIdx )            { return m_piVSPDir[uiIdx];                  }
+  Void          setVSPDir          ( UInt uiIdx, Int n )     { m_piVSPDir[uiIdx] = n;  }
+  Void          setVSPDirSubParts  ( Char iVSPDir, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+#endif
 #endif
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );
