@@ -106,6 +106,9 @@ private:
 #if MTK_NBDV_TN_FIX_E0172 
   Bool        m_abTIVRINCurrRL  [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
 #endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182  
+  Int         m_aiTexToDepRef  [2][MAX_NUM_REF];
+#endif
 public:
   TComPic();
   virtual ~TComPic();
@@ -220,6 +223,10 @@ public:
 #if MTK_NBDV_TN_FIX_E0172
   Void      checkTemporalIVRef();
   Bool      isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
+#endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+  Void      checkTextureRef(  );
+  Int       isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
 #endif
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }

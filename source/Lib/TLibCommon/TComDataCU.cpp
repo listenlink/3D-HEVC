@@ -3158,6 +3158,47 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
  
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
     {
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+      pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
+      Int iValidDepRef = getPic()->isTextRefValid( REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1].getRefIdx() );
+      if( (pcMvFieldNeighbours[iCount<<1].getRefIdx()>=0) && ( iValidDepRef >= 0 ) )
+      {
+        TComMv cMvPred = pcMvFieldNeighbours[iCount<<1].getMv();
+        const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
+        cMvPred+=cAdd;
+        cMvPred>>=2;
+        clipMv(cMvPred);
+        pcMvFieldNeighbours[iCount<<1].setMvField(cMvPred,iValidDepRef);
+      }
+
+      if ( getSlice()->isInterB() )
+      {
+        pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1] );
+        iValidDepRef = getPic()->isTextRefValid( REF_PIC_LIST_1, pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx() );
+        if( (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()>=0) && ( iValidDepRef >= 0) )
+        {
+          TComMv cMvPred = pcMvFieldNeighbours[(iCount<<1)+1].getMv();
+          const TComMv cAdd( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
+          cMvPred+=cAdd;
+          cMvPred>>=2;
+          clipMv(cMvPred);
+          pcMvFieldNeighbours[(iCount<<1)+1].setMvField(cMvPred,iValidDepRef);
+        }
+      }
+
+      puhInterDirNeighbours[iCount] = (pcMvFieldNeighbours[iCount<<1].getRefIdx()>=0)?1:0;
+      puhInterDirNeighbours[iCount] += (pcMvFieldNeighbours[(iCount<<1)+1].getRefIdx()>=0)?2:0;
+
+      if( puhInterDirNeighbours[iCount] != 0 )
+      {
+        abCandIsInter[iCount] = true;
+        if ( mrgCandIdx == iCount )
+        {
+          return;
+        }
+        iCount ++;
+      }
+#else
       abCandIsInter[iCount] = true;      
       puhInterDirNeighbours[iCount] = pcTextureCU->getInterDir( uiPartIdxCenter );
       if( ( puhInterDirNeighbours[iCount] & 1 ) == 1 )
@@ -3201,6 +3242,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
         return;
       }
       iCount ++;
+#endif//Bug fix
     }
   }
 

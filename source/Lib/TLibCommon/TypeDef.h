@@ -107,6 +107,7 @@
 #define MTK_DIVMC_FIX_E0172                  1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
 #define MTK_NBDV_TN_FIX_E0172                1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
 #endif
+#define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1   // Bugfix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
 #endif
 #define H_3D_VSP                          1   // View synthesis prediction
                                               // MERL_C0152: Basic VSP
