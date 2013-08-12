@@ -391,7 +391,11 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
   TComPic* picLastCoded = getPic( getGOPEncoder()->getPocLastCoded() );
   if( picLastCoded )
   {
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+    picLastCoded->compressMotion(1); 
+#else
     picLastCoded->compressMotion(); 
+#endif
   }
 #endif
 #if H_MV
