@@ -65,10 +65,9 @@ private:
 
   Bool                m_bSetupFromCoded;                      ///< setup from coded parameter file
   Bool                m_bCamParsCodedPrecSet;                 ///< Coded Cam Para precision set for current frame;
-
-#if SAIT_VSO_EST_A0033
+  
+  //SAIT_VSO_EST_A0033
   Double              m_dDispCoeff;
-#endif
 
   // view lists
   std::vector<Int>    m_aiViewsInCfgFile;                     ///< views for which parameters are specified in cfg file (from left to right)
@@ -88,11 +87,6 @@ private:
   Int**               m_aaiCodedScale;                        ///< array of coded scaling parameters [RefView][TargetView]
   Int**               m_aaiCodedOffset;                       ///< array of coded offset  parameters [RefView][TargetView]
   Int**               m_aaiScaleAndOffsetSet;                 ///< array indicating whether scale and offset have been set
-
-  // parameters for virtual depth map generation
-  Int                 m_iPdmPrecision;                        ///< additional precision for disparity - virtual depth conversion
-  Int**               m_aaiPdmScaleNomDelta;                  ///< [TargetView][RefView] delta for nominator of scale factor
-  Int**               m_aaiPdmOffset;                         ///< [TargetView][RefView] offset parameter
 
   // scale and offset parameters
   Double***           m_adBaseViewShiftParameter;             ///< ShiftParameters between BaseViews e.g. [2][1][0] shift scale from view 2 to view 1; [2][1][1] shift offset from view 2 to view 1
@@ -181,14 +175,15 @@ public:
   // miscellaneous functions
 
   Int                 synthRelNum2Idx           ( Int iRelNum );
-  Bool getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int &riRightViewIdx, Int &riRelDistToLeft, Bool& rbIsBaseView );
+  Bool                getLeftRightBaseView      ( Int iSynthViewIdx, Int &riLeftViewIdx, Int &riRightViewIdx, Int &riRelDistToLeft, Bool& rbIsBaseView );
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
 
-#if SAIT_VSO_EST_A0033
-  Void xSetDispCoeff( UInt uiStartFrameId, Int iViewIdx );
-  Double getDispCoeff() { return m_dDispCoeff; }
+#if H_3D_VSO
+  // SAIT_VSO_EST_A033
+  Void                setDispCoeff              ( UInt uiStartFrameId, Int iViewIdx );
+  Double              getDispCoeff              () { return m_dDispCoeff; }
 #endif
 
   // function for getting parameters and parameter arrays
@@ -214,11 +209,6 @@ public:
   std::vector<Int>&   getViewOrderIndex         ()  { return m_aiViewOrderIndex;        }
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
-
-  // parameters for virtual depth map generation
-  Int                 getPdmPrecision           ()  { return m_iPdmPrecision;           }
-  Int**               getPdmScaleNomDelta       ()  { return m_aaiPdmScaleNomDelta;     }
-  Int**               getPdmOffset              ()  { return m_aaiPdmOffset;            }
 };
 
 
