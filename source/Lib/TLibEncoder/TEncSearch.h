@@ -212,7 +212,14 @@ public:
                                   TComYuv*&   rpcYuvResiBest,
                                   TComYuv*&   rpcYuvRec,
                                   Bool        bSkipRes );
-  
+#if LGE_INTER_SDC_E0156
+  Void encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU,
+    TComYuv* pcOrg, 
+    TComYuv* pcPred, 
+    TComYuv* pcResi, 
+    TComYuv* pcRec, 
+    const UInt uiDepth );
+#endif
   /// set ME search range
   Void setAdaptiveSearchRange   ( Int iDir, Int iRefIdx, Int iSearchRange) { m_aaiAdaptSR[iDir][iRefIdx] = iSearchRange; }
   

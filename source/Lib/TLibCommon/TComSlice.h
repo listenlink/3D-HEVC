@@ -506,6 +506,9 @@ private:
 #if H_3D_TMVP
   Bool        m_ivMvScalingFlag; 
 #endif
+#if LGE_INTER_SDC_E0156
+  Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
+#endif
 
 #endif
 public:
@@ -715,6 +718,10 @@ public:
 #if H_3D_TMVP
   Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
   Void    setIvMvScalingFlag   ( Bool b )                 { m_ivMvScalingFlag = b;    }  
+#endif
+#if LGE_INTER_SDC_E0156
+  Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
+  Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
 #endif
 
 #endif  

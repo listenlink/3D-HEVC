@@ -504,6 +504,9 @@ UInt TComRdCost::getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piO
 #if H_3D_IC
   cDtParam.bUseIC       = false;
 #endif
+#if LGE_INTER_SDC_E0156
+  cDtParam.bUseSDCMRSAD = false;
+#endif
 #if WEIGHTED_CHROMA_DISTORTION
   if (eText == TEXT_CHROMA_U)
   {
@@ -607,6 +610,12 @@ UInt TComRdCost::xGetSAD( DistParam* pcDtParam )
     return xGetSADic( pcDtParam );
   }
 #endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
+  {
+    return xGetSADic( pcDtParam );
+  }
+#endif
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -637,6 +646,12 @@ UInt TComRdCost::xGetSAD4( DistParam* pcDtParam )
   }
 #if H_3D_IC
   if( pcDtParam->bUseIC )
+  {
+    return xGetSAD4ic( pcDtParam );
+  }
+#endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD4ic( pcDtParam );
   }
@@ -678,6 +693,12 @@ UInt TComRdCost::xGetSAD8( DistParam* pcDtParam )
     return xGetSAD8ic( pcDtParam );
   }
 #endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
+  {
+    return xGetSAD8ic( pcDtParam );
+  }
+#endif
   Pel* piOrg      = pcDtParam->pOrg;
   Pel* piCur      = pcDtParam->pCur;
   Int  iRows      = pcDtParam->iRows;
@@ -715,6 +736,12 @@ UInt TComRdCost::xGetSAD16( DistParam* pcDtParam )
   }
 #if H_3D_IC
   if( pcDtParam->bUseIC )
+  {
+    return xGetSAD16ic( pcDtParam );
+  }
+#endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD16ic( pcDtParam );
   }
@@ -769,6 +796,12 @@ UInt TComRdCost::xGetSAD12( DistParam* pcDtParam )
     return xGetSAD12ic( pcDtParam );
   }
 #endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
+  {
+    return xGetSAD12ic( pcDtParam );
+  }
+#endif
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -807,6 +840,12 @@ UInt TComRdCost::xGetSAD16N( DistParam* pcDtParam )
 {
 #if H_3D_IC
   if( pcDtParam->bUseIC )
+  {
+    return xGetSAD16Nic( pcDtParam );
+  }
+#endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD16Nic( pcDtParam );
   }
@@ -859,6 +898,12 @@ UInt TComRdCost::xGetSAD32( DistParam* pcDtParam )
   }
 #if H_3D_IC
   if( pcDtParam->bUseIC )
+  {
+    return xGetSAD32ic( pcDtParam );
+  }
+#endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD32ic( pcDtParam );
   }
@@ -929,6 +974,12 @@ UInt TComRdCost::xGetSAD24( DistParam* pcDtParam )
     return xGetSAD24ic( pcDtParam );
   }
 #endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
+  {
+    return xGetSAD24ic( pcDtParam );
+  }
+#endif
   Pel* piOrg   = pcDtParam->pOrg;
   Pel* piCur   = pcDtParam->pCur;
   Int  iRows   = pcDtParam->iRows;
@@ -984,6 +1035,12 @@ UInt TComRdCost::xGetSAD64( DistParam* pcDtParam )
   }
 #if H_3D_IC
   if( pcDtParam->bUseIC )
+  {
+    return xGetSAD64ic( pcDtParam );
+  }
+#endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD64ic( pcDtParam );
   }
@@ -1082,6 +1139,12 @@ UInt TComRdCost::xGetSAD48( DistParam* pcDtParam )
   }
 #if H_3D_IC
   if( pcDtParam->bUseIC )
+  {
+    return xGetSAD48ic( pcDtParam );
+  }
+#endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD48ic( pcDtParam );
   }
@@ -3404,6 +3467,12 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
   }
 #if H_3D_IC
   if( pcDtParam->bUseIC )
+  {
+    return xGetHADsic( pcDtParam );
+  }
+#endif
+#if LGE_INTER_SDC_E0156
+  if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetHADsic( pcDtParam );
   }

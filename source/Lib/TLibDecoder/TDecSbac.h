@@ -111,6 +111,10 @@ private:
   Void  xParseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
 #endif
+#if LGE_INTER_SDC_E0156
+  Void  parseInterSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+  Void  parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
+#endif
 private:
   TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
@@ -219,6 +223,11 @@ private:
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
   ContextModel3DBuffer m_cSDCResidualSCModel;
 #endif
+#endif
+#if LGE_INTER_SDC_E0156
+  ContextModel3DBuffer m_cInterSDCFlagSCModel;
+  ContextModel3DBuffer m_cInterSDCResidualSCModel;
+  ContextModel3DBuffer m_cInterSDCResidualSignFlagSCModel;
 #endif
 };
 

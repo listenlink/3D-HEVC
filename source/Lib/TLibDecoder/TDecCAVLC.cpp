@@ -1072,6 +1072,9 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
               free(aiIdx2DepthValue);
             }
 #endif
+#if LGE_INTER_SDC_E0156
+            READ_FLAG( uiCode, "depth_inter_SDC_flag" );              pcVPS->setInterSDCFlag( i, uiCode ? true : false );
+#endif
           }
         }
       }
@@ -2028,6 +2031,17 @@ Void TDecCavlc::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
 #if H_3D_IC
 Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#endif
+#if LGE_INTER_SDC_E0156
+Void TDecCavlc::parseInterSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+
+Void TDecCavlc::parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart )
 {
   assert(0);
 }

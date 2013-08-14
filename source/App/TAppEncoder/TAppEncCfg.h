@@ -431,6 +431,9 @@ protected:
   Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
   Bool      m_bUsePC;                                         ///< flag for using Predictive Coding with QTL
 #endif
+#if LGE_INTER_SDC_E0156
+  Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
+#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
