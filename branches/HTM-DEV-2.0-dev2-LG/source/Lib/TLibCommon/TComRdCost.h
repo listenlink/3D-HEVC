@@ -93,6 +93,9 @@ public:
 #if H_3D_IC
   Bool  bUseIC;
 #endif
+#if LGE_INTER_SDC_E0156
+  Bool  bUseSDCMRSAD;
+#endif
   Int   iRows;
   Int   iCols;
   Int   iStep;
@@ -131,6 +134,9 @@ public:
     pVirRec = NULL;
     pVirOrg = NULL;
     iStrideVir = 0;
+#endif
+#if LGE_INTER_SDC_E0156
+    bUseSDCMRSAD = false;
 #endif
   }
 };

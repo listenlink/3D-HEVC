@@ -99,6 +99,7 @@
 #define MTK_FAST_TEXTURE_ENCODING_E0173   1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
 #define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
 #define MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170            1   // Progressive MV Compression, JCT3V-E0170
+#define LGE_INTER_SDC_E0156               1   // Enable inter SDC for depth coding
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation

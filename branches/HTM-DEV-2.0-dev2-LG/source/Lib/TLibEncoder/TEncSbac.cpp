@@ -105,6 +105,11 @@ TEncSbac::TEncSbac()
 , m_cSDCResidualSCModel       ( 1,             1,               SDC_NUM_RESIDUAL_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #endif
+#if LGE_INTER_SDC_E0156
+, m_cInterSDCFlagSCModel             ( 1,             1,  NUM_INTER_SDC_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cInterSDCResidualSCModel         ( 1,             1,  NUM_INTER_SDC_RESIDUAL_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cInterSDCResidualSignFlagSCModel ( 1,             1,  NUM_INTER_SDC_SIGN_FLAG_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -180,6 +185,11 @@ Void TEncSbac::resetEntropy           ()
   m_cSDCResidualSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
 #endif
 #endif
+#if LGE_INTER_SDC_E0156
+  m_cInterSDCFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_FLAG );
+  m_cInterSDCResidualSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_RESIDUAL );
+  m_cInterSDCResidualSignFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
+#endif
   // new structure
   m_uiLastQp = iQp;
   
@@ -216,6 +226,11 @@ Void TEncSbac::determineCabacInitIdx()
 #endif
 #if H_3D_IC
       curCost += m_cCUICFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_IC_FLAG );
+#endif
+#if LGE_INTER_SDC_E0156
+      curCost += m_cInterSDCFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_INTER_SDC_FLAG );
+      curCost += m_cInterSDCResidualSCModel.calcCost  ( curSliceType, qp, (UChar*)INIT_INTER_SDC_RESIDUAL );
+      curCost += m_cInterSDCResidualSignFlagSCModel.calcCost( curSliceType, qp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
 #endif
       curCost += m_cCUPartSizeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
       curCost += m_cCUAMPSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CU_AMP_POS );
@@ -328,6 +343,11 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cSDCResidualFlagSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
   m_cSDCResidualSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
 #endif
+#endif
+#if LGE_INTER_SDC_E0156
+  m_cInterSDCFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_FLAG );
+  m_cInterSDCResidualSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_RESIDUAL );
+  m_cInterSDCResidualSignFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
 #endif
   m_pcBinIf->start();
 }
@@ -2208,4 +2228,27 @@ Void  TEncSbac::loadContexts ( TEncSbac* pScr)
 {
   this->xCopyContextsFrom(pScr);
 }
+
+#if LGE_INTER_SDC_E0156
+Void TEncSbac::codeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  UInt uiSymbol = pcCU->getInterSDCFlag( uiAbsPartIdx ) ? 1 : 0;
+  UInt uiCtxInterSDCFlag = pcCU->getCtxInterSDCFlag( uiAbsPartIdx );
+
+  m_pcBinIf->encodeBin( uiSymbol, m_cInterSDCFlagSCModel.get( 0, 0, uiCtxInterSDCFlag ) );
+}
+
+Void TEncSbac::codeInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
+{
+  Pel segmentDCOffset = pcCU->getInterSDCSegmentDCOffset( uiSegment, uiAbsPartIdx );
+
+  UInt uiSign     = segmentDCOffset < 0 ? 1 : 0;
+  UInt uiAbsIdx   = abs( segmentDCOffset );
+
+  assert( uiAbsIdx > 0 );
+  uiAbsIdx--;
+  xWriteExGolombLevel( uiAbsIdx, m_cInterSDCResidualSCModel.get( 0, 0, 0 ) );
+  m_pcBinIf->encodeBin( uiSign, m_cInterSDCResidualSignFlagSCModel.get( 0, 0, 0 ) );
+}
+#endif
 //! \}

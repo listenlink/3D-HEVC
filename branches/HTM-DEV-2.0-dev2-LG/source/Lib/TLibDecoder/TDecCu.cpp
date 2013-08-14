@@ -420,6 +420,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_ARP
   m_pcEntropyDecoder->decodeARPW    ( pcCU , uiAbsPartIdx , uiDepth );  
 #endif  
+#if LGE_INTER_SDC_E0156
+  m_pcEntropyDecoder->decodeInterSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
   // Coefficient decoding
   Bool bCodeDQP = getdQPFlag();
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
@@ -484,6 +487,11 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
     case MODE_INTER:
+#if LGE_INTER_SDC_E0156
+      if( m_ppcCU[uiDepth]->getInterSDCFlag( 0 ) )
+        xReconInterSDC( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
+      else
+#endif
       xReconInter( m_ppcCU[uiDepth], uiDepth );
       break;
     case MODE_INTRA:
@@ -525,6 +533,56 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
     m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
   }
 }
+
+#if LGE_INTER_SDC_E0156
+Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  // inter prediction
+  m_pcPrediction->motionCompensation( pcCU, m_ppcYuvReco[uiDepth] );
+
+  UInt  uiWidth      = pcCU->getWidth ( 0 );
+  UInt  uiHeight     = pcCU->getHeight( 0 );
+  UChar* pMask       = pcCU->getInterSDCMask();
+
+  memset( pMask, 0, uiWidth*uiHeight );
+  pcCU->xSetInterSDCCUMask( pcCU, pMask );
+
+  Pel  *pResi;
+  UInt uiPelX, uiPelY;
+  UInt uiResiStride = m_ppcYuvResi[uiDepth]->getStride();
+
+  pResi = m_ppcYuvResi[uiDepth]->getLumaAddr( 0 );
+  for( uiPelY = 0; uiPelY < uiHeight; uiPelY++ )
+  {
+    for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
+    {
+      UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
+
+      pResi[ uiPelX ] = pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 );;
+    }
+    pResi += uiResiStride;
+  }
+
+  m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
+
+  // clear UV
+  UInt  uiStrideC     = m_ppcYuvReco[uiDepth]->getCStride();
+  Pel   *pRecCb       = m_ppcYuvReco[uiDepth]->getCbAddr();
+  Pel   *pRecCr       = m_ppcYuvReco[uiDepth]->getCrAddr();
+
+  for (Int y = 0; y < uiHeight/2; y++)
+  {
+    for (Int x = 0; x < uiWidth/2; x++)
+    {
+      pRecCb[x] = (Pel)( 1 << ( g_bitDepthC - 1 ) );
+      pRecCr[x] = (Pel)( 1 << ( g_bitDepthC - 1 ) );
+    }
+
+    pRecCb += uiStrideC;
+    pRecCr += uiStrideC;
+  }
+}
+#endif
 
 Void
 TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,

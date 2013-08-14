@@ -187,6 +187,10 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL               : false );
     m_cTEncTop.setUsePC                        ( isDepth ? m_bUsePC                : false );
 #endif
+    //====== Depth Inter SDC =========
+#if LGE_INTER_SDC_E0156
+    m_cTEncTop.setInterSDCEnable               ( isDepth ? m_bDepthInterSDCFlag    : false );
+#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
@@ -1223,7 +1227,10 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 #if H_3D_VSP
     vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && m_viewSynthesisPredFlag );         
-#endif      
+#endif   
+#if LGE_INTER_SDC_E0156
+    vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
+#endif
   }  
 #if H_3D_TMVP
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
