@@ -100,6 +100,8 @@
                                               // MTK_D0156
                                               // MERL_D0166: Reference view selection in NBDV & Bi-VSP
                                               // MERL_C0152: Basic VSP
+
+#define NBDV_DEFAULT_VIEWIDX_BUGFIX       1  // Bug fix for invalid default view index for NBDV
 #define MTK_RVS_BUGFIX_E0172              1  // Bug fix for issues caused by reference view selection, JCT3V-E0172
 #if MTK_RVS_BUGFIX_E0172
 #define MTK_DVMCP_FIX_E0172                  1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
