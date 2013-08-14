@@ -2832,9 +2832,20 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     //===== determine set of depth intra modes to be tested =====
     if( m_pcEncCfg->getIsDepth() && uiWidth >= DIM_MIN_SIZE && uiWidth <= DIM_MAX_SIZE && uiWidth == uiHeight )
     {
+
+#if SCU_HS_FAST_DEPTH_INTRA_E0238
+Int threshold = max(((pcCU->getQP(0))>>3)-1,3);
+Int varThreshold = (int)(threshold*threshold - 8);
+UInt uiVarCU=m_pcRdCost->calcVAR(piOrg, uiWidth,pcCU->getDepth(0));
+#endif
+
 #if H_3D_DIM_DMM
-      if( m_pcEncCfg->getUseDMM() )
-      {
+       if( m_pcEncCfg->getUseDMM()
+#if SCU_HS_FAST_DEPTH_INTRA_E0238
+        && (uiRdModeList[0] != 0 || uiVarCU >= varThreshold)
+#endif
+         )
+       {
         for( UInt dmmType = 0; dmmType < DMM_NUM_TYPE; dmmType++ )
         {
           UInt uiTabIdx = 0;
@@ -2907,8 +2918,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       }
 #endif
 #if H_3D_DIM_RBC
-      if( m_pcEncCfg->getUseRBC() )
-      {
+       if( m_pcEncCfg->getUseRBC()
+#if SCU_HS_FAST_DEPTH_INTRA_E0238
+          && (uiRdModeList[0] != 0 || uiVarCU >= varThreshold)
+#endif
+         )
+       {
         if( xSearchRbcEdge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight ) )
         {
           Pel deltaDC1 = 0; Pel deltaDC2 = 0;
