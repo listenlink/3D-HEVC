@@ -5208,6 +5208,45 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 
   TComMv defaultDV(0, 0);
   pDInfo->m_acNBDV = defaultDV;
+#if NBDV_DEFAULT_VIEWIDX_BUGFIX
+  Int valid = 0;
+  Int viewIndex = 0;
+  for( UInt uiBId = 0; uiBId < getSlice()->getViewIndex() && valid==0; uiBId++ )
+  {
+    UInt        uiBaseId    = uiBId;
+    TComPic*    pcBasePic   = getSlice()->getIvPic( false, uiBaseId );
+    for( Int iRefListId = 0; ( iRefListId < (getSlice()->isInterB()? 2:1) ) && !getSlice()->isIntra() && valid==0; iRefListId++ )
+    {
+      RefPicList  eRefPicListTest = RefPicList( iRefListId );
+      Int         iNumRefPics = getSlice()->getNumRefIdx( eRefPicListTest ) ;
+      for( Int iRefIndex = 0; iRefIndex < iNumRefPics; iRefIndex++ )
+      { 
+        if(pcBasePic->getPOC() == getSlice()->getRefPic( eRefPicListTest, iRefIndex )->getPOC() 
+          && pcBasePic->getViewIndex() == getSlice()->getRefPic( eRefPicListTest, iRefIndex )->getViewIndex())
+        {
+          valid=1;
+          viewIndex = uiBaseId;
+          break;
+        }
+      }
+    }
+  }
+  if(valid)
+  {
+    pDInfo->m_aVIdxCan = viewIndex;
+#if H_3D_NBDV_REF
+    TComPic* picDepth = NULL;
+    picDepth = getSlice()->getIvPic( true, viewIndex );
+    assert(picDepth!=NULL);
+
+    if (picDepth && bDepthRefine)
+    {
+      estimateDVFromDM(viewIndex, uiPartIdx, picDepth, uiPartAddr, &defaultDV ); // from base view
+    }
+    pDInfo->m_acDoNBDV = defaultDV;
+#endif
+  }
+#else
   pDInfo->m_aVIdxCan = 0;
 #if H_3D_NBDV_REF
   TComPic* picDepth = NULL;
@@ -5220,7 +5259,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   }
   pDInfo->m_acDoNBDV = defaultDV;
 #endif
-
+#endif
   return false; 
 }
 
