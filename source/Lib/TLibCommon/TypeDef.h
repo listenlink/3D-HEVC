@@ -200,11 +200,11 @@
 #define H_3D_VSP_CONSTRAINED              0
 #endif
 
-#define NTT_VSP_COMMON_E0207_E0208        0 // common part of JCT3V-E0207 and JCT3V-E0208
+#define NTT_VSP_COMMON_E0207_E0208        1 // common part of JCT3V-E0207 and JCT3V-E0208
 #if NTT_VSP_COMMON_E0207_E0208
 #define NTT_VSP_DC_BUGFIX_E0208           0 // bugfix for sub-PU based DC in VSP, JCT3V-E0208
 #define NTT_VSP_VECTOR_CLIP_E0208         0 // disparity vector clipping on fetching depth map in VSP, JCT3V-E0208
-#define NTT_VSP_ADAPTIVE_SPLIT_E0207      0 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
+#define NTT_VSP_ADAPTIVE_SPLIT_E0207      1 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
 #endif
 
 #endif
