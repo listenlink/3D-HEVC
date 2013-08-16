@@ -5268,11 +5268,18 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
 {
   Int iPictureWidth  = pcBaseViewDepthPicYuv->getWidth();
   Int iPictureHeight = pcBaseViewDepthPicYuv->getHeight();
-
+  
+#if NTT_DoNBDV_VECTOR_CLIP_E0141
+  Int depthStartPosX = Clip3(0,   iPictureWidth - 1,  iBlkX + ((mv->getHor()+2)>>2));
+  Int depthStartPosY = Clip3(0,   iPictureHeight - 1, iBlkY + ((mv->getVer()+2)>>2));
+  Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
+  Int depthEndPosY   = Clip3(0,   iPictureHeight - 1, iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
+#else
   Int depthStartPosX = Clip3(0,   iPictureWidth - iBlkWidth,  iBlkX + ((mv->getHor()+2)>>2));
   Int depthStartPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + ((mv->getVer()+2)>>2));
   Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
   Int depthEndPosY   = Clip3(0,   iPictureHeight - 1,  iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
+#endif
 
   Pel* depthTL  = pcBaseViewDepthPicYuv->getLumaAddr();
   Int depStride =  pcBaseViewDepthPicYuv->getStride();
@@ -5351,7 +5358,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
         {
           assert( uiMvpDvPos < IDV_CANDS );
           paIDVInfo->m_acMvCand[iList][ uiMvpDvPos ] = TComMv( cMvPred.getIDVHor(), cMvPred.getIDVVer() );
-          //Notes from QC: DvMCP is implemented in a way that doesnï¿½t carry the reference view identifier as NBDV. It only works for CTC and needs to be fixed to be aligned with other part of the NBDV design.
+          //Notes from QC: DvMCP is implemented in a way that doesnE½t carry the reference view identifier as NBDV. It only works for CTC and needs to be fixed to be aligned with other part of the NBDV design.
 #if MTK_DVMCP_FIX_E0172
           paIDVInfo->m_aVIdxCan[iList][ uiMvpDvPos ] = cMvPred.getIDVVId();
 #else  

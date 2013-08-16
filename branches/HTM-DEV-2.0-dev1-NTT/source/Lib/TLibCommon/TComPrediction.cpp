@@ -62,6 +62,9 @@ TComPrediction::~TComPrediction()
 #if H_3D_VSP
   if (m_pDepthBlock != NULL)
       free(m_pDepthBlock);
+#if NTT_VSP_COMMON_E0207_E0208
+  m_cYuvDepthOnVsp.destroy();
+#endif
 #endif
 
   delete[] m_piYuvExt;
@@ -118,6 +121,9 @@ Void TComPrediction::initTempBuff()
 #if H_3D_ARP
     m_acYuvPredBase[0] .create( g_uiMaxCUWidth, g_uiMaxCUHeight );
     m_acYuvPredBase[1] .create( g_uiMaxCUWidth, g_uiMaxCUHeight );
+#endif
+#if NTT_VSP_COMMON_E0207_E0208
+    m_cYuvDepthOnVsp.create( g_uiMaxCUWidth, g_uiMaxCUHeight );
 #endif
   }
 
@@ -728,11 +734,24 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   TComMv cDv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cDv is the disparity vector derived from the neighbors
 #endif
   pcCU->clipMv(cDv);
+
+#if NTT_VSP_COMMON_E0207_E0208
+  // fetch virtual depth map
+#if NTT_VSP_VECTOR_CLIP_E0208
+  pcBaseViewDepthPicYuv->extendPicBorder();
+#endif
+  xGetVirtualDepth( pcCU, pcBaseViewDepthPicYuv, &cDv, uiPartAddr, iWidth, iHeight, &m_cYuvDepthOnVsp );
+  // sub-PU based compensation
+  xPredInterLumaBlkFromDM   ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
+  xPredInterChromaBlkFromDM ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
+#else
   UInt uiAbsPartIdx = pcCU->getZorderIdxInCU();
   Int iBlkX = ( pcCU->getAddr() % pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
   Int iBlkY = ( pcCU->getAddr() / pRefPicBaseDepth->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ uiAbsPartIdx ] ];
   xPredInterLumaBlkFromDM  ( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, &cDv, uiPartAddr, iBlkX,    iBlkY,    iWidth,    iHeight,    pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
   xPredInterChromaBlkFromDM( pcBaseViewTxtPicYuv, pcBaseViewDepthPicYuv, pShiftLUT, &cDv, uiPartAddr, iBlkX>>1, iBlkY>>1, iWidth>>1, iHeight>>1, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
+#endif
+
 }
 #endif
 
@@ -1512,6 +1531,494 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 #endif
 
 #if H_3D_VSP
+
+#if NTT_VSP_COMMON_E0207_E0208
+// not fully support iRatioTxtPerDepth* != 1
+Void TComPrediction::xGetVirtualDepth( TComDataCU *pcCU, TComPicYuv *pcPicRefDepth, TComMv *pcMv, UInt partAddr, Int iWidth, Int iHeight, TComYuv *pcYuvDepth, Int iRatioTxtPerDepthX, Int iRatioTxtPerDepthY )
+{
+  Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE;
+  Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE;
+
+  Int refDepStride = pcPicRefDepth->getStride();
+
+#if NTT_VSP_VECTOR_CLIP_E0208
+
+  Int refDepOffset = ( (pcMv->getHor()+2) >> 2 ) + ( (pcMv->getVer()+2) >> 2 ) * refDepStride;
+
+#if 1 // // iRatioTxtPerDepthX==1 && iRatioTxtPerDepthY==1
+  Pel *refDepth    = pcPicRefDepth->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr );
+#else
+  Pel *refDepth    = pcPicRefDepth->getLumaAddr( );
+  Int iPosX, iPosY;
+  pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr, iPosX, iPosY ); // top-left position in texture
+  iPosX /= iRatioTxtPerDepthX; // texture position -> depth postion
+  iPosY /= iRatioTxtPerDepthY;
+  refDepOffset += iPosX + iPosY * refDepStride;
+
+  iWidth  /= iRatioTxtPerDepthX; // texture size -> depth size
+  iHeight /= iRatioTxtPerDepthY;
+#endif
+
+  refDepth += refDepOffset;
+
+#else // NTT_VSP_VECTOR_CLIP_E0208
+
+  Int widthDepth = pcPicRefDepth->getWidth();
+  Int heightDepth = pcPicRefDepth->getHeight();
+  Int iPosX, iPosY;
+  pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr, iPosX, iPosY ); // top-left position in texture
+  iPosX /= iRatioTxtPerDepthX; // texture position -> depth postion
+  iPosY /= iRatioTxtPerDepthY;
+  
+  iPosX = Clip3(0, widthDepth-iWidth,   iPosX + ((pcMv->getHor()+2)>>2));
+  iPosY = Clip3(0, heightDepth-iHeight, iPosY + ((pcMv->getVer()+2)>>2));
+  
+  Pel *refDepth  = pcPicRefDepth->getLumaAddr() + iPosX + iPosY * refDepStride;
+
+#endif // NTT_VSP_VECTOR_CLIP_E0208
+
+  Int depStride = pcYuvDepth->getStride();
+  Pel *depth = pcYuvDepth->getLumaAddr();
+
+#if NTT_VSP_ADAPTIVE_SPLIT_E0207
+
+  if( iWidth<8 || iHeight<8 )
+  { // no split
+    Int rightOffset = iWidth - 1;
+    Int depStrideBlock = depStride * nTxtPerDepthY;
+    Pel *refDepthTop = refDepth;
+    Pel *refDepthBot = refDepthTop + (iHeight-1)*refDepStride;
+
+    Pel maxDepth = refDepthTop[0] > refDepthBot[0] ? refDepthTop[0] : refDepthBot[0];
+    if( maxDepth < refDepthTop[rightOffset] ) maxDepth = refDepthTop[rightOffset];
+    if( maxDepth < refDepthBot[rightOffset] ) maxDepth = refDepthBot[rightOffset];
+
+    for( Int sY=0; sY<iHeight; sY+=nTxtPerDepthY )
+    {
+      for( Int sX=0; sX<iWidth; sX+=nTxtPerDepthX )
+      {
+        depth[sX] = maxDepth;
+      }
+      depth += depStrideBlock;
+    }
+  }
+  else
+  { // split to 4x8, or 8x4
+    Int blocksize    = 8;
+    Int subblocksize = 4;
+    Int depStrideBlock = depStride * blocksize;
+    Pel *depthTmp = NULL;
+    Int depStrideTmp = depStride * nTxtPerDepthY;
+    Int offset[4] = { 0, subblocksize-1, subblocksize, blocksize-1 };
+    Pel *refDepthTmp[4] = { NULL, NULL, NULL, NULL };
+    Pel repDepth4x8[2] = {0, 0};
+    Pel repDepth8x4[2] = {0, 0};
+
+    Int refDepStrideBlock    = refDepStride * blocksize;
+    Int refDepStrideSubBlock = refDepStride * subblocksize;
+
+    refDepthTmp[0] = refDepth;
+    refDepthTmp[2] = refDepthTmp[0] + refDepStrideSubBlock;
+    refDepthTmp[1] = refDepthTmp[2] - refDepStride;
+    refDepthTmp[3] = refDepthTmp[1] + refDepStrideSubBlock;
+
+    for( Int y=0; y<iHeight; y+=blocksize )
+    {
+      for( Int x=0; x<iWidth; x+=blocksize )
+      {
+        Bool ULvsBR = false, URvsBL = false;
+
+        ULvsBR = refDepthTmp[0][x+offset[0]] < refDepthTmp[3][x+offset[3]];
+        URvsBL = refDepthTmp[0][x+offset[3]] < refDepthTmp[3][x+offset[0]];
+
+        if( ULvsBR ^ URvsBL )
+        { // 4x8
+          repDepth4x8[0] = refDepthTmp[0][x+offset[0]] > refDepthTmp[0][x+offset[1]] ? refDepthTmp[0][x+offset[0]] : refDepthTmp[0][x+offset[1]];
+          if( repDepth4x8[0] < refDepthTmp[3][x+offset[0]] ) repDepth4x8[0] = refDepthTmp[3][x+offset[0]];
+          if( repDepth4x8[0] < refDepthTmp[3][x+offset[1]] ) repDepth4x8[0] = refDepthTmp[3][x+offset[1]];
+          repDepth4x8[1] = refDepthTmp[0][x+offset[2]] > refDepthTmp[0][x+offset[3]] ? refDepthTmp[0][x+offset[2]] : refDepthTmp[0][x+offset[3]];
+          if( repDepth4x8[1] < refDepthTmp[3][x+offset[2]] ) repDepth4x8[1] = refDepthTmp[3][x+offset[2]];
+          if( repDepth4x8[1] < refDepthTmp[3][x+offset[3]] ) repDepth4x8[1] = refDepthTmp[3][x+offset[3]];
+
+          depthTmp = &depth[x];
+          for( Int sY=0; sY<blocksize; sY+=nTxtPerDepthY )
+          {
+            for( Int sX=0; sX<subblocksize; sX+=nTxtPerDepthX )
+            {
+              depthTmp[sX] = repDepth4x8[0];
+            }
+            depthTmp += depStrideTmp;
+          }
+          depthTmp = &depth[x+subblocksize];
+          for( Int sY=0; sY<blocksize; sY+=nTxtPerDepthY )
+          {
+            for( Int sX=0; sX<subblocksize; sX+=nTxtPerDepthX )
+            {
+              depthTmp[sX] = repDepth4x8[1];
+            }
+            depthTmp += depStrideTmp;
+          }
+        }
+        else
+        { // 8x4
+          repDepth8x4[0] = refDepthTmp[0][x+offset[0]] > refDepthTmp[0][x+offset[3]] ? refDepthTmp[0][x+offset[0]] : refDepthTmp[0][x+offset[3]];
+          if( repDepth8x4[0] < refDepthTmp[1][x+offset[0]] ) repDepth8x4[0] = refDepthTmp[1][x+offset[0]];
+          if( repDepth8x4[0] < refDepthTmp[1][x+offset[3]] ) repDepth8x4[0] = refDepthTmp[1][x+offset[3]];
+          repDepth8x4[1] = refDepthTmp[2][x+offset[0]] > refDepthTmp[2][x+offset[3]] ? refDepthTmp[2][x+offset[0]] : refDepthTmp[2][x+offset[3]];
+          if( repDepth8x4[1] < refDepthTmp[3][x+offset[0]] ) repDepth8x4[1] = refDepthTmp[3][x+offset[0]];
+          if( repDepth8x4[1] < refDepthTmp[3][x+offset[3]] ) repDepth8x4[1] = refDepthTmp[3][x+offset[3]];
+          
+          depthTmp = &depth[x];
+          for( Int sY=0; sY<subblocksize; sY+=nTxtPerDepthY )
+          {
+            for( Int sX=0; sX<blocksize; sX+=nTxtPerDepthX )
+            {
+              depthTmp[sX] = repDepth8x4[0];
+            }
+            depthTmp += depStrideTmp;
+          }
+          for( Int sY=0; sY<subblocksize; sY+=nTxtPerDepthY )
+          {
+            for( Int sX=0; sX<blocksize; sX+=nTxtPerDepthX )
+            {
+              depthTmp[sX] = repDepth8x4[1];
+            }
+            depthTmp += depStrideTmp;
+          }
+        }
+      }
+      refDepthTmp[0] += refDepStrideBlock;
+      refDepthTmp[1] += refDepStrideBlock;
+      refDepthTmp[2] += refDepStrideBlock;
+      refDepthTmp[3] += refDepStrideBlock;
+      depth       += depStrideBlock;
+    }
+  }
+
+#else // NTT_VSP_ADAPTIVE_SPLIT_E0207
+
+  Int rightOffset = nTxtPerDepthX - 1;
+  Int depStrideBlock = depStride * nTxtPerDepthY;
+  Int refDepStrideBlock = refDepStride * nTxtPerDepthY;
+  Pel *refDepthTop = refDepth;
+  Pel *refDepthBot = refDepthTop + (nTxtPerDepthY-1)*refDepStride;
+
+  for( Int y=0; y<iHeight; y+= nTxtPerDepthY )
+  {
+    for( Int x=0; x<iWidth; x+=nTxtPerDepthX )
+    {
+      Pel maxDepth = refDepthTop[x] > refDepthBot[x] ? refDepthTop[x] : refDepthBot[x]; 
+
+      if( maxDepth < refDepthTop[x+rightOffset] ) maxDepth = refDepthTop[x+rightOffset];
+      if( maxDepth < refDepthBot[x+rightOffset] ) maxDepth = refDepthBot[x+rightOffset];
+
+      depth[x] = maxDepth;
+
+    }
+    refDepthTop += refDepStrideBlock;
+    refDepthBot += refDepStrideBlock;
+    depth       += depStrideBlock;
+  }
+
+#endif // NTT_VSP_ADAPTIVE_SPLIT_E0207
+}
+
+Void TComPrediction::xPredInterLumaBlkFromDM( TComDataCU *pcCU, TComPicYuv *pcPicRef, TComYuv *pcYuvDepth, Int* pShiftLUT, TComMv *pcMv, UInt partAddr, Int iWidth, Int iHeight, Bool bIsDepth, TComYuv *&pcYuvDst, Bool bIsBi )
+{
+  Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE;
+  Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE;
+  
+  Int refStride = pcPicRef->getStride();
+  Int dstStride = pcYuvDst->getStride();
+  Int depStride = pcYuvDepth->getStride();
+  Int refStrideBlock = refStride  * nTxtPerDepthY;
+  Int dstStrideBlock = dstStride * nTxtPerDepthY;
+  Int depStrideBlock = depStride * nTxtPerDepthY;
+
+  Pel *ref    = pcPicRef->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr );
+  Pel *dst    = pcYuvDst->getLumaAddr(partAddr);
+  Pel *depth  = pcYuvDepth->getLumaAddr();
+  
+#if !(NTT_VSP_DC_BUGFIX_E0208)
+  Int widthLuma = pcPicRef->getWidth();
+  Int iPosX, iPosY;
+  pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr, iPosX, iPosY ); // top-left position in texture
+#endif
+
+#if H_3D_VSP_BLOCKSIZE == 1
+#if H_3D_VSP_CONSTRAINED
+  //get LUT based horizontal reference range
+  Int range = xGetConstrainedSize(iWidth, iHeight);
+
+  // The minimum depth value
+  Int minRelativePos = MAX_INT;
+  Int maxRelativePos = MIN_INT;
+
+  Pel* depthTemp, *depthInitial=depth;
+  for (Int yTxt = 0; yTxt < iHeight; yTxt++)
+  {
+    for (Int xTxt = 0; xTxt < iWidth; xTxt++)
+    {
+      if (depthPosX+xTxt < widthDepth)
+        depthTemp = depthInitial + xTxt;
+      else
+        depthTemp = depthInitial + (widthDepth - depthPosX - 1);
+
+      Int disparity = pShiftLUT[ *depthTemp ]; // << iShiftPrec;
+      Int disparityInt = disparity >> 2;
+
+      if( disparity <= 0)
+      {
+        if (minRelativePos > disparityInt+xTxt)
+            minRelativePos = disparityInt+xTxt;
+      }
+      else
+      {
+        if (maxRelativePos < disparityInt+xTxt)
+            maxRelativePos = disparityInt+xTxt;
+      }
+    }
+    if (depthPosY+yTxt < heightDepth)
+      depthInitial = depthInitial + depStride;
+  }
+
+  Int disparity_tmp = pShiftLUT[ *depth ]; // << iShiftPrec;
+  if (disparity_tmp <= 0)
+    maxRelativePos = minRelativePos + range -1 ;
+  else
+    minRelativePos = maxRelativePos - range +1 ;
+#endif
+#endif // H_3D_VSP_BLOCKSIZE == 1
+
+  TComMv cDv(0, 0);
+
+  for ( Int yTxt = 0; yTxt < iHeight; yTxt += nTxtPerDepthY )
+  {
+    for ( Int xTxt = 0; xTxt < iWidth; xTxt += nTxtPerDepthX )
+    {
+      Pel repDepth = depth[ xTxt ];
+      assert( repDepth >= 0 && repDepth <= 255 );
+
+      Int disparity = pShiftLUT[ repDepth ]; // remove << iShiftPrec ??
+      Int xFrac = disparity & 0x3;
+
+#if NTT_VSP_DC_BUGFIX_E0208
+
+      cDv.setHor( disparity );
+      pcCU->clipMv( cDv );
+
+      Int refOffset = xTxt + (cDv.getHor() >> 2);
+      
+#if H_3D_VSP_CONSTRAINED
+      if(refOffset<minRelativePos || refOffset>maxRelativePos)
+        xFrac = 0;
+      refOffset = Clip3(minRelativePos, maxRelativePos, refOffset);
+#endif
+
+      assert( ref[refOffset] >= 0 && ref[refOffset]<= 255 );
+      m_if.filterHorLuma( &ref[refOffset], refStride, &dst[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, !bIsBi );
+
+#else // NTT_VSP_DC_BUGFIX_E0208
+
+      for( Int j=0; j < nTxtPerDepthX; j++ )
+      {
+        Int refOffset = xTxt+j + (disparity >> 2);
+#if H_3D_VSP_CONSTRAINED
+        if(refOffset<minRelativePos || refOffset>maxRelativePos)
+          xFrac = 0;
+        refOffset = Clip3(minRelativePos, maxRelativePos, refOffset);
+#endif
+        Int absX  = iPosX + refOffset;
+
+        if (xFrac == 0)
+          absX = Clip3(0, widthLuma-1, absX);
+        else
+          absX = Clip3(4, widthLuma-5, absX);
+
+        refOffset = absX - iPosX;
+        assert( ref[refOffset] >= 0 && ref[refOffset] <= 255 );
+        
+        m_if.filterHorLuma( &ref[refOffset], refStride, &dst[xTxt+j], dstStride, 1, nTxtPerDepthY, xFrac, !bIsBi );
+      }
+
+#endif // NTT_VSP_DC_BUGFIX_E0208
+
+    }
+    ref   += refStrideBlock;
+    dst   += dstStrideBlock;
+    depth += depStrideBlock;
+  }
+
+}
+
+Void TComPrediction::xPredInterChromaBlkFromDM  ( TComDataCU *pcCU, TComPicYuv *pcPicRef, TComYuv *pcYuvDepth, Int* pShiftLUT, TComMv *pcMv, UInt partAddr, Int iWidth, Int iHeight, Bool bIsDepth, TComYuv *&pcYuvDst, Bool bIsBi )
+{
+#if (H_3D_VSP_BLOCKSIZE==1)
+  Int nTxtPerDepthX = 1;
+  Int nTxtPerDepthY = 1;
+#else
+  Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE >> 1;
+  Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE >> 1;
+#endif
+
+  Int refStride = pcPicRef->getCStride();
+  Int dstStride = pcYuvDst->getCStride();
+  Int depStride = pcYuvDepth->getStride();
+  Int refStrideBlock = refStride * nTxtPerDepthY;
+  Int dstStrideBlock = dstStride * nTxtPerDepthY;
+  Int depStrideBlock = depStride * (nTxtPerDepthY<<1);
+
+  Pel *refCb  = pcPicRef->getCbAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr );
+  Pel *refCr  = pcPicRef->getCrAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr );
+  Pel *dstCb  = pcYuvDst->getCbAddr(partAddr);
+  Pel *dstCr  = pcYuvDst->getCrAddr(partAddr);
+  Pel *depth  = pcYuvDepth->getLumaAddr();
+
+#if 0 // not necessary??
+  if (bIsDepth)
+  {
+    Pel val = 128;
+    iHeight >>=1; // luma to chroma
+    iWidth >>=1;
+    if ( bIsBi )
+    {
+      Int shift = IF_INTERNAL_PREC - ( g_uiBitDepth + g_uiBitIncrement );
+      val = (val << shift) - (Pel)IF_INTERNAL_OFFS;
+    }
+    for (Int y = 0; y < iHeight; y++)
+    {
+      for (Int x = 0; x < iWidth; x++)
+      {
+        dstCb[x] = val;
+        dstCr[x] = val;
+      }
+      dstCb += dstStride;
+      dstCr += dstStride;
+    }
+    return;
+  }
+#endif
+
+#if !(NTT_VSP_DC_BUGFIX_E0208)
+  Int widthChroma = pcPicRef->getWidth() >> 1;
+  Int iPosX, iPosY;
+  pcCU->getPic()->getPicYuvRec()->getTopLeftSamplePos( pcCU->getAddr(), pcCU->getZorderIdxInCU() + partAddr, iPosX, iPosY ); // top-left position in texture
+  iPosX >>= 1;
+  iPosY >>= 1;
+#endif
+  
+#if H_3D_VSP_BLOCKSIZE == 1
+#if H_3D_VSP_CONSTRAINED
+  //get LUT based horizontal reference range
+  Int range = xGetConstrainedSize(iWidth, iHeight, false);
+
+  // The minimum depth value
+  Int minRelativePos = MAX_INT;
+  Int maxRelativePos = MIN_INT;
+
+  Int depthTmp;
+  for (Int yTxt=0; yTxt<iHeight; yTxt++)
+  {
+    for (Int xTxt=0; xTxt<iWidth; xTxt++)
+    {
+      depthTmp = m_pDepthBlock[xTxt+yTxt*dW];
+      Int disparity = pShiftLUT[ depthTmp ]; // << iShiftPrec;
+      Int disparityInt = disparity >> 3;//in chroma resolution
+
+      if (disparityInt < 0)
+      {
+        if (minRelativePos > disparityInt+xTxt)
+            minRelativePos = disparityInt+xTxt;
+      }
+      else
+      {
+        if (maxRelativePos < disparityInt+xTxt)
+            maxRelativePos = disparityInt+xTxt;
+      }
+    }
+  }
+
+  depthTmp = m_pDepthBlock[0];
+  Int disparity_tmp = pShiftLUT[ depthTmp ]; // << iShiftPrec;
+  if ( disparity_tmp < 0 )
+    maxRelativePos = minRelativePos + range - 1;
+  else
+    minRelativePos = maxRelativePos - range + 1;
+
+#endif // H_3D_VSP_CONSTRAINED
+#endif // H_3D_VSP_BLOCKSIZE == 1
+
+  TComMv cDv(0, 0);
+  // luma size -> chroma size
+  iHeight >>= 1;
+  iWidth  >>= 1;
+
+  for ( Int yTxt = 0; yTxt < iHeight; yTxt += nTxtPerDepthY )
+  {
+    for ( Int xTxt = 0; xTxt < iWidth; xTxt += nTxtPerDepthX )
+    {
+      Pel repDepth = depth[ xTxt<<1 ];
+      assert( repDepth >= 0 && repDepth <= 255 );
+
+      Int disparity = pShiftLUT[ repDepth ]; // remove << iShiftPrec;
+      Int xFrac = disparity & 0x7;
+      
+#if NTT_VSP_DC_BUGFIX_E0208
+
+      cDv.setHor( disparity );
+      pcCU->clipMv( cDv );
+
+      Int refOffset = xTxt + (cDv.getHor() >> 3);
+
+#if H_3D_VSP_CONSTRAINED
+      if(refOffset<minRelativePos || refOffset>maxRelativePos)
+        xFrac = 0;
+      refOffset = Clip3(minRelativePos, maxRelativePos, refOffset);
+#endif
+
+      assert( refCb[refOffset] >= 0 && refCb[refOffset]<= 255 );
+      assert( refCr[refOffset] >= 0 && refCr[refOffset]<= 255 );
+
+      m_if.filterHorChroma( &refCb[refOffset], refStride, &dstCb[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, !bIsBi );
+      m_if.filterHorChroma( &refCr[refOffset], refStride, &dstCr[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, !bIsBi );
+
+#else // NTT_VSP_DC_BUGFIX_E0208
+      
+      for( Int j=0; j < nTxtPerDepthX; j++ )
+      {
+        Int refOffset = xTxt+j + (disparity >> 3);
+#if H_3D_VSP_CONSTRAINED
+        if(refOffset<minRelativePos || refOffset>maxRelativePos)
+          xFrac = 0;
+        refOffset = Clip3(minRelativePos, maxRelativePos, refOffset);
+#endif
+        Int absX  = iPosX + refOffset;
+
+        if (xFrac == 0)
+          absX = Clip3(0, widthChroma-1, absX);
+        else
+          absX = Clip3(4, widthChroma-5, absX);
+
+        refOffset = absX - iPosX;
+        assert( refCb[refOffset] >= 0 && refCb[refOffset] <= 255 );
+        assert( refCr[refOffset] >= 0 && refCr[refOffset] <= 255 );
+
+        m_if.filterHorChroma( &refCb[refOffset], refStride, &dstCb[xTxt+j], dstStride, 1, nTxtPerDepthY, xFrac, !bIsBi );
+        m_if.filterHorChroma( &refCr[refOffset], refStride, &dstCr[xTxt+j], dstStride, 1, nTxtPerDepthY, xFrac, !bIsBi );
+      }
+
+#endif // NTT_VSP_DC_BUGFIX_E0208
+    }
+    refCb += refStrideBlock;
+    refCr += refStrideBlock;
+    dstCb += dstStrideBlock;
+    dstCr += dstStrideBlock;
+    depth += depStrideBlock;
+  }
+
+}
+#else // NTT_VSP_COMMON_E0207_E0208
+
 // Input:
 // refPic: Ref picture. Full picture, with padding
 // posX, posY:     PU position, texture
@@ -1964,6 +2471,8 @@ Void TComPrediction::xPredInterChromaBlkFromDM ( TComPicYuv *refPic, TComPicYuv 
   }
 
 }
+
+#endif // NTT_VSP_COMMON_E0207_E0208
 
 #if H_3D_VSP_CONSTRAINED
 Int TComPrediction::xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma)

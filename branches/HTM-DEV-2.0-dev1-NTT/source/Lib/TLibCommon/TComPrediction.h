@@ -83,6 +83,9 @@ protected:
 #if H_3D_VSP_CONSTRAINED
   Int  xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma = true);
 #endif
+#if NTT_VSP_COMMON_E0207_E0208
+  TComYuv   m_cYuvDepthOnVsp;
+#endif
 #endif
 
   Void xPredIntraAng            (Int bitDepth, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, Bool bFilter );
@@ -118,8 +121,14 @@ protected:
     );
 
 #if H_3D_VSP
+#if NTT_VSP_COMMON_E0207_E0208
+  Void xGetVirtualDepth           ( TComDataCU *pcCU, TComPicYuv *pcPicRefDepth, TComMv *pcDv, UInt partAddr, Int iWidth, Int iHeight, TComYuv *pcYuvDepth, Int iTxtPerDepthX=1, Int iTxtPerDepthY=1 );
+  Void xPredInterLumaBlkFromDM    ( TComDataCU *pcCU, TComPicYuv *pcPicRef, TComYuv *pcYuvDepth, Int* pShiftLUT, TComMv *pcMv, UInt partAddr, Int iWidth, Int iHeight, Bool bIsDepth, TComYuv *&pcYuvDst, Bool bIsBi );
+  Void xPredInterChromaBlkFromDM  ( TComDataCU *pcCU, TComPicYuv *pcPicRef, TComYuv *pcYuvDepth, Int* pShiftLUT, TComMv *pcMv, UInt partAddr, Int iWidth, Int iHeight, Bool bIsDepth, TComYuv *&pcYuvDst, Bool bIsBi );
+#else
   Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
   Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
+#endif
 #endif
 
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
