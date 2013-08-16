@@ -5531,7 +5531,9 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
 
 #if H_3D_VSO //M 14
     if ( m_pcRdCost->getUseLambdaScaleVSO() )    
+    {
       rdCost = m_pcRdCost->calcRdCostVSO( uiBits, ruiDist );    
+    }
     else
 #endif
     {

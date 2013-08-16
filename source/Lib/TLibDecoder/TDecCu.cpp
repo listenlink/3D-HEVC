@@ -489,10 +489,16 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
     case MODE_INTER:
 #if LGE_INTER_SDC_E0156
       if( m_ppcCU[uiDepth]->getInterSDCFlag( 0 ) )
+      {
         xReconInterSDC( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
+      }
       else
+      {
 #endif
       xReconInter( m_ppcCU[uiDepth], uiDepth );
+#if LGE_INTER_SDC_E0156
+      }
+#endif
       break;
     case MODE_INTRA:
 #if H_3D_DIM_SDC

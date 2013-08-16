@@ -1863,10 +1863,16 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
       {
 #if LGE_INTER_SDC_E0156
         if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) )
+        {
           bestIsSkip = !rpcBestCU->getSDCFlag( 0 ) && ( rpcBestCU->getQtRootCbf(0) == 0 );
+        }
         else
+        {
 #endif
         bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
+#if LGE_INTER_SDC_E0156
+        }
+#endif
       }
     }
    }

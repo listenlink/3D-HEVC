@@ -290,7 +290,9 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
 #if LGE_INTER_SDC_E0156
     m_pbInterSDCFlag     = (Bool*  )xMalloc(Bool,   uiNumPartition);
     for( Int i = 0; i < 4; i++ )
+    {
       m_apSegmentInterDCOffset[i] = (Int*)xMalloc(Int, uiNumPartition);
+    }
 #endif
   }
   else

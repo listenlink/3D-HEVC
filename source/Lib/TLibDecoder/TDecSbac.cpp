@@ -2266,7 +2266,9 @@ Void TDecSbac::parseInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     pcCU->setCbfSubParts( 1, 1, 1, uiAbsPartIdx, uiDepth );
   }
   else
+  {
     pcCU->setInterSDCFlagSubParts( false, uiAbsPartIdx, 0, uiDepth);
+  }
 }
 
 Void TDecSbac::parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSegment )
