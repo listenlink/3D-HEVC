@@ -827,13 +827,19 @@ Void TEncEntropy::encodeScalingList( TComScalingList* scalingList )
 Void TEncEntropy::encodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
+  {
     return;
+  }
 
   if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || pcCU->isSkipped( uiAbsPartIdx ) )
+  {
     return;
+  }
 
   if( bRD )
+  {
     uiAbsPartIdx = 0;
+  }
 
   m_pcEntropyCoderIf->codeInterSDCFlag( pcCU, uiAbsPartIdx );
 }
@@ -841,20 +847,28 @@ Void TEncEntropy::encodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool 
 Void TEncEntropy::encodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
+  {
     return;
+  }
 
   if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || !pcCU->getInterSDCFlag( uiAbsPartIdx ) )
+  {
     return;
+  }
 
   if( bRD )
+  {
     uiAbsPartIdx = 0;
+  }
 
   // number of segments depends on prediction mode for INTRA
   UInt uiNumSegments = ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ? 1 : ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 4 : 2 );
 
   // encode residual data for each segment
   for( UInt uiSeg = 0; uiSeg < uiNumSegments; uiSeg++ )
+  {
     m_pcEntropyCoderIf->codeInterSDCResidualData( pcCU, uiAbsPartIdx, uiSeg );
+  }
 }
 #endif
 
