@@ -485,31 +485,35 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
 
 #if SCU_HS_FAST_DEPTH_INTRA_E0238
 
-UInt TComRdCost::calcVAR (Pel* pi0, Int iStride, Int cuDepth)
-{
-  UInt uiSum = 0;
+UInt TComRdCost::calcVAR (Pel* pi0, Int uiWidth, Int uiHeight, Int cuDepth)
+{ 
   Int x, y;
   Int temp = 0;
-  if (iStride == 4)
-      cuDepth = 4;
 
-  for (x = 0; x < iStride; x++)
+  for (x = 0; x <  uiHeight; x++)
   {
-      for (y = 0; y < iStride; y++)
+     for (y = 0; y < uiWidth; y++)
       {
-         temp += pi0[x*iStride+y];
+         temp += pi0[x*uiHeight+y]; 
       }
   }
-  temp = temp >> (6-cuDepth)*2;
-
-  for (x = 0; x < iStride; x++)
+  Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
+  if (uiWidth == 4)
   {
-      for (y = 0; y < iStride; y++)
+     cuDepth = cuMaxLog2Size-2;
+  }
+
+  temp = temp >> (cuMaxLog2Size-cuDepth)*2;
+
+  UInt uiSum = 0;
+    for (x = 0; x <  uiHeight; x++)
+  {
+      for (y = 0; y < uiWidth; y++)
       {
-         uiSum += (pi0[x*iStride+y]-temp)*(pi0[x*iStride+y]-temp);
+        uiSum += (pi0[x*uiHeight+y]-temp)*(pi0[x*uiHeight+y]-temp);
       }
   }
-  return (uiSum >> (6-cuDepth)*2);
+     return (uiSum >> (cuMaxLog2Size-cuDepth)*2);
 
 }
 #endif

@@ -228,7 +228,7 @@ public:
   
   UInt    calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
 #if SCU_HS_FAST_DEPTH_INTRA_E0238
-  UInt    calcVAR (Pel* pi0, Int iStride, Int cuDepth);
+  UInt    calcVAR(Pel* pi0, Int uiWidth, Int uiHeight, Int cuDepth);
 #endif  
   // for motion cost
 #if !FIX203
