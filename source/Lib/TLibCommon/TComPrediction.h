@@ -122,9 +122,9 @@ protected:
 
 #if H_3D_VSP
 #if NTT_VSP_COMMON_E0207_E0208
-  Void xGetVirtualDepth           ( TComDataCU *pcCU, TComPicYuv *pcPicRefDepth, TComMv *pcDv, UInt partAddr, Int iWidth, Int iHeight, TComYuv *pcYuvDepth, Int iTxtPerDepthX=1, Int iTxtPerDepthY=1 );
-  Void xPredInterLumaBlkFromDM    ( TComDataCU *pcCU, TComPicYuv *pcPicRef, TComYuv *pcYuvDepth, Int* pShiftLUT, TComMv *pcMv, UInt partAddr, Int iWidth, Int iHeight, Bool bIsDepth, TComYuv *&pcYuvDst, Bool bIsBi );
-  Void xPredInterChromaBlkFromDM  ( TComDataCU *pcCU, TComPicYuv *pcPicRef, TComYuv *pcYuvDepth, Int* pShiftLUT, TComMv *pcMv, UInt partAddr, Int iWidth, Int iHeight, Bool bIsDepth, TComYuv *&pcYuvDst, Bool bIsBi );
+  Void xGetVirtualDepth           ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int txtPerDepthX=1, Int txtPerDepthY=1 );
+  Void xPredInterLumaBlkFromDM    ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&pcYuvDst, Bool isBi );
+  Void xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&pcYuvDst, Bool isBi );
 #else
   Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
   Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
