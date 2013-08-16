@@ -110,6 +110,9 @@
 #define MTK_NBDV_TN_FIX_E0172                1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
 #endif
 #define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1   // Bugfix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
+#if H_3D_NBDV_REF
+#define NTT_DoNBDV_VECTOR_CLIP_E0141      1   // disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
+#endif
 #endif
 #define H_3D_VSP                          1   // View synthesis prediction
                                               // MERL_C0152: Basic VSP
@@ -196,6 +199,14 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
+
+#define NTT_VSP_COMMON_E0207_E0208        1 // common part of JCT3V-E0207 and JCT3V-E0208
+#if NTT_VSP_COMMON_E0207_E0208
+#define NTT_VSP_DC_BUGFIX_E0208           1 // bugfix for sub-PU based DC in VSP, JCT3V-E0208
+#define NTT_VSP_VECTOR_CLIP_E0208         1 // disparity vector clipping on fetching depth map in VSP, JCT3V-E0208
+#define NTT_VSP_ADAPTIVE_SPLIT_E0207      1 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
+#endif
+
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
