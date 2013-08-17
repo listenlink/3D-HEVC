@@ -2834,16 +2834,16 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     {
 
 #if SCU_HS_FAST_DEPTH_INTRA_E0238
-Int threshold = max(((pcCU->getQP(0))>>3)-1,3);
-Int varThreshold = (Int)(threshold*threshold - 8);
-UInt uiVarCU=m_pcRdCost->calcVAR(piOrg, uiWidth,uiHeight,pcCU->getDepth(0));
+      Int  threshold    = max(((pcCU->getQP(0))>>3)-1,3);
+      Int  varThreshold = (Int)( threshold * threshold - 8 );
+      UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, uiWidth,uiHeight,pcCU->getDepth(0));
 #endif
 
 
 #if H_3D_DIM_DMM
       if( m_pcEncCfg->getUseDMM()
 #if SCU_HS_FAST_DEPTH_INTRA_E0238
-         && (uiRdModeList[0] != 0 || uiVarCU >= varThreshold)
+         && (uiRdModeList[0] != 0 || varCU >= varThreshold)
 #endif
         )
       {
@@ -2921,7 +2921,7 @@ UInt uiVarCU=m_pcRdCost->calcVAR(piOrg, uiWidth,uiHeight,pcCU->getDepth(0));
 #if H_3D_DIM_RBC
       if( m_pcEncCfg->getUseRBC()
 #if SCU_HS_FAST_DEPTH_INTRA_E0238
-          && (uiRdModeList[0] != 0 || uiVarCU >= varThreshold)
+          && (uiRdModeList[0] != 0 || varCU >= varThreshold)
 #endif
         )
       {

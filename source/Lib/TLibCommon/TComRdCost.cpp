@@ -485,35 +485,36 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
 
 #if SCU_HS_FAST_DEPTH_INTRA_E0238
 
-UInt TComRdCost::calcVAR (Pel* pi0, Int uiWidth, Int uiHeight, Int cuDepth)
+UInt TComRdCost::calcVAR (Pel* pi0, Int width, Int height, Int stride, Int cuDepth)
 { 
-  Int x, y;
   Int temp = 0;
 
-  for (x = 0; x <  uiHeight; x++)
+  for (Int y = 0; y < height; y++)
   {
-     for (y = 0; y < uiWidth; y++)
-      {
-         temp += pi0[x*uiHeight+y]; 
-      }
+    for (Int x = 0; x < width; x++)
+    {
+      temp += pi0[ y * stride + x ]; 
+    }
   }
+
   Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
-  if (uiWidth == 4)
+  
+  if ( width == 4 ) // GT: What is the rational behind this? 
   {
-     cuDepth = cuMaxLog2Size-2;
+    cuDepth = cuMaxLog2Size - 2;
   }
 
-  temp = temp >> (cuMaxLog2Size-cuDepth)*2;
+  temp = temp >> (cuMaxLog2Size-cuDepth) * 2;
 
-  UInt uiSum = 0;
-    for (x = 0; x <  uiHeight; x++)
+  UInt sum = 0;
+  for (Int y = 0; y < height; y++)
   {
-      for (y = 0; y < uiWidth; y++)
-      {
-        uiSum += (pi0[x*uiHeight+y]-temp)*(pi0[x*uiHeight+y]-temp);
-      }
+    for (Int x = 0; x <  width; x++)
+    {
+      sum += (pi0[ y * stride + x ] - temp ) * (pi0[ y * stride + x ] - temp );
+    }
   }
-     return (uiSum >> (cuMaxLog2Size-cuDepth)*2);
+  return (sum >> (cuMaxLog2Size-cuDepth)*2);
 
 }
 #endif

@@ -2141,8 +2141,8 @@ Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   }
 
 #if SCU_HS_DMM4_REMOVE_DIV_E0242
-Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
-iDC = iDC >> (cuMaxLog2Size - pcCU->getDepth(0))*2;
+  Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
+  iDC = iDC >> (cuMaxLog2Size - pcCU->getDepth(0))*2;
 #else
   iDC /= (uiWidth*uiHeight);
 #endif
