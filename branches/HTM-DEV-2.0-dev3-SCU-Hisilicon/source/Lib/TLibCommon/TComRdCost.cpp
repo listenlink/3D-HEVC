@@ -485,7 +485,7 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
 
 #if SCU_HS_FAST_DEPTH_INTRA_E0238
 
-UInt TComRdCost::calcVAR (Pel* pi0, Int width, Int height, Int stride, Int cuDepth)
+UInt TComRdCost::calcVAR (Pel* pi0, Int stride, Int width, Int height, Int cuDepth)
 { 
   Int temp = 0;
 
@@ -499,7 +499,7 @@ UInt TComRdCost::calcVAR (Pel* pi0, Int width, Int height, Int stride, Int cuDep
 
   Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
   
-  if ( width == 4 ) // GT: What is the rational behind this? 
+  if ( width == 4 ) 
   {
     cuDepth = cuMaxLog2Size - 2;
   }
