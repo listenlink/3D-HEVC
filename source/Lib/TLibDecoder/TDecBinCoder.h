@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -53,25 +53,18 @@ public:
 
   virtual Void  start             ()                                          = 0;
   virtual Void  finish            ()                                          = 0;
-  virtual Void  flush            ()                                           = 0;
 
   virtual Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel )  = 0;
   virtual Void  decodeBinEP       ( UInt& ruiBin                           )  = 0;
   virtual Void  decodeBinsEP      ( UInt& ruiBins, Int numBins             )  = 0;
   virtual Void  decodeBinTrm      ( UInt& ruiBin                           )  = 0;
   
-  virtual Void  resetBac          ()                                          = 0;
-  virtual Void  decodeNumSubseqIPCM( Int& numSubseqIPCM )                  = 0;
-  virtual Void  decodePCMAlignBits()                                          = 0;
   virtual Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode)              = 0;
 
   virtual ~TDecBinIf() {}
 
   virtual Void  copyState         ( TDecBinIf* pcTDecBinIf )                  = 0;
   virtual TDecBinCABAC*   getTDecBinCABAC   ()  { return 0; }
-#if !OL_FLUSH_ALIGN
-  virtual Int   getBitsReadAhead() { return 0; }
-#endif
 };
 
 //! \}

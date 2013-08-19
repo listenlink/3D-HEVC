@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,6 +36,7 @@
 */
 
 #include "TComPicSym.h"
+#include "TComSampleAdaptiveOffset.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -43,6 +44,31 @@
 // ====================================================================================================================
 // Constructor / destructor / create / destroy
 // ====================================================================================================================
+
+TComPicSym::TComPicSym()
+:m_uiWidthInCU(0)
+,m_uiHeightInCU(0)
+,m_uiMaxCUWidth(0)
+,m_uiMaxCUHeight(0)
+,m_uiMinCUWidth(0)
+,m_uiMinCUHeight(0)
+,m_uhTotalDepth(0)
+,m_uiNumPartitions(0)
+,m_uiNumPartInWidth(0)
+,m_uiNumPartInHeight(0)
+,m_uiNumCUsInFrame(0)
+,m_apcTComSlice(NULL)
+,m_uiNumAllocatedSlice (0)
+,m_apcTComDataCU (NULL)
+,m_iTileBoundaryIndependenceIdr (0)
+,m_iNumColumnsMinus1 (0)
+,m_iNumRowsMinus1(0)
+,m_apcTComTile(NULL)
+,m_puiCUOrderMap(0)
+,m_puiTileIdxMap(NULL)
+,m_puiInverseCUOrderMap(NULL)
+{};
+
 
 Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth )
 {
@@ -96,15 +122,14 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
     m_puiCUOrderMap[i] = i;
     m_puiInverseCUOrderMap[i] = i;
   }
+  m_saoParam = NULL;
 }
 
 Void TComPicSym::destroy()
 {
-  Int i;
-  
   if (m_uiNumAllocatedSlice>0)
   {
-    for ( i=0; i<m_uiNumAllocatedSlice ; i++ )
+    for (Int i = 0; i<m_uiNumAllocatedSlice ; i++ )
     {
       delete m_apcTComSlice[i];
     }
@@ -112,7 +137,7 @@ Void TComPicSym::destroy()
   }
   m_apcTComSlice = NULL;
   
-  for (i = 0; i < m_uiNumCUsInFrame; i++)
+  for (Int i = 0; i < m_uiNumCUsInFrame; i++)
   {
     m_apcTComDataCU[i]->destroy();
     delete m_apcTComDataCU[i];
@@ -121,13 +146,12 @@ Void TComPicSym::destroy()
   delete [] m_apcTComDataCU;
   m_apcTComDataCU = NULL;
 
-
-  for( i=0; i<(m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1); i++ )
+  for(Int i = 0; i < (m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1); i++ )
   {
-    if ( m_apcTComTile[i] )  delete m_apcTComTile[i];
+    delete m_apcTComTile[i];
   }
-
   delete [] m_apcTComTile;
+
   m_apcTComTile = NULL;
 
   delete [] m_puiCUOrderMap;
@@ -138,6 +162,13 @@ Void TComPicSym::destroy()
 
   delete [] m_puiInverseCUOrderMap;
   m_puiInverseCUOrderMap = NULL;
+  
+  if (m_saoParam)
+  {
+    TComSampleAdaptiveOffset::freeSaoParam(m_saoParam);
+    delete m_saoParam;
+    m_saoParam = NULL;
+  }
 }
 
 Void TComPicSym::allocateNewSlice()
@@ -147,8 +178,6 @@ Void TComPicSym::allocateNewSlice()
   {
     m_apcTComSlice[m_uiNumAllocatedSlice-1]->copySliceInfo( m_apcTComSlice[m_uiNumAllocatedSlice-2] );
     m_apcTComSlice[m_uiNumAllocatedSlice-1]->initSlice();
-    m_apcTComSlice[m_uiNumAllocatedSlice-1]->initTiles();
-
   }
 }
 
@@ -192,6 +221,7 @@ Void TComPicSym::xInitTiles()
 
   //initialize each tile of the current picture
   for( uiRowIdx=0; uiRowIdx < m_iNumRowsMinus1+1; uiRowIdx++ )
+  {
     for( uiColumnIdx=0; uiColumnIdx < m_iNumColumnsMinus1+1; uiColumnIdx++ )
     {
       uiTileIdx = uiRowIdx * (m_iNumColumnsMinus1+1) + uiColumnIdx;
@@ -216,6 +246,7 @@ Void TComPicSym::xInitTiles()
       this->getTComTile(uiTileIdx)->setFirstCUAddr( (this->getTComTile(uiTileIdx)->getBottomEdgePosInCU() - this->getTComTile(uiTileIdx)->getTileHeight() +1)*m_uiWidthInCU + 
         this->getTComTile(uiTileIdx)->getRightEdgePosInCU() - this->getTComTile(uiTileIdx)->getTileWidth() + 1);
     }
+  }
 
   //initialize the TileIdxMap
   for( i=0; i<m_uiNumCUsInFrame; i++)
@@ -239,14 +270,6 @@ Void TComPicSym::xInitTiles()
     m_puiTileIdxMap[i] = uiRowIdx * (m_iNumColumnsMinus1 + 1) + uiColumnIdx;
   }
 
-  // Determine bits required for tile index
-  Int uiTilesCount = (m_iNumRowsMinus1+1) * (m_iNumColumnsMinus1+1);
-  m_uiBitsUsedByTileIdx = 0;
-  while (uiTilesCount)
-  {
-    m_uiBitsUsedByTileIdx++;
-    uiTilesCount >>= 1;
-  }
 }
 
 UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
@@ -283,6 +306,12 @@ UInt TComPicSym::xCalculateNxtCUAddr( UInt uiCurrCUAddr )
   }
 
   return uiNxtCUAddr;
+}
+
+Void TComPicSym::allocSaoParam(TComSampleAdaptiveOffset *sao)
+{
+  m_saoParam = new SAOParam;
+  sao->allocSaoParam(m_saoParam);
 }
 
 TComTile::TComTile()

@@ -32,17 +32,17 @@
  */
 
 
-
 #include <time.h>
+#include "../../Lib/TLibCommon/TypeDef.h"
+#if H_3D
 #include "TAppRendererTop.h"
-
 // ====================================================================================================================
 // Main function
 // ====================================================================================================================
 
 int main(int argc, char* argv[])
   {
-#if !QC_MVHEVC_B0046
+
   TAppRendererTop  cTAppRendererTop;
 
   // print information
@@ -78,7 +78,15 @@ int main(int argc, char* argv[])
   cTAppRendererTop.destroy();
 
   return 0;
-#endif
+}
+#else
+
+#include <iostream>
+int main(int argc, char* argv[])
+{
+  std::cout << "Set H_3D equal to 1 in TypeDef.h to build renderer. " << std::endl; 
+  return 1; 
 }
 
+#endif // H_3D
 
