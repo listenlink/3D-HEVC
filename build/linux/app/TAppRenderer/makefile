@@ -3,7 +3,7 @@ CONFIG 				= CONSOLE
 
 # set directories to your wanted values
 SRC_DIR				= ../../../../source/App/TAppRenderer
-INC_DIR				= ../../../../source/App
+INC_DIR				= ../../../../source/Lib
 LIB_DIR				= ../../../../lib
 BIN_DIR				= ../../../../bin
 
