@@ -175,6 +175,10 @@
 #define DVFROM_ABOVELEFT                  4
 #define IDV_CANDS                         5
 #endif
+////   **** Inter-view motion prediction for merge        *********
+#if H_3D_IV_MERGE
+#define QC_INRIA_MTK_MRG_E0126            1   // additional merge candidates JCT3V-E0126
+#endif
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3

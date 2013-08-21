@@ -256,6 +256,11 @@ protected:
                              Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag );
 #endif
 #endif
+#if QC_INRIA_MTK_MRG_E0126
+  Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int*   iPdmDir, TComMv* acPdmMv, 
+                               Int* aiPdmRefIdx, Int iPosDmv, Int* vspFlag ); 
+  Bool          xFirstDmvAvai( Int& iCount, TComMvField* pcMvFieldNeighbours, Int*  iPdmDir, Int iPosDmv, Int* vspFlag, Int& iFirDispCand );
+#endif
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
