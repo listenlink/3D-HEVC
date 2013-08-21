@@ -1509,7 +1509,9 @@ TComVPS::TComVPS()
       m_iIdx2DepthValue[i][d] = d;
     }
 #endif
+#if H_3D_TMVP
     m_ivMvScalingFlag = true; 
+#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
