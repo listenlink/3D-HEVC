@@ -793,7 +793,11 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // get DC prediction for each segment
   Pel apDCPredValues[2];
+#if KWU_SDC_SIMPLE_DC_E0117
+  m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
+#else
   m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride);
+#endif
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
