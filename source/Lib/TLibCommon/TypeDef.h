@@ -179,6 +179,7 @@
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#define KWU_SDC_SIMPLE_DC_E0117           1   // Simplified DC calculation for SDC
 #define SCU_HS_DMM4_REMOVE_DIV_E0242      1   // DMM4 Division Removal
 #define SCU_HS_FAST_DEPTH_INTRA_E0238     1   // Fast DMM and RBC Mode Selection
 #if H_3D_DIM_SDC

@@ -1890,11 +1890,19 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   
   // get DC prediction for each segment
   Pel apDCPredValues[2];
+#if KWU_SDC_SIMPLE_DC_E0117
+  analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode );
+#else
   analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride );
+#endif
   
   // get original DC for each segment
   Pel apDCOrigValues[2];
+#if KWU_SDC_SIMPLE_DC_E0117
+  analyzeSegmentsSDC(piOrg, uiStride, uiWidth, apDCOrigValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode, true );
+#else
   analyzeSegmentsSDC(piOrg, uiStride, uiWidth, apDCOrigValues, uiNumSegments, pbMask, uiMaskStride );
+#endif
   
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
   {

@@ -2588,14 +2588,48 @@ Void TComPrediction::xDeltaDCQuantScaleDown( TComDataCU*  pcCU, Pel& rDeltaDC )
   return;
 }
 #endif
+
 #if H_3D_DIM_SDC
-Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride )
+Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride
+#if KWU_SDC_SIMPLE_DC_E0117
+                                         ,UInt uiIntraMode
+                                         ,Bool orgDC
+#endif
+                                        )
 {
   Int iSumDepth[2];
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
-  
+ 
+#if KWU_SDC_SIMPLE_DC_E0117
+  if (orgDC == false)
+  {
+    if ( getDimType(uiIntraMode) == DMM1_IDX )
+    {
+      UChar ucSegmentLT = pMask[0];
+      UChar ucSegmentRT = pMask[uiSize-1];
+      UChar ucSegmentLB = pMask[uiMaskStride * (uiSize-1)]; 
+      UChar ucSegmentRB = pMask[uiMaskStride * (uiSize-1) + (uiSize-1)]; 
+
+      rpSegMeans[ucSegmentLT] = pOrig[0];
+      rpSegMeans[ucSegmentRT] = pOrig[uiSize-1];
+      rpSegMeans[ucSegmentLB] = pOrig[uiStride * (uiSize-1) ];
+      rpSegMeans[ucSegmentRB] = pOrig[uiStride * (uiSize-1) + (uiSize-1) ];
+    }
+    else if (uiIntraMode == PLANAR_IDX)
+    {
+      Pel* pLeftTop = pOrig;
+      Pel* pRightTop = pOrig + (uiSize-1);
+      Pel* pLeftBottom = (pOrig+ (uiStride*(uiSize-1)));
+      Pel* pRightBottom = (pOrig+ (uiStride*(uiSize-1)) + (uiSize-1));
+
+      rpSegMeans[0] = (*pLeftTop + *pRightTop + *pLeftBottom + *pRightBottom + 2)>>2;
+    }
+    return;
+  }
+#endif
+
   Int subSamplePix;
   if ( uiSize == 64 || uiSize == 32 )
   {
