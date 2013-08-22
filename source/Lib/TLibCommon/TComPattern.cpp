@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,18 +64,14 @@ const UChar TComPattern::m_aucIntraFilter[5] =
  \param  iRoiHeight    pattern height
  \param  iStride       buffer stride
  \param  iOffsetLeft   neighbour offset (left)
- \param  iOffsetRight  neighbour offset (right)
  \param  iOffsetAbove  neighbour offset (above)
- \param  iOffsetBottom neighbour offset (bottom)
  */
 Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
                                            Int iRoiWidth,
                                            Int iRoiHeight,
                                            Int iStride,
                                            Int iOffsetLeft,
-                                           Int iOffsetRight,
-                                           Int iOffsetAbove,
-                                           Int iOffsetBottom )
+                                           Int iOffsetAbove )
 {
   m_piPatternOrigin = piTexture;
   m_iROIWidth       = iRoiWidth;
@@ -83,8 +79,6 @@ Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
   m_iPatternStride  = iStride;
   m_iOffsetLeft     = iOffsetLeft;
   m_iOffsetAbove    = iOffsetAbove;
-  m_iOffsetRight    = iOffsetRight;
-  m_iOffsetBottom   = iOffsetBottom;
 }
 
 /**
@@ -94,10 +88,7 @@ Void TComPatternParam::setPatternParamPel ( Pel* piTexture,
  \param  iRoiHeight    pattern height
  \param  iStride       buffer stride
  \param  iOffsetLeft   neighbour offset (left)
- \param  iOffsetRight  neighbour offset (right)
  \param  iOffsetAbove  neighbour offset (above)
- \param  iOffsetBottom neighbour offset (bottom)
- \param  uiPartDepth   CU depth
  \param  uiAbsPartIdx  part index
  */
 Void TComPatternParam::setPatternParamCU( TComDataCU* pcCU,
@@ -105,55 +96,32 @@ Void TComPatternParam::setPatternParamCU( TComDataCU* pcCU,
                                          UChar       iRoiWidth,
                                          UChar       iRoiHeight,
                                          Int         iOffsetLeft,
-                                         Int         iOffsetRight,
                                          Int         iOffsetAbove,
-                                         Int         iOffsetBottom,
-                                         UInt        uiPartDepth,
-                                         UInt        uiAbsPartIdx 
-#if DEPTH_MAP_GENERATION
-                                         ,Bool        bPrdDepthMap
-#endif
-                                         )
+                                         UInt        uiAbsPartIdx )
 {
   m_iOffsetLeft   = iOffsetLeft;
-  m_iOffsetRight  = iOffsetRight;
   m_iOffsetAbove  = iOffsetAbove;
-  m_iOffsetBottom = iOffsetBottom;
   
   m_iROIWidth     = iRoiWidth;
   m_iROIHeight    = iRoiHeight;
   
   UInt uiAbsZorderIdx = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
   
-#if DEPTH_MAP_GENERATION
-  TComPicYuv* pcPic = ( bPrdDepthMap ? pcCU->getPic()->getPredDepthMap() : pcCU->getPic()->getPicYuvRec() );
-#else
-  TComPicYuv* pcPic = pcCU->getPic()->getPicYuvRec();
-#endif
-
   if ( iComp == 0 )
   {
-#if DEPTH_MAP_GENERATION
-    m_iPatternStride  = ( bPrdDepthMap ? pcCU->getPic()->getPredDepthMap()->getStride() : pcCU->getPic()->getStride() );
-#else
     m_iPatternStride  = pcCU->getPic()->getStride();
-#endif
-    m_piPatternOrigin = pcPic->getLumaAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
+    m_piPatternOrigin = pcCU->getPic()->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
   }
   else
   {
-#if DEPTH_MAP_GENERATION
-    m_iPatternStride  = ( bPrdDepthMap ? pcCU->getPic()->getPredDepthMap()->getCStride() : pcCU->getPic()->getCStride() );
-#else
     m_iPatternStride = pcCU->getPic()->getCStride();
-#endif
     if ( iComp == 1 )
     {
-      m_piPatternOrigin = pcPic->getCbAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
+      m_piPatternOrigin = pcCU->getPic()->getPicYuvRec()->getCbAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
     }
     else
     {
-      m_piPatternOrigin = pcPic->getCrAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
+      m_piPatternOrigin = pcCU->getPic()->getPicYuvRec()->getCrAddr(pcCU->getAddr(), uiAbsZorderIdx) - m_iOffsetAbove * m_iPatternStride - m_iOffsetLeft;
     }
   }
 }
@@ -169,28 +137,20 @@ Void TComPattern::initPattern ( Pel* piY,
                                Int iRoiHeight,
                                Int iStride,
                                Int iOffsetLeft,
-                               Int iOffsetRight,
-                               Int iOffsetAbove,
-                               Int iOffsetBottom )
+                               Int iOffsetAbove )
 {
-  m_cPatternY. setPatternParamPel( piY,  iRoiWidth,      iRoiHeight,      iStride,      iOffsetLeft,      iOffsetRight,      iOffsetAbove,      iOffsetBottom );
-  m_cPatternCb.setPatternParamPel( piCb, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetRight >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
-  m_cPatternCr.setPatternParamPel( piCr, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetRight >> 1, iOffsetAbove >> 1, iOffsetBottom >> 1 );
+  m_cPatternY. setPatternParamPel( piY,  iRoiWidth,      iRoiHeight,      iStride,      iOffsetLeft,      iOffsetAbove      );
+  m_cPatternCb.setPatternParamPel( piCb, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1 );
+  m_cPatternCr.setPatternParamPel( piCr, iRoiWidth >> 1, iRoiHeight >> 1, iStride >> 1, iOffsetLeft >> 1, iOffsetAbove >> 1 );
   
   return;
 }
 
-Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPartIdx 
-#if DEPTH_MAP_GENERATION
-                              , Bool bPrdDepthMap 
-#endif
-                              )
+Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPartIdx )
 {
   Int   uiOffsetLeft  = 0;
-  Int   uiOffsetRight = 0;
   Int   uiOffsetAbove = 0;
   
-  TComPic* pcPic         = pcCU->getPic();
   UChar uiWidth          = pcCU->getWidth (0)>>uiPartDepth;
   UChar uiHeight         = pcCU->getHeight(0)>>uiPartDepth;
   
@@ -205,44 +165,15 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
   
   if( uiCurrPicPelY != 0 )
   {
-    UInt uiNumPartInWidth = ( uiWidth/pcPic->getMinCUWidth() );
     uiOffsetAbove = 1;
-    
-    if( uiCurrPicPelX + uiWidth < pcCU->getSlice()->getSPS()->getPicWidthInLumaSamples() )
-    {
-      if( ( g_auiZscanToRaster[uiAbsZorderIdx] + uiNumPartInWidth ) % pcPic->getNumPartInWidth() ) // Not CU boundary
-      {
-        if( g_auiRasterToZscan[ (Int)g_auiZscanToRaster[uiAbsZorderIdx] - (Int)pcPic->getNumPartInWidth() + (Int)uiNumPartInWidth ] < uiAbsZorderIdx )
-        {
-          uiOffsetRight = 1;
-        }
-      }
-      else // if it is CU boundary
-      {
-        if( g_auiZscanToRaster[uiAbsZorderIdx] < pcPic->getNumPartInWidth() && (uiCurrPicPelX+uiWidth) < pcPic->getPicYuvRec()->getWidth() ) // first line
-        {
-          uiOffsetRight = 1;
-        }
-      }
-    }
   }
   
-#if DEPTH_MAP_GENERATION
-  m_cPatternY .setPatternParamCU( pcCU, 0, uiWidth,      uiHeight,      uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiPartDepth, uiAbsPartIdx, bPrdDepthMap );
-  m_cPatternCb.setPatternParamCU( pcCU, 1, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiPartDepth, uiAbsPartIdx, bPrdDepthMap );
-  m_cPatternCr.setPatternParamCU( pcCU, 2, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiPartDepth, uiAbsPartIdx, bPrdDepthMap );
-#else
-  m_cPatternY .setPatternParamCU( pcCU, 0, uiWidth,      uiHeight,      uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiPartDepth, uiAbsPartIdx );
-  m_cPatternCb.setPatternParamCU( pcCU, 1, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiPartDepth, uiAbsPartIdx );
-  m_cPatternCr.setPatternParamCU( pcCU, 2, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetRight, uiOffsetAbove, 0, uiPartDepth, uiAbsPartIdx );
-#endif
+  m_cPatternY .setPatternParamCU( pcCU, 0, uiWidth,      uiHeight,      uiOffsetLeft, uiOffsetAbove, uiAbsPartIdx );
+  m_cPatternCb.setPatternParamCU( pcCU, 1, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, uiAbsPartIdx );
+  m_cPatternCr.setPatternParamCU( pcCU, 2, uiWidth >> 1, uiHeight >> 1, uiOffsetLeft, uiOffsetAbove, uiAbsPartIdx );
 }
 
-  Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt uiPartDepth, Int* piAdiBuf, Int iOrgBufStride, Int iOrgBufHeight, Bool& bAbove, Bool& bLeft, Bool bLMmode 
-#if DEPTH_MAP_GENERATION
-                                  , Bool bPrdDepthMap, UInt uiSubSampExpX, UInt uiSubSampExpY
-#endif
-    )
+Void TComPattern::initAdiPattern( TComDataCU* pcCU, UInt uiZorderIdxInPart, UInt uiPartDepth, Int* piAdiBuf, Int iOrgBufStride, Int iOrgBufHeight, Bool& bAbove, Bool& bLeft, Bool bLMmode )
 {
   Pel*  piRoiOrigin;
   Int*  piAdiTemp;
@@ -252,11 +183,7 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
   UInt  uiCuHeight2 = uiCuHeight<<1;
   UInt  uiWidth;
   UInt  uiHeight;
-#if DEPTH_MAP_GENERATION
-  Int   iPicStride = ( bPrdDepthMap ? pcCU->getPic()->getPredDepthMap()->getStride() : pcCU->getPic()->getStride() );
-#else
   Int   iPicStride = pcCU->getPic()->getStride();
-#endif
   Int   iUnitSize = 0;
   Int   iNumUnitsInCu = 0;
   Int   iTotalUnits = 0;
@@ -283,21 +210,8 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
   bAbove = true;
   bLeft  = true;
 
-#if DEPTH_MAP_GENERATION
-  if ( bPrdDepthMap )
-  {
-    uiWidth  = ( uiCuWidth2  >> uiSubSampExpX ) + 1;
-    uiHeight = ( uiCuHeight2 >> uiSubSampExpY ) + 1;
-  }
-  else
-  {
-    uiWidth=uiCuWidth2+1;
-    uiHeight=uiCuHeight2+1;
-  }
-#else
   uiWidth=uiCuWidth2+1;
   uiHeight=uiCuHeight2+1;
-#endif
   
   if (((uiWidth<<2)>iOrgBufStride)||((uiHeight<<2)>iOrgBufHeight))
   {
@@ -307,22 +221,7 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
   piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
   piAdiTemp   = piAdiBuf;
 
-#if DEPTH_MAP_GENERATION
-  if( bPrdDepthMap )
-  {
-    piRoiOrigin = pcCU->getPic()->getPredDepthMap()->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiZorderIdxInPart );
-  }
-#endif
-
-#if DEPTH_MAP_GENERATION
-  if ( bPrdDepthMap )
-    fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize >> uiSubSampExpX, iNumUnitsInCu, iTotalUnits, uiCuWidth >> uiSubSampExpX, uiCuHeight >> uiSubSampExpY, uiWidth, uiHeight, iPicStride, bLMmode, bPrdDepthMap );
-  else
-    fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride, bLMmode, bPrdDepthMap );
-#else
-  fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride, bLMmode);
-#endif
-
+  fillReferenceSamples (g_bitDepthY, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride, bLMmode);
   
   Int   i;
   // generate filtered intra prediction samples
@@ -349,12 +248,52 @@ Void TComPattern::initPattern( TComDataCU* pcCU, UInt uiPartDepth, UInt uiAbsPar
     piFilterBuf[l++] = piAdiTemp[1 + i];
   }
 
-  // 1. filtering with [1 2 1]
-  piFilterBufN[0] = piFilterBuf[0];
-  piFilterBufN[iBufSize - 1] = piFilterBuf[iBufSize - 1];
-  for (i = 1; i < iBufSize - 1; i++)
+  if (pcCU->getSlice()->getSPS()->getUseStrongIntraSmoothing())
   {
-    piFilterBufN[i] = (piFilterBuf[i - 1] + 2 * piFilterBuf[i]+piFilterBuf[i + 1] + 2) >> 2;
+    Int blkSize = 32;
+    Int bottomLeft = piFilterBuf[0];
+    Int topLeft = piFilterBuf[uiCuHeight2];
+    Int topRight = piFilterBuf[iBufSize-1];
+    Int threshold = 1 << (g_bitDepthY - 5);
+    Bool bilinearLeft = abs(bottomLeft+topLeft-2*piFilterBuf[uiCuHeight]) < threshold;
+    Bool bilinearAbove  = abs(topLeft+topRight-2*piFilterBuf[uiCuHeight2+uiCuHeight]) < threshold;
+  
+    if (uiCuWidth>=blkSize && (bilinearLeft && bilinearAbove))
+    {
+      Int shift = g_aucConvertToBit[uiCuWidth] + 3;  // log2(uiCuHeight2)
+      piFilterBufN[0] = piFilterBuf[0];
+      piFilterBufN[uiCuHeight2] = piFilterBuf[uiCuHeight2];
+      piFilterBufN[iBufSize - 1] = piFilterBuf[iBufSize - 1];
+      for (i = 1; i < uiCuHeight2; i++)
+      {
+        piFilterBufN[i] = ((uiCuHeight2-i)*bottomLeft + i*topLeft + uiCuHeight) >> shift;
+      }
+  
+      for (i = 1; i < uiCuWidth2; i++)
+      {
+        piFilterBufN[uiCuHeight2 + i] = ((uiCuWidth2-i)*topLeft + i*topRight + uiCuWidth) >> shift;
+      }
+    }
+    else 
+    {
+      // 1. filtering with [1 2 1]
+      piFilterBufN[0] = piFilterBuf[0];
+      piFilterBufN[iBufSize - 1] = piFilterBuf[iBufSize - 1];
+      for (i = 1; i < iBufSize - 1; i++)
+      {
+        piFilterBufN[i] = (piFilterBuf[i - 1] + 2 * piFilterBuf[i]+piFilterBuf[i + 1] + 2) >> 2;
+      }
+    }
+  }
+  else 
+  {
+    // 1. filtering with [1 2 1]
+    piFilterBufN[0] = piFilterBuf[0];
+    piFilterBufN[iBufSize - 1] = piFilterBuf[iBufSize - 1];
+    for (i = 1; i < iBufSize - 1; i++)
+    {
+      piFilterBufN[i] = (piFilterBuf[i - 1] + 2 * piFilterBuf[i]+piFilterBuf[i + 1] + 2) >> 2;
+    }
   }
 
   // fill 1. filter buffer with filtered values
@@ -420,37 +359,20 @@ Void TComPattern::initAdiPatternChroma( TComDataCU* pcCU, UInt uiZorderIdxInPart
   piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getCbAddr(pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
   piAdiTemp   = piAdiBuf;
 
-#if DEPTH_MAP_GENERATION
-  fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride, false, false );
-#else
-  fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride);
-#endif
+  fillReferenceSamples (g_bitDepthC, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride);
   
   // get Cr pattern
   piRoiOrigin = pcCU->getPic()->getPicYuvRec()->getCrAddr(pcCU->getAddr(), pcCU->getZorderIdxInCU()+uiZorderIdxInPart);
   piAdiTemp   = piAdiBuf+uiWidth*uiHeight;
   
-#if DEPTH_MAP_GENERATION
-  fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride, false, false );
-#else
-  fillReferenceSamples ( pcCU, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride);
-#endif
-
+  fillReferenceSamples (g_bitDepthC, piRoiOrigin, piAdiTemp, bNeighborFlags, iNumIntraNeighbor, iUnitSize, iNumUnitsInCu, iTotalUnits, uiCuWidth, uiCuHeight, uiWidth, uiHeight, iPicStride);
 }
 
-Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, Bool bLMmode 
-#if DEPTH_MAP_GENERATION
-                                       , Bool bPrdDepthMap 
-#endif
-                                       )
+Void TComPattern::fillReferenceSamples(Int bitDepth, Pel* piRoiOrigin, Int* piAdiTemp, Bool* bNeighborFlags, Int iNumIntraNeighbor, Int iUnitSize, Int iNumUnitsInCu, Int iTotalUnits, UInt uiCuWidth, UInt uiCuHeight, UInt uiWidth, UInt uiHeight, Int iPicStride, Bool bLMmode )
 {
   Pel* piRoiTemp;
   Int  i, j;
-#if DEPTH_MAP_GENERATION
-  Int  iDCValue = ( bPrdDepthMap ? PDM_UNDEFINED_DEPTH : ( 1<<( g_uiBitDepth + g_uiBitIncrement - 1) ) );
-#else
-  Int  iDCValue = ( 1<<( g_uiBitDepth + g_uiBitIncrement - 1) );
-#endif
+  Int  iDCValue = 1 << (bitDepth - 1);
 
   if (iNumIntraNeighbor == 0)
   {
@@ -632,12 +554,12 @@ Void TComPattern::fillReferenceSamples( TComDataCU* pcCU, Pel* piRoiOrigin, Int*
   }
 }
 
-Int* TComPattern::getAdiOrgBuf( Int iCuWidth, Int iCuHeight, Int* piAdiBuf)
+Int* TComPattern::getAdiOrgBuf( Int /*iCuWidth*/, Int /*iCuHeight*/, Int* piAdiBuf)
 {
   return piAdiBuf;
 }
 
-Int* TComPattern::getAdiCbBuf( Int iCuWidth, Int iCuHeight, Int* piAdiBuf)
+Int* TComPattern::getAdiCbBuf( Int /*iCuWidth*/, Int /*iCuHeight*/, Int* piAdiBuf)
 {
   return piAdiBuf;
 }
@@ -658,16 +580,10 @@ Int* TComPattern::getAdiCrBuf(Int iCuWidth,Int iCuHeight, Int* piAdiBuf)
 Int* TComPattern::getPredictorPtr( UInt uiDirMode, UInt log2BlkSize, Int* piAdiBuf )
 {
   Int* piSrc;
-#if LGE_EDGE_INTRA_A0070
-  mapEdgeIntratoDC( uiDirMode );
-#endif
   assert(log2BlkSize >= 2 && log2BlkSize < 7);
-#if HHI_DMM_WEDGE_INTRA || HHI_DMM_PRED_TEX
-  mapDMMtoIntraMode( uiDirMode );
-#endif
   Int diff = min<Int>(abs((Int) uiDirMode - HOR_IDX), abs((Int)uiDirMode - VER_IDX));
   UChar ucFiltIdx = diff > m_aucIntraFilter[log2BlkSize - 2] ? 1 : 0;
-  if (uiDirMode == DC_IDX || uiDirMode == LM_CHROMA_IDX)
+  if (uiDirMode == DC_IDX)
   {
     ucFiltIdx = 0; //no smoothing for DC or LM chroma
   }
@@ -691,7 +607,7 @@ Bool TComPattern::isAboveLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT )
 {
   Bool bAboveLeftFlag;
   UInt uiPartAboveLeft;
-  TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT, true, false );
+  TComDataCU* pcCUAboveLeft = pcCU->getPUAboveLeft( uiPartAboveLeft, uiPartIdxLT );
   if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
   {
     bAboveLeftFlag = ( pcCUAboveLeft && pcCUAboveLeft->getPredictionMode( uiPartAboveLeft ) == MODE_INTRA );
@@ -714,7 +630,7 @@ Int TComPattern::isAboveAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPa
   for ( UInt uiRasterPart = uiRasterPartBegin; uiRasterPart < uiRasterPartEnd; uiRasterPart += uiIdxStep )
   {
     UInt uiPartAbove;
-    TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart], true, false );
+    TComDataCU* pcCUAbove = pcCU->getPUAbove( uiPartAbove, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCUAbove && pcCUAbove->getPredictionMode( uiPartAbove ) == MODE_INTRA )
@@ -755,7 +671,7 @@ Int TComPattern::isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPar
   for ( UInt uiRasterPart = uiRasterPartBegin; uiRasterPart < uiRasterPartEnd; uiRasterPart += uiIdxStep )
   {
     UInt uiPartLeft;
-    TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart], true, false );
+    TComDataCU* pcCULeft = pcCU->getPULeft( uiPartLeft, g_auiRasterToZscan[uiRasterPart] );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCULeft && pcCULeft->getPredictionMode( uiPartLeft ) == MODE_INTRA )
@@ -789,14 +705,13 @@ Int TComPattern::isLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPar
 Int TComPattern::isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxRT, Bool *bValidFlags )
 {
   const UInt uiNumUnitsInPU = g_auiZscanToRaster[uiPartIdxRT] - g_auiZscanToRaster[uiPartIdxLT] + 1;
-  const UInt uiPuWidth = uiNumUnitsInPU * pcCU->getPic()->getMinCUWidth();
   Bool *pbValidFlags = bValidFlags;
   Int iNumIntra = 0;
 
   for ( UInt uiOffset = 1; uiOffset <= uiNumUnitsInPU; uiOffset++ )
   {
     UInt uiPartAboveRight;
-    TComDataCU* pcCUAboveRight = pcCU->getPUAboveRightAdi( uiPartAboveRight, uiPuWidth, uiPartIdxRT, uiOffset, true, false );
+    TComDataCU* pcCUAboveRight = pcCU->getPUAboveRightAdi( uiPartAboveRight, uiPartIdxRT, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCUAboveRight && pcCUAboveRight->getPredictionMode( uiPartAboveRight ) == MODE_INTRA )
@@ -830,14 +745,13 @@ Int TComPattern::isAboveRightAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt
 Int TComPattern::isBelowLeftAvailable( TComDataCU* pcCU, UInt uiPartIdxLT, UInt uiPartIdxLB, Bool *bValidFlags )
 {
   const UInt uiNumUnitsInPU = (g_auiZscanToRaster[uiPartIdxLB] - g_auiZscanToRaster[uiPartIdxLT]) / pcCU->getPic()->getNumPartInWidth() + 1;
-  const UInt uiPuHeight = uiNumUnitsInPU * pcCU->getPic()->getMinCUHeight();
   Bool *pbValidFlags = bValidFlags;
   Int iNumIntra = 0;
 
   for ( UInt uiOffset = 1; uiOffset <= uiNumUnitsInPU; uiOffset++ )
   {
     UInt uiPartBelowLeft;
-    TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeftAdi( uiPartBelowLeft, uiPuHeight, uiPartIdxLB, uiOffset, true, false );
+    TComDataCU* pcCUBelowLeft = pcCU->getPUBelowLeftAdi( uiPartBelowLeft, uiPartIdxLB, uiOffset );
     if(pcCU->getSlice()->getPPS()->getConstrainedIntraPred())
     {
       if ( pcCUBelowLeft && pcCUBelowLeft->getPredictionMode( uiPartBelowLeft ) == MODE_INTRA )

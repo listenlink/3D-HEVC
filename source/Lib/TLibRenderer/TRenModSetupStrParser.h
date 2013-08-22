@@ -30,7 +30,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
-#if !QC_MVHEVC_B0046
+
 #ifndef __TRENMODSETUPSTRPARSER__
 #define __TRENMODSETUPSTRPARSER__
 
@@ -38,6 +38,8 @@
 #include "../TLibCommon/TComPicYuv.h"
 #include "../TLibCommon/TypeDef.h"
 #include "../TAppCommon/TAppComCamPara.h"
+#if H_3D
+
 
 
 #include <list>
@@ -125,6 +127,7 @@ private:
   Void xGetNextChar       ( Char& rcNextChar );
 };
 
+#endif // H_3D
 #endif //__TRENMODEL__
-#endif
+
 

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,11 +56,7 @@
 class ContextModel
 {
 public:
-#if CABAC_INIT_FLAG
   ContextModel  ()                        { m_ucState = 0; m_binsCoded = 0; }
-#else
-  ContextModel  ()                        { m_ucState = 0;             }
-#endif
   ~ContextModel ()                        {}
   
   UChar getState  ()                { return ( m_ucState >> 1 ); }                    ///< get current state
@@ -89,10 +85,8 @@ public:
   static Void buildNextStateTable();
   static Int getEntropyBitsTrm( Int val ) { return m_entropyBits[126 ^ val]; }
 #endif
-#if CABAC_INIT_FLAG
   Void setBinsCoded(UInt val)   { m_binsCoded = val;  }
   UInt getBinsCoded()           { return m_binsCoded;   }
-#endif
   
 private:
   UChar         m_ucState;                                                                  ///< internal state variable
@@ -102,9 +96,7 @@ private:
 #if FAST_BIT_EST
   static UChar m_nextState[128][2];
 #endif
-#if CABAC_INIT_FLAG
   UInt          m_binsCoded;
-#endif
 };
 
 //! \}
