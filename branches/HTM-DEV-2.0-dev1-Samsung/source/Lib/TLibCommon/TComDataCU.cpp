@@ -5170,9 +5170,11 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     xDeriveCenterIdx(uiPartIdx, uiPartIdxCenter );
 
     ///*** Derive bottom right neighbour position ***
+#if !SEC_SIMPLIFIED_NBDV_E0142
     Int iLCUIdxRBNb  = -1;    
     Int iPartIdxRBNb = -1;
     xDeriveRightBottomNbIdx(iLCUIdxRBNb, iPartIdxRBNb );
+#endif
 
     ///*** Search temporal candidate pictures for disparity vector ***
     const Int iNumCandPics = getPic()->getNumDdvCandPics();
@@ -5191,10 +5193,13 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
         curCandPicRefIdx = getPic()->getRapRefIdx();
       }
 
+#if !SEC_SIMPLIFIED_NBDV_E0142
       // Check BR and Center       
       for(Int curPosition = 0; curPosition < 2; curPosition++) 
       {
+#endif
         Bool bCheck = false; 
+#if !SEC_SIMPLIFIED_NBDV_E0142
         if ( curPosition == 0 && iLCUIdxRBNb >= 0 )
 #if MTK_NBDV_TN_FIX_E0172
           bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, iLCUIdxRBNb, iPartIdxRBNb,  cColMv, iTargetViewIdx, iTStartViewIdx);
@@ -5203,6 +5208,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 #endif
 
         if (curPosition == 1 )
+#endif
 #if MTK_NBDV_TN_FIX_E0172
           bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, uiLCUIdx,   uiPartIdxCenter,  cColMv, iTargetViewIdx, iTStartViewIdx );
 #else
@@ -5226,7 +5232,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 #endif //H_3D_NBDV_REF
           return true;
         }
+#if !SEC_SIMPLIFIED_NBDV_E0142
       } 
+#endif
     }
   } 
 
@@ -5257,6 +5265,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
       return true;
   }
 
+#if !SEC_SIMPLIFIED_NBDV_E0142
   //// ******* Get disparity from above right block ******* /////
   pcTmpCU = getPUAboveRight(uiIdx, uiPartIdxRT, true);
   if(pcTmpCU != NULL )
@@ -5297,6 +5306,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     ) )
       return true;
   }
+#endif
 
   //// ******* Search MCP blocks ******* /////
   if( cIDVInfo.m_bFound ) 
