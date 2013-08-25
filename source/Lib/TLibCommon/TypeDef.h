@@ -112,6 +112,7 @@
 #define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1   // Bugfix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
 #if H_3D_NBDV_REF
 #define NTT_DoNBDV_VECTOR_CLIP_E0141      1   // disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
+#define SEC_SIMPLIFIED_NBDV_E0142         1   // Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
 #endif
 #endif
 #define H_3D_VSP                          1   // View synthesis prediction
@@ -168,12 +169,18 @@
 #endif
 ////   ****** Neighbouring block-based Disparity Vector  *********
 #if H_3D_NBDV
+#if SEC_SIMPLIFIED_NBDV_E0142
+#define DVFROM_LEFT                       0
+#define DVFROM_ABOVE                      1
+#define IDV_CANDS                         2
+#else
 #define DVFROM_LEFTBELOW                  0
 #define DVFROM_LEFT                       1
 #define DVFROM_ABOVERIGHT                 2
 #define DVFROM_ABOVE                      3
 #define DVFROM_ABOVELEFT                  4
 #define IDV_CANDS                         5
+#endif
 #endif
 ////   **** Inter-view motion prediction for merge        *********
 #if H_3D_IV_MERGE
