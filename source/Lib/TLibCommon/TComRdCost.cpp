@@ -1219,7 +1219,7 @@ UInt TComRdCost::xGetSAD48( DistParam* pcDtParam )
 }
 #endif
 
-#if H_3D_IC
+#if H_3D_IC || LGE_INTER_SDC_E0156
 UInt TComRdCost::xGetSADic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
@@ -3574,7 +3574,7 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
   return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
 
-#if H_3D_IC
+#if H_3D_IC || LGE_INTER_SDC_E0156
 UInt TComRdCost::xGetHADsic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
