@@ -36,7 +36,7 @@
 */
 
 #include "TExtrTop.h"
-
+#if H_MV
 TExtrTop::TExtrTop()
 {
 }
@@ -54,41 +54,30 @@ Void TExtrTop::init()
 
 Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds )
 {
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   //extraction now has to be done using layer_id
-  UInt uiLayerId = nalu.m_layerId;
-#else
-  UInt uiLayerId = xGetLayerId( nalu.m_viewId, nalu.m_isDepth );
-#endif
+  UInt uiLayerId      = nalu.m_layerId;
+
+  
   // Initialize entropy decoder
   m_cEntropyDecoder.setEntropyDecoder( &m_cCavlcDecoder );
   m_cEntropyDecoder.setBitstream     ( nalu.m_Bitstream );
   
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
   if ( nalu.m_nalUnitType == NAL_UNIT_VPS )
   {
     // a hack for now assuming there's only one VPS in the bitstream
-    m_cEntropyDecoder.decodeVPS( &m_cVPS );
-      
+    m_cEntropyDecoder.decodeVPS( &m_cVPS );      
   }
-#endif
 
   if ( nalu.m_nalUnitType == NAL_UNIT_SPS )
   {
-     TComSPS cSPS;
-     TComRPSList cRPS;
-     cSPS.setRPSList( &cRPS );
-#if HHI_MPI || H3D_QTL
-#if VIDYO_VPS_INTEGRATION
-     m_cEntropyDecoder.decodeSPS( &cSPS, m_cVPS.getDepthFlag(uiLayerId) );
+     TComSPS     cSPS;
+#if H_3D
+     Int layerIdInVPS = m_cVPS.getLayerIdInVps( uiLayerId ); 
+     m_cEntropyDecoder   .decodeSPS( &cSPS, m_cVPS.getViewIndex( layerIdInVPS ), ( m_cVPS.getDepthId( layerIdInVPS ) == 1 ) );
 #else
-     m_cEntropyDecoder.decodeSPS( &cSPS, nalu.m_isDepth );
+     m_cEntropyDecoder   .decodeSPS( &cSPS );
 #endif
-#else
-     m_cEntropyDecoder.decodeSPS( &cSPS );
-#endif
-
-     m_acSPSBuffer.push_back( cSPS );
+     m_acSPSBuffer       .push_back( cSPS );
   }
 
   return ( rsuiExtractLayerIds.find( uiLayerId ) != rsuiExtractLayerIds.end() );
@@ -96,16 +85,33 @@ Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds 
 
 
 Void TExtrTop::dumpSpsInfo( std::ostream& rcSpsInfoHandle )
-{
+{ 
   rcSpsInfoHandle << "NumSPS = " << m_acSPSBuffer.size() << std::endl;
+  
+  std::list<Int>::iterator iterSPSLayerId = m_aiSPSLayerIdBuffer.begin(); 
 
-  for( std::list<TComSPS>::iterator iterSPS = m_acSPSBuffer.begin(); iterSPS != m_acSPSBuffer.end(); iterSPS++ )
-  {
-     rcSpsInfoHandle << std::endl;
-     rcSpsInfoHandle << "layer_id = "              << xGetLayerId( iterSPS->getViewId(), iterSPS->isDepth() ) << std::endl;
+  for( std::list<TComSPS>::iterator iterSPS = m_acSPSBuffer.begin(); iterSPS != m_acSPSBuffer.end(); iterSPS++, iterSPSLayerId++ )
+  {     
+     rcSpsInfoHandle << "layer_id = "              << *iterSPSLayerId << std::endl;
      rcSpsInfoHandle << "seq_parameter_set_id = "  << iterSPS->getSPSId() << std::endl;
-     rcSpsInfoHandle << "view_id = "               << iterSPS->getViewId() << std::endl;
-     rcSpsInfoHandle << "view_order_idx = "        << iterSPS->getViewOrderIdx() << std::endl;
-     rcSpsInfoHandle << "is_depth = "              << iterSPS->isDepth() << std::endl;
   }
 }
+
+Void TExtrTop::dumpVpsInfo( std::ostream& rcVpsInfoHandle )
+{ 
+  rcVpsInfoHandle << "MaxLayers = "     << m_cVPS.getMaxLayers()     << std::endl; 
+  rcVpsInfoHandle << "MaxNuhLayerId = " << m_cVPS.getVpsMaxLayerId() << std::endl; 
+  
+  for ( Int layerIdxInVps = 0; layerIdxInVps < m_cVPS.getMaxLayers(); layerIdxInVps++ )
+  {  
+    rcVpsInfoHandle << "LayerIdxInVps =  " << layerIdxInVps                           << std::endl; 
+    rcVpsInfoHandle << "LayerIdInNuh = "   << m_cVPS.getLayerIdInNuh( layerIdxInVps ) << std::endl; 
+    rcVpsInfoHandle << "ViewId = "         << m_cVPS.getViewId      ( layerIdxInVps ) << std::endl; 
+#if H_3D
+    rcVpsInfoHandle << "DepthFlag = "      << m_cVPS.getViewIndex   ( layerIdxInVps ) << std::endl;     
+    rcVpsInfoHandle << "DepthFlag = "      << m_cVPS.getDepthId     ( layerIdxInVps ) << std::endl;     
+#endif
+  }
+}
+#endif
+

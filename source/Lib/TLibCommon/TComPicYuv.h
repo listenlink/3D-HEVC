@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -75,11 +75,6 @@ private:
   
   Int   m_iCuWidth;             ///< Width of Coding Unit (CU)
   Int   m_iCuHeight;            ///< Height of Coding Unit (CU)
-  UInt  m_uiMaxCuDepth;         ///< maximum coding unit depth
-  Int   m_iBaseUnitWidth;       ///< Width of Base Unit (with maximum depth or minimum size, m_iCuWidth >> Max. Depth)
-  Int   m_iBaseUnitHeight;      ///< Height of Base Unit (with maximum depth or minimum size, m_iCuHeight >> Max. Depth)
-  Int   m_iNumCuInWidth;
-  
   Int*  m_cuOffsetY;
   Int*  m_cuOffsetC;
   Int*  m_buOffsetY;
@@ -92,9 +87,16 @@ private:
   
   Bool  m_bIsBorderExtended;
   
+#if H_3D_IV_MERGE
+  Int   m_iBaseUnitWidth;       ///< Width of Base Unit (with maximum depth or minimum size, m_iCuWidth >> Max. Depth)
+  Int   m_iBaseUnitHeight;      ///< Height of Base Unit (with maximum depth or minimum size, m_iCuHeight >> Max. Depth)
+  Int   m_iNumCuInWidth;
+#endif
 protected:
   Void  xExtendPicCompBorder (Pel* piTxt, Int iStride, Int iWidth, Int iHeight, Int iMarginX, Int iMarginY);
+#if H_3D
   Void  xSetPels( Pel* piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Pel iVal );
+#endif
   
 public:
   TComPicYuv         ();
@@ -117,17 +119,11 @@ public:
   Int   getWidth    ()     { return  m_iPicWidth;    }
   Int   getHeight   ()     { return  m_iPicHeight;   }
   
-  UInt  getMaxCuWidth ()   { return  (UInt)m_iCuWidth;   }
-  UInt  getMaxCuHeight()   { return  (UInt)m_iCuHeight;  }
-  UInt  getMaxCuDepth ()   { return  m_uiMaxCuDepth;     }
-
   Int   getStride   ()     { return (m_iPicWidth     ) + (m_iLumaMarginX  <<1); }
   Int   getCStride  ()     { return (m_iPicWidth >> 1) + (m_iChromaMarginX<<1); }
   
   Int   getLumaMargin   () { return m_iLumaMarginX;  }
   Int   getChromaMargin () { return m_iChromaMarginX;}
-  
-  Void  getLumaMinMax( Int* pMin, Int* pMax );
   
   // ------------------------------------------------------------------------------------------------
   //  Access function for picture buffer
@@ -151,16 +147,10 @@ public:
   Pel*  getCbAddr   ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgU + m_cuOffsetC[iCuAddr] + m_buOffsetC[g_auiZscanToRaster[uiAbsZorderIdx]]; }
   Pel*  getCrAddr   ( Int iCuAddr, Int uiAbsZorderIdx ) { return m_piPicOrgV + m_cuOffsetC[iCuAddr] + m_buOffsetC[g_auiZscanToRaster[uiAbsZorderIdx]]; }
   
-
   // ------------------------------------------------------------------------------------------------
   //  Miscellaneous
   // ------------------------------------------------------------------------------------------------
   
-  // sample to block and block to sample conversion
-  Void  getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY );
-  Void  getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
-
-
   //  Copy function to picture
   Void  copyToPic       ( TComPicYuv*  pcPicYuvDst );
   Void  copyToPicLuma   ( TComPicYuv*  pcPicYuvDst );
@@ -171,24 +161,25 @@ public:
   Void  extendPicBorder      ();
   
   //  Dump picture
-  Void  dump (char* pFileName, Bool bAdd = false);
+  Void  dump (Char* pFileName, Bool bAdd = false);
   
   // Set border extension flag
   Void  setBorderExtension(Bool b) { m_bIsBorderExtended = b; }
-#if FIXED_ROUNDING_FRAME_MEMORY
-  Void  xFixedRoundingPic();
-#endif  
-
+#if H_3D
   // Set Function 
   Void  setLumaTo    ( Pel pVal );  
   Void  setChromaTo  ( Pel pVal );  
-#if QC_ARP_D0177
-  Void    clearPic();
+#if H_3D_IV_MERGE
+  // sample to block and block to sample conversion
+  Void  getTopLeftSamplePos( Int iCuAddr, Int iAbsZorderIdx, Int& riX, Int& riY );
+  Void  getCUAddrAndPartIdx( Int iX, Int iY, Int& riCuAddr, Int& riAbsZorderIdx );
+#endif
 #endif
 };// END CLASS DEFINITION TComPicYuv
 
-void calcMD5(TComPicYuv& pic, unsigned char digest[16]);
-
+void calcChecksum(TComPicYuv& pic, UChar digest[3][16]);
+void calcCRC(TComPicYuv& pic, UChar digest[3][16]);
+void calcMD5(TComPicYuv& pic, UChar digest[3][16]);
 //! \}
 
 #endif // __TCOMPICYUV__

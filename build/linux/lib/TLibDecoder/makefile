@@ -35,6 +35,7 @@ OBJS          	= \
 				$(OBJ_DIR)/AnnexBread.o \
 				$(OBJ_DIR)/NALread.o \
 				$(OBJ_DIR)/SEIread.o \
+				$(OBJ_DIR)/SyntaxElementParser.o \
 				$(OBJ_DIR)/TDecBinCoderCABAC.o \
 				$(OBJ_DIR)/TDecCAVLC.o \
 				$(OBJ_DIR)/TDecCu.o \
