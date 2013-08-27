@@ -148,7 +148,11 @@
                                               // LGE_CONCATENATE_D0141
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
-
+#define H_3D_FIX                             1
+#if H_3D_FIX
+#define H_3D_BVSP_FIX                        1  //DV from NBDV instead of DoNBDV should be used
+#define FIX036                               1  // fix for ticket #36
+#endif
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -429,7 +433,11 @@ typedef       Int             TCoeff;     ///< transform coefficient
 typedef       Int64           RMDist;     ///< renderer model distortion
 
 #if H_3D_VSO_DIST_INT
+#if FIX036
+typedef       Int64            Dist;       ///< RDO distortion
+#else
 typedef       Int              Dist;       ///< RDO distortion
+#endif
 typedef       Int64            Dist64; 
 #define       RDO_DIST_MIN     MIN_INT
 #define       RDO_DIST_MAX     MAX_INT
