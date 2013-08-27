@@ -3026,7 +3026,11 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         derivedViewId = m_pcSlice->getRefPic(eRefPicList, i)->getViewId(); 
 #endif
         iRefListIdY = 1 - iRefListIdX;
+#if H_3D_BVSP_FIX
+        pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acNBDV, i );
+#else
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i );
+#endif
 #if H_3D_NBDV
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].getMv().setIDVFlag (false);
 #endif
@@ -3046,7 +3050,11 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         refViewAvailFlag = true;
         predFlag[iRefListIdY] = 1;
 #if MTK_VSP_FIX_E0172
+#if H_3D_BVSP_FIX
+        TComMv  cMv = pDInfo->m_acNBDV;
+#else
         TComMv  cMv = pDInfo->m_acDoNBDV;
+#endif
         otherViewId = m_pcSlice->getRefPic( eRefPicList, i)->getViewId();
         Int iScale = xGetDistScaleFactor( currViewId, otherViewId, currViewId, derivedViewId );
         if ( iScale != 4096 && m_pcSlice->getVPS()->getIvMvScalingFlag() ) 
@@ -3061,7 +3069,11 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         clipMv( cMv );
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( cMv, i );
 #else
+#if H_3D_BVSP_FIX
+        pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acNBDV, i );
+#else
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );
+#endif
 #endif
 #if H_3D_NBDV
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].getMv().setIDVFlag (false);
