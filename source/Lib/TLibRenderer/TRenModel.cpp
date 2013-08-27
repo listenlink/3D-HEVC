@@ -34,7 +34,8 @@
 #include "TRenImage.h"
 #include "TRenFilter.h"
 #include "TRenModel.h"
-#if !QC_MVHEVC_B0046
+
+#if H_3D_VSO
 ///////////  TRENMODEL //////////////////////
 TRenModel::TRenModel()
 {
@@ -47,7 +48,7 @@ TRenModel::TRenModel()
   m_iShiftPrec         =  0;
   m_iHoleMargin        =  1;
   m_uiHorOff           = -1;
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   m_bEarlySkip         = false; 
 #endif
 
@@ -213,7 +214,7 @@ TRenModel::~TRenModel()
 
 
 Void
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
 TRenModel::create( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeight, Int iShiftPrec, Int iHoleMargin, Bool bEarlySkip )
 #else
 TRenModel::create( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeight, Int iShiftPrec, Int iHoleMargin )
@@ -225,7 +226,7 @@ TRenModel::create( Int iNumOfBaseViews, Int iNumOfModels, Int iWidth, Int iHeigh
   m_iHeight             = iHeight;
   m_iShiftPrec          = iShiftPrec;
   m_iHoleMargin         = iHoleMargin;
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   m_bEarlySkip          = bEarlySkip; 
 #endif
 
@@ -356,8 +357,9 @@ TRenModel::createSingleModel( Int iBaseViewNum, Int iContent, Int iModelNum, Int
   AOT( iBaseViewNum != -1 && iBaseViewNum != iLeftViewNum && iBaseViewNum != iRightViewNum );
   AOT( iContent      < -1 || iContent > 1 );
   AOT( iBlendMode < -1 || iBlendMode > 2 );
+  AOT( g_bitDepthY  != g_bitDepthC ); 
 
-  Bool bBitInc = (g_uiBitIncrement != 0);
+  Bool bBitInc = ( DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) != 0);
 
   AOT( m_apcRenModels[iModelNum] );
 
@@ -413,7 +415,7 @@ TRenModel::createSingleModel( Int iBaseViewNum, Int iContent, Int iModelNum, Int
   }
 
 
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   m_apcRenModels[iModelNum]->create( iMode ,m_iWidth, m_iHeight, m_iShiftPrec, m_aaaiSubPelShiftLut, m_iHoleMargin,  bUseOrgRef, iBlendMode, m_bEarlySkip );
 #else
   m_apcRenModels[iModelNum]->create( iMode ,m_iWidth, m_iHeight, m_iShiftPrec, m_aaaiSubPelShiftLut, m_iHoleMargin,  bUseOrgRef, iBlendMode );
@@ -549,7 +551,7 @@ TRenModel::setupPart ( UInt uiHorOff, Int iUsedHeight )
   m_iUsedHeight = iUsedHeight; 
 }
 
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
 RMDist
 TRenModel::getDist( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel * piOrgData, Int iOrgStride)
 #else
@@ -573,7 +575,7 @@ TRenModel::getDist( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
   {
     if (m_iCurrentContent == 1)
     {
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
       iDist +=  m_apcCurRenModels[iModelNum]->getDistDepth  ( m_aiCurPosInModels[iModelNum], iStartPosX, iStartPosY,  iWidth,  iHeight,  iStride,  piNewData , piOrgData, iOrgStride);
 #else
       iDist +=  m_apcCurRenModels[iModelNum]->getDistDepth  ( m_aiCurPosInModels[iModelNum], iStartPosX, iStartPosY,  iWidth,  iHeight,  iStride,  piNewData );
@@ -605,7 +607,7 @@ TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
   {
     if (m_iCurrentContent == 1)
     {
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
       Int iTargetStride = m_aiCurDepthStrides[ m_iCurrentView ];
       m_apcCurRenModels[iModelNum]->setDepth  ( m_aiCurPosInModels[iModelNum], iStartPosX, iStartPosY, iWidth, iHeight, iStride, piNewData,m_apiCurDepthPel[ m_iCurrentView ] + iStartPosY * iTargetStride + iStartPosX ,iTargetStride );
 #else
@@ -618,7 +620,7 @@ TRenModel::setData( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int
     }
   }
 
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   if (m_iCurrentContent == 1)
   {
     Int iTargetStride = m_aiCurDepthStrides[ m_iCurrentView ];
@@ -657,9 +659,9 @@ TRenModel::getTotalSSE( Int64& riSSEY, Int64& riSSEU, Int64& riSSEV )
     m_apcCurRenModels[iCurModel]->getSynthVideo( m_aiCurPosInModels[iCurModel], &cPicYuvSynth );    
     m_apcCurRenModels[iCurModel]->getRefVideo  ( m_aiCurPosInModels[iCurModel], &cPicYuvTempRef   );
 
-    iSSEY += TRenFilter::SSE( cPicYuvSynth.getLumaAddr(), cPicYuvSynth.getStride(),  m_iWidth,      m_iUsedHeight     , cPicYuvTempRef.getLumaAddr(), cPicYuvTempRef.getStride() );
-    iSSEU += TRenFilter::SSE( cPicYuvSynth.getCbAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCbAddr()  , cPicYuvTempRef.getCStride());
-    iSSEV += TRenFilter::SSE( cPicYuvSynth.getCrAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCrAddr()  , cPicYuvTempRef.getCStride());
+    iSSEY += TRenFilter::SSE( cPicYuvSynth.getLumaAddr(), cPicYuvSynth.getStride(),  m_iWidth,      m_iUsedHeight     , cPicYuvTempRef.getLumaAddr(), cPicYuvTempRef.getStride() , true  );
+    iSSEU += TRenFilter::SSE( cPicYuvSynth.getCbAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCbAddr()  , cPicYuvTempRef.getCStride(), false );
+    iSSEV += TRenFilter::SSE( cPicYuvSynth.getCrAddr()  , cPicYuvSynth.getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, cPicYuvTempRef.getCrAddr()  , cPicYuvTempRef.getCStride(), false );
   }
 
   riSSEY = ( iSSEY + (m_iNumOfCurRenModels >> 1) ) / m_iNumOfCurRenModels;
@@ -696,5 +698,4 @@ TRenModel::xSetLRViewAndAddModel( Int iModelNum, Int iBaseViewNum, Int iContent,
     }
   }
 }
-#endif
-
+#endif // H_3D

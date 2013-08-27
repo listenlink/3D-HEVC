@@ -38,6 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComPicYuv.h"
 #include "TRenImagePlane.h"
+#if H_3D
 
 
 #define PelImage    TRenImage<Pel>
@@ -98,6 +99,7 @@ private:
   Void xDeletePlanes();
 };
 
+#endif // H_3D
 #endif // __TRENIMAGE__
 
 

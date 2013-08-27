@@ -31,7 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#if !QC_MVHEVC_B0046
+
 #ifndef __TRENSINGLEMODEL__ 
 #define __TRENSINGLEMODEL__
 
@@ -50,11 +50,10 @@
 #include <cstdio>
 #include <cstring>
 
-
+#if H_3D_VSO
 using namespace std;
 
-
-#if HHI_VSO_RM_ASSERTIONS
+#if H_3D_VSO_RM_ASSERTIONS
 #define RM_AOT( exp ) AOT ( exp )
 #define RM_AOF( exp ) AOF ( exp )
 #else
@@ -69,7 +68,7 @@ class TRenSingleModel
 public: 
 
   virtual ~TRenSingleModel() { }  
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   virtual Void   create    ( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode, Bool bEarlySkip ) = 0;
 #else
   virtual Void   create    ( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode ) = 0;
@@ -81,7 +80,7 @@ public:
   virtual Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference ) = 0;
 
   // Set Data
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   virtual Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel* piOrgData, Int iOrgStride )  = 0;
 #else
   virtual Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )  = 0;
@@ -89,7 +88,7 @@ public:
   virtual Void   setVideo  ( Int iViewPos,     Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData ) = 0;
 
   // Get Distortion
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   virtual RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel * piOrgData , Int iOrgStride)=0;
 #else
   virtual RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData ) = 0;
@@ -108,7 +107,7 @@ class TRenSingleModelC : public TRenSingleModel
   {
     // video
     Pel aiY[5]    ; // y-value
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     Pel aiU[5]    ; // u-value
     Pel aiV[5]    ; // v-value
 #endif
@@ -125,7 +124,7 @@ class TRenSingleModelC : public TRenSingleModel
     Pel iYLeft    ; 
     Pel iYRight   ; 
     Pel iYBlended ; 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     Pel iULeft    ; 
     Pel iURight   ; 
     Pel iUBlended ; 
@@ -147,7 +146,7 @@ class TRenSingleModelC : public TRenSingleModel
 
     // reference
     Pel iYRef    ; 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     Pel iURef    ; 
     Pel iVRef    ; 
 #endif        
@@ -160,7 +159,7 @@ public:
   ~TRenSingleModelC();
 
   // Create Model
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Void   create    ( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode, Bool bEarlySkip  );
 #else
   Void   create    ( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode );
@@ -171,7 +170,7 @@ public:
   Void   setupPart ( UInt uiHorOffset,       Int uiUsedHeight );
   Void   setup     ( TComPicYuv* pcOrgVideo, Int** ppiShiftLutLeft, Int** ppiBaseShiftLutLeft, Int** ppiShiftLutRight,  Int** ppiBaseShiftLutRight,  Int iDistToLeft, Bool bKeepReference );
 
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel* piOrgData, Int iOrgStride );
 #else
   Void   setDepth  ( Int iViewPos,                 Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
@@ -179,7 +178,7 @@ public:
   Void   setVideo  ( Int iViewPos,     Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
 
   // Get Distortion
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel * piOrgData , Int iOrgStride);
 #else
   RMDist getDistDepth  ( Int iViewPos,             Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData );
@@ -197,7 +196,7 @@ private:
 
   /////  Rendering /////
   // Left to Right
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
                       __inline Bool   xDetectEarlySkipL   ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData,Pel* piOrgData, Int iOrgStride );
                       __inline Bool   xDetectEarlySkipR   ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData,Pel* piOrgData, Int iOrgStride );
   template<Bool bSet> __inline RMDist xRenderL            ( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Bool bFast );
@@ -228,7 +227,7 @@ private:
   // Blending
   template<Bool bSet> __inline Void   xSetShiftedPelBlend ( Int iSourcePos, Int iTargetSPos, Pel iFilled, RMDist& riError );
 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   __inline Void   xGetBlendedValue    ( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV );
   __inline Void   xGetBlendedValueBM1 ( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV );
   __inline Void   xGetBlendedValueBM2 ( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV );
@@ -259,7 +258,7 @@ private:
   __inline Void   xSetBools  ( Bool* pbSource    , Int iSourceStride, Int iWidth, Int iHeight, Bool bVal );
   __inline Void   xSetInts   ( Int*  piPelSource , Int iSourceStride, Int iWidth, Int iHeight, Int iVal );
 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   Void            xGetSampleStrTextPtrs ( Int iViewNum, Pel RenModelOutPels::*& rpiSrcY, Pel RenModelOutPels::*& rpiSrcU, Pel RenModelOutPels::*& rpiSrcV );
 #else  
   Void            xGetSampleStrTextPtrs ( Int iViewNum, Pel RenModelOutPels::*& rpiSrcY );
@@ -366,7 +365,7 @@ private:
   Bool  m_bUseOrgRef;
   Int   m_iShiftPrec;
   Int   m_iHoleMargin;
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Bool  m_bEarlySkip; 
 #endif
 
@@ -384,11 +383,12 @@ private:
   const Int m_iDistShift;                  // Shift in Distortion computation
 
   //// Early Skip 
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Bool* m_pbHorSkip;
 #endif
 };
 
+#endif // H_3D
 #endif //__TRENSINGLEMODEL__
-#endif
+
 
