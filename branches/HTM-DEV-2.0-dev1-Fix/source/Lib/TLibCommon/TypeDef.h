@@ -105,7 +105,10 @@
 #define MTK_RVS_BUGFIX_E0172              1  // Bug fix for issues caused by reference view selection, JCT3V-E0172
 #if MTK_RVS_BUGFIX_E0172
 #define MTK_DVMCP_FIX_E0172                  1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
+#define MTK_VSP_FIX_ALIGN_WD_E0172           1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172, using an implementation aligned with WD
+#if !MTK_VSP_FIX_ALIGN_WD_E0172
 #define MTK_VSP_FIX_E0172                    1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172
+#endif
 #define MTK_DIVMC_FIX_E0172                  1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
 #define MTK_NBDV_TN_FIX_E0172                1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
 #endif
