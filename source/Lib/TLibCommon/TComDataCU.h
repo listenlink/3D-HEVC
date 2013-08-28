@@ -434,7 +434,10 @@ public:
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
-
+#if MTK_VSP_FIX_ALIGN_WD_E0172
+  template<typename T>
+  Void          setSubPartT           ( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
+#endif
 #if AMP_MRG
   Void          setMergeAMP( Bool b )      { m_bIsMergeAMP = b; }
   Bool          getMergeAMP( )             { return m_bIsMergeAMP; }
@@ -460,6 +463,9 @@ public:
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
 #if H_3D_NBDV
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
+#if MTK_VSP_FIX_ALIGN_WD_E0172
+  Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth);
+#endif
   DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                 }
   DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];          }
 #endif
@@ -648,11 +654,17 @@ public:
   Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #if H_3D_VSP
                                             , Int* vspFlag
+#if MTK_VSP_FIX_ALIGN_WD_E0172
+                                            , InheritedVSPDisInfo*  inheritedVSPDisInfo
+#endif
 #if MTK_VSP_FIX_E0172
                                             , Int* vspDir
 #endif
 #endif
                                             , Int& numValidMergeCand, Int mrgCandIdx = -1 );
+#if MTK_VSP_FIX_ALIGN_WD_E0172
+  inline Void xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
+#endif
 #if H_3D_VSP
   Char*         getVSPFlag        ()                        { return m_piVSPFlag;          }
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }

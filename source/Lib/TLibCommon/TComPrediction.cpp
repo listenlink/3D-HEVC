@@ -728,11 +728,15 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
 
   // Do compensation
-#if MTK_VSP_FIX_E0172 
+#if MTK_VSP_FIX_ALIGN_WD_E0172 
+  TComMv cDv  = pcCU->getDvInfo(uiPartAddr).m_acNBDV;
+#else
+#if MTK_VSP_FIX_E0172
   TComMv cDv  = pcCU->getCUMvField( privateRefPicList )->getMv( uiPartAddr );
 #else
   TComMv cDv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cDv is the disparity vector derived from the neighbors
 #endif
+#endif // end of MTK_VSP_FIX_ALIGN_WD_E0172 
   pcCU->clipMv(cDv);
 
 #if NTT_VSP_COMMON_E0207_E0208
