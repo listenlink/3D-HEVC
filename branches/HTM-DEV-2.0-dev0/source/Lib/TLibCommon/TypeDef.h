@@ -164,7 +164,7 @@
                                               // LGE_CONCATENATE_D0141
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
-#define H_3D_FIX                             1
+
 #if H_3D_FIX
 #define H_3D_BVSP_FIX                        1  //DV from NBDV instead of DoNBDV should be used
 #define FIX036                               1  // fix for ticket #36
