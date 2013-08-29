@@ -123,6 +123,12 @@
 #define SDC_NUM_RESIDUAL_FLAG_CTX        1
 #define SDC_NUM_RESIDUAL_CTX             1
 #endif
+
+#if LGE_INTER_SDC_E0156
+#define NUM_INTER_SDC_FLAG_CTX        1      ///< number of context models for inter SDC flag
+#define NUM_INTER_SDC_SIGN_FLAG_CTX   1      ///< number of context models for sign of inter SDC residual
+#define NUM_INTER_SDC_RESIDUAL_CTX    1      ///< number of context models for abs of inter SDC residual
+#endif
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -452,6 +458,31 @@ INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
 #endif
 #endif
 
+#if LGE_INTER_SDC_E0156
+static const UChar 
+INIT_INTER_SDC_FLAG[3][NUM_INTER_SDC_FLAG_CTX] =
+{
+  { CNU },  
+  { 154 },
+  { 154 },
+};
+
+static const UChar 
+INIT_INTER_SDC_SIGN_FLAG[3][NUM_INTER_SDC_SIGN_FLAG_CTX] =
+{
+  { CNU },  
+  { 154 },
+  { 154 },
+};
+
+static const UChar 
+INIT_INTER_SDC_RESIDUAL[3][NUM_INTER_SDC_RESIDUAL_CTX] =
+{
+  { CNU },  
+  { 154 },
+  { 154 },
+};
+#endif
 //! \}
 
 

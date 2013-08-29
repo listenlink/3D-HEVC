@@ -93,6 +93,9 @@ public:
 #if H_3D_IC
   Bool  bUseIC;
 #endif
+#if LGE_INTER_SDC_E0156
+  Bool  bUseSDCMRSAD;
+#endif
   Int   iRows;
   Int   iCols;
   Int   iStep;
@@ -131,6 +134,9 @@ public:
     pVirRec = NULL;
     pVirOrg = NULL;
     iStrideVir = 0;
+#endif
+#if LGE_INTER_SDC_E0156
+    bUseSDCMRSAD = false;
 #endif
   }
 };
@@ -273,7 +279,7 @@ private:
   static UInt xGetSSE32         ( DistParam* pcDtParam );
   static UInt xGetSSE64         ( DistParam* pcDtParam );
   static UInt xGetSSE16N        ( DistParam* pcDtParam );
-#if H_3D_IC
+#if H_3D_IC || LGE_INTER_SDC_E0156
   static UInt xGetSADic         ( DistParam* pcDtParam );
   static UInt xGetSAD4ic        ( DistParam* pcDtParam );
   static UInt xGetSAD8ic        ( DistParam* pcDtParam );
@@ -301,7 +307,7 @@ private:
 #endif
 
 #if AMP_SAD
-#if H_3D_IC
+#if H_3D_IC || LGE_INTER_SDC_E0156
   static UInt xGetSAD12ic       ( DistParam* pcDtParam );
   static UInt xGetSAD24ic       ( DistParam* pcDtParam );
   static UInt xGetSAD48ic       ( DistParam* pcDtParam );
@@ -312,7 +318,7 @@ private:
 
 #endif
 
-#if H_3D_IC
+#if H_3D_IC || LGE_INTER_SDC_E0156
   static UInt xGetHADsic          ( DistParam* pcDtParam );
 #endif
   static UInt xGetHADs4         ( DistParam* pcDtParam );

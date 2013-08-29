@@ -674,6 +674,18 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
 #endif
   
+#if LGE_INTER_SDC_E0156
+  if( pcCU->getInterSDCFlag( uiAbsPartIdx ) )
+  {
+    assert( !pcCU->isSkipped( uiAbsPartIdx ) );
+    assert( !pcCU->isIntra( uiAbsPartIdx) );
+    assert( pcCU->getSlice()->getIsDepth() );
+
+    decodeInterSDCResidualData( pcCU, uiAbsPartIdx, uiDepth );
+    return;
+  }
+#endif
+
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
   }
@@ -694,5 +706,45 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
   xDecodeTransform( pcCU, uiLumaOffset, uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth, uiHeight, 0, bCodeDQP );
 }
+
+#if LGE_INTER_SDC_E0156
+Void TDecEntropy::decodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  pcCU->setInterSDCFlagSubParts( false, uiAbsPartIdx, 0, uiDepth);
+
+  if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
+  {
+    return;
+  }
+
+  if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || pcCU->isSkipped( uiAbsPartIdx ) )
+  {
+    return;
+  }
+
+  m_pcEntropyDecoderIf->parseInterSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
+}
+
+Void TDecEntropy::decodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
+  {
+    return;
+  }
+
+  if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || !pcCU->getInterSDCFlag( uiAbsPartIdx ) )
+  {
+    return;
+  }
+
+  UInt uiNumSegments = ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ? 1 : ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 4 : 2 );
+
+  // decode residual data for each segment
+  for( UInt uiSeg = 0; uiSeg < uiNumSegments; uiSeg++ )
+  {
+    m_pcEntropyDecoderIf->parseInterSDCResidualData( pcCU, uiAbsPartIdx, uiDepth, uiSeg );
+  }
+}
+#endif
 
 //! \}

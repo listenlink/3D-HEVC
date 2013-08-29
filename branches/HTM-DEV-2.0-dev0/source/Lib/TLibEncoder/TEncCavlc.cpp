@@ -841,6 +841,9 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
           }
         }        
 #endif
+#if LGE_INTER_SDC_E0156
+        WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
+#endif
       }
     }  
   }
@@ -1775,4 +1778,16 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   }
   return true;
 }
+
+#if LGE_INTER_SDC_E0156
+Void TEncCavlc::codeInterSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+
+Void TEncCavlc::codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
+{
+  assert(0);
+}
+#endif
 //! \}

@@ -1779,7 +1779,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
         pcPic->destroyNonDBFilterInfo();
       }
-
 #if !H_3D
       pcPic->compressMotion(); 
 #endif

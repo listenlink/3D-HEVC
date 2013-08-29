@@ -101,6 +101,9 @@ private:
 #if H_3D_IC
   Bool              m_bICFlag;
 #endif
+#if LGE_INTER_SDC_E0156
+  Bool              m_bSDCMRSADFlag;
+#endif
   static const UChar m_aucIntraFilter[5];
   
 public:
@@ -114,6 +117,10 @@ public:
 #if H_3D_IC
   Bool  getICFlag()               { return m_bICFlag; }
   Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
+#endif
+#if LGE_INTER_SDC_E0156
+  Bool  getSDCMRSADFlag()         { return m_bSDCMRSADFlag; }
+  Void  setSDCMRSADFlag( Bool bSDCMRSADFlag )    { m_bSDCMRSADFlag = bSDCMRSADFlag; }
 #endif
 
   // access functions of ADI buffers
