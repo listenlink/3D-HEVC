@@ -95,42 +95,14 @@
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-#define H_3D_FIX                          1   // Bug Fix
-#define SHARP_ILLUCOMP_REFINE_E0046       1
-#define MTK_FAST_TEXTURE_ENCODING_E0173   1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
-#if H_3D_FIX
-#if H_3D_IC
-#define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
-#endif
-#else
-#define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
-#endif
-#define MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170            1   // Progressive MV Compression, JCT3V-E0170
-#define LGE_INTER_SDC_E0156               1   // Enable inter SDC for depth coding
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
                                               // MERL_D0166: Reference view selection in NBDV & Bi-VSP
                                               // MERL_C0152: Basic VSP
+#endif
 
-#define NBDV_DEFAULT_VIEWIDX_BUGFIX       1  // Bug fix for invalid default view index for NBDV
-#define MTK_RVS_BUGFIX_E0172              1  // Bug fix for issues caused by reference view selection, JCT3V-E0172
-#if MTK_RVS_BUGFIX_E0172
-#define MTK_DVMCP_FIX_E0172                  1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
-#define MTK_VSP_FIX_ALIGN_WD_E0172           1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172, using an implementation aligned with WD
-#if !MTK_VSP_FIX_ALIGN_WD_E0172
-#define MTK_VSP_FIX_E0172                    1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172
-#endif
-#define MTK_DIVMC_FIX_E0172                  1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
-#define MTK_NBDV_TN_FIX_E0172                1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
-#endif
-#define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1   // Bugfix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
-#if H_3D_NBDV_REF
-#define NTT_DoNBDV_VECTOR_CLIP_E0141      1   // disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
-#define SEC_SIMPLIFIED_NBDV_E0142         1   // Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
-#endif
-#endif
 #define H_3D_VSP                          1   // View synthesis prediction
                                               // MERL_C0152: Basic VSP
                                               // MERL_D0166: Reference view selection in NBDV & Bi-VSP
@@ -165,16 +137,73 @@
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
 
-#if H_3D_FIX
-#define H_3D_BVSP_FIX                        1  //DV from NBDV instead of DoNBDV should be used
-#define FIX036                               1  // fix for ticket #36
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   NEW ADOPTIONS       ///////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#define SHARP_ILLUCOMP_REFINE_E0046       1
+#define MTK_FAST_TEXTURE_ENCODING_E0173   1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
+#define MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170            1   // Progressive MV Compression, JCT3V-E0170
+#define LGE_INTER_SDC_E0156               1   // Enable inter SDC for depth coding
+
+#if H_3D_IC
+#define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
 #endif
-#endif 
+
+#if H_3D_NBDV
+#define NBDV_DEFAULT_VIEWIDX_BUGFIX       1  // Bug fix for invalid default view index for NBDV
+#define MTK_RVS_BUGFIX_E0172              1  // Bug fix for issues caused by reference view selection, JCT3V-E0172
+#define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1  // Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
+
+#if MTK_RVS_BUGFIX_E0172
+#define MTK_DIVMC_FIX_E0172               1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
+#define MTK_NBDV_TN_FIX_E0172             1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
+#define MTK_DVMCP_FIX_E0172               1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
+#define MTK_VSP_FIX_ALIGN_WD_E0172        1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172, using an implementation aligned with WD
+
+#if !MTK_VSP_FIX_ALIGN_WD_E0172
+#define MTK_VSP_FIX_E0172                 1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172
+#endif
+#endif // MTK_RVS_BUGFIX_E0172
+
+#if H_3D_NBDV_REF
+#define NTT_DoNBDV_VECTOR_CLIP_E0141      1   // disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
+#define SEC_SIMPLIFIED_NBDV_E0142         1   // Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
+#endif
+#endif // H_3D_NBDV
+
+#if H_3D_IV_MERGE
+#define QC_INRIA_MTK_MRG_E0126            1   // additional merge candidates JCT3V-E0126
+#endif
+
+#if H_3D_DIM
+#define SEC_DMM2_E0146                    1   // Removal of DMM2 from DMMs
+#define ZJU_DEPTH_INTRA_MODE_E0204        1   // Simplified Binarization for depth_intra_mode
+#define KWU_SDC_SIMPLE_DC_E0117           1   // Simplified DC calculation for SDC
+#define SCU_HS_DMM4_REMOVE_DIV_E0242      1   // DMM4 Division Removal
+#define SCU_HS_FAST_DEPTH_INTRA_E0238     1   // Fast DMM and RBC Mode Selection
+#endif
+
+#if H_3D_VSP
+#define NTT_VSP_COMMON_E0207_E0208        1 // common part of JCT3V-E0207 and JCT3V-E0208
+#if NTT_VSP_COMMON_E0207_E0208
+#define NTT_VSP_DC_BUGFIX_E0208           1 // bugfix for sub-PU based DC in VSP, JCT3V-E0208
+#define NTT_VSP_VECTOR_CLIP_E0208         1 // disparity vector clipping on fetching depth map in VSP, JCT3V-E0208
+#define NTT_VSP_ADAPTIVE_SPLIT_E0207      1 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
+#endif
+#endif
+
+/// FIXES
+#define H_3D_BVSP_FIX                     1  //DV from NBDV instead of DoNBDV should be used
+#define FIX036                            1  // fix for ticket #36
+
+#endif // H_3D
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
-
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
@@ -202,10 +231,7 @@
 #define IDV_CANDS                         5
 #endif
 #endif
-////   **** Inter-view motion prediction for merge        *********
-#if H_3D_IV_MERGE
-#define QC_INRIA_MTK_MRG_E0126            1   // additional merge candidates JCT3V-E0126
-#endif
+
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
@@ -213,19 +239,12 @@
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
-#if H_3D_DIM
-#define SEC_DMM2_E0146                    1   // Removal of DMM2 from DMMs
-#define ZJU_DEPTH_INTRA_MODE_E0204        1   // Simplified Binarization for depth_intra_mode
-#endif
 #define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
-#define KWU_SDC_SIMPLE_DC_E0117           1   // Simplified DC calculation for SDC
-#define SCU_HS_DMM4_REMOVE_DIV_E0242      1   // DMM4 Division Removal
-#define SCU_HS_FAST_DEPTH_INTRA_E0238     1   // Fast DMM and RBC Mode Selection
 #if H_3D_DIM_SDC
 #define LGE_SDC_REMOVE_DC_E0158           1   // Removal of DC mode from SDC
 #endif
@@ -242,13 +261,6 @@
 #define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
 #else
 #define H_3D_VSP_CONSTRAINED              0
-#endif
-
-#define NTT_VSP_COMMON_E0207_E0208        1 // common part of JCT3V-E0207 and JCT3V-E0208
-#if NTT_VSP_COMMON_E0207_E0208
-#define NTT_VSP_DC_BUGFIX_E0208           1 // bugfix for sub-PU based DC in VSP, JCT3V-E0208
-#define NTT_VSP_VECTOR_CLIP_E0208         1 // disparity vector clipping on fetching depth map in VSP, JCT3V-E0208
-#define NTT_VSP_ADAPTIVE_SPLIT_E0207      1 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
 #endif
 
 #endif
