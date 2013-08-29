@@ -213,12 +213,25 @@
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
+#if H_3D_DIM
+#define SEC_DMM2_E0146                    1   // Removal of DMM2 from DMMs
+#define ZJU_DEPTH_INTRA_MODE_E0204        1   // Simplified Binarization for depth_intra_mode
+#endif
 #define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#define KWU_SDC_SIMPLE_DC_E0117           1   // Simplified DC calculation for SDC
+#define SCU_HS_DMM4_REMOVE_DIV_E0242      1   // DMM4 Division Removal
+#define SCU_HS_FAST_DEPTH_INTRA_E0238     1   // Fast DMM and RBC Mode Selection
+#if H_3D_DIM_SDC
+#define LGE_SDC_REMOVE_DC_E0158           1   // Removal of DC mode from SDC
+#endif
+#if H_3D_DIM_DMM
+#define LGE_PKU_DMM3_OVERLAP_E0159        1   // Removal of overlap between DMM3 and DMM1
+#endif
 #endif
 
 ///// ***** VIEW SYNTHESIS PREDICTION *********

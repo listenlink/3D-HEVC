@@ -1899,11 +1899,19 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   
   // get DC prediction for each segment
   Pel apDCPredValues[2];
+#if KWU_SDC_SIMPLE_DC_E0117
+  analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode );
+#else
   analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride );
+#endif
   
   // get original DC for each segment
   Pel apDCOrigValues[2];
+#if KWU_SDC_SIMPLE_DC_E0117
+  analyzeSegmentsSDC(piOrg, uiStride, uiWidth, apDCOrigValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode, true );
+#else
   analyzeSegmentsSDC(piOrg, uiStride, uiWidth, apDCOrigValues, uiNumSegments, pbMask, uiMaskStride );
+#endif
   
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
   {
@@ -2841,8 +2849,20 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     //===== determine set of depth intra modes to be tested =====
     if( m_pcEncCfg->getIsDepth() && uiWidth >= DIM_MIN_SIZE && uiWidth <= DIM_MAX_SIZE && uiWidth == uiHeight )
     {
+
+#if SCU_HS_FAST_DEPTH_INTRA_E0238
+      Int  threshold    = max(((pcCU->getQP(0))>>3)-1,3);
+      Int  varThreshold = (Int)( threshold * threshold - 8 );
+      UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, uiWidth,uiHeight,pcCU->getDepth(0));
+#endif
+
+
 #if H_3D_DIM_DMM
-      if( m_pcEncCfg->getUseDMM() )
+      if( m_pcEncCfg->getUseDMM()
+#if SCU_HS_FAST_DEPTH_INTRA_E0238
+         && (uiRdModeList[0] != 0 || varCU >= varThreshold)
+#endif
+        )
       {
         for( UInt dmmType = 0; dmmType < DMM_NUM_TYPE; dmmType++ )
         {
@@ -2857,6 +2877,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType,  uiPartOffset, uiDepth + uiInitTrDepth );
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
             } break;
+#if !SEC_DMM2_E0146
           case( DMM2_IDX ):
             {
               if( uiWidth > 4 )
@@ -2868,13 +2889,26 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
                 biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
               }
             } break;
+#endif
           case( DMM3_IDX ):
             {
+#if LGE_PKU_DMM3_OVERLAP_E0159
+              TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
+              TComDataCU* pcColTexCU = pcPicTex->getCU( pcCU->getAddr() );
+              UInt      uiTexPartIdx = pcCU->getZorderIdxInCU() + uiPartOffset;
+              Int   uiColTexIntraDir = pcColTexCU->isIntra( uiTexPartIdx ) ? pcColTexCU->getLumaIntraDir( uiTexPartIdx ) : 255;
+
+              if( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 )
+              {
+#endif
               UInt uiIntraTabIdx = 0;
               xSearchDmm3Wedge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight, uiTabIdx, uiIntraTabIdx );
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType, uiPartOffset, uiDepth + uiInitTrDepth );
               pcCU->setDmm3IntraTabIdxSubParts( uiIntraTabIdx, uiPartOffset, uiDepth + uiInitTrDepth );
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
+#if LGE_PKU_DMM3_OVERLAP_E0159
+              }
+#endif
             } break;
           case( DMM4_IDX ):
             {
@@ -2902,7 +2936,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       }
 #endif
 #if H_3D_DIM_RBC
-      if( m_pcEncCfg->getUseRBC() )
+      if( m_pcEncCfg->getUseRBC()
+#if SCU_HS_FAST_DEPTH_INTRA_E0238
+          && (uiRdModeList[0] != 0 || varCU >= varThreshold)
+#endif
+        )
       {
         if( xSearchRbcEdge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight ) )
         {
@@ -7322,6 +7360,7 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   return;
 }
 
+#if !SEC_DMM2_E0146
 Void TEncSearch::xSearchDmm2Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd )
 {
   ruiTabIdx       = 0;
@@ -7387,6 +7426,7 @@ Void TEncSearch::xSearchDmm2Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   cPredYuv.destroy();
   return;
 }
+#endif
 
 Void TEncSearch::xSearchDmm3Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx )
 {

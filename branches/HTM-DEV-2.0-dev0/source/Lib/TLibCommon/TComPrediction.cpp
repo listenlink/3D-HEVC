@@ -455,6 +455,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       {
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
       } break;
+#if !SEC_DMM2_E0146
     case( DMM2_IDX ):
       {
         UInt uiTabIdx = 0;
@@ -466,6 +467,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
         }
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ uiTabIdx ]);
       } break;
+#endif
     case( DMM3_IDX ): 
       {
         UInt uiTabIdx = 0;
@@ -2781,7 +2783,11 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType =  getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
+#if SEC_DMM2_E0146
+    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
+#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
+#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;
@@ -2806,7 +2812,11 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType = getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
+#if SEC_DMM2_E0146
+    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
+#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
+#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;
@@ -2869,7 +2879,13 @@ Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   { 
     iDC += piRefBlkY[k]; 
   }
+
+#if SCU_HS_DMM4_REMOVE_DIV_E0242
+  Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
+  iDC = iDC >> (cuMaxLog2Size - pcCU->getDepth(0))*2;
+#else
   iDC /= (uiWidth*uiHeight);
+#endif
   piRefBlkY = cTempYuv.getLumaAddr();
 
   Bool* pabContourPattern = pcContourWedge->getPattern();
@@ -3313,13 +3329,46 @@ Void TComPrediction::xDeltaDCQuantScaleDown( TComDataCU*  pcCU, Pel& rDeltaDC )
 }
 #endif
 #if H_3D_DIM_SDC
-Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride )
+Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride
+#if KWU_SDC_SIMPLE_DC_E0117
+                                         ,UInt uiIntraMode
+                                         ,Bool orgDC
+#endif
+                                        )
 {
   Int iSumDepth[2];
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
   
+#if KWU_SDC_SIMPLE_DC_E0117
+  if (orgDC == false)
+  {
+    if ( getDimType(uiIntraMode) == DMM1_IDX )
+    {
+      UChar ucSegmentLT = pMask[0];
+      UChar ucSegmentRT = pMask[uiSize-1];
+      UChar ucSegmentLB = pMask[uiMaskStride * (uiSize-1)]; 
+      UChar ucSegmentRB = pMask[uiMaskStride * (uiSize-1) + (uiSize-1)]; 
+
+      rpSegMeans[ucSegmentLT] = pOrig[0];
+      rpSegMeans[ucSegmentRT] = pOrig[uiSize-1];
+      rpSegMeans[ucSegmentLB] = pOrig[uiStride * (uiSize-1) ];
+      rpSegMeans[ucSegmentRB] = pOrig[uiStride * (uiSize-1) + (uiSize-1) ];
+    }
+    else if (uiIntraMode == PLANAR_IDX)
+    {
+      Pel* pLeftTop = pOrig;
+      Pel* pRightTop = pOrig + (uiSize-1);
+      Pel* pLeftBottom = (pOrig+ (uiStride*(uiSize-1)));
+      Pel* pRightBottom = (pOrig+ (uiStride*(uiSize-1)) + (uiSize-1));
+
+      rpSegMeans[0] = (*pLeftTop + *pRightTop + *pLeftBottom + *pRightBottom + 2)>>2;
+    }
+    return;
+  }
+#endif
+
   Int subSamplePix;
   if ( uiSize == 64 || uiSize == 32 )
   {

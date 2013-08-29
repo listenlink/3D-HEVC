@@ -111,7 +111,9 @@
 #define NUM_DDC_DATA_CTX              2       ///< number of context models for deltaDC data (DMM or RBC)
 #if H_3D_DIM_DMM
 #define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
+#if !SEC_DMM2_E0146
 #define NUM_DMM2_DATA_CTX             1       ///< number of context models for DMM2 data
+#endif
 #define NUM_DMM3_DATA_CTX             1       ///< number of context models for DMM3 data
 #endif
 #if H_3D_DIM_RBC
@@ -387,6 +389,15 @@ INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =
 };
 #endif
 #if H_3D_DIM
+#if ZJU_DEPTH_INTRA_MODE_E0204
+static const UChar
+INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
+{
+    {0,  0,  64, 168, 168, 124, CNU, 0},
+    {0, 64,   0, 183, CNU, 108,   0, 0},
+    {64, 0, CNU, CNU, 168, 109,   0, 0}
+};
+#else
 static const UChar 
 INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
 {
@@ -394,6 +405,7 @@ INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
   {0, 64,   0, CNU,   0, CNU,   0, 0},
   {64, 0, CNU,   0, CNU,   0,   0, 0}
 };
+#endif
 static const UChar 
 INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =
 {
@@ -416,6 +428,7 @@ INIT_DMM1_DATA[3][NUM_DMM1_DATA_CTX] =
   { CNU }, 
   { CNU }, 
 };
+#if !SEC_DMM2_E0146
 static const UChar
 INIT_DMM2_DATA[3][NUM_DMM2_DATA_CTX] = 
 {
@@ -423,6 +436,7 @@ INIT_DMM2_DATA[3][NUM_DMM2_DATA_CTX] =
   { CNU }, 
   { CNU }, 
 };
+#endif
 static const UChar
 INIT_DMM3_DATA[3][NUM_DMM3_DATA_CTX] = 
 {
