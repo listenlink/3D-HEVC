@@ -49,13 +49,24 @@
 
 enum DIM_IDX
 {
+#if SEC_DMM2_E0146
+  DMM1_IDX = 0,
+  DMM3_IDX = 1,
+  DMM4_IDX = 2,
+  RBC_IDX  = 3
+#else
   DMM1_IDX = 0,
   DMM2_IDX = 3,
   DMM3_IDX = 1,
   DMM4_IDX = 2,
   RBC_IDX  = 4
+#endif
 };
+#if SEC_DMM2_E0146
+#define DMM_NUM_TYPE   3
+#else
 #define DMM_NUM_TYPE   4
+#endif
 #define RBC_NUM_TYPE   1
 #define DIM_NUM_TYPE   (DMM_NUM_TYPE+RBC_NUM_TYPE)
 #define DIM_NO_IDX     MAX_UINT
@@ -74,7 +85,9 @@ __inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && 
 #if H_3D_DIM_DMM
 #define DMM_NO_WEDGEINDEX       MAX_UINT
 #define DMM_NUM_WEDGE_REFINES   8
+#if !SEC_DMM2_E0146
 #define DMM2_DELTAEND_MAX       4
+#endif
 #define DMM3_SIMPLIFY_TR        1
 
 enum WedgeResolution

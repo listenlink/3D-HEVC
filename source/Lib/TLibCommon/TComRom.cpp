@@ -346,9 +346,15 @@ const WedgeResolution g_dmmWedgeResolution[6] =
 const UChar g_dmm1TabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
      0,    7,   10,   11,   11,   13 };
+#if LGE_PKU_DMM3_OVERLAP_E0159
+const UChar g_dmm3IntraTabIdxBits[6] =
+{ //2x2   4x4   8x8 16x16 32x32 64x64
+     0,    4,    7,    8,    8,    0 };
+#else
 const UChar g_dmm3IntraTabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
      0,    6,    9,    9,    9,    0 };
+#endif
 
 extern std::vector< std::vector<TComWedgelet> >   g_dmmWedgeLists;
 extern std::vector< std::vector<TComWedgeRef> >   g_dmmWedgeRefLists;

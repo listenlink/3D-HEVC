@@ -483,6 +483,43 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
 
 }
 
+#if SCU_HS_FAST_DEPTH_INTRA_E0238
+
+UInt TComRdCost::calcVAR (Pel* pi0, Int stride, Int width, Int height, Int cuDepth)
+{ 
+  Int temp = 0;
+
+  for (Int y = 0; y < height; y++)
+  {
+    for (Int x = 0; x < width; x++)
+    {
+      temp += pi0[ y * stride + x ]; 
+    }
+  }
+
+  Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
+  
+  if ( width == 4 ) 
+  {
+    cuDepth = cuMaxLog2Size - 2;
+  }
+
+  temp = temp >> (cuMaxLog2Size-cuDepth) * 2;
+
+  UInt sum = 0;
+  for (Int y = 0; y < height; y++)
+  {
+    for (Int x = 0; x <  width; x++)
+    {
+      sum += (pi0[ y * stride + x ] - temp ) * (pi0[ y * stride + x ] - temp );
+    }
+  }
+  return (sum >> (cuMaxLog2Size-cuDepth)*2);
+
+}
+#endif
+
+
 #if WEIGHTED_CHROMA_DISTORTION
 UInt TComRdCost::getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, TextType eText, DFunc eDFunc)
 #else
