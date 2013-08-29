@@ -99,6 +99,11 @@ TDecSbac::TDecSbac()
 , m_cSDCResidualSCModel         ( 1,             1,             SDC_NUM_RESIDUAL_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #endif
+#if LGE_INTER_SDC_E0156
+, m_cInterSDCFlagSCModel             ( 1,             1,  NUM_INTER_SDC_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cInterSDCResidualSCModel         ( 1,             1,  NUM_INTER_SDC_RESIDUAL_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cInterSDCResidualSignFlagSCModel ( 1,             1,  NUM_INTER_SDC_SIGN_FLAG_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -182,6 +187,11 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cSDCResidualSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL );
 #endif
 #endif
+#if LGE_INTER_SDC_E0156
+  m_cInterSDCFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_INTER_SDC_FLAG );
+  m_cInterSDCResidualSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_INTER_SDC_RESIDUAL );
+  m_cInterSDCResidualSignFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
+#endif
   m_uiLastDQpNonZero  = 0;
   
   // new structure
@@ -250,6 +260,11 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cSDCResidualFlagSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
   m_cSDCResidualSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
 #endif
+#endif
+#if LGE_INTER_SDC_E0156
+  m_cInterSDCFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_FLAG );
+  m_cInterSDCResidualSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_RESIDUAL );
+  m_cInterSDCResidualSignFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
 #endif
   m_pcTDecBinIf->start();
 }
@@ -2233,6 +2248,42 @@ Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
   
   pcCU->setICFlagSubParts( uiSymbol ? true : false , uiAbsPartIdx, 0, uiDepth );
+}
+#endif
+
+#if LGE_INTER_SDC_E0156
+Void TDecSbac::parseInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiSymbol = 0;
+  UInt uiCtxInterSDCFlag = pcCU->getCtxInterSDCFlag( uiAbsPartIdx );
+
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cInterSDCFlagSCModel.get( 0, 0, uiCtxInterSDCFlag ) );
+
+  if( uiSymbol )
+  {
+    pcCU->setInterSDCFlagSubParts( true, uiAbsPartIdx, 0, uiDepth );
+    pcCU->setTrIdxSubParts( 0, uiAbsPartIdx, uiDepth );
+    pcCU->setCbfSubParts( 1, 1, 1, uiAbsPartIdx, uiDepth );
+  }
+  else
+  {
+    pcCU->setInterSDCFlagSubParts( false, uiAbsPartIdx, 0, uiDepth);
+  }
+}
+
+Void TDecSbac::parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSegment )
+{
+  UInt uiAbsIdx   = 0;
+  UInt uiSign     = 0;
+  Int  iIdx       = 0;
+
+  xReadExGolombLevel( uiAbsIdx, m_cInterSDCResidualSCModel.get( 0, 0, 0 ) );
+
+  uiAbsIdx++;
+  m_pcTDecBinIf->decodeBin( uiSign, m_cInterSDCResidualSignFlagSCModel.get( 0, 0, 0 ) );
+  iIdx = (Int)( uiSign ? -1 : 1 ) * uiAbsIdx;
+
+  pcCU->setInterSDCSegmentDCOffset( iIdx, uiSegment, uiAbsPartIdx );
 }
 #endif
 

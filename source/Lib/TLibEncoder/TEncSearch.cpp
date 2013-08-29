@@ -40,6 +40,9 @@
 #include "TLibCommon/TComMotionInfo.h"
 #include "TEncSearch.h"
 #include <math.h>
+#if LGE_INTER_SDC_E0156
+#include <memory.h>
+#endif
 
 //! \ingroup TLibEncoder
 //! \{
@@ -318,6 +321,9 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
   piRefSrch = rcStruct.piRefY + iSearchY * rcStruct.iYStride + iSearchX;
 #if H_3D_IC
   m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
+#if LGE_INTER_SDC_E0156
+  m_cDistParam.bUseSDCMRSAD = pcPatternKey->getSDCMRSADFlag();
 #endif
   //-- jclee for using the SAD function pointer
   m_pcRdCost->setDistParam( pcPatternKey, piRefSrch, rcStruct.iYStride,  m_cDistParam );
@@ -747,6 +753,9 @@ UInt TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
     setDistParamComp(0);  // Y component
 #if H_3D_IC
     m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
+#if LGE_INTER_SDC_E0156
+    m_cDistParam.bUseSDCMRSAD = pcPatternKey->getSDCMRSADFlag();
 #endif
     m_cDistParam.pCur = piRefPos;
     m_cDistParam.bitDepth = g_bitDepthY;
@@ -3530,6 +3539,9 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
 #if H_3D_IC
   cDistParam.bUseIC = false;
 #endif
+#if LGE_INTER_SDC_E0156
+  cDistParam.bUseSDCMRSAD = false;
+#endif
   ruiErr = cDistParam.DistFunc( &cDistParam );
 }
 
@@ -3689,7 +3701,11 @@ Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvF
  * \returns Void
  */
 #if AMP_MRG
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv, Bool bFMD, Bool bUseRes, Bool bUseMRG )
+#else
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv, Bool bUseRes, Bool bUseMRG )
+#endif
 #else
 Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*& rpcPredYuv, TComYuv*& rpcResiYuv, TComYuv*& rpcRecoYuv, Bool bUseRes )
 #endif
@@ -3800,8 +3816,11 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     
 #if AMP_MRG
     Bool bTestNormalMC = true;
-    
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+    if (bFMD||( bUseMRG && pcCU->getWidth( 0 ) > 8 && iNumPart == 2 ))
+#else            
     if ( bUseMRG && pcCU->getWidth( 0 ) > 8 && iNumPart == 2 )
+#endif
     {
       bTestNormalMC = false;
     }
@@ -4688,6 +4707,16 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getViewIndex() != pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getViewIndex() );
   pcPatternKey->setICFlag( bICFlag );
 #endif
+#if LGE_INTER_SDC_E0156
+  if ( pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
+  {
+    pcPatternKey->setSDCMRSADFlag( true );
+  } 
+  else
+  {
+    pcPatternKey->setSDCMRSADFlag( false );
+  }
+#endif
 
   if ( bBi )
   {
@@ -4833,6 +4862,9 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
       setDistParamComp(0);
 #if H_3D_IC
       m_cDistParam.bUseIC = pcPatternKey->getICFlag();
+#endif
+#if LGE_INTER_SDC_E0156
+      m_cDistParam.bUseSDCMRSAD = pcPatternKey->getSDCMRSADFlag();
 #endif
       m_cDistParam.bitDepth = g_bitDepthY;
       uiSad = m_cDistParam.DistFunc( &m_cDistParam );
@@ -5439,6 +5471,165 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
   }
 #endif
 }
+
+#if LGE_INTER_SDC_E0156
+Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, TComYuv* pcRec, const UInt uiDepth )
+{
+  if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( 0 ) )
+  {
+    return;
+  }
+
+  pcCU->setInterSDCFlagSubParts( true, 0, 0, uiDepth );
+
+  UInt  uiWidth      = pcCU->getWidth ( 0 );
+  UInt  uiHeight     = pcCU->getHeight( 0 );
+  UChar* pMask       = pcCU->getInterSDCMask();
+  memset( pMask, 0, uiWidth*uiHeight );
+
+  pcCU->xSetInterSDCCUMask( pcCU, pMask );
+
+  UInt uiSegSize[4] = { 0, 0, 0, 0 };
+  Pel *pPred, *pOrg;
+  UInt uiPredStride = pcPred->getStride();
+  UInt uiOrgStride  = pcOrg->getStride();
+  UInt uiPelX, uiPelY;
+  UInt uiPartitionSize = pcCU->getPartitionSize( 0 );
+  UInt uiSegmentNum = ( uiPartitionSize == SIZE_2Nx2N ) ? 1 : ( uiPartitionSize == SIZE_NxN ? 4 : 2 );
+
+  pPred = pcPred->getLumaAddr( 0 );
+  pOrg  = pcOrg->getLumaAddr( 0 );
+  Int pResDC[4] = { 0, 0, 0, 0};
+
+  //calculate dc value for prediction and original signal, and calculate residual and reconstruction
+  for( uiPelY = 0; uiPelY < uiHeight; uiPelY++ )
+  {
+    for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
+    {
+      UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
+      pResDC[uiSeg] += (Int)( pOrg [uiPelX] - pPred[uiPelX] );
+      uiSegSize[uiSeg]++;
+    }
+    pOrg  += uiOrgStride;
+    pPred += uiPredStride;
+  }
+
+  for( UInt uiSeg = 0; uiSeg < uiSegmentNum; uiSeg++ )
+  {
+    Int iResiOffset = ( pResDC [uiSeg] > 0 ? ( uiSegSize[uiSeg] >> 1 ) : -1*( uiSegSize[uiSeg] >> 1 ) );
+    pResDC [uiSeg]  = ( pResDC [uiSeg] + iResiOffset ) / (Int) uiSegSize[uiSeg];
+
+    pcCU->setInterSDCSegmentDCOffset( pResDC[uiSeg], uiSeg, 0 );
+  }
+
+  Pel *pRec;
+  UInt uiRecStride  = pcRec->getStride();
+  pPred = pcPred->getLumaAddr( 0 );
+  pRec  = pcRec->getLumaAddr( 0 );
+
+  for( uiPelY = 0; uiPelY < uiHeight; uiPelY++ )
+  {
+    for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
+    {
+      UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
+      assert( uiSeg < uiSegmentNum );
+
+      pRec[ uiPelX ] = Clip3( 0, ( 1 << g_bitDepthY ) - 1, pPred[uiPelX] + pResDC[uiSeg] );
+    }
+    pPred     += uiPredStride;
+    pRec      += uiRecStride;
+  }
+
+  // clear UV
+  UInt  uiStrideC     = pcRec->getCStride();
+  Pel   *pRecCb       = pcRec->getCbAddr();
+  Pel   *pRecCr       = pcRec->getCrAddr();
+
+  for (Int y=0; y < uiHeight/2; y++)
+  {
+    for (Int x=0; x < uiWidth/2; x++)
+    {
+      pRecCb[x] = (Pel)( 1 << ( g_bitDepthC - 1 ) );
+      pRecCr[x] = (Pel)( 1 << ( g_bitDepthC - 1 ) );
+    }
+
+    pRecCb += uiStrideC;
+    pRecCr += uiStrideC;
+  }
+
+  Dist ruiDist;
+  Double rdCost;
+#if H_3D_VSO // M13
+  if ( m_pcRdCost->getUseVSO() )
+  {
+    ruiDist = m_pcRdCost->getDistPartVSO( pcCU, 0, pcRec->getLumaAddr(), pcRec->getStride(),  pcOrg->getLumaAddr(), pcOrg->getStride(),  uiWidth,      uiHeight     , false );
+  }
+  else    
+  {
+#endif
+    {
+      ruiDist = m_pcRdCost->getDistPart( g_bitDepthY, pcRec->getLumaAddr( 0 ), uiRecStride, pcOrg->getLumaAddr( 0 ), uiOrgStride, uiWidth, uiHeight );
+    }
+#if H_3D_VSO
+  }
+#endif
+
+  Bool bNonSkip = true;
+  for( UInt uiSeg = 0; uiSeg < uiSegmentNum; uiSeg++ )
+  {
+    bNonSkip &= ( pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 ) != 0 ) ? 1 : 0;
+  }
+
+  if( !bNonSkip )
+  {
+    pcCU->getTotalBits()       = MAX_INT;
+    pcCU->getTotalDistortion() = MAX_INT;
+    pcCU->getTotalCost()       = MAX_DOUBLE;
+  }
+  else
+  {
+    //----- determine rate and r-d cost -----
+    UInt uiBits = 0;
+    TComYuv *pDummy = NULL;
+    if( m_bUseSBACRD )
+    {
+      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
+    }
+
+    xAddSymbolBitsInter( pcCU, 0, 0, uiBits, pDummy, NULL, pDummy );
+
+#if H_3D_VSO //M 14
+    if ( m_pcRdCost->getUseLambdaScaleVSO() )    
+    {
+      rdCost = m_pcRdCost->calcRdCostVSO( uiBits, ruiDist );    
+    }
+    else
+#endif
+    {
+      rdCost = m_pcRdCost->calcRdCost( uiBits, ruiDist );
+    }
+
+    pcCU->getTotalBits()       = m_pcEntropyCoder->getNumberOfWrittenBits();
+    pcCU->getTotalDistortion() = ruiDist;
+    pcCU->getTotalCost()       = rdCost;
+
+    if( m_bUseSBACRD )
+    {
+      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
+    }
+  }
+
+#if H_3D_VSO // necessary? // M15
+  // set Model
+  if( !m_pcRdCost->getUseEstimatedVSD() && m_pcRdCost->getUseRenModel() )
+  {
+    Pel*  piSrc       = pcRec->getLumaAddr();
+    UInt  uiSrcStride = pcRec->getStride();
+    m_pcRdCost->setRenModelData( pcCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+  }
+#endif
+}
+#endif
 
 #if H_3D_VSO // M25
 Void TEncSearch::xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx, UInt absTUPartIdx, TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, const UInt uiDepth, Double &rdCost, UInt &ruiBits, Dist &ruiDist, Dist *puiZeroDist )
@@ -6603,6 +6794,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0 );
+#endif
+#if LGE_INTER_SDC_E0156
+    m_pcEntropyCoder->encodeInterSDCFlag( pcCU, 0, true );
 #endif
     Bool bDummy = false;
     m_pcEntropyCoder->encodeCoeff   ( pcCU, 0, pcCU->getDepth(0), pcCU->getWidth(0), pcCU->getHeight(0), bDummy );

@@ -75,7 +75,11 @@ protected:
   Pel*   m_pLumaRecBuffer;       ///< array for downsampled reconstructed luma sample 
   Int    m_iLumaRecStride;       ///< stride of #m_pLumaRecBuffer array
 #if H_3D_IC
+#if SHARP_ILLUCOMP_REFINE_E0046
+  UInt   m_uiaShift[ 64 ];       // Table for multiplication to substitue of division operation
+#else
   UInt   m_uiaShift[ 63 ];       // Table for multiplication to substitue of division operation
+#endif
 #endif
 
 #if H_3D_VSP
@@ -135,7 +139,11 @@ protected:
   
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );
 #if H_3D_IC
+#if SHARP_ILLUCOMP_REFINE_E0046
+  Void xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, TextType eType );
+#else
   Void xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift, TextType eType );
+#endif
 #endif
   Void xDCPredFiltering( Int* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight );
   Bool xCheckIdenticalMotion    ( TComDataCU* pcCU, UInt PartAddr);

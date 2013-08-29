@@ -225,6 +225,11 @@ private:
   Pel*          m_apSegmentDCOffset[2];
 #endif
 #endif
+#if LGE_INTER_SDC_E0156
+  Bool*         m_pbInterSDCFlag;
+  Int*          m_apSegmentInterDCOffset[4];
+  UChar*        m_pucInterSDCMask;
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
@@ -507,6 +512,9 @@ public:
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
 #endif //H_3D_NBDV_REF
 #endif
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+  Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);
+#endif
 #if H_3D_IV_MERGE
   Bool          getInterViewMergeCands          ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc );   
 #endif
@@ -585,6 +593,19 @@ public:
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
 #endif
 #endif
+#if LGE_INTER_SDC_E0156
+  Bool*         getInterSDCFlag     ()                        { return m_pbInterSDCFlag;               }
+  Bool          getInterSDCFlag     ( UInt uiIdx )            { return m_pbInterSDCFlag[uiIdx];        }
+  Void          setInterSDCFlagSubParts ( Bool bInterSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  UInt          getCtxInterSDCFlag  ( UInt uiAbsPartIdx );
+  Int*          getInterSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentInterDCOffset[uiSeg]; }
+  Int           getInterSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentInterDCOffset[uiSeg][uiPartIdx]; }
+  Void          setInterSDCSegmentDCOffset( Int pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentInterDCOffset[uiSeg][uiPartIdx] = pOffset; }
+
+  Void          xSetInterSDCCUMask( TComDataCU *pcCU, UChar *pMask );
+
+  UChar*        getInterSDCMask     ()                        { return m_pucInterSDCMask;              }
+#endif
   
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for motion vector
@@ -610,9 +631,11 @@ public:
   Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
   Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
-  
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+  Void          compressMV            (int scale);
+#else            
   Void          compressMV            ();
-  
+#endif  
   // -------------------------------------------------------------------------------------------------------------------
   // utility functions for neighbouring information
   // -------------------------------------------------------------------------------------------------------------------

@@ -393,6 +393,9 @@ protected:
 #if H_3D_IC
   Bool      m_bUseIC;
 #endif
+#if LGE_INTER_SDC_E0156
+  bool      m_bInterSDC;
+#endif
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
@@ -489,6 +492,10 @@ public:
 #if H_3D_IC
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
+#endif
+#if LGE_INTER_SDC_E0156
+  Void       setInterSDCEnable              ( Bool bVal )    { m_bInterSDC = bVal; }
+  Bool       getInterSDCEnable              ()               { return m_bInterSDC; }
 #endif
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }

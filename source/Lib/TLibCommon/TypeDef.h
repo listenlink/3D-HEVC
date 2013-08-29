@@ -95,6 +95,19 @@
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
+#define H_3D_FIX                          1   // Bug Fix
+#define SHARP_ILLUCOMP_REFINE_E0046       1
+#define MTK_FAST_TEXTURE_ENCODING_E0173   1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
+#if H_3D_FIX
+#if H_3D_IC
+#define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
+#endif
+#else
+#define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
+#endif
+#define MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170            1   // Progressive MV Compression, JCT3V-E0170
+#define LGE_INTER_SDC_E0156               1   // Enable inter SDC for depth coding
+
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156

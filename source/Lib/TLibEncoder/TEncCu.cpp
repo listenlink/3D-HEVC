@@ -488,6 +488,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   // We need to split, so don't try these modes.
   if(!bSliceEnd && !bSliceStart && bInsidePicture )
   {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+    Bool bIVFMerge = false;
+    Int  iIVFMaxD = 0;
+    Bool bFMD = false;
+#endif
     for (Int iQP=iMinQP; iQP<=iMaxQP; iQP++)
     {
       if (isAddLowestQP && (iQP == iMinQP))
@@ -563,6 +568,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
         }
       }
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+      if(rpcTempCU->getSlice()->getViewIndex() && !rpcTempCU->getSlice()->getIsDepth())
+      {
+        PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
+        rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth ); 
+        rpcTempCU->getIVNStatus( 0, &DvInfo,  bIVFMerge, iIVFMaxD);
+        rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
+      }
+#endif
 #endif
       // do inter modes, SKIP and 2Nx2N
       if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
@@ -578,7 +592,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_IC
           rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+          xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP );//by Competition for inter_2Nx2N
+#else
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );//by Competition for inter_2Nx2N
+#endif
 #if MTK_VSP_FIX_ALIGN_WD_E0172
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
@@ -588,6 +606,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU, &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+        bFMD = bIVFMerge && rpcBestCU->isSkipped(0);
+#endif
         rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
         rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -611,7 +632,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_IC
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP );
+#else
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );
+#endif
 #if MTK_VSP_FIX_ALIGN_WD_E0172
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
@@ -693,7 +718,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN, bFMD  );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN   );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -709,7 +738,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
             )
           {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N, bFMD  );
+#else
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );
+#endif
             rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -725,7 +758,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
             )
           {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+            xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN, bFMD  );
+#else
             xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN  );
+#endif
             rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -760,7 +797,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFMD );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -776,7 +817,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFMD );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -796,7 +841,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFMD, true );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, true );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -812,7 +861,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFMD, true );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, true );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -834,7 +887,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFMD );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -850,7 +907,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFMD );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -866,7 +927,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFMD, true );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, true );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -882,7 +947,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 )
               {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+                xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFMD, true );
+#else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, true );
+#endif
                 rpcTempCU->initEstData( uiDepth, iQP );
 #if MTK_VSP_FIX_ALIGN_WD_E0172
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -929,7 +998,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           }    
 #endif
         }
-
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+        if(!bFMD)
+        {
+#endif
         // do normal intra modes
 #if H_3D_DIM_ENC
         if ( !bEarlySkip || ( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() ) )
@@ -985,6 +1057,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             rpcTempCU->initEstData( uiDepth, iQP );
           }
         }
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+        }
+#endif
         if (isAddLowestQP && (iQP == lowestQP))
         {
           iQP = iMinQP;
@@ -1027,6 +1102,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     {
       bSubBranch = true;
     }
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+    if(rpcBestCU->getSlice()->getViewIndex() && !rpcBestCU->getSlice()->getIsDepth() && (uiDepth >=iIVFMaxD) && rpcBestCU->isSkipped(0))
+    {
+      bSubBranch = false;
+    }
+#endif
   }
   else if(!(bSliceEnd && bInsidePicture))
   {
@@ -1507,6 +1588,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
+#if LGE_INTER_SDC_E0156
+  m_pcEntropyCoder->encodeInterSDCFlag( pcCU, uiAbsPartIdx, false );
+#endif
 
   // Encode Coefficients
   Bool bCodeDQP = getdQPFlag();
@@ -1814,14 +1898,60 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
          }
 
           rpcTempCU->setSkipFlagSubParts( rpcTempCU->getQtRootCbf(0) == 0, 0, uhDepth );
+#if LGE_INTER_SDC_E0156
+          TComDataCU *rpcTempCUPre = rpcTempCU;
+#endif
           Int orgQP = rpcTempCU->getQP( 0 );
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+#if LGE_INTER_SDC_E0156
+          if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && !uiNoResidual )
+          {
+            if( rpcTempCU != rpcTempCUPre )
+            {
+              rpcTempCU->initEstData( uhDepth, orgQP );
+              rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
+            }
+            rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
+            rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
+            rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
+#if H_3D_VSO //M2
+            if( m_pcRdCost->getUseRenModel() )
+            { //Reset
+              UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth    ();
+              UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight   ();
+              Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr ();
+              UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride   ();
+              m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+            }
+#endif
+            m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
+              m_ppcOrigYuv[uhDepth], 
+              ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth], 
+              m_ppcResiYuvTemp[uhDepth], 
+              m_ppcRecoYuvTemp[uhDepth], 
+              uhDepth );
+
+            xCheckDQP( rpcTempCU );
+            xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth );
+          }
+#endif
           rpcTempCU->initEstData( uhDepth, orgQP );
 
       if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
       {
+#if LGE_INTER_SDC_E0156
+        if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) )
+        {
+          bestIsSkip = !rpcBestCU->getSDCFlag( 0 ) && ( rpcBestCU->getQtRootCbf(0) == 0 );
+        }
+        else
+        {
+#endif
         bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
+#if LGE_INTER_SDC_E0156
+        }
+#endif
       }
     }
    }
@@ -1864,11 +1994,19 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
 
 #if AMP_MRG
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFMD, Bool bUseMRG)
+#else
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG)
+#endif
 #else
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize )
 #endif
 {
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+  if(!(bFMD && (ePartSize == SIZE_2Nx2N)))  //have  motion estimation or merge check
+  {
+#endif
   UChar uhDepth = rpcTempCU->getDepth( 0 );
 #if H_3D_ARP
   Int iLayerId    = rpcTempCU->getSlice()->getLayerId();
@@ -1942,7 +2080,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
+  m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bFMD, false, bUseMRG );
+#else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, bUseMRG );
+#endif
 #else  
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth] );
 #endif
@@ -2002,10 +2144,49 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   else
 #endif
   rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
+#if LGE_INTER_SDC_E0156
+  TComDataCU *rpcTempCUPre = rpcTempCU;
+#endif
+  xCheckDQP( rpcTempCU );
+  xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+#if LGE_INTER_SDC_E0156
+  if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() )
+  {
+    if( rpcTempCU != rpcTempCUPre )
+    {
+      Int orgQP = rpcBestCU->getQP( 0 );
+      rpcTempCU->initEstData( uhDepth, orgQP );
+      rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
+    }
+    rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
+    rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
+    rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
+#if H_3D_VSO // M3
+    if( m_pcRdCost->getUseRenModel() )
+    {
+      UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth ( );
+      UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight( );
+      Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( );
+      UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
+      m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+    }
+#endif
+
+    m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
+      m_ppcOrigYuv[uhDepth],
+      ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth],
+      m_ppcResiYuvTemp[uhDepth],
+      m_ppcRecoYuvTemp[uhDepth],
+      uhDepth );
 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+  }
+#endif
 #if H_3D_ARP
+  }
+#endif
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
   }
 #endif
 }

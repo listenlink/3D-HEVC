@@ -157,6 +157,10 @@ public:
 #if H_3D_IC
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
+#if LGE_INTER_SDC_E0156
+  Void codeInterSDCFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   
@@ -259,6 +263,11 @@ private:
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
   ContextModel3DBuffer m_cSDCResidualSCModel;
 #endif
+#endif
+#if LGE_INTER_SDC_E0156
+  ContextModel3DBuffer m_cInterSDCFlagSCModel;
+  ContextModel3DBuffer m_cInterSDCResidualSCModel;
+  ContextModel3DBuffer m_cInterSDCResidualSignFlagSCModel;
 #endif
 };
 
