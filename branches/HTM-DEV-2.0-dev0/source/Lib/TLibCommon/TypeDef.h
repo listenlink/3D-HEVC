@@ -100,6 +100,23 @@
                                               // MTK_D0156
                                               // MERL_D0166: Reference view selection in NBDV & Bi-VSP
                                               // MERL_C0152: Basic VSP
+
+#define NBDV_DEFAULT_VIEWIDX_BUGFIX       1  // Bug fix for invalid default view index for NBDV
+#define MTK_RVS_BUGFIX_E0172              1  // Bug fix for issues caused by reference view selection, JCT3V-E0172
+#if MTK_RVS_BUGFIX_E0172
+#define MTK_DVMCP_FIX_E0172                  1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
+#define MTK_VSP_FIX_ALIGN_WD_E0172           1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172, using an implementation aligned with WD
+#if !MTK_VSP_FIX_ALIGN_WD_E0172
+#define MTK_VSP_FIX_E0172                    1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172
+#endif
+#define MTK_DIVMC_FIX_E0172                  1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
+#define MTK_NBDV_TN_FIX_E0172                1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
+#endif
+#define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1   // Bugfix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
+#if H_3D_NBDV_REF
+#define NTT_DoNBDV_VECTOR_CLIP_E0141      1   // disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
+#define SEC_SIMPLIFIED_NBDV_E0142         1   // Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
+#endif
 #endif
 #define H_3D_VSP                          1   // View synthesis prediction
                                               // MERL_C0152: Basic VSP
@@ -134,7 +151,11 @@
                                               // LGE_CONCATENATE_D0141
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
-
+#define H_3D_FIX                             1
+#if H_3D_FIX
+#define H_3D_BVSP_FIX                        1  //DV from NBDV instead of DoNBDV should be used
+#define FIX036                               1  // fix for ticket #36
+#endif
 #endif 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -155,12 +176,22 @@
 #endif
 ////   ****** Neighbouring block-based Disparity Vector  *********
 #if H_3D_NBDV
+#if SEC_SIMPLIFIED_NBDV_E0142
+#define DVFROM_LEFT                       0
+#define DVFROM_ABOVE                      1
+#define IDV_CANDS                         2
+#else
 #define DVFROM_LEFTBELOW                  0
 #define DVFROM_LEFT                       1
 #define DVFROM_ABOVERIGHT                 2
 #define DVFROM_ABOVE                      3
 #define DVFROM_ABOVELEFT                  4
 #define IDV_CANDS                         5
+#endif
+#endif
+////   **** Inter-view motion prediction for merge        *********
+#if H_3D_IV_MERGE
+#define QC_INRIA_MTK_MRG_E0126            1   // additional merge candidates JCT3V-E0126
 #endif
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
@@ -186,6 +217,14 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
+
+#define NTT_VSP_COMMON_E0207_E0208        1 // common part of JCT3V-E0207 and JCT3V-E0208
+#if NTT_VSP_COMMON_E0207_E0208
+#define NTT_VSP_DC_BUGFIX_E0208           1 // bugfix for sub-PU based DC in VSP, JCT3V-E0208
+#define NTT_VSP_VECTOR_CLIP_E0208         1 // disparity vector clipping on fetching depth map in VSP, JCT3V-E0208
+#define NTT_VSP_ADAPTIVE_SPLIT_E0207      1 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
+#endif
+
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +436,11 @@ typedef       Int             TCoeff;     ///< transform coefficient
 typedef       Int64           RMDist;     ///< renderer model distortion
 
 #if H_3D_VSO_DIST_INT
+#if FIX036
+typedef       Int64            Dist;       ///< RDO distortion
+#else
 typedef       Int              Dist;       ///< RDO distortion
+#endif
 typedef       Int64            Dist64; 
 #define       RDO_DIST_MIN     MIN_INT
 #define       RDO_DIST_MAX     MAX_INT

@@ -57,6 +57,9 @@ private:
   Bool  m_bIDV;       
   Short m_iIDVHor;    
   Short m_iIDVVer;   
+#if MTK_DVMCP_FIX_E0172
+  Short m_iIDVVId;  //view index of the IDV
+#endif
 #endif
 public:
   
@@ -71,6 +74,9 @@ public:
   , m_bIDV(false)
   , m_iIDVHor(0)
   , m_iIDVVer(0)
+#if MTK_DVMCP_FIX_E0172
+  , m_iIDVVId(0) 
+#endif
 #endif
   {
   }
@@ -82,6 +88,9 @@ public:
   , m_bIDV(false)
   , m_iIDVHor(0)
   , m_iIDVVer(0)
+#if MTK_DVMCP_FIX_E0172
+  , m_iIDVVId(0) 
+#endif
 #endif
   {
   }
@@ -96,12 +105,18 @@ public:
   Void  setZero   ()                            { m_iHor = m_iVer = 0;  
  #if H_3D_NBDV
    m_bIDV = false; m_iIDVHor = m_iIDVVer = 0;
+#if MTK_DVMCP_FIX_E0172
+   m_iIDVVId = 0; 
+#endif
 #endif
   }
 #if H_3D_NBDV
   Void   setIDVHor  (Short i)                    {m_iIDVHor = i;}
   Void   setIDVVer  (Short i)                    {m_iIDVVer = i;}
   Void   setIDVFlag (Bool b )                    {m_bIDV    = b;}
+#if MTK_DVMCP_FIX_E0172
+  Void   setIDVVId  (Short i)                    {m_iIDVVId = i;}
+#endif
 #endif
   // ------------------------------------------------------------------------------------------------------------------
   // get
@@ -115,6 +130,9 @@ public:
   Short getIDVHor () const { return m_iIDVHor;       }
   Short getIDVVer () const { return m_iIDVVer;       }
   Bool  getIDVFlag() const { return m_bIDV;          }
+#if MTK_DVMCP_FIX_E0172
+  Short getIDVVId () const { return m_iIDVVId;       }
+#endif
 #endif
   // ------------------------------------------------------------------------------------------------------------------
   // operations
