@@ -76,6 +76,12 @@ typedef struct _IDVCand // IDV
   Bool   m_bFound;                                
 } IDVInfo;
 #endif
+#if MTK_VSP_FIX_ALIGN_WD_E0172
+typedef struct _InheritedVSPDisCand 
+{
+  DisInfo m_acDvInfo;
+} InheritedVSPDisInfo;
+#endif
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================

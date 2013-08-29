@@ -158,6 +158,18 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
     rpcPic->setNumDdvCandPics(rpcPic->getDisCandRefPictures(iColPoc));
   }
 #endif
+#if MTK_NBDV_TN_FIX_E0172 
+  if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
+  {
+    rpcPic->checkTemporalIVRef();
+  }
+#endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+  if(pcSlice->getIsDepth())
+  {
+    rpcPic->checkTextureRef();
+  }
+#endif
 #if H_3D
   pcSlice->setDepthToDisparityLUTs(); 
 #endif
