@@ -1032,6 +1032,24 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
           {
             for ( ; iInterPolPos <= xCeil (iShiftedPos ) -1 ; iInterPolPos++)
             {
+#if H_3D_FIX_REN
+              if ( ( iInterPolPos >= 0 ) && ( iInterPolPos < iOutputWidth ) )
+              {
+                if( pcFilledData[iInterPolPos] == REN_IS_HOLE )
+                {               
+                  Int iNextPos = std::min(iInputWidth-1,iPosX + iStep); 
+                  Int iPosXBG  = ( std::abs( pcDepthData[iNextPos] - pcDepthData[iPosX] ) > 5  ) ? iPosX : iNextPos; 
+                  for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
+                  {
+                    apcOutputData[uiCurPlane][iInterPolPos]  = apcInputData[uiCurPlane][iPosXBG];
+                  }
+                }
+                else
+                {
+                  pcFilledData[iInterPolPos] = REN_IS_HOLE + 1; 
+                }
+              }
+#else
               for( UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++)
               {
                 if ( ( iInterPolPos >= 0 ) && ( iInterPolPos < iOutputWidth ) )
@@ -1039,6 +1057,7 @@ Void TRenTop::xShiftPlanePixels8Tap( PelImagePlane** apcInputPlanes, PelImagePla
                   apcOutputData[uiCurPlane][iInterPolPos]  = apcInputData[uiCurPlane][iPosX];
                 }
               }
+#endif
             }
           }
         }
@@ -1284,7 +1303,11 @@ Void TRenTop::xCreateAlphaMapPlane(PelImagePlane** apcFilledPlanes,  PelImagePla
         }
         else
         {
+#if H_3D_FIX_REN
+          pcAlphaData[iXPos] = pcFilledData[iXPos];
+#else
           pcAlphaData[iXPos] = REN_IS_FILLED;
+#endif
         }
       }
       pcAlphaData    += iAlphaStride;

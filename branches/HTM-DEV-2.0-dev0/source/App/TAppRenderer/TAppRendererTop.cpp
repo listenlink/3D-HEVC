@@ -475,10 +475,18 @@ Void TAppRendererTop::go()
   case 10:
     renderUsedPelsMap( );
       break;
-
   default:
     AOT(true);
   }
+
+#if H_3D_FIX_REN_WARNING
+  Double dMaxDispDiff = m_cCameraData.getMaxShiftDeviation(); 
+
+  if ( !(dMaxDispDiff < 0) )
+  {  
+    printf("\n Max. possible shift error: %12.3f samples.\n", dMaxDispDiff );
+  }
+#endif
 }
 
 #if H_3D_VSO
@@ -936,8 +944,6 @@ Void TAppRendererTop::renderUsedPelsMap( )
 
   while ( ( ( iNumOfRenderedFrames < m_iFramesToBeRendered ) || ( m_iFramesToBeRendered == 0 ) ) && !bAnyEOS )
   {
-
-
     if ( iFrame >= m_iFrameSkip )
     {      
       // read in depth and video

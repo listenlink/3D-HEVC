@@ -66,6 +66,9 @@ private:
   Bool                m_bSetupFromCoded;                      ///< setup from coded parameter file
   Bool                m_bCamParsCodedPrecSet;                 ///< Coded Cam Para precision set for current frame;
   
+#if H_3D_FIX_REN_WARNING
+  Double              m_dMaxShiftDeviation;                   ///< Maximum deviation of shifts with integer precision compare to double precision
+#endif
   //SAIT_VSO_EST_A0033
   Double              m_dDispCoeff;
 
@@ -179,6 +182,9 @@ public:
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
+#if H_3D_FIX_REN_WARNING
+  Double              getMaxShiftDeviation      () { return m_dMaxShiftDeviation; }; 
+#endif
 
 #if H_3D_VSO
   // SAIT_VSO_EST_A033
