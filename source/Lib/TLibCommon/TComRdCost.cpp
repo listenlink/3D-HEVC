@@ -604,7 +604,11 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Pel* piCur
 
     dist = (Dist) (iDWeight * distDepth + iVSOWeight * dist ) / ( iDWeight + iVSOWeight);
   }
+#if H_3D_FIX_UINT_WARNING
+  return (UInt) dist; 
+#else
   return dist; 
+#endif
 
 }
 #endif

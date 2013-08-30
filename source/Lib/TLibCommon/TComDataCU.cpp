@@ -3403,7 +3403,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         derivedViewId = m_pcSlice->getRefPic(eRefPicList, i)->getViewId(); 
 #endif
         iRefListIdY = 1 - iRefListIdX;
-#if H_3D_BVSP_FIX
+#if H_3D_FIX_BVSP
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acNBDV, i );
 #else
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acDoNBDV, i );
@@ -3427,7 +3427,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         refViewAvailFlag = true;
         predFlag[iRefListIdY] = 1;
 #if MTK_VSP_FIX_E0172 || MTK_VSP_FIX_ALIGN_WD_E0172
-#if H_3D_BVSP_FIX
+#if H_3D_FIX_BVSP
         TComMv  cMv = pDInfo->m_acNBDV;
 #else
         TComMv  cMv = pDInfo->m_acDoNBDV;
@@ -3446,7 +3446,7 @@ inline Bool TComDataCU::xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInf
         clipMv( cMv );
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( cMv, i );
 #else
-#if H_3D_BVSP_FIX
+#if H_3D_FIX_BVSP
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acNBDV, i );
 #else
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdY].setMvField( pDInfo->m_acDoNBDV, i );

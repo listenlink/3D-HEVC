@@ -840,9 +840,11 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
 
   Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_uiCamParsCodedPrecision + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
   Int     iLog2DivChroma = iLog2DivLuma + 1;
+#if !H_3D_FIX_REN_WARNING
   Double  dMaxDispDev    = 0.0;
   Double  dMaxRndDispDvL = 0.0;
   Double  dMaxRndDispDvC = 0.0;
+#endif
   for( UInt uiSourceView = 0; uiSourceView < uiNumberSourceViews; uiSourceView++ )
   {
     for( UInt uiTargetView = 0; uiTargetView < uiNumberTargetViews; uiTargetView++ )
@@ -884,16 +886,22 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
 
         // integer-valued look-up tables
         Int64   iTempScale      = (Int64)uiDepthValue * iScale;
+#if !H_3D_FIX_REN_WARNING        
         Int64   iTestScale      = ( iTempScale + iOffset       );   // for checking accuracy of camera parameters
+#endif
         Int64   iShiftLuma      = ( iTempScale + iOffsetLuma   ) >> iLog2DivLuma;
         Int64   iShiftChroma    = ( iTempScale + iOffsetChroma ) >> iLog2DivChroma;
         raiLUT[ uiSourceView ][ uiTargetView ][ 0 ][ uiDepthValue ] = (Int)iShiftLuma;
         raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = (Int)iShiftChroma;
 
         // maximum deviation
+#if H_3D_FIX_REN_WARNING        
+        m_dMaxShiftDeviation = std::max( m_dMaxShiftDeviation, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) / Double( 1 << m_iLog2Precision ) );        
+#else
         dMaxDispDev     = std::max( dMaxDispDev,    fabs( Double( (Int) iTestScale   ) - dShiftLuma * Double( 1 << iLog2DivLuma ) ) / Double( 1 << iLog2DivLuma ) );
         dMaxRndDispDvL  = std::max( dMaxRndDispDvL, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) );
         dMaxRndDispDvC  = std::max( dMaxRndDispDvC, fabs( Double( (Int) iShiftChroma ) - dShiftChroma ) );
+#endif
       }
 
       radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
@@ -903,6 +911,7 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
     }
   }
 
+#if !H_3D_FIX_REN_WARNING
   // check maximum deviation
   Double  dMaxAllowedDispDev    =       Double( 1 << m_iLog2Precision ) / Double( 1 << m_uiCamParsCodedPrecision );       //  counting only the impact of camera parameter rounding
   Double  dMaxAllowedRndDispDvL = 0.5 + Double( 1 << m_iLog2Precision ) / Double( 1 << m_uiCamParsCodedPrecision );       // final rounding and impact of camera parameter rounding
@@ -924,6 +933,7 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
       std::cout << "   max rnd chroma disp diff is " << dMaxRndDispDvC << " (allowed: " << dMaxAllowedRndDispDvC << ")" << std::endl;
     }
   }
+#endif
 }
 
 Void
@@ -1025,6 +1035,9 @@ TAppComCamPara::TAppComCamPara()
   m_bSetupFromCoded           = false;
   m_bCamParsCodedPrecSet      = false;
 
+#if H_3D_FIX_REN_WARNING
+  m_dMaxShiftDeviation        = -1; 
+#endif
 
 }
 

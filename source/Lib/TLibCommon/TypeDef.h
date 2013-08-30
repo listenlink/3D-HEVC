@@ -196,9 +196,11 @@
 #endif
 
 /// FIXES
-#define H_3D_BVSP_FIX                     1  //DV from NBDV instead of DoNBDV should be used
-#define FIX036                            1  // fix for ticket #36
-
+#define H_3D_FIX_BVSP                     1  // DV from NBDV instead of DoNBDV should be used
+#define H_3D_FIX_TICKET_036               1  // fix for ticket #36
+#define H_3D_FIX_REN                      1  // fix of erroneous inpainting for renderer
+#define H_3D_FIX_REN_WARNING              1  // fix of warning related to camera parameter precision
+#define H_3D_FIX_UINT_WARNING             1  // explicit in VSD
 #endif // H_3D
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -474,7 +476,7 @@ typedef       Int             TCoeff;     ///< transform coefficient
 typedef       Int64           RMDist;     ///< renderer model distortion
 
 #if H_3D_VSO_DIST_INT
-#if FIX036
+#if H_3D_FIX_TICKET_036
 typedef       Int64            Dist;       ///< RDO distortion
 #else
 typedef       Int              Dist;       ///< RDO distortion
