@@ -66,7 +66,7 @@ private:
   Bool                m_bSetupFromCoded;                      ///< setup from coded parameter file
   Bool                m_bCamParsCodedPrecSet;                 ///< Coded Cam Para precision set for current frame;
   
-#if H_3D_FIX_REN_WARNING
+#if H_3D_REN_MAX_DEV_OUT
   Double              m_dMaxShiftDeviation;                   ///< Maximum deviation of shifts with integer precision compare to double precision
 #endif
   //SAIT_VSO_EST_A0033
@@ -128,6 +128,10 @@ protected:
   Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
   Void  xSetupBaseViewsFromCoded  ();
   Void  xSetupBaseViews           ( Char* pchBaseViewNumbers, UInt uiNumBaseViews );
+#if H_3D_FIX_REN_WARNING
+  Bool  xIsIn                     ( std::vector<Int>& rVec, Int iNumber);
+#endif
+
 
   // functions for getting and setting scales and offsets
   Bool  xGetShiftParameterReal    ( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Bool bExternal, Bool bByIdx, Double& rdScale, Double& rdOffset );
@@ -182,7 +186,7 @@ public:
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
-#if H_3D_FIX_REN_WARNING
+#if H_3D_REN_MAX_DEV_OUT
   Double              getMaxShiftDeviation      () { return m_dMaxShiftDeviation; }; 
 #endif
 
@@ -216,8 +220,6 @@ public:
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
 };
-
-
 
 
 
