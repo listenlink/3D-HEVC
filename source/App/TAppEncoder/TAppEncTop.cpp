@@ -767,6 +767,15 @@ Void TAppEncTop::encode()
   
   printRateSummary();
 
+#if H_3D_REN_MAX_DEV_OUT
+  Double dMaxDispDiff = m_cCameraData.getMaxShiftDeviation(); 
+
+  if ( !(dMaxDispDiff < 0) )
+  {  
+    printf("\n Max. possible shift error: %12.3f samples.\n", dMaxDispDiff );
+  }
+#endif
+
   return;
 }
 
