@@ -31,6 +31,7 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+
 #include "TRenImage.h"
 #include "TRenTop.h"
 
@@ -38,6 +39,8 @@
 #include <iostream>
 #include <math.h>
 #include "../TLibCommon/CommonDef.h"
+#if H_3D
+
 
 Void TRenTop::xGetDataPointers( PelImage*& rpcInputImage, PelImage*& rpcOutputImage, PelImage*& rpcInputDepth, PelImage*& rpcOutputDepth, PelImage*& rpcFilled, Bool bRenderDepth )
 {
@@ -1587,17 +1590,18 @@ Void TRenTop::xEnhSimilarity( PelImage* pcLeftImage, PelImage* pcRightImage, Pel
 
 Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImagePlane** apcRightPlane, PelImagePlane* pcFilledLeftPlane, PelImagePlane* pcFilledRightPlane, UInt uiNumberOfPlanes )
 {
+  AOF( g_bitDepthC == g_bitDepthY ); 
   AOT( m_iSimEnhBaseView != 1 && m_iSimEnhBaseView != 2 );
   Int iWidth  = (*apcRightPlane)->getWidth ();
   Int iHeight = (*apcRightPlane)->getHeight();
 
-  Int* aiHistLeft  = new Int[ g_uiIBDI_MAX + 1 ];
-  Int* aiHistRight = new Int[ g_uiIBDI_MAX + 1 ];
-  Pel* aiConvLUT   = new Pel[ g_uiIBDI_MAX + 1 ];
+  Int* aiHistLeft  = new Int[ ((Int64)1 ) << g_bitDepthY ];
+  Int* aiHistRight = new Int[ ((Int64)1 ) << g_bitDepthY ];
+  Pel* aiConvLUT   = new Pel[ ((Int64)1 ) << g_bitDepthY ];
 
   for (UInt uiCurPlane = 0; uiCurPlane < uiNumberOfPlanes; uiCurPlane++ )
   {
-    for (Int iCurVal = 0 ; iCurVal <= g_uiIBDI_MAX; iCurVal++)
+    for (Int iCurVal = 0 ; iCurVal < ( 1 << g_bitDepthY ); iCurVal++)
     {
       aiHistLeft [iCurVal] = 0;
       aiHistRight[iCurVal] = 0;
@@ -1644,22 +1648,22 @@ Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImage
     Int iCheckSumLeft  = 0;
     Int iCheckSumRight = 0;
 
-    for (Int iCurVal = 0 ; iCurVal <= g_uiIBDI_MAX; iCurVal++)
+    for (Int iCurVal = 0 ; iCurVal < ( 1 << g_bitDepthY ); iCurVal++)
     {
       iCheckSumLeft  += aiHistLeft [iCurVal];
       iCheckSumRight += aiHistRight[iCurVal];
     }
 
 
-    while( iCurChangeVal <= g_uiIBDI_MAX )
+    while( iCurChangeVal < ( 1 << g_bitDepthY ) )
     {
       if ( iCumSumBase == iCumSumChange )
       {
-        aiConvLUT[iCurChangeVal] = Min(iCurBaseVal, g_uiIBDI_MAX);
+        aiConvLUT[iCurChangeVal] = std::min( iCurBaseVal,  ( 1 << g_bitDepthY ) - 1 );
         iCurBaseVal  ++;
         iCurChangeVal++;
         iCumSumChange += aiHistChange[iCurChangeVal];
-        if (iCurBaseVal <= g_uiIBDI_MAX )
+        if (iCurBaseVal <  ( 1 << g_bitDepthY ) )
         {
           iCumSumBase   += aiHistBase  [iCurBaseVal]  ;
         }
@@ -1667,14 +1671,14 @@ Void TRenTop::xEnhSimilarityPlane       ( PelImagePlane** apcLeftPlane, PelImage
       else if ( iCumSumBase < iCumSumChange )
       {
         iCurBaseVal++;
-        if (iCurBaseVal <= g_uiIBDI_MAX )
+        if (iCurBaseVal < ( 1 << g_bitDepthY ) )
         {
           iCumSumBase   += aiHistBase  [iCurBaseVal]  ;
         }
       }
       else if ( iCumSumBase > iCumSumChange)
       {
-        aiConvLUT[iCurChangeVal] = Min(iCurBaseVal, g_uiIBDI_MAX);
+        aiConvLUT[iCurChangeVal] = std::min(iCurBaseVal, ( 1 << g_bitDepthY )-1);
         iCurChangeVal++;
         iCumSumChange += aiHistChange  [iCurChangeVal]  ;
       }
@@ -1883,6 +1887,7 @@ Void TRenTop::xBlendPlanesAvg( PelImagePlane** apcLeftPlane, PelImagePlane** apc
 // Temporal Filter from Zhejiang University: (a little different from m16041: Temporal Improvement Method in View Synthesis)
 Void TRenTop::temporalFilterVSRS( TComPicYuv* pcPicYuvVideoCur, TComPicYuv* pcPicYuvDepthCur, TComPicYuv* pcPicYuvVideoLast, TComPicYuv* pcPicYuvDepthLast, Bool bFirstFrame )
 {
+  AOF( g_bitDepthY == g_bitDepthC ); 
   Int iSADThres  = 100 ;  //threshold of sad in 4*4 block motion detection
 
   Int iWidth  = m_auiInputResolution[0];
@@ -1949,7 +1954,7 @@ Void TRenTop::temporalFilterVSRS( TComPicYuv* pcPicYuvVideoCur, TComPicYuv* pcPi
             for( Int iCurPosX = 0; iCurPosX < 4; iCurPosX++)
             { //Weight: 0.75
               Int iFilt = (( (pcDepthLastDataBlk[iCurPosX] << 1 ) + pcDepthLastDataBlk[iCurPosX] + pcDepthCurDataBlk[iCurPosX] + 2 ) >> 2 );
-              assert( (iFilt >= 0) && (iFilt <=  g_uiIBDI_MAX) );
+              assert( (iFilt >= 0) && (iFilt <  ( 1 << g_bitDepthY ) ) );
               pcDepthCurDataBlk[iCurPosX] = pcDepthLastDataBlk[iCurPosX];
               pcDepthCurDataBlk[iCurPosX] = iFilt;
             }
@@ -2220,3 +2225,5 @@ TRenTop::~TRenTop()
   // Zheijang temporal filter
   if(m_aiBlkMoving         != NULL ) delete[] m_aiBlkMoving;
 }
+#endif // H_3D
+

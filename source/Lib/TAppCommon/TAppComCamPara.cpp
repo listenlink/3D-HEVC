@@ -48,7 +48,7 @@
 #include <algorithm>
 #include <functional>
 #include <string>
-
+#if H_3D
 
 
 Void
@@ -57,8 +57,8 @@ TAppComCamPara::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews,
   AOF( m_uiBitDepthForLUT == 8 );
   AOF( radShiftParams == NULL && raiShiftParams == NULL && radLUT == NULL && raiLUT == NULL );
 
-  uiNumberSourceViews = Max( 1, uiNumberSourceViews );
-  uiNumberTargetViews = Max( 1, uiNumberTargetViews );
+  uiNumberSourceViews = std::max( (UInt) 1, uiNumberSourceViews );
+  uiNumberTargetViews = std::max( (UInt) 1, uiNumberTargetViews );
 
   radShiftParams = new Double** [ uiNumberSourceViews ];
   raiShiftParams = new Int64 ** [ uiNumberSourceViews ];
@@ -891,9 +891,9 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
         raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = (Int)iShiftChroma;
 
         // maximum deviation
-        dMaxDispDev     = Max( dMaxDispDev,    fabs( Double( (Int) iTestScale   ) - dShiftLuma * Double( 1 << iLog2DivLuma ) ) / Double( 1 << iLog2DivLuma ) );
-        dMaxRndDispDvL  = Max( dMaxRndDispDvL, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) );
-        dMaxRndDispDvC  = Max( dMaxRndDispDvC, fabs( Double( (Int) iShiftChroma ) - dShiftChroma ) );
+        dMaxDispDev     = std::max( dMaxDispDev,    fabs( Double( (Int) iTestScale   ) - dShiftLuma * Double( 1 << iLog2DivLuma ) ) / Double( 1 << iLog2DivLuma ) );
+        dMaxRndDispDvL  = std::max( dMaxRndDispDvL, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) );
+        dMaxRndDispDvC  = std::max( dMaxRndDispDvC, fabs( Double( (Int) iShiftChroma ) - dShiftChroma ) );
       }
 
       radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 256 ] = radLUT[ uiSourceView ][ uiTargetView ][ 0 ][ 255 ];
@@ -964,7 +964,6 @@ TAppComCamPara::xSetPdmConversionParams()
 
   //--- determine (virtual) camera parameter shift between view order index 1 and base view (view order index 0) ---
   Double        dCamPosShift, dPicPosShift;
-  Int           iMinVOI       = (1<<30);
   Int           iMinAbsVOI    = (1<<30);
   Int           iMinAbsVOIId  = 0;
   for( Int iBaseId = 1; iBaseId < m_iNumberOfBaseViews; iBaseId++ )
@@ -972,14 +971,12 @@ TAppComCamPara::xSetPdmConversionParams()
     Int iAbsVOI = ( m_aiViewOrderIndex[ iBaseId ] < 0 ? -m_aiViewOrderIndex[ iBaseId ] : m_aiViewOrderIndex[ iBaseId ] );
     if( iAbsVOI < iMinAbsVOI )
     {
-      iMinVOI      = m_aiViewOrderIndex[ iBaseId ];
       iMinAbsVOI   = iAbsVOI;
       iMinAbsVOIId = iBaseId;
     }
   }
   AOF( iMinAbsVOIId != 0 && iMinAbsVOI != 0 );
   xGetCameraShifts( 0, iMinAbsVOIId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
-  Double  dCamPosShiftVOI01     = dCamPosShift / Double( iMinVOI );
 
   //--- determine maximum absolute camera position shift, precision, and base scale ---
   Double  dMaxAbsCamPosShift = 0.0;
@@ -990,40 +987,6 @@ TAppComCamPara::xSetPdmConversionParams()
       xGetCameraShifts( (UInt)iBaseId, (UInt)iTargetId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
       dCamPosShift        = ( dCamPosShift < 0.0                ? -dCamPosShift : dCamPosShift       );
       dMaxAbsCamPosShift  = ( dCamPosShift > dMaxAbsCamPosShift ?  dCamPosShift : dMaxAbsCamPosShift );
-    }
-  }
-  Int     iPrecision  = 0;
-#if 0 // enabling this lines might be reasonable, but produces different results for the 2 view and 3 view test cases
-  Double  dEpsilon    = 1e-15;
-  Double  dAbsCamPosShiftVOI01  = ( dCamPosShiftVOI01 < 0.0 ? -dCamPosShiftVOI01 : dCamPosShiftVOI01 );
-  Double  dShiftRatio = dMaxAbsCamPosShift / dAbsCamPosShiftVOI01 - dEpsilon;
-  for( ; (Double)( 1 << iPrecision ) < dShiftRatio; iPrecision++ );
-#endif
-  Int     iPrecShift  = iPrecision + PDM_INTER_CALC_SHIFT + PDM_VIRT_DEPTH_PRECISION - 2;
-  AOF(    iPrecShift  < PDM_INTERNAL_CALC_BIT_DEPTH );
-  Int     iScaleVOI01 = 1 << iPrecShift;
-  m_iPdmPrecision     = iPrecision;
-
-  //--- loop over target views ---
-  for( Int iTargetId = 1; iTargetId < m_iNumberOfBaseViews; iTargetId++ )
-  {
-    // set scale and offset parameters for other views
-    for( Int iBaseId = 0; iBaseId < iTargetId; iBaseId++ )
-    {
-      xGetCameraShifts( (UInt)iBaseId, (UInt)iTargetId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
-      Double  dScale      = Double( iScaleVOI01 ) * dCamPosShiftVOI01 / dCamPosShift;
-      Int     iDiv        = m_aiViewOrderIndex[ iTargetId ] - m_aiViewOrderIndex[ iBaseId ];
-      Int     iAdd        = ( iDiv > 0 ? iDiv / 2 : -iDiv / 2 );
-      Int     iScalePred  = ( iScaleVOI01 + iAdd ) / iDiv;
-      Double  dFactor     = dScale / (Double)iScalePred * pow( 2.0, PDM_LOG4_SCALE_DENOMINATOR );
-      Int     iNominator  = (Int)floor( dFactor + .5 );
-      Int     iNomDelta   = iNominator - ( 1 << PDM_LOG4_SCALE_DENOMINATOR );
-      Int     iScale      = Int( ( (Int64)iNominator * (Int64)iScalePred + (Int64)( ( 1 << PDM_LOG4_SCALE_DENOMINATOR ) >> 1 ) ) >> PDM_LOG4_SCALE_DENOMINATOR );
-      Double  dOffset     = -dPicPosShift * Double( iScale ) * pow( 2.0, 2 - PDM_OFFSET_SHIFT );
-      Int     iOffset     = (Int)floor( dOffset + .5 );
-
-      m_aaiPdmScaleNomDelta [ iTargetId ][ iBaseId ]  = iNomDelta;
-      m_aaiPdmOffset        [ iTargetId ][ iBaseId ]  = iOffset;
     }
   }
 }
@@ -1049,10 +1012,6 @@ TAppComCamPara::TAppComCamPara()
   m_aaiCodedOffset            = 0;
   m_aaiScaleAndOffsetSet      = 0;
 
-  m_iPdmPrecision             = 0;
-  m_aaiPdmScaleNomDelta       = 0;
-  m_aaiPdmOffset              = 0;
-
   m_adBaseViewShiftParameter  = 0;
   m_aiBaseViewShiftParameter  = 0;
   m_adSynthViewShiftParameter = 0;
@@ -1077,17 +1036,15 @@ TAppComCamPara::~TAppComCamPara()
   xDeleteArray( m_adBaseViewShiftLUT,        m_iNumberOfBaseViews, m_iNumberOfBaseViews,  2 );
   xDeleteArray( m_aiBaseViewShiftLUT,        m_iNumberOfBaseViews, m_iNumberOfBaseViews,  2 );
 
-  xDeleteArray( m_adSynthViewShiftParameter, m_iNumberOfBaseViews, Max(1,m_iNumberOfSynthViews));
-  xDeleteArray( m_aiSynthViewShiftParameter, m_iNumberOfBaseViews, Max(1,m_iNumberOfSynthViews));
-  xDeleteArray( m_adSynthViewShiftLUT,       m_iNumberOfBaseViews, Max(1,m_iNumberOfSynthViews), 2 );
-  xDeleteArray( m_aiSynthViewShiftLUT,       m_iNumberOfBaseViews, Max(1,m_iNumberOfSynthViews), 2 );
+  xDeleteArray( m_adSynthViewShiftParameter, m_iNumberOfBaseViews, std::max((Int) 1 ,m_iNumberOfSynthViews));
+  xDeleteArray( m_aiSynthViewShiftParameter, m_iNumberOfBaseViews, std::max((Int) 1 ,m_iNumberOfSynthViews));
+  xDeleteArray( m_adSynthViewShiftLUT,       m_iNumberOfBaseViews, std::max((Int) 1 ,m_iNumberOfSynthViews), 2 );
+  xDeleteArray( m_aiSynthViewShiftLUT,       m_iNumberOfBaseViews, std::max( (Int)1 ,m_iNumberOfSynthViews), 2 );
 
   xDeleteArray( m_aaiCodedScale,             m_iNumberOfBaseViews );
   xDeleteArray( m_aaiCodedOffset,            m_iNumberOfBaseViews );
   xDeleteArray( m_aaiScaleAndOffsetSet,      m_iNumberOfBaseViews );
 
-  xDeleteArray( m_aaiPdmScaleNomDelta,       m_iNumberOfBaseViews );
-  xDeleteArray( m_aaiPdmOffset,              m_iNumberOfBaseViews );
 }
 
 Void
@@ -1105,7 +1062,7 @@ TAppComCamPara::xSetupBaseViewsFromCoded()
       break;
 
     Int iViewOrderIdx  = (Int)( m_aadCameraParameters[ uiRow ][ 1 ] );
-    iMinViewOrderIdx   = Min( iViewOrderIdx, iMinViewOrderIdx );
+    iMinViewOrderIdx   = std::min( iViewOrderIdx, iMinViewOrderIdx );
 
     aiViewOrderIdx     .push_back( iViewOrderIdx );
     aiViewId           .push_back( (Int) m_aadCameraParameters[ uiRow ][ 0 ]  );
@@ -1120,7 +1077,6 @@ TAppComCamPara::xSetupBaseViewsFromCoded()
     m_aiBaseViews      .push_back(  aiViewOrderIdx[iCurBaseView] * ( (Int) m_dViewNumPrec) );
     m_aiBaseId2SortedId.push_back( iCurBaseView );
     m_aiBaseSortedId2Id.push_back( iCurBaseView );
-
   }
 
   m_iNumberOfBaseViews = (Int) m_aiBaseViews.size();
@@ -1331,12 +1287,6 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
   xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet    );
   xInit2dArray  ( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiScaleAndOffsetSet, 0 );
 
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmScaleNomDelta     );
-  xCreate2dArray( (UInt)m_iNumberOfBaseViews, (UInt)m_iNumberOfBaseViews,  m_aaiPdmOffset            );
-
-  //===== init disparity to virtual depth conversion parameters =====
-  xSetPdmConversionParams();
-
   //===== init arrays for first frame =====
   xSetShiftParametersAndLUT( m_uiFirstFrameId );
 }
@@ -1384,6 +1334,8 @@ TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
       }
     }
 
+    Bool bInterpolateFirst = true; 
+    Bool bAnyInterpolated  = false; 
     for( UInt uiERView = 0; uiERView < m_aiSynthViews.size() && !m_bSetupFromCoded; uiERView++ )
     {
       Bool bInterpolated = false;
@@ -1393,11 +1345,20 @@ TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
         xGetGeometryData( m_aiSynthViews[ uiERView ], uiFrame, dDummy, dDummy, dDummy, bInterpolatedCur );
         bInterpolated |= bInterpolatedCur;
       }
+      
       if( bInterpolated )
       {
-        std::cout << "Interpolating Camera Parameters for View " << (Double)m_aiSynthViews[ uiERView ] / m_dViewNumPrec << std::endl;
+        bAnyInterpolated = true; 
+        if ( bInterpolateFirst ) 
+        {
+          std::cout << "Interpolating Camera Parameters for View(s) " ; 
+            bInterpolateFirst = false; 
+        }          
+        std::cout << (Double)m_aiSynthViews[ uiERView ] / m_dViewNumPrec << " " ; 
       }
     }
+    if ( bAnyInterpolated )
+      std::cout << std::endl;
   }
 
   if( bCheckViewRange )
@@ -1432,9 +1393,9 @@ TAppComCamPara::update( UInt uiFrameId )
   }
 }
 
-#if SAIT_VSO_EST_A0033
+#if H_3D_VSO
 Void
-TAppComCamPara::xSetDispCoeff( UInt uiFrameId, Int iViewIdx )
+TAppComCamPara::setDispCoeff( UInt uiFrameId, Int iViewIdx )
 {
   UInt uiFrame = m_uiFirstFrameId + uiFrameId;
   Int  iSourceViewNum = m_aiBaseViews[ iViewIdx ];
@@ -1452,7 +1413,7 @@ TAppComCamPara::xSetDispCoeff( UInt uiFrameId, Int iViewIdx )
     xGetGeometryData( iSourceViewNum, uiFrame, dFL1, dCP1, dCS1, bInterpolated );
     xGetZNearZFar   ( iSourceViewNum, uiFrame, dZN1, dZF1 );
 
-    dBaseLine = ( Max( dPos[0], Max( dPos[1], dPos[2] ) ) - Min( dPos[0], Min( dPos[1], dPos[2] ) ) ) / 2.0;
+    dBaseLine = ( std::max( dPos[0], std::max( dPos[1], dPos[2] ) ) - std::min( dPos[0], std::min( dPos[1], dPos[2] ) ) ) / 2.0;
   }
   else if( m_iNumberOfBaseViews == 2 )
   {
@@ -1464,7 +1425,6 @@ TAppComCamPara::xSetDispCoeff( UInt uiFrameId, Int iViewIdx )
 
     dBaseLine = dPos[0] - dPos[1];
   }
-
 
   m_dDispCoeff = fabs( dFL1 * ( dBaseLine / 2.0 ) / 255.0 * ( 1.0/dZN1 - 1.0/dZF1 ) );
 }
@@ -1509,3 +1469,4 @@ TAppComCamPara::synthRelNum2Idx( Int iRelNum )
 {
   return xGetViewId(m_aiRelSynthViewsNum, iRelNum );
 }
+#endif

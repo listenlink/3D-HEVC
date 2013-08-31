@@ -36,6 +36,8 @@
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
 #include "assert.h"
+#if H_3D
+
 
 template<typename T>
 TRenImage<T>::TRenImage( TRenImage& rcIn )
@@ -230,7 +232,7 @@ Void TRenImage<T>::init()
 
   for (UInt uiCurPlane = 1; uiCurPlane < m_uiNumberOfPlanes; uiCurPlane++)
   {
-    m_apcPlanes[uiCurPlane]->assign( (Pel) ((g_uiIBDI_MAX+1) >> 1) );
+    m_apcPlanes[uiCurPlane]->assign( (Pel) ( 1 << ( g_bitDepthC - 1 ) ) );
   }
 }
 
@@ -269,3 +271,4 @@ template class TRenImage<Bool>;
 
 template Void TRenImage<Pel>::assign<Pel>    (TRenImage<Pel>*   );
 
+#endif // H_3D
