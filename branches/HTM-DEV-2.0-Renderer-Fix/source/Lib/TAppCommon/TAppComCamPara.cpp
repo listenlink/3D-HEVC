@@ -615,7 +615,11 @@ Void
 TAppComCamPara::xGetGeometryData( Int iView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated )
 {
   UInt uiFoundLine = -1;
+#if H_3D_FIX_REN_WARNING
+  if ( !xGetCameraDataRow( iView, uiFrame, uiFoundLine ) && xIsIn( m_aiSortedBaseViews, iView ))
+#else  
   if ( !xGetCameraDataRow( iView, uiFrame, uiFoundLine ) )
+#endif
   {
     AOT( m_aadCameraParameters[ uiFoundLine ].size() < 6 );
     rbInterpolated = false;
@@ -631,12 +635,20 @@ TAppComCamPara::xGetGeometryData( Int iView, UInt uiFrame, Double& rdFocalLength
     Int  iRightView;
     Int  iDummy;
 
+#if H_3D_FIX_REN_WARNING
+    if( !xGetLeftRightView( iView, m_aiSortedBaseViews, iLeftView, iRightView, iDummy, iDummy ) ||
+#else
     if( !xGetLeftRightView( iView, m_aiViewsInCfgFile, iLeftView, iRightView, iDummy, iDummy ) ||
+#endif
          xGetCameraDataRow( iLeftView,  uiFrame, uiLeftViewLine  )                             ||
          xGetCameraDataRow( iRightView, uiFrame, uiRightViewLine )
       )
     {
+#if H_3D_FIX_REN_WARNING
+      std::cerr << "No left or no right base view next to view " << (Double)iView / m_dViewNumPrec << " for Frame " << uiFrame << " given in CameraParameterFile" << std::endl;
+#else
       std::cerr << "No Left or no Right View next to View " << (Double)iView / m_dViewNumPrec << " for Frame " << uiFrame << " given in CameraParameterFile" << std::endl;
+#endif
       AOT(true);
       exit( EXIT_FAILURE );
     }
@@ -891,6 +903,9 @@ TAppComCamPara::xSetShiftParametersAndLUT( UInt uiNumberSourceViews, UInt uiNumb
         raiLUT[ uiSourceView ][ uiTargetView ][ 1 ][ uiDepthValue ] = (Int)iShiftChroma;
 
         // maximum deviation
+#if H_3D_REN_MAX_DEV_OUT
+        m_dMaxShiftDeviation = std::max( m_dMaxShiftDeviation, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) / Double( 1 << m_iLog2Precision ) );        
+#endif
         dMaxDispDev     = std::max( dMaxDispDev,    fabs( Double( (Int) iTestScale   ) - dShiftLuma * Double( 1 << iLog2DivLuma ) ) / Double( 1 << iLog2DivLuma ) );
         dMaxRndDispDvL  = std::max( dMaxRndDispDvL, fabs( Double( (Int) iShiftLuma   ) - dShiftLuma   ) );
         dMaxRndDispDvC  = std::max( dMaxRndDispDvC, fabs( Double( (Int) iShiftChroma ) - dShiftChroma ) );
@@ -1025,6 +1040,9 @@ TAppComCamPara::TAppComCamPara()
   m_bSetupFromCoded           = false;
   m_bCamParsCodedPrecSet      = false;
 
+#if H_3D_REN_MAX_DEV_OUT
+  m_dMaxShiftDeviation        = -1; 
+#endif
 
 }
 
@@ -1333,6 +1351,26 @@ TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
 
       }
     }
+#if H_3D_FIX_REN_WARNING
+    Bool bIgnoreFirst = true;     
+    for( UInt uiERView = 0; uiERView < m_aiSynthViews.size() && !m_bSetupFromCoded; uiERView++ )
+    {
+      if ( xIsIn(m_aiViewsInCfgFile, m_aiSynthViews[ uiERView ] ) )
+      {
+        if ( bIgnoreFirst )
+        {
+          std::cout << "Ignoring CameraParameterFile entries for virtual view(s): " ;
+          //GT: Integer precision virtual view camera parameters are always interpolated from coded views camera parameters.
+          bIgnoreFirst = false; 
+        }
+        std::cout << (Double)m_aiSynthViews[ uiERView ] / m_dViewNumPrec << " " ; 
+      }
+    }
+    if ( !bIgnoreFirst )
+    {
+      std::cout << std::endl; 
+    }
+#endif
 
     Bool bInterpolateFirst = true; 
     Bool bAnyInterpolated  = false; 
@@ -1351,7 +1389,11 @@ TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
         bAnyInterpolated = true; 
         if ( bInterpolateFirst ) 
         {
+#if H_3D_FIX_REN_WARNING                        
+          std::cout << "Interpolating camera parameters      for virtual view(s): " ; 
+#else
           std::cout << "Interpolating Camera Parameters for View(s) " ; 
+#endif
             bInterpolateFirst = false; 
         }          
         std::cout << (Double)m_aiSynthViews[ uiERView ] / m_dViewNumPrec << " " ; 
@@ -1454,6 +1496,19 @@ TAppComCamPara::getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int
 
   return bExist;
 }
+
+#if H_3D_FIX_REN_WARNING
+Bool 
+  TAppComCamPara::xIsIn( std::vector<Int>& rVec, Int iElem) 
+{
+  Bool bFound = false; 
+  for (Int idx = 0; idx < rVec.size() && !bFound; idx++)
+  {
+    bFound = bFound || rVec[idx] == iElem; 
+  }
+  return bFound;
+}
+#endif
 
 Int TAppComCamPara::getRelDistLeft( Int iSynthViewIdx, Int iLeftViewIdx, Int iRightViewIdx )
 {
