@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,34 +57,32 @@ typedef struct _AMVPInfo
   Int    iN;                                ///< number of motion vector predictor candidates
 } AMVPInfo;
 
-// ====================================================================================================================
-#if H3D_NBDV
-typedef struct _DisCand
+#if H_3D_NBDV
+typedef struct _DisCand 
 {
-  TComMv m_acMvCand[ DIS_CANS ];            ///< array of motion vector predictor candidates
-  Int    m_aVIdxCan[ DIS_CANS ];            ///< array of motion vector predictor candidates
-#if QC_CU_NBDV_D0181 
   Bool bDV;
-#if MERL_VSP_C0152
-  TComMv m_acMvCandNoRef[ DIS_CANS ];
-#endif
-#endif
-  Int    iN;                                ///< number of motion vector predictor candidates
-#if MERL_VSP_NBDV_RefVId_Fix_D0166
-  Int    m_aListIdx[ DIS_CANS ];            ///< array of reference list of derived NBDV
-  Int    m_aRefIdx [ DIS_CANS ];            ///< array of reference frame index corresponding to either RefList0/1
-#endif
+  TComMv m_acNBDV;              // DV from NBDV
+#if H_3D_NBDV_REF 
+  TComMv m_acDoNBDV;            // DV from DoNBDV
+#endif  
+  Int    m_aVIdxCan;            // View order index (the same with the NBDV and the DoNBDV)
 } DisInfo;
 
-typedef struct _McpDisCand
+typedef struct _IDVCand // IDV
 {
-  TComMv m_acMvCand[2][ MCP_DIS_CANS ];            ///< array of motion vector predictor candidates
-  Int    m_aVIdxCan[2][ MCP_DIS_CANS ];            ///< array of motion vector predictor candidates
-  Bool   m_bAvailab[2][ MCP_DIS_CANS ];
-  Bool   m_bFound;                                 ///< number of motion vector predictor candidates
-} McpDisInfo;
-
-#endif 
+  TComMv m_acMvCand[2][ IDV_CANDS ];            
+  Int    m_aVIdxCan[2][ IDV_CANDS ];            
+  Bool   m_bAvailab[2][ IDV_CANDS ];
+  Bool   m_bFound;                                
+} IDVInfo;
+#endif
+#if MTK_VSP_FIX_ALIGN_WD_E0172
+typedef struct _InheritedVSPDisCand 
+{
+  DisInfo m_acDvInfo;
+} InheritedVSPDisInfo;
+#endif
+// ====================================================================================================================
 // Class definition
 // ====================================================================================================================
 
@@ -112,7 +110,7 @@ public:
   Int getRefIdx() const { return  m_iRefIdx;       }
   Int getHor   () const { return  m_acMv.getHor(); }
   Int getVer   () const { return  m_acMv.getVer(); }
-#if H3D_IVMP
+#if H_3D_IV_MERGE
   Bool operator== ( const TComMvField& rcMv ) const
   {
     return (m_acMv.getHor()==rcMv.getHor() && m_acMv.getVer()==rcMv.getVer() && m_iRefIdx == rcMv.getRefIdx());
@@ -185,18 +183,7 @@ public:
     m_piRefIdx = src->m_piRefIdx + offset;
   }
   
-#if HHI_MPI
-  Void compress(Char* pePredMode, UChar* puhInterDir, Int scale);
-#else
   Void compress(Char* pePredMode, Int scale); 
-#endif
-#if HHI_FULL_PEL_DEPTH_MAP_MV_ACC
-  Void decreaseMvAccuracy( Int iPartAddr, Int iNumPart, Int iShift );
-#endif
-
-#if MTK_UNCONSTRAINED_MVI_B0083
-  Void setUndefinedMv( Int iPartAddr, Int iNumPart, Char* pePredMode, UChar* puhInterDir, Int refIdx, Int InterDir );
-#endif
 };
 
 //! \}

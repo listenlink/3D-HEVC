@@ -287,7 +287,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncAdaptiveLoopFilter.cpp"
+				RelativePath="..\..\source\Lib\TLibEncoder\SyntaxElementWriter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncAnalyze.cpp"
 				>
 			</File>
 			<File
@@ -320,6 +324,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\TEncPreanalyzer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncRateCtrl.cpp"
 				>
 			</File>
 			<File
@@ -364,7 +372,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\source\Lib\TLibEncoder\TEncAdaptiveLoopFilter.h"
+				RelativePath="..\..\source\Lib\TLibEncoder\SyntaxElementWriter.h"
 				>
 			</File>
 			<File
@@ -409,6 +417,10 @@
 			</File>
 			<File
 				RelativePath="..\..\source\Lib\TLibEncoder\TEncPreanalyzer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\source\Lib\TLibEncoder\TEncRateCtrl.h"
 				>
 			</File>
 			<File

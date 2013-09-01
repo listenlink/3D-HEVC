@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file     WeightedPredAnalysis.h
-    \brief    encoder class
+/** \file     WeightPredAnalysis.h
+    \brief    weighted prediction encoder class
 */
 #ifndef __WEIGHTPREDANALYSIS__
 #define __WEIGHTPREDANALYSIS__
@@ -44,7 +44,7 @@
 class  WeightPredAnalysis
 {
   Bool m_weighted_pred_flag;
-  Int  m_weighted_bipred_idc;
+  Bool  m_weighted_bipred_flag;
   wpScalingParam  m_wp[2][MAX_NUM_REF][3];
 
   Int64   xCalcDCValueSlice(TComSlice *slice, Pel *pPel,Int *iSample);
@@ -55,8 +55,9 @@ class  WeightPredAnalysis
 
   Int64   xCalcDCValue(Pel *pPel, Int iWidth, Int iHeight, Int iStride);
   Int64   xCalcACValue(Pel *pPel, Int iWidth, Int iHeight, Int iStride, Int64 iDC);
-  Int64   xCalcSADvalueWP(Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset);
+  Int64   xCalcSADvalueWP(Int bitDepth, Pel *pOrgPel, Pel *pRefPel, Int iWidth, Int iHeight, Int iOrgStride, Int iRefStride, Int iDenom, Int iWeight, Int iOffset);
   Bool    xSelectWP(TComSlice *slice, wpScalingParam weightPredTable[2][MAX_NUM_REF][3], Int iDenom);
+  Bool    xUpdatingWPParameters(TComSlice *slice, wpScalingParam weightPredTable[2][MAX_NUM_REF][3], Int log2Denom);
 
 public:
 
@@ -65,8 +66,7 @@ public:
   // WP analysis :
   Bool  xCalcACDCParamSlice(TComSlice *slice);
   Bool  xEstimateWPParamSlice(TComSlice *slice);
-
-  Void  xStoreWPparam(Bool weighted_pred_flag, Int weighted_bipred_idc);
+  Void  xStoreWPparam(Bool weighted_pred_flag, Bool weighted_bipred_flag);
   Void  xRestoreWPparam(TComSlice *slice);
   Void  xCheckWPEnable(TComSlice *slice);
 };

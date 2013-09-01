@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,7 +39,10 @@
 typedef struct _context_md5_t {
   uint32_t buf[4];
   uint32_t bits[2];
-  unsigned char in[64];
+  union {
+    unsigned char b8[64];
+    uint32_t b32[16];
+  } in;
 } context_md5_t;
 
 #ifdef __cplusplus

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,27 +55,19 @@ struct OutputNALUnit : public NALUnit
    */
   OutputNALUnit(
     NalUnitType nalUnitType,
-    Bool nalRefFlag,
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-    unsigned layerId,
+    UInt temporalID = 0,
+#if H_MV
+    Int layerId = 0)
 #else
-    Int viewId,
-    Bool isDepth,
+    UInt reserved_zero_6bits = 0)
 #endif
-    unsigned temporalID = 0)
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  : NALUnit(nalUnitType, nalRefFlag, layerId, temporalID)
+#if H_MV
+  : NALUnit(nalUnitType, temporalID, layerId)
 #else
-  : NALUnit(nalUnitType, nalRefFlag, viewId, isDepth, temporalID)
+  : NALUnit(nalUnitType, temporalID, reserved_zero_6bits)
 #endif
   , m_Bitstream()
   {}
-
-  OutputNALUnit(const NALUnit& src)
-  {
-    m_Bitstream.clear();
-    static_cast<NALUnit*>(this)->operator=(src);
-  }
 
   OutputNALUnit& operator=(const NALUnit& src)
   {

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,7 +43,8 @@
 
 //! \ingroup TLibCommon
 //! \{
-#if QC_ARP_D0177
+
+#if H_3D_ARP
 #define NTAPS_LUMA_ARP    2 ///< Number of taps for luma
 #define NTAPS_CHROMA_ARP  2 ///< Number of taps for chroma
 #endif
@@ -61,47 +62,42 @@ class TComInterpolationFilter
 {
   static const Short m_lumaFilter[4][NTAPS_LUMA];     ///< Luma filter taps
   static const Short m_chromaFilter[8][NTAPS_CHROMA]; ///< Chroma filter taps
-#if QC_ARP_D0177
-  static const Short m_lumaFilterARP  [4][NTAPS_LUMA_ARP];     ///< Luma filter taps
-  static const Short m_chromaFilterARP[8][NTAPS_CHROMA_ARP]; ///< Chroma filter taps
+#if H_3D_ARP
+  static const Short m_lumaFilterARP  [4][NTAPS_LUMA_ARP];     ///< Luma filter taps for ARP
+  static const Short m_chromaFilterARP[8][NTAPS_CHROMA_ARP];   ///< Chroma filter taps for ARP
 #endif
-
-  static Void filterCopy(const Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast);
+  static Void filterCopy(Int bitDepth, const Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast);
   
-  template<int N, bool isVertical, bool isFirst, bool isLast>
-  static Void filter(Pel const *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Short const *coeff);
+  template<Int N, Bool isVertical, Bool isFirst, Bool isLast>
+  static Void filter(Int bitDepth, Pel const *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Short const *coeff);
 
-  template<int N>
-  static Void filterHor(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height,               Bool isLast, Short const *coeff);
-  template<int N>
-  static Void filterVer(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast, Short const *coeff);
+  template<Int N>
+  static Void filterHor(Int bitDepth, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height,               Bool isLast, Short const *coeff);
+  template<Int N>
+  static Void filterVer(Int bitDepth, Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast, Short const *coeff);
 
 public:
   TComInterpolationFilter() {}
   ~TComInterpolationFilter() {}
 
-  Void filterHorLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast
-#if QC_ARP_D0177
-    ,
-    Bool filterType = 0
+  Void filterHorLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast 
+#if H_3D_ARP
+    , Bool filterType = false
 #endif
     );
   Void filterVerLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast 
-#if QC_ARP_D0177
-    ,
-    Bool filterType = 0
+#if H_3D_ARP
+    , Bool filterType = false
 #endif
     );
-  Void filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast
-#if QC_ARP_D0177
-    ,
-    Bool filterType = 0
+  Void filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast 
+#if H_3D_ARP
+    , Bool filterType = false
 #endif
     );
-  Void filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast
-#if QC_ARP_D0177
-    ,
-    Bool filterType = 0
+  Void filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast 
+#if H_3D_ARP
+    , Bool filterType = false
 #endif
     );
 };

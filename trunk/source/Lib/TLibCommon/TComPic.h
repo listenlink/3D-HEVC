@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,7 @@
     \brief    picture class (header)
 */
 
+
 #ifndef __TCOMPIC__
 #define __TCOMPIC__
 
@@ -43,11 +44,10 @@
 #include "TComPicSym.h"
 #include "TComPicYuv.h"
 #include "TComBitStream.h"
+#include "SEI.h"
 
 //! \ingroup TLibCommon
 //! \{
-
-class SEImessages;
 
 // ====================================================================================================================
 // Class definition
@@ -60,157 +60,104 @@ private:
   UInt                  m_uiTLayer;               //  Temporal layer
   Bool                  m_bUsedByCurr;            //  Used by current picture
   Bool                  m_bIsLongTerm;            //  IS long term picture
+  Bool                  m_bIsUsedAsLongTerm;      //  long term picture is used as reference before
   TComPicSym*           m_apcPicSym;              //  Symbol
   
   TComPicYuv*           m_apcPicYuv[2];           //  Texture,  0:org / 1:rec
   
-#if DEPTH_MAP_GENERATION
-  TComPicYuv*           m_pcPredDepthMap;         //  estimated depth map
-#if PDM_REMOVE_DEPENDENCE
-  TComPicYuv*           m_pcPredDepthMap_temp;         //  estimated depth map
-  Bool                  m_bPDMV2;                       
-#endif
-#endif
-
-#if FCO_DVP_REFINE_C0132_C0170
-  Bool                  m_bDepthCoded;
-  TComPic*              m_pcRecDepthMap;   
-#endif
-
-#if LG_ZEROINTRADEPTHRESI_A0087
-  Int                   m_uiIntraPeriod;
-#endif
-
-#if H3D_IVMP
-  TComPicYuv*           m_pcOrgDepthMap;          //  original depth map
-#if H3D_NBDV
-  Bool        m_checked;
-  UInt        m_uiRapRefIdx;
-  RefPicList  m_eRapRefList;
-  Bool        m_bRapCheck;
-#endif
-#endif
-#if H3D_IVRP
-  TComPicYuv*           m_pcResidual;             //  residual buffer (coded or inter-view predicted residual)
-#endif
-
   TComPicYuv*           m_pcPicYuvPred;           //  Prediction
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
   Bool                  m_bNeededForOutput;
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
-
-  Bool                  m_usedForTMVP;
-  
   Int*                  m_pSliceSUMap;
   Bool*                 m_pbValidSlice;
   Int                   m_sliceGranularityForNDBFilter;
   Bool                  m_bIndependentSliceBoundaryForNDBFilter;
   Bool                  m_bIndependentTileBoundaryForNDBFilter;
   TComPicYuv*           m_pNDBFilterYuvTmp;    //!< temporary picture buffer when non-cross slice/tile boundary in-loop filtering is enabled
+  Bool                  m_bCheckLTMSB;
+  
+  Int                   m_numReorderPics[MAX_TLAYER];
+  Window                m_conformanceWindow;
+  Window                m_defaultDisplayWindow;
+
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
-  SEImessages* m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
-#if HHI_INTERVIEW_SKIP
-  TComPicYuv*           m_pcUsedPelsMap;
-#endif
-#if INTER_VIEW_VECTOR_SCALING_C0115
-  Int                   m_iViewOrderIdx;    // will be changed to view_id
-#endif
+  SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
+
+#if H_MV
+  Int                   m_layerId;
+  Int                   m_viewId;
+#if H_3D
+  Int                   m_viewIndex;
+  Bool                  m_isDepth;
   Int**                 m_aaiCodedScale;
   Int**                 m_aaiCodedOffset;
-
-#if H3D_QTL
+#endif
+#endif
+#if H_3D_QTLPC
   Bool                  m_bReduceBitsQTL;
 #endif
-
+#if H_3D_NBDV
+  UInt        m_uiRapRefIdx;
+  RefPicList  m_eRapRefList;
+  Int         m_iNumDdvCandPics;
+#endif
+#if MTK_NBDV_TN_FIX_E0172 
+  Bool        m_abTIVRINCurrRL  [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
+#endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182  
+  Int         m_aiTexToDepRef  [2][MAX_NUM_REF];
+#endif
 public:
   TComPic();
   virtual ~TComPic();
   
-  Void          create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Bool bIsVirtual = false );
+  Void          create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight, UInt uiMaxDepth, Window &conformanceWindow, Window &defaultDisplayWindow, 
+                        Int *numReorderPics, Bool bIsVirtual = false );
+                        
   virtual Void  destroy();
   
   UInt          getTLayer()                { return m_uiTLayer;   }
   Void          setTLayer( UInt uiTLayer ) { m_uiTLayer = uiTLayer; }
 
-  Bool          getUsedByCurr()             { return m_bUsedByCurr; }
-  Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
-  Bool          getIsLongTerm()             { return m_bIsLongTerm; }
-  Void          setIsLongTerm( Bool lt ) { m_bIsLongTerm = lt; }
+#if H_MV
+  Void          setLayerId            ( Int layerId )    { m_layerId      = layerId; }
+  Int           getLayerId            ()                 { return m_layerId;    }
+  Void          setViewId             ( Int viewId )     { m_viewId = viewId;   }
+  Int           getViewId             ()                 { return m_viewId;     }
+#if H_3D
+  Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
+  Int           getViewIndex          ()                 { return m_viewIndex;     }
 
-  TComPicSym*   getPicSym()           { return  m_apcPicSym;    }
-  TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
-  TComSlice*    getCurrSlice()        { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx);  }
-#if VIDYO_VPS_INTEGRATION|QC_MVHEVC_B0046
-  TComVPS*      getVPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getVPS();  }
-#endif
-#if LG_ZEROINTRADEPTHRESI_A0087
-  Int           getIntraPeriod()                           { return  m_uiIntraPeriod; }
-  Void          setIntraPeriod(Int uiIntraPeriod)          { m_uiIntraPeriod = uiIntraPeriod; }
-#endif
-  TComSPS*      getSPS()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getSPS();  }
-  Int           getPOC()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
-  Int           getViewId()           { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getViewId(); }
-  TComDataCU*&  getCU( UInt uiCUAddr ){ return  m_apcPicSym->getCU( uiCUAddr ); }
-  
-  TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[0]; }
-  TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[1]; }
-#if HHI_INTERVIEW_SKIP
-  TComPicYuv*   getUsedPelsMap()      { return  m_pcUsedPelsMap; }
-#endif
-  
-#if DEPTH_MAP_GENERATION
-  TComPicYuv*   getPredDepthMap()     { return  m_pcPredDepthMap; }
-#if PDM_REMOVE_DEPENDENCE
-  TComPicYuv*   getPredDepthMapTemp()           { return  m_pcPredDepthMap_temp; }
-  Void          setStoredPDMforV2  (Bool flag)  { m_bPDMV2 = flag;}
-  Bool          getStoredPDMforV2  ()           { return m_bPDMV2;}
-#endif
-
-#endif
-#if H3D_IVMP
-  TComPicYuv*   getOrgDepthMap()      { return  m_pcOrgDepthMap; }
-#if H3D_NBDV
-  Void          setCandPicCheckedFlag (Bool bchecked)   { m_checked = bchecked; }
-  Bool          getCandPicCheckedFlag ()                { return m_checked;}
-#endif
-#endif
-
-#if FCO_DVP_REFINE_C0132_C0170
-  void setRecDepthMap(TComPic * pRecPic)                { m_pcRecDepthMap = pRecPic; }
-  TComPic * getRecDepthMap()                            { return m_pcRecDepthMap; }
-  void setDepthCoded(Bool flag)                         { m_bDepthCoded = flag; }
-  Bool getDepthCoded()                                  { return m_bDepthCoded; }
-#endif
-
-#if H3D_IVRP
-  TComPicYuv*   getResidual()         { return  m_pcResidual; }
-#endif
-#if H3D_NBDV
-  UInt          getRapRefIdx()                         {return m_uiRapRefIdx;}
-  RefPicList    getRapRefList()                        {return m_eRapRefList;}
-  Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
-  Void          setRapRefList(RefPicList eRefPicList)  {m_eRapRefList = eRefPicList;}
-  Bool          getRapbCheck()                         {return m_bRapCheck;}
-  Void          setRapbCheck(Bool bCheck)              {m_bRapCheck = bCheck;}
-  Bool          getDisCandRefPictures(Int iColPOC);
-#endif
-
-#if INTER_VIEW_VECTOR_SCALING_C0115
-  Void          setViewOrderIdx(Int i)                        { m_iViewOrderIdx = i; }        // will be changed to view_id
-  Int           getViewOrderIdx()                             { return m_iViewOrderIdx; }    // will be changed to view_id
-#endif
-
-#if H3D_QTL
-  Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
-  Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
-#endif
+  Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
+  Bool          getIsDepth            ()                 { return m_isDepth; }
 
   Void          setScaleOffset( Int** pS, Int** pO )  { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
   Int**         getCodedScale ()                      { return m_aaiCodedScale;  }
   Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
+#endif
+#endif
+#if H_3D_QTLPC
+  Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
+  Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
+#endif
+  Bool          getUsedByCurr()             { return m_bUsedByCurr; }
+  Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
+  Bool          getIsLongTerm()             { return m_bIsLongTerm; }
+  Void          setIsLongTerm( Bool lt ) { m_bIsLongTerm = lt; }
+  Void          setCheckLTMSBPresent     (Bool b ) {m_bCheckLTMSB=b;}
+  Bool          getCheckLTMSBPresent     () { return m_bCheckLTMSB;}
 
+  TComPicSym*   getPicSym()           { return  m_apcPicSym;    }
+  TComSlice*    getSlice(Int i)       { return  m_apcPicSym->getSlice(i);  }
+  Int           getPOC()              { return  m_apcPicSym->getSlice(m_uiCurrSliceIdx)->getPOC();  }
+  TComDataCU*&  getCU( UInt uiCUAddr )  { return  m_apcPicSym->getCU( uiCUAddr ); }
+  
+  TComPicYuv*   getPicYuvOrg()        { return  m_apcPicYuv[0]; }
+  TComPicYuv*   getPicYuvRec()        { return  m_apcPicYuv[1]; }
+  
   TComPicYuv*   getPicYuvPred()       { return  m_pcPicYuvPred; }
   TComPicYuv*   getPicYuvResi()       { return  m_pcPicYuvResi; }
   Void          setPicYuvPred( TComPicYuv* pcPicYuv )       { m_pcPicYuvPred = pcPicYuv; }
@@ -233,72 +180,100 @@ public:
   
   Void          setReconMark (Bool b) { m_bReconstructed = b;     }
   Bool          getReconMark ()       { return m_bReconstructed;  }
-
-  Void          setUsedForTMVP( Bool b ) { m_usedForTMVP = b;    }
-  Bool          getUsedForTMVP()         { return m_usedForTMVP; }
-
   Void          setOutputMark (Bool b) { m_bNeededForOutput = b;     }
   Bool          getOutputMark ()       { return m_bNeededForOutput;  }
  
+  Void          setNumReorderPics(Int i, UInt tlayer) { m_numReorderPics[tlayer] = i;    }
+  Int           getNumReorderPics(UInt tlayer)        { return m_numReorderPics[tlayer]; }
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+  Void          compressMotion(int scale); 
+#else   
   Void          compressMotion(); 
+#endif
   UInt          getCurrSliceIdx()            { return m_uiCurrSliceIdx;                }
   Void          setCurrSliceIdx(UInt i)      { m_uiCurrSliceIdx = i;                   }
   UInt          getNumAllocatedSlice()       {return m_apcPicSym->getNumAllocatedSlice();}
   Void          allocateNewSlice()           {m_apcPicSym->allocateNewSlice();         }
   Void          clearSliceBuffer()           {m_apcPicSym->clearSliceBuffer();         }
-#if HHI_INTERVIEW_SKIP
-  Void          addUsedPelsMapBuffer    ();
-  Void          removeUsedPelsMapBuffer ();
-#endif
-  
-  Void          createNonDBFilterInfo   (UInt* pSliceStartAddress = NULL, Int numSlices = 1, Int sliceGranularityDepth= 0
-                                        ,Bool bNDBFilterCrossSliceBoundary = true
+
+  Window&       getConformanceWindow()  { return m_conformanceWindow; }
+  Window&       getDefDisplayWindow()   { return m_defaultDisplayWindow; }
+
+  Void          createNonDBFilterInfo   (std::vector<Int> sliceStartAddress, Int sliceGranularityDepth
+                                        ,std::vector<Bool>* LFCrossSliceBoundary
                                         ,Int  numTiles = 1
                                         ,Bool bNDBFilterCrossTileBoundary = true);
   Void          createNonDBFilterInfoLCU(Int tileID, Int sliceID, TComDataCU* pcCU, UInt startSU, UInt endSU, Int sliceGranularyDepth, UInt picWidth, UInt picHeight);
   Void          destroyNonDBFilterInfo();
 
-#if DEPTH_MAP_GENERATION
-  Void          addPrdDepthMapBuffer    ( UInt uiSubSampExpX, UInt uiSubSampExpY );
-#endif
-#if H3D_IVMP
-  Void          addOrgDepthMapBuffer    ();
-#endif
-#if H3D_IVRP
-  Void          addResidualBuffer       ();
-#endif
-#if DEPTH_MAP_GENERATION
-  Void          removePrdDepthMapBuffer ();
-#endif
-#if H3D_IVMP
-  Void          removeOrgDepthMapBuffer ();
-#endif
-#if H3D_IVRP
-  Void          removeResidualBuffer    ();
-#endif
-
   Bool          getValidSlice                                  (Int sliceID)  {return m_pbValidSlice[sliceID];}
-  Int           getSliceGranularityForNDBFilter                ()             {return m_sliceGranularityForNDBFilter;}
   Bool          getIndependentSliceBoundaryForNDBFilter        ()             {return m_bIndependentSliceBoundaryForNDBFilter;}
   Bool          getIndependentTileBoundaryForNDBFilter         ()             {return m_bIndependentTileBoundaryForNDBFilter; }
   TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
 
+#if H_MV
+  Void          print( Bool legend );
+#endif
+#if H_3D_NBDV
+  Int           getNumDdvCandPics()                    {return m_iNumDdvCandPics;   }
+  Int           getDisCandRefPictures(Int iColPOC);
+  Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
+  Void          setRapRefList(RefPicList eRefPicList)  {m_eRapRefList = eRefPicList;}
+  Void          setNumDdvCandPics (Int i)              {m_iNumDdvCandPics = i;       }
+  UInt          getRapRefIdx()                         {return m_uiRapRefIdx;       }
+  RefPicList    getRapRefList()                        {return m_eRapRefList;       }
+#endif
+#if MTK_NBDV_TN_FIX_E0172
+  Void      checkTemporalIVRef();
+  Bool      isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
+#endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+  Void      checkTextureRef(  );
+  Int       isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
+#endif
   /** transfer ownership of seis to this picture */
-  void setSEIs(SEImessages* seis) { m_SEIs = seis; }
+  void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 
   /**
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
-  SEImessages* getSEIs() { return m_SEIs; }
+  SEIMessages& getSEIs() { return m_SEIs; }
 
   /**
    * return the current list of SEI messages associated with this picture.
    * Pointer is valid until this->destroy() is called */
-  const SEImessages* getSEIs() const { return m_SEIs; }
+  const SEIMessages& getSEIs() const { return m_SEIs; }
 
 };// END CLASS DEFINITION TComPic
 
+#if H_MV
+class TComPicLists 
+{
+private: 
+  TComList<TComList<TComPic*>*> m_lists; 
+#if H_3D
+  TComVPS*                     m_vps; 
+#endif
+public: 
+  Void        push_back( TComList<TComPic*>* list ) { m_lists.push_back( list );   }
+  Int         size     ()                           { return (Int) m_lists.size(); } 
+#if H_3D_ARP
+  TComList<TComPic*>*  getPicList   ( Int layerIdInNuh );
+#endif
+  TComPic*    getPic   ( Int layerIdInNuh,              Int poc );    
+  TComPicYuv* getPicYuv( Int layerIdInNuh,              Int poc, Bool recon ); 
+#if H_3D
+  Void        setVPS   ( TComVPS* vps ) { m_vps = vps;  }; 
+  TComPic*    getPic   ( Int viewIndex, Bool depthFlag, Int poc );
+  TComPicYuv* getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon );
+#endif  
+
+  Void print( );  
+
+}; // END CLASS DEFINITION TComPicLists
+
+#endif 
 //! \}
 
 #endif // __TCOMPIC__
