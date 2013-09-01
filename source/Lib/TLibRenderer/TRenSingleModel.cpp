@@ -35,11 +35,12 @@
 #include "TRenFilter.h"
 #include "TRenSingleModel.h"
 
-#if !QC_MVHEVC_B0046
+#if H_3D_VSO
+
 ////////////// TRENSINGLE MODEL ///////////////
 template <BlenMod iBM, Bool bBitInc>
 TRenSingleModelC<iBM,bBitInc>::TRenSingleModelC()
-:  m_iDistShift ( g_uiBitIncrement << 1 )
+:  m_iDistShift ( ( g_bitDepthY - 8) << 1 )
 {
   m_iWidth  = -1;
   m_iHeight = -1;
@@ -83,7 +84,7 @@ TRenSingleModelC<iBM,bBitInc>::TRenSingleModelC()
     m_piInvZLUTRight          = NULL;
   }
 
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   m_pbHorSkip = NULL;
 #endif
 }
@@ -91,7 +92,7 @@ TRenSingleModelC<iBM,bBitInc>::TRenSingleModelC()
 template <BlenMod iBM, Bool bBitInc>
 TRenSingleModelC<iBM,bBitInc>::~TRenSingleModelC()
 {
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   if ( m_pbHorSkip ) 
   {
     delete[] m_pbHorSkip;
@@ -113,14 +114,14 @@ TRenSingleModelC<iBM,bBitInc>::~TRenSingleModelC()
 }
 
 template <BlenMod iBM, Bool bBitInc> Void
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
 TRenSingleModelC<iBM,bBitInc>::create( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode, Bool bEarlySkip )
 #else
 TRenSingleModelC<iBM,bBitInc>::create( Int iMode, Int iWidth, Int iHeight, Int iShiftPrec, Int*** aaaiSubPelShiftTable, Int iHoleMargin, Bool bUseOrgRef, Int iBlendMode )
 #endif
 
 {
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   m_pbHorSkip     = new Bool [MAX_CU_SIZE];
   m_bEarlySkip    = bEarlySkip; 
 #endif
@@ -181,7 +182,7 @@ TRenSingleModelC<iBM,bBitInc>::setLRView( Int iViewPos, Pel** apiCurVideoPel, In
   
   Pel* piDRow = piCurDepthPel;
   Pel* piYRow = apiCurVideoPel[0];
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   Pel* piURow = apiCurVideoPel[1];
   Pel* piVRow = apiCurVideoPel[2];
 #endif  
@@ -195,7 +196,7 @@ TRenSingleModelC<iBM,bBitInc>::setLRView( Int iViewPos, Pel** apiCurVideoPel, In
     {
       Int iSubPosX = (1 << m_iShiftPrec); 
       pcCurInputSampleRow[0].aiY[iSubPosX] = piYRow[0];
-#if HHI_VSO_COLOR_PLANES 
+#if H_3D_VSO_COLOR_PLANES 
       pcCurInputSampleRow[0].aiU[iSubPosX] = piURow[0];
       pcCurInputSampleRow[0].aiV[iSubPosX] = piVRow[0];
 #endif
@@ -209,7 +210,7 @@ TRenSingleModelC<iBM,bBitInc>::setLRView( Int iViewPos, Pel** apiCurVideoPel, In
       { 
         Int iShift = (iPosX << m_iShiftPrec) + iSubPosX;
         pcCurInputSampleRow[iPosX+iOffsetX].aiY[iSubPosX] = piYRow[iShift];
-#if HHI_VSO_COLOR_PLANES 
+#if H_3D_VSO_COLOR_PLANES 
         pcCurInputSampleRow[iPosX+iOffsetX].aiU[iSubPosX] = piURow[iShift];
         pcCurInputSampleRow[iPosX+iOffsetX].aiV[iSubPosX] = piVRow[iShift];
 #endif
@@ -220,7 +221,7 @@ TRenSingleModelC<iBM,bBitInc>::setLRView( Int iViewPos, Pel** apiCurVideoPel, In
 
     piDRow += iCurDepthStride;
     piYRow += aiCurVideoStride[0];
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     piURow += aiCurVideoStride[1];
     piVRow += aiCurVideoStride[2];
 #endif
@@ -269,14 +270,14 @@ TRenSingleModelC<iBM,bBitInc>::setup( TComPicYuv* pcOrgVideo, Int** ppiShiftLutL
   switch ( m_iMode )
   {  
   case 0:   
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     xRenderL<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[0], m_apiBaseDepthPel[0],false );
 #else
     xRenderL<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[0], m_apiBaseDepthPel[0] );
 #endif   
     break;
   case 1:    
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     xRenderR<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[1], m_apiBaseDepthPel[1],false);
 #else
     xRenderR<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[1], m_apiBaseDepthPel[1] );
@@ -284,7 +285,7 @@ TRenSingleModelC<iBM,bBitInc>::setup( TComPicYuv* pcOrgVideo, Int** ppiShiftLutL
     break;
   case 2:
     TRenFilter::setupZLUT( true, 30, iDistToLeft, ppiBaseShiftLutLeft, ppiBaseShiftLutRight, m_iBlendZThres, m_iBlendDistWeight, m_piInvZLUTLeft, m_piInvZLUTRight );
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     xRenderL<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[0], m_apiBaseDepthPel[0],false);
     xRenderR<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[1], m_apiBaseDepthPel[1],false);
 #else      
@@ -305,7 +306,7 @@ TRenSingleModelC<iBM,bBitInc>::setup( TComPicYuv* pcOrgVideo, Int** ppiShiftLutL
 }
 
 template <BlenMod iBM, Bool bBitInc> Void
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
 TRenSingleModelC<iBM,bBitInc>::xGetSampleStrTextPtrs( Int iViewNum, Pel RenModelOutPels::*& rpiSrcY, Pel RenModelOutPels::*& rpiSrcU, Pel RenModelOutPels::*& rpiSrcV )
 #else
 TRenSingleModelC<iBM,bBitInc>::xGetSampleStrTextPtrs( Int iViewNum, Pel RenModelOutPels::*& rpiSrcY )
@@ -315,21 +316,21 @@ TRenSingleModelC<iBM,bBitInc>::xGetSampleStrTextPtrs( Int iViewNum, Pel RenModel
   {
   case 0:
     rpiSrcY = &RenModelOutPels::iYLeft;
-#if HHI_VSO_COLOR_PLANES  
+#if H_3D_VSO_COLOR_PLANES  
     rpiSrcU = &RenModelOutPels::iULeft;
     rpiSrcV = &RenModelOutPels::iVLeft;
 #endif
     break;
   case 1:
     rpiSrcY = &RenModelOutPels::iYRight;
-#if HHI_VSO_COLOR_PLANES  
+#if H_3D_VSO_COLOR_PLANES  
     rpiSrcU = &RenModelOutPels::iURight;
     rpiSrcV = &RenModelOutPels::iVRight;
 #endif
     break;
   case 2:
     rpiSrcY = &RenModelOutPels::iYBlended;
-#if HHI_VSO_COLOR_PLANES  
+#if H_3D_VSO_COLOR_PLANES  
     rpiSrcU = &RenModelOutPels::iUBlended;
     rpiSrcV = &RenModelOutPels::iVBlended;
 #endif
@@ -352,7 +353,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetStructRefView( )
   RenModelOutPels* pcCurOutSampleRow = m_pcOutputSamples;
   
   Pel* piYRow = m_aapiRefVideoPel[0];
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   Pel* piURow = m_aapiRefVideoPel[1];
   Pel* piVRow = m_aapiRefVideoPel[2];
 #endif  
@@ -362,7 +363,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetStructRefView( )
     for ( Int iPosX = 0; iPosX < m_iWidth; iPosX++ )
     {      
       pcCurOutSampleRow[iPosX].iYRef = piYRow[iPosX];
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
       pcCurOutSampleRow[iPosX].iURef = piURow[iPosX];
       pcCurOutSampleRow[iPosX].iVRef = piVRow[iPosX];
 #endif
@@ -371,7 +372,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetStructRefView( )
     pcCurOutSampleRow += m_iOutputSamplesStride; 
     
     piYRow += m_aiRefVideoStrides[0];
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     piURow += m_aiRefVideoStrides[1];
     piVRow += m_aiRefVideoStrides[2];
 #endif
@@ -402,7 +403,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetStructSynthViewAsRefView( )
 
   Pel RenModelOutPels::* piSrcY = NULL;
 
-#if HHI_VSO_COLOR_PLANES  
+#if H_3D_VSO_COLOR_PLANES  
   Pel RenModelOutPels::* piSrcU = NULL;
   Pel RenModelOutPels::* piSrcV = NULL;
   xGetSampleStrTextPtrs( m_iMode, piSrcY, piSrcU, piSrcV );
@@ -415,7 +416,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetStructSynthViewAsRefView( )
     for ( Int iPosX = 0; iPosX < m_iWidth; iPosX++ )
     {      
       pcCurOutSampleRow[iPosX].iYRef = pcCurOutSampleRow[iPosX].*piSrcY;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
       pcCurOutSampleRow[iPosX].iURef = pcCurOutSampleRow[iPosX].*piSrcU;
       pcCurOutSampleRow[iPosX].iVRef = pcCurOutSampleRow[iPosX].*piSrcV;
 #endif
@@ -448,16 +449,16 @@ TRenSingleModelC<iBM,bBitInc>::xInitSampleStructs()
       pcOutSampleRow[iPosX].iYLeft        = 0;
       pcOutSampleRow[iPosX].iYRight       = 0;
       pcOutSampleRow[iPosX].iYBlended     = 0;
-#if HHI_VSO_COLOR_PLANES             
+#if H_3D_VSO_COLOR_PLANES             
       // U Planes                    
-      pcOutSampleRow[iPosX].iULeft        = 128 << g_uiBitIncrement;
-      pcOutSampleRow[iPosX].iURight       = 128 << g_uiBitIncrement;
-      pcOutSampleRow[iPosX].iUBlended     = 128 << g_uiBitIncrement;
+      pcOutSampleRow[iPosX].iULeft        = 1 << (g_bitDepthC - 1);
+      pcOutSampleRow[iPosX].iURight       = 1 << (g_bitDepthC - 1);
+      pcOutSampleRow[iPosX].iUBlended     = 1 << (g_bitDepthC - 1);
                                      
       // V Planes                    
-      pcOutSampleRow[iPosX].iVLeft        = 128 << g_uiBitIncrement;
-      pcOutSampleRow[iPosX].iVRight       = 128 << g_uiBitIncrement;
-      pcOutSampleRow[iPosX].iVBlended     = 128 << g_uiBitIncrement;
+      pcOutSampleRow[iPosX].iVLeft        = 1 << (g_bitDepthC - 1);
+      pcOutSampleRow[iPosX].iVRight       = 1 << (g_bitDepthC - 1);
+      pcOutSampleRow[iPosX].iVBlended     = 1 << (g_bitDepthC - 1);
 #endif
       //// Input Samples
       pcLeftInSampleRow [iPosX].bOccluded = false;
@@ -471,7 +472,7 @@ TRenSingleModelC<iBM,bBitInc>::xInitSampleStructs()
 }
 
 
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> RMDist
 TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData , Pel * piOrgData, Int iOrgStride )
 #else
@@ -480,13 +481,13 @@ TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int i
 #endif
 {
   RMDist iSSE = 0;
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   Bool   bEarlySkip;
 #endif
   switch ( iViewPos )
   {
   case 0:
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     bEarlySkip = m_bEarlySkip ? xDetectEarlySkipL(iStartPosX,   iStartPosY,   iWidth,   iHeight,   iStride, piNewData, piOrgData, iOrgStride) : false;
     if( !bEarlySkip )
     {
@@ -497,7 +498,7 @@ TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int i
 #endif
     break;
   case 1:
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     bEarlySkip = m_bEarlySkip ? xDetectEarlySkipR(iStartPosX,   iStartPosY,   iWidth,   iHeight,   iStride, piNewData, piOrgData, iOrgStride) : false;
     if( !bEarlySkip )
     {
@@ -513,7 +514,7 @@ TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int i
 
   return iSSE;
 }
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> Void
 TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel* piOrgData, Int iOrgStride )
 #else
@@ -521,13 +522,13 @@ template <BlenMod iBM, Bool bBitInc> Void
 TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )
 #endif
 {
-#ifdef  LGE_VSO_EARLY_SKIP_A0093
+#ifdef  H_3D_VSO_EARLY_SKIP
   Bool bEarlySkip;
 #endif
   switch ( iViewPos )
   {
   case 0:
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     bEarlySkip = m_bEarlySkip ? xDetectEarlySkipL(iStartPosX,   iStartPosY,   iWidth,   iHeight,   iStride, piNewData, piOrgData,iOrgStride) : false;
     if( !bEarlySkip )
     {
@@ -538,7 +539,7 @@ TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStar
 #endif     
     break;
   case 1:
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     bEarlySkip = m_bEarlySkip ? xDetectEarlySkipR(iStartPosX,   iStartPosY,   iWidth,   iHeight,   iStride, piNewData, piOrgData,iOrgStride) : false;
     if( !bEarlySkip )
     {
@@ -559,7 +560,7 @@ TRenSingleModelC<iBM,bBitInc>::getSynthVideo( Int iViewPos, TComPicYuv* pcPicYuv
   AOT( pcPicYuv->getWidth() != m_iWidth );
   AOT( pcPicYuv->getHeight() < m_iUsedHeight + m_iHorOffset );
 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   Pel RenModelOutPels::* piText[3] = { NULL, NULL, NULL };
   xGetSampleStrTextPtrs(iViewPos, piText[0], piText[1], piText[2]); 
 
@@ -580,7 +581,7 @@ TRenSingleModelC<iBM,bBitInc>::getSynthVideo( Int iViewPos, TComPicYuv* pcPicYuv
   Pel RenModelOutPels::* piY;
   xGetSampleStrTextPtrs(iViewPos, piY); 
   xCopyFromSampleStruct( m_pcOutputSamples, m_iOutputSamplesStride, piY, pcPicYuv->getLumaAddr() + m_iHorOffset * pcPicYuv->getStride(), pcPicYuv->getStride(), m_iWidth, m_iUsedHeight );
-  pcPicYuv->setChromaTo( 128 << g_uiBitIncrement );   
+  pcPicYuv->setChromaTo( 1 << (g_bitDepthC - 1) );   
 #endif  
 }
 
@@ -594,7 +595,7 @@ TRenSingleModelC<iBM,bBitInc>::getSynthDepth( Int iViewPos, TComPicYuv* pcPicYuv
   Pel RenModelOutPels::* piD = 0;
   xGetSampleStrDepthPtrs(iViewPos, piD); 
   xCopyFromSampleStruct( m_pcOutputSamples, m_iOutputSamplesStride, piD, pcPicYuv->getLumaAddr() + pcPicYuv->getStride() * m_iHorOffset, pcPicYuv->getStride(), m_iWidth, m_iUsedHeight );
-  pcPicYuv->setChromaTo( 128 << g_uiBitIncrement );   
+  pcPicYuv->setChromaTo( 1 << (g_bitDepthC - 1) );   
 }
 
 
@@ -604,7 +605,7 @@ TRenSingleModelC<iBM,bBitInc>::getRefVideo ( Int iViewPos, TComPicYuv* pcPicYuv 
   AOT( pcPicYuv->getWidth()  != m_iWidth  );
   AOT( pcPicYuv->getHeight() <  m_iUsedHeight + m_iHorOffset);
 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   Pel RenModelOutPels::* piText[3];
   piText[0] = &RenModelOutPels::iYRef;
   piText[1] = &RenModelOutPels::iURef;
@@ -626,7 +627,7 @@ TRenSingleModelC<iBM,bBitInc>::getRefVideo ( Int iViewPos, TComPicYuv* pcPicYuv 
   xCopy2PicYuv( apiData, aiStrides, pcPicYuv );
 #else
   xCopyFromSampleStruct( m_pcOutputSamples, m_iOutputSamplesStride, &RenModelOutPels::iYRef, pcPicYuv->getLumaAddr() *  pcPicYuv->getStride() + m_iHorOffset, pcPicYuv->getStride(), m_iWidth, m_iUsedHeight );
-  pcPicYuv->setChromaTo( 128 << g_uiBitIncrement );   
+  pcPicYuv->setChromaTo( 1 << ( g_bitDepthC - 1 ) );   
 #endif  
 }
 
@@ -661,7 +662,7 @@ TRenSingleModelC<iBM,bBitInc>::xIncViewRow( )
   m_pcInputSamplesRow[1] += m_iInputSamplesStride ;
   m_pcOutputSamplesRow   += m_iOutputSamplesStride;  
 }
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline RMDist 
 TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Bool bFast)
 #else
@@ -694,7 +695,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWi
 
   for (Int iPosY = iStartPosY; iPosY < iStartPosY + iHeight; iPosY++ )
   {
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     if( m_bEarlySkip && bFast )
     {
       if ( m_pbHorSkip[iPosY-iStartPosY] )
@@ -720,7 +721,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWi
       m_iLastOccludedSPosFP = xRangeLeftL( m_iLastOccludedSPos );
       xExtrapolateMarginL<bSet>  ( iCurSPos, iEndChangePos, iError );
 
-      iMinChangedSPos       = Min( iMinChangedSPos, (iEndChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( Max(m_pcInputSamplesRow[iCurViewPos][iEndChangePos].iD, m_piNewDepthData[iPosXinNewData] )) ]);
+      iMinChangedSPos       = std::min( iMinChangedSPos, (iEndChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( std::max(m_pcInputSamplesRow[iCurViewPos][iEndChangePos].iD, m_piNewDepthData[iPosXinNewData] )) ]);
       iLastSPos             = iCurSPos;
       m_iLastDepth          = m_iCurDepth;
 
@@ -745,7 +746,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWi
     {
       // Get minimal changed sample position
 
-      iMinChangedSPos = Min( iMinChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( Max(m_pcInputSamplesRow[iCurViewPos][iCurPosX].iD, m_piNewDepthData[iPosXinNewData] )) ]);
+      iMinChangedSPos = std::min( iMinChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( std::max(m_pcInputSamplesRow[iCurViewPos][iCurPosX].iD, m_piNewDepthData[iPosXinNewData] )) ]);
       Int iCurSPos    = xShiftNewData(iCurPosX,iPosXinNewData);
       m_iCurDepth     = m_piNewDepthData[iPosXinNewData];
       xRenderRangeL<bSet>(iCurSPos, iLastSPos, iCurPosX, iError );
@@ -785,7 +786,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWi
   return iError;
 }
 
-#ifdef  LGE_VSO_EARLY_SKIP_A0093
+#ifdef  H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline RMDist
 TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData , Bool bFast)
 #else
@@ -819,7 +820,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWi
 
   for (Int iPosY = iStartPosY; iPosY < iStartPosY + iHeight; iPosY++ )
   {
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     if( m_bEarlySkip && bFast )
     {
       if ( m_pbHorSkip[iPosY-iStartPosY] )
@@ -845,7 +846,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWi
       m_iLastOccludedSPosFP = xRangeRightR( m_iLastOccludedSPos );
       xExtrapolateMarginR<bSet>     ( iCurSPos, iStartChangePos, iError );
 
-      iMaxChangedSPos       = Max( iMaxChangedSPos, (iStartChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( Max(m_pcInputSamplesRow[iCurViewPos][iStartChangePos].iD, m_piNewDepthData[iPosXinNewData] )) ]);
+      iMaxChangedSPos       = std::max( iMaxChangedSPos, (iStartChangePos << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( std::max(m_pcInputSamplesRow[iCurViewPos][iStartChangePos].iD, m_piNewDepthData[iPosXinNewData] )) ]);
       iLastSPos             = iCurSPos;
       m_iLastDepth          = m_iCurDepth;
       if ( bSet )
@@ -871,7 +872,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWi
     {
       // Get minimal changed sample position
 
-      iMaxChangedSPos = Max( iMaxChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( Max(m_pcInputSamplesRow[iCurViewPos][iCurPosX].iD, m_piNewDepthData[iPosXinNewData] )) ]);
+      iMaxChangedSPos = std::max( iMaxChangedSPos, (iCurPosX << m_iShiftPrec) - m_ppiCurLUT[0][ RenModRemoveBitInc( std::max(m_pcInputSamplesRow[iCurViewPos][iCurPosX].iD, m_piNewDepthData[iPosXinNewData] )) ]);
       Int iCurSPos    = xShiftNewData(iCurPosX,iPosXinNewData);
       m_iCurDepth     = m_piNewDepthData[iPosXinNewData];
       xRenderRangeR<bSet>(iCurSPos, iLastSPos, iCurPosX, iError );
@@ -1001,7 +1002,7 @@ TRenSingleModelC<iBM,bBitInc>::xRenderShiftedRangeL(Int iCurSPos, Int iLastSPos,
     RM_AOT( iDeltaSPos    > m_iGapTolerance );
 
     m_iThisDepth = m_iCurDepth;
-    for (Int iFillSPos = Max(0, xRangeLeftL(iCurSPos) ); iFillSPos <= min(xRangeRightL( iLastSPos ) ,m_iLastOccludedSPosFP-1); iFillSPos++ )
+    for (Int iFillSPos = std::max(0, xRangeLeftL(iCurSPos) ); iFillSPos <= min(xRangeRightL( iLastSPos ) ,m_iLastOccludedSPosFP-1); iFillSPos++ )
     {
       Int iDeltaCurSPos  = (iFillSPos << m_iShiftPrec) - iCurSPos;
 
@@ -1188,7 +1189,7 @@ TRenSingleModelC<iBM,bBitInc>::xFillHoleL( Int iCurSPos, Int iLastSPos, Int iCur
   }
 
   m_iThisDepth = m_iLastDepth;
-  for (Int iFillSPos = Max(iStartFillSPosFP+1,0); iFillSPos <= min(xRangeRightL( iLastSPos ), m_iLastOccludedSPosFP-1 ); iFillSPos++ )
+  for (Int iFillSPos = std::max(iStartFillSPosFP+1,0); iFillSPos <= min(xRangeRightL( iLastSPos ), m_iLastOccludedSPosFP-1 ); iFillSPos++ )
   {
     xSetShiftedPelL<bSet>( iLastPos, 0,  iFillSPos, REN_IS_HOLE, riError );
   }
@@ -1232,7 +1233,7 @@ TRenSingleModelC<iBM,bBitInc>::xExtrapolateMarginL(Int iCurSPos, Int iCurPos, RM
 //  if (iLeftSPos < 0 )
 //    return;
 
-  Int iSPosFullPel = Max(0,xRangeLeftL(iCurSPos));
+  Int iSPosFullPel = std::max(0,xRangeLeftL(iCurSPos));
 
   m_iThisDepth = m_iCurDepth;
   if (iSPosFullPel < m_iWidth)
@@ -1252,7 +1253,7 @@ TRenSingleModelC<iBM,bBitInc>::xExtrapolateMarginR(Int iCurSPos, Int iCurPos, RM
   //  if (iLeftSPos < 0 )
   //    return;
 
-  Int iSPosFullPel = Min(m_iWidth-1,xRangeRightR(iCurSPos));
+  Int iSPosFullPel = std::min(m_iWidth-1,xRangeRightR(iCurSPos));
 
   m_iThisDepth = m_iCurDepth;
   if (iSPosFullPel > -1)
@@ -1412,7 +1413,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelNoBlendL(RenModelInPels* pcInSample
 
     // Yuv
     pcOutSample->iYLeft  = pcInSample->aiY[iSubSourcePos];
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     pcOutSample->iULeft  = pcInSample->aiU[iSubSourcePos];
     pcOutSample->iVLeft  = pcInSample->aiV[iSubSourcePos];
 
@@ -1427,7 +1428,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelNoBlendL(RenModelInPels* pcInSample
   }
   else
   { 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riError += xGetDist( pcInSample->aiY[iSubSourcePos] - pcOutSample->iYRef,
                          pcInSample->aiU[iSubSourcePos] - pcOutSample->iURef,
                          pcInSample->aiV[iSubSourcePos] - pcOutSample->iVRef
@@ -1444,7 +1445,7 @@ template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline Void
 TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendL(RenModelInPels* pcInSample, Int iSubSourcePos, RenModelOutPels* pcOutSample, Pel iFilled, RMDist& riError )
 {
   Pel piBlendedValueY;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   Pel piBlendedValueU;
   Pel piBlendedValueV;
 #endif
@@ -1452,7 +1453,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendL(RenModelInPels* pcInSample, 
   xGetBlendedValue (
     pcInSample ->aiY[iSubSourcePos],
     pcOutSample->iYRight,    
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     pcInSample ->aiU[iSubSourcePos],
     pcOutSample->iURight,    
     pcInSample ->aiV[iSubSourcePos],
@@ -1463,7 +1464,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendL(RenModelInPels* pcInSample, 
     iFilled,
     pcOutSample->iFilledRight  ,
     piBlendedValueY
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     , piBlendedValueU,
     piBlendedValueV
 #endif
@@ -1475,7 +1476,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendL(RenModelInPels* pcInSample, 
     pcOutSample->iDLeft      = m_iThisDepth;
     pcOutSample->iYLeft      = pcInSample ->aiY[iSubSourcePos];
     pcOutSample->iYBlended   = piBlendedValueY;    
-#if HHI_VSO_COLOR_PLANES  
+#if H_3D_VSO_COLOR_PLANES  
     pcOutSample->iULeft      = pcInSample ->aiU[iSubSourcePos];
     pcOutSample->iUBlended   = piBlendedValueU;    
     pcOutSample->iVLeft      = pcInSample ->aiV[iSubSourcePos];
@@ -1485,7 +1486,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendL(RenModelInPels* pcInSample, 
 
     // Get Error
     Int iDiffY = pcOutSample->iYRef - piBlendedValueY;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     Int iDiffU = pcOutSample->iURef - piBlendedValueU;
     Int iDiffV = pcOutSample->iVRef - piBlendedValueV;
     pcOutSample->iError  = xGetDist(iDiffY, iDiffU, iDiffV );
@@ -1496,7 +1497,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendL(RenModelInPels* pcInSample, 
   else
   {
     Int iDiffY = pcOutSample->iYRef - piBlendedValueY;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     Int iDiffU = pcOutSample->iURef - piBlendedValueU;
     Int iDiffV = pcOutSample->iVRef - piBlendedValueV;
     riError   += ( xGetDist( iDiffY, iDiffU, iDiffV ) - pcOutSample->iError );
@@ -1542,7 +1543,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelNoBlendR(RenModelInPels* pcInSample
 
     // Yuv
     pcOutSample->iYRight  = pcInSample->aiY[iSubSourcePos];
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     pcOutSample->iURight  = pcInSample->aiU[iSubSourcePos];
     pcOutSample->iVRight  = pcInSample->aiV[iSubSourcePos];
 
@@ -1558,7 +1559,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelNoBlendR(RenModelInPels* pcInSample
   }
   else
   { 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riError += xGetDist( pcInSample->aiY[iSubSourcePos] - pcOutSample->iYRef,
       pcInSample->aiU[iSubSourcePos] - pcOutSample->iURef,
       pcInSample->aiV[iSubSourcePos] - pcOutSample->iVRef
@@ -1575,7 +1576,7 @@ template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline Void
 TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendR(RenModelInPels* pcInSample, Int iSubSourcePos, RenModelOutPels* pcOutSample, Pel iFilled, RMDist& riError )
 {
   Pel piBlendedValueY;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
   Pel piBlendedValueU;
   Pel piBlendedValueV;
 #endif
@@ -1583,7 +1584,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendR(RenModelInPels* pcInSample, 
   xGetBlendedValue (
     pcOutSample->iYLeft, 
     pcInSample ->aiY[iSubSourcePos],        
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     pcOutSample->iULeft,    
     pcInSample ->aiU[iSubSourcePos],
     pcOutSample->iVLeft,    
@@ -1594,7 +1595,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendR(RenModelInPels* pcInSample, 
     pcOutSample->iFilledLeft,
     iFilled,
     piBlendedValueY
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     , piBlendedValueU,
     piBlendedValueV
 #endif
@@ -1606,7 +1607,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendR(RenModelInPels* pcInSample, 
     pcOutSample->iDRight     = m_iThisDepth;
     pcOutSample->iYRight     = pcInSample ->aiY[iSubSourcePos];
     pcOutSample->iYBlended   = piBlendedValueY;    
-#if HHI_VSO_COLOR_PLANES  
+#if H_3D_VSO_COLOR_PLANES  
     pcOutSample->iURight     = pcInSample ->aiU[iSubSourcePos];
     pcOutSample->iUBlended   = piBlendedValueU;    
     pcOutSample->iVRight     = pcInSample ->aiV[iSubSourcePos];
@@ -1616,7 +1617,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendR(RenModelInPels* pcInSample, 
 
     // Get Error
     Int iDiffY = pcOutSample->iYRef - piBlendedValueY;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     Int iDiffU = pcOutSample->iURef - piBlendedValueU;
     Int iDiffV = pcOutSample->iVRef - piBlendedValueV;
     pcOutSample->iError  = xGetDist(iDiffY, iDiffU, iDiffV );
@@ -1627,7 +1628,7 @@ TRenSingleModelC<iBM,bBitInc>::xSetShiftedPelBlendR(RenModelInPels* pcInSample, 
   else
   {
     Int iDiffY = pcOutSample->iYRef - piBlendedValueY;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     Int iDiffU = pcOutSample->iURef - piBlendedValueU;
     Int iDiffV = pcOutSample->iVRef - piBlendedValueV;
     riError   += ( xGetDist( iDiffY, iDiffU, iDiffV ) - pcOutSample->iError );
@@ -1679,7 +1680,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetDist( Int iDiffY )
 }
 
 
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
 template <BlenMod iBM, Bool bBitInc>  __inline Void
 TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV )
 #else
@@ -1694,7 +1695,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
   {
     if (iBM == BLEND_LEFT )
     {
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
       xGetBlendedValueBM1(  iYL,  iYR,  iUL,  iUR,  iVL,  iVR,  iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY,  riU, riV );
 #else
       xGetBlendedValueBM1(  iYL,  iYR,  iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY );
@@ -1702,7 +1703,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
     }
     else
     {
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
       xGetBlendedValueBM2(  iYL,  iYR,  iUL,  iUR,  iVL,  iVR,  iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY,  riU, riV );
 #else
       xGetBlendedValueBM2(  iYL,  iYR, iDepthL,  iDepthR,  iFilledL,  iFilledR,  riY );
@@ -1720,7 +1721,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
       if      ((iFilledL == REN_IS_FILLED) && ( iFilledR != REN_IS_FILLED))
       {
         riY = xBlend( iYL, iYR, iFilledR >> 1 );
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
         riU = xBlend( iUL, iUR, iFilledR >> 1 );
         riV = xBlend( iVL, iVR, iFilledR >> 1 );
 #endif
@@ -1729,7 +1730,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
       else if ((iFilledL != REN_IS_FILLED) && ( iFilledR == REN_IS_FILLED))
       {
         riY = xBlend( iYR, iYL, (iFilledL >> 1) );
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
         riU = xBlend( iUR, iUL, (iFilledL >> 1) );
         riV = xBlend( iVR, iVL, (iFilledL >> 1) );
 #endif
@@ -1737,7 +1738,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
       else
       {
         riY = xBlend( iYL, iYR, m_iBlendDistWeight );
-#if HHI_VSO_COLOR_PLANES    
+#if H_3D_VSO_COLOR_PLANES    
         riU = xBlend( iUL, iUR, m_iBlendDistWeight );
         riV = xBlend( iVL, iVR, m_iBlendDistWeight );
 #endif
@@ -1746,7 +1747,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
     else if ( iDepthDifference < 0 )
     {
       riY = iYL;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
       riU = iUL;
       riV = iVL;
 #endif
@@ -1754,7 +1755,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
     else
     {
       riY = iYR;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
       riU = iUR;
       riV = iVR;
 #endif
@@ -1765,7 +1766,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
     if ( iDepthR < iDepthL )
     {
         riY =  iYR;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
         riU =  iUR;
         riV =  iVR;
 #endif
@@ -1773,7 +1774,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
     else
     {
         riY =  iYL;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
         riU =  iUL;
         riV =  iVL;
 #endif
@@ -1784,7 +1785,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
     if (iFilledR == REN_IS_HOLE)
     {
         riY = iYL;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
         riU = iUL;
         riV = iVL;
 #endif
@@ -1792,7 +1793,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
     else
     {
       riY = iYR;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
       riU = iUR;
       riV = iVR;
 #endif
@@ -1801,7 +1802,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValue( Pel iYL, Pel iYR, Pel iDepthL, 
 }
 
 template <BlenMod iBM, Bool bBitInc> __inline Void
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
 TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV )
 #else
 TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY )
@@ -1810,7 +1811,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iDepth
   if ( iFilledL == REN_IS_FILLED ||  iFilledR == REN_IS_HOLE )
   {
     riY = iYL;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riU = iUL;
     riV = iVL;
 #endif
@@ -1818,7 +1819,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iDepth
   else if ( iFilledL == REN_IS_HOLE  )
   {
     riY = iYR;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riU = iUR;
     riV = iVR;
 #endif
@@ -1826,7 +1827,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iDepth
   else
   {
     riY = xBlend( iYR, iYL, iFilledL );
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riU = xBlend( iUR, iUL, iFilledL );
     riV = xBlend( iVR, iUL, iFilledL );
 #endif
@@ -1834,7 +1835,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM1( Pel iYL, Pel iYR, Pel iDepth
 }
 
 template <BlenMod iBM, Bool bBitInc> __inline Void
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
 TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iUL, Pel iUR, Pel iVL, Pel iVR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY, Pel& riU, Pel&riV )
 #else
 TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iDepthL, Pel iDepthR, Int iFilledL, Int iFilledR, Pel& riY )
@@ -1843,7 +1844,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iDepth
   if      ( iFilledR == REN_IS_FILLED ||  iFilledL == REN_IS_HOLE )
   {
     riY = iYR;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riU = iUR;
     riV = iVR;
 #endif
@@ -1851,7 +1852,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iDepth
   else if ( iFilledR == REN_IS_HOLE  )
   {
     riY = iYL;
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riU = iUL;
     riV = iVL;
 #endif
@@ -1859,7 +1860,7 @@ TRenSingleModelC<iBM,bBitInc>::xGetBlendedValueBM2( Pel iYL, Pel iYR, Pel iDepth
   else
   {
     riY = xBlend( iYL, iYR, iFilledR );
-#if HHI_VSO_COLOR_PLANES
+#if H_3D_VSO_COLOR_PLANES
     riU = xBlend( iUL, iUR, iFilledR );
     riV = xBlend( iVL, iUR, iFilledR );
 #endif
@@ -1890,7 +1891,7 @@ template class TRenSingleModelC<BLEND_AVRG ,false>;
 template class TRenSingleModelC<BLEND_LEFT ,false>;
 template class TRenSingleModelC<BLEND_RIGHT,false>;
 
-#ifdef LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> 
 __inline Bool
 TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData,Pel* piOrgData, Int iOrgStride)
@@ -1956,5 +1957,5 @@ TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipR( Int iStartPosX, Int iStartPosY
   return bNoDiff;
 }
 #endif
-#endif
+#endif // H_3D
 

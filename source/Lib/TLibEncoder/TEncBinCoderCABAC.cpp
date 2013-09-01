@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2012, ITU/ISO/IEC
+ * Copyright (c) 2010-2013, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -109,9 +109,7 @@ Void TEncBinCABAC::flush()
   encodeBinTrm(1);
   finish();
   m_pcTComBitIf->write(1, 1);
-#if OL_FLUSH_ALIGN
   m_pcTComBitIf->writeAlignZero();
-#endif
 
   start();
 }
@@ -124,37 +122,13 @@ Void TEncBinCABAC::resetBac()
   start();
 }
 
-/** Encode # of subsequent IPCM blocks.
- * \param numSubseqIPCM 
- * \returns Void
- */
-Void TEncBinCABAC::encodeNumSubseqIPCM( Int numSubseqIPCM )
-{
-  finish();
-  m_pcTComBitIf->write( 1, 1 ); // stop bit
-
-  m_pcTComBitIf->write( numSubseqIPCM ? 1 : 0, 1);
-
-  if ( numSubseqIPCM > 0)
-  {
-    Bool bCodeLast = ( 3 > numSubseqIPCM );
-
-    while( --numSubseqIPCM )
-    {
-      m_pcTComBitIf->write( 1, 1 );
-    }
-    if( bCodeLast )
-    {
-      m_pcTComBitIf->write( 0, 1 );
-    }
-  }
-}
-
 /** Encode PCM alignment zero bits.
  * \returns Void
  */
 Void TEncBinCABAC::encodePCMAlignBits()
 {
+  finish();
+  m_pcTComBitIf->write(1, 1);
   m_pcTComBitIf->writeAlignZero(); // pcm align zero
 }
 
@@ -210,17 +184,17 @@ UInt TEncBinCABAC::getNumWrittenBits()
 Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 {
   {
+#if !H_MV
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tstate=" )
     DTRACE_CABAC_V( ( rcCtxModel.getState() << 1 ) + rcCtxModel.getMps() )
     DTRACE_CABAC_T( "\tsymbol=" )
     DTRACE_CABAC_V( binValue )
     DTRACE_CABAC_T( "\n" )
+#endif
   }
   m_uiBinsCoded += m_binCountIncrement;
-#if CABAC_INIT_FLAG
   rcCtxModel.setBinsCoded( 1 );
-#endif
   
   UInt  uiLPS   = TComCABACTables::sm_aucLPSTable[ rcCtxModel.getState() ][ ( m_uiRange >> 6 ) & 3 ];
   m_uiRange    -= uiLPS;
@@ -258,10 +232,12 @@ Void TEncBinCABAC::encodeBin( UInt binValue, ContextModel &rcCtxModel )
 Void TEncBinCABAC::encodeBinEP( UInt binValue )
 {
   {
+#if !H_MV
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
     DTRACE_CABAC_V( binValue )
     DTRACE_CABAC_T( "\n" )
+#endif
   }
   m_uiBinsCoded += m_binCountIncrement;
   m_uiLow <<= 1;
@@ -286,10 +262,12 @@ Void TEncBinCABAC::encodeBinsEP( UInt binValues, Int numBins )
   
   for ( Int i = 0; i < numBins; i++ )
   {
+#if !H_MV
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tEPsymbol=" )
     DTRACE_CABAC_V( ( binValues >> ( numBins - 1 - i ) ) & 1 )
     DTRACE_CABAC_T( "\n" )
+#endif
   }
   
   while ( numBins > 8 )
@@ -384,26 +362,6 @@ Void TEncBinCABAC::writeOut()
       m_bufferedByte = leadByte;
     }      
   }    
-}
-
-/** flush bits when CABAC termination
-  * \param [in] bEnd true means this flushing happens at the end of RBSP. No need to encode stop bit
-  */
-Void TEncBinCABAC::encodeFlush(Bool bEnd)
-{
-  m_uiRange = 2;
-
-  m_uiLow  += 2;
-  m_uiLow <<= 7;
-  m_uiRange = 2 << 7;
-  m_bitsLeft -= 7;
-  testAndWriteOut();
-  finish();
-
-  if(!bEnd)
-  {
-    m_pcTComBitIf->write( 1, 1 ); // stop bit
-  }
 }
 
 //! \}

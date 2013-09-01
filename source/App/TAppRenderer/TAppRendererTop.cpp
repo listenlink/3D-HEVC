@@ -32,7 +32,6 @@
  */
 
 
-
 #include <list>
 #include <stdio.h>
 #include <fcntl.h>
@@ -41,10 +40,12 @@
 
 #include "TAppRendererTop.h"
 
+#if H_3D
+
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
 // ====================================================================================================================
-#if !QC_MVHEVC_B0046
+
 TAppRendererTop::TAppRendererTop()
 {
 
@@ -58,8 +59,6 @@ TAppRendererTop::~TAppRendererTop()
 
 Void TAppRendererTop::xCreateLib()
 {
-  Int iInteralBitDepth = g_uiBitDepth + g_uiBitIncrement;
-  Int iFileBitDepth    = 8;
   m_pcRenTop = new TRenTop();
 
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfInputViews; iViewIdx++)
@@ -67,8 +66,8 @@ Void TAppRendererTop::xCreateLib()
     TVideoIOYuv* pcVideoInput = new TVideoIOYuv;
     TVideoIOYuv* pcDepthInput = new TVideoIOYuv;
 
-    pcVideoInput->open( m_pchVideoInputFileList[iViewIdx], false, iFileBitDepth, iInteralBitDepth );  // read mode
-    pcDepthInput->open( m_pchDepthInputFileList[iViewIdx], false, iFileBitDepth, iInteralBitDepth );  // read mode
+    pcVideoInput->open( m_pchVideoInputFileList[iViewIdx], false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC);  // read mode
+    pcDepthInput->open( m_pchDepthInputFileList[iViewIdx], false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC  );  // read mode
     pcVideoInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight  );
     pcDepthInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight  );
 
@@ -79,7 +78,7 @@ Void TAppRendererTop::xCreateLib()
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfOutputViews; iViewIdx++)
   {
     TVideoIOYuv* pcSynthOutput = new TVideoIOYuv;
-    pcSynthOutput->open( m_pchSynthOutputFileList[iViewIdx], true, iFileBitDepth, iInteralBitDepth );  // write mode
+    pcSynthOutput->open( m_pchSynthOutputFileList[iViewIdx], true, m_outputBitDepthY, m_outputBitDepthC, m_internalBitDepthY, m_internalBitDepthC );  // write mode
     m_apcTVideoIOYuvSynthOutput.push_back( pcSynthOutput );
   }
 }
@@ -468,18 +467,29 @@ Void TAppRendererTop::go()
   case 0:
     render();
     break;
+#if H_3D_VSO
   case 1:
     renderModel();
     break;
+#endif
   case 10:
     renderUsedPelsMap( );
       break;
-
   default:
     AOT(true);
   }
+
+#if H_3D_REN_MAX_DEV_OUT
+  Double dMaxDispDiff = m_cCameraData.getMaxShiftDeviation(); 
+
+  if ( !(dMaxDispDiff < 0) )
+  {  
+    printf("\n Max. possible shift error: %12.3f samples.\n", dMaxDispDiff );
+  }
+#endif
 }
 
+#if H_3D_VSO
 Void TAppRendererTop::renderModel()
 {
   if ( m_bUseSetupString )
@@ -492,9 +502,10 @@ Void TAppRendererTop::renderModel()
   }
 }
 
+
+
 Void TAppRendererTop::xRenderModelFromString()
 {
-
     xCreateLib();
     xInitLib();
 
@@ -521,7 +532,7 @@ Void TAppRendererTop::xRenderModelFromString()
     TRenModel cCurModel;
 
     AOT( m_iLog2SamplingFactor != 0 );
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
     cCurModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin, false );
 #else
     cCurModel.create( m_cRenModStrParser.getNumOfBaseViews(), m_cRenModStrParser.getNumOfModels(), m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin );
@@ -682,6 +693,7 @@ Void TAppRendererTop::xRenderModelFromString()
     xDestroyLib();
 }
 
+
 Void TAppRendererTop::xRenderModelFromNums()
 {
   xCreateLib();
@@ -699,7 +711,7 @@ Void TAppRendererTop::xRenderModelFromNums()
 
   AOT( m_iLog2SamplingFactor != 0 );
   cCurModel.setupPart( 0, m_iSourceHeight  ); 
-#if LGE_VSO_EARLY_SKIP_A0093
+#if H_3D_VSO_EARLY_SKIP
   cCurModel.create( m_iNumberOfInputViews, m_iNumberOfOutputViews, m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin, false );
 #else
   cCurModel.create( m_iNumberOfInputViews, m_iNumberOfOutputViews, m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin );
@@ -879,6 +891,7 @@ Void TAppRendererTop::xRenderModelFromNums()
   xDestroyLib();
 
 }
+#endif
 
 Void TAppRendererTop::renderUsedPelsMap( )
 {
@@ -931,8 +944,6 @@ Void TAppRendererTop::renderUsedPelsMap( )
 
   while ( ( ( iNumOfRenderedFrames < m_iFramesToBeRendered ) || ( m_iFramesToBeRendered == 0 ) ) && !bAnyEOS )
   {
-
-
     if ( iFrame >= m_iFrameSkip )
     {      
       // read in depth and video

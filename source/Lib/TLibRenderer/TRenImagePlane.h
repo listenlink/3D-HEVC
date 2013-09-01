@@ -38,6 +38,7 @@
 #include "../TLibCommon/CommonDef.h"
 #include "../TLibCommon/TComPicYuv.h"
 
+#if H_3D
 #define PelImagePlane     TRenImagePlane<Pel>
 #define DoubleImagePlane  TRenImagePlane<Double>
 #define IntImagePlane     TRenImagePlane<Int>
@@ -120,4 +121,5 @@ public:
   ~TRenImagePlanePart();;
 };
 
+#endif // H_3D
 #endif // __TRENIMAGEPLANE__

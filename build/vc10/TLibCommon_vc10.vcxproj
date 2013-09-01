@@ -146,11 +146,10 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel3DBuffer.cpp" />
     <ClCompile Include="..\..\source\Lib\libmd5\libmd5.c" />
-    <ClCompile Include="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\SEI.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComBitStream.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComCABACTables.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComDataCU.cpp" />
-    <ClCompile Include="..\..\source\Lib\TLibCommon\TComDepthMapGenerator.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComLoopFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComMotionInfo.cpp" />
@@ -162,7 +161,6 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComPrediction.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComRdCost.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComRdCostWeightPrediction.cpp" />
-    <ClCompile Include="..\..\source\Lib\TLibCommon\TComResidualGenerator.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComRom.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComSlice.cpp" />
@@ -181,12 +179,10 @@
     <ClInclude Include="..\..\source\Lib\libmd5\MD5.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\NAL.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\SEI.h" />
-    <ClInclude Include="..\..\source\Lib\TLibCommon\TComAdaptiveLoopFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComBitCounter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComBitStream.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComCABACTables.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComDataCU.h" />
-    <ClInclude Include="..\..\source\Lib\TLibCommon\TComDepthMapGenerator.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComList.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComLoopFilter.h" />
@@ -199,7 +195,6 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPrediction.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRdCost.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRdCostWeightPrediction.h" />
-    <ClInclude Include="..\..\source\Lib\TLibCommon\TComResidualGenerator.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRom.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComSlice.h" />
