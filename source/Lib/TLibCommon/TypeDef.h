@@ -264,7 +264,7 @@
 #define LGE_SDC_REMOVE_DC_E0158           1   // Removal of DC mode from SDC
 #endif
 #if H_3D_DIM_DMM
-#define LGE_PKU_DMM3_OVERLAP_E0159        1   // Removal of overlap between DMM3 and DMM1
+#define LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   // Removal of overlap between DMM3 and DMM1
 #endif
 #endif
 

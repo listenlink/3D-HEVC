@@ -346,7 +346,7 @@ const WedgeResolution g_dmmWedgeResolution[6] =
 const UChar g_dmm1TabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
      0,    7,   10,   11,   11,   13 };
-#if LGE_PKU_DMM3_OVERLAP_E0159
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
 const UChar g_dmm3IntraTabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
      0,    4,    7,    8,    8,    0 };
@@ -610,7 +610,11 @@ std::vector< std::vector<TComWedgeRef>  > g_dmmWedgeRefLists;
 std::vector< std::vector<TComWedgeNode> > g_dmmWedgeNodeLists;
 std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
 
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
+Void initWedgeLists( Bool initNodeList )
+#else
 Void initWedgeLists( Bool initRefinements )
+#endif
 {
   if( !g_dmmWedgeLists.empty() ) return;
 
@@ -623,6 +627,10 @@ Void initWedgeLists( Bool initRefinements )
     g_dmmWedgeLists.push_back( acWedgeList );
     g_dmmWedgeRefLists.push_back( acWedgeRefList );
 
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
+    if( initNodeList )
+    {
+#endif
     // create WedgeNodeList
     std::vector<TComWedgeNode> acWedgeNodeList;
     for( UInt uiPos = 0; uiPos < acWedgeList.size(); uiPos++ )
@@ -632,8 +640,10 @@ Void initWedgeLists( Bool initRefinements )
         TComWedgeNode cWedgeNode;
         cWedgeNode.setPatternIdx( uiPos );
 
+#if !LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
         if( initRefinements )
         {
+#endif
           UInt uiRefPos = 0;
           for( Int iOffS = -1; iOffS <= 1; iOffS++ )
           {
@@ -680,11 +690,16 @@ Void initWedgeLists( Bool initRefinements )
               }
             }
           }
+#if !LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
         }
+#endif
         acWedgeNodeList.push_back( cWedgeNode );
       }
     }
     g_dmmWedgeNodeLists.push_back( acWedgeNodeList );
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
+  }
+#endif
   }
   return;
 }
