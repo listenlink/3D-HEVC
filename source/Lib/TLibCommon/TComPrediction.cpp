@@ -455,7 +455,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       {
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
       } break;
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
     case( DMM2_IDX ):
       {
         UInt uiTabIdx = 0;
@@ -2772,6 +2772,7 @@ Void TComPrediction::xAssignBiSegDCs( Pel* ptrDst, UInt dstStride, Bool* biSegPa
 }
 
 #if H_3D_DIM_DMM
+#if !SEC_DMM2_E0146_HHIFIX
 UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Int iDeltaEnd )
 {
   UInt uiThisBlockSize = uiWidth;
@@ -2783,11 +2784,7 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType =  getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
-#if SEC_DMM2_E0146
-    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
-#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
-#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;
@@ -2812,11 +2809,7 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType = getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
-#if SEC_DMM2_E0146
-    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
-#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
-#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;
@@ -2848,6 +2841,7 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 
   return 0;
 }
+#endif
 
 UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt intraTabIdx )
 {
@@ -2913,6 +2907,7 @@ Void TComPrediction::xCopyTextureLumaBlock( TComDataCU* pcCU, UInt uiAbsPartIdx,
   }
 }
 
+#if !SEC_DMM2_E0146_HHIFIX
 Void TComPrediction::xGetBlockOffset( TComDataCU* pcCU, UInt uiAbsPartIdx, TComDataCU* pcRefCU, UInt uiRefAbsPartIdx, UInt& ruiOffsetX, UInt& ruiOffsetY )
 {
   ruiOffsetX = 0;
@@ -3300,6 +3295,7 @@ UInt TComPrediction::xGetWedgePatternIdx( UInt uiBlockSize, UChar uhXs, UChar uh
   }
   return 0;
 }
+#endif
 #endif
 #if H_3D_DIM_RBC
 Void TComPrediction::xDeltaDCQuantScaleUp( TComDataCU* pcCU, Pel& rDeltaDC )

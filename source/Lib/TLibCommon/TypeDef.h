@@ -179,7 +179,7 @@
 #endif
 
 #if H_3D_DIM
-#define SEC_DMM2_E0146                    1   // Removal of DMM2 from DMMs
+#define SEC_DMM2_E0146_HHIFIX             1   // Removal of DMM2 from DMMs
 #define ZJU_DEPTH_INTRA_MODE_E0204        1   // Simplified Binarization for depth_intra_mode
 #define KWU_SDC_SIMPLE_DC_E0117           1   // Simplified DC calculation for SDC
 #define SCU_HS_DMM4_REMOVE_DIV_E0242      1   // DMM4 Division Removal
