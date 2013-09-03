@@ -2851,8 +2851,13 @@ UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   UInt          uiTexPartIdx = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
   Int           uiColTexIntraDir = pcColTexCU->isIntra( uiTexPartIdx ) ? pcColTexCU->getLumaIntraDir( uiTexPartIdx ) : 255;
 
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
+  assert( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 );
+  return g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]][uiColTexIntraDir-2].at(intraTabIdx);
+#else
   if( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 ) { return g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]][uiColTexIntraDir-2].at(intraTabIdx); }
   else                                                     { return g_dmmWedgeNodeLists[(g_aucConvertToBit[uiWidth])].at(intraTabIdx).getPatternIdx(); }
+#endif
 }
 
 Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge )
