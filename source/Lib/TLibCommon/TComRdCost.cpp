@@ -483,7 +483,7 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
 
 }
 
-#if SCU_HS_FAST_DEPTH_INTRA_E0238
+#if SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 
 UInt TComRdCost::calcVAR (Pel* pi0, Int stride, Int width, Int height, Int cuDepth)
 { 
