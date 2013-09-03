@@ -2850,17 +2850,16 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     if( m_pcEncCfg->getIsDepth() && uiWidth >= DIM_MIN_SIZE && uiWidth <= DIM_MAX_SIZE && uiWidth == uiHeight )
     {
 
-#if SCU_HS_FAST_DEPTH_INTRA_E0238
+#if SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
       Int  threshold    = max(((pcCU->getQP(0))>>3)-1,3);
       Int  varThreshold = (Int)( threshold * threshold - 8 );
       UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, uiWidth,uiHeight,pcCU->getDepth(0));
 #endif
 
-
 #if H_3D_DIM_DMM
       if( m_pcEncCfg->getUseDMM()
-#if SCU_HS_FAST_DEPTH_INTRA_E0238
-         && (uiRdModeList[0] != 0 || varCU >= varThreshold)
+#if SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
+         && (uiRdModeList[0] != PLANAR_IDX || varCU >= varThreshold)
 #endif
         )
       {
@@ -2941,8 +2940,8 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 #if H_3D_DIM_RBC
       if( m_pcEncCfg->getUseRBC()
-#if SCU_HS_FAST_DEPTH_INTRA_E0238
-          && (uiRdModeList[0] != 0 || varCU >= varThreshold)
+#if SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
+          && (uiRdModeList[0] != PLANAR_IDX || varCU >= varThreshold)
 #endif
         )
       {
