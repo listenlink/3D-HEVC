@@ -2877,7 +2877,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType,  uiPartOffset, uiDepth + uiInitTrDepth );
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
             } break;
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
           case( DMM2_IDX ):
             {
               if( uiWidth > 4 )
@@ -7360,7 +7360,7 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   return;
 }
 
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 Void TEncSearch::xSearchDmm2Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd )
 {
   ruiTabIdx       = 0;

@@ -174,6 +174,7 @@ Bool TComWedgelet::checkInvIdentical( Bool* pbRefPattern )
   return true;
 }
 
+#if !SEC_DMM2_E0146_HHIFIX
 Bool TComWedgelet::checkPredDirAbovePossible( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset )
 {
   WedgeResolution eContDWedgeRes = g_dmmWedgeResolution[(UInt)g_aucConvertToBit[uiPredDirBlockSize]];
@@ -641,6 +642,7 @@ Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ru
     }
   }
 }
+#endif
 
 Void TComWedgelet::xGenerateWedgePattern()
 {
