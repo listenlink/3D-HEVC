@@ -114,7 +114,7 @@ protected:
 #if H_3D_VSP
   Bool m_viewSynthesisPredFlag;
 #endif
-#if H_3D_TMVP
+#if H_3D
   Bool m_ivMvScalingFlag; 
 #endif
 #endif

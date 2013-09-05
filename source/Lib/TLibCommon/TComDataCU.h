@@ -196,9 +196,6 @@ private:
 #if H_3D_VSP
   Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not
                                       ///< 0: non-VSP; 1: VSP
-#if MTK_VSP_FIX_E0172
-  Char*         m_piVSPDir;           ///< 0: LIST0; 1: LIST1
-#endif
 #endif
 #if H_3D_ARP
   UChar*        m_puhARPW;
@@ -255,18 +252,13 @@ protected:
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if H_3D_VSP
-#if MTK_VSP_FIX_E0172
-  Bool          xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
-                             Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag, Int* vspDir );
-#else
-  Bool          xAddVspCand( UChar ucVspMergePos, Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
+  Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
                              Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag );
 #endif
-#endif
-#if QC_INRIA_MTK_MRG_E0126
-  Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int*   iPdmDir, TComMv* acPdmMv, 
-                               Int* aiPdmRefIdx, Int iPosDmv, Int* vspFlag ); 
-  Bool          xFirstDmvAvai( Int& iCount, TComMvField* pcMvFieldNeighbours, Int*  iPdmDir, Int iPosDmv, Int* vspFlag, Int& iFirDispCand );
+#if H_3D_IV_MERGE
+  Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int*   ivCandDir, TComMv* ivCandMv, 
+                               Int* ivCandRefIdx, Int posIvDC, Int* vspFlag ); 
+  Bool          xGetPosFirstAvailDmvCand( Int iCount, TComMvField* pcMvFieldNeighbours, Int*  ivCandDir, Int posIvDC, Int* vspFlag, Int& iFirDispCand );
 #endif
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
@@ -441,7 +433,7 @@ public:
   Void          setMergeIndexSubParts ( UInt uiMergeIndex, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   template <typename T>
   Void          setSubPart            ( T bParameter, T* pbBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
   template<typename T>
   Void          setSubPartT           ( T uiParameter, T* puhBaseLCU, UInt uiCUAddr, UInt uiCUDepth, UInt uiPUIdx );
 #endif
@@ -470,9 +462,7 @@ public:
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
 #if H_3D_NBDV
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth);
-#endif
   DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                 }
   DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];          }
 #endif
@@ -681,28 +671,15 @@ public:
   Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #if H_3D_VSP
                                             , Int* vspFlag
-#if MTK_VSP_FIX_ALIGN_WD_E0172
                                             , InheritedVSPDisInfo*  inheritedVSPDisInfo
-#endif
-#if MTK_VSP_FIX_E0172
-                                            , Int* vspDir
-#endif
-#endif
                                             , Int& numValidMergeCand, Int mrgCandIdx = -1 );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
-  inline Void xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
+  inline Void   xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
 #endif
 #if H_3D_VSP
   Char*         getVSPFlag        ()                        { return m_piVSPFlag;          }
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
   Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }
   Void          setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-#if MTK_VSP_FIX_E0172
-  Char*         getVSPDir          ()                        { return m_piVSPDir;                           }
-  Char          getVSPDir          ( UInt uiIdx )            { return m_piVSPDir[uiIdx];                  }
-  Void          setVSPDir          ( UInt uiIdx, Int n )     { m_piVSPDir[uiIdx] = n;  }
-  Void          setVSPDirSubParts  ( Char iVSPDir, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-#endif
 #endif
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );

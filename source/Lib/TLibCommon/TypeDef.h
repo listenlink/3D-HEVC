@@ -91,6 +91,7 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
+                                              // MTK_DVMCP_FIX_E0172               1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
@@ -109,7 +110,7 @@
                                               // MTK_D0105, LG_D0139: No VSP for depth
                                               // QC_D0191: Clean up
                                               // LG_D0092: Multiple VSP candidate allowed
-
+                                              // MTK_VSP_FIX_ALIGN_WD_E0172
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
                                               // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
@@ -118,6 +119,7 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
+                                              // QC_INRIA_MTK_MRG_E0126            
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -160,12 +162,6 @@
 #if MTK_RVS_BUGFIX_E0172
 #define MTK_DIVMC_FIX_E0172               1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
 #define MTK_NBDV_TN_FIX_E0172             1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
-#define MTK_DVMCP_FIX_E0172               1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
-#define MTK_VSP_FIX_ALIGN_WD_E0172        1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172, using an implementation aligned with WD
-
-#if !MTK_VSP_FIX_ALIGN_WD_E0172
-#define MTK_VSP_FIX_E0172                 1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172
-#endif
 #endif // MTK_RVS_BUGFIX_E0172
 
 #if H_3D_NBDV_REF
@@ -173,10 +169,6 @@
 #define SEC_SIMPLIFIED_NBDV_E0142         1   // Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
 #endif
 #endif // H_3D_NBDV
-
-#if H_3D_IV_MERGE
-#define QC_INRIA_MTK_MRG_E0126            1   // additional merge candidates JCT3V-E0126
-#endif
 
 #if H_3D_DIM
 #define SEC_DMM2_E0146_HHIFIX             1   // Removal of DMM2 from DMMs
@@ -270,7 +262,6 @@
 
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
-#define H_3D_VSP_POSITION                 3   // The only supported position
 #define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
 #if H_3D_VSP_BLOCKSIZE == 1
 #define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1

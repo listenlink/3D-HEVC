@@ -503,7 +503,7 @@ private:
   Int*        m_iDepthValue2Idx          [MAX_NUM_LAYERS   ];
   Int*        m_iIdx2DepthValue          [MAX_NUM_LAYERS   ];
 #endif
-#if H_3D_TMVP
+#if H_3D
   Bool        m_ivMvScalingFlag; 
 #endif
 #if LGE_INTER_SDC_E0156
@@ -715,10 +715,8 @@ public:
   Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
 #endif
 
-#if H_3D_TMVP
   Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
   Void    setIvMvScalingFlag   ( Bool b )                 { m_ivMvScalingFlag = b;    }  
-#endif
 #if LGE_INTER_SDC_E0156
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
@@ -1639,7 +1637,7 @@ public:
 #if H_3D
   TComPic*  getIvPic            ( Bool depthFlag, Int viewIndex){ return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ]; }
 #endif
-#if H_3D_IV_MERGE
+#if H_3D
   TComPic*  getTexturePic       ()                              { return  m_ivPicsCurrPoc[0][ m_viewIndex ]; }
 #endif
 #if H_3D_IC

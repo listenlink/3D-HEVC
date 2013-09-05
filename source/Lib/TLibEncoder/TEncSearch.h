@@ -430,12 +430,7 @@ protected:
                                     UChar* uhInterDirNeighbours
 #if H_3D_VSP
                                   , Int* vspFlag
-#if MTK_VSP_FIX_ALIGN_WD_E0172
                                   , InheritedVSPDisInfo*  inheritedVSPDisInfo
-#endif
-#if MTK_VSP_FIX_E0172
-                                  , Int* vspDir
-#endif
 #endif
                                   , Int& numValidMergeCand
                                    );
@@ -444,9 +439,7 @@ protected:
                                     UInt            puIdx,
                                     TComMvField*    mvFieldNeighbours, 
                                     UChar*          interDirNeighbours, 
-#if MTK_VSP_FIX_E0172 || MTK_VSP_FIX_ALIGN_WD_E0172
                                     Int* vspFlag,
-#endif
                                     Int             numValidMergeCand );
 
   // -------------------------------------------------------------------------------------------------------------------

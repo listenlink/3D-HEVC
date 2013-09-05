@@ -718,7 +718,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_VSP
   ("ViewSynthesisPred",               m_viewSynthesisPredFlag,  true           , "view synthesis prediction " )  
 #endif
-#if H_3D_TMVP
+#if H_3D
   ("IvMvScaling",                     m_ivMvScalingFlag      ,  true            , "inter view motion vector scaling" )    
 #endif
 #endif //H_3D
@@ -2282,7 +2282,7 @@ Void TAppEncCfg::xPrintParameter()
 #if H_3D_VSP
   printf("ViewSynthesisPred:%d ", m_viewSynthesisPredFlag );
 #endif
-#if H_3D_TMVP
+#if H_3D
   printf("IvMvScaling:%d ", m_ivMvScalingFlag ? 1 : 0  );
 #endif
 #if H_3D_DIM
