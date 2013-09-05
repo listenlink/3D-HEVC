@@ -587,7 +587,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
   {
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
 #if H_3D_VSP
-    if ( 0 == pcCU->getVSPFlag(uiPartAddr) )
+    if ( pcCU->getVSPFlag(uiPartAddr) == 0)
     {
 #endif
       if ( eRefPicList != REF_PIC_LIST_X )
@@ -621,9 +621,13 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     else
     {
       if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+      {
         xPredInterUniVSP( pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+      }
       else
+      {
         xPredInterBiVSP ( pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
+      }
     }
 #endif
     return;
@@ -634,7 +638,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
 
 #if H_3D_VSP
-    if ( 0 == pcCU->getVSPFlag(uiPartAddr) )
+    if ( pcCU->getVSPFlag(uiPartAddr) == 0 )
     {
 #endif
       if ( eRefPicList != REF_PIC_LIST_X )
@@ -668,9 +672,13 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     else
     {
       if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+      {
         xPredInterUniVSP( pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+      }
       else
+      {
         xPredInterBiVSP ( pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
+      }
     }
 #endif
   }
@@ -721,14 +729,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
   // Get depth reference
-#if MTK_VSP_FIX_E0172 
-  Int vspDir = pcCU->getVSPDir( uiPartAddr );
-  RefPicList privateRefPicList = (vspDir == 0) ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
-  Int privateRefIdx = pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr );
-  Int depthRefViewIdx = pcCU->getSlice()->getRefPic(privateRefPicList, privateRefIdx)->getViewIndex();
-#else
-  Int depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
-#endif
+  Int       depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
   TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
   assert(pRefPicBaseDepth != NULL);
   TComPicYuv* pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
@@ -747,15 +748,7 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
 
   // Do compensation
-#if MTK_VSP_FIX_ALIGN_WD_E0172 
   TComMv cDv  = pcCU->getDvInfo(uiPartAddr).m_acNBDV;
-#else
-#if MTK_VSP_FIX_E0172
-  TComMv cDv  = pcCU->getCUMvField( privateRefPicList )->getMv( uiPartAddr );
-#else
-  TComMv cDv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cDv is the disparity vector derived from the neighbors
-#endif
-#endif // end of MTK_VSP_FIX_ALIGN_WD_E0172 
   pcCU->clipMv(cDv);
 
 #if NTT_VSP_COMMON_E0207_E0208
@@ -934,7 +927,9 @@ Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWi
     iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
 
     if ( iRefIdx[iRefList] < 0 )
+    {
       continue;
+    }
     assert( iRefIdx[iRefList] < pcCU->getSlice()->getNumRefIdx(eRefPicList) );
 
     pcMbYuv = &m_acYuvPred[iRefList];

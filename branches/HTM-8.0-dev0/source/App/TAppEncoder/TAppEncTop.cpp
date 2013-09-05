@@ -1241,7 +1241,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
 #endif
   }  
-#if H_3D_TMVP
+#if H_3D
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
 #endif
 }

@@ -847,9 +847,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
       }
     }  
   }
-#if H_3D_TMVP
   WRITE_FLAG( pcVPS->getIvMvScalingFlag( ) ? 1 : 0 ,          "iv_mv_scaling_flag" );
-#endif
 #else
   WRITE_FLAG( 0,                                             "vps_extension2_flag" );
 #endif
