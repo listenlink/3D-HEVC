@@ -5656,9 +5656,6 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           clipMv( cDispVec );
           pDInfo->m_acNBDV = cDispVec;
           pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
-#if !MTK_DVMCP_FIX_E0172
-          assert(pDInfo->m_aVIdxCan == 0); //Notes from QC: only works for CTC
-#endif
 #if H_3D_NBDV_REF
           TComPic* picDepth = getSlice()->getIvPic( true, pDInfo->m_aVIdxCan );
           assert(picDepth!=NULL);
@@ -5828,11 +5825,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
           assert( uiMvpDvPos < IDV_CANDS );
           paIDVInfo->m_acMvCand[iList][ uiMvpDvPos ] = TComMv( cMvPred.getIDVHor(), cMvPred.getIDVVer() );
           //Notes from QC: DvMCP is implemented in a way that doesnE½t carry the reference view identifier as NBDV. It only works for CTC and needs to be fixed to be aligned with other part of the NBDV design.
-#if MTK_DVMCP_FIX_E0172
           paIDVInfo->m_aVIdxCan[iList][ uiMvpDvPos ] = cMvPred.getIDVVId();
-#else  
-          paIDVInfo->m_aVIdxCan[iList][ uiMvpDvPos ] = 0; 
-#endif
           paIDVInfo->m_bAvailab[iList][ uiMvpDvPos ] = true;
           paIDVInfo->m_bFound                        = true; 
         }

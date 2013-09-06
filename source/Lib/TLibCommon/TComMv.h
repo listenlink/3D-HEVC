@@ -106,9 +106,7 @@ public:
   Void   setIDVHor  (Short i)                    {m_iIDVHor = i;}
   Void   setIDVVer  (Short i)                    {m_iIDVVer = i;}
   Void   setIDVFlag (Bool b )                    {m_bIDV    = b;}
-#if MTK_DVMCP_FIX_E0172
   Void   setIDVVId  (Short i)                    {m_iIDVVId = i;}
-#endif
 #endif
   // ------------------------------------------------------------------------------------------------------------------
   // get
