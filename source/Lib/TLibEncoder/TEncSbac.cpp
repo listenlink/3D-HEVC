@@ -648,11 +648,17 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   
   // residual flag
   m_pcBinIf->encodeBin( uiResidual, m_cSDCResidualFlagSCModel.get( 0, 0, 0 ) );
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("sdc_residual_flag[i]", uiResidual)
+#endif  
   
   if (uiResidual)
   {
     // encode sign bit of residual
     m_pcBinIf->encodeBinEP( uiSign );
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_sign_flag[i]", uiSign)
+#endif
     
 #if H_3D_DIM_DLT
     UInt uiNumDepthValues = pcCU->getSlice()->getVPS()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() );
@@ -663,9 +669,16 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
     
     // encode residual magnitude
     uiAbsIdx -= 1;
+
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_abs_minus1[i]", uiAbsIdx)
+#endif
+
     // prefix part
     if ( uiAbsIdx == 0 )
+    {
       m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+    }
     else
     {
       UInt l = uiAbsIdx;
@@ -678,10 +691,11 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
         k++;
       }
       if ( uiAbsIdx < uiPrefixThreshold )
-        m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
-      // suffix part
-      else
       {
+        m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+      }      
+      else
+      { // suffix part
         uiAbsIdx -= uiPrefixThreshold;
         UInt uiSuffixLength = numBitsForValue(uiNumDepthValues - uiPrefixThreshold);
         UInt uiBitInfo = 0;

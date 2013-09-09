@@ -223,8 +223,11 @@ extern UInt64 g_nSymbolCounter;
  extern Bool   g_traceCU; 
  extern Bool   g_tracePU; 
  extern Bool   g_traceTU; 
- extern Bool   g_disableHLSTrace; 
- extern UInt64 g_stopAtCounter; 
+ extern Bool   g_disableHLSTrace;       // USE g_HLSTraceEnable to toggle HLS trace. Not this one!
+ extern UInt64 g_stopAtCounter;         // Counter to set breakpoint. 
+ extern Bool   g_traceCopyBack;         // Output samples on copy back  
+ extern Bool   g_decTraceDispDer; // Trace derived disparity vectors (decoder only) 
+ extern Bool   g_decTraceMvFromMerge;   // Trace motion vectors obtained from merge (decoder only) 
 
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );

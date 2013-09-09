@@ -99,6 +99,21 @@ Void TExtrTop::dumpSpsInfo( std::ostream& rcSpsInfoHandle )
 
 Void TExtrTop::dumpVpsInfo( std::ostream& rcVpsInfoHandle )
 { 
+#if H_MV5
+  rcVpsInfoHandle << "MaxLayers      = " << m_cVPS.getMaxLayersMinus1() + 1 << std::endl; 
+  rcVpsInfoHandle << "MaxNuhLayerId  = " << m_cVPS.getVpsMaxLayerId() << std::endl;                      
+
+  for ( Int layerIdxInVps = 0; layerIdxInVps <= m_cVPS.getMaxLayersMinus1(); layerIdxInVps++ )
+  {  
+    Int layerId = m_cVPS.getLayerIdInNuh( layerIdxInVps ); 
+    rcVpsInfoHandle << "LayerIdxInVps  = " << layerIdxInVps                       << std::endl; 
+    rcVpsInfoHandle << "LayerIdInNuh   = " << layerId                             << std::endl; 
+    rcVpsInfoHandle << "ViewOrderIndex = " << m_cVPS.getViewIndex     ( layerId ) << std::endl;     
+#if H_3D    
+    rcVpsInfoHandle << "DepthFlag      = " << m_cVPS.getDepthId       ( layerId ) << std::endl;     
+#endif
+    rcVpsInfoHandle << "ViewId         = " << m_cVPS.getViewId        ( layerId ) << std::endl;     
+#else
   rcVpsInfoHandle << "MaxLayers = "     << m_cVPS.getMaxLayers()     << std::endl; 
   rcVpsInfoHandle << "MaxNuhLayerId = " << m_cVPS.getVpsMaxLayerId() << std::endl; 
   
@@ -110,6 +125,7 @@ Void TExtrTop::dumpVpsInfo( std::ostream& rcVpsInfoHandle )
 #if H_3D
     rcVpsInfoHandle << "DepthFlag = "      << m_cVPS.getViewIndex   ( layerIdxInVps ) << std::endl;     
     rcVpsInfoHandle << "DepthFlag = "      << m_cVPS.getDepthId     ( layerIdxInVps ) << std::endl;     
+#endif
 #endif
   }
 }

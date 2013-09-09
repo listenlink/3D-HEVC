@@ -68,8 +68,12 @@ protected:
 #if H_MV
   std::vector<char*>     m_pchReconFileList;                  ///< output reconstruction file names
   Int                    m_numberOfLayers;                    ///< number of Layers to Encode
+#if H_MV5
+  Int                    m_iNumberOfViews;                    ///< number of Layers that are views
+#else
 #if H_3D
   Int                    m_iNumberOfViews;                    ///< number of Layers that are views
+#endif
 #endif
 #else
   Char*     m_pchReconFile;                                   ///< output reconstruction file
@@ -78,6 +82,9 @@ protected:
 // VPS specification
   std::vector< std::vector<Int> > m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
   std::vector<Int>       m_viewId;                            ///< view id
+#if H_MV5
+  std::vector<Int>       m_viewOrderIndex;                    ///< view order index  
+#endif
 #if H_3D
   std::vector<Int>       m_depthFlag;                         ///< depth flag
 #endif
@@ -97,6 +104,24 @@ protected:
   // Dependencies
   std::vector< std::vector<Int> > m_directRefLayers;          ///< LayerIds of direct reference layers
   std::vector< std::vector<Int> > m_dependencyTypes;          ///< Dependency types of direct reference layers
+
+#if H_MV5
+  // VPS VUI
+  Bool m_vpsVuiPresentFlag;
+  Bool m_bitRatePresentVpsFlag;
+  Bool m_picRatePresentVpsFlag;
+  std::vector< std::vector<Bool > > m_bitRatePresentFlag;
+  std::vector< std::vector<Bool > > m_picRatePresentFlag;
+  std::vector< std::vector<Int  > > m_avgBitRate;
+  std::vector< std::vector<Int  > > m_maxBitRate;
+  std::vector< std::vector<Int  > > m_constantPicRateIdc;
+  std::vector< std::vector<Int  > > m_avgPicRate;
+  std::vector< std::vector<Bool > > m_tileBoundariesAlignedFlag;  
+  Bool m_ilpRestrictedRefLayersFlag;
+  std::vector< std::vector<Int  > > m_minSpatialSegmentOffsetPlus1;
+  std::vector< std::vector<Bool > > m_ctuBasedOffsetEnabledFlag;
+  std::vector< std::vector<Int  > > m_minHorizontalCtuOffsetPlus1;
+#endif
 
 #if H_3D_IV_MERGE
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 

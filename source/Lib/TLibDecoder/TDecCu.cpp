@@ -314,10 +314,25 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
 #if H_3D_NBDV_REF
       if(pcCU->getSlice()->getVPS()->getDepthRefinementFlag( pcCU->getSlice()->getLayerIdInVps() ))  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
+      {
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo, true);
+      }
       else
 #endif
+      {
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo);
+      }
+
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
+      if ( g_decTraceDispDer )
+      {
+        DTRACE_CU( "RefViewIdx",  DvInfo.m_aVIdxCan );       
+        DTRACE_CU( "MvDisp[x]", DvInfo.m_acNBDV.getHor() );
+        DTRACE_CU( "MvDisp[y]", DvInfo.m_acNBDV.getVer() );
+        DTRACE_CU( "MvRefinedDisp[x]", DvInfo.m_acDoNBDV.getHor() );
+        DTRACE_CU( "MvRefinedDisp[y]", DvInfo.m_acDoNBDV.getVer() );
+      }
+#endif
 
       pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
       m_ppcCU[uiDepth]->setPartSizeSubParts( ePartTemp, 0, uiDepth );
@@ -388,6 +403,23 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiAbsPartIdx, 0, uiDepth);
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
+        if ( g_decTraceMvFromMerge )
+        {        
+          if ( uiRefListIdx == 0 )
+          {
+            DTRACE_PU( "mvL0[0]", cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getHor());
+            DTRACE_PU( "mvL0[1]", cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getVer());
+            DTRACE_PU( "refIdxL0   ", cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getRefIdx());
+          }
+          else
+          {
+            DTRACE_PU( "mvL1[0]", cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getHor());
+            DTRACE_PU( "mvL1[1]", cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getVer());
+            DTRACE_PU( "refIdxL1", cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getRefIdx());
+          }
+        }
+#endif
       }
     }
 #if H_3D_IC

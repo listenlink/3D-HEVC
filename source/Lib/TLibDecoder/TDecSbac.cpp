@@ -583,10 +583,17 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
   
   m_pcTDecBinIf->decodeBin(uiResidual, m_cSDCResidualFlagSCModel.get( 0, 0, 0 ) );
   
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("sdc_residual_flag[i]", uiResidual)
+#endif
+  
   if (uiResidual)
   {
     // decode residual sign bit
     m_pcTDecBinIf->decodeBinEP(uiSign);
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_sign_flag[i]", uiSign)
+#endif
     
     // decode residual magnitude
     // prefix part
@@ -616,7 +623,13 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
       uiAbsIdx += uiCount;
     }
     else
+    {
       uiAbsIdx = uiCount;
+    }
+  
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_abs_minus1[i]", uiAbsIdx)
+#endif
     
     uiAbsIdx += 1;
     iIdx =(Int)(uiSign ? -1 : 1)*uiAbsIdx;
