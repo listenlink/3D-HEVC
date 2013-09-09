@@ -672,10 +672,12 @@ public:
 #if H_3D_VSP
                                             , Int* vspFlag
                                             , InheritedVSPDisInfo*  inheritedVSPDisInfo
-                                            , Int& numValidMergeCand, Int mrgCandIdx = -1 );
-  inline Void   xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
 #endif
+                                            , Int& numValidMergeCand, Int mrgCandIdx = -1 );
+
 #if H_3D_VSP
+  inline Void   xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
+
   Char*         getVSPFlag        ()                        { return m_piVSPFlag;          }
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
   Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }

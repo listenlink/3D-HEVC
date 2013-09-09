@@ -439,7 +439,9 @@ protected:
                                     UInt            puIdx,
                                     TComMvField*    mvFieldNeighbours, 
                                     UChar*          interDirNeighbours, 
+#if H_3D_VSP
                                     Int* vspFlag,
+#endif
                                     Int             numValidMergeCand );
 
   // -------------------------------------------------------------------------------------------------------------------
