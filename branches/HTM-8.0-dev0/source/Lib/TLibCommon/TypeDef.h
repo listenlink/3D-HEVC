@@ -69,6 +69,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 #if H_MV
 #define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define H_MV5                             1
 #endif
 
 #if H_3D
@@ -790,10 +791,17 @@ namespace Level
 /// scalability types
   enum ScalabilityType
   {
+#if H_MV5
+#if H_3D
+    DEPTH_ID = 0,    
+#endif    
+    VIEW_ORDER_INDEX  = 1,
+#else
     VIEW_ID  = 0,
 #if H_3D
     DEPTH_ID = 1,    
 #endif    
+#endif
   };
 #endif
 #if H_3D

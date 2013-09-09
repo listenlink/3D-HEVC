@@ -371,7 +371,7 @@ Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 FILE*  g_hTrace = NULL;
 const Bool g_bEncDecTraceEnable  = true;
 const Bool g_bEncDecTraceDisable = false;
-Bool   g_HLSTraceEnable = true;
+Bool   g_HLSTraceEnable = false;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
 #if H_MV_ENC_DEC_TRAC
@@ -379,7 +379,10 @@ Bool g_traceCU = true;
 Bool g_tracePU = true; 
 Bool g_traceTU = true; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter   = 10803; 
+UInt64 g_stopAtCounter       = 48; 
+Bool g_traceCopyBack         = false; 
+Bool g_decTraceDispDer       = false; 
+Bool g_decTraceMvFromMerge   = false; 
 #endif
 #endif
 // ====================================================================================================================
