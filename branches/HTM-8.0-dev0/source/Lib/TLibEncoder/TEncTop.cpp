@@ -514,7 +514,10 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+
+#if H_MV
   rpcPic->getPicYuvOrg()->setBorderExtension(false);
+#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -754,22 +757,7 @@ Void TEncTop::xInitPPS()
 #endif
 #endif
   m_cPPS.setSignHideFlag(getSignHideFlag());
-#if L0386_DB_METRIC
-  if ( getDeblockingFilterMetric() )
-  {
-    m_cPPS.setDeblockingFilterControlPresentFlag (true);
-    m_cPPS.setDeblockingFilterOverrideEnabledFlag(true);
-    m_cPPS.setPicDisableDeblockingFilterFlag(false);
-    m_cPPS.setDeblockingFilterBetaOffsetDiv2(0);
-    m_cPPS.setDeblockingFilterTcOffsetDiv2(0);
-  } 
-  else
-  {
   m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
-  }
-#else
-  m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
-#endif
   m_cPPS.setLog2ParallelMergeLevelMinus2   (m_log2ParallelMergeLevelMinus2 );
   m_cPPS.setCabacInitPresentFlag(CABAC_INIT_PRESENT_FLAG);
   m_cPPS.setLoopFilterAcrossSlicesEnabledFlag( m_bLFCrossSliceBoundaryFlag );

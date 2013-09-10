@@ -3825,17 +3825,6 @@ Void TComPTL::copyLevelFrom( TComPTL* source )
   }
 }
 #endif
-#if SIGNAL_BITRATE_PICRATE_IN_VPS
-TComBitRatePicRateInfo::TComBitRatePicRateInfo()
-{
-  ::memset(m_bitRateInfoPresentFlag, 0, sizeof(m_bitRateInfoPresentFlag));
-  ::memset(m_picRateInfoPresentFlag, 0, sizeof(m_picRateInfoPresentFlag));
-  ::memset(m_avgBitRate,             0, sizeof(m_avgBitRate));
-  ::memset(m_maxBitRate,             0, sizeof(m_maxBitRate));
-  ::memset(m_constantPicRateIdc,     0, sizeof(m_constantPicRateIdc));
-  ::memset(m_avgPicRate,             0, sizeof(m_avgPicRate));
-}
-#endif
 //! \}
 
 #if H_MV5
