@@ -697,7 +697,7 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     READ_UVLC ( uiCode, "sps_max_latency_increase[i]");
 #endif
 #else
-    READ_UVLC ( uiCode, "sps_max_latency_increase");
+    READ_UVLC ( uiCode, "sps_max_latency_increase_plus1");
 #endif
     pcSPS->setMaxLatencyIncrease( uiCode, i );
 

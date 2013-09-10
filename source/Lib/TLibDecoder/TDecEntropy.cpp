@@ -259,7 +259,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       }
       else
       {
-        uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx); // Redundant line
+        uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
 #if H_3D_VSP
         Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
         memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
