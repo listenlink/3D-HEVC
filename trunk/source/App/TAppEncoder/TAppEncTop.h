@@ -120,6 +120,11 @@ protected:
   Void xSetDependencies           ( TComVPS& vps );
   Void xSetLayerSets              ( TComVPS& vps );
   Void xSetProfileTierLevel       ( TComVPS& vps );
+#if H_MV5
+  Void xSetRepFormat              ( TComVPS& vps );
+  Void xSetVPSVUI                 ( TComVPS& vps );
+  GOPEntry* xGetGopEntry( Int layerIdInVps, Int poc );
+#endif
   Int  xGetMax( std::vector<Int>& vec);
 #endif
 #if H_3D

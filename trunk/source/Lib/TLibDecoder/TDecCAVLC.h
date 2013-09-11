@@ -75,7 +75,22 @@ public:
   Void  parseQtCbf          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, UInt uiTrDepth, UInt uiDepth );
   Void  parseQtRootCbf      ( UInt uiAbsPartIdx, UInt& uiQtRootCbf );
   Void  parseVPS            ( TComVPS* pcVPS );
+#if H_MV5
+#if H_MV
+  Void  parseVPSExtension   ( TComVPS* pcVPS ); 
+  Void  parseRepFormat      ( TComRepFormat* pcRepFormat );
+  Void  parseVPSVUI         ( TComVPS* pcVPS );
+#endif
+
+#if H_MV
+  Void  parseSPSExtension   ( TComSPS* pcSPS );  
+#endif
+#endif
 #if H_3D
+#if H_MV5
+  Void  parseVPSExtension2  ( TComVPS* pcVPS ); 
+  Void  parseSPSExtension2  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#endif
   Void  parseSPS            ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
 #else
   Void  parseSPS            ( TComSPS* pcSPS );

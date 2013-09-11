@@ -351,10 +351,14 @@ protected:
 #if H_3D_DIM_DMM
   Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
   Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   Void xSearchDmm2Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd );
 #endif
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
+  Void xSearchDmm3Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx, UInt colTexIntraDir );
+#else
   Void xSearchDmm3Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx );
+#endif
 #endif
 #if H_3D_DIM_RBC
   Void xSearchRbcDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
@@ -426,12 +430,7 @@ protected:
                                     UChar* uhInterDirNeighbours
 #if H_3D_VSP
                                   , Int* vspFlag
-#if MTK_VSP_FIX_ALIGN_WD_E0172
                                   , InheritedVSPDisInfo*  inheritedVSPDisInfo
-#endif
-#if MTK_VSP_FIX_E0172
-                                  , Int* vspDir
-#endif
 #endif
                                   , Int& numValidMergeCand
                                    );
@@ -440,7 +439,7 @@ protected:
                                     UInt            puIdx,
                                     TComMvField*    mvFieldNeighbours, 
                                     UChar*          interDirNeighbours, 
-#if MTK_VSP_FIX_E0172 || MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                                     Int* vspFlag,
 #endif
                                     Int             numValidMergeCand );

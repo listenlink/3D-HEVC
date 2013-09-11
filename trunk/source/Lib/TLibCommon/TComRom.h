@@ -173,7 +173,11 @@ extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
 extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
 extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
 
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
+Void initWedgeLists( Bool initNodeList = false );
+#else
 Void initWedgeLists( Bool initRefinements = false );
+#endif
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
 #endif
@@ -193,7 +197,7 @@ extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE];
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 
 #ifndef ENC_DEC_TRACE
-# define ENC_DEC_TRACE 0
+#define ENC_DEC_TRACE   0
 #endif
 
 #if ENC_DEC_TRACE
@@ -219,8 +223,11 @@ extern UInt64 g_nSymbolCounter;
  extern Bool   g_traceCU; 
  extern Bool   g_tracePU; 
  extern Bool   g_traceTU; 
- extern Bool   g_disableHLSTrace; 
- extern UInt64 g_stopAtCounter; 
+ extern Bool   g_disableHLSTrace;       // USE g_HLSTraceEnable to toggle HLS trace. Not this one!
+ extern UInt64 g_stopAtCounter;         // Counter to set breakpoint. 
+ extern Bool   g_traceCopyBack;         // Output samples on copy back  
+ extern Bool   g_decTraceDispDer; // Trace derived disparity vectors (decoder only) 
+ extern Bool   g_decTraceMvFromMerge;   // Trace motion vectors obtained from merge (decoder only) 
 
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );

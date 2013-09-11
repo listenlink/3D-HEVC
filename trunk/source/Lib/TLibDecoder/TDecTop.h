@@ -215,7 +215,12 @@ private:
   Int                     m_layerId;
   Int                     m_viewId;
   TComPicLists*           m_ivPicLists;
+#if H_MV5
+  std::vector<TComPic*>   m_refPicSetInterLayer0; 
+  std::vector<TComPic*>   m_refPicSetInterLayer1; 
+#else
   std::vector<TComPic*>   m_refPicSetInterLayer; 
+#endif
 #if H_3D
   Int                     m_viewIndex; 
   Bool                    m_isDepth;
@@ -273,6 +278,9 @@ protected:
 #if H_MV  
   TComPic*  xGetPic( Int layerId, Int poc ); 
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag );  
+#if H_MV5
+  Void      xResetPocInPicBuffer();
+#endif
 #else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
 #endif

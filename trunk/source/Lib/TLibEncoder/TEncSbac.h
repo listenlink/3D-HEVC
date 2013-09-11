@@ -120,7 +120,7 @@ private:
   Void  xCodeDimDeltaDC      ( Pel valDeltaDC, UInt dimType );
 #if H_3D_DIM_DMM
   Void  xCodeDmm1WedgeIdx    ( UInt uiTabIdx, Int iNumBit );
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   Void  xCodeDmm2Offset      ( Int iOffset );
 #endif
   Void  xCodeDmm3WedgeIdx    ( UInt uiIntraIdx, Int iNumBit );
@@ -255,7 +255,7 @@ private:
   ContextModel3DBuffer m_cDdcDataSCModel;
 #if H_3D_DIM_DMM
   ContextModel3DBuffer m_cDmm1DataSCModel;
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   ContextModel3DBuffer m_cDmm2DataSCModel;
 #endif
   ContextModel3DBuffer m_cDmm3DataSCModel;

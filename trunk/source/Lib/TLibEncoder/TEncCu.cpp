@@ -415,7 +415,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool earlyDetectionSkipMode = false;
 
   Bool    bTrySplitDQP  = true;
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
   DisInfo DvInfo; 
   DvInfo.bDV = false;
   DvInfo.m_acNBDV.setZero();
@@ -529,15 +529,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 
 #if H_3D_NBDV
-#if !MTK_VSP_FIX_ALIGN_WD_E0172
-      DisInfo DvInfo; 
-      DvInfo.bDV = false;
-      DvInfo.m_acNBDV.setZero();
-      DvInfo.m_aVIdxCan = 0;
-#if H_3D_NBDV_REF
-      DvInfo.m_acDoNBDV.setZero();
-#endif
-#endif
       if( rpcTempCU->getSlice()->getSliceType() != I_SLICE )
       {
 #if H_3D_ARP && H_3D_IV_MERGE
@@ -597,7 +588,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #else
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );//by Competition for inter_2Nx2N
 #endif
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
         }
@@ -610,7 +601,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         bFMD = bIVFMerge && rpcBestCU->isSkipped(0);
 #endif
         rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
         rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
         // fast encoder decision for early skip
@@ -637,7 +628,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #else
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );
 #endif
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
             if(m_pcEncCfg->getUseCbfFastMode())
@@ -724,7 +715,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN   );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
               }
@@ -744,7 +735,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );
 #endif
             rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
             if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_Nx2N )
@@ -764,7 +755,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN  );
 #endif
             rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
             if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxN)
@@ -803,7 +794,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnU )
@@ -823,7 +814,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnD )
@@ -847,7 +838,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, true );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnU )
@@ -867,7 +858,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, true );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_2NxnD )
@@ -893,7 +884,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_nLx2N )
@@ -913,7 +904,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
               }
@@ -933,7 +924,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, true );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
                 if(m_pcEncCfg->getUseCbfFastMode() && rpcBestCU->getPartitionSize(0) == SIZE_nLx2N )
@@ -953,7 +944,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, true );
 #endif
                 rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
                 rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
               }
@@ -967,12 +958,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
               xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
               rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
               xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
               rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 #if H_3D_QTLPC
@@ -982,12 +973,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
               xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
               rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
               xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N );
               rpcTempCU->initEstData( uiDepth, iQP );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
+#if H_3D_VSP
               rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
 #if H_3D_QTLPC
@@ -1760,18 +1751,8 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #if H_3D_VSP
   Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
   memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-#if MTK_VSP_FIX_ALIGN_WD_E0172
   InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
-#else
-#if MTK_VSP_FIX_E0172
-  Int vspDir[MRG_MAX_NUM_CANDS_MEM];
-  memset(vspDir, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,vspDir, numValidMergeCand );
-#else
-  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, numValidMergeCand );
-#endif
-#endif//end of MTK_VSP_FIX_ALIGN_WD_E0172
 #else
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
 #endif
@@ -1839,12 +1820,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->setMergeIndexSubParts( uiMergeCand, 0, 0, uhDepth ); // interprets depth relative to LCU level
 #if H_3D_VSP
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
-#if MTK_VSP_FIX_ALIGN_WD_E0172
           rpcTempCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, 0, 0, uhDepth );
-#endif
-#if MTK_VSP_FIX_E0172
-          rpcTempCU->setVSPDirSubParts( vspDir[uiMergeCand], 0, 0, uhDepth );
-#endif
 #endif
           rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level

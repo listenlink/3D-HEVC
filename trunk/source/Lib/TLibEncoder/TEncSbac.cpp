@@ -94,7 +94,7 @@ TEncSbac::TEncSbac()
 , m_cDdcDataSCModel           ( 1,             1,               NUM_DDC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 #if H_3D_DIM_DMM
 , m_cDmm1DataSCModel          ( 1,             1,               NUM_DMM1_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 , m_cDmm2DataSCModel          ( 1,             1,               NUM_DMM2_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 , m_cDmm3DataSCModel          ( 1,             1,               NUM_DMM3_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
@@ -176,7 +176,7 @@ Void TEncSbac::resetEntropy           ()
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
 #if H_3D_DIM_DMM
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   m_cDmm2DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM2_DATA );
 #endif
   m_cDmm3DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM3_DATA );
@@ -267,7 +267,7 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cDdcDataSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_DATA );
 #if H_3D_DIM_DMM
       curCost += m_cDmm1DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM1_DATA );
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
       curCost += m_cDmm2DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM2_DATA );
 #endif
       curCost += m_cDmm3DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM3_DATA );
@@ -339,7 +339,7 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
 #if H_3D_DIM_DMM
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   m_cDmm2DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM2_DATA );
 #endif
   m_cDmm3DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM3_DATA );
@@ -548,7 +548,7 @@ Void TEncSbac::xCodeDmm1WedgeIdx( UInt uiTabIdx, Int iNumBit )
   }
 }
 
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 Void TEncSbac::xCodeDmm2Offset( Int iOffset )
 {
   if( DMM2_DELTAEND_MAX > 0 )
@@ -648,11 +648,17 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   
   // residual flag
   m_pcBinIf->encodeBin( uiResidual, m_cSDCResidualFlagSCModel.get( 0, 0, 0 ) );
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("sdc_residual_flag[i]", uiResidual)
+#endif  
   
   if (uiResidual)
   {
     // encode sign bit of residual
     m_pcBinIf->encodeBinEP( uiSign );
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_sign_flag[i]", uiSign)
+#endif
     
 #if H_3D_DIM_DLT
     UInt uiNumDepthValues = pcCU->getSlice()->getVPS()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() );
@@ -663,9 +669,16 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
     
     // encode residual magnitude
     uiAbsIdx -= 1;
+
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_abs_minus1[i]", uiAbsIdx)
+#endif
+
     // prefix part
     if ( uiAbsIdx == 0 )
+    {
       m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+    }
     else
     {
       UInt l = uiAbsIdx;
@@ -678,10 +691,11 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
         k++;
       }
       if ( uiAbsIdx < uiPrefixThreshold )
-        m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
-      // suffix part
-      else
       {
+        m_pcBinIf->encodeBin( 0, m_cSDCResidualSCModel.get(0, 0, 0) );
+      }      
+      else
+      { // suffix part
         uiAbsIdx -= uiPrefixThreshold;
         UInt uiSuffixLength = numBitsForValue(uiNumDepthValues - uiPrefixThreshold);
         UInt uiBitInfo = 0;
@@ -1225,7 +1239,7 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
     {
       xCodeDmm1WedgeIdx( pcCU->getDmmWedgeTabIdx( dimType, absPartIdx ), g_dmm1TabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
     } break;
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   case( DMM2_IDX ):
     {
       xCodeDmm2Offset( pcCU->getDmm2DeltaEnd( absPartIdx ) );
@@ -1284,7 +1298,7 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     UInt codeWordLenTable[3][7] = {{0, 1, 0, 2, 0,3, 3},{1, 1, 2, 3, 2, 3, 2},{1, 1, 0, 0, 0, 0, 0}};
 #else
 #if LGE_SDC_REMOVE_DC_E0158
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
   UInt codeWordTable[3][7] =    {{0, 0, 0, 2, 0,6, 7},{0, 2, 3, 4, 5, 6, 7},{0, 1, 0, 0, 0, 0, 0}};
   UInt codeWordLenTable[3][7] = {{0, 1, 0, 2, 0,3, 3},{2, 3, 3, 3, 3, 3, 3},{1, 1, 0, 0, 0, 0, 0}};
 #else
@@ -1292,7 +1306,7 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
   UInt codeWordLenTable[3][8] = { { 0, 1, 0, 2, 0, 3, 0, 3 }, { 2, 3, 3, 3, 3, 3,  4,  4 }, { 1, 1, 0, 0, 0, 0, 0, 0 } };
 #endif
 #else
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
   UInt codeWordTable[3][8] =    {{0, 0, 0, 2, 0,6, 0, 7},{0, 2, 3, 4, 5, 6, 14, 15},{0, 2, 0, 0, 0, 0, 3, 0}};
   UInt codeWordLenTable[3][8] = {{0, 1, 0, 2, 0,3, 0, 3},{2, 3, 3, 3, 3, 3,  4,  4},{1, 2, 0, 0, 0, 0, 2, 0}};
 #else
@@ -1317,14 +1331,14 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     case DMM4_IDX: codeIdx = 4; break;
     case DMM3_IDX: codeIdx = 5; break;
 #if LGE_SDC_REMOVE_DC_E0158
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
     case  RBC_IDX: codeIdx = 6; break;
 #else
     case DMM2_IDX: codeIdx = 6; break;
     case  RBC_IDX: codeIdx = 7; break;
 #endif
 #else
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
     case  RBC_IDX: codeIdx = 7; break;
 #else
     case DMM2_IDX: codeIdx = 7; break;

@@ -514,7 +514,10 @@ Void TEncTop::xGetNewPicBuffer ( TComPic*& rpcPic )
   rpcPic->getSlice(0)->setPOC( m_iPOCLast );
   // mark it should be extended
   rpcPic->getPicYuvRec()->setBorderExtension(false);
+
+#if H_MV
   rpcPic->getPicYuvOrg()->setBorderExtension(false);
+#endif
 }
 
 Void TEncTop::xInitSPS()
@@ -547,6 +550,13 @@ Void TEncTop::xInitSPS()
   /* XXX: may be a good idea to refactor the above into a function
    * that chooses the actual compatibility based upon options */
 
+#if H_MV5
+#if H_MV  
+  m_cSPS.setUpdateRepFormatFlag           ( m_layerId == 0 );    
+  m_cSPS.setSpsInferScalingListFlag       ( m_layerId > 0 && m_cVPS->getInDirectDependencyFlag( getLayerIdInVps(), 0 ) ); 
+  m_cSPS.setSpsScalingListRefLayerId      ( 0              ); 
+#endif
+#endif
   m_cSPS.setPicWidthInLumaSamples         ( m_iSourceWidth      );
   m_cSPS.setPicHeightInLumaSamples        ( m_iSourceHeight     );
   m_cSPS.setConformanceWindow             ( m_conformanceWindow );
@@ -669,7 +679,12 @@ Void TEncTop::xInitSPS()
 Void TEncTop::xInitPPS()
 {
 #if H_MV
+#if H_MV5
+  m_cPPS.setLayerId( getLayerId() );
+  if( getVPS()->getNumDirectRefLayers( getLayerId() ) > 0 )
+#else
   if( getVPS()->getNumDirectRefLayers( getLayerIdInVps() ) > 0 )
+#endif
   {
     m_cPPS.setListsModificationPresentFlag( true );
   }
@@ -735,25 +750,14 @@ Void TEncTop::xInitPPS()
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
 #if H_MV
+#if H_MV5
+  m_cPPS.setNumExtraSliceHeaderBits( 2 ); 
+#else
   m_cPPS.setNumExtraSliceHeaderBits( 1 ); 
 #endif
-  m_cPPS.setSignHideFlag(getSignHideFlag());
-#if L0386_DB_METRIC
-  if ( getDeblockingFilterMetric() )
-  {
-    m_cPPS.setDeblockingFilterControlPresentFlag (true);
-    m_cPPS.setDeblockingFilterOverrideEnabledFlag(true);
-    m_cPPS.setPicDisableDeblockingFilterFlag(false);
-    m_cPPS.setDeblockingFilterBetaOffsetDiv2(0);
-    m_cPPS.setDeblockingFilterTcOffsetDiv2(0);
-  } 
-  else
-  {
-  m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
-  }
-#else
-  m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
 #endif
+  m_cPPS.setSignHideFlag(getSignHideFlag());
+  m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
   m_cPPS.setLog2ParallelMergeLevelMinus2   (m_log2ParallelMergeLevelMinus2 );
   m_cPPS.setCabacInitPresentFlag(CABAC_INIT_PRESENT_FLAG);
   m_cPPS.setLoopFilterAcrossSlicesEnabledFlag( m_bLFCrossSliceBoundaryFlag );

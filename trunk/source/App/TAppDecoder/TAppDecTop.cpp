@@ -503,6 +503,10 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
         const Window &conf = pcPic->getConformanceWindow();
         const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 #if H_MV
+#if H_MV5
+        assert( conf   .getScaledFlag() );
+        assert( defDisp.getScaledFlag() );
+#endif
         m_tVideoIOYuvReconFile[decIdx]->write( pcPic->getPicYuvRec(),
 #else
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),
@@ -576,6 +580,10 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
         const Window &conf = pcPic->getConformanceWindow();
         const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();
 #if H_MV
+#if H_MV5
+        assert( conf   .getScaledFlag() );
+        assert( defDisp.getScaledFlag() );
+#endif
         m_tVideoIOYuvReconFile[decIdx]->write( pcPic->getPicYuvRec(),
 #else
         m_cTVideoIOYuvReconFile.write( pcPic->getPicYuvRec(),

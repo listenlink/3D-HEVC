@@ -111,7 +111,7 @@
 #define NUM_DDC_DATA_CTX              2       ///< number of context models for deltaDC data (DMM or RBC)
 #if H_3D_DIM_DMM
 #define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 #define NUM_DMM2_DATA_CTX             1       ///< number of context models for DMM2 data
 #endif
 #define NUM_DMM3_DATA_CTX             1       ///< number of context models for DMM3 data
@@ -428,7 +428,7 @@ INIT_DMM1_DATA[3][NUM_DMM1_DATA_CTX] =
   { CNU }, 
   { CNU }, 
 };
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 static const UChar
 INIT_DMM2_DATA[3][NUM_DMM2_DATA_CTX] = 
 {

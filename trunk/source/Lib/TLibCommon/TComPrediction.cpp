@@ -455,7 +455,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       {
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
       } break;
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
     case( DMM2_IDX ):
       {
         UInt uiTabIdx = 0;
@@ -587,7 +587,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
   {
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
 #if H_3D_VSP
-    if ( 0 == pcCU->getVSPFlag(uiPartAddr) )
+    if ( pcCU->getVSPFlag(uiPartAddr) == 0)
     {
 #endif
       if ( eRefPicList != REF_PIC_LIST_X )
@@ -621,9 +621,13 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     else
     {
       if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+      {
         xPredInterUniVSP( pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+      }
       else
+      {
         xPredInterBiVSP ( pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
+      }
     }
 #endif
     return;
@@ -634,7 +638,7 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     pcCU->getPartIndexAndSize( iPartIdx, uiPartAddr, iWidth, iHeight );
 
 #if H_3D_VSP
-    if ( 0 == pcCU->getVSPFlag(uiPartAddr) )
+    if ( pcCU->getVSPFlag(uiPartAddr) == 0 )
     {
 #endif
       if ( eRefPicList != REF_PIC_LIST_X )
@@ -668,9 +672,13 @@ Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, 
     else
     {
       if ( xCheckIdenticalMotion( pcCU, uiPartAddr ) )
+      {
         xPredInterUniVSP( pcCU, uiPartAddr, iWidth, iHeight, REF_PIC_LIST_0, pcYuvPred );
+      }
       else
+      {
         xPredInterBiVSP ( pcCU, uiPartAddr, iWidth, iHeight, pcYuvPred );
+      }
     }
 #endif
   }
@@ -721,14 +729,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
   // Get depth reference
-#if MTK_VSP_FIX_E0172 
-  Int vspDir = pcCU->getVSPDir( uiPartAddr );
-  RefPicList privateRefPicList = (vspDir == 0) ? REF_PIC_LIST_0 : REF_PIC_LIST_1;
-  Int privateRefIdx = pcCU->getCUMvField( privateRefPicList )->getRefIdx( uiPartAddr );
-  Int depthRefViewIdx = pcCU->getSlice()->getRefPic(privateRefPicList, privateRefIdx)->getViewIndex();
-#else
-  Int depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
-#endif
+  Int       depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
   TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
   assert(pRefPicBaseDepth != NULL);
   TComPicYuv* pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
@@ -747,15 +748,7 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
 
   // Do compensation
-#if MTK_VSP_FIX_ALIGN_WD_E0172 
   TComMv cDv  = pcCU->getDvInfo(uiPartAddr).m_acNBDV;
-#else
-#if MTK_VSP_FIX_E0172
-  TComMv cDv  = pcCU->getCUMvField( privateRefPicList )->getMv( uiPartAddr );
-#else
-  TComMv cDv  = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr ); // cDv is the disparity vector derived from the neighbors
-#endif
-#endif // end of MTK_VSP_FIX_ALIGN_WD_E0172 
   pcCU->clipMv(cDv);
 
 #if NTT_VSP_COMMON_E0207_E0208
@@ -934,7 +927,9 @@ Void TComPrediction::xPredInterBiVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWi
     iRefIdx[iRefList] = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
 
     if ( iRefIdx[iRefList] < 0 )
+    {
       continue;
+    }
     assert( iRefIdx[iRefList] < pcCU->getSlice()->getNumRefIdx(eRefPicList) );
 
     pcMbYuv = &m_acYuvPred[iRefList];
@@ -2772,6 +2767,7 @@ Void TComPrediction::xAssignBiSegDCs( Pel* ptrDst, UInt dstStride, Bool* biSegPa
 }
 
 #if H_3D_DIM_DMM
+#if !SEC_DMM2_E0146_HHIFIX
 UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Int iDeltaEnd )
 {
   UInt uiThisBlockSize = uiWidth;
@@ -2783,11 +2779,7 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType =  getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
-#if SEC_DMM2_E0146
-    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
-#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
-#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;
@@ -2812,11 +2804,7 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   if( pcTempCU && isDimMode( pcTempCU->getLumaIntraDir( uiTempPartIdx ) ) )
   {
     UInt dimType = getDimType( pcTempCU->getLumaIntraDir( uiTempPartIdx ) );
-#if SEC_DMM2_E0146
-    if( DMM1_IDX == dimType || DMM3_IDX == dimType )
-#else
     if( DMM1_IDX == dimType || DMM2_IDX == dimType || DMM3_IDX == dimType )
-#endif
     {
       // get offset between current and reference block
       UInt uiOffsetX = 0, uiOffsetY = 0;
@@ -2848,6 +2836,7 @@ UInt TComPrediction::xPredWedgeFromIntra( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 
   return 0;
 }
+#endif
 
 UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt intraTabIdx )
 {
@@ -2857,8 +2846,13 @@ UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   UInt          uiTexPartIdx = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
   Int           uiColTexIntraDir = pcColTexCU->isIntra( uiTexPartIdx ) ? pcColTexCU->getLumaIntraDir( uiTexPartIdx ) : 255;
 
+#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
+  assert( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 );
+  return g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]][uiColTexIntraDir-2].at(intraTabIdx);
+#else
   if( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 ) { return g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]][uiColTexIntraDir-2].at(intraTabIdx); }
   else                                                     { return g_dmmWedgeNodeLists[(g_aucConvertToBit[uiWidth])].at(intraTabIdx).getPatternIdx(); }
+#endif
 }
 
 Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge )
@@ -2913,6 +2907,7 @@ Void TComPrediction::xCopyTextureLumaBlock( TComDataCU* pcCU, UInt uiAbsPartIdx,
   }
 }
 
+#if !SEC_DMM2_E0146_HHIFIX
 Void TComPrediction::xGetBlockOffset( TComDataCU* pcCU, UInt uiAbsPartIdx, TComDataCU* pcRefCU, UInt uiRefAbsPartIdx, UInt& ruiOffsetX, UInt& ruiOffsetY )
 {
   ruiOffsetX = 0;
@@ -3300,6 +3295,7 @@ UInt TComPrediction::xGetWedgePatternIdx( UInt uiBlockSize, UChar uhXs, UChar uh
   }
   return 0;
 }
+#endif
 #endif
 #if H_3D_DIM_RBC
 Void TComPrediction::xDeltaDCQuantScaleUp( TComDataCU* pcCU, Pel& rDeltaDC )
