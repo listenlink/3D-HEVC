@@ -49,7 +49,7 @@
 
 enum DIM_IDX
 {
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
   DMM1_IDX = 0,
   DMM3_IDX = 1,
   DMM4_IDX = 2,
@@ -62,7 +62,7 @@ enum DIM_IDX
   RBC_IDX  = 4
 #endif
 };
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
 #define DMM_NUM_TYPE   3
 #else
 #define DMM_NUM_TYPE   4
@@ -85,7 +85,7 @@ __inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && 
 #if H_3D_DIM_DMM
 #define DMM_NO_WEDGEINDEX       MAX_UINT
 #define DMM_NUM_WEDGE_REFINES   8
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 #define DMM2_DELTAEND_MAX       4
 #endif
 #define DMM3_SIMPLIFY_TR        1
@@ -150,11 +150,13 @@ public:
   Bool  checkIdentical( Bool* pbRefPattern );
   Bool  checkInvIdentical( Bool* pbRefPattern );
 
+#if !SEC_DMM2_E0146_HHIFIX
   // functions for DMM2 prediction
   Bool  checkPredDirAbovePossible( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffsett );
   Bool  checkPredDirLeftPossible ( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffsett );
   Void  getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd );
   Void  getPredDirStartEndLeft ( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd );
+#endif
 };  // END CLASS DEFINITION TComWedgelet
 
 // type definition wedgelet pattern list

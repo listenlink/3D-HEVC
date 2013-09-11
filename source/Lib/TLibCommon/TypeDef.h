@@ -91,6 +91,7 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
+                                              // MTK_DVMCP_FIX_E0172               1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
@@ -109,7 +110,7 @@
                                               // MTK_D0105, LG_D0139: No VSP for depth
                                               // QC_D0191: Clean up
                                               // LG_D0092: Multiple VSP candidate allowed
-
+                                              // MTK_VSP_FIX_ALIGN_WD_E0172
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
                                               // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
@@ -118,6 +119,7 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
+                                              // QC_INRIA_MTK_MRG_E0126            
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -160,12 +162,6 @@
 #if MTK_RVS_BUGFIX_E0172
 #define MTK_DIVMC_FIX_E0172               1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
 #define MTK_NBDV_TN_FIX_E0172             1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
-#define MTK_DVMCP_FIX_E0172               1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
-#define MTK_VSP_FIX_ALIGN_WD_E0172        1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172, using an implementation aligned with WD
-
-#if !MTK_VSP_FIX_ALIGN_WD_E0172
-#define MTK_VSP_FIX_E0172                 1 // fix the issues related to VSP merge candidate, issue 3, 4 in JCT3V-E0172
-#endif
 #endif // MTK_RVS_BUGFIX_E0172
 
 #if H_3D_NBDV_REF
@@ -174,16 +170,12 @@
 #endif
 #endif // H_3D_NBDV
 
-#if H_3D_IV_MERGE
-#define QC_INRIA_MTK_MRG_E0126            1   // additional merge candidates JCT3V-E0126
-#endif
-
 #if H_3D_DIM
-#define SEC_DMM2_E0146                    1   // Removal of DMM2 from DMMs
+#define SEC_DMM2_E0146_HHIFIX             1   // Removal of DMM2 from DMMs
 #define ZJU_DEPTH_INTRA_MODE_E0204        1   // Simplified Binarization for depth_intra_mode
 #define KWU_SDC_SIMPLE_DC_E0117           1   // Simplified DC calculation for SDC
 #define SCU_HS_DMM4_REMOVE_DIV_E0242      1   // DMM4 Division Removal
-#define SCU_HS_FAST_DEPTH_INTRA_E0238     1   // Fast DMM and RBC Mode Selection
+#define SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX     1   // Fast DMM and RBC Mode Selection
 #endif
 
 #if H_3D_VSP
@@ -214,8 +206,11 @@
 // Please put HTM-8.1 Integration defines here, when possible 
 
 
-
-
+/// FIXES
+#if H_MV
+#define H_MV_FIX_LID_PIC_HASH_SEI_T40                      1   // Fix wrong layer_id in decoded picture hash SEI 
+#define H_MV5                                              1   // Update to MV-HEVC 5 HLS
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -264,13 +259,12 @@
 #define LGE_SDC_REMOVE_DC_E0158           1   // Removal of DC mode from SDC
 #endif
 #if H_3D_DIM_DMM
-#define LGE_PKU_DMM3_OVERLAP_E0159        1   // Removal of overlap between DMM3 and DMM1
+#define LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   // Removal of overlap between DMM3 and DMM1
 #endif
 #endif
 
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
-#define H_3D_VSP_POSITION                 3   // The only supported position
 #define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
 #if H_3D_VSP_BLOCKSIZE == 1
 #define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
@@ -798,10 +792,17 @@ namespace Level
 /// scalability types
   enum ScalabilityType
   {
+#if H_MV5
+#if H_3D
+    DEPTH_ID = 0,    
+#endif    
+    VIEW_ORDER_INDEX  = 1,
+#else
     VIEW_ID  = 0,
 #if H_3D
     DEPTH_ID = 1,    
 #endif    
+#endif
   };
 #endif
 #if H_3D

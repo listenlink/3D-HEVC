@@ -88,7 +88,7 @@ TDecSbac::TDecSbac()
 , m_cDdcDataSCModel           ( 1,             1,               NUM_DDC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 #if H_3D_DIM_DMM
 , m_cDmm1DataSCModel          ( 1,             1,               NUM_DMM1_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 , m_cDmm2DataSCModel          ( 1,             1,               NUM_DMM2_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 , m_cDmm3DataSCModel          ( 1,             1,               NUM_DMM3_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
@@ -178,7 +178,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cDdcDataSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DDC_DATA );
 #if H_3D_DIM_DMM
   m_cDmm1DataSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_DMM1_DATA );
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   m_cDmm2DataSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_DMM2_DATA );
 #endif
   m_cDmm3DataSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_DMM3_DATA );
@@ -254,7 +254,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
 #if H_3D_DIM_DMM
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   m_cDmm2DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM2_DATA );
 #endif
   m_cDmm3DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM3_DATA );
@@ -443,7 +443,7 @@ Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
   }
   ruiTabIdx = uiIdx;
 }
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
 Void TDecSbac::xParseDmm2Offset( Int& riOffset )
 {
   Int iDeltaEnd = 0;
@@ -583,10 +583,17 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
   
   m_pcTDecBinIf->decodeBin(uiResidual, m_cSDCResidualFlagSCModel.get( 0, 0, 0 ) );
   
+#if H_MV_ENC_DEC_TRAC
+  DTRACE_CU("sdc_residual_flag[i]", uiResidual)
+#endif
+  
   if (uiResidual)
   {
     // decode residual sign bit
     m_pcTDecBinIf->decodeBinEP(uiSign);
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_sign_flag[i]", uiSign)
+#endif
     
     // decode residual magnitude
     // prefix part
@@ -616,7 +623,13 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
       uiAbsIdx += uiCount;
     }
     else
+    {
       uiAbsIdx = uiCount;
+    }
+  
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_CU("sdc_residual_abs_minus1[i]", uiAbsIdx)
+#endif
     
     uiAbsIdx += 1;
     iIdx =(Int)(uiSign ? -1 : 1)*uiAbsIdx;
@@ -1161,7 +1174,7 @@ Void TDecSbac::parseIntraDepth( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
       xParseDmm1WedgeIdx( uiTabIdx, g_dmm1TabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
       pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dimType, absPartIdx, depth );
     } break;
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
   case( DMM2_IDX ):
     {
       Int iOffset = 0;
@@ -1332,11 +1345,11 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
       {
         binNum = 0;
 #if LGE_SDC_REMOVE_DC_E0158
-#if !SEC_DMM2_E0146
+#if !SEC_DMM2_E0146_HHIFIX
         while( symbol && binNum < 2 )
 #endif
 #else
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
         while( symbol && binNum < 2 )
 #else
         while( symbol && binNum < 3 )
@@ -1357,7 +1370,7 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
     else if( modeCode == 5  ) { dir = (2*DMM4_IDX+DIM_OFFSET); sdcFlag = 0;}
     else if( modeCode == 6  ) { dir = (2*DMM3_IDX+DIM_OFFSET); sdcFlag = 0;}
 #if LGE_SDC_REMOVE_DC_E0158
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
     else if( modeCode == 7 )  { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
 #else
     else if( modeCode == 14 ) { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
@@ -1365,7 +1378,7 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
 #endif
 #else
     else if( modeCode == 14 ) { dir =      DC_IDX;             sdcFlag = 1;}
-#if SEC_DMM2_E0146
+#if SEC_DMM2_E0146_HHIFIX
     else if( modeCode == 15 ) { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}
 #else
     else if( modeCode == 30 ) { dir = (2* RBC_IDX+DIM_OFFSET); sdcFlag = 0;}

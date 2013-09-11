@@ -153,16 +153,20 @@ protected:
   Void xPredBiSegDCs            ( Int* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& predDC1, Pel& predDC2 );
   Void xAssignBiSegDCs          ( Pel* ptrDst, UInt dstStride, Bool* biSegPattern, Int patternStride, Pel   valDC1, Pel   valDC2 );
 #if H_3D_DIM_DMM
+#if !SEC_DMM2_E0146_HHIFIX
   UInt xPredWedgeFromIntra      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Int iDeltaEnd = 0 );
+#endif
   UInt xPredWedgeFromTex        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt intraTabIdx );
   Void xPredContourFromTex      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge );
 
   Void xCopyTextureLumaBlock    ( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piDestBlockY, UInt uiWidth, UInt uiHeight );
 
+#if !SEC_DMM2_E0146_HHIFIX
   Void xGetBlockOffset          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComDataCU* pcRefCU, UInt uiRefAbsPartIdx, UInt& ruiOffsetX, UInt& ruiOffsetY );
   Bool xGetWedgeIntraDirPredData( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiBlockSize, Int& riSlopeX, Int& riSlopeY, UInt& ruiStartPosX, UInt& ruiStartPosY );
   Void xGetWedgeIntraDirStartEnd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiBlockSize, Int iDeltaX, Int iDeltaY, UInt uiPMSPosX, UInt uiPMSPosY, UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, Int iDeltaEnd = 0 );
   UInt xGetWedgePatternIdx      ( UInt uiBlockSize, UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe );
+#endif
 #endif
 #if H_3D_DIM_RBC
   Void xDeltaDCQuantScaleUp     ( TComDataCU* pcCU, Pel& rDeltaDC );

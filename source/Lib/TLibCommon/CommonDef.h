@@ -47,6 +47,9 @@
 #pragma warning( disable : 4800 )
 #endif // _MSC_VER > 1000
 #include "TypeDef.h"
+#if H_MV
+#include <assert.h>
+#endif
 
 //! \ingroup TLibCommon
 //! \{
@@ -182,6 +185,17 @@ __inline T gSign(const T& t)
   else
     return (t < 0) ? T(-1) : T(1);
 }
+
+#if H_MV5
+template <typename T>
+__inline T gCeilLog2( T val )
+{
+  assert( val > 0 ); 
+  Int ceilLog2 = 0;
+  while( val > ( 1 << ceilLog2 ) ) ceilLog2++;
+  return ceilLog2;
+}
+#endif
 
 #define RemoveBitIncrement( exp ) ( exp >> ( g_bitDepthY - 8 ) )
 
