@@ -188,7 +188,7 @@
 #endif
 
 #if H_3D_FCO_E0163
-#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
+#define H_3D_FCO_VSP_DONBDV_E0163               1   // Adaptive depth reference for flexible coding order
 #else
 #define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #endif
