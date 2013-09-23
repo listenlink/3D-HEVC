@@ -138,7 +138,7 @@
                                               // LGE_CONCATENATE_D0141
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
-#define H_3D_FCO_E0163                          1   // Flexible coding order for 3D
+#define H_3D_FCO_E0163                          0   // Flexible coding order for 3D
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
