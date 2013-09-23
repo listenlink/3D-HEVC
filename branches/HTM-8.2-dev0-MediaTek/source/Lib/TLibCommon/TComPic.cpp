@@ -117,6 +117,17 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
+  /* initialize the texture to depth reference status */
+#if H_3D_FCO
+  for (int j=0; j<2; j++)
+  {
+      for (int i=0; i<MAX_NUM_REF; i++)
+      {
+          m_aiTexToDepRef[j][i] = -1;
+      }
+  }
+#endif
+
   return;
 }
 
@@ -721,6 +732,11 @@ Void TComPic::checkTextureRef(  )
 {
   TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
   TComPic* pcTextPic = pcCurrSlice->getTexturePic();
+#if H_3D_FCO
+  if ( pcTextPic )
+  {
+#endif
+
   TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
 
   for( Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB()? 2:1) ) && !pcTextSlice->isIntra(); iTextRefDir ++ )
@@ -742,6 +758,10 @@ Void TComPic::checkTextureRef(  )
     }
 
   }
+#if H_3D_FCO
+  }
+#endif
+
 }
 
 Int TComPic::isTextRefValid(Int iTextRefDir, Int iTextRefIdx)

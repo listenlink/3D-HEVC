@@ -730,7 +730,21 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 {
   // Get depth reference
   Int       depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
+#if H_3D_FCO_VSP_DONBDV
+  TComPic* pRefPicBaseDepth = 0;
+  Bool     bIsCurrDepthCoded = false;
+  pRefPicBaseDepth  = pcCU->getSlice()->getIvPic( true, pcCU->getSlice()->getViewIndex() );
+  if ( pRefPicBaseDepth->getPicYuvRec() != NULL  ) 
+  {
+    bIsCurrDepthCoded = true;
+  }
+  else 
+  {
+    pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
+  }
+#else
   TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
+#endif
   assert(pRefPicBaseDepth != NULL);
   TComPicYuv* pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
   assert(pcBaseViewDepthPicYuv != NULL);
@@ -750,6 +764,13 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   // Do compensation
   TComMv cDv  = pcCU->getDvInfo(uiPartAddr).m_acNBDV;
   pcCU->clipMv(cDv);
+
+#if H_3D_FCO_VSP_DONBDV
+  if ( bIsCurrDepthCoded )
+  {
+      cDv.setZero();
+  }
+#endif
 
 #if NTT_VSP_COMMON_E0207_E0208
   // fetch virtual depth map

@@ -977,8 +977,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
 #if H_3D
     pcSlice->setIvPicLists( m_ivPicLists );         
-#if H_3D_IV_MERGE    
+#if H_3D_IV_MERGE
+#if H_3D_FCO
+    //assert( !getIsDepth() );
+#else
     assert( !getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
+#endif
 #endif    
 #endif
     // For generalized B

@@ -138,7 +138,7 @@
                                               // LGE_CONCATENATE_D0141
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
-
+#define H_3D_FCO                          1   // Flexible coding order for 3D
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -185,6 +185,12 @@
 #define NTT_VSP_VECTOR_CLIP_E0208         1 // disparity vector clipping on fetching depth map in VSP, JCT3V-E0208
 #define NTT_VSP_ADAPTIVE_SPLIT_E0207      1 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
 #endif
+#endif
+
+#if H_3D_FCO
+#define H_3D_FCO_VSP_DONBDV               0   // Adaptive depth reference for flexible coding order
+#else
+#define H_3D_FCO_VSP_DONBDV               0   // Adaptive depth reference for flexible coding order
 #endif
 
 #define H_3D_REN_MAX_DEV_OUT              0  // Output maximal possible shift deviation 

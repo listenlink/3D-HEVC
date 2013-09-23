@@ -3568,9 +3568,20 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( uiPUIdx, uiPartIdxCenter );    
+#if H_3D_FCO
+    TComPic * pcTexturePic = m_pcSlice->getTexturePic();
+    TComDataCU *pcTextureCU = 0;
+    if ( pcTexturePic )
+        pcTextureCU = pcTexturePic->getCU( getAddr() );
+#else
     TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
+#endif
  
+#if H_3D_FCO
+    if ( pcTextureCU && pcTexturePic->getReconMark() && !pcTextureCU->isIntra( uiPartIdxCenter ) )
+#else
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
+#endif
     {
       pcTextureCU->getMvField( pcTextureCU, uiPartIdxCenter, REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1] );
       Int iValidDepRef = getPic()->isTextRefValid( REF_PIC_LIST_0, pcMvFieldNeighbours[iCount<<1].getRefIdx() );
@@ -5561,9 +5572,23 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           pDInfo->m_aVIdxCan  = iTargetViewIdx;
 
 #if H_3D_NBDV_REF
-          TComPic* picDepth = NULL;          
+          TComPic* picDepth = NULL;   
+#if H_3D_FCO_VSP_DONBDV
+          picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
+          if ( picDepth->getPicYuvRec() != NULL  )  
+          {
+            cColMv.setZero();
+          }
+          else // Go back with virtual depth
+          {
+            picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
+          }
+
+          assert(picDepth != NULL);
+#else
           picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
           assert(picDepth != NULL);
+#endif
           if (picDepth && bDepthRefine)
             estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
 
@@ -5661,8 +5686,24 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           pDInfo->m_acNBDV = cDispVec;
           pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
 #if H_3D_NBDV_REF
+#if H_3D_FCO_VSP_DONBDV
+          TComPic* picDepth  = NULL;
+
+          picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
+          if ( picDepth->getPicYuvRec() != NULL )  
+          {
+            cDispVec.setZero();
+          }
+          else // Go back with virtual depth
+          {
+            picDepth = getSlice()->getIvPic( true, pDInfo->m_aVIdxCan );
+          }
+
+          assert(picDepth != NULL);
+#else
           TComPic* picDepth = getSlice()->getIvPic( true, pDInfo->m_aVIdxCan );
           assert(picDepth!=NULL);
+#endif
 
           if (picDepth && bDepthRefine)
           {
@@ -5706,9 +5747,22 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     pDInfo->m_aVIdxCan = viewIndex;
 #if H_3D_NBDV_REF
     TComPic* picDepth = NULL;
+#if H_3D_FCO_VSP_DONBDV
+    picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
+    if ( picDepth->getPicYuvRec() != NULL )  
+    {
+      defaultDV.setZero();
+    }
+    else // Go back with virtual depth
+    {
+      picDepth = getSlice()->getIvPic( true, viewIndex );
+    }
+
+    assert(picDepth != NULL);
+#else
     picDepth = getSlice()->getIvPic( true, viewIndex );
     assert(picDepth!=NULL);
-
+#endif
     if (picDepth && bDepthRefine)
     {
       estimateDVFromDM(viewIndex, uiPartIdx, picDepth, uiPartAddr, &defaultDV ); // from base view
@@ -5811,9 +5865,21 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
 #if H_3D_NBDV_REF
           TComPic* picDepth = NULL;
           assert(getSlice()->getRefPic(eRefPicList, refId)->getPOC() == getSlice()->getPOC());          
+#if H_3D_FCO_VSP_DONBDV
+          picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
+          if ( picDepth->getPicYuvRec() != NULL )  
+          {
+            cMvPred.setZero();
+          }
+          else// Go back with virtual depth
+          {
+            picDepth = getSlice()->getIvPic (true, refViewIdx );
+          }
+          assert(picDepth != NULL);
+#else
           picDepth   = getSlice()->getIvPic (true, refViewIdx );
           assert(picDepth != NULL);
-
+#endif
           UInt uiPartIdx = 0;   //Notes from MTK: Please confirm that using 0 as partition index and partition address is correct for CU-level DoNBDV
           UInt uiPartAddr = 0;  //QC: confirmed
 

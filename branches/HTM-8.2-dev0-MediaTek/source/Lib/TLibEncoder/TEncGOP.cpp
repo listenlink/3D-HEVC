@@ -912,8 +912,15 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 
     // SAIT_VSO_EST_A0033
+#if H_3D_FCO
+    Bool flagRec;
+    flagRec =  ((m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), true) == NULL) ? false: true);
+    pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), flagRec ) );
+    pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true, pcSlice->getPOC(), false ) );
+#else
     pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false , pcSlice->getPOC(), true ) );
     pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true  , pcSlice->getPOC(), false ) );
+#endif
 
     // LGE_WVSO_A0119
     Bool bUseWVSO  = m_pcEncTop->getUseWVSO();
