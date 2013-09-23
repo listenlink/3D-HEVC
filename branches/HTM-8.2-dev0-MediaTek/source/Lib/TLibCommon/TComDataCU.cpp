@@ -3568,7 +3568,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( uiPUIdx, uiPartIdxCenter );    
-#if H_3D_FCO
+#if H_3D_FCO_E0163
     TComPic * pcTexturePic = m_pcSlice->getTexturePic();
     TComDataCU *pcTextureCU = 0;
     if ( pcTexturePic )
@@ -3577,7 +3577,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
 #endif
  
-#if H_3D_FCO
+#if H_3D_FCO_E0163
     if ( pcTextureCU && pcTexturePic->getReconMark() && !pcTextureCU->isIntra( uiPartIdxCenter ) )
 #else
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
@@ -5573,7 +5573,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 
 #if H_3D_NBDV_REF
           TComPic* picDepth = NULL;   
-#if H_3D_FCO_VSP_DONBDV
+#if H_3D_FCO_VSP_DONBDV_E0163
           picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
           if ( picDepth->getPicYuvRec() != NULL  )  
           {
@@ -5686,7 +5686,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           pDInfo->m_acNBDV = cDispVec;
           pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
 #if H_3D_NBDV_REF
-#if H_3D_FCO_VSP_DONBDV
+#if H_3D_FCO_VSP_DONBDV_E0163
           TComPic* picDepth  = NULL;
 
           picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
@@ -5747,7 +5747,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     pDInfo->m_aVIdxCan = viewIndex;
 #if H_3D_NBDV_REF
     TComPic* picDepth = NULL;
-#if H_3D_FCO_VSP_DONBDV
+#if H_3D_FCO_VSP_DONBDV_E0163
     picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
     if ( picDepth->getPicYuvRec() != NULL )  
     {
@@ -5865,7 +5865,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
 #if H_3D_NBDV_REF
           TComPic* picDepth = NULL;
           assert(getSlice()->getRefPic(eRefPicList, refId)->getPOC() == getSlice()->getPOC());          
-#if H_3D_FCO_VSP_DONBDV
+#if H_3D_FCO_VSP_DONBDV_E0163
           picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
           if ( picDepth->getPicYuvRec() != NULL )  
           {

@@ -912,7 +912,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 
     // SAIT_VSO_EST_A0033
-#if H_3D_FCO
+#if H_3D_FCO_E0163
     Bool flagRec;
     flagRec =  ((m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), true) == NULL) ? false: true);
     pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), flagRec ) );

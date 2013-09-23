@@ -2865,7 +2865,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       {
         for( UInt dmmType = 0; dmmType < DMM_NUM_TYPE; dmmType++ )
         {
-#if H_3D_FCO
+#if H_3D_FCO_E0163
             TComPic* picTexture  = pcCU->getSlice()->getIvPic(false, pcCU->getSlice()->getViewIndex() );
             if ( !picTexture->getReconMark() && (DMM3_IDX == dmmType || DMM4_IDX == dmmType ) )
             {

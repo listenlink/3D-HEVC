@@ -730,7 +730,7 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 {
   // Get depth reference
   Int       depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
-#if H_3D_FCO_VSP_DONBDV
+#if H_3D_FCO_VSP_DONBDV_E0163
   TComPic* pRefPicBaseDepth = 0;
   Bool     bIsCurrDepthCoded = false;
   pRefPicBaseDepth  = pcCU->getSlice()->getIvPic( true, pcCU->getSlice()->getViewIndex() );
@@ -765,7 +765,7 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   TComMv cDv  = pcCU->getDvInfo(uiPartAddr).m_acNBDV;
   pcCU->clipMv(cDv);
 
-#if H_3D_FCO_VSP_DONBDV
+#if H_3D_FCO_VSP_DONBDV_E0163
   if ( bIsCurrDepthCoded )
   {
       cDv.setZero();

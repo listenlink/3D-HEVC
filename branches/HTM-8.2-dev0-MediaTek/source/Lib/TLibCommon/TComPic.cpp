@@ -118,7 +118,7 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
   /* initialize the texture to depth reference status */
-#if H_3D_FCO
+#if H_3D_FCO_E0163
   for (int j=0; j<2; j++)
   {
       for (int i=0; i<MAX_NUM_REF; i++)
@@ -732,7 +732,7 @@ Void TComPic::checkTextureRef(  )
 {
   TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
   TComPic* pcTextPic = pcCurrSlice->getTexturePic();
-#if H_3D_FCO
+#if H_3D_FCO_E0163
   if ( pcTextPic )
   {
 #endif
@@ -758,7 +758,7 @@ Void TComPic::checkTextureRef(  )
     }
 
   }
-#if H_3D_FCO
+#if H_3D_FCO_E0163
   }
 #endif
 

@@ -1371,7 +1371,7 @@ Void TAppEncCfg::xCheckParameter()
 
      xConfirmPara( allEqual , "Each layer shall have a different position in scalability space." );
 
-#if !H_3D_FCO
+#if !H_3D_FCO_E0163
      if ( numDiff  == 1 ) 
      {
        Bool inc = m_dimIds[ lastDiff ][ i ] > m_dimIds[ lastDiff ][ j ]; 

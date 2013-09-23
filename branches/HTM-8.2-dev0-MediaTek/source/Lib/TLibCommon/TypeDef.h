@@ -138,7 +138,7 @@
                                               // LGE_CONCATENATE_D0141
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
-#define H_3D_FCO                          1   // Flexible coding order for 3D
+#define H_3D_FCO_E0163                          1   // Flexible coding order for 3D
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -187,10 +187,10 @@
 #endif
 #endif
 
-#if H_3D_FCO
-#define H_3D_FCO_VSP_DONBDV               0   // Adaptive depth reference for flexible coding order
+#if H_3D_FCO_E0163
+#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #else
-#define H_3D_FCO_VSP_DONBDV               0   // Adaptive depth reference for flexible coding order
+#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #endif
 
 #define H_3D_REN_MAX_DEV_OUT              0  // Output maximal possible shift deviation 
