@@ -152,6 +152,10 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_isDepth              = pcTEncTop->getIsDepth();
 #endif
 #endif
+
+#if !RATE_CONTROL_LAMBDA_DOMAIN
+  m_pcRateCtrl           = pcTEncTop->getRateCtrl();
+#endif
 }
 
 SEIActiveParameterSets* TEncGOP::xCreateSEIActiveParameterSets (TComSPS *sps)
@@ -976,6 +980,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         frameLevel = 0;
       }
       m_pcRateCtrl->initRCPic( frameLevel );
+
+#if KWU_RC_MADPRED_E0227
+      if(m_pcCfg->getLayerId() != 0)
+        m_pcRateCtrl->getRCPic()->setIVPic( m_pcEncTop->getEncTop()->getTEncTop(0)->getRateCtrl()->getRCPic() );
+      //getEncTop()->getEncTop();//->getTEncTop(0);//->getUseRateCtrl()->getRCPic();
+#endif
+
       estimatedBits = m_pcRateCtrl->getRCPic()->getTargetBits();
 
       Int sliceQP = m_pcCfg->getInitialQP();
@@ -1020,6 +1031,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
       else    // normal case
       {
+#if KWU_RC_MADPRED_E0227
+        if(m_pcRateCtrl->getLayerID() != 0)
+        {
+          list<TEncRCPic*> listPreviousPicture = m_pcRateCtrl->getPicList();
+          lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambdaIV( listPreviousPicture, pcSlice->getPOC() );
+          //printf("lambda : %lf\n", lambda);
+          sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture );
+        }
+        else
+        {
+#endif
         list<TEncRCPic*> listPreviousPicture = m_pcRateCtrl->getPicList();
 #if RATE_CONTROL_INTRA
         lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambda( listPreviousPicture, pcSlice->getSliceType());
@@ -1027,6 +1049,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambda( listPreviousPicture );
 #endif
         sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture );
+#if KWU_RC_MADPRED_E0227
+        }
+#endif
       }
 
       sliceQP = Clip3( -pcSlice->getSPS()->getQpBDOffsetY(), MAX_QP, sliceQP );
@@ -2190,12 +2215,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       delete[] pcSubstreamsOut;
   }
-#if !RATE_CONTROL_LAMBDA_DOMAIN
-  if(m_pcCfg->getUseRateCtrl())
-  {
-    m_pcRateCtrl->updateRCGOPStatus();
-  }
-#endif
+
   delete pcBitstreamRedirect;
 
   if( accumBitsDU != NULL) delete accumBitsDU;

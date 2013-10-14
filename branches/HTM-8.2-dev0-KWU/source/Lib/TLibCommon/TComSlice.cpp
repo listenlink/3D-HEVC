@@ -471,8 +471,8 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   if (checkNumPocTotalCurr)
   {
     // The variable NumPocTotalCurr is derived as specified in subclause 7.4.7.2. It is a requirement of bitstream conformance that the following applies to the value of NumPocTotalCurr:
-    // � If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
-    // � Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
+    // ?If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
+    // ?Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
     if (getRapPicFlag())
     {
       assert(numPocTotalCurr == 0);
@@ -826,12 +826,12 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   {
     // The variable NumPocTotalCurr is derived as specified in subclause 7.4.7.2. It is a requirement of bitstream conformance that the following applies to the value of NumPocTotalCurr:
 #if H_MV
-    // – If nuh_layer_id is equal to 0 and the current picture is a BLA picture or a CRA picture, the value of NumPocTotalCurr shall be equal to 0.
-    // – Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
+    // ??If nuh_layer_id is equal to 0 and the current picture is a BLA picture or a CRA picture, the value of NumPocTotalCurr shall be equal to 0.
+    // ??Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
     if ( getRapPicFlag() && m_layerId == 0 )
 #else
-    // – If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
-    // – Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
+    // ??If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
+    // ??Otherwise, when the current picture contains a P or B slice, the value of NumPocTotalCurr shall not be equal to 0.
     if (getRapPicFlag())
 #endif
     {

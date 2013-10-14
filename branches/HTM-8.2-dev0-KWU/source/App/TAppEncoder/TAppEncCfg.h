@@ -366,10 +366,26 @@ protected:
   Bool      m_RCUseLCUSeparateModel;              ///< use separate R-lambda model at LCU level
   Int       m_RCInitialQP;                        ///< inital QP for rate control
   Bool      m_RCForceIntraQP;                     ///< force all intra picture to use initial QP or not
+
+#if KWU_RC_VIEWRC_E0227
+  vector<Int>     m_pchViewTargetBits;
+  bool      m_bViewWiseRateCtrl;                              ///< Flag for using view-wise rate control
+#endif
+#if KWU_RC_MADPRED_E0227
+  UInt       m_uiDepthMADPred;
+#endif
 #else
   Bool      m_enableRateCtrl;                                   ///< Flag for using rate control algorithm
   Int       m_targetBitrate;                                 ///< target bitrate
   Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be completely divided by the NumLCUInUnit
+
+#if KWU_RC_VIEWRC_E0227
+  vector<Int>     m_pchViewTargetBits;
+  bool      m_bViewWiseRateCtrl;                              ///< Flag for using view-wise rate control
+#endif
+#if KWU_RC_MADPRED_E0227
+  UInt       m_uiDepthMADPred;
+#endif
 #endif
   Int       m_useScalingListId;                               ///< using quantization matrix
   Char*     m_scalingListFile;                                ///< quantization matrix file name

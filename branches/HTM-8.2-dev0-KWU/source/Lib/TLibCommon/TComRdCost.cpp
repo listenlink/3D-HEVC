@@ -613,7 +613,7 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Pel* piCur
 }
 #endif
 
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
 UInt TComRdCost::getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height )
 {
   UInt SAD = 0;

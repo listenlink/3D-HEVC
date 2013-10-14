@@ -122,11 +122,17 @@ Void TEncTop::create ()
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
+#if KWU_RC_MADPRED_E0227
+    m_cRateCtrl.init( m_framesToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
+      g_uiMaxCUWidth, g_uiMaxCUHeight, m_RCKeepHierarchicalBit, m_RCUseLCUSeparateModel, m_GOPList, getLayerId() );
+#else
     m_cRateCtrl.init( m_framesToBeEncoded, m_RCTargetBitrate, m_iFrameRate, m_iGOPSize, m_iSourceWidth, m_iSourceHeight,
                       g_uiMaxCUWidth, g_uiMaxCUHeight, m_RCKeepHierarchicalBit, m_RCUseLCUSeparateModel, m_GOPList );
+#endif
   }
 #else
-  m_cRateCtrl.create(getIntraPeriod(), getGOPSize(), getFrameRate(), getTargetBitrate(), getQP(), getNumLCUInUnit(), getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight);
+  if(m_enableRateCtrl)
+    m_cRateCtrl.create(getIntraPeriod(), getGOPSize(), getFrameRate(), getTargetBitrate(), getQP(), getNumLCUInUnit(), getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight);
 #endif
   // if SBAC-based RD optimization is used
   if( m_bUseSBACRD )
@@ -223,7 +229,6 @@ Void TEncTop::destroy ()
     m_cEncSAO.destroyEncBuffer();
   }
   m_cLoopFilter.        destroy();
-  m_cRateCtrl.          destroy();
   // SBAC RD
   if( m_bUseSBACRD )
   {
@@ -283,7 +288,11 @@ Void TEncTop::destroy ()
   return;
 }
 
+#if KWU_RC_MADPRED_E0227
+Void TEncTop::init(TAppEncTop* pcTAppEncTop)
+#else
 Void TEncTop::init()
+#endif
 {
   // initialize SPS
   xInitSPS();
@@ -309,6 +318,9 @@ Void TEncTop::init()
   m_cSliceEncoder.init( this );
   m_cCuEncoder.   init( this );
   
+#if KWU_RC_MADPRED_E0227
+  m_pcTAppEncTop = pcTAppEncTop;
+#endif
   // initialize transform & quantization class
   m_pcCavlcCoder = getCavlcCoder();
   
@@ -733,6 +745,13 @@ Void TEncTop::xInitPPS()
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
+  {
+    m_cPPS.setUseDQP(true);
+    m_cPPS.setMaxCuDQPDepth( 0 );
+    m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
+  } 
+#else
+  if ( m_enableRateCtrl )
   {
     m_cPPS.setUseDQP(true);
     m_cPPS.setMaxCuDQPDepth( 0 );

@@ -101,10 +101,11 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
   Int                     m_temporalSAD;
+  Int                     m_spatialSAD;
 #endif
 public:
   /// copy parameters from encoder class
@@ -123,7 +124,7 @@ public:
   Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
   UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
 #if RATE_CONTROL_INTRA

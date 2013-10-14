@@ -156,7 +156,10 @@ Void TEncSlice::init( TEncTop* pcEncTop )
   m_pdRdPicLambda     = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_pdRdPicQp         = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_piRdPicQp         = (Int*   )xMalloc( Int,    m_pcCfg->getDeltaQpRD() * 2 + 1 );
-  m_pcRateCtrl        = pcEncTop->getRateCtrl();
+  if(m_pcCfg->getUseRateCtrl())
+    m_pcRateCtrl        = pcEncTop->getRateCtrl();
+  else
+    m_pcRateCtrl        = NULL;
 }
 
 /**
@@ -320,7 +323,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     dQP += pdQPs[ rpcSlice->getPOC() ];
   }
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-  if ( m_pcCfg->getUseRateCtrl())
+  if ( m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
   {
     dQP = m_pcRateCtrl->getFrameQP(rpcSlice->isReferenced(), rpcSlice->getPOC());
   }
@@ -1122,8 +1125,23 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }
 #endif
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-    if(m_pcCfg->getUseRateCtrl())
+    if(m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
     {
+#if KWU_RC_MADPRED_E0227
+      if(pcSlice->getLayerId() != 0 && m_pcCfg->getUseDepthMADPred() && !pcSlice->getIsDepth())
+      {
+        double Zn, Zf, FocalLength, Position, CamShift;
+        double BasePos;
+        bool bInterpolated;
+        Int Direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
+
+        pcEncTop->getCamParam()->RCGetZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
+        pcEncTop->getCamParam()->RCGetGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
+        pcEncTop->getCamParam()->RCGetGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
+
+        m_pcRateCtrl->updateLCUDataEnhancedView(pcCU, pcCU->getTotalBits(), pcCU->getQP(0), BasePos, Position, FocalLength, Zn, Zf, (Direction > 0 ? 1 : -1));
+      }
+#endif
       if(m_pcRateCtrl->calculateUnitQP())
       {
         xLamdaRecalculation(m_pcRateCtrl->getUnitQP(), m_pcRateCtrl->getGOPId(), pcSlice->getDepth(), pcSlice->getSliceType(), pcSlice->getSPS(), pcSlice );
@@ -1222,6 +1240,24 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
         else
         {
+#if KWU_RC_MADPRED_E0227
+          if(pcSlice->getLayerId() != 0 && m_pcCfg->getUseDepthMADPred() && !pcSlice->getIsDepth())
+          {
+            double Zn, Zf, FocalLength, Position, CamShift;
+            double BasePos;
+            bool bInterpolated;
+            Int Direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
+            Int iDisparity;
+
+            pcEncTop->getCamParam()->RCGetZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
+            pcEncTop->getCamParam()->RCGetGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
+            pcEncTop->getCamParam()->RCGetGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
+            bpp       = m_pcRateCtrl->getRCPic()->getLCUTargetBppforInterView( m_pcRateCtrl->getPicList(), pcCU,
+                            BasePos, Position, FocalLength, Zn, Zf, (Direction > 0 ? 1 : -1), &iDisparity );
+          }
+          else
+          {
+#endif
 #if RATE_CONTROL_INTRA
           bpp = m_pcRateCtrl->getRCPic()->getLCUTargetBpp(pcSlice->getSliceType());
           if ( rpcPic->getSlice( 0 )->getSliceType() == I_SLICE)
@@ -1238,7 +1274,13 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
           estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp );
           estQP     = m_pcRateCtrl->getRCPic()->getLCUEstQP    ( estLambda, pcSlice->getSliceQp() );
 #endif
-
+#if KWU_RC_MADPRED_E0227
+          }
+#endif
+#if KWU_RC_MADPRED_E0227
+          estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp );
+          estQP     = m_pcRateCtrl->getRCPic()->getLCUEstQP    ( estLambda, pcSlice->getSliceQp() );
+#endif
           estQP     = Clip3( -pcSlice->getSPS()->getQpBDOffsetY(), MAX_QP, estQP );
 
           m_pcRdCost->setLambda(estLambda);
@@ -1340,9 +1382,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 
 #if TICKET_1090_FIX
 #if RATE_CONTROL_LAMBDA_DOMAIN
-      if ( m_pcCfg->getUseRateCtrl() )
+      if ( m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth() )
       {
-#if !M0036_RC_IMPROVEMENT
+#if !M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227
         UInt SAD    = m_pcCuEncoder->getLCUPredictionSAD();
         Int height  = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
         Int width   = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
@@ -1405,7 +1447,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     m_dPicRdCost     += pcCU->getTotalCost();
     m_uiPicDist      += pcCU->getTotalDistortion();
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-    if(m_pcCfg->getUseRateCtrl())
+    if(m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
     {
       m_pcRateCtrl->updateLCUData(pcCU, pcCU->getTotalBits(), pcCU->getQP(0));
       m_pcRateCtrl->updataRCUnitStatus();
@@ -1426,7 +1468,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   }
   xRestoreWPparam( pcSlice );
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-  if(m_pcCfg->getUseRateCtrl())
+  if(m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
   {
     m_pcRateCtrl->updateFrameData(m_uiPicTotalBits);
   }

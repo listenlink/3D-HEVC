@@ -219,6 +219,11 @@ public:
   std::vector<Int>&   getViewOrderIndex         ()  { return m_aiViewOrderIndex;        }
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
+
+#if KWU_RC_MADPRED_E0227
+  Void  RCGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
+  Void  RCGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
+#endif
 };
 
 

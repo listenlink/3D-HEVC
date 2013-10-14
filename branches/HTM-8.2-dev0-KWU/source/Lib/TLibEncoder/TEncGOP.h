@@ -56,6 +56,9 @@
 
 #include "TEncAnalyze.h"
 #include "TEncRateCtrl.h"
+#if KWU_RC_MADPRED_E0227
+#include "../App/TAppEncoder/TAppEncTop.h"
+#endif
 #include <vector>
 
 //! \ingroup TLibEncoder
@@ -175,7 +178,11 @@ public:
 #else
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
 #endif
-  
+
+#if KWU_RC_MADPRED_E0227
+  TEncTop* getEncTop() { return m_pcEncTop; }
+#endif
+
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );

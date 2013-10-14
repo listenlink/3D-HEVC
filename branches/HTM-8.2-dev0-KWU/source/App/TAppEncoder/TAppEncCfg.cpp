@@ -81,6 +81,10 @@ TAppEncCfg::TAppEncCfg()
   m_startOfCodedInterval = NULL;
   m_codedPivotValue = NULL;
   m_targetPivotValue = NULL;
+
+#if KWU_RC_MADPRED_E0227
+  m_uiDepthMADPred = 0;
+#endif
 }
 
 TAppEncCfg::~TAppEncCfg()
@@ -593,10 +597,26 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ( "RCLCUSeparateModel",  m_RCUseLCUSeparateModel,  true, "Rate control: use LCU level separate R-lambda model" )
   ( "InitialQP",           m_RCInitialQP,               0, "Rate control: initial QP" )
   ( "RCForceIntraQP",      m_RCForceIntraQP,        false, "Rate control: force intra QP to be equal to initial QP" )
+
+#if KWU_RC_VIEWRC_E0227
+  ("ViewWiseTargetBits, -vtbr" ,  m_pchViewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
+  ("TargetBitAssign, -ta", m_bViewWiseRateCtrl, false, "View-wise rate control on/off")
+#endif
+#if KWU_RC_MADPRED_E0227
+  ("DepthMADPred, -dm", m_uiDepthMADPred, (UInt)0, "Depth based MAD prediction on/off")
+#endif
 #else
-  ("RateCtrl,-rc", m_enableRateCtrl, false, "Rate control on/off")
+  ("RateControl,-rc", m_enableRateCtrl, false, "Rate control on/off")
   ("TargetBitrate,-tbr", m_targetBitrate, 0, "Input target bitrate")
   ("NumLCUInUnit,-nu", m_numLCUInUnit, 0, "Number of LCUs in an Unit")
+
+#if KWU_RC_VIEWRC_E0227
+  ("ViewWiseTargetBits, -vtbr" ,  m_pchViewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
+  ("TargetBitAssign, -ta", m_bViewWiseRateCtrl, false, "View-wise rate control on/off")
+#endif
+#if KWU_RC_MADPRED_E0227
+  ("DepthMADPred, -dm", m_uiDepthMADPred, (UInt)0, "Depth based MAD prediction on/off")
+#endif
 #endif
 
 #if H_MV5
@@ -2158,7 +2178,7 @@ Void TAppEncCfg::xCheckParameter()
 
     xConfirmPara( (numLCUInPic % m_numLCUInUnit) != 0, "total number of LCUs in a frame should be completely divided by NumLCUInUnit" );
 
-    m_iMaxDeltaQP       = MAX_DELTA_QP;
+    //m_iMaxDeltaQP       = MAX_DELTA_QP;
     m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;
   }
 #endif
@@ -2300,6 +2320,25 @@ Void TAppEncCfg::xPrintParameter()
     printf("UseLCUSeparateModel          : %d\n", m_RCUseLCUSeparateModel );
     printf("InitialQP                    : %d\n", m_RCInitialQP );
     printf("ForceIntraQP                 : %d\n", m_RCForceIntraQP );
+
+#if KWU_RC_MADPRED_E0227
+    printf("Depth based MAD prediction   : %d\n", m_uiDepthMADPred);
+#endif
+#if KWU_RC_VIEWRC_E0227
+    printf("View-wise Rate control       : %d\n", m_bViewWiseRateCtrl);
+    if(m_bViewWiseRateCtrl)
+    {
+
+      printf("ViewWiseTargetBits           : ");
+      for (int i = 0 ; i < m_iNumberOfViews ; i++)
+        printf("%d ", m_pchViewTargetBits[i]);
+      printf("\n");
+    }
+    else
+    {
+      printf("TargetBitrate                : %d\n", m_RCTargetBitrate );
+    }
+#endif
   }
 #else
   printf("RateControl                  : %d\n", m_enableRateCtrl);
@@ -2307,6 +2346,25 @@ Void TAppEncCfg::xPrintParameter()
   {
     printf("TargetBitrate                : %d\n", m_targetBitrate);
     printf("NumLCUInUnit                 : %d\n", m_numLCUInUnit);
+
+#if KWU_RC_MADPRED_E0227
+    printf("Depth based MAD prediction   : %d\n", m_uiDepthMADPred);
+#endif
+#if KWU_RC_VIEWRC_E0227
+    printf("View-wise Rate control       : %d\n", m_bViewWiseRateCtrl);
+    if(m_bViewWiseRateCtrl)
+    {
+
+      printf("ViewWiseTargetBits           : ");
+      for (int i = 0 ; i < m_iNumberOfViews ; i++)
+        printf("%d ", m_pchViewTargetBits[i]);
+      printf("\n");
+    }
+    else
+    {
+      printf("TargetBitrate                : %d\n", m_targetBitrate );
+    }
+#endif
   }
 #endif
   printf("Max Num Merge Candidates     : %d\n", m_maxNumMergeCand);

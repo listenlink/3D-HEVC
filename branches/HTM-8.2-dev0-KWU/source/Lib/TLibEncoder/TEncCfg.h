@@ -309,10 +309,24 @@ protected:
   Bool      m_RCUseLCUSeparateModel;
   Int       m_RCInitialQP;
   Bool      m_RCForceIntraQP;
+
+#if KWU_RC_MADPRED_E0227
+  UInt       m_uiDepthMADPred;
+#endif
+#if KWU_RC_VIEWRC_E0227
+  Bool      m_bViewWiseRateCtrl;
+#endif
 #else
   Bool      m_enableRateCtrl;                                ///< Flag for using rate control algorithm
   Int       m_targetBitrate;                                 ///< target bitrate
   Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be divided by the NumLCUInUnit
+
+#if KWU_RC_MADPRED_E0227
+  UInt       m_uiDepthMADPred;
+#endif
+#if KWU_RC_VIEWRC_E0227
+  Bool      m_bViewWiseRateCtrl;
+#endif
 #endif
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
@@ -825,6 +839,15 @@ public:
   Void      setInitialQP           ( Int QP )      { m_RCInitialQP = QP;             }
   Bool      getForceIntraQP        ()              { return m_RCForceIntraQP;        }
   Void      setForceIntraQP        ( Bool b )      { m_RCForceIntraQP = b;           }
+
+#if KWU_RC_MADPRED_E0227
+  UInt      getUseDepthMADPred    ()                { return m_uiDepthMADPred;        }
+  Void      setUseDepthMADPred    (UInt b)          { m_uiDepthMADPred    = b;        }
+#endif
+#if KWU_RC_VIEWRC_E0227
+  Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
+  Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
+#endif
 #else
   Bool      getUseRateCtrl    ()                { return m_enableRateCtrl;    }
   Void      setUseRateCtrl    (Bool flag)       { m_enableRateCtrl = flag;    }
@@ -832,6 +855,15 @@ public:
   Void      setTargetBitrate  (Int target)      { m_targetBitrate  = target;  }
   Int       getNumLCUInUnit   ()                { return m_numLCUInUnit;      }
   Void      setNumLCUInUnit   (Int numLCUs)     { m_numLCUInUnit   = numLCUs; }
+
+#if KWU_RC_MADPRED_E0227
+  UInt      getUseDepthMADPred    ()                { return m_uiDepthMADPred;        }
+  Void      setUseDepthMADPred    (UInt b)          { m_uiDepthMADPred    = b;        }
+#endif
+#if KWU_RC_VIEWRC_E0227
+  Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
+  Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
+#endif
 #endif
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }

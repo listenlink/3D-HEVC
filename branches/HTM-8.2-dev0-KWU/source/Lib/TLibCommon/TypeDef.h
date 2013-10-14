@@ -305,8 +305,12 @@
 #define M0036_RC_IMPROVEMENT                        1  ///< JCTVC-M0036, improvement for R-lambda model based rate control
 #define TICKET_1090_FIX                             1
 
+#if RATE_CONTROL_LAMBDA_DOMAIN
 #define RC_FIX                                      1  /// suggested fix for M0036
 #define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
+#endif
+#define KWU_RC_VIEWRC_E0227                         0  ///< JCT3V-E0227, view-wise target bitrate allocation
+#define KWU_RC_MADPRED_E0227                        0  ///< JCT3V-E0227, inter-view MAD prediction
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS               64

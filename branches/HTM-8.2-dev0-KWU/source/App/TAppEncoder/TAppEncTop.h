@@ -49,6 +49,9 @@
 #include "../../Lib/TLibRenderer/TRenTop.h"
 #endif
 
+#if KWU_RC_MADPRED_E0227
+class TEncTop;
+#endif
 //! \ingroup TAppEncoder
 //! \{
 

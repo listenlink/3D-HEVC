@@ -511,17 +511,137 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setScalingListFile            ( m_scalingListFile   );
   m_cTEncTop.setSignHideFlag(m_signHideFlag);
 #if RATE_CONTROL_LAMBDA_DOMAIN
-  m_cTEncTop.setUseRateCtrl         ( m_RCEnableRateControl );
+  if(!m_cTEncTop.getIsDepth())    //only for texture
+    m_cTEncTop.setUseRateCtrl         ( m_RCEnableRateControl );
+  else
+    m_cTEncTop.setUseRateCtrl         ( 0 );
+#if !KWU_RC_VIEWRC_E0227
   m_cTEncTop.setTargetBitrate       ( m_RCTargetBitrate );
+#endif
   m_cTEncTop.setKeepHierBit         ( m_RCKeepHierarchicalBit );
   m_cTEncTop.setLCULevelRC          ( m_RCLCULevelRC );
   m_cTEncTop.setUseLCUSeparateModel ( m_RCUseLCUSeparateModel );
   m_cTEncTop.setInitialQP           ( m_RCInitialQP );
   m_cTEncTop.setForceIntraQP        ( m_RCForceIntraQP );
+
+#if KWU_RC_MADPRED_E0227
+  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
+  {
+    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_uiDepthMADPred       : 0);
+
+    if(m_cTEncTop.getUseDepthMADPred())
+      m_cTEncTop.setCamParam(&m_cCameraData);
+  }
+#endif
+#if KWU_RC_VIEWRC_E0227
+  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
+  {
+    m_cTEncTop.setUseViewWiseRateCtrl(m_bViewWiseRateCtrl);
+
+    if(m_iNumberOfViews == 1)
+    {
+      if(m_bViewWiseRateCtrl)
+      {
+        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+      }
+      else
+        m_cTEncTop.setTargetBitrate       ( m_RCTargetBitrate );
+    }
+    else
+    {
+      if(m_bViewWiseRateCtrl)
+      {
+        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+      }
+      else
+      {
+        if(m_iNumberOfViews == 2)
+        {
+          if(m_cTEncTop.getViewId() == 0)
+            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*80)/100 );
+          else if(m_cTEncTop.getViewId() == 1)
+            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*20)/100 );
+        }
+        else if(m_iNumberOfViews == 3)
+        {
+          if(m_cTEncTop.getViewId() == 0)
+            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*66)/100 );
+          else if(m_cTEncTop.getViewId() == 1)
+            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*17)/100 );
+          else if(m_cTEncTop.getViewId() == 2)
+            m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*17)/100 );
+        }
+        else
+          m_cTEncTop.setTargetBitrate              ( m_RCTargetBitrate );
+      }
+    }
+  }
+#endif
 #else
-  m_cTEncTop.setUseRateCtrl     ( m_enableRateCtrl);
-  m_cTEncTop.setTargetBitrate   ( m_targetBitrate);
-  m_cTEncTop.setNumLCUInUnit    ( m_numLCUInUnit);
+  if(!m_cTEncTop.getIsDepth())    //only for texture
+  {
+    m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
+#if !KWU_RC_VIEWRC_E0227
+    m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
+#endif
+    m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
+  }
+  else
+    m_cTEncTop.setUseRateCtrl         ( 0 );
+  
+#if KWU_RC_MADPRED_E0227
+  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
+  {
+    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_uiDepthMADPred       : 0);
+
+    if(m_cTEncTop.getUseDepthMADPred())
+      m_cTEncTop.setCamParam(&m_cCameraData);
+  }
+#endif
+
+#if KWU_RC_VIEWRC_E0227
+  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
+  {
+    m_cTEncTop.setUseViewWiseRateCtrl(m_bViewWiseRateCtrl);
+    if(m_iNumberOfViews == 1)
+    {
+      if(m_bViewWiseRateCtrl)
+      {
+        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+      }
+      else
+        m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
+    }
+    else
+    {
+      if(m_bViewWiseRateCtrl)
+      {
+        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+      }
+      else
+      {
+        if(m_iNumberOfViews == 2)
+        {
+          if(m_cTEncTop.getViewId() == 0)
+            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*80)/100 );
+          else if(m_cTEncTop.getViewId() == 1)
+            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*20)/100 );
+        }
+        else if(m_iNumberOfViews == 3)
+        {
+          if(m_cTEncTop.getViewId() == 0)
+            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*66)/100 );
+          else if(m_cTEncTop.getViewId() == 1)
+            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
+          else if(m_cTEncTop.getViewId() == 2)
+            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
+        }
+        else
+          m_cTEncTop.setTargetBitrate              ( m_targetBitrate );
+      }
+    }
+  }
+#endif
 #endif
   m_cTEncTop.setTransquantBypassEnableFlag(m_TransquantBypassEnableFlag);
   m_cTEncTop.setCUTransquantBypassFlagValue(m_CUTransquantBypassFlagValue);
@@ -668,7 +788,11 @@ Void TAppEncTop::xInitLib()
 #if H_MV
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
+#if KWU_RC_MADPRED_E0227
+    m_acTEncTopList[layer]->init( this );
+#else
     m_acTEncTopList[layer]->init( );
+#endif
   }
 #else
   m_cTEncTop.init();
@@ -788,6 +912,17 @@ Void TAppEncTop::encode()
         outputAccessUnits.clear();
       }
     }
+
+#if !RATE_CONTROL_LAMBDA_DOMAIN
+    for(Int layer=0; layer < m_numberOfLayers; layer++ )
+    {
+      if(m_acTEncTopList[layer]->getUseRateCtrl()  && !m_acTEncTopList[layer]->getIsDepth())
+      {
+        m_acTEncTopList[layer]->getRateCtrl()->updateRCGOPStatus();
+      }
+    }
+#endif
+
     gopSize = maxGopSize;
   }
   for(Int layer=0; layer < m_numberOfLayers; layer++ )

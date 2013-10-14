@@ -63,6 +63,9 @@
 // Class definition
 // ====================================================================================================================
 
+#if KWU_RC_MADPRED_E0227
+class TAppEncTop;
+#endif
 /// encoder class
 class TEncTop : public TEncCfg
 {
@@ -123,6 +126,11 @@ private:
 
   TComScalingList         m_scalingList;                 ///< quantization matrix information
   TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
+
+#if KWU_RC_MADPRED_E0227
+  TAppEncTop*             m_pcTAppEncTop;
+  TAppComCamPara*         m_cCamParam;
+#endif
   
 #if H_MV
   TEncAnalyze             m_cAnalyzeAll;
@@ -144,7 +152,12 @@ public:
   
   Void      create          ();
   Void      destroy         ();
+#if KWU_RC_MADPRED_E0227
+  Void      init            ( TAppEncTop* pcTAppEncTop );
+#else
   Void      init            ();
+#endif
+
 #if H_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
@@ -184,6 +197,11 @@ public:
   TEncSbac****            getRDSbacCoders       () { return  m_ppppcRDSbacCoders;     }
   TEncSbac*               getRDGoOnSbacCoders   () { return  m_pcRDGoOnSbacCoders;   }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
+#if KWU_RC_MADPRED_E0227
+  TAppEncTop*             getEncTop             () { return m_pcTAppEncTop; }
+  TAppComCamPara*         getCamParam()                 { return m_cCamParam;}
+  Void                    setCamParam(TAppComCamPara * pCamparam)                 { m_cCamParam = pCamparam;}
+#endif
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
