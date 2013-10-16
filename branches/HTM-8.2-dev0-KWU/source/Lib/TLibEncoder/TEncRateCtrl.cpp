@@ -725,6 +725,7 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
 #if !M0036_RC_IMPROVEMENT
   m_lastPicture = NULL;
   list<TEncRCPic*>::reverse_iterator it;
+#if KWU_RC_MADPRED_E0227
   for ( it = listPreviousPictures.rbegin(); it != listPreviousPictures.rend(); it++ )
   {
     if ( (*it)->getFrameLevel() == m_frameLevel )
@@ -733,6 +734,7 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
       break;
     }
   }
+#endif
 #endif
 
 #if KWU_RC_MADPRED_E0227
@@ -1091,7 +1093,7 @@ Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPic
 
   {
     Pel*  pOrg    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
-    Pel*  pRec    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvPred()->getLumaAddr(pcCU->getAddr(), 0);
+    Pel*  pRec    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), 0);
     Pel*  pDep    = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
     Int   iStride = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getStride();
 
@@ -1120,7 +1122,9 @@ Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPic
     Int PosX, PosY;
     pcCU->getPosInPic(0, PosX, PosY);
     if((PosX + *iDisparity) < 0 || (PosX + *iDisparity + iWidth) >= pcCU->getSlice()->getSPS()->getMaxCUWidth())
+    {
       Disp = 0;
+    }
 
     for( y = 0; y < iHeight; y++ )
     {
@@ -1137,7 +1141,9 @@ Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPic
 
     m_LCUs[ LCUIdx ].m_IVMAD = IVMAD;
     if(m_lastPicture)
+    {
       m_LCUs[ LCUIdx ].m_MAD = m_lastPicture->getLCU(LCUIdx).m_MAD;
+    }
 
     MAD = m_LCUs[ LCUIdx ].m_IVMAD;
 
@@ -2075,8 +2081,13 @@ Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int 
   m_sourceWidthInLCU         = (sourceWidth  / maxCUWidth  ) + (( sourceWidth  %  maxCUWidth ) ? 1 : 0);
   m_sourceHeightInLCU        = (sourceHeight / maxCUHeight) + (( sourceHeight %  maxCUHeight) ? 1 : 0);  
   m_isLowdelay               = (sizeIntraPeriod == -1) ? true : false;
+#if KWU_RC_MADPRED_E0227
   m_prevBitrate              = ( targetKbps * 1000 );  // in units of 1,024 bps
   m_currBitrate              = ( targetKbps * 1000 );
+#else
+  m_prevBitrate              = ( targetKbps << 10 );  // in units of 1,024 bps
+  m_currBitrate              = ( targetKbps << 10 );
+#endif
   m_frameRate                = frameRate;
   m_refFrameNum              = m_isLowdelay ? (sizeGOP) : (sizeGOP>>1);
   m_nonRefFrameNum           = sizeGOP-m_refFrameNum;
@@ -2452,7 +2463,7 @@ Void  TEncRateCtrl::updateLCUData(TComDataCU* pcCU, UInt64 actualLCUBits, Int qp
   Double  costMAD = 0.0;
 
   Pel*  pOrg   = pcCU->getPic()->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
-  Pel*  pRec   = pcCU->getPic()->getPicYuvPred()->getLumaAddr(pcCU->getAddr(), 0);
+  Pel*  pRec   = pcCU->getPic()->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), 0);
   Int   stride = pcCU->getPic()->getStride();
 
   Int   width  = m_pcLCUData[m_indexLCU].m_widthInPixel;
@@ -2482,7 +2493,7 @@ Void  TEncRateCtrl::updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, I
   Double SAD = 0.0;
 
   Pel*  pOrg    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
-  Pel*  pRec    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvPred()->getLumaAddr(pcCU->getAddr(), 0);
+  Pel*  pRec    = pcCU->getSlice()->getIvPic(false, 0)->getPicYuvRec()->getLumaAddr(pcCU->getAddr(), 0);
   Pel*  pDep    = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
   Int   iStride = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getStride();
 

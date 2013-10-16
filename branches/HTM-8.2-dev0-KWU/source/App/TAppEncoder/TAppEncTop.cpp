@@ -511,10 +511,18 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setScalingListFile            ( m_scalingListFile   );
   m_cTEncTop.setSignHideFlag(m_signHideFlag);
 #if RATE_CONTROL_LAMBDA_DOMAIN
+#if KWU_RC_MADPRED_E0227
   if(!m_cTEncTop.getIsDepth())    //only for texture
+  {
     m_cTEncTop.setUseRateCtrl         ( m_RCEnableRateControl );
+  }
   else
+  {
     m_cTEncTop.setUseRateCtrl         ( 0 );
+  }
+#else
+  m_cTEncTop.setUseRateCtrl         ( m_RCEnableRateControl );
+#endif
 #if !KWU_RC_VIEWRC_E0227
   m_cTEncTop.setTargetBitrate       ( m_RCTargetBitrate );
 #endif
@@ -527,57 +535,74 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_uiDepthMADPred       : 0);
+    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_DepthMADPred       : 0);
 
     if(m_cTEncTop.getUseDepthMADPred())
+    {
       m_cTEncTop.setCamParam(&m_cCameraData);
+    }
   }
 #endif
 #if KWU_RC_VIEWRC_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseViewWiseRateCtrl(m_bViewWiseRateCtrl);
+    m_cTEncTop.setUseViewWiseRateCtrl(m_ViewWiseRateCtrl);
 
     if(m_iNumberOfViews == 1)
     {
-      if(m_bViewWiseRateCtrl)
+      if(m_ViewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
       }
       else
+      {
         m_cTEncTop.setTargetBitrate       ( m_RCTargetBitrate );
+      }
     }
     else
     {
-      if(m_bViewWiseRateCtrl)
+      if(m_ViewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
       }
       else
       {
         if(m_iNumberOfViews == 2)
         {
           if(m_cTEncTop.getViewId() == 0)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*80)/100 );
+          }
           else if(m_cTEncTop.getViewId() == 1)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*20)/100 );
+          }
         }
         else if(m_iNumberOfViews == 3)
         {
           if(m_cTEncTop.getViewId() == 0)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*66)/100 );
+          }
           else if(m_cTEncTop.getViewId() == 1)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*17)/100 );
+          }
           else if(m_cTEncTop.getViewId() == 2)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_RCTargetBitrate*17)/100 );
+          }
         }
         else
+        {
           m_cTEncTop.setTargetBitrate              ( m_RCTargetBitrate );
+        }
       }
     }
   }
 #endif
 #else
+#if KWU_RC_MADPRED_E0227
   if(!m_cTEncTop.getIsDepth())    //only for texture
   {
     m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
@@ -587,57 +612,80 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
   }
   else
+  {
     m_cTEncTop.setUseRateCtrl         ( 0 );
+  }
+#else
+  m_cTEncTop.setUseRateCtrl     ( m_enableRateCtrl);
+  m_cTEncTop.setTargetBitrate   ( m_targetBitrate);
+  m_cTEncTop.setNumLCUInUnit    ( m_numLCUInUnit);
+#endif
   
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_uiDepthMADPred       : 0);
+    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_DepthMADPred       : 0);
 
     if(m_cTEncTop.getUseDepthMADPred())
+    {
       m_cTEncTop.setCamParam(&m_cCameraData);
+    }
   }
 #endif
 
 #if KWU_RC_VIEWRC_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseViewWiseRateCtrl(m_bViewWiseRateCtrl);
+    m_cTEncTop.setUseViewWiseRateCtrl(m_ViewWiseRateCtrl);
     if(m_iNumberOfViews == 1)
     {
-      if(m_bViewWiseRateCtrl)
+      if(m_ViewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
       }
       else
+      {
         m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
+      }
     }
     else
     {
-      if(m_bViewWiseRateCtrl)
+      if(m_ViewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_pchViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
       }
       else
       {
         if(m_iNumberOfViews == 2)
         {
           if(m_cTEncTop.getViewId() == 0)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*80)/100 );
+          }
           else if(m_cTEncTop.getViewId() == 1)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*20)/100 );
+          }
         }
         else if(m_iNumberOfViews == 3)
         {
           if(m_cTEncTop.getViewId() == 0)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*66)/100 );
+          }
           else if(m_cTEncTop.getViewId() == 1)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
+          }
           else if(m_cTEncTop.getViewId() == 2)
+          {
             m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
+          }
         }
         else
+        {
           m_cTEncTop.setTargetBitrate              ( m_targetBitrate );
+        }
       }
     }
   }

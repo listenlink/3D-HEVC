@@ -983,8 +983,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
 #if KWU_RC_MADPRED_E0227
       if(m_pcCfg->getLayerId() != 0)
+      {
         m_pcRateCtrl->getRCPic()->setIVPic( m_pcEncTop->getEncTop()->getTEncTop(0)->getRateCtrl()->getRCPic() );
-      //getEncTop()->getEncTop();//->getTEncTop(0);//->getUseRateCtrl()->getRCPic();
+      }
 #endif
 
       estimatedBits = m_pcRateCtrl->getRCPic()->getTargetBits();
@@ -1036,7 +1037,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {
           list<TEncRCPic*> listPreviousPicture = m_pcRateCtrl->getPicList();
           lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambdaIV( listPreviousPicture, pcSlice->getPOC() );
-          //printf("lambda : %lf\n", lambda);
           sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture );
         }
         else

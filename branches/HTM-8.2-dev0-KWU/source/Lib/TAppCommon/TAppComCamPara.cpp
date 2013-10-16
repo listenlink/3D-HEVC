@@ -1529,7 +1529,7 @@ TAppComCamPara::synthRelNum2Idx( Int iRelNum )
 
 #if KWU_RC_MADPRED_E0227
 Void
-  TAppComCamPara::RCGetZNearZFar( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar )
+  TAppComCamPara::getZNearZFar( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar )
 {
   UInt uiFoundLine = -1;
   if( !xGetCameraDataRow( m_aiBaseViews[iView], uiFrame, uiFoundLine ) || !( m_aadCameraParameters[ uiFoundLine ].size() < 8 ) )
@@ -1546,7 +1546,7 @@ Void
 
 
 Void
-  TAppComCamPara::RCGetGeometryData( Int iView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated )
+  TAppComCamPara::getGeometryData( Int iView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated )
 {
   UInt uiFoundLine = -1;
   if ( !xGetCameraDataRow( m_aiBaseViews[iView], uiFrame, uiFoundLine ) )

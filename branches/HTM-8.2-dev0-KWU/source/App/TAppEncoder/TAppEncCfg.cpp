@@ -83,7 +83,7 @@ TAppEncCfg::TAppEncCfg()
   m_targetPivotValue = NULL;
 
 #if KWU_RC_MADPRED_E0227
-  m_uiDepthMADPred = 0;
+  m_DepthMADPred = 0;
 #endif
 }
 
@@ -599,23 +599,23 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ( "RCForceIntraQP",      m_RCForceIntraQP,        false, "Rate control: force intra QP to be equal to initial QP" )
 
 #if KWU_RC_VIEWRC_E0227
-  ("ViewWiseTargetBits, -vtbr" ,  m_pchViewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
-  ("TargetBitAssign, -ta", m_bViewWiseRateCtrl, false, "View-wise rate control on/off")
+  ("ViewWiseTargetBits, -vtbr" ,  m_ViewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
+  ("TargetBitAssign, -ta", m_ViewWiseRateCtrl, false, "View-wise rate control on/off")
 #endif
 #if KWU_RC_MADPRED_E0227
-  ("DepthMADPred, -dm", m_uiDepthMADPred, (UInt)0, "Depth based MAD prediction on/off")
+  ("DepthMADPred, -dm", m_DepthMADPred, (UInt)0, "Depth based MAD prediction on/off")
 #endif
 #else
-  ("RateControl,-rc", m_enableRateCtrl, false, "Rate control on/off")
+  ("RateCtrl,-rc", m_enableRateCtrl, false, "Rate control on/off")
   ("TargetBitrate,-tbr", m_targetBitrate, 0, "Input target bitrate")
   ("NumLCUInUnit,-nu", m_numLCUInUnit, 0, "Number of LCUs in an Unit")
 
 #if KWU_RC_VIEWRC_E0227
-  ("ViewWiseTargetBits, -vtbr" ,  m_pchViewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
-  ("TargetBitAssign, -ta", m_bViewWiseRateCtrl, false, "View-wise rate control on/off")
+  ("ViewWiseTargetBits, -vtbr" ,  m_ViewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
+  ("TargetBitAssign, -ta", m_ViewWiseRateCtrl, false, "View-wise rate control on/off")
 #endif
 #if KWU_RC_MADPRED_E0227
-  ("DepthMADPred, -dm", m_uiDepthMADPred, (UInt)0, "Depth based MAD prediction on/off")
+  ("DepthMADPred, -dm", m_DepthMADPred, (UInt)0, "Depth based MAD prediction on/off")
 #endif
 #endif
 
@@ -2178,7 +2178,9 @@ Void TAppEncCfg::xCheckParameter()
 
     xConfirmPara( (numLCUInPic % m_numLCUInUnit) != 0, "total number of LCUs in a frame should be completely divided by NumLCUInUnit" );
 
-    //m_iMaxDeltaQP       = MAX_DELTA_QP;
+#if !(KWU_RC_MADPRED_E0227 || KWU_RC_VIEWRC_E0227)
+    m_iMaxDeltaQP       = MAX_DELTA_QP;
+#endif
     m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;
   }
 #endif
@@ -2322,16 +2324,16 @@ Void TAppEncCfg::xPrintParameter()
     printf("ForceIntraQP                 : %d\n", m_RCForceIntraQP );
 
 #if KWU_RC_MADPRED_E0227
-    printf("Depth based MAD prediction   : %d\n", m_uiDepthMADPred);
+    printf("Depth based MAD prediction   : %d\n", m_DepthMADPred);
 #endif
 #if KWU_RC_VIEWRC_E0227
-    printf("View-wise Rate control       : %d\n", m_bViewWiseRateCtrl);
-    if(m_bViewWiseRateCtrl)
+    printf("View-wise Rate control       : %d\n", m_ViewWiseRateCtrl);
+    if(m_ViewWiseRateCtrl)
     {
 
       printf("ViewWiseTargetBits           : ");
       for (int i = 0 ; i < m_iNumberOfViews ; i++)
-        printf("%d ", m_pchViewTargetBits[i]);
+        printf("%d ", m_ViewTargetBits[i]);
       printf("\n");
     }
     else
@@ -2348,16 +2350,16 @@ Void TAppEncCfg::xPrintParameter()
     printf("NumLCUInUnit                 : %d\n", m_numLCUInUnit);
 
 #if KWU_RC_MADPRED_E0227
-    printf("Depth based MAD prediction   : %d\n", m_uiDepthMADPred);
+    printf("Depth based MAD prediction   : %d\n", m_DepthMADPred);
 #endif
 #if KWU_RC_VIEWRC_E0227
-    printf("View-wise Rate control       : %d\n", m_bViewWiseRateCtrl);
-    if(m_bViewWiseRateCtrl)
+    printf("View-wise Rate control       : %d\n", m_ViewWiseRateCtrl);
+    if(m_ViewWiseRateCtrl)
     {
 
       printf("ViewWiseTargetBits           : ");
       for (int i = 0 ; i < m_iNumberOfViews ; i++)
-        printf("%d ", m_pchViewTargetBits[i]);
+        printf("%d ", m_ViewTargetBits[i]);
       printf("\n");
     }
     else

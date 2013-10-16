@@ -241,12 +241,19 @@ Void TEncCu::init( TEncTop* pcEncTop )
   m_pcRDGoOnSbacCoder = pcEncTop->getRDGoOnSbacCoder();
   
   m_bUseSBACRD        = pcEncTop->getUseSBACRD();
+
+#if KWU_RC_MADPRED_E0227
   if(!pcEncTop->getIsDepth())
+  {
     m_pcRateCtrl        = pcEncTop->getRateCtrl();
+  }
   else
   {
     m_pcRateCtrl = NULL;
   }
+#else
+  m_pcRateCtrl        = pcEncTop->getRateCtrl();
+#endif
 }
 
 // ====================================================================================================================
@@ -2123,8 +2130,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
 #endif
 
-#if RATE_CONTROL_LAMBDA_DOMAIN  && !M0036_RC_IMPROVEMENT
-#if KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN  && (!M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227)
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && ePartSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {
     UInt SAD = m_pcRdCost->getSADPart( g_bitDepthY, m_ppcPredYuvTemp[uhDepth]->getLumaAddr(), m_ppcPredYuvTemp[uhDepth]->getStride(),
@@ -2132,7 +2138,6 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
     m_temporalSAD = (Int)SAD;
   }
-#endif
 #endif
 #if !RATE_CONTROL_LAMBDA_DOMAIN  && KWU_RC_MADPRED_E0227
   if ( m_pcEncCfg->getUseRateCtrl() && ePartSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
@@ -2267,8 +2272,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
   
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
-#if KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN && (!M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227)
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {
@@ -2277,7 +2281,6 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
     m_spatialSAD = (Int)SAD;
   }
-#endif
 #endif
 #if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
   UChar uhDepth = rpcTempCU->getDepth( 0 );

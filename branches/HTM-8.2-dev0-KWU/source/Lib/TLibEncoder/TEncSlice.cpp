@@ -156,10 +156,18 @@ Void TEncSlice::init( TEncTop* pcEncTop )
   m_pdRdPicLambda     = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_pdRdPicQp         = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_piRdPicQp         = (Int*   )xMalloc( Int,    m_pcCfg->getDeltaQpRD() * 2 + 1 );
+#if KWU_RC_MADPRED_E0227
   if(m_pcCfg->getUseRateCtrl())
+  {
     m_pcRateCtrl        = pcEncTop->getRateCtrl();
+  }
   else
+  {
     m_pcRateCtrl        = NULL;
+  }
+#else
+  m_pcRateCtrl        = pcEncTop->getRateCtrl();
+#endif
 }
 
 /**
@@ -1135,9 +1143,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         bool bInterpolated;
         Int Direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
 
-        pcEncTop->getCamParam()->RCGetZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
-        pcEncTop->getCamParam()->RCGetGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
-        pcEncTop->getCamParam()->RCGetGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
+        pcEncTop->getCamParam()->getZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
+        pcEncTop->getCamParam()->getGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
+        pcEncTop->getCamParam()->getGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
 
         m_pcRateCtrl->updateLCUDataEnhancedView(pcCU, pcCU->getTotalBits(), pcCU->getQP(0), BasePos, Position, FocalLength, Zn, Zf, (Direction > 0 ? 1 : -1));
       }
@@ -1249,9 +1257,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
             Int Direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
             Int iDisparity;
 
-            pcEncTop->getCamParam()->RCGetZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
-            pcEncTop->getCamParam()->RCGetGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
-            pcEncTop->getCamParam()->RCGetGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
+            pcEncTop->getCamParam()->getZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
+            pcEncTop->getCamParam()->getGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
+            pcEncTop->getCamParam()->getGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
             bpp       = m_pcRateCtrl->getRCPic()->getLCUTargetBppforInterView( m_pcRateCtrl->getPicList(), pcCU,
                             BasePos, Position, FocalLength, Zn, Zf, (Direction > 0 ? 1 : -1), &iDisparity );
           }

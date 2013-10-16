@@ -221,8 +221,8 @@ public:
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
 
 #if KWU_RC_MADPRED_E0227
-  Void  RCGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
-  Void  RCGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
+  Void  getZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
+  Void  getGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
 #endif
 };
 
