@@ -331,7 +331,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     dQP += pdQPs[ rpcSlice->getPOC() ];
   }
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-  if ( m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
+  if ( m_pcCfg->getUseRateCtrl())
   {
     dQP = m_pcRateCtrl->getFrameQP(rpcSlice->isReferenced(), rpcSlice->getPOC());
   }
@@ -1133,21 +1133,21 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }
 #endif
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-    if(m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
+    if(m_pcCfg->getUseRateCtrl())
     {
 #if KWU_RC_MADPRED_E0227
       if(pcSlice->getLayerId() != 0 && m_pcCfg->getUseDepthMADPred() && !pcSlice->getIsDepth())
       {
-        double Zn, Zf, FocalLength, Position, CamShift;
-        double BasePos;
+        double zn, zf, focallength, position, camshift;
+        double basepos;
         bool bInterpolated;
-        Int Direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
+        Int direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
 
-        pcEncTop->getCamParam()->getZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
-        pcEncTop->getCamParam()->getGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
-        pcEncTop->getCamParam()->getGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
+        pcEncTop->getCamParam()->xGetZNearZFar(pcEncTop->getCamParam()->getBaseViewNumbers()[pcSlice->getViewIndex()], pcSlice->getPOC(), zn, zf);
+        pcEncTop->getCamParam()->xGetGeometryData(pcEncTop->getCamParam()->getBaseViewNumbers()[0], pcSlice->getPOC(), focallength, basepos, camshift, bInterpolated);
+        pcEncTop->getCamParam()->xGetGeometryData(pcEncTop->getCamParam()->getBaseViewNumbers()[pcSlice->getViewIndex()], pcSlice->getPOC(), focallength, position, camshift, bInterpolated);
 
-        m_pcRateCtrl->updateLCUDataEnhancedView(pcCU, pcCU->getTotalBits(), pcCU->getQP(0), BasePos, Position, FocalLength, Zn, Zf, (Direction > 0 ? 1 : -1));
+        m_pcRateCtrl->updateLCUDataEnhancedView(pcCU, pcCU->getTotalBits(), pcCU->getQP(0), basepos, position, focallength, zn, zf, (direction > 0 ? 1 : -1));
       }
 #endif
       if(m_pcRateCtrl->calculateUnitQP())
@@ -1251,17 +1251,17 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if KWU_RC_MADPRED_E0227
           if(pcSlice->getLayerId() != 0 && m_pcCfg->getUseDepthMADPred() && !pcSlice->getIsDepth())
           {
-            double Zn, Zf, FocalLength, Position, CamShift;
-            double BasePos;
+            double zn, zf, focallength, position, camShift;
+            double basePos;
             bool bInterpolated;
-            Int Direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
-            Int iDisparity;
+            Int direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
+            Int disparity;
 
-            pcEncTop->getCamParam()->getZNearZFar(pcSlice->getViewId(), pcSlice->getPOC(), Zn, Zf);
-            pcEncTop->getCamParam()->getGeometryData(0, pcSlice->getPOC(), FocalLength, BasePos, CamShift, bInterpolated);
-            pcEncTop->getCamParam()->getGeometryData(pcSlice->getViewId(), pcSlice->getPOC(), FocalLength, Position, CamShift, bInterpolated);
+            pcEncTop->getCamParam()->xGetZNearZFar(pcEncTop->getCamParam()->getBaseViewNumbers()[pcSlice->getViewIndex()], pcSlice->getPOC(), zn, zf);
+            pcEncTop->getCamParam()->xGetGeometryData(pcEncTop->getCamParam()->getBaseViewNumbers()[0], pcSlice->getPOC(), focallength, basePos, camShift, bInterpolated);
+            pcEncTop->getCamParam()->xGetGeometryData(pcEncTop->getCamParam()->getBaseViewNumbers()[pcSlice->getViewIndex()], pcSlice->getPOC(), focallength, position, camShift, bInterpolated);
             bpp       = m_pcRateCtrl->getRCPic()->getLCUTargetBppforInterView( m_pcRateCtrl->getPicList(), pcCU,
-                            BasePos, Position, FocalLength, Zn, Zf, (Direction > 0 ? 1 : -1), &iDisparity );
+              basePos, position, focallength, zn, zf, (direction > 0 ? 1 : -1), &disparity );
           }
           else
           {
@@ -1390,7 +1390,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 
 #if TICKET_1090_FIX
 #if RATE_CONTROL_LAMBDA_DOMAIN
-      if ( m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth() )
+      if ( m_pcCfg->getUseRateCtrl() )
       {
 #if !M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227
         UInt SAD    = m_pcCuEncoder->getLCUPredictionSAD();
@@ -1455,7 +1455,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     m_dPicRdCost     += pcCU->getTotalCost();
     m_uiPicDist      += pcCU->getTotalDistortion();
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-    if(m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
+    if(m_pcCfg->getUseRateCtrl())
     {
       m_pcRateCtrl->updateLCUData(pcCU, pcCU->getTotalBits(), pcCU->getQP(0));
       m_pcRateCtrl->updataRCUnitStatus();
@@ -1476,7 +1476,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   }
   xRestoreWPparam( pcSlice );
 #if !RATE_CONTROL_LAMBDA_DOMAIN
-  if(m_pcCfg->getUseRateCtrl() && !m_pcCfg->getIsDepth())
+  if(m_pcCfg->getUseRateCtrl())
   {
     m_pcRateCtrl->updateFrameData(m_uiPicTotalBits);
   }

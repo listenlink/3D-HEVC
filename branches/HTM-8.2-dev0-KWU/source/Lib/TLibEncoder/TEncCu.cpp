@@ -102,7 +102,7 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   }
   
   m_bEncodeDQP = false;
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN && (!M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227)
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
   m_temporalSAD      = 0;
@@ -241,19 +241,7 @@ Void TEncCu::init( TEncTop* pcEncTop )
   m_pcRDGoOnSbacCoder = pcEncTop->getRDGoOnSbacCoder();
   
   m_bUseSBACRD        = pcEncTop->getUseSBACRD();
-
-#if KWU_RC_MADPRED_E0227
-  if(!pcEncTop->getIsDepth())
-  {
-    m_pcRateCtrl        = pcEncTop->getRateCtrl();
-  }
-  else
-  {
-    m_pcRateCtrl = NULL;
-  }
-#else
   m_pcRateCtrl        = pcEncTop->getRateCtrl();
-#endif
 }
 
 // ====================================================================================================================
@@ -477,13 +465,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   }
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
-  if ( m_pcEncCfg->getUseRateCtrl() && !m_pcEncCfg->getIsDepth() )
+  if ( m_pcEncCfg->getUseRateCtrl() )
   {
     iMinQP = m_pcRateCtrl->getRCQP();
     iMaxQP = m_pcRateCtrl->getRCQP();
   }
 #else
-  if(m_pcEncCfg->getUseRateCtrl() && !m_pcEncCfg->getIsDepth())
+  if(m_pcEncCfg->getUseRateCtrl())
   {
     Int qp = m_pcRateCtrl->getUnitQP();
     iMinQP  = Clip3( MIN_QP, MAX_QP, qp);
@@ -691,7 +679,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       m_addSADDepth = uiDepth;
     }
 #endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN
+#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_FIX_URQ
     if(m_pcEncCfg->getUseRateCtrl())
     {
       Int qp = m_pcRateCtrl->getUnitQP();
@@ -1174,13 +1162,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     iMaxQP = iStartQP;
   }
 #if RATE_CONTROL_LAMBDA_DOMAIN
-  if ( m_pcEncCfg->getUseRateCtrl() && !m_pcEncCfg->getIsDepth() )
+  if ( m_pcEncCfg->getUseRateCtrl() )
   {
     iMinQP = m_pcRateCtrl->getRCQP();
     iMaxQP = m_pcRateCtrl->getRCQP();
   }
 #else
-  if(m_pcEncCfg->getUseRateCtrl() && !m_pcEncCfg->getIsDepth())
+  if(m_pcEncCfg->getUseRateCtrl())
   {
     Int qp = m_pcRateCtrl->getUnitQP();
     iMinQP  = Clip3( MIN_QP, MAX_QP, qp);

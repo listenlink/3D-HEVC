@@ -124,8 +124,10 @@ protected:
 
   Bool  xGetLeftRightView         ( Int iView, std::vector<Int> aiSortedViews, Int& riLeftView, Int& riRightView, Int& riLeftSortedViewIdx, Int& riRightSortedViewIdx );
   Void  xGetPrevAndNextBaseView   ( Int iSourceViewNum, Int iTargetViewNum, Int& riPrevBaseViewNum, Int& riNextBaseViewNum );
+#if !KWU_RC_MADPRED_E0227
   Void  xGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
   Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
+#endif
   Void  xSetupBaseViewsFromCoded  ();
   Void  xSetupBaseViews           ( Char* pchBaseViewNumbers, UInt uiNumBaseViews );
 #if H_3D_FIX_REN_WARNING
@@ -221,8 +223,8 @@ public:
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
 
 #if KWU_RC_MADPRED_E0227
-  Void  getZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
-  Void  getGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
+  Void  xGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
+  Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
 #endif
 };
 

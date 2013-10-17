@@ -256,14 +256,14 @@ public:
 
 public:
 #if KWU_RC_MADPRED_E0227
-  Void create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures, Int LayerID );
+  Void create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures, Int layerID );
 #else
   Void create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures );
 #endif
   Void destroy();
 
 #if KWU_RC_MADPRED_E0227
-  Double estimatePicLambdaIV( list<TEncRCPic*>& listPreviousPictures, Int CurPOC );
+  Double estimatePicLambdaIV( list<TEncRCPic*>& listPreviousPictures, Int curPOC );
 #endif
 #if !RATE_CONTROL_INTRA
   Double estimatePicLambda( list<TEncRCPic*>& listPreviousPictures );
@@ -283,7 +283,7 @@ public:
 #endif
 
 #if KWU_RC_MADPRED_E0227
-  Double getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPictures, TComDataCU* pcCU, Double BasePos, Double CurPos, Double FocalLen, Double Znear, Double Zfar, Int Direction, Int* iDisparity );
+  Double getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPictures, TComDataCU* pcCU, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction, Int* disparity );
 #endif
 
   Double getLCUEstLambda( Double bpp );
@@ -304,7 +304,7 @@ public:
 
 #if KWU_RC_MADPRED_E0227
   Void addToPictureLsitIV( list<TEncRCPic*>& listPreviousPictures );
-  Void setIVPic( TEncRCPic* BaseRCPic );
+  Void setIVPic( TEncRCPic* baseRCPic );
 #endif
 
 #if !M0036_RC_IMPROVEMENT
@@ -418,7 +418,7 @@ public:
 public:
 #if M0036_RC_IMPROVEMENT
 #if KWU_RC_MADPRED_E0227
-  Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP], Int LayerID );
+  Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP], Int layerID );
 #else
   Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Int keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP] );
 #endif
@@ -578,7 +578,7 @@ public:
   Void          updataRCUnitStatus    ();
   Void          updateLCUData         (TComDataCU* pcCU, UInt64 actualLCUBits, Int qp);
 #if KWU_RC_MADPRED_E0227
-  Void          updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, Int iQP, Double BasePos, Double CurPos, Double FocalLen, Double Znear, Double Zfar, Int Direction);
+  Void          updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, Int qp, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction);
 #endif
   Void          updateFrameData       (UInt64 actualFrameBits);
   Double        xAdjustmentBits       (Int& reductionBits, Int& compensationBits);

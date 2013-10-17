@@ -643,7 +643,7 @@ Void TEncRCPic::setIVPic( TEncRCPic* BaseRCPic )
 #endif
 
 #if KWU_RC_MADPRED_E0227
-Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures, Int LayerID )
+Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures, Int layerID )
 #else
 Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures )
 #endif
@@ -716,7 +716,7 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
 
 
 #if KWU_RC_MADPRED_E0227
-  m_LayerID = LayerID;
+  m_LayerID = layerID;
   m_lastIVPicture = NULL;
   m_IVtotalMAD            = 0.0;
 #endif
@@ -1073,7 +1073,7 @@ Double TEncRCPic::getLCUTargetBpp()
 
 
 #if KWU_RC_MADPRED_E0227
-Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPictures, TComDataCU* pcCU, Double BasePos, Double CurPos, Double FocalLen, Double Znear, Double Zfar, Int Direction, Int* iDisparity )
+Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPictures, TComDataCU* pcCU, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction, Int* disparity )
 {
   Int   LCUIdx    = getLCUCoded();
   Double bpp      = -1.0;
@@ -1097,8 +1097,8 @@ Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPic
     Pel*  pDep    = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
     Int   iStride = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getStride();
 
-    Int   iWidth  = m_LCUs[ LCUIdx ].m_CUWidth;
-    Int   iHeight = m_LCUs[ LCUIdx ].m_CUHeight;
+    Int   width  = m_LCUs[ LCUIdx ].m_CUWidth;
+    Int   height = m_LCUs[ LCUIdx ].m_CUHeight;
 
     for( y = 0 ; y < pcCU->getSlice()->getSPS()->getMaxCUHeight() ; y+=8)
     {
@@ -1111,32 +1111,30 @@ Double TEncRCPic::getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPic
 
     Double AvgDepth = (Double)Sum/((pcCU->getSlice()->getSPS()->getMaxCUHeight()/8)*(pcCU->getSlice()->getSPS()->getMaxCUWidth()/8));
 
-    //Int iDisparity = pDepthGen->RCGetDisparityFromVirtDepth(0, (Int)AvgDepth);
-
-    Double dFL = FocalLen * abs( BasePos - CurPos );
-    Double dZ  = abs( 1.0 / Znear - 1.0 / Zfar ) * ((Double)(AvgDepth) / (( 1 << g_bitDepthY ) - 1) ) + abs(1.0 / Zfar);
-    *iDisparity = (Int)(Direction*dFL * dZ);
+    Double fL = focalLen * abs( basePos - curPos );
+    Double z  = abs( 1.0 / znear - 1.0 / zfar ) * ((Double)(AvgDepth) / (( 1 << g_bitDepthY ) - 1) ) + abs(1.0 / zfar);
+    *disparity = (Int)(direction*fL * z);
     Int shift = DISTORTION_PRECISION_ADJUSTMENT(g_bitDepthY-8);
 
-    Int Disp = *iDisparity;
-    Int PosX, PosY;
-    pcCU->getPosInPic(0, PosX, PosY);
-    if((PosX + *iDisparity) < 0 || (PosX + *iDisparity + iWidth) >= pcCU->getSlice()->getSPS()->getMaxCUWidth())
+    Int disp = *disparity;
+    Int posX, posY;
+    pcCU->getPosInPic(0, posX, posY);
+    if((posX + *disparity) < 0 || (posX + *disparity + width) >= pcCU->getSlice()->getSPS()->getMaxCUWidth())
     {
-      Disp = 0;
+      disp = 0;
     }
 
-    for( y = 0; y < iHeight; y++ )
+    for( y = 0; y < height; y++ )
     {
-      for( x = 0; x < iWidth; x++ )
+      for( x = 0; x < width; x++ )
       {
-        SAD += abs( pOrg[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + Disp)]
-                  - pRec[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + Disp)] )>>shift;
+        SAD += abs( pOrg[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + disp)]
+                  - pRec[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + disp)] )>>shift;
       }
       pOrg += iStride;
       pRec += iStride;
     }
-    IVMAD = SAD / (Double)(iHeight * iWidth);
+    IVMAD = SAD / (Double)(height * width);
     IVMAD = IVMAD * IVMAD;
 
     m_LCUs[ LCUIdx ].m_IVMAD = IVMAD;
@@ -1439,7 +1437,9 @@ Void TEncRCPic::updateAfterPicture( Int actualHeaderBits, Int actualTotalBits, D
   }
   m_picLambda           = averageLambda;
 #if !M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227
+#if KWU_RC_MADPRED_E0227
   m_totalMAD = 0;
+#endif
   for ( Int i=0; i<m_numberOfLCU; i++ )
   {
     m_totalMAD += m_LCUs[i].m_MAD;
@@ -1648,7 +1648,7 @@ Void TEncRateCtrl::destroy()
 
 #if M0036_RC_IMPROVEMENT
 #if KWU_RC_MADPRED_E0227
-Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry  GOPList[MAX_GOP], Int LayerID )
+Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry  GOPList[MAX_GOP], Int layerID )
 #else
 Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Int keepHierBits, Bool useLCUSeparateModel, GOPEntry  GOPList[MAX_GOP] )
 #endif
@@ -1866,7 +1866,7 @@ Void TEncRateCtrl::init( Int totalFrames, Int targetBitrate, Int frameRate, Int 
   }
 
 #if KWU_RC_MADPRED_E0227
-  setLayerID(LayerID);
+  setLayerID(layerID);
 #endif
 
   delete[] bitsRatio;
@@ -2081,13 +2081,10 @@ Void  TEncRateCtrl::create(Int sizeIntraPeriod, Int sizeGOP, Int frameRate, Int 
   m_sourceWidthInLCU         = (sourceWidth  / maxCUWidth  ) + (( sourceWidth  %  maxCUWidth ) ? 1 : 0);
   m_sourceHeightInLCU        = (sourceHeight / maxCUHeight) + (( sourceHeight %  maxCUHeight) ? 1 : 0);  
   m_isLowdelay               = (sizeIntraPeriod == -1) ? true : false;
-#if KWU_RC_MADPRED_E0227
-  m_prevBitrate              = ( targetKbps * 1000 );  // in units of 1,024 bps
-  m_currBitrate              = ( targetKbps * 1000 );
-#else
+
   m_prevBitrate              = ( targetKbps << 10 );  // in units of 1,024 bps
   m_currBitrate              = ( targetKbps << 10 );
-#endif
+
   m_frameRate                = frameRate;
   m_refFrameNum              = m_isLowdelay ? (sizeGOP) : (sizeGOP>>1);
   m_nonRefFrameNum           = sizeGOP-m_refFrameNum;
@@ -2485,7 +2482,7 @@ Void  TEncRateCtrl::updateLCUData(TComDataCU* pcCU, UInt64 actualLCUBits, Int qp
 
 
 #if KWU_RC_MADPRED_E0227
-Void  TEncRateCtrl::updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, Int iQP, Double BasePos, Double CurPos, Double FocalLen, Double Znear, Double Zfar, Int Direction)
+Void  TEncRateCtrl::updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, Int qp, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction)
 {
   Int     x, y;
   double dMAD = 0.0;
@@ -2497,8 +2494,8 @@ Void  TEncRateCtrl::updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, I
   Pel*  pDep    = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getLumaAddr(pcCU->getAddr(), 0);
   Int   iStride = pcCU->getSlice()->getIvPic(true, pcCU->getSlice()->getViewIndex())->getPicYuvOrg()->getStride();
 
-  Int   iWidth  = m_pcLCUData[m_indexLCU].m_widthInPixel;
-  Int   iHeight = m_pcLCUData[m_indexLCU].m_heightInPixel;
+  Int   width  = m_pcLCUData[m_indexLCU].m_widthInPixel;
+  Int   height = m_pcLCUData[m_indexLCU].m_heightInPixel;
 
   for( y = 0 ; y < pcCU->getSlice()->getSPS()->getMaxCUHeight() ; y+=8)
   {
@@ -2510,27 +2507,24 @@ Void  TEncRateCtrl::updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, I
   }
 
   Double AvgDepth = (Double)Sum/((pcCU->getSlice()->getSPS()->getMaxCUHeight()/8)*(pcCU->getSlice()->getSPS()->getMaxCUWidth()/8));
-
-  //Int iDisparity = pDepthGen->RCGetDisparityFromVirtDepth(0, (Int)AvgDepth);
-
-  Double dFL = FocalLen * abs( BasePos - CurPos );
-  Double dZ  = abs( 1.0 / Znear - 1.0 / Zfar ) * ((Double)(AvgDepth) / (( 1 << g_bitDepthY ) - 1) ) + abs(1.0 / Zfar);
-  Int   iDisparity = (Int)(Direction*dFL * dZ);
+  Double fL = focalLen * abs( basePos - curPos );
+  Double z  = abs( 1.0 / znear - 1.0 / zfar ) * ((Double)(AvgDepth) / (( 1 << g_bitDepthY ) - 1) ) + abs(1.0 / zfar);
+  Int   disparity = (Int)(direction*fL * z);
   Int shift = DISTORTION_PRECISION_ADJUSTMENT(g_bitDepthY-8);
-  Int Disp = iDisparity;
+  Int disp = disparity;
 
-  for( y = 0; y < iHeight; y++ )
+  for( y = 0; y < height; y++ )
   {
-    for( x = 0; x < iWidth; x++ )
+    for( x = 0; x < width; x++ )
     {
-      SAD += abs( pOrg[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + Disp)]
-      - pRec[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + Disp)] )>>shift;
+      SAD += abs( pOrg[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + disp)]
+      - pRec[Clip3(0, (Int)(pcCU->getPic()->getPicYuvOrg()->getWidth() - pcCU->getSlice()->getSPS()->getMaxCUWidth()), x + disp)] )>>shift;
     }
     pOrg += iStride;
     pRec += iStride;
   }
-  m_pcLCUData[m_indexLCU].m_qp   = iQP;
-  m_pcLCUData[m_indexLCU].m_costMAD  = (SAD /(Double)(iWidth*iHeight));
+  m_pcLCUData[m_indexLCU].m_qp   = qp;
+  m_pcLCUData[m_indexLCU].m_costMAD  = (SAD /(Double)(width*height));
   m_pcLCUData[m_indexLCU].m_bits = (Int)uiBits;
 }
 #endif

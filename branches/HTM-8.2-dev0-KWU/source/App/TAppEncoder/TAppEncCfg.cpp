@@ -2178,7 +2178,7 @@ Void TAppEncCfg::xCheckParameter()
 
     xConfirmPara( (numLCUInPic % m_numLCUInUnit) != 0, "total number of LCUs in a frame should be completely divided by NumLCUInUnit" );
 
-#if !(KWU_RC_MADPRED_E0227 || KWU_RC_VIEWRC_E0227)
+#if !KWU_FIX_URQ
     m_iMaxDeltaQP       = MAX_DELTA_QP;
 #endif
     m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;

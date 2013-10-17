@@ -131,7 +131,9 @@ Void TEncTop::create ()
 #endif
   }
 #else
+#if KWU_FIX_URQ
   if(m_enableRateCtrl)
+#endif
     m_cRateCtrl.create(getIntraPeriod(), getGOPSize(), getFrameRate(), getTargetBitrate(), getQP(), getNumLCUInUnit(), getSourceWidth(), getSourceHeight(), g_uiMaxCUWidth, g_uiMaxCUHeight);
 #endif
   // if SBAC-based RD optimization is used
@@ -229,6 +231,7 @@ Void TEncTop::destroy ()
     m_cEncSAO.destroyEncBuffer();
   }
   m_cLoopFilter.        destroy();
+  m_cRateCtrl.          destroy();
   // SBAC RD
   if( m_bUseSBACRD )
   {
@@ -749,8 +752,9 @@ Void TEncTop::xInitPPS()
     m_cPPS.setUseDQP(true);
     m_cPPS.setMaxCuDQPDepth( 0 );
     m_cPPS.setMinCuDQPSize( m_cPPS.getSPS()->getMaxCUWidth() >> ( m_cPPS.getMaxCuDQPDepth()) );
-  } 
-#else
+  }
+#endif 
+#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_FIX_URQ
   if ( m_enableRateCtrl )
   {
     m_cPPS.setUseDQP(true);

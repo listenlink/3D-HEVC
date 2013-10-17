@@ -511,7 +511,7 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setScalingListFile            ( m_scalingListFile   );
   m_cTEncTop.setSignHideFlag(m_signHideFlag);
 #if RATE_CONTROL_LAMBDA_DOMAIN
-#if KWU_RC_MADPRED_E0227
+#if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
   if(!m_cTEncTop.getIsDepth())    //only for texture
   {
     m_cTEncTop.setUseRateCtrl         ( m_RCEnableRateControl );
@@ -521,7 +521,7 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     m_cTEncTop.setUseRateCtrl         ( 0 );
   }
 #else
-  m_cTEncTop.setUseRateCtrl         ( m_RCEnableRateControl );
+    m_cTEncTop.setUseRateCtrl         ( m_RCEnableRateControl );
 #endif
 #if !KWU_RC_VIEWRC_E0227
   m_cTEncTop.setTargetBitrate       ( m_RCTargetBitrate );
@@ -602,13 +602,11 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   }
 #endif
 #else
-#if KWU_RC_MADPRED_E0227
+#if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
   if(!m_cTEncTop.getIsDepth())    //only for texture
   {
     m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
-#if !KWU_RC_VIEWRC_E0227
     m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
-#endif
     m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
   }
   else
@@ -616,10 +614,11 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     m_cTEncTop.setUseRateCtrl         ( 0 );
   }
 #else
-  m_cTEncTop.setUseRateCtrl     ( m_enableRateCtrl);
-  m_cTEncTop.setTargetBitrate   ( m_targetBitrate);
-  m_cTEncTop.setNumLCUInUnit    ( m_numLCUInUnit);
+  m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
+  m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
+  m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
 #endif
+
   
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
@@ -961,7 +960,7 @@ Void TAppEncTop::encode()
       }
     }
 
-#if !RATE_CONTROL_LAMBDA_DOMAIN
+#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_FIX_URQ
     for(Int layer=0; layer < m_numberOfLayers; layer++ )
     {
       if(m_acTEncTopList[layer]->getUseRateCtrl()  && !m_acTEncTopList[layer]->getIsDepth())

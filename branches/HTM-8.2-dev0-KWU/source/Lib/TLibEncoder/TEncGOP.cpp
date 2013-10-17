@@ -153,7 +153,7 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
 #endif
 #endif
 
-#if !RATE_CONTROL_LAMBDA_DOMAIN
+#if KWU_FIX_URQ
   m_pcRateCtrl           = pcTEncTop->getRateCtrl();
 #endif
 }
@@ -2215,7 +2215,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       delete[] pcSubstreamsOut;
   }
-
+#if !KWU_FIX_URQ && !RATE_CONTROL_LAMBDA_DOMAIN
+  if(m_pcCfg->getUseRateCtrl())
+  {
+    m_pcRateCtrl->updateRCGOPStatus();
+  }
+#endif
   delete pcBitstreamRedirect;
 
   if( accumBitsDU != NULL) delete accumBitsDU;
