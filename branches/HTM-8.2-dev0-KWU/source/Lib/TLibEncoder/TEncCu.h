@@ -101,12 +101,25 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN
+#if !M0036_RC_IMPROVEMENT
+  UInt                    m_LCUPredictionSAD;
+  Int                     m_addSADDepth;
+  Int                     m_temporalSAD;
+#endif
+#if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
+  UInt                    m_LCUPredictionSAD;
+  Int                     m_addSADDepth;
+  Int                     m_temporalSAD;
+#endif
+#endif
+#if KWU_RC_MADPRED_E0227
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
   Int                     m_temporalSAD;
   Int                     m_spatialSAD;
 #endif
+
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );

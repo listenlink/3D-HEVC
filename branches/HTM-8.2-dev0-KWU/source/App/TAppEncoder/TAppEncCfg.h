@@ -368,11 +368,11 @@ protected:
   Bool      m_RCForceIntraQP;                     ///< force all intra picture to use initial QP or not
 
 #if KWU_RC_VIEWRC_E0227
-  vector<Int>     m_ViewTargetBits;
-  bool      m_ViewWiseRateCtrl;                              ///< Flag for using view-wise rate control
+  vector<Int>     m_viewTargetBits;
+  Bool      m_viewWiseRateCtrl;                              ///< Flag for using view-wise rate control
 #endif
 #if KWU_RC_MADPRED_E0227
-  UInt       m_DepthMADPred;
+  UInt       m_depthMADPred;
 #endif
 #else
   Bool      m_enableRateCtrl;                                   ///< Flag for using rate control algorithm
@@ -380,11 +380,11 @@ protected:
   Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be completely divided by the NumLCUInUnit
 
 #if KWU_RC_VIEWRC_E0227
-  vector<Int>     m_ViewTargetBits;
-  bool      m_ViewWiseRateCtrl;                              ///< Flag for using view-wise rate control
+  vector<Int>     m_viewTargetBits;
+  Bool      m_viewWiseRateCtrl;                              ///< Flag for using view-wise rate control
 #endif
 #if KWU_RC_MADPRED_E0227
-  UInt       m_DepthMADPred;
+  UInt       m_depthMADPred;
 #endif
 #endif
   Int       m_useScalingListId;                               ///< using quantization matrix

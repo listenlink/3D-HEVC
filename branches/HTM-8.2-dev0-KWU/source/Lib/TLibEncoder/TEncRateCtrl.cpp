@@ -725,7 +725,6 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
 #if !M0036_RC_IMPROVEMENT
   m_lastPicture = NULL;
   list<TEncRCPic*>::reverse_iterator it;
-#if KWU_RC_MADPRED_E0227
   for ( it = listPreviousPictures.rbegin(); it != listPreviousPictures.rend(); it++ )
   {
     if ( (*it)->getFrameLevel() == m_frameLevel )
@@ -734,7 +733,6 @@ Void TEncRCPic::create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel
       break;
     }
   }
-#endif
 #endif
 
 #if KWU_RC_MADPRED_E0227
@@ -2485,7 +2483,7 @@ Void  TEncRateCtrl::updateLCUData(TComDataCU* pcCU, UInt64 actualLCUBits, Int qp
 Void  TEncRateCtrl::updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, Int qp, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction)
 {
   Int     x, y;
-  double dMAD = 0.0;
+  Double dMAD = 0.0;
   Int Sum = 0;
   Double SAD = 0.0;
 

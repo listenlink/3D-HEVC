@@ -102,7 +102,19 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   }
   
   m_bEncodeDQP = false;
-#if RATE_CONTROL_LAMBDA_DOMAIN && (!M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227)
+#if RATE_CONTROL_LAMBDA_DOMAIN
+#if !M0036_RC_IMPROVEMENT
+  m_LCUPredictionSAD = 0;
+  m_addSADDepth      = 0;
+  m_temporalSAD      = 0;
+#endif
+#if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
+  m_LCUPredictionSAD = 0;
+  m_addSADDepth      = 0;
+  m_temporalSAD      = 0;
+#endif
+#endif
+#if KWU_RC_MADPRED_E0227
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
   m_temporalSAD      = 0;
@@ -256,9 +268,21 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   m_ppcBestCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
   m_ppcTempCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
 
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
-  m_addSADDepth      = 0;
+#if RATE_CONTROL_LAMBDA_DOMAIN
+#if !M0036_RC_IMPROVEMENT
   m_LCUPredictionSAD = 0;
+  m_addSADDepth      = 0;
+  m_temporalSAD      = 0;
+#endif
+#if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
+  m_LCUPredictionSAD = 0;
+  m_addSADDepth      = 0;
+  m_temporalSAD      = 0;
+#endif
+#endif
+#if KWU_RC_MADPRED_E0227
+  m_LCUPredictionSAD = 0;
+  m_addSADDepth      = 0;
   m_temporalSAD      = 0;
   m_spatialSAD       = 0;
 #endif
@@ -672,12 +696,26 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
     }
 
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
     if ( uiDepth <= m_addSADDepth )
     {
       m_LCUPredictionSAD += m_temporalSAD;
       m_addSADDepth = uiDepth;
     }
+#endif
+#if RATE_CONTROL_LAMBDA_DOMAIN && M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
+    if ( uiDepth <= m_addSADDepth )
+    {
+      m_LCUPredictionSAD += m_temporalSAD;
+      m_addSADDepth = uiDepth;
+    }
+#endif
+#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
+if ( uiDepth <= m_addSADDepth )
+{
+  m_LCUPredictionSAD += m_temporalSAD;
+  m_addSADDepth = uiDepth;
+}
 #endif
 #if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_FIX_URQ
     if(m_pcEncCfg->getUseRateCtrl())
@@ -1021,7 +1059,20 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             ) // avoid very complex intra if it is unlikely
           {
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+            if ( uiDepth <= m_addSADDepth )
+            {
+              m_LCUPredictionSAD += m_spatialSAD;
+              m_addSADDepth = uiDepth;
+            }
+#elif RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
+            if ( uiDepth <= m_addSADDepth )
+            {
+              m_LCUPredictionSAD += m_spatialSAD;
+              m_addSADDepth = uiDepth;
+            }
+#endif
+#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
             if ( uiDepth <= m_addSADDepth )
             {
               m_LCUPredictionSAD += m_spatialSAD;
@@ -2260,7 +2311,16 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
   
-#if RATE_CONTROL_LAMBDA_DOMAIN && (!M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227)
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+  UChar uhDepth = rpcTempCU->getDepth( 0 );
+  if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
+  {
+    UInt SAD = m_pcRdCost->getSADPart( g_bitDepthY, m_ppcPredYuvTemp[uhDepth]->getLumaAddr(), m_ppcPredYuvTemp[uhDepth]->getStride(),
+      m_ppcOrigYuv[uhDepth]->getLumaAddr(), m_ppcOrigYuv[uhDepth]->getStride(),
+      rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
+    m_spatialSAD = (Int)SAD;
+  }
+#elif RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {

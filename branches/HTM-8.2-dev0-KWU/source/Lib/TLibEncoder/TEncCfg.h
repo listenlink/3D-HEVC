@@ -311,7 +311,7 @@ protected:
   Bool      m_RCForceIntraQP;
 
 #if KWU_RC_MADPRED_E0227
-  UInt       m_uiDepthMADPred;
+  UInt       m_depthMADPred;
 #endif
 #if KWU_RC_VIEWRC_E0227
   Bool      m_bViewWiseRateCtrl;
@@ -322,7 +322,7 @@ protected:
   Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be divided by the NumLCUInUnit
 
 #if KWU_RC_MADPRED_E0227
-  UInt       m_uiDepthMADPred;
+  UInt       m_depthMADPred;
 #endif
 #if KWU_RC_VIEWRC_E0227
   Bool      m_bViewWiseRateCtrl;
@@ -841,8 +841,8 @@ public:
   Void      setForceIntraQP        ( Bool b )      { m_RCForceIntraQP = b;           }
 
 #if KWU_RC_MADPRED_E0227
-  UInt      getUseDepthMADPred    ()                { return m_uiDepthMADPred;        }
-  Void      setUseDepthMADPred    (UInt b)          { m_uiDepthMADPred    = b;        }
+  UInt      getUseDepthMADPred    ()                { return m_depthMADPred;        }
+  Void      setUseDepthMADPred    (UInt b)          { m_depthMADPred    = b;        }
 #endif
 #if KWU_RC_VIEWRC_E0227
   Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
@@ -857,8 +857,8 @@ public:
   Void      setNumLCUInUnit   (Int numLCUs)     { m_numLCUInUnit   = numLCUs; }
 
 #if KWU_RC_MADPRED_E0227
-  UInt      getUseDepthMADPred    ()                { return m_uiDepthMADPred;        }
-  Void      setUseDepthMADPred    (UInt b)          { m_uiDepthMADPred    = b;        }
+  UInt      getUseDepthMADPred    ()                { return m_depthMADPred;        }
+  Void      setUseDepthMADPred    (UInt b)          { m_depthMADPred    = b;        }
 #endif
 #if KWU_RC_VIEWRC_E0227
   Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }

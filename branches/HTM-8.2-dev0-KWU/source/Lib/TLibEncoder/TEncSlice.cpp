@@ -1138,9 +1138,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if KWU_RC_MADPRED_E0227
       if(pcSlice->getLayerId() != 0 && m_pcCfg->getUseDepthMADPred() && !pcSlice->getIsDepth())
       {
-        double zn, zf, focallength, position, camshift;
-        double basepos;
-        bool bInterpolated;
+        Double zn, zf, focallength, position, camshift;
+        Double basepos;
+        Bool bInterpolated;
         Int direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
 
         pcEncTop->getCamParam()->xGetZNearZFar(pcEncTop->getCamParam()->getBaseViewNumbers()[pcSlice->getViewIndex()], pcSlice->getPOC(), zn, zf);
@@ -1251,9 +1251,9 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 #if KWU_RC_MADPRED_E0227
           if(pcSlice->getLayerId() != 0 && m_pcCfg->getUseDepthMADPred() && !pcSlice->getIsDepth())
           {
-            double zn, zf, focallength, position, camShift;
-            double basePos;
-            bool bInterpolated;
+            Double zn, zf, focallength, position, camShift;
+            Double basePos;
+            Bool bInterpolated;
             Int direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
             Int disparity;
 

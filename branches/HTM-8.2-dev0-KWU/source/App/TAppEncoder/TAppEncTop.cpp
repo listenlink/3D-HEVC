@@ -535,7 +535,7 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_DepthMADPred       : 0);
+    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_depthMADPred       : 0);
 
     if(m_cTEncTop.getUseDepthMADPred())
     {
@@ -546,13 +546,13 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
 #if KWU_RC_VIEWRC_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseViewWiseRateCtrl(m_ViewWiseRateCtrl);
+    m_cTEncTop.setUseViewWiseRateCtrl(m_viewWiseRateCtrl);
 
     if(m_iNumberOfViews == 1)
     {
-      if(m_ViewWiseRateCtrl)
+      if(m_viewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
       }
       else
       {
@@ -561,9 +561,9 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     }
     else
     {
-      if(m_ViewWiseRateCtrl)
+      if(m_viewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
       }
       else
       {
@@ -623,7 +623,7 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_DepthMADPred       : 0);
+    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_depthMADPred       : 0);
 
     if(m_cTEncTop.getUseDepthMADPred())
     {
@@ -635,12 +635,12 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
 #if KWU_RC_VIEWRC_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
-    m_cTEncTop.setUseViewWiseRateCtrl(m_ViewWiseRateCtrl);
+    m_cTEncTop.setUseViewWiseRateCtrl(m_viewWiseRateCtrl);
     if(m_iNumberOfViews == 1)
     {
-      if(m_ViewWiseRateCtrl)
+      if(m_viewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
       }
       else
       {
@@ -649,9 +649,9 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     }
     else
     {
-      if(m_ViewWiseRateCtrl)
+      if(m_viewWiseRateCtrl)
       {
-        m_cTEncTop.setTargetBitrate(m_ViewTargetBits[layerIdInVps>>1]);
+        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
       }
       else
       {
