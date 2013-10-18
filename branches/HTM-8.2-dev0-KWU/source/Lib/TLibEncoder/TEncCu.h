@@ -111,9 +111,10 @@ private:
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
   Int                     m_temporalSAD;
+  Int                     m_spatialSAD;
 #endif
 #endif
-#if KWU_RC_MADPRED_E0227
+#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
   Int                     m_temporalSAD;

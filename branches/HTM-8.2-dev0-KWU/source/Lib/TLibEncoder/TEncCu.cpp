@@ -112,9 +112,10 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
   m_temporalSAD      = 0;
+  m_spatialSAD       = 0;
 #endif
 #endif
-#if KWU_RC_MADPRED_E0227
+#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
   m_temporalSAD      = 0;
@@ -278,6 +279,7 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
   m_temporalSAD      = 0;
+  m_spatialSAD       = 0;
 #endif
 #endif
 #if KWU_RC_MADPRED_E0227
