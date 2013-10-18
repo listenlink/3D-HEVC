@@ -1061,7 +1061,8 @@ if ( uiDepth <= m_addSADDepth )
             ) // avoid very complex intra if it is unlikely
           {
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT && GT_RC_MACRO_FIX
             if ( uiDepth <= m_addSADDepth )
             {
               m_LCUPredictionSAD += m_spatialSAD;
@@ -2315,7 +2316,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
   
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT && GT_RC_MACRO_FIX
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {
