@@ -311,8 +311,8 @@
 #define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
 #endif
 
-#define KWU_RC_VIEWRC_E0227                         0  ///< JCT3V-E0227, view-wise target bitrate allocation
-#define KWU_RC_MADPRED_E0227                        0  ///< JCT3V-E0227, inter-view MAD prediction
+#define KWU_RC_VIEWRC_E0227                         1  ///< JCT3V-E0227, view-wise target bitrate allocation
+#define KWU_RC_MADPRED_E0227                        1  ///< JCT3V-E0227, inter-view MAD prediction
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS               64

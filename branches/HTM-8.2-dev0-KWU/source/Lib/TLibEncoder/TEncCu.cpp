@@ -1061,18 +1061,21 @@ if ( uiDepth <= m_addSADDepth )
             ) // avoid very complex intra if it is unlikely
           {
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+#if RATE_CONTROL_LAMBDA_DOMAIN
+#if !M0036_RC_IMPROVEMENT
             if ( uiDepth <= m_addSADDepth )
             {
               m_LCUPredictionSAD += m_spatialSAD;
               m_addSADDepth = uiDepth;
             }
-#elif RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
+#endif
+#if KWU_RC_MADPRED_E0227
             if ( uiDepth <= m_addSADDepth )
             {
               m_LCUPredictionSAD += m_spatialSAD;
               m_addSADDepth = uiDepth;
             }
+#endif
 #endif
 #if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
             if ( uiDepth <= m_addSADDepth )
@@ -2313,7 +2316,8 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
   
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
+#if RATE_CONTROL_LAMBDA_DOMAIN
+#if !M0036_RC_IMPROVEMENT
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {
@@ -2322,7 +2326,8 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
     m_spatialSAD = (Int)SAD;
   }
-#elif RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
+#endif
+#if KWU_RC_MADPRED_E0227
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {
@@ -2331,6 +2336,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
     m_spatialSAD = (Int)SAD;
   }
+#endif
 #endif
 #if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
   UChar uhDepth = rpcTempCU->getDepth( 0 );
