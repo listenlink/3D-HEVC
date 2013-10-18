@@ -305,7 +305,6 @@
 #define M0036_RC_IMPROVEMENT                        1  ///< JCTVC-M0036, improvement for R-lambda model based rate control
 #define TICKET_1090_FIX                             1
 #define KWU_FIX_URQ                                 1
-#define GT_RC_MACRO_FIX                             1
 
 #if KWU_FIX_URQ
 
