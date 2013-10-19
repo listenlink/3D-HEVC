@@ -795,6 +795,8 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
   }
 }
+
+#if H_MV
 Void TDecCavlc::parseSPSExtension( TComSPS* pcSPS )
 {
   UInt uiCode; 
@@ -837,6 +839,7 @@ Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFla
   }
   pcSPS->initCamParaSPS( viewIndex, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
 }
+#endif
 #endif
 
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)

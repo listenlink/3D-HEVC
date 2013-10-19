@@ -197,6 +197,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   
   rpcSlice = pcPic->getSlice(0);
 
+#if H_MV
   rpcSlice->setVPS( pVPS ); 
 
   rpcSlice->setLayerId     ( layerId );
@@ -204,6 +205,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setViewIndex   ( pVPS->getViewIndex   ( layerId ) );
 #if H_3D
   rpcSlice->setIsDepth     ( pVPS->getDepthId     ( layerId ) != 0 );    
+#endif
 #endif
   rpcSlice->setSPS( pSPS );
   rpcSlice->setPPS( pPPS );
