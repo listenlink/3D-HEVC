@@ -225,7 +225,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   {
     rpcPic->destroyNonDBFilterInfo();
   }
-#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+#if H_3D
   rpcPic->compressMotion(2); 
 #endif
 #if !H_3D

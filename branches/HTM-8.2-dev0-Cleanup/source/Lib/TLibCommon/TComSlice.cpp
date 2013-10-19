@@ -1949,7 +1949,7 @@ TComVPS::TComVPS()
 #if H_3D_NBDV_REF
     m_depthRefinementFlag  [ i ] = false;
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
 #endif
   }  

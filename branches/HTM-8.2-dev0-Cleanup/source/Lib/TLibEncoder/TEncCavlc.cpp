@@ -967,7 +967,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
           }
         }        
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
         WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
 #endif
       }
@@ -1308,7 +1308,7 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
           }
         }        
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
         WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
 #endif
       }
@@ -2281,7 +2281,7 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
   return true;
 }
 
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
 Void TEncCavlc::codeInterSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);

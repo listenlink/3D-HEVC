@@ -185,8 +185,8 @@ public:
  
   Void          setNumReorderPics(Int i, UInt tlayer) { m_numReorderPics[tlayer] = i;    }
   Int           getNumReorderPics(UInt tlayer)        { return m_numReorderPics[tlayer]; }
-#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
-  Void          compressMotion(int scale); 
+#if H_3D
+  Void          compressMotion(Int scale); 
 #else   
   Void          compressMotion(); 
 #endif

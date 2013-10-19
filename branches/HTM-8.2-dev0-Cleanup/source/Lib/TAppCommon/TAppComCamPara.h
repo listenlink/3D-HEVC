@@ -130,10 +130,7 @@ protected:
 #endif
   Void  xSetupBaseViewsFromCoded  ();
   Void  xSetupBaseViews           ( Char* pchBaseViewNumbers, UInt uiNumBaseViews );
-#if H_3D_FIX_REN_WARNING
   Bool  xIsIn                     ( std::vector<Int>& rVec, Int iNumber);
-#endif
-
 
   // functions for getting and setting scales and offsets
   Bool  xGetShiftParameterReal    ( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Bool bExternal, Bool bByIdx, Double& rdScale, Double& rdOffset );

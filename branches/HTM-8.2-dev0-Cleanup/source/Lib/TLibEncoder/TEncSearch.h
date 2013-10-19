@@ -212,7 +212,7 @@ public:
                                   TComYuv*&   rpcYuvResiBest,
                                   TComYuv*&   rpcYuvRec,
                                   Bool        bSkipRes );
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   Void encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU,
     TComYuv* pcOrg, 
     TComYuv* pcPred, 
@@ -351,9 +351,6 @@ protected:
 #if H_3D_DIM_DMM
   Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
   Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
-#if !SEC_DMM2_E0146_HHIFIX
-  Void xSearchDmm2Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd );
-#endif
 #if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
   Void xSearchDmm3Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx, UInt colTexIntraDir );
 #else

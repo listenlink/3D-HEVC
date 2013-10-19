@@ -101,9 +101,6 @@ private:
   Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt dimType );
 #if H_3D_DIM_DMM
   Void  xParseDmm1WedgeIdx   ( UInt& ruiTabIdx, Int iNumBit );
-#if !SEC_DMM2_E0146_HHIFIX
-  Void  xParseDmm2Offset     ( Int& riOffset );
-#endif
   Void  xParseDmm3WedgeIdx   ( UInt& ruiIntraIdx, Int iNumBit );
 #endif
 #if H_3D_DIM_RBC
@@ -113,7 +110,7 @@ private:
   Void  xParseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   Void  parseInterSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void  parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
@@ -215,9 +212,6 @@ private:
   ContextModel3DBuffer m_cDdcDataSCModel;
 #if H_3D_DIM_DMM
   ContextModel3DBuffer m_cDmm1DataSCModel;
-#if !SEC_DMM2_E0146_HHIFIX
-  ContextModel3DBuffer m_cDmm2DataSCModel;
-#endif
   ContextModel3DBuffer m_cDmm3DataSCModel;
 #endif
 #if H_3D_DIM_RBC
@@ -228,7 +222,7 @@ private:
   ContextModel3DBuffer m_cSDCResidualSCModel;
 #endif
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   ContextModel3DBuffer m_cInterSDCFlagSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSignFlagSCModel;

@@ -1652,7 +1652,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   m_pcEntropyCoder->encodeInterSDCFlag( pcCU, uiAbsPartIdx, false );
 #endif
 
@@ -1947,13 +1947,13 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
          }
 
           rpcTempCU->setSkipFlagSubParts( rpcTempCU->getQtRootCbf(0) == 0, 0, uhDepth );
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
           TComDataCU *rpcTempCUPre = rpcTempCU;
 #endif
           Int orgQP = rpcTempCU->getQP( 0 );
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
           if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && !uiNoResidual )
           {
             if( rpcTempCU != rpcTempCUPre )
@@ -1989,7 +1989,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
       if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
       {
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
         if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) )
         {
           bestIsSkip = !rpcBestCU->getSDCFlag( 0 ) && ( rpcBestCU->getQtRootCbf(0) == 0 );
@@ -1998,7 +1998,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
         {
 #endif
         bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
         }
 #endif
       }
@@ -2202,12 +2202,12 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   else
 #endif
   rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   TComDataCU *rpcTempCUPre = rpcTempCU;
 #endif
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() )
   {
     if( rpcTempCU != rpcTempCUPre )

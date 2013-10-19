@@ -40,7 +40,7 @@
 #include "TLibCommon/TComMotionInfo.h"
 #include "TEncSearch.h"
 #include <math.h>
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
 #include <memory.h>
 #endif
 
@@ -322,7 +322,7 @@ __inline Void TEncSearch::xTZSearchHelp( TComPattern* pcPatternKey, IntTZSearchS
 #if H_3D_IC
   m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   m_cDistParam.bUseSDCMRSAD = pcPatternKey->getSDCMRSADFlag();
 #endif
   //-- jclee for using the SAD function pointer
@@ -754,7 +754,7 @@ UInt TEncSearch::xPatternRefinement( TComPattern* pcPatternKey,
 #if H_3D_IC
     m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
     m_cDistParam.bUseSDCMRSAD = pcPatternKey->getSDCMRSADFlag();
 #endif
     m_cDistParam.pCur = piRefPos;
@@ -1899,19 +1899,11 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   
   // get DC prediction for each segment
   Pel apDCPredValues[2];
-#if KWU_SDC_SIMPLE_DC_E0117
   analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode );
-#else
-  analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride );
-#endif
   
   // get original DC for each segment
   Pel apDCOrigValues[2];
-#if KWU_SDC_SIMPLE_DC_E0117
   analyzeSegmentsSDC(piOrg, uiStride, uiWidth, apDCOrigValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode, true );
-#else
-  analyzeSegmentsSDC(piOrg, uiStride, uiWidth, apDCOrigValues, uiNumSegments, pbMask, uiMaskStride );
-#endif
   
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
   {
@@ -2883,19 +2875,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType,  uiPartOffset, uiDepth + uiInitTrDepth );
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
             } break;
-#if !SEC_DMM2_E0146_HHIFIX
-          case( DMM2_IDX ):
-            {
-              if( uiWidth > 4 )
-              {
-                Int dmm2DeltaEnd = 0;
-                xSearchDmm2Wedge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight, uiTabIdx, dmm2DeltaEnd );
-                pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType, uiPartOffset, uiDepth + uiInitTrDepth );
-                pcCU->setDmm2DeltaEndSubParts( dmm2DeltaEnd, uiPartOffset, uiDepth + uiInitTrDepth );
-                biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
-              }
-            } break;
-#endif
           case( DMM3_IDX ):
             {
 #if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
@@ -3587,7 +3566,7 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
 #if H_3D_IC
   cDistParam.bUseIC = false;
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   cDistParam.bUseSDCMRSAD = false;
 #endif
   ruiErr = cDistParam.DistFunc( &cDistParam );
@@ -4712,7 +4691,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   Bool bICFlag = pcCU->getICFlag( uiPartAddr ) && ( pcCU->getSlice()->getViewIndex() != pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getViewIndex() );
   pcPatternKey->setICFlag( bICFlag );
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   if ( pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
   {
     pcPatternKey->setSDCMRSADFlag( true );
@@ -4868,7 +4847,7 @@ Void TEncSearch::xPatternSearch( TComPattern* pcPatternKey, Pel* piRefY, Int iRe
 #if H_3D_IC
       m_cDistParam.bUseIC = pcPatternKey->getICFlag();
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
       m_cDistParam.bUseSDCMRSAD = pcPatternKey->getSDCMRSADFlag();
 #endif
       m_cDistParam.bitDepth = g_bitDepthY;
@@ -5477,7 +5456,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 #endif
 }
 
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
 Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, TComYuv* pcRec, const UInt uiDepth )
 {
   if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( 0 ) )
@@ -6800,7 +6779,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0 );
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
     m_pcEntropyCoder->encodeInterSDCFlag( pcCU, 0, true );
 #endif
     Bool bDummy = false;
@@ -7326,74 +7305,6 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   cPredYuv.destroy();
   return;
 }
-
-#if !SEC_DMM2_E0146_HHIFIX
-Void TEncSearch::xSearchDmm2Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, Int& riWedgeDeltaEnd )
-{
-  ruiTabIdx       = 0;
-  riWedgeDeltaEnd = 0;
-
-  // local pred buffer
-  TComYuv cPredYuv;
-  cPredYuv.create( uiWidth, uiHeight );
-  cPredYuv.clear();
-
-  UInt uiPredStride = cPredYuv.getStride();
-  Pel* piPred       = cPredYuv.getLumaAddr();
-
-
-  // regular wedge search
-  Dist uiBestDist    = RDO_DIST_MAX;
-  UInt uiBestTabIdx  = 0;
-  Int  iBestDeltaEnd = 0;
-
-  UInt uiIdx = 0;
-  Pel refDC1 = 0; Pel refDC2 = 0;
-  for( Int iTestDeltaEnd = -DMM2_DELTAEND_MAX; iTestDeltaEnd <= DMM2_DELTAEND_MAX; iTestDeltaEnd++ )
-  {
-    uiIdx = xPredWedgeFromIntra( pcCU, uiAbsPtIdx, uiWidth, uiHeight, iTestDeltaEnd );
-    TComWedgelet* pcWedgelet = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiIdx]);
-    xCalcBiSegDCs  ( piRef,  uiRefStride,  pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
-    xAssignBiSegDCs( piPred, uiPredStride, pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
-
-    Dist uiActDist = RDO_DIST_MAX;
-#if H_3D_VSO
-    if( m_pcRdCost->getUseVSO() )
-    {
-      if( m_pcRdCost->getUseEstimatedVSD() )
-      {
-        uiActDist = m_pcRdCost->getDistPartVSD( pcCU, uiAbsPtIdx, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false );
-      }
-      else
-      {
-        uiActDist = m_pcRdCost->getDistPartVSO( pcCU, uiAbsPtIdx, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, false );
-      }
-    }
-    else
-#endif
-    {
-      uiActDist = m_pcRdCost->getDistPart( g_bitDepthY, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, TEXT_LUMA, DF_SAD );
-    }
-
-    if( uiActDist < uiBestDist || uiBestDist == RDO_DIST_MAX )
-    {
-      uiBestDist    = uiActDist;
-      uiBestTabIdx  = uiIdx;
-      iBestDeltaEnd = iTestDeltaEnd;
-    }
-    else if( uiIdx == uiBestTabIdx && abs(iTestDeltaEnd) < abs(iBestDeltaEnd) )
-    {
-      iBestDeltaEnd = iTestDeltaEnd;
-    }
-  }
-
-  ruiTabIdx       = uiBestTabIdx;
-  riWedgeDeltaEnd = iBestDeltaEnd;
-
-  cPredYuv.destroy();
-  return;
-}
-#endif
 
 #if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
 Void TEncSearch::xSearchDmm3Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx, UInt colTexIntraDir )

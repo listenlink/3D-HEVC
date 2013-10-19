@@ -416,7 +416,7 @@ protected:
 #if H_3D_IC
   Bool      m_bUseIC;
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   bool      m_bInterSDC;
 #endif
   //====== Depth Intra Modes ======
@@ -527,7 +527,7 @@ public:
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   Void       setInterSDCEnable              ( Bool bVal )    { m_bInterSDC = bVal; }
   Bool       getInterSDCEnable              ()               { return m_bInterSDC; }
 #endif

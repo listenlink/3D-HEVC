@@ -472,7 +472,7 @@ protected:
   Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
   Bool      m_bUsePC;                                         ///< flag for using Predictive Coding with QTL
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
 #endif
 #endif

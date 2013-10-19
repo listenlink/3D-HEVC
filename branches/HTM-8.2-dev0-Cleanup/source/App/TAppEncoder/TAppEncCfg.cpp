@@ -520,7 +520,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_IC
   ("IlluCompEnable",           m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation")
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
 #endif
   // Coding tools
@@ -2475,7 +2475,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   printf( "interSDC: %d ", m_bDepthInterSDCFlag ? 1 : 0 );
 #endif
   printf("\n\n");  

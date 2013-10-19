@@ -116,7 +116,7 @@ public:
 #if H_3D_IC
   Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   Void  parseInterSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void  parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif

@@ -96,12 +96,15 @@
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
+                                              // SHARP_ILLUCOMP_REFINE_E0046
+                                              // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
                                               // MERL_D0166: Reference view selection in NBDV & Bi-VSP
                                               // MERL_C0152: Basic VSP
+                                              // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
 #endif
 
 #define H_3D_VSP                          1   // View synthesis prediction
@@ -111,6 +114,9 @@
                                               // QC_D0191: Clean up
                                               // LG_D0092: Multiple VSP candidate allowed
                                               // MTK_VSP_FIX_ALIGN_WD_E0172
+                                              // NTT_VSP_ADAPTIVE_SPLIT_E0207 adaptive sub-PU partitioning in VSP, JCT3V-E0207
+                                              // NTT_VSP_DC_BUGFIX_E0208 bugfix for sub-PU based DC in VSP, JCT3V-E0208
+                                              // NTT_VSP_COMMON_E0207_E0208 common part of JCT3V-E0207 and JCT3V-E0208
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
                                               // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
@@ -138,24 +144,29 @@
                                               // LGE_CONCATENATE_D0141
                                               // FIX_SDC_ENC_RD_WVSO_D0163
                                               // MTK_SAMPLE_BASED_SDC_D0110
+                                              // SEC_DMM2_E0146_HHIFIX Removal of DMM2 from DMMs
+                                              // ZJU_DEPTH_INTRA_MODE_E0204 Simplified Binarization for depth_intra_mode
+                                              // KWU_SDC_SIMPLE_DC_E0117 Simplified DC calculation for SDC
+                                              // SCU_HS_DMM4_REMOVE_DIV_E0242 DMM4 Division Removal
+#define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
+                                              // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
 #define H_3D_FCO_E0163                          0   // Flexible coding order for 3D
 
+
+
+// OTHERS
+                                              // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
+
+#define H_3D_REN_MAX_DEV_OUT              0  // Output maximal possible shift deviation 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HTM-8.0 INTEGRATIONS //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#define SHARP_ILLUCOMP_REFINE_E0046       1
 #define MTK_FAST_TEXTURE_ENCODING_E0173   1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
-#define MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170            1   // Progressive MV Compression, JCT3V-E0170
-#define LGE_INTER_SDC_E0156               1   // Enable inter SDC for depth coding
 
-#if H_3D_IC
-#define MTK_CLIPPING_ALIGN_IC_E0168       1   // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
-#endif
 
 #if H_3D_NBDV
-#define NBDV_DEFAULT_VIEWIDX_BUGFIX       1  // Bug fix for invalid default view index for NBDV
 #define MTK_RVS_BUGFIX_E0172              1  // Bug fix for issues caused by reference view selection, JCT3V-E0172
 #define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1  // Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
 
@@ -171,20 +182,7 @@
 #endif // H_3D_NBDV
 
 #if H_3D_DIM
-#define SEC_DMM2_E0146_HHIFIX             1   // Removal of DMM2 from DMMs
-#define ZJU_DEPTH_INTRA_MODE_E0204        1   // Simplified Binarization for depth_intra_mode
-#define KWU_SDC_SIMPLE_DC_E0117           1   // Simplified DC calculation for SDC
-#define SCU_HS_DMM4_REMOVE_DIV_E0242      1   // DMM4 Division Removal
 #define SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX     1   // Fast DMM and RBC Mode Selection
-#endif
-
-#if H_3D_VSP
-#define NTT_VSP_COMMON_E0207_E0208        1 // common part of JCT3V-E0207 and JCT3V-E0208
-#if NTT_VSP_COMMON_E0207_E0208
-#define NTT_VSP_DC_BUGFIX_E0208           1 // bugfix for sub-PU based DC in VSP, JCT3V-E0208
-#define NTT_VSP_VECTOR_CLIP_E0208         1 // disparity vector clipping on fetching depth map in VSP, JCT3V-E0208
-#define NTT_VSP_ADAPTIVE_SPLIT_E0207      1 // adaptive sub-PU partitioning in VSP, JCT3V-E0207
-#endif
 #endif
 
 #if H_3D_FCO_E0163
@@ -192,16 +190,6 @@
 #else
 #define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #endif
-
-#define H_3D_REN_MAX_DEV_OUT              0  // Output maximal possible shift deviation 
-
-/// FIXES
-#define H_3D_FIX_BVSP                     1  // DV from NBDV instead of DoNBDV should be used
-#define H_3D_FIX_TICKET_036               1  // fix for ticket #36
-#define H_3D_FIX_REN                      1  // fix of erroneous inpainting for renderer
-#define H_3D_FIX_REN_WARNING              1  // fix of warning related to camera parameter precision
-
-#define H_3D_FIX_UINT_WARNING             1  // explicit in VSD
 #endif // H_3D
 
 
@@ -278,6 +266,15 @@
 #define H_3D_VSP_CONSTRAINED              0
 #endif
 
+#endif
+
+///// ***** ILLUMATION COMPENSATION *********
+
+
+#if H_3D_IC
+#define IC_REG_COST_SHIFT 7
+#define IC_CONST_SHIFT 5
+#define IC_SHIFT_DIFF 12
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -504,11 +501,7 @@ typedef       Int             TCoeff;     ///< transform coefficient
 typedef       Int64           RMDist;     ///< renderer model distortion
 
 #if H_3D_VSO_DIST_INT
-#if H_3D_FIX_TICKET_036
 typedef       Int64            Dist;       ///< RDO distortion
-#else
-typedef       Int              Dist;       ///< RDO distortion
-#endif
 typedef       Int64            Dist64; 
 #define       RDO_DIST_MIN     MIN_INT
 #define       RDO_DIST_MAX     MAX_INT
