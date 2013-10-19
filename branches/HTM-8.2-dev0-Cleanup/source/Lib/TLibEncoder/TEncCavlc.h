@@ -83,24 +83,18 @@ public:
   UInt  getNumberOfWrittenBits()                { return  m_pcBitIf->getNumberOfWrittenBits();  }
   UInt  getCoeffCost          ()                { return  m_uiCoeffCost;  }
   Void  codeVPS                 ( TComVPS* pcVPS );
-#if H_MV5
 #if H_MV
   Void  codeVPSExtension       ( TComVPS *pcVPS );
   Void  codeRepFormat          ( TComRepFormat* pcRepFormat );
   Void  codeVPSVUI             ( TComVPS* pcVPS );
 #endif 
-#endif
   Void  codeVUI                 ( TComVUI *pcVUI, TComSPS* pcSPS );
-#if H_MV5
 #if H_MV
   Void  codeSPSExtension        ( TComSPS* pcSPS ); 
 #endif
-#endif
 #if H_3D
-#if H_MV5
   Void  codeVPSExtension2       ( TComVPS* pcVPS ); 
   Void  codeSPSExtension2       ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  ); 
-#endif
   Void  codeSPS                 ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
 #else
   Void  codeSPS                 ( TComSPS* pcSPS );

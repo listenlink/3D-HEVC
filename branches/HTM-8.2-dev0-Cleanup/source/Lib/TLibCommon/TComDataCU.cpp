@@ -4803,23 +4803,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   TComMv cColMv;
 
   // use coldir.
-#if H_MV5
   TComPic *pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? 1-getSlice()->getColFromL0Flag() : 0), getSlice()->getColRefIdx());
-#else
-#if H_MV
-  TComPic *pColPic;  
-  if (getSlice()->getAltCollocatedIndicationFlag() )
-  {
-    pColPic = getSlice()->getPicFromRefPicSetInterLayer( getSlice()->getActiveMotionPredRefLayerId( getSlice()->getCollocatedRefLayerIdx() )); 
-  }
-  else
-  {
-    pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? 1-getSlice()->getColFromL0Flag() : 0), getSlice()->getColRefIdx());  
-  }  
-#else
-  TComPic *pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? 1-getSlice()->getColFromL0Flag() : 0), getSlice()->getColRefIdx());
-#endif
-#endif
   TComDataCU *pColCU = pColPic->getCU( uiCUAddr );
   if(pColCU->getPic()==0||pColCU->getPartitionSize(uiPartUnitIdx)==SIZE_NONE)
   {

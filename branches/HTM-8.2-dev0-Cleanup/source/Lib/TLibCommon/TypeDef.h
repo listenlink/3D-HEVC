@@ -180,11 +180,6 @@
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
 
-
-/// FIXES
-#if H_MV
-#define H_MV5                             1   // Update to MV-HEVC 5 HLS
-#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -768,17 +763,10 @@ namespace Level
 /// scalability types
   enum ScalabilityType
   {
-#if H_MV5
 #if H_3D
     DEPTH_ID = 0,    
 #endif    
     VIEW_ORDER_INDEX  = 1,
-#else
-    VIEW_ID  = 0,
-#if H_3D
-    DEPTH_ID = 1,    
-#endif    
-#endif
   };
 #endif
 #if H_3D

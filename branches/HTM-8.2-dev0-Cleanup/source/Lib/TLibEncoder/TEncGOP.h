@@ -101,12 +101,8 @@ private:
   
 #if H_MV
   TComPicLists*           m_ivPicLists;
-#if H_MV5
   std::vector<TComPic*>   m_refPicSetInterLayer0; 
   std::vector<TComPic*>   m_refPicSetInterLayer1; 
-#else
-  std::vector<TComPic*>   m_refPicSetInterLayer; 
-#endif
 
   Int                     m_pocLastCoded;
   Int                     m_layerId;  
@@ -222,11 +218,7 @@ protected:
     m_nestedPictureTimingSEIPresentInAU      = false;
   }
 #if H_MV
-#if H_MV5
    Void  xSetRefPicListModificationsMv( std::vector<TComPic*> tempPicLists[2], TComSlice* pcSlice, UInt iGOPid );
-#else
-   Void  xSetRefPicListModificationsMv( TComSlice* pcSlice, UInt iGOPid );
-#endif
 #endif
   Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
 };// END CLASS DEFINITION TEncGOP
