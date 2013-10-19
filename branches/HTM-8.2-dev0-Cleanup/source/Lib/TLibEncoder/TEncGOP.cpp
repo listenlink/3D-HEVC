@@ -916,7 +916,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
 
     // SAIT_VSO_EST_A0033
-#if H_3D_FCO_E0163
+#if H_3D_FCO
     Bool flagRec;
     flagRec =  ((m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), true) == NULL) ? false: true);
     pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), flagRec ) );
@@ -1186,18 +1186,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         Int iColPoc = pcSlice->getRefPOC(RefPicList(1-pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
         pcPic->setNumDdvCandPics(pcPic->getDisCandRefPictures(iColPoc));
       }
+#endif
 #if H_3D
       pcSlice->setDepthToDisparityLUTs(); 
 
 #endif
-#endif
-#if MTK_NBDV_TN_FIX_E0172 
+
+#if H_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {
         pcPic->checkTemporalIVRef();
       }
-#endif
-#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+
       if(pcSlice->getIsDepth())
       {
         pcPic->checkTextureRef();
@@ -1929,7 +1929,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           calcChecksum(*pcPic->getPicYuvRec(), sei_recon_picture_digest.digest);
           digestStr = digestToString(sei_recon_picture_digest.digest, 4);
         }
-#if H_MV_FIX_LID_PIC_HASH_SEI_T40
+#if H_MV
         OutputNALUnit nalu(NAL_UNIT_SUFFIX_SEI, pcSlice->getTLayer(), getLayerId() );
 #else
         OutputNALUnit nalu(NAL_UNIT_SUFFIX_SEI, pcSlice->getTLayer());

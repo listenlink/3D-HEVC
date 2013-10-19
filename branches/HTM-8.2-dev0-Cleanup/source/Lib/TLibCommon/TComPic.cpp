@@ -118,7 +118,7 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
   /* initialize the texture to depth reference status */
-#if H_3D_FCO_E0163
+#if H_3D_FCO
   for (int j=0; j<2; j++)
   {
       for (int i=0; i<MAX_NUM_REF; i++)
@@ -671,8 +671,7 @@ Int TComPic::getDisCandRefPictures( Int iColPOC )
 
   return numDdvCandPics;
 }
-#endif
-#if MTK_NBDV_TN_FIX_E0172
+
 Void TComPic::checkTemporalIVRef()
 {
   TComSlice* currSlice = getSlice(getCurrSliceIdx());
@@ -726,13 +725,12 @@ Bool TComPic::isTempIVRefValid(Int currCandPic, Int iColRefDir, Int iColRefIdx)
 {
   return m_abTIVRINCurrRL[currCandPic][iColRefDir][iColRefIdx];
 }
-#endif
-#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+
 Void TComPic::checkTextureRef(  )
 {
   TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
   TComPic* pcTextPic = pcCurrSlice->getTexturePic();
-#if H_3D_FCO_E0163
+#if H_3D_FCO
   if ( pcTextPic )
   {
 #endif
@@ -758,7 +756,7 @@ Void TComPic::checkTextureRef(  )
     }
 
   }
-#if H_3D_FCO_E0163
+#if H_3D_FCO
   }
 #endif
 

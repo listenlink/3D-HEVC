@@ -1273,11 +1273,7 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     case DMM1_IDX: codeIdx = 3; break;
     case DMM4_IDX: codeIdx = 4; break;
     case DMM3_IDX: codeIdx = 5; break;
-#if LGE_SDC_REMOVE_DC_E0158
     case  RBC_IDX: codeIdx = 6; break;
-#else
-    case  RBC_IDX: codeIdx = 7; break;
-#endif
     default:                    break;
     }
   }
@@ -1288,9 +1284,6 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     switch( dir )
     {
       case PLANAR_IDX:  codeIdx = 0; break;
-#if !LGE_SDC_REMOVE_DC_E0158
-      case DC_IDX:      codeIdx = 6; break;
-#endif
       default:          codeIdx = 2; break;
     }
   }

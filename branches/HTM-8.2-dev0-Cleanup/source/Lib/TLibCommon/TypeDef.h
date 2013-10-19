@@ -91,7 +91,10 @@
                                               // MTK_SIMPLIFY_DVTC_C0135           
                                               // QC_CU_NBDV_D0181
                                               // SEC_DEFAULT_DV_D0112
-                                              // MTK_DVMCP_FIX_E0172               1 // fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
+                                              // MTK_DVMCP_FIX_E0172       fix the mismatch between software and WD for DV derivation from DVMCP blocks, issue 2 in JCT3V-E0172
+                                              // SEC_SIMPLIFIED_NBDV_E0142 Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
+                                              // MTK_NBDV_TN_FIX_E0172     fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
+                                              // MTK_TEXTURE_MRGCAND_BUGFIX_E0182  Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
@@ -105,6 +108,8 @@
                                               // MERL_D0166: Reference view selection in NBDV & Bi-VSP
                                               // MERL_C0152: Basic VSP
                                               // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
+                                              // NTT_DoNBDV_VECTOR_CLIP_E0141 disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
+
 #endif
 
 #define H_3D_VSP                          1   // View synthesis prediction
@@ -148,62 +153,37 @@
                                               // ZJU_DEPTH_INTRA_MODE_E0204 Simplified Binarization for depth_intra_mode
                                               // KWU_SDC_SIMPLE_DC_E0117 Simplified DC calculation for SDC
                                               // SCU_HS_DMM4_REMOVE_DIV_E0242 DMM4 Division Removal
+                                              // LGE_SDC_REMOVE_DC_E0158 Removal of DC mode from SDC
+                                              // LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   Removal of overlap between DMM3 and DMM1
+
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
-#define H_3D_FCO_E0163                          0   // Flexible coding order for 3D
+#define H_3D_FCO                          0   // Flexible coding order for 3D
 
 
 
 // OTHERS
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
-
-#define H_3D_REN_MAX_DEV_OUT              0  // Output maximal possible shift deviation 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-8.0 INTEGRATIONS //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-
-#define MTK_FAST_TEXTURE_ENCODING_E0173   1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
-
-
-#if H_3D_NBDV
-#define MTK_RVS_BUGFIX_E0172              1  // Bug fix for issues caused by reference view selection, JCT3V-E0172
-#define MTK_TEXTURE_MRGCAND_BUGFIX_E0182  1  // Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
-
-#if MTK_RVS_BUGFIX_E0172
-#define MTK_DIVMC_FIX_E0172               1 // fix the issue of derivation of disparity inter-view merge candidate, issue 5 in JCT3V-E0172
-#define MTK_NBDV_TN_FIX_E0172             1 // fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
-#endif // MTK_RVS_BUGFIX_E0172
-
-#if H_3D_NBDV_REF
-#define NTT_DoNBDV_VECTOR_CLIP_E0141      1   // disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
-#define SEC_SIMPLIFIED_NBDV_E0142         1   // Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
-#endif
-#endif // H_3D_NBDV
-
+#define H_3D_REN_MAX_DEV_OUT              0   // Output maximal possible shift deviation 
+#define H_3D_FAST_TEXTURE_ENCODING        1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
+                                              // MTK_FAST_TEXTURE_ENCODING_E0173
 #if H_3D_DIM
-#define SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX     1   // Fast DMM and RBC Mode Selection
+#define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
+                                              // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
-#if H_3D_FCO_E0163
-#define H_3D_FCO_VSP_DONBDV_E0163               1   // Adaptive depth reference for flexible coding order
-#else
-#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
-#endif
 #endif // H_3D
 
 
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-8.1 INTEGRATIONS //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-
-// Please put HTM-8.1 Integration defines here, when possible 
+// Rate Control
+#define KWU_FIX_URQ                       1
+#define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
+#define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
 
 
 /// FIXES
 #if H_MV
-#define H_MV_FIX_LID_PIC_HASH_SEI_T40                      1   // Fix wrong layer_id in decoded picture hash SEI 
-#define H_MV5                                              1   // Update to MV-HEVC 5 HLS
+#define H_MV5                             1   // Update to MV-HEVC 5 HLS
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
@@ -216,30 +196,21 @@
 #define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
 #define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
-
 #define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
-
 #endif
-////   ****** Neighbouring block-based Disparity Vector  *********
+
+////   ****** neighbouring block-based disparity vector  *********
 #if H_3D_NBDV
-#if SEC_SIMPLIFIED_NBDV_E0142
 #define DVFROM_LEFT                       0
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
-#else
-#define DVFROM_LEFTBELOW                  0
-#define DVFROM_LEFT                       1
-#define DVFROM_ABOVERIGHT                 2
-#define DVFROM_ABOVE                      3
-#define DVFROM_ABOVELEFT                  4
-#define IDV_CANDS                         5
-#endif
 #endif
 
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
 #endif
+
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
@@ -249,14 +220,7 @@
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
-#if H_3D_DIM_SDC
-#define LGE_SDC_REMOVE_DC_E0158           1   // Removal of DC mode from SDC
 #endif
-#if H_3D_DIM_DMM
-#define LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   // Removal of overlap between DMM3 and DMM1
-#endif
-#endif
-
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
 #define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
@@ -269,12 +233,17 @@
 #endif
 
 ///// ***** ILLUMATION COMPENSATION *********
-
-
 #if H_3D_IC
-#define IC_REG_COST_SHIFT 7
-#define IC_CONST_SHIFT 5
-#define IC_SHIFT_DIFF 12
+#define IC_REG_COST_SHIFT                 7
+#define IC_CONST_SHIFT                    5
+#define IC_SHIFT_DIFF                     12
+#endif
+
+///// ***** FCO *********
+#if H_3D_FCO
+#define H_3D_FCO_VSP_DONBDV_E0163               1   // Adaptive depth reference for flexible coding order
+#else
+#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -301,24 +270,17 @@
 #define RATE_CONTROL_LAMBDA_DOMAIN                  1  ///< JCTVC-K0103, rate control by R-lambda model
 #define M0036_RC_IMPROVEMENT                        1  ///< JCTVC-M0036, improvement for R-lambda model based rate control
 #define TICKET_1090_FIX                             1
-#define KWU_FIX_URQ                                 1
 
 #if KWU_FIX_URQ
-
 #if RATE_CONTROL_LAMBDA_DOMAIN
 #define RC_FIX                                      1  /// suggested fix for M0036
 #define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
 #endif
-
 #else
-
 #define RC_FIX                                      1  /// suggested fix for M0036
 #define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
-
 #endif
 
-#define KWU_RC_VIEWRC_E0227                         0  ///< JCT3V-E0227, view-wise target bitrate allocation
-#define KWU_RC_MADPRED_E0227                        0  ///< JCT3V-E0227, inter-view MAD prediction
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #define MAX_NUM_LAYER_IDS               64

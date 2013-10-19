@@ -2655,11 +2655,7 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
   
   // check prediction mode
   UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
-#if LGE_SDC_REMOVE_DC_E0158
   if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
-#else
-  if( uiLumaPredMode == DC_IDX || uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
-#endif
     return true;
   
   // else
@@ -3535,7 +3531,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( uiPUIdx, uiPartIdxCenter );    
-#if H_3D_FCO_E0163
+#if H_3D_FCO
     TComPic * pcTexturePic = m_pcSlice->getTexturePic();
     TComDataCU *pcTextureCU = 0;
     if ( pcTexturePic )
@@ -3544,7 +3540,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
 #endif
  
-#if H_3D_FCO_E0163
+#if H_3D_FCO
     if ( pcTextureCU && pcTexturePic->getReconMark() && !pcTextureCU->isIntra( uiPartIdxCenter ) )
 #else
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
@@ -5486,13 +5482,6 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     Int  uiLCUIdx   = getAddr();
     xDeriveCenterIdx(uiPartIdx, uiPartIdxCenter );
 
-    ///*** Derive bottom right neighbour position ***
-#if !SEC_SIMPLIFIED_NBDV_E0142
-    Int iLCUIdxRBNb  = -1;    
-    Int iPartIdxRBNb = -1;
-    xDeriveRightBottomNbIdx(iLCUIdxRBNb, iPartIdxRBNb );
-#endif
-
     ///*** Search temporal candidate pictures for disparity vector ***
     const Int iNumCandPics = getPic()->getNumDdvCandPics();
     for(Int curCandPic = 0; curCandPic < iNumCandPics; curCandPic++)
@@ -5510,62 +5499,39 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
         curCandPicRefIdx = getPic()->getRapRefIdx();
       }
 
-#if !SEC_SIMPLIFIED_NBDV_E0142
-      // Check BR and Center       
-      for(Int curPosition = 0; curPosition < 2; curPosition++) 
+      Bool bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, uiLCUIdx,   uiPartIdxCenter,  cColMv, iTargetViewIdx, iTStartViewIdx );
+
+      if( bCheck )
       {
-#endif
-        Bool bCheck = false; 
-#if !SEC_SIMPLIFIED_NBDV_E0142
-        if ( curPosition == 0 && iLCUIdxRBNb >= 0 )
-#if MTK_NBDV_TN_FIX_E0172
-          bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, iLCUIdxRBNb, iPartIdxRBNb,  cColMv, iTargetViewIdx, iTStartViewIdx);
-#else
-          bCheck = xGetColDisMV( eCurRefPicList, curCandPicRefIdx, iLCUIdxRBNb, iPartIdxRBNb,  cColMv, iTargetViewIdx, iTStartViewIdx);
-#endif
-
-        if (curPosition == 1 )
-#endif
-#if MTK_NBDV_TN_FIX_E0172
-          bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, uiLCUIdx,   uiPartIdxCenter,  cColMv, iTargetViewIdx, iTStartViewIdx );
-#else
-          bCheck = xGetColDisMV( eCurRefPicList, curCandPicRefIdx, uiLCUIdx,   uiPartIdxCenter,  cColMv, iTargetViewIdx, iTStartViewIdx );
-#endif
-
-        if( bCheck )
-        {
-          clipMv(cColMv);
-          pDInfo->m_acNBDV = cColMv;
-          pDInfo->m_aVIdxCan  = iTargetViewIdx;
+        clipMv(cColMv);
+        pDInfo->m_acNBDV = cColMv;
+        pDInfo->m_aVIdxCan  = iTargetViewIdx;
 
 #if H_3D_NBDV_REF
-          TComPic* picDepth = NULL;   
+        TComPic* picDepth = NULL;   
 #if H_3D_FCO_VSP_DONBDV_E0163
-          picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
-          if ( picDepth->getPicYuvRec() != NULL  )  
-          {
-            cColMv.setZero();
-          }
-          else // Go back with virtual depth
-          {
-            picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
-          }
-
-          assert(picDepth != NULL);
-#else
-          picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
-          assert(picDepth != NULL);
-#endif
-          if (picDepth && bDepthRefine)
-            estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
-
-          pDInfo->m_acDoNBDV  = cColMv;
-#endif //H_3D_NBDV_REF
-          return true;
+        picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
+        if ( picDepth->getPicYuvRec() != NULL  )  
+        {
+          cColMv.setZero();
         }
-#if !SEC_SIMPLIFIED_NBDV_E0142
-      } 
+        else // Go back with virtual depth
+        {
+          picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
+        }
+
+        assert(picDepth != NULL);
+#else
+        picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
+        assert(picDepth != NULL);
 #endif
+        if (picDepth && bDepthRefine)
+          estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
+
+        pDInfo->m_acDoNBDV  = cColMv;
+#endif //H_3D_NBDV_REF
+        return true;
+      }
     }
   } 
 
@@ -5578,7 +5544,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   bCheckMcpDv = true; 
   if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_LEFT
 #if H_3D_NBDV_REF
-  , bDepthRefine 
+    , bDepthRefine 
 #endif
     ) )
     return true;
@@ -5590,54 +5556,11 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     bCheckMcpDv = ( ( getAddr() - pcTmpCU->getAddr() ) == 0);
     if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_ABOVE
 #if H_3D_NBDV_REF
-  , bDepthRefine 
+      , bDepthRefine 
 #endif
-    ) )
+      ) )
       return true;
   }
-
-#if !SEC_SIMPLIFIED_NBDV_E0142
-  //// ******* Get disparity from above right block ******* /////
-  pcTmpCU = getPUAboveRight(uiIdx, uiPartIdxRT, true);
-  if(pcTmpCU != NULL )
-  {
-    bCheckMcpDv = ( ( getAddr() - pcTmpCU->getAddr() ) == 0);
-    if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_ABOVERIGHT
-#if H_3D_NBDV_REF
-  , bDepthRefine 
-#endif
-    ) )
-      return true;
-  }
-
-  //// ******* Get disparity from below left block ******* /////
-  pcTmpCU = getPUBelowLeft(uiIdx, uiPartIdxLB, true);
-  if( pcTmpCU != NULL )
-  {
-    bCheckMcpDv = true; 
-    if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_LEFTBELOW
-#if H_3D_NBDV_REF
-  , bDepthRefine 
-#endif
-    ) )
-      return true;
-  }
-
-  //// ******* Get disparity from above left block ******* /////
-  pcTmpCU = getPUAboveLeft(uiIdx, (m_uiAbsIdxInLCU + uiPartAddr), true);
-  assert(uiPartIdxLT == (m_uiAbsIdxInLCU + uiPartAddr));
-
-  if( pcTmpCU != NULL )
-  {
-    bCheckMcpDv = (( getAddr() - pcTmpCU->getAddr() ) <= 1); 
-    if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_ABOVELEFT
-#if H_3D_NBDV_REF
-  , bDepthRefine 
-#endif
-    ) )
-      return true;
-  }
-#endif
 
   //// ******* Search MCP blocks ******* /////
   if( cIDVInfo.m_bFound ) 
@@ -5746,17 +5669,10 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
   Int iPictureWidth  = pcBaseViewDepthPicYuv->getWidth();
   Int iPictureHeight = pcBaseViewDepthPicYuv->getHeight();
   
-#if NTT_DoNBDV_VECTOR_CLIP_E0141
   Int depthStartPosX = Clip3(0,   iPictureWidth - 1,  iBlkX + ((mv->getHor()+2)>>2));
   Int depthStartPosY = Clip3(0,   iPictureHeight - 1, iBlkY + ((mv->getVer()+2)>>2));
   Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
   Int depthEndPosY   = Clip3(0,   iPictureHeight - 1, iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
-#else
-  Int depthStartPosX = Clip3(0,   iPictureWidth - iBlkWidth,  iBlkX + ((mv->getHor()+2)>>2));
-  Int depthStartPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + ((mv->getVer()+2)>>2));
-  Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
-  Int depthEndPosY   = Clip3(0,   iPictureHeight - 1,  iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
-#endif
 
   Pel* depthTL  = pcBaseViewDepthPicYuv->getLumaAddr();
   Int depStride =  pcBaseViewDepthPicYuv->getStride();
@@ -5847,7 +5763,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
         {
           assert( uiMvpDvPos < IDV_CANDS );
           paIDVInfo->m_acMvCand[iList][ uiMvpDvPos ] = TComMv( cMvPred.getIDVHor(), cMvPred.getIDVVer() );
-          //Notes from QC: DvMCP is implemented in a way that doesnE½t carry the reference view identifier as NBDV. It only works for CTC and needs to be fixed to be aligned with other part of the NBDV design.
+          //Notes from QC: DvMCP is implemented in a way that doesnot carry the reference view identifier as NBDV. It only works for CTC and needs to be fixed to be aligned with other part of the NBDV design.
           paIDVInfo->m_aVIdxCan[iList][ uiMvpDvPos ] = cMvPred.getIDVVId();
           paIDVInfo->m_bAvailab[iList][ uiMvpDvPos ] = true;
           paIDVInfo->m_bFound                        = true; 
@@ -5919,11 +5835,8 @@ Void TComDataCU::setDvInfoSubParts( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiP
   setSubPartT<DisInfo>( cDvInfo, m_pDvInfo, uiAbsPartIdx, uiDepth, uiPUIdx );
 }
 #endif
-#if MTK_NBDV_TN_FIX_E0172
+
 Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv , Int & iTargetViewIdx, Int & iStartViewIdx )
-#else
-Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv , Int & iTargetViewIdx, Int & iStartViewIdx )
-#endif
 {
 
   RefPicList  eColRefPicList = REF_PIC_LIST_0;
@@ -5939,7 +5852,7 @@ Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr,
   {
     if(pColCU->getSlice()->isInterB())
     {
-        eColRefPicList = RefPicList(ilist);
+      eColRefPicList = RefPicList(ilist);
     }
 
     Int iColRefIdx = pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiPartUnitIdx);
@@ -5957,25 +5870,21 @@ Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr,
     }
     else 
     {
-#if MTK_NBDV_TN_FIX_E0172
       if(getPic()->isTempIVRefValid(currCandPic, ilist,  iColRefIdx))
       {
-#endif
-      rcMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiPartUnitIdx);
-      rcMv.setIDVFlag(0);
-      iTargetViewIdx  = iColRefViewIdx ;
-      iStartViewIdx   = iColViewIdx   ;
-      return true;    
-#if MTK_NBDV_TN_FIX_E0172
+        rcMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiPartUnitIdx);
+        rcMv.setIDVFlag(0);
+        iTargetViewIdx  = iColRefViewIdx ;
+        iStartViewIdx   = iColViewIdx   ;
+        return true;    
       }
-#endif
     }
   }
 
   return false;
 }
 #endif 
-#if  MTK_FAST_TEXTURE_ENCODING_E0173
+#if  H_3D_FAST_TEXTURE_ENCODIN
 Void 
 TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge, Int& iIVFMaxD)
 {

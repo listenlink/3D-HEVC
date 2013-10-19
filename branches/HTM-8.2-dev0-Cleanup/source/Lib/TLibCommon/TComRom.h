@@ -173,11 +173,7 @@ extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
 extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
 extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
 
-#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
 Void initWedgeLists( Bool initNodeList = false );
-#else
-Void initWedgeLists( Bool initRefinements = false );
-#endif
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
 #endif

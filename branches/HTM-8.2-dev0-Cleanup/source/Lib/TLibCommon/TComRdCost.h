@@ -234,7 +234,7 @@ public:
   
   UInt    calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
   
-#if SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
+#if H_3D_FAST_DEPTH_INTRA
   UInt    calcVAR(Pel* pi0, Int stride, Int width, Int height, Int cuDepth);
 #endif  
   // for motion cost

@@ -485,11 +485,7 @@ public:
   , Bool bDepthRefine = false
 #endif
   );
-#if MTK_NBDV_TN_FIX_E0172
   Bool          xGetColDisMV      ( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
-#else
-  Bool          xGetColDisMV      ( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
-#endif
   Bool          getDisMvpCandNBDV ( DisInfo* pDInfo
 #if H_3D_NBDV_REF
    , Bool bDepthRefine = false
@@ -501,7 +497,7 @@ public:
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
 #endif //H_3D_NBDV_REF
 #endif
-#if  MTK_FAST_TEXTURE_ENCODING_E0173
+#if  H_3D_FAST_TEXTURE_ENCODIN
   Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);
 #endif
 #if H_3D_IV_MERGE
