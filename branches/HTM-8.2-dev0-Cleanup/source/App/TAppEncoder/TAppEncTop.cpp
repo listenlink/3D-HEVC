@@ -755,19 +755,19 @@ Void TAppEncTop::xDestroyLib()
 #endif
 }
 
-Void TAppEncTop::xInitLib()
+Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
 #if H_MV
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
 #if KWU_RC_MADPRED_E0227
-    m_acTEncTopList[layer]->init( this );
+    m_acTEncTopList[layer]->init( isFieldCoding, this );
 #else
-    m_acTEncTopList[layer]->init( );
+    m_acTEncTopList[layer]->init( isFieldCoding );
 #endif
   }
 #else
-  m_cTEncTop.init();
+  m_cTEncTop.init( isFieldCoding );
 #endif
 }
 
@@ -798,7 +798,7 @@ Void TAppEncTop::encode()
   // initialize internal class & member variables
   xInitLibCfg();
   xCreateLib();
-  xInitLib();
+  xInitLib(m_isField);
   
   // main encoder loop
 #if H_MV
@@ -823,7 +823,14 @@ Void TAppEncTop::encode()
   list<AccessUnit> outputAccessUnits; ///< list of access units to write out.  is populated by the encoding process
 
   // allocate original YUV buffer
+  if( m_isField )
+  {
+    pcPicYuvOrg->create( m_iSourceWidth, m_iSourceHeightOrg, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+  }
+  else
+  {
   pcPicYuvOrg->create( m_iSourceWidth, m_iSourceHeight, m_uiMaxCUWidth, m_uiMaxCUHeight, m_uiMaxCUDepth );
+  }
   
 #if H_MV
   while ( !allEos )
@@ -899,7 +906,7 @@ Void TAppEncTop::encode()
   }
   for(Int layer=0; layer < m_numberOfLayers; layer++ )
   {
-    m_acTEncTopList[layer]->printSummary( m_acTEncTopList[layer]->getNumAllPicCoded() );
+    m_acTEncTopList[layer]->printSummary( m_acTEncTopList[layer]->getNumAllPicCoded(), m_isField );
   }
 #else
   while ( !bEos )
@@ -913,7 +920,7 @@ Void TAppEncTop::encode()
     // increase number of received frames
     m_iFrameRcvd++;
 
-    bEos = (m_iFrameRcvd == m_framesToBeEncoded);
+    bEos = (m_isField && (m_iFrameRcvd == (m_framesToBeEncoded >> 1) )) || ( !m_isField && (m_iFrameRcvd == m_framesToBeEncoded) );
 
     Bool flush = 0;
     // if end of file (which is only detected on a read failure) flush the encoder of any queued pictures
@@ -926,7 +933,14 @@ Void TAppEncTop::encode()
     }
 
     // call encoding function for one frame
+    if ( m_isField )
+    {
+      m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, m_cListPicYuvRec, outputAccessUnits, iNumEncoded, m_isTopFieldFirst);
+    }
+    else
+    {
     m_cTEncTop.encode( bEos, flush ? 0 : pcPicYuvOrg, m_cListPicYuvRec, outputAccessUnits, iNumEncoded );
+    }
     
     // write bistream to file if necessary
     if ( iNumEncoded > 0 )
@@ -936,7 +950,7 @@ Void TAppEncTop::encode()
     }
   }
 
-  m_cTEncTop.printSummary();
+  m_cTEncTop.printSummary(m_isField);
 #endif
 
   // delete original YUV buffer
@@ -1047,25 +1061,80 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, std:
 Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, const std::list<AccessUnit>& accessUnits)
 #endif
 {
-  Int i;
-  
+  if (m_isField)
+  {
+    //Reinterlace fields
+    Int i;
 #if H_MV
   if( iNumEncoded > 0 )
   {
     TComList<TComPicYuv*>::iterator iterPicYuvRec = m_picYuvRec[layerId]->end();
 #else
-  TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
-  list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
+    TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
+    list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
 #endif
-
-  for ( i = 0; i < iNumEncoded; i++ )
+    
+    for ( i = 0; i < iNumEncoded; i++ )
+    {
+      --iterPicYuvRec;
+    }
+    
+    for ( i = 0; i < iNumEncoded/2; i++ )
+    {
+      TComPicYuv*  pcPicYuvRecTop  = *(iterPicYuvRec++);
+      TComPicYuv*  pcPicYuvRecBottom  = *(iterPicYuvRec++);
+      
+#if H_MV
+      if (m_pchReconFileList[layerId])
+      {
+        m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRecTop, pcPicYuvRecBottom, m_confLeft, m_confRight, m_confTop, m_confBottom, m_isTopFieldFirst );
+      }
+    }
+  if( ! accessUnits.empty() )
   {
-    --iterPicYuvRec;
+    list<AccessUnit>::iterator aUIter;
+    for( aUIter = accessUnits.begin(); aUIter != accessUnits.end(); aUIter++ )
+    {
+      const vector<UInt>& stats = writeAnnexB(bitstreamFile, *aUIter);
+      rateStatsAccum(*aUIter, stats);
+    }
   }
-  
-  for ( i = 0; i < iNumEncoded; i++ )
+#else
+      if (m_pchReconFile)
+      {
+        m_cTVideoIOYuvReconFile.write( pcPicYuvRecTop, pcPicYuvRecBottom, m_confLeft, m_confRight, m_confTop, m_confBottom, m_isTopFieldFirst );
+      }
+
+      const AccessUnit& auTop = *(iterBitstream++);
+      const vector<UInt>& statsTop = writeAnnexB(bitstreamFile, auTop);
+      rateStatsAccum(auTop, statsTop);
+      
+      const AccessUnit& auBottom = *(iterBitstream++);
+      const vector<UInt>& statsBottom = writeAnnexB(bitstreamFile, auBottom);
+      rateStatsAccum(auBottom, statsBottom);
+    }
+#endif
+  }
+  else
   {
-    TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
+    Int i;
+#if H_MV
+  if( iNumEncoded > 0 )
+  {
+    TComList<TComPicYuv*>::iterator iterPicYuvRec = m_picYuvRec[layerId]->end();
+#else
+    TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
+    list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
+#endif
+    
+    for ( i = 0; i < iNumEncoded; i++ )
+    {
+      --iterPicYuvRec;
+    }
+    
+    for ( i = 0; i < iNumEncoded; i++ )
+    {
+      TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
 #if H_MV
       if (m_pchReconFileList[layerId])
       {
@@ -1083,18 +1152,18 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     }
   }
 #else
-    if (m_pchReconFile)
-    {
-      m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
-    }
-
-    const AccessUnit& au = *(iterBitstream++);
-    const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
-    rateStatsAccum(au, stats);
-  }
+      if (m_pchReconFile)
+      {
+        m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
+      }
+      
+      const AccessUnit& au = *(iterBitstream++);
+      const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
+      rateStatsAccum(au, stats);
 #endif
+    }
+  }
 }
-
 /**
  *
  */

@@ -354,9 +354,9 @@ Void TEncGOP::initGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcList
 }
 #endif
 #if H_MV
-Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid)
+Void TEncGOP::compressPicInGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid, bool isField, bool isTff)
 #else
-Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP)
+Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, bool isField, bool isTff)
 #endif
 {
   TComPic*        pcPic;
@@ -370,7 +370,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   TComOutputBitstream* pcSubstreamsOut = NULL;
 
 #if !H_MV
-  xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut );
+  xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut, isField );
+
   
   m_iNumPicCoded = 0;
 #endif
@@ -442,12 +443,23 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////// Initial to start encoding
-    Int pocCurr = iPOCLast -iNumPicRcvd+ m_pcCfg->getGOPEntry(iGOPid).m_POC;
-    Int iTimeOffset = m_pcCfg->getGOPEntry(iGOPid).m_POC;
-    if(iPOCLast == 0)
+    Int iTimeOffset;
+    Int pocCurr;
+    
+    if(iPOCLast == 0) //case first frame or first top field
     {
       pocCurr=0;
       iTimeOffset = 1;
+    }
+    else if(iPOCLast == 1 && isField) //case first bottom field, just like the first frame, the poc computation is not right anymore, we set the right value
+    {
+      pocCurr = 1;
+      iTimeOffset = 1;
+    }
+    else
+    {
+      pocCurr = iPOCLast - iNumPicRcvd + m_pcCfg->getGOPEntry(iGOPid).m_POC - isField;
+      iTimeOffset = m_pcCfg->getGOPEntry(iGOPid).m_POC;
     }
     if(pocCurr>=m_pcCfg->getFramesToBeEncoded())
     {
@@ -466,7 +478,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     // start a new access unit: create an entry in the list of output access units
     accessUnitsInGOP.push_back(AccessUnit());
     AccessUnit& accessUnit = accessUnitsInGOP.back();
-    xGetBuffer( rcListPic, rcListPicYuvRecOut, iNumPicRcvd, iTimeOffset, pcPic, pcPicYuvRecOut, pocCurr );
+    xGetBuffer( rcListPic, rcListPicYuvRecOut, iNumPicRcvd, iTimeOffset, pcPic, pcPicYuvRecOut, pocCurr, isField);
 
     //  Slice data initialization
     pcPic->clearSliceBuffer();
@@ -476,10 +488,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
 
 #if H_MV
-    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS(), getLayerId() );     
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getVPS(), m_pcEncTop->getSPS(), m_pcEncTop->getPPS(), getLayerId(), isField  );     
 #else
-    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS() );
+    m_pcSliceEncoder->initEncSlice ( pcPic, iPOCLast, pocCurr, iNumPicRcvd, iGOPid, pcSlice, m_pcEncTop->getSPS(), m_pcEncTop->getPPS(), isField  );
 #endif
+    
+    //Set Frame/Field coding
+    pcSlice->getPic()->setField(isField);
+
     pcSlice->setLastIDR(m_iLastIDR);
     pcSlice->setSliceIdx(0);
 #if H_MV
@@ -499,7 +515,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     //set default slice level flag to the same as SPS level flag
     pcSlice->setLFCrossSliceBoundaryFlag(  pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag()  );
     pcSlice->setScalingList ( m_pcEncTop->getScalingList()  );
-    pcSlice->getScalingList()->setUseTransformSkip(m_pcEncTop->getPPS()->getUseTransformSkip());
     if(m_pcEncTop->getUseScalingListId() == SCALING_LIST_OFF)
     {
       m_pcEncTop->getTrQuant()->setFlatScalingList();
@@ -553,7 +568,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #endif
     if(pcSlice->getTemporalLayerNonReferenceFlag())
     {
-      if(pcSlice->getNalUnitType()==NAL_UNIT_CODED_SLICE_TRAIL_R)
+      if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_R &&
+          !(m_iGopSize == 1 && pcSlice->getSliceType() == I_SLICE))
+        // Add this condition to avoid POC issues with encoder_intra_main.cfg configuration (see #1127 in bug tracker)
       {
         pcSlice->setNalUnitType(NAL_UNIT_CODED_SLICE_TRAIL_N);
       }
@@ -1355,7 +1372,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           accumNalsDU                                  = new UInt[ numDU ];
         }
       }
-      pictureTimingSEI.m_auCpbRemovalDelay = std::max<Int>(1, m_totalCoded - m_lastBPSEI); // Syntax element signalled as minus, hence the .
+      pictureTimingSEI.m_auCpbRemovalDelay = std::min<Int>(std::max<Int>(1, m_totalCoded - m_lastBPSEI), static_cast<Int>(pow(2, static_cast<double>(pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getCpbRemovalDelayLengthMinus1()+1)))); // Syntax element signalled as minus, hence the .
       pictureTimingSEI.m_picDpbOutputDelay = pcSlice->getSPS()->getNumReorderPics(0) + pcSlice->getPOC() - m_totalCoded;
       Int factor = pcSlice->getSPS()->getVuiParameters()->getHrdParameters()->getTickDivisorMinus2() + 2;
       pictureTimingSEI.m_picDpbOutputDuDelay = factor * pictureTimingSEI.m_picDpbOutputDelay;
@@ -1883,6 +1900,20 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
       xCalculateAddPSNR( pcPic, pcPic->getPicYuvRec(), accessUnit, dEncTime );
 
+    //In case of field coding, compute the interlaced PSNR for both fields
+    if (isField && ((!pcPic->isTopField() && isTff) || (pcPic->isTopField() && !isTff)))
+    {
+      //get complementary top field
+      TComPic* pcPicTop;
+      TComList<TComPic*>::iterator   iterPic = rcListPic.begin();
+      while ((*iterPic)->getPOC() != pcPic->getPOC()-1)
+      {
+        iterPic ++;
+      }
+      pcPicTop = *(iterPic);
+      xCalculateInterlacedAddPSNR(pcPicTop, pcPic, pcPicTop->getPicYuvRec(), pcPic->getPicYuvRec(), accessUnit, dEncTime );
+    }
+    
       if (digestStr)
       {
         if(m_pcCfg->getDecodedPictureHashSEIEnabled() == 1)
@@ -2015,6 +2046,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           {
             OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI, pcSlice->getTLayer());
           m_pcEntropyCoder->setEntropyCoder(m_pcCavlcCoder, pcSlice);
+          pictureTimingSEI.m_picStruct = (isField && pcSlice->getPic()->isTopField())? 1 : isField? 2 : 0;
           m_seiWriter.writeSEImessage(nalu.m_Bitstream, pictureTimingSEI, pcSlice->getSPS());
           writeRBSPTrailingBits(nalu.m_Bitstream);
           UInt seiPositionInAu = xGetFirstSeiLocation(accessUnit);
@@ -2135,21 +2167,31 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   if( accumNalsDU != NULL) delete accumNalsDU;
 
 #if !H_MV
-  assert ( m_iNumPicCoded == iNumPicRcvd );
+  assert ( (m_iNumPicCoded == iNumPicRcvd) || (isField && iPOCLast == 1) );
 #endif
 }
 
 #if !H_MV
-Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded)
+Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, bool isField)
 {
   assert (uiNumAllPicCoded == m_gcAnalyzeAll.getNumPic());
   
     
   //--CFG_KDY
+  if(isField)
+  {
+    m_gcAnalyzeAll.setFrmRate( m_pcCfg->getFrameRate() * 2);
+    m_gcAnalyzeI.setFrmRate( m_pcCfg->getFrameRate() * 2);
+    m_gcAnalyzeP.setFrmRate( m_pcCfg->getFrameRate() * 2);
+    m_gcAnalyzeB.setFrmRate( m_pcCfg->getFrameRate() * 2);
+  }
+  else
+  {
   m_gcAnalyzeAll.setFrmRate( m_pcCfg->getFrameRate() );
   m_gcAnalyzeI.setFrmRate( m_pcCfg->getFrameRate() );
   m_gcAnalyzeP.setFrmRate( m_pcCfg->getFrameRate() );
   m_gcAnalyzeB.setFrmRate( m_pcCfg->getFrameRate() );
+  }
   
   //-- all
   printf( "\n\nSUMMARY --------------------------------------------------------\n" );
@@ -2172,6 +2214,18 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded)
   m_gcAnalyzeP.printSummary('P');
   m_gcAnalyzeB.printSummary('B');
 #endif
+
+  if(isField)
+  {
+    //-- interlaced summary
+    m_gcAnalyzeAll_in.setFrmRate( m_pcCfg->getFrameRate());
+    printf( "\n\nSUMMARY INTERLACED ---------------------------------------------\n" );
+    m_gcAnalyzeAll_in.printOutInterlaced('a',  m_gcAnalyzeAll.getBits());
+    
+#if _SUMMARY_OUT_
+    m_gcAnalyzeAll_in.printSummaryOutInterlaced();
+#endif
+  }
 
   printf("\nRVM: %.3lf\n" , xCalculateRVM());
 }
@@ -2216,6 +2270,24 @@ Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiB
 // Protected member functions
 // ====================================================================================================================
 
+
+Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, bool isField )
+{
+  assert( iNumPicRcvd > 0 );
+  //  Exception for the first frames
+  if ( ( isField && (iPOCLast == 0 || iPOCLast == 1) ) || (!isField  && (iPOCLast == 0))  )
+  {
+    m_iGopSize    = 1;
+  }
+  else
+  {
+    m_iGopSize    = m_pcCfg->getGOPSize();
+  }
+  assert (m_iGopSize > 0);
+  
+  return;
+}
+
 Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut )
 {
   assert( iNumPicRcvd > 0 );
@@ -2238,16 +2310,36 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
                          Int                       iTimeOffset,
                          TComPic*&                 rpcPic,
                          TComPicYuv*&              rpcPicYuvRecOut,
-                         Int                       pocCurr )
+                         Int                       pocCurr,
+                         bool                      isField)
 {
   Int i;
   //  Rec. output
   TComList<TComPicYuv*>::iterator     iterPicYuvRec = rcListPicYuvRecOut.end();
-  for ( i = 0; i < iNumPicRcvd - iTimeOffset + 1; i++ )
+  
+  if (isField)
+  {
+    for ( i = 0; i < ( (pocCurr == 0 ) || (pocCurr == 1 ) ? (iNumPicRcvd - iTimeOffset + 1) : (iNumPicRcvd - iTimeOffset + 2) ); i++ )
+    {
+      iterPicYuvRec--;
+    }
+  }
+  else
+  {
+    for ( i = 0; i < (iNumPicRcvd - iTimeOffset + 1); i++ )
   {
     iterPicYuvRec--;
   }
   
+  }
+  
+  if (isField)
+  {
+    if(pocCurr == 1)
+    {
+      iterPicYuvRec++;
+    }
+  }
   rpcPicYuvRecOut = *(iterPicYuvRec);
   
   //  Current pic.
@@ -2581,6 +2673,169 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   }
 }
 
+
+Void reinterlace(Pel* top, Pel* bottom, Pel* dst, UInt stride, UInt width, UInt height, bool isTff)
+{
+  
+  for (Int y = 0; y < height; y++)
+  {
+    for (Int x = 0; x < width; x++)
+    {
+      dst[x] = isTff ? (UChar) top[x] : (UChar) bottom[x];
+      dst[stride+x] = isTff ? (UChar) bottom[x] : (UChar) top[x];
+    }
+    top += stride;
+    bottom += stride;
+    dst += stride*2;
+  }
+}
+
+
+Void TEncGOP::xCalculateInterlacedAddPSNR( TComPic* pcPicOrgTop, TComPic* pcPicOrgBottom, TComPicYuv* pcPicRecTop, TComPicYuv* pcPicRecBottom, const AccessUnit& accessUnit, Double dEncTime )
+{
+#if  H_MV
+  assert( 0 ); // Field coding and MV need to be aligned. 
+#else
+  Int     x, y;
+  
+  UInt64 uiSSDY_in  = 0;
+  UInt64 uiSSDU_in  = 0;
+  UInt64 uiSSDV_in  = 0;
+  
+  Double  dYPSNR_in  = 0.0;
+  Double  dUPSNR_in  = 0.0;
+  Double  dVPSNR_in  = 0.0;
+  
+  /*------ INTERLACED PSNR -----------*/
+  
+  /* Luma */
+  
+  Pel*  pOrgTop = pcPicOrgTop->getPicYuvOrg()->getLumaAddr();
+  Pel*  pOrgBottom = pcPicOrgBottom->getPicYuvOrg()->getLumaAddr();
+  Pel*  pRecTop = pcPicRecTop->getLumaAddr();
+  Pel*  pRecBottom = pcPicRecBottom->getLumaAddr();
+  
+  Int   iWidth;
+  Int   iHeight;
+  Int iStride;
+  
+  iWidth  = pcPicOrgTop->getPicYuvOrg()->getWidth () - m_pcEncTop->getPad(0);
+  iHeight = pcPicOrgTop->getPicYuvOrg()->getHeight() - m_pcEncTop->getPad(1);
+  iStride = pcPicOrgTop->getPicYuvOrg()->getStride();
+  Int   iSize   = iWidth*iHeight;
+  bool isTff = pcPicOrgTop->isTopField();
+  
+  TComPicYuv* pcOrgInterlaced = new TComPicYuv;
+  pcOrgInterlaced->create( iWidth, iHeight << 1, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+  
+  TComPicYuv* pcRecInterlaced = new TComPicYuv;
+  pcRecInterlaced->create( iWidth, iHeight << 1, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
+  
+  Pel* pOrgInterlaced = pcOrgInterlaced->getLumaAddr();
+  Pel* pRecInterlaced = pcRecInterlaced->getLumaAddr();
+  
+  //=== Interlace fields ====
+  reinterlace(pOrgTop, pOrgBottom, pOrgInterlaced, iStride, iWidth, iHeight, isTff);
+  reinterlace(pRecTop, pRecBottom, pRecInterlaced, iStride, iWidth, iHeight, isTff);
+  
+  //===== calculate PSNR =====
+  for( y = 0; y < iHeight << 1; y++ )
+  {
+    for( x = 0; x < iWidth; x++ )
+    {
+      Int iDiff = (Int)( pOrgInterlaced[x] - pRecInterlaced[x] );
+      uiSSDY_in   += iDiff * iDiff;
+    }
+    pOrgInterlaced += iStride;
+    pRecInterlaced += iStride;
+  }
+  
+  /*Chroma*/
+  
+  iHeight >>= 1;
+  iWidth  >>= 1;
+  iStride >>= 1;
+  
+  pOrgTop = pcPicOrgTop->getPicYuvOrg()->getCbAddr();
+  pOrgBottom = pcPicOrgBottom->getPicYuvOrg()->getCbAddr();
+  pRecTop = pcPicRecTop->getCbAddr();
+  pRecBottom = pcPicRecBottom->getCbAddr();
+  pOrgInterlaced = pcOrgInterlaced->getCbAddr();
+  pRecInterlaced = pcRecInterlaced->getCbAddr();
+  
+  //=== Interlace fields ====
+  reinterlace(pOrgTop, pOrgBottom, pOrgInterlaced, iStride, iWidth, iHeight, isTff);
+  reinterlace(pRecTop, pRecBottom, pRecInterlaced, iStride, iWidth, iHeight, isTff);
+  
+  //===== calculate PSNR =====
+  for( y = 0; y < iHeight << 1; y++ )
+  {
+    for( x = 0; x < iWidth; x++ )
+    {
+      Int iDiff = (Int)( pOrgInterlaced[x] - pRecInterlaced[x] );
+      uiSSDU_in   += iDiff * iDiff;
+    }
+    pOrgInterlaced += iStride;
+    pRecInterlaced += iStride;
+  }
+  
+  pOrgTop = pcPicOrgTop->getPicYuvOrg()->getCrAddr();
+  pOrgBottom = pcPicOrgBottom->getPicYuvOrg()->getCrAddr();
+  pRecTop = pcPicRecTop->getCrAddr();
+  pRecBottom = pcPicRecBottom->getCrAddr();
+  pOrgInterlaced = pcOrgInterlaced->getCrAddr();
+  pRecInterlaced = pcRecInterlaced->getCrAddr();
+  
+  //=== Interlace fields ====
+  reinterlace(pOrgTop, pOrgBottom, pOrgInterlaced, iStride, iWidth, iHeight, isTff);
+  reinterlace(pRecTop, pRecBottom, pRecInterlaced, iStride, iWidth, iHeight, isTff);
+  
+  //===== calculate PSNR =====
+  for( y = 0; y < iHeight << 1; y++ )
+  {
+    for( x = 0; x < iWidth; x++ )
+    {
+      Int iDiff = (Int)( pOrgInterlaced[x] - pRecInterlaced[x] );
+      uiSSDV_in   += iDiff * iDiff;
+    }
+    pOrgInterlaced += iStride;
+    pRecInterlaced += iStride;
+  }
+  
+  Int maxvalY = 255 << (g_bitDepthY-8);
+  Int maxvalC = 255 << (g_bitDepthC-8);
+  Double fRefValueY = (Double) maxvalY * maxvalY * iSize*2;
+  Double fRefValueC = (Double) maxvalC * maxvalC * iSize*2 / 4.0;
+  dYPSNR_in            = ( uiSSDY_in ? 10.0 * log10( fRefValueY / (Double)uiSSDY_in ) : 99.99 );
+  dUPSNR_in            = ( uiSSDU_in ? 10.0 * log10( fRefValueC / (Double)uiSSDU_in ) : 99.99 );
+  dVPSNR_in            = ( uiSSDV_in ? 10.0 * log10( fRefValueC / (Double)uiSSDV_in ) : 99.99 );
+  
+  /* calculate the size of the access unit, excluding:
+   *  - any AnnexB contributions (start_code_prefix, zero_byte, etc.,)
+   *  - SEI NAL units
+   */
+  UInt numRBSPBytes = 0;
+  for (AccessUnit::const_iterator it = accessUnit.begin(); it != accessUnit.end(); it++)
+  {
+    UInt numRBSPBytes_nal = UInt((*it)->m_nalUnitData.str().size());
+    
+    if ((*it)->m_nalUnitType != NAL_UNIT_PREFIX_SEI && (*it)->m_nalUnitType != NAL_UNIT_SUFFIX_SEI)
+      numRBSPBytes += numRBSPBytes_nal;
+  }
+  
+  UInt uibits = numRBSPBytes * 8 ;
+  
+  //===== add PSNR =====
+  m_gcAnalyzeAll_in.addResult (dYPSNR_in, dUPSNR_in, dVPSNR_in, (Double)uibits);
+  
+  printf("\n                                      Interlaced frame %d: [Y %6.4lf dB    U %6.4lf dB    V %6.4lf dB]", pcPicOrgBottom->getPOC()/2 , dYPSNR_in, dUPSNR_in, dVPSNR_in );
+  
+  pcOrgInterlaced->destroy();
+  delete pcOrgInterlaced;
+  pcRecInterlaced->destroy();
+  delete pcRecInterlaced;
+#endif
+}
 /** Function for deciding the nal_unit_type.
  * \param pocCurr POC of the current picture
  * \returns the nal unit type of the picture

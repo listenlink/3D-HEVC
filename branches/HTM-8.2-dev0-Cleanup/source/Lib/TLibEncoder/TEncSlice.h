@@ -117,10 +117,10 @@ public:
   /// preparation of slice encoding (reference marking, QP and lambda)
 #if H_MV
   Void    initEncSlice        ( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, 
-                                Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS, Int layerId ); 
+                                Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS, Int layerId, bool isField  ); 
 #else
   Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd,
-                                Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS );
+                                Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, bool isField  );
 #endif
 #if RATE_CONTROL_LAMBDA_DOMAIN
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );

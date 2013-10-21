@@ -60,7 +60,6 @@ private:
   UInt                  m_uiTLayer;               //  Temporal layer
   Bool                  m_bUsedByCurr;            //  Used by current picture
   Bool                  m_bIsLongTerm;            //  IS long term picture
-  Bool                  m_bIsUsedAsLongTerm;      //  long term picture is used as reference before
   TComPicSym*           m_apcPicSym;              //  Symbol
   
   TComPicYuv*           m_apcPicYuv[2];           //  Texture,  0:org / 1:rec
@@ -82,6 +81,9 @@ private:
   Window                m_conformanceWindow;
   Window                m_defaultDisplayWindow;
 
+  bool                  m_isTop;
+  bool                  m_isField;
+  
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
@@ -207,6 +209,14 @@ public:
   Bool          getIndependentTileBoundaryForNDBFilter         ()             {return m_bIndependentTileBoundaryForNDBFilter; }
   TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
+
+
+  /* field coding parameters*/
+
+   Void              setTopField(bool b)                  {m_isTop = b;}
+   bool              isTopField()                         {return m_isTop;}
+   Void              setField(bool b)                     {m_isField = b;}
+   bool              isField()                            {return m_isField;}
 
 #if H_MV
   Void          print( Bool legend );

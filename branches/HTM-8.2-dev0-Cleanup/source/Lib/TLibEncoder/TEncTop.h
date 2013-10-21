@@ -144,7 +144,7 @@ protected:
   Void  xInitPPS          ();                             ///< initialize PPS from encoder options
   
   Void  xInitPPSforTiles  ();
-  Void  xInitRPS          ();                             ///< initialize PPS from encoder options
+  Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
 
 public:
   TEncTop();
@@ -153,9 +153,9 @@ public:
   Void      create          ();
   Void      destroy         ();
 #if KWU_RC_MADPRED_E0227
-  Void      init            ( TAppEncTop* pcTAppEncTop );
+  Void      init            ( TAppEncTop* pcTAppEncTop, Bool isFieldCoding );
 #else
-  Void      init            ();
+  Void      init            (Bool isFieldCoding);
 #endif
 
 #if H_MV  
@@ -227,15 +227,24 @@ public:
   /// encode several number of pictures until end-of-sequence
 #if H_MV
   Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded  , Int gopId  );  
+
+   /// encode several number of pictures until end-of-sequence
+  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff  , Int gopId );
+
 #else
   Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
-              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );  
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded ); 
+   /// encode several number of pictures until end-of-sequence
+  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
+
 #endif
 
 #if H_MV
-  Void printSummary      ( Int numAllPicCoded ); 
+  Void printSummary      ( Int numAllPicCoded, bool isField ); 
 #else
-  void printSummary() { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded); } 
+  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField); }
 #endif
 
 #if H_3D

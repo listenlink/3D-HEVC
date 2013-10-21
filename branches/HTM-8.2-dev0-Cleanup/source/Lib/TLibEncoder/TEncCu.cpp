@@ -431,9 +431,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 
   // variables for fast encoder decision
-  Bool    bEarlySkip  = false;
-  Bool    bTrySplit    = true;
-  Double  fRD_Skip    = MAX_DOUBLE;
+#if H_3D_QTLPC  
+  Bool    bTrySplit     = true;
+  Bool    bTrySplitDQP  = true;
+#endif
 
   // variable for Early CU determination
   Bool    bSubBranch = true;
@@ -442,7 +443,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool    doNotBlockPu = true;
   Bool earlyDetectionSkipMode = false;
 
-  Bool    bTrySplitDQP  = true;
 #if H_3D_VSP
   DisInfo DvInfo; 
   DvInfo.bDV = false;
@@ -452,15 +452,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   DvInfo.m_acDoNBDV.setZero();
 #endif
 #endif
-  static  Double  afCost[ MAX_CU_DEPTH ];
-  static  Int      aiNum [ MAX_CU_DEPTH ];
-
-  if ( rpcBestCU->getAddr() == 0 )
-  {
-    ::memset( afCost, 0, sizeof( afCost ) );
-    ::memset( aiNum,  0, sizeof( aiNum  ) );
-  }
-
   Bool bBoundary = false;
   UInt uiLPelX   = rpcBestCU->getCUPelX();
   UInt uiRPelX   = uiLPelX + rpcBestCU->getWidth(0)  - 1;
@@ -528,9 +519,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         iQP = lowestQP;
       }
       // variables for fast encoder decision
-      bEarlySkip  = false;
+#if H_3D_QTLPC
       bTrySplit    = true;
-      fRD_Skip    = MAX_DOUBLE;
+#endif
 
       rpcTempCU->initEstData( uiDepth, iQP );
 #if H_3D_QTLPC
@@ -632,22 +623,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_VSP
         rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
-        // fast encoder decision for early skip
-        if ( m_pcEncCfg->getUseFastEnc() )
-        {
-          Int iIdx = g_aucConvertToBit[ rpcBestCU->getWidth(0) ];
-          if ( aiNum [ iIdx ] > 5 && fRD_Skip < EARLY_SKIP_THRES*afCost[ iIdx ]/aiNum[ iIdx ] )
-          {
-            bEarlySkip = true;
-            bTrySplit  = false;
-          }
-        }
 
         if(!m_pcEncCfg->getUseEarlySkipDetection())
         {
           // 2Nx2N, NxN
-          if ( !bEarlySkip )
-          {
 #if H_3D_IC
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
@@ -663,33 +642,16 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             {
               doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
             }
-          }
         }
 #if H_3D_IC
         }
 #endif
       }
 
-#if H_3D_QTLPC
+#if H_3D_QTLPC      
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL())
       {
         bTrySplitDQP = bTrySplit;
-      }
-      else
-      {
-#endif
-        if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
-        {
-          if(iQP == iBaseQP)
-          {
-            bTrySplitDQP = bTrySplit;
-          }
-        }
-        else
-        {
-          bTrySplitDQP = bTrySplit;
-        }
-#if H_3D_QTLPC
       }
 #endif
       if (isAddLowestQP && (iQP == lowestQP))
@@ -749,8 +711,6 @@ if ( uiDepth <= m_addSADDepth )
         if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
         {
           // 2Nx2N, NxN
-          if ( !bEarlySkip )
-          {
             if(!( (rpcBestCU->getWidth(0)==8) && (rpcBestCU->getHeight(0)==8) ))
             {
               if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && doNotBlockPu
@@ -770,7 +730,6 @@ if ( uiDepth <= m_addSADDepth )
 #endif
               }
             }
-          }
 
           // 2NxN, Nx2N
           if(doNotBlockPu
@@ -1045,9 +1004,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
         // do normal intra modes
 #if H_3D_DIM_ENC
-        if ( !bEarlySkip || ( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() ) )
-#else
-        if ( !bEarlySkip )
+        if (( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() ) )
 #endif
         {
           // speedup for inter frames
@@ -1145,17 +1102,6 @@ if ( uiDepth <= m_addSADDepth )
     else
 #endif
     rpcBestCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcBestCU->getTotalBits(), rpcBestCU->getTotalDistortion() );
-
-    // accumulate statistics for early skip
-    if ( m_pcEncCfg->getUseFastEnc() )
-    {
-      if ( rpcBestCU->isSkipped(0) )
-      {
-        Int iIdx = g_aucConvertToBit[ rpcBestCU->getWidth(0) ];
-        afCost[ iIdx ] += rpcBestCU->getTotalCost();
-        aiNum [ iIdx ] ++;
-      }
-    }
 
     // Early CU determination
     if( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->isSkipped(0) )

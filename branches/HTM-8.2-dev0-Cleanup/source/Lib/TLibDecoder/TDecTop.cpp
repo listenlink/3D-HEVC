@@ -346,12 +346,14 @@ TDecTop::TDecTop()
   }
 #endif
 #endif
+  m_associatedIRAPType = NAL_UNIT_INVALID;
   m_pocCRA = 0;
-  m_prevRAPisBLA = false;
   m_pocRandomAccess = MAX_INT;  
   m_prevPOC                = MAX_INT;
   m_bFirstSliceInPicture    = true;
   m_bFirstSliceInSequence   = true;
+  m_prevSliceSkipped = false;
+  m_skippedPOC = 0;
 #if H_MV
   m_layerId = 0;
   m_viewId = 0;
@@ -685,6 +687,15 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder);
 
+  // set POC for dependent slices in skipped pictures
+  if(m_apcSlicePilot->getDependentSliceSegmentFlag() && m_prevSliceSkipped) 
+  {
+    m_apcSlicePilot->setPOC(m_skippedPOC);
+  }
+
+  m_apcSlicePilot->setAssociatedIRAPPOC(m_pocCRA);
+  m_apcSlicePilot->setAssociatedIRAPType(m_associatedIRAPType);
+
 #if H_MV  
   TComVPS* vps     = m_apcSlicePilot->getVPS();
   Int layerId  = nalu.m_layerId;   
@@ -698,13 +709,20 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     // Skip pictures due to random access
     if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
     {
+    m_prevSliceSkipped = true;
+    m_skippedPOC = m_apcSlicePilot->getPOC();
       return false;
     }
     // Skip TFD pictures associated with BLA/BLANT pictures
     if (isSkipPictureForBLA(iPOCLastDisplay))
     {
+    m_prevSliceSkipped = true;
+    m_skippedPOC = m_apcSlicePilot->getPOC();
       return false;
     }
+
+  // clear previous slice skipped flag
+  m_prevSliceSkipped = false;
 
   //we should only get a different poc for a new picture (with CTU address==0)
   if (m_apcSlicePilot->isNextSlice() && m_apcSlicePilot->getPOC()!=m_prevPOC && !m_bFirstSliceInSequence && (!m_apcSlicePilot->getSliceCurStartCUAddr()==0))
@@ -765,6 +783,25 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     //  Get a new picture buffer
     xGetNewPicBuffer (m_apcSlicePilot, pcPic);
 
+    Bool isField = false;
+    Bool isTff = false;
+    
+    if(!m_SEIs.empty())
+    {
+      // Check if any new Picture Timing SEI has arrived
+      SEIMessages pictureTimingSEIs = extractSeisByType (m_SEIs, SEI::PICTURE_TIMING);
+      if (pictureTimingSEIs.size()>0)
+      {
+        SEIPictureTiming* pictureTiming = (SEIPictureTiming*) *(pictureTimingSEIs.begin());
+        isField = (pictureTiming->m_picStruct == 1) || (pictureTiming->m_picStruct == 2);
+        isTff =  (pictureTiming->m_picStruct == 1);
+      }
+    }
+    
+    //Set Field/Frame coding mode
+    m_pcPic->setField(isField);
+    m_pcPic->setTopField(isTff);
+    
     // transfer any SEI messages that have been received to the picture
     pcPic->setSEIs(m_SEIs);
     m_SEIs.clear();
@@ -903,7 +940,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
   if (bNextSlice)
   {
-    pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_prevRAPisBLA, m_cListPic );
+    pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_associatedIRAPType, m_cListPic );
     // Set reference list
 #if H_MV    
     std::vector< TComPic* > tempRefPicLists[2];
@@ -1002,7 +1039,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     {
       pcSlice->setScalingList ( pcSlice->getPPS()->getScalingList()  );
     }
-    pcSlice->getScalingList()->setUseTransformSkip(pcSlice->getPPS()->getUseTransformSkip());
     if(!pcSlice->getPPS()->getScalingListPresentFlag() && !pcSlice->getSPS()->getScalingListPresentFlag())
     {
       pcSlice->setDefaultScalingList();
@@ -1167,7 +1203,8 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
  */
 Bool TDecTop::isSkipPictureForBLA(Int& iPOCLastDisplay)
 {
-  if (m_prevRAPisBLA && m_apcSlicePilot->getPOC() < m_pocCRA && (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_R || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N))
+  if ((m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_N_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_LP || m_associatedIRAPType == NAL_UNIT_CODED_SLICE_BLA_W_RADL) && 
+       m_apcSlicePilot->getPOC() < m_pocCRA && (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_R || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_RASL_N))
   {
     iPOCLastDisplay++;
     return true;

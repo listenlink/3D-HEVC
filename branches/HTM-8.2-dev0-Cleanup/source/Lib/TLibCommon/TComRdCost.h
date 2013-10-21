@@ -147,8 +147,6 @@ class TComRdCost
 {
 private:
   // for distortion
-  Int                     m_iBlkWidth;
-  Int                     m_iBlkHeight;
   
 #if AMP_SAD
   FpDistFunc              m_afpDistortFunc[64]; // [eDFunc]

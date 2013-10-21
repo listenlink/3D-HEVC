@@ -1129,7 +1129,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
     if( !pcSlice->getIdrPicFlag() )
     {
-      Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC()))%(1<<pcSlice->getSPS()->getBitsForPOC());
+      Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC())) & ((1<<pcSlice->getSPS()->getBitsForPOC())-1);
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
       TComReferencePictureSet* rps = pcSlice->getRPS();
       
@@ -1926,7 +1926,7 @@ Void TEncCavlc::xCodeScalingList(TComScalingList* scalingList, UInt sizeId, UInt
 Bool TEncCavlc::findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag )
 {
   // Bool state = true, state2 = false;
-  Int lsb = ltrpPOC % (1<<pcSlice->getSPS()->getBitsForPOC());
+  Int lsb = ltrpPOC & ((1<<pcSlice->getSPS()->getBitsForPOC())-1);
   for (Int k = 0; k < pcSlice->getSPS()->getNumLongTermRefPicSPS(); k++)
   {
     if ( (lsb == pcSlice->getSPS()->getLtRefPicPocLsbSps(k)) && (usedFlag == pcSlice->getSPS()->getUsedByCurrPicLtSPSFlag(k)) )
