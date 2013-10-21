@@ -7023,10 +7023,10 @@ Void  TEncSearch::setWpScalingDistParam( TComDataCU* pcCU, Int iRefIdx, RefPicLi
   }
 }
 
+#if H_3D_DIM
   // -------------------------------------------------------------------------------------------------------------------
   // Depth intra search
   // -------------------------------------------------------------------------------------------------------------------
-#if H_3D_DIM
 Void TEncSearch::xCalcBiSegDCs( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2 )
 {
   valDC1 = ( 1<<( g_bitDepthY - 1) );

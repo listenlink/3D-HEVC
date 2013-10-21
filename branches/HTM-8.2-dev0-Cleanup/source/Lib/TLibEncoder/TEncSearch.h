@@ -342,11 +342,10 @@ protected:
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
 
-
+#if H_3D_DIM
   // -------------------------------------------------------------------------------------------------------------------
   // Depth intra search
   // -------------------------------------------------------------------------------------------------------------------
-#if H_3D_DIM
   Void xCalcBiSegDCs              ( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2 );
 #if H_3D_DIM_DMM
   Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );

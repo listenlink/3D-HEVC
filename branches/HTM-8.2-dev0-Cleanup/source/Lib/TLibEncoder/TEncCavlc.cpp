@@ -729,6 +729,8 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   WRITE_FLAG( 0,                     "vps_extension_flag" );
 #endif
   //future extensions here..
+
+  return;
 }
 
 

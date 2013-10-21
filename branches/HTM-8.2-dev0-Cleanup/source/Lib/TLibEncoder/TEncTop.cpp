@@ -922,7 +922,18 @@ Void TEncTop::xInitPPS()
   m_cPPS.setNumExtraSliceHeaderBits( 2 ); 
 #endif
   m_cPPS.setSignHideFlag(getSignHideFlag());
-  m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
+  if ( getDeblockingFilterMetric() )
+  {
+    m_cPPS.setDeblockingFilterControlPresentFlag (true);
+    m_cPPS.setDeblockingFilterOverrideEnabledFlag(true);
+    m_cPPS.setPicDisableDeblockingFilterFlag(false);
+    m_cPPS.setDeblockingFilterBetaOffsetDiv2(0);
+    m_cPPS.setDeblockingFilterTcOffsetDiv2(0);
+  } 
+  else
+  {
+    m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
+  }
   m_cPPS.setLog2ParallelMergeLevelMinus2   (m_log2ParallelMergeLevelMinus2 );
   m_cPPS.setCabacInitPresentFlag(CABAC_INIT_PRESENT_FLAG);
   m_cPPS.setLoopFilterAcrossSlicesEnabledFlag( m_bLFCrossSliceBoundaryFlag );

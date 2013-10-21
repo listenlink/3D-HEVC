@@ -271,8 +271,8 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
 #if !M0036_RC_IMPROVEMENT
-  m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
+  m_LCUPredictionSAD = 0;
   m_temporalSAD      = 0;
 #endif
 #if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
@@ -1188,7 +1188,11 @@ if ( uiDepth <= m_addSADDepth )
     rpcTempCU->initEstData( uiDepth, iQP );
 
     // further split
+#if H_3D_QTLPC
     if( bSubBranch && bTrySplitDQP && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
+#else
+    if( bSubBranch && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
+#endif
     {
 #if H_3D_VSO // M9
       // reset Model

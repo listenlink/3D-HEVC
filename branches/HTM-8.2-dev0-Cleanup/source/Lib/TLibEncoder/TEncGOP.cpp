@@ -2354,7 +2354,10 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
     }
     iterPic++;
   }
-  
+
+#if !H_MV
+  assert( rpcPic != NULL );
+#endif
   assert (rpcPic->getPOC() == pocCurr);
   
   return;

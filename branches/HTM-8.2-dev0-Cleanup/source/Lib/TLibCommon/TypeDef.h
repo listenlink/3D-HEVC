@@ -172,13 +172,15 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
-#endif // H_3D
-
 
 // Rate Control
 #define KWU_FIX_URQ                       1
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
+
+#endif // H_3D
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
