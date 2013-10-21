@@ -831,6 +831,7 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
   if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP ) // IDR picture found
   {
     pocCRA = getPOC();
+    associatedIRAPType = getNalUnitType();
   }
   else if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA ) // CRA picture found
   {
@@ -1314,6 +1315,10 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
       }
       else 
       {
+        Int pocCycle = 1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC();
+        Int curPoc = rpcPic->getPicSym()->getSlice(0)->getPOC() & (pocCycle-1);
+        Int refPoc = pReferencePictureSet->getPOC(i) & (pocCycle-1);
+        if(rpcPic->getIsLongTerm() && curPoc == refPoc)
         {
           isReference = 1;
           rpcPic->setUsedByCurr(pReferencePictureSet->getUsed(i));
@@ -1373,6 +1378,10 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
       }
       else 
       {
+        Int pocCycle = 1<<rpcPic->getPicSym()->getSlice(0)->getSPS()->getBitsForPOC();
+        Int curPoc = rpcPic->getPicSym()->getSlice(0)->getPOC() & (pocCycle-1);
+        Int refPoc = pReferencePictureSet->getPOC(i) & (pocCycle-1);
+        if(rpcPic->getIsLongTerm() && curPoc == refPoc && rpcPic->getSlice(0)->isReferenced())
         {
           isAvailable = 1;
         }

@@ -959,6 +959,7 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     }
 #endif
   }
+  return; 
 }
 
 #if H_MV

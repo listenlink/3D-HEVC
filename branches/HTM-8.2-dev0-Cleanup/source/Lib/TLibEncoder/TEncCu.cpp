@@ -1005,8 +1005,9 @@ if ( uiDepth <= m_addSADDepth )
         // do normal intra modes
 #if H_3D_DIM_ENC
         if (( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() ) )
-#endif
         {
+#endif
+        
           // speedup for inter frames
           if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
             rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
@@ -1058,8 +1059,9 @@ if ( uiDepth <= m_addSADDepth )
 #endif
             }
           }
+#if H_3D_DIM_ENC
         }
-
+#endif
         // test PCM
         if(pcPic->getSlice(0)->getSPS()->getUsePCM()
           && rpcTempCU->getWidth(0) <= (1<<pcPic->getSlice(0)->getSPS()->getPCMLog2MaxSize())
