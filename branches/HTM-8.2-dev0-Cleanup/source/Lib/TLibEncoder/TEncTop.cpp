@@ -1219,9 +1219,6 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
       }
     }
   }
-#if H_MV
-  }
-#endif
   if(POCCurr == 1 && slice->getPic()->isField())
   {
     slice->setRPSidx(m_iGOPSize+m_extraRPSs);
@@ -1229,6 +1226,10 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
 
   slice->setRPS(getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
   slice->getRPS()->setNumberOfPictures(slice->getRPS()->getNumberOfNegativePictures()+slice->getRPS()->getNumberOfPositivePictures());
+#if H_MV
+  }
+#endif
+
 }
 
 Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int GOPid )

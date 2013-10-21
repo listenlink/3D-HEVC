@@ -738,7 +738,11 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
       if ( pcPic->getOutputMark() )
       {
         // write to file
+#if H_MV
+      if ( m_pchReconFiles[decIdx] )
+#else
         if ( m_pchReconFile )
+#endif
         {
           const Window &conf = pcPic->getConformanceWindow();
           const Window &defDisp = m_respectDefDispWindow ? pcPic->getDefDisplayWindow() : Window();

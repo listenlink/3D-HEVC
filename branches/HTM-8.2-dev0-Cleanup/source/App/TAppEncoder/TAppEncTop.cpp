@@ -1066,30 +1066,32 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
     //Reinterlace fields
     Int i;
 #if H_MV
-  if( iNumEncoded > 0 )
-  {
-    TComList<TComPicYuv*>::iterator iterPicYuvRec = m_picYuvRec[layerId]->end();
+    if( iNumEncoded > 0 )
+    {
+      TComList<TComPicYuv*>::iterator iterPicYuvRec = m_picYuvRec[layerId]->end();
 #else
     TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
     list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
 #endif
-    
+
     for ( i = 0; i < iNumEncoded; i++ )
     {
       --iterPicYuvRec;
     }
-    
+
     for ( i = 0; i < iNumEncoded/2; i++ )
     {
       TComPicYuv*  pcPicYuvRecTop  = *(iterPicYuvRec++);
       TComPicYuv*  pcPicYuvRecBottom  = *(iterPicYuvRec++);
-      
+
 #if H_MV
       if (m_pchReconFileList[layerId])
       {
         m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRecTop, pcPicYuvRecBottom, m_confLeft, m_confRight, m_confTop, m_confBottom, m_isTopFieldFirst );
       }
     }
+  }
+
   if( ! accessUnits.empty() )
   {
     list<AccessUnit>::iterator aUIter;
@@ -1108,7 +1110,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       const AccessUnit& auTop = *(iterBitstream++);
       const vector<UInt>& statsTop = writeAnnexB(bitstreamFile, auTop);
       rateStatsAccum(auTop, statsTop);
-      
+
       const AccessUnit& auBottom = *(iterBitstream++);
       const vector<UInt>& statsBottom = writeAnnexB(bitstreamFile, auBottom);
       rateStatsAccum(auBottom, statsBottom);
@@ -1119,19 +1121,19 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
   {
     Int i;
 #if H_MV
-  if( iNumEncoded > 0 )
-  {
-    TComList<TComPicYuv*>::iterator iterPicYuvRec = m_picYuvRec[layerId]->end();
+    if( iNumEncoded > 0 )
+    {
+      TComList<TComPicYuv*>::iterator iterPicYuvRec = m_picYuvRec[layerId]->end();
 #else
     TComList<TComPicYuv*>::iterator iterPicYuvRec = m_cListPicYuvRec.end();
     list<AccessUnit>::const_iterator iterBitstream = accessUnits.begin();
 #endif
-    
+
     for ( i = 0; i < iNumEncoded; i++ )
     {
       --iterPicYuvRec;
     }
-    
+
     for ( i = 0; i < iNumEncoded; i++ )
     {
       TComPicYuv*  pcPicYuvRec  = *(iterPicYuvRec++);
@@ -1139,7 +1141,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       if (m_pchReconFileList[layerId])
       {
         m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
-      }
+      }    
     }
   }
   if( ! accessUnits.empty() )
@@ -1156,14 +1158,15 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       {
         m_cTVideoIOYuvReconFile.write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
       }
-      
+
       const AccessUnit& au = *(iterBitstream++);
       const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
-      rateStatsAccum(au, stats);
-#endif
+      rateStatsAccum(au, stats);   
     }
+#endif    
   }
 }
+  
 /**
  *
  */
