@@ -5868,7 +5868,7 @@ Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refi
   return false;
 }
 #endif 
-#if  H_3D_FAST_TEXTURE_ENCODIN
+#if  H_3D_FAST_TEXTURE_ENCODING
 Void 
 TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge, Int& iIVFMaxD)
 {

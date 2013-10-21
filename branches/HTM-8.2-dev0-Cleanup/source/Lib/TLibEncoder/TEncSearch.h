@@ -195,7 +195,7 @@ public:
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv,
-#if H_3D_FAST_TEXTURE_ENCODIN
+#if H_3D_FAST_TEXTURE_ENCODING
                                   Bool        bFMD,
 #endif
                                   Bool        bUseRes = false
