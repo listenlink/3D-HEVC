@@ -71,7 +71,6 @@ private:
   TVideoIOYuv                     m_cTVideoIOYuvReconFile;        ///< reconstruction YUV class
 #endif
     // for output control
-  Bool                            m_abDecFlag[ MAX_GOP ];         ///< decoded flag in one GOP
 #if H_MV
   Int                             m_pocLastDisplay      [ MAX_NUM_LAYERS ]; ///< last POC in display order
   Bool                            m_reconOpen           [ MAX_NUM_LAYERS ]; ///< reconstruction file opened

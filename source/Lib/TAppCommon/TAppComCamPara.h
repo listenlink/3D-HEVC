@@ -124,14 +124,13 @@ protected:
 
   Bool  xGetLeftRightView         ( Int iView, std::vector<Int> aiSortedViews, Int& riLeftView, Int& riRightView, Int& riLeftSortedViewIdx, Int& riRightSortedViewIdx );
   Void  xGetPrevAndNextBaseView   ( Int iSourceViewNum, Int iTargetViewNum, Int& riPrevBaseViewNum, Int& riNextBaseViewNum );
+#if !KWU_RC_MADPRED_E0227
   Void  xGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
   Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
+#endif
   Void  xSetupBaseViewsFromCoded  ();
   Void  xSetupBaseViews           ( Char* pchBaseViewNumbers, UInt uiNumBaseViews );
-#if H_3D_FIX_REN_WARNING
   Bool  xIsIn                     ( std::vector<Int>& rVec, Int iNumber);
-#endif
-
 
   // functions for getting and setting scales and offsets
   Bool  xGetShiftParameterReal    ( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Bool bExternal, Bool bByIdx, Double& rdScale, Double& rdOffset );
@@ -219,6 +218,11 @@ public:
   std::vector<Int>&   getViewOrderIndex         ()  { return m_aiViewOrderIndex;        }
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
+
+#if KWU_RC_MADPRED_E0227
+  Void  xGetZNearZFar             ( Int iView, UInt uiFrame, Double& rdZNear, Double& rdZFar );
+  Void  xGetGeometryData          ( Int dView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated );
+#endif
 };
 
 

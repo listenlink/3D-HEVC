@@ -93,7 +93,7 @@ public:
 #if H_3D_IC
   virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   virtual Void codeInterSDCFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment ) = 0;
 #endif
@@ -184,7 +184,7 @@ public:
 #if H_3D_IC
   Void encodeICFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   Void encodeInterSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD );
 #endif

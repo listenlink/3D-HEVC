@@ -55,7 +55,7 @@
 // Macros
 // ====================================================================================================================
 
-#define     MAX_CU_DEPTH            7                           // log2(LCUSize)
+#define     MAX_CU_DEPTH            6                           // log2(LCUSize)
 #define     MAX_CU_SIZE             (1<<(MAX_CU_DEPTH))         // maximum allowable size of CU
 #define     MIN_PU_SIZE             4
 #define     MAX_NUM_SPU_W           (MAX_CU_SIZE/MIN_PU_SIZE)   // maximum number of SPU in horizontal line
@@ -135,7 +135,7 @@ extern       UInt   g_sigLastScanCG32x32[ 64 ];
 // ADI table
 // ====================================================================================================================
 
-extern const UChar  g_aucIntraModeNumFast[7];
+extern const UChar  g_aucIntraModeNumFast[ MAX_CU_DEPTH ];
 
 // ====================================================================================================================
 // Bit-depth
@@ -173,11 +173,7 @@ extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
 extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
 extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
 
-#if LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX
 Void initWedgeLists( Bool initNodeList = false );
-#else
-Void initWedgeLists( Bool initRefinements = false );
-#endif
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
 #endif

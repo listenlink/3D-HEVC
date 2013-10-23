@@ -56,6 +56,9 @@
 
 #include "TEncAnalyze.h"
 #include "TEncRateCtrl.h"
+#if KWU_RC_MADPRED_E0227
+#include "../App/TAppEncoder/TAppEncTop.h"
+#endif
 #include <vector>
 
 //! \ingroup TLibEncoder
@@ -98,12 +101,8 @@ private:
   
 #if H_MV
   TComPicLists*           m_ivPicLists;
-#if H_MV5
   std::vector<TComPic*>   m_refPicSetInterLayer0; 
   std::vector<TComPic*>   m_refPicSetInterLayer1; 
-#else
-  std::vector<TComPic*>   m_refPicSetInterLayer; 
-#endif
 
   Int                     m_pocLastCoded;
   Int                     m_layerId;  
@@ -147,9 +146,9 @@ public:
   Void  init        ( TEncTop* pcTEncTop );
 #if H_MV
   Void  initGOP     ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP);
-  Void  compressPicInGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid );
+  Void  compressPicInGOP ( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP, Int iGOPid, Bool isField, Bool isTff  );
 #else
-  Void  compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP );
+  Void  compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRec, std::list<AccessUnit>& accessUnitsInGOP, Bool isField, Bool isTff  );
 #endif
   Void  xAttachSliceDataToNalUnit (OutputNALUnit& rNalu, TComOutputBitstream*& rpcBitstreamRedirect);
 
@@ -168,14 +167,18 @@ public:
   TComList<TComPic*>*   getListPic()      { return m_pcListPic; }
 
 #if !H_MV
-  Void  printOutSummary      ( UInt uiNumAllPicCoded );
+  Void  printOutSummary      ( UInt uiNumAllPicCoded , bool isField);
 #endif
 #if H_3D_VSO
   Void  preLoopFilterPicAll  ( TComPic* pcPic, Dist64& ruiDist, UInt64& ruiBits );
 #else
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
 #endif
-  
+
+#if KWU_RC_MADPRED_E0227
+  TEncTop* getEncTop() { return m_pcEncTop; }
+#endif
+
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
@@ -183,10 +186,14 @@ protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 
 protected:
+  Void xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, bool isField );
+
   Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
-  Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, Int pocCurr );
+  Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, Int pocCurr, bool isField );
   
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
+  Void  xCalculateInterlacedAddPSNR( TComPic* pcPicOrgTop, TComPic* pcPicOrgBottom, TComPicYuv* pcPicRecTop, TComPicYuv* pcPicRecBottom, const AccessUnit& accessUnit, Double dEncTime );
+
 #if H_3D_VSO
   Dist64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
 #else  
@@ -215,11 +222,7 @@ protected:
     m_nestedPictureTimingSEIPresentInAU      = false;
   }
 #if H_MV
-#if H_MV5
    Void  xSetRefPicListModificationsMv( std::vector<TComPic*> tempPicLists[2], TComSlice* pcSlice, UInt iGOPid );
-#else
-   Void  xSetRefPicListModificationsMv( TComSlice* pcSlice, UInt iGOPid );
-#endif
 #endif
   Void dblMetric( TComPic* pcPic, UInt uiNumSlices );
 };// END CLASS DEFINITION TEncGOP

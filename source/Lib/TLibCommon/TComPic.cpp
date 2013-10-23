@@ -49,7 +49,6 @@ TComPic::TComPic()
 : m_uiTLayer                              (0)
 , m_bUsedByCurr                           (false)
 , m_bIsLongTerm                           (false)
-, m_bIsUsedAsLongTerm                     (false)
 , m_apcPicSym                             (NULL)
 , m_pcPicYuvPred                          (NULL)
 , m_pcPicYuvResi                          (NULL)
@@ -117,6 +116,17 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
+  /* initialize the texture to depth reference status */
+#if H_3D_FCO
+  for (int j=0; j<2; j++)
+  {
+      for (int i=0; i<MAX_NUM_REF; i++)
+      {
+          m_aiTexToDepRef[j][i] = -1;
+      }
+  }
+#endif
+
   return;
 }
 
@@ -145,8 +155,8 @@ Void TComPic::destroy()
   
   deleteSEIs(m_SEIs);
 }
-#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
-Void TComPic::compressMotion(int scale)
+#if H_3D
+Void TComPic::compressMotion(Int scale)
 #else
 Void TComPic::compressMotion()
 #endif
@@ -155,7 +165,7 @@ Void TComPic::compressMotion()
   for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getFrameHeightInCU()*pPicSym->getFrameWidthInCU(); uiCUAddr++ )
   {
     TComDataCU* pcCU = pPicSym->getCU(uiCUAddr);
-#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+#if H_3D
     pcCU->compressMV(scale); 
 #else
     pcCU->compressMV(); 
@@ -660,8 +670,7 @@ Int TComPic::getDisCandRefPictures( Int iColPOC )
 
   return numDdvCandPics;
 }
-#endif
-#if MTK_NBDV_TN_FIX_E0172
+
 Void TComPic::checkTemporalIVRef()
 {
   TComSlice* currSlice = getSlice(getCurrSliceIdx());
@@ -715,12 +724,16 @@ Bool TComPic::isTempIVRefValid(Int currCandPic, Int iColRefDir, Int iColRefIdx)
 {
   return m_abTIVRINCurrRL[currCandPic][iColRefDir][iColRefIdx];
 }
-#endif
-#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+
 Void TComPic::checkTextureRef(  )
 {
   TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
   TComPic* pcTextPic = pcCurrSlice->getTexturePic();
+#if H_3D_FCO
+  if ( pcTextPic )
+  {
+#endif
+
   TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
 
   for( Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB()? 2:1) ) && !pcTextSlice->isIntra(); iTextRefDir ++ )
@@ -742,6 +755,10 @@ Void TComPic::checkTextureRef(  )
     }
 
   }
+#if H_3D_FCO
+  }
+#endif
+
 }
 
 Int TComPic::isTextRefValid(Int iTextRefDir, Int iTextRefIdx)
