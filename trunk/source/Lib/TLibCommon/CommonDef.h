@@ -60,9 +60,9 @@
 
 #if H_MV
 #define NV_VERSION        "8.1"                 ///< Current software version
-#define HM_VERSION        "11.0"                ///< 
+#define HM_VERSION        "12.0"                ///< 
 #else
-#define NV_VERSION        "11.0"                 ///< Current software version
+#define NV_VERSION        "12.0"                 ///< Current software version
 #endif
 
 // ====================================================================================================================
@@ -186,7 +186,6 @@ __inline T gSign(const T& t)
     return (t < 0) ? T(-1) : T(1);
 }
 
-#if H_MV5
 template <typename T>
 __inline T gCeilLog2( T val )
 {
@@ -195,7 +194,6 @@ __inline T gCeilLog2( T val )
   while( val > ( 1 << ceilLog2 ) ) ceilLog2++;
   return ceilLog2;
 }
-#endif
 
 #define RemoveBitIncrement( exp ) ( exp >> ( g_bitDepthY - 8 ) )
 

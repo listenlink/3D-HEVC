@@ -63,6 +63,9 @@
 // Class definition
 // ====================================================================================================================
 
+#if KWU_RC_MADPRED_E0227
+class TAppEncTop;
+#endif
 /// encoder class
 class TEncTop : public TEncCfg
 {
@@ -123,6 +126,11 @@ private:
 
   TComScalingList         m_scalingList;                 ///< quantization matrix information
   TEncRateCtrl            m_cRateCtrl;                    ///< Rate control class
+
+#if KWU_RC_MADPRED_E0227
+  TAppEncTop*             m_pcTAppEncTop;
+  TAppComCamPara*         m_cCamParam;
+#endif
   
 #if H_MV
   TEncAnalyze             m_cAnalyzeAll;
@@ -136,7 +144,7 @@ protected:
   Void  xInitPPS          ();                             ///< initialize PPS from encoder options
   
   Void  xInitPPSforTiles  ();
-  Void  xInitRPS          ();                             ///< initialize PPS from encoder options
+  Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
 
 public:
   TEncTop();
@@ -144,7 +152,12 @@ public:
   
   Void      create          ();
   Void      destroy         ();
-  Void      init            ();
+#if KWU_RC_MADPRED_E0227
+  Void      init            ( TAppEncTop* pcTAppEncTop, Bool isFieldCoding );
+#else
+  Void      init            (Bool isFieldCoding);
+#endif
+
 #if H_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
@@ -184,6 +197,11 @@ public:
   TEncSbac****            getRDSbacCoders       () { return  m_ppppcRDSbacCoders;     }
   TEncSbac*               getRDGoOnSbacCoders   () { return  m_pcRDGoOnSbacCoders;   }
   TEncRateCtrl*           getRateCtrl           () { return &m_cRateCtrl;             }
+#if KWU_RC_MADPRED_E0227
+  TAppEncTop*             getEncTop             () { return m_pcTAppEncTop; }
+  TAppComCamPara*         getCamParam()                 { return m_cCamParam;}
+  Void                    setCamParam(TAppComCamPara * pCamparam)                 { m_cCamParam = pCamparam;}
+#endif
   TComSPS*                getSPS                () { return  &m_cSPS;                 }
   TComPPS*                getPPS                () { return  &m_cPPS;                 }
   Void selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid );
@@ -209,15 +227,24 @@ public:
   /// encode several number of pictures until end-of-sequence
 #if H_MV
   Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded  , Int gopId  );  
+
+   /// encode several number of pictures until end-of-sequence
+  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff  , Int gopId );
+
 #else
   Void encode( Bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
-              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded );  
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded ); 
+   /// encode several number of pictures until end-of-sequence
+  Void encode( bool bEos, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut,
+              std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff);
+
 #endif
 
 #if H_MV
-  Void printSummary      ( Int numAllPicCoded ); 
+  Void printSummary      ( Int numAllPicCoded, bool isField ); 
 #else
-  void printSummary() { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded); } 
+  Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField); }
 #endif
 
 #if H_3D

@@ -661,7 +661,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
 #endif
 
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   if( pcCU->getInterSDCFlag( uiAbsPartIdx ) )
   {
     assert( !pcCU->isSkipped( uiAbsPartIdx ) );
@@ -823,7 +823,7 @@ Void TEncEntropy::encodeScalingList( TComScalingList* scalingList )
   m_pcEntropyCoderIf->codeScalingList( scalingList );
 }
 
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
 Void TEncEntropy::encodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )

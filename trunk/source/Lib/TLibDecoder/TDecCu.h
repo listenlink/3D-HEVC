@@ -117,7 +117,7 @@ protected:
 #if H_3D_DIM_SDC
   Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
-#if LGE_INTER_SDC_E0156
+#if H_3D_INTER_SDC
   Void xReconInterSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 };
