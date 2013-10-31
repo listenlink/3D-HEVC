@@ -614,7 +614,11 @@ Void
 TAppComCamPara::xGetGeometryData( Int iView, UInt uiFrame, Double& rdFocalLength, Double& rdPosition, Double& rdCameraShift, Bool& rbInterpolated )
 {
   UInt uiFoundLine = -1;
+#if H_3D_FIX_REN_WARNING
   if ( !xGetCameraDataRow( iView, uiFrame, uiFoundLine ) && xIsIn( m_aiSortedBaseViews, iView ))
+#else  
+  if ( !xGetCameraDataRow( iView, uiFrame, uiFoundLine ) )
+#endif
   {
     AOT( m_aadCameraParameters[ uiFoundLine ].size() < 6 );
     rbInterpolated = false;
@@ -630,12 +634,20 @@ TAppComCamPara::xGetGeometryData( Int iView, UInt uiFrame, Double& rdFocalLength
     Int  iRightView;
     Int  iDummy;
 
+#if H_3D_FIX_REN_WARNING
     if( !xGetLeftRightView( iView, m_aiSortedBaseViews, iLeftView, iRightView, iDummy, iDummy ) ||
+#else
+    if( !xGetLeftRightView( iView, m_aiViewsInCfgFile, iLeftView, iRightView, iDummy, iDummy ) ||
+#endif
          xGetCameraDataRow( iLeftView,  uiFrame, uiLeftViewLine  )                             ||
          xGetCameraDataRow( iRightView, uiFrame, uiRightViewLine )
       )
     {
+#if H_3D_FIX_REN_WARNING
       std::cerr << "No left or no right base view next to view " << (Double)iView / m_dViewNumPrec << " for Frame " << uiFrame << " given in CameraParameterFile" << std::endl;
+#else
+      std::cerr << "No Left or no Right View next to View " << (Double)iView / m_dViewNumPrec << " for Frame " << uiFrame << " given in CameraParameterFile" << std::endl;
+#endif
       AOT(true);
       exit( EXIT_FAILURE );
     }
@@ -1339,7 +1351,7 @@ TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
         }
       }
     }
-
+#if H_3D_FIX_REN_WARNING
     Bool bIgnoreFirst = true;     
     for( UInt uiERView = 0; uiERView < m_aiSynthViews.size() && !m_bSetupFromCoded; uiERView++ )
     {
@@ -1358,6 +1370,7 @@ TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
     {
       std::cout << std::endl; 
     }
+#endif
 
     Bool bInterpolateFirst = true; 
     Bool bAnyInterpolated  = false; 
@@ -1376,7 +1389,11 @@ TAppComCamPara::check( Bool bCheckViewRange, Bool bCheckFrameRange )
         bAnyInterpolated = true; 
         if ( bInterpolateFirst ) 
         {
+#if H_3D_FIX_REN_WARNING                        
           std::cout << "Interpolating camera parameters      for virtual view(s): " ; 
+#else
+          std::cout << "Interpolating Camera Parameters for View(s) " ; 
+#endif
             bInterpolateFirst = false; 
         }          
         std::cout << (Double)m_aiSynthViews[ uiERView ] / m_dViewNumPrec << " " ; 
@@ -1480,6 +1497,7 @@ TAppComCamPara::getLeftRightBaseView( Int iSynthViewIdx, Int &riLeftViewIdx, Int
   return bExist;
 }
 
+#if H_3D_FIX_REN_WARNING
 Bool 
   TAppComCamPara::xIsIn( std::vector<Int>& rVec, Int iElem) 
 {
@@ -1490,6 +1508,7 @@ Bool
   }
   return bFound;
 }
+#endif
 
 Int TAppComCamPara::getRelDistLeft( Int iSynthViewIdx, Int iLeftViewIdx, Int iRightViewIdx )
 {

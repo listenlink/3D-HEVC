@@ -483,7 +483,7 @@ UInt TComRdCost::calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iSt
 
 }
 
-#if H_3D_FAST_DEPTH_INTRA
+#if SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 
 UInt TComRdCost::calcVAR (Pel* pi0, Int stride, Int width, Int height, Int cuDepth)
 { 
@@ -541,7 +541,7 @@ UInt TComRdCost::getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piO
 #if H_3D_IC
   cDtParam.bUseIC       = false;
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   cDtParam.bUseSDCMRSAD = false;
 #endif
 #if WEIGHTED_CHROMA_DISTORTION
@@ -604,8 +604,12 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Pel* piCur
 
     dist = (Dist) (iDWeight * distDepth + iVSOWeight * dist ) / ( iDWeight + iVSOWeight);
   }
-
+#if H_3D_FIX_UINT_WARNING
   return (UInt) dist; 
+#else
+  return dist; 
+#endif
+
 }
 #endif
 
@@ -647,7 +651,7 @@ UInt TComRdCost::xGetSAD( DistParam* pcDtParam )
     return xGetSADic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSADic( pcDtParam );
@@ -687,7 +691,7 @@ UInt TComRdCost::xGetSAD4( DistParam* pcDtParam )
     return xGetSAD4ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD4ic( pcDtParam );
@@ -730,7 +734,7 @@ UInt TComRdCost::xGetSAD8( DistParam* pcDtParam )
     return xGetSAD8ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD8ic( pcDtParam );
@@ -777,7 +781,7 @@ UInt TComRdCost::xGetSAD16( DistParam* pcDtParam )
     return xGetSAD16ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD16ic( pcDtParam );
@@ -833,7 +837,7 @@ UInt TComRdCost::xGetSAD12( DistParam* pcDtParam )
     return xGetSAD12ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD12ic( pcDtParam );
@@ -881,7 +885,7 @@ UInt TComRdCost::xGetSAD16N( DistParam* pcDtParam )
     return xGetSAD16Nic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD16Nic( pcDtParam );
@@ -939,7 +943,7 @@ UInt TComRdCost::xGetSAD32( DistParam* pcDtParam )
     return xGetSAD32ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD32ic( pcDtParam );
@@ -1011,7 +1015,7 @@ UInt TComRdCost::xGetSAD24( DistParam* pcDtParam )
     return xGetSAD24ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD24ic( pcDtParam );
@@ -1076,7 +1080,7 @@ UInt TComRdCost::xGetSAD64( DistParam* pcDtParam )
     return xGetSAD64ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD64ic( pcDtParam );
@@ -1180,7 +1184,7 @@ UInt TComRdCost::xGetSAD48( DistParam* pcDtParam )
     return xGetSAD48ic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetSAD48ic( pcDtParam );
@@ -1256,7 +1260,7 @@ UInt TComRdCost::xGetSAD48( DistParam* pcDtParam )
 }
 #endif
 
-#if H_3D_IC || H_3D_INTER_SDC
+#if H_3D_IC || LGE_INTER_SDC_E0156
 UInt TComRdCost::xGetSADic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )
@@ -3508,7 +3512,7 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
     return xGetHADsic( pcDtParam );
   }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcDtParam->bUseSDCMRSAD )
   {
     return xGetHADsic( pcDtParam );
@@ -3611,7 +3615,7 @@ UInt TComRdCost::xGetHADs( DistParam* pcDtParam )
   return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
 
-#if H_3D_IC || H_3D_INTER_SDC
+#if H_3D_IC || LGE_INTER_SDC_E0156
 UInt TComRdCost::xGetHADsic( DistParam* pcDtParam )
 {
   if ( pcDtParam->bApplyWeight )

@@ -76,6 +76,9 @@ struct GOPEntry
   Int m_numActiveRefLayerPics;
   Int m_interLayerPredLayerIdc [MAX_NUM_REF_PICS];
   Int m_interViewRefPosL[2][MAX_NUM_REF_PICS];  
+#if !H_MV5
+  Int m_collocatedRefLayerIdx; 
+#endif
 #endif
   GOPEntry()
   : m_POC(-1)
@@ -93,6 +96,9 @@ struct GOPEntry
   , m_numRefIdc(0)
 #if H_MV
   , m_numActiveRefLayerPics(0)
+#if !H_MV5
+  , m_collocatedRefLayerIdx(-1)
+#endif
 #endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
@@ -368,10 +374,15 @@ protected:
   Int       m_layerId;
   Int       m_layerIdInVps;
   Int       m_viewId;
+#if H_MV5
   Int       m_viewIndex; 
+#endif
 #endif 
 
 #if H_3D
+#if !H_MV5
+  Int       m_viewIndex; 
+#endif
   Bool      m_isDepth;
 
   //====== Camera Parameters ======
@@ -405,7 +416,7 @@ protected:
 #if H_3D_IC
   Bool      m_bUseIC;
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   bool      m_bInterSDC;
 #endif
   //====== Depth Intra Modes ======
@@ -428,8 +439,13 @@ public:
   , m_layerId(-1)
   , m_layerIdInVps(-1)
   , m_viewId(-1)
+#if H_MV5
   , m_viewIndex(-1)
+#endif
 #if H_3D
+#if !H_MV5
+  , m_viewIndex(-1)
+#endif
   , m_isDepth(false)
   , m_bUseVSO(false)
 #endif
@@ -462,9 +478,15 @@ public:
   Void      setLayerIdInVps                  ( Int layerIdInVps)  { m_layerIdInVps = layerIdInVps; }
   Void      setViewId                        ( Int viewId  )      { m_viewId  = viewId;  }
   Int       getViewId                        ()                   { return m_viewId;    }
+#if H_MV5
   Void      setViewIndex                     ( Int viewIndex  )   { m_viewIndex  = viewIndex;  }
   Int       getViewIndex                     ()                   { return m_viewIndex;    }
+#endif
 #if H_3D
+#if !H_MV5
+  Void      setViewIndex                     ( Int viewIndex  )   { m_viewIndex  = viewIndex;  }
+  Int       getViewIndex                     ()                   { return m_viewIndex;    }
+#endif
   Void      setIsDepth                       ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth                       ()                 { return m_isDepth; }
 #endif
@@ -505,7 +527,7 @@ public:
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Void       setInterSDCEnable              ( Bool bVal )    { m_bInterSDC = bVal; }
   Bool       getInterSDCEnable              ()               { return m_bInterSDC; }
 #endif

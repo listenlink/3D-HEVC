@@ -75,7 +75,11 @@ protected:
   Pel*   m_pLumaRecBuffer;       ///< array for downsampled reconstructed luma sample 
   Int    m_iLumaRecStride;       ///< stride of #m_pLumaRecBuffer array
 #if H_3D_IC
+#if SHARP_ILLUCOMP_REFINE_E0046
   UInt   m_uiaShift[ 64 ];       // Table for multiplication to substitue of division operation
+#else
+  UInt   m_uiaShift[ 63 ];       // Table for multiplication to substitue of division operation
+#endif
 #endif
 
 #if H_3D_VSP
@@ -83,7 +87,9 @@ protected:
 #if H_3D_VSP_CONSTRAINED
   Int  xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma = true);
 #endif
+#if NTT_VSP_COMMON_E0207_E0208
   TComYuv   m_cYuvDepthOnVsp;
+#endif
 #endif
 
   Void xPredIntraAng            (Int bitDepth, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, Bool bFilter );
@@ -119,16 +125,25 @@ protected:
     );
 
 #if H_3D_VSP
+#if NTT_VSP_COMMON_E0207_E0208
   Void xGetVirtualDepth           ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int txtPerDepthX=1, Int txtPerDepthY=1 );
   Void xPredInterLumaBlkFromDM    ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&pcYuvDst, Bool isBi );
   Void xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&pcYuvDst, Bool isBi );
+#else
+  Void xPredInterLumaBlkFromDM  ( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
+  Void xPredInterChromaBlkFromDM( TComPicYuv *refPic, TComPicYuv *pPicBaseDepth, Int* pShiftLUT, TComMv* dv, UInt partAddr, Int posX, Int posY, Int sizeX, Int sizeY, Bool isDepth, TComYuv *&dstPic, Bool bi );
+#endif
 #endif
 
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );
   
   Void xGetLLSPrediction ( TComPattern* pcPattern, Int* pSrc0, Int iSrcStride, Pel* pDst0, Int iDstStride, UInt uiWidth, UInt uiHeight, UInt uiExt0 );
 #if H_3D_IC
+#if SHARP_ILLUCOMP_REFINE_E0046
   Void xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, TextType eType );
+#else
+  Void xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPicYuv *pRefPic, Int &a, Int &b, Int &iShift, TextType eType );
+#endif
 #endif
   Void xDCPredFiltering( Int* pSrc, Int iSrcStride, Pel*& rpDst, Int iDstStride, Int iWidth, Int iHeight );
   Bool xCheckIdenticalMotion    ( TComDataCU* pcCU, UInt PartAddr);
@@ -138,9 +153,20 @@ protected:
   Void xPredBiSegDCs            ( Int* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& predDC1, Pel& predDC2 );
   Void xAssignBiSegDCs          ( Pel* ptrDst, UInt dstStride, Bool* biSegPattern, Int patternStride, Pel   valDC1, Pel   valDC2 );
 #if H_3D_DIM_DMM
+#if !SEC_DMM2_E0146_HHIFIX
+  UInt xPredWedgeFromIntra      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Int iDeltaEnd = 0 );
+#endif
   UInt xPredWedgeFromTex        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt intraTabIdx );
   Void xPredContourFromTex      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge );
+
   Void xCopyTextureLumaBlock    ( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piDestBlockY, UInt uiWidth, UInt uiHeight );
+
+#if !SEC_DMM2_E0146_HHIFIX
+  Void xGetBlockOffset          ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComDataCU* pcRefCU, UInt uiRefAbsPartIdx, UInt& ruiOffsetX, UInt& ruiOffsetY );
+  Bool xGetWedgeIntraDirPredData( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiBlockSize, Int& riSlopeX, Int& riSlopeY, UInt& ruiStartPosX, UInt& ruiStartPosY );
+  Void xGetWedgeIntraDirStartEnd( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiBlockSize, Int iDeltaX, Int iDeltaY, UInt uiPMSPosX, UInt uiPMSPosY, UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, Int iDeltaEnd = 0 );
+  UInt xGetWedgePatternIdx      ( UInt uiBlockSize, UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe );
+#endif
 #endif
 #if H_3D_DIM_RBC
   Void xDeltaDCQuantScaleUp     ( TComDataCU* pcCU, Pel& rDeltaDC );
@@ -169,8 +195,10 @@ public:
   Void predIntraLumaDepth         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc = false );
 #if H_3D_DIM_SDC
   Void analyzeSegmentsSDC         ( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride
+#if KWU_SDC_SIMPLE_DC_E0117
                                     ,UInt uiIntraMode 
                                     ,Bool orgDC=false
+#endif
     );
 #endif
 #endif

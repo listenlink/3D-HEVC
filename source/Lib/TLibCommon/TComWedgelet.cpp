@@ -174,6 +174,476 @@ Bool TComWedgelet::checkInvIdentical( Bool* pbRefPattern )
   return true;
 }
 
+#if !SEC_DMM2_E0146_HHIFIX
+Bool TComWedgelet::checkPredDirAbovePossible( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset )
+{
+  WedgeResolution eContDWedgeRes = g_dmmWedgeResolution[(UInt)g_aucConvertToBit[uiPredDirBlockSize]];
+  UInt uiContDStartEndMax = 0;
+  UInt uiContDStartEndOffset = 0;
+  switch( eContDWedgeRes )
+  {
+  case( DOUBLE_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize>>1); uiContDStartEndOffset = (uiPredDirBlockOffset>>1); break; }
+  case(   FULL_PEL ): { uiContDStartEndMax =  uiPredDirBlockSize;     uiContDStartEndOffset =  uiPredDirBlockOffset;     break; }
+  case(   HALF_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize<<1); uiContDStartEndOffset = (uiPredDirBlockOffset<<1); break; }
+  }
+
+  if( m_uhOri == 2 || m_uhOri == 3 || m_uhOri == 4 )
+  {
+    UInt uiThisStartEndMax = 0;
+    switch( m_eWedgeRes )
+    {
+    case( DOUBLE_PEL ): { uiThisStartEndMax = (m_uiWidth>>1); break; }
+    case(   FULL_PEL ): { uiThisStartEndMax =  m_uiWidth;     break; }
+    case(   HALF_PEL ): { uiThisStartEndMax = (m_uiWidth<<1); break; }
+    }
+
+    UChar uhStartX = m_uhXs;
+    UChar uhStartY = m_uhYs;
+    UChar uhEndX   = m_uhXe;
+    UChar uhEndY   = m_uhYe;
+
+    if( 2 == m_uhOri )
+    {
+      std::swap( uhStartX, uhEndX );
+      std::swap( uhStartY, uhEndY );
+    }
+
+    UInt uiScaledEndX = (UInt)uhEndX;
+    Int iDeltaRes = (Int)eContDWedgeRes - (Int)m_eWedgeRes;
+    if( iDeltaRes > 0 ) { uiScaledEndX <<=  iDeltaRes; }
+    if( iDeltaRes < 0 ) { uiScaledEndX >>= -iDeltaRes; }
+
+    if( ((UInt)uhEndY == (uiThisStartEndMax-1)) && ((uiScaledEndX-uiContDStartEndOffset) > 0 && (uiScaledEndX-uiContDStartEndOffset) < (uiContDStartEndMax-1)) )
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+Bool TComWedgelet::checkPredDirLeftPossible( UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset )
+{
+  WedgeResolution eContDWedgeRes = g_dmmWedgeResolution[(UInt)g_aucConvertToBit[uiPredDirBlockSize]];
+  UInt uiContDStartEndMax = 0;
+  UInt uiContDStartEndOffset = 0;
+  switch( eContDWedgeRes )
+  {
+  case( DOUBLE_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize>>1); uiContDStartEndOffset = (uiPredDirBlockOffset>>1); break; }
+  case(   FULL_PEL ): { uiContDStartEndMax =  uiPredDirBlockSize;     uiContDStartEndOffset =  uiPredDirBlockOffset;     break; }
+  case(   HALF_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize<<1); uiContDStartEndOffset = (uiPredDirBlockOffset<<1); break; }
+  }
+
+  if( m_uhOri == 1 || m_uhOri == 2 || m_uhOri == 5 )
+  {
+    UInt uiThisStartEndMax = 0;
+    switch( m_eWedgeRes )
+    {
+    case( DOUBLE_PEL ): { uiThisStartEndMax = (m_uiHeight>>1); break; }
+    case(   FULL_PEL ): { uiThisStartEndMax =  m_uiHeight;     break; }
+    case(   HALF_PEL ): { uiThisStartEndMax = (m_uiHeight<<1); break; }
+    }
+
+    UChar uhStartX = m_uhXs;
+    UChar uhStartY = m_uhYs;
+    UChar uhEndX   = m_uhXe;
+    UChar uhEndY   = m_uhYe;
+
+    if( 1 == m_uhOri || 5 == m_uhOri )
+    {
+      std::swap( uhStartX, uhEndX );
+      std::swap( uhStartY, uhEndY );
+    }
+
+    UInt uiScaledEndY = (UInt)uhEndY;
+    Int iDeltaRes = (Int)eContDWedgeRes - (Int)m_eWedgeRes;
+    if( iDeltaRes > 0 ) { uiScaledEndY <<=  iDeltaRes; }
+    if( iDeltaRes < 0 ) { uiScaledEndY >>= -iDeltaRes; }
+
+    if( ((UInt)uhEndX == (uiThisStartEndMax-1)) && ((uiScaledEndY-uiContDStartEndOffset) > 0 && (uiScaledEndY-uiContDStartEndOffset) < (uiContDStartEndMax-1)) )
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+Void TComWedgelet::getPredDirStartEndAbove( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd )
+{
+  ruhXs = 0;
+  ruhYs = 0;
+  ruhXe = 0;
+  ruhYe = 0;
+
+  // get start/end of reference (=this) wedgelet
+  UInt uiRefStartX = (UInt)getStartX();
+  UInt uiRefStartY = (UInt)getStartY();
+  UInt uiRefEndX   = (UInt)getEndX();
+  UInt uiRefEndY   = (UInt)getEndY();
+
+  WedgeResolution eContDWedgeRes = g_dmmWedgeResolution[(UInt)g_aucConvertToBit[uiPredDirBlockSize]];
+  UInt uiContDStartEndMax = 0;
+  UInt uiContDStartEndOffset = 0;
+  switch( eContDWedgeRes )
+  {
+  case( DOUBLE_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize>>1); uiContDStartEndOffset = (uiPredDirBlockOffset>>1); break; }
+  case(   FULL_PEL ): { uiContDStartEndMax =  uiPredDirBlockSize;     uiContDStartEndOffset =  uiPredDirBlockOffset;     break; }
+  case(   HALF_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize<<1); uiContDStartEndOffset = (uiPredDirBlockOffset<<1); break; }
+  }
+  Int iContDMaxPos = (Int)uiContDStartEndMax - 1;
+
+  // swap if start/end if line orientation is not from top to bottom
+  if( 2 == (UInt)getOri() )
+  {
+    std::swap( uiRefStartX, uiRefEndX );
+    std::swap( uiRefStartY, uiRefEndY );
+  }
+
+  // calc slopes
+  Int iA_DeltaX = (Int)uiRefEndX - (Int)uiRefStartX;
+  Int iA_DeltaY = (Int)uiRefEndY - (Int)uiRefStartY;
+
+  // get aligned end x value of ref wedge
+  UInt uiScaledRefEndX = uiRefEndX;
+  Int iDeltaRes = (Int)eContDWedgeRes - (Int)m_eWedgeRes;
+  if( iDeltaRes > 0 ) { uiScaledRefEndX <<=  iDeltaRes; }
+  if( iDeltaRes < 0 ) { uiScaledRefEndX >>= -iDeltaRes; }
+
+  assert( uiScaledRefEndX >= uiContDStartEndOffset );
+  Int iAlignedRefEndX = (Int)uiScaledRefEndX - (Int)uiContDStartEndOffset;
+
+  // special for straight vertical wedge
+  if( iA_DeltaX == 0 )
+  {
+    ruhXs = (UChar)iAlignedRefEndX;
+    ruhYs = 0;
+
+    Int iXe = iAlignedRefEndX + iDeltaEnd;
+    if( iXe < 0 )
+    {
+      ruhXe = 0;
+      ruhYe = (UChar)min( max( (iContDMaxPos + iXe), 0 ), iContDMaxPos );
+
+      return;
+    }
+    else if( iXe > iContDMaxPos )
+    {
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)min( max( (iContDMaxPos - (iXe - iContDMaxPos)), 0 ), iContDMaxPos );
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)iXe;
+      ruhYe = (UChar)iContDMaxPos;
+
+      return;
+    }
+  }
+
+  // special for straight horizontal short bottom line
+  if( iA_DeltaY == 0 )
+  {
+    switch( (UInt)getOri() )
+    {
+    case( 2 ):
+      {
+        ruhXs = (UChar)(iAlignedRefEndX-1);
+        ruhYs = 0;
+        ruhXe = 0;
+        ruhYe = (UChar)min( max( iDeltaEnd, 0 ), iContDMaxPos );
+
+        return;
+      }
+    case( 3 ):
+      {
+        ruhXs = (UChar)(iAlignedRefEndX+1);
+        ruhYs = 0;
+        ruhXe = (UChar)iContDMaxPos;
+        ruhYe = (UChar)min( max( -iDeltaEnd, 0 ), iContDMaxPos );
+
+        std::swap( ruhXs, ruhXe );
+        std::swap( ruhYs, ruhYe );
+        return;
+      }
+    default:
+      {
+        assert( 0 );
+        return;
+      }
+    }
+  }
+
+  // set start point depending on slope
+  if( abs( iA_DeltaX ) >= abs( iA_DeltaY ) ) { if( iA_DeltaX < 0 ) { ruhXs = (UChar)(iAlignedRefEndX-1); ruhYs = 0; }
+                                                if( iA_DeltaX > 0 ) { ruhXs = (UChar)(iAlignedRefEndX+1); ruhYs = 0; } }
+  else                                                             { ruhXs = (UChar)(iAlignedRefEndX);   ruhYs = 0;   }
+
+  // calc end point and determine orientation
+  Int iVirtualEndX = (Int)ruhXs + roftoi( (Double)iContDMaxPos * ((Double)iA_DeltaX / (Double)iA_DeltaY) );
+
+  if( iVirtualEndX < 0 )
+  {
+    Int iYe = roftoi( (Double)(0 - (Int)ruhXs) * ((Double)iA_DeltaY / (Double)iA_DeltaX) ) + iDeltaEnd;
+    if( iYe < (Int)uiContDStartEndMax )
+    {
+      ruhXe = 0;
+      ruhYe = (UChar)max( iYe, 0 );
+
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)min( (iYe - iContDMaxPos), iContDMaxPos );
+      ruhYe = (UChar)iContDMaxPos;
+
+      return;
+    }
+  }
+  else if( iVirtualEndX > iContDMaxPos )
+  {
+    Int iYe = roftoi( (Double)(iContDMaxPos - (Int)ruhXs) * ((Double)iA_DeltaY / (Double)iA_DeltaX) ) - iDeltaEnd;
+    if( iYe < (Int)uiContDStartEndMax )
+    {
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)max( iYe, 0 );
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)max( (iContDMaxPos - (iYe - iContDMaxPos)), 0 );
+      ruhYe = (UChar)iContDMaxPos;
+
+      return;
+    }
+  }
+  else
+  {
+    Int iXe = iVirtualEndX + iDeltaEnd;
+    if( iXe < 0 )
+    {
+      ruhXe = 0;
+      ruhYe = (UChar)max( (iContDMaxPos + iXe), 0 );
+
+      return;
+    }
+    else if( iXe > iContDMaxPos )
+    {
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)max( (iContDMaxPos - (iXe - iContDMaxPos)), 0 );
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)iXe;
+      ruhYe = (UChar)iContDMaxPos;
+
+      return;
+    }
+  }
+}
+
+Void TComWedgelet::getPredDirStartEndLeft( UChar& ruhXs, UChar& ruhYs, UChar& ruhXe, UChar& ruhYe, UInt uiPredDirBlockSize, UInt uiPredDirBlockOffset, Int iDeltaEnd )
+{
+  ruhXs = 0;
+  ruhYs = 0;
+  ruhXe = 0;
+  ruhYe = 0;
+
+  // get start/end of reference (=this) wedgelet
+  UInt uiRefStartX = (UInt)getStartX();
+  UInt uiRefStartY = (UInt)getStartY();
+  UInt uiRefEndX   = (UInt)getEndX();
+  UInt uiRefEndY   = (UInt)getEndY();
+
+  WedgeResolution eContDWedgeRes = g_dmmWedgeResolution[(UInt)g_aucConvertToBit[uiPredDirBlockSize]];
+  UInt uiContDStartEndMax = 0;
+  UInt uiContDStartEndOffset = 0;
+  switch( eContDWedgeRes )
+  {
+  case( DOUBLE_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize>>1); uiContDStartEndOffset = (uiPredDirBlockOffset>>1); break; }
+  case(   FULL_PEL ): { uiContDStartEndMax =  uiPredDirBlockSize;     uiContDStartEndOffset =  uiPredDirBlockOffset;     break; }
+  case(   HALF_PEL ): { uiContDStartEndMax = (uiPredDirBlockSize<<1); uiContDStartEndOffset = (uiPredDirBlockOffset<<1); break; }
+  }
+  Int iContDMaxPos = (Int)uiContDStartEndMax - 1;
+
+  // swap if start/end if line orientation is not from left to right
+  if( 1 == (UInt)getOri() || 5 == (UInt)getOri() )
+  {
+    std::swap( uiRefStartX, uiRefEndX );
+    std::swap( uiRefStartY, uiRefEndY );
+  }
+
+  Int iL_DeltaX = (Int)uiRefEndX - (Int)uiRefStartX;
+  Int iL_DeltaY = (Int)uiRefEndY - (Int)uiRefStartY;
+
+  UInt uiScaledRefEndY = uiRefEndY;
+  Int iDeltaRes = (Int)eContDWedgeRes - (Int)m_eWedgeRes;
+  if( iDeltaRes > 0 ) { uiScaledRefEndY <<=  iDeltaRes; }
+  if( iDeltaRes < 0 ) { uiScaledRefEndY >>= -iDeltaRes; }
+
+  assert( uiScaledRefEndY >= uiContDStartEndOffset );
+  Int iAlignedRefEndY = (Int)uiScaledRefEndY - (Int)uiContDStartEndOffset;
+
+  // special for straight horizontal wedge
+  if( iL_DeltaY == 0 )
+  {
+    ruhXs = 0;
+    ruhYs = (UChar)iAlignedRefEndY;
+
+    Int iYe = iAlignedRefEndY - iDeltaEnd;
+    if( iYe < 0 )
+    {
+      ruhXe = (UChar)min( max( (iContDMaxPos + iYe), 0 ), iContDMaxPos );
+      ruhYe = 0;
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+    else if( iYe > iContDMaxPos )
+    {
+      ruhXe = (UChar)min( max( (iContDMaxPos - (iYe - iContDMaxPos)), 0 ), iContDMaxPos );
+      ruhYe = (UChar)iContDMaxPos;
+
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)iYe;
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+  }
+
+  // special for straight vertical short right line
+  if( iL_DeltaX == 0 )
+  {
+    switch( (UInt)getOri() )
+    {
+    case( 1 ):
+      {
+        ruhXs = 0;
+        ruhYs = (UChar)(iAlignedRefEndY+1);
+        ruhXe = (UChar)min( max( iDeltaEnd, 0 ), iContDMaxPos );
+        ruhYe = (UChar)iContDMaxPos;
+
+        return;
+      }
+    case( 2 ):
+      {
+        ruhXs = 0;
+        ruhYs = (UChar)(iAlignedRefEndY-1);
+        ruhXe = (UChar)min( max( -iDeltaEnd, 0 ), iContDMaxPos );
+        ruhYe = 0;
+
+        std::swap( ruhXs, ruhXe );
+        std::swap( ruhYs, ruhYe );
+        return;
+      }
+    default:
+      {
+        assert( 0 );
+        return;
+      }
+    }
+  }
+
+  // set start point depending on slope
+  if( abs( iL_DeltaY ) >= abs( iL_DeltaX ) ) { if( iL_DeltaY < 0 ) { ruhYs = (UChar)(iAlignedRefEndY-1); ruhXs = 0; }
+                                               if( iL_DeltaY > 0 ) { ruhYs = (UChar)(iAlignedRefEndY+1); ruhXs = 0; } }
+  else                                       {                       ruhYs = (UChar)(iAlignedRefEndY);   ruhXs = 0;   }
+
+  // calc end point and determine orientation
+  Int iVirtualEndY = (Int)ruhYs + roftoi( (Double)iContDMaxPos * ((Double)iL_DeltaY / (Double)iL_DeltaX) );
+
+  if( iVirtualEndY < 0 )
+  {
+    Int iXe = roftoi( (Double)(0 - (Int)ruhYs ) * ((Double)iL_DeltaX / (Double)iL_DeltaY) ) - iDeltaEnd;
+    if( iXe < (Int)uiContDStartEndMax )
+    {
+      ruhXe = (UChar)max( iXe, 0 );
+      ruhYe = 0;
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)min( (iXe - iContDMaxPos), iContDMaxPos );
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+  }
+  else if( iVirtualEndY > iContDMaxPos )
+  {
+    Int iXe = roftoi( (Double)(iContDMaxPos - (Int)ruhYs ) * ((Double)iL_DeltaX / (Double)iL_DeltaY) ) + iDeltaEnd;
+    if( iXe < (Int)uiContDStartEndMax )
+    {
+      ruhXe = (UChar)max( iXe, 0 );
+      ruhYe = (UChar)iContDMaxPos;
+
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)max( (iContDMaxPos - (iXe - iContDMaxPos)), 0 );
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+  }
+  else
+  {
+    Int iYe = iVirtualEndY - iDeltaEnd;
+    if( iYe < 0 )
+    {
+      ruhXe = (UChar)max( (iContDMaxPos + iYe), 0 );
+      ruhYe = 0;
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+    else if( iYe > iContDMaxPos )
+    {
+      ruhXe = (UChar)max( (iContDMaxPos - (iYe - iContDMaxPos)), 0 );
+      ruhYe = (UChar)iContDMaxPos;
+
+      return;
+    }
+    else
+    {
+      ruhXe = (UChar)iContDMaxPos;
+      ruhYe = (UChar)iYe;
+
+      std::swap( ruhXs, ruhXe );
+      std::swap( ruhYs, ruhYe );
+      return;
+    }
+  }
+}
+#endif
+
 Void TComWedgelet::xGenerateWedgePattern()
 {
   UInt uiTempBlockSize = 0;

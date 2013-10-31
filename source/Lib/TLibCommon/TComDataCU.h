@@ -207,6 +207,9 @@ private:
   Pel*          m_dimDeltaDC[DIM_NUM_TYPE][2];
 #if H_3D_DIM_DMM
   UInt*         m_dmmWedgeTabIdx[DMM_NUM_TYPE]; 
+#if !SEC_DMM2_E0146_HHIFIX
+  Int*          m_dmm2DeltaEnd;
+#endif
   UInt*         m_dmm3IntraTabIdx;
 #endif
 #if H_3D_DIM_RBC
@@ -221,7 +224,7 @@ private:
   Pel*          m_apSegmentDCOffset[2];
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Bool*         m_pbInterSDCFlag;
   Int*          m_apSegmentInterDCOffset[4];
   UChar*        m_pucInterSDCMask;
@@ -485,7 +488,11 @@ public:
   , Bool bDepthRefine = false
 #endif
   );
+#if MTK_NBDV_TN_FIX_E0172
   Bool          xGetColDisMV      ( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+#else
+  Bool          xGetColDisMV      ( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+#endif
   Bool          getDisMvpCandNBDV ( DisInfo* pDInfo
 #if H_3D_NBDV_REF
    , Bool bDepthRefine = false
@@ -497,7 +504,7 @@ public:
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
 #endif //H_3D_NBDV_REF
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
   Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);
 #endif
 #if H_3D_IV_MERGE
@@ -537,6 +544,13 @@ public:
   Void  setDmmWedgeTabIdx             ( UInt dmmType, UInt uiIdx, UInt tabIdx ) { m_dmmWedgeTabIdx[dmmType][uiIdx] = tabIdx; }
   Void  setDmmWedgeTabIdxSubParts     ( UInt tabIdx, UInt dmmType, UInt uiAbsPartIdx, UInt uiDepth );
 
+#if !SEC_DMM2_E0146_HHIFIX
+  Int*  getDmm2DeltaEnd               ()                      { return m_dmm2DeltaEnd;        }
+  Int   getDmm2DeltaEnd               ( UInt uiIdx )          { return m_dmm2DeltaEnd[uiIdx]; }
+  Void  setDmm2DeltaEnd               ( UInt uiIdx, Int iD )  { m_dmm2DeltaEnd[uiIdx] = iD;   }
+  Void  setDmm2DeltaEndSubParts       ( Int iDelta, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
+
   UInt* getDmm3IntraTabIdx            ()                      { return m_dmm3IntraTabIdx;        }
   UInt  getDmm3IntraTabIdx            ( UInt uiIdx )          { return m_dmm3IntraTabIdx[uiIdx]; }
   Void  setDmm3IntraTabIdx            ( UInt uiIdx, UInt uh ) { m_dmm3IntraTabIdx[uiIdx] = uh;   }
@@ -573,7 +587,7 @@ public:
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Bool*         getInterSDCFlag     ()                        { return m_pbInterSDCFlag;               }
   Bool          getInterSDCFlag     ( UInt uiIdx )            { return m_pbInterSDCFlag[uiIdx];        }
   Void          setInterSDCFlagSubParts ( Bool bInterSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
@@ -611,8 +625,8 @@ public:
   Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
   Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }
-#if H_3D
-  Void          compressMV            ( Int scale );
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+  Void          compressMV            (int scale);
 #else            
   Void          compressMV            ();
 #endif  

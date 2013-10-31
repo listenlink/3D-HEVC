@@ -57,11 +57,11 @@ Void  SyntaxElementParser::xReadCodeTr           (UInt length, UInt& rValue, con
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
   if (length < 10)
   {
-    fprintf( g_hTrace, "%-50s u(%d)  : %u\n", pSymbolName, length, rValue ); 
+    fprintf( g_hTrace, "%-50s u(%d)  : %d\n", pSymbolName, length, rValue ); 
   }
   else
   {
-    fprintf( g_hTrace, "%-50s u(%d) : %u\n", pSymbolName, length, rValue ); 
+    fprintf( g_hTrace, "%-50s u(%d) : %d\n", pSymbolName, length, rValue ); 
   }
   fflush ( g_hTrace );
 }
@@ -76,7 +76,7 @@ Void  SyntaxElementParser::xReadUvlcTr           (UInt& rValue, const Char *pSym
   }
 #endif
   fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
-  fprintf( g_hTrace, "%-50s ue(v) : %u\n", pSymbolName, rValue ); 
+  fprintf( g_hTrace, "%-50s ue(v) : %d\n", pSymbolName, rValue ); 
   fflush ( g_hTrace );
 }
 

@@ -292,9 +292,9 @@ Void TEncTop::destroy ()
 }
 
 #if KWU_RC_MADPRED_E0227
-Void TEncTop::init(TAppEncTop* pcTAppEncTop, Bool isFieldCoding)
+Void TEncTop::init(TAppEncTop* pcTAppEncTop)
 #else
-Void TEncTop::init(Bool isFieldCoding)
+Void TEncTop::init()
 #endif
 {
   // initialize SPS
@@ -312,7 +312,7 @@ Void TEncTop::init(Bool isFieldCoding)
   // initialize PPS
   m_cPPS.setSPS(&m_cSPS);
   xInitPPS();
-  xInitRPS(isFieldCoding);
+  xInitRPS();
 
   xInitPPSforTiles();
 
@@ -406,7 +406,11 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
   TComPic* picLastCoded = getPic( getGOPEncoder()->getPocLastCoded() );
   if( picLastCoded )
   {
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
     picLastCoded->compressMotion(1); 
+#else
+    picLastCoded->compressMotion(); 
+#endif
   }
 #endif
 #if H_MV
@@ -443,13 +447,13 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 
 #if H_MV
   }
-  m_cGOPEncoder.compressPicInGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, gopId, false, false );
+  m_cGOPEncoder.compressPicInGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, gopId );
 
   if( gopId + 1 == m_cGOPEncoder.getGOPSize() )
   {
 #else
   // compress GOP
-  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, false, false);
+  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut);
 #endif
 
 #if RATE_CONTROL_LAMBDA_DOMAIN
@@ -466,162 +470,6 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 }
 #endif
 }
-/**------------------------------------------------
- Separate interlaced frame into two fields
- -------------------------------------------------**/
-void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt height, bool isTop)
-{
-  if (!isTop)
-  {
-    org += stride;
-  }
-  for (Int y = 0; y < height>>1; y++)
-  {
-    for (Int x = 0; x < width; x++)
-    {
-      dstField[x] = org[x];
-    }
-    
-    dstField += stride;
-    org += stride*2;
-  }
-  
-}
-
-#if H_MV
-Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff, Int gopId )
-{
-  assert( 0 ); // Field coding and multiview need to be furhter harmonized. 
-}
-#else
-Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
-{
-  /* -- TOP FIELD -- */
-  
-  if (pcPicYuvOrg)
-  {
-    
-    /* -- Top field initialization -- */
-    
-    TComPic *pcTopField;
-    xGetNewPicBuffer( pcTopField );
-    pcTopField->getPicSym()->allocSaoParam(&m_cEncSAO);
-    pcTopField->setReconMark (false);
-    
-    pcTopField->getSlice(0)->setPOC( m_iPOCLast );
-    pcTopField->getPicYuvRec()->setBorderExtension(false);
-    pcTopField->setTopField(isTff);
-    
-    int nHeight = pcPicYuvOrg->getHeight();
-    int nWidth = pcPicYuvOrg->getWidth();
-    int nStride = pcPicYuvOrg->getStride();
-    int nPadLuma = pcPicYuvOrg->getLumaMargin();
-    int nPadChroma = pcPicYuvOrg->getChromaMargin();
-    
-    // Get pointers
-    Pel * PicBufY = pcPicYuvOrg->getBufY();
-    Pel * PicBufU = pcPicYuvOrg->getBufU();
-    Pel * PicBufV = pcPicYuvOrg->getBufV();
-    
-    Pel * pcTopFieldY =  pcTopField->getPicYuvOrg()->getLumaAddr();
-    Pel * pcTopFieldU =  pcTopField->getPicYuvOrg()->getCbAddr();
-    Pel * pcTopFieldV =  pcTopField->getPicYuvOrg()->getCrAddr();
-    
-    // compute image characteristics
-    if ( getUseAdaptiveQP() )
-    {
-      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcTopField ) );
-    }
-    
-    /* -- Defield -- */
-    
-    bool isTop = isTff;
-    
-    separateFields(PicBufY + nPadLuma + nStride*nPadLuma, pcTopFieldY, nStride, nWidth, nHeight, isTop);
-    separateFields(PicBufU + nPadChroma + (nStride >> 1)*nPadChroma, pcTopFieldU, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
-    separateFields(PicBufV + nPadChroma + (nStride >> 1)*nPadChroma, pcTopFieldV, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
-    
-  }
-  
-  if (m_iPOCLast == 0) // compress field 0
-  {
-    m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff);
-  }
-  
-  /* -- BOTTOM FIELD -- */
-  
-  if (pcPicYuvOrg)
-  {
-    
-    /* -- Bottom field initialization -- */
-    
-    TComPic* pcBottomField;
-    xGetNewPicBuffer( pcBottomField );
-    pcBottomField->getPicSym()->allocSaoParam(&m_cEncSAO);
-    pcBottomField->setReconMark (false);
-    
-    TComPicYuv* rpcPicYuvRec = new TComPicYuv;
-    if ( rcListPicYuvRecOut.size() == (UInt)m_iGOPSize )
-    {
-      rpcPicYuvRec = rcListPicYuvRecOut.popFront();
-    }
-    else
-    {
-      rpcPicYuvRec->create( m_iSourceWidth, m_iSourceHeight, g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth );
-    }
-    rcListPicYuvRecOut.pushBack( rpcPicYuvRec );
-    
-    pcBottomField->getSlice(0)->setPOC( m_iPOCLast);
-    pcBottomField->getPicYuvRec()->setBorderExtension(false);
-    pcBottomField->setTopField(!isTff);
-    
-    int nHeight = pcPicYuvOrg->getHeight();
-    int nWidth = pcPicYuvOrg->getWidth();
-    int nStride = pcPicYuvOrg->getStride();
-    int nPadLuma = pcPicYuvOrg->getLumaMargin();
-    int nPadChroma = pcPicYuvOrg->getChromaMargin();
-    
-    // Get pointers
-    Pel * PicBufY = pcPicYuvOrg->getBufY();
-    Pel * PicBufU = pcPicYuvOrg->getBufU();
-    Pel * PicBufV = pcPicYuvOrg->getBufV();
-    
-    Pel * pcBottomFieldY =  pcBottomField->getPicYuvOrg()->getLumaAddr();
-    Pel * pcBottomFieldU =  pcBottomField->getPicYuvOrg()->getCbAddr();
-    Pel * pcBottomFieldV =  pcBottomField->getPicYuvOrg()->getCrAddr();
-    
-    // Compute image characteristics
-    if ( getUseAdaptiveQP() )
-    {
-      m_cPreanalyzer.xPreanalyze( dynamic_cast<TEncPic*>( pcBottomField ) );
-    }
-    
-    /* -- Defield -- */
-    
-    bool isTop = !isTff;
-    
-    separateFields(PicBufY + nPadLuma + nStride*nPadLuma, pcBottomFieldY, nStride, nWidth, nHeight, isTop);
-    separateFields(PicBufU + nPadChroma + (nStride >> 1)*nPadChroma, pcBottomFieldU, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
-    separateFields(PicBufV + nPadChroma + (nStride >> 1)*nPadChroma, pcBottomFieldV, nStride >> 1, nWidth >> 1, nHeight >> 1, isTop);
-    
-  }
-  
-  if ( ( !(m_iNumPicRcvd) || (!flush && m_iPOCLast != 1 && m_iNumPicRcvd != m_iGOPSize && m_iGOPSize)) )
-  {
-    iNumEncoded = 0;
-    return;
-  }
-  
-  // compress GOP
-  m_cGOPEncoder.compressGOP(m_iPOCLast, m_iNumPicRcvd, m_cListPic, rcListPicYuvRecOut, accessUnitsOut, true, isTff);
-  
-  iNumEncoded = m_iNumPicRcvd;
-  m_iNumPicRcvd = 0;
-  m_uiNumAllPicCoded += iNumEncoded;
-}
-#endif
-
-
 
 // ====================================================================================================================
 // Protected member functions
@@ -717,10 +565,12 @@ Void TEncTop::xInitSPS()
   /* XXX: may be a good idea to refactor the above into a function
    * that chooses the actual compatibility based upon options */
 
+#if H_MV5
 #if H_MV  
   m_cSPS.setUpdateRepFormatFlag           ( m_layerId == 0 );    
   m_cSPS.setSpsInferScalingListFlag       ( m_layerId > 0 && m_cVPS->getInDirectDependencyFlag( getLayerIdInVps(), 0 ) ); 
   m_cSPS.setSpsScalingListRefLayerId      ( 0              ); 
+#endif
 #endif
   m_cSPS.setPicWidthInLumaSamples         ( m_iSourceWidth      );
   m_cSPS.setPicHeightInLumaSamples        ( m_iSourceHeight     );
@@ -844,8 +694,12 @@ Void TEncTop::xInitSPS()
 Void TEncTop::xInitPPS()
 {
 #if H_MV
+#if H_MV5
   m_cPPS.setLayerId( getLayerId() );
   if( getVPS()->getNumDirectRefLayers( getLayerId() ) > 0 )
+#else
+  if( getVPS()->getNumDirectRefLayers( getLayerIdInVps() ) > 0 )
+#endif
   {
     m_cPPS.setListsModificationPresentFlag( true );
   }
@@ -919,21 +773,14 @@ Void TEncTop::xInitPPS()
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
 #if H_MV
+#if H_MV5
   m_cPPS.setNumExtraSliceHeaderBits( 2 ); 
+#else
+  m_cPPS.setNumExtraSliceHeaderBits( 1 ); 
+#endif
 #endif
   m_cPPS.setSignHideFlag(getSignHideFlag());
-  if ( getDeblockingFilterMetric() )
-  {
-    m_cPPS.setDeblockingFilterControlPresentFlag (true);
-    m_cPPS.setDeblockingFilterOverrideEnabledFlag(true);
-    m_cPPS.setPicDisableDeblockingFilterFlag(false);
-    m_cPPS.setDeblockingFilterBetaOffsetDiv2(0);
-    m_cPPS.setDeblockingFilterTcOffsetDiv2(0);
-  } 
-  else
-  {
-    m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
-  }
+  m_cPPS.setDeblockingFilterControlPresentFlag (m_DeblockingFilterControlPresent );
   m_cPPS.setLog2ParallelMergeLevelMinus2   (m_log2ParallelMergeLevelMinus2 );
   m_cPPS.setCabacInitPresentFlag(CABAC_INIT_PRESENT_FLAG);
   m_cPPS.setLoopFilterAcrossSlicesEnabledFlag( m_bLFCrossSliceBoundaryFlag );
@@ -987,11 +834,11 @@ Void TEncTop::xInitPPS()
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.
-Void TEncTop::xInitRPS(Bool isFieldCoding)
+Void TEncTop::xInitRPS()
 {
   TComReferencePictureSet*      rps;
   
-  m_cSPS.createRPSList(getGOPSize()+m_extraRPSs+1);
+  m_cSPS.createRPSList(getGOPSize()+m_extraRPSs);
   TComRPSList* rpsList = m_cSPS.getRPSList();
 
   for( Int i = 0; i < getGOPSize()+m_extraRPSs; i++) 
@@ -1088,13 +935,13 @@ Void TEncTop::xInitRPS(Bool isFieldCoding)
       {
         printf("Warning: number of negative pictures in RPS is different between intra and inter RPS specified in the config file.\n");
         rps->setNumberOfNegativePictures(numNeg);
-        rps->setNumberOfPictures(numNeg+numPos);
+        rps->setNumberOfPositivePictures(numNeg+numPos);
       }
       if (numPos != rps->getNumberOfPositivePictures())
       {
         printf("Warning: number of positive pictures in RPS is different between intra and inter RPS specified in the config file.\n");
         rps->setNumberOfPositivePictures(numPos);
-        rps->setNumberOfPictures(numNeg+numPos);
+        rps->setNumberOfPositivePictures(numNeg+numPos);
       }
       RPSTemp.setNumberOfPictures(numNeg+numPos);
       RPSTemp.setNumberOfNegativePictures(numNeg);
@@ -1158,23 +1005,7 @@ Void TEncTop::xInitRPS(Bool isFieldCoding)
     }
 #endif //INTER_RPS_AUTO
   }
-  //In case of field coding, we need to set special parameters for the first bottom field of the sequence, since it is not specified in the cfg file. 
-  //The position = GOPSize + extraRPSs which is (a priori) unused is reserved for this field in the RPS. 
-  if (isFieldCoding) 
-  {
-    rps = rpsList->getReferencePictureSet(getGOPSize()+m_extraRPSs);
-    rps->setNumberOfPictures(1);
-    rps->setNumberOfNegativePictures(1);
-    rps->setNumberOfPositivePictures(0);
-    rps->setNumberOfLongtermPictures(0);
-    rps->setDeltaPOC(0,-1);
-    rps->setPOC(0,0);
-    rps->setUsed(0,true);
-    rps->setInterRPSPrediction(false);
-    rps->setDeltaRIdxMinus1(0);
-    rps->setDeltaRPS(0);
-    rps->setNumRefIdc(0);
-}
+  
 }
 
    // This is a function that 
@@ -1218,10 +1049,6 @@ Void TEncTop::selectReferencePictureSet(TComSlice* slice, Int POCCurr, Int GOPid
         slice->setRPSidx(extraNum);
       }
     }
-  }
-  if(POCCurr == 1 && slice->getPic()->isField())
-  {
-    slice->setRPSidx(m_iGOPSize+m_extraRPSs);
   }
 
   slice->setRPS(getSPS()->getRPSList()->getReferencePictureSet(slice->getRPSidx()));
@@ -1342,9 +1169,8 @@ Void  TEncCfg::xCheckGSParameters()
   }
 }
 #if H_MV
-Void TEncTop::printSummary( Int numAllPicCoded, Bool isField )
+Void TEncTop::printSummary( Int numAllPicCoded )
 {
-  assert ( !isField ); // Multiview and field coding need to be further unified
   assert (numAllPicCoded == m_cAnalyzeAll.getNumPic());
 
   //--CFG_KDY

@@ -68,7 +68,13 @@ protected:
 #if H_MV
   std::vector<char*>     m_pchReconFileList;                  ///< output reconstruction file names
   Int                    m_numberOfLayers;                    ///< number of Layers to Encode
+#if H_MV5
   Int                    m_iNumberOfViews;                    ///< number of Layers that are views
+#else
+#if H_3D
+  Int                    m_iNumberOfViews;                    ///< number of Layers that are views
+#endif
+#endif
 #else
   Char*     m_pchReconFile;                                   ///< output reconstruction file
 #endif
@@ -76,7 +82,9 @@ protected:
 // VPS specification
   std::vector< std::vector<Int> > m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
   std::vector<Int>       m_viewId;                            ///< view id
+#if H_MV5
   std::vector<Int>       m_viewOrderIndex;                    ///< view order index  
+#endif
 #if H_3D
   std::vector<Int>       m_depthFlag;                         ///< depth flag
 #endif
@@ -97,6 +105,7 @@ protected:
   std::vector< std::vector<Int> > m_directRefLayers;          ///< LayerIds of direct reference layers
   std::vector< std::vector<Int> > m_dependencyTypes;          ///< Dependency types of direct reference layers
 
+#if H_MV5
   // VPS VUI
   Bool m_vpsVuiPresentFlag;
   Bool m_bitRatePresentVpsFlag;
@@ -112,6 +121,7 @@ protected:
   std::vector< std::vector<Int  > > m_minSpatialSegmentOffsetPlus1;
   std::vector< std::vector<Bool > > m_ctuBasedOffsetEnabledFlag;
   std::vector< std::vector<Int  > > m_minHorizontalCtuOffsetPlus1;
+#endif
 
 #if H_3D_IV_MERGE
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
@@ -138,13 +148,7 @@ protected:
   Int       m_iFrameRate;                                     ///< source frame-rates (Hz)
   UInt      m_FrameSkip;                                      ///< number of skipped frames from the beginning
   Int       m_iSourceWidth;                                   ///< source width in pixel
-  Int       m_iSourceHeight;                                  ///< source height in pixel (when interlaced = field height)
-  
-  Int       m_iSourceHeightOrg;                               ///< original source height in pixel (when interlaced = frame height)
-  
-  bool      m_isField;                                        ///< enable field coding
-  bool      m_isTopFieldFirst;
-  
+  Int       m_iSourceHeight;                                  ///< source height in pixel
   Int       m_conformanceMode;
   Int       m_confLeft;
   Int       m_confRight;
@@ -468,7 +472,7 @@ protected:
   Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
   Bool      m_bUsePC;                                         ///< flag for using Predictive Coding with QTL
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
 #endif
 #endif

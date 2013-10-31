@@ -227,6 +227,12 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   {
     in>>entry.m_interViewRefPosL[1][i];
   }
+#if !H_MV5
+  if (entry.m_numActiveRefLayerPics > 0 )
+  {
+    in>>entry.m_collocatedRefLayerIdx; 
+  }
+#endif
 #endif
   return in;
 }
@@ -366,13 +372,21 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_MV
   ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
 #if !H_3D
+#if H_MV5
   ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask")    
+#else
+  ("ScalabilityMask",       m_scalabilityMask    , 1                    , "Scalability Mask")    
+#endif
 #else
   ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
 #endif  
   ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
+#if H_MV5
   ("ViewOrderIndex",        m_viewOrderIndex     , std::vector<Int>(1,0), "View Order Index per layer")
   ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id per View Order Index")
+#else
+  ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id")
+#endif
 #if H_3D
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
@@ -417,10 +431,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FrameSkip,-fs",         m_FrameSkip,          0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",   m_framesToBeEncoded,   0, "Number of frames to be encoded (default=all)")
 
-  //Field coding parameters
-  ("FieldCoding", m_isField, false, "Signals if it's a field based coding")
-  ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
-  
   // Profile and level
   ("Profile", m_profile,   Profile::NONE, "Profile to be used when encoding (Incomplete)")
   ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1 (Incomplete)")
@@ -510,7 +520,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_IC
   ("IlluCompEnable",           m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation")
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
 #endif
   // Coding tools
@@ -609,6 +619,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #endif
 
+#if H_MV5
 #if H_MV
   // VPS VUI
   ("VpsVuiPresentFlag"           , m_vpsVuiPresentFlag           , false                                           , "VpsVuiPresentFlag           ")
@@ -625,6 +636,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MinSpatialSegmentOffsetPlus1", m_minSpatialSegmentOffsetPlus1, std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
   ("CtuBasedOffsetEnabledFlag"   , m_ctuBasedOffsetEnabledFlag   , std::vector< Bool >(1,0)  ,MAX_NUM_LAYERS       , "CtuBasedOffsetEnabledFlag    per direct reference for the N-th layer")
   ("MinHorizontalCtuOffsetPlus1" , m_minHorizontalCtuOffsetPlus1 , std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinHorizontalCtuOffsetPlus1  per direct reference for the N-th layer")
+#endif
 #endif
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
@@ -769,7 +781,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     m_GOPListMvc.push_back( new GOPEntry[MAX_GOP + 1] );
     if( k == 0 )
     {
+#if H_MV5
       m_GOPListMvc[0][0].m_sliceType = 'I'; 
+#endif
       for( Int i = 1; i < MAX_GOP + 1; i++ ) 
       {
         std::ostringstream cOSS;
@@ -815,16 +829,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   po::setDefaults(opts);
   const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);
 
-  if(m_isField)
-  {
-    //Frame height
-    m_iSourceHeightOrg = m_iSourceHeight;
-    //Field height
-    m_iSourceHeight = m_iSourceHeight >> 1;
-    //number of fields to encode
-    m_framesToBeEncoded *= 2;
-  }
-  
   for (list<const Char*>::const_iterator it = argv_unhandled.begin(); it != argv_unhandled.end(); it++)
   {
     fprintf(stderr, "Unhandled argument ignored: `%s'\n", *it);
@@ -943,11 +947,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       {
         m_aiPad[1] = m_confBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
         m_iSourceHeight += m_confBottom;
-        if ( m_isField )
-        {
-          m_iSourceHeightOrg += m_confBottom << 1;
-          m_aiPad[1] = m_confBottom << 1;
-        }
       }
       if (m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0)
       {
@@ -988,6 +987,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   // allocate slice-based dQP values
 #if H_MV
+#if H_MV5
   xResizeVector( m_viewOrderIndex    ); 
 
   std::vector<Int> uniqueViewOrderIndices; 
@@ -1007,6 +1007,28 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #if H_3D
   xResizeVector( m_depthFlag ); 
+#endif
+#else
+  xResizeVector( m_viewId    ); 
+#if H_3D
+  xResizeVector( m_depthFlag ); 
+
+  std::vector<Int> uniqueViewIds; 
+  for( Int layer = 0; layer < m_numberOfLayers; layer++ )
+  {    
+    Bool isIn = false; 
+    for ( Int i = 0 ; i < uniqueViewIds.size(); i++ )
+    {
+      isIn = isIn || ( m_viewId[ layer ] == uniqueViewIds[ i ] ); 
+    }
+    if ( !isIn ) 
+    {
+      uniqueViewIds.push_back( m_viewId[ layer ] ); 
+    } 
+  }
+  m_iNumberOfViews = (Int) uniqueViewIds.size(); 
+#endif
+
 #endif
   xResizeVector( m_fQP ); 
 
@@ -1280,6 +1302,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_layerIdInNuh[0] != 0      , "LayerIdInNuh must be 0 for the first layer. ");
   xConfirmPara( (m_layerIdInNuh.size()!=1) && (m_layerIdInNuh.size() < m_numberOfLayers) , "LayerIdInNuh must be given for all layers. ");
   
+#if H_MV5
 #if H_3D
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 3, "Scalability Mask must be equal to 2 or 3. ");
 #else
@@ -1294,6 +1317,21 @@ Void TAppEncCfg::xCheckParameter()
 #endif
 
   m_dimIds.push_back( m_viewOrderIndex );   
+#else
+#if H_3D
+  xConfirmPara( m_scalabilityMask != 1 && m_scalabilityMask != 3, "Scalability Mask must be equal to 1 or 3. ");
+#else
+  xConfirmPara( m_scalabilityMask != 1 , "Scalability Mask must be equal to 1. ");
+#endif
+ 
+  m_dimIds.push_back( m_viewId ); 
+  const Int viewDimPosition = 0; 
+#if H_3D
+  if ( m_scalabilityMask & ( 1 << DEPTH_ID ) )
+    m_dimIds.push_back( m_depthFlag ); 
+#endif
+
+#endif
   xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
 
   dimBitOffset[ 0 ] = 0; 
@@ -1310,7 +1348,11 @@ Void TAppEncCfg::xCheckParameter()
   for( Int j = 0; j < m_dimIds.size(); j++ )
   {    
     xConfirmPara( m_dimIds[j].size() < m_numberOfLayers,  "DimensionId must be given for all layers and all dimensions. ");   
+#if H_MV5   
     xConfirmPara( (m_dimIds[j][0] != 0)                 , "DimensionId of layer 0 must be 0. " );
+#else
+    xConfirmPara( ( j != viewDimPosition ) &&  (m_dimIds[j][0] != 0), "DimensionId of layer 0 must be 0. " );
+#endif
     xConfirmPara( m_dimensionIdLen[j] < 1 || m_dimensionIdLen[j] > 8, "DimensionIdLen must be greater than 0 and less than 9 in all dimensions. " ); 
      
 
@@ -1349,26 +1391,38 @@ Void TAppEncCfg::xCheckParameter()
 
      xConfirmPara( allEqual , "Each layer shall have a different position in scalability space." );
 
-#if !H_3D_FCO
+#if !H_3D_FCO_E0163
      if ( numDiff  == 1 ) 
      {
        Bool inc = m_dimIds[ lastDiff ][ i ] > m_dimIds[ lastDiff ][ j ]; 
+#if H_MV5
        Bool shallBeButIsNotIncreasing = ( !inc  ) ; 
+#else
+       Bool shallBeButIsNotIncreasing = ( !inc && ( lastDiff != viewDimPosition ) ) ; 
+#endif
        if ( shallBeButIsNotIncreasing )
        {       
          printf( "\nError: Positions of Layers %d and %d is not increasing in dimension %d \n", i, j, lastDiff);        
        }
+#if H_MV5
        xConfirmPara( shallBeButIsNotIncreasing,  "DimensionIds shall be increasing within one dimension. " );
+#else
+       xConfirmPara( shallBeButIsNotIncreasing && ( lastDiff != viewDimPosition ),  "DimensionIds shall be increasing within one dimension. " );
+#endif
      }
 #endif
    }
  }
 
+#if H_MV5
  /// ViewId 
  xConfirmPara( m_viewId.size() != m_iNumberOfViews, "The number of ViewIds must be equal to the number of views." ); 
 
   /// Layer sets
   xConfirmPara( m_vpsNumLayerSets < 0 || m_vpsNumLayerSets > 1024, "VpsNumLayerSets must be greater than 0 and less than 1025. ") ; 
+#else
+  xConfirmPara( m_vpsNumLayerSets < 0 || m_vpsNumLayerSets > 1024, "VpsNumLayerSets must be greater than 0 and less than 1025") ; 
+#endif
   for( Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
   {
     if (lsIdx == 0)
@@ -1710,13 +1764,9 @@ Void TAppEncCfg::xCheckParameter()
   Bool verifiedGOP=false;
   Bool errorGOP=false;
   Int checkGOP=1;
-  Int numRefs = m_isField ? 2 : 1;
+  Int numRefs = 1;
   Int refList[MAX_NUM_REF_PICS+1];
   refList[0]=0;
-  if(m_isField)
-  {
-    refList[1] = 1;
-  }
   Bool isOK[MAX_GOP];
   for(Int i=0; i<MAX_GOP; i++) 
   {
@@ -2134,6 +2184,7 @@ Void TAppEncCfg::xCheckParameter()
     m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;
   }
 #endif
+#if H_MV5
 #if H_MV
   // VPS VUI
   for(Int i = 0; i < MAX_VPS_OP_SETS_PLUS1; i++ )
@@ -2155,6 +2206,7 @@ Void TAppEncCfg::xCheckParameter()
       if ( j < m_minHorizontalCtuOffsetPlus1[i] .size() ) xConfirmPara( m_minHorizontalCtuOffsetPlus1[i][j]  < 0 || m_minHorizontalCtuOffsetPlus1[i][j]  >   100, "min_horizontal_ctu_offset_plus1  must be more than or equal to     0 and less than   101" );
     }
   }
+#endif
 #endif
 
   xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagValue, "CUTransquantBypassFlagValue cannot be 1 when TransquantBypassEnableFlag is 0");
@@ -2221,8 +2273,12 @@ Void TAppEncCfg::xPrintParameter()
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
 #endif
 #if H_MV
+#if H_MV5
   xPrintParaVector( "ViewIdVal"     , m_viewId ); 
   xPrintParaVector( "ViewOrderIndex", m_viewOrderIndex ); 
+#else
+  xPrintParaVector( "ViewId", m_viewId ); 
+#endif
 #endif
 #if H_3D
   xPrintParaVector( "DepthFlag", m_depthFlag ); 
@@ -2235,24 +2291,7 @@ Void TAppEncCfg::xPrintParameter()
 #endif
   printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
-  if (m_isField)
-  {
-    printf("Frame/Field          : Field based coding\n");
-    printf("Field index          : %u - %d (%d fields)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
-    if (m_isTopFieldFirst)
-    {
-      printf("Field Order            : Top field first\n");
-    }
-    else
-    {
-      printf("Field Order            : Bottom field first\n");
-    }
-  }
-  else
-  {
-    printf("Frame/Field                  : Frame based coding\n");
   printf("Frame index                  : %u - %d (%d frames)\n", m_FrameSkip, m_FrameSkip+m_framesToBeEncoded-1, m_framesToBeEncoded );
-  }
   printf("CU size / depth              : %d / %d\n", m_uiMaxCUWidth, m_uiMaxCUDepth );
   printf("RQT trans. size (min / max)  : %d / %d\n", 1 << m_uiQuadtreeTULog2MinSize, 1 << m_uiQuadtreeTULog2MaxSize );
   printf("Max RQT depth inter          : %d\n", m_uiQuadtreeTUMaxDepthInter);
@@ -2436,7 +2475,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   printf( "interSDC: %d ", m_bDepthInterSDCFlag ? 1 : 0 );
 #endif
   printf("\n\n");  

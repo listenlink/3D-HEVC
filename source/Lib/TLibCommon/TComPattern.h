@@ -101,7 +101,7 @@ private:
 #if H_3D_IC
   Bool              m_bICFlag;
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Bool              m_bSDCMRSADFlag;
 #endif
   static const UChar m_aucIntraFilter[5];
@@ -118,7 +118,7 @@ public:
   Bool  getICFlag()               { return m_bICFlag; }
   Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Bool  getSDCMRSADFlag()         { return m_bSDCMRSADFlag; }
   Void  setSDCMRSADFlag( Bool bSDCMRSADFlag )    { m_bSDCMRSADFlag = bSDCMRSADFlag; }
 #endif

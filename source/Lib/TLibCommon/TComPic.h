@@ -60,6 +60,7 @@ private:
   UInt                  m_uiTLayer;               //  Temporal layer
   Bool                  m_bUsedByCurr;            //  Used by current picture
   Bool                  m_bIsLongTerm;            //  IS long term picture
+  Bool                  m_bIsUsedAsLongTerm;      //  long term picture is used as reference before
   TComPicSym*           m_apcPicSym;              //  Symbol
   
   TComPicYuv*           m_apcPicYuv[2];           //  Texture,  0:org / 1:rec
@@ -81,9 +82,6 @@ private:
   Window                m_conformanceWindow;
   Window                m_defaultDisplayWindow;
 
-  bool                  m_isTop;
-  bool                  m_isField;
-  
   std::vector<std::vector<TComDataCU*> > m_vSliceCUDataLink;
 
   SEIMessages  m_SEIs; ///< Any SEI messages that have been received.  If !NULL we own the object.
@@ -105,7 +103,11 @@ private:
   UInt        m_uiRapRefIdx;
   RefPicList  m_eRapRefList;
   Int         m_iNumDdvCandPics;
+#endif
+#if MTK_NBDV_TN_FIX_E0172 
   Bool        m_abTIVRINCurrRL  [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
+#endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182  
   Int         m_aiTexToDepRef  [2][MAX_NUM_REF];
 #endif
 public:
@@ -183,8 +185,8 @@ public:
  
   Void          setNumReorderPics(Int i, UInt tlayer) { m_numReorderPics[tlayer] = i;    }
   Int           getNumReorderPics(UInt tlayer)        { return m_numReorderPics[tlayer]; }
-#if H_3D
-  Void          compressMotion(Int scale); 
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+  Void          compressMotion(int scale); 
 #else   
   Void          compressMotion(); 
 #endif
@@ -210,14 +212,6 @@ public:
   TComPicYuv*   getYuvPicBufferForIndependentBoundaryProcessing()             {return m_pNDBFilterYuvTmp;}
   std::vector<TComDataCU*>& getOneSliceCUDataForNDBFilter      (Int sliceID) { return m_vSliceCUDataLink[sliceID];}
 
-
-  /* field coding parameters*/
-
-   Void              setTopField(bool b)                  {m_isTop = b;}
-   bool              isTopField()                         {return m_isTop;}
-   Void              setField(bool b)                     {m_isField = b;}
-   bool              isField()                            {return m_isField;}
-
 #if H_MV
   Void          print( Bool legend );
 #endif
@@ -229,10 +223,14 @@ public:
   Void          setNumDdvCandPics (Int i)              {m_iNumDdvCandPics = i;       }
   UInt          getRapRefIdx()                         {return m_uiRapRefIdx;       }
   RefPicList    getRapRefList()                        {return m_eRapRefList;       }
-  Void          checkTemporalIVRef();
-  Bool          isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
-  Void          checkTextureRef(  );
-  Int           isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
+#endif
+#if MTK_NBDV_TN_FIX_E0172
+  Void      checkTemporalIVRef();
+  Bool      isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
+#endif
+#if MTK_TEXTURE_MRGCAND_BUGFIX_E0182
+  Void      checkTextureRef(  );
+  Int       isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
 #endif
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }

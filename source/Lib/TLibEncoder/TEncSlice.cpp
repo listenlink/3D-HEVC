@@ -186,10 +186,18 @@ Void TEncSlice::init( TEncTop* pcEncTop )
  \param pSPS          SPS associated with the slice
  \param pPPS          PPS associated with the slice
  */
+#if H_MV5
 #if H_MV
-Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS, Int layerId, bool isField )
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS, Int layerId )
 #else
-Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, bool isField )
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
+#endif
+#else
+#if H_3D
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComVPS* pVPS, TComSPS* pSPS, TComPPS *pPPS, Int layerId )
+#else
+Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd, Int iGOPid, TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS )
+#endif
 #endif
 {
   Double dQP;
@@ -197,7 +205,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   
   rpcSlice = pcPic->getSlice(0);
 
-#if H_MV
+#if H_MV5
   rpcSlice->setVPS( pVPS ); 
 
   rpcSlice->setLayerId     ( layerId );
@@ -205,6 +213,17 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setViewIndex   ( pVPS->getViewIndex   ( layerId ) );
 #if H_3D
   rpcSlice->setIsDepth     ( pVPS->getDepthId     ( layerId ) != 0 );    
+#endif
+#else
+#if H_3D
+  // GT: Should also be activated for MV-HEVC at some stage
+  rpcSlice->setVPS( pVPS );
+  Int vpsLayerId = pVPS->getLayerIdInNuh( layerId ); 
+
+  rpcSlice->setLayerId     ( layerId );
+  rpcSlice->setViewId      ( pVPS->getViewId      ( vpsLayerId ) );    
+  rpcSlice->setViewIndex   ( pVPS->getViewIndex   ( vpsLayerId ) );
+  rpcSlice->setIsDepth     ( pVPS->getDepthId     ( vpsLayerId ) != 0 );    
 #endif
 #endif
   rpcSlice->setSPS( pSPS );
@@ -333,7 +352,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     // compute lambda value
     Int    NumberBFrames = ( m_pcCfg->getGOPSize() - 1 );
     Int    SHIFT_QP = 12;
-    Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)(isField ? NumberBFrames/2 : NumberBFrames) );
+    Double dLambda_scale = 1.0 - Clip3( 0.0, 0.5, 0.05*(Double)NumberBFrames );
 #if FULL_NBIT
     Int    bitdepth_luma_qp_scale = 6 * (g_bitDepth - 8);
 #else
