@@ -93,7 +93,7 @@ public:
 #if H_3D_IC
   Bool  bUseIC;
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Bool  bUseSDCMRSAD;
 #endif
   Int   iRows;
@@ -135,7 +135,7 @@ public:
     pVirOrg = NULL;
     iStrideVir = 0;
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
     bUseSDCMRSAD = false;
 #endif
   }
@@ -147,6 +147,8 @@ class TComRdCost
 {
 private:
   // for distortion
+  Int                     m_iBlkWidth;
+  Int                     m_iBlkHeight;
   
 #if AMP_SAD
   FpDistFunc              m_afpDistortFunc[64]; // [eDFunc]
@@ -232,7 +234,7 @@ public:
   
   UInt    calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
   
-#if H_3D_FAST_DEPTH_INTRA
+#if SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
   UInt    calcVAR(Pel* pi0, Int stride, Int width, Int height, Int cuDepth);
 #endif  
   // for motion cost
@@ -280,7 +282,7 @@ private:
   static UInt xGetSSE32         ( DistParam* pcDtParam );
   static UInt xGetSSE64         ( DistParam* pcDtParam );
   static UInt xGetSSE16N        ( DistParam* pcDtParam );
-#if H_3D_IC || H_3D_INTER_SDC
+#if H_3D_IC || LGE_INTER_SDC_E0156
   static UInt xGetSADic         ( DistParam* pcDtParam );
   static UInt xGetSAD4ic        ( DistParam* pcDtParam );
   static UInt xGetSAD8ic        ( DistParam* pcDtParam );
@@ -308,7 +310,7 @@ private:
 #endif
 
 #if AMP_SAD
-#if H_3D_IC || H_3D_INTER_SDC
+#if H_3D_IC || LGE_INTER_SDC_E0156
   static UInt xGetSAD12ic       ( DistParam* pcDtParam );
   static UInt xGetSAD24ic       ( DistParam* pcDtParam );
   static UInt xGetSAD48ic       ( DistParam* pcDtParam );
@@ -319,7 +321,7 @@ private:
 
 #endif
 
-#if H_3D_IC || H_3D_INTER_SDC
+#if H_3D_IC || LGE_INTER_SDC_E0156
   static UInt xGetHADsic          ( DistParam* pcDtParam );
 #endif
   static UInt xGetHADs4         ( DistParam* pcDtParam );
@@ -340,7 +342,7 @@ public:
   UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc = DF_SSE );
 #endif
 
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   UInt   getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height );
 #endif
 

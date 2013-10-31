@@ -97,14 +97,6 @@ struct TRCLCU
   Double m_costIntra;
   Int m_targetBitsLeft;
 #endif
-
-#if KWU_RC_MADPRED_E0227
-  Double m_MAD;
-
-  Int m_CUWidth;
-  Int m_CUHeight;
-  Double m_IVMAD;
-#endif
 };
 
 struct TRCParameter
@@ -255,16 +247,9 @@ public:
   ~TEncRCPic();
 
 public:
-#if KWU_RC_MADPRED_E0227
-  Void create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures, Int layerID );
-#else
   Void create( TEncRCSeq* encRCSeq, TEncRCGOP* encRCGOP, Int frameLevel, list<TEncRCPic*>& listPreviousPictures );
-#endif
   Void destroy();
 
-#if KWU_RC_MADPRED_E0227
-  Double estimatePicLambdaIV( list<TEncRCPic*>& listPreviousPictures, Int curPOC );
-#endif
 #if !RATE_CONTROL_INTRA
   Double estimatePicLambda( list<TEncRCPic*>& listPreviousPictures );
 #endif
@@ -281,11 +266,6 @@ public:
 #else
   Double getLCUTargetBpp();
 #endif
-
-#if KWU_RC_MADPRED_E0227
-  Double getLCUTargetBppforInterView( list<TEncRCPic*>& listPreviousPictures, TComDataCU* pcCU, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction, Int* disparity );
-#endif
-
   Double getLCUEstLambda( Double bpp );
   Int    getLCUEstQP( Double lambda, Int clipPicQP );
 
@@ -301,12 +281,6 @@ public:
 #endif
 
   Void addToPictureLsit( list<TEncRCPic*>& listPreviousPictures );
-
-#if KWU_RC_MADPRED_E0227
-  Void addToPictureLsitIV( list<TEncRCPic*>& listPreviousPictures );
-  Void setIVPic( TEncRCPic* baseRCPic );
-#endif
-
 #if !M0036_RC_IMPROVEMENT
   Double getEffectivePercentage();
 #endif
@@ -347,14 +321,6 @@ public:
   Void getLCUInitTargetBits();
 #endif
 
-#if KWU_RC_MADPRED_E0227
-  Double getTotalMAD()                                    { return m_totalMAD; }
-  Void   setTotalMAD( Double MAD )                        { m_totalMAD = MAD; }
-
-  Double getIVTotalMAD()                                    { return m_IVtotalMAD; }
-  Void   setIVTotalMAD( Double MAD )                        { m_IVtotalMAD = MAD; }
-#endif
-
   Int  getPicActualBits()                                 { return m_picActualBits; }
   Int  getPicActualQP()                                   { return m_picQP; }
   Double getPicActualLambda()                             { return m_picLambda; }
@@ -362,11 +328,6 @@ public:
   Void setPicEstQP( Int QP )                              { m_estPicQP = QP; }
   Double getPicEstLambda()                                { return m_estPicLambda; }
   Void setPicEstLambda( Double lambda )                   { m_picLambda = lambda; }
-
-#if KWU_RC_MADPRED_E0227
-  Int getLayerID()                                         { return m_LayerID; }
-  Void setLayerID(Int layerid)                              { m_LayerID = layerid; }
-#endif
 
 private:
   TEncRCSeq* m_encRCSeq;
@@ -399,14 +360,6 @@ private:
 #if !M0036_RC_IMPROVEMENT
   TEncRCPic* m_lastPicture;
 #endif
-
-#if KWU_RC_MADPRED_E0227
-  Double m_totalMAD;
-  TEncRCPic* m_lastPicture;
-  Int m_LayerID;
-  TEncRCPic* m_lastIVPicture;
-  Double m_IVtotalMAD;
-#endif
 };
 
 class TEncRateCtrl
@@ -417,11 +370,7 @@ public:
 
 public:
 #if M0036_RC_IMPROVEMENT
-#if KWU_RC_MADPRED_E0227
-  Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP], Int layerID );
-#else
   Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Int keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP] );
-#endif
 #else
   Void init( Int totalFrames, Int targetBitrate, Int frameRate, Int GOPSize, Int picWidth, Int picHeight, Int LCUWidth, Int LCUHeight, Bool keepHierBits, Bool useLCUSeparateModel, GOPEntry GOPList[MAX_GOP] );
 #endif
@@ -438,21 +387,12 @@ public:
   TEncRCPic* getRCPic()          { assert ( m_encRCPic != NULL ); return m_encRCPic; }
   list<TEncRCPic*>& getPicList() { return m_listRCPictures; }
 
-#if KWU_RC_MADPRED_E0227
-  Int getLayerID()                { return m_LayerID; }
-  Void setLayerID(Int layerid)     { m_LayerID = layerid; }
-#endif
-
 private:
   TEncRCSeq* m_encRCSeq;
   TEncRCGOP* m_encRCGOP;
   TEncRCPic* m_encRCPic;
   list<TEncRCPic*> m_listRCPictures;
   Int        m_RCQP;
-
-#if KWU_RC_MADPRED_E0227
-  Int m_LayerID;
-#endif
 };
 
 #else
@@ -577,9 +517,6 @@ public:
   Void          updataRCFrameStatus   (Int frameBits, SliceType eSliceType);
   Void          updataRCUnitStatus    ();
   Void          updateLCUData         (TComDataCU* pcCU, UInt64 actualLCUBits, Int qp);
-#if KWU_RC_MADPRED_E0227
-  Void          updateLCUDataEnhancedView(TComDataCU* pcCU, UInt64 uiBits, Int qp, Double basePos, Double curPos, Double focalLen, Double znear, Double zfar, Int direction);
-#endif
   Void          updateFrameData       (UInt64 actualFrameBits);
   Double        xAdjustmentBits       (Int& reductionBits, Int& compensationBits);
   Int           getGOPId              ()                                          { return m_indexFrame; }

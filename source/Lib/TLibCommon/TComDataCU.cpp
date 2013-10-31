@@ -119,6 +119,9 @@ TComDataCU::TComDataCU()
   {
     m_dmmWedgeTabIdx[i] = NULL;
   }
+#if !SEC_DMM2_E0146_HHIFIX
+  m_dmm2DeltaEnd    = NULL;
+#endif
   m_dmm3IntraTabIdx = NULL;
 #endif
 #if H_3D_DIM_RBC
@@ -149,7 +152,7 @@ TComDataCU::TComDataCU()
 #if H_3D_IC
   m_pbICFlag             = NULL;
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   m_pbInterSDCFlag       = NULL;
   for( Int i = 0; i < 4; i++ )
   {
@@ -270,6 +273,9 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     {
       m_dmmWedgeTabIdx[i]    = (UInt*)xMalloc(UInt, uiNumPartition);
     }
+#if !SEC_DMM2_E0146_HHIFIX
+    m_dmm2DeltaEnd    = (Int* )xMalloc(Int,  uiNumPartition);
+#endif
     m_dmm3IntraTabIdx = (UInt*)xMalloc(UInt, uiNumPartition);
 #endif
 #if H_3D_DIM_RBC
@@ -285,7 +291,7 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_apSegmentDCOffset[1]  = (Pel*)xMalloc(Pel, uiNumPartition);
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
     m_pbInterSDCFlag     = (Bool*  )xMalloc(Bool,   uiNumPartition);
     for( Int i = 0; i < 4; i++ )
     {
@@ -298,7 +304,7 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_acCUMvField[0].setNumPartition(uiNumPartition );
     m_acCUMvField[1].setNumPartition(uiNumPartition );
   }
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   m_pucInterSDCMask     = (UChar*  )xMalloc(UChar,    g_uiMaxCUHeight*g_uiMaxCUWidth);
 #endif
   m_sliceStartCU        = (UInt*  )xMalloc(UInt, uiNumPartition);
@@ -403,6 +409,9 @@ Void TComDataCU::destroy()
     {
       if ( m_dmmWedgeTabIdx[i] ) { xFree( m_dmmWedgeTabIdx[i] ); m_dmmWedgeTabIdx[i] = NULL; }
     }
+#if !SEC_DMM2_E0146_HHIFIX
+    if ( m_dmm2DeltaEnd    ) { xFree( m_dmm2DeltaEnd    ); m_dmm2DeltaEnd    = NULL; }
+#endif
     if ( m_dmm3IntraTabIdx ) { xFree( m_dmm3IntraTabIdx ); m_dmm3IntraTabIdx = NULL; }
 #endif
 #if H_3D_DIM_RBC
@@ -418,7 +427,7 @@ Void TComDataCU::destroy()
     if ( m_apSegmentDCOffset[1] ) { xFree(m_apSegmentDCOffset[1]);  m_apSegmentDCOffset[1]  = NULL; }
 #endif
 #endif    
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
     if ( m_pbInterSDCFlag     ) { xFree(m_pbInterSDCFlag);      m_pbInterSDCFlag    = NULL; }
     for(Int i = 0; i < 4; i++ )
     {
@@ -426,7 +435,7 @@ Void TComDataCU::destroy()
   }
 #endif
   }
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if ( m_pucInterSDCMask     ) { xFree(m_pucInterSDCMask);      m_pucInterSDCMask    = NULL; }
 #endif
   m_pcCUAboveLeft       = NULL;
@@ -565,7 +574,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 #if H_3D_DIM_SDC
     m_pbSDCFlag[ui] = pcFrom->m_pbSDCFlag[ui];
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
     m_pbInterSDCFlag[ui] = pcFrom->m_pbInterSDCFlag[ui];
 #endif
   }
@@ -621,6 +630,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     {
       memset( m_dmmWedgeTabIdx[i] + firstElement, 0,                      numElements * sizeof( *m_dmmWedgeTabIdx[i] ) );
     }
+#if !SEC_DMM2_E0146_HHIFIX
+    memset( m_dmm2DeltaEnd      + firstElement, 0,                        numElements * sizeof( *m_dmm2DeltaEnd    ) );
+#endif
     memset( m_dmm3IntraTabIdx   + firstElement, 0,                        numElements * sizeof( *m_dmm3IntraTabIdx ) );
 #endif
 #if H_3D_DIM_RBC
@@ -636,7 +648,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_apSegmentDCOffset[1]  + firstElement,     0,                numElements * sizeof( *m_apSegmentDCOffset[1] ) );
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
     memset( m_pbInterSDCFlag   + firstElement,     0,                    numElements * sizeof( *m_pbInterSDCFlag ) );
     for( Int i = 0; i < 4; i++ )
     {
@@ -798,6 +810,9 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
       {
         m_dmmWedgeTabIdx[i] [ui] = 0;
       }
+#if !SEC_DMM2_E0146_HHIFIX
+      m_dmm2DeltaEnd    [ui] = 0;
+#endif
       m_dmm3IntraTabIdx [ui] = 0;
 #endif
 #if H_3D_DIM_SDC
@@ -806,7 +821,7 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
       m_apSegmentDCOffset[1][ui] = 0;
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
       m_pbInterSDCFlag[ui] = false;
       for( Int i = 0; i < 4; i++ )
       {
@@ -909,6 +924,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   {
     memset( m_dmmWedgeTabIdx[i], 0, sizeof(UInt) * m_uiNumPartition );
   }
+#if !SEC_DMM2_E0146_HHIFIX
+  memset( m_dmm2DeltaEnd   , 0, sizeof(Int ) * m_uiNumPartition );
+#endif
   memset( m_dmm3IntraTabIdx, 0, sizeof(UInt) * m_uiNumPartition );
 #endif
 #if H_3D_DIM_RBC
@@ -924,7 +942,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_apSegmentDCOffset[1], 0, sizeof(Pel) * m_uiNumPartition   );
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   memset( m_pbInterSDCFlag,           0, sizeof( Bool ) * m_uiNumPartition );
   for( Int i = 0; i < 4; i++ )
   {
@@ -991,6 +1009,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       {
         m_dmmWedgeTabIdx[i] [ui] = pcCU->m_dmmWedgeTabIdx[i] [uiPartOffset+ui];
       }
+#if !SEC_DMM2_E0146_HHIFIX
+      m_dmm2DeltaEnd    [ui] = pcCU->m_dmm2DeltaEnd   [uiPartOffset+ui];
+#endif
       m_dmm3IntraTabIdx [ui] = pcCU->m_dmm3IntraTabIdx[uiPartOffset+ui];
 #endif
 #if H_3D_DIM_SDC
@@ -999,7 +1020,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_apSegmentDCOffset[1][ui] = pcCU->m_apSegmentDCOffset[1] [ uiPartOffset + ui ];
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
       m_pbInterSDCFlag      [ui] = pcCU->m_pbInterSDCFlag    [ uiPartOffset + ui ];
       for( Int i = 0; i < 4; i++ )
       {
@@ -1145,6 +1166,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     m_dmmWedgeTabIdx[i] = pcCU->getDmmWedgeTabIdx( i ) + uiPart;
   }
+#if !SEC_DMM2_E0146_HHIFIX
+  m_dmm2DeltaEnd    = pcCU->getDmm2DeltaEnd()    + uiPart;
+#endif
   m_dmm3IntraTabIdx = pcCU->getDmm3IntraTabIdx() + uiPart;
 #endif
 #if H_3D_DIM_RBC
@@ -1160,7 +1184,7 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_apSegmentDCOffset[1]    = pcCU->getSDCSegmentDCOffset(1)  + uiPart;
 #endif
 #endif  
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   m_pbInterSDCFlag          = pcCU->getInterSDCFlag()       + uiPart;
   for( Int i = 0; i < 4; i++ )
   {
@@ -1341,6 +1365,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   {
     memcpy( m_dmmWedgeTabIdx[i] + uiOffset, pcCU->getDmmWedgeTabIdx( i ), sizeof(UInt) * uiNumPartition );
   }
+#if !SEC_DMM2_E0146_HHIFIX
+  memcpy( m_dmm2DeltaEnd    + uiOffset, pcCU->getDmm2DeltaEnd()   , sizeof(Int ) * uiNumPartition );
+#endif
   memcpy( m_dmm3IntraTabIdx + uiOffset, pcCU->getDmm3IntraTabIdx(), sizeof(UInt) * uiNumPartition );
 #endif
 #if H_3D_DIM_RBC
@@ -1356,7 +1383,7 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   memcpy( m_apSegmentDCOffset[1]  + uiOffset, pcCU->getSDCSegmentDCOffset(1), sizeof( Pel ) * uiNumPartition);
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   memcpy( m_pbInterSDCFlag  + uiOffset, pcCU->getInterSDCFlag(),      iSizeInBool  );
   for( Int i = 0; i < 4; i++ )
   {
@@ -1468,6 +1495,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   {
     memcpy( rpcCU->getDmmWedgeTabIdx( i ) + m_uiAbsIdxInLCU, m_dmmWedgeTabIdx[i], sizeof(UInt) * m_uiNumPartition );
   }
+#if !SEC_DMM2_E0146_HHIFIX
+  memcpy( rpcCU->getDmm2DeltaEnd()    + m_uiAbsIdxInLCU, m_dmm2DeltaEnd   , sizeof(Int ) * m_uiNumPartition );
+#endif
   memcpy( rpcCU->getDmm3IntraTabIdx() + m_uiAbsIdxInLCU, m_dmm3IntraTabIdx, sizeof(UInt) * m_uiNumPartition );
 #endif
 #if H_3D_DIM_RBC
@@ -1483,7 +1513,7 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   memcpy( rpcCU->getSDCSegmentDCOffset(1) + m_uiAbsIdxInLCU, m_apSegmentDCOffset[1], sizeof( Pel ) * m_uiNumPartition);
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   memcpy( rpcCU->getInterSDCFlag() + m_uiAbsIdxInLCU, m_pbInterSDCFlag,      iSizeInBool  );
   for( Int i = 0;i < 4; i++ )
   {
@@ -1581,6 +1611,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   {
     memcpy( rpcCU->getDmmWedgeTabIdx( i ) + uiPartOffset, m_dmmWedgeTabIdx[i], sizeof(UInt) * uiQNumPart );
   }
+#if !SEC_DMM2_E0146_HHIFIX
+  memcpy( rpcCU->getDmm2DeltaEnd()    + uiPartOffset, m_dmm2DeltaEnd   , sizeof(Int ) * uiQNumPart );
+#endif
   memcpy( rpcCU->getDmm3IntraTabIdx() + uiPartOffset, m_dmm3IntraTabIdx, sizeof(UInt) * uiQNumPart );
 #endif
 #if H_3D_DIM_RBC
@@ -1596,7 +1629,7 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   memcpy( rpcCU->getSDCSegmentDCOffset(1) + uiPartOffset, m_apSegmentDCOffset[1], sizeof( Pel ) * uiQNumPart);
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   memcpy( rpcCU->getInterSDCFlag() + uiPartOffset, m_pbInterSDCFlag,      iSizeInBool  );
   for( Int i = 0; i < 4; i++ )
   {
@@ -2317,7 +2350,7 @@ UInt TComDataCU::getCtxICFlag( UInt uiAbsPartIdx )
 }
 #endif
 
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
 Void TComDataCU::setInterSDCFlagSubParts ( Bool bInterSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
   setSubPart( bInterSDCFlag, m_pbInterSDCFlag, uiAbsPartIdx, uiDepth, uiPartIdx );
@@ -2655,7 +2688,11 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
   
   // check prediction mode
   UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
+#if LGE_SDC_REMOVE_DC_E0158
   if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
+#else
+  if( uiLumaPredMode == DC_IDX || uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
+#endif
     return true;
   
   // else
@@ -3531,7 +3568,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( uiPUIdx, uiPartIdxCenter );    
-#if H_3D_FCO
+#if H_3D_FCO_E0163
     TComPic * pcTexturePic = m_pcSlice->getTexturePic();
     TComDataCU *pcTextureCU = 0;
     if ( pcTexturePic )
@@ -3540,7 +3577,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
 #endif
  
-#if H_3D_FCO
+#if H_3D_FCO_E0163
     if ( pcTextureCU && pcTexturePic->getReconMark() && !pcTextureCU->isIntra( uiPartIdxCenter ) )
 #else
     if ( pcTextureCU && !pcTextureCU->isIntra( uiPartIdxCenter ) )
@@ -4803,7 +4840,23 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   TComMv cColMv;
 
   // use coldir.
+#if H_MV5
   TComPic *pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? 1-getSlice()->getColFromL0Flag() : 0), getSlice()->getColRefIdx());
+#else
+#if H_MV
+  TComPic *pColPic;  
+  if (getSlice()->getAltCollocatedIndicationFlag() )
+  {
+    pColPic = getSlice()->getPicFromRefPicSetInterLayer( getSlice()->getActiveMotionPredRefLayerId( getSlice()->getCollocatedRefLayerIdx() )); 
+  }
+  else
+  {
+    pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? 1-getSlice()->getColFromL0Flag() : 0), getSlice()->getColRefIdx());  
+  }  
+#else
+  TComPic *pColPic = getSlice()->getRefPic( RefPicList(getSlice()->isInterB() ? 1-getSlice()->getColFromL0Flag() : 0), getSlice()->getColRefIdx());
+#endif
+#endif
   TComDataCU *pColCU = pColPic->getCU( uiCUAddr );
   if(pColCU->getPic()==0||pColCU->getPartitionSize(uiPartUnitIdx)==SIZE_NONE)
   {
@@ -4953,13 +5006,13 @@ Void TComDataCU::xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter )
                                         + ( iPartHeight/m_pcPic->getMinCUHeight()  )/2*m_pcPic->getNumPartInWidth()
                                         + ( iPartWidth/m_pcPic->getMinCUWidth()  )/2];
 }
-#if H_3D
-Void TComDataCU::compressMV(Int scale)
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
+Void TComDataCU::compressMV(int scale)
 #else
 Void TComDataCU::compressMV()
 #endif
 {
-#if H_3D
+#if MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170
   Int scaleFactor = (4 / scale ) * AMVP_DECIMATION_FACTOR / m_unitSize;
 #else
   Int scaleFactor = 4 * AMVP_DECIMATION_FACTOR / m_unitSize;
@@ -5466,6 +5519,13 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     Int  uiLCUIdx   = getAddr();
     xDeriveCenterIdx(uiPartIdx, uiPartIdxCenter );
 
+    ///*** Derive bottom right neighbour position ***
+#if !SEC_SIMPLIFIED_NBDV_E0142
+    Int iLCUIdxRBNb  = -1;    
+    Int iPartIdxRBNb = -1;
+    xDeriveRightBottomNbIdx(iLCUIdxRBNb, iPartIdxRBNb );
+#endif
+
     ///*** Search temporal candidate pictures for disparity vector ***
     const Int iNumCandPics = getPic()->getNumDdvCandPics();
     for(Int curCandPic = 0; curCandPic < iNumCandPics; curCandPic++)
@@ -5483,39 +5543,62 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
         curCandPicRefIdx = getPic()->getRapRefIdx();
       }
 
-      Bool bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, uiLCUIdx,   uiPartIdxCenter,  cColMv, iTargetViewIdx, iTStartViewIdx );
-
-      if( bCheck )
+#if !SEC_SIMPLIFIED_NBDV_E0142
+      // Check BR and Center       
+      for(Int curPosition = 0; curPosition < 2; curPosition++) 
       {
-        clipMv(cColMv);
-        pDInfo->m_acNBDV = cColMv;
-        pDInfo->m_aVIdxCan  = iTargetViewIdx;
+#endif
+        Bool bCheck = false; 
+#if !SEC_SIMPLIFIED_NBDV_E0142
+        if ( curPosition == 0 && iLCUIdxRBNb >= 0 )
+#if MTK_NBDV_TN_FIX_E0172
+          bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, iLCUIdxRBNb, iPartIdxRBNb,  cColMv, iTargetViewIdx, iTStartViewIdx);
+#else
+          bCheck = xGetColDisMV( eCurRefPicList, curCandPicRefIdx, iLCUIdxRBNb, iPartIdxRBNb,  cColMv, iTargetViewIdx, iTStartViewIdx);
+#endif
+
+        if (curPosition == 1 )
+#endif
+#if MTK_NBDV_TN_FIX_E0172
+          bCheck = xGetColDisMV( curCandPic, eCurRefPicList, curCandPicRefIdx, uiLCUIdx,   uiPartIdxCenter,  cColMv, iTargetViewIdx, iTStartViewIdx );
+#else
+          bCheck = xGetColDisMV( eCurRefPicList, curCandPicRefIdx, uiLCUIdx,   uiPartIdxCenter,  cColMv, iTargetViewIdx, iTStartViewIdx );
+#endif
+
+        if( bCheck )
+        {
+          clipMv(cColMv);
+          pDInfo->m_acNBDV = cColMv;
+          pDInfo->m_aVIdxCan  = iTargetViewIdx;
 
 #if H_3D_NBDV_REF
-        TComPic* picDepth = NULL;   
+          TComPic* picDepth = NULL;   
 #if H_3D_FCO_VSP_DONBDV_E0163
-        picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
-        if ( picDepth->getPicYuvRec() != NULL  )  
-        {
-          cColMv.setZero();
-        }
-        else // Go back with virtual depth
-        {
-          picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
-        }
+          picDepth  = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
+          if ( picDepth->getPicYuvRec() != NULL  )  
+          {
+            cColMv.setZero();
+          }
+          else // Go back with virtual depth
+          {
+            picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
+          }
 
-        assert(picDepth != NULL);
+          assert(picDepth != NULL);
 #else
-        picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
-        assert(picDepth != NULL);
+          picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
+          assert(picDepth != NULL);
 #endif
-        if (picDepth && bDepthRefine)
-          estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
+          if (picDepth && bDepthRefine)
+            estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
 
-        pDInfo->m_acDoNBDV  = cColMv;
+          pDInfo->m_acDoNBDV  = cColMv;
 #endif //H_3D_NBDV_REF
-        return true;
-      }
+          return true;
+        }
+#if !SEC_SIMPLIFIED_NBDV_E0142
+      } 
+#endif
     }
   } 
 
@@ -5528,7 +5611,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   bCheckMcpDv = true; 
   if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_LEFT
 #if H_3D_NBDV_REF
-    , bDepthRefine 
+  , bDepthRefine 
 #endif
     ) )
     return true;
@@ -5540,11 +5623,54 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     bCheckMcpDv = ( ( getAddr() - pcTmpCU->getAddr() ) == 0);
     if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_ABOVE
 #if H_3D_NBDV_REF
-      , bDepthRefine 
+  , bDepthRefine 
 #endif
-      ) )
+    ) )
       return true;
   }
+
+#if !SEC_SIMPLIFIED_NBDV_E0142
+  //// ******* Get disparity from above right block ******* /////
+  pcTmpCU = getPUAboveRight(uiIdx, uiPartIdxRT, true);
+  if(pcTmpCU != NULL )
+  {
+    bCheckMcpDv = ( ( getAddr() - pcTmpCU->getAddr() ) == 0);
+    if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_ABOVERIGHT
+#if H_3D_NBDV_REF
+  , bDepthRefine 
+#endif
+    ) )
+      return true;
+  }
+
+  //// ******* Get disparity from below left block ******* /////
+  pcTmpCU = getPUBelowLeft(uiIdx, uiPartIdxLB, true);
+  if( pcTmpCU != NULL )
+  {
+    bCheckMcpDv = true; 
+    if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_LEFTBELOW
+#if H_3D_NBDV_REF
+  , bDepthRefine 
+#endif
+    ) )
+      return true;
+  }
+
+  //// ******* Get disparity from above left block ******* /////
+  pcTmpCU = getPUAboveLeft(uiIdx, (m_uiAbsIdxInLCU + uiPartAddr), true);
+  assert(uiPartIdxLT == (m_uiAbsIdxInLCU + uiPartAddr));
+
+  if( pcTmpCU != NULL )
+  {
+    bCheckMcpDv = (( getAddr() - pcTmpCU->getAddr() ) <= 1); 
+    if ( xCheckSpatialNBDV( pcTmpCU, uiIdx, pDInfo, bCheckMcpDv, &cIDVInfo, DVFROM_ABOVELEFT
+#if H_3D_NBDV_REF
+  , bDepthRefine 
+#endif
+    ) )
+      return true;
+  }
+#endif
 
   //// ******* Search MCP blocks ******* /////
   if( cIDVInfo.m_bFound ) 
@@ -5593,7 +5719,7 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 
   TComMv defaultDV(0, 0);
   pDInfo->m_acNBDV = defaultDV;
-
+#if NBDV_DEFAULT_VIEWIDX_BUGFIX
   Int valid = 0;
   Int viewIndex = 0;
   for( UInt uiBId = 0; uiBId < getSlice()->getViewIndex() && valid==0; uiBId++ )
@@ -5644,6 +5770,20 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     pDInfo->m_acDoNBDV = defaultDV;
 #endif
   }
+#else
+  pDInfo->m_aVIdxCan = 0;
+#if H_3D_NBDV_REF
+  TComPic* picDepth = NULL;
+  picDepth = getSlice()->getIvPic( true, 0 );
+  assert(picDepth!=NULL);
+
+  if (picDepth && bDepthRefine)
+  {
+    estimateDVFromDM(0, uiPartIdx, picDepth, uiPartAddr, &defaultDV ); // from base view
+  }
+  pDInfo->m_acDoNBDV = defaultDV;
+#endif
+#endif
   return false; 
 }
 
@@ -5653,10 +5793,17 @@ Pel TComDataCU::getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int 
   Int iPictureWidth  = pcBaseViewDepthPicYuv->getWidth();
   Int iPictureHeight = pcBaseViewDepthPicYuv->getHeight();
   
+#if NTT_DoNBDV_VECTOR_CLIP_E0141
   Int depthStartPosX = Clip3(0,   iPictureWidth - 1,  iBlkX + ((mv->getHor()+2)>>2));
   Int depthStartPosY = Clip3(0,   iPictureHeight - 1, iBlkY + ((mv->getVer()+2)>>2));
   Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
   Int depthEndPosY   = Clip3(0,   iPictureHeight - 1, iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
+#else
+  Int depthStartPosX = Clip3(0,   iPictureWidth - iBlkWidth,  iBlkX + ((mv->getHor()+2)>>2));
+  Int depthStartPosY = Clip3(0,   iPictureHeight- iBlkHeight,  iBlkY + ((mv->getVer()+2)>>2));
+  Int depthEndPosX   = Clip3(0,   iPictureWidth - 1,  iBlkX + iBlkWidth - 1 + ((mv->getHor()+2)>>2));
+  Int depthEndPosY   = Clip3(0,   iPictureHeight - 1,  iBlkY + iBlkHeight - 1 + ((mv->getVer()+2)>>2));
+#endif
 
   Pel* depthTL  = pcBaseViewDepthPicYuv->getLumaAddr();
   Int depStride =  pcBaseViewDepthPicYuv->getStride();
@@ -5747,7 +5894,7 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
         {
           assert( uiMvpDvPos < IDV_CANDS );
           paIDVInfo->m_acMvCand[iList][ uiMvpDvPos ] = TComMv( cMvPred.getIDVHor(), cMvPred.getIDVVer() );
-          //Notes from QC: DvMCP is implemented in a way that doesnot carry the reference view identifier as NBDV. It only works for CTC and needs to be fixed to be aligned with other part of the NBDV design.
+          //Notes from QC: DvMCP is implemented in a way that doesnE½t carry the reference view identifier as NBDV. It only works for CTC and needs to be fixed to be aligned with other part of the NBDV design.
           paIDVInfo->m_aVIdxCan[iList][ uiMvpDvPos ] = cMvPred.getIDVVId();
           paIDVInfo->m_bAvailab[iList][ uiMvpDvPos ] = true;
           paIDVInfo->m_bFound                        = true; 
@@ -5819,8 +5966,11 @@ Void TComDataCU::setDvInfoSubParts( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiP
   setSubPartT<DisInfo>( cDvInfo, m_pDvInfo, uiAbsPartIdx, uiDepth, uiPUIdx );
 }
 #endif
-
+#if MTK_NBDV_TN_FIX_E0172
 Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv , Int & iTargetViewIdx, Int & iStartViewIdx )
+#else
+Bool TComDataCU::xGetColDisMV( RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv , Int & iTargetViewIdx, Int & iStartViewIdx )
+#endif
 {
 
   RefPicList  eColRefPicList = REF_PIC_LIST_0;
@@ -5836,7 +5986,7 @@ Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refi
   {
     if(pColCU->getSlice()->isInterB())
     {
-      eColRefPicList = RefPicList(ilist);
+        eColRefPicList = RefPicList(ilist);
     }
 
     Int iColRefIdx = pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiPartUnitIdx);
@@ -5854,21 +6004,25 @@ Bool TComDataCU::xGetColDisMV( Int currCandPic, RefPicList eRefPicList, Int refi
     }
     else 
     {
+#if MTK_NBDV_TN_FIX_E0172
       if(getPic()->isTempIVRefValid(currCandPic, ilist,  iColRefIdx))
       {
-        rcMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiPartUnitIdx);
-        rcMv.setIDVFlag(0);
-        iTargetViewIdx  = iColRefViewIdx ;
-        iStartViewIdx   = iColViewIdx   ;
-        return true;    
+#endif
+      rcMv = pColCU->getCUMvField(eColRefPicList)->getMv(uiPartUnitIdx);
+      rcMv.setIDVFlag(0);
+      iTargetViewIdx  = iColRefViewIdx ;
+      iStartViewIdx   = iColViewIdx   ;
+      return true;    
+#if MTK_NBDV_TN_FIX_E0172
       }
+#endif
     }
   }
 
   return false;
 }
 #endif 
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
 Void 
 TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge, Int& iIVFMaxD)
 {
@@ -6153,6 +6307,13 @@ Void TComDataCU::setDmmWedgeTabIdxSubParts( UInt tabIdx, UInt dmmType, UInt uiAb
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
   for( UInt ui = 0; ui < uiCurrPartNumb; ui++ ) { m_dmmWedgeTabIdx[dmmType][uiAbsPartIdx+ui] = tabIdx; }
 }
+#if !SEC_DMM2_E0146_HHIFIX
+Void  TComDataCU::setDmm2DeltaEndSubParts( Int iDelta, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
+  for( UInt ui = 0; ui < uiCurrPartNumb; ui++ ) { m_dmm2DeltaEnd[uiAbsPartIdx+ui] = iDelta; }
+}
+#endif
 Void  TComDataCU::setDmm3IntraTabIdxSubParts( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);

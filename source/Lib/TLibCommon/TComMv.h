@@ -39,7 +39,6 @@
 #define __TCOMMV__
 
 #include "CommonDef.h"
-#include <cstdlib>
 
 //! \ingroup TLibCommon
 //! \{

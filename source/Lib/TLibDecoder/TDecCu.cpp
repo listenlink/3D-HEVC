@@ -457,7 +457,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_ARP
   m_pcEntropyDecoder->decodeARPW    ( pcCU , uiAbsPartIdx , uiDepth );  
 #endif  
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   m_pcEntropyDecoder->decodeInterSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
   // Coefficient decoding
@@ -524,7 +524,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
     case MODE_INTER:
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
       if( m_ppcCU[uiDepth]->getInterSDCFlag( 0 ) )
       {
         xReconInterSDC( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
@@ -533,7 +533,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
       {
 #endif
       xReconInter( m_ppcCU[uiDepth], uiDepth );
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
       }
 #endif
       break;
@@ -577,7 +577,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
   }
 }
 
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
 Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   // inter prediction
@@ -894,7 +894,11 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   // get DC prediction for each segment
   Pel apDCPredValues[2];
+#if KWU_SDC_SIMPLE_DC_E0117
   m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
+#else
+  m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride);
+#endif
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];

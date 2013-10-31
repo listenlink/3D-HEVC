@@ -98,7 +98,8 @@ private:
   TComSlice**   m_apcTComSlice;
   UInt          m_uiNumAllocatedSlice;
   TComDataCU**  m_apcTComDataCU;        ///< array of CU data
-    
+  
+  Int           m_iTileBoundaryIndependenceIdr;
   Int           m_iNumColumnsMinus1; 
   Int           m_iNumRowsMinus1;
   TComTile**    m_apcTComTile;

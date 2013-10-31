@@ -101,26 +101,11 @@ private:
   TEncSbac*               m_pcRDGoOnSbacCoder;
   Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
-#if RATE_CONTROL_LAMBDA_DOMAIN
-#if !M0036_RC_IMPROVEMENT
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
   Int                     m_temporalSAD;
 #endif
-#if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-  UInt                    m_LCUPredictionSAD;
-  Int                     m_addSADDepth;
-  Int                     m_temporalSAD;
-  Int                     m_spatialSAD;
-#endif
-#endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
-  UInt                    m_LCUPredictionSAD;
-  Int                     m_addSADDepth;
-  Int                     m_temporalSAD;
-  Int                     m_spatialSAD;
-#endif
-
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -138,7 +123,7 @@ public:
   Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
 #if RATE_CONTROL_INTRA
@@ -159,7 +144,7 @@ protected:
   Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool *earlyDetectionSkipMode);
 
 #if AMP_MRG
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize,  Bool bFMD, Bool bUseMRG = false  ) ;
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );

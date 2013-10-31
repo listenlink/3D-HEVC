@@ -76,6 +76,9 @@ struct GOPEntry
   Int m_numActiveRefLayerPics;
   Int m_interLayerPredLayerIdc [MAX_NUM_REF_PICS];
   Int m_interViewRefPosL[2][MAX_NUM_REF_PICS];  
+#if !H_MV5
+  Int m_collocatedRefLayerIdx; 
+#endif
 #endif
   GOPEntry()
   : m_POC(-1)
@@ -93,6 +96,9 @@ struct GOPEntry
   , m_numRefIdc(0)
 #if H_MV
   , m_numActiveRefLayerPics(0)
+#if !H_MV5
+  , m_collocatedRefLayerIdx(-1)
+#endif
 #endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
@@ -303,24 +309,10 @@ protected:
   Bool      m_RCUseLCUSeparateModel;
   Int       m_RCInitialQP;
   Bool      m_RCForceIntraQP;
-
-#if KWU_RC_MADPRED_E0227
-  UInt       m_depthMADPred;
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      m_bViewWiseRateCtrl;
-#endif
 #else
   Bool      m_enableRateCtrl;                                ///< Flag for using rate control algorithm
   Int       m_targetBitrate;                                 ///< target bitrate
   Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be divided by the NumLCUInUnit
-
-#if KWU_RC_MADPRED_E0227
-  UInt       m_depthMADPred;
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      m_bViewWiseRateCtrl;
-#endif
 #endif
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
@@ -368,10 +360,15 @@ protected:
   Int       m_layerId;
   Int       m_layerIdInVps;
   Int       m_viewId;
+#if H_MV5
   Int       m_viewIndex; 
+#endif
 #endif 
 
 #if H_3D
+#if !H_MV5
+  Int       m_viewIndex; 
+#endif
   Bool      m_isDepth;
 
   //====== Camera Parameters ======
@@ -405,7 +402,7 @@ protected:
 #if H_3D_IC
   Bool      m_bUseIC;
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   bool      m_bInterSDC;
 #endif
   //====== Depth Intra Modes ======
@@ -428,8 +425,13 @@ public:
   , m_layerId(-1)
   , m_layerIdInVps(-1)
   , m_viewId(-1)
+#if H_MV5
   , m_viewIndex(-1)
+#endif
 #if H_3D
+#if !H_MV5
+  , m_viewIndex(-1)
+#endif
   , m_isDepth(false)
   , m_bUseVSO(false)
 #endif
@@ -462,9 +464,15 @@ public:
   Void      setLayerIdInVps                  ( Int layerIdInVps)  { m_layerIdInVps = layerIdInVps; }
   Void      setViewId                        ( Int viewId  )      { m_viewId  = viewId;  }
   Int       getViewId                        ()                   { return m_viewId;    }
+#if H_MV5
   Void      setViewIndex                     ( Int viewIndex  )   { m_viewIndex  = viewIndex;  }
   Int       getViewIndex                     ()                   { return m_viewIndex;    }
+#endif
 #if H_3D
+#if !H_MV5
+  Void      setViewIndex                     ( Int viewIndex  )   { m_viewIndex  = viewIndex;  }
+  Int       getViewIndex                     ()                   { return m_viewIndex;    }
+#endif
   Void      setIsDepth                       ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth                       ()                 { return m_isDepth; }
 #endif
@@ -505,7 +513,7 @@ public:
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   Void       setInterSDCEnable              ( Bool bVal )    { m_bInterSDC = bVal; }
   Bool       getInterSDCEnable              ()               { return m_bInterSDC; }
 #endif
@@ -817,15 +825,6 @@ public:
   Void      setInitialQP           ( Int QP )      { m_RCInitialQP = QP;             }
   Bool      getForceIntraQP        ()              { return m_RCForceIntraQP;        }
   Void      setForceIntraQP        ( Bool b )      { m_RCForceIntraQP = b;           }
-
-#if KWU_RC_MADPRED_E0227
-  UInt      getUseDepthMADPred    ()                { return m_depthMADPred;        }
-  Void      setUseDepthMADPred    (UInt b)          { m_depthMADPred    = b;        }
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
-  Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
-#endif
 #else
   Bool      getUseRateCtrl    ()                { return m_enableRateCtrl;    }
   Void      setUseRateCtrl    (Bool flag)       { m_enableRateCtrl = flag;    }
@@ -833,15 +832,6 @@ public:
   Void      setTargetBitrate  (Int target)      { m_targetBitrate  = target;  }
   Int       getNumLCUInUnit   ()                { return m_numLCUInUnit;      }
   Void      setNumLCUInUnit   (Int numLCUs)     { m_numLCUInUnit   = numLCUs; }
-
-#if KWU_RC_MADPRED_E0227
-  UInt      getUseDepthMADPred    ()                { return m_depthMADPred;        }
-  Void      setUseDepthMADPred    (UInt b)          { m_depthMADPred    = b;        }
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
-  Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
-#endif
 #endif
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }

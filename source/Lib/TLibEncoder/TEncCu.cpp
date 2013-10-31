@@ -102,24 +102,10 @@ Void TEncCu::create(UChar uhTotalDepth, UInt uiMaxWidth, UInt uiMaxHeight)
   }
   
   m_bEncodeDQP = false;
-#if RATE_CONTROL_LAMBDA_DOMAIN
-#if !M0036_RC_IMPROVEMENT
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
   m_temporalSAD      = 0;
-#endif
-#if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-  m_LCUPredictionSAD = 0;
-  m_addSADDepth      = 0;
-  m_temporalSAD      = 0;
-  m_spatialSAD       = 0;
-#endif
-#endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
-  m_LCUPredictionSAD = 0;
-  m_addSADDepth      = 0;
-  m_temporalSAD      = 0;
-  m_spatialSAD       = 0;
 #endif
 
   // initialize partition order.
@@ -269,24 +255,10 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   m_ppcBestCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
   m_ppcTempCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
-#if !M0036_RC_IMPROVEMENT
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   m_addSADDepth      = 0;
   m_LCUPredictionSAD = 0;
   m_temporalSAD      = 0;
-#endif
-#if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-  m_LCUPredictionSAD = 0;
-  m_addSADDepth      = 0;
-  m_temporalSAD      = 0;
-  m_spatialSAD       = 0;
-#endif
-#endif
-#if KWU_RC_MADPRED_E0227
-  m_LCUPredictionSAD = 0;
-  m_addSADDepth      = 0;
-  m_temporalSAD      = 0;
-  m_spatialSAD       = 0;
 #endif
 
   // analysis of CU
@@ -431,10 +403,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 
   // variables for fast encoder decision
-#if H_3D_QTLPC  
-  Bool    bTrySplit     = true;
-  Bool    bTrySplitDQP  = true;
-#endif
+  Bool    bEarlySkip  = false;
+  Bool    bTrySplit    = true;
+  Double  fRD_Skip    = MAX_DOUBLE;
 
   // variable for Early CU determination
   Bool    bSubBranch = true;
@@ -443,6 +414,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool    doNotBlockPu = true;
   Bool earlyDetectionSkipMode = false;
 
+  Bool    bTrySplitDQP  = true;
 #if H_3D_VSP
   DisInfo DvInfo; 
   DvInfo.bDV = false;
@@ -452,6 +424,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   DvInfo.m_acDoNBDV.setZero();
 #endif
 #endif
+  static  Double  afCost[ MAX_CU_DEPTH ];
+  static  Int      aiNum [ MAX_CU_DEPTH ];
+
+  if ( rpcBestCU->getAddr() == 0 )
+  {
+    ::memset( afCost, 0, sizeof( afCost ) );
+    ::memset( aiNum,  0, sizeof( aiNum  ) );
+  }
+
   Bool bBoundary = false;
   UInt uiLPelX   = rpcBestCU->getCUPelX();
   UInt uiRPelX   = uiLPelX + rpcBestCU->getWidth(0)  - 1;
@@ -507,7 +488,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   // We need to split, so don't try these modes.
   if(!bSliceEnd && !bSliceStart && bInsidePicture )
   {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
     Bool bIVFMerge = false;
     Int  iIVFMaxD = 0;
     Bool bFMD = false;
@@ -519,9 +500,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         iQP = lowestQP;
       }
       // variables for fast encoder decision
-#if H_3D_QTLPC
+      bEarlySkip  = false;
       bTrySplit    = true;
-#endif
+      fRD_Skip    = MAX_DOUBLE;
 
       rpcTempCU->initEstData( uiDepth, iQP );
 #if H_3D_QTLPC
@@ -578,7 +559,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
         }
       }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
       if(rpcTempCU->getSlice()->getViewIndex() && !rpcTempCU->getSlice()->getIsDepth())
       {
         PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
@@ -602,7 +583,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_IC
           rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP );//by Competition for inter_2Nx2N
 #else
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );//by Competition for inter_2Nx2N
@@ -616,21 +597,33 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
         xCheckRDCostMerge2Nx2N( rpcBestCU, rpcTempCU, &earlyDetectionSkipMode );//by Merge for inter_2Nx2N
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
         bFMD = bIVFMerge && rpcBestCU->isSkipped(0);
 #endif
         rpcTempCU->initEstData( uiDepth, iQP );
 #if H_3D_VSP
         rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
 #endif
+        // fast encoder decision for early skip
+        if ( m_pcEncCfg->getUseFastEnc() )
+        {
+          Int iIdx = g_aucConvertToBit[ rpcBestCU->getWidth(0) ];
+          if ( aiNum [ iIdx ] > 5 && fRD_Skip < EARLY_SKIP_THRES*afCost[ iIdx ]/aiNum[ iIdx ] )
+          {
+            bEarlySkip = true;
+            bTrySplit  = false;
+          }
+        }
 
         if(!m_pcEncCfg->getUseEarlySkipDetection())
         {
           // 2Nx2N, NxN
+          if ( !bEarlySkip )
+          {
 #if H_3D_IC
             rpcTempCU->setICFlagSubParts(bICFlag, 0, 0, uiDepth);
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP );
 #else
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP );
@@ -642,16 +635,33 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             {
               doNotBlockPu = rpcBestCU->getQtRootCbf( 0 ) != 0;
             }
+          }
         }
 #if H_3D_IC
         }
 #endif
       }
 
-#if H_3D_QTLPC      
+#if H_3D_QTLPC
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL())
       {
         bTrySplitDQP = bTrySplit;
+      }
+      else
+      {
+#endif
+        if( (g_uiMaxCUWidth>>uiDepth) >= rpcTempCU->getSlice()->getPPS()->getMinCuDQPSize() )
+        {
+          if(iQP == iBaseQP)
+          {
+            bTrySplitDQP = bTrySplit;
+          }
+        }
+        else
+        {
+          bTrySplitDQP = bTrySplit;
+        }
+#if H_3D_QTLPC
       }
 #endif
       if (isAddLowestQP && (iQP == lowestQP))
@@ -665,28 +675,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
     {
       m_LCUPredictionSAD += m_temporalSAD;
       m_addSADDepth = uiDepth;
-    }
-#endif
-#if RATE_CONTROL_LAMBDA_DOMAIN && M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-    if ( uiDepth <= m_addSADDepth )
-    {
-      m_LCUPredictionSAD += m_temporalSAD;
-      m_addSADDepth = uiDepth;
-    }
-#endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
-if ( uiDepth <= m_addSADDepth )
-{
-  m_LCUPredictionSAD += m_temporalSAD;
-  m_addSADDepth = uiDepth;
-}
-#endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_FIX_URQ
-    if(m_pcEncCfg->getUseRateCtrl())
-    {
-      Int qp = m_pcRateCtrl->getUnitQP();
-      iMinQP  = Clip3( MIN_QP, MAX_QP, qp);
-      iMaxQP  = Clip3( MIN_QP, MAX_QP, qp);
     }
 #endif
 
@@ -711,6 +699,8 @@ if ( uiDepth <= m_addSADDepth )
         if( rpcBestCU->getSlice()->getSliceType() != I_SLICE )
         {
           // 2Nx2N, NxN
+          if ( !bEarlySkip )
+          {
             if(!( (rpcBestCU->getWidth(0)==8) && (rpcBestCU->getHeight(0)==8) ))
             {
               if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && doNotBlockPu
@@ -719,7 +709,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN, bFMD  );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_NxN   );
@@ -730,6 +720,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
               }
             }
+          }
 
           // 2NxN, Nx2N
           if(doNotBlockPu
@@ -738,7 +729,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
             )
           {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N, bFMD  );
 #else
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_Nx2N  );
@@ -758,7 +749,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
             )
           {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
             xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN, bFMD  );
 #else
             xCheckRDCostInter      ( rpcBestCU, rpcTempCU, SIZE_2NxN  );
@@ -797,7 +788,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU );
@@ -817,7 +808,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD );
@@ -841,7 +832,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, bFMD, true );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnU, true );
@@ -861,7 +852,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, bFMD, true );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2NxnD, true );
@@ -887,7 +878,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N );
@@ -907,7 +898,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFMD );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N );
@@ -927,7 +918,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, bFMD, true );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nLx2N, true );
@@ -947,7 +938,7 @@ if ( uiDepth <= m_addSADDepth )
 #endif
                 )
               {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, bFMD, true );
 #else
                 xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_nRx2N, true );
@@ -998,12 +989,17 @@ if ( uiDepth <= m_addSADDepth )
           }    
 #endif
         }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
         if(!bFMD)
         {
 #endif
         // do normal intra modes
-       
+#if H_3D_DIM_ENC
+        if ( !bEarlySkip || ( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() ) )
+#else
+        if ( !bEarlySkip )
+#endif
+        {
           // speedup for inter frames
           if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
             rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
@@ -1015,29 +1011,6 @@ if ( uiDepth <= m_addSADDepth )
             ) // avoid very complex intra if it is unlikely
           {
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
-
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-            if ( uiDepth <= m_addSADDepth )
-            {
-              m_LCUPredictionSAD += m_spatialSAD;
-              m_addSADDepth = uiDepth;
-            }
-#endif
-#if RATE_CONTROL_LAMBDA_DOMAIN && M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-            if ( uiDepth <= m_addSADDepth )
-            {
-              m_LCUPredictionSAD += m_spatialSAD;
-              m_addSADDepth = uiDepth;
-            }
-#endif
-
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
-            if ( uiDepth <= m_addSADDepth )
-            {
-              m_LCUPredictionSAD += m_spatialSAD;
-              m_addSADDepth = uiDepth;
-            }
-#endif
             rpcTempCU->initEstData( uiDepth, iQP );
             if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
             {
@@ -1055,6 +1028,8 @@ if ( uiDepth <= m_addSADDepth )
 #endif
             }
           }
+        }
+
         // test PCM
         if(pcPic->getSlice(0)->getSPS()->getUsePCM()
           && rpcTempCU->getWidth(0) <= (1<<pcPic->getSlice(0)->getSPS()->getPCMLog2MaxSize())
@@ -1073,7 +1048,7 @@ if ( uiDepth <= m_addSADDepth )
             rpcTempCU->initEstData( uiDepth, iQP );
           }
         }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
         }
 #endif
         if (isAddLowestQP && (iQP == lowestQP))
@@ -1098,6 +1073,17 @@ if ( uiDepth <= m_addSADDepth )
 #endif
     rpcBestCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcBestCU->getTotalBits(), rpcBestCU->getTotalDistortion() );
 
+    // accumulate statistics for early skip
+    if ( m_pcEncCfg->getUseFastEnc() )
+    {
+      if ( rpcBestCU->isSkipped(0) )
+      {
+        Int iIdx = g_aucConvertToBit[ rpcBestCU->getWidth(0) ];
+        afCost[ iIdx ] += rpcBestCU->getTotalCost();
+        aiNum [ iIdx ] ++;
+      }
+    }
+
     // Early CU determination
     if( m_pcEncCfg->getUseEarlyCU() && rpcBestCU->isSkipped(0) )
     {
@@ -1107,7 +1093,7 @@ if ( uiDepth <= m_addSADDepth )
     {
       bSubBranch = true;
     }
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
     if(rpcBestCU->getSlice()->getViewIndex() && !rpcBestCU->getSlice()->getIsDepth() && (uiDepth >=iIVFMaxD) && rpcBestCU->isSkipped(0))
     {
       bSubBranch = false;
@@ -1181,11 +1167,7 @@ if ( uiDepth <= m_addSADDepth )
     rpcTempCU->initEstData( uiDepth, iQP );
 
     // further split
-#if H_3D_QTLPC
     if( bSubBranch && bTrySplitDQP && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
-#else
-    if( bSubBranch && uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth )
-#endif
     {
 #if H_3D_VSO // M9
       // reset Model
@@ -1597,7 +1579,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   m_pcEntropyCoder->encodeInterSDCFlag( pcCU, uiAbsPartIdx, false );
 #endif
 
@@ -1892,13 +1874,13 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
          }
 
           rpcTempCU->setSkipFlagSubParts( rpcTempCU->getQtRootCbf(0) == 0, 0, uhDepth );
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
           TComDataCU *rpcTempCUPre = rpcTempCU;
 #endif
           Int orgQP = rpcTempCU->getQP( 0 );
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
           if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && !uiNoResidual )
           {
             if( rpcTempCU != rpcTempCUPre )
@@ -1934,7 +1916,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
       if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
       {
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
         if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) )
         {
           bestIsSkip = !rpcBestCU->getSDCFlag( 0 ) && ( rpcBestCU->getQtRootCbf(0) == 0 );
@@ -1943,7 +1925,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
         {
 #endif
         bestIsSkip = rpcBestCU->getQtRootCbf(0) == 0;
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
         }
 #endif
       }
@@ -1988,7 +1970,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
 
 #if AMP_MRG
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bFMD, Bool bUseMRG)
 #else
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG)
@@ -1997,7 +1979,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize )
 #endif
 {
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
   if(!(bFMD && (ePartSize == SIZE_2Nx2N)))  //have  motion estimation or merge check
   {
 #endif
@@ -2074,7 +2056,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 #if AMP_MRG
   rpcTempCU->setMergeAMP (true);
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], bFMD, false, bUseMRG );
 #else
   m_pcPredSearch->predInterSearch ( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcRecoYuvTemp[uhDepth], false, bUseMRG );
@@ -2119,17 +2101,8 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
 #endif
 
-#if RATE_CONTROL_LAMBDA_DOMAIN  && (!M0036_RC_IMPROVEMENT || KWU_RC_MADPRED_E0227)
+#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT
   if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && ePartSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
-  {
-    UInt SAD = m_pcRdCost->getSADPart( g_bitDepthY, m_ppcPredYuvTemp[uhDepth]->getLumaAddr(), m_ppcPredYuvTemp[uhDepth]->getStride(),
-      m_ppcOrigYuv[uhDepth]->getLumaAddr(), m_ppcOrigYuv[uhDepth]->getStride(),
-      rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
-    m_temporalSAD = (Int)SAD;
-  }
-#endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN  && KWU_RC_MADPRED_E0227
-  if ( m_pcEncCfg->getUseRateCtrl() && ePartSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
   {
     UInt SAD = m_pcRdCost->getSADPart( g_bitDepthY, m_ppcPredYuvTemp[uhDepth]->getLumaAddr(), m_ppcPredYuvTemp[uhDepth]->getStride(),
       m_ppcOrigYuv[uhDepth]->getLumaAddr(), m_ppcOrigYuv[uhDepth]->getStride(),
@@ -2147,12 +2120,12 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   else
 #endif
   rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   TComDataCU *rpcTempCUPre = rpcTempCU;
 #endif
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() )
   {
     if( rpcTempCU != rpcTempCUPre )
@@ -2189,7 +2162,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if H_3D_ARP
   }
 #endif
-#if  H_3D_FAST_TEXTURE_ENCODING
+#if  MTK_FAST_TEXTURE_ENCODING_E0173
   }
 #endif
 }
@@ -2261,36 +2234,6 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
   
-#if RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-  UChar uhDepth = rpcTempCU->getDepth( 0 );
-  if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
-  {
-    UInt SAD = m_pcRdCost->getSADPart( g_bitDepthY, m_ppcPredYuvTemp[uhDepth]->getLumaAddr(), m_ppcPredYuvTemp[uhDepth]->getStride(),
-      m_ppcOrigYuv[uhDepth]->getLumaAddr(), m_ppcOrigYuv[uhDepth]->getStride(),
-      rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
-    m_spatialSAD = (Int)SAD;
-  }
-#endif
-#if RATE_CONTROL_LAMBDA_DOMAIN && M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
-  UChar uhDepth = rpcTempCU->getDepth( 0 );
-  if ( m_pcEncCfg->getUseRateCtrl() && m_pcEncCfg->getLCULevelRC() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
-  {
-    UInt SAD = m_pcRdCost->getSADPart( g_bitDepthY, m_ppcPredYuvTemp[uhDepth]->getLumaAddr(), m_ppcPredYuvTemp[uhDepth]->getStride(),
-      m_ppcOrigYuv[uhDepth]->getLumaAddr(), m_ppcOrigYuv[uhDepth]->getStride(),
-      rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
-    m_spatialSAD = (Int)SAD;
-  }
-#endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
-  UChar uhDepth = rpcTempCU->getDepth( 0 );
-  if ( m_pcEncCfg->getUseRateCtrl() && eSize == SIZE_2Nx2N && uhDepth <= m_addSADDepth )
-  {
-    UInt SAD = m_pcRdCost->getSADPart( g_bitDepthY, m_ppcPredYuvTemp[uhDepth]->getLumaAddr(), m_ppcPredYuvTemp[uhDepth]->getStride(),
-      m_ppcOrigYuv[uhDepth]->getLumaAddr(), m_ppcOrigYuv[uhDepth]->getStride(),
-      rpcTempCU->getWidth(0), rpcTempCU->getHeight(0) );
-    m_spatialSAD = (Int)SAD;
-  }
-#endif
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth);
 }

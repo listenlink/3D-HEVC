@@ -175,8 +175,8 @@ class TDecTop
 private:
   Int                     m_iMaxRefPicNum;
   
-  NalUnitType             m_associatedIRAPType; ///< NAL unit type of the associated IRAP picture
   Int                     m_pocCRA;            ///< POC number of the latest CRA picture
+  Bool                    m_prevRAPisBLA;      ///< true if the previous RAP (CRA/CRANT/BLA/BLANT/IDR) picture is a BLA/BLANT picture
   Int                     m_pocRandomAccess;   ///< POC number of the random access point (the first IDR or CRA picture)
 
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
@@ -210,16 +210,17 @@ private:
   Int                     m_prevPOC;
   Bool                    m_bFirstSliceInPicture;
   Bool                    m_bFirstSliceInSequence;
-  Bool                    m_prevSliceSkipped;
-  Int                     m_skippedPOC;
-
 #if H_MV
   // For H_MV m_bFirstSliceInSequence indicates first slice in sequence of the particular layer  
   Int                     m_layerId;
   Int                     m_viewId;
   TComPicLists*           m_ivPicLists;
+#if H_MV5
   std::vector<TComPic*>   m_refPicSetInterLayer0; 
   std::vector<TComPic*>   m_refPicSetInterLayer1; 
+#else
+  std::vector<TComPic*>   m_refPicSetInterLayer; 
+#endif
 #if H_3D
   Int                     m_viewIndex; 
   Bool                    m_isDepth;
@@ -277,7 +278,9 @@ protected:
 #if H_MV  
   TComPic*  xGetPic( Int layerId, Int poc ); 
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag );  
+#if H_MV5
   Void      xResetPocInPicBuffer();
+#endif
 #else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
 #endif

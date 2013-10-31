@@ -649,7 +649,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
 #endif
   
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
   if( pcCU->getInterSDCFlag( uiAbsPartIdx ) )
   {
     assert( !pcCU->isSkipped( uiAbsPartIdx ) );
@@ -682,7 +682,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   xDecodeTransform( pcCU, uiLumaOffset, uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth, uiHeight, 0, bCodeDQP );
 }
 
-#if H_3D_INTER_SDC
+#if LGE_INTER_SDC_E0156
 Void TDecEntropy::decodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setInterSDCFlagSubParts( false, uiAbsPartIdx, 0, uiDepth);

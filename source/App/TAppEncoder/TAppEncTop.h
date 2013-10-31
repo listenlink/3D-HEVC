@@ -49,9 +49,6 @@
 #include "../../Lib/TLibRenderer/TRenTop.h"
 #endif
 
-#if KWU_RC_MADPRED_E0227
-class TEncTop;
-#endif
 //! \ingroup TAppEncoder
 //! \{
 
@@ -95,7 +92,7 @@ protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
   Void  xInitLibCfg       ();                               ///< initialize internal variables
-  Void  xInitLib          (Bool isFieldCoding);             ///< initialize encoder class
+  Void  xInitLib          ();                               ///< initialize encoder class
   Void  xDestroyLib       ();                               ///< destroy encoder class
   
   /// obtain required buffers
@@ -123,9 +120,11 @@ protected:
   Void xSetDependencies           ( TComVPS& vps );
   Void xSetLayerSets              ( TComVPS& vps );
   Void xSetProfileTierLevel       ( TComVPS& vps );
+#if H_MV5
   Void xSetRepFormat              ( TComVPS& vps );
   Void xSetVPSVUI                 ( TComVPS& vps );
   GOPEntry* xGetGopEntry( Int layerIdInVps, Int poc );
+#endif
   Int  xGetMax( std::vector<Int>& vec);
 #endif
 #if H_3D
