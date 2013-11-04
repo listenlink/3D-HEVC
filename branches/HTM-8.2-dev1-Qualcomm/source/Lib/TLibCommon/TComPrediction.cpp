@@ -663,6 +663,13 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
 #if H_3D_ARP
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+  if(pcCU->getARPW( uiPartAddr ) > 0  && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()== pcCU->getSlice()->getPOC())
+  {
+      xPredInterUniARPviewRef( pcCU , uiPartAddr , iWidth , iHeight , eRefPicList , rpcYuvPred , bi );
+  }
+  else
+#endif
   if(  pcCU->getARPW( uiPartAddr ) > 0 
     && pcCU->getPartitionSize(uiPartAddr)==SIZE_2Nx2N 
     && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()!= pcCU->getSlice()->getPOC() 
@@ -840,6 +847,107 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     rpcYuvPred->addARP( rpcYuvPred , pYuvB0 , uiPartAddr , iWidth , iHeight , !bi );
   }
 }
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, TComMvField * pNewMvFiled )
+{
+  Int         iRefIdx       = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           
+  TComMv      cDMv          = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
+  TComMv      cTempDMv      = cDMv;
+  UChar       dW            = pcCU->getARPW ( uiPartAddr );
+
+  TComPic* pcPicYuvBaseTRef = NULL;
+  TComPic* pcPicYuvCurrTRef = NULL;
+  TComPic* pcPicYuvBaseCol  = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx );  
+  TComPicYuv* pcYuvBaseCol  = pcPicYuvBaseCol->getPicYuvRec();   
+  Bool bTMVAvai = false;     
+  TComMv cBaseTMV;
+  if( pNewMvFiled )
+  {
+    iRefIdx = pNewMvFiled->getRefIdx(); 
+    cDMv = pNewMvFiled->getMv();
+  }
+  pcCU->clipMv(cTempDMv);
+
+  assert(dW > 0);
+  Int uiLCUAddr,uiAbsPartAddr;
+  Int irefPUX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[uiPartAddr]] + iWidth/2  + ((cDMv.getHor() + 2)>>2);
+  Int irefPUY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[uiPartAddr]] + iHeight/2 + ((cDMv.getVer() + 2)>>2);
+
+  irefPUX = (Int)Clip3<Int>(0, pcCU->getSlice()->getSPS()-> getPicWidthInLumaSamples()-1, irefPUX);
+  irefPUY = (Int)Clip3<Int>(0, pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples()-1, irefPUY);  
+  pcYuvBaseCol->getCUAddrAndPartIdx( irefPUX, irefPUY, uiLCUAddr, uiAbsPartAddr);
+  TComDataCU *pColCU = pcPicYuvBaseCol->getCU( uiLCUAddr );
+
+  if(!pColCU->isIntra(uiAbsPartAddr))
+  {
+    TComMvField puMVField;
+    for(Int iList = 0; iList < (pColCU->getSlice()->isInterB() ? 2: 1) && !bTMVAvai; iList ++)
+    {
+      RefPicList eRefPicListCurr = RefPicList(iList);
+      Int iRef = pColCU->getCUMvField(eRefPicListCurr)->getRefIdx(uiAbsPartAddr);
+      if( iRef != -1)
+      {
+        pcPicYuvBaseTRef = pColCU->getSlice()->getRefPic(eRefPicListCurr, iRef);  
+        Int  iCurrPOC    = pColCU->getSlice()->getPOC();
+        Int  iCurrRefPOC = pcPicYuvBaseTRef->getPOC();
+        Int  iCurrRef    = pcCU->getSlice()->getFirstTRefIdx(eRefPicListCurr);
+        if( iCurrRef >= 0)
+        {
+          pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic(eRefPicListCurr,iCurrRef);  
+          Int iTargetPOC = pcPicYuvCurrTRef->getPOC();
+          {
+            pcPicYuvBaseTRef =  pcCU->getSlice()->getBaseViewRefPic(iTargetPOC,  pcPicYuvBaseCol->getViewIndex() );  
+            if(pcPicYuvBaseTRef)
+            {
+              cBaseTMV = pColCU->getCUMvField(eRefPicListCurr)->getMv(uiAbsPartAddr);
+              Int iScale = pcCU-> xGetDistScaleFactor(iCurrPOC, iTargetPOC, iCurrPOC, iCurrRefPOC);
+              if ( iScale != 4096 )
+                cBaseTMV = cBaseTMV.scaleMv( iScale );                  
+              bTMVAvai = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  if (bTMVAvai == false)
+  { 
+    bTMVAvai = true;
+    cBaseTMV.set(0, 0);
+    pcPicYuvBaseTRef =  pColCU->getSlice()->getRefPic(eRefPicList,  pcCU->getSlice()->getFirstTRefIdx(eRefPicList));  
+    pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic  (eRefPicList,  pcCU->getSlice()->getFirstTRefIdx(eRefPicList));      
+  }
+
+  xPredInterLumaBlk  ( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi,        bTMVAvai);
+  xPredInterChromaBlk( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi,        bTMVAvai);
+
+  if( dW > 0 && bTMVAvai ) 
+  {
+    TComYuv*    pYuvCurrTRef    = &m_acYuvPredBase[0];
+    TComYuv*    pYuvBaseTRef    = &m_acYuvPredBase[1];
+    TComPicYuv* pcYuvCurrTref   = pcPicYuvCurrTRef->getPicYuvRec();        
+    TComPicYuv* pcYuvBaseTref   = pcPicYuvBaseTRef->getPicYuvRec();  
+    TComMv      cTempMv         = cDMv + cBaseTMV;
+
+    pcCU->clipMv(cBaseTMV);
+    pcCU->clipMv(cTempMv);
+
+    xPredInterLumaBlk  ( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, bi,   true);
+    xPredInterChromaBlk( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, bi,   true);
+    xPredInterLumaBlk  ( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, bi,   true); 
+    xPredInterChromaBlk( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, bi,   true); 
+
+    pYuvCurrTRef->subtractARP( pYuvCurrTRef , pYuvBaseTRef , uiPartAddr , iWidth , iHeight );  
+    if(dW == 2)
+    {
+      pYuvCurrTRef->multiplyARP( uiPartAddr , iWidth , iHeight , dW );
+    }
+    rpcYuvPred->addARP( rpcYuvPred , pYuvCurrTRef , uiPartAddr , iWidth , iHeight , !bi ); 
+  }
+}
+#endif
+
 #endif
 
 Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred )
