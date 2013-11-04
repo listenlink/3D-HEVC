@@ -217,6 +217,8 @@
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#define QC_DIM_DELTADC_UNIFY_F0132        1   // Unify delta DC coding in depth intra modes
+#define HHI_DIM_PREDSAMP_FIX_F0171        1
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP

@@ -407,6 +407,24 @@ Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
   return;
 }
 
+#if QC_DIM_DELTADC_UNIFY_F0132
+Void TDecSbac::xParseDimDeltaDC( Pel& rValDeltaDC, UInt uiNumSeg )
+{
+  UInt absValDeltaDC = 0;
+  xReadExGolombLevel( absValDeltaDC, m_cDdcDataSCModel.get(0, 0, 0) );
+  rValDeltaDC = (Pel)absValDeltaDC + ( uiNumSeg > 1 ? 0 : 1 );
+
+  if( rValDeltaDC != 0 )
+  {
+    UInt uiSign;
+    m_pcTDecBinIf->decodeBinEP( uiSign );
+    if ( uiSign )
+    {
+      rValDeltaDC = -rValDeltaDC;
+    }
+  }
+}
+#else
 Void TDecSbac::xParseDimDeltaDC( Pel& rValDeltaDC, UInt dimType )
 {
   UInt absValDeltaDC = 0;
@@ -423,6 +441,8 @@ Void TDecSbac::xParseDimDeltaDC( Pel& rValDeltaDC, UInt dimType )
     }
   }
 }
+#endif
+
 #if H_3D_DIM_DMM
 Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
 {
@@ -1156,7 +1176,7 @@ Void TDecSbac::parseIntraDepth( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
   default: break;
   }
 
-#if H_3D_DIM_SDC
+#if H_3D_DIM_SDC && !QC_DIM_DELTADC_UNIFY_F0132
   if( pcCU->getSDCFlag(absPartIdx) )
   {
     assert(pcCU->getPartitionSize(absPartIdx)==SIZE_2Nx2N);
@@ -1172,9 +1192,50 @@ Void TDecSbac::parseIntraDepth( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
   else
   {
 #endif
+#if QC_DIM_DELTADC_UNIFY_F0132
+    if( dimType < DIM_NUM_TYPE || pcCU->getSDCFlag( absPartIdx ) )
+#else
     if( dimType < DIM_NUM_TYPE )
+#endif
     {
       UInt symbol;
+#if QC_DIM_DELTADC_UNIFY_F0132
+      UInt uiNumSegments = ( dir == PLANAR_IDX ) ? 1 : 2;
+
+      if( pcCU->getSDCFlag( absPartIdx ) )
+      {
+        assert(pcCU->getPartitionSize(absPartIdx)==SIZE_2Nx2N);
+        pcCU->setTrIdxSubParts(0, absPartIdx, depth);
+        pcCU->setCbfSubParts(1, 1, 1, absPartIdx, depth);
+      }
+
+      m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get(0, 0, uiNumSegments-1) );
+
+      if( symbol )
+      {
+        if( !pcCU->getSDCFlag( absPartIdx ) )
+        {
+          dir += symbol;
+        }
+      }
+      for( UInt segment = 0; segment < uiNumSegments; segment++ )
+      {
+        Pel valDeltaDC = 0;
+        if( symbol )
+        {
+          xParseDimDeltaDC( valDeltaDC, uiNumSegments );
+        }
+
+        if( pcCU->getSDCFlag( absPartIdx ) )
+        {
+          pcCU->setSDCSegmentDCOffset( valDeltaDC, segment, absPartIdx );
+        }
+        else
+        {
+          pcCU->setDimDeltaDC( dimType, segment, absPartIdx, valDeltaDC );
+        }
+      }
+#else
       m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get(0, 0, (RBC_IDX == dimType) ? 1 : 0) );
       if( symbol )
       {
@@ -1186,8 +1247,9 @@ Void TDecSbac::parseIntraDepth( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
           pcCU->setDimDeltaDC( dimType, segment, absPartIdx, valDeltaDC );
         }
       }
+#endif
     }
-#if H_3D_DIM_SDC
+#if H_3D_DIM_SDC && !QC_DIM_DELTADC_UNIFY_F0132
   }
 #endif
 

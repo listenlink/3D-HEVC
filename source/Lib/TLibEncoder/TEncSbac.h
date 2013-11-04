@@ -117,7 +117,11 @@ private:
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam );
   #if H_3D_DIM
   Void  xWriteExGolombLevel  ( UInt uiSymbol, ContextModel& rcSCModel  );
+#if QC_DIM_DELTADC_UNIFY_F0132
+  Void  xCodeDimDeltaDC      ( Pel valDeltaDC, UInt uiNumSeg );
+#else
   Void  xCodeDimDeltaDC      ( Pel valDeltaDC, UInt dimType );
+#endif
 #if H_3D_DIM_DMM
   Void  xCodeDmm1WedgeIdx    ( UInt uiTabIdx, Int iNumBit );
   Void  xCodeDmm3WedgeIdx    ( UInt uiIntraIdx, Int iNumBit );
