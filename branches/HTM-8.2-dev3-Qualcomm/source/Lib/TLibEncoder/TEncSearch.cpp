@@ -2927,7 +2927,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         if( xSearchRbcEdge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight ) )
         {
           Pel deltaDC1 = 0; Pel deltaDC2 = 0;
+#if QC_DIM_DELTADC_UNIFY_F0132
+          xSearchDmmDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, pcCU->getEdgePartition( uiPartOffset ), uiWidth, uiWidth, uiHeight, deltaDC1, deltaDC2 );
+#else
           xSearchRbcDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, pcCU->getEdgePartition( uiPartOffset ), uiWidth, uiWidth, uiHeight, deltaDC1, deltaDC2 );
+#endif
           pcCU->setDimDeltaDC( RBC_IDX, 0, uiPartOffset, deltaDC1 );
           pcCU->setDimDeltaDC( RBC_IDX, 1, uiPartOffset, deltaDC2 );
 

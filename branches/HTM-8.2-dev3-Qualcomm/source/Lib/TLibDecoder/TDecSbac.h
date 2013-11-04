@@ -98,7 +98,11 @@ private:
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam );
 #if H_3D_DIM
   Void  xReadExGolombLevel   ( UInt& ruiSymbol, ContextModel& rcSCModel  );
+#if QC_DIM_DELTADC_UNIFY_F0132
+  Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt uiNumSeg );
+#else
   Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt dimType );
+#endif
 #if H_3D_DIM_DMM
   Void  xParseDmm1WedgeIdx   ( UInt& ruiTabIdx, Int iNumBit );
   Void  xParseDmm3WedgeIdx   ( UInt& ruiIntraIdx, Int iNumBit );
