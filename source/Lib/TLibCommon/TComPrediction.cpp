@@ -474,8 +474,12 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   // get predicted partition values
   assert( biSegPattern );
   Int* piMask = NULL;
+#if QC_DIM_DELTADC_UNIFY_F0132 || HHI_DIM_PREDSAMP_FIX_F0171
+  piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt ); // no filtering
+#else
   if( isDmmMode ) piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt ); // no filtering for DMM
   else            piMask = pcCU->getPattern()->getPredictorPtr( 0, g_aucConvertToBit[ iWidth ] + 2, m_piYuvExt );
+#endif
   assert( piMask );
   Int maskStride = 2*iWidth + 1;  
   Int* ptrSrc = piMask+maskStride+1;
@@ -490,7 +494,11 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     Pel deltaDC1 = pcCU->getDimDeltaDC( dimType, 0, uiAbsPartIdx );
     Pel deltaDC2 = pcCU->getDimDeltaDC( dimType, 1, uiAbsPartIdx );
 #if H_3D_DIM_DMM
+#if QC_DIM_DELTADC_UNIFY_F0132
+    if( isDmmMode || isRbcMode)
+#else
     if( isDmmMode )
+#endif
     {
 #if H_3D_DIM_DLT
       segDC1 = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 ) + deltaDC1 );
@@ -501,7 +509,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
 #endif
     }
 #endif
-#if H_3D_DIM_RBC
+#if H_3D_DIM_RBC && !QC_DIM_DELTADC_UNIFY_F0132
     if( isRbcMode )
     {
       xDeltaDCQuantScaleUp( pcCU, deltaDC1 );

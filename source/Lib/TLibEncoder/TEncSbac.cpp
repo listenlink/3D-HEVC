@@ -517,6 +517,17 @@ Void TEncSbac::xWriteExGolombLevel( UInt uiSymbol, ContextModel& rcSCModel  )
   return;
 }
 
+#if QC_DIM_DELTADC_UNIFY_F0132
+Void TEncSbac::xCodeDimDeltaDC( Pel valDeltaDC, UInt uiNumSeg )
+{
+  xWriteExGolombLevel( UInt( abs( valDeltaDC ) - ( uiNumSeg > 1 ? 0 : 1 ) ), m_cDdcDataSCModel.get(0, 0, 0) );
+  if( valDeltaDC != 0 )
+  {
+    UInt uiSign = valDeltaDC > 0 ? 0 : 1;
+    m_pcBinIf->encodeBinEP( uiSign );
+  }
+}
+#else
 Void TEncSbac::xCodeDimDeltaDC( Pel valDeltaDC, UInt dimType )
 {
   xWriteExGolombLevel( UInt( abs( valDeltaDC ) ), m_cDdcDataSCModel.get(0, 0, (RBC_IDX == dimType) ? 1 : 0) );
@@ -526,6 +537,7 @@ Void TEncSbac::xCodeDimDeltaDC( Pel valDeltaDC, UInt dimType )
     m_pcBinIf->encodeBinEP( uiSign );
   }
 }
+#endif
 
 #if H_3D_DIM_DMM
 Void TEncSbac::xCodeDmm1WedgeIdx( UInt uiTabIdx, Int iNumBit )
@@ -1224,7 +1236,7 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
   default: break;
   }
 
-#if H_3D_DIM_SDC
+#if H_3D_DIM_SDC && !QC_DIM_DELTADC_UNIFY_F0132
   if( pcCU->getSDCFlag( absPartIdx ) )
   {
     assert(pcCU->getPartitionSize(absPartIdx)==SIZE_2Nx2N);
@@ -1237,8 +1249,43 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
   else
   {
 #endif
+#if QC_DIM_DELTADC_UNIFY_F0132
+    if( dimType < DIM_NUM_TYPE || pcCU->getSDCFlag( absPartIdx ) )
+#else
     if( dimType < DIM_NUM_TYPE )
+#endif
     {
+#if QC_DIM_DELTADC_UNIFY_F0132
+      UInt dimDeltaDC;
+      Pel  deltaDC;
+      UInt uiNumSegments = ( dir == PLANAR_IDX ) ? 1 : 2;
+      if( pcCU->getSDCFlag( absPartIdx ) )
+      {
+        if( uiNumSegments==1 )
+        {
+          dimDeltaDC = pcCU->getSDCSegmentDCOffset(0, absPartIdx) ? 1 : 0;
+        }
+        else
+        {
+          dimDeltaDC = ( pcCU->getSDCSegmentDCOffset(0, absPartIdx) || pcCU->getSDCSegmentDCOffset(1, absPartIdx) ) ? 1 : 0;
+        }
+      }
+      else
+      {
+        dimDeltaDC = isDimDeltaDC( dir );
+      }
+
+      m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get(0, 0, uiNumSegments-1) );
+
+      if( dimDeltaDC ) 
+      {
+        for( UInt segment = 0; segment < uiNumSegments; segment++ )
+        {
+          deltaDC = pcCU->getSDCFlag( absPartIdx ) ? pcCU->getSDCSegmentDCOffset(segment, absPartIdx) : pcCU->getDimDeltaDC( dimType, segment, absPartIdx );
+          xCodeDimDeltaDC( deltaDC, uiNumSegments );
+        }
+      }
+#else
       UInt dimDeltaDC = isDimDeltaDC( dir );
       m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get(0, 0, (RBC_IDX == dimType) ? 1 : 0) );
       if( dimDeltaDC ) 
@@ -1248,8 +1295,9 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
           xCodeDimDeltaDC( pcCU->getDimDeltaDC( dimType, segment, absPartIdx ), dimType );
         }
       }
+#endif
     }
-#if H_3D_DIM_SDC
+#if H_3D_DIM_SDC && !QC_DIM_DELTADC_UNIFY_F0132
   }
 #endif
 }
