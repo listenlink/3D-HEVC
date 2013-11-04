@@ -566,6 +566,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+#if QC_DEPTH_IV_MRG_F0125
+          if (rpcTempCU->getSlice()->getIsDepth() )
+          {
+            DvInfo.bDV = rpcTempCU->getDispNeighBlocks(0, 0, &DvInfo);
+          }
+          else
+          {
+#endif 
 #if H_3D_NBDV_REF
           if(rpcTempCU->getSlice()->getVPS()->getDepthRefinementFlag( rpcTempCU->getSlice()->getLayerIdInVps()))
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
@@ -573,6 +581,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif 
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo);
 
+#if QC_DEPTH_IV_MRG_F0125
+          }
+#endif
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
           rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
           rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
