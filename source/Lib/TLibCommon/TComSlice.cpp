@@ -750,7 +750,16 @@ Void TComSlice::generateAlterRefforTMVP()
   {        
     if ( this->getNumRefIdx( RefPicList( uiRefListIdx ) ) == 0)
         continue;
-
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+     for(Int i = 0; i < this->getNumRefIdx(RefPicList(uiRefListIdx)); i++ )
+     {
+       if ( this->getRefPic(RefPicList(uiRefListIdx), i)->getPOC() != getPOC() )
+       {
+         this->setFirstTRefIdx (RefPicList(uiRefListIdx), i);
+         break;
+       }
+     }
+#endif
     Bool bZeroIdxLtFlag = this->getRefPic(RefPicList(uiRefListIdx), 0)->getIsLongTerm();
     for(Int i = 1; i < this->getNumRefIdx(RefPicList(uiRefListIdx)); i++ )
     {
@@ -2833,8 +2842,11 @@ Int TComSlice::getRefPicLayerId( Int i )
 Void TComSlice::setARPStepNum()                                  
 {
   Bool bAllIvRef = true;
-
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+  if(!getVPS()->getUseAdvRP(getLayerId()) || this->isIRAP())
+#else
   if(!getVPS()->getUseAdvRP(getLayerId()))
+#endif
   {
     m_nARPStepNum = 0;
   }

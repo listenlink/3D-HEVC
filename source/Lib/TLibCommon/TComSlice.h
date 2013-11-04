@@ -1731,6 +1731,9 @@ private:
 #if H_3D_ARP
   TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
   UInt                 m_nARPStepNum; 
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+  Int         m_aiFirstTRefIdx    [2]; 
+#endif
 #endif
 #if H_3D_IC
   Bool      m_bApplyIC;
@@ -2017,6 +2020,10 @@ public:
   Void      generateAlterRefforTMVP ();   
   Void      setAlterRefIdx          ( RefPicList e, Int i ) { m_aiAlterRefIdx[e]    = i;      }
   Int       getAlterRefIdx          ( RefPicList e )        { return  m_aiAlterRefIdx[e];     }
+#endif
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+  Int       getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];     }
+  Void      setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;      }
 #endif
   Void      setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth            ()                 { return m_isDepth; }
