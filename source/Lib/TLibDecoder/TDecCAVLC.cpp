@@ -1264,7 +1264,12 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       }
       else
       {
-
+#if QC_DEPTH_IV_MRG_F0125 && H_3D_IV_MERGE
+        if(i!=1)
+        {
+          READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+        }
+#endif
         READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
         //          READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPreFlag     ( i, uiCode == 1 ? true : false ); 
 #if H_3D_DIM_DLT
