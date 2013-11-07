@@ -2313,6 +2313,17 @@ UInt TComDataCU::getCtxICFlag( UInt uiAbsPartIdx )
 {
   UInt        uiCtx = 0;
 
+#if LGE_IC_CTX_F0160
+  TComDataCU* pcTempCU = NULL;
+  UInt        uiTempPartIdx = 0;
+
+  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  uiCtx    = ( pcTempCU ) ? pcTempCU->isIC( uiTempPartIdx ) : 0;
+
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  uiCtx    += ( pcTempCU ) ? pcTempCU->isIC( uiTempPartIdx ) : 0;
+#endif
+
   return uiCtx;
 }
 #endif
@@ -4569,6 +4580,17 @@ Bool TComDataCU::isSkipped( UInt uiPartIdx )
 {
   return ( getSkipFlag( uiPartIdx ) );
 }
+
+#if LGE_IC_CTX_F0160
+Bool TComDataCU::isIC( UInt uiPartIdx )
+{
+    if ( m_pcSlice->isIntra () )
+    {
+        return false;
+    }
+    return ( ( getSkipFlag(uiPartIdx) || getPredictionMode(uiPartIdx) == MODE_INTER) && getICFlag( uiPartIdx ) && isICFlagRequired( uiPartIdx ) );
+}
+#endif
 
 // ====================================================================================================================
 // Protected member functions
