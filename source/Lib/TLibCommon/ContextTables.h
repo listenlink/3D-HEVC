@@ -370,9 +370,15 @@ INIT_TRANSFORMSKIP_FLAG[3][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
 static const UChar 
 INIT_ARPW[3][NUM_ARPW_CTX] = 
 {
+#if LGE_ARP_CTX_F0161
+    { 162, 153, 154, 162 },
+    { 162, 153, 154, 162 },
+    { 162, 153, 154, 162 },
+#else
   { 154, 154, 154, 154 }, 
   { 154, 154, 154, 154 }, 
   { 154, 154, 154, 154 }, 
+#endif
 };
 #endif
 
