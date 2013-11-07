@@ -681,6 +681,10 @@ public:
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
   Bool          isBipredRestriction( UInt puIdx );
 
+#if LGE_IC_CTX_F0160
+  Bool          isIC      ( UInt uiPartIdx );
+#endif
+
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)
   // -------------------------------------------------------------------------------------------------------------------

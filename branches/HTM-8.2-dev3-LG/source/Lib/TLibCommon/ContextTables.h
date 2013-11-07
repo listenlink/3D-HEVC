@@ -384,9 +384,15 @@ INIT_ARPW[3][NUM_ARPW_CTX] =
 static const UChar 
 INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
 {
+#if LGE_IC_CTX_F0160
+    { 154,  154,  154, },
+    { 154,  154,  154, },
+    { 154,  154,  154, },
+#else
   { CNU,  CNU,  CNU, }, 
   { 197,  185,  201, }, 
   { 197,  185,  201, }, 
+#endif
 };
 #endif
 #if H_3D_DIM
