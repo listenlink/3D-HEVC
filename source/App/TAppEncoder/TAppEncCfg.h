@@ -114,7 +114,11 @@ protected:
   std::vector< std::vector<Int  > > m_minHorizontalCtuOffsetPlus1;
 
 #if H_3D_IV_MERGE
+#if QC_DEPTH_IV_MRG_F0125
+  vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
+#else
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
+#endif
 #endif
 #if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
   UInt                   m_uiUseAdvResPred;

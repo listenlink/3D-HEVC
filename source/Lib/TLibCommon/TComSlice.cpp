@@ -2967,6 +2967,10 @@ Void TComSlice::setDepthToDisparityLUTs()
   setupLUT = setupLUT || getVPS()->getDepthRefinementFlag( layerIdInVPS );
 #endif 
 
+#if QC_DEPTH_IV_MRG_F0125
+  setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
+#endif
+
   if( !setupLUT )
     return; 
 

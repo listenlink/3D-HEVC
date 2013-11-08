@@ -134,7 +134,9 @@ Void TDecCu::decodeCU( TComDataCU* pcCU, UInt& ruiIsLast )
  */
 Void TDecCu::decompressCU( TComDataCU* pcCU )
 {
+#if !QC_DEPTH_IV_MRG_F0125
   xDecompressCU( pcCU, 0,  0 );
+#endif
 }
 
 // ====================================================================================================================
@@ -312,6 +314,14 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       m_ppcCU[uiDepth]->setWidth  ( 0, pcCU->getSlice()->getSPS()->getMaxCUWidth ()/(1<<uiDepth)  );
       m_ppcCU[uiDepth]->setHeight ( 0, pcCU->getSlice()->getSPS()->getMaxCUHeight()/(1<<uiDepth)  );
       m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+#if QC_DEPTH_IV_MRG_F0125
+      if( pcCU->getSlice()->getIsDepth())
+      {
+        DvInfo.bDV = m_ppcCU[uiDepth]->getDispNeighBlocks(0, 0, &DvInfo);
+      }
+      else
+      {
+#endif
 #if H_3D_NBDV_REF
       if(pcCU->getSlice()->getVPS()->getDepthRefinementFlag( pcCU->getSlice()->getLayerIdInVps() ))  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
       {
@@ -322,7 +332,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       {
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo);
       }
-
+#if QC_DEPTH_IV_MRG_F0125
+      }
+#endif
 #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
       if ( g_decTraceDispDer )
       {
@@ -429,6 +441,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth );
 #endif
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+#if QC_DEPTH_IV_MRG_F0125
+    xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
+#endif
     return;
   }
 
@@ -442,6 +457,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
       xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+#if QC_DEPTH_IV_MRG_F0125
+      xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
+#endif
       return;
     }
   }
@@ -465,6 +483,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
   setdQPFlag( bCodeDQP );
   xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
+#if QC_DEPTH_IV_MRG_F0125
+  xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
+#endif
 }
 
 Void TDecCu::xFinishDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt& ruiIsLast)
@@ -480,7 +501,7 @@ Void TDecCu::xFinishDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth,
 Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
 {
   TComPic* pcPic = pcCU->getPic();
-  
+#if !QC_DEPTH_IV_MRG_F0125  
   Bool bBoundary = false;
   UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
@@ -515,7 +536,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
     }
     return;
   }
-  
+#endif  
   // Residual reconstruction
   m_ppcYuvResi[uiDepth]->clear();
   
