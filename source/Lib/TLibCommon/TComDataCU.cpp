@@ -3749,7 +3749,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       if (pcCULeft->getVSPFlag(uiLeftPartIdx) == 1)
       {
         vspFlag[iCount] = 1;
+#if !MTK_VSP_SIMPLIFICATION_F0111
         xInheritVSPDisInfo(pcCULeft,uiLeftPartIdx,iCount,inheritedVSPDisInfo);
+#endif
       }
 #endif
       if ( mrgCandIdx == iCount )
@@ -3831,11 +3833,17 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
 #endif
 #if H_3D_VSP
+#if MTK_VSP_SIMPLIFICATION_F0111
+      if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1) )
+#else
       if (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1)
+#endif
       {
 
         vspFlag[iCount] = 1;
+#if !MTK_VSP_SIMPLIFICATION_F0111
         xInheritVSPDisInfo(pcCUAbove,uiAbovePartIdx,iCount,inheritedVSPDisInfo);
+#endif
       }
 #endif
       if ( mrgCandIdx == iCount )
@@ -3887,10 +3895,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
 #endif
 #if H_3D_VSP
+#if MTK_VSP_SIMPLIFICATION_F0111
+    if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1) )
+#else
     if (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1)
+#endif
     {
       vspFlag[iCount] = 1;
+#if !MTK_VSP_SIMPLIFICATION_F0111
       xInheritVSPDisInfo(pcCUAboveRight,uiAboveRightPartIdx,iCount,inheritedVSPDisInfo);
+#endif
     }
 #endif
     if ( mrgCandIdx == iCount )
@@ -4011,7 +4025,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     if (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) == 1)
     {
       vspFlag[iCount] = 1;
+#if !MTK_VSP_SIMPLIFICATION_F0111
       xInheritVSPDisInfo(pcCULeftBottom,uiLeftBottomPartIdx,iCount,inheritedVSPDisInfo);
+#endif
     }
 #endif
     if ( mrgCandIdx == iCount )
@@ -4057,10 +4073,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
 #endif
 #if H_3D_VSP
+#if MTK_VSP_SIMPLIFICATION_F0111
+      if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1) )
+#else
       if (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1)
+#endif
       {
         vspFlag[iCount] = 1;
+#if !MTK_VSP_SIMPLIFICATION_F0111
         xInheritVSPDisInfo(pcCUAboveLeft,uiAboveLeftPartIdx,iCount,inheritedVSPDisInfo);
+#endif
       }
 #endif
       if ( mrgCandIdx == iCount )
