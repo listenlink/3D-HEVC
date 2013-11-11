@@ -1844,7 +1844,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
 
-#if H_3D_ARP
+#if H_3D_ARP && !QC_MTK_INTERVIEW_ARP_F0123_F0108
           if( nARPW )
           {
             Bool bSignalflag[2] = { true, true };
@@ -2049,7 +2049,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
     rpcTempCU->setARPWSubParts( (UChar)nARPW , 0 , uhDepth );
 
     m_pcPredSearch->motionCompensation( rpcTempCU , m_ppcPredYuvTemp[uhDepth] );
-
+#if !QC_MTK_INTERVIEW_ARP_F0123_F0108
     if(rpcTempCU->getPartitionSize(0)==SIZE_2Nx2N)
     {
       Bool bSignalflag[2] = { true, true };
@@ -2067,6 +2067,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
         rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
       }
     }
+#endif
   }
   else
   {
@@ -2086,7 +2087,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
    if( nARPWMax )
    {
      m_ppcWeightedTempCU[uhDepth]->copyPartFrom( rpcTempCU , 0 , uhDepth );
-
+#if !QC_MTK_INTERVIEW_ARP_F0123_F0108
      Bool bSignalflag[2] = { true, true };
      for(UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx ++ )
      {
@@ -2101,6 +2102,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
      {
        rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
      }
+#endif
    }
   }
 #endif
