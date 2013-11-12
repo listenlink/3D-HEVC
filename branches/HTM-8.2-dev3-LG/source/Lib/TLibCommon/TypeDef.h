@@ -103,7 +103,7 @@
                                               // SHARP_ILLUCOMP_REFINE_E0046
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
 
-#define LGE_IC_CTX_F0160 0 //JCT3V-F0160
+#define LGE_IC_CTX_F0160 1 //JCT3V-F0160
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
