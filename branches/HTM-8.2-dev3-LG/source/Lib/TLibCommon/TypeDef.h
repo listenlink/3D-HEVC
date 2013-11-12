@@ -103,7 +103,7 @@
                                               // SHARP_ILLUCOMP_REFINE_E0046
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
 
-#define LGE_IC_CTX_F0160 1 //JCT3V-F0160
+#define LGE_IC_CTX_F0160 0 //JCT3V-F0160
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -222,7 +222,7 @@
                                               // LG_ZEROINTRADEPTHRESI_A0087
 #define QC_DIM_DELTADC_UNIFY_F0132        1   // Unify delta DC coding in depth intra modes
 #define HHI_DIM_PREDSAMP_FIX_F0171        1
-#define LGE_PRED_RES_CODING_DLT_DOMAIN_F0159 1 //JCT3V-F0159
+#define LGE_PRED_RES_CODING_DLT_DOMAIN_F0159 0 //JCT3V-F0159
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
