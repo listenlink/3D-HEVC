@@ -783,22 +783,38 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
   if( cDistparity.bDV ) 
   {
+#if SHARP_ARP_REF_CHECK_F0105
+    Int arpRefIdx = pcCU->getSlice()->getFirstTRefIdx(eRefPicList);
+    if( dW > 0 && pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC()!= pcCU->getSlice()->getPOC() )
+#else
     if( dW > 0 && pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC()!= pcCU->getSlice()->getPOC() )
+#endif
     {
       bTobeScaled = true;
     }
 
     pcPicYuvBaseCol =  pcCU->getSlice()->getBaseViewRefPic( pcCU->getSlice()->getPOC(),                              cDistparity.m_aVIdxCan );
+
+#if SHARP_ARP_REF_CHECK_F0105
+    pcPicYuvBaseRef =  pcCU->getSlice()->getBaseViewRefPic( pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC(), cDistparity.m_aVIdxCan );
+
+    if (!pcCU->getSlice()->getArpRefPicAvailable( eRefPicList, cDistparity.m_aVIdxCan))
+#else
     pcPicYuvBaseRef =  pcCU->getSlice()->getBaseViewRefPic( pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC(), cDistparity.m_aVIdxCan );
-    
+
     if( ( !pcPicYuvBaseCol || pcPicYuvBaseCol->getPOC() != pcCU->getSlice()->getPOC() ) || ( !pcPicYuvBaseRef || pcPicYuvBaseRef->getPOC() != pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC() ) )
+#endif
     {
       dW = 0;
       bTobeScaled = false;
     }
     else
     {
+#if SHARP_ARP_REF_CHECK_F0105
+      assert( pcPicYuvBaseCol->getPOC() == pcCU->getSlice()->getPOC() && pcPicYuvBaseRef->getPOC() == pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC() );
+#else
       assert( pcPicYuvBaseCol->getPOC() == pcCU->getSlice()->getPOC() && pcPicYuvBaseRef->getPOC() == pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC() );
+#endif
     }
 
     if(bTobeScaled)
@@ -869,6 +885,12 @@ Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr,
   pcCU->clipMv(cTempDMv);
 
   assert(dW > 0);
+#if SHARP_ARP_REF_CHECK_F0105
+  if (!pcCU->getSlice()->getArpRefPicAvailable( eRefPicList, pcPicYuvBaseCol->getViewIndex()))
+  {
+    dW = 0;
+  }
+#endif
   Int uiLCUAddr,uiAbsPartAddr;
   Int irefPUX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[uiPartAddr]] + iWidth/2  + ((cDMv.getHor() + 2)>>2);
   Int irefPUY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[uiPartAddr]] + iHeight/2 + ((cDMv.getVer() + 2)>>2);

@@ -750,6 +750,8 @@ Void TComSlice::generateAlterRefforTMVP()
   {        
     if ( this->getNumRefIdx( RefPicList( uiRefListIdx ) ) == 0)
         continue;
+#if !SHARP_ARP_REF_CHECK_F0105
+// move the following to setARPStepNum() to define ARP related thing in ARP function.
 #if QC_MTK_INTERVIEW_ARP_F0123_F0108
      for(Int i = 0; i < this->getNumRefIdx(RefPicList(uiRefListIdx)); i++ )
      {
@@ -759,6 +761,7 @@ Void TComSlice::generateAlterRefforTMVP()
          break;
        }
      }
+#endif
 #endif
     Bool bZeroIdxLtFlag = this->getRefPic(RefPicList(uiRefListIdx), 0)->getIsLongTerm();
     for(Int i = 1; i < this->getNumRefIdx(RefPicList(uiRefListIdx)); i++ )
@@ -2839,9 +2842,17 @@ Int TComSlice::getRefPicLayerId( Int i )
 }
 
 #if H_3D_ARP
+#if SHARP_ARP_REF_CHECK_F0105
+Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
+#else
 Void TComSlice::setARPStepNum()                                  
+#endif
 {
+#if SHARP_ARP_REF_CHECK_F0105
+  Bool tempRefPicInListsFlag = false;
+#else
   Bool bAllIvRef = true;
+#endif
 #if QC_MTK_INTERVIEW_ARP_F0123_F0108
   if(!getVPS()->getUseAdvRP(getLayerId()) || this->isIRAP())
 #else
@@ -2852,6 +2863,23 @@ Void TComSlice::setARPStepNum()
   }
   else
   {
+#if SHARP_ARP_REF_CHECK_F0105
+    setFirstTRefIdx (REF_PIC_LIST_0, -1);
+    setFirstTRefIdx (REF_PIC_LIST_1, -1);
+    for ( Int refListIdx = 0; refListIdx < ((m_eSliceType==B_SLICE) ? 2 : 1); refListIdx++ )
+    {
+      for(Int i = 0; i < getNumRefIdx(RefPicList(refListIdx)); i++ )
+      {
+        if ( getRefPic(RefPicList(refListIdx), i)->getPOC() != getPOC() )
+        {
+          setFirstTRefIdx (RefPicList(refListIdx), i);
+          break;
+        }
+      }
+    }
+    tempRefPicInListsFlag = getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0;
+    m_nARPStepNum = tempRefPicInListsFlag ? getVPS()->getARPStepNum(getLayerId()) : 0;
+#else
     for( Int iRefListId = 0; iRefListId < 2; iRefListId++ )
     {
       RefPicList  eRefPicList = RefPicList( iRefListId );
@@ -2874,7 +2902,32 @@ Void TComSlice::setARPStepNum()
       if( bAllIvRef == false ) { break; }
     }
     m_nARPStepNum = !bAllIvRef ? getVPS()->getARPStepNum(getLayerId()) : 0;
+#endif
   }
+#if SHARP_ARP_REF_CHECK_F0105
+  if (tempRefPicInListsFlag)
+  {
+    for ( Int refListIdx = 0; refListIdx < ((m_eSliceType==B_SLICE) ? 2 : 1); refListIdx++ )
+    {
+      RefPicList eRefPicList = RefPicList( refListIdx );
+      Int prevPOC = getRefPic(eRefPicList, getFirstTRefIdx(eRefPicList) )->getPOC();
+      for( Int i = 0; i < getNumActiveRefLayerPics(); i++ )
+      {
+        Int layerIdInNuh = getRefPicLayerId( i );
+        Int viewIdx = getVPS()->getViewId( layerIdInNuh );
+        TComPic*pcPicPrev = ivPicLists->getPic(viewIdx, 0, prevPOC);
+        if (getFirstTRefIdx(eRefPicList) >= 0 && pcPicPrev && pcPicPrev->getSlice( 0 )->isReferenced())
+        {
+          m_arpRefPicAvailable[eRefPicList][layerIdInNuh] = true;
+        }
+        else
+        {
+          m_arpRefPicAvailable[eRefPicList][layerIdInNuh] = false;
+        }
+      }
+    }
+  }
+#endif
 }
 #endif
 #if H_3D_IC
