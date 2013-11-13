@@ -232,6 +232,7 @@
 #define H_3D_VSP_CONSTRAINED              0
 #endif
 #define MTK_VSP_SIMPLIFICATION_F0111      1   // 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
+#define LGE_SHARP_VSP_INHERIT_F0104       1
 #endif
 
 ///// ***** ILLUMATION COMPENSATION *********
