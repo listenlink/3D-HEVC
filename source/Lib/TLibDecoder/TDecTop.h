@@ -77,6 +77,10 @@ public:
   Bool  isInitialized() const     { return m_bInitialized; }
   Int**** getBaseViewShiftLUTI()  { return m_aiBaseViewShiftLUT;   }
 
+#if QC_DEPTH_IV_MRG_F0125
+  Void  copyCamParamForSlice( TComSlice* pcSlice );
+#endif
+
 private:
   Bool  xIsComplete ();
   Void  xOutput     ( Int iPOC );

@@ -749,7 +749,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PC",                              m_bUsePC                  , true          , "Use Predictive Coding with QTL" )
 #endif
 #if H_3D_IV_MERGE
+#if QC_DEPTH_IV_MRG_F0125  
+  ("IvMvPred",                        m_ivMvPredFlag            , std::vector<Bool>(2, true)            , "inter view motion prediction " )
+#else
   ("IvMvPred",                        m_ivMvPredFlag,           true            , "inter view motion prediction " )  
+#endif
 #endif
 #if H_3D_NBDV_REF
   ("DepthRefinement",                 m_depthRefinementFlag,    true           , "depth refinement by DoNBDV" )  
@@ -2413,7 +2417,11 @@ Void TAppEncCfg::xPrintParameter()
   printf("PC:%d " , m_bUsePC );
 #endif
 #if H_3D_IV_MERGE
+#if QC_DEPTH_IV_MRG_F0125
+  printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
+#else
   printf("IvMvPred:%d ", m_ivMvPredFlag );
+#endif
 #endif
 #if H_3D_ARP
   printf(" ARP:%d  ", m_uiUseAdvResPred  );
