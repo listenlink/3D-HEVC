@@ -3525,6 +3525,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   Bool bIsDepth = getSlice()->getIsDepth();
   Bool bDepthIPMCAvai = false;
 #endif 
+
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+  Bool bICFlag = getICFlag(uiAbsPartIdx);
+#endif
+#if H_3D_ARP
+  Bool bARPFlag = getARPW(uiAbsPartIdx)>0 ? true : false;
+#endif
+#endif
+
 #if H_3D_IV_MERGE
   
   /////////////////////////////////////////////
@@ -3746,7 +3756,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
 #endif
 #if H_3D_VSP
-      if (pcCULeft->getVSPFlag(uiLeftPartIdx) == 1)
+      if (pcCULeft->getVSPFlag(uiLeftPartIdx) == 1
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+          && !bICFlag
+#endif
+#if H_3D_ARP
+          && !bARPFlag
+#endif
+#endif
+          )
       {
         vspFlag[iCount] = 1;
 #if !MTK_VSP_SIMPLIFICATION_F0111
@@ -3834,9 +3853,27 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_VSP
 #if MTK_VSP_SIMPLIFICATION_F0111
-      if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1) )
+      if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1) 
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+          && !bICFlag
+#endif
+#if H_3D_ARP
+          && !bARPFlag
+#endif
+#endif
+          )
 #else
-      if (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1)
+      if (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+          && !bICFlag
+#endif
+#if H_3D_ARP
+          && !bARPFlag
+#endif
+#endif
+          )
 #endif
       {
 
@@ -3896,9 +3933,27 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_VSP
 #if MTK_VSP_SIMPLIFICATION_F0111
-    if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1) )
+    if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1) 
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+        && !bICFlag
+#endif
+#if H_3D_ARP
+        && !bARPFlag
+#endif
+#endif
+        )
 #else
-    if (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1)
+    if (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+        && !bICFlag
+#endif
+#if H_3D_ARP
+        && !bARPFlag
+#endif
+#endif
+        )
 #endif
     {
       vspFlag[iCount] = 1;
@@ -3982,7 +4037,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   //////// VIEW SYNTHESIS PREDICTION (VSP) ////////
   /////////////////////////////////////////////////
 
-  if ( xAddVspCand( mrgCandIdx, &cDisInfo, iCount, abCandIsInter, pcMvFieldNeighbours, puhInterDirNeighbours, vspFlag ) )
+  if (
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+      !bICFlag &&
+#endif
+#if H_3D_ARP
+      !bARPFlag &&
+#endif
+#endif
+      xAddVspCand( mrgCandIdx, &cDisInfo, iCount, abCandIsInter, pcMvFieldNeighbours, puhInterDirNeighbours, vspFlag ) )
   {
     return;
   }
@@ -4022,7 +4086,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     pcMvFieldNeighbours[(iCount<<1)+1].getMv().setIDVFlag (false);
 #endif
 #if H_3D_VSP
-    if (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) == 1)
+    if (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) == 1
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+        && !bICFlag
+#endif
+#if H_3D_ARP
+        && !bARPFlag
+#endif
+#endif
+        )
     {
       vspFlag[iCount] = 1;
 #if !MTK_VSP_SIMPLIFICATION_F0111
@@ -4074,9 +4147,27 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_VSP
 #if MTK_VSP_SIMPLIFICATION_F0111
-      if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1) )
+      if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1) 
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+          && !bICFlag
+#endif
+#if H_3D_ARP
+          && !bARPFlag
+#endif
+#endif
+          )
 #else
-      if (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1)
+      if (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+          && !bICFlag
+#endif
+#if H_3D_ARP
+          && !bARPFlag
+#endif
+#endif
+          )
 #endif
       {
         vspFlag[iCount] = 1;
