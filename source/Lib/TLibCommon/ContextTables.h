@@ -108,7 +108,11 @@
 #if H_3D_DIM
 #define NUM_DEPTH_INTRA_MODE_CTX      8       ///< number of context models for depth intra modes
 #define NUM_DDC_FLAG_CTX              2       ///< number of context models for deltaDC flag (DMM or RBC)
+#if QC_DIM_DELTADC_UNIFY_F0132
+#define NUM_DDC_DATA_CTX              1       ///< number of context models for deltaDC data (DMM or RBC)
+#else
 #define NUM_DDC_DATA_CTX              2       ///< number of context models for deltaDC data (DMM or RBC)
+#endif
 #if H_3D_DIM_DMM
 #define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
 #define NUM_DMM3_DATA_CTX             1       ///< number of context models for DMM3 data
@@ -380,9 +384,15 @@ INIT_ARPW[3][NUM_ARPW_CTX] =
 static const UChar 
 INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
 {
+#if LGE_IC_CTX_F0160
+    { 154,  154,  154, },
+    { 154,  154,  154, },
+    { 154,  154,  154, },
+#else
   { CNU,  CNU,  CNU, }, 
   { 197,  185,  201, }, 
   { 197,  185,  201, }, 
+#endif
 };
 #endif
 #if H_3D_DIM
@@ -404,9 +414,15 @@ INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =
 static const UChar
 INIT_DDC_DATA[3][NUM_DDC_DATA_CTX] = 
 {
+#if QC_DIM_DELTADC_UNIFY_F0132
+  { 154 }, 
+  { 154 }, 
+  { 154 }, 
+#else
   { CNU, CNU }, 
   { CNU, CNU }, 
   { CNU, CNU }, 
+#endif
 };
 #if H_3D_DIM_DMM
 static const UChar
