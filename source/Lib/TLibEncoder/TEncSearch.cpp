@@ -1127,9 +1127,13 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
       {
 #if LGE_PRED_RES_CODING_DLT_DOMAIN_F0159
           if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
+          {
               pResi[ uiX ] = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pOrg[ uiX ] ) - pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] );
+          }
           else
+          {
               pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
+          }
 #else
         pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
 #endif
@@ -1198,9 +1202,13 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
       {
 #if LGE_PRED_RES_CODING_DLT_DOMAIN_F0159
           if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
+          {
               pReco    [ uiX ] = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getVPS()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
+          }
           else
+          {
               pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
+          }
 #else
         pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
 #endif
