@@ -115,7 +115,9 @@
 #endif
 #if H_3D_DIM_DMM
 #define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
+#if !SEC_DMM3_RBC_F0147
 #define NUM_DMM3_DATA_CTX             1       ///< number of context models for DMM3 data
+#endif
 #endif
 #if H_3D_DIM_RBC
 #define NUM_RBC_DATA_CTX              1       ///< number of context models for RBC data
@@ -432,6 +434,7 @@ INIT_DMM1_DATA[3][NUM_DMM1_DATA_CTX] =
   { CNU }, 
   { CNU }, 
 };
+#if !SEC_DMM3_RBC_F0147
 static const UChar
 INIT_DMM3_DATA[3][NUM_DMM3_DATA_CTX] = 
 {
@@ -439,6 +442,7 @@ INIT_DMM3_DATA[3][NUM_DMM3_DATA_CTX] =
   { CNU }, 
   { CNU }, 
 };
+#endif
 #endif
 #if H_3D_DIM_RBC
 static const UChar

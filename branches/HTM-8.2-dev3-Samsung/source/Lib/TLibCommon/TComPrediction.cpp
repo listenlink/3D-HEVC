@@ -424,7 +424,9 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   UInt dimType    = getDimType  ( uiIntraMode );
   Bool dimDeltaDC = isDimDeltaDC( uiIntraMode );    
   Bool isDmmMode  = (dimType <  DMM_NUM_TYPE);
+#if !SEC_DMM3_RBC_F0147
   Bool isRbcMode  = (dimType == RBC_IDX);
+#endif
 
   Bool* biSegPattern  = NULL;
   UInt  patternStride = 0;
@@ -440,6 +442,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       {
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
       } break;
+#if !SEC_DMM3_RBC_F0147
     case( DMM3_IDX ): 
       {
         UInt uiTabIdx = 0;
@@ -451,6 +454,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
         }
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ uiTabIdx ]);
       } break;
+#endif
     case( DMM4_IDX ): 
       {
         dmmSegmentation = new TComWedgelet( iWidth, iHeight );
@@ -494,7 +498,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     Pel deltaDC1 = pcCU->getDimDeltaDC( dimType, 0, uiAbsPartIdx );
     Pel deltaDC2 = pcCU->getDimDeltaDC( dimType, 1, uiAbsPartIdx );
 #if H_3D_DIM_DMM
-#if QC_DIM_DELTADC_UNIFY_F0132
+#if QC_DIM_DELTADC_UNIFY_F0132 && !SEC_DMM3_RBC_F0147
     if( isDmmMode || isRbcMode)
 #else
     if( isDmmMode )
@@ -1975,6 +1979,7 @@ Void TComPrediction::xAssignBiSegDCs( Pel* ptrDst, UInt dstStride, Bool* biSegPa
 }
 
 #if H_3D_DIM_DMM
+#if !SEC_DMM3_RBC_F0147
 UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt intraTabIdx )
 {
   TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
@@ -1986,6 +1991,7 @@ UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   assert( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 );
   return g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]][uiColTexIntraDir-2].at(intraTabIdx);
 }
+#endif
 
 Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge )
 {

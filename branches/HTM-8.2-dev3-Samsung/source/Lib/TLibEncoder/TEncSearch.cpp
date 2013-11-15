@@ -1127,13 +1127,9 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
       {
 #if LGE_PRED_RES_CODING_DLT_DOMAIN_F0159
           if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
-          {
               pResi[ uiX ] = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pOrg[ uiX ] ) - pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] );
-          }
           else
-          {
               pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
-          }
 #else
         pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
 #endif
@@ -1202,13 +1198,9 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
       {
 #if LGE_PRED_RES_CODING_DLT_DOMAIN_F0159
           if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
-          {
               pReco    [ uiX ] = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getVPS()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
-          }
           else
-          {
               pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
-          }
 #else
         pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
 #endif
@@ -2897,6 +2889,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType,  uiPartOffset, uiDepth + uiInitTrDepth );
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
             } break;
+#if !SEC_DMM3_RBC_F0147
           case( DMM3_IDX ):
             {
 
@@ -2914,6 +2907,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
               }
             } break;
+#endif
           case( DMM4_IDX ):
             {
               if( uiWidth > 4 )
@@ -7329,6 +7323,7 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   return;
 }
 
+#if !SEC_DMM3_RBC_F0147
 Void TEncSearch::xSearchDmm3Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx, UInt colTexIntraDir )
 {
   ruiTabIdx       = 0;
@@ -7365,7 +7360,7 @@ Void TEncSearch::xSearchDmm3Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   }
   cPredYuv.destroy();
 }
-
+#endif
 #endif
 #if H_3D_DIM_RBC
 Void TEncSearch::xSearchRbcDeltaDCs( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 )

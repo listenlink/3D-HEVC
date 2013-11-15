@@ -460,7 +460,9 @@ protected:
 #endif
 #if H_3D_DIM
   Bool      m_useDMM;                                        ///< flag for using DMM
+#if !SEC_DMM3_RBC_F0147
   Bool      m_useRBC;                                        ///< flag for using RBC
+#endif
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif
