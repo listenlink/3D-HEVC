@@ -181,7 +181,9 @@ Void TAppEncTop::xInitLibCfg()
   //========== Depth intra modes ==========
 #if H_3D_DIM
     m_cTEncTop.setUseDMM                       ( isDepth ? m_useDMM               : false );
+#if !SEC_DMM3_RBC_F0147
     m_cTEncTop.setUseRBC                       ( isDepth ? m_useRBC               : false );
+#endif
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
@@ -1640,7 +1642,11 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif  
 
 #if H_3D_DIM
+#if SEC_DMM3_RBC_F0147
+    vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useSDC || m_useDLT ) );
+#else
     vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useRBC || m_useSDC || m_useDLT ) );
+#endif
 #if H_3D_DIM_DLT
     vps.setUseDLTFlag( layer , isDepth && m_useDLT );
     if( vps.getUseDLTFlag( layer ) )

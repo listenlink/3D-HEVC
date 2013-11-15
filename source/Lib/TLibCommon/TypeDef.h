@@ -38,6 +38,8 @@
 #ifndef _TYPEDEF__
 #define _TYPEDEF__
 
+
+
 //! \ingroup TLibCommon
 //! \{
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -158,6 +160,7 @@
                                               // SCU_HS_DMM4_REMOVE_DIV_E0242 DMM4 Division Removal
                                               // LGE_SDC_REMOVE_DC_E0158 Removal of DC mode from SDC
                                               // LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   Removal of overlap between DMM3 and DMM1
+#define SEC_DMM3_RBC_F0147                1   // Removal of DMM3 and RBC from DMMs
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
@@ -214,7 +217,9 @@
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
+#if !SEC_DMM3_RBC_F0147
 #define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
+#endif
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:

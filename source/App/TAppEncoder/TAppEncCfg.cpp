@@ -377,7 +377,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
   ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
+#if !SEC_DMM3_RBC_F0147
   ("RBC",                   m_useRBC,           true,  "Region boundary chain mode")
+#endif
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
@@ -2432,7 +2434,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_DIM
   printf("DMM:%d ", m_useDMM );
+#if !SEC_DMM3_RBC_F0147
   printf("RBC:%d ", m_useRBC );
+#endif
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif

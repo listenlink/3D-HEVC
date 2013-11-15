@@ -350,7 +350,9 @@ protected:
 #if H_3D_DIM_DMM
   Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
   Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
+#if !SEC_DMM3_RBC_F0147
   Void xSearchDmm3Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx, UInt colTexIntraDir );
+#endif
 #endif
 #if H_3D_DIM_RBC
   Void xSearchRbcDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
