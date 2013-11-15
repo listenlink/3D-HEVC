@@ -130,7 +130,9 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
-                                              // QC_INRIA_MTK_MRG_E0126            
+                                              // QC_INRIA_MTK_MRG_E0126 
+#define SEC_MPI_ENABLING_MERGE_F0150      1   // MPI flag in VPS and enabling in Merge mode
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 

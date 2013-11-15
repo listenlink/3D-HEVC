@@ -3521,6 +3521,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   PartSize cCurPS = getPartitionSize( uiAbsPartIdx );
   deriveLeftRightTopIdxGeneral( uiAbsPartIdx, uiPUIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdxGeneral  ( uiAbsPartIdx, uiPUIdx, uiPartIdxLB );
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool bMPIFlag   = getSlice()->getVPS()->getMPIFlag( getSlice()->getLayerIdInVps() );
+#endif
 #if QC_DEPTH_IV_MRG_F0125
   Bool bIsDepth = getSlice()->getIsDepth();
   Bool bDepthIPMCAvai = false;
@@ -3541,7 +3544,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   //////// TEXTURE MERGE CANDIDATE (T) ////////
   /////////////////////////////////////////////
 
+#if SEC_MPI_ENABLING_MERGE_F0150
+  if( bMPIFlag)
+#else
   if( m_pcSlice->getIsDepth())
+#endif
   {
     UInt uiPartIdxCenter;
     xDeriveCenterIdx( uiPUIdx, uiPartIdxCenter );    

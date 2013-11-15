@@ -513,6 +513,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
 #endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  ("MPI",                      m_bMPIFlag,        true, "Enable MPI")
+#endif
   // Coding tools
   ("AMP",                      m_enableAMP,                 true,  "Enable asymmetric motion partitions")
   ("TransformSkip",            m_useTransformSkip,          false, "Intra transform skipping")
@@ -2446,6 +2449,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_INTER_SDC
   printf( "interSDC: %d ", m_bDepthInterSDCFlag ? 1 : 0 );
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  printf( "MPI: %d ", m_bMPIFlag ? 1 : 0 );
 #endif
   printf("\n\n");  
 

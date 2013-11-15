@@ -200,6 +200,9 @@ Void TAppEncTop::xInitLibCfg()
 #if H_3D_INTER_SDC
     m_cTEncTop.setInterSDCEnable               ( isDepth ? m_bDepthInterSDCFlag    : false );
 #endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+    m_cTEncTop.setUseMPI               ( isDepth ? m_bMPIFlag    : false );
+#endif
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
@@ -1679,6 +1682,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif      
 #if H_3D_INTER_SDC
     vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+    vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag );
 #endif
   }  
 #if H_3D

@@ -618,6 +618,9 @@ private:
 #if H_3D_INTER_SDC
   Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
 #endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool        m_bMPIFlag[MAX_NUM_LAYERS   ];
+#endif
 
 #endif
 public:
@@ -853,7 +856,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
 #endif
-
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool    getMPIFlag      ( Int layerIdInVps )           { return m_bMPIFlag[layerIdInVps]; }
+  Void    setMPIFlag      ( Int layerIdInVps, Bool bval ){ m_bMPIFlag[layerIdInVps] = bval; }
+#endif
 #endif  
 #endif
 };
