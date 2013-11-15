@@ -510,7 +510,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AdvMultiviewResPred",      m_uiUseAdvResPred,           (UInt)1, "Usage of Advanced Residual Prediction" )
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
+#else
   ("IlluCompEnable",           m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation")
+#endif
 #endif
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
@@ -2421,7 +2425,11 @@ Void TAppEncCfg::xPrintParameter()
   printf(" ARP:%d  ", m_uiUseAdvResPred  );
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  printf( "IlluCompEnable: %d ", m_abUseIC);
+#else
   printf( "IlluCompEnable: %d %d ", m_abUseIC[0] ? 1 : 0, m_abUseIC[1] ? 1 : 0 );
+#endif
 #endif
 #if H_3D_NBDV_REF
   printf("DepthRefinement:%d ", m_depthRefinementFlag );  

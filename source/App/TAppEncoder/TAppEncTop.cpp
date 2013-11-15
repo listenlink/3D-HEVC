@@ -176,7 +176,11 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layerIdInVps ) ? 1 : H_3D_ARP_WFNR     );
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+    m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
+#else
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 ? false : m_abUseIC[isDepth ? 1 : 0] );
+#endif
 #endif
   //========== Depth intra modes ==========
 #if H_3D_DIM
