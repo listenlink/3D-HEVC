@@ -475,6 +475,9 @@ protected:
 #if H_3D_INTER_SDC
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
 #endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool m_bMPIFlag;                                           ///< flag for MPI of depth map coding
+#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
