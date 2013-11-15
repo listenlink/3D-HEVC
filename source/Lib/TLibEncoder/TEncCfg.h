@@ -415,6 +415,9 @@ protected:
   Bool      m_useSDC;
   Bool      m_useDLT;
 #endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool      m_useMPI;
+#endif
 #if H_3D_QTLPC
   Bool      m_bUseQTL;
   Bool      m_bUsePC;
@@ -991,6 +994,10 @@ public:
   Bool      getUseQTL                       ()         { return m_bUseQTL; }
   Void      setUsePC                        ( Bool b ) { m_bUsePC  = b;    }
   Bool      getUsePC                        ()         { return m_bUsePC;  }
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Void      setUseMPI                       ( Bool b ) { m_useMPI = b;    }
+  Bool      getUseMPI                       ()         { return m_useMPI; }
 #endif
 #endif // H_3D
 };

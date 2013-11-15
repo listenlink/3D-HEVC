@@ -130,7 +130,9 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
-                                              // QC_INRIA_MTK_MRG_E0126            
+                                              // QC_INRIA_MTK_MRG_E0126 
+#define SEC_MPI_ENABLING_MERGE_F0150      1   // MPI flag in VPS and enabling in Merge mode
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -208,6 +210,11 @@
 #define H_3D_ARP_WFNR                     3
 #endif
 
+///// ***** Inter-view motion merge candidate *********
+#if H_3D_IV_MERGE
+#define QC_DEPTH_IV_MRG_F0125             1   // JCT3V-F0125: Depth oriented Inter-view MV candidate
+#endif
+
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
@@ -226,7 +233,8 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
-
+#define MTK_VSP_SIMPLIFICATION_F0111      1   // 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
+#define LGE_SHARP_VSP_INHERIT_F0104       1
 #endif
 
 ///// ***** ILLUMATION COMPENSATION *********
