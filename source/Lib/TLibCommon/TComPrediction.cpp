@@ -663,6 +663,13 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
 #if H_3D_ARP
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+  if(pcCU->getARPW( uiPartAddr ) > 0  && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()== pcCU->getSlice()->getPOC())
+  {
+      xPredInterUniARPviewRef( pcCU , uiPartAddr , iWidth , iHeight , eRefPicList , rpcYuvPred , bi );
+  }
+  else
+#endif
   if(  pcCU->getARPW( uiPartAddr ) > 0 
     && pcCU->getPartitionSize(uiPartAddr)==SIZE_2Nx2N 
     && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()!= pcCU->getSlice()->getPOC() 
@@ -743,10 +750,19 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 #endif
   // fetch virtual depth map
   pcBaseViewDepthPicYuv->extendPicBorder();
+
+#if MTK_F0109_LG_F0120_VSP_BLOCK
+  Int vspSize=0;
+  xGetVirtualDepth( pcCU, pcBaseViewDepthPicYuv, &cDv, uiPartAddr, iWidth, iHeight, &m_cYuvDepthOnVsp,vspSize );
+  // sub-PU based compensation
+  xPredInterLumaBlkFromDM   ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
+  xPredInterChromaBlkFromDM ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
+#else
   xGetVirtualDepth( pcCU, pcBaseViewDepthPicYuv, &cDv, uiPartAddr, iWidth, iHeight, &m_cYuvDepthOnVsp );
   // sub-PU based compensation
   xPredInterLumaBlkFromDM   ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
   xPredInterChromaBlkFromDM ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi );
+#endif
 }
 #endif
 
@@ -776,22 +792,38 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
   if( cDistparity.bDV ) 
   {
+#if SHARP_ARP_REF_CHECK_F0105
+    Int arpRefIdx = pcCU->getSlice()->getFirstTRefIdx(eRefPicList);
+    if( dW > 0 && pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC()!= pcCU->getSlice()->getPOC() )
+#else
     if( dW > 0 && pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC()!= pcCU->getSlice()->getPOC() )
+#endif
     {
       bTobeScaled = true;
     }
 
     pcPicYuvBaseCol =  pcCU->getSlice()->getBaseViewRefPic( pcCU->getSlice()->getPOC(),                              cDistparity.m_aVIdxCan );
+
+#if SHARP_ARP_REF_CHECK_F0105
+    pcPicYuvBaseRef =  pcCU->getSlice()->getBaseViewRefPic( pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC(), cDistparity.m_aVIdxCan );
+
+    if (!pcCU->getSlice()->getArpRefPicAvailable( eRefPicList, cDistparity.m_aVIdxCan))
+#else
     pcPicYuvBaseRef =  pcCU->getSlice()->getBaseViewRefPic( pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC(), cDistparity.m_aVIdxCan );
-    
+
     if( ( !pcPicYuvBaseCol || pcPicYuvBaseCol->getPOC() != pcCU->getSlice()->getPOC() ) || ( !pcPicYuvBaseRef || pcPicYuvBaseRef->getPOC() != pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC() ) )
+#endif
     {
       dW = 0;
       bTobeScaled = false;
     }
     else
     {
+#if SHARP_ARP_REF_CHECK_F0105
+      assert( pcPicYuvBaseCol->getPOC() == pcCU->getSlice()->getPOC() && pcPicYuvBaseRef->getPOC() == pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC() );
+#else
       assert( pcPicYuvBaseCol->getPOC() == pcCU->getSlice()->getPOC() && pcPicYuvBaseRef->getPOC() == pcCU->getSlice()->getRefPic( eRefPicList, 0 )->getPOC() );
+#endif
     }
 
     if(bTobeScaled)
@@ -840,6 +872,113 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     rpcYuvPred->addARP( rpcYuvPred , pYuvB0 , uiPartAddr , iWidth , iHeight , !bi );
   }
 }
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, TComMvField * pNewMvFiled )
+{
+  Int         iRefIdx       = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           
+  TComMv      cDMv          = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
+  TComMv      cTempDMv      = cDMv;
+  UChar       dW            = pcCU->getARPW ( uiPartAddr );
+
+  TComPic* pcPicYuvBaseTRef = NULL;
+  TComPic* pcPicYuvCurrTRef = NULL;
+  TComPic* pcPicYuvBaseCol  = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx );  
+  TComPicYuv* pcYuvBaseCol  = pcPicYuvBaseCol->getPicYuvRec();   
+  Bool bTMVAvai = false;     
+  TComMv cBaseTMV;
+  if( pNewMvFiled )
+  {
+    iRefIdx = pNewMvFiled->getRefIdx(); 
+    cDMv = pNewMvFiled->getMv();
+  }
+  pcCU->clipMv(cTempDMv);
+
+  assert(dW > 0);
+#if SHARP_ARP_REF_CHECK_F0105
+  if (!pcCU->getSlice()->getArpRefPicAvailable( eRefPicList, pcPicYuvBaseCol->getViewIndex()))
+  {
+    dW = 0;
+  }
+#endif
+  Int uiLCUAddr,uiAbsPartAddr;
+  Int irefPUX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[uiPartAddr]] + iWidth/2  + ((cDMv.getHor() + 2)>>2);
+  Int irefPUY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[uiPartAddr]] + iHeight/2 + ((cDMv.getVer() + 2)>>2);
+
+  irefPUX = (Int)Clip3<Int>(0, pcCU->getSlice()->getSPS()-> getPicWidthInLumaSamples()-1, irefPUX);
+  irefPUY = (Int)Clip3<Int>(0, pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples()-1, irefPUY);  
+  pcYuvBaseCol->getCUAddrAndPartIdx( irefPUX, irefPUY, uiLCUAddr, uiAbsPartAddr);
+  TComDataCU *pColCU = pcPicYuvBaseCol->getCU( uiLCUAddr );
+
+  if(!pColCU->isIntra(uiAbsPartAddr))
+  {
+    TComMvField puMVField;
+    for(Int iList = 0; iList < (pColCU->getSlice()->isInterB() ? 2: 1) && !bTMVAvai; iList ++)
+    {
+      RefPicList eRefPicListCurr = RefPicList(iList);
+      Int iRef = pColCU->getCUMvField(eRefPicListCurr)->getRefIdx(uiAbsPartAddr);
+      if( iRef != -1)
+      {
+        pcPicYuvBaseTRef = pColCU->getSlice()->getRefPic(eRefPicListCurr, iRef);  
+        Int  iCurrPOC    = pColCU->getSlice()->getPOC();
+        Int  iCurrRefPOC = pcPicYuvBaseTRef->getPOC();
+        Int  iCurrRef    = pcCU->getSlice()->getFirstTRefIdx(eRefPicListCurr);
+        if( iCurrRef >= 0)
+        {
+          pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic(eRefPicListCurr,iCurrRef);  
+          Int iTargetPOC = pcPicYuvCurrTRef->getPOC();
+          {
+            pcPicYuvBaseTRef =  pcCU->getSlice()->getBaseViewRefPic(iTargetPOC,  pcPicYuvBaseCol->getViewIndex() );  
+            if(pcPicYuvBaseTRef)
+            {
+              cBaseTMV = pColCU->getCUMvField(eRefPicListCurr)->getMv(uiAbsPartAddr);
+              Int iScale = pcCU-> xGetDistScaleFactor(iCurrPOC, iTargetPOC, iCurrPOC, iCurrRefPOC);
+              if ( iScale != 4096 )
+                cBaseTMV = cBaseTMV.scaleMv( iScale );                  
+              bTMVAvai = true;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+  if (bTMVAvai == false)
+  { 
+    bTMVAvai = true;
+    cBaseTMV.set(0, 0);
+    pcPicYuvBaseTRef =  pColCU->getSlice()->getRefPic(eRefPicList,  pcCU->getSlice()->getFirstTRefIdx(eRefPicList));  
+    pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic  (eRefPicList,  pcCU->getSlice()->getFirstTRefIdx(eRefPicList));      
+  }
+
+  xPredInterLumaBlk  ( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi,        bTMVAvai);
+  xPredInterChromaBlk( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi,        bTMVAvai);
+
+  if( dW > 0 && bTMVAvai ) 
+  {
+    TComYuv*    pYuvCurrTRef    = &m_acYuvPredBase[0];
+    TComYuv*    pYuvBaseTRef    = &m_acYuvPredBase[1];
+    TComPicYuv* pcYuvCurrTref   = pcPicYuvCurrTRef->getPicYuvRec();        
+    TComPicYuv* pcYuvBaseTref   = pcPicYuvBaseTRef->getPicYuvRec();  
+    TComMv      cTempMv         = cDMv + cBaseTMV;
+
+    pcCU->clipMv(cBaseTMV);
+    pcCU->clipMv(cTempMv);
+
+    xPredInterLumaBlk  ( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, bi,   true);
+    xPredInterChromaBlk( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, bi,   true);
+    xPredInterLumaBlk  ( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, bi,   true); 
+    xPredInterChromaBlk( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, bi,   true); 
+
+    pYuvCurrTRef->subtractARP( pYuvCurrTRef , pYuvBaseTRef , uiPartAddr , iWidth , iHeight );  
+    if(dW == 2)
+    {
+      pYuvCurrTRef->multiplyARP( uiPartAddr , iWidth , iHeight , dW );
+    }
+    rpcYuvPred->addARP( rpcYuvPred , pYuvCurrTRef , uiPartAddr , iWidth , iHeight , !bi ); 
+  }
+}
+#endif
+
 #endif
 
 Void TComPrediction::xPredInterBi ( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvPred )
@@ -1498,7 +1637,11 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 
 #if H_3D_VSP
 // not fully support iRatioTxtPerDepth* != 1
+#if MTK_F0109_LG_F0120_VSP_BLOCK
+Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *mv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int &vspSize, Int ratioTxtPerDepthX, Int ratioTxtPerDepthY )
+#else
 Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *mv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int ratioTxtPerDepthX, Int ratioTxtPerDepthY )
+#endif
 {
   Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE;
   Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE;
@@ -1545,6 +1688,12 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
       }
       depth += depStrideBlock;
     }
+#if MTK_F0109_LG_F0120_VSP_BLOCK
+  if(width==4)
+    vspSize=0;
+  else
+    vspSize=1;
+#endif
   }
   else
   { // split to 4x8, or 8x4
@@ -1558,6 +1707,7 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
     Pel repDepth4x8[2] = {0, 0};
     Pel repDepth8x4[2] = {0, 0};
 
+#if !MTK_F0109_LG_F0120_VSP_BLOCK
     Int refDepStrideBlock    = refDepStride * blocksize;
     Int refDepStrideSubBlock = refDepStride * subblocksize;
 
@@ -1661,16 +1811,147 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
       refDepthTmp[3] += refDepStrideBlock;
       depth       += depStrideBlock;
     }
+#else
+    Int refDepStrideBlock    = refDepStride * height;
+    Int refDepStrideSubBlock = refDepStride * height/2;
+    refDepthTmp[0] = refDepth;
+    refDepthTmp[2] = refDepthTmp[0] + refDepStrideSubBlock;
+    refDepthTmp[1] = refDepthTmp[2] - refDepStride;
+    refDepthTmp[3] = refDepthTmp[1] + refDepStrideSubBlock;
+    offset[3] = width-1;
+    Bool ULvsBR = false, URvsBL = false;
+    ULvsBR = refDepthTmp[0][0+offset[0]] < refDepthTmp[3][0+offset[3]];
+    URvsBL = refDepthTmp[0][0+offset[3]] < refDepthTmp[3][0+offset[0]];
+    refDepStrideBlock    = refDepStride * blocksize;
+    refDepStrideSubBlock = refDepStride * subblocksize;
+    refDepthTmp[0] = refDepth;
+    refDepthTmp[2] = refDepthTmp[0] + refDepStrideSubBlock;
+    refDepthTmp[1] = refDepthTmp[2] - refDepStride;
+    refDepthTmp[3] = refDepthTmp[1] + refDepStrideSubBlock;
+    offset[3] = blocksize-1;
+    if( ULvsBR ^ URvsBL )
+    {
+    vspSize = 0;//4x8
+    for( Int y=0; y<height; y+=blocksize )
+    {
+      for( Int x=0; x<width; x+=blocksize )
+      {
+        { // 4x8
+          repDepth4x8[0] = refDepthTmp[0][x+offset[0]] > refDepthTmp[0][x+offset[1]] ? refDepthTmp[0][x+offset[0]] : refDepthTmp[0][x+offset[1]];
+          if( repDepth4x8[0] < refDepthTmp[3][x+offset[0]] )
+          {
+            repDepth4x8[0] = refDepthTmp[3][x+offset[0]];
+          }
+          if( repDepth4x8[0] < refDepthTmp[3][x+offset[1]] )
+          {
+            repDepth4x8[0] = refDepthTmp[3][x+offset[1]];
+          }
+          repDepth4x8[1] = refDepthTmp[0][x+offset[2]] > refDepthTmp[0][x+offset[3]] ? refDepthTmp[0][x+offset[2]] : refDepthTmp[0][x+offset[3]];
+          if( repDepth4x8[1] < refDepthTmp[3][x+offset[2]] )
+          {
+            repDepth4x8[1] = refDepthTmp[3][x+offset[2]];
+          }
+          if( repDepth4x8[1] < refDepthTmp[3][x+offset[3]] )
+          {
+            repDepth4x8[1] = refDepthTmp[3][x+offset[3]];
+          }
+
+          depthTmp = &depth[x];
+          for( Int sY=0; sY<blocksize; sY+=nTxtPerDepthY )
+          {
+            for( Int sX=0; sX<subblocksize; sX+=nTxtPerDepthX )
+            {
+              depthTmp[sX] = repDepth4x8[0];
+            }
+            depthTmp += depStrideTmp;
+          }
+          depthTmp = &depth[x+subblocksize];
+          for( Int sY=0; sY<blocksize; sY+=nTxtPerDepthY )
+          {
+            for( Int sX=0; sX<subblocksize; sX+=nTxtPerDepthX )
+            {
+              depthTmp[sX] = repDepth4x8[1];
+            }
+            depthTmp += depStrideTmp;
+          }
+        }
+      }
+      refDepthTmp[0] += refDepStrideBlock;
+      refDepthTmp[1] += refDepStrideBlock;
+      refDepthTmp[2] += refDepStrideBlock;
+      refDepthTmp[3] += refDepStrideBlock;
+      depth       += depStrideBlock;
+    }
+  }
+  else
+  { // 8x4
+    vspSize = 1;
+    for( Int y=0; y<height; y+=blocksize )
+    {
+      for( Int x=0; x<width; x+=blocksize )
+      {
+        repDepth8x4[0] = refDepthTmp[0][x+offset[0]] > refDepthTmp[0][x+offset[3]] ? refDepthTmp[0][x+offset[0]] : refDepthTmp[0][x+offset[3]];
+        if( repDepth8x4[0] < refDepthTmp[1][x+offset[0]] )
+        {
+          repDepth8x4[0] = refDepthTmp[1][x+offset[0]];
+        }
+        if( repDepth8x4[0] < refDepthTmp[1][x+offset[3]] )
+        {
+          repDepth8x4[0] = refDepthTmp[1][x+offset[3]];
+        }
+        repDepth8x4[1] = refDepthTmp[2][x+offset[0]] > refDepthTmp[2][x+offset[3]] ? refDepthTmp[2][x+offset[0]] : refDepthTmp[2][x+offset[3]];
+        if( repDepth8x4[1] < refDepthTmp[3][x+offset[0]] )
+        {
+          repDepth8x4[1] = refDepthTmp[3][x+offset[0]];
+        }
+        if( repDepth8x4[1] < refDepthTmp[3][x+offset[3]] )
+        {
+          repDepth8x4[1] = refDepthTmp[3][x+offset[3]];
+        }
+
+        depthTmp = &depth[x];
+        for( Int sY=0; sY<subblocksize; sY+=nTxtPerDepthY )
+        {
+          for( Int sX=0; sX<blocksize; sX+=nTxtPerDepthX )
+          {
+            depthTmp[sX] = repDepth8x4[0];
+          }
+          depthTmp += depStrideTmp;
+        }
+        for( Int sY=0; sY<subblocksize; sY+=nTxtPerDepthY )
+        {
+          for( Int sX=0; sX<blocksize; sX+=nTxtPerDepthX )
+          {
+            depthTmp[sX] = repDepth8x4[1];
+          }
+          depthTmp += depStrideTmp;
+        }
+      }
+      refDepthTmp[0] += refDepStrideBlock;
+      refDepthTmp[1] += refDepStrideBlock;
+      refDepthTmp[2] += refDepStrideBlock;
+      refDepthTmp[3] += refDepStrideBlock;
+      depth       += depStrideBlock;
+    }
+  }
+#endif
   }
 
 
 }
-
+#if MTK_F0109_LG_F0120_VSP_BLOCK
+Void TComPrediction::xPredInterLumaBlkFromDM( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&yuvDst, Bool isBi, Int vspSize)
+#else
 Void TComPrediction::xPredInterLumaBlkFromDM( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&yuvDst, Bool isBi )
+#endif
 {
   Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE;
   Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE;
-  
+
+#if MTK_F0109_LG_F0120_VSP_BLOCK
+  nTxtPerDepthX = nTxtPerDepthX << vspSize;
+  nTxtPerDepthY = nTxtPerDepthY << (1-vspSize);
+#endif
   Int refStride = picRef->getStride();
   Int dstStride = yuvDst->getStride();
   Int depStride = yuvDepth->getStride();
@@ -1775,8 +2056,11 @@ Void TComPrediction::xPredInterLumaBlkFromDM( TComDataCU *cu, TComPicYuv *picRef
   }
 
 }
-
+#if MTK_F0109_LG_F0120_VSP_BLOCK
+Void TComPrediction::xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&yuvDst, Bool isBi, Int vspSize)
+#else
 Void TComPrediction::xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&yuvDst, Bool isBi )
+#endif
 {
 #if (H_3D_VSP_BLOCKSIZE==1)
   Int nTxtPerDepthX = 1;
@@ -1786,6 +2070,10 @@ Void TComPrediction::xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *pi
   Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE >> 1;
 #endif
 
+#if MTK_F0109_LG_F0120_VSP_BLOCK
+  nTxtPerDepthX = nTxtPerDepthX << vspSize;
+  nTxtPerDepthY = nTxtPerDepthY << (1-vspSize);
+#endif
   Int refStride = picRef->getCStride();
   Int dstStride = yuvDst->getCStride();
   Int depStride = yuvDepth->getStride();

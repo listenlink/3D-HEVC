@@ -206,6 +206,10 @@
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
+#define QC_MTK_INTERVIEW_ARP_F0123_F0108  1 //JCT3V-F0123; JCT3V-F0108
+#define QC_MTK_INTERVIEW_ARP_F0123_F0108  1 //JCT3V-F0123; JCT3V-F0108
+#define SHARP_ARP_REF_CHECK_F0105         1 // ARP reference picture selection and DPB check
+#define LGE_ARP_CTX_F0161 1 //JCT3V-F0161
 #endif
 
 ///// ***** DEPTH INTRA MODES *********
@@ -220,6 +224,7 @@
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
+#define MTK_F0109_LG_F0120_VSP_BLOCK      1   // MTK_LG_SIMPLIFY_VSP_BLOCK_PARTITION_F0109_F0120  
 #define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
 #if H_3D_VSP_BLOCKSIZE == 1
 #define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
