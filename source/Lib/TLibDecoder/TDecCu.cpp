@@ -402,10 +402,23 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
     InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+
+#if ETRIKHU_MERGE_REUSE_F0093
+    m_ppcCU[uiDepth]->initAvailableFlags();
+    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand, uiMergeIndex );
+#else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand, uiMergeIndex );
+#endif
     pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 #else
+#if ETRIKHU_MERGE_REUSE_F0093
+    m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#else
+    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#endif
 #endif
 #if H_3D_VSP
     if(vspFlag[uiMergeIndex])
