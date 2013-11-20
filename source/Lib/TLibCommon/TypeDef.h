@@ -225,6 +225,8 @@
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
 #define MTK_F0109_LG_F0120_VSP_BLOCK      1   // MTK_LG_SIMPLIFY_VSP_BLOCK_PARTITION_F0109_F0120  
+#define SHARP_VSP_BLOCK_IN_AMP_F0102      1   // VSP partitioning for AMP
+#define FIX_VSP                           0
 #define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
 #if H_3D_VSP_BLOCKSIZE == 1
 #define H_3D_VSP_CONSTRAINED              1   // Constrained VSP @ 1x1
