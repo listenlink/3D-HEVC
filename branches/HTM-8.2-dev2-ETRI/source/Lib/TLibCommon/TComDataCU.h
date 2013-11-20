@@ -226,7 +226,13 @@ private:
   Int*          m_apSegmentInterDCOffset[4];
   UChar*        m_pucInterSDCMask;
 #endif
-
+#if ETRIKHU_MERGE_REUSE_F0093
+  Bool          m_bAvailableFlagA1;    ///< A1 available flag
+  Bool          m_bAvailableFlagB1;    ///< B1 available flag
+  Bool          m_bAvailableFlagB0;    ///< B0 available flag
+  Bool          m_bAvailableFlagA0;    ///< A0 available flag
+  Bool          m_bAvailableFlagB2;    ///< B2 available flag
+#endif
   // -------------------------------------------------------------------------------------------------------------------
   // misc. variables
   // -------------------------------------------------------------------------------------------------------------------
@@ -243,18 +249,32 @@ private:
   UInt*         m_sliceStartCU;    ///< Start CU address of current slice
   UInt*         m_sliceSegmentStartCU; ///< Start CU address of current slice
   Char          m_codedQP;
+#if ETRIKHU_MERGE_REUSE_F0093
+  DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
+#endif
+
 protected:
   
   /// add possible motion vector predictor candidates
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if H_3D_VSP
+#if ETRIKHU_MERGE_REUSE_F0093
+  Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
+                             Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag, Int& iCount3DV, InheritedVSPDisInfo*  inheritedVSPDisInfo);
+#else
   Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
                              Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag );
 #endif
+#endif
 #if H_3D_IV_MERGE
+#if ETRIKHU_MERGE_REUSE_F0093
+  Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int*   ivCandDir, TComMv* ivCandMv, 
+                               Int* ivCandRefIdx, Int posIvDC, Int* vspFlag, Int &iCount3DV, InheritedVSPDisInfo*  inheritedVSPDisInfo   ); 
+#else
   Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int*   ivCandDir, TComMv* ivCandMv, 
                                Int* ivCandRefIdx, Int posIvDC, Int* vspFlag ); 
+#endif
   Bool          xGetPosFirstAvailDmvCand( Int iCount, TComMvField* pcMvFieldNeighbours, Int*  ivCandDir, Int posIvDC, Int* vspFlag, Int& iFirDispCand );
 #endif
 
@@ -492,6 +512,9 @@ public:
 #endif
    ); 
    
+#if ETRIKHU_MERGE_REUSE_F0093
+  Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
+#endif
 #if QC_DEPTH_IV_MRG_F0125
   Bool          getDispNeighBlocks  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
@@ -663,7 +686,19 @@ public:
   Void          deriveLeftBottomIdxAdi      ( UInt& ruiPartIdxLB, UInt  uiPartOffset, UInt uiPartDepth );
   
   Bool          hasEqualMotion              ( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt uiCandAbsPartIdx );
-  Void          getInterMergeCandidates     ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
+
+#if ETRIKHU_MERGE_REUSE_F0093
+  Bool          getAvailableFlagA1() { return m_bAvailableFlagA1;}
+  Bool          getAvailableFlagB1() { return m_bAvailableFlagB1;}
+  Bool          getAvailableFlagB0() { return m_bAvailableFlagB0;}
+  Bool          getAvailableFlagA0() { return m_bAvailableFlagA0;}
+  Bool          getAvailableFlagB2() { return m_bAvailableFlagB2;}
+  Void          initAvailableFlags() { m_bAvailableFlagA1 = m_bAvailableFlagB1 = m_bAvailableFlagB0 = m_bAvailableFlagA0 = m_bAvailableFlagB2 = 0;  }
+  Void          getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1);
+  Void          xGetInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
+#else
+  Void          getInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
+#endif
 #if H_3D_VSP
                                             , Int* vspFlag
                                             , InheritedVSPDisInfo*  inheritedVSPDisInfo

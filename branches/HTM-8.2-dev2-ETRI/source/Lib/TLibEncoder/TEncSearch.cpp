@@ -3598,6 +3598,17 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
     if ( iPUIdx == 0 )
     {
+#if ETRIKHU_MERGE_REUSE_F0093
+      pcCU->initAvailableFlags();
+      pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
+      pcCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
+#if H_3D_VSP
+                                        , vspFlag
+                                        , inheritedVSPDisInfo
+#endif
+                                        , numValidMergeCand
+        );
+#else
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
 #if H_3D_VSP
                                    , vspFlag
@@ -3605,11 +3616,23 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
                                    , numValidMergeCand
                                    );
+#endif
     }
     pcCU->setPartSizeSubParts( partSize, 0, uiDepth );
   }
   else
   {
+#if ETRIKHU_MERGE_REUSE_F0093
+    pcCU->initAvailableFlags();
+    pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
+    pcCU->xGetInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_VSP
+                                      , vspFlag
+                                      , inheritedVSPDisInfo
+#endif
+                                      , numValidMergeCand
+      );
+#else
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
 #if H_3D_VSP
                                  , vspFlag
@@ -3617,6 +3640,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
                                  , numValidMergeCand
                                  );
+#endif
   }
 #if H_3D_VSP
   xRestrictBipredMergeCand( pcCU, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours,vspFlag, numValidMergeCand );

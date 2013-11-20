@@ -1786,10 +1786,30 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
   memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
   InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#if ETRIKHU_MERGE_REUSE_F0093
+  rpcTempCU->m_bAvailableFlagA1 = 0;
+  rpcTempCU->m_bAvailableFlagB1 = 0;
+  rpcTempCU->m_bAvailableFlagB0 = 0;
+  rpcTempCU->m_bAvailableFlagA0 = 0;
+  rpcTempCU->m_bAvailableFlagB2 = 0;
+  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
+#else
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
 #endif
+#endif
+#else
+#if ETRIKHU_MERGE_REUSE_F0093
+  rpcTempCU->m_bAvailableFlagA1 = 0;
+  rpcTempCU->m_bAvailableFlagB1 = 0;
+  rpcTempCU->m_bAvailableFlagB0 = 0;
+  rpcTempCU->m_bAvailableFlagA0 = 0;
+  rpcTempCU->m_bAvailableFlagB2 = 0;
+  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
 #else
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
+#endif
 #endif
 
 #if H_3D_IV_MERGE
@@ -1839,7 +1859,13 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
     InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#if ETRIKHU_MERGE_REUSE_F0093
+    rpcTempCU->initAvailableFlags();
+    rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+    rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
+#else
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
+#endif
 #endif
 #endif
   for( UInt uiNoResidual = 0; uiNoResidual < iteration; ++uiNoResidual )

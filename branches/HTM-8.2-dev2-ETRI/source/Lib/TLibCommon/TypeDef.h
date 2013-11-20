@@ -174,6 +174,9 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
+#define ETRIKHU_MERGE_REUSE_F0093         1   // Reuse HEVC merge candidate list construction for base candidates, JCT3V-F0093 
+
+
 
 // Rate Control
 #define KWU_FIX_URQ                       1
