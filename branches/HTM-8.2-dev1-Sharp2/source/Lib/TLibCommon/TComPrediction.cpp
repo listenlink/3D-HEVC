@@ -1669,6 +1669,7 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
   Int depStride = yuvDepth->getStride();
   Pel *depth = yuvDepth->getLumaAddr();
 
+#if !SHARP_VSP_BLOCK_IN_AMP_F0102
   if( width<8 || height<8 )
   { // no split
     Int rightOffset = width - 1;
@@ -1706,8 +1707,18 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
     Pel *refDepthTmp[4] = { NULL, NULL, NULL, NULL };
     Pel repDepth4x8[2] = {0, 0};
     Pel repDepth8x4[2] = {0, 0};
+#endif
 
 #if !MTK_F0109_LG_F0120_VSP_BLOCK
+#if SHARP_VSP_BLOCK_IN_AMP_F0102
+    Int blocksize    = 8;
+    Int subblocksize = 4;
+    Int depStrideBlock = depStride * blocksize;
+    Pel *depthTmp = NULL;
+    Int depStrideTmp = depStride * nTxtPerDepthY;
+    Int offset[4] = { 0, subblocksize-1, subblocksize, blocksize-1 };
+    Pel *refDepthTmp[4] = { NULL, NULL, NULL, NULL };
+#endif
     Int refDepStrideBlock    = refDepStride * blocksize;
     Int refDepStrideSubBlock = refDepStride * subblocksize;
 
@@ -1716,6 +1727,78 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
     refDepthTmp[1] = refDepthTmp[2] - refDepStride;
     refDepthTmp[3] = refDepthTmp[1] + refDepStrideSubBlock;
 
+#if SHARP_VSP_BLOCK_IN_AMP_F0102
+    Int subBlockW, subBlockH;
+    Int blockW, blockH;
+    subBlockW = subBlockH = 8;
+    if (height % 8)
+    {
+      subBlockW = 8;
+      subBlockH = 4;
+      blockW = width;  // no further split
+      blockH = height; // no further split
+    }
+    else if (width % 8)
+    {
+      subBlockW = 4;
+      subBlockH = 8;
+      blockW = width;  // no further split
+      blockH = height; // no further split
+    }
+    else
+    {
+      blockW = blockH = 8;
+    }
+    for( Int y=0; y<height; y+=blockH )
+    {
+      for( Int x=0; x<width; x+=blockW )
+      {
+        if (blockW == 8 && blockH == 8)
+        {
+          Bool ULvsBR = false, URvsBL = false;
+          ULvsBR = refDepthTmp[0][x+offset[0]] < refDepthTmp[3][x+offset[3]];
+          URvsBL = refDepthTmp[0][x+offset[3]] < refDepthTmp[3][x+offset[0]];
+          if( ULvsBR ^ URvsBL )
+          { // 4x8
+            subBlockW = 4;
+            subBlockH = 8;
+          }
+          else
+          {
+            subBlockW = 8;
+            subBlockH = 4;
+          }
+        }
+        for( Int yy=0; yy<blockH; yy+=subBlockH )
+        {
+          for( Int xx=0; xx<blockW; xx+=subBlockW )
+          {
+            Pel  maxDepthVal = 0;
+            Int xP0, xP1, yP0, yP1;
+            xP0 = x+xx;
+            xP1 = x+xx+subBlockW-1;
+            yP0 = yy;
+            yP1 = yy+subBlockH-1;
+            maxDepthVal = std::max( maxDepthVal, refDepthTmp[0][xP0+yP0*refDepStride]);
+            maxDepthVal = std::max( maxDepthVal, refDepthTmp[0][xP1+yP0*refDepStride]);
+            maxDepthVal = std::max( maxDepthVal, refDepthTmp[0][xP0+yP1*refDepStride]);
+            maxDepthVal = std::max( maxDepthVal, refDepthTmp[0][xP1+yP1*refDepStride]);
+            depthTmp = &depth[x+xx+yy*depStride];
+            for( Int sY=0; sY<subBlockH; sY+=nTxtPerDepthY )
+            {
+              for( Int sX=0; sX<subBlockW; sX+=nTxtPerDepthX )
+              {
+                depthTmp[sX] = maxDepthVal;
+              }
+              depthTmp += depStrideTmp;
+            }
+          }
+        }
+      }
+      refDepthTmp[0] += refDepStrideBlock;
+      depth       += depStrideBlock;
+    }
+#else // SHARP_VSP_BLOCK_IN_AMP_F0102
     for( Int y=0; y<height; y+=blocksize )
     {
       for( Int x=0; x<width; x+=blocksize )
@@ -1811,7 +1894,62 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
       refDepthTmp[3] += refDepStrideBlock;
       depth       += depStrideBlock;
     }
+#endif // SHARP_VSP_BLOCK_IN_AMP_F0102
 #else
+#if SHARP_VSP_BLOCK_IN_AMP_F0102
+  if ((height % 8))
+  {
+    vspSize = 1; // 8x4
+  }
+  else if ((width % 8))
+  {
+    vspSize = 0; // 4x8
+  }
+  else
+  {
+    Bool ULvsBR, URvsBL;
+    ULvsBR = refDepth[0]       < refDepth[refDepStride * (height-1) + width-1];
+    URvsBL = refDepth[width-1] < refDepth[refDepStride * (height-1)];
+    vspSize = ( ULvsBR ^ URvsBL ) ? 0 : 1;
+  }
+  Int subBlockW, subBlockH;
+  Int depStrideTmp = depStride * nTxtPerDepthY;
+  if (vspSize)
+  {
+    subBlockW = 8;
+    subBlockH = 4;
+  }
+  else
+  {
+    subBlockW = 4;
+    subBlockH = 8;
+  }
+  for( Int y=0; y<height; y+=subBlockH )
+  {
+    Pel *refDepthTmp[4];
+    refDepthTmp[0] = refDepth + refDepStride * y;
+    refDepthTmp[1] = refDepthTmp[0] + subBlockW - 1;
+    refDepthTmp[2] = refDepthTmp[0] + refDepStride * (subBlockH - 1);
+    refDepthTmp[3] = refDepthTmp[2] + subBlockW - 1;
+    for( Int x=0; x<width; x+=subBlockW )
+    {
+      Pel  maxDepthVal;
+      maxDepthVal = refDepthTmp[0][x];
+      maxDepthVal = std::max( maxDepthVal, refDepthTmp[1][x]);
+      maxDepthVal = std::max( maxDepthVal, refDepthTmp[2][x]);
+      maxDepthVal = std::max( maxDepthVal, refDepthTmp[3][x]);
+      Pel *depthTmp = &depth[x+y*depStride];
+      for( Int sY=0; sY<subBlockH; sY+=nTxtPerDepthY )
+      {
+        for( Int sX=0; sX<subBlockW; sX+=nTxtPerDepthX )
+        {
+          depthTmp[sX] = maxDepthVal;
+        }
+        depthTmp += depStrideTmp;
+      }
+    }
+  }
+#else // SHARP_VSP_BLOCK_IN_AMP_F0102
     Int refDepStrideBlock    = refDepStride * height;
     Int refDepStrideSubBlock = refDepStride * height/2;
     refDepthTmp[0] = refDepth;
@@ -1934,8 +2072,11 @@ Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, 
       depth       += depStrideBlock;
     }
   }
+#endif    
 #endif
+#if !SHARP_VSP_BLOCK_IN_AMP_F0102
   }
+#endif
 
 
 }
