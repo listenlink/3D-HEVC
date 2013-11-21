@@ -1846,7 +1846,11 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
   }
   for( Int nARPW=nARPWMax; nARPW >= 0 ; nARPW-- )
   {
+#if FIX_MISSING_MACRO_R690
     memset( mergeCandBuffer, 0, MRG_MAX_NUM_CANDS_MEM*sizeof(Int) );
+#else
+    memset( mergeCandBuffer, 0, MRG_MAX_NUM_CANDS*sizeof(Int) );
+#endif
 #if LGE_SHARP_VSP_INHERIT_F0104
     rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
     rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uhDepth );
