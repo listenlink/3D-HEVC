@@ -496,7 +496,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   }
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  Bool bICEnabled = rpcTempCU->getSlice()->getViewIndex() && ( rpcTempCU->getSlice()->getSliceType() == P_SLICE || rpcTempCU->getSlice()->getSliceType() == B_SLICE ) && !rpcTempCU->getSlice()->getIsDepth();
+#else
   Bool bICEnabled = rpcTempCU->getSlice()->getViewIndex() && ( rpcTempCU->getSlice()->getSliceType() == P_SLICE || rpcTempCU->getSlice()->getSliceType() == B_SLICE );
+#endif
   bICEnabled = bICEnabled && rpcTempCU->getSlice()->getApplyIC();
 #endif
   // If slice start or slice end is within this cu...

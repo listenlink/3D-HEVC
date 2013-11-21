@@ -377,7 +377,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
   ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
+#if !SEC_DMM3_RBC_F0147
   ("RBC",                   m_useRBC,           true,  "Region boundary chain mode")
+#endif
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
@@ -508,7 +510,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AdvMultiviewResPred",      m_uiUseAdvResPred,           (UInt)1, "Usage of Advanced Residual Prediction" )
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
+#else
   ("IlluCompEnable",           m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation")
+#endif
 #endif
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
@@ -2430,7 +2436,11 @@ Void TAppEncCfg::xPrintParameter()
   printf(" ARP:%d  ", m_uiUseAdvResPred  );
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  printf( "IlluCompEnable: %d ", m_abUseIC);
+#else
   printf( "IlluCompEnable: %d %d ", m_abUseIC[0] ? 1 : 0, m_abUseIC[1] ? 1 : 0 );
+#endif
 #endif
 #if H_3D_NBDV_REF
   printf("DepthRefinement:%d ", m_depthRefinementFlag );  
@@ -2443,7 +2453,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_DIM
   printf("DMM:%d ", m_useDMM );
+#if !SEC_DMM3_RBC_F0147
   printf("RBC:%d ", m_useRBC );
+#endif
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif
