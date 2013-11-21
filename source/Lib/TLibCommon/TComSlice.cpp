@@ -1835,6 +1835,9 @@ TComVPS::TComVPS()
 #if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
 #endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+    m_bMPIFlag             [ i ] = false;
+#endif
   }  
 #endif
 #endif
@@ -2966,6 +2969,10 @@ Void TComSlice::setDepthToDisparityLUTs()
 #if H_3D_NBDV_REF
   setupLUT = setupLUT || getVPS()->getDepthRefinementFlag( layerIdInVPS );
 #endif 
+
+#if QC_DEPTH_IV_MRG_F0125
+  setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
+#endif
 
   if( !setupLUT )
     return; 

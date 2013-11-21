@@ -618,6 +618,9 @@ private:
 #if H_3D_INTER_SDC
   Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
 #endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool        m_bMPIFlag[MAX_NUM_LAYERS   ];
+#endif
 
 #endif
 public:
@@ -853,7 +856,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
 #endif
-
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool    getMPIFlag      ( Int layerIdInVps )           { return m_bMPIFlag[layerIdInVps]; }
+  Void    setMPIFlag      ( Int layerIdInVps, Bool bval ){ m_bMPIFlag[layerIdInVps] = bval; }
+#endif
 #endif  
 #endif
 };
@@ -1337,6 +1343,9 @@ public:
   Void initCamParaSPS      (  UInt uiViewIndex, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
   UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
   Bool hasCamParInSliceHeader()  { return m_bCamParInSliceHeader; }
+#if QC_DEPTH_IV_MRG_F0125
+  Void setHasCamParInSliceHeader( Bool b )  { m_bCamParInSliceHeader = b; }
+#endif
   Int* getCodedScale         ()  { return m_aaiCodedScale [0]; }
   Int* getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int* getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
