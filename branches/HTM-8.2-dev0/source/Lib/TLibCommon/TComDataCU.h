@@ -207,7 +207,9 @@ private:
   Pel*          m_dimDeltaDC[DIM_NUM_TYPE][2];
 #if H_3D_DIM_DMM
   UInt*         m_dmmWedgeTabIdx[DMM_NUM_TYPE]; 
+#if !SEC_DMM3_RBC_F0147
   UInt*         m_dmm3IntraTabIdx;
+#endif
 #endif
 #if H_3D_DIM_RBC
   UChar*        m_pucEdgeCode;          ///< array of edge code
@@ -569,10 +571,12 @@ public:
   Void  setDmmWedgeTabIdx             ( UInt dmmType, UInt uiIdx, UInt tabIdx ) { m_dmmWedgeTabIdx[dmmType][uiIdx] = tabIdx; }
   Void  setDmmWedgeTabIdxSubParts     ( UInt tabIdx, UInt dmmType, UInt uiAbsPartIdx, UInt uiDepth );
 
+#if !SEC_DMM3_RBC_F0147
   UInt* getDmm3IntraTabIdx            ()                      { return m_dmm3IntraTabIdx;        }
   UInt  getDmm3IntraTabIdx            ( UInt uiIdx )          { return m_dmm3IntraTabIdx[uiIdx]; }
   Void  setDmm3IntraTabIdx            ( UInt uiIdx, UInt uh ) { m_dmm3IntraTabIdx[uiIdx] = uh;   }
   Void  setDmm3IntraTabIdxSubParts    ( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 #endif
 #if H_3D_DIM_RBC
   UChar* getEdgeCode( UInt uiIdx )                 { return &m_pucEdgeCode[uiIdx * RBC_MAX_EDGE_NUM_PER_4x4]; }
@@ -724,6 +728,10 @@ public:
   Bool          isIntra   ( UInt uiPartIdx )  { return m_pePredMode[ uiPartIdx ] == MODE_INTRA; }
   Bool          isSkipped ( UInt uiPartIdx );                                                     ///< SKIP (no residual)
   Bool          isBipredRestriction( UInt puIdx );
+
+#if LGE_IC_CTX_F0160
+  Bool          isIC      ( UInt uiPartIdx );
+#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // member functions for symbol prediction (most probable / mode conversion)

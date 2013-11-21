@@ -119,7 +119,9 @@ TComDataCU::TComDataCU()
   {
     m_dmmWedgeTabIdx[i] = NULL;
   }
+#if !SEC_DMM3_RBC_F0147
   m_dmm3IntraTabIdx = NULL;
+#endif
 #endif
 #if H_3D_DIM_RBC
   m_pucEdgeCode     = NULL;
@@ -270,7 +272,9 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     {
       m_dmmWedgeTabIdx[i]    = (UInt*)xMalloc(UInt, uiNumPartition);
     }
+#if !SEC_DMM3_RBC_F0147
     m_dmm3IntraTabIdx = (UInt*)xMalloc(UInt, uiNumPartition);
+#endif
 #endif
 #if H_3D_DIM_RBC
     m_pucEdgeCode     = (UChar*)xMalloc(UChar, uiNumPartition * RBC_MAX_EDGE_NUM_PER_4x4);
@@ -403,7 +407,9 @@ Void TComDataCU::destroy()
     {
       if ( m_dmmWedgeTabIdx[i] ) { xFree( m_dmmWedgeTabIdx[i] ); m_dmmWedgeTabIdx[i] = NULL; }
     }
+#if !SEC_DMM3_RBC_F0147
     if ( m_dmm3IntraTabIdx ) { xFree( m_dmm3IntraTabIdx ); m_dmm3IntraTabIdx = NULL; }
+#endif
 #endif
 #if H_3D_DIM_RBC
     if ( m_pbEdgeLeftFirst ) { xFree( m_pbEdgeLeftFirst ); m_pbEdgeLeftFirst = NULL; }
@@ -621,7 +627,9 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     {
       memset( m_dmmWedgeTabIdx[i] + firstElement, 0,                      numElements * sizeof( *m_dmmWedgeTabIdx[i] ) );
     }
+#if !SEC_DMM3_RBC_F0147
     memset( m_dmm3IntraTabIdx   + firstElement, 0,                        numElements * sizeof( *m_dmm3IntraTabIdx ) );
+#endif
 #endif
 #if H_3D_DIM_RBC
     memset( m_pucEdgeCode       + firstElement, 0,                        numElements * sizeof( *m_pucEdgeCode     ) * RBC_MAX_EDGE_NUM_PER_4x4 );
@@ -798,7 +806,9 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
       {
         m_dmmWedgeTabIdx[i] [ui] = 0;
       }
+#if !SEC_DMM3_RBC_F0147
       m_dmm3IntraTabIdx [ui] = 0;
+#endif
 #endif
 #if H_3D_DIM_SDC
       m_pbSDCFlag           [ui] = false;
@@ -909,7 +919,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   {
     memset( m_dmmWedgeTabIdx[i], 0, sizeof(UInt) * m_uiNumPartition );
   }
+#if !SEC_DMM3_RBC_F0147
   memset( m_dmm3IntraTabIdx, 0, sizeof(UInt) * m_uiNumPartition );
+#endif
 #endif
 #if H_3D_DIM_RBC
   memset( m_pucEdgeCode    , 0, iSizeInUchar * RBC_MAX_EDGE_NUM_PER_4x4 );
@@ -991,7 +1003,9 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       {
         m_dmmWedgeTabIdx[i] [ui] = pcCU->m_dmmWedgeTabIdx[i] [uiPartOffset+ui];
       }
+#if !SEC_DMM3_RBC_F0147
       m_dmm3IntraTabIdx [ui] = pcCU->m_dmm3IntraTabIdx[uiPartOffset+ui];
+#endif
 #endif
 #if H_3D_DIM_SDC
       m_pbSDCFlag           [ui] = pcCU->m_pbSDCFlag            [ uiPartOffset + ui ];
@@ -1145,7 +1159,9 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     m_dmmWedgeTabIdx[i] = pcCU->getDmmWedgeTabIdx( i ) + uiPart;
   }
+#if !SEC_DMM3_RBC_F0147
   m_dmm3IntraTabIdx = pcCU->getDmm3IntraTabIdx() + uiPart;
+#endif
 #endif
 #if H_3D_DIM_RBC
   m_pucEdgeCode     = pcCU->getEdgeCode( uiPart );
@@ -1341,7 +1357,9 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   {
     memcpy( m_dmmWedgeTabIdx[i] + uiOffset, pcCU->getDmmWedgeTabIdx( i ), sizeof(UInt) * uiNumPartition );
   }
+#if !SEC_DMM3_RBC_F0147
   memcpy( m_dmm3IntraTabIdx + uiOffset, pcCU->getDmm3IntraTabIdx(), sizeof(UInt) * uiNumPartition );
+#endif
 #endif
 #if H_3D_DIM_RBC
   memcpy( getEdgeCode( uiOffset ),       pcCU->getEdgeCode(0),      iSizeInUchar * RBC_MAX_EDGE_NUM_PER_4x4 );
@@ -1468,7 +1486,9 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   {
     memcpy( rpcCU->getDmmWedgeTabIdx( i ) + m_uiAbsIdxInLCU, m_dmmWedgeTabIdx[i], sizeof(UInt) * m_uiNumPartition );
   }
+#if !SEC_DMM3_RBC_F0147
   memcpy( rpcCU->getDmm3IntraTabIdx() + m_uiAbsIdxInLCU, m_dmm3IntraTabIdx, sizeof(UInt) * m_uiNumPartition );
+#endif
 #endif
 #if H_3D_DIM_RBC
   memcpy( rpcCU->getEdgeCode( m_uiAbsIdxInLCU ),         m_pucEdgeCode,     iSizeInUchar * RBC_MAX_EDGE_NUM_PER_4x4 );
@@ -1581,7 +1601,9 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   {
     memcpy( rpcCU->getDmmWedgeTabIdx( i ) + uiPartOffset, m_dmmWedgeTabIdx[i], sizeof(UInt) * uiQNumPart );
   }
+#if !SEC_DMM3_RBC_F0147
   memcpy( rpcCU->getDmm3IntraTabIdx() + uiPartOffset, m_dmm3IntraTabIdx, sizeof(UInt) * uiQNumPart );
+#endif
 #endif
 #if H_3D_DIM_RBC
   memcpy( rpcCU->getEdgeCode( uiPartOffset ),         m_pucEdgeCode,     iSizeInUchar * RBC_MAX_EDGE_NUM_PER_4x4 );
@@ -2312,6 +2334,17 @@ UInt TComDataCU::getCTXARPWFlag( UInt uiAbsPartIdx )
 UInt TComDataCU::getCtxICFlag( UInt uiAbsPartIdx )
 {
   UInt        uiCtx = 0;
+
+#if LGE_IC_CTX_F0160
+  TComDataCU* pcTempCU = NULL;
+  UInt        uiTempPartIdx = 0;
+
+  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  uiCtx    = ( pcTempCU ) ? pcTempCU->isIC( uiTempPartIdx ) : 0;
+
+  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
+  uiCtx    += ( pcTempCU ) ? pcTempCU->isIC( uiTempPartIdx ) : 0;
+#endif
 
   return uiCtx;
 }
@@ -6646,6 +6679,17 @@ Bool TComDataCU::isSkipped( UInt uiPartIdx )
   return ( getSkipFlag( uiPartIdx ) );
 }
 
+#if LGE_IC_CTX_F0160
+Bool TComDataCU::isIC( UInt uiPartIdx )
+{
+    if ( m_pcSlice->isIntra () )
+    {
+        return false;
+    }
+    return ( ( getSkipFlag(uiPartIdx) || getPredictionMode(uiPartIdx) == MODE_INTER) && getICFlag( uiPartIdx ) && isICFlagRequired( uiPartIdx ) );
+}
+#endif
+
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
@@ -8303,11 +8347,13 @@ Void TComDataCU::setDmmWedgeTabIdxSubParts( UInt tabIdx, UInt dmmType, UInt uiAb
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
   for( UInt ui = 0; ui < uiCurrPartNumb; ui++ ) { m_dmmWedgeTabIdx[dmmType][uiAbsPartIdx+ui] = tabIdx; }
 }
+#if !SEC_DMM3_RBC_F0147
 Void  TComDataCU::setDmm3IntraTabIdxSubParts( UInt uiTIdx, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
   for( UInt ui = 0; ui < uiCurrPartNumb; ui++ ) { m_dmm3IntraTabIdx[uiAbsPartIdx+ui] = uiTIdx; }
 }
+#endif
 #endif
 #if H_3D_DIM_RBC
 Void TComDataCU::reconPartition( UInt uiAbsPartIdx, UInt uiDepth, Bool bLeft, UChar ucStartPos, UChar ucNumEdge, UChar* pucEdgeCode, Bool* pbRegion )

@@ -1802,7 +1802,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+    else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth())
+#else
     else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) )
+#endif
     {
       UInt uiCodeTmp = 0;
 

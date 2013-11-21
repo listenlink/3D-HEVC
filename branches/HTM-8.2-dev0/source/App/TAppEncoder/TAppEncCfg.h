@@ -125,7 +125,11 @@ protected:
   UInt                   m_uiARPStepNum;
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  Bool   m_abUseIC;
+#else
   vector<Bool> m_abUseIC;                                    ///< flag for using illumination compensation for inter-view prediction
+#endif
 #endif
 #if H_3D_NBDV_REF
   Bool m_depthRefinementFlag;  
@@ -464,7 +468,9 @@ protected:
 #endif
 #if H_3D_DIM
   Bool      m_useDMM;                                        ///< flag for using DMM
+#if !SEC_DMM3_RBC_F0147
   Bool      m_useRBC;                                        ///< flag for using RBC
+#endif
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif

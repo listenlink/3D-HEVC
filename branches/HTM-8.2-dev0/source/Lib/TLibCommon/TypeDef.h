@@ -64,6 +64,7 @@
 #define H_MV          ( HEVC_EXT != 0)
 #define H_3D          ( HEVC_EXT == 2)
 
+#define LGE_BUGFIX_F0158 1 //JCT3V-F0158
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -101,6 +102,9 @@
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
                                               // SHARP_ILLUCOMP_REFINE_E0046
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
+
+#define LGE_IC_CTX_F0160 1 //JCT3V-F0160
+#define SEC_ONLY_TEXTURE_IC_F0151         1
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -157,6 +161,7 @@
                                               // SCU_HS_DMM4_REMOVE_DIV_E0242 DMM4 Division Removal
                                               // LGE_SDC_REMOVE_DC_E0158 Removal of DC mode from SDC
                                               // LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   Removal of overlap between DMM3 and DMM1
+#define SEC_DMM3_RBC_F0147                1   // Removal of DMM3 and RBC from DMMs
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
@@ -212,12 +217,17 @@
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
+#if !SEC_DMM3_RBC_F0147
 #define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
+#endif
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#define QC_DIM_DELTADC_UNIFY_F0132        1   // Unify delta DC coding in depth intra modes
+#define HHI_DIM_PREDSAMP_FIX_F0171        1
+#define LGE_PRED_RES_CODING_DLT_DOMAIN_F0159 1 //JCT3V-F0159
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP

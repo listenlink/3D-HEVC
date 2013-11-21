@@ -424,7 +424,9 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   UInt dimType    = getDimType  ( uiIntraMode );
   Bool dimDeltaDC = isDimDeltaDC( uiIntraMode );    
   Bool isDmmMode  = (dimType <  DMM_NUM_TYPE);
+#if !SEC_DMM3_RBC_F0147
   Bool isRbcMode  = (dimType == RBC_IDX);
+#endif
 
   Bool* biSegPattern  = NULL;
   UInt  patternStride = 0;
@@ -440,6 +442,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       {
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
       } break;
+#if !SEC_DMM3_RBC_F0147
     case( DMM3_IDX ): 
       {
         UInt uiTabIdx = 0;
@@ -451,6 +454,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
         }
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ uiTabIdx ]);
       } break;
+#endif
     case( DMM4_IDX ): 
       {
         dmmSegmentation = new TComWedgelet( iWidth, iHeight );
@@ -474,8 +478,12 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   // get predicted partition values
   assert( biSegPattern );
   Int* piMask = NULL;
+#if QC_DIM_DELTADC_UNIFY_F0132 || HHI_DIM_PREDSAMP_FIX_F0171
+  piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt ); // no filtering
+#else
   if( isDmmMode ) piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt ); // no filtering for DMM
   else            piMask = pcCU->getPattern()->getPredictorPtr( 0, g_aucConvertToBit[ iWidth ] + 2, m_piYuvExt );
+#endif
   assert( piMask );
   Int maskStride = 2*iWidth + 1;  
   Int* ptrSrc = piMask+maskStride+1;
@@ -490,7 +498,11 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     Pel deltaDC1 = pcCU->getDimDeltaDC( dimType, 0, uiAbsPartIdx );
     Pel deltaDC2 = pcCU->getDimDeltaDC( dimType, 1, uiAbsPartIdx );
 #if H_3D_DIM_DMM
+#if QC_DIM_DELTADC_UNIFY_F0132 && !SEC_DMM3_RBC_F0147
+    if( isDmmMode || isRbcMode)
+#else
     if( isDmmMode )
+#endif
     {
 #if H_3D_DIM_DLT
       segDC1 = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 ) + deltaDC1 );
@@ -501,7 +513,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
 #endif
     }
 #endif
-#if H_3D_DIM_RBC
+#if H_3D_DIM_RBC && !QC_DIM_DELTADC_UNIFY_F0132
     if( isRbcMode )
     {
       xDeltaDCQuantScaleUp( pcCU, deltaDC1 );
@@ -2397,6 +2409,7 @@ Void TComPrediction::xAssignBiSegDCs( Pel* ptrDst, UInt dstStride, Bool* biSegPa
 }
 
 #if H_3D_DIM_DMM
+#if !SEC_DMM3_RBC_F0147
 UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt intraTabIdx )
 {
   TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
@@ -2408,6 +2421,7 @@ UInt TComPrediction::xPredWedgeFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UIn
   assert( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 );
   return g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]][uiColTexIntraDir-2].at(intraTabIdx);
 }
+#endif
 
 Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge )
 {
