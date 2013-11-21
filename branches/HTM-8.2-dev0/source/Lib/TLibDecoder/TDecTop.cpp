@@ -965,7 +965,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->getTempRefPicLists( m_cListPic, m_refPicSetInterLayer0, m_refPicSetInterLayer1, tempRefPicLists, usedAsLongTerm, numPocTotalCurr);
     pcSlice->setRefPicList     ( tempRefPicLists, usedAsLongTerm, numPocTotalCurr, true ); 
 #if H_3D_ARP
+#if SHARP_ARP_REF_CHECK_F0105
+    pcSlice->setARPStepNum(m_ivPicLists);
+#else
     pcSlice->setARPStepNum();
+#endif
     if( pcSlice->getARPStepNum() > 1 )
     {
       // GT: This seems to be broken, not all nuh_layer_ids are necessarily present
