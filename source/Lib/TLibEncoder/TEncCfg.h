@@ -411,9 +411,14 @@ protected:
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
+#if !SEC_DMM3_RBC_F0147
   Bool      m_useRBC;
+#endif
   Bool      m_useSDC;
   Bool      m_useDLT;
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool      m_useMPI;
 #endif
 #if H_3D_QTLPC
   Bool      m_bUseQTL;
@@ -979,8 +984,10 @@ public:
 #if H_3D_DIM
   Bool      getUseDMM                       ()        { return m_useDMM; }
   Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
+#if !SEC_DMM3_RBC_F0147
   Bool      getUseRBC                       ()        { return m_useRBC; }
   Void      setUseRBC                       ( Bool b) { m_useRBC = b;    }
+#endif
   Bool      getUseSDC                       ()        { return m_useSDC; }
   Void      setUseSDC                       ( Bool b) { m_useSDC = b;    }
   Bool      getUseDLT                       ()        { return m_useDLT; }
@@ -991,6 +998,10 @@ public:
   Bool      getUseQTL                       ()         { return m_bUseQTL; }
   Void      setUsePC                        ( Bool b ) { m_bUsePC  = b;    }
   Bool      getUsePC                        ()         { return m_bUsePC;  }
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Void      setUseMPI                       ( Bool b ) { m_useMPI = b;    }
+  Bool      getUseMPI                       ()         { return m_useMPI; }
 #endif
 #endif // H_3D
 };

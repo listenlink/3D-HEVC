@@ -496,7 +496,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   }
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  Bool bICEnabled = rpcTempCU->getSlice()->getViewIndex() && ( rpcTempCU->getSlice()->getSliceType() == P_SLICE || rpcTempCU->getSlice()->getSliceType() == B_SLICE ) && !rpcTempCU->getSlice()->getIsDepth();
+#else
   Bool bICEnabled = rpcTempCU->getSlice()->getViewIndex() && ( rpcTempCU->getSlice()->getSliceType() == P_SLICE || rpcTempCU->getSlice()->getSliceType() == B_SLICE );
+#endif
   bICEnabled = bICEnabled && rpcTempCU->getSlice()->getApplyIC();
 #endif
   // If slice start or slice end is within this cu...
@@ -566,6 +570,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         {
           PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
           rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+#if QC_DEPTH_IV_MRG_F0125
+          if (rpcTempCU->getSlice()->getIsDepth() )
+          {
+            DvInfo.bDV = rpcTempCU->getDispNeighBlocks(0, 0, &DvInfo);
+          }
+          else
+          {
+#endif 
 #if H_3D_NBDV_REF
           if(rpcTempCU->getSlice()->getVPS()->getDepthRefinementFlag( rpcTempCU->getSlice()->getLayerIdInVps()))
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
@@ -573,6 +585,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif 
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo);
 
+#if QC_DEPTH_IV_MRG_F0125
+          }
+#endif
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
           rpcBestCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
           rpcTempCU->setPartSizeSubParts( ePartTemp, 0, uiDepth );
@@ -1763,16 +1778,42 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
   }
 #endif
 
+#if H_3D_ARP && LGE_SHARP_VSP_INHERIT_F0104 
+  DisInfo cOrigDisInfo = rpcTempCU->getDvInfo(0);
+#else
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
   rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uhDepth );
+#endif
 
 #if H_3D_VSP
+#if !(H_3D_ARP && LGE_SHARP_VSP_INHERIT_F0104)
   Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
   memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
   InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
+#if ETRIKHU_MERGE_REUSE_F0093
+  rpcTempCU->m_bAvailableFlagA1 = 0;
+  rpcTempCU->m_bAvailableFlagB1 = 0;
+  rpcTempCU->m_bAvailableFlagB0 = 0;
+  rpcTempCU->m_bAvailableFlagA0 = 0;
+  rpcTempCU->m_bAvailableFlagB2 = 0;
+  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
+#else
+  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
+#endif
+#endif
+#else
+#if ETRIKHU_MERGE_REUSE_F0093
+  rpcTempCU->m_bAvailableFlagA1 = 0;
+  rpcTempCU->m_bAvailableFlagB1 = 0;
+  rpcTempCU->m_bAvailableFlagB0 = 0;
+  rpcTempCU->m_bAvailableFlagA0 = 0;
+  rpcTempCU->m_bAvailableFlagB2 = 0;
+  rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+  rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
 #else
   rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
+#endif
 #endif
 
 #if H_3D_IV_MERGE
@@ -1780,7 +1821,11 @@ Void TEncCu::xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTem
 #else
   Int mergeCandBuffer[MRG_MAX_NUM_CANDS];
 #endif
+#if H_3D_ARP && LGE_SHARP_VSP_INHERIT_F0104
+for( UInt ui = 0; ui < rpcTempCU->getSlice()->getMaxNumMergeCand(); ++ui )
+#else
 for( UInt ui = 0; ui < numValidMergeCand; ++ui )
+#endif
   {
     mergeCandBuffer[ui] = 0;
   }
@@ -1805,7 +1850,31 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
   }
   for( Int nARPW=nARPWMax; nARPW >= 0 ; nARPW-- )
   {
+#if FIX_MISSING_MACRO_R690
+    memset( mergeCandBuffer, 0, MRG_MAX_NUM_CANDS_MEM*sizeof(Int) );
+#else
     memset( mergeCandBuffer, 0, MRG_MAX_NUM_CANDS*sizeof(Int) );
+#endif
+#if LGE_SHARP_VSP_INHERIT_F0104
+    rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
+    rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uhDepth );
+    rpcTempCU->setARPWSubParts( (UChar)nARPW , 0 , uhDepth );
+#if H_3D_IC
+    rpcTempCU->setICFlagSubParts( bICFlag, 0, 0, uhDepth );
+#endif
+    rpcTempCU->getDvInfo(0) = cOrigDisInfo;
+    rpcTempCU->setDvInfoSubParts(cOrigDisInfo, 0, 0, uhDepth );
+    Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
+    memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+    InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#if ETRIKHU_MERGE_REUSE_F0093
+    rpcTempCU->initAvailableFlags();
+    rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+    rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
+#else
+    rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
+#endif
+#endif
 #endif
   for( UInt uiNoResidual = 0; uiNoResidual < iteration; ++uiNoResidual )
   {
@@ -1843,8 +1912,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
           rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
-
-#if H_3D_ARP
+#if H_3D_ARP && !QC_MTK_INTERVIEW_ARP_F0123_F0108
           if( nARPW )
           {
             Bool bSignalflag[2] = { true, true };
@@ -1859,7 +1927,11 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
             }
             if( !bSignalflag[0] && !bSignalflag[1] )
             {
+#if LGE_SHARP_VSP_INHERIT_F0104
+              continue;
+#else
               rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
+#endif
             }
           }
 #endif
@@ -2050,6 +2122,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
     m_pcPredSearch->motionCompensation( rpcTempCU , m_ppcPredYuvTemp[uhDepth] );
 
+#if !QC_MTK_INTERVIEW_ARP_F0123_F0108
     if(rpcTempCU->getPartitionSize(0)==SIZE_2Nx2N)
     {
       Bool bSignalflag[2] = { true, true };
@@ -2067,6 +2140,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
         rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
       }
     }
+#endif
   }
   else
   {
@@ -2087,6 +2161,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
    {
      m_ppcWeightedTempCU[uhDepth]->copyPartFrom( rpcTempCU , 0 , uhDepth );
 
+#if !QC_MTK_INTERVIEW_ARP_F0123_F0108
      Bool bSignalflag[2] = { true, true };
      for(UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx ++ )
      {
@@ -2101,6 +2176,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
      {
        rpcTempCU->setARPWSubParts( 0 , 0 , uhDepth );
      }
+#endif
    }
   }
 #endif

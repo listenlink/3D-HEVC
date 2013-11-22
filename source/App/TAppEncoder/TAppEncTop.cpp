@@ -148,10 +148,17 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setIsDepth                      ( isDepth );
     //====== Camera Parameters =========
     m_cTEncTop.setCameraParameters             ( &m_cCameraData );     
+#if QC_DEPTH_IV_MRG_F0125
+    m_cTEncTop.setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
+    m_cTEncTop.setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
+    m_cTEncTop.setCodedScale                   ( m_cCameraData.getCodedScale             () );
+    m_cTEncTop.setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#else
     m_cTEncTop.setCamParPrecision              ( isDepth ? false : m_cCameraData.getCamParsCodedPrecision  () );
     m_cTEncTop.setCamParInSliceHeader          ( isDepth ? 0     : m_cCameraData.getVaryingCameraParameters() );
     m_cTEncTop.setCodedScale                   ( isDepth ? 0     : m_cCameraData.getCodedScale             () );
     m_cTEncTop.setCodedOffset                  ( isDepth ? 0     : m_cCameraData.getCodedOffset            () );
+#endif
 #if H_3D_VSO
     //====== VSO =========
     m_cTEncTop.setRenderModelParameters        ( &m_cRenModStrParser ); 
@@ -176,12 +183,18 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layerIdInVps ) ? 1 : H_3D_ARP_WFNR     );
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+    m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
+#else
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 ? false : m_abUseIC[isDepth ? 1 : 0] );
+#endif
 #endif
   //========== Depth intra modes ==========
 #if H_3D_DIM
     m_cTEncTop.setUseDMM                       ( isDepth ? m_useDMM               : false );
+#if !SEC_DMM3_RBC_F0147
     m_cTEncTop.setUseRBC                       ( isDepth ? m_useRBC               : false );
+#endif
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
@@ -192,6 +205,9 @@ Void TAppEncTop::xInitLibCfg()
     //====== Depth Inter SDC =========
 #if H_3D_INTER_SDC
     m_cTEncTop.setInterSDCEnable               ( isDepth ? m_bDepthInterSDCFlag    : false );
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+    m_cTEncTop.setUseMPI               ( isDepth ? m_bMPIFlag    : false );
 #endif
 #endif // H_3D
 
@@ -1640,7 +1656,11 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif  
 
 #if H_3D_DIM
+#if SEC_DMM3_RBC_F0147
+    vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useSDC || m_useDLT ) );
+#else
     vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useRBC || m_useSDC || m_useDLT ) );
+#endif
 #if H_3D_DIM_DLT
     vps.setUseDLTFlag( layer , isDepth && m_useDLT );
     if( vps.getUseDLTFlag( layer ) )
@@ -1651,7 +1671,18 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 
 #if H_3D_IV_MERGE
+#if QC_DEPTH_IV_MRG_F0125
+    if( isDepth )
+    {
+      vps.setIvMvPredFlag         ( layer, (layer != 1) && m_ivMvPredFlag[1] ); 
+    }
+    else
+    {
+      vps.setIvMvPredFlag         ( layer, !isLayerZero && m_ivMvPredFlag[0] ); 
+    }
+#else
     vps.setIvMvPredFlag         ( layer, !isLayerZero && !isDepth && m_ivMvPredFlag ); 
+#endif
 #endif
 #if H_3D_NBDV_REF
     vps.setDepthRefinementFlag  ( layer, !isLayerZero && !isDepth && m_depthRefinementFlag );         
@@ -1661,6 +1692,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif      
 #if H_3D_INTER_SDC
     vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+    vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag );
 #endif
   }  
 #if H_3D

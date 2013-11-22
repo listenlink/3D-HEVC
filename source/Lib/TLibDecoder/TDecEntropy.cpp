@@ -110,7 +110,11 @@ Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 {
   pcCU->setICFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
 
+#if SEC_ONLY_TEXTURE_IC_F0151
+  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() )
+#else
   if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) )
+#endif
   {
     return;
   }
@@ -234,6 +238,14 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     {
       decodeMergeIndex( pcCU, uiPartIdx, uiSubPartIdx, uiDepth );
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+      decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+#if H_3D_ARP
+      decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+#endif
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 ) 
       {
         pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
@@ -243,7 +255,13 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
           memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
           InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#if ETRIKHU_MERGE_REUSE_F0093
+          pcSubCU->initAvailableFlags();
+          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
+          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
+#else
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
+#endif
           pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
           if(vspFlag[uiMergeIndex])
@@ -251,7 +269,14 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
             pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
           }
 #else
+#if ETRIKHU_MERGE_REUSE_F0093
+          pcSubCU->initAvailableFlags();
+          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
+          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+
+#else
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+#endif
 #endif
           isMerged = true;
         }
@@ -264,14 +289,26 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
         memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
         InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#if ETRIKHU_MERGE_REUSE_F0093
+        pcSubCU->initAvailableFlags();
+        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo,numValidMergeCand, uiMergeIndex );
+#else
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo,numValidMergeCand, uiMergeIndex );
+#endif
         pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
         if(vspFlag[uiMergeIndex])
         {
           pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
         }
 #else
+#if ETRIKHU_MERGE_REUSE_F0093
+        pcSubCU->initAvailableFlags();
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#else
+        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#endif
 #endif
       }
       pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
@@ -300,6 +337,14 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           decodeMVPIdxPU   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
         }
       }
+#if LGE_SHARP_VSP_INHERIT_F0104
+#if H_3D_IC
+      decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+#if H_3D_ARP
+      decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+#endif
     }
 #if H_3D_VSP
     if ( (pcCU->getInterDir(uiSubPartIdx) == 3) && pcSubCU->isBipredRestriction(uiPartIdx) && (pcCU->getVSPFlag(uiSubPartIdx) == false))

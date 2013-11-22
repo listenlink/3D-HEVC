@@ -114,14 +114,22 @@ protected:
   std::vector< std::vector<Int  > > m_minHorizontalCtuOffsetPlus1;
 
 #if H_3D_IV_MERGE
+#if QC_DEPTH_IV_MRG_F0125
+  vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
+#else
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
+#endif
 #endif
 #if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
   UInt                   m_uiUseAdvResPred;
   UInt                   m_uiARPStepNum;
 #endif
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+  Bool   m_abUseIC;
+#else
   vector<Bool> m_abUseIC;                                    ///< flag for using illumination compensation for inter-view prediction
+#endif
 #endif
 #if H_3D_NBDV_REF
   Bool m_depthRefinementFlag;  
@@ -460,7 +468,9 @@ protected:
 #endif
 #if H_3D_DIM
   Bool      m_useDMM;                                        ///< flag for using DMM
+#if !SEC_DMM3_RBC_F0147
   Bool      m_useRBC;                                        ///< flag for using RBC
+#endif
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif
@@ -470,6 +480,9 @@ protected:
 #endif
 #if H_3D_INTER_SDC
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool m_bMPIFlag;                                           ///< flag for MPI of depth map coding
 #endif
 #endif
   // internal member functions
