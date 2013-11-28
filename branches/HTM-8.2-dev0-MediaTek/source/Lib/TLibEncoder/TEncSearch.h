@@ -426,6 +426,9 @@ protected:
                                   , Int* vspFlag
                                   , InheritedVSPDisInfo*  inheritedVSPDisInfo
 #endif
+#if MTK_SPIVMP_F0110
+                                  , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
+#endif
                                   , Int& numValidMergeCand
                                    );
 

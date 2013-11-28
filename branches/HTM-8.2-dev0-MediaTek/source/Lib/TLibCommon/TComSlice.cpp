@@ -1837,6 +1837,9 @@ TComVPS::TComVPS()
   {
 #if H_3D_IV_MERGE
     m_ivMvPredFlag         [ i ] = false;
+#if MTK_SPIVMP_F0110
+    m_iSubPULog2Size       [ i ] = 0;
+#endif
 #endif
 #if H_3D_VSP
     m_viewSynthesisPredFlag[ i ] = false;

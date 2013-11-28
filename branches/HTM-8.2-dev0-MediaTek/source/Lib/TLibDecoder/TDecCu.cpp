@@ -402,11 +402,22 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
     InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-
+#if MTK_SPIVMP_F0110
+    Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
+    memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
+    TComMvField*  pcMvFieldSP;
+    UChar* puhInterDirSP;
+    pcMvFieldSP = new TComMvField[pcCU->getPic()->getPicSym()->getNumPartition()*2]; 
+    puhInterDirSP = new UChar[pcCU->getPic()->getPicSym()->getNumPartition()]; 
+#endif
 #if ETRIKHU_MERGE_REUSE_F0093
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand, uiMergeIndex );
+    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo
+#if MTK_SPIVMP_F0110
+      , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
+#endif
+      , numValidMergeCand, uiMergeIndex );
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand, uiMergeIndex );
 #endif
@@ -456,6 +467,29 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
       }
     }
+#if MTK_SPIVMP_F0110
+    pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth ); 
+    if (bSPIVMPFlag[uiMergeIndex])
+    {
+      UInt uiSPAddr;
+      Int iWidth = pcCU->getWidth(uiAbsPartIdx);
+      Int iHeight = pcCU->getHeight(uiAbsPartIdx);
+
+      Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
+
+      pcCU->getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
+
+      for (Int iPartitionIdx = 0; iPartitionIdx < iNumSP; iPartitionIdx++)
+      {
+        pcCU->getSPAbsPartIdx(uiAbsPartIdx, iSPWidth, iSPHeight, iPartitionIdx, iNumSPInOneLine, uiSPAddr);
+        pcCU->setInterDirSP(puhInterDirSP[iPartitionIdx], uiSPAddr, iSPWidth, iSPHeight);
+        pcCU->getCUMvField( REF_PIC_LIST_0 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx], iSPWidth, iSPHeight);
+        pcCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
+      }
+    }
+    delete pcMvFieldSP;
+    delete puhInterDirSP;
+#endif
 #if !LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
     m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );

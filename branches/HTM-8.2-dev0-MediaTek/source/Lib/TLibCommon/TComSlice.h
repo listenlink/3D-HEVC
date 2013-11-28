@@ -596,6 +596,9 @@ private:
 #endif
 #if H_3D_IV_MERGE
   Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
+#if MTK_SPIVMP_F0110
+  Int         m_iSubPULog2Size           [MAX_NUM_LAYERS   ];
+#endif
 #endif
 #if H_3D_VSP
   Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ];
@@ -828,6 +831,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
 #if H_3D_IV_MERGE
   Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
   Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
+#if MTK_SPIVMP_F0110
+  Int     getSubPULog2Size(Int layerIdInVps)           { return m_iSubPULog2Size[layerIdInVps]; }
+  Void    setSubPULog2Size(Int layerIdInVps, Int u)    { m_iSubPULog2Size[layerIdInVps] = u;}
+#endif
 #endif
 #if H_3D_VSP
   Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }

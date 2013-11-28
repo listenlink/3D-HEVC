@@ -182,6 +182,9 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseAdvRP                     ( ( isDepth || 0==layerIdInVps ) ? 0 : m_uiUseAdvResPred );
     m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layerIdInVps ) ? 1 : H_3D_ARP_WFNR     );
 #endif
+#if MTK_SPIVMP_F0110
+    m_cTEncTop.setSubPULog2Size                 (( isDepth || 0==layerIdInVps ) ? 0 : m_iSubPULog2Size   );
+#endif
 #if H_3D_IC
 #if SEC_ONLY_TEXTURE_IC_F0151
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
@@ -1654,6 +1657,16 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setUseAdvRP        ( layer, ( isDepth || isLayerZero ) ? 0 : m_uiUseAdvResPred );
     vps.setARPStepNum      ( layer, ( isDepth || isLayerZero ) ? 1 : H_3D_ARP_WFNR     );
 #endif  
+#if MTK_SPIVMP_F0110
+    if( isDepth )
+    {
+      vps.setSubPULog2Size         ( layer, (layer != 1) ? m_iSubPULog2Size: 0 ); 
+    }
+    else
+    {
+      vps.setSubPULog2Size         ( layer, (!isLayerZero) ? m_iSubPULog2Size: 0 ); 
+    }
+#endif
 
 #if H_3D_DIM
 #if SEC_DMM3_RBC_F0147
