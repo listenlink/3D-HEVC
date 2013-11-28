@@ -509,6 +509,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_ARP
   ("AdvMultiviewResPred",      m_uiUseAdvResPred,           (UInt)1, "Usage of Advanced Residual Prediction" )
 #endif
+#if MTK_SPIVMP_F0110
+  ("SubPULog2Size", m_iSubPULog2Size, (Int)3, "Sub-PU size index: 2^n")
+#endif
+
 #if H_3D_IC
 #if SEC_ONLY_TEXTURE_IC_F0151
   ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
@@ -1486,6 +1490,11 @@ Void TAppEncCfg::xCheckParameter()
 #if H_3D_ARP
   xConfirmPara( ( 0 != m_uiUseAdvResPred ) &&  ( 1 != m_uiUseAdvResPred ), "UseAdvResPred must be 0 or 1." );
 #endif
+#if MTK_SPIVMP_F0110
+  xConfirmPara( m_iSubPULog2Size < 2,                                        "SubPULog2Size must be 2 or greater.");
+  xConfirmPara( m_iSubPULog2Size > 6,                                        "SubPULog2Size must be 6 or smaller.");
+  xConfirmPara( (1<<m_iSubPULog2Size) > m_uiMaxCUWidth,                      "SubPULog2Size must be log2(maxCUSize) or smaller.");
+#endif
 #if ADAPTIVE_QP_SELECTION
 #if H_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
@@ -2430,6 +2439,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
 #else
   printf("IvMvPred:%d ", m_ivMvPredFlag );
+#endif
+#if MTK_SPIVMP_F0110
+  printf(" SubPULog2Size:%d  " , m_iSubPULog2Size  );
 #endif
 #endif
 #if H_3D_ARP

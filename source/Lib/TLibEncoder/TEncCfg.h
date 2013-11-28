@@ -402,6 +402,9 @@ protected:
   UInt      m_uiUseAdvResPred;
   UInt      m_uiARPStepNum;
 #endif
+#if MTK_SPIVMP_F0110
+  Int      m_iSubPULog2Size;
+#endif
 #if H_3D_IC
   Bool      m_bUseIC;
 #endif
@@ -504,6 +507,10 @@ public:
 
   UInt       getARPStepNum                  ()               { return m_uiARPStepNum;    }
   Void       setARPStepNum                  ( UInt  u )      { m_uiARPStepNum = u;       }
+#endif
+#if MTK_SPIVMP_F0110
+  Int        getSubPULog2Size                   ()                   { return m_iSubPULog2Size;}
+  Void       setSubPULog2Size                   (Int u)              { m_iSubPULog2Size = u; }     
 #endif
 
 #if H_3D_IC

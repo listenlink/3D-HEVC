@@ -39,6 +39,10 @@
 #include "TComMotionInfo.h"
 #include "assert.h"
 #include <stdlib.h>
+#if MTK_SPIVMP_F0110
+#include "TComDataCU.h"
+#include "TComPic.h"
+#endif
 
 //! \ingroup TLibCommon
 //! \{
@@ -322,6 +326,32 @@ Void TComCUMvField::setAllMvField( TComMvField const & mvField, PartSize eCUMode
   setAllMv    ( mvField.getMv(),     eCUMode, iPartAddr, uiDepth, iPartIdx );
   setAllRefIdx( mvField.getRefIdx(), eCUMode, iPartAddr, uiDepth, iPartIdx );
 }
+
+#if MTK_SPIVMP_F0110
+Void TComCUMvField::setMvFieldSP( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  )
+{
+  uiAbsPartIdx += pcCU->getZorderIdxInCU();
+  Int iStartPelX = g_auiRasterToPelX[g_auiZscanToRaster[uiAbsPartIdx]];
+  Int iStartPelY = g_auiRasterToPelY[g_auiZscanToRaster[uiAbsPartIdx]];
+  Int iEndPelX = iStartPelX + iWidth;
+  Int iEndPelY = iStartPelY + iHeight;
+
+  Int iCurrRaster, uiPartAddr;
+
+  for (Int i=iStartPelY; i<iEndPelY; i+=pcCU->getPic()->getMinCUHeight())
+  {
+    for (Int j=iStartPelX; j < iEndPelX; j += pcCU->getPic()->getMinCUWidth())
+    {
+      iCurrRaster = i / pcCU->getPic()->getMinCUHeight() * pcCU->getPic()->getNumPartInWidth() + j/pcCU->getPic()->getMinCUWidth();
+      uiPartAddr = g_auiRasterToZscan[iCurrRaster];
+      uiPartAddr -= pcCU->getZorderIdxInCU();  
+
+      m_pcMv[uiPartAddr] = cMvField.getMv();
+      m_piRefIdx[uiPartAddr] = cMvField.getRefIdx();
+    }
+  }
+}
+#endif
 
 /**Subsampling of the stored prediction mode, reference index and motion vector
  * \param pePredMode Pointer to prediction modes

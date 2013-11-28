@@ -1005,6 +1005,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       {
 #if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
+#if MTK_SPIVMP_F0110
+        WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
+#endif
 #endif
 #if H_3D_ARP
         WRITE_FLAG( pcVPS->getUseAdvRP             ( i ) ? 1 : 0,  "iv_res_pred_flag[i]"  );
@@ -1022,6 +1025,12 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
         if(i!=1)
         {
           WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
+        }
+#endif
+#if MTK_SPIVMP_F0110
+        if (i!=1)
+        {
+          WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
         }
 #endif
 #if SEC_MPI_ENABLING_MERGE_F0150

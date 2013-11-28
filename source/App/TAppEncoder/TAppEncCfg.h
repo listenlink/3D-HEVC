@@ -119,6 +119,9 @@ protected:
 #else
   Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
 #endif
+#if MTK_SPIVMP_F0110
+  Int                    m_iSubPULog2Size;                    
+#endif
 #endif
 #if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
   UInt                   m_uiUseAdvResPred;

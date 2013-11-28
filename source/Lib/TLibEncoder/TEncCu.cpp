@@ -1867,10 +1867,23 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
     InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#if MTK_SPIVMP_F0110
+    Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
+    memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
+    TComMvField*  pcMvFieldSP;
+    UChar* puhInterDirSP;
+    pcMvFieldSP = new TComMvField[rpcTempCU->getPic()->getPicSym()->getNumPartition()*2]; 
+    puhInterDirSP = new UChar[rpcTempCU->getPic()->getPicSym()->getNumPartition()]; 
+#endif
 #if ETRIKHU_MERGE_REUSE_F0093
     rpcTempCU->initAvailableFlags();
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-    rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo, numValidMergeCand );
+    rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo
+#if MTK_SPIVMP_F0110
+      , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
+#endif
+      , numValidMergeCand 
+      );
 #else
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
 #endif
@@ -1909,9 +1922,35 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
           rpcTempCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, 0, 0, uhDepth );
 #endif
-          rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
-          rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
-          rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
+#if MTK_SPIVMP_F0110
+          rpcTempCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeCand], 0, 0, uhDepth);
+          if (bSPIVMPFlag[uiMergeCand])
+          {
+            UInt uiSPAddr;
+            Int iWidth = rpcTempCU->getWidth(0);
+            Int iHeight = rpcTempCU->getHeight(0);
+
+            Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
+
+            rpcTempCU->getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
+
+            for (Int iPartitionIdx = 0; iPartitionIdx < iNumSP; iPartitionIdx++)
+            {
+              rpcTempCU->getSPAbsPartIdx(0, iSPWidth, iSPHeight, iPartitionIdx, iNumSPInOneLine, uiSPAddr);
+              rpcTempCU->setInterDirSP(puhInterDirSP[iPartitionIdx], uiSPAddr, iSPWidth, iSPHeight);
+              rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setMvFieldSP(rpcTempCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx], iSPWidth, iSPHeight);
+              rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(rpcTempCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
+            }
+          }
+          else
+          {
+#endif
+            rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
+            rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
+            rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
+#if MTK_SPIVMP_F0110
+          }
+#endif
 #if H_3D_ARP && !QC_MTK_INTERVIEW_ARP_F0123_F0108
           if( nARPW )
           {
@@ -2053,6 +2092,10 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
     }
   }
  }
+#if MTK_SPIVMP_F0110
+ delete pcMvFieldSP;
+ delete puhInterDirSP;
+#endif
 #if H_3D_ARP
  }
 #endif

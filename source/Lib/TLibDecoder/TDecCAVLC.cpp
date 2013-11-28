@@ -1244,12 +1244,18 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
     pcVPS->setUseAdvRP  ( i, 0 );
     pcVPS->setARPStepNum( i, 1 );
 #endif  
+#if MTK_SPIVMP_F0110
+    pcVPS->setSubPULog2Size(i, 0);
+#endif
     if ( i != 0 )
     {
       if( !( pcVPS->getDepthId( i ) == 1 ) )
       {
 #if H_3D_IV_MERGE
         READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#if MTK_SPIVMP_F0110
+        READ_UVLC (uiCode, "log2_sub_PU_size_minus2");     pcVPS->setSubPULog2Size(i, uiCode+2); 
+#endif
 #endif
 #if H_3D_ARP
         READ_FLAG( uiCode, "iv_res_pred_flag[i]"  );       pcVPS->setUseAdvRP  ( i, uiCode ); pcVPS->setARPStepNum( i, uiCode ? H_3D_ARP_WFNR : 1 );
@@ -1268,6 +1274,12 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
         if(i!=1)
         {
           READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+        }
+#endif
+#if MTK_SPIVMP_F0110
+        if (i!=1)
+        {
+          READ_UVLC (uiCode, "log2_sub_PU_size_minus2");     pcVPS->setSubPULog2Size(i, uiCode+2); 
         }
 #endif
 #if SEC_MPI_ENABLING_MERGE_F0150
