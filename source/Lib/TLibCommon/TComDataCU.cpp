@@ -8434,17 +8434,28 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
     // iLoopCan == 0 --> IvMC
     // iLoopCan == 1 --> IvMCShift 
 
+#if !MTK_SPIVMP_F0110
     Int         iBaseCUAddr;
     Int         iBaseAbsPartIdx;
+#endif
 
     Int offsetW = (iLoopCan == 0) ? 0 : ( ((iWidth /2)*4) + 4 );
     Int offsetH = (iLoopCan == 0) ? 0 : ( ((iHeight/2)*4) + 4 );
 
+#if MTK_SPIVMP_F0110
+    iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + offsetW + 2 ) >> 2 ) );
+    iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + offsetH + 2 ) >> 2 ) ); 
+#else
     Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + offsetW + 2 ) >> 2 ) );
     Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + offsetH + 2 ) >> 2 ) ); 
+#endif
     pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY , iBaseCUAddr, iBaseAbsPartIdx );
 
+#if MTK_SPIVMP_F0110
+    pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
+#else
     TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
+#endif
     if(!( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTRA ))
     {
       // Loop reference picture list of current slice (X in spec). 
