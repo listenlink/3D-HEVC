@@ -281,6 +281,21 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   m_iLastPOC       = (Int)pcSlice->getPOC();
 }
 
+#if QC_DEPTH_IV_MRG_F0125
+Void
+CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
+{
+  UInt uiViewIndex = pcSlice->getViewIndex();
+
+  pcSlice->getSPS()->initCamParaSPS( uiViewIndex, m_uiCamParsCodedPrecision, m_bCamParsVaryOverTime, m_aaiCodedScale, m_aaiCodedOffset );
+
+  if( m_bCamParsVaryOverTime )
+  {
+    pcSlice->setCamparaSlice( m_aaiCodedScale, m_aaiCodedOffset );
+  }
+}
+#endif
+
 Bool
 CamParsCollector::xIsComplete()
 {
@@ -950,7 +965,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->getTempRefPicLists( m_cListPic, m_refPicSetInterLayer0, m_refPicSetInterLayer1, tempRefPicLists, usedAsLongTerm, numPocTotalCurr);
     pcSlice->setRefPicList     ( tempRefPicLists, usedAsLongTerm, numPocTotalCurr, true ); 
 #if H_3D_ARP
+#if SHARP_ARP_REF_CHECK_F0105
+    pcSlice->setARPStepNum(m_ivPicLists);
+#else
     pcSlice->setARPStepNum();
+#endif
     if( pcSlice->getARPStepNum() > 1 )
     {
       // GT: This seems to be broken, not all nuh_layer_ids are necessarily present
@@ -1052,6 +1071,13 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cTrQuant.setUseScalingList(false);
   }
 
+#if QC_DEPTH_IV_MRG_F0125
+  if( pcSlice->getIsDepth() && m_pcCamParsCollector )
+  {
+    m_pcCamParsCollector->copyCamParamForSlice( pcSlice );
+  }
+#endif
+
   //  Decode a picture
   m_cGopDecoder.decompressSlice(nalu.m_Bitstream, pcPic);
 #if H_3D
@@ -1059,6 +1085,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     m_pcCamParsCollector->setSlice( pcSlice );
   }
+#if QC_DEPTH_IV_MRG_F0125
+  if( pcSlice->getIsDepth() )
+  {
+    pcSlice->getSPS()->setHasCamParInSliceHeader( false );
+  }
+#endif
 #endif
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;

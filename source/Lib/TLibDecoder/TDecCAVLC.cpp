@@ -1244,12 +1244,18 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
     pcVPS->setUseAdvRP  ( i, 0 );
     pcVPS->setARPStepNum( i, 1 );
 #endif  
+#if MTK_SPIVMP_F0110
+    pcVPS->setSubPULog2Size(i, 0);
+#endif
     if ( i != 0 )
     {
       if( !( pcVPS->getDepthId( i ) == 1 ) )
       {
 #if H_3D_IV_MERGE
         READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#if MTK_SPIVMP_F0110
+        READ_UVLC (uiCode, "log2_sub_PU_size_minus2");     pcVPS->setSubPULog2Size(i, uiCode+2); 
+#endif
 #endif
 #if H_3D_ARP
         READ_FLAG( uiCode, "iv_res_pred_flag[i]"  );       pcVPS->setUseAdvRP  ( i, uiCode ); pcVPS->setARPStepNum( i, uiCode ? H_3D_ARP_WFNR : 1 );
@@ -1264,7 +1270,21 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       }
       else
       {
-
+#if QC_DEPTH_IV_MRG_F0125 && H_3D_IV_MERGE
+        if(i!=1)
+        {
+          READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+        }
+#endif
+#if MTK_SPIVMP_F0110
+        if (i!=1)
+        {
+          READ_UVLC (uiCode, "log2_sub_PU_size_minus2");     pcVPS->setSubPULog2Size(i, uiCode+2); 
+        }
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+        READ_FLAG( uiCode, "mpi_flag[i]" );             pcVPS->setMPIFlag( i, uiCode == 1 ? true : false );
+#endif
         READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
         //          READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPreFlag     ( i, uiCode == 1 ? true : false ); 
 #if H_3D_DIM_DLT
@@ -1794,7 +1814,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
+#if SEC_ONLY_TEXTURE_IC_F0151
+    else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth())
+#else
     else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) )
+#endif
     {
       UInt uiCodeTmp = 0;
 
@@ -1812,8 +1836,22 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
 #if H_3D_IV_MERGE
+#if SEC_MPI_ENABLING_MERGE_F0150
+      if(rpcSlice->getIsDepth())
+      {
+        Bool bMPIFlag = rpcSlice->getVPS()->getMPIFlag( rpcSlice->getLayerIdInVps() ) ;
+        Bool ivMvPredFlag = rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ;
+        rpcSlice->setMaxNumMergeCand(( ( bMPIFlag || ivMvPredFlag ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+      }
+      else
+      {
+        Bool ivMvPredFlag = rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ;
+        rpcSlice->setMaxNumMergeCand(( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+      }
+#else
       Bool ivMvPredFlag = rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ;
       rpcSlice->setMaxNumMergeCand(( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#endif
 #else
       rpcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
 #endif

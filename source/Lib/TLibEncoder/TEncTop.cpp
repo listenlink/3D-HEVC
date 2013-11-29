@@ -834,7 +834,9 @@ Void TEncTop::xInitSPS()
     pcVUI->setLog2MaxMvLengthVertical(getLog2MaxMvLengthVertical());
   }
 #if H_3D
+#if !QC_DEPTH_IV_MRG_F0125
   if ( !m_isDepth )
+#endif
   {
     m_cSPS.initCamParaSPS           ( m_viewIndex, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
   }

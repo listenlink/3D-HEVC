@@ -64,6 +64,7 @@
 #define H_MV          ( HEVC_EXT != 0)
 #define H_3D          ( HEVC_EXT == 2)
 
+
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -130,7 +131,9 @@
                                               // MTK_INTERVIEW_MERGE_A0049     , second part
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
-                                              // QC_INRIA_MTK_MRG_E0126            
+                                              // QC_INRIA_MTK_MRG_E0126 
+
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -161,7 +164,6 @@
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
 
-
 // OTHERS
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
 #define H_3D_REN_MAX_DEV_OUT              0   // Output maximal possible shift deviation 
@@ -171,7 +173,6 @@
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
-
 
 // Rate Control
 #define KWU_FIX_URQ                       1
@@ -211,7 +212,6 @@
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
-#define H_3D_DIM_RBC                      1   // Region Boundary Chain mode
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
@@ -226,7 +226,6 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
-
 #endif
 
 ///// ***** ILLUMATION COMPENSATION *********
@@ -242,6 +241,52 @@
 #else
 #define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #endif
+
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   HTM-9.0 Integrations //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#if H_3D
+#define FIX_MISSING_MACRO_R690                  1 // Missing macro in integration to revision 690
+
+#define SEC_MPI_ENABLING_MERGE_F0150            1 // MPI flag in VPS and enabling in Merge mode
+#define ETRIKHU_MERGE_REUSE_F0093               1 // Reuse HEVC merge candidate list construction for base candidates, JCT3V-F0093 
+
+#if H_3D_ARP
+#define QC_MTK_INTERVIEW_ARP_F0123_F0108        1 //JCT3V-F0123; JCT3V-F0108
+#define SHARP_ARP_REF_CHECK_F0105               1 // ARP reference picture selection and DPB check
+#define LGE_ARP_CTX_F0161                       1 //JCT3V-F0161
+#endif
+
+#if H_3D_IV_MERGE
+#define QC_DEPTH_IV_MRG_F0125                   1 // JCT3V-F0125: Depth oriented Inter-view MV candidate
+#define MTK_SPIVMP_F0110                        1 // JCT3V-F0110: Sub-PU level inter-view motion prediction
+#define BUGFIX_F0093                            1 // bug fix for F0093 for depth IvMC pruning
+#endif
+
+#if H_3D_VSP
+#define MTK_F0109_LG_F0120_VSP_BLOCK            1 // MTK_LG_SIMPLIFY_VSP_BLOCK_PARTITION_F0109_F0120  
+#define SHARP_VSP_BLOCK_IN_AMP_F0102            1 // VSP partitioning for AMP
+#define MTK_VSP_SIMPLIFICATION_F0111            1 // 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
+#define LGE_SHARP_VSP_INHERIT_F0104             1
+#endif
+
+#define LGE_BUGFIX_F0158                        1 //JCT3V-F0158
+#define LGE_IC_CTX_F0160                        1 //JCT3V-F0160
+#define SEC_ONLY_TEXTURE_IC_F0151               1
+
+#if H_3D_DIM
+#define SEC_DMM3_RBC_F0147                      1 // Removal of DMM3 and RBC from DMMs
+#if !SEC_DMM3_RBC_F0147
+#define H_3D_DIM_RBC                            1 // Region Boundary Chain mode
+#endif
+#define QC_DIM_DELTADC_UNIFY_F0132              1 // Unify delta DC coding in depth intra modes
+#define HHI_DIM_PREDSAMP_FIX_F0171              1
+#define LGE_PRED_RES_CODING_DLT_DOMAIN_F0159    1 //JCT3V-F0159
+#endif
+#endif
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////

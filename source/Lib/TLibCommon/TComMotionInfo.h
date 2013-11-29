@@ -42,7 +42,6 @@
 #include <memory.h>
 #include "CommonDef.h"
 #include "TComMv.h"
-
 //! \ingroup TLibCommon
 //! \{
 
@@ -50,6 +49,9 @@
 // Type definition
 // ====================================================================================================================
 
+#if MTK_SPIVMP_F0110
+class TComDataCU;
+#endif
 /// parameters for AMVP
 typedef struct _AMVPInfo
 {
@@ -170,6 +172,9 @@ public:
   Void    setAllMvd    ( TComMv const & rcMvd,        PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllRefIdx ( Int iRefIdx,                 PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllMvField( TComMvField const & mvField, PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
+#if MTK_SPIVMP_F0110
+  Void    setMvFieldSP ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  );
+#endif
 
   Void setNumPartition( Int iNumPart )
   {

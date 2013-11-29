@@ -117,10 +117,16 @@ private:
   Void  xWriteCoefRemainExGolomb ( UInt symbol, UInt &rParam );
   #if H_3D_DIM
   Void  xWriteExGolombLevel  ( UInt uiSymbol, ContextModel& rcSCModel  );
+#if QC_DIM_DELTADC_UNIFY_F0132
+  Void  xCodeDimDeltaDC      ( Pel valDeltaDC, UInt uiNumSeg );
+#else
   Void  xCodeDimDeltaDC      ( Pel valDeltaDC, UInt dimType );
+#endif
 #if H_3D_DIM_DMM
   Void  xCodeDmm1WedgeIdx    ( UInt uiTabIdx, Int iNumBit );
+#if !SEC_DMM3_RBC_F0147
   Void  xCodeDmm3WedgeIdx    ( UInt uiIntraIdx, Int iNumBit );
+#endif
 #endif
 #if H_3D_DIM_RBC
   Void  xCodeRbcEdge         ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -252,7 +258,9 @@ private:
   ContextModel3DBuffer m_cDdcDataSCModel;
 #if H_3D_DIM_DMM
   ContextModel3DBuffer m_cDmm1DataSCModel;
+#if !SEC_DMM3_RBC_F0147
   ContextModel3DBuffer m_cDmm3DataSCModel;
+#endif
 #endif
 #if H_3D_DIM_RBC
   ContextModel3DBuffer m_cRbcDataSCModel;
