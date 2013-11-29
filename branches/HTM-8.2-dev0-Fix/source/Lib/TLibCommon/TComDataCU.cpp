@@ -4144,7 +4144,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     iPosLeftAbove[1] = numA1B1B0;
 #if H_3D_VSP
+#if BUGFIX_2_F0093 && MTK_VSP_SIMPLIFICATION_F0111
+    if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1) 
+#else
     if (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1
+#endif
 #if LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
       && !bICFlag
@@ -4172,7 +4176,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if ( getAvailableFlagB0())
   {
 #if H_3D_VSP
+#if BUGFIX_2_F0093 && MTK_VSP_SIMPLIFICATION_F0111
+    if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1) 
+#else
     if (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1
+#endif
 #if LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
       && !bICFlag
@@ -4226,7 +4234,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if (getAvailableFlagB2())
   {
 #if H_3D_VSP
+#if BUGFIX_2_F0093 && MTK_VSP_SIMPLIFICATION_F0111
+    if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1) 
+#else
     if (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1
+#endif
 #if LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
       && !bICFlag
