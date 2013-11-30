@@ -596,6 +596,9 @@ private:
 #endif
 #if H_3D_IV_MERGE
   Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
+#if MTK_SPIVMP_F0110
+  Int         m_iSubPULog2Size           [MAX_NUM_LAYERS   ];
+#endif
 #endif
 #if H_3D_VSP
   Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ];
@@ -617,6 +620,9 @@ private:
 #endif
 #if H_3D_INTER_SDC
   Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
+#endif
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool        m_bMPIFlag[MAX_NUM_LAYERS   ];
 #endif
 
 #endif
@@ -825,6 +831,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
 #if H_3D_IV_MERGE
   Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
   Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
+#if MTK_SPIVMP_F0110
+  Int     getSubPULog2Size(Int layerIdInVps)           { return m_iSubPULog2Size[layerIdInVps]; }
+  Void    setSubPULog2Size(Int layerIdInVps, Int u)    { m_iSubPULog2Size[layerIdInVps] = u;}
+#endif
 #endif
 #if H_3D_VSP
   Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }
@@ -853,7 +863,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
 #endif
-
+#if SEC_MPI_ENABLING_MERGE_F0150
+  Bool    getMPIFlag      ( Int layerIdInVps )           { return m_bMPIFlag[layerIdInVps]; }
+  Void    setMPIFlag      ( Int layerIdInVps, Bool bval ){ m_bMPIFlag[layerIdInVps] = bval; }
+#endif
 #endif  
 #endif
 };
@@ -1337,6 +1350,9 @@ public:
   Void initCamParaSPS      (  UInt uiViewIndex, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
   UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
   Bool hasCamParInSliceHeader()  { return m_bCamParInSliceHeader; }
+#if QC_DEPTH_IV_MRG_F0125
+  Void setHasCamParInSliceHeader( Bool b )  { m_bCamParInSliceHeader = b; }
+#endif
   Int* getCodedScale         ()  { return m_aaiCodedScale [0]; }
   Int* getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int* getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
@@ -1729,8 +1745,14 @@ private:
   Int        m_aiAlterRefIdx   [2]; 
 #endif
 #if H_3D_ARP
+#if SHARP_ARP_REF_CHECK_F0105
+  Bool m_arpRefPicAvailable[2][MAX_NUM_LAYERS];
+#endif
   TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
   UInt                 m_nARPStepNum; 
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+  Int         m_aiFirstTRefIdx    [2]; 
+#endif
 #endif
 #if H_3D_IC
   Bool      m_bApplyIC;
@@ -1817,7 +1839,11 @@ public:
 #endif
 #if H_3D_ARP
   Void      setBaseViewRefPicList( TComList<TComPic*> *pListPic, Int iViewIdx )      { m_pBaseViewRefPicList[iViewIdx] = pListPic;                   }
+#if SHARP_ARP_REF_CHECK_F0105
+  Void      setARPStepNum( TComPicLists*ivPicLists );
+#else
   Void      setARPStepNum();                                 
+#endif
   TComPic*  getBaseViewRefPic    ( UInt uiPOC , Int iViewIdx )                       { return xGetRefPic( *m_pBaseViewRefPicList[iViewIdx], uiPOC ); }
   UInt      getARPStepNum( )                                                         { return m_nARPStepNum;                                         }  
 #endif
@@ -2017,6 +2043,13 @@ public:
   Void      generateAlterRefforTMVP ();   
   Void      setAlterRefIdx          ( RefPicList e, Int i ) { m_aiAlterRefIdx[e]    = i;      }
   Int       getAlterRefIdx          ( RefPicList e )        { return  m_aiAlterRefIdx[e];     }
+#endif
+#if QC_MTK_INTERVIEW_ARP_F0123_F0108
+  Int       getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];     }
+  Void      setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;      }
+#endif
+#if SHARP_ARP_REF_CHECK_F0105
+  Bool      getArpRefPicAvailable( RefPicList e, Int viewIdx) {return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }
 #endif
   Void      setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth            ()                 { return m_isDepth; }
