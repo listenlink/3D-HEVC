@@ -502,9 +502,9 @@ Void TComPic::destroyNonDBFilterInfo()
 Void TComPic::print( Bool legend )
 {
   if ( legend )
-    std::cout  << "LId"        << "\t" << "POC"   << "\t" << "Rec"          << "\t" << "Ref"                       << "\t" << "LT"            << std::endl;
+    std::cout  << std::endl << "LId"        << "\t" << "POC"   << "\t" << "Rec"          << "\t" << "Ref"                       << "\t" << "LT"            <<  "\t" << "OutMark" <<  "\t" << "OutFlag" << std::endl;
   else
-    std::cout  << getLayerId() << "\t" << getPOC()<< "\t" << getReconMark() << "\t" << getSlice(0)->isReferenced() << "\t" << getIsLongTerm() << std::endl;
+    std::cout  << getLayerId() << "\t" << getPOC()<< "\t" << getReconMark() << "\t" << getSlice(0)->isReferenced() << "\t" << getIsLongTerm() << "\t" << getOutputMark() << "\t" << getSlice(0)->getPicOutputFlag() <<std::endl;
 }
 
 TComPic* TComPicLists::getPic( Int layerIdInNuh, Int poc )
@@ -523,13 +523,12 @@ TComPic* TComPicLists::getPic( Int layerIdInNuh, Int poc )
   }
   return pcPic;
 }
-
 #if H_3D
 TComPic* TComPicLists::getPic( Int viewIndex, Bool depthFlag, Int poc )
 {
   return getPic   ( m_vps->getLayerIdInNuh( viewIndex, depthFlag ), poc );
 }
-
+#endif
 Void TComPicLists::print()
 {
   Bool first = true;     
@@ -570,11 +569,13 @@ TComPicYuv* TComPicLists::getPicYuv( Int layerIdInNuh, Int poc, Bool reconFlag )
   return pcPicYuv;
 }
 
+#if H_3D
 TComPicYuv* TComPicLists::getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon )
 {  
   Int layerIdInNuh = m_vps->getLayerIdInNuh( viewIndex, depthFlag ); 
   return getPicYuv( layerIdInNuh, poc, recon );
 }
+
 #if H_3D_ARP
 TComList<TComPic*>* TComPicLists::getPicList( Int layerIdInNuh )
 {
@@ -592,7 +593,7 @@ TComList<TComPic*>* TComPicLists::getPicList( Int layerIdInNuh )
   return *itL;
 }
 #endif
-#endif // H_3D
+#endif
 #endif // H_MV
 
 #if H_3D_NBDV 
