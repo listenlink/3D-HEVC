@@ -4491,8 +4491,13 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         }
       }
 #if MTK_SPIVMP_F0110
+#if MTK_F0110_FIX
+      delete[] pcMvFieldSP;
+      delete[] puhInterDirSP;
+#else
       delete pcMvFieldSP;
       delete puhInterDirSP;
+#endif
 #endif
     }
 

@@ -1947,7 +1947,11 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #if MTK_SPIVMP_F0110
     if( isDepth )
     {
+#if MTK_F0110_FIX
+      vps.setSubPULog2Size         ( layer, (layer != 1) ? 6: 0 ); 
+#else
       vps.setSubPULog2Size         ( layer, (layer != 1) ? m_iSubPULog2Size: 0 ); 
+#endif
     }
     else
     {

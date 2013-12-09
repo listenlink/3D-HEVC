@@ -401,8 +401,13 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     }
   }
 #if MTK_SPIVMP_F0110
+#if MTK_F0110_FIX
+  delete[] pcMvFieldSP;
+  delete[] puhInterDirSP;
+#else
   delete pcMvFieldSP;
   delete puhInterDirSP;
+#endif
 #endif
   return;
 }
