@@ -263,6 +263,7 @@
 #if H_3D_IV_MERGE
 #define QC_DEPTH_IV_MRG_F0125                   1 // JCT3V-F0125: Depth oriented Inter-view MV candidate
 #define MTK_SPIVMP_F0110                        1 // JCT3V-F0110: Sub-PU level inter-view motion prediction
+#define MTK_F0110_FIX                           1 // Disable Sub-PU IVMP in Depth, fix some delete problems
 #define BUGFIX_F0093                            1 // bug fix for F0093 for depth IvMC pruning
 #define BUGFIX_2_F0093                          1 // bug fix for VSP inheritance
 #endif
