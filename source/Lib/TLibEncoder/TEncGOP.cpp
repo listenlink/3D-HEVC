@@ -663,7 +663,11 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     refPicListModification->setRefPicListModificationFlagL0(0);
     refPicListModification->setRefPicListModificationFlagL1(0);
 #if H_MV
+#if H_MV_6_RALS_O0149_11
+    if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > 0 )
+#else
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > 1 )
+#endif
     {
       // Some more sophisticated algorithm to determine discardable_flag might be added here. 
       pcSlice->setDiscardableFlag           ( false );     
@@ -673,6 +677,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
     GOPEntry gopEntry      = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid );     
     
+#if H_MV_6_ILDDS_ILREFPICS_27_34
+    Bool interLayerPredLayerIdcPresentFlag = false; 
+#endif
     if ( getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && numDirectRefLayers > 0 )
     {         
       pcSlice->setInterLayerPredEnabledFlag ( gopEntry.m_numActiveRefLayerPics > 0 );     
@@ -684,6 +691,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
         if ( gopEntry.m_numActiveRefLayerPics != vps->getNumDirectRefLayers( getLayerId() ) )
         {        
+#if H_MV_6_ILDDS_ILREFPICS_27_34
+          interLayerPredLayerIdcPresentFlag = true; 
+#endif
           for (Int i = 0; i < gopEntry.m_numActiveRefLayerPics; i++ )
           {
             pcSlice->setInterLayerPredLayerIdc( i, gopEntry.m_interLayerPredLayerIdc[ i ] ); 
@@ -691,6 +701,17 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
       }
     }
+#if H_MV_6_ILDDS_ILREFPICS_27_34
+    if ( !interLayerPredLayerIdcPresentFlag )
+    {
+      for( Int i = 0; i < pcSlice->getNumActiveRefLayerPics(); i++ )   
+      {
+        pcSlice->setInterLayerPredLayerIdc(i, pcSlice->getRefLayerPicIdc( i ) );
+      }
+    }
+#endif
+
+
     assert( pcSlice->getNumActiveRefLayerPics() == gopEntry.m_numActiveRefLayerPics ); 
     
     pcSlice->createInterLayerReferencePictureSet( m_ivPicLists, m_refPicSetInterLayer0, m_refPicSetInterLayer1 ); 
