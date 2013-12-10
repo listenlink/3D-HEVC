@@ -487,8 +487,13 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
       }
     }
+#if MTK_F0110_FIX
+    delete[] pcMvFieldSP;
+    delete[] puhInterDirSP;
+#else
     delete pcMvFieldSP;
     delete puhInterDirSP;
+#endif
 #endif
 #if !LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
