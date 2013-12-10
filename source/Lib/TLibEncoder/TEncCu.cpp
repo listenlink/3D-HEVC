@@ -2093,8 +2093,13 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
   }
  }
 #if MTK_SPIVMP_F0110
+#if MTK_F0110_FIX
+ delete[] pcMvFieldSP;
+ delete[] puhInterDirSP;
+#else
  delete pcMvFieldSP;
  delete puhInterDirSP;
+#endif
 #endif
 #if H_3D_ARP
  }
