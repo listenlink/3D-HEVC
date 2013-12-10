@@ -634,6 +634,12 @@ Void TDecTop::xActivateParameterSets()
   m_apcSlicePilot->setSPS(sps);
 #if H_MV
   m_apcSlicePilot->setVPS(vps);  
+#if H_MV_6_PS_0092_17
+  // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
+  assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, pps->getLayerId() ) );   
+  // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
+  assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, sps->getLayerId() ) );
+#endif
   sps->inferRepFormat  ( vps , m_layerId ); 
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
 #endif
@@ -664,7 +670,11 @@ Void TDecTop::xActivateParameterSets()
 }
 
 #if H_MV
+#if H_MV_FIX_SKIP_PICTURES
+Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag  )
+#else
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag )
+#endif
 {
   assert( nalu.m_layerId == m_layerId ); 
 
@@ -721,11 +731,18 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   m_ivPicLists->setVPS( vps ); 
 #endif
 #endif
+
+#if H_MV_LAYER_WISE_STARTUP
+    xCeckNoClrasOutput();
+#endif
     // Skip pictures due to random access
     if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
     {
     m_prevSliceSkipped = true;
     m_skippedPOC = m_apcSlicePilot->getPOC();
+#if H_MV_FIX_SKIP_PICTURES
+      sliceSkippedFlag = true; 
+#endif
       return false;
     }
     // Skip TFD pictures associated with BLA/BLANT pictures
@@ -733,6 +750,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     {
     m_prevSliceSkipped = true;
     m_skippedPOC = m_apcSlicePilot->getPOC();
+#if H_MV_FIX_SKIP_PICTURES
+      sliceSkippedFlag = true; 
+#endif
       return false;
     }
 
@@ -1170,7 +1190,11 @@ Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType 
 }
 
 #if H_MV
+#if H_MV_FIX_SKIP_PICTURES
+Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag )
+#else
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayerFlag)
+#endif
 #else
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 #endif
@@ -1215,7 +1239,11 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_RASL_R:
 #if H_MV
+#if H_MV_FIX_SKIP_PICTURES
+      return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag, sliceSkippedFlag );
+#else
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag);
+#endif
 #else
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
 #endif
@@ -1264,28 +1292,77 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     iSkipFrame--;   // decrement the counter
     return true;
   }
+#if H_MV_LAYER_WISE_STARTUP
+  else if ( !m_layerInitilizedFlag[ m_layerId ] ) // start of random access point, m_pocRandomAccess has not been set yet.
+#else
   else if (m_pocRandomAccess == MAX_INT) // start of random access point, m_pocRandomAccess has not been set yet.
+#endif
   {
     if (   m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA
         || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
         || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
         || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL )
     {
+
+#if H_MV_LAYER_WISE_STARTUP
+      if ( xAllRefLayersInitilized() )
+      {
+        m_layerInitilizedFlag[ m_layerId ] = true; 
+        m_pocRandomAccess = m_apcSlicePilot->getPOC();
+      }
+      else
+      {
+        return true; 
+      }
+#else
       // set the POC random access since we need to skip the reordered pictures in the case of CRA/CRANT/BLA/BLANT.
       m_pocRandomAccess = m_apcSlicePilot->getPOC();
+#endif
     }
     else if ( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
+#if H_MV_LAYER_WISE_STARTUP
+      if ( xAllRefLayersInitilized() )
+      {
+        m_layerInitilizedFlag[ m_layerId ] = true; 
       m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
     }
     else 
     {
+        return true; 
+      }
+#else
+      m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
+#endif
+    }
+    else 
+    {
+#if H_MV_FIX_SKIP_PICTURES
+      static Bool warningMessage[MAX_NUM_LAYERS];
+      static Bool warningInitFlag = false;
+      
+      if (!warningInitFlag)
+      {
+        for ( Int i = 0; i < MAX_NUM_LAYERS; i++)
+        {
+          warningMessage[i] = true; 
+        }
+        warningInitFlag = true; 
+      }
+
+      if ( warningMessage[getLayerId()] )
+      {
+        printf("\nLayer%3d   No valid random access point. VCL NAL units of this layer are discarded until next layer initialization picture. ", getLayerId() ); 
+        warningMessage[m_layerId] = false; 
+      }
+#else
       static Bool warningMessage = false;
       if(!warningMessage)
       {
         printf("\nWarning: this is not a valid random access point and the data is discarded until the first CRA picture");
         warningMessage = true;
       }
+#endif
       return true;
     }
   }
@@ -1295,8 +1372,12 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     iPOCLastDisplay++;
     return true;
   }
+#if H_MV_LAYER_WISE_STARTUP
+  return !m_layerInitilizedFlag[ getLayerId() ]; 
+#else
   // if we reach here, then the picture is not skipped.
   return false; 
+#endif
 }
 
 #if H_MV
@@ -1337,5 +1418,41 @@ Void TDecTop::xResetPocInPicBuffer()
     }     
   }
 }
+
+#if H_MV_LAYER_WISE_STARTUP
+Void TDecTop::xCeckNoClrasOutput()
+{
+  // This part needs further testing! 
+  if ( getLayerId() == 0 )
+  {    
+    NalUnitType nut = m_apcSlicePilot->getNalUnitType(); 
+
+    Bool isBLA =  ( nut == NAL_UNIT_CODED_SLICE_BLA_W_LP  )  || ( nut == NAL_UNIT_CODED_SLICE_BLA_N_LP ) || ( nut == NAL_UNIT_CODED_SLICE_BLA_W_RADL ); 
+    Bool isIDR  = ( nut == NAL_UNIT_CODED_SLICE_IDR_W_RADL ) || ( nut == NAL_UNIT_CODED_SLICE_IDR_N_LP ); 
+    Bool noClrasOutputFlag  = isBLA || ( isIDR  &&  m_apcSlicePilot->getCrossLayerBlaFlag() ); 
+
+    if ( noClrasOutputFlag ) 
+    {
+      for (Int i = 0; i < MAX_NUM_LAYER_IDS; i++)
+      {
+        m_layerInitilizedFlag[i] = false; 
+      } 
+    }
+  }
+}
+
+Bool TDecTop::xAllRefLayersInitilized()
+{
+  Bool allRefLayersInitilizedFlag = true; 
+  TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); 
+  for (Int i = 0; i < vps->getNumDirectRefLayers( getLayerId()  ); i++ )
+  {
+    Int refLayerId = vps->getRefLayerId( m_layerId, i ); 
+    allRefLayersInitilizedFlag = allRefLayersInitilizedFlag && m_layerInitilizedFlag[ refLayerId ]; 
+  }
+
+  return allRefLayersInitilizedFlag;
+}
+#endif
 #endif
 //! \}

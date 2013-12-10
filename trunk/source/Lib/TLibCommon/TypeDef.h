@@ -242,7 +242,56 @@
 #define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #endif
 
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   HTM-9.2 Integrations //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
 
+// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   HTM-9.1 Integrations //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+
+#define H_MV_FIX_TRACE_FILE                     1  // Fix linux compilation error related const char conversion 
+
+#define H_MV_LAYER_WISE_STARTUP                 1  // Basic version of layer wise startup.
+#define H_MV_FIX_SKIP_PICTURES                  1  // Fix related to skipping pictures. 
+#define H_MV_6_HRD_O0164_15                     1  // (HRD/O0164/Multilayer HRD) #15 Decision: Adopt, modified as follows: It was suggested to constrain the stalling based on the relative cpb removal times, which must be in decoding order. The "du_based_bpb_sync_flag" is not needed, in view of this. SEI in the highest layer of the layer set or (inclusive "or") VPS VUI is used to carry the parameters (at encoder discretion). SEI in higher layer and SEI in VUI do not need to repeat information available in some lower layer. Shall be after APS SEI and buffering period SEI and before all other SEI of all layers except other HRD related SEI.
+#define H_MV_6_HRD_O0217_13                     1  // (HRD/O0217/Sub-DPB based DPB operations) #13 Decision: Adopt – Specify a separate DPB capacity for each layer – no sharing of capacity across layers – each layer has its own parameters (max pictures, max latency, max reordering). This proposal would specify distinct parameters for each "output layer set" and to change the definition of an operation point to be specific to an output layer set instead of a 'layer set". Decision: Adopted this aspect as well.
+#define H_MV_6_SHVC_O0098_36                    1  // (SHVC/O0098/Scaled ref layer offset) #36 Modify signalling of scaled reference layer offsets to allow signalling of any lower layer, rather than just a direct reference layer, in order to enable alignment of auxiliary pictures. In further JCT-VC and JCT-3V discussion, it was also agreed to use the same offset signalling for MV-HEVC as well as SHVC
+#define H_MV_6_GEN_0153_28                      1  //(Gen/O0153/output highest layer) #28 Add a flag in the VPS to indicate if startup process should output the highest available layer if the target output layer is not available.
+#define H_MV_6_PS_0109_25                       1  //XXX(PS/O0109/default_one_target_output_layer_idc) #25 To change default_one_target_output_layer_flag to a two-bit default_one_target_output_layer_idc, and reserve the values 2 and 3
+#define H_MV_6_O0226_37                         1  //(VUI/O0226/Mod tile WPP) #37 Modifications to the VUI indicators of tile and WPP alignment related syntax elements, from the r1.
+#define H_MV_6_RALS_O0149_11                    1  //XXX (RALS/O0149/Prop2): #11 Proposal: A new slice_reserved_flag is taken into use to indicate if a base-layer IDR picture initiates the layer-wise start-up process. Decision: Adopt (the bit should not be required to be present; if present should be the bit after the discardable_flag, and discardable_flag should be the first one of the three, and the poc reset flag is not required to be present).
+#define H_MV_6_PSEM_O0142_3                     1  // (PSEM/O0142/Conditional extension syntax) #3 Adopt JCTVC-O0142 (as a structure to be used to switch whatever extensions we define in SPS, not necessarily committing to having these extensions be separate for each extension, but the current plan unless decided otherwise is to use one flag for range extensions syntax presence and one flag for SHVC+MV-HEVC extension syntax presence) 
+#define H_MV_6_FIX_GET_VIEW_ID                  1  // Fix get view id
+#define H_MV_6_LAYER_ID_32                      1  // (Gen/O0137,O0200,O0223,Layer id) #32 Add (editorial equivalent of) "The value of nuh_layer_id shall be in the range of 0 to 62. The value of 63 for nuh_layer_id is reserved for future use by ITU-T | ISO/IEC. Decoders shall ignore all data that follow the value 63 for nuh_layer_id in a NAL unit." and specify that vps_max_layers_minus1 shall not be equal to 63, but decoders shall allow that value to appear in the bitstream. Specify that the value 63 is interpreted the same as the value 62 (e.g., MaxLayersMinus1 = Min( 62, vps_max_layers_minus1) and subsequently refer to MaxLayersMinus1 instead of vps_max_layers_minus1)
+#define H_MV_6_PS_O0118_33                      1  // (PS/O0118/visual signal info in vui per layer) #33 Add visual signal information (video_format, video_full_range_flag, colour_primaries, transfer_characteristics, matrix_coeffs) per layer to the VPS VUI, from v2 version of JCTVC-O0118.
+#define H_MV_6_POC_31_35_38                     1  //XXX  Various related to POC
+                                                   // (Misc/O0062/POC LSB present) (SH changes)
+                                                   // (POC/O0117/Modify PicOrderCntVal of prevTid0Pic) #35 Modification of the PicOrderCntVal of prevTid0Pic and modification to the decoding process for reference picture set, to address problems found for cross-layer POC alignment.
+                                                   // (POC/O0211/Fix ambiguity) #38 Modify POC derivation to correct an ambiguity in the spec.
+#define H_MV_6_MISC_O0062_31                    1  // (Misc/O0062/POC LSB present) (without SH changes ) #31 The proposal's "option 3" is to add a flag in the VPS for each EL to control whether these LSBs are present or not (for IDR pictures), and when not present, the LSBs are inferred to be equal to 0. Decision: Adopted (as described herein).
+#define H_MV_6_ILDDS_ILREFPICS_27_34            1  // Various inter layer reference picture derivation 
+                                                   // (ILDSD/O0225/max_tid_il_ref_pics RPL const.) #27 Change derivation of NumActiveRefLayerPics to consider max_tid_il_ref_pics.
+                                                   // (ILDSD/O0120/sub_layers_vps_max_minus1 RPL const) #34 Modify inter-layer reference picture list default construction to incorporate max temporal sub-layers per layer syntax elements in VPS extension, from r2 version of JCTVC-O0120
+#define H_MV_6_ILDDS_O0225_30                   1  // (ILDSD/O0225/signal max_tid_il_ref_pics per layer ) #30 2nd proposal of JCTVC-O0225 regarding signalling of max_tid_il_ref_pics per layer, based upon relation to SCE2 on single loop decoding. Decision: Adopted. 
+#define H_MV_6_ILDSD_O0120_26                   1  // (ILDSD/O0120/sub_layers_vps_max_minus1) #26 Add syntax elements to signal max temporal sub-layers for each layer in the VPS, with a gating flag, from JCTVC- option 2.
+#define H_MV_6_PS_O0223_29                      1  // (PS/O0223/Cross layer alignment type) #29 Add a flag in VPS VUI to indicate cross layer pic type alignment.  Move cross_layer_irap_aligned_flag to VPS VUI and make presence condition on added flag
+#define H_MV_6_PS_0092_17                       1  // (PS/O0092/Sharing SPS PPS) #17 Restrict sharing of SPS and PPS across layers to avoid creating problems during sub-bitstream extraction, based on modification of proposals in JCTVC-O0059 and JCTVC-O0092, reflected in the v2 version of O0092.
+#define H_MV_6_PS_REP_FORM_18_19_20             1  //  Various Rep format
+                                                   // (PS/O0096/rep format syntax element length ) #20 Modification of length to 8 bit as decided later in trac. 
+                                                   // (PS/O0179/Rep. Format) #18 Add flag in rep_format( ) syntax structure to control sending of chroma and bit depth related parameters, as proposed in the v2 version of JCTVC-O0179. 
+                                                   // (PS/O0096/rep format) #20 Modify the SPS syntax for layers with nuh_layer_id > 0 to signal a reference to a rep_format index in the VPS, rather than signalling explicit representation format data in the SPS, from the v2 version of JCTVC-O0096. 
+                                                   // (PS/FIX/N0092/Rep. Format) #19 Inferences. 
+#define H_MV_6_PS_O0096_21                      1  // (PS/O0096/direct_dependency_type gating flag) #21 Add a gating flag in VPS extension to condition the presence of direct dependency type, with a default type signalled, from JCTVC-O0096 
+#define H_MV_6_PS_O0109_22                      1  // (PS/O0109/view_id_len) #22 Modify the VPS extension syntax and semantics to replace view_id_len_minus1 with view_id_len, always signal that syntax element, add a constraint that (1<<view_id_len) >= NumViews, and modify view_id_val semantics to infer value of 0 when not present, from discussion of JCTVC-O0109 
+#define H_MV_6_PS_O0109_23                      1  // (PS/O0109/profile_ref_minus1 constraint) #23 Modify the semantics of profile_ref_minus1[ i ] to replace “shall be less than i” with “shall be less than or equal to i”, from discussion of JCTVC-O0109 
+#define H_MV_6_PS_O0109_24                      1  // (PS/O0109/vps_vui_present_flag move) #24 Move the vps_vui_present_flag to precede vps_vui_offset, and make vps_vui_offset conditional on that flag, from JCTVC-O0109
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HTM-9.0 Integrations //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -305,7 +354,11 @@
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #define MAX_VPS_OP_SETS_PLUS1                     1024
 #if H_MV
+#if H_MV_6_LAYER_ID_32
+#define MAX_VPS_NUH_LAYER_ID_PLUS1  63
+#else
 #define MAX_VPS_NUH_LAYER_ID_PLUS1  64
+#endif
 #define MAX_NUM_SCALABILITY_TYPES   16
 #define ENC_CFG_CONSOUT_SPACE       29           
 #else
@@ -328,12 +381,28 @@
 
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
-#define MAX_NUM_LAYER_IDS               64
 #if H_MV
+#if H_MV_6_LAYER_ID_32
+#define MAX_NUM_LAYER_IDS               63
+#define MAX_NUM_LAYERS                  63
+#else
+#define MAX_NUM_LAYER_IDS               64
 #define MAX_NUM_LAYERS                  64
+#endif
 #define MAX_VPS_PROFILE_TIER_LEVEL      64
 #define MAX_VPS_ADD_OUTPUT_LAYER_SETS   1024
 #define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 )
+#if H_MV_6_PS_O0118_33
+#define  MAX_NUM_VIDEO_SIGNAL_INFO      16
+#endif
+#if H_MV_6_SHVC_O0098_36
+#define MAX_NUM_SCALED_REF_LAYERS       MAX_NUM_LAYERS-1
+#endif
+#if H_MV_6_HRD_O0164_15
+#define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
+#define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
+#define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
+#endif
 #endif
 
 #define COEF_REMAIN_BIN_REDUCTION        3 ///< indicates the level at which the VLC 
@@ -810,6 +879,19 @@ namespace Level
 //! \}
 
 #if H_MV
+
+#if H_MV_6_PSEM_O0142_3
+  enum PsExtensionTypes
+  {
+    PS_EX_T_MV   = 1,
+#if H_3D
+    PS_EX_T_3D   = 3,
+#endif
+    PS_EX_T_ESC  = 7,
+    PS_EX_T_MAX_NUM = 8
+  };
+#endif
+
 /// scalability types
   enum ScalabilityType
   {

@@ -85,8 +85,23 @@ public:
   Void  codeVPS                 ( TComVPS* pcVPS );
 #if H_MV
   Void  codeVPSExtension       ( TComVPS *pcVPS );
+#if H_MV_6_PS_O0118_33
+  Void  codeVideoSignalInfo     ( TComVideoSignalInfo* pcVideoSignalInfo ); 
+#endif
+
+#if H_MV_6_HRD_O0217_13
+  Void  codeDpbSize   ( TComVPS* vps );
+#endif
+
+#if H_MV_6_PS_REP_FORM_18_19_20
+  Void  codeRepFormat           ( Int i, TComRepFormat* curRepFormat, TComRepFormat* prevRepFormat );
+#else
   Void  codeRepFormat          ( TComRepFormat* pcRepFormat );
+#endif
   Void  codeVPSVUI             ( TComVPS* pcVPS );
+#if H_MV_6_HRD_O0164_15
+  Void  codeVpsVuiBspHrdParameters( TComVPS* pcVPS ); 
+#endif
 #endif 
   Void  codeVUI                 ( TComVUI *pcVUI, TComSPS* pcSPS );
 #if H_MV

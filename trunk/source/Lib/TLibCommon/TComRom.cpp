@@ -572,7 +572,11 @@ Int  g_eTTable[4] = {0,3,1,2};
 
 #if H_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
+#if H_MV_FIX_TRACE_FILE
+Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
+#else
 Void writeToTraceFile( Char* symbolName, Int val, Bool doIt )
+#endif
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
@@ -587,7 +591,11 @@ Void writeToTraceFile( Char* symbolName, Int val, Bool doIt )
   }
 }
 
+#if H_MV_FIX_TRACE_FILE
+Void writeToTraceFile( const Char* symbolName, Bool doIt )
+#else
 Void writeToTraceFile( Char* symbolName, Bool doIt )
+#endif
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
