@@ -235,13 +235,8 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
 
 
-#if H_MV_FIX_TRACE_FILE
- Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
- Void           writeToTraceFile( const Char* symbolName, Bool doIt );
-#else
  Void           writeToTraceFile( Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( Char* symbolName, Bool doIt );
-#endif
 #endif
 #else
 

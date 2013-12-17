@@ -66,10 +66,6 @@ private:
   Int                             m_layerIdToDecIdx     [ MAX_NUM_LAYER_IDS ]; ///< maping from layer id to decoder index
   Int                             m_numDecoders;                               ///< number of decoder instances
   TComPicLists                    m_ivPicLists;                                ///< picture buffers of decoder instances
-#if H_MV_LAYER_WISE_STARTUP
-  Bool                            m_layerInitilizedFlags[ MAX_NUM_LAYER_IDS ]; ///< for layerwise startup 
-#endif
-
 #else
   TDecTop                         m_cTDecTop;                     ///< decoder class
   TVideoIOYuv                     m_cTVideoIOYuvReconFile;        ///< reconstruction YUV class

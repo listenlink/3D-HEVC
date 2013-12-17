@@ -59,7 +59,7 @@
 // ====================================================================================================================
 
 #if H_MV
-#define NV_VERSION        "9.1"              ///< Current software version
+#define NV_VERSION        "9.0r1"               ///< Current software version
 #define HM_VERSION        "12.0"                ///< 
 #else
 #define NV_VERSION        "12.0"                 ///< Current software version
@@ -120,8 +120,9 @@
 
 #define MAX_UINT                    0xFFFFFFFFU ///< max. value of unsigned 32-bit integer
 #define MAX_INT                     2147483647  ///< max. value of signed 32-bit integer
+#if H_3D
 #define MIN_INT                     (-2147483647-1) // < min. value of signed 32-bit integer
-
+#endif
 #define MAX_INT64                   0x7FFFFFFFFFFFFFFFLL  ///< max. value of signed 64-bit integer
 #define MAX_DOUBLE                  1.7e+308    ///< max. value of double-type value
 

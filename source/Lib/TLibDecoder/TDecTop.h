@@ -185,9 +185,6 @@ private:
 
   TComList<TComPic*>      m_cListPic;         //  Dynamic buffer
 #if H_MV
-#if H_MV_LAYER_WISE_STARTUP
-  Bool*                    m_layerInitilizedFlag; // initialization Layers
-#endif
   static ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
 #else
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
@@ -245,11 +242,6 @@ public:
 
   Void  init();
 #if H_MV  
-#if H_MV_FIX_SKIP_PICTURES
-  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer, Bool& sliceSkippedFlag );
-#else
-  Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer );
-#endif
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer );
 #else  
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
@@ -267,12 +259,7 @@ public:
   TComPic*                getPic                ( Int poc );
   TComList<TComPic*>*     getListPic            ()               { return &m_cListPic;  }  
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
-#if H_MV_LAYER_WISE_STARTUP
-  Void                    setLayerInitilizedFlags( Bool* val )    { m_layerInitilizedFlag = val; }
-#endif
-#if H_MV_6_HRD_O0217_13
-  TComVPS*                getPrefetchedVPS      ()               { return m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); }; //Assuming that currently only one VPS is present. 
-#endif
+  
   Int                     getCurrPoc            ()               { return m_apcSlicePilot->getPOC(); }
   Void                    setLayerId            ( Int layer)     { m_layerId = layer;   }
   Int                     getLayerId            ()               { return m_layerId;    }
@@ -293,17 +280,8 @@ protected:
   Void      xActivateParameterSets();
 #if H_MV  
   TComPic*  xGetPic( Int layerId, Int poc ); 
-#if H_MV_FIX_SKIP_PICTURES
-  Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag );  
-#else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag );  
-#endif
   Void      xResetPocInPicBuffer();
-#if H_MV_LAYER_WISE_STARTUP
-  Void      xCeckNoClrasOutput();
-
-  Bool      xAllRefLayersInitilized();
-#endif
 #else
   Bool      xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay);
 #endif
