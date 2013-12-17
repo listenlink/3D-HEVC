@@ -140,7 +140,7 @@ protected:
 #if H_3D_VSP
   Bool m_viewSynthesisPredFlag;
 #endif
-#if H_3D
+#if H_3DV
   Bool m_ivMvScalingFlag; 
 #endif
 #endif

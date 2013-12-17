@@ -1810,7 +1810,7 @@ TComVPS::TComVPS()
       m_iIdx2DepthValue[i][d] = d;
     }
 #endif
-#if H_3D
+#if H_3DV
     m_ivMvScalingFlag = true; 
 #endif
 #endif
@@ -3028,8 +3028,9 @@ Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
 Void TComSlice::setDepthToDisparityLUTs()
 { 
   Bool setupLUT = false; 
+#if H_3DV
   Int layerIdInVPS = getVPS()->getLayerIdInNuh( m_layerId ); 
-
+#endif
 #if H_3D_VSP
   setupLUT = setupLUT || getVPS()->getViewSynthesisPredFlag( layerIdInVPS); 
 #endif

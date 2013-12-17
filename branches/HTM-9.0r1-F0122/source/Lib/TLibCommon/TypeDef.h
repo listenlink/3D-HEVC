@@ -73,6 +73,13 @@
 #endif
 
 #if H_3D
+#define H_3DV                             1   // QC_F0122 MV-HEVC with depth support
+                                              // This macro equal to 1 indicates 3D-HEVC
+                                              // This macro equal to 0 indicates MV-HEVC plus depth coding
+                                              // CY:  H_3D is now mainly used to control the common framework, common high-level syntax (HLS) and 
+                                              //      common encoder optimization for both 3D-HEVC and MV-HEVC. 
+                                              //      H_3DV controls all the other 3D-HEVC features, including coding tools and different HLS.
+
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160     // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
 
@@ -81,6 +88,7 @@
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
                                               // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
                                               // LGE_WVSO_A0119
+#if H_3DV
 #define H_3D_NBDV                         1   // Neighboring block disparity derivation 
                                               // QC_JCT3V-A0097 
                                               // LGE_DVMCP_A0126
@@ -179,6 +187,9 @@
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
 
+#endif // H_3DV
+#else
+#define H_3DV                             0  // QC_F0122 MV-HEVC with depth support, this value shall always be 0 here
 #endif // H_3D
 
 
@@ -247,7 +258,7 @@
 ///////////////////////////////////   HTM-9.0 Integrations //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#if H_3D
+#if H_3DV
 
 #define FIX_MISSING_MACRO_R690                  1 // Missing macro in integration to revision 690
 
@@ -771,10 +782,10 @@ namespace Profile
     MAIN = 1,
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
-#if H_MV
+#if H_MV || !H_3DV
     MAINSTEREO = 4,
     MAINMULTIVIEW = 5,
-#if H_3D
+#if H_3D && H_3DV
     MAIN3D = 6, 
 #endif
 #endif

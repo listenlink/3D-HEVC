@@ -850,7 +850,7 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 
   UInt uiSymbol;
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
   Bool bParseSplitFlag    = true;
 
   TComSPS *sps            = pcCU->getPic()->getSlice(0)->getSPS();
@@ -877,7 +877,7 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
     DTRACE_CABAC_VL( g_nSymbolCounter++ )
     DTRACE_CABAC_T( "\tSplitFlag\n" )
 #endif
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
   }
   else
   {
@@ -900,7 +900,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   UInt uiSymbol, uiMode = 0;
   PartSize eMode;
 
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
   Bool bParsePartSize    = true;
   TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
@@ -924,7 +924,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
     if(bParsePartSize)
     {
 #endif
@@ -937,7 +937,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #endif        
       }
       eMode = uiSymbol ? SIZE_2Nx2N : SIZE_NxN;
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
     }
 #endif
     UInt uiTrLevel = 0;    
@@ -955,7 +955,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   else
   {
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
     if(bParsePartSize)
     {
 #endif
@@ -998,7 +998,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #if H_MV_ENC_DEC_TRAC          
       DTRACE_CU("part_mode", eMode )
 #endif
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
     }
 #endif
   }

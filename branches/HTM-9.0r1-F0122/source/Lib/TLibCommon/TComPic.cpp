@@ -155,7 +155,7 @@ Void TComPic::destroy()
   
   deleteSEIs(m_SEIs);
 }
-#if H_3D
+#if H_3DV
 Void TComPic::compressMotion(Int scale)
 #else
 Void TComPic::compressMotion()
@@ -165,7 +165,7 @@ Void TComPic::compressMotion()
   for ( UInt uiCUAddr = 0; uiCUAddr < pPicSym->getFrameHeightInCU()*pPicSym->getFrameWidthInCU(); uiCUAddr++ )
   {
     TComDataCU* pcCU = pPicSym->getCU(uiCUAddr);
-#if H_3D
+#if H_3DV
     pcCU->compressMV(scale); 
 #else
     pcCU->compressMV(); 

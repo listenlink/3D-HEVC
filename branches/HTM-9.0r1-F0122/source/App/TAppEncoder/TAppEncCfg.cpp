@@ -242,7 +242,7 @@ static const struct MapStrToProfile {
 #if H_MV
   {"main-stereo",    Profile::MAINSTEREO},
   {"main-multiview", Profile::MAINMULTIVIEW},
-#if H_3D
+#if H_3DV
   {"main-3d"    , Profile::MAIN3D},
 #endif
 #endif
@@ -774,7 +774,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_VSP
   ("ViewSynthesisPred",               m_viewSynthesisPredFlag,  true           , "view synthesis prediction " )  
 #endif
-#if H_3D
+#if H_3DV
   ("IvMvScaling",                     m_ivMvScalingFlag      ,  true            , "inter view motion vector scaling" )    
 #endif
 #endif //H_3D
@@ -2460,7 +2460,7 @@ Void TAppEncCfg::xPrintParameter()
 #if H_3D_VSP
   printf("ViewSynthesisPred:%d ", m_viewSynthesisPredFlag );
 #endif
-#if H_3D
+#if H_3DV
   printf("IvMvScaling:%d ", m_ivMvScalingFlag ? 1 : 0  );
 #endif
 #if H_3D_DIM

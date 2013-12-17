@@ -599,7 +599,7 @@ Void TEncCavlc::codeSPSExtension( TComSPS* pcSPS )
 #if H_3D
 Void TEncCavlc::codeSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 {
-#if H_3D_QTLPC
+#if H_3D_QTLPC && H_3DV
 //GT: This has to go to VPS
 if( depthFlag )
 {
