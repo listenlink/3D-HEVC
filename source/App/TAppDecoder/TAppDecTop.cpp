@@ -285,7 +285,7 @@ Void TAppDecTop::decode()
       m_cTDecTop.executeLoopFilters(poc, pcListPic);
 #endif
     }
-#if H_3D
+#if H_3DV
     if ( allLayersDecoded || !bitstreamFile )
     {
       for( Int dI = 0; dI < m_numDecoders; dI++ )

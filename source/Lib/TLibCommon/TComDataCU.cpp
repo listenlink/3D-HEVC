@@ -4056,7 +4056,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 
   numValidMergeCand = getSlice()->getMaxNumMergeCand();
-#if H_3D
+#if H_3DV
   //////////////////////////////////
   //////// DERIVE LOCATIONS ////////
   //////////////////////////////////
@@ -4723,7 +4723,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if ETRIKHU_MERGE_REUSE_F0093
   iCount += numA1B1B0;
 #else
-#if H_3D
+#if H_3DV
   ////////////////////////////
   //////// LEFT (A1) /////////
   ////////////////////////////
@@ -4814,7 +4814,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     return;
   }
-#if H_3D
+#if H_3DV
   ////////////////////////////
   //////// ABOVE (B1) ////////
   ////////////////////////////
@@ -4924,7 +4924,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     return;
   }
 
-#if H_3D
+#if H_3DV
   //////////////////////////////////
   //////// ABOVE RIGHT (B0) ////////
   //////////////////////////////////
@@ -5127,7 +5127,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if ETRIKHU_MERGE_REUSE_F0093
   iCount += numA0B2;
 #else
-#if H_3D
+#if H_3DV
   ///////////////////////////////////
   //////// LEFT BOTTOM (A0) ////////
   ///////////////////////////////////
@@ -5184,7 +5184,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     return;
   }
-#if H_3D
+#if H_3DV
   ///////////////////////////////////
   //////// LEFT ABOVE (B2) ////////
   ///////////////////////////////////
@@ -5296,7 +5296,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }
   numValidMergeCand = iCount;
 #else
-#if H_3D
+#if H_3DV
   /////////////////////////////////
   //////// Collocate (COL) ////////
   /////////////////////////////////
@@ -5531,7 +5531,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
   }
   numValidMergeCand = getSlice()->getMaxNumMergeCand();
-#if H_3D
+#if H_3DV
   //////////////////////////////////
   //////// DERIVE LOCATIONS ////////
   //////////////////////////////////
@@ -5734,7 +5734,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }
 #endif
 
-#if H_3D
+#if H_3DV
   ////////////////////////////
   //////// LEFT (A1) /////////
   ////////////////////////////
@@ -5825,7 +5825,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     return;
   }
-#if H_3D
+#if H_3DV
   ////////////////////////////
   //////// ABOVE (B1) ////////
   ////////////////////////////
@@ -5935,7 +5935,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     return;
   }
 
-#if H_3D
+#if H_3DV
   //////////////////////////////////
   //////// ABOVE RIGHT (B0) ////////
   //////////////////////////////////
@@ -6089,7 +6089,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     return;
   }
 #endif
-#if H_3D
+#if H_3DV
   ///////////////////////////////////
   //////// LEFT BOTTOM (A0) ////////
   ///////////////////////////////////
@@ -6146,7 +6146,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     return;
   }
-#if H_3D
+#if H_3DV
   ///////////////////////////////////
   //////// LEFT ABOVE (B2) ////////
   ///////////////////////////////////
@@ -6238,7 +6238,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
     }
   }
 #endif
-#if H_3D
+#if H_3DV
   /////////////////////////////////
   //////// Collocate (COL) ////////
   /////////////////////////////////
@@ -7163,13 +7163,13 @@ Void TComDataCU::xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter )
                                         + ( iPartHeight/m_pcPic->getMinCUHeight()  )/2*m_pcPic->getNumPartInWidth()
                                         + ( iPartWidth/m_pcPic->getMinCUWidth()  )/2];
 }
-#if H_3D
+#if H_3DV
 Void TComDataCU::compressMV(Int scale)
 #else
 Void TComDataCU::compressMV()
 #endif
 {
-#if H_3D
+#if H_3DV
   Int scaleFactor = (4 / scale ) * AMVP_DECIMATION_FACTOR / m_unitSize;
 #else
   Int scaleFactor = 4 * AMVP_DECIMATION_FACTOR / m_unitSize;

@@ -812,10 +812,14 @@ Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFla
   //GT: This has to go to VPS
   if( depthFlag )
   {
+#if H_3DV
     READ_FLAG( uiCode, "use_qtl_flag" );
     pcSPS->setUseQTL( uiCode );
     READ_FLAG( uiCode, "use_pc_flag" );
     pcSPS->setUsePC( uiCode );
+#else
+    pcSPS->setUsePC( 0 );
+#endif
   }
 #endif
 
@@ -1319,7 +1323,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       }
     }
   }
+#if H_3DV
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
+#endif 
 }
 #endif
 

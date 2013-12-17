@@ -183,7 +183,7 @@ public:
  
   Void          setNumReorderPics(Int i, UInt tlayer) { m_numReorderPics[tlayer] = i;    }
   Int           getNumReorderPics(UInt tlayer)        { return m_numReorderPics[tlayer]; }
-#if H_3D
+#if H_3DV
   Void          compressMotion(Int scale); 
 #else   
   Void          compressMotion(); 

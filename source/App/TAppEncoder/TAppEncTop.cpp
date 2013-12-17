@@ -1650,8 +1650,10 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 
   for ( Int layer = 0; layer <= vps.getMaxLayersMinus1(); layer++ )
   {
+#if H_3DV
     Bool isDepth      = ( vps.getDepthId( layer ) == 1 ) ;
     Bool isLayerZero  = ( layer == 0 ); 
+#endif
 
 #if H_3D_ARP
     vps.setUseAdvRP        ( layer, ( isDepth || isLayerZero ) ? 0 : m_uiUseAdvResPred );
@@ -1714,7 +1716,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag );
 #endif
   }  
-#if H_3D
+#if H_3DV
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
 #endif
 }

@@ -615,7 +615,7 @@ private:
   Int*        m_iDepthValue2Idx          [MAX_NUM_LAYERS   ];
   Int*        m_iIdx2DepthValue          [MAX_NUM_LAYERS   ];
 #endif
-#if H_3D
+#if H_3DV
   Bool        m_ivMvScalingFlag; 
 #endif
 #if H_3D_INTER_SDC
@@ -857,8 +857,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
 #endif
 
+#if H_3DV
   Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
   Void    setIvMvScalingFlag   ( Bool b )                 { m_ivMvScalingFlag = b;    }  
+#endif
 #if H_3D_INTER_SDC
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }

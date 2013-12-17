@@ -402,7 +402,7 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
 {
 #endif
-#if H_3D
+#if H_3DV
   TComPic* picLastCoded = getPic( getGOPEncoder()->getPocLastCoded() );
   if( picLastCoded )
   {
@@ -765,8 +765,13 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUseAMP ( m_useAMP );
 
 #if H_3D_QTLPC
+#if H_3DV
   m_cSPS.setUseQTL( m_bUseQTL );
   m_cSPS.setUsePC ( m_bUsePC  );
+#else
+  m_cSPS.setUseQTL( m_bUseQTL );
+  m_cSPS.setUsePC ( 0 );
+#endif 
 #endif
 
   for (i = g_uiMaxCUDepth-g_uiAddCUDepth; i < g_uiMaxCUDepth; i++ )

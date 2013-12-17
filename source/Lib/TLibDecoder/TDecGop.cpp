@@ -223,10 +223,10 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   {
     rpcPic->destroyNonDBFilterInfo();
   }
-#if H_3D
+#if H_3DV
   rpcPic->compressMotion(2); 
 #endif
-#if !H_3D
+#if !H_3DV
   rpcPic->compressMotion(); 
 #endif
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
