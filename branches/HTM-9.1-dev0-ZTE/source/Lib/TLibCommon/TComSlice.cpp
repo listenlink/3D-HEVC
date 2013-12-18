@@ -1815,6 +1815,7 @@ TComVPS::TComVPS()
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
 #if H_3D_DIM_DLT
+#if !DLT_DIFF_CODING_IN_PPS
     m_bUseDLTFlag         [i] = false;
     
     // allocate some memory and initialize with default mapping
@@ -1830,6 +1831,7 @@ TComVPS::TComVPS()
       m_iDepthValue2Idx[i][d] = d;
       m_iIdx2DepthValue[i][d] = d;
     }
+#endif
 #endif
 #if H_3D
     m_ivMvScalingFlag = true; 
@@ -1901,6 +1903,7 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
   {
     if (m_repFormat[ i ] != NULL )      delete m_repFormat[ i ];    
 #if H_3D_DIM_DLT
+#if !DLT_DIFF_CODING_IN_PPS
     if ( m_iDepthValue2Idx[i] != 0 ) 
     {
        xFree( m_iDepthValue2Idx[i] );
@@ -1913,11 +1916,13 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
       m_iIdx2DepthValue[i] = 0; 
     }
 #endif
+#endif
   }
 #endif
 }
 
 #if H_3D_DIM_DLT
+#if !DLT_DIFF_CODING_IN_PPS
   Void TComVPS::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNumDepthValues)
   {
     if( idxToDepthValueTable == NULL || iNumDepthValues == 0 ) // default mapping only
@@ -1978,6 +1983,7 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
     m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
     m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
   }
+#endif
 #endif
 
 #if H_MV
@@ -2443,6 +2449,9 @@ TComPPS::TComPPS()
 #if H_MV
 , m_ppsInferScalingListFlag(false)
 , m_ppsScalingListRefLayerId(0)
+#if DLT_DIFF_CODING_IN_PPS
+, m_pcDLT(NULL)
+#endif
 #endif
 {
   m_scalingList = new TComScalingList;
@@ -2462,6 +2471,115 @@ TComPPS::~TComPPS()
   }
   delete m_scalingList;
 }
+
+#if DLT_DIFF_CODING_IN_PPS
+TComDLT::TComDLT()
+: m_bDltPresentFlag(false)
+, m_iNumDepthViews(0)
+, m_uiDepthViewBitDepth(8)
+{
+  m_uiDepthViewBitDepth = g_bitDepthY; 
+
+  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {
+    m_bUseDLTFlag                 [i] = false;
+    m_bInterViewDltPredEnableFlag [i] = false;
+
+    // allocate some memory and initialize with default mapping
+    m_iNumDepthmapValues[i] = ((1 << m_uiDepthViewBitDepth)-1)+1;
+    m_iBitsPerDepthValue[i] = numBitsForValue(m_iNumDepthmapValues[i]);
+
+    m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
+    m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
+
+    //default mapping
+    for (Int d=0; d<m_iNumDepthmapValues[i]; d++)
+    {
+      m_iDepthValue2Idx[i][d] = d;
+      m_iIdx2DepthValue[i][d] = d;
+    }
+  }
+}
+
+TComDLT::~TComDLT()
+{
+  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
+  {
+    if ( m_iDepthValue2Idx[i] != NULL ) 
+    {
+      xFree( m_iDepthValue2Idx[i] );
+      m_iDepthValue2Idx[i] = NULL; 
+    }
+
+    if ( m_iIdx2DepthValue[i] != NULL ) 
+    {
+      xFree( m_iIdx2DepthValue[i] );
+      m_iIdx2DepthValue[i] = NULL; 
+    }
+  }
+}
+
+Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNumDepthValues)
+{
+  if( idxToDepthValueTable == NULL || iNumDepthValues == 0 ) // default mapping only
+    return;
+
+  // copy idx2DepthValue to internal array
+  memcpy(m_iIdx2DepthValue[layerIdInVps], idxToDepthValueTable, iNumDepthValues*sizeof(UInt));
+
+  UInt uiMaxDepthValue = ((1 << g_bitDepthY)-1);
+  for(Int p=0; p<=uiMaxDepthValue; p++)
+  {
+    Int iIdxDown    = 0;
+    Int iIdxUp      = iNumDepthValues-1;
+    Bool bFound     = false;
+
+    // iterate over indices to find lower closest depth
+    Int i = 1;
+    while(!bFound && i<iNumDepthValues)
+    {
+      if( m_iIdx2DepthValue[layerIdInVps][i] > p )
+      {
+        iIdxDown  = i-1;
+        bFound    = true;
+      }
+
+      i++;
+    }
+    // iterate over indices to find upper closest depth
+    i = iNumDepthValues-2;
+    bFound = false;
+    while(!bFound && i>=0)
+    {
+      if( m_iIdx2DepthValue[layerIdInVps][i] < p )
+      {
+        iIdxUp  = i+1;
+        bFound    = true;
+      }
+
+      i--;
+    }
+
+    // assert monotony
+    assert(iIdxDown<=iIdxUp);
+
+    // assign closer depth value/idx
+    if( abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxDown]) < abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxUp]) )
+    {
+      m_iDepthValue2Idx[layerIdInVps][p] = iIdxDown;
+    }
+    else
+    {
+      m_iDepthValue2Idx[layerIdInVps][p] = iIdxUp;
+    }
+
+  }
+
+  // update DLT variables
+  m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
+  m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
+}
+#endif
 
 #if H_MV
 Void TComSPS::inferRepFormat( TComVPS* vps, Int layerIdCurr )
@@ -3706,7 +3824,7 @@ Void TComVpsVuiBspHrdParameters::checkLayerInBspFlag( TComVPS* vps, Int h )
 {
   // It is a requirement of bitstream conformance that bitstream partition with index j shall not include 
   // direct or indirect reference layers of any layers in bitstream partition i for any values of i and j 
-  // in the range of 0 to num_bitstream_partitions[ h ] – 1, inclusive, such that i is less than j.
+  // in the range of 0 to num_bitstream_partitions[ h ] ?1, inclusive, such that i is less than j.
 
   for ( Int partJ = 0; partJ < getNumBitstreamPartitions( h ); partJ++ )
   {        

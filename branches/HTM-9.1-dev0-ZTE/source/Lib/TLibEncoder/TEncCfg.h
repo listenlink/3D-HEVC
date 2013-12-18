@@ -329,6 +329,11 @@ protected:
 #else
   TComVPS                    m_cVPS;
 #endif
+
+#if DLT_DIFF_CODING_IN_PPS
+  TComDLT*  m_cDLT;
+#endif
+
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
   Bool      m_vuiParametersPresentFlag;                       ///< enable generation of VUI parameters
@@ -440,6 +445,9 @@ public:
 #if H_3D
   , m_isDepth(false)
   , m_bUseVSO(false)
+#endif
+#if DLT_DIFF_CODING_IN_PPS
+  , m_cDLT(NULL)
 #endif
 #endif
   {}
@@ -866,6 +874,12 @@ public:
   Void setVPS(TComVPS *p) { m_cVPS = *p; }
   TComVPS *getVPS() { return &m_cVPS; }
 #endif
+
+#if DLT_DIFF_CODING_IN_PPS
+  Void      setDLT           ( TComDLT *p ) { m_cDLT = p; }
+  TComDLT*  getDLT           ()             { return m_cDLT; }
+#endif
+
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }
   Bool      getUseRecalculateQPAccordingToLambda ()         { return m_recalculateQPAccordingToLambda; }
 

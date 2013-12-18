@@ -567,7 +567,11 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
   Int  iIdx       = 0;
   
 #if H_3D_DIM_DLT
+#if DLT_DIFF_CODING_IN_PPS
+  UInt uiMaxResidualBits = pcCU->getSlice()->getPPS()->getDLT()->getBitsPerDepthValue( pcCU->getSlice()->getLayerIdInVps() );
+#else
   UInt uiMaxResidualBits = pcCU->getSlice()->getVPS()->getBitsPerDepthValue( pcCU->getSlice()->getLayerIdInVps() );
+#endif
 #else
   UInt uiMaxResidualBits = g_bitDepthY;
 #endif
@@ -591,7 +595,11 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
     // prefix part
     UInt uiCount = 0;
 #if H_3D_DIM_DLT
+#if DLT_DIFF_CODING_IN_PPS
+    UInt uiNumDepthValues = pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() );
+#else
     UInt uiNumDepthValues = pcCU->getSlice()->getVPS()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() );
+#endif
 #else
     UInt uiNumDepthValues = ((1 << g_bitDepthY)-1);
 #endif

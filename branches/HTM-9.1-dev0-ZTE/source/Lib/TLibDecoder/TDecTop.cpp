@@ -1150,7 +1150,19 @@ Void TDecTop::xDecodePPS()
 #if H_MV
   pps->setLayerId( getLayerId() ); 
 #endif
+#if DLT_DIFF_CODING_IN_PPS
+  // Assuming that all PPS indirectly refer to the same VPS via different SPS
+  // There is no parsing dependency in decoding DLT in PPS. 
+  // The VPS information passed to decodePPS() is used to arrange the decoded DLT tables to their corresponding layers. 
+  // This is equivalent to the process of 
+  //   Step 1) decoding DLT tables based on the number of depth layers, and
+  //   Step 2) mapping DLT tables to the depth layers
+  // as descripted in the 3D-HEVC WD. 
+  TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 );
+  m_cEntropyDecoder.decodePPS( pps, vps );
+#else
   m_cEntropyDecoder.decodePPS( pps );
+#endif
   m_parameterSetManagerDecoder.storePrefetchedPPS( pps );
 }
 
