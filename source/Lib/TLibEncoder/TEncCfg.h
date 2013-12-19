@@ -446,9 +446,6 @@ public:
   , m_isDepth(false)
   , m_bUseVSO(false)
 #endif
-#if DLT_DIFF_CODING_IN_PPS
-  , m_cDLT(NULL)
-#endif
 #endif
   {}
 
