@@ -298,6 +298,10 @@ Void TEncTop::init(Bool isFieldCoding)
 #endif
 {
   // initialize SPS
+#if DLT_DIFF_CODING_IN_PPS
+  // Assuming that all PPS indirectly refer to the same VPS via different SPS
+  m_cSPS.setVPS(m_cVPS);
+#endif
   xInitSPS();
   
   /* set the VPS profile information */
@@ -869,6 +873,11 @@ Void TEncTop::xInitPPS()
   m_cPPS.setPPSId( getLayerIdInVps() );
   m_cPPS.setSPSId( getLayerIdInVps() );
 #endif
+
+#if DLT_DIFF_CODING_IN_PPS
+  m_cPPS.setDLT( getDLT() );
+#endif
+
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   Bool bUseDQP = (getMaxCuDQPDepth() > 0)? true : false;
 

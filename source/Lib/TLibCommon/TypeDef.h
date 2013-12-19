@@ -214,6 +214,15 @@
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
+
+#if H_3D_DIM_DLT
+#define DLT_DIFF_CODING_IN_PPS            1   // moving DLT syntax elements from VPS to PPS and differential coding of DLT values
+                                              // JCT3V-F0131, JCT3V-F0139
+#if DLT_DIFF_CODING_IN_PPS
+#define Log2( n ) ( log((double)n) / log(2.0) )
+#endif
+#endif
+
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
@@ -261,7 +270,7 @@
 #define H_MV_LAYER_WISE_STARTUP                 1  // Basic version of layer wise startup.
 #define H_MV_FIX_SKIP_PICTURES                  1  // Fix related to skipping pictures. 
 #define H_MV_6_HRD_O0164_15                     1  // (HRD/O0164/Multilayer HRD) #15 Decision: Adopt, modified as follows: It was suggested to constrain the stalling based on the relative cpb removal times, which must be in decoding order. The "du_based_bpb_sync_flag" is not needed, in view of this. SEI in the highest layer of the layer set or (inclusive "or") VPS VUI is used to carry the parameters (at encoder discretion). SEI in higher layer and SEI in VUI do not need to repeat information available in some lower layer. Shall be after APS SEI and buffering period SEI and before all other SEI of all layers except other HRD related SEI.
-#define H_MV_6_HRD_O0217_13                     1  // (HRD/O0217/Sub-DPB based DPB operations) #13 Decision: Adopt – Specify a separate DPB capacity for each layer – no sharing of capacity across layers – each layer has its own parameters (max pictures, max latency, max reordering). This proposal would specify distinct parameters for each "output layer set" and to change the definition of an operation point to be specific to an output layer set instead of a 'layer set". Decision: Adopted this aspect as well.
+#define H_MV_6_HRD_O0217_13                     1  // (HRD/O0217/Sub-DPB based DPB operations) #13 Decision: Adopt ?Specify a separate DPB capacity for each layer ?no sharing of capacity across layers ?each layer has its own parameters (max pictures, max latency, max reordering). This proposal would specify distinct parameters for each "output layer set" and to change the definition of an operation point to be specific to an output layer set instead of a 'layer set". Decision: Adopted this aspect as well.
 #define H_MV_6_SHVC_O0098_36                    1  // (SHVC/O0098/Scaled ref layer offset) #36 Modify signalling of scaled reference layer offsets to allow signalling of any lower layer, rather than just a direct reference layer, in order to enable alignment of auxiliary pictures. In further JCT-VC and JCT-3V discussion, it was also agreed to use the same offset signalling for MV-HEVC as well as SHVC
 #define H_MV_6_GEN_0153_28                      1  //(Gen/O0153/output highest layer) #28 Add a flag in the VPS to indicate if startup process should output the highest available layer if the target output layer is not available.
 #define H_MV_6_PS_0109_25                       1  //XXX(PS/O0109/default_one_target_output_layer_idc) #25 To change default_one_target_output_layer_flag to a two-bit default_one_target_output_layer_idc, and reserve the values 2 and 3
@@ -290,7 +299,7 @@
                                                    // (PS/FIX/N0092/Rep. Format) #19 Inferences. 
 #define H_MV_6_PS_O0096_21                      1  // (PS/O0096/direct_dependency_type gating flag) #21 Add a gating flag in VPS extension to condition the presence of direct dependency type, with a default type signalled, from JCTVC-O0096 
 #define H_MV_6_PS_O0109_22                      1  // (PS/O0109/view_id_len) #22 Modify the VPS extension syntax and semantics to replace view_id_len_minus1 with view_id_len, always signal that syntax element, add a constraint that (1<<view_id_len) >= NumViews, and modify view_id_val semantics to infer value of 0 when not present, from discussion of JCTVC-O0109 
-#define H_MV_6_PS_O0109_23                      1  // (PS/O0109/profile_ref_minus1 constraint) #23 Modify the semantics of profile_ref_minus1[ i ] to replace “shall be less than i” with “shall be less than or equal to i”, from discussion of JCTVC-O0109 
+#define H_MV_6_PS_O0109_23                      1  // (PS/O0109/profile_ref_minus1 constraint) #23 Modify the semantics of profile_ref_minus1[ i ] to replace “shall be less than i?with “shall be less than or equal to i? from discussion of JCTVC-O0109 
 #define H_MV_6_PS_O0109_24                      1  // (PS/O0109/vps_vui_present_flag move) #24 Move the vps_vui_present_flag to precede vps_vui_offset, and make vps_vui_offset conditional on that flag, from JCTVC-O0109
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HTM-9.0 Integrations //////////////////////////////
