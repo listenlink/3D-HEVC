@@ -221,6 +221,7 @@
 #if DLT_DIFF_CODING_IN_PPS
 #define Log2( n ) ( log((double)n) / log(2.0) )
 #endif
+#define RWTH_DELTA_DLT                    1
 #endif
 
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:

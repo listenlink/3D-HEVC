@@ -2579,6 +2579,74 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
   m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
   m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
 }
+
+#if RWTH_DELTA_DLT
+Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, Int* piDeltaDLTOut, Int *piDeltaDLTOutNum )
+{
+  Bool abBM0[ 256 ];
+  Bool abBM1[ 256 ];
+  
+  memset( abBM0, 0, sizeof( abBM0 ));
+  memset( abBM1, 0, sizeof( abBM1 ));
+  
+  // convert reference DLT to bit string
+  for( Int i = 0; i < iDLTInRefNum; i++ )
+  {
+    abBM0[ piDLTInRef[ i ] ] = true;
+  }
+  // convert internal DLT to bit string
+  for( Int i = 0; i < m_iNumDepthmapValues[ layerIdInVps ]; i++ )
+  {
+    abBM1[ m_iIdx2DepthValue[ layerIdInVps ][ i ] ] = true;
+  }
+  
+  *piDeltaDLTOutNum = 0;
+  for( Int i = 0; i < 256; i++ )
+  {
+    if( abBM0[ i ] ^ abBM1[ i ] )
+    {
+      piDeltaDLTOut[ *piDeltaDLTOutNum ] = i;
+      *piDeltaDLTOutNum = *piDeltaDLTOutNum + 1;
+    }
+  }
+}
+
+Void TComDLT::setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, Int* piDeltaDLTIn, Int piDeltaDLTInNum )
+{
+  Bool abBM0[ 256 ];
+  Bool abBM1[ 256 ];
+  
+  memset( abBM0, 0, sizeof( abBM0 ));
+  memset( abBM1, 0, sizeof( abBM1 ));
+  
+  // convert reference DLT to bit string
+  for( Int i = 0; i < iDLTInRefNum; i++ )
+  {
+    abBM0[ piDLTInRef[ i ] ] = true;
+  }
+  // convert delta DLT to bit string
+  for( Int i = 0; i < piDeltaDLTInNum; i++ )
+  {
+    abBM1[ piDeltaDLTIn[ i ] ] = true;
+  }
+  
+  Int aiIdx2DepthValue[256];
+  UInt uiNumDepthValues = 0;
+  memset( aiIdx2DepthValue, 0, sizeof( aiIdx2DepthValue ));
+  
+  for( Int i = 0; i < 256; i++ )
+  {
+    if( abBM0[ i ] ^ abBM1[ i ] )
+    {
+      aiIdx2DepthValue[ uiNumDepthValues++ ] = i;
+    }
+  }
+  
+  // update internal tables
+  setDepthLUTs(layerIdInVps, aiIdx2DepthValue, uiNumDepthValues);
+}
+#endif
+
 #endif
 
 #if H_MV
