@@ -416,7 +416,6 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
             UInt uiMaxDiff            = 0xffffffff;
             UInt uiMinDiff            = 0;
             UInt uiCodeLength         = 0;
-            UInt uiDiffMaxMinDltValue = 0;
 
             READ_FLAG(uiCode, "inter_view_dlt_pred_enable_flag[ i ]"); 
             pcDLT->setInterViewDltPredEnableFlag( i, (uiCode == 1) ? true : false );
