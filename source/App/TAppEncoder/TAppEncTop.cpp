@@ -2057,6 +2057,9 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
     {
       xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod[layer], 24), &vps, &dlt);
       bDltPresentFlag = bDltPresentFlag || dlt.getUseDLTFlag(layer);
+#if H_3D_DELTA_DLT
+      dlt.setInterViewDltPredEnableFlag(layer, (dlt.getUseDLTFlag(layer) && (layer>1)));
+#endif
     }
   }
 

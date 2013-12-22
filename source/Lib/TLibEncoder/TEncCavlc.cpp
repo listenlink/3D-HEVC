@@ -298,7 +298,7 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
           {
             WRITE_FLAG( pcDLT->getInterViewDltPredEnableFlag( i ) ? 1 : 0, "inter_view_dlt_pred_enable_flag[ i ]");
 
-            // determine whether to use bit-map
+            // ----------------------------- determine whether to use bit-map -----------------------------
             Bool bDltBitMapRepFlag       = false;
             UInt uiNumBitsNonBitMap      = 0;
             UInt uiNumBitsBitMap         = 0;
@@ -309,15 +309,36 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
             UInt uiLengthDltDiffMinusMin = 0;
 
             UInt* puiDltDiffValues       = NULL;
+            
+            Int aiIdx2DepthValue_coded[256];
+            UInt uiNumDepthValues_coded = 0;
+            
+            uiNumDepthValues_coded = pcDLT->getNumDepthValues(i);
+            for( UInt ui = 0; ui<uiNumDepthValues_coded; ui++ )
+            {
+              aiIdx2DepthValue_coded[ui] = pcDLT->idx2DepthValue(i, ui);
+            }
+            
+#if H_3D_DELTA_DLT
+            if( pcDLT->getInterViewDltPredEnableFlag( i ) )
+            {
+              AOF( pcVPS->getDepthId( 1 ) == 1 );
+              AOF( i > 1 );
+              // assumes ref layer id to be 1
+              Int* piRefDLT = pcDLT->idx2DepthValue( 1 );
+              UInt uiRefNum = pcDLT->getNumDepthValues( 1 );
+              pcDLT->getDeltaDLT(i, piRefDLT, uiRefNum, aiIdx2DepthValue_coded, &uiNumDepthValues_coded);
+            }
+#endif
 
-            if ( NULL == (puiDltDiffValues = (UInt *)calloc(pcDLT->getNumDepthValues(i), sizeof(UInt))) )
+            if ( NULL == (puiDltDiffValues = (UInt *)calloc(uiNumDepthValues_coded, sizeof(UInt))) )
             {
               exit(-1);
             }
 
-            for (UInt d = 1; d < pcDLT->getNumDepthValues(i); d++)
+            for (UInt d = 1; d < uiNumDepthValues_coded; d++)
             {
-              puiDltDiffValues[d] = pcDLT->idx2DepthValue(i, d) - pcDLT->idx2DepthValue(i, (d-1));
+              puiDltDiffValues[d] = aiIdx2DepthValue_coded[d] - aiIdx2DepthValue_coded[d-1];
 
               if ( uiMaxDiff < puiDltDiffValues[d] )
               {
@@ -334,12 +355,12 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
             // diff coding branch
             uiNumBitsNonBitMap += 8;                          // u(v) bits for num_depth_values_in_dlt[layerId] (i.e. num_entry[ layerId ])
 
-            if ( pcDLT->getNumDepthValues(i) > 1 )
+            if ( uiNumDepthValues_coded > 1 )
             {
               uiNumBitsNonBitMap += 8;                        // u(v) bits for max_diff[ layerId ]
             }
 
-            if ( pcDLT->getNumDepthValues(i) > 2 )
+            if ( uiNumDepthValues_coded > 2 )
             {
               uiLengthMinDiff    = (UInt) ceil(Log2(uiMaxDiff + 1));
               uiNumBitsNonBitMap += uiLengthMinDiff;          // u(v)  bits for min_diff[ layerId ]
@@ -350,7 +371,7 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
             if (uiMaxDiff > uiMinDiff)
             {
               uiLengthDltDiffMinusMin = (UInt) ceil(Log2(uiMaxDiff - uiMinDiff + 1));
-              uiNumBitsNonBitMap += uiLengthDltDiffMinusMin * (pcDLT->getNumDepthValues(i) - 1);  // u(v) bits for dlt_depth_value_diff_minus_min[ layerId ][ j ]
+              uiNumBitsNonBitMap += uiLengthDltDiffMinusMin * (uiNumDepthValues_coded - 1);  // u(v) bits for dlt_depth_value_diff_minus_min[ layerId ][ j ]
             }
 
             // bit map branch
@@ -359,7 +380,7 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
             // determine bDltBitMapFlag
             bDltBitMapRepFlag = (uiNumBitsBitMap > uiNumBitsNonBitMap) ? false : true;
 
-            // Actual coding
+            // ----------------------------- Actual coding -----------------------------
             if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )
             {
               WRITE_FLAG( bDltBitMapRepFlag ? 1 : 0, "dlt_bit_map_rep_flag[ layerId ]" );
@@ -375,7 +396,7 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
               UInt uiDltArrayIndex = 0; 
               for (UInt d=0; d < 256; d++)
               {
-                if ( d == pcDLT->idx2DepthValue(i, uiDltArrayIndex) )
+                if ( d == aiIdx2DepthValue_coded[uiDltArrayIndex] )
                 {                  
                   WRITE_FLAG(1, "dlt_bit_map_flag[ layerId ][ j ]");
                   uiDltArrayIndex++;
@@ -389,26 +410,28 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
             // Diff Coding
             else
             {
-              WRITE_CODE(pcDLT->getNumDepthValues(i), 8, "num_depth_values_in_dlt[layerId]");    // num_entry
+              WRITE_CODE(uiNumDepthValues_coded, 8, "num_depth_values_in_dlt[layerId]");    // num_entry
 
+#if !H_3D_DELTA_DLT
               if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )   // Single-view DLT Diff Coding
+#endif
               {
-                // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component. 
-                if ( pcDLT->getNumDepthValues(i) > 1 )
+                // The condition if( uiNumDepthValues_coded > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component.
+                if ( uiNumDepthValues_coded > 1 )
                 {
                   WRITE_CODE(uiMaxDiff, 8, "max_diff[ layerId ]");        // max_diff
                 }
 
-                if ( pcDLT->getNumDepthValues(i) > 2 )
+                if ( uiNumDepthValues_coded > 2 )
                 {
                   WRITE_CODE((uiMinDiff - 1), uiLengthMinDiff, "min_diff_minus1[ layerId ]");     // min_diff_minus1
                 }
 
-                WRITE_CODE(pcDLT->idx2DepthValue(i, 0), 8, "dlt_depth_value0[layerId]");          // entry0
+                WRITE_CODE(aiIdx2DepthValue_coded[0], 8, "dlt_depth_value0[layerId]");          // entry0
 
                 if (uiMaxDiff > uiMinDiff)
                 {
-                  for (UInt d=1; d < pcDLT->getNumDepthValues(i); d++)
+                  for (UInt d=1; d < uiNumDepthValues_coded; d++)
                   {
                     WRITE_CODE( (puiDltDiffValues[d] - uiMinDiff), uiLengthDltDiffMinusMin, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");    // entry_value_diff_minus_min[ k ]
                   }

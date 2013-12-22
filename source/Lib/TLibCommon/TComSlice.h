@@ -1203,10 +1203,6 @@ private:
 
   Int         m_iNumDepthViews;
   UInt        m_uiDepthViewBitDepth;
-  
-#if RWTH_DELTA_DLT
-  Bool        m_bUseDeltaDLTFlag         [ MAX_NUM_LAYERS ];
-#endif
 
 public:
   TComDLT();
@@ -1217,15 +1213,9 @@ public:
 
   Bool    getUseDLTFlag      ( Int layerIdInVps )         { return m_bUseDLTFlag[ layerIdInVps ]; }
   Void    setUseDLTFlag      ( Int layerIdInVps, Bool b ) { m_bUseDLTFlag[ layerIdInVps ]  = b;   }
-
-#if RWTH_DELTA_DLT
-  Bool    getUseDeltaDLTFlag      ( Int layerIdInVps )         { return m_bUseDeltaDLTFlag[ layerIdInVps ]; }
-  Void    setUseDeltaDLTFlag      ( Int layerIdInVps, Bool b ) { m_bUseDeltaDLTFlag[ layerIdInVps ]  = b;   }
-#endif
   
   Bool    getInterViewDltPredEnableFlag( Int layerIdInVps )         { return m_bInterViewDltPredEnableFlag[ layerIdInVps ]; }
   Void    setInterViewDltPredEnableFlag( Int layerIdInVps, Bool b ) { m_bInterViewDltPredEnableFlag[ layerIdInVps ] = b;    }
-
 
   Void    setNumDepthViews   ( Int n )                    { m_iNumDepthViews = n; }
   Int     getNumDepthViews   ()                           { return m_iNumDepthViews; }
@@ -1238,9 +1228,10 @@ public:
   Int     depthValue2idx( Int layerIdInVps, Pel value )   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
   Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][uiIdx]:uiIdx; }
   Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
-#if RWTH_DELTA_DLT
-  Void    getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, Int* piDeltaDLTOut, Int *piDeltaDLTOutNum );
-  Void    setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, Int* piDeltaDLTIn, Int piDeltaDLTInNum );
+#if H_3D_DELTA_DLT
+  Int*    idx2DepthValue( Int layerIdInVps )  { return m_iIdx2DepthValue[layerIdInVps]; }
+  Void    getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTOut, UInt *puiDeltaDLTOutNum );
+  Void    setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTIn, UInt uiDeltaDLTInNum );
 #endif
 };
 #endif
