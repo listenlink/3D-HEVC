@@ -2580,8 +2580,8 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
   m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
 }
 
-#if RWTH_DELTA_DLT
-Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, Int* piDeltaDLTOut, Int *piDeltaDLTOutNum )
+#if H_3D_DELTA_DLT
+Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTOut, UInt *puiDeltaDLTOutNum )
 {
   Bool abBM0[ 256 ];
   Bool abBM1[ 256 ];
@@ -2590,7 +2590,7 @@ Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, 
   memset( abBM1, 0, sizeof( abBM1 ));
   
   // convert reference DLT to bit string
-  for( Int i = 0; i < iDLTInRefNum; i++ )
+  for( Int i = 0; i < uiDLTInRefNum; i++ )
   {
     abBM0[ piDLTInRef[ i ] ] = true;
   }
@@ -2600,18 +2600,18 @@ Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, 
     abBM1[ m_iIdx2DepthValue[ layerIdInVps ][ i ] ] = true;
   }
   
-  *piDeltaDLTOutNum = 0;
+  *puiDeltaDLTOutNum = 0;
   for( Int i = 0; i < 256; i++ )
   {
     if( abBM0[ i ] ^ abBM1[ i ] )
     {
-      piDeltaDLTOut[ *piDeltaDLTOutNum ] = i;
-      *piDeltaDLTOutNum = *piDeltaDLTOutNum + 1;
+      piDeltaDLTOut[ *puiDeltaDLTOutNum ] = i;
+      *puiDeltaDLTOutNum = *puiDeltaDLTOutNum + 1;
     }
   }
 }
 
-Void TComDLT::setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, Int* piDeltaDLTIn, Int piDeltaDLTInNum )
+Void TComDLT::setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTIn, UInt uiDeltaDLTInNum )
 {
   Bool abBM0[ 256 ];
   Bool abBM1[ 256 ];
@@ -2620,12 +2620,12 @@ Void TComDLT::setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, Int iDLTInRefNum, 
   memset( abBM1, 0, sizeof( abBM1 ));
   
   // convert reference DLT to bit string
-  for( Int i = 0; i < iDLTInRefNum; i++ )
+  for( Int i = 0; i < uiDLTInRefNum; i++ )
   {
     abBM0[ piDLTInRef[ i ] ] = true;
   }
   // convert delta DLT to bit string
-  for( Int i = 0; i < piDeltaDLTInNum; i++ )
+  for( Int i = 0; i < uiDeltaDLTInNum; i++ )
   {
     abBM1[ piDeltaDLTIn[ i ] ] = true;
   }

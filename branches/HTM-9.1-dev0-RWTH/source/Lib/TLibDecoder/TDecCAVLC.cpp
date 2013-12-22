@@ -411,7 +411,6 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
 
           if ( pcDLT->getUseDLTFlag( i ) )
           {
-            UInt uiNumDepthValues     = 0;
             Bool bDltBitMapRepFlag    = false;
             UInt uiMaxDiff            = 0xffffffff;
             UInt uiMinDiff            = 0;
@@ -429,13 +428,13 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
             {
               bDltBitMapRepFlag = false;
             }
+            
+            UInt uiNumDepthValues = 0;
+            Int  aiIdx2DepthValue[256];
 
             // Bit map
             if ( bDltBitMapRepFlag )
             {
-              UInt uiNumDepthValues = 0;
-              Int  aiIdx2DepthValue[256]; 
-
               for (UInt d=0; d<256; d++)
               {
                 READ_FLAG(uiCode, "dlt_bit_map_flag[ layerId ][ j ]");
@@ -445,19 +444,17 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
                   uiNumDepthValues++;
                 }
               }
-
-              pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
             }
             // Diff Coding
             else
             {
               READ_CODE(8, uiNumDepthValues, "num_depth_values_in_dlt[i]");   // num_entry
 
+#if !H_3D_DELTA_DLT
               if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )       // Single-view DLT Diff Coding
+#endif
               {
                 // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component. 
-
-                Int* aiIdx2DepthValue = (Int*) calloc(uiNumDepthValues, sizeof(Int));
 
                 if (uiNumDepthValues > 1)
                 {
@@ -500,11 +497,29 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
                   }
                 }
 
-                pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
-
-                free(aiIdx2DepthValue);
-              }              
+              }
             }
+            
+#if H_3D_DELTA_DLT
+            if( pcDLT->getInterViewDltPredEnableFlag( i ) )
+            {
+              // interpret decoded values as delta DLT
+              AOF( pcVPS->getDepthId( 1 ) == 1 );
+              AOF( i > 1 );
+              // assumes ref layer id to be 1
+              Int* piRefDLT = pcDLT->idx2DepthValue( 1 );
+              UInt uiRefNum = pcDLT->getNumDepthValues( 1 );
+              pcDLT->setDeltaDLT(i, piRefDLT, uiRefNum, aiIdx2DepthValue, uiNumDepthValues);
+            }
+            else
+            {
+              // store final DLT
+              pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
+            }
+#else
+            // store final DLT
+            pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
+#endif
           }
         }
       }
