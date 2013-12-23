@@ -75,6 +75,10 @@ Void TAppEncTop::xInitLibCfg()
   TComVPS vps;
 #endif
   
+#if DLT_DIFF_CODING_IN_PPS
+  TComDLT& dlt = m_dlt;
+#endif
+
 #if H_MV
   Int maxTempLayer = -1; 
   for (Int j = 0; j < m_numberOfLayers; j++)
@@ -124,7 +128,10 @@ Void TAppEncTop::xInitLibCfg()
   xSetVPSVUI               ( vps ); 
 #if H_3D
   xSetVPSExtension2        ( vps ); 
-  m_ivPicLists.setVPS      ( &vps ); 
+  m_ivPicLists.setVPS      ( &vps );
+#if DLT_DIFF_CODING_IN_PPS
+  xDeriveDltArray          ( vps, dlt );
+#endif
 #endif
 
 
@@ -217,6 +224,10 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
   // H_MV
   m_cTEncTop.setVPS(&vps);
+
+#if DLT_DIFF_CODING_IN_PPS
+  m_cTEncTop.setDLT(&dlt);
+#endif
 
   m_cTEncTop.setProfile(m_profile);
   m_cTEncTop.setLevel(m_levelTier, m_level);
@@ -1246,7 +1257,11 @@ void TAppEncTop::printRateSummary()
 }
 
 #if H_3D_DIM_DLT
+#if DLT_DIFF_CODING_IN_PPS
+Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt)
+#else
 Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps)
+#endif
 {
   TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
   // allocate original YUV buffer
@@ -1306,13 +1321,22 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* v
   
   if( uiNumFrames == 0 || numBitsForValue(iNumDepthValues) == g_bitDepthY )
   {
+#if DLT_DIFF_CODING_IN_PPS
+    dlt->setUseDLTFlag(layer, false);
+#else
     // don't use DLT
     vps->setUseDLTFlag(layer, false);
+#endif
   }
   
   // assign LUT
+#if DLT_DIFF_CODING_IN_PPS
+  if( dlt->getUseDLTFlag(layer) )
+    dlt->setDepthLUTs(layer, aiIdx2DepthValue, iNumDepthValues);
+#else
   if( vps->getUseDLTFlag(layer) )
     vps->setDepthLUTs(layer, aiIdx2DepthValue, iNumDepthValues);
+#endif
   
   // free temporary memory
   free(aiIdx2DepthValue);
@@ -1966,6 +1990,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useRBC || m_useSDC || m_useDLT ) );
 #endif
 #if H_3D_DIM_DLT
+#if !DLT_DIFF_CODING_IN_PPS
     vps.setUseDLTFlag( layer , isDepth && m_useDLT );
     if( vps.getUseDLTFlag( layer ) )
     {
@@ -1975,6 +2000,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
       xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod, 24), &vps);
 #endif
     }
+#endif
 #endif
 #endif
 
@@ -2008,6 +2034,37 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #if H_3D
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
 #endif
+}
+#endif
+
+#if DLT_DIFF_CODING_IN_PPS
+Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
+{
+  Int  iNumDepthViews  = 0;
+  Bool bDltPresentFlag = false;
+
+  for ( Int layer = 0; layer <= vps.getMaxLayersMinus1(); layer++ )
+  {
+    Bool isDepth = ( vps.getDepthId( layer ) == 1 );
+
+    if ( isDepth )
+    {
+      iNumDepthViews++;
+    }
+
+    dlt.setUseDLTFlag( layer , isDepth && m_useDLT );
+    if( dlt.getUseDLTFlag( layer ) )
+    {
+      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod[layer], 24), &vps, &dlt);
+      bDltPresentFlag = bDltPresentFlag || dlt.getUseDLTFlag(layer);
+#if H_3D_DELTA_DLT
+      dlt.setInterViewDltPredEnableFlag(layer, (dlt.getUseDLTFlag(layer) && (layer>1)));
+#endif
+    }
+  }
+
+  dlt.setDltPresentFlag( bDltPresentFlag );
+  dlt.setNumDepthViews ( iNumDepthViews  );
 }
 #endif
 #endif
