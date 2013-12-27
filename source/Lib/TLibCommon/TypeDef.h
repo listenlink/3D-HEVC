@@ -174,6 +174,11 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
+#define CAM_HLS_F0136_F0045_F0082         1   // JCT3V-F0136/F0045: view order index based camera parameter signaling 
+                                              // JCT3V-F0082: the cp_in_slice_segment_layer_flag to be view specific and used as a condition of the presence of slice header level camera parameters
+#define CAM_HLS_F0044                     1   // JCT3V-F0044: move camera parameter from slice header extension to slice header
+
+
 // Rate Control
 #define KWU_FIX_URQ                       1
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation

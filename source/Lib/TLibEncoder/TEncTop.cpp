@@ -853,12 +853,14 @@ Void TEncTop::xInitSPS()
     pcVUI->setLog2MaxMvLengthVertical(getLog2MaxMvLengthVertical());
   }
 #if H_3D
+#if !CAM_HLS_F0136_F0045_F0082
 #if !QC_DEPTH_IV_MRG_F0125
   if ( !m_isDepth )
 #endif
   {
     m_cSPS.initCamParaSPS           ( m_viewIndex, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
   }
+#endif
 #endif
 }
 
@@ -1009,7 +1011,11 @@ Void TEncTop::xInitPPS()
     }
   }
 #if H_3D
+#if CAM_HLS_F0136_F0045_F0082
+  if( m_cVPS->hasCamParInSliceHeader( getViewIndex() ) )
+#else
   if( m_cSPS.hasCamParInSliceHeader() )
+#endif
   {
     m_cPPS.setSliceHeaderExtensionPresentFlag( true ); 
   }
