@@ -781,7 +781,11 @@ Void TComSlice::generateAlterRefforTMVP()
 #endif
 Void TComSlice::setCamparaSlice( Int** aaiScale, Int** aaiOffset )
 {  
+#if CAM_HLS_F0136_F0045_F0082
+  if( m_pcVPS->hasCamParInSliceHeader( m_viewIndex ) )
+#else
   if( m_pcSPS->hasCamParInSliceHeader() )
+#endif
   {    
     for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < m_viewIndex; uiBaseViewIndex++ )
     {
@@ -1919,6 +1923,9 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
 #endif
   }
 #endif
+#if CAM_HLS_F0136_F0045_F0082
+  deleteCamPars();
+#endif
 }
 
 #if H_3D_DIM_DLT
@@ -2071,6 +2078,97 @@ Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag )
 
   return foundLayerIdinNuh;
 }
+#if CAM_HLS_F0136_F0045_F0082
+Void TComVPS::createCamPars(Int iNumViews)
+{
+  Int i = 0, j = 0;
+
+  m_bCamParPresent = new Bool[ iNumViews ];
+  m_bCamParInSliceHeader = new Bool[ iNumViews ];
+
+  m_aaaiCodedScale = new Int**[ iNumViews ];
+  m_aaaiCodedOffset = new Int**[ iNumViews ];
+  for ( i = 0; i < iNumViews ; i++ )
+  {
+    m_aaaiCodedScale[i] = new Int*[ 2 ];
+    m_aaaiCodedOffset[i] = new Int*[ 2 ];
+    for ( j = 0; j < 2; j++ )
+    {
+      m_aaaiCodedScale[i][j] = new Int[ MAX_NUM_LAYERS ];
+      m_aaaiCodedOffset[i][j] = new Int[ MAX_NUM_LAYERS ];
+      for ( Int k = 0; k < MAX_NUM_LAYERS; k++ )
+      {
+        m_aaaiCodedScale[i][j][k] = 0;
+        m_aaaiCodedOffset[i][j][k] = 0;
+      }
+    }
+  }
+}
+
+Void TComVPS::deleteCamPars()
+{
+  Int iNumViews = getNumViews();
+  Int i = 0, j = 0;
+
+  if ( m_bCamParPresent != NULL )
+  {
+    delete [] m_bCamParPresent;
+  }
+  if ( m_bCamParInSliceHeader != NULL )
+  {
+    delete [] m_bCamParInSliceHeader;
+  }
+
+  if ( m_aaaiCodedScale != NULL )
+  {
+    for ( i = 0; i < iNumViews ; i++ )
+    {
+      for ( j = 0; j < 2; j++ )
+      {
+        delete [] m_aaaiCodedScale[i][j];
+      }
+      delete [] m_aaaiCodedScale[i];
+    }
+    delete [] m_aaaiCodedScale;
+  }
+
+  if ( m_aaaiCodedOffset != NULL )
+  {
+    for ( i = 0; i < iNumViews ; i++ )
+    {
+      for ( j = 0; j < 2; j++ )
+      {
+        delete [] m_aaaiCodedOffset[i][j];
+      }
+      delete [] m_aaaiCodedOffset[i];
+    }
+    delete [] m_aaaiCodedOffset;
+  }
+}
+
+
+Void
+  TComVPS::initCamParaVPS( UInt uiViewIndex, Bool bCamParPresent, UInt uiCamParPrecision, Bool bCamParSlice, Int** aaiScale, Int** aaiOffset )
+{
+  AOT( uiViewIndex != 0 && !bCamParSlice && ( aaiScale == 0 || aaiOffset == 0 ) );  
+
+  m_uiCamParPrecision = ( ( uiViewIndex != 0 )? uiCamParPrecision : 0 );
+  m_bCamParPresent[ uiViewIndex ] = (( uiViewIndex != 0 )? bCamParPresent  : false );
+  m_bCamParInSliceHeader[ uiViewIndex ]  = ( (uiViewIndex != 0)? bCamParSlice  : false );
+
+  if( !m_bCamParInSliceHeader[ uiViewIndex ] )
+  {
+    for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < uiViewIndex; uiBaseViewIndex++ )
+    {
+      m_aaaiCodedScale [ uiViewIndex ][ 0 ][ uiBaseViewIndex ] = aaiScale [ uiBaseViewIndex ][     uiViewIndex ];
+      m_aaaiCodedScale [ uiViewIndex ][ 1 ][ uiBaseViewIndex ] = aaiScale [     uiViewIndex ][ uiBaseViewIndex ];
+      m_aaaiCodedOffset[ uiViewIndex ][ 0 ][ uiBaseViewIndex ] = aaiOffset[ uiBaseViewIndex ][     uiViewIndex ];
+      m_aaaiCodedOffset[ uiViewIndex ][ 1 ][ uiBaseViewIndex ] = aaiOffset[     uiViewIndex ][ uiBaseViewIndex ];
+    }
+  }
+}
+#endif // CAM_HLS_F0136_F0045_F0082
+
 #endif // H_3D
 
 
@@ -2710,6 +2808,7 @@ Void TComSPS::inferScalingList( TComSPS* spsSrc )
 }
 #endif
 #if H_3D
+#if !CAM_HLS_F0136_F0045_F0082
 Void
 TComSPS::initCamParaSPS( UInt uiViewIndex, UInt uiCamParPrecision, Bool bCamParSlice, Int** aaiScale, Int** aaiOffset )
 {
@@ -2731,6 +2830,7 @@ TComSPS::initCamParaSPS( UInt uiViewIndex, UInt uiCamParPrecision, Bool bCamParS
     }
   }
 }
+#endif
 #endif
 TComReferencePictureSet::TComReferencePictureSet()
 : m_numberOfPictures (0)
@@ -3442,8 +3542,23 @@ Void TComSlice::setDepthToDisparityLUTs()
   assert( m_depthToDisparityB != NULL ); 
   assert( m_depthToDisparityF != NULL ); 
 
+#if CAM_HLS_F0136_F0045_F0082
+  TComVPS* vps = getVPS(); 
+#else
   TComSPS* sps = getSPS(); 
+#endif
 
+#if CAM_HLS_F0136_F0045_F0082
+  Int log2Div = g_bitDepthY - 1 + vps->getCamParPrecision();
+  Int viewIndex = getViewIndex();
+
+  Bool camParaSH = vps->hasCamParInSliceHeader( viewIndex );
+
+  Int* codScale     = camParaSH ? m_aaiCodedScale [ 0 ] : vps->getCodedScale    ( viewIndex ); 
+  Int* codOffset    = camParaSH ? m_aaiCodedOffset[ 0 ] : vps->getCodedOffset   ( viewIndex ); 
+  Int* invCodScale  = camParaSH ? m_aaiCodedScale [ 1 ] : vps->getInvCodedScale ( viewIndex ); 
+  Int* invCodOffset = camParaSH ? m_aaiCodedOffset[ 1 ] : vps->getInvCodedOffset( viewIndex ); 
+#else
   Int log2Div = g_bitDepthY - 1 + sps->getCamParPrecision();
 
   Bool camParaSH = m_pcSPS->hasCamParInSliceHeader();
@@ -3452,6 +3567,7 @@ Void TComSlice::setDepthToDisparityLUTs()
   Int* codOffset    = camParaSH ? m_aaiCodedOffset[ 0 ] : sps->getCodedOffset   (); 
   Int* invCodScale  = camParaSH ? m_aaiCodedScale [ 1 ] : sps->getInvCodedScale (); 
   Int* invCodOffset = camParaSH ? m_aaiCodedOffset[ 1 ] : sps->getInvCodedOffset(); 
+#endif
 
   for (Int i = 0; i <= ( getViewIndex() - 1); i++)
   {

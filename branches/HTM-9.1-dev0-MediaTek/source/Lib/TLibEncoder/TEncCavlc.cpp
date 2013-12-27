@@ -860,21 +860,23 @@ if( depthFlag )
   WRITE_FLAG( pcSPS->getUsePC()  ? 1 : 0, "use_pc_flag");
 }
 #endif
-  if (!depthFlag )
+#if !CAM_HLS_F0136_F0045_F0082
+if (!depthFlag )
+{
+  WRITE_UVLC( pcSPS->getCamParPrecision(), "cp_precision" );
+  WRITE_FLAG( pcSPS->hasCamParInSliceHeader() ? 1 : 0, "cp_in_slice_header_flag" );
+  if( !pcSPS->hasCamParInSliceHeader() )
   {
-    WRITE_UVLC( pcSPS->getCamParPrecision(), "cp_precision" );
-    WRITE_FLAG( pcSPS->hasCamParInSliceHeader() ? 1 : 0, "cp_in_slice_header_flag" );
-    if( !pcSPS->hasCamParInSliceHeader() )
+    for( UInt uiIndex = 0; uiIndex < viewIndex; uiIndex++ )
     {
-      for( UInt uiIndex = 0; uiIndex < viewIndex; uiIndex++ )
-      {
-        WRITE_SVLC( pcSPS->getCodedScale    ()[ uiIndex ],                                      "cp_scale" );
-        WRITE_SVLC( pcSPS->getCodedOffset   ()[ uiIndex ],                                      "cp_off" );
-        WRITE_SVLC( pcSPS->getInvCodedScale ()[ uiIndex ] + pcSPS->getCodedScale ()[ uiIndex ], "cp_inv_scale_plus_scale" );
-        WRITE_SVLC( pcSPS->getInvCodedOffset()[ uiIndex ] + pcSPS->getCodedOffset()[ uiIndex ], "cp_inv_off_plus_off" );
-      }
+      WRITE_SVLC( pcSPS->getCodedScale    ()[ uiIndex ],                                      "cp_scale" );
+      WRITE_SVLC( pcSPS->getCodedOffset   ()[ uiIndex ],                                      "cp_off" );
+      WRITE_SVLC( pcSPS->getInvCodedScale ()[ uiIndex ] + pcSPS->getCodedScale ()[ uiIndex ], "cp_inv_scale_plus_scale" );
+      WRITE_SVLC( pcSPS->getInvCodedOffset()[ uiIndex ] + pcSPS->getCodedOffset()[ uiIndex ], "cp_inv_off_plus_off" );
     }
   }
+}
+#endif
 }
 #endif
 
@@ -1674,6 +1676,27 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }
     }  
   }
+#if CAM_HLS_F0136_F0045_F0082
+  WRITE_UVLC( pcVPS->getCamParPrecision(), "cp_precision" );
+  for (UInt viewIndex=0; viewIndex<pcVPS->getNumViews(); viewIndex++)
+  {
+    WRITE_FLAG( pcVPS->getCamParPresent(viewIndex) ? 1 : 0, "cp_present_flag[i]" );
+    if ( pcVPS->getCamParPresent(viewIndex) )
+    {
+      WRITE_FLAG( pcVPS->hasCamParInSliceHeader(viewIndex) ? 1 : 0, "cp_in_slice_segment_header_flag[i]" );
+      if ( !pcVPS->hasCamParInSliceHeader(viewIndex) )
+      {
+        for( UInt uiIndex = 0; uiIndex < viewIndex; uiIndex++ )
+        {
+          WRITE_SVLC( pcVPS->getCodedScale    (viewIndex)[ uiIndex ],                                               "vps_cp_scale" );
+          WRITE_SVLC( pcVPS->getCodedOffset   (viewIndex)[ uiIndex ],                                               "vps_cp_off" );
+          WRITE_SVLC( pcVPS->getInvCodedScale (viewIndex)[ uiIndex ] + pcVPS->getCodedScale (viewIndex)[ uiIndex ], "vps_cp_inv_scale_plus_scale" );
+          WRITE_SVLC( pcVPS->getInvCodedOffset(viewIndex)[ uiIndex ] + pcVPS->getCodedOffset(viewIndex)[ uiIndex ], "vps_cp_inv_off_plus_off" );
+        }
+      }
+    }
+  }
+#endif
 #if H_3D_TMVP
   WRITE_FLAG( pcVPS->getIvMvScalingFlag( ) ? 1 : 0 ,          "iv_mv_scaling_flag" );
 #endif
@@ -2138,15 +2161,39 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
     }
   }
+#if CAM_HLS_F0044
+#if QC_DEPTH_IV_MRG_F0125
+#if CAM_HLS_F0136_F0045_F0082
+  if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && !pcSlice->getIsDepth() )
+#else
+  if( pcSlice->getSPS()->hasCamParInSliceHeader() && !pcSlice->getIsDepth() )
+#endif
+#else
+  if( pcSlice->getSPS()->hasCamParInSliceHeader() )
+#endif
+  {
+    for( UInt uiId = 0; uiId < pcSlice->getViewIndex(); uiId++ )
+    {
+      WRITE_SVLC( pcSlice->getCodedScale    ()[ uiId ],                                     "cp_scale" );
+      WRITE_SVLC( pcSlice->getCodedOffset   ()[ uiId ],                                     "cp_off" );
+      WRITE_SVLC( pcSlice->getInvCodedScale ()[ uiId ] + pcSlice->getCodedScale ()[ uiId ], "cp_inv_scale_plus_scale" );
+      WRITE_SVLC( pcSlice->getInvCodedOffset()[ uiId ] + pcSlice->getCodedOffset()[ uiId ], "cp_inv_off_plus_off" );
+    }
+  }
+#endif
+
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag())
   {
-#if !H_3D
+#if !H_3D || CAM_HLS_F0044
     WRITE_UVLC(0,"slice_header_extension_length");
 #else
     WRITE_UVLC(0,"slice_header_extension_length"); //<- this element needs to be set to the correct value!!
-
 #if QC_DEPTH_IV_MRG_F0125
+#if CAM_HLS_F0136_F0045_F0082
+    if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && !pcSlice->getIsDepth() )
+#else
     if( pcSlice->getSPS()->hasCamParInSliceHeader() && !pcSlice->getIsDepth() )
+#endif
 #else
     if( pcSlice->getSPS()->hasCamParInSliceHeader() )
 #endif

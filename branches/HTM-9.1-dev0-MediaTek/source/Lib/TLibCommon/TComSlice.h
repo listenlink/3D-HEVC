@@ -861,6 +861,13 @@ private:
 #endif
 
 #if H_3D
+#if CAM_HLS_F0136_F0045_F0082
+  UInt        m_uiCamParPrecision;
+  Bool*       m_bCamParInSliceHeader;
+  Bool*       m_bCamParPresent;
+  Int         ***m_aaaiCodedScale ;
+  Int         ***m_aaaiCodedOffset;
+#endif
   Bool        m_ivMvScalingFlag; 
 #endif
 #if H_3D_INTER_SDC
@@ -1142,6 +1149,20 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Void    setUseAdvRP  ( Int layerIdInVps, UInt val )                      { m_uiUseAdvResPred[layerIdInVps] = val;     }
   Void    setARPStepNum( Int layerIdInVps, UInt val )                      { m_uiARPStepNum[layerIdInVps]    = val;     }
 #endif
+#if CAM_HLS_F0136_F0045_F0082
+  Void createCamPars(Int iNumViews);
+  Void deleteCamPars();
+  Void initCamParaVPS      (  UInt uiViewIndex, Bool bCamParPresent = false, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
+  UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
+  Bool getCamParPresent      ( Int viewIndex )  { return m_bCamParPresent[viewIndex]; }
+  Bool hasCamParInSliceHeader( Int viewIndex )  { return m_bCamParInSliceHeader[viewIndex]; }
+  Void setHasCamParInSliceHeader( Int viewIndex, Bool b )  { m_bCamParInSliceHeader[viewIndex] = b; }
+  Int* getCodedScale         ( Int viewIndex )  { return m_aaaiCodedScale [viewIndex][0]; }
+  Int* getCodedOffset        ( Int viewIndex )  { return m_aaaiCodedOffset[viewIndex][0]; }
+  Int* getInvCodedScale      ( Int viewIndex )  { return m_aaaiCodedScale [viewIndex][1]; }
+  Int* getInvCodedOffset     ( Int viewIndex )  { return m_aaaiCodedOffset[viewIndex][1]; }
+#endif
+
 #if H_3D_IV_MERGE
   Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
   Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
@@ -1779,6 +1800,7 @@ public:
   Bool getUsePC ()         { return m_bUsePC;  }
 #endif
 #if H_3D
+#if !CAM_HLS_F0136_F0045_F0082
   Void initCamParaSPS      (  UInt uiViewIndex, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
   UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
   Bool hasCamParInSliceHeader()  { return m_bCamParInSliceHeader; }
@@ -1789,6 +1811,7 @@ public:
   Int* getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int* getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int* getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+#endif
 #endif
 #if H_MV
   Int  getLayerId            ()           { return m_layerId; }

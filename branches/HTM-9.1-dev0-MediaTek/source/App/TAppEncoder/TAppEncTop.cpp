@@ -75,6 +75,10 @@ Void TAppEncTop::xInitLibCfg()
   TComVPS vps;
 #endif
   
+#if CAM_HLS_F0136_F0045_F0082
+  vps.createCamPars(m_iNumberOfViews);
+#endif
+
 #if DLT_DIFF_CODING_IN_PPS
   TComDLT& dlt = m_dlt;
 #endif
@@ -791,6 +795,14 @@ Void TAppEncTop::xDestroyLib()
 
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
+#if CAM_HLS_F0136_F0045_F0082
+  for ( Int viewIndex = 0; viewIndex < m_vps.getNumViews(); viewIndex++ )
+  {
+    m_vps.initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
+      m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
+  }
+#endif
+
 #if H_MV
   for(Int layer=0; layer<m_numberOfLayers; layer++)
   {
