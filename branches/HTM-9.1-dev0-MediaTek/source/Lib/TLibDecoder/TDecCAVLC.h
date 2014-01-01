@@ -105,14 +105,13 @@ public:
   Void  parseSPS            ( TComSPS* pcSPS );
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D && DLT_DIFF_CODING_IN_PPS
   Void  parsePPS            ( TComPPS* pcPPS, TComVPS* pcVPS );
   Void  parsePPSExtension   ( TComPPS* pcPPS, TComVPS* pcVPS );
 #else
   Void  parsePPS            ( TComPPS* pcPPS);
 #endif
 
-  Void  parsePPS            ( TComPPS* pcPPS);
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
