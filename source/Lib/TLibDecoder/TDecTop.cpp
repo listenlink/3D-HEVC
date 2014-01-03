@@ -227,6 +227,18 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   {
     m_uiMaxViewIndex                     = std::max( m_uiMaxViewIndex, uiViewIndex );
     m_aiViewId[ uiViewIndex ]            = pcSlice->getViewId();
+#if CAM_HLS_F0136_F0045_F0082
+    if( uiViewIndex == 1 )
+    {
+      m_uiCamParsCodedPrecision       = pcSlice->getVPS()->getCamParPrecision     ();
+      m_bCamParsVaryOverTime          = pcSlice->getVPS()->hasCamParInSliceHeader ( uiViewIndex );
+    }
+    else if( uiViewIndex > 1 )
+    {
+      AOF( m_uiCamParsCodedPrecision == pcSlice->getVPS()->getCamParPrecision     () );
+      AOF( m_bCamParsVaryOverTime    == pcSlice->getVPS()->hasCamParInSliceHeader ( uiViewIndex ) );
+    }
+#else
     if( uiViewIndex == 1 )
     {
       m_uiCamParsCodedPrecision       = pcSlice->getSPS()->getCamParPrecision     ();
@@ -237,6 +249,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
       AOF( m_uiCamParsCodedPrecision == pcSlice->getSPS()->getCamParPrecision     () );
       AOF( m_bCamParsVaryOverTime    == pcSlice->getSPS()->hasCamParInSliceHeader () );
     }
+#endif
     for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )
     {
       if( m_bCamParsVaryOverTime )
@@ -250,10 +263,17 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
       }
       else
       {
+#if CAM_HLS_F0136_F0045_F0082
+        m_aaiCodedScale [ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getVPS()->getCodedScale    (uiViewIndex) [ uiBaseIndex ];
+        m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getVPS()->getCodedOffset   (uiViewIndex) [ uiBaseIndex ];
+        m_aaiCodedScale [ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getVPS()->getInvCodedScale (uiViewIndex) [ uiBaseIndex ];
+        m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getVPS()->getInvCodedOffset(uiViewIndex) [ uiBaseIndex ];
+#else
         m_aaiCodedScale [ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getSPS()->getCodedScale    () [ uiBaseIndex ];
         m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getSPS()->getCodedOffset   () [ uiBaseIndex ];
         m_aaiCodedScale [ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getSPS()->getInvCodedScale () [ uiBaseIndex ];
         m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getSPS()->getInvCodedOffset() [ uiBaseIndex ];
+#endif
         xInitLUTs( uiBaseIndex, uiViewIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
         xInitLUTs( uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiViewIndex ][ uiBaseIndex ], m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
       }
@@ -285,10 +305,11 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
 Void
 CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
 {
+#if !CAM_HLS_F0136_F0045_F0082
   UInt uiViewIndex = pcSlice->getViewIndex();
 
   pcSlice->getSPS()->initCamParaSPS( uiViewIndex, m_uiCamParsCodedPrecision, m_bCamParsVaryOverTime, m_aaiCodedScale, m_aaiCodedOffset );
-
+#endif
   if( m_bCamParsVaryOverTime )
   {
     pcSlice->setCamparaSlice( m_aaiCodedScale, m_aaiCodedOffset );
@@ -1108,7 +1129,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #if QC_DEPTH_IV_MRG_F0125
   if( pcSlice->getIsDepth() )
   {
+#if !CAM_HLS_F0136_F0045_F0082
     pcSlice->getSPS()->setHasCamParInSliceHeader( false );
+#endif
   }
 #endif
 #endif
@@ -1150,7 +1173,19 @@ Void TDecTop::xDecodePPS()
 #if H_MV
   pps->setLayerId( getLayerId() ); 
 #endif
+#if DLT_DIFF_CODING_IN_PPS
+  // Assuming that all PPS indirectly refer to the same VPS via different SPS
+  // There is no parsing dependency in decoding DLT in PPS. 
+  // The VPS information passed to decodePPS() is used to arrange the decoded DLT tables to their corresponding layers. 
+  // This is equivalent to the process of 
+  //   Step 1) decoding DLT tables based on the number of depth layers, and
+  //   Step 2) mapping DLT tables to the depth layers
+  // as descripted in the 3D-HEVC WD. 
+  TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 );
+  m_cEntropyDecoder.decodePPS( pps, vps );
+#else
   m_cEntropyDecoder.decodePPS( pps );
+#endif
   m_parameterSetManagerDecoder.storePrefetchedPPS( pps );
 }
 

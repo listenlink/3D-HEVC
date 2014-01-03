@@ -848,7 +848,9 @@ private:
   Bool        m_depthRefinementFlag      [ MAX_NUM_LAYERS ]; 
 #endif
   Bool        m_vpsDepthModesFlag        [MAX_NUM_LAYERS   ];
+
 #if H_3D_DIM_DLT
+#if !DLT_DIFF_CODING_IN_PPS
   Bool        m_bUseDLTFlag              [MAX_NUM_LAYERS   ];
   
   Int         m_iBitsPerDepthValue       [MAX_NUM_LAYERS   ];
@@ -856,7 +858,16 @@ private:
   Int*        m_iDepthValue2Idx          [MAX_NUM_LAYERS   ];
   Int*        m_iIdx2DepthValue          [MAX_NUM_LAYERS   ];
 #endif
+#endif
+
 #if H_3D
+#if CAM_HLS_F0136_F0045_F0082
+  UInt        m_uiCamParPrecision;
+  Bool*       m_bCamParInSliceHeader;
+  Bool*       m_bCamParPresent;
+  Int         ***m_aaaiCodedScale ;
+  Int         ***m_aaaiCodedOffset;
+#endif
   Bool        m_ivMvScalingFlag; 
 #endif
 #if H_3D_INTER_SDC
@@ -1034,7 +1045,7 @@ public:
   Bool    inferOutputLayerFlag( Int layerSetIdx, Int i )                   { return ( getDefaultOneTargetOutputLayerIdc( ) == 0 || ( ( getDefaultOneTargetOutputLayerIdc( ) == 1 ) && ( i == m_layerSetLayerIdList[layerSetIdx].size() - 1  ) ));  }
 #endif
 
-  Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx  = val ]; } 
+  Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx  = val ]; }
   Int     getProfileLevelTierIdx( Int outLayerSetIdx )                     { return m_profileLevelTierIdx[ outLayerSetIdx ]; } 
 #if H_MV_6_GEN_0153_28
   Void    setAltOutputLayerFlag( Bool flag )                               { m_altOutputLayerFlag = flag; } 
@@ -1138,6 +1149,20 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Void    setUseAdvRP  ( Int layerIdInVps, UInt val )                      { m_uiUseAdvResPred[layerIdInVps] = val;     }
   Void    setARPStepNum( Int layerIdInVps, UInt val )                      { m_uiARPStepNum[layerIdInVps]    = val;     }
 #endif
+#if CAM_HLS_F0136_F0045_F0082
+  Void createCamPars(Int iNumViews);
+  Void deleteCamPars();
+  Void initCamParaVPS      (  UInt uiViewIndex, Bool bCamParPresent = false, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
+  UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
+  Bool getCamParPresent      ( Int viewIndex )  { return m_bCamParPresent[viewIndex]; }
+  Bool hasCamParInSliceHeader( Int viewIndex )  { return m_bCamParInSliceHeader[viewIndex]; }
+  Void setHasCamParInSliceHeader( Int viewIndex, Bool b )  { m_bCamParInSliceHeader[viewIndex] = b; }
+  Int* getCodedScale         ( Int viewIndex )  { return m_aaaiCodedScale [viewIndex][0]; }
+  Int* getCodedOffset        ( Int viewIndex )  { return m_aaaiCodedOffset[viewIndex][0]; }
+  Int* getInvCodedScale      ( Int viewIndex )  { return m_aaaiCodedScale [viewIndex][1]; }
+  Int* getInvCodedOffset     ( Int viewIndex )  { return m_aaaiCodedOffset[viewIndex][1]; }
+#endif
+
 #if H_3D_IV_MERGE
   Void    setIvMvPredFlag     ( Int layerIdInVps, Bool val )  { m_ivMvPredFlag[ layerIdInVps ] = val; }
   Bool    getIvMvPredFlag     ( Int layerIdInVps )            { return m_ivMvPredFlag[ layerIdInVps ]; }; 
@@ -1156,7 +1181,9 @@ Int     getProfileLevelTierIdxLen()                                      { retur
 #endif
   Void    setVpsDepthModesFlag( Int layerIdInVps, Bool val )               { m_vpsDepthModesFlag[ layerIdInVps ] = val; }
   Bool    getVpsDepthModesFlag( Int layerIdInVps )                         { return m_vpsDepthModesFlag[ layerIdInVps ]; }
+
 #if H_3D_DIM_DLT
+#if !DLT_DIFF_CODING_IN_PPS
   Bool    getUseDLTFlag      ( Int layerIdInVps )                         { return m_bUseDLTFlag[ layerIdInVps ]; }
   Void    setUseDLTFlag      ( Int layerIdInVps, Bool b ) { m_bUseDLTFlag[ layerIdInVps ]  = b;          }
   
@@ -1165,6 +1192,7 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Int     depthValue2idx( Int layerIdInVps, Pel value )   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
   Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][uiIdx]:uiIdx; }
   Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
+#endif
 #endif
 
   Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
@@ -1180,6 +1208,54 @@ Int     getProfileLevelTierIdxLen()                                      { retur
 #endif  
 #endif
 };
+
+#if DLT_DIFF_CODING_IN_PPS
+class TComDLT
+{
+private:
+  Bool        m_bDltPresentFlag;
+  Bool        m_bUseDLTFlag              [ MAX_NUM_LAYERS ];
+  Bool        m_bInterViewDltPredEnableFlag[ MAX_NUM_LAYERS ];
+
+  Int         m_iBitsPerDepthValue       [ MAX_NUM_LAYERS ];
+  Int         m_iNumDepthmapValues       [ MAX_NUM_LAYERS ];
+  Int*        m_iDepthValue2Idx          [ MAX_NUM_LAYERS ];
+  Int*        m_iIdx2DepthValue          [ MAX_NUM_LAYERS ];
+
+  Int         m_iNumDepthViews;
+  UInt        m_uiDepthViewBitDepth;
+
+public:
+  TComDLT();
+  ~TComDLT(); 
+
+  Bool    getDltPresentFlag  ()                           { return m_bDltPresentFlag; }
+  Void    setDltPresentFlag  ( Bool b )                   { m_bDltPresentFlag = b;    }
+
+  Bool    getUseDLTFlag      ( Int layerIdInVps )         { return m_bUseDLTFlag[ layerIdInVps ]; }
+  Void    setUseDLTFlag      ( Int layerIdInVps, Bool b ) { m_bUseDLTFlag[ layerIdInVps ]  = b;   }
+  
+  Bool    getInterViewDltPredEnableFlag( Int layerIdInVps )         { return m_bInterViewDltPredEnableFlag[ layerIdInVps ]; }
+  Void    setInterViewDltPredEnableFlag( Int layerIdInVps, Bool b ) { m_bInterViewDltPredEnableFlag[ layerIdInVps ] = b;    }
+
+  Void    setNumDepthViews   ( Int n )                    { m_iNumDepthViews = n; }
+  Int     getNumDepthViews   ()                           { return m_iNumDepthViews; }
+
+  Void    setDepthViewBitDepth( UInt n )                  { m_uiDepthViewBitDepth = n; }
+  UInt    getDepthViewBitDepth()                          { return m_uiDepthViewBitDepth; }
+
+  Int     getBitsPerDepthValue( Int layerIdInVps )        { return getUseDLTFlag(layerIdInVps)?m_iBitsPerDepthValue[layerIdInVps]:g_bitDepthY; }
+  Int     getNumDepthValues( Int layerIdInVps )           { return getUseDLTFlag(layerIdInVps)?m_iNumDepthmapValues[layerIdInVps]:((1 << g_bitDepthY)-1); }
+  Int     depthValue2idx( Int layerIdInVps, Pel value )   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
+  Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][uiIdx]:uiIdx; }
+  Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
+#if H_3D_DELTA_DLT
+  Int*    idx2DepthValue( Int layerIdInVps )  { return m_iIdx2DepthValue[layerIdInVps]; }
+  Void    getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTOut, UInt *puiDeltaDLTOutNum );
+  Void    setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTIn, UInt uiDeltaDLTInNum );
+#endif
+};
+#endif
 
 class Window
 {
@@ -1724,6 +1800,7 @@ public:
   Bool getUsePC ()         { return m_bUsePC;  }
 #endif
 #if H_3D
+#if !CAM_HLS_F0136_F0045_F0082
   Void initCamParaSPS      (  UInt uiViewIndex, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
   UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
   Bool hasCamParInSliceHeader()  { return m_bCamParInSliceHeader; }
@@ -1734,6 +1811,7 @@ public:
   Int* getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int* getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int* getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+#endif
 #endif
 #if H_MV
   Int  getLayerId            ()           { return m_layerId; }
@@ -1839,6 +1917,11 @@ private:
   Bool m_ppsInferScalingListFlag;
   Int  m_ppsScalingListRefLayerId;
 #endif
+
+#if DLT_DIFF_CODING_IN_PPS
+  TComDLT*  m_pcDLT; 
+#endif
+
 public:
   TComPPS();
   virtual ~TComPPS();
@@ -1863,6 +1946,11 @@ public:
   UInt      getMaxCuDQPDepth    ()         { return m_uiMaxCuDQPDepth;}
   Void      setMinCuDQPSize     ( UInt u ) { m_uiMinCuDQPSize = u;    }
   UInt      getMinCuDQPSize     ()         { return m_uiMinCuDQPSize; }
+
+#if DLT_DIFF_CODING_IN_PPS
+  Void      setDLT              ( TComDLT* pcDLT ) { m_pcDLT = pcDLT; }
+  TComDLT*  getDLT              ()                 { return m_pcDLT; }
+#endif
 
   Void      setChromaCbQpOffset( Int i ) { m_chromaCbQpOffset = i;    }
   Int       getChromaCbQpOffset()        { return m_chromaCbQpOffset; }

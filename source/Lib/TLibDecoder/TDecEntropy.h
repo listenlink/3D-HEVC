@@ -70,7 +70,11 @@ public:
 #else
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
 #endif
+#if DLT_DIFF_CODING_IN_PPS
+  virtual Void  parsePPS                  ( TComPPS* pcPPS, TComVPS* pcVPS )                      = 0;
+#else
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
+#endif
 
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)       = 0;
 
@@ -147,7 +151,11 @@ public:
 #else
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
 #endif
+#if DLT_DIFF_CODING_IN_PPS
+  Void    decodePPS                   ( TComPPS* pcPPS, TComVPS* pcVPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS, pcVPS);                    }
+#else
   Void    decodePPS                   ( TComPPS* pcPPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
+#endif
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager);         }
 
   Void    decodeTerminatingBit        ( UInt& ruiIsLast )       { m_pcEntropyDecoderIf->parseTerminatingBit(ruiIsLast);     }
