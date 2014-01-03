@@ -115,6 +115,11 @@ public:
   Void  codeSPS                 ( TComSPS* pcSPS );
 #endif
   Void  codePPS                 ( TComPPS* pcPPS );
+
+#if DLT_DIFF_CODING_IN_PPS
+  Void  codePPSExtension        ( TComPPS* pcPPS );
+#endif
+
   Void  codeSliceHeader         ( TComSlice* pcSlice );
   Void  codePTL                 ( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
   Void  codeProfileTier         ( ProfileTierLevel* ptl );

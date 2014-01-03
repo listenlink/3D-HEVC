@@ -214,7 +214,11 @@ void TDecCavlc::parseShortTermRefPicSet( TComSPS* sps, TComReferencePictureSet* 
 #endif
 }
 
+#if DLT_DIFF_CODING_IN_PPS
+Void TDecCavlc::parsePPS(TComPPS* pcPPS, TComVPS* pcVPS )
+#else
 Void TDecCavlc::parsePPS(TComPPS* pcPPS)
+#endif
 {
 #if ENC_DEC_TRACE  
   xTracePPSHeader (pcPPS);
@@ -363,12 +367,168 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   READ_FLAG( uiCode, "pps_extension_flag");
   if (uiCode)
   {
-    while ( xMoreRbspData() )
+#if DLT_DIFF_CODING_IN_PPS
+    parsePPSExtension( pcPPS, pcVPS );
+    READ_FLAG( uiCode, "pps_extension2_flag");
+    if ( uiCode )
     {
-      READ_FLAG( uiCode, "pps_extension_data_flag");
+#endif
+      while ( xMoreRbspData() )
+      {
+        READ_FLAG( uiCode, "pps_extension_data_flag");
+      }
+#if DLT_DIFF_CODING_IN_PPS
     }
+#endif
   }
 }
+
+#if DLT_DIFF_CODING_IN_PPS
+Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
+{
+  UInt uiCode = 0; 
+  TComDLT* pcDLT = new TComDLT;
+
+  READ_FLAG(uiCode, "dlt_present_flag");
+  pcDLT->setDltPresentFlag( (uiCode == 1) ? true : false );
+
+  if ( pcDLT->getDltPresentFlag() )
+  {
+    READ_CODE(6, uiCode, "pps_depth_layers_minus1");
+    pcDLT->setNumDepthViews( uiCode );
+
+    READ_CODE(4, uiCode, "pps_bit_depth_for_depth_views_minus8");
+    pcDLT->setDepthViewBitDepth( (uiCode+8) );
+
+    for( Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
+    {
+      if ( i != 0 )
+      {
+        if( pcVPS->getDepthId( i ) == 1 ) 
+        {
+          READ_FLAG(uiCode, "dlt_flag[i]");
+          pcDLT->setUseDLTFlag(i, (uiCode == 1) ? true : false);
+
+          if ( pcDLT->getUseDLTFlag( i ) )
+          {
+            Bool bDltBitMapRepFlag    = false;
+            UInt uiMaxDiff            = 0xffffffff;
+            UInt uiMinDiff            = 0;
+            UInt uiCodeLength         = 0;
+
+            READ_FLAG(uiCode, "inter_view_dlt_pred_enable_flag[ i ]"); 
+            pcDLT->setInterViewDltPredEnableFlag( i, (uiCode == 1) ? true : false );
+
+            if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )
+            {
+              READ_FLAG(uiCode, "dlt_bit_map_rep_flag[ layerId ]");
+              bDltBitMapRepFlag = (uiCode == 1) ? true : false; 
+            }
+            else
+            {
+              bDltBitMapRepFlag = false;
+            }
+            
+            UInt uiNumDepthValues = 0;
+            Int  aiIdx2DepthValue[256];
+
+            // Bit map
+            if ( bDltBitMapRepFlag )
+            {
+              for (UInt d=0; d<256; d++)
+              {
+                READ_FLAG(uiCode, "dlt_bit_map_flag[ layerId ][ j ]");
+                if (uiCode == 1)
+                {
+                  aiIdx2DepthValue[uiNumDepthValues] = d;
+                  uiNumDepthValues++;
+                }
+              }
+            }
+            // Diff Coding
+            else
+            {
+              READ_CODE(8, uiNumDepthValues, "num_depth_values_in_dlt[i]");   // num_entry
+
+#if !H_3D_DELTA_DLT
+              if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )       // Single-view DLT Diff Coding
+#endif
+              {
+                // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component. 
+
+                if (uiNumDepthValues > 1)
+                {
+                  READ_CODE(8, uiCode, "max_diff[ layerId ]"); 
+                  uiMaxDiff = uiCode;
+                }
+                else
+                {
+                  uiMaxDiff = 0;           // when there is only one value in DLT
+                }
+
+                if (uiNumDepthValues > 2)
+                {
+                  uiCodeLength = (UInt) ceil(Log2(uiMaxDiff + 1));
+                  READ_CODE(uiCodeLength, uiCode, "min_diff_minus1[ layerId ]");
+                  uiMinDiff = uiCode + 1;
+                }
+                else
+                {
+                  uiMinDiff = uiMaxDiff;   // when there are only one or two values in DLT
+                }
+
+                READ_CODE(8, uiCode, "dlt_depth_value0[layerId]");   // entry0
+                aiIdx2DepthValue[0] = uiCode;
+
+                if (uiMaxDiff == uiMinDiff)
+                {
+                  for (UInt d=1; d<uiNumDepthValues; d++)
+                  {
+                    aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + 0;
+                  }
+                }
+                else
+                {
+                  uiCodeLength = (UInt) ceil(Log2(uiMaxDiff - uiMinDiff + 1));
+                  for (UInt d=1; d<uiNumDepthValues; d++)
+                  {
+                    READ_CODE(uiCodeLength, uiCode, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");
+                    aiIdx2DepthValue[d] = aiIdx2DepthValue[d-1] + uiMinDiff + uiCode;
+                  }
+                }
+
+              }
+            }
+            
+#if H_3D_DELTA_DLT
+            if( pcDLT->getInterViewDltPredEnableFlag( i ) )
+            {
+              // interpret decoded values as delta DLT
+              AOF( pcVPS->getDepthId( 1 ) == 1 );
+              AOF( i > 1 );
+              // assumes ref layer id to be 1
+              Int* piRefDLT = pcDLT->idx2DepthValue( 1 );
+              UInt uiRefNum = pcDLT->getNumDepthValues( 1 );
+              pcDLT->setDeltaDLT(i, piRefDLT, uiRefNum, aiIdx2DepthValue, uiNumDepthValues);
+            }
+            else
+            {
+              // store final DLT
+              pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
+            }
+#else
+            // store final DLT
+            pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
+#endif
+          }
+        }
+      }
+    }
+  }
+
+  pcPPS->setDLT( pcDLT );
+}
+#endif
 
 Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
 {
@@ -888,6 +1048,7 @@ Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFla
   }
 #endif
 
+#if !CAM_HLS_F0136_F0045_F0082
   UInt uiCamParPrecision = 0; 
   Bool bCamParSlice      = false; 
   if ( !depthFlag )
@@ -907,6 +1068,7 @@ Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFla
     }
   }
   pcSPS->initCamParaSPS( viewIndex, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
+#endif
 }
 #endif
 #endif
@@ -1018,6 +1180,9 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     {
 #if H_3D
       m_pcBitstream->readOutTrailingBits();
+#if CAM_HLS_F0136_F0045_F0082
+      pcVPS->createCamPars(pcVPS->getNumViews());
+#endif
       parseVPSExtension2( pcVPS );   
       READ_FLAG( uiCode,  "vps_extension3_flag" );
       if (uiCode)
@@ -1737,6 +1902,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
         READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
         //          READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPreFlag     ( i, uiCode == 1 ? true : false ); 
 #if H_3D_DIM_DLT
+#if !DLT_DIFF_CODING_IN_PPS
         if( pcVPS->getVpsDepthModesFlag( i ) )
         {
           READ_FLAG( uiCode, "dlt_flag[i]" );                       pcVPS->setUseDLTFlag( i, uiCode == 1 ? true : false );
@@ -1762,12 +1928,40 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
           free(aiIdx2DepthValue);
         }
 #endif
+#endif
 #if H_3D_INTER_SDC
             READ_FLAG( uiCode, "depth_inter_SDC_flag" );              pcVPS->setInterSDCFlag( i, uiCode ? true : false );
 #endif
       }
     }
   }
+#if CAM_HLS_F0136_F0045_F0082
+  UInt uiCamParPrecision = 0; 
+  Bool bCamParSlice      = false; 
+  Bool bCamParPresentFlag = false;
+
+  READ_UVLC( uiCamParPrecision, "cp_precision" );
+  for (UInt viewIndex=0; viewIndex<pcVPS->getNumViews(); viewIndex++)
+  {
+    READ_FLAG( uiCode, "cp_present_flag[i]" );                  bCamParPresentFlag = ( uiCode == 1);
+    if ( bCamParPresentFlag )
+    {
+      READ_FLAG( uiCode, "cp_in_slice_segment_header_flag[i]" );          bCamParSlice = ( uiCode == 1);
+      if ( !bCamParSlice )
+      {
+        for( UInt uiBaseIndex = 0; uiBaseIndex < viewIndex; uiBaseIndex++ )
+        {
+          Int iCode; 
+          READ_SVLC( iCode, "vps_cp_scale" );                m_aaiTempScale  [ uiBaseIndex ][ viewIndex ]   = iCode;
+          READ_SVLC( iCode, "vps_cp_off" );                  m_aaiTempOffset [ uiBaseIndex ][ viewIndex ]   = iCode;
+          READ_SVLC( iCode, "vps_cp_inv_scale_plus_scale" ); m_aaiTempScale  [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempScale [ uiBaseIndex ][ viewIndex ];
+          READ_SVLC( iCode, "vps_cp_inv_off_plus_off" );     m_aaiTempOffset [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempOffset[ uiBaseIndex ][ viewIndex ];
+        }
+      }
+      pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
+    }
+  }
+#endif
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
 }
 #endif
@@ -2494,11 +2688,35 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setNumEntryPointOffsets ( 0 );
   }
 
+#if CAM_HLS_F0044
+#if CAM_HLS_F0136_F0045_F0082
+  if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && !rpcSlice->getIsDepth() )
+#else
+  if( rpcSlice->getSPS()->hasCamParInSliceHeader() )
+#endif
+  {
+    UInt uiViewIndex = rpcSlice->getViewIndex();
+    for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )
+    {
+      READ_SVLC( iCode, "cp_scale" );                m_aaiTempScale [ uiBaseIndex ][ uiViewIndex ] = iCode;
+      READ_SVLC( iCode, "cp_off" );                  m_aaiTempOffset[ uiBaseIndex ][ uiViewIndex ] = iCode;
+      READ_SVLC( iCode, "cp_inv_scale_plus_scale" ); m_aaiTempScale [ uiViewIndex ][ uiBaseIndex ] = iCode - m_aaiTempScale [ uiBaseIndex ][ uiViewIndex ];
+      READ_SVLC( iCode, "cp_inv_off_plus_off" );     m_aaiTempOffset[ uiViewIndex ][ uiBaseIndex ] = iCode - m_aaiTempOffset[ uiBaseIndex ][ uiViewIndex ];
+    }
+    rpcSlice->setCamparaSlice( m_aaiTempScale, m_aaiTempOffset );
+  }
+
+#endif
+
   if(pps->getSliceHeaderExtensionPresentFlag())
   {
     READ_UVLC(uiCode,"slice_header_extension_length");
-#if H_3D
+#if H_3D && !CAM_HLS_F0044
+#if CAM_HLS_F0136_F0045_F0082
+    if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && !rpcSlice->getIsDepth() )
+#else
     if( rpcSlice->getSPS()->hasCamParInSliceHeader() )
+#endif
     {
       UInt uiViewIndex = rpcSlice->getViewIndex();
       for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )
