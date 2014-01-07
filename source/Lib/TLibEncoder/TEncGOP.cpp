@@ -1318,6 +1318,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
       nalu = NALUnit(NAL_UNIT_PPS);
 #endif
+#if PPS_FIX_DEPTH
+      if(!pcSlice->getIsDepth() || !pcSlice->getViewIndex() )
+      {
+#endif
       m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
       m_pcEntropyCoder->encodePPS(pcSlice->getPPS());
       writeRBSPTrailingBits(nalu.m_Bitstream);
@@ -1325,7 +1329,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if RATE_CONTROL_LAMBDA_DOMAIN
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
 #endif
-
+#if PPS_FIX_DEPTH
+      }
+#endif
       xCreateLeadingSEIMessages(accessUnit, pcSlice->getSPS());
 
       m_bSeqFirst = false;
