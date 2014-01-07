@@ -272,6 +272,13 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 #endif
   WRITE_FLAG( pcPPS->getListsModificationPresentFlag(), "lists_modification_present_flag");
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
+#if PPS_FIX_DEPTH
+  if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
+  {
+    WRITE_FLAG( 1, "slice_segment_header_extension_present_flag" );
+  }
+  else
+#endif
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
 
 #if !DLT_DIFF_CODING_IN_PPS
@@ -2213,7 +2220,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
 #endif
 
+#if PPS_FIX_DEPTH
+  if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag() || pcSlice->getIsDepth() )
+#else
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag())
+#endif
   {
 #if !H_3D || CAM_HLS_F0044
     WRITE_UVLC(0,"slice_header_extension_length");
