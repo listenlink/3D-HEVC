@@ -103,6 +103,8 @@
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
                                               // SHARP_ILLUCOMP_REFINE_E0046
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
+                                              // LGE_IC_CTX_F0160 //JCT3V-F0160
+                                              // SEC_ONLY_TEXTURE_IC_F0151
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -133,6 +135,7 @@
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
                                               // QC_INRIA_MTK_MRG_E0126 
+                                              // ETRIKHU_MERGE_REUSE_F0093
 
 
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
@@ -159,6 +162,10 @@
                                               // SCU_HS_DMM4_REMOVE_DIV_E0242 DMM4 Division Removal
                                               // LGE_SDC_REMOVE_DC_E0158 Removal of DC mode from SDC
                                               // LGE_PKU_DMM3_OVERLAP_E0159_HHIFIX 1   Removal of overlap between DMM3 and DMM1
+                                              // LGE_PRED_RES_CODING_DLT_DOMAIN_F0159 JCT3V-F0159
+                                              // HHI_DIM_PREDSAMP_FIX_F0171
+                                              // SEC_DMM3_RBC_F0147 Removal of DMM3 and RBC from DMMs
+                                              // QC_DIM_DELTADC_UNIFY_F0132 Unify delta DC coding in depth intra modes
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
@@ -316,9 +323,7 @@
 #define PPS_FIX_DEPTH                           1
 
 #define FIX_MISSING_MACRO_R690                  1 // Missing macro in integration to revision 690
-
 #define SEC_MPI_ENABLING_MERGE_F0150            1 // MPI flag in VPS and enabling in Merge mode
-#define ETRIKHU_MERGE_REUSE_F0093               1 // Reuse HEVC merge candidate list construction for base candidates, JCT3V-F0093 
 
 #if H_3D_ARP
 #define QC_MTK_INTERVIEW_ARP_F0123_F0108        1 //JCT3V-F0123; JCT3V-F0108
@@ -339,20 +344,6 @@
 #define SHARP_VSP_BLOCK_IN_AMP_F0102            1 // VSP partitioning for AMP
 #define MTK_VSP_SIMPLIFICATION_F0111            1 // 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
 #define LGE_SHARP_VSP_INHERIT_F0104             1
-#endif
-
-#define LGE_BUGFIX_F0158                        1 //JCT3V-F0158
-#define LGE_IC_CTX_F0160                        1 //JCT3V-F0160
-#define SEC_ONLY_TEXTURE_IC_F0151               1
-
-#if H_3D_DIM
-#define SEC_DMM3_RBC_F0147                      1 // Removal of DMM3 and RBC from DMMs
-#if !SEC_DMM3_RBC_F0147
-#define H_3D_DIM_RBC                            1 // Region Boundary Chain mode
-#endif
-#define QC_DIM_DELTADC_UNIFY_F0132              1 // Unify delta DC coding in depth intra modes
-#define HHI_DIM_PREDSAMP_FIX_F0171              1
-#define LGE_PRED_RES_CODING_DLT_DOMAIN_F0159    1 //JCT3V-F0159
 #endif
 #endif
 

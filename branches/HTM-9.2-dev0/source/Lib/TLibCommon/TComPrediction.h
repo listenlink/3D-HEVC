@@ -154,10 +154,6 @@ protected:
   Void xPredContourFromTex      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge );
   Void xCopyTextureLumaBlock    ( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piDestBlockY, UInt uiWidth, UInt uiHeight );
 #endif
-#if H_3D_DIM_RBC
-  Void xDeltaDCQuantScaleUp     ( TComDataCU* pcCU, Pel& rDeltaDC );
-  Void xDeltaDCQuantScaleDown   ( TComDataCU* pcCU, Pel& rDeltaDC );
-#endif
 #endif
 
 public:

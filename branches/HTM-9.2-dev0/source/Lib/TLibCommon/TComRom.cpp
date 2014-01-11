@@ -611,9 +611,6 @@ Void writeToTraceFile( Char* symbolName, Bool doIt )
 std::vector< std::vector<TComWedgelet>  > g_dmmWedgeLists;
 std::vector< std::vector<TComWedgeRef>  > g_dmmWedgeRefLists;
 std::vector< std::vector<TComWedgeNode> > g_dmmWedgeNodeLists;
-#if !SEC_DMM3_RBC_F0147
-std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
-#endif
 
 Void initWedgeLists( Bool initNodeList )
 {
@@ -732,24 +729,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     }
   }
 
-#if !SEC_DMM3_RBC_F0147
-  UInt uiThrSz = DMM3_SIMPLIFY_TR;
-  std::vector< std::vector<UInt> > auiWdgListSz;
-  for( Int idxM=2; idxM<=34 ; idxM++)
-  {
-    std::vector<UInt> auiWdgList;
-    for( Int idxW=0; idxW<racWedgeList.size(); idxW++)
-    {
-      UInt uiAbsDiff = abs(idxM-(Int)racWedgeList[idxW].getAng());
-      if( uiAbsDiff <= uiThrSz )
-      {
-        auiWdgList.push_back(idxW);
-      }
-    }
-    auiWdgListSz.push_back(auiWdgList);
-  }
-  g_aauiWdgLstM3.push_back(auiWdgListSz);
-#endif
+
 }
 
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList )

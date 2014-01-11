@@ -197,18 +197,11 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setSubPULog2Size                 (( isDepth || 0==layerIdInVps ) ? 0 : m_iSubPULog2Size   );
 #endif
 #if H_3D_IC
-#if SEC_ONLY_TEXTURE_IC_F0151
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
-#else
-    m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 ? false : m_abUseIC[isDepth ? 1 : 0] );
-#endif
 #endif
   //========== Depth intra modes ==========
 #if H_3D_DIM
     m_cTEncTop.setUseDMM                       ( isDepth ? m_useDMM               : false );
-#if !SEC_DMM3_RBC_F0147
-    m_cTEncTop.setUseRBC                       ( isDepth ? m_useRBC               : false );
-#endif
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
@@ -1996,11 +1989,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 
 #if H_3D_DIM
-#if SEC_DMM3_RBC_F0147
     vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useSDC || m_useDLT ) );
-#else
-    vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useRBC || m_useSDC || m_useDLT ) );
-#endif
 #if H_3D_DIM_DLT
 #if !DLT_DIFF_CODING_IN_PPS
     vps.setUseDLTFlag( layer , isDepth && m_useDLT );
