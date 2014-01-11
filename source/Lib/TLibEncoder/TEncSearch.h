@@ -350,16 +350,6 @@ protected:
 #if H_3D_DIM_DMM
   Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
   Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
-#if !SEC_DMM3_RBC_F0147
-  Void xSearchDmm3Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx, UInt colTexIntraDir );
-#endif
-#endif
-#if H_3D_DIM_RBC
-  Void xSearchRbcDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
-  Bool xSearchRbcEdge             ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride,  Int  iWidth,  Int  iHeight );
-  
-  Bool xCheckTerminatedEdge       ( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight );
-  Bool xConstructChainCode        ( TComDataCU* pcCU, UInt uiAbsPtIdx, UInt uiWidth, UInt uiHeight );
 #endif
 #if H_3D_DIM_SDC
   Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bResidual );

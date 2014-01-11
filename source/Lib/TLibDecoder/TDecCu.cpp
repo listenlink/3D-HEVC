@@ -389,13 +389,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_pcEntropyDecoder->decodeMergeIndex( pcCU, 0, uiAbsPartIdx, uiDepth );
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
 
-#if LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
     m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 #if H_3D_ARP
     m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth );
-#endif
 #endif
 
 #if H_3D_VSP
@@ -410,7 +408,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     pcMvFieldSP = new TComMvField[pcCU->getPic()->getPicSym()->getNumPartition()*2]; 
     puhInterDirSP = new UChar[pcCU->getPic()->getPicSym()->getNumPartition()]; 
 #endif
-#if ETRIKHU_MERGE_REUSE_F0093
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
     m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo
@@ -418,12 +415,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand, uiMergeIndex );
-#else
-    m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand, uiMergeIndex );
-#endif
     pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 #else
-#if ETRIKHU_MERGE_REUSE_F0093
+#if H_3D
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
     m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
@@ -495,14 +489,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     delete puhInterDirSP;
 #endif
 #endif
-#if !LGE_SHARP_VSP_INHERIT_F0104
-#if H_3D_IC
-    m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#if H_3D_ARP
-    m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth );
-#endif
-#endif
 
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
 #if QC_DEPTH_IV_MRG_F0125
@@ -533,14 +519,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   
   // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if !LGE_SHARP_VSP_INHERIT_F0104
-#if H_3D_IC
-  m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#if H_3D_ARP
-  m_pcEntropyDecoder->decodeARPW    ( pcCU , uiAbsPartIdx , uiDepth );  
-#endif  
-#endif
 #if H_3D_INTER_SDC
   m_pcEntropyDecoder->decodeInterSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
@@ -779,7 +757,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   {
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
-#if LGE_PRED_RES_CODING_DLT_DOMAIN_F0159
+#if H_3D
 #if DLT_DIFF_CODING_IN_PPS
       if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
 #else
@@ -796,8 +774,6 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
         {
       pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
         }
-#else
-      pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
 #endif
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
