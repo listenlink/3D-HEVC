@@ -494,7 +494,9 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
     WRITE_FLAG(pcVUI->getOverscanAppropriateFlag(),             "overscan_appropriate_flag");
   }
   WRITE_FLAG(pcVUI->getVideoSignalTypePresentFlag(),            "video_signal_type_present_flag");
+#if H_MV
   assert( pcSPS->getLayerId() == 0 || !pcVUI->getVideoSignalTypePresentFlag() ); 
+#endif
   if (pcVUI->getVideoSignalTypePresentFlag())
   {
     WRITE_CODE(pcVUI->getVideoFormat(), 3,                      "video_format");
@@ -1656,12 +1658,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 );
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
-
+#if H_MV
     if ( (pcSlice->getLayerId() > 0 && !vps->getPocLsbNotPresentFlag( pcSlice->getLayerIdInVps())) || !pcSlice->getIdrPicFlag() )
     {
       Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC())) & ((1<<pcSlice->getSPS()->getBitsForPOC())-1);
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "slice_pic_order_cnt_lsb");
     }
+#endif
     if( !pcSlice->getIdrPicFlag() )
     {
       TComReferencePictureSet* rps = pcSlice->getRPS();

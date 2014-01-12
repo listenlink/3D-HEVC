@@ -3752,4 +3752,25 @@ Void TComVpsVuiBspHrdParameters::checkLayerInBspFlag( TComVPS* vps, Int h )
     }
   }
 }
+
+Void TComVUI::inferVideoSignalInfo( TComVPS* vps, Int layerIdCurr )
+{
+  if ( layerIdCurr == 0 || !vps->getVpsVuiPresentFlag() ) 
+  {
+    return; 
+  }
+
+  TComVPSVUI* vpsVUI = vps->getVPSVUI(); 
+  assert( vpsVUI != NULL );  
+
+  TComVideoSignalInfo* videoSignalInfo = vpsVUI->getVideoSignalInfo( vpsVUI->getVpsVideoSignalInfoIdx( vps->getLayerIdInVps( layerIdCurr ) ) ); 
+  assert( videoSignalInfo != NULL );
+
+  setVideoFormat            ( videoSignalInfo->getVideoVpsFormat            () ); 
+  setVideoFullRangeFlag     ( videoSignalInfo->getVideoFullRangeVpsFlag     () );
+  setColourPrimaries        ( videoSignalInfo->getColourPrimariesVps        () );
+  setTransferCharacteristics( videoSignalInfo->getTransferCharacteristicsVps() );
+  setMatrixCoefficients     ( videoSignalInfo->getMatrixCoeffsVps           () );
+}
 #endif
+

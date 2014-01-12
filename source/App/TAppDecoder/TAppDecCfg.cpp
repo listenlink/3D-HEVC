@@ -123,7 +123,9 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
   if ( !cfg_TargetDecLayerIdSetFile.empty() )
   {
+#if H_MV
     m_targetDecLayerIdSetFileEmpty = false;     
+#endif
     FILE* targetDecLayerIdSetFile = fopen ( cfg_TargetDecLayerIdSetFile.c_str(), "r" );
     if ( targetDecLayerIdSetFile )
     {

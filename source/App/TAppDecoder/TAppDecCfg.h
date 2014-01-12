@@ -74,7 +74,9 @@ protected:
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
 
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
+#if H_MV
   Bool          m_targetDecLayerIdSetFileEmpty;      ///< indication if target layers are given by file
+#endif
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window 
 
 #if H_MV
@@ -83,15 +85,15 @@ protected:
 public:
   TAppDecCfg()
   : m_pchBitstreamFile(NULL)
-#if H_MV
-#endif
   , m_pchReconFile(NULL)
   , m_iSkipFrame(0)
   , m_outputBitDepthY(0)
   , m_outputBitDepthC(0)
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
+#if H_MV
   , m_targetDecLayerIdSetFileEmpty(true)
+#endif
   , m_respectDefDispWindow(0)
   {}
   virtual ~TAppDecCfg() {}
