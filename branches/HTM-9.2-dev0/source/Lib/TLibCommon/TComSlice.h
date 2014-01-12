@@ -616,7 +616,7 @@ public:
   Void setBitDepthVpsChromaMinus8( Int  val ) { m_bitDepthVpsChromaMinus8 = val; } 
   Int  getBitDepthVpsChromaMinus8(  ) { return m_bitDepthVpsChromaMinus8; } 
 };
-#endif
+
 
 class TComDpbSize
 {
@@ -663,7 +663,7 @@ public:
   Void setMaxVpsLatencyIncreasePlus1( Int i, Int j, Int  val ) { m_maxVpsLatencyIncreasePlus1[i][j] = val; } 
   Int  getMaxVpsLatencyIncreasePlus1( Int i, Int j ) { return m_maxVpsLatencyIncreasePlus1[i][j]; } 
 };
-
+#endif
 class TComVPS
 {
 private:
@@ -1351,26 +1351,9 @@ public:
 
   TComHRD* getHrdParameters                 ()             { return &m_hrdParameters; }
   TimingInfo* getTimingInfo() { return &m_timingInfo; }
-
-  Void inferVideoSignalInfo( TComVPS* vps, Int layerIdCurr )
-  {
-    if ( layerIdCurr == 0 || !vps->getVpsVuiPresentFlag() ) 
-    {
-      return; 
-    }
-
-    TComVPSVUI* vpsVUI = vps->getVPSVUI(); 
-    assert( vpsVUI != NULL );  
-
-    TComVideoSignalInfo* videoSignalInfo = vpsVUI->getVideoSignalInfo( vpsVUI->getVpsVideoSignalInfoIdx( vps->getLayerIdInVps( layerIdCurr ) ) ); 
-    assert( videoSignalInfo != NULL );
-
-    setVideoFormat            ( videoSignalInfo->getVideoVpsFormat            () ); 
-    setVideoFullRangeFlag     ( videoSignalInfo->getVideoFullRangeVpsFlag     () );
-    setColourPrimaries        ( videoSignalInfo->getColourPrimariesVps        () );
-    setTransferCharacteristics( videoSignalInfo->getTransferCharacteristicsVps() );
-    setMatrixCoefficients     ( videoSignalInfo->getMatrixCoeffsVps           () );     
-  }
+#if H_MV
+  Void inferVideoSignalInfo( TComVPS* vps, Int layerIdCurr );
+#endif
 };
 
 /// SPS class

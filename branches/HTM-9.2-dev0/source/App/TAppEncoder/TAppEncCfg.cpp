@@ -443,9 +443,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   ("QuadtreeTUMaxDepthIntra", m_uiQuadtreeTUMaxDepthIntra, 1u, "Depth of TU tree for intra CUs")
   ("QuadtreeTUMaxDepthInter", m_uiQuadtreeTUMaxDepthInter, 2u, "Depth of TU tree for inter CUs")
-  
   // Coding structure parameters
+#if H_MV  
   ("IntraPeriod,-ip",         m_iIntraPeriod,std::vector<Int>(1,-1), "Intra period in frames, (-1: only first frame), per layer")
+#else
+("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
+#endif
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
   // motion options
@@ -1439,10 +1442,14 @@ Void TAppEncCfg::xCheckParameter()
 #endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
+#if H_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
   {
     xConfirmPara( (m_iIntraPeriod[layer] > 0 && m_iIntraPeriod[layer] < m_iGOPSize) || m_iIntraPeriod[layer] == 0, "Intra period must be more than GOP size, or -1 , not 0" );
   }
+#else
+  xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
+#endif
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
 #if H_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
@@ -1468,10 +1475,14 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iQPAdaptationRange <= 0,                                                  "QP Adaptation Range must be more than 0" );
   if (m_iDecodingRefreshType == 2)
   {
+#if H_MV
     for (Int i = 0; i < m_numberOfLayers; i++ )
     {
       xConfirmPara( m_iIntraPeriod[i] > 0 && m_iIntraPeriod[i] <= m_iGOPSize ,                      "Intra period must be larger than GOP size for periodic IDR pictures");
     }
+#else
+    xConfirmPara( m_iIntraPeriod > 0 && m_iIntraPeriod <= m_iGOPSize ,                      "Intra period must be larger than GOP size for periodic IDR pictures");
+#endif
   }
   xConfirmPara( (m_uiMaxCUWidth  >> m_uiMaxCUDepth) < 4,                                    "Minimum partition width size should be larger than or equal to 8");
   xConfirmPara( (m_uiMaxCUHeight >> m_uiMaxCUDepth) < 4,                                    "Minimum partition height size should be larger than or equal to 8");
@@ -1730,7 +1741,12 @@ Void TAppEncCfg::xCheckParameter()
 #endif
   /* if this is an intra-only sequence, ie IntraPeriod=1, don't verify the GOP structure
    * This permits the ability to omit a GOP structure specification */
-  if (m_iIntraPeriod[layer] == 1 && m_GOPList[0].m_POC == -1) {
+#if H_MV
+  if (m_iIntraPeriod[layer] == 1 && m_GOPList[0].m_POC == -1)
+  {
+#else
+  if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1) {
+#endif
     m_GOPList[0] = GOPEntry();
     m_GOPList[0].m_QPFactor = 1;
     m_GOPList[0].m_betaOffsetDiv2 = 0;
@@ -1755,7 +1771,11 @@ Void TAppEncCfg::xCheckParameter()
     isOK[i]=false;
   }
   Int numOK=0;
+#if H_MV
+xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" );
+#else
   xConfirmPara( m_iIntraPeriod[layer] >=0&&(m_iIntraPeriod[layer]%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" ); 
+#endif
 
   for(Int i=0; i<m_iGOPSize; i++)
   {
@@ -2291,7 +2311,11 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
+#if H_MV
   xPrintParaVector( "Intra period", m_iIntraPeriod );
+#else
+  printf("Intra period                 : %d\n", m_iIntraPeriod );
+#endif
   printf("Decoding refresh type        : %d\n", m_iDecodingRefreshType );
 #if !H_MV
   printf("QP                           : %5.2f\n", m_fQP );

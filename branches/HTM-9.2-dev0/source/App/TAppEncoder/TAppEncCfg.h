@@ -177,7 +177,11 @@ protected:
   Bool m_frameOnlyConstraintFlag;
   
   // coding structure
+#if H_MV
   std::vector<Int> m_iIntraPeriod;                            ///< period of I-slice (random access period)
+#else
+  Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
+#endif
   Int       m_iDecodingRefreshType;                           ///< random access type
   Int       m_iGOPSize;                                       ///< GOP size of hierarchical structure
 #if H_MV

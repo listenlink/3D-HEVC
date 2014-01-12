@@ -229,7 +229,11 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFramesToBeEncoded            ( m_framesToBeEncoded );
   
   //====== Coding Structure ========
+#if H_MV
   m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod[ layerIdInVps ] );
+#else
+  m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod );
+#endif
   m_cTEncTop.setDecodingRefreshType          ( m_iDecodingRefreshType );
   m_cTEncTop.setGOPSize                      ( m_iGOPSize );
 #if H_MV

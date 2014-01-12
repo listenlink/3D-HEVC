@@ -556,8 +556,9 @@ Void  TDecCavlc::parseVUI(TComVUI* pcVUI, TComSPS *pcSPS)
   }
 
   READ_FLAG(     uiCode, "video_signal_type_present_flag");           pcVUI->setVideoSignalTypePresentFlag(uiCode);
+#if H_MV
   assert( pcSPS->getLayerId() == 0 || !pcVUI->getVideoSignalTypePresentFlag() ); 
-
+#endif
   if (pcVUI->getVideoSignalTypePresentFlag())
   {
     READ_CODE(3, uiCode, "video_format");                             pcVUI->setVideoFormat(uiCode);
