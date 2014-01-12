@@ -330,7 +330,7 @@ protected:
   TComVPS                    m_cVPS;
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   TComDLT*  m_cDLT;
 #endif
 
@@ -869,7 +869,7 @@ public:
   TComVPS *getVPS() { return &m_cVPS; }
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void      setDLT           ( TComDLT *p ) { m_cDLT = p; }
   TComDLT*  getDLT           ()             { return m_cDLT; }
 #endif

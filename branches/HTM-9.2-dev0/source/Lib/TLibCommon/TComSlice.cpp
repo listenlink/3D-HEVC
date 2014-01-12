@@ -768,11 +768,7 @@ Void TComSlice::generateAlterRefforTMVP()
 #endif
 Void TComSlice::setCamparaSlice( Int** aaiScale, Int** aaiOffset )
 {  
-#if CAM_HLS_F0136_F0045_F0082
   if( m_pcVPS->hasCamParInSliceHeader( m_viewIndex ) )
-#else
-  if( m_pcSPS->hasCamParInSliceHeader() )
-#endif
   {    
     for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < m_viewIndex; uiBaseViewIndex++ )
     {
@@ -1788,26 +1784,6 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
-#if H_3D_DIM_DLT
-#if !DLT_DIFF_CODING_IN_PPS
-    m_bUseDLTFlag         [i] = false;
-    
-    // allocate some memory and initialize with default mapping
-    m_iNumDepthmapValues[i] = ((1 << g_bitDepthY)-1)+1;
-    m_iBitsPerDepthValue[i] = numBitsForValue(m_iNumDepthmapValues[i]);
-    
-    m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
-    m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
-    
-    //default mapping
-    for (Int d=0; d<m_iNumDepthmapValues[i]; d++)
-    {
-      m_iDepthValue2Idx[i][d] = d;
-      m_iIdx2DepthValue[i][d] = d;
-    }
-#endif
-#endif
-#if H_3D
     m_ivMvScalingFlag = true; 
 #endif
 #endif
@@ -1855,12 +1831,11 @@ TComVPS::TComVPS()
 #endif
   }  
 #endif
-#endif
 }
 
 TComVPS::~TComVPS()
 {
-if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
+  if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
   if( m_hrdOpSetIdx      != NULL )     delete[] m_hrdOpSetIdx;
   if( m_cprmsPresentFlag != NULL )     delete[] m_cprmsPresentFlag;
 #if H_MV
@@ -1870,92 +1845,12 @@ if( m_hrdParameters    != NULL )     delete[] m_hrdParameters;
   for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
   {
     if (m_repFormat[ i ] != NULL )      delete m_repFormat[ i ];    
-#if H_3D_DIM_DLT
-#if !DLT_DIFF_CODING_IN_PPS
-    if ( m_iDepthValue2Idx[i] != 0 ) 
-    {
-       xFree( m_iDepthValue2Idx[i] );
-       m_iDepthValue2Idx[i] = 0; 
-    }
-
-    if ( m_iIdx2DepthValue[i] != 0 ) 
-    {
-      xFree( m_iIdx2DepthValue[i] );
-      m_iIdx2DepthValue[i] = 0; 
-    }
-#endif
-#endif
   }
 #endif
-#if CAM_HLS_F0136_F0045_F0082
+#if H_3D
   deleteCamPars();
 #endif
 }
-
-#if H_3D_DIM_DLT
-#if !DLT_DIFF_CODING_IN_PPS
-  Void TComVPS::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNumDepthValues)
-  {
-    if( idxToDepthValueTable == NULL || iNumDepthValues == 0 ) // default mapping only
-      return;
-    
-    // copy idx2DepthValue to internal array
-    memcpy(m_iIdx2DepthValue[layerIdInVps], idxToDepthValueTable, iNumDepthValues*sizeof(UInt));
-    
-    UInt uiMaxDepthValue = ((1 << g_bitDepthY)-1);
-    for(Int p=0; p<=uiMaxDepthValue; p++)
-    {
-      Int iIdxDown    = 0;
-      Int iIdxUp      = iNumDepthValues-1;
-      Bool bFound     = false;
-      
-      // iterate over indices to find lower closest depth
-      Int i = 1;
-      while(!bFound && i<iNumDepthValues)
-      {
-        if( m_iIdx2DepthValue[layerIdInVps][i] > p )
-        {
-          iIdxDown  = i-1;
-          bFound    = true;
-        }
-        
-        i++;
-      }
-      // iterate over indices to find upper closest depth
-      i = iNumDepthValues-2;
-      bFound = false;
-      while(!bFound && i>=0)
-      {
-        if( m_iIdx2DepthValue[layerIdInVps][i] < p )
-        {
-          iIdxUp  = i+1;
-          bFound    = true;
-        }
-        
-        i--;
-      }
-      
-      // assert monotony
-      assert(iIdxDown<=iIdxUp);
-      
-      // assign closer depth value/idx
-      if( abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxDown]) < abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxUp]) )
-      {
-        m_iDepthValue2Idx[layerIdInVps][p] = iIdxDown;
-      }
-      else
-      {
-        m_iDepthValue2Idx[layerIdInVps][p] = iIdxUp;
-      }
-      
-    }
-    
-    // update DLT variables
-    m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
-    m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
-  }
-#endif
-#endif
 
 #if H_MV
 
@@ -2042,7 +1937,7 @@ Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag )
 
   return foundLayerIdinNuh;
 }
-#if CAM_HLS_F0136_F0045_F0082
+
 Void TComVPS::createCamPars(Int iNumViews)
 {
   Int i = 0, j = 0;
@@ -2131,7 +2026,6 @@ Void
     }
   }
 }
-#endif // CAM_HLS_F0136_F0045_F0082
 
 #endif // H_3D
 
@@ -2490,7 +2384,7 @@ TComPPS::TComPPS()
 #if H_MV
 , m_ppsInferScalingListFlag(false)
 , m_ppsScalingListRefLayerId(0)
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
 , m_pcDLT(NULL)
 #endif
 #endif
@@ -2513,7 +2407,7 @@ TComPPS::~TComPPS()
   delete m_scalingList;
 }
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
 TComDLT::TComDLT()
 : m_bDltPresentFlag(false)
 , m_iNumDepthViews(0)
@@ -2739,31 +2633,7 @@ Void TComSPS::inferScalingList( TComSPS* spsSrc )
   }
 }
 #endif
-#if H_3D
-#if !CAM_HLS_F0136_F0045_F0082
-Void
-TComSPS::initCamParaSPS( UInt uiViewIndex, UInt uiCamParPrecision, Bool bCamParSlice, Int** aaiScale, Int** aaiOffset )
-{
-  AOT( uiViewIndex != 0 && !bCamParSlice && ( aaiScale == 0 || aaiOffset == 0 ) );  
-  
-  m_uiCamParPrecision     = ( uiViewIndex ? uiCamParPrecision : 0 );
-  m_bCamParInSliceHeader  = ( uiViewIndex ? bCamParSlice  : false );
-  ::memset( m_aaiCodedScale,  0x00, sizeof( m_aaiCodedScale  ) );
-  ::memset( m_aaiCodedOffset, 0x00, sizeof( m_aaiCodedOffset ) );
 
-  if( !m_bCamParInSliceHeader )
-  {
-    for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < uiViewIndex; uiBaseViewIndex++ )
-    {
-      m_aaiCodedScale [ 0 ][ uiBaseViewIndex ] = aaiScale [ uiBaseViewIndex ][     uiViewIndex ];
-      m_aaiCodedScale [ 1 ][ uiBaseViewIndex ] = aaiScale [     uiViewIndex ][ uiBaseViewIndex ];
-      m_aaiCodedOffset[ 0 ][ uiBaseViewIndex ] = aaiOffset[ uiBaseViewIndex ][     uiViewIndex ];
-      m_aaiCodedOffset[ 1 ][ uiBaseViewIndex ] = aaiOffset[     uiViewIndex ][ uiBaseViewIndex ];
-    }
-  }
-}
-#endif
-#endif
 TComReferencePictureSet::TComReferencePictureSet()
 : m_numberOfPictures (0)
 , m_numberOfNegativePictures (0)
@@ -3422,13 +3292,8 @@ Void TComSlice::setDepthToDisparityLUTs()
   assert( m_depthToDisparityB != NULL ); 
   assert( m_depthToDisparityF != NULL ); 
 
-#if CAM_HLS_F0136_F0045_F0082
   TComVPS* vps = getVPS(); 
-#else
-  TComSPS* sps = getSPS(); 
-#endif
 
-#if CAM_HLS_F0136_F0045_F0082
   Int log2Div = g_bitDepthY - 1 + vps->getCamParPrecision();
   Int viewIndex = getViewIndex();
 
@@ -3438,16 +3303,6 @@ Void TComSlice::setDepthToDisparityLUTs()
   Int* codOffset    = camParaSH ? m_aaiCodedOffset[ 0 ] : vps->getCodedOffset   ( viewIndex ); 
   Int* invCodScale  = camParaSH ? m_aaiCodedScale [ 1 ] : vps->getInvCodedScale ( viewIndex ); 
   Int* invCodOffset = camParaSH ? m_aaiCodedOffset[ 1 ] : vps->getInvCodedOffset( viewIndex ); 
-#else
-  Int log2Div = g_bitDepthY - 1 + sps->getCamParPrecision();
-
-  Bool camParaSH = m_pcSPS->hasCamParInSliceHeader();
-
-  Int* codScale     = camParaSH ? m_aaiCodedScale [ 0 ] : sps->getCodedScale    (); 
-  Int* codOffset    = camParaSH ? m_aaiCodedOffset[ 0 ] : sps->getCodedOffset   (); 
-  Int* invCodScale  = camParaSH ? m_aaiCodedScale [ 1 ] : sps->getInvCodedScale (); 
-  Int* invCodOffset = camParaSH ? m_aaiCodedOffset[ 1 ] : sps->getInvCodedOffset(); 
-#endif
 
   for (Int i = 0; i <= ( getViewIndex() - 1); i++)
   {

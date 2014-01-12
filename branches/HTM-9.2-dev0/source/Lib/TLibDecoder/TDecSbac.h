@@ -80,7 +80,7 @@ public:
 #else
   Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
 #endif
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void  parsePPS                  ( TComPPS* /*pcPPS*/, TComVPS* /*pcVPS*/ ) {}
 #else
   Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}

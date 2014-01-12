@@ -75,11 +75,8 @@ Void TAppEncTop::xInitLibCfg()
   TComVPS vps;
 #endif
   
-#if CAM_HLS_F0136_F0045_F0082
+#if H_3D
   vps.createCamPars(m_iNumberOfViews);
-#endif
-
-#if DLT_DIFF_CODING_IN_PPS
   TComDLT& dlt = m_dlt;
 #endif
 
@@ -133,9 +130,7 @@ Void TAppEncTop::xInitLibCfg()
 #if H_3D
   xSetVPSExtension2        ( vps ); 
   m_ivPicLists.setVPS      ( &vps );
-#if DLT_DIFF_CODING_IN_PPS
   xDeriveDltArray          ( vps, dlt );
-#endif
 #endif
 
 
@@ -215,7 +210,7 @@ Void TAppEncTop::xInitLibCfg()
   // H_MV
   m_cTEncTop.setVPS(&vps);
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   m_cTEncTop.setDLT(&dlt);
 #endif
 
@@ -777,7 +772,7 @@ Void TAppEncTop::xDestroyLib()
 
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
-#if CAM_HLS_F0136_F0045_F0082
+#if H_3D
   for ( Int viewIndex = 0; viewIndex < m_vps.getNumViews(); viewIndex++ )
   {
     m_vps.initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
@@ -1251,11 +1246,7 @@ void TAppEncTop::printRateSummary()
 }
 
 #if H_3D_DIM_DLT
-#if DLT_DIFF_CODING_IN_PPS
 Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt)
-#else
-Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps)
-#endif
 {
   TComPicYuv*       pcDepthPicYuvOrg = new TComPicYuv;
   // allocate original YUV buffer
@@ -1315,22 +1306,14 @@ Void TAppEncTop::xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* v
   
   if( uiNumFrames == 0 || numBitsForValue(iNumDepthValues) == g_bitDepthY )
   {
-#if DLT_DIFF_CODING_IN_PPS
     dlt->setUseDLTFlag(layer, false);
-#else
-    // don't use DLT
-    vps->setUseDLTFlag(layer, false);
-#endif
   }
   
   // assign LUT
-#if DLT_DIFF_CODING_IN_PPS
   if( dlt->getUseDLTFlag(layer) )
+  {
     dlt->setDepthLUTs(layer, aiIdx2DepthValue, iNumDepthValues);
-#else
-  if( vps->getUseDLTFlag(layer) )
-    vps->setDepthLUTs(layer, aiIdx2DepthValue, iNumDepthValues);
-#endif
+  }
   
   // free temporary memory
   free(aiIdx2DepthValue);
@@ -1876,7 +1859,6 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
 #if H_3D
 Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 {
-
   for ( Int layer = 0; layer <= vps.getMaxLayersMinus1(); layer++ )
   {
     Bool isDepth      = ( vps.getDepthId( layer ) == 1 ) ;
@@ -1899,15 +1881,6 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 
 #if H_3D_DIM
     vps.setVpsDepthModesFlag( layer, isDepth && !isLayerZero && (m_useDMM || m_useSDC || m_useDLT ) );
-#if H_3D_DIM_DLT
-#if !DLT_DIFF_CODING_IN_PPS
-    vps.setUseDLTFlag( layer , isDepth && m_useDLT );
-    if( vps.getUseDLTFlag( layer ) )
-    {
-      xAnalyzeInputBaseDepth(layer, max(  m_iIntraPeriod[layer], 24), &vps);
-    }
-#endif
-#endif
 #endif
 
 #if H_3D_IV_MERGE
@@ -1937,9 +1910,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
 #endif
 }
-#endif
 
-#if DLT_DIFF_CODING_IN_PPS
 Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
 {
   Int  iNumDepthViews  = 0;

@@ -95,7 +95,7 @@ public:
   Void  parseSPS            ( TComSPS* pcSPS );
 #endif
 
-#if H_3D && DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void  parsePPS            ( TComPPS* pcPPS, TComVPS* pcVPS );
   Void  parsePPSExtension   ( TComPPS* pcPPS, TComVPS* pcVPS );
 #else
