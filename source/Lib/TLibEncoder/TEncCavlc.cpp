@@ -1645,7 +1645,7 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       {
 #if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
 #endif
 #endif
@@ -1661,19 +1661,17 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }          
       else
       {
-#if QC_DEPTH_IV_MRG_F0125
         if(i!=1)
         {
           WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
         }
-#endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         if (i!=1)
         {
           WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
         }
 #endif
-#if SEC_MPI_ENABLING_MERGE_F0150
+#if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getMPIFlag( i ) ? 1 : 0 ,          "mpi_flag[i]" );
 #endif
         WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ) ? 1 : 0 ,          "vps_depth_modes_flag[i]" );
@@ -2141,7 +2139,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
 #if H_3D_IV_MERGE
-#if SEC_MPI_ENABLING_MERGE_F0150
       if(pcSlice->getIsDepth())
       {
         Bool bMPIFlag = pcSlice->getVPS()->getMPIFlag( pcSlice->getLayerIdInVps() ) ;
@@ -2153,10 +2150,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
         WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
       }
-#else
-      Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
-      WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
-#endif
 #else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
 #endif
@@ -2196,14 +2189,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
   }
 #if CAM_HLS_F0044
-#if QC_DEPTH_IV_MRG_F0125
 #if CAM_HLS_F0136_F0045_F0082
   if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && !pcSlice->getIsDepth() )
 #else
   if( pcSlice->getSPS()->hasCamParInSliceHeader() && !pcSlice->getIsDepth() )
-#endif
-#else
-  if( pcSlice->getSPS()->hasCamParInSliceHeader() )
 #endif
   {
     for( UInt uiId = 0; uiId < pcSlice->getViewIndex(); uiId++ )
@@ -2226,14 +2215,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     WRITE_UVLC(0,"slice_header_extension_length");
 #else
     WRITE_UVLC(0,"slice_header_extension_length"); //<- this element needs to be set to the correct value!!
-#if QC_DEPTH_IV_MRG_F0125
 #if CAM_HLS_F0136_F0045_F0082
     if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && !pcSlice->getIsDepth() )
 #else
     if( pcSlice->getSPS()->hasCamParInSliceHeader() && !pcSlice->getIsDepth() )
-#endif
-#else
-    if( pcSlice->getSPS()->hasCamParInSliceHeader() )
 #endif
     {
       for( UInt uiId = 0; uiId < pcSlice->getViewIndex(); uiId++ )

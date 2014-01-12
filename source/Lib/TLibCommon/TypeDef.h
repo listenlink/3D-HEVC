@@ -98,6 +98,9 @@
                                               // MTK_NBDV_TN_FIX_E0172     fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
                                               // MTK_TEXTURE_MRGCAND_BUGFIX_E0182  Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
+                                              // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
+                                              // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
+                                              // LGE_ARP_CTX_F0161                JCT3V-F0161
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
@@ -113,7 +116,6 @@
                                               // MERL_C0152: Basic VSP
                                               // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
                                               // NTT_DoNBDV_VECTOR_CLIP_E0141 disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
-
 #endif
 
 #define H_3D_VSP                          1   // View synthesis prediction
@@ -126,6 +128,11 @@
                                               // NTT_VSP_ADAPTIVE_SPLIT_E0207 adaptive sub-PU partitioning in VSP, JCT3V-E0207
                                               // NTT_VSP_DC_BUGFIX_E0208 bugfix for sub-PU based DC in VSP, JCT3V-E0208
                                               // NTT_VSP_COMMON_E0207_E0208 common part of JCT3V-E0207 and JCT3V-E0208
+                                              // MTK_F0109_LG_F0120_VSP_BLOCK MTK_LG_SIMPLIFY_VSP_BLOCK_PARTITION_F0109_F0120  
+                                              // SHARP_VSP_BLOCK_IN_AMP_F0102 VSP partitioning for AMP
+                                              // MTK_VSP_SIMPLIFICATION_F0111 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
+                                              // LGE_SHARP_VSP_INHERIT_F0104 
+
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
                                               // SAIT_IMPROV_MOTION_PRED_M24829, improved inter-view motion vector prediction
@@ -135,7 +142,10 @@
                                               // QC_AMVP_MRG_UNIFY_IVCAN_C0051     
                                               // TEXTURE MERGING CANDIDATE     , JCT3V-C0137
                                               // QC_INRIA_MTK_MRG_E0126 
-                                              // ETRIKHU_MERGE_REUSE_F0093
+                                              // ETRIKHU_MERGE_REUSE_F0093 QC_DEPTH_IV_MRG_F0125, JCT3V-F0125: Depth oriented Inter-view MV candidate
+                                              // EC_MPI_ENABLING_MERGE_F0150, MPI flag in VPS and enabling in Merge mode
+
+
 
 
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
@@ -169,7 +179,9 @@
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
+#define H_3D_SPIVMP                       1   // H_3D_SPIVMP    // JCT3V-F0110: Sub-PU level inter-view motion prediction
 #define H_3D_FCO                          0   // Flexible coding order for 3D
+
 
 
 // OTHERS
@@ -210,7 +222,7 @@
 #define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
 #endif
 
-////   ****** neighbouring block-based disparity vector  *********
+////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
 #if H_3D_NBDV
 #define DVFROM_LEFT                       0
 #define DVFROM_ABOVE                      1
@@ -265,15 +277,20 @@
 #define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
 #endif
 
+#if H_3D
+#define PPS_FIX_DEPTH                           1
+#endif
+
+
 /////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-9.2 Integrations //////////////////////////////
+///////////////////////////////////   HTM-10.0 Integrations //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-9.2 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HTM-9.1 Integrations //////////////////////////////
@@ -315,37 +332,6 @@
 #define H_MV_6_PS_O0109_22                      1  // (PS/O0109/view_id_len) #22 Modify the VPS extension syntax and semantics to replace view_id_len_minus1 with view_id_len, always signal that syntax element, add a constraint that (1<<view_id_len) >= NumViews, and modify view_id_val semantics to infer value of 0 when not present, from discussion of JCTVC-O0109 
 #define H_MV_6_PS_O0109_23                      1  // (PS/O0109/profile_ref_minus1 constraint) #23 Modify the semantics of profile_ref_minus1[ i ] to replace “shall be less than i?with “shall be less than or equal to i? from discussion of JCTVC-O0109 
 #define H_MV_6_PS_O0109_24                      1  // (PS/O0109/vps_vui_present_flag move) #24 Move the vps_vui_present_flag to precede vps_vui_offset, and make vps_vui_offset conditional on that flag, from JCTVC-O0109
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-9.0 Integrations //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-
-#if H_3D
-#define PPS_FIX_DEPTH                           1
-
-#define FIX_MISSING_MACRO_R690                  1 // Missing macro in integration to revision 690
-#define SEC_MPI_ENABLING_MERGE_F0150            1 // MPI flag in VPS and enabling in Merge mode
-
-#if H_3D_ARP
-#define QC_MTK_INTERVIEW_ARP_F0123_F0108        1 //JCT3V-F0123; JCT3V-F0108
-#define SHARP_ARP_REF_CHECK_F0105               1 // ARP reference picture selection and DPB check
-#define LGE_ARP_CTX_F0161                       1 //JCT3V-F0161
-#endif
-
-#if H_3D_IV_MERGE
-#define QC_DEPTH_IV_MRG_F0125                   1 // JCT3V-F0125: Depth oriented Inter-view MV candidate
-#define MTK_SPIVMP_F0110                        1 // JCT3V-F0110: Sub-PU level inter-view motion prediction
-#define MTK_F0110_FIX                           1 // Disable Sub-PU IVMP in Depth, fix some delete problems
-#define BUGFIX_F0093                            1 // bug fix for F0093 for depth IvMC pruning
-#define BUGFIX_2_F0093                          1 // bug fix for VSP inheritance
-#endif
-
-#if H_3D_VSP
-#define MTK_F0109_LG_F0120_VSP_BLOCK            1 // MTK_LG_SIMPLIFY_VSP_BLOCK_PARTITION_F0109_F0120  
-#define SHARP_VSP_BLOCK_IN_AMP_F0102            1 // VSP partitioning for AMP
-#define MTK_VSP_SIMPLIFICATION_F0111            1 // 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
-#define LGE_SHARP_VSP_INHERIT_F0104             1
-#endif
-#endif
 
 
 /////////////////////////////////////////////////////////////////////////////////////////

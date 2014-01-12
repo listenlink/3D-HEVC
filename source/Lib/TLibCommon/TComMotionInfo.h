@@ -49,7 +49,7 @@
 // Type definition
 // ====================================================================================================================
 
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
 class TComDataCU;
 #endif
 /// parameters for AMVP
@@ -172,7 +172,7 @@ public:
   Void    setAllMvd    ( TComMv const & rcMvd,        PartSize eCUMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllRefIdx ( Int iRefIdx,                 PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
   Void    setAllMvField( TComMvField const & mvField, PartSize eMbMode, Int iPartAddr, UInt uiDepth, Int iPartIdx=0 );
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Void    setMvFieldSP ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  );
 #endif
 

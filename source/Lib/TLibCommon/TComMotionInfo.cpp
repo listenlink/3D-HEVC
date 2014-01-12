@@ -39,7 +39,7 @@
 #include "TComMotionInfo.h"
 #include "assert.h"
 #include <stdlib.h>
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
 #include "TComDataCU.h"
 #include "TComPic.h"
 #endif
@@ -327,7 +327,7 @@ Void TComCUMvField::setAllMvField( TComMvField const & mvField, PartSize eCUMode
   setAllRefIdx( mvField.getRefIdx(), eCUMode, iPartAddr, uiDepth, iPartIdx );
 }
 
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
 Void TComCUMvField::setMvFieldSP( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  )
 {
   uiAbsPartIdx += pcCU->getZorderIdxInCU();
