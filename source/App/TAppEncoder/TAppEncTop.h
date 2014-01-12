@@ -128,9 +128,7 @@ protected:
   Void xSetLayerSets              ( TComVPS& vps );
   Void xSetProfileTierLevel       ( TComVPS& vps );
   Void xSetRepFormat              ( TComVPS& vps );
-#if H_MV_6_HRD_O0217_13
   Void xSetDpbSize                ( TComVPS& vps );
-#endif
   Void xSetVPSVUI                 ( TComVPS& vps );
   GOPEntry* xGetGopEntry( Int layerIdInVps, Int poc );
   Int  xGetMax( std::vector<Int>& vec);

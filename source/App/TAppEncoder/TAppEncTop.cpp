@@ -234,11 +234,7 @@ Void TAppEncTop::xInitLibCfg()
   m_cTEncTop.setFramesToBeEncoded            ( m_framesToBeEncoded );
   
   //====== Coding Structure ========
-#if H_MV_LAYER_WISE_STARTUP
   m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod[ layerIdInVps ] );
-#else
-  m_cTEncTop.setIntraPeriod                  ( m_iIntraPeriod );
-#endif
   m_cTEncTop.setDecodingRefreshType          ( m_iDecodingRefreshType );
   m_cTEncTop.setGOPSize                      ( m_iGOPSize );
 #if H_MV
@@ -1357,17 +1353,10 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
 
   Int maxViewId = xGetMax( m_viewId ); 
 
-#if H_MV_6_PS_O0109_22
   Int viewIdLen = gCeilLog2( maxViewId + 1 ); 
   const Int maxViewIdLen = ( 1 << 4 ) - 1; 
   assert( viewIdLen <= maxViewIdLen ); 
   vps.setViewIdLen( viewIdLen ); 
-#else
-  Int viewIdLenMinus1 = std::max( gCeilLog2( maxViewId + 1 ) - 1, 0 ) ; 
-  const Int maxViewIdLenMinus1 = ( 1 << 4 ) - 1; 
-  assert( viewIdLenMinus1 <= maxViewIdLenMinus1  ); 
-  vps.setViewIdLenMinus1( viewIdLenMinus1 ); 
-#endif
   for (Int i = 0; i < m_iNumberOfViews; i++)
   {
     vps.setViewIdVal( i, m_viewId[ i] ); 
@@ -1388,10 +1377,8 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     }
     }
 
-#if H_MV_6_PS_O0096_21
   Int  defaultDirectDependencyType = -1; 
   Bool defaultDirectDependencyFlag = true; 
-#endif
   for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
   {
     Int numRefLayers = (Int) m_directRefLayers[depLayer].size(); 
@@ -1400,7 +1387,6 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     {
       Int refLayer = m_directRefLayers[depLayer][i]; 
       vps.setDirectDependencyFlag( depLayer, refLayer, true); 
-#if H_MV_6_PS_O0096_21
       Int curDirectDependencyType = m_dependencyTypes[depLayer][i]; 
 
       if ( defaultDirectDependencyType != -1 )    
@@ -1413,18 +1399,12 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       }
       
       vps.setDirectDependencyType( depLayer, refLayer, curDirectDependencyType);       
-#else
-      vps.setDirectDependencyType( depLayer, refLayer,m_dependencyTypes[depLayer][i]); 
-#endif
     }
   }
 
-#if H_MV_6_PS_O0096_21
   vps.setDefaultDirectDependencyFlag( defaultDirectDependencyFlag );       
   vps.setDefaultDirectDependencyType( defaultDirectDependencyFlag ? defaultDirectDependencyType : -1 );       
-#endif
 
-#if H_MV_6_ILDSD_O0120_26
   // Max sub layers, + presence flag
   Bool subLayersMaxMinus1PresentFlag = false; 
   Int  subLayersMaxMinus1 = -1; 
@@ -1449,21 +1429,15 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   }
 
   vps.setVpsSubLayersMaxMinus1PresentFlag( subLayersMaxMinus1PresentFlag ); 
-#endif
 
 
   // Max temporal id for inter layer reference pictures + presence flag
   Bool maxTidRefPresentFlag = false; 
   for ( Int refLayerIdInVps = 0; refLayerIdInVps < m_numberOfLayers; refLayerIdInVps++)
     {
-#if !H_MV_6_ILDDS_O0225_30
-    Int maxTid = -1; 
-#endif
     for ( Int curLayerIdInVps = 1; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++)
       {
-#if H_MV_6_ILDDS_O0225_30
       Int maxTid = -1; 
-#endif
       for( Int i = 0; i < getGOPSize(); i++ ) 
       {        
         GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][i];
@@ -1477,15 +1451,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
           }
         }
       }
-#if H_MV_6_ILDDS_O0225_30    
       vps.setMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps, maxTid + 1 );
       maxTidRefPresentFlag = maxTidRefPresentFlag || ( maxTid != 6 );    
     }
-#else
-    }
-    vps.setMaxTidIlRefPicPlus1( refLayerIdInVps, maxTid + 1 );
-    maxTidRefPresentFlag = maxTidRefPresentFlag || ( maxTid != 6 );    
-#endif
   }
 
   vps.setMaxTidRefPresentFlag( maxTidRefPresentFlag );
@@ -1503,7 +1471,6 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   vps.setMaxOneActiveRefLayerFlag( maxOneActiveRefLayerFlag );
   
   // Poc Lsb Not Present Flag
-#if H_MV_6_MISC_O0062_31
   for ( Int layerIdInVps = 1; layerIdInVps < m_numberOfLayers; layerIdInVps++)
   {
     if ( m_directRefLayers[ layerIdInVps ].size() == 0 ) 
@@ -1511,7 +1478,6 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       vps.setPocLsbNotPresentFlag( layerIdInVps,  true );  
     }
   }
-#endif
   
   // All Ref layers active flag
   Bool allRefLayersActiveFlag = true; 
@@ -1520,7 +1486,6 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     for( Int i = 0; i < ( getGOPSize() + 1) && allRefLayersActiveFlag; i++ ) 
     {        
       GOPEntry ge =  m_GOPListMvc[layerIdInVps][ ( i < getGOPSize()  ? i : MAX_GOP ) ]; 
-#if H_MV_6_ILDDS_ILREFPICS_27_34
       Int tId = ge.m_temporalId;  // Should be equal for all layers. 
       
       // check if all reference layers when allRefLayerActiveFlag is equal to 1 are reference layer pictures specified in the gop entry
@@ -1556,18 +1521,11 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
        maxTidIlRefAndSubLayerMaxVaildFlag = maxTidIlRefAndSubLayerMaxVaildFlag && referenceLayerFoundFlag;  
       }
       assert ( maxTidIlRefAndSubLayerMaxVaildFlag ); // Something wrong with MaxTidIlRefPicsPlus1 or SubLayersVpsMaxMinus1
-#else
-      allRefLayersActiveFlag = allRefLayersActiveFlag && (ge.m_numActiveRefLayerPics == m_directRefLayers[ layerIdInVps ].size() ); 
-#endif
     }            
   }
 
   vps.setAllRefLayersActiveFlag( allRefLayersActiveFlag );
 
-#if !H_MV_6_PS_O0223_29
-  // Currently cross layer irap aligned is always true.   
-  vps.setCrossLayerIrapAlignedFlag( true ); 
-#endif
   vps.setRefLayers(); 
 }; 
 
@@ -1637,9 +1595,7 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
   repFormat->setChromaFormatVpsIdc        ( CHROMA_420      );
   repFormat->setPicHeightVpsInLumaSamples ( m_iSourceHeight );
   repFormat->setPicWidthVpsInLumaSamples  ( m_iSourceWidth  );    
-#if H_MV_6_PS_REP_FORM_18_19_20
   repFormat->setChromaAndBitDepthVpsPresentFlag( true );    
-#endif
   // ToDo not supported yet. 
   //repFormat->setSeparateColourPlaneVpsFlag( );
 
@@ -1652,7 +1608,6 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
   }
 }
 
-#if H_MV_6_HRD_O0217_13
 Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
 {
   // These settings need to be verified
@@ -1708,7 +1663,6 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
     }  
   }  
 }
-#endif
 
 
 Void TAppEncTop::xSetLayerSets( TComVPS& vps )
@@ -1728,23 +1682,16 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
       vps.setLayerIdIncludedFlag( true, lsIdx, vps.getLayerIdInNuh( m_layerIdsInSets[lsIdx][i] ) ); 
     } 
   }
-#if H_MV_6_HRD_O0217_13
   vps.deriveLayerSetLayerIdList(); 
-#endif
 
   Int numAddOuputLayerSets = (Int) m_outputLayerSetIdx.size(); 
   // Additional output layer sets + profileLevelTierIdx
-#if H_MV_6_PS_0109_25
   vps.setDefaultOneTargetOutputLayerIdc   ( m_defaultOneTargetOutputLayerIdc ); 
-#else
-  vps.setDefaultOneTargetOutputLayerFlag   ( m_defaultOneTargetOutputLayerFlag ); 
-#endif
   vps.setMoreOutputLayerSetsThanDefaultFlag( numAddOuputLayerSets       != 0 );   
   vps.setNumAddOutputLayerSetsMinus1       ( numAddOuputLayerSets - 1        ); 
 
 
 
-#if H_MV_6_HRD_O0217_13
   for (Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++)
   {
     if ( lsIdx > 0 ) 
@@ -1759,12 +1706,6 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
       vps.setOutputLayerFlag( lsIdx, i, vps.inferOutputLayerFlag( lsIdx, i ));       
     }
   }
-#else
-  for (Int lsIdx = 1; lsIdx < m_vpsNumLayerSets; lsIdx++)
-  {
-    vps.setProfileLevelTierIdx( lsIdx, m_profileLevelTierIdx[ lsIdx ] ); 
-  }
-#endif
 
   for (Int addOutLs = 0; addOutLs < numAddOuputLayerSets; addOutLs++ )
   {
@@ -1787,9 +1728,7 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
       vps.setOutputLayerFlag( m_vpsNumLayerSets + addOutLs, i, outputLayerFlag );       
     }
   }
-#if H_MV_6_HRD_O0217_13
   vps.deriveTargetLayerIdLists(); 
-#endif
 }
 
 Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
@@ -1806,10 +1745,8 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
     // All this stuff could actually be derived by the encoder, 
     // however preliminary setting it from input parameters
 
-#if H_MV_6_PS_O0223_29
     pcVPSVUI->setCrossLayerPicTypeAlignedFlag( m_crossLayerPicTypeAlignedFlag );
     pcVPSVUI->setCrossLayerIrapAlignedFlag   ( m_crossLayerIrapAlignedFlag    );
-#endif
 
     pcVPSVUI->setBitRatePresentVpsFlag( m_bitRatePresentVpsFlag );
     pcVPSVUI->setPicRatePresentVpsFlag( m_picRatePresentVpsFlag );
@@ -1848,7 +1785,6 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
       }
     }
 
-#if H_MV_6_O0226_37
     pcVPSVUI->setTilesNotInUseFlag( m_tilesNotInUseFlag );
 
     if( !pcVPSVUI->getTilesNotInUseFlag() ) 
@@ -1884,18 +1820,6 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
         pcVPSVUI->setWppInUseFlag( i, m_wppInUseFlag[ i ]);
       }
     }
-#else
-    for( Int i = 1; i  <=  vps.getMaxLayersMinus1(); i++ )
-    {
-      for( Int  j = 0; j < vps.getNumDirectRefLayers( vps.getLayerIdInNuh( i ) ); j++ ) 
-      {
-        if ( m_tileBoundariesAlignedFlag[i].size() > j )
-        {
-          pcVPSVUI->setTileBoundariesAlignedFlag( i, j, m_tileBoundariesAlignedFlag[i][j]);
-        }
-      }
-    }
-#endif
 
     pcVPSVUI->setIlpRestrictedRefLayersFlag( m_ilpRestrictedRefLayersFlag );
 
@@ -1926,7 +1850,6 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
         }
       }
     }      
-#if H_MV_6_PS_O0118_33
     pcVPSVUI->setVideoSignalInfoIdxPresentFlag( true ); 
     pcVPSVUI->setVpsNumVideoSignalInfoMinus1  ( 0    ); 
 
@@ -1946,10 +1869,7 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
     {      
       pcVPSVUI->setVpsVideoSignalInfoIdx( i, 0 ); 
     }
-#endif
-#if H_MV_6_HRD_O0164_15
     pcVPSVUI->setVpsVuiBspHrdPresentFlag( false ); // TBD
-#endif
   }
 }
 #endif
@@ -1984,11 +1904,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setUseDLTFlag( layer , isDepth && m_useDLT );
     if( vps.getUseDLTFlag( layer ) )
     {
-#if H_MV_LAYER_WISE_STARTUP
       xAnalyzeInputBaseDepth(layer, max(  m_iIntraPeriod[layer], 24), &vps);
-#else
-      xAnalyzeInputBaseDepth(layer, max(m_iIntraPeriod, 24), &vps);
-#endif
     }
 #endif
 #endif

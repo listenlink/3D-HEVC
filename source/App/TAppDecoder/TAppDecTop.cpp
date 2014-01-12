@@ -60,15 +60,11 @@ TAppDecTop::TAppDecTop()
 #endif
 {
 #if H_MV
-#if H_MV_LAYER_WISE_STARTUP
   for (Int i = 0; i < MAX_NUM_LAYER_IDS; i++) 
   {
     m_layerIdToDecIdx[i] = -1; 
     m_layerInitilizedFlags[i] = false; 
   }
-#else
-  for (Int i = 0; i < MAX_NUM_LAYER_IDS; i++) m_layerIdToDecIdx[i] = -1; 
-#endif
 #endif
 #if H_3D
     m_pScaleOffsetFile  = 0;
@@ -191,9 +187,7 @@ Void TAppDecTop::decode()
 #if H_MV
     Bool newSliceDiffPoc   = false;
     Bool newSliceDiffLayer = false;
-#if H_MV_FIX_SKIP_PICTURES
     Bool sliceSkippedFlag = false; 
-#endif
 #if H_3D
     Bool allLayersDecoded  = false;     
 #endif
@@ -211,40 +205,24 @@ Void TAppDecTop::decode()
     {
       read(nalu, nalUnit);
 #if H_MV      
-#if !H_MV_6_HRD_O0217_13
-      Int decIdx     = xGetDecoderIdx( nalu.m_layerId , true );
-#endif
-#if H_MV_6_LAYER_ID_32
       if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu) || nalu.m_layerId > MAX_NUM_LAYER_IDS-1 ) 
-#else            
-      if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu) )
-#endif
       {
         bNewPicture = false;
-#if H_MV_6_LAYER_ID_32
         if ( !bitstreamFile )
         {
           decIdxLastPic     = decIdxCurrPic; 
         }
-#endif
       }
       else
       { 
-#if H_MV_6_HRD_O0217_13
         Int decIdx     = xGetDecoderIdx( nalu.m_layerId , true );      
-#endif
         newSliceDiffLayer = nalu.isSlice() && ( nalu.m_layerId != layerIdCurrPic ) && !firstSlice;
-#if H_MV_FIX_SKIP_PICTURES
         newSliceDiffPoc   = m_tDecTop[decIdx]->decode(nalu, m_iSkipFrame, m_pocLastDisplay[decIdx], newSliceDiffLayer, sliceSkippedFlag );
-#else
-        newSliceDiffPoc   = m_tDecTop[decIdx]->decode(nalu, m_iSkipFrame, m_pocLastDisplay[decIdx], newSliceDiffLayer );
-#endif
         // decode function only returns true when all of the following conditions are true
         // - poc in particular layer changes
         // - nalu does not belong to first slice in layer
         // - nalu.isSlice() == true      
 
-#if H_MV_6_HRD_O0217_13
         // Update TargetDecLayerIdList only when not specified by layer id file, specification by file might actually out of conformance. 
         if (nalu.m_nalUnitType == NAL_UNIT_VPS && m_targetDecLayerIdSetFileEmpty )
         {
@@ -257,15 +235,8 @@ Void TAppDecTop::decode()
 
           m_targetDecLayerIdSet = vps->getTargetDecLayerIdList( m_targetOptLayerSetIdx ); 
         }
-#endif
-#if H_MV_FIX_SKIP_PICTURES
         bNewPicture       = ( newSliceDiffLayer || newSliceDiffPoc ) && !sliceSkippedFlag; 
         if ( nalu.isSlice() && firstSlice && !sliceSkippedFlag )        
-#else
-        bNewPicture       = newSliceDiffLayer || newSliceDiffPoc; 
-
-        if ( nalu.isSlice() && firstSlice )
-#endif
         {
           layerIdCurrPic = nalu.m_layerId; 
 #if H_3D
@@ -880,12 +851,10 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
 {
   Int decIdx = -1; 
 
-#if H_MV_6_LAYER_ID_32
   if ( layerId > MAX_NUM_LAYER_IDS-1 )  
   {
     return decIdx; 
   }
-#endif
 
   if ( m_layerIdToDecIdx[ layerId ] != -1 ) 
   {      
@@ -905,9 +874,7 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     m_tDecTop[ decIdx ]->setLayerId( layerId );
     m_tDecTop[ decIdx ]->setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
     m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
-#if H_MV_LAYER_WISE_STARTUP
     m_tDecTop[ decIdx ]->setLayerInitilizedFlags( m_layerInitilizedFlags );
-#endif
 
 #if H_3D
    m_tDecTop[ decIdx ]->setCamParsCollector( &m_cCamParsCollector );
