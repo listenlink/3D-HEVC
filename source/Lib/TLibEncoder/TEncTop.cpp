@@ -298,7 +298,7 @@ Void TEncTop::init(Bool isFieldCoding)
 #endif
 {
   // initialize SPS
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   // Assuming that all PPS indirectly refer to the same VPS via different SPS
   m_cSPS.setVPS(m_cVPS);
 #endif
@@ -842,13 +842,6 @@ Void TEncTop::xInitSPS()
     pcVUI->setLog2MaxMvLengthHorizontal(getLog2MaxMvLengthHorizontal());
     pcVUI->setLog2MaxMvLengthVertical(getLog2MaxMvLengthVertical());
   }
-#if H_3D
-#if !CAM_HLS_F0136_F0045_F0082
-  {
-    m_cSPS.initCamParaSPS           ( m_viewIndex, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
-  }
-#endif
-#endif
 }
 
 Void TEncTop::xInitPPS()
@@ -863,7 +856,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setSPSId( getLayerIdInVps() );
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   m_cPPS.setDLT( getDLT() );
 #endif
 
@@ -994,11 +987,7 @@ Void TEncTop::xInitPPS()
     }
   }
 #if H_3D
-#if CAM_HLS_F0136_F0045_F0082
   if( m_cVPS->hasCamParInSliceHeader( getViewIndex() ) )
-#else
-  if( m_cSPS.hasCamParInSliceHeader() )
-#endif
   {
     m_cPPS.setSliceHeaderExtensionPresentFlag( true ); 
   }

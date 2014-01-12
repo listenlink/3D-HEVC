@@ -106,7 +106,7 @@ public:
 #endif
   Void  codePPS                 ( TComPPS* pcPPS );
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void  codePPSExtension        ( TComPPS* pcPPS );
 #endif
 

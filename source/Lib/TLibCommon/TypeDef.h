@@ -144,10 +144,6 @@
                                               // QC_INRIA_MTK_MRG_E0126 
                                               // ETRIKHU_MERGE_REUSE_F0093 QC_DEPTH_IV_MRG_F0125, JCT3V-F0125: Depth oriented Inter-view MV candidate
                                               // EC_MPI_ENABLING_MERGE_F0150, MPI flag in VPS and enabling in Merge mode
-
-
-
-
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -194,11 +190,6 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
-#define CAM_HLS_F0136_F0045_F0082         1   // JCT3V-F0136/F0045: view order index based camera parameter signaling 
-                                              // JCT3V-F0082: the cp_in_slice_segment_layer_flag to be view specific and used as a condition of the presence of slice header level camera parameters
-#define CAM_HLS_F0044                     1   // JCT3V-F0044: move camera parameter from slice header extension to slice header
-
-
 // Rate Control
 #define KWU_FIX_URQ                       1
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
@@ -241,11 +232,7 @@
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 
 #if H_3D_DIM_DLT
-#define DLT_DIFF_CODING_IN_PPS            1   // moving DLT syntax elements from VPS to PPS and differential coding of DLT values
-                                              // JCT3V-F0131, JCT3V-F0139
-#if DLT_DIFF_CODING_IN_PPS
-#define Log2( n ) ( log((double)n) / log(2.0) )
-#endif
+#define Log2( n ) ( log((double)n) / log(2.0) ) // Ed.(GT): This is very very bad and should be fixed to used integer arithmetics ( see gCeilLog2 ) moreover it should not be defined in the tool macro section! 
 #define H_3D_DELTA_DLT                    1
 #endif
 
