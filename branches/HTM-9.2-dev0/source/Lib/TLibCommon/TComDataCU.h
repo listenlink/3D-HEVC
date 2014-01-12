@@ -197,7 +197,7 @@ private:
   Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not
                                       ///< 0: non-VSP; 1: VSP
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Bool*         m_pbSPIVMPFlag;       ///< array of sub-PU IVMP flags to indicate whehter a block uses sub-PU IVMP
                                       ///< 0: non-SPIVMP; 1: SPIVMP
 #endif
@@ -500,8 +500,6 @@ public:
    
 #if H_3D
   Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
-#endif
-#if QC_DEPTH_IV_MRG_F0125
   Bool          getDispNeighBlocks  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
@@ -514,17 +512,15 @@ public:
 #if  H_3D_FAST_TEXTURE_ENCODING
   Void          getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMerge,  Int& iIVFMaxD);
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Void          getSPPara(Int iPUWidth, Int iPUHeight, Int& iNumSP, Int& iNumSPInOneLine, Int& iSPWidth, Int& iSPHeight);
   Void          getSPAbsPartIdx(UInt uiBaseAbsPartIdx, Int iWidth, Int iHeight, Int iPartIdx, Int iNumPartLine, UInt& ruiPartAddr );
   Void          setInterDirSP( UInt uiDir, UInt uiAbsPartIdx, Int iWidth, Int iHeight );
 #endif
 #if H_3D_IV_MERGE
-  Bool          getInterViewMergeCands          ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc 
-#if QC_DEPTH_IV_MRG_F0125
-    , Bool bIsDepth           
-#endif
-#if MTK_SPIVMP_F0110
+  Bool          getInterViewMergeCands          ( UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDInfo, Int* availableMcDc, Bool bIsDepth           
+
+#if H_3D_SPIVMP
     , TComMvField* pcMFieldSP, UChar* puhInterDirSP
 #endif
     );   
@@ -674,7 +670,7 @@ public:
                                             , Int* vspFlag
                                             , InheritedVSPDisInfo*  inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                                             , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
                                             , Int& numValidMergeCand, Int mrgCandIdx = -1
@@ -683,7 +679,7 @@ public:
 #if H_3D_VSP
   inline Void   xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
 
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Bool*         getSPIVMPFlag        ()                        { return m_pbSPIVMPFlag;          }
   Bool          getSPIVMPFlag        ( UInt uiIdx )            { return m_pbSPIVMPFlag[uiIdx];   }
   Void          setSPIVMPFlag        ( UInt uiIdx, Bool n )     { m_pbSPIVMPFlag[uiIdx] = n;      }

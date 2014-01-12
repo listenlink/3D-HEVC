@@ -3580,7 +3580,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                  , Int* vspFlag
                                  , InheritedVSPDisInfo*  inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                                  , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
                                  , Int& numValidMergeCand
@@ -3606,7 +3606,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                         , vspFlag
                                         , inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                                         , pbSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
                                         , numValidMergeCand
@@ -3627,7 +3627,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                       , vspFlag
                                       , inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                                       , pbSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
                                       , numValidMergeCand
@@ -3653,7 +3653,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       
       PartSize ePartSize = pcCU->getPartitionSize( 0 );
 
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       pcCU->setSPIVMPFlagSubParts( pbSPIVMPFlag[uiMergeCand], uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx )); 
       if (pbSPIVMPFlag[uiMergeCand])
       {
@@ -3675,7 +3675,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
         pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
         pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       }
 #endif
 
@@ -4354,7 +4354,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       pcCU->getPartIndexAndSize( iPartIdx, uiAbsPartIdx, iWidth, iHeight );
       DisInfo OriginalDvInfo = pcCU->getDvInfo(uiAbsPartIdx);
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
       memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
       TComMvField*  pcMvFieldSP;
@@ -4367,7 +4367,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
                       , vspFlag
                       , inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                       , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif 
                       , numValidMergeCand
@@ -4381,7 +4381,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         pcCU->setVSPFlagSubParts( vspFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
         pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMRGIndex].m_acDvInfo, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );  
         if (bSPIVMPFlag[uiMRGIndex]!=0)
         {
@@ -4415,7 +4415,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
             pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMRGMvField[0], ePartSize, uiPartAddr, 0, iPartIdx );
             pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMRGMvField[1], ePartSize, uiPartAddr, 0, iPartIdx );
           }
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         }
 #endif
 
@@ -4429,7 +4429,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       }
       else
       {
-#if MTK_SPIVMP_F0110        
+#if H_3D_SPIVMP        
         pcCU->setSPIVMPFlagSubParts(0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) ); 
 #endif
         // set ME result
@@ -4444,14 +4444,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
           pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMEMvField[1], ePartSize, uiPartAddr, 0, iPartIdx );
         }
       }
-#if MTK_SPIVMP_F0110
-#if MTK_F0110_FIX
+#if H_3D_SPIVMP
       delete[] pcMvFieldSP;
       delete[] puhInterDirSP;
-#else
-      delete pcMvFieldSP;
-      delete puhInterDirSP;
-#endif
 #endif
     }
 
@@ -5365,7 +5360,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     {  
       dZeroCost = dCost + 1;
     }
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
     if ( dZeroCost < dCost || pcCU->getQtRootCbf(0)==0)
 #else
     if ( dZeroCost < dCost )

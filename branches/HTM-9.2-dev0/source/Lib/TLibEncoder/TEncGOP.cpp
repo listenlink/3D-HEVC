@@ -744,11 +744,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   
 #if H_3D_ARP
     //GT: This seems to be broken when layerId in vps is not equal to layerId in nuh
-#if SHARP_ARP_REF_CHECK_F0105
     pcSlice->setARPStepNum(m_ivPicLists);
-#else
-    pcSlice->setARPStepNum();
-#endif
     if(pcSlice->getARPStepNum() > 1)
     {
       for(Int iLayerId = 0; iLayerId < getLayerId(); iLayerId ++ )

@@ -134,7 +134,7 @@ Void TDecCu::decodeCU( TComDataCU* pcCU, UInt& ruiIsLast )
  */
 Void TDecCu::decompressCU( TComDataCU* pcCU )
 {
-#if !QC_DEPTH_IV_MRG_F0125
+#if !H_3D_IV_MERGE
   xDecompressCU( pcCU, 0,  0 );
 #endif
 }
@@ -314,7 +314,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       m_ppcCU[uiDepth]->setWidth  ( 0, pcCU->getSlice()->getSPS()->getMaxCUWidth ()/(1<<uiDepth)  );
       m_ppcCU[uiDepth]->setHeight ( 0, pcCU->getSlice()->getSPS()->getMaxCUHeight()/(1<<uiDepth)  );
       m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
-#if QC_DEPTH_IV_MRG_F0125
+#if H_3D_IV_MERGE
       if( pcCU->getSlice()->getIsDepth())
       {
         DvInfo.bDV = m_ppcCU[uiDepth]->getDispNeighBlocks(0, 0, &DvInfo);
@@ -332,7 +332,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       {
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo);
       }
-#if QC_DEPTH_IV_MRG_F0125
+#if H_3D_IV_MERGE
       }
 #endif
 #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
@@ -400,7 +400,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
     InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
     Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
     TComMvField*  pcMvFieldSP;
@@ -411,7 +411,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
     m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand, uiMergeIndex );
@@ -461,7 +461,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
       }
     }
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
     pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth ); 
     if (bSPIVMPFlag[uiMergeIndex])
     {
@@ -481,17 +481,12 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
       }
     }
-#if MTK_F0110_FIX
     delete[] pcMvFieldSP;
     delete[] puhInterDirSP;
-#else
-    delete pcMvFieldSP;
-    delete puhInterDirSP;
-#endif
 #endif
 
     xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
-#if QC_DEPTH_IV_MRG_F0125
+#if H_3D_IV_MERGE
     xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
 #endif
     return;
@@ -507,7 +502,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
       xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
-#if QC_DEPTH_IV_MRG_F0125
+#if H_3D_IV_MERGE
       xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
 #endif
       return;
@@ -527,7 +522,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
   setdQPFlag( bCodeDQP );
   xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
-#if QC_DEPTH_IV_MRG_F0125
+#if H_3D_IV_MERGE
   xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
 #endif
 }
@@ -545,7 +540,7 @@ Void TDecCu::xFinishDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth,
 Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
 {
   TComPic* pcPic = pcCU->getPic();
-#if !QC_DEPTH_IV_MRG_F0125  
+#if !H_3D_IV_MERGE
   Bool bBoundary = false;
   UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
