@@ -1323,7 +1323,7 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     }
     else 
     {
-#if H_MV_FIX_SKIP_PICTURES
+#if H_MV
       static Bool warningMessage[MAX_NUM_LAYERS];
       static Bool warningInitFlag = false;
       

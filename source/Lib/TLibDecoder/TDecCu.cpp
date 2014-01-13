@@ -761,6 +761,8 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
       {
         pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
       }
+#else
+      pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
 #endif
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
