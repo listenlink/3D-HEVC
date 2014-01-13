@@ -724,13 +724,17 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 #endif
 
+#if H_MV
     xCeckNoClrasOutput();
+#endif
     // Skip pictures due to random access
     if (isRandomAccessSkipPicture(iSkipFrame, iPOCLastDisplay))
     {
     m_prevSliceSkipped = true;
     m_skippedPOC = m_apcSlicePilot->getPOC();
-      sliceSkippedFlag = true; 
+#if H_MV
+    sliceSkippedFlag = true; 
+#endif
       return false;
     }
     // Skip TFD pictures associated with BLA/BLANT pictures
@@ -738,7 +742,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     {
     m_prevSliceSkipped = true;
     m_skippedPOC = m_apcSlicePilot->getPOC();
-      sliceSkippedFlag = true; 
+#if H_MV
+    sliceSkippedFlag = true; 
+#endif
       return false;
     }
 
@@ -1272,7 +1278,11 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     iSkipFrame--;   // decrement the counter
     return true;
   }
+#if H_MV
   else if ( !m_layerInitilizedFlag[ m_layerId ] ) // start of random access point, m_pocRandomAccess has not been set yet.
+#else
+  else if (m_pocRandomAccess == MAX_INT) // start of random access point, m_pocRandomAccess has not been set yet.
+#endif
   {
     if (   m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA
         || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -1280,6 +1290,7 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
         || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL )
     {
 
+#if H_MV
       if ( xAllRefLayersInitilized() )
       {
         m_layerInitilizedFlag[ m_layerId ] = true; 
@@ -1289,21 +1300,30 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
       {
         return true; 
       }
+#else
+      // set the POC random access since we need to skip the reordered pictures in the case of CRA/CRANT/BLA/BLANT.
+      m_pocRandomAccess = m_apcSlicePilot->getPOC();
+#endif
     }
     else if ( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
+#if H_MV
       if ( xAllRefLayersInitilized() )
       {
         m_layerInitilizedFlag[ m_layerId ] = true; 
-      m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
-    }
-    else 
-    {
+        m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
+      }
+      else 
+      {
         return true; 
       }
+#else
+      m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
+#endif
     }
     else 
     {
+#if H_MV_FIX_SKIP_PICTURES
       static Bool warningMessage[MAX_NUM_LAYERS];
       static Bool warningInitFlag = false;
       
@@ -1321,6 +1341,14 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
         printf("\nLayer%3d   No valid random access point. VCL NAL units of this layer are discarded until next layer initialization picture. ", getLayerId() ); 
         warningMessage[m_layerId] = false; 
       }
+#else
+      static Bool warningMessage = false;
+      if(!warningMessage)
+      {
+        printf("\nWarning: this is not a valid random access point and the data is discarded until the first CRA picture");
+        warningMessage = true;
+      }
+#endif
       return true;
     }
   }
@@ -1330,7 +1358,12 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     iPOCLastDisplay++;
     return true;
   }
+#if H_MV
   return !m_layerInitilizedFlag[ getLayerId() ]; 
+#else
+  // if we reach here, then the picture is not skipped.
+  return false; 
+#endif
 }
 
 #if H_MV
@@ -1372,6 +1405,7 @@ Void TDecTop::xResetPocInPicBuffer()
   }
 }
 
+#if H_MV
 Void TDecTop::xCeckNoClrasOutput()
 {
   // This part needs further testing! 
@@ -1405,5 +1439,6 @@ Bool TDecTop::xAllRefLayersInitilized()
 
   return allRefLayersInitilizedFlag;
 }
+#endif
 #endif
 //! \}

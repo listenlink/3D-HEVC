@@ -52,6 +52,7 @@ class TComPic;
 class TComTrQuant;
 #if H_MV
 class TComPicLists; 
+class TComVPS; 
 #endif
 // ====================================================================================================================
 // Constants
@@ -61,7 +62,6 @@ class TComPicLists;
 // Class definition
 // ====================================================================================================================
 
-class TComVPS; 
 /// Reference Picture Set class
 class TComReferencePictureSet
 {
@@ -828,8 +828,9 @@ public:
 
   UInt    getMaxTLayers  ()                   { return m_uiMaxTLayers;   }
   Void    setMaxTLayers  (UInt t)             { m_uiMaxTLayers = t; }
-  UInt    getMaxSubLayersMinus1()             { return m_uiMaxTLayers - 1;  }  // For consistency with draft spec
+
 #if H_MV    
+  UInt    getMaxSubLayersMinus1()             { return m_uiMaxTLayers - 1;  }  // For consistency with draft spec
   UInt    getMaxLayersMinus1()                { return m_uiMaxLayersMinus1;  }; 
   Void    setMaxLayersMinus1(UInt l)          { m_uiMaxLayersMinus1 = l; }
 #else
@@ -988,7 +989,8 @@ public:
   Bool    getVpsVuiPresentFlag(  )                                         { return m_vpsVuiPresentFlag; } 
 
   TComVPSVUI* getVPSVUI(  )                                                { return m_vpsVUI;  }
-  // VPS EXTENSION SEMANTICS VARIABLES
+ 
+ // VPS EXTENSION SEMANTICS VARIABLES
   Void    setLayerIdInVps( Int layerIdInNuh, Int val )                     { m_layerIdInVps[layerIdInNuh] = val;  }
   Int     getLayerIdInVps( Int layerIdInNuh )                              { assert( m_layerIdInVps[layerIdInNuh] >= 0 ); return m_layerIdInVps[layerIdInNuh]; }
 
@@ -2368,17 +2370,17 @@ public:
   Void setPocResetFlag( Bool flag ) { m_pocResetFlag = flag; } 
   Bool getPocResetFlag(  ) { return m_pocResetFlag; } 
 
-Void setDiscardableFlag( Bool flag ) { m_discardableFlag = flag; } 
-Bool getDiscardableFlag(  ) { return m_discardableFlag; } 
+  Void setDiscardableFlag( Bool flag ) { m_discardableFlag = flag; } 
+  Bool getDiscardableFlag(  ) { return m_discardableFlag; } 
 
-Void setInterLayerPredEnabledFlag( Bool flag ) { m_interLayerPredEnabledFlag = flag; } 
-Bool getInterLayerPredEnabledFlag(  ) { return m_interLayerPredEnabledFlag; } 
+  Void setInterLayerPredEnabledFlag( Bool flag ) { m_interLayerPredEnabledFlag = flag; } 
+  Bool getInterLayerPredEnabledFlag(  ) { return m_interLayerPredEnabledFlag; } 
 
-Void setNumInterLayerRefPicsMinus1( Int  val ) { m_numInterLayerRefPicsMinus1 = val; } 
-Int  getNumInterLayerRefPicsMinus1(  ) { return m_numInterLayerRefPicsMinus1; } 
+  Void setNumInterLayerRefPicsMinus1( Int  val ) { m_numInterLayerRefPicsMinus1 = val; } 
+  Int  getNumInterLayerRefPicsMinus1(  ) { return m_numInterLayerRefPicsMinus1; } 
 
-Void setInterLayerPredLayerIdc( Int i, Int  val ) { m_interLayerPredLayerIdc[i] = val; } 
-Int  getInterLayerPredLayerIdc( Int i ) { return m_interLayerPredLayerIdc[i]; } 
+  Void setInterLayerPredLayerIdc( Int i, Int  val ) { m_interLayerPredLayerIdc[i] = val; } 
+  Int  getInterLayerPredLayerIdc( Int i ) { return m_interLayerPredLayerIdc[i]; } 
 
   // Additional variables derived in slice header semantics 
   Int  getNumInterLayerRefPicsMinus1Len( ) { return gCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerId() )); }

@@ -936,9 +936,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   }
 
   READ_FLAG( uiCode, "sps_extension_flag");
+#if H_MV
   pcSPS->setSpsExtensionFlag( uiCode ); 
   if (pcSPS->getSpsExtensionFlag( ) )
+#else
+  if (uiCode)
+#endif
   {
+#if H_MV
     for (Int i = 0; i < PS_EX_T_MAX_NUM; i++)
     {
       READ_FLAG( uiCode, "sps_extension_type_flag" ); pcSPS->setSpsExtensionTypeFlag( i, uiCode );
@@ -963,11 +968,14 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 
     if ( pcSPS->getSpsExtensionTypeFlag( PS_EX_T_ESC ))
     {   
+#endif
         while ( xMoreRbspData() )
         {
           READ_FLAG( uiCode, "sps_extension_data_flag");
         }
+#if H_MV
     }
+#endif
   }
 }
 
@@ -1072,7 +1080,9 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       READ_FLAG( uiCode, "layer_id_included_flag[opsIdx][i]" );     pcVPS->setLayerIdIncludedFlag( uiCode == 1 ? true : false, opsIdx, i );
     }
   }
+#if H_MV
   pcVPS->deriveLayerSetLayerIdList(); 
+#endif
   TimingInfo *timingInfo = pcVPS->getTimingInfo();
   READ_FLAG(       uiCode, "vps_timing_info_present_flag");         timingInfo->setTimingInfoPresentFlag      (uiCode ? true : false);
   if(timingInfo->getTimingInfoPresentFlag())
@@ -1889,6 +1899,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     //   colour_plane_id                                      u(2)
 
 
+#if H_MV
     UInt slicePicOrderCntLsb = 0;
     Int iPOClsb = slicePicOrderCntLsb;  // Needed later
     if ( (rpcSlice->getLayerId() > 0 && !vps->getPocLsbNotPresentFlag( rpcSlice->getLayerIdInVps())) || !rpcSlice->getIdrPicFlag() )
@@ -1935,9 +1946,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPocBeforeReset   ( rpcSlice->getPOC() ); 
       rpcSlice->setPOC              ( 0 );
     }      
+#endif
 
     if( rpcSlice->getIdrPicFlag() )
     {
+#if !H_MV
+      rpcSlice->setPOC(0);
+#endif
       TComReferencePictureSet* rps = rpcSlice->getLocalRPS();
       rps->setNumberOfNegativePictures(0);
       rps->setNumberOfPositivePictures(0);
@@ -1950,6 +1965,35 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     else
     {
+#if !H_MV
+      READ_CODE(sps->getBitsForPOC(), uiCode, "pic_order_cnt_lsb");  
+      Int iPOClsb = uiCode;
+      Int iPrevPOC = rpcSlice->getPrevTid0POC();
+      Int iMaxPOClsb = 1<< sps->getBitsForPOC();
+      Int iPrevPOClsb = iPrevPOC & (iMaxPOClsb - 1);
+      Int iPrevPOCmsb = iPrevPOC-iPrevPOClsb;
+      Int iPOCmsb;
+      if( ( iPOClsb  <  iPrevPOClsb ) && ( ( iPrevPOClsb - iPOClsb )  >=  ( iMaxPOClsb / 2 ) ) )
+      {
+        iPOCmsb = iPrevPOCmsb + iMaxPOClsb;
+      }
+      else if( (iPOClsb  >  iPrevPOClsb )  && ( (iPOClsb - iPrevPOClsb )  >  ( iMaxPOClsb / 2 ) ) ) 
+      {
+        iPOCmsb = iPrevPOCmsb - iMaxPOClsb;
+      }
+      else
+      {
+        iPOCmsb = iPrevPOCmsb;
+      }
+      if ( rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
+        || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+        || rpcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP )
+      {
+        // For BLA picture types, POCmsb is set to 0.
+        iPOCmsb = 0;
+      }
+      rpcSlice->setPOC              (iPOCmsb+iPOClsb);
+#endif
       TComReferencePictureSet* rps;
       rps = rpcSlice->getLocalRPS();
       rpcSlice->setRPS(rps);

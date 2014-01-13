@@ -109,7 +109,9 @@ TComSlice::TComSlice()
 , m_isDepth                       (false)
 #endif
 , m_pocResetFlag                  (false)
+#if H_MV
 , m_crossLayerBlaFlag             (false)
+#endif
 , m_discardableFlag               (false)
 , m_interLayerPredEnabledFlag     (false)
 , m_numInterLayerRefPicsMinus1    (0)
@@ -1698,8 +1700,8 @@ TComVPS::TComVPS()
 , m_hrdParameters             (NULL)
 , m_hrdOpSetIdx               (NULL)
 , m_cprmsPresentFlag          (NULL)
-, m_dpbSize                   (NULL)
 #if H_MV
+, m_dpbSize                   (NULL)
 , m_vpsVUI                 (  NULL )
 #endif
 {
@@ -1786,7 +1788,6 @@ TComVPS::TComVPS()
     m_vpsDepthModesFlag [i] = false;
     m_ivMvScalingFlag = true; 
 #endif
-#endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
     {
@@ -1807,7 +1808,7 @@ TComVPS::TComVPS()
   }
   m_vpsVUI = new TComVPSVUI; 
   m_dpbSize = new TComDpbSize; 
-#
+
 #if H_3D
   for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
   {
@@ -1830,6 +1831,7 @@ TComVPS::TComVPS()
     m_bMPIFlag             [ i ] = false;
 #endif
   }  
+#endif
 #endif
 }
 
@@ -2210,6 +2212,7 @@ TComSPS::TComSPS()
   m_scalingList = new TComScalingList;
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));
   ::memset(m_usedByCurrPicLtSPSFlag, 0, sizeof(m_usedByCurrPicLtSPSFlag));
+#if H_MV
   m_spsExtensionFlag = false; 
   for( Int i = 0; i < PS_EX_T_MAX_NUM; i++ ) 
   {
@@ -2229,6 +2232,7 @@ TComSPS::TComSPS()
     m_scaledRefLayerRightOffset    [i] = 0;
     m_scaledRefLayerBottomOffset   [i] = 0;
   }
+#endif
 }
 
 TComSPS::~TComSPS()
@@ -3773,4 +3777,3 @@ Void TComVUI::inferVideoSignalInfo( TComVPS* vps, Int layerIdCurr )
   setMatrixCoefficients     ( videoSignalInfo->getMatrixCoeffsVps           () );
 }
 #endif
-

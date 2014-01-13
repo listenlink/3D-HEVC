@@ -816,7 +816,11 @@ Void TEncTop::xInitSPS()
     pcVUI->setSarHeight(getSarHeight());
     pcVUI->setOverscanInfoPresentFlag(getOverscanInfoPresentFlag());
     pcVUI->setOverscanAppropriateFlag(getOverscanAppropriateFlag());
+#if H_MV
     pcVUI->setVideoSignalTypePresentFlag(getVideoSignalTypePresentFlag() && getLayerId() == 0 );
+#else
+   pcVUI->setVideoSignalTypePresentFlag(getVideoSignalTypePresentFlag());
+#endif
     pcVUI->setVideoFormat(getVideoFormat());
     pcVUI->setVideoFullRangeFlag(getVideoFullRangeFlag());
     pcVUI->setColourDescriptionPresentFlag(getColourDescriptionPresentFlag());

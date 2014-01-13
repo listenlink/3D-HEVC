@@ -207,7 +207,7 @@ Void TAppEncTop::xInitLibCfg()
 #endif // H_3D
 
     m_cTEncTop.setIvPicLists                   ( &m_ivPicLists ); 
-  // H_MV
+#endif  // H_MV
   m_cTEncTop.setVPS(&vps);
 
 #if H_3D
@@ -1944,5 +1944,5 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
   dlt.setNumDepthViews ( iNumDepthViews  );
 }
 #endif
-#endif
+
 //! \}
