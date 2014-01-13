@@ -1742,8 +1742,7 @@ Void TAppEncCfg::xCheckParameter()
   /* if this is an intra-only sequence, ie IntraPeriod=1, don't verify the GOP structure
    * This permits the ability to omit a GOP structure specification */
 #if H_MV
-  if (m_iIntraPeriod[layer] == 1 && m_GOPList[0].m_POC == -1)
-  {
+  if (m_iIntraPeriod[layer] == 1 && m_GOPList[0].m_POC == -1) {
 #else
   if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1) {
 #endif
@@ -1772,9 +1771,9 @@ Void TAppEncCfg::xCheckParameter()
   }
   Int numOK=0;
 #if H_MV
-xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" );
-#else
   xConfirmPara( m_iIntraPeriod[layer] >=0&&(m_iIntraPeriod[layer]%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" ); 
+#else
+xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" );
 #endif
 
   for(Int i=0; i<m_iGOPSize; i++)

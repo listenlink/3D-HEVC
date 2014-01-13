@@ -54,7 +54,7 @@
 */
 
 #ifndef HEVC_EXT
-#define HEVC_EXT                    0
+#define HEVC_EXT                    2
 #endif
 
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
@@ -232,7 +232,6 @@
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 
 #if H_3D_DIM_DLT
-#define Log2( n ) ( log((double)n) / log(2.0) ) // Ed.(GT): This is very very bad and should be fixed to used integer arithmetics ( see gCeilLog2 ) moreover it should not be defined in the tool macro section! 
 #define H_3D_DELTA_DLT                    1
 #endif
 
@@ -278,7 +277,11 @@
 // !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
 // !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
 // !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
@@ -328,6 +331,8 @@
 #define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
 #define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
 #define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
+#else
+#define MAX_NUM_LAYER_IDS                64
 #endif
 
 #define COEF_REMAIN_BIN_REDUCTION        3 ///< indicates the level at which the VLC 
@@ -844,6 +849,6 @@ namespace Level
     VIEWPOS_MERGED  = 2
   };
 
-
+#define Log2( n ) ( log((double)n) / log(2.0) ) // Ed.(GT): This is very very bad and should be fixed to used integer arithmetics ( see gCeilLog2 ) moreover it should not be defined in the tool macro section! 
 #endif
 #endif
