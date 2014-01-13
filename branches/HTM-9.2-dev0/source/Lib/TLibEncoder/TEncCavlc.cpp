@@ -1665,11 +1665,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "slice_pic_order_cnt_lsb");
     }
 #else
+    if( !pcSlice->getIdrPicFlag() )
+    {
       Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC())) & ((1<<pcSlice->getSPS()->getBitsForPOC())-1);
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
 #endif
-    if( !pcSlice->getIdrPicFlag() )
-    {
       TComReferencePictureSet* rps = pcSlice->getRPS();
       
 #if FIX1071
