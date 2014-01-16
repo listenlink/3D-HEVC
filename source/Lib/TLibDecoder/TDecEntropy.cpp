@@ -110,11 +110,7 @@ Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 {
   pcCU->setICFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
 
-#if SEC_ONLY_TEXTURE_IC_F0151
   if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() )
-#else
-  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) )
-#endif
   {
     return;
   }
@@ -212,7 +208,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
   TComMvField*  pcMvFieldSP;
   UChar* puhInterDirSP;
@@ -244,13 +240,11 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     {
       decodeMergeIndex( pcCU, uiPartIdx, uiSubPartIdx, uiDepth );
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
-#if LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 #if H_3D_ARP
       decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
-#endif
 #endif
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 ) 
       {
@@ -261,20 +255,16 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
           memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
           InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
           memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
 #endif
-#if ETRIKHU_MERGE_REUSE_F0093
           pcSubCU->initAvailableFlags();
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
           pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
             , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
             , numValidMergeCand );
-#else
-          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
-#endif
           pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
           if(vspFlag[uiMergeIndex])
@@ -282,7 +272,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
             pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
           }
 #else
-#if ETRIKHU_MERGE_REUSE_F0093
+#if H_3D
           pcSubCU->initAvailableFlags();
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
           pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
@@ -302,27 +292,23 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
         memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
         InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
 #endif
-#if ETRIKHU_MERGE_REUSE_F0093
         pcSubCU->initAvailableFlags();
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
         pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
           , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
           ,numValidMergeCand, uiMergeIndex );
-#else
-        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo,numValidMergeCand, uiMergeIndex );
-#endif
         pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
         if(vspFlag[uiMergeIndex])
         {
           pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
         }
 #else
-#if ETRIKHU_MERGE_REUSE_F0093
+#if H_3D
         pcSubCU->initAvailableFlags();
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
         pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
@@ -344,7 +330,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
         }
       }
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );  
       if (bSPIVMPFlag[uiMergeIndex] != 0)
       {
@@ -380,13 +366,11 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           decodeMVPIdxPU   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
         }
       }
-#if LGE_SHARP_VSP_INHERIT_F0104
 #if H_3D_IC
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
 #if H_3D_ARP
       decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
-#endif
 #endif
     }
 #if H_3D_VSP
@@ -400,14 +384,9 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       pcCU->setInterDirSubParts( 1, uiSubPartIdx, uiPartIdx, uiDepth);
     }
   }
-#if MTK_SPIVMP_F0110
-#if MTK_F0110_FIX
+#if H_3D_SPIVMP
   delete[] pcMvFieldSP;
   delete[] puhInterDirSP;
-#else
-  delete pcMvFieldSP;
-  delete puhInterDirSP;
-#endif
 #endif
   return;
 }

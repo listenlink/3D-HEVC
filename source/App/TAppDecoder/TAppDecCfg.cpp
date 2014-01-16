@@ -84,11 +84,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("OutputBitDepth,d", m_outputBitDepthY, 0, "bit depth of YUV output luma component (default: use 0 for native depth)")
   ("OutputBitDepthC,d", m_outputBitDepthC, 0, "bit depth of YUV output chroma component (default: use 0 for native depth)")
 #if H_MV
-#if H_MV_6_HRD_O0217_13
   ("TargetOptLayerSetIdx,x", m_targetOptLayerSetIdx, -1, "Target output layer set index. (default: -1, determine automatically to be equal to highest layer set index") // Should actually equal to 0 as default. However, this would cause only the base layer to be decoded.  
-#else
-  ("MaxLayerId,-ls", m_maxLayerId, MAX_NUM_LAYER_IDS-1, "Maximum LayerId to be decoded.")
-#endif
 #endif
   ("MaxTemporalLayer,t", m_iMaxTemporalLayer, -1, "Maximum Temporal Layer to be decoded. -1 to decode all layers")
   ("SEIDecodedPictureHash", m_decodedPictureHashSEIEnabled, 1, "Control handling of decoded picture hash SEI messages\n"
@@ -127,7 +123,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
 
   if ( !cfg_TargetDecLayerIdSetFile.empty() )
   {
-#if H_MV_6_HRD_O0217_13
+#if H_MV
     m_targetDecLayerIdSetFileEmpty = false;     
 #endif
     FILE* targetDecLayerIdSetFile = fopen ( cfg_TargetDecLayerIdSetFile.c_str(), "r" );
@@ -173,17 +169,7 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
     }
   }
 #if H_MV
-#if H_MV_6_HRD_O0217_13
   m_targetDecLayerIdSet.push_back( 0 );         // Only base layer at startup
-#else
-  else
-  {
-    for ( Int curLayerId = 0; curLayerId <= m_maxLayerId; curLayerId++ )
-    {
-      m_targetDecLayerIdSet.push_back( curLayerId );
-    }
-  }
-#endif
 #endif
 
   return true;

@@ -330,7 +330,7 @@ protected:
   TComVPS                    m_cVPS;
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   TComDLT*  m_cDLT;
 #endif
 
@@ -407,7 +407,7 @@ protected:
   UInt      m_uiUseAdvResPred;
   UInt      m_uiARPStepNum;
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Int      m_iSubPULog2Size;
 #endif
 #if H_3D_IC
@@ -419,13 +419,10 @@ protected:
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
-#if !SEC_DMM3_RBC_F0147
-  Bool      m_useRBC;
-#endif
   Bool      m_useSDC;
   Bool      m_useDLT;
 #endif
-#if SEC_MPI_ENABLING_MERGE_F0150
+#if H_3D_IV_MERGE
   Bool      m_useMPI;
 #endif
 #if H_3D_QTLPC
@@ -513,7 +510,7 @@ public:
   UInt       getARPStepNum                  ()               { return m_uiARPStepNum;    }
   Void       setARPStepNum                  ( UInt  u )      { m_uiARPStepNum = u;       }
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Int        getSubPULog2Size                   ()                   { return m_iSubPULog2Size;}
   Void       setSubPULog2Size                   (Int u)              { m_iSubPULog2Size = u; }     
 #endif
@@ -872,7 +869,7 @@ public:
   TComVPS *getVPS() { return &m_cVPS; }
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void      setDLT           ( TComDLT *p ) { m_cDLT = p; }
   TComDLT*  getDLT           ()             { return m_cDLT; }
 #endif
@@ -1002,10 +999,6 @@ public:
 #if H_3D_DIM
   Bool      getUseDMM                       ()        { return m_useDMM; }
   Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
-#if !SEC_DMM3_RBC_F0147
-  Bool      getUseRBC                       ()        { return m_useRBC; }
-  Void      setUseRBC                       ( Bool b) { m_useRBC = b;    }
-#endif
   Bool      getUseSDC                       ()        { return m_useSDC; }
   Void      setUseSDC                       ( Bool b) { m_useSDC = b;    }
   Bool      getUseDLT                       ()        { return m_useDLT; }
@@ -1017,7 +1010,7 @@ public:
   Void      setUsePC                        ( Bool b ) { m_bUsePC  = b;    }
   Bool      getUsePC                        ()         { return m_bUsePC;  }
 #endif
-#if SEC_MPI_ENABLING_MERGE_F0150
+#if H_3D_IV_MERGE
   Void      setUseMPI                       ( Bool b ) { m_useMPI = b;    }
   Bool      getUseMPI                       ()         { return m_useMPI; }
 #endif

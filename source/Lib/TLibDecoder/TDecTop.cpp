@@ -227,7 +227,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   {
     m_uiMaxViewIndex                     = std::max( m_uiMaxViewIndex, uiViewIndex );
     m_aiViewId[ uiViewIndex ]            = pcSlice->getViewId();
-#if CAM_HLS_F0136_F0045_F0082
+
     if( uiViewIndex == 1 )
     {
       m_uiCamParsCodedPrecision       = pcSlice->getVPS()->getCamParPrecision     ();
@@ -238,18 +238,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
       AOF( m_uiCamParsCodedPrecision == pcSlice->getVPS()->getCamParPrecision     () );
       AOF( m_bCamParsVaryOverTime    == pcSlice->getVPS()->hasCamParInSliceHeader ( uiViewIndex ) );
     }
-#else
-    if( uiViewIndex == 1 )
-    {
-      m_uiCamParsCodedPrecision       = pcSlice->getSPS()->getCamParPrecision     ();
-      m_bCamParsVaryOverTime          = pcSlice->getSPS()->hasCamParInSliceHeader ();
-    }
-    else if( uiViewIndex > 1 )
-    {
-      AOF( m_uiCamParsCodedPrecision == pcSlice->getSPS()->getCamParPrecision     () );
-      AOF( m_bCamParsVaryOverTime    == pcSlice->getSPS()->hasCamParInSliceHeader () );
-    }
-#endif
+
     for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )
     {
       if( m_bCamParsVaryOverTime )
@@ -263,17 +252,10 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
       }
       else
       {
-#if CAM_HLS_F0136_F0045_F0082
         m_aaiCodedScale [ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getVPS()->getCodedScale    (uiViewIndex) [ uiBaseIndex ];
         m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getVPS()->getCodedOffset   (uiViewIndex) [ uiBaseIndex ];
         m_aaiCodedScale [ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getVPS()->getInvCodedScale (uiViewIndex) [ uiBaseIndex ];
         m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getVPS()->getInvCodedOffset(uiViewIndex) [ uiBaseIndex ];
-#else
-        m_aaiCodedScale [ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getSPS()->getCodedScale    () [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getSPS()->getCodedOffset   () [ uiBaseIndex ];
-        m_aaiCodedScale [ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getSPS()->getInvCodedScale () [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getSPS()->getInvCodedOffset() [ uiBaseIndex ];
-#endif
         xInitLUTs( uiBaseIndex, uiViewIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
         xInitLUTs( uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiViewIndex ][ uiBaseIndex ], m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
       }
@@ -301,15 +283,10 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   m_iLastPOC       = (Int)pcSlice->getPOC();
 }
 
-#if QC_DEPTH_IV_MRG_F0125
+#if H_3D_IV_MERGE
 Void
 CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
 {
-#if !CAM_HLS_F0136_F0045_F0082
-  UInt uiViewIndex = pcSlice->getViewIndex();
-
-  pcSlice->getSPS()->initCamParaSPS( uiViewIndex, m_uiCamParsCodedPrecision, m_bCamParsVaryOverTime, m_aaiCodedScale, m_aaiCodedOffset );
-#endif
   if( m_bCamParsVaryOverTime )
   {
     pcSlice->setCamparaSlice( m_aaiCodedScale, m_aaiCodedOffset );
@@ -655,12 +632,10 @@ Void TDecTop::xActivateParameterSets()
   m_apcSlicePilot->setSPS(sps);
 #if H_MV
   m_apcSlicePilot->setVPS(vps);  
-#if H_MV_6_PS_0092_17
   // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, pps->getLayerId() ) );   
   // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, sps->getLayerId() ) );
-#endif
   sps->inferRepFormat  ( vps , m_layerId ); 
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
 #endif
@@ -691,11 +666,7 @@ Void TDecTop::xActivateParameterSets()
 }
 
 #if H_MV
-#if H_MV_FIX_SKIP_PICTURES
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag  )
-#else
-Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag )
-#endif
 {
   assert( nalu.m_layerId == m_layerId ); 
 
@@ -753,7 +724,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 #endif
 
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
     xCeckNoClrasOutput();
 #endif
     // Skip pictures due to random access
@@ -761,8 +732,8 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     {
     m_prevSliceSkipped = true;
     m_skippedPOC = m_apcSlicePilot->getPOC();
-#if H_MV_FIX_SKIP_PICTURES
-      sliceSkippedFlag = true; 
+#if H_MV
+    sliceSkippedFlag = true; 
 #endif
       return false;
     }
@@ -771,8 +742,8 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     {
     m_prevSliceSkipped = true;
     m_skippedPOC = m_apcSlicePilot->getPOC();
-#if H_MV_FIX_SKIP_PICTURES
-      sliceSkippedFlag = true; 
+#if H_MV
+    sliceSkippedFlag = true; 
 #endif
       return false;
     }
@@ -1006,11 +977,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->getTempRefPicLists( m_cListPic, m_refPicSetInterLayer0, m_refPicSetInterLayer1, tempRefPicLists, usedAsLongTerm, numPocTotalCurr);
     pcSlice->setRefPicList     ( tempRefPicLists, usedAsLongTerm, numPocTotalCurr, true ); 
 #if H_3D_ARP
-#if SHARP_ARP_REF_CHECK_F0105
     pcSlice->setARPStepNum(m_ivPicLists);
-#else
-    pcSlice->setARPStepNum();
-#endif
     if( pcSlice->getARPStepNum() > 1 )
     {
       // GT: This seems to be broken, not all nuh_layer_ids are necessarily present
@@ -1112,7 +1079,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     m_cTrQuant.setUseScalingList(false);
   }
 
-#if QC_DEPTH_IV_MRG_F0125
+#if H_3D_IV_MERGE
   if( pcSlice->getIsDepth() && m_pcCamParsCollector )
   {
     m_pcCamParsCollector->copyCamParamForSlice( pcSlice );
@@ -1126,14 +1093,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     m_pcCamParsCollector->setSlice( pcSlice );
   }
-#if QC_DEPTH_IV_MRG_F0125
-  if( pcSlice->getIsDepth() )
-  {
-#if !CAM_HLS_F0136_F0045_F0082
-    pcSlice->getSPS()->setHasCamParInSliceHeader( false );
-#endif
-  }
-#endif
 #endif
   m_bFirstSliceInPicture = false;
   m_uiSliceIdx++;
@@ -1173,14 +1132,14 @@ Void TDecTop::xDecodePPS()
 #if H_MV
   pps->setLayerId( getLayerId() ); 
 #endif
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   // Assuming that all PPS indirectly refer to the same VPS via different SPS
   // There is no parsing dependency in decoding DLT in PPS. 
   // The VPS information passed to decodePPS() is used to arrange the decoded DLT tables to their corresponding layers. 
   // This is equivalent to the process of 
   //   Step 1) decoding DLT tables based on the number of depth layers, and
   //   Step 2) mapping DLT tables to the depth layers
-  // as descripted in the 3D-HEVC WD. 
+  // as described in the 3D-HEVC WD. 
   TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 );
   m_cEntropyDecoder.decodePPS( pps, vps );
 #else
@@ -1225,11 +1184,7 @@ Void TDecTop::xDecodeSEI( TComInputBitstream* bs, const NalUnitType nalUnitType 
 }
 
 #if H_MV
-#if H_MV_FIX_SKIP_PICTURES
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag )
-#else
-Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayerFlag)
-#endif
 #else
 Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 #endif
@@ -1274,11 +1229,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_RASL_R:
 #if H_MV
-#if H_MV_FIX_SKIP_PICTURES
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag, sliceSkippedFlag );
-#else
-      return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag);
-#endif
 #else
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
 #endif
@@ -1327,7 +1278,7 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     iSkipFrame--;   // decrement the counter
     return true;
   }
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
   else if ( !m_layerInitilizedFlag[ m_layerId ] ) // start of random access point, m_pocRandomAccess has not been set yet.
 #else
   else if (m_pocRandomAccess == MAX_INT) // start of random access point, m_pocRandomAccess has not been set yet.
@@ -1339,7 +1290,7 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
         || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL )
     {
 
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
       if ( xAllRefLayersInitilized() )
       {
         m_layerInitilizedFlag[ m_layerId ] = true; 
@@ -1356,14 +1307,14 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     }
     else if ( m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP )
     {
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
       if ( xAllRefLayersInitilized() )
       {
         m_layerInitilizedFlag[ m_layerId ] = true; 
-      m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
-    }
-    else 
-    {
+        m_pocRandomAccess = -MAX_INT; // no need to skip the reordered pictures in IDR, they are decodable.
+      }
+      else 
+      {
         return true; 
       }
 #else
@@ -1372,7 +1323,7 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     }
     else 
     {
-#if H_MV_FIX_SKIP_PICTURES
+#if H_MV
       static Bool warningMessage[MAX_NUM_LAYERS];
       static Bool warningInitFlag = false;
       
@@ -1407,7 +1358,7 @@ Bool TDecTop::isRandomAccessSkipPicture(Int& iSkipFrame,  Int& iPOCLastDisplay)
     iPOCLastDisplay++;
     return true;
   }
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
   return !m_layerInitilizedFlag[ getLayerId() ]; 
 #else
   // if we reach here, then the picture is not skipped.
@@ -1454,7 +1405,7 @@ Void TDecTop::xResetPocInPicBuffer()
   }
 }
 
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
 Void TDecTop::xCeckNoClrasOutput()
 {
   // This part needs further testing! 

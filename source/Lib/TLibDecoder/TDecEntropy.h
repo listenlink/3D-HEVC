@@ -70,7 +70,7 @@ public:
 #else
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
 #endif
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   virtual Void  parsePPS                  ( TComPPS* pcPPS, TComVPS* pcVPS )                      = 0;
 #else
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
@@ -151,7 +151,7 @@ public:
 #else
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
 #endif
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void    decodePPS                   ( TComPPS* pcPPS, TComVPS* pcVPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS, pcVPS);                    }
 #else
   Void    decodePPS                   ( TComPPS* pcPPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }

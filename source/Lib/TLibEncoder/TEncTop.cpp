@@ -298,7 +298,7 @@ Void TEncTop::init(Bool isFieldCoding)
 #endif
 {
   // initialize SPS
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   // Assuming that all PPS indirectly refer to the same VPS via different SPS
   m_cSPS.setVPS(m_cVPS);
 #endif
@@ -722,19 +722,13 @@ Void TEncTop::xInitSPS()
    * that chooses the actual compatibility based upon options */
 
 #if H_MV  
-#if H_MV_6_PS_REP_FORM_18_19_20
   m_cSPS.setUpdateRepFormatFlag           ( false );    
-#else
-  m_cSPS.setUpdateRepFormatFlag           ( m_layerId == 0 );    
-#endif
   m_cSPS.setSpsInferScalingListFlag       ( m_layerId > 0 && m_cVPS->getInDirectDependencyFlag( getLayerIdInVps(), 0 ) ); 
   m_cSPS.setSpsScalingListRefLayerId      ( 0              ); 
-#if H_MV_6_PSEM_O0142_3
   m_cSPS.setSpsExtensionFlag              ( true ); 
   m_cSPS.setSpsExtensionTypeFlag          ( PS_EX_T_MV ,true ); 
 #if H_3D
   m_cSPS.setSpsExtensionTypeFlag          ( PS_EX_T_3D ,true ); 
-#endif
 #endif
 #endif
   m_cSPS.setPicWidthInLumaSamples         ( m_iSourceWidth      );
@@ -822,10 +816,10 @@ Void TEncTop::xInitSPS()
     pcVUI->setSarHeight(getSarHeight());
     pcVUI->setOverscanInfoPresentFlag(getOverscanInfoPresentFlag());
     pcVUI->setOverscanAppropriateFlag(getOverscanAppropriateFlag());
-#if H_MV_6_PS_O0118_33
+#if H_MV
     pcVUI->setVideoSignalTypePresentFlag(getVideoSignalTypePresentFlag() && getLayerId() == 0 );
 #else
-    pcVUI->setVideoSignalTypePresentFlag(getVideoSignalTypePresentFlag());
+   pcVUI->setVideoSignalTypePresentFlag(getVideoSignalTypePresentFlag());
 #endif
     pcVUI->setVideoFormat(getVideoFormat());
     pcVUI->setVideoFullRangeFlag(getVideoFullRangeFlag());
@@ -852,16 +846,6 @@ Void TEncTop::xInitSPS()
     pcVUI->setLog2MaxMvLengthHorizontal(getLog2MaxMvLengthHorizontal());
     pcVUI->setLog2MaxMvLengthVertical(getLog2MaxMvLengthVertical());
   }
-#if H_3D
-#if !CAM_HLS_F0136_F0045_F0082
-#if !QC_DEPTH_IV_MRG_F0125
-  if ( !m_isDepth )
-#endif
-  {
-    m_cSPS.initCamParaSPS           ( m_viewIndex, m_uiCamParPrecision, m_bCamParInSliceHeader, m_aaiCodedScale, m_aaiCodedOffset );
-  }
-#endif
-#endif
 }
 
 Void TEncTop::xInitPPS()
@@ -876,7 +860,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setSPSId( getLayerIdInVps() );
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   m_cPPS.setDLT( getDLT() );
 #endif
 
@@ -947,11 +931,7 @@ Void TEncTop::xInitPPS()
   m_cPPS.setWPBiPred( m_useWeightedBiPred );
   m_cPPS.setOutputFlagPresentFlag( false );
 #if H_MV
-#if H_MV_6_RALS_O0149_11
   m_cPPS.setNumExtraSliceHeaderBits( 3 ); 
-#else
-  m_cPPS.setNumExtraSliceHeaderBits( 2 ); 
-#endif
 #endif
   m_cPPS.setSignHideFlag(getSignHideFlag());
   if ( getDeblockingFilterMetric() )
@@ -1011,11 +991,7 @@ Void TEncTop::xInitPPS()
     }
   }
 #if H_3D
-#if CAM_HLS_F0136_F0045_F0082
   if( m_cVPS->hasCamParInSliceHeader( getViewIndex() ) )
-#else
-  if( m_cSPS.hasCamParInSliceHeader() )
-#endif
   {
     m_cPPS.setSliceHeaderExtensionPresentFlag( true ); 
   }

@@ -572,11 +572,7 @@ Int  g_eTTable[4] = {0,3,1,2};
 
 #if H_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
-#if H_MV_FIX_TRACE_FILE
 Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
-#else
-Void writeToTraceFile( Char* symbolName, Int val, Bool doIt )
-#endif
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
@@ -591,11 +587,7 @@ Void writeToTraceFile( Char* symbolName, Int val, Bool doIt )
   }
 }
 
-#if H_MV_FIX_TRACE_FILE
 Void writeToTraceFile( const Char* symbolName, Bool doIt )
-#else
-Void writeToTraceFile( Char* symbolName, Bool doIt )
-#endif
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 
   {
@@ -611,9 +603,6 @@ Void writeToTraceFile( Char* symbolName, Bool doIt )
 std::vector< std::vector<TComWedgelet>  > g_dmmWedgeLists;
 std::vector< std::vector<TComWedgeRef>  > g_dmmWedgeRefLists;
 std::vector< std::vector<TComWedgeNode> > g_dmmWedgeNodeLists;
-#if !SEC_DMM3_RBC_F0147
-std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
-#endif
 
 Void initWedgeLists( Bool initNodeList )
 {
@@ -732,24 +721,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     }
   }
 
-#if !SEC_DMM3_RBC_F0147
-  UInt uiThrSz = DMM3_SIMPLIFY_TR;
-  std::vector< std::vector<UInt> > auiWdgListSz;
-  for( Int idxM=2; idxM<=34 ; idxM++)
-  {
-    std::vector<UInt> auiWdgList;
-    for( Int idxW=0; idxW<racWedgeList.size(); idxW++)
-    {
-      UInt uiAbsDiff = abs(idxM-(Int)racWedgeList[idxW].getAng());
-      if( uiAbsDiff <= uiThrSz )
-      {
-        auiWdgList.push_back(idxW);
-      }
-    }
-    auiWdgListSz.push_back(auiWdgList);
-  }
-  g_aauiWdgLstM3.push_back(auiWdgListSz);
-#endif
+
 }
 
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList )

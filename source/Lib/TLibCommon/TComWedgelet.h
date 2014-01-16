@@ -49,25 +49,12 @@
 
 enum DIM_IDX
 {
-#if SEC_DMM3_RBC_F0147
   DMM1_IDX = 0,
   DMM4_IDX = 1,
-#else
-  DMM1_IDX = 0,
-  DMM3_IDX = 1,
-  DMM4_IDX = 2,
-  RBC_IDX  = 3
-#endif
 };
 
-#if SEC_DMM3_RBC_F0147
 #define DMM_NUM_TYPE   2
 #define DIM_NUM_TYPE   (DMM_NUM_TYPE)
-#else
-#define DMM_NUM_TYPE   3
-#define RBC_NUM_TYPE   1
-#define DIM_NUM_TYPE   (DMM_NUM_TYPE+RBC_NUM_TYPE)
-#endif
 #define DIM_NO_IDX     MAX_UINT
 
 __inline UInt getDimType  ( Int intraMode ) { Int dimType = (intraMode-DIM_OFFSET)/2; return (dimType >= 0 && dimType < DIM_NUM_TYPE) ? (UInt)dimType : DIM_NO_IDX; }
@@ -75,18 +62,9 @@ __inline Bool isDimMode   ( Int intraMode ) { return (getDimType( intraMode ) < 
 __inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && ((intraMode-DIM_OFFSET)%2) == 1); }
 #endif
 
-#if H_3D_DIM_RBC
-#define RBC_THRESHOLD              20
-#define RBC_MAX_EDGE_NUM_PER_4x4   8
-#define RBC_MAX_DISTANCE           255
-#endif
-
 #if H_3D_DIM_DMM
 #define DMM_NO_WEDGEINDEX       MAX_UINT
 #define DMM_NUM_WEDGE_REFINES   8
-#if !SEC_DMM3_RBC_F0147
-#define DMM3_SIMPLIFY_TR        1
-#endif
 
 enum WedgeResolution
 {

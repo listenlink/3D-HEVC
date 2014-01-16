@@ -171,9 +171,6 @@ extern const UChar                                           g_dmm3IntraTabIdxBi
 extern       std::vector< std::vector<TComWedgelet> >        g_dmmWedgeLists;
 extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
 extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
-#if !SEC_DMM3_RBC_F0147
-extern       std::vector< std::vector< std::vector<UInt> > > g_aauiWdgLstM3;
-#endif
 
 Void initWedgeLists( Bool initNodeList = false );
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
@@ -235,13 +232,8 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
 
 
-#if H_MV_FIX_TRACE_FILE
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
-#else
- Void           writeToTraceFile( Char* symbolName, Int val, Bool doIt );
- Void           writeToTraceFile( Char* symbolName, Bool doIt );
-#endif
 #endif
 #else
 
