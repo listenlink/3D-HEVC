@@ -77,21 +77,11 @@ public:
   Void  parseVPS            ( TComVPS* pcVPS );
 #if H_MV
   Void  parseVPSExtension   ( TComVPS* pcVPS ); 
-#if H_MV_6_PS_REP_FORM_18_19_20
   Void  parseRepFormat      ( Int i, TComRepFormat* curRepFormat, TComRepFormat* prevRepFormat );
-#else
-  Void  parseRepFormat      ( TComRepFormat* pcRepFormat );
-#endif
   Void  parseVPSVUI         ( TComVPS* pcVPS );
-#if H_MV_6_PS_O0118_33
   Void parseVideoSignalInfo ( TComVideoSignalInfo* pcVideoSignalInfo ); 
-#endif
-#if H_MV_6_HRD_O0217_13
   Void  parseDpbSize        ( TComVPS* pcVPS ); 
-#endif
-#if H_MV_6_HRD_O0164_15
   Void parseVpsVuiBspHrdParameters( TComVPS* pcVPS ); 
-#endif
 #endif
 
 #if H_MV
@@ -105,7 +95,7 @@ public:
   Void  parseSPS            ( TComSPS* pcSPS );
 #endif
 
-#if H_3D && DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void  parsePPS            ( TComPPS* pcPPS, TComVPS* pcVPS );
   Void  parsePPSExtension   ( TComPPS* pcPPS, TComVPS* pcVPS );
 #else

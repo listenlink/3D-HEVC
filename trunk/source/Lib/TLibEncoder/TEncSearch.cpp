@@ -1123,32 +1123,24 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
       else
       {
 #endif
-      for( UInt uiX = 0; uiX < uiWidth; uiX++ )
-      {
-#if LGE_PRED_RES_CODING_DLT_DOMAIN_F0159
-#if DLT_DIFF_CODING_IN_PPS
-        if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
-#else
-        if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
-#endif
+        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+        {
+#if H_3D_DIM
+          if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
           {
-#if DLT_DIFF_CODING_IN_PPS
             pResi[ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pOrg[ uiX ] ) - pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] );
-#else
-            pResi[ uiX ] = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pOrg[ uiX ] ) - pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] );
-#endif
           }
           else
           {
-              pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
+            pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
           }
 #else
-        pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
+          pResi[ uiX ] = pOrg[ uiX ] - pPred[ uiX ];
 #endif
-      }
-      pOrg  += uiStride;
-      pResi += uiStride;
-      pPred += uiStride;
+        }
+        pOrg  += uiStride;
+        pResi += uiStride;
+        pPred += uiStride;
 #if H_3D_DIM_ENC
       }
 #endif
@@ -1208,23 +1200,15 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
     {
       for( UInt uiX = 0; uiX < uiWidth; uiX++ )
       {
-#if LGE_PRED_RES_CODING_DLT_DOMAIN_F0159
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D_DIM
         if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
-#else
-        if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
-#endif
-          {
-#if DLT_DIFF_CODING_IN_PPS
-            pReco    [ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
-#else
-            pReco    [ uiX ] = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getVPS()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
-#endif
-          }
-          else
-          {
-              pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
-          }
+        {
+          pReco    [ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
+        }
+        else
+        {
+          pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
+        }
 #else
         pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
 #endif
@@ -1950,11 +1934,7 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     
     // get residual (idx)
 #if H_3D_DIM_DLT
-#if DLT_DIFF_CODING_IN_PPS
     Pel pResidualIdx = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pDCRec ) - pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
-#else
-    Pel pResidualIdx = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pDCRec ) - pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
-#endif
 #else
     Pel pResidualIdx = pDCRec - apDCPredValues[uiSegment];
 #endif
@@ -1968,15 +1948,9 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
   {
 #if H_3D_DIM_DLT
-#if DLT_DIFF_CODING_IN_PPS
     Pel   pPredIdx    = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
     Pel   pResiIdx    = pcCU->getSDCSegmentDCOffset(uiSegment, uiAbsPartIdx);
     Pel   pRecoValue  = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pPredIdx + pResiIdx );
-#else
-    Pel   pPredIdx    = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
-    Pel   pResiIdx    = pcCU->getSDCSegmentDCOffset(uiSegment, uiAbsPartIdx);
-    Pel   pRecoValue  = pcCU->getSlice()->getVPS()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pPredIdx + pResiIdx );
-#endif
 
     apDCResiValues[uiSegment]  = pRecoValue - apDCPredValues[uiSegment];
 #else
@@ -2923,25 +2897,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType,  uiPartOffset, uiDepth + uiInitTrDepth );
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
             } break;
-#if !SEC_DMM3_RBC_F0147
-          case( DMM3_IDX ):
-            {
 
-              TComPic*      pcPicTex = pcCU->getSlice()->getTexturePic();
-              TComDataCU* pcColTexCU = pcPicTex->getCU( pcCU->getAddr() );
-              UInt      uiTexPartIdx = pcCU->getZorderIdxInCU() + uiPartOffset;
-              Int   uiColTexIntraDir = pcColTexCU->isIntra( uiTexPartIdx ) ? pcColTexCU->getLumaIntraDir( uiTexPartIdx ) : 255;
-
-              if( uiColTexIntraDir > DC_IDX && uiColTexIntraDir < 35 )
-              {
-             UInt uiIntraTabIdx = 0;
-              xSearchDmm3Wedge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight, uiTabIdx, uiIntraTabIdx, uiColTexIntraDir );
-              pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType, uiPartOffset, uiDepth + uiInitTrDepth );
-              pcCU->setDmm3IntraTabIdxSubParts( uiIntraTabIdx, uiPartOffset, uiDepth + uiInitTrDepth );
-              biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
-              }
-            } break;
-#endif
           case( DMM4_IDX ):
             {
               if( uiWidth > 4 )
@@ -2964,29 +2920,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
             if( DMM4_IDX == dmmType ) { biSegmentation->destroy(); delete biSegmentation; }
           }
-        }
-      }
-#endif
-#if H_3D_DIM_RBC
-      if( m_pcEncCfg->getUseRBC()
-#if H_3D_FAST_DEPTH_INTRA
-          && (uiRdModeList[0] != PLANAR_IDX || varCU >= varThreshold)
-#endif
-        )
-      {
-        if( xSearchRbcEdge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight ) )
-        {
-          Pel deltaDC1 = 0; Pel deltaDC2 = 0;
-#if QC_DIM_DELTADC_UNIFY_F0132
-          xSearchDmmDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, pcCU->getEdgePartition( uiPartOffset ), uiWidth, uiWidth, uiHeight, deltaDC1, deltaDC2 );
-#else
-          xSearchRbcDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, pcCU->getEdgePartition( uiPartOffset ), uiWidth, uiWidth, uiHeight, deltaDC1, deltaDC2 );
-#endif
-          pcCU->setDimDeltaDC( RBC_IDX, 0, uiPartOffset, deltaDC1 );
-          pcCU->setDimDeltaDC( RBC_IDX, 1, uiPartOffset, deltaDC2 );
-
-          uiRdModeList[ numModesForFullRD++ ] = (2*RBC_IDX  +DIM_OFFSET);
-          uiRdModeList[ numModesForFullRD++ ] = (2*RBC_IDX+1+DIM_OFFSET);
         }
       }
 #endif
@@ -3028,11 +2961,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if H_3D_DIM_ENC || H_3D_DIM_SDC
       Bool bTestZeroResi = false;
 #if H_3D_DIM_ENC
-#if LGE_BUGFIX_F0158
       bTestZeroResi |= pcCU->getSlice()->getIsDepth() && !pcCU->getSlice()->isIRAP();
-#else
-      bTestZeroResi |= pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->isIRAP();
-#endif
 #endif
 #if H_3D_DIM_SDC
       bTestZeroResi |= pcCU->getSDCFlag(uiPartOffset);
@@ -3641,7 +3570,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                  , Int* vspFlag
                                  , InheritedVSPDisInfo*  inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                                  , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
                                  , Int& numValidMergeCand
@@ -3659,7 +3588,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
     if ( iPUIdx == 0 )
     {
-#if ETRIKHU_MERGE_REUSE_F0093
+#if H_3D
       pcCU->initAvailableFlags();
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
       pcCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
@@ -3667,26 +3596,20 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                         , vspFlag
                                         , inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                                         , pbSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
                                         , numValidMergeCand
         );
 #else
-      pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
-#if H_3D_VSP
-                                   , vspFlag
-                                   , inheritedVSPDisInfo
-#endif
-                                   , numValidMergeCand
-                                   );
+      pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
 #endif
     }
     pcCU->setPartSizeSubParts( partSize, 0, uiDepth );
   }
   else
   {
-#if ETRIKHU_MERGE_REUSE_F0093
+#if H_3D
     pcCU->initAvailableFlags();
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
     pcCU->xGetInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
@@ -3694,18 +3617,13 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                       , vspFlag
                                       , inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                                       , pbSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif
                                       , numValidMergeCand
       );
 #else
-    pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
-#if H_3D_VSP
-                                 , vspFlag
-                                 , inheritedVSPDisInfo
-#endif
-                                 , numValidMergeCand
+    pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand
                                  );
 #endif
   }
@@ -3725,7 +3643,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       
       PartSize ePartSize = pcCU->getPartitionSize( 0 );
 
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       pcCU->setSPIVMPFlagSubParts( pbSPIVMPFlag[uiMergeCand], uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx )); 
       if (pbSPIVMPFlag[uiMergeCand])
       {
@@ -3747,7 +3665,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
         pcCU->getCUMvField(REF_PIC_LIST_0)->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
         pcCU->getCUMvField(REF_PIC_LIST_1)->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], ePartSize, uiAbsPartIdx, 0, iPUIdx );
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       }
 #endif
 
@@ -4426,7 +4344,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       pcCU->getPartIndexAndSize( iPartIdx, uiAbsPartIdx, iWidth, iHeight );
       DisInfo OriginalDvInfo = pcCU->getDvInfo(uiAbsPartIdx);
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
       Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
       memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
       TComMvField*  pcMvFieldSP;
@@ -4439,7 +4357,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
                       , vspFlag
                       , inheritedVSPDisInfo
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
                       , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
 #endif 
                       , numValidMergeCand
@@ -4453,7 +4371,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         pcCU->setVSPFlagSubParts( vspFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
         pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMRGIndex].m_acDvInfo, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );  
         if (bSPIVMPFlag[uiMRGIndex]!=0)
         {
@@ -4487,7 +4405,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
             pcCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMRGMvField[0], ePartSize, uiPartAddr, 0, iPartIdx );
             pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMRGMvField[1], ePartSize, uiPartAddr, 0, iPartIdx );
           }
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         }
 #endif
 
@@ -4501,7 +4419,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       }
       else
       {
-#if MTK_SPIVMP_F0110        
+#if H_3D_SPIVMP        
         pcCU->setSPIVMPFlagSubParts(0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) ); 
 #endif
         // set ME result
@@ -4516,14 +4434,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
           pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMEMvField[1], ePartSize, uiPartAddr, 0, iPartIdx );
         }
       }
-#if MTK_SPIVMP_F0110
-#if MTK_F0110_FIX
+#if H_3D_SPIVMP
       delete[] pcMvFieldSP;
       delete[] puhInterDirSP;
-#else
-      delete pcMvFieldSP;
-      delete puhInterDirSP;
-#endif
 #endif
     }
 
@@ -5437,7 +5350,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     {  
       dZeroCost = dCost + 1;
     }
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
     if ( dZeroCost < dCost || pcCU->getQtRootCbf(0)==0)
 #else
     if ( dZeroCost < dCost )
@@ -7371,13 +7284,8 @@ Void TEncSearch::xSearchDmmDeltaDCs( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piO
 #endif
 
 #if H_3D_DIM_DLT
-#if DLT_DIFF_CODING_IN_PPS
   rDeltaDC1 = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), ClipY(predDC1 + rDeltaDC1) ) - pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 );
   rDeltaDC2 = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), ClipY(predDC2 + rDeltaDC2) ) - pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC2 );
-#else
-  rDeltaDC1 = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), ClipY(predDC1 + rDeltaDC1) ) - pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 );
-  rDeltaDC2 = pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), ClipY(predDC2 + rDeltaDC2) ) - pcCU->getSlice()->getVPS()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC2 );
-#endif
 #endif
 }
 
@@ -7476,1032 +7384,8 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   return;
 }
 
-#if !SEC_DMM3_RBC_F0147
-Void TEncSearch::xSearchDmm3Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx, UInt& ruiIntraTabIdx, UInt colTexIntraDir )
-{
-  ruiTabIdx       = 0;
-  ruiIntraTabIdx  = 0;
 
-  // local pred buffer
-  TComYuv cPredYuv; 
-  cPredYuv.create( uiWidth, uiHeight ); 
-  cPredYuv.clear();
-  Pel* piPred = cPredYuv.getLumaAddr();
-  UInt uiPredStride = cPredYuv.getStride();
-
-  // wedge search
-  UInt uiBestDist = MAX_UINT;
-  WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
-  Pel refDC1 = 0; Pel refDC2 = 0;
-
-  std::vector< std::vector<UInt> > pauiWdgLstSz = g_aauiWdgLstM3[g_aucConvertToBit[uiWidth]];
-  std::vector<UInt>* pauiWdgLst = &pauiWdgLstSz[colTexIntraDir-2];
-  for( UInt uiIdxW = 0; uiIdxW < pauiWdgLst->size(); uiIdxW++ )
-  {
-    UInt uiIdx     =   pauiWdgLst->at(uiIdxW);
-    TComWedgelet* pcWedgelet = &(pacWedgeList->at(uiIdx));
-    xCalcBiSegDCs  ( piRef,  uiRefStride,  pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
-    xAssignBiSegDCs( piPred, uiPredStride, pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
-
-    UInt uiActDist = m_pcRdCost->getDistPart( g_bitDepthY, piPred, uiPredStride, piRef, uiRefStride, uiWidth, uiHeight, TEXT_LUMA, DF_SAD );
-    if( uiActDist < uiBestDist || uiBestDist == MAX_UINT )
-    {
-      uiBestDist     = uiActDist;
-      ruiTabIdx      = uiIdx;
-      ruiIntraTabIdx = uiIdxW;
-    }
-  }
-  cPredYuv.destroy();
-}
-#endif
-#endif
-#if H_3D_DIM_RBC
-Void TEncSearch::xSearchRbcDeltaDCs( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 )
-{
-  assert( biSegPattern );
-  Pel origDC1 = 0; Pel origDC2 = 0;
-  xCalcBiSegDCs  ( piOrig,   uiStride, biSegPattern, patternStride, origDC1, origDC2 );
-  xAssignBiSegDCs( piPredic, uiStride, biSegPattern, patternStride, origDC1, origDC2 );
-
-  Int* piMask = pcCU->getPattern()->getAdiOrgBuf( uiWidth, uiHeight, m_piYuvExt ); // no filtering for DMM
-  Int  maskStride = 2*uiWidth + 1;
-  Int* ptrSrc = piMask+maskStride+1;
-  Pel  predDC1 = 0; Pel predDC2 = 0;
-  xPredBiSegDCs( ptrSrc, maskStride, biSegPattern, patternStride, predDC1, predDC2 );
-
-  rDeltaDC1 = origDC1 - predDC1;
-  rDeltaDC2 = origDC2 - predDC2;
-
-#if H_3D_VSO
-  if( m_pcRdCost->getUseVSO() )
-  {
-    Pel fullDeltaDC1 = rDeltaDC1;
-    Pel fullDeltaDC2 = rDeltaDC2;
-
-    xDeltaDCQuantScaleDown( pcCU, fullDeltaDC1 );
-    xDeltaDCQuantScaleDown( pcCU, fullDeltaDC2 );
-
-    Dist uiBestDist     = RDO_DIST_MAX;
-    UInt uiBestQStepDC1 = 0;
-    UInt uiBestQStepDC2 = 0;
-
-    UInt uiDeltaDC1Max = abs(fullDeltaDC1);
-    UInt uiDeltaDC2Max = abs(fullDeltaDC2);
-
-    //VSO Level delta DC check range extension
-    uiDeltaDC1Max += (uiDeltaDC1Max>>1);
-    uiDeltaDC2Max += (uiDeltaDC2Max>>1);
-
-    for( UInt uiQStepDC1 = 1; uiQStepDC1 <= uiDeltaDC1Max; uiQStepDC1++  )
-    {
-      Pel iLevelDeltaDC1 = (Pel)(uiQStepDC1) * (Pel)(( fullDeltaDC1 < 0 ) ? -1 : 1);
-      xDeltaDCQuantScaleUp( pcCU, iLevelDeltaDC1 );
-      Pel testDC1 = ClipY( predDC1 + iLevelDeltaDC1 );
-
-      for( UInt uiQStepDC2 = 1; uiQStepDC2 <= uiDeltaDC2Max; uiQStepDC2++  )
-      {
-        Pel iLevelDeltaDC2 = (Pel)(uiQStepDC2) * (Pel)(( fullDeltaDC2 < 0 ) ? -1 : 1);
-        xDeltaDCQuantScaleUp( pcCU, iLevelDeltaDC2 );
-        Pel testDC2 = ClipY( predDC2 + iLevelDeltaDC2 );
-
-        xAssignBiSegDCs( piPredic, uiStride, biSegPattern, patternStride, testDC1, testDC2 );
-
-        Dist uiActDist = RDO_DIST_MAX;
-        if( m_pcRdCost->getUseEstimatedVSD() )
-        {
-          uiActDist = m_pcRdCost->getDistPartVSD( pcCU, uiAbsPtIdx, piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false );
-        }
-        else
-        {
-          uiActDist = m_pcRdCost->getDistPartVSO( pcCU, uiAbsPtIdx, piPredic, uiStride, piOrig, uiStride, uiWidth, uiHeight, false );
-        }
-
-        if( uiActDist < uiBestDist || uiBestDist == RDO_DIST_MAX )
-        {
-          uiBestDist     = uiActDist;
-          uiBestQStepDC1 = uiQStepDC1;
-          uiBestQStepDC2 = uiQStepDC2;
-        }
-      }
-    }
-
-    fullDeltaDC1 = (Int)(uiBestQStepDC1) * (Int)(( fullDeltaDC1 < 0 ) ? -1 : 1);
-    fullDeltaDC2 = (Int)(uiBestQStepDC2) * (Int)(( fullDeltaDC2 < 0 ) ? -1 : 1);
-    xDeltaDCQuantScaleUp( pcCU, fullDeltaDC1 );
-    xDeltaDCQuantScaleUp( pcCU, fullDeltaDC2 );
-    rDeltaDC1 = fullDeltaDC1;
-    rDeltaDC2 = fullDeltaDC2;
-  }
 #endif
 
-  xDeltaDCQuantScaleDown( pcCU, rDeltaDC1 );
-  xDeltaDCQuantScaleDown( pcCU, rDeltaDC2 );
-}
-
-Bool TEncSearch::xSearchRbcEdge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, Int iWidth, Int iHeight )
-{
-  Bool* pbEdge  = (Bool*) xMalloc( Bool, iWidth * iHeight * 4 );
-
-  Short* psDiffX = new Short[ iWidth * iHeight ];
-  Short* psDiffY = new Short[ iWidth * iHeight ];
-  Bool*  pbEdgeX = new Bool [ iWidth * iHeight ];
-  Bool*  pbEdgeY = new Bool [ iWidth * iHeight ];
-
-  // Find Horizontal Gradient & Edge Detection ((x+1, y) - (x,y))
-  for( Int y=0; y<iHeight; y++ )
-  {
-    Short* psDiffXPtr = &psDiffX[ y * iHeight ];
-    Bool*  pbEdgeXPtr = &pbEdgeX[ y * iHeight ];
-    for(Int x=0; x<iWidth-1; x++ )
-    {
-      *psDiffXPtr = piRef[ x+1 + y*uiRefStride ] - piRef[ x + y*uiRefStride ];
-      if(*psDiffXPtr >= RBC_THRESHOLD || *psDiffXPtr <= (-1)*RBC_THRESHOLD)
-      {
-        *pbEdgeXPtr = true;
-      }
-      else
-      {
-        *pbEdgeXPtr = false;
-      }
-
-      psDiffXPtr++;
-      pbEdgeXPtr++;
-    }
-  }
-
-  // Find Vertical Gradient & Edge Detection((x,y+1) - (x,y))
-  for( Int y=0; y<iHeight-1; y++ )
-  {
-    Short* psDiffYPtr = &psDiffY[ y * iHeight ];
-    Bool*  pbEdgeYPtr = &pbEdgeY[ y * iHeight ];
-    for(Int x=0; x<iWidth; x++ )
-    {
-      *psDiffYPtr = piRef[ x + (y+1)*uiRefStride ] - piRef[ x + y*uiRefStride ];
-      if(*psDiffYPtr >= RBC_THRESHOLD || *psDiffYPtr <= (-1)*RBC_THRESHOLD)
-      {
-        *pbEdgeYPtr = true;
-      }
-      else
-      {
-        *pbEdgeYPtr = false;
-      }
-
-      psDiffYPtr++;
-      pbEdgeYPtr++;
-    }
-  }
-
-  // Eliminate local maximum
-  for( Int y=0; y<iHeight; y++ )
-  {
-    Short* psDiffXPtr = &psDiffX[ y * iHeight ];
-    Bool*  pbEdgeXPtr = &pbEdgeX[ y * iHeight ];
-    for( Int x=0; x<iWidth-1; x++ )
-    {
-      UShort usAbs0=0, usAbs1=0, usAbs2=0;  // 0 : left, 1 : current, 2 : right
-
-      if( x > 0 && *(pbEdgeXPtr-1) == true )
-      {
-        if( *(psDiffXPtr-1) >= 0)
-        {
-          usAbs0 = *(psDiffXPtr-1);
-
-        }
-        else
-        {
-          usAbs0 = (-1) * *(psDiffXPtr-1);
-        }
-      }
-      if( *pbEdgeXPtr == true )
-      {
-        if( *(psDiffXPtr) >= 0)
-        {
-          usAbs1 = *(psDiffXPtr);
-        }
-        else
-        {
-          usAbs1 = (-1) * *(psDiffXPtr);
-        }
-      }
-      if( x < iWidth-2 && *(pbEdgeXPtr+1) == true )
-      {
-        if( *(psDiffXPtr+1) >= 0)
-        {
-          usAbs2 = *(psDiffXPtr+1);
-          //bSign2 = true;
-        }
-        else
-        {
-          usAbs2 = (-1) * *(psDiffXPtr+1);
-        }
-      }
-
-      if( x == 0 )
-      {
-        if( usAbs1 < usAbs2 )
-        {
-          *pbEdgeXPtr = false;
-        }
-      }
-      else if( x == iWidth-2 )
-      {
-        if( usAbs1 <= usAbs0 )
-          *pbEdgeXPtr = false;
-      }
-      else
-      {
-        if( usAbs2 > usAbs0 )
-        {
-          if( usAbs1 < usAbs2 )
-            *pbEdgeXPtr = false;
-        }
-        else
-        {
-          if( usAbs1 <= usAbs0 )
-            *pbEdgeXPtr = false;
-        }
-      }
-
-      psDiffXPtr++;
-      pbEdgeXPtr++;
-    }
-  }
-
-  for( Int y=0; y<iHeight-1; y++ )
-  {
-    Short* psDiffYPtr = &psDiffY[ y * iWidth ];
-    Bool*  pbEdgeYPtr = &pbEdgeY[ y * iWidth ];
-    for( Int x=0; x<iWidth; x++ )
-    {
-      UShort usAbs0=0, usAbs1=0, usAbs2=0;  // 0 : upper, 1 : current, 2 : bottom
-      if( y > 0 && *(pbEdgeYPtr-iWidth) == true )
-      {
-        if( *(psDiffYPtr-iWidth) >= 0)
-        {
-          usAbs0 = *(psDiffYPtr-iWidth);
-        }
-        else
-        {
-          usAbs0 = (-1) * *(psDiffYPtr-iWidth);          
-        }
-      }
-      if( *pbEdgeYPtr == true )
-      {
-        if( *(psDiffYPtr) >= 0)
-        {
-          usAbs1 = *(psDiffYPtr);
-        }
-        else
-        {
-          usAbs1 = (-1) * *(psDiffYPtr);
-        }
-      }
-      if( y < iHeight-2 && *(pbEdgeYPtr+iWidth) == true )
-      {
-        if( *(psDiffYPtr+iWidth) >= 0)
-        {
-          usAbs2 = *(psDiffYPtr+iWidth);          
-        }
-        else
-        {
-          usAbs2 = (-1) * *(psDiffYPtr+iWidth);
-        }
-      }
-
-      if( y == 0 )
-      {
-        if( usAbs1 < usAbs2 )
-          *pbEdgeYPtr = false;
-      }
-      else if( y == iHeight-2 )
-      {
-        if( usAbs1 <= usAbs0 )
-          *pbEdgeYPtr = false;
-      }
-      else
-      {
-        if( usAbs2 > usAbs0 )
-        {
-          if( usAbs1 < usAbs2 )
-            *pbEdgeYPtr = false;
-        }
-        else
-        {
-          if( usAbs1 <= usAbs0 )
-            *pbEdgeYPtr = false;
-        }
-      }
-
-      psDiffYPtr++;
-      pbEdgeYPtr++;
-    }
-  }
-
-  // Edge Merging
-  for( Int i=0; i< 4 * iWidth * iHeight; i++ )
-    pbEdge[ i ] = false;
-  /// Even Line (0,2,4,6,...) => Vertical Edge
-  for( Int i=0; i<iHeight; i++)
-  {
-    for( Int j=0; j<iWidth-1; j++)
-    {
-      pbEdge[ (2 * j + 1) + (2 * i) * 2 * iWidth ] = pbEdgeX[ j + i * iHeight ];
-    }
-  }
-  /// Odd Line (1,3,5,7,...) => Horizontal Edge
-  for( Int i=0; i<iHeight-1; i++)
-  {
-    for( Int j=0; j<iWidth; j++)
-    {
-      pbEdge[ (2 * j) + (2 * i + 1) * 2 * iWidth ] = pbEdgeY[ j + i * iHeight ]; 
-    }
-  }
-
-  // Intersection Filling
-  /// Vertical Edge between Horizontal Edges
-  for( Int i = 1; i < 2 * iHeight - 3; i += 2)
-  {
-    for( Int j = 0; j < 2 * iWidth - 1; j += 2)
-    {
-      if( pbEdge[ j + i * 2 * iWidth ] )
-      {
-        if( j != 0 && pbEdge[ (j - 2) + ((i + 2) * 2 * iWidth) ] )
-        {
-          if( !pbEdge[ (j - 1) + ((i - 1) * 2 * iWidth) ] && !pbEdge[ (j - 1) + ((i + 3) * 2 * iWidth) ] )
-            pbEdge[ (j - 1) + ((i + 1) * 2 * iWidth) ] = true;
-        }
-        if( j != 2 * iWidth - 2 && pbEdge[ (j + 2) + ((i + 2) * 2 * iWidth) ] )
-        {
-          if( !pbEdge[ (j + 1) + ((i - 1) * 2 * iWidth) ] && !pbEdge[ (j + 1) + ((i + 3) * 2 * iWidth) ] )
-            pbEdge[ (j + 1) + ((i + 1) * 2 * iWidth) ] = true;
-        }
-      }
-    }
-  }
-  /// Horizontal Edge between Vertical Edges
-  for( Int j = 1; j < 2 * iWidth - 3; j += 2)
-  {
-    for( Int i = 0; i < 2 * iHeight - 1; i += 2)
-    {
-      if( pbEdge[ j + i * 2 * iWidth ] )
-      {
-        if( i != 0 && pbEdge[ (j + 2) + ((i - 2) * 2 * iWidth) ] )
-        {
-          if( !pbEdge[ (j - 1) + ((i - 1) * 2 * iWidth) ] && !pbEdge[ (j + 3) + ((i - 1) * 2 * iWidth) ] )
-            pbEdge[ (j + 1) + ((i - 1) * 2 * iWidth) ] = true;
-        }
-        if( i != 2 * iHeight - 2 && pbEdge[ (j + 2) + ((i + 2) * 2 * iWidth) ] )
-        {
-          if( !pbEdge[ (j - 1) + ((i + 1) * 2 * iWidth) ] && !pbEdge[ (j + 3) + ((i + 1) * 2 * iWidth) ] )
-            pbEdge[ (j + 1) + ((i + 1) * 2 * iWidth) ] = true;
-        }
-      }
-    }
-  }
-
-  // Static Pruning Unnecessary Edges
-  /// Step1. Stack push the unconnected edges
-  UShort* pusUnconnectedEdgeStack = new UShort[ 4 * iWidth * iHeight ]; // approximate size calculation
-  Int iUnconnectedEdgeStackPtr = 0;
-  //// Vertical Edges
-  for( Int i = 0; i < 2 * iHeight - 1; i += 2 )
-  {
-    for( Int j = 1; j < 2 * iWidth - 2; j += 2 )
-    {
-      if( pbEdge[ j + i * 2 * iWidth ] )
-      {
-        if( !xCheckTerminatedEdge( pbEdge, j, i, iWidth, iHeight ) )
-        {
-          pusUnconnectedEdgeStack[iUnconnectedEdgeStackPtr] = (i << 8) | (j);
-          iUnconnectedEdgeStackPtr++;
-        }
-      }
-    }
-  }
-
-  //// Horizontal Edges
-  for( Int i = 1; i < 2 * iHeight - 2; i += 2 )
-  {
-    for( Int j = 0; j < 2 * iWidth - 1; j += 2 )
-    {
-      if( pbEdge[ j + i * 2 * iWidth ] )
-      {
-        if( !xCheckTerminatedEdge( pbEdge, j, i, iWidth, iHeight ) )
-        {
-          pusUnconnectedEdgeStack[iUnconnectedEdgeStackPtr] = (i << 8) | (j);
-          iUnconnectedEdgeStackPtr++;
-        }
-      }
-    }
-  }
-
-  /// Step2. Remove the edges from the stack and push the new unconnected edges
-  //// (This step may contain duplicated edges already in the stack)
-  //// (But it doesn't cause any functional problems)
-  while( iUnconnectedEdgeStackPtr != 0 )
-  {
-    iUnconnectedEdgeStackPtr--;
-    Int iX = pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] & 0xff;
-    Int iY = pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] >> 8;
-
-    pbEdge[ iX + iY * 2 * iWidth ] = false;
-
-    if( iY % 2 == 1 && iX > 0 && pbEdge[ iX - 2 + iY * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX - 2, iY, iWidth, iHeight ) ) // left
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY + 0) << 8) | (iX - 2);
-      iUnconnectedEdgeStackPtr++;
-    }
-    if( iY % 2 == 1 && iX < 2 * iWidth - 2 && pbEdge[ iX + 2 + iY * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX + 2, iY, iWidth, iHeight ) ) // right
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY + 0) << 8) | (iX + 2);
-      iUnconnectedEdgeStackPtr++;
-    }
-    if( iY % 2 == 0 && iY > 0 && pbEdge[ iX + (iY - 2) * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX, iY - 2, iWidth, iHeight ) ) // top
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY - 2) << 8) | (iX + 0);
-      iUnconnectedEdgeStackPtr++;
-    }
-    if( iY % 2 == 0 && iY < 2 * iHeight - 2 && pbEdge[ iX + (iY + 2) * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX, iY + 2, iWidth, iHeight ) ) // bottom
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY + 2) << 8) | (iX + 0);
-      iUnconnectedEdgeStackPtr++;
-    }
-    if( iX > 0 && iY > 0 && pbEdge[ iX - 1 + (iY - 1) * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX - 1, iY - 1, iWidth, iHeight ) ) // left-top
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY - 1) << 8) | (iX - 1);
-      iUnconnectedEdgeStackPtr++;
-    }
-    if( iX < 2 * iWidth - 1 && iY > 0 && pbEdge[ iX + 1 + (iY - 1) * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX + 1, iY - 1, iWidth, iHeight ) ) // right-top
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY - 1) << 8) | (iX + 1);
-      iUnconnectedEdgeStackPtr++;
-    }
-    if( iX > 0 && iY < 2 * iHeight - 1 && pbEdge[ iX - 1 + (iY + 1) * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX - 1, iY + 1, iWidth, iHeight ) ) // left-bottom
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY + 1) << 8) | (iX - 1);
-      iUnconnectedEdgeStackPtr++;
-    }
-    if( iX < 2 * iWidth - 1 && iY < 2 * iHeight - 1 && pbEdge[ iX + 1 + (iY + 1) * 2 * iWidth ] &&
-      !xCheckTerminatedEdge( pbEdge, iX + 1, iY + 1, iWidth, iHeight ) ) // right-bottom
-    {
-      pusUnconnectedEdgeStack[ iUnconnectedEdgeStackPtr ] = ((iY + 1) << 8) | (iX + 1);
-      iUnconnectedEdgeStackPtr++;
-    }
-  }
-
-
-  // Region Generation ( edge -> region )
-  Bool* pbRegion = pcCU->getEdgePartition( uiAbsPtIdx );
-  Bool* pbVisit  = new Bool[ iWidth * iHeight ];
-
-  for( UInt ui = 0; ui < iWidth * iHeight; ui++ )
-  {
-    pbRegion[ ui ] = true; // fill it as region 1 (we'll discover region 0 next)
-    pbVisit [ ui ] = false;
-  }
-
-  Int* piStack = new Int[ iWidth * iHeight ];
-
-  Int iPtr = 0;
-
-  piStack[iPtr++] = (0 << 8) | (0);
-  pbRegion[ 0 ] = false;
-
-  while(iPtr > 0)
-  {
-    Int iTmp = piStack[--iPtr];
-    Int iX1, iY1;
-    iX1 = iTmp & 0xff;
-    iY1 = (iTmp >> 8) & 0xff;
-
-    pbVisit[ iX1 + iY1 * iWidth ] = true;
-
-    assert( iX1 >= 0 && iX1 < iWidth );
-    assert( iY1 >= 0 && iY1 < iHeight );
-
-    if( iX1 > 0 && !pbEdge[ 2 * iX1 - 1 + 4 * iY1 * iWidth ] && !pbVisit[ iX1 - 1 + iY1 * iWidth ] )
-    {
-      piStack[iPtr++] = (iY1 << 8) | (iX1 - 1);
-      pbRegion[ iX1 - 1 + iY1 * iWidth ] = false;
-    }
-    if( iX1 < iWidth - 1 && !pbEdge[ 2 * iX1 + 1 + 4 * iY1 * iWidth ] && !pbVisit[ iX1 + 1 + iY1 * iWidth ] )
-    {
-      piStack[iPtr++] = (iY1 << 8) | (iX1 + 1);
-      pbRegion[ iX1 + 1 + iY1 * iWidth ] = false;
-    }
-    if( iY1 > 0 && !pbEdge[ 2 * iX1 + 2 * (2 * iY1 - 1) * iWidth ] && !pbVisit[ iX1 + (iY1 - 1) * iWidth ] )
-    {
-      piStack[iPtr++] = ((iY1 - 1) << 8) | iX1;
-      pbRegion[ iX1 + (iY1 - 1) * iWidth ] = false;
-    }
-    if( iY1 < iHeight - 1 && !pbEdge[ 2 * iX1 + 2 * (2 * iY1 + 1) * iWidth ] && !pbVisit[ iX1 + (iY1 + 1) * iWidth ] )
-    {
-      piStack[iPtr++] = ((iY1 + 1) << 8) | iX1;
-      pbRegion[ iX1 + (iY1 + 1) * iWidth ] = false;
-    }
-  }
-
-  ///////////
-  iPtr = 0;
-  for( Int i = 0; i < iWidth * iHeight; i++ )
-    pbVisit[ i ] = false;
-  piStack[ iPtr++ ] = (0 << 8) | (0); // initial seed
-  while( iPtr > 0 && iPtr < iWidth * iHeight )
-  {
-    Int iX;
-    Int iY;
-    iPtr--;
-    iX = piStack[ iPtr ] & 0xff;
-    iY = piStack[ iPtr ] >> 8;
-    pbVisit[ iY * iWidth + iX ] = true;
-
-    if( iY > 0 && !pbVisit[ (iY - 1) * iWidth + iX ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ (iY - 1) * iWidth + iX ] )
-    {
-      piStack[ iPtr++ ] = ((iY - 1) << 8) | iX;
-    }
-    if( iY < iHeight - 1 && !pbVisit[ (iY + 1) * iWidth + iX ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ (iY + 1) * iWidth + iX ] )
-    {
-      piStack[ iPtr++ ] = ((iY + 1) << 8) | iX;
-    }
-    if( iX > 0 && !pbVisit[ iY * iWidth + (iX - 1) ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ iY * iWidth + (iX - 1) ] )
-    {
-      piStack[ iPtr++ ] = (iY << 8) | (iX - 1);
-    }
-    if( iX < iWidth - 1 && !pbVisit[ iY * iWidth + (iX + 1) ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ iY * iWidth + (iX + 1) ] )
-    {
-      piStack[ iPtr++ ] = (iY << 8) | (iX + 1);
-    }
-  }
-  assert( iPtr == 0 || iPtr == iWidth * iHeight );
-
-  Bool bBipartition;
-  if( iPtr == iWidth * iHeight )
-  {
-    bBipartition = false; // single partition
-  }
-  else
-  {
-    for( Int i = 0; i < iWidth * iHeight; i++ )
-    {
-      if( !pbVisit[ i ] )
-      {
-        piStack[ iPtr++ ] = (( i / iWidth ) << 8) | ( i % iWidth );
-        pbVisit[ i ] = true;
-        break;
-      }
-    }
-    while( iPtr > 0 )
-    {
-      Int iX;
-      Int iY;
-      iPtr--;
-      iX = piStack[ iPtr ] & 0xff;
-      iY = piStack[ iPtr ] >> 8;
-      pbVisit[ iY * iWidth + iX ] = true;
-
-      if( iY > 0 && !pbVisit[ (iY - 1) * iWidth + iX ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ (iY - 1) * iWidth + iX ] )
-      {
-        piStack[ iPtr++ ] = ((iY - 1) << 8) | iX;
-      }
-      if( iY < iHeight - 1 && !pbVisit[ (iY + 1) * iWidth + iX ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ (iY + 1) * iWidth + iX ] )
-      {
-        piStack[ iPtr++ ] = ((iY + 1) << 8) | iX;
-      }
-      if( iX > 0 && !pbVisit[ iY * iWidth + (iX - 1) ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ iY * iWidth + (iX - 1) ] )
-      {
-        piStack[ iPtr++ ] = (iY << 8) | (iX - 1);
-      }
-      if( iX < iWidth - 1 && !pbVisit[ iY * iWidth + (iX + 1) ] && pbRegion[ iY * iWidth + iX ] == pbRegion[ iY * iWidth + (iX + 1) ] )
-      {
-        piStack[ iPtr++ ] = (iY << 8) | (iX + 1);
-      }
-    }
-    bBipartition = true;
-    for( Int i = 0; i < iWidth * iHeight; i++ )
-    {
-      if( !pbVisit[ i ] )
-      {
-        bBipartition = false;
-        break;
-      }
-    }
-  }
-
-  xFree( pbEdge );
-  delete[] pbEdgeX; pbEdgeX = NULL;
-  delete[] pbEdgeY; pbEdgeY = NULL;
-  delete[] psDiffX; psDiffX = NULL;
-  delete[] psDiffY; psDiffY = NULL;
-  delete[] pusUnconnectedEdgeStack; pusUnconnectedEdgeStack = NULL;
-  delete[] pbVisit; pbVisit = NULL;
-  delete[] piStack; piStack = NULL;
-
-  if( bBipartition )
-  {
-    return xConstructChainCode( pcCU, uiAbsPtIdx, (UInt)iWidth, (UInt)iHeight );
-  }
-  else
-  {
-    return false;
-  }
-}
-
-Bool TEncSearch::xCheckTerminatedEdge( Bool* pbEdge, Int iX, Int iY, Int iWidth, Int iHeight )
-{
-  if( (iY % 2) == 0 ) // vertical edge
-  {
-    Bool bTopConnected = false;
-    Bool bBottomConnected = false;
-
-    if( iY != 0 )
-    {
-      if( pbEdge[ iX + (iY - 2) * 2 * iWidth ] )
-        bTopConnected = true;
-      if( pbEdge[ (iX - 1) + (iY - 1) * 2 * iWidth ] )
-        bTopConnected = true;
-      if( pbEdge[ (iX + 1) + (iY - 1) * 2 * iWidth ] )
-        bTopConnected = true;
-    }
-    else
-    {
-      bTopConnected = true;
-    }
-
-
-    if( iY != 2 * iHeight - 2 )
-    {
-      if( pbEdge[ iX + (iY + 2) * 2 * iWidth ] )
-        bBottomConnected = true;
-      if( pbEdge[ (iX - 1) + (iY + 1) * 2 * iWidth ] )
-        bBottomConnected = true;
-      if( pbEdge[ (iX + 1) + (iY + 1) * 2 * iWidth ] )
-        bBottomConnected = true;
-    }
-    else
-    {
-      bBottomConnected = true;
-    }
-
-
-    if( bTopConnected && bBottomConnected )
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  {
-    Bool bLeftConnected = false;
-    Bool bRightConnected = false;
-
-    if( iX != 0 )
-    {
-      if( pbEdge[ (iX - 2) + iY * 2 * iWidth ] )
-        bLeftConnected = true;
-      if( pbEdge[ (iX - 1) + (iY - 1) * 2 * iWidth ] )
-        bLeftConnected = true;
-      if( pbEdge[ (iX - 1) + (iY + 1) * 2 * iWidth ] )
-        bLeftConnected = true;
-    }
-    else
-    {
-      bLeftConnected = true;
-    }
-
-    if( iX != 2 * iWidth - 2 )
-    {
-      if( pbEdge[ (iX + 2) + iY * 2 * iWidth ] )
-        bRightConnected = true;
-      if( pbEdge[ (iX + 1) + (iY - 1) * 2 * iWidth ] )
-        bRightConnected = true;
-      if( pbEdge[ (iX + 1) + (iY + 1) * 2 * iWidth ] )
-        bRightConnected = true;
-    }
-    else
-    {
-      bRightConnected = true;
-    }
-
-
-    if( bLeftConnected && bRightConnected )
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  }
-}
-Bool TEncSearch::xConstructChainCode( TComDataCU* pcCU, UInt uiAbsPtIdx, UInt uiWidth, UInt uiHeight )
-{
-  //UInt   uiWidth    = pcCU->getWidth( uiPartIdx ) >> (bPU4x4 ? 1 : 0);
-  //UInt   uiHeight   = pcCU->getHeight( uiPartIdx ) >> (bPU4x4 ? 1 : 0);
-  Bool*  pbEdge     = (Bool*) xMalloc( Bool, uiWidth * uiHeight * 4 );
-  Bool*  pbVisit    = (Bool*) xMalloc( Bool, uiWidth * uiHeight * 4 );
-  UInt   uiMaxEdge  = uiWidth * (RBC_MAX_EDGE_NUM_PER_4x4 / 4);
-  Bool*  pbRegion   = pcCU->getEdgePartition( uiAbsPtIdx );
-  UChar* piEdgeCode = pcCU->getEdgeCode( uiAbsPtIdx );
-  Bool   bStartLeft = false;
-  Bool   bPossible  = false;
-  Bool   bFinish    = false;
-  Int    iStartPosition = -1;
-  Int    iPtr = 0;
-  Int    iDir = -1, iNextDir = -1;
-  Int    iArrow = -1, iNextArrow = -1;
-  Int    iX = -1, iY = -1;
-  Int    iDiffX = 0, iDiffY = 0;
-  UChar  iCode = 255;
-  UInt   uiWidth2 = uiWidth * 2;
-
-  for( Int i = 0; i < uiWidth * uiHeight * 4; i++ )
-    pbEdge[ i ] = false;
-
-  for( Int i = 0; i < uiHeight; i++ )
-  {
-    for( Int j = 0; j < uiWidth - 1; j++ )
-    {
-      if( pbRegion[ i * uiWidth + j ] != pbRegion[ i * uiWidth + j + 1 ] )
-        pbEdge[ i * uiWidth * 4 + j * 2 + 1 ] = true;
-    }
-  }
-
-  for( Int i = 0; i < uiHeight - 1; i++ )
-  {
-    for( Int j = 0; j < uiWidth; j++ )
-    {
-      if( pbRegion[ (i + 0) * uiWidth + j ] != pbRegion[ (i + 1) * uiWidth + j ] )
-        pbEdge[ (2 * i + 1) * 2 * uiWidth + j * 2 ] = true;
-    }
-  }
-
-  for( Int i = 1; i < uiWidth2 - 2; i+=2 )
-  {
-    if(pbEdge[ i ])
-    {
-      bPossible  = true;
-      bStartLeft = false;
-      iStartPosition = iX = i;
-      iY = 0;
-      iDir = 3;
-      iArrow = 3;
-      break;
-    }
-  }
-
-  if( !bPossible )
-  {
-    for( Int i = 1; i < uiWidth2 - 2; i+=2 )
-    {
-      if(pbEdge[ i * uiWidth2 ])
-      {
-        bPossible  = true;
-        bStartLeft = true;
-        iX = 0;
-        iStartPosition = iY = i;
-        iDir = 1;
-        iArrow = 1;
-        break;
-      }
-    }
-  }
-
-  if( bPossible )
-  {
-    for( Int i = 0; i < 4 * uiWidth * uiHeight; i++ )
-      pbVisit[ i ] = false;
-
-    while( !bFinish )
-    {
-      Bool bArrowSkip = false;
-      pbVisit[ iX + iY * uiWidth2 ] = true;
-
-      switch( iDir )
-      {
-      case 0: // left
-        if( iX > 0 && !pbVisit[ (iX - 2) + iY * uiWidth2 ] && pbEdge[ (iX - 2) + iY * uiWidth2 ] ) // left
-        {
-          iDiffX = -2;
-          iDiffY =  0;
-          iNextDir = 0;
-          iNextArrow = 0;
-        }
-        else if( iX > 0 && !pbVisit[ (iX - 1) + (iY - 1) * uiWidth2 ] && pbEdge[ (iX - 1) + (iY - 1) * uiWidth2 ] ) // top
-        {
-          iDiffX = -1;
-          iDiffY = -1;
-          iNextDir = 2;
-          iNextArrow = 4;
-        }
-        else if( iX > 0 && !pbVisit[ (iX - 1) + (iY + 1) * uiWidth2 ] && pbEdge[ (iX - 1) + (iY + 1) * uiWidth2 ] ) // bottom
-        {
-          iDiffX = -1;
-          iDiffY = +1;
-          iNextDir = 3;
-          iNextArrow = iArrow;
-          if( !(iPtr == 0 && iX == uiWidth2 - 2 && iY == uiHeight * 2 - 3) )
-            bArrowSkip = true;
-          else
-            iNextArrow = 3;
-        }
-        else if( iX == 0 )
-        {
-          iDiffX = 0;
-          iDiffY = 0;
-          iNextDir = iDir;
-          iNextArrow = iArrow;
-          bFinish = true;
-          continue;
-        }
-        else
-        {
-          iPtr = 0; // edge loop or unwanted case
-          bFinish = true;
-          //continue;
-          assert(false);
-        }
-        break;
-      case 1: // right
-        if( iX < uiWidth2 - 2 && !pbVisit[ (iX + 2) + iY * uiWidth2 ] && pbEdge[ (iX + 2) + iY * uiWidth2 ] ) // right
-        {
-          iDiffX = +2;
-          iDiffY =  0;
-          iNextDir = 1;
-          iNextArrow = 1;
-        }
-        else if( iX < uiWidth2 - 2 && !pbVisit[ (iX + 1) + (iY - 1) * uiWidth2 ] && pbEdge[ (iX + 1) + (iY - 1) * uiWidth2 ] ) // top
-        {
-          iDiffX = +1;
-          iDiffY = -1;
-          iNextDir = 2;
-          iNextArrow = iArrow;
-          if( !(iPtr == 0 && iX == 0 && iY == 1) )
-            bArrowSkip = true;
-          else
-            iNextArrow = 2;
-        }
-        else if( iX < uiWidth2 - 2 && !pbVisit[ (iX + 1) + (iY + 1) * uiWidth2 ] && pbEdge[ (iX + 1) + (iY + 1) * uiWidth2 ] ) // bottom
-        {
-          iDiffX = +1;
-          iDiffY = +1;
-          iNextDir = 3;
-          iNextArrow = 7;
-        }
-        else if( iX == uiWidth2 - 2 )
-        {
-          iDiffX = 0;
-          iDiffY = 0;
-          iNextDir = iDir;
-          iNextArrow = iArrow;
-          bFinish = true;
-          continue;
-        }
-        else
-        {
-          iPtr = 0; // edge loop or unwanted case
-          bFinish = true;
-          //continue;
-          assert(false);
-        }
-        break;
-      case 2: // top
-        if( iY > 0 && !pbVisit[ (iX - 1) + (iY - 1) * uiWidth2 ] && pbEdge[ (iX - 1) + (iY - 1) * uiWidth2 ] ) // left
-        {
-          iDiffX = -1;
-          iDiffY = -1;
-          iNextDir = 0;
-          iNextArrow = iArrow;
-          if( !(iPtr == 0 && iX == 1 && iY == uiHeight * 2 - 2) )
-            bArrowSkip = true;
-          else
-            iNextArrow = 0;
-        }
-        else if( iY > 0 && !pbVisit[ (iX + 1) + (iY - 1) * uiWidth2 ] && pbEdge[ (iX + 1) + (iY - 1) * uiWidth2 ] ) // right
-        {
-          iDiffX = +1;
-          iDiffY = -1;
-          iNextDir = 1;
-          iNextArrow = 5;
-        }
-        else if( iY > 0 && !pbVisit[ iX + (iY - 2) * uiWidth2 ] && pbEdge[ iX + (iY - 2) * uiWidth2 ] ) // top
-        {
-          iDiffX =  0;
-          iDiffY = -2;
-          iNextDir = 2;
-          iNextArrow = 2;
-        }
-        else if( iY == 0 )
-        {
-          iDiffX = 0;
-          iDiffY = 0;
-          iNextDir = iDir;
-          iNextArrow = iArrow;
-          bFinish = true;
-          continue;
-        }
-        else
-        {
-          iPtr = 0; // edge loop or unwanted case
-          bFinish = true;
-          //continue;
-          assert(false);
-        }
-        break;
-      case 3: // bottom
-        if( iY < uiWidth2 - 2 && !pbVisit[ (iX - 1) + (iY + 1) * uiWidth2 ] && pbEdge[ (iX - 1) + (iY + 1) * uiWidth2 ] ) // left
-        {
-          iDiffX = -1;
-          iDiffY = +1;
-          iNextDir = 0;
-          iNextArrow = 6;
-        }
-        else if( iY < uiWidth2 - 2 && !pbVisit[ (iX + 1) + (iY + 1) * uiWidth2 ] && pbEdge[ (iX + 1) + (iY + 1) * uiWidth2 ] ) // right
-        {
-          iDiffX = +1;
-          iDiffY = +1;
-          iNextDir = 1;
-          iNextArrow = iArrow;
-          if( !(iPtr == 0 && iX == uiWidth * 2 - 3 && iY == 0) )
-            bArrowSkip = true;
-          else
-            iNextArrow = 1;
-        }
-        else if( iY < uiWidth2 - 2 && !pbVisit[ iX + (iY + 2) * uiWidth2 ] && pbEdge[ iX + (iY + 2) * uiWidth2 ] ) // bottom
-        {
-          iDiffX =  0;
-          iDiffY = +2;
-          iNextDir = 3;
-          iNextArrow = 3;
-        }
-        else if( iY == uiWidth2 - 2 )
-        {
-          iDiffX = 0;
-          iDiffY = 0;
-          iNextDir = iDir;
-          iNextArrow = iArrow;
-          bFinish = true;
-          continue;
-        }
-        else
-        {
-          iPtr = 0; // edge loop or unwanted case
-          bFinish = true;
-          //continue;
-          assert(false);
-        }
-        break;
-      }
-
-      const UChar tableCode[8][8] = { { 0, -1, 4, 3, 2, 6, 1, 5 }, // iArrow(current direction), iNextArrow(next direction)
-      { -1, 0, 3, 4, 5, 1, 6, 2 },
-      { 3, 4, 0, -1, 1, 2, 5, 6 },
-      { 4, 3, -1, 0, 6, 5, 2, 1 },
-      { 1, 6, 2, 5, 0, 4, 3, -1 },
-      { 5, 2, 1, 6, 3, 0, -1, 4 },
-      { 2, 5, 6, 1, 4, -1, 0, 3 },
-      { 6, 1, 5, 2, -1, 3, 4, 0 } };
-
-      iCode = tableCode[iArrow][iNextArrow];
-
-      if(iPtr >= uiMaxEdge)
-      {
-        iPtr = 0; // over the maximum number of edge
-        bPossible = false;
-        break;
-      }
-
-      if( !bArrowSkip )
-      {
-        piEdgeCode[iPtr++] = iCode; // first edge coding
-        //printf("xEdgeCoding: (%d,%d)->(%d,%d) code %d\n",iX,iY, iX+iDiffX, iY+iDiffY, iCode);
-      }
-
-      iX += iDiffX;
-      iY += iDiffY;
-      iDir = iNextDir;
-      iArrow = iNextArrow;
-    }
-  }
-
-  pcCU->setEdgeLeftFirst( uiAbsPtIdx, bStartLeft );
-  pcCU->setEdgeStartPos ( uiAbsPtIdx, bStartLeft ? (iStartPosition - 1) >> 1 : (iStartPosition + 1) >> 1);
-  pcCU->setEdgeNumber   ( uiAbsPtIdx, iPtr );
-
-  xFree( pbEdge );
-  xFree( pbVisit );
-
-  return (iPtr != 0);
-}
-#endif
 #endif
 //! \}

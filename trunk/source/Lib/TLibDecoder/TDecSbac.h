@@ -80,7 +80,7 @@ public:
 #else
   Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
 #endif
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   Void  parsePPS                  ( TComPPS* /*pcPPS*/, TComVPS* /*pcVPS*/ ) {}
 #else
   Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}
@@ -102,19 +102,9 @@ private:
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam );
 #if H_3D_DIM
   Void  xReadExGolombLevel   ( UInt& ruiSymbol, ContextModel& rcSCModel  );
-#if QC_DIM_DELTADC_UNIFY_F0132
   Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt uiNumSeg );
-#else
-  Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt dimType );
-#endif
 #if H_3D_DIM_DMM
   Void  xParseDmm1WedgeIdx   ( UInt& ruiTabIdx, Int iNumBit );
-#if !SEC_DMM3_RBC_F0147
-  Void  xParseDmm3WedgeIdx   ( UInt& ruiIntraIdx, Int iNumBit );
-#endif
-#endif
-#if H_3D_DIM_RBC
-  Void  xParseRbcEdge        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_DIM_SDC
   Void  xParseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
@@ -222,12 +212,6 @@ private:
   ContextModel3DBuffer m_cDdcDataSCModel;
 #if H_3D_DIM_DMM
   ContextModel3DBuffer m_cDmm1DataSCModel;
-#if !SEC_DMM3_RBC_F0147
-  ContextModel3DBuffer m_cDmm3DataSCModel;
-#endif
-#endif
-#if H_3D_DIM_RBC
-  ContextModel3DBuffer m_cRbcDataSCModel;
 #endif
 #if H_3D_DIM_SDC  
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;

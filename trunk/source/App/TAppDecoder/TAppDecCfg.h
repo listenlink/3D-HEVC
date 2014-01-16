@@ -58,9 +58,7 @@ class TAppDecCfg
 protected:
   Char*         m_pchBitstreamFile;                   ///< input bitstream file name
 #if H_MV
-#if H_MV_6_HRD_O0217_13
   Int           m_targetOptLayerSetIdx;               ///< target output layer set index
-#endif
   Int           m_maxLayerId;                         ///< maximum nuh_layer_id decoded
   std::vector<Char*> m_pchReconFiles;                 ///< array of output reconstruction file name create from output reconstruction file name
 #endif
@@ -76,7 +74,7 @@ protected:
   Int           m_decodedPictureHashSEIEnabled;       ///< Checksum(3)/CRC(2)/MD5(1)/disable(0) acting on decoded picture hash SEI message
 
   std::vector<Int> m_targetDecLayerIdSet;             ///< set of LayerIds to be included in the sub-bitstream extraction process.
-#if H_MV_6_HRD_O0217_13
+#if H_MV
   Bool          m_targetDecLayerIdSetFileEmpty;      ///< indication if target layers are given by file
 #endif
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window 
@@ -87,18 +85,13 @@ protected:
 public:
   TAppDecCfg()
   : m_pchBitstreamFile(NULL)
-#if H_MV
-#if !H_MV_6_HRD_O0217_13
-  , m_maxLayerId(0)
-#endif
-#endif
   , m_pchReconFile(NULL)
   , m_iSkipFrame(0)
   , m_outputBitDepthY(0)
   , m_outputBitDepthC(0)
   , m_iMaxTemporalLayer(-1)
   , m_decodedPictureHashSEIEnabled(0)
-#if H_MV_6_HRD_O0217_13
+#if H_MV
   , m_targetDecLayerIdSetFileEmpty(true)
 #endif
   , m_respectDefDispWindow(0)

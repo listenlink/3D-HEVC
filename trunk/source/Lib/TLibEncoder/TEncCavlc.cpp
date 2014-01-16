@@ -175,9 +175,20 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_CODE( pcPPS->getNumExtraSliceHeaderBits(), 3,        "num_extra_slice_header_bits");
   WRITE_FLAG( pcPPS->getSignHideFlag(), "sign_data_hiding_flag" );
   WRITE_FLAG( pcPPS->getCabacInitPresentFlag() ? 1 : 0,   "cabac_init_present_flag" );
+#if PPS_FIX_DEPTH
+  if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
+  {
+    WRITE_UVLC( pcPPS->getNumRefIdxL0DefaultActive(),     "num_ref_idx_l0_default_active_minus1");
+    WRITE_UVLC( pcPPS->getNumRefIdxL1DefaultActive(),     "num_ref_idx_l1_default_active_minus1");
+  }
+  else
+  {
+#endif
   WRITE_UVLC( pcPPS->getNumRefIdxL0DefaultActive()-1,     "num_ref_idx_l0_default_active_minus1");
   WRITE_UVLC( pcPPS->getNumRefIdxL1DefaultActive()-1,     "num_ref_idx_l1_default_active_minus1");
-
+#if PPS_FIX_DEPTH
+  }
+#endif
   WRITE_SVLC( pcPPS->getPicInitQPMinus26(),                  "init_qp_minus26");
   WRITE_FLAG( pcPPS->getConstrainedIntraPred() ? 1 : 0,      "constrained_intra_pred_flag" );
   WRITE_FLAG( pcPPS->getUseTransformSkip() ? 1 : 0,  "transform_skip_enabled_flag" ); 
@@ -252,11 +263,25 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 #if H_MV
   }
 #endif
+#if PPS_FIX_DEPTH
+  if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
+  {
+    WRITE_FLAG( 1, "lists_modification_present_flag" );
+  }
+  else
+#endif
   WRITE_FLAG( pcPPS->getListsModificationPresentFlag(), "lists_modification_present_flag");
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
+#if PPS_FIX_DEPTH
+  if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
+  {
+    WRITE_FLAG( 1, "slice_segment_header_extension_present_flag" );
+  }
+  else
+#endif
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
 
-#if !DLT_DIFF_CODING_IN_PPS
+#if !H_3D
   WRITE_FLAG( 0, "pps_extension_flag" );
 #else
   WRITE_FLAG( 1, "pps_extension_flag" );
@@ -265,7 +290,7 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 #endif
 }
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
 Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
 {
   // Assuming that all PPS indirectly refer to the same VPS via different SPS
@@ -274,7 +299,7 @@ Void  TEncCavlc::codePPSExtension        ( TComPPS* pcPPS )
   // This is equivalent to the process of 
   //   Step 1) decoding DLT tables based on the number of depth layers, and
   //   Step 2) mapping DLT tables to the depth layers
-  // as descripted in the 3D-HEVC WD.
+  // as described in the 3D-HEVC WD.
   TComVPS* pcVPS = pcPPS->getSPS()->getVPS();
 
   TComDLT* pcDLT = pcPPS->getDLT();
@@ -469,7 +494,7 @@ Void TEncCavlc::codeVUI( TComVUI *pcVUI, TComSPS* pcSPS )
     WRITE_FLAG(pcVUI->getOverscanAppropriateFlag(),             "overscan_appropriate_flag");
   }
   WRITE_FLAG(pcVUI->getVideoSignalTypePresentFlag(),            "video_signal_type_present_flag");
-#if H_MV_6_PS_O0118_33
+#if H_MV
   assert( pcSPS->getLayerId() == 0 || !pcVUI->getVideoSignalTypePresentFlag() ); 
 #endif
   if (pcVUI->getVideoSignalTypePresentFlag())
@@ -635,7 +660,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   if ( pcSPS->getLayerId() > 0 )
   {
     WRITE_FLAG( pcSPS->getUpdateRepFormatFlag( ) ? 1 : 0 , "update_rep_format_flag" );
-#if H_MV_6_PS_REP_FORM_18_19_20    
     if ( pcSPS->getUpdateRepFormatFlag() )
     { 
       WRITE_CODE( pcSPS->getSpsRepFormatIdx( ), 8, "sps_rep_format_idx" );
@@ -643,12 +667,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   }
   else
   {
-#else
-  }
-
-  if ( pcSPS->getUpdateRepFormatFlag() )
-  { 
-#endif
 #endif
   WRITE_UVLC( pcSPS->getChromaFormatIdc (),         "chroma_format_idc" );
   assert(pcSPS->getChromaFormatIdc () == 1);
@@ -674,11 +692,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_UVLC( conf.getWindowBottomOffset() / TComSPS::getWinUnitY(pcSPS->getChromaFormatIdc() ), "conf_win_bottom_offset" );
   }
 #if H_MV
-#if H_MV_6_PS_REP_FORM_18_19_20
   if ( pcSPS->getLayerId() == 0 )
-#else
-  if ( pcSPS->getUpdateRepFormatFlag() )
-#endif
   { 
 #endif
   WRITE_UVLC( pcSPS->getBitDepthY() - 8,             "bit_depth_luma_minus8" );
@@ -783,7 +797,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if !H_MV
   WRITE_FLAG( 0, "sps_extension_flag" );
 #else
-#if H_MV_6_PSEM_O0142_3
   WRITE_FLAG( pcSPS->getSpsExtensionFlag(), "sps_extension_flag" );
 
   if ( pcSPS->getSpsExtensionFlag() )
@@ -810,17 +823,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     }
 #endif
   }
-#else
-  WRITE_FLAG( 1, "sps_extension_flag" );
-  codeSPSExtension( pcSPS ); 
-#if !H_3D
-  WRITE_FLAG( 0, "sps_extension2_flag" );
-#else
-  WRITE_FLAG( 1, "sps_extension2_flag" );
-  codeSPSExtension2( pcSPS, viewIndex, depthFlag ); 
-  WRITE_FLAG( 0, "sps_extension3_flag" );
-#endif  
-#endif
 #endif
 }
 
@@ -829,9 +831,6 @@ Void TEncCavlc::codeSPSExtension( TComSPS* pcSPS )
 {
   WRITE_FLAG( pcSPS->getInterViewMvVertConstraintFlag() ? 1 : 0, "inter_view_mv_vert_constraint_flag" );
 
-#if !H_MV_6_SHVC_O0098_36
-  WRITE_UVLC( 0, "sps_shvc_reserved_zero_idc" ); 
-#else
   WRITE_UVLC( pcSPS->getNumScaledRefLayerOffsets( ), "num_scaled_ref_layer_offsets" );
 
   for( Int i = 0; i < pcSPS->getNumScaledRefLayerOffsets( ); i++)
@@ -845,7 +844,6 @@ Void TEncCavlc::codeSPSExtension( TComSPS* pcSPS )
     WRITE_SVLC( pcSPS->getScaledRefLayerRightOffset( j ), "scaled_ref_layer_right_offset" );
     WRITE_SVLC( pcSPS->getScaledRefLayerBottomOffset( j ), "scaled_ref_layer_bottom_offset" );
   }
-#endif  
 }
 #endif
 
@@ -858,23 +856,6 @@ if( depthFlag )
 {
   WRITE_FLAG( pcSPS->getUseQTL() ? 1 : 0, "use_qtl_flag");
   WRITE_FLAG( pcSPS->getUsePC()  ? 1 : 0, "use_pc_flag");
-}
-#endif
-#if !CAM_HLS_F0136_F0045_F0082
-if (!depthFlag )
-{
-  WRITE_UVLC( pcSPS->getCamParPrecision(), "cp_precision" );
-  WRITE_FLAG( pcSPS->hasCamParInSliceHeader() ? 1 : 0, "cp_in_slice_header_flag" );
-  if( !pcSPS->hasCamParInSliceHeader() )
-  {
-    for( UInt uiIndex = 0; uiIndex < viewIndex; uiIndex++ )
-    {
-      WRITE_SVLC( pcSPS->getCodedScale    ()[ uiIndex ],                                      "cp_scale" );
-      WRITE_SVLC( pcSPS->getCodedOffset   ()[ uiIndex ],                                      "cp_off" );
-      WRITE_SVLC( pcSPS->getInvCodedScale ()[ uiIndex ] + pcSPS->getCodedScale ()[ uiIndex ], "cp_inv_scale_plus_scale" );
-      WRITE_SVLC( pcSPS->getInvCodedOffset()[ uiIndex ] + pcSPS->getCodedOffset()[ uiIndex ], "cp_inv_off_plus_off" );
-    }
-  }
 }
 #endif
 }
@@ -994,15 +975,11 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS ) 
 {
   WRITE_FLAG( pcVPS->getAvcBaseLayerFlag() ? 1 : 0,          "avc_base_layer_flag" );
-#if H_MV_6_PS_O0109_24
   WRITE_FLAG( pcVPS->getVpsVuiPresentFlag() ? 1 : 0 , "vps_vui_present_flag" );
   if ( pcVPS->getVpsVuiPresentFlag() )
   {  
-#endif
   WRITE_CODE( pcVPS->getVpsVuiOffset( ), 16,                 "vps_vui_offset" );  // TBD
-#if H_MV_6_PS_O0109_24
   }
-#endif
   WRITE_FLAG( pcVPS->getSplittingFlag() ? 1 : 0,             "splitting_flag" );
   
   for( Int type = 0; type < MAX_NUM_SCALABILITY_TYPES; type++ )
@@ -1049,7 +1026,6 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
   }
 
 
-#if H_MV_6_PS_O0109_22
     WRITE_CODE( pcVPS->getViewIdLen( ), 4, "view_id_len" );
     
     if ( pcVPS->getViewIdLen( ) > 0 )
@@ -1066,19 +1042,6 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
         assert( pcVPS->getViewIdVal( i ) == 0 ); 
       }
     }
-#else
-  // GT spec says: trac #39
-  // if ( pcVPS->getNumViews() > 1 )  
-  //   However, this is a bug in the text since, view_id_len_minus1 is needed to parse view_id_val. 
-  {
-    WRITE_CODE( pcVPS->getViewIdLenMinus1( ), 4, "view_id_len_minus1" );
-  }
-
-  for( Int i = 0; i < pcVPS->getNumViews(); i++ )
-  {
-    WRITE_CODE( pcVPS->getViewIdVal( i ), pcVPS->getViewIdLenMinus1( ) + 1, "view_id_val[i]" );
-  }
-#endif
 
 
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
@@ -1088,7 +1051,6 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       WRITE_FLAG( pcVPS->getDirectDependencyFlag( i, j ),    "direct_dependency_flag[i][j]" );
     }
   }
-#if H_MV_6_ILDSD_O0120_26
   WRITE_FLAG( pcVPS->getVpsSubLayersMaxMinus1PresentFlag( ) ? 1 : 0 , "vps_sub_layers_max_minus1_present_flag" );
   if ( pcVPS->getVpsSubLayersMaxMinus1PresentFlag() )
   {
@@ -1105,14 +1067,12 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       assert( pcVPS->getSubLayersVpsMaxMinus1( i ) + 1 == pcVPS->getMaxTLayers( ) );    
     }
   }
-#endif
   WRITE_FLAG( pcVPS->getMaxTidRefPresentFlag( ) ? 1 : 0 , "max_tid_ref_present_flag" );
 
   if ( pcVPS->getMaxTidRefPresentFlag() )
   {    
     for( Int i = 0; i < pcVPS->getMaxLayersMinus1(); i++ )
     {
-#if H_MV_6_ILDDS_O0225_30
       for( Int j = i + 1; j <= pcVPS->getMaxLayersMinus1(); j++ )
       {
         if ( pcVPS->getDirectDependencyFlag(j,i) )
@@ -1120,9 +1080,6 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
           WRITE_CODE( pcVPS->getMaxTidIlRefPicsPlus1( i, j ), 3, "max_tid_il_ref_pics_plus1" );
         }
       }
-#else
-      WRITE_CODE( pcVPS->getMaxTidIlRefPicPlus1( i ), 3,       "max_tid_il_ref_pics_plus1[i]" );
-#endif
     }
   }
 
@@ -1136,9 +1093,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
     if( !pcVPS->getVpsProfilePresentFlag( i ) )
     {    
       WRITE_CODE( pcVPS->getProfileRefMinus1( i ), 6, "profile_ref_minus1[i]" );
-#if H_MV_6_PS_O0109_23
       pcVPS->checkProfileRefMinus1( i );      
-#endif
     }
     codePTL( pcVPS->getPTL( i ), pcVPS->getVpsProfilePresentFlag( i ), pcVPS->getMaxTLayers() - 1 );
   }
@@ -1155,18 +1110,12 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
 
   if( numOutputLayerSets > 1)
   {
-#if H_MV_6_PS_0109_25
     WRITE_CODE( pcVPS->getDefaultOneTargetOutputLayerIdc( ), 2, "default_one_target_output_layer_idc" );
     pcVPS->checkDefaultOneTargetOutputLayerIdc(); 
-#else
-    WRITE_FLAG( pcVPS->getDefaultOneTargetOutputLayerFlag( ) ? 1 : 0, "default_one_target_output_layer_flag" );
-#endif        
   }  
 
-#if H_MV_6_HRD_O0217_13
   assert( pcVPS->getOutputLayerFlag(0, 0) == pcVPS->inferOutputLayerFlag( 0, 0 )); 
   assert( pcVPS->getOutputLayerSetIdxMinus1( 0 ) == -1 ); 
-#endif
   for( Int i = 1; i < numOutputLayerSets; i++ )
   {
     if( i > pcVPS->getVpsNumberLayerSetsMinus1( ) )
@@ -1177,7 +1126,6 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
         WRITE_FLAG( pcVPS->getOutputLayerFlag( i, j) ? 1 : 0, "output_layer_flag" );
       }      
     }
-#if H_MV_6_HRD_O0217_13
     else
     { // These inference rules would also be helpful in spec text
       assert( pcVPS->getOutputLayerSetIdxMinus1(i ) ==  i - 1 ); 
@@ -1186,7 +1134,6 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
         assert( pcVPS->getOutputLayerFlag( i , j ) == pcVPS->inferOutputLayerFlag( i, j )); 
       }
     }
-#endif
 
     if ( pcVPS->getProfileLevelTierIdxLen()  > 0 )
     {      
@@ -1194,12 +1141,10 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
     }
   }
 
-#if H_MV_6_GEN_0153_28
   if( pcVPS->getMaxLayersMinus1() > 0 )
   {
     WRITE_FLAG( pcVPS->getAltOutputLayerFlag( ) ? 1 : 0 , "alt_output_layer_flag" );
   }
-#endif
 
   WRITE_FLAG( pcVPS->getRepFormatIdxPresentFlag( ) ? 1 : 0 , "rep_format_idx_present_flag" );
   if ( pcVPS->getRepFormatIdxPresentFlag() )
@@ -1209,14 +1154,9 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
 
   for (Int i = 0; i <= pcVPS->getVpsNumRepFormatsMinus1(); i++ )
   {    
-#if H_MV_6_PS_REP_FORM_18_19_20
     TComRepFormat* curRepFormat = pcVPS->getRepFormat(i);     
     TComRepFormat* prevRepFormat = i > 0 ? pcVPS->getRepFormat( i - 1) : NULL; 
     codeRepFormat( i, curRepFormat ,  prevRepFormat); 
-#else
-    TComRepFormat* pcRepFormat = pcVPS->getRepFormat(i);     
-    codeRepFormat( pcRepFormat ); 
-#endif
   }
 
   if( pcVPS->getRepFormatIdxPresentFlag() ) 
@@ -1225,17 +1165,12 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
     {
       if( pcVPS->getVpsNumRepFormatsMinus1() > 0 )
       {
-#if H_MV_6_PS_REP_FORM_18_19_20
         WRITE_CODE( pcVPS->getVpsRepFormatIdx( i ), 8, "vps_rep_format_idx" );
-#else
-        WRITE_CODE( pcVPS->getVpsRepFormatIdx( i ), 4, "vps_rep_format_idx" );
-#endif
       }
     }
   }
 
   WRITE_FLAG( pcVPS->getMaxOneActiveRefLayerFlag( ) ? 1 : 0, "max_one_active_ref_layer_flag" );
-#if H_MV_6_MISC_O0062_31
   for( Int i = 1; i  <=  pcVPS->getMaxLayersMinus1(); i++ )
   {
     if( pcVPS->getNumDirectRefLayers( pcVPS->getLayerIdInNuh( i ) )  ==  0 )
@@ -1243,17 +1178,10 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       WRITE_FLAG( pcVPS->getPocLsbNotPresentFlag( i ) ? 1 : 0 , "poc_lsb_not_present_flag" );
     }
   }
-#endif
-#if H_MV_6_HRD_O0217_13
   codeDpbSize( pcVPS ); 
-#endif
 
-#if !H_MV_6_PS_O0223_29
-  WRITE_FLAG( pcVPS->getCrossLayerIrapAlignedFlag( ) ? 1 : 0 , "cross_layer_irap_aligned_flag" );
-#endif
   WRITE_UVLC( pcVPS->getDirectDepTypeLenMinus2 ( ),         "direct_dep_type_len_minus2"); 
 
-#if H_MV_6_PS_O0096_21
   WRITE_FLAG( pcVPS->getDefaultDirectDependencyFlag( ) ? 1 : 0 , "default_direct_dependency_flag" );
 
   if ( pcVPS->getDefaultDirectDependencyFlag( ) )
@@ -1279,23 +1207,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       }
     }
   }  
-#else
-    for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
-    {
-      for( Int j = 0; j < i; j++ )
-      {
-        if (pcVPS->getDirectDependencyFlag( i, j) )
-        {        
-          assert ( pcVPS->getDirectDependencyType( i, j ) != -1 ); 
-          WRITE_CODE( pcVPS->getDirectDependencyType( i, j ),pcVPS->getDirectDepTypeLenMinus2( ) + 2,  "direct_dependency_type[i][j]" );
-        }
-      }
-    }
-#endif
     WRITE_FLAG ( 0,                                      "vps_shvc_reserved_zero_flag" ); 
-#if !H_MV_6_PS_O0109_24
-    WRITE_FLAG( pcVPS->getVpsVuiPresentFlag( ) ? 1 : 0 , "vps_vui_present_flag" );
-#endif
 
     if( pcVPS->getVpsVuiPresentFlag() )
     {
@@ -1303,7 +1215,6 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       codeVPSVUI( pcVPS ); 
     }     
 }
-#if H_MV_6_PS_O0118_33
 Void TEncCavlc::codeVideoSignalInfo( TComVideoSignalInfo* pcVideoSignalInfo )
 {
   assert( pcVideoSignalInfo ); 
@@ -1313,9 +1224,7 @@ Void TEncCavlc::codeVideoSignalInfo( TComVideoSignalInfo* pcVideoSignalInfo )
   WRITE_CODE( pcVideoSignalInfo->getTransferCharacteristicsVps( ), 8, "transfer_characteristics_vps" );
   WRITE_CODE( pcVideoSignalInfo->getMatrixCoeffsVps( ), 8, "matrix_coeffs_vps" );
 }
-#endif
 
-#if H_MV_6_HRD_O0217_13
 Void TEncCavlc::codeDpbSize( TComVPS* vps )
 { 
   TComDpbSize* dpbSize = vps->getDpbSize(); 
@@ -1355,17 +1264,11 @@ Void TEncCavlc::codeDpbSize( TComVPS* vps )
     }        
   }  
 }
-#endif
 
-#if H_MV_6_PS_REP_FORM_18_19_20
 Void TEncCavlc::codeRepFormat( Int i, TComRepFormat* pcRepFormat, TComRepFormat* pcPrevRepFormat )
-#else
-Void TEncCavlc::codeRepFormat( TComRepFormat* pcRepFormat )
-#endif
 {
   assert( pcRepFormat ); 
 
-#if H_MV_6_PS_REP_FORM_18_19_20
   WRITE_CODE( pcRepFormat->getPicWidthVpsInLumaSamples( ),  16, "pic_width_vps_in_luma_samples" );
   WRITE_CODE( pcRepFormat->getPicHeightVpsInLumaSamples( ), 16, "pic_height_vps_in_luma_samples" );
   WRITE_FLAG( pcRepFormat->getChromaAndBitDepthVpsPresentFlag( ) ? 1 : 0 , "chroma_and_bit_depth_vps_present_flag" );
@@ -1374,26 +1277,19 @@ Void TEncCavlc::codeRepFormat( TComRepFormat* pcRepFormat )
 
   if ( pcRepFormat->getChromaAndBitDepthVpsPresentFlag() )
   {  
-#endif
   WRITE_CODE( pcRepFormat->getChromaFormatVpsIdc( ), 2, "chroma_format_vps_idc" );
 
   if ( pcRepFormat->getChromaFormatVpsIdc() == 3 )
   {
     WRITE_FLAG( pcRepFormat->getSeparateColourPlaneVpsFlag( ) ? 1 : 0 , "separate_colour_plane_vps_flag" );
   }
-#if !H_MV_6_PS_REP_FORM_18_19_20
-  WRITE_CODE( pcRepFormat->getPicWidthVpsInLumaSamples( ),  16, "pic_width_vps_in_luma_samples" );
-  WRITE_CODE( pcRepFormat->getPicHeightVpsInLumaSamples( ), 16, "pic_height_vps_in_luma_samples" );
-#endif
   WRITE_CODE( pcRepFormat->getBitDepthVpsLumaMinus8( ),      4, "bit_depth_vps_luma_minus8" );
   WRITE_CODE( pcRepFormat->getBitDepthVpsChromaMinus8( ),    4, "bit_depth_vps_chroma_minus8" );
-#if H_MV_6_PS_REP_FORM_18_19_20
   }
   else
   {
     pcRepFormat->inferChromaAndBitDepth(pcPrevRepFormat, true ); 
   }
-#endif
 }
 
 Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
@@ -1404,13 +1300,11 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
 
   assert( pcVPSVUI ); 
 
-#if H_MV_6_PS_O0223_29
   WRITE_FLAG( pcVPSVUI->getCrossLayerPicTypeAlignedFlag( ) ? 1 : 0 , "cross_layer_pic_type_aligned_flag" );
   if ( !pcVPSVUI->getCrossLayerPicTypeAlignedFlag() )
   {  
     WRITE_FLAG( pcVPSVUI->getCrossLayerIrapAlignedFlag( ) ? 1 : 0 , "cross_layer_irap_aligned_flag" );
   }
-#endif
 
   WRITE_FLAG( pcVPSVUI->getBitRatePresentVpsFlag( ) ? 1 : 0 , "bit_rate_present_vps_flag" );
   WRITE_FLAG( pcVPSVUI->getPicRatePresentVpsFlag( ) ? 1 : 0 , "pic_rate_present_vps_flag" );
@@ -1442,7 +1336,6 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
     }
   }
 
-#if H_MV_6_O0226_37
   WRITE_FLAG( pcVPSVUI->getTilesNotInUseFlag( ) ? 1 : 0 , "tiles_not_in_use_flag" );
   if( !pcVPSVUI->getTilesNotInUseFlag() ) 
   {      
@@ -1477,15 +1370,6 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
       WRITE_FLAG( pcVPSVUI->getWppInUseFlag( i ) ? 1 : 0 , "wpp_in_use_flag[i]" );
     }
   }
-#else
-  for( Int i = 1; i  <=  pcVPS->getMaxLayersMinus1(); i++ )
-  {
-    for( Int  j = 0; j < pcVPS->getNumDirectRefLayers( pcVPS->getLayerIdInNuh( i ) ); j++ ) 
-    {
-      WRITE_FLAG( pcVPSVUI->getTileBoundariesAlignedFlag( i, j ) ? 1 : 0 , "tile_boundaries_aligned_flag" );
-    }
-  }
-#endif
   WRITE_FLAG( pcVPSVUI->getIlpRestrictedRefLayersFlag( ) ? 1 : 0 , "ilp_restricted_ref_layers_flag" );
 
   if( pcVPSVUI->getIlpRestrictedRefLayersFlag( ) )
@@ -1506,7 +1390,6 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
       }
     }
   }
-#if H_MV_6_PS_O0118_33
   WRITE_FLAG( pcVPSVUI->getVideoSignalInfoIdxPresentFlag( ) ? 1 : 0 , "video_signal_info_idx_present_flag" );
   if( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() )
   {
@@ -1539,16 +1422,12 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
       assert( pcVPSVUI->getVpsVideoSignalInfoIdx( i  ) == ( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() ? 0 : i ) ); 
     }
   }
-#endif
-#if H_MV_6_HRD_O0164_15
   WRITE_FLAG( pcVPSVUI->getVpsVuiBspHrdPresentFlag( ) ? 1 : 0 , "vps_vui_bsp_hrd_present_flag" );
   if ( pcVPSVUI->getVpsVuiBspHrdPresentFlag( ) )
   {
     codeVpsVuiBspHrdParameters( pcVPS ); 
   }
-#endif
 }
-#if H_MV_6_HRD_O0164_15
 Void TEncCavlc::codeVpsVuiBspHrdParameters( TComVPS* pcVPS )
 {
   assert( pcVPS ); 
@@ -1605,7 +1484,6 @@ Void TEncCavlc::codeVpsVuiBspHrdParameters( TComVPS* pcVPS )
     }  
   }  
 }  
-#endif
 
 #endif
 
@@ -1620,7 +1498,7 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       {
 #if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
 #endif
 #endif
@@ -1636,47 +1514,27 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }          
       else
       {
-#if QC_DEPTH_IV_MRG_F0125
         if(i!=1)
         {
           WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
         }
-#endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
         if (i!=1)
         {
           WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
         }
 #endif
-#if SEC_MPI_ENABLING_MERGE_F0150
+#if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getMPIFlag( i ) ? 1 : 0 ,          "mpi_flag[i]" );
 #endif
         WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ) ? 1 : 0 ,          "vps_depth_modes_flag[i]" );
         //WRITE_FLAG( pcVPS->getLimQtPredFlag    ( i ) ? 1 : 0 ,          "lim_qt_pred_flag[i]"     ); 
-#if H_3D_DIM_DLT
-#if !DLT_DIFF_CODING_IN_PPS
-        if( pcVPS->getVpsDepthModesFlag( i ) )
-        {
-          WRITE_FLAG( pcVPS->getUseDLTFlag( i ) ? 1 : 0, "dlt_flag[i]" );
-        }
-        if( pcVPS->getUseDLTFlag( i ) )
-        {
-          // code mapping
-          WRITE_UVLC(pcVPS->getNumDepthValues(i), "num_depth_values_in_dlt[i]");
-          for(Int d=0; d<pcVPS->getNumDepthValues(i); d++)
-          {
-            WRITE_UVLC( pcVPS->idx2DepthValue(i, d), "dlt_depth_value[i][d]" );
-          }
-        }
-#endif
-#endif
 #if H_3D_INTER_SDC
         WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
 #endif
       }
     }  
   }
-#if CAM_HLS_F0136_F0045_F0082
   WRITE_UVLC( pcVPS->getCamParPrecision(), "cp_precision" );
   for (UInt viewIndex=0; viewIndex<pcVPS->getNumViews(); viewIndex++)
   {
@@ -1696,7 +1554,6 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }
     }
   }
-#endif
 #if H_3D_TMVP
   WRITE_FLAG( pcVPS->getIvMvScalingFlag( ) ? 1 : 0 ,          "iv_mv_scaling_flag" );
 #endif
@@ -1738,6 +1595,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   {
     WRITE_FLAG( 0, "no_output_of_prior_pics_flag" );
   }
+#if PPS_FIX_DEPTH
+  if( pcSlice->getIsDepth() )
+  {
+    WRITE_UVLC( 1, "slice_pic_parameter_set_id" );
+  }
+  else
+#endif
   WRITE_UVLC( pcSlice->getPPS()->getPPSId(), "slice_pic_parameter_set_id" );
   pcSlice->setDependentSliceSegmentFlag(!pcSlice->isNextSlice());
   if ( pcSlice->getPPS()->getDependentSliceSegmentsEnabledFlag() && (sliceSegmentAddress!=0) )
@@ -1752,13 +1616,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   {
 #if H_MV    
     Int esb = 0;  //Don't use i, otherwise will shadow something below
-#if !H_MV_6_RALS_O0149_11
-    if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
-    {
-      esb++; 
-      WRITE_FLAG( pcSlice->getPocResetFlag( ) ? 1 : 0 , "poc_reset_flag" );
-    }
-#endif
 
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
     {
@@ -1766,7 +1623,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG( pcSlice->getDiscardableFlag( ) ? 1 : 0 , "discardable_flag" );
     }
 
-#if H_MV_6_RALS_O0149_11
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
     {
       esb++; 
@@ -1779,7 +1635,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       esb++; 
       WRITE_FLAG( pcSlice->getPocResetFlag( ) ? 1 : 0 , "poc_reset_flag" );
     }
-#endif
 
 
 
@@ -1803,8 +1658,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 );
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
-
-#if H_MV_6_POC_31_35_38
+#if H_MV
     if ( (pcSlice->getLayerId() > 0 && !vps->getPocLsbNotPresentFlag( pcSlice->getLayerIdInVps())) || !pcSlice->getIdrPicFlag() )
     {
       Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC())) & ((1<<pcSlice->getSPS()->getBitsForPOC())-1);
@@ -1813,7 +1667,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #endif
     if( !pcSlice->getIdrPicFlag() )
     {
-#if !H_MV_6_POC_31_35_38
+#if !H_MV
       Int picOrderCntLSB = (pcSlice->getPOC()-pcSlice->getLastIDR()+(1<<pcSlice->getSPS()->getBitsForPOC())) & ((1<<pcSlice->getSPS()->getBitsForPOC())-1);
       WRITE_CODE( picOrderCntLSB, pcSlice->getSPS()->getBitsForPOC(), "pic_order_cnt_lsb");
 #endif
@@ -1930,9 +1784,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 #if H_MV
-#if H_MV_6_ILDDS_ILREFPICS_27_34
     Bool interLayerPredLayerIdcPresentFlag = false; 
-#endif
     Int layerId = pcSlice->getLayerId(); 
     if( pcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumDirectRefLayers( layerId ) > 0 )
     {   
@@ -1945,9 +1797,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         }
         if ( pcSlice->getNumActiveRefLayerPics() != vps->getNumDirectRefLayers( layerId ) )
         {        
-#if H_MV_6_ILDDS_ILREFPICS_27_34
           interLayerPredLayerIdcPresentFlag = true; 
-#endif
           for( Int idx = 0; idx < pcSlice->getNumActiveRefLayerPics(); idx++ )   
           {
             WRITE_CODE( pcSlice->getInterLayerPredLayerIdc( idx ), pcSlice->getInterLayerPredLayerIdcLen( ), "inter_layer_pred_layer_idc" );
@@ -1955,7 +1805,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         }
       }  
     }
-#if H_MV_6_ILDDS_ILREFPICS_27_34
     if ( !interLayerPredLayerIdcPresentFlag )
     {
       for( Int i = 0; i < pcSlice->getNumActiveRefLayerPics(); i++ )   
@@ -1963,7 +1812,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         assert( pcSlice->getInterLayerPredLayerIdc( i ) == pcSlice->getRefLayerPicIdc( i ) );
       }
     }
-#endif
 #endif
     if(pcSlice->getSPS()->getUseSAO())
     {
@@ -1982,6 +1830,9 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
       Bool overrideFlag = (pcSlice->getNumRefIdx( REF_PIC_LIST_0 )!=pcSlice->getPPS()->getNumRefIdxL0DefaultActive()||(pcSlice->isInterB()&&pcSlice->getNumRefIdx( REF_PIC_LIST_1 )!=pcSlice->getPPS()->getNumRefIdxL1DefaultActive()));
+#if PPS_FIX_DEPTH
+      overrideFlag |= (pcSlice->getIsDepth() && !pcSlice->getViewIndex());
+#endif
       WRITE_FLAG( overrideFlag ? 1 : 0,                               "num_ref_idx_active_override_flag");
       if (overrideFlag) 
       {
@@ -2001,8 +1852,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       pcSlice->setNumRefIdx(REF_PIC_LIST_0, 0);
       pcSlice->setNumRefIdx(REF_PIC_LIST_1, 0);
     }
-
+#if PPS_FIX_DEPTH
+    if( (pcSlice->getPPS()->getListsModificationPresentFlag() || (pcSlice->getIsDepth() && !pcSlice->getViewIndex())) && pcSlice->getNumRpsCurrTempList() > 1)
+#else
     if( pcSlice->getPPS()->getListsModificationPresentFlag() && pcSlice->getNumRpsCurrTempList() > 1)
+#endif
     {
       TComRefPicListModification* refPicListModification = pcSlice->getRefPicListModification();
       if(!pcSlice->isIntra())
@@ -2085,11 +1939,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       xCodePredWeightTable( pcSlice );
     }
 #if H_3D_IC
-#if SEC_ONLY_TEXTURE_IC_F0151
     else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth())
-#else
-    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) )
-#endif
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
       if( pcSlice->getApplyIC() )
@@ -2107,7 +1957,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
 #if H_3D_IV_MERGE
-#if SEC_MPI_ENABLING_MERGE_F0150
       if(pcSlice->getIsDepth())
       {
         Bool bMPIFlag = pcSlice->getVPS()->getMPIFlag( pcSlice->getLayerIdInVps() ) ;
@@ -2119,10 +1968,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
         WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
       }
-#else
-      Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
-      WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
-#endif
 #else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
 #endif
@@ -2161,16 +2006,8 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
     }
   }
-#if CAM_HLS_F0044
-#if QC_DEPTH_IV_MRG_F0125
-#if CAM_HLS_F0136_F0045_F0082
+#if H_3D
   if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && !pcSlice->getIsDepth() )
-#else
-  if( pcSlice->getSPS()->hasCamParInSliceHeader() && !pcSlice->getIsDepth() )
-#endif
-#else
-  if( pcSlice->getSPS()->hasCamParInSliceHeader() )
-#endif
   {
     for( UInt uiId = 0; uiId < pcSlice->getViewIndex(); uiId++ )
     {
@@ -2182,38 +2019,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
 #endif
 
+#if PPS_FIX_DEPTH
+  if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag() || pcSlice->getIsDepth() )
+#else
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag())
+#endif
   {
-#if !H_3D || CAM_HLS_F0044
     WRITE_UVLC(0,"slice_header_extension_length");
-#else
-    WRITE_UVLC(0,"slice_header_extension_length"); //<- this element needs to be set to the correct value!!
-#if QC_DEPTH_IV_MRG_F0125
-#if CAM_HLS_F0136_F0045_F0082
-    if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && !pcSlice->getIsDepth() )
-#else
-    if( pcSlice->getSPS()->hasCamParInSliceHeader() && !pcSlice->getIsDepth() )
-#endif
-#else
-    if( pcSlice->getSPS()->hasCamParInSliceHeader() )
-#endif
-    {
-      for( UInt uiId = 0; uiId < pcSlice->getViewIndex(); uiId++ )
-      {
-        WRITE_SVLC( pcSlice->getCodedScale    ()[ uiId ],                                     "cp_scale" );
-        WRITE_SVLC( pcSlice->getCodedOffset   ()[ uiId ],                                     "cp_off" );
-        WRITE_SVLC( pcSlice->getInvCodedScale ()[ uiId ] + pcSlice->getCodedScale ()[ uiId ], "cp_inv_scale_plus_scale" );
-        WRITE_SVLC( pcSlice->getInvCodedOffset()[ uiId ] + pcSlice->getCodedOffset()[ uiId ], "cp_inv_off_plus_off" );
-      }
-    }
-
-    Bool sliceSegmentHeaderExtension2Flag = false; 
-    WRITE_FLAG( sliceSegmentHeaderExtension2Flag ? 1 : 0 , "slice_segment_header_extension2_flag" ); 
-    if ( sliceSegmentHeaderExtension2Flag )
-    {
-      WRITE_UVLC(0,"slice_header_extension2_length");
-    }
-#endif
   }
 }
 

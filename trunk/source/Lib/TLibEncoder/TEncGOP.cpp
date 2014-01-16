@@ -663,11 +663,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     refPicListModification->setRefPicListModificationFlagL0(0);
     refPicListModification->setRefPicListModificationFlagL1(0);
 #if H_MV
-#if H_MV_6_RALS_O0149_11
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > 0 )
-#else
-    if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > 1 )
-#endif
     {
       // Some more sophisticated algorithm to determine discardable_flag might be added here. 
       pcSlice->setDiscardableFlag           ( false );     
@@ -677,9 +673,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
     GOPEntry gopEntry      = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid );     
     
-#if H_MV_6_ILDDS_ILREFPICS_27_34
     Bool interLayerPredLayerIdcPresentFlag = false; 
-#endif
     if ( getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && numDirectRefLayers > 0 )
     {         
       pcSlice->setInterLayerPredEnabledFlag ( gopEntry.m_numActiveRefLayerPics > 0 );     
@@ -691,9 +685,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
         if ( gopEntry.m_numActiveRefLayerPics != vps->getNumDirectRefLayers( getLayerId() ) )
         {        
-#if H_MV_6_ILDDS_ILREFPICS_27_34
           interLayerPredLayerIdcPresentFlag = true; 
-#endif
           for (Int i = 0; i < gopEntry.m_numActiveRefLayerPics; i++ )
           {
             pcSlice->setInterLayerPredLayerIdc( i, gopEntry.m_interLayerPredLayerIdc[ i ] ); 
@@ -701,7 +693,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         }
       }
     }
-#if H_MV_6_ILDDS_ILREFPICS_27_34
     if ( !interLayerPredLayerIdcPresentFlag )
     {
       for( Int i = 0; i < pcSlice->getNumActiveRefLayerPics(); i++ )   
@@ -709,7 +700,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         pcSlice->setInterLayerPredLayerIdc(i, pcSlice->getRefLayerPicIdc( i ) );
       }
     }
-#endif
 
 
     assert( pcSlice->getNumActiveRefLayerPics() == gopEntry.m_numActiveRefLayerPics ); 
@@ -744,11 +734,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
   
 #if H_3D_ARP
     //GT: This seems to be broken when layerId in vps is not equal to layerId in nuh
-#if SHARP_ARP_REF_CHECK_F0105
     pcSlice->setARPStepNum(m_ivPicLists);
-#else
-    pcSlice->setARPStepNum();
-#endif
     if(pcSlice->getARPStepNum() > 1)
     {
       for(Int iLayerId = 0; iLayerId < getLayerId(); iLayerId ++ )
@@ -1318,6 +1304,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
       nalu = NALUnit(NAL_UNIT_PPS);
 #endif
+#if PPS_FIX_DEPTH
+      if(!pcSlice->getIsDepth() || !pcSlice->getViewIndex() )
+      {
+#endif
       m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
       m_pcEntropyCoder->encodePPS(pcSlice->getPPS());
       writeRBSPTrailingBits(nalu.m_Bitstream);
@@ -1325,7 +1315,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if RATE_CONTROL_LAMBDA_DOMAIN
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
 #endif
-
+#if PPS_FIX_DEPTH
+      }
+#endif
       xCreateLeadingSEIMessages(accessUnit, pcSlice->getSPS());
 
       m_bSeqFirst = false;

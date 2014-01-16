@@ -88,11 +88,7 @@ protected:
 // layer sets   
   Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
   std::vector< std::vector<Int> > m_layerIdsInSets;           ///< LayerIds in vps of layer set 
-#if H_MV_6_PS_0109_25
   Int                    m_defaultOneTargetOutputLayerIdc;    ///< Output highest layer of layer sets by default when equal to 1
-#else
-  Bool                   m_defaultOneTargetOutputLayerFlag;   ///< Output highest layer of layer sets by default  
-#endif
   std::vector<Int>       m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
   std::vector< std::vector<Int> > m_layerIdsInAddOutputLayerSet; ///< LayerIds in vps of additional output layers
   std::vector<Int>       m_profileLevelTierIdx;               ///< Indices of of profile level tier
@@ -101,17 +97,13 @@ protected:
   std::vector< std::vector<Int> > m_directRefLayers;          ///< LayerIds of direct reference layers
   std::vector< std::vector<Int> > m_dependencyTypes;          ///< Dependency types of direct reference layers
 
-#if H_MV_6_HRD_O0217_13
   // DBP Size
   Bool m_subLayerFlagInfoPresentFlag;
-#endif
 
   // VPS VUI
   Bool m_vpsVuiPresentFlag;
-#if H_MV_6_PS_O0223_29
   Bool m_crossLayerPicTypeAlignedFlag;
   Bool m_crossLayerIrapAlignedFlag;
-#endif
   Bool m_bitRatePresentVpsFlag;
   Bool m_picRatePresentVpsFlag;
   std::vector< std::vector<Bool > > m_bitRatePresentFlag;
@@ -120,14 +112,12 @@ protected:
   std::vector< std::vector<Int  > > m_maxBitRate;
   std::vector< std::vector<Int  > > m_constantPicRateIdc;
   std::vector< std::vector<Int  > > m_avgPicRate;
-#if H_MV_6_O0226_37
   Bool                              m_tilesNotInUseFlag; 
   std::vector< Bool >               m_tilesInUseFlag;
   std::vector< Bool >               m_loopFilterNotAcrossTilesFlag; 
   Bool                              m_wppNotInUseFlag;
   std::vector< Bool >               m_wppInUseFlag;
 
-#endif
   std::vector< std::vector<Bool > > m_tileBoundariesAlignedFlag;  
   Bool m_ilpRestrictedRefLayersFlag;
   std::vector< std::vector<Int  > > m_minSpatialSegmentOffsetPlus1;
@@ -135,12 +125,8 @@ protected:
   std::vector< std::vector<Int  > > m_minHorizontalCtuOffsetPlus1;
 
 #if H_3D_IV_MERGE
-#if QC_DEPTH_IV_MRG_F0125
   vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
-#else
-  Bool                   m_ivMvPredFlag;                      ///< Interview motion vector prediction 
-#endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   Int                    m_iSubPULog2Size;                    
 #endif
 #endif
@@ -149,11 +135,7 @@ protected:
   UInt                   m_uiARPStepNum;
 #endif
 #if H_3D_IC
-#if SEC_ONLY_TEXTURE_IC_F0151
   Bool   m_abUseIC;
-#else
-  vector<Bool> m_abUseIC;                                    ///< flag for using illumination compensation for inter-view prediction
-#endif
 #endif
 #if H_3D_NBDV_REF
   Bool m_depthRefinementFlag;  
@@ -195,7 +177,7 @@ protected:
   Bool m_frameOnlyConstraintFlag;
   
   // coding structure
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
   std::vector<Int> m_iIntraPeriod;                            ///< period of I-slice (random access period)
 #else
   Int       m_iIntraPeriod;                                   ///< period of I-slice (random access period)
@@ -496,9 +478,6 @@ protected:
 #endif
 #if H_3D_DIM
   Bool      m_useDMM;                                        ///< flag for using DMM
-#if !SEC_DMM3_RBC_F0147
-  Bool      m_useRBC;                                        ///< flag for using RBC
-#endif
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif
@@ -509,7 +488,7 @@ protected:
 #if H_3D_INTER_SDC
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
 #endif
-#if SEC_MPI_ENABLING_MERGE_F0150
+#if H_3D_IV_MERGE
   Bool m_bMPIFlag;                                           ///< flag for MPI of depth map coding
 #endif
 #endif

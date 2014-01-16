@@ -377,9 +377,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
   ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
-#if !SEC_DMM3_RBC_F0147
-  ("RBC",                   m_useRBC,           true,  "Region boundary chain mode")
-#endif
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
@@ -390,11 +387,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // Layer Sets + Output Layer Sets + Profile Tier Level
   ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
   ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
-#if H_MV_6_PS_0109_25
   ("DefaultOneTargetOutputLayerFlag"  , m_defaultOneTargetOutputLayerIdc  , 0, "Output highest layer of layer sets by default")
-#else
-  ("DefaultOneTargetOutputLayerFlag", m_defaultOneTargetOutputLayerFlag,  false , "Output highest layer of layer sets by default")      
-#endif
   ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
   ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(1,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "LayerIds of additional output layers")  
   ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
@@ -450,12 +443,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   ("QuadtreeTUMaxDepthIntra", m_uiQuadtreeTUMaxDepthIntra, 1u, "Depth of TU tree for intra CUs")
   ("QuadtreeTUMaxDepthInter", m_uiQuadtreeTUMaxDepthInter, 2u, "Depth of TU tree for inter CUs")
-  
   // Coding structure parameters
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV  
   ("IntraPeriod,-ip",         m_iIntraPeriod,std::vector<Int>(1,-1), "Intra period in frames, (-1: only first frame), per layer")
 #else
-  ("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
+("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
 #endif
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
@@ -517,21 +509,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_ARP
   ("AdvMultiviewResPred",      m_uiUseAdvResPred,           (UInt)1, "Usage of Advanced Residual Prediction" )
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   ("SubPULog2Size", m_iSubPULog2Size, (Int)3, "Sub-PU size index: 2^n")
 #endif
 
 #if H_3D_IC
-#if SEC_ONLY_TEXTURE_IC_F0151
   ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
-#else
-  ("IlluCompEnable",           m_abUseIC, std::vector<Bool>(2, true), "Enable illumination compensation")
-#endif
 #endif
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
 #endif
-#if SEC_MPI_ENABLING_MERGE_F0150
+#if H_3D_IV_MERGE
   ("MPI",                      m_bMPIFlag,        true, "Enable MPI")
 #endif
   // Coding tools
@@ -632,16 +620,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
 #if H_MV
 
-#if H_MV_6_HRD_O0217_13
   // DBP Size
   ("SubLayerFlagInfoPresentFlag",  m_subLayerFlagInfoPresentFlag , false                                           , "SubLayerFlagInfoPresentFlag")
-#endif
   // VPS VUI
   ("VpsVuiPresentFlag"           , m_vpsVuiPresentFlag           , false                                           , "VpsVuiPresentFlag           ")
-#if H_MV_6_PS_O0223_29
   ("CrossLayerPicTypeAlignedFlag", m_crossLayerPicTypeAlignedFlag, false                                           , "CrossLayerPicTypeAlignedFlag")  // Could actually be derived by the encoder
   ("CrossLayerIrapAlignedFlag"   , m_crossLayerIrapAlignedFlag   , false                                           , "CrossLayerIrapAlignedFlag   ")  // Could actually be derived by the encoder
-#endif
   ("BitRatePresentVpsFlag"       , m_bitRatePresentVpsFlag       , false                                           , "BitRatePresentVpsFlag       ")
   ("PicRatePresentVpsFlag"       , m_picRatePresentVpsFlag       , false                                           , "PicRatePresentVpsFlag       ")
   ("BitRatePresentFlag"          , m_bitRatePresentFlag          , std::vector< Bool >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "BitRatePresentFlag per sub layer for the N-th layer set")
@@ -650,13 +634,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MaxBitRate"                  , m_maxBitRate                  , std::vector< Int  >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "MaxBitRate         per sub layer for the N-th layer set")
   ("ConstantPicRateIdc"          , m_constantPicRateIdc          , std::vector< Int  >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "ConstantPicRateIdc per sub layer for the N-th layer set")
   ("AvgPicRate"                  , m_avgPicRate                  , std::vector< Int  >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "AvgPicRate         per sub layer for the N-th layer set")
-#if H_MV_6_O0226_37
   ("TilesNotInUseFlag"            , m_tilesNotInUseFlag            , true                                          , "TilesNotInUseFlag            ")
   ("TilesInUseFlag"               , m_tilesInUseFlag               , std::vector< Bool >(1,false)                   , "TilesInUseFlag               ")
   ("LoopFilterNotAcrossTilesFlag" , m_loopFilterNotAcrossTilesFlag , std::vector< Bool >(1,false)                  , "LoopFilterNotAcrossTilesFlag ")
   ("WppNotInUseFlag"              , m_wppNotInUseFlag              , true                                          , "WppNotInUseFlag              ")
   ("WppInUseFlag"                 , m_wppInUseFlag                 , std::vector< Bool >(1,0)                      , "WppInUseFlag                 ")
-#endif
   ("TileBoundariesAlignedFlag"   , m_tileBoundariesAlignedFlag   , std::vector< Bool >(1,0)  ,MAX_NUM_LAYERS       , "TileBoundariesAlignedFlag    per direct reference for the N-th layer")
   ("IlpRestrictedRefLayersFlag"  , m_ilpRestrictedRefLayersFlag  , false                                           , "IlpRestrictedRefLayersFlag")
   ("MinSpatialSegmentOffsetPlus1", m_minSpatialSegmentOffsetPlus1, std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
@@ -786,11 +768,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PC",                              m_bUsePC                  , true          , "Use Predictive Coding with QTL" )
 #endif
 #if H_3D_IV_MERGE
-#if QC_DEPTH_IV_MRG_F0125  
   ("IvMvPred",                        m_ivMvPredFlag            , std::vector<Bool>(2, true)            , "inter view motion prediction " )
-#else
-  ("IvMvPred",                        m_ivMvPredFlag,           true            , "inter view motion prediction " )  
-#endif
 #endif
 #if H_3D_NBDV_REF
   ("DepthRefinement",                 m_depthRefinementFlag,    true           , "depth refinement by DoNBDV" )  
@@ -1073,14 +1051,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   xResizeVector( m_bLoopFilterDisable ); 
   xResizeVector( m_bUseSAO ); 
-#if H_MV_LAYER_WISE_STARTUP
   xResizeVector( m_iIntraPeriod ); 
-#endif
-#if H_MV_6_O0226_37
   xResizeVector( m_tilesInUseFlag ); 
   xResizeVector( m_loopFilterNotAcrossTilesFlag ); 
   xResizeVector( m_wppInUseFlag ); 
-#endif
 #else
   m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
   ::memset( m_aidQP, 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
@@ -1425,11 +1399,7 @@ Void TAppEncCfg::xCheckParameter()
     }
     for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
     {
-#if H_MV_6_LAYER_ID_32
       xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than MAX_NUM_LAYER_IDS" ); 
-#else
-      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than 64" ); 
-#endif
     }
   }
 
@@ -1455,9 +1425,7 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
 
-#if H_MV_6_PS_0109_25
   xConfirmPara( m_defaultOneTargetOutputLayerIdc < 0 || m_defaultOneTargetOutputLayerIdc > 1, "Default one target output layer idc must be equal to 0 or equal to 1" );
-#endif
   xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
 
   // Layer Dependencies  
@@ -1474,7 +1442,7 @@ Void TAppEncCfg::xCheckParameter()
 #endif
   xConfirmPara( m_iGOPSize < 1 ,                                                            "GOP Size must be greater or equal to 1" );
   xConfirmPara( m_iGOPSize > 1 &&  m_iGOPSize % 2,                                          "GOP Size must be a multiple of 2, if GOP Size is greater than 1" );
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
   {
     xConfirmPara( (m_iIntraPeriod[layer] > 0 && m_iIntraPeriod[layer] < m_iGOPSize) || m_iIntraPeriod[layer] == 0, "Intra period must be more than GOP size, or -1 , not 0" );
@@ -1507,7 +1475,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iQPAdaptationRange <= 0,                                                  "QP Adaptation Range must be more than 0" );
   if (m_iDecodingRefreshType == 2)
   {
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
     for (Int i = 0; i < m_numberOfLayers; i++ )
     {
       xConfirmPara( m_iIntraPeriod[i] > 0 && m_iIntraPeriod[i] <= m_iGOPSize ,                      "Intra period must be larger than GOP size for periodic IDR pictures");
@@ -1543,7 +1511,7 @@ Void TAppEncCfg::xCheckParameter()
 #if H_3D_ARP
   xConfirmPara( ( 0 != m_uiUseAdvResPred ) &&  ( 1 != m_uiUseAdvResPred ), "UseAdvResPred must be 0 or 1." );
 #endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   xConfirmPara( m_iSubPULog2Size < 2,                                        "SubPULog2Size must be 2 or greater.");
   xConfirmPara( m_iSubPULog2Size > 6,                                        "SubPULog2Size must be 6 or smaller.");
   xConfirmPara( (1<<m_iSubPULog2Size) > m_uiMaxCUWidth,                      "SubPULog2Size must be log2(maxCUSize) or smaller.");
@@ -1773,7 +1741,7 @@ Void TAppEncCfg::xCheckParameter()
 #endif
   /* if this is an intra-only sequence, ie IntraPeriod=1, don't verify the GOP structure
    * This permits the ability to omit a GOP structure specification */
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
   if (m_iIntraPeriod[layer] == 1 && m_GOPList[0].m_POC == -1) {
 #else
   if (m_iIntraPeriod == 1 && m_GOPList[0].m_POC == -1) {
@@ -1802,10 +1770,10 @@ Void TAppEncCfg::xCheckParameter()
     isOK[i]=false;
   }
   Int numOK=0;
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
   xConfirmPara( m_iIntraPeriod[layer] >=0&&(m_iIntraPeriod[layer]%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" ); 
 #else
-  xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" );
+xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period must be a multiple of GOPSize, or -1" );
 #endif
 
   for(Int i=0; i<m_iGOPSize; i++)
@@ -1817,11 +1785,7 @@ Void TAppEncCfg::xCheckParameter()
   }
   
 #if H_MV
-#if H_MV_LAYER_WISE_STARTUP
   if ( (m_iIntraPeriod[layer] != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable[layer]) )
-#else
-  if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable[layer]) )
-#endif
 #else
   if ( (m_iIntraPeriod != 1) && !m_loopFilterOffsetInPPS && m_DeblockingFilterControlPresent && (!m_bLoopFilterDisable) )
 #endif
@@ -2346,7 +2310,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
-#if H_MV_LAYER_WISE_STARTUP
+#if H_MV
   xPrintParaVector( "Intra period", m_iIntraPeriod );
 #else
   printf("Intra period                 : %d\n", m_iIntraPeriod );
@@ -2504,12 +2468,8 @@ Void TAppEncCfg::xPrintParameter()
   printf("PC:%d " , m_bUsePC );
 #endif
 #if H_3D_IV_MERGE
-#if QC_DEPTH_IV_MRG_F0125
   printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
-#else
-  printf("IvMvPred:%d ", m_ivMvPredFlag );
-#endif
-#if MTK_SPIVMP_F0110
+#if H_3D_SPIVMP
   printf(" SubPULog2Size:%d  " , m_iSubPULog2Size  );
 #endif
 #endif
@@ -2517,11 +2477,7 @@ Void TAppEncCfg::xPrintParameter()
   printf(" ARP:%d  ", m_uiUseAdvResPred  );
 #endif
 #if H_3D_IC
-#if SEC_ONLY_TEXTURE_IC_F0151
   printf( "IlluCompEnable: %d ", m_abUseIC);
-#else
-  printf( "IlluCompEnable: %d %d ", m_abUseIC[0] ? 1 : 0, m_abUseIC[1] ? 1 : 0 );
-#endif
 #endif
 #if H_3D_NBDV_REF
   printf("DepthRefinement:%d ", m_depthRefinementFlag );  
@@ -2534,16 +2490,13 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_DIM
   printf("DMM:%d ", m_useDMM );
-#if !SEC_DMM3_RBC_F0147
-  printf("RBC:%d ", m_useRBC );
-#endif
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif
 #if H_3D_INTER_SDC
   printf( "interSDC: %d ", m_bDepthInterSDCFlag ? 1 : 0 );
 #endif
-#if SEC_MPI_ENABLING_MERGE_F0150
+#if H_3D_IV_MERGE
   printf( "MPI: %d ", m_bMPIFlag ? 1 : 0 );
 #endif
   printf("\n\n");  

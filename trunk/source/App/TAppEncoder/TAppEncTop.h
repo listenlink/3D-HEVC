@@ -85,7 +85,7 @@ private:
   Int                        m_iFrameRcvd;                  ///< number of received frames
 #endif
 
-#if DLT_DIFF_CODING_IN_PPS
+#if H_3D
   TComDLT                    m_dlt;                         ///< dlt
 #endif
 
@@ -128,25 +128,17 @@ protected:
   Void xSetLayerSets              ( TComVPS& vps );
   Void xSetProfileTierLevel       ( TComVPS& vps );
   Void xSetRepFormat              ( TComVPS& vps );
-#if H_MV_6_HRD_O0217_13
   Void xSetDpbSize                ( TComVPS& vps );
-#endif
   Void xSetVPSVUI                 ( TComVPS& vps );
   GOPEntry* xGetGopEntry( Int layerIdInVps, Int poc );
   Int  xGetMax( std::vector<Int>& vec);
 #endif
 #if H_3D
   Void xSetVPSExtension2( TComVPS& vps );
-#endif
-#if DLT_DIFF_CODING_IN_PPS
   Void xDeriveDltArray( TComVPS& vps, TComDLT& dlt );
 #endif
 #if H_3D_DIM_DLT
-#if DLT_DIFF_CODING_IN_PPS
   Void  xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt);
-#else
-  Void  xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps);
-#endif
 #endif
 public:
   TAppEncTop();
