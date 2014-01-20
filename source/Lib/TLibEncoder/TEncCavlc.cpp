@@ -1554,6 +1554,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }
     }
   }
+#if QC_SPIVMP_MPI_G0119
+  WRITE_UVLC( pcVPS->getSubPUMPILog2Size( ) - 3, "log2_sub_PU_MPI_size_minus3");
+#endif
 #if H_3D_TMVP
   WRITE_FLAG( pcVPS->getIvMvScalingFlag( ) ? 1 : 0 ,          "iv_mv_scaling_flag" );
 #endif

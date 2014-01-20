@@ -782,6 +782,9 @@ private:
   Int         m_iSubPULog2Size           [MAX_NUM_LAYERS   ];
 #endif
 #endif
+#if QC_SPIVMP_MPI_G0119
+  Int         m_iSubPUMPILog2Size;
+#endif
 #if H_3D_VSP
   Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ];
 #endif
@@ -1056,6 +1059,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Int     getSubPULog2Size(Int layerIdInVps)           { return m_iSubPULog2Size[layerIdInVps]; }
   Void    setSubPULog2Size(Int layerIdInVps, Int u)    { m_iSubPULog2Size[layerIdInVps] = u;}
 #endif
+#endif
+#if QC_SPIVMP_MPI_G0119
+  Int     getSubPUMPILog2Size( )           { return m_iSubPUMPILog2Size; }
+  Void    setSubPUMPILog2Size( Int u )     { m_iSubPUMPILog2Size = u;    }
 #endif
 #if H_3D_VSP
   Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }

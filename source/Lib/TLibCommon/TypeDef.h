@@ -225,6 +225,11 @@
 #define H_3D_ARP_WFNR                     3
 #endif
 
+#if H_3D_SPIVMP
+#define QC_SPIVMP_MPI_G0119               1 // Sub-PU level MPI merge candidate
+#endif
+#define QC_DEPTH_MERGE_SIMP_G0127         1 // Remove DV candidate and shifting candidate for depth coding
+
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
