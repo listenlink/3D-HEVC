@@ -235,7 +235,9 @@
 #define H_3D_DELTA_DLT                    1
 #endif
 #define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
-
+#if H_3D_DIM_SDC && H_3D_INTER_SDC
+#define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
+#endif
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087

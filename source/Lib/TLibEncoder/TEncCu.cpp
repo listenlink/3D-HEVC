@@ -1587,7 +1587,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
   
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
-  
+#if QC_SDC_UNIFY_G0130
+  m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
+#endif
   if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
   {
     m_pcEntropyCoder->encodeIPCMInfo( pcCU, uiAbsPartIdx );
@@ -1608,7 +1610,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
   m_pcEntropyCoder->encodeInterSDCFlag( pcCU, uiAbsPartIdx, false );
 #endif
 
@@ -2284,6 +2286,9 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
+#if QC_SDC_UNIFY_G0130
+  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
+#endif
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
 
@@ -2373,6 +2378,9 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize ( rpcTempCU, 0, uiDepth, true );
+#if QC_SDC_UNIFY_G0130
+  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
+#endif
   m_pcEntropyCoder->encodeIPCMInfo ( rpcTempCU, 0, true );
 
   if( m_bUseSBACRD ) m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
