@@ -410,6 +410,9 @@ protected:
 #if H_3D_SPIVMP
   Int      m_iSubPULog2Size;
 #endif
+#if QC_SPIVMP_MPI_G0119
+  Int      m_iSubPUMPILog2Size;
+#endif
 #if H_3D_IC
   Bool      m_bUseIC;
 #endif
@@ -514,7 +517,10 @@ public:
   Int        getSubPULog2Size                   ()                   { return m_iSubPULog2Size;}
   Void       setSubPULog2Size                   (Int u)              { m_iSubPULog2Size = u; }     
 #endif
-
+#if QC_SPIVMP_MPI_G0119
+  Int        getSubPUMPILog2Size            ()               { return m_iSubPUMPILog2Size;}
+  Void       setSubPUMPILog2Size            (Int u)          { m_iSubPUMPILog2Size = u;   }     
+#endif
 #if H_3D_IC
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
