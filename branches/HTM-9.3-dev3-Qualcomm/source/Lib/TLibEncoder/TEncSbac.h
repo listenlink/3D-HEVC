@@ -153,8 +153,13 @@ public:
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+  Void codeDeltaDC       ( TComDataCU* pcCU, UInt absPartIdx );
+  Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#else
   Void codeInterSDCFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#endif
 #endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
@@ -248,7 +253,9 @@ private:
   ContextModel3DBuffer m_cDdcDataSCModel;
 #if QC_GENERIC_SDC_G0122
   ContextModel3DBuffer m_cAngleFlagSCModel;
+#if !QC_SDC_UNIFY_G0130
   ContextModel3DBuffer m_cIntraSdcFlagSCModel;
+#endif
 #endif
 #if H_3D_DIM_DMM
   ContextModel3DBuffer m_cDmm1DataSCModel;
@@ -258,10 +265,13 @@ private:
   ContextModel3DBuffer m_cSDCResidualSCModel;
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
   ContextModel3DBuffer m_cInterSDCFlagSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSignFlagSCModel;
+#endif
+#if QC_SDC_UNIFY_G0130
+  ContextModel3DBuffer m_cSDCFlagSCModel;
 #endif
 };
 

@@ -920,7 +920,9 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
       }
       
       m_pcEntropyCoder  ->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
-
+#if QC_SDC_UNIFY_G0130
+      m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
       if (pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_2Nx2N )
       {
         m_pcEntropyCoder->encodeIPCMInfo( pcCU, 0, true );
@@ -955,6 +957,21 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiAbsPartIdx );
       }
     }
+#if QC_SDC_UNIFY_G0130
+    Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
+    UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
+
+    if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
+    {
+      for( Int iPart = 0; iPart < iPartNum; iPart++ )
+      {
+        if( getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx + uiPartOffset*iPart ) ) < DIM_NUM_TYPE ) 
+        {
+          m_pcEntropyCoder->encodeDeltaDC( pcCU, uiAbsPartIdx + uiPartOffset*iPart );
+        }
+      }
+    }
+#endif
   }
   if( bChroma )
   {
@@ -2046,10 +2063,29 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   m_pcEntropyCoder->resetBits();
   
   // encode reduced intra header
+#if QC_SDC_UNIFY_G0130
+  if( !pcCU->getSlice()->isIntra() )
+  {
+    if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
+    {
+      m_pcEntropyCoder->encodeCUTransquantBypassFlag( pcCU, 0, true );
+    }
+    m_pcEntropyCoder->encodeSkipFlag( pcCU, 0, true );
+    m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
+  }
+
+  m_pcEntropyCoder->encodePartSize( pcCU, 0, true );
+  m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#else
   m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
+#endif
   
   // encode pred direction + DC residual data
   m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if QC_SDC_UNIFY_G0130
+  Bool bDummy = false;
+  m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth( 0 ), uiWidth, uiHeight, bDummy );
+#endif
   UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
   
 #if H_3D_VSO
@@ -5602,8 +5638,11 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
   {
     return;
   }
-
+#if QC_SDC_UNIFY_G0130
+  pcCU->setSDCFlagSubParts( true, 0, uiDepth );
+#else
   pcCU->setInterSDCFlagSubParts( true, 0, 0, uiDepth );
+#endif
 
   UInt  uiWidth      = pcCU->getWidth ( 0 );
   UInt  uiHeight     = pcCU->getHeight( 0 );
@@ -5641,8 +5680,11 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
   {
     Int iResiOffset = ( pResDC [uiSeg] > 0 ? ( uiSegSize[uiSeg] >> 1 ) : -1*( uiSegSize[uiSeg] >> 1 ) );
     pResDC [uiSeg]  = ( pResDC [uiSeg] + iResiOffset ) / (Int) uiSegSize[uiSeg];
-
+#if QC_SDC_UNIFY_G0130
+    pcCU->setSDCSegmentDCOffset( pResDC[uiSeg], uiSeg, 0 );
+#else
     pcCU->setInterSDCSegmentDCOffset( pResDC[uiSeg], uiSeg, 0 );
+#endif
   }
 
   Pel *pRec;
@@ -5697,10 +5739,18 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
   }
 #endif
 
+#if QC_SDC_UNIFY_G0130
+  Bool bNonSkip = false;
+#else
   Bool bNonSkip = true;
+#endif
   for( UInt uiSeg = 0; uiSeg < uiSegmentNum; uiSeg++ )
   {
+#if QC_SDC_UNIFY_G0130
+    bNonSkip |= ( pcCU->getSDCSegmentDCOffset( uiSeg, 0 ) != 0 ) ? 1 : 0;
+#else
     bNonSkip &= ( pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 ) != 0 ) ? 1 : 0;
+#endif
   }
 
   if( !bNonSkip )
@@ -6911,6 +6961,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodeSkipFlag ( pcCU, 0, true );
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
+#if QC_SDC_UNIFY_G0130
+    m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
@@ -6918,7 +6971,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0 );
 #endif
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
     m_pcEntropyCoder->encodeInterSDCFlag( pcCU, 0, true );
 #endif
     Bool bDummy = false;
