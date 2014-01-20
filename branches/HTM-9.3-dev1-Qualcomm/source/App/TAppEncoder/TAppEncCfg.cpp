@@ -512,7 +512,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_SPIVMP
   ("SubPULog2Size", m_iSubPULog2Size, (Int)3, "Sub-PU size index: 2^n")
 #endif
-
+#if QC_SPIVMP_MPI_G0119
+  ("SubPUMPILog2Size", m_iSubPUMPILog2Size, (Int)3, "Sub-PU MPI size index: 2^n")
+#endif
 #if H_3D_IC
   ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
 #endif
@@ -1516,6 +1518,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iSubPULog2Size > 6,                                        "SubPULog2Size must be 6 or smaller.");
   xConfirmPara( (1<<m_iSubPULog2Size) > m_uiMaxCUWidth,                      "SubPULog2Size must be log2(maxCUSize) or smaller.");
 #endif
+#if QC_SPIVMP_MPI_G0119
+  xConfirmPara( m_iSubPUMPILog2Size < 3,                                        "SubPUMPILog2Size must be 3 or greater.");
+  xConfirmPara( m_iSubPUMPILog2Size > 6,                                        "SubPUMPILog2Size must be 6 or smaller.");
+  xConfirmPara( ( 1 << m_iSubPUMPILog2Size ) > m_uiMaxCUWidth,                  "SubPUMPILog2Size must be log2(maxCUSize) or smaller.");
+#endif
 #if ADAPTIVE_QP_SELECTION
 #if H_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
@@ -2472,6 +2479,9 @@ Void TAppEncCfg::xPrintParameter()
 #if H_3D_SPIVMP
   printf(" SubPULog2Size:%d  " , m_iSubPULog2Size  );
 #endif
+#endif
+#if QC_SPIVMP_MPI_G0119
+  printf(" SubPUMPILog2Size:%d  " , m_iSubPUMPILog2Size  );
 #endif
 #if H_3D_ARP
   printf(" ARP:%d  ", m_uiUseAdvResPred  );

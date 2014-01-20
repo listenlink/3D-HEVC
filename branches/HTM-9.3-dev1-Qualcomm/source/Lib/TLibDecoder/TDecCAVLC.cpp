@@ -1761,7 +1761,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
     }
   }
-
+#if QC_SPIVMP_MPI_G0119
+  READ_UVLC (uiCode, "log2_sub_PU_MPI_size_minus3");              pcVPS->setSubPUMPILog2Size( uiCode + 3 ); 
+#endif
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
 }
 #endif
