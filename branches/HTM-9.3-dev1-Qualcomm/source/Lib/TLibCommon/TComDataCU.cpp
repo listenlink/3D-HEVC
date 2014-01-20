@@ -4350,7 +4350,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   ///////////////////////////////////////////////
   //////// INTER VIEW MOTION COMP(IvMC) /////////
   ///////////////////////////////////////////////
-
+#if QC_DEPTH_MERGE_SIMP_G0127
+  if( getSlice()->getIsDepth() )
+  {
+    ivCandDir[1] = ivCandDir[2] = ivCandDir[3] = 0;
+  }
+#endif
   if( ivCandDir[0] )
   {
     tmpMV[0].setMvField( cZeroMv, NOT_VALID );
@@ -4587,8 +4592,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   /////////////////////////////////////////////
   //////// INTER VIEW DISP COMP (IvDC) ////////
   /////////////////////////////////////////////
-
+#if QC_DEPTH_MERGE_SIMP_G0127
+  if( ivCandDir[1] && iCount < getSlice()->getMaxNumMergeCand() && !getSlice()->getIsDepth() )
+#else
   if( ivCandDir[1] && iCount < getSlice()->getMaxNumMergeCand())
+#endif
   {
     assert(iCount < getSlice()->getMaxNumMergeCand());
 
@@ -4749,7 +4757,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   ////////////////////////////////////////////////////
   //////// SHIFTED IV (IvMCShift + IvDCShift) ////////
   ////////////////////////////////////////////////////
+#if QC_DEPTH_MERGE_SIMP_G0127
+  if(  ivMvPredFlag && iCount < getSlice()->getMaxNumMergeCand() && !getSlice()->getIsDepth() ) 
+#else
   if(  ivMvPredFlag && iCount < getSlice()->getMaxNumMergeCand() ) 
+#endif
   {
     if(xAddIvMRGCand( mrgCandIdx,  iCount, abCandIsInter, pcMvFieldNeighbours, puhInterDirNeighbours, ivCandDir, ivCandMv, ivCandRefIdx, posIvDC, vspFlag, iCount3DV, inheritedVSPDisInfo ) )
     {
@@ -7299,7 +7311,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
    iCurrPosX  += ( iWidth  >> 1 );
    iCurrPosY  += ( iHeight >> 1 );
  }
+#if QC_DEPTH_MERGE_SIMP_G0127
+ for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#else
  for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < 2; iLoopCan ++) 
+#endif
 #else
   for(Int iLoopCan = 1; iLoopCan < 2; iLoopCan ++) 
 #endif
@@ -7386,7 +7402,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   }
 #if H_3D_SPIVMP
 #if QC_SPIVMP_MPI_G0119
+#if QC_DEPTH_MERGE_SIMP_G0127
+  for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#else
   for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < 2; iLoopCan ++) 
+#endif
 #else
   for(Int iLoopCan = 1; iLoopCan < 2; iLoopCan ++)
 #endif
@@ -7401,7 +7421,10 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   ////////////////////////////////
   /////// IvDC + IvDCShift ///////
   ////////////////////////////////
-  
+#if QC_DEPTH_MERGE_SIMP_G0127
+  if( !getSlice()->getIsDepth() )
+  {
+#endif
   for( Int iRefListId = 0; iRefListId < 2 ; iRefListId++ )
   {
     RefPicList  eRefPicListDMV       = RefPicList( iRefListId );
@@ -7435,6 +7458,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   {
     availableMcDc[1 + (iLoopCan << 1)] = ( abPdmAvailable[2 + (iLoopCan<<2)] ? 1 : 0 ) + ( abPdmAvailable[3 + (iLoopCan<<2)] ? 2 : 0 );
   }
+#if QC_DEPTH_MERGE_SIMP_G0127
+  }
+#endif
   return false;
 }
 #endif
