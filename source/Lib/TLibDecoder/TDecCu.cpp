@@ -931,12 +931,18 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool  bLeftAvail  = false;
   pcCU->getPattern()->initPattern   ( pcCU, 0, uiAbsPartIdx );
   pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, 0, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
-  
+#if QC_GENERIC_SDC_G0122
+  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+#endif
   //===== get prediction signal =====
 #if H_3D_DIM
   if( isDimMode( uiLumaPredMode ) )
   {
-    m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight );
+    m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight 
+#if QC_GENERIC_SDC_G0122
+      , false, dmm4Segmentation
+#endif
+      );
   }
   else
   {
@@ -962,7 +968,14 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
   }
-  
+#if QC_GENERIC_SDC_G0122
+  if( getDimType( uiLumaPredMode ) == DMM4_IDX )
+  {
+    uiNumSegments = 2;
+    pbMask  = dmm4Segmentation->getPattern();
+    uiMaskStride = dmm4Segmentation->getStride();
+  }
+#endif
   // get DC prediction for each segment
   Pel apDCPredValues[2];
   m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
@@ -1024,6 +1037,9 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pRecCb += uiStrideC;
     pRecCr += uiStrideC;
   }
+#if QC_GENERIC_SDC_G0122
+  dmm4Segmentation->destroy(); delete dmm4Segmentation;
+#endif
 }
 #endif
 
