@@ -570,6 +570,10 @@ public:
   Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
   Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
+#if QC_GENERIC_SDC_G0122
+  UInt          getCtxSDCFlag          ( UInt   uiAbsPartIdx );
+  UInt          getCtxAngleFlag        ( UInt   uiAbsPartIdx );
+#endif
 #endif
 #endif
 #if H_3D_INTER_SDC

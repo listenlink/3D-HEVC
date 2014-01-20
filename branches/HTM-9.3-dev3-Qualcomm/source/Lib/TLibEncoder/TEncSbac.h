@@ -246,6 +246,10 @@ private:
   ContextModel3DBuffer m_cDepthIntraModeSCModel;
   ContextModel3DBuffer m_cDdcFlagSCModel;
   ContextModel3DBuffer m_cDdcDataSCModel;
+#if QC_GENERIC_SDC_G0122
+  ContextModel3DBuffer m_cAngleFlagSCModel;
+  ContextModel3DBuffer m_cIntraSdcFlagSCModel;
+#endif
 #if H_3D_DIM_DMM
   ContextModel3DBuffer m_cDmm1DataSCModel;
 #endif

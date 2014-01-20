@@ -92,6 +92,10 @@ TEncSbac::TEncSbac()
 , m_cDepthIntraModeSCModel    ( 1,             1,               NUM_DEPTH_INTRA_MODE_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDdcFlagSCModel           ( 1,             1,               NUM_DDC_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDdcDataSCModel           ( 1,             1,               NUM_DDC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
+#if QC_GENERIC_SDC_G0122
+, m_cAngleFlagSCModel         ( 1,             1,               NUM_ANGLE_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cIntraSdcFlagSCModel      ( 1,             1,               NUM_INTRASDC_FLAG_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #if H_3D_DIM_DMM
 , m_cDmm1DataSCModel          ( 1,             1,               NUM_DMM1_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
@@ -167,6 +171,10 @@ Void TEncSbac::resetEntropy           ()
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
+#if QC_GENERIC_SDC_G0122
+  m_cAngleFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_ANGLE_FLAG );
+  m_cIntraSdcFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRASDC_FLAG );
+#endif
 #if H_3D_DIM_DMM
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
 #endif
@@ -251,6 +259,10 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cDepthIntraModeSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
       curCost += m_cDdcFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_FLAG );
       curCost += m_cDdcDataSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_DATA );
+#if QC_GENERIC_SDC_G0122
+      curCost += m_cAngleFlagSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_ANGLE_FLAG );  
+      curCost += m_cIntraSdcFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_INTRASDC_FLAG );  
+#endif
 #if H_3D_DIM_DMM
       curCost += m_cDmm1DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM1_DATA );
 #endif
@@ -316,6 +328,10 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
+#if QC_GENERIC_SDC_G0122
+  m_cAngleFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_ANGLE_FLAG );
+  m_cIntraSdcFlagSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_INTRASDC_FLAG );
+#endif
 #if H_3D_DIM_DMM
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
 #endif
@@ -628,6 +644,10 @@ Void TEncSbac::loadIntraDepthMode( TEncSbac* pSrc)
 
   this->m_cDepthIntraModeSCModel .copyFrom( &pSrc->m_cDepthIntraModeSCModel );
   this->m_cDdcFlagSCModel        .copyFrom( &pSrc->m_cDdcFlagSCModel );
+#if QC_GENERIC_SDC_G0122
+  this->m_cAngleFlagSCModel      .copyFrom( &pSrc->m_cAngleFlagSCModel );
+  this->m_cIntraSdcFlagSCModel   .copyFrom( &pSrc->m_cIntraSdcFlagSCModel );
+#endif
 }
 #endif
 
@@ -1015,7 +1035,11 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
     }
     if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
 #if H_3D_DIM_SDC
+#if QC_GENERIC_SDC_G0122
+      if( 1 )
+#else
       if( !pcCU->getSDCFlag( absPartIdx+partOffset*j ) )
+#endif
 #endif
     {
 #endif
@@ -1041,7 +1065,11 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
 #if H_3D_DIM
     if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
 #if H_3D_DIM_SDC
+#if QC_GENERIC_SDC_G0122
+      if( 1 )
+#else
       if( !pcCU->getSDCFlag( absPartIdx+partOffset*j ) )
+#endif
 #endif
     {
 #endif
@@ -1145,7 +1173,11 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
   {
     UInt dimDeltaDC;
     Pel  deltaDC;
+#if QC_GENERIC_SDC_G0122
+    UInt uiNumSegments = isDimMode( dir ) ? 2 : 1;
+#else
     UInt uiNumSegments = ( dir == PLANAR_IDX ) ? 1 : 2;
+#endif
     if( pcCU->getSDCFlag( absPartIdx ) )
     {
       if( uiNumSegments==1 )
@@ -1175,6 +1207,36 @@ Void TEncSbac::codeIntraDepth( TComDataCU* pcCU, UInt absPartIdx )
   }
 }
 
+#if QC_GENERIC_SDC_G0122
+Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
+{
+  UInt dir = pcCU->getLumaIntraDir( absPartIdx );
+
+  if( ( pcCU->getSlice()->getSPS()->getMaxCUWidth() >> pcCU->getDepth( absPartIdx ) ) < 64 ) //DMM and HEVC intra modes are both allowed
+  {
+    m_pcBinIf->encodeBin( isDimMode( dir ) ? 0 : 1, m_cAngleFlagSCModel.get( 0, 0, pcCU->getCtxAngleFlag( absPartIdx ) ) );
+  }
+
+  if( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N ) //SDC is allowed only in this case
+  {
+    m_pcBinIf->encodeBin( pcCU->getSDCFlag( absPartIdx ) ? 1 : 0, m_cIntraSdcFlagSCModel.get( 0, 0, pcCU->getCtxSDCFlag( absPartIdx ) ) );
+  }
+
+  if( isDimMode( dir ) )
+  {
+    UInt uiCodeIdx = 0;
+
+    switch( getDimType( dir ) )
+    {
+    case DMM1_IDX: uiCodeIdx = 0; break;
+    case DMM4_IDX: uiCodeIdx = 1; break;
+    default:                      break;
+    }
+    //mode coding
+    m_pcBinIf->encodeBin( uiCodeIdx == 0 ? 0 : 1, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
+  }
+}
+#else
 Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 {
   UInt codeWordTable[3][7] =    {{0, 0, 0, 1, 0, 0, 0},{0, 2, 6, 14, 15, 0, 0},{0, 1, 0, 0, 0, 0, 0}};
@@ -1215,6 +1277,7 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     m_pcBinIf->encodeBin( bit!=0 , m_cDepthIntraModeSCModel.get(0, 0, ctxDepthMode) );
   }
 }
+#endif
 #endif
 
 
