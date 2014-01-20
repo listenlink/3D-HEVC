@@ -2773,6 +2773,17 @@ Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+Void TDecCavlc::parseDeltaDC( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{ 
+  assert(0);
+}
+
+Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#else
 Void TDecCavlc::parseInterSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -2782,6 +2793,7 @@ Void TDecCavlc::parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx,
 {
   assert(0);
 }
+#endif
 #endif
 // ====================================================================================================================
 // Protected member functions

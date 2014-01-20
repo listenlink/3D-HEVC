@@ -494,7 +494,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 
   m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
   m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
-
+#if QC_SDC_UNIFY_G0130
+  m_pcEntropyDecoder->decodeSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
   if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
   {
     m_pcEntropyDecoder->decodeIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
@@ -514,7 +516,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   
   // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
   m_pcEntropyDecoder->decodeInterSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
   // Coefficient decoding
@@ -585,7 +587,11 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   {
     case MODE_INTER:
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+      if( m_ppcCU[uiDepth]->getSDCFlag( 0 ) )
+#else
       if( m_ppcCU[uiDepth]->getInterSDCFlag( 0 ) )
+#endif
       {
         xReconInterSDC( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
       }
@@ -660,8 +666,11 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
     {
       UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
-
-      pResi[ uiPelX ] = pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 );;
+#if QC_SDC_UNIFY_G0130
+      pResi[ uiPelX ] = pcCU->getSDCSegmentDCOffset( uiSeg, 0 );
+#else
+      pResi[ uiPelX ] = pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 );
+#endif
     }
     pResi += uiResiStride;
   }
@@ -931,12 +940,18 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool  bLeftAvail  = false;
   pcCU->getPattern()->initPattern   ( pcCU, 0, uiAbsPartIdx );
   pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, 0, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
-  
+#if QC_GENERIC_SDC_G0122
+  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+#endif
   //===== get prediction signal =====
 #if H_3D_DIM
   if( isDimMode( uiLumaPredMode ) )
   {
-    m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight );
+    m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight 
+#if QC_GENERIC_SDC_G0122
+      , false, dmm4Segmentation
+#endif
+      );
   }
   else
   {
@@ -962,7 +977,14 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
   }
-  
+#if QC_GENERIC_SDC_G0122
+  if( getDimType( uiLumaPredMode ) == DMM4_IDX )
+  {
+    uiNumSegments = 2;
+    pbMask  = dmm4Segmentation->getPattern();
+    uiMaskStride = dmm4Segmentation->getStride();
+  }
+#endif
   // get DC prediction for each segment
   Pel apDCPredValues[2];
   m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
@@ -1024,6 +1046,9 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pRecCb += uiStrideC;
     pRecCr += uiStrideC;
   }
+#if QC_GENERIC_SDC_G0122
+  dmm4Segmentation->destroy(); delete dmm4Segmentation;
+#endif
 }
 #endif
 
