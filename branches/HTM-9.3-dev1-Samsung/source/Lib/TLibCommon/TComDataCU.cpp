@@ -6495,8 +6495,24 @@ Void TComDataCU::getPosInPic( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY )
 }
 #endif
 #if H_3D_IV_MERGE
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDisp)
+#else
 Bool TComDataCU::getDispNeighBlocks (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDisp)
+#endif
 {
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+  assert(getPartitionSize( uiPartAddr ) == SIZE_2Nx2N);
+
+  TComMv cMv; 
+  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ 128 ];
+  cMv.setHor(iDisp);
+  cMv.setVer(0);
+  pDisp->m_acNBDV = cMv;
+  pDisp->m_aVIdxCan = 0;
+
+  return true;
+#else
   Pel pDepPos[3] = {0, 0, 0};
   assert(getPartitionSize( uiPartAddr ) == SIZE_2Nx2N);
   Bool bDepAvail = false;
@@ -6542,6 +6558,7 @@ Bool TComDataCU::getDispNeighBlocks (UInt uiPartIdx, UInt uiPartAddr, DisInfo* p
     pDisp->m_aVIdxCan = 0;
     return false;
   }
+#endif
 }
 #endif
 #if H_3D_NBDV 

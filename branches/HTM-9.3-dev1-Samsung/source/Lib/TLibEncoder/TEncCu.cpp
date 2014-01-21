@@ -569,7 +569,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_IV_MERGE
           if (rpcTempCU->getSlice()->getIsDepth() )
           {
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+            DvInfo.bDV = rpcTempCU->getDispforDepth(0, 0, &DvInfo);
+#else
             DvInfo.bDV = rpcTempCU->getDispNeighBlocks(0, 0, &DvInfo);
+#endif
           }
           else
           {
