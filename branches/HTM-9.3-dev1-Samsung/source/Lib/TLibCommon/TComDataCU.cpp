@@ -4460,7 +4460,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if QC_SPIVMP_MPI_G0119
       if(!m_pcSlice->getIsDepth())
 #endif
+#if SEC_SPIVMP_MCP_SIZE_G0077
+        if(getPartitionSize(0) == SIZE_2Nx2N)
+          pbSPIVMPFlag[iCount] = true;
+#else
       pbSPIVMPFlag[iCount] = true;
+#endif
       if( ( ivCandDir[0] & 1 ) == 1 )
       {
         pcMvFieldNeighbours[iCount<<1].setMvField( ivCandMv[ 0 ], ivCandRefIdx[ 0 ] );
@@ -7176,6 +7181,10 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   if(!m_pcSlice->getIsDepth())
   {
 #endif  
+#if SEC_SPIVMP_MCP_SIZE_G0077
+  if( getPartitionSize(0) == SIZE_2Nx2N )
+  {
+#endif
   Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
   getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
 
@@ -7292,6 +7301,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 
     }
   }  
+#if SEC_SPIVMP_MCP_SIZE_G0077
+  }
+#endif
 
   iCurrPosX  += ( iWidth  >> 1 );
   iCurrPosY  += ( iHeight >> 1 );
@@ -7312,12 +7324,24 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
    iCurrPosY  += ( iHeight >> 1 );
  }
 #if QC_DEPTH_MERGE_SIMP_G0127
+#if SEC_SPIVMP_MCP_SIZE_G0077
+  for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getPartitionSize(uiPartAddr) != SIZE_2Nx2N) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#else
  for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#endif
+#else
+#if SEC_SPIVMP_MCP_SIZE_G0077
+ for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getPartitionSize(uiPartAddr) != SIZE_2Nx2N) ? 0 : 1 ); iLoopCan < 2; iLoopCan ++) 
 #else
  for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < 2; iLoopCan ++) 
 #endif
+#endif
+#else
+#if SEC_SPIVMP_MCP_SIZE_G0077
+ for(Int iLoopCan = (getPartitionSize(uiPartAddr) == SIZE_2Nx2N ? 1 : 0); iLoopCan < 2; iLoopCan ++) 
 #else
   for(Int iLoopCan = 1; iLoopCan < 2; iLoopCan ++) 
+#endif
 #endif
 #else
   for(Int iLoopCan = 0; iLoopCan < 2; iLoopCan ++)

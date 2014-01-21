@@ -203,6 +203,8 @@
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 
+#define SEC_SPIVMP_MCP_SIZE_G0077         1  // Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
+
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
 #define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
