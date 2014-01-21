@@ -1514,7 +1514,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( ( 0 != m_uiUseAdvResPred ) &&  ( 1 != m_uiUseAdvResPred ), "UseAdvResPred must be 0 or 1." );
 #endif
 #if H_3D_SPIVMP
+#if SEC_SPIVMP_MCP_SIZE_G0077
+  xConfirmPara( m_iSubPULog2Size < 3,                                        "SubPULog2Size must be 3 or greater.");
+#else
   xConfirmPara( m_iSubPULog2Size < 2,                                        "SubPULog2Size must be 2 or greater.");
+#endif
   xConfirmPara( m_iSubPULog2Size > 6,                                        "SubPULog2Size must be 6 or smaller.");
   xConfirmPara( (1<<m_iSubPULog2Size) > m_uiMaxCUWidth,                      "SubPULog2Size must be log2(maxCUSize) or smaller.");
 #endif

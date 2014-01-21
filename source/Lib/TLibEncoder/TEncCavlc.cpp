@@ -1499,7 +1499,11 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
 #if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
 #if H_3D_SPIVMP
+#if SEC_SPIVMP_MCP_SIZE_G0077
+        WRITE_UVLC( pcVPS->getSubPULog2Size(i)-3, "log2_sub_PU_size_minus3[i]");
+#else
         WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
+#endif
 #endif
 #endif
 #if H_3D_ARP
@@ -1521,7 +1525,11 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
 #if H_3D_SPIVMP
         if (i!=1)
         {
+#if SEC_SPIVMP_MCP_SIZE_G0077
+          WRITE_UVLC( pcVPS->getSubPULog2Size(i)-3, "log2_sub_PU_size_minus3[i]");
+#else
           WRITE_UVLC( pcVPS->getSubPULog2Size(i)-2, "log2_sub_PU_size_minus2[i]");
+#endif
         }
 #endif
 #if H_3D_IV_MERGE
