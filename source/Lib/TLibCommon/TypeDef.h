@@ -204,6 +204,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #define SEC_SPIVMP_MCP_SIZE_G0077         1  // Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
+#define SEC_DEPTH_DV_DERIVAITON_G0074     1  // Simplification of DV derivation for depth, JCT3V-G0074
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  

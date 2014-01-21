@@ -317,7 +317,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_IV_MERGE
       if( pcCU->getSlice()->getIsDepth())
       {
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+        DvInfo.bDV = m_ppcCU[uiDepth]->getDispforDepth(0, 0, &DvInfo);
+#else
         DvInfo.bDV = m_ppcCU[uiDepth]->getDispNeighBlocks(0, 0, &DvInfo);
+#endif
       }
       else
       {
