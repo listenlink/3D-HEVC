@@ -224,6 +224,7 @@
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
 #endif
+#define SEC_IC_ARP_SIG_G0072              1   // Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
 
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
