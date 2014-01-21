@@ -500,7 +500,11 @@ public:
    
 #if H_3D
   Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+  Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#else
   Bool          getDispNeighBlocks  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#endif
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
 

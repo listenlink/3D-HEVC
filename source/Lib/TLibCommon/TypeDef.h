@@ -203,6 +203,9 @@
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 
+#define SEC_SPIVMP_MCP_SIZE_G0077         1  // Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
+#define SEC_DEPTH_DV_DERIVAITON_G0074     1  // Simplification of DV derivation for depth, JCT3V-G0074
+
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
 #define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
@@ -224,6 +227,11 @@
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
 #endif
+
+#if H_3D_SPIVMP
+#define QC_SPIVMP_MPI_G0119               1 // Sub-PU level MPI merge candidate
+#endif
+#define QC_DEPTH_MERGE_SIMP_G0127         1 // Remove DV candidate and shifting candidate for depth coding
 
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
