@@ -118,7 +118,7 @@
                                               // MERL_C0152: Basic VSP
                                               // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
                                               // NTT_DoNBDV_VECTOR_CLIP_E0141 disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
-#define MTK_NBDV_IVREF_FIX_G0067          0   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
+#define MTK_NBDV_IVREF_FIX_G0067          1   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
 #endif
 
 #define H_3D_VSP                          1   // View synthesis prediction
