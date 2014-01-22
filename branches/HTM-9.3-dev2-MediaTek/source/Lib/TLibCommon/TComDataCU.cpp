@@ -3249,7 +3249,11 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
 inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
   Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag, Int& iCount3DV, InheritedVSPDisInfo*  inheritedVSPDisInfo  )
   {
+#if MTK_NBDV_IVREF_FIX_G0067
+  if ( m_pcSlice->getViewIndex() == 0 || !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) || m_pcSlice->getIsDepth() || pDInfo->m_aVIdxCan == -1)
+#else
   if ( m_pcSlice->getViewIndex() == 0 || !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) || m_pcSlice->getIsDepth() )
+#endif
   {
     return false;
   }
@@ -4228,7 +4232,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
   Bool ivMvPredFlag   = getSlice()->getVPS()->getIvMvPredFlag( getSlice()->getLayerIdInVps() );
 
+#if MTK_NBDV_IVREF_FIX_G0067
+  if ( ivMvPredFlag && cDisInfo.m_aVIdxCan!=-1)
+#else
   if ( ivMvPredFlag )
+#endif
   {
     getInterViewMergeCands(uiPUIdx, ivCandRefIdx, ivCandMv, &cDisInfo, ivCandDir , bIsDepth, pcMvFieldSP, puhInterDirSP );
   }  
@@ -6424,6 +6432,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
   //// ******* Init variables ******* /////
   // Init disparity struct for results
   pDInfo->bDV = false;   
+#if MTK_NBDV_IVREF_FIX_G0067
+  pDInfo->m_aVIdxCan = -1;
+#endif
   // Init struct for disparities from MCP neighboring blocks
   IDVInfo cIDVInfo;
   cIDVInfo.m_bFound = false; 

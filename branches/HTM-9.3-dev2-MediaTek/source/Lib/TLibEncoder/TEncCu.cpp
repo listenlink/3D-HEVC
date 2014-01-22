@@ -543,6 +543,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           bTrySplit = false;
           bTryNx2N  = false;
           bTry2NxN  = false;
+#if MTK_TEX_DEP_PAR_G0055
+          if( pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize(uiCUIdx) != SIZE_2Nx2N)
+          {
+            if(pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxN || pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxnU|| pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxnD)
+              bTry2NxN  = true;
+            else
+              bTryNx2N  = true;
+          }
+#endif
         }
       }
 #endif
