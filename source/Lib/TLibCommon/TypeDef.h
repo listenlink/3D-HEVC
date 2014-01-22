@@ -76,7 +76,9 @@
 #if H_3D
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160     // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
-
+#ifdef H_3D_QTLPC
+#define MTK_TEX_DEP_PAR_G0055             1   // Texture-partition-dependent depth partition. JCT3V-G0055
+#endif
 #define H_3D_VSO                          1   // VSO, View synthesis optimization, includes: 
                                               // HHI_VSO
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
@@ -116,6 +118,7 @@
                                               // MERL_C0152: Basic VSP
                                               // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
                                               // NTT_DoNBDV_VECTOR_CLIP_E0141 disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
+#define MTK_NBDV_IVREF_FIX_G0067          0   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
 #endif
 
 #define H_3D_VSP                          1   // View synthesis prediction
