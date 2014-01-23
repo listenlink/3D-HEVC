@@ -5632,7 +5632,11 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 }
 
 #if H_3D_INTER_SDC
+#if SEC_INTER_SDC_G0101
+Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, TComYuv* pcRec, Int uiOffest, const UInt uiDepth )
+#else
 Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, TComYuv* pcRec, const UInt uiDepth )
+#endif
 {
   if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( 0 ) )
   {
@@ -5646,36 +5650,57 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
 
   UInt  uiWidth      = pcCU->getWidth ( 0 );
   UInt  uiHeight     = pcCU->getHeight( 0 );
+#if SEC_INTER_SDC_G0101
+  UInt uiSegSize = 0;
+#else
   UChar* pMask       = pcCU->getInterSDCMask();
   memset( pMask, 0, uiWidth*uiHeight );
 
   pcCU->xSetInterSDCCUMask( pcCU, pMask );
 
   UInt uiSegSize[4] = { 0, 0, 0, 0 };
+#endif
   Pel *pPred, *pOrg;
   UInt uiPredStride = pcPred->getStride();
   UInt uiOrgStride  = pcOrg->getStride();
   UInt uiPelX, uiPelY;
+#if !SEC_INTER_SDC_G0101
   UInt uiPartitionSize = pcCU->getPartitionSize( 0 );
   UInt uiSegmentNum = ( uiPartitionSize == SIZE_2Nx2N ) ? 1 : ( uiPartitionSize == SIZE_NxN ? 4 : 2 );
+#endif
 
   pPred = pcPred->getLumaAddr( 0 );
   pOrg  = pcOrg->getLumaAddr( 0 );
+#if SEC_INTER_SDC_G0101
+  Int pResDC = 0;
+#else
   Int pResDC[4] = { 0, 0, 0, 0};
+#endif
 
   //calculate dc value for prediction and original signal, and calculate residual and reconstruction
   for( uiPelY = 0; uiPelY < uiHeight; uiPelY++ )
   {
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
     {
+#if SEC_INTER_SDC_G0101
+      pResDC += (Int)( pOrg [uiPelX] - pPred[uiPelX] );
+      uiSegSize++;
+#else
       UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
       pResDC[uiSeg] += (Int)( pOrg [uiPelX] - pPred[uiPelX] );
       uiSegSize[uiSeg]++;
+#endif
     }
     pOrg  += uiOrgStride;
     pPred += uiPredStride;
   }
 
+#if SEC_INTER_SDC_G0101
+  Int iResiOffset = ( pResDC  > 0 ? ( uiSegSize >> 1 ) : -1*( uiSegSize >> 1 ) );
+  pResDC          = ( pResDC + iResiOffset ) / (Int) uiSegSize;
+
+  pcCU->setSDCSegmentDCOffset( pResDC + uiOffest, 0, 0 );
+#else
   for( UInt uiSeg = 0; uiSeg < uiSegmentNum; uiSeg++ )
   {
     Int iResiOffset = ( pResDC [uiSeg] > 0 ? ( uiSegSize[uiSeg] >> 1 ) : -1*( uiSegSize[uiSeg] >> 1 ) );
@@ -5686,6 +5711,7 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
     pcCU->setInterSDCSegmentDCOffset( pResDC[uiSeg], uiSeg, 0 );
 #endif
   }
+#endif
 
   Pel *pRec;
   UInt uiRecStride  = pcRec->getStride();
@@ -5696,10 +5722,14 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
   {
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
     {
+#if SEC_INTER_SDC_G0101
+      pRec[ uiPelX ] = Clip3( 0, ( 1 << g_bitDepthY ) - 1, pPred[uiPelX] + pcCU->getSDCSegmentDCOffset(0, 0) );
+#else
       UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
       assert( uiSeg < uiSegmentNum );
 
       pRec[ uiPelX ] = Clip3( 0, ( 1 << g_bitDepthY ) - 1, pPred[uiPelX] + pResDC[uiSeg] );
+#endif
     }
     pPred     += uiPredStride;
     pRec      += uiRecStride;
@@ -5744,6 +5774,9 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
 #else
   Bool bNonSkip = true;
 #endif
+#if SEC_INTER_SDC_G0101
+  bNonSkip |= ( pcCU->getSDCSegmentDCOffset( 0, 0 ) != 0 ) ? 1 : 0;
+#else
   for( UInt uiSeg = 0; uiSeg < uiSegmentNum; uiSeg++ )
   {
 #if QC_SDC_UNIFY_G0130
@@ -5752,6 +5785,7 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
     bNonSkip &= ( pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 ) != 0 ) ? 1 : 0;
 #endif
   }
+#endif
 
   if( !bNonSkip )
   {

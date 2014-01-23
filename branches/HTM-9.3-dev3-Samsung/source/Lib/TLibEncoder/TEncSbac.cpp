@@ -2258,9 +2258,12 @@ Void TEncSbac::codeDeltaDC( TComDataCU* pcCU, UInt absPartIdx )
   }
   else //all-zero inter SDC is not allowed
   {
+#if SEC_INTER_SDC_G0101
+    uiNumSegments = 1;
+#else
     PartSize cPartSize = pcCU->getPartitionSize( absPartIdx );
-
     uiNumSegments = ( cPartSize == SIZE_2Nx2N ) ? 1 : ( cPartSize == SIZE_NxN ? 4 : 2 );
+#endif
     dimDeltaDC = 1;
   }
 
