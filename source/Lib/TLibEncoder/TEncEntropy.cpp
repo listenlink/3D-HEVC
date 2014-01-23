@@ -912,6 +912,7 @@ Void TEncEntropy::encodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool 
   }
 
   if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || pcCU->isSkipped( uiAbsPartIdx ) )
+  {
     return;
   }
 
