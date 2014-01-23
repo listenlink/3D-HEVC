@@ -255,6 +255,7 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
+#define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
 #endif
 
 ///// ***** ILLUMATION COMPENSATION *********

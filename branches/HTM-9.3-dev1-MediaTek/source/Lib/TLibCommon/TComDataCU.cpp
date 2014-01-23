@@ -3290,6 +3290,7 @@ inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCoun
     }
   }
 
+#if !MTK_RBIP_VSP_G0069
   if (m_pcSlice->isInterB() && refViewAvailFlag)
   {
     RefPicList eRefPicListY = RefPicList( refListIdY );
@@ -3329,6 +3330,7 @@ inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCoun
       }
     }
   }
+#endif
 
   // Set values to be returned
   abCandIsInter        [iCount] = true;
