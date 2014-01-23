@@ -218,6 +218,9 @@ public:
     TComYuv* pcPred, 
     TComYuv* pcResi, 
     TComYuv* pcRec, 
+#if SEC_INTER_SDC_G0101
+    Int      uiOffset,
+#endif
     const UInt uiDepth );
 #endif
   /// set ME search range

@@ -651,10 +651,12 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   UInt  uiWidth      = pcCU->getWidth ( 0 );
   UInt  uiHeight     = pcCU->getHeight( 0 );
+#if !SEC_INTER_SDC_G0101
   UChar* pMask       = pcCU->getInterSDCMask();
 
   memset( pMask, 0, uiWidth*uiHeight );
   pcCU->xSetInterSDCCUMask( pcCU, pMask );
+#endif
 
   Pel  *pResi;
   UInt uiPelX, uiPelY;
@@ -665,11 +667,15 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
     {
+#if SEC_INTER_SDC_G0101
+      pResi[ uiPelX ] = pcCU->getSDCSegmentDCOffset( 0, 0 );
+#else
       UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
 #if QC_SDC_UNIFY_G0130
       pResi[ uiPelX ] = pcCU->getSDCSegmentDCOffset( uiSeg, 0 );
 #else
       pResi[ uiPelX ] = pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 );
+#endif
 #endif
     }
     pResi += uiResiStride;

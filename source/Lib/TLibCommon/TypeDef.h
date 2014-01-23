@@ -238,6 +238,7 @@
 #if H_3D_DIM_SDC && H_3D_INTER_SDC
 #define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
 #endif
+#define SEC_INTER_SDC_G0101               1  // Improved inter SDC with multiple DC candidates
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087

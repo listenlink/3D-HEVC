@@ -2209,9 +2209,12 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
   }
   else
   {
+#if SEC_INTER_SDC_G0101
+    uiNumSegments = 1;
+#else
     PartSize cPartSize = pcCU->getPartitionSize( absPartIdx );
-
     uiNumSegments = ( cPartSize == SIZE_2Nx2N ) ? 1 : ( cPartSize == SIZE_NxN ? 4 : 2 );
+#endif
     symbol = 1;
   }
 

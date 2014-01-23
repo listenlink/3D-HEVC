@@ -214,7 +214,7 @@ private:
 #endif
 #if H_3D_DIM_SDC
   Bool*         m_pbSDCFlag;
-#if QC_SDC_UNIFY_G0130
+#if QC_SDC_UNIFY_G0130 && !SEC_INTER_SDC_G0101
   Pel*          m_apSegmentDCOffset[4];
 #else
   Pel*          m_apSegmentDCOffset[2];
@@ -226,7 +226,9 @@ private:
   Bool*         m_pbInterSDCFlag;
   Int*          m_apSegmentInterDCOffset[4];
 #endif
+#if !SEC_INTER_SDC_G0101
   UChar*        m_pucInterSDCMask;
+#endif
 #endif
 #if H_3D
   Bool          m_bAvailableFlagA1;    ///< A1 available flag
@@ -592,9 +594,11 @@ public:
   Int           getInterSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentInterDCOffset[uiSeg][uiPartIdx]; }
   Void          setInterSDCSegmentDCOffset( Int pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentInterDCOffset[uiSeg][uiPartIdx] = pOffset; }
 #endif
+#if !SEC_INTER_SDC_G0101
   Void          xSetInterSDCCUMask( TComDataCU *pcCU, UChar *pMask );
 
   UChar*        getInterSDCMask     ()                        { return m_pucInterSDCMask;              }
+#endif
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------
