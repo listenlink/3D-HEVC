@@ -81,6 +81,12 @@ public:
   Void  copyCamParamForSlice( TComSlice* pcSlice );
 #endif
 
+#if MTK_DDD_G0063
+  Int getCodedScale( Int iBaseView, Int iCureView){ return m_aaiCodedScale[ iBaseView ][ iCureView ];}
+  Int getCodedOffset( Int iBaseView, Int iCureView){ return m_aaiCodedOffset[ iBaseView ][ iCureView ];}
+  UInt getCamParsCodedPrecision(){ return m_uiCamParsCodedPrecision; }
+#endif
+
 private:
   Bool  xIsComplete ();
   Void  xOutput     ( Int iPOC );

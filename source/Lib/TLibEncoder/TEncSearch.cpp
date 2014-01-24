@@ -3674,6 +3674,18 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
 #endif
 
+#if MTK_DDD_G0063
+      if( uiMergeCand == pcCU->getUseDDDCandIdx() )
+      {
+          pcCU->setUseDDD( true, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+          pcCU->setDDDepthSubParts( pcCU->getDDTmpDepth(), uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+      }
+      else
+      {
+          pcCU->setUseDDD( false, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+      }
+#endif
+
       xGetInterPredictionError( pcCU, pcYuvOrg, iPUIdx, uiCostCand, m_pcEncCfg->getUseHADME() );
       uiBitsCand = uiMergeCand + 1;
       if (uiMergeCand == m_pcEncCfg->getMaxNumMergeCand() -1)
@@ -4371,6 +4383,21 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         pcCU->setVSPFlagSubParts( vspFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
         pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMRGIndex].m_acDvInfo, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
+
+#if MTK_DDD_G0063
+        if( uiMRGIndex == pcCU->getUseDDDCandIdx() )
+        {
+            assert( vspFlag[uiMRGIndex]     == 0 );
+            assert( bSPIVMPFlag[uiMRGIndex] == 0 );
+            pcCU->setUseDDD( true, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+            pcCU->setDDDepthSubParts( pcCU->getDDTmpDepth(), uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+        }
+        else
+        {
+            pcCU->setUseDDD( false, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+        }
+#endif
+
 #if H_3D_SPIVMP
         pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );  
         if (bSPIVMPFlag[uiMRGIndex]!=0)
@@ -4421,6 +4448,10 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       {
 #if H_3D_SPIVMP        
         pcCU->setSPIVMPFlagSubParts(0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) ); 
+#endif
+
+#if MTK_DDD_G0063
+        pcCU->setUseDDD( false, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
         // set ME result
         pcCU->setMergeFlagSubParts( false,        uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );

@@ -1880,6 +1880,13 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #endif
 
 #endif
+
+#if MTK_DDD_G0063
+    Int iDDDCand = rpcTempCU->getUseDDDCandIdx(); 
+    UChar ucDDDepth = rpcTempCU->getDDTmpDepth();
+    rpcTempCU->setUseDDD( false, 0, uhDepth );
+#endif
+
   for( UInt uiNoResidual = 0; uiNoResidual < iteration; ++uiNoResidual )
   {
     for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
@@ -1913,6 +1920,19 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
           rpcTempCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, 0, 0, uhDepth );
 #endif
+
+#if MTK_DDD_G0063
+          if( rpcTempCU->getSlice()->getIsDepth() && rpcTempCU->getSlice()->getViewIndex() != 0 && iDDDCand == uiMergeCand )
+          {
+              rpcTempCU->setUseDDD( true, 0, 0, uhDepth );
+              rpcTempCU->setDDDepthSubParts( ucDDDepth, 0, 0, uhDepth );
+          }
+          else
+          {
+              rpcTempCU->setUseDDD( false, 0, 0, uhDepth );
+          }
+#endif
+
 #if H_3D_SPIVMP
           rpcTempCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeCand], 0, 0, uhDepth);
           if (bSPIVMPFlag[uiMergeCand])
@@ -2121,6 +2141,10 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
   rpcTempCU->setCUTransquantBypassSubParts  ( m_pcEncCfg->getCUTransquantBypassFlagValue(),      0, uhDepth );
   
+#if MTK_DDD_G0063
+  rpcTempCU->setUseDDD( false, 0, uhDepth );
+#endif
+
 #if H_3D_ARP
   rpcTempCU->setARPWSubParts( (UChar)nARPW , 0 , uhDepth );
 #endif

@@ -2061,6 +2061,13 @@ private:
   Int**      m_depthToDisparityF; 
 #endif
 #endif
+
+#if MTK_DDD_G0063
+  Int          m_aiDDDInvScale [MAX_NUM_LAYERS];
+  Int          m_aiDDDInvOffset[MAX_NUM_LAYERS];
+  UInt         m_aiDDDShift    [MAX_NUM_LAYERS];
+#endif
+
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -2407,6 +2414,15 @@ public:
   Void     setRefPicSetInterLayer       ( std::vector<TComPic*>* refPicSetInterLayer0, std::vector<TComPic*>* refPicSetInterLayer1);
   TComPic* getPicFromRefPicSetInterLayer( Int setIdc, Int layerId );
 #endif
+
+#if MTK_DDD_G0063
+  Void InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
+  Int  getDepthFromDV( Int iDV, Int iBaseViewIdx )
+  {
+      return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
+  }
+#endif
+
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Int                 poc);
