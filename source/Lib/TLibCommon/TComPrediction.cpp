@@ -782,6 +782,43 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
+
+#if MTK_DDD_G0063
+  if( pcCU->getUseDDD( uiPartAddr ) )
+  {
+      assert( pcCU->getSPIVMPFlag( uiPartAddr ) == 0 );
+      assert( pcCU->getSlice()->getViewIndex() != 0 );
+
+      Int dstStride = rpcYuvPred->getStride();
+      Int dstStrideC = rpcYuvPred->getCStride();
+      Pel *dst      = rpcYuvPred->getLumaAddr( uiPartAddr );
+      Pel *dstU     = rpcYuvPred->getCbAddr( uiPartAddr );
+      Pel *dstV     = rpcYuvPred->getCrAddr( uiPartAddr );
+
+      Int iWidthC  = iWidth >> 1;
+      Int iHeightC = iHeight >> 1;
+      Int DefaultC = 1 << ( g_bitDepthY - 1);
+      for ( Int i = 0; i < iHeight; i++)
+      {
+          for ( Int j = 0; j < iWidth ; j++)
+          {
+              dst[j] = pcCU->getDDDepth( uiPartAddr );
+          }
+          dst += dstStride;
+      }
+      for ( Int i = 0; i < iHeightC; i++)
+      {
+          for ( Int j = 0; j < iWidthC; j++)
+          {
+              dstU[j] = dstV[j] = DefaultC;
+          }
+          dstU += dstStrideC;
+          dstV += dstStrideC;
+      }
+
+      //return;
+  } else
+#endif
 #if H_3D_ARP
   if(pcCU->getARPW( uiPartAddr ) > 0  && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()== pcCU->getSlice()->getPOC())
   {

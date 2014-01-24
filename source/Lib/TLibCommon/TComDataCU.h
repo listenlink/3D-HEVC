@@ -249,6 +249,13 @@ private:
   DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
 #endif
 
+#if MTK_DDD_G0063
+  UChar*        m_pucDisparityDerivedDepth;
+  Bool*         m_pbUseDDD;
+  Int           m_iUseDDDCandIdx;
+  UChar         m_ucDDTmpDepth;
+#endif
+
 protected:
   
   /// add possible motion vector predictor candidates
@@ -500,7 +507,11 @@ public:
    
 #if H_3D
   Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+  Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#else
   Bool          getDispNeighBlocks  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#endif
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
 
@@ -750,6 +761,23 @@ public:
 
   UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
 
+#if MTK_DDD_G0063
+  UChar*       getDDDepth        ()                        { return m_pucDisparityDerivedDepth;        }
+  UChar        getDDDepth        ( UInt uiIdx )            { return m_pucDisparityDerivedDepth[uiIdx]; }
+  Void         setDDDepth        ( UInt uiIdx, UChar n )   { m_pucDisparityDerivedDepth[uiIdx] = n;    }
+  Void         setDDDepthSubParts( UChar ucDDD, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+
+  Bool*        getUseDDD        ()                        { return m_pbUseDDD;        }
+  Bool         getUseDDD        ( UInt uiIdx )            { return m_pbUseDDD[uiIdx]; }
+  Void         setUseDDD        ( UInt uiIdx, Bool n )     { m_pbUseDDD[uiIdx] = n;    }
+  Void         setUseDDD( Bool bUseDDD, UInt uiAbsPartIdx, UInt uiDepth );
+
+  Void         setUseDDD        ( Bool bUseDDD, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+
+  UChar        getDDTmpDepth(){ return m_ucDDTmpDepth; }
+  Int          getUseDDDCandIdx(){ return m_iUseDDDCandIdx;}
+
+#endif
 };
 
 namespace RasterAddress

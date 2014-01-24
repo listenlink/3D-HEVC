@@ -1696,7 +1696,11 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_IV_MERGE
         READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
 #if H_3D_SPIVMP
+#if SEC_SPIVMP_MCP_SIZE_G0077
+        READ_UVLC (uiCode, "log2_sub_PU_size_minus3");     pcVPS->setSubPULog2Size(i, uiCode+3); 
+#else
         READ_UVLC (uiCode, "log2_sub_PU_size_minus2");     pcVPS->setSubPULog2Size(i, uiCode+2); 
+#endif
 #endif
 #endif
 #if H_3D_ARP
@@ -1721,7 +1725,11 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_SPIVMP
         if (i!=1)
         {
+#if SEC_SPIVMP_MCP_SIZE_G0077
+          READ_UVLC (uiCode, "log2_sub_PU_size_minus3[i]");     pcVPS->setSubPULog2Size(i, uiCode+3); 
+#else
           READ_UVLC (uiCode, "log2_sub_PU_size_minus2[i]");     pcVPS->setSubPULog2Size(i, uiCode+2); 
+#endif
         }
 #endif
 #if H_3D_IV_MERGE
@@ -1761,7 +1769,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
     }
   }
-
+#if QC_SPIVMP_MPI_G0119
+  READ_UVLC (uiCode, "log2_sub_PU_MPI_size_minus3");              pcVPS->setSubPUMPILog2Size( uiCode + 3 ); 
+#endif
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
 }
 #endif

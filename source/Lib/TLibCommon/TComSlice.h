@@ -782,6 +782,9 @@ private:
   Int         m_iSubPULog2Size           [MAX_NUM_LAYERS   ];
 #endif
 #endif
+#if QC_SPIVMP_MPI_G0119
+  Int         m_iSubPUMPILog2Size;
+#endif
 #if H_3D_VSP
   Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ];
 #endif
@@ -1056,6 +1059,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Int     getSubPULog2Size(Int layerIdInVps)           { return m_iSubPULog2Size[layerIdInVps]; }
   Void    setSubPULog2Size(Int layerIdInVps, Int u)    { m_iSubPULog2Size[layerIdInVps] = u;}
 #endif
+#endif
+#if QC_SPIVMP_MPI_G0119
+  Int     getSubPUMPILog2Size( )           { return m_iSubPUMPILog2Size; }
+  Void    setSubPUMPILog2Size( Int u )     { m_iSubPUMPILog2Size = u;    }
 #endif
 #if H_3D_VSP
   Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }
@@ -2054,6 +2061,13 @@ private:
   Int**      m_depthToDisparityF; 
 #endif
 #endif
+
+#if MTK_DDD_G0063
+  Int          m_aiDDDInvScale [MAX_NUM_LAYERS];
+  Int          m_aiDDDInvOffset[MAX_NUM_LAYERS];
+  UInt         m_aiDDDShift    [MAX_NUM_LAYERS];
+#endif
+
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -2400,6 +2414,15 @@ public:
   Void     setRefPicSetInterLayer       ( std::vector<TComPic*>* refPicSetInterLayer0, std::vector<TComPic*>* refPicSetInterLayer1);
   TComPic* getPicFromRefPicSetInterLayer( Int setIdc, Int layerId );
 #endif
+
+#if MTK_DDD_G0063
+  Void InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
+  Int  getDepthFromDV( Int iDV, Int iBaseViewIdx )
+  {
+      return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
+  }
+#endif
+
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Int                 poc);
