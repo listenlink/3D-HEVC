@@ -94,8 +94,13 @@ public:
   virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+  virtual Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+  virtual Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#else
   virtual Void codeInterSDCFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment ) = 0;
+#endif
 #endif
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   
@@ -185,8 +190,13 @@ public:
   Void encodeICFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+  Void encodeDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx );
+  Void encodeSDCFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#else
   Void encodeInterSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD );
+#endif
 #endif
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );

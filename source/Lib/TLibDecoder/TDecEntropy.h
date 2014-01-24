@@ -95,8 +95,13 @@ public:
   virtual Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+  virtual Void parseDeltaDC       ( TComDataCU* pcCU, UInt absPartIdx, UInt depth ) = 0;
+  virtual Void parseSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#else
   virtual Void parseInterSDCFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart ) = 0;
+#endif
 #endif
   virtual Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -178,8 +183,12 @@ public:
   Void decodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+  Void decodeSDCFlag           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#else
   Void decodeInterSDCFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 #endif
   Void decodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 

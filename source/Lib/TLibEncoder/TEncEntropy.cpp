@@ -648,7 +648,49 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
   UInt uiLumaOffset   = uiMinCoeffSize*uiAbsPartIdx;
   UInt uiChromaOffset = uiLumaOffset>>2;
-    
+#if QC_SDC_UNIFY_G0130
+#if H_3D_DIM_SDC
+  if( pcCU->getSDCFlag( uiAbsPartIdx ) && pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
+    assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
+    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
+    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
+    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+  }
+#endif
+
+#if H_3D_INTER_SDC
+  if( pcCU->getSDCFlag( uiAbsPartIdx ) && !pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    assert( !pcCU->isSkipped( uiAbsPartIdx ) );
+    assert( !pcCU->isIntra( uiAbsPartIdx) );
+    assert( pcCU->getSlice()->getIsDepth() );
+  }
+#endif
+
+  if( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) )
+  {
+    Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
+    UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
+
+    if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
+    {
+      for( Int iPart = 0; iPart < iPartNum; iPart++ )
+      {
+        if( getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx + uiPartOffset*iPart ) ) < DIM_NUM_TYPE ) 
+        {
+          m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx + uiPartOffset*iPart );
+        }
+      }
+    }
+    else
+    {
+      m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx );
+      return;
+    }
+  }
+#else
 #if H_3D_DIM_SDC
   if( pcCU->getSDCFlag( uiAbsPartIdx ) )
   {
@@ -671,6 +713,7 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     encodeInterSDCResidualData( pcCU, uiAbsPartIdx, false );
     return;
   }
+#endif
 #endif
 
   if( pcCU->isIntra(uiAbsPartIdx) )
@@ -824,6 +867,43 @@ Void TEncEntropy::encodeScalingList( TComScalingList* scalingList )
 }
 
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+Void TEncEntropy::encodeDeltaDC  ( TComDataCU* pcCU, UInt absPartIdx )
+{
+  m_pcEntropyCoderIf->codeDeltaDC( pcCU, absPartIdx );
+}
+
+Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) ) || 
+    ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getVpsDepthModesFlag( pcCU->getSlice()->getLayerIdInVps() ) ) )
+  {
+    return;
+  }
+
+#if SEC_INTER_SDC_G0101
+  if( !pcCU->getSlice()->getIsDepth() || pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N || pcCU->isSkipped( uiAbsPartIdx ) )
+#else
+  if( !pcCU->getSlice()->getIsDepth() || ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N ) || pcCU->isSkipped( uiAbsPartIdx ) )
+#endif
+  {
+    return;
+  }
+
+#if SEC_INTER_SDC_G0101
+  assert( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
+#else
+  assert( ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
+#endif
+
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+
+  m_pcEntropyCoderIf->codeSDCFlag( pcCU, uiAbsPartIdx );
+}
+#else
 Void TEncEntropy::encodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
@@ -870,6 +950,7 @@ Void TEncEntropy::encodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartId
     m_pcEntropyCoderIf->codeInterSDCResidualData( pcCU, uiAbsPartIdx, uiSeg );
   }
 }
+#endif
 #endif
 
 //! \}
