@@ -4421,7 +4421,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
   }
 #if MTK_DDD_G0063
-  if( m_pcSlice->getIsDepth() && m_pcSlice->getViewIndex() != 0  )
+  if( m_pcSlice->getIsDepth() && m_pcSlice->getViewIndex() != 0  && bMPIFlag )
   {
       UInt uiPartIdx;
       TComDataCU *pcTextureCU = m_pcSlice->getTexturePic()->getCU( getAddr() );
