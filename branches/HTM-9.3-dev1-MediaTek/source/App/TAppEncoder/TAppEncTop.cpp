@@ -913,6 +913,12 @@ Void TAppEncTop::encode()
             m_acTEncTopList[layer]  ->setDispCoeff( m_cCameraData.getDispCoeff() );
           }
 #endif
+
+#if MTK_DDD_G0063
+          m_acTEncTopList[ layer ]->getSliceEncoder()->setDDDPar( m_cCameraData.getCodedScale()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
+              m_cCameraData.getCodedOffset()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
+              m_cCameraData.getCamParsCodedPrecision() );
+#endif
         Int   iNumEncoded = 0;
 
         // call encoding function for one frame          

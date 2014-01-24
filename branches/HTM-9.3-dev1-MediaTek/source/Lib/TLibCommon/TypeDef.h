@@ -258,6 +258,8 @@
 #define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
 #endif
 
+#define MTK_DDD_G0063                     1   // Disparity derived depth coding
+
 ///// ***** ILLUMATION COMPENSATION *********
 #if H_3D_IC
 #define IC_REG_COST_SHIFT                 7

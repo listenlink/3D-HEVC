@@ -319,6 +319,19 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       }
       pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
+#if MTK_DDD_G0063
+      if( uiMergeIndex == pcSubCU->getUseDDDCandIdx() )
+      {
+          assert( pcCU->getSlice()->getViewIndex() != 0 );
+          pcCU->setUseDDD( true, uiSubPartIdx, uiPartIdx, uiDepth );
+          pcCU->setDDDepthSubParts( pcSubCU->getDDTmpDepth(),uiSubPartIdx, uiPartIdx, uiDepth );
+      }
+      else
+      {
+          pcCU->setUseDDD( false, uiSubPartIdx, uiPartIdx, uiDepth );
+      }
+#endif
+
       TComMv cTmpMv( 0, 0 );
       for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
       {        
