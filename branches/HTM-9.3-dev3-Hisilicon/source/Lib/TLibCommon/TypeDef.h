@@ -243,6 +243,10 @@
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
 #endif
+#define QC_PKU_SDC_SPLIT_G0123            1   // Intra SDC Split
+#if QC_PKU_SDC_SPLIT_G0123
+#define HS_TSINGHUA_SDC_SPLIT_G0111       1
+#endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
 #define H_3D_VSP_BLOCKSIZE                4   // Supported values: 1, 2, and 4
