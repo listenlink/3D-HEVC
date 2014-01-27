@@ -7436,6 +7436,75 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   Int iDelX = iSPWidth/2;
   Int iDelY = iSPHeight/2;
 
+#if KHU_SIMP_SPIVMP_G0147
+  Int         iCenterPosX = iCurrPosX + ( ( iWidth /  iSPWidth ) >> 1 )  * iSPWidth + ( iSPWidth >> 1 );
+  Int         iCenterPosY = iCurrPosY + ( ( iHeight /  iSPHeight ) >> 1 )  * iSPHeight + (iSPHeight >> 1);
+  Int         iRefCenterCUAddr, iRefCenterAbsPartIdx;
+
+  if(iWidth == iSPWidth && iHeight == iSPHeight)
+  {
+    iCenterPosX = iCurrPosX + (iWidth >> 1);
+    iCenterPosY = iCurrPosY + (iHeight >> 1);
+  }
+
+  Int iRefCenterPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCenterPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+  Int iRefCenterPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCenterPosY + ( (cDv.getVer() + 2 ) >> 2 ) ); 
+
+  pcBaseRec->getCUAddrAndPartIdx( iRefCenterPosX , iRefCenterPosY , iRefCenterCUAddr, iRefCenterAbsPartIdx );
+  TComDataCU* pcDefaultCU    = pcBasePic->getCU( iRefCenterCUAddr );
+  if(!( pcDefaultCU->getPredictionMode( iRefCenterAbsPartIdx ) == MODE_INTRA ))
+  {
+    for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )       
+    {
+      RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
+      Bool stopLoop = false;
+      for(Int iLoop = 0; iLoop < 2 && !stopLoop; ++iLoop)
+      {
+        RefPicList eDefaultRefPicList = (iLoop ==1)? RefPicList( 1 -  uiCurrRefListId ) : RefPicList( uiCurrRefListId );
+        TComMvField cDefaultMvField;
+        pcDefaultCU->getMvField( pcDefaultCU, iRefCenterAbsPartIdx, eDefaultRefPicList, cDefaultMvField );
+        Int         iDefaultRefIdx     = cDefaultMvField.getRefIdx();
+        if (iDefaultRefIdx >= 0)
+        {
+          Int iDefaultRefPOC = pcDefaultCU->getSlice()->getRefPOC(eDefaultRefPicList, iDefaultRefIdx);
+          if (iDefaultRefPOC != pcSlice->getPOC())    
+          {
+            for (Int iPdmRefIdx = 0; iPdmRefIdx < pcSlice->getNumRefIdx( eCurrRefPicList ); iPdmRefIdx++)
+            {
+              if (iDefaultRefPOC == pcSlice->getRefPOC(eCurrRefPicList, iPdmRefIdx))
+              {
+                abPdmAvailable[ uiCurrRefListId ] = true;
+                TComMv cMv(cDefaultMvField.getHor(), cDefaultMvField.getVer());
+#if H_3D_NBDV 
+#if H_3D_IV_MERGE
+                if( !bIsDepth )
+                {
+#endif
+                  cMv.setIDVFlag   (true);
+                  cMv.setIDVHor    (cDv.getHor());                  
+                  cMv.setIDVVer    (cDv.getVer());  
+                  cMv.setIDVVId    (iViewIndex); 
+#if H_3D_IV_MERGE
+                }
+#endif
+#endif
+                clipMv( cMv );
+                paiPdmRefIdx  [ uiCurrRefListId ] = iPdmRefIdx;
+                pacPdmMv      [ uiCurrRefListId ] = cMv;
+                stopLoop = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  availableMcDc[0] = ( abPdmAvailable[0]? 1 : 0) + (abPdmAvailable[1]? 2 : 0);
+
+  if(availableMcDc[0])
+  {
+#endif
   Int         iBasePosX, iBasePosY;
   for (Int i=iCurrPosY; i < iCurrPosY + iHeight; i += iSPHeight)
   {
@@ -7494,13 +7563,20 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
       puhInterDirSP[iPartition] = (pcMvFieldSP[2*iPartition].getRefIdx()!=-1 ? 1: 0) + (pcMvFieldSP[2*iPartition+1].getRefIdx()!=-1 ? 2: 0);
       if (puhInterDirSP[iPartition] == 0)
       {
+#if KHU_SIMP_SPIVMP_G0147
+        puhInterDirSP[iPartition] = availableMcDc[0];
+        pcMvFieldSP[2*iPartition].setMvField(pacPdmMv[0], paiPdmRefIdx[0]);
+        pcMvFieldSP[2*iPartition + 1].setMvField(pacPdmMv[1], paiPdmRefIdx[1]);
+#else
         if (iInterDirLast != 0)
         {
           puhInterDirSP[iPartition] = iInterDirLast;
           pcMvFieldSP[2*iPartition] = cMvFieldLast[0];
           pcMvFieldSP[2*iPartition + 1] = cMvFieldLast[1];
         }
+#endif
       }
+#if !KHU_SIMP_SPIVMP_G0147
       else
       {
         if (iInterDirLast ==0)
@@ -7525,11 +7601,14 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
         cMvFieldLast[0] = pcMvFieldSP[2*iPartition];
         cMvFieldLast[1] = pcMvFieldSP[2*iPartition + 1];
       }
-
+#endif
       iPartition ++;
 
     }
-  }  
+  }
+#if KHU_SIMP_SPIVMP_G0147
+  }
+#endif
 #if SEC_SPIVMP_MCP_SIZE_G0077
   }
 #endif
