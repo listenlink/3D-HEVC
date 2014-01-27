@@ -111,6 +111,7 @@
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
                                               // LGE_IC_CTX_F0160 //JCT3V-F0160
                                               // SEC_ONLY_TEXTURE_IC_F0151
+#define MTK_IC_FLAG_CABAC_SIMP_G0061      1   // Use only 1 context for IC flag in JCT3V-G0061
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
