@@ -212,6 +212,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   DTRACE_CU("log2CbSize", g_uiMaxCUWidth>>uiDepth)
   DTRACE_CU("cqtDepth"  , uiDepth)
 #endif
+
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
   Bool bStartInCU = pcCU->getSCUAddr()+uiAbsPartIdx+uiCurNumParts>pcSlice->getSliceSegmentCurStartCUAddr()&&pcCU->getSCUAddr()+uiAbsPartIdx<pcSlice->getSliceSegmentCurStartCUAddr();
   if((!bStartInCU) && ( uiRPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiBPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
@@ -275,6 +276,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   DTRACE_CU_S("=========== coding_unit ===========\n")
 #endif
 
+
+#if MTK_DDD_G0063
+      pcCU->setUseDDD( false, uiAbsPartIdx, uiDepth );
+#endif
+
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
   {
     setdQPFlag(true);
@@ -317,7 +323,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_IV_MERGE
       if( pcCU->getSlice()->getIsDepth())
       {
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+        DvInfo.bDV = m_ppcCU[uiDepth]->getDispforDepth(0, 0, &DvInfo);
+#else
         DvInfo.bDV = m_ppcCU[uiDepth]->getDispNeighBlocks(0, 0, &DvInfo);
+#endif
       }
       else
       {
@@ -432,6 +442,15 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     }
 #endif
     pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
+
+#if MTK_DDD_G0063
+    if( uiMergeIndex == m_ppcCU[uiDepth]->getUseDDDCandIdx() )
+    {
+        assert( pcCU->getSlice()->getViewIndex() != 0 );
+        pcCU->setUseDDD( true, uiAbsPartIdx, 0, uiDepth );
+        pcCU->setDDDepthSubParts( m_ppcCU[uiDepth]->getDDTmpDepth(),uiAbsPartIdx, 0, uiDepth );
+    }
+#endif
 
     TComMv cTmpMv( 0, 0 );
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
