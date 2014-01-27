@@ -103,6 +103,7 @@
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
                                               // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
                                               // LGE_ARP_CTX_F0161                JCT3V-F0161
+#define MTK_ARP_REF_SELECTION_G0053       1   // ARP Reference picture selection in JCT3V-G0053 
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
