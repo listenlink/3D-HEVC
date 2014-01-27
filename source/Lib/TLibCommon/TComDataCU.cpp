@@ -7430,8 +7430,10 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   Int         iBaseAbsPartIdx;
   TComDataCU* pcBaseCU;
   Int iPartition = 0;
+#if !KHU_SIMP_SPIVMP_G0147
   Int iInterDirLast = 0;
   TComMvField cMvFieldLast[2];
+#endif
 
   Int iDelX = iSPWidth/2;
   Int iDelY = iSPHeight/2;
