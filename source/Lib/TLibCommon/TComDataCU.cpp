@@ -2272,7 +2272,7 @@ UInt TComDataCU::getCTXARPWFlag( UInt uiAbsPartIdx )
   return uiCtx;
 }
 #endif
-
+#if !MTK_IC_FLAG_CABAC_SIMP_G0061
 #if H_3D_IC
 UInt TComDataCU::getCtxICFlag( UInt uiAbsPartIdx )
 {
@@ -2290,7 +2290,7 @@ UInt TComDataCU::getCtxICFlag( UInt uiAbsPartIdx )
   return uiCtx;
 }
 #endif
-
+#endif
 #if H_3D_INTER_SDC
 Void TComDataCU::setInterSDCFlagSubParts ( Bool bInterSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
