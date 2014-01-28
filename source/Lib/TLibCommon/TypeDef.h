@@ -212,7 +212,7 @@
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
 #define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
 #endif
-
+#define SCU_HS_VSD_BUGFIX_IMPROV_G0163    1
 ////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
 #if H_3D_NBDV
 #define DVFROM_LEFT                       0
