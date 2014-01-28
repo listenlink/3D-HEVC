@@ -230,7 +230,7 @@
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
-
+#define SCU_HS_DEPTH_DC_PRED_G0143        1
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
 #endif
