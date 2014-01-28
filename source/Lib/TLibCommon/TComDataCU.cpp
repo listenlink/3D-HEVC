@@ -2265,10 +2265,10 @@ UInt TComDataCU::getCTXARPWFlag( UInt uiAbsPartIdx )
   
   pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
   uiCtx    = ( pcTempCU ) ? ((pcTempCU->getARPW( uiTempPartIdx )==0)?0:1) : 0;
-  
+#if !MTK_ARP_FLAG_CABAC_SIMP_G0061        
   pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
   uiCtx   += ( pcTempCU ) ? ((pcTempCU->getARPW( uiTempPartIdx )==0)?0:1): 0;
-  
+#endif
   return uiCtx;
 }
 #endif

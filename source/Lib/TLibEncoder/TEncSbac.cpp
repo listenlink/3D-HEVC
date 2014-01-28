@@ -999,7 +999,11 @@ Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcBinIf->encodeBin( iW ? 1 : 0 , m_cCUPUARPWSCModel.get( 0, 0, 0 + nOffset ) );
   if( nBinNum > 1 )
   {
+#if MTK_ARP_FLAG_CABAC_SIMP_G0061
+     m_pcBinIf->encodeBin( ( iW == iMaxW ) ? 1 : 0, m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
+#else
      m_pcBinIf->encodeBin( ( iW == iMaxW ) ? 1 : 0, m_cCUPUARPWSCModel.get( 0, 0, 3 ) );
+#endif
   }
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU("iv_res_pred_weight_idx", iW); 
