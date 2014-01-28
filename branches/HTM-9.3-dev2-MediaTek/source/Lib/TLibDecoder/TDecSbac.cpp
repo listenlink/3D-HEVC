@@ -2140,7 +2140,11 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   uiW = uiCode;
   if( 1 == uiW )   
   {
+#if MTK_ARP_FLAG_CABAC_SIMP_G0061
+    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
+#else
     m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 3 ) );
+#endif
     uiW += ( 1 == uiCode ? 1 : 0 );
   }
 #if H_MV_ENC_DEC_TRAC
