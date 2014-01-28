@@ -2102,7 +2102,13 @@ Void TComPrediction::xPredBiSegDCs( Int* ptrSrc, UInt srcStride, Bool* biSegPatt
 
   if( bL == bT )
   {
+#if SCU_HS_DEPTH_DC_PRED_G0143
+    const Int  iTRR = ( patternStride * 2 - 1  ) - srcStride; 
+    const Int  iLBB = ( patternStride * 2 - 1  ) * srcStride - 1;
+    refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : (abs(ptrSrc[iTRR] - ptrSrc[-(Int)srcStride]) > abs(ptrSrc[iLBB] - ptrSrc[ -1]) ? ptrSrc[iTRR] : ptrSrc[iLBB]);
+#else
     refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : 1<<( g_bitDepthY - 1 );
+#endif
     refDC2 =      ( ptrSrc[ -1] + ptrSrc[-(Int)srcStride] )>>1;
   }
   else
