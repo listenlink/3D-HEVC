@@ -677,13 +677,25 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
  
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
-
+#if MTK_TEX_DEP_PAR_G0055
+  Bool depthDependent = false;
+  UInt uiTexturePart = eSize;
+#endif
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && sps->getUseQTL() && sps->getUsePC() )
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
     assert(pcTextureCU->getDepth(uiCUIdx) >= uiDepth);
+#if !MTK_TEX_DEP_PAR_G0055
     if (pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize( uiCUIdx ) != SIZE_NxN)
+#else
+    if(pcTextureCU->getDepth(uiCUIdx) == uiDepth )
+    {
+      depthDependent = true;
+      uiTexturePart = pcTextureCU->getPartitionSize( uiCUIdx );
+    }
+    if (pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize( uiCUIdx ) == SIZE_2Nx2N)
+#endif
     {
       assert( eSize == SIZE_2Nx2N );
       return;
@@ -701,76 +713,158 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
     return;
   }
-  
+
 #if H_MV_ENC_DEC_TRAC          
   DTRACE_CU("part_mode", eSize )
 #endif        
-  switch(eSize)
-  {
-    case SIZE_2Nx2N:
+#if MTK_TEX_DEP_PAR_G0055
+    if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
     {
-      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-      break;
-    }
-    case SIZE_2NxN:
-    case SIZE_2NxnU:
-    case SIZE_2NxnD:
-    {
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
-      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+#endif
+      switch(eSize)
       {
-        if (eSize == SIZE_2NxN)
+      case SIZE_2Nx2N:
         {
-          m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          break;
         }
-        else
+      case SIZE_2NxN:
+      case SIZE_2NxnU:
+      case SIZE_2NxnD:
         {
-          m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));          
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          {
+            if (eSize == SIZE_2NxN)
+            {
+              m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+            }
+            else
+            {
+              m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));          
+              m_pcBinIf->encodeBinEP((eSize == SIZE_2NxnU? 0: 1));
+            }
+          }
+          break;
+        }
+      case SIZE_Nx2N:
+      case SIZE_nLx2N:
+      case SIZE_nRx2N:
+        {
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+          if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
+          {
+            m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 2) );
+          }
+          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          {
+            if (eSize == SIZE_Nx2N)
+            {
+              m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+            }
+            else
+            {
+              m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));
+              m_pcBinIf->encodeBinEP((eSize == SIZE_nLx2N? 0: 1));
+            }
+          }
+          break;
+        }
+      case SIZE_NxN:
+        {
+          if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
+          {
+            m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+            m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+            m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 2) );
+          }
+          break;
+        }
+      default:
+        {
+          assert(0);
+        }
+      }
+#if MTK_TEX_DEP_PAR_G0055
+    }
+    else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
+    {
+      //assert(eSize!=SIZE_NxN);
+      //assert(eSize!=SIZE_Nx2N);
+      //assert(eSize==SIZE_2Nx2N || eSize==SIZE_2NxN || eSize==SIZE_2NxnU || eSize==SIZE_2NxnD);
+      switch(eSize)
+      {
+      case SIZE_2Nx2N:
+        {
+          m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          break;
+        }
+      case SIZE_2NxN:
+        {
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          {     
+            m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+          }
+          break;
+        }
+      case SIZE_2NxnU:
+      case SIZE_2NxnD:
+        {
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
           m_pcBinIf->encodeBinEP((eSize == SIZE_2NxnU? 0: 1));
+          break;
+        }
+      default:
+        {
+          assert(0);
         }
       }
-      break;
     }
-    case SIZE_Nx2N:
-    case SIZE_nLx2N:
-    case SIZE_nRx2N:
+    else if(uiTexturePart == SIZE_Nx2N|| uiTexturePart==SIZE_nLx2N || uiTexturePart==SIZE_nRx2N)
     {
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
-      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
+      //assert(eSize!=SIZE_NxN);
+      //assert(eSize!=SIZE_2NxN);
+      //assert(eSize==SIZE_2Nx2N ||eSize==SIZE_Nx2N || eSize==SIZE_nLx2N || eSize==SIZE_nRx2N);
+      switch(eSize)
       {
-        m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 2) );
-      }
-      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
-      {
-        if (eSize == SIZE_Nx2N)
+      case SIZE_2Nx2N:
         {
-          m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          break;
         }
-        else
+      case SIZE_Nx2N:
         {
-          m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          {     
+            m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+          }
+          break;
+        }
+      case SIZE_nLx2N:
+      case SIZE_nRx2N:
+        {
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
           m_pcBinIf->encodeBinEP((eSize == SIZE_nLx2N? 0: 1));
+          break;
+        }
+      default:
+        {
+          assert(0);
         }
       }
-      break;
     }
-    case SIZE_NxN:
+    else
     {
-      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
-      {
-        m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-        m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
-        m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 2) );
-      }
-      break;
-    }
-    default:
-    {
+      printf("uiTexturePart=%d",uiTexturePart);
       assert(0);
     }
-  }
+#endif
 }
 
 /** code prediction mode
@@ -905,7 +999,11 @@ Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcBinIf->encodeBin( iW ? 1 : 0 , m_cCUPUARPWSCModel.get( 0, 0, 0 + nOffset ) );
   if( nBinNum > 1 )
   {
+#if MTK_ARP_FLAG_CABAC_SIMP_G0061
+     m_pcBinIf->encodeBin( ( iW == iMaxW ) ? 1 : 0, m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
+#else
      m_pcBinIf->encodeBin( ( iW == iMaxW ) ? 1 : 0, m_cCUPUARPWSCModel.get( 0, 0, 3 ) );
+#endif
   }
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU("iv_res_pred_weight_idx", iW); 
@@ -923,8 +1021,12 @@ Void TEncSbac::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
   UInt uiSymbol = pcCU->getICFlag( uiAbsPartIdx ) ? 1 : 0;
+#if MTK_IC_FLAG_CABAC_SIMP_G0061
+  m_pcBinIf->encodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, 0 ) );
+#else
   UInt uiCtxIC  = pcCU->getCtxICFlag( uiAbsPartIdx ) ;
   m_pcBinIf->encodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, uiCtxIC ) );
+#endif
 #if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tICFlag" );
