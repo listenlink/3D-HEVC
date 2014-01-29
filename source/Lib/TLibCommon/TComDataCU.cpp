@@ -3538,7 +3538,11 @@ inline Bool TComDataCU::xGetPosFirstAvailDmvCand( Int iCount, TComMvField* pcMvF
   // ivCandDir[0] == true --> IvMC is available and excluded in loop over merge list. 
   for ( Int currListPos = (ivCandDir[0] ? 1 : 0); currListPos < iCount; currListPos++ )
   {
+#if NTT_STORE_SPDV_VSP_G0148
+    if ( ( currListPos == posIvDC ) || ( vspFlag[ currListPos ] != 0 ) )
+#else
     if ( ( currListPos == posIvDC ) || ( vspFlag[ currListPos ] == 1 ) )
+#endif
     {
       continue;
     }
@@ -4051,7 +4055,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     iPosLeftAbove[0] = numA1B1B0;
 #if H_3D_VSP
+#if NTT_STORE_SPDV_VSP_G0148
+    if (pcCULeft->getVSPFlag(uiLeftPartIdx) != 0
+#else
     if (pcCULeft->getVSPFlag(uiLeftPartIdx) == 1
+#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4074,7 +4082,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     iPosLeftAbove[1] = numA1B1B0;
 #if H_3D_VSP
+#if NTT_STORE_SPDV_VSP_G0148
+    if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) != 0) 
+#else
     if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1) 
+#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4097,7 +4109,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if ( getAvailableFlagB0())
   {
 #if H_3D_VSP
+#if NTT_STORE_SPDV_VSP_G0148
+    if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) != 0) 
+#else
     if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1) 
+#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4118,7 +4134,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if ( getAvailableFlagA0())
   {
 #if H_3D_VSP
+#if NTT_STORE_SPDV_VSP_G0148
+    if (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) != 0
+#else
     if (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) == 1
+#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4141,7 +4161,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if (getAvailableFlagB2())
   {
 #if H_3D_VSP
+#if NTT_STORE_SPDV_VSP_G0148
+    if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) != 0) 
+#else
     if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1) 
+#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -7868,5 +7892,140 @@ Void TComDataCU::setDmmWedgeTabIdxSubParts( UInt tabIdx, UInt dmmType, UInt uiAb
 }
 #endif
 
+#if NTT_STORE_SPDV_VSP_G0148
+Void TComDataCU::setMvFieldPUForVSP( TComDataCU* pcCU, UInt partAddr, Int width, Int height, RefPicList eRefPicList, Int iRefIdx, Int &vspSize )
+{
+  // Get depth reference
+  Int depthRefViewIdx = pcCU->getDvInfo(partAddr).m_aVIdxCan;
+  
+#if H_3D_FCO_VSP_DONBDV_E0163
+  TComPic* pRefPicBaseDepth = 0;
+  Bool     bIsCurrDepthCoded = false;
+  pRefPicBaseDepth  = pcCU->getSlice()->getIvPic( true, pcCU->getSlice()->getViewIndex() );
+  if ( pRefPicBaseDepth->getPicYuvRec() != NULL  ) 
+  {
+    bIsCurrDepthCoded = true;
+  }
+  else 
+  {
+    pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
+  }
+#else
+  TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
+#endif
+  assert(pRefPicBaseDepth != NULL);
+  TComPicYuv* pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
+  assert(pcBaseViewDepthPicYuv != NULL);
+  pcBaseViewDepthPicYuv->extendPicBorder();
+
+  // Get texture reference
+  assert(iRefIdx >= 0);
+  TComPic* pRefPicBaseTxt = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx );
+  TComPicYuv* pcBaseViewTxtPicYuv = pRefPicBaseTxt->getPicYuvRec();
+  assert(pcBaseViewTxtPicYuv != NULL);
+
+  // Initialize LUT according to the reference viewIdx
+  Int txtRefViewIdx = pRefPicBaseTxt->getViewIndex();
+  Int* pShiftLUT    = pcCU->getSlice()->getDepthToDisparityB( txtRefViewIdx );
+  assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
+
+  // prepare Dv to access depth map or reference view
+  TComMv cDv  = pcCU->getDvInfo(partAddr).m_acNBDV;
+  pcCU->clipMv(cDv);
+
+#if H_3D_FCO_VSP_DONBDV_E0163
+  if ( bIsCurrDepthCoded )
+  {
+      cDv.setZero();
+  }
+#endif
+
+  // fetch virtual depth map & convert depth to motion vector, which are stored in the motion memory
+  xSetMvFieldForVSP( pcCU, pcBaseViewDepthPicYuv, &cDv, partAddr, width, height, pShiftLUT, eRefPicList, iRefIdx, pcCU->getSlice()->getIsDepth(), vspSize );
+}
+
+Void TComDataCU::xSetMvFieldForVSP( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, Int *shiftLUT, RefPicList refPicList, Int refIdx, Bool isDepth, Int &vspSize )
+{
+  TComCUMvField *cuMvField = cu->getCUMvField( refPicList );
+  Int partAddrRasterSubPULine  = g_auiZscanToRaster[ partAddr ];
+  Int numPartsLine    = cu->getPic()->getNumPartInWidth();
+
+  Int nTxtPerMvInfoX = 4; // cu->getPic()->getMinCUWidth();
+  Int nTxtPerMvInfoY = 4; // cu->getPic()->getMinCUHeight();
+
+  Int refDepStride = picRefDepth->getStride();
+
+  TComMv tmpMv(0, 0);
+  tmpMv.setIDVFlag(false);
+
+  Int refDepOffset  = ( (dv->getHor()+2) >> 2 ) + ( (dv->getVer()+2) >> 2 ) * refDepStride;
+  Pel *refDepth     = picRefDepth->getLumaAddr( cu->getAddr(), cu->getZorderIdxInCU() + partAddr ) + refDepOffset;
+
+  if ((height % 8))
+  {
+    vspSize = 1; // 8x4
+  }
+  else if ((width % 8))
+  {
+    vspSize = 0; // 4x8
+  }
+  else
+  {
+    Bool ULvsBR, URvsBL;
+    ULvsBR = refDepth[0]       < refDepth[refDepStride * (height-1) + width-1];
+    URvsBL = refDepth[width-1] < refDepth[refDepStride * (height-1)];
+    vspSize = ( ULvsBR ^ URvsBL ) ? 0 : 1;
+  }
+  
+  Int subBlockW, subBlockH;
+  if (vspSize)
+  {
+    subBlockW = 8;
+    subBlockH = 4;
+  }
+  else
+  {
+    subBlockW = 4;
+    subBlockH = 8;
+  }
+  
+  Int numPartsInSubPUW = subBlockW / nTxtPerMvInfoX;
+  Int numPartsInSubPUH = subBlockH / nTxtPerMvInfoY * numPartsLine;
+
+  for( Int y=0; y<height; y+=subBlockH, partAddrRasterSubPULine+=numPartsInSubPUH )
+  {
+    Pel *refDepthTmp[4];
+    refDepthTmp[0] = refDepth + refDepStride * y;
+    refDepthTmp[1] = refDepthTmp[0] + subBlockW - 1;
+    refDepthTmp[2] = refDepthTmp[0] + refDepStride * (subBlockH - 1);
+    refDepthTmp[3] = refDepthTmp[2] + subBlockW - 1;
+
+    Int partAddrRasterSubPU = partAddrRasterSubPULine;
+    for( Int x=0; x<width; x+=subBlockW, partAddrRasterSubPU+=numPartsInSubPUW )
+    {
+      Pel  maxDepthVal;
+      maxDepthVal = refDepthTmp[0][x];
+      maxDepthVal = std::max( maxDepthVal, refDepthTmp[1][x]);
+      maxDepthVal = std::max( maxDepthVal, refDepthTmp[2][x]);
+      maxDepthVal = std::max( maxDepthVal, refDepthTmp[3][x]);
+      tmpMv.setHor( (Short) shiftLUT[ maxDepthVal ] );
+
+      Int partAddrRasterPartLine = partAddrRasterSubPU;
+      for( Int sY=0; sY<numPartsInSubPUH; sY+=numPartsLine, partAddrRasterPartLine += numPartsLine )
+      {
+        Int partAddrRasterPart = partAddrRasterPartLine;
+        for( Int sX=0; sX<numPartsInSubPUW; sX+=1, partAddrRasterPart++ )
+        {
+          cuMvField->setMv    ( g_auiRasterToZscan[ partAddrRasterPart ], tmpMv );
+          cuMvField->setRefIdx( g_auiRasterToZscan[ partAddrRasterPart ], refIdx );
+        }
+      }
+    }
+  }
+
+  vspSize = (vspSize<<2)+1;
+
+}
+#endif // NTT_STORE_SPDV_VSP_G0148
 
 //! \}
