@@ -921,8 +921,14 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiWidth        = pcCU->getWidth  ( 0 );
   UInt uiHeight       = pcCU->getHeight ( 0 );
 #if QC_PKU_SDC_SPLIT_G0123
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+#if QC_GENERIC_SDC_G0122
+  TComWedgelet* dmm4SegmentationOrg = new TComWedgelet( uiWidth, uiHeight );
+#endif
+#else
 #if QC_GENERIC_SDC_G0122
   TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+#endif
 #endif
 #endif
 #if QC_PKU_SDC_SPLIT_G0123
@@ -1011,6 +1017,9 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
 #endif
 #endif
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+#endif
   //===== get prediction signal =====
 #if H_3D_DIM
   if( isDimMode( uiLumaPredMode ) )
@@ -1020,6 +1029,14 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       , false, dmm4Segmentation
 #endif
       );
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+    Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
+    Bool* dmm4PatternOrg = dmm4SegmentationOrg->getPattern();
+    for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
+    { 
+      dmm4PatternOrg[k+(uiAbsPartIdx<<4)] = dmm4PatternSplit[k];
+    }
+#endif
   }
   else
   {
@@ -1044,6 +1061,9 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       }
     }
     uiAbsPartIdx += ( (uiWidth * uiWidth) >> 4 );
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+    dmm4Segmentation->destroy(); delete dmm4Segmentation;
+#endif
   }
   uiAbsPartIdx = 0;
 
@@ -1079,8 +1099,13 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
     uiNumSegments = 2;
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+    pbMask  = dmm4SegmentationOrg->getPattern();
+    uiMaskStride = dmm4SegmentationOrg->getStride();
+#else
     pbMask  = dmm4Segmentation->getPattern();
     uiMaskStride = dmm4Segmentation->getStride();
+#endif
   }
 #endif
   // get DC prediction for each segment
@@ -1145,7 +1170,11 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pRecCr += uiStrideC;
   }
 #if QC_GENERIC_SDC_G0122
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+  dmm4SegmentationOrg->destroy(); delete dmm4SegmentationOrg;
+#else
   dmm4Segmentation->destroy(); delete dmm4Segmentation;
+#endif
 #endif
 }
 #endif
