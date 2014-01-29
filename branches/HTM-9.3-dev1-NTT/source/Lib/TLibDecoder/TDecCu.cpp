@@ -461,6 +461,20 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiAbsPartIdx, 0, uiDepth);
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+#if NTT_STORE_SPDV_VSP_G0148
+        if( pcCU->getVSPFlag( uiAbsPartIdx ) != 0 )
+        {
+          if ( uhInterDirNeighbours[ uiMergeIndex ] & (1<<uiRefListIdx) )
+          {
+            UInt dummy;
+            Int vspSize;
+            Int width, height;
+            m_ppcCU[uiDepth]->getPartIndexAndSize( uiAbsPartIdx, dummy, width, height );
+            m_ppcCU[uiDepth]->setMvFieldPUForVSP( pcCU, uiAbsPartIdx, width, height, RefPicList( uiRefListIdx ), cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getRefIdx(), vspSize );
+            pcCU->setVSPFlag( uiAbsPartIdx, vspSize );
+          }
+        }
+#endif
 #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
         if ( g_decTraceMvFromMerge )
         {        

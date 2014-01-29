@@ -258,6 +258,7 @@
 #define H_3D_VSP_CONSTRAINED              0
 #endif
 #define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
+#define NTT_STORE_SPDV_VSP_G0148          1   // Storing Sub-PU based DV for VSP
 #endif
 
 #define MTK_DDD_G0063                     1   // Disparity derived depth coding

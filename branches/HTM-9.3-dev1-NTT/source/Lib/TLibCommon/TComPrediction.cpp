@@ -862,6 +862,23 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #if H_3D_VSP
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
+#if NTT_STORE_SPDV_VSP_G0148
+  Int vspSize = pcCU->getVSPFlag( uiPartAddr ) >> 1;
+
+  Int widthSubPU, heightSubPU;
+  if (vspSize)
+  {
+    widthSubPU  = 8;
+    heightSubPU = 4;
+  }
+  else
+  {
+    widthSubPU  = 4;
+    heightSubPU = 8;
+  }
+  xPredInterUniSubPU( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, rpcYuvPred, bi, widthSubPU, heightSubPU );
+
+#else // NTT_STORE_SPDV_VSP_G0148
   // Get depth reference
   Int       depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
 #if H_3D_FCO_VSP_DONBDV_E0163
@@ -913,7 +930,36 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   // sub-PU based compensation
   xPredInterLumaBlkFromDM   ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
   xPredInterChromaBlkFromDM ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
+#endif // NTT_STORE_SPDV_VSP_G0148
 }
+
+#if NTT_STORE_SPDV_VSP_G0148
+Void TComPrediction::xPredInterUniSubPU( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, Int widthSubPU, Int heightSubPU )
+{
+  UInt numPartsInLine       = pcCU->getPic()->getNumPartInWidth();
+  UInt horiNumPartsInSubPU  = widthSubPU >> 2;
+  UInt vertNumPartsInSubPU  = (heightSubPU >> 2) * numPartsInLine;
+
+  UInt partAddrRasterLine = g_auiZscanToRaster[ uiPartAddr ];
+
+  for( Int posY=0; posY<iHeight; posY+=heightSubPU, partAddrRasterLine+=vertNumPartsInSubPU )
+  {
+    UInt partAddrRasterSubPU = partAddrRasterLine;
+    for( Int posX=0; posX<iWidth; posX+=widthSubPU, partAddrRasterSubPU+=horiNumPartsInSubPU )
+    {
+      UInt    partAddrSubPU = g_auiRasterToZscan[ partAddrRasterSubPU ];
+      Int     refIdx        = pcCU->getCUMvField( eRefPicList )->getRefIdx( partAddrSubPU );           assert (refIdx >= 0);
+      TComMv  cMv           = pcCU->getCUMvField( eRefPicList )->getMv( partAddrSubPU );
+      pcCU->clipMv(cMv);
+
+      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi );
+      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi );
+
+    }
+  }
+}
+#endif // NTT_STORE_SPDV_VSP_G0148
+
 #endif
 
 #if H_3D_ARP
@@ -1768,6 +1814,7 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 #endif
 
 #if H_3D_VSP
+#if !(NTT_STORE_SPDV_VSP_G0148)
 // not fully support iRatioTxtPerDepth* != 1
 Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *mv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int &vspSize, Int ratioTxtPerDepthX, Int ratioTxtPerDepthY )
 {
@@ -2080,7 +2127,7 @@ Void TComPrediction::xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *pi
     depth += depStrideBlock;
   }
 }
-
+#endif
 
 #if H_3D_VSP_CONSTRAINED
 Int TComPrediction::xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma)
