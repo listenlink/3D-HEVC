@@ -249,6 +249,13 @@ private:
   DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
 #endif
 
+#if MTK_DDD_G0063
+  UChar*        m_pucDisparityDerivedDepth;
+  Bool*         m_pbUseDDD;
+  Int           m_iUseDDDCandIdx;
+  UChar         m_ucDDTmpDepth;
+#endif
+
 protected:
   
   /// add possible motion vector predictor candidates
@@ -282,6 +289,10 @@ protected:
 #endif
 
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
+
+#if NTT_STORE_SPDV_VSP_G0148
+  Void xSetMvFieldForVSP  ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, Int *shiftLUT, RefPicList refPicList, Int refIdx, Bool isDepth, Int &vspSize );
+#endif
 
 public:
   TComDataCU();
@@ -500,7 +511,11 @@ public:
    
 #if H_3D
   Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+  Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#else
   Bool          getDispNeighBlocks  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#endif
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
 
@@ -690,6 +705,9 @@ public:
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
   Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }
   Void          setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+#if NTT_STORE_SPDV_VSP_G0148
+  Void          setMvFieldPUForVSP    ( TComDataCU* cu, UInt partAddr, Int width, Int height, RefPicList refPicList, Int refIdx, Int &vspSize );
+#endif
 #endif
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );
@@ -750,6 +768,23 @@ public:
 
   UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
 
+#if MTK_DDD_G0063
+  UChar*       getDDDepth        ()                        { return m_pucDisparityDerivedDepth;        }
+  UChar        getDDDepth        ( UInt uiIdx )            { return m_pucDisparityDerivedDepth[uiIdx]; }
+  Void         setDDDepth        ( UInt uiIdx, UChar n )   { m_pucDisparityDerivedDepth[uiIdx] = n;    }
+  Void         setDDDepthSubParts( UChar ucDDD, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+
+  Bool*        getUseDDD        ()                        { return m_pbUseDDD;        }
+  Bool         getUseDDD        ( UInt uiIdx )            { return m_pbUseDDD[uiIdx]; }
+  Void         setUseDDD        ( UInt uiIdx, Bool n )     { m_pbUseDDD[uiIdx] = n;    }
+  Void         setUseDDD( Bool bUseDDD, UInt uiAbsPartIdx, UInt uiDepth );
+
+  Void         setUseDDD        ( Bool bUseDDD, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+
+  UChar        getDDTmpDepth(){ return m_ucDDTmpDepth; }
+  Int          getUseDDDCandIdx(){ return m_iUseDDDCandIdx;}
+
+#endif
 };
 
 namespace RasterAddress
