@@ -521,6 +521,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
 #endif
+#if H_3D_DBBP
+  ("DBBP",                     m_bUseDBBP,   true, "Enable depth-based block partitioning" )
+#endif
 #if H_3D_IV_MERGE
   ("MPI",                      m_bMPIFlag,        true, "Enable MPI")
 #endif
@@ -2491,7 +2494,7 @@ Void TAppEncCfg::xPrintParameter()
   printf(" ARP:%d  ", m_uiUseAdvResPred  );
 #endif
 #if H_3D_IC
-  printf( "IlluCompEnable: %d ", m_abUseIC);
+  printf( "IlluCompEnable:%d ", m_abUseIC);
 #endif
 #if H_3D_NBDV_REF
   printf("DepthRefinement:%d ", m_depthRefinementFlag );  
@@ -2508,10 +2511,13 @@ Void TAppEncCfg::xPrintParameter()
   printf("DLT:%d ", m_useDLT );
 #endif
 #if H_3D_INTER_SDC
-  printf( "interSDC: %d ", m_bDepthInterSDCFlag ? 1 : 0 );
+  printf( "interSDC:%d ", m_bDepthInterSDCFlag ? 1 : 0 );
+#endif
+#if H_3D_DBBP
+  printf("DBBP:%d ", m_bUseDBBP ? 1 : 0);
 #endif
 #if H_3D_IV_MERGE
-  printf( "MPI: %d ", m_bMPIFlag ? 1 : 0 );
+  printf( "MPI:%d ", m_bMPIFlag ? 1 : 0 );
 #endif
   printf("\n\n");  
 

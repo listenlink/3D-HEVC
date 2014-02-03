@@ -1515,6 +1515,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
 #if H_3D_VSP
         WRITE_FLAG( pcVPS->getViewSynthesisPredFlag( i ) ? 1 : 0 , "view_synthesis_pred_flag[i]");
 #endif
+#if H_3D_DBBP
+        WRITE_FLAG( pcVPS->getUseDBBP( i ) ? 1 : 0, "use_dbbp_flag[i]" );
+#endif
       }          
       else
       {
@@ -2529,6 +2532,13 @@ Void TEncCavlc::codeInterSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 }
 
 Void TEncCavlc::codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
+{
+  assert(0);
+}
+#endif
+    
+#if H_3D_DBBP
+Void TEncCavlc::codeDBBPFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }

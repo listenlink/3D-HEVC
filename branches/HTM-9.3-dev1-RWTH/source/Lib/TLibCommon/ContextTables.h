@@ -124,6 +124,10 @@
 #define NUM_INTER_SDC_SIGN_FLAG_CTX   1      ///< number of context models for sign of inter SDC residual
 #define NUM_INTER_SDC_RESIDUAL_CTX    1      ///< number of context models for abs of inter SDC residual
 #endif
+
+#if H_3D_DBBP
+#define DBBP_NUM_FLAG_CTX                 1
+#endif
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -458,5 +462,13 @@ INIT_INTER_SDC_RESIDUAL[3][NUM_INTER_SDC_RESIDUAL_CTX] =
 #endif
 //! \}
 
+#if H_3D_DBBP
+static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
+{
+  { CNU },
+  { CNU },
+  { CNU },
+};
+#endif
 
 #endif

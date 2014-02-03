@@ -3582,8 +3582,63 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 
   pcCU->getPartIndexAndSize( iPUIdx, uiAbsPartIdx, iWidth, iHeight );
   UInt uiDepth = pcCU->getDepth( uiAbsPartIdx );
+  
+#if H_3D_DBBP
+  DBBPTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();
+  if( pcCU->getDBBPFlag(0) )
+  {
+    AOF( uiAbsPartIdx == 0 );
+    AOF( iPUIdx == 0 );
+    AOF( pcCU->getPartitionSize(0) == SIZE_2Nx2N );
+    AOF( pDBBPTmpData->eVirtualPartSize != SIZE_NONE );
+    
+    // temporary change of partition size for candidate derivation
+    pcCU->setPartSizeSubParts( pDBBPTmpData->eVirtualPartSize, 0, pcCU->getDepth(0));
+    iPUIdx = pcCU->getDBBPTmpData()->uiVirtualPartIndex;
+    
+    // if this is handling the second segment, make sure that motion info of first segment is available
+    if( iPUIdx == 1 )
+    {
+      pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[0], 0, 0, pcCU->getDepth(0)); // interprets depth relative to LCU level
+      
+      pcCU->setVSPFlagSubParts(pDBBPTmpData->ahVSPFlag[0], 0, 0, pcCU->getDepth(0));
+      pcCU->setDvInfoSubParts(pDBBPTmpData->acDvInfo[0], 0, 0, pcCU->getDepth(0));
+      
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {
+        RefPicList eRefList = (RefPicList)uiRefListIdx;
+        
+#if NTT_STORE_SPDV_VSP_G0148
+        if( pcCU->getVSPFlag( 0 ) != 0 )
+        {
+          if ( pcCU->getInterDir(0) & (1<<uiRefListIdx) )
+          {
+            UInt dummy;
+            Int vspSize;
+            Int width, height;
+            pcCU->getPartIndexAndSize( 0, dummy, width, height, 0, pcCU->getTotalNumPart()==256 );
+            AOF( dummy == 0 );
+            pcCU->setMvFieldPUForVSP( pcCU, 0, width, height, eRefList, pDBBPTmpData->acMvField[0][eRefList].getRefIdx(), vspSize );
+            pcCU->setVSPFlag( 0, vspSize );
+          }
+        }
+        else
+#endif
+        pcCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[0][eRefList], pDBBPTmpData->eVirtualPartSize, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+      }
+    }
+    
+    // update these values to virtual partition size
+    pcCU->getPartIndexAndSize( iPUIdx, uiAbsPartIdx, iWidth, iHeight );
+  }
+#endif
+  
   PartSize partSize = pcCU->getPartitionSize( 0 );
+#if H_3D_DBBP
+  if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && partSize != SIZE_2Nx2N && pcCU->getWidth( 0 ) <= 8 && pcCU->getDBBPFlag(0) == false )
+#else
   if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && partSize != SIZE_2Nx2N && pcCU->getWidth( 0 ) <= 8 )
+#endif
   {
     pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
     if ( iPUIdx == 0 )
@@ -3633,6 +3688,21 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
   xRestrictBipredMergeCand( pcCU, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
 #endif
 
+#if H_3D_DBBP
+  if( pcCU->getDBBPFlag(0) )
+  {
+    // reset to 2Nx2N for actual motion search
+    iPUIdx = 0;
+    AOF( pcCU->getPartitionSize(0) == pDBBPTmpData->eVirtualPartSize );
+    pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, pcCU->getDepth(0));
+    
+    // restore values for 2Nx2N partition size
+    pcCU->getPartIndexAndSize( iPUIdx, uiAbsPartIdx, iWidth, iHeight );
+    
+    AOF( uiAbsPartIdx == 0 );
+    AOF( iWidth == iHeight );
+  }
+#endif
 
   ruiCost = MAX_UINT;
   for( UInt uiMergeCand = 0; uiMergeCand < numValidMergeCand; ++uiMergeCand )
@@ -4345,7 +4415,12 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
     } // end if bTestNormalMC
 #endif
 
+#if H_3D_DBBP
+    // test merge mode for DBBP (2Nx2N)
+    if ( pcCU->getPartitionSize( uiPartAddr ) != SIZE_2Nx2N || pcCU->getDBBPFlag(0) )
+#else
     if ( pcCU->getPartitionSize( uiPartAddr ) != SIZE_2Nx2N )
+#endif
     {
       UInt uiMRGInterDir = 0;     
       TComMvField cMRGMvField[2];
@@ -4563,7 +4638,52 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
   // Fill the MV Candidates
   if (!bFilled)
   {
+#if H_3D_DBBP
+    DBBPTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();
+    if( pcCU->getDBBPFlag(0) )
+    {
+      AOF( uiPartAddr == 0 );
+      AOF( uiPartIdx == 0 );
+      AOF( pcCU->getPartitionSize(0) == SIZE_2Nx2N );
+      AOF( pDBBPTmpData->eVirtualPartSize != SIZE_NONE );
+      AOF( iRoiWidth == iRoiHeight );
+      
+      // temporary change of partition size for candidate derivation
+      pcCU->setPartSizeSubParts( pDBBPTmpData->eVirtualPartSize, 0, pcCU->getDepth(0));
+      uiPartIdx = pcCU->getDBBPTmpData()->uiVirtualPartIndex;
+      
+      // if this is handling the second segment, make sure that motion info of first segment is set to first segment
+      if( uiPartIdx == 1 )
+      {
+        pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[0], 0, 0, pcCU->getDepth(0)); // interprets depth relative to LCU level
+        
+        for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+        {
+          RefPicList eRefList = (RefPicList)uiRefListIdx;
+          pcCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[0][eRefList], pDBBPTmpData->eVirtualPartSize, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
+        }
+      }
+      
+      // update these values to virtual partition size
+      pcCU->getPartIndexAndSize( uiPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
+    }
+#endif
+    
     pcCU->fillMvpCand( uiPartIdx, uiPartAddr, eRefPicList, iRefIdx, pcAMVPInfo );
+    
+#if H_3D_DBBP
+    if( pcCU->getDBBPFlag(0) )
+    {
+      // reset to 2Nx2N for motion search
+      uiPartIdx = 0;
+      AOF( pcCU->getPartitionSize(0) == pDBBPTmpData->eVirtualPartSize );
+      pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, pcCU->getDepth(0));
+      
+      // restore values for 2Nx2N partition size
+      pcCU->getPartIndexAndSize( uiPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
+      AOF(uiPartAddr==0);
+    }
+#endif
   }
   
   // initialize Mvp index & Mvp

@@ -156,6 +156,9 @@ public:
   Void codeInterSDCFlag  ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
 #endif
+#if H_3D_DBBP
+  Void codeDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void codeMVPIdx        ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefList );
   
@@ -258,6 +261,9 @@ private:
   ContextModel3DBuffer m_cInterSDCFlagSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSignFlagSCModel;
+#endif
+#if H_3D_DBBP
+  ContextModel3DBuffer m_cDBBPFlagSCModel;
 #endif
 };
 

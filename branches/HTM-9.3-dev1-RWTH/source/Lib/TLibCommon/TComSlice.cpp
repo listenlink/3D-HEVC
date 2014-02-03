@@ -1827,6 +1827,9 @@ TComVPS::TComVPS()
 #if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
 #endif
+#if H_3D_DBBP
+    m_dbbpFlag             [ i ] = false;
+#endif
 #if H_3D_IV_MERGE
     m_bMPIFlag             [ i ] = false;
 #endif

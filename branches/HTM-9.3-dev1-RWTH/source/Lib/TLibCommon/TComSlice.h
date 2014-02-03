@@ -804,6 +804,9 @@ private:
 #if H_3D_INTER_SDC
   Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
 #endif
+#if H_3D_DBBP
+  Bool        m_dbbpFlag[MAX_NUM_LAYERS];
+#endif
 #if H_3D_IV_MERGE
   Bool        m_bMPIFlag[MAX_NUM_LAYERS   ];
 #endif
@@ -954,7 +957,7 @@ public:
   Bool    getOutputLayerFlag( Int outLayerSetIdx, Int i )                  { return m_outputLayerFlag[ outLayerSetIdx ][ i ]; } 
   Bool    inferOutputLayerFlag( Int layerSetIdx, Int i )                   { return ( getDefaultOneTargetOutputLayerIdc( ) == 0 || ( ( getDefaultOneTargetOutputLayerIdc( ) == 1 ) && ( i == m_layerSetLayerIdList[layerSetIdx].size() - 1  ) ));  }
 
-  Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx  = val ]; }
+  Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx ] = val; }
   Int     getProfileLevelTierIdx( Int outLayerSetIdx )                     { return m_profileLevelTierIdx[ outLayerSetIdx ]; } 
   Void    setAltOutputLayerFlag( Bool flag )                               { m_altOutputLayerFlag = flag; } 
   Bool    getAltOutputLayerFlag(  )                                        { return m_altOutputLayerFlag; } 
@@ -1080,6 +1083,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
 #if H_3D_INTER_SDC
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
+#endif
+#if H_3D_DBBP
+  Bool getUseDBBP              ( Int layerIdInVps )         { return m_dbbpFlag[layerIdInVps]; }
+  Void setUseDBBP              ( Int layerIdInVps, Bool bval ){ m_dbbpFlag[layerIdInVps] = bval; }
 #endif
 #if H_3D_IV_MERGE
   Bool    getMPIFlag      ( Int layerIdInVps )           { return m_bMPIFlag[layerIdInVps]; }

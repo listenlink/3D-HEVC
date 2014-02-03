@@ -419,6 +419,9 @@ protected:
 #if H_3D_INTER_SDC
   bool      m_bInterSDC;
 #endif
+#if H_3D_DBBP
+  Bool      m_bUseDBBP;
+#endif
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
@@ -528,6 +531,10 @@ public:
 #if H_3D_INTER_SDC
   Void       setInterSDCEnable              ( Bool bVal )    { m_bInterSDC = bVal; }
   Bool       getInterSDCEnable              ()               { return m_bInterSDC; }
+#endif
+#if H_3D_DBBP
+  Void       setUseDBBP                     ( Bool  b )      { m_bUseDBBP   = b; }
+  Bool       getUseDBBP()                                    { return m_bUseDBBP;     }
 #endif
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }
