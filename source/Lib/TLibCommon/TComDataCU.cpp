@@ -3472,9 +3472,11 @@ inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCoun
   rightShiftMergeCandList( pcMvFieldNeighbours, puhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, iCount, (5-iCount), iCount3DV);
   
   Bool  refViewAvailFlag = false;
-  UChar predFlag[2]      = {0, 0};  
+  UChar predFlag[2]      = {0, 0};
+#if !MTK_RBIP_VSP_G0069
   Int   refListIdY       = 0;    
   Int   viewIdInRefListX = -1;
+#endif
   
   for( Int iRefListIdX = 0; iRefListIdX < 2 && !refViewAvailFlag; iRefListIdX++ )
   {
@@ -3486,8 +3488,10 @@ inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCoun
       {
         refViewAvailFlag      = true;
         predFlag[iRefListIdX] = 1;
+#if !MTK_RBIP_VSP_G0069
         viewIdInRefListX      = m_pcSlice->getRefPic(eRefPicListX, i)->getViewId();
         refListIdY            = 1 - iRefListIdX;
+#endif
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acNBDV, i );
 #if H_3D_NBDV
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].getMv().setIDVFlag (false);
