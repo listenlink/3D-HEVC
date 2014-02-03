@@ -136,6 +136,34 @@ Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
+  
+#if H_3D_DBBP
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE )
+  {
+    decodeDBBPFlag(pcCU, uiAbsPartIdx, uiDepth);
+    
+    if( pcCU->getDBBPFlag(uiAbsPartIdx) )
+    {
+      AOF( pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE );
+      
+      // get collocated depth block
+      UInt uiDepthStride = 0;
+      Pel* pDepthPels = NULL;
+      pDepthPels = pcCU->getVirtualDepthBlock(uiAbsPartIdx, pcCU->getWidth(uiAbsPartIdx), pcCU->getHeight(uiAbsPartIdx), uiDepthStride);
+      
+      AOF( pDepthPels != NULL );
+      AOF( uiDepthStride != 0 );
+      
+      // derive true partitioning for this CU based on depth
+      // (needs to be done in parsing process as motion vector predictors are also derived during parsing)
+      PartSize eVirtualPartSize = m_pcPrediction->getPartitionSizeFromDepth(pDepthPels, uiDepthStride, pcCU->getWidth(uiAbsPartIdx));
+      AOF( eVirtualPartSize != SIZE_NONE );
+      
+      pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
+      AOF( pcCU->getPartitionSize(uiAbsPartIdx) == eVirtualPartSize );
+    }
+  }
+#endif
 }
 
 Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU )
@@ -246,7 +274,11 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #if H_3D_ARP
       decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
 #endif
+#if H_3D_DBBP
+      if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 && pcCU->getDBBPFlag(uiAbsPartIdx) == false )
+#else
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 ) 
+#endif
       {
         pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
         if ( !isMerged )
@@ -826,6 +858,13 @@ Void TDecEntropy::decodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartId
   {
     m_pcEntropyDecoderIf->parseInterSDCResidualData( pcCU, uiAbsPartIdx, uiDepth, uiSeg );
   }
+}
+#endif
+
+#if H_3D_DBBP
+Void TDecEntropy::decodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  m_pcEntropyDecoderIf->parseDBBPFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
 #endif
 

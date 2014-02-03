@@ -178,6 +178,9 @@
 #define H_3D_SPIVMP                       1   // H_3D_SPIVMP    // JCT3V-F0110: Sub-PU level inter-view motion prediction
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
+#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
+
+
 
 
 // OTHERS
@@ -268,6 +271,12 @@
 #define IC_REG_COST_SHIFT                 7
 #define IC_CONST_SHIFT                    5
 #define IC_SHIFT_DIFF                     12
+#endif
+
+///// ***** DEPTH-BASED BLOCK PARTITIONING *********
+#if H_3D_DBBP
+#define DBBP_INVALID_SHORT                (-4)
+#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
 #endif
 
 ///// ***** FCO *********

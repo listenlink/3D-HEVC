@@ -1713,6 +1713,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_VSP
         READ_FLAG( uiCode, "view_synthesis_pred_flag[i]"); pcVPS->setViewSynthesisPredFlag( i, uiCode == 1 ? true : false );
 #endif
+#if H_3D_DBBP
+          READ_FLAG( uiCode, "use_dbbp_flag[i]" ); pcVPS->setUseDBBP( i, uiCode == 1 ? true : false );
+#endif
       }
       else
       {
@@ -2792,6 +2795,12 @@ Void TDecCavlc::parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx,
 {
   assert(0);
 }
+#endif
+#if H_3D_DBBP
+  Void TDecCavlc::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+  {
+    assert(0);
+  }
 #endif
 // ====================================================================================================================
 // Protected member functions

@@ -204,6 +204,9 @@ Void TAppEncTop::xInitLibCfg()
 #if H_3D_INTER_SDC
     m_cTEncTop.setInterSDCEnable               ( isDepth ? m_bDepthInterSDCFlag    : false );
 #endif
+#if H_3D_DBBP
+    m_cTEncTop.setUseDBBP                      ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_bUseDBBP );
+#endif
 #if H_3D_IV_MERGE
     m_cTEncTop.setUseMPI               ( isDepth ? m_bMPIFlag    : false );
 #endif
@@ -1911,7 +1914,10 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 #if H_3D_VSP
     vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && m_viewSynthesisPredFlag );         
-#endif      
+#endif
+#if H_3D_DBBP
+    vps.setUseDBBP              ( layer, !isLayerZero && !isDepth && m_bUseDBBP );
+#endif
 #if H_3D_INTER_SDC
     vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
 #endif

@@ -62,6 +62,10 @@ private:
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
   TComDataCU**        m_ppcCU;            ///< CU data array
   
+#if H_3D_DBBP
+  TComYuv**           m_ppcYuvRecoDBBP;
+#endif
+  
   // access channel
   TComTrQuant*        m_pcTrQuant;
   TComPrediction*     m_pcPrediction;
@@ -96,6 +100,10 @@ protected:
   Void xDecompressCU            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
+  
+#if H_3D_DBBP
+  Void xReconInterDBBP          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
   
   Void  xReconIntraQT           ( TComDataCU* pcCU, UInt uiDepth );
   Void  xIntraRecLumaBlk        ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );

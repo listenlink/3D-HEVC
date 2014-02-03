@@ -140,6 +140,9 @@ public:
   Void codeInterSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
 #endif
+#if H_3D_DBBP
+  Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
 
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

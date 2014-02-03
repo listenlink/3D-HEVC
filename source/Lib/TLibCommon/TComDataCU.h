@@ -96,6 +96,23 @@ struct NDBFBlockInfo
   const NDBFBlockInfo& operator= (const NDBFBlockInfo& src);  //!< "=" operator
 };
 
+#if H_3D_DBBP
+typedef struct _DBBPTmpData
+{
+  TComMv      acMvd[2][2];          // for two segments and two lists
+  TComMvField acMvField[2][2];      // for two segments and two lists
+  Int         aiMvpNum[2][2];       // for two segments and two lists
+  Int         aiMvpIdx[2][2];       // for two segments and two lists
+  UChar       auhInterDir[2];       // for two segments
+  Bool        abMergeFlag[2];       // for two segments
+  UChar       auhMergeIndex[2];     // for two segments
+  Char        ahVSPFlag[2];         // for two segments
+  DisInfo     acDvInfo[2];          // for two segments
+  
+  PartSize    eVirtualPartSize;
+  UInt        uiVirtualPartIndex;
+} DBBPTmpData;
+#endif
 
 // ====================================================================================================================
 // Class definition
@@ -221,6 +238,10 @@ private:
   Bool*         m_pbInterSDCFlag;
   Int*          m_apSegmentInterDCOffset[4];
   UChar*        m_pucInterSDCMask;
+#endif
+#if H_3D_DBBP
+  Bool*         m_pbDBBPFlag;        ///< array of DBBP flags
+  DBBPTmpData   m_sDBBPTmpData;
 #endif
 #if H_3D
   Bool          m_bAvailableFlagA1;    ///< A1 available flag
@@ -361,6 +382,10 @@ public:
   Void          setPartSizeSubParts   ( PartSize eMode, UInt uiAbsPartIdx, UInt uiDepth );
   Void          setCUTransquantBypassSubParts( Bool flag, UInt uiAbsPartIdx, UInt uiDepth );
   
+#if H_3D_DBBP
+  Pel*          getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, UInt& uiDepthStride);
+#endif
+  
   Bool*        getSkipFlag            ()                        { return m_skipFlag;          }
   Bool         getSkipFlag            (UInt idx)                { return m_skipFlag[idx];     }
   Void         setSkipFlag           ( UInt idx, Bool skip)     { m_skipFlag[idx] = skip;   }
@@ -372,6 +397,14 @@ public:
   Bool          getCUTransquantBypass( UInt uiIdx )             { return m_CUTransquantBypass[uiIdx]; }
   Void          setPredictionMode     ( UInt uiIdx, PredMode uh){ m_pePredMode[uiIdx] = uh;   }
   Void          setPredModeSubParts   ( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth );
+  
+#if H_3D_DBBP
+  Bool*         getDBBPFlag           ()                        { return m_pbDBBPFlag;               }
+  Bool          getDBBPFlag           ( UInt uiIdx )            { return m_pbDBBPFlag[uiIdx];        }
+  Void          setDBBPFlag           ( UInt uiIdx, Bool b )    { m_pbDBBPFlag[uiIdx] = b;           }
+  Void          setDBBPFlagSubParts   ( Bool bDBBPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
+  DBBPTmpData*  getDBBPTmpData        () { return &m_sDBBPTmpData; }
+#endif
   
   UChar*        getWidth              ()                        { return m_puhWidth;          }
   UChar         getWidth              ( UInt uiIdx )            { return m_puhWidth[uiIdx];   }

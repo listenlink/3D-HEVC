@@ -71,6 +71,10 @@ Void         initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidt
 // Data structure related table & variable
 // ====================================================================================================================
 
+#if H_3D_DBBP
+extern       Bool   g_bTestVirtualParts;
+#endif
+
 // flexible conversion from relative to absolute index
 extern       UInt   g_auiZscanToRaster[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];
 extern       UInt   g_auiRasterToZscan[ MAX_NUM_SPU_W*MAX_NUM_SPU_W ];

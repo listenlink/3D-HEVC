@@ -491,6 +491,9 @@ protected:
 #if H_3D_INTER_SDC
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
 #endif
+#if H_3D_DBBP
+  Bool      m_bUseDBBP;                                     ///< flag for depth-based block partitioning
+#endif
 #if H_3D_IV_MERGE
   Bool m_bMPIFlag;                                           ///< flag for MPI of depth map coding
 #endif

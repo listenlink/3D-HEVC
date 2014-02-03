@@ -333,6 +333,13 @@ private:
   static UInt xCalcHADs4x16     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
 #endif
   
+#if H_3D_DBBP
+  static UInt xGetMaskedSSE     ( DistParam* pcDtParam );
+  static UInt xGetMaskedSAD     ( DistParam* pcDtParam );
+  static UInt xGetMaskedHADs    ( DistParam* pcDtParam );
+  static UInt xGetMaskedVSD     ( DistParam* pcDtParam );
+#endif
+  
 public:
 #if WEIGHTED_CHROMA_DISTORTION
   UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, TextType eText = TEXT_LUMA, DFunc eDFunc = DF_SSE );
