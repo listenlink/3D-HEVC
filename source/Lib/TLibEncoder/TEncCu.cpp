@@ -2513,22 +2513,6 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
       rpcTempCU->setMVPNum(eRefList, uiPartAddr, pDBBPTmpData->aiMvpNum[uiSegment][eRefList]);
       rpcTempCU->setMVPIdx(eRefList, uiPartAddr, pDBBPTmpData->aiMvpIdx[uiSegment][eRefList]);
       
-#if NTT_STORE_SPDV_VSP_G0148
-      if( rpcTempCU->getVSPFlag( uiPartAddr ) != 0 )
-      {
-        if ( rpcTempCU->getInterDir(uiPartAddr) & (1<<uiRefListIdx) )
-        {
-          UInt dummy;
-          Int vspSize;
-          Int width, height;
-          rpcTempCU->getPartIndexAndSize( uiSegment, dummy, width, height, uiPartAddr, rpcTempCU->getTotalNumPart()==256 );
-          AOF( dummy == uiPartAddr );
-          rpcTempCU->setMvFieldPUForVSP( rpcTempCU, uiPartAddr, width, height, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList].getRefIdx(), vspSize );
-          rpcTempCU->setVSPFlag( uiPartAddr, vspSize );
-        }
-      }
-      else
-#endif
       rpcTempCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[uiSegment][eRefList], eVirtualPartSize, uiPartAddr, 0, uiSegment ); // interprets depth relative to rpcTempCU level
     }
   }

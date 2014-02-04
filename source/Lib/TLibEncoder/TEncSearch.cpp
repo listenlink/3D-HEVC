@@ -3608,22 +3608,6 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       {
         RefPicList eRefList = (RefPicList)uiRefListIdx;
         
-#if NTT_STORE_SPDV_VSP_G0148
-        if( pcCU->getVSPFlag( 0 ) != 0 )
-        {
-          if ( pcCU->getInterDir(0) & (1<<uiRefListIdx) )
-          {
-            UInt dummy;
-            Int vspSize;
-            Int width, height;
-            pcCU->getPartIndexAndSize( 0, dummy, width, height, 0, pcCU->getTotalNumPart()==256 );
-            AOF( dummy == 0 );
-            pcCU->setMvFieldPUForVSP( pcCU, 0, width, height, eRefList, pDBBPTmpData->acMvField[0][eRefList].getRefIdx(), vspSize );
-            pcCU->setVSPFlag( 0, vspSize );
-          }
-        }
-        else
-#endif
         pcCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[0][eRefList], pDBBPTmpData->eVirtualPartSize, 0, 0, 0 ); // interprets depth relative to rpcTempCU level
       }
     }
@@ -3738,7 +3722,11 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       else
 #endif
 #if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_DBBP
+      if ( vspFlag[uiMergeCand] && !pcCU->getDBBPFlag(0) )
+#else
       if ( vspFlag[uiMergeCand] )
+#endif
       {
         UInt partAddr;
         Int vspSize;
@@ -4534,7 +4522,11 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         else
 #endif
 #if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_DBBP
+        if ( vspFlag[uiMRGIndex] && !pcCU->getDBBPFlag(uiPartAddr) )
+#else
         if ( vspFlag[uiMRGIndex] )
+#endif
         {
           UInt partAddrTemp;
           Int vspSize;

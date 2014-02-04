@@ -800,23 +800,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {
       RefPicList eRefList = (RefPicList)uiRefListIdx;
-#if NTT_STORE_SPDV_VSP_G0148
-      if( pcCU->getVSPFlag( 0 ) != 0 )
-      {
-        if ( pcCU->getInterDir(0) & (1<<uiRefListIdx) )
-        {
-          UInt dummy;
-          Int vspSize;
-          Int width, height;
-          pcCU->getPartIndexAndSize( 0, dummy, width, height, 0, pcCU->getTotalNumPart()==256 );
-          AOF( dummy == 0 );
-          AOF( width == height );
-          pcCU->setMvFieldPUForVSP( pcCU, 0, width, height, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList].getRefIdx(), vspSize );
-          pcCU->setVSPFlag( 0, vspSize );
-        }
-      }
-      else
-#endif
+
       pcCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[uiSegment][eRefList], SIZE_2Nx2N, 0, 0 );
     }
     
@@ -841,22 +825,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {
       RefPicList eRefList = (RefPicList)uiRefListIdx;
-#if NTT_STORE_SPDV_VSP_G0148
-      if( pcCU->getVSPFlag( uiPartAddr ) != 0 )
-      {
-        if ( pcCU->getInterDir(uiPartAddr) & (1<<uiRefListIdx) )
-        {
-          UInt dummy;
-          Int vspSize;
-          Int width, height;
-          pcCU->getPartIndexAndSize( uiSegment, dummy, width, height, 0, pcCU->getTotalNumPart()==256 );
-          AOF( dummy == uiPartAddr );
-          pcCU->setMvFieldPUForVSP( pcCU, uiPartAddr, width, height, RefPicList( uiRefListIdx ), pcCU->getMVPIdx(eRefList, uiPartAddr), vspSize );
-          pcCU->setVSPFlag( uiPartAddr, vspSize );
-        }
-      }
-      else
-#endif
+
       pcCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[uiSegment][eRefList], ePartSize, uiPartAddr, 0, uiSegment ); // interprets depth relative to rpcTempCU level
     }
   }
