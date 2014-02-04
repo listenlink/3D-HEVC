@@ -374,7 +374,11 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
 #if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_DBBP
+          if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 && !pcCU->getDBBPFlag( uiAbsPartIdx ) )
+#else
           if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 )
+#endif
           {
             if ( uhInterDirNeighbours[ uiMergeIndex ] & (1<<uiRefListIdx) )
             {
