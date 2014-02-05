@@ -237,6 +237,7 @@
 #define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
 #if H_3D_DIM_SDC && H_3D_INTER_SDC
 #define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
+#define QC_SDC_UNIFY_G0130_FIX            1  // Fix bug of G0130
 #endif
 #define SEC_INTER_SDC_G0101               1  // Improved inter SDC with multiple DC candidates
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
