@@ -939,6 +939,12 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
       if( uiAbsPartIdx == 0 )
       {
         m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 );
+#if QC_SDC_UNIFY_G0130_FIX
+        if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( 0 ) ) && getDimType( pcCU->getLumaIntraDir( 0 ) ) < DIM_NUM_TYPE ) 
+        {
+          m_pcEntropyCoder->encodeDeltaDC( pcCU, 0 );
+        }
+#endif
       }
     }
     else
@@ -950,14 +956,26 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         for( UInt uiPart = 0; uiPart < 4; uiPart++ )
         {
           m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPart * uiQNumParts );
+#if QC_SDC_UNIFY_G0130_FIX
+          if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiPart * uiQNumParts ) ) && getDimType( pcCU->getLumaIntraDir( uiPart * uiQNumParts ) ) < DIM_NUM_TYPE ) 
+          {
+            m_pcEntropyCoder->encodeDeltaDC( pcCU, uiPart * uiQNumParts );
+          }
+#endif
         }
       }
       else if( ( uiAbsPartIdx % uiQNumParts ) == 0 )
       {
         m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiAbsPartIdx );
+#if QC_SDC_UNIFY_G0130_FIX
+        if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiAbsPartIdx ) ) && getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx ) ) < DIM_NUM_TYPE ) 
+        {
+          m_pcEntropyCoder->encodeDeltaDC( pcCU, uiAbsPartIdx );
+        }
+#endif
       }
     }
-#if QC_SDC_UNIFY_G0130
+#if QC_SDC_UNIFY_G0130 && !QC_SDC_UNIFY_G0130_FIX
     Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
     UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
 

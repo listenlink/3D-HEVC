@@ -732,8 +732,11 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getSlice()->getIsDepth() );
   }
 #endif
-
+#if QC_SDC_UNIFY_G0130_FIX
+  if( pcCU->getSlice()->getIsDepth() && ( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) ) )
+#else
   if( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) )
+#endif
   {
     Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
     UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
