@@ -600,6 +600,304 @@ Bool TComPrediction::xCheckTwoSPMotion ( TComDataCU* pcCU, UInt PartAddr0, UInt 
 }
 #endif
 
+#if H_3D_DBBP
+PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize)
+{
+  // find virtual partitioning for this CU based on depth block
+  // segmentation of texture block --> mask IDs
+  Pel*  pDepthBlockStart      = pDepthPels;
+  
+  // first compute average of depth block for thresholding
+  Int iSumDepth = 0;
+  Int iSubSample = 4;
+  for (Int y=0; y<uiSize; y+=iSubSample)
+  {
+    for (Int x=0; x<uiSize; x+=iSubSample)
+    {
+      Int depthPel = pDepthPels[x];
+      
+      iSumDepth += depthPel;
+    }
+    
+    // next row
+    pDepthPels += uiDepthStride*iSubSample;
+  }
+  
+  Int iSizeInBits = g_aucConvertToBit[uiSize] - g_aucConvertToBit[iSubSample];  // respect sub-sampling factor
+  Int iMean = iSumDepth >> iSizeInBits*2;       // iMean /= (uiSize*uiSize);
+  
+  // start again for segmentation
+  pDepthPels = pDepthBlockStart;
+  
+  // start mapping process
+  Bool bAMPAvail = uiSize > 8;
+  Int matchedPartSum[6][2] = {{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}}; // counter for each part size and boolean option
+  PartSize virtualPartSizes[6] = { SIZE_Nx2N, SIZE_2NxN, SIZE_2NxnU, SIZE_2NxnD, SIZE_nLx2N, SIZE_nRx2N };
+  
+  UInt uiHalfSize = uiSize>>1;
+  UInt uiQuarterSize = uiSize>>2;
+  
+  for (Int y=0; y<uiSize; y+=iSubSample)
+  {
+    for (Int x=0; x<uiSize; x+=iSubSample)
+    {
+      Int depthPel = pDepthPels[x];
+      
+      // decide which segment this pixel belongs to
+      Int ucSegment = (Int)(depthPel>iMean);
+      
+      // Matched Filter to find optimal (conventional) partitioning
+      
+      // SIZE_Nx2N
+      if(x<uiHalfSize)  // left
+      {
+        matchedPartSum[0][ucSegment]++;
+      }
+      else  // right
+      {
+        matchedPartSum[0][1-ucSegment]++;
+      }
+      
+      // SIZE_2NxN
+      if(y<uiHalfSize)  // top
+      {
+        matchedPartSum[1][ucSegment]++;
+      }
+      else  // bottom
+      {
+        matchedPartSum[1][1-ucSegment]++;
+      }
+      
+      if( bAMPAvail )
+      {
+        // SIZE_2NxnU
+        if(y<uiQuarterSize)  // top (1/4)
+        {
+          matchedPartSum[2][ucSegment]++;
+        }
+        else  // bottom (3/4)
+        {
+          matchedPartSum[2][1-ucSegment]++;
+        }
+        
+        // SIZE_2NxnD
+        if(y<(uiQuarterSize*3))  // top (3/4)
+        {
+          matchedPartSum[3][ucSegment]++;
+        }
+        else  // bottom (1/4)
+        {
+          matchedPartSum[3][1-ucSegment]++;
+        }
+        
+        // SIZE_nLx2N
+        if(x<uiQuarterSize)  // left (1/4)
+        {
+          matchedPartSum[4][ucSegment]++;
+        }
+        else  // right (3/4)
+        {
+          matchedPartSum[4][1-ucSegment]++;
+        }
+        
+        // SIZE_nRx2N
+        if(x<(uiQuarterSize*3))  // left (3/4)
+        {
+          matchedPartSum[5][ucSegment]++;
+        }
+        else  // right (1/4)
+        {
+          matchedPartSum[5][1-ucSegment]++;
+        }
+      }
+    }
+    
+    // next row
+    pDepthPels += uiDepthStride*iSubSample;
+  }
+  
+  PartSize matchedPartSize = SIZE_NONE;
+  
+  Int iMaxMatchSum = 0;
+  for(Int p=0; p<6; p++)  // loop over partition sizes
+  {
+    for( Int b=0; b<=1; b++ ) // loop over boolean options
+    {
+      if(matchedPartSum[p][b] > iMaxMatchSum)
+      {
+        iMaxMatchSum = matchedPartSum[p][b];
+        matchedPartSize = virtualPartSizes[p];
+      }
+    }
+  }
+  
+  AOF( matchedPartSize != SIZE_NONE );
+  
+  return matchedPartSize;
+}
+
+Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask )
+{
+  // segmentation of texture block --> mask IDs
+  Pel*  pDepthBlockStart      = pDepthPels;
+  
+  // first compute average of depth block for thresholding
+  Int iSumDepth = 0;
+  Int uiMinDepth = MAX_INT;
+  Int uiMaxDepth = 0;
+  for (Int y=0; y<uiHeight; y++)
+  {
+    for (Int x=0; x<uiWidth; x++)
+    {
+      Int depthPel = pDepthPels[x];
+      iSumDepth += depthPel;
+      
+      if( depthPel > uiMaxDepth )
+      {
+        uiMaxDepth = depthPel;
+      }
+      if( depthPel < uiMinDepth )
+      {
+        uiMinDepth = depthPel;
+      }
+    }
+    
+    // next row
+    pDepthPels += uiDepthStride;
+  }
+  
+  // don't generate mask for blocks with small depth range (encoder decision)
+  if( uiMaxDepth - uiMinDepth < 10 )
+  {
+    return false;
+  }
+  
+  AOF(uiWidth==uiHeight);
+  Int iSizeInBits = g_aucConvertToBit[uiWidth]+2;
+  Int iMean = iSumDepth >> iSizeInBits*2;       // iMean /= (uiWidth*uiHeight);
+  
+  // start again for segmentation
+  pDepthPels = pDepthBlockStart;
+  
+  Bool bInvertMask = pDepthPels[0]>iMean; // top-left segment needs to be mapped to partIdx 0
+  
+  // generate mask
+  UInt uiSumPix[2] = {0,0};
+  for (Int y=0; y<uiHeight; y++)
+  {
+    for (Int x=0; x<uiHeight; x++)
+    {
+      Int depthPel = pDepthPels[x];
+      
+      // decide which segment this pixel belongs to
+      Int ucSegment = (Int)(depthPel>iMean);
+      
+      if( bInvertMask )
+      {
+        ucSegment = 1-ucSegment;
+      }
+      
+      // count pixels for each segment
+      uiSumPix[ucSegment]++;
+      
+      // set mask value
+      pMask[x] = (Bool)ucSegment;
+    }
+    
+    // next row
+    pDepthPels += uiDepthStride;
+    pMask += MAX_CU_SIZE;
+  }
+  
+  // don't generate valid mask for tiny segments (encoder decision)
+  // each segment needs to cover at least 1/8th of block
+  UInt uiMinPixPerSegment = (uiWidth*uiHeight) >> 3;
+  if( !( uiSumPix[0] > uiMinPixPerSegment && uiSumPix[1] > uiMinPixPerSegment ) )
+  {
+    return false;
+  }
+  
+  // all good
+  return true;
+}
+
+Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutYuv, Bool* pMask, UInt uiWidth, UInt uiHeight, UInt uiPartAddr )
+{
+  Pel*  piSrc[2]    = {pInYuv[0]->getLumaAddr(uiPartAddr), pInYuv[1]->getLumaAddr(uiPartAddr)};
+  UInt  uiSrcStride = pInYuv[0]->getStride();
+  Pel*  piDst       = pOutYuv->getLumaAddr(uiPartAddr);
+  UInt  uiDstStride = pOutYuv->getStride();
+  
+  UInt  uiMaskStride= MAX_CU_SIZE;
+  
+  // backup pointer
+  Bool* pMaskStart = pMask;
+  
+  // combine luma first
+  for (Int y=0; y<uiHeight; y++)
+  {
+    for (Int x=0; x<uiWidth; x++)
+    {
+      UChar ucSegment = (UChar)pMask[x];
+      AOF( ucSegment < 2 );
+      
+      // filtering
+      Bool t = (y==0)?pMaskStart[(y+1)*uiMaskStride+x]:pMaskStart[(y-1)*uiMaskStride+x];
+      Bool l = (x==0)?pMaskStart[y*uiMaskStride+x+1]:pMaskStart[y*uiMaskStride+x-1];
+      Bool b = (y==uiHeight-1)?pMaskStart[(y-1)*uiMaskStride+x]:pMaskStart[(y+1)*uiMaskStride+x];
+      Bool r = (x==uiWidth-1)?pMaskStart[y*uiMaskStride+x-1]:pMaskStart[y*uiMaskStride+x+1];
+      
+      Bool bBlend = !((t&&l&&b&&r) || (!t&&!l&&!b&&!r));
+      piDst[x] = bBlend?((piSrc[0][x]+piSrc[1][x]+1)>>1):piSrc[ucSegment][x];
+    }
+    
+    piSrc[0]  += uiSrcStride;
+    piSrc[1]  += uiSrcStride;
+    piDst     += uiDstStride;
+    pMask     += uiMaskStride;
+  }
+  
+  // now combine chroma
+  Pel*  piSrcU[2]       = { pInYuv[0]->getCbAddr(uiPartAddr), pInYuv[1]->getCbAddr(uiPartAddr) };
+  Pel*  piSrcV[2]       = { pInYuv[0]->getCrAddr(uiPartAddr), pInYuv[1]->getCrAddr(uiPartAddr) };
+  UInt  uiSrcStrideC    = pInYuv[0]->getCStride();
+  Pel*  piDstU          = pOutYuv->getCbAddr(uiPartAddr);
+  Pel*  piDstV          = pOutYuv->getCrAddr(uiPartAddr);
+  UInt  uiDstStrideC    = pOutYuv->getCStride();
+  UInt  uiWidthC        = uiWidth >> 1;
+  UInt  uiHeightC       = uiHeight >> 1;
+  pMask = pMaskStart;
+  
+  for (Int y=0; y<uiHeightC; y++)
+  {
+    for (Int x=0; x<uiWidthC; x++)
+    {
+      UChar ucSegment = (UChar)pMask[x*2];
+      AOF( ucSegment < 2 );
+      
+      // filtering
+      Bool t = (y==0)?pMaskStart[(y+1)*2*uiMaskStride+x*2]:pMaskStart[(y-1)*2*uiMaskStride+x*2];
+      Bool l = (x==0)?pMaskStart[y*2*uiMaskStride+(x+1)*2]:pMaskStart[y*2*uiMaskStride+(x-1)*2];
+      Bool b = (y==uiHeightC-1)?pMaskStart[(y-1)*2*uiMaskStride+x*2]:pMaskStart[(y+1)*2*uiMaskStride+x*2];
+      Bool r = (x==uiWidthC-1)?pMaskStart[y*2*uiMaskStride+(x-1)*2]:pMaskStart[y*2*uiMaskStride+(x+1)*2];
+      
+      Bool bBlend = !((t&&l&&b&&r) || (!t&&!l&&!b&&!r));
+      
+      piDstU[x] = bBlend?((piSrcU[0][x]+piSrcU[1][x]+1)>>1):piSrcU[ucSegment][x];
+      piDstV[x] = bBlend?((piSrcV[0][x]+piSrcV[1][x]+1)>>1):piSrcV[ucSegment][x];
+    }
+    
+    piSrcU[0]   += uiSrcStrideC;
+    piSrcU[1]   += uiSrcStrideC;
+    piSrcV[0]   += uiSrcStrideC;
+    piSrcV[1]   += uiSrcStrideC;
+    piDstU      += uiDstStrideC;
+    piDstV      += uiDstStrideC;
+    pMask       += 2*uiMaskStride;
+  }
+}
+#endif
+
 Void TComPrediction::motionCompensation ( TComDataCU* pcCU, TComYuv* pcYuvPred, RefPicList eRefPicList, Int iPartIdx )
 {
   Int         iWidth;
@@ -782,6 +1080,43 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
+
+#if MTK_DDD_G0063
+  if( pcCU->getUseDDD( uiPartAddr ) )
+  {
+      assert( pcCU->getSPIVMPFlag( uiPartAddr ) == 0 );
+      assert( pcCU->getSlice()->getViewIndex() != 0 );
+
+      Int dstStride = rpcYuvPred->getStride();
+      Int dstStrideC = rpcYuvPred->getCStride();
+      Pel *dst      = rpcYuvPred->getLumaAddr( uiPartAddr );
+      Pel *dstU     = rpcYuvPred->getCbAddr( uiPartAddr );
+      Pel *dstV     = rpcYuvPred->getCrAddr( uiPartAddr );
+
+      Int iWidthC  = iWidth >> 1;
+      Int iHeightC = iHeight >> 1;
+      Int DefaultC = 1 << ( g_bitDepthY - 1);
+      for ( Int i = 0; i < iHeight; i++)
+      {
+          for ( Int j = 0; j < iWidth ; j++)
+          {
+              dst[j] = pcCU->getDDDepth( uiPartAddr );
+          }
+          dst += dstStride;
+      }
+      for ( Int i = 0; i < iHeightC; i++)
+      {
+          for ( Int j = 0; j < iWidthC; j++)
+          {
+              dstU[j] = dstV[j] = DefaultC;
+          }
+          dstU += dstStrideC;
+          dstV += dstStrideC;
+      }
+
+      //return;
+  } else
+#endif
 #if H_3D_ARP
   if(pcCU->getARPW( uiPartAddr ) > 0  && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()== pcCU->getSlice()->getPOC())
   {
@@ -825,6 +1160,23 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #if H_3D_VSP
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
+#if NTT_STORE_SPDV_VSP_G0148
+  Int vspSize = pcCU->getVSPFlag( uiPartAddr ) >> 1;
+
+  Int widthSubPU, heightSubPU;
+  if (vspSize)
+  {
+    widthSubPU  = 8;
+    heightSubPU = 4;
+  }
+  else
+  {
+    widthSubPU  = 4;
+    heightSubPU = 8;
+  }
+  xPredInterUniSubPU( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, rpcYuvPred, bi, widthSubPU, heightSubPU );
+
+#else // NTT_STORE_SPDV_VSP_G0148
   // Get depth reference
   Int       depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
 #if H_3D_FCO_VSP_DONBDV_E0163
@@ -876,7 +1228,36 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   // sub-PU based compensation
   xPredInterLumaBlkFromDM   ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
   xPredInterChromaBlkFromDM ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
+#endif // NTT_STORE_SPDV_VSP_G0148
 }
+
+#if NTT_STORE_SPDV_VSP_G0148
+Void TComPrediction::xPredInterUniSubPU( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, Int widthSubPU, Int heightSubPU )
+{
+  UInt numPartsInLine       = pcCU->getPic()->getNumPartInWidth();
+  UInt horiNumPartsInSubPU  = widthSubPU >> 2;
+  UInt vertNumPartsInSubPU  = (heightSubPU >> 2) * numPartsInLine;
+
+  UInt partAddrRasterLine = g_auiZscanToRaster[ uiPartAddr ];
+
+  for( Int posY=0; posY<iHeight; posY+=heightSubPU, partAddrRasterLine+=vertNumPartsInSubPU )
+  {
+    UInt partAddrRasterSubPU = partAddrRasterLine;
+    for( Int posX=0; posX<iWidth; posX+=widthSubPU, partAddrRasterSubPU+=horiNumPartsInSubPU )
+    {
+      UInt    partAddrSubPU = g_auiRasterToZscan[ partAddrRasterSubPU ];
+      Int     refIdx        = pcCU->getCUMvField( eRefPicList )->getRefIdx( partAddrSubPU );           assert (refIdx >= 0);
+      TComMv  cMv           = pcCU->getCUMvField( eRefPicList )->getMv( partAddrSubPU );
+      pcCU->clipMv(cMv);
+
+      xPredInterLumaBlk  ( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi );
+      xPredInterChromaBlk( pcCU, pcCU->getSlice()->getRefPic( eRefPicList, refIdx )->getPicYuvRec(), partAddrSubPU, &cMv, widthSubPU, heightSubPU, rpcYuvPred, bi );
+
+    }
+  }
+}
+#endif // NTT_STORE_SPDV_VSP_G0148
+
 #endif
 
 #if H_3D_ARP
@@ -1731,6 +2112,7 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 #endif
 
 #if H_3D_VSP
+#if !(NTT_STORE_SPDV_VSP_G0148)
 // not fully support iRatioTxtPerDepth* != 1
 Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *mv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int &vspSize, Int ratioTxtPerDepthX, Int ratioTxtPerDepthY )
 {
@@ -2043,7 +2425,7 @@ Void TComPrediction::xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *pi
     depth += depStrideBlock;
   }
 }
-
+#endif
 
 #if H_3D_VSP_CONSTRAINED
 Int TComPrediction::xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma)

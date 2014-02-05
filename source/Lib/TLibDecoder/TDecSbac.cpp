@@ -99,6 +99,9 @@ TDecSbac::TDecSbac()
 , m_cInterSDCResidualSCModel         ( 1,             1,  NUM_INTER_SDC_RESIDUAL_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cInterSDCResidualSignFlagSCModel ( 1,             1,  NUM_INTER_SDC_SIGN_FLAG_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if H_3D_DBBP
+, m_cDBBPFlagSCModel             ( 1,             1,                 DBBP_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -182,6 +185,9 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cInterSDCResidualSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_INTER_SDC_RESIDUAL );
   m_cInterSDCResidualSignFlagSCModel.initBuffer ( sliceType, qp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
 #endif
+#if H_3D_DBBP
+  m_cDBBPFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_DBBP_FLAG );
+#endif
   m_uiLastDQpNonZero  = 0;
   
   // new structure
@@ -250,6 +256,9 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cInterSDCFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_FLAG );
   m_cInterSDCResidualSCModel.initBuffer   ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_RESIDUAL );
   m_cInterSDCResidualSignFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
+#endif
+#if H_3D_DBBP
+  m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
   m_pcTDecBinIf->start();
 }
@@ -2128,6 +2137,25 @@ Void TDecSbac::parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, 
   iIdx = (Int)( uiSign ? -1 : 1 ) * uiAbsIdx;
 
   pcCU->setInterSDCSegmentDCOffset( iIdx, uiSegment, uiAbsPartIdx );
+}
+#endif
+
+#if H_3D_DBBP
+Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+  AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
+  AOF( !pcCU->getSlice()->getIsDepth() );
+  AOF( ePartSize == RWTH_DBBP_PACK_MODE );
+  
+  UInt uiSymbol = 0;
+  
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
+  
+  if( uiSymbol )
+  {
+    pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx, 0, uiDepth);
+  }
 }
 #endif
 

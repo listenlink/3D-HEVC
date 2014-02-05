@@ -239,7 +239,33 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     uiAbsPartIdx = 0;
   }
+  
+#if H_3D_DBBP
+  PartSize eVirtualPartSize = pcCU->getPartitionSize(uiAbsPartIdx);
+  if( pcCU->getDBBPFlag(uiAbsPartIdx) )
+  {
+    AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
+    
+    // temporarily change partition size for DBBP blocks
+    pcCU->setPartSizeSubParts(RWTH_DBBP_PACK_MODE, uiAbsPartIdx, uiDepth);
+  }
+#endif
+  
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
+  
+#if H_3D_DBBP
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE )
+  {
+    encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
+    
+    if( pcCU->getDBBPFlag(uiAbsPartIdx) )
+    {
+      AOF( pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE );
+      // restore virtual partition size for DBBP blocks
+      pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
+    }
+  }
+#endif
 }
 
 /** Encode I_PCM information. 
@@ -869,6 +895,17 @@ Void TEncEntropy::encodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartId
   {
     m_pcEntropyCoderIf->codeInterSDCResidualData( pcCU, uiAbsPartIdx, uiSeg );
   }
+}
+#endif
+
+#if H_3D_DBBP
+Void TEncEntropy::encodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  m_pcEntropyCoderIf->codeDBBPFlag( pcCU, uiAbsPartIdx );
 }
 #endif
 

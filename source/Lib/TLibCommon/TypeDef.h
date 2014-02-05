@@ -178,6 +178,9 @@
 #define H_3D_SPIVMP                       1   // H_3D_SPIVMP    // JCT3V-F0110: Sub-PU level inter-view motion prediction
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
+#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
+
+
 
 
 // OTHERS
@@ -203,6 +206,9 @@
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 
+#define SEC_SPIVMP_MCP_SIZE_G0077         1  // Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
+#define SEC_DEPTH_DV_DERIVAITON_G0074     1  // Simplification of DV derivation for depth, JCT3V-G0074
+
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
 #define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
@@ -224,6 +230,13 @@
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
 #endif
+
+#if H_3D_SPIVMP
+#define QC_SPIVMP_MPI_G0119               1 // Sub-PU level MPI merge candidate
+#endif
+#define QC_DEPTH_MERGE_SIMP_G0127         1 // Remove DV candidate and shifting candidate for depth coding
+
+#define KHU_SIMP_SPIVMP_G0147             1  // Simplification on Sub-PU level temporal interview motion prediction
 
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
@@ -247,13 +260,23 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
+#define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
+#define NTT_STORE_SPDV_VSP_G0148          1   // Storing Sub-PU based DV for VSP
 #endif
+
+#define MTK_DDD_G0063                     1   // Disparity derived depth coding
 
 ///// ***** ILLUMATION COMPENSATION *********
 #if H_3D_IC
 #define IC_REG_COST_SHIFT                 7
 #define IC_CONST_SHIFT                    5
 #define IC_SHIFT_DIFF                     12
+#endif
+
+///// ***** DEPTH-BASED BLOCK PARTITIONING *********
+#if H_3D_DBBP
+#define DBBP_INVALID_SHORT                (-4)
+#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
 #endif
 
 ///// ***** FCO *********

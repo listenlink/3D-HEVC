@@ -49,6 +49,9 @@ TDecCu::TDecCu()
   m_ppcYuvResi = NULL;
   m_ppcYuvReco = NULL;
   m_ppcCU      = NULL;
+#if H_3D_DBBP
+  m_ppcYuvRecoDBBP = NULL;
+#endif
 }
 
 TDecCu::~TDecCu()
@@ -74,6 +77,9 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
   m_ppcYuvResi = new TComYuv*[m_uiMaxDepth-1];
   m_ppcYuvReco = new TComYuv*[m_uiMaxDepth-1];
   m_ppcCU      = new TComDataCU*[m_uiMaxDepth-1];
+#if H_3D_DBBP
+  m_ppcYuvRecoDBBP = new TComYuv*[m_uiMaxDepth-1];
+#endif
   
   UInt uiNumPartitions;
   for ( UInt ui = 0; ui < m_uiMaxDepth-1; ui++ )
@@ -85,6 +91,9 @@ Void TDecCu::create( UInt uiMaxDepth, UInt uiMaxWidth, UInt uiMaxHeight )
     m_ppcYuvResi[ui] = new TComYuv;    m_ppcYuvResi[ui]->create( uiWidth, uiHeight );
     m_ppcYuvReco[ui] = new TComYuv;    m_ppcYuvReco[ui]->create( uiWidth, uiHeight );
     m_ppcCU     [ui] = new TComDataCU; m_ppcCU     [ui]->create( uiNumPartitions, uiWidth, uiHeight, true, uiMaxWidth >> (m_uiMaxDepth - 1) );
+#if H_3D_DBBP
+    m_ppcYuvRecoDBBP[ui] = new TComYuv;    m_ppcYuvRecoDBBP[ui]->create( uiWidth, uiHeight );
+#endif
   }
   
   m_bDecodeDQP = false;
@@ -105,11 +114,17 @@ Void TDecCu::destroy()
     m_ppcYuvResi[ui]->destroy(); delete m_ppcYuvResi[ui]; m_ppcYuvResi[ui] = NULL;
     m_ppcYuvReco[ui]->destroy(); delete m_ppcYuvReco[ui]; m_ppcYuvReco[ui] = NULL;
     m_ppcCU     [ui]->destroy(); delete m_ppcCU     [ui]; m_ppcCU     [ui] = NULL;
+#if H_3D_DBBP
+    m_ppcYuvRecoDBBP[ui]->destroy(); delete m_ppcYuvRecoDBBP[ui]; m_ppcYuvRecoDBBP[ui] = NULL;
+#endif
   }
   
   delete [] m_ppcYuvResi; m_ppcYuvResi = NULL;
   delete [] m_ppcYuvReco; m_ppcYuvReco = NULL;
   delete [] m_ppcCU     ; m_ppcCU      = NULL;
+#if H_3D_DBBP
+  delete [] m_ppcYuvRecoDBBP; m_ppcYuvRecoDBBP = NULL;
+#endif
 }
 
 // ====================================================================================================================
@@ -212,6 +227,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   DTRACE_CU("log2CbSize", g_uiMaxCUWidth>>uiDepth)
   DTRACE_CU("cqtDepth"  , uiDepth)
 #endif
+
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
   Bool bStartInCU = pcCU->getSCUAddr()+uiAbsPartIdx+uiCurNumParts>pcSlice->getSliceSegmentCurStartCUAddr()&&pcCU->getSCUAddr()+uiAbsPartIdx<pcSlice->getSliceSegmentCurStartCUAddr();
   if((!bStartInCU) && ( uiRPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiBPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
@@ -275,6 +291,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   DTRACE_CU_S("=========== coding_unit ===========\n")
 #endif
 
+
+#if MTK_DDD_G0063
+      pcCU->setUseDDD( false, uiAbsPartIdx, uiDepth );
+#endif
+
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
   {
     setdQPFlag(true);
@@ -317,7 +338,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_IV_MERGE
       if( pcCU->getSlice()->getIsDepth())
       {
+#if SEC_DEPTH_DV_DERIVAITON_G0074
+        DvInfo.bDV = m_ppcCU[uiDepth]->getDispforDepth(0, 0, &DvInfo);
+#else
         DvInfo.bDV = m_ppcCU[uiDepth]->getDispNeighBlocks(0, 0, &DvInfo);
+#endif
       }
       else
       {
@@ -433,6 +458,15 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
     pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 
+#if MTK_DDD_G0063
+    if( uiMergeIndex == m_ppcCU[uiDepth]->getUseDDDCandIdx() )
+    {
+        assert( pcCU->getSlice()->getViewIndex() != 0 );
+        pcCU->setUseDDD( true, uiAbsPartIdx, 0, uiDepth );
+        pcCU->setDDDepthSubParts( m_ppcCU[uiDepth]->getDDTmpDepth(),uiAbsPartIdx, 0, uiDepth );
+    }
+#endif
+
     TComMv cTmpMv( 0, 0 );
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {        
@@ -442,6 +476,20 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiAbsPartIdx, 0, uiDepth);
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
         pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+#if NTT_STORE_SPDV_VSP_G0148
+        if( pcCU->getVSPFlag( uiAbsPartIdx ) != 0 )
+        {
+          if ( uhInterDirNeighbours[ uiMergeIndex ] & (1<<uiRefListIdx) )
+          {
+            UInt dummy;
+            Int vspSize;
+            Int width, height;
+            m_ppcCU[uiDepth]->getPartIndexAndSize( uiAbsPartIdx, dummy, width, height );
+            m_ppcCU[uiDepth]->setMvFieldPUForVSP( pcCU, uiAbsPartIdx, width, height, RefPicList( uiRefListIdx ), cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getRefIdx(), vspSize );
+            pcCU->setVSPFlag( uiAbsPartIdx, vspSize );
+          }
+        }
+#endif
 #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC   
         if ( g_decTraceMvFromMerge )
         {        
@@ -584,6 +632,14 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
     case MODE_INTER:
+#if H_3D_DBBP
+      if( m_ppcCU[uiDepth]->getDBBPFlag(0) )
+      {
+        xReconInterDBBP( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
+      }
+      else
+      {
+#endif
 #if H_3D_INTER_SDC
       if( m_ppcCU[uiDepth]->getInterSDCFlag( 0 ) )
       {
@@ -594,6 +650,9 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
 #endif
       xReconInter( m_ppcCU[uiDepth], uiDepth );
 #if H_3D_INTER_SDC
+      }
+#endif
+#if H_3D_DBBP
       }
 #endif
       break;
@@ -683,6 +742,106 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
     pRecCb += uiStrideC;
     pRecCr += uiStrideC;
+  }
+}
+#endif
+
+#if H_3D_DBBP
+Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  AOF(!pcCU->getSlice()->getIsDepth());
+  AOF(!pcCU->getSlice()->isIntra());
+  PartSize ePartSize = pcCU->getPartitionSize( 0 );
+  
+  // get collocated depth block
+  UInt uiDepthStride = 0;
+  Pel* pDepthPels = pcCU->getVirtualDepthBlock(0, pcCU->getWidth(0), pcCU->getHeight(0), uiDepthStride);
+  AOF( pDepthPels != NULL );
+  AOF( uiDepthStride != 0 );
+  
+  // compute mask by segmenting depth block
+  Bool pMask[MAX_CU_SIZE*MAX_CU_SIZE];
+  Bool bValidMask = m_pcPrediction->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, pcCU->getWidth(0), pcCU->getHeight(0), pMask);
+  AOF(bValidMask);
+  
+  DBBPTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();
+  TComYuv* apSegPredYuv[2] = { m_ppcYuvReco[uiDepth], m_ppcYuvRecoDBBP[uiDepth] };
+  
+  // first, extract the two sets of motion parameters
+  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+  for( UInt uiSegment = 0; uiSegment < 2; uiSegment++ )
+  {
+    UInt uiPartAddr = uiSegment*uiPUOffset;
+    
+    pDBBPTmpData->auhInterDir[uiSegment] = pcCU->getInterDir(uiPartAddr);
+    
+    for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+    {
+      RefPicList eRefList = (RefPicList)uiRefListIdx;
+      pcCU->getMvField(pcCU, uiPartAddr, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList]);
+    }
+    
+    pDBBPTmpData->ahVSPFlag[uiSegment] = pcCU->getVSPFlag( uiPartAddr );
+    pDBBPTmpData->acDvInfo[uiSegment] = pcCU->getDvInfo( uiPartAddr );
+  }
+  
+  // do motion compensation for each segment as 2Nx2N
+  pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
+  pcCU->setPredModeSubParts( MODE_INTER, 0, uiDepth );
+  for( UInt uiSegment = 0; uiSegment < 2; uiSegment++ )
+  {
+    pcCU->setInterDirSubParts( pDBBPTmpData->auhInterDir[uiSegment], 0, 0, uiDepth );
+    
+    pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], 0, 0, uiDepth );
+    pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], 0, 0, uiDepth );
+    
+    for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+    {
+      RefPicList eRefList = (RefPicList)uiRefListIdx;
+
+      pcCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[uiSegment][eRefList], SIZE_2Nx2N, 0, 0 );
+    }
+    
+    // inter prediction
+    m_pcPrediction->motionCompensation( pcCU, apSegPredYuv[uiSegment] );
+  }
+  
+  // restore motion information in both segments again
+  pcCU->setPartSizeSubParts( ePartSize,  0, uiDepth );
+  pcCU->setPredModeSubParts( MODE_INTER, 0, uiDepth );
+  for( UInt uiSegment = 0; uiSegment < 2; uiSegment++ )
+  {
+    UInt uiPartAddr = uiSegment*uiPUOffset;
+    
+    pcCU->setDBBPFlagSubParts(true, uiPartAddr, uiSegment, uiDepth);
+    
+    pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], uiPartAddr, uiSegment, uiDepth );
+    pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], uiPartAddr, uiSegment, uiDepth );
+    
+    pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[uiSegment], uiPartAddr, uiSegment, uiDepth); // interprets depth relative to LCU level
+    
+    for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+    {
+      RefPicList eRefList = (RefPicList)uiRefListIdx;
+
+      pcCU->getCUMvField( eRefList )->setAllMvField( pDBBPTmpData->acMvField[uiSegment][eRefList], ePartSize, uiPartAddr, 0, uiSegment ); // interprets depth relative to rpcTempCU level
+    }
+  }
+  
+  // reconstruct final prediction signal by combining both segments
+  m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0));
+  
+  // inter recon
+  xDecodeInterTexture( pcCU, 0, uiDepth );
+  
+  // clip for only non-zero cbp case
+  if  ( ( pcCU->getCbf( 0, TEXT_LUMA ) ) || ( pcCU->getCbf( 0, TEXT_CHROMA_U ) ) || ( pcCU->getCbf(0, TEXT_CHROMA_V ) ) )
+  {
+    m_ppcYuvReco[uiDepth]->addClip( m_ppcYuvReco[uiDepth], m_ppcYuvResi[uiDepth], 0, pcCU->getWidth( 0 ) );
+  }
+  else
+  {
+    m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
   }
 }
 #endif

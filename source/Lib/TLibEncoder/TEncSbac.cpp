@@ -105,6 +105,9 @@ TEncSbac::TEncSbac()
 , m_cInterSDCResidualSCModel         ( 1,             1,  NUM_INTER_SDC_RESIDUAL_CTX       , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cInterSDCResidualSignFlagSCModel ( 1,             1,  NUM_INTER_SDC_SIGN_FLAG_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if H_3D_DBBP
+, m_cDBBPFlagSCModel             ( 1,             1,                 DBBP_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 {
   assert( m_numContextModels <= MAX_NUM_CTX_MOD );
 }
@@ -180,6 +183,9 @@ Void TEncSbac::resetEntropy           ()
   m_cInterSDCResidualSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_RESIDUAL );
   m_cInterSDCResidualSignFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
 #endif
+#if H_3D_DBBP
+  m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
+#endif
   // new structure
   m_uiLastQp = iQp;
   
@@ -221,6 +227,9 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cInterSDCFlagSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_INTER_SDC_FLAG );
       curCost += m_cInterSDCResidualSCModel.calcCost  ( curSliceType, qp, (UChar*)INIT_INTER_SDC_RESIDUAL );
       curCost += m_cInterSDCResidualSignFlagSCModel.calcCost( curSliceType, qp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
+#endif
+#if H_3D_DBBP
+      curCost += m_cDBBPFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
       curCost += m_cCUPartSizeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
       curCost += m_cCUAMPSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CU_AMP_POS );
@@ -328,6 +337,9 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cInterSDCFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_FLAG );
   m_cInterSDCResidualSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_RESIDUAL );
   m_cInterSDCResidualSignFlagSCModel.initBuffer ( eSliceType, iQp, (UChar*)INIT_INTER_SDC_SIGN_FLAG );
+#endif
+#if H_3D_DBBP
+  m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
 #endif
   m_pcBinIf->start();
 }
@@ -2157,4 +2169,18 @@ Void TEncSbac::codeInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, U
   m_pcBinIf->encodeBin( uiSign, m_cInterSDCResidualSignFlagSCModel.get( 0, 0, 0 ) );
 }
 #endif
+
+#if H_3D_DBBP
+Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+  AOF( ePartSize == RWTH_DBBP_PACK_MODE );
+  AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
+  AOF( !pcCU->getSlice()->getIsDepth() );
+  
+  UInt uiSymbol = pcCU->getDBBPFlag( uiAbsPartIdx ) ? 1 : 0;
+  m_pcBinIf->encodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
+}
+#endif
+
 //! \}
