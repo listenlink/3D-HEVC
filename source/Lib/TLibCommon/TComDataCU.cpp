@@ -2431,7 +2431,9 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
   
   // DBBP is a texture coding tool
   if( getSlice()->getIsDepth() )
+  {
     return NULL;
+  }
   
 #if H_3D_FCO
   TComPic* depthPic = getSlice()->getIvPic(true, getSlice()->getViewIndex() );
@@ -2453,7 +2455,9 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
     TComPic* baseDepthPic = getSlice()->getIvPic (true, DvInfo.m_aVIdxCan);
     
     if( baseDepthPic == NULL || baseDepthPic->getPicYuvRec() == NULL )
+    {
       return NULL;
+    }
     
     depthPicYuv   = baseDepthPic->getPicYuvRec();
     depthPicYuv->extendPicBorder();
@@ -5938,7 +5942,9 @@ Bool TComDataCU::isBipredRestriction(UInt puIdx)
   
 #if H_3D_DBBP
   if( getDBBPFlag(0) )
+  {
     return true;
+  }
 #endif
 
   getPartIndexAndSize( puIdx, partAddr, width, height );

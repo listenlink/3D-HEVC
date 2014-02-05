@@ -105,10 +105,6 @@ Void destroyROM()
 // Data structure related table & variable
 // ====================================================================================================================
 
-#if H_3D_DBBP
-Bool g_bTestVirtualParts;
-#endif
-
 UInt g_uiMaxCUWidth  = MAX_CU_SIZE;
 UInt g_uiMaxCUHeight = MAX_CU_SIZE;
 UInt g_uiMaxCUDepth  = MAX_CU_DEPTH;

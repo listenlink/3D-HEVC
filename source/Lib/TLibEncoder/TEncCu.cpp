@@ -2437,7 +2437,9 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   Bool bValidMask = m_pcPredSearch->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, uiWidth, uiHeight, pMask);
   
   if( !bValidMask )
+  {
     return;
+  }
   
   // find optimal motion/disparity vector for each segment
   DisInfo originalDvInfo = rpcTempCU->getDvInfo(0);
@@ -2457,11 +2459,11 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     xInvalidateOriginalSegments(m_ppcOrigYuv[uhDepth], m_ppcOrigYuvDBBP[uhDepth], pMask, uiSegment);
     
     // do motion estimation for this segment
-    g_bTestVirtualParts = true;
+    m_pcRdCost->setUseMask(true);
     rpcTempCU->getDBBPTmpData()->eVirtualPartSize = eVirtualPartSize;
     rpcTempCU->getDBBPTmpData()->uiVirtualPartIndex = uiSegment;
     m_pcPredSearch->predInterSearch( rpcTempCU, m_ppcOrigYuvDBBP[uhDepth], apPredYuv[uiSegment], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], false, false, bUseMRG );
-    g_bTestVirtualParts = false;
+    m_pcRdCost->setUseMask(false);
     
     // extract motion parameters of full block for this segment
     pDBBPTmpData->auhInterDir[uiSegment] = rpcTempCU->getInterDir(0);
