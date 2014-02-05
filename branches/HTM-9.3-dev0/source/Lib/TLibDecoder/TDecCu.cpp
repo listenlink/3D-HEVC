@@ -414,11 +414,18 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_pcEntropyDecoder->decodeMergeIndex( pcCU, 0, uiAbsPartIdx, uiDepth );
     UInt uiMergeIndex = pcCU->getMergeIndex(uiAbsPartIdx);
 
+#if !SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
     m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
+#endif
 #if H_3D_ARP
     m_pcEntropyDecoder->decodeARPW( pcCU , uiAbsPartIdx , uiDepth );
+#endif
+#if SEC_IC_ARP_SIG_G0072
+#if H_3D_IC
+    m_pcEntropyDecoder->decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
 #endif
 
 #if H_3D_VSP

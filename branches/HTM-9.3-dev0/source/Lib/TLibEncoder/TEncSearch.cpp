@@ -5455,11 +5455,18 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex( pcCU, 0, true );
+#if !SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
 #endif
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
+#endif
+#if SEC_IC_ARP_SIG_G0072
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
+#endif
 #endif
     uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
     pcCU->getTotalBits()       = uiBits;
@@ -7035,11 +7042,18 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     }
     m_pcEntropyCoder->encodeSkipFlag(pcCU, 0, true);
     m_pcEntropyCoder->encodeMergeIndex(pcCU, 0, true);
+#if !SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
 #endif
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU, 0 );
+#endif
+#if SEC_IC_ARP_SIG_G0072
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
+#endif
 #endif
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }
@@ -7054,11 +7068,18 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if !SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
 #endif
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0 );
+#endif
+#if SEC_IC_ARP_SIG_G0072
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
+#endif
 #endif
 #if H_3D_INTER_SDC
     m_pcEntropyCoder->encodeInterSDCFlag( pcCU, 0, true );

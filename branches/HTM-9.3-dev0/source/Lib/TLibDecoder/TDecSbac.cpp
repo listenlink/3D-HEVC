@@ -792,11 +792,24 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
+#if MTK_TEX_DEP_PAR_G0055
+  Bool depthDependent = false;
+  UInt uiTexturePart = uiMode;
+#endif
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
+#if !MTK_TEX_DEP_PAR_G0055
     if (pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth && pcTextureCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN)
+#else
+    if(pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth )
+    {
+      depthDependent = true;
+      uiTexturePart = pcTextureCU->getPartitionSize( uiAbsPartIdx );
+    }
+    if (pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth && pcTextureCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N)
+#endif
     {
       bParsePartSize = false;
       eMode          = SIZE_2Nx2N;
@@ -842,6 +855,10 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     if(bParsePartSize)
     {
 #endif
+#if MTK_TEX_DEP_PAR_G0055
+      if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
+      {
+#endif
       UInt uiMaxNumBits = 2;
       if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
       {
@@ -878,6 +895,73 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
           }
         }
       }
+#if MTK_TEX_DEP_PAR_G0055
+      }
+      else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
+      {
+        UInt uiMaxNumBits = 1;
+        if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+        {
+          uiMaxNumBits ++;
+        }
+        for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
+        {
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
+          if ( uiSymbol )
+          {
+            break;
+          }
+          uiMode++;
+        }
+        eMode = (PartSize) uiMode;
+        if(uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==1 )
+        {
+          eMode = SIZE_2NxN;
+        }
+        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth )==0  && uiSymbol==0)
+        {
+          eMode = SIZE_2NxN;
+        }
+        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==0)
+        {
+          m_pcTDecBinIf->decodeBinEP(uiSymbol);
+          eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+        }
+      }
+      else if(uiTexturePart == SIZE_Nx2N|| uiTexturePart==SIZE_nLx2N || uiTexturePart==SIZE_nRx2N)
+      {
+        UInt uiMaxNumBits = 1;
+        if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+        {
+          uiMaxNumBits ++;
+        }
+        for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
+        {
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
+          if ( uiSymbol )
+          {
+            break;
+          }
+          uiMode++;
+        }
+        eMode = (PartSize) uiMode;
+        if(uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==1 )
+        {
+          eMode = SIZE_Nx2N;
+        }
+        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth )==0  && uiSymbol==0)
+        {
+          eMode = SIZE_Nx2N;
+        }
+        else if (uiMode && pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) && uiSymbol==0)
+        {
+          m_pcTDecBinIf->decodeBinEP(uiSymbol);
+          eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
+        }
+      }
+      else
+        assert(0);
+#endif
 #if H_MV_ENC_DEC_TRAC          
       DTRACE_CU("part_mode", eMode )
 #endif
@@ -2066,7 +2150,11 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   uiW = uiCode;
   if( 1 == uiW )   
   {
+#if MTK_ARP_FLAG_CABAC_SIMP_G0061
+    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
+#else
     m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 3 ) );
+#endif
     uiW += ( 1 == uiCode ? 1 : 0 );
   }
 #if H_MV_ENC_DEC_TRAC
@@ -2086,8 +2174,12 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 { 
   UInt uiSymbol = 0;
+#if MTK_IC_FLAG_CABAC_SIMP_G0061
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, 0 ) );
+#else
   UInt uiCtxIC = pcCU->getCtxICFlag( uiAbsPartIdx );
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, uiCtxIC ) );
+#endif
 #if !H_MV_ENC_DEC_TRAC 
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tICFlag" );
