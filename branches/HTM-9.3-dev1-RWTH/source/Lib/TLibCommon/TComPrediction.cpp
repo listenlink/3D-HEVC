@@ -650,41 +650,65 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
       
       // SIZE_Nx2N
       if(x<uiHalfSize)  // left
+      {
         matchedPartSum[0][ucSegment]++;
+      }
       else  // right
+      {
         matchedPartSum[0][1-ucSegment]++;
+      }
       
       // SIZE_2NxN
       if(y<uiHalfSize)  // top
+      {
         matchedPartSum[1][ucSegment]++;
+      }
       else  // bottom
+      {
         matchedPartSum[1][1-ucSegment]++;
+      }
       
       if( bAMPAvail )
       {
         // SIZE_2NxnU
         if(y<uiQuarterSize)  // top (1/4)
+        {
           matchedPartSum[2][ucSegment]++;
+        }
         else  // bottom (3/4)
+        {
           matchedPartSum[2][1-ucSegment]++;
+        }
         
         // SIZE_2NxnD
         if(y<(uiQuarterSize*3))  // top (3/4)
+        {
           matchedPartSum[3][ucSegment]++;
+        }
         else  // bottom (1/4)
+        {
           matchedPartSum[3][1-ucSegment]++;
+        }
         
         // SIZE_nLx2N
         if(x<uiQuarterSize)  // left (1/4)
+        {
           matchedPartSum[4][ucSegment]++;
+        }
         else  // right (3/4)
+        {
           matchedPartSum[4][1-ucSegment]++;
+        }
         
         // SIZE_nRx2N
         if(x<(uiQuarterSize*3))  // left (3/4)
+        {
           matchedPartSum[5][ucSegment]++;
+        }
         else  // right (1/4)
+        {
           matchedPartSum[5][1-ucSegment]++;
+        }
       }
     }
     
@@ -729,9 +753,13 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
       iSumDepth += depthPel;
       
       if( depthPel > uiMaxDepth )
+      {
         uiMaxDepth = depthPel;
+      }
       if( depthPel < uiMinDepth )
+      {
         uiMinDepth = depthPel;
+      }
     }
     
     // next row
@@ -740,7 +768,9 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   
   // don't generate mask for blocks with small depth range (encoder decision)
   if( uiMaxDepth - uiMinDepth < 10 )
+  {
     return false;
+  }
   
   AOF(uiWidth==uiHeight);
   Int iSizeInBits = g_aucConvertToBit[uiWidth]+2;
@@ -763,7 +793,9 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
       Int ucSegment = (Int)(depthPel>iMean);
       
       if( bInvertMask )
+      {
         ucSegment = 1-ucSegment;
+      }
       
       // count pixels for each segment
       uiSumPix[ucSegment]++;
@@ -781,7 +813,9 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   // each segment needs to cover at least 1/8th of block
   UInt uiMinPixPerSegment = (uiWidth*uiHeight) >> 3;
   if( !( uiSumPix[0] > uiMinPixPerSegment && uiSumPix[1] > uiMinPixPerSegment ) )
+  {
     return false;
+  }
   
   // all good
   return true;

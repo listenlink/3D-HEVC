@@ -326,18 +326,28 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
   rcDistParam.DistFunc = m_afpDistortFunc[eDFunc + g_aucConvertToBit[ rcDistParam.iCols ] + 1 ];
   
 #if H_3D_DBBP
-  if( g_bTestVirtualParts )
+  if( m_bUseMask )
   {
     if( eDFunc >= DF_SSE && eDFunc <= DF_SSE16N )
+    {
       rcDistParam.DistFunc = TComRdCost::xGetMaskedSSE;
+    }
     else if( eDFunc >= DF_SAD && eDFunc <= DF_SADS16N )
+    {
       rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
+    }
     else if( eDFunc >= DF_HADS && eDFunc <= DF_HADS16N )
+    {
       rcDistParam.DistFunc = TComRdCost::xGetMaskedHADs;
+    }
     else if( eDFunc >= DF_VSD && eDFunc <= DF_VSD16N )
+    {
       rcDistParam.DistFunc = TComRdCost::xGetMaskedVSD;
+    }
     else if( eDFunc >= DF_SAD12 && eDFunc <= DF_SADS48 )
+    {
       rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
+    }
   }
 #endif
   
@@ -376,7 +386,7 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
 #endif
   
 #if H_3D_DBBP
-  if( g_bTestVirtualParts )
+  if( m_bUseMask )
   {
     rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
   }
@@ -435,12 +445,9 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
   }
   
 #if H_3D_DBBP
-  if( g_bTestVirtualParts )
+  if( m_bUseMask )
   {
-    if( !bHADME )
-      rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
-    else
-      rcDistParam.DistFunc = TComRdCost::xGetMaskedHADs;
+    rcDistParam.DistFunc = (bHADME)?TComRdCost::xGetMaskedHADs:TComRdCost::xGetMaskedSAD;
   }
 #endif
   
@@ -467,12 +474,9 @@ TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, 
   rcDP.DistFunc   = m_afpDistortFunc[ ( bHadamard ? DF_HADS : DF_SADS ) + g_aucConvertToBit[ iWidth ] + 1 ];
   
 #if H_3D_DBBP
-  if( g_bTestVirtualParts )
+  if( m_bUseMask )
   {
-    if( !bHadamard )
-      rcDP.DistFunc = TComRdCost::xGetMaskedSAD;
-    else
-      rcDP.DistFunc = TComRdCost::xGetMaskedHADs;
+    rcDP.DistFunc = (bHadamard)?TComRdCost::xGetMaskedHADs:TComRdCost::xGetMaskedSAD;
   }
 #endif
   
@@ -734,7 +738,9 @@ UInt TComRdCost::xGetMaskedSAD( DistParam* pcDtParam )
     for (Int n = 0; n < iCols; n++ )
     {
       if( piOrg[n] != DBBP_INVALID_SHORT )
+      {
         uiSum += abs( piOrg[n] - piCur[n] );
+      }
     }
     piOrg += iStrideOrg;
     piCur += iStrideCur;
@@ -774,7 +780,9 @@ UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
         for ( x=0; x<iCols; x+= 8 )
         {
           if( piOrg[x] != DBBP_INVALID_SHORT )
+          {
             uiSum += xCalcHADs8x8( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
+          }
         }
         piOrg += iOffsetOrg;
         piCur += iOffsetCur;
@@ -790,7 +798,9 @@ UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
         for ( x=0; x<iCols; x+= 16 )
         {
           if( piOrg[x] != DBBP_INVALID_SHORT )
+          {
             uiSum += xCalcHADs16x4( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
+          }
         }
         piOrg += iOffsetOrg;
         piCur += iOffsetCur;
@@ -805,7 +815,9 @@ UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
         for ( x=0; x<iCols; x+= 4 )
         {
           if( piOrg[x] != DBBP_INVALID_SHORT )
+          {
             uiSum += xCalcHADs4x16( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
+          }
         }
         piOrg += iOffsetOrg;
         piCur += iOffsetCur;
@@ -822,7 +834,9 @@ UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
         for ( x=0; x<iCols; x+= 4 )
         {
           if( piOrg[x] != DBBP_INVALID_SHORT )
+          {
             uiSum += xCalcHADs4x4( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
+          }
         }
         piOrg += iOffsetOrg;
         piCur += iOffsetCur;
@@ -837,7 +851,9 @@ UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
         for ( x=0; x<iCols; x+=2 )
         {
           if( piOrg[x] != DBBP_INVALID_SHORT )
+          {
             uiSum += xCalcHADs2x2( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
+          }
         }
         piOrg += iOffsetOrg;
         piCur += iOffsetCur;
