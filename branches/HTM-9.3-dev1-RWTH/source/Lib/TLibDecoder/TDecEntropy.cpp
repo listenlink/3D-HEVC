@@ -160,7 +160,6 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
       AOF( eVirtualPartSize != SIZE_NONE );
       
       pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
-      AOF( pcCU->getPartitionSize(uiAbsPartIdx) == eVirtualPartSize );
     }
   }
 #endif

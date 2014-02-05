@@ -4656,7 +4656,7 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
         }
       }
       
-      // update these values to virtual partition size
+      // update values to virtual partition size
       pcCU->getPartIndexAndSize( uiPartIdx, uiPartAddr, iRoiWidth, iRoiHeight );
     }
 #endif
@@ -4666,7 +4666,7 @@ Void TEncSearch::xEstimateMvPredAMVP( TComDataCU* pcCU, TComYuv* pcOrgYuv, UInt 
 #if H_3D_DBBP
     if( pcCU->getDBBPFlag(0) )
     {
-      // reset to 2Nx2N for motion search
+      // restore 2Nx2N partitioning for motion estimation
       uiPartIdx = 0;
       AOF( pcCU->getPartitionSize(0) == pDBBPTmpData->eVirtualPartSize );
       pcCU->setPartSizeSubParts( SIZE_2Nx2N, 0, pcCU->getDepth(0));

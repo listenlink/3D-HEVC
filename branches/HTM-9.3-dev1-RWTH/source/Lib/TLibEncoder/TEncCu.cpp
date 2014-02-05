@@ -2362,7 +2362,7 @@ Void TEncCu::xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTe
     for (Int x=0; x<uiWidth; x++)
     {
       UChar ucSegment = (UChar)pMask[x];
-      assert( ucSegment < 2 );
+      AOF( ucSegment < 2 );
       
       piDst[x] = (ucSegment==uiValidSegment)?piSrc[x]:DBBP_INVALID_SHORT;
     }
@@ -2386,7 +2386,7 @@ Void TEncCu::xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTe
     for (Int x=0; x<uiWidth/2; x++)
     {
       UChar ucSegment = (UChar)pMask[x*2];
-      assert( ucSegment < 2 );
+      AOF( ucSegment < 2 );
       
       piDstU[x] = (ucSegment==uiValidSegment)?piSrcU[x]:DBBP_INVALID_SHORT;
       piDstV[x] = (ucSegment==uiValidSegment)?piSrcV[x]:DBBP_INVALID_SHORT;
@@ -2403,7 +2403,6 @@ Void TEncCu::xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTe
 Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG )
 {
   AOF( !rpcTempCU->getSlice()->getIsDepth() );
-  
   
   UChar uhDepth = rpcTempCU->getDepth( 0 );
   
@@ -2424,7 +2423,7 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N,  0, uhDepth );
   
-  // get coded and reconstructed depth view
+  // fetch virtual depth block
   UInt uiDepthStride = 0;
   Pel* pDepthPels = rpcTempCU->getVirtualDepthBlock(0, uiWidth, uiHeight, uiDepthStride);
   AOF( pDepthPels != NULL );
@@ -2485,6 +2484,7 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     }
   }
   
+  // store final motion/disparity information in each PU using derived partitioning
   rpcTempCU->setDepthSubParts( uhDepth, 0 );
   rpcTempCU->setPartSizeSubParts  ( eVirtualPartSize,  0, uhDepth );
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );

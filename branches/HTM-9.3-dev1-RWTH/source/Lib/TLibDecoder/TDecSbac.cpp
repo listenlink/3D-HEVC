@@ -2152,14 +2152,6 @@ Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
   
-  DTRACE_CABAC_VL( g_nSymbolCounter++ );
-  DTRACE_CABAC_T( "\tDBBPFlag" );
-  DTRACE_CABAC_T( "\tuiCtxDBBP: ");
-  DTRACE_CABAC_V( uiCtxDBBPFlag );
-  DTRACE_CABAC_T( "\tuiSymbol: ");
-  DTRACE_CABAC_V( uiSymbol );
-  DTRACE_CABAC_T( "\n");
-  
   if( uiSymbol )
   {
     pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx, 0, uiDepth);
