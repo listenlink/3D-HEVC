@@ -244,6 +244,8 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   PartSize eVirtualPartSize = pcCU->getPartitionSize(uiAbsPartIdx);
   if( pcCU->getDBBPFlag(uiAbsPartIdx) )
   {
+    AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
+    
     // temporarily change partition size for DBBP blocks
     pcCU->setPartSizeSubParts(RWTH_DBBP_PACK_MODE, uiAbsPartIdx, uiDepth);
   }

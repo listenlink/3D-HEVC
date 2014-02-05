@@ -624,9 +624,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   }
   
   Int iSizeInBits = g_aucConvertToBit[uiSize] - g_aucConvertToBit[iSubSample];  // respect sub-sampling factor
-  Int iMean = iSumDepth >> iSizeInBits*2;       // iMean /= (uiWidth*uiHeight);
-  AOF( iMean == iSumDepth/((uiSize/iSubSample)*(uiSize/iSubSample) ) );
-  AOF( iMean >= 0 && iMean < 256);
+  Int iMean = iSumDepth >> iSizeInBits*2;       // iMean /= (uiSize*uiSize);
   
   // start again for segmentation
   pDepthPels = pDepthBlockStart;
@@ -647,7 +645,6 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
       
       // decide which segment this pixel belongs to
       Int ucSegment = (Int)(depthPel>iMean);
-      AOF( ucSegment == 0 || ucSegment == 1 );
       
       // Matched Filter to find optimal (conventional) partitioning
       
@@ -717,8 +714,6 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
 
 Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask )
 {
-  AOF( uiWidth == uiHeight );
-  
   // segmentation of texture block --> mask IDs
   Pel*  pDepthBlockStart      = pDepthPels;
   
@@ -747,10 +742,9 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   if( uiMaxDepth - uiMinDepth < 10 )
     return false;
   
+  AOF(uiWidth==uiHeight);
   Int iSizeInBits = g_aucConvertToBit[uiWidth]+2;
   Int iMean = iSumDepth >> iSizeInBits*2;       // iMean /= (uiWidth*uiHeight);
-  AOF( iMean == iSumDepth/(uiWidth*uiHeight) );
-  AOF( iMean >= 0 && iMean < 256);
   
   // start again for segmentation
   pDepthPels = pDepthBlockStart;
@@ -767,7 +761,6 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
       
       // decide which segment this pixel belongs to
       Int ucSegment = (Int)(depthPel>iMean);
-      AOF( ucSegment == 0 || ucSegment == 1 );
       
       if( bInvertMask )
         ucSegment = 1-ucSegment;

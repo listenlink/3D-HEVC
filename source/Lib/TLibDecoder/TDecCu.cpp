@@ -752,7 +752,6 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   AOF(!pcCU->getSlice()->getIsDepth());
   AOF(!pcCU->getSlice()->isIntra());
   PartSize ePartSize = pcCU->getPartitionSize( 0 );
-  AOF( uiAbsPartIdx == pcCU->getZorderIdxInCU() );
   
   // get collocated depth block
   UInt uiDepthStride = 0;
@@ -761,7 +760,6 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   AOF( uiDepthStride != 0 );
   
   // compute mask by segmenting depth block
-  AOF( pcCU->getWidth(0) == m_ppcYuvReco[uiDepth]->getWidth() );
   Bool pMask[MAX_CU_SIZE*MAX_CU_SIZE];
   Bool bValidMask = m_pcPrediction->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, pcCU->getWidth(0), pcCU->getHeight(0), pMask);
   AOF(bValidMask);

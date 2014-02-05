@@ -1239,13 +1239,6 @@ Void TEncSbac::codeInterDir( TComDataCU* pcCU, UInt uiAbsPartIdx )
   {
     m_pcBinIf->encodeBin( uiInterDir == 2 ? 1 : 0, *( pCtx + uiCtx ) );
   }
-#if H_3D_DBBP
-  else
-  {
-    // only uni-prediction is allowed for DBBP
-    AOF( uiInterDir == 0 || uiInterDir == 1 );
-  }
-#endif
   if (uiInterDir < 2)
   {
     m_pcBinIf->encodeBin( uiInterDir, *( pCtx + 4 ) );
