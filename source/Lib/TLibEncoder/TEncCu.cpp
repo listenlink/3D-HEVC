@@ -562,6 +562,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           bTrySplit = false;
           bTryNx2N  = false;
           bTry2NxN  = false;
+#if MTK_TEX_DEP_PAR_G0055
+          if( pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize(uiCUIdx) != SIZE_2Nx2N)
+          {
+            if(pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxN || pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxnU|| pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxnD)
+              bTry2NxN  = true;
+            else
+              bTryNx2N  = true;
+          }
+#endif
         }
       }
 #endif
@@ -1610,11 +1619,18 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     DTRACE_PU("x1", uiTPelY)
 #endif
     m_pcEntropyCoder->encodeMergeIndex( pcCU, uiAbsPartIdx );
+#if !SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
 #endif
+#endif
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
+#endif
+#if SEC_IC_ARP_SIG_G0072
+#if H_3D_IC
+    m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
+#endif
 #endif
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
@@ -1637,11 +1653,18 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
+#if !SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
   m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
 #endif
+#endif
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
+#endif
+#if SEC_IC_ARP_SIG_G0072
+#if H_3D_IC
+  m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
+#endif
 #endif
 #if H_3D_INTER_SDC
   m_pcEntropyCoder->encodeInterSDCFlag( pcCU, uiAbsPartIdx, false );
@@ -1871,7 +1894,11 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
 #if H_3D_ARP
   Int nARPWMax = rpcTempCU->getSlice()->getARPStepNum() - 1;
+#if SEC_IC_ARP_SIG_G0072
+  if( nARPWMax < 0 || !rpcTempCU->getDvInfo(0).bDV || bICFlag )
+#else
   if( nARPWMax < 0 || !rpcTempCU->getDvInfo(0).bDV )
+#endif
   {
     nARPWMax = 0;
   }
@@ -2176,7 +2203,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   Bool bFirstTime = true;
   Int nARPWMax    = rpcTempCU->getSlice()->getARPStepNum() - 1;
 
+#if SEC_IC_ARP_SIG_G0072
+  if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N || !rpcTempCU->getDvInfo(0).bDV || rpcTempCU->getICFlag(0) )
+#else
   if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N || !rpcTempCU->getDvInfo(0).bDV  )
+#endif
   {
     nARPWMax = 0;
   }
