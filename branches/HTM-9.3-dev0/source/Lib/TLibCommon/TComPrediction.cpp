@@ -415,7 +415,11 @@ Void TComPrediction::predIntraChromaAng( Int* piSrc, UInt uiDirMode, Pel* piPred
 }
 
 #if H_3D_DIM
-Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc )
+Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc
+#if QC_GENERIC_SDC_G0122
+  , TComWedgelet* dmm4Segmentation
+#endif
+  )
 {
   assert( iWidth == iHeight  );
   assert( iWidth >= DIM_MIN_SIZE && iWidth <= DIM_MAX_SIZE );
@@ -441,8 +445,21 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       } break;
     case( DMM4_IDX ): 
       {
+#if QC_GENERIC_SDC_G0122
+        if( dmm4Segmentation == NULL )
+        { 
+          dmmSegmentation = new TComWedgelet( iWidth, iHeight );
+          xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmmSegmentation );
+        }
+        else
+        {
+          xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmm4Segmentation );
+          dmmSegmentation = dmm4Segmentation;
+        }
+#else
         dmmSegmentation = new TComWedgelet( iWidth, iHeight );
         xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmmSegmentation );
+#endif
       } break;
     default: assert(0);
     }
@@ -493,7 +510,11 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   xAssignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
 
 #if H_3D_DIM_DMM
+#if QC_GENERIC_SDC_G0122
+  if( dimType == DMM4_IDX && dmm4Segmentation == NULL ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
+#else
   if( dimType == DMM4_IDX ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
+#endif
 #endif
 }
 #endif
@@ -2463,7 +2484,13 @@ Void TComPrediction::xPredBiSegDCs( Int* ptrSrc, UInt srcStride, Bool* biSegPatt
 
   if( bL == bT )
   {
+#if SCU_HS_DEPTH_DC_PRED_G0143
+    const Int  iTRR = ( patternStride * 2 - 1  ) - srcStride; 
+    const Int  iLBB = ( patternStride * 2 - 1  ) * srcStride - 1;
+    refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : (abs(ptrSrc[iTRR] - ptrSrc[-(Int)srcStride]) > abs(ptrSrc[iLBB] - ptrSrc[ -1]) ? ptrSrc[iTRR] : ptrSrc[iLBB]);
+#else
     refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : 1<<( g_bitDepthY - 1 );
+#endif
     refDC2 =      ( ptrSrc[ -1] + ptrSrc[-(Int)srcStride] )>>1;
   }
   else
@@ -2565,7 +2592,12 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
-  
+#if QC_GENERIC_SDC_G0122
+  for( Int i = 0; i < uiNumSegments; i++ )
+  {
+    rpSegMeans[i] = 0;
+  }
+#endif
   if (orgDC == false)
   {
     if ( getDimType(uiIntraMode) == DMM1_IDX )
@@ -2580,7 +2612,43 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
       rpSegMeans[ucSegmentLB] = pOrig[uiStride * (uiSize-1) ];
       rpSegMeans[ucSegmentRB] = pOrig[uiStride * (uiSize-1) + (uiSize-1) ];
     }
+#if QC_GENERIC_SDC_G0122
+    else if( getDimType( uiIntraMode ) == DMM4_IDX )
+    {
+      Pel *ptmpOrig = pOrig;
+      Bool *ptmpMask = pMask, bBreak = false;
+      UChar ucSegment = ptmpMask? (UChar) ptmpMask[0] : 0;
+      UChar bFirstSeg = ucSegment;
+
+      rpSegMeans[ucSegment] = ptmpOrig[0];
+      for ( Int y = 0; y < uiSize; y++ )
+      {
+        for ( Int x = 0; x < uiSize; x++ )
+        {
+          ucSegment = ptmpMask[x];
+          assert( ucSegment < uiNumSegments );
+
+          if( bFirstSeg != ucSegment )
+          {
+            rpSegMeans[ucSegment] = ptmpOrig[x];
+            bBreak = true;
+            break;
+          }
+        }
+
+        if( bBreak )
+        {
+          break;
+        }
+
+        ptmpOrig  += uiStride;
+        ptmpMask  += uiMaskStride;
+      }
+    }
+    else
+#else
     else if (uiIntraMode == PLANAR_IDX)
+#endif
     {
       Pel* pLeftTop = pOrig;
       Pel* pRightTop = pOrig + (uiSize-1);

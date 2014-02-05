@@ -226,6 +226,7 @@
 #define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
 #endif
 
+#define SCU_HS_VSD_BUGFIX_IMPROV_G0163    1
 ////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
 #if H_3D_NBDV
 #define DVFROM_LEFT                       0
@@ -252,13 +253,23 @@
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 
+#define SCU_HS_DEPTH_DC_PRED_G0143        1
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
 #endif
-
+#define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
+#if H_3D_DIM_SDC && H_3D_INTER_SDC
+#define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
+#define QC_SDC_UNIFY_G0130_FIX            1  // Fix bug of G0130
+#endif
+#define SEC_INTER_SDC_G0101               1  // Improved inter SDC with multiple DC candidates
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#endif
+#define QC_PKU_SDC_SPLIT_G0123            1   // Intra SDC Split
+#if QC_PKU_SDC_SPLIT_G0123
+#define HS_TSINGHUA_SDC_SPLIT_G0111       1
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
