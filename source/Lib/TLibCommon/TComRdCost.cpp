@@ -265,6 +265,9 @@ Void TComRdCost::init()
   // SAIT_VSO_EST_A0033
   m_bUseEstimatedVSD        = false; 
 #endif
+#if H_3D_DBBP
+  m_bUseMask                = false;
+#endif
 }
 
 #if !FIX203
