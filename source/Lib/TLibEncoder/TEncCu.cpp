@@ -1639,6 +1639,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
+#if QC_SDC_UNIFY_G0130
+  m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
+#endif
   if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
   {
     m_pcEntropyCoder->encodeIPCMInfo( pcCU, uiAbsPartIdx );
@@ -1666,7 +1669,7 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_pcEntropyCoder->encodeICFlag  ( pcCU, uiAbsPartIdx );
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
   m_pcEntropyCoder->encodeInterSDCFlag( pcCU, uiAbsPartIdx, false );
 #endif
 
@@ -2048,7 +2051,9 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
             rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
             rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
             rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
+#if H_3D_SPIVMP
           }
+#endif
        // do MC
        m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
        // estimate residual and encode everything
@@ -2093,6 +2098,39 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #if H_3D_INTER_SDC
           if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && !uiNoResidual )
           {
+#if SEC_INTER_SDC_G0101
+            for( Int uiOffest = -2 ; uiOffest <= 2 ; uiOffest++ )
+            {
+              if( rpcTempCU != rpcTempCUPre )
+              {
+                rpcTempCU->initEstData( uhDepth, orgQP );
+                rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
+              }
+              rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
+              rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
+              rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
+#if H_3D_VSO //M2
+              if( m_pcRdCost->getUseRenModel() )
+              { //Reset
+                UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth    ();
+                UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight   ();
+                Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr ();
+                UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride   ();
+                m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+              }
+#endif
+              m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
+                m_ppcOrigYuv[uhDepth], 
+                ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth], 
+                m_ppcResiYuvTemp[uhDepth], 
+                m_ppcRecoYuvTemp[uhDepth],
+                uiOffest,
+                uhDepth );
+
+              xCheckDQP( rpcTempCU );
+              xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth );
+            }
+#else
             if( rpcTempCU != rpcTempCUPre )
             {
               rpcTempCU->initEstData( uhDepth, orgQP );
@@ -2120,6 +2158,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
             xCheckDQP( rpcTempCU );
             xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth );
+#endif
           }
 #endif
           rpcTempCU->initEstData( uhDepth, orgQP );
@@ -2330,8 +2369,47 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
 #if H_3D_INTER_SDC
+#if SEC_INTER_SDC_G0101 // ONLY_2NX2N_SDC
+  if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && ePartSize == SIZE_2Nx2N)
+#else
   if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() )
+#endif
   {
+#if SEC_INTER_SDC_G0101
+    for( Int uiOffest = -2 ; uiOffest <= 2 ; uiOffest++ )
+    {
+      if( rpcTempCU != rpcTempCUPre )
+      {
+        Int orgQP = rpcBestCU->getQP( 0 );
+        rpcTempCU->initEstData( uhDepth, orgQP );
+        rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
+      }
+      rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
+      rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
+      rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
+#if H_3D_VSO // M3
+      if( m_pcRdCost->getUseRenModel() )
+      {
+        UInt  uiWidth     = m_ppcOrigYuv[uhDepth]->getWidth ( );
+        UInt  uiHeight    = m_ppcOrigYuv[uhDepth]->getHeight( );
+        Pel*  piSrc       = m_ppcOrigYuv[uhDepth]->getLumaAddr( );
+        UInt  uiSrcStride = m_ppcOrigYuv[uhDepth]->getStride();
+        m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
+      }
+#endif
+
+      m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
+        m_ppcOrigYuv[uhDepth],
+        ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth],
+        m_ppcResiYuvTemp[uhDepth],
+        m_ppcRecoYuvTemp[uhDepth],
+        uiOffest,
+        uhDepth );
+
+      xCheckDQP( rpcTempCU );
+      xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+    }
+#else
     if( rpcTempCU != rpcTempCUPre )
     {
       Int orgQP = rpcBestCU->getQP( 0 );
@@ -2361,6 +2439,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
+#endif
   }
 #endif
 #if H_3D_ARP
@@ -2604,6 +2683,9 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
+#if QC_SDC_UNIFY_G0130
+  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
+#endif
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
 
@@ -2693,6 +2775,9 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize ( rpcTempCU, 0, uiDepth, true );
+#if QC_SDC_UNIFY_G0130
+  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
+#endif
   m_pcEntropyCoder->encodeIPCMInfo ( rpcTempCU, 0, true );
 
   if( m_bUseSBACRD ) m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
