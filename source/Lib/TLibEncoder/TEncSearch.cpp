@@ -920,7 +920,9 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
       }
       
       m_pcEntropyCoder  ->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
-
+#if QC_SDC_UNIFY_G0130
+      m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
       if (pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_2Nx2N )
       {
         m_pcEntropyCoder->encodeIPCMInfo( pcCU, 0, true );
@@ -955,6 +957,21 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiAbsPartIdx );
       }
     }
+#if QC_SDC_UNIFY_G0130
+    Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
+    UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
+
+    if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
+    {
+      for( Int iPart = 0; iPart < iPartNum; iPart++ )
+      {
+        if( getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx + uiPartOffset*iPart ) ) < DIM_NUM_TYPE ) 
+        {
+          m_pcEntropyCoder->encodeDeltaDC( pcCU, uiAbsPartIdx + uiPartOffset*iPart );
+        }
+      }
+    }
+#endif
   }
   if( bChroma )
   {
@@ -1861,11 +1878,70 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
 }
 
 #if H_3D_DIM_SDC
-Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bResidual )
+Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, 
+#if QC_GENERIC_SDC_G0122
+  Bool bZeroResidual, Int iSDCDeltaResi
+#else
+  Bool bResidual
+#endif
+  )
 {
   UInt    uiLumaPredMode    = pcCU     ->getLumaIntraDir( uiAbsPartIdx );
   UInt    uiWidth           = pcCU     ->getWidth   ( 0 );
   UInt    uiHeight          = pcCU     ->getHeight  ( 0 );
+#if QC_PKU_SDC_SPLIT_G0123
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+#if QC_GENERIC_SDC_G0122
+  TComWedgelet* dmm4SegmentationOrg = new TComWedgelet( uiWidth, uiHeight );
+#endif
+#else
+#if QC_GENERIC_SDC_G0122
+  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+#endif
+#endif
+#endif
+#if QC_PKU_SDC_SPLIT_G0123
+  UInt numParts = 1;
+  UInt i = 0;
+  UInt sdcDepth = 0;
+  UInt uiStride;         
+  Pel* piOrg;          
+  Pel* piPred;          
+  Pel* piReco;        
+
+  UInt uiZOrder;         
+  Pel* piRecIPred;       
+  UInt uiRecIPredStride; 
+
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+  if ( ( uiWidth >> pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() ) > 1 )
+  {
+    numParts = uiWidth * uiWidth >> ( 2 * pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
+    sdcDepth = g_aucConvertToBit[uiWidth] + 2 - pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize();
+    uiWidth = uiHeight = ( 1 << pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
+  }
+#else
+  if (uiWidth == 64)
+  {
+    numParts = 4;
+    sdcDepth = 1;
+    uiWidth = uiHeight = 32;
+  }
+#endif
+
+  for ( i = 0; i < numParts; i++ )
+  {
+    uiStride          = pcOrgYuv ->getStride  ();
+    piOrg             = pcOrgYuv ->getLumaAddr( uiAbsPartIdx );
+    piPred            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
+    piReco            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
+
+    uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
+    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
+    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
+
+    AOF( uiWidth == uiHeight );
+#else
   UInt    uiStride          = pcOrgYuv ->getStride  ();
   Pel*    piOrg             = pcOrgYuv ->getLumaAddr( uiAbsPartIdx );
   Pel*    piPred            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
@@ -1874,25 +1950,66 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   UInt    uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
   Pel*    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
   UInt    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
-  
+
   AOF( uiWidth == uiHeight );
   AOF( uiAbsPartIdx == 0 );
   AOF( pcCU->getSDCAvailable(uiAbsPartIdx) );
   AOF( pcCU->getSDCFlag(uiAbsPartIdx) );
+#endif
+#if !QC_GENERIC_SDC_G0122
   AOF( uiLumaPredMode == DC_IDX || uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) );
   AOF( uiLumaPredMode == DC_IDX || uiLumaPredMode == PLANAR_IDX || uiWidth < 64  );
+#endif
   
   //===== init availability pattern =====
   Bool  bAboveAvail = false;
   Bool  bLeftAvail  = false;
+#if QC_PKU_SDC_SPLIT_G0123
+  pcCU->getPattern()->initPattern   ( pcCU, sdcDepth, uiAbsPartIdx );
+  pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, sdcDepth, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail );
+#else
   pcCU->getPattern()->initPattern   ( pcCU, 0, uiAbsPartIdx );
   pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, 0, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail );
-  
+#endif
+#if !QC_PKU_SDC_SPLIT_G0123
+#if QC_GENERIC_SDC_G0122
+  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+#endif
+#endif
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+#if QC_GENERIC_SDC_G0122
+  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+#endif
+#endif
   //===== get prediction signal =====
 #if H_3D_DIM
   if( isDimMode( uiLumaPredMode ) )
   {
-    predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, true );
+#if HS_TSINGHUA_SDC_SPLIT_G0111  
+    UInt dimType   = getDimType  ( uiLumaPredMode );
+    UInt patternID = pcCU->getDmmWedgeTabIdx(dimType, uiAbsPartIdx);
+    if ( patternID >= g_dmmWedgeLists[g_aucConvertToBit[uiWidth]].size() && dimType == DMM1_IDX )
+    {
+      if (g_aucConvertToBit[uiWidth] == 2)  // Encoder method. Avoid DMM1 pattern list index exceeds the maximum DMM1 pattern number when SDC split is used.
+        patternID = 1349;  // Split 32x32 to 16x16. 1349: Maximum DMM1 pattern number when block size is 16x16
+      else 
+        patternID = patternID >> 1;  // Other cases
+      pcCU->setDmmWedgeTabIdx(dimType, uiAbsPartIdx, patternID);
+    }
+#endif
+    predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, true 
+#if QC_GENERIC_SDC_G0122
+      , dmm4Segmentation
+#endif
+      );
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+    Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
+    Bool* dmm4PatternOrg = dmm4SegmentationOrg->getPattern();
+    for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
+    { 
+      dmm4PatternOrg[k+(uiAbsPartIdx<<4)] = dmm4PatternSplit[k];
+    }
+#endif
   }
   else
   {
@@ -1901,7 +2018,41 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 #if H_3D_DIM
   }
 #endif
-  
+#if QC_PKU_SDC_SPLIT_G0123
+    if ( numParts > 1 )
+    {
+      for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+      {
+        for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+        {
+          piPred        [ uiX ] = ClipY( piPred[ uiX ] );
+          piRecIPred    [ uiX ] = piPred[ uiX ];
+        }
+        piPred     += uiStride;
+        piRecIPred += uiRecIPredStride;
+      }
+    }
+    uiAbsPartIdx += ( ( uiWidth * uiWidth ) >> 4 );
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+    dmm4Segmentation->destroy(); delete dmm4Segmentation;
+#endif
+  }
+  uiAbsPartIdx = 0;
+  uiStride          = pcOrgYuv ->getStride  ();
+  piOrg             = pcOrgYuv ->getLumaAddr( uiAbsPartIdx );
+  piPred            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
+  piReco            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
+
+  uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
+  piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
+  uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
+
+  if (numParts > 1)
+  {
+    uiWidth = pcCU->getWidth( 0 );
+    uiHeight = pcCU->getHeight( 0 );
+  }
+#endif
   // number of segments depends on prediction mode
   UInt uiNumSegments = 1;
   Bool* pbMask = NULL;
@@ -1918,7 +2069,20 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
   }
-  
+#if QC_GENERIC_SDC_G0122
+  if( getDimType( uiLumaPredMode ) == DMM4_IDX )
+  {
+    uiNumSegments = 2;
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+    pbMask  = dmm4SegmentationOrg->getPattern();
+    uiMaskStride = dmm4SegmentationOrg->getStride();
+#else
+    pbMask  = dmm4Segmentation->getPattern();
+    uiMaskStride = dmm4Segmentation->getStride();
+#endif
+  }
+#endif
+
   // get DC prediction for each segment
   Pel apDCPredValues[2];
   analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode );
@@ -1930,15 +2094,28 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
   {
     // remap reconstructed value to valid depth values
+#if QC_GENERIC_SDC_G0122
+    Pel pDCRec = ( !bZeroResidual ) ? apDCOrigValues[uiSegment] : apDCPredValues[uiSegment];
+#else
     Pel pDCRec = bResidual?apDCOrigValues[uiSegment]:apDCPredValues[uiSegment];
-    
+#endif
     // get residual (idx)
 #if H_3D_DIM_DLT
     Pel pResidualIdx = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pDCRec ) - pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
 #else
     Pel pResidualIdx = pDCRec - apDCPredValues[uiSegment];
 #endif
-    
+#if QC_GENERIC_SDC_G0122
+    if( !bZeroResidual )
+    {
+      Pel   pPredIdx    = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
+      Int   pTestIdx    = pPredIdx + pResidualIdx + iSDCDeltaResi;
+      if( pTestIdx >= 0 && pTestIdx < pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) )
+      {
+        pResidualIdx += iSDCDeltaResi;
+      }
+    }
+#endif
     // save SDC DC offset
     pcCU->setSDCSegmentDCOffset(pResidualIdx, uiSegment, uiAbsPartIdx);
   }
@@ -2011,10 +2188,29 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   m_pcEntropyCoder->resetBits();
   
   // encode reduced intra header
+#if QC_SDC_UNIFY_G0130
+  if( !pcCU->getSlice()->isIntra() )
+  {
+    if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
+    {
+      m_pcEntropyCoder->encodeCUTransquantBypassFlag( pcCU, 0, true );
+    }
+    m_pcEntropyCoder->encodeSkipFlag( pcCU, 0, true );
+    m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
+  }
+
+  m_pcEntropyCoder->encodePartSize( pcCU, 0, true );
+  m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#else
   m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
+#endif
   
   // encode pred direction + DC residual data
   m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if QC_SDC_UNIFY_G0130
+  Bool bDummy = false;
+  m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth( 0 ), uiWidth, uiHeight, bDummy );
+#endif
   UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
   
 #if H_3D_VSO
@@ -2023,6 +2219,13 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   else
 #endif
     dRDCost = m_pcRdCost->calcRdCost( uiBits, ruiDist );
+#if QC_GENERIC_SDC_G0122
+#if HS_TSINGHUA_SDC_SPLIT_G0111
+  dmm4SegmentationOrg->destroy(); delete dmm4SegmentationOrg;
+#else
+  dmm4Segmentation->destroy(); delete dmm4Segmentation;
+#endif
+#endif
 }
 #endif
 
@@ -2900,7 +3103,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
           case( DMM4_IDX ):
             {
+#if !QC_GENERIC_SDC_G0122
               if( uiWidth > 4 )
+#endif
               {
                 biSegmentation = new TComWedgelet( uiWidth, uiHeight );
                 xPredContourFromTex( pcCU, uiPartOffset, uiWidth, uiHeight, biSegmentation );
@@ -2956,6 +3161,14 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       for( UInt uiSDC=0; uiSDC<=(bTestSDC?1:0); uiSDC++ )
       {
         pcCU->setSDCFlagSubParts( (uiSDC != 0), uiPartOffset, uiDepth + uiInitTrDepth );
+#if QC_GENERIC_SDC_G0122
+        for( Int iSDCDeltaResi = -2; iSDCDeltaResi <= 2; iSDCDeltaResi++ )
+        {
+          if( ( uiSDC == 0 ) && iSDCDeltaResi != 0 )
+          {
+            continue;
+          }
+#endif
 #endif
       
 #if H_3D_DIM_ENC || H_3D_DIM_SDC
@@ -2965,6 +3178,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 #if H_3D_DIM_SDC
       bTestZeroResi |= pcCU->getSDCFlag(uiPartOffset);
+#endif
+#if QC_GENERIC_SDC_G0122
+      if( uiSDC != 0 && iSDCDeltaResi != 0 )
+      {
+        bTestZeroResi = false;
+      }
 #endif
 #endif
       
@@ -2999,7 +3218,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
               pcCU->setCbfSubParts(1, 1, 1, uiPartOffset, uiDepth + uiInitTrDepth);
               
               // start encoding with SDC
+#if QC_GENERIC_SDC_G0122
+              xIntraCodingSDC(pcCU, uiPartOffset, pcOrgYuv, pcPredYuv, uiPUDistY, dPUCost, ( testZeroResi != 0 ), iSDCDeltaResi );
+#else
               xIntraCodingSDC(pcCU, uiPartOffset, pcOrgYuv, pcPredYuv, uiPUDistY, dPUCost, (testZeroResi!=0));
+#endif
             }
             else
             {
@@ -3072,6 +3295,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 #if H_3D_DIM_ENC || H_3D_DIM_SDC
       }
+#endif
+#if QC_GENERIC_SDC_G0122
+        } // SDC residual loop
 #endif
 #if H_3D_DIM_SDC
       } // SDC loop
@@ -5535,54 +5761,86 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
 }
 
 #if H_3D_INTER_SDC
+#if SEC_INTER_SDC_G0101
+Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, TComYuv* pcRec, Int uiOffest, const UInt uiDepth )
+#else
 Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, TComYuv* pcRec, const UInt uiDepth )
+#endif
 {
   if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( 0 ) )
   {
     return;
   }
-
+#if QC_SDC_UNIFY_G0130
+  pcCU->setSDCFlagSubParts( true, 0, uiDepth );
+#else
   pcCU->setInterSDCFlagSubParts( true, 0, 0, uiDepth );
+#endif
 
   UInt  uiWidth      = pcCU->getWidth ( 0 );
   UInt  uiHeight     = pcCU->getHeight( 0 );
+#if SEC_INTER_SDC_G0101
+  UInt uiSegSize = 0;
+#else
   UChar* pMask       = pcCU->getInterSDCMask();
   memset( pMask, 0, uiWidth*uiHeight );
 
   pcCU->xSetInterSDCCUMask( pcCU, pMask );
 
   UInt uiSegSize[4] = { 0, 0, 0, 0 };
+#endif
   Pel *pPred, *pOrg;
   UInt uiPredStride = pcPred->getStride();
   UInt uiOrgStride  = pcOrg->getStride();
   UInt uiPelX, uiPelY;
+#if !SEC_INTER_SDC_G0101
   UInt uiPartitionSize = pcCU->getPartitionSize( 0 );
   UInt uiSegmentNum = ( uiPartitionSize == SIZE_2Nx2N ) ? 1 : ( uiPartitionSize == SIZE_NxN ? 4 : 2 );
+#endif
 
   pPred = pcPred->getLumaAddr( 0 );
   pOrg  = pcOrg->getLumaAddr( 0 );
+#if SEC_INTER_SDC_G0101
+  Int pResDC = 0;
+#else
   Int pResDC[4] = { 0, 0, 0, 0};
+#endif
 
   //calculate dc value for prediction and original signal, and calculate residual and reconstruction
   for( uiPelY = 0; uiPelY < uiHeight; uiPelY++ )
   {
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
     {
+#if SEC_INTER_SDC_G0101
+      pResDC += (Int)( pOrg [uiPelX] - pPred[uiPelX] );
+      uiSegSize++;
+#else
       UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
       pResDC[uiSeg] += (Int)( pOrg [uiPelX] - pPred[uiPelX] );
       uiSegSize[uiSeg]++;
+#endif
     }
     pOrg  += uiOrgStride;
     pPred += uiPredStride;
   }
 
+#if SEC_INTER_SDC_G0101
+  Int iResiOffset = ( pResDC  > 0 ? ( uiSegSize >> 1 ) : -1*( uiSegSize >> 1 ) );
+  pResDC          = ( pResDC + iResiOffset ) / (Int) uiSegSize;
+
+  pcCU->setSDCSegmentDCOffset( pResDC + uiOffest, 0, 0 );
+#else
   for( UInt uiSeg = 0; uiSeg < uiSegmentNum; uiSeg++ )
   {
     Int iResiOffset = ( pResDC [uiSeg] > 0 ? ( uiSegSize[uiSeg] >> 1 ) : -1*( uiSegSize[uiSeg] >> 1 ) );
     pResDC [uiSeg]  = ( pResDC [uiSeg] + iResiOffset ) / (Int) uiSegSize[uiSeg];
-
+#if QC_SDC_UNIFY_G0130
+    pcCU->setSDCSegmentDCOffset( pResDC[uiSeg], uiSeg, 0 );
+#else
     pcCU->setInterSDCSegmentDCOffset( pResDC[uiSeg], uiSeg, 0 );
+#endif
   }
+#endif
 
   Pel *pRec;
   UInt uiRecStride  = pcRec->getStride();
@@ -5593,10 +5851,14 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
   {
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
     {
+#if SEC_INTER_SDC_G0101
+      pRec[ uiPelX ] = Clip3( 0, ( 1 << g_bitDepthY ) - 1, pPred[uiPelX] + pcCU->getSDCSegmentDCOffset(0, 0) );
+#else
       UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
       assert( uiSeg < uiSegmentNum );
 
       pRec[ uiPelX ] = Clip3( 0, ( 1 << g_bitDepthY ) - 1, pPred[uiPelX] + pResDC[uiSeg] );
+#endif
     }
     pPred     += uiPredStride;
     pRec      += uiRecStride;
@@ -5636,11 +5898,23 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
   }
 #endif
 
+#if QC_SDC_UNIFY_G0130
+  Bool bNonSkip = false;
+#else
   Bool bNonSkip = true;
+#endif
+#if SEC_INTER_SDC_G0101
+  bNonSkip |= ( pcCU->getSDCSegmentDCOffset( 0, 0 ) != 0 ) ? 1 : 0;
+#else
   for( UInt uiSeg = 0; uiSeg < uiSegmentNum; uiSeg++ )
   {
+#if QC_SDC_UNIFY_G0130
+    bNonSkip |= ( pcCU->getSDCSegmentDCOffset( uiSeg, 0 ) != 0 ) ? 1 : 0;
+#else
     bNonSkip &= ( pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 ) != 0 ) ? 1 : 0;
+#endif
   }
+#endif
 
   if( !bNonSkip )
   {
@@ -6850,6 +7124,9 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodeSkipFlag ( pcCU, 0, true );
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
+#if QC_SDC_UNIFY_G0130
+    m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
@@ -6857,7 +7134,7 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #if H_3D_ARP
     m_pcEntropyCoder->encodeARPW( pcCU , 0 );
 #endif
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
     m_pcEntropyCoder->encodeInterSDCFlag( pcCU, 0, true );
 #endif
     Bool bDummy = false;

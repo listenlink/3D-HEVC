@@ -584,7 +584,9 @@ UInt TComRdCost::getDistPartVSD( TComDataCU* pcCU, UInt uiPartOffset, Pel* piCur
 
   cDtParam.bApplyWeight = false;
   cDtParam.uiComp       = 255;    // just for assert: to be sure it was set before use, since only values 0,1 or 2 are allowed.
-
+#if SCU_HS_VSD_BUGFIX_IMPROV_G0163
+  cDtParam.bitDepth   = g_bitDepthY;
+#endif
   Dist dist = cDtParam.DistFunc( &cDtParam );
 
   if ( m_bUseWVSO )   
@@ -2745,8 +2747,12 @@ UInt TComRdCost::getVSDEstimate( Int dDM, Pel* pOrg, Int iOrgStride,  Pel* pVirR
   Int iTemp;
 
   dD = ( (Double) ( dDM >> DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) ) ) * m_dDisparityCoeff;
-
+#if SCU_HS_VSD_BUGFIX_IMPROV_G0163
+  Double dDepthWeight = ( pOrg[x] >=  ( (1<<(g_bitDepthY - 3)) + (1<<(g_bitDepthY - 2)) ) ? 4 : pOrg[x] > ((1<<g_bitDepthY) >> 4) ? (Float)(pOrg[x] - ((1<<g_bitDepthY) >> 4))/(Float)((1<<g_bitDepthY) >> 3) + 1 : 1.0 );
+  Double dTemp = ( 0.5 * fabs(dD) * dDepthWeight * ( abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x-1+y*iVirStride ] ) + abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x+1+y*iVirStride ] ) ) );
+#else
   Double dTemp = ( 0.5 * fabs(dD) * ( abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x-1+y*iVirStride ] ) + abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x+1+y*iVirStride ] ) ) );
+#endif  
   iTemp = (Int) (((dTemp) < 0)? (Int)((dTemp) - 0.5) : (Int)((dTemp) + 0.5));
 
   return (UInt) ( (iTemp*iTemp)>>1 );

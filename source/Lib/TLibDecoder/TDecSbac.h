@@ -111,8 +111,13 @@ private:
 #endif
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+  Void  parseDeltaDC         ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
+  Void  parseSDCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#else
   Void  parseInterSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void  parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
+#endif
 #endif
 private:
   TComInputBitstream* m_pcBitstream;
@@ -210,6 +215,12 @@ private:
   ContextModel3DBuffer m_cDepthIntraModeSCModel;
   ContextModel3DBuffer m_cDdcFlagSCModel;
   ContextModel3DBuffer m_cDdcDataSCModel;
+#if QC_GENERIC_SDC_G0122
+  ContextModel3DBuffer m_cAngleFlagSCModel;
+#if !QC_SDC_UNIFY_G0130
+  ContextModel3DBuffer m_cIntraSdcFlagSCModel;
+#endif
+#endif
 #if H_3D_DIM_DMM
   ContextModel3DBuffer m_cDmm1DataSCModel;
 #endif
@@ -218,10 +229,13 @@ private:
   ContextModel3DBuffer m_cSDCResidualSCModel;
 #endif
 #endif
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
   ContextModel3DBuffer m_cInterSDCFlagSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSCModel;
   ContextModel3DBuffer m_cInterSDCResidualSignFlagSCModel;
+#endif
+#if QC_SDC_UNIFY_G0130
+  ContextModel3DBuffer m_cSDCFlagSCModel;
 #endif
 };
 
