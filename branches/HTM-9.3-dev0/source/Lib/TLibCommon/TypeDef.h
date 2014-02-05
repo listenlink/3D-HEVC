@@ -77,9 +77,6 @@
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160     // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
 
-#ifdef H_3D_QTLPC
-#define MTK_TEX_DEP_PAR_G0055             1   // Texture-partition-dependent depth partition. JCT3V-G0055
-#endif
 #define H_3D_VSO                          1   // VSO, View synthesis optimization, includes: 
                                               // HHI_VSO
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
@@ -104,8 +101,6 @@
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
                                               // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
                                               // LGE_ARP_CTX_F0161                JCT3V-F0161
-#define MTK_ARP_REF_SELECTION_G0053       1   // ARP Reference picture selection in JCT3V-G0053 
-#define MTK_ARP_FLAG_CABAC_SIMP_G0061     1   // Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
@@ -113,7 +108,6 @@
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
                                               // LGE_IC_CTX_F0160 //JCT3V-F0160
                                               // SEC_ONLY_TEXTURE_IC_F0151
-#define MTK_IC_FLAG_CABAC_SIMP_G0061      1   // Use only 1 context for IC flag in JCT3V-G0061
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -122,7 +116,6 @@
                                               // MERL_C0152: Basic VSP
                                               // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
                                               // NTT_DoNBDV_VECTOR_CLIP_E0141 disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
-#define MTK_NBDV_IVREF_FIX_G0067          1   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
 #endif
 
 #define H_3D_VSP                          1   // View synthesis prediction
@@ -185,9 +178,6 @@
 #define H_3D_SPIVMP                       1   // H_3D_SPIVMP    // JCT3V-F0110: Sub-PU level inter-view motion prediction
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
-#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
-
-
 
 
 // OTHERS
@@ -213,9 +203,6 @@
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 
-#define SEC_SPIVMP_MCP_SIZE_G0077         1  // Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
-#define SEC_DEPTH_DV_DERIVAITON_G0074     1  // Simplification of DV derivation for depth, JCT3V-G0074
-
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
 #define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
@@ -226,7 +213,6 @@
 #define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
 #endif
 
-#define SCU_HS_VSD_BUGFIX_IMPROV_G0163    1
 ////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
 #if H_3D_NBDV
 #define DVFROM_LEFT                       0
@@ -238,14 +224,6 @@
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
 #endif
-#define KHU_SIMP_SPIVMP_G0147             1  // Simplification on Sub-PU level temporal interview motion prediction
-
-#if H_3D_SPIVMP
-#define QC_SPIVMP_MPI_G0119               1 // Sub-PU level MPI merge candidate
-#endif
-#define QC_DEPTH_MERGE_SIMP_G0127         1 // Remove DV candidate and shifting candidate for depth coding
-
-#define SEC_IC_ARP_SIG_G0072              1   // Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
 
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
@@ -253,23 +231,12 @@
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 
-#define SCU_HS_DEPTH_DC_PRED_G0143        1
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
 #endif
-#define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
-#if H_3D_DIM_SDC && H_3D_INTER_SDC
-#define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
-#define QC_SDC_UNIFY_G0130_FIX            1  // Fix bug of G0130
-#endif
-#define SEC_INTER_SDC_G0101               1  // Improved inter SDC with multiple DC candidates
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
-#endif
-#define QC_PKU_SDC_SPLIT_G0123            1   // Intra SDC Split
-#if QC_PKU_SDC_SPLIT_G0123
-#define HS_TSINGHUA_SDC_SPLIT_G0111       1
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
@@ -279,11 +246,8 @@
 #else
 #define H_3D_VSP_CONSTRAINED              0
 #endif
-#define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
-#define NTT_STORE_SPDV_VSP_G0148          1   // Storing Sub-PU based DV for VSP
 #endif
 
-#define MTK_DDD_G0063                     1   // Disparity derived depth coding
 
 ///// ***** ILLUMATION COMPENSATION *********
 #if H_3D_IC
@@ -292,11 +256,6 @@
 #define IC_SHIFT_DIFF                     12
 #endif
 
-///// ***** DEPTH-BASED BLOCK PARTITIONING *********
-#if H_3D_DBBP
-#define DBBP_INVALID_SHORT                (-4)
-#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
-#endif
 
 ///// ***** FCO *********
 #if H_3D_FCO
@@ -313,18 +272,55 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HTM-10.0 Integrations //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
+#if H_3D
+#if  H_3D_QTLPC
+#define MTK_TEX_DEP_PAR_G0055             1   // Texture-partition-dependent depth partition. JCT3V-G0055
+#endif
 
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
-// !!! PLEASE PUT MACROS RELATED TO HTM-10.0 INTEGRATIONS HERE !!!
+#define MTK_DDD_G0063                     1   // Disparity derived depth coding
 
+#if H_3D_VSP
+#define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
+#define NTT_STORE_SPDV_VSP_G0148          1   // Storing Sub-PU based DV for VSP
+#endif
+
+#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
+
+#if H_3D_DBBP
+#define DBBP_INVALID_SHORT                (-4)
+#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
+#endif
+
+#if H_3D_DIM
+#define QC_PKU_SDC_SPLIT_G0123            1   // Intra SDC Split
+#if QC_PKU_SDC_SPLIT_G0123
+#define HS_TSINGHUA_SDC_SPLIT_G0111       1
+#endif
+#define SCU_HS_DEPTH_DC_PRED_G0143        1
+#define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
+#if H_3D_DIM_SDC && H_3D_INTER_SDC
+#define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
+#define QC_SDC_UNIFY_G0130_FIX            1  // Fix bug of G0130
+#endif
+#define SEC_INTER_SDC_G0101               1  // Improved inter SDC with multiple DC candidates
+#endif
+
+#define KHU_SIMP_SPIVMP_G0147             1  // Simplification on Sub-PU level temporal interview motion prediction
+
+#if H_3D_SPIVMP
+#define QC_SPIVMP_MPI_G0119               1 // Sub-PU level MPI merge candidate
+#endif
+
+#define QC_DEPTH_MERGE_SIMP_G0127         1 // Remove DV candidate and shifting candidate for depth coding
+#define SEC_IC_ARP_SIG_G0072              1   // Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
+#define SCU_HS_VSD_BUGFIX_IMPROV_G0163    1
+#define SEC_SPIVMP_MCP_SIZE_G0077         1  // Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
+#define SEC_DEPTH_DV_DERIVAITON_G0074     1  // Simplification of DV derivation for depth, JCT3V-G0074
+#define MTK_ARP_REF_SELECTION_G0053       1   // ARP Reference picture selection in JCT3V-G0053 
+#define MTK_ARP_FLAG_CABAC_SIMP_G0061     1   // Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
+#define MTK_IC_FLAG_CABAC_SIMP_G0061      1   // Use only 1 context for IC flag in JCT3V-G0061
+#define MTK_NBDV_IVREF_FIX_G0067          1   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
