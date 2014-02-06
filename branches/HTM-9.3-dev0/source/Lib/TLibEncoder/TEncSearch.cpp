@@ -2219,7 +2219,11 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
   }
 
+#if QC_SDC_UNIFY_G0130_FIX2
+  m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth( 0 ), true );
+#else
   m_pcEntropyCoder->encodePartSize( pcCU, 0, true );
+#endif
   m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
 #else
   m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
