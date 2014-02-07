@@ -183,6 +183,10 @@ private:
   Int                     m_iSearchLimit;
 #endif
   
+#if H_3D_DBBP
+  Bool                    m_bUseMask;
+#endif
+  
 public:
   TComRdCost();
   virtual ~TComRdCost();
@@ -228,6 +232,10 @@ public:
 #else
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
   Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
+#endif
+  
+#if H_3D_DBBP
+  Void    setUseMask(Bool b) { m_bUseMask = b; }
 #endif
   
   UInt    calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
@@ -331,6 +339,13 @@ private:
 #if NS_HAD
   static UInt xCalcHADs16x4     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs4x16     ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
+#endif
+  
+#if H_3D_DBBP
+  static UInt xGetMaskedSSE     ( DistParam* pcDtParam );
+  static UInt xGetMaskedSAD     ( DistParam* pcDtParam );
+  static UInt xGetMaskedHADs    ( DistParam* pcDtParam );
+  static UInt xGetMaskedVSD     ( DistParam* pcDtParam );
 #endif
   
 public:
