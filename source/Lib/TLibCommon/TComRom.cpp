@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -394,17 +394,6 @@ UInt g_sigLastScanCG32x32[ 64 ];
 
 const UInt g_uiMinInGroup[ 10 ] = {0,1,2,3,4,6,8,12,16,24};
 const UInt g_uiGroupIdx[ 32 ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
-
-// Rice parameters for absolute transform levels
-const UInt g_auiGoRiceRange[5] =
-{
-  7, 14, 26, 46, 78
-};
-
-const UInt g_auiGoRicePrefixLen[5] =
-{
-  8, 7, 6, 5, 4
-};
 
 Void initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight)
 {

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -466,7 +466,6 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
     
     rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, 
                      conformanceWindow, defaultDisplayWindow, numReorderPics, true);
-    rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
     m_cListPic.pushBack( rpcPic );
     
     return;
@@ -504,7 +503,6 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   rpcPic->destroy();
   rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
                    conformanceWindow, defaultDisplayWindow, numReorderPics, true);
-  rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
 }
 
 #if H_MV
@@ -661,7 +659,7 @@ Void TDecTop::xActivateParameterSets()
   }
 
   m_cSAO.destroy();
-  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getMaxCUWidth(), sps->getMaxCUHeight() );
+  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getMaxCUDepth() );
   m_cLoopFilter.create( sps->getMaxCUDepth() );
 }
 
@@ -669,7 +667,6 @@ Void TDecTop::xActivateParameterSets()
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag  )
 {
   assert( nalu.m_layerId == m_layerId ); 
-
 #else
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay )
 {
@@ -681,11 +678,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     m_uiSliceIdx     = 0;
   }
-  m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
-  if (!m_bFirstSliceInPicture)
   {
     m_apcSlicePilot->copySliceInfo( pcPic->getPicSym()->getSlice(m_uiSliceIdx-1) );
   }
+  m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
 
   m_apcSlicePilot->setNalUnitType(nalu.m_nalUnitType);
   Bool nonReferenceFlag = (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_N ||
@@ -993,12 +989,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     }
 #endif
 #else
-#if FIX1071
     pcSlice->setRefPicList( m_cListPic, true );
-#else
-    pcSlice->setRefPicList( m_cListPic );
-#endif
-
 #endif
 
 #if H_3D
@@ -1214,7 +1205,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 
     case NAL_UNIT_CODED_SLICE_TRAIL_R:
     case NAL_UNIT_CODED_SLICE_TRAIL_N:
-    case NAL_UNIT_CODED_SLICE_TLA_R:
+    case NAL_UNIT_CODED_SLICE_TSA_R:
     case NAL_UNIT_CODED_SLICE_TSA_N:
     case NAL_UNIT_CODED_SLICE_STSA_R:
     case NAL_UNIT_CODED_SLICE_STSA_N:
@@ -1234,8 +1225,70 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
 #endif
       break;
+    case NAL_UNIT_EOS:
+      m_associatedIRAPType = NAL_UNIT_INVALID;
+      m_pocCRA = 0;
+      m_pocRandomAccess = MAX_INT;
+      m_prevPOC = MAX_INT;
+      m_bFirstSliceInPicture = true;
+      m_bFirstSliceInSequence = true;
+      m_prevSliceSkipped = false;
+      m_skippedPOC = 0;
+      return false;
+      
+    case NAL_UNIT_ACCESS_UNIT_DELIMITER:
+      // TODO: process AU delimiter
+      return false;
+      
+    case NAL_UNIT_EOB:
+      return false;
+      
+      
+    case NAL_UNIT_RESERVED_VCL_N10:
+    case NAL_UNIT_RESERVED_VCL_R11:
+    case NAL_UNIT_RESERVED_VCL_N12:
+    case NAL_UNIT_RESERVED_VCL_R13:
+    case NAL_UNIT_RESERVED_VCL_N14:
+    case NAL_UNIT_RESERVED_VCL_R15:
+      
+    case NAL_UNIT_RESERVED_IRAP_VCL22:
+    case NAL_UNIT_RESERVED_IRAP_VCL23:
+      
+    case NAL_UNIT_RESERVED_VCL24:
+    case NAL_UNIT_RESERVED_VCL25:
+    case NAL_UNIT_RESERVED_VCL26:
+    case NAL_UNIT_RESERVED_VCL27:
+    case NAL_UNIT_RESERVED_VCL28:
+    case NAL_UNIT_RESERVED_VCL29:
+    case NAL_UNIT_RESERVED_VCL30:
+    case NAL_UNIT_RESERVED_VCL31:
+      
+    case NAL_UNIT_FILLER_DATA:
+    case NAL_UNIT_RESERVED_NVCL41:
+    case NAL_UNIT_RESERVED_NVCL42:
+    case NAL_UNIT_RESERVED_NVCL43:
+    case NAL_UNIT_RESERVED_NVCL44:
+    case NAL_UNIT_RESERVED_NVCL45:
+    case NAL_UNIT_RESERVED_NVCL46:
+    case NAL_UNIT_RESERVED_NVCL47:
+    case NAL_UNIT_UNSPECIFIED_48:
+    case NAL_UNIT_UNSPECIFIED_49:
+    case NAL_UNIT_UNSPECIFIED_50:
+    case NAL_UNIT_UNSPECIFIED_51:
+    case NAL_UNIT_UNSPECIFIED_52:
+    case NAL_UNIT_UNSPECIFIED_53:
+    case NAL_UNIT_UNSPECIFIED_54:
+    case NAL_UNIT_UNSPECIFIED_55:
+    case NAL_UNIT_UNSPECIFIED_56:
+    case NAL_UNIT_UNSPECIFIED_57:
+    case NAL_UNIT_UNSPECIFIED_58:
+    case NAL_UNIT_UNSPECIFIED_59:
+    case NAL_UNIT_UNSPECIFIED_60:
+    case NAL_UNIT_UNSPECIFIED_61:
+    case NAL_UNIT_UNSPECIFIED_62:
+    case NAL_UNIT_UNSPECIFIED_63:
     default:
-      assert (1);
+      assert (0);
   }
 
   return false;

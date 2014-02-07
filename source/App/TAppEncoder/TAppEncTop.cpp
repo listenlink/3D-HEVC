@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -308,26 +308,13 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setUseAdaptQpSelect             ( m_bUseAdaptQpSelect   );
 #endif
 
-  Int lowestQP;
-  lowestQP =  - 6*(g_bitDepthY - 8); // XXX: check
-
-#if H_MV
-  if ((m_iMaxDeltaQP == 0 ) && (m_iQP[layerIdInVps] == lowestQP) && (m_useLossless == true))
-#else
-  if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
-#endif
-  {
-    m_bUseAdaptiveQP = false;
-  }
   m_cTEncTop.setUseAdaptiveQP                ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
   
   //====== Tool list ========
-  m_cTEncTop.setUseSBACRD                    ( m_bUseSBACRD   );
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
-  m_cTEncTop.setUseLossless                  ( m_useLossless );
 #if H_MV
   m_cTEncTop.setdQPs                         ( m_aidQP[layerIdInVps]   );
 #else
@@ -395,7 +382,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
 
   m_cTEncTop.setSaoLcuBoundary (m_saoLcuBoundary);
-  m_cTEncTop.setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
@@ -460,7 +446,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setUseScalingListId           ( m_useScalingListId  );
   m_cTEncTop.setScalingListFile            ( m_scalingListFile   );
   m_cTEncTop.setSignHideFlag(m_signHideFlag);
-#if RATE_CONTROL_LAMBDA_DOMAIN
 #if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
   if(!m_cTEncTop.getIsDepth())    //only for texture
   {
@@ -481,12 +466,10 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setUseLCUSeparateModel ( m_RCUseLCUSeparateModel );
   m_cTEncTop.setInitialQP           ( m_RCInitialQP );
   m_cTEncTop.setForceIntraQP        ( m_RCForceIntraQP );
-
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
     m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_depthMADPred       : 0);
-
     if(m_cTEncTop.getUseDepthMADPred())
     {
       m_cTEncTop.setCamParam(&m_cCameraData);
@@ -497,7 +480,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
     m_cTEncTop.setUseViewWiseRateCtrl(m_viewWiseRateCtrl);
-
     if(m_iNumberOfViews == 1)
     {
       if(m_viewWiseRateCtrl)
@@ -551,97 +533,8 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     }
   }
 #endif
-#else
-#if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
-  if(!m_cTEncTop.getIsDepth())    //only for texture
-  {
-    m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
-    m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
-    m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
-  }
-  else
-  {
-    m_cTEncTop.setUseRateCtrl         ( 0 );
-  }
-#else
-  m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
-  m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
-  m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
-#endif
-
-  
-#if KWU_RC_MADPRED_E0227
-  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
-  {
-    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_depthMADPred       : 0);
-
-    if(m_cTEncTop.getUseDepthMADPred())
-    {
-      m_cTEncTop.setCamParam(&m_cCameraData);
-    }
-  }
-#endif
-
-#if KWU_RC_VIEWRC_E0227
-  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
-  {
-    m_cTEncTop.setUseViewWiseRateCtrl(m_viewWiseRateCtrl);
-    if(m_iNumberOfViews == 1)
-    {
-      if(m_viewWiseRateCtrl)
-      {
-        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
-      }
-      else
-      {
-        m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
-      }
-    }
-    else
-    {
-      if(m_viewWiseRateCtrl)
-      {
-        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
-      }
-      else
-      {
-        if(m_iNumberOfViews == 2)
-        {
-          if(m_cTEncTop.getViewId() == 0)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*80)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 1)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*20)/100 );
-          }
-        }
-        else if(m_iNumberOfViews == 3)
-        {
-          if(m_cTEncTop.getViewId() == 0)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*66)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 1)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 2)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
-          }
-        }
-        else
-        {
-          m_cTEncTop.setTargetBitrate              ( m_targetBitrate );
-        }
-      }
-    }
-  }
-#endif
-#endif
   m_cTEncTop.setTransquantBypassEnableFlag(m_TransquantBypassEnableFlag);
-  m_cTEncTop.setCUTransquantBypassFlagValue(m_CUTransquantBypassFlagValue);
+  m_cTEncTop.setCUTransquantBypassFlagForceValue(m_CUTransquantBypassFlagForce);
   m_cTEncTop.setUseRecalculateQPAccordingToLambda( m_recalculateQPAccordingToLambda );
   m_cTEncTop.setUseStrongIntraSmoothing( m_useStrongIntraSmoothing );
   m_cTEncTop.setActiveParameterSetsSEIEnabled ( m_activeParameterSetsSEIEnabled ); 
@@ -1202,7 +1095,6 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
       rateStatsAccum(au, stats);   
     }
-#endif    
   }
 }
   
@@ -1220,7 +1112,7 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
     {
     case NAL_UNIT_CODED_SLICE_TRAIL_R:
     case NAL_UNIT_CODED_SLICE_TRAIL_N:
-    case NAL_UNIT_CODED_SLICE_TLA_R:
+    case NAL_UNIT_CODED_SLICE_TSA_R:
     case NAL_UNIT_CODED_SLICE_TSA_N:
     case NAL_UNIT_CODED_SLICE_STSA_R:
     case NAL_UNIT_CODED_SLICE_STSA_N:

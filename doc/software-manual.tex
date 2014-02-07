@@ -98,10 +98,10 @@
 \title{HM Software Manual}
 \author{%
 	Frank Bossen
-	\email{bossen@docomoinnovations.com}
+	\email{frank@bossentech.com}
 	\and
 	David Flynn
-	\email{davidf@rd.bbc.co.uk}
+	\email{dflynn@blackberry.com}
 	\and
 	Karsten S\"uhring
 	\email{Karsten.Suehring@hhi.fraunhofer.de}
@@ -117,7 +117,7 @@
 \maketitle
 \begin{abstract}
 This document is a user manual describing usage of reference software
-for the HEVC project. It applies to version 11.0
+for the HEVC project. It applies to version 13.0
 of the software.
 \end{abstract}
 
@@ -951,20 +951,6 @@ Recalculate QP values according to lambda values. Do not suggest to be enabled i
 \end{OptionTable}
 
 
-
-%%
-%% Entropy coding parameters
-%%
-\begin{OptionTable}{Entropy coding parameters}
-\Option{SBACRD} &
-\ShortOption{\None} &
-\Default{true} &
-Enables or disables the use of bit counts from arithmetic coder in
-rate-distortion decisions.
-\\
-\end{OptionTable}
-
-
 %%
 %% Slice coding parameters
 %%
@@ -1182,19 +1168,19 @@ quantization and filtering stages at CU level.
 This option corresponds to the value of
 transquant_bypass_enable_flag that is transmitted in the PPS.
 
-See CUTransquantBypassFlagValue for further details.
+See CUTransquantBypassFlagForce for further details.
 \\
 
-\Option{CUTransquantBypassFlagValue} &
+\Option{CUTransquantBypassFlagForce} &
 \ShortOption{\None} &
 \Default{0} &
 Controls the per CU transformation, quantization and filtering
 mode decision.
-This option corresponds to the value of the per CU cu_transquant_bypass_flag.
+This option controls the value of the per CU cu_transquant_bypass_flag.
 \par
 \begin{tabular}{cp{0.45\textwidth}}
- 0 & Bypass is not performed on any CU \\
- 1 & Bypass is performed on all CUs \\
+ 0 & Bypass is searched on a CU-by-CU basis and will be used if the cost is lower than not bypassing. \\
+ 1 & Bypass is forced for all CUs. \\
 \end{tabular}
 
 This option has no effect if TransquantBypassEnableFlag is disabled.
@@ -1203,7 +1189,7 @@ This option has no effect if TransquantBypassEnableFlag is disabled.
 \Option{PCMEnabledFlag} &
 \ShortOption{\None} &
 \Default{false} &
-Enables or disables the use of PCM.
+Enables or disables the use of PCM. The encoder will use cost measures on a CU-by-CU basis to determine if PCM mode is to be applied.
 \\
 
 \Option{PCMLog2MaxSize} &
@@ -1923,7 +1909,7 @@ Numerous constants that guard individual adoptions are defined within
 \clearpage
 \section{Using the decoder}
 \begin{verbatim}
-TappDecoder -b str.bin -o dec.yuv [options]
+TAppDecoder -b str.bin -o dec.yuv [options]
 \end{verbatim}
 
 \begin{OptionTable}{Decoder options}

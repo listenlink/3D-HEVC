@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -69,6 +69,7 @@ static void convertPayloadToRBSP(vector<uint8_t>& nalUnitBuf, TComInputBitstream
       {
         break;
       }
+      assert(*it_read <= 0x03);
     }
     zeroCount = (*it_read == 0x00) ? zeroCount+1 : 0;
     *it_write = *it_read;
@@ -125,7 +126,7 @@ Void readNalUnitHeader(InputNALUnit& nalu)
   }
   else
   {
-    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TLA_R
+    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TSA_R
          && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TSA_N
          && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_R
          && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_N );

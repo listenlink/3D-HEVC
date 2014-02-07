@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,12 +70,6 @@ TComSlice::TComSlice()
 , m_pcPic                         ( NULL )
 , m_colFromL0Flag                 ( 1 )
 , m_colRefIdx                     ( 0 )
-#if SAO_CHROMA_LAMBDA
-, m_dLambdaLuma( 0.0 )
-, m_dLambdaChroma( 0.0 )
-#else
-, m_dLambda                       ( 0.0 )
-#endif
 , m_uiTLayer                      ( 0 )
 , m_bTLayerSwitchingFlag          ( false )
 , m_sliceMode                   ( 0 )
@@ -129,6 +123,11 @@ TComSlice::TComSlice()
   
   initEqualRef();
   
+  for (Int component = 0; component < 3; component++)
+  {
+    m_lambdas[component] = 0.0;
+  }
+  
   for ( Int idx = 0; idx < MAX_NUM_REF; idx++ )
   {
     m_list1IdxToList0Idx[idx] = -1;
@@ -147,6 +146,7 @@ TComSlice::TComSlice()
   resetWpScaling();
   initWpAcDcParam();
   m_saoEnabledFlag = false;
+  m_saoEnabledFlagChroma = false;
 #if H_MV
   for (Int i = 0; i < MAX_NUM_LAYERS; i++ )
   {
@@ -369,16 +369,11 @@ Void TComSlice::setList1IdxToList0Idx()
     }
   }
 }
+
 #if !H_MV
-#if FIX1071
 Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic, Bool checkNumPocTotalCurr )
-#else
-Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
-#endif
 {
-#if FIX1071
   if (!checkNumPocTotalCurr)
-#endif
   {
     if (m_eSliceType == I_SLICE)
     {
@@ -448,8 +443,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
   TComPic*  rpsCurrList0[MAX_NUM_REF+1];
   TComPic*  rpsCurrList1[MAX_NUM_REF+1];
   Int numPocTotalCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr;
-
-#if FIX1071
   if (checkNumPocTotalCurr)
   {
     // The variable NumPocTotalCurr is derived as specified in subclause 7.4.7.2. It is a requirement of bitstream conformance that the following applies to the value of NumPocTotalCurr:
@@ -473,7 +466,6 @@ Void TComSlice::setRefPicList( TComList<TComPic*>& rcListPic )
     m_aiNumRefIdx[0] = getNumRefIdx(REF_PIC_LIST_0);
     m_aiNumRefIdx[1] = getNumRefIdx(REF_PIC_LIST_1);
   }
-#endif
 
   Int cIdx = 0;
   for ( i=0; i<NumPocStCurr0; i++, cIdx++)
@@ -872,7 +864,9 @@ Void TComSlice::checkCRA(TComReferencePictureSet *pReferencePictureSet, Int& poc
 Void TComSlice::decodingRefreshMarking(Int& pocCRA, Bool& bRefreshPending, TComList<TComPic*>& rcListPic)
 {
   TComPic*                 rpcPic;
+#if !FIX1172
   setAssociatedIRAPPOC(pocCRA);
+#endif
   Int pocCurr = getPOC(); 
 
   if ( getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP
@@ -992,12 +986,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
   m_colFromL0Flag        = pSrc->m_colFromL0Flag;
   m_colRefIdx            = pSrc->m_colRefIdx;
-#if SAO_CHROMA_LAMBDA 
-  m_dLambdaLuma          = pSrc->m_dLambdaLuma;
-  m_dLambdaChroma        = pSrc->m_dLambdaChroma;
-#else
-  m_dLambda              = pSrc->m_dLambda;
-#endif
+  setLambdas(pSrc->getLambdas());
   for (i = 0; i < 2; i++)
   {
     for (j = 0; j < MAX_NUM_REF; j++)
@@ -1176,6 +1165,12 @@ Void TComSlice::checkLeadingPictureRestrictions(TComList<TComPic*>& rcListPic)
   while ( iterPic != rcListPic.end())
   {
     rpcPic = *(iterPic++);
+#if BUGFIX_INTRAPERIOD
+    if(!rpcPic->getReconMark())
+    {
+      continue;
+    }
+#endif
     if (rpcPic->getPOC() == this->getPOC())
     {
       continue;
@@ -1341,7 +1336,7 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
     //check that pictures of higher temporal layers are not used
     assert(rpcPic->getSlice( 0 )->isReferenced()==0||rpcPic->getUsedByCurr()==0||rpcPic->getTLayer()<=this->getTLayer());
     //check that pictures of higher or equal temporal layer are not in the RPS if the current picture is a TSA picture
-    if(this->getNalUnitType() == NAL_UNIT_CODED_SLICE_TLA_R || this->getNalUnitType() == NAL_UNIT_CODED_SLICE_TSA_N)
+    if(this->getNalUnitType() == NAL_UNIT_CODED_SLICE_TSA_R || this->getNalUnitType() == NAL_UNIT_CODED_SLICE_TSA_N)
     {
       assert(rpcPic->getSlice( 0 )->isReferenced()==0||rpcPic->getTLayer()<this->getTLayer());
     }
@@ -1500,11 +1495,7 @@ Int TComSlice::checkThatAllRefPicsAreAvailable( TComList<TComPic*>& rcListPic, T
 
 /** Function for constructing an explicit Reference Picture Set out of the available pictures in a referenced Reference Picture Set
 */
-#if FIX1071
 Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet, Bool isRAP)
-#else
-Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic*>& rcListPic, TComReferencePictureSet *pReferencePictureSet)
-#endif
 {
   TComPic* rpcPic;
   Int i, j;
@@ -1529,11 +1520,7 @@ Void TComSlice::createExplicitReferencePictureSetFromReference( TComList<TComPic
         // This picture exists as a reference picture
         // and should be added to the explicit Reference Picture Set
         pcRPS->setDeltaPOC(k, pReferencePictureSet->getDeltaPOC(i));
-#if FIX1071
         pcRPS->setUsed(k, pReferencePictureSet->getUsed(i) && (!isRAP));
-#else
-        pcRPS->setUsed(k, pReferencePictureSet->getUsed(i));
-#endif
         if(pcRPS->getDeltaPOC(k) < 0)
         {
           nrOfNegativePictures++;
@@ -2180,7 +2167,6 @@ TComSPS::TComSPS()
 , m_bitDepthC                 (  8)
 , m_qpBDOffsetY               (  0)
 , m_qpBDOffsetC               (  0)
-, m_useLossless               (false)
 , m_uiPCMBitDepthLuma         (  8)
 , m_uiPCMBitDepthChroma       (  8)
 , m_bPCMFilterDisableFlag     (false)
@@ -2860,7 +2846,7 @@ Void TComSlice::setDefaultScalingList()
   {
     for(UInt listId=0;listId<g_scalingListNum[sizeId];listId++)
     {
-      getScalingList()->processDefaultMarix(sizeId, listId);
+      getScalingList()->processDefaultMatrix(sizeId, listId);
     }
   }
 }
@@ -3583,7 +3569,7 @@ Int* TComScalingList::getScalingListDefaultAddress(UInt sizeId, UInt listId)
  * \param sizeId size index
  * \param Index of input matrix
  */
-Void TComScalingList::processDefaultMarix(UInt sizeId, UInt listId)
+Void TComScalingList::processDefaultMatrix(UInt sizeId, UInt listId)
 {
   ::memcpy(getScalingListAddress(sizeId, listId),getScalingListDefaultAddress(sizeId,listId),sizeof(Int)*min(MAX_MATRIX_COEF_NUM,(Int)g_scalingListSize[sizeId]));
   setScalingListDC(sizeId,listId,SCALING_LIST_DC);
@@ -3600,7 +3586,7 @@ Void TComScalingList::checkDcOfMatrix()
       //check default matrix?
       if(getScalingListDC(sizeId,listId) == 0)
       {
-        processDefaultMarix(sizeId, listId);
+        processDefaultMatrix(sizeId, listId);
       }
     }
   }
