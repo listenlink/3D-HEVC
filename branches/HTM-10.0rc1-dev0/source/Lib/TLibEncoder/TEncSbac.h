@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -109,6 +109,14 @@ public:
   Void  codeSaoUflc       ( UInt uiLength, UInt  uiCode );
   Void  codeSAOSign       ( UInt  uiCode);  //<! code SAO offset sign
   Void  codeScalingList      ( TComScalingList* /*scalingList*/     ){ assert (0);  return;};
+
+  Void codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled);
+  Void codeSAOBlkParam(SAOBlkParam& saoBlkParam
+                    , Bool* sliceEnabled
+                    , Bool leftMergeAvail
+                    , Bool aboveMergeAvail
+                    , Bool onlyEstMergeInfo = false
+                    );
 
 private:
   Void  xWriteUnarySymbol    ( UInt uiSymbol, ContextModel* pcSCModel, Int iOffset );
@@ -244,41 +252,10 @@ private:
   
   ContextModel3DBuffer m_cMVPIdxSCModel;
   
-  ContextModel3DBuffer m_cCUAMPSCModel;
   ContextModel3DBuffer m_cSaoMergeSCModel;
   ContextModel3DBuffer m_cSaoTypeIdxSCModel;
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
-
-#if H_3D_DIM
-  ContextModel3DBuffer m_cDepthIntraModeSCModel;
-  ContextModel3DBuffer m_cDdcFlagSCModel;
-  ContextModel3DBuffer m_cDdcDataSCModel;
-#if QC_GENERIC_SDC_G0122
-  ContextModel3DBuffer m_cAngleFlagSCModel;
-#if !QC_SDC_UNIFY_G0130
-  ContextModel3DBuffer m_cIntraSdcFlagSCModel;
-#endif
-#endif
-#if H_3D_DIM_DMM
-  ContextModel3DBuffer m_cDmm1DataSCModel;
-#endif
-#if H_3D_DIM_SDC  
-  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
-  ContextModel3DBuffer m_cSDCResidualSCModel;
-#endif
-#endif
-#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
-  ContextModel3DBuffer m_cInterSDCFlagSCModel;
-  ContextModel3DBuffer m_cInterSDCResidualSCModel;
-  ContextModel3DBuffer m_cInterSDCResidualSignFlagSCModel;
-#endif
-#if QC_SDC_UNIFY_G0130
-  ContextModel3DBuffer m_cSDCFlagSCModel;
-#endif
-#if H_3D_DBBP
-  ContextModel3DBuffer m_cDBBPFlagSCModel;
-#endif
 };
 
 //! \}

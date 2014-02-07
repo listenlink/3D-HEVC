@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -111,15 +111,6 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
 
   //-- For time output for each slice
   long iBeforeTime = clock();
-  
-  UInt uiStartCUAddr   = pcSlice->getSliceSegmentCurStartCUAddr();
-
-  UInt uiSliceStartCuAddr = pcSlice->getSliceCurStartCUAddr();
-  if(uiSliceStartCuAddr == uiStartCUAddr)
-  {
-    m_sliceStartCUAddress.push_back(uiSliceStartCuAddr);
-  }
-
   m_pcSbacDecoder->init( (TDecBinIf*)m_pcBinCABAC );
   m_pcEntropyDecoder->setEntropyDecoder (m_pcSbacDecoder);
 
@@ -146,11 +137,6 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   m_pcEntropyDecoder->setEntropyDecoder ( m_pcSbacDecoder  );
   m_pcEntropyDecoder->setBitstream      ( ppcSubstreams[0] );
   m_pcEntropyDecoder->resetEntropy      (pcSlice);
-
-  if(uiSliceStartCuAddr == uiStartCUAddr)
-  {
-    m_LFCrossSliceBoundaryFlag.push_back( pcSlice->getLFCrossSliceBoundaryFlag());
-  }
 #if H_3D_NBDV 
   if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
   {
@@ -198,30 +184,11 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
   Bool bLFCrossTileBoundary = pcSlice->getPPS()->getLoopFilterAcrossTilesEnabledFlag();
   m_pcLoopFilter->setCfg(bLFCrossTileBoundary);
   m_pcLoopFilter->loopFilterPic( rpcPic );
-
-  if(pcSlice->getSPS()->getUseSAO())
-  {
-    m_sliceStartCUAddress.push_back(rpcPic->getNumCUsInFrame()* rpcPic->getNumPartInCU());
-    rpcPic->createNonDBFilterInfo(m_sliceStartCUAddress, 0, &m_LFCrossSliceBoundaryFlag, rpcPic->getPicSym()->getNumTiles(), bLFCrossTileBoundary);
-  }
-
   if( pcSlice->getSPS()->getUseSAO() )
   {
-    {
-      SAOParam *saoParam = rpcPic->getPicSym()->getSaoParam();
-      saoParam->bSaoFlag[0] = pcSlice->getSaoEnabledFlag();
-      saoParam->bSaoFlag[1] = pcSlice->getSaoEnabledFlagChroma();
-      m_pcSAO->setSaoLcuBasedOptimization(1);
-      m_pcSAO->createPicSaoInfo(rpcPic);
-      m_pcSAO->SAOProcess(saoParam);
-      m_pcSAO->PCMLFDisableProcess(rpcPic);
-      m_pcSAO->destroyPicSaoInfo();
-    }
-  }
-
-  if(pcSlice->getSPS()->getUseSAO())
-  {
-    rpcPic->destroyNonDBFilterInfo();
+    m_pcSAO->reconstructBlkSAOParams(rpcPic, rpcPic->getPicSym()->getSAOBlkParam());
+    m_pcSAO->SAOProcess(rpcPic);
+    m_pcSAO->PCMLFDisableProcess(rpcPic);
   }
 #if H_3D
   rpcPic->compressMotion(2); 
@@ -283,8 +250,6 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
 
   rpcPic->setOutputMark(true);
   rpcPic->setReconMark(true);
-  m_sliceStartCUAddress.clear();
-  m_LFCrossSliceBoundaryFlag.clear();
 }
 
 /**

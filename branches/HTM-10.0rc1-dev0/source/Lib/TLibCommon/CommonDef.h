@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -60,9 +60,9 @@
 
 #if H_MV
 #define NV_VERSION        "10.0rc1"              ///< Current software version
-#define HM_VERSION        "12.0"                ///< 
+#define HM_VERSION        "13.0"                ///< 
 #else
-#define NV_VERSION        "12.0"                 ///< Current software version
+#define NV_VERSION        "13.0"                 ///< Current software version
 #endif
 
 // ====================================================================================================================
@@ -246,7 +246,7 @@ enum NalUnitType
   NAL_UNIT_CODED_SLICE_TRAIL_R,   // 1
   
   NAL_UNIT_CODED_SLICE_TSA_N,     // 2
-  NAL_UNIT_CODED_SLICE_TLA_R,       // 3
+  NAL_UNIT_CODED_SLICE_TSA_R,       // 3
   
   NAL_UNIT_CODED_SLICE_STSA_N,    // 4
   NAL_UNIT_CODED_SLICE_STSA_R,    // 5

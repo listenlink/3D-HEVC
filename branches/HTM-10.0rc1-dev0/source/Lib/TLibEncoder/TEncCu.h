@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -103,28 +103,13 @@ private:
   // SBAC RD
   TEncSbac***             m_pppcRDSbacCoder;
   TEncSbac*               m_pcRDGoOnSbacCoder;
-  Bool                    m_bUseSBACRD;
   TEncRateCtrl*           m_pcRateCtrl;
-#if RATE_CONTROL_LAMBDA_DOMAIN
-#if !M0036_RC_IMPROVEMENT
-  UInt                    m_LCUPredictionSAD;
-  Int                     m_addSADDepth;
-  Int                     m_temporalSAD;
-#endif
-#if M0036_RC_IMPROVEMENT && KWU_RC_MADPRED_E0227
+#if KWU_RC_MADPRED_E0227
   UInt                    m_LCUPredictionSAD;
   Int                     m_addSADDepth;
   Int                     m_temporalSAD;
   Int                     m_spatialSAD;
 #endif
-#endif
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_RC_MADPRED_E0227
-  UInt                    m_LCUPredictionSAD;
-  Int                     m_addSADDepth;
-  Int                     m_temporalSAD;
-  Int                     m_spatialSAD;
-#endif
-
 public:
   /// copy parameters from encoder class
   Void  init                ( TEncTop* pcEncTop );
@@ -142,12 +127,10 @@ public:
   Void  encodeCU            ( TComDataCU*    pcCU );
   
   Void setBitCounter        ( TComBitCounter* pcBitCounter ) { m_pcBitCounter = pcBitCounter; }
-#if (RATE_CONTROL_LAMBDA_DOMAIN && !M0036_RC_IMPROVEMENT) || KWU_RC_MADPRED_E0227
+#if KWU_RC_MADPRED_E0227
   UInt getLCUPredictionSAD() { return m_LCUPredictionSAD; }
 #endif
-#if RATE_CONTROL_INTRA
   Int   updateLCUDataISlice ( TComDataCU* pcCU, Int LCUIdx, Int width, Int height );
-#endif
 protected:
   Void  finishCU            ( TComDataCU*  pcCU, UInt uiAbsPartIdx,           UInt uiDepth        );
 #if AMP_ENC_SPEEDUP

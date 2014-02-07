@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -306,15 +306,15 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS 
   WRITE_UVLC( sei.m_bpSeqParameterSetId, "bp_seq_parameter_set_id" );
   if( !hrd->getSubPicCpbParamsPresentFlag() )
   {
-    WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "rap_cpb_params_present_flag" );
+    WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "irap_cpb_params_present_flag" );
   }
-  WRITE_FLAG( sei.m_concatenationFlag, "concatenation_flag");
-  WRITE_CODE( sei.m_auCpbRemovalDelayDelta - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), "au_cpb_removal_delay_delta_minus1" );
   if( sei.m_rapCpbParamsPresentFlag )
   {
     WRITE_CODE( sei.m_cpbDelayOffset, hrd->getCpbRemovalDelayLengthMinus1() + 1, "cpb_delay_offset" );
     WRITE_CODE( sei.m_dpbDelayOffset, hrd->getDpbOutputDelayLengthMinus1()  + 1, "dpb_delay_offset" );
   }
+  WRITE_FLAG( sei.m_concatenationFlag, "concatenation_flag");
+  WRITE_CODE( sei.m_auCpbRemovalDelayDelta - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), "au_cpb_removal_delay_delta_minus1" );
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
     if( ( ( nalOrVcl == 0 ) && ( hrd->getNalHrdParametersPresentFlag() ) ) ||

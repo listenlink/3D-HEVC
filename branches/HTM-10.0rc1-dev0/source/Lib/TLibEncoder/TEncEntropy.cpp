@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,15 +50,6 @@ Void TEncEntropy::setEntropyCoder ( TEncEntropyIf* e, TComSlice* pcSlice )
 
 Void TEncEntropy::encodeSliceHeader ( TComSlice* pcSlice )
 {
-  if (pcSlice->getSPS()->getUseSAO())
-  {
-    SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
-    pcSlice->setSaoEnabledFlag     (saoParam->bSaoFlag[0]);
-    {
-      pcSlice->setSaoEnabledFlagChroma   (saoParam->bSaoFlag[1]);
-    }
-  }
-
   m_pcEntropyCoderIf->codeSliceHeader( pcSlice );
   return;
 }
@@ -786,99 +777,6 @@ Void TEncEntropy::estimateBit (estBitsSbacStruct* pcEstBitsSbac, Int width, Int 
   m_pcEntropyCoderIf->estBit ( pcEstBitsSbac, width, height, eTType );
 }
 
-/** Encode SAO Offset
- * \param  saoLcuParam SAO LCU paramters
- */
-Void TEncEntropy::encodeSaoOffset(SaoLcuParam* saoLcuParam, UInt compIdx)
-{
-  UInt uiSymbol;
-  Int i;
-
-  uiSymbol = saoLcuParam->typeIdx + 1;
-  if (compIdx!=2)
-  {
-    m_pcEntropyCoderIf->codeSaoTypeIdx(uiSymbol);
-  }
-  if (uiSymbol)
-  {
-    if (saoLcuParam->typeIdx < 4 && compIdx != 2)
-    {
-      saoLcuParam->subTypeIdx = saoLcuParam->typeIdx;
-    }
-    Int bitDepth = compIdx ? g_bitDepthC : g_bitDepthY;
-    Int offsetTh = 1 << min(bitDepth - 5,5);
-    if( saoLcuParam->typeIdx == SAO_BO )
-    {
-      for( i=0; i< saoLcuParam->length; i++)
-      {
-        UInt absOffset = ( (saoLcuParam->offset[i] < 0) ? -saoLcuParam->offset[i] : saoLcuParam->offset[i]);
-        m_pcEntropyCoderIf->codeSaoMaxUvlc(absOffset, offsetTh-1);
-      }  
-      for( i=0; i< saoLcuParam->length; i++)
-      {
-        if (saoLcuParam->offset[i] != 0)
-        {
-          UInt sign = (saoLcuParam->offset[i] < 0) ? 1 : 0 ;
-          m_pcEntropyCoderIf->codeSAOSign(sign);
-        }
-      }
-      uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
-      m_pcEntropyCoderIf->codeSaoUflc(5, uiSymbol);
-    }
-    else if( saoLcuParam->typeIdx < 4 )
-    {
-      m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[0], offsetTh-1);
-      m_pcEntropyCoderIf->codeSaoMaxUvlc( saoLcuParam->offset[1], offsetTh-1);
-      m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[2], offsetTh-1);
-      m_pcEntropyCoderIf->codeSaoMaxUvlc(-saoLcuParam->offset[3], offsetTh-1);
-      if (compIdx!=2)
-      {
-        uiSymbol = (UInt) (saoLcuParam->subTypeIdx);
-        m_pcEntropyCoderIf->codeSaoUflc(2, uiSymbol);
-      }
-    }
-  }
-}
-
-/** Encode SAO unit interleaving
-* \param  rx
-* \param  ry
-* \param  pSaoParam
-* \param  pcCU
-* \param  iCUAddrInSlice
-* \param  iCUAddrUpInSlice
-* \param  bLFCrossSliceBoundaryFlag
- */
-Void TEncEntropy::encodeSaoUnitInterleaving(Int compIdx, Bool saoFlag, Int rx, Int ry, SaoLcuParam* saoLcuParam, Int cuAddrInSlice, Int cuAddrUpInSlice, Int allowMergeLeft, Int allowMergeUp)
-{
-  if (saoFlag)
-  {
-    if (rx>0 && cuAddrInSlice!=0 && allowMergeLeft)
-    {
-      m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeLeftFlag);
-    }
-    else
-    {
-      saoLcuParam->mergeLeftFlag = 0;
-    }
-    if (saoLcuParam->mergeLeftFlag == 0)
-    {
-      if ( (ry > 0) && (cuAddrUpInSlice>=0) && allowMergeUp )
-      {
-        m_pcEntropyCoderIf->codeSaoMerge(saoLcuParam->mergeUpFlag);
-      }
-      else
-      {
-        saoLcuParam->mergeUpFlag = 0;
-      }
-      if (!saoLcuParam->mergeUpFlag)
-      {
-        encodeSaoOffset(saoLcuParam, compIdx);
-      }
-    }
-  }
-}
-
 Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
 {
   Int count = 0;
@@ -898,102 +796,5 @@ Void TEncEntropy::encodeScalingList( TComScalingList* scalingList )
 {
   m_pcEntropyCoderIf->codeScalingList( scalingList );
 }
-
-#if H_3D_INTER_SDC
-#if QC_SDC_UNIFY_G0130
-Void TEncEntropy::encodeDeltaDC  ( TComDataCU* pcCU, UInt absPartIdx )
-{
-  m_pcEntropyCoderIf->codeDeltaDC( pcCU, absPartIdx );
-}
-
-Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) ) || 
-    ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getVpsDepthModesFlag( pcCU->getSlice()->getLayerIdInVps() ) ) )
-  {
-    return;
-  }
-
-#if SEC_INTER_SDC_G0101
-  if( !pcCU->getSlice()->getIsDepth() || pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N || pcCU->isSkipped( uiAbsPartIdx ) )
-#else
-  if( !pcCU->getSlice()->getIsDepth() || ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N ) || pcCU->isSkipped( uiAbsPartIdx ) )
-#endif
-  {
-    return;
-  }
-
-#if SEC_INTER_SDC_G0101
-  assert( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
-#else
-  assert( ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
-#endif
-
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-
-  m_pcEntropyCoderIf->codeSDCFlag( pcCU, uiAbsPartIdx );
-}
-#else
-Void TEncEntropy::encodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
-  {
-    return;
-  }
-
-  if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || pcCU->isSkipped( uiAbsPartIdx ) )
-  {
-    return;
-  }
-
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-
-  m_pcEntropyCoderIf->codeInterSDCFlag( pcCU, uiAbsPartIdx );
-}
-
-Void TEncEntropy::encodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
-  {
-    return;
-  }
-
-  if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || !pcCU->getInterSDCFlag( uiAbsPartIdx ) )
-  {
-    return;
-  }
-
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-
-  // number of segments depends on prediction mode for INTRA
-  UInt uiNumSegments = ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ? 1 : ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 4 : 2 );
-
-  // encode residual data for each segment
-  for( UInt uiSeg = 0; uiSeg < uiNumSegments; uiSeg++ )
-  {
-    m_pcEntropyCoderIf->codeInterSDCResidualData( pcCU, uiAbsPartIdx, uiSeg );
-  }
-}
-#endif
-#endif
-#if H_3D_DBBP
-Void TEncEntropy::encodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  m_pcEntropyCoderIf->codeDBBPFlag( pcCU, uiAbsPartIdx );
-}
-#endif
 
 //! \}

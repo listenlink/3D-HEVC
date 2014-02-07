@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,7 +83,6 @@ TEncSbac::TEncSbac()
 , m_cCUOneSCModel             ( 1,             1,               NUM_ONE_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAbsSCModel             ( 1,             1,               NUM_ABS_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cMVPIdxSCModel            ( 1,             1,               NUM_MVP_IDX_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCUAMPSCModel             ( 1,             1,               NUM_CU_AMP_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoMergeSCModel          ( 1,             1,               NUM_SAO_MERGE_FLAG_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoTypeIdxSCModel        ( 1,             1,               NUM_SAO_TYPE_IDX_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel     ( 1,             2,               NUM_TRANSFORMSKIP_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
@@ -152,7 +151,6 @@ Void TEncSbac::resetEntropy           ()
   m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
-  m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CHROMA_PRED_MODE );
@@ -253,7 +251,6 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cDBBPFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
       curCost += m_cCUPartSizeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
-      curCost += m_cCUAMPSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CU_AMP_POS );
       curCost += m_cCUPredModeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PRED_MODE );
       curCost += m_cCUIntraPredSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_INTRA_PRED_MODE );
       curCost += m_cCUChromaPredSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_CHROMA_PRED_MODE );
@@ -325,7 +322,6 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
-  m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CHROMA_PRED_MODE );
@@ -347,7 +343,6 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cTransformSkipSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-
 #if H_3D_DIM
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
@@ -793,11 +788,11 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       {
         if (eSize == SIZE_2NxN)
         {
-          m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
         }
         else
         {
-          m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));          
+          m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
           m_pcBinIf->encodeBinEP((eSize == SIZE_2NxnU? 0: 1));
         }
       }
@@ -817,11 +812,11 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       {
         if (eSize == SIZE_Nx2N)
         {
-          m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
         }
         else
         {
-          m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
           m_pcBinIf->encodeBinEP((eSize == SIZE_nLx2N? 0: 1));
         }
       }

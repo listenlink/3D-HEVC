@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -164,7 +164,8 @@ Void TAppDecTop::decode()
 
   Bool firstSlice        = true; 
 #endif
- 
+  Bool loopFiltered = false;
+
   while (!!bitstreamFile)
   {
     /* location serves to work around a design fault in the decoder, whereby
@@ -295,13 +296,18 @@ Void TAppDecTop::decode()
         }
       }
     }
-    if (bNewPicture || !bitstreamFile)
+    if (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS )
     {
 #if H_MV
       assert( decIdxLastPic != -1 ); 
+      // TODO add loop filtered variable here
       m_tDecTop[decIdxLastPic]->endPicDecoding(poc, pcListPic, m_targetDecLayerIdSet );
 #else
-      m_cTDecTop.executeLoopFilters(poc, pcListPic);
+      if (!loopFiltered || bitstreamFile)
+      {
+        m_cTDecTop.executeLoopFilters(poc, pcListPic);
+      }
+      loopFiltered = (nalu.m_nalUnitType == NAL_UNIT_EOS);
 #endif
     }
 #if H_3D
@@ -343,6 +349,14 @@ Void TAppDecTop::decode()
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_RADL
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP ) )
+      {
+#if H_MV
+        xFlushOutput( pcListPic, decIdxLastPic );
+#else
+        xFlushOutput( pcListPic );
+#endif
+      }
+      if (nalu.m_nalUnitType == NAL_UNIT_EOS)
       {
 #if H_MV
         xFlushOutput( pcListPic, decIdxLastPic );
@@ -461,6 +475,12 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int decIdx, Int tI
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 #endif
 {
+
+  if (pcListPic->empty())
+  {
+    return;
+  }
+
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
   
@@ -646,7 +666,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int decIdx )
 Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
 #endif
 {
-  if(!pcListPic)
+  if(!pcListPic || pcListPic->empty())
   {
     return;
   }
