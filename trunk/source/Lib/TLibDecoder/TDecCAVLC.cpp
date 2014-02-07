@@ -1696,7 +1696,11 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_IV_MERGE
         READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
 #if H_3D_SPIVMP
+#if SEC_SPIVMP_MCP_SIZE_G0077
+        READ_UVLC (uiCode, "log2_sub_PU_size_minus3");     pcVPS->setSubPULog2Size(i, uiCode+3); 
+#else
         READ_UVLC (uiCode, "log2_sub_PU_size_minus2");     pcVPS->setSubPULog2Size(i, uiCode+2); 
+#endif
 #endif
 #endif
 #if H_3D_ARP
@@ -1708,6 +1712,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #endif
 #if H_3D_VSP
         READ_FLAG( uiCode, "view_synthesis_pred_flag[i]"); pcVPS->setViewSynthesisPredFlag( i, uiCode == 1 ? true : false );
+#endif
+#if H_3D_DBBP
+          READ_FLAG( uiCode, "use_dbbp_flag[i]" ); pcVPS->setUseDBBP( i, uiCode == 1 ? true : false );
 #endif
       }
       else
@@ -1721,7 +1728,11 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_SPIVMP
         if (i!=1)
         {
+#if SEC_SPIVMP_MCP_SIZE_G0077
+          READ_UVLC (uiCode, "log2_sub_PU_size_minus3[i]");     pcVPS->setSubPULog2Size(i, uiCode+3); 
+#else
           READ_UVLC (uiCode, "log2_sub_PU_size_minus2[i]");     pcVPS->setSubPULog2Size(i, uiCode+2); 
+#endif
         }
 #endif
 #if H_3D_IV_MERGE
@@ -1761,7 +1772,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
     }
   }
-
+#if QC_SPIVMP_MPI_G0119
+  READ_UVLC (uiCode, "log2_sub_PU_MPI_size_minus3");              pcVPS->setSubPUMPILog2Size( uiCode + 3 ); 
+#endif
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
 }
 #endif
@@ -2773,6 +2786,17 @@ Void TDecCavlc::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+Void TDecCavlc::parseDeltaDC( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{ 
+  assert(0);
+}
+
+Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  assert(0);
+}
+#else
 Void TDecCavlc::parseInterSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -2782,6 +2806,13 @@ Void TDecCavlc::parseInterSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx,
 {
   assert(0);
 }
+#endif
+#endif
+#if H_3D_DBBP
+  Void TDecCavlc::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+  {
+    assert(0);
+  }
 #endif
 // ====================================================================================================================
 // Protected member functions

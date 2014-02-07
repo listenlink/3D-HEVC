@@ -184,6 +184,9 @@ Void TAppEncTop::xInitLibCfg()
 #if H_3D_SPIVMP
     m_cTEncTop.setSubPULog2Size                 (( isDepth || 0==layerIdInVps ) ? 0 : m_iSubPULog2Size   );
 #endif
+#if QC_SPIVMP_MPI_G0119
+    m_cTEncTop.setSubPUMPILog2Size              ( !isDepth ? 0 : m_iSubPUMPILog2Size   );
+#endif
 #if H_3D_IC
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
 #endif
@@ -200,6 +203,9 @@ Void TAppEncTop::xInitLibCfg()
     //====== Depth Inter SDC =========
 #if H_3D_INTER_SDC
     m_cTEncTop.setInterSDCEnable               ( isDepth ? m_bDepthInterSDCFlag    : false );
+#endif
+#if H_3D_DBBP
+    m_cTEncTop.setUseDBBP                      ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_bUseDBBP );
 #endif
 #if H_3D_IV_MERGE
     m_cTEncTop.setUseMPI               ( isDepth ? m_bMPIFlag    : false );
@@ -909,6 +915,12 @@ Void TAppEncTop::encode()
             m_cCameraData.setDispCoeff( iNextPoc, m_acTEncTopList[layer]->getViewIndex() );
             m_acTEncTopList[layer]  ->setDispCoeff( m_cCameraData.getDispCoeff() );
           }
+#endif
+
+#if MTK_DDD_G0063
+          m_acTEncTopList[ layer ]->getSliceEncoder()->setDDDPar( m_cCameraData.getCodedScale()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
+              m_cCameraData.getCodedOffset()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
+              m_cCameraData.getCamParsCodedPrecision() );
 #endif
         Int   iNumEncoded = 0;
 
@@ -1902,7 +1914,10 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 #if H_3D_VSP
     vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && m_viewSynthesisPredFlag );         
-#endif      
+#endif
+#if H_3D_DBBP
+    vps.setUseDBBP              ( layer, !isLayerZero && !isDepth && m_bUseDBBP );
+#endif
 #if H_3D_INTER_SDC
     vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
 #endif
@@ -1910,6 +1925,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag );
 #endif
   }  
+#if QC_SPIVMP_MPI_G0119
+  vps.setSubPUMPILog2Size( m_iSubPUMPILog2Size );
+#endif
 #if H_3D
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
 #endif

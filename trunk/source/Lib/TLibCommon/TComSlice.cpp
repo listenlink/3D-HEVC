@@ -1827,6 +1827,9 @@ TComVPS::TComVPS()
 #if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
 #endif
+#if H_3D_DBBP
+    m_dbbpFlag             [ i ] = false;
+#endif
 #if H_3D_IV_MERGE
     m_bMPIFlag             [ i ] = false;
 #endif
@@ -3128,13 +3131,31 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
     setFirstTRefIdx (REF_PIC_LIST_1, -1);
     for ( Int refListIdx = 0; refListIdx < ((m_eSliceType==B_SLICE) ? 2 : 1); refListIdx++ )
     {
+#if MTK_ARP_REF_SELECTION_G0053
+      Int diffPOC=MAX_INT;
+      Int idx=-1;
+#endif
       for(Int i = 0; i < getNumRefIdx(RefPicList(refListIdx)); i++ )
       {
         if ( getRefPic(RefPicList(refListIdx), i)->getPOC() != getPOC() )
         {
+#if MTK_ARP_REF_SELECTION_G0053
+          if( abs(getRefPic(RefPicList(refListIdx), i)->getPOC() - getPOC()) < diffPOC)
+          {
+            diffPOC=abs(getRefPic(RefPicList(refListIdx), i)->getPOC() - getPOC());
+            idx=i;
+          }
+#else
           setFirstTRefIdx (RefPicList(refListIdx), i);
           break;
+#endif
         }
+#if MTK_ARP_REF_SELECTION_G0053
+        if(idx>=0)
+        {
+          setFirstTRefIdx (RefPicList(refListIdx), idx);
+        }
+#endif
       }
     }
     tempRefPicInListsFlag = getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0;
@@ -3271,6 +3292,16 @@ Void TComSlice::setDepthToDisparityLUTs()
   setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
 #endif
 
+#if MTK_DDD_G0063
+  if( getIsDepth() && getViewIndex() > 0 )
+  {
+      TComSlice *pcTextSlice = getTexturePic()->getSlice( 0 );
+      memcpy( m_aiDDDInvScale, pcTextSlice->m_aiDDDInvScale, sizeof( Int ) * getViewIndex() );
+      memcpy( m_aiDDDInvOffset, pcTextSlice->m_aiDDDInvOffset, sizeof( Int ) * getViewIndex() );
+      memcpy( m_aiDDDShift, pcTextSlice->m_aiDDDShift, sizeof( Int ) * getViewIndex() );             
+  }  
+#endif 
+
   if( !setupLUT )
     return; 
 
@@ -3318,10 +3349,76 @@ Void TComSlice::setDepthToDisparityLUTs()
       Int invOffset = ( invCodOffset[ i ] << g_bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
       m_depthToDisparityF[ i ][ d ] = ( invCodScale[ i ] * d + invOffset ) >> log2Div; 
     }
+
+#if MTK_DDD_G0063
+    InitializeDDDPara( vps->getCamParPrecision(), codScale[ i ], codOffset[ i ], i );
+#endif
   }
 }
 #endif
 #endif
+
+#if MTK_DDD_G0063
+Void TComSlice::InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx )
+{
+    UInt uiViewId     = getViewIndex();
+
+    if( uiViewId == 0 )
+    {
+        m_aiDDDInvScale[ iBaseViewIdx ] = m_aiDDDInvOffset[ iBaseViewIdx ] = m_aiDDDShift[ iBaseViewIdx ] = 0;
+        return;
+    }
+
+
+    Int iSign = iCodedScale >= 0 ? 1 : -1;
+    iCodedScale = abs( iCodedScale );
+
+    Int iBitWidth = 0;
+
+    const Int iInvPres = 9;
+
+    while( ((( 1 << iBitWidth ) << 1 ) <= iCodedScale ) )
+    {
+        iBitWidth ++;
+    }
+    iBitWidth += iInvPres;
+    Int iTargetValue =  1 << iBitWidth;
+
+    Int iMinError = MAX_INT;
+    Int iBestD = 1 << ( iInvPres - 1 );
+    for( Int d = 1 << ( iInvPres - 1 ); d < ( 1 << iInvPres ); d++ )
+    {
+        Int iError = abs( iCodedScale * d - iTargetValue );
+        if( iError < iMinError )
+        {
+            iMinError = iError;
+            iBestD = d;
+        }
+        if( iMinError == 0 )
+        {
+            break;
+        }
+    }
+    Int iRoundingDir = 0;
+    if( iCodedScale * iBestD > iTargetValue )
+    {
+        iRoundingDir = -1;
+    }
+    else if( iCodedScale * iBestD < iTargetValue )
+    {
+        iRoundingDir = 1;
+    }
+    Int iCamPres = uiCamParsCodedPrecision - 1;
+    m_aiDDDInvScale [ iBaseViewIdx ] = ( iBestD << ( iCamPres + g_bitDepthY )) * iSign;
+    m_aiDDDInvOffset[ iBaseViewIdx ] = -iSign * iBestD * ( iCodedOffset << g_bitDepthY );
+    m_aiDDDShift    [ iBaseViewIdx ] = iBitWidth;
+    m_aiDDDInvOffset[ iBaseViewIdx ] += 1 << ( m_aiDDDShift[ iBaseViewIdx ] - 1 );
+    m_aiDDDInvOffset[ iBaseViewIdx ] += ( 1 << ( m_aiDDDShift[ iBaseViewIdx ] - 4 ) ) * iRoundingDir;
+
+    return;
+}
+#endif
+
 /** get scaling matrix from RefMatrixID
  * \param sizeId size index
  * \param Index of input matrix

@@ -137,8 +137,16 @@ public:
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if H_3D_INTER_SDC
+#if QC_SDC_UNIFY_G0130
+  Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+  Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#else
   Void codeInterSDCFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#endif
+#endif
+#if H_3D_DBBP
+  Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );

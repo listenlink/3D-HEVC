@@ -782,6 +782,9 @@ private:
   Int         m_iSubPULog2Size           [MAX_NUM_LAYERS   ];
 #endif
 #endif
+#if QC_SPIVMP_MPI_G0119
+  Int         m_iSubPUMPILog2Size;
+#endif
 #if H_3D_VSP
   Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ];
 #endif
@@ -800,6 +803,9 @@ private:
 #endif
 #if H_3D_INTER_SDC
   Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
+#endif
+#if H_3D_DBBP
+  Bool        m_dbbpFlag[MAX_NUM_LAYERS];
 #endif
 #if H_3D_IV_MERGE
   Bool        m_bMPIFlag[MAX_NUM_LAYERS   ];
@@ -951,7 +957,7 @@ public:
   Bool    getOutputLayerFlag( Int outLayerSetIdx, Int i )                  { return m_outputLayerFlag[ outLayerSetIdx ][ i ]; } 
   Bool    inferOutputLayerFlag( Int layerSetIdx, Int i )                   { return ( getDefaultOneTargetOutputLayerIdc( ) == 0 || ( ( getDefaultOneTargetOutputLayerIdc( ) == 1 ) && ( i == m_layerSetLayerIdList[layerSetIdx].size() - 1  ) ));  }
 
-  Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx  = val ]; }
+  Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx ] = val; }
   Int     getProfileLevelTierIdx( Int outLayerSetIdx )                     { return m_profileLevelTierIdx[ outLayerSetIdx ]; } 
   Void    setAltOutputLayerFlag( Bool flag )                               { m_altOutputLayerFlag = flag; } 
   Bool    getAltOutputLayerFlag(  )                                        { return m_altOutputLayerFlag; } 
@@ -1057,6 +1063,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
   Void    setSubPULog2Size(Int layerIdInVps, Int u)    { m_iSubPULog2Size[layerIdInVps] = u;}
 #endif
 #endif
+#if QC_SPIVMP_MPI_G0119
+  Int     getSubPUMPILog2Size( )           { return m_iSubPUMPILog2Size; }
+  Void    setSubPUMPILog2Size( Int u )     { m_iSubPUMPILog2Size = u;    }
+#endif
 #if H_3D_VSP
   Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }
   Bool    getViewSynthesisPredFlag  ( Int layerIdInVps )            { return m_viewSynthesisPredFlag[ layerIdInVps ]; }; 
@@ -1073,6 +1083,10 @@ Int     getProfileLevelTierIdxLen()                                      { retur
 #if H_3D_INTER_SDC
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
+#endif
+#if H_3D_DBBP
+  Bool getUseDBBP              ( Int layerIdInVps )         { return m_dbbpFlag[layerIdInVps]; }
+  Void setUseDBBP              ( Int layerIdInVps, Bool bval ){ m_dbbpFlag[layerIdInVps] = bval; }
 #endif
 #if H_3D_IV_MERGE
   Bool    getMPIFlag      ( Int layerIdInVps )           { return m_bMPIFlag[layerIdInVps]; }
@@ -2054,6 +2068,13 @@ private:
   Int**      m_depthToDisparityF; 
 #endif
 #endif
+
+#if MTK_DDD_G0063
+  Int          m_aiDDDInvScale [MAX_NUM_LAYERS];
+  Int          m_aiDDDInvOffset[MAX_NUM_LAYERS];
+  UInt         m_aiDDDShift    [MAX_NUM_LAYERS];
+#endif
+
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -2400,6 +2421,15 @@ public:
   Void     setRefPicSetInterLayer       ( std::vector<TComPic*>* refPicSetInterLayer0, std::vector<TComPic*>* refPicSetInterLayer1);
   TComPic* getPicFromRefPicSetInterLayer( Int setIdc, Int layerId );
 #endif
+
+#if MTK_DDD_G0063
+  Void InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
+  Int  getDepthFromDV( Int iDV, Int iBaseViewIdx )
+  {
+      return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
+  }
+#endif
+
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,
                          Int                 poc);

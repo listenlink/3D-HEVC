@@ -130,6 +130,9 @@ protected:
   Int                    m_iSubPULog2Size;                    
 #endif
 #endif
+#if QC_SPIVMP_MPI_G0119
+  Int                    m_iSubPUMPILog2Size;                    
+#endif
 #if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
   UInt                   m_uiUseAdvResPred;
   UInt                   m_uiARPStepNum;
@@ -487,6 +490,9 @@ protected:
 #endif
 #if H_3D_INTER_SDC
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
+#endif
+#if H_3D_DBBP
+  Bool      m_bUseDBBP;                                     ///< flag for depth-based block partitioning
 #endif
 #if H_3D_IV_MERGE
   Bool m_bMPIFlag;                                           ///< flag for MPI of depth map coding

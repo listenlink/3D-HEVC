@@ -512,12 +512,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D_SPIVMP
   ("SubPULog2Size", m_iSubPULog2Size, (Int)3, "Sub-PU size index: 2^n")
 #endif
-
+#if QC_SPIVMP_MPI_G0119
+  ("SubPUMPILog2Size", m_iSubPUMPILog2Size, (Int)3, "Sub-PU MPI size index: 2^n")
+#endif
 #if H_3D_IC
   ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
 #endif
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
+#endif
+#if H_3D_DBBP
+  ("DBBP",                     m_bUseDBBP,   true, "Enable depth-based block partitioning" )
 #endif
 #if H_3D_IV_MERGE
   ("MPI",                      m_bMPIFlag,        true, "Enable MPI")
@@ -1512,9 +1517,18 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( ( 0 != m_uiUseAdvResPred ) &&  ( 1 != m_uiUseAdvResPred ), "UseAdvResPred must be 0 or 1." );
 #endif
 #if H_3D_SPIVMP
+#if SEC_SPIVMP_MCP_SIZE_G0077
+  xConfirmPara( m_iSubPULog2Size < 3,                                        "SubPULog2Size must be 3 or greater.");
+#else
   xConfirmPara( m_iSubPULog2Size < 2,                                        "SubPULog2Size must be 2 or greater.");
+#endif
   xConfirmPara( m_iSubPULog2Size > 6,                                        "SubPULog2Size must be 6 or smaller.");
   xConfirmPara( (1<<m_iSubPULog2Size) > m_uiMaxCUWidth,                      "SubPULog2Size must be log2(maxCUSize) or smaller.");
+#endif
+#if QC_SPIVMP_MPI_G0119
+  xConfirmPara( m_iSubPUMPILog2Size < 3,                                        "SubPUMPILog2Size must be 3 or greater.");
+  xConfirmPara( m_iSubPUMPILog2Size > 6,                                        "SubPUMPILog2Size must be 6 or smaller.");
+  xConfirmPara( ( 1 << m_iSubPUMPILog2Size ) > m_uiMaxCUWidth,                  "SubPUMPILog2Size must be log2(maxCUSize) or smaller.");
 #endif
 #if ADAPTIVE_QP_SELECTION
 #if H_MV
@@ -2473,11 +2487,14 @@ Void TAppEncCfg::xPrintParameter()
   printf(" SubPULog2Size:%d  " , m_iSubPULog2Size  );
 #endif
 #endif
+#if QC_SPIVMP_MPI_G0119
+  printf(" SubPUMPILog2Size:%d  " , m_iSubPUMPILog2Size  );
+#endif
 #if H_3D_ARP
   printf(" ARP:%d  ", m_uiUseAdvResPred  );
 #endif
 #if H_3D_IC
-  printf( "IlluCompEnable: %d ", m_abUseIC);
+  printf( "IlluCompEnable:%d ", m_abUseIC);
 #endif
 #if H_3D_NBDV_REF
   printf("DepthRefinement:%d ", m_depthRefinementFlag );  
@@ -2494,10 +2511,13 @@ Void TAppEncCfg::xPrintParameter()
   printf("DLT:%d ", m_useDLT );
 #endif
 #if H_3D_INTER_SDC
-  printf( "interSDC: %d ", m_bDepthInterSDCFlag ? 1 : 0 );
+  printf( "interSDC:%d ", m_bDepthInterSDCFlag ? 1 : 0 );
+#endif
+#if H_3D_DBBP
+  printf("DBBP:%d ", m_bUseDBBP ? 1 : 0);
 #endif
 #if H_3D_IV_MERGE
-  printf( "MPI: %d ", m_bMPIFlag ? 1 : 0 );
+  printf( "MPI:%d ", m_bMPIFlag ? 1 : 0 );
 #endif
   printf("\n\n");  
 

@@ -96,21 +96,39 @@
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
 
 #if H_3D_ARP
+#if MTK_ARP_FLAG_CABAC_SIMP_G0061
+#define NUM_ARPW_CTX                  3       ///< number of context models for weighting factor index used by advanced residual prediction
+#else
 #define NUM_ARPW_CTX                  4       ///< number of context models for weighting factor index used by advanced residual prediction
+#endif
 #endif
 
 #if H_3D_IC
+#if MTK_IC_FLAG_CABAC_SIMP_G0061
+#define NUM_IC_FLAG_CTX               1       ///< number of context models for illumination compensation flag
+#else
 #define NUM_IC_FLAG_CTX               3       ///< number of context models for illumination compensation flag
+#endif
 #endif
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 #if H_3D_DIM
+#if QC_GENERIC_SDC_G0122
+#define NUM_DEPTH_INTRA_MODE_CTX      1       ///< number of context models for depth intra modes
+#else
 #define NUM_DEPTH_INTRA_MODE_CTX      8       ///< number of context models for depth intra modes
+#endif
 #define NUM_DDC_FLAG_CTX              2       ///< number of context models for deltaDC flag (DMM or RBC)
 #define NUM_DDC_DATA_CTX              1       ///< number of context models for deltaDC data (DMM or RBC)
 #if H_3D_DIM_DMM
 #define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
+#endif
+#if QC_GENERIC_SDC_G0122
+#define NUM_ANGLE_FLAG_CTX            3
+#if !QC_SDC_UNIFY_G0130
+#define NUM_INTRASDC_FLAG_CTX         3
+#endif
 #endif
 #endif
 
@@ -119,10 +137,17 @@
 #define SDC_NUM_RESIDUAL_CTX             1
 #endif
 
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
 #define NUM_INTER_SDC_FLAG_CTX        1      ///< number of context models for inter SDC flag
 #define NUM_INTER_SDC_SIGN_FLAG_CTX   1      ///< number of context models for sign of inter SDC residual
 #define NUM_INTER_SDC_RESIDUAL_CTX    1      ///< number of context models for abs of inter SDC residual
+#endif
+
+#if QC_SDC_UNIFY_G0130
+#define NUM_SDC_FLAG_CTX              1      ///< number of context 
+#endif
+#if H_3D_DBBP
+#define DBBP_NUM_FLAG_CTX                 1
 #endif
 // ====================================================================================================================
 // Tables
@@ -363,6 +388,15 @@ INIT_TRANSFORMSKIP_FLAG[3][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
 };
 
 #if H_3D_ARP
+#if MTK_ARP_FLAG_CABAC_SIMP_G0061
+static const UChar 
+INIT_ARPW[3][NUM_ARPW_CTX] = 
+{
+    { 162, 153, 162 },
+    { 162, 153, 162 },
+    { 162, 153, 162 },
+};
+#else
 static const UChar 
 INIT_ARPW[3][NUM_ARPW_CTX] = 
 {
@@ -371,8 +405,17 @@ INIT_ARPW[3][NUM_ARPW_CTX] =
     { 162, 153, 154, 162 },
 };
 #endif
-
+#endif
 #if H_3D_IC
+#if MTK_IC_FLAG_CABAC_SIMP_G0061
+static const UChar 
+INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
+{
+    { 154 },
+    { 154 },
+    { 154 },
+};
+#else
 static const UChar 
 INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
 {
@@ -381,7 +424,17 @@ INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =
     { 154,  154,  154, },
 };
 #endif
+#endif
 #if H_3D_DIM
+#if QC_GENERIC_SDC_G0122
+static const UChar
+INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
+{
+  { 154, },
+  { 154, },
+  { 154, }
+};
+#else
 static const UChar
 INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
 {
@@ -389,6 +442,26 @@ INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
     {0, 64,   0, 183, CNU, 108,   0, 0},
     {64, 0, CNU, CNU, 168, 109,   0, 0}
 };
+#endif
+
+#if QC_GENERIC_SDC_G0122
+static const UChar 
+INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
+{
+  { 154, 155, 156 },
+  { 141, 185, 214 },
+  { 155, 170, 157 },
+};
+#if !QC_SDC_UNIFY_G0130
+static const UChar 
+INIT_INTRASDC_FLAG[3][NUM_INTRASDC_FLAG_CTX] =
+{
+  { 214, 229, 230 },
+  { 215, 202, 174 },
+  { 213, 201, 246 },
+};
+#endif
+#endif
 
 static const UChar 
 INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =
@@ -431,7 +504,7 @@ INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
 #endif
 #endif
 
-#if H_3D_INTER_SDC
+#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
 static const UChar 
 INIT_INTER_SDC_FLAG[3][NUM_INTER_SDC_FLAG_CTX] =
 {
@@ -457,6 +530,23 @@ INIT_INTER_SDC_RESIDUAL[3][NUM_INTER_SDC_RESIDUAL_CTX] =
 };
 #endif
 //! \}
+#if QC_SDC_UNIFY_G0130
+static const UChar 
+INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
+{
+  { 154 },  
+  { 154 },
+  { 154 },
+};
+#endif
 
+#if H_3D_DBBP
+static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
+{
+  { CNU },
+  { CNU },
+  { CNU },
+};
+#endif
 
 #endif
