@@ -300,18 +300,6 @@ protected:
 #if KWU_RC_VIEWRC_E0227
   Bool      m_bViewWiseRateCtrl;
 #endif
-#else
-  Bool      m_enableRateCtrl;                                ///< Flag for using rate control algorithm
-  Int       m_targetBitrate;                                 ///< target bitrate
-  Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be divided by the NumLCUInUnit
-
-#if KWU_RC_MADPRED_E0227
-  UInt       m_depthMADPred;
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      m_bViewWiseRateCtrl;
-#endif
-#endif
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
   Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
 #if H_MV
@@ -828,23 +816,6 @@ public:
 #if KWU_RC_VIEWRC_E0227
   Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
   Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
-#endif
-#else
-  Bool      getUseRateCtrl    ()                { return m_enableRateCtrl;    }
-  Void      setUseRateCtrl    (Bool flag)       { m_enableRateCtrl = flag;    }
-  Int       getTargetBitrate  ()                { return m_targetBitrate;     }
-  Void      setTargetBitrate  (Int target)      { m_targetBitrate  = target;  }
-  Int       getNumLCUInUnit   ()                { return m_numLCUInUnit;      }
-  Void      setNumLCUInUnit   (Int numLCUs)     { m_numLCUInUnit   = numLCUs; }
-
-#if KWU_RC_MADPRED_E0227
-  UInt      getUseDepthMADPred    ()                { return m_depthMADPred;        }
-  Void      setUseDepthMADPred    (UInt b)          { m_depthMADPred    = b;        }
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
-  Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
-#endif
 #endif
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }

@@ -335,12 +335,16 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
         Int ry = (iCUAddr / uiWidthInLCUs);
         if(ry > 0)
         {
+          aboveMergeAvail = rpcPic->getSAOMergeAvailability(iCUAddr, iCUAddr-uiWidthInLCUs);
       }
 
         pcSbacDecoder->parseSAOBlkParam( saoblkParam, sliceEnabled, leftMergeAvail, aboveMergeAvail);
     }
       else 
         {
+        saoblkParam[SAO_Y ].modeIdc = SAO_MODE_OFF;
+        saoblkParam[SAO_Cb].modeIdc = SAO_MODE_OFF;
+        saoblkParam[SAO_Cr].modeIdc = SAO_MODE_OFF;
       }
     }
     m_pcCuDecoder->decodeCU     ( pcCU, uiIsLast );

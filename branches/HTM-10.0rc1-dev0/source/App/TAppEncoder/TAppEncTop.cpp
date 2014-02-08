@@ -1096,6 +1096,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       rateStatsAccum(au, stats);   
     }
   }
+#endif
 }
   
 /**
@@ -1854,5 +1855,4 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
   dlt.setNumDepthViews ( iNumDepthViews  );
 }
 #endif
-
 //! \}
