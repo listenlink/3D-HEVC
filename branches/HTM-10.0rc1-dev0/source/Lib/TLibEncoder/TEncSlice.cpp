@@ -392,6 +392,26 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
 
   // store lambda
   m_pcRdCost ->setLambda( dLambda );
+
+#if H_3D_VSO
+  m_pcRdCost->setUseLambdaScaleVSO  ( (m_pcCfg->getUseVSO() ||  m_pcCfg->getForceLambdaScaleVSO()) && m_pcCfg->getIsDepth() );
+  m_pcRdCost->setLambdaVSO          ( dLambda * m_pcCfg->getLambdaScaleVSO() );
+
+  // Should be moved to TEncTop
+  
+  // SAIT_VSO_EST_A0033
+  m_pcRdCost->setDisparityCoeff( m_pcCfg->getDispCoeff() );
+
+  // LGE_WVSO_A0119
+  if( m_pcCfg->getUseWVSO() && m_pcCfg->getIsDepth() )
+  {
+    m_pcRdCost->setDWeight  ( m_pcCfg->getDWeight()   );
+    m_pcRdCost->setVSOWeight( m_pcCfg->getVSOWeight() );
+    m_pcRdCost->setVSDWeight( m_pcCfg->getVSDWeight() );
+  }
+
+#endif
+
 // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
   Double weight[2] = { 1.0, 1.0 };
