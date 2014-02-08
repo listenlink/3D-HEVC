@@ -6043,10 +6043,7 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
     //----- determine rate and r-d cost -----
     UInt uiBits = 0;
     TComYuv *pDummy = NULL;
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
-    }
+    m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
 
     xAddSymbolBitsInter( pcCU, 0, 0, uiBits, pDummy, NULL, pDummy );
 
@@ -6065,10 +6062,7 @@ Void TEncSearch::encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU, TComYuv* pcOrg,
     pcCU->getTotalDistortion() = ruiDist;
     pcCU->getTotalCost()       = rdCost;
 
-    if( m_bUseSBACRD )
-    {
-      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
-    }
+    m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
   }
 
 #if H_3D_VSO // necessary? // M15

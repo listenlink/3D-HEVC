@@ -824,16 +824,6 @@ Void TAppEncTop::encode()
       }
     }
 
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_FIX_URQ
-    for(Int layer=0; layer < m_numberOfLayers; layer++ )
-    {
-      if(m_acTEncTopList[layer]->getUseRateCtrl()  && !m_acTEncTopList[layer]->getIsDepth())
-      {
-        m_acTEncTopList[layer]->getRateCtrl()->updateRCGOPStatus();
-      }
-    }
-#endif
-
     gopSize = maxGopSize;
   }
   for(Int layer=0; layer < m_numberOfLayers; layer++ )
@@ -1095,8 +1085,8 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
       rateStatsAccum(au, stats);   
     }
-  }
 #endif
+  }
 }
   
 /**

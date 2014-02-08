@@ -1804,7 +1804,9 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
   {
     memset( mergeCandBuffer, 0, MRG_MAX_NUM_CANDS_MEM*sizeof(Int) );
     rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uhDepth ); // interprets depth relative to LCU level
+#if !UPDATE_HM13
     rpcTempCU->setCUTransquantBypassSubParts( m_pcEncCfg->getCUTransquantBypassFlagValue(), 0, uhDepth );
+#endif
     rpcTempCU->setARPWSubParts( (UChar)nARPW , 0 , uhDepth );
 #if H_3D_IC
     rpcTempCU->setICFlagSubParts( bICFlag, 0, 0, uhDepth );
@@ -1991,7 +1993,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
             {
               if( rpcTempCU != rpcTempCUPre )
               {
-                rpcTempCU->initEstData( uhDepth, orgQP );
+                rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag  );
                 rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
               }
               rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
@@ -2021,7 +2023,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #else
             if( rpcTempCU != rpcTempCUPre )
             {
-              rpcTempCU->initEstData( uhDepth, orgQP );
+              rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag  );
               rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
             }
             rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
@@ -2120,6 +2122,12 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize )
 #endif
 {
+
+#if UPDATE_HM13
+#if H_3D
+  const Bool bTransquantBypassFlag = rpcTempCU->getCUTransquantBypass(0);
+#endif
+#endif
 #if  H_3D_FAST_TEXTURE_ENCODING
   if(!(bFMD && (ePartSize == SIZE_2Nx2N)))  //have  motion estimation or merge check
   {
@@ -2143,7 +2151,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   {
     if( bFirstTime == false && rpcTempCU->getSlice()->getVPS()->getUseAdvRP( iLayerId ) )
     {
+#if UPDATE_HM13
+      rpcTempCU->initEstData( rpcTempCU->getDepth(0), rpcTempCU->getQP(0),bTransquantBypassFlag );      
+#else
       rpcTempCU->initEstData( rpcTempCU->getDepth(0), rpcTempCU->getQP(0) );
+#endif
     }
 #endif
 #if H_3D_VSO // M3
@@ -2257,7 +2269,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       if( rpcTempCU != rpcTempCUPre )
       {
         Int orgQP = rpcBestCU->getQP( 0 );
+#if UPDATE_HM13
+        rpcTempCU->initEstData( uhDepth, orgQP ,bTransquantBypassFlag );      
+#else
         rpcTempCU->initEstData( uhDepth, orgQP );
+#endif
         rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
       }
       rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
