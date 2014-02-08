@@ -550,6 +550,13 @@ enum SliceConstraint
   FIXED_NUMBER_OF_TILES  = 3,          ///< slices / slice segments span an integer number of tiles
 };
 
+enum SAOComponentIdx
+{
+  SAO_Y =0,
+  SAO_Cb,
+  SAO_Cr,
+  NUM_SAO_COMPONENTS
+};
 
 enum SAOMode //mode
 {

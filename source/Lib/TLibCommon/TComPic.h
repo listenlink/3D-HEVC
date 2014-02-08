@@ -191,6 +191,7 @@ public:
   Window&       getConformanceWindow()  { return m_conformanceWindow; }
   Window&       getDefDisplayWindow()   { return m_defaultDisplayWindow; }
 
+  Bool          getSAOMergeAvailability(Int currAddr, Int mergeAddr);
 
   /* field coding parameters*/
 

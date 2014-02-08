@@ -122,6 +122,8 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
     m_puiCUOrderMap[i] = i;
     m_puiInverseCUOrderMap[i] = i;
   }
+
+  m_saoBlkParams = new SAOBlkParam[m_uiNumCUsInFrame];
 }
 
 Void TComPicSym::destroy()

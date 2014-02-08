@@ -285,7 +285,6 @@ protected:
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
 
   // coding tools (encoder-only parameters)
-  Bool      m_bUseSBACRD;                                     ///< flag for using RD optimization based on SBAC
   Bool      m_bUseASR;                                        ///< flag for using adaptive motion search range
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
@@ -383,19 +382,6 @@ protected:
 #endif
 #if KWU_RC_MADPRED_E0227
   UInt       m_depthMADPred;
-#endif
-#else
-  Bool      m_enableRateCtrl;                                   ///< Flag for using rate control algorithm
-  Int       m_targetBitrate;                                 ///< target bitrate
-  Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be completely divided by the NumLCUInUnit
-
-#if KWU_RC_VIEWRC_E0227
-  vector<Int>     m_viewTargetBits;
-  Bool      m_viewWiseRateCtrl;                              ///< Flag for using view-wise rate control
-#endif
-#if KWU_RC_MADPRED_E0227
-  UInt       m_depthMADPred;
-#endif
 #endif
   Int       m_useScalingListId;                               ///< using quantization matrix
   Char*     m_scalingListFile;                                ///< quantization matrix file name

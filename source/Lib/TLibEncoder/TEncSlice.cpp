@@ -563,6 +563,7 @@ Void TEncSlice::resetQP( TComPic* pic, Int sliceQP, Double lambda )
   weight[1] = pow( 2.0, (sliceQP-g_aucChromaScale[qpc])/3.0 );  // takes into account of the chroma qp mapping and chroma qp Offset
   m_pcRdCost->setCrDistortionWeight(weight[1]);
 
+  const Double lambdaArray[3] = {lambda, (lambda / weight[0]), (lambda / weight[1])};
 
 #if RDOQ_CHROMA_LAMBDA 
   // for RDOQ

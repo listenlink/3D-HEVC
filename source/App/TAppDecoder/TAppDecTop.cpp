@@ -278,7 +278,6 @@ Void TAppDecTop::decode()
            *     (but bNewPicture doesn't happen then) */
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
-#if ENC_DEC_TRACE
 #if H_MV_ENC_DEC_TRAC
           const Bool resetCounter = false; 
           if ( resetCounter )
@@ -289,9 +288,6 @@ Void TAppDecTop::decode()
           {
             g_disableHLSTrace = true;     // Trancing of second parsing of SH is not carried out
           }          
-#else
-          g_nSymbolCounter = symCount;
-#endif
 #endif
         }
       }

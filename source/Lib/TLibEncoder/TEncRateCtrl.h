@@ -325,9 +325,6 @@ private:
 
   TRCLCU* m_LCUs;
   Int m_picActualHeaderBits;    // only SH and potential APS
-#if !M0036_RC_IMPROVEMENT
-  Double m_totalMAD;
-#endif
   Double m_totalCostIntra; 
   Double m_remainingCostIntra;
   Int m_picActualBits;          // the whole picture, including header
