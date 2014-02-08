@@ -164,7 +164,7 @@ Void TAppDecTop::decode()
 
   Bool firstSlice        = true; 
 #endif
-  Bool loopFiltered = false;
+  Bool loopFiltered      = false;
 
   while (!!bitstreamFile)
   {
@@ -296,17 +296,16 @@ Void TAppDecTop::decode()
     }
     if (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS )
     {
-#if H_MV
-      assert( decIdxLastPic != -1 ); 
-      // TODO add loop filtered variable here
-      m_tDecTop[decIdxLastPic]->endPicDecoding(poc, pcListPic, m_targetDecLayerIdSet );
-#else
       if (!loopFiltered || bitstreamFile)
       {
+#if H_MV
+        assert( decIdxLastPic != -1 ); 
+        m_tDecTop[decIdxLastPic]->endPicDecoding(poc, pcListPic, m_targetDecLayerIdSet );
+#else
         m_cTDecTop.executeLoopFilters(poc, pcListPic);
+#endif
       }
       loopFiltered = (nalu.m_nalUnitType == NAL_UNIT_EOS);
-#endif
     }
 #if H_3D
     if ( allLayersDecoded || !bitstreamFile )
