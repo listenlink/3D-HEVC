@@ -150,7 +150,6 @@ public:
 
 #if RDOQ_CHROMA_LAMBDA 
   Void setLambdas ( const Double lambdas[3] ) { for (Int component = 0; component < 3; component++) m_lambdas[component] = lambdas[component]; }
-  Void setLambda(Double dLambdaLuma, Double dLambdaChroma) { m_dLambdaLuma = dLambdaLuma; m_dLambdaChroma = dLambdaChroma; }
   Void selectLambda(TextType eTType) { m_dLambda = (eTType == TEXT_LUMA) ? m_lambdas[0] : ((eTType == TEXT_CHROMA_U) ? m_lambdas[1] : m_lambdas[2]); }
 #else
   Void setLambda(Double dLambda) { m_dLambda = dLambda;}

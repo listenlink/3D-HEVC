@@ -54,7 +54,7 @@
 */
 
 #ifndef HEVC_EXT
-#define HEVC_EXT                    2
+#define HEVC_EXT                    0
 #endif
 
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )

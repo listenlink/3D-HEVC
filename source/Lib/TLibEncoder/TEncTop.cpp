@@ -600,7 +600,7 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
   m_iNumPicRcvd = 0;
   m_uiNumAllPicCoded += iNumEncoded;
 }
-
+#endif
 // ====================================================================================================================
 // Protected member functions
 // ====================================================================================================================
