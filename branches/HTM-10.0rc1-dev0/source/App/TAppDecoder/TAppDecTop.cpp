@@ -279,6 +279,7 @@ Void TAppDecTop::decode()
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
 #if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
           const Bool resetCounter = false; 
           if ( resetCounter )
           {
@@ -287,7 +288,8 @@ Void TAppDecTop::decode()
           else
           {
             g_disableHLSTrace = true;     // Trancing of second parsing of SH is not carried out
-          }          
+          }      
+#endif
 #endif
         }
       }
