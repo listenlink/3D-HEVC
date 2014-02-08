@@ -326,10 +326,10 @@ Int  g_bitDepthC = 8;
 UInt g_uiPCMBitDepthLuma     = 8;    // PCM bit-depth
 UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
 
+#if H_3D_DIM_DMM
 // ====================================================================================================================
 // Depth coding modes
 // ====================================================================================================================
-#if H_3D_DIM_DMM
 const WedgeResolution g_dmmWedgeResolution[6] = 
 {
   HALF_PEL,    //   4x4

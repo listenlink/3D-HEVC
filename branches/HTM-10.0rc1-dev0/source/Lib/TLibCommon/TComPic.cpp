@@ -110,8 +110,8 @@ Void TComPic::create( Int iWidth, Int iHeight, UInt uiMaxWidth, UInt uiMaxHeight
   /* store number of reorder pics with picture */
   memcpy(m_numReorderPics, numReorderPics, MAX_TLAYER*sizeof(Int));
 
-  /* initialize the texture to depth reference status */
 #if H_3D_FCO
+/* initialize the texture to depth reference status */
   for (int j=0; j<2; j++)
   {
       for (int i=0; i<MAX_NUM_REF; i++)

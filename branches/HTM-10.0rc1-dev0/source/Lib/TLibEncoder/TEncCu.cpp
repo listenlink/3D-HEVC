@@ -422,7 +422,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   // get Original YUV data from picture
   m_ppcOrigYuv[uiDepth]->copyFromPicYuv( pcPic->getPicYuvOrg(), rpcBestCU->getAddr(), rpcBestCU->getZorderIdxInCU() );
 
-  // variables for fast encoder decision
 #if H_3D_QTLPC  
   Bool    bTrySplit     = true;
   Bool    bTrySplitDQP  = true;
@@ -622,7 +621,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if  H_3D_FAST_TEXTURE_ENCODING
           xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode  );//by Competition for inter_2Nx2N
 #else
-          xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bIsLosslessMode  );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode  );//by Competition for inter_2Nx2N
+          xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
+          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );//by Competition for inter_2Nx2N
 #endif
 #if H_3D_VSP
           rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -650,7 +650,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if  H_3D_FAST_TEXTURE_ENCODING
             xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bFMD );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 #else
-            xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );  rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
+          xCheckRDCostInter( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
+          rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
 #endif
 #if H_3D_VSP
             rpcTempCU->setDvInfoSubParts(DvInfo, 0, uiDepth);
@@ -1875,7 +1876,6 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
           rpcTempCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, 0, 0, uhDepth );
 #endif
-
 #if MTK_DDD_G0063
           if( rpcTempCU->getSlice()->getIsDepth() && rpcTempCU->getSlice()->getViewIndex() != 0 && iDDDCand == uiMergeCand )
           {
@@ -1887,7 +1887,6 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
               rpcTempCU->setUseDDD( false, 0, 0, uhDepth );
           }
 #endif
-
 #if H_3D_SPIVMP
           rpcTempCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeCand], 0, 0, uhDepth);
           if (bSPIVMPFlag[uiMergeCand])
@@ -1895,11 +1894,8 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
             UInt uiSPAddr;
             Int iWidth = rpcTempCU->getWidth(0);
             Int iHeight = rpcTempCU->getHeight(0);
-
             Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
-
             rpcTempCU->getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
-
             for (Int iPartitionIdx = 0; iPartitionIdx < iNumSP; iPartitionIdx++)
             {
               rpcTempCU->getSPAbsPartIdx(0, iSPWidth, iSPHeight, iPartitionIdx, iNumSPInOneLine, uiSPAddr);
@@ -1917,7 +1913,6 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
             Int vspSize;
             Int width, height;
             rpcTempCU->getPartIndexAndSize( 0, partAddr, width, height );
-
             if( uhInterDirNeighbours[ uiMergeCand ] & 0x01 )
             {
               rpcTempCU->setMvFieldPUForVSP( rpcTempCU, partAddr, width, height, REF_PIC_LIST_0, cMvFieldNeighbours[ 2*uiMergeCand + 0 ].getRefIdx(), vspSize );
@@ -1936,16 +1931,17 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
             {
               rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
             }
-
             rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
           }
           else
-#endif
           {
+#endif
             rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
             rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
             rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
+#if NTT_STORE_SPDV_VSP_G0148
           }
+#endif
        // do MC
        m_pcPredSearch->motionCompensation ( rpcTempCU, m_ppcPredYuvTemp[uhDepth] );
        // estimate residual and encode everything
