@@ -287,7 +287,7 @@ Void TAppDecTop::decode()
           }
           else
           {
-            g_disableHLSTrace = true;     // Trancing of second parsing of SH is not carried out
+            g_disableHLSTrace = true;     // Tracing of second parsing of SH is not carried out
           }      
 #endif
 #endif

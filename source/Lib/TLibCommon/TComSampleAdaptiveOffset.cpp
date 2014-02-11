@@ -40,7 +40,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-
 //! \ingroup TLibCommon
 //! \{
 UInt g_saoMaxOffsetQVal[NUM_SAO_COMPONENTS];
