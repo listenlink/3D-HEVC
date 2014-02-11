@@ -371,10 +371,12 @@ Bool g_traceCU = true;
 Bool g_tracePU = true; 
 Bool g_traceTU = true; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter       = 48; 
+UInt64 g_stopAtCounter       = 0; 
 Bool g_traceCopyBack         = false; 
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
+Bool g_stopAtPos             = false; 
+Bool g_outputPos             = false; 
 #endif
 #endif
 // ====================================================================================================================
@@ -561,6 +563,46 @@ Int  g_eTTable[4] = {0,3,1,2};
 
 #if H_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
+Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight )
+{
+
+  if ( g_outputPos ) 
+  {
+    std::cout << "POC\t"        << poc 
+              << "\tLayerId\t"  << layerId 
+              << "\tCuPelX\t"   << cuPelX  
+              << "\tCuPelY\t"   << cuPelY 
+              << "\tCuWidth\t"  << cuWidth
+              << "\tCuHeight\t" << cuHeight
+              << std::endl; 
+  }
+
+  Bool stopFlag = false; 
+  if ( g_stopAtPos && poc == 0 && layerId == 4 )
+  {
+    Bool stopAtCU = true; 
+    if ( stopAtCU )        // Stop at CU with specific size
+    {    
+      stopFlag = ( cuPelX  == 16 ) && ( cuPelY  == 112 ) && ( cuWidth == 16 ) && ( cuHeight == 16); 
+    }
+    else
+    {                     // Stop at specific position 
+      Int xPos = 18; 
+      Int yPos = 112; 
+
+      Int cuPelXEnd = cuPelX + cuWidth  - 1; 
+      Int cuPelYEnd = cuPelY + cuHeight - 1; 
+
+      stopFlag = (cuPelX <= xPos ) && (cuPelXEnd >= xPos ) && (cuPelY <= yPos ) && (cuPelYEnd >= yPos ); 
+    }
+  }
+  
+  if ( stopFlag )
+  { // Set breakpoint here. 
+    std::cout << "Stop position. Break point here." << std::endl; 
+  }  
+}
+
 Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 

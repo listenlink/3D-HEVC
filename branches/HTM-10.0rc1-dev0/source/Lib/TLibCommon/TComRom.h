@@ -218,8 +218,10 @@ extern UInt64 g_nSymbolCounter;
  extern Bool   g_disableHLSTrace;       // USE g_HLSTraceEnable to toggle HLS trace. Not this one!
  extern UInt64 g_stopAtCounter;         // Counter to set breakpoint. 
  extern Bool   g_traceCopyBack;         // Output samples on copy back  
- extern Bool   g_decTraceDispDer; // Trace derived disparity vectors (decoder only) 
+ extern Bool   g_decTraceDispDer;       // Trace derived disparity vectors (decoder only) 
  extern Bool   g_decTraceMvFromMerge;   // Trace motion vectors obtained from merge (decoder only) 
+ extern Bool   g_stopAtPos;             // Stop at position
+ extern Bool   g_outputPos;             // Output position
 
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );
@@ -228,9 +230,9 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_PU_S(x)             writeToTraceFile( x,   g_tracePU );
 #define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
 
-
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
+ Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );
 #endif
 #else
 

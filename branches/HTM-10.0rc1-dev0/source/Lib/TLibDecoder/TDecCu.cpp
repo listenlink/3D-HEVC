@@ -36,7 +36,6 @@
 */
 
 #include "TDecCu.h"
-
 //! \ingroup TLibDecoder
 //! \{
 
@@ -638,7 +637,18 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   m_ppcYuvResi[uiDepth]->clear();
   
   m_ppcCU[uiDepth]->copySubCU( pcCU, uiAbsPartIdx, uiDepth );
-  
+
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+  stopAtPos  ( m_ppcCU[uiDepth]->getSlice()->getPOC(), 
+    m_ppcCU[uiDepth]->getSlice()->getLayerId(), 
+    m_ppcCU[uiDepth]->getCUPelX(),
+    m_ppcCU[uiDepth]->getCUPelY(),
+    m_ppcCU[uiDepth]->getWidth(0), 
+    m_ppcCU[uiDepth]->getHeight(0) );
+#endif
+#endif
+
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
     case MODE_INTER:
