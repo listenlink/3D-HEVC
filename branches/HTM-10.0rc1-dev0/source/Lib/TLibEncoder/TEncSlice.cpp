@@ -1456,10 +1456,10 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
       {
         m_pcBufferSbacCoders[uiTileCol].loadContexts( &pcSbacCoders[uiSubStrm] );
       }
-    }
 #if H_3D_QTLPC
     rpcPic->setReduceBitsFlag(false);
 #endif
+  }
   if( depSliceSegmentsEnabled )
   {
     if (m_pcCfg->getWaveFrontsynchro())
