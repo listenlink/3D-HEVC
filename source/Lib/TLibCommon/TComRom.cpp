@@ -578,17 +578,17 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
   }
 
   Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 0 && layerId == 4 )
+  if ( g_stopAtPos && poc == 0 && layerId == 1 )
   {
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 16 ) && ( cuPelY  == 112 ) && ( cuWidth == 16 ) && ( cuHeight == 16); 
+      stopFlag = ( cuPelX  == 888 ) && ( cuPelY  == 248 ) && ( cuWidth == 8 ) && ( cuHeight == 8); 
     }
     else
     {                     // Stop at specific position 
-      Int xPos = 18; 
-      Int yPos = 112; 
+      Int xPos = 888; 
+      Int yPos = 248; 
 
       Int cuPelXEnd = cuPelX + cuWidth  - 1; 
       Int cuPelYEnd = cuPelY + cuHeight - 1; 

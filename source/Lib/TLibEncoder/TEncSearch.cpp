@@ -5802,8 +5802,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       uiDistortionBest = uiDistortion;
       dCostBest        = dCost;
       qpBest           = qp;
-        m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
-      }
+      m_pcRDGoOnSbacCoder->store( m_pppcRDSbacCoder[ pcCU->getDepth( 0 ) ][ CI_TEMP_BEST ] );
     }
 #if H_3D_VSO // M21
     if( m_pcRdCost->getUseRenModel() && !m_pcRdCost->getUseEstimatedVSD() )
@@ -5813,7 +5812,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
       m_pcRdCost->setRenModelData( pcCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
     }
 #endif
-  
+  }
   assert ( dCostBest != MAX_DOUBLE );
   
   if( qpMin != qpMax && qpBest != qpMax )
