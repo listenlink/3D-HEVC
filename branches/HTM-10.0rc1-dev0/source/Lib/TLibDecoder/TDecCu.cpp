@@ -927,7 +927,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   }
 #endif
 
-#if UPDATE_HM13
+#if H_3D && UPDATE_HM13
   Bool useDltFlag = (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps());
 
   if ( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth ) || useDltFlag )
