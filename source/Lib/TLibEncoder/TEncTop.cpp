@@ -667,6 +667,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setSPSId( getLayerIdInVps() );
   m_cSPS.setLayerId( getLayerId() );
 #endif
+#if H_MV_HLS_7_VPS_P0048_14
+ // Code below needs to be moved to VPS
+#endif
   ProfileTierLevel& profileTierLevel = *m_cSPS.getPTL()->getGeneralPTL();
   profileTierLevel.setLevelIdc(m_level);
   profileTierLevel.setTierFlag(m_levelTier);
@@ -827,7 +830,17 @@ Void TEncTop::xInitPPS()
   }
   m_cPPS.setPPSId( getLayerIdInVps() );
   m_cPPS.setSPSId( getLayerIdInVps() );
+
+#if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION
+#if H_MV  
+  m_cPPS.setPpsExtensionTypeFlag          ( PPS_EX_T_MV ,true ); 
+#if H_3D
+  m_cPPS.setPpsExtensionTypeFlag          ( PPS_EX_T_3D ,true ); 
 #endif
+#endif
+#endif
+#endif
+
 #if H_3D
   m_cPPS.setDLT( getDLT() );
 #endif

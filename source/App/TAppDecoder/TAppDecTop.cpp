@@ -139,7 +139,9 @@ Void TAppDecTop::decode()
     m_pScaleOffsetFile = ::fopen( m_pchScaleOffsetFile, "wt" ); 
     AOF( m_pScaleOffsetFile ); 
   }
+#if !FIX_CAM_PARS_COLLECTOR
   m_cCamParsCollector.init( m_pScaleOffsetFile );
+#endif
 #endif
   InputByteStream bytestream(bitstreamFile);
 
@@ -206,7 +208,18 @@ Void TAppDecTop::decode()
     {
       read(nalu, nalUnit);
 #if H_MV      
+#if H_MV_FIX_VPS_LAYER_ID_NOT_EQUAL_ZERO
+      if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) 
+          || !isNaluWithinTargetDecLayerIdSet(&nalu)
+          || nalu.m_layerId > MAX_NUM_LAYER_IDS-1
+          || (nalu.m_nalUnitType == NAL_UNIT_VPS && nalu.m_layerId > 0)           
+#if H_MV_HLS_7_MISC_P0130_EOS
+          || (nalu.m_nalUnitType == NAL_UNIT_EOB && nalu.m_layerId > 0)           
+#endif
+         ) 
+#else
       if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu) || nalu.m_layerId > MAX_NUM_LAYER_IDS-1 ) 
+#endif
       {
         bNewPicture = false;
         if ( !bitstreamFile )
@@ -234,8 +247,25 @@ Void TAppDecTop::decode()
             m_targetOptLayerSetIdx = vps->getVpsNumLayerSetsMinus1(); 
           }
 
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+          if ( m_targetOptLayerSetIdx < 0 || m_targetOptLayerSetIdx >= vps->getNumOutputLayerSets() )
+          {
+            fprintf(stderr, "\ntarget output layer set index must be in the range of 0 to %d, inclusive \n", vps->getNumOutputLayerSets() - 1 );            
+            exit(EXIT_FAILURE);
+          }
+#endif
           m_targetDecLayerIdSet = vps->getTargetDecLayerIdList( m_targetOptLayerSetIdx ); 
         }
+
+#if FIX_CAM_PARS_COLLECTOR
+#if H_3D
+        if (nalu.m_nalUnitType == NAL_UNIT_VPS )
+        {        
+          
+          m_cCamParsCollector.init( m_pScaleOffsetFile, m_tDecTop[decIdx]->getPrefetchedVPS() );
+        }       
+#endif
+#endif
         bNewPicture       = ( newSliceDiffLayer || newSliceDiffPoc ) && !sliceSkippedFlag; 
         if ( nalu.isSlice() && firstSlice && !sliceSkippedFlag )        
         {

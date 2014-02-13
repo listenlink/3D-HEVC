@@ -365,6 +365,47 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   pcPPS->setSliceHeaderExtensionPresentFlag(uiCode);
 
   READ_FLAG( uiCode, "pps_extension_flag");
+#if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION
+  if (uiCode)
+  {
+#if H_MV
+    for ( Int i = 0; i < PPS_EX_T_MAX_NUM; i++ )
+    {
+      READ_FLAG( uiCode, "pps_extension_type_flag" ); pcPPS->setPpsExtensionTypeFlag( i, uiCode == 1 );
+#if H_3D
+      assert( !pcPPS->getPpsExtensionTypeFlag( i ) || i == PPS_EX_T_MV || i == PPS_EX_T_3D || i == PPS_EX_T_ESC ); 
+#else
+      assert( !pcPPS->getPpsExtensionTypeFlag( i ) || i == PPS_EX_T_MV || i == PPS_EX_T_ESC ); 
+#endif
+    }
+    
+
+    if( pcPPS->getPpsExtensionTypeFlag( PPS_EX_T_MV ) )
+    {
+#if H_MV_HLS7_GEN
+      READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
+#endif
+    }
+
+#if H_3D
+    if( pcPPS->getPpsExtensionTypeFlag( PPS_EX_T_3D ) ) // This probably needs to be aligned with Rext and SHVC
+    {
+      parsePPSExtension( pcPPS, pcVPS );
+    }
+#endif
+
+    if( pcPPS->getPpsExtensionTypeFlag( PPS_EX_T_ESC ) )
+    {
+#endif
+      while ( xMoreRbspData() )
+      {
+        READ_FLAG( uiCode, "pps_extension_data_flag");
+      }
+#if H_MV
+    }
+#endif
+  }
+#else
   if (uiCode)
   {
 #if H_3D
@@ -381,6 +422,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     }
 #endif
   }
+#endif
 }
 
 #if H_3D
@@ -806,6 +848,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   READ_UVLC( uiCode,    "log2_max_pic_order_cnt_lsb_minus4" );   pcSPS->setBitsForPOC( 4 + uiCode );
   assert(uiCode <= 12);
 
+#if H_MV_HLS_7_SPS_P0155_16_32
+  if ( pcSPS->getLayerId() == 0 ) 
+  {  
+#endif
   UInt subLayerOrderingInfoPresentFlag;
   READ_FLAG(subLayerOrderingInfoPresentFlag, "sps_sub_layer_ordering_info_present_flag");
   
@@ -841,6 +887,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
       break;
     }
   }
+#if H_MV_HLS_7_SPS_P0155_16_32
+  }
+#endif
 
   READ_UVLC( uiCode, "log2_min_coding_block_size_minus3" );
   Int log2MinCUSize = uiCode + 3;
@@ -1003,6 +1052,9 @@ Void TDecCavlc::parseSPSExtension( TComSPS* pcSPS )
     READ_SVLC( iCode, "scaled_ref_layer_top_offset" ); pcSPS->setScaledRefLayerTopOffset( j, iCode );
     READ_SVLC( iCode, "scaled_ref_layer_right_offset" ); pcSPS->setScaledRefLayerRightOffset( j, iCode );
     READ_SVLC( iCode, "scaled_ref_layer_bottom_offset" ); pcSPS->setScaledRefLayerBottomOffset( j, iCode );
+#if H_MV_HLS_7_RESERVED_FLAGS
+    READ_FLAG( uiCode, "sps_multilayer_ext_reserved_zero_flag[ i ]" );
+#endif
   }
 }
 
@@ -1038,7 +1090,9 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
   READ_CODE( 3,  uiCode,  "vps_max_sub_layers_minus1" );          pcVPS->setMaxTLayers( uiCode + 1 );
   READ_FLAG(     uiCode,  "vps_temporal_id_nesting_flag" );       pcVPS->setTemporalNestingFlag( uiCode ? true:false );
   assert (pcVPS->getMaxTLayers()>1||pcVPS->getTemporalNestingFlag());
-#if H_MV
+
+
+#if H_MV && !H_MV_HLS7_GEN
   READ_CODE( 16, uiCode,  "vps_extension_offset" );               
 #else
   READ_CODE( 16, uiCode,  "vps_reserved_ffff_16bits" );           assert(uiCode == 0xffff);
@@ -1153,10 +1207,13 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
 {
   UInt uiCode; 
   READ_FLAG( uiCode, "avc_base_layer_flag" );                     pcVPS->setAvcBaseLayerFlag( uiCode == 1 ? true : false );
-  READ_FLAG( uiCode, "vps_vui_present_flag" );                    pcVPS->setVpsVuiPresentFlag( uiCode == 1 );  if ( pcVPS->getVpsVuiPresentFlag() )
+#if !H_MV_HLS7_GEN
+  READ_FLAG( uiCode, "vps_vui_present_flag" );                    pcVPS->setVpsVuiPresentFlag( uiCode == 1 );
+  if ( pcVPS->getVpsVuiPresentFlag() )
   {  
   READ_CODE( 16, uiCode, "vps_vui_offset" );                      pcVPS->setVpsVuiOffset( uiCode );
   }
+#endif
 
   READ_FLAG( uiCode, "splitting_flag" );                          pcVPS->setSplittingFlag( uiCode == 1 ? true : false );
 
@@ -1232,7 +1289,7 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   READ_FLAG( uiCode, "vps_sub_layers_max_minus1_present_flag" ); pcVPS->setVpsSubLayersMaxMinus1PresentFlag( uiCode == 1 );
   if ( pcVPS->getVpsSubLayersMaxMinus1PresentFlag() )
   {
-    for (Int i = 0; i < pcVPS->getMaxLayersMinus1(); i++ )
+    for (Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
     {
       READ_CODE( 3, uiCode, "sub_layers_vps_max_minus1" ); pcVPS->setSubLayersVpsMaxMinus1( i, uiCode );    
       pcVPS->checkSubLayersVpsMaxMinus1( i ); 
@@ -1241,7 +1298,7 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   }  
   else
   {
-    for (Int i = 0; i < pcVPS->getMaxLayersMinus1(); i++ )
+    for (Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
     {
       pcVPS->setSubLayersVpsMaxMinus1( i, pcVPS->getMaxTLayers( ) - 1);    
     }
@@ -1263,26 +1320,47 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   }
 
   READ_FLAG( uiCode, "all_ref_layers_active_flag" );             pcVPS->setAllRefLayersActiveFlag( uiCode == 1 );
+#if !H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   READ_CODE( 10, uiCode, "vps_number_layer_sets_minus1"      );  pcVPS->setVpsNumberLayerSetsMinus1    ( uiCode ); 
-  READ_CODE( 6,  uiCode, "vps_num_profile_tier_level_minus1" );  pcVPS->setVpsNumProfileTierLevelMinus1( uiCode );
+#endif
 
+#if !H_MV_HLS7_GEN
+  READ_CODE( 6,  uiCode, "vps_num_profile_tier_level_minus1" );  pcVPS->setVpsNumProfileTierLevelMinus1( uiCode );
+#else
+  READ_UVLC( uiCode, "vps_num_profile_tier_level_minus1" );  pcVPS->setVpsNumProfileTierLevelMinus1( uiCode );  
+#endif
   for( Int i = 1; i <= pcVPS->getVpsNumProfileTierLevelMinus1(); i++ )
   {
     READ_FLAG(  uiCode, "vps_profile_present_flag[i]" );    pcVPS->setVpsProfilePresentFlag( i, uiCode == 1 );
+#if !H_MV_HLS_7_VPS_P0048_14
     if( !pcVPS->getVpsProfilePresentFlag( i ) )
     {
       READ_CODE( 6, uiCode, "profile_ref_minus1[i]" ); pcVPS->setProfileRefMinus1( i, uiCode );
       pcVPS->checkProfileRefMinus1( i );      
     }
+#endif
     parsePTL ( pcVPS->getPTL( i ), pcVPS->getVpsProfilePresentFlag( i ), pcVPS->getMaxTLayers()-1);
     if( !pcVPS->getVpsProfilePresentFlag( i ) )
     {
       TComPTL temp = *pcVPS->getPTL( i );
+#if H_MV_HLS_7_VPS_P0048_14
+      *pcVPS->getPTL( i ) = *pcVPS->getPTL( i - 1 );
+#else
       *pcVPS->getPTL( i ) = *pcVPS->getPTL( pcVPS->getProfileRefMinus1( i ) + 1 );
+#endif
       pcVPS->getPTL( i )->copyLevelFrom( &temp );
     }
   }
 
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+  READ_UVLC( uiCode, "num_add_output_layer_sets"      ); pcVPS->setNumAddOutputLayerSets( uiCode );
+  pcVPS->initTargetLayerIdLists( ); 
+  if( pcVPS->getNumOutputLayerSets() > 1)
+  {
+    READ_CODE( 2, uiCode, "default_target_output_layer_idc" ); pcVPS->setDefaultTargetOutputLayerIdc( std::min( uiCode, (UInt) 2 ) );    
+  }  
+
+#else
   Int numOutputLayerSets = pcVPS->getVpsNumberLayerSetsMinus1( ) + 1; 
 
   READ_FLAG( uiCode, "more_output_layer_sets_than_default_flag" ); pcVPS->setMoreOutputLayerSetsThanDefaultFlag( uiCode == 1 );
@@ -1298,14 +1376,42 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     READ_CODE( 2, uiCode, "default_one_target_output_layer_idc" ); pcVPS->setDefaultOneTargetOutputLayerIdc( uiCode );
     pcVPS->checkDefaultOneTargetOutputLayerIdc(); 
   }  
+#endif
 
   pcVPS->setOutputLayerFlag(0, 0, pcVPS->inferOutputLayerFlag( 0, 0 )); 
   pcVPS->setOutputLayerSetIdxMinus1(0, -1); 
+
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+  pcVPS->deriveTargetLayerIdList( 0 ); 
+  for( Int i = 1; i < pcVPS->getNumOutputLayerSets( ); i++ )
+  {
+    if( i > pcVPS->getVpsNumLayerSetsMinus1( ) )    
+#else
   for( Int i = 1; i < numOutputLayerSets; i++ )
   {
     if( i > pcVPS->getVpsNumberLayerSetsMinus1( ) )
+#endif
     {        
       READ_UVLC( uiCode,      "output_layer_set_idx_minus1[i]" ); pcVPS->setOutputLayerSetIdxMinus1( i, uiCode ); 
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+    }
+
+    if ( i > pcVPS->getVpsNumLayerSetsMinus1() || pcVPS->getDefaultTargetOutputLayerIdc() == 2 )
+    {       
+      for( Int j = 0; j < pcVPS->getNumLayersInIdList( pcVPS->getLayerSetIdxForOutputLayerSet( i ) ); j++ )
+      {
+        READ_FLAG( uiCode, "output_layer_flag" ); pcVPS->setOutputLayerFlag( i, j, uiCode == 1 ); 
+      }
+    }
+    else
+    { 
+      for( Int j = 0; j < pcVPS->getNumLayersInIdList( pcVPS->getLayerSetIdxForOutputLayerSet( i ) ); j++ )
+      {              
+        pcVPS->setOutputLayerFlag(i,j, pcVPS->inferOutputLayerFlag( i, j )); 
+      }
+    }
+    pcVPS->deriveTargetLayerIdList( i ); 
+#else
       for( Int j = 0; j < pcVPS->getNumLayersInIdList( j ) - 1; j++ )
       {
         READ_FLAG( uiCode, "output_layer_flag" ); pcVPS->setOutputLayerFlag( i, j, uiCode == 1 ); 
@@ -1319,21 +1425,38 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
         pcVPS->setOutputLayerFlag(i,j, pcVPS->inferOutputLayerFlag( i, j )); 
       }
     }
-
+#endif
     if ( pcVPS->getProfileLevelTierIdxLen()  > 0 )
     {      
       READ_CODE( pcVPS->getProfileLevelTierIdxLen(), uiCode,"profile_level_tier_idx[ i ]" );   pcVPS->setProfileLevelTierIdx( i , uiCode ); 
     }
+
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+    if( pcVPS->getNumOutputLayersInOutputLayerSet( i ) == 1 && pcVPS->getNumDirectRefLayers( pcVPS->getOlsHighestOutputLayerId( i ) ) > 0 )
+    {
+      READ_FLAG( uiCode, "alt_output_layer_flag[ i ]" ); pcVPS->setAltOutputLayerFlag( i, uiCode == 1 );
+    }
+  }
+#else
   }
   if( pcVPS->getMaxLayersMinus1() > 0 )
   {
     READ_FLAG( uiCode, "alt_output_layer_flag" ); pcVPS->setAltOutputLayerFlag( uiCode == 1 );
   }
+#endif
+
+#if !H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   pcVPS->deriveTargetLayerIdLists(); 
+#endif
+
   READ_FLAG( uiCode, "rep_format_idx_present_flag" ); pcVPS->setRepFormatIdxPresentFlag( uiCode == 1 );
   if ( pcVPS->getRepFormatIdxPresentFlag() )
   {
+#if H_MV_HLS7_GEN
+    READ_UVLC( 4, uiCode, "vps_num_rep_formats_minus1" ); pcVPS->setVpsNumRepFormatsMinus1( uiCode );
+#else
     READ_CODE( 4, uiCode, "vps_num_rep_formats_minus1" ); pcVPS->setVpsNumRepFormatsMinus1( uiCode );
+#endif
   }
 
   for (Int i = 0; i <= pcVPS->getVpsNumRepFormatsMinus1(); i++ )
@@ -1357,6 +1480,9 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   }
 
   READ_FLAG( uiCode, "max_one_active_ref_layer_flag" ); pcVPS->setMaxOneActiveRefLayerFlag ( uiCode == 1 ); 
+#if H_MV_HLS7_GEN
+  READ_FLAG( uiCode, "vps_poc_lsb_aligned_flag" ); pcVPS->setVpsPocLsbAlignedFlag( uiCode == 1 );
+#endif
   for( Int i = 1; i  <=  pcVPS->getMaxLayersMinus1(); i++ )
   {
     if( pcVPS->getNumDirectRefLayers( pcVPS->getLayerIdInNuh( i ) )  ==  0 )
@@ -1365,6 +1491,9 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }
 
+#if H_MV_HLS_7_RESERVED_FLAGS
+  READ_FLAG( uiCode, "vps_reserved_zero_flag" ); 
+#endif
   parseDpbSize( pcVPS ); 
 
   READ_UVLC( uiCode, "direct_dep_type_len_minus2")    ; pcVPS->setDirectDepTypeLenMinus2   ( uiCode ); 
@@ -1393,13 +1522,29 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }  
 
+#if H_MV_HLS7_GEN
+  READ_UVLC( uiCode, "vps_non_vui_extension_length" ); pcVPS->setVpsNonVuiExtensionLength( uiCode ); 
+  for ( Int i = 1; i < pcVPS->getVpsNonVuiExtensionLength(); i++ )
+  {
+    READ_CODE( 8, uiCode, "vps_non_vui_extension_data_byte" );
+  }
+  READ_FLAG( uiCode, "vps_vui_present_flag" );                    pcVPS->setVpsVuiPresentFlag( uiCode == 1 );  if ( pcVPS->getVpsVuiPresentFlag() )
+#endif
+#if !H_MV_HLS_7_RESERVED_FLAGS
   READ_FLAG( uiCode, "vps_shvc_reserved_zero_flag" ); 
-
+#endif
   if( pcVPS->getVpsVuiPresentFlag() )
   {
     m_pcBitstream->readOutTrailingBits(); // vps_vui_alignment_bit_equal_to_one
     parseVPSVUI( pcVPS ); 
   }     
+#if H_MV_HLS_7_FIX_INFER_CROSS_LAYER_IRAP_ALIGNED_FLAG
+  {
+    TComVPSVUI* pcVPSVUI = pcVPS->getVPSVUI( ); 
+    assert( pcVPSVUI ); 
+    pcVPSVUI->inferVpsVui( false ); 
+  }
+#endif
 
   pcVPS->checkVPSExtensionSyntax(); 
 }
@@ -1447,11 +1592,21 @@ Void TDecCavlc::parseVPSVUI( TComVPS* pcVPS )
   {  
     READ_FLAG( uiCode, "cross_layer_irap_aligned_flag" ); pcVPSVUI->setCrossLayerIrapAlignedFlag( uiCode == 1 );
   }
+#if H_MV_HLS_7_MISC_P0068_21
+  if( pcVPSVUI->getCrossLayerIrapAlignedFlag( ) )
+  {
+    READ_FLAG( uiCode, "all_layers_idr_aligned_flag" ); pcVPSVUI->setAllLayersIdrAlignedFlag( uiCode == 1 );
+  }
+#endif
   READ_FLAG( uiCode, "bit_rate_present_vps_flag" ); pcVPSVUI->setBitRatePresentVpsFlag( uiCode == 1 );
   READ_FLAG( uiCode, "pic_rate_present_vps_flag" ); pcVPSVUI->setPicRatePresentVpsFlag( uiCode == 1 );
   if( pcVPSVUI->getBitRatePresentVpsFlag( )  ||  pcVPSVUI->getPicRatePresentVpsFlag( ) )
   {
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+    for( Int i = 0; i  <=  pcVPS->getVpsNumLayerSetsMinus1(); i++ )
+#else
     for( Int i = 0; i  <=  pcVPS->getVpsNumberLayerSetsMinus1(); i++ )
+#endif
     {
       for( Int j = 0; j  <=  pcVPS->getMaxTLayers(); j++ ) 
       {
@@ -1476,6 +1631,42 @@ Void TDecCavlc::parseVPSVUI( TComVPS* pcVPS )
       }
     }
   }
+
+#if H_MV_HLS_7_VPS_P0076_15
+  READ_FLAG( uiCode, "video_signal_info_idx_present_flag" ); pcVPSVUI->setVideoSignalInfoIdxPresentFlag( uiCode == 1 );
+  if( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() )
+  {
+    READ_CODE( 4, uiCode, "vps_num_video_signal_info_minus1" ); pcVPSVUI->setVpsNumVideoSignalInfoMinus1( uiCode );
+  }
+  else
+  {
+    pcVPSVUI->setVpsNumVideoSignalInfoMinus1( pcVPS->getMaxLayersMinus1() ); 
+  }
+
+  for( Int i = 0; i <= pcVPSVUI->getVpsNumVideoSignalInfoMinus1(); i++ )
+  {
+    assert( pcVPSVUI->getVideoSignalInfo( i ) == NULL ); 
+    TComVideoSignalInfo* curVideoSignalInfo = new TComVideoSignalInfo();     
+    parseVideoSignalInfo( curVideoSignalInfo ); 
+    pcVPSVUI->setVideoSignalInfo(i, curVideoSignalInfo ); 
+  }
+
+  if( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() && pcVPSVUI->getVpsNumVideoSignalInfoMinus1() > 0 )
+  {
+    for( Int i = 1; i <=  pcVPS->getMaxLayersMinus1(); i++ )
+    {
+      READ_CODE( 4, uiCode, "vps_video_signal_info_idx" ); pcVPSVUI->setVpsVideoSignalInfoIdx( i, uiCode );
+      assert( pcVPSVUI->getVpsVideoSignalInfoIdx( i ) >= 0 && pcVPSVUI->getVpsVideoSignalInfoIdx( i ) <= pcVPSVUI->getVpsNumVideoSignalInfoMinus1() );
+    }
+  }
+  else
+  {
+    for( Int i = 1; i <=  pcVPS->getMaxLayersMinus1(); i++ )
+    {
+      pcVPSVUI->setVpsVideoSignalInfoIdx( i, pcVPSVUI->getVideoSignalInfoIdxPresentFlag() ? 0 : i ); 
+    }
+  }
+#endif
 
   READ_FLAG( uiCode, "tiles_not_in_use_flag" ); pcVPSVUI->setTilesNotInUseFlag( uiCode == 1 );
   if( !pcVPSVUI->getTilesNotInUseFlag() ) 
@@ -1512,6 +1703,10 @@ Void TDecCavlc::parseVPSVUI( TComVPS* pcVPS )
     }
   }
 
+#if H_MV_HLS_7_RESERVED_FLAGS
+  READ_CODE( 3, uiCode, "vps_vui_reserved_zero_3bits" ); 
+#endif
+
   READ_FLAG( uiCode, "ilp_restricted_ref_layers_flag" ); pcVPSVUI->setIlpRestrictedRefLayersFlag( uiCode == 1 );
 
   if( pcVPSVUI->getIlpRestrictedRefLayersFlag( ) )
@@ -1533,6 +1728,7 @@ Void TDecCavlc::parseVPSVUI( TComVPS* pcVPS )
     }
   }
 
+#if !H_MV_HLS_7_VPS_P0076_15
   READ_FLAG( uiCode, "video_signal_info_idx_present_flag" ); pcVPSVUI->setVideoSignalInfoIdxPresentFlag( uiCode == 1 );
   if( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() )
   {
@@ -1566,11 +1762,21 @@ Void TDecCavlc::parseVPSVUI( TComVPS* pcVPS )
       pcVPSVUI->setVpsVideoSignalInfoIdx( i, pcVPSVUI->getVideoSignalInfoIdxPresentFlag() ? 0 : i ); 
     }
   }
+#endif
   READ_FLAG( uiCode, "vps_vui_bsp_hrd_present_flag" ); pcVPSVUI->setVpsVuiBspHrdPresentFlag( uiCode == 1 );
   if ( pcVPSVUI->getVpsVuiBspHrdPresentFlag( ) )
   {
     parseVpsVuiBspHrdParameters( pcVPS ); 
 }
+#if H_MV_HLS_7_MISC_P0182_13
+  for( Int i = 1; i  <=  pcVPS->getMaxLayersMinus1(); i++ )
+  {
+    if( pcVPS->getNumDirectRefLayers( pcVPS->getLayerIdInNuh( i )) == 0 ) 
+    {
+      READ_FLAG( uiCode, "base_layer_parameter_set_compatibility_flag" ); pcVPSVUI->setBaseLayerParameterSetCompatibilityFlag( i, uiCode == 1 );
+    }
+  }
+#endif
 }
 
 Void TDecCavlc::parseVpsVuiBspHrdParameters( TComVPS* pcVPS )
@@ -1649,8 +1855,11 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
   for( Int i = 1; i < vps->getNumOutputLayerSets(); i++ )
   {  
     READ_FLAG( uiCode, "sub_layer_flag_info_present_flag" ); dpbSize->setSubLayerFlagInfoPresentFlag( i, uiCode == 1 );
-
+#if H_MV_HLS_7_HRD_P0156_7
+    for( Int j = 0; j  <=  vps->getMaxSubLayersInLayerSetMinus1( i ); j++ )
+#else
     for( Int j = 0; j  <=  vps->getMaxTLayers() - 1 ; j++ )
+#endif
     {  
       if( j > 0  &&  dpbSize->getSubLayerDpbInfoPresentFlag( i, j )  )  
       {
@@ -1658,11 +1867,24 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
       }
       if( dpbSize->getSubLayerDpbInfoPresentFlag( i, j ) )
       {  
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+        for( Int k = 0; k < vps->getNumSubDpbs( vps->getLayerSetIdxForOutputLayerSet( i )); k++ )   
+#else
         for( Int k = 0; k < vps->getNumSubDpbs( vps->getOutputLayerSetIdxMinus1( i ) + 1 ); k++ )   
+#endif
         {
           READ_UVLC( uiCode, "max_vps_dec_pic_buffering_minus1" ); dpbSize->setMaxVpsDecPicBufferingMinus1( i, k, j, uiCode );
         }
         READ_UVLC( uiCode, "max_vps_num_reorder_pics" ); dpbSize->setMaxVpsNumReorderPics( i, j, uiCode );
+#if H_MV_HLS7_GEN
+        if( vps->getNumSubDpbs( vps->getLayerSetIdxForOutputLayerSet( i ) ) != vps->getNumLayersInIdList( vps->getLayerSetIdxForOutputLayerSet( i ) ) ) 
+        {
+          for( Int k = 0; k < vps->getNumLayersInIdList( vps->getLayerSetIdxForOutputLayerSet( i ) ); k++ )
+          {
+            READ_UVLC( uiCode, "max_vps_layer_dec_pic_buff_minus1" ); dpbSize->setMaxVpsLayerDecPicBuffMinus1( i, k, j, uiCode );
+          }
+        }
+#endif
         READ_UVLC( uiCode, "max_vps_latency_increase_plus1" ); dpbSize->setMaxVpsLatencyIncreasePlus1( i, j, uiCode );
       }
       else
@@ -1703,7 +1925,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
         READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
 #if H_3D_SPIVMP
 #if SEC_SPIVMP_MCP_SIZE_G0077
-        READ_UVLC (uiCode, "log2_sub_PU_size_minus3");     pcVPS->setSubPULog2Size(i, uiCode+3); 
+        READ_UVLC (uiCode, "log2_sub_PU_size_minus3[i]");     pcVPS->setSubPULog2Size(i, uiCode+3); 
 #else
         READ_UVLC (uiCode, "log2_sub_PU_size_minus2");     pcVPS->setSubPULog2Size(i, uiCode+2); 
 #endif
@@ -1760,6 +1982,10 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
   READ_UVLC( uiCamParPrecision, "cp_precision" );
   for (UInt viewIndex=0; viewIndex<pcVPS->getNumViews(); viewIndex++)
   {
+#if FIX_CAM_PARS_COLLECTOR
+    pcVPS->setCamParPresent         ( viewIndex, false );
+    pcVPS->setHasCamParInSliceHeader( viewIndex, false );
+#endif
     READ_FLAG( uiCode, "cp_present_flag[i]" );                  bCamParPresentFlag = ( uiCode == 1);
     if ( bCamParPresentFlag )
     {
@@ -1889,11 +2115,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     rpcSlice->checkCrossLayerBlaFlag( ); 
 
+#if !H_MV_HLS7_GEN
     if ( rpcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
     {
       esb++; 
       READ_FLAG( uiCode, "poc_reset_flag" ); rpcSlice->setPocResetFlag( uiCode == 1 );
     }
+#endif
 
     for (; esb < rpcSlice->getPPS()->getNumExtraSliceHeaderBits(); esb++)    
 #else
@@ -2491,14 +2719,61 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 
   if(pps->getSliceHeaderExtensionPresentFlag())
   {
+#if !H_MV_HLS7_GEN    
     READ_UVLC(uiCode,"slice_header_extension_length");
-
     for(Int i=0; i<uiCode; i++)
     {
       UInt ignore;
       READ_CODE(8,ignore,"slice_header_extension_data_byte");
     }
   }
+#else
+#if H_MV
+    READ_UVLC( uiCode, "slice_segment_header_extension_length" ); rpcSlice->setSliceSegmentHeaderExtensionLength( uiCode );
+    UInt posFollSliceSegHeaderExtLen = m_pcBitstream->getNumBitsRead();
+
+    if( rpcSlice->getPPS()->getPocResetInfoPresentFlag() )
+    {
+      READ_CODE( 2, uiCode, "poc_reset_idc" ); rpcSlice->setPocResetIdc( uiCode );
+    }
+
+    if( rpcSlice->getPocResetIdc() !=  0 )
+    {
+      READ_CODE( 6, uiCode, "poc_reset_period_id" ); rpcSlice->setPocResetPeriodId( uiCode );
+    }
+    
+    if( rpcSlice->getPocResetIdc() ==  3 ) 
+    {
+      READ_FLAG( uiCode, "full_poc_reset_flag" ); rpcSlice->setFullPocResetFlag( uiCode == 1 );
+      READ_CODE( rpcSlice->getPocLsbValLen() , uiCode, "poc_lsb_val" ); rpcSlice->setPocLsbVal( uiCode );
+    }          
+
+    if( !rpcSlice->getPocMsbValRequiredFlag() &&  rpcSlice->getVPS()->getVpsPocLsbAlignedFlag() )
+    {
+      READ_FLAG( uiCode, "poc_msb_val_present_flag" ); rpcSlice->setPocMsbValPresentFlag( uiCode == 1 );
+    }
+    
+    if( rpcSlice->getPocMsbValPresentFlag() )
+    {
+      READ_UVLC( uiCode, "poc_msb_val" ); rpcSlice->setPocMsbVal( uiCode );
+    }
+
+    while( ( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) < rpcSlice->getSliceSegmentHeaderExtensionLength() * 8 );
+    {
+     READ_FLAG( uiCode, "slice_segment_header_extension_data_bit" );
+    }
+    assert( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) == rpcSlice->getSliceSegmentHeaderExtensionLength() * 8  ); 
+#else
+    READ_UVLC( uiCode, "slice_header_extension_length" );
+    for(Int i=0; i<uiCode; i++)
+    {
+      UInt ignore;
+      READ_CODE(8,ignore,"slice_header_extension_data_byte");
+    }
+  }
+#endif
+#endif
+
 
   m_pcBitstream->readByteAlignment();
 
