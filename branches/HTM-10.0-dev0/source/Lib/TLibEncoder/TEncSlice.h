@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -106,7 +106,6 @@ private:
   TEncRateCtrl*           m_pcRateCtrl;                         ///< Rate control manager
   UInt                    m_uiSliceIdx;
   std::vector<TEncSbac*> CTXMem;
-
 #if MTK_DDD_G0063
   Int          m_iDDDScale;
   Int          m_iDDDOffset;
@@ -128,17 +127,11 @@ public:
   Void    initEncSlice        ( TComPic*  pcPic, Int pocLast, Int pocCurr, Int iNumPicRcvd,
                                 Int iGOPid,   TComSlice*& rpcSlice, TComSPS* pSPS, TComPPS *pPPS, bool isField  );
 #endif
-#if RATE_CONTROL_LAMBDA_DOMAIN
   Void    resetQP             ( TComPic* pic, Int sliceQP, Double lambda );
-#else
-  Void    xLamdaRecalculation ( Int changeQP, Int idGOP, Int depth, SliceType eSliceType, TComSPS* pcSPS, TComSlice* pcSlice);
-#endif
   // compress and encode slice
   Void    precompressSlice    ( TComPic*& rpcPic                                );      ///< precompress slice for multi-loop opt.
   Void    compressSlice       ( TComPic*& rpcPic                                );      ///< analysis stage of slice
-#if RATE_CONTROL_INTRA
   Void    calCostSliceI       ( TComPic*& rpcPic );
-#endif
   Void    encodeSlice         ( TComPic*& rpcPic, TComOutputBitstream* pcSubstreams  );
   
   // misc. functions

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -326,10 +326,10 @@ Int  g_bitDepthC = 8;
 UInt g_uiPCMBitDepthLuma     = 8;    // PCM bit-depth
 UInt g_uiPCMBitDepthChroma   = 8;    // PCM bit-depth
 
+#if H_3D_DIM_DMM
 // ====================================================================================================================
 // Depth coding modes
 // ====================================================================================================================
-#if H_3D_DIM_DMM
 const WedgeResolution g_dmmWedgeResolution[6] = 
 {
   HALF_PEL,    //   4x4
@@ -371,10 +371,12 @@ Bool g_traceCU = true;
 Bool g_tracePU = true; 
 Bool g_traceTU = true; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter       = 48; 
+UInt64 g_stopAtCounter       = 0; 
 Bool g_traceCopyBack         = false; 
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
+Bool g_stopAtPos             = false; 
+Bool g_outputPos             = false; 
 #endif
 #endif
 // ====================================================================================================================
@@ -394,17 +396,6 @@ UInt g_sigLastScanCG32x32[ 64 ];
 
 const UInt g_uiMinInGroup[ 10 ] = {0,1,2,3,4,6,8,12,16,24};
 const UInt g_uiGroupIdx[ 32 ]   = {0,1,2,3,4,4,5,5,6,6,6,6,7,7,7,7,8,8,8,8,8,8,8,8,9,9,9,9,9,9,9,9};
-
-// Rice parameters for absolute transform levels
-const UInt g_auiGoRiceRange[5] =
-{
-  7, 14, 26, 46, 78
-};
-
-const UInt g_auiGoRicePrefixLen[5] =
-{
-  8, 7, 6, 5, 4
-};
 
 Void initSigLastScan(UInt* pBuffD, UInt* pBuffH, UInt* pBuffV, Int iWidth, Int iHeight)
 {
@@ -572,6 +563,46 @@ Int  g_eTTable[4] = {0,3,1,2};
 
 #if H_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
+Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight )
+{
+
+  if ( g_outputPos ) 
+  {
+    std::cout << "POC\t"        << poc 
+              << "\tLayerId\t"  << layerId 
+              << "\tCuPelX\t"   << cuPelX  
+              << "\tCuPelY\t"   << cuPelY 
+              << "\tCuWidth\t"  << cuWidth
+              << "\tCuHeight\t" << cuHeight
+              << std::endl; 
+  }
+
+  Bool stopFlag = false; 
+  if ( g_stopAtPos && poc == 0 && layerId == 1 )
+  {
+    Bool stopAtCU = true; 
+    if ( stopAtCU )        // Stop at CU with specific size
+    {    
+      stopFlag = ( cuPelX  == 888 ) && ( cuPelY  == 248 ) && ( cuWidth == 8 ) && ( cuHeight == 8); 
+    }
+    else
+    {                     // Stop at specific position 
+      Int xPos = 888; 
+      Int yPos = 248; 
+
+      Int cuPelXEnd = cuPelX + cuWidth  - 1; 
+      Int cuPelYEnd = cuPelY + cuHeight - 1; 
+
+      stopFlag = (cuPelX <= xPos ) && (cuPelXEnd >= xPos ) && (cuPelY <= yPos ) && (cuPelYEnd >= yPos ); 
+    }
+  }
+  
+  if ( stopFlag )
+  { // Set breakpoint here. 
+    std::cout << "Stop position. Break point here." << std::endl; 
+  }  
+}
+
 Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
 {
   if ( ( ( g_nSymbolCounter >= COUNTER_START && g_nSymbolCounter <= COUNTER_END )|| g_bJustDoIt ) && doIt  ) 

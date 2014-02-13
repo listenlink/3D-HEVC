@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -443,10 +443,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   ("QuadtreeTUMaxDepthIntra", m_uiQuadtreeTUMaxDepthIntra, 1u, "Depth of TU tree for intra CUs")
   ("QuadtreeTUMaxDepthInter", m_uiQuadtreeTUMaxDepthInter, 2u, "Depth of TU tree for inter CUs")
-  // Coding structure parameters
 #if H_MV  
+  // Coding structure parameters
   ("IntraPeriod,-ip",         m_iIntraPeriod,std::vector<Int>(1,-1), "Intra period in frames, (-1: only first frame), per layer")
 #else
+  // Coding structure paramters
 ("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
 #endif
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
@@ -491,8 +492,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("RDOQ",                          m_useRDOQ,                  true )
   ("RDOQTS",                        m_useRDOQTS,                true )
   ("RDpenalty",                     m_rdPenalty,                0,  "RD-penalty for 32x32 TU for intra in non-intra slices. 0:disbaled  1:RD-penalty  2:maximum RD-penalty")
-  // Entropy coding parameters
-  ("SBACRD",                         m_bUseSBACRD,                      true, "SBAC based RD estimation")
   
   // Deblocking filter parameters
 #if H_MV
@@ -538,7 +537,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   ("MaxNumOffsetsPerPic",      m_maxNumOffsetsPerPic,       2048,  "Max number of SAO offset per picture (Default: 2048)")   
   ("SAOLcuBoundary",           m_saoLcuBoundary,            false, "0: right/bottom LCU boundary areas skipped from SAO parameter estimation, 1: non-deblocked pixels are used for those areas")
-  ("SAOLcuBasedOptimization",  m_saoLcuBasedOptimization,   true,  "0: SAO picture-based optimization, 1: SAO LCU-based optimization ")
   ("SliceMode",                m_sliceMode,                0,     "0: Disable all Recon slice limits, 1: Enforce max # of LCUs, 2: Enforce max # of bytes, 3:specify tiles per dependent slice")
   ("SliceArgument",            m_sliceArgument,            0,     "Depending on SliceMode being:"
                                                                    "\t1: max number of CTUs per slice"
@@ -558,8 +556,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("PCMLog2MinSize",           m_uiPCMLog2MinSize,          3u)
   ("PCMInputBitDepthFlag",     m_bPCMInputBitDepthFlag,     true)
   ("PCMFilterDisableFlag",     m_bPCMFilterDisableFlag,    false)
-
-  ("LosslessCuEnabled",        m_useLossless, false)
 
   ("WeightedPredP,-wpP",          m_useWeightedPred,               false,      "Use weighted prediction in P slices")
   ("WeightedPredB,-wpB",          m_useWeightedBiPred,             false,      "Use weighted (bidirectional) prediction in B slices")
@@ -589,14 +585,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("FDM", m_useFastDecisionForMerge, true, "Fast decision for Merge RD Cost") 
   ("CFM", m_bUseCbfFastMode, false, "Cbf fast mode setting")
   ("ESD", m_useEarlySkipDetection, false, "Early SKIP detection setting")
-#if RATE_CONTROL_LAMBDA_DOMAIN
   ( "RateControl",         m_RCEnableRateControl,   false, "Rate control: enable rate control" )
   ( "TargetBitrate",       m_RCTargetBitrate,           0, "Rate control: target bitrate" )
-#if M0036_RC_IMPROVEMENT
   ( "KeepHierarchicalBit", m_RCKeepHierarchicalBit,     0, "Rate control: 0: equal bit allocation; 1: fixed ratio bit allocation; 2: adaptive ratio bit allocation" )
-#else
-  ( "KeepHierarchicalBit", m_RCKeepHierarchicalBit, false, "Rate control: keep hierarchical bit allocation in rate control algorithm" )
-#endif
   ( "LCULevelRateControl", m_RCLCULevelRC,           true, "Rate control: true: LCU level RC; false: picture level RC" )
   ( "RCLCUSeparateModel",  m_RCUseLCUSeparateModel,  true, "Rate control: use LCU level separate R-lambda model" )
   ( "InitialQP",           m_RCInitialQP,               0, "Rate control: initial QP" )
@@ -609,20 +600,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if KWU_RC_MADPRED_E0227
   ("DepthMADPred, -dm", m_depthMADPred, (UInt)0, "Depth based MAD prediction on/off")
 #endif
-#else
-  ("RateCtrl,-rc", m_enableRateCtrl, false, "Rate control on/off")
-  ("TargetBitrate,-tbr", m_targetBitrate, 0, "Input target bitrate")
-  ("NumLCUInUnit,-nu", m_numLCUInUnit, 0, "Number of LCUs in an Unit")
-
-#if KWU_RC_VIEWRC_E0227
-  ("ViewWiseTargetBits, -vtbr" ,  m_viewTargetBits,  std::vector<Int>(1, 32), "View-wise target bit-rate setting")
-  ("TargetBitAssign, -ta", m_viewWiseRateCtrl, false, "View-wise rate control on/off")
-#endif
-#if KWU_RC_MADPRED_E0227
-  ("DepthMADPred, -dm", m_depthMADPred, (UInt)0, "Depth based MAD prediction on/off")
-#endif
-#endif
-
 #if H_MV
 
   // DBP Size
@@ -652,7 +629,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
-  ("CUTransquantBypassFlagValue", m_CUTransquantBypassFlagValue, false, "Fixed cu_transquant_bypass_flag value, when transquant_bypass_enable_flag is enabled")
+  ("CUTransquantBypassFlagForce", m_CUTransquantBypassFlagForce, false, "Force transquant bypass mode, when transquant_bypass_enable_flag is enabled")
   ("RecalculateQPAccordingToLambda", m_recalculateQPAccordingToLambda, false, "Recalculate QP values according to lambda values. Do not suggest to be enabled in all intra case")
   ("StrongIntraSmoothing,-sis",      m_useStrongIntraSmoothing,           true, "Enable strong intra smoothing for 32x32 blocks")
   ("SEIActiveParameterSets",         m_activeParameterSetsSEIEnabled,          0, "Enable generation of active parameter sets SEI messages")
@@ -2020,7 +1997,7 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
     {
       m_maxTempLayer = m_GOPList[i].m_temporalId+1;
     }
-    xConfirmPara(m_GOPList[i].m_sliceType!='B'&&m_GOPList[i].m_sliceType!='P', "Slice type must be equal to B or P");
+    xConfirmPara(m_GOPList[i].m_sliceType!='B'&&m_GOPList[i].m_sliceType!='P'&&m_GOPList[i].m_sliceType!='I', "Slice type must be equal to B or P or I");
   }
   for(Int i=0; i<MAX_TLAYER; i++)
   {
@@ -2171,7 +2148,6 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
     xConfirmPara( m_extendedWhiteLevelLumaCodeValue < m_nominalWhiteLevelLumaCodeValue, "SEIToneMapExtendedWhiteLevelLumaCodeValue shall be greater than or equal to SEIToneMapNominalWhiteLevelLumaCodeValue");
   }
 
-#if RATE_CONTROL_LAMBDA_DOMAIN
   if ( m_RCEnableRateControl )
   {
     if ( m_RCForceIntraQP )
@@ -2184,21 +2160,6 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
     }
     xConfirmPara( m_uiDeltaQpRD > 0, "Rate control cannot be used together with slice level multiple-QP optimization!\n" );
   }
-#else
-  if(m_enableRateCtrl)
-  {
-    Int numLCUInWidth  = (m_iSourceWidth  / m_uiMaxCUWidth) + (( m_iSourceWidth  %  m_uiMaxCUWidth ) ? 1 : 0);
-    Int numLCUInHeight = (m_iSourceHeight / m_uiMaxCUHeight)+ (( m_iSourceHeight %  m_uiMaxCUHeight) ? 1 : 0);
-    Int numLCUInPic    =  numLCUInWidth * numLCUInHeight;
-
-    xConfirmPara( (numLCUInPic % m_numLCUInUnit) != 0, "total number of LCUs in a frame should be completely divided by NumLCUInUnit" );
-
-#if !KWU_FIX_URQ
-    m_iMaxDeltaQP       = MAX_DELTA_QP;
-#endif
-    m_iMaxCuDQPDepth    = MAX_CUDQP_DEPTH;
-  }
-#endif
 #if H_MV
   // VPS VUI
   for(Int i = 0; i < MAX_VPS_OP_SETS_PLUS1; i++ )
@@ -2222,7 +2183,7 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
   }
 #endif
 
-  xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagValue, "CUTransquantBypassFlagValue cannot be 1 when TransquantBypassEnableFlag is 0");
+  xConfirmPara(!m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce, "CUTransquantBypassFlagForce cannot be 1 when TransquantBypassEnableFlag is 0");
 
   xConfirmPara(m_log2ParallelMergeLevel < 2, "Log2ParallelMergeLevel should be larger than or equal to 2");
   if (m_framePackingSEIEnabled)
@@ -2342,7 +2303,6 @@ Void TAppEncCfg::xPrintParameter()
   printf("GOP size                     : %d\n", m_iGOPSize );
   printf("Internal bit depth           : (Y:%d, C:%d)\n", m_internalBitDepthY, m_internalBitDepthC );
   printf("PCM sample bit depth         : (Y:%d, C:%d)\n", g_uiPCMBitDepthLuma, g_uiPCMBitDepthChroma );
-#if RATE_CONTROL_LAMBDA_DOMAIN
   printf("RateControl                  : %d\n", m_RCEnableRateControl );
   if(m_RCEnableRateControl)
   {
@@ -2372,33 +2332,6 @@ Void TAppEncCfg::xPrintParameter()
     }
 #endif
   }
-#else
-  printf("RateControl                  : %d\n", m_enableRateCtrl);
-  if(m_enableRateCtrl)
-  {
-    printf("TargetBitrate                : %d\n", m_targetBitrate);
-    printf("NumLCUInUnit                 : %d\n", m_numLCUInUnit);
-
-#if KWU_RC_MADPRED_E0227
-    printf("Depth based MAD prediction   : %d\n", m_depthMADPred);
-#endif
-#if KWU_RC_VIEWRC_E0227
-    printf("View-wise Rate control       : %d\n", m_viewWiseRateCtrl);
-    if(m_viewWiseRateCtrl)
-    {
-
-      printf("ViewWiseTargetBits           : ");
-      for (Int i = 0 ; i < m_iNumberOfViews ; i++)
-        printf("%d ", m_viewTargetBits[i]);
-      printf("\n");
-    }
-    else
-    {
-      printf("TargetBitrate                : %d\n", m_targetBitrate );
-    }
-#endif
-  }
-#endif
   printf("Max Num Merge Candidates     : %d\n", m_maxNumMergeCand);
 #if H_3D
   printf("BaseViewCameraNumbers        : %s\n", m_pchBaseViewCameraNumbers ); 
@@ -2428,7 +2361,6 @@ Void TAppEncCfg::xPrintParameter()
 #endif
   printf("IBD:%d ", g_bitDepthY > m_inputBitDepthY || g_bitDepthC > m_inputBitDepthC);
   printf("HAD:%d ", m_bUseHADME           );
-  printf("SRD:%d ", m_bUseSBACRD          );
   printf("RDQ:%d ", m_useRDOQ            );
   printf("RDQTS:%d ", m_useRDOQTS        );
   printf("RDpenalty:%d ", m_rdPenalty  );
@@ -2457,9 +2389,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("SAO:%d ", (m_bUseSAO)?(1):(0));
 #endif
   printf("PCM:%d ", (m_usePCM && (1<<m_uiPCMLog2MinSize) <= m_uiMaxCUWidth)? 1 : 0);
-  printf("SAOLcuBasedOptimization:%d ", (m_saoLcuBasedOptimization)?(1):(0));
-
-  printf("LosslessCuEnabled:%d ", (m_useLossless)? 1:0 );
+  if (m_TransquantBypassEnableFlag && m_CUTransquantBypassFlagForce)
+  {
+    printf("TransQuantBypassEnabled: =1 ");
+  }
+  else
+  {
+    printf("TransQuantBypassEnabled:%d ", (m_TransquantBypassEnableFlag)? 1:0 );
+  }
   printf("WPP:%d ", (Int)m_useWeightedPred);
   printf("WPB:%d ", (Int)m_useWeightedBiPred);
   printf("PME:%d ", m_log2ParallelMergeLevel);

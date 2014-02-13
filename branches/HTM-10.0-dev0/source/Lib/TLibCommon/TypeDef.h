@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -322,11 +322,21 @@
 #define MTK_IC_FLAG_CABAC_SIMP_G0061      1   // Use only 1 context for IC flag in JCT3V-G0061
 #define MTK_NBDV_IVREF_FIX_G0067          1   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
 #endif
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   HTM-10.1 Integrations //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+#define UPDATE_HM13                       1
+#if H_3D
+#define H_3D_FIX_G0148_BRACE              1 
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
+#define BUGFIX_INTRAPERIOD 1
+#define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
 
-#define FIX1071 1 ///< fix for issue #1071
+#define FIX1172 1 ///< fix ticket #1172
 
 #define MAX_NUM_PICS_IN_SOP           1024
 
@@ -341,20 +351,6 @@
 #define ENC_CFG_CONSOUT_SPACE       29           
 #else
 #define MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1  1
-#endif
-
-#define RATE_CONTROL_LAMBDA_DOMAIN                  1  ///< JCTVC-K0103, rate control by R-lambda model
-#define M0036_RC_IMPROVEMENT                        1  ///< JCTVC-M0036, improvement for R-lambda model based rate control
-#define TICKET_1090_FIX                             1
-
-#if KWU_FIX_URQ
-#if RATE_CONTROL_LAMBDA_DOMAIN
-#define RC_FIX                                      1  /// suggested fix for M0036
-#define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
-#endif
-#else
-#define RC_FIX                                      1  /// suggested fix for M0036
-#define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
 #endif
 
 
@@ -388,9 +384,6 @@
   
 #define C1FLAG_NUMBER               8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER               1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5 
-
-#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3 1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
-
 #define SAO_ENCODING_CHOICE              1  ///< I0184: picture early termination
 #if SAO_ENCODING_CHOICE
 #define SAO_ENCODING_RATE                0.75
@@ -404,11 +397,7 @@
 #define MAX_NUM_SPS                16
 #define MAX_NUM_PPS                64
 
-
-
-#define WEIGHTED_CHROMA_DISTORTION  1   ///< F386: weighting of chroma for RDO
 #define RDOQ_CHROMA_LAMBDA          1   ///< F386: weighting of chroma for RDOQ
-#define SAO_CHROMA_LAMBDA           1   ///< F386: weighting of chroma for SAO
 
 #define MIN_SCAN_POS_CROSS          4
 
@@ -422,8 +411,6 @@
 #define ARL_C_PRECISION                     7      ///< G382: 7-bit arithmetic precision
 #define LEVEL_RANGE                         30     ///< G382: max coefficient level in statistics collection
 #endif
-
-#define NS_HAD                               0
 
 #define HHI_RQT_INTRA_SPEEDUP             1           ///< tests one best mode with full rqt
 #define HHI_RQT_INTRA_SPEEDUP_MOD         0           ///< tests two best modes with full rqt
@@ -491,8 +478,6 @@
 #define AMP_MRG                               1           ///< encoder only force merge for AMP partition (no motion search for AMP)
 #endif
 
-#define SCALING_LIST_OUTPUT_RESULT    0 //JCTVC-G880/JCTVC-G1016 quantization matrices
-
 #define CABAC_INIT_PRESENT_FLAG     1
 
 // ====================================================================================================================
@@ -502,7 +487,11 @@
 typedef       void                Void;
 typedef       bool                Bool;
 
+#ifdef __arm__
+typedef       signed char         Char;
+#else
 typedef       char                Char;
+#endif
 typedef       unsigned char       UChar;
 typedef       short               Short;
 typedef       unsigned short      UShort;
@@ -569,76 +558,94 @@ enum SliceConstraint
   FIXED_NUMBER_OF_TILES  = 3,          ///< slices / slice segments span an integer number of tiles
 };
 
-#define NUM_DOWN_PART 4
-
-enum SAOTypeLen
+enum SAOComponentIdx
 {
-  SAO_EO_LEN    = 4, 
-  SAO_BO_LEN    = 4,
-  SAO_MAX_BO_CLASSES = 32
+  SAO_Y =0,
+  SAO_Cb,
+  SAO_Cr,
+  NUM_SAO_COMPONENTS
 };
 
-enum SAOType
+enum SAOMode //mode
 {
-  SAO_EO_0 = 0, 
-  SAO_EO_1,
-  SAO_EO_2, 
-  SAO_EO_3,
-  SAO_BO,
-  MAX_NUM_SAO_TYPE
+  SAO_MODE_OFF = 0,
+  SAO_MODE_NEW,
+  SAO_MODE_MERGE,
+  NUM_SAO_MODES
 };
 
-typedef struct _SaoQTPart
+enum SAOModeMergeTypes 
 {
-  Int         iBestType;
-  Int         iLength;
-  Int         subTypeIdx ;                 ///< indicates EO class or BO band position
-  Int         iOffset[4];
-  Int         StartCUX;
-  Int         StartCUY;
-  Int         EndCUX;
-  Int         EndCUY;
+  SAO_MERGE_LEFT =0,
+  SAO_MERGE_ABOVE,
+  NUM_SAO_MERGE_TYPES
+};
 
-  Int         PartIdx;
-  Int         PartLevel;
-  Int         PartCol;
-  Int         PartRow;
 
-  Int         DownPartsIdx[NUM_DOWN_PART];
-  Int         UpPartIdx;
-
-  Bool        bSplit;
-
-  //---- encoder only start -----//
-  Bool        bProcessed;
-  Double      dMinCost;
-  Int64       iMinDist;
-  Int         iMinRate;
-  //---- encoder only end -----//
-} SAOQTPart;
-
-typedef struct _SaoLcuParam
+enum SAOModeNewTypes 
 {
-  Bool       mergeUpFlag;
-  Bool       mergeLeftFlag;
-  Int        typeIdx;
-  Int        subTypeIdx;                  ///< indicates EO class or BO band position
-  Int        offset[4];
-  Int        partIdx;
-  Int        partIdxTmp;
-  Int        length;
-} SaoLcuParam;
+  SAO_TYPE_START_EO =0,
+  SAO_TYPE_EO_0 = SAO_TYPE_START_EO,
+  SAO_TYPE_EO_90,
+  SAO_TYPE_EO_135,
+  SAO_TYPE_EO_45,
 
-struct SAOParam
+  SAO_TYPE_START_BO,
+  SAO_TYPE_BO = SAO_TYPE_START_BO,
+
+  NUM_SAO_NEW_TYPES
+};
+#define NUM_SAO_EO_TYPES_LOG2 2
+
+enum SAOEOClasses 
 {
-  Bool       bSaoFlag[2];
-  SAOQTPart* psSaoPart[3];
-  Int        iMaxSplitLevel;
-  Bool         oneUnitFlag[3];
-  SaoLcuParam* saoLcuParam[3];
-  Int          numCuInHeight;
-  Int          numCuInWidth;
-  ~SAOParam();
+  SAO_CLASS_EO_FULL_VALLEY = 0,
+  SAO_CLASS_EO_HALF_VALLEY = 1,
+  SAO_CLASS_EO_PLAIN       = 2,
+  SAO_CLASS_EO_HALF_PEAK   = 3,
+  SAO_CLASS_EO_FULL_PEAK   = 4,
+  NUM_SAO_EO_CLASSES,
+};
+
+
+#define NUM_SAO_BO_CLASSES_LOG2  5
+enum SAOBOClasses
+{
+  //SAO_CLASS_BO_BAND0 = 0,
+  //SAO_CLASS_BO_BAND1,
+  //SAO_CLASS_BO_BAND2,
+  //...
+  //SAO_CLASS_BO_BAND31,
+
+  NUM_SAO_BO_CLASSES = (1<<NUM_SAO_BO_CLASSES_LOG2),
+};
+#define MAX_NUM_SAO_CLASSES  32  //(NUM_SAO_EO_GROUPS > NUM_SAO_BO_GROUPS)?NUM_SAO_EO_GROUPS:NUM_SAO_BO_GROUPS
+
+struct SAOOffset
+{
+  Int modeIdc; //NEW, MERGE, OFF
+  Int typeIdc; //NEW: EO_0, EO_90, EO_135, EO_45, BO. MERGE: left, above
+  Int typeAuxInfo; //BO: starting band index
+  Int offset[MAX_NUM_SAO_CLASSES];
+
+  SAOOffset();
+  ~SAOOffset();
+  Void reset();
+
+  const SAOOffset& operator= (const SAOOffset& src);
+};
+
+struct SAOBlkParam
+{
+
+  SAOBlkParam();
+  ~SAOBlkParam();
+  Void reset();
+  const SAOBlkParam& operator= (const SAOBlkParam& src);
+  SAOOffset& operator[](Int compIdx){ return offsetParam[compIdx];}
+private:
+  SAOOffset offsetParam[NUM_SAO_COMPONENTS];
+
 };
 
 /// parameters for deblocking filter

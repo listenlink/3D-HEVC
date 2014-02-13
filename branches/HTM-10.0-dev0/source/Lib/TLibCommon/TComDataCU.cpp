@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -487,25 +487,6 @@ Void TComDataCU::destroy()
   }
 }
 
-const NDBFBlockInfo& NDBFBlockInfo::operator= (const NDBFBlockInfo& src)
-{
-  this->tileID = src.tileID;
-  this->sliceID= src.sliceID;
-  this->startSU= src.startSU;
-  this->endSU  = src.endSU;
-  this->widthSU= src.widthSU;
-  this->heightSU=src.heightSU;
-  this->posX   = src.posX;
-  this->posY   = src.posY;
-  this->width  = src.width;
-  this->height = src.height;
-  ::memcpy(this->isBorderAvailable, src.isBorderAvailable, sizeof(Bool)*((Int)NUM_SGU_BORDER));
-  this->allBordersAvailable = src.allBordersAvailable;
-
-  return *this;
-}
-
-
 // ====================================================================================================================
 // Public member functions
 // ====================================================================================================================
@@ -800,7 +781,7 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
 *- set qp value according to input qp 
 *- set last-coded qp value according to input last-coded qp 
 */
-Void TComDataCU::initEstData( UInt uiDepth, Int qp )
+Void TComDataCU::initEstData( UInt uiDepth, Int qp, Bool bTransquantBypass )
 {
   m_dTotalCost         = MAX_DOUBLE;
   m_uiTotalDistortion  = 0;
@@ -828,7 +809,7 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp )
       m_skipFlag[ui]   = false;
       m_pePartSize[ui] = SIZE_NONE;
       m_pePredMode[ui] = MODE_NONE;
-      m_CUTransquantBypass[ui] = false;
+      m_CUTransquantBypass[ui] = bTransquantBypass;
       m_pbIPCMFlag[ui] = 0;
       m_phQP[ui] = qp;
       m_pbMergeFlag[ui] = 0;
@@ -5979,10 +5960,8 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
   {
     xAddMVPCand( pInfo, eRefPicList, iRefIdx, uiPartIdxLT, MD_ABOVE_LEFT);
   }
-  bAdded = bAddedSmvp;
-  if (pInfo->iN==2) bAdded = true;
 
-  if(!bAdded)
+  if (!bAddedSmvp)
   {
     bAdded = xAddMVPCandOrder( pInfo, eRefPicList, iRefIdx, uiPartIdxRT, MD_ABOVE_RIGHT);
     if (!bAdded) 
@@ -6640,375 +6619,6 @@ UInt TComDataCU::getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, B
 UInt TComDataCU::getSCUAddr()
 { 
   return getPic()->getPicSym()->getInverseCUOrderMap(m_uiCUAddr)*(1<<(m_pcSlice->getSPS()->getMaxCUDepth()<<1))+m_uiAbsIdxInLCU; 
-}
-
-/** Set neighboring blocks availabilities for non-deblocked filtering 
- * \param numLCUInPicWidth number of LCUs in picture width
- * \param numLCUInPicHeight number of LCUs in picture height
- * \param numSUInLCUWidth number of SUs in LCU width
- * \param numSUInLCUHeight number of SUs in LCU height
- * \param picWidth picture width
- * \param picHeight picture height
- * \param bIndependentSliceBoundaryEnabled true for independent slice boundary enabled
- * \param bTopTileBoundary true means that top boundary coincides tile boundary
- * \param bDownTileBoundary true means that bottom boundary coincides tile boundary
- * \param bLeftTileBoundary true means that left boundary coincides tile boundary
- * \param bRightTileBoundary true means that right boundary coincides tile boundary
- * \param bIndependentTileBoundaryEnabled true for independent tile boundary enabled
- */
-Void TComDataCU::setNDBFilterBlockBorderAvailability(UInt numLCUInPicWidth, UInt /*numLCUInPicHeight*/, UInt numSUInLCUWidth, UInt numSUInLCUHeight, UInt picWidth, UInt picHeight
-                                                    ,std::vector<Bool>& LFCrossSliceBoundary
-                                                    ,Bool bTopTileBoundary, Bool bDownTileBoundary, Bool bLeftTileBoundary, Bool bRightTileBoundary
-                                                    ,Bool bIndependentTileBoundaryEnabled)
-{
-  UInt numSUInLCU = numSUInLCUWidth*numSUInLCUHeight;
-  Int* pSliceIDMapLCU = m_piSliceSUMap;
-  Bool onlyOneSliceInPic = ((Int)LFCrossSliceBoundary.size() == 1);
-  UInt uiLPelX, uiTPelY;
-  UInt width, height;
-  Bool bPicRBoundary, bPicBBoundary, bPicTBoundary, bPicLBoundary;
-  Bool bLCURBoundary= false, bLCUBBoundary= false, bLCUTBoundary= false, bLCULBoundary= false;
-  Bool* pbAvailBorder;
-  Bool* pbAvail;
-  UInt rTLSU, rBRSU, widthSU, heightSU;
-  UInt zRefSU;
-  Int* pRefID;
-  Int* pRefMapLCU;
-  UInt rTRefSU= 0, rBRefSU= 0, rLRefSU= 0, rRRefSU= 0;
-  Int* pRRefMapLCU= NULL;
-  Int* pLRefMapLCU= NULL;
-  Int* pTRefMapLCU= NULL;
-  Int* pBRefMapLCU= NULL;
-  Int  sliceID;
-  UInt numSGU = (UInt)m_vNDFBlock.size();
-
-  for(Int i=0; i< numSGU; i++)
-  {
-    NDBFBlockInfo& rSGU = m_vNDFBlock[i];
-
-    sliceID = rSGU.sliceID;
-    uiLPelX = rSGU.posX;
-    uiTPelY = rSGU.posY;
-    width   = rSGU.width;
-    height  = rSGU.height;
-    rTLSU     = g_auiZscanToRaster[ rSGU.startSU ];
-    rBRSU     = g_auiZscanToRaster[ rSGU.endSU   ];
-    widthSU   = rSGU.widthSU;
-    heightSU  = rSGU.heightSU;
-
-    pbAvailBorder = rSGU.isBorderAvailable;
-
-    bPicTBoundary= (uiTPelY == 0                       )?(true):(false);
-    bPicLBoundary= (uiLPelX == 0                       )?(true):(false);
-    bPicRBoundary= (!(uiLPelX+ width < picWidth )  )?(true):(false);
-    bPicBBoundary= (!(uiTPelY + height < picHeight))?(true):(false);
-
-    bLCULBoundary = (rTLSU % numSUInLCUWidth == 0)?(true):(false);
-    bLCURBoundary = ( (rTLSU+ widthSU) % numSUInLCUWidth == 0)?(true):(false);
-    bLCUTBoundary = ( (UInt)(rTLSU / numSUInLCUWidth)== 0)?(true):(false);
-    bLCUBBoundary = ( (UInt)(rBRSU / numSUInLCUWidth) == (numSUInLCUHeight-1) )?(true):(false);
-
-    //       SGU_L
-    pbAvail = &(pbAvailBorder[SGU_L]);
-    if(bPicLBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      //      bLCULBoundary = (rTLSU % uiNumSUInLCUWidth == 0)?(true):(false);
-      if(bLCULBoundary)
-      {
-        rLRefSU     = rTLSU + numSUInLCUWidth -1;
-        zRefSU      = g_auiRasterToZscan[rLRefSU];
-        pRefMapLCU = pLRefMapLCU= (pSliceIDMapLCU - numSUInLCU);
-      }
-      else
-      {
-        zRefSU   = g_auiRasterToZscan[rTLSU - 1];
-        pRefMapLCU  = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    //       SGU_R
-    pbAvail = &(pbAvailBorder[SGU_R]);
-    if(bPicRBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      //       bLCURBoundary = ( (rTLSU+ uiWidthSU) % uiNumSUInLCUWidth == 0)?(true):(false);
-      if(bLCURBoundary)
-      {
-        rRRefSU      = rTLSU + widthSU - numSUInLCUWidth;
-        zRefSU       = g_auiRasterToZscan[rRRefSU];
-        pRefMapLCU  = pRRefMapLCU= (pSliceIDMapLCU + numSUInLCU);
-      }
-      else
-      {
-        zRefSU       = g_auiRasterToZscan[rTLSU + widthSU];
-        pRefMapLCU  = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    //       SGU_T
-    pbAvail = &(pbAvailBorder[SGU_T]);
-    if(bPicTBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      //      bLCUTBoundary = ( (UInt)(rTLSU / uiNumSUInLCUWidth)== 0)?(true):(false);
-      if(bLCUTBoundary)
-      {
-        rTRefSU      = numSUInLCU - (numSUInLCUWidth - rTLSU);
-        zRefSU       = g_auiRasterToZscan[rTRefSU];
-        pRefMapLCU  = pTRefMapLCU= (pSliceIDMapLCU - (numLCUInPicWidth*numSUInLCU));
-      }
-      else
-      {
-        zRefSU       = g_auiRasterToZscan[rTLSU - numSUInLCUWidth];
-        pRefMapLCU  = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    //       SGU_B
-    pbAvail = &(pbAvailBorder[SGU_B]);
-    if(bPicBBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      //      bLCUBBoundary = ( (UInt)(rBRSU / uiNumSUInLCUWidth) == (uiNumSUInLCUHeight-1) )?(true):(false);
-      if(bLCUBBoundary)
-      {
-        rBRefSU      = rTLSU % numSUInLCUWidth;
-        zRefSU       = g_auiRasterToZscan[rBRefSU];
-        pRefMapLCU  = pBRefMapLCU= (pSliceIDMapLCU + (numLCUInPicWidth*numSUInLCU));
-      }
-      else
-      {
-        zRefSU       = g_auiRasterToZscan[rTLSU + (heightSU*numSUInLCUWidth)];
-        pRefMapLCU  = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    //       SGU_TL
-    pbAvail = &(pbAvailBorder[SGU_TL]);
-    if(bPicTBoundary || bPicLBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      if(bLCUTBoundary && bLCULBoundary)
-      {
-        zRefSU       = numSUInLCU -1;
-        pRefMapLCU  = pSliceIDMapLCU - ( (numLCUInPicWidth+1)*numSUInLCU);
-      }
-      else if(bLCUTBoundary)
-      {
-        zRefSU       = g_auiRasterToZscan[ rTRefSU- 1];
-        pRefMapLCU  = pTRefMapLCU;
-      }
-      else if(bLCULBoundary)
-      {
-        zRefSU       = g_auiRasterToZscan[ rLRefSU- numSUInLCUWidth ];
-        pRefMapLCU  = pLRefMapLCU;
-      }
-      else //inside LCU
-      {
-        zRefSU       = g_auiRasterToZscan[ rTLSU - numSUInLCUWidth -1];
-        pRefMapLCU  = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    //       SGU_TR
-    pbAvail = &(pbAvailBorder[SGU_TR]);
-    if(bPicTBoundary || bPicRBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      if(bLCUTBoundary && bLCURBoundary)
-      {
-        zRefSU      = g_auiRasterToZscan[numSUInLCU - numSUInLCUWidth];
-        pRefMapLCU  = pSliceIDMapLCU - ( (numLCUInPicWidth-1)*numSUInLCU);        
-      }
-      else if(bLCUTBoundary)
-      {
-        zRefSU       = g_auiRasterToZscan[ rTRefSU+ widthSU];
-        pRefMapLCU  = pTRefMapLCU;
-      }
-      else if(bLCURBoundary)
-      {
-        zRefSU       = g_auiRasterToZscan[ rRRefSU- numSUInLCUWidth ];
-        pRefMapLCU  = pRRefMapLCU;
-      }
-      else //inside LCU
-      {
-        zRefSU       = g_auiRasterToZscan[ rTLSU - numSUInLCUWidth +widthSU];
-        pRefMapLCU  = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    //       SGU_BL
-    pbAvail = &(pbAvailBorder[SGU_BL]);
-    if(bPicBBoundary || bPicLBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      if(bLCUBBoundary && bLCULBoundary)
-      {
-        zRefSU      = g_auiRasterToZscan[numSUInLCUWidth - 1];
-        pRefMapLCU  = pSliceIDMapLCU + ( (numLCUInPicWidth-1)*numSUInLCU);        
-      }
-      else if(bLCUBBoundary)
-      {
-        zRefSU       = g_auiRasterToZscan[ rBRefSU - 1];
-        pRefMapLCU  = pBRefMapLCU;
-      }
-      else if(bLCULBoundary)
-      {
-        zRefSU       = g_auiRasterToZscan[ rLRefSU+ heightSU*numSUInLCUWidth ];
-        pRefMapLCU  = pLRefMapLCU;
-      }
-      else //inside LCU
-      {
-        zRefSU       = g_auiRasterToZscan[ rTLSU + heightSU*numSUInLCUWidth -1];
-        pRefMapLCU  = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    //       SGU_BR
-    pbAvail = &(pbAvailBorder[SGU_BR]);
-    if(bPicBBoundary || bPicRBoundary)
-    {
-      *pbAvail = false;
-    }
-    else if (onlyOneSliceInPic)
-    {
-      *pbAvail = true;
-    }
-    else
-    {
-      if(bLCUBBoundary && bLCURBoundary)
-      {
-        zRefSU = 0;
-        pRefMapLCU = pSliceIDMapLCU+ ( (numLCUInPicWidth+1)*numSUInLCU);
-      }
-      else if(bLCUBBoundary)
-      {
-        zRefSU      = g_auiRasterToZscan[ rBRefSU + widthSU];
-        pRefMapLCU = pBRefMapLCU;
-      }
-      else if(bLCURBoundary)
-      {
-        zRefSU      = g_auiRasterToZscan[ rRRefSU + (heightSU*numSUInLCUWidth)];
-        pRefMapLCU = pRRefMapLCU;
-      }
-      else //inside LCU
-      {
-        zRefSU      = g_auiRasterToZscan[ rTLSU + (heightSU*numSUInLCUWidth)+ widthSU];
-        pRefMapLCU = pSliceIDMapLCU;
-      }
-      pRefID = pRefMapLCU + zRefSU;
-      *pbAvail = (*pRefID == sliceID)?(true):((*pRefID > sliceID)?(LFCrossSliceBoundary[*pRefID]):(LFCrossSliceBoundary[sliceID]));
-    }
-
-    if(bIndependentTileBoundaryEnabled)
-    {
-      //left LCU boundary
-      if(!bPicLBoundary && bLCULBoundary)
-      {
-        if(bLeftTileBoundary)
-        {
-          pbAvailBorder[SGU_L] = pbAvailBorder[SGU_TL] = pbAvailBorder[SGU_BL] = false;
-        }
-      }
-      //right LCU boundary
-      if(!bPicRBoundary && bLCURBoundary)
-      {
-        if(bRightTileBoundary)
-        {
-          pbAvailBorder[SGU_R] = pbAvailBorder[SGU_TR] = pbAvailBorder[SGU_BR] = false;
-        }
-      }
-      //top LCU boundary
-      if(!bPicTBoundary && bLCUTBoundary)
-      {
-        if(bTopTileBoundary)
-        {
-          pbAvailBorder[SGU_T] = pbAvailBorder[SGU_TL] = pbAvailBorder[SGU_TR] = false;
-        }
-      }
-      //down LCU boundary
-      if(!bPicBBoundary && bLCUBBoundary)
-      {
-        if(bDownTileBoundary)
-        {
-          pbAvailBorder[SGU_B] = pbAvailBorder[SGU_BL] = pbAvailBorder[SGU_BR] = false;
-        }
-      }
-    }
-    rSGU.allBordersAvailable = true;
-    for(Int b=0; b< NUM_SGU_BORDER; b++)
-    {
-      if(pbAvailBorder[b] == false)
-      {
-        rSGU.allBordersAvailable = false;
-        break;
-      }
-    }
-  }
 }
 
 #if H_3D

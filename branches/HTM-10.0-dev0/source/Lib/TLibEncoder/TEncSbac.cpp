@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -83,7 +83,6 @@ TEncSbac::TEncSbac()
 , m_cCUOneSCModel             ( 1,             1,               NUM_ONE_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUAbsSCModel             ( 1,             1,               NUM_ABS_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cMVPIdxSCModel            ( 1,             1,               NUM_MVP_IDX_CTX               , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cCUAMPSCModel             ( 1,             1,               NUM_CU_AMP_CTX                , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoMergeSCModel          ( 1,             1,               NUM_SAO_MERGE_FLAG_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSaoTypeIdxSCModel        ( 1,             1,               NUM_SAO_TYPE_IDX_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cTransformSkipSCModel     ( 1,             2,               NUM_TRANSFORMSKIP_FLAG_CTX    , m_contextModels + m_numContextModels, m_numContextModels)
@@ -152,7 +151,6 @@ Void TEncSbac::resetEntropy           ()
   m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
-  m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CHROMA_PRED_MODE );
@@ -253,7 +251,6 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cDBBPFlagSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
       curCost += m_cCUPartSizeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PART_SIZE );
-      curCost += m_cCUAMPSCModel.calcCost             ( curSliceType, qp, (UChar*)INIT_CU_AMP_POS );
       curCost += m_cCUPredModeSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_PRED_MODE );
       curCost += m_cCUIntraPredSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_INTRA_PRED_MODE );
       curCost += m_cCUChromaPredSCModel.calcCost      ( curSliceType, qp, (UChar*)INIT_CHROMA_PRED_MODE );
@@ -325,7 +322,6 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
   m_cCUPartSizeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PART_SIZE );
-  m_cCUAMPSCModel.initBuffer             ( eSliceType, iQp, (UChar*)INIT_CU_AMP_POS );
   m_cCUPredModeSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_PRED_MODE );
   m_cCUIntraPredSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_INTRA_PRED_MODE );
   m_cCUChromaPredSCModel.initBuffer      ( eSliceType, iQp, (UChar*)INIT_CHROMA_PRED_MODE );
@@ -347,7 +343,6 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cSaoTypeIdxSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SAO_TYPE_IDX );
   m_cTransformSkipSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
   m_CUTransquantBypassFlagSCModel.initBuffer( eSliceType, iQp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
-
 #if H_3D_DIM
   m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
@@ -793,11 +788,11 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       {
         if (eSize == SIZE_2NxN)
         {
-          m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
         }
         else
         {
-          m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));          
+          m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
           m_pcBinIf->encodeBinEP((eSize == SIZE_2NxnU? 0: 1));
         }
       }
@@ -817,11 +812,11 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       {
         if (eSize == SIZE_Nx2N)
         {
-          m_pcBinIf->encodeBin(1, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
         }
         else
         {
-          m_pcBinIf->encodeBin(0, m_cCUAMPSCModel.get( 0, 0, 0 ));
+          m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
           m_pcBinIf->encodeBinEP((eSize == SIZE_nLx2N? 0: 1));
         }
       }
@@ -2133,7 +2128,7 @@ Void TEncSbac::codeSaoTypeIdx       ( UInt uiCode)
   else
   {
     m_pcBinIf->encodeBin( 1, m_cSaoTypeIdxSCModel.get( 0, 0, 0 ) );
-    m_pcBinIf->encodeBinEP( uiCode <= 4 ? 1 : 0 );
+    m_pcBinIf->encodeBinEP( uiCode == 1 ? 0 : 1 );
   }
 }
 /*!
@@ -2334,6 +2329,119 @@ Void TEncSbac::xCopyContextsFrom( TEncSbac* pSrc )
 Void  TEncSbac::loadContexts ( TEncSbac* pScr)
 {
   this->xCopyContextsFrom(pScr);
+}
+
+Void TEncSbac::codeSAOOffsetParam(Int compIdx, SAOOffset& ctbParam, Bool sliceEnabled)
+{
+  UInt uiSymbol;
+  if(!sliceEnabled)
+  {
+    assert(ctbParam.modeIdc == SAO_MODE_OFF);
+    return;
+  }
+
+  //type
+  if(compIdx == SAO_Y || compIdx == SAO_Cb)
+  {
+    //sao_type_idx_luma or sao_type_idx_chroma
+    if(ctbParam.modeIdc == SAO_MODE_OFF)
+    {
+      uiSymbol =0;
+    }
+    else if(ctbParam.typeIdc == SAO_TYPE_BO) //BO
+    {
+      uiSymbol = 1;
+    }
+    else
+    {
+      assert(ctbParam.typeIdc < SAO_TYPE_START_BO); //EO
+      uiSymbol = 2;
+    }
+    codeSaoTypeIdx(uiSymbol); 
+  }
+
+  if(ctbParam.modeIdc == SAO_MODE_NEW)
+  {
+    Int numClasses = (ctbParam.typeIdc == SAO_TYPE_BO)?4:NUM_SAO_EO_CLASSES; 
+    Int offset[4];
+    Int k=0;
+    for(Int i=0; i< numClasses; i++)
+    {
+      if(ctbParam.typeIdc != SAO_TYPE_BO && i == SAO_CLASS_EO_PLAIN)
+      {
+        continue;
+      }
+      Int classIdx = (ctbParam.typeIdc == SAO_TYPE_BO)?(  (ctbParam.typeAuxInfo+i)% NUM_SAO_BO_CLASSES   ):i;
+      offset[k] = ctbParam.offset[classIdx];
+      k++;
+    }
+
+    for(Int i=0; i< 4; i++)
+    {
+      codeSaoMaxUvlc((offset[i]<0)?(-offset[i]):(offset[i]),  g_saoMaxOffsetQVal[compIdx] ); //sao_offset_abs
+    }
+
+
+    if(ctbParam.typeIdc == SAO_TYPE_BO)
+    {
+      for(Int i=0; i< 4; i++)
+      {
+        if(offset[i] != 0)
+        {
+          codeSAOSign((offset[i]< 0)?1:0);
+        }
+      }
+
+      codeSaoUflc(NUM_SAO_BO_CLASSES_LOG2, ctbParam.typeAuxInfo ); //sao_band_position
+    }
+    else //EO
+    {
+      if(compIdx == SAO_Y || compIdx == SAO_Cb)
+      {
+        assert(ctbParam.typeIdc - SAO_TYPE_START_EO >=0);
+        codeSaoUflc(NUM_SAO_EO_TYPES_LOG2, ctbParam.typeIdc - SAO_TYPE_START_EO ); //sao_eo_class_luma or sao_eo_class_chroma
+      }
+    }
+
+  }
+}
+
+
+Void TEncSbac::codeSAOBlkParam(SAOBlkParam& saoBlkParam
+                              , Bool* sliceEnabled
+                              , Bool leftMergeAvail
+                              , Bool aboveMergeAvail
+                              , Bool onlyEstMergeInfo // = false
+                              )
+{
+
+  Bool isLeftMerge = false;
+  Bool isAboveMerge= false;
+
+  if(leftMergeAvail)
+  {
+    isLeftMerge = ((saoBlkParam[SAO_Y].modeIdc == SAO_MODE_MERGE) && (saoBlkParam[SAO_Y].typeIdc == SAO_MERGE_LEFT));
+    codeSaoMerge( isLeftMerge?1:0  ); //sao_merge_left_flag
+  }
+
+  if( aboveMergeAvail && !isLeftMerge)
+  {
+    isAboveMerge = ((saoBlkParam[SAO_Y].modeIdc == SAO_MODE_MERGE) && (saoBlkParam[SAO_Y].typeIdc == SAO_MERGE_ABOVE)); 
+    codeSaoMerge( isAboveMerge?1:0  ); //sao_merge_left_flag
+  }
+
+  if(onlyEstMergeInfo)
+  {
+    return; //only for RDO
+  }
+
+  if(!isLeftMerge && !isAboveMerge) //not merge mode
+  {
+    for(Int compIdx=0; compIdx < NUM_SAO_COMPONENTS; compIdx++)
+    {
+      codeSAOOffsetParam(compIdx, saoBlkParam[compIdx], sliceEnabled[compIdx]);
+    }
+  }
 }
 
 #if H_3D_INTER_SDC

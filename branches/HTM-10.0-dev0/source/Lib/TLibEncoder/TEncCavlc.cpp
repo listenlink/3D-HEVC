@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -255,9 +255,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_FLAG( pcPPS->getScalingListPresentFlag() ? 1 : 0,                          "pps_scaling_list_data_present_flag" ); 
   if( pcPPS->getScalingListPresentFlag() )
   {
-#if SCALING_LIST_OUTPUT_RESULT
-    printf("PPS\n");
-#endif
     codeScalingList( m_pcSlice->getScalingList() );
   }
 #if H_MV
@@ -741,9 +738,6 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( pcSPS->getScalingListPresentFlag() ? 1 : 0,                          "sps_scaling_list_data_present_flag" ); 
     if(pcSPS->getScalingListPresentFlag())
     {
-#if SCALING_LIST_OUTPUT_RESULT
-    printf("SPS\n");
-#endif
       codeScalingList( m_pcSlice->getScalingList() );
     }
 #if H_MV
@@ -1687,7 +1681,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #endif
       TComReferencePictureSet* rps = pcSlice->getRPS();
       
-#if FIX1071
       // check for bitstream restriction stating that:
       // If the current picture is a BLA or CRA picture, the value of NumPocTotalCurr shall be equal to 0.
       // Ideally this process should not be repeated for each slice in a picture
@@ -1698,7 +1691,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           assert (!rps->getUsed(picIdx));
           }
         }
-#endif
 
       if(pcSlice->getRPSidx() < 0)
       {
@@ -1832,10 +1824,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if (pcSlice->getSPS()->getUseSAO())
       {
          WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
-         {
-           SAOParam *saoParam = pcSlice->getPic()->getPicSym()->getSaoParam();
-          WRITE_FLAG( saoParam->bSaoFlag[1], "slice_sao_chroma_flag" );
-         }
+         WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
       }
     }
 
@@ -2428,21 +2417,11 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
   UInt listId,sizeId;
   Bool scalingListPredModeFlag;
 
-#if SCALING_LIST_OUTPUT_RESULT
-  Int startBit;
-  Int startTotalBit;
-  startBit = m_pcBitIf->getNumberOfWrittenBits();
-  startTotalBit = m_pcBitIf->getNumberOfWrittenBits();
-#endif
-
     //for each size
     for(sizeId = 0; sizeId < SCALING_LIST_SIZE_NUM; sizeId++)
     {
       for(listId = 0; listId < g_scalingListNum[sizeId]; listId++)
       {
-#if SCALING_LIST_OUTPUT_RESULT
-        startBit = m_pcBitIf->getNumberOfWrittenBits();
-#endif
         scalingListPredModeFlag = scalingList->checkPredMode( sizeId, listId );
         WRITE_FLAG( scalingListPredModeFlag, "scaling_list_pred_mode_flag" );
         if(!scalingListPredModeFlag)// Copy Mode
@@ -2453,14 +2432,8 @@ Void TEncCavlc::codeScalingList( TComScalingList* scalingList )
         {
           xCodeScalingList(scalingList, sizeId, listId);
         }
-#if SCALING_LIST_OUTPUT_RESULT
-        printf("Matrix [%d][%d] Bit %d\n",sizeId,listId,m_pcBitIf->getNumberOfWrittenBits() - startBit);
-#endif
       }
     }
-#if SCALING_LIST_OUTPUT_RESULT
-  printf("Total Bit %d\n",m_pcBitIf->getNumberOfWrittenBits()-startTotalBit);
-#endif
   return;
 }
 /** code DPCM
