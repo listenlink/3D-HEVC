@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -124,6 +124,10 @@ private:
   Int                     m_pocCRA;
   std::vector<Int>        m_storedStartCUAddrForEncodingSlice;
   std::vector<Int>        m_storedStartCUAddrForEncodingSliceSegment;
+#if FIX1172
+  NalUnitType             m_associatedIRAPType;
+  Int                     m_associatedIRAPPOC;
+#endif
 
   std::vector<Int> m_vRVM_RP;
   UInt                    m_lastBPSEI;
@@ -180,14 +184,14 @@ public:
 #endif
 
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
-  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr );
+  NalUnitType getNalUnitType( Int pocCurr, Int lastIdr, Bool isField );
   Void arrangeLongtermPicturesInRPS(TComSlice *, TComList<TComPic*>& );
 protected:
   TEncRateCtrl* getRateCtrl()       { return m_pcRateCtrl;  }
 
 protected:
-  Void xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, bool isField );
 
+  Void xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, bool isField );
   Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
   Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, Int pocCurr, bool isField );
   

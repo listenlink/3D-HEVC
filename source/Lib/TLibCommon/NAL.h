@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -78,7 +78,7 @@ struct NALUnit
   {
     return m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_R
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_N
-        || m_nalUnitType == NAL_UNIT_CODED_SLICE_TLA_R
+        || m_nalUnitType == NAL_UNIT_CODED_SLICE_TSA_R
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_TSA_N
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_R
         || m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_N

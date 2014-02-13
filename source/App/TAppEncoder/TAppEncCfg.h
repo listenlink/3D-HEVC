@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -258,8 +258,7 @@ protected:
   // coding tools (PCM bit-depth)
   Bool      m_bPCMInputBitDepthFlag;                          ///< 0: PCM bit-depth is internal bit-depth. 1: PCM bit-depth is input bit-depth.
 
-  // coding tool (lossless)
-  Bool      m_useLossless;                                    ///< flag for using lossless coding
+  // coding tool (SAO)
 #if H_MV
   std::vector<Bool> m_bUseSAO; 
 #else
@@ -267,7 +266,6 @@ protected:
 #endif
   Int       m_maxNumOffsetsPerPic;                            ///< SAO maximun number of offset per picture
   Bool      m_saoLcuBoundary;                                 ///< SAO parameter estimation using non-deblocked pixels for LCU bottom and right boundary areas
-  Bool      m_saoLcuBasedOptimization;                        ///< SAO LCU-based optimization
   // coding tools (loop filter)
 #if H_MV
   std::vector<Bool> m_bLoopFilterDisable;                     ///< flag for using deblocking filter for each layer
@@ -287,7 +285,6 @@ protected:
   Bool      m_bPCMFilterDisableFlag;                          ///< PCM filter disable flag
 
   // coding tools (encoder-only parameters)
-  Bool      m_bUseSBACRD;                                     ///< flag for using RD optimization based on SBAC
   Bool      m_bUseASR;                                        ///< flag for using adaptive motion search range
   Bool      m_bUseHADME;                                      ///< flag for using HAD in sub-pel ME
   Bool      m_useRDOQ;                                       ///< flag for using RD optimized quantization
@@ -371,14 +368,9 @@ protected:
 
   Int       m_TMVPModeId;
   Int       m_signHideFlag;
-#if RATE_CONTROL_LAMBDA_DOMAIN
   Bool      m_RCEnableRateControl;                ///< enable rate control or not
   Int       m_RCTargetBitrate;                    ///< target bitrate when rate control is enabled
-#if M0036_RC_IMPROVEMENT
   Int       m_RCKeepHierarchicalBit;              ///< 0: equal bit allocation; 1: fixed ratio bit allocation; 2: adaptive ratio bit allocation
-#else
-  Bool      m_RCKeepHierarchicalBit;              ///< whether keeping hierarchical bit allocation structure or not
-#endif
   Bool      m_RCLCULevelRC;                       ///< true: LCU level rate control; false: picture level rate control
   Bool      m_RCUseLCUSeparateModel;              ///< use separate R-lambda model at LCU level
   Int       m_RCInitialQP;                        ///< inital QP for rate control
@@ -391,24 +383,11 @@ protected:
 #if KWU_RC_MADPRED_E0227
   UInt       m_depthMADPred;
 #endif
-#else
-  Bool      m_enableRateCtrl;                                   ///< Flag for using rate control algorithm
-  Int       m_targetBitrate;                                 ///< target bitrate
-  Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be completely divided by the NumLCUInUnit
-
-#if KWU_RC_VIEWRC_E0227
-  vector<Int>     m_viewTargetBits;
-  Bool      m_viewWiseRateCtrl;                              ///< Flag for using view-wise rate control
-#endif
-#if KWU_RC_MADPRED_E0227
-  UInt       m_depthMADPred;
-#endif
-#endif
   Int       m_useScalingListId;                               ///< using quantization matrix
   Char*     m_scalingListFile;                                ///< quantization matrix file name
 
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
-  Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Bool      m_useStrongIntraSmoothing;                        ///< enable strong intra smoothing for 32x32 blocks where the reference samples are flat

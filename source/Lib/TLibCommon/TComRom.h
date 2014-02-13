@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -125,9 +125,6 @@ extern       UInt*  g_auiSigLastScan[ 3 ][ MAX_CU_DEPTH ];  // raster index from
 extern const UInt   g_uiGroupIdx[ 32 ];
 extern const UInt   g_uiMinInGroup[ 10 ];
 
-extern const UInt   g_auiGoRiceRange[5];                  //!< maximum value coded with Rice codes
-extern const UInt   g_auiGoRicePrefixLen[5];              //!< prefix length for each maximum value
-  
 extern const UInt   g_sigLastScan8x8[ 3 ][ 4 ];           //!< coefficient group scan order for 8x8 TUs
 extern       UInt   g_sigLastScanCG32x32[ 64 ];
 
@@ -221,8 +218,10 @@ extern UInt64 g_nSymbolCounter;
  extern Bool   g_disableHLSTrace;       // USE g_HLSTraceEnable to toggle HLS trace. Not this one!
  extern UInt64 g_stopAtCounter;         // Counter to set breakpoint. 
  extern Bool   g_traceCopyBack;         // Output samples on copy back  
- extern Bool   g_decTraceDispDer; // Trace derived disparity vectors (decoder only) 
+ extern Bool   g_decTraceDispDer;       // Trace derived disparity vectors (decoder only) 
  extern Bool   g_decTraceMvFromMerge;   // Trace motion vectors obtained from merge (decoder only) 
+ extern Bool   g_stopAtPos;             // Stop at position
+ extern Bool   g_outputPos;             // Output position
 
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );
@@ -231,9 +230,9 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_PU_S(x)             writeToTraceFile( x,   g_tracePU );
 #define DTRACE_TU_S(x)             writeToTraceFile( x,   g_traceTU );
 
-
  Void           writeToTraceFile( const Char* symbolName, Int val, Bool doIt );
  Void           writeToTraceFile( const Char* symbolName, Bool doIt );
+ Void           stopAtPos       ( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int cuHeight );
 #endif
 #else
 
