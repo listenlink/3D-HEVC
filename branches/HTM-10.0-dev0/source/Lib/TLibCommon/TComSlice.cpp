@@ -102,7 +102,9 @@ TComSlice::TComSlice()
 #if H_3D
 , m_isDepth                       (false)
 #endif
+#if !H_MV_HLS7_GEN
 , m_pocResetFlag                  (false)
+#endif
 #if H_MV
 , m_crossLayerBlaFlag             (false)
 #endif
@@ -1031,7 +1033,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
 
 #if H_MV
   // Additional slice header syntax elements 
+#if !H_MV_HLS7_GEN
   m_pocResetFlag               = pSrc->m_pocResetFlag; 
+#endif
   m_discardableFlag            = pSrc->m_discardableFlag; 
   m_interLayerPredEnabledFlag  = pSrc->m_interLayerPredEnabledFlag; 
   m_numInterLayerRefPicsMinus1 = pSrc->m_numInterLayerRefPicsMinus1;
@@ -1706,18 +1710,26 @@ TComVPS::TComVPS()
       m_layerIdIncludedFlag[lsIdx][layerId] = (( lsIdx == 0 ) && ( layerId == 0 )) ; 
     }
   } 
-
+#if !H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   m_vpsNumberLayerSetsMinus1     = -1; 
+#endif
   m_vpsNumProfileTierLevelMinus1 = -1; 
     
+#if !H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   for ( Int i = 0; i < MAX_VPS_PROFILE_TIER_LEVEL; i++)
   {
+#if !H_MV_HLS_7_VPS_P0048_14
     m_profileRefMinus1[ i ] = -1; 
+#endif
   }
     
   m_moreOutputLayerSetsThanDefaultFlag = false;   
   m_numAddOutputLayerSetsMinus1        = -1;   
   m_defaultOneTargetOutputLayerIdc     = 0; 
+#else
+  m_numAddOutputLayerSets              = -1;   
+  m_defaultTargetOutputLayerIdc     = 0; 
+#endif
   
   for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
   {
@@ -1727,14 +1739,21 @@ TComVPS::TComVPS()
     {
       m_outputLayerFlag[i][j] = false; 
     }
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+    m_altOutputLayerFlag[ i ]       = false; 
+#endif
   }
+#if !H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   m_altOutputLayerFlag       = false; 
+#endif
   m_maxOneActiveRefLayerFlag = false; 
   m_directDepTypeLenMinus2   = 0;         
   
 
   m_avcBaseLayerFlag = false;
+#if !H_MV_HLS7_GEN
   m_vpsVuiOffset     = 0; 
+#endif
   m_splittingFlag    = false;
   
   for( Int i = 0; i < MAX_NUM_SCALABILITY_TYPES; i++ )
@@ -1748,7 +1767,9 @@ TComVPS::TComVPS()
   for( Int i = 0; i < MAX_VPS_OP_SETS_PLUS1; i++ )
   {
     m_vpsProfilePresentFlag   [i] = false;
+#if !H_MV_HLS_7_VPS_P0048_14
     m_profileRefMinus1[i] = 0;
+#endif
     m_outputLayerSetIdxMinus1       [i] = 0;
     for( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++ )
     {
@@ -2059,12 +2080,16 @@ Int TComVPS::getNumLayersInIdList( Int lsIdx )
 
 Int    TComVPS::getNumOutputLayerSets() 
 {
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+  return getNumAddOutputLayerSets() + getVpsNumLayerSetsMinus1() + 1; 
+#else
   Int numOutputLayerSets = getVpsNumberLayerSetsMinus1( ) + 1; 
   if ( getMoreOutputLayerSetsThanDefaultFlag( ) )
   {      
     numOutputLayerSets += (getNumAddOutputLayerSetsMinus1( ) + 1); 
 }
   return numOutputLayerSets; 
+#endif
 }
 
 Int TComVPS::getNumViews()
@@ -2112,6 +2137,27 @@ Void TComVPS::deriveLayerSetLayerIdList()
   }
 }
 
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+Void TComVPS::initTargetLayerIdLists()
+{
+  m_targetDecLayerIdLists.resize( getNumOutputLayerSets() ); 
+  m_targetOptLayerIdLists.resize( getNumOutputLayerSets() ); 
+}
+
+Void TComVPS::deriveTargetLayerIdList( Int i )
+{  
+  Int lsIdx = getLayerSetIdxForOutputLayerSet( i );     
+  
+  for( Int j = 0; j < getNumLayersInIdList( lsIdx ); j++ )
+  {
+    m_targetDecLayerIdLists[i].push_back( m_layerSetLayerIdList[ lsIdx ][ j ] ); 
+    if( getOutputLayerFlag( i, j  ))
+    {
+      m_targetOptLayerIdLists[i].push_back( m_layerSetLayerIdList[ lsIdx ][ j ] );
+    }
+  }  
+}
+#else
 Void TComVPS::deriveTargetLayerIdLists()
 {
   m_targetDecLayerIdLists.resize( getNumOutputLayerSets() ); 
@@ -2132,6 +2178,8 @@ Void TComVPS::deriveTargetLayerIdLists()
     }  
   }
 }
+#endif
+
 #endif // H_MV
 
 // ------------------------------------------------------------------------------------------------
@@ -2384,6 +2432,14 @@ TComPPS::TComPPS()
 #endif
 {
   m_scalingList = new TComScalingList;
+
+#if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION  
+  for( Int i = 0; i < PS_EX_T_MAX_NUM; i++ ) 
+  {
+    m_ppsExtensionTypeFlag[ i ] = false;
+  }
+#endif
+
 }
 
 TComPPS::~TComPPS()
@@ -2902,6 +2958,9 @@ Void TComSlice::createInterLayerReferencePictureSet( TComPicLists* ivPicLists, s
     }
     // Consider to check here: 
     // "If the current picture is a RADL picture, there shall be no entry in the RefPicSetInterLayer0 and RefPicSetInterLayer1 that is a RASL picture. "    
+#if H_MV_HLS7_GEN
+    // "There shall be no picture that has discardable_flag equal to 1 in RefPicSetInterLayer0 or RefPicSetInterLayer1".    
+#endif
   }
 }
 
@@ -3076,7 +3135,11 @@ Int TComSlice::getNumActiveRefLayerPics()
 {
   Int numActiveRefLayerPics; 
 
+#if H_MV_HLS_7_MISC_P0079_18
+  if( getLayerId() == 0 || getNumRefLayerPics() ==  0 )
+#else
   if( getLayerId() == 0 || getVPS()->getNumDirectRefLayers( getLayerId() ) ==  0 )
+#endif
   {
     numActiveRefLayerPics = 0; 
   }
@@ -3090,7 +3153,11 @@ Int TComSlice::getNumActiveRefLayerPics()
   }
   else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
   {
+#if H_MV_HLS_7_MISC_P0079_18
+    numActiveRefLayerPics = 1; 
+#else
     numActiveRefLayerPics = getRefLayerPicFlag( 0 ) ? 1 : 0; 
+#endif
   }
   else
   {
@@ -3748,6 +3815,9 @@ Void TComPTL::copyLevelFrom( TComPTL* source )
 TComVPSVUI::TComVPSVUI()
 {
   m_crossLayerIrapAlignedFlag = true; 
+#if H_MV_HLS_7_MISC_P0068_21
+  m_allLayersIdrAlignedFlag   = false; 
+#endif
   m_bitRatePresentVpsFlag = false;
   m_picRatePresentVpsFlag = false;
   for ( Int i = 0; i < MAX_VPS_OP_SETS_PLUS1; i++)
@@ -3774,6 +3844,9 @@ TComVPSVUI::TComVPSVUI()
       m_ctuBasedOffsetEnabledFlag   [i][j] = false;
       m_minHorizontalCtuOffsetPlus1 [i][j] = -1;
     }
+#if H_MV_HLS_7_MISC_P0182_13
+    m_baseLayerParameterSetCompatibilityFlag[i] = false;
+#endif
   }
   for ( Int i = 0; i < MAX_NUM_VIDEO_SIGNAL_INFO; i++ )
   {

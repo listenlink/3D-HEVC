@@ -36,6 +36,7 @@
 */
 
 #include "TDecCu.h"
+
 //! \ingroup TLibDecoder
 //! \{
 
@@ -637,7 +638,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   m_ppcYuvResi[uiDepth]->clear();
   
   m_ppcCU[uiDepth]->copySubCU( pcCU, uiAbsPartIdx, uiDepth );
-
+  
 #if H_MV_ENC_DEC_TRAC
 #if ENC_DEC_TRACE
   stopAtPos  ( m_ppcCU[uiDepth]->getSlice()->getPOC(), 
@@ -926,7 +927,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
 #if H_3D_DIM
   }
 #endif
-
+  
 #if H_3D && UPDATE_HM13
   Bool useDltFlag = (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps());
 
