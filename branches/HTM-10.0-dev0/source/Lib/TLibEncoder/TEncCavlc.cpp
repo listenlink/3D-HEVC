@@ -910,10 +910,14 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   WRITE_CODE( pcVPS->getMaxTLayers() - 1,           3,        "vps_max_sub_layers_minus1" );
   WRITE_FLAG( pcVPS->getTemporalNestingFlag(),                "vps_temporal_id_nesting_flag" );
   assert (pcVPS->getMaxTLayers()>1||pcVPS->getTemporalNestingFlag());
+#if H_MV_HLS_7_VPS_P0125_24
+  WRITE_CODE( 0xffff,                              16,        "vps_reserved_ffff_16bits" );
+#else
 #if H_MV && !H_MV_HLS7_GEN
   WRITE_CODE( 0xffff,                              16,        "vps_extension_offset" );
 #else
   WRITE_CODE( 0xffff,                              16,        "vps_reserved_ffff_16bits" );
+#endif
 #endif
   codePTL( pcVPS->getPTL(), true, pcVPS->getMaxTLayers() - 1 );
   const Bool subLayerOrderingInfoPresentFlag = 1;
