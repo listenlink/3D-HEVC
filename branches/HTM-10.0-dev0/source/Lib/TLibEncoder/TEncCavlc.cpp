@@ -1016,7 +1016,7 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS ) 
 {
   WRITE_FLAG( pcVPS->getAvcBaseLayerFlag() ? 1 : 0,          "avc_base_layer_flag" );
-#if !H_MV_HLS7_GEN
+#if !H_MV_HLS_7_VPS_P0307_23
   WRITE_FLAG( pcVPS->getVpsVuiPresentFlag() ? 1 : 0 , "vps_vui_present_flag" );
   if ( pcVPS->getVpsVuiPresentFlag() )
   {  
@@ -1323,7 +1323,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       }
     }
   }  
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_VPS_P0307_23
   WRITE_UVLC( 0, "vps_non_vui_extension_length" );
   WRITE_FLAG( pcVPS->getVpsVuiPresentFlag() ? 1 : 0 , "vps_vui_present_flag" );
 #endif

@@ -1210,7 +1210,8 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
 {
   UInt uiCode; 
   READ_FLAG( uiCode, "avc_base_layer_flag" );                     pcVPS->setAvcBaseLayerFlag( uiCode == 1 ? true : false );
-#if !H_MV_HLS7_GEN
+
+#if !H_MV_HLS_7_VPS_P0307_23
   READ_FLAG( uiCode, "vps_vui_present_flag" );                    pcVPS->setVpsVuiPresentFlag( uiCode == 1 );
   if ( pcVPS->getVpsVuiPresentFlag() )
   {  
@@ -1525,13 +1526,13 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }  
 
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_VPS_P0307_23
   READ_UVLC( uiCode, "vps_non_vui_extension_length" ); pcVPS->setVpsNonVuiExtensionLength( uiCode ); 
-  for ( Int i = 1; i < pcVPS->getVpsNonVuiExtensionLength(); i++ )
+  for ( Int i = 1; i <= pcVPS->getVpsNonVuiExtensionLength(); i++ )
   {
     READ_CODE( 8, uiCode, "vps_non_vui_extension_data_byte" );
   }
-  READ_FLAG( uiCode, "vps_vui_present_flag" );                    pcVPS->setVpsVuiPresentFlag( uiCode == 1 );  if ( pcVPS->getVpsVuiPresentFlag() )
+  READ_FLAG( uiCode, "vps_vui_present_flag" );  pcVPS->setVpsVuiPresentFlag( uiCode == 1 );
 #endif
 #if !H_MV_HLS_7_RESERVED_FLAGS
   READ_FLAG( uiCode, "vps_shvc_reserved_zero_flag" ); 
