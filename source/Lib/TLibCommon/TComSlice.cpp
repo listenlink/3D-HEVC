@@ -1751,7 +1751,9 @@ TComVPS::TComVPS()
   
 
   m_avcBaseLayerFlag = false;
-#if !H_MV_HLS7_GEN
+#if H_MV_HLS_7_VPS_P0307_23
+  m_vpsNonVuiExtensionLength = 0;
+#else
   m_vpsVuiOffset     = 0; 
 #endif
   m_splittingFlag    = false;

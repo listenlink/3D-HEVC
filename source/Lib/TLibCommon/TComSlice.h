@@ -767,7 +767,9 @@ private:
 #if H_MV
   /// VPS EXTENSION SYNTAX ELEMENTS
   Bool        m_avcBaseLayerFlag;
-#if !H_MV_HLS7_GEN
+#if H_MV_HLS_7_VPS_P0307_23
+  Int         m_vpsNonVuiExtensionLength;
+#else
   Int         m_vpsVuiOffset;
 #endif
   Bool        m_splittingFlag;
@@ -828,7 +830,6 @@ private:
   
 #if H_MV_HLS7_GEN
   Int         m_directDependencyType     [MAX_NUM_LAYERS] [MAX_NUM_LAYERS];
-  Int         m_vpsNonVuiExtensionLength;
 #endif
   Bool        m_vpsVuiPresentFlag;
   TComVPSVUI* m_vpsVUI; 
@@ -972,7 +973,10 @@ public:
   Void    setAvcBaseLayerFlag( Bool val )                                  { m_avcBaseLayerFlag = val;  }
   Bool    getAvcBaseLayerFlag()                                            { return m_avcBaseLayerFlag; } 
 
-#if !H_MV_HLS7_GEN
+#if H_MV_HLS_7_VPS_P0307_23
+  Void    setVpsNonVuiExtensionLength( Int  val )                          { m_vpsNonVuiExtensionLength = val; } 
+  Int     getVpsNonVuiExtensionLength(  )                                  { return m_vpsNonVuiExtensionLength; } 
+#else
   Void    setVpsVuiOffset( Int  val )                                      { m_vpsVuiOffset = val; } 
   Int     getVpsVuiOffset(  )                                              { return m_vpsVuiOffset; } 
 #endif
@@ -1139,11 +1143,6 @@ public:
   Int     getDefaultDirectDependencyType(  )                               { return m_defaultDirectDependencyType; } 
   Void    setDirectDependencyType( Int depLayeridInVps, Int refLayeridInVps, Int val) { m_directDependencyType[ depLayeridInVps ][ refLayeridInVps ] = val; } 
   Int     getDirectDependencyType( Int depLayeridInVps, Int refLayeridInVps)   { return m_directDependencyType[ depLayeridInVps ][ refLayeridInVps ]; } 
-
-#if H_MV_HLS7_GEN
-  Void    setVpsNonVuiExtensionLength( Int  val )                          { m_vpsNonVuiExtensionLength = val; } 
-  Int     getVpsNonVuiExtensionLength(  )                                  { return m_vpsNonVuiExtensionLength; } 
-#endif
 
   Void    setVpsVuiPresentFlag( Bool flag )                                { m_vpsVuiPresentFlag = flag; } 
   Bool    getVpsVuiPresentFlag(  )                                         { return m_vpsVuiPresentFlag; } 
