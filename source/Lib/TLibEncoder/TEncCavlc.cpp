@@ -1132,7 +1132,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
   WRITE_CODE( pcVPS->getVpsNumberLayerSetsMinus1( )    , 10,    "vps_number_layer_sets_minus1"      );
 #endif
 
-#if !H_MV_HLS7_GEN
+#if !H_MV_HLS_7_VPS_P0306_22
   WRITE_CODE( pcVPS->getVpsNumProfileTierLevelMinus1( ), 6,     "vps_num_profile_tier_level_minus1" );
 #else
   WRITE_UVLC( pcVPS->getVpsNumProfileTierLevelMinus1( ), "vps_num_profile_tier_level_minus1" );
@@ -1255,7 +1255,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
   WRITE_FLAG( pcVPS->getRepFormatIdxPresentFlag( ) ? 1 : 0 , "rep_format_idx_present_flag" );
   if ( pcVPS->getRepFormatIdxPresentFlag() )
   {
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_VPS_P0306_22
     WRITE_UVLC( pcVPS->getVpsNumRepFormatsMinus1( ), "vps_num_rep_formats_minus1" );
 #else
     WRITE_CODE( pcVPS->getVpsNumRepFormatsMinus1( ), 4, "vps_num_rep_formats_minus1" );
@@ -1275,7 +1275,16 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
     {
       if( pcVPS->getVpsNumRepFormatsMinus1() > 0 )
       {
+#if H_MV_HLS_7_VPS_P0306_22
+        Int numBits = 1;
+        while ((1 << numBits) < (pcVPS->getVpsNumRepFormatsMinus1() + 1))
+        {
+          numBits++;
+        }
+        WRITE_CODE( pcVPS->getVpsRepFormatIdx(i), numBits, "vps_rep_format_idx[i]" );
+#else
         WRITE_CODE( pcVPS->getVpsRepFormatIdx( i ), 8, "vps_rep_format_idx" );
+#endif
       }
     }
   }

@@ -332,7 +332,7 @@
 
 // #define H_MV_HLS_7_ED_FIX_P0130_34        0 // (ED.FIX/P0130/il ref pic set no reference pic) #34 For proposal 5, delegated to editors
 // #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
-// #define H_MV_HLS_7_VPS_P0306_22           0 // (VPS/P0306/ue(v) coded syntax elements) #22 Several minor modifications to the VPS syntax, consistent with eliminating the previous intention to avoid ue(v) parsing in the VPS 
+#define H_MV_HLS_7_VPS_P0306_22           0 // (VPS/P0306/ue(v) coded syntax elements) #22 Several minor modifications to the VPS syntax, consistent with eliminating the previous intention to avoid ue(v) parsing in the VPS 
 // #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 #define H_MV_HLS_7_VPS_P0125_24           1 // (VPS/P0125/VPS extension offset ) #24 Decision: Keep it as a reserved FFFF value. 
 #define H_MV_HLS_7_VPS_P0307_23           1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
