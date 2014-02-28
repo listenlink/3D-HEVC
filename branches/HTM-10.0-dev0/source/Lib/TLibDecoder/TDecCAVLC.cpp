@@ -1328,7 +1328,7 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   READ_CODE( 10, uiCode, "vps_number_layer_sets_minus1"      );  pcVPS->setVpsNumberLayerSetsMinus1    ( uiCode ); 
 #endif
 
-#if !H_MV_HLS7_GEN
+#if !H_MV_HLS_7_VPS_P0306_22
   READ_CODE( 6,  uiCode, "vps_num_profile_tier_level_minus1" );  pcVPS->setVpsNumProfileTierLevelMinus1( uiCode );
 #else
   READ_UVLC( uiCode, "vps_num_profile_tier_level_minus1" );  pcVPS->setVpsNumProfileTierLevelMinus1( uiCode );  
@@ -1456,8 +1456,8 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   READ_FLAG( uiCode, "rep_format_idx_present_flag" ); pcVPS->setRepFormatIdxPresentFlag( uiCode == 1 );
   if ( pcVPS->getRepFormatIdxPresentFlag() )
   {
-#if H_MV_HLS7_GEN
-    READ_UVLC( 4, uiCode, "vps_num_rep_formats_minus1" ); pcVPS->setVpsNumRepFormatsMinus1( uiCode );
+#if H_MV_HLS_7_VPS_P0306_22
+    READ_UVLC( uiCode, "vps_num_rep_formats_minus1" ); pcVPS->setVpsNumRepFormatsMinus1( uiCode );
 #else
     READ_CODE( 4, uiCode, "vps_num_rep_formats_minus1" ); pcVPS->setVpsNumRepFormatsMinus1( uiCode );
 #endif
@@ -1478,7 +1478,16 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     {
       if( pcVPS->getVpsNumRepFormatsMinus1() > 0 )
       {
+#if H_MV_HLS_7_VPS_P0306_22
+        Int numBits = 1;
+        while ((1 << numBits) < (pcVPS->getVpsNumRepFormatsMinus1() + 1))
+        {
+          numBits++;
+        }
+        READ_CODE( numBits, uiCode, "vps_rep_format_idx[i]" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
+#else
         READ_CODE( 8, uiCode, "vps_rep_format_idx" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
+#endif
       }
     }
   }
