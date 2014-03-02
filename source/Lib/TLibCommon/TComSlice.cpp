@@ -1329,6 +1329,12 @@ Void TComSlice::applyReferencePictureSet( TComList<TComPic*>& rcListPic, TComRef
       }
 
     }
+#if H_MV_HLS_7_MISC_P0130_20
+    if( isReference ) // Current picture is in the temporal RPS
+    {
+      assert( rpcPic->getSlice(0)->getDiscardableFlag() == 0 ); // Temporal RPS shall not contain picture with discardable_flag equal to 1
+    }
+#endif
     // mark the picture as "unused for reference" if it is not in
     // the Reference Picture Set
     if(rpcPic->getPicSym()->getSlice(0)->getPOC() != this->getPOC() && isReference == 0)    
@@ -2960,8 +2966,8 @@ Void TComSlice::createInterLayerReferencePictureSet( TComPicLists* ivPicLists, s
     }
     // Consider to check here: 
     // "If the current picture is a RADL picture, there shall be no entry in the RefPicSetInterLayer0 and RefPicSetInterLayer1 that is a RASL picture. "    
-#if H_MV_HLS7_GEN
-    // "There shall be no picture that has discardable_flag equal to 1 in RefPicSetInterLayer0 or RefPicSetInterLayer1".    
+#if H_MV_HLS_7_MISC_P0130_20
+    assert( picRef->getSlice(0)->getDiscardableFlag() == false ); // "There shall be no picture that has discardable_flag equal to 1 in RefPicSetInterLayer0 or RefPicSetInterLayer1".        
 #endif
   }
 }
