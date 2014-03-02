@@ -339,7 +339,7 @@
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
 // #define H_MV_HLS_7_SEI_P0204_26           0 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
-// #define H_MV_HLS_7_MISC_P0130_20          0 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
+#define H_MV_HLS_7_MISC_P0130_20          1 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
 
 
 // #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
