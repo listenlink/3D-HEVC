@@ -278,6 +278,8 @@
 #endif
 
 #define MTK_DDD_G0063                     1   // Disparity derived depth coding
+#define HTM10RC1_FIX                           1   // Fix of DDD
+
 
 #if H_3D_VSP
 #define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
