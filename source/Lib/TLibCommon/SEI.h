@@ -71,6 +71,9 @@ public:
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
+#if H_MV_HLS_7_SEI_P0204_26
+    SUB_BITSTREAM_PROPERTY               = 139,    // Final PayloadType to be defined after finalization
+#endif
   };
   
   SEI() {}
@@ -361,6 +364,25 @@ public:
   Int    m_nominalWhiteLevelLumaCodeValue;
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
+
+#if H_MV_HLS_7_SEI_P0204_26
+class SEISubBitstreamProperty : public SEI
+{
+public:
+  PayloadType payloadType() const { return SUB_BITSTREAM_PROPERTY; }
+
+  SEISubBitstreamProperty():   m_activeVpsId(-1), m_numAdditionalSubStreams(0) {}
+  virtual ~SEISubBitstreamProperty() {}
+
+  Int  m_activeVpsId;
+  Int  m_numAdditionalSubStreams;
+  std::vector<Int>  m_subBitstreamMode;
+  std::vector<Int>  m_outputLayerSetIdxToVps;
+  std::vector<Int>  m_highestSublayerId;
+  std::vector<Int>  m_avgBitRate;
+  std::vector<Int>  m_maxBitRate;
+};
+#endif
 
 typedef std::list<SEI*> SEIMessages;
 

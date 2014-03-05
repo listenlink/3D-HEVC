@@ -439,7 +439,15 @@ protected:
   Int       m_maxBitsPerMinCuDenom;                           ///< Indicates an upper bound for the number of bits of coding_unit() data
   Int       m_log2MaxMvLengthHorizontal;                      ///< Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
-
+#if H_MV_HLS_7_SEI_P0204_26
+  Bool              m_subBistreamPropSEIEnabled;
+  Int               m_sbPropNumAdditionalSubStreams;
+  std::vector<Int>  m_sbPropSubBitstreamMode;
+  std::vector<Int>  m_sbPropOutputLayerSetIdxToVps;
+  std::vector<Int>  m_sbPropHighestSublayerId;
+  std::vector<Int>  m_sbPropAvgBitRate;
+  std::vector<Int>  m_sbPropMaxBitRate;
+#endif
 #if H_3D
   // Camera parameters
   Char*     m_pchCameraParameterFile;                         ///< camera parameter file

@@ -65,6 +65,9 @@ protected:
   Void xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei);
   Void xWriteSEISOPDescription(const SEISOPDescription& sei);
   Void xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting& sei, TComSPS *sps);
+#if H_MV_HLS_7_SEI_P0204_26
+  Void xWriteSEISubBitstreamProperty(const SEISubBitstreamProperty &sei);
+#endif
   Void xWriteByteAlign();
 };
 

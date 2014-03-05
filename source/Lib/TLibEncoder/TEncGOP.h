@@ -211,6 +211,9 @@ protected:
   SEIDisplayOrientation*  xCreateSEIDisplayOrientation();
 
   SEIToneMappingInfo*     xCreateSEIToneMappingInfo();
+#if H_MV_HLS_7_SEI_P0204_26
+  SEISubBitstreamProperty *xCreateSEISubBitstreamProperty( TComSPS *sps);
+#endif
 
   Void xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps);
   Int xGetFirstSeiLocation (AccessUnit &accessUnit);

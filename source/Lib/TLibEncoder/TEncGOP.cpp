@@ -295,6 +295,25 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   return seiToneMappingInfo;
 }
 
+#if H_MV_HLS_7_SEI_P0204_26
+SEISubBitstreamProperty *TEncGOP::xCreateSEISubBitstreamProperty( TComSPS *sps)
+{
+  SEISubBitstreamProperty *seiSubBitstreamProperty = new SEISubBitstreamProperty();
+
+  seiSubBitstreamProperty->m_activeVpsId = sps->getVPSId();
+  /* These values can be determined by the encoder; for now we will use the input parameter */
+  TEncTop *encTop = this->m_pcEncTop;
+  seiSubBitstreamProperty->m_numAdditionalSubStreams = encTop->getNumAdditionalSubStreams();
+  seiSubBitstreamProperty->m_subBitstreamMode        = encTop->getSubBitstreamMode();
+  seiSubBitstreamProperty->m_outputLayerSetIdxToVps  = encTop->getOutputLayerSetIdxToVps();
+  seiSubBitstreamProperty->m_highestSublayerId       = encTop->getHighestSublayerId();
+  seiSubBitstreamProperty->m_avgBitRate              = encTop->getAvgBitRate();
+  seiSubBitstreamProperty->m_maxBitRate              = encTop->getMaxBitRate();
+
+  return seiSubBitstreamProperty;
+}
+#endif
+
 Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit &accessUnit, TComSPS *sps)
 {
   OutputNALUnit nalu(NAL_UNIT_PREFIX_SEI);
@@ -345,6 +364,19 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
+#if H_MV_HLS_7_SEI_P0204_26
+  if( m_pcCfg->getSubBitstreamPropSEIEnabled() )
+  {
+    SEISubBitstreamProperty *sei = xCreateSEISubBitstreamProperty ( sps );
+
+    nalu = NALUnit(NAL_UNIT_PREFIX_SEI); 
+    m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
+    m_seiWriter.writeSEImessage(nalu.m_Bitstream, *sei, sps); 
+    writeRBSPTrailingBits(nalu.m_Bitstream);
+    accessUnit.push_back(new NALUnitEBSP(nalu));
+    delete sei;
+  }
+#endif
 }
 
 // ====================================================================================================================
