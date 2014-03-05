@@ -92,6 +92,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
+#if H_MV_HLS_7_SEI_P0204_26
+    case SEI::SUB_BITSTREAM_PROPERTY:
+    fprintf( g_hTrace, "=========== Sub-bitstream property SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -145,6 +150,11 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
+#if H_MV_HLS_7_SEI_P0204_26
+   case SEI::SUB_BITSTREAM_PROPERTY:
+   xWriteSEISubBitstreamProperty(*static_cast<const SEISubBitstreamProperty*>(&sei));
+   break;
+#endif
   default:
     assert(!"Unhandled SEI message");
   }
@@ -577,6 +587,25 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
     writeSEImessage(bs, *(*it), sps);
   }
 }
+
+#if H_MV_HLS_7_SEI_P0204_26
+Void SEIWriter::xWriteSEISubBitstreamProperty(const SEISubBitstreamProperty &sei)
+{
+  WRITE_CODE( sei.m_activeVpsId, 4, "active_vps_id" );
+  assert( sei.m_numAdditionalSubStreams >= 1 );
+  WRITE_UVLC( sei.m_numAdditionalSubStreams - 1, "num_additional_sub_streams_minus1" );
+
+  for( Int i = 0; i < sei.m_numAdditionalSubStreams; i++ )
+  {
+    WRITE_CODE( sei.m_subBitstreamMode[i],       2, "sub_bitstream_mode[i]"           );
+    WRITE_UVLC( sei.m_outputLayerSetIdxToVps[i],    "output_layer_set_idx_to_vps[i]"  );
+    WRITE_CODE( sei.m_highestSublayerId[i],      3, "highest_sub_layer_id[i]"         );
+    WRITE_CODE( sei.m_avgBitRate[i],            16, "avg_bit_rate[i]"                 );
+    WRITE_CODE( sei.m_maxBitRate[i],            16, "max_bit_rate[i]"                 );
+  }
+  xWriteByteAlign();
+}
+#endif
 
 Void SEIWriter::xWriteByteAlign()
 {

@@ -736,6 +736,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIDecodingUnitInfo",             m_decodingUnitInfoSEIEnabled,                       0, "Control generation of decoding unit information SEI message.")
   ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,              0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
+#if H_MV_HLS_7_SEI_P0204_26
+  ("SubBitstreamPropSEIEnabled",              m_subBistreamPropSEIEnabled,    false                     ,"Enable signaling of sub-bitstream property SEI message")
+  ("SEISubBitstreamNumAdditionalSubStreams",  m_sbPropNumAdditionalSubStreams,0, "Number of substreams for which additional information is signalled")
+  ("SEISubBitstreamSubBitstreamMode",         m_sbPropSubBitstreamMode,       std::vector< Int  >(1,0)  ,"Specifies mode of generation of the i-th sub-bitstream (0 or 1)")
+  ("SEISubBitstreamOutputLayerSetIdxToVps",   m_sbPropOutputLayerSetIdxToVps, std::vector< Int  >(1,0)  ,"Specifies output layer set index of the i-th sub-bitstream ")
+  ("SEISubBitstreamHighestSublayerId",        m_sbPropHighestSublayerId,      std::vector< Int  >(1,0)  ,"Specifies highest TemporalId of the i-th sub-bitstream")
+  ("SEISubBitstreamAvgBitRate",               m_sbPropAvgBitRate,             std::vector< Int  >(1,0)  ,"Specifies average bit rate of the i-th sub-bitstream")
+  ("SEISubBitstreamMaxBitRate",               m_sbPropMaxBitRate,             std::vector< Int  >(1,0)  ,"Specifies maximum bit rate of the i-th sub-bitstream")
+#endif
 #if H_3D
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
   ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
@@ -2241,6 +2250,25 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
 
 #if H_MV
   }
+  }
+#endif
+#if H_MV_HLS_7_SEI_P0204_26
+  // Check input parameters for Sub-bitstream property SEI message
+  if( m_subBistreamPropSEIEnabled )
+  {
+    xConfirmPara( 
+      (this->m_sbPropNumAdditionalSubStreams != m_sbPropAvgBitRate.size() )
+      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropHighestSublayerId.size() )
+      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropMaxBitRate.size() )
+      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropOutputLayerSetIdxToVps.size() )
+      || (this->m_sbPropNumAdditionalSubStreams != m_sbPropSubBitstreamMode.size()), "Some parameters of some sub-bitstream not defined");
+
+    for( Int i = 0; i < m_sbPropNumAdditionalSubStreams; i++ )
+    {
+      xConfirmPara( m_sbPropSubBitstreamMode[i] < 0 || m_sbPropSubBitstreamMode[i] > 1, "Mode value should be 0 or 1" );
+      xConfirmPara( m_sbPropHighestSublayerId[i] < 0 || m_sbPropHighestSublayerId[i] > MAX_TLAYER-1, "Maximum sub-layer ID out of range" );
+      xConfirmPara( m_sbPropOutputLayerSetIdxToVps[i] < 0 || m_sbPropOutputLayerSetIdxToVps[i] >= MAX_VPS_OUTPUTLAYER_SETS, "OutputLayerSetIdxToVps should be within allowed range" );
+    }
   }
 #endif
 #undef xConfirmPara

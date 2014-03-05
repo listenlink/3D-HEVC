@@ -428,6 +428,18 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
+#if H_MV_HLS_7_SEI_P0204_26
+  m_cTEncTop.setSubBitstreamPropSEIEnabled( m_subBistreamPropSEIEnabled );
+  if( m_subBistreamPropSEIEnabled )
+  {
+    m_cTEncTop.setNumAdditionalSubStreams ( m_sbPropNumAdditionalSubStreams );
+    m_cTEncTop.setSubBitstreamMode        ( m_sbPropSubBitstreamMode );
+    m_cTEncTop.setOutputLayerSetIdxToVps  ( m_sbPropOutputLayerSetIdxToVps );
+    m_cTEncTop.setHighestSublayerId       ( m_sbPropHighestSublayerId );
+    m_cTEncTop.setAvgBitRate              ( m_sbPropAvgBitRate );
+    m_cTEncTop.setMaxBitRate              ( m_sbPropMaxBitRate );
+  }
+#endif
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
   m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );

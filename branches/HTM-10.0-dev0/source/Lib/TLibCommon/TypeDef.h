@@ -338,7 +338,7 @@
 #define H_MV_HLS_7_VPS_P0307_23           1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
-// #define H_MV_HLS_7_SEI_P0204_26           0 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
+#define H_MV_HLS_7_SEI_P0204_26           1 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
 #define H_MV_HLS_7_MISC_P0130_20          1 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
 
 
@@ -415,6 +415,9 @@
 #define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
 #define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
 #define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
+#if H_MV_HLS_7_SEI_P0204_26
+#define MAX_SUB_STREAMS                 1024
+#endif
 #else
 #define MAX_NUM_LAYER_IDS                64
 #endif
