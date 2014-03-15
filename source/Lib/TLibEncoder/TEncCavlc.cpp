@@ -2246,7 +2246,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
 #endif
 
-#if !H_MV_HLS7_GEN
+#if !H_MV_HLS_7_POC_P0041
 #if PPS_FIX_DEPTH
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag() || pcSlice->getIsDepth() )
 #else
@@ -2257,7 +2257,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   }
 #endif
 
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_POC_P0041
 #if !H_MV
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag())
   {
@@ -2266,11 +2266,74 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #else
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag())
   {
+    // Derive the value of PocMsbValRequiredFlag
+    pcSlice->setPocMsbValRequiredFlag( pcSlice->getCraPicFlag() || pcSlice->getBlaPicFlag()
+                                          /* || related to vps_poc_lsb_aligned_flag */
+                                          );
+
+    // Determine value of SH extension length.
+    Int shExtnLengthInBit = 0;
+    if (pcSlice->getPPS()->getPocResetInfoPresentFlag())
+    {
+      shExtnLengthInBit += 2;
+    }
+    if (pcSlice->getPocResetIdc() > 0)
+    {
+      shExtnLengthInBit += 6;
+    }
+    if (pcSlice->getPocResetIdc() == 3)
+    {
+      shExtnLengthInBit += (pcSlice->getSPS()->getBitsForPOC() + 1);
+    }
+
+
+    if( !pcSlice->getPocMsbValRequiredFlag() /* TODO &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag() */ )
+    {
+      shExtnLengthInBit++;    // For poc_msb_val_present_flag
+    }
+    else
+    {
+      if( pcSlice->getPocMsbValRequiredFlag() )
+      {
+        pcSlice->setPocMsbValPresentFlag( true );
+      }
+      else
+      {
+        pcSlice->setPocMsbValPresentFlag( false );
+      }
+    }
+
+    if( pcSlice->getPocMsbValPresentFlag() )
+    {
+      Int iMaxPOClsb = 1<< pcSlice->getSPS()->getBitsForPOC();
+
+      UInt lengthVal = 1;
+      UInt tempVal = pcSlice->getPocMsbVal() + 1;
+      assert ( tempVal );
+      while( 1 != tempVal )
+      {
+        tempVal >>= 1;
+        lengthVal += 2;
+      }
+      shExtnLengthInBit += lengthVal;
+    }
+    Int shExtnAdditionalBits = 0;
+    if(shExtnLengthInBit % 8 != 0)
+    {
+      shExtnAdditionalBits = 8 - (shExtnLengthInBit % 8);
+    }
+    pcSlice->setSliceSegmentHeaderExtensionLength((shExtnLengthInBit + shExtnAdditionalBits) / 8);
+     
+
     WRITE_UVLC( pcSlice->getSliceSegmentHeaderExtensionLength( ), "slice_segment_header_extension_length" );
     UInt posFollSliceSegHeaderExtLen = m_pcBitIf->getNumberOfWrittenBits();
     if( pcSlice->getPPS()->getPocResetInfoPresentFlag() )
     {
       WRITE_CODE( pcSlice->getPocResetIdc( ), 2, "poc_reset_idc" );
+    }
+    else
+    {
+      assert( pcSlice->getPocResetIdc( ) == 0 );
     }
 
     if( pcSlice->getPocResetIdc() !=  0 )
@@ -2281,10 +2344,10 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if( pcSlice->getPocResetIdc() ==  3 ) 
     {
       WRITE_FLAG( pcSlice->getFullPocResetFlag( ) ? 1 : 0 , "full_poc_reset_flag" );
-      WRITE_CODE( pcSlice->getPocLsbVal( ), getPocLsbValLen ), "poc_lsb_val" );
+      WRITE_CODE( pcSlice->getPocLsbVal( ), pcSlice->getPocLsbValLen() , "poc_lsb_val" );
     }              
     
-    if( !pcSlice->getPocMsbValRequiredFlag() &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag() )
+    if( !pcSlice->getPocMsbValRequiredFlag() /* TODO &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag() */ )
     {
       WRITE_FLAG( pcSlice->getPocMsbValPresentFlag( ) ? 1 : 0 , "poc_msb_val_present_flag" );
     }
@@ -2293,15 +2356,15 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_UVLC( pcSlice->getPocMsbVal( ), "poc_msb_val" );
     }
-
-    while( ( m_pcBitIf->getNumberOfWrittenBits() - posFollSliceSegHeaderExtLen ) < pcSlice->getSliceSegmentHeaderExtensionLength() * 8 ); 
+    
+    while( ( m_pcBitIf->getNumberOfWrittenBits() - posFollSliceSegHeaderExtLen ) < pcSlice->getSliceSegmentHeaderExtensionLength() * 8 )
     {
       WRITE_FLAG( 0, "slice_segment_header_extension_data_bit" );
     }
 
-    assert( m_pcBitIf->getNumberOfWrittenBits() - posFollSliceSegHeaderExtLen ) == pcSlice->getSliceSegmentHeaderExtensionLength() * 8  ); 
+    assert( ( m_pcBitIf->getNumberOfWrittenBits() - posFollSliceSegHeaderExtLen ) == pcSlice->getSliceSegmentHeaderExtensionLength() * 8  ); 
+  }
 #endif 
-
 #endif
 }
 

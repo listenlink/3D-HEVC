@@ -2239,7 +2239,7 @@ private:
   Int        m_numInterLayerRefPicsMinus1;
   Int        m_interLayerPredLayerIdc       [MAX_NUM_LAYERS];
 
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_POC_P0041
   Int        m_sliceSegmentHeaderExtensionLength;
   Int        m_pocResetIdc;
   Int        m_pocResetPeriodId;
@@ -2247,6 +2247,7 @@ private:
   Int        m_pocLsbVal;
   Bool       m_pocMsbValPresentFlag;
   Int        m_pocMsbVal;
+  Bool       m_pocMsbValRequiredFlag;
 #endif
 
 #if H_3D
@@ -2595,7 +2596,7 @@ public:
   Void setInterLayerPredLayerIdc( Int i, Int  val ) { m_interLayerPredLayerIdc[i] = val; } 
   Int  getInterLayerPredLayerIdc( Int i ) { return m_interLayerPredLayerIdc[i]; } 
 
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_POC_P0041
   Void setSliceSegmentHeaderExtensionLength( Int  val ) { m_sliceSegmentHeaderExtensionLength = val; } 
   Int  getSliceSegmentHeaderExtensionLength(  ) { return m_sliceSegmentHeaderExtensionLength; } 
 
@@ -2617,6 +2618,21 @@ public:
   Void setPocMsbVal( Int  val ) { m_pocMsbVal = val; } 
   Int  getPocMsbVal(  ) { return m_pocMsbVal; } 
 
+  Bool getPocMsbValRequiredFlag() { return m_pocMsbValRequiredFlag; }
+  Void setPocMsbValRequiredFlag(Bool x) { m_pocMsbValRequiredFlag = x; }
+
+  UInt getPocLsbValLen() { return getSPS()->getBitsForPOC(); }; //log2_max_pic_order_cnt_lsb_minus4 + 4  
+
+  Bool TComSlice::getBlaPicFlag       ()
+  {
+    return  getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
+    || getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
+    || getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP;
+  }
+  Bool TComSlice::getCraPicFlag       ()
+  {
+    return getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA;
+  }
 #endif
 
   // Additional variables derived in slice header semantics 
@@ -2637,10 +2653,6 @@ public:
   Void     setRefPicSetInterLayer       ( std::vector<TComPic*>* refPicSetInterLayer0, std::vector<TComPic*>* refPicSetInterLayer1);
   TComPic* getPicFromRefPicSetInterLayer( Int setIdc, Int layerId );
 
-#if H_MV_HLS7_GEN
-  Bool     getPocMsbValRequiredFlag( )        { return   }; 
-  UInt     getPocLsbValLen()                  { return getSPS->getBitsForPOC(); }; //log2_max_pic_order_cnt_lsb_minus4 + 4  
-#endif
 #endif
 #if MTK_DDD_G0063
   Void InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
