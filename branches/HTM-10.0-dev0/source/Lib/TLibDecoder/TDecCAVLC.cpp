@@ -382,7 +382,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
     if( pcPPS->getPpsExtensionTypeFlag( PPS_EX_T_MV ) )
     {
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_POC_P0041
       READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
 #endif
     }
