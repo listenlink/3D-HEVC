@@ -1939,7 +1939,7 @@ private:
 #if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION
   Bool m_ppsExtensionTypeFlag[PS_EX_T_MAX_NUM];
 #endif
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_POC_P0041
   Bool m_pocResetInfoPresentFlag;
 #endif
 #endif
@@ -2089,7 +2089,7 @@ public:
   Bool getPpsExtensionTypeFlag( Int i ) { return m_ppsExtensionTypeFlag[i]; } 
 #endif
 
-#if H_MV_HLS7_GEN
+#if H_MV_HLS_7_POC_P0041
   Void setPocResetInfoPresentFlag( Bool flag ) { m_pocResetInfoPresentFlag = flag; } 
   Bool getPocResetInfoPresentFlag(  ) { return m_pocResetInfoPresentFlag; } 
 #endif

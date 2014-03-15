@@ -336,6 +336,7 @@
 // #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 #define H_MV_HLS_7_VPS_P0125_24           1 // (VPS/P0125/VPS extension offset ) #24 Decision: Keep it as a reserved FFFF value. 
 #define H_MV_HLS_7_VPS_P0307_23           1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
+#define H_MV_HLS_7_POC_P0041              1 // Syntax related to POC reset
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
 #define H_MV_HLS_7_SEI_P0204_26           1 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt

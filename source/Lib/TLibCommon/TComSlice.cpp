@@ -2434,6 +2434,9 @@ TComPPS::TComPPS()
 #if H_MV
 , m_ppsInferScalingListFlag(false)
 , m_ppsScalingListRefLayerId(0)
+#if H_MV_HLS_7_POC_P0041
+, m_pocResetInfoPresentFlag(false)
+#endif
 #if H_3D
 , m_pcDLT(NULL)
 #endif
