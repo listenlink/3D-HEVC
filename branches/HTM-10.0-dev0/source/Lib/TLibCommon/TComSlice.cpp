@@ -111,6 +111,16 @@ TComSlice::TComSlice()
 , m_discardableFlag               (false)
 , m_interLayerPredEnabledFlag     (false)
 , m_numInterLayerRefPicsMinus1    (0)
+#if H_MV_HLS_7_POC_P0041
+, m_sliceSegmentHeaderExtensionLength (0)
+, m_pocResetIdc                       (0)
+, m_pocResetPeriodId                  (0)
+, m_fullPocResetFlag                  (false)
+, m_pocLsbVal                         (0)
+, m_pocMsbValPresentFlag              (false)
+, m_pocMsbVal                         (0)
+, m_pocMsbValRequiredFlag         ( false )
+#endif
 #if H_3D_IC
 , m_bApplyIC                      ( false )
 , m_icSkipParseFlag               ( false )

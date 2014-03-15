@@ -2732,7 +2732,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 
   if(pps->getSliceHeaderExtensionPresentFlag())
   {
-#if !H_MV_HLS7_GEN    
+#if !H_MV_HLS_7_POC_P0041    
     READ_UVLC(uiCode,"slice_header_extension_length");
     for(Int i=0; i<uiCode; i++)
     {
@@ -2749,10 +2749,19 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_CODE( 2, uiCode, "poc_reset_idc" ); rpcSlice->setPocResetIdc( uiCode );
     }
+    else
+    {
+      rpcSlice->setPocResetIdc( 0 );
+    }
 
     if( rpcSlice->getPocResetIdc() !=  0 )
     {
       READ_CODE( 6, uiCode, "poc_reset_period_id" ); rpcSlice->setPocResetPeriodId( uiCode );
+    }
+    else
+    {
+      // TODO Copy poc_reset_period from earlier picture
+      rpcSlice->setPocResetPeriodId( 0 );
     }
     
     if( rpcSlice->getPocResetIdc() ==  3 ) 
@@ -2761,21 +2770,38 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_CODE( rpcSlice->getPocLsbValLen() , uiCode, "poc_lsb_val" ); rpcSlice->setPocLsbVal( uiCode );
     }          
 
-    if( !rpcSlice->getPocMsbValRequiredFlag() &&  rpcSlice->getVPS()->getVpsPocLsbAlignedFlag() )
+    // Derive the value of PocMsbValRequiredFlag
+    rpcSlice->setPocMsbValRequiredFlag( rpcSlice->getCraPicFlag() || rpcSlice->getBlaPicFlag()
+                                          /* || TODO related to vps_poc_lsb_aligned_flag */
+                                          );
+
+    if( !rpcSlice->getPocMsbValRequiredFlag() /* TODO &&  rpcSlice->getVPS()->getVpsPocLsbAlignedFlag() */ )
     {
       READ_FLAG( uiCode, "poc_msb_val_present_flag" ); rpcSlice->setPocMsbValPresentFlag( uiCode == 1 );
     }
+    else
+    {
+      if( rpcSlice->getPocMsbValRequiredFlag() )
+      {
+        rpcSlice->setPocMsbValPresentFlag( true );
+      }
+      else
+      {
+        rpcSlice->setPocMsbValPresentFlag( false );
+      }
+    }
+
     
     if( rpcSlice->getPocMsbValPresentFlag() )
     {
       READ_UVLC( uiCode, "poc_msb_val" ); rpcSlice->setPocMsbVal( uiCode );
     }
 
-    while( ( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) < rpcSlice->getSliceSegmentHeaderExtensionLength() * 8 );
+    while( ( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) < rpcSlice->getSliceSegmentHeaderExtensionLength() * 8 )
     {
      READ_FLAG( uiCode, "slice_segment_header_extension_data_bit" );
     }
-    assert( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) == rpcSlice->getSliceSegmentHeaderExtensionLength() * 8  ); 
+    assert( ( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) == rpcSlice->getSliceSegmentHeaderExtensionLength() * 8  ); 
 #else
     READ_UVLC( uiCode, "slice_header_extension_length" );
     for(Int i=0; i<uiCode; i++)
@@ -2786,6 +2812,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   }
 #endif
 #endif
+  }
 
 
   m_pcBitstream->readByteAlignment();
