@@ -4717,13 +4717,20 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       {
 
           TComMvField cMVField;
+#if !HTM10RC1_FIX
           UChar ucInterDir = pcTextureCU->getInterDir( uiPartIdx );
-
+#endif
           Int iDV = 0;
           Int iViewIdx = 0;
+#if !HTM10RC1_FIX
           if( ucInterDir & 1 )
           {
+#endif
               pcTextureCU->getMvField( pcTextureCU, uiPartIdx, REF_PIC_LIST_0, cMVField );
+#if HTM10RC1_FIX
+              if( cMVField.getRefIdx() >= 0 )
+              {
+#endif
               if( pcTextureSlice->getRefPOC( REF_PIC_LIST_0, cMVField.getRefIdx()) == pcTextureSlice->getPOC() )
               {
                   iViewIdx = pcTextureSlice->getRefPic( REF_PIC_LIST_0, cMVField.getRefIdx())->getViewIndex();
@@ -4743,9 +4750,17 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                   }
               }
           }
+
+#if !HTM10RC1_FIX
           if( !tmpDir && ( ucInterDir & 2 ))
           {
+#endif
               pcTextureCU->getMvField( pcTextureCU, uiPartIdx, REF_PIC_LIST_1, cMVField );
+
+#if HTM10RC1_FIX
+              if( !tmpDir && cMVField.getRefIdx() >= 0 )
+              {
+#endif
               if( pcTextureSlice->getRefPOC( REF_PIC_LIST_1, cMVField.getRefIdx()) == pcTextureSlice->getPOC() )
               {
                   iViewIdx = pcTextureSlice->getRefPic( REF_PIC_LIST_1, cMVField.getRefIdx())->getViewIndex();
