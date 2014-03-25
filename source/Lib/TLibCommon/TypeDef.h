@@ -331,27 +331,24 @@
 
 
 // TBD
-
-// #define H_MV_HLS_7_ED_FIX_P0130_34        0 // (ED.FIX/P0130/il ref pic set no reference pic) #34 For proposal 5, delegated to editors
-// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
-#define H_MV_HLS_7_VPS_P0306_22           0 // (VPS/P0306/ue(v) coded syntax elements) #22 Several minor modifications to the VPS syntax, consistent with eliminating the previous intention to avoid ue(v) parsing in the VPS 
-// #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
-#define H_MV_HLS_7_VPS_P0125_24           1 // (VPS/P0125/VPS extension offset ) #24 Decision: Keep it as a reserved FFFF value. 
-#define H_MV_HLS_7_VPS_P0307_23           1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
-#define H_MV_HLS_7_POC_P0041              1 // Syntax related to POC reset
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
-#define H_MV_HLS_7_SEI_P0204_26           1 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
-#define H_MV_HLS_7_MISC_P0130_20          1 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
-
-
-// #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
-// #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 // #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications – with text provided as P0297).
+
+// #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
+// #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
+
 // #define H_MV_HLS_7_HRD_P0138_6            0 // (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
+// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+// #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 
 
-
+#define H_MV_HLS_7_VPS_P0306_22                1 // (VPS/P0306/ue(v) coded syntax elements) #22 Several minor modifications to the VPS syntax, consistent with eliminating the previous intention to avoid ue(v) parsing in the VPS 
+#define H_MV_HLS_7_SEI_P0204_26                1 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
+#define H_MV_HLS_7_MISC_P0130_20               1 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
+#define H_MV_HLS_7_VPS_P0125_24                1 // (VPS/P0125/VPS extension offset ) #24 Decision: Keep it as a reserved FFFF value. 
+#define H_MV_HLS_7_VPS_P0307_23                1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
+#define H_MV_HLS_7_POC_P0041                   1 // Syntax related to POC reset
 
 
 #define H_MV_HLS7_GEN                          0  // General changes (not tested)
@@ -380,7 +377,7 @@
 #define FIX_CAM_PARS_COLLECTOR                 1
 #define UPDATE_HM13                            1  // Only some parts in H_3D parts are marked! 
 #if H_3D
-#define H_3D_FIX_G0148_BRACE              1 
+#define H_3D_FIX_G0148_BRACE                   1 
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
