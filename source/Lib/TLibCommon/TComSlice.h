@@ -2626,13 +2626,13 @@ public:
 
   UInt getPocLsbValLen() { return getSPS()->getBitsForPOC(); }; //log2_max_pic_order_cnt_lsb_minus4 + 4  
 
-  Bool TComSlice::getBlaPicFlag       ()
+  Bool getBlaPicFlag       ()
   {
     return  getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_N_LP
     || getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_RADL
     || getNalUnitType() == NAL_UNIT_CODED_SLICE_BLA_W_LP;
   }
-  Bool TComSlice::getCraPicFlag       ()
+  Bool getCraPicFlag       ()
   {
     return getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA;
   }
