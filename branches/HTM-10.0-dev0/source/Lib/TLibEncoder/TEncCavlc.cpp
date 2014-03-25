@@ -2293,7 +2293,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 
     if( pcSlice->getPocMsbValPresentFlag() )
     {
-      Int iMaxPOClsb = 1<< pcSlice->getSPS()->getBitsForPOC();
+//      Int iMaxPOClsb = 1<< pcSlice->getSPS()->getBitsForPOC(); currently unused
 
       UInt lengthVal = 1;
       UInt tempVal = pcSlice->getPocMsbVal() + 1;
