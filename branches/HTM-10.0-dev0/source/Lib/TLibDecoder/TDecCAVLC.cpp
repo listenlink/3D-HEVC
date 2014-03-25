@@ -1479,12 +1479,7 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
       if( pcVPS->getVpsNumRepFormatsMinus1() > 0 )
       {
 #if H_MV_HLS_7_VPS_P0306_22
-        Int numBits = 1;
-        while ((1 << numBits) < (pcVPS->getVpsNumRepFormatsMinus1() + 1))
-        {
-          numBits++;
-        }
-        READ_CODE( numBits, uiCode, "vps_rep_format_idx[i]" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
+        READ_CODE( pcVPS->getVpsRepFormatIdxLen(), uiCode, "vps_rep_format_idx[i]" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
 #else
         READ_CODE( 8, uiCode, "vps_rep_format_idx" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
 #endif

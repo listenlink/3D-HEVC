@@ -269,13 +269,6 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
 #endif
   WRITE_FLAG( pcPPS->getListsModificationPresentFlag(), "lists_modification_present_flag");
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
-#if PPS_FIX_DEPTH
-  if( pcPPS->getSPS()->getVPS()->getDepthId(pcPPS->getSPS()->getLayerId()) )
-  {
-    WRITE_FLAG( 1, "slice_segment_header_extension_present_flag" );
-  }
-  else
-#endif
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
 
 #if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION
@@ -1276,12 +1269,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       if( pcVPS->getVpsNumRepFormatsMinus1() > 0 )
       {
 #if H_MV_HLS_7_VPS_P0306_22
-        Int numBits = 1;
-        while ((1 << numBits) < (pcVPS->getVpsNumRepFormatsMinus1() + 1))
-        {
-          numBits++;
-        }
-        WRITE_CODE( pcVPS->getVpsRepFormatIdx(i), numBits, "vps_rep_format_idx[i]" );
+        WRITE_CODE( pcVPS->getVpsRepFormatIdx(i), pcVPS->getVpsRepFormatIdxLen(), "vps_rep_format_idx[i]" );
 #else
         WRITE_CODE( pcVPS->getVpsRepFormatIdx( i ), 8, "vps_rep_format_idx" );
 #endif

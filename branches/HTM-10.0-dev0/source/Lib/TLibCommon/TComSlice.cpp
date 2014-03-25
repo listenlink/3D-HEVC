@@ -2959,7 +2959,7 @@ Void TComSlice::createInterLayerReferencePictureSet( TComPicLists* ivPicLists, s
   {
     Int layerIdRef = getRefPicLayerId( i ); 
     TComPic* picRef = ivPicLists->getPic( layerIdRef, getPOC() ) ; 
-    assert ( picRef != 0 ); 
+    assert ( picRef != 0 ); // There shall be no entry equal to "no reference picture" in RefPicSetInterLayer0 or RefPicSetInterLayer1.
 
     picRef->getPicYuvRec()->extendPicBorder(); 
     picRef->setIsLongTerm( true );        

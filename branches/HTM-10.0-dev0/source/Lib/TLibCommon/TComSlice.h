@@ -1165,8 +1165,11 @@ public:
   Bool    checkVPSExtensionSyntax(); 
   Int     scalTypeToScalIdx   ( ScalabilityType scalType );
 
-Int     getProfileLevelTierIdxLen()                                      { return gCeilLog2( getVpsNumProfileTierLevelMinus1() + 1 ); };       
+  Int     getProfileLevelTierIdxLen()                                      { return gCeilLog2( getVpsNumProfileTierLevelMinus1() + 1 ); };       
 
+#if H_MV_HLS_7_VPS_P0306_22
+  Int     getVpsRepFormatIdxLen()                                          { return gCeilLog2( getVpsNumRepFormatsMinus1() + 1 ); };       
+#endif
   Int     getNumLayersInIdList ( Int lsIdx );
 
   Int     getNumOutputLayerSets() ;   

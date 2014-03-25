@@ -941,12 +941,6 @@ Void TEncTop::xInitPPS()
       m_cSliceEncoder.setCtxMem( ctx, st );
     }
   }
-#if H_3D
-  if( m_cVPS->hasCamParInSliceHeader( getViewIndex() ) )
-  {
-    m_cPPS.setSliceHeaderExtensionPresentFlag( true ); 
-  }
-#endif
 }
 
 //Function for initializing m_RPSList, a list of TComReferencePictureSet, based on the GOPEntry objects read from the config file.
