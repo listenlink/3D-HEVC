@@ -1049,11 +1049,7 @@ Void TEncSbac::codeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
   m_pcBinIf->encodeBin( iW ? 1 : 0 , m_cCUPUARPWSCModel.get( 0, 0, 0 + nOffset ) );
   if( nBinNum > 1 )
   {
-#if MTK_ARP_FLAG_CABAC_SIMP_G0061
      m_pcBinIf->encodeBin( ( iW == iMaxW ) ? 1 : 0, m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
-#else
-     m_pcBinIf->encodeBin( ( iW == iMaxW ) ? 1 : 0, m_cCUPUARPWSCModel.get( 0, 0, 3 ) );
-#endif
   }
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU("iv_res_pred_weight_idx", iW); 
@@ -1071,17 +1067,10 @@ Void TEncSbac::codeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   // get context function is here
   UInt uiSymbol = pcCU->getICFlag( uiAbsPartIdx ) ? 1 : 0;
-#if MTK_IC_FLAG_CABAC_SIMP_G0061
   m_pcBinIf->encodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, 0 ) );
-#else
-  UInt uiCtxIC  = pcCU->getCtxICFlag( uiAbsPartIdx ) ;
-  m_pcBinIf->encodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, uiCtxIC ) );
-#endif
 #if !H_MV_ENC_DEC_TRAC
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tICFlag" );
-  DTRACE_CABAC_T( "\tuiCtxIC: ");
-  DTRACE_CABAC_V( uiCtxIC );
   DTRACE_CABAC_T( "\tuiSymbol: ");
   DTRACE_CABAC_V( uiSymbol );
   DTRACE_CABAC_T( "\n");

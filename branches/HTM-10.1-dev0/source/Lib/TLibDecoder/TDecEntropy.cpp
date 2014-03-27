@@ -110,11 +110,7 @@ Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 {
   pcCU->setICFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
 
-#if SEC_IC_ARP_SIG_G0072
   if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() || pcCU->getARPW( uiAbsPartIdx ) > 0 )
-#else
-  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() )
-#endif
   {
     return;
   }
@@ -271,18 +267,11 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     {
       decodeMergeIndex( pcCU, uiPartIdx, uiSubPartIdx, uiDepth );
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
-#if !SEC_IC_ARP_SIG_G0072
-#if H_3D_IC
-      decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#endif
 #if H_3D_ARP
       decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
 #endif
-#if SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
 #endif
 #if H_3D_DBBP
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 && pcCU->getDBBPFlag(uiAbsPartIdx) == false )
@@ -439,18 +428,11 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           decodeMVPIdxPU   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
         }
       }
-#if !SEC_IC_ARP_SIG_G0072
-#if H_3D_IC
-      decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#endif
 #if H_3D_ARP
       decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
 #endif
-#if SEC_IC_ARP_SIG_G0072
 #if H_3D_IC
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
 #endif
     }
 #if H_3D_VSP

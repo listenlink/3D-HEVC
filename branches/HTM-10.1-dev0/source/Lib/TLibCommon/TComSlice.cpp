@@ -3206,31 +3206,22 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
     setFirstTRefIdx (REF_PIC_LIST_1, -1);
     for ( Int refListIdx = 0; refListIdx < ((m_eSliceType==B_SLICE) ? 2 : 1); refListIdx++ )
     {
-#if MTK_ARP_REF_SELECTION_G0053
       Int diffPOC=MAX_INT;
       Int idx=-1;
-#endif
       for(Int i = 0; i < getNumRefIdx(RefPicList(refListIdx)); i++ )
       {
         if ( getRefPic(RefPicList(refListIdx), i)->getPOC() != getPOC() )
         {
-#if MTK_ARP_REF_SELECTION_G0053
           if( abs(getRefPic(RefPicList(refListIdx), i)->getPOC() - getPOC()) < diffPOC)
           {
             diffPOC=abs(getRefPic(RefPicList(refListIdx), i)->getPOC() - getPOC());
             idx=i;
           }
-#else
-          setFirstTRefIdx (RefPicList(refListIdx), i);
-          break;
-#endif
         }
-#if MTK_ARP_REF_SELECTION_G0053
         if(idx>=0)
         {
           setFirstTRefIdx (RefPicList(refListIdx), idx);
         }
-#endif
       }
     }
     tempRefPicInListsFlag = getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0;

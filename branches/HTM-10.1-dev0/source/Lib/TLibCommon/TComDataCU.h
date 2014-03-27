@@ -498,11 +498,7 @@ public:
    
 #if H_3D
   Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
-#if SEC_DEPTH_DV_DERIVAITON_G0074
   Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
-#else
-  Bool          getDispNeighBlocks  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
-#endif
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
 
@@ -742,11 +738,6 @@ public:
 #if H_3D_ARP
   UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
 #endif  
-#if !MTK_IC_FLAG_CABAC_SIMP_G0061
-#if H_3D_IC
-  UInt          getCtxICFlag                    ( UInt   uiAbsPartIdx                                 );
-#endif
-#endif
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
   UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }

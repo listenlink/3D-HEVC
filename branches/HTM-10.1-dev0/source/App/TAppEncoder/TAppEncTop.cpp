@@ -186,8 +186,6 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 #if H_3D_SPIVMP
     m_cTEncTop.setSubPULog2Size                 (( isDepth || 0==layerIdInVps ) ? 0 : m_iSubPULog2Size   );
-#endif
-#if QC_SPIVMP_MPI_G0119
     m_cTEncTop.setSubPUMPILog2Size              ( !isDepth ? 0 : m_iSubPUMPILog2Size   );
 #endif
 #if H_3D_IC
@@ -1969,7 +1967,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag );
 #endif
   }  
-#if QC_SPIVMP_MPI_G0119
+#if H_3D_SPIVMP
   vps.setSubPUMPILog2Size( m_iSubPUMPILog2Size );
 #endif
 #if H_3D
