@@ -79,11 +79,8 @@ protected:
 #endif
 
 #if H_3D_VSP
-  Int*   m_pDepthBlock;         ///< Store a depth block, local variable, to prevent memory allocation every time
-#if H_3D_VSP_CONSTRAINED
-  Int  xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma = true);
-#endif
-  TComYuv   m_cYuvDepthOnVsp;
+  Int*    m_pDepthBlock;         ///< Store a depth block, local variable, to prevent memory allocation every time
+  TComYuv m_cYuvDepthOnVsp;
 #endif
 
   Void xPredIntraAng            (Int bitDepth, Int* pSrc, Int srcStride, Pel*& rpDst, Int dstStride, UInt width, UInt height, UInt dirMode, Bool blkAboveAvailable, Bool blkLeftAvailable, Bool bFilter );
@@ -120,13 +117,7 @@ protected:
     );
 
 #if H_3D_VSP
-#if NTT_STORE_SPDV_VSP_G0148
   Void xPredInterUniSubPU        ( TComDataCU *cu, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, Int widthSubPU=4, Int heightSubPU=4 );
-#else
-  Void xGetVirtualDepth           ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int &vspSize, Int txtPerDepthX=1, Int txtPerDepthY=1 );
-  Void xPredInterLumaBlkFromDM    ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&pcYuvDst, Bool isBi, Int vspSize);
-  Void xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&pcYuvDst, Bool isBi, Int vspSize);
-#endif
 #endif
 
   Void xWeightedAverage         ( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, Int iRefIdx0, Int iRefIdx1, UInt uiPartAddr, Int iWidth, Int iHeight, TComYuv*& rpcYuvDst );

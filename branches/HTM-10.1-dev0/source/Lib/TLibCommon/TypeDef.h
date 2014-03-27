@@ -138,6 +138,8 @@
                                               // SHARP_VSP_BLOCK_IN_AMP_F0102 VSP partitioning for AMP
                                               // MTK_VSP_SIMPLIFICATION_F0111 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
                                               // LGE_SHARP_VSP_INHERIT_F0104 
+                                              // NTT_STORE_SPDV_VSP_G0148 Storing Sub-PU based DV for VSP
+                                              // Restricted bi-prediction for VSP
 
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
@@ -313,15 +315,6 @@
 
 #define MTK_DDD_G0063                     1   // Disparity derived depth coding
 #define HTM10RC1_FIX                      1   // Fix of DDD
-
-
-#if H_3D_VSP
-#define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
-#define NTT_STORE_SPDV_VSP_G0148          1   // Storing Sub-PU based DV for VSP
-#endif
-
-
-
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

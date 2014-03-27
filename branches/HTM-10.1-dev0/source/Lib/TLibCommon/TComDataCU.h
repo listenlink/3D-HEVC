@@ -266,7 +266,7 @@ protected:
 
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
 
-#if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_VSP
   Void xSetMvFieldForVSP  ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, Int *shiftLUT, RefPicList refPicList, Int refIdx, Bool isDepth, Int &vspSize );
 #endif
 
@@ -664,9 +664,7 @@ public:
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
   Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }
   Void          setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-#if NTT_STORE_SPDV_VSP_G0148
   Void          setMvFieldPUForVSP    ( TComDataCU* cu, UInt partAddr, Int width, Int height, RefPicList refPicList, Int refIdx, Int &vspSize );
-#endif
 #endif
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );

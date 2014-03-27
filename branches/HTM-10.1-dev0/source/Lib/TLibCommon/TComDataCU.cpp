@@ -3278,10 +3278,6 @@ inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCoun
 
   Bool  refViewAvailFlag = false;
   UChar predFlag[2]      = {0, 0};
-#if !MTK_RBIP_VSP_G0069
-  Int   refListIdY       = 0;    
-  Int   viewIdInRefListX = -1;
-#endif
 
   for( Int iRefListIdX = 0; iRefListIdX < 2 && !refViewAvailFlag; iRefListIdX++ )
   {
@@ -3293,10 +3289,6 @@ inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCoun
       {
         refViewAvailFlag      = true;
         predFlag[iRefListIdX] = 1;
-#if !MTK_RBIP_VSP_G0069
-        viewIdInRefListX      = m_pcSlice->getRefPic(eRefPicListX, i)->getViewId();
-        refListIdY            = 1 - iRefListIdX;
-#endif
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].setMvField( pDInfo->m_acNBDV, i );
 #if H_3D_NBDV
         pcMvFieldNeighbours[(iCount<<1)+iRefListIdX].getMv().setIDVFlag (false);
@@ -3304,48 +3296,6 @@ inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCoun
       }
     }
   }
-
-#if !MTK_RBIP_VSP_G0069
-  if (m_pcSlice->isInterB() && refViewAvailFlag)
-  {
-    RefPicList eRefPicListY = RefPicList( refListIdY );
-    refViewAvailFlag = false;
-    for ( Int i = 0; i < m_pcSlice->getNumRefIdx(eRefPicListY) && !refViewAvailFlag; i++ )
-    {
-      Int viewIdxRefInListY = m_pcSlice->getRefPic(eRefPicListY, i)->getViewIndex();
-      if ( viewIdxRefInListY != refViewIdx && viewIdxRefInListY != m_pcSlice->getViewIndex() )
-      {
-        refViewAvailFlag = true;
-        predFlag[refListIdY] = 1;
-        TComMv  cMv = pDInfo->m_acNBDV;
-
-        Int viewIdInRefListY = m_pcSlice->getRefPic( eRefPicListY, i)->getViewId();
-        Int currViewId       = m_pcSlice->getViewId();
-
-        //// Following might be added here when MV-HEVC 5 HLS is included (and derivations above removed): 
-        // Int viewIdInRefListX = m_pcSlice->getVPS()->getViewIdVal( refViewIdx  ); 
-
-        Int iScale      = xGetDistScaleFactor( currViewId, viewIdInRefListY, currViewId, viewIdInRefListX );
-
-        // Can iScale == 4096 happen?, I guess not since viewIdInRefListY is always unequal to viewIdInRefListX.
-        if ( iScale != 4096 && m_pcSlice->getVPS()->getIvMvScalingFlag() ) 
-        {
-          cMv = cMv.scaleMv( iScale );
-        }
-        else
-        {
-
-          cMv = cMv;
-        }
-        clipMv( cMv );
-        pcMvFieldNeighbours[(iCount<<1)+refListIdY].setMvField( cMv, i );
-#if H_3D_NBDV
-        pcMvFieldNeighbours[(iCount<<1)+refListIdY].getMv().setIDVFlag (false);
-#endif
-      }
-    }
-  }
-#endif
 
   // Set values to be returned
   abCandIsInter        [iCount] = true;
@@ -3464,11 +3414,7 @@ inline Bool TComDataCU::xGetPosFirstAvailDmvCand( Int iCount, TComMvField* pcMvF
   // ivCandDir[0] == true --> IvMC is available and excluded in loop over merge list. 
   for ( Int currListPos = (ivCandDir[0] ? 1 : 0); currListPos < iCount; currListPos++ )
   {
-#if NTT_STORE_SPDV_VSP_G0148
     if ( ( currListPos == posIvDC ) || ( vspFlag[ currListPos ] != 0 ) )
-#else
-    if ( ( currListPos == posIvDC ) || ( vspFlag[ currListPos ] == 1 ) )
-#endif
     {
       continue;
     }
@@ -3984,11 +3930,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     iPosLeftAbove[0] = numA1B1B0;
 #if H_3D_VSP
-#if NTT_STORE_SPDV_VSP_G0148
     if (pcCULeft->getVSPFlag(uiLeftPartIdx) != 0
-#else
-    if (pcCULeft->getVSPFlag(uiLeftPartIdx) == 1
-#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4011,11 +3953,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   {
     iPosLeftAbove[1] = numA1B1B0;
 #if H_3D_VSP
-#if NTT_STORE_SPDV_VSP_G0148
     if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) != 0) 
-#else
-    if ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) == 1) 
-#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4038,11 +3976,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if ( getAvailableFlagB0())
   {
 #if H_3D_VSP
-#if NTT_STORE_SPDV_VSP_G0148
     if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) != 0) 
-#else
-    if ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) == 1) 
-#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4063,11 +3997,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if ( getAvailableFlagA0())
   {
 #if H_3D_VSP
-#if NTT_STORE_SPDV_VSP_G0148
     if (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) != 0
-#else
-    if (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) == 1
-#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -4090,11 +4020,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   if (getAvailableFlagB2())
   {
 #if H_3D_VSP
-#if NTT_STORE_SPDV_VSP_G0148
     if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) != 0) 
-#else
-    if ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) == 1) 
-#endif
 #if H_3D_IC
       && !bICFlag
 #endif
@@ -7246,7 +7172,7 @@ Void TComDataCU::setDmmWedgeTabIdxSubParts( UInt tabIdx, UInt dmmType, UInt uiAb
 }
 #endif
 
-#if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_VSP
 Void TComDataCU::setMvFieldPUForVSP( TComDataCU* pcCU, UInt partAddr, Int width, Int height, RefPicList eRefPicList, Int iRefIdx, Int &vspSize )
 {
   // Get depth reference
@@ -7380,6 +7306,6 @@ Void TComDataCU::xSetMvFieldForVSP( TComDataCU *cu, TComPicYuv *picRefDepth, TCo
   vspSize = (vspSize<<2)+1;
 
 }
-#endif // NTT_STORE_SPDV_VSP_G0148
+#endif
 
 //! \}

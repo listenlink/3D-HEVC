@@ -175,7 +175,7 @@ public:
 #if H_3D_SPIVMP
   Void    setMvFieldSP ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvField cMvField, Int iWidth, Int iHeight  );
 #endif
-#if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_VSP
   Void    setMv         ( Int iIdx, TComMv const & rcMv ) { m_pcMv[iIdx] = rcMv; }
   Void    setRefIdx     ( Int iIdx, Int iRefIdx )         { m_piRefIdx[iIdx] = iRefIdx; }
 #endif
