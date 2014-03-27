@@ -1860,22 +1860,13 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
 }
 
 #if H_3D_DIM_SDC
-Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, 
-  Bool bZeroResidual, Int iSDCDeltaResi
-  )
+Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bZeroResidual, Int iSDCDeltaResi  )
 {
   UInt    uiLumaPredMode    = pcCU     ->getLumaIntraDir( uiAbsPartIdx );
   UInt    uiWidth           = pcCU     ->getWidth   ( 0 );
   UInt    uiHeight          = pcCU     ->getHeight  ( 0 );
-#if QC_PKU_SDC_SPLIT_G0123
-#if HS_TSINGHUA_SDC_SPLIT_G0111
   TComWedgelet* dmm4SegmentationOrg = new TComWedgelet( uiWidth, uiHeight );
-#else
-#endif
-#endif
-#if QC_PKU_SDC_SPLIT_G0123
   UInt numParts = 1;
-  UInt i = 0;
   UInt sdcDepth = 0;
   UInt uiStride;         
   Pel* piOrg;          
@@ -1886,23 +1877,14 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   Pel* piRecIPred;       
   UInt uiRecIPredStride; 
 
-#if HS_TSINGHUA_SDC_SPLIT_G0111
   if ( ( uiWidth >> pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() ) > 1 )
   {
     numParts = uiWidth * uiWidth >> ( 2 * pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
     sdcDepth = g_aucConvertToBit[uiWidth] + 2 - pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize();
     uiWidth = uiHeight = ( 1 << pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() );
   }
-#else
-  if (uiWidth == 64)
-  {
-    numParts = 4;
-    sdcDepth = 1;
-    uiWidth = uiHeight = 32;
-  }
-#endif
 
-  for ( i = 0; i < numParts; i++ )
+  for ( Int i = 0; i < numParts; i++ )
   {
     uiStride          = pcOrgYuv ->getStride  ();
     piOrg             = pcOrgYuv ->getLumaAddr( uiAbsPartIdx );
@@ -1914,75 +1896,42 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
 
     AOF( uiWidth == uiHeight );
-#else
-  UInt    uiStride          = pcOrgYuv ->getStride  ();
-  Pel*    piOrg             = pcOrgYuv ->getLumaAddr( uiAbsPartIdx );
-  Pel*    piPred            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
-  Pel*    piReco            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
-  
-  UInt    uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
-  Pel*    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
-  UInt    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
-  
-  AOF( uiWidth == uiHeight );
-  AOF( uiAbsPartIdx == 0 );
-  AOF( pcCU->getSDCAvailable(uiAbsPartIdx) );
-  AOF( pcCU->getSDCFlag(uiAbsPartIdx) );
-#endif
-  
-  //===== init availability pattern =====
-  Bool  bAboveAvail = false;
-  Bool  bLeftAvail  = false;
-#if QC_PKU_SDC_SPLIT_G0123
-  pcCU->getPattern()->initPattern   ( pcCU, sdcDepth, uiAbsPartIdx );
-  pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, sdcDepth, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail );
-#else
-  pcCU->getPattern()->initPattern   ( pcCU, 0, uiAbsPartIdx );
-  pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, 0, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail );
-  
-#endif
-#if !QC_PKU_SDC_SPLIT_G0123
-  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-#endif
-#if HS_TSINGHUA_SDC_SPLIT_G0111
-  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-#endif
-  //===== get prediction signal =====
-#if H_3D_DIM
-  if( isDimMode( uiLumaPredMode ) )
-  {
-#if HS_TSINGHUA_SDC_SPLIT_G0111  
-    UInt dimType   = getDimType  ( uiLumaPredMode );
-    UInt patternID = pcCU->getDmmWedgeTabIdx(dimType, uiAbsPartIdx);
-    if ( patternID >= g_dmmWedgeLists[g_aucConvertToBit[uiWidth]].size() && dimType == DMM1_IDX )
+
+    //===== init availability pattern =====
+    Bool  bAboveAvail = false;
+    Bool  bLeftAvail  = false;
+    pcCU->getPattern()->initPattern   ( pcCU, sdcDepth, uiAbsPartIdx );
+    pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, sdcDepth, m_piYuvExt, m_iYuvExtStride, m_iYuvExtHeight, bAboveAvail, bLeftAvail );
+    TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+    //===== get prediction signal =====
+    if( isDimMode( uiLumaPredMode ) )
     {
-      if (g_aucConvertToBit[uiWidth] == 2)  // Encoder method. Avoid DMM1 pattern list index exceeds the maximum DMM1 pattern number when SDC split is used.
-        patternID = 1349;  // Split 32x32 to 16x16. 1349: Maximum DMM1 pattern number when block size is 16x16
-      else 
-        patternID = patternID >> 1;  // Other cases
-      pcCU->setDmmWedgeTabIdx(dimType, uiAbsPartIdx, patternID);
+      UInt dimType   = getDimType  ( uiLumaPredMode );
+      UInt patternID = pcCU->getDmmWedgeTabIdx(dimType, uiAbsPartIdx);
+      if ( patternID >= g_dmmWedgeLists[g_aucConvertToBit[uiWidth]].size() && dimType == DMM1_IDX )
+      {
+        if (g_aucConvertToBit[uiWidth] == 2) // Encoder method. Avoid DMM1 pattern list index exceeds the maximum DMM1 pattern number when SDC split is used.
+        {                                    
+          patternID = 1349;  // Split 32x32 to 16x16. 1349: Maximum DMM1 pattern number when block size is 16x16
+        }
+        else
+        {
+          patternID = patternID >> 1;  // Other cases
+        }
+        pcCU->setDmmWedgeTabIdx(dimType, uiAbsPartIdx, patternID);
+      }
+      predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, true , dmm4Segmentation    );
+      Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
+      Bool* dmm4PatternOrg = dmm4SegmentationOrg->getPattern();
+      for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
+      { 
+        dmm4PatternOrg[k+(uiAbsPartIdx<<4)] = dmm4PatternSplit[k];
+      }
     }
-#endif
-    predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, true 
-      , dmm4Segmentation
-      );
-#if HS_TSINGHUA_SDC_SPLIT_G0111
-    Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
-    Bool* dmm4PatternOrg = dmm4SegmentationOrg->getPattern();
-    for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
-    { 
-      dmm4PatternOrg[k+(uiAbsPartIdx<<4)] = dmm4PatternSplit[k];
+    else
+    {
+      predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
     }
-#endif
-  }
-  else
-  {
-#endif
-    predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
-#if H_3D_DIM
-  }
-#endif
-#if QC_PKU_SDC_SPLIT_G0123
     if ( numParts > 1 )
     {
       for( UInt uiY = 0; uiY < uiHeight; uiY++ )
@@ -1997,16 +1946,14 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
       }
     }
     uiAbsPartIdx += ( ( uiWidth * uiWidth ) >> 4 );
-#if HS_TSINGHUA_SDC_SPLIT_G0111
     dmm4Segmentation->destroy(); delete dmm4Segmentation;
-#endif
   }
   uiAbsPartIdx = 0;
   uiStride          = pcOrgYuv ->getStride  ();
   piOrg             = pcOrgYuv ->getLumaAddr( uiAbsPartIdx );
   piPred            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
   piReco            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
-  
+
   uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
   piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
   uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
@@ -2016,19 +1963,18 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     uiWidth = pcCU->getWidth( 0 );
     uiHeight = pcCU->getHeight( 0 );
   }
-#endif
   // number of segments depends on prediction mode
   UInt uiNumSegments = 1;
   Bool* pbMask = NULL;
   UInt uiMaskStride = 0;
-    
+
   if( getDimType( uiLumaPredMode ) == DMM1_IDX )
   {
     Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
-    
+
     WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
     TComWedgelet* pcWedgelet = &(pacWedgeList->at( uiTabIdx ));
-    
+
     uiNumSegments = 2;
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
@@ -2036,23 +1982,18 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
     uiNumSegments = 2;
-#if HS_TSINGHUA_SDC_SPLIT_G0111
-    pbMask  = dmm4SegmentationOrg->getPattern();
+    pbMask       = dmm4SegmentationOrg->getPattern();
     uiMaskStride = dmm4SegmentationOrg->getStride();
-#else
-    pbMask  = dmm4Segmentation->getPattern();
-    uiMaskStride = dmm4Segmentation->getStride();
-#endif
   }
-  
+
   // get DC prediction for each segment
   Pel apDCPredValues[2];
   analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode );
-  
+
   // get original DC for each segment
   Pel apDCOrigValues[2];
   analyzeSegmentsSDC(piOrg, uiStride, uiWidth, apDCOrigValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode, true );
-  
+
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
   {
     // remap reconstructed value to valid depth values
@@ -2075,7 +2016,7 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     // save SDC DC offset
     pcCU->setSDCSegmentDCOffset(pResidualIdx, uiSegment, uiAbsPartIdx);
   }
-  
+
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
@@ -2090,13 +2031,13 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     apDCResiValues[uiSegment]  = pcCU->getSDCSegmentDCOffset(uiSegment, uiAbsPartIdx);
 #endif
   }
-  
+
   //===== reconstruction =====
   Bool* pMask     = pbMask;
   Pel* pPred      = piPred;
   Pel* pReco      = piReco;
   Pel* pRecIPred  = piRecIPred;
-  
+
   for( UInt uiY = 0; uiY < uiHeight; uiY++ )
   {
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
@@ -2105,7 +2046,7 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
       assert( ucSegment < uiNumSegments );
 
       Pel pResiDC = apDCResiValues[ucSegment];
-      
+
       pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResiDC );
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
@@ -2114,12 +2055,12 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     pRecIPred += uiRecIPredStride;
     pMask     += uiMaskStride;
   }
-  
+
   // clear UV
   UInt  uiStrideC     = pcPredYuv->getCStride();
   Pel   *pRecCb       = pcPredYuv->getCbAddr();
   Pel   *pRecCr       = pcPredYuv->getCrAddr();
-  
+
   for (Int y=0; y<uiHeight/2; y++)
   {
     for (Int x=0; x<uiWidth/2; x++)
@@ -2127,11 +2068,11 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
       pRecCb[x] = 128;
       pRecCr[x] = 128;
     }
-    
+
     pRecCb += uiStrideC;
     pRecCr += uiStrideC;
   }
-  
+
   //===== determine distortion =====
 #if H_3D_VSO
   if ( m_pcRdCost->getUseVSO() )
@@ -2139,12 +2080,11 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   else
 #endif
     ruiDist = m_pcRdCost->getDistPart(g_bitDepthY, piReco, uiStride, piOrg, uiStride, uiWidth, uiHeight );
-  
+
   //===== determine rate and r-d cost =====
   m_pcEntropyCoder->resetBits();
-  
+
   // encode reduced intra header
-#if H_3D_DIM_SDC
   if( !pcCU->getSlice()->isIntra() )
   {
     if (pcCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
@@ -2157,29 +2097,20 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 
   m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth( 0 ), true );
   m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
-#else
-  m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
-#endif
-  
+
   // encode pred direction + DC residual data
   m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
-#if H_3D_DIM_SDC
   Bool bDummy = false;
   m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth( 0 ), uiWidth, uiHeight, bDummy );
-#endif
   UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
-  
+
 #if H_3D_VSO
   if ( m_pcRdCost->getUseLambdaScaleVSO())
     dRDCost = m_pcRdCost->calcRdCostVSO( uiBits, ruiDist );
   else
 #endif
     dRDCost = m_pcRdCost->calcRdCost( uiBits, ruiDist );
-#if HS_TSINGHUA_SDC_SPLIT_G0111
   dmm4SegmentationOrg->destroy(); delete dmm4SegmentationOrg;
-#else
-  dmm4Segmentation->destroy(); delete dmm4Segmentation;
-#endif
 }
 #endif
 

@@ -184,6 +184,10 @@
                                               // QC_DIM_DELTADC_UNIFY_F0132 Unify delta DC coding in depth intra modes
                                               // Unify intra SDC and inter SDC
                                               // QC_GENERIC_SDC_G0122 Generalize SDC to all depth intra modes
+                                              // SCU_HS_DEPTH_DC_PRED_G0143
+                                              // HS_TSINGHUA_SDC_SPLIT_G0111
+                                              // QC_PKU_SDC_SPLIT_G0123 Intra SDC Split
+
 
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
@@ -194,6 +198,11 @@
                                               // SEC_SPIVMP_MCP_SIZE_G0077, Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
                                               // QC_SPIVMP_MPI_G0119 Sub-PU level MPI merge candidate
                                               // Simplification on Sub-PU level temporal interview motion prediction
+
+
+#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
+
+
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
 
@@ -275,6 +284,13 @@
 #endif
 
 
+///// ***** DEPTH BASED BLOCK PARTITIONING *********
+#if H_3D_DBBP
+#define DBBP_INVALID_SHORT                (-4)
+#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
+#endif
+
+
 ///// ***** FCO *********
 #if H_3D_FCO
 #define H_3D_FCO_VSP_DONBDV_E0163               1   // Adaptive depth reference for flexible coding order
@@ -304,21 +320,6 @@
 #define NTT_STORE_SPDV_VSP_G0148          1   // Storing Sub-PU based DV for VSP
 #endif
 
-#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
-
-#if H_3D_DBBP
-#define DBBP_INVALID_SHORT                (-4)
-#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
-#endif
-
-#if H_3D_DIM
-#define QC_PKU_SDC_SPLIT_G0123            1   // Intra SDC Split
-#if QC_PKU_SDC_SPLIT_G0123
-#define HS_TSINGHUA_SDC_SPLIT_G0111       1
-#endif
-#define SCU_HS_DEPTH_DC_PRED_G0143        1
-
-#endif
 
 
 #endif
