@@ -1899,8 +1899,8 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           }
           else
 #endif
-#if NTT_STORE_SPDV_VSP_G0148
-            {
+#if H_3D_VSP
+          {
           if ( vspFlag[uiMergeCand] )
           {
             UInt partAddr;
@@ -1933,7 +1933,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
             rpcTempCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeCand], 0, 0, uhDepth ); // interprets depth relative to LCU level
             rpcTempCU->getCUMvField( REF_PIC_LIST_0 )->setAllMvField( cMvFieldNeighbours[0 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
             rpcTempCU->getCUMvField( REF_PIC_LIST_1 )->setAllMvField( cMvFieldNeighbours[1 + 2*uiMergeCand], SIZE_2Nx2N, 0, 0 ); // interprets depth relative to rpcTempCU level
-#if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_VSP
           }
         }
 #endif
@@ -1966,7 +1966,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
          }
 
           rpcTempCU->setSkipFlagSubParts( rpcTempCU->getQtRootCbf(0) == 0, 0, uhDepth );
-#if NTT_STORE_SPDV_VSP_G0148 // possible bug fix
+#if H_3D_VSP // possible bug fix
           if( rpcTempCU->getSkipFlag(0) )
           {
             rpcTempCU->setTrIdxSubParts(0, 0, uhDepth);
@@ -2196,7 +2196,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   }
 #endif
   m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false );
-#if NTT_STORE_SPDV_VSP_G0148 // possible bug fix
+#if H_3D_VSP // possible bug fix
   if( rpcTempCU->getQtRootCbf(0)==0 )
   {
     rpcTempCU->setTrIdxSubParts(0, 0, uhDepth);
