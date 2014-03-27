@@ -115,24 +115,12 @@
 #endif
 #if QC_GENERIC_SDC_G0122
 #define NUM_ANGLE_FLAG_CTX            3
-#if !QC_SDC_UNIFY_G0130
-#define NUM_INTRASDC_FLAG_CTX         3
-#endif
 #endif
 #endif
 
 #if H_3D_DIM_SDC
-#define SDC_NUM_RESIDUAL_FLAG_CTX        1
-#define SDC_NUM_RESIDUAL_CTX             1
-#endif
-
-#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
-#define NUM_INTER_SDC_FLAG_CTX        1      ///< number of context models for inter SDC flag
-#define NUM_INTER_SDC_SIGN_FLAG_CTX   1      ///< number of context models for sign of inter SDC residual
-#define NUM_INTER_SDC_RESIDUAL_CTX    1      ///< number of context models for abs of inter SDC residual
-#endif
-
-#if QC_SDC_UNIFY_G0130
+#define SDC_NUM_RESIDUAL_FLAG_CTX     1
+#define SDC_NUM_RESIDUAL_CTX          1
 #define NUM_SDC_FLAG_CTX              1      ///< number of context 
 #endif
 #if H_3D_DBBP
@@ -403,15 +391,6 @@ INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
   { 141, 185, 214 },
   { 155, 170, 157 },
 };
-#if !QC_SDC_UNIFY_G0130
-static const UChar 
-INIT_INTRASDC_FLAG[3][NUM_INTRASDC_FLAG_CTX] =
-{
-  { 214, 229, 230 },
-  { 215, 202, 174 },
-  { 213, 201, 246 },
-};
-#endif
 #endif
 
 static const UChar 
@@ -455,33 +434,9 @@ INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
 #endif
 #endif
 
-#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
-static const UChar 
-INIT_INTER_SDC_FLAG[3][NUM_INTER_SDC_FLAG_CTX] =
-{
-  { CNU },  
-  { 154 },
-  { 154 },
-};
 
-static const UChar 
-INIT_INTER_SDC_SIGN_FLAG[3][NUM_INTER_SDC_SIGN_FLAG_CTX] =
-{
-  { CNU },  
-  { 154 },
-  { 154 },
-};
-
-static const UChar 
-INIT_INTER_SDC_RESIDUAL[3][NUM_INTER_SDC_RESIDUAL_CTX] =
-{
-  { CNU },  
-  { 154 },
-  { 154 },
-};
-#endif
 //! \}
-#if QC_SDC_UNIFY_G0130
+#if H_3D_DIM_SDC
 static const UChar 
 INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
 {

@@ -182,12 +182,17 @@
                                               // HHI_DIM_PREDSAMP_FIX_F0171
                                               // SEC_DMM3_RBC_F0147 Removal of DMM3 and RBC from DMMs
                                               // QC_DIM_DELTADC_UNIFY_F0132 Unify delta DC coding in depth intra modes
+                                              // Unify intra SDC and inter SDC
+
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
-                                              // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
+                                              // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
+                                              // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
+
 #define H_3D_SPIVMP                       1   // H_3D_SPIVMP    // JCT3V-F0110: Sub-PU level inter-view motion prediction
                                               // SEC_SPIVMP_MCP_SIZE_G0077, Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
                                               // QC_SPIVMP_MPI_G0119 Sub-PU level MPI merge candidate
+                                              // Simplification on Sub-PU level temporal interview motion prediction
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
 
@@ -312,15 +317,8 @@
 #endif
 #define SCU_HS_DEPTH_DC_PRED_G0143        1
 #define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
-#if H_3D_DIM_SDC && H_3D_INTER_SDC
-#define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
-#define QC_SDC_UNIFY_G0130_FIX            1  // Fix bug of G0130
-#define QC_SDC_UNIFY_G0130_FIX2           1  // Fix bug of G0130
-#endif
-#define SEC_INTER_SDC_G0101               1  // Improved inter SDC with multiple DC candidates
 #endif
 
-#define KHU_SIMP_SPIVMP_G0147             1  // Simplification on Sub-PU level temporal interview motion prediction
 
 #endif
 

@@ -2813,7 +2813,6 @@ Bool TComScalingList::checkPredMode(UInt sizeId, UInt listId)
 }
 
 #if H_3D_INTER_SDC
-#if QC_SDC_UNIFY_G0130
 Void TEncCavlc::codeDeltaDC( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
@@ -2823,17 +2822,7 @@ Void TEncCavlc::codeSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-#else
-Void TEncCavlc::codeInterSDCFlag ( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  assert(0);
-}
 
-Void TEncCavlc::codeInterSDCResidualData  ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
-{
-  assert(0);
-}
-#endif
 #endif
     
 #if H_3D_DBBP
