@@ -3824,7 +3824,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       }
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
       if( uiMergeCand == pcCU->getUseDDDCandIdx() )
       {
         pcCU->setUseDDD( true, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
@@ -4532,7 +4532,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         pcCU->setVSPFlagSubParts( vspFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
         pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMRGIndex].m_acDvInfo, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
-#if MTK_DDD_G0063
+#if H_3D_DDD
         if( uiMRGIndex == pcCU->getUseDDDCandIdx() )
         {
             assert( vspFlag[uiMRGIndex]     == 0 );
@@ -4623,7 +4623,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #if H_3D_SPIVMP        
         pcCU->setSPIVMPFlagSubParts(0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) ); 
 #endif
-#if MTK_DDD_G0063
+#if H_3D_DDD
         pcCU->setUseDDD( false, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
         // set ME result

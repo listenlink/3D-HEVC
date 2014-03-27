@@ -350,7 +350,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       }
       pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
       if( uiMergeIndex == pcSubCU->getUseDDDCandIdx() )
       {
           assert( pcCU->getSlice()->getViewIndex() != 0 );

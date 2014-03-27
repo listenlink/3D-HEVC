@@ -2273,7 +2273,7 @@ private:
 #endif
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   Int          m_aiDDDInvScale [MAX_NUM_LAYERS];
   Int          m_aiDDDInvOffset[MAX_NUM_LAYERS];
   UInt         m_aiDDDShift    [MAX_NUM_LAYERS];
@@ -2653,7 +2653,7 @@ public:
   TComPic* getPicFromRefPicSetInterLayer( Int setIdc, Int layerId );
 
 #endif
-#if MTK_DDD_G0063
+#if H_3D_DDD
   Void InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
   Int  getDepthFromDV( Int iDV, Int iBaseViewIdx )
   {

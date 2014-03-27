@@ -75,7 +75,8 @@
 
 #if H_3D
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
-                                              // HHI_QTLPC_RAU_OFF_C0160     // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
+                                              // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
+                                              // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
 
 #define H_3D_VSO                          1   // VSO, View synthesis optimization, includes: 
                                               // HHI_VSO
@@ -204,6 +205,7 @@
 
 #define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
 
+#define H_3D_DDD                          1   // Disparity derived depth coding
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
@@ -302,19 +304,6 @@
 
 #if H_3D
 #define PPS_FIX_DEPTH                           1
-#endif
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-10.0 Integrations //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-#if H_3D
-#if  H_3D_QTLPC
-#define MTK_TEX_DEP_PAR_G0055             1   // Texture-partition-dependent depth partition. JCT3V-G0055
-#endif
-
-#define MTK_DDD_G0063                     1   // Disparity derived depth coding
-#define HTM10RC1_FIX                      1   // Fix of DDD
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////

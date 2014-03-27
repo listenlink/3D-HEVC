@@ -546,7 +546,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           bTrySplit = false;
           bTryNx2N  = false;
           bTry2NxN  = false;
-#if MTK_TEX_DEP_PAR_G0055
           if( pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize(uiCUIdx) != SIZE_2Nx2N)
           {
             if(pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxN || pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxnU|| pcTextureCU->getPartitionSize(uiCUIdx)==SIZE_2NxnD)
@@ -554,7 +553,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             else
               bTryNx2N  = true;
           }
-#endif
         }
       }
 #endif
@@ -1830,7 +1828,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
     Int iDDDCand = rpcTempCU->getUseDDDCandIdx(); 
     UChar ucDDDepth = rpcTempCU->getDDTmpDepth();
     rpcTempCU->setUseDDD( false, 0, uhDepth );
@@ -1869,7 +1867,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
           rpcTempCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, 0, 0, uhDepth );
 #endif
-#if MTK_DDD_G0063
+#if H_3D_DDD
           if( rpcTempCU->getSlice()->getIsDepth() && rpcTempCU->getSlice()->getViewIndex() != 0 && iDDDCand == uiMergeCand )
           {
               rpcTempCU->setUseDDD( true, 0, 0, uhDepth );
@@ -2134,7 +2132,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
-#if MTK_DDD_G0063
+#if H_3D_DDD
   rpcTempCU->setUseDDD( false, 0, uhDepth );
 #endif
 

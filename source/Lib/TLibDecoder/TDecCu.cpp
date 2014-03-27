@@ -292,7 +292,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
 
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
       pcCU->setUseDDD( false, uiAbsPartIdx, uiDepth );
 #endif
 
@@ -453,7 +453,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
     pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
     if( uiMergeIndex == m_ppcCU[uiDepth]->getUseDDDCandIdx() )
     {
         assert( pcCU->getSlice()->getViewIndex() != 0 );

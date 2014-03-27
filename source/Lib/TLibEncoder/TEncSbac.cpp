@@ -682,25 +682,19 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
  
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
-#if MTK_TEX_DEP_PAR_G0055
   Bool depthDependent = false;
   UInt uiTexturePart = eSize;
-#endif
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && sps->getUseQTL() && sps->getUsePC() )
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
     assert(pcTextureCU->getDepth(uiCUIdx) >= uiDepth);
-#if !MTK_TEX_DEP_PAR_G0055
-    if (pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize( uiCUIdx ) != SIZE_NxN)
-#else
     if(pcTextureCU->getDepth(uiCUIdx) == uiDepth )
     {
       depthDependent = true;
       uiTexturePart = pcTextureCU->getPartitionSize( uiCUIdx );
     }
     if (pcTextureCU->getDepth(uiCUIdx) == uiDepth && pcTextureCU->getPartitionSize( uiCUIdx ) == SIZE_2Nx2N)
-#endif
     {
       assert( eSize == SIZE_2Nx2N );
       return;
@@ -722,7 +716,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_MV_ENC_DEC_TRAC          
   DTRACE_CU("part_mode", eSize )
 #endif        
-#if MTK_TEX_DEP_PAR_G0055
+#if H_3D_QTLPC
     if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
     {
 #endif
@@ -792,7 +786,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
       assert(0);
     }
   }
-#if MTK_TEX_DEP_PAR_G0055
+#if H_3D_QTLPC
     }
     else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
     {

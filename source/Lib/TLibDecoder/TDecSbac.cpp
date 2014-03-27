@@ -786,24 +786,18 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
-#if MTK_TEX_DEP_PAR_G0055
   Bool depthDependent = false;
   UInt uiTexturePart = uiMode;
-#endif
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
-#if !MTK_TEX_DEP_PAR_G0055
-    if (pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth && pcTextureCU->getPartitionSize( uiAbsPartIdx ) != SIZE_NxN)
-#else
     if(pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth )
     {
       depthDependent = true;
       uiTexturePart = pcTextureCU->getPartitionSize( uiAbsPartIdx );
     }
     if (pcTextureCU->getDepth(uiAbsPartIdx) == uiDepth && pcTextureCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N)
-#endif
     {
       bParsePartSize = false;
       eMode          = SIZE_2Nx2N;
@@ -848,8 +842,6 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #if H_3D_QTLPC
     if(bParsePartSize)
     {
-#endif
-#if MTK_TEX_DEP_PAR_G0055
       if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
       {
 #endif
@@ -889,7 +881,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
           }
         }
       }
-#if MTK_TEX_DEP_PAR_G0055
+#if H_3D_QTLPC
       }
       else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
       {
@@ -954,12 +946,12 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
         }
       }
       else
+      {
         assert(0);
-#endif
+      }
 #if H_MV_ENC_DEC_TRAC          
       DTRACE_CU("part_mode", eMode )
 #endif
-#if H_3D_QTLPC
     }
 #endif
   }

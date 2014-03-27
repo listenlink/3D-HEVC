@@ -225,7 +225,7 @@ private:
   DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   UChar*        m_pucDisparityDerivedDepth;
   Bool*         m_pbUseDDD;
   Int           m_iUseDDDCandIdx;
@@ -722,7 +722,7 @@ public:
 
   UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   UChar*       getDDDepth        ()                        { return m_pucDisparityDerivedDepth;        }
   UChar        getDDDepth        ( UInt uiIdx )            { return m_pucDisparityDerivedDepth[uiIdx]; }
   Void         setDDDepth        ( UInt uiIdx, UChar n )   { m_pucDisparityDerivedDepth[uiIdx] = n;    }
