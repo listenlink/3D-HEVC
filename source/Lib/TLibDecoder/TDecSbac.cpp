@@ -2188,11 +2188,7 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   uiW = uiCode;
   if( 1 == uiW )   
   {
-#if MTK_ARP_FLAG_CABAC_SIMP_G0061
     m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 2 ) );
-#else
-    m_pcTDecBinIf->decodeBin( uiCode , m_cCUPUARPWSCModel.get( 0, 0, 3 ) );
-#endif
     uiW += ( 1 == uiCode ? 1 : 0 );
   }
 #if H_MV_ENC_DEC_TRAC
@@ -2212,12 +2208,7 @@ Void TDecSbac::parseARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 { 
   UInt uiSymbol = 0;
-#if MTK_IC_FLAG_CABAC_SIMP_G0061
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, 0 ) );
-#else
-  UInt uiCtxIC = pcCU->getCtxICFlag( uiAbsPartIdx );
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUICFlagSCModel.get( 0, 0, uiCtxIC ) );
-#endif
 #if !H_MV_ENC_DEC_TRAC 
   DTRACE_CABAC_VL( g_nSymbolCounter++ );
   DTRACE_CABAC_T( "\tICFlag" );

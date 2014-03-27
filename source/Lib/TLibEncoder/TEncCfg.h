@@ -396,8 +396,6 @@ protected:
 #endif
 #if H_3D_SPIVMP
   Int      m_iSubPULog2Size;
-#endif
-#if QC_SPIVMP_MPI_G0119
   Int      m_iSubPUMPILog2Size;
 #endif
 #if H_3D_IC
@@ -506,8 +504,6 @@ public:
 #if H_3D_SPIVMP
   Int        getSubPULog2Size                   ()                   { return m_iSubPULog2Size;}
   Void       setSubPULog2Size                   (Int u)              { m_iSubPULog2Size = u; }     
-#endif
-#if QC_SPIVMP_MPI_G0119
   Int        getSubPUMPILog2Size            ()               { return m_iSubPUMPILog2Size;}
   Void       setSubPUMPILog2Size            (Int u)          { m_iSubPUMPILog2Size = u;   }     
 #endif

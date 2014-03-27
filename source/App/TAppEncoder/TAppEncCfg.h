@@ -140,10 +140,8 @@ protected:
   vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
 #if H_3D_SPIVMP
   Int                    m_iSubPULog2Size;                    
-#endif
-#endif
-#if QC_SPIVMP_MPI_G0119
   Int                    m_iSubPUMPILog2Size;                    
+#endif
 #endif
 #if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
   UInt                   m_uiUseAdvResPred;

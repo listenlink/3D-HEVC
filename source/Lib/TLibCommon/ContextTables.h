@@ -93,19 +93,11 @@
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
 
 #if H_3D_ARP
-#if MTK_ARP_FLAG_CABAC_SIMP_G0061
 #define NUM_ARPW_CTX                  3       ///< number of context models for weighting factor index used by advanced residual prediction
-#else
-#define NUM_ARPW_CTX                  4       ///< number of context models for weighting factor index used by advanced residual prediction
-#endif
 #endif
 
 #if H_3D_IC
-#if MTK_IC_FLAG_CABAC_SIMP_G0061
 #define NUM_IC_FLAG_CTX               1       ///< number of context models for illumination compensation flag
-#else
-#define NUM_IC_FLAG_CTX               3       ///< number of context models for illumination compensation flag
-#endif
 #endif
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
@@ -365,7 +357,6 @@ INIT_TRANSFORMSKIP_FLAG[3][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
 };
 
 #if H_3D_ARP
-#if MTK_ARP_FLAG_CABAC_SIMP_G0061
 static const UChar 
 INIT_ARPW[3][NUM_ARPW_CTX] = 
 {
@@ -373,18 +364,9 @@ INIT_ARPW[3][NUM_ARPW_CTX] =
     { 162, 153, 162 },
     { 162, 153, 162 },
 };
-#else
-static const UChar 
-INIT_ARPW[3][NUM_ARPW_CTX] = 
-{
-    { 162, 153, 154, 162 },
-    { 162, 153, 154, 162 },
-    { 162, 153, 154, 162 },
-};
-#endif
+
 #endif
 #if H_3D_IC
-#if MTK_IC_FLAG_CABAC_SIMP_G0061
 static const UChar 
 INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
 {
@@ -392,15 +374,7 @@ INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =
     { 154 },
     { 154 },
 };
-#else
-static const UChar 
-INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
-{
-    { 154,  154,  154, },
-    { 154,  154,  154, },
-    { 154,  154,  154, },
-};
-#endif
+
 #endif
 #if H_3D_DIM
 #if QC_GENERIC_SDC_G0122
