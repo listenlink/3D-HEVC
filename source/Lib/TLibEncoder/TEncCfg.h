@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -176,10 +176,6 @@ protected:
   Bool      m_bUseSAO;
   Int       m_maxNumOffsetsPerPic;
   Bool      m_saoLcuBoundary;
-  Bool      m_saoLcuBasedOptimization;
-
-  //====== Lossless ========
-  Bool      m_useLossless;
   //====== Motion search ========
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
@@ -200,7 +196,6 @@ protected:
   Int       m_iQPAdaptationRange;
   
   //====== Tool list ========
-  Bool      m_bUseSBACRD;
   Bool      m_bUseASR;
   Bool      m_bUseHADME;
   Bool      m_useRDOQ;
@@ -291,14 +286,9 @@ protected:
   Char*     m_scalingListFile;          ///< quantization matrix file name
   Int       m_TMVPModeId;
   Int       m_signHideFlag;
-#if RATE_CONTROL_LAMBDA_DOMAIN
   Bool      m_RCEnableRateControl;
   Int       m_RCTargetBitrate;
-#if M0036_RC_IMPROVEMENT
   Int       m_RCKeepHierarchicalBit;
-#else
-  Bool      m_RCKeepHierarchicalBit;
-#endif
   Bool      m_RCLCULevelRC;
   Bool      m_RCUseLCUSeparateModel;
   Int       m_RCInitialQP;
@@ -310,20 +300,8 @@ protected:
 #if KWU_RC_VIEWRC_E0227
   Bool      m_bViewWiseRateCtrl;
 #endif
-#else
-  Bool      m_enableRateCtrl;                                ///< Flag for using rate control algorithm
-  Int       m_targetBitrate;                                 ///< target bitrate
-  Int       m_numLCUInUnit;                                  ///< Total number of LCUs in a frame should be divided by the NumLCUInUnit
-
-#if KWU_RC_MADPRED_E0227
-  UInt       m_depthMADPred;
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      m_bViewWiseRateCtrl;
-#endif
-#endif
   Bool      m_TransquantBypassEnableFlag;                     ///< transquant_bypass_enable_flag setting in PPS.
-  Bool      m_CUTransquantBypassFlagValue;                    ///< if transquant_bypass_enable_flag, the fixed value to use for the per-CU cu_transquant_bypass_flag.
+  Bool      m_CUTransquantBypassFlagForce;                    ///< if transquant_bypass_enable_flag, then, if true, all CU transquant bypass flags will be set to true.
 #if H_MV
   TComVPS*  m_cVPS;                                           ///< pointer to VPS, same for all layers
 #else
@@ -368,6 +346,15 @@ protected:
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
 
   Bool      m_useStrongIntraSmoothing;                        ///< enable the use of strong intra smoothing (bi_linear interpolation) for 32x32 blocks when reference samples are flat.
+#if H_MV_HLS_7_SEI_P0204_26
+  Bool              m_subBistreamPropSEIEnabled;
+  Int               m_numAdditionalSubStreams;
+  std::vector<Int>  m_subBitstreamMode;
+  std::vector<Int>  m_outputLayerSetIdxToVps;
+  std::vector<Int>  m_highestSublayerId;
+  std::vector<Int>  m_avgBitRate;
+  std::vector<Int>  m_maxBitRate;
+#endif
 
 #if H_MV
   Int       m_layerId;
@@ -572,8 +559,6 @@ public:
   Void      setUseAdaptiveQP                ( Bool  b )      { m_bUseAdaptiveQP = b; }
   Void      setQPAdaptationRange            ( Int   i )      { m_iQPAdaptationRange = i; }
   
-  //====== Lossless ========
-  Void      setUseLossless                  (Bool    b  )        { m_useLossless = b;  }
   //====== Sequence ========
   Int       getFrameRate                    ()      { return  m_iFrameRate; }
   UInt      getFrameSkip                    ()      { return  m_FrameSkip; }
@@ -616,11 +601,8 @@ public:
   Int       getMaxCuDQPDepth                ()      { return  m_iMaxCuDQPDepth; }
   Bool      getUseAdaptiveQP                ()      { return  m_bUseAdaptiveQP; }
   Int       getQPAdaptationRange            ()      { return  m_iQPAdaptationRange; }
-  //====== Lossless ========
-  Bool      getUseLossless                  ()      { return  m_useLossless;  }
   
   //==== Tool list ========
-  Void      setUseSBACRD                    ( Bool  b )     { m_bUseSBACRD  = b; }
   Void      setUseASR                       ( Bool  b )     { m_bUseASR     = b; }
   Void      setUseHADME                     ( Bool  b )     { m_bUseHADME   = b; }
   Void      setUseRDOQ                      ( Bool  b )     { m_useRDOQ    = b; }
@@ -639,7 +621,6 @@ public:
   Void      setPCMLog2MinSize               ( UInt u )     { m_uiPCMLog2MinSize = u;      }
   Void      setdQPs                         ( Int*  p )     { m_aidQP       = p; }
   Void      setDeltaQpRD                    ( UInt  u )     {m_uiDeltaQpRD  = u; }
-  Bool      getUseSBACRD                    ()      { return m_bUseSBACRD;  }
   Bool      getUseASR                       ()      { return m_bUseASR;     }
   Bool      getUseHADME                     ()      { return m_bUseHADME;   }
   Bool      getUseRDOQ                      ()      { return m_useRDOQ;    }
@@ -683,8 +664,6 @@ public:
   Int   getMaxNumOffsetsPerPic                   ()                    { return m_maxNumOffsetsPerPic; }
   Void  setSaoLcuBoundary              (Bool val)      { m_saoLcuBoundary = val; }
   Bool  getSaoLcuBoundary              ()              { return m_saoLcuBoundary; }
-  Void  setSaoLcuBasedOptimization               (Bool val)            { m_saoLcuBasedOptimization = val; }
-  Bool  getSaoLcuBasedOptimization               ()                    { return m_saoLcuBasedOptimization; }
   Void  setLFCrossTileBoundaryFlag               ( Bool   val  )       { m_loopFilterAcrossTilesEnabledFlag = val; }
   Bool  getLFCrossTileBoundaryFlag               ()                    { return m_loopFilterAcrossTilesEnabledFlag;   }
   Void  setUniformSpacingIdr           ( Int i )           { m_iUniformSpacingIdr = i; }
@@ -808,6 +787,35 @@ public:
   Int   getSOPDescriptionSEIEnabled()                     { return m_SOPDescriptionSEIEnabled; }
   Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
   Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
+
+#if H_MV_HLS_7_SEI_P0204_26
+  Bool   getSubBitstreamPropSEIEnabled()        { return m_subBistreamPropSEIEnabled;}
+  Void   setSubBitstreamPropSEIEnabled(Bool x)  { m_subBistreamPropSEIEnabled = x;}
+
+  Int    getNumAdditionalSubStreams()           { return m_numAdditionalSubStreams;}
+  Void   setNumAdditionalSubStreams(Int x)      { m_numAdditionalSubStreams = x;}
+
+  std::vector<Int> const &getSubBitstreamMode()  { return m_subBitstreamMode;}
+  Int   getSubBitstreamMode(Int idx)  { return m_subBitstreamMode[idx];}
+  Void  setSubBitstreamMode(std::vector<Int> &x)  { m_subBitstreamMode = x;}
+
+  std::vector<Int> const &getOutputLayerSetIdxToVps()  { return m_outputLayerSetIdxToVps;}
+  Int   getOutputLayerSetIdxToVps(Int idx)  { return m_outputLayerSetIdxToVps[idx];}
+  Void  setOutputLayerSetIdxToVps(std::vector<Int> &x)  { m_outputLayerSetIdxToVps = x;}
+
+  std::vector<Int> const &getHighestSublayerId()  { return m_highestSublayerId;}
+  Int   getHighestSublayerId(Int idx)  { return m_highestSublayerId[idx];}
+  Void  setHighestSublayerId(std::vector<Int> &x)  { m_highestSublayerId = x;}
+
+  std::vector<Int> const &getAvgBitRate()  { return m_avgBitRate;}
+  Int   getAvgBitRate(Int idx)  { return m_avgBitRate[idx];}
+  Void  setAvgBitRate(std::vector<Int> &x)  { m_avgBitRate = x;}
+
+  std::vector<Int> const &getMaxBitRate()  { return m_maxBitRate;}
+  Int   getMaxBitRate(Int idx)  { return m_maxBitRate[idx];}
+  Void  setMaxBitRate(std::vector<Int> &x)  { m_maxBitRate = x;}
+
+#endif
   Void      setUseWP               ( Bool b )    { m_useWeightedPred   = b;    }
   Void      setWPBiPred            ( Bool b )    { m_useWeightedBiPred = b;    }
   Bool      getUseWP               ()            { return m_useWeightedPred;   }
@@ -824,18 +832,12 @@ public:
   Int       getTMVPModeId ()         { return m_TMVPModeId; }
   Void      setSignHideFlag( Int signHideFlag ) { m_signHideFlag = signHideFlag; }
   Int       getSignHideFlag()                    { return m_signHideFlag; }
-#if RATE_CONTROL_LAMBDA_DOMAIN
   Bool      getUseRateCtrl         ()              { return m_RCEnableRateControl;   }
   Void      setUseRateCtrl         ( Bool b )      { m_RCEnableRateControl = b;      }
   Int       getTargetBitrate       ()              { return m_RCTargetBitrate;       }
   Void      setTargetBitrate       ( Int bitrate ) { m_RCTargetBitrate  = bitrate;   }
-#if M0036_RC_IMPROVEMENT
   Int       getKeepHierBit         ()              { return m_RCKeepHierarchicalBit; }
   Void      setKeepHierBit         ( Int i )       { m_RCKeepHierarchicalBit = i;    }
-#else
-  Bool      getKeepHierBit         ()              { return m_RCKeepHierarchicalBit; }
-  Void      setKeepHierBit         ( Bool b )      { m_RCKeepHierarchicalBit = b;    }
-#endif
   Bool      getLCULevelRC          ()              { return m_RCLCULevelRC; }
   Void      setLCULevelRC          ( Bool b )      { m_RCLCULevelRC = b; }
   Bool      getUseLCUSeparateModel ()              { return m_RCUseLCUSeparateModel; }
@@ -853,27 +855,10 @@ public:
   Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
   Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
 #endif
-#else
-  Bool      getUseRateCtrl    ()                { return m_enableRateCtrl;    }
-  Void      setUseRateCtrl    (Bool flag)       { m_enableRateCtrl = flag;    }
-  Int       getTargetBitrate  ()                { return m_targetBitrate;     }
-  Void      setTargetBitrate  (Int target)      { m_targetBitrate  = target;  }
-  Int       getNumLCUInUnit   ()                { return m_numLCUInUnit;      }
-  Void      setNumLCUInUnit   (Int numLCUs)     { m_numLCUInUnit   = numLCUs; }
-
-#if KWU_RC_MADPRED_E0227
-  UInt      getUseDepthMADPred    ()                { return m_depthMADPred;        }
-  Void      setUseDepthMADPred    (UInt b)          { m_depthMADPred    = b;        }
-#endif
-#if KWU_RC_VIEWRC_E0227
-  Bool      getUseViewWiseRateCtrl    ()                { return m_bViewWiseRateCtrl;        }
-  Void      setUseViewWiseRateCtrl    (Bool b)          { m_bViewWiseRateCtrl    = b;        }
-#endif
-#endif
   Bool      getTransquantBypassEnableFlag()           { return m_TransquantBypassEnableFlag; }
   Void      setTransquantBypassEnableFlag(Bool flag)  { m_TransquantBypassEnableFlag = flag; }
-  Bool      getCUTransquantBypassFlagValue()          { return m_CUTransquantBypassFlagValue; }
-  Void      setCUTransquantBypassFlagValue(Bool flag) { m_CUTransquantBypassFlagValue = flag; }
+  Bool      getCUTransquantBypassFlagForceValue()          { return m_CUTransquantBypassFlagForce; }
+  Void      setCUTransquantBypassFlagForceValue(Bool flag) { m_CUTransquantBypassFlagForce = flag; }
 #if H_MV
   Void      setVPS           ( TComVPS *p ) { m_cVPS = p;    }
   TComVPS*  getVPS           ()             { return m_cVPS; }

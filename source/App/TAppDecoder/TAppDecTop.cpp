@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -139,7 +139,9 @@ Void TAppDecTop::decode()
     m_pScaleOffsetFile = ::fopen( m_pchScaleOffsetFile, "wt" ); 
     AOF( m_pScaleOffsetFile ); 
   }
+#if !FIX_CAM_PARS_COLLECTOR
   m_cCamParsCollector.init( m_pScaleOffsetFile );
+#endif
 #endif
   InputByteStream bytestream(bitstreamFile);
 
@@ -164,7 +166,8 @@ Void TAppDecTop::decode()
 
   Bool firstSlice        = true; 
 #endif
- 
+  Bool loopFiltered      = false;
+
   while (!!bitstreamFile)
   {
     /* location serves to work around a design fault in the decoder, whereby
@@ -205,7 +208,18 @@ Void TAppDecTop::decode()
     {
       read(nalu, nalUnit);
 #if H_MV      
+#if H_MV_FIX_VPS_LAYER_ID_NOT_EQUAL_ZERO
+      if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) 
+          || !isNaluWithinTargetDecLayerIdSet(&nalu)
+          || nalu.m_layerId > MAX_NUM_LAYER_IDS-1
+          || (nalu.m_nalUnitType == NAL_UNIT_VPS && nalu.m_layerId > 0)           
+#if H_MV_HLS_7_MISC_P0130_EOS
+          || (nalu.m_nalUnitType == NAL_UNIT_EOB && nalu.m_layerId > 0)           
+#endif
+         ) 
+#else
       if( (m_iMaxTemporalLayer >= 0 && nalu.m_temporalId > m_iMaxTemporalLayer) || !isNaluWithinTargetDecLayerIdSet(&nalu) || nalu.m_layerId > MAX_NUM_LAYER_IDS-1 ) 
+#endif
       {
         bNewPicture = false;
         if ( !bitstreamFile )
@@ -233,8 +247,25 @@ Void TAppDecTop::decode()
             m_targetOptLayerSetIdx = vps->getVpsNumLayerSetsMinus1(); 
           }
 
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+          if ( m_targetOptLayerSetIdx < 0 || m_targetOptLayerSetIdx >= vps->getNumOutputLayerSets() )
+          {
+            fprintf(stderr, "\ntarget output layer set index must be in the range of 0 to %d, inclusive \n", vps->getNumOutputLayerSets() - 1 );            
+            exit(EXIT_FAILURE);
+          }
+#endif
           m_targetDecLayerIdSet = vps->getTargetDecLayerIdList( m_targetOptLayerSetIdx ); 
         }
+
+#if FIX_CAM_PARS_COLLECTOR
+#if H_3D
+        if (nalu.m_nalUnitType == NAL_UNIT_VPS )
+        {        
+          
+          m_cCamParsCollector.init( m_pScaleOffsetFile, m_tDecTop[decIdx]->getPrefetchedVPS() );
+        }       
+#endif
+#endif
         bNewPicture       = ( newSliceDiffLayer || newSliceDiffPoc ) && !sliceSkippedFlag; 
         if ( nalu.isSlice() && firstSlice && !sliceSkippedFlag )        
         {
@@ -277,8 +308,8 @@ Void TAppDecTop::decode()
            *     (but bNewPicture doesn't happen then) */
           bitstreamFile.seekg(location-streamoff(3));
           bytestream.reset();
-#if ENC_DEC_TRACE
 #if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
           const Bool resetCounter = false; 
           if ( resetCounter )
           {
@@ -286,23 +317,25 @@ Void TAppDecTop::decode()
           }
           else
           {
-            g_disableHLSTrace = true;     // Trancing of second parsing of SH is not carried out
-          }          
-#else
-          g_nSymbolCounter = symCount;
+            g_disableHLSTrace = true;     // Tracing of second parsing of SH is not carried out
+          }      
 #endif
 #endif
         }
       }
     }
-    if (bNewPicture || !bitstreamFile)
+    if (bNewPicture || !bitstreamFile || nalu.m_nalUnitType == NAL_UNIT_EOS )
     {
+      if (!loopFiltered || bitstreamFile)
+      {
 #if H_MV
-      assert( decIdxLastPic != -1 ); 
-      m_tDecTop[decIdxLastPic]->endPicDecoding(poc, pcListPic, m_targetDecLayerIdSet );
+        assert( decIdxLastPic != -1 ); 
+        m_tDecTop[decIdxLastPic]->endPicDecoding(poc, pcListPic, m_targetDecLayerIdSet );
 #else
-      m_cTDecTop.executeLoopFilters(poc, pcListPic);
+        m_cTDecTop.executeLoopFilters(poc, pcListPic);
 #endif
+      }
+      loopFiltered = (nalu.m_nalUnitType == NAL_UNIT_EOS);
     }
 #if H_3D
     if ( allLayersDecoded || !bitstreamFile )
@@ -343,6 +376,14 @@ Void TAppDecTop::decode()
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_N_LP
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_RADL
             || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_BLA_W_LP ) )
+      {
+#if H_MV
+        xFlushOutput( pcListPic, decIdxLastPic );
+#else
+        xFlushOutput( pcListPic );
+#endif
+      }
+      if (nalu.m_nalUnitType == NAL_UNIT_EOS)
       {
 #if H_MV
         xFlushOutput( pcListPic, decIdxLastPic );
@@ -461,6 +502,12 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, Int decIdx, Int tI
 Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 #endif
 {
+
+  if (pcListPic->empty())
+  {
+    return;
+  }
+
   TComList<TComPic*>::iterator iterPic   = pcListPic->begin();
   Int numPicsNotYetDisplayed = 0;
   
@@ -646,7 +693,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic, Int decIdx )
 Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
 #endif
 {
-  if(!pcListPic)
+  if(!pcListPic || pcListPic->empty())
   {
     return;
   }

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,9 +50,11 @@ CamParsCollector::CamParsCollector()
 {
   m_aaiCodedOffset         = new Int* [ MAX_NUM_LAYERS ];
   m_aaiCodedScale          = new Int* [ MAX_NUM_LAYERS ];
+#if !FIX_CAM_PARS_COLLECTOR
   m_aiViewId               = new Int  [ MAX_NUM_LAYERS ];
 
   m_bViewReceived          = new Bool [ MAX_NUM_LAYERS ];
+#endif
   for( UInt uiId = 0; uiId < MAX_NUM_LAYERS; uiId++ )
   {
     m_aaiCodedOffset      [ uiId ] = new Int [ MAX_NUM_LAYERS ];
@@ -62,6 +64,10 @@ CamParsCollector::CamParsCollector()
   xCreateLUTs( (UInt)MAX_NUM_LAYERS, (UInt)MAX_NUM_LAYERS, m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
   m_iLog2Precision   = LOG2_DISP_PREC_LUT;
   m_uiBitDepthForLUT = 8; // fixed
+#if FIX_CAM_PARS_COLLECTOR
+  m_receivedIdc = NULL; 
+  m_vps         = NULL; 
+#endif
 }
 
 CamParsCollector::~CamParsCollector()
@@ -73,13 +79,86 @@ CamParsCollector::~CamParsCollector()
   }
   delete [] m_aaiCodedOffset;
   delete [] m_aaiCodedScale;
+#if !FIX_CAM_PARS_COLLECTOR
   delete [] m_aiViewId;  
   delete [] m_bViewReceived;
+#endif
 
   xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
   xDeleteArray( m_aiBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
+#if FIX_CAM_PARS_COLLECTOR
+  xDeleteArray( m_receivedIdc, m_uiMaxViewIndex + 1 );
+#endif
 }
 
+
+#if FIX_CAM_PARS_COLLECTOR
+Void
+CamParsCollector::init( FILE* pCodedScaleOffsetFile, TComVPS* vps)
+{
+  assert( !isInitialized() ); // Only one initialization currently supported
+  m_bInitialized            = true;
+  m_vps                     = vps; 
+  m_bCamParsVaryOverTime    = false; 
+  m_pCodedScaleOffsetFile   = pCodedScaleOffsetFile;
+  m_lastPoc                 = -1;   
+  m_firstReceivedPoc        = -2; 
+
+  m_uiMaxViewIndex            = -1; 
+  for (Int i = 0; i <= vps->getMaxLayersMinus1(); i++)
+  {
+    Int curViewIdx = m_vps->getViewIndex( m_vps->getLayerIdInNuh( i )); 
+    m_bCamParsVaryOverTime = m_bCamParsVaryOverTime || vps->hasCamParInSliceHeader( curViewIdx );
+    m_uiMaxViewIndex = std::max( m_uiMaxViewIndex, curViewIdx  ) ; 
+  }
+
+  assert( m_receivedIdc == NULL ); 
+  m_receivedIdc = new Int*[ m_uiMaxViewIndex + 1]; 
+  for (Int i = 0; i <= m_uiMaxViewIndex; i++)
+  {
+    m_receivedIdc[i] = new Int[ m_uiMaxViewIndex + 1 ]; 
+  }
+
+  xResetReceivedIdc( true ); 
+
+  for (Int viewIndex = 0; viewIndex <= m_uiMaxViewIndex ; viewIndex++ )
+  {
+    if (m_vps->getCamParPresent( viewIndex ) )
+    {    
+      if( !m_vps->hasCamParInSliceHeader( viewIndex ) ) 
+      {
+        for (Int baseViewIndex = 0; baseViewIndex < viewIndex ; baseViewIndex++ )
+        { 
+          m_receivedIdc   [ baseViewIndex ][ viewIndex ] = -1; 
+          m_aaiCodedScale [ baseViewIndex ][ viewIndex ] = m_vps->getCodedScale    (viewIndex) [ baseViewIndex ];
+          m_aaiCodedOffset[ baseViewIndex ][ viewIndex ] = m_vps->getCodedOffset   (viewIndex) [ baseViewIndex ];
+
+          m_receivedIdc   [ viewIndex ][ baseViewIndex ] = -1; 
+          m_aaiCodedScale [ viewIndex ][ baseViewIndex ] = m_vps->getInvCodedScale (viewIndex) [ baseViewIndex ];
+          m_aaiCodedOffset[ viewIndex ][ baseViewIndex ] = m_vps->getInvCodedOffset(viewIndex) [ baseViewIndex ];
+          xInitLUTs( baseViewIndex, viewIndex, m_aaiCodedScale[ baseViewIndex ][ viewIndex ], m_aaiCodedOffset[ baseViewIndex ][ viewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+          xInitLUTs( viewIndex, baseViewIndex, m_aaiCodedScale[ viewIndex ][ baseViewIndex ], m_aaiCodedOffset[ viewIndex ][ baseViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+        }
+      }
+    }
+  }
+}
+
+Void
+CamParsCollector::xResetReceivedIdc( Bool overWriteFlag )
+{
+  for (Int i = 0; i <= m_uiMaxViewIndex; i++)
+  {  
+    for (Int j = 0; j <= m_uiMaxViewIndex; j++)
+    {
+      if ( overWriteFlag ||  ( m_receivedIdc[i][j] != -1 ) )
+      {
+        m_receivedIdc[i][j] = 0; 
+      }      
+    }
+  }
+}
+#else
 Void
 CamParsCollector::init( FILE* pCodedScaleOffsetFile )
 {
@@ -91,6 +170,9 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile )
   m_iLastPOC                = -1;
   m_uiMaxViewIndex             = 0;
 }
+#endif
+
+
 
 Void
 CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetViews, Double****& radLUT, Int****& raiLUT)
@@ -123,7 +205,11 @@ CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetView
 Void 
   CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
 {
+#if FIX_CAM_PARS_COLLECTOR
+  Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCamParPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
+#else
   Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_uiCamParsCodedPrecision + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
+#endif
   Int     iLog2DivChroma = iLog2DivLuma + 1;
 
   iOffset <<= m_uiBitDepthForLUT;
@@ -165,6 +251,7 @@ CamParsCollector::uninit()
   m_bInitialized = false;
 }
 
+#if !FIX_CAM_PARS_COLLECTOR
 Void
 CamParsCollector::setSlice( TComSlice* pcSlice )
 {
@@ -283,6 +370,78 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
   m_iLastPOC       = (Int)pcSlice->getPOC();
 }
 
+#else
+Void
+CamParsCollector::setSlice( TComSlice* pcSlice )
+{
+  if( pcSlice == 0 )
+  {
+    xOutput( m_lastPoc );
+    return;
+  }
+
+  if ( pcSlice->getIsDepth())
+  {
+    return;
+  }
+
+  Int curPoc = pcSlice->getPOC();
+  if( m_firstReceivedPoc == -2 )
+  {
+    m_firstReceivedPoc = curPoc; 
+  }
+
+  Bool newPocFlag = ( m_lastPoc != curPoc );  
+
+  if ( newPocFlag )
+  {    
+    if( m_lastPoc != -1 )
+    {
+      xOutput( m_lastPoc );
+    }
+
+    xResetReceivedIdc( false ); 
+    m_lastPoc = pcSlice->getPOC();
+  }
+
+  UInt uiViewIndex          = pcSlice->getViewIndex();  
+  if( m_vps->getCamParPresent( uiViewIndex ) )
+  {    
+    if( m_vps->hasCamParInSliceHeader( uiViewIndex ) ) // check consistency of slice parameters here
+    {   
+      for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < uiViewIndex; uiBaseViewIndex++ )
+      {        
+        if ( m_receivedIdc[ uiViewIndex ][ uiBaseViewIndex ] != 0 )
+        {      
+          AOF( m_aaiCodedScale [ uiViewIndex ][ uiBaseViewIndex ] == pcSlice->getInvCodedScale () [ uiBaseViewIndex ] );
+          AOF( m_aaiCodedOffset[ uiViewIndex ][ uiBaseViewIndex ] == pcSlice->getInvCodedOffset() [ uiBaseViewIndex ] );
+        }
+        else
+        {          
+          m_receivedIdc   [ uiViewIndex ][ uiBaseViewIndex ]  = 1; 
+          m_aaiCodedScale [ uiViewIndex ][ uiBaseViewIndex ]  = pcSlice->getInvCodedScale () [ uiBaseViewIndex ];
+          m_aaiCodedOffset[ uiViewIndex ][ uiBaseViewIndex ]  = pcSlice->getInvCodedOffset() [ uiBaseViewIndex ];
+          xInitLUTs( uiViewIndex, uiBaseViewIndex, m_aaiCodedScale[ uiViewIndex ][ uiBaseViewIndex ], m_aaiCodedOffset[ uiViewIndex ][ uiBaseViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
+        }
+        if ( m_receivedIdc[ uiBaseViewIndex ][ uiViewIndex ] != 0 )
+        {      
+          AOF( m_aaiCodedScale [ uiBaseViewIndex ][ uiViewIndex ] == pcSlice->getCodedScale    () [ uiBaseViewIndex ] );
+          AOF( m_aaiCodedOffset[ uiBaseViewIndex ][ uiViewIndex ] == pcSlice->getCodedOffset   () [ uiBaseViewIndex ] );
+        }
+        else
+        {        
+          m_receivedIdc   [ uiBaseViewIndex ][ uiViewIndex ]  = 1; 
+          m_aaiCodedScale [ uiBaseViewIndex ][ uiViewIndex ]  = pcSlice->getCodedScale    () [ uiBaseViewIndex ];
+          m_aaiCodedOffset[ uiBaseViewIndex ][ uiViewIndex ]  = pcSlice->getCodedOffset   () [ uiBaseViewIndex ];
+          xInitLUTs( uiBaseViewIndex, uiViewIndex, m_aaiCodedScale[ uiBaseViewIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseViewIndex ][ uiViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
+        }
+      }
+    }
+  }
+}
+#endif
+
+
 #if H_3D_IV_MERGE
 Void
 CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
@@ -294,6 +453,7 @@ CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
 }
 #endif
 
+#if !FIX_CAM_PARS_COLLECTOR
 Bool
 CamParsCollector::xIsComplete()
 {
@@ -306,25 +466,40 @@ CamParsCollector::xIsComplete()
   }
   return true;
 }
+#endif
 
 Void
 CamParsCollector::xOutput( Int iPOC )
 {
   if( m_pCodedScaleOffsetFile )
   {
+#if FIX_CAM_PARS_COLLECTOR
+    if( iPOC == m_firstReceivedPoc )
+#else
     if( iPOC == 0 )
+#endif
     {
       fprintf( m_pCodedScaleOffsetFile, "#  ViewIndex       ViewId\n" );
       fprintf( m_pCodedScaleOffsetFile, "#----------- ------------\n" );
+#if FIX_CAM_PARS_COLLECTOR
+      for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
+      {
+        fprintf( m_pCodedScaleOffsetFile, "%12d %12d\n", uiViewIndex, m_vps->getViewIdVal( uiViewIndex ) );
+#else        
       for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
       {
         fprintf( m_pCodedScaleOffsetFile, "%12d %12d\n", uiViewIndex, m_aiViewId[ uiViewIndex ] );
+#endif
       }
       fprintf( m_pCodedScaleOffsetFile, "\n\n");
       fprintf( m_pCodedScaleOffsetFile, "# StartFrame     EndFrame   TargetView     BaseView   CodedScale  CodedOffset    Precision\n" );
       fprintf( m_pCodedScaleOffsetFile, "#----------- ------------ ------------ ------------ ------------ ------------ ------------\n" );
     }
+#if FIX_CAM_PARS_COLLECTOR
+    if( iPOC == m_firstReceivedPoc || m_bCamParsVaryOverTime  )
+#else
     if( iPOC == 0 || m_bCamParsVaryOverTime )
+#endif
     {
       Int iS = iPOC;
       Int iE = ( m_bCamParsVaryOverTime ? iPOC : ~( 1 << 31 ) );
@@ -334,8 +509,17 @@ CamParsCollector::xOutput( Int iPOC )
         {
           if( uiViewIndex != uiBaseIndex )
           {
+#if FIX_CAM_PARS_COLLECTOR
+            if ( m_receivedIdc[uiBaseIndex][uiViewIndex] != 0 )
+            {            
+              fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
+                iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_vps->getCamParPrecision() );
+            }            
+#else
             fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
               iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_uiCamParsCodedPrecision );
+#endif
+
           }
         }
       }
@@ -456,17 +640,38 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 #endif
   for( Int temporalLayer=0; temporalLayer < MAX_TLAYER; temporalLayer++) 
   {
+#if H_MV_HLS_7_SPS_P0155_16_32
+    numReorderPics[temporalLayer] = ( getLayerId() == 0 ) ? pcSlice->getSPS()->getNumReorderPics(temporalLayer) : pcSlice->getVPS()->getNumReorderPics(temporalLayer);
+#else
     numReorderPics[temporalLayer] = pcSlice->getSPS()->getNumReorderPics(temporalLayer);
+#endif
   }
-
+#if H_MV_HLS_7_SPS_P0155_16_32
+  if ( getLayerId() == 0 )
+  {  
+    m_iMaxRefPicNum = pcSlice->getSPS()->getMaxDecPicBuffering(pcSlice->getTLayer());
+  }
+  else
+  {
+    m_iMaxRefPicNum = pcSlice->getVPS()->getMaxDecPicBuffering(pcSlice->getTLayer());
+#if H_MV_HLS7_GEN
+    TComVPS* vps         = pcSlice->getVPS();
+    TComDpbSize* dpbSize = vps->getDpbSize(); 
+    Int lsIdx            = vps->getLayerSetIdxForOutputLayerSet( getTargetOutputLayerSetIdx()); // Is this correct, seems to be missing in spec?
+    Int layerIdx         = vps->getIdxInLayerSet     ( lsIdx, getLayerId() ); 
+    Int subDpbIdx        = dpbSize->getSubDpbAssigned( lsIdx, layerIdx ); 
+    m_iMaxRefPicNum      = dpbSize->getMaxVpsDecPicBufferingMinus1(getTargetOutputLayerSetIdx(), subDpbIdx , vps->getSubLayersVpsMaxMinus1( vps->getLayerIdInVps( getLayerId() ) ) + 1 ) + 1 ;  
+#endif    
+  }
+#else
   m_iMaxRefPicNum = pcSlice->getSPS()->getMaxDecPicBuffering(pcSlice->getTLayer());     // m_uiMaxDecPicBuffering has the space for the picture currently being decoded
+#endif
   if (m_cListPic.size() < (UInt)m_iMaxRefPicNum)
   {
     rpcPic = new TComPic();
     
     rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth, 
                      conformanceWindow, defaultDisplayWindow, numReorderPics, true);
-    rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
     m_cListPic.pushBack( rpcPic );
     
     return;
@@ -504,7 +709,6 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
   rpcPic->destroy();
   rpcPic->create ( pcSlice->getSPS()->getPicWidthInLumaSamples(), pcSlice->getSPS()->getPicHeightInLumaSamples(), g_uiMaxCUWidth, g_uiMaxCUHeight, g_uiMaxCUDepth,
                    conformanceWindow, defaultDisplayWindow, numReorderPics, true);
-  rpcPic->getPicSym()->allocSaoParam(&m_cSAO);
 }
 
 #if H_MV
@@ -661,7 +865,7 @@ Void TDecTop::xActivateParameterSets()
   }
 
   m_cSAO.destroy();
-  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getMaxCUWidth(), sps->getMaxCUHeight() );
+  m_cSAO.create( sps->getPicWidthInLumaSamples(), sps->getPicHeightInLumaSamples(), sps->getMaxCUWidth(), sps->getMaxCUHeight(), sps->getMaxCUDepth() );
   m_cLoopFilter.create( sps->getMaxCUDepth() );
 }
 
@@ -669,7 +873,6 @@ Void TDecTop::xActivateParameterSets()
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay, Bool newLayerFlag, Bool& sliceSkippedFlag  )
 {
   assert( nalu.m_layerId == m_layerId ); 
-
 #else
 Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisplay )
 {
@@ -681,11 +884,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   {
     m_uiSliceIdx     = 0;
   }
-  m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
-  if (!m_bFirstSliceInPicture)
+  else
   {
     m_apcSlicePilot->copySliceInfo( pcPic->getPicSym()->getSlice(m_uiSliceIdx-1) );
   }
+  m_apcSlicePilot->setSliceIdx(m_uiSliceIdx);
 
   m_apcSlicePilot->setNalUnitType(nalu.m_nalUnitType);
   Bool nonReferenceFlag = (m_apcSlicePilot->getNalUnitType() == NAL_UNIT_CODED_SLICE_TRAIL_N ||
@@ -993,12 +1196,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     }
 #endif
 #else
-#if FIX1071
     pcSlice->setRefPicList( m_cListPic, true );
-#else
-    pcSlice->setRefPicList( m_cListPic );
-#endif
-
 #endif
 
 #if H_3D
@@ -1214,7 +1412,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 
     case NAL_UNIT_CODED_SLICE_TRAIL_R:
     case NAL_UNIT_CODED_SLICE_TRAIL_N:
-    case NAL_UNIT_CODED_SLICE_TLA_R:
+    case NAL_UNIT_CODED_SLICE_TSA_R:
     case NAL_UNIT_CODED_SLICE_TSA_N:
     case NAL_UNIT_CODED_SLICE_STSA_R:
     case NAL_UNIT_CODED_SLICE_STSA_N:
@@ -1234,8 +1432,70 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
 #endif
       break;
+    case NAL_UNIT_EOS:
+      m_associatedIRAPType = NAL_UNIT_INVALID;
+      m_pocCRA = 0;
+      m_pocRandomAccess = MAX_INT;
+      m_prevPOC = MAX_INT;
+      m_bFirstSliceInPicture = true;
+      m_bFirstSliceInSequence = true;
+      m_prevSliceSkipped = false;
+      m_skippedPOC = 0;
+      return false;
+      
+    case NAL_UNIT_ACCESS_UNIT_DELIMITER:
+      // TODO: process AU delimiter
+      return false;
+      
+    case NAL_UNIT_EOB:
+      return false;
+      
+      
+    case NAL_UNIT_RESERVED_VCL_N10:
+    case NAL_UNIT_RESERVED_VCL_R11:
+    case NAL_UNIT_RESERVED_VCL_N12:
+    case NAL_UNIT_RESERVED_VCL_R13:
+    case NAL_UNIT_RESERVED_VCL_N14:
+    case NAL_UNIT_RESERVED_VCL_R15:
+      
+    case NAL_UNIT_RESERVED_IRAP_VCL22:
+    case NAL_UNIT_RESERVED_IRAP_VCL23:
+      
+    case NAL_UNIT_RESERVED_VCL24:
+    case NAL_UNIT_RESERVED_VCL25:
+    case NAL_UNIT_RESERVED_VCL26:
+    case NAL_UNIT_RESERVED_VCL27:
+    case NAL_UNIT_RESERVED_VCL28:
+    case NAL_UNIT_RESERVED_VCL29:
+    case NAL_UNIT_RESERVED_VCL30:
+    case NAL_UNIT_RESERVED_VCL31:
+      
+    case NAL_UNIT_FILLER_DATA:
+    case NAL_UNIT_RESERVED_NVCL41:
+    case NAL_UNIT_RESERVED_NVCL42:
+    case NAL_UNIT_RESERVED_NVCL43:
+    case NAL_UNIT_RESERVED_NVCL44:
+    case NAL_UNIT_RESERVED_NVCL45:
+    case NAL_UNIT_RESERVED_NVCL46:
+    case NAL_UNIT_RESERVED_NVCL47:
+    case NAL_UNIT_UNSPECIFIED_48:
+    case NAL_UNIT_UNSPECIFIED_49:
+    case NAL_UNIT_UNSPECIFIED_50:
+    case NAL_UNIT_UNSPECIFIED_51:
+    case NAL_UNIT_UNSPECIFIED_52:
+    case NAL_UNIT_UNSPECIFIED_53:
+    case NAL_UNIT_UNSPECIFIED_54:
+    case NAL_UNIT_UNSPECIFIED_55:
+    case NAL_UNIT_UNSPECIFIED_56:
+    case NAL_UNIT_UNSPECIFIED_57:
+    case NAL_UNIT_UNSPECIFIED_58:
+    case NAL_UNIT_UNSPECIFIED_59:
+    case NAL_UNIT_UNSPECIFIED_60:
+    case NAL_UNIT_UNSPECIFIED_61:
+    case NAL_UNIT_UNSPECIFIED_62:
+    case NAL_UNIT_UNSPECIFIED_63:
     default:
-      assert (1);
+      assert (0);
   }
 
   return false;
