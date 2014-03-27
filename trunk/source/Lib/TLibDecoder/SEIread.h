@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -72,6 +72,10 @@ protected:
   Void xParseSEIToneMappingInfo       (SEIToneMappingInfo& sei, UInt payloadSize);
   Void xParseSEISOPDescription        (SEISOPDescription &sei, UInt payloadSize);
   Void xParseSEIScalableNesting       (SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps);
+#if H_MV_HLS_7_SEI_P0204_26
+  Void  xParseSEISubBitstreamProperty   (SEISubBitstreamProperty &sei);
+  Void  xResizeSubBitstreamPropertySeiArrays(SEISubBitstreamProperty &sei);
+#endif
   Void xParseByteAlign();
 };
 

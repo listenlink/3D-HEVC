@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,6 +89,10 @@ void write(ostream& out, OutputNALUnit& nalu)
    *  - 0x00000303
    */
   vector<uint8_t>& rbsp   = nalu.m_Bitstream.getFIFO();
+
+#if H_MV_HLS_7_MISC_P0130_EOS  // This will handle situation when writing NAL with zero payload
+  if (rbsp.size() == 0) return;
+#endif
 
   for (vector<uint8_t>::iterator it = rbsp.begin(); it != rbsp.end();)
   {

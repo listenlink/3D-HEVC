@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -92,6 +92,11 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
+#if H_MV_HLS_7_SEI_P0204_26
+    case SEI::SUB_BITSTREAM_PROPERTY:
+    fprintf( g_hTrace, "=========== Sub-bitstream property SEI message ===========\n");
+    break;
+#endif
   default:
     fprintf( g_hTrace, "=========== Unknown SEI message ===========\n");
     break;
@@ -145,6 +150,11 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
+#if H_MV_HLS_7_SEI_P0204_26
+   case SEI::SUB_BITSTREAM_PROPERTY:
+   xWriteSEISubBitstreamProperty(*static_cast<const SEISubBitstreamProperty*>(&sei));
+   break;
+#endif
   default:
     assert(!"Unhandled SEI message");
   }
@@ -306,15 +316,15 @@ Void SEIWriter::xWriteSEIBufferingPeriod(const SEIBufferingPeriod& sei, TComSPS 
   WRITE_UVLC( sei.m_bpSeqParameterSetId, "bp_seq_parameter_set_id" );
   if( !hrd->getSubPicCpbParamsPresentFlag() )
   {
-    WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "rap_cpb_params_present_flag" );
+    WRITE_FLAG( sei.m_rapCpbParamsPresentFlag, "irap_cpb_params_present_flag" );
   }
-  WRITE_FLAG( sei.m_concatenationFlag, "concatenation_flag");
-  WRITE_CODE( sei.m_auCpbRemovalDelayDelta - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), "au_cpb_removal_delay_delta_minus1" );
   if( sei.m_rapCpbParamsPresentFlag )
   {
     WRITE_CODE( sei.m_cpbDelayOffset, hrd->getCpbRemovalDelayLengthMinus1() + 1, "cpb_delay_offset" );
     WRITE_CODE( sei.m_dpbDelayOffset, hrd->getDpbOutputDelayLengthMinus1()  + 1, "dpb_delay_offset" );
   }
+  WRITE_FLAG( sei.m_concatenationFlag, "concatenation_flag");
+  WRITE_CODE( sei.m_auCpbRemovalDelayDelta - 1, ( hrd->getCpbRemovalDelayLengthMinus1() + 1 ), "au_cpb_removal_delay_delta_minus1" );
   for( nalOrVcl = 0; nalOrVcl < 2; nalOrVcl ++ )
   {
     if( ( ( nalOrVcl == 0 ) && ( hrd->getNalHrdParametersPresentFlag() ) ) ||
@@ -577,6 +587,25 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
     writeSEImessage(bs, *(*it), sps);
   }
 }
+
+#if H_MV_HLS_7_SEI_P0204_26
+Void SEIWriter::xWriteSEISubBitstreamProperty(const SEISubBitstreamProperty &sei)
+{
+  WRITE_CODE( sei.m_activeVpsId, 4, "active_vps_id" );
+  assert( sei.m_numAdditionalSubStreams >= 1 );
+  WRITE_UVLC( sei.m_numAdditionalSubStreams - 1, "num_additional_sub_streams_minus1" );
+
+  for( Int i = 0; i < sei.m_numAdditionalSubStreams; i++ )
+  {
+    WRITE_CODE( sei.m_subBitstreamMode[i],       2, "sub_bitstream_mode[i]"           );
+    WRITE_UVLC( sei.m_outputLayerSetIdxToVps[i],    "output_layer_set_idx_to_vps[i]"  );
+    WRITE_CODE( sei.m_highestSublayerId[i],      3, "highest_sub_layer_id[i]"         );
+    WRITE_CODE( sei.m_avgBitRate[i],            16, "avg_bit_rate[i]"                 );
+    WRITE_CODE( sei.m_maxBitRate[i],            16, "max_bit_rate[i]"                 );
+  }
+  xWriteByteAlign();
+}
+#endif
 
 Void SEIWriter::xWriteByteAlign()
 {

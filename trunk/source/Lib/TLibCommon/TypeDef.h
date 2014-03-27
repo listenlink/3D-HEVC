@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -324,11 +324,68 @@
 #define MTK_IC_FLAG_CABAC_SIMP_G0061      1   // Use only 1 context for IC flag in JCT3V-G0061
 #define MTK_NBDV_IVREF_FIX_G0067          1   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
 #endif
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   HTM-10.1 Integrations //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+
+
+// TBD
+// #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
+// #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
+// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications – with text provided as P0297).
+
+// #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
+// #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
+
+// #define H_MV_HLS_7_HRD_P0138_6            0 // (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
+// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+// #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
+
+
+#define H_MV_HLS_7_VPS_P0306_22                1 // (VPS/P0306/ue(v) coded syntax elements) #22 Several minor modifications to the VPS syntax, consistent with eliminating the previous intention to avoid ue(v) parsing in the VPS 
+#define H_MV_HLS_7_SEI_P0204_26                1 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
+#define H_MV_HLS_7_MISC_P0130_20               1 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
+#define H_MV_HLS_7_VPS_P0125_24                1 // (VPS/P0125/VPS extension offset ) #24 Decision: Keep it as a reserved FFFF value. 
+#define H_MV_HLS_7_VPS_P0307_23                1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
+#define H_MV_HLS_7_POC_P0041                   1 // Syntax related to POC reset
+
+
+#define H_MV_HLS7_GEN                          0  // General changes (not tested)
+#define H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27    1  // Output layer sets, various
+                                                  // (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
+                                                  // (VPS/P0156/Num of output_layer_flag) #10 Proposal 3: The output_layer_flag[ i ][ j ] is signalled for j equal to 0 to NumLayersInIdList[ lsIdx ] inclusive. It was remarked that we might be able to just assume that the top layer is always output; however, this was not entirely clear , so the safe thing to do may be to also send the flag for this layer.
+                                                  // (VPS/P0295/Default output layer sets) #5 Discussion from (P0110). Decision: Three-state approach (text in P0295, decoder shall allow 3 to be present and shall treat 3 the same as the value 2). 
+
+
+#define H_MV_HLS_7_HRD_P0156_7                 1  // (HRD/P0156/MaxSubLayersInLayerSetMinus1) #7 Proposal 1: signal, in the VPS extension, the DPB parameters for an output layer set for sub-DPBs only up to the maximum temporal sub-layers in the corresponding layer set
+#define H_MV_HLS_7_VPS_P0048_14                1  // (VPS/P0048/profile_ref_minus1 rem) #14 Remove profile_ref_minus1 from the VPS extension, from JCTVC-P0048
+#define H_MV_HLS_7_VPS_P0076_15                1  // (VPS/P0076/video signal info move) #15 Move video signal information syntax structure earlier in the VPS VUI.
+#define H_MV_HLS_7_SPS_P0155_16_32             1  // (SPS/P0155/sps_sub_layer_ordering_info) #16, #32 Not signal the sps_max_num_reorder_pics[], sps_max_latency_increase_plus1[], and sps_max_dec_pic_buffering_minus1[] syntax elements in the SPS when nuh_layer_id > 0. 
+#define H_MV_HLS_7_GEN_P0166_PPS_EXTENSION     1  // (GEN/P0166/pps_extension) #17 Add PPS extension type flags for conditional presence of syntax extensions per extension type, aligned with the SPS extension type flags, from JCTVC-P0166. Further align the SPS extension type flags syntax between RExt and MV-HEVC/SHVC
+#define H_MV_HLS_7_FIX_SET_DPB_SIZE            1  // Fix derivation dpb size parameters
+#define H_MV_HLS_7_RESERVED_FLAGS              1  // Added flags
+                                                  // (SPS/P0312/SHVC reserved flag) The flag will be used for the syntax vert_phase_position_enable_flag in SHVC draft
+                                                  // (VPS/O0215/SHVC reserved flag): this flag will be used for the syntax cross_layer_phase_alignment_flag in SHVC draft.
+                                                  // (VPS VUI/O0199,P0312/SHVC reserved flags) the 3 reserved bits will be used for the syntaxes single_layer_for_non_irap_flag, higher_layer_irap_skip_flag and vert_phase_position_not_in_use_flag in SHVC draft.
+#define H_MV_FIX_VPS_LAYER_ID_NOT_EQUAL_ZERO   1  // Discard VPS with nuh_layer_Id > 0
+#define H_MV_HLS_7_MISC_P0130_EOS              1  // (MISC/P0130/EOS NAL layer id) #19 Require that end of bitstream NAL unit shall have nuh_layer_id equal to 0, from JCTVC-P0130. Decoders shall allow an end of bitstream NAL unit with nuh_layer_id > 0 to be present, and shall ignore the NAL unit.
+#define H_MV_HLS_7_MISC_P0182_13               1  // (MISC/P0182/BL PS Compatibility flag) #13 Define the flag (in VPS VUI) with the proposed semantics, without specifying an associated extraction process. Editors to select the position in the VPS VUI.
+#define H_MV_HLS_7_MISC_P0068_21               1  // (MISC/P0068/all irap idr flag) #21 Add flag in VUI to indicate that all IRAP pictures are IDRs and that all layer pictures in an AU are IDR aligned, from JCTVC-P0068 proposal 1.
+#define H_MV_HLS_7_FIX_INFER_CROSS_LAYER_IRAP_ALIGNED_FLAG               1  // Fix inference of cross_layer_irap_aligned_flag
+#define H_MV_HLS_7_MISC_P0079_18               1  // (MISC/P0079/NumActiveRefLayerPics) #18 Modification of derivation of variable NumActiveRefLayerPics.
+#define FIX_CAM_PARS_COLLECTOR                 1
+#define UPDATE_HM13                            1  // Only some parts in H_3D parts are marked! 
+#if H_3D
+#define H_3D_FIX_G0148_BRACE                   1 
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
+#define BUGFIX_INTRAPERIOD 1
+#define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
 
-#define FIX1071 1 ///< fix for issue #1071
+#define FIX1172 1 ///< fix ticket #1172
 
 #define MAX_NUM_PICS_IN_SOP           1024
 
@@ -345,20 +402,6 @@
 #define MAX_VPS_NUH_RESERVED_ZERO_LAYER_ID_PLUS1  1
 #endif
 
-#define RATE_CONTROL_LAMBDA_DOMAIN                  1  ///< JCTVC-K0103, rate control by R-lambda model
-#define M0036_RC_IMPROVEMENT                        1  ///< JCTVC-M0036, improvement for R-lambda model based rate control
-#define TICKET_1090_FIX                             1
-
-#if KWU_FIX_URQ
-#if RATE_CONTROL_LAMBDA_DOMAIN
-#define RC_FIX                                      1  /// suggested fix for M0036
-#define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
-#endif
-#else
-#define RC_FIX                                      1  /// suggested fix for M0036
-#define RATE_CONTROL_INTRA                          1  ///< JCTVC-M0257, rate control for intra 
-#endif
-
 
 #define MAX_CPB_CNT                     32  ///< Upper bound of (cpb_cnt_minus1 + 1)
 #if H_MV
@@ -372,6 +415,9 @@
 #define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
 #define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
 #define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
+#if H_MV_HLS_7_SEI_P0204_26
+#define MAX_SUB_STREAMS                 1024
+#endif
 #else
 #define MAX_NUM_LAYER_IDS                64
 #endif
@@ -390,9 +436,6 @@
   
 #define C1FLAG_NUMBER               8 // maximum number of largerThan1 flag coded in one chunk :  16 in HM5
 #define C2FLAG_NUMBER               1 // maximum number of largerThan2 flag coded in one chunk:  16 in HM5 
-
-#define REMOVE_SAO_LCU_ENC_CONSTRAINTS_3 1  ///< disable the encoder constraint that conditionally disable SAO for chroma for entire slice in interleaved mode
-
 #define SAO_ENCODING_CHOICE              1  ///< I0184: picture early termination
 #if SAO_ENCODING_CHOICE
 #define SAO_ENCODING_RATE                0.75
@@ -406,11 +449,7 @@
 #define MAX_NUM_SPS                16
 #define MAX_NUM_PPS                64
 
-
-
-#define WEIGHTED_CHROMA_DISTORTION  1   ///< F386: weighting of chroma for RDO
 #define RDOQ_CHROMA_LAMBDA          1   ///< F386: weighting of chroma for RDOQ
-#define SAO_CHROMA_LAMBDA           1   ///< F386: weighting of chroma for SAO
 
 #define MIN_SCAN_POS_CROSS          4
 
@@ -424,8 +463,6 @@
 #define ARL_C_PRECISION                     7      ///< G382: 7-bit arithmetic precision
 #define LEVEL_RANGE                         30     ///< G382: max coefficient level in statistics collection
 #endif
-
-#define NS_HAD                               0
 
 #define HHI_RQT_INTRA_SPEEDUP             1           ///< tests one best mode with full rqt
 #define HHI_RQT_INTRA_SPEEDUP_MOD         0           ///< tests two best modes with full rqt
@@ -493,8 +530,6 @@
 #define AMP_MRG                               1           ///< encoder only force merge for AMP partition (no motion search for AMP)
 #endif
 
-#define SCALING_LIST_OUTPUT_RESULT    0 //JCTVC-G880/JCTVC-G1016 quantization matrices
-
 #define CABAC_INIT_PRESENT_FLAG     1
 
 // ====================================================================================================================
@@ -504,7 +539,11 @@
 typedef       void                Void;
 typedef       bool                Bool;
 
+#ifdef __arm__
+typedef       signed char         Char;
+#else
 typedef       char                Char;
+#endif
 typedef       unsigned char       UChar;
 typedef       short               Short;
 typedef       unsigned short      UShort;
@@ -571,76 +610,94 @@ enum SliceConstraint
   FIXED_NUMBER_OF_TILES  = 3,          ///< slices / slice segments span an integer number of tiles
 };
 
-#define NUM_DOWN_PART 4
-
-enum SAOTypeLen
+enum SAOComponentIdx
 {
-  SAO_EO_LEN    = 4, 
-  SAO_BO_LEN    = 4,
-  SAO_MAX_BO_CLASSES = 32
+  SAO_Y =0,
+  SAO_Cb,
+  SAO_Cr,
+  NUM_SAO_COMPONENTS
 };
 
-enum SAOType
+enum SAOMode //mode
 {
-  SAO_EO_0 = 0, 
-  SAO_EO_1,
-  SAO_EO_2, 
-  SAO_EO_3,
-  SAO_BO,
-  MAX_NUM_SAO_TYPE
+  SAO_MODE_OFF = 0,
+  SAO_MODE_NEW,
+  SAO_MODE_MERGE,
+  NUM_SAO_MODES
 };
 
-typedef struct _SaoQTPart
+enum SAOModeMergeTypes 
 {
-  Int         iBestType;
-  Int         iLength;
-  Int         subTypeIdx ;                 ///< indicates EO class or BO band position
-  Int         iOffset[4];
-  Int         StartCUX;
-  Int         StartCUY;
-  Int         EndCUX;
-  Int         EndCUY;
+  SAO_MERGE_LEFT =0,
+  SAO_MERGE_ABOVE,
+  NUM_SAO_MERGE_TYPES
+};
 
-  Int         PartIdx;
-  Int         PartLevel;
-  Int         PartCol;
-  Int         PartRow;
 
-  Int         DownPartsIdx[NUM_DOWN_PART];
-  Int         UpPartIdx;
-
-  Bool        bSplit;
-
-  //---- encoder only start -----//
-  Bool        bProcessed;
-  Double      dMinCost;
-  Int64       iMinDist;
-  Int         iMinRate;
-  //---- encoder only end -----//
-} SAOQTPart;
-
-typedef struct _SaoLcuParam
+enum SAOModeNewTypes 
 {
-  Bool       mergeUpFlag;
-  Bool       mergeLeftFlag;
-  Int        typeIdx;
-  Int        subTypeIdx;                  ///< indicates EO class or BO band position
-  Int        offset[4];
-  Int        partIdx;
-  Int        partIdxTmp;
-  Int        length;
-} SaoLcuParam;
+  SAO_TYPE_START_EO =0,
+  SAO_TYPE_EO_0 = SAO_TYPE_START_EO,
+  SAO_TYPE_EO_90,
+  SAO_TYPE_EO_135,
+  SAO_TYPE_EO_45,
 
-struct SAOParam
+  SAO_TYPE_START_BO,
+  SAO_TYPE_BO = SAO_TYPE_START_BO,
+
+  NUM_SAO_NEW_TYPES
+};
+#define NUM_SAO_EO_TYPES_LOG2 2
+
+enum SAOEOClasses 
 {
-  Bool       bSaoFlag[2];
-  SAOQTPart* psSaoPart[3];
-  Int        iMaxSplitLevel;
-  Bool         oneUnitFlag[3];
-  SaoLcuParam* saoLcuParam[3];
-  Int          numCuInHeight;
-  Int          numCuInWidth;
-  ~SAOParam();
+  SAO_CLASS_EO_FULL_VALLEY = 0,
+  SAO_CLASS_EO_HALF_VALLEY = 1,
+  SAO_CLASS_EO_PLAIN       = 2,
+  SAO_CLASS_EO_HALF_PEAK   = 3,
+  SAO_CLASS_EO_FULL_PEAK   = 4,
+  NUM_SAO_EO_CLASSES,
+};
+
+
+#define NUM_SAO_BO_CLASSES_LOG2  5
+enum SAOBOClasses
+{
+  //SAO_CLASS_BO_BAND0 = 0,
+  //SAO_CLASS_BO_BAND1,
+  //SAO_CLASS_BO_BAND2,
+  //...
+  //SAO_CLASS_BO_BAND31,
+
+  NUM_SAO_BO_CLASSES = (1<<NUM_SAO_BO_CLASSES_LOG2),
+};
+#define MAX_NUM_SAO_CLASSES  32  //(NUM_SAO_EO_GROUPS > NUM_SAO_BO_GROUPS)?NUM_SAO_EO_GROUPS:NUM_SAO_BO_GROUPS
+
+struct SAOOffset
+{
+  Int modeIdc; //NEW, MERGE, OFF
+  Int typeIdc; //NEW: EO_0, EO_90, EO_135, EO_45, BO. MERGE: left, above
+  Int typeAuxInfo; //BO: starting band index
+  Int offset[MAX_NUM_SAO_CLASSES];
+
+  SAOOffset();
+  ~SAOOffset();
+  Void reset();
+
+  const SAOOffset& operator= (const SAOOffset& src);
+};
+
+struct SAOBlkParam
+{
+
+  SAOBlkParam();
+  ~SAOBlkParam();
+  Void reset();
+  const SAOBlkParam& operator= (const SAOBlkParam& src);
+  SAOOffset& operator[](Int compIdx){ return offsetParam[compIdx];}
+private:
+  SAOOffset offsetParam[NUM_SAO_COMPONENTS];
+
 };
 
 /// parameters for deblocking filter
@@ -850,6 +907,20 @@ namespace Level
 //! \}
 
 #if H_MV
+
+#if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION
+enum PpsExtensionTypes
+{
+  PPS_EX_T_MV      = 0,
+#if H_3D
+  PPS_EX_T_3D      = 3,
+#endif
+  PPS_EX_T_ESC     = 7,
+  PPS_EX_T_MAX_NUM = 8
+};
+
+//Below for sps, would be good if this could be aligned
+#endif
 
   enum PsExtensionTypes
   {

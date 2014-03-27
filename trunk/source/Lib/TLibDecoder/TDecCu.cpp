@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -639,6 +639,17 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   
   m_ppcCU[uiDepth]->copySubCU( pcCU, uiAbsPartIdx, uiDepth );
   
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+  stopAtPos  ( m_ppcCU[uiDepth]->getSlice()->getPOC(), 
+    m_ppcCU[uiDepth]->getSlice()->getLayerId(), 
+    m_ppcCU[uiDepth]->getCUPelX(),
+    m_ppcCU[uiDepth]->getCUPelY(),
+    m_ppcCU[uiDepth]->getWidth(0), 
+    m_ppcCU[uiDepth]->getHeight(0) );
+#endif
+#endif
+
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
     case MODE_INTER:
@@ -917,11 +928,19 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   }
 #endif
   
+#if H_3D && UPDATE_HM13
+  Bool useDltFlag = (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps());
+
+  if ( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth ) || useDltFlag )
+#else
+  if ( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth ) )
+#endif
+  {
   //===== inverse transform =====
   m_pcTrQuant->setQPforQuant  ( pcCU->getQP(0), TEXT_LUMA, pcCU->getSlice()->getSPS()->getQpBDOffsetY(), 0 );
 
   Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)TEXT_LUMA];
-  assert(scalingListType < 6);
+    assert(scalingListType < SCALING_LIST_NUM);
   m_pcTrQuant->invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), TEXT_LUMA, pcCU->getLumaIntraDir( uiAbsPartIdx ), piResi, uiStride, pcCoeff, uiWidth, uiHeight, scalingListType, useTransformSkip );
 
   
@@ -935,7 +954,11 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
 #if H_3D
+#if UPDATE_HM13
+      if ( useDltFlag )
+#else
       if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
+#endif
       {
         pReco    [ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
       }
@@ -952,6 +975,25 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
     pResi     += uiStride;
     pReco     += uiStride;
     pRecIPred += uiRecIPredStride;
+  }
+}
+  else
+  {
+    //===== reconstruction =====
+    Pel* pPred      = piPred;
+    Pel* pReco      = piReco;
+    Pel* pRecIPred  = piRecIPred;
+    for ( Int y = 0; y < uiHeight; y++ )
+    {
+      for ( Int x = 0; x < uiWidth; x++ )
+      {
+        pReco    [ x ] = pPred[ x ];
+        pRecIPred[ x ] = pReco[ x ];
+      }
+      pPred     += uiStride;
+      pReco     += uiStride;
+      pRecIPred += uiRecIPredStride;
+    }
   }
 }
 
@@ -1021,6 +1063,8 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
     m_pcPrediction->predIntraChromaAng( pPatChroma, uiChromaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );  
   }
 
+  if ( pcCU->getCbf( uiAbsPartIdx, eText, uiTrDepth ) )
+  {
   //===== inverse transform =====
   Int curChromaQpOffset;
   if(eText == TEXT_CHROMA_U)
@@ -1034,7 +1078,7 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
   m_pcTrQuant->setQPforQuant  ( pcCU->getQP(0), eText, pcCU->getSlice()->getSPS()->getQpBDOffsetC(), curChromaQpOffset );
 
   Int scalingListType = (pcCU->isIntra(uiAbsPartIdx) ? 0 : 3) + g_eTTable[(Int)eText];
-  assert(scalingListType < 6);
+    assert(scalingListType < SCALING_LIST_NUM);
   m_pcTrQuant->invtransformNxN( pcCU->getCUTransquantBypass(uiAbsPartIdx), eText, REG_DCT, piResi, uiStride, pcCoeff, uiWidth, uiHeight, scalingListType, useTransformSkipChroma );
 
   //===== reconstruction =====
@@ -1053,6 +1097,25 @@ TDecCu::xIntraRecChromaBlk( TComDataCU* pcCU,
     pResi     += uiStride;
     pReco     += uiStride;
     pRecIPred += uiRecIPredStride;
+  }
+}
+  else
+  {
+    //===== reconstruction =====
+    Pel* pPred      = piPred;
+    Pel* pReco      = piReco;
+    Pel* pRecIPred  = piRecIPred;
+    for ( Int y = 0; y < uiHeight; y++ )
+    {
+      for ( Int x = 0; x < uiWidth; x++ )
+      {
+        pReco    [ x ] = pPred[ x ];
+        pRecIPred[ x ] = pReco[ x ];
+      }
+      pPred     += uiStride;
+      pReco     += uiStride;
+      pRecIPred += uiRecIPredStride;
+    }    
   }
 }
 

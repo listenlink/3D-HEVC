@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
- * Copyright (c) 2010-2013, ITU/ISO/IEC
+* Copyright (c) 2010-2014, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -126,6 +126,9 @@ Void TAppEncTop::xInitLibCfg()
   xSetProfileTierLevel     ( vps ); 
   xSetRepFormat            ( vps ); 
   xSetLayerSets            ( vps ); 
+#if H_MV_HLS_7_FIX_SET_DPB_SIZE
+  xSetDpbSize              ( vps ); 
+#endif
   xSetVPSVUI               ( vps ); 
 #if H_3D
   xSetVPSExtension2        ( vps ); 
@@ -308,26 +311,13 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setUseAdaptQpSelect             ( m_bUseAdaptQpSelect   );
 #endif
 
-  Int lowestQP;
-  lowestQP =  - 6*(g_bitDepthY - 8); // XXX: check
-
-#if H_MV
-  if ((m_iMaxDeltaQP == 0 ) && (m_iQP[layerIdInVps] == lowestQP) && (m_useLossless == true))
-#else
-  if ((m_iMaxDeltaQP == 0 ) && (m_iQP == lowestQP) && (m_useLossless == true))
-#endif
-  {
-    m_bUseAdaptiveQP = false;
-  }
   m_cTEncTop.setUseAdaptiveQP                ( m_bUseAdaptiveQP  );
   m_cTEncTop.setQPAdaptationRange            ( m_iQPAdaptationRange );
   
   //====== Tool list ========
-  m_cTEncTop.setUseSBACRD                    ( m_bUseSBACRD   );
   m_cTEncTop.setDeltaQpRD                    ( m_uiDeltaQpRD  );
   m_cTEncTop.setUseASR                       ( m_bUseASR      );
   m_cTEncTop.setUseHADME                     ( m_bUseHADME    );
-  m_cTEncTop.setUseLossless                  ( m_useLossless );
 #if H_MV
   m_cTEncTop.setdQPs                         ( m_aidQP[layerIdInVps]   );
 #else
@@ -395,7 +385,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setMaxNumOffsetsPerPic (m_maxNumOffsetsPerPic);
 
   m_cTEncTop.setSaoLcuBoundary (m_saoLcuBoundary);
-  m_cTEncTop.setSaoLcuBasedOptimization (m_saoLcuBasedOptimization);
   m_cTEncTop.setPCMInputBitDepthFlag  ( m_bPCMInputBitDepthFlag); 
   m_cTEncTop.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag); 
 
@@ -439,6 +428,18 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setDecodingUnitInfoSEIEnabled( m_decodingUnitInfoSEIEnabled );
   m_cTEncTop.setSOPDescriptionSEIEnabled( m_SOPDescriptionSEIEnabled );
   m_cTEncTop.setScalableNestingSEIEnabled( m_scalableNestingSEIEnabled );
+#if H_MV_HLS_7_SEI_P0204_26
+  m_cTEncTop.setSubBitstreamPropSEIEnabled( m_subBistreamPropSEIEnabled );
+  if( m_subBistreamPropSEIEnabled )
+  {
+    m_cTEncTop.setNumAdditionalSubStreams ( m_sbPropNumAdditionalSubStreams );
+    m_cTEncTop.setSubBitstreamMode        ( m_sbPropSubBitstreamMode );
+    m_cTEncTop.setOutputLayerSetIdxToVps  ( m_sbPropOutputLayerSetIdxToVps );
+    m_cTEncTop.setHighestSublayerId       ( m_sbPropHighestSublayerId );
+    m_cTEncTop.setAvgBitRate              ( m_sbPropAvgBitRate );
+    m_cTEncTop.setMaxBitRate              ( m_sbPropMaxBitRate );
+  }
+#endif
   m_cTEncTop.setUniformSpacingIdr          ( m_iUniformSpacingIdr );
   m_cTEncTop.setNumColumnsMinus1           ( m_iNumColumnsMinus1 );
   m_cTEncTop.setNumRowsMinus1              ( m_iNumRowsMinus1 );
@@ -460,7 +461,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setUseScalingListId           ( m_useScalingListId  );
   m_cTEncTop.setScalingListFile            ( m_scalingListFile   );
   m_cTEncTop.setSignHideFlag(m_signHideFlag);
-#if RATE_CONTROL_LAMBDA_DOMAIN
 #if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
   if(!m_cTEncTop.getIsDepth())    //only for texture
   {
@@ -481,12 +481,10 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setUseLCUSeparateModel ( m_RCUseLCUSeparateModel );
   m_cTEncTop.setInitialQP           ( m_RCInitialQP );
   m_cTEncTop.setForceIntraQP        ( m_RCForceIntraQP );
-
 #if KWU_RC_MADPRED_E0227
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
     m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_depthMADPred       : 0);
-
     if(m_cTEncTop.getUseDepthMADPred())
     {
       m_cTEncTop.setCamParam(&m_cCameraData);
@@ -497,7 +495,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
   {
     m_cTEncTop.setUseViewWiseRateCtrl(m_viewWiseRateCtrl);
-
     if(m_iNumberOfViews == 1)
     {
       if(m_viewWiseRateCtrl)
@@ -551,97 +548,8 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     }
   }
 #endif
-#else
-#if KWU_RC_VIEWRC_E0227 || KWU_RC_MADPRED_E0227
-  if(!m_cTEncTop.getIsDepth())    //only for texture
-  {
-    m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
-    m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
-    m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
-  }
-  else
-  {
-    m_cTEncTop.setUseRateCtrl         ( 0 );
-  }
-#else
-  m_cTEncTop.setUseRateCtrl         ( m_enableRateCtrl );
-  m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
-  m_cTEncTop.setNumLCUInUnit        ( m_numLCUInUnit);
-#endif
-
-  
-#if KWU_RC_MADPRED_E0227
-  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
-  {
-    m_cTEncTop.setUseDepthMADPred(layerIdInVps ? m_depthMADPred       : 0);
-
-    if(m_cTEncTop.getUseDepthMADPred())
-    {
-      m_cTEncTop.setCamParam(&m_cCameraData);
-    }
-  }
-#endif
-
-#if KWU_RC_VIEWRC_E0227
-  if(m_cTEncTop.getUseRateCtrl() && !m_cTEncTop.getIsDepth())
-  {
-    m_cTEncTop.setUseViewWiseRateCtrl(m_viewWiseRateCtrl);
-    if(m_iNumberOfViews == 1)
-    {
-      if(m_viewWiseRateCtrl)
-      {
-        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
-      }
-      else
-      {
-        m_cTEncTop.setTargetBitrate       ( m_targetBitrate );
-      }
-    }
-    else
-    {
-      if(m_viewWiseRateCtrl)
-      {
-        m_cTEncTop.setTargetBitrate(m_viewTargetBits[layerIdInVps>>1]);
-      }
-      else
-      {
-        if(m_iNumberOfViews == 2)
-        {
-          if(m_cTEncTop.getViewId() == 0)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*80)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 1)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*20)/100 );
-          }
-        }
-        else if(m_iNumberOfViews == 3)
-        {
-          if(m_cTEncTop.getViewId() == 0)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*66)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 1)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
-          }
-          else if(m_cTEncTop.getViewId() == 2)
-          {
-            m_cTEncTop.setTargetBitrate              ( (m_targetBitrate*17)/100 );
-          }
-        }
-        else
-        {
-          m_cTEncTop.setTargetBitrate              ( m_targetBitrate );
-        }
-      }
-    }
-  }
-#endif
-#endif
   m_cTEncTop.setTransquantBypassEnableFlag(m_TransquantBypassEnableFlag);
-  m_cTEncTop.setCUTransquantBypassFlagValue(m_CUTransquantBypassFlagValue);
+  m_cTEncTop.setCUTransquantBypassFlagForceValue(m_CUTransquantBypassFlagForce);
   m_cTEncTop.setUseRecalculateQPAccordingToLambda( m_recalculateQPAccordingToLambda );
   m_cTEncTop.setUseStrongIntraSmoothing( m_useStrongIntraSmoothing );
   m_cTEncTop.setActiveParameterSetsSEIEnabled ( m_activeParameterSetsSEIEnabled ); 
@@ -931,16 +839,6 @@ Void TAppEncTop::encode()
       }
     }
 
-#if !RATE_CONTROL_LAMBDA_DOMAIN && KWU_FIX_URQ
-    for(Int layer=0; layer < m_numberOfLayers; layer++ )
-    {
-      if(m_acTEncTopList[layer]->getUseRateCtrl()  && !m_acTEncTopList[layer]->getIsDepth())
-      {
-        m_acTEncTopList[layer]->getRateCtrl()->updateRCGOPStatus();
-      }
-    }
-#endif
-
     gopSize = maxGopSize;
   }
   for(Int layer=0; layer < m_numberOfLayers; layer++ )
@@ -1202,7 +1100,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
       const vector<UInt>& stats = writeAnnexB(bitstreamFile, au);
       rateStatsAccum(au, stats);   
     }
-#endif    
+#endif
   }
 }
   
@@ -1220,7 +1118,7 @@ void TAppEncTop::rateStatsAccum(const AccessUnit& au, const std::vector<UInt>& a
     {
     case NAL_UNIT_CODED_SLICE_TRAIL_R:
     case NAL_UNIT_CODED_SLICE_TRAIL_N:
-    case NAL_UNIT_CODED_SLICE_TLA_R:
+    case NAL_UNIT_CODED_SLICE_TSA_R:
     case NAL_UNIT_CODED_SLICE_TSA_N:
     case NAL_UNIT_CODED_SLICE_STSA_R:
     case NAL_UNIT_CODED_SLICE_STSA_N:
@@ -1607,6 +1505,77 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
   }
 }
 
+#if H_MV_HLS_7_FIX_SET_DPB_SIZE
+Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
+{
+  // These settings need to be verified
+
+  TComDpbSize* dpbSize = vps.getDpbSize(); 
+
+  assert ( dpbSize != 0 ); 
+
+  for( Int i = 1; i < vps.getNumOutputLayerSets(); i++ )
+  {  
+    std::vector<Int> targetDecLayerIdList = vps.getTargetDecLayerIdList( i ); 
+    Bool subLayerFlagInfoPresentFlag = false; 
+
+#if H_MV_HLS_7_HRD_P0156_7
+    for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( i ); j++ )
+#else
+    for( Int j = 0; j  <=  vps.getMaxTLayers() - 1 ; j++ )
+#endif
+    {   
+      Bool subLayerDpbInfoPresentFlag = false; 
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+      assert( vps.getNumSubDpbs( vps.getLayerSetIdxForOutputLayerSet( i ) ) == targetDecLayerIdList.size() ); 
+      for( Int k = 0; k < vps.getNumSubDpbs( vps.getLayerSetIdxForOutputLayerSet( i )); k++ )   
+#else
+      assert( vps.getNumSubDpbs( vps.getOutputLayerSetIdxMinus1( i ) + 1 ) == targetDecLayerIdList.size() ); 
+      for( Int k = 0; k < vps.getNumSubDpbs( vps.getOutputLayerSetIdxMinus1( i ) + 1 ); k++ )   
+#endif
+      {
+        Int layerIdInVps = vps.getLayerIdInVps( targetDecLayerIdList[k] );           
+#if H_MV_HLS7_GEN
+        // TBD. Some derivation based on output layer set might be added here. 
+#endif
+        dpbSize->setMaxVpsDecPicBufferingMinus1( i, k, j, m_maxDecPicBufferingMvc[ layerIdInVps ][ j ] - 1 );
+        if ( j > 0 )
+        {
+          subLayerDpbInfoPresentFlag = subLayerDpbInfoPresentFlag || ( dpbSize->getMaxVpsDecPicBufferingMinus1( i, k, j ) != dpbSize->getMaxVpsDecPicBufferingMinus1( i, k, j - 1 ) );
+        }
+      }        
+
+      Int maxNumReorderPics = MIN_INT;
+      for ( Int idx = 0; idx < targetDecLayerIdList.size(); idx++ )
+      {
+        Int layerIdInVps = vps.getLayerIdInVps( targetDecLayerIdList[ idx ] ); 
+        maxNumReorderPics = std::max( maxNumReorderPics, m_numReorderPicsMvc[ layerIdInVps ][ j ] ); 
+      }
+      assert( maxNumReorderPics != MIN_INT ); 
+
+      dpbSize->setMaxVpsNumReorderPics( i, j, maxNumReorderPics );
+      if ( j > 0 )
+      {
+        subLayerDpbInfoPresentFlag = subLayerDpbInfoPresentFlag || ( dpbSize->getMaxVpsNumReorderPics( i, j ) != dpbSize->getMaxVpsNumReorderPics( i, j - 1 ) );
+      }
+
+      // To Be Done !
+      // dpbSize->setMaxVpsLatencyIncreasePlus1( i, j, xx );
+      if ( j > 0 )
+      {
+        subLayerDpbInfoPresentFlag = subLayerDpbInfoPresentFlag || ( dpbSize->getMaxVpsLatencyIncreasePlus1( i, j ) != dpbSize->getMaxVpsLatencyIncreasePlus1( i, j - 1  ) );
+      }
+
+      if( j > 0 )  
+      {
+        dpbSize->setSubLayerDpbInfoPresentFlag( i, j, subLayerDpbInfoPresentFlag );
+        subLayerFlagInfoPresentFlag = subLayerFlagInfoPresentFlag || subLayerDpbInfoPresentFlag; 
+      }       
+    }  
+    dpbSize->setSubLayerFlagInfoPresentFlag( i, subLayerFlagInfoPresentFlag ); 
+  }  
+}
+#else
 Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
 {
   // These settings need to be verified
@@ -1619,7 +1588,6 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
   {  
     std::vector<Int> targetDecLayerIdList = vps.getTargetDecLayerIdList( i ); 
     dpbSize->setSubLayerFlagInfoPresentFlag( i, m_subLayerFlagInfoPresentFlag );
-
     if ( dpbSize->getSubLayerFlagInfoPresentFlag( i ) )
     {
       for( Int j = 0; j  <=  vps.getMaxTLayers() - 1 ; j++ )
@@ -1662,13 +1630,15 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
     }  
   }  
 }
-
+#endif
 
 Void TAppEncTop::xSetLayerSets( TComVPS& vps )
 {   
   // Layer sets
   vps.setVpsNumLayerSetsMinus1   ( m_vpsNumLayerSets - 1 ); 
+#if !H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   vps.setVpsNumberLayerSetsMinus1( vps.getVpsNumLayerSetsMinus1() ); 
+#endif
     
   for (Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++ )
   {
@@ -1685,12 +1655,67 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
 
   Int numAddOuputLayerSets = (Int) m_outputLayerSetIdx.size(); 
   // Additional output layer sets + profileLevelTierIdx
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+  vps.setDefaultTargetOutputLayerIdc      ( m_defaultTargetOutputLayerIdc );   
+  vps.setNumAddOutputLayerSets            ( numAddOuputLayerSets          ); 
+  vps.initTargetLayerIdLists(); 
+#else
   vps.setDefaultOneTargetOutputLayerIdc   ( m_defaultOneTargetOutputLayerIdc ); 
   vps.setMoreOutputLayerSetsThanDefaultFlag( numAddOuputLayerSets       != 0 );   
   vps.setNumAddOutputLayerSetsMinus1       ( numAddOuputLayerSets - 1        ); 
+#endif
 
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+  for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + numAddOuputLayerSets; olsIdx++)
+  {
+    Int addOutLsIdx = olsIdx - m_vpsNumLayerSets;     
+    
+    vps.setOutputLayerSetIdxMinus1( olsIdx, ( ( addOutLsIdx < 0 ) ?  olsIdx  : m_outputLayerSetIdx[ addOutLsIdx ] ) - 1 ); 
 
+    std::vector<Int>& layerIdList    = m_layerIdsInSets[ vps.getLayerSetIdxForOutputLayerSet( olsIdx ) ];
 
+    if (vps.getDefaultTargetOutputLayerIdc() == 2 || addOutLsIdx >= 0 )
+    { 
+      for ( Int i = 0; i < layerIdList.size(); i++)
+      {
+        vps.setOutputLayerFlag( olsIdx, i, ( olsIdx == 0 && i == 0 ) ? vps.inferOutputLayerFlag(olsIdx, i ) : false ); // This is a software only fix for a bug in the spec. In spec outputLayerFlag neither present nor inferred for this case !
+      }
+
+      std::vector<Int>& outLayerIdList = ( addOutLsIdx >= 0 ) ? m_layerIdsInAddOutputLayerSet[addOutLsIdx] : m_layerIdsInDefOutputLayerSet[olsIdx]; 
+
+      Bool outputLayerInLayerSetFlag = false; 
+      for (Int j = 0; j < outLayerIdList.size(); j++)
+      {   
+        for (Int i = 0; i < layerIdList.size(); i++ )
+        {
+          if ( layerIdList[ i ] == outLayerIdList[ j ] )
+          {
+            vps.setOutputLayerFlag( olsIdx, i, true );       
+            outputLayerInLayerSetFlag = true; 
+            break; 
+          }
+        }
+        assert( outputLayerInLayerSetFlag ); // The output layer is not not in the layer set.
+      }
+    }
+    else
+    {
+      for ( Int i = 0; i < layerIdList.size(); i++)
+      {
+        vps.setOutputLayerFlag( olsIdx, i, vps.inferOutputLayerFlag( olsIdx, i ) );       
+      }
+    }
+
+    vps.deriveTargetLayerIdList(  olsIdx ); 
+
+    if ( olsIdx > 0 ) 
+    {
+      vps.setProfileLevelTierIdx( olsIdx, m_profileLevelTierIdx[ olsIdx ] ); 
+    }
+
+    vps.setAltOutputLayerFlag( olsIdx , false);     
+  }
+#else
   for (Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++)
   {
     if ( lsIdx > 0 ) 
@@ -1728,31 +1753,44 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
     }
   }
   vps.deriveTargetLayerIdLists(); 
+#endif
 }
 
 Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
 {
   vps.setVpsVuiPresentFlag( m_vpsVuiPresentFlag ); 
 
+#if H_MV_HLS_7_FIX_INFER_CROSS_LAYER_IRAP_ALIGNED_FLAG
+  TComVPSVUI* pcVPSVUI = vps.getVPSVUI(  ); 
+  assert( pcVPSVUI ); 
+#endif
+
   if ( m_vpsVuiPresentFlag )
   {
+#if !H_MV_HLS_7_FIX_INFER_CROSS_LAYER_IRAP_ALIGNED_FLAG
     TComVPSVUI* pcVPSVUI = vps.getVPSVUI(  ); 
 
     assert( pcVPSVUI ); 
-
+#endif
 
     // All this stuff could actually be derived by the encoder, 
     // however preliminary setting it from input parameters
 
     pcVPSVUI->setCrossLayerPicTypeAlignedFlag( m_crossLayerPicTypeAlignedFlag );
     pcVPSVUI->setCrossLayerIrapAlignedFlag   ( m_crossLayerIrapAlignedFlag    );
-
+#if H_MV_HLS_7_MISC_P0068_21
+    pcVPSVUI->setAllLayersIdrAlignedFlag     ( m_allLayersIdrAlignedFlag      );
+#endif
     pcVPSVUI->setBitRatePresentVpsFlag( m_bitRatePresentVpsFlag );
     pcVPSVUI->setPicRatePresentVpsFlag( m_picRatePresentVpsFlag );
 
     if( pcVPSVUI->getBitRatePresentVpsFlag( )  ||  pcVPSVUI->getPicRatePresentVpsFlag( ) )
     {
+#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
+      for( Int i = 0; i  <=  vps.getVpsNumLayerSetsMinus1(); i++ )
+#else
       for( Int i = 0; i  <=  vps.getVpsNumberLayerSetsMinus1(); i++ )
+#endif
       {
         for( Int j = 0; j  <=  vps.getMaxTLayers(); j++ ) 
         {
@@ -1870,6 +1908,12 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
     }
     pcVPSVUI->setVpsVuiBspHrdPresentFlag( false ); // TBD
   }
+#if H_MV_HLS_7_FIX_INFER_CROSS_LAYER_IRAP_ALIGNED_FLAG
+  else
+  {
+    pcVPSVUI->setCrossLayerIrapAlignedFlag   ( false   );
+  }
+#endif
 }
 #endif
 #if H_3D
@@ -1962,5 +2006,4 @@ Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
   dlt.setNumDepthViews ( iNumDepthViews  );
 }
 #endif
-
 //! \}
