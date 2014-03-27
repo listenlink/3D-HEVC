@@ -1118,13 +1118,9 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiHeight       = pcCU->getHeight ( 0 );
 #if QC_PKU_SDC_SPLIT_G0123
 #if HS_TSINGHUA_SDC_SPLIT_G0111
-#if QC_GENERIC_SDC_G0122
   TComWedgelet* dmm4SegmentationOrg = new TComWedgelet( uiWidth, uiHeight );
-#endif
 #else
-#if QC_GENERIC_SDC_G0122
   TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-#endif
 #endif
 #endif
 #if QC_PKU_SDC_SPLIT_G0123
@@ -1209,9 +1205,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, 0, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
 #endif
 #if !QC_PKU_SDC_SPLIT_G0123
-#if QC_GENERIC_SDC_G0122
   TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-#endif
 #endif
 #if HS_TSINGHUA_SDC_SPLIT_G0111
   TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
@@ -1221,9 +1215,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( isDimMode( uiLumaPredMode ) )
   {
     m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight 
-#if QC_GENERIC_SDC_G0122
       , false, dmm4Segmentation
-#endif
       );
 #if HS_TSINGHUA_SDC_SPLIT_G0111
     Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
@@ -1291,7 +1283,6 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
   }
-#if QC_GENERIC_SDC_G0122
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
     uiNumSegments = 2;
@@ -1303,7 +1294,6 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     uiMaskStride = dmm4Segmentation->getStride();
 #endif
   }
-#endif
   // get DC prediction for each segment
   Pel apDCPredValues[2];
   m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
@@ -1365,12 +1355,10 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pRecCb += uiStrideC;
     pRecCr += uiStrideC;
   }
-#if QC_GENERIC_SDC_G0122
 #if HS_TSINGHUA_SDC_SPLIT_G0111
   dmm4SegmentationOrg->destroy(); delete dmm4SegmentationOrg;
 #else
   dmm4Segmentation->destroy(); delete dmm4Segmentation;
-#endif
 #endif
 }
 #endif

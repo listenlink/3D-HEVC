@@ -2374,7 +2374,7 @@ Void TComDataCU::setDBBPFlagSubParts ( Bool bDBBPFlag, UInt uiAbsPartIdx, UInt u
 }
 #endif
 
-#if QC_GENERIC_SDC_G0122
+#if H_3D_DIM_SDC
 UInt TComDataCU::getCtxSDCFlag( UInt uiAbsPartIdx )
 {
   return 0;
@@ -2623,8 +2623,10 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
 {
   // check general CU information
   if( !getSlice()->getIsDepth() || !isIntra(uiAbsPartIdx) || getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )
+  {
     return false;
-#if QC_GENERIC_SDC_G0122
+  }
+
   if( isDimMode( getLumaIntraDir( uiAbsPartIdx ) ) && !isDimDeltaDC( getLumaIntraDir( uiAbsPartIdx ) ) )
   {
     return true;
@@ -2636,7 +2638,6 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
   }
 
   return false;
-#endif
   // check prediction mode
   UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
   if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
