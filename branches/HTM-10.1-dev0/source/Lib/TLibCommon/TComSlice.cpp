@@ -3358,7 +3358,7 @@ Void TComSlice::setDepthToDisparityLUTs()
   setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   if( getIsDepth() && getViewIndex() > 0 )
   {
       TComSlice *pcTextSlice = getTexturePic()->getSlice( 0 );
@@ -3416,7 +3416,7 @@ Void TComSlice::setDepthToDisparityLUTs()
       m_depthToDisparityF[ i ][ d ] = ( invCodScale[ i ] * d + invOffset ) >> log2Div; 
     }
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
     InitializeDDDPara( vps->getCamParPrecision(), codScale[ i ], codOffset[ i ], i );
 #endif
   }
@@ -3424,7 +3424,7 @@ Void TComSlice::setDepthToDisparityLUTs()
 #endif
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
 Void TComSlice::InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx )
 {
     UInt uiViewId     = getViewIndex();

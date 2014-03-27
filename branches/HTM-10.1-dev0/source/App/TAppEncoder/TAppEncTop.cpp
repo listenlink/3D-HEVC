@@ -823,7 +823,7 @@ Void TAppEncTop::encode()
           }
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
           m_acTEncTopList[ layer ]->getSliceEncoder()->setDDDPar( m_cCameraData.getCodedScale()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
               m_cCameraData.getCodedOffset()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
               m_cCameraData.getCamParsCodedPrecision() );

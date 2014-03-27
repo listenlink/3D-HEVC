@@ -1089,7 +1089,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   if( pcCU->getUseDDD( uiPartAddr ) )
   {
       assert( pcCU->getSPIVMPFlag( uiPartAddr ) == 0 );
