@@ -191,20 +191,7 @@ private:
 #endif
 #if H_3D_DIM_SDC
   Bool*         m_pbSDCFlag;
-#if QC_SDC_UNIFY_G0130 && !SEC_INTER_SDC_G0101
-  Pel*          m_apSegmentDCOffset[4];
-#else
   Pel*          m_apSegmentDCOffset[2];
-#endif
-#endif
-#endif
-#if H_3D_INTER_SDC
-#if !QC_SDC_UNIFY_G0130
-  Bool*         m_pbInterSDCFlag;
-  Int*          m_apSegmentInterDCOffset[4];
-#endif
-#if !SEC_INTER_SDC_G0101
-  UChar*        m_pucInterSDCMask;
 #endif
 #endif
 #if H_3D_DBBP
@@ -572,23 +559,6 @@ public:
   UInt          getCtxSDCFlag          ( UInt   uiAbsPartIdx );
   UInt          getCtxAngleFlag        ( UInt   uiAbsPartIdx );
 #endif
-#endif
-#endif
-#if H_3D_INTER_SDC
-#if !QC_SDC_UNIFY_G0130
-  Bool*         getInterSDCFlag     ()                        { return m_pbInterSDCFlag;               }
-  Bool          getInterSDCFlag     ( UInt uiIdx )            { return m_pbInterSDCFlag[uiIdx];        }
-  Void          setInterSDCFlagSubParts ( Bool bInterSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-  UInt          getCtxInterSDCFlag  ( UInt uiAbsPartIdx );
-  Int*          getInterSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentInterDCOffset[uiSeg]; }
-  Int           getInterSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentInterDCOffset[uiSeg][uiPartIdx]; }
-  Void          setInterSDCSegmentDCOffset( Int pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentInterDCOffset[uiSeg][uiPartIdx] = pOffset; }
-
-#endif
-#if !SEC_INTER_SDC_G0101
-  Void          xSetInterSDCCUMask( TComDataCU *pcCU, UChar *pMask );
-
-  UChar*        getInterSDCMask     ()                        { return m_pucInterSDCMask;              }
 #endif
 #endif
   

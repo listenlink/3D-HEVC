@@ -778,7 +778,6 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
   UInt uiLumaOffset   = uiMinCoeffSize*uiAbsPartIdx;
   UInt uiChromaOffset = uiLumaOffset>>2;
-#if QC_SDC_UNIFY_G0130
 #if H_3D_DIM_SDC
   if( pcCU->getSDCFlag( uiAbsPartIdx ) && pcCU->isIntra( uiAbsPartIdx) )
   {
@@ -788,7 +787,6 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
   }
-#endif
 
 #if H_3D_INTER_SDC
   if( pcCU->getSDCFlag( uiAbsPartIdx ) && !pcCU->isIntra( uiAbsPartIdx) )
@@ -798,11 +796,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getSlice()->getIsDepth() );
   }
 #endif
-#if QC_SDC_UNIFY_G0130_FIX
   if( pcCU->getSlice()->getIsDepth() && ( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) ) )
-#else
-  if( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) )
-#endif
   {
     Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
     UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
@@ -823,30 +817,6 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       return;
     }
   }
-#else
-#if H_3D_DIM_SDC
-  if( pcCU->getSDCFlag( uiAbsPartIdx ) )
-  {
-    assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
-    assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
-    return;
-  }
-#endif
-  
-#if H_3D_INTER_SDC
-  if( pcCU->getInterSDCFlag( uiAbsPartIdx ) )
-  {
-    assert( !pcCU->isSkipped( uiAbsPartIdx ) );
-    assert( !pcCU->isIntra( uiAbsPartIdx) );
-    assert( pcCU->getSlice()->getIsDepth() );
-
-    decodeInterSDCResidualData( pcCU, uiAbsPartIdx, uiDepth );
-    return;
-  }
-#endif
 #endif
 
   if( pcCU->isIntra(uiAbsPartIdx) )
@@ -874,7 +844,6 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 }
 
 #if H_3D_INTER_SDC
-#if QC_SDC_UNIFY_G0130
 Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setSDCFlagSubParts( false, uiAbsPartIdx, uiDepth );
@@ -885,63 +854,14 @@ Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
     return;
   }
 
-#if SEC_INTER_SDC_G0101
   if( !pcCU->getSlice()->getIsDepth() || pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N || pcCU->isSkipped( uiAbsPartIdx ) )
-#else
-  if( !pcCU->getSlice()->getIsDepth() || ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N ) || pcCU->isSkipped( uiAbsPartIdx ) )
-#endif
   {
     return;
   }
 
-#if SEC_INTER_SDC_G0101
   assert( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
-#else
-  assert( ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
-#endif
-
   m_pcEntropyDecoderIf->parseSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
-
-#else
-Void TDecEntropy::decodeInterSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  pcCU->setInterSDCFlagSubParts( false, uiAbsPartIdx, 0, uiDepth);
-
-  if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
-  {
-    return;
-  }
-
-  if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || pcCU->isSkipped( uiAbsPartIdx ) )
-  {
-    return;
-  }
-
-  m_pcEntropyDecoderIf->parseInterSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
-}
-
-Void TDecEntropy::decodeInterSDCResidualData( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  if( !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
-  {
-    return;
-  }
-
-  if( !pcCU->getSlice()->getIsDepth() || pcCU->isIntra( uiAbsPartIdx ) || !pcCU->getInterSDCFlag( uiAbsPartIdx ) )
-  {
-    return;
-  }
-
-  UInt uiNumSegments = ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N ) ? 1 : ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ? 4 : 2 );
-
-  // decode residual data for each segment
-  for( UInt uiSeg = 0; uiSeg < uiNumSegments; uiSeg++ )
-  {
-    m_pcEntropyDecoderIf->parseInterSDCResidualData( pcCU, uiAbsPartIdx, uiDepth, uiSeg );
-  }
-}
-#endif
 #endif
 #if H_3D_DBBP
 Void TDecEntropy::decodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )

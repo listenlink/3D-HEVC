@@ -538,7 +538,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
   m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
-#if QC_SDC_UNIFY_G0130
+#if H_3D_DIM_SDC
   m_pcEntropyDecoder->decodeSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
   if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
@@ -560,9 +560,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   
   // prediction mode ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyDecoder->decodePredInfo( pcCU, uiAbsPartIdx, uiDepth, m_ppcCU[uiDepth]);
-#if H_3D_INTER_SDC && !QC_SDC_UNIFY_G0130
-  m_pcEntropyDecoder->decodeInterSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
   // Coefficient decoding
   Bool bCodeDQP = getdQPFlag();
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
@@ -650,11 +647,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
       {
 #endif
 #if H_3D_INTER_SDC
-#if QC_SDC_UNIFY_G0130
       if( m_ppcCU[uiDepth]->getSDCFlag( 0 ) )
-#else
-      if( m_ppcCU[uiDepth]->getInterSDCFlag( 0 ) )
-#endif
       {
         xReconInterSDC( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
       }
@@ -717,12 +710,6 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   UInt  uiWidth      = pcCU->getWidth ( 0 );
   UInt  uiHeight     = pcCU->getHeight( 0 );
-#if !SEC_INTER_SDC_G0101
-  UChar* pMask       = pcCU->getInterSDCMask();
-
-  memset( pMask, 0, uiWidth*uiHeight );
-  pcCU->xSetInterSDCCUMask( pcCU, pMask );
-#endif
 
   Pel  *pResi;
   UInt uiPelX, uiPelY;
@@ -733,16 +720,7 @@ Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     for( uiPelX = 0; uiPelX < uiWidth; uiPelX++ )
     {
-#if SEC_INTER_SDC_G0101
       pResi[ uiPelX ] = pcCU->getSDCSegmentDCOffset( 0, 0 );
-#else
-      UChar uiSeg = pMask[ uiPelX + uiPelY*uiWidth ];
-#if QC_SDC_UNIFY_G0130
-      pResi[ uiPelX ] = pcCU->getSDCSegmentDCOffset( uiSeg, 0 );
-#else
-      pResi[ uiPelX ] = pcCU->getInterSDCSegmentDCOffset( uiSeg, 0 );
-#endif
-#endif
     }
     pResi += uiResiStride;
   }
