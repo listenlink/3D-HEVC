@@ -1861,11 +1861,7 @@ TEncSearch::xRecurIntraCodingQT( TComDataCU*  pcCU,
 
 #if H_3D_DIM_SDC
 Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, 
-#if QC_GENERIC_SDC_G0122
   Bool bZeroResidual, Int iSDCDeltaResi
-#else
-  Bool bResidual
-#endif
   )
 {
   UInt    uiLumaPredMode    = pcCU     ->getLumaIntraDir( uiAbsPartIdx );
@@ -1873,13 +1869,8 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   UInt    uiHeight          = pcCU     ->getHeight  ( 0 );
 #if QC_PKU_SDC_SPLIT_G0123
 #if HS_TSINGHUA_SDC_SPLIT_G0111
-#if QC_GENERIC_SDC_G0122
   TComWedgelet* dmm4SegmentationOrg = new TComWedgelet( uiWidth, uiHeight );
-#endif
 #else
-#if QC_GENERIC_SDC_G0122
-  TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-#endif
 #endif
 #endif
 #if QC_PKU_SDC_SPLIT_G0123
@@ -1938,10 +1929,6 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   AOF( pcCU->getSDCAvailable(uiAbsPartIdx) );
   AOF( pcCU->getSDCFlag(uiAbsPartIdx) );
 #endif
-#if !QC_GENERIC_SDC_G0122
-  AOF( uiLumaPredMode == DC_IDX || uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) );
-  AOF( uiLumaPredMode == DC_IDX || uiLumaPredMode == PLANAR_IDX || uiWidth < 64  );
-#endif
   
   //===== init availability pattern =====
   Bool  bAboveAvail = false;
@@ -1955,14 +1942,10 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   
 #endif
 #if !QC_PKU_SDC_SPLIT_G0123
-#if QC_GENERIC_SDC_G0122
   TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-#endif
 #endif
 #if HS_TSINGHUA_SDC_SPLIT_G0111
-#if QC_GENERIC_SDC_G0122
   TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
-#endif
 #endif
   //===== get prediction signal =====
 #if H_3D_DIM
@@ -1981,9 +1964,7 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     }
 #endif
     predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, true 
-#if QC_GENERIC_SDC_G0122
       , dmm4Segmentation
-#endif
       );
 #if HS_TSINGHUA_SDC_SPLIT_G0111
     Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
@@ -2052,7 +2033,6 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
   }
-#if QC_GENERIC_SDC_G0122
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
     uiNumSegments = 2;
@@ -2064,7 +2044,6 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     uiMaskStride = dmm4Segmentation->getStride();
 #endif
   }
-#endif
   
   // get DC prediction for each segment
   Pel apDCPredValues[2];
@@ -2077,18 +2056,13 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   for( UInt uiSegment = 0; uiSegment < uiNumSegments; uiSegment++ )
   {
     // remap reconstructed value to valid depth values
-#if QC_GENERIC_SDC_G0122
     Pel pDCRec = ( !bZeroResidual ) ? apDCOrigValues[uiSegment] : apDCPredValues[uiSegment];
-#else
-    Pel pDCRec = bResidual?apDCOrigValues[uiSegment]:apDCPredValues[uiSegment];
-#endif
     // get residual (idx)
 #if H_3D_DIM_DLT
     Pel pResidualIdx = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pDCRec ) - pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
 #else
     Pel pResidualIdx = pDCRec - apDCPredValues[uiSegment];
 #endif
-#if QC_GENERIC_SDC_G0122
     if( !bZeroResidual )
     {
       Pel   pPredIdx    = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), apDCPredValues[uiSegment] );
@@ -2098,7 +2072,6 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
         pResidualIdx += iSDCDeltaResi;
       }
     }
-#endif
     // save SDC DC offset
     pcCU->setSDCSegmentDCOffset(pResidualIdx, uiSegment, uiAbsPartIdx);
   }
@@ -2202,12 +2175,10 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   else
 #endif
     dRDCost = m_pcRdCost->calcRdCost( uiBits, ruiDist );
-#if QC_GENERIC_SDC_G0122
 #if HS_TSINGHUA_SDC_SPLIT_G0111
   dmm4SegmentationOrg->destroy(); delete dmm4SegmentationOrg;
 #else
   dmm4Segmentation->destroy(); delete dmm4Segmentation;
-#endif
 #endif
 }
 #endif
@@ -3074,9 +3045,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
           case( DMM4_IDX ):
             {
-#if !QC_GENERIC_SDC_G0122
-              if( uiWidth > 4 )
-#endif
               {
                 biSegmentation = new TComWedgelet( uiWidth, uiHeight );
                 xPredContourFromTex( pcCU, uiPartOffset, uiWidth, uiHeight, biSegmentation );
@@ -3132,14 +3100,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       for( UInt uiSDC=0; uiSDC<=(bTestSDC?1:0); uiSDC++ )
       {
         pcCU->setSDCFlagSubParts( (uiSDC != 0), uiPartOffset, uiDepth + uiInitTrDepth );
-#if QC_GENERIC_SDC_G0122
         for( Int iSDCDeltaResi = -2; iSDCDeltaResi <= 2; iSDCDeltaResi++ )
         {
           if( ( uiSDC == 0 ) && iSDCDeltaResi != 0 )
           {
             continue;
           }
-#endif
 #endif
       
 #if H_3D_DIM_ENC || H_3D_DIM_SDC
@@ -3150,12 +3116,10 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if H_3D_DIM_SDC
       bTestZeroResi |= pcCU->getSDCFlag(uiPartOffset);
 #endif
-#if QC_GENERIC_SDC_G0122
       if( uiSDC != 0 && iSDCDeltaResi != 0 )
       {
         bTestZeroResi = false;
       }
-#endif
 #endif
       
 #if H_3D_DIM_ENC || H_3D_DIM_SDC      
@@ -3186,11 +3150,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
           pcCU->setCbfSubParts(1, 1, 1, uiPartOffset, uiDepth + uiInitTrDepth);
 
           // start encoding with SDC
-#if QC_GENERIC_SDC_G0122
           xIntraCodingSDC(pcCU, uiPartOffset, pcOrgYuv, pcPredYuv, uiPUDistY, dPUCost, ( testZeroResi != 0 ), iSDCDeltaResi );
-#else
-          xIntraCodingSDC(pcCU, uiPartOffset, pcOrgYuv, pcPredYuv, uiPUDistY, dPUCost, (testZeroResi!=0));
-#endif
         }
         else
         {
@@ -3263,8 +3223,6 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 #if H_3D_DIM_ENC || H_3D_DIM_SDC
       }
-#endif
-#if QC_GENERIC_SDC_G0122
         } // SDC residual loop
 #endif
 #if H_3D_DIM_SDC

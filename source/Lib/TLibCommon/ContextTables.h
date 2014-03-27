@@ -103,19 +103,13 @@
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
 #if H_3D_DIM
-#if QC_GENERIC_SDC_G0122
 #define NUM_DEPTH_INTRA_MODE_CTX      1       ///< number of context models for depth intra modes
-#else
-#define NUM_DEPTH_INTRA_MODE_CTX      8       ///< number of context models for depth intra modes
-#endif
 #define NUM_DDC_FLAG_CTX              2       ///< number of context models for deltaDC flag (DMM or RBC)
 #define NUM_DDC_DATA_CTX              1       ///< number of context models for deltaDC data (DMM or RBC)
 #if H_3D_DIM_DMM
 #define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
 #endif
-#if QC_GENERIC_SDC_G0122
 #define NUM_ANGLE_FLAG_CTX            3
-#endif
 #endif
 
 #if H_3D_DIM_SDC
@@ -365,7 +359,6 @@ INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =
 
 #endif
 #if H_3D_DIM
-#if QC_GENERIC_SDC_G0122
 static const UChar
 INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
 {
@@ -373,17 +366,7 @@ INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
   { 154, },
   { 154, }
 };
-#else
-static const UChar
-INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
-{
-    {0,  0,  64, 168, 168, 124, CNU, 0},
-    {0, 64,   0, 183, CNU, 108,   0, 0},
-    {64, 0, CNU, CNU, 168, 109,   0, 0}
-};
-#endif
 
-#if QC_GENERIC_SDC_G0122
 static const UChar 
 INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
 {
@@ -391,7 +374,6 @@ INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
   { 141, 185, 214 },
   { 155, 170, 157 },
 };
-#endif
 
 static const UChar 
 INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =

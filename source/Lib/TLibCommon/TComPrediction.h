@@ -171,9 +171,7 @@ public:
 #if H_3D_DIM
   // Depth intra
   Void predIntraLumaDepth         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc = false 
-#if QC_GENERIC_SDC_G0122
     , TComWedgelet* dmm4Segmentation = NULL
-#endif
     );
 #if H_3D_DIM_SDC
   Void analyzeSegmentsSDC         ( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride

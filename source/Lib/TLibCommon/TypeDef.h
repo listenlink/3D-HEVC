@@ -183,6 +183,7 @@
                                               // SEC_DMM3_RBC_F0147 Removal of DMM3 and RBC from DMMs
                                               // QC_DIM_DELTADC_UNIFY_F0132 Unify delta DC coding in depth intra modes
                                               // Unify intra SDC and inter SDC
+                                              // QC_GENERIC_SDC_G0122 Generalize SDC to all depth intra modes
 
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
@@ -316,7 +317,7 @@
 #define HS_TSINGHUA_SDC_SPLIT_G0111       1
 #endif
 #define SCU_HS_DEPTH_DC_PRED_G0143        1
-#define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
+
 #endif
 
 

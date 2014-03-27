@@ -415,11 +415,7 @@ Void TComPrediction::predIntraChromaAng( Int* piSrc, UInt uiDirMode, Pel* piPred
 }
 
 #if H_3D_DIM
-Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc
-#if QC_GENERIC_SDC_G0122
-  , TComWedgelet* dmm4Segmentation
-#endif
-  )
+Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc, TComWedgelet* dmm4Segmentation  )
 {
   assert( iWidth == iHeight  );
   assert( iWidth >= DIM_MIN_SIZE && iWidth <= DIM_MAX_SIZE );
@@ -445,7 +441,6 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       } break;
     case( DMM4_IDX ): 
       {
-#if QC_GENERIC_SDC_G0122
         if( dmm4Segmentation == NULL )
         { 
           dmmSegmentation = new TComWedgelet( iWidth, iHeight );
@@ -456,10 +451,6 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
           xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmm4Segmentation );
           dmmSegmentation = dmm4Segmentation;
         }
-#else
-        dmmSegmentation = new TComWedgelet( iWidth, iHeight );
-        xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmmSegmentation );
-#endif
       } break;
     default: assert(0);
     }
@@ -510,11 +501,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   xAssignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
 
 #if H_3D_DIM_DMM
-#if QC_GENERIC_SDC_G0122
   if( dimType == DMM4_IDX && dmm4Segmentation == NULL ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
-#else
-  if( dimType == DMM4_IDX ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
-#endif
 #endif
 }
 #endif
@@ -2592,12 +2579,10 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
-#if QC_GENERIC_SDC_G0122
   for( Int i = 0; i < uiNumSegments; i++ )
   {
     rpSegMeans[i] = 0;
   }
-#endif
   if (orgDC == false)
   {
     if ( getDimType(uiIntraMode) == DMM1_IDX )
@@ -2612,7 +2597,6 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
       rpSegMeans[ucSegmentLB] = pOrig[uiStride * (uiSize-1) ];
       rpSegMeans[ucSegmentRB] = pOrig[uiStride * (uiSize-1) + (uiSize-1) ];
     }
-#if QC_GENERIC_SDC_G0122
     else if( getDimType( uiIntraMode ) == DMM4_IDX )
     {
       Pel *ptmpOrig = pOrig;
@@ -2646,9 +2630,6 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
       }
     }
     else
-#else
-    else if (uiIntraMode == PLANAR_IDX)
-#endif
     {
       Pel* pLeftTop = pOrig;
       Pel* pRightTop = pOrig + (uiSize-1);

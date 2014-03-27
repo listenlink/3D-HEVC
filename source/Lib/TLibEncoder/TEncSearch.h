@@ -352,13 +352,7 @@ protected:
   Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
 #endif
 #if H_3D_DIM_SDC
-  Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, 
-#if QC_GENERIC_SDC_G0122
-    Bool bZeroResidual, Int iSDCDeltaResi
-#else
-    Bool bResidual
-#endif
-    );
+  Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bZeroResidual, Int iSDCDeltaResi    );
 #endif
 #endif
 
