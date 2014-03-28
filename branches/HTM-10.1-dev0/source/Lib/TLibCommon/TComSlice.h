@@ -586,19 +586,7 @@ public:
   Void setBaseLayerParameterSetCompatibilityFlag( Int i, Bool flag ) { m_baseLayerParameterSetCompatibilityFlag[i] = flag; } 
   Bool getBaseLayerParameterSetCompatibilityFlag( Int i ) { return m_baseLayerParameterSetCompatibilityFlag[i]; } 
 
-  Void inferVpsVui( Bool encoderFlag )
-  {
-    // inference of syntax elements that differ from default inference (as done in constructor), when VPS VUI is not present
-    if (!encoderFlag )
-    {
-      setCrossLayerIrapAlignedFlag( false ); 
-    }
-    else
-    {
-      assert( !getCrossLayerIrapAlignedFlag() ); 
-    }
-
-  }
+  Void inferVpsVui( Bool encoderFlag );
 };
 
 class TComRepFormat
@@ -653,25 +641,7 @@ private:
   Int   m_maxVpsLatencyIncreasePlus1 [MAX_VPS_OUTPUTLAYER_SETS][MAX_TLAYER];
 
 public: 
-  TComDpbSize( )
-  {
-    for (Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++ )
-    {      
-      m_subLayerFlagInfoPresentFlag[i]  = false;
-
-      for (Int j = 0; j < MAX_TLAYER; j++  )
-      {        
-        m_subLayerDpbInfoPresentFlag [i][j] = ( j == 0) ;
-        m_maxVpsNumReorderPics       [i][j] = 0;
-        m_maxVpsLatencyIncreasePlus1 [i][j] = 0;
-
-        for (Int k = 0; k < MAX_NUM_LAYER_IDS; k++ )
-        {
-          m_maxVpsDecPicBufferingMinus1[i][k][j] = 0; 
-        }
-      }
-    }  
-  }  
+  TComDpbSize( );  
 
   Void setSubLayerFlagInfoPresentFlag( Int i, Bool flag ) { m_subLayerFlagInfoPresentFlag[i] = flag; } 
   Bool getSubLayerFlagInfoPresentFlag( Int i ) { return m_subLayerFlagInfoPresentFlag[i]; } 
@@ -928,6 +898,7 @@ public:
   Void    setScalabilityMaskFlag( UInt val );
   Void    setScalabilityMaskFlag( Int scalType, Bool val )                     { m_scalabilityMaskFlag[scalType] = val;  }
   Bool    getScalabilityMaskFlag( Int scalType )                               { return m_scalabilityMaskFlag[scalType]; }
+  
   Int     getNumScalabilityTypes( );
 
   Void    setDimensionIdLen( Int sIdx, Int val )                           { m_dimensionIdLen[sIdx] = val;  }
@@ -949,17 +920,23 @@ public:
 
   Void    setViewIdVal( Int viewOrderIndex, Int  val )                     { m_viewIdVal[viewOrderIndex] = val; } 
   Int     getViewIdVal( Int viewOrderIndex )                               { return m_viewIdVal[viewOrderIndex]; } 
+  
   Void    setDirectDependencyFlag( Int depLayeridInVps, Int refLayeridInVps, Bool val ) { m_directDependencyFlag[depLayeridInVps][refLayeridInVps] = val;  }
   Bool    getDirectDependencyFlag( Int depLayeridInVps, Int refLayeridInVps )           { return m_directDependencyFlag[depLayeridInVps][refLayeridInVps]; }
+  
   Void    setVpsSubLayersMaxMinus1PresentFlag( Bool flag )                 { m_vpsSubLayersMaxMinus1PresentFlag = flag; } 
   Bool    getVpsSubLayersMaxMinus1PresentFlag(  )                          { return m_vpsSubLayersMaxMinus1PresentFlag; } 
+  
   Void    setSubLayersVpsMaxMinus1( Int i, Int  val )                      { m_subLayersVpsMaxMinus1[i] = val; } 
   Int     getSubLayersVpsMaxMinus1( Int i )                                { return m_subLayersVpsMaxMinus1[i]; } 
   Void    checkSubLayersVpsMaxMinus1( Int i )                              { assert( m_subLayersVpsMaxMinus1[i] >= 0 && m_subLayersVpsMaxMinus1[i] <= m_uiMaxTLayers - 1 ); }
+
   Void    setMaxTidRefPresentFlag( Bool flag )                             { m_maxTidRefPresentFlag = flag; } 
   Bool    getMaxTidRefPresentFlag(  )                                      { return m_maxTidRefPresentFlag; } 
+
   Void    setMaxTidIlRefPicsPlus1( Int i, Int j, Int  val )                { m_maxTidIlRefPicsPlus1[i][j] = val; } 
   Int     getMaxTidIlRefPicsPlus1( Int i, Int j )                          { return m_maxTidIlRefPicsPlus1[i][j]; } 
+ 
   Void    setAllRefLayersActiveFlag( Bool flag )                           { m_allRefLayersActiveFlag = flag; } 
   Bool    getAllRefLayersActiveFlag(  )                                    { return m_allRefLayersActiveFlag; } 
   
@@ -1000,6 +977,7 @@ public:
 
   Void    setRepFormat( Int i, TComRepFormat* val )                        { m_repFormat[i] = val;  }
   TComRepFormat* getRepFormat( Int i )                                     { return m_repFormat[i]; }
+  
   Void    setMaxOneActiveRefLayerFlag( Bool flag)                          { m_maxOneActiveRefLayerFlag = flag; } 
   Bool    getMaxOneActiveRefLayerFlag( )                                   { return m_maxOneActiveRefLayerFlag; } 
 
@@ -1013,6 +991,7 @@ public:
 
   Void    setPocLsbNotPresentFlag( Int i, Bool flag )                      { m_pocLsbNotPresentFlag[i] = flag; } 
   Bool    getPocLsbNotPresentFlag( Int i )                                 { return m_pocLsbNotPresentFlag[i]; } 
+  
   Void    setDirectDepTypeLenMinus2( Int val)                              { m_directDepTypeLenMinus2 = val; } 
   Int     getDirectDepTypeLenMinus2( )                                     { return m_directDepTypeLenMinus2; } 
 
@@ -1021,6 +1000,7 @@ public:
 
   Void    setDefaultDirectDependencyType( Int  val )                       { m_defaultDirectDependencyType = val; } 
   Int     getDefaultDirectDependencyType(  )                               { return m_defaultDirectDependencyType; } 
+  
   Void    setDirectDependencyType( Int depLayeridInVps, Int refLayeridInVps, Int val) { m_directDependencyType[ depLayeridInVps ][ refLayeridInVps ] = val; } 
   Int     getDirectDependencyType( Int depLayeridInVps, Int refLayeridInVps)   { return m_directDependencyType[ depLayeridInVps ][ refLayeridInVps ]; } 
 
@@ -1066,17 +1046,7 @@ public:
   Int     getNumOutputLayersInOutputLayerSet( Int i )                      { return (Int) getTargetOptLayerIdList( i ).size(); }; 
   Int     getOlsHighestOutputLayerId( Int i )                              { return getTargetOptLayerIdList( i ).back(); };  
 
-  Int     getMaxSubLayersInLayerSetMinus1( Int i )
-  { 
-    Int maxSLMinus1 = 0; 
-    Int optLsIdx    = getLayerSetIdxForOutputLayerSet( i );
-    for( Int k = 0; k < getNumLayersInIdList( optLsIdx ); k++ )
-    {
-      Int lId = m_layerSetLayerIdList[optLsIdx][k];
-      maxSLMinus1 = std::max( maxSLMinus1, getSubLayersVpsMaxMinus1( getLayerIdInVps( lId ) ));
-    }
-    return maxSLMinus1; 
-  }
+  Int     getMaxSubLayersInLayerSetMinus1( Int i );
 
   // inference
   Int     inferDimensionId     ( Int i, Int j );
