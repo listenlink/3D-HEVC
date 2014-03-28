@@ -295,7 +295,7 @@ SEIToneMappingInfo*  TEncGOP::xCreateSEIToneMappingInfo()
   return seiToneMappingInfo;
 }
 
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
 SEISubBitstreamProperty *TEncGOP::xCreateSEISubBitstreamProperty( TComSPS *sps)
 {
   SEISubBitstreamProperty *seiSubBitstreamProperty = new SEISubBitstreamProperty();
@@ -364,7 +364,7 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
     accessUnit.push_back(new NALUnitEBSP(nalu));
     delete sei;
   }
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   if( m_pcCfg->getSubBitstreamPropSEIEnabled() )
   {
     SEISubBitstreamProperty *sei = xCreateSEISubBitstreamProperty ( sps );

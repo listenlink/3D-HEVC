@@ -894,7 +894,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   }
 #endif
   
-#if H_3D && UPDATE_HM13
+#if H_3D
   Bool useDltFlag = (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps());
 
   if ( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth ) || useDltFlag )
@@ -920,11 +920,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
 #if H_3D
-#if UPDATE_HM13
       if ( useDltFlag )
-#else
-      if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
-#endif
       {
         pReco    [ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
       }

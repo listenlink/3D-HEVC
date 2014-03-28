@@ -72,7 +72,7 @@ protected:
   Void xParseSEIToneMappingInfo       (SEIToneMappingInfo& sei, UInt payloadSize);
   Void xParseSEISOPDescription        (SEISOPDescription &sei, UInt payloadSize);
   Void xParseSEIScalableNesting       (SEIScalableNesting& sei, const NalUnitType nalUnitType, UInt payloadSize, TComSPS *sps);
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   Void  xParseSEISubBitstreamProperty   (SEISubBitstreamProperty &sei);
   Void  xResizeSubBitstreamPropertySeiArrays(SEISubBitstreamProperty &sei);
 #endif
