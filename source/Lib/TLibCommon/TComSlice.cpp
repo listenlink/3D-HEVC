@@ -2165,6 +2165,18 @@ Bool TComVPS::inferOutputLayerFlag( Int i, Int j )
   return outputLayerFlag;
 }
 
+Int TComVPS::getMaxSubLayersInLayerSetMinus1( Int i )
+{
+  Int maxSLMinus1 = 0; 
+  Int optLsIdx    = getLayerSetIdxForOutputLayerSet( i );
+  for( Int k = 0; k < getNumLayersInIdList( optLsIdx ); k++ )
+  {
+    Int lId = m_layerSetLayerIdList[optLsIdx][k];
+    maxSLMinus1 = std::max( maxSLMinus1, getSubLayersVpsMaxMinus1( getLayerIdInVps( lId ) ));
+  }
+  return maxSLMinus1;
+}
+
 #endif // H_MV
 
 // ------------------------------------------------------------------------------------------------
@@ -3831,6 +3843,19 @@ TComVPSVUI::~TComVPSVUI()
   m_vpsVuiBspHrdParameters = NULL; 
 }
 
+Void TComVPSVUI::inferVpsVui( Bool encoderFlag )
+{
+  // inference of syntax elements that differ from default inference (as done in constructor), when VPS VUI is not present
+  if (!encoderFlag )
+  {
+    setCrossLayerIrapAlignedFlag( false ); 
+  }
+  else
+  {
+    assert( !getCrossLayerIrapAlignedFlag() ); 
+  }
+}
+
 Void TComRepFormat::inferChromaAndBitDepth( TComRepFormat* prevRepFormat, Bool encoderFlag )
 {
   if ( !encoderFlag )
@@ -3894,5 +3919,25 @@ Void TComVUI::inferVideoSignalInfo( TComVPS* vps, Int layerIdCurr )
   setColourPrimaries        ( videoSignalInfo->getColourPrimariesVps        () );
   setTransferCharacteristics( videoSignalInfo->getTransferCharacteristicsVps() );
   setMatrixCoefficients     ( videoSignalInfo->getMatrixCoeffsVps           () );
+}
+
+TComDpbSize::TComDpbSize()
+{
+  for (Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++ )
+  {      
+    m_subLayerFlagInfoPresentFlag[i]  = false;
+
+    for (Int j = 0; j < MAX_TLAYER; j++  )
+    {        
+      m_subLayerDpbInfoPresentFlag [i][j] = ( j == 0) ;
+      m_maxVpsNumReorderPics       [i][j] = 0;
+      m_maxVpsLatencyIncreasePlus1 [i][j] = 0;
+
+      for (Int k = 0; k < MAX_NUM_LAYER_IDS; k++ )
+      {
+        m_maxVpsDecPicBufferingMinus1[i][k][j] = 0; 
+      }
+    }
+  }
 }
 #endif
