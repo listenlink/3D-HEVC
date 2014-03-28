@@ -307,11 +307,9 @@
 #endif
 
 /////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-10.1 Integrations //////////////////////////////
+///////////////////////////////////   TBD                  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-
-// TBD
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
 // #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications – with text provided as P0297).
@@ -323,43 +321,10 @@
 // #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 // #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 
-
-#define H_MV_HLS_7_VPS_P0306_22                1 // (VPS/P0306/ue(v) coded syntax elements) #22 Several minor modifications to the VPS syntax, consistent with eliminating the previous intention to avoid ue(v) parsing in the VPS 
-#define H_MV_HLS_7_SEI_P0204_26                1 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
-#define H_MV_HLS_7_MISC_P0130_20               1 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
-#define H_MV_HLS_7_VPS_P0125_24                1 // (VPS/P0125/VPS extension offset ) #24 Decision: Keep it as a reserved FFFF value. 
-#define H_MV_HLS_7_VPS_P0307_23                1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
-#define H_MV_HLS_7_POC_P0041                   1 // Syntax related to POC reset
+#define H_MV_HLS7_GEN                        0  // General changes (not tested)
 
 
-#define H_MV_HLS7_GEN                          0  // General changes (not tested)
-#define H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27    1  // Output layer sets, various
-                                                  // (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
-                                                  // (VPS/P0156/Num of output_layer_flag) #10 Proposal 3: The output_layer_flag[ i ][ j ] is signalled for j equal to 0 to NumLayersInIdList[ lsIdx ] inclusive. It was remarked that we might be able to just assume that the top layer is always output; however, this was not entirely clear , so the safe thing to do may be to also send the flag for this layer.
-                                                  // (VPS/P0295/Default output layer sets) #5 Discussion from (P0110). Decision: Three-state approach (text in P0295, decoder shall allow 3 to be present and shall treat 3 the same as the value 2). 
 
-
-#define H_MV_HLS_7_HRD_P0156_7                 1  // (HRD/P0156/MaxSubLayersInLayerSetMinus1) #7 Proposal 1: signal, in the VPS extension, the DPB parameters for an output layer set for sub-DPBs only up to the maximum temporal sub-layers in the corresponding layer set
-#define H_MV_HLS_7_VPS_P0048_14                1  // (VPS/P0048/profile_ref_minus1 rem) #14 Remove profile_ref_minus1 from the VPS extension, from JCTVC-P0048
-#define H_MV_HLS_7_VPS_P0076_15                1  // (VPS/P0076/video signal info move) #15 Move video signal information syntax structure earlier in the VPS VUI.
-#define H_MV_HLS_7_SPS_P0155_16_32             1  // (SPS/P0155/sps_sub_layer_ordering_info) #16, #32 Not signal the sps_max_num_reorder_pics[], sps_max_latency_increase_plus1[], and sps_max_dec_pic_buffering_minus1[] syntax elements in the SPS when nuh_layer_id > 0. 
-#define H_MV_HLS_7_GEN_P0166_PPS_EXTENSION     1  // (GEN/P0166/pps_extension) #17 Add PPS extension type flags for conditional presence of syntax extensions per extension type, aligned with the SPS extension type flags, from JCTVC-P0166. Further align the SPS extension type flags syntax between RExt and MV-HEVC/SHVC
-#define H_MV_HLS_7_FIX_SET_DPB_SIZE            1  // Fix derivation dpb size parameters
-#define H_MV_HLS_7_RESERVED_FLAGS              1  // Added flags
-                                                  // (SPS/P0312/SHVC reserved flag) The flag will be used for the syntax vert_phase_position_enable_flag in SHVC draft
-                                                  // (VPS/O0215/SHVC reserved flag): this flag will be used for the syntax cross_layer_phase_alignment_flag in SHVC draft.
-                                                  // (VPS VUI/O0199,P0312/SHVC reserved flags) the 3 reserved bits will be used for the syntaxes single_layer_for_non_irap_flag, higher_layer_irap_skip_flag and vert_phase_position_not_in_use_flag in SHVC draft.
-#define H_MV_FIX_VPS_LAYER_ID_NOT_EQUAL_ZERO   1  // Discard VPS with nuh_layer_Id > 0
-#define H_MV_HLS_7_MISC_P0130_EOS              1  // (MISC/P0130/EOS NAL layer id) #19 Require that end of bitstream NAL unit shall have nuh_layer_id equal to 0, from JCTVC-P0130. Decoders shall allow an end of bitstream NAL unit with nuh_layer_id > 0 to be present, and shall ignore the NAL unit.
-#define H_MV_HLS_7_MISC_P0182_13               1  // (MISC/P0182/BL PS Compatibility flag) #13 Define the flag (in VPS VUI) with the proposed semantics, without specifying an associated extraction process. Editors to select the position in the VPS VUI.
-#define H_MV_HLS_7_MISC_P0068_21               1  // (MISC/P0068/all irap idr flag) #21 Add flag in VUI to indicate that all IRAP pictures are IDRs and that all layer pictures in an AU are IDR aligned, from JCTVC-P0068 proposal 1.
-#define H_MV_HLS_7_FIX_INFER_CROSS_LAYER_IRAP_ALIGNED_FLAG               1  // Fix inference of cross_layer_irap_aligned_flag
-#define H_MV_HLS_7_MISC_P0079_18               1  // (MISC/P0079/NumActiveRefLayerPics) #18 Modification of derivation of variable NumActiveRefLayerPics.
-#define FIX_CAM_PARS_COLLECTOR                 1
-#define UPDATE_HM13                            1  // Only some parts in H_3D parts are marked! 
-#if H_3D
-#define H_3D_FIX_G0148_BRACE                   1 
-#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -396,9 +361,7 @@
 #define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
 #define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
 #define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
-#if H_MV_HLS_7_SEI_P0204_26
 #define MAX_SUB_STREAMS                 1024
-#endif
 #else
 #define MAX_NUM_LAYER_IDS                64
 #endif
@@ -889,7 +852,6 @@ namespace Level
 
 #if H_MV
 
-#if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION
 enum PpsExtensionTypes
 {
   PPS_EX_T_MV      = 0,
@@ -901,7 +863,6 @@ enum PpsExtensionTypes
 };
 
 //Below for sps, would be good if this could be aligned
-#endif
 
   enum PsExtensionTypes
   {

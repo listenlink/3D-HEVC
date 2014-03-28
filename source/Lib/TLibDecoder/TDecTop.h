@@ -70,11 +70,7 @@ public:
   CamParsCollector  ();
   ~CamParsCollector ();
 
-#if FIX_CAM_PARS_COLLECTOR
   Void  init        ( FILE* pCodedScaleOffsetFile, TComVPS* vps );
-#else
-  Void  init        ( FILE* pCodedScaleOffsetFile );
-#endif
 
   Void  uninit      ();
   Void  setSlice    ( TComSlice* pcSlice );
@@ -93,11 +89,7 @@ public:
 #endif
 
 private:
-#if FIX_CAM_PARS_COLLECTOR
   Void xResetReceivedIdc( Bool overWriteFlag ); 
-#else
-  Bool  xIsComplete ();
-#endif
   Void  xOutput     ( Int iPOC );
 
 private:
@@ -107,28 +99,14 @@ private:
   Int**   m_aaiCodedOffset;
   Int**   m_aaiCodedScale;
   
-#if !FIX_CAM_PARS_COLLECTOR
-  Int*    m_aiViewId;  
-#else
   TComVPS* m_vps; 
   Int**    m_receivedIdc; 
   Int      m_uiMaxViewIndex; 
   Int      m_lastPoc; 
   Int      m_firstReceivedPoc; 
-#endif
 
   
-#if !FIX_CAM_PARS_COLLECTOR
-  Bool*   m_bViewReceived;
-  UInt    m_uiCamParsCodedPrecision;
-#endif
   Bool    m_bCamParsVaryOverTime;
-#if !FIX_CAM_PARS_COLLECTOR
-  Int     m_iLastViewIndex;
-  Int     m_iLastPOC;
-  UInt    m_uiMaxViewIndex;
-#endif
-
 
   UInt    m_uiBitDepthForLUT;
   UInt    m_iLog2Precision;

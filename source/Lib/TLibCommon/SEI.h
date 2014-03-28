@@ -71,7 +71,7 @@ public:
     DECODED_PICTURE_HASH                 = 132,
     SCALABLE_NESTING                     = 133,
     REGION_REFRESH_INFO                  = 134,
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
     SUB_BITSTREAM_PROPERTY               = 139,    // Final PayloadType to be defined after finalization
 #endif
   };
@@ -365,7 +365,7 @@ public:
   Int    m_extendedWhiteLevelLumaCodeValue;
 };
 
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
 class SEISubBitstreamProperty : public SEI
 {
 public:

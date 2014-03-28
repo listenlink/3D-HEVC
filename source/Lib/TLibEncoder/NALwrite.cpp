@@ -90,7 +90,7 @@ void write(ostream& out, OutputNALUnit& nalu)
    */
   vector<uint8_t>& rbsp   = nalu.m_Bitstream.getFIFO();
 
-#if H_MV_HLS_7_MISC_P0130_EOS  // This will handle situation when writing NAL with zero payload
+#if H_MV  // This will handle situation when writing NAL with zero payload
   if (rbsp.size() == 0) return;
 #endif
 

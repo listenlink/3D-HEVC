@@ -346,7 +346,7 @@ protected:
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
 
   Bool      m_useStrongIntraSmoothing;                        ///< enable the use of strong intra smoothing (bi_linear interpolation) for 32x32 blocks when reference samples are flat.
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   Bool              m_subBistreamPropSEIEnabled;
   Int               m_numAdditionalSubStreams;
   std::vector<Int>  m_subBitstreamMode;
@@ -784,7 +784,7 @@ public:
   Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
   Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
 
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   Bool   getSubBitstreamPropSEIEnabled()        { return m_subBistreamPropSEIEnabled;}
   Void   setSubBitstreamPropSEIEnabled(Bool x)  { m_subBistreamPropSEIEnabled = x;}
 
