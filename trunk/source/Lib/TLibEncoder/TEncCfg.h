@@ -346,7 +346,7 @@ protected:
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
 
   Bool      m_useStrongIntraSmoothing;                        ///< enable the use of strong intra smoothing (bi_linear interpolation) for 32x32 blocks when reference samples are flat.
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   Bool              m_subBistreamPropSEIEnabled;
   Int               m_numAdditionalSubStreams;
   std::vector<Int>  m_subBitstreamMode;
@@ -396,8 +396,6 @@ protected:
 #endif
 #if H_3D_SPIVMP
   Int      m_iSubPULog2Size;
-#endif
-#if QC_SPIVMP_MPI_G0119
   Int      m_iSubPUMPILog2Size;
 #endif
 #if H_3D_IC
@@ -506,8 +504,6 @@ public:
 #if H_3D_SPIVMP
   Int        getSubPULog2Size                   ()                   { return m_iSubPULog2Size;}
   Void       setSubPULog2Size                   (Int u)              { m_iSubPULog2Size = u; }     
-#endif
-#if QC_SPIVMP_MPI_G0119
   Int        getSubPUMPILog2Size            ()               { return m_iSubPUMPILog2Size;}
   Void       setSubPUMPILog2Size            (Int u)          { m_iSubPUMPILog2Size = u;   }     
 #endif
@@ -788,7 +784,7 @@ public:
   Void  setScalableNestingSEIEnabled(Int b)                { m_scalableNestingSEIEnabled = b; }
   Int   getScalableNestingSEIEnabled()                     { return m_scalableNestingSEIEnabled; }
 
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   Bool   getSubBitstreamPropSEIEnabled()        { return m_subBistreamPropSEIEnabled;}
   Void   setSubBitstreamPropSEIEnabled(Bool x)  { m_subBistreamPropSEIEnabled = x;}
 

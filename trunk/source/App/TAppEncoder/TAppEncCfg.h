@@ -88,34 +88,21 @@ protected:
 // layer sets   
   Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
   std::vector< std::vector<Int> > m_layerIdsInSets;           ///< LayerIds in vps of layer set 
-#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   Int                    m_defaultTargetOutputLayerIdc;       ///< Specifies output layers of layer sets, 0: output all layers, 1: output highest layers, 2: specified by LayerIdsInDefOuputLayerSet
-#else
-  Int                    m_defaultOneTargetOutputLayerIdc;    ///< Output highest layer of layer sets by default when equal to 1
-#endif
   std::vector<Int>       m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
   std::vector< std::vector<Int> > m_layerIdsInAddOutputLayerSet; ///< LayerIds in vps of additional output layers
-#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   std::vector< std::vector<Int> > m_layerIdsInDefOutputLayerSet; ///< Indices in vps of output layers in layer sets
-#endif
   std::vector<Int>       m_profileLevelTierIdx;               ///< Indices of of profile level tier
   
   // Dependencies
   std::vector< std::vector<Int> > m_directRefLayers;          ///< LayerIds of direct reference layers
   std::vector< std::vector<Int> > m_dependencyTypes;          ///< Dependency types of direct reference layers
 
-  // DBP Size
-#if !H_MV_HLS_7_FIX_SET_DPB_SIZE
-  Bool m_subLayerFlagInfoPresentFlag;
-#endif
-
   // VPS VUI
   Bool m_vpsVuiPresentFlag;
   Bool m_crossLayerPicTypeAlignedFlag;
   Bool m_crossLayerIrapAlignedFlag;
-#if H_MV_HLS_7_MISC_P0068_21
   Bool m_allLayersIdrAlignedFlag;
-#endif
   Bool m_bitRatePresentVpsFlag;
   Bool m_picRatePresentVpsFlag;
   std::vector< std::vector<Bool > > m_bitRatePresentFlag;
@@ -140,10 +127,8 @@ protected:
   vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
 #if H_3D_SPIVMP
   Int                    m_iSubPULog2Size;                    
-#endif
-#endif
-#if QC_SPIVMP_MPI_G0119
   Int                    m_iSubPUMPILog2Size;                    
+#endif
 #endif
 #if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
   UInt                   m_uiUseAdvResPred;
@@ -439,7 +424,7 @@ protected:
   Int       m_maxBitsPerMinCuDenom;                           ///< Indicates an upper bound for the number of bits of coding_unit() data
   Int       m_log2MaxMvLengthHorizontal;                      ///< Indicate the maximum absolute value of a decoded horizontal MV component in quarter-pel luma units
   Int       m_log2MaxMvLengthVertical;                        ///< Indicate the maximum absolute value of a decoded vertical MV component in quarter-pel luma units
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   Bool              m_subBistreamPropSEIEnabled;
   Int               m_sbPropNumAdditionalSubStreams;
   std::vector<Int>  m_sbPropSubBitstreamMode;

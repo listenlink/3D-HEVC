@@ -75,13 +75,15 @@
 
 #if H_3D
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
-                                              // HHI_QTLPC_RAU_OFF_C0160     // JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
+                                              // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
+                                              // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
 
 #define H_3D_VSO                          1   // VSO, View synthesis optimization, includes: 
                                               // HHI_VSO
                                               // HHI_VSO_LS_TABLE_M23714 enable table base Lagrange multiplier optimization
                                               // SAIT_VSO_EST_A0033, JCT3V-A0033 modification 3
                                               // LGE_WVSO_A0119
+                                              // SCU_HS_VSD_BUGFIX_IMPROV_G0163
 #define H_3D_NBDV                         1   // Neighboring block disparity derivation 
                                               // QC_JCT3V-A0097 
                                               // LGE_DVMCP_A0126
@@ -101,6 +103,9 @@
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
                                               // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
                                               // LGE_ARP_CTX_F0161                JCT3V-F0161
+                                              // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
+                                              // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053 
+
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
@@ -108,6 +113,8 @@
                                               // MTK_CLIPPING_ALIGN_IC_E0168       // To support simplify bi-prediction PU with identical motion checking, JCT3V-E0168
                                               // LGE_IC_CTX_F0160 //JCT3V-F0160
                                               // SEC_ONLY_TEXTURE_IC_F0151
+                                              // MTK_IC_FLAG_CABAC_SIMP_G0061
+                                              // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -132,6 +139,8 @@
                                               // SHARP_VSP_BLOCK_IN_AMP_F0102 VSP partitioning for AMP
                                               // MTK_VSP_SIMPLIFICATION_F0111 1. Inherited VSP also use NBDV of current CU, 2. VSP cannot be inherited from above LCU rowss
                                               // LGE_SHARP_VSP_INHERIT_F0104 
+                                              // NTT_STORE_SPDV_VSP_G0148 Storing Sub-PU based DV for VSP
+                                              // Restricted bi-prediction for VSP
 
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
@@ -144,6 +153,10 @@
                                               // QC_INRIA_MTK_MRG_E0126 
                                               // ETRIKHU_MERGE_REUSE_F0093 QC_DEPTH_IV_MRG_F0125, JCT3V-F0125: Depth oriented Inter-view MV candidate
                                               // EC_MPI_ENABLING_MERGE_F0150, MPI flag in VPS and enabling in Merge mode
+                                              // MTK_NBDV_IVREF_FIX_G0067      , Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
+                                              // SEC_DEPTH_DV_DERIVAITON_G0074, Simplification of DV derivation for depth, JCT3V-G0074
+                                              // QC_DEPTH_MERGE_SIMP_G0127 Remove DV candidate and shifting candidate for depth coding
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -172,10 +185,28 @@
                                               // HHI_DIM_PREDSAMP_FIX_F0171
                                               // SEC_DMM3_RBC_F0147 Removal of DMM3 and RBC from DMMs
                                               // QC_DIM_DELTADC_UNIFY_F0132 Unify delta DC coding in depth intra modes
+                                              // Unify intra SDC and inter SDC
+                                              // QC_GENERIC_SDC_G0122 Generalize SDC to all depth intra modes
+                                              // SCU_HS_DEPTH_DC_PRED_G0143
+                                              // HS_TSINGHUA_SDC_SPLIT_G0111
+                                              // QC_PKU_SDC_SPLIT_G0123 Intra SDC Split
+
+
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
-                                              // LGE_INTER_SDC_E0156  Enable inter SDC for depth coding
+                                              // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
+                                              // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
+
 #define H_3D_SPIVMP                       1   // H_3D_SPIVMP    // JCT3V-F0110: Sub-PU level inter-view motion prediction
+                                              // SEC_SPIVMP_MCP_SIZE_G0077, Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
+                                              // QC_SPIVMP_MPI_G0119 Sub-PU level MPI merge candidate
+                                              // Simplification on Sub-PU level temporal interview motion prediction
+
+
+#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
+
+#define H_3D_DDD                          1   // Disparity derived depth coding
+
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
 
@@ -257,6 +288,13 @@
 #endif
 
 
+///// ***** DEPTH BASED BLOCK PARTITIONING *********
+#if H_3D_DBBP
+#define DBBP_INVALID_SHORT                (-4)
+#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
+#endif
+
+
 ///// ***** FCO *********
 #if H_3D_FCO
 #define H_3D_FCO_VSP_DONBDV_E0163               1   // Adaptive depth reference for flexible coding order
@@ -268,69 +306,10 @@
 #define PPS_FIX_DEPTH                           1
 #endif
 
-
 /////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-10.0 Integrations //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-#if H_3D
-#if  H_3D_QTLPC
-#define MTK_TEX_DEP_PAR_G0055             1   // Texture-partition-dependent depth partition. JCT3V-G0055
-#endif
-
-#define MTK_DDD_G0063                     1   // Disparity derived depth coding
-#define HTM10RC1_FIX                           1   // Fix of DDD
-
-
-#if H_3D_VSP
-#define MTK_RBIP_VSP_G0069                1   // Restricted bi-prediction for VSP
-#define NTT_STORE_SPDV_VSP_G0148          1   // Storing Sub-PU based DV for VSP
-#endif
-
-#define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
-
-#if H_3D_DBBP
-#define DBBP_INVALID_SHORT                (-4)
-#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
-#endif
-
-#if H_3D_DIM
-#define QC_PKU_SDC_SPLIT_G0123            1   // Intra SDC Split
-#if QC_PKU_SDC_SPLIT_G0123
-#define HS_TSINGHUA_SDC_SPLIT_G0111       1
-#endif
-#define SCU_HS_DEPTH_DC_PRED_G0143        1
-#define QC_GENERIC_SDC_G0122              1  // Generalize SDC to all depth intra modes
-#if H_3D_DIM_SDC && H_3D_INTER_SDC
-#define QC_SDC_UNIFY_G0130                1  // Unify intra SDC and inter SDC
-#define QC_SDC_UNIFY_G0130_FIX            1  // Fix bug of G0130
-#define QC_SDC_UNIFY_G0130_FIX2           1  // Fix bug of G0130
-#endif
-#define SEC_INTER_SDC_G0101               1  // Improved inter SDC with multiple DC candidates
-#endif
-
-#define KHU_SIMP_SPIVMP_G0147             1  // Simplification on Sub-PU level temporal interview motion prediction
-
-#if H_3D_SPIVMP
-#define QC_SPIVMP_MPI_G0119               1 // Sub-PU level MPI merge candidate
-#endif
-
-#define QC_DEPTH_MERGE_SIMP_G0127         1 // Remove DV candidate and shifting candidate for depth coding
-#define SEC_IC_ARP_SIG_G0072              1   // Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
-#define SCU_HS_VSD_BUGFIX_IMPROV_G0163    1
-#define SEC_SPIVMP_MCP_SIZE_G0077         1  // Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
-#define SEC_DEPTH_DV_DERIVAITON_G0074     1  // Simplification of DV derivation for depth, JCT3V-G0074
-#define MTK_ARP_REF_SELECTION_G0053       1   // ARP Reference picture selection in JCT3V-G0053 
-#define MTK_ARP_FLAG_CABAC_SIMP_G0061     1   // Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
-#define MTK_IC_FLAG_CABAC_SIMP_G0061      1   // Use only 1 context for IC flag in JCT3V-G0061
-#define MTK_NBDV_IVREF_FIX_G0067          1   // Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
-#endif
-
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-10.1 Integrations //////////////////////////////
+///////////////////////////////////   TBD                  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-
-// TBD
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
 // #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications – with text provided as P0297).
@@ -342,43 +321,10 @@
 // #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 // #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 
-
-#define H_MV_HLS_7_VPS_P0306_22                1 // (VPS/P0306/ue(v) coded syntax elements) #22 Several minor modifications to the VPS syntax, consistent with eliminating the previous intention to avoid ue(v) parsing in the VPS 
-#define H_MV_HLS_7_SEI_P0204_26                1 // (SEI/P0204/sub-bitstream SEI) #26 Add sub-bitstream property SEI message. Decision: Adopt
-#define H_MV_HLS_7_MISC_P0130_20               1 // (MISC/P0130/discardable not in inter-layer RPS) #20 Add constraint restricting pictures marked as discardable from being present in the temporal or inter-layer RPS,
-#define H_MV_HLS_7_VPS_P0125_24                1 // (VPS/P0125/VPS extension offset ) #24 Decision: Keep it as a reserved FFFF value. 
-#define H_MV_HLS_7_VPS_P0307_23                1 // (VPS/P0307/VPS VUI extension)  #23 Decision: Adopt modification in P0307.
-#define H_MV_HLS_7_POC_P0041                   1 // Syntax related to POC reset
+#define H_MV_HLS7_GEN                        0  // General changes (not tested)
 
 
-#define H_MV_HLS7_GEN                          0  // General changes (not tested)
-#define H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27    1  // Output layer sets, various
-                                                  // (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
-                                                  // (VPS/P0156/Num of output_layer_flag) #10 Proposal 3: The output_layer_flag[ i ][ j ] is signalled for j equal to 0 to NumLayersInIdList[ lsIdx ] inclusive. It was remarked that we might be able to just assume that the top layer is always output; however, this was not entirely clear , so the safe thing to do may be to also send the flag for this layer.
-                                                  // (VPS/P0295/Default output layer sets) #5 Discussion from (P0110). Decision: Three-state approach (text in P0295, decoder shall allow 3 to be present and shall treat 3 the same as the value 2). 
 
-
-#define H_MV_HLS_7_HRD_P0156_7                 1  // (HRD/P0156/MaxSubLayersInLayerSetMinus1) #7 Proposal 1: signal, in the VPS extension, the DPB parameters for an output layer set for sub-DPBs only up to the maximum temporal sub-layers in the corresponding layer set
-#define H_MV_HLS_7_VPS_P0048_14                1  // (VPS/P0048/profile_ref_minus1 rem) #14 Remove profile_ref_minus1 from the VPS extension, from JCTVC-P0048
-#define H_MV_HLS_7_VPS_P0076_15                1  // (VPS/P0076/video signal info move) #15 Move video signal information syntax structure earlier in the VPS VUI.
-#define H_MV_HLS_7_SPS_P0155_16_32             1  // (SPS/P0155/sps_sub_layer_ordering_info) #16, #32 Not signal the sps_max_num_reorder_pics[], sps_max_latency_increase_plus1[], and sps_max_dec_pic_buffering_minus1[] syntax elements in the SPS when nuh_layer_id > 0. 
-#define H_MV_HLS_7_GEN_P0166_PPS_EXTENSION     1  // (GEN/P0166/pps_extension) #17 Add PPS extension type flags for conditional presence of syntax extensions per extension type, aligned with the SPS extension type flags, from JCTVC-P0166. Further align the SPS extension type flags syntax between RExt and MV-HEVC/SHVC
-#define H_MV_HLS_7_FIX_SET_DPB_SIZE            1  // Fix derivation dpb size parameters
-#define H_MV_HLS_7_RESERVED_FLAGS              1  // Added flags
-                                                  // (SPS/P0312/SHVC reserved flag) The flag will be used for the syntax vert_phase_position_enable_flag in SHVC draft
-                                                  // (VPS/O0215/SHVC reserved flag): this flag will be used for the syntax cross_layer_phase_alignment_flag in SHVC draft.
-                                                  // (VPS VUI/O0199,P0312/SHVC reserved flags) the 3 reserved bits will be used for the syntaxes single_layer_for_non_irap_flag, higher_layer_irap_skip_flag and vert_phase_position_not_in_use_flag in SHVC draft.
-#define H_MV_FIX_VPS_LAYER_ID_NOT_EQUAL_ZERO   1  // Discard VPS with nuh_layer_Id > 0
-#define H_MV_HLS_7_MISC_P0130_EOS              1  // (MISC/P0130/EOS NAL layer id) #19 Require that end of bitstream NAL unit shall have nuh_layer_id equal to 0, from JCTVC-P0130. Decoders shall allow an end of bitstream NAL unit with nuh_layer_id > 0 to be present, and shall ignore the NAL unit.
-#define H_MV_HLS_7_MISC_P0182_13               1  // (MISC/P0182/BL PS Compatibility flag) #13 Define the flag (in VPS VUI) with the proposed semantics, without specifying an associated extraction process. Editors to select the position in the VPS VUI.
-#define H_MV_HLS_7_MISC_P0068_21               1  // (MISC/P0068/all irap idr flag) #21 Add flag in VUI to indicate that all IRAP pictures are IDRs and that all layer pictures in an AU are IDR aligned, from JCTVC-P0068 proposal 1.
-#define H_MV_HLS_7_FIX_INFER_CROSS_LAYER_IRAP_ALIGNED_FLAG               1  // Fix inference of cross_layer_irap_aligned_flag
-#define H_MV_HLS_7_MISC_P0079_18               1  // (MISC/P0079/NumActiveRefLayerPics) #18 Modification of derivation of variable NumActiveRefLayerPics.
-#define FIX_CAM_PARS_COLLECTOR                 1
-#define UPDATE_HM13                            1  // Only some parts in H_3D parts are marked! 
-#if H_3D
-#define H_3D_FIX_G0148_BRACE                   1 
-#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -415,9 +361,7 @@
 #define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
 #define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
 #define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
-#if H_MV_HLS_7_SEI_P0204_26
 #define MAX_SUB_STREAMS                 1024
-#endif
 #else
 #define MAX_NUM_LAYER_IDS                64
 #endif
@@ -908,7 +852,6 @@ namespace Level
 
 #if H_MV
 
-#if H_MV_HLS_7_GEN_P0166_PPS_EXTENSION
 enum PpsExtensionTypes
 {
   PPS_EX_T_MV      = 0,
@@ -920,7 +863,6 @@ enum PpsExtensionTypes
 };
 
 //Below for sps, would be good if this could be aligned
-#endif
 
   enum PsExtensionTypes
   {
