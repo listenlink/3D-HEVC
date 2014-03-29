@@ -415,11 +415,7 @@ Void TComPrediction::predIntraChromaAng( Int* piSrc, UInt uiDirMode, Pel* piPred
 }
 
 #if H_3D_DIM
-Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc
-#if QC_GENERIC_SDC_G0122
-  , TComWedgelet* dmm4Segmentation
-#endif
-  )
+Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc, TComWedgelet* dmm4Segmentation  )
 {
   assert( iWidth == iHeight  );
   assert( iWidth >= DIM_MIN_SIZE && iWidth <= DIM_MAX_SIZE );
@@ -445,7 +441,6 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
       } break;
     case( DMM4_IDX ): 
       {
-#if QC_GENERIC_SDC_G0122
         if( dmm4Segmentation == NULL )
         { 
           dmmSegmentation = new TComWedgelet( iWidth, iHeight );
@@ -456,10 +451,6 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
           xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmm4Segmentation );
           dmmSegmentation = dmm4Segmentation;
         }
-#else
-        dmmSegmentation = new TComWedgelet( iWidth, iHeight );
-        xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmmSegmentation );
-#endif
       } break;
     default: assert(0);
     }
@@ -510,11 +501,7 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   xAssignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
 
 #if H_3D_DIM_DMM
-#if QC_GENERIC_SDC_G0122
   if( dimType == DMM4_IDX && dmm4Segmentation == NULL ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
-#else
-  if( dimType == DMM4_IDX ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
-#endif
 #endif
 }
 #endif
@@ -1102,7 +1089,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   if( pcCU->getUseDDD( uiPartAddr ) )
   {
       assert( pcCU->getSPIVMPFlag( uiPartAddr ) == 0 );
@@ -1181,7 +1168,6 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 #if H_3D_VSP
 Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi )
 {
-#if NTT_STORE_SPDV_VSP_G0148
   Int vspSize = pcCU->getVSPFlag( uiPartAddr ) >> 1;
 
   Int widthSubPU, heightSubPU;
@@ -1196,63 +1182,8 @@ Void TComPrediction::xPredInterUniVSP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     heightSubPU = 8;
   }
   xPredInterUniSubPU( pcCU, uiPartAddr, iWidth, iHeight, eRefPicList, rpcYuvPred, bi, widthSubPU, heightSubPU );
-
-#else // NTT_STORE_SPDV_VSP_G0148
-  // Get depth reference
-  Int       depthRefViewIdx = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
-#if H_3D_FCO_VSP_DONBDV_E0163
-  TComPic* pRefPicBaseDepth = 0;
-  Bool     bIsCurrDepthCoded = false;
-  pRefPicBaseDepth  = pcCU->getSlice()->getIvPic( true, pcCU->getSlice()->getViewIndex() );
-  if ( pRefPicBaseDepth->getPicYuvRec() != NULL  ) 
-  {
-    bIsCurrDepthCoded = true;
-  }
-  else 
-  {
-    pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
-  }
-#else
-  TComPic* pRefPicBaseDepth = pcCU->getSlice()->getIvPic (true, depthRefViewIdx );
-#endif
-  assert(pRefPicBaseDepth != NULL);
-  TComPicYuv* pcBaseViewDepthPicYuv = pRefPicBaseDepth->getPicYuvRec();
-  assert(pcBaseViewDepthPicYuv != NULL);
-
-  // Get texture reference
-  Int iRefIdx = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );
-  assert(iRefIdx >= 0);
-  TComPic* pRefPicBaseTxt = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx );
-  TComPicYuv* pcBaseViewTxtPicYuv = pRefPicBaseTxt->getPicYuvRec();
-  assert(pcBaseViewTxtPicYuv != NULL);
-
-  // Initialize LUT according to the reference viewIdx
-  Int txtRefViewIdx = pRefPicBaseTxt->getViewIndex();
-  Int* pShiftLUT    = pcCU->getSlice()->getDepthToDisparityB( txtRefViewIdx );
-  assert( txtRefViewIdx < pcCU->getSlice()->getViewIndex() );
-
-  // Do compensation
-  TComMv cDv  = pcCU->getDvInfo(uiPartAddr).m_acNBDV;
-  pcCU->clipMv(cDv);
-
-#if H_3D_FCO_VSP_DONBDV_E0163
-  if ( bIsCurrDepthCoded )
-  {
-      cDv.setZero();
-  }
-#endif
-  // fetch virtual depth map
-  pcBaseViewDepthPicYuv->extendPicBorder();
-
-  Int vspSize=0;
-  xGetVirtualDepth( pcCU, pcBaseViewDepthPicYuv, &cDv, uiPartAddr, iWidth, iHeight, &m_cYuvDepthOnVsp,vspSize );
-  // sub-PU based compensation
-  xPredInterLumaBlkFromDM   ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
-  xPredInterChromaBlkFromDM ( pcCU, pcBaseViewTxtPicYuv, &m_cYuvDepthOnVsp, pShiftLUT, &cDv, uiPartAddr, iWidth, iHeight, pcCU->getSlice()->getIsDepth(), rpcYuvPred, bi, vspSize);
-#endif // NTT_STORE_SPDV_VSP_G0148
 }
 
-#if NTT_STORE_SPDV_VSP_G0148
 Void TComPrediction::xPredInterUniSubPU( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, Int widthSubPU, Int heightSubPU )
 {
   UInt numPartsInLine       = pcCU->getPic()->getNumPartInWidth();
@@ -1277,7 +1208,6 @@ Void TComPrediction::xPredInterUniSubPU( TComDataCU* pcCU, UInt uiPartAddr, Int 
     }
   }
 }
-#endif // NTT_STORE_SPDV_VSP_G0148
 
 #endif
 
@@ -2132,344 +2062,6 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 }
 #endif
 
-#if H_3D_VSP
-#if !(NTT_STORE_SPDV_VSP_G0148)
-// not fully support iRatioTxtPerDepth* != 1
-Void TComPrediction::xGetVirtualDepth( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *mv, UInt partAddr, Int width, Int height, TComYuv *yuvDepth, Int &vspSize, Int ratioTxtPerDepthX, Int ratioTxtPerDepthY )
-{
-  Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE;
-  Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE;
-
-  Int refDepStride = picRefDepth->getStride();
-
-  Int refDepOffset  = ( (mv->getHor()+2) >> 2 ) + ( (mv->getVer()+2) >> 2 ) * refDepStride;
-  Pel *refDepth     = picRefDepth->getLumaAddr( cu->getAddr(), cu->getZorderIdxInCU() + partAddr );
-
-  if( ratioTxtPerDepthX!=1 || ratioTxtPerDepthY!=1 )
-  {
-    Int posX, posY;
-    refDepth    = picRefDepth->getLumaAddr( );
-    cu->getPic()->getPicYuvRec()->getTopLeftSamplePos( cu->getAddr(), cu->getZorderIdxInCU() + partAddr, posX, posY ); // top-left position in texture
-    posX /= ratioTxtPerDepthX; // texture position -> depth postion
-    posY /= ratioTxtPerDepthY;
-    refDepOffset += posX + posY * refDepStride;
-
-    width  /= ratioTxtPerDepthX; // texture size -> depth size
-    height /= ratioTxtPerDepthY;
-  }
-
-  refDepth += refDepOffset;
-
-  Int depStride = yuvDepth->getStride();
-  Pel *depth = yuvDepth->getLumaAddr();
-
-  if ((height % 8))
-  {
-    vspSize = 1; // 8x4
-  }
-  else if ((width % 8))
-  {
-    vspSize = 0; // 4x8
-  }
-  else
-  {
-    Bool ULvsBR, URvsBL;
-    ULvsBR = refDepth[0]       < refDepth[refDepStride * (height-1) + width-1];
-    URvsBL = refDepth[width-1] < refDepth[refDepStride * (height-1)];
-    vspSize = ( ULvsBR ^ URvsBL ) ? 0 : 1;
-  }
-  Int subBlockW, subBlockH;
-  Int depStrideTmp = depStride * nTxtPerDepthY;
-  if (vspSize)
-  {
-    subBlockW = 8;
-    subBlockH = 4;
-  }
-  else
-  {
-    subBlockW = 4;
-    subBlockH = 8;
-  }
-  for( Int y=0; y<height; y+=subBlockH )
-  {
-    Pel *refDepthTmp[4];
-    refDepthTmp[0] = refDepth + refDepStride * y;
-    refDepthTmp[1] = refDepthTmp[0] + subBlockW - 1;
-    refDepthTmp[2] = refDepthTmp[0] + refDepStride * (subBlockH - 1);
-    refDepthTmp[3] = refDepthTmp[2] + subBlockW - 1;
-    for( Int x=0; x<width; x+=subBlockW )
-    {
-      Pel  maxDepthVal;
-      maxDepthVal = refDepthTmp[0][x];
-      maxDepthVal = std::max( maxDepthVal, refDepthTmp[1][x]);
-      maxDepthVal = std::max( maxDepthVal, refDepthTmp[2][x]);
-      maxDepthVal = std::max( maxDepthVal, refDepthTmp[3][x]);
-      Pel *depthTmp = &depth[x+y*depStride];
-      for( Int sY=0; sY<subBlockH; sY+=nTxtPerDepthY )
-      {
-        for( Int sX=0; sX<subBlockW; sX+=nTxtPerDepthX )
-        {
-          depthTmp[sX] = maxDepthVal;
-        }
-        depthTmp += depStrideTmp;
-      }
-    }
-  }    
-}
-
-Void TComPrediction::xPredInterLumaBlkFromDM( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&yuvDst, Bool isBi, Int vspSize)
-{
-  Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE;
-  Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE;
-  
-  nTxtPerDepthX = nTxtPerDepthX << vspSize;
-  nTxtPerDepthY = nTxtPerDepthY << (1-vspSize);
-
-  Int refStride = picRef->getStride();
-  Int dstStride = yuvDst->getStride();
-  Int depStride = yuvDepth->getStride();
-  Int refStrideBlock = refStride  * nTxtPerDepthY;
-  Int dstStrideBlock = dstStride * nTxtPerDepthY;
-  Int depStrideBlock = depStride * nTxtPerDepthY;
-
-  Pel *ref    = picRef->getLumaAddr( cu->getAddr(), cu->getZorderIdxInCU() + partAddr );
-  Pel *dst    = yuvDst->getLumaAddr(partAddr);
-  Pel *depth  = yuvDepth->getLumaAddr();
-
-#if H_3D_VSP_BLOCKSIZE == 1
-#if H_3D_VSP_CONSTRAINED
-  //get LUT based horizontal reference range
-  Int range = xGetConstrainedSize(width, height);
-
-  // The minimum depth value
-  Int minRelativePos = MAX_INT;
-  Int maxRelativePos = MIN_INT;
-
-  Pel* depthTemp, *depthInitial=depth;
-  for (Int yTxt = 0; yTxt < height; yTxt++)
-  {
-    for (Int xTxt = 0; xTxt < width; xTxt++)
-    {
-      if (depthPosX+xTxt < widthDepth)
-      {
-        depthTemp = depthInitial + xTxt;
-      }
-      else
-      {
-        depthTemp = depthInitial + (widthDepth - depthPosX - 1);
-      }
-
-      Int disparity = shiftLUT[ *depthTemp ]; // << iShiftPrec;
-      Int disparityInt = disparity >> 2;
-
-      if( disparity <= 0)
-      {
-        if (minRelativePos > disparityInt+xTxt)
-        {
-          minRelativePos = disparityInt+xTxt;
-        }
-      }
-      else
-      {
-        if (maxRelativePos < disparityInt+xTxt)
-        {
-          maxRelativePos = disparityInt+xTxt;
-        }
-      }
-    }
-    if (depthPosY+yTxt < heightDepth)
-    {
-      depthInitial = depthInitial + depStride;
-    }
-  }
-
-  Int disparity_tmp = shiftLUT[ *depth ]; // << iShiftPrec;
-  if (disparity_tmp <= 0)
-  {
-    maxRelativePos = minRelativePos + range -1 ;
-  }
-  else
-  {
-    minRelativePos = maxRelativePos - range +1 ;
-  }
-#endif
-#endif // H_3D_VSP_BLOCKSIZE == 1
-
-  TComMv dv(0, 0);
-
-  for ( Int yTxt = 0; yTxt < height; yTxt += nTxtPerDepthY )
-  {
-    for ( Int xTxt = 0; xTxt < width; xTxt += nTxtPerDepthX )
-    {
-      Pel repDepth = depth[ xTxt ];
-      assert( repDepth >= 0 && repDepth <= 255 );
-
-      Int disparity = shiftLUT[ repDepth ]; // remove << iShiftPrec ??
-      Int xFrac = disparity & 0x3;
-
-      dv.setHor( disparity );
-      cu->clipMv( dv );
-
-      Int refOffset = xTxt + (dv.getHor() >> 2);
-      
-#if H_3D_VSP_CONSTRAINED
-      if(refOffset<minRelativePos || refOffset>maxRelativePos)
-      {
-        xFrac = 0;
-      }
-      refOffset = Clip3(minRelativePos, maxRelativePos, refOffset);
-#endif
-
-      assert( ref[refOffset] >= 0 && ref[refOffset]<= 255 );
-      m_if.filterHorLuma( &ref[refOffset], refStride, &dst[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, !isBi );
-    }
-    ref   += refStrideBlock;
-    dst   += dstStrideBlock;
-    depth += depStrideBlock;
-  }
-
-}
-
-Void TComPrediction::xPredInterChromaBlkFromDM  ( TComDataCU *cu, TComPicYuv *picRef, TComYuv *yuvDepth, Int* shiftLUT, TComMv *mv, UInt partAddr, Int width, Int height, Bool isDepth, TComYuv *&yuvDst, Bool isBi, Int vspSize)
-{
-#if (H_3D_VSP_BLOCKSIZE==1)
-  Int nTxtPerDepthX = 1;
-  Int nTxtPerDepthY = 1;
-#else
-  Int nTxtPerDepthX = H_3D_VSP_BLOCKSIZE >> 1;
-  Int nTxtPerDepthY = H_3D_VSP_BLOCKSIZE >> 1;
-#endif
-
-  nTxtPerDepthX = nTxtPerDepthX << vspSize;
-  nTxtPerDepthY = nTxtPerDepthY << (1-vspSize);
-
-  Int refStride = picRef->getCStride();
-  Int dstStride = yuvDst->getCStride();
-  Int depStride = yuvDepth->getStride();
-  Int refStrideBlock = refStride * nTxtPerDepthY;
-  Int dstStrideBlock = dstStride * nTxtPerDepthY;
-  Int depStrideBlock = depStride * (nTxtPerDepthY<<1);
-
-  Pel *refCb  = picRef->getCbAddr( cu->getAddr(), cu->getZorderIdxInCU() + partAddr );
-  Pel *refCr  = picRef->getCrAddr( cu->getAddr(), cu->getZorderIdxInCU() + partAddr );
-  Pel *dstCb  = yuvDst->getCbAddr(partAddr);
-  Pel *dstCr  = yuvDst->getCrAddr(partAddr);
-  Pel *depth  = yuvDepth->getLumaAddr();
-
-#if H_3D_VSP_BLOCKSIZE == 1
-#if H_3D_VSP_CONSTRAINED
-  //get LUT based horizontal reference range
-  Int range = xGetConstrainedSize(width, height, false);
-
-  // The minimum depth value
-  Int minRelativePos = MAX_INT;
-  Int maxRelativePos = MIN_INT;
-
-  Int depthTmp;
-  for (Int yTxt=0; yTxt<height; yTxt++)
-  {
-    for (Int xTxt=0; xTxt<width; xTxt++)
-    {
-      depthTmp = m_pDepthBlock[xTxt+yTxt*width];
-      Int disparity = shiftLUT[ depthTmp ]; // << iShiftPrec;
-      Int disparityInt = disparity >> 3;//in chroma resolution
-
-      if (disparityInt < 0)
-      {
-        if (minRelativePos > disparityInt+xTxt)
-        {
-          minRelativePos = disparityInt+xTxt;
-        }
-      }
-      else
-      {
-        if (maxRelativePos < disparityInt+xTxt)
-        {
-          maxRelativePos = disparityInt+xTxt;
-        }
-      }
-    }
-  }
-
-  depthTmp = m_pDepthBlock[0];
-  Int disparity_tmp = shiftLUT[ depthTmp ]; // << iShiftPrec;
-  if ( disparity_tmp < 0 )
-  {
-    maxRelativePos = minRelativePos + range - 1;
-  }
-  else
-  {
-    minRelativePos = maxRelativePos - range + 1;
-  }
-
-#endif // H_3D_VSP_CONSTRAINED
-#endif // H_3D_VSP_BLOCKSIZE == 1
-
-  TComMv dv(0, 0);
-  // luma size -> chroma size
-  height >>= 1;
-  width  >>= 1;
-
-  for ( Int yTxt = 0; yTxt < height; yTxt += nTxtPerDepthY )
-  {
-    for ( Int xTxt = 0; xTxt < width; xTxt += nTxtPerDepthX )
-    {
-      Pel repDepth = depth[ xTxt<<1 ];
-      assert( repDepth >= 0 && repDepth <= 255 );
-
-      Int disparity = shiftLUT[ repDepth ]; // remove << iShiftPrec;
-      Int xFrac = disparity & 0x7;
-      
-      dv.setHor( disparity );
-      cu->clipMv( dv );
-
-      Int refOffset = xTxt + (dv.getHor() >> 3);
-
-#if H_3D_VSP_CONSTRAINED
-      if(refOffset<minRelativePos || refOffset>maxRelativePos)
-      {
-        xFrac = 0;
-      }
-      refOffset = Clip3(minRelativePos, maxRelativePos, refOffset);
-#endif
-
-      assert( refCb[refOffset] >= 0 && refCb[refOffset]<= 255 );
-      assert( refCr[refOffset] >= 0 && refCr[refOffset]<= 255 );
-
-      m_if.filterHorChroma( &refCb[refOffset], refStride, &dstCb[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, !isBi );
-      m_if.filterHorChroma( &refCr[refOffset], refStride, &dstCr[xTxt], dstStride, nTxtPerDepthX, nTxtPerDepthY, xFrac, !isBi );
-    }
-    refCb += refStrideBlock;
-    refCr += refStrideBlock;
-    dstCb += dstStrideBlock;
-    dstCr += dstStrideBlock;
-    depth += depStrideBlock;
-  }
-}
-#endif
-
-#if H_3D_VSP_CONSTRAINED
-Int TComPrediction::xGetConstrainedSize(Int nPbW, Int nPbH, Bool bLuma)
-{
-  Int iSize = 0;
-  if (bLuma)
-  {
-    Int iArea = (nPbW+7) * (nPbH+7);
-    Int iAlpha = iArea / nPbH - nPbW - 7;
-    iSize = iAlpha + nPbW;
-  }
-  else // chroma
-  {
-    Int iArea = (nPbW+2) * (nPbH+2);
-    Int iAlpha = iArea / nPbH - nPbW - 4;
-    iSize = iAlpha + nPbW;
-  }
-  return iSize;
-}
-#endif // H_3D_VSP_CONSTRAINED
-
-#endif // H_3D_VSP
-
 #if H_3D_DIM
 Void TComPrediction::xPredBiSegDCs( Int* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& predDC1, Pel& predDC2 )
 {
@@ -2484,13 +2076,9 @@ Void TComPrediction::xPredBiSegDCs( Int* ptrSrc, UInt srcStride, Bool* biSegPatt
 
   if( bL == bT )
   {
-#if SCU_HS_DEPTH_DC_PRED_G0143
     const Int  iTRR = ( patternStride * 2 - 1  ) - srcStride; 
     const Int  iLBB = ( patternStride * 2 - 1  ) * srcStride - 1;
     refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : (abs(ptrSrc[iTRR] - ptrSrc[-(Int)srcStride]) > abs(ptrSrc[iLBB] - ptrSrc[ -1]) ? ptrSrc[iTRR] : ptrSrc[iLBB]);
-#else
-    refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : 1<<( g_bitDepthY - 1 );
-#endif
     refDC2 =      ( ptrSrc[ -1] + ptrSrc[-(Int)srcStride] )>>1;
   }
   else
@@ -2592,12 +2180,10 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
   memset(iSumDepth, 0, sizeof(Int)*2);
   Int iSumPix[2];
   memset(iSumPix, 0, sizeof(Int)*2);
-#if QC_GENERIC_SDC_G0122
   for( Int i = 0; i < uiNumSegments; i++ )
   {
     rpSegMeans[i] = 0;
   }
-#endif
   if (orgDC == false)
   {
     if ( getDimType(uiIntraMode) == DMM1_IDX )
@@ -2612,7 +2198,6 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
       rpSegMeans[ucSegmentLB] = pOrig[uiStride * (uiSize-1) ];
       rpSegMeans[ucSegmentRB] = pOrig[uiStride * (uiSize-1) + (uiSize-1) ];
     }
-#if QC_GENERIC_SDC_G0122
     else if( getDimType( uiIntraMode ) == DMM4_IDX )
     {
       Pel *ptmpOrig = pOrig;
@@ -2646,9 +2231,6 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
       }
     }
     else
-#else
-    else if (uiIntraMode == PLANAR_IDX)
-#endif
     {
       Pel* pLeftTop = pOrig;
       Pel* pRightTop = pOrig + (uiSize-1);

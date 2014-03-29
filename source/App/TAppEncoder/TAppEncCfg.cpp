@@ -387,19 +387,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // Layer Sets + Output Layer Sets + Profile Tier Level
   ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
   ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
-#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   ("DefaultTargetOutputLayerIdc"     , m_defaultTargetOutputLayerIdc     , 0, "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
-#else
-  ("DefaultOneTargetOutputLayerFlag"  , m_defaultOneTargetOutputLayerIdc  , 0, "Output highest layer of layer sets by default")
-#endif
   ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
 
-#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "Indices in VPS of output layers in additional output layer set")  
   ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_OP_SETS_PLUS1, "Indices in VPS of output layers in layer set")  
-#else
-  ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(1,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "LayerIds of additional output layers")  
-#endif
   ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
   
   // Layer dependencies
@@ -520,8 +512,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if H_3D_SPIVMP
   ("SubPULog2Size", m_iSubPULog2Size, (Int)3, "Sub-PU size index: 2^n")
-#endif
-#if QC_SPIVMP_MPI_G0119
   ("SubPUMPILog2Size", m_iSubPUMPILog2Size, (Int)3, "Sub-PU MPI size index: 2^n")
 #endif
 #if H_3D_IC
@@ -612,17 +602,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if H_MV
 
-  // DBP Size
-#if !H_MV_HLS_7_FIX_SET_DPB_SIZE
-  ("SubLayerFlagInfoPresentFlag",  m_subLayerFlagInfoPresentFlag , false                                           , "SubLayerFlagInfoPresentFlag")
-#endif
   // VPS VUI
   ("VpsVuiPresentFlag"           , m_vpsVuiPresentFlag           , false                                           , "VpsVuiPresentFlag           ")
   ("CrossLayerPicTypeAlignedFlag", m_crossLayerPicTypeAlignedFlag, false                                           , "CrossLayerPicTypeAlignedFlag")  // Could actually be derived by the encoder
   ("CrossLayerIrapAlignedFlag"   , m_crossLayerIrapAlignedFlag   , false                                           , "CrossLayerIrapAlignedFlag   ")  // Could actually be derived by the encoder
-#if H_MV_HLS_7_MISC_P0068_21
   ("AllLayersIdrAlignedFlag"     , m_allLayersIdrAlignedFlag     , false                                           , "CrossLayerIrapAlignedFlag   ")  // Could actually be derived by the encoder
-#endif
   ("BitRatePresentVpsFlag"       , m_bitRatePresentVpsFlag       , false                                           , "BitRatePresentVpsFlag       ")
   ("PicRatePresentVpsFlag"       , m_picRatePresentVpsFlag       , false                                           , "PicRatePresentVpsFlag       ")
   ("BitRatePresentFlag"          , m_bitRatePresentFlag          , std::vector< Bool >(1,0)  ,MAX_VPS_OP_SETS_PLUS1, "BitRatePresentFlag per sub layer for the N-th layer set")
@@ -736,7 +720,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIDecodingUnitInfo",             m_decodingUnitInfoSEIEnabled,                       0, "Control generation of decoding unit information SEI message.")
   ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,              0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
-#if H_MV_HLS_7_SEI_P0204_26
   ("SubBitstreamPropSEIEnabled",              m_subBistreamPropSEIEnabled,    false                     ,"Enable signaling of sub-bitstream property SEI message")
   ("SEISubBitstreamNumAdditionalSubStreams",  m_sbPropNumAdditionalSubStreams,0, "Number of substreams for which additional information is signalled")
   ("SEISubBitstreamSubBitstreamMode",         m_sbPropSubBitstreamMode,       std::vector< Int  >(1,0)  ,"Specifies mode of generation of the i-th sub-bitstream (0 or 1)")
@@ -744,7 +727,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISubBitstreamHighestSublayerId",        m_sbPropHighestSublayerId,      std::vector< Int  >(1,0)  ,"Specifies highest TemporalId of the i-th sub-bitstream")
   ("SEISubBitstreamAvgBitRate",               m_sbPropAvgBitRate,             std::vector< Int  >(1,0)  ,"Specifies average bit rate of the i-th sub-bitstream")
   ("SEISubBitstreamMaxBitRate",               m_sbPropMaxBitRate,             std::vector< Int  >(1,0)  ,"Specifies maximum bit rate of the i-th sub-bitstream")
-#endif
 #if H_3D
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
   ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
@@ -1431,7 +1413,6 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
 
-#if H_MV_HLS_7_OUTPUT_LAYERS_5_10_22_27
   xConfirmPara( m_defaultTargetOutputLayerIdc < 0 || m_defaultTargetOutputLayerIdc > 2, "Default target output layer idc must greater than or equal to 0 and less than or equal to 2." );  
 
   if( m_defaultTargetOutputLayerIdc != 2 )
@@ -1462,9 +1443,7 @@ Void TAppEncCfg::xCheckParameter()
       }
     }
   }
-#else
-  xConfirmPara( m_defaultOneTargetOutputLayerIdc < 0 || m_defaultOneTargetOutputLayerIdc > 1, "Default one target output layer idc must be equal to 0 or equal to 1" );
-#endif
+
   xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
 
   // Layer Dependencies  
@@ -1551,15 +1530,10 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( ( 0 != m_uiUseAdvResPred ) &&  ( 1 != m_uiUseAdvResPred ), "UseAdvResPred must be 0 or 1." );
 #endif
 #if H_3D_SPIVMP
-#if SEC_SPIVMP_MCP_SIZE_G0077
   xConfirmPara( m_iSubPULog2Size < 3,                                        "SubPULog2Size must be 3 or greater.");
-#else
-  xConfirmPara( m_iSubPULog2Size < 2,                                        "SubPULog2Size must be 2 or greater.");
-#endif
   xConfirmPara( m_iSubPULog2Size > 6,                                        "SubPULog2Size must be 6 or smaller.");
   xConfirmPara( (1<<m_iSubPULog2Size) > m_uiMaxCUWidth,                      "SubPULog2Size must be log2(maxCUSize) or smaller.");
-#endif
-#if QC_SPIVMP_MPI_G0119
+ 
   xConfirmPara( m_iSubPUMPILog2Size < 3,                                        "SubPUMPILog2Size must be 3 or greater.");
   xConfirmPara( m_iSubPUMPILog2Size > 6,                                        "SubPUMPILog2Size must be 6 or smaller.");
   xConfirmPara( ( 1 << m_iSubPUMPILog2Size ) > m_uiMaxCUWidth,                  "SubPUMPILog2Size must be log2(maxCUSize) or smaller.");
@@ -2251,8 +2225,6 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
 #if H_MV
   }
   }
-#endif
-#if H_MV_HLS_7_SEI_P0204_26
   // Check input parameters for Sub-bitstream property SEI message
   if( m_subBistreamPropSEIEnabled )
   {
@@ -2498,10 +2470,8 @@ Void TAppEncCfg::xPrintParameter()
   printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
 #if H_3D_SPIVMP
   printf(" SubPULog2Size:%d  " , m_iSubPULog2Size  );
-#endif
-#endif
-#if QC_SPIVMP_MPI_G0119
   printf(" SubPUMPILog2Size:%d  " , m_iSubPUMPILog2Size  );
+#endif
 #endif
 #if H_3D_ARP
   printf(" ARP:%d  ", m_uiUseAdvResPred  );

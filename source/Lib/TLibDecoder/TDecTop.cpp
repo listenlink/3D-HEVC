@@ -50,11 +50,6 @@ CamParsCollector::CamParsCollector()
 {
   m_aaiCodedOffset         = new Int* [ MAX_NUM_LAYERS ];
   m_aaiCodedScale          = new Int* [ MAX_NUM_LAYERS ];
-#if !FIX_CAM_PARS_COLLECTOR
-  m_aiViewId               = new Int  [ MAX_NUM_LAYERS ];
-
-  m_bViewReceived          = new Bool [ MAX_NUM_LAYERS ];
-#endif
   for( UInt uiId = 0; uiId < MAX_NUM_LAYERS; uiId++ )
   {
     m_aaiCodedOffset      [ uiId ] = new Int [ MAX_NUM_LAYERS ];
@@ -64,10 +59,8 @@ CamParsCollector::CamParsCollector()
   xCreateLUTs( (UInt)MAX_NUM_LAYERS, (UInt)MAX_NUM_LAYERS, m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
   m_iLog2Precision   = LOG2_DISP_PREC_LUT;
   m_uiBitDepthForLUT = 8; // fixed
-#if FIX_CAM_PARS_COLLECTOR
   m_receivedIdc = NULL; 
   m_vps         = NULL; 
-#endif
 }
 
 CamParsCollector::~CamParsCollector()
@@ -79,20 +72,13 @@ CamParsCollector::~CamParsCollector()
   }
   delete [] m_aaiCodedOffset;
   delete [] m_aaiCodedScale;
-#if !FIX_CAM_PARS_COLLECTOR
-  delete [] m_aiViewId;  
-  delete [] m_bViewReceived;
-#endif
 
   xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
   xDeleteArray( m_aiBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
-#if FIX_CAM_PARS_COLLECTOR
   xDeleteArray( m_receivedIdc, m_uiMaxViewIndex + 1 );
-#endif
 }
 
 
-#if FIX_CAM_PARS_COLLECTOR
 Void
 CamParsCollector::init( FILE* pCodedScaleOffsetFile, TComVPS* vps)
 {
@@ -158,20 +144,6 @@ CamParsCollector::xResetReceivedIdc( Bool overWriteFlag )
     }
   }
 }
-#else
-Void
-CamParsCollector::init( FILE* pCodedScaleOffsetFile )
-{
-  m_bInitialized            = true;
-  m_pCodedScaleOffsetFile   = pCodedScaleOffsetFile;
-  m_uiCamParsCodedPrecision = 0;
-  m_bCamParsVaryOverTime    = false;
-  m_iLastViewIndex             = -1;
-  m_iLastPOC                = -1;
-  m_uiMaxViewIndex             = 0;
-}
-#endif
-
 
 
 Void
@@ -205,11 +177,7 @@ CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetView
 Void 
   CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
 {
-#if FIX_CAM_PARS_COLLECTOR
   Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCamParPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
-#else
-  Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_uiCamParsCodedPrecision + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
-#endif
   Int     iLog2DivChroma = iLog2DivLuma + 1;
 
   iOffset <<= m_uiBitDepthForLUT;
@@ -251,126 +219,6 @@ CamParsCollector::uninit()
   m_bInitialized = false;
 }
 
-#if !FIX_CAM_PARS_COLLECTOR
-Void
-CamParsCollector::setSlice( TComSlice* pcSlice )
-{
-
-  if( pcSlice == 0 )
-  {
-    AOF( xIsComplete() );
-    if( m_bCamParsVaryOverTime || m_iLastPOC == 0 )
-    {
-      xOutput( m_iLastPOC );
-    }
-    return;
-  }
-  
-  if ( pcSlice->getIsDepth())
-  {
-    return;
-  }
-
-  Bool  bFirstAU          = ( pcSlice->getPOC()     == 0 );
-  Bool  bFirstSliceInAU   = ( pcSlice->getPOC()     != Int ( m_iLastPOC ) );
-  Bool  bFirstSliceInView = ( pcSlice->getViewIndex()  != UInt( m_iLastViewIndex ) || bFirstSliceInAU );
-
-  AOT(  bFirstSliceInAU  &&   pcSlice->getViewIndex()  != 0 );
-  AOT( !bFirstSliceInAU  &&   pcSlice->getViewIndex()   < UInt( m_iLastViewIndex ) );
-  
-  AOT( !bFirstSliceInAU  &&   pcSlice->getViewIndex()   > UInt( m_iLastViewIndex + 1 ) );
-  
-  AOT( !bFirstAU         &&   pcSlice->getViewIndex()   > m_uiMaxViewIndex );
-
-  if ( !bFirstSliceInView )
-  {
-    if( m_bCamParsVaryOverTime ) // check consistency of slice parameters here
-    {
-      UInt uiViewIndex = pcSlice->getViewIndex();
-      for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < uiViewIndex; uiBaseViewIndex++ )
-      {
-        AOF( m_aaiCodedScale [ uiBaseViewIndex ][ uiViewIndex ] == pcSlice->getCodedScale    () [ uiBaseViewIndex ] );
-        AOF( m_aaiCodedOffset[ uiBaseViewIndex ][ uiViewIndex ] == pcSlice->getCodedOffset   () [ uiBaseViewIndex ] );
-        AOF( m_aaiCodedScale [ uiViewIndex ][ uiBaseViewIndex ] == pcSlice->getInvCodedScale () [ uiBaseViewIndex ] );
-        AOF( m_aaiCodedOffset[ uiViewIndex ][ uiBaseViewIndex ] == pcSlice->getInvCodedOffset() [ uiBaseViewIndex ] );
-      }
-    }
-    return;
-  }
-
-  if( bFirstSliceInAU )
-  {
-    if( !bFirstAU )
-    {
-      AOF( xIsComplete() );
-      xOutput( m_iLastPOC );
-    }
-    ::memset( m_bViewReceived, false, MAX_NUM_LAYERS * sizeof( Bool ) );
-  }
-
-  UInt uiViewIndex                       = pcSlice->getViewIndex();
-  m_bViewReceived[ uiViewIndex ]         = true;
-  if( bFirstAU )
-  {
-    m_uiMaxViewIndex                     = std::max( m_uiMaxViewIndex, uiViewIndex );
-    m_aiViewId[ uiViewIndex ]            = pcSlice->getViewId();
-
-    if( uiViewIndex == 1 )
-    {
-      m_uiCamParsCodedPrecision       = pcSlice->getVPS()->getCamParPrecision     ();
-      m_bCamParsVaryOverTime          = pcSlice->getVPS()->hasCamParInSliceHeader ( uiViewIndex );
-    }
-    else if( uiViewIndex > 1 )
-    {
-      AOF( m_uiCamParsCodedPrecision == pcSlice->getVPS()->getCamParPrecision     () );
-      AOF( m_bCamParsVaryOverTime    == pcSlice->getVPS()->hasCamParInSliceHeader ( uiViewIndex ) );
-    }
-
-    for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )
-    {
-      if( m_bCamParsVaryOverTime )
-      {
-        m_aaiCodedScale [ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getCodedScale    () [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getCodedOffset   () [ uiBaseIndex ];
-        m_aaiCodedScale [ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getInvCodedScale () [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getInvCodedOffset() [ uiBaseIndex ];
-        xInitLUTs( uiBaseIndex, uiViewIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
-        xInitLUTs( uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiViewIndex ][ uiBaseIndex ], m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
-      }
-      else
-      {
-        m_aaiCodedScale [ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getVPS()->getCodedScale    (uiViewIndex) [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getVPS()->getCodedOffset   (uiViewIndex) [ uiBaseIndex ];
-        m_aaiCodedScale [ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getVPS()->getInvCodedScale (uiViewIndex) [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getVPS()->getInvCodedOffset(uiViewIndex) [ uiBaseIndex ];
-        xInitLUTs( uiBaseIndex, uiViewIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-        xInitLUTs( uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiViewIndex ][ uiBaseIndex ], m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-      }
-    }
-  }
-  else
-  {
-    AOF( m_aiViewId[ uiViewIndex ] == pcSlice->getViewId() );
-    if( m_bCamParsVaryOverTime )
-    {
-      for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )
-      {
-        m_aaiCodedScale [ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getCodedScale    () [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ]  = pcSlice->getCodedOffset   () [ uiBaseIndex ];
-        m_aaiCodedScale [ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getInvCodedScale () [ uiBaseIndex ];
-        m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ]  = pcSlice->getInvCodedOffset() [ uiBaseIndex ];
-
-        xInitLUTs( uiBaseIndex, uiViewIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-        xInitLUTs( uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiViewIndex ][ uiBaseIndex ], m_aaiCodedOffset[ uiViewIndex ][ uiBaseIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-      }
-    }
-  }
-  
-  m_iLastViewIndex = (Int)pcSlice->getViewIndex();  
-  m_iLastPOC       = (Int)pcSlice->getPOC();
-}
-
-#else
 Void
 CamParsCollector::setSlice( TComSlice* pcSlice )
 {
@@ -439,7 +287,6 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
     }
   }
 }
-#endif
 
 
 #if H_3D_IV_MERGE
@@ -453,53 +300,25 @@ CamParsCollector::copyCamParamForSlice( TComSlice* pcSlice )
 }
 #endif
 
-#if !FIX_CAM_PARS_COLLECTOR
-Bool
-CamParsCollector::xIsComplete()
-{
-  for( UInt uiView = 0; uiView <= m_uiMaxViewIndex; uiView++ )
-  {
-    if( m_bViewReceived[ uiView ] == 0 )
-    {
-      return false;
-    }
-  }
-  return true;
-}
-#endif
 
 Void
 CamParsCollector::xOutput( Int iPOC )
 {
   if( m_pCodedScaleOffsetFile )
   {
-#if FIX_CAM_PARS_COLLECTOR
     if( iPOC == m_firstReceivedPoc )
-#else
-    if( iPOC == 0 )
-#endif
     {
       fprintf( m_pCodedScaleOffsetFile, "#  ViewIndex       ViewId\n" );
       fprintf( m_pCodedScaleOffsetFile, "#----------- ------------\n" );
-#if FIX_CAM_PARS_COLLECTOR
       for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
       {
         fprintf( m_pCodedScaleOffsetFile, "%12d %12d\n", uiViewIndex, m_vps->getViewIdVal( uiViewIndex ) );
-#else        
-      for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
-      {
-        fprintf( m_pCodedScaleOffsetFile, "%12d %12d\n", uiViewIndex, m_aiViewId[ uiViewIndex ] );
-#endif
       }
       fprintf( m_pCodedScaleOffsetFile, "\n\n");
       fprintf( m_pCodedScaleOffsetFile, "# StartFrame     EndFrame   TargetView     BaseView   CodedScale  CodedOffset    Precision\n" );
       fprintf( m_pCodedScaleOffsetFile, "#----------- ------------ ------------ ------------ ------------ ------------ ------------\n" );
     }
-#if FIX_CAM_PARS_COLLECTOR
     if( iPOC == m_firstReceivedPoc || m_bCamParsVaryOverTime  )
-#else
-    if( iPOC == 0 || m_bCamParsVaryOverTime )
-#endif
     {
       Int iS = iPOC;
       Int iE = ( m_bCamParsVaryOverTime ? iPOC : ~( 1 << 31 ) );
@@ -509,17 +328,11 @@ CamParsCollector::xOutput( Int iPOC )
         {
           if( uiViewIndex != uiBaseIndex )
           {
-#if FIX_CAM_PARS_COLLECTOR
             if ( m_receivedIdc[uiBaseIndex][uiViewIndex] != 0 )
             {            
               fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
                 iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_vps->getCamParPrecision() );
             }            
-#else
-            fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
-              iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_uiCamParsCodedPrecision );
-#endif
-
           }
         }
       }
@@ -640,13 +453,13 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
 #endif
   for( Int temporalLayer=0; temporalLayer < MAX_TLAYER; temporalLayer++) 
   {
-#if H_MV_HLS_7_SPS_P0155_16_32
+#if H_MV
     numReorderPics[temporalLayer] = ( getLayerId() == 0 ) ? pcSlice->getSPS()->getNumReorderPics(temporalLayer) : pcSlice->getVPS()->getNumReorderPics(temporalLayer);
 #else
     numReorderPics[temporalLayer] = pcSlice->getSPS()->getNumReorderPics(temporalLayer);
 #endif
   }
-#if H_MV_HLS_7_SPS_P0155_16_32
+#if H_MV
   if ( getLayerId() == 0 )
   {  
     m_iMaxRefPicNum = pcSlice->getSPS()->getMaxDecPicBuffering(pcSlice->getTLayer());

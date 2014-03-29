@@ -191,20 +191,7 @@ private:
 #endif
 #if H_3D_DIM_SDC
   Bool*         m_pbSDCFlag;
-#if QC_SDC_UNIFY_G0130 && !SEC_INTER_SDC_G0101
-  Pel*          m_apSegmentDCOffset[4];
-#else
   Pel*          m_apSegmentDCOffset[2];
-#endif
-#endif
-#endif
-#if H_3D_INTER_SDC
-#if !QC_SDC_UNIFY_G0130
-  Bool*         m_pbInterSDCFlag;
-  Int*          m_apSegmentInterDCOffset[4];
-#endif
-#if !SEC_INTER_SDC_G0101
-  UChar*        m_pucInterSDCMask;
 #endif
 #endif
 #if H_3D_DBBP
@@ -238,7 +225,7 @@ private:
   DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
 #endif
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   UChar*        m_pucDisparityDerivedDepth;
   Bool*         m_pbUseDDD;
   Int           m_iUseDDDCandIdx;
@@ -279,7 +266,7 @@ protected:
 
   Void xDeriveCenterIdx( UInt uiPartIdx, UInt& ruiPartIdxCenter );
 
-#if NTT_STORE_SPDV_VSP_G0148
+#if H_3D_VSP
   Void xSetMvFieldForVSP  ( TComDataCU *cu, TComPicYuv *picRefDepth, TComMv *dv, UInt partAddr, Int width, Int height, Int *shiftLUT, RefPicList refPicList, Int refIdx, Bool isDepth, Int &vspSize );
 #endif
 
@@ -498,11 +485,7 @@ public:
    
 #if H_3D
   Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
-#if SEC_DEPTH_DV_DERIVAITON_G0074
   Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
-#else
-  Bool          getDispNeighBlocks  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
-#endif
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
 
@@ -572,27 +555,8 @@ public:
   Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
   Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
-#if QC_GENERIC_SDC_G0122
   UInt          getCtxSDCFlag          ( UInt   uiAbsPartIdx );
   UInt          getCtxAngleFlag        ( UInt   uiAbsPartIdx );
-#endif
-#endif
-#endif
-#if H_3D_INTER_SDC
-#if !QC_SDC_UNIFY_G0130
-  Bool*         getInterSDCFlag     ()                        { return m_pbInterSDCFlag;               }
-  Bool          getInterSDCFlag     ( UInt uiIdx )            { return m_pbInterSDCFlag[uiIdx];        }
-  Void          setInterSDCFlagSubParts ( Bool bInterSDCFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-  UInt          getCtxInterSDCFlag  ( UInt uiAbsPartIdx );
-  Int*          getInterSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentInterDCOffset[uiSeg]; }
-  Int           getInterSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentInterDCOffset[uiSeg][uiPartIdx]; }
-  Void          setInterSDCSegmentDCOffset( Int pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentInterDCOffset[uiSeg][uiPartIdx] = pOffset; }
-
-#endif
-#if !SEC_INTER_SDC_G0101
-  Void          xSetInterSDCCUMask( TComDataCU *pcCU, UChar *pMask );
-
-  UChar*        getInterSDCMask     ()                        { return m_pucInterSDCMask;              }
 #endif
 #endif
   
@@ -700,9 +664,7 @@ public:
   Char          getVSPFlag        ( UInt uiIdx )            { return m_piVSPFlag[uiIdx];   }
   Void          setVSPFlag        ( UInt uiIdx, Int n )     { m_piVSPFlag[uiIdx] = n;      }
   Void          setVSPFlagSubParts( Char iVSPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-#if NTT_STORE_SPDV_VSP_G0148
   Void          setMvFieldPUForVSP    ( TComDataCU* cu, UInt partAddr, Int width, Int height, RefPicList refPicList, Int refIdx, Int &vspSize );
-#endif
 #endif
   Void          deriveLeftRightTopIdxGeneral  ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLT, UInt& ruiPartIdxRT );
   Void          deriveLeftBottomIdxGeneral    ( UInt uiAbsPartIdx, UInt uiPartIdx, UInt& ruiPartIdxLB );
@@ -742,11 +704,6 @@ public:
 #if H_3D_ARP
   UInt          getCTXARPWFlag                  ( UInt   uiAbsPartIdx                                 );
 #endif  
-#if !MTK_IC_FLAG_CABAC_SIMP_G0061
-#if H_3D_IC
-  UInt          getCtxICFlag                    ( UInt   uiAbsPartIdx                                 );
-#endif
-#endif
   UInt          getSliceStartCU         ( UInt pos )                  { return m_sliceStartCU[pos-m_uiAbsIdxInLCU];                                                                                          }
   UInt          getSliceSegmentStartCU  ( UInt pos )                  { return m_sliceSegmentStartCU[pos-m_uiAbsIdxInLCU];                                                                                   }
   UInt&         getTotalBins            ()                            { return m_uiTotalBins;                                                                                                  }
@@ -765,7 +722,7 @@ public:
 
   UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
 
-#if MTK_DDD_G0063
+#if H_3D_DDD
   UChar*       getDDDepth        ()                        { return m_pucDisparityDerivedDepth;        }
   UChar        getDDDepth        ( UInt uiIdx )            { return m_pucDisparityDerivedDepth[uiIdx]; }
   Void         setDDDepth        ( UInt uiIdx, UChar n )   { m_pucDisparityDerivedDepth[uiIdx] = n;    }

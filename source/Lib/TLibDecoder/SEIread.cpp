@@ -98,7 +98,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
   case SEI::SUB_BITSTREAM_PROPERTY:
     fprintf( g_hTrace, "=========== Sub-bitstream property SEI message ===========\n");
     break;
@@ -244,7 +244,7 @@ Void SEIReader::xReadSEImessage(SEIMessages& seis, const NalUnitType nalUnitType
       sei = new SEIScalableNesting;
       xParseSEIScalableNesting((SEIScalableNesting&) *sei, nalUnitType, payloadSize, sps);
       break;
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
      case SEI::SUB_BITSTREAM_PROPERTY:
        sei = new SEISubBitstreamProperty;
        xParseSEISubBitstreamProperty((SEISubBitstreamProperty&) *sei);
@@ -776,7 +776,7 @@ Void SEIReader::xParseSEIScalableNesting(SEIScalableNesting& sei, const NalUnitT
   } while (m_pcBitstream->getNumBitsLeft() > 8);
 
 }
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
 Void SEIReader::xParseSEISubBitstreamProperty(SEISubBitstreamProperty &sei)
 {
   UInt uiCode;

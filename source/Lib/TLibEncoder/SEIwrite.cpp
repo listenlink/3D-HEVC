@@ -92,7 +92,7 @@ Void  xTraceSEIMessageType(SEI::PayloadType payloadType)
   case SEI::SCALABLE_NESTING:
     fprintf( g_hTrace, "=========== Scalable Nesting SEI message ===========\n");
     break;
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
     case SEI::SUB_BITSTREAM_PROPERTY:
     fprintf( g_hTrace, "=========== Sub-bitstream property SEI message ===========\n");
     break;
@@ -150,7 +150,7 @@ void SEIWriter::xWriteSEIpayloadData(TComBitIf& bs, const SEI& sei, TComSPS *sps
   case SEI::SCALABLE_NESTING:
     xWriteSEIScalableNesting(bs, *static_cast<const SEIScalableNesting*>(&sei), sps);
     break;
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
    case SEI::SUB_BITSTREAM_PROPERTY:
    xWriteSEISubBitstreamProperty(*static_cast<const SEISubBitstreamProperty*>(&sei));
    break;
@@ -588,7 +588,7 @@ Void SEIWriter::xWriteSEIScalableNesting(TComBitIf& bs, const SEIScalableNesting
   }
 }
 
-#if H_MV_HLS_7_SEI_P0204_26
+#if H_MV
 Void SEIWriter::xWriteSEISubBitstreamProperty(const SEISubBitstreamProperty &sei)
 {
   WRITE_CODE( sei.m_activeVpsId, 4, "active_vps_id" );
