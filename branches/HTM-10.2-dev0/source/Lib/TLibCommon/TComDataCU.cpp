@@ -3333,7 +3333,9 @@ inline Bool TComDataCU::xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Bool* abCand
         {
           cMv.setVer(0);
         }
+#if !(NTT_BUG_FIX_TK54)
         clipMv( cMv );
+#endif
 
         rightShiftMergeCandList( pcMvFieldNeighbours, puhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, iCount, (5-iCount), iCount3DV);
 
@@ -4109,8 +4111,10 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
               if( (cTexMvField.getRefIdx()>=0) && ( iValidDepRef >= 0 ) )
               {
                 TComMv cMv = cTexMvField.getMv() + cMvRounding;
-                cMv >>=2;
+                cMv >>=2;          
+#if !(NTT_BUG_FIX_TK54)
                 this->clipMv( cMv );
+#endif
                 pcMvFieldSP[2*iPartition + uiCurrRefListId].setMvField(cMv, iValidDepRef);
               }
             }
@@ -4260,7 +4264,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
             const TComMv cAdd( 2, 2 );
             cMVField.getMv() += cAdd;
             cMVField.getMv() >>= 2;
+#if !(NTT_BUG_FIX_TK54)
             clipMv( cMVField.getMv() );
+#endif
             tmpMV[ 0 ].setMvField( cMVField.getMv(), iValidDepRef );
             tmpDir = 1;
           }
@@ -4283,7 +4289,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
             const TComMv cAdd( 2, 2 );
             cMVField.getMv() += cAdd;
             cMVField.getMv() >>= 2;
+#if !(NTT_BUG_FIX_TK54)
             clipMv( cMVField.getMv() );
+#endif
             tmpMV[ 1 ].setMvField( cMVField.getMv(), iValidDepRef );
             tmpDir = 2;
           }
@@ -6226,7 +6234,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 
       if( bCheck )
       {
+#if !(NTT_BUG_FIX_TK54)
         clipMv(cColMv);
+#endif
         pDInfo->m_acNBDV = cColMv;
         pDInfo->m_aVIdxCan  = iTargetViewIdx;
 
@@ -6295,7 +6305,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
         if( cIDVInfo.m_bAvailab[iList][curPos] )
         {
           TComMv cDispVec = cIDVInfo.m_acMvCand[iList][ curPos ];
+#if !(NTT_BUG_FIX_TK54)
           clipMv( cDispVec );
+#endif
           pDInfo->m_acNBDV = cDispVec;
           pDInfo->m_aVIdxCan = cIDVInfo.m_aVIdxCan[iList][ curPos ];
 #if H_3D_NBDV_REF
@@ -6425,7 +6437,9 @@ Void TComDataCU::estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDe
 
     Pel iDisp = getMcpFromDM( pcBaseViewDepthPicYuv, cMvPred, iBlkX, iBlkY, iWidth, iHeight, aiShiftLUT );
     cMvPred->setHor( iDisp );
+#if !(NTT_BUG_FIX_TK54)
     clipMv(*cMvPred);
+#endif
   }
 }
 #endif //H_3D_NBDV_REF
@@ -6451,7 +6465,9 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
         Int refViewIdx  = pcTmpCU->getSlice()->getRefPic(eRefPicList, refId)->getViewIndex();
         if (refViewIdx != m_pcSlice->getViewIndex()) 
         {
+#if !(NTT_BUG_FIX_TK54)
           clipMv(cMvPred);
+#endif
           pNbDvInfo->m_acNBDV = cMvPred;
           pNbDvInfo->m_aVIdxCan = refViewIdx;
 #if H_3D_NBDV_REF
@@ -6858,7 +6874,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
                     }
 #endif
 #endif
+#if !(NTT_BUG_FIX_TK54)
                     clipMv( cMv );
+#endif
                     paiPdmRefIdx  [ uiCurrRefListId ] = iPdmRefIdx;
                     pacPdmMv      [ uiCurrRefListId ] = cMv;
                     stopLoop = true;
@@ -6916,8 +6934,10 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
                             cMv.setIDVVer    (cDv.getVer());  
                             cMv.setIDVVId    (iViewIndex); 
                           }
-
+                          
+#if !(NTT_BUG_FIX_TK54)
                           clipMv( cMv );
+#endif
                           bLoop_stop = true;
 
                           pcMvFieldSP[2*iPartition + uiCurrRefListId].setMvField(cMv, iPdmRefIdx);
@@ -7017,7 +7037,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
                   }
 #endif
 #endif
+#if !(NTT_BUG_FIX_TK54)
                   clipMv( cMv );
+#endif
                   paiPdmRefIdx  [ (uiCurrRefListId + (iLoopCan<<2)) ] = iPdmRefIdx;
                   pacPdmMv      [ (uiCurrRefListId + (iLoopCan<<2)) ] = cMv;
                   stopLoop = true;
@@ -7070,7 +7092,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
             }
 #endif
             cMv.setVer( 0 );
+#if !(NTT_BUG_FIX_TK54)
             clipMv( cMv );
+#endif
             pacPdmMv      [iRefListId + 2 + (iLoopCan<<2)] = cMv;
           }
           break;
