@@ -1285,10 +1285,19 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     pcCU->clipMv(cMVwithDisparity);
 
     assert ( cDistparity.bDV );
-
+    
+#if NTT_BUG_FIX_TK54
+    TComMv cNBDV = cDistparity.m_acNBDV;
+    pcCU->clipMv( cNBDV );
+    
+    pcPicYuvRef = pcPicYuvBaseCol->getPicYuvRec();
+    xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, bi, true );
+    xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, bi, true );
+#else
     pcPicYuvRef = pcPicYuvBaseCol->getPicYuvRec();
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cDistparity.m_acNBDV, iWidth, iHeight, pYuvB0, bi, true );
     xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cDistparity.m_acNBDV, iWidth, iHeight, pYuvB0, bi, true );
+#endif
     
     pcPicYuvRef = pcPicYuvBaseRef->getPicYuvRec();
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, bi, true );
