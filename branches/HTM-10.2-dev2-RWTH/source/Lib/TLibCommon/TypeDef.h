@@ -294,6 +294,8 @@
 #if H_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
 #define RWTH_DBBP_PACK_MODE               SIZE_2NxN
+#define MTK_H0072_DBBP_AMP_REM                 1
+#define RWTH_H0057_DBBP_NO_SPU                 1
 #endif
 
 

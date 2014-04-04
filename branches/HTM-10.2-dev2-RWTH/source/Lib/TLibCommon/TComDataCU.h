@@ -69,8 +69,10 @@ typedef struct _DBBPTmpData
   UChar       auhInterDir[2];       // for two segments
   Bool        abMergeFlag[2];       // for two segments
   UChar       auhMergeIndex[2];     // for two segments
+#if !RWTH_H0057_DBBP_NO_SPU
   Char        ahVSPFlag[2];         // for two segments
   DisInfo     acDvInfo[2];          // for two segments
+#endif
   
   PartSize    eVirtualPartSize;
   UInt        uiVirtualPartIndex;

@@ -781,8 +781,16 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       pcCU->getMvField(pcCU, uiPartAddr, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList]);
     }
     
+    AOF( pcCU->getARPW(uiPartAddr) == 0 );
+    AOF( pcCU->getICFlag(uiPartAddr) == false );
+    
+#if RWTH_H0057_DBBP_NO_SPU
+    AOF( pcCU->getSPIVMPFlag(uiPartAddr) == false );
+    AOF( pcCU->getVSPFlag(uiPartAddr) == 0 );
+#else
     pDBBPTmpData->ahVSPFlag[uiSegment] = pcCU->getVSPFlag( uiPartAddr );
     pDBBPTmpData->acDvInfo[uiSegment] = pcCU->getDvInfo( uiPartAddr );
+#endif
   }
   
   // do motion compensation for each segment as 2Nx2N
@@ -792,8 +800,10 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   {
     pcCU->setInterDirSubParts( pDBBPTmpData->auhInterDir[uiSegment], 0, 0, uiDepth );
     
+#if !RWTH_H0057_DBBP_NO_SPU
     pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], 0, 0, uiDepth );
     pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], 0, 0, uiDepth );
+#endif
     
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {
@@ -815,8 +825,10 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     
     pcCU->setDBBPFlagSubParts(true, uiPartAddr, uiSegment, uiDepth);
     
+#if !RWTH_H0057_DBBP_NO_SPU
     pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], uiPartAddr, uiSegment, uiDepth );
     pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], uiPartAddr, uiSegment, uiDepth );
+#endif
     
     pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[uiSegment], uiPartAddr, uiSegment, uiDepth); // interprets depth relative to LCU level
     
