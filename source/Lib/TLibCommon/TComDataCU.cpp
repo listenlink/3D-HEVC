@@ -3939,6 +3939,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
+#if RWTH_H0057_DBBP_NO_SPU
+      && !bDBBPFlag
+#endif
       )
     {
       vspFlag[numA1B1B0] = 1;
@@ -3961,6 +3964,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_H0057_DBBP_NO_SPU
+      && !bDBBPFlag
 #endif
       )
     {
@@ -3985,6 +3991,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
+#if RWTH_H0057_DBBP_NO_SPU
+      && !bDBBPFlag
+#endif
       )
     {
       vspFlag[numA1B1B0] = 1;
@@ -4005,6 +4014,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_H0057_DBBP_NO_SPU
+      && !bDBBPFlag
 #endif
       )
     {
@@ -4028,6 +4040,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_H0057_DBBP_NO_SPU
+      && !bDBBPFlag
 #endif
       )
     {
@@ -4688,6 +4703,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       !bARPFlag &&
+#endif
+#if RWTH_H0057_DBBP_NO_SPU
+      !bDBBPFlag &&
 #endif
       xAddVspCand( mrgCandIdx, &cDisInfo, iCount, abCandIsInter, pcMvFieldNeighbours, puhInterDirNeighbours, vspFlag, iCount3DV, inheritedVSPDisInfo ) )
   {

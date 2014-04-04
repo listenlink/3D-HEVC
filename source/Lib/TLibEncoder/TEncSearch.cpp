@@ -3665,8 +3665,10 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     {
       pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[0], 0, 0, pcCU->getDepth(0)); // interprets depth relative to LCU level
       
+#if !RWTH_H0057_DBBP_NO_SPU
       pcCU->setVSPFlagSubParts(pDBBPTmpData->ahVSPFlag[0], 0, 0, pcCU->getDepth(0));
       pcCU->setDvInfoSubParts(pDBBPTmpData->acDvInfo[0], 0, 0, pcCU->getDepth(0));
+#endif
       
       for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
       {
