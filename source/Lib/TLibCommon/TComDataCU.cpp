@@ -4090,71 +4090,132 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       Int iOffsetY = iPUHeight/2;
 
       Int         iTexPosX, iTexPosY;
+
       const TComMv cMvRounding( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
-      for (Int i=iCurrPosY; i < iCurrPosY + iHeight; i += iPUHeight)
+#if MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
+      
+      Int         iCenterPosX = iCurrPosX + ( ( iWidth /  iPUWidth ) >> 1 )  * iPUWidth + ( iPUWidth >> 1 );
+      Int         iCenterPosY = iCurrPosY + ( ( iHeight /  iPUHeight ) >> 1 )  * iPUHeight + (iPUHeight >> 1);
+      Int         iTexCenterCUAddr, iTexCenterAbsPartIdx;
+
+      if(iWidth == iPUWidth && iHeight == iPUHeight)
       {
-        for (Int j = iCurrPosX; j < iCurrPosX + iWidth; j += iPUWidth)
-        {
-          iTexPosX     = j + iOffsetX;
-          iTexPosY     = i + iOffsetY; 
-          pcTexRec->getCUAddrAndPartIdx( iTexPosX, iTexPosY, iTexCUAddr, iTexAbsPartIdx );
-          pcTexCU  = pcTexPic->getCU( iTexCUAddr );
+          iCenterPosX = iCurrPosX + (iWidth >> 1);
+          iCenterPosY = iCurrPosY + (iHeight >> 1);
+      }
 
-          if( pcTexCU && !pcTexCU->isIntra(iTexAbsPartIdx) )
+      // derivation of center motion parameters from the collocated texture CU
+
+      pcTexRec->getCUAddrAndPartIdx( iCenterPosX , iCenterPosY , iTexCenterCUAddr, iTexCenterAbsPartIdx );
+      TComDataCU* pcDefaultCU    = pcTexPic->getCU( iTexCenterCUAddr );
+
+      if( pcDefaultCU->getPredictionMode( iTexCenterAbsPartIdx ) != MODE_INTRA )
+      {
+          for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )
           {
-            for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )
-            {
               RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
-              TComMvField cTexMvField;
-              pcTexCU->getMvField( pcTexCU, iTexAbsPartIdx, eCurrRefPicList, cTexMvField );
-              Int iValidDepRef = getPic()->isTextRefValid( eCurrRefPicList, cTexMvField.getRefIdx() );
-              if( (cTexMvField.getRefIdx()>=0) && ( iValidDepRef >= 0 ) )
-              {
-                TComMv cMv = cTexMvField.getMv() + cMvRounding;
-                cMv >>=2;          
-#if !(NTT_BUG_FIX_TK54)
-                this->clipMv( cMv );
-#endif
-                pcMvFieldSP[2*iPartition + uiCurrRefListId].setMvField(cMv, iValidDepRef);
-              }
-            }
-          }
-          puhInterDirSP[iPartition] = (pcMvFieldSP[2*iPartition].getRefIdx()!=-1 ? 1: 0) + (pcMvFieldSP[2*iPartition+1].getRefIdx()!=-1 ? 2: 0);
-          if (puhInterDirSP[iPartition] == 0)
-          {
-            if (iInterDirSaved != 0)
-            {
-              puhInterDirSP[iPartition] = iInterDirSaved;
-              pcMvFieldSP[2*iPartition] = cMvFieldSaved[0];
-              pcMvFieldSP[2*iPartition + 1] = cMvFieldSaved[1];
-            }
-          }
-          else
-          {
-            if (iInterDirSaved ==0)
-            {
-              pbSPIVMPFlag[iCount] = true;
-              tmpDir = puhInterDirSP[iPartition];
-              tmpMV[0] = pcMvFieldSP[2*iPartition];
-              tmpMV[1] = pcMvFieldSP[2*iPartition+1];
 
-              if (iPartition != 0)
+              TComMvField cDefaultMvField;
+              pcDefaultCU->getMvField( pcDefaultCU, iTexCenterAbsPartIdx, eCurrRefPicList, cDefaultMvField );
+              Int         iDefaultRefIdx     = cDefaultMvField.getRefIdx();
+              if (iDefaultRefIdx >= 0)
               {
-                for (Int iPart = iPartition-1; iPart >= 0; iPart--)
+                  Int iDefaultRefPOC = pcDefaultCU->getSlice()->getRefPOC(eCurrRefPicList, iDefaultRefIdx);
+                  for (Int iRefPicList = 0; iRefPicList < m_pcSlice->getNumRefIdx( eCurrRefPicList ); iRefPicList++)
+                  {
+                      if (iDefaultRefPOC == m_pcSlice->getRefPOC(eCurrRefPicList, iRefPicList))
+                      {
+                          pbSPIVMPFlag[iCount] = true;
+                          TComMv cMv = cDefaultMvField.getMv() + cMvRounding;
+                          cMv >>= 2;
+                          clipMv( cMv );
+                          cMvFieldSaved[eCurrRefPicList].setMvField(cMv, iRefPicList) ;
+                          break;
+                      }
+                  }
+              }
+          }
+      }
+      if ( pbSPIVMPFlag[iCount] == true )
+      {   
+          iInterDirSaved = (cMvFieldSaved[0].getRefIdx()!=-1 ? 1: 0) + (cMvFieldSaved[1].getRefIdx()!=-1 ? 2: 0);
+          tmpDir = iInterDirSaved;
+          tmpMV[0] = cMvFieldSaved[0];
+          tmpMV[1] = cMvFieldSaved[1];
+      }
+
+      if ( iInterDirSaved != 0 )
+      {
+#endif
+          for (Int i=iCurrPosY; i < iCurrPosY + iHeight; i += iPUHeight)
+          {
+            for (Int j = iCurrPosX; j < iCurrPosX + iWidth; j += iPUWidth)
+            {
+              iTexPosX     = j + iOffsetX;
+              iTexPosY     = i + iOffsetY; 
+              pcTexRec->getCUAddrAndPartIdx( iTexPosX, iTexPosY, iTexCUAddr, iTexAbsPartIdx );
+              pcTexCU  = pcTexPic->getCU( iTexCUAddr );
+
+              if( pcTexCU && !pcTexCU->isIntra(iTexAbsPartIdx) )
+              {
+                for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )
                 {
-                  puhInterDirSP[iPart] = puhInterDirSP[iPartition];
-                  pcMvFieldSP[2*iPart] = pcMvFieldSP[2*iPartition];
-                  pcMvFieldSP[2*iPart + 1] = pcMvFieldSP[2*iPartition + 1];
+                  RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
+                  TComMvField cTexMvField;
+                  pcTexCU->getMvField( pcTexCU, iTexAbsPartIdx, eCurrRefPicList, cTexMvField );
+                  Int iValidDepRef = getPic()->isTextRefValid( eCurrRefPicList, cTexMvField.getRefIdx() );
+                  if( (cTexMvField.getRefIdx()>=0) && ( iValidDepRef >= 0 ) )
+                  {
+                    TComMv cMv = cTexMvField.getMv() + cMvRounding;
+                    cMv >>=2;          
+#if !(NTT_BUG_FIX_TK54)
+                    this->clipMv( cMv );
+#endif
+                    pcMvFieldSP[2*iPartition + uiCurrRefListId].setMvField(cMv, iValidDepRef);
+                  }
                 }
               }
+              puhInterDirSP[iPartition] = (pcMvFieldSP[2*iPartition].getRefIdx()!=-1 ? 1: 0) + (pcMvFieldSP[2*iPartition+1].getRefIdx()!=-1 ? 2: 0);
+              if (puhInterDirSP[iPartition] == 0)
+              {
+                if (iInterDirSaved != 0)
+                {
+                  puhInterDirSP[iPartition] = iInterDirSaved;
+                  pcMvFieldSP[2*iPartition] = cMvFieldSaved[0];
+                  pcMvFieldSP[2*iPartition + 1] = cMvFieldSaved[1];
+                }
+              }
+#if !MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
+              else
+              {
+                if (iInterDirSaved ==0)
+                {
+                  pbSPIVMPFlag[iCount] = true;
+                  tmpDir = puhInterDirSP[iPartition];
+                  tmpMV[0] = pcMvFieldSP[2*iPartition];
+                  tmpMV[1] = pcMvFieldSP[2*iPartition+1];
+
+                  if (iPartition != 0)
+                  {
+                    for (Int iPart = iPartition-1; iPart >= 0; iPart--)
+                    {
+                      puhInterDirSP[iPart] = puhInterDirSP[iPartition];
+                      pcMvFieldSP[2*iPart] = pcMvFieldSP[2*iPartition];
+                      pcMvFieldSP[2*iPart + 1] = pcMvFieldSP[2*iPartition + 1];
+                    }
+                  }
+                }
+                iInterDirSaved = puhInterDirSP[iPartition];
+                cMvFieldSaved[0] = pcMvFieldSP[2*iPartition];
+                cMvFieldSaved[1] = pcMvFieldSP[2*iPartition + 1];
+              }
+#endif
+              iPartition ++;
             }
-            iInterDirSaved = puhInterDirSP[iPartition];
-            cMvFieldSaved[0] = pcMvFieldSP[2*iPartition];
-            cMvFieldSaved[1] = pcMvFieldSP[2*iPartition + 1];
           }
-          iPartition ++;
-        }
+#if MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
       }
+#endif
 #if H_3D_FCO
     }
 #endif
