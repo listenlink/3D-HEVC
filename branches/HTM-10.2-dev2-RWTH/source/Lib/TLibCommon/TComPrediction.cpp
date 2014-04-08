@@ -638,7 +638,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   pDepthPels = pDepthBlockStart;
   
   // start mapping process
-#if !MTK_H0072_DBBP_AMP_REM
+#if !MTK_DBBP_AMP_REM_H0072
   Bool bAMPAvail = uiSize > 8;
   Int matchedPartSum[6][2] = {{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}}; // counter for each part size and boolean option
   PartSize virtualPartSizes[6] = { SIZE_Nx2N, SIZE_2NxN, SIZE_2NxnU, SIZE_2NxnD, SIZE_nLx2N, SIZE_nRx2N };
@@ -648,7 +648,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
 #endif
   
   UInt uiHalfSize = uiSize>>1;
-#if !MTK_H0072_DBBP_AMP_REM
+#if !MTK_DBBP_AMP_REM_H0072
   UInt uiQuarterSize = uiSize>>2;
 #endif
   
@@ -683,7 +683,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
         matchedPartSum[1][1-ucSegment]++;
       }
       
-#if !MTK_H0072_DBBP_AMP_REM
+#if !MTK_DBBP_AMP_REM_H0072
       if( bAMPAvail )
       {
         // SIZE_2NxnU
@@ -736,7 +736,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   PartSize matchedPartSize = SIZE_NONE;
   
   Int iMaxMatchSum = 0;
-#if !MTK_H0072_DBBP_AMP_REM
+#if !MTK_DBBP_AMP_REM_H0072
   for(Int p=0; p<6; p++)  // loop over partition
 #else
   for(Int p=0; p<2; p++)  // loop over partition

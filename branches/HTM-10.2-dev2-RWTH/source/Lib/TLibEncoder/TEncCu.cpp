@@ -2382,7 +2382,7 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     pDBBPTmpData->abMergeFlag[uiSegment] = rpcTempCU->getMergeFlag(0);
     pDBBPTmpData->auhMergeIndex[uiSegment] = rpcTempCU->getMergeIndex(0);
     
-#if RWTH_H0057_DBBP_NO_SPU
+#if RWTH_DBBP_NO_SPU_H0057
     AOF( rpcTempCU->getSPIVMPFlag(0) == false );
     AOF( rpcTempCU->getVSPFlag(0) == 0 );
 #else
@@ -2420,7 +2420,7 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     rpcTempCU->setMergeFlagSubParts(pDBBPTmpData->abMergeFlag[uiSegment], uiPartAddr, uiSegment, uhDepth);
     rpcTempCU->setMergeIndexSubParts(pDBBPTmpData->auhMergeIndex[uiSegment], uiPartAddr, uiSegment, uhDepth);
     
-#if !RWTH_H0057_DBBP_NO_SPU
+#if !RWTH_DBBP_NO_SPU_H0057
     rpcTempCU->setVSPFlagSubParts(pDBBPTmpData->ahVSPFlag[uiSegment], uiPartAddr, uiSegment, uhDepth);
     rpcTempCU->setDvInfoSubParts(pDBBPTmpData->acDvInfo[uiSegment], uiPartAddr, uiSegment, uhDepth);
 #endif

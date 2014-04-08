@@ -161,7 +161,7 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
       
       pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
       
-#if RWTH_H0057_DBBP_NO_SPU
+#if RWTH_DBBP_NO_SPU_H0057
       // make sure that DBBP flag is set for both segments
       UInt uiPUOffset = ( g_auiPUOffset[UInt( eVirtualPartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
       pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx, 0, uiDepth);

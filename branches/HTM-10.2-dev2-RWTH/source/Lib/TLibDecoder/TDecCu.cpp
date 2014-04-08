@@ -781,10 +781,9 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       pcCU->getMvField(pcCU, uiPartAddr, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList]);
     }
     
+#if RWTH_DBBP_NO_SPU_H0057
     AOF( pcCU->getARPW(uiPartAddr) == 0 );
     AOF( pcCU->getICFlag(uiPartAddr) == false );
-    
-#if RWTH_H0057_DBBP_NO_SPU
     AOF( pcCU->getSPIVMPFlag(uiPartAddr) == false );
     AOF( pcCU->getVSPFlag(uiPartAddr) == 0 );
 #else
@@ -800,7 +799,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   {
     pcCU->setInterDirSubParts( pDBBPTmpData->auhInterDir[uiSegment], 0, 0, uiDepth );
     
-#if !RWTH_H0057_DBBP_NO_SPU
+#if !RWTH_DBBP_NO_SPU_H0057
     pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], 0, 0, uiDepth );
     pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], 0, 0, uiDepth );
 #endif
@@ -825,7 +824,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     
     pcCU->setDBBPFlagSubParts(true, uiPartAddr, uiSegment, uiDepth);
     
-#if !RWTH_H0057_DBBP_NO_SPU
+#if !RWTH_DBBP_NO_SPU_H0057
     pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], uiPartAddr, uiSegment, uiDepth );
     pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], uiPartAddr, uiSegment, uiDepth );
 #endif
