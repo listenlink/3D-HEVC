@@ -638,12 +638,19 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   pDepthPels = pDepthBlockStart;
   
   // start mapping process
+#if !MTK_DBBP_AMP_REM_H0072
   Bool bAMPAvail = uiSize > 8;
   Int matchedPartSum[6][2] = {{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}}; // counter for each part size and boolean option
   PartSize virtualPartSizes[6] = { SIZE_Nx2N, SIZE_2NxN, SIZE_2NxnU, SIZE_2NxnD, SIZE_nLx2N, SIZE_nRx2N };
+#else
+  Int matchedPartSum[2][2] = {{0,0},{0,0}}; // counter for each part size and boolean option
+  PartSize virtualPartSizes[2] = { SIZE_Nx2N, SIZE_2NxN};
+#endif
   
   UInt uiHalfSize = uiSize>>1;
+#if !MTK_DBBP_AMP_REM_H0072
   UInt uiQuarterSize = uiSize>>2;
+#endif
   
   for (Int y=0; y<uiSize; y+=iSubSample)
   {
@@ -676,6 +683,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
         matchedPartSum[1][1-ucSegment]++;
       }
       
+#if !MTK_DBBP_AMP_REM_H0072
       if( bAMPAvail )
       {
         // SIZE_2NxnU
@@ -718,6 +726,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
           matchedPartSum[5][1-ucSegment]++;
         }
       }
+#endif
     }
     
     // next row
@@ -727,7 +736,11 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   PartSize matchedPartSize = SIZE_NONE;
   
   Int iMaxMatchSum = 0;
-  for(Int p=0; p<6; p++)  // loop over partition sizes
+#if !MTK_DBBP_AMP_REM_H0072
+  for(Int p=0; p<6; p++)  // loop over partition
+#else
+  for(Int p=0; p<2; p++)  // loop over partition
+#endif
   {
     for( Int b=0; b<=1; b++ ) // loop over boolean options
     {
@@ -1285,10 +1298,19 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     pcCU->clipMv(cMVwithDisparity);
 
     assert ( cDistparity.bDV );
-
+    
+#if NTT_BUG_FIX_TK54
+    TComMv cNBDV = cDistparity.m_acNBDV;
+    pcCU->clipMv( cNBDV );
+    
+    pcPicYuvRef = pcPicYuvBaseCol->getPicYuvRec();
+    xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, bi, true );
+    xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, bi, true );
+#else
     pcPicYuvRef = pcPicYuvBaseCol->getPicYuvRec();
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cDistparity.m_acNBDV, iWidth, iHeight, pYuvB0, bi, true );
     xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cDistparity.m_acNBDV, iWidth, iHeight, pYuvB0, bi, true );
+#endif
     
     pcPicYuvRef = pcPicYuvBaseRef->getPicYuvRec();
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, bi, true );
