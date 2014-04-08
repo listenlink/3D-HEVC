@@ -324,7 +324,7 @@
 // #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
-
+#define MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133    1
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
