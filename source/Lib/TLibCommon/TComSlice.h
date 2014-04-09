@@ -2178,6 +2178,9 @@ public:
   Void      setApplyIC( Bool b )                                { m_bApplyIC = b; }
   Bool      getApplyIC()                                        { return m_bApplyIC; }
   Void      xSetApplyIC();
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  Void      xSetApplyIC(Bool bUseLowLatencyICEnc);
+#endif
   Void      setIcSkipParseFlag( Bool b )                        { m_icSkipParseFlag = b; }
   Bool      getIcSkipParseFlag()                                { return m_icSkipParseFlag; }
 #endif

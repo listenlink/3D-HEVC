@@ -118,6 +118,11 @@
                                               // MTK_IC_FLAG_CABAC_SIMP_G0061
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
 
+#define MTK_LOW_LATENCY_IC_ENCODING_H0086   1 // Low-latency IC encoding in JCT3V-H0086
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+#define MTK_LOW_LATENCY_IC_ENCODING_THRESHOLD_H0086    0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
+#endif
+
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
