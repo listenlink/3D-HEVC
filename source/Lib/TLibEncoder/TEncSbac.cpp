@@ -2312,8 +2312,11 @@ Void TEncSbac::codeDeltaDC( TComDataCU* pcCU, UInt absPartIdx )
     {
       dimDeltaDC = isDimDeltaDC( dir );
     }
-
+#if MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113
+    m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
+#else
     m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get( 0, 0, uiNumSegments-1 ) );
+#endif
   }
   else //all-zero inter SDC is not allowed
   {
