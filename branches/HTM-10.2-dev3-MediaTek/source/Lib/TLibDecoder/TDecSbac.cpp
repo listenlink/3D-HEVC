@@ -2067,9 +2067,11 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
   {
     UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
     uiNumSegments = isDimMode( dir ) ? 2 : 1;
-
+#if MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113
+    m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
+#else
     m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, uiNumSegments-1 ) );
-
+#endif
     if( pcCU->getSDCFlag( absPartIdx ) )
     {
       assert( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N );
