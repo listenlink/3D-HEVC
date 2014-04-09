@@ -162,7 +162,16 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   {
     uiAbsPartIdx = 0;
   }
-
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  else
+  {
+    g_aICEnableCANDIDATE[pcCU->getSlice()->getDepth()]++;
+    if(pcCU->getICFlag(uiAbsPartIdx))
+    {
+      g_aICEnableNUM[pcCU->getSlice()->getDepth()]++;
+    }
+  }
+#endif
   if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
     m_pcEntropyCoderIf->codeICFlag( pcCU, uiAbsPartIdx );
 }
