@@ -195,11 +195,13 @@ Void TDecEntropy::decodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   {
     return;
   }
+#if !MTK_SDC_FLAG_FIX_H0095
 #if H_3D_DIM_SDC
   if( pcCU->getSDCFlag(uiAbsPartIdx) )
   {
     return;
   }
+#endif
 #endif
   
   m_pcEntropyDecoderIf->parseIPCMInfo( pcCU, uiAbsPartIdx, uiDepth );
