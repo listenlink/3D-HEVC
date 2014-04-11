@@ -2351,6 +2351,12 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
 #endif // H_3D_NBDV_REF
     
     TComMv cDv = depthRefineFlag ? DvInfo.m_acDoNBDV : DvInfo.m_acNBDV;
+#if SEC_VER_DONBDV_H0103
+    if( depthRefineFlag )
+    {
+      cDv.setVer(0);
+    }
+#endif
     
     Int depthPosX = Clip3(0,   iPictureWidth - iWidth,  iBlkX + ((cDv.getHor()+2)>>2));
     Int depthPosY = Clip3(0,   iPictureHeight- iHeight, iBlkY + ((cDv.getVer()+2)>>2));
@@ -6668,6 +6674,12 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
 #endif // H_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
+#if SEC_VER_DONBDV_H0103
+  if( depthRefineFlag )
+  {
+    cDv.setVer(0);
+  }
+#endif
 
   Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
   Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
@@ -6804,6 +6816,12 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 #endif // H_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
+#if SEC_VER_DONBDV_H0103
+  if( depthRefineFlag )
+  {
+    cDv.setVer(0);
+  }
+#endif
 
   Bool abPdmAvailable[8] =  {false, false, false, false, false, false, false, false};
 #if H_3D_NBDV

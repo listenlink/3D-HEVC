@@ -251,6 +251,7 @@
 #define DVFROM_LEFT                       0
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
+#define SEC_VER_DONBDV_H0103              1   // Vertical DV Restriction for DoNBDV
 #endif
 
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
