@@ -200,6 +200,8 @@
 #define MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113     1 // Use only one context for CABAC of delta_dc_flag as in JCTVC-H0084, JCTVC-H0100 and JCTVC-H0113
 #define MTK_SDC_FLAG_FIX_H0095            1   // Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
 
+#define MTK_DMM_SIMP_CODE_H0092           1   // Remove CABAC context for DMM1 mode coding
+
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
                                               // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
