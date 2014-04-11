@@ -188,6 +188,9 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 #if H_3D_IC
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+    m_cTEncTop.setUseICLowLatencyEnc           ( m_bUseLowLatencyICEnc );
+#endif
 #endif
   //========== Depth intra modes ==========
 #if H_3D_DIM

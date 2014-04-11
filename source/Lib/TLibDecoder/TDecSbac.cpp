@@ -86,7 +86,7 @@ TDecSbac::TDecSbac()
 , m_cDdcFlagSCModel           ( 1,             1,               NUM_DDC_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDdcDataSCModel           ( 1,             1,               NUM_DDC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cAngleFlagSCModel         ( 1,             1,               NUM_ANGLE_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
 , m_cDmm1DataSCModel          ( 1,             1,               NUM_DMM1_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if H_3D_DIM_SDC
@@ -170,7 +170,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cDdcFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DDC_FLAG );
   m_cDdcDataSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DDC_DATA );
   m_cAngleFlagSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_ANGLE_FLAG );
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
   m_cDmm1DataSCModel.initBuffer          ( sliceType, qp, (UChar*)INIT_DMM1_DATA );
 #endif
 #if H_3D_DIM_SDC
@@ -240,7 +240,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
   m_cAngleFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_ANGLE_FLAG );
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
 #endif
 #if H_3D_DIM_SDC
@@ -422,7 +422,11 @@ Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
   UInt uiSymbol, uiIdx = 0;
   for( Int i = 0; i < iNumBit; i++ )
   {
-    m_pcTDecBinIf->decodeBin( uiSymbol, m_cDmm1DataSCModel.get(0, 0, 0) );
+#if MTK_DMM_SIMP_CODE_H0092
+      m_pcTDecBinIf->decodeBinEP( uiSymbol );
+#else
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cDmm1DataSCModel.get(0, 0, 0) );
+#endif
     uiIdx += uiSymbol << i;
   }
   ruiTabIdx = uiIdx;
@@ -2067,9 +2071,11 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
   {
     UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
     uiNumSegments = isDimMode( dir ) ? 2 : 1;
-
+#if MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113
+    m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
+#else
     m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, uiNumSegments-1 ) );
-
+#endif
     if( pcCU->getSDCFlag( absPartIdx ) )
     {
       assert( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N );
