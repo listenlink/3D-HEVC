@@ -850,6 +850,11 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
   UInt  uiDstStride = pOutYuv->getStride();
   
   UInt  uiMaskStride= MAX_CU_SIZE;
+#if SEC_DBBP_FILTERING_H0104
+  Pel  filSrc = 0;
+  Pel* tmpTar = 0;
+  tmpTar = (Pel *)xMalloc(Pel, uiWidth*uiHeight);
+#endif
   
   // backup pointer
   Bool* pMaskStart = pMask;
@@ -863,6 +868,9 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
       AOF( ucSegment < 2 );
       
       // filtering
+#if SEC_DBBP_FILTERING_H0104
+      tmpTar[y*uiWidth+x] = piSrc[ucSegment][x];
+#else
       Bool t = (y==0)?pMaskStart[(y+1)*uiMaskStride+x]:pMaskStart[(y-1)*uiMaskStride+x];
       Bool l = (x==0)?pMaskStart[y*uiMaskStride+x+1]:pMaskStart[y*uiMaskStride+x-1];
       Bool b = (y==uiHeight-1)?pMaskStart[(y-1)*uiMaskStride+x]:pMaskStart[(y+1)*uiMaskStride+x];
@@ -870,13 +878,53 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
       
       Bool bBlend = !((t&&l&&b&&r) || (!t&&!l&&!b&&!r));
       piDst[x] = bBlend?((piSrc[0][x]+piSrc[1][x]+1)>>1):piSrc[ucSegment][x];
+#endif
     }
     
     piSrc[0]  += uiSrcStride;
     piSrc[1]  += uiSrcStride;
+#if !SEC_DBBP_FILTERING_H0104
     piDst     += uiDstStride;
+#endif
     pMask     += uiMaskStride;
   }
+
+#if SEC_DBBP_FILTERING_H0104
+  for (Int y=0; y<uiHeight; y++)
+  {
+    for (Int x=0; x<uiWidth; x++)
+    {
+      Bool t = (y==0)?pMaskStart[y*uiMaskStride+x]:pMaskStart[(y-1)*uiMaskStride+x];
+      Bool l = (x==0)?pMaskStart[y*uiMaskStride+x]:pMaskStart[y*uiMaskStride+x-1];
+      Bool b = (y==uiHeight-1)?pMaskStart[y*uiMaskStride+x]:pMaskStart[(y+1)*uiMaskStride+x];
+      Bool r = (x==uiWidth-1)?pMaskStart[y*uiMaskStride+x]:pMaskStart[y*uiMaskStride+x+1];
+      Bool c =pMaskStart[y*uiMaskStride+x];
+
+      Pel left, right, top, bottom;
+      left   = (x==0)          ? tmpTar[y*uiWidth+x] : tmpTar[y*uiWidth+x-1];
+      right  = (x==uiWidth-1)  ? tmpTar[y*uiWidth+x] : tmpTar[y*uiWidth+x+1];
+      top    = (y==0)          ? tmpTar[y*uiWidth+x] : tmpTar[(y-1)*uiWidth+x];
+      bottom = (y==uiHeight-1) ? tmpTar[y*uiWidth+x] : tmpTar[(y+1)*uiWidth+x];
+
+      if(!((l&&r&&c) || (!l&&!r&&!c)))
+      {
+        filSrc = Clip3( Pel( 0 ), Pel( 255 ), Pel(( left + (tmpTar[y*uiWidth+x] << 1) + right ) >> 2 ));
+      }
+      else
+      {
+        filSrc = tmpTar[y*uiWidth+x];
+      }
+
+      if(!((t&&b&&c) || (!t&&!b&&!c)))
+      {
+        filSrc = Clip3( Pel( 0 ), Pel( 255 ), Pel(( top + (filSrc << 1) + bottom ) >> 2 ));
+      }
+      piDst[x] = filSrc;
+    }
+    piDst     += uiDstStride;
+  }
+  if ( tmpTar    ) { xFree(tmpTar);             tmpTar        = NULL; }
+#endif
   
   // now combine chroma
   Pel*  piSrcU[2]       = { pInYuv[0]->getCbAddr(uiPartAddr), pInYuv[1]->getCbAddr(uiPartAddr) };
@@ -887,6 +935,12 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
   UInt  uiDstStrideC    = pOutYuv->getCStride();
   UInt  uiWidthC        = uiWidth >> 1;
   UInt  uiHeightC       = uiHeight >> 1;
+#if SEC_DBBP_FILTERING_H0104
+  Pel  filSrcU = 0, filSrcV = 0;
+  Pel* tmpTarU = 0, *tmpTarV = 0;
+  tmpTarU = (Pel *)xMalloc(Pel, uiWidthC*uiHeightC);
+  tmpTarV = (Pel *)xMalloc(Pel, uiWidthC*uiHeightC);
+#endif
   pMask = pMaskStart;
   
   for (Int y=0; y<uiHeightC; y++)
@@ -897,6 +951,10 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
       AOF( ucSegment < 2 );
       
       // filtering
+#if SEC_DBBP_FILTERING_H0104
+      tmpTarU[y*uiWidthC+x] = piSrcU[ucSegment][x];
+      tmpTarV[y*uiWidthC+x] = piSrcV[ucSegment][x];
+#else
       Bool t = (y==0)?pMaskStart[(y+1)*2*uiMaskStride+x*2]:pMaskStart[(y-1)*2*uiMaskStride+x*2];
       Bool l = (x==0)?pMaskStart[y*2*uiMaskStride+(x+1)*2]:pMaskStart[y*2*uiMaskStride+(x-1)*2];
       Bool b = (y==uiHeightC-1)?pMaskStart[(y-1)*2*uiMaskStride+x*2]:pMaskStart[(y+1)*2*uiMaskStride+x*2];
@@ -906,16 +964,69 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
       
       piDstU[x] = bBlend?((piSrcU[0][x]+piSrcU[1][x]+1)>>1):piSrcU[ucSegment][x];
       piDstV[x] = bBlend?((piSrcV[0][x]+piSrcV[1][x]+1)>>1):piSrcV[ucSegment][x];
+#endif
     }
     
     piSrcU[0]   += uiSrcStrideC;
     piSrcU[1]   += uiSrcStrideC;
     piSrcV[0]   += uiSrcStrideC;
     piSrcV[1]   += uiSrcStrideC;
+#if !SEC_DBBP_FILTERING_H0104
     piDstU      += uiDstStrideC;
     piDstV      += uiDstStrideC;
+#endif
     pMask       += 2*uiMaskStride;
   }
+
+#if SEC_DBBP_FILTERING_H0104
+  for (Int y=0; y<uiHeightC; y++)
+  {
+    for (Int x=0; x<uiWidthC; x++)
+    {
+      Bool t = (y==0)?pMaskStart[y*2*uiMaskStride+x*2]:pMaskStart[(y-1)*2*uiMaskStride+x*2];
+      Bool l = (x==0)?pMaskStart[y*2*uiMaskStride+x*2]:pMaskStart[y*2*uiMaskStride+(x-1)*2];
+      Bool b = (y==uiHeightC-1)?pMaskStart[y*2*uiMaskStride+x*2]:pMaskStart[(y+1)*2*uiMaskStride+x*2];
+      Bool r = (x==uiWidthC-1)?pMaskStart[y*2*uiMaskStride+x*2]:pMaskStart[y*2*uiMaskStride+(x+1)*2];
+      Bool c =pMaskStart[y*2*uiMaskStride+x*2];
+
+      Pel leftU, rightU, topU, bottomU;
+      leftU   = (x==0)           ? tmpTarU[y*uiWidthC+x] : tmpTarU[y*uiWidthC+x-1];
+      rightU  = (x==uiWidthC-1)  ? tmpTarU[y*uiWidthC+x] : tmpTarU[y*uiWidthC+x+1];
+      topU    = (y==0)           ? tmpTarU[y*uiWidthC+x] : tmpTarU[(y-1)*uiWidthC+x];
+      bottomU = (y==uiHeightC-1) ? tmpTarU[y*uiWidthC+x] : tmpTarU[(y+1)*uiWidthC+x];
+
+      Pel leftV, rightV, topV, bottomV;
+      leftV   = (x==0)           ? tmpTarV[y*uiWidthC+x] : tmpTarV[y*uiWidthC+x-1];
+      rightV  = (x==uiWidthC-1)  ? tmpTarV[y*uiWidthC+x] : tmpTarV[y*uiWidthC+x+1];
+      topV    = (y==0)           ? tmpTarV[y*uiWidthC+x] : tmpTarV[(y-1)*uiWidthC+x];
+      bottomV = (y==uiHeightC-1) ? tmpTarV[y*uiWidthC+x] : tmpTarV[(y+1)*uiWidthC+x];
+
+      if(!((l&&r&&c) || (!l&&!r&&!c)))
+      {
+        filSrcU = Clip3( Pel( 0 ), Pel( 255 ), Pel(( leftU + (tmpTarU[y*uiWidthC+x] << 1) + rightU ) >> 2 ));
+        filSrcV = Clip3( Pel( 0 ), Pel( 255 ), Pel(( leftV + (tmpTarV[y*uiWidthC+x] << 1) + rightV ) >> 2 ));
+      }
+      else
+      {
+        filSrcU = tmpTarU[y*uiWidthC+x];
+        filSrcV = tmpTarV[y*uiWidthC+x];
+      }
+
+      if(!((t&&b&&c) || (!t&&!b&&!c)))
+      {
+        filSrcU = Clip3( Pel( 0 ), Pel( 255 ), Pel(( topU + (filSrcU << 1) + bottomU ) >> 2 ));
+        filSrcV = Clip3( Pel( 0 ), Pel( 255 ), Pel(( topV + (filSrcV << 1) + bottomV ) >> 2 ));
+      }
+
+      piDstU[x] = filSrcU;
+      piDstV[x] = filSrcV;
+    }
+    piDstU      += uiDstStrideC;
+    piDstV      += uiDstStrideC;
+  }
+  if ( tmpTarU    ) { xFree(tmpTarU);             tmpTarU        = NULL; }
+  if ( tmpTarV    ) { xFree(tmpTarV);             tmpTarV        = NULL; }
+#endif
 }
 #endif
 
