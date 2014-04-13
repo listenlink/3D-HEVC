@@ -197,4 +197,83 @@ public:
 
 //! \}
 
+#if ETRIKHU_CLEANUP_H0083
+class TComMotionCand
+{
+public:
+  Bool                  m_bAvailable;
+  TComMvField           m_cMvField[2];
+  UChar                 m_uDir;
+#if H_3D_VSP
+  Int                   m_iVspFlag;
+#endif  
+  Bool                  m_bSPIVMPFlag;
+
+public:
+  TComMotionCand()
+  {
+    m_bAvailable = false;
+    m_uDir = 0;
+#if H_3D_VSP
+    m_iVspFlag = 0;
+#endif
+    m_bSPIVMPFlag = false;
+  }
+
+  ~TComMotionCand()
+  {
+
+  }
+
+  Void init()
+  {
+    TComMv cZeroMv;
+
+    m_bAvailable = false;
+    m_uDir = 0;
+#if H_3D_VSP
+    m_iVspFlag = 0;
+#endif
+    m_bSPIVMPFlag = false;
+    m_cMvField[0].setMvField(cZeroMv, NOT_VALID);
+    m_cMvField[1].setMvField(cZeroMv, NOT_VALID);
+  }
+
+  Void setCand(TComMvField* pcMvFieldNeighbours, UChar uhInterDirNeighbours
+#if H_3D_VSP
+    , Int vspFlag
+#endif
+    , Bool bSPIVMPFlag
+    )
+  {
+    m_bAvailable = true;
+    m_cMvField[0] = pcMvFieldNeighbours[0];
+    m_cMvField[1] = pcMvFieldNeighbours[1];
+    m_uDir = uhInterDirNeighbours;
+#if H_3D_VSP
+    m_iVspFlag = vspFlag;
+#endif
+    m_bSPIVMPFlag = bSPIVMPFlag;
+  }
+
+
+  Void getCand(Int iCount, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours
+#if H_3D_VSP
+    , Int* vspFlag
+#endif
+    , Bool* pbSPIVMPFlag
+    )
+  {
+    pcMvFieldNeighbours[iCount<<1] = m_cMvField[0];
+    pcMvFieldNeighbours[(iCount<<1) + 1] = m_cMvField[1];
+    puhInterDirNeighbours[iCount] = m_uDir;
+#if H_3D_VSP
+    vspFlag[iCount] = m_iVspFlag;
+#endif
+    pbSPIVMPFlag[iCount] = m_bSPIVMPFlag;
+  }
+};
+#endif
+
+
 #endif // __TCOMMOTIONINFO__
