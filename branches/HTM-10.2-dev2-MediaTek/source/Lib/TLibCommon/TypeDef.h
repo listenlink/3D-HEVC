@@ -268,6 +268,7 @@
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
 #define SEC_NO_RESI_DLT_H0105             1
+#define MTK_DLT_CODING_FIX_H0091          1
 #endif
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
