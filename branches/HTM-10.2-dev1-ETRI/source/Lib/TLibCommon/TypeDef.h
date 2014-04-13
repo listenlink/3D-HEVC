@@ -38,6 +38,7 @@
 #ifndef _TYPEDEF__
 #define _TYPEDEF__
 
+
 //! \ingroup TLibCommon
 //! \{
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -222,6 +223,9 @@
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
+
+#define ETRIKHU_BUGFIX_H0083              1   // bug-fix for DV candidate pruning
+#define ETRIKHU_CLEANUP_H0083             1   // cleaned-up source code for constructing merging candidate list
 
 // Rate Control
 #define KWU_FIX_URQ                       1
@@ -797,6 +801,25 @@ enum MVP_DIR
   MD_BELOW_LEFT,        ///< MVP of below left block
   MD_ABOVE_LEFT         ///< MVP of above left block
 };
+
+/// merging candidates
+#if ETRIKHU_CLEANUP_H0083
+enum DefaultMergCandOrder
+{
+  MRG_T = 0,            ///< MPI
+  MRG_D,                ///< DDD
+  MRG_IVMC,             ///< Temporal inter-view
+  MRG_A1,               ///< Left
+  MRG_B1,               ///< Above
+  MRG_B0,               ///< Above right
+  MRG_IVDC,             ///< Disparity inter-view
+  MRG_VSP,              ///< VSP
+  MRG_A0,               ///< Left bottom
+  MRG_B2,               ///< Above left
+  MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
+  MRG_COL               ///< Temporal co-located
+};
+#endif
 
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE

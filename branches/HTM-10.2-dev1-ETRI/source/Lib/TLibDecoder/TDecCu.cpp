@@ -430,11 +430,23 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo
+    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours 
+#if !ETRIKHU_CLEANUP_H0083
+      ,vspFlag
+#endif
+      , inheritedVSPDisInfo
 #if H_3D_SPIVMP
-      , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
+      , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand, uiMergeIndex );
+
+#if ETRIKHU_CLEANUP_H0083
+    m_ppcCU[uiDepth]->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
+#if H_3D_SPIVMP
+      , bSPIVMPFlag
+#endif
+      , numValidMergeCand );
+#endif
     pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 #else
 #if H_3D
