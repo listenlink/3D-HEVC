@@ -481,9 +481,15 @@ Void TEncSbac::xWriteExGolombLevel( UInt uiSymbol, ContextModel& rcSCModel  )
   {
     m_pcBinIf->encodeBin( 1, rcSCModel );
     UInt uiCount = 0;
+#if QC_SIMP_DELTADC_CODING_H0131
+    Bool bNoExGo = ( uiSymbol < 3 );
+
+    while( --uiSymbol && ++uiCount < 3 )
+#else
     Bool bNoExGo = (uiSymbol < 13);
 
     while( --uiSymbol && ++uiCount < 13 )
+#endif
     {
       m_pcBinIf->encodeBin( 1, rcSCModel );
     }

@@ -271,6 +271,7 @@
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 
+#define QC_SIMP_DELTADC_CODING_H0131      1   // Simplify detaDC entropy coding 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
 #endif
