@@ -177,7 +177,7 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
-#if H_3D_ARP
+#if H_3D_ARP && !QC_IV_PRED_CONSTRAINT_H0137
     //====== Advanced Inter-view Residual Prediction =========
     m_cTEncTop.setUseAdvRP                     ( ( isDepth || 0==layerIdInVps ) ? 0 : m_uiUseAdvResPred );
     m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layerIdInVps ) ? 1 : H_3D_ARP_WFNR     );
@@ -1795,8 +1795,13 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     Bool isLayerZero  = ( layer == 0 ); 
 
 #if H_3D_ARP
+#if QC_IV_PRED_CONSTRAINT_H0137
+    vps.setUseAdvRP        ( layer, ( isDepth || isLayerZero || !vps.getNumDirectRefLayers(layer) ) ? 0 : m_uiUseAdvResPred );
+    vps.setARPStepNum      ( layer, ( isDepth || isLayerZero || !vps.getNumDirectRefLayers(layer) ) ? 1 : H_3D_ARP_WFNR     );
+#else
     vps.setUseAdvRP        ( layer, ( isDepth || isLayerZero ) ? 0 : m_uiUseAdvResPred );
     vps.setARPStepNum      ( layer, ( isDepth || isLayerZero ) ? 1 : H_3D_ARP_WFNR     );
+#endif
 #endif  
 #if H_3D_SPIVMP
     if( isDepth )
@@ -1814,6 +1819,14 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 
 #if H_3D_IV_MERGE
+#if QC_IV_PRED_CONSTRAINT_H0137
+    if( !vps.getNumDirectRefLayers(layer) )
+    {
+      vps.setIvMvPredFlag    (layer, false);
+    }
+    else
+    {
+#endif
     if( isDepth )
     {
       vps.setIvMvPredFlag         ( layer, (layer != 1) && m_ivMvPredFlag[1] ); 
@@ -1822,12 +1835,19 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     {
       vps.setIvMvPredFlag         ( layer, !isLayerZero && m_ivMvPredFlag[0] ); 
     }
+#if QC_IV_PRED_CONSTRAINT_H0137
+    }
+#endif
 #endif
 #if H_3D_NBDV_REF
     vps.setDepthRefinementFlag  ( layer, !isLayerZero && !isDepth && m_depthRefinementFlag );         
 #endif
 #if H_3D_VSP
+#if QC_IV_PRED_CONSTRAINT_H0137
+    vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && vps.getNumDirectRefLayers(layer) && m_viewSynthesisPredFlag );         
+#else
     vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && m_viewSynthesisPredFlag );         
+#endif
 #endif
 #if H_3D_DBBP
     vps.setUseDBBP              ( layer, !isLayerZero && !isDepth && m_bUseDBBP );

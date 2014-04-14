@@ -225,6 +225,7 @@
 #define H_3D_REN_MAX_DEV_OUT              0   // Output maximal possible shift deviation 
 #define H_3D_FAST_TEXTURE_ENCODING        1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
                                               // MTK_FAST_TEXTURE_ENCODING_E0173
+#define QC_IV_PRED_CONSTRAINT_H0137       1   // Constraint on inter-view (motion) prediction tools
 #if H_3D_DIM
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
