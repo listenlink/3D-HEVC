@@ -385,8 +385,11 @@ Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
     m_pcTDecBinIf->decodeBin( uiSymbol, rcSCModel );
     uiCount++;
   }
+#if QC_SIMP_DELTADC_CODING_H0131
+  while( uiSymbol && ( uiCount != 3 ) );
+#else
   while( uiSymbol && ( uiCount != 13 ) );
-
+#endif
   ruiSymbol = uiCount - 1;
 
   if( uiSymbol )
