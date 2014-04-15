@@ -1750,19 +1750,36 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       {
 #if H_3D_IV_MERGE
         READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#if QC_IV_PRED_CONSTRAINT_H0137
+        if( !pcVPS->getNumDirectRefLayers(i) )
+        {
+          assert( !uiCode );         
+        }
+#endif
 #if H_3D_SPIVMP
         READ_UVLC (uiCode, "log2_sub_PU_size_minus3[i]");     pcVPS->setSubPULog2Size(i, uiCode+3); 
 #endif
 #endif
 #if H_3D_ARP
         READ_FLAG( uiCode, "iv_res_pred_flag[i]"  );       pcVPS->setUseAdvRP  ( i, uiCode ); pcVPS->setARPStepNum( i, uiCode ? H_3D_ARP_WFNR : 1 );
-
+#if QC_IV_PRED_CONSTRAINT_H0137
+        if( !pcVPS->getNumDirectRefLayers(i) )
+        {
+          assert( !uiCode );         
+        }
+#endif
 #endif
 #if H_3D_NBDV_REF
         READ_FLAG( uiCode, "depth_refinement_flag[i]");    pcVPS->setDepthRefinementFlag  ( i, uiCode == 1 ? true : false );
 #endif
 #if H_3D_VSP
         READ_FLAG( uiCode, "view_synthesis_pred_flag[i]"); pcVPS->setViewSynthesisPredFlag( i, uiCode == 1 ? true : false );
+#if QC_IV_PRED_CONSTRAINT_H0137
+        if( !pcVPS->getNumDirectRefLayers(i) )
+        {
+          assert( !uiCode );         
+        }
+#endif
 #endif
 #if H_3D_DBBP
           READ_FLAG( uiCode, "use_dbbp_flag[i]" ); pcVPS->setUseDBBP( i, uiCode == 1 ? true : false );
@@ -1774,6 +1791,12 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
         if(i!=1)
         {
           READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#if QC_IV_PRED_CONSTRAINT_H0137
+          if( !pcVPS->getNumDirectRefLayers(i) )
+          {
+            assert( !uiCode );         
+          }
+#endif
         }
 #endif
 #if H_3D_SPIVMP

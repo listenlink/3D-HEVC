@@ -64,6 +64,8 @@
 #define H_MV          ( HEVC_EXT != 0)
 #define H_3D          ( HEVC_EXT == 2)
 
+#define NTT_BUG_FIX_TK54    1
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
@@ -115,6 +117,11 @@
                                               // SEC_ONLY_TEXTURE_IC_F0151
                                               // MTK_IC_FLAG_CABAC_SIMP_G0061
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
+
+#define MTK_LOW_LATENCY_IC_ENCODING_H0086   1 // Low-latency IC encoding in JCT3V-H0086
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+#define MTK_LOW_LATENCY_IC_ENCODING_THRESHOLD_H0086    0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
+#endif
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -190,8 +197,10 @@
                                               // SCU_HS_DEPTH_DC_PRED_G0143
                                               // HS_TSINGHUA_SDC_SPLIT_G0111
                                               // QC_PKU_SDC_SPLIT_G0123 Intra SDC Split
+#define MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113     1 // Use only one context for CABAC of delta_dc_flag as in JCTVC-H0084, JCTVC-H0100 and JCTVC-H0113
+#define MTK_SDC_FLAG_FIX_H0095            1   // Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
 
-
+#define MTK_DMM_SIMP_CODE_H0092           1   // Remove CABAC context for DMM1 mode coding
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -216,6 +225,7 @@
 #define H_3D_REN_MAX_DEV_OUT              0   // Output maximal possible shift deviation 
 #define H_3D_FAST_TEXTURE_ENCODING        1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
                                               // MTK_FAST_TEXTURE_ENCODING_E0173
+#define QC_IV_PRED_CONSTRAINT_H0137       1   // Constraint on inter-view (motion) prediction tools
 #if H_3D_DIM
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
@@ -262,6 +272,7 @@
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 
+#define QC_SIMP_DELTADC_CODING_H0131      1   // Simplify detaDC entropy coding 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
 #endif
@@ -312,7 +323,7 @@
 
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
-// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications ñ with text provided as P0297).
+// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications ÅEwith text provided as P0297).
 
 // #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 // #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
