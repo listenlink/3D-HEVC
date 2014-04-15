@@ -4762,7 +4762,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
   if ( ivMvPredFlag && cDisInfo.m_aVIdxCan!=-1)
   {
+#if SEC_ADAPT_DISABLE_IVMP
+    getInterViewMergeCands(uiPUIdx, ivCandRefIdx, ivCandMv, &cDisInfo, ivCandDir , bIsDepth, pcMvFieldSP, puhInterDirSP, bICFlag );
+#else
     getInterViewMergeCands(uiPUIdx, ivCandRefIdx, ivCandMv, &cDisInfo, ivCandDir , bIsDepth, pcMvFieldSP, puhInterDirSP );
+#endif
   }  
 
   ///////////////////////////////////////////////
@@ -7247,6 +7251,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 #if H_3D_SPIVMP
 , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
+#if SEC_ADAPT_DISABLE_IVMP
+, Bool bICFlag
+#endif
 )
 {
   TComSlice*    pcSlice = getSlice ();  
@@ -7282,6 +7289,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   {
     pacPdmMv[i].setIDVFlag   (false);
   }
+#endif
+
+#if SEC_ADAPT_DISABLE_IVMP
+  if(!bICFlag)
+  {
 #endif
 
 #if H_3D_SPIVMP
@@ -7550,6 +7562,9 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
     availableMcDc[(iLoopCan << 1)] = ( abPdmAvailable[(iLoopCan<<2)] ? 1 : 0 ) + ( abPdmAvailable[1 + (iLoopCan<<2)] ? 2 : 0);
   }
 
+#if SEC_ADAPT_DISABLE_IVMP
+  }
+#endif
 
   ////////////////////////////////
   /////// IvDC + IvDCShift ///////

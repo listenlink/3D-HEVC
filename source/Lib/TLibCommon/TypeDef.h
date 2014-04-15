@@ -160,6 +160,8 @@
                                               // SEC_DEPTH_DV_DERIVAITON_G0074, Simplification of DV derivation for depth, JCT3V-G0074
                                               // QC_DEPTH_MERGE_SIMP_G0127 Remove DV candidate and shifting candidate for depth coding
 
+#define SEC_ADAPT_DISABLE_IVMP            1   // Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
