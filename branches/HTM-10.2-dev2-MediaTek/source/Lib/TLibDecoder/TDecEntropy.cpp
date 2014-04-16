@@ -138,14 +138,21 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
 #if H_3D_DBBP
+
+#if MTK_DBBP_SIGNALING_H0094
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) )
+#else
   if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE )
+#endif
   {
     decodeDBBPFlag(pcCU, uiAbsPartIdx, uiDepth);
     
     if( pcCU->getDBBPFlag(uiAbsPartIdx) )
     {
+#if !MTK_DBBP_SIGNALING_H0094
       AOF( pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE );
-      
+#endif
+
       // get collocated depth block
       UInt uiDepthStride = 0;
       Pel* pDepthPels = NULL;
