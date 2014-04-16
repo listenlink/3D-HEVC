@@ -429,12 +429,21 @@ INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
 #endif
 
 #if H_3D_DBBP
+#if MTK_DBBP_SIGNALING_H0094
+static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
+{
+  { 161 },
+  { 161 },
+  { 161 },
+};
+#else
 static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
 {
   { CNU },
   { CNU },
   { CNU },
 };
+#endif
 #endif
 
 #endif
