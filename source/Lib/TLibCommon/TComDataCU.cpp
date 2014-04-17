@@ -2382,6 +2382,9 @@ UInt TComDataCU::getCtxSDCFlag( UInt uiAbsPartIdx )
 
 UInt TComDataCU::getCtxAngleFlag( UInt uiAbsPartIdx )
 {
+#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
+  return 0;
+#else
   TComDataCU* pcTempCU;
   UInt        uiTempPartIdx;
   UInt        uiCtx = 0;
@@ -2395,6 +2398,7 @@ UInt TComDataCU::getCtxAngleFlag( UInt uiAbsPartIdx )
   uiCtx   += ( pcTempCU && pcTempCU->isIntra( uiTempPartIdx ) ) ? ( pcTempCU->getLumaIntraDir( uiTempPartIdx ) < NUM_INTRA_MODE ? 1 : 0 ) : 0;
 
   return uiCtx;
+#endif
 }
 #endif
 
