@@ -4351,6 +4351,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   //////// TEXTURE MERGE CANDIDATE (T) ////////
   /////////////////////////////////////////////
 
+#if SHARP_SIMPLE_MERGE_H0062
+  bMPIFlag &= (nPSW + nPSH > 12);
+#endif
   if( bMPIFlag)
   {
     tmpMV[0].setMvField( cZeroMv, NOT_VALID );
@@ -4760,6 +4763,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
   Bool ivMvPredFlag   = getSlice()->getVPS()->getIvMvPredFlag( getSlice()->getLayerIdInVps() );
 
+#if SHARP_SIMPLE_MERGE_H0062
+  ivMvPredFlag &= (nPSW + nPSH > 12);
+#endif
   if ( ivMvPredFlag && cDisInfo.m_aVIdxCan!=-1)
   {
 #if SEC_ADAPT_DISABLE_IVMP
@@ -5167,6 +5173,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       !bARPFlag &&
+#endif
+#if SHARP_SIMPLE_MERGE_H0062
+      (nPSW + nPSH > 12) &&
 #endif
 #if ETRIKHU_CLEANUP_H0083
       xAddVspCand( mrgCandIdx, &cDisInfo, iCount ) )
