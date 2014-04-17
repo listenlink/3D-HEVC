@@ -1242,7 +1242,11 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 
   if( ( pcCU->getSlice()->getSPS()->getMaxCUWidth() >> pcCU->getDepth( absPartIdx ) ) < 64 ) //DMM and HEVC intra modes are both allowed
   {
+#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
+    m_pcBinIf->encodeBin( isDimMode( dir ) ? 0 : 1, m_cAngleFlagSCModel.get( 0, 0, 0 ) );
+#else
     m_pcBinIf->encodeBin( isDimMode( dir ) ? 0 : 1, m_cAngleFlagSCModel.get( 0, 0, pcCU->getCtxAngleFlag( absPartIdx ) ) );
+#endif
   }
   if( isDimMode( dir ) )
   {

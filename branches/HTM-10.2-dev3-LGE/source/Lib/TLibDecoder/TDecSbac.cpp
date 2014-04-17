@@ -1134,7 +1134,11 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
 
   if( ( pcCU->getSlice()->getSPS()->getMaxCUWidth() >> pcCU->getDepth( absPartIdx ) ) < 64 ) //DMM and HEVC intra modes are both allowed
   {
+#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cAngleFlagSCModel.get( 0, 0, 0 ) );
+#else
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cAngleFlagSCModel.get( 0, 0, pcCU->getCtxAngleFlag( absPartIdx ) ) );
+#endif
   }
   else
   {
