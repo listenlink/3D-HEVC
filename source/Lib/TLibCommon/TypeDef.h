@@ -38,6 +38,7 @@
 #ifndef _TYPEDEF__
 #define _TYPEDEF__
 
+
 //! \ingroup TLibCommon
 //! \{
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -63,6 +64,8 @@
 
 #define H_MV          ( HEVC_EXT != 0)
 #define H_3D          ( HEVC_EXT == 2)
+
+#define NTT_BUG_FIX_TK54    1
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -157,6 +160,8 @@
                                               // SEC_DEPTH_DV_DERIVAITON_G0074, Simplification of DV derivation for depth, JCT3V-G0074
                                               // QC_DEPTH_MERGE_SIMP_G0127 Remove DV candidate and shifting candidate for depth coding
 
+#define SEC_ADAPT_DISABLE_IVMP            1   // Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -220,6 +225,10 @@
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
+
+#define ETRIKHU_BUGFIX_H0083              1   // bug-fix for DV candidate pruning
+#define ETRIKHU_CLEANUP_H0083             1   // cleaned-up source code for constructing merging candidate list
+#define SHARP_SIMPLE_MERGE_H0062          1   // Restrict 3D-HEVC merge cand in small PUs
 
 // Rate Control
 #define KWU_FIX_URQ                       1
@@ -312,7 +321,7 @@
 
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
-// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications ñ with text provided as P0297).
+// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications ÅEwith text provided as P0297).
 
 // #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 // #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
@@ -322,7 +331,7 @@
 // #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
-
+#define MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133    1
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -795,6 +804,25 @@ enum MVP_DIR
   MD_BELOW_LEFT,        ///< MVP of below left block
   MD_ABOVE_LEFT         ///< MVP of above left block
 };
+
+/// merging candidates
+#if ETRIKHU_CLEANUP_H0083
+enum DefaultMergCandOrder
+{
+  MRG_T = 0,            ///< MPI
+  MRG_D,                ///< DDD
+  MRG_IVMC,             ///< Temporal inter-view
+  MRG_A1,               ///< Left
+  MRG_B1,               ///< Above
+  MRG_B0,               ///< Above right
+  MRG_IVDC,             ///< Disparity inter-view
+  MRG_VSP,              ///< VSP
+  MRG_A0,               ///< Left bottom
+  MRG_B2,               ///< Above left
+  MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
+  MRG_COL               ///< Temporal co-located
+};
+#endif
 
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE
