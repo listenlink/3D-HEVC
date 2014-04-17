@@ -228,6 +228,7 @@
 
 #define ETRIKHU_BUGFIX_H0083              1   // bug-fix for DV candidate pruning
 #define ETRIKHU_CLEANUP_H0083             1   // cleaned-up source code for constructing merging candidate list
+#define SHARP_SIMPLE_MERGE_H0062          1   // Restrict 3D-HEVC merge cand in small PUs
 
 // Rate Control
 #define KWU_FIX_URQ                       1
