@@ -108,6 +108,7 @@
                                               // LGE_ARP_CTX_F0161                JCT3V-F0161
                                               // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
                                               // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053 
+#define MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085 1   // Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
 
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
