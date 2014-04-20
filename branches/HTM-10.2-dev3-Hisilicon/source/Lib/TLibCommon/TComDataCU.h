@@ -192,6 +192,9 @@ private:
 #if H_3D_DIM_SDC
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
+#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
+  Pel          m_apDmmPredictor[2];
+#endif
 #endif
 #endif
 #if H_3D_DBBP
@@ -555,6 +558,10 @@ public:
   Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
   Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
+#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
+  Void          setDmmPredictor ( Pel pOffset, UInt uiSeg) { m_apDmmPredictor[uiSeg] = pOffset; }
+  Pel           getDmmPredictor ( UInt uiSeg) { return m_apDmmPredictor[uiSeg]; }
+#endif
   UInt          getCtxSDCFlag          ( UInt   uiAbsPartIdx );
   UInt          getCtxAngleFlag        ( UInt   uiAbsPartIdx );
 #endif
