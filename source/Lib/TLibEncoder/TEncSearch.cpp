@@ -1988,6 +1988,14 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 
   // get DC prediction for each segment
   Pel apDCPredValues[2];
+#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
+  if ( getDimType( uiLumaPredMode ) == DMM1_IDX || getDimType( uiLumaPredMode ) == DMM4_IDX )
+  {
+    apDCPredValues[0] = pcCU->getDmmPredictor( 0 );
+    apDCPredValues[1] = pcCU->getDmmPredictor( 1 );
+  }
+  else
+#endif
   analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode );
 
   // get original DC for each segment

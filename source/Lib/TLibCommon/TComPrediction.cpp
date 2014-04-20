@@ -499,6 +499,10 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   // set prediction signal
   Pel* pDst = piPred;
   xAssignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
+#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
+  pcCU->setDmmPredictor(segDC1, 0);
+  pcCU->setDmmPredictor(segDC2, 1);
+#endif
 
 #if H_3D_DIM_DMM
   if( dimType == DMM4_IDX && dmm4Segmentation == NULL ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
@@ -2195,6 +2199,7 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
   }
   if (orgDC == false)
   {
+#if !HS_DMM_SDC_PREDICTOR_UNIFY_H0108
     if ( getDimType(uiIntraMode) == DMM1_IDX )
     {
       UChar ucSegmentLT = pMask[0];
@@ -2240,6 +2245,7 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
       }
     }
     else
+#endif
     {
       Pel* pLeftTop = pOrig;
       Pel* pRightTop = pOrig + (uiSize-1);
