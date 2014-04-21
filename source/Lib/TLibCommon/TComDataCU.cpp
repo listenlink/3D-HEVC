@@ -4067,6 +4067,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_DBBP
   Bool bDBBPFlag = getDBBPFlag(uiAbsPartIdx);
+#if MTK_DIS_SPBIP8X4_H0205
+  assert(bDBBPFlag == getDBBPFlag(0));  
+#endif
 #endif
 
 #if H_3D
@@ -4503,6 +4506,16 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                   pcMvFieldSP[2*iPartition + 1] = cMvFieldSaved[1];
                 }
               }
+#if MTK_DIS_SPBIP8X4_H0205
+              if (iPUHeight + iPUWidth == 12)
+              {
+                if (puhInterDirSP[iPartition] == 3)
+                {
+                  puhInterDirSP[iPartition] = 1;
+                  pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
+                }
+              }
+#endif
 #if !MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
               else
               {
@@ -4915,7 +4928,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if ETRIKHU_CLEANUP_H0083
       Bool SPIVMPFlag = false;
+#if MTK_DIS_SPBIP8X4_H0205
+      if(!m_pcSlice->getIsDepth())
+#else
       if(!m_pcSlice->getIsDepth() && getPartitionSize(0) == SIZE_2Nx2N )
+#endif
       {
         SPIVMPFlag = true;
       }
@@ -7311,7 +7328,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   ////////////////////////////////
   if(!m_pcSlice->getIsDepth())
   {
+#if MTK_DIS_SPBIP8X4_H0205
+    if (!getDBBPFlag(0))
+#else
     if( getPartitionSize(0) == SIZE_2Nx2N )
+#endif
     {
       Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
       getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
@@ -7468,6 +7489,16 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
               pcMvFieldSP[2*iPartition + 1].setMvField(pacPdmMv[1], paiPdmRefIdx[1]);
 
             }
+#if MTK_DIS_SPBIP8X4_H0205
+            if (iSPHeight + iSPWidth == 12)
+            {
+              if (puhInterDirSP[iPartition] == 3)
+              {
+                puhInterDirSP[iPartition] = 1;
+                pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
+              }
+            }
+#endif
             iPartition ++;
           }
         }
@@ -7489,7 +7520,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
     iCurrPosX  += ( iWidth  >> 1 );
     iCurrPosY  += ( iHeight >> 1 );
   }
+#if MTK_DIS_SPBIP8X4_H0205
+  for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#else
   for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getPartitionSize(uiPartAddr) != SIZE_2Nx2N) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#endif
 #else
   for(Int iLoopCan = 0; iLoopCan < 2; iLoopCan ++)
 #endif
