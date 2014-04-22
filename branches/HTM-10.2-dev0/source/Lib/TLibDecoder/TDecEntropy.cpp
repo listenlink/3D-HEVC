@@ -363,6 +363,9 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
           , inheritedVSPDisInfo
 #if H_3D_SPIVMP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+            , bSPIVMPFlag
+#endif
           , pcMvFieldSP, puhInterDirSP
 #endif
           ,numValidMergeCand, uiMergeIndex );
