@@ -177,6 +177,7 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
+#if H_3D_ARP && !QC_IV_PRED_CONSTRAINT_H0137
     //====== Advanced Inter-view Residual Prediction =========
     m_cTEncTop.setUseAdvRP                     ( ( isDepth || 0==layerIdInVps ) ? 0 : m_uiUseAdvResPred );
     m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layerIdInVps ) ? 1 : H_3D_ARP_WFNR     );
