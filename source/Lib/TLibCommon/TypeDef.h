@@ -259,6 +259,7 @@
 #define DVFROM_LEFT                       0
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
+#define SEC_VER_DONBDV_H0103              1   // Vertical DV Restriction for DoNBDV
 #endif
 
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
@@ -274,6 +275,8 @@
 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
+#define SEC_NO_RESI_DLT_H0105             1
+#define MTK_DLT_CODING_FIX_H0091          1
 #endif
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
@@ -302,6 +305,10 @@
 #if H_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
 #define RWTH_DBBP_PACK_MODE               SIZE_2NxN
+#define MTK_DBBP_AMP_REM_H0072                 1
+#define RWTH_DBBP_NO_SPU_H0057                 1
+#define SEC_DBBP_FILTERING_H0104               1
+#define MTK_DBBP_SIGNALING_H0094               1    
 #endif
 
 

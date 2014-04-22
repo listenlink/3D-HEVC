@@ -439,6 +439,14 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
             UInt uiCodeLength         = 0;
 
             READ_FLAG(uiCode, "inter_view_dlt_pred_enable_flag[ i ]"); 
+
+#if  MTK_DLT_CODING_FIX_H0091
+            if( uiCode )
+            {
+                assert( pcDLT->getUseDLTFlag( 1 ));
+            }
+#endif
+
             pcDLT->setInterViewDltPredEnableFlag( i, (uiCode == 1) ? true : false );
 
             if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )

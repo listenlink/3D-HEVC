@@ -2140,10 +2140,14 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_DBBP
 Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if !MTK_DBBP_SIGNALING_H0094
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+#endif
   AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
   AOF( !pcCU->getSlice()->getIsDepth() );
+#if !MTK_DBBP_SIGNALING_H0094
   AOF( ePartSize == RWTH_DBBP_PACK_MODE );
+#endif
   
   UInt uiSymbol = 0;
   

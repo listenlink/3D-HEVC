@@ -220,6 +220,12 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
       CTXMem[0]->loadContexts(pcSbacDecoder);
     }
   }
+#if  MTK_DLT_CODING_FIX_H0091
+  if( pcSlice->getPPS()->getDLT() != NULL )
+  {
+      assert( pcSlice->getSPS()->getBitDepthY() == pcSlice->getPPS()->getDLT()->getDepthViewBitDepth() );
+  }
+#endif
   for( Int iCUAddr = iStartCUAddr; !uiIsLast && iCUAddr < rpcPic->getNumCUsInFrame(); iCUAddr = rpcPic->getPicSym()->xCalculateNxtCUAddr(iCUAddr) )
   {
     pcCU = rpcPic->getCU( iCUAddr );

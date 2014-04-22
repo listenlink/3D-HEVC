@@ -2351,6 +2351,12 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
 #endif // H_3D_NBDV_REF
     
     TComMv cDv = depthRefineFlag ? DvInfo.m_acDoNBDV : DvInfo.m_acNBDV;
+#if SEC_VER_DONBDV_H0103
+    if( depthRefineFlag )
+    {
+      cDv.setVer(0);
+    }
+#endif
     
     Int depthPosX = Clip3(0,   iPictureWidth - iWidth,  iBlkX + ((cDv.getHor()+2)>>2));
     Int depthPosY = Clip3(0,   iPictureHeight- iHeight, iBlkY + ((cDv.getVer()+2)>>2));
@@ -4244,6 +4250,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
+#endif
       )
     {
       vspFlag[numA1B1B0] = 1;
@@ -4266,6 +4275,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
 #endif
       )
     {
@@ -4290,6 +4302,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
+#endif
       )
     {
       vspFlag[numA1B1B0] = 1;
@@ -4310,6 +4325,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
 #endif
       )
     {
@@ -4333,6 +4351,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
 #endif
       )
     {
@@ -5192,6 +5213,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if SHARP_SIMPLE_MERGE_H0062
       (nPSW + nPSH > 12) &&
+#endif
+#if RWTH_DBBP_NO_SPU_H0057
+      !bDBBPFlag &&
 #endif
 #if ETRIKHU_CLEANUP_H0083
       xAddVspCand( mrgCandIdx, &cDisInfo, iCount ) )
@@ -7168,6 +7192,12 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
 #endif // H_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
+#if SEC_VER_DONBDV_H0103
+  if( depthRefineFlag )
+  {
+    cDv.setVer(0);
+  }
+#endif
 
   Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
   Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + 2 ) >> 2 )); 
@@ -7307,6 +7337,12 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 #endif // H_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
+#if SEC_VER_DONBDV_H0103
+  if( depthRefineFlag )
+  {
+    cDv.setVer(0);
+  }
+#endif
 
   Bool abPdmAvailable[8] =  {false, false, false, false, false, false, false, false};
 #if H_3D_NBDV
