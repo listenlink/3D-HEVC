@@ -2152,6 +2152,10 @@ Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   if( uiSymbol )
   {
     pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx, 0, uiDepth);
+#if MTK_DIS_SPBIP8X4_H0205
+    UInt uiCurrPartNumQ = (pcCU->getPic()->getNumPartInCU() >> (2 * uiDepth)) >> 2;
+    pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx + 2*uiCurrPartNumQ, 1, uiDepth);
+#endif
   }
 }
 #endif
