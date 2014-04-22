@@ -351,7 +351,7 @@
 #endif
 #if H_3D_DBBP
 #define MTK_DBBP_AMP_REM_H0072                 1
-#define RWTH_DBBP_NO_SPU_H0057                 1
+#define RWTH_DBBP_NO_SPU_H0057                 0
 #define SEC_DBBP_FILTERING_H0104               1
 #define MTK_DBBP_SIGNALING_H0094               1    
 #endif
