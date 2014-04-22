@@ -271,6 +271,14 @@ Void TEncCavlc::codePPS( TComPPS* pcPPS )
   WRITE_UVLC( pcPPS->getLog2ParallelMergeLevelMinus2(), "log2_parallel_merge_level_minus2");
   WRITE_FLAG( pcPPS->getSliceHeaderExtensionPresentFlag() ? 1 : 0, "slice_segment_header_extension_present_flag");
 
+  #if MTK_DLT_CODING_FIX_H0091
+    if(( !pcPPS->getSPS()->getVPS()->getDepthId( pcPPS->getSPS()->getLayerId() ) )||
+        pcPPS->getLayerId() != 1  )
+    {
+        pcPPS->setPpsExtensionTypeFlag( PPS_EX_T_3D, false );
+    }
+  #endif
+
 #if !H_MV
   WRITE_FLAG( 0, "pps_extension_flag" );
 #else

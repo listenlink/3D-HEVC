@@ -2355,8 +2355,10 @@ Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #if H_3D_DBBP
 Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if !MTK_DBBP_SIGNALING_H0094
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   AOF( ePartSize == RWTH_DBBP_PACK_MODE );
+#endif
   AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
   AOF( !pcCU->getSlice()->getIsDepth() );
   
