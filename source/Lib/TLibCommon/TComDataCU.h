@@ -232,19 +232,36 @@ private:
   UChar         m_ucDDTmpDepth;
 #endif
 
+#if ETRIKHU_CLEANUP_H0083
+  TComMotionCand  m_mergCands[MRG_IVSHIFT+1];
+  Int           m_baseListidc;
+#endif
+
 protected:
   
   /// add possible motion vector predictor candidates
   Bool          xAddMVPCand           ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
   Bool          xAddMVPCandOrder      ( AMVPInfo* pInfo, RefPicList eRefPicList, Int iRefIdx, UInt uiPartUnitIdx, MVP_DIR eDir );
 #if H_3D_VSP
+#if ETRIKHU_CLEANUP_H0083
+  Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount);
+#else
   Bool          xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount,
                              Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* vspFlag, Int& iCount3DV, InheritedVSPDisInfo*  inheritedVSPDisInfo);
 #endif
+#endif
 #if H_3D_IV_MERGE
+#if ETRIKHU_CLEANUP_H0083
+  Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int*   ivCandDir, TComMv* ivCandMv, Int* ivCandRefIdx ); 
+#else
   Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Bool* abCandIsInter, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int*   ivCandDir, TComMv* ivCandMv, 
                                Int* ivCandRefIdx, Int posIvDC, Int* vspFlag, Int &iCount3DV, InheritedVSPDisInfo*  inheritedVSPDisInfo   ); 
+#endif
+#if ETRIKHU_CLEANUP_H0083
+  Bool          xGetPosFirstAvailDmvCand( Int iCount, Int& iFirDispCand );
+#else
   Bool          xGetPosFirstAvailDmvCand( Int iCount, TComMvField* pcMvFieldNeighbours, Int*  ivCandDir, Int posIvDC, Int* vspFlag, Int& iFirDispCand );
+#endif
 #endif
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
@@ -484,7 +501,9 @@ public:
    ); 
    
 #if H_3D
+#if !ETRIKHU_CLEANUP_H0083
   Void          rightShiftMergeCandList( TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int* iVSPIndexTrue, InheritedVSPDisInfo*  inheritedVSPDisInfo, UInt start, UInt num, Int &iCount3DV);
+#endif
   Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
@@ -507,6 +526,9 @@ public:
 
 #if H_3D_SPIVMP
     , TComMvField* pcMFieldSP, UChar* puhInterDirSP
+#endif
+#if SEC_ADAPT_DISABLE_IVMP
+    , Bool bICFlag
 #endif
     );   
 #endif
@@ -634,18 +656,37 @@ public:
   Bool          getAvailableFlagB0() { return m_bAvailableFlagB0;}
   Bool          getAvailableFlagA0() { return m_bAvailableFlagA0;}
   Bool          getAvailableFlagB2() { return m_bAvailableFlagB2;}
+#if ETRIKHU_CLEANUP_H0083
   Void          initAvailableFlags() { m_bAvailableFlagA1 = m_bAvailableFlagB1 = m_bAvailableFlagB0 = m_bAvailableFlagA0 = m_bAvailableFlagB2 = 0;  }
+  Void          buildMCL(TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
+#if H_3D_VSP
+    , Int* vspFlag
+#endif
+#if H_3D_SPIVMP
+    , Bool* pbSPIVMPFlag
+#endif
+    , Int& numValidMergeCand
+    );
+#else
+  Void          initAvailableFlags() { m_bAvailableFlagA1 = m_bAvailableFlagB1 = m_bAvailableFlagB0 = m_bAvailableFlagA0 = m_bAvailableFlagB2 = 0;  }
+#endif
   Void          getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours, Int& numValidMergeCand, Int mrgCandIdx = -1);
   Void          xGetInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #else
   Void          getInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #endif
 #if H_3D_VSP
+#if !ETRIKHU_CLEANUP_H0083
                                             , Int* vspFlag
+#endif
                                             , InheritedVSPDisInfo*  inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
+#if ETRIKHU_CLEANUP_H0083
+                                            , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
+#else
                                             , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
+#endif
 #endif
                                             , Int& numValidMergeCand, Int mrgCandIdx = -1
                                             );
