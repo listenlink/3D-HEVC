@@ -188,6 +188,12 @@ extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE];
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+extern UInt g_aICEnableCANDIDATE[10];
+extern UInt g_aICEnableNUM[ 10 ]; //10 layers
+extern Int g_lastlayer;
+#endif
+
 #ifndef ENC_DEC_TRACE
 #define ENC_DEC_TRACE   0
 #endif

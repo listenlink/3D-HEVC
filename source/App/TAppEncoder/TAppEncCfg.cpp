@@ -516,6 +516,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if H_3D_IC
   ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  ("IlluCompLowLatencyEnc",    m_bUseLowLatencyICEnc, false, "Enable low-latency illumination compensation encoding")
+#endif
 #endif
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
@@ -2478,6 +2481,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_IC
   printf( "IlluCompEnable:%d ", m_abUseIC);
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  printf ("IlluCompLowLatencyEnc:%d ",  m_bUseLowLatencyICEnc);
+#endif
 #endif
 #if H_3D_NBDV_REF
   printf("DepthRefinement:%d ", m_depthRefinementFlag );  

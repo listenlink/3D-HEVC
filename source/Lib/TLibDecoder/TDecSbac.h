@@ -213,7 +213,7 @@ private:
   ContextModel3DBuffer m_cDdcFlagSCModel;
   ContextModel3DBuffer m_cDdcDataSCModel;
   ContextModel3DBuffer m_cAngleFlagSCModel;
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
   ContextModel3DBuffer m_cDmm1DataSCModel;
 #endif
 #if H_3D_DIM_SDC  

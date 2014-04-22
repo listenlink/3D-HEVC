@@ -119,6 +119,11 @@
                                               // MTK_IC_FLAG_CABAC_SIMP_G0061
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
 
+#define MTK_LOW_LATENCY_IC_ENCODING_H0086   1 // Low-latency IC encoding in JCT3V-H0086
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+#define MTK_LOW_LATENCY_IC_ENCODING_THRESHOLD_H0086    0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
+#endif
+
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
@@ -195,8 +200,11 @@
                                               // SCU_HS_DEPTH_DC_PRED_G0143
                                               // HS_TSINGHUA_SDC_SPLIT_G0111
                                               // QC_PKU_SDC_SPLIT_G0123 Intra SDC Split
+#define MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113     1 // Use only one context for CABAC of delta_dc_flag as in JCTVC-H0084, JCTVC-H0100 and JCTVC-H0113
+#define MTK_SDC_FLAG_FIX_H0095            1   // Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
 
 
+#define MTK_DMM_SIMP_CODE_H0092           1   // Remove CABAC context for DMM1 mode coding
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -221,6 +229,7 @@
 #define H_3D_REN_MAX_DEV_OUT              0   // Output maximal possible shift deviation 
 #define H_3D_FAST_TEXTURE_ENCODING        1   // Fast merge mode decision and early CU determination for texture component of dependent view, JCT3V-E0173
                                               // MTK_FAST_TEXTURE_ENCODING_E0173
+#define QC_IV_PRED_CONSTRAINT_H0137       1   // Constraint on inter-view (motion) prediction tools
 #if H_3D_DIM
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
@@ -274,6 +283,9 @@
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 
+#define HS_DMM_SDC_PREDICTOR_UNIFY_H0108  1   // Unification of DMM and SDC predictor derivation
+#define LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135  1 // Use only one context for CABAC of dim_not_present_flag
+#define QC_SIMP_DELTADC_CODING_H0131      1   // Simplify detaDC entropy coding 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
 #define SEC_NO_RESI_DLT_H0105             1
