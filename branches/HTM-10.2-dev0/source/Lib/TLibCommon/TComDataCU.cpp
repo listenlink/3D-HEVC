@@ -609,6 +609,10 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_apSegmentDCOffset[0]  + firstElement,     0,                numElements * sizeof( *m_apSegmentDCOffset[0] ) );
     memset( m_apSegmentDCOffset[1]  + firstElement,     0,                numElements * sizeof( *m_apSegmentDCOffset[1] ) );
 #endif
+#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
+    m_apDmmPredictor[0] = 0;
+    m_apDmmPredictor[1] = 0;
+#endif
 #endif
 #if H_3D_DBBP
     memset( m_pbDBBPFlag        + firstElement, false,                    numElements * sizeof( *m_pbDBBPFlag ) );
@@ -783,6 +787,10 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp, Bool bTransquantBypass )
       m_apSegmentDCOffset[0][ui] = 0;
       m_apSegmentDCOffset[1][ui] = 0;
 #endif
+#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
+      m_apDmmPredictor[0] = 0;
+      m_apDmmPredictor[1] = 0;
+#endif
 #endif
 #if H_3D_DBBP
       m_pbDBBPFlag[ui] = false;
@@ -897,6 +905,10 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_pbSDCFlag,            0, sizeof(Bool) * m_uiNumPartition  );
   memset( m_apSegmentDCOffset[0], 0, sizeof(Pel) * m_uiNumPartition   );
   memset( m_apSegmentDCOffset[1], 0, sizeof(Pel) * m_uiNumPartition   );
+#endif
+#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
+  m_apDmmPredictor[0] = 0;
+  m_apDmmPredictor[1] = 0;
 #endif
 #endif
 #if H_3D_DBBP
@@ -2388,6 +2400,9 @@ UInt TComDataCU::getCtxSDCFlag( UInt uiAbsPartIdx )
 
 UInt TComDataCU::getCtxAngleFlag( UInt uiAbsPartIdx )
 {
+#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
+  return 0;
+#else
   TComDataCU* pcTempCU;
   UInt        uiTempPartIdx;
   UInt        uiCtx = 0;
@@ -2401,6 +2416,7 @@ UInt TComDataCU::getCtxAngleFlag( UInt uiAbsPartIdx )
   uiCtx   += ( pcTempCU && pcTempCU->isIntra( uiTempPartIdx ) ) ? ( pcTempCU->getLumaIntraDir( uiTempPartIdx ) < NUM_INTRA_MODE ? 1 : 0 ) : 0;
 
   return uiCtx;
+#endif
 }
 #endif
 
