@@ -1819,6 +1819,9 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #endif
       , inheritedVSPDisInfo
 #if H_3D_SPIVMP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+      , bSPIVMPFlag
+#endif
       , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand 

@@ -436,6 +436,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
       , inheritedVSPDisInfo
 #if H_3D_SPIVMP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+      , bSPIVMPFlag
+#endif
       , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand, uiMergeIndex );

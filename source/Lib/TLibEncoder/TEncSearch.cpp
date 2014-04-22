@@ -3704,6 +3704,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                         , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+        , pbSPIVMPFlag
+#endif
         , pcMvFieldSP, puhInterDirSP
 #endif
         , numValidMergeCand
@@ -3739,6 +3742,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                       , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+      , pbSPIVMPFlag 
+#endif
       , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand

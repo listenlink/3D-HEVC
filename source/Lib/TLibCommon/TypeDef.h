@@ -228,6 +228,7 @@
 
 #define ETRIKHU_BUGFIX_H0083              1   // bug-fix for DV candidate pruning
 #define ETRIKHU_CLEANUP_H0083             1   // cleaned-up source code for constructing merging candidate list
+#define ETRIKHU_CLEANUP_H0083_MISSING     1   // missing guard macros added by GT
 #define SHARP_SIMPLE_MERGE_H0062          1   // Restrict 3D-HEVC merge cand in small PUs
 #define MTK_DIS_SPBIP8X4_H0205            1   // Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
 
