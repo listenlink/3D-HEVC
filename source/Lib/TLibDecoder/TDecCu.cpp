@@ -430,11 +430,26 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo
+    m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours 
+#if !ETRIKHU_CLEANUP_H0083
+      ,vspFlag
+#endif
+      , inheritedVSPDisInfo
 #if H_3D_SPIVMP
-      , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+      , bSPIVMPFlag
+#endif
+      , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand, uiMergeIndex );
+
+#if ETRIKHU_CLEANUP_H0083
+    m_ppcCU[uiDepth]->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
+#if H_3D_SPIVMP
+      , bSPIVMPFlag
+#endif
+      , numValidMergeCand );
+#endif
     pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 #else
 #if H_3D
@@ -781,8 +796,15 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       pcCU->getMvField(pcCU, uiPartAddr, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList]);
     }
     
+#if RWTH_DBBP_NO_SPU_H0057
+    AOF( pcCU->getARPW(uiPartAddr) == 0 );
+    AOF( pcCU->getICFlag(uiPartAddr) == false );
+    AOF( pcCU->getSPIVMPFlag(uiPartAddr) == false );
+    AOF( pcCU->getVSPFlag(uiPartAddr) == 0 );
+#else
     pDBBPTmpData->ahVSPFlag[uiSegment] = pcCU->getVSPFlag( uiPartAddr );
     pDBBPTmpData->acDvInfo[uiSegment] = pcCU->getDvInfo( uiPartAddr );
+#endif
   }
   
   // do motion compensation for each segment as 2Nx2N
@@ -792,8 +814,10 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   {
     pcCU->setInterDirSubParts( pDBBPTmpData->auhInterDir[uiSegment], 0, 0, uiDepth );
     
+#if !RWTH_DBBP_NO_SPU_H0057
     pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], 0, 0, uiDepth );
     pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], 0, 0, uiDepth );
+#endif
     
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {
@@ -815,8 +839,10 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     
     pcCU->setDBBPFlagSubParts(true, uiPartAddr, uiSegment, uiDepth);
     
+#if !RWTH_DBBP_NO_SPU_H0057
     pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], uiPartAddr, uiSegment, uiDepth );
     pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], uiPartAddr, uiSegment, uiDepth );
+#endif
     
     pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[uiSegment], uiPartAddr, uiSegment, uiDepth); // interprets depth relative to LCU level
     
@@ -919,7 +945,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   {
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
-#if H_3D
+#if H_3D && !SEC_NO_RESI_DLT_H0105
       if ( useDltFlag )
       {
         pReco    [ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );

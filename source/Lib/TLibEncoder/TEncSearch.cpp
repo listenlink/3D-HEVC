@@ -1145,7 +1145,7 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
 #endif
         for( UInt uiX = 0; uiX < uiWidth; uiX++ )
         {
-#if H_3D_DIM
+#if H_3D_DIM && !SEC_NO_RESI_DLT_H0105
           if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
           {
             pResi[ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pOrg[ uiX ] ) - pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] );
@@ -1220,7 +1220,7 @@ TEncSearch::xIntraCodingLumaBlk( TComDataCU* pcCU,
     {
       for( UInt uiX = 0; uiX < uiWidth; uiX++ )
       {
-#if H_3D_DIM
+#if H_3D_DIM && !SEC_NO_RESI_DLT_H0105
         if( (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps()) )
         {
           pReco    [ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
@@ -3665,8 +3665,10 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     {
       pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[0], 0, 0, pcCU->getDepth(0)); // interprets depth relative to LCU level
       
+#if !RWTH_DBBP_NO_SPU_H0057
       pcCU->setVSPFlagSubParts(pDBBPTmpData->ahVSPFlag[0], 0, 0, pcCU->getDepth(0));
       pcCU->setDvInfoSubParts(pDBBPTmpData->acDvInfo[0], 0, 0, pcCU->getDepth(0));
+#endif
       
       for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
       {
@@ -3696,14 +3698,31 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
       pcCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
 #if H_3D_VSP
+#if !ETRIKHU_CLEANUP_H0083
                                         , vspFlag
+#endif
                                         , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
-                                        , pbSPIVMPFlag, pcMvFieldSP, puhInterDirSP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+        , pbSPIVMPFlag
+#endif
+        , pcMvFieldSP, puhInterDirSP
+#endif
+        , numValidMergeCand
+        );
+
+#if ETRIKHU_CLEANUP_H0083
+      pcCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours
+#if H_3D_VSP
+        , vspFlag
+#endif
+#if H_3D_SPIVMP
+        , pbSPIVMPFlag
 #endif
                                         , numValidMergeCand
         );
+#endif
 #else
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
 #endif
@@ -3717,14 +3736,31 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
     pcCU->xGetInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
 #if H_3D_VSP
+#if !ETRIKHU_CLEANUP_H0083
                                       , vspFlag
+#endif
                                       , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
-                                      , pbSPIVMPFlag, pcMvFieldSP, puhInterDirSP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+      , pbSPIVMPFlag 
+#endif
+      , pcMvFieldSP, puhInterDirSP
+#endif
+      , numValidMergeCand
+      );
+
+#if ETRIKHU_CLEANUP_H0083
+    pcCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_VSP
+      , vspFlag
+#endif
+#if H_3D_SPIVMP
+      , pbSPIVMPFlag
 #endif
                                       , numValidMergeCand
       );
+#endif
 #else
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand
                                  );
