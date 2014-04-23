@@ -307,7 +307,7 @@
 #define DBBP_INVALID_SHORT                (-4)
 #define RWTH_DBBP_PACK_MODE               SIZE_2NxN
 #define MTK_DBBP_AMP_REM_H0072                 1
-#define RWTH_DBBP_NO_SPU_H0057                 0
+#define RWTH_DBBP_NO_SPU_H0057                 1
 #define SEC_DBBP_FILTERING_H0104               1
 #define MTK_DBBP_SIGNALING_H0094               1    
 #endif

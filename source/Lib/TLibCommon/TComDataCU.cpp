@@ -4125,6 +4125,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
+#endif
       )
 #endif
       , false
@@ -4148,6 +4151,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
 #endif
       )
 #endif
@@ -4173,6 +4179,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
+#endif
       )
 #endif
       , false
@@ -4195,6 +4204,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
 #endif
       )
 #endif
@@ -4219,6 +4231,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D_ARP
       && !bARPFlag
+#endif
+#if RWTH_DBBP_NO_SPU_H0057
+      && !bDBBPFlag
 #endif
       )
 #endif
