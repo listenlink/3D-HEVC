@@ -314,7 +314,7 @@
 ///////////////////////////////////   HTM-11.0 Integrations                  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
-
+#define  H_3D_FIX_DBBP_IVMP                1  // Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
 
 #define MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085 1   // Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
 #define MTK_LOW_LATENCY_IC_ENCODING_H0086   1 // Low-latency IC encoding in JCT3V-H0086

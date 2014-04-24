@@ -7664,7 +7664,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
     }
   }
 #if H_3D_SPIVMP
+#if H_3D_FIX_DBBP_IVMP
+  for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++)
+#else
   for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#endif
 #else
   for(Int iLoopCan = 0; iLoopCan < 2; iLoopCan ++)
 #endif
