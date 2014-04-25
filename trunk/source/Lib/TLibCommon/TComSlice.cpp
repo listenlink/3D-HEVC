@@ -3219,8 +3219,74 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 }
 #endif
 #if H_3D_IC
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
+#else
 Void TComSlice::xSetApplyIC()
+#endif
 {
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  if(bUseLowLatencyICEnc)
+  {
+    Bool existInterViewRef=false;
+    TComPic* pcCurrPic = getPic();
+    TComPic* pcRefPic = NULL;
+    for ( Int i = 0; (i < getNumRefIdx( REF_PIC_LIST_0 )) && !existInterViewRef; i++ )
+    {
+      pcRefPic = getRefPic( REF_PIC_LIST_0, i );
+      if ( pcRefPic != NULL )
+      {
+        if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
+        {
+          existInterViewRef = true;        
+        }
+      }
+    }
+
+    for ( Int i = 0; (i < getNumRefIdx( REF_PIC_LIST_1 )) && !existInterViewRef; i++ )
+    {
+      pcRefPic = getRefPic( REF_PIC_LIST_1, i );
+      if ( pcRefPic != NULL )
+      {
+        if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
+        {
+          existInterViewRef = true;        
+        }
+      }
+    }
+
+    if(!existInterViewRef)
+    {
+      m_bApplyIC = false;
+    }
+    else
+    {
+      Int curLayer=getDepth();
+      if( curLayer>9) curLayer=9; // Max layer is 10
+
+      m_bApplyIC = true;
+      Int refLayer = curLayer-1;
+      if( (refLayer>=0) && (g_aICEnableCANDIDATE[refLayer]>0) )
+      {    
+        Double ratio=Double(g_aICEnableNUM[refLayer])/Double(g_aICEnableCANDIDATE[refLayer]);
+
+        if( ratio > MTK_LOW_LATENCY_IC_ENCODING_THRESHOLD_H0086)
+{
+          m_bApplyIC=true;
+        }
+        else
+        {
+          m_bApplyIC=false;
+        }
+      }
+      g_aICEnableNUM[curLayer]=0;
+      g_aICEnableCANDIDATE[curLayer]=0;
+      g_lastlayer=getDepth();
+    }
+  }
+  else
+  {
+#endif
   Int iMaxPelValue = ( 1 << g_bitDepthY ); 
   Int *aiRefOrgHist;
   Int *aiCurrHist;
@@ -3294,6 +3360,9 @@ Void TComSlice::xSetApplyIC()
   xFree( aiRefOrgHist );
   aiCurrHist = NULL;
   aiRefOrgHist = NULL;
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  }//if(bUseLowLatencyICEnc)
+#endif
 }
 #endif
 #if H_3D

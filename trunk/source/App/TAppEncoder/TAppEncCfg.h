@@ -136,6 +136,9 @@ protected:
 #endif
 #if H_3D_IC
   Bool   m_abUseIC;
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  Bool  m_bUseLowLatencyICEnc;
+#endif
 #endif
 #if H_3D_NBDV_REF
   Bool m_depthRefinementFlag;  

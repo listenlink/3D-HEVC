@@ -109,7 +109,11 @@
 #if H_3D_DIM_DMM
 #define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
 #endif
+#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
+#define NUM_ANGLE_FLAG_CTX            1
+#else
 #define NUM_ANGLE_FLAG_CTX            3
+#endif
 #endif
 
 #if H_3D_DIM_SDC
@@ -367,6 +371,15 @@ INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
   { 154, }
 };
 
+#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
+static const UChar 
+INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
+{
+  { 154 },
+  { 141 },
+  { 155 },
+};
+#else
 static const UChar 
 INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
 {
@@ -374,6 +387,7 @@ INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
   { 141, 185, 214 },
   { 155, 170, 157 },
 };
+#endif
 
 static const UChar 
 INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =
@@ -429,12 +443,21 @@ INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
 #endif
 
 #if H_3D_DBBP
+#if MTK_DBBP_SIGNALING_H0094
+static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
+{
+  { 161 },
+  { 161 },
+  { 161 },
+};
+#else
 static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
 {
   { CNU },
   { CNU },
   { CNU },
 };
+#endif
 #endif
 
 #endif

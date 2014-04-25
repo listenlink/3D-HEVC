@@ -162,7 +162,16 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   {
     uiAbsPartIdx = 0;
   }
-
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+  else
+  {
+    g_aICEnableCANDIDATE[pcCU->getSlice()->getDepth()]++;
+    if(pcCU->getICFlag(uiAbsPartIdx))
+    {
+      g_aICEnableNUM[pcCU->getSlice()->getDepth()]++;
+    }
+  }
+#endif
   if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
     m_pcEntropyCoderIf->codeICFlag( pcCU, uiAbsPartIdx );
 }
@@ -245,13 +254,20 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
 #if H_3D_DBBP
+
+#if MTK_DBBP_SIGNALING_H0094
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) )
+#else
   if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE )
+#endif
   {
     encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
     
     if( pcCU->getDBBPFlag(uiAbsPartIdx) )
     {
+#if !MTK_DBBP_SIGNALING_H0094
       AOF( pcCU->getPartitionSize(uiAbsPartIdx) == RWTH_DBBP_PACK_MODE );
+#endif
       // restore virtual partition size for DBBP blocks
       pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
     }
@@ -273,11 +289,13 @@ Void TEncEntropy::encodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     return;
   }
+#if !MTK_SDC_FLAG_FIX_H0095
 #if H_3D_DIM_SDC
   if( pcCU->getSDCFlag(uiAbsPartIdx) )
   {
     return;
   }
+#endif
 #endif
   
   if( bRD )
