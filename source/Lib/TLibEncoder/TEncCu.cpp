@@ -1813,12 +1813,29 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #if H_3D
     rpcTempCU->initAvailableFlags();
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-    rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag,inheritedVSPDisInfo
+    rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
+#if !ETRIKHU_CLEANUP_H0083
+      , vspFlag
+#endif
+      , inheritedVSPDisInfo
 #if H_3D_SPIVMP
-      , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
+#if !ETRIKHU_CLEANUP_H0083_MISSING
+      , bSPIVMPFlag
+#endif
+      , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand 
       );
+
+#if ETRIKHU_CLEANUP_H0083
+    rpcTempCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours, vspFlag
+#if H_3D_SPIVMP
+      , bSPIVMPFlag
+#endif
+      , numValidMergeCand 
+      );
+#endif
+
 #else
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
 #endif
@@ -2382,8 +2399,13 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     pDBBPTmpData->abMergeFlag[uiSegment] = rpcTempCU->getMergeFlag(0);
     pDBBPTmpData->auhMergeIndex[uiSegment] = rpcTempCU->getMergeIndex(0);
     
+#if RWTH_DBBP_NO_SPU_H0057
+    AOF( rpcTempCU->getSPIVMPFlag(0) == false );
+    AOF( rpcTempCU->getVSPFlag(0) == 0 );
+#else
     pDBBPTmpData->ahVSPFlag[uiSegment] = rpcTempCU->getVSPFlag(0);
     pDBBPTmpData->acDvInfo[uiSegment] = rpcTempCU->getDvInfo(0);
+#endif
     
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {
@@ -2415,8 +2437,10 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
     rpcTempCU->setMergeFlagSubParts(pDBBPTmpData->abMergeFlag[uiSegment], uiPartAddr, uiSegment, uhDepth);
     rpcTempCU->setMergeIndexSubParts(pDBBPTmpData->auhMergeIndex[uiSegment], uiPartAddr, uiSegment, uhDepth);
     
+#if !RWTH_DBBP_NO_SPU_H0057
     rpcTempCU->setVSPFlagSubParts(pDBBPTmpData->ahVSPFlag[uiSegment], uiPartAddr, uiSegment, uhDepth);
     rpcTempCU->setDvInfoSubParts(pDBBPTmpData->acDvInfo[uiSegment], uiPartAddr, uiSegment, uhDepth);
+#endif
     
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {

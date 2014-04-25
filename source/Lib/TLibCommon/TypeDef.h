@@ -64,6 +64,8 @@
 #define H_MV          ( HEVC_EXT != 0)
 #define H_3D          ( HEVC_EXT == 2)
 
+#define NTT_BUG_FIX_TK54    1
+
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
@@ -106,6 +108,7 @@
                                               // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
                                               // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053 
 
+
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC
@@ -115,6 +118,7 @@
                                               // SEC_ONLY_TEXTURE_IC_F0151
                                               // MTK_IC_FLAG_CABAC_SIMP_G0061
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
+
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -157,6 +161,7 @@
                                               // SEC_DEPTH_DV_DERIVAITON_G0074, Simplification of DV derivation for depth, JCT3V-G0074
                                               // QC_DEPTH_MERGE_SIMP_G0127 Remove DV candidate and shifting candidate for depth coding
 
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -190,8 +195,6 @@
                                               // SCU_HS_DEPTH_DC_PRED_G0143
                                               // HS_TSINGHUA_SDC_SPLIT_G0111
                                               // QC_PKU_SDC_SPLIT_G0123 Intra SDC Split
-
-
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -306,13 +309,62 @@
 #define PPS_FIX_DEPTH                           1
 #endif
 
+
+/////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   HTM-11.0 Integrations                  //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+#if H_3D
+#define  H_3D_FIX_DBBP_IVMP                1  // Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
+
+#define MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085 1   // Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
+#define MTK_LOW_LATENCY_IC_ENCODING_H0086   1 // Low-latency IC encoding in JCT3V-H0086
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+#define MTK_LOW_LATENCY_IC_ENCODING_THRESHOLD_H0086    0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
+#endif
+#define SEC_ADAPT_DISABLE_IVMP            1   // Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
+
+#define MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113     1 // Use only one context for CABAC of delta_dc_flag as in JCTVC-H0084, JCTVC-H0100 and JCTVC-H0113
+#define MTK_SDC_FLAG_FIX_H0095            1   // Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
+#define MTK_DMM_SIMP_CODE_H0092           1   // Remove CABAC context for DMM1 mode coding
+
+
+#define QC_IV_PRED_CONSTRAINT_H0137       1   // Constraint on inter-view (motion) prediction tools
+#define ETRIKHU_BUGFIX_H0083              1   // bug-fix for DV candidate pruning
+#define ETRIKHU_CLEANUP_H0083             1   // cleaned-up source code for constructing merging candidate list
+#define ETRIKHU_CLEANUP_H0083_MISSING     1   // missing guard macros added by GT
+#define SHARP_SIMPLE_MERGE_H0062          1   // Restrict 3D-HEVC merge cand in small PUs
+#define MTK_DIS_SPBIP8X4_H0205            1   // Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
+
+#if H_3D_NBDV
+#define SEC_VER_DONBDV_H0103              1   // Vertical DV Restriction for DoNBDV
+#endif
+
+#if H_3D_DIM
+#define HS_DMM_SDC_PREDICTOR_UNIFY_H0108  1   // Unification of DMM and SDC predictor derivation
+#define LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135  1 // Use only one context for CABAC of dim_not_present_flag
+#define QC_SIMP_DELTADC_CODING_H0131      1   // Simplify detaDC entropy coding 
+
+#if H_3D_DIM_DLT
+#define SEC_NO_RESI_DLT_H0105             1
+#define MTK_DLT_CODING_FIX_H0091          1
+#endif
+#endif
+#if H_3D_DBBP
+#define MTK_DBBP_AMP_REM_H0072                 1
+#define RWTH_DBBP_NO_SPU_H0057                 1
+#define SEC_DBBP_FILTERING_H0104               1
+#define MTK_DBBP_SIGNALING_H0094               1    
+#endif
+
+#define MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133    1
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   TBD                  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
-// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications ñ with text provided as P0297).
+// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications ÅEwith text provided as P0297).
 
 // #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 // #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
@@ -322,7 +374,6 @@
 // #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
-
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -795,6 +846,25 @@ enum MVP_DIR
   MD_BELOW_LEFT,        ///< MVP of below left block
   MD_ABOVE_LEFT         ///< MVP of above left block
 };
+
+/// merging candidates
+#if ETRIKHU_CLEANUP_H0083
+enum DefaultMergCandOrder
+{
+  MRG_T = 0,            ///< MPI
+  MRG_D,                ///< DDD
+  MRG_IVMC,             ///< Temporal inter-view
+  MRG_A1,               ///< Left
+  MRG_B1,               ///< Above
+  MRG_B0,               ///< Above right
+  MRG_IVDC,             ///< Disparity inter-view
+  MRG_VSP,              ///< VSP
+  MRG_A0,               ///< Left bottom
+  MRG_B2,               ///< Above left
+  MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
+  MRG_COL               ///< Temporal co-located
+};
+#endif
 
 /// coefficient scanning type used in ACS
 enum COEFF_SCAN_TYPE

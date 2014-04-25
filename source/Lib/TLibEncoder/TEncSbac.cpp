@@ -92,7 +92,7 @@ TEncSbac::TEncSbac()
 , m_cDdcFlagSCModel           ( 1,             1,               NUM_DDC_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cDdcDataSCModel           ( 1,             1,               NUM_DDC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cAngleFlagSCModel         ( 1,             1,               NUM_ANGLE_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
 , m_cDmm1DataSCModel          ( 1,             1,               NUM_DMM1_DATA_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if H_3D_DIM_SDC
@@ -168,7 +168,7 @@ Void TEncSbac::resetEntropy           ()
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
   m_cAngleFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_ANGLE_FLAG );
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
 #endif
 #if H_3D_DIM_SDC
@@ -254,7 +254,7 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cDdcFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_FLAG );
       curCost += m_cDdcDataSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_DATA );
       curCost += m_cAngleFlagSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_ANGLE_FLAG );  
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
       curCost += m_cDmm1DataSCModel.calcCost          ( curSliceType, qp, (UChar*)INIT_DMM1_DATA );
 #endif
     }
@@ -318,7 +318,7 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
   m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
   m_cAngleFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_ANGLE_FLAG );
-#if H_3D_DIM_DMM
+#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
   m_cDmm1DataSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_DMM1_DATA );
 #endif
 #if H_3D_DIM_SDC
@@ -481,9 +481,15 @@ Void TEncSbac::xWriteExGolombLevel( UInt uiSymbol, ContextModel& rcSCModel  )
   {
     m_pcBinIf->encodeBin( 1, rcSCModel );
     UInt uiCount = 0;
+#if QC_SIMP_DELTADC_CODING_H0131
+    Bool bNoExGo = ( uiSymbol < 3 );
+
+    while( --uiSymbol && ++uiCount < 3 )
+#else
     Bool bNoExGo = (uiSymbol < 13);
 
     while( --uiSymbol && ++uiCount < 13 )
+#endif
     {
       m_pcBinIf->encodeBin( 1, rcSCModel );
     }
@@ -519,7 +525,11 @@ Void TEncSbac::xCodeDmm1WedgeIdx( UInt uiTabIdx, Int iNumBit )
 {
   for ( Int i = 0; i < iNumBit; i++ )
   {
+#if MTK_DMM_SIMP_CODE_H0092
+      m_pcBinIf->encodeBinEP( ( uiTabIdx >> i ) & 1 );
+#else
     m_pcBinIf->encodeBin( ( uiTabIdx >> i ) & 1, m_cDmm1DataSCModel.get(0, 0, 0) );
+#endif
   }
 }
 
@@ -1232,7 +1242,11 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
 
   if( ( pcCU->getSlice()->getSPS()->getMaxCUWidth() >> pcCU->getDepth( absPartIdx ) ) < 64 ) //DMM and HEVC intra modes are both allowed
   {
+#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
+    m_pcBinIf->encodeBin( isDimMode( dir ) ? 0 : 1, m_cAngleFlagSCModel.get( 0, 0, 0 ) );
+#else
     m_pcBinIf->encodeBin( isDimMode( dir ) ? 0 : 1, m_cAngleFlagSCModel.get( 0, 0, pcCU->getCtxAngleFlag( absPartIdx ) ) );
+#endif
   }
   if( isDimMode( dir ) )
   {
@@ -2312,8 +2326,11 @@ Void TEncSbac::codeDeltaDC( TComDataCU* pcCU, UInt absPartIdx )
     {
       dimDeltaDC = isDimDeltaDC( dir );
     }
-
+#if MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113
+    m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
+#else
     m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get( 0, 0, uiNumSegments-1 ) );
+#endif
   }
   else //all-zero inter SDC is not allowed
   {
@@ -2355,8 +2372,10 @@ Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #if H_3D_DBBP
 Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if !MTK_DBBP_SIGNALING_H0094
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   AOF( ePartSize == RWTH_DBBP_PACK_MODE );
+#endif
   AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
   AOF( !pcCU->getSlice()->getIsDepth() );
   
