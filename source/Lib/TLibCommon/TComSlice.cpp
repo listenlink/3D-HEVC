@@ -1935,8 +1935,9 @@ Int TComVPS::getLayerIdInNuh( Int viewIndex, Bool depthFlag )
       break; 
     }
   }
+#if !BUG_FIX_TK65
   assert( foundLayerIdinNuh != -1 ); 
-
+#endif
   return foundLayerIdinNuh;
 }
 
