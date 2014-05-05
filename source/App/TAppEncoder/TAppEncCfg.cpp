@@ -1590,7 +1590,11 @@ Void TAppEncCfg::xCheckParameter()
 #if H_3D
   xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
   xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
+#if BUG_FIX_TK65
+  xConfirmPara( ( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size() ) && ( m_numberOfLayers != m_cCameraData.getBaseViewNumbers().size() ),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#else
   xConfirmPara( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#endif
   xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
 #if H_3D_VSO
     if( m_bUseVSO )
