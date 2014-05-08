@@ -361,7 +361,7 @@
 
 #define H0044_POC_LSB_NOT_PRESENT        1      ///< JCT3V-H0044: Add constraint checking on the value of poc_reset_idc and poc_lsb_val
 #define H0056_EOS_CHECKS                 1      ///< JCT3V-H0056: Put checks on handling EOS
-
+#define H0056_SPS_TEMP_NESTING_FIX       1      ///< JCT3V-H0056: Fix the inference value of sps_temporal_id_nesting_flag when it is not present
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   TBD                  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
