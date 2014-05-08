@@ -360,6 +360,7 @@
 #endif
 
 #define H0044_POC_LSB_NOT_PRESENT        1      ///< JCT3V-H0044: Add constraint checking on the value of poc_reset_idc and poc_lsb_val
+#define H0056_EOS_CHECKS                 1      ///< JCT3V-H0056: Put checks on handling EOS
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   TBD                  //////////////////////////////

@@ -225,6 +225,10 @@ private:
   Bool                    m_prevSliceSkipped;
   Int                     m_skippedPOC;
 
+#if H0056_EOS_CHECKS
+  Bool                    m_isLastNALWasEos;
+#endif
+
 #if H_MV
   // For H_MV m_bFirstSliceInSequence indicates first slice in sequence of the particular layer  
   Int                     m_layerId;
