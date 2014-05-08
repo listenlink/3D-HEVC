@@ -1943,6 +1943,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setSliceCurEndCUAddr(numCTUs*maxParts);
   }
   
+#if H0044_POC_LSB_NOT_PRESENT
+    UInt slicePicOrderCntLsb = 0;
+#endif
+
   if(!rpcSlice->getDependentSliceSegmentFlag())
   {
 #if H_MV    
@@ -1993,7 +1997,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 
 
 #if H_MV
+#if !H0044_POC_LSB_NOT_PRESENT
     UInt slicePicOrderCntLsb = 0;
+#endif
     Int iPOClsb = slicePicOrderCntLsb;  // Needed later
     if ( (rpcSlice->getLayerId() > 0 && !vps->getPocLsbNotPresentFlag( rpcSlice->getLayerIdInVps())) || !rpcSlice->getIdrPicFlag() )
     {
@@ -2578,6 +2584,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPocResetIdc( 0 );
     }
 
+#if H0044_POC_LSB_NOT_PRESENT
+    if ( rpcSlice->getVPS()->getPocLsbNotPresentFlag(rpcSlice->getLayerId()) && slicePicOrderCntLsb > 0 )
+    {
+      assert( rpcSlice->getPocResetIdc() != 2 );
+    }
+#endif
     if( rpcSlice->getPocResetIdc() !=  0 )
     {
       READ_CODE( 6, uiCode, "poc_reset_period_id" ); rpcSlice->setPocResetPeriodId( uiCode );
@@ -2592,6 +2604,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_FLAG( uiCode, "full_poc_reset_flag" ); rpcSlice->setFullPocResetFlag( uiCode == 1 );
       READ_CODE( rpcSlice->getPocLsbValLen() , uiCode, "poc_lsb_val" ); rpcSlice->setPocLsbVal( uiCode );
+#if H0044_POC_LSB_NOT_PRESENT
+      if ( rpcSlice->getVPS()->getPocLsbNotPresentFlag(rpcSlice->getLayerId()) && rpcSlice->getFullPocResetFlag() )
+      {
+        assert( rpcSlice->getPocLsbVal() == 0 );
+      }
+#endif
     }          
 
     // Derive the value of PocMsbValRequiredFlag
