@@ -631,6 +631,13 @@ Void TDecTop::xActivateParameterSets()
     assert (0);
   }
 
+#if H0056_SPS_TEMP_NESTING_FIX
+  if( m_layerId > 0 )
+  {
+    sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
+  }
+#endif
+
   if( pps->getDependentSliceSegmentsEnabledFlag() )
   {
     Int NumCtx = pps->getEntropyCodingSyncEnabledFlag()?2:1;
