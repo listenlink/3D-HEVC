@@ -6829,7 +6829,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
         assert(picDepth != NULL);
 #else
         picDepth = getSlice()->getIvPic( true, iTargetViewIdx );
+#if !BUG_FIX_TK65
         assert(picDepth != NULL);
+#endif
 #endif
         if (picDepth && bDepthRefine)
           estimateDVFromDM(iTargetViewIdx, uiPartIdx, picDepth, uiPartAddr, &cColMv );
@@ -6900,7 +6902,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           assert(picDepth != NULL);
 #else
           TComPic* picDepth = getSlice()->getIvPic( true, pDInfo->m_aVIdxCan );
+#if !BUG_FIX_TK65
           assert(picDepth!=NULL);
+#endif
 #endif
 
           if (picDepth && bDepthRefine)
@@ -6959,7 +6963,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     assert(picDepth != NULL);
 #else
     picDepth = getSlice()->getIvPic( true, viewIndex );
+#if !BUG_FIX_TK65
     assert(picDepth!=NULL);
+#endif
 #endif
     if (picDepth && bDepthRefine)
     {
@@ -7059,7 +7065,9 @@ Bool TComDataCU::xCheckSpatialNBDV( TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pN
           assert(picDepth != NULL);
 #else
           picDepth   = getSlice()->getIvPic (true, refViewIdx );
+#if !BUG_FIX_TK65
           assert(picDepth != NULL);
+#endif
 #endif
           UInt uiPartIdx = 0;   //Notes from MTK: Please confirm that using 0 as partition index and partition address is correct for CU-level DoNBDV
           UInt uiPartAddr = 0;  //QC: confirmed

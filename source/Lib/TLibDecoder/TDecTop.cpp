@@ -364,6 +364,9 @@ TDecTop::TDecTop()
   m_bFirstSliceInSequence   = true;
   m_prevSliceSkipped = false;
   m_skippedPOC = 0;
+#if H0056_EOS_CHECKS
+  m_isLastNALWasEos = false;
+#endif
 #if H_MV
   m_layerId = 0;
   m_viewId = 0;
@@ -627,6 +630,13 @@ Void TDecTop::xActivateParameterSets()
     printf ("Parameter set activation failed!");
     assert (0);
   }
+
+#if H0056_SPS_TEMP_NESTING_FIX
+  if( m_layerId > 0 )
+  {
+    sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
+  }
+#endif
 
   if( pps->getDependentSliceSegmentsEnabledFlag() )
   {
@@ -1208,6 +1218,9 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
   {
     case NAL_UNIT_VPS:
       xDecodeVPS();
+#if H0056_EOS_CHECKS
+      m_isLastNALWasEos = false;
+#endif
       return false;
       
     case NAL_UNIT_SPS:
@@ -1220,6 +1233,12 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       
     case NAL_UNIT_PREFIX_SEI:
     case NAL_UNIT_SUFFIX_SEI:
+#if H0056_EOS_CHECKS
+      if ( nalu.m_nalUnitType == NAL_UNIT_SUFFIX_SEI )
+      {
+        assert( m_isLastNALWasEos == false );
+      }
+#endif
       xDecodeSEI( nalu.m_Bitstream, nalu.m_nalUnitType );
       return false;
 
@@ -1239,6 +1258,20 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RADL_R:
     case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_RASL_R:
+#if H0056_EOS_CHECKS
+      if (nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_N ||
+          nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TSA_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TSA_N ||
+          nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_N ||
+          nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_RADL_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_RADL_N ||
+          nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_RASL_N )
+      {
+        assert( m_isLastNALWasEos == false );
+      }
+      else
+      {
+        m_isLastNALWasEos = false;
+      }
+#endif
 #if H_MV
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag, sliceSkippedFlag );
 #else
@@ -1246,6 +1279,16 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
 #endif
       break;
     case NAL_UNIT_EOS:
+#if H0056_EOS_CHECKS
+      assert( m_isLastNALWasEos == false );
+      //Check layer id of the nalu. if it is not 0, give a warning message and just return without doing anything.
+      if (nalu.m_layerId > 0)
+      {
+        printf( "\nThis bitstream has EOS with non-zero layer id.\n" );
+        return false;
+      }
+      m_isLastNALWasEos = true;
+#endif
       m_associatedIRAPType = NAL_UNIT_INVALID;
       m_pocCRA = 0;
       m_pocRandomAccess = MAX_INT;
@@ -1263,6 +1306,11 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_EOB:
       return false;
       
+#if H0056_EOS_CHECKS
+    case NAL_UNIT_FILLER_DATA:
+      assert( m_isLastNALWasEos == false );
+      return false;
+#endif
       
     case NAL_UNIT_RESERVED_VCL_N10:
     case NAL_UNIT_RESERVED_VCL_R11:
@@ -1283,7 +1331,9 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_RESERVED_VCL30:
     case NAL_UNIT_RESERVED_VCL31:
       
+#if !H0056_EOS_CHECKS
     case NAL_UNIT_FILLER_DATA:
+#endif
     case NAL_UNIT_RESERVED_NVCL41:
     case NAL_UNIT_RESERVED_NVCL42:
     case NAL_UNIT_RESERVED_NVCL43:
