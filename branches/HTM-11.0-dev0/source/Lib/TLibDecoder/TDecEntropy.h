@@ -66,7 +66,7 @@ public:
 
   virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
 #if H_3D
-  virtual Void  parseSPS                  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  )         = 0;
+  virtual Void  parseSPS                  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  )                    = 0;
 #else
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
 #endif
@@ -76,7 +76,11 @@ public:
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
 #endif
 
+#if H_MV_HLS_8_HRD_Q0102_08
+  virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx )       = 0;
+#else
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)       = 0;
+#endif
 
   virtual Void  parseTerminatingBit       ( UInt& ruilsLast )                                     = 0;
   
@@ -124,7 +128,7 @@ public:
   virtual Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType) = 0;
   virtual Void updateContextTables( SliceType eSliceType, Int iQp ) = 0;
   
-  virtual ~TDecEntropyIf() {}
+  virtual ~TDecEntropyIf() {}; 
 };
 
 /// entropy decoder class
@@ -159,8 +163,11 @@ public:
 #else
   Void    decodePPS                   ( TComPPS* pcPPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
 #endif
+#if H_MV_HLS_8_HRD_Q0102_08
+  Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, targetOlsIdx );         }
+#else
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager);         }
-
+#endif
   Void    decodeTerminatingBit        ( UInt& ruiIsLast )       { m_pcEntropyDecoderIf->parseTerminatingBit(ruiIsLast);     }
   
   TDecEntropyIf* getEntropyDecoder() { return m_pcEntropyDecoderIf; }

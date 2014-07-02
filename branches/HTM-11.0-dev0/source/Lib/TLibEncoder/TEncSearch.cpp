@@ -2808,7 +2808,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
                            Bool        bLumaOnly )
 {
   UInt    uiDepth        = pcCU->getDepth(0);
-  UInt    uiNumPU        = pcCU->getNumPartInter();
+  UInt    uiNumPU        = pcCU->getNumPartitions();
   UInt    uiInitTrDepth  = pcCU->getPartitionSize(0) == SIZE_2Nx2N ? 0 : 1;
   UInt    uiWidth        = pcCU->getWidth (0) >> uiInitTrDepth;
   UInt    uiHeight       = pcCU->getHeight(0) >> uiInitTrDepth;
@@ -3970,7 +3970,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
   TComMv        cMvBi[2];
   TComMv        cMvTemp[2][33];
   
-  Int           iNumPart    = pcCU->getNumPartInter();
+  Int           iNumPart    = pcCU->getNumPartitions();
   Int           iNumPredDir = pcCU->getSlice()->isInterP() ? 1 : 2;
   
   TComMv        cMvPred[2][33];
@@ -5643,16 +5643,7 @@ Void TEncSearch::encodeResAndCalcRdInterCU( TComDataCU* pcCU, TComYuv* pcYuvOrg,
     }
     
       m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
-#if 0 // check
-    {
-      m_pcEntropyCoder->resetBits();
-      m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth(0), pcCU->getWidth(0), pcCU->getHeight(0) );
-      const UInt uiBitsForCoeff = m_pcEntropyCoder->getNumberOfWrittenBits();
-        m_pcRDGoOnSbacCoder->load( m_pppcRDSbacCoder[pcCU->getDepth(0)][CI_CURR_BEST] );
-      if( uiBitsForCoeff != uiBits )
-        assert( 0 );
-    }
-#endif
+
     uiBits = 0;
     {
       TComYuv *pDummy = NULL;

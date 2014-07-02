@@ -56,6 +56,10 @@ using namespace std;
 
 TAppEncTop::TAppEncTop()
 {
+
+#if H_MV_HLS_8
+  m_vps = new TComVPS; 
+#endif
 #if !H_MV
   m_iFrameRcvd = 0;
 #endif
@@ -65,12 +69,23 @@ TAppEncTop::TAppEncTop()
 
 TAppEncTop::~TAppEncTop()
 {
+#if H_MV_HLS_8
+  if (m_vps)
+  {
+   delete m_vps; 
+  };
+#endif
+
 }
 
 Void TAppEncTop::xInitLibCfg()
 {
 #if H_MV
+#if H_MV_HLS_8
+  TComVPS& vps = (*m_vps);   
+#else
   TComVPS& vps = m_vps;   
+#endif
 #else
   TComVPS vps;
 #endif
@@ -408,6 +423,8 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setTMISEITargetPivotValue                    ( m_targetPivotValue );
   m_cTEncTop.setTMISEICameraIsoSpeedIdc                   ( m_cameraIsoSpeedIdc );
   m_cTEncTop.setTMISEICameraIsoSpeedValue                 ( m_cameraIsoSpeedValue );
+  m_cTEncTop.setTMISEIExposureIndexIdc                    ( m_exposureIndexIdc );
+  m_cTEncTop.setTMISEIExposureIndexValue                  ( m_exposureIndexValue );
   m_cTEncTop.setTMISEIExposureCompensationValueSignFlag   ( m_exposureCompensationValueSignFlag );
   m_cTEncTop.setTMISEIExposureCompensationValueNumerator  ( m_exposureCompensationValueNumerator );
   m_cTEncTop.setTMISEIExposureCompensationValueDenomIdc   ( m_exposureCompensationValueDenomIdc );
@@ -690,10 +707,17 @@ Void TAppEncTop::xDestroyLib()
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
 #if H_3D
+#if H_MV_HLS_8
+  for ( Int viewIndex = 0; viewIndex < m_vps->getNumViews(); viewIndex++ )
+  {
+    m_vps->initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
+      m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
+#else
   for ( Int viewIndex = 0; viewIndex < m_vps.getNumViews(); viewIndex++ )
   {
-    m_vps.initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
+  m_vps.initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
       m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
+#endif
   }
 #endif
 
@@ -1274,7 +1298,12 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     }
 
   Int  defaultDirectDependencyType = -1; 
+#if MV_FIX_DEP_TYPES
+  Bool defaultDirectDependencyFlag = false; 
+#else
   Bool defaultDirectDependencyFlag = true; 
+#endif
+
   for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
   {
     Int numRefLayers = (Int) m_directRefLayers[depLayer].size(); 
@@ -1292,6 +1321,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       else
       {
         defaultDirectDependencyType = curDirectDependencyType; 
+#if MV_FIX_DEP_TYPES
+        defaultDirectDependencyFlag = true; 
+#endif
       }
       
       vps.setDirectDependencyType( depLayer, refLayer, curDirectDependencyType);       
@@ -1481,7 +1513,11 @@ Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
 
 Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 {
+#if H_MV_HLS_8_PMS_Q0195_20
+  vps.setRepFormatIdxPresentFlag( false ); 
+#else
   vps.setRepFormatIdxPresentFlag( true ); 
+#endif
   vps.setVpsNumRepFormatsMinus1 ( 0    ); 
 
   TComRepFormat* repFormat = new TComRepFormat; 
@@ -1498,10 +1534,12 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
   assert( vps.getRepFormat( 0 ) == NULL ); 
   vps.setRepFormat( 0 , repFormat );
 
+#if !H_MV_HLS_8_PMS_Q0195_20
   for(Int i = 0; i <= vps.getMaxLayersMinus1(); i++ )
   {
     vps.setVpsRepFormatIdx( i , 0 ); 
   }
+#endif
 }
 
 Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
@@ -1512,16 +1550,32 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
 
   assert ( dpbSize != 0 ); 
 
+#if H_MV_HLS_8_HRD_Q0102_08
+  for( Int i = 0; i < vps.getNumOutputLayerSets(); i++ )
+#else
   for( Int i = 1; i < vps.getNumOutputLayerSets(); i++ )
+#endif
   {  
+#if H_MV_HLS_8_MIS_Q0102_30
+    Int currLsIdx = vps.olsIdxToLsIdx( i ); 
+#endif
     std::vector<Int> targetDecLayerIdList = vps.getTargetDecLayerIdList( i ); 
     Bool subLayerFlagInfoPresentFlag = false; 
 
+#if H_MV_HLS_8_MIS_Q0102_30
+    for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( currLsIdx ); j++ )
+#else
     for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( i ); j++ )
+#endif
     {   
       Bool subLayerDpbInfoPresentFlag = false; 
-      assert( vps.getNumSubDpbs( vps.getLayerSetIdxForOutputLayerSet( i ) ) == targetDecLayerIdList.size() ); 
-      for( Int k = 0; k < vps.getNumSubDpbs( vps.getLayerSetIdxForOutputLayerSet( i )); k++ )   
+#if H_MV_HLS_8_MIS_Q0102_30 || H_MV_HLS_8_DBP_NODOC_42
+      assert( vps.getNumLayersInIdList( currLsIdx ) == targetDecLayerIdList.size() ); 
+      for( Int k = 0; k < vps.getNumLayersInIdList( currLsIdx ); k++ )   
+#else
+      assert( vps.getNumSubDpbs( vps.olsIdxToLsIdx( i ) ) == targetDecLayerIdList.size() ); 
+      for( Int k = 0; k < vps.getNumSubDpbs( vps.olsIdxToLsIdx( i )); k++ )   
+#endif
       {
         Int layerIdInVps = vps.getLayerIdInVps( targetDecLayerIdList[k] );           
 #if H_MV_HLS7_GEN
@@ -1586,19 +1640,24 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
 
   Int numAddOuputLayerSets = (Int) m_outputLayerSetIdx.size(); 
   // Additional output layer sets + profileLevelTierIdx
-  vps.setDefaultTargetOutputLayerIdc      ( m_defaultTargetOutputLayerIdc );   
-  vps.setNumAddOutputLayerSets            ( numAddOuputLayerSets          ); 
+  vps.setDefaultOutputLayerIdc      ( m_defaultOutputLayerIdc );   
+#if H_MV_HLS_8_SYN_39_19
+  vps.setNumAddLayerSets            ( 0                             );  
+  vps.setNumAddOlss                 ( numAddOuputLayerSets          ); 
+#else
+  vps.setNumAddLayerSets            ( numAddOuputLayerSets          ); 
+#endif
   vps.initTargetLayerIdLists(); 
 
   for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + numAddOuputLayerSets; olsIdx++)
   {
     Int addOutLsIdx = olsIdx - m_vpsNumLayerSets;     
     
-    vps.setOutputLayerSetIdxMinus1( olsIdx, ( ( addOutLsIdx < 0 ) ?  olsIdx  : m_outputLayerSetIdx[ addOutLsIdx ] ) - 1 ); 
+    vps.setLayerSetIdxForOlsMinus1( olsIdx, ( ( addOutLsIdx < 0 ) ?  olsIdx  : m_outputLayerSetIdx[ addOutLsIdx ] ) - 1 ); 
 
-    std::vector<Int>& layerIdList    = m_layerIdsInSets[ vps.getLayerSetIdxForOutputLayerSet( olsIdx ) ];
+    std::vector<Int>& layerIdList    = m_layerIdsInSets[ vps.olsIdxToLsIdx( olsIdx ) ];
 
-    if (vps.getDefaultTargetOutputLayerIdc() == 2 || addOutLsIdx >= 0 )
+    if (vps.getDefaultOutputLayerIdc() == 2 || addOutLsIdx >= 0 )
     { 
       for ( Int i = 0; i < layerIdList.size(); i++)
       {
@@ -1636,10 +1695,24 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
     {
       vps.setProfileLevelTierIdx( olsIdx, m_profileLevelTierIdx[ olsIdx ] ); 
     }
-
+#if H_MV_HLS_7_VPS_P0300_27
+    if ( vps.getNumOutputLayersInOutputLayerSet( olsIdx ) == 1 && 
+        vps.getNumDirectRefLayers( vps.getOlsHighestOutputLayerId( olsIdx ) ) )
+    {   
+      vps.setAltOutputLayerFlag( olsIdx , m_altOutputLayerFlag[ olsIdx ]);
+    }
+    else
+    {
+      vps.setAltOutputLayerFlag( olsIdx , false );
+      if ( m_altOutputLayerFlag[ olsIdx ] )
+      {
+        printf( "\nWarning: Ignoring AltOutputLayerFlag for output layer set %d, since more than one output layer or no dependent layers.\n", olsIdx );            
+      }
+    }
+#else
     vps.setAltOutputLayerFlag( olsIdx , false);     
+#endif
   }
-
 }
 
 Void TAppEncTop::xSetVPSVUI( TComVPS& vps )

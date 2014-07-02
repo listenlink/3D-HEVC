@@ -126,10 +126,27 @@ Void readNalUnitHeader(InputNALUnit& nalu)
   }
   else
   {
+#if H_MV_HLS_8_GEN_Q0108_13
+
+    // If nal_unit_type is in the range of BLA_W_LP to RSV_IRAP_VCL23, inclusive, i.e. the coded 
+    // slice segment belongs to an IRAP picture, TemporalId shall be equal to 0. 
+    // Otherwise, when nal_unit_type is equal to TSA_R, TSA_N, STSA_R, or STSA_N, TemporalId shall not be equal to 0. 
+    // Otherwise, if nal_unit_type is equal to TSA or TSA_N, TemporalId shall not be equal to 0. 
+    // Otherwise, when nuh_layer_id is equal to 0 and nal_unit_type is equal to STSA_R or STSA_N, 
+    // TemporalId shall not be equal to 0.
+
+    assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TSA_R
+         && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TSA_N    );
+
+    assert( nalu.m_layerId > 0 
+      || ( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_R
+        && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_N ) );
+#else
     assert( nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TSA_R
          && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_TSA_N
          && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_R
          && nalu.m_nalUnitType != NAL_UNIT_CODED_SLICE_STSA_N );
+#endif
   }
 }
 /**

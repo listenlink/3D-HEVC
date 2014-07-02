@@ -88,12 +88,15 @@ protected:
 // layer sets   
   Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
   std::vector< std::vector<Int> > m_layerIdsInSets;           ///< LayerIds in vps of layer set 
-  Int                    m_defaultTargetOutputLayerIdc;       ///< Specifies output layers of layer sets, 0: output all layers, 1: output highest layers, 2: specified by LayerIdsInDefOuputLayerSet
+  Int                    m_defaultOutputLayerIdc;       ///< Specifies output layers of layer sets, 0: output all layers, 1: output highest layers, 2: specified by LayerIdsInDefOuputLayerSet
   std::vector<Int>       m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
   std::vector< std::vector<Int> > m_layerIdsInAddOutputLayerSet; ///< LayerIds in vps of additional output layers
   std::vector< std::vector<Int> > m_layerIdsInDefOutputLayerSet; ///< Indices in vps of output layers in layer sets
   std::vector<Int>       m_profileLevelTierIdx;               ///< Indices of of profile level tier
-  
+  #if H_MV_HLS_7_VPS_P0300_27
+  std::vector<Bool>      m_altOutputLayerFlag;                ///< Alt output layer flag
+#endif
+
   // Dependencies
   std::vector< std::vector<Int> > m_directRefLayers;          ///< LayerIds of direct reference layers
   std::vector< std::vector<Int> > m_dependencyTypes;          ///< Dependency types of direct reference layers
@@ -337,6 +340,8 @@ protected:
   Int       m_numPivots;
   Int       m_cameraIsoSpeedIdc;
   Int       m_cameraIsoSpeedValue;
+  Int       m_exposureIndexIdc;
+  Int       m_exposureIndexValue;
   Int       m_exposureCompensationValueSignFlag;
   Int       m_exposureCompensationValueNumerator;
   Int       m_exposureCompensationValueDenomIdc;

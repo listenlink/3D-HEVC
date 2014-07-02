@@ -194,6 +194,9 @@ private:
 #if H_MV
   Bool*                    m_layerInitilizedFlag; // initialization Layers
   static ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
+#if  H_MV_HLS_8_HRD_Q0102_08
+  Int                      m_targetOptLayerSetIdx; 
+#endif
 #else
   ParameterSetManagerDecoder m_parameterSetManagerDecoder;  // storage for parameter sets 
 #endif
@@ -224,7 +227,12 @@ private:
   Bool                    m_bFirstSliceInSequence;
   Bool                    m_prevSliceSkipped;
   Int                     m_skippedPOC;
-
+#if SETTING_NO_OUT_PIC_PRIOR  
+  Bool                    m_bFirstSliceInBitstream;
+  Int                     m_lastPOCNoOutputPriorPics;
+  Bool                    m_isNoOutputPriorPics;
+  Bool                    m_craNoRaslOutputFlag;    //value of variable NoRaslOutputFlag of the last CRA pic
+#endif
 #if H0056_EOS_CHECKS
   Bool                    m_isLastNALWasEos;
 #endif
@@ -261,6 +269,14 @@ public:
 #endif
   
   Void  deletePicBuffer();
+#if H_MV
+#if H_MV_HLS_7_VPS_P0300_27
+  TComVPS* getActiveVPS() { return m_parameterSetManagerDecoder.getActiveVPS( ); }
+#endif
+  TComSPS* getActiveSPS() { return m_parameterSetManagerDecoder.getActiveSPS( m_layerId ); }
+#else
+  TComSPS* getActiveSPS() { return m_parameterSetManagerDecoder.getActiveSPS(); }
+#endif
 
 #if H_MV
   Void endPicDecoding(Int& poc, TComList<TComPic*>*& rpcListPic,  std::vector<Int>& targetDecLayerIdSet);  
@@ -268,11 +284,20 @@ public:
   Void executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic);
 #endif
   
+#if SETTING_NO_OUT_PIC_PRIOR  
+  Void  checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic);
+
+  Bool  getNoOutputPriorPicsFlag () { return m_isNoOutputPriorPics; }
+  Void  setNoOutputPriorPicsFlag (bool val) { m_isNoOutputPriorPics = val; }
+#endif
 #if H_MV    
   TComPic*                getPic                ( Int poc );
   TComList<TComPic*>*     getListPic            ()               { return &m_cListPic;  }  
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
   Void                    setLayerInitilizedFlags( Bool* val )    { m_layerInitilizedFlag = val; }
+#if  H_MV_HLS_8_HRD_Q0102_08
+  Void                    setTargetOptLayerSetIdx( Int targetOptLayerSetIdx ) { m_targetOptLayerSetIdx = targetOptLayerSetIdx; }    
+#endif
   TComVPS*                getPrefetchedVPS      ()               { return m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); }; //Assuming that currently only one VPS is present. 
   Int                     getCurrPoc            ()               { return m_apcSlicePilot->getPOC(); }
   Void                    setLayerId            ( Int layer)     { m_layerId = layer;   }
