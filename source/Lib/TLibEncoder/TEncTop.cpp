@@ -696,10 +696,18 @@ Void TEncTop::xInitSPS()
   m_cSPS.setUpdateRepFormatFlag           ( false );    
   m_cSPS.setSpsInferScalingListFlag       ( m_layerId > 0 && m_cVPS->getInDirectDependencyFlag( getLayerIdInVps(), 0 ) ); 
   m_cSPS.setSpsScalingListRefLayerId      ( 0              ); 
-  m_cSPS.setSpsExtensionFlag              ( true ); 
+  m_cSPS.setSpsExtensionPresentFlag              ( true ); 
+#if H_MV_HLS_8_SPS_NODOC_48
+  m_cSPS.setSpsMultilayerExtensionFlag    ( true ); 
+#else
   m_cSPS.setSpsExtensionTypeFlag          ( PS_EX_T_MV ,true ); 
+#endif
 #if H_3D
+#if H_MV_HLS_8_SPS_NODOC_48
+  m_cSPS.setSps3dExtensionFlag            ( true ); 
+#else
   m_cSPS.setSpsExtensionTypeFlag          ( PS_EX_T_3D ,true ); 
+#endif
 #endif
 #endif
   m_cSPS.setPicWidthInLumaSamples         ( m_iSourceWidth      );
@@ -768,6 +776,22 @@ Void TEncTop::xInitSPS()
     m_cSPS.setMaxDecPicBuffering(m_maxDecPicBuffering[i], i);
     m_cSPS.setNumReorderPics(m_numReorderPics[i], i);
   }
+#if H_MV_HLS_8_HRD_Q0102_08
+  for ( Int ols = 0; ols < m_cVPS->getNumOutputLayerSets(); ols++)
+  {
+    // Check MaxDecPicBuffering
+    const std::vector<Int>& targetDecLayerIdList = m_cVPS->getTargetDecLayerIdList( m_cVPS->olsIdxToLsIdx( ols )); 
+    for( Int is = 0; is < targetDecLayerIdList.size(); is++  )
+    {
+      m_cSPS.inferSpsMaxDecPicBufferingMinus1( m_cVPS, ols, targetDecLayerIdList[is], true );       
+    }
+  }
+
+#if H_MV_HLS_8_RPS_Q0100_36
+  m_cVPS->inferDbpSizeLayerSetZero( &m_cSPS, true ); 
+#endif
+
+#endif
   m_cSPS.setPCMBitDepthLuma (g_uiPCMBitDepthLuma);
   m_cSPS.setPCMBitDepthChroma (g_uiPCMBitDepthChroma);
   m_cSPS.setPCMFilterDisableFlag  ( m_bPCMFilterDisableFlag );
@@ -828,10 +852,16 @@ Void TEncTop::xInitPPS()
   }
   m_cPPS.setPPSId( getLayerIdInVps() );
   m_cPPS.setSPSId( getLayerIdInVps() );
-
+#if H_MV_HLS_8_SPS_NODOC_48
+  m_cPPS.setPpsMultilayerExtensionFlag    ( true ); 
+#if H_3D
+  m_cPPS.setPps3dExtensionFlag            ( true ); 
+#endif
+#else
   m_cPPS.setPpsExtensionTypeFlag          ( PPS_EX_T_MV ,true ); 
 #if H_3D
   m_cPPS.setPpsExtensionTypeFlag          ( PPS_EX_T_3D ,true ); 
+#endif
 #endif
 #endif
 

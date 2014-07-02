@@ -67,7 +67,9 @@ private:
   Int                             m_numDecoders;                               ///< number of decoder instances
   TComPicLists                    m_ivPicLists;                                ///< picture buffers of decoder instances
   Bool                            m_layerInitilizedFlags[ MAX_NUM_LAYER_IDS ]; ///< for layerwise startup 
-
+#if H_MV_HLS_7_VPS_P0300_27
+  TComVPS*                        m_vps;                                ///< active VPS
+#endif
 #else
   TDecTop                         m_cTDecTop;                     ///< decoder class
   TVideoIOYuv                     m_cTVideoIOYuvReconFile;        ///< reconstruction YUV class
@@ -79,6 +81,11 @@ private:
 #else
   Int                             m_iPOCLastDisplay;              ///< last POC in display order
 #endif
+#if H_MV_HLS_7_VPS_P0300_27
+  Bool                            m_markedForOutput; 
+#endif
+
+
 #if H_3D
   FILE*                           m_pScaleOffsetFile;
   CamParsCollector                m_cCamParsCollector;
@@ -98,6 +105,44 @@ protected:
 
 #if H_MV
   Void  xWriteOutput      ( TComList<TComPic*>* pcListPic, Int layerId, Int tId ); ///< write YUV to file
+
+#if H_MV_HLS_7_VPS_P0300_27
+  Void  xMarkForOutput   ( Bool allLayersDecoded, Int pocLastPic, Int layerIdLastPic );         
+  Void  xMarkAltOutPic    ( Int targetOutputLayer, Int pocLastPic )
+  {
+    Int optLayerIdxInVps = m_vps->getLayerIdInNuh( targetOutputLayer ); 
+    Int highestNuhLayerId = -1; 
+    TComPic* picWithHighestNuhLayerId = NULL; 
+    for (Int dIdx = 0; dIdx < m_numDecoders; dIdx++)
+    {
+      Int curLayerId = m_tDecTop[dIdx]->getLayerId();
+      Int curLayerIdxInVps = m_vps->getLayerIdInNuh( curLayerId  ); 
+      if ( m_vps->getInDirectDependencyFlag(optLayerIdxInVps, curLayerIdxInVps ) )
+      {
+        TComPic* curPic = m_ivPicLists.getPic( curLayerId, pocLastPic ); 
+        if (curPic != NULL)
+        {
+          if (curPic->getReconMark() && curPic->getPicOutputFlag() )
+          {
+            curPic->setOutputMark   ( false ); 
+            curPic->setPicOutputFlag( false ); 
+            if ( curLayerId > highestNuhLayerId)
+            {
+              highestNuhLayerId = curLayerId ; 
+              picWithHighestNuhLayerId = curPic; 
+            }            
+          }
+        }
+      }
+    }
+    if ( picWithHighestNuhLayerId != NULL )
+    {
+      picWithHighestNuhLayerId->setPicOutputFlag(true); 
+      picWithHighestNuhLayerId->setOutputMark   (true); 
+    }
+  }
+#endif
+
   Void  xFlushOutput      ( TComList<TComPic*>* pcListPic, Int layerId ); ///< flush all remaining decoded pictures to file
   Int   xGetDecoderIdx    ( Int layerId, Bool createFlag = false );
 #else

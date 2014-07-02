@@ -60,9 +60,9 @@
 
 #if H_MV
 #define NV_VERSION        "11.0"                ///< Current software version
-#define HM_VERSION        "13.0"                ///< 
+#define HM_VERSION        "14.0"                ///< 
 #else
-#define NV_VERSION        "13.0"                 ///< Current software version
+#define NV_VERSION        "14.0"                 ///< Current software version
 #endif
 
 // ====================================================================================================================
@@ -214,7 +214,7 @@ __inline T gCeilLog2( T val )
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
 
 // Explicit temporal layer QP offset
-#define MAX_TLAYER                  8           ///< max number of temporal layer
+#define MAX_TLAYER                  7           ///< max number of temporal layer
 #define HB_LAMBDA_FOR_LDC           1           ///< use of B-style lambda for non-key pictures in low-delay mode
 
 // Fast estimation of generalized B in low-delay mode

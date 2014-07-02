@@ -2882,7 +2882,7 @@ Void TComDataCU::setSizeSubParts( UInt uiWidth, UInt uiHeight, UInt uiAbsPartIdx
   memset( m_puhHeight + uiAbsPartIdx, uiHeight, sizeof(UChar)*uiCurrPartNumb );
 }
 
-UChar TComDataCU::getNumPartInter()
+UChar TComDataCU::getNumPartitions()
 {
   UChar iNumPart = 0;
   
