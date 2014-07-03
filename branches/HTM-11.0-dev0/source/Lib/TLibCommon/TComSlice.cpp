@@ -1862,6 +1862,10 @@ TComVPS::TComVPS()
 , m_vpsVUI                 (  NULL )
 #endif
 {
+#if H_MV_HLS_8_SYN_Q0041_03
+  m_vpsBaseLayerInternalFlag = true; 
+#endif
+
   for( Int i = 0; i < MAX_TLAYER; i++)
   {
     m_numReorderPics[i] = 0;
@@ -1878,7 +1882,12 @@ TComVPS::TComVPS()
   } 
   m_vpsNumProfileTierLevelMinus1 = -1; 
     
+#if H_MV_HLS_8_SYN_39_19
+  m_numAddLayerSets              = 0;   
+  m_numAddOlss                   = 0; 
+#else
   m_numAddLayerSets              = -1;   
+#endif
   m_defaultOutputLayerIdc     = 0; 
   
   for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
