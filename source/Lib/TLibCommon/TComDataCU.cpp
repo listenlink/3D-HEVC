@@ -609,10 +609,8 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
     memset( m_apSegmentDCOffset[0]  + firstElement,     0,                numElements * sizeof( *m_apSegmentDCOffset[0] ) );
     memset( m_apSegmentDCOffset[1]  + firstElement,     0,                numElements * sizeof( *m_apSegmentDCOffset[1] ) );
 #endif
-#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
     m_apDmmPredictor[0] = 0;
     m_apDmmPredictor[1] = 0;
-#endif
 #endif
 #if H_3D_DBBP
     memset( m_pbDBBPFlag        + firstElement, false,                    numElements * sizeof( *m_pbDBBPFlag ) );
@@ -787,10 +785,8 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp, Bool bTransquantBypass )
       m_apSegmentDCOffset[0][ui] = 0;
       m_apSegmentDCOffset[1][ui] = 0;
 #endif
-#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
       m_apDmmPredictor[0] = 0;
       m_apDmmPredictor[1] = 0;
-#endif
 #endif
 #if H_3D_DBBP
       m_pbDBBPFlag[ui] = false;
@@ -906,10 +902,8 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_apSegmentDCOffset[0], 0, sizeof(Pel) * m_uiNumPartition   );
   memset( m_apSegmentDCOffset[1], 0, sizeof(Pel) * m_uiNumPartition   );
 #endif
-#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
   m_apDmmPredictor[0] = 0;
   m_apDmmPredictor[1] = 0;
-#endif
 #endif
 #if H_3D_DBBP
   memset( m_pbDBBPFlag,         0, iSizeInBool  );
@@ -2398,26 +2392,6 @@ UInt TComDataCU::getCtxSDCFlag( UInt uiAbsPartIdx )
   return 0;
 }
 
-UInt TComDataCU::getCtxAngleFlag( UInt uiAbsPartIdx )
-{
-#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
-  return 0;
-#else
-  TComDataCU* pcTempCU;
-  UInt        uiTempPartIdx;
-  UInt        uiCtx = 0;
-
-  // Get BCBP of left PU
-  pcTempCU = getPULeft( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-  uiCtx    = ( pcTempCU && pcTempCU->isIntra( uiTempPartIdx ) ) ? ( pcTempCU->getLumaIntraDir( uiTempPartIdx ) < NUM_INTRA_MODE ? 1 : 0 ) : 0;
-
-  // Get BCBP of above PU
-  pcTempCU = getPUAbove( uiTempPartIdx, m_uiAbsIdxInLCU + uiAbsPartIdx );
-  uiCtx   += ( pcTempCU && pcTempCU->isIntra( uiTempPartIdx ) ) ? ( pcTempCU->getLumaIntraDir( uiTempPartIdx ) < NUM_INTRA_MODE ? 1 : 0 ) : 0;
-
-  return uiCtx;
-#endif
-}
 #endif
 
 UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
@@ -4141,7 +4115,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4168,7 +4142,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4195,7 +4169,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4221,7 +4195,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4248,7 +4222,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4281,7 +4255,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4307,7 +4281,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4333,7 +4307,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4357,7 +4331,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4383,7 +4357,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if H_3D_ARP
       && !bARPFlag
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       && !bDBBPFlag
 #endif
       )
@@ -4456,7 +4430,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
       Int         iTexPosX, iTexPosY;
       const TComMv cMvRounding( 1 << ( 2 - 1 ), 1 << ( 2 - 1 ) );
-#if MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
       
       Int         iCenterPosX = iCurrPosX + ( ( iWidth /  iPUWidth ) >> 1 )  * iPUWidth + ( iPUWidth >> 1 );
       Int         iCenterPosY = iCurrPosY + ( ( iHeight /  iPUHeight ) >> 1 )  * iPUHeight + (iPUHeight >> 1);
@@ -4518,7 +4491,6 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
       if ( iInterDirSaved != 0 )
       {
-#endif
       for (Int i=iCurrPosY; i < iCurrPosY + iHeight; i += iPUHeight)
       {
         for (Int j = iCurrPosX; j < iCurrPosX + iWidth; j += iPUWidth)
@@ -4567,39 +4539,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                 }
               }
 #endif
-#if !MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
-          else
-          {
-            if (iInterDirSaved ==0)
-            {
-#if ETRIKHU_CLEANUP_H0083
-                  bSPIVMPFlag = true;
-#else
-              pbSPIVMPFlag[iCount] = true;
-#endif
-              tmpDir = puhInterDirSP[iPartition];
-              tmpMV[0] = pcMvFieldSP[2*iPartition];
-              tmpMV[1] = pcMvFieldSP[2*iPartition+1];
 
-              if (iPartition != 0)
-              {
-                for (Int iPart = iPartition-1; iPart >= 0; iPart--)
-                {
-                  puhInterDirSP[iPart] = puhInterDirSP[iPartition];
-                  pcMvFieldSP[2*iPart] = pcMvFieldSP[2*iPartition];
-                  pcMvFieldSP[2*iPart + 1] = pcMvFieldSP[2*iPartition + 1];
-                }
-              }
-            }
-            iInterDirSaved = puhInterDirSP[iPartition];
-            cMvFieldSaved[0] = pcMvFieldSP[2*iPartition];
-            cMvFieldSaved[1] = pcMvFieldSP[2*iPartition + 1];
-          }
-#endif
           iPartition ++;
         }
       }
-#if MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
+#if H_3D
       }
 #endif
 #if H_3D_FCO
@@ -5245,7 +5189,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #if SHARP_SIMPLE_MERGE_H0062
       (nPSW + nPSH > 12) &&
 #endif
-#if RWTH_DBBP_NO_SPU_H0057
+#if H_3D_DBBP
       !bDBBPFlag &&
 #endif
 #if ETRIKHU_CLEANUP_H0083

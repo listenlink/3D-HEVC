@@ -796,15 +796,10 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       pcCU->getMvField(pcCU, uiPartAddr, eRefList, pDBBPTmpData->acMvField[uiSegment][eRefList]);
     }
     
-#if RWTH_DBBP_NO_SPU_H0057
     AOF( pcCU->getARPW(uiPartAddr) == 0 );
     AOF( pcCU->getICFlag(uiPartAddr) == false );
     AOF( pcCU->getSPIVMPFlag(uiPartAddr) == false );
     AOF( pcCU->getVSPFlag(uiPartAddr) == 0 );
-#else
-    pDBBPTmpData->ahVSPFlag[uiSegment] = pcCU->getVSPFlag( uiPartAddr );
-    pDBBPTmpData->acDvInfo[uiSegment] = pcCU->getDvInfo( uiPartAddr );
-#endif
   }
   
   // do motion compensation for each segment as 2Nx2N
@@ -813,12 +808,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   for( UInt uiSegment = 0; uiSegment < 2; uiSegment++ )
   {
     pcCU->setInterDirSubParts( pDBBPTmpData->auhInterDir[uiSegment], 0, 0, uiDepth );
-    
-#if !RWTH_DBBP_NO_SPU_H0057
-    pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], 0, 0, uiDepth );
-    pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], 0, 0, uiDepth );
-#endif
-    
+  
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
     {
       RefPicList eRefList = (RefPicList)uiRefListIdx;
@@ -838,12 +828,6 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
     UInt uiPartAddr = uiSegment*uiPUOffset;
     
     pcCU->setDBBPFlagSubParts(true, uiPartAddr, uiSegment, uiDepth);
-    
-#if !RWTH_DBBP_NO_SPU_H0057
-    pcCU->setVSPFlagSubParts( pDBBPTmpData->ahVSPFlag[uiSegment], uiPartAddr, uiSegment, uiDepth );
-    pcCU->setDvInfoSubParts( pDBBPTmpData->acDvInfo[uiSegment], uiPartAddr, uiSegment, uiDepth );
-#endif
-    
     pcCU->setInterDirSubParts(pDBBPTmpData->auhInterDir[uiSegment], uiPartAddr, uiSegment, uiDepth); // interprets depth relative to LCU level
     
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
@@ -945,18 +929,7 @@ TDecCu::xIntraRecLumaBlk( TComDataCU* pcCU,
   {
     for( UInt uiX = 0; uiX < uiWidth; uiX++ )
     {
-#if H_3D && !SEC_NO_RESI_DLT_H0105
-      if ( useDltFlag )
-      {
-        pReco    [ uiX ] = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), Clip3( 0, pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() ) - 1, pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), pPred[ uiX ] ) + pResi[ uiX ] ) );
-      }
-      else
-      {
-        pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
-      }
-#else
       pReco    [ uiX ] = ClipY( pPred[ uiX ] + pResi[ uiX ] );
-#endif
       pRecIPred[ uiX ] = pReco[ uiX ];
     }
     pPred     += uiStride;
@@ -1256,15 +1229,15 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
   // get DC prediction for each segment
   Pel apDCPredValues[2];
-#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
   if ( getDimType( uiLumaPredMode ) == DMM1_IDX || getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
     apDCPredValues[0] = pcCU->getDmmPredictor( 0 );
     apDCPredValues[1] = pcCU->getDmmPredictor( 1 );
   }
   else
-#endif
-  m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
+  {
+    m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
+  }
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
