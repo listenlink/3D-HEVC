@@ -3680,21 +3680,14 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
       pcCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
 #if H_3D_VSP
-#if !ETRIKHU_CLEANUP_H0083
-                                        , vspFlag
-#endif
                                         , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
-#if !ETRIKHU_CLEANUP_H0083_MISSING
-        , pbSPIVMPFlag
-#endif
         , pcMvFieldSP, puhInterDirSP
 #endif
         , numValidMergeCand
         );
 
-#if ETRIKHU_CLEANUP_H0083
       pcCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours
 #if H_3D_VSP
         , vspFlag
@@ -3704,7 +3697,6 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
                                         , numValidMergeCand
         );
-#endif
 #else
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand );
 #endif
@@ -3718,21 +3710,14 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
     pcCU->xGetInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
 #if H_3D_VSP
-#if !ETRIKHU_CLEANUP_H0083
-                                      , vspFlag
-#endif
                                       , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
-#if !ETRIKHU_CLEANUP_H0083_MISSING
-      , pbSPIVMPFlag 
-#endif
       , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand
       );
 
-#if ETRIKHU_CLEANUP_H0083
     pcCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours
 #if H_3D_VSP
       , vspFlag
@@ -3742,7 +3727,6 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #endif
                                       , numValidMergeCand
       );
-#endif
 #else
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand
                                  );
