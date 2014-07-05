@@ -47,7 +47,7 @@
 
 TComSlice::TComSlice()
 : m_iPPSId                        ( -1 )
-#if H_MV_HLS_8_POC_Q0142_32
+#if H_MV
 , m_slicePicOrderCntLsb           ( 0 )
 #endif
 , m_iPOC                          ( 0 )
@@ -1862,7 +1862,7 @@ TComVPS::TComVPS()
 , m_vpsVUI                 (  NULL )
 #endif
 {
-#if H_MV_HLS_8_SYN_Q0041_03
+#if H_MV
   m_vpsBaseLayerInternalFlag = true; 
 #endif
 
@@ -1882,12 +1882,8 @@ TComVPS::TComVPS()
   } 
   m_vpsNumProfileTierLevelMinus1 = -1; 
     
-#if H_MV_HLS_8_SYN_39_19
   m_numAddLayerSets              = 0;   
   m_numAddOlss                   = 0; 
-#else
-  m_numAddLayerSets              = -1;   
-#endif
   m_defaultOutputLayerIdc     = 0; 
   
   for ( Int i = 0; i < MAX_VPS_OUTPUTLAYER_SETS; i++)
@@ -1901,17 +1897,12 @@ TComVPS::TComVPS()
     m_altOutputLayerFlag[ i ]       = false; 
   }
 
-#if H_MV_HLS_8_PMS_Q0195_20
   m_repFormatIdxPresentFlag = false; 
-#endif
   m_maxOneActiveRefLayerFlag = false; 
   m_directDepTypeLenMinus2   = 0;         
   
 
-#if H_MV_HLS_8_RPS_Q0100_36
   m_vpsExtensionFlag = true; 
-#endif
-  m_avcBaseLayerFlag = false;
   m_vpsNonVuiExtensionLength = 0;
   m_splittingFlag    = false;
   
@@ -2031,12 +2022,9 @@ Bool TComVPS::checkVPSExtensionSyntax()
     assert( getLayerIdInNuh( layer ) > getLayerIdInNuh( layer -1 ) );
   }
 
-
-#if H_MV_HLS_8_PMS_Q0195_20
   //The value of vps_num_rep_formats_minus1 shall be in the range of 0 to 255, inclusive.
   assert( getVpsNumRepFormatsMinus1() >= 0 ); 
   assert( getVpsNumRepFormatsMinus1() <= 255 ); 
-#endif
 
   return true; 
 }
@@ -2082,7 +2070,6 @@ Void TComVPS::setRefLayers()
     }
   }
 
-#if H_MV_HLS_8
   for (Int i = 0 ; i < MAX_NUM_LAYER_IDS; i++ )
   {
     m_numRefLayers[i] = 0; 
@@ -2096,7 +2083,6 @@ Void TComVPS::setRefLayers()
     }
   }
 
-
   for( Int i = 0; i  <=  getMaxLayersMinus1(); i++ )
   {
     Int iNuhLId = getLayerIdInNuh( i );
@@ -2106,7 +2092,6 @@ Void TComVPS::setRefLayers()
       m_numRefLayers[ iNuhLId ]  +=  m_recursiveRefLayerFlag[ iNuhLId ][ j ];
     }
   }
-
 
   for( Int i = 0; i <= getMaxLayersMinus1(); i++ )  // Bug in spec "<" instead of "<=" 
   {
@@ -2148,7 +2133,6 @@ Void TComVPS::setRefLayers()
     }
     m_numIndependentLayers = k;
   }
-#endif
 }
 
 Int TComVPS::getRefLayerId( Int layerIdInNuh, Int idx )
@@ -2313,11 +2297,7 @@ Int TComVPS::getNumLayersInIdList( Int lsIdx )
 
 Int    TComVPS::getNumOutputLayerSets() 
 {
-#if H_MV_HLS_8_SYN_39_19
   return getNumAddOlss() + getNumLayerSets(); 
-#else
-  return getNumAddLayerSets() + getVpsNumLayerSetsMinus1() + 1; 
-#endif
 }
 
 Int TComVPS::getNumViews()
@@ -2383,9 +2363,7 @@ Void TComVPS::deriveTargetLayerIdList( Int i )
       m_targetOptLayerIdLists[i].push_back( m_layerSetLayerIdList[ lsIdx ][ j ] );
     }
   }  
-#if H_MV_HLS_8_PMS_Q0165_18
   assert( getNumOutputLayersInOutputLayerSet( i ) > 0 ); 
-#endif
 }
 
 Bool TComVPS::inferOutputLayerFlag( Int i, Int j )
@@ -2419,22 +2397,14 @@ Bool TComVPS::inferOutputLayerFlag( Int i, Int j )
 Int TComVPS::getMaxSubLayersInLayerSetMinus1( Int i )
 {
   Int maxSLMinus1 = 0; 
-#if H_MV_HLS_8_MIS_Q0102_30
   for( Int k = 0; k < getNumLayersInIdList( i ); k++ )
   {
     Int lId = m_layerSetLayerIdList[i][k];
-#else  
-  Int optLsIdx    = olsIdxToLsIdx( i );
-
-  for( Int k = 0; k < getNumLayersInIdList( optLsIdx ); k++ )
-  {
-    Int lId = m_layerSetLayerIdList[optLsIdx][k];
-#endif
     maxSLMinus1 = std::max( maxSLMinus1, getSubLayersVpsMaxMinus1( getLayerIdInVps( lId ) ));
   }
   return maxSLMinus1;
 }
-#if H_MV_HLS_8_RPS_Q0100_36
+
 Void TComVPS::inferDbpSizeLayerSetZero( TComSPS* sps, Bool encoder )
 {
   for( Int j = 0; j <= getMaxSubLayersInLayerSetMinus1( 0 ); j++ )
@@ -2457,7 +2427,52 @@ Void TComVPS::inferDbpSizeLayerSetZero( TComSPS* sps, Bool encoder )
     }     
   }
 }
-#endif
+
+Bool TComVPS::getAltOutputLayerFlagVar( Int i )
+{
+  // Semantics variable not syntax element !
+
+  Bool altOptLayerFlag = false;     
+  if ( i > 0 && getNumOutputLayersInOutputLayerSet( i ) == 1 && 
+    getNumDirectRefLayers( getOlsHighestOutputLayerId( i ) ) > 0 )
+  {
+    altOptLayerFlag = getAltOutputLayerFlag( i ); 
+  }
+  return altOptLayerFlag;
+}
+
+Int TComVPS::getMaxNumPics( Int layerId )
+{
+  Int maxNumPics = MAX_INT; 
+  for( Int olsIdx = 0; olsIdx < getNumOutputLayerSets(); olsIdx++)
+  {
+    Int lsIdx = olsIdxToLsIdx( olsIdx ); 
+    for( Int j = 0; j < getNumLayersInIdList( lsIdx ); j++ )
+    {
+      if( getLayerSetLayerIdList(lsIdx, j ) ==  layerId )
+      {
+        Int maxSL = getMaxSubLayersInLayerSetMinus1( lsIdx ); 
+        maxNumPics = std::min( maxNumPics, getDpbSize()->getMaxVpsDecPicBufferingMinus1( olsIdx , j,  maxSL ) );
+      }
+    }
+  }
+  assert( maxNumPics != MAX_INT ); 
+  return maxNumPics;
+}
+
+Void TComVPS::xSetRefLayerFlags( Int currLayerId )
+{
+  for( Int j = 0; j < getNumDirectRefLayers( currLayerId ); j++ )
+  {
+    Int refLayerId = m_refLayerId[ currLayerId ][ j ];
+    m_recursiveRefLayerFlag[ currLayerId ][ refLayerId ] = 1;
+    for( Int k = 0; k < MAX_NUM_LAYER_IDS; k++ )
+    {
+      m_recursiveRefLayerFlag[ currLayerId ][ k ] = m_recursiveRefLayerFlag[ currLayerId ][ k ]  ||  m_recursiveRefLayerFlag[ refLayerId ][ k ];
+    }
+  }
+}
+
 #endif // H_MV
 
 // ------------------------------------------------------------------------------------------------
@@ -2529,13 +2544,6 @@ TComSPS::TComSPS()
   ::memset(m_ltRefPicPocLsbSps, 0, sizeof(m_ltRefPicPocLsbSps));
   ::memset(m_usedByCurrPicLtSPSFlag, 0, sizeof(m_usedByCurrPicLtSPSFlag));
 #if H_MV
-#if !H_MV_HLS_8_SPS_NODOC_48
-  m_spsExtensionPresentFlag = false; 
-  for( Int i = 0; i < PS_EX_T_MAX_NUM; i++ ) 
-  {
-    m_spsExtensionTypeFlag[ i ] = false;
-  }
-#else 
   m_spsRangeExtensionsFlag     = false;
   m_spsMultilayerExtensionFlag = false;
 #if H_3D
@@ -2543,7 +2551,6 @@ TComSPS::TComSPS()
   m_sps3dExtensionFlag         = false; 
 #else
   m_spsExtension6bits          = 0;
-#endif
 #endif
 
   m_numScaledRefLayerOffsets = 0; 
@@ -2725,7 +2732,6 @@ TComPPS::TComPPS()
   m_scalingList = new TComScalingList;
 
 #if H_MV
-#if H_MV_HLS_8_SPS_NODOC_48
   m_ppsRangeExtensionsFlag     = false;
   m_ppsMultilayerExtensionFlag = false;
 #if !H_3D
@@ -2733,12 +2739,6 @@ TComPPS::TComPPS()
 #else
   m_pps3dExtensionFlag         = false;
   m_ppsExtension5bits          = 0;
-#endif
-#else
-  for( Int i = 0; i < PS_EX_T_MAX_NUM; i++ ) 
-  {
-    m_ppsExtensionTypeFlag[ i ] = false;
-  }
 #endif
 #endif
 }
@@ -2983,6 +2983,57 @@ Void TComSPS::inferScalingList( TComSPS* spsSrc )
     getScalingList()->inferFrom( spsSrc->getScalingList() ); 
   }
 }
+
+Void TComSPS::inferSpsMaxDecPicBufferingMinus1( TComVPS* vps, Int targetOptLayerSetIdx, Int currLayerId, Bool encoder )
+{
+  const std::vector<Int>& targetDecLayerIdList = vps->getTargetDecLayerIdList( vps->olsIdxToLsIdx( targetOptLayerSetIdx )); 
+
+  if (getLayerId() > 0 )
+  {
+    Int layerIdx = 0;         
+    while (layerIdx < (Int) targetDecLayerIdList.size() )
+    {
+      if ( targetDecLayerIdList[layerIdx] == currLayerId )
+      { 
+        break; 
+      }
+      layerIdx++; 
+    }
+
+    assert( layerIdx < (Int) targetDecLayerIdList.size() ); 
+
+    for (Int i = 0; i <= getSpsMaxSubLayersMinus1(); i++ ) 
+    {
+      Int maxDecPicBufferingMinus1 = vps->getDpbSize()->getMaxVpsDecPicBufferingMinus1( targetOptLayerSetIdx, layerIdx, i ) ; 
+
+      if ( encoder )
+      {
+        assert( getMaxDecPicBuffering( i ) - 1 == maxDecPicBufferingMinus1 ); 
+      }
+      else
+      {
+        setMaxDecPicBuffering(i, maxDecPicBufferingMinus1 + 1 ); 
+      }
+    }
+  }
+}
+
+Void TComSPS::checkRpsMaxNumPics( TComVPS* vps, Int currLayerId )
+{
+  // In spec, when rps is in SPS, nuh_layer_id of SPS is used instead 
+  // of nuh_layer_id of slice (currLayerId), this seems to be a bug.
+
+  for (Int i = 0; i < getRPSList()->getNumberOfReferencePictureSets(); i++ )
+  {
+    TComReferencePictureSet* rps = getRPSList()->getReferencePictureSet( i ); 
+    if ( !rps->getInterRPSPrediction() )
+    {
+      rps->checkMaxNumPics( vps->getVpsExtensionFlag(), vps->getMaxNumPics( currLayerId ), 
+        getLayerId(), getMaxDecPicBuffering( getSpsMaxSubLayersMinus1() ) - 1 );  
+    }
+  }
+}
+
 #endif
 
 TComReferencePictureSet::TComReferencePictureSet()
@@ -3132,6 +3183,21 @@ Void TComReferencePictureSet::printDeltaPOC()
   }
   printf("}\n");
 }
+#if H_MV
+Void TComReferencePictureSet::checkMaxNumPics( Bool vpsExtensionFlag, Int maxNumPics, Int nuhLayerId, Int spsMaxDecPicBufferingMinus1 )
+{
+  assert( getNumberOfPictures() >= 0 ); 
+  if ( nuhLayerId == 0 )
+  {
+    assert( getNumberOfPictures() <= spsMaxDecPicBufferingMinus1 ); 
+  }
+
+  if ( vpsExtensionFlag )
+  {
+    assert( getNumberOfPictures() <= maxNumPics );
+  }
+}
+#endif
 
 TComRPSList::TComRPSList()
 :m_referencePictureSets (NULL)
@@ -3278,62 +3344,6 @@ Void TComSlice::markIvRefPicsAsShortTerm( std::vector<TComPic*> refPicSetInterLa
 
 }
 
-#if !H_MV_HLS_8_DBP_NODOC_42
-Void TComSlice::markIvRefPicsAsUnused( TComPicLists* ivPicLists, std::vector<Int> targetDecLayerIdSet, TComVPS* vps, Int curLayerId, Int curPoc )
-{
-  // Fill targetDecLayerIdSet with all layers if empty (at encoder side) 
-  if (targetDecLayerIdSet.size() == 0 )    
-  {
-    for ( Int layerIdInVps = 0; layerIdInVps <= vps->getMaxLayersMinus1(); layerIdInVps++ )
-    {
-      targetDecLayerIdSet.push_back( vps->getLayerIdInNuh( layerIdInVps ) ); 
-    }
-  }     
-
-  Int numTargetDecLayers = (Int) targetDecLayerIdSet.size(); 
-  Int latestDecIdx; 
-  for ( latestDecIdx = 0; latestDecIdx < numTargetDecLayers; latestDecIdx++)
-  {
-    if ( targetDecLayerIdSet[ latestDecIdx ] == curLayerId )
-    {
-      break; 
-    }        
-  }        
-
-  for( Int i = 0; i <= latestDecIdx; i++ ) 
-  {
-    if ( vps->nuhLayerIdIncluded( targetDecLayerIdSet[ i ] ) )
-    {
-      TComPic* pcPic = ivPicLists->getPic( targetDecLayerIdSet[ i ], curPoc ); 
-      if ( pcPic )
-      {
-        if( pcPic->getSlice(0)->isReferenced() && pcPic->getSlice(0)->getTemporalLayerNonReferenceFlag() ) 
-        { 
-          Bool remainingInterLayerReferencesFlag = false; 
-          for( Int j = latestDecIdx + 1; j < numTargetDecLayers; j++ )
-          { 
-            TComVPS* vpsSlice = pcPic->getSlice(0)->getVPS(); 
-            if ( vps->nuhLayerIdIncluded( targetDecLayerIdSet[ j ] ) )
-            {
-              for( Int k = 0; k < vpsSlice->getNumDirectRefLayers( targetDecLayerIdSet[ j ] ); k++ )
-              {
-                if ( targetDecLayerIdSet[ i ] == vpsSlice->getRefLayerId( targetDecLayerIdSet[ j ],  k  ) )
-                {
-                  remainingInterLayerReferencesFlag = true;
-                }
-              }
-            }
-          }
-          if( !remainingInterLayerReferencesFlag )
-          {
-            pcPic->getSlice(0)->setReferenced( false );                   
-          }
-        }
-      }
-    }
-  }
-}
-#endif
 Void TComSlice::printRefPicList()
 {  
   for ( Int li = 0; li < 2; li++)
@@ -3350,25 +3360,11 @@ Void TComSlice::printRefPicList()
 
 Void TComSlice::markCurrPic( TComPic* currPic )
 {
+  currPic->getSlice(0)->setReferenced( true ) ; 
+  currPic->setIsLongTerm( false ); 
 
-#if !H_MV_HLS_8_DBP_NODOC_42
-  if ( !currPic->getSlice(0)->getDiscardableFlag() )
-  {
-#endif
-    currPic->getSlice(0)->setReferenced( true ) ; 
-    currPic->setIsLongTerm( false ); 
-#if !H_MV_HLS_8_DBP_NODOC_42
-  }
-  else
-  {
-    currPic->getSlice(0)->setReferenced( false ) ; 
-  }
-#endif
-
-#if H_MV_HLS_7_VPS_P0300_27
   currPic->setReconMark( true );
   currPic->setPicOutputFlag( currPic->getSlice(0)->getPicOutputFlag() );
-#endif
 }
 
 Void TComSlice::setRefPicSetInterLayer( std::vector<TComPic*>* refPicSetInterLayer0, std::vector<TComPic*>* refPicSetInterLayer1 )
@@ -3402,13 +3398,8 @@ Int  TComSlice::getRefLayerPicFlag( Int i )
   TComVPS* vps = getVPS(); 
   Int refLayerIdx = vps->getLayerIdInVps( vps->getRefLayerId( getLayerId(), i ) ); 
 
-#if H_MV_HLS_8_RPS_Q0060_17
   Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer() )  && ( getTLayer() == 0  ) &&
     ( vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() ); 
-#else
-  Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer() )  && 
-    ( vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() ); 
-#endif
 
   return refLayerPicFlag;       
 }    
@@ -3765,7 +3756,7 @@ Void TComSlice::setDepthToDisparityLUTs()
     }
 
 #if H_3D_DDD
-    InitializeDDDPara( vps->getCamParPrecision(), codScale[ i ], codOffset[ i ], i );
+    initializeDDDPara( vps->getCamParPrecision(), codScale[ i ], codOffset[ i ], i );
 #endif
   }
 }
@@ -3773,7 +3764,7 @@ Void TComSlice::setDepthToDisparityLUTs()
 #endif
 
 #if H_3D_DDD
-Void TComSlice::InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx )
+Void TComSlice::initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx )
 {
     UInt uiViewId     = getViewIndex();
 
@@ -3830,6 +3821,47 @@ Void TComSlice::InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScal
     m_aiDDDInvOffset[ iBaseViewIdx ] += ( 1 << ( m_aiDDDShift[ iBaseViewIdx ] - 4 ) ) * iRoundingDir;
 
     return;
+}
+
+
+#endif
+
+#if H_MV
+Void TComSlice::checkCrossLayerBlaFlag()
+{
+  // cross_layer_bla_flag shall be equal to 0 for pictures with nal_unit_type not equal to IDR_W_RADL or IDR_N_LP or with nuh_layer_id not equal to 0.
+  if ( getLayerId() != 0 || getNalUnitType() != NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP )
+  {
+    assert( m_crossLayerBlaFlag == 0 ); 
+  }
+}
+
+Bool TComSlice::inferPocMsbValPresentFlag()
+{
+  Bool pocMsbValPresentFlag; 
+  if( getSliceSegmentHeaderExtensionLength() == 0 ) 
+  {
+    pocMsbValPresentFlag = false; 
+  }
+  else if ( getPocMsbValRequiredFlag() )
+  {
+    pocMsbValPresentFlag = true; 
+  }
+  else
+  {
+    pocMsbValPresentFlag = false; 
+  }
+
+  return pocMsbValPresentFlag;
+}
+
+
+#endif
+
+#if H_3D_DBBP
+Int TComSlice::getDepthFromDV( Int iDV, Int iBaseViewIdx )
+{
+  return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
 }
 #endif
 
@@ -4320,6 +4352,19 @@ Void TComVpsVuiBspHrdParameters::checkLayerInBspFlag( TComVPS* vps, Int h )
     assert( numLayerInBsp <= 1 ); 
   }
 
+}
+
+Void TComVpsVuiBspHrdParameters::checkBspCombHrdAndShedIdx( TComVPS* vps, Int h, Int i, Int j )
+{
+  // bsp_comb_hrd_idx
+  assert( getBspCombSchedIdx(h, i, j ) >= 0 );
+  assert( getBspCombSchedIdx(h, i, j ) <= getVpsNumBspHrdParametersMinus1() );
+
+  // bsp_comb_sched_idx
+  assert( getBspCombSchedIdx(h, i, j ) >= 0 );
+
+  //* This check needs to activated,  when HighestTid is available here    
+  //  assert(  getBspCombSchedIdx(h, i, j ) <= vps->getHrdParameters( getBspCombHrdIdx( h, i, j ) )->getCpbCntMinus1( highestTid ) );
 }
 
 Void TComVUI::inferVideoSignalInfo( TComVPS* vps, Int layerIdCurr )

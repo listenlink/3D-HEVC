@@ -373,7 +373,6 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   {
 
 #if H_MV
-#if H_MV_HLS_8_SPS_NODOC_48
     READ_FLAG( uiCode, "pps_range_extensions_flag" ); pcPPS->setPpsRangeExtensionsFlag( uiCode == 1 );
     READ_FLAG( uiCode, "pps_multilayer_extension_flag" ); pcPPS->setPpsMultilayerExtensionFlag( uiCode == 1 );
 #if !H_3D
@@ -389,10 +388,8 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
 
     if ( pcPPS->getPpsMultilayerExtensionFlag() )
     { 
-        READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
-#if H_MV_HLS_8_PPS_NODOC_NN
-        READ_FLAG( uiCode, "pps_extension_reserved_zero_flag" );
-#endif
+      READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
+      READ_FLAG( uiCode, "pps_extension_reserved_zero_flag" );
     }
 #if !H_3D
     if ( pcPPS->getPpsExtension6bits() )
@@ -405,33 +402,7 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
     if ( pcPPS->getPpsExtension5bits() )
     {
 #endif
-#else
-    for ( Int i = 0; i < PPS_EX_T_MAX_NUM; i++ )
-    {
-      READ_FLAG( uiCode, "pps_extension_type_flag" ); pcPPS->setPpsExtensionTypeFlag( i, uiCode == 1 );
-#if H_3D
-      assert( !pcPPS->getPpsExtensionTypeFlag( i ) || i == PPS_EX_T_MV || i == PPS_EX_T_3D || i == PPS_EX_T_ESC ); 
-#else
-      assert( !pcPPS->getPpsExtensionTypeFlag( i ) || i == PPS_EX_T_MV || i == PPS_EX_T_ESC ); 
-#endif
-    }
-    
 
-    if( pcPPS->getPpsExtensionTypeFlag( PPS_EX_T_MV ) )
-    {
-      READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
-    }
-
-#if H_3D
-    if( pcPPS->getPpsExtensionTypeFlag( PPS_EX_T_3D ) ) // This probably needs to be aligned with Rext and SHVC
-    {
-      parsePPSExtension( pcPPS, pcVPS );
-    }
-#endif
-
-    if( pcPPS->getPpsExtensionTypeFlag( PPS_EX_T_ESC ) )
-    {
-#endif
 #endif
 
       while ( xMoreRbspData() )
@@ -791,17 +762,17 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if ( pcSPS->getLayerId() == 0 )
   {
 #endif
-  READ_CODE( 3,  uiCode, "sps_max_sub_layers_minus1" );          pcSPS->setMaxTLayers   ( uiCode+1 );
-  assert(uiCode <= 6);
-  
-  READ_FLAG( uiCode, "sps_temporal_id_nesting_flag" );               pcSPS->setTemporalIdNestingFlag ( uiCode > 0 ? true : false );
-  if ( pcSPS->getMaxTLayers() == 1 )
-  {
-    // sps_temporal_id_nesting_flag must be 1 when sps_max_sub_layers_minus1 is 0
-    assert( uiCode == 1 );
-  }
-  
-  parsePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
+    READ_CODE( 3,  uiCode, "sps_max_sub_layers_minus1" );          pcSPS->setMaxTLayers   ( uiCode+1 );
+    assert(uiCode <= 6);
+
+    READ_FLAG( uiCode, "sps_temporal_id_nesting_flag" );               pcSPS->setTemporalIdNestingFlag ( uiCode > 0 ? true : false );
+    if ( pcSPS->getMaxTLayers() == 1 )
+    {
+      // sps_temporal_id_nesting_flag must be 1 when sps_max_sub_layers_minus1 is 0
+      assert( uiCode == 1 );
+    }
+
+    parsePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
 #if H_MV
   }
 #endif
@@ -819,17 +790,17 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   else
   {
 #endif
-  READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( uiCode );
-  assert(uiCode <= 3);
-  // in the first version we only support chroma_format_idc equal to 1 (4:2:0), so separate_colour_plane_flag cannot appear in the bitstream
-  assert (uiCode == 1);
-  if( uiCode == 3 )
-  {
-    READ_FLAG(     uiCode, "separate_colour_plane_flag");        assert(uiCode == 0);
-  }
+    READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( uiCode );
+    assert(uiCode <= 3);
+    // in the first version we only support chroma_format_idc equal to 1 (4:2:0), so separate_colour_plane_flag cannot appear in the bitstream
+    assert (uiCode == 1);
+    if( uiCode == 3 )
+    {
+      READ_FLAG(     uiCode, "separate_colour_plane_flag");        assert(uiCode == 0);
+    }
 
-  READ_UVLC (    uiCode, "pic_width_in_luma_samples" );          pcSPS->setPicWidthInLumaSamples ( uiCode    );
-  READ_UVLC (    uiCode, "pic_height_in_luma_samples" );         pcSPS->setPicHeightInLumaSamples( uiCode    );
+    READ_UVLC (    uiCode, "pic_width_in_luma_samples" );          pcSPS->setPicWidthInLumaSamples ( uiCode    );
+    READ_UVLC (    uiCode, "pic_height_in_luma_samples" );         pcSPS->setPicHeightInLumaSamples( uiCode    );
 #if H_MV
   }
 #endif
@@ -856,15 +827,15 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if ( pcSPS->getLayerId() == 0 )
   { 
 #endif
-  READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
-  assert(uiCode <= 6);
-  pcSPS->setBitDepthY( uiCode + 8 );
-  pcSPS->setQpBDOffsetY( (Int) (6*uiCode) );
+    READ_UVLC(     uiCode, "bit_depth_luma_minus8" );
+    assert(uiCode <= 6);
+    pcSPS->setBitDepthY( uiCode + 8 );
+    pcSPS->setQpBDOffsetY( (Int) (6*uiCode) );
 
-  READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
-  assert(uiCode <= 6);
-  pcSPS->setBitDepthC( uiCode + 8 );
-  pcSPS->setQpBDOffsetC( (Int) (6*uiCode) );
+    READ_UVLC( uiCode,    "bit_depth_chroma_minus8" );
+    assert(uiCode <= 6);
+    pcSPS->setBitDepthC( uiCode + 8 );
+    pcSPS->setQpBDOffsetC( (Int) (6*uiCode) );
 #if H_MV
   }
 #endif
@@ -876,29 +847,29 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if ( pcSPS->getLayerId() == 0 ) 
   {  
 #endif
-  UInt subLayerOrderingInfoPresentFlag;
-  READ_FLAG(subLayerOrderingInfoPresentFlag, "sps_sub_layer_ordering_info_present_flag");
-  
-  for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
-  {
-    READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1[i]");
-    pcSPS->setMaxDecPicBuffering( uiCode + 1, i);
-    READ_UVLC ( uiCode, "sps_num_reorder_pics[i]" );
-    pcSPS->setNumReorderPics(uiCode, i);
-    READ_UVLC ( uiCode, "sps_max_latency_increase_plus1[i]");
-    pcSPS->setMaxLatencyIncrease( uiCode, i );
+    UInt subLayerOrderingInfoPresentFlag;
+    READ_FLAG(subLayerOrderingInfoPresentFlag, "sps_sub_layer_ordering_info_present_flag");
 
-    if (!subLayerOrderingInfoPresentFlag)
+    for(UInt i=0; i <= pcSPS->getMaxTLayers()-1; i++)
     {
-      for (i++; i <= pcSPS->getMaxTLayers()-1; i++)
+      READ_UVLC ( uiCode, "sps_max_dec_pic_buffering_minus1[i]");
+      pcSPS->setMaxDecPicBuffering( uiCode + 1, i);
+      READ_UVLC ( uiCode, "sps_num_reorder_pics[i]" );
+      pcSPS->setNumReorderPics(uiCode, i);
+      READ_UVLC ( uiCode, "sps_max_latency_increase_plus1[i]");
+      pcSPS->setMaxLatencyIncrease( uiCode, i );
+
+      if (!subLayerOrderingInfoPresentFlag)
       {
-        pcSPS->setMaxDecPicBuffering(pcSPS->getMaxDecPicBuffering(0), i);
-        pcSPS->setNumReorderPics(pcSPS->getNumReorderPics(0), i);
-        pcSPS->setMaxLatencyIncrease(pcSPS->getMaxLatencyIncrease(0), i);
+        for (i++; i <= pcSPS->getMaxTLayers()-1; i++)
+        {
+          pcSPS->setMaxDecPicBuffering(pcSPS->getMaxDecPicBuffering(0), i);
+          pcSPS->setNumReorderPics(pcSPS->getNumReorderPics(0), i);
+          pcSPS->setMaxLatencyIncrease(pcSPS->getMaxLatencyIncrease(0), i);
+        }
+        break;
       }
-      break;
     }
-  }
 #if H_MV
   }
 #endif
@@ -908,12 +879,12 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   pcSPS->setLog2MinCodingBlockSize(log2MinCUSize);
   READ_UVLC( uiCode, "log2_diff_max_min_coding_block_size" );
   pcSPS->setLog2DiffMaxMinCodingBlockSize(uiCode);
-  
+
   if (pcSPS->getPTL()->getGeneralPTL()->getLevelIdc() >= Level::LEVEL5)
   {
     assert(log2MinCUSize + pcSPS->getLog2DiffMaxMinCodingBlockSize() >= 5);
   }
-  
+
   Int maxCUDepthDelta = uiCode;
   pcSPS->setMaxCUWidth  ( 1<<(log2MinCUSize + maxCUDepthDelta) ); 
   pcSPS->setMaxCUHeight ( 1<<(log2MinCUSize + maxCUDepthDelta) );
@@ -944,11 +915,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     else
     {    
 #endif
-    READ_FLAG( uiCode, "sps_scaling_list_data_present_flag" );                 pcSPS->setScalingListPresentFlag ( uiCode );
-    if(pcSPS->getScalingListPresentFlag ())
-    {
-      parseScalingList( pcSPS->getScalingList() );
-    }
+      READ_FLAG( uiCode, "sps_scaling_list_data_present_flag" );                 pcSPS->setScalingListPresentFlag ( uiCode );
+      if(pcSPS->getScalingListPresentFlag ())
+      {
+        parseScalingList( pcSPS->getScalingList() );
+      }
 #if H_MV
     }
 #endif
@@ -1013,7 +984,6 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #endif
   {
 #if H_MV
-#if H_MV_HLS_8_SPS_NODOC_48
     READ_FLAG( uiCode, "sps_range_extensions_flag" ); pcSPS->setSpsRangeExtensionsFlag( uiCode == 1 );
     READ_FLAG( uiCode, "sps_multilayer_extension_flag" ); pcSPS->setSpsMultilayerExtensionFlag( uiCode == 1 );
 #if !H_3D
@@ -1046,40 +1016,12 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
   if ( pcSPS->getSpsExtension6bits() )
   { 
 #endif
-#else
-    for (Int i = 0; i < PS_EX_T_MAX_NUM; i++)
-    {
-      READ_FLAG( uiCode, "sps_extension_type_flag" ); pcSPS->setSpsExtensionTypeFlag( i, uiCode );
-#if H_3D
-      assert( !pcSPS->getSpsExtensionTypeFlag( i ) || i == PS_EX_T_MV || i == PS_EX_T_3D || i == PS_EX_T_ESC ); 
-#else
-      assert( !pcSPS->getSpsExtensionTypeFlag( i ) || i == PS_EX_T_MV || i == PS_EX_T_ESC ); 
-#endif
-    }  
 
-    if( pcSPS->getSpsExtensionTypeFlag( PS_EX_T_MV ))
+#endif
+    while ( xMoreRbspData() )
     {
-      parseSPSExtension( pcSPS ); 
+      READ_FLAG( uiCode, "sps_extension_data_flag");
     }
-
-#if H_3D
-    if( pcSPS->getSpsExtensionTypeFlag( PS_EX_T_3D ))
-    {
-      parseSPSExtension2( pcSPS, viewIndex, depthFlag  ); 
-    }
-#endif
-
-    if ( pcSPS->getSpsExtensionTypeFlag( PS_EX_T_ESC ))
-    {   
-#endif
-#endif
-        while ( xMoreRbspData() )
-        {
-          READ_FLAG( uiCode, "sps_extension_data_flag");
-        }
-#if H_MV && !H_MV_HLS_8_SPS_NODOC_48
-    }
-#endif
   }
 }
 
@@ -2026,7 +1968,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 }
 #endif
 
-#if H_MV_HLS_8_HRD_Q0102_08
+#if H_MV
 Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx)
 #else
 Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)
@@ -2069,12 +2011,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   
   sps->inferRepFormat  ( vps , rpcSlice->getLayerId() ); 
   sps->inferScalingList( parameterSetManager->getActiveSPS( sps->getSpsScalingListRefLayerId() ) );   
-#if H_MV_HLS_8_HRD_Q0102_08
   sps->inferSpsMaxDecPicBufferingMinus1( vps, targetOlsIdx, rpcSlice->getLayerId(), false ); 
-#endif
-#if H_MV_HLS_8_RPS_Q0100_36
   vps->inferDbpSizeLayerSetZero( sps, false ); 
-#endif
 
   if ( sps->getVuiParametersPresentFlag() )
   {
@@ -2191,9 +2129,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_CODE(sps->getBitsForPOC(), slicePicOrderCntLsb, "slice_pic_order_cnt_lsb");        
     }    
-#if H_MV_HLS_8_POC_Q0142_32
     rpcSlice->setSlicePicOrderCntLsb( slicePicOrderCntLsb ); 
-#endif
 
     Bool picOrderCntMSBZeroFlag = false;     
 
@@ -2289,7 +2225,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       if(uiCode == 0) // use short-term reference picture set explicitly signalled in slice header
       {        
         parseShortTermRefPicSet(sps,rps, sps->getRPSList()->getNumberOfReferencePictureSets());
-#if H_MV_HLS_8_RPS_Q0100_36
+#if H_MV
         if ( !rps->getInterRPSPrediction( ) )
         { // check sum of num_positive_pics and num_negative_pics
           rps->checkMaxNumPics( 
@@ -2402,7 +2338,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         offset += rps->getNumberOfLongtermPictures();
         rps->setNumberOfPictures(offset);        
       }  
-#if H_MV_HLS_8_RPS_Q0100_36
+#if H_MV
       if ( !rps->getInterRPSPrediction( ) )
       { // check sum of NumPositivePics, NumNegativePics, num_long_term_sps and num_long_term_pics 
         rps->checkMaxNumPics( 
@@ -2792,9 +2728,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       rpcSlice->setPocResetIdc( 0 );
     }
-#if H_MV_HLS_8_POC_Q0142_32
     rpcSlice->checkPocResetIdc(); 
-#endif
 
 #if H0044_POC_LSB_NOT_PRESENT
     if ( rpcSlice->getVPS()->getPocLsbNotPresentFlag(rpcSlice->getLayerId()) && slicePicOrderCntLsb > 0 )
@@ -2816,18 +2750,8 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_FLAG( uiCode, "full_poc_reset_flag" ); rpcSlice->setFullPocResetFlag( uiCode == 1 );
       READ_CODE( rpcSlice->getPocLsbValLen() , uiCode, "poc_lsb_val" ); rpcSlice->setPocLsbVal( uiCode );
-#if !H_MV_HLS_8_POC_Q0142_32
-#if H0044_POC_LSB_NOT_PRESENT
-      if ( rpcSlice->getVPS()->getPocLsbNotPresentFlag(rpcSlice->getLayerId()) && rpcSlice->getFullPocResetFlag() )
-      {
-        assert( rpcSlice->getPocLsbVal() == 0 );
-      }
-#endif
-#endif
     }          
-#if H_MV_HLS_8_POC_Q0142_32
     rpcSlice->checkPocLsbVal(); 
-#endif
 
     // Derive the value of PocMs8bValRequiredFlag
     rpcSlice->setPocMsbValRequiredFlag( rpcSlice->getCraPicFlag() || rpcSlice->getBlaPicFlag()
@@ -2840,18 +2764,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     else
     {
-#if H_MV_HLS_8_POC_Q0146_15
       rpcSlice->setPocMsbValPresentFlag( rpcSlice->inferPocMsbValPresentFlag( ) ); 
-#else
-      if( rpcSlice->getPocMsbValRequiredFlag() )
-      {
-        rpcSlice->setPocMsbValPresentFlag( true );
-      }
-      else
-      {
-        rpcSlice->setPocMsbValPresentFlag( false );
-      }
-#endif
     }
 
     
