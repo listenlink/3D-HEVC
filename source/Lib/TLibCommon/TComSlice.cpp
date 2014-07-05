@@ -3540,13 +3540,8 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 }
 #endif
 #if H_3D_IC
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
 Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
-#else
-Void TComSlice::xSetApplyIC()
-#endif
 {
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   if(bUseLowLatencyICEnc)
   {
     Bool existInterViewRef=false;
@@ -3591,7 +3586,7 @@ Void TComSlice::xSetApplyIC()
       {    
         Double ratio=Double(g_aICEnableNUM[refLayer])/Double(g_aICEnableCANDIDATE[refLayer]);
 
-        if( ratio > MTK_LOW_LATENCY_IC_ENCODING_THRESHOLD_H0086)
+        if( ratio > IC_LOW_LATENCY_ENCODING_THRESHOLD)
 {
           m_bApplyIC=true;
         }
@@ -3607,7 +3602,6 @@ Void TComSlice::xSetApplyIC()
   }
   else
   {
-#endif
   Int iMaxPelValue = ( 1 << g_bitDepthY ); 
   Int *aiRefOrgHist;
   Int *aiCurrHist;
@@ -3681,9 +3675,7 @@ Void TComSlice::xSetApplyIC()
   xFree( aiRefOrgHist );
   aiCurrHist = NULL;
   aiRefOrgHist = NULL;
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   }//if(bUseLowLatencyICEnc)
-#endif
 }
 #endif
 #if H_3D

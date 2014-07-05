@@ -288,6 +288,7 @@
 #define IC_REG_COST_SHIFT                 7
 #define IC_CONST_SHIFT                    5
 #define IC_SHIFT_DIFF                     12
+#define IC_LOW_LATENCY_ENCODING_THRESHOLD 0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
 #endif
 
 
@@ -318,17 +319,6 @@
 
 #define MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085 1   // Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
 #define MTK_LOW_LATENCY_IC_ENCODING_H0086   1 // Low-latency IC encoding in JCT3V-H0086
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
-#define MTK_LOW_LATENCY_IC_ENCODING_THRESHOLD_H0086    0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
-#endif
-#define SEC_ADAPT_DISABLE_IVMP            1   // Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
-
-#define MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113     1 // Use only one context for CABAC of delta_dc_flag as in JCTVC-H0084, JCTVC-H0100 and JCTVC-H0113
-#define MTK_SDC_FLAG_FIX_H0095            1   // Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
-#define MTK_DMM_SIMP_CODE_H0092           1   // Remove CABAC context for DMM1 mode coding
-
-#define QC_IV_PRED_CONSTRAINT_H0137       1   // Constraint on inter-view (motion) prediction tools
-#define ETRIKHU_CLEANUP_H0083             1   // cleaned-up source code for constructing merging candidate list
 #endif
 
 #if H_MV
