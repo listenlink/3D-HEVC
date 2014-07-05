@@ -1814,27 +1814,19 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
     rpcTempCU->initAvailableFlags();
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
     rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
-#if !ETRIKHU_CLEANUP_H0083
-      , vspFlag
-#endif
       , inheritedVSPDisInfo
 #if H_3D_SPIVMP
-#if !ETRIKHU_CLEANUP_H0083_MISSING
-      , bSPIVMPFlag
-#endif
       , pcMvFieldSP, puhInterDirSP
 #endif
       , numValidMergeCand 
       );
 
-#if ETRIKHU_CLEANUP_H0083
     rpcTempCU->buildMCL( cMvFieldNeighbours,uhInterDirNeighbours, vspFlag
 #if H_3D_SPIVMP
       , bSPIVMPFlag
 #endif
       , numValidMergeCand 
       );
-#endif
 
 #else
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );

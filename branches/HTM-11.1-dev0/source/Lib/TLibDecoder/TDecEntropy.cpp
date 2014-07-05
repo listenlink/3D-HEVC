@@ -299,25 +299,16 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           pcSubCU->initAvailableFlags();
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
           pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours
-#if !ETRIKHU_CLEANUP_H0083
-            ,vspFlag
-#endif
             , inheritedVSPDisInfo
 #if H_3D_SPIVMP
-#if !ETRIKHU_CLEANUP_H0083_MISSING
-            , bSPIVMPFlag
-#endif
             , pcMvFieldSP, puhInterDirSP
 #endif
             , numValidMergeCand );
-
-#if ETRIKHU_CLEANUP_H0083
           pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
 #if H_3D_SPIVMP
             , bSPIVMPFlag
 #endif
             , numValidMergeCand );
-#endif
           pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
           if(vspFlag[uiMergeIndex])
@@ -351,25 +342,16 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
         pcSubCU->initAvailableFlags();
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
         pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours
-#if !ETRIKHU_CLEANUP_H0083
-          , vspFlag
-#endif
           , inheritedVSPDisInfo
 #if H_3D_SPIVMP
-#if !ETRIKHU_CLEANUP_H0083_MISSING
-            , bSPIVMPFlag
-#endif
           , pcMvFieldSP, puhInterDirSP
 #endif
           ,numValidMergeCand, uiMergeIndex );
-
-#if ETRIKHU_CLEANUP_H0083
         pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
 #if H_3D_SPIVMP
           , bSPIVMPFlag
 #endif
           ,numValidMergeCand );
-#endif
         pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
         if(vspFlag[uiMergeIndex])
         {

@@ -327,17 +327,8 @@
 #define MTK_SDC_FLAG_FIX_H0095            1   // Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
 #define MTK_DMM_SIMP_CODE_H0092           1   // Remove CABAC context for DMM1 mode coding
 
-
 #define QC_IV_PRED_CONSTRAINT_H0137       1   // Constraint on inter-view (motion) prediction tools
-#define ETRIKHU_BUGFIX_H0083              1   // bug-fix for DV candidate pruning
 #define ETRIKHU_CLEANUP_H0083             1   // cleaned-up source code for constructing merging candidate list
-#define ETRIKHU_CLEANUP_H0083_MISSING     1   // missing guard macros added by GT
-#define SHARP_SIMPLE_MERGE_H0062          1   // Restrict 3D-HEVC merge cand in small PUs
-#define MTK_DIS_SPBIP8X4_H0205            1   // Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
-
-#if H_3D_NBDV
-#define SEC_VER_DONBDV_H0103              1   // Vertical DV Restriction for DoNBDV
-#endif
 #endif
 
 #if H_MV
@@ -916,7 +907,7 @@ enum MVP_DIR
 };
 
 /// merging candidates
-#if ETRIKHU_CLEANUP_H0083
+#if H_3D
 enum DefaultMergCandOrder
 {
   MRG_T = 0,            ///< MPI
