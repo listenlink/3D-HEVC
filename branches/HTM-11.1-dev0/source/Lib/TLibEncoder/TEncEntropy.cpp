@@ -156,13 +156,14 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   }
 
   if( !pcCU->getSlice()->getApplyIC() )
+  {
     return;
+  }
 
   if( bRD )
   {
     uiAbsPartIdx = 0;
   }
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   else
   {
     g_aICEnableCANDIDATE[pcCU->getSlice()->getDepth()]++;
@@ -171,9 +172,10 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
       g_aICEnableNUM[pcCU->getSlice()->getDepth()]++;
     }
   }
-#endif
   if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
+  {
     m_pcEntropyCoderIf->codeICFlag( pcCU, uiAbsPartIdx );
+  }
 }
 #endif
 
@@ -281,14 +283,6 @@ Void TEncEntropy::encodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     return;
   }
-#if !MTK_SDC_FLAG_FIX_H0095
-#if H_3D_DIM_SDC
-  if( pcCU->getSDCFlag(uiAbsPartIdx) )
-  {
-    return;
-  }
-#endif
-#endif
   
   if( bRD )
   {

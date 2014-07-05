@@ -507,10 +507,8 @@ public:
 
 #if H_3D_SPIVMP
     , TComMvField* pcMFieldSP, UChar* puhInterDirSP
-#endif
-#if SEC_ADAPT_DISABLE_IVMP
+#endif    
     , Bool bICFlag
-#endif
     );   
 #endif
 #if H_3D_ARP

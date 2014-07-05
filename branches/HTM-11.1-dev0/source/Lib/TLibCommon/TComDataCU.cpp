@@ -4376,11 +4376,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   ivMvPredFlag &= (nPSW + nPSH > 12);
   if ( ivMvPredFlag && cDisInfo.m_aVIdxCan!=-1)
   {
-#if SEC_ADAPT_DISABLE_IVMP
     getInterViewMergeCands(uiPUIdx, ivCandRefIdx, ivCandMv, &cDisInfo, ivCandDir , bIsDepth, pcMvFieldSP, puhInterDirSP, bICFlag );
-#else
-    getInterViewMergeCands(uiPUIdx, ivCandRefIdx, ivCandMv, &cDisInfo, ivCandDir , bIsDepth, pcMvFieldSP, puhInterDirSP );
-#endif
   }  
 
   ///////////////////////////////////////////////
@@ -6708,9 +6704,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 #if H_3D_SPIVMP
 , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
-#if SEC_ADAPT_DISABLE_IVMP
 , Bool bICFlag
-#endif
 )
 {
   TComSlice*    pcSlice = getSlice ();  
@@ -6752,77 +6746,246 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
   }
 #endif
 
-#if SEC_ADAPT_DISABLE_IVMP
   if(!bICFlag)
   {
-#endif
 
 #if H_3D_SPIVMP
-  ////////////////////////////////
-  //////////sub-PU IvMC///////////
-  ////////////////////////////////
-  if(!m_pcSlice->getIsDepth())
-  {
-    if (!getDBBPFlag(0))
+    ////////////////////////////////
+    //////////sub-PU IvMC///////////
+    ////////////////////////////////
+    if(!m_pcSlice->getIsDepth())
     {
-      Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
-      getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
-
-      for (Int i=0; i<iNumSP; i++)
+      if (!getDBBPFlag(0))
       {
-        puhInterDirSP[i] = 0;
-        pcMvFieldSP[2*i].getMv().set(0, 0);
-        pcMvFieldSP[2*i+1].getMv().set(0,0);
-        pcMvFieldSP[2*i].setRefIdx(-1);
-        pcMvFieldSP[2*i+1].setRefIdx(-1);
+        Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
+        getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
+
+        for (Int i=0; i<iNumSP; i++)
+        {
+          puhInterDirSP[i] = 0;
+          pcMvFieldSP[2*i].getMv().set(0, 0);
+          pcMvFieldSP[2*i+1].getMv().set(0,0);
+          pcMvFieldSP[2*i].setRefIdx(-1);
+          pcMvFieldSP[2*i+1].setRefIdx(-1);
+        }
+
+        Int         iBaseCUAddr;
+        Int         iBaseAbsPartIdx;
+        TComDataCU* pcBaseCU;
+        Int iPartition = 0;
+
+        Int iDelX = iSPWidth/2;
+        Int iDelY = iSPHeight/2;
+
+        Int         iCenterPosX = iCurrPosX + ( ( iWidth /  iSPWidth ) >> 1 )  * iSPWidth + ( iSPWidth >> 1 );
+        Int         iCenterPosY = iCurrPosY + ( ( iHeight /  iSPHeight ) >> 1 )  * iSPHeight + (iSPHeight >> 1);
+        Int         iRefCenterCUAddr, iRefCenterAbsPartIdx;
+
+        if(iWidth == iSPWidth && iHeight == iSPHeight)
+        {
+          iCenterPosX = iCurrPosX + (iWidth >> 1);
+          iCenterPosY = iCurrPosY + (iHeight >> 1);
+        }
+
+        Int iRefCenterPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCenterPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
+        Int iRefCenterPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCenterPosY + ( (cDv.getVer() + 2 ) >> 2 ) ); 
+
+        pcBaseRec->getCUAddrAndPartIdx( iRefCenterPosX , iRefCenterPosY , iRefCenterCUAddr, iRefCenterAbsPartIdx );
+        TComDataCU* pcDefaultCU    = pcBasePic->getCU( iRefCenterCUAddr );
+        if(!( pcDefaultCU->getPredictionMode( iRefCenterAbsPartIdx ) == MODE_INTRA ))
+        {
+          for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )       
+          {
+            RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
+            Bool stopLoop = false;
+            for(Int iLoop = 0; iLoop < 2 && !stopLoop; ++iLoop)
+            {
+              RefPicList eDefaultRefPicList = (iLoop ==1)? RefPicList( 1 -  uiCurrRefListId ) : RefPicList( uiCurrRefListId );
+              TComMvField cDefaultMvField;
+              pcDefaultCU->getMvField( pcDefaultCU, iRefCenterAbsPartIdx, eDefaultRefPicList, cDefaultMvField );
+              Int         iDefaultRefIdx     = cDefaultMvField.getRefIdx();
+              if (iDefaultRefIdx >= 0)
+              {
+                Int iDefaultRefPOC = pcDefaultCU->getSlice()->getRefPOC(eDefaultRefPicList, iDefaultRefIdx);
+                if (iDefaultRefPOC != pcSlice->getPOC())    
+                {
+                  for (Int iPdmRefIdx = 0; iPdmRefIdx < pcSlice->getNumRefIdx( eCurrRefPicList ); iPdmRefIdx++)
+                  {
+                    if (iDefaultRefPOC == pcSlice->getRefPOC(eCurrRefPicList, iPdmRefIdx))
+                    {
+                      abPdmAvailable[ uiCurrRefListId ] = true;
+                      TComMv cMv(cDefaultMvField.getHor(), cDefaultMvField.getVer());
+#if H_3D_NBDV 
+#if H_3D_IV_MERGE
+                      if( !bIsDepth )
+                      {
+#endif
+                        cMv.setIDVFlag   (true);
+                        cMv.setIDVHor    (cDv.getHor());                  
+                        cMv.setIDVVer    (cDv.getVer());  
+                        cMv.setIDVVId    (iViewIndex); 
+#if H_3D_IV_MERGE
+                      }
+#endif
+#endif
+#if !(NTT_BUG_FIX_TK54)
+                      clipMv( cMv );
+#endif
+                      paiPdmRefIdx  [ uiCurrRefListId ] = iPdmRefIdx;
+                      pacPdmMv      [ uiCurrRefListId ] = cMv;
+                      stopLoop = true;
+                      break;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        availableMcDc[0] = ( abPdmAvailable[0]? 1 : 0) + (abPdmAvailable[1]? 2 : 0);
+
+        if(availableMcDc[0])
+        {
+
+          Int         iBasePosX, iBasePosY;
+          for (Int i=iCurrPosY; i < iCurrPosY + iHeight; i += iSPHeight)
+          {
+            for (Int j = iCurrPosX; j < iCurrPosX + iWidth; j += iSPWidth)
+            {
+              iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, j + iDelX + ( (cDv.getHor() + 2 ) >> 2 ));
+              iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, i + iDelY + ( (cDv.getVer() + 2 ) >> 2 )); 
+
+              pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY, iBaseCUAddr, iBaseAbsPartIdx );
+              pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
+              if(!( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTRA ))
+              {
+                for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )
+                {
+                  RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
+                  Bool bLoop_stop = false;
+                  for(Int iLoop = 0; iLoop < 2 && !bLoop_stop; ++iLoop)
+                  {
+                    RefPicList eBaseRefPicList = (iLoop ==1)? RefPicList( 1 -  uiCurrRefListId ) : RefPicList( uiCurrRefListId );
+                    TComMvField cBaseMvField;
+                    pcBaseCU->getMvField( pcBaseCU, iBaseAbsPartIdx, eBaseRefPicList, cBaseMvField );
+                    Int         iBaseRefIdx     = cBaseMvField.getRefIdx();
+                    if (iBaseRefIdx >= 0)
+                    {
+                      Int iBaseRefPOC = pcBaseCU->getSlice()->getRefPOC(eBaseRefPicList, iBaseRefIdx);
+                      if (iBaseRefPOC != pcSlice->getPOC())    
+                      {
+                        for (Int iPdmRefIdx = 0; iPdmRefIdx < pcSlice->getNumRefIdx( eCurrRefPicList ); iPdmRefIdx++)
+                        {
+                          if (iBaseRefPOC == pcSlice->getRefPOC(eCurrRefPicList, iPdmRefIdx))
+                          {
+                            abPdmAvailable[ uiCurrRefListId ] = true;
+                            TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
+
+                            if( !bIsDepth )
+                            {
+                              cMv.setIDVFlag   (true);
+                              cMv.setIDVHor    (cDv.getHor());                  
+                              cMv.setIDVVer    (cDv.getVer());  
+                              cMv.setIDVVId    (iViewIndex); 
+                            }
+
+#if !(NTT_BUG_FIX_TK54)
+                            clipMv( cMv );
+#endif
+                            bLoop_stop = true;
+
+                            pcMvFieldSP[2*iPartition + uiCurrRefListId].setMvField(cMv, iPdmRefIdx);
+                            break;
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+
+              puhInterDirSP[iPartition] = (pcMvFieldSP[2*iPartition].getRefIdx()!=-1 ? 1: 0) + (pcMvFieldSP[2*iPartition+1].getRefIdx()!=-1 ? 2: 0);
+              if (puhInterDirSP[iPartition] == 0)
+              {
+                puhInterDirSP[iPartition] = availableMcDc[0];
+                pcMvFieldSP[2*iPartition].setMvField(pacPdmMv[0], paiPdmRefIdx[0]);
+                pcMvFieldSP[2*iPartition + 1].setMvField(pacPdmMv[1], paiPdmRefIdx[1]);
+
+              }
+              if (iSPHeight + iSPWidth == 12)
+              {
+                if (puhInterDirSP[iPartition] == 3)
+                {
+                  puhInterDirSP[iPartition] = 1;
+                  pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
+                }
+              }
+              iPartition ++;
+            }
+          }
+        }
       }
+
+      iCurrPosX  += ( iWidth  >> 1 );
+      iCurrPosY  += ( iHeight >> 1 );
+    }
+#endif
+
+    ////////////////////////////////
+    /////// IvMC + IvMCShift ///////
+    ////////////////////////////////
+
+#if H_3D_SPIVMP
+    if(m_pcSlice->getIsDepth())
+    {
+      iCurrPosX  += ( iWidth  >> 1 );
+      iCurrPosY  += ( iHeight >> 1 );
+    }
+    for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+#else
+    for(Int iLoopCan = 0; iLoopCan < 2; iLoopCan ++)
+#endif
+    {
+      // iLoopCan == 0 --> IvMC
+      // iLoopCan == 1 --> IvMCShift 
 
       Int         iBaseCUAddr;
       Int         iBaseAbsPartIdx;
-      TComDataCU* pcBaseCU;
-      Int iPartition = 0;
 
-      Int iDelX = iSPWidth/2;
-      Int iDelY = iSPHeight/2;
+      Int offsetW = (iLoopCan == 0) ? 0 : ( ((iWidth /2)*4) + 4 );
+      Int offsetH = (iLoopCan == 0) ? 0 : ( ((iHeight/2)*4) + 4 );
 
-      Int         iCenterPosX = iCurrPosX + ( ( iWidth /  iSPWidth ) >> 1 )  * iSPWidth + ( iSPWidth >> 1 );
-      Int         iCenterPosY = iCurrPosY + ( ( iHeight /  iSPHeight ) >> 1 )  * iSPHeight + (iSPHeight >> 1);
-      Int         iRefCenterCUAddr, iRefCenterAbsPartIdx;
+      Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + offsetW + 2 ) >> 2 ) );
+      Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + offsetH + 2 ) >> 2 ) ); 
+      pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY , iBaseCUAddr, iBaseAbsPartIdx );
 
-      if(iWidth == iSPWidth && iHeight == iSPHeight)
+      TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
+      if(!( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTRA ))
       {
-        iCenterPosX = iCurrPosX + (iWidth >> 1);
-        iCenterPosY = iCurrPosY + (iHeight >> 1);
-      }
-
-      Int iRefCenterPosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCenterPosX + ( (cDv.getHor() + 2 ) >> 2 ) );
-      Int iRefCenterPosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCenterPosY + ( (cDv.getVer() + 2 ) >> 2 ) ); 
-
-      pcBaseRec->getCUAddrAndPartIdx( iRefCenterPosX , iRefCenterPosY , iRefCenterCUAddr, iRefCenterAbsPartIdx );
-      TComDataCU* pcDefaultCU    = pcBasePic->getCU( iRefCenterCUAddr );
-      if(!( pcDefaultCU->getPredictionMode( iRefCenterAbsPartIdx ) == MODE_INTRA ))
-      {
+        // Loop reference picture list of current slice (X in spec). 
         for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )       
         {
           RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
+
           Bool stopLoop = false;
+          // Loop reference picture list of candidate slice (Y in spec)
           for(Int iLoop = 0; iLoop < 2 && !stopLoop; ++iLoop)
           {
-            RefPicList eDefaultRefPicList = (iLoop ==1)? RefPicList( 1 -  uiCurrRefListId ) : RefPicList( uiCurrRefListId );
-            TComMvField cDefaultMvField;
-            pcDefaultCU->getMvField( pcDefaultCU, iRefCenterAbsPartIdx, eDefaultRefPicList, cDefaultMvField );
-            Int         iDefaultRefIdx     = cDefaultMvField.getRefIdx();
-            if (iDefaultRefIdx >= 0)
+            RefPicList eBaseRefPicList = (iLoop ==1)? RefPicList( 1 -  uiCurrRefListId ) : RefPicList( uiCurrRefListId );
+            TComMvField cBaseMvField;
+            pcBaseCU->getMvField( pcBaseCU, iBaseAbsPartIdx, eBaseRefPicList, cBaseMvField );
+            Int         iBaseRefIdx     = cBaseMvField.getRefIdx();
+            if (iBaseRefIdx >= 0)
             {
-              Int iDefaultRefPOC = pcDefaultCU->getSlice()->getRefPOC(eDefaultRefPicList, iDefaultRefIdx);
-              if (iDefaultRefPOC != pcSlice->getPOC())    
+              Int iBaseRefPOC = pcBaseCU->getSlice()->getRefPOC(eBaseRefPicList, iBaseRefIdx);
+              if (iBaseRefPOC != pcSlice->getPOC())    
               {
                 for (Int iPdmRefIdx = 0; iPdmRefIdx < pcSlice->getNumRefIdx( eCurrRefPicList ); iPdmRefIdx++)
                 {
-                  if (iDefaultRefPOC == pcSlice->getRefPOC(eCurrRefPicList, iPdmRefIdx))
+                  if (iBaseRefPOC == pcSlice->getRefPOC(eCurrRefPicList, iPdmRefIdx))
                   {
-                    abPdmAvailable[ uiCurrRefListId ] = true;
-                    TComMv cMv(cDefaultMvField.getHor(), cDefaultMvField.getVer());
+                    abPdmAvailable[ (uiCurrRefListId + (iLoopCan<<2)) ] = true;
+                    TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
 #if H_3D_NBDV 
 #if H_3D_IV_MERGE
                     if( !bIsDepth )
@@ -6839,8 +7002,8 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 #if !(NTT_BUG_FIX_TK54)
                     clipMv( cMv );
 #endif
-                    paiPdmRefIdx  [ uiCurrRefListId ] = iPdmRefIdx;
-                    pacPdmMv      [ uiCurrRefListId ] = cMv;
+                    paiPdmRefIdx  [ (uiCurrRefListId + (iLoopCan<<2)) ] = iPdmRefIdx;
+                    pacPdmMv      [ (uiCurrRefListId + (iLoopCan<<2)) ] = cMv;
                     stopLoop = true;
                     break;
                   }
@@ -6850,194 +7013,21 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
           }
         }
       }
-      availableMcDc[0] = ( abPdmAvailable[0]? 1 : 0) + (abPdmAvailable[1]? 2 : 0);
-
-      if(availableMcDc[0])
-      {
-
-        Int         iBasePosX, iBasePosY;
-        for (Int i=iCurrPosY; i < iCurrPosY + iHeight; i += iSPHeight)
-        {
-          for (Int j = iCurrPosX; j < iCurrPosX + iWidth; j += iSPWidth)
-          {
-            iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, j + iDelX + ( (cDv.getHor() + 2 ) >> 2 ));
-            iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, i + iDelY + ( (cDv.getVer() + 2 ) >> 2 )); 
-
-            pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY, iBaseCUAddr, iBaseAbsPartIdx );
-            pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
-            if(!( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTRA ))
-            {
-              for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )
-              {
-                RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
-                Bool bLoop_stop = false;
-                for(Int iLoop = 0; iLoop < 2 && !bLoop_stop; ++iLoop)
-                {
-                  RefPicList eBaseRefPicList = (iLoop ==1)? RefPicList( 1 -  uiCurrRefListId ) : RefPicList( uiCurrRefListId );
-                  TComMvField cBaseMvField;
-                  pcBaseCU->getMvField( pcBaseCU, iBaseAbsPartIdx, eBaseRefPicList, cBaseMvField );
-                  Int         iBaseRefIdx     = cBaseMvField.getRefIdx();
-                  if (iBaseRefIdx >= 0)
-                  {
-                    Int iBaseRefPOC = pcBaseCU->getSlice()->getRefPOC(eBaseRefPicList, iBaseRefIdx);
-                    if (iBaseRefPOC != pcSlice->getPOC())    
-                    {
-                      for (Int iPdmRefIdx = 0; iPdmRefIdx < pcSlice->getNumRefIdx( eCurrRefPicList ); iPdmRefIdx++)
-                      {
-                        if (iBaseRefPOC == pcSlice->getRefPOC(eCurrRefPicList, iPdmRefIdx))
-                        {
-                          abPdmAvailable[ uiCurrRefListId ] = true;
-                          TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
-
-                          if( !bIsDepth )
-                          {
-                            cMv.setIDVFlag   (true);
-                            cMv.setIDVHor    (cDv.getHor());                  
-                            cMv.setIDVVer    (cDv.getVer());  
-                            cMv.setIDVVId    (iViewIndex); 
-                          }
-                          
-#if !(NTT_BUG_FIX_TK54)
-                          clipMv( cMv );
-#endif
-                          bLoop_stop = true;
-
-                          pcMvFieldSP[2*iPartition + uiCurrRefListId].setMvField(cMv, iPdmRefIdx);
-                          break;
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-
-            puhInterDirSP[iPartition] = (pcMvFieldSP[2*iPartition].getRefIdx()!=-1 ? 1: 0) + (pcMvFieldSP[2*iPartition+1].getRefIdx()!=-1 ? 2: 0);
-            if (puhInterDirSP[iPartition] == 0)
-            {
-              puhInterDirSP[iPartition] = availableMcDc[0];
-              pcMvFieldSP[2*iPartition].setMvField(pacPdmMv[0], paiPdmRefIdx[0]);
-              pcMvFieldSP[2*iPartition + 1].setMvField(pacPdmMv[1], paiPdmRefIdx[1]);
-
-            }
-            if (iSPHeight + iSPWidth == 12)
-            {
-              if (puhInterDirSP[iPartition] == 3)
-              {
-                puhInterDirSP[iPartition] = 1;
-                pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
-              }
-            }
-            iPartition ++;
-          }
-        }
-      }
     }
-
-    iCurrPosX  += ( iWidth  >> 1 );
-    iCurrPosY  += ( iHeight >> 1 );
-  }
-#endif
-
-  ////////////////////////////////
-  /////// IvMC + IvMCShift ///////
-  ////////////////////////////////
-
-#if H_3D_SPIVMP
-  if(m_pcSlice->getIsDepth())
-  {
-    iCurrPosX  += ( iWidth  >> 1 );
-    iCurrPosY  += ( iHeight >> 1 );
-  }
-  for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
-#else
-  for(Int iLoopCan = 0; iLoopCan < 2; iLoopCan ++)
-#endif
-  {
-    // iLoopCan == 0 --> IvMC
-    // iLoopCan == 1 --> IvMCShift 
-
-    Int         iBaseCUAddr;
-    Int         iBaseAbsPartIdx;
-
-    Int offsetW = (iLoopCan == 0) ? 0 : ( ((iWidth /2)*4) + 4 );
-    Int offsetH = (iLoopCan == 0) ? 0 : ( ((iHeight/2)*4) + 4 );
-
-    Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + offsetW + 2 ) >> 2 ) );
-    Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + offsetH + 2 ) >> 2 ) ); 
-    pcBaseRec->getCUAddrAndPartIdx( iBasePosX , iBasePosY , iBaseCUAddr, iBaseAbsPartIdx );
-
-    TComDataCU* pcBaseCU    = pcBasePic->getCU( iBaseCUAddr );
-    if(!( pcBaseCU->getPredictionMode( iBaseAbsPartIdx ) == MODE_INTRA ))
-    {
-      // Loop reference picture list of current slice (X in spec). 
-      for( UInt uiCurrRefListId = 0; uiCurrRefListId < 2; uiCurrRefListId++ )       
-      {
-        RefPicList  eCurrRefPicList = RefPicList( uiCurrRefListId );
-
-        Bool stopLoop = false;
-        // Loop reference picture list of candidate slice (Y in spec)
-        for(Int iLoop = 0; iLoop < 2 && !stopLoop; ++iLoop)
-        {
-          RefPicList eBaseRefPicList = (iLoop ==1)? RefPicList( 1 -  uiCurrRefListId ) : RefPicList( uiCurrRefListId );
-          TComMvField cBaseMvField;
-          pcBaseCU->getMvField( pcBaseCU, iBaseAbsPartIdx, eBaseRefPicList, cBaseMvField );
-          Int         iBaseRefIdx     = cBaseMvField.getRefIdx();
-          if (iBaseRefIdx >= 0)
-          {
-            Int iBaseRefPOC = pcBaseCU->getSlice()->getRefPOC(eBaseRefPicList, iBaseRefIdx);
-            if (iBaseRefPOC != pcSlice->getPOC())    
-            {
-              for (Int iPdmRefIdx = 0; iPdmRefIdx < pcSlice->getNumRefIdx( eCurrRefPicList ); iPdmRefIdx++)
-              {
-                if (iBaseRefPOC == pcSlice->getRefPOC(eCurrRefPicList, iPdmRefIdx))
-                {
-                  abPdmAvailable[ (uiCurrRefListId + (iLoopCan<<2)) ] = true;
-                  TComMv cMv(cBaseMvField.getHor(), cBaseMvField.getVer());
-#if H_3D_NBDV 
-#if H_3D_IV_MERGE
-                  if( !bIsDepth )
-                  {
-#endif
-                    cMv.setIDVFlag   (true);
-                    cMv.setIDVHor    (cDv.getHor());                  
-                    cMv.setIDVVer    (cDv.getVer());  
-                    cMv.setIDVVId    (iViewIndex); 
-#if H_3D_IV_MERGE
-                  }
-#endif
-#endif
-#if !(NTT_BUG_FIX_TK54)
-                  clipMv( cMv );
-#endif
-                  paiPdmRefIdx  [ (uiCurrRefListId + (iLoopCan<<2)) ] = iPdmRefIdx;
-                  pacPdmMv      [ (uiCurrRefListId + (iLoopCan<<2)) ] = cMv;
-                  stopLoop = true;
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
 #if H_3D_SPIVMP
 #if H_3D_FIX_DBBP_IVMP
-  for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++)
+    for(Int iLoopCan = ( (m_pcSlice->getIsDepth() || getDBBPFlag(0)) ? 0 : 1 ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++)
 #else
-  for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
+    for(Int iLoopCan = ( 1 - m_pcSlice->getIsDepth() ); iLoopCan < ( 2 - m_pcSlice->getIsDepth() ); iLoopCan ++) 
 #endif
 #else
-  for(Int iLoopCan = 0; iLoopCan < 2; iLoopCan ++)
+    for(Int iLoopCan = 0; iLoopCan < 2; iLoopCan ++)
 #endif
-  {
-    availableMcDc[(iLoopCan << 1)] = ( abPdmAvailable[(iLoopCan<<2)] ? 1 : 0 ) + ( abPdmAvailable[1 + (iLoopCan<<2)] ? 2 : 0);
-  }
+    {
+      availableMcDc[(iLoopCan << 1)] = ( abPdmAvailable[(iLoopCan<<2)] ? 1 : 0 ) + ( abPdmAvailable[1 + (iLoopCan<<2)] ? 2 : 0);
+    }
 
-#if SEC_ADAPT_DISABLE_IVMP
   }
-#endif
 
   ////////////////////////////////
   /////// IvDC + IvDCShift ///////

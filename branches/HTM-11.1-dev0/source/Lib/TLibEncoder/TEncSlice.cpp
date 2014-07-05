@@ -929,11 +929,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
        !( ( pcSlice->getSliceType() == P_SLICE && pcSlice->getPPS()->getUseWP() ) || ( pcSlice->getSliceType() == B_SLICE && pcSlice->getPPS()->getWPBiPred() ) )
      )
   {
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
     pcSlice ->xSetApplyIC(pcEncTop->getUseICLowLatencyEnc());
-#else
-    pcSlice ->xSetApplyIC();
-#endif
     if ( pcSlice->getApplyIC() )
     {
       pcSlice->setIcSkipParseFlag( pcSlice->getPOC() % m_pcCfg->getIntraPeriod() != 0 );

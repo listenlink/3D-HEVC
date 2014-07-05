@@ -402,9 +402,7 @@ protected:
 #endif
 #if H_3D_IC
   Bool      m_bUseIC;
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   Bool      m_bUseICLowLatencyEnc;
-#endif
 #endif
 #if H_3D_INTER_SDC
   bool      m_bInterSDC;
@@ -515,10 +513,8 @@ public:
 #if H_3D_IC
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   Void       setUseICLowLatencyEnc          ( Bool bVal )    { m_bUseICLowLatencyEnc = bVal; }
   Bool       getUseICLowLatencyEnc          ()               { return m_bUseICLowLatencyEnc; }
-#endif
 #endif
 #if H_3D_INTER_SDC
   Void       setInterSDCEnable              ( Bool bVal )    { m_bInterSDC = bVal; }

@@ -359,7 +359,7 @@ extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
 
 Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
 
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
+#if H_3D_IC
 UInt g_aICEnableCANDIDATE[10] = { 0, };
 UInt g_aICEnableNUM[ 10 ] = { 0, };
 Int g_lastlayer=0;
