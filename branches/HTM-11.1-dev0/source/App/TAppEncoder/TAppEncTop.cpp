@@ -57,10 +57,9 @@ using namespace std;
 TAppEncTop::TAppEncTop()
 {
 
-#if H_MV_HLS_8
+#if H_MV
   m_vps = new TComVPS; 
-#endif
-#if !H_MV
+#else !H_MV
   m_iFrameRcvd = 0;
 #endif
   m_totalBytes = 0;
@@ -69,7 +68,7 @@ TAppEncTop::TAppEncTop()
 
 TAppEncTop::~TAppEncTop()
 {
-#if H_MV_HLS_8
+#if H_MV
   if (m_vps)
   {
    delete m_vps; 
@@ -81,11 +80,7 @@ TAppEncTop::~TAppEncTop()
 Void TAppEncTop::xInitLibCfg()
 {
 #if H_MV
-#if H_MV_HLS_8
   TComVPS& vps = (*m_vps);   
-#else
-  TComVPS& vps = m_vps;   
-#endif
 #else
   TComVPS vps;
 #endif
@@ -700,17 +695,10 @@ Void TAppEncTop::xDestroyLib()
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
 #if H_3D
-#if H_MV_HLS_8
   for ( Int viewIndex = 0; viewIndex < m_vps->getNumViews(); viewIndex++ )
   {
     m_vps->initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
       m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
-#else
-  for ( Int viewIndex = 0; viewIndex < m_vps.getNumViews(); viewIndex++ )
-  {
-  m_vps.initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
-      m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
-#endif
   }
 #endif
 
@@ -1506,11 +1494,7 @@ Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
 
 Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 {
-#if H_MV_HLS_8_PMS_Q0195_20
   vps.setRepFormatIdxPresentFlag( false ); 
-#else
-  vps.setRepFormatIdxPresentFlag( true ); 
-#endif
   vps.setVpsNumRepFormatsMinus1 ( 0    ); 
 
   TComRepFormat* repFormat = new TComRepFormat; 
@@ -1526,13 +1510,6 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 
   assert( vps.getRepFormat( 0 ) == NULL ); 
   vps.setRepFormat( 0 , repFormat );
-
-#if !H_MV_HLS_8_PMS_Q0195_20
-  for(Int i = 0; i <= vps.getMaxLayersMinus1(); i++ )
-  {
-    vps.setVpsRepFormatIdx( i , 0 ); 
-  }
-#endif
 }
 
 Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
@@ -1543,37 +1520,19 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
 
   assert ( dpbSize != 0 ); 
 
-#if H_MV_HLS_8_HRD_Q0102_08
   for( Int i = 0; i < vps.getNumOutputLayerSets(); i++ )
-#else
-  for( Int i = 1; i < vps.getNumOutputLayerSets(); i++ )
-#endif
   {  
-#if H_MV_HLS_8_MIS_Q0102_30
     Int currLsIdx = vps.olsIdxToLsIdx( i ); 
-#endif
     std::vector<Int> targetDecLayerIdList = vps.getTargetDecLayerIdList( i ); 
     Bool subLayerFlagInfoPresentFlag = false; 
 
-#if H_MV_HLS_8_MIS_Q0102_30
     for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( currLsIdx ); j++ )
-#else
-    for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( i ); j++ )
-#endif
     {   
       Bool subLayerDpbInfoPresentFlag = false; 
-#if H_MV_HLS_8_MIS_Q0102_30 || H_MV_HLS_8_DBP_NODOC_42
       assert( vps.getNumLayersInIdList( currLsIdx ) == targetDecLayerIdList.size() ); 
       for( Int k = 0; k < vps.getNumLayersInIdList( currLsIdx ); k++ )   
-#else
-      assert( vps.getNumSubDpbs( vps.olsIdxToLsIdx( i ) ) == targetDecLayerIdList.size() ); 
-      for( Int k = 0; k < vps.getNumSubDpbs( vps.olsIdxToLsIdx( i )); k++ )   
-#endif
       {
         Int layerIdInVps = vps.getLayerIdInVps( targetDecLayerIdList[k] );           
-#if H_MV_HLS7_GEN
-        // TBD. Some derivation based on output layer set might be added here. 
-#endif
         dpbSize->setMaxVpsDecPicBufferingMinus1( i, k, j, m_maxDecPicBufferingMvc[ layerIdInVps ][ j ] - 1 );
         if ( j > 0 )
         {
@@ -1634,12 +1593,8 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
   Int numAddOuputLayerSets = (Int) m_outputLayerSetIdx.size(); 
   // Additional output layer sets + profileLevelTierIdx
   vps.setDefaultOutputLayerIdc      ( m_defaultOutputLayerIdc );   
-#if H_MV_HLS_8_SYN_39_19
   vps.setNumAddLayerSets            ( 0                             );  
   vps.setNumAddOlss                 ( numAddOuputLayerSets          ); 
-#else
-  vps.setNumAddLayerSets            ( numAddOuputLayerSets          ); 
-#endif
   vps.initTargetLayerIdLists(); 
 
   for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + numAddOuputLayerSets; olsIdx++)

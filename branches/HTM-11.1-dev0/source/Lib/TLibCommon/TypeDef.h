@@ -396,7 +396,7 @@
 // OTHERS
 //#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 //#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
-//#define H_MV_HLS_7_HRD_P0138_6            0 // (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
+//#define H_MV_HLS_7_HRD_P0138_6   0 //     (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
 
 #define H_MV_HLS_8_SYN_Q0041_03    1   // #3  Syntax only (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 #define H_MV_HLS_8_SYN_39_19       1   // #39 Syntax only + (PS/Q0165,Q0078/presence of num_add_output_layer_sets) proposal 2. change condition for presence of num_add_output_layer_sets to avoid sending it when there is only one layer set.
@@ -984,29 +984,6 @@ namespace Level
 
 #if H_MV
 
-#if !H_MV_HLS_8_SPS_NODOC_48
-enum PpsExtensionTypes
-{
-  PPS_EX_T_MV      = 0,
-#if H_3D
-  PPS_EX_T_3D      = 3,
-#endif
-  PPS_EX_T_ESC     = 7,
-  PPS_EX_T_MAX_NUM = 8
-};
-
-//Below for sps, would be good if this could be aligned
-
-  enum PsExtensionTypes
-  {
-    PS_EX_T_MV   = 1,
-#if H_3D
-    PS_EX_T_3D   = 3,
-#endif
-    PS_EX_T_ESC  = 7,
-    PS_EX_T_MAX_NUM = 8
-  };
-#endif
 /// scalability types
   enum ScalabilityType
   {
