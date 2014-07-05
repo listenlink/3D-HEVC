@@ -101,12 +101,14 @@
                                               // SEC_SIMPLIFIED_NBDV_E0142 Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
                                               // MTK_NBDV_TN_FIX_E0172     fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
                                               // MTK_TEXTURE_MRGCAND_BUGFIX_E0182  Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
+
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
                                               // SHARP_ARP_REF_CHECK_F0105        ARP reference picture selection and DPB check
                                               // LGE_ARP_CTX_F0161                JCT3V-F0161
                                               // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
                                               // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053 
+                                              // MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085  Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
 
 
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
@@ -118,6 +120,7 @@
                                               // SEC_ONLY_TEXTURE_IC_F0151
                                               // MTK_IC_FLAG_CABAC_SIMP_G0061
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
+                                              // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
 
 
 #if H_3D_NBDV
@@ -127,6 +130,7 @@
                                               // MERL_C0152: Basic VSP
                                               // NBDV_DEFAULT_VIEWIDX_BUGFIX Bug fix for invalid default view index for NBDV
                                               // NTT_DoNBDV_VECTOR_CLIP_E0141 disparity vector clipping in DoNBDV, JCT3V-E0141 and JCT3V-E0209
+                                              // SEC_VER_DONBDV_H0103          Vertical DV Restriction for DoNBDV
 #endif
 
 #define H_3D_VSP                          1   // View synthesis prediction
@@ -160,7 +164,13 @@
                                               // MTK_NBDV_IVREF_FIX_G0067      , Disable IvMC, VSP when IVREF is not available, JCT3V-G0067
                                               // SEC_DEPTH_DV_DERIVAITON_G0074, Simplification of DV derivation for depth, JCT3V-G0074
                                               // QC_DEPTH_MERGE_SIMP_G0127 Remove DV candidate and shifting candidate for depth coding
-
+                                              // QC_IV_PRED_CONSTRAINT_H0137   Constraint on inter-view (motion) prediction tools
+                                              // ETRIKHU_BUGFIX_H0083          bug-fix for DV candidate pruning
+                                              // ETRIKHU_CLEANUP_H0083         cleaned-up source code for constructing merging candidate list
+                                              // ETRIKHU_CLEANUP_H0083_MISSING missing guard macros added by GT
+                                              // SHARP_SIMPLE_MERGE_H0062      Restrict 3D-HEVC merge cand in small PUs
+                                              // MTK_DIS_SPBIP8X4_H0205        Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
+                                              // SEC_ADAPT_DISABLE_IVMP        Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
 
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
@@ -195,6 +205,15 @@
                                               // SCU_HS_DEPTH_DC_PRED_G0143
                                               // HS_TSINGHUA_SDC_SPLIT_G0111
                                               // QC_PKU_SDC_SPLIT_G0123 Intra SDC Split
+                                              // HS_DMM_SDC_PREDICTOR_UNIFY_H0108  Unification of DMM and SDC predictor derivation
+                                              // LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135  Use only one context for CABAC of dim_not_present_flag
+                                              // QC_SIMP_DELTADC_CODING_H0131   Simplify detaDC entropy coding 
+                                              // MTK_DMM_SIMP_CODE_H0092        Remove CABAC context for DMM1 mode coding
+                                              // MTK_DELTA_DC_FLAG_ONE_CONTEXT_H0084_H0100_H0113 Use only one context for CABAC of delta_dc_flag as in JCTVC-H0084, JCTVC-H0100 and JCTVC-H0113
+                                              // MTK_SDC_FLAG_FIX_H0095                          Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
+                                              // SEC_NO_RESI_DLT_H0105    
+                                              // MTK_DLT_CODING_FIX_H0091 
+
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -204,9 +223,15 @@
                                               // SEC_SPIVMP_MCP_SIZE_G0077, Apply SPIVMP only to 2Nx2N partition, JCT3V-G0077
                                               // QC_SPIVMP_MPI_G0119 Sub-PU level MPI merge candidate
                                               // Simplification on Sub-PU level temporal interview motion prediction
-
+                                              // MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133
 
 #define H_3D_DBBP                         1   // DBBP: Depth-based Block Partitioning and Merging
+                                              // MTK_DBBP_AMP_REM_H0072   
+                                              // RWTH_DBBP_NO_SPU_H0057   
+                                              // SEC_DBBP_FILTERING_H0104 
+                                              // MTK_DBBP_SIGNALING_H0094    
+                                              // H_3D_FIX_DBBP_IVMP        Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
+
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
@@ -314,13 +339,6 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HTM-11.0 Integrations                  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-#if H_3D
-#define  H_3D_FIX_DBBP_IVMP                1  // Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
-
-#define MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085 1   // Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
-#define MTK_LOW_LATENCY_IC_ENCODING_H0086   1 // Low-latency IC encoding in JCT3V-H0086
-#endif
-
 #if H_MV
 #define H0044_POC_LSB_NOT_PRESENT        1      ///< JCT3V-H0044: Add constraint checking on the value of poc_reset_idc and poc_lsb_val
 #define H0056_EOS_CHECKS                 1      ///< JCT3V-H0056: Put checks on handling EOS
@@ -342,10 +360,6 @@
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
 // #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications Ewith text provided as P0297).
 
-
-// OTHERS
-// #define H_MV_HLS_7_HRD_P0138_6            0 // (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
-
 // SEI related
 //#define H_MV_HLS_8_SEI_NODOC_53  0 // #53 (SEI    /NODOC/Added Multiview view position SEI message) Plain copy from AVC.
 //#define H_MV_HLS_8_SEI_NODOC_52  0 // #52 (SEI    /NODOC/Added Multiview acquisition information SEI) Plain copy from AVC. 
@@ -360,7 +374,6 @@
 //#define H_MV_HLS_8_SEI_Q0045_11  0 // #11 (SEI    /Q0045/Overlay) Proposal for an SEI message on selectable overlays. Decision: Adopt (modified for variable-length strings).
 //#define H_MV_HLS_7_SEI_P0133_28  0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 //#define H_MV_HLS_7_SEI_P0123_25  0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
-
 
 // Auxiliary picture related
 //#define H_MV_HLS_8_AUX_NODOC_40  0 // #40 (AUX    /NODOC/primary pic) Clarify that an auxiliary picture can be associated with more than one primary picture. Consider if the language associating an alpha auxiliary picture with a primary picture in the semantics of dimension_id[ ][ ] near the AuxId derivation could be moved to the alpha SEI message.
@@ -380,10 +393,10 @@
 //#define H_MV_HLS_8_HRD_Q0154_10  0 // #10 (HRD    /Q0154/DPB Flushing and parameters) On picture flushing and DPB parameters Decision: Adopted (some details to be discussed further in BoG).
 //#define H_MV_HLS_7_OTHER_P0187_1 0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 
-// Others
+// OTHERS
 //#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 //#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
-
+//#define H_MV_HLS_7_HRD_P0138_6            0 // (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
 
 #define H_MV_HLS_8_SYN_Q0041_03    1   // #3  Syntax only (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 #define H_MV_HLS_8_SYN_39_19       1   // #39 Syntax only + (PS/Q0165,Q0078/presence of num_add_output_layer_sets) proposal 2. change condition for presence of num_add_output_layer_sets to avoid sending it when there is only one layer set.
