@@ -956,9 +956,11 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       {
         assert(0);
       }
+#endif
 #if H_MV_ENC_DEC_TRAC          
       DTRACE_CU("part_mode", eMode )
 #endif
+#if H_3D_QTLPC
     }
 #endif
   }

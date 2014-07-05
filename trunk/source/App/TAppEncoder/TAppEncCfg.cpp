@@ -387,11 +387,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // Layer Sets + Output Layer Sets + Profile Tier Level
   ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
   ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
-  ("DefaultTargetOutputLayerIdc"     , m_defaultTargetOutputLayerIdc     , 0, "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
+  ("DefaultTargetOutputLayerIdc"     , m_defaultOutputLayerIdc     , 0, "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
   ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
 
   ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "Indices in VPS of output layers in additional output layer set")  
   ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_OP_SETS_PLUS1, "Indices in VPS of output layers in layer set")  
+#if H_MV_HLS_7_VPS_P0300_27
+  ("AltOutputLayerFlag",    m_altOutputLayerFlag , std::vector<Bool>(1,0), "Alt output layer flag")
+#endif
   ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
   
   // Layer dependencies
@@ -452,7 +455,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // Coding structure paramters
 ("IntraPeriod,-ip",         m_iIntraPeriod,              -1, "Intra period in frames, (-1: only first frame)")
 #endif
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR 3:RecPointSEI)")
+#else
   ("DecodingRefreshType,-dr", m_iDecodingRefreshType,       0, "Intra refresh type (0:none 1:CRA 2:IDR)")
+#endif
   ("GOPSize,g",               m_iGOPSize,                   1, "GOP size of temporal structure")
   // motion options
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
@@ -469,7 +476,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LambdaModifier4,-LM4", m_adLambdaModifier[ 4 ], ( Double )1.0, "Lambda modifier for temporal layer 4")
   ("LambdaModifier5,-LM5", m_adLambdaModifier[ 5 ], ( Double )1.0, "Lambda modifier for temporal layer 5")
   ("LambdaModifier6,-LM6", m_adLambdaModifier[ 6 ], ( Double )1.0, "Lambda modifier for temporal layer 6")
-  ("LambdaModifier7,-LM7", m_adLambdaModifier[ 7 ], ( Double )1.0, "Lambda modifier for temporal layer 7")
 
   /* Quantization parameters */
 #if H_MV
@@ -693,6 +699,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIToneMapTargetPivotValue",                      cfg_targetPivotValue,              string(""), "Array of pivot point")
   ("SEIToneMapCameraIsoSpeedIdc",                     m_cameraIsoSpeedIdc,                        0, "Indicates the camera ISO speed for daylight illumination")
   ("SEIToneMapCameraIsoSpeedValue",                   m_cameraIsoSpeedValue,                    400, "Specifies the camera ISO speed for daylight illumination of Extended_ISO")
+  ("SEIToneMapExposureIndexIdc",                      m_exposureIndexIdc,                         0, "Indicates the exposure index setting of the camera")
+  ("SEIToneMapExposureIndexValue",                    m_exposureIndexValue,                     400, "Specifies the exposure index setting of the cameran of Extended_ISO")
   ("SEIToneMapExposureCompensationValueSignFlag",     m_exposureCompensationValueSignFlag,        0, "Specifies the sign of ExposureCompensationValue")
   ("SEIToneMapExposureCompensationValueNumerator",    m_exposureCompensationValueNumerator,       0, "Specifies the numerator of ExposureCompensationValue")
   ("SEIToneMapExposureCompensationValueDenomIdc",     m_exposureCompensationValueDenomIdc,        2, "Specifies the denominator of ExposureCompensationValue")
@@ -723,6 +731,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIDecodingUnitInfo",             m_decodingUnitInfoSEIEnabled,                       0, "Control generation of decoding unit information SEI message.")
   ("SEISOPDescription",              m_SOPDescriptionSEIEnabled,              0, "Control generation of SOP description SEI messages")
   ("SEIScalableNesting",             m_scalableNestingSEIEnabled,              0, "Control generation of scalable nesting SEI messages")
+#if H_MV
   ("SubBitstreamPropSEIEnabled",              m_subBistreamPropSEIEnabled,    false                     ,"Enable signaling of sub-bitstream property SEI message")
   ("SEISubBitstreamNumAdditionalSubStreams",  m_sbPropNumAdditionalSubStreams,0, "Number of substreams for which additional information is signalled")
   ("SEISubBitstreamSubBitstreamMode",         m_sbPropSubBitstreamMode,       std::vector< Int  >(1,0)  ,"Specifies mode of generation of the i-th sub-bitstream (0 or 1)")
@@ -730,6 +739,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISubBitstreamHighestSublayerId",        m_sbPropHighestSublayerId,      std::vector< Int  >(1,0)  ,"Specifies highest TemporalId of the i-th sub-bitstream")
   ("SEISubBitstreamAvgBitRate",               m_sbPropAvgBitRate,             std::vector< Int  >(1,0)  ,"Specifies average bit rate of the i-th sub-bitstream")
   ("SEISubBitstreamMaxBitRate",               m_sbPropMaxBitRate,             std::vector< Int  >(1,0)  ,"Specifies maximum bit rate of the i-th sub-bitstream")
+#endif
 #if H_3D
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
   ("BaseViewCameraNumbers" ,  m_pchBaseViewCameraNumbers,  (Char *) 0, "Numbers of base views")
@@ -1046,6 +1056,13 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   xResizeVector( m_tilesInUseFlag ); 
   xResizeVector( m_loopFilterNotAcrossTilesFlag ); 
   xResizeVector( m_wppInUseFlag ); 
+
+#if H_MV_HLS_7_VPS_P0300_27
+  for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + (Int) m_outputLayerSetIdx.size(); olsIdx++)
+  {    
+    m_altOutputLayerFlag.push_back( false );      
+  }
+#endif
 #else
   m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
   ::memset( m_aidQP, 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
@@ -1416,9 +1433,9 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
 
-  xConfirmPara( m_defaultTargetOutputLayerIdc < 0 || m_defaultTargetOutputLayerIdc > 2, "Default target output layer idc must greater than or equal to 0 and less than or equal to 2." );  
+  xConfirmPara( m_defaultOutputLayerIdc < 0 || m_defaultOutputLayerIdc > 2, "Default target output layer idc must greater than or equal to 0 and less than or equal to 2." );  
 
-  if( m_defaultTargetOutputLayerIdc != 2 )
+  if( m_defaultOutputLayerIdc != 2 )
   {
     Bool anyDefaultOutputFlag = false;   
     for (Int lsIdx = 0; lsIdx < m_vpsNumLayerSets; lsIdx++)
@@ -1447,6 +1464,9 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
 
+#if H_MV_HLS_7_VPS_P0300_27
+  xConfirmPara( m_altOutputLayerFlag.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
+#endif
   xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
 
   // Layer Dependencies  
@@ -1471,7 +1491,15 @@ Void TAppEncCfg::xCheckParameter()
 #else
   xConfirmPara( (m_iIntraPeriod > 0 && m_iIntraPeriod < m_iGOPSize) || m_iIntraPeriod == 0, "Intra period must be more than GOP size, or -1 , not 0" );
 #endif
+#if ALLOW_RECOVERY_POINT_AS_RAP
+  xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 3,                   "Decoding Refresh Type must be comprised between 0 and 3 included" );
+  if(m_iDecodingRefreshType == 3)
+  {
+    xConfirmPara( !m_recoveryPointSEIEnabled,                                               "When using RecoveryPointSEI messages as RA points, recoveryPointSEI must be enabled" );
+  }
+#else
   xConfirmPara( m_iDecodingRefreshType < 0 || m_iDecodingRefreshType > 2,                   "Decoding Refresh Type must be equal to 0, 1 or 2" );
+#endif
 #if H_MV
   for( Int layer = 0; layer < m_numberOfLayers; layer++ )
   {
@@ -1590,7 +1618,11 @@ Void TAppEncCfg::xCheckParameter()
 #if H_3D
   xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
   xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
+#if BUG_FIX_TK65
+  xConfirmPara( ( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size() ) && ( m_numberOfLayers != m_cCameraData.getBaseViewNumbers().size() ),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#else
   xConfirmPara( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#endif
   xConfirmPara    ( m_iCodedCamParPrecision < 0 || m_iCodedCamParPrecision > 5,       "CodedCamParsPrecision must be in range of 0..5" );
 #if H_3D_VSO
     if( m_bUseVSO )
@@ -2177,6 +2209,7 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
     xConfirmPara( m_toneMapTargetBitDepth < 1 || (m_toneMapTargetBitDepth > 16 && m_toneMapTargetBitDepth < 255) , "SEIToneMapTargetBitDepth must be in rage 1 to 16 or equal to 255");
     xConfirmPara( m_toneMapModelId < 0 || m_toneMapModelId > 4 , "SEIToneMapModelId must be in rage 0 to 4");
     xConfirmPara( m_cameraIsoSpeedValue == 0, "SEIToneMapCameraIsoSpeedValue shall not be equal to 0");
+    xConfirmPara( m_exposureIndexValue  == 0, "SEIToneMapExposureIndexValue shall not be equal to 0");
     xConfirmPara( m_extendedRangeWhiteLevel < 100, "SEIToneMapExtendedRangeWhiteLevel should be greater than or equal to 100");
     xConfirmPara( m_nominalBlackLevelLumaCodeValue >= m_nominalWhiteLevelLumaCodeValue, "SEIToneMapNominalWhiteLevelLumaCodeValue shall be greater than SEIToneMapNominalBlackLevelLumaCodeValue");
     xConfirmPara( m_extendedWhiteLevelLumaCodeValue < m_nominalWhiteLevelLumaCodeValue, "SEIToneMapExtendedWhiteLevelLumaCodeValue shall be greater than or equal to SEIToneMapNominalWhiteLevelLumaCodeValue");

@@ -558,7 +558,7 @@ public:
   
   Void          getPartIndexAndSize   ( UInt uiPartIdx, UInt& ruiPartAddr, Int& riWidth, Int& riHeight );
 #endif
-  UChar         getNumPartInter       ();
+UChar         getNumPartitions       ();
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
 
 #if H_3D_DIM

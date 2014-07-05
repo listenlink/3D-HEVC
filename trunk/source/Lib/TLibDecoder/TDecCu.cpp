@@ -1112,7 +1112,7 @@ Void
 TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
 {
   UInt  uiInitTrDepth = ( pcCU->getPartitionSize(0) == SIZE_2Nx2N ? 0 : 1 );
-  UInt  uiNumPart     = pcCU->getNumPartInter();
+  UInt  uiNumPart     = pcCU->getNumPartitions();
   UInt  uiNumQParts   = pcCU->getTotalNumPart() >> 2;
   
   if (pcCU->getIPCMFlag(0))

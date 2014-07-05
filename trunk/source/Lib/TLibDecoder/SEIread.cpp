@@ -398,23 +398,18 @@ Void SEIReader::xParseSEIDecodedPictureHash(SEIDecodedPictureHash& sei, UInt /*p
 Void SEIReader::xParseSEIActiveParameterSets(SEIActiveParameterSets& sei, UInt /*payloadSize*/)
 {
   UInt val; 
-  READ_CODE(4, val, "active_vps_id");      sei.activeVPSId = val; 
-  READ_FLAG( val, "full_random_access_flag");  sei.m_fullRandomAccessFlag = val ? true : false;
-  READ_FLAG( val, "no_param_set_update_flag"); sei.m_noParamSetUpdateFlag = val ? true : false;
+  READ_CODE(4, val, "active_video_parameter_set_id");   sei.activeVPSId = val; 
+  READ_FLAG(   val, "self_contained_cvs_flag");         sei.m_selfContainedCvsFlag = val ? true : false;
+  READ_FLAG(   val, "no_parameter_set_update_flag");    sei.m_noParameterSetUpdateFlag = val ? true : false;
   READ_UVLC(   val, "num_sps_ids_minus1"); sei.numSpsIdsMinus1 = val;
 
-  sei.activeSeqParamSetId.resize(sei.numSpsIdsMinus1 + 1);
+  sei.activeSeqParameterSetId.resize(sei.numSpsIdsMinus1 + 1);
   for (Int i=0; i < (sei.numSpsIdsMinus1 + 1); i++)
   {
-    READ_UVLC(val, "active_seq_param_set_id");  sei.activeSeqParamSetId[i] = val; 
+    READ_UVLC(val, "active_seq_parameter_set_id");      sei.activeSeqParameterSetId[i] = val; 
   }
 
-  UInt uibits = m_pcBitstream->getNumBitsUntilByteAligned(); 
-  
-  while(uibits--)
-  {
-    READ_FLAG(val, "alignment_bit");
-  }
+  xParseByteAlign();
 }
 
 Void SEIReader::xParseSEIDecodingUnitInfo(SEIDecodingUnitInfo& sei, UInt /*payloadSize*/, TComSPS *sps)
@@ -680,10 +675,15 @@ Void SEIReader::xParseSEIToneMappingInfo(SEIToneMappingInfo& sei, UInt /*payload
       }
     case 4:
       {
-        READ_CODE( 8, val, "camera_iso_speed_idc" );                     sei.m_cameraIsoSpeedValue = val;
-        if( sei.m_cameraIsoSpeedValue == 255) //Extended_ISO
+        READ_CODE( 8, val, "camera_iso_speed_idc" );                     sei.m_cameraIsoSpeedIdc = val;
+        if( sei.m_cameraIsoSpeedIdc == 255) //Extended_ISO
         {
           READ_CODE( 32,   val,   "camera_iso_speed_value" );            sei.m_cameraIsoSpeedValue = val;
+        }
+        READ_CODE( 8, val, "exposure_index_idc" );                       sei.m_exposureIndexIdc = val;
+        if( sei.m_exposureIndexIdc == 255) //Extended_ISO
+        {
+          READ_CODE( 32,   val,   "exposure_index_value" );              sei.m_exposureIndexValue = val;
         }
         READ_FLAG( val, "exposure_compensation_value_sign_flag" );       sei.m_exposureCompensationValueSignFlag = val;
         READ_CODE( 16, val, "exposure_compensation_value_numerator" );   sei.m_exposureCompensationValueNumerator = val;
