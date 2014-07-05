@@ -919,10 +919,18 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 #endif
         for (y=0; y<endY; y++)
         {
+#if SAO_SGN_FUNC
+          signLeft = (Char)sgn(srcLine[startX] - srcLine[startX-1]);
+#else
           signLeft = (Char)m_sign[srcLine[startX] - srcLine[startX-1]];
+#endif
           for (x=startX; x<endX; x++)
           {
+#if SAO_SGN_FUNC
+            signRight =  (Char)sgn(srcLine[x] - srcLine[x+1]);
+#else
             signRight =  (Char)m_sign[srcLine[x] - srcLine[x+1]]; 
+#endif
             edgeType  =  signRight + signLeft;
             signLeft  = -signRight;
 
@@ -942,10 +950,18 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 
             for(y=0; y<skipLinesB[typeIdx]; y++)
             {
+#if SAO_SGN_FUNC
+              signLeft = (Char)sgn(srcLine[startX] - srcLine[startX-1]);
+#else
               signLeft = (Char)m_sign[srcLine[startX] - srcLine[startX-1]];
+#endif
               for (x=startX; x<endX; x++)
               {
+#if SAO_SGN_FUNC
+                signRight =  (Char)sgn(srcLine[x] - srcLine[x+1]);
+#else
                 signRight =  (Char)m_sign[srcLine[x] - srcLine[x+1]]; 
+#endif
                 edgeType  =  signRight + signLeft;
                 signLeft  = -signRight;
 
@@ -993,7 +1009,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
         for (x=0; x< endX; x++) 
 #endif
         {
+#if SAO_SGN_FUNC
+          signUpLine[x] = (Char)sgn(srcLine[x] - srcLineAbove[x]);
+#else
           signUpLine[x] = (Char)m_sign[srcLine[x] - srcLineAbove[x]];
+#endif
         }
 
         Pel* srcLineBelow;
@@ -1007,7 +1027,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
           for (x=0; x<endX; x++)
 #endif
           {
+#if SAO_SGN_FUNC
+            signDown  = (Char)sgn(srcLine[x] - srcLineBelow[x]); 
+#else
             signDown  = (Char)m_sign[srcLine[x] - srcLineBelow[x]]; 
+#endif
             edgeType  = signDown + signUpLine[x];
             signUpLine[x]= -signDown;
 
@@ -1032,7 +1056,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 
               for (x=startX; x<endX; x++)
               {
+#if SAO_SGN_FUNC
+                edgeType = sgn(srcLine[x] - srcLineBelow[x]) + sgn(srcLine[x] - srcLineAbove[x]);
+#else
                 edgeType = m_sign[srcLine[x] - srcLineBelow[x]] + m_sign[srcLine[x] - srcLineAbove[x]];
+#endif
                 diff [edgeType] += (orgLine[x] - srcLine[x]);
                 count[edgeType] ++;
               }
@@ -1075,7 +1103,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
         Pel* srcLineBelow = srcLine + srcStride;
         for (x=startX; x<endX+1; x++)
         {
+#if SAO_SGN_FUNC
+          signUpLine[x] = (Char)sgn(srcLineBelow[x] - srcLine[x-1]);
+#else
           signUpLine[x] = (Char)m_sign[srcLineBelow[x] - srcLine[x-1]];
+#endif
         }
 
         //1st line
@@ -1089,7 +1121,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 #endif
         for(x=firstLineStartX; x<firstLineEndX; x++)
         {
+#if SAO_SGN_FUNC
+          edgeType = sgn(srcLine[x] - srcLineAbove[x-1]) - signUpLine[x+1];
+#else
           edgeType = m_sign[srcLine[x] - srcLineAbove[x-1]] - signUpLine[x+1];
+#endif
           diff [edgeType] += (orgLine[x] - srcLine[x]);
           count[edgeType] ++;
         }
@@ -1104,14 +1140,22 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 
           for (x=startX; x<endX; x++)
           {
+#if SAO_SGN_FUNC
+            signDown = (Char)sgn(srcLine[x] - srcLineBelow[x+1]);
+#else
             signDown = (Char)m_sign[srcLine[x] - srcLineBelow[x+1]] ;
+#endif
             edgeType = signDown + signUpLine[x];
             diff [edgeType] += (orgLine[x] - srcLine[x]);
             count[edgeType] ++;
 
             signDownLine[x+1] = -signDown; 
           }
+#if SAO_SGN_FUNC
+          signDownLine[startX] = (Char)sgn(srcLineBelow[startX] - srcLine[startX-1]);
+#else
           signDownLine[startX] = (Char)m_sign[srcLineBelow[startX] - srcLine[startX-1]];
+#endif
 
           signTmpLine  = signUpLine;
           signUpLine   = signDownLine;
@@ -1135,7 +1179,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 
               for (x=startX; x< endX; x++)
               {
+#if SAO_SGN_FUNC
+                edgeType = sgn(srcLine[x] - srcLineBelow[x+1]) + sgn(srcLine[x] - srcLineAbove[x-1]);
+#else
                 edgeType = m_sign[srcLine[x] - srcLineBelow[x+1]] + m_sign[srcLine[x] - srcLineAbove[x-1]];
+#endif
                 diff [edgeType] += (orgLine[x] - srcLine[x]);
                 count[edgeType] ++;
               }
@@ -1173,7 +1221,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
         Pel* srcLineBelow = srcLine + srcStride;
         for (x=startX-1; x<endX; x++)
         {
+#if SAO_SGN_FUNC
+          signUpLine[x] = (Char)sgn(srcLineBelow[x] - srcLine[x+1]);
+#else
           signUpLine[x] = (Char)m_sign[srcLineBelow[x] - srcLine[x+1]];
+#endif
         }
 
 
@@ -1192,7 +1244,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 #endif
         for(x=firstLineStartX; x<firstLineEndX; x++)
         {
+#if SAO_SGN_FUNC
+          edgeType = sgn(srcLine[x] - srcLineAbove[x+1]) - signUpLine[x-1];
+#else
           edgeType = m_sign[srcLine[x] - srcLineAbove[x+1]] - signUpLine[x-1];
+#endif
           diff [edgeType] += (orgLine[x] - srcLine[x]);
           count[edgeType] ++;
         }
@@ -1207,7 +1263,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 
           for(x=startX; x<endX; x++)
           {
+#if SAO_SGN_FUNC
+            signDown = (Char)sgn(srcLine[x] - srcLineBelow[x-1]);
+#else
             signDown = (Char)m_sign[srcLine[x] - srcLineBelow[x-1]] ;
+#endif
             edgeType = signDown + signUpLine[x];
 
             diff [edgeType] += (orgLine[x] - srcLine[x]);
@@ -1215,7 +1275,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 
             signUpLine[x-1] = -signDown; 
           }
+#if SAO_SGN_FUNC
+          signUpLine[endX-1] = (Char)sgn(srcLineBelow[endX-1] - srcLine[endX]);
+#else
           signUpLine[endX-1] = (Char)m_sign[srcLineBelow[endX-1] - srcLine[endX]];
+#endif
           srcLine  += srcStride;
           orgLine  += orgStride;
         }
@@ -1234,7 +1298,11 @@ Void TEncSampleAdaptiveOffset::getBlkStats(Int compIdx, SAOStatData* statsDataTy
 
               for (x=startX; x<endX; x++)
               {
+#if SAO_SGN_FUNC
+                edgeType = sgn(srcLine[x] - srcLineBelow[x-1]) + sgn(srcLine[x] - srcLineAbove[x+1]);
+#else
                 edgeType = m_sign[srcLine[x] - srcLineBelow[x-1]] + m_sign[srcLine[x] - srcLineAbove[x+1]];
+#endif
                 diff [edgeType] += (orgLine[x] - srcLine[x]);
                 count[edgeType] ++;
               }

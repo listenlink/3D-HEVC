@@ -65,7 +65,7 @@
 #define H_3D          ( HEVC_EXT == 2)
 
 #define NTT_BUG_FIX_TK54    1
-
+#define BUG_FIX_TK65        1
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
@@ -358,31 +358,118 @@
 
 #define MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133    1
 #endif
+
+#if H_MV
+#define H0044_POC_LSB_NOT_PRESENT        1      ///< JCT3V-H0044: Add constraint checking on the value of poc_reset_idc and poc_lsb_val
+#define H0056_EOS_CHECKS                 1      ///< JCT3V-H0056: Put checks on handling EOS
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   TBD                  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
 
+
+#define H_MV_HLS_8                           1 // General changes
+#define H_MV_HLS_7_VPS_P0300_27              1 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
+#define MV_FIX_DEP_TYPES                     1
+
+
+#define H_MV_HLS7_GEN                        0  // General changes (not tested)
+
+// POC
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
 // #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
 // #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications Ewith text provided as P0297).
 
-// #define H_MV_HLS_7_SEI_P0133_28           0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
-// #define H_MV_HLS_7_SEI_P0123_25           0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
 
+// OTHERS
 // #define H_MV_HLS_7_HRD_P0138_6            0 // (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
-// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
-// #define H_MV_HLS_7_VPS_P0300_27           0 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
 
-#define H_MV_HLS7_GEN                        0  // General changes (not tested)
+// SEI related
+//#define H_MV_HLS_8_SEI_NODOC_53  0 // #53 (SEI    /NODOC/Added Multiview view position SEI message) Plain copy from AVC.
+//#define H_MV_HLS_8_SEI_NODOC_52  0 // #52 (SEI    /NODOC/Added Multiview acquisition information SEI) Plain copy from AVC. 
+//#define H_MV_HLS_8_SEI_NODOC_51  0 // #51 (SEI    /NODOC/Added Multiview scene information SEI message)
+//#define H_MV_HLS_8_SEI_Q0189_35  0 // #35 (SEI    /Q0189/SEI message for indicating constraints on TMVP) Proposal 2.3,  SEI message for indicating constraints on TMVP
+//#define H_MV_HLS_8_EDF_Q0116_29  0 // #29 (ED.FIX /Q0116/Recovery point SEI) , consider adding a note regarding how random accessibility is affected by the recovery point SEI message
+//#define H_MV_HLS_8_GEN_Q0183_23  0 // #23 (GEN    /Q0183/SEI clean-ups) numerous small clean-ups on SEI messages.
+//#define H_MV_HLS_8_MIS_Q0247_49  0 // #49 (MISC   /Q0247/frame-field information SEI message)
+//#define H_MV_HLS_8_MIS_Q0189_34  0 // #34 (MISC   /Q0189/slice temporal mvp enabled flag) Proposal 2.2, clarification of semantics of slice temporal mvp enabled flag
+//#define H_MV_HLS_8_EDF_Q0081_01  0 // #1  (ED.FIX /Q0081/alpha channel persist) On reuse of alpha planes in auxiliary pictures. It was asked why there would not be a presumption that the alpha channel content would simply persist, without needing the flag to indicate it. Decision (Ed.): Delegated to editors to clarify, as necessary, that the alpha channel content persists until cancelled or updated in output order.
+//#define H_MV_HLS_8_SEI_Q0253_37  0 // #37 (SEI    /Q0253/layer not present), modified semantics of layers not present SEI message to correct bug introduced during editing 
+//#define H_MV_HLS_8_SEI_Q0045_11  0 // #11 (SEI    /Q0045/Overlay) Proposal for an SEI message on selectable overlays. Decision: Adopt (modified for variable-length strings).
+//#define H_MV_HLS_7_SEI_P0133_28  0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
+//#define H_MV_HLS_7_SEI_P0123_25  0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
+
+
+// Auxiliary picture related
+//#define H_MV_HLS_8_AUX_NODOC_40  0 // #40 (AUX    /NODOC/primary pic) Clarify that an auxiliary picture can be associated with more than one primary picture. Consider if the language associating an alpha auxiliary picture with a primary picture in the semantics of dimension_id[ ][ ] near the AuxId derivation could be moved to the alpha SEI message.
+//#define H_MV_HLS_8_AUX_Q0081_2   0 // #2  (AUX    /Q0081/primary) Decision: Remove the constraint that an alpha picture must be accompanied by a primary picture.
+//#define H_MV_HLS_8_AUX_Q0078_44  0 // #44 (AUX    /Q0078/concepts Auxiliary picture concepts:
+//#define H_MV_HLS_8_AUX_Q0078_39  0 // #39 (AUX    /Q0078/conformance): mechanism for signaling a profile/tier/level conformance point for auxiliary pictures
+
+// Profiles
+//#define H_MV_HLS_8_PRO_NODOC_50  0 // #50 (PROF   /NODOC/Monochrome) Add Monochrome 8-bit profile
+//#define H_MV_HLS_8_PRO_NODOC_31  0 // #31 (PROF   /NODOC/Profile constraint) Add a profile constraint to the Scalable Main, Scalable Main 10, and Stereo Main profiles against allowing layers with duplicate values of DependencyId (or ViewOrderIdx) when AuxId equal to 0.
+//#define H_MV_HLS_8_PRO_H0126_45  0 // #45 (PROF   /H0126/Stereo main) Phrasing used in specifying the Stereo Main profile. 
+//#define H_MV_HLS_8_PRO_Q0160_33  0 // #33 (PROF   /Q0160/alt_output_flag) v2: Add constraint to stereo main profile that it must contain exactly two texture views, and add a note to state that the constraint implies a restriction that alt_output_flag equal to 0. 
+
+// DPB
+//#define H_MV_HLS_8_HRD_Q0102_09  0 // #9  (HRD    /Q0102/NoOutputOfPriorPicsFlag) It was suggested that also the separate_colour_plane_flag should affect inference of NoOutputOfPriorPicsFlag. Decision (Ed.): Agreed (affects RExt text).
+//#define H_MV_HLS_8_DBP_Q0154_38  0 // #38 (DBP    /Q0154/VPS DPB) Proposal in C.5.2.1: Add in the decoding process that when a new VPS is activated, all pictures in the DPB are marked as unused for reference
+//#define H_MV_HLS_8_HRD_Q0154_10  0 // #10 (HRD    /Q0154/DPB Flushing and parameters) On picture flushing and DPB parameters Decision: Adopted (some details to be discussed further in BoG).
+//#define H_MV_HLS_7_OTHER_P0187_1 0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+
+// Others
+//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+//#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
+
+
+#define H_MV_HLS_8_SYN_Q0041_03    1   // #3  Syntax only (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+#define H_MV_HLS_8_SYN_39_19       1   // #39 Syntax only + (PS/Q0165,Q0078/presence of num_add_output_layer_sets) proposal 2. change condition for presence of num_add_output_layer_sets to avoid sending it when there is only one layer set.
+#define H_MV_HLS_8_HRD_Q0101_04    1   // #4  (HRD    /Q0101/Bitstream part buffer) On Bitstream Partition Buffer. Decision (BF/Cleanup): Adopt (sub-proposals 1–11, refined as described).
+#define H_MV_HLS_8_PPS_NODOC_NN    1   // #NN (PPS    /NODOC/reserved flag): Add a flag in PPS for SHVC color gamut scalability
+#define H_MV_HLS_8_MIS_Q0177_47    1   // #47 (MISC   /Q0177/EOS NAL) proposal 2: clarification of description of end of sequence NAL unit
+#define H_MV_HLS_8_HRD_Q0182_05    1   // #5  (HRD    /Q0182/Bitstream part buffer) Decision (BF/Cleanup/Ed): Adopted (such that we use the main proposal for sub-proposal 1, and alternative 1 for sub-proposal 2). + #define H_MV_HLS_8_HRD_Q0182_06  0 // #6  (HRD    /Q0182/hrd_parameters) Sub-proposal 2 Alternative 1: Clarify that the VPS hrd_parameters( ) syntax structure that applies to the layer set which is associated with the bitstream partition initial arrival time SEI message is used to determine the lengths of the nal_initial_arrival_delay[ i ] and vcl_initial_arrival_delay[ i ] syntax elements. Decision (BF/Cleanup/Ed): Adopted alternative 1 for sub-proposal 2
+#define H_MV_HLS_8_SPS_NODOC_48    1   // #48 (SPS    /NODOC/PPS extension cleanups) Alignment with RExt
+#define H_MV_HLS_8_DBP_NODOC_42    1   // #42 (DBP    /NODOC/sharing) Remove sub-DPB sharing and processes that mark inter-layer reference pictures as "unused for reference"
+#define H_MV_HLS_8_RPS_Q0100_36    1   // #36 (RPS    /Q0100/constraint to semantics) v3, add constraint to RPS semantics
+#define H_MV_HLS_8_POC_Q0142_32    1   // #32 (POC    /Q0142/poc_lsb_not_present_flag) v2: Add semantic constraints to poc_lsb_not_present_flag.
+#define H_MV_HLS_8_HRD_Q0102_08    1   // #8  (HRD    /Q0102/sps_max_dec_pic_buffering_minus1) Sub-proposal 2: A semantics bug fix is proposed for sps_max_dec_pic_buffering_minus1 as a bug-fix. In discussion, the first option was preferred. Decision (BF/Cleanup/Ed.): Adopt. 
+#define H_MV_HLS_8_MIS_Q0102_30    1   // #30 (MISC   /Q0102/loop index) proposal 3, change the max loop index for signaling bit rate and pic rate info to MaxSubLayersInLayerSetMinus1
+#define H_MV_HLS_8_GEN_Q0108_13    1   // #13 (GEN    /Q0108/STSA TemporalId) Agreed to remove restriction from proposal 2, to allow STSA pics of non-base layers to have TemporalId equal to 0.
+#define H_MV_HLS_8_PMS_Q0195_21    1   // #21 (PS     /Q0195/constraint update_ref_format_flag) proposal 2: add a semantic constraint on the value of update_ref_format_flag
+#define H_MV_HLS_8_PMS_Q0195_20    1   // #20 (PS     /Q0195/syntax table rep format) proposal 1: restructure syntax table for sending of rep_format_idx_present_flag and vps_num_ref_formats_minus1
+#define H_MV_HLS_8_MIS_Q0177_22    1   // #22 (MISC   /Q0177/inference sps_temporal_id_nesting_flag) proposal 1: modify inference rule for sps_temporal_id_nesting_flag when it is not present
+#define H_MV_HLS_8_PMS_Q0165_18    1   // #18 (PS     /Q0165/disallow an empty layer set) proposal 1.a), add a constraint to disallow an empty layer set
+#define H_MV_HLS_8_RPS_Q0060_17    1   // #17 (RPS    /Q0060/condition refLayerPicIdc) Proposal 2: Add a condition to the derivation of refLayerPicIdc of (TemporalId == 0)
+#define H_MV_HLS_8_POC_Q0146_15    1   // #15 (POC    /Q0146/inference of poc_msb_val_present_flag) Proposal 1.1: Change inference rule in semantics of poc_msb_val_present_flag
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////
-#define BUGFIX_INTRAPERIOD 1
+#define HARMONIZE_GOP_FIRST_FIELD_COUPLE  1
+#define FIX_FIELD_DEPTH                 1
+#if H_MV
+#define EFFICIENT_FIELD_IRAP            0
+#else
+#define EFFICIENT_FIELD_IRAP            1
+#endif
+#define ALLOW_RECOVERY_POINT_AS_RAP     1
+#define BUGFIX_INTRAPERIOD              1
 #define SAO_ENCODE_ALLOW_USE_PREDEBLOCK 1
 
+#define SAO_SGN_FUNC 1
+
 #define FIX1172 1 ///< fix ticket #1172
+
+#define SETTING_PIC_OUTPUT_MARK     1
+#define SETTING_NO_OUT_PIC_PRIOR    1
+#define FIX_EMPTY_PAYLOAD_NAL       1
+#define FIX_WRITING_OUTPUT          1
+#define FIX_OUTPUT_EOS              1
+
+#define FIX_POC_CRA_NORASL_OUTPUT   1
 
 #define MAX_NUM_PICS_IN_SOP           1024
 
@@ -922,6 +1009,7 @@ namespace Level
 
 #if H_MV
 
+#if !H_MV_HLS_8_SPS_NODOC_48
 enum PpsExtensionTypes
 {
   PPS_EX_T_MV      = 0,
@@ -943,7 +1031,7 @@ enum PpsExtensionTypes
     PS_EX_T_ESC  = 7,
     PS_EX_T_MAX_NUM = 8
   };
-
+#endif
 /// scalability types
   enum ScalabilityType
   {

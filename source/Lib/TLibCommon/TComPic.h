@@ -68,6 +68,9 @@ private:
   TComPicYuv*           m_pcPicYuvResi;           //  Residual
   Bool                  m_bReconstructed;
   Bool                  m_bNeededForOutput;
+#if H_MV_HLS_7_VPS_P0300_27
+  Bool                  m_bPicOutputFlag;         // Semantics variable 
+#endif
   UInt                  m_uiCurrSliceIdx;         // Index of current slice
   Bool                  m_bCheckLTMSB;
   
@@ -174,7 +177,11 @@ public:
   Bool          getReconMark ()       { return m_bReconstructed;  }
   Void          setOutputMark (Bool b) { m_bNeededForOutput = b;     }
   Bool          getOutputMark ()       { return m_bNeededForOutput;  }
- 
+ #if H_MV_HLS_7_VPS_P0300_27
+  Void          setPicOutputFlag(Bool b) { m_bPicOutputFlag = b;      }
+  Bool          getPicOutputFlag()       { return m_bPicOutputFlag ;  }
+#endif
+
   Void          setNumReorderPics(Int i, UInt tlayer) { m_numReorderPics[tlayer] = i;    }
   Int           getNumReorderPics(UInt tlayer)        { return m_numReorderPics[tlayer]; }
 #if H_3D

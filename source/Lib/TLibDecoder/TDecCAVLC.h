@@ -66,6 +66,7 @@ protected:
   Int**    m_aaiTempScale;
   Int**    m_aaiTempOffset;
 #endif
+
 public:
 
   /// rest entropy coder by intial QP and IDC in CABAC
@@ -79,9 +80,9 @@ public:
   Void  parseVPSExtension   ( TComVPS* pcVPS ); 
   Void  parseRepFormat      ( Int i, TComRepFormat* curRepFormat, TComRepFormat* prevRepFormat );
   Void  parseVPSVUI         ( TComVPS* pcVPS );
-  Void parseVideoSignalInfo ( TComVideoSignalInfo* pcVideoSignalInfo ); 
+  Void  parseVideoSignalInfo( TComVideoSignalInfo* pcVideoSignalInfo ); 
   Void  parseDpbSize        ( TComVPS* pcVPS ); 
-  Void parseVpsVuiBspHrdParameters( TComVPS* pcVPS ); 
+  Void  parseVpsVuiBspHrdParameters( TComVPS* pcVPS ); 
 #endif
 
 #if H_MV
@@ -107,7 +108,11 @@ public:
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
   Void  parseProfileTier    (ProfileTierLevel *ptl);
   Void  parseHrdParameters  (TComHRD *hrd, Bool cprms_present_flag, UInt tempLevelHigh);
+#if H_MV_HLS_8_HRD_Q0102_08
+  Void  parseSliceHeader    ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx);
+#else
   Void  parseSliceHeader    ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager);
+#endif
   Void  parseTerminatingBit ( UInt& ruiBit );
   
   Void  parseMVPIdx         ( Int& riMVPIdx );

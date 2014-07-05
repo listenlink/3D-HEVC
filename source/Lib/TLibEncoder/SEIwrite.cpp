@@ -266,29 +266,18 @@ Void SEIWriter::xWriteSEIDecodedPictureHash(const SEIDecodedPictureHash& sei)
 
 Void SEIWriter::xWriteSEIActiveParameterSets(const SEIActiveParameterSets& sei)
 {
-  WRITE_CODE(sei.activeVPSId,     4, "active_vps_id");
-  WRITE_FLAG(sei.m_fullRandomAccessFlag, "full_random_access_flag");
-  WRITE_FLAG(sei.m_noParamSetUpdateFlag, "no_param_set_update_flag");
+  WRITE_CODE(sei.activeVPSId,     4,         "active_video_parameter_set_id");
+  WRITE_FLAG(sei.m_selfContainedCvsFlag,     "self_contained_cvs_flag");
+  WRITE_FLAG(sei.m_noParameterSetUpdateFlag, "no_parameter_set_update_flag");
   WRITE_UVLC(sei.numSpsIdsMinus1,    "num_sps_ids_minus1");
 
-  assert (sei.activeSeqParamSetId.size() == (sei.numSpsIdsMinus1 + 1));
+  assert (sei.activeSeqParameterSetId.size() == (sei.numSpsIdsMinus1 + 1));
 
-  for (Int i = 0; i < sei.activeSeqParamSetId.size(); i++)
-  {
-    WRITE_UVLC(sei.activeSeqParamSetId[i], "active_seq_param_set_id"); 
-  }
-
-  UInt uiBits = m_pcBitIf->getNumberOfWrittenBits();
-  UInt uiAlignedBits = ( 8 - (uiBits&7) ) % 8;  
-  if(uiAlignedBits) 
-  {
-    WRITE_FLAG(1, "alignment_bit" );
-    uiAlignedBits--; 
-    while(uiAlignedBits--)
+  for (Int i = 0; i < sei.activeSeqParameterSetId.size(); i++)
     {
-      WRITE_FLAG(0, "alignment_bit" );
-    }
+    WRITE_UVLC(sei.activeSeqParameterSetId[i], "active_seq_parameter_set_id"); 
   }
+  xWriteByteAlign();
 }
 
 Void SEIWriter::xWriteSEIDecodingUnitInfo(const SEIDecodingUnitInfo& sei, TComSPS *sps)
@@ -477,6 +466,11 @@ Void SEIWriter::xWriteSEIToneMappingInfo(const SEIToneMappingInfo& sei)
         if( sei.m_cameraIsoSpeedIdc == 255) //Extended_ISO
         {
           WRITE_CODE( sei.m_cameraIsoSpeedValue,    32,    "camera_iso_speed_value" );
+        }
+        WRITE_CODE( sei.m_exposureIndexIdc,     8,    "exposure_index_idc" );
+        if( sei.m_exposureIndexIdc == 255) //Extended_ISO
+        {
+          WRITE_CODE( sei.m_exposureIndexValue,     32,    "exposure_index_value" );
         }
         WRITE_FLAG( sei.m_exposureCompensationValueSignFlag,           "exposure_compensation_value_sign_flag" );
         WRITE_CODE( sei.m_exposureCompensationValueNumerator,     16,  "exposure_compensation_value_numerator" );

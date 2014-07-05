@@ -74,7 +74,11 @@ private:
   std::vector<Int>           m_frameRcvd;                   ///< number of received frames 
 
   TComPicLists               m_ivPicLists;                  ///< picture buffers of encoder instances
+#if H_MV_HLS_8
+  TComVPS*                   m_vps;                         ///< vps
+#else
   TComVPS                    m_vps;                         ///< vps
+#endif
 #else
   TEncTop                    m_cTEncTop;                    ///< encoder class
   TVideoIOYuv                m_cTVideoIOYuvInputFile;       ///< input YUV file

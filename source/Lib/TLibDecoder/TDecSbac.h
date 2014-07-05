@@ -86,7 +86,11 @@ public:
   Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}
 #endif
 
+#if H_MV_HLS_8_HRD_Q0102_08
+  Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/, Int targetOlsIdx ) {}
+#else
   Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/) {}
+#endif
   Void  parseTerminatingBit       ( UInt& ruiBit );
   Void  parseMVPIdx               ( Int& riMVPIdx          );
   Void  parseSaoMaxUvlc           ( UInt& val, UInt maxSymbol );

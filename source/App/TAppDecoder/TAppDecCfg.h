@@ -44,7 +44,6 @@
 
 #include "TLibCommon/CommonDef.h"
 #include <vector>
-
 //! \ingroup TAppDecoder
 //! \{
 

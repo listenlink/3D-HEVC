@@ -127,17 +127,17 @@ public:
 
   SEIActiveParameterSets() 
     : activeVPSId            (0)
-    , m_fullRandomAccessFlag (false)
-    , m_noParamSetUpdateFlag (false)
+    , m_selfContainedCvsFlag (false)
+    , m_noParameterSetUpdateFlag (false)
     , numSpsIdsMinus1        (0)
   {}
   virtual ~SEIActiveParameterSets() {}
 
   Int activeVPSId; 
-  Bool m_fullRandomAccessFlag;
-  Bool m_noParamSetUpdateFlag;
+  Bool m_selfContainedCvsFlag;
+  Bool m_noParameterSetUpdateFlag;
   Int numSpsIdsMinus1;
-  std::vector<Int> activeSeqParamSetId; 
+  std::vector<Int> activeSeqParameterSetId; 
 };
 
 class SEIBufferingPeriod : public SEI
@@ -355,6 +355,8 @@ public:
   std::vector<Int> m_targetPivotValue;
   Int    m_cameraIsoSpeedIdc;
   Int    m_cameraIsoSpeedValue;
+  Int    m_exposureIndexIdc;
+  Int    m_exposureIndexValue;
   Int    m_exposureCompensationValueSignFlag;
   Int    m_exposureCompensationValueNumerator;
   Int    m_exposureCompensationValueDenomIdc;

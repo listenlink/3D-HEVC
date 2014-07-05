@@ -380,6 +380,7 @@ UInt64 g_stopAtCounter       = 0;
 Bool g_traceCopyBack         = false; 
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
+Bool g_decTracePicOutput     = false; 
 Bool g_stopAtPos             = false; 
 Bool g_outputPos             = false; 
 #endif
