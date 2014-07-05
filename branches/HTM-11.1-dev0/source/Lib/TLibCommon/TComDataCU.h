@@ -69,11 +69,6 @@ typedef struct _DBBPTmpData
   UChar       auhInterDir[2];       // for two segments
   Bool        abMergeFlag[2];       // for two segments
   UChar       auhMergeIndex[2];     // for two segments
-#if !RWTH_DBBP_NO_SPU_H0057
-  Char        ahVSPFlag[2];         // for two segments
-  DisInfo     acDvInfo[2];          // for two segments
-#endif
-  
   PartSize    eVirtualPartSize;
   UInt        uiVirtualPartIndex;
 } DBBPTmpData;
@@ -194,9 +189,7 @@ private:
 #if H_3D_DIM_SDC
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
-#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
   Pel          m_apDmmPredictor[2];
-#endif
 #endif
 #endif
 #if H_3D_DBBP
@@ -582,12 +575,9 @@ UChar         getNumPartitions       ();
   Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
   Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
-#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
   Void          setDmmPredictor ( Pel pOffset, UInt uiSeg) { m_apDmmPredictor[uiSeg] = pOffset; }
   Pel           getDmmPredictor ( UInt uiSeg) { return m_apDmmPredictor[uiSeg]; }
-#endif
   UInt          getCtxSDCFlag          ( UInt   uiAbsPartIdx );
-  UInt          getCtxAngleFlag        ( UInt   uiAbsPartIdx );
 #endif
 #endif
   

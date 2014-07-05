@@ -385,11 +385,7 @@ Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
     m_pcTDecBinIf->decodeBin( uiSymbol, rcSCModel );
     uiCount++;
   }
-#if QC_SIMP_DELTADC_CODING_H0131
   while( uiSymbol && ( uiCount != 3 ) );
-#else
-  while( uiSymbol && ( uiCount != 13 ) );
-#endif
   ruiSymbol = uiCount - 1;
 
   if( uiSymbol )
@@ -1136,11 +1132,7 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
 
   if( ( pcCU->getSlice()->getSPS()->getMaxCUWidth() >> pcCU->getDepth( absPartIdx ) ) < 64 ) //DMM and HEVC intra modes are both allowed
   {
-#if LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cAngleFlagSCModel.get( 0, 0, 0 ) );
-#else
-    m_pcTDecBinIf->decodeBin( uiSymbol, m_cAngleFlagSCModel.get( 0, 0, pcCU->getCtxAngleFlag( absPartIdx ) ) );
-#endif
   }
   else
   {
@@ -2155,14 +2147,8 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_DBBP
 Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if !MTK_DBBP_SIGNALING_H0094
-  PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
-#endif
   AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
   AOF( !pcCU->getSlice()->getIsDepth() );
-#if !MTK_DBBP_SIGNALING_H0094
-  AOF( ePartSize == RWTH_DBBP_PACK_MODE );
-#endif
   
   UInt uiSymbol = 0;
   

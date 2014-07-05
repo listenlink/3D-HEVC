@@ -338,25 +338,6 @@
 #if H_3D_NBDV
 #define SEC_VER_DONBDV_H0103              1   // Vertical DV Restriction for DoNBDV
 #endif
-
-#if H_3D_DIM
-#define HS_DMM_SDC_PREDICTOR_UNIFY_H0108  1   // Unification of DMM and SDC predictor derivation
-#define LGE_SIMP_DIM_NOT_PRESENT_FLAG_CODING_H0119_H0135  1 // Use only one context for CABAC of dim_not_present_flag
-#define QC_SIMP_DELTADC_CODING_H0131      1   // Simplify detaDC entropy coding 
-
-#if H_3D_DIM_DLT
-#define SEC_NO_RESI_DLT_H0105             1
-#define MTK_DLT_CODING_FIX_H0091          1
-#endif
-#endif
-#if H_3D_DBBP
-#define MTK_DBBP_AMP_REM_H0072                 1
-#define RWTH_DBBP_NO_SPU_H0057                 1
-#define SEC_DBBP_FILTERING_H0104               1
-#define MTK_DBBP_SIGNALING_H0094               1    
-#endif
-
-#define MPI_SUBPU_DEFAULT_MV_H0077_H0099_H0111_H0133    1
 #endif
 
 #if H_MV
