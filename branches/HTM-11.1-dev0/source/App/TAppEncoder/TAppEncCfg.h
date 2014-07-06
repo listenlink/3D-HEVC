@@ -93,9 +93,7 @@ protected:
   std::vector< std::vector<Int> > m_layerIdsInAddOutputLayerSet; ///< LayerIds in vps of additional output layers
   std::vector< std::vector<Int> > m_layerIdsInDefOutputLayerSet; ///< Indices in vps of output layers in layer sets
   std::vector<Int>       m_profileLevelTierIdx;               ///< Indices of of profile level tier
-  #if H_MV_HLS_7_VPS_P0300_27
   std::vector<Bool>      m_altOutputLayerFlag;                ///< Alt output layer flag
-#endif
 
   // Dependencies
   std::vector< std::vector<Int> > m_directRefLayers;          ///< LayerIds of direct reference layers

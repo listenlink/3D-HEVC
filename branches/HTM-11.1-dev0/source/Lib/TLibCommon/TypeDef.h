@@ -335,24 +335,10 @@
 #define PPS_FIX_DEPTH                           1
 #endif
 
-
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   HTM-11.0 Integrations                  //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-#if H_MV
-#define H0044_POC_LSB_NOT_PRESENT        1      ///< JCT3V-H0044: Add constraint checking on the value of poc_reset_idc and poc_lsb_val
-#define H0056_EOS_CHECKS                 1      ///< JCT3V-H0056: Put checks on handling EOS
-#endif
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   TBD                  //////////////////////////////
-/////////////////////////////////////////////////////////////////////////////////////////
-
-
-#define H_MV_HLS_8                           1 // General changes
-#define H_MV_HLS_7_VPS_P0300_27              1 // Output part only. (VPS/P0300/alt output layer flag) #27 Change alt output layer flag to be signalled within the loop of output layer sets, from JCTVC-P0300-v2. Decision: Adopt. 
-#define MV_FIX_DEP_TYPES                     1
-
-
+/////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////
+// TBD: Check if integration is necessary. 
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
 
 // POC
@@ -397,28 +383,6 @@
 //#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 //#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
 //#define H_MV_HLS_7_HRD_P0138_6   0 //     (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
-
-#define H_MV_HLS_8_SYN_Q0041_03    1   // #3  Syntax only (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
-#define H_MV_HLS_8_SYN_39_19       1   // #39 Syntax only + (PS/Q0165,Q0078/presence of num_add_output_layer_sets) proposal 2. change condition for presence of num_add_output_layer_sets to avoid sending it when there is only one layer set.
-#define H_MV_HLS_8_HRD_Q0101_04    1   // #4  (HRD    /Q0101/Bitstream part buffer) On Bitstream Partition Buffer. Decision (BF/Cleanup): Adopt (sub-proposals 1–11, refined as described).
-#define H_MV_HLS_8_PPS_NODOC_NN    1   // #NN (PPS    /NODOC/reserved flag): Add a flag in PPS for SHVC color gamut scalability
-#define H_MV_HLS_8_MIS_Q0177_47    1   // #47 (MISC   /Q0177/EOS NAL) proposal 2: clarification of description of end of sequence NAL unit
-#define H_MV_HLS_8_HRD_Q0182_05    1   // #5  (HRD    /Q0182/Bitstream part buffer) Decision (BF/Cleanup/Ed): Adopted (such that we use the main proposal for sub-proposal 1, and alternative 1 for sub-proposal 2). + #define H_MV_HLS_8_HRD_Q0182_06  0 // #6  (HRD    /Q0182/hrd_parameters) Sub-proposal 2 Alternative 1: Clarify that the VPS hrd_parameters( ) syntax structure that applies to the layer set which is associated with the bitstream partition initial arrival time SEI message is used to determine the lengths of the nal_initial_arrival_delay[ i ] and vcl_initial_arrival_delay[ i ] syntax elements. Decision (BF/Cleanup/Ed): Adopted alternative 1 for sub-proposal 2
-#define H_MV_HLS_8_SPS_NODOC_48    1   // #48 (SPS    /NODOC/PPS extension cleanups) Alignment with RExt
-#define H_MV_HLS_8_DBP_NODOC_42    1   // #42 (DBP    /NODOC/sharing) Remove sub-DPB sharing and processes that mark inter-layer reference pictures as "unused for reference"
-#define H_MV_HLS_8_RPS_Q0100_36    1   // #36 (RPS    /Q0100/constraint to semantics) v3, add constraint to RPS semantics
-#define H_MV_HLS_8_POC_Q0142_32    1   // #32 (POC    /Q0142/poc_lsb_not_present_flag) v2: Add semantic constraints to poc_lsb_not_present_flag.
-#define H_MV_HLS_8_HRD_Q0102_08    1   // #8  (HRD    /Q0102/sps_max_dec_pic_buffering_minus1) Sub-proposal 2: A semantics bug fix is proposed for sps_max_dec_pic_buffering_minus1 as a bug-fix. In discussion, the first option was preferred. Decision (BF/Cleanup/Ed.): Adopt. 
-#define H_MV_HLS_8_MIS_Q0102_30    1   // #30 (MISC   /Q0102/loop index) proposal 3, change the max loop index for signaling bit rate and pic rate info to MaxSubLayersInLayerSetMinus1
-#define H_MV_HLS_8_GEN_Q0108_13    1   // #13 (GEN    /Q0108/STSA TemporalId) Agreed to remove restriction from proposal 2, to allow STSA pics of non-base layers to have TemporalId equal to 0.
-#define H_MV_HLS_8_PMS_Q0195_21    1   // #21 (PS     /Q0195/constraint update_ref_format_flag) proposal 2: add a semantic constraint on the value of update_ref_format_flag
-#define H_MV_HLS_8_PMS_Q0195_20    1   // #20 (PS     /Q0195/syntax table rep format) proposal 1: restructure syntax table for sending of rep_format_idx_present_flag and vps_num_ref_formats_minus1
-#define H_MV_HLS_8_MIS_Q0177_22    1   // #22 (MISC   /Q0177/inference sps_temporal_id_nesting_flag) proposal 1: modify inference rule for sps_temporal_id_nesting_flag when it is not present
-#define H_MV_HLS_8_PMS_Q0165_18    1   // #18 (PS     /Q0165/disallow an empty layer set) proposal 1.a), add a constraint to disallow an empty layer set
-#define H_MV_HLS_8_RPS_Q0060_17    1   // #17 (RPS    /Q0060/condition refLayerPicIdc) Proposal 2: Add a condition to the derivation of refLayerPicIdc of (TemporalId == 0)
-#define H_MV_HLS_8_POC_Q0146_15    1   // #15 (POC    /Q0146/inference of poc_msb_val_present_flag) Proposal 1.1: Change inference rule in semantics of poc_msb_val_present_flag
-
-
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////

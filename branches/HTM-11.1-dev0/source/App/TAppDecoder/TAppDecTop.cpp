@@ -70,7 +70,7 @@ TAppDecTop::TAppDecTop()
     m_pScaleOffsetFile  = 0;
 #endif
 
-#if H_MV_HLS_7_VPS_P0300_27
+#if H_MV
     m_markedForOutput = false; 
 #endif
 
@@ -160,9 +160,7 @@ Void TAppDecTop::decode()
   Int  pocCurrPic        = -MAX_INT;     
   Int  pocLastPic        = -MAX_INT;   
 
-#if H_MV_HLS_7_VPS_P0300_27
   Int  layerIdLastPic    = -MAX_INT; 
-#endif
   Int  layerIdCurrPic    = 0; 
 
   Int  decIdxLastPic     = 0; 
@@ -215,9 +213,7 @@ Void TAppDecTop::decode()
           || nalu.m_layerId > MAX_NUM_LAYER_IDS-1
           || (nalu.m_nalUnitType == NAL_UNIT_VPS && nalu.m_layerId > 0)           
           || (nalu.m_nalUnitType == NAL_UNIT_EOB && nalu.m_layerId > 0)    
-#if H_MV_HLS_8_MIS_Q0177_47
           || (nalu.m_nalUnitType == NAL_UNIT_EOS && nalu.m_layerId > 0)    
-#endif
          ) 
       {
         bNewPicture = false;
@@ -236,30 +232,22 @@ Void TAppDecTop::decode()
         // - nalu does not belong to first slice in layer
         // - nalu.isSlice() == true      
 
-#if H_MV_HLS_7_VPS_P0300_27
         if ( nalu.m_nalUnitType == NAL_UNIT_VPS )
         {
           m_vps = m_tDecTop[decIdx]->getPrefetchedVPS(); 
           if ( m_targetDecLayerIdSetFileEmpty )
           {
             TComVPS* vps = m_vps; 
-#else
-        // Update TargetDecLayerIdList only when not specified by layer id file, specification by file might actually out of conformance. 
-        if (nalu.m_nalUnitType == NAL_UNIT_VPS && m_targetDecLayerIdSetFileEmpty )
-        {
-          TComVPS* vps = m_tDecTop[decIdx]->getPrefetchedVPS(); 
-#endif
           if ( m_targetOptLayerSetIdx == -1 )
           {
             // Not normative! Corresponds to specification by "External Means". (Should be set equal to 0, when no external means available. ) 
             m_targetOptLayerSetIdx = vps->getVpsNumLayerSetsMinus1(); 
           }
-#if H_MV_HLS_8_HRD_Q0102_08
+
           for (Int dI = 0; dI < m_numDecoders; dI++ )
           {
             m_tDecTop[decIdx]->setTargetOptLayerSetIdx( m_targetOptLayerSetIdx ); 
           }
-#endif
 
           if ( m_targetOptLayerSetIdx < 0 || m_targetOptLayerSetIdx >= vps->getNumOutputLayerSets() )
           {
@@ -268,9 +256,7 @@ Void TAppDecTop::decode()
           }
           m_targetDecLayerIdSet = vps->getTargetDecLayerIdList( m_targetOptLayerSetIdx ); 
         }
-#if H_MV_HLS_7_VPS_P0300_27
       }
-#endif
 #if H_3D
         if (nalu.m_nalUnitType == NAL_UNIT_VPS )
         {                  
@@ -288,9 +274,7 @@ Void TAppDecTop::decode()
 
         if ( bNewPicture || !bitstreamFile )
         { 
-#if H_MV_HLS_7_VPS_P0300_27
           layerIdLastPic    = layerIdCurrPic; 
-#endif
           layerIdCurrPic    = nalu.m_layerId; 
           pocLastPic        = pocCurrPic; 
           pocCurrPic        = m_tDecTop[decIdx]->getCurrPoc(); 
@@ -339,9 +323,7 @@ Void TAppDecTop::decode()
 #if H_MV
         assert( decIdxLastPic != -1 ); 
         m_tDecTop[decIdxLastPic]->endPicDecoding(poc, pcListPic, m_targetDecLayerIdSet );
-#if H_MV_HLS_7_VPS_P0300_27
         xMarkForOutput( allLayersDecoded, poc, layerIdLastPic ); 
-#endif
 #else
         m_cTDecTop.executeLoopFilters(poc, pcListPic);
 #endif
@@ -798,7 +780,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 #endif
         }
         pcPic->setOutputMark(false);
-#if H_MV_HLS_7_VPS_P0300_27
+#if H_MV
         pcPic->setPicOutputFlag(false);
 #endif
       }
@@ -984,7 +966,7 @@ Void TAppDecTop::xFlushOutput( TComList<TComPic*>* pcListPic )
 #endif
         }
         pcPic->setOutputMark(false);
-#if H_MV_HLS_7_VPS_P0300_27
+#if H_MV
         pcPic->setPicOutputFlag(false);
 #endif
       }
@@ -1060,9 +1042,7 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     m_tDecTop[ decIdx ]->setDecodedPictureHashSEIEnabled(m_decodedPictureHashSEIEnabled);
     m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
     m_tDecTop[ decIdx ]->setLayerInitilizedFlags( m_layerInitilizedFlags );
-#if    H_MV_HLS_8_HRD_Q0102_08
     m_tDecTop[ decIdx ]->setTargetOptLayerSetIdx( m_targetOptLayerSetIdx );    
-#endif
 
 #if H_3D
    m_tDecTop[ decIdx ]->setCamParsCollector( &m_cCamParsCollector );
@@ -1098,8 +1078,6 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
 
 }
 
-
-#if H_MV_HLS_7_VPS_P0300_27
 Void TAppDecTop::xMarkForOutput( Bool allLayersDecoded, Int pocLastPic, Int layerIdLastPic )
 {  
   vector<Int> targetOptLayerIdList = m_vps->getTargetOptLayerIdList( m_targetOptLayerSetIdx );
@@ -1151,6 +1129,40 @@ Void TAppDecTop::xMarkForOutput( Bool allLayersDecoded, Int pocLastPic, Int laye
     }
   }
 }
-#endif
+
+Void TAppDecTop::xMarkAltOutPic( Int targetOutputLayer, Int pocLastPic )
+{
+  Int optLayerIdxInVps = m_vps->getLayerIdInNuh( targetOutputLayer ); 
+  Int highestNuhLayerId = -1; 
+  TComPic* picWithHighestNuhLayerId = NULL; 
+  for (Int dIdx = 0; dIdx < m_numDecoders; dIdx++)
+  {
+    Int curLayerId = m_tDecTop[dIdx]->getLayerId();
+    Int curLayerIdxInVps = m_vps->getLayerIdInNuh( curLayerId  ); 
+    if ( m_vps->getInDirectDependencyFlag(optLayerIdxInVps, curLayerIdxInVps ) )
+    {
+      TComPic* curPic = m_ivPicLists.getPic( curLayerId, pocLastPic ); 
+      if (curPic != NULL)
+      {
+        if (curPic->getReconMark() && curPic->getPicOutputFlag() )
+        {
+          curPic->setOutputMark   ( false ); 
+          curPic->setPicOutputFlag( false ); 
+          if ( curLayerId > highestNuhLayerId)
+          {
+            highestNuhLayerId = curLayerId ; 
+            picWithHighestNuhLayerId = curPic; 
+          }            
+        }
+      }
+    }
+  }
+  if ( picWithHighestNuhLayerId != NULL )
+  {
+    picWithHighestNuhLayerId->setPicOutputFlag(true); 
+    picWithHighestNuhLayerId->setOutputMark   (true); 
+  }
+}
+
 #endif
 //! \}

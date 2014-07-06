@@ -1245,17 +1245,7 @@ public:
 #if H_MV
   Void          setScaledFlag(Bool flag)          { m_scaledFlag = flag;  } 
   Bool          getScaledFlag() const             { return m_scaledFlag;  } 
-  Void          scaleOffsets( Int scal )          
-  {
-    if (! m_scaledFlag )
-    {
-      m_scaledFlag         = true; 
-      m_winLeftOffset     *= scal; 
-      m_winRightOffset    *= scal; 
-      m_winTopOffset      *= scal; 
-      m_winBottomOffset   *= scal; 
-    }
-  }
+  Void          scaleOffsets( Int scal );
 #endif
   Void          setWindow(Int offsetLeft, Int offsetLRight, Int offsetLTop, Int offsetLBottom)
   {
