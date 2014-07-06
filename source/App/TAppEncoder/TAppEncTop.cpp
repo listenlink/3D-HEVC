@@ -59,7 +59,7 @@ TAppEncTop::TAppEncTop()
 
 #if H_MV
   m_vps = new TComVPS; 
-#else !H_MV
+#else
   m_iFrameRcvd = 0;
 #endif
   m_totalBytes = 0;

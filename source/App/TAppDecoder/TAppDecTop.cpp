@@ -649,7 +649,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
 #if H_MV
         assert( conf   .getScaledFlag() );
         assert( defDisp.getScaledFlag() );
-#if ENC_DEC_TRACE
+#if ENC_DEC_TRACE 
         g_bJustDoIt = true;  
         writeToTraceFile( "OutputPic Poc"   , pcPic->getPOC    (), g_decTracePicOutput  ); 
         writeToTraceFile( "OutputPic LayerId", pcPic->getLayerId(), g_decTracePicOutput );         
