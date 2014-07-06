@@ -88,6 +88,8 @@ public:
 
 #if H_MV
   Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/, Int targetOlsIdx ) {}
+#else
+  Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/ ) {}
 #endif
   Void  parseTerminatingBit       ( UInt& ruiBit );
   Void  parseMVPIdx               ( Int& riMVPIdx          );

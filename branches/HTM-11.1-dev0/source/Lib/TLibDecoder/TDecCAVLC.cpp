@@ -1406,7 +1406,6 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
       pcVPS->setVpsRepFormatIdx( i, pcVPS->inferVpsRepFormatIdx( i ) );
     }
   }
-#endif
 
   READ_FLAG( uiCode, "max_one_active_ref_layer_flag" ); pcVPS->setMaxOneActiveRefLayerFlag ( uiCode == 1 ); 
 #if H_MV_HLS7_GEN
@@ -1861,7 +1860,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
 }
 #endif
-
+#endif
 #if H_MV
 Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx)
 #else

@@ -832,11 +832,12 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
     WRITE_FLAG( pcSPS->getSpsRangeExtensionsFlag( ) ? 1 : 0 , "sps_range_extensions_flag" );
     WRITE_FLAG( pcSPS->getSpsMultilayerExtensionFlag( ) ? 1 : 0 , "sps_multilayer_extension_flag" );
 #if !H_3D
-    WRITE_CODE( pcSPS->getSpsExtension6bits( ), 6, "sps_extension_6bits" );
+    WRITE_CODE( pcSPS->getSpsExtension6bits( ), 6, "sps_extension_6bits" );  
 #else
     WRITE_FLAG( pcSPS->getSps3dExtensionFlag( ) ? 1 : 0 , "sps_3d_extension_flag" );
     WRITE_CODE( pcSPS->getSpsExtension5bits( ), 5, "sps_extension_5bits" );
- }
+#endif
+  }
 
   if ( pcSPS->getSpsRangeExtensionsFlag() )
   {
@@ -856,7 +857,7 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 
 #endif
 #endif
-#endif
+
 }
 
 #if H_MV

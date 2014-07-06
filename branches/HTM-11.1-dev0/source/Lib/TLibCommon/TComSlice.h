@@ -849,8 +849,10 @@ public:
   Int     getVPSId       ()                   { return m_VPSId;          }
   Void    setVPSId       (Int i)              { m_VPSId = i;             }
 
+#if H_MV
   Void    setVpsBaseLayerInternalFlag( Bool flag ) { m_vpsBaseLayerInternalFlag = flag; } 
   Bool    getVpsBaseLayerInternalFlag(  )          { return m_vpsBaseLayerInternalFlag; } 
+#endif
 
   UInt    getMaxTLayers  ()                   { return m_uiMaxTLayers;   }
   Void    setMaxTLayers  (UInt t)             { m_uiMaxTLayers = t; }
