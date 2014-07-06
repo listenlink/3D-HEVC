@@ -54,7 +54,7 @@ TComPic::TComPic()
 , m_pcPicYuvResi                          (NULL)
 , m_bReconstructed                        (false)
 , m_bNeededForOutput                      (false)
-#if H_MV_HLS_7_VPS_P0300_27
+#if H_MV
 , m_bPicOutputFlag                        (false)
 #endif
 , m_uiCurrSliceIdx                        (0)

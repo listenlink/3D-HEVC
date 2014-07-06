@@ -1279,11 +1279,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     }
 
   Int  defaultDirectDependencyType = -1; 
-#if MV_FIX_DEP_TYPES
   Bool defaultDirectDependencyFlag = false; 
-#else
-  Bool defaultDirectDependencyFlag = true; 
-#endif
 
   for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
   {
@@ -1302,9 +1298,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       else
       {
         defaultDirectDependencyType = curDirectDependencyType; 
-#if MV_FIX_DEP_TYPES
         defaultDirectDependencyFlag = true; 
-#endif
       }
       
       vps.setDirectDependencyType( depLayer, refLayer, curDirectDependencyType);       
@@ -1643,7 +1637,7 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
     {
       vps.setProfileLevelTierIdx( olsIdx, m_profileLevelTierIdx[ olsIdx ] ); 
     }
-#if H_MV_HLS_7_VPS_P0300_27
+   
     if ( vps.getNumOutputLayersInOutputLayerSet( olsIdx ) == 1 && 
         vps.getNumDirectRefLayers( vps.getOlsHighestOutputLayerId( olsIdx ) ) )
     {   
@@ -1657,9 +1651,6 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
         printf( "\nWarning: Ignoring AltOutputLayerFlag for output layer set %d, since more than one output layer or no dependent layers.\n", olsIdx );            
       }
     }
-#else
-    vps.setAltOutputLayerFlag( olsIdx , false);     
-#endif
   }
 }
 

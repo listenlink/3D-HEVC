@@ -370,10 +370,8 @@ TDecTop::TDecTop()
   m_craNoRaslOutputFlag = false;
   m_isNoOutputPriorPics = false;
 #endif
-#if H0056_EOS_CHECKS
-  m_isLastNALWasEos = false;
-#endif
 #if H_MV
+  m_isLastNALWasEos = false;
   m_layerId = 0;
   m_viewId = 0;
 #if H_3D
@@ -381,7 +379,7 @@ TDecTop::TDecTop()
   m_isDepth = false;
   m_pcCamParsCollector = 0;
 #endif
-#if H_MV_HLS_8_HRD_Q0102_08
+#if H_MV
   m_targetOptLayerSetIdx = -1; 
 #endif
 #endif
@@ -510,7 +508,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
     if ( rpcPic->getReconMark() == false && rpcPic->getOutputMark() == false)
     {
       rpcPic->setOutputMark(false);
-#if H_MV_HLS_7_VPS_P0300_27
+#if H_MV
       rpcPic->setPicOutputFlag(false); 
 #endif
       bBufferIsAvailable = true;
@@ -520,7 +518,7 @@ Void TDecTop::xGetNewPicBuffer ( TComSlice* pcSlice, TComPic*& rpcPic )
     if ( rpcPic->getSlice( 0 )->isReferenced() == false  && rpcPic->getOutputMark() == false)
     {
       rpcPic->setOutputMark(false);
-#if H_MV_HLS_7_VPS_P0300_27
+#if H_MV
       rpcPic->setPicOutputFlag(false); 
 #endif
       rpcPic->setReconMark( false );
@@ -567,9 +565,6 @@ Void TDecTop::executeLoopFilters(Int& poc, TComList<TComPic*>*& rpcListPic)
 #if H_MV 
   TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer0, m_refPicSetInterLayer1 );  
   TComSlice::markCurrPic( pcPic ); 
-#if !H_MV_HLS_8_DBP_NODOC_42
-  TComSlice::markIvRefPicsAsUnused   ( m_ivPicLists, targetDecLayerIdSet, m_parameterSetManagerDecoder.getActiveVPS(), m_layerId, poc ); 
-#endif
 #endif
   m_bFirstSliceInPicture  = true;
 
@@ -589,7 +584,7 @@ Void TDecTop::checkNoOutputPriorPics (TComList<TComPic*>*& rpcListPic)
     if (m_lastPOCNoOutputPriorPics != pcPicTmp->getPOC())
     {
       pcPicTmp->setOutputMark(false);
-#if H_MV_HLS_7_VPS_P0300_27
+#if H_MV
       pcPicTmp->setPicOutputFlag(false); 
 #endif
     }
@@ -669,28 +664,16 @@ Void TDecTop::xActivateParameterSets()
     assert (0);
   }
 
-#if H_MV_HLS_8_HRD_Q0102_08
+#if H_MV
   sps->inferSpsMaxDecPicBufferingMinus1( vps, m_targetOptLayerSetIdx, getLayerId(), false ); 
-#endif
-
-#if H_MV_HLS_8_RPS_Q0100_36
   vps->inferDbpSizeLayerSetZero( sps, false ); 
-#endif
-
-#if H_MV_HLS_8_PMS_Q0195_21
   // When the value of vps_num_rep_formats_minus1 in the active VPS is equal to 0
   if ( vps->getVpsNumRepFormatsMinus1() == 0 )
   {
     //, it is a requirement of bitstream conformance that the value of update_rep_format_flag shall be equal to 0.
     assert( sps->getUpdateRepFormatFlag() == false ); 
   }
-#endif
-
-#if H_MV_HLS_8_RPS_Q0100_36
   sps->checkRpsMaxNumPics( vps, getLayerId() ); 
-#endif
-
-#if H_MV_HLS_8_MIS_Q0177_22
   if( m_layerId > 0 )
   {
     sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
@@ -786,12 +769,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #if H_MV
   m_apcSlicePilot->setRefPicSetInterLayer( & m_refPicSetInterLayer0, &m_refPicSetInterLayer1 ); 
   m_apcSlicePilot->setLayerId( nalu.m_layerId );
-#endif
-
-#if H_MV_HLS_8_HRD_Q0102_08
   m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder, m_targetOptLayerSetIdx );
-#else
-  m_cEntropyDecoder.decodeSliceHeader (m_apcSlicePilot, &m_parameterSetManagerDecoder);
 #endif
   // set POC for dependent slices in skipped pictures
   if(m_apcSlicePilot->getDependentSliceSegmentFlag() && m_prevSliceSkipped) 
@@ -1339,7 +1317,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
   {
     case NAL_UNIT_VPS:
       xDecodeVPS();
-#if H0056_EOS_CHECKS
+#if H_MV
       m_isLastNALWasEos = false;
 #endif
       return false;
@@ -1354,7 +1332,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       
     case NAL_UNIT_PREFIX_SEI:
     case NAL_UNIT_SUFFIX_SEI:
-#if H0056_EOS_CHECKS
+#if H_MV
       if ( nalu.m_nalUnitType == NAL_UNIT_SUFFIX_SEI )
       {
         assert( m_isLastNALWasEos == false );
@@ -1379,7 +1357,7 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
     case NAL_UNIT_CODED_SLICE_RADL_R:
     case NAL_UNIT_CODED_SLICE_RASL_N:
     case NAL_UNIT_CODED_SLICE_RASL_R:
-#if H0056_EOS_CHECKS
+#if H_MV
       if (nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TRAIL_N ||
           nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TSA_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_TSA_N ||
           nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_R || nalu.m_nalUnitType == NAL_UNIT_CODED_SLICE_STSA_N ||
@@ -1392,15 +1370,14 @@ Bool TDecTop::decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay)
       {
         m_isLastNALWasEos = false;
       }
-#endif
-#if H_MV
+
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay, newLayerFlag, sliceSkippedFlag );
 #else
       return xDecodeSlice(nalu, iSkipFrame, iPOCLastDisplay);
 #endif
       break;
     case NAL_UNIT_EOS:
-#if H0056_EOS_CHECKS
+#if H_MV
       assert( m_isLastNALWasEos == false );
       //Check layer id of the nalu. if it is not 0, give a warning message and just return without doing anything.
       if (nalu.m_layerId > 0)

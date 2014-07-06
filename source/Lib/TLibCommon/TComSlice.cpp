@@ -4406,4 +4406,17 @@ TComDpbSize::TComDpbSize()
     }
   }
 }
+
+Void Window::scaleOffsets( Int scal )
+{
+  if (! m_scaledFlag )
+  {
+    m_scaledFlag         = true; 
+    m_winLeftOffset     *= scal; 
+    m_winRightOffset    *= scal; 
+    m_winTopOffset      *= scal; 
+    m_winBottomOffset   *= scal; 
+  }
+}
 #endif
+

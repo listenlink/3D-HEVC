@@ -2324,9 +2324,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       TComSlice::markIvRefPicsAsShortTerm( m_refPicSetInterLayer0, m_refPicSetInterLayer1 );  
       std::vector<Int> temp; 
       TComSlice::markCurrPic( pcPic ); 
-#if !H_MV_HLS_8_DBP_NODOC_42
-      TComSlice::markIvRefPicsAsUnused   ( m_ivPicLists, temp, pcPic->getSlice(0)->getVPS(), m_layerId, pcPic->getPOC() ); 
-#endif
 #endif
       m_bFirst = false;
       m_iNumPicCoded++;
