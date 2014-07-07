@@ -53,9 +53,7 @@ class TComTrQuant;
 #if H_MV
 class TComPicLists; 
 class TComVPS; 
-#if H_MV_HLS_8_RPS_Q0100_36
 class TComSPS; 
-#endif
 #endif
 // ====================================================================================================================
 // Constants
@@ -129,20 +127,8 @@ public:
   Void sortDeltaPOC();
   Void printDeltaPOC();
 
-#if H_MV_HLS_8_RPS_Q0100_36
-  Void checkMaxNumPics( Bool vpsExtensionFlag, Int maxNumPics, Int nuhLayerId, Int spsMaxDecPicBufferingMinus1 )
-  {
-    assert( getNumberOfPictures() >= 0 ); 
-    if ( nuhLayerId == 0 )
-    {
-      assert( getNumberOfPictures() <= spsMaxDecPicBufferingMinus1 ); 
-    }
-
-    if ( vpsExtensionFlag )
-    {
-      assert( getNumberOfPictures() <= maxNumPics );
-    }
-  }
+#if H_MV
+  Void checkMaxNumPics( Bool vpsExtensionFlag, Int maxNumPics, Int nuhLayerId, Int spsMaxDecPicBufferingMinus1 );
 #endif
 };
 
@@ -478,24 +464,13 @@ public:
 
   Void setBspCombHrdIdx( Int h, Int i, Int j, Int  val ) { m_bspCombHrdIdx[h][i][j] = val; } 
   Int  getBspCombHrdIdx( Int h, Int i, Int j ) { return m_bspCombHrdIdx[h][i][j]; } 
-#if H_MV_HLS_8_HRD_Q0101_04
   Int  getBspCombHrdIdxLen() { return gCeilLog2( getVpsNumBspHrdParametersMinus1() + 1);  }; 
-  Void checkBspCombHrdAndShedIdx( TComVPS* vps, Int h, Int i, Int j )  
-  {
-    // bsp_comb_hrd_idx
-    assert( getBspCombSchedIdx(h, i, j ) >= 0 );
-    assert( getBspCombSchedIdx(h, i, j ) <= getVpsNumBspHrdParametersMinus1() );
 
-    // bsp_comb_sched_idx
-    assert( getBspCombSchedIdx(h, i, j ) >= 0 );
-
-    //* This check needs to activated,  when HighestTid is available here    
-    //  assert(  getBspCombSchedIdx(h, i, j ) <= vps->getHrdParameters( getBspCombHrdIdx( h, i, j ) )->getCpbCntMinus1( highestTid ) );
-  }
-#endif
 
   Void setBspCombSchedIdx( Int h, Int i, Int j, Int  val ) { m_bspCombSchedIdx[h][i][j] = val; } 
   Int  getBspCombSchedIdx( Int h, Int i, Int j ) { return m_bspCombSchedIdx[h][i][j]; } 
+
+  Void checkBspCombHrdAndShedIdx( TComVPS* vps, Int h, Int i, Int j );
 
   Void setHrdParametermeters( Int k, TComHRD* val  ) {  m_hrdParameters[k] = val; }; 
   TComHRD* getHrdParametermeters( Int k ) {  return m_hrdParameters[k]; }; 
@@ -694,7 +669,7 @@ class TComVPS
 {
 private:
   Int         m_VPSId;
-#if H_MV_HLS_8_SYN_Q0041_03
+#if H_MV
   Bool        m_vpsBaseLayerInternalFlag;
 #endif
 
@@ -735,11 +710,9 @@ private:
 #endif
   TimingInfo  m_timingInfo;
 #if H_MV
-  #if H_MV_HLS_8_RPS_Q0100_36
   Bool        m_vpsExtensionFlag;
-#endif
+
   /// VPS EXTENSION SYNTAX ELEMENTS
-  Bool        m_avcBaseLayerFlag;
   Int         m_vpsNonVuiExtensionLength;
   Bool        m_splittingFlag;
   Bool        m_scalabilityMaskFlag          [MAX_NUM_SCALABILITY_TYPES];
@@ -760,10 +733,9 @@ private:
   Bool        m_vpsProfilePresentFlag    [MAX_VPS_OP_SETS_PLUS1];
 
   Int         m_numAddLayerSets;    
-#if H_MV_HLS_8_SYN_39_19
   Int         m_highestLayerIdxPlus1     [MAX_VPS_ADD_OUTPUT_LAYER_SETS][MAX_NUM_LAYERS];
   Int         m_numAddOlss;
-#endif
+
   Int         m_defaultOutputLayerIdc;
 
   Int         m_layerSetIdxForOlsMinus1  [MAX_VPS_OUTPUTLAYER_SETS];  
@@ -801,7 +773,6 @@ private:
   Int         m_numDirectRefLayers       [MAX_NUM_LAYERS];
   Int         m_refLayerId               [MAX_NUM_LAYERS][MAX_NUM_LAYERS];  
 
-#if H_MV_HLS_8
   Int         m_numRefLayers             [MAX_NUM_LAYER_IDS]; 
   Int         m_numPredictedLayers       [MAX_NUM_LAYERS]; 
   Int         m_predictedLayerId         [MAX_NUM_LAYERS][MAX_NUM_LAYER_IDS];
@@ -809,16 +780,7 @@ private:
   Int         m_numLayersInTreePartition [MAX_NUM_LAYER_IDS];
   Int         m_treePartitionLayerIdList [MAX_NUM_LAYERS][MAX_NUM_LAYER_IDS];
   Bool        m_recursiveRefLayerFlag    [MAX_NUM_LAYER_IDS][MAX_NUM_LAYER_IDS]; 
-#else
 
-  Int         m_numSamplePredRefLayers   [MAX_NUM_LAYERS];
-  Bool        m_samplePredEnabledFlag    [MAX_NUM_LAYERS][MAX_NUM_LAYERS];
-  Int         m_samplePredRefLayerId     [MAX_NUM_LAYERS][MAX_NUM_LAYERS];
-
-  Int         m_numMotionPredRefLayers   [MAX_NUM_LAYERS];
-  Bool        m_motionPredEnabledFlag    [MAX_NUM_LAYERS][MAX_NUM_LAYERS];
-  Int         m_motionPredRefLayerId     [MAX_NUM_LAYERS][MAX_NUM_LAYERS];
-#endif
   Int         m_viewIndex                [MAX_NUM_LAYERS   ];
   
   std::vector< std::vector< Int> >       m_targetDecLayerIdLists;   //[TargetOptLayerSetIdx][i]
@@ -827,21 +789,7 @@ private:
 
 
   Int         xGetDimBitOffset( Int j );
-
-#if H_MV_HLS_8
-  Void xSetRefLayerFlags( Int currLayerId )
-  { 
-    for( Int j = 0; j < getNumDirectRefLayers( currLayerId ); j++ )
-    {
-      Int refLayerId = m_refLayerId[ currLayerId ][ j ];
-      m_recursiveRefLayerFlag[ currLayerId ][ refLayerId ] = 1;
-      for( Int k = 0; k < MAX_NUM_LAYER_IDS; k++ )
-      {
-        m_recursiveRefLayerFlag[ currLayerId ][ k ] = m_recursiveRefLayerFlag[ currLayerId ][ k ]  ||  m_recursiveRefLayerFlag[ refLayerId ][ k ];
-      }
-    }
-  }
-#endif
+  Void        xSetRefLayerFlags( Int currLayerId );
   // VPS EXTENSION 2 SYNTAX ELEMENTS
 #if H_3D_ARP
   UInt        m_uiUseAdvResPred          [MAX_NUM_LAYERS   ];
@@ -901,7 +849,7 @@ public:
   Int     getVPSId       ()                   { return m_VPSId;          }
   Void    setVPSId       (Int i)              { m_VPSId = i;             }
 
-#if H_MV_HLS_8_SYN_Q0041_03
+#if H_MV
   Void    setVpsBaseLayerInternalFlag( Bool flag ) { m_vpsBaseLayerInternalFlag = flag; } 
   Bool    getVpsBaseLayerInternalFlag(  )          { return m_vpsBaseLayerInternalFlag; } 
 #endif
@@ -956,15 +904,9 @@ public:
 #endif
   TimingInfo* getTimingInfo() { return &m_timingInfo; }
 #if H_MV
-
-#if H_MV_HLS_8_RPS_Q0100_36
   Void    setVpsExtensionFlag( Bool flag )                                 { m_vpsExtensionFlag = flag; } 
   Bool    getVpsExtensionFlag(  )                                          { return m_vpsExtensionFlag; } 
-#endif
-#if !H_MV_HLS_8_SYN_Q0041_03
-  Void    setAvcBaseLayerFlag( Bool val )                                  { m_avcBaseLayerFlag = val;  }
-  Bool    getAvcBaseLayerFlag()                                            { return m_avcBaseLayerFlag; } 
-#endif 
+
   Void    setVpsNonVuiExtensionLength( Int  val )                          { m_vpsNonVuiExtensionLength = val; } 
   Int     getVpsNonVuiExtensionLength(  )                                  { return m_vpsNonVuiExtensionLength; } 
 
@@ -1025,13 +967,11 @@ public:
   Void    setNumAddLayerSets( Int val )                                    { m_numAddLayerSets = val; } 
   Int     getNumAddLayerSets( )                                            { return m_numAddLayerSets; } 
   
-#if H_MV_HLS_8_SYN_39_19
   Void    setHighestLayerIdxPlus1( Int i, Int j, Int  val )                { m_highestLayerIdxPlus1[i][j] = val; } 
   Int     getHighestLayerIdxPlus1( Int i, Int j )                          { return m_highestLayerIdxPlus1[i][j]; } 
 
   Void    setNumAddOlss( Int  val )                                        { m_numAddOlss = val; } 
   Int     getNumAddOlss(  )                                                { return m_numAddOlss; } 
-#endif
 
   Void    setDefaultOutputLayerIdc( Int  val )                             { m_defaultOutputLayerIdc = val; } 
   Int     getDefaultOutputLayerIdc(  )                                     { return m_defaultOutputLayerIdc; }   
@@ -1059,9 +999,7 @@ public:
   Void    setVpsRepFormatIdx( Int i, Int  val )                            { m_vpsRepFormatIdx[i] = val; } 
   Int     getVpsRepFormatIdx( Int i )                                      { return m_vpsRepFormatIdx[i]; } 
 
-#if H_MV_HLS_8_PMS_Q0195_20
   Int     inferVpsRepFormatIdx( Int i )                                    { return std::min( i, getVpsNumRepFormatsMinus1()  );  }
-#endif
 
   Void    setRepFormat( Int i, TComRepFormat* val )                        { m_repFormat[i] = val;  }
   TComRepFormat* getRepFormat( Int i )                                     { return m_repFormat[i]; }
@@ -1076,11 +1014,9 @@ public:
 
   Void    setDpbSize( TComDpbSize* val )                                   { assert( m_dpbSize != 0 ); m_dpbSize = val; } 
   TComDpbSize* getDpbSize( )                                               { return m_dpbSize;} 
-#if H_MV_HLS_8_RPS_Q0100_36
+  
   Void    inferDbpSizeLayerSetZero( TComSPS* sps, Bool encoder );
-#endif
-
-
+  
   Void    setPocLsbNotPresentFlag( Int i, Bool flag )                      { m_pocLsbNotPresentFlag[i] = flag; } 
   Bool    getPocLsbNotPresentFlag( Int i )                                 { return m_pocLsbNotPresentFlag[i]; } 
   
@@ -1115,7 +1051,6 @@ public:
   Int     getNumDirectRefLayers( Int layerIdInNuh )                        { return m_numDirectRefLayers[ layerIdInNuh ];  };                               
   Int     getRefLayerId        ( Int layerIdInNuh, Int idx );; 
 
-#if H_MV_HLS_8
   Int     getNumRefLayers            ( Int i )        { return m_numRefLayers[i]; } 
   Int     getNumPredictedLayers      ( Int i )        { return m_numPredictedLayers[i]; } 
   Int     getPredictedLayerId        ( Int i, Int j ) { return m_predictedLayerId[i][j]; } 
@@ -1123,12 +1058,8 @@ public:
   Int     getNumLayersInTreePartition( Int i )        { return m_numLayersInTreePartition[i]; } 
   Int     getTreePartitionLayerIdList( Int i, Int j ) { return m_treePartitionLayerIdList[i][j]; } 
   Bool    getRecursiveRefLayerFlag   ( Int i, Int j ) { return m_recursiveRefLayerFlag[i][j]; } 
-
-#endif
-
-#if H_MV_HLS_8_SYN_39_19
   Int     getNumLayerSets( )                                               { return getVpsNumLayerSetsMinus1() + 1 + getNumAddLayerSets();  };  
-#endif
+  
   Bool    checkVPSExtensionSyntax(); 
   Int     scalTypeToScalIdx   ( ScalabilityType scalType );
 
@@ -1136,14 +1067,10 @@ public:
   Int     getVpsRepFormatIdxLen()                                          { return gCeilLog2( getVpsNumRepFormatsMinus1() + 1 ); };       
 
   Int     getNumLayersInIdList ( Int lsIdx );
-#if H_MV_HLS_8_RPS_Q0100_36
   Int     getLayerSetLayerIdList(Int lsIdx, Int j )                       { return m_layerSetLayerIdList[ lsIdx ][ j ]; }; 
-#endif
 
   Int     getNumOutputLayerSets() ;   
-#if !H_MV_HLS_8_DBP_NODOC_42
-  Int     getNumSubDpbs( Int i )                                           { return getNumLayersInIdList( i ); };  
-#endif
+
   Bool    isOutputLayer( Int outLayerSetIdx, Int layerIdInNuh );   
   Void    deriveLayerSetLayerIdList();
 
@@ -1159,25 +1086,9 @@ public:
   Int     getOlsHighestOutputLayerId( Int i )                              { return getTargetOptLayerIdList( i ).back(); };  
 
   Int     getMaxSubLayersInLayerSetMinus1( Int i );
-
-#if H_MV_HLS_8_SYN_39_19
   Int     getHighestLayerIdxPlus1Len( Int j )                                   { return gCeilLog2( getNumLayersInTreePartition( j ) + 1 );   }; 
-#endif
 
-  
-#if H_MV_HLS_7_VPS_P0300_27
-  Bool     getAltOutputLayerFlagVar( Int i )
-  {  // Semantics variable not syntax element !
-
-    Bool altOptLayerFlag = false;     
-    if ( i > 0 && getNumOutputLayersInOutputLayerSet( i ) == 1 && 
-      getNumDirectRefLayers( getOlsHighestOutputLayerId( i ) ) > 0 )
-    {
-      altOptLayerFlag = getAltOutputLayerFlag( i ); 
-    }
-    return altOptLayerFlag; 
-  };
-#endif
+  Bool     getAltOutputLayerFlagVar( Int i );;
 
   // inference
   Int     inferDimensionId     ( Int i, Int j );
@@ -1185,26 +1096,7 @@ public:
 
   // helpers
   Bool    getInDirectDependencyFlag( Int depLayeridInVps, Int refLayeridInVps, Int depth = 0 );
-#if H_MV_HLS_8_RPS_Q0100_36
-  Int     getMaxNumPics( Int layerId )
-  {    
-    Int maxNumPics = MAX_INT; 
-    for( Int olsIdx = 0; olsIdx < getNumOutputLayerSets(); olsIdx++)
-    {
-      Int lsIdx = olsIdxToLsIdx( olsIdx ); 
-      for( Int j = 0; j < getNumLayersInIdList( lsIdx ); j++ )
-      {
-        if( getLayerSetLayerIdList(lsIdx, j ) ==  layerId )
-        {
-          Int maxSL = getMaxSubLayersInLayerSetMinus1( lsIdx ); 
-          maxNumPics = std::min( maxNumPics, getDpbSize()->getMaxVpsDecPicBufferingMinus1( olsIdx , j,  maxSL ) );
-        }
-      }
-    }
-    assert( maxNumPics != MAX_INT ); 
-    return maxNumPics; 
-  }
-#endif
+  Int     getMaxNumPics( Int layerId );
 
   /// VPS EXTENSION 2 SYNTAX ELEMENTS
 #if H_3D  
@@ -1355,17 +1247,7 @@ public:
 #if H_MV
   Void          setScaledFlag(Bool flag)          { m_scaledFlag = flag;  } 
   Bool          getScaledFlag() const             { return m_scaledFlag;  } 
-  Void          scaleOffsets( Int scal )          
-  {
-    if (! m_scaledFlag )
-    {
-      m_scaledFlag         = true; 
-      m_winLeftOffset     *= scal; 
-      m_winRightOffset    *= scal; 
-      m_winTopOffset      *= scal; 
-      m_winBottomOffset   *= scal; 
-    }
-  }
+  Void          scaleOffsets( Int scal );
 #endif
   Void          setWindow(Int offsetLeft, Int offsetLRight, Int offsetLTop, Int offsetLBottom)
   {
@@ -1629,7 +1511,7 @@ private:
   TComVPS*    m_pcVPS; 
   // SPS 
   Bool        m_spsExtensionPresentFlag; 
-#if H_MV_HLS_8_SPS_NODOC_48
+
   Bool        m_spsRangeExtensionsFlag;
   Bool        m_spsMultilayerExtensionFlag;
 #if H_3D
@@ -1638,9 +1520,7 @@ private:
 #else
   Int         m_spsExtension6bits;
 #endif
-#else
-  Bool        m_spsExtensionTypeFlag     [PS_EX_T_MAX_NUM];
-#endif
+
   Bool        m_spsInferScalingListFlag;
   Int         m_spsScalingListRefLayerId;
   Bool        m_updateRepFormatFlag;
@@ -1754,7 +1634,7 @@ public:
 
   UInt      getMaxTLayers()                           { return m_uiMaxTLayers; }
   Void      setMaxTLayers( UInt uiMaxTLayers )        { assert( uiMaxTLayers <= MAX_TLAYER ); m_uiMaxTLayers = uiMaxTLayers; }
-#if H_MV_HLS_8
+#if H_MV
   UInt      getSpsMaxSubLayersMinus1()                { return ( m_uiMaxTLayers - 1); }
 #endif
 
@@ -1788,47 +1668,11 @@ public:
 
   TComPTL* getPTL()     { return &m_pcPTL; }
 #if H_MV
-
-#if H_MV_HLS_8_HRD_Q0102_08
-  Void inferSpsMaxDecPicBufferingMinus1( TComVPS* vps, Int targetOptLayerSetIdx, Int currLayerId, Bool encoder )
-  {
-    const std::vector<Int>& targetDecLayerIdList = vps->getTargetDecLayerIdList( vps->olsIdxToLsIdx( targetOptLayerSetIdx )); 
-
-    if (getLayerId() > 0 )
-    {
-      Int layerIdx = 0;         
-      while (layerIdx < (Int) targetDecLayerIdList.size() )
-      {
-        if ( targetDecLayerIdList[layerIdx] == currLayerId )
-        { 
-          break; 
-        }
-        layerIdx++; 
-      }
-
-      assert( layerIdx < (Int) targetDecLayerIdList.size() ); 
-
-      for (Int i = 0; i <= getSpsMaxSubLayersMinus1(); i++ ) 
-      {
-        Int maxDecPicBufferingMinus1 = vps->getDpbSize()->getMaxVpsDecPicBufferingMinus1( targetOptLayerSetIdx, layerIdx, i ) ; 
-
-        if ( encoder )
-        {
-          assert( getMaxDecPicBuffering( i ) - 1 == maxDecPicBufferingMinus1 ); 
-        }
-        else
-        {
-          setMaxDecPicBuffering(i, maxDecPicBufferingMinus1 + 1 ); 
-        }
-      }
-    }    
-  }
-#endif
+  Void inferSpsMaxDecPicBufferingMinus1( TComVPS* vps, Int targetOptLayerSetIdx, Int currLayerId, Bool encoder );
 
   Void setSpsExtensionPresentFlag( Bool flag ) { m_spsExtensionPresentFlag = flag; } 
   Bool getSpsExtensionPresentFlag( )           { return m_spsExtensionPresentFlag; }
 
-#if H_MV_HLS_8_SPS_NODOC_48
   Void setSpsRangeExtensionsFlag( Bool flag )            { m_spsRangeExtensionsFlag = flag; } 
   Bool getSpsRangeExtensionsFlag(  )                     { return m_spsRangeExtensionsFlag; } 
 
@@ -1843,10 +1687,6 @@ public:
 #else
   Void setSpsExtension6bits( Int  val )                  { m_spsExtension6bits = val; } 
   Int  getSpsExtension6bits(  )                          { return m_spsExtension6bits; } 
-#endif
-#else
-  Void setSpsExtensionTypeFlag( Int i, Bool flag )       { m_spsExtensionTypeFlag[i] = flag; } 
-  Bool getSpsExtensionTypeFlag( Int i )                  { return m_spsExtensionTypeFlag[i]; }
 #endif
   
   Void      setVPS          ( TComVPS* pcVPS ) { m_pcVPS = pcVPS; }
@@ -1885,27 +1725,10 @@ public:
   Int  getScaledRefLayerBottomOffset( Int j )           { return m_scaledRefLayerBottomOffset[j]; } 
   // Inference 
   Void inferRepFormat( TComVPS* vps, Int layerIdCurr );
-
   Void inferScalingList( TComSPS* spsSrc );
 
-#if H_MV_HLS_8_RPS_Q0100_36
   // others
-  Void checkRpsMaxNumPics( TComVPS* vps, Int currLayerId ) 
-  {
-    // In spec, when rps is in SPS, nuh_layer_id of SPS is used instead 
-    // of nuh_layer_id of slice (currLayerId), this seems to be a bug.
-
-    for (Int i = 0; i < getRPSList()->getNumberOfReferencePictureSets(); i++ )
-    {
-      TComReferencePictureSet* rps = getRPSList()->getReferencePictureSet( i ); 
-      if ( !rps->getInterRPSPrediction() )
-      {
-        rps->checkMaxNumPics( vps->getVpsExtensionFlag(), vps->getMaxNumPics( currLayerId ), 
-          getLayerId(), getMaxDecPicBuffering( getSpsMaxSubLayersMinus1() ) - 1 );  
-      }
-    }
-  }
-#endif
+  Void checkRpsMaxNumPics( TComVPS* vps, Int currLayerId );
 
 #endif
 #if H_3D_QTLPC
@@ -2018,7 +1841,6 @@ private:
   Bool m_ppsInferScalingListFlag;
   Int  m_ppsScalingListRefLayerId;
 
-#if H_MV_HLS_8_SPS_NODOC_48
   Bool m_ppsRangeExtensionsFlag;
   Bool m_ppsMultilayerExtensionFlag;
 #if !H_3D
@@ -2028,9 +1850,6 @@ private:
   Int  m_ppsExtension5bits;
 #endif
 
-#else
-  Bool m_ppsExtensionTypeFlag[PS_EX_T_MAX_NUM];
-#endif
   Bool m_pocResetInfoPresentFlag;
 #endif
 
@@ -2174,7 +1993,6 @@ public:
   Void setPpsScalingListRefLayerId( Int  val ) { m_ppsScalingListRefLayerId = val; } 
   Int  getPpsScalingListRefLayerId(  ) { return m_ppsScalingListRefLayerId; } 
 
-#if H_MV_HLS_8_SPS_NODOC_48
   Void setPpsRangeExtensionsFlag( Bool flag ) { m_ppsRangeExtensionsFlag = flag; } 
   Bool getPpsRangeExtensionsFlag(  ) { return m_ppsRangeExtensionsFlag; } 
 
@@ -2190,10 +2008,6 @@ public:
 
   Void setPpsExtension5bits( Int  val ) { m_ppsExtension5bits = val; } 
   Int  getPpsExtension5bits(  ) { return m_ppsExtension5bits; } 
-#endif
-#else
-  Void setPpsExtensionTypeFlag( Int i, Bool flag ) { m_ppsExtensionTypeFlag[i] = flag; } 
-  Bool getPpsExtensionTypeFlag( Int i ) { return m_ppsExtensionTypeFlag[i]; } 
 #endif
 
   Void setPocResetInfoPresentFlag( Bool flag ) { m_pocResetInfoPresentFlag = flag; } 
@@ -2230,7 +2044,7 @@ private:
   Bool       m_saoEnabledFlagChroma;      ///< SAO Cb&Cr enabled flag
   Int         m_iPPSId;               ///< picture parameter set ID
   Bool        m_PicOutputFlag;        ///< pic_output_flag 
-#if H_MV_HLS_8_POC_Q0142_32
+#if H_MV
   Int         m_slicePicOrderCntLsb;   
 #endif  
   Int         m_iPOC;
@@ -2413,7 +2227,7 @@ public:
   Int       getPPSId        () { return m_iPPSId; }
   Void      setPicOutputFlag( Bool b )         { m_PicOutputFlag = b;    }
   Bool      getPicOutputFlag()                 { return m_PicOutputFlag; }
-#if H_MV_HLS_8_POC_Q0142_32
+#if H_MV
   Void      setSlicePicOrderCntLsb( Int i ) { m_slicePicOrderCntLsb = i; }; 
   Int       getSlicePicOrderCntLsb(  )      { return m_slicePicOrderCntLsb; }; 
 #endif
@@ -2465,9 +2279,7 @@ public:
   Void      setApplyIC( Bool b )                                { m_bApplyIC = b; }
   Bool      getApplyIC()                                        { return m_bApplyIC; }
   Void      xSetApplyIC();
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   Void      xSetApplyIC(Bool bUseLowLatencyICEnc);
-#endif
   Void      setIcSkipParseFlag( Bool b )                        { m_icSkipParseFlag = b; }
   Bool      getIcSkipParseFlag()                                { return m_icSkipParseFlag; }
 #endif
@@ -2568,9 +2380,6 @@ public:
   Void createInterLayerReferencePictureSet( TComPicLists* ivPicLists, std::vector<TComPic*>& refPicSetInterLayer0, std::vector<TComPic*>& refPicSetInterLayer1 );
   static Void markIvRefPicsAsShortTerm    ( std::vector<TComPic*> refPicSetInterLayer0, std::vector<TComPic*> refPicSetInterLayer1 );
   static Void markCurrPic                 ( TComPic* currPic );
-#if !H_MV_HLS_8_DBP_NODOC_42
-  static Void markIvRefPicsAsUnused       ( TComPicLists* ivPicLists, std::vector<Int> targetDecLayerIdSet, TComVPS* vps, Int curLayerId, Int curPoc  );
-#endif
   Void        printRefPicList();
 #endif
   Bool isTemporalLayerSwitchingPoint( TComList<TComPic*>& rcListPic );
@@ -2706,14 +2515,7 @@ public:
 
   Void setCrossLayerBlaFlag( Bool flag ) { m_crossLayerBlaFlag = flag; } 
   Bool getCrossLayerBlaFlag(  ) { return m_crossLayerBlaFlag; } 
-  Void checkCrossLayerBlaFlag ( )
-  {
-    // cross_layer_bla_flag shall be equal to 0 for pictures with nal_unit_type not equal to IDR_W_RADL or IDR_N_LP or with nuh_layer_id not equal to 0.
-    if ( getLayerId() != 0 || getNalUnitType() != NAL_UNIT_CODED_SLICE_IDR_W_RADL || getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP )
-    {
-      assert( m_crossLayerBlaFlag == 0 ); 
-    }
-  }
+  Void checkCrossLayerBlaFlag ( );
 
 #if !H_MV_HLS7_GEN
   Void setPocResetFlag( Bool flag ) { m_pocResetFlag = flag; } 
@@ -2737,9 +2539,8 @@ public:
 
   Void setPocResetIdc( Int  val ) { m_pocResetIdc = val; } 
   Int  getPocResetIdc(  ) { return m_pocResetIdc; } 
-#if H_MV_HLS_8_POC_Q0142_32
   Void checkPocResetIdc( ) { assert( !(getVPS()->getPocLsbNotPresentFlag( getLayerIdInVps() ) )  || !(getSlicePicOrderCntLsb() > 0 ) || !( getPocResetIdc() == 2) ); }  
-#endif
+
   Void setPocResetPeriodId( Int  val ) { m_pocResetPeriodId = val; } 
   Int  getPocResetPeriodId(  ) { return m_pocResetPeriodId; } 
 
@@ -2748,9 +2549,7 @@ public:
 
   Void setPocLsbVal( Int  val ) { m_pocLsbVal = val; } 
   Int  getPocLsbVal(  ) { return m_pocLsbVal; } 
-#if H_MV_HLS_8_POC_Q0142_32
   Void checkPocLsbVal( ) { assert( !(getVPS()->getPocLsbNotPresentFlag( getLayerIdInVps() ) )  || !getFullPocResetFlag() || ( getPocLsbVal() == 0 ) ); }  
-#endif
 
   Void setPocMsbValPresentFlag( Bool flag ) { m_pocMsbValPresentFlag = flag; } 
   Bool getPocMsbValPresentFlag(  ) { return m_pocMsbValPresentFlag; } 
@@ -2793,35 +2592,12 @@ public:
   Void     setRefPicSetInterLayer       ( std::vector<TComPic*>* refPicSetInterLayer0, std::vector<TComPic*>* refPicSetInterLayer1);
   TComPic* getPicFromRefPicSetInterLayer( Int setIdc, Int layerId );
 
-
-#if H_MV_HLS_8_POC_Q0146_15
-// Inference 
-  Bool inferPocMsbValPresentFlag()
-  {
-    Bool pocMsbValPresentFlag; 
-    if( getSliceSegmentHeaderExtensionLength() == 0 ) 
-    {
-      pocMsbValPresentFlag = false; 
-    }
-    else if ( getPocMsbValRequiredFlag() )
-    {
-      pocMsbValPresentFlag = true; 
-    }
-    else
-    {
-      pocMsbValPresentFlag = false; 
-    }
-
-    return pocMsbValPresentFlag; 
-  }  
-#endif
+  // Inference 
+  Bool inferPocMsbValPresentFlag();  
 #endif
 #if H_3D_DDD
-  Void InitializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
-  Int  getDepthFromDV( Int iDV, Int iBaseViewIdx )
-  {
-      return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
-  }
+  Void initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
+  Int  getDepthFromDV( Int iDV, Int iBaseViewIdx );
 #endif
 
 protected:

@@ -59,7 +59,7 @@
 // ====================================================================================================================
 
 #if H_MV
-#define NV_VERSION        "11.1"                ///< Current software version
+#define NV_VERSION        "11.2"                ///< Current software version
 #define HM_VERSION        "14.0"                ///< 
 #else
 #define NV_VERSION        "14.0"                 ///< Current software version

@@ -197,7 +197,7 @@ public:
 
 //! \}
 
-#if ETRIKHU_CLEANUP_H0083
+#if H_3D_IV_MERGE
 class TComMotionCand
 {
 public:

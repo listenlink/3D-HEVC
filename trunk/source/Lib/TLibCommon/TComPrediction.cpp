@@ -499,10 +499,8 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   // set prediction signal
   Pel* pDst = piPred;
   xAssignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
-#if HS_DMM_SDC_PREDICTOR_UNIFY_H0108
   pcCU->setDmmPredictor(segDC1, 0);
   pcCU->setDmmPredictor(segDC2, 1);
-#endif
 
 #if H_3D_DIM_DMM
   if( dimType == DMM4_IDX && dmm4Segmentation == NULL ) { dmmSegmentation->destroy(); delete dmmSegmentation; }
@@ -522,7 +520,7 @@ Bool TComPrediction::xCheckIdenticalMotion ( TComDataCU* pcCU, UInt PartAddr )
     {
       Int RefPOCL0 = pcCU->getSlice()->getRefPic(REF_PIC_LIST_0, pcCU->getCUMvField(REF_PIC_LIST_0)->getRefIdx(PartAddr))->getPOC();
       Int RefPOCL1 = pcCU->getSlice()->getRefPic(REF_PIC_LIST_1, pcCU->getCUMvField(REF_PIC_LIST_1)->getRefIdx(PartAddr))->getPOC();
-#if MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085
+#if H_3D_ARP
       if(!pcCU->getARPW(PartAddr) && RefPOCL0 == RefPOCL1 && pcCU->getCUMvField(REF_PIC_LIST_0)->getMv(PartAddr) == pcCU->getCUMvField(REF_PIC_LIST_1)->getMv(PartAddr))
 #else
       if(RefPOCL0 == RefPOCL1 && pcCU->getCUMvField(REF_PIC_LIST_0)->getMv(PartAddr) == pcCU->getCUMvField(REF_PIC_LIST_1)->getMv(PartAddr))
@@ -646,20 +644,10 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   pDepthPels = pDepthBlockStart;
   
   // start mapping process
-#if !MTK_DBBP_AMP_REM_H0072
-  Bool bAMPAvail = uiSize > 8;
-  Int matchedPartSum[6][2] = {{0,0},{0,0},{0,0},{0,0},{0,0},{0,0}}; // counter for each part size and boolean option
-  PartSize virtualPartSizes[6] = { SIZE_Nx2N, SIZE_2NxN, SIZE_2NxnU, SIZE_2NxnD, SIZE_nLx2N, SIZE_nRx2N };
-#else
   Int matchedPartSum[2][2] = {{0,0},{0,0}}; // counter for each part size and boolean option
   PartSize virtualPartSizes[2] = { SIZE_Nx2N, SIZE_2NxN};
-#endif
   
   UInt uiHalfSize = uiSize>>1;
-#if !MTK_DBBP_AMP_REM_H0072
-  UInt uiQuarterSize = uiSize>>2;
-#endif
-  
   for (Int y=0; y<uiSize; y+=iSubSample)
   {
     for (Int x=0; x<uiSize; x+=iSubSample)
@@ -690,51 +678,6 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
       {
         matchedPartSum[1][1-ucSegment]++;
       }
-      
-#if !MTK_DBBP_AMP_REM_H0072
-      if( bAMPAvail )
-      {
-        // SIZE_2NxnU
-        if(y<uiQuarterSize)  // top (1/4)
-        {
-          matchedPartSum[2][ucSegment]++;
-        }
-        else  // bottom (3/4)
-        {
-          matchedPartSum[2][1-ucSegment]++;
-        }
-        
-        // SIZE_2NxnD
-        if(y<(uiQuarterSize*3))  // top (3/4)
-        {
-          matchedPartSum[3][ucSegment]++;
-        }
-        else  // bottom (1/4)
-        {
-          matchedPartSum[3][1-ucSegment]++;
-        }
-        
-        // SIZE_nLx2N
-        if(x<uiQuarterSize)  // left (1/4)
-        {
-          matchedPartSum[4][ucSegment]++;
-        }
-        else  // right (3/4)
-        {
-          matchedPartSum[4][1-ucSegment]++;
-        }
-        
-        // SIZE_nRx2N
-        if(x<(uiQuarterSize*3))  // left (3/4)
-        {
-          matchedPartSum[5][ucSegment]++;
-        }
-        else  // right (1/4)
-        {
-          matchedPartSum[5][1-ucSegment]++;
-        }
-      }
-#endif
     }
     
     // next row
@@ -744,11 +687,7 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   PartSize matchedPartSize = SIZE_NONE;
   
   Int iMaxMatchSum = 0;
-#if !MTK_DBBP_AMP_REM_H0072
-  for(Int p=0; p<6; p++)  // loop over partition
-#else
   for(Int p=0; p<2; p++)  // loop over partition
-#endif
   {
     for( Int b=0; b<=1; b++ ) // loop over boolean options
     {
@@ -858,11 +797,9 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
   UInt  uiDstStride = pOutYuv->getStride();
   
   UInt  uiMaskStride= MAX_CU_SIZE;
-#if SEC_DBBP_FILTERING_H0104
   Pel  filSrc = 0;
   Pel* tmpTar = 0;
   tmpTar = (Pel *)xMalloc(Pel, uiWidth*uiHeight);
-#endif
   
   // backup pointer
   Bool* pMaskStart = pMask;
@@ -876,28 +813,14 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
       AOF( ucSegment < 2 );
       
       // filtering
-#if SEC_DBBP_FILTERING_H0104
       tmpTar[y*uiWidth+x] = piSrc[ucSegment][x];
-#else
-      Bool t = (y==0)?pMaskStart[(y+1)*uiMaskStride+x]:pMaskStart[(y-1)*uiMaskStride+x];
-      Bool l = (x==0)?pMaskStart[y*uiMaskStride+x+1]:pMaskStart[y*uiMaskStride+x-1];
-      Bool b = (y==uiHeight-1)?pMaskStart[(y-1)*uiMaskStride+x]:pMaskStart[(y+1)*uiMaskStride+x];
-      Bool r = (x==uiWidth-1)?pMaskStart[y*uiMaskStride+x-1]:pMaskStart[y*uiMaskStride+x+1];
-      
-      Bool bBlend = !((t&&l&&b&&r) || (!t&&!l&&!b&&!r));
-      piDst[x] = bBlend?((piSrc[0][x]+piSrc[1][x]+1)>>1):piSrc[ucSegment][x];
-#endif
     }
     
     piSrc[0]  += uiSrcStride;
     piSrc[1]  += uiSrcStride;
-#if !SEC_DBBP_FILTERING_H0104
-    piDst     += uiDstStride;
-#endif
     pMask     += uiMaskStride;
   }
   
-#if SEC_DBBP_FILTERING_H0104
   for (Int y=0; y<uiHeight; y++)
   {
     for (Int x=0; x<uiWidth; x++)
@@ -932,7 +855,6 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
     piDst     += uiDstStride;
   }
   if ( tmpTar    ) { xFree(tmpTar);             tmpTar        = NULL; }
-#endif
   
   // now combine chroma
   Pel*  piSrcU[2]       = { pInYuv[0]->getCbAddr(uiPartAddr), pInYuv[1]->getCbAddr(uiPartAddr) };
@@ -943,12 +865,10 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
   UInt  uiDstStrideC    = pOutYuv->getCStride();
   UInt  uiWidthC        = uiWidth >> 1;
   UInt  uiHeightC       = uiHeight >> 1;
-#if SEC_DBBP_FILTERING_H0104
   Pel  filSrcU = 0, filSrcV = 0;
   Pel* tmpTarU = 0, *tmpTarV = 0;
   tmpTarU = (Pel *)xMalloc(Pel, uiWidthC*uiHeightC);
   tmpTarV = (Pel *)xMalloc(Pel, uiWidthC*uiHeightC);
-#endif
   pMask = pMaskStart;
   
   for (Int y=0; y<uiHeightC; y++)
@@ -959,34 +879,17 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
       AOF( ucSegment < 2 );
       
       // filtering
-#if SEC_DBBP_FILTERING_H0104
       tmpTarU[y*uiWidthC+x] = piSrcU[ucSegment][x];
       tmpTarV[y*uiWidthC+x] = piSrcV[ucSegment][x];
-#else
-      Bool t = (y==0)?pMaskStart[(y+1)*2*uiMaskStride+x*2]:pMaskStart[(y-1)*2*uiMaskStride+x*2];
-      Bool l = (x==0)?pMaskStart[y*2*uiMaskStride+(x+1)*2]:pMaskStart[y*2*uiMaskStride+(x-1)*2];
-      Bool b = (y==uiHeightC-1)?pMaskStart[(y-1)*2*uiMaskStride+x*2]:pMaskStart[(y+1)*2*uiMaskStride+x*2];
-      Bool r = (x==uiWidthC-1)?pMaskStart[y*2*uiMaskStride+(x-1)*2]:pMaskStart[y*2*uiMaskStride+(x+1)*2];
-      
-      Bool bBlend = !((t&&l&&b&&r) || (!t&&!l&&!b&&!r));
-      
-      piDstU[x] = bBlend?((piSrcU[0][x]+piSrcU[1][x]+1)>>1):piSrcU[ucSegment][x];
-      piDstV[x] = bBlend?((piSrcV[0][x]+piSrcV[1][x]+1)>>1):piSrcV[ucSegment][x];
-#endif
     }
     
     piSrcU[0]   += uiSrcStrideC;
     piSrcU[1]   += uiSrcStrideC;
     piSrcV[0]   += uiSrcStrideC;
     piSrcV[1]   += uiSrcStrideC;
-#if !SEC_DBBP_FILTERING_H0104
-    piDstU      += uiDstStrideC;
-    piDstV      += uiDstStrideC;
-#endif
     pMask       += 2*uiMaskStride;
   }
 
-#if SEC_DBBP_FILTERING_H0104
   for (Int y=0; y<uiHeightC; y++)
   {
     for (Int x=0; x<uiWidthC; x++)
@@ -1034,7 +937,6 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
   }
   if ( tmpTarU    ) { xFree(tmpTarU);             tmpTarU        = NULL; }
   if ( tmpTarV    ) { xFree(tmpTarV);             tmpTarV        = NULL; }
-#endif
 }
 #endif
 
@@ -2327,61 +2229,12 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
   }
   if (orgDC == false)
   {
-#if !HS_DMM_SDC_PREDICTOR_UNIFY_H0108
-    if ( getDimType(uiIntraMode) == DMM1_IDX )
-    {
-      UChar ucSegmentLT = pMask[0];
-      UChar ucSegmentRT = pMask[uiSize-1];
-      UChar ucSegmentLB = pMask[uiMaskStride * (uiSize-1)]; 
-      UChar ucSegmentRB = pMask[uiMaskStride * (uiSize-1) + (uiSize-1)]; 
+    Pel* pLeftTop = pOrig;
+    Pel* pRightTop = pOrig + (uiSize-1);
+    Pel* pLeftBottom = (pOrig+ (uiStride*(uiSize-1)));
+    Pel* pRightBottom = (pOrig+ (uiStride*(uiSize-1)) + (uiSize-1));
 
-      rpSegMeans[ucSegmentLT] = pOrig[0];
-      rpSegMeans[ucSegmentRT] = pOrig[uiSize-1];
-      rpSegMeans[ucSegmentLB] = pOrig[uiStride * (uiSize-1) ];
-      rpSegMeans[ucSegmentRB] = pOrig[uiStride * (uiSize-1) + (uiSize-1) ];
-    }
-    else if( getDimType( uiIntraMode ) == DMM4_IDX )
-    {
-      Pel *ptmpOrig = pOrig;
-      Bool *ptmpMask = pMask, bBreak = false;
-      UChar ucSegment = ptmpMask? (UChar) ptmpMask[0] : 0;
-      UChar bFirstSeg = ucSegment;
-
-      rpSegMeans[ucSegment] = ptmpOrig[0];
-      for ( Int y = 0; y < uiSize; y++ )
-      {
-        for ( Int x = 0; x < uiSize; x++ )
-        {
-          ucSegment = ptmpMask[x];
-          assert( ucSegment < uiNumSegments );
-
-          if( bFirstSeg != ucSegment )
-          {
-            rpSegMeans[ucSegment] = ptmpOrig[x];
-            bBreak = true;
-            break;
-          }
-        }
-
-        if( bBreak )
-        {
-          break;
-        }
-
-        ptmpOrig  += uiStride;
-        ptmpMask  += uiMaskStride;
-      }
-    }
-    else
-#endif
-    {
-      Pel* pLeftTop = pOrig;
-      Pel* pRightTop = pOrig + (uiSize-1);
-      Pel* pLeftBottom = (pOrig+ (uiStride*(uiSize-1)));
-      Pel* pRightBottom = (pOrig+ (uiStride*(uiSize-1)) + (uiSize-1));
-
-      rpSegMeans[0] = (*pLeftTop + *pRightTop + *pLeftBottom + *pRightBottom + 2)>>2;
-    }
+    rpSegMeans[0] = (*pLeftTop + *pRightTop + *pLeftBottom + *pRightBottom + 2)>>2;
     return;
   }
 

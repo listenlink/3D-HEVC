@@ -86,10 +86,10 @@ public:
   Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}
 #endif
 
-#if H_MV_HLS_8_HRD_Q0102_08
+#if H_MV
   Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/, Int targetOlsIdx ) {}
 #else
-  Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/) {}
+  Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/ ) {}
 #endif
   Void  parseTerminatingBit       ( UInt& ruiBit );
   Void  parseMVPIdx               ( Int& riMVPIdx          );
@@ -217,9 +217,6 @@ private:
   ContextModel3DBuffer m_cDdcFlagSCModel;
   ContextModel3DBuffer m_cDdcDataSCModel;
   ContextModel3DBuffer m_cAngleFlagSCModel;
-#if H_3D_DIM_DMM && !MTK_DMM_SIMP_CODE_H0092
-  ContextModel3DBuffer m_cDmm1DataSCModel;
-#endif
 #if H_3D_DIM_SDC  
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
   ContextModel3DBuffer m_cSDCResidualSCModel;

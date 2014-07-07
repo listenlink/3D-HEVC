@@ -126,7 +126,7 @@ Void readNalUnitHeader(InputNALUnit& nalu)
   }
   else
   {
-#if H_MV_HLS_8_GEN_Q0108_13
+#if H_MV
 
     // If nal_unit_type is in the range of BLA_W_LP to RSV_IRAP_VCL23, inclusive, i.e. the coded 
     // slice segment belongs to an IRAP picture, TemporalId shall be equal to 0. 
