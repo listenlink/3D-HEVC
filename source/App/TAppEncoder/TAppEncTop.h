@@ -74,7 +74,7 @@ private:
   std::vector<Int>           m_frameRcvd;                   ///< number of received frames 
 
   TComPicLists               m_ivPicLists;                  ///< picture buffers of encoder instances
-#if H_MV_HLS_8
+#if H_MV
   TComVPS*                   m_vps;                         ///< vps
 #else
   TComVPS                    m_vps;                         ///< vps

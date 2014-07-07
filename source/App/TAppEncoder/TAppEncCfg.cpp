@@ -392,9 +392,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   ("LayerIdsInAddOutputLayerSet_%d", m_layerIdsInAddOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_ADD_OUTPUT_LAYER_SETS, "Indices in VPS of output layers in additional output layer set")  
   ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_OP_SETS_PLUS1, "Indices in VPS of output layers in layer set")  
-#if H_MV_HLS_7_VPS_P0300_27
   ("AltOutputLayerFlag",    m_altOutputLayerFlag , std::vector<Bool>(1,0), "Alt output layer flag")
-#endif
   ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
   
   // Layer dependencies
@@ -522,9 +520,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if H_3D_IC
   ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   ("IlluCompLowLatencyEnc",    m_bUseLowLatencyICEnc, false, "Enable low-latency illumination compensation encoding")
-#endif
 #endif
 #if H_3D_INTER_SDC
   ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
@@ -1057,12 +1053,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   xResizeVector( m_loopFilterNotAcrossTilesFlag ); 
   xResizeVector( m_wppInUseFlag ); 
 
-#if H_MV_HLS_7_VPS_P0300_27
   for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + (Int) m_outputLayerSetIdx.size(); olsIdx++)
   {    
     m_altOutputLayerFlag.push_back( false );      
   }
-#endif
 #else
   m_aidQP = new Int[ m_framesToBeEncoded + m_iGOPSize + 1 ];
   ::memset( m_aidQP, 0, sizeof(Int)*( m_framesToBeEncoded + m_iGOPSize + 1 ) );
@@ -1464,9 +1458,7 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
 
-#if H_MV_HLS_7_VPS_P0300_27
   xConfirmPara( m_altOutputLayerFlag.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
-#endif
   xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
 
   // Layer Dependencies  
@@ -2514,9 +2506,7 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_IC
   printf( "IlluCompEnable:%d ", m_abUseIC);
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
   printf ("IlluCompLowLatencyEnc:%d ",  m_bUseLowLatencyICEnc);
-#endif
 #endif
 #if H_3D_NBDV_REF
   printf("DepthRefinement:%d ", m_depthRefinementFlag );  

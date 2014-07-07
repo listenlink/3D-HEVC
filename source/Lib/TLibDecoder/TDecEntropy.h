@@ -76,7 +76,7 @@ public:
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
 #endif
 
-#if H_MV_HLS_8_HRD_Q0102_08
+#if H_MV
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx )       = 0;
 #else
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)       = 0;
@@ -163,7 +163,7 @@ public:
 #else
   Void    decodePPS                   ( TComPPS* pcPPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
 #endif
-#if H_MV_HLS_8_HRD_Q0102_08
+#if H_MV
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, targetOlsIdx );         }
 #else
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager);         }

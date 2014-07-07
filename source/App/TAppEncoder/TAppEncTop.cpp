@@ -57,10 +57,9 @@ using namespace std;
 TAppEncTop::TAppEncTop()
 {
 
-#if H_MV_HLS_8
+#if H_MV
   m_vps = new TComVPS; 
-#endif
-#if !H_MV
+#else
   m_iFrameRcvd = 0;
 #endif
   m_totalBytes = 0;
@@ -69,7 +68,7 @@ TAppEncTop::TAppEncTop()
 
 TAppEncTop::~TAppEncTop()
 {
-#if H_MV_HLS_8
+#if H_MV
   if (m_vps)
   {
    delete m_vps; 
@@ -81,11 +80,7 @@ TAppEncTop::~TAppEncTop()
 Void TAppEncTop::xInitLibCfg()
 {
 #if H_MV
-#if H_MV_HLS_8
   TComVPS& vps = (*m_vps);   
-#else
-  TComVPS& vps = m_vps;   
-#endif
 #else
   TComVPS vps;
 #endif
@@ -192,20 +187,13 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
-#if H_3D_ARP && !QC_IV_PRED_CONSTRAINT_H0137
-    //====== Advanced Inter-view Residual Prediction =========
-    m_cTEncTop.setUseAdvRP                     ( ( isDepth || 0==layerIdInVps ) ? 0 : m_uiUseAdvResPred );
-    m_cTEncTop.setARPStepNum                   ( ( isDepth || 0==layerIdInVps ) ? 1 : H_3D_ARP_WFNR     );
-#endif
 #if H_3D_SPIVMP
     m_cTEncTop.setSubPULog2Size                 (( isDepth || 0==layerIdInVps ) ? 0 : m_iSubPULog2Size   );
     m_cTEncTop.setSubPUMPILog2Size              ( !isDepth ? 0 : m_iSubPUMPILog2Size   );
 #endif
 #if H_3D_IC
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086
     m_cTEncTop.setUseICLowLatencyEnc           ( m_bUseLowLatencyICEnc );
-#endif
 #endif
   //========== Depth intra modes ==========
 #if H_3D_DIM
@@ -707,17 +695,10 @@ Void TAppEncTop::xDestroyLib()
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
 #if H_3D
-#if H_MV_HLS_8
   for ( Int viewIndex = 0; viewIndex < m_vps->getNumViews(); viewIndex++ )
   {
     m_vps->initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
       m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
-#else
-  for ( Int viewIndex = 0; viewIndex < m_vps.getNumViews(); viewIndex++ )
-  {
-  m_vps.initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
-      m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
-#endif
   }
 #endif
 
@@ -1298,11 +1279,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     }
 
   Int  defaultDirectDependencyType = -1; 
-#if MV_FIX_DEP_TYPES
   Bool defaultDirectDependencyFlag = false; 
-#else
-  Bool defaultDirectDependencyFlag = true; 
-#endif
 
   for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
   {
@@ -1321,9 +1298,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       else
       {
         defaultDirectDependencyType = curDirectDependencyType; 
-#if MV_FIX_DEP_TYPES
         defaultDirectDependencyFlag = true; 
-#endif
       }
       
       vps.setDirectDependencyType( depLayer, refLayer, curDirectDependencyType);       
@@ -1513,11 +1488,7 @@ Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
 
 Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 {
-#if H_MV_HLS_8_PMS_Q0195_20
   vps.setRepFormatIdxPresentFlag( false ); 
-#else
-  vps.setRepFormatIdxPresentFlag( true ); 
-#endif
   vps.setVpsNumRepFormatsMinus1 ( 0    ); 
 
   TComRepFormat* repFormat = new TComRepFormat; 
@@ -1533,13 +1504,6 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 
   assert( vps.getRepFormat( 0 ) == NULL ); 
   vps.setRepFormat( 0 , repFormat );
-
-#if !H_MV_HLS_8_PMS_Q0195_20
-  for(Int i = 0; i <= vps.getMaxLayersMinus1(); i++ )
-  {
-    vps.setVpsRepFormatIdx( i , 0 ); 
-  }
-#endif
 }
 
 Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
@@ -1550,37 +1514,19 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
 
   assert ( dpbSize != 0 ); 
 
-#if H_MV_HLS_8_HRD_Q0102_08
   for( Int i = 0; i < vps.getNumOutputLayerSets(); i++ )
-#else
-  for( Int i = 1; i < vps.getNumOutputLayerSets(); i++ )
-#endif
   {  
-#if H_MV_HLS_8_MIS_Q0102_30
     Int currLsIdx = vps.olsIdxToLsIdx( i ); 
-#endif
     std::vector<Int> targetDecLayerIdList = vps.getTargetDecLayerIdList( i ); 
     Bool subLayerFlagInfoPresentFlag = false; 
 
-#if H_MV_HLS_8_MIS_Q0102_30
     for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( currLsIdx ); j++ )
-#else
-    for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( i ); j++ )
-#endif
     {   
       Bool subLayerDpbInfoPresentFlag = false; 
-#if H_MV_HLS_8_MIS_Q0102_30 || H_MV_HLS_8_DBP_NODOC_42
       assert( vps.getNumLayersInIdList( currLsIdx ) == targetDecLayerIdList.size() ); 
       for( Int k = 0; k < vps.getNumLayersInIdList( currLsIdx ); k++ )   
-#else
-      assert( vps.getNumSubDpbs( vps.olsIdxToLsIdx( i ) ) == targetDecLayerIdList.size() ); 
-      for( Int k = 0; k < vps.getNumSubDpbs( vps.olsIdxToLsIdx( i )); k++ )   
-#endif
       {
         Int layerIdInVps = vps.getLayerIdInVps( targetDecLayerIdList[k] );           
-#if H_MV_HLS7_GEN
-        // TBD. Some derivation based on output layer set might be added here. 
-#endif
         dpbSize->setMaxVpsDecPicBufferingMinus1( i, k, j, m_maxDecPicBufferingMvc[ layerIdInVps ][ j ] - 1 );
         if ( j > 0 )
         {
@@ -1641,12 +1587,8 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
   Int numAddOuputLayerSets = (Int) m_outputLayerSetIdx.size(); 
   // Additional output layer sets + profileLevelTierIdx
   vps.setDefaultOutputLayerIdc      ( m_defaultOutputLayerIdc );   
-#if H_MV_HLS_8_SYN_39_19
   vps.setNumAddLayerSets            ( 0                             );  
   vps.setNumAddOlss                 ( numAddOuputLayerSets          ); 
-#else
-  vps.setNumAddLayerSets            ( numAddOuputLayerSets          ); 
-#endif
   vps.initTargetLayerIdLists(); 
 
   for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + numAddOuputLayerSets; olsIdx++)
@@ -1695,7 +1637,7 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
     {
       vps.setProfileLevelTierIdx( olsIdx, m_profileLevelTierIdx[ olsIdx ] ); 
     }
-#if H_MV_HLS_7_VPS_P0300_27
+   
     if ( vps.getNumOutputLayersInOutputLayerSet( olsIdx ) == 1 && 
         vps.getNumDirectRefLayers( vps.getOlsHighestOutputLayerId( olsIdx ) ) )
     {   
@@ -1709,9 +1651,6 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
         printf( "\nWarning: Ignoring AltOutputLayerFlag for output layer set %d, since more than one output layer or no dependent layers.\n", olsIdx );            
       }
     }
-#else
-    vps.setAltOutputLayerFlag( olsIdx , false);     
-#endif
   }
 }
 
@@ -1868,13 +1807,8 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     Bool isLayerZero  = ( layer == 0 ); 
 
 #if H_3D_ARP
-#if QC_IV_PRED_CONSTRAINT_H0137
     vps.setUseAdvRP        ( layer, ( isDepth || isLayerZero || !vps.getNumDirectRefLayers(layer) ) ? 0 : m_uiUseAdvResPred );
     vps.setARPStepNum      ( layer, ( isDepth || isLayerZero || !vps.getNumDirectRefLayers(layer) ) ? 1 : H_3D_ARP_WFNR     );
-#else
-    vps.setUseAdvRP        ( layer, ( isDepth || isLayerZero ) ? 0 : m_uiUseAdvResPred );
-    vps.setARPStepNum      ( layer, ( isDepth || isLayerZero ) ? 1 : H_3D_ARP_WFNR     );
-#endif  
 #endif  
 #if H_3D_SPIVMP
     if( isDepth )
@@ -1892,35 +1826,27 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 
 #if H_3D_IV_MERGE
-#if QC_IV_PRED_CONSTRAINT_H0137
     if( !vps.getNumDirectRefLayers(layer) )
     {
       vps.setIvMvPredFlag    (layer, false);
     }
     else
     {
-#endif
-    if( isDepth )
-    {
-      vps.setIvMvPredFlag         ( layer, (layer != 1) && m_ivMvPredFlag[1] ); 
+      if( isDepth )
+      {
+        vps.setIvMvPredFlag         ( layer, (layer != 1) && m_ivMvPredFlag[1] ); 
+      }
+      else
+      {
+        vps.setIvMvPredFlag         ( layer, !isLayerZero && m_ivMvPredFlag[0] ); 
+      }
     }
-    else
-    {
-      vps.setIvMvPredFlag         ( layer, !isLayerZero && m_ivMvPredFlag[0] ); 
-    }
-#if QC_IV_PRED_CONSTRAINT_H0137
-    }
-#endif
 #endif
 #if H_3D_NBDV_REF
     vps.setDepthRefinementFlag  ( layer, !isLayerZero && !isDepth && m_depthRefinementFlag );         
 #endif
 #if H_3D_VSP
-#if QC_IV_PRED_CONSTRAINT_H0137
     vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && vps.getNumDirectRefLayers(layer) && m_viewSynthesisPredFlag );         
-#else
-    vps.setViewSynthesisPredFlag( layer, !isLayerZero && !isDepth && m_viewSynthesisPredFlag );         
-#endif
 #endif
 #if H_3D_DBBP
     vps.setUseDBBP              ( layer, !isLayerZero && !isDepth && m_bUseDBBP );
