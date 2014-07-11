@@ -186,7 +186,15 @@ public:
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt        uiPreCalcDistC );
-  
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void  estIntraPredSingleDepth  ( TComDataCU* pcCU, 
+                                  TComYuv*    pcOrgYuv, 
+                                  TComYuv*    pcPredYuv, 
+                                  TComYuv*    pcResiYuv, 
+                                  TComYuv*    pcRecoYuv,
+                                  UInt&       ruiDistC,
+                                  Bool        bLumaOnly );
+#endif    
   
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
@@ -341,7 +349,9 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void xIntraCodingSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Int iTestDepthIdx, Pel * DepthNeighbor );
+#endif
 #if H_3D_DIM
   // -------------------------------------------------------------------------------------------------------------------
   // Depth intra search

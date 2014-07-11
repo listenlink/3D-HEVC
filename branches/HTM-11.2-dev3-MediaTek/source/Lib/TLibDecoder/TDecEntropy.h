@@ -88,6 +88,9 @@ public:
   
 public:
   virtual Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  virtual Void parseSingleDepthMode       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#endif
   virtual Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx ) = 0;
@@ -175,6 +178,9 @@ public:
 public:
   Void decodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void decodeSingleDepthMode ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) ;
+#endif
   Void decodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeMergeFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void decodeMergeIndex        ( TComDataCU* pcSubCU, UInt uiPartIdx, UInt uiPartAddr, UInt uiDepth );
