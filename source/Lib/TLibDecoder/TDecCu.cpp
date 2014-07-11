@@ -541,7 +541,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
     return;
   }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_pcEntropyDecoder->decodeSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
+  if(!pcCU->getSingleDepthFlag(uiAbsPartIdx))
+  {
+#endif
   m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
   m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
@@ -571,6 +575,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   Bool bCodeDQP = getdQPFlag();
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
   setdQPFlag( bCodeDQP );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  }
+#endif
   xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
 #if H_3D_IV_MERGE
   xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
@@ -670,10 +677,20 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
 #endif
       break;
     case MODE_INTRA:
+#if MTK_SINGLE_DEPTH_MODE_I0095
+      if( m_ppcCU[uiDepth]->getSingleDepthFlag(0) )
+        xReconIntraSingleDepth( m_ppcCU[uiDepth], 0, uiDepth );
+#if H_3D_DIM_SDC
+      else if( m_ppcCU[uiDepth]->getSDCFlag(0) )
+        xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
+#endif
+      else
+#else
 #if H_3D_DIM_SDC
       if( m_ppcCU[uiDepth]->getSDCFlag(0) )
         xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
       else
+#endif
 #endif
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
@@ -708,7 +725,82 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
     m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
   }
 }
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TDecCu::xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiWidth        = pcCU->getWidth  ( 0 );
+  UInt uiHeight       = pcCU->getHeight ( 0 );
 
+  TComYuv* pcRecoYuv  = m_ppcYuvReco[uiDepth];
+
+  UInt    uiStride    = pcRecoYuv->getStride  ();
+  Pel*    piReco      = pcRecoYuv->getLumaAddr( uiAbsPartIdx );
+
+
+  AOF( uiWidth == uiHeight );
+  AOF( uiAbsPartIdx == 0 );
+
+  //construction of depth candidates
+  Pel testDepth;
+  Pel DepthNeighbours[5];
+  Int index =0;
+  for( Int i = 0; (i < 5) && (index<MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE) ; i++ )
+  {
+    if(!pcCU->getNeighDepth (0, uiAbsPartIdx, &testDepth, i))
+    {
+      continue;
+    }
+    DepthNeighbours[index]=testDepth;
+    index++;
+    for(Int j=0;j<index-1;j++)
+    {
+     if( (DepthNeighbours[index-1]==DepthNeighbours[j]) )
+     {
+       index--;
+       break;
+     }
+    }
+  }
+
+  if(index==0)
+  {
+    DepthNeighbours[index]=1<<(g_bitDepthY-1);
+    index++;
+  }
+
+  if(index==1)
+  {
+    DepthNeighbours[index]=ClipY(DepthNeighbours[0] + 1 );
+    index++;
+  }
+
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      piReco[ uiX ] =DepthNeighbours[(Int)pcCU->getSingleDepthValue(uiAbsPartIdx)];
+    }
+    piReco     += uiStride;
+  }
+
+  // clear UV
+  UInt  uiStrideC     = pcRecoYuv->getCStride();
+  Pel   *pRecCb       = pcRecoYuv->getCbAddr();
+  Pel   *pRecCr       = pcRecoYuv->getCrAddr();
+
+  for (Int y=0; y<uiHeight/2; y++)
+  {
+    for (Int x=0; x<uiWidth/2; x++)
+    {
+      pRecCb[x] = 1<<(g_bitDepthC-1);
+      pRecCr[x] = 1<<(g_bitDepthC-1);
+    }
+
+    pRecCb += uiStrideC;
+    pRecCr += uiStrideC;
+  }
+}
+#endif
 #if H_3D_INTER_SDC
 Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {

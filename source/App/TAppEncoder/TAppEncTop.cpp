@@ -201,6 +201,9 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    m_cTEncTop.setUseSingleDepthMode           ( isDepth ? m_useSingleDepthMode   : false );
+#endif
 #if H_3D_QTLPC
     m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL               : false );
     m_cTEncTop.setUsePC                        ( isDepth ? m_bUsePC                : false );

@@ -152,6 +152,9 @@ protected:
 public:
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #if H_3D_ARP
@@ -218,6 +221,10 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  ContextModel3DBuffer m_cCUSingleDepthFlagSCModel;
+  ContextModel3DBuffer m_cSingleDepthValueSCModel;
+#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
 #if H_3D_ARP
