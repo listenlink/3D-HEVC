@@ -2021,7 +2021,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 #endif
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    if(pcSlice->getIsDepth())
+    {
+      WRITE_FLAG( pcSlice->getApplySingleDepthMode() ? 1 : 0, "slice_enable_single_depth_mode" );
+    }
+#endif
 #if H_3D_IV_MERGE
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS_MEM);
 #else
@@ -2407,7 +2412,12 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TEncCavlc::codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);

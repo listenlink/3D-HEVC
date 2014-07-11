@@ -138,6 +138,9 @@ TComSlice::TComSlice()
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
 #endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+, m_bApplySingleDepthMode         (false)
+#endif
 #endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = 0;
@@ -1090,6 +1093,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   {
     m_interLayerPredLayerIdc[ layer ] = pSrc->m_interLayerPredLayerIdc[ layer ]; 
   }
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_bApplySingleDepthMode = pSrc->m_bApplySingleDepthMode;
 #endif
 #if H_3D_IC
   m_bApplyIC = pSrc->m_bApplyIC;

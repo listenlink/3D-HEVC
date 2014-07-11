@@ -122,6 +122,9 @@ protected:
   Bool getdQPFlag               ()                        { return m_bDecodeDQP;        }
   Void setdQPFlag               ( Bool b )                { m_bDecodeDQP = b;           }
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt depth);
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 #if H_3D_DIM_SDC
   Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
