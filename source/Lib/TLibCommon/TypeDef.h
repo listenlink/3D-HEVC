@@ -283,6 +283,7 @@
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
 #define QC_I0129_ARP_FIX                  1
+#define QC_I0051_ARP_SIMP                 1
 #endif
 
 ///// ***** DEPTH INTRA MODES *********
