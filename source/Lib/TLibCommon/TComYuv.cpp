@@ -688,6 +688,10 @@ Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPart
   UInt iSrc0Stride = pcYuvSrc0->getStride();
   UInt iSrc1Stride = pcYuvSrc1->getStride();
   UInt iDstStride  = getStride();
+#if QC_I0129_ARP_FIX
+  Int iIFshift = IF_INTERNAL_PREC - g_bitDepthY;
+  Int iOffSet  = ( 1 << ( iIFshift - 1 ) ) + IF_INTERNAL_OFFS;
+#endif
   for ( y = uiHeight-1; y >= 0; y-- )
   {
     for ( x = uiWidth-1; x >= 0; x-- )
@@ -695,7 +699,11 @@ Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPart
       pDst[x] = pSrc0[x] + pSrc1[x];
       if( bClip )
       {
+#if QC_I0129_ARP_FIX
+        pDst[x] = ClipY( ( pDst[x] + iOffSet ) >> iIFshift );
+#else
         pDst[x] = ClipY( pDst[x] );
+#endif
       }
     }
     pSrc0 += iSrc0Stride;
@@ -718,6 +726,10 @@ Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPa
   UInt  iSrc0Stride = pcYuvSrc0->getCStride();
   UInt  iSrc1Stride = pcYuvSrc1->getCStride();
   UInt  iDstStride  = getCStride();
+#if QC_I0129_ARP_FIX
+  Int iIFshift = IF_INTERNAL_PREC - g_bitDepthC;
+  Int iOffSet  = ( 1 << ( iIFshift - 1 ) ) + IF_INTERNAL_OFFS;
+#endif
   for ( y = uiHeight-1; y >= 0; y-- )
   {
     for ( x = uiWidth-1; x >= 0; x-- )
@@ -726,8 +738,13 @@ Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPa
       pDstV[x] = pSrcV0[x] + pSrcV1[x];
       if( bClip )
       {
+#if QC_I0129_ARP_FIX
+        pDstU[x] = ClipC( ( pDstU[x] + iOffSet ) >> iIFshift );
+        pDstV[x] = ClipC( ( pDstV[x] + iOffSet ) >> iIFshift );
+#else
         pDstU[x] = ClipC( pDstU[x] );
         pDstV[x] = ClipC( pDstV[x] );
+#endif
       }
     }
 
