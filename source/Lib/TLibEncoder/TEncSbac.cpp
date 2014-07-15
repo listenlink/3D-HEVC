@@ -2323,9 +2323,18 @@ Void TEncSbac::codeDeltaDC( TComDataCU* pcCU, UInt absPartIdx )
     assert( 0 );
   }
 
+#if HS_DMM_SIGNALLING_I0120
+  UInt uiNumSegments = isDimMode( pcCU->getLumaIntraDir( absPartIdx ) ) ? 2 : 1;
+  UInt dimDeltaDC = 1;
+#else
   UInt uiNumSegments = 0;
   UInt dimDeltaDC = 0;
+#endif
 
+#if HS_DMM_SIGNALLING_I0120
+  if( pcCU->isIntra( absPartIdx ) && pcCU->getSDCFlag( absPartIdx ))
+  {
+#else
   if( pcCU->isIntra( absPartIdx ) )
   {
     UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
@@ -2333,6 +2342,7 @@ Void TEncSbac::codeDeltaDC( TComDataCU* pcCU, UInt absPartIdx )
 
     if( pcCU->getSDCFlag( absPartIdx ) )
     {
+#endif
       if( uiNumSegments == 1 )
       {
         dimDeltaDC = pcCU->getSDCSegmentDCOffset( 0, absPartIdx ) ? 1 : 0;
@@ -2341,18 +2351,22 @@ Void TEncSbac::codeDeltaDC( TComDataCU* pcCU, UInt absPartIdx )
       {
         dimDeltaDC = ( pcCU->getSDCSegmentDCOffset( 0, absPartIdx ) || pcCU->getSDCSegmentDCOffset( 1, absPartIdx ) ) ? 1 : 0;
       }
+#if !HS_DMM_SIGNALLING_I0120
     }
     else
     {
       dimDeltaDC = isDimDeltaDC( dir );
     }
+#endif
     m_pcBinIf->encodeBin( dimDeltaDC, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
   }
+#if !HS_DMM_SIGNALLING_I0120
   else //all-zero inter SDC is not allowed
   {
     uiNumSegments = 1;
     dimDeltaDC = 1;
   }
+#endif
 
   if( dimDeltaDC )
   {

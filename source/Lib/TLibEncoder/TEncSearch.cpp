@@ -3156,8 +3156,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
             pcCU->setDimDeltaDC( dmmType, 0, uiPartOffset, deltaDC1 );
             pcCU->setDimDeltaDC( dmmType, 1, uiPartOffset, deltaDC2 );
 
+#if HS_DMM_SIGNALLING_I0120
+            uiRdModeList[ numModesForFullRD++ ] = (dmmType  +DIM_OFFSET);
+#else
             uiRdModeList[ numModesForFullRD++ ] = (2*dmmType  +DIM_OFFSET);
             uiRdModeList[ numModesForFullRD++ ] = (2*dmmType+1+DIM_OFFSET);
+#endif
 
             if( DMM4_IDX == dmmType ) { biSegmentation->destroy(); delete biSegmentation; }
           }
@@ -3212,7 +3216,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       UInt uiOrgMode;
       if (uiMode < numModesForFullRD)
       {   
-           uiOrgMode = uiRdModeList[uiMode];
+         uiOrgMode = uiRdModeList[uiMode];
       }
       else
       {
@@ -3225,7 +3229,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
            else
            {
               if (uiOrgMode != uiBestPUModeConv && uiOrgMode != uiSecondBestPUModeConv && uiOrgMode != uiThirdBestPUModeConv 
-                 && uiOrgMode > 1 && uiOrgMode < NUM_INTRA_MODE && varCU < 4) 
+                  && uiOrgMode > 1 && uiOrgMode < NUM_INTRA_MODE && varCU < 4) 
               continue;
            }
        }

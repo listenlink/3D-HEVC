@@ -1193,11 +1193,19 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
     if( !uiSymbol )
     {
+#if HS_DMM_SIGNALLING_I0120
+      pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
+#else
       pcCU->setLumaIntraDirSubParts( ( 2 * DMM1_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
     }
     else
     {
+#if HS_DMM_SIGNALLING_I0120
+      pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
+#else
       pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
     }
   }
 }
@@ -2111,20 +2119,33 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
     assert( 0 );
   }
 
+#if HS_DMM_SIGNALLING_I0120
+  UInt symbol = 1;
+  UInt uiNumSegments = isDimMode( pcCU->getLumaIntraDir( absPartIdx ) ) ? 2 : 1;
+#else
   UInt symbol = 0;
   UInt uiNumSegments = 0;
+#endif
 
+#if HS_DMM_SIGNALLING_I0120
+  if( pcCU->isIntra( absPartIdx ) && pcCU->getSDCFlag( absPartIdx ))
+  {
+#else
   if( pcCU->isIntra( absPartIdx ) )
   {
     UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
     uiNumSegments = isDimMode( dir ) ? 2 : 1;
+#endif
     m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
+#if !HS_DMM_SIGNALLING_I0120
     if( pcCU->getSDCFlag( absPartIdx ) )
     {
+#endif
       assert( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N );
       pcCU->setTrIdxSubParts( 0, absPartIdx, depth );
       pcCU->setCbfSubParts( 1, 1, 1, absPartIdx, depth );
     }
+#if !HS_DMM_SIGNALLING_I0120
     else
     {
       pcCU->setLumaIntraDirSubParts( dir + symbol, absPartIdx, depth );
@@ -2135,6 +2156,7 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
     uiNumSegments = 1;
     symbol = 1;
   }
+#endif
 
 
   for( UInt segment = 0; segment < uiNumSegments; segment++ )
