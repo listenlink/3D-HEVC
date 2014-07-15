@@ -3173,6 +3173,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
     
     UInt    uiBestPUMode  = 0;
+#if SCU_HS_FAST_INTRA_SDC_I0123
+    UInt    uiBestPUModeConv  = 0;
+    UInt    uiSecondBestPUModeConv  = 0;
+    UInt    uiThirdBestPUModeConv  = 0;
+#endif
+
 #if H_3D_VSO
     Dist    uiBestPUDistY = 0;
 #else
@@ -3180,22 +3186,65 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
     UInt    uiBestPUDistC = 0;
     Double  dBestPUCost   = MAX_DOUBLE;
+
+#if SCU_HS_FAST_INTRA_SDC_I0123
+    Double  dBestPUCostConv   = MAX_DOUBLE;
+    UInt varCU      = m_pcRdCost->calcVAR(piOrg, uiStride, uiWidth,uiHeight,pcCU->getDepth(0));
+    UInt rdSDC = m_pcEncCfg->getIsDepth() ? numModesForFullRD : 0;
+#endif
+
 #if H_3D_DIM_SDC
     Bool    bBestUseSDC   = false;
     Pel     apBestDCOffsets[2] = {0,0};
 #endif
+#if SCU_HS_FAST_INTRA_SDC_I0123
+    for( UInt uiMode = 0; uiMode < numModesForFullRD + rdSDC; uiMode++ )
+#else
     for( UInt uiMode = 0; uiMode < numModesForFullRD; uiMode++ )
+#endif
     {
       // set luma prediction mode
-      UInt uiOrgMode = uiRdModeList[uiMode];
+#if !SCU_HS_FAST_INTRA_SDC_I0123
+     UInt uiOrgMode = uiRdModeList[uiMode];  
+#endif
       
+#if SCU_HS_FAST_INTRA_SDC_I0123
+      UInt uiOrgMode;
+      if (uiMode < numModesForFullRD)
+      {   
+           uiOrgMode = uiRdModeList[uiMode];
+      }
+      else
+      {
+           uiOrgMode = uiRdModeList[uiMode - numModesForFullRD];
+
+           if (uiBestPUModeConv <= 1 )
+           {
+           if (uiOrgMode > 1 && varCU < 1) continue;          
+           }
+           else
+           {
+              if (uiOrgMode != uiBestPUModeConv && uiOrgMode != uiSecondBestPUModeConv && uiOrgMode != uiThirdBestPUModeConv 
+                 && uiOrgMode > 1 && uiOrgMode < NUM_INTRA_MODE && varCU < 4) 
+              continue;
+           }
+       }
+#endif
+
       pcCU->setLumaIntraDirSubParts ( uiOrgMode, uiPartOffset, uiDepth + uiInitTrDepth );
       
 #if H_3D_DIM_SDC
+#if SCU_HS_FAST_INTRA_SDC_I0123
+      Bool bTestSDC = ( m_pcEncCfg->getUseSDC() && pcCU->getSDCAvailable(uiPartOffset) && uiMode >= numModesForFullRD);
+#else
       Bool bTestSDC = ( m_pcEncCfg->getUseSDC() && pcCU->getSDCAvailable(uiPartOffset) );
+#endif
       
       for( UInt uiSDC=0; uiSDC<=(bTestSDC?1:0); uiSDC++ )
       {
+#if SCU_HS_FAST_INTRA_SDC_I0123
+        if (!uiSDC && uiMode >= numModesForFullRD) continue;
+#endif
         pcCU->setSDCFlagSubParts( (uiSDC != 0), uiPartOffset, uiDepth + uiInitTrDepth );
         for( Int iSDCDeltaResi = -2; iSDCDeltaResi <= 2; iSDCDeltaResi++ )
         {
@@ -3255,6 +3304,15 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if HHI_RQT_INTRA_SPEEDUP
 #if H_3D_DIM_ENC
           xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost, (testZeroResi != 0) );
+#if SCU_HS_FAST_INTRA_SDC_I0123    
+      if( dPUCost < dBestPUCostConv )
+      {
+        uiThirdBestPUModeConv = uiSecondBestPUModeConv;
+        uiSecondBestPUModeConv = uiBestPUModeConv;
+        uiBestPUModeConv  = uiOrgMode;
+        dBestPUCostConv   = dPUCost;
+      }
+#endif
 #else
           xRecurIntraCodingQT( pcCU, uiInitTrDepth, uiPartOffset, bLumaOnly, pcOrgYuv, pcPredYuv, pcResiYuv, uiPUDistY, uiPUDistC, true, dPUCost );
 #endif
