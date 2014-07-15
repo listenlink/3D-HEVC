@@ -2340,6 +2340,13 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   UInt uiWidth  = rpcTempCU->getWidth(0);
   UInt uiHeight = rpcTempCU->getHeight(0);
   AOF( uiWidth == uiHeight );
+
+#if SEC_DBBP_DISALLOW_8x8_I0078
+  if(uiWidth <= 8)
+  {
+    return;
+  }
+#endif
   
   rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N,  0, uhDepth );
   

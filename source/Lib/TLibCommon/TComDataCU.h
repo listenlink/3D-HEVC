@@ -245,7 +245,9 @@ protected:
 #endif
 #if H_3D_IV_MERGE
   Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int*   ivCandDir, TComMv* ivCandMv, Int* ivCandRefIdx ); 
+#if! SEC_SIMP_SHIFTED_DV_I0086
   Bool          xGetPosFirstAvailDmvCand( Int iCount, Int& iFirDispCand );
+#endif
 #endif
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
