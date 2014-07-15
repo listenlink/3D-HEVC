@@ -241,7 +241,7 @@
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
-
+#define SCU_HS_FAST_INTRA_SDC_I0123       1
 
 // OTHERS
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
