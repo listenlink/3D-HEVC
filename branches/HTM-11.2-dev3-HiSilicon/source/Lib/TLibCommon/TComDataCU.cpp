@@ -2676,7 +2676,11 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
     return false;
   }
 
+#if HS_DMM_SIGNALLING_I0120
+  if( isDimMode( getLumaIntraDir( uiAbsPartIdx ) ) )
+#else
   if( isDimMode( getLumaIntraDir( uiAbsPartIdx ) ) && !isDimDeltaDC( getLumaIntraDir( uiAbsPartIdx ) ) )
+#endif
   {
     return true;
   }
@@ -2689,7 +2693,11 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
   return false;
   // check prediction mode
   UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
+#if HS_DMM_SIGNALLING_I0120
+  if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX  ) )
+#else
   if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
+#endif
     return true;
   
   // else
