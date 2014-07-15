@@ -3309,6 +3309,7 @@ inline Bool TComDataCU::xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int* ivCandD
 {
   for(Int iLoop = 0; iLoop < 2; iLoop ++ ) 
   {
+#if !SEC_SIMP_SHIFTED_DV_I0086
     // IvDcShift (Derived from spatial Iv neighboring blocks)
     if( iLoop == 1 )
     {
@@ -3342,6 +3343,7 @@ inline Bool TComDataCU::xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int* ivCandD
         break;
       }
     }
+#endif
 
     /// iLoop = 0 --> IvMCShift
     /// iLoop = 1 --> IvDCShift  (Derived from IvDC)
@@ -3389,6 +3391,7 @@ inline Bool TComDataCU::xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int* ivCandD
   return false;
 } 
 
+#if !SEC_SIMP_SHIFTED_DV_I0086
 inline Bool TComDataCU::xGetPosFirstAvailDmvCand(Int iCount, Int& posFirstAvailDmvCand )
 {
   for ( Int currListPos = 0; currListPos < iCount; currListPos++ )
@@ -3405,6 +3408,7 @@ inline Bool TComDataCU::xGetPosFirstAvailDmvCand(Int iCount, Int& posFirstAvailD
   }
   return false;  
 }
+#endif
                                       
 #endif
 
