@@ -172,6 +172,8 @@
                                               // MTK_DIS_SPBIP8X4_H0205        Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
                                               // SEC_ADAPT_DISABLE_IVMP        Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
 
+#define SEC_SIMP_SHIFTED_DV_I0086         1   // Simplification of Shifted DV candidate, JCT3V-I0086
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
