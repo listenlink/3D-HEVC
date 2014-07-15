@@ -235,6 +235,7 @@
                                               // H_3D_FIX_DBBP_IVMP        Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
 
 #define SEC_DBBP_EXPLICIT_SIG_I0077       1   // Remove the partition derivation and signal dbbp_flag only when the partion mode is 2NxN/Nx2N, JCT3V-I0077
+#define SEC_DBBP_DISALLOW_8x8_I0078       1   // Disallow DBBP in 8x8 CU, JCT3V-I0078
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
