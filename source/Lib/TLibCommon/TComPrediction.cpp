@@ -542,6 +542,12 @@ Void TComPrediction::xGetSubPUAddrAndMerge(TComDataCU* pcCU, UInt uiPartAddr, In
     uiMergedSPH[i] = iSPHeight;
     pcCU->getSPAbsPartIdx(uiPartAddr, iSPWidth, iSPHeight, i, iNumSPInOneLine, uiSPAddr[i]);
   }
+#if SHARP_ARP_CHROMA_I0104
+  if( pcCU->getARPW( uiPartAddr ) != 0 )
+  {
+    return;
+  }
+#endif
   // horizontal sub-PU merge
   for (Int i=0; i<iNumSP; i++)
   {
@@ -1321,6 +1327,12 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
     TComMv cMVwithDisparity = cMv + cDistparity.m_acNBDV;
     pcCU->clipMv(cMVwithDisparity);
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth <= 8)
+    {
+      pYuvB0->clear(); pYuvB1->clear();
+    }
+#endif
 
     assert ( cDistparity.bDV );
     
@@ -1331,6 +1343,9 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     pcPicYuvRef = pcPicYuvBaseCol->getPicYuvRec();
 #if QC_I0129_ARP_FIX
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, true, true );
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
     xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, true, true );
 #else
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, bi, true );
@@ -1345,6 +1360,9 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     pcPicYuvRef = pcPicYuvBaseRef->getPicYuvRec();
 #if QC_I0129_ARP_FIX
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, true, true );
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
     xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, true, true );
 #else
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, bi, true );
@@ -1583,10 +1601,22 @@ Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr,
 
     pcCU->clipMv(cBaseTMV);
     pcCU->clipMv(cTempMv);
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth <= 8)
+    {
+      pYuvCurrTRef->clear(); pYuvBaseTRef->clear();
+    }
+#endif
 #if QC_I0129_ARP_FIX
     xPredInterLumaBlk  ( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, true,   true);
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
     xPredInterChromaBlk( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, true,   true);
     xPredInterLumaBlk  ( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, true,   true); 
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
     xPredInterChromaBlk( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, true,   true); 
 #else
     xPredInterLumaBlk  ( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, bi,   true);
