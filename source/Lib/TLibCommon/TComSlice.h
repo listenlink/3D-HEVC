@@ -2204,7 +2204,9 @@ private:
   Int          m_aiDDDInvOffset[MAX_NUM_LAYERS];
   UInt         m_aiDDDShift    [MAX_NUM_LAYERS];
 #endif
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Bool      m_bApplySingleDepthMode;
+#endif
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -2274,6 +2276,10 @@ public:
 #endif
 #if H_3D
   TComPic*  getTexturePic       ()                              { return  m_ivPicsCurrPoc[0][ m_viewIndex ]; }
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void      setApplySingleDepthMode( Bool b )                                { m_bApplySingleDepthMode = b; }
+  Bool      getApplySingleDepthMode()                                        { return m_bApplySingleDepthMode; }
 #endif
 #if H_3D_IC
   Void      setApplyIC( Bool b )                                { m_bApplyIC = b; }

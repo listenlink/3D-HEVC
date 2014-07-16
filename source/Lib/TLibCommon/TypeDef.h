@@ -214,6 +214,10 @@
                                               // SEC_NO_RESI_DLT_H0105    
                                               // MTK_DLT_CODING_FIX_H0091 
 
+#define MTK_SINGLE_DEPTH_MODE_I0095       1   // Single depth mode proposed in JCT3V-I0095
+#if MTK_SINGLE_DEPTH_MODE_I0095
+#define MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE            2 // size of the sample candidate list
+#endif
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -237,7 +241,7 @@
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
-
+#define SCU_HS_FAST_INTRA_SDC_I0123       1
 
 // OTHERS
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
@@ -289,6 +293,7 @@
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
+#define HS_DMM_SIGNALLING_I0120  1   
 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
@@ -380,7 +385,7 @@
 //#define H_MV_HLS_7_OTHER_P0187_1 0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 
 // OTHERS
-//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows ?// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 //#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
 //#define H_MV_HLS_7_HRD_P0138_6   0 //     (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
 

@@ -57,9 +57,19 @@ enum DIM_IDX
 #define DIM_NUM_TYPE   (DMM_NUM_TYPE)
 #define DIM_NO_IDX     MAX_UINT
 
+#if HS_DMM_SIGNALLING_I0120
+__inline UInt getDimType  ( Int intraMode ) 
+{ 
+    Int dimType = intraMode-DIM_OFFSET; 
+    return (dimType >= 0 && dimType < DIM_NUM_TYPE) ? (UInt)dimType : DIM_NO_IDX; 
+}
+#else
 __inline UInt getDimType  ( Int intraMode ) { Int dimType = (intraMode-DIM_OFFSET)/2; return (dimType >= 0 && dimType < DIM_NUM_TYPE) ? (UInt)dimType : DIM_NO_IDX; }
+#endif
 __inline Bool isDimMode   ( Int intraMode ) { return (getDimType( intraMode ) < DIM_NUM_TYPE); }
+#if !HS_DMM_SIGNALLING_I0120
 __inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && ((intraMode-DIM_OFFSET)%2) == 1); }
+#endif
 #endif
 
 #if H_3D_DIM_DMM

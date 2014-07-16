@@ -422,7 +422,9 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   assert( isDimMode( uiIntraMode ) );
 
   UInt dimType    = getDimType  ( uiIntraMode );
-  Bool dimDeltaDC = isDimDeltaDC( uiIntraMode );    
+#if !HS_DMM_SIGNALLING_I0120
+  Bool dimDeltaDC = isDimDeltaDC( uiIntraMode );
+#endif
   Bool isDmmMode  = (dimType <  DMM_NUM_TYPE);
 
   Bool* biSegPattern  = NULL;
@@ -473,7 +475,11 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   // set segment values with deltaDC offsets
   Pel segDC1 = 0;
   Pel segDC2 = 0;
+#if HS_DMM_SIGNALLING_I0120
+  if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
+#else
   if( dimDeltaDC )
+#endif
   {
     Pel deltaDC1 = pcCU->getDimDeltaDC( dimType, 0, uiAbsPartIdx );
     Pel deltaDC2 = pcCU->getDimDeltaDC( dimType, 1, uiAbsPartIdx );

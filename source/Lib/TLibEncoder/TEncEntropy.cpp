@@ -118,7 +118,25 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TEncEntropy::encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if ( !pcCU->getSlice()->getIsDepth() )
+  {
+    return;
+  }
+  if(!pcCU->getSlice()->getApplySingleDepthMode())
+  {
+     return;
+  }
+  
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  m_pcEntropyCoderIf->codeSingleDepthMode( pcCU, uiAbsPartIdx );
+}
+#endif
 /** encode merge flag
  * \param pcCU
  * \param uiAbsPartIdx

@@ -380,6 +380,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  ("SingleDepthMode",    m_useSingleDepthMode, true, "Single depth mode")                         
+#endif
 #endif
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
   ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
@@ -2521,6 +2524,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("DMM:%d ", m_useDMM );
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  printf("SingleDepthMode:%d ",    m_useSingleDepthMode);
 #endif
 #if H_3D_INTER_SDC
   printf( "interSDC:%d ", m_bDepthInterSDCFlag ? 1 : 0 );
