@@ -646,7 +646,11 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   Int numPocInterLayer[2] = { getNumActiveRefLayerPics0( ), getNumActiveRefLayerPics1( ) }; 
   
   TComPic**             refPicSetStCurr    [2] = { RefPicSetStCurr0, RefPicSetStCurr1 };
+#if FIX_WARNING
+  Int numPocStCurr[2] = { (Int)NumPocStCurr0, (Int)NumPocStCurr1 }; 
+#else
   Int numPocStCurr[2] = { NumPocStCurr0, NumPocStCurr1 }; 
+#endif
 
   for (Int li = 0; li < ((m_eSliceType==B_SLICE) ? 2 : 1); li++)
   { 
