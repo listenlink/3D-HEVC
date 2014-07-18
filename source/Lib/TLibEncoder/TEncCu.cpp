@@ -2444,7 +2444,11 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   }
   
   // reconstruct final prediction signal by combining both segments
+#if SHARP_DBBP_SIMPLE_FLTER_I0109
+  m_pcPredSearch->combineSegmentsWithMask(apPredYuv, m_ppcPredYuvTemp[uhDepth], pMask, uiWidth, uiHeight, 0, eVirtualPartSize);
+#else
   m_pcPredSearch->combineSegmentsWithMask(apPredYuv, m_ppcPredYuvTemp[uhDepth], pMask, uiWidth, uiHeight);
+#endif
   
   m_pcPredSearch->encodeResAndCalcRdInterCU( rpcTempCU, m_ppcOrigYuv[uhDepth], m_ppcPredYuvTemp[uhDepth], m_ppcResiYuvTemp[uhDepth], m_ppcResiYuvBest[uhDepth], m_ppcRecoYuvTemp[uhDepth], false );
   
