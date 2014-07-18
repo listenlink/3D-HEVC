@@ -765,6 +765,12 @@ UChar         getNumPartitions       ();
   Int          getUseDDDCandIdx(){ return m_iUseDDDCandIdx;}
 
 #endif
+
+#if SHARP_DMM1_I0110
+  Bool         isDMM1UpscaleMode       ( UInt uiWidth ){ Bool bDMM1UpsampleModeFlag = true; UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ bDMM1UpsampleModeFlag = false; } return bDMM1UpsampleModeFlag; };
+  UInt         getDMM1BasePatternWidth ( UInt uiWidth ){ UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ uiBaseWidth =  uiWidth; } return uiBaseWidth; }
+#endif
+
 };
 
 namespace RasterAddress

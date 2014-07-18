@@ -1297,13 +1297,23 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( getDimType( uiLumaPredMode ) == DMM1_IDX )
   {
     Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
-    
+
+#if SHARP_DMM1_I0110
+    WedgeList* pacWedgeList  = pcCU->isDMM1UpscaleMode(uiWidth) ? &g_dmmWedgeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])] :  &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+#else
     WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+#endif
     TComWedgelet* pcWedgelet = &(pacWedgeList->at( uiTabIdx ));
-    
+
     uiNumSegments = 2;
+
+#if SHARP_DMM1_I0110
+    pbMask       = pcCU->isDMM1UpscaleMode( uiWidth ) ? pcWedgelet->getScaledPattern(uiWidth) : pcWedgelet->getPattern();
+    uiMaskStride = pcCU->isDMM1UpscaleMode( uiWidth ) ? uiWidth : pcWedgelet->getStride();
+#else
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
+#endif
   }
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {

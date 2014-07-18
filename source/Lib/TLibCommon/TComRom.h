@@ -165,6 +165,10 @@ extern const WedgeResolution                                 g_dmmWedgeResolutio
 extern const UChar                                           g_dmm1TabIdxBits     [6];
 extern const UChar                                           g_dmm3IntraTabIdxBits[6];
 
+#if SHARP_DMM1_I0110
+extern Bool                                                  g_wedgePattern[32*32];
+#endif 
+
 extern       std::vector< std::vector<TComWedgelet> >        g_dmmWedgeLists;
 extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
 extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
