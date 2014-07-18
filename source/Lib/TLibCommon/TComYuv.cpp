@@ -688,6 +688,10 @@ Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPart
   UInt iSrc0Stride = pcYuvSrc0->getStride();
   UInt iSrc1Stride = pcYuvSrc1->getStride();
   UInt iDstStride  = getStride();
+#if QC_I0129_ARP_FIX
+  Int iIFshift = IF_INTERNAL_PREC - g_bitDepthY;
+  Int iOffSet  = ( 1 << ( iIFshift - 1 ) ) + IF_INTERNAL_OFFS;
+#endif
   for ( y = uiHeight-1; y >= 0; y-- )
   {
     for ( x = uiWidth-1; x >= 0; x-- )
@@ -695,7 +699,11 @@ Void TComYuv::addARPLuma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPart
       pDst[x] = pSrc0[x] + pSrc1[x];
       if( bClip )
       {
+#if QC_I0129_ARP_FIX
+        pDst[x] = ClipY( ( pDst[x] + iOffSet ) >> iIFshift );
+#else
         pDst[x] = ClipY( pDst[x] );
+#endif
       }
     }
     pSrc0 += iSrc0Stride;
@@ -718,6 +726,10 @@ Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPa
   UInt  iSrc0Stride = pcYuvSrc0->getCStride();
   UInt  iSrc1Stride = pcYuvSrc1->getCStride();
   UInt  iDstStride  = getCStride();
+#if QC_I0129_ARP_FIX
+  Int iIFshift = IF_INTERNAL_PREC - g_bitDepthC;
+  Int iOffSet  = ( 1 << ( iIFshift - 1 ) ) + IF_INTERNAL_OFFS;
+#endif
   for ( y = uiHeight-1; y >= 0; y-- )
   {
     for ( x = uiWidth-1; x >= 0; x-- )
@@ -726,8 +738,13 @@ Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPa
       pDstV[x] = pSrcV0[x] + pSrcV1[x];
       if( bClip )
       {
+#if QC_I0129_ARP_FIX
+        pDstU[x] = ClipC( ( pDstU[x] + iOffSet ) >> iIFshift );
+        pDstV[x] = ClipC( ( pDstV[x] + iOffSet ) >> iIFshift );
+#else
         pDstU[x] = ClipC( pDstU[x] );
         pDstV[x] = ClipC( pDstV[x] );
+#endif
       }
     }
 
@@ -743,6 +760,9 @@ Void TComYuv::addARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPa
 Void TComYuv::subtractARP( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt uiAbsPartIdx, UInt uiWidth , UInt uiHeight )
 {
   subtractARPLuma  ( pcYuvSrc0, pcYuvSrc1,  uiAbsPartIdx, uiWidth    , uiHeight    );
+#if SHARP_ARP_CHROMA_I0104
+  if (uiWidth > 8)
+#endif
   subtractARPChroma( pcYuvSrc0, pcYuvSrc1,  uiAbsPartIdx, uiWidth>>1 , uiHeight>>1 );
 }
 
@@ -802,6 +822,9 @@ Void TComYuv::subtractARPChroma( TComYuv* pcYuvSrc0, TComYuv* pcYuvSrc1, UInt ui
 Void TComYuv::multiplyARP( UInt uiAbsPartIdx , UInt uiWidth , UInt uiHeight , UChar dW )
 {
   multiplyARPLuma( uiAbsPartIdx , uiWidth , uiHeight , dW );
+#if SHARP_ARP_CHROMA_I0104
+  if (uiWidth > 8)
+#endif
   multiplyARPChroma( uiAbsPartIdx , uiWidth >> 1 , uiHeight >> 1 , dW );
 }
 
