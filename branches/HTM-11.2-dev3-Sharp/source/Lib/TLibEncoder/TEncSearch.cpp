@@ -1969,9 +1969,18 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
     {
       UInt dimType   = getDimType  ( uiLumaPredMode );
       UInt patternID = pcCU->getDmmWedgeTabIdx(dimType, uiAbsPartIdx);
+#if SHARP_DMM1_I0110
+      UInt uiBaseWidth = pcCU->isDMM1UpscaleMode(uiWidth) ? pcCU->getDMM1BasePatternWidth(uiWidth) : uiWidth;
+      if ( patternID >= g_dmmWedgeLists[g_aucConvertToBit[uiBaseWidth]].size() && dimType == DMM1_IDX )
+#else
       if ( patternID >= g_dmmWedgeLists[g_aucConvertToBit[uiWidth]].size() && dimType == DMM1_IDX )
+#endif
       {
+#if SHARP_DMM1_I0110
+        if (g_aucConvertToBit[uiBaseWidth] == 2) // Encoder method. Avoid DMM1 pattern list index exceeds the maximum DMM1 pattern number when SDC split is used.
+#else
         if (g_aucConvertToBit[uiWidth] == 2) // Encoder method. Avoid DMM1 pattern list index exceeds the maximum DMM1 pattern number when SDC split is used.
+#endif
         {                                    
           patternID = 1349;  // Split 32x32 to 16x16. 1349: Maximum DMM1 pattern number when block size is 16x16
         }
@@ -2033,12 +2042,21 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   {
     Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
 
+#if SHARP_DMM1_I0110
+    WedgeList* pacWedgeList  = pcCU->isDMM1UpscaleMode( uiWidth ) ? &g_dmmWedgeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])] : &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+#else
     WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+#endif
     TComWedgelet* pcWedgelet = &(pacWedgeList->at( uiTabIdx ));
 
     uiNumSegments = 2;
+#if SHARP_DMM1_I0110
+    pbMask       = pcCU->isDMM1UpscaleMode( uiWidth ) ? pcWedgelet->getScaledPattern( uiWidth ) : pcWedgelet->getPattern();
+    uiMaskStride = pcCU->isDMM1UpscaleMode( uiWidth ) ? uiWidth : pcWedgelet->getStride();
+#else
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
+#endif
   }
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
@@ -3137,7 +3155,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
             {
               xSearchDmm1Wedge( pcCU, uiPartOffset, piOrg, uiStride, uiWidth, uiHeight, uiTabIdx );
               pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dmmType,  uiPartOffset, uiDepth + uiInitTrDepth );
+#if SHARP_DMM1_I0110
+              biSegmentation = pcCU->isDMM1UpscaleMode( uiWidth ) ? 
+                  &(g_dmmWedgeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])][uiTabIdx]) : &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
+#else
               biSegmentation = &(g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])][uiTabIdx]);
+#endif
             } break;
 
           case( DMM4_IDX ):
@@ -3152,7 +3175,17 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
           if( biSegmentation )
           {
+#if SHARP_DMM1_I0110
+            if( dmmType == DMM1_IDX && pcCU->isDMM1UpscaleMode( uiWidth ) ){
+                xSearchDmmDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, biSegmentation->getScaledPattern(uiWidth), uiWidth, uiWidth, uiHeight, deltaDC1, deltaDC2 );
+            } 
+            else
+            {
+                xSearchDmmDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, biSegmentation->getPattern(), biSegmentation->getStride(), uiWidth, uiHeight, deltaDC1, deltaDC2 );
+            }
+#else
             xSearchDmmDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, biSegmentation->getPattern(), biSegmentation->getStride(), uiWidth, uiHeight, deltaDC1, deltaDC2 );
+#endif
             pcCU->setDimDeltaDC( dmmType, 0, uiPartOffset, deltaDC1 );
             pcCU->setDimDeltaDC( dmmType, 1, uiPartOffset, deltaDC2 );
 
@@ -7678,8 +7711,13 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   Pel* piPred       = cPredYuv.getLumaAddr();
 
   Pel refDC1 = 0; Pel refDC2 = 0;
+#if SHARP_DMM1_I0110
+  WedgeList*     pacWedgeList     = pcCU->isDMM1UpscaleMode( uiWidth ) ? &g_dmmWedgeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])] : &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+  WedgeNodeList* pacWedgeNodeList = pcCU->isDMM1UpscaleMode( uiWidth ) ? &g_dmmWedgeNodeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])] : &g_dmmWedgeNodeLists[(g_aucConvertToBit[uiWidth])];
+#else
   WedgeList*     pacWedgeList     = &g_dmmWedgeLists    [(g_aucConvertToBit[uiWidth])];
   WedgeNodeList* pacWedgeNodeList = &g_dmmWedgeNodeLists[(g_aucConvertToBit[uiWidth])];
+#endif
 
   // coarse wedge search
   Dist uiBestDist   = RDO_DIST_MAX;
@@ -7687,8 +7725,15 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
   for( UInt uiNodeId = 0; uiNodeId < pacWedgeNodeList->size(); uiNodeId++ )
   {
     TComWedgelet* pcWedgelet = &(pacWedgeList->at(pacWedgeNodeList->at(uiNodeId).getPatternIdx()));
+#if SHARP_DMM1_I0110
+    Bool *pbPattern = pcCU->isDMM1UpscaleMode(uiWidth) ? pcWedgelet->getScaledPattern(uiWidth) : pcWedgelet->getPattern();
+    UInt uiStride   = pcCU->isDMM1UpscaleMode(uiWidth) ? uiWidth : pcWedgelet->getStride();
+    xCalcBiSegDCs  ( piRef,  uiRefStride,  pbPattern, uiStride, refDC1, refDC2 );
+    xAssignBiSegDCs( piPred, uiPredStride, pbPattern, uiStride, refDC1, refDC2 );
+#else
     xCalcBiSegDCs  ( piRef,  uiRefStride,  pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
     xAssignBiSegDCs( piPred, uiPredStride, pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
+#endif
 
     Dist uiActDist = RDO_DIST_MAX;
 #if H_3D_VSO
@@ -7724,9 +7769,15 @@ Void TEncSearch::xSearchDmm1Wedge( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef
     if( pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId ) != DMM_NO_WEDGEINDEX )
     {
       TComWedgelet* pcWedgelet = &(pacWedgeList->at(pacWedgeNodeList->at(uiBestNodeId).getRefineIdx( uiRefId )));
+#if SHARP_DMM1_I0110
+      Bool *pbPattern = pcCU->isDMM1UpscaleMode(uiWidth) ? pcWedgelet->getScaledPattern(uiWidth) : pcWedgelet->getPattern();
+      UInt uiStride   = pcCU->isDMM1UpscaleMode(uiWidth) ? uiWidth : pcWedgelet->getStride();
+      xCalcBiSegDCs  ( piRef,  uiRefStride,  pbPattern, uiStride, refDC1, refDC2 );
+      xAssignBiSegDCs( piPred, uiPredStride, pbPattern, uiStride, refDC1, refDC2 );
+#else
       xCalcBiSegDCs  ( piRef,  uiRefStride,  pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
       xAssignBiSegDCs( piPred, uiPredStride, pcWedgelet->getPattern(), pcWedgelet->getStride(), refDC1, refDC2 );
-
+#endif
       Dist uiActDist = RDO_DIST_MAX;
 #if H_3D_VSO
       if( m_pcRdCost->getUseVSO() )

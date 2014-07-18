@@ -439,7 +439,13 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     {
     case( DMM1_IDX ): 
       {
+#if SHARP_DMM1_I0110
+        dmmSegmentation = pcCU->isDMM1UpscaleMode((UInt)iWidth) ? 
+            &(g_dmmWedgeLists[ g_aucConvertToBit[pcCU->getDMM1BasePatternWidth((UInt)iWidth)] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]) : 
+            &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
+#else
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
+#endif
       } break;
     case( DMM4_IDX ): 
       {
@@ -457,8 +463,21 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     default: assert(0);
     }
     assert( dmmSegmentation );
+#if SHARP_DMM1_I0110
+    if( dimType == DMM1_IDX && pcCU->isDMM1UpscaleMode((UInt)iWidth) ) 
+    {
+        biSegPattern = dmmSegmentation->getScaledPattern((UInt)iWidth);
+        patternStride = iWidth;
+    } 
+    else 
+    { 
+        biSegPattern  = dmmSegmentation->getPattern();
+        patternStride = dmmSegmentation->getStride ();
+    }
+#else
     biSegPattern  = dmmSegmentation->getPattern();
     patternStride = dmmSegmentation->getStride ();
+#endif
   }
 #endif
 

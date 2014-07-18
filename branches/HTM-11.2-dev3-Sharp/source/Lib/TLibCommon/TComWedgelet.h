@@ -78,7 +78,9 @@ __inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && 
 
 enum WedgeResolution
 {
+#if !SHARP_DMM1_I0110
   DOUBLE_PEL,
+#endif
   FULL_PEL,
   HALF_PEL
 };
@@ -103,6 +105,9 @@ private:
   UInt  m_uiHeight;
 
   Bool* m_pbPattern;
+#if SHARP_DMM1_I0110
+  Bool* m_pbScaledPattern;
+#endif
 
   Void  xGenerateWedgePattern();
   Void  xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, Bool* pbPattern, Int iPatternStride );
@@ -128,6 +133,9 @@ public:
   UChar           getOri     () { return m_uhOri; }
   Bool            getIsCoarse() { return m_bIsCoarse; }
   UInt            getAng     () { return m_uiAng; }
+#if SHARP_DMM1_I0110
+  Bool*           getScaledPattern(UInt uiWidth);
+#endif
 
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse = false );
   Void  findClosestAngle();
