@@ -841,7 +841,7 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
         left   = (x==0)          ? tmpTar[y*uiWidth+x] : tmpTar[y*uiWidth+x-1];
         right  = (x==uiWidth-1)  ? tmpTar[y*uiWidth+x] : tmpTar[y*uiWidth+x+1];
         
-        piDst[x] = (l!=r) ? Clip3( Pel( 0 ), Pel( 255 ), Pel(( left + (tmpTar[y*uiWidth+x] << 1) + right ) >> 2 )) : tmpTar[y*uiWidth+x]; 
+        piDst[x] = (l!=r) ? ClipY( Pel(( left + (tmpTar[y*uiWidth+x] << 1) + right ) >> 2 )) : tmpTar[y*uiWidth+x]; 
       }
       piDst     += uiDstStride;
     }
@@ -859,7 +859,7 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
         top    = (y==0)          ? tmpTar[y*uiWidth+x] : tmpTar[(y-1)*uiWidth+x];
         bottom = (y==uiHeight-1) ? tmpTar[y*uiWidth+x] : tmpTar[(y+1)*uiWidth+x];
         
-        piDst[x] = (t!=b) ? Clip3( Pel( 0 ), Pel( 255 ), Pel(( top + (tmpTar[y*uiWidth+x] << 1) + bottom ) >> 2 )) : tmpTar[y*uiWidth+x];
+        piDst[x] = (t!=b) ? ClipY( Pel(( top + (tmpTar[y*uiWidth+x] << 1) + bottom ) >> 2 )) : tmpTar[y*uiWidth+x];
       }
       piDst     += uiDstStride;
     }
@@ -935,7 +935,7 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
     piSrcV[1]   += uiSrcStrideC;
     pMask       += 2*uiMaskStride;
   }
-  
+
 #if SHARP_DBBP_SIMPLE_FLTER_I0109
   if (partSize == SIZE_Nx2N)
   {
@@ -955,8 +955,8 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
 
         if (l!=r)
         {
-          filSrcU = Clip3( Pel( 0 ), Pel( 255 ), Pel(( leftU + (tmpTarU[y*uiWidthC+x] << 1) + rightU ) >> 2 ));
-          filSrcV = Clip3( Pel( 0 ), Pel( 255 ), Pel(( leftV + (tmpTarV[y*uiWidthC+x] << 1) + rightV ) >> 2 ));
+          filSrcU = ClipC( Pel(( leftU + (tmpTarU[y*uiWidthC+x] << 1) + rightU ) >> 2 ));
+          filSrcV = ClipC( Pel(( leftV + (tmpTarV[y*uiWidthC+x] << 1) + rightV ) >> 2 ));
         }
         else
         {
@@ -988,8 +988,8 @@ Void TComPrediction::combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutY
 
         if (t!=b)
         {
-          filSrcU = Clip3( Pel( 0 ), Pel( 255 ), Pel(( topU + (tmpTarU[y*uiWidthC+x] << 1) + bottomU ) >> 2 ));
-          filSrcV = Clip3( Pel( 0 ), Pel( 255 ), Pel(( topV + (tmpTarV[y*uiWidthC+x] << 1) + bottomV ) >> 2 ));
+          filSrcU = ClipC( Pel(( topU + (tmpTarU[y*uiWidthC+x] << 1) + bottomU ) >> 2 ));
+          filSrcV = ClipC( Pel(( topV + (tmpTarV[y*uiWidthC+x] << 1) + bottomV ) >> 2 ));
         }
         else
         {
