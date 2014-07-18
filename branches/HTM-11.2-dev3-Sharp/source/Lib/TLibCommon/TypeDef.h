@@ -294,6 +294,7 @@
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
 #define HS_DMM_SIGNALLING_I0120  1   
+#define FIX_WARNING                       1   // fix narrowing conversion of NumPocStCurr0,NumPocStCurr1 at TComSlice.cpp
 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
