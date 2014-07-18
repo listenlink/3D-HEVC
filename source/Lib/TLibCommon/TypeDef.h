@@ -172,6 +172,8 @@
                                               // MTK_DIS_SPBIP8X4_H0205        Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
                                               // SEC_ADAPT_DISABLE_IVMP        Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
 
+#define SEC_SIMP_SHIFTED_DV_I0086         1   // Simplification of Shifted DV candidate, JCT3V-I0086
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -232,6 +234,9 @@
                                               // MTK_DBBP_SIGNALING_H0094    
                                               // H_3D_FIX_DBBP_IVMP        Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
 
+#define SEC_DBBP_EXPLICIT_SIG_I0077       1   // Remove the partition derivation and signal dbbp_flag only when the partion mode is 2NxN/Nx2N, JCT3V-I0077
+#define SEC_DBBP_DISALLOW_8x8_I0078       1   // Disallow DBBP in 8x8 CU, JCT3V-I0078
+#define SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional dilter for DBBP
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
