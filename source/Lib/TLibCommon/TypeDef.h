@@ -67,6 +67,7 @@
 #define NTT_BUG_FIX_TK54    1
 #define BUG_FIX_TK65        1
 
+#define MTK_I0093           1
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -385,7 +386,7 @@
 //#define H_MV_HLS_7_OTHER_P0187_1 0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 
 // OTHERS
-//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows ?// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 //#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
 //#define H_MV_HLS_7_HRD_P0138_6   0 //     (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
 
