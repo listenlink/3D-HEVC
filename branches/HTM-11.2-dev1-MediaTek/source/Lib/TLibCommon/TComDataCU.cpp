@@ -6086,7 +6086,11 @@ Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDis
   assert(getPartitionSize( uiPartAddr ) == SIZE_2Nx2N);
 
   TComMv cMv; 
+#if MTK_I0093
+  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ 1 << ( getSlice()->getSPS()->getBitDepthY() - 1 ) ];
+#else
   Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ 128 ];
+#endif
   cMv.setHor(iDisp);
   cMv.setVer(0);
   pDisp->m_acNBDV = cMv;
