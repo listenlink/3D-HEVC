@@ -51,7 +51,20 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if ( !pcCU->getSlice()->getIsDepth() )
+  {
+    return;
+  }
+  if(!pcCU->getSlice()->getApplySingleDepthMode())
+  {
+     return;
+  }
+  m_pcEntropyDecoderIf->parseSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
+}
+#endif
 Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );

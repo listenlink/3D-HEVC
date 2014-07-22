@@ -67,6 +67,9 @@ TComWedgelet::TComWedgelet( const TComWedgelet &rcWedge ) : m_uhXs     ( rcWedge
                                                             m_uiWidth  ( rcWedge.m_uiWidth   ),
                                                             m_uiHeight ( rcWedge.m_uiHeight  ),
                                                             m_pbPattern( (Bool*)xMalloc( Bool, (m_uiWidth * m_uiHeight) ) )
+#if SHARP_DMM1_I0110
+                                                            ,m_pbScaledPattern( g_wedgePattern )
+#endif
 {
   ::memcpy( m_pbPattern, rcWedge.m_pbPattern, sizeof(Bool) * (m_uiWidth * m_uiHeight));
 }
@@ -84,6 +87,9 @@ Void TComWedgelet::create( UInt uiWidth, UInt uiHeight )
   m_uiHeight  = uiHeight;
 
   m_pbPattern = (Bool*)xMalloc( Bool, (m_uiWidth * m_uiHeight) );
+#if SHARP_DMM1_I0110
+  m_pbScaledPattern = g_wedgePattern;
+#endif
 }
 
 Void TComWedgelet::destroy()
@@ -180,11 +186,14 @@ Void TComWedgelet::xGenerateWedgePattern()
   UChar uhXs = 0, uhYs = 0, uhXe = 0, uhYe = 0;
   switch( m_eWedgeRes )
   {
+#if !SHARP_DMM1_I0110
   case( DOUBLE_PEL ): { uiTempBlockSize =  m_uiWidth;     uhXs = (m_uhXs<<1); uhYs = (m_uhYs<<1); uhXe = (m_uhXe<<1); uhYe = (m_uhYe<<1); } break;
+#endif
   case(   FULL_PEL ): { uiTempBlockSize =  m_uiWidth;     uhXs =  m_uhXs;     uhYs =  m_uhYs;     uhXe =  m_uhXe;     uhYe =  m_uhYe;     } break;
   case(   HALF_PEL ): { uiTempBlockSize = (m_uiWidth<<1); uhXs =  m_uhXs;     uhYs =  m_uhYs;     uhXe =  m_uhXe;     uhYe =  m_uhYe;     } break;
   }
 
+#if !SHARP_DMM1_I0110
   if( m_eWedgeRes == DOUBLE_PEL) // adjust line-end for DOUBLE_PEL resolution
   {
     if( m_uhOri == 1 ) { uhXs = uiTempBlockSize-1; }
@@ -193,6 +202,7 @@ Void TComWedgelet::xGenerateWedgePattern()
     if( m_uhOri == 4 ) { uhYe = uiTempBlockSize-1; }
     if( m_uhOri == 5 ) { uhXs = uiTempBlockSize-1; }
   }
+#endif
 
   Bool* pbTempPattern = new Bool[ (uiTempBlockSize * uiTempBlockSize) ];
   ::memset( pbTempPattern, 0, (uiTempBlockSize * uiTempBlockSize) * sizeof(Bool) );
@@ -222,7 +232,9 @@ Void TComWedgelet::xGenerateWedgePattern()
   clear();
   switch( m_eWedgeRes )
   {
+#if !SHARP_DMM1_I0110
   case( DOUBLE_PEL ): { for( UInt k = 0; k < (m_uiWidth * m_uiHeight); k++ ) { m_pbPattern[k] = pbTempPattern[k]; }; } break;
+#endif
   case(   FULL_PEL ): { for( UInt k = 0; k < (m_uiWidth * m_uiHeight); k++ ) { m_pbPattern[k] = pbTempPattern[k]; }; } break;
   case(   HALF_PEL ): // sub-sampling by factor 2
     {
@@ -313,6 +325,27 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
     }
   }
 }
+
+#if SHARP_DMM1_I0110
+Bool* TComWedgelet::getScaledPattern(UInt uiDstSize)
+{
+    Bool *pbSrcPat = this->getPattern();
+    UInt uiSrcSize = this->getStride();
+
+    Int scale = (g_aucConvertToBit[uiDstSize] - g_aucConvertToBit[uiSrcSize]);
+    assert(scale>=0);
+    for (Int y=0; y<uiDstSize; y++)
+    {
+       for (Int x=0; x<uiDstSize; x++)
+       {
+           Int srcX = x>>scale;
+           Int srcY = y>>scale;
+           m_pbScaledPattern[y*uiDstSize + x] = pbSrcPat[ srcY*uiSrcSize + srcX ];
+       }
+   }
+   return m_pbScaledPattern;
+}
+#endif
 
 TComWedgeNode::TComWedgeNode()
 {

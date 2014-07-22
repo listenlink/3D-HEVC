@@ -422,7 +422,9 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   assert( isDimMode( uiIntraMode ) );
 
   UInt dimType    = getDimType  ( uiIntraMode );
-  Bool dimDeltaDC = isDimDeltaDC( uiIntraMode );    
+#if !HS_DMM_SIGNALLING_I0120
+  Bool dimDeltaDC = isDimDeltaDC( uiIntraMode );
+#endif
   Bool isDmmMode  = (dimType <  DMM_NUM_TYPE);
 
   Bool* biSegPattern  = NULL;
@@ -437,7 +439,13 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     {
     case( DMM1_IDX ): 
       {
+#if SHARP_DMM1_I0110
+        dmmSegmentation = pcCU->isDMM1UpscaleMode((UInt)iWidth) ? 
+            &(g_dmmWedgeLists[ g_aucConvertToBit[pcCU->getDMM1BasePatternWidth((UInt)iWidth)] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]) : 
+            &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
+#else
         dmmSegmentation = &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
+#endif
       } break;
     case( DMM4_IDX ): 
       {
@@ -455,8 +463,21 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
     default: assert(0);
     }
     assert( dmmSegmentation );
+#if SHARP_DMM1_I0110
+    if( dimType == DMM1_IDX && pcCU->isDMM1UpscaleMode((UInt)iWidth) ) 
+    {
+        biSegPattern = dmmSegmentation->getScaledPattern((UInt)iWidth);
+        patternStride = iWidth;
+    } 
+    else 
+    { 
+        biSegPattern  = dmmSegmentation->getPattern();
+        patternStride = dmmSegmentation->getStride ();
+    }
+#else
     biSegPattern  = dmmSegmentation->getPattern();
     patternStride = dmmSegmentation->getStride ();
+#endif
   }
 #endif
 
@@ -473,7 +494,11 @@ Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   // set segment values with deltaDC offsets
   Pel segDC1 = 0;
   Pel segDC2 = 0;
+#if HS_DMM_SIGNALLING_I0120
+  if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
+#else
   if( dimDeltaDC )
+#endif
   {
     Pel deltaDC1 = pcCU->getDimDeltaDC( dimType, 0, uiAbsPartIdx );
     Pel deltaDC2 = pcCU->getDimDeltaDC( dimType, 1, uiAbsPartIdx );

@@ -51,6 +51,10 @@ TDecSbac::TDecSbac()
 , m_numContextModels          ( 0 )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels )
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if MTK_SINGLE_DEPTH_MODE_I0095
+, m_cCUSingleDepthFlagSCModel        ( 1,             1,               NUM_SINGLEDEPTH_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSingleDepthValueSCModel         ( 1,             1,               NUM_SINGLE_DEPTH_VALUE_DATA_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
 #if H_3D_ARP
@@ -131,6 +135,10 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 
   m_cCUSplitFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SKIP_FLAG );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_cCUSingleDepthFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SINGLEDEPTH_FLAG );
+  m_cSingleDepthValueSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
+#endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
 #if H_3D_ARP
@@ -198,6 +206,10 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_cCUSingleDepthFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SINGLEDEPTH_FLAG );
+  m_cSingleDepthValueSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
+#endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
 #if H_3D_ARP
@@ -635,7 +647,54 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   DTRACE_CU("cu_skip_flag", uiSymbol); 
 #endif
 }
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TDecSbac::parseSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  pcCU->setSingleDepthFlagSubParts( false,        uiAbsPartIdx, uiDepth );
+  UInt uiSymbol = 0;
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSingleDepthFlagSCModel.get( 0, 0, 0 ) );
+  if( uiSymbol )
+  {
+    pcCU->setSingleDepthFlagSubParts( true,        uiAbsPartIdx, uiDepth );
+    pcCU->setSkipFlagSubParts( false,        uiAbsPartIdx, uiDepth );
+    pcCU->setSDCFlagSubParts( false,        uiAbsPartIdx, uiDepth );
+    pcCU->setPredModeSubParts( MODE_INTRA,  uiAbsPartIdx, uiDepth );
+    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+    pcCU->setLumaIntraDirSubParts (DC_IDX, uiAbsPartIdx, uiDepth );
+    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+    pcCU->setMergeFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
+    pcCU->setTrIdxSubParts(0, uiAbsPartIdx, uiDepth);
+    pcCU->setCbfSubParts(0, 1, 1, uiAbsPartIdx, uiDepth);
 
+    UInt absValDeltaDC = 0;
+
+    UInt uiUnaryIdx = 0;
+    UInt uiNumCand = MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE;
+    if ( uiNumCand > 1 )
+    {
+      for( ; uiUnaryIdx < uiNumCand - 1; ++uiUnaryIdx )
+      {
+        UInt uiSymbol2 = 0;
+        if ( uiUnaryIdx==0 )
+        {
+          m_pcTDecBinIf->decodeBin( uiSymbol2, m_cSingleDepthValueSCModel.get( 0, 0, 0 ) );
+        }
+        else
+        {
+          m_pcTDecBinIf->decodeBinEP( uiSymbol2);
+        }
+        if( uiSymbol2 == 0 )
+        {
+          break;
+        }
+      }
+    }
+    absValDeltaDC = uiUnaryIdx;
+    pcCU->setSingleDepthValueSubParts((Pel)absValDeltaDC,uiAbsPartIdx, 0, uiDepth);
+  }
+}
+
+#endif
 /** parse merge flag
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -1134,11 +1193,19 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
     if( !uiSymbol )
     {
+#if HS_DMM_SIGNALLING_I0120
+      pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
+#else
       pcCU->setLumaIntraDirSubParts( ( 2 * DMM1_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
     }
     else
     {
+#if HS_DMM_SIGNALLING_I0120
+      pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
+#else
       pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
     }
   }
 }
@@ -2052,20 +2119,33 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
     assert( 0 );
   }
 
+#if HS_DMM_SIGNALLING_I0120
+  UInt symbol = 1;
+  UInt uiNumSegments = isDimMode( pcCU->getLumaIntraDir( absPartIdx ) ) ? 2 : 1;
+#else
   UInt symbol = 0;
   UInt uiNumSegments = 0;
+#endif
 
+#if HS_DMM_SIGNALLING_I0120
+  if( pcCU->isIntra( absPartIdx ) && pcCU->getSDCFlag( absPartIdx ))
+  {
+#else
   if( pcCU->isIntra( absPartIdx ) )
   {
     UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
     uiNumSegments = isDimMode( dir ) ? 2 : 1;
+#endif
     m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
+#if !HS_DMM_SIGNALLING_I0120
     if( pcCU->getSDCFlag( absPartIdx ) )
     {
+#endif
       assert( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N );
       pcCU->setTrIdxSubParts( 0, absPartIdx, depth );
       pcCU->setCbfSubParts( 1, 1, 1, absPartIdx, depth );
     }
+#if !HS_DMM_SIGNALLING_I0120
     else
     {
       pcCU->setLumaIntraDirSubParts( dir + symbol, absPartIdx, depth );
@@ -2076,6 +2156,7 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
     uiNumSegments = 1;
     symbol = 1;
   }
+#endif
 
 
   for( UInt segment = 0; segment < uiNumSegments; segment++ )
