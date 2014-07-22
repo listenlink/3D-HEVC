@@ -249,6 +249,9 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
+#define MTK_I0099_VPS_EX2                 1  ///< JCT3V-I0099, sub-PU size signaling and lim_qt_pred_flag in VPS extension 2
+
+
 // Rate Control
 #define KWU_FIX_URQ                       1
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation

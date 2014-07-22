@@ -1973,6 +1973,9 @@ TComVPS::TComVPS()
     m_iSubPULog2Size       [ i ] = 0;
 #endif
 #endif
+#if MTK_I0099_VPS_EX2
+    m_bLimQtPredFlag       [ i ] = false;
+#endif
 #if H_3D_VSP
     m_viewSynthesisPredFlag[ i ] = false;
 #endif
@@ -2501,9 +2504,11 @@ TComSPS::TComSPS()
 , m_usePCM                   (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
 , m_bUseQTL                   (false)
 , m_bUsePC                    (false)
+#endif
 #endif
 , m_bitDepthY                 (  8)
 , m_bitDepthC                 (  8)

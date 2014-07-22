@@ -760,9 +760,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 
 #endif //HHI_VSO
+#if MTK_I0099_VPS_EX2
+  ("LimQtPredFlag",                   m_bLimQtPredFlag          , true          , "Use Predictive Coding with QTL" )
+#endif
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
   ("QTL",                             m_bUseQTL                 , true          , "Use depth Quadtree Limitation" )
   ("PC",                              m_bUsePC                  , true          , "Use Predictive Coding with QTL" )
+#endif
 #endif
 #if H_3D_IV_MERGE
   ("IvMvPred",                        m_ivMvPredFlag            , std::vector<Bool>(2, true)            , "inter view motion prediction " )
@@ -2490,9 +2495,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
 #endif
+#if MTK_I0099_VPS_EX2
+  printf("LimQtPredFlag:%d", m_bLimQtPredFlag ? 1 : 0);
+#endif
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
   printf("QTL:%d ", m_bUseQTL);
   printf("PC:%d " , m_bUsePC );
+#endif
 #endif
 #if H_3D_IV_MERGE
   printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
