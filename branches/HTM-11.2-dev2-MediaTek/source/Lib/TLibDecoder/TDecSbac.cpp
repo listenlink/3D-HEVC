@@ -720,14 +720,23 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 #if H_3D_QTLPC
   Bool bParseSplitFlag    = true;
 
-  TComSPS *sps            = pcCU->getPic()->getSlice(0)->getSPS();
+#if MTK_I0099_VPS_EX2
+  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
+  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
+#else
+  TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
+#endif
   TComPic *pcTexture      = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect    = (pcTexture != NULL);
   Bool bIntraSliceDetect  = (pcCU->getSlice()->getSliceType() == I_SLICE);
 
   Bool rapPic = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
+#if MTK_I0099_VPS_EX2
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag)
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
+#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);
@@ -769,7 +778,12 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
 #if H_3D_QTLPC
   Bool bParsePartSize    = true;
+#if MTK_I0099_VPS_EX2
+  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
+  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
+#else
   TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
+#endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -778,7 +792,11 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   Bool depthDependent = false;
   UInt uiTexturePart = uiMode;
+#if MTK_I0099_VPS_EX2
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag )
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
+#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     assert(pcTextureCU->getDepth(uiAbsPartIdx) >= uiDepth);

@@ -886,12 +886,14 @@ Void TEncCavlc::codeSPSExtension( TComSPS* pcSPS )
 Void TEncCavlc::codeSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 {
 #if H_3D_QTLPC
+#if !MTK_I0099_VPS_EX2
 //GT: This has to go to VPS
 if( depthFlag )
 {
   WRITE_FLAG( pcSPS->getUseQTL() ? 1 : 0, "use_qtl_flag");
   WRITE_FLAG( pcSPS->getUsePC()  ? 1 : 0, "use_pc_flag");
 }
+#endif
 #endif
 }
 #endif
@@ -1561,10 +1563,15 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
   {
     if (i!= 0)
     {
+#if MTK_I0099_VPS_EX2
+      WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
+#endif
       if ( !( pcVPS->getDepthId( i ) == 1 ) )
       {
 #if H_3D_IV_MERGE
+#if !MTK_I0099_VPS_EX2
         WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
+#endif
 #if H_3D_SPIVMP
         WRITE_UVLC( pcVPS->getSubPULog2Size(i)-3, "log2_sub_PU_size_minus3[i]");
 #endif
@@ -1584,6 +1591,7 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }          
       else
       {
+#if !MTK_I0099_VPS_EX2
         if(i!=1)
         {
           WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
@@ -1594,11 +1602,17 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
           WRITE_UVLC( pcVPS->getSubPULog2Size(i)-3, "log2_sub_PU_size_minus3[i]");
         }
 #endif
+#endif
 #if H_3D_IV_MERGE
         WRITE_FLAG( pcVPS->getMPIFlag( i ) ? 1 : 0 ,          "mpi_flag[i]" );
 #endif
+#if MTK_I0099_VPS_EX2
+        WRITE_UVLC( pcVPS->getSubPUMPILog2Size(i)-3, "log2_mpi_sub_PU_size_minus3[i]");
+#endif
         WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ) ? 1 : 0 ,          "vps_depth_modes_flag[i]" );
-        //WRITE_FLAG( pcVPS->getLimQtPredFlag    ( i ) ? 1 : 0 ,          "lim_qt_pred_flag[i]"     ); 
+#if MTK_I0099_VPS_EX2
+        WRITE_FLAG( pcVPS->getLimQtPredFlag    ( i ) ? 1 : 0 ,          "lim_qt_pred_flag[i]"     ); 
+#endif
 #if H_3D_INTER_SDC
         WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
 #endif
@@ -1624,7 +1638,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }
     }
   }
+#if !MTK_I0099_VPS_EX2
   WRITE_UVLC( pcVPS->getSubPUMPILog2Size( ) - 3, "log2_sub_PU_MPI_size_minus3");
+#endif
 #if H_3D_TMVP
   WRITE_FLAG( pcVPS->getIvMvScalingFlag( ) ? 1 : 0 ,          "iv_mv_scaling_flag" );
 #endif

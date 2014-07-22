@@ -127,9 +127,12 @@ protected:
 #if H_3D_IV_MERGE
   vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
 #if H_3D_SPIVMP
-  Int                    m_iSubPULog2Size;                    
-  Int                    m_iSubPUMPILog2Size;                    
+  Int                    m_iSubPULog2Size;   
+  Int                    m_iSubPUMPILog2Size;   
 #endif
+#endif
+#if MTK_I0099_VPS_EX2
+  Bool                   m_bLimQtPredFlag;
 #endif
 #if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
   UInt                   m_uiUseAdvResPred;
@@ -472,9 +475,11 @@ protected:
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
   Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
   Bool      m_bUsePC;                                         ///< flag for using Predictive Coding with QTL
+#endif
 #endif
 #if H_3D_INTER_SDC
   Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
