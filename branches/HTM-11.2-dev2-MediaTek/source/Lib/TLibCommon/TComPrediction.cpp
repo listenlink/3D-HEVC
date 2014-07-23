@@ -1410,7 +1410,11 @@ Bool TComPrediction::xCheckBiInterviewARP( TComDataCU* pcCU, UInt uiPartAddr, In
         Int  iCurrPOC    = pColCU->getSlice()->getPOC();
         Int  iCurrRefPOC = pcPicYuvBaseTRef->getPOC();
         Int  iCurrRef    = pcCU->getSlice()->getFirstTRefIdx(eRefPicListCurr);
+#if MTK_I0072_IVARP_SCALING_FIX
+        if( iCurrRef >= 0 && iCurrPOC != iCurrRefPOC)
+#else
         if( iCurrRef >= 0)
+#endif
         {
           pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic(eRefPicListCurr,iCurrRef);  
           Int iTargetPOC = pcPicYuvCurrTRef->getPOC();
@@ -1557,7 +1561,11 @@ Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr,
         Int  iCurrPOC    = pColCU->getSlice()->getPOC();
         Int  iCurrRefPOC = pcPicYuvBaseTRef->getPOC();
         Int  iCurrRef    = pcCU->getSlice()->getFirstTRefIdx(eRefPicListCurr);
+#if MTK_I0072_IVARP_SCALING_FIX
+        if (iCurrRef >= 0 && iCurrRefPOC != iCurrPOC)
+#else
         if( iCurrRef >= 0)
+#endif
         {
           pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic(eRefPicListCurr,iCurrRef);  
           Int iTargetPOC = pcPicYuvCurrTRef->getPOC();
