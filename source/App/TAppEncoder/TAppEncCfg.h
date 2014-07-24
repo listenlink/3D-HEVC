@@ -475,10 +475,12 @@ protected:
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif
-#if !MTK_I0099_VPS_EX2
+#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
   Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
+#if !MTK_I0099_VPS_EX2
   Bool      m_bUsePC;                                         ///< flag for using Predictive Coding with QTL
+#endif
 #endif
 #endif
 #if H_3D_INTER_SDC

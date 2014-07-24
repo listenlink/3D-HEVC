@@ -201,10 +201,12 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
-#if !MTK_I0099_VPS_EX2
+#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
     m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL               : false );
+#if !MTK_I0099_VPS_EX2    
     m_cTEncTop.setUsePC                        ( isDepth ? m_bUsePC                : false );
+#endif
 #endif
 #endif
     //====== Depth Inter SDC =========

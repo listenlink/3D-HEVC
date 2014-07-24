@@ -536,7 +536,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
 
 #if MTK_I0099_VPS_EX2
+#if MTK_I0099_FIX
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
+#else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFalg)
+#endif
 #else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL())
 #endif
@@ -694,7 +698,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if H_3D_QTLPC      
 #if MTK_I0099_VPS_EX2
+#if MTK_I0099_FIX
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
+#else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFalg)
+#endif
 #else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL())
 #endif

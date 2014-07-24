@@ -250,7 +250,7 @@
 #endif
 
 #define MTK_I0099_VPS_EX2                 1  ///< JCT3V-I0099, sub-PU size signaling and lim_qt_pred_flag in VPS extension 2
-
+#define MTK_I0099_FIX                     1  ///< Fix the problem of removing encoder only QTL 
 
 // Rate Control
 #define KWU_FIX_URQ                       1
