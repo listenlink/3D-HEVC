@@ -179,7 +179,11 @@ public:
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt&       ruiDistC,
-                                  Bool        bLumaOnly );
+                                  Bool        bLumaOnly
+#if HHI_DMM4_ENC_I0066
+                                , Bool        bOnlyIVP
+#endif
+                                );
   Void  estIntraPredChromaQT    ( TComDataCU* pcCU, 
                                   TComYuv*    pcOrgYuv, 
                                   TComYuv*    pcPredYuv, 
