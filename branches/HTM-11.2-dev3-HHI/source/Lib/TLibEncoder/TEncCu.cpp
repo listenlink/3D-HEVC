@@ -1027,15 +1027,33 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
        
           // speedup for inter frames
           if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
-            rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
-            rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
+              rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
+              rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
               rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     
 #if H_3D_DIM_ENC
+#if HHI_DMM4_ENC_I0066
+              || rpcBestCU->getSlice()->getIsDepth()
+#else
             || ( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() )
+#endif
 #endif
             ) // avoid very complex intra if it is unlikely
           {
+#if HHI_DMM4_ENC_I0066
+            Bool bOnlyIVP = false;
+            if( rpcBestCU->getSlice()->getIsDepth() && !(rpcBestCU->getSlice()->isIRAP()) && 
+                rpcBestCU->getSlice()->getSliceType() != I_SLICE && 
+                rpcBestCU->getCbf( 0, TEXT_LUMA     ) == 0 &&
+                rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) == 0 &&
+                rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) == 0 
+              )
+            { 
+              bOnlyIVP = true;
+            }
+            xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bOnlyIVP );
+#else
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
+#endif
 
 #if KWU_RC_MADPRED_E0227
             if ( uiDepth <= m_addSADDepth )
@@ -1054,7 +1072,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
                 if( rpcTempCU->getWidth(0) > ( 1 << rpcTempCU->getSlice()->getSPS()->getQuadtreeTULog2MinSize() ) )
                 {
+#if HHI_DMM4_ENC_I0066
+                  xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN, bOnlyIVP );
+#else
                   xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN   );
+#endif
                   rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode );
                 }
 #if H_3D_QTLPC
@@ -2627,7 +2649,11 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
 }
 #endif
 
+#if HHI_DMM4_ENC_I0066
+Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize, Bool bOnlyIVP )
+#else
 Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize )
+#endif
 {
   UInt uiDepth = rpcTempCU->getDepth( 0 );
   
@@ -2655,8 +2681,11 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   {
     m_pcPredSearch->preestChromaPredMode( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth] );
   }
+#if HHI_DMM4_ENC_I0066
+  m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma, bOnlyIVP );
+#else
   m_pcPredSearch  ->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma );
-
+#endif
   m_ppcRecoYuvTemp[uiDepth]->copyToPicLuma(rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
   
 #if H_3D_DIM_SDC

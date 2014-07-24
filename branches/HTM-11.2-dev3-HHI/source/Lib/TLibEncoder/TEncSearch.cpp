@@ -2976,12 +2976,16 @@ TEncSearch::estIntraPredSingleDepth( TComDataCU* pcCU,
 #endif 
 Void 
 TEncSearch::estIntraPredQT( TComDataCU* pcCU, 
-                           TComYuv*    pcOrgYuv, 
-                           TComYuv*    pcPredYuv, 
-                           TComYuv*    pcResiYuv, 
-                           TComYuv*    pcRecoYuv,
-                           UInt&       ruiDistC,
-                           Bool        bLumaOnly )
+                            TComYuv*    pcOrgYuv, 
+                            TComYuv*    pcPredYuv, 
+                            TComYuv*    pcResiYuv, 
+                            TComYuv*    pcRecoYuv,
+                            UInt&       ruiDistC,
+                            Bool        bLumaOnly
+#if HHI_DMM4_ENC_I0066
+                          , Bool        bOnlyIVP
+#endif
+                          )
 {
   UInt    uiDepth        = pcCU->getDepth(0);
   UInt    uiNumPU        = pcCU->getNumPartitions();
@@ -3027,6 +3031,14 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     UInt uiRdModeList[FAST_UDI_MAX_RDMODE_NUM];
     Int numModesForFullRD = g_aucIntraModeNumFast[ uiWidthBit ];
     
+#if HHI_DMM4_ENC_I0066
+    if( bOnlyIVP )
+    {
+      numModesForFullRD = 0;
+    }
+    else
+    {
+#endif
     Bool doFastSearch = (numModesForFullRD != numModesAvailable);
     if (doFastSearch)
     {
@@ -3118,12 +3130,41 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         uiRdModeList[i] = i;
       }
     }
-    
+#if HHI_DMM4_ENC_I0066
+    }
+#endif
+
 #if H_3D_DIM
     //===== determine set of depth intra modes to be tested =====
     if( m_pcEncCfg->getIsDepth() && uiWidth >= DIM_MIN_SIZE && uiWidth <= DIM_MAX_SIZE && uiWidth == uiHeight )
     {
+#if HHI_DMM4_ENC_I0066
+#if SEPARATE_FLAG_I0085
+      if( bOnlyIVP && m_pcEncCfg->getUseIVP() )
+#else
+      if( bOnlyIVP )
+#endif
+      {
+        TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
+        xPredContourFromTex( pcCU, uiPartOffset, uiWidth, uiHeight, dmm4Segmentation );
 
+        Pel deltaDC1 = 0; Pel deltaDC2 = 0;
+        xSearchDmmDeltaDCs( pcCU, uiPartOffset, piOrg, piPred, uiStride, dmm4Segmentation->getPattern(), dmm4Segmentation->getStride(), uiWidth, uiHeight, deltaDC1, deltaDC2 );
+        pcCU->setDimDeltaDC( DMM4_IDX, 0, uiPartOffset, deltaDC1 );
+        pcCU->setDimDeltaDC( DMM4_IDX, 1, uiPartOffset, deltaDC2 );
+
+#if HS_DMM_SIGNALLING_I0120
+        uiRdModeList[ numModesForFullRD++ ] = (DMM4_IDX+DIM_OFFSET);
+#else
+        uiRdModeList[ numModesForFullRD++ ] = (2*DMM4_IDX  +DIM_OFFSET);
+        if( deltaDC1 != 0 || deltaDC2 != 0 )
+          uiRdModeList[ numModesForFullRD++ ] = (2*DMM4_IDX+1+DIM_OFFSET);
+#endif
+        dmm4Segmentation->destroy(); delete dmm4Segmentation;
+      }
+      else
+      {
+#endif
 #if H_3D_FAST_DEPTH_INTRA
       Int  threshold    = max(((pcCU->getQP(0))>>3)-1,3);
       Int  varThreshold = (Int)( threshold * threshold - 8 );
@@ -3222,6 +3263,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
             uiRdModeList[ numModesForFullRD++ ] = (dmmType  +DIM_OFFSET);
 #else
             uiRdModeList[ numModesForFullRD++ ] = (2*dmmType  +DIM_OFFSET);
+#if HHI_DMM4_ENC_I0066
+            if( deltaDC1 != 0 || deltaDC2 != 0 )
+#endif
             uiRdModeList[ numModesForFullRD++ ] = (2*dmmType+1+DIM_OFFSET);
 #endif
 
@@ -3229,6 +3273,9 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
           }
         }
       }
+#if HHI_DMM4_ENC_I0066
+      }
+#endif
 #endif
     }
 #endif
