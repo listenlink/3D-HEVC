@@ -469,6 +469,9 @@ protected:
 #endif
 #if H_3D_DIM
   Bool      m_useDMM;                                        ///< flag for using DMM
+#if SEPARATE_FLAG_I0085
+  Bool      m_useIVP;
+#endif
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
 #endif

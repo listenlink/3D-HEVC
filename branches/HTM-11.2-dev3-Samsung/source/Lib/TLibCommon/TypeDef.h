@@ -299,6 +299,7 @@
 #define SHARP_DMM1_I0110                  1   // LUT size reduction for DMM1 proposed in JCT3V-I0110 
 #define FIX_WARNING                       1   // fix narrowing conversion of NumPocStCurr0,NumPocStCurr1 at TComSlice.cpp
 #define FAST_SDC_OFFSET_DECISION_I0084    1
+#define SEPARATE_FLAG_I0085               1
 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1

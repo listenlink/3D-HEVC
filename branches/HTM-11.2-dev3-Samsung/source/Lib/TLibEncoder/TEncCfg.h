@@ -413,6 +413,9 @@ protected:
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
+#if SEPARATE_FLAG_I0085
+  Bool      m_useIVP;
+#endif
   Bool      m_useSDC;
   Bool      m_useDLT;
 #endif
@@ -1005,6 +1008,10 @@ public:
 #if H_3D_DIM
   Bool      getUseDMM                       ()        { return m_useDMM; }
   Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
+#if SEPARATE_FLAG_I0085
+  Bool      getUseIVP                       ()        { return m_useIVP; }
+  Void      setUseIVP                       ( Bool b) { m_useIVP = b;    }
+#endif
   Bool      getUseSDC                       ()        { return m_useSDC; }
   Void      setUseSDC                       ( Bool b) { m_useSDC = b;    }
   Bool      getUseDLT                       ()        { return m_useDLT; }

@@ -1951,6 +1951,9 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
+#if SEPARATE_FLAG_I0085
+    m_bIVPFlag [i]      = false;
+#endif
     m_ivMvScalingFlag = true; 
 #endif
 
@@ -1991,6 +1994,9 @@ TComVPS::TComVPS()
 #endif
 #if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
+#endif
+#if SEPARATE_FLAG_I0085
+    m_bIVPFlag             [ i ] = false;
 #endif
 #if H_3D_DBBP
     m_dbbpFlag             [ i ] = false;

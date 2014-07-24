@@ -3131,13 +3131,42 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 
 #if H_3D_DIM_DMM
+#if SEPARATE_FLAG_I0085
+      if( ( m_pcEncCfg->getUseDMM() || m_pcEncCfg->getUseIVP() )
+#else
       if( m_pcEncCfg->getUseDMM()
+#endif
 #if H_3D_FAST_DEPTH_INTRA
          && (uiRdModeList[0] != PLANAR_IDX || varCU >= varThreshold)
 #endif
         )
       {
+#if SEPARATE_FLAG_I0085
+        UInt uiStart, uiEnd;
+        if( m_pcEncCfg->getUseDMM() &&  m_pcEncCfg->getUseIVP() )
+        {
+          uiStart = 0;
+          uiEnd   = 2;
+        }
+        else if( m_pcEncCfg->getUseDMM() )
+        {
+          uiStart = 0;
+          uiEnd   = 1;
+        }
+        else if( m_pcEncCfg->getUseIVP() )
+        {
+          uiStart = 1;
+          uiEnd   = 2;
+        }
+        else
+        {
+          uiStart = 0;
+          uiEnd   = 0;
+        }
+        for( UInt dmmType = uiStart; dmmType < uiEnd; dmmType++ )
+#else
         for( UInt dmmType = 0; dmmType < DMM_NUM_TYPE; dmmType++ )
+#endif
         {
 #if H_3D_FCO
             TComPic* picTexture  = pcCU->getSlice()->getIvPic(false, pcCU->getSlice()->getViewIndex() );

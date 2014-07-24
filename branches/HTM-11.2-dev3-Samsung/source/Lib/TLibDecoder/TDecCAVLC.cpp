@@ -1821,6 +1821,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
         READ_FLAG( uiCode, "mpi_flag[i]" );             pcVPS->setMPIFlag( i, uiCode == 1 ? true : false );
 #endif
         READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
+#if SEPARATE_FLAG_I0085
+        READ_FLAG( uiCode, "ivp_flag[i]" );                   pcVPS->setIVPFlag( i, uiCode == 1 ? true : false );
+#endif
         //          READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPreFlag     ( i, uiCode == 1 ? true : false ); 
 #if H_3D_INTER_SDC
             READ_FLAG( uiCode, "depth_inter_SDC_flag" );              pcVPS->setInterSDCFlag( i, uiCode ? true : false );

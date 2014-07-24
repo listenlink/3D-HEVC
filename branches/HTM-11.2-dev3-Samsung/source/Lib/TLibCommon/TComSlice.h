@@ -809,6 +809,9 @@ private:
   Bool        m_depthRefinementFlag      [ MAX_NUM_LAYERS ]; 
 #endif
   Bool        m_vpsDepthModesFlag        [MAX_NUM_LAYERS   ];
+#if SEPARATE_FLAG_I0085
+  Bool        m_bIVPFlag                 [MAX_NUM_LAYERS   ];
+#endif
 
 #if H_3D
   UInt        m_uiCamParPrecision;
@@ -1143,6 +1146,10 @@ public:
 #endif
   Void    setVpsDepthModesFlag( Int layerIdInVps, Bool val )               { m_vpsDepthModesFlag[ layerIdInVps ] = val; }
   Bool    getVpsDepthModesFlag( Int layerIdInVps )                         { return m_vpsDepthModesFlag[ layerIdInVps ]; }
+#if SEPARATE_FLAG_I0085
+  Void    setIVPFlag( Int layerIdInVps, Bool val )                    { m_bIVPFlag[ layerIdInVps ] = val; }
+  Bool    getIVPFlag( Int layerIdInVps )                              { return m_bIVPFlag[ layerIdInVps ]; }
+#endif
 
   Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
   Void    setIvMvScalingFlag   ( Bool b )                 { m_ivMvScalingFlag = b;    }  
@@ -2514,7 +2521,9 @@ public:
   Int* getDepthToDisparityB( Int refViewIdx ) { return m_depthToDisparityB[ refViewIdx ]; }; 
   Int* getDepthToDisparityF( Int refViewIdx ) { return m_depthToDisparityF[ refViewIdx ]; }; 
   Bool getVpsDepthModesFlag  ()  { return getVPS()->getVpsDepthModesFlag( getVPS()->getLayerIdInVps( m_layerId ) ); }
-
+#if SEPARATE_FLAG_I0085
+  Bool getIVPFlag       ()  { return getVPS()->getIVPFlag( getVPS()->getLayerIdInVps( m_layerId ) ); }
+#endif
 #endif
 #if H_MV
 // Additional slice header syntax elements

@@ -1598,6 +1598,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
         WRITE_FLAG( pcVPS->getMPIFlag( i ) ? 1 : 0 ,          "mpi_flag[i]" );
 #endif
         WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ) ? 1 : 0 ,          "vps_depth_modes_flag[i]" );
+#if SEPARATE_FLAG_I0085
+        WRITE_FLAG( pcVPS->getIVPFlag( i ) ? 1 : 0 ,               "IVP_flag[i]" );
+#endif
         //WRITE_FLAG( pcVPS->getLimQtPredFlag    ( i ) ? 1 : 0 ,          "lim_qt_pred_flag[i]"     ); 
 #if H_3D_INTER_SDC
         WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
