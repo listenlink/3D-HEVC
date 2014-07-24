@@ -1048,7 +1048,11 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
   for (j=0;j<partNum;j++)
   {
 #if H_3D_DIM
+#if SEPARATE_FLAG_I0085
+    if( pcCU->getSlice()->getVpsDepthModesFlag() || pcCU->getSlice()->getIVPFlag() )
+#else
     if( pcCU->getSlice()->getVpsDepthModesFlag() )
+#endif
     {
       parseIntraDepth( pcCU, absPartIdx+partOffset*j, depth );
     }
@@ -1190,6 +1194,44 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
   //decode DMM index
   if( uiIsDimMode )
   {
+#if SEPARATE_FLAG_I0085
+    if( pcCU->getSlice()->getVpsDepthModesFlag() && pcCU->getSlice()->getIVPFlag() )
+    {
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
+      if( !uiSymbol )
+      {
+#if HS_DMM_SIGNALLING_I0120
+        pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
+#else
+        pcCU->setLumaIntraDirSubParts( ( 2 * DMM1_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
+      }
+      else
+      {
+#if HS_DMM_SIGNALLING_I0120
+        pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
+#else
+        pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
+      }
+    }
+    else if ( pcCU->getSlice()->getVpsDepthModesFlag() )
+    {
+#if HS_DMM_SIGNALLING_I0120
+      pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
+#else
+      pcCU->setLumaIntraDirSubParts( ( 2 * DMM1_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
+    }
+    else if( pcCU->getSlice()->getIVPFlag() )
+    {
+#if HS_DMM_SIGNALLING_I0120
+      pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
+#else
+      pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
+#endif
+    }
+#else
     m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
     if( !uiSymbol )
     {
@@ -1207,6 +1249,7 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
       pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
 #endif
     }
+#endif
   }
 }
 #endif

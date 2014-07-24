@@ -254,7 +254,11 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cTransformSkipSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
       curCost += m_CUTransquantBypassFlagSCModel.calcCost( curSliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
 #if H_3D_DIM
+#if SEPARATE_FLAG_I0085
+    if( m_pcSlice->getVpsDepthModesFlag() || m_pcSlice->getIVPFlag() )
+#else
     if( m_pcSlice->getVpsDepthModesFlag() )
+#endif
     {
       curCost += m_cDepthIntraModeSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
       curCost += m_cDdcFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_FLAG );
@@ -1133,7 +1137,11 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
   {
     dir[j] = pcCU->getLumaIntraDir( absPartIdx+partOffset*j );
 #if H_3D_DIM
+#if SEPARATE_FLAG_I0085
+    if( pcCU->getSlice()->getVpsDepthModesFlag() ||  pcCU->getSlice()->getIVPFlag() )
+#else
     if( pcCU->getSlice()->getVpsDepthModesFlag() )
+#endif
     {
       codeIntraDepth( pcCU, absPartIdx+partOffset*j );
     }
@@ -1279,7 +1287,14 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     default:                      break;
     }
     //mode coding
+#if SEPARATE_FLAG_I0085
+    if( pcCU->getSlice()->getVpsDepthModesFlag() && pcCU->getSlice()->getIVPFlag())
+    {
+      m_pcBinIf->encodeBin( uiCodeIdx == 0 ? 0 : 1, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
+    }
+#else
     m_pcBinIf->encodeBin( uiCodeIdx == 0 ? 0 : 1, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
+#endif
   }
 }
 #endif
