@@ -138,6 +138,9 @@ TComSlice::TComSlice()
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
 #endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+, m_bApplySingleDepthMode         (false)
+#endif
 #endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = 0;
@@ -643,7 +646,11 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   Int numPocInterLayer[2] = { getNumActiveRefLayerPics0( ), getNumActiveRefLayerPics1( ) }; 
   
   TComPic**             refPicSetStCurr    [2] = { RefPicSetStCurr0, RefPicSetStCurr1 };
+#if FIX_WARNING
+  Int numPocStCurr[2] = { (Int)NumPocStCurr0, (Int)NumPocStCurr1 }; 
+#else
   Int numPocStCurr[2] = { NumPocStCurr0, NumPocStCurr1 }; 
+#endif
 
   for (Int li = 0; li < ((m_eSliceType==B_SLICE) ? 2 : 1); li++)
   { 
@@ -1090,6 +1097,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   {
     m_interLayerPredLayerIdc[ layer ] = pSrc->m_interLayerPredLayerIdc[ layer ]; 
   }
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_bApplySingleDepthMode = pSrc->m_bApplySingleDepthMode;
 #endif
 #if H_3D_IC
   m_bApplyIC = pSrc->m_bApplyIC;
@@ -1941,6 +1951,9 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
+#if SEPARATE_FLAG_I0085
+    m_bIVPFlag [i]      = false;
+#endif
     m_ivMvScalingFlag = true; 
 #endif
 
@@ -1981,6 +1994,9 @@ TComVPS::TComVPS()
 #endif
 #if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
+#endif
+#if SEPARATE_FLAG_I0085
+    m_bIVPFlag             [ i ] = false;
 #endif
 #if H_3D_DBBP
     m_dbbpFlag             [ i ] = false;

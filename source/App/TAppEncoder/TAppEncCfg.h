@@ -469,8 +469,14 @@ protected:
 #endif
 #if H_3D_DIM
   Bool      m_useDMM;                                        ///< flag for using DMM
+#if SEPARATE_FLAG_I0085
+  Bool      m_useIVP;
+#endif
   Bool      m_useSDC;                                        ///< flag for using SDC
   Bool      m_useDLT;                                        ///< flag for using DLT
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Bool     m_useSingleDepthMode;                          ///< flag for using single depth mode
 #endif
 #if H_3D_QTLPC
   Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation

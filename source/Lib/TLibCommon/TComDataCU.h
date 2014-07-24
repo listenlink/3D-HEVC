@@ -109,6 +109,10 @@ private:
   // CU data
   // -------------------------------------------------------------------------------------------------------------------
   Bool*         m_skipFlag;           ///< array of skip flags
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Bool*         m_singleDepthFlag;           ///< array of single depth flags
+  Pel*          m_apSingleDepthValue;
+#endif
   Char*         m_pePartSize;         ///< array of partition sizes
   Char*         m_pePredMode;         ///< array of prediction modes
   Bool*         m_CUTransquantBypass;   ///< array of cu_transquant_bypass flags
@@ -346,7 +350,17 @@ public:
   Bool         getSkipFlag            (UInt idx)                { return m_skipFlag[idx];     }
   Void         setSkipFlag           ( UInt idx, Bool skip)     { m_skipFlag[idx] = skip;   }
   Void         setSkipFlagSubParts   ( Bool skip, UInt absPartIdx, UInt depth );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Bool*        getSingleDepthFlag            ()                        { return m_singleDepthFlag;          }
+  Bool         getSingleDepthFlag            (UInt idx)                { return m_singleDepthFlag[idx];     }
+  Void         setSingleDepthFlag           ( UInt idx, Bool singleDepth)     { m_singleDepthFlag[idx] = singleDepth;   }
+  Void         setSingleDepthFlagSubParts   ( Bool singleDepth, UInt absPartIdx, UInt depth );
 
+  Pel*         getSingleDepthValue( ) { return m_apSingleDepthValue; }
+  Pel          getSingleDepthValue            (UInt idx)                { return m_apSingleDepthValue[idx];     }
+  Void         setSingleDepthValue           ( UInt idx, Pel pDepthValue)     { m_apSingleDepthValue[idx] = pDepthValue;   }
+  Void         setSingleDepthValueSubParts   (Pel singleDepthValue, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth );
+#endif  
   Char*         getPredictionMode     ()                        { return m_pePredMode;        }
   PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
   Bool*         getCUTransquantBypass ()                        { return m_CUTransquantBypass;        }
@@ -488,7 +502,9 @@ public:
   Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+   Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
+#endif
 #if H_3D_NBDV_REF
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT );
   Void          estimateDVFromDM(Int refViewIdx, UInt uiPartIdx, TComPic* picDepth, UInt uiPartAddr, TComMv* cMvPred );
@@ -749,6 +765,12 @@ UChar         getNumPartitions       ();
   Int          getUseDDDCandIdx(){ return m_iUseDDDCandIdx;}
 
 #endif
+
+#if SHARP_DMM1_I0110
+  Bool         isDMM1UpscaleMode       ( UInt uiWidth ){ Bool bDMM1UpsampleModeFlag = true; UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ bDMM1UpsampleModeFlag = false; } return bDMM1UpsampleModeFlag; };
+  UInt         getDMM1BasePatternWidth ( UInt uiWidth ){ UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ uiBaseWidth =  uiWidth; } return uiBaseWidth; }
+#endif
+
 };
 
 namespace RasterAddress

@@ -59,7 +59,10 @@ TComDataCU::TComDataCU()
   m_puhDepth           = NULL;
   
   m_skipFlag           = NULL;
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_singleDepthFlag     = NULL;
+  m_apSingleDepthValue  = NULL;
+#endif  
   m_pePartSize         = NULL;
   m_pePredMode         = NULL;
   m_CUTransquantBypass = NULL;
@@ -181,7 +184,10 @@ Void TComDataCU::create(UInt uiNumPartition, UInt uiWidth, UInt uiHeight, Bool b
     m_puhHeight          = (UChar*    )xMalloc(UChar,    uiNumPartition);
 
     m_skipFlag           = new Bool[ uiNumPartition ];
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    m_singleDepthFlag     = new Bool[ uiNumPartition ];
+    m_apSingleDepthValue  = (Pel*)xMalloc(Pel, uiNumPartition);
+#endif
     m_pePartSize         = new Char[ uiNumPartition ];
     memset( m_pePartSize, SIZE_NONE,uiNumPartition * sizeof( *m_pePartSize ) );
     m_pePredMode         = new Char[ uiNumPartition ];
@@ -328,7 +334,10 @@ Void TComDataCU::destroy()
     if ( m_puhHeight          ) { xFree(m_puhHeight);           m_puhHeight         = NULL; }
 
     if ( m_skipFlag           ) { delete[] m_skipFlag;          m_skipFlag          = NULL; }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    if ( m_singleDepthFlag    ) { delete[] m_singleDepthFlag;   m_singleDepthFlag     = NULL; }
+    if ( m_apSingleDepthValue ) { xFree(m_apSingleDepthValue);  m_apSingleDepthValue  = NULL; }
+#endif
     if ( m_pePartSize         ) { delete[] m_pePartSize;        m_pePartSize        = NULL; }
     if ( m_pePredMode         ) { delete[] m_pePredMode;        m_pePredMode        = NULL; }
     if ( m_CUTransquantBypass ) { delete[] m_CUTransquantBypass;m_CUTransquantBypass = NULL; }
@@ -493,6 +502,10 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   {
     TComDataCU * pcFrom = pcPic->getCU(getAddr());
     m_skipFlag[ui]   = pcFrom->getSkipFlag(ui);
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    m_singleDepthFlag[ui]    = pcFrom->getSingleDepthFlag(ui);
+    m_apSingleDepthValue[ui] = pcFrom->getSingleDepthValue(ui);
+#endif
     m_pePartSize[ui] = pcFrom->getPartitionSize(ui);
     m_pePredMode[ui] = pcFrom->getPredictionMode(ui);
     m_CUTransquantBypass[ui] = pcFrom->getCUTransquantBypass(ui);
@@ -549,7 +562,10 @@ Void TComDataCU::initCU( TComPic* pcPic, UInt iCUAddr )
   if ( numElements > 0 )
   {
     memset( m_skipFlag          + firstElement, false,                    numElements * sizeof( *m_skipFlag ) );
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    memset( m_singleDepthFlag     + firstElement, false,                  numElements * sizeof( *m_singleDepthFlag ) );
+    memset( m_apSingleDepthValue  + firstElement,     0,                  numElements * sizeof( *m_apSingleDepthValue ) );
+#endif
     memset( m_pePartSize        + firstElement, SIZE_NONE,                numElements * sizeof( *m_pePartSize ) );
     memset( m_pePredMode        + firstElement, MODE_NONE,                numElements * sizeof( *m_pePredMode ) );
     memset( m_CUTransquantBypass+ firstElement, false,                    numElements * sizeof( *m_CUTransquantBypass) );
@@ -737,6 +753,10 @@ Void TComDataCU::initEstData( UInt uiDepth, Int qp, Bool bTransquantBypass )
       m_puhTransformSkip[1][ui] = 0;
       m_puhTransformSkip[2][ui] = 0;
       m_skipFlag[ui]   = false;
+#if MTK_SINGLE_DEPTH_MODE_I0095
+      m_singleDepthFlag[ui]     = false;
+      m_apSingleDepthValue[ui]  = 0;
+#endif
       m_pePartSize[ui] = SIZE_NONE;
       m_pePredMode[ui] = MODE_NONE;
       m_CUTransquantBypass[ui] = bTransquantBypass;
@@ -912,6 +932,10 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   for (UInt ui = 0; ui < m_uiNumPartition; ui++)
   {
     m_skipFlag[ui]   = false;
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    m_singleDepthFlag[ui]   = false;
+    m_apSingleDepthValue[ui]= 0;
+#endif
     m_pePartSize[ui] = SIZE_NONE;
     m_pePredMode[ui] = MODE_NONE;
     m_CUTransquantBypass[ui] = false;
@@ -933,6 +957,10 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
       m_puhTransformSkip[1][ui] = pcCU->getTransformSkip(uiPartOffset+ui,TEXT_CHROMA_U);
       m_puhTransformSkip[2][ui] = pcCU->getTransformSkip(uiPartOffset+ui,TEXT_CHROMA_V);
       m_skipFlag[ui]   = pcCU->getSkipFlag(uiPartOffset+ui);
+#if MTK_SINGLE_DEPTH_MODE_I0095
+      m_singleDepthFlag[ui]    = pcCU->getSingleDepthFlag(uiPartOffset+ui);
+      m_apSingleDepthValue[ui] = pcCU->getSingleDepthValue(uiPartOffset+ui);
+#endif
       m_pePartSize[ui] = pcCU->getPartitionSize(uiPartOffset+ui);
       m_pePredMode[ui] = pcCU->getPredictionMode(uiPartOffset+ui);
       m_CUTransquantBypass[ui] = pcCU->getCUTransquantBypass(uiPartOffset+ui);
@@ -1082,7 +1110,10 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_uiCUPelY           = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   
   m_skipFlag=pcCU->getSkipFlag()          + uiPart;
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_singleDepthFlag     = pcCU->getSingleDepthFlag()   + uiPart;
+  m_apSingleDepthValue  = pcCU->getSingleDepthValue()  + uiPart;
+#endif  
   m_phQP=pcCU->getQP()                    + uiPart;
   m_pePartSize = pcCU->getPartitionSize() + uiPart;
   m_pePredMode=pcCU->getPredictionMode()  + uiPart;
@@ -1220,7 +1251,10 @@ Void TComDataCU::copyInterPredInfoFrom    ( TComDataCU* pcCU, UInt uiAbsPartIdx,
   m_apcCUColocated[1]  = pcCU->getCUColocated(REF_PIC_LIST_1);
   
   m_skipFlag           = pcCU->getSkipFlag ()             + uiAbsPartIdx;
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_singleDepthFlag     = pcCU->getSingleDepthFlag ()             + uiAbsPartIdx;
+  m_apSingleDepthValue  = pcCU->getSingleDepthValue ()            + uiAbsPartIdx;
+#endif  
   m_pePartSize         = pcCU->getPartitionSize ()        + uiAbsPartIdx;
 #if H_3D_NBDV
   if(bNBDV == true)
@@ -1296,6 +1330,10 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
   
   Int sizeInChar  = sizeof( Char ) * uiNumPartition;
   memcpy( m_skipFlag   + uiOffset, pcCU->getSkipFlag(),       sizeof( *m_skipFlag )   * uiNumPartition );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  memcpy( m_singleDepthFlag     + uiOffset, pcCU->getSingleDepthFlag(),       sizeof( *m_singleDepthFlag )   * uiNumPartition );
+  memcpy( m_apSingleDepthValue  + uiOffset, pcCU->getSingleDepthValue(),      sizeof( *m_apSingleDepthValue ) * uiNumPartition);
+#endif
   memcpy( m_phQP       + uiOffset, pcCU->getQP(),             sizeInChar                        );
   memcpy( m_pePartSize + uiOffset, pcCU->getPartitionSize(),  sizeof( *m_pePartSize ) * uiNumPartition );
   memcpy( m_pePredMode + uiOffset, pcCU->getPredictionMode(), sizeof( *m_pePredMode ) * uiNumPartition );
@@ -1416,7 +1454,10 @@ Void TComDataCU::copyToPic( UChar uhDepth )
   Int sizeInChar  = sizeof( Char ) * m_uiNumPartition;
 
   memcpy( rpcCU->getSkipFlag() + m_uiAbsIdxInLCU, m_skipFlag, sizeof( *m_skipFlag ) * m_uiNumPartition );
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  memcpy( rpcCU->getSingleDepthFlag()  + m_uiAbsIdxInLCU, m_singleDepthFlag,    sizeof( *m_singleDepthFlag ) * m_uiNumPartition );
+  memcpy( rpcCU->getSingleDepthValue() + m_uiAbsIdxInLCU, m_apSingleDepthValue, sizeof( *m_apSingleDepthValue ) * m_uiNumPartition);
+#endif
   memcpy( rpcCU->getQP() + m_uiAbsIdxInLCU, m_phQP, sizeInChar  );
 #if H_3D_NBDV
   memcpy( rpcCU->getDvInfo()         + m_uiAbsIdxInLCU, m_pDvInfo,    sizeof(* m_pDvInfo)     * m_uiNumPartition );
@@ -1532,7 +1573,10 @@ Void TComDataCU::copyToPic( UChar uhDepth, UInt uiPartIdx, UInt uiPartDepth )
   
   Int sizeInChar  = sizeof( Char ) * uiQNumPart;
   memcpy( rpcCU->getSkipFlag()       + uiPartOffset, m_skipFlag,   sizeof( *m_skipFlag )   * uiQNumPart );
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  memcpy( rpcCU->getSingleDepthFlag()  + uiPartOffset, m_singleDepthFlag,    sizeof( *m_singleDepthFlag )   * uiQNumPart );
+  memcpy( rpcCU->getSingleDepthValue() + uiPartOffset, m_apSingleDepthValue, sizeof( *m_apSingleDepthValue ) * uiQNumPart);
+#endif
   memcpy( rpcCU->getQP() + uiPartOffset, m_phQP, sizeInChar );
   memcpy( rpcCU->getPartitionSize()  + uiPartOffset, m_pePartSize, sizeof( *m_pePartSize ) * uiQNumPart );
   memcpy( rpcCU->getPredictionMode() + uiPartOffset, m_pePredMode, sizeof( *m_pePredMode ) * uiQNumPart );
@@ -2452,7 +2496,18 @@ Void TComDataCU::setSkipFlagSubParts( Bool skip, UInt absPartIdx, UInt depth )
   assert( sizeof( *m_skipFlag) == 1 );
   memset( m_skipFlag + absPartIdx, skip, m_pcPic->getNumPartInCU() >> ( 2 * depth ) );
 }
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TComDataCU::setSingleDepthFlagSubParts( Bool singleDepth, UInt absPartIdx, UInt depth )
+{
+  assert( sizeof( *m_singleDepthFlag) == 1 );
+  memset( m_singleDepthFlag + absPartIdx, singleDepth, m_pcPic->getNumPartInCU() >> ( 2 * depth ) );
+}
 
+Void TComDataCU::setSingleDepthValueSubParts(Pel singleDepthValue, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth )
+{
+  setSubPartT<Pel>( singleDepthValue, m_apSingleDepthValue, uiAbsPartIdx, uiDepth, uiPUIdx );
+}
+#endif
 Void TComDataCU::setPredModeSubParts( PredMode eMode, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert( sizeof( *m_pePredMode) == 1 );
@@ -2621,7 +2676,11 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
     return false;
   }
 
+#if HS_DMM_SIGNALLING_I0120
+  if( isDimMode( getLumaIntraDir( uiAbsPartIdx ) ) )
+#else
   if( isDimMode( getLumaIntraDir( uiAbsPartIdx ) ) && !isDimDeltaDC( getLumaIntraDir( uiAbsPartIdx ) ) )
+#endif
   {
     return true;
   }
@@ -2634,7 +2693,11 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
   return false;
   // check prediction mode
   UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
+#if HS_DMM_SIGNALLING_I0120
+  if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX  ) )
+#else
   if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX && !isDimDeltaDC( uiLumaPredMode ) ) )
+#endif
     return true;
   
   // else
@@ -6090,6 +6153,63 @@ Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDis
 
   return true;
 }
+#endif
+
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Bool TComDataCU::getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index)
+{
+
+  Bool bDepAvail = false;
+  Pel *pDepth  = this->getPic()->getPicYuvRec()->getLumaAddr();
+  Int iDepStride =  this->getPic()->getPicYuvRec()->getStride();
+
+  Int xP, yP, nPSW, nPSH;
+  this->getPartPosition(uiPartIdx, xP, yP, nPSW, nPSH);
+  UInt PicHeight=this->getPic()->getPicYuvRec()->getHeight();
+  UInt PicWidth=this->getPic()->getPicYuvRec()->getWidth();
+  switch(index)
+  {
+  case 0: // Mid Left
+    if( ( xP != 0 ) && ( ( yP + ( nPSH >> 1 ) ) < PicHeight ) )
+    {
+      *pNeighDepth = pDepth[ (yP+(nPSH>>1)) * iDepStride + (xP-1) ];
+      bDepAvail = true;
+    }
+    break;
+  case 1: // Mid Above
+    if( ( yP != 0 ) && ( ( xP + ( nPSW >> 1 ) ) < PicWidth ) )
+    {
+      *pNeighDepth = pDepth[ (yP-1) * iDepStride + (xP + (nPSW>>1)) ];
+      bDepAvail = true;
+    }
+    break;
+  case 2: // Above
+    if(yP != 0)
+    {
+      *pNeighDepth = pDepth[ (yP-1) * iDepStride + (xP) ];
+      bDepAvail = true;
+    }
+    break;
+  case 3: // Left
+    if(xP != 0)
+    {
+      *pNeighDepth = pDepth[ (yP) * iDepStride + (xP-1) ];
+      bDepAvail = true;
+    }
+    break;
+  case 4: // Above_Left
+    if(xP != 0 && yP != 0)
+    {
+      *pNeighDepth = pDepth[ (yP-1) * iDepStride + (xP-1) ];
+      bDepAvail = true;
+    }
+    break;
+  default:
+      break;
+  }
+  return bDepAvail;
+}
+
 #endif
 #if H_3D_NBDV 
 //Notes from QC:
