@@ -738,6 +738,22 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   Int iSumDepth = 0;
   Int uiMinDepth = MAX_INT;
   Int uiMaxDepth = 0;
+#if SEC_DBBP_DMM4_THRESHOLD_I0076
+  iSumDepth  = pDepthPels[ 0 ];
+  iSumDepth += pDepthPels[ uiWidth - 1 ];
+  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) ];
+  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ];
+
+  uiMinDepth = pDepthPels[ 0 ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiWidth - 1 ]);
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
+
+  uiMaxDepth = pDepthPels[ 0 ];
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiWidth - 1 ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
+#else
   for (Int y=0; y<uiHeight; y++)
   {
     for (Int x=0; x<uiWidth; x++)
@@ -758,6 +774,7 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
     // next row
     pDepthPels += uiDepthStride;
   }
+#endif
   
   // don't generate mask for blocks with small depth range (encoder decision)
   if( uiMaxDepth - uiMinDepth < 10 )
@@ -766,8 +783,12 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   }
   
   AOF(uiWidth==uiHeight);
+#if SEC_DBBP_DMM4_THRESHOLD_I0076
+  Int iMean = iSumDepth >> 2;
+#else
   Int iSizeInBits = g_aucConvertToBit[uiWidth]+2;
   Int iMean = iSumDepth >> iSizeInBits*2;       // iMean /= (uiWidth*uiHeight);
+#endif
   
   // start again for segmentation
   pDepthPels = pDepthBlockStart;
@@ -2201,6 +2222,13 @@ Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 
   // find contour for texture luma block
   UInt iDC = 0;
+#if SEC_DBBP_DMM4_THRESHOLD_I0076
+  iDC  = piRefBlkY[ 0 ];
+  iDC += piRefBlkY[ uiWidth - 1 ];
+  iDC += piRefBlkY[ uiWidth * (uiHeight - 1) ];
+  iDC += piRefBlkY[ uiWidth * (uiHeight - 1) + uiWidth - 1 ];
+  iDC = iDC >> 2;
+#else
   for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
   { 
     iDC += piRefBlkY[k]; 
@@ -2208,6 +2236,7 @@ Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, U
 
   Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;   // 
   iDC = iDC >> (cuMaxLog2Size - pcCU->getDepth(0))*2;        //  iDC /= (uiWidth*uiHeight);
+#endif
 
   piRefBlkY = cTempYuv.getLumaAddr();
 
