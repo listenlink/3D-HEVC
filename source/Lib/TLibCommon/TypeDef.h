@@ -236,6 +236,8 @@
                                               // MTK_DBBP_SIGNALING_H0094    
                                               // H_3D_FIX_DBBP_IVMP        Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
 
+#define SEC_DBBP_DMM4_THRESHOLD_I0076     1   // Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
+
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
