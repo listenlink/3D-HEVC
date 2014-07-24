@@ -2002,8 +2002,30 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #if H_3D_INTER_SDC
           if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && !uiNoResidual )
           {
+#if FAST_SDC_OFFSET_DECISION_I0084
+            Double dOffsetCost[3] = {MAX_DOUBLE,MAX_DOUBLE,MAX_DOUBLE};
+            for( Int uiOffest = 1 ; uiOffest <= 5 ; uiOffest++ )
+#else
             for( Int uiOffest = -2 ; uiOffest <= 2 ; uiOffest++ )
+#endif
             {
+#if FAST_SDC_OFFSET_DECISION_I0084
+              if( uiOffest > 3)
+              {
+                if ( dOffsetCost[0] < (0.9*dOffsetCost[1]) && dOffsetCost[0] < (0.9*dOffsetCost[2]) )
+                {
+                  continue;
+                }
+                if ( dOffsetCost[1] < dOffsetCost[0] && dOffsetCost[0] < dOffsetCost[2] &&  uiOffest == 5)
+                {
+                  continue;
+                }
+                if ( dOffsetCost[0] < dOffsetCost[1] && dOffsetCost[2] < dOffsetCost[0] &&  uiOffest == 4)
+                {
+                  continue;
+                }
+              }
+#endif
               if( rpcTempCU != rpcTempCUPre )
               {
                 rpcTempCU->initEstData( uhDepth, orgQP, bTransquantBypassFlag  );
@@ -2025,6 +2047,28 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
                 m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
               }
 #endif
+#if FAST_SDC_OFFSET_DECISION_I0084
+              Int iSdcOffset = 0;
+              if(uiOffest % 2 == 0)
+              {
+                iSdcOffset = uiOffest >> 1;
+              }
+              else
+              {
+                iSdcOffset = -1 * (uiOffest >> 1);
+              }
+              m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
+                m_ppcOrigYuv[uhDepth], 
+                ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth], 
+                m_ppcResiYuvTemp[uhDepth], 
+                m_ppcRecoYuvTemp[uhDepth],
+                iSdcOffset,
+                uhDepth );
+              if (uiOffest <= 3 )
+              {
+                dOffsetCost [uiOffest -1] = rpcTempCU->getTotalCost();
+              }
+#else
               m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
                 m_ppcOrigYuv[uhDepth], 
                 ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth], 
@@ -2032,6 +2076,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
                 m_ppcRecoYuvTemp[uhDepth],
                 uiOffest,
                 uhDepth );
+#endif
 
               xCheckDQP( rpcTempCU );
               xCheckBestMode( rpcBestCU, rpcTempCU, uhDepth );
@@ -2238,8 +2283,30 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if H_3D_INTER_SDC
   if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && ePartSize == SIZE_2Nx2N)
   {
+#if FAST_SDC_OFFSET_DECISION_I0084
+    Double dOffsetCost[3] = {MAX_DOUBLE,MAX_DOUBLE,MAX_DOUBLE};
+    for( Int uiOffest = 1 ; uiOffest <= 5 ; uiOffest++ )
+#else
     for( Int uiOffest = -2 ; uiOffest <= 2 ; uiOffest++ )
+#endif
     {
+#if FAST_SDC_OFFSET_DECISION_I0084
+      if( uiOffest > 3)
+      {
+        if ( dOffsetCost[0] < (0.9*dOffsetCost[1]) && dOffsetCost[0] < (0.9*dOffsetCost[2]) )
+        {
+          continue;
+        }
+        if ( dOffsetCost[1] < dOffsetCost[0] && dOffsetCost[0] < dOffsetCost[2] &&  uiOffest == 5)
+        {
+          continue;
+        }
+        if ( dOffsetCost[0] < dOffsetCost[1] && dOffsetCost[2] < dOffsetCost[0] &&  uiOffest == 4)
+        {
+          continue;
+        }
+      }
+#endif
       if( rpcTempCU != rpcTempCUPre )
       {
         Int orgQP = rpcBestCU->getQP( 0 );
@@ -2263,6 +2330,28 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
       }
 #endif
 
+#if FAST_SDC_OFFSET_DECISION_I0084
+      Int iSdcOffset = 0;
+      if(uiOffest % 2 == 0)
+      {
+        iSdcOffset = uiOffest >> 1;
+      }
+      else
+      {
+        iSdcOffset = -1 * (uiOffest >> 1);
+      }
+      m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
+        m_ppcOrigYuv[uhDepth],
+        ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth],
+        m_ppcResiYuvTemp[uhDepth],
+        m_ppcRecoYuvTemp[uhDepth],
+        iSdcOffset,
+        uhDepth );
+      if (uiOffest <= 3 )
+      {
+        dOffsetCost [uiOffest -1] = rpcTempCU->getTotalCost();
+      }
+#else
       m_pcPredSearch->encodeResAndCalcRdInterSDCCU( rpcTempCU, 
         m_ppcOrigYuv[uhDepth],
         ( rpcTempCU != rpcTempCUPre ) ? m_ppcPredYuvBest[uhDepth] : m_ppcPredYuvTemp[uhDepth],
@@ -2270,6 +2359,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
         m_ppcRecoYuvTemp[uhDepth],
         uiOffest,
         uhDepth );
+#endif
 
       xCheckDQP( rpcTempCU );
       xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
