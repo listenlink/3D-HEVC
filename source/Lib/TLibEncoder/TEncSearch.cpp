@@ -3283,12 +3283,45 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         if (!uiSDC && uiMode >= numModesForFullRD) continue;
 #endif
         pcCU->setSDCFlagSubParts( (uiSDC != 0), uiPartOffset, uiDepth + uiInitTrDepth );
+#if FAST_SDC_OFFSET_DECISION_I0084
+        Double dOffsetCost[3] = {MAX_DOUBLE,MAX_DOUBLE,MAX_DOUBLE};
+        for( Int iOffset = 1; iOffset <= 5; iOffset++ )
+#else
         for( Int iSDCDeltaResi = -2; iSDCDeltaResi <= 2; iSDCDeltaResi++ )
+#endif
         {
+#if FAST_SDC_OFFSET_DECISION_I0084
+          Int iSDCDeltaResi = 0;
+          if(iOffset % 2 == 0)
+          {
+            iSDCDeltaResi = iOffset >> 1;
+          }
+          else
+          {
+            iSDCDeltaResi = -1 * (iOffset >> 1);
+          }
+#endif
           if( ( uiSDC == 0 ) && iSDCDeltaResi != 0 )
           {
             continue;
           }
+#if FAST_SDC_OFFSET_DECISION_I0084
+          if( iOffset > 3)
+          {
+            if ( dOffsetCost[0] < (0.9*dOffsetCost[1]) && dOffsetCost[0] < (0.9*dOffsetCost[2]) )
+            {
+              continue;
+            }
+            if ( dOffsetCost[1] < dOffsetCost[0] && dOffsetCost[0] < dOffsetCost[2] &&  iOffset == 5)
+            {
+              continue;
+            }
+            if ( dOffsetCost[0] < dOffsetCost[1] && dOffsetCost[2] < dOffsetCost[0] &&  iOffset == 4)
+            {
+              continue;
+            }
+          }
+#endif
 #endif
       
 #if H_3D_DIM_ENC || H_3D_DIM_SDC
@@ -3334,6 +3367,12 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 
           // start encoding with SDC
           xIntraCodingSDC(pcCU, uiPartOffset, pcOrgYuv, pcPredYuv, uiPUDistY, dPUCost, ( testZeroResi != 0 ), iSDCDeltaResi );
+#if FAST_SDC_OFFSET_DECISION_I0084
+          if ( testZeroResi == 0 && iOffset <= 3 )
+          {
+            dOffsetCost [iOffset -1] = dPUCost;
+          }
+#endif
         }
         else
         {
