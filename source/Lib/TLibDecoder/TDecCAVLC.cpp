@@ -1050,6 +1050,7 @@ Void TDecCavlc::parseSPSExtension( TComSPS* pcSPS )
 #if H_3D
 Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 { 
+#if !MTK_I0099_VPS_EX2
   UInt uiCode; 
 #if H_3D_QTLPC
   //GT: This has to go to VPS
@@ -1060,6 +1061,7 @@ Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFla
     READ_FLAG( uiCode, "use_pc_flag" );
     pcSPS->setUsePC( uiCode );
   }
+#endif
 #endif
 }
 #endif
@@ -1766,10 +1768,15 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #endif
     if ( i != 0 )
     {
+#if MTK_I0099_VPS_EX2
+      READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#endif
       if( !( pcVPS->getDepthId( i ) == 1 ) )
       {
 #if H_3D_IV_MERGE
+#if !MTK_I0099_VPS_EX2
         READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#endif
         if( !pcVPS->getNumDirectRefLayers(i) )
         {
           assert( !uiCode );         
@@ -1801,6 +1808,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       }
       else
       {
+#if !MTK_I0099_VPS_EX2
 #if H_3D_IV_MERGE
         if(i!=1)
         {
@@ -1817,11 +1825,17 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
           READ_UVLC (uiCode, "log2_sub_PU_size_minus3[i]");     pcVPS->setSubPULog2Size(i, uiCode+3); 
         }
 #endif
+#endif
 #if H_3D_IV_MERGE
         READ_FLAG( uiCode, "mpi_flag[i]" );             pcVPS->setMPIFlag( i, uiCode == 1 ? true : false );
 #endif
+#if MTK_I0099_VPS_EX2
+        READ_UVLC (uiCode, "log2_mpi_sub_PU_size_minus3[i]");     pcVPS->setSubPUMPILog2Size(i, uiCode+3);
+#endif
         READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
-        //          READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPreFlag     ( i, uiCode == 1 ? true : false ); 
+#if MTK_I0099_VPS_EX2
+        READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPredFlag     ( i, uiCode == 1 ? true : false ); 
+#endif
 #if H_3D_INTER_SDC
             READ_FLAG( uiCode, "depth_inter_SDC_flag" );              pcVPS->setInterSDCFlag( i, uiCode ? true : false );
 #endif
@@ -1856,7 +1870,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
     }
   }
+#if !MTK_I0099_VPS_EX2
   READ_UVLC (uiCode, "log2_sub_PU_MPI_size_minus3");              pcVPS->setSubPUMPILog2Size( uiCode + 3 ); 
+#endif
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
 }
 #endif

@@ -6649,7 +6649,11 @@ Void TComDataCU::getSPPara(Int iPUWidth, Int iPUHeight, Int& iNumSP, Int& iNumSP
   Int iSubPUSize = 1<<getSlice()->getVPS()->getSubPULog2Size(getSlice()->getLayerId());
   if( getSlice()->getIsDepth() )
   {
+#if MTK_I0099_VPS_EX2
+    iSubPUSize = 1<<getSlice()->getVPS()->getSubPUMPILog2Size(getSlice()->getLayerId());
+#else
     iSubPUSize = 1 << getSlice()->getVPS()->getSubPUMPILog2Size();
+#endif
   }
 
   iNumSPInOneLine = iPUWidth/iSubPUSize;

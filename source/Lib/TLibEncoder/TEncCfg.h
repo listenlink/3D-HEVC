@@ -419,9 +419,13 @@ protected:
 #if H_3D_IV_MERGE
   Bool      m_useMPI;
 #endif
+#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
   Bool      m_bUseQTL;
+#if !MTK_I0099_VPS_EX2
   Bool      m_bUsePC;
+#endif
+#endif
 #endif
 #endif
 public:
@@ -1007,11 +1011,15 @@ public:
   Bool      getUseDLT                       ()        { return m_useDLT; }
   Void      setUseDLT                       ( Bool b) { m_useDLT = b;    }
 #endif
+#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
   Void      setUseQTL                       ( Bool b ) { m_bUseQTL = b;    }
   Bool      getUseQTL                       ()         { return m_bUseQTL; }
+#if !MTK_I0099_VPS_EX2
   Void      setUsePC                        ( Bool b ) { m_bUsePC  = b;    }
   Bool      getUsePC                        ()         { return m_bUsePC;  }
+#endif
+#endif
 #endif
 #if H_3D_IV_MERGE
   Void      setUseMPI                       ( Bool b ) { m_useMPI = b;    }

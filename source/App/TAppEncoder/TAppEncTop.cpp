@@ -201,9 +201,13 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
+#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
     m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL               : false );
+#if !MTK_I0099_VPS_EX2    
     m_cTEncTop.setUsePC                        ( isDepth ? m_bUsePC                : false );
+#endif
+#endif
 #endif
     //====== Depth Inter SDC =========
 #if H_3D_INTER_SDC
@@ -1814,6 +1818,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     if( isDepth )
     {
       vps.setSubPULog2Size         ( layer, (layer != 1) ? 6: 0 ); 
+#if MTK_I0099_VPS_EX2
+      vps.setSubPUMPILog2Size      ( layer, (!isLayerZero) ? m_iSubPUMPILog2Size: 0 ); 
+#endif
     }
     else
     {
@@ -1842,6 +1849,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
       }
     }
 #endif
+#if MTK_I0099_VPS_EX2
+    vps.setLimQtPredFlag         ( layer, isDepth && m_bLimQtPredFlag ); 
+#endif
 #if H_3D_NBDV_REF
     vps.setDepthRefinementFlag  ( layer, !isLayerZero && !isDepth && m_depthRefinementFlag );         
 #endif
@@ -1858,8 +1868,10 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag );
 #endif
   }  
+#if !MTK_I0099_VPS_EX2
 #if H_3D_SPIVMP
   vps.setSubPUMPILog2Size( m_iSubPUMPILog2Size );
+#endif
 #endif
 #if H_3D
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
