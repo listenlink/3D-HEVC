@@ -1598,6 +1598,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
         WRITE_FLAG( pcVPS->getMPIFlag( i ) ? 1 : 0 ,          "mpi_flag[i]" );
 #endif
         WRITE_FLAG( pcVPS->getVpsDepthModesFlag( i ) ? 1 : 0 ,          "vps_depth_modes_flag[i]" );
+#if SEPARATE_FLAG_I0085
+        WRITE_FLAG( pcVPS->getIVPFlag( i ) ? 1 : 0 ,               "IVP_flag[i]" );
+#endif
         //WRITE_FLAG( pcVPS->getLimQtPredFlag    ( i ) ? 1 : 0 ,          "lim_qt_pred_flag[i]"     ); 
 #if H_3D_INTER_SDC
         WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
@@ -2021,7 +2024,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 #endif
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    if(pcSlice->getIsDepth())
+    {
+      WRITE_FLAG( pcSlice->getApplySingleDepthMode() ? 1 : 0, "slice_enable_single_depth_mode" );
+    }
+#endif
 #if H_3D_IV_MERGE
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS_MEM);
 #else
@@ -2407,7 +2415,12 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TEncCavlc::codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#endif
 Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
