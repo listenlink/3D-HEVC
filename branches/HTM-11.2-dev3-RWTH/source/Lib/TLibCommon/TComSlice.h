@@ -1207,7 +1207,11 @@ public:
   Int     getBitsPerDepthValue( Int layerIdInVps )        { return getUseDLTFlag(layerIdInVps)?m_iBitsPerDepthValue[layerIdInVps]:g_bitDepthY; }
   Int     getNumDepthValues( Int layerIdInVps )           { return getUseDLTFlag(layerIdInVps)?m_iNumDepthmapValues[layerIdInVps]:((1 << g_bitDepthY)-1); }
   Int     depthValue2idx( Int layerIdInVps, Pel value )   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
+#if RWTH_DLT_CLIP_I0057
+  Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][ClipY(uiIdx)]:uiIdx; }
+#else
   Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][uiIdx]:uiIdx; }
+#endif
   Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
 #if H_3D_DELTA_DLT
   Int*    idx2DepthValue( Int layerIdInVps )  { return m_iIdx2DepthValue[layerIdInVps]; }
