@@ -1571,6 +1571,10 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
     {
 #if MTK_I0099_VPS_EX2
       WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
+#if SEC_HLS_CLEANUP_I0100
+      WRITE_FLAG( pcVPS->getIvMvScalingFlag( i ) ? 1 : 0 ,       "iv_mv_scaling_flag[i]" );
+#endif
+
 #endif
       if ( !( pcVPS->getDepthId( i ) == 1 ) )
       {
@@ -1652,7 +1656,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
   WRITE_UVLC( pcVPS->getSubPUMPILog2Size( ) - 3, "log2_sub_PU_MPI_size_minus3");
 #endif
 #if H_3D_TMVP
+#if !SEC_HLS_CLEANUP_I0100
   WRITE_FLAG( pcVPS->getIvMvScalingFlag( ) ? 1 : 0 ,          "iv_mv_scaling_flag" );
+#endif
 #endif
 }
 #endif
@@ -2038,7 +2044,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       xCodePredWeightTable( pcSlice );
     }
 #if H_3D_IC
-    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth())
+#if SEC_HLS_CLEANUP_I0100
+    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#else
+    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth() )
+#endif
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
       if( pcSlice->getApplyIC() )

@@ -1941,7 +1941,11 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
+#if SEC_HLS_CLEANUP_I0100
+    m_ivMvScalingFlag[i] = true; 
+#else
     m_ivMvScalingFlag = true; 
+#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )

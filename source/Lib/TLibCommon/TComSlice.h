@@ -797,6 +797,9 @@ private:
 #endif
 #if H_3D_IV_MERGE
   Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
+#if SEC_HLS_CLEANUP_I0100
+  Bool        m_ivMvScalingFlag          [ MAX_NUM_LAYERS ]; 
+#endif
 #if H_3D_SPIVMP
   Int         m_iSubPULog2Size           [MAX_NUM_LAYERS   ];
 #if MTK_I0099_VPS_EX2
@@ -823,7 +826,11 @@ private:
   Bool*       m_bCamParPresent;
   Int         ***m_aaaiCodedScale ;
   Int         ***m_aaaiCodedOffset;
+
+#if !SEC_HLS_CLEANUP_I0100
   Bool        m_ivMvScalingFlag; 
+#endif
+
 #endif
 #if H_3D_INTER_SDC
   Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
@@ -1160,8 +1167,14 @@ public:
   Void    setVpsDepthModesFlag( Int layerIdInVps, Bool val )               { m_vpsDepthModesFlag[ layerIdInVps ] = val; }
   Bool    getVpsDepthModesFlag( Int layerIdInVps )                         { return m_vpsDepthModesFlag[ layerIdInVps ]; }
 
+#if SEC_HLS_CLEANUP_I0100
+  Bool    getIvMvScalingFlag   ( Int layerIdInVps )                        { return m_ivMvScalingFlag[ layerIdInVps ]; }
+  Void    setIvMvScalingFlag   (Int layerIdInVps, Bool b )                 { m_ivMvScalingFlag[ layerIdInVps ] = b;    }  
+#else
   Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
   Void    setIvMvScalingFlag   ( Bool b )                 { m_ivMvScalingFlag = b;    }  
+#endif
+
 #if H_3D_INTER_SDC
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }

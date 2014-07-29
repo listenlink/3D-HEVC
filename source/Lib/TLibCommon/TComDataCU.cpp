@@ -5899,7 +5899,11 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
     Int iColViewId     = pColCU->getSlice()->getViewIndex(); 
     Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewIndex(); 
     iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
+#if SEC_HLS_CLEANUP_I0100
+    if ( iScale != 4096 && m_pcSlice->getVPS()->getIvMvScalingFlag(getSlice()->getLayerIdInVps()) ) 
+#else
     if ( iScale != 4096 && m_pcSlice->getVPS()->getIvMvScalingFlag() ) 
+#endif
     {
       rcMv = cColMv.scaleMv( iScale );
     }

@@ -1836,6 +1836,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
     if( !vps.getNumDirectRefLayers(layer) )
     {
       vps.setIvMvPredFlag    (layer, false);
+#if SEC_HLS_CLEANUP_I0100
+      vps.setIvMvScalingFlag (layer, false); 
+#endif
     }
     else
     {
@@ -1847,6 +1850,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
       {
         vps.setIvMvPredFlag         ( layer, !isLayerZero && m_ivMvPredFlag[0] ); 
       }
+#if SEC_HLS_CLEANUP_I0100
+      vps.setIvMvScalingFlag (layer, m_ivMvScalingFlag); 
+#endif
     }
 #endif
 #if MTK_I0099_VPS_EX2
@@ -1874,7 +1880,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
 #endif
 #if H_3D
+#if !SEC_HLS_CLEANUP_I0100
   vps.setIvMvScalingFlag( m_ivMvScalingFlag );   
+#endif
 #endif
 }
 
