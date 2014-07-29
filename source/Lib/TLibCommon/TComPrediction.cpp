@@ -2165,14 +2165,20 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
   UInt uiWidth, uiHeight, uiTmpPartIdx;
   Int iRecStride = ( eType == TEXT_LUMA ) ? pRecPic->getStride() : pRecPic->getCStride();
   Int iRefStride = ( eType == TEXT_LUMA ) ? pRefPic->getStride() : pRefPic->getCStride();
+#if SEC_IC_NEIGHBOR_CLIP_I0080
+  Int iRefOffset, iHor, iVer;
+#else
   Int iCUPelX, iCUPelY, iRefX, iRefY, iRefOffset, iHor, iVer;
 
   iCUPelX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
   iCUPelY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
+#endif
   iHor = pcCU->getSlice()->getIsDepth() ? pMv->getHor() : ( ( pMv->getHor() + 2 ) >> 2 );
   iVer = pcCU->getSlice()->getIsDepth() ? pMv->getVer() : ( ( pMv->getVer() + 2 ) >> 2 );
+#if !SEC_IC_NEIGHBOR_CLIP_I0080
   iRefX   = iCUPelX + iHor;
   iRefY   = iCUPelY + iVer;
+#endif
   if( eType != TEXT_LUMA )
   {
     iHor = pcCU->getSlice()->getIsDepth() ? ( ( pMv->getHor() + 1 ) >> 1 ) : ( ( pMv->getHor() + 4 ) >> 3 );
@@ -2188,7 +2194,11 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
   Int x = 0, y = 0, xx = 0, xy = 0;
   Int precShift = std::max(0, (( eType == TEXT_LUMA ) ? g_bitDepthY : g_bitDepthC) - 12);
 
+#if SEC_IC_NEIGHBOR_CLIP_I0080
+  if( pcCU->getPUAbove( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) )
+#else
   if( pcCU->getPUAbove( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) && iCUPelY > 0 && iRefY > 0 )
+#endif
   {
     iRefOffset = iHor + iVer * iRefStride - iRefStride;
     if( eType == TEXT_LUMA )
@@ -2218,8 +2228,11 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     iCountShift += g_aucConvertToBit[ uiWidth ] + 1;
   }
 
-
+#if SEC_IC_NEIGHBOR_CLIP_I0080
+  if( pcCU->getPULeft( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) )
+#else
   if( pcCU->getPULeft( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) && iCUPelX > 0 && iRefX > 0 )
+#endif
   {
     iRefOffset = iHor + iVer * iRefStride - 1;
     if( eType == TEXT_LUMA )
