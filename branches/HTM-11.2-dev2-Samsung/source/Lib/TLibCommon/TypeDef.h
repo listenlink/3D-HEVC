@@ -257,6 +257,8 @@
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
 
+#define SEC_VPS_CLEANUP_I0090             1
+
 #endif // H_3D
 
 

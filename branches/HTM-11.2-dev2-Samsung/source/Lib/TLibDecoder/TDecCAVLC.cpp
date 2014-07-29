@@ -1757,7 +1757,11 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
 Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 {
   UInt uiCode; 
+#if SEC_VPS_CLEANUP_I0090
+  for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
+#else
   for( Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
+#endif
   {
 #if H_3D_ARP
     pcVPS->setUseAdvRP  ( i, 0 );
@@ -1766,7 +1770,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_SPIVMP
     pcVPS->setSubPULog2Size(i, 0);
 #endif
+#if !SEC_VPS_CLEANUP_I0090
     if ( i != 0 )
+#endif
     {
 #if MTK_I0099_VPS_EX2
       READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
@@ -1848,7 +1854,11 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
   Bool bCamParPresentFlag = false;
 
   READ_UVLC( uiCamParPrecision, "cp_precision" );
+#if SEC_VPS_CLEANUP_I0090
+  for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
+#else
   for (UInt viewIndex=0; viewIndex<pcVPS->getNumViews(); viewIndex++)
+#endif
   {
     pcVPS->setCamParPresent         ( viewIndex, false );
     pcVPS->setHasCamParInSliceHeader( viewIndex, false );
