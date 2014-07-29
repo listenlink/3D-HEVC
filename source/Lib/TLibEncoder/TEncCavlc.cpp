@@ -1559,9 +1559,15 @@ Void TEncCavlc::codeVpsVuiBspHrdParameters( TComVPS* pcVPS )
 #if H_3D
 Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
 { 
+#if SEC_VPS_CLEANUP_I0090
+  for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
+#else
   for( Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
+#endif
   {
+#if !SEC_VPS_CLEANUP_I0090
     if (i!= 0)
+#endif
     {
 #if MTK_I0099_VPS_EX2
       WRITE_FLAG( pcVPS->getIvMvPredFlag         ( i ) ? 1 : 0 , "iv_mv_pred_flag[i]");
@@ -1620,7 +1626,11 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
     }  
   }
   WRITE_UVLC( pcVPS->getCamParPrecision(), "cp_precision" );
+#if SEC_VPS_CLEANUP_I0090
+  for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
+#else
   for (UInt viewIndex=0; viewIndex<pcVPS->getNumViews(); viewIndex++)
+#endif
   {
     WRITE_FLAG( pcVPS->getCamParPresent(viewIndex) ? 1 : 0, "cp_present_flag[i]" );
     if ( pcVPS->getCamParPresent(viewIndex) )
