@@ -1776,6 +1776,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
     {
 #if MTK_I0099_VPS_EX2
       READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
+#if SEC_HLS_CLEANUP_I0100
+      READ_FLAG( uiCode, "iv_mv_scaling_flag[i]");       pcVPS->setIvMvScalingFlag         ( i, uiCode == 1 ? true : false );
+#endif
 #endif
       if( !( pcVPS->getDepthId( i ) == 1 ) )
       {
@@ -1883,7 +1886,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if !MTK_I0099_VPS_EX2
   READ_UVLC (uiCode, "log2_sub_PU_MPI_size_minus3");              pcVPS->setSubPUMPILog2Size( uiCode + 3 ); 
 #endif
+#if !SEC_HLS_CLEANUP_I0100
   READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
+#endif
 }
 #endif
 #endif
@@ -2484,7 +2489,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
+#if SEC_HLS_CLEANUP_I0100
+    else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#else
     else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth())
+#endif
     {
       UInt uiCodeTmp = 0;
 
