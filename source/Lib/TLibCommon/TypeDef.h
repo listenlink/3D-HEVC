@@ -123,6 +123,8 @@
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
 
+#define SEC_IC_NEIGHBOR_CLIP_I0080        1   // Clipping of neighboring sample position, JCT3V-I0080
+
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -261,10 +263,16 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
+#define MTK_I0099_VPS_EX2                 1  ///< JCT3V-I0099, sub-PU size signaling and lim_qt_pred_flag in VPS extension 2
+#define MTK_I0099_FIX                     1  ///< Fix the problem of removing encoder only QTL 
+
 // Rate Control
 #define KWU_FIX_URQ                       1
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
+
+#define SEC_VPS_CLEANUP_I0090             1
+#define SEC_HLS_CLEANUP_I0100             1
 
 #endif // H_3D
 
@@ -294,6 +302,10 @@
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
+#define QC_I0129_ARP_FIX                  1
+#define QC_I0051_ARP_SIMP                 1
+#define SHARP_ARP_CHROMA_I0104            1
+#define MTK_I0072_IVARP_SCALING_FIX       1
 #endif
 
 ///// ***** DEPTH INTRA MODES *********

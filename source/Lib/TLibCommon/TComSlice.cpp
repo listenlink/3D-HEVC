@@ -1951,6 +1951,12 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
+#if SEC_HLS_CLEANUP_I0100
+    m_ivMvScalingFlag[i] = true; 
+#else
+    m_ivMvScalingFlag = true; 
+#endif
+#endif
 #if SEPARATE_FLAG_I0085
     m_bIVPFlag [i]      = false;
 #endif
@@ -1985,6 +1991,9 @@ TComVPS::TComVPS()
 #if H_3D_SPIVMP
     m_iSubPULog2Size       [ i ] = 0;
 #endif
+#endif
+#if MTK_I0099_VPS_EX2
+    m_bLimQtPredFlag       [ i ] = false;
 #endif
 #if H_3D_VSP
     m_viewSynthesisPredFlag[ i ] = false;
@@ -2517,9 +2526,11 @@ TComSPS::TComSPS()
 , m_usePCM                   (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
 , m_bUseQTL                   (false)
 , m_bUsePC                    (false)
+#endif
 #endif
 , m_bitDepthY                 (  8)
 , m_bitDepthC                 (  8)

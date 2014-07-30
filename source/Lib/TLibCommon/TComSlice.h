@@ -797,10 +797,20 @@ private:
 #endif
 #if H_3D_IV_MERGE
   Bool        m_ivMvPredFlag             [ MAX_NUM_LAYERS ]; 
+#if SEC_HLS_CLEANUP_I0100
+  Bool        m_ivMvScalingFlag          [ MAX_NUM_LAYERS ]; 
+#endif
 #if H_3D_SPIVMP
   Int         m_iSubPULog2Size           [MAX_NUM_LAYERS   ];
+#if MTK_I0099_VPS_EX2
+  Int         m_iSubPUMPILog2Size        [MAX_NUM_LAYERS   ];
+#else
   Int         m_iSubPUMPILog2Size;
 #endif
+#endif
+#endif
+#if MTK_I0099_VPS_EX2
+  Bool        m_bLimQtPredFlag           [ MAX_NUM_LAYERS ];
 #endif
 #if H_3D_VSP
   Bool        m_viewSynthesisPredFlag    [ MAX_NUM_LAYERS ];
@@ -819,7 +829,11 @@ private:
   Bool*       m_bCamParPresent;
   Int         ***m_aaaiCodedScale ;
   Int         ***m_aaaiCodedOffset;
+
+#if !SEC_HLS_CLEANUP_I0100
   Bool        m_ivMvScalingFlag; 
+#endif
+
 #endif
 #if H_3D_INTER_SDC
   Bool        m_bInterSDCFlag[MAX_NUM_LAYERS   ];
@@ -1132,9 +1146,18 @@ public:
 #if H_3D_SPIVMP
   Int     getSubPULog2Size(Int layerIdInVps)           { return m_iSubPULog2Size[layerIdInVps]; }
   Void    setSubPULog2Size(Int layerIdInVps, Int u)    { m_iSubPULog2Size[layerIdInVps] = u;}
+#if MTK_I0099_VPS_EX2
+  Int     getSubPUMPILog2Size(Int layerIdInVps)           { return m_iSubPUMPILog2Size[layerIdInVps]; }
+  Void    setSubPUMPILog2Size(Int layerIdInVps, Int u)    { m_iSubPUMPILog2Size[layerIdInVps] = u;}
+#else
   Int     getSubPUMPILog2Size( )           { return m_iSubPUMPILog2Size; }
   Void    setSubPUMPILog2Size( Int u )     { m_iSubPUMPILog2Size = u;    }
 #endif
+#endif
+#endif
+#if MTK_I0099_VPS_EX2
+  Void    setLimQtPredFlag    ( Int layerIdInVps, Bool val )  { m_bLimQtPredFlag[ layerIdInVps ] = val; }
+  Bool    getLimQtPredFlag    ( Int layerIdInVps ) { return m_bLimQtPredFlag[layerIdInVps];}
 #endif
 #if H_3D_VSP
   Void    setViewSynthesisPredFlag  ( Int layerIdInVps, Bool val )  { m_viewSynthesisPredFlag[ layerIdInVps ] = val; }
@@ -1151,8 +1174,14 @@ public:
   Bool    getIVPFlag( Int layerIdInVps )                              { return m_bIVPFlag[ layerIdInVps ]; }
 #endif
 
+#if SEC_HLS_CLEANUP_I0100
+  Bool    getIvMvScalingFlag   ( Int layerIdInVps )                        { return m_ivMvScalingFlag[ layerIdInVps ]; }
+  Void    setIvMvScalingFlag   (Int layerIdInVps, Bool b )                 { m_ivMvScalingFlag[ layerIdInVps ] = b;    }  
+#else
   Bool    getIvMvScalingFlag   (  )                       { return m_ivMvScalingFlag; }
   Void    setIvMvScalingFlag   ( Bool b )                 { m_ivMvScalingFlag = b;    }  
+#endif
+
 #if H_3D_INTER_SDC
   Bool    getInterSDCFlag      ( Int layerIdInVps )           { return m_bInterSDCFlag[layerIdInVps]; }
   Void    setInterSDCFlag      ( Int layerIdInVps, Bool bval ){ m_bInterSDCFlag[layerIdInVps] = bval; }
@@ -1476,9 +1505,11 @@ private:
   UInt        m_uiPCMLog2MinSize;
   Bool        m_useAMP;
 
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
   Bool        m_bUseQTL;
   Bool        m_bUsePC;
+#endif
 #endif
   // Parameter
   Int         m_bitDepthY;
@@ -1742,11 +1773,13 @@ public:
   Void checkRpsMaxNumPics( TComVPS* vps, Int currLayerId );
 
 #endif
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
   Void setUseQTL( Bool b ) { m_bUseQTL = b;    }
   Bool getUseQTL()         { return m_bUseQTL; }
   Void setUsePC ( Bool b ) { m_bUsePC  = b;    }
   Bool getUsePC ()         { return m_bUsePC;  }
+#endif
 #endif
 #if H_MV
   Int  getLayerId            ()           { return m_layerId; }
