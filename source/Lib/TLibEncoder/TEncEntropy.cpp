@@ -261,6 +261,7 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   }
   
 #if H_3D_DBBP
+#if! SEC_DBBP_EXPLICIT_SIG_I0077
   PartSize eVirtualPartSize = pcCU->getPartitionSize(uiAbsPartIdx);
   if( pcCU->getDBBPFlag(uiAbsPartIdx) )
   {
@@ -270,19 +271,33 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     pcCU->setPartSizeSubParts(RWTH_DBBP_PACK_MODE, uiAbsPartIdx, uiDepth);
   }
 #endif
+#endif
   
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
 #if H_3D_DBBP
+#if SEC_DBBP_EXPLICIT_SIG_I0077
+#if SEC_DBBP_DISALLOW_8x8_I0078
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 )
+#else
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) )
+#endif
+#else
+#if SEC_DBBP_DISALLOW_8x8_I0078
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getWidth(uiAbsPartIdx) > 8 )
+#else
   if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) )
+#endif
+#endif
   {
     encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
-    
+#if !SEC_DBBP_EXPLICIT_SIG_I0077
     if( pcCU->getDBBPFlag(uiAbsPartIdx) )
     {
       // restore virtual partition size for DBBP blocks
       pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
     }
+#endif
   }
 #endif
 }

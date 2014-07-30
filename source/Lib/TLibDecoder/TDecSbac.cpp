@@ -2261,12 +2261,20 @@ Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
   
+#if SEC_DBBP_EXPLICIT_SIG_I0077
+  PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+  AOF( ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N );
+  UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
+  pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx, 0, uiDepth);
+  pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx+uiPUOffset, 1, uiDepth);
+#else
   if( uiSymbol )
   {
     pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx, 0, uiDepth);
     UInt uiCurrPartNumQ = (pcCU->getPic()->getNumPartInCU() >> (2 * uiDepth)) >> 2;
     pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx + 2*uiCurrPartNumQ, 1, uiDepth);
   }
+#endif
 }
 #endif
 
