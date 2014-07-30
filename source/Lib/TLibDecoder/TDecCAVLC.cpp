@@ -1821,6 +1821,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
         READ_FLAG( uiCode, "mpi_flag[i]" );             pcVPS->setMPIFlag( i, uiCode == 1 ? true : false );
 #endif
         READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
+#if SEPARATE_FLAG_I0085
+        READ_FLAG( uiCode, "ivp_flag[i]" );                   pcVPS->setIVPFlag( i, uiCode == 1 ? true : false );
+#endif
         //          READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPreFlag     ( i, uiCode == 1 ? true : false ); 
 #if H_3D_INTER_SDC
             READ_FLAG( uiCode, "depth_inter_SDC_flag" );              pcVPS->setInterSDCFlag( i, uiCode ? true : false );
@@ -2472,6 +2475,14 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
 #endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    if(rpcSlice->getIsDepth())
+    {
+      UInt uiCodeTmp = 0;
+      READ_FLAG( uiCodeTmp, "slice_enable_single_depth_mode" );
+      rpcSlice->setApplySingleDepthMode(uiCodeTmp);
+    }
+#endif
     if (!rpcSlice->isIntra())
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
@@ -2842,7 +2853,12 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
 {
   assert(0);
 }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TDecCavlc::parseSingleDepthMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+#endif
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);

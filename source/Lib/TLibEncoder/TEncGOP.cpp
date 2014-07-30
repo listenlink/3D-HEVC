@@ -933,7 +933,18 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
-  
+#if MTK_SINGLE_DEPTH_MODE_I0095
+    TEncTop* pcEncTop = (TEncTop*) m_pcCfg;
+    bool enableSingleDepthMode=false;
+    if(pcEncTop->getUseSingleDepthMode())
+    {
+      if(pcSlice->getIsDepth())
+      {
+        enableSingleDepthMode=true;
+      }
+    }
+    pcSlice->setApplySingleDepthMode(enableSingleDepthMode);
+#endif    
 #if H_3D_ARP
     //GT: This seems to be broken when layerId in vps is not equal to layerId in nuh
     pcSlice->setARPStepNum(m_ivPicLists);

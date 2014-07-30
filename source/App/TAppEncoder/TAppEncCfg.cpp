@@ -377,8 +377,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
   ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
+#if SEPARATE_FLAG_I0085
+  ("IVP",                   m_useIVP,           true,  "intra-view prediction")
+#endif
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  ("SingleDepthMode",    m_useSingleDepthMode, true, "Single depth mode")                         
 #endif
 #endif
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")
@@ -2519,8 +2525,14 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_DIM
   printf("DMM:%d ", m_useDMM );
+#if SEPARATE_FLAG_I0085
+  printf("IVP:%d ", m_useIVP );
+#endif
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  printf("SingleDepthMode:%d ",    m_useSingleDepthMode);
 #endif
 #if H_3D_INTER_SDC
   printf( "interSDC:%d ", m_bDepthInterSDCFlag ? 1 : 0 );

@@ -413,8 +413,14 @@ protected:
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
+#if SEPARATE_FLAG_I0085
+  Bool      m_useIVP;
+#endif
   Bool      m_useSDC;
   Bool      m_useDLT;
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Bool      m_useSingleDepthMode;
 #endif
 #if H_3D_IV_MERGE
   Bool      m_useMPI;
@@ -1002,10 +1008,18 @@ public:
 #if H_3D_DIM
   Bool      getUseDMM                       ()        { return m_useDMM; }
   Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
+#if SEPARATE_FLAG_I0085
+  Bool      getUseIVP                       ()        { return m_useIVP; }
+  Void      setUseIVP                       ( Bool b) { m_useIVP = b;    }
+#endif
   Bool      getUseSDC                       ()        { return m_useSDC; }
   Void      setUseSDC                       ( Bool b) { m_useSDC = b;    }
   Bool      getUseDLT                       ()        { return m_useDLT; }
   Void      setUseDLT                       ( Bool b) { m_useDLT = b;    }
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void       setUseSingleDepthMode          ( Bool bVal )    { m_useSingleDepthMode = bVal; }
+  Bool       getUseSingleDepthMode          ()               { return m_useSingleDepthMode; }
 #endif
 #if H_3D_QTLPC
   Void      setUseQTL                       ( Bool b ) { m_bUseQTL = b;    }
