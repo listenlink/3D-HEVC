@@ -713,7 +713,12 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
 #if H_3D_QTLPC
+#if MTK_I0099_VPS_EX2
+  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
+  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
+#else
   TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
+#endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -722,7 +727,11 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   Bool depthDependent = false;
   UInt uiTexturePart = eSize;
+#if MTK_I0099_VPS_EX2
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && bLimQtPredFlag )
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && sps->getUseQTL() && sps->getUsePC() )
+#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();
@@ -1080,14 +1089,23 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 #if H_3D_QTLPC
   Bool bCodeSplitFlag    = true;
 
+#if MTK_I0099_VPS_EX2
+  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
+  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
+#else
   TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
+#endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
 
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
+#if MTK_I0099_VPS_EX2
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && bLimQtPredFlag  )
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && pcCU->getPic()->getReduceBitsFlag() && sps->getUseQTL() && sps->getUsePC())
+#endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
     UInt uiCUIdx            = (pcCU->getZorderIdxInCU() == 0) ? uiAbsPartIdx : pcCU->getZorderIdxInCU();

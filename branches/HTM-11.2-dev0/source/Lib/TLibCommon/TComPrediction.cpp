@@ -567,6 +567,12 @@ Void TComPrediction::xGetSubPUAddrAndMerge(TComDataCU* pcCU, UInt uiPartAddr, In
     uiMergedSPH[i] = iSPHeight;
     pcCU->getSPAbsPartIdx(uiPartAddr, iSPWidth, iSPHeight, i, iNumSPInOneLine, uiSPAddr[i]);
   }
+#if SHARP_ARP_CHROMA_I0104
+  if( pcCU->getARPW( uiPartAddr ) != 0 )
+  {
+    return;
+  }
+#endif
   // horizontal sub-PU merge
   for (Int i=0; i<iNumSP; i++)
   {
@@ -1468,9 +1474,13 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
   pcCU->clipMv(cMv);
   TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPicYuvRec();
+#if QC_I0129_ARP_FIX
+  xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi || ( dW > 0 ), true );
+  xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi || ( dW > 0 ), true );
+#else
   xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, true );
   xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMv, iWidth, iHeight, rpcYuvPred, bi, true );
-
+#endif
   if( dW > 0 )
   {
     TComYuv * pYuvB0 = &m_acYuvPredBase[0];
@@ -1478,6 +1488,12 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
     TComMv cMVwithDisparity = cMv + cDistparity.m_acNBDV;
     pcCU->clipMv(cMVwithDisparity);
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth <= 8)
+    {
+      pYuvB0->clear(); pYuvB1->clear();
+    }
+#endif
 
     assert ( cDistparity.bDV );
     
@@ -1486,8 +1502,16 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     pcCU->clipMv( cNBDV );
     
     pcPicYuvRef = pcPicYuvBaseCol->getPicYuvRec();
+#if QC_I0129_ARP_FIX
+    xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, true, true );
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
+    xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, true, true );
+#else
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, bi, true );
     xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cNBDV, iWidth, iHeight, pYuvB0, bi, true );
+#endif
 #else
     pcPicYuvRef = pcPicYuvBaseCol->getPicYuvRec();
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cDistparity.m_acNBDV, iWidth, iHeight, pYuvB0, bi, true );
@@ -1495,9 +1519,16 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 #endif
     
     pcPicYuvRef = pcPicYuvBaseRef->getPicYuvRec();
+#if QC_I0129_ARP_FIX
+    xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, true, true );
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
+    xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, true, true );
+#else
     xPredInterLumaBlk  ( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, bi, true );
     xPredInterChromaBlk( pcCU, pcPicYuvRef, uiPartAddr, &cMVwithDisparity, iWidth, iHeight, pYuvB1, bi, true );
-
+#endif
     pYuvB0->subtractARP( pYuvB0 , pYuvB1 , uiPartAddr , iWidth , iHeight );
 
     if( 2 == dW )
@@ -1507,6 +1538,77 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     rpcYuvPred->addARP( rpcYuvPred , pYuvB0 , uiPartAddr , iWidth , iHeight , !bi );
   }
 }
+
+#if QC_I0051_ARP_SIMP
+Bool TComPrediction::xCheckBiInterviewARP( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eBaseRefPicList, TComPic*& pcPicYuvCurrTRef, TComMv& cBaseTMV, Int& iCurrTRefPoc )
+{
+  Int         iRefIdx       = pcCU->getCUMvField( eBaseRefPicList )->getRefIdx( uiPartAddr );
+  TComMv      cDMv          = pcCU->getCUMvField( eBaseRefPicList )->getMv( uiPartAddr );
+  TComPic* pcPicYuvBaseCol  = pcCU->getSlice()->getRefPic( eBaseRefPicList, iRefIdx );  
+  TComPicYuv* pcYuvBaseCol  = pcPicYuvBaseCol->getPicYuvRec();
+  Int uiLCUAddr,uiAbsPartAddr;
+  Int irefPUX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[uiPartAddr]] + iWidth/2  + ((cDMv.getHor() + 2)>>2);
+  Int irefPUY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[uiPartAddr]] + iHeight/2 + ((cDMv.getVer() + 2)>>2);
+
+  irefPUX = (Int)Clip3<Int>(0, pcCU->getSlice()->getSPS()-> getPicWidthInLumaSamples()-1, irefPUX);
+  irefPUY = (Int)Clip3<Int>(0, pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples()-1, irefPUY);  
+  pcYuvBaseCol->getCUAddrAndPartIdx( irefPUX, irefPUY, uiLCUAddr, uiAbsPartAddr);
+  TComDataCU *pColCU = pcPicYuvBaseCol->getCU( uiLCUAddr );
+
+  TComPic* pcPicYuvBaseTRef = NULL;
+  pcPicYuvCurrTRef = NULL;
+
+  //If there is available motion in base reference list, use it
+  if(!pColCU->isIntra(uiAbsPartAddr))
+  {
+    for(Int iList = 0; iList < (pColCU->getSlice()->isInterB() ? 2: 1); iList ++)
+    {
+      RefPicList eRefPicListCurr = RefPicList(iList);
+      Int iRef = pColCU->getCUMvField(eRefPicListCurr)->getRefIdx(uiAbsPartAddr);
+      if( iRef != -1)
+      {
+        pcPicYuvBaseTRef = pColCU->getSlice()->getRefPic(eRefPicListCurr, iRef);  
+        Int  iCurrPOC    = pColCU->getSlice()->getPOC();
+        Int  iCurrRefPOC = pcPicYuvBaseTRef->getPOC();
+        Int  iCurrRef    = pcCU->getSlice()->getFirstTRefIdx(eRefPicListCurr);
+#if MTK_I0072_IVARP_SCALING_FIX
+        if( iCurrRef >= 0 && iCurrPOC != iCurrRefPOC)
+#else
+        if( iCurrRef >= 0)
+#endif
+        {
+          pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic(eRefPicListCurr,iCurrRef);  
+          Int iTargetPOC = pcPicYuvCurrTRef->getPOC();
+          pcPicYuvBaseTRef =  pcCU->getSlice()->getBaseViewRefPic(iTargetPOC,  pcPicYuvBaseCol->getViewIndex() );  
+          if(pcPicYuvBaseTRef)
+          {
+            cBaseTMV = pColCU->getCUMvField(eRefPicListCurr)->getMv(uiAbsPartAddr);
+            Int iScale = pcCU-> xGetDistScaleFactor(iCurrPOC, iTargetPOC, iCurrPOC, iCurrRefPOC);
+            if ( iScale != 4096 )
+            {
+              cBaseTMV = cBaseTMV.scaleMv( iScale );
+            }
+            iCurrTRefPoc = iTargetPOC;
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  //If there is no available motion in base reference list, use ( 0, 0 )
+  if( pcCU->getSlice()->getFirstTRefIdx( eBaseRefPicList ) >= 0 )
+  {
+    cBaseTMV.set( 0, 0 );
+    pcPicYuvCurrTRef = pcCU->getSlice()->getRefPic( eBaseRefPicList,  pcCU->getSlice()->getFirstTRefIdx( eBaseRefPicList ) );
+    iCurrTRefPoc = pcPicYuvCurrTRef->getPOC();
+    return true;
+  }
+
+  return false;
+}
+#endif
+
 Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr, Int iWidth, Int iHeight, RefPicList eRefPicList, TComYuv*& rpcYuvPred, Bool bi, TComMvField * pNewMvFiled )
 {
   Int         iRefIdx       = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           
@@ -1540,8 +1642,74 @@ Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr,
   irefPUY = (Int)Clip3<Int>(0, pcCU->getSlice()->getSPS()->getPicHeightInLumaSamples()-1, irefPUY);  
   pcYuvBaseCol->getCUAddrAndPartIdx( irefPUX, irefPUY, uiLCUAddr, uiAbsPartAddr);
   TComDataCU *pColCU = pcPicYuvBaseCol->getCU( uiLCUAddr );
+#if QC_I0051_ARP_SIMP
+  if( pcCU->getSlice()->isInterB() && !pcCU->getSlice()->getIsDepth() )
+  {
+    RefPicList eOtherRefList = ( eRefPicList == REF_PIC_LIST_0 ) ? REF_PIC_LIST_1 : REF_PIC_LIST_0;
+    Int iOtherRefIdx = pcCU->getCUMvField( eOtherRefList )->getRefIdx( uiPartAddr );
+    //The other prediction direction is temporal ARP
+    if( iOtherRefIdx >= 0 && pcCU->getSlice()->getViewIndex() == pcCU->getSlice()->getRefPic( eOtherRefList, iOtherRefIdx )->getViewIndex() )
+    {
+      bTMVAvai = true;
+      pcPicYuvBaseTRef = pcCU->getSlice()->getRefPic( eOtherRefList, iOtherRefIdx );
+      Int  iCurrPOC    = pcCU->getSlice()->getPOC();
+      Int  iCurrRefPOC = pcPicYuvBaseTRef->getPOC();
+      Int  iCurrRef    = pcCU->getSlice()->getFirstTRefIdx( eOtherRefList );
+      
+      if( iCurrRef >= 0 )
+      {
+        pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic( eOtherRefList,iCurrRef );  
+        Int iTargetPOC = pcPicYuvCurrTRef->getPOC();
+        pcPicYuvBaseTRef =  pcCU->getSlice()->getBaseViewRefPic( iTargetPOC,  pcPicYuvBaseCol->getViewIndex() );
+        if( pcPicYuvBaseTRef )
+        {
+          cBaseTMV = pcCU->getCUMvField( eOtherRefList )->getMv( uiPartAddr );
+          Int iScale = pcCU-> xGetDistScaleFactor( iCurrPOC, iTargetPOC, iCurrPOC, iCurrRefPOC );
+          if ( iScale != 4096 )
+          {
+            cBaseTMV = cBaseTMV.scaleMv( iScale );
+          }
+        }
+        else
+        {
+          dW = 0;
+        }
+      }
+      else
+      {
+        dW = 0;
+      }
+    }
 
+    //Both prediction directions are inter-view ARP
+    if ( iOtherRefIdx >= 0 && !bTMVAvai )
+    {
+      RefPicList eBaseList = REF_PIC_LIST_0;
+      Int iCurrTRefPoc;
+      bTMVAvai = ( eBaseList != eRefPicList ) && ( pcCU->getSlice()->getViewIndex() != pcCU->getSlice()->getRefPic( eOtherRefList, iOtherRefIdx )->getViewIndex() );
+
+      if ( bTMVAvai )
+      {
+        if( xCheckBiInterviewARP( pcCU, uiPartAddr, iWidth, iHeight, eBaseList, pcPicYuvCurrTRef, cBaseTMV, iCurrTRefPoc ) )
+        {
+          pcPicYuvBaseTRef = pcCU->getSlice()->getBaseViewRefPic( iCurrTRefPoc,  pcPicYuvBaseCol->getViewIndex() );
+          if ( pcPicYuvBaseTRef == NULL )
+          {
+            dW = 0;
+          }
+        }
+        else
+        {
+          dW = 0;
+        }
+      }
+    }
+  }
+
+  if( !pColCU->isIntra( uiAbsPartAddr ) && !bTMVAvai )
+#else
   if(!pColCU->isIntra(uiAbsPartAddr))
+#endif
   {
     TComMvField puMVField;
     for(Int iList = 0; iList < (pColCU->getSlice()->isInterB() ? 2: 1) && !bTMVAvai; iList ++)
@@ -1554,7 +1722,11 @@ Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr,
         Int  iCurrPOC    = pColCU->getSlice()->getPOC();
         Int  iCurrRefPOC = pcPicYuvBaseTRef->getPOC();
         Int  iCurrRef    = pcCU->getSlice()->getFirstTRefIdx(eRefPicListCurr);
+#if MTK_I0072_IVARP_SCALING_FIX
+        if (iCurrRef >= 0 && iCurrRefPOC != iCurrPOC)
+#else
         if( iCurrRef >= 0)
+#endif
         {
           pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic(eRefPicListCurr,iCurrRef);  
           Int iTargetPOC = pcPicYuvCurrTRef->getPOC();
@@ -1581,10 +1753,13 @@ Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr,
     pcPicYuvBaseTRef =  pColCU->getSlice()->getRefPic(eRefPicList,  pcCU->getSlice()->getFirstTRefIdx(eRefPicList));  
     pcPicYuvCurrTRef =  pcCU->getSlice()->getRefPic  (eRefPicList,  pcCU->getSlice()->getFirstTRefIdx(eRefPicList));      
   }
-
+#if QC_I0129_ARP_FIX
+  xPredInterLumaBlk  ( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi || ( dW > 0 && bTMVAvai ),        bTMVAvai);
+  xPredInterChromaBlk( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi || ( dW > 0 && bTMVAvai ),        bTMVAvai);
+#else
   xPredInterLumaBlk  ( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi,        bTMVAvai);
   xPredInterChromaBlk( pcCU, pcYuvBaseCol, uiPartAddr, &cTempDMv, iWidth, iHeight, rpcYuvPred, bi,        bTMVAvai);
-
+#endif
   if( dW > 0 && bTMVAvai ) 
   {
     TComYuv*    pYuvCurrTRef    = &m_acYuvPredBase[0];
@@ -1595,12 +1770,30 @@ Void TComPrediction::xPredInterUniARPviewRef( TComDataCU* pcCU, UInt uiPartAddr,
 
     pcCU->clipMv(cBaseTMV);
     pcCU->clipMv(cTempMv);
-
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth <= 8)
+    {
+      pYuvCurrTRef->clear(); pYuvBaseTRef->clear();
+    }
+#endif
+#if QC_I0129_ARP_FIX
+    xPredInterLumaBlk  ( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, true,   true);
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
+    xPredInterChromaBlk( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, true,   true);
+    xPredInterLumaBlk  ( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, true,   true); 
+#if SHARP_ARP_CHROMA_I0104
+    if (iWidth > 8)
+#endif
+    xPredInterChromaBlk( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, true,   true); 
+#else
     xPredInterLumaBlk  ( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, bi,   true);
     xPredInterChromaBlk( pcCU, pcYuvCurrTref, uiPartAddr, &cBaseTMV, iWidth, iHeight, pYuvCurrTRef, bi,   true);
     xPredInterLumaBlk  ( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, bi,   true); 
     xPredInterChromaBlk( pcCU, pcYuvBaseTref, uiPartAddr, &cTempMv,  iWidth, iHeight, pYuvBaseTRef, bi,   true); 
 
+#endif
     pYuvCurrTRef->subtractARP( pYuvCurrTRef , pYuvBaseTRef , uiPartAddr , iWidth , iHeight );  
     if(dW == 2)
     {
@@ -2134,14 +2327,20 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
   UInt uiWidth, uiHeight, uiTmpPartIdx;
   Int iRecStride = ( eType == TEXT_LUMA ) ? pRecPic->getStride() : pRecPic->getCStride();
   Int iRefStride = ( eType == TEXT_LUMA ) ? pRefPic->getStride() : pRefPic->getCStride();
+#if SEC_IC_NEIGHBOR_CLIP_I0080
+  Int iRefOffset, iHor, iVer;
+#else
   Int iCUPelX, iCUPelY, iRefX, iRefY, iRefOffset, iHor, iVer;
 
   iCUPelX = pcCU->getCUPelX() + g_auiRasterToPelX[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
   iCUPelY = pcCU->getCUPelY() + g_auiRasterToPelY[g_auiZscanToRaster[pcCU->getZorderIdxInCU()]];
+#endif
   iHor = pcCU->getSlice()->getIsDepth() ? pMv->getHor() : ( ( pMv->getHor() + 2 ) >> 2 );
   iVer = pcCU->getSlice()->getIsDepth() ? pMv->getVer() : ( ( pMv->getVer() + 2 ) >> 2 );
+#if !SEC_IC_NEIGHBOR_CLIP_I0080
   iRefX   = iCUPelX + iHor;
   iRefY   = iCUPelY + iVer;
+#endif
   if( eType != TEXT_LUMA )
   {
     iHor = pcCU->getSlice()->getIsDepth() ? ( ( pMv->getHor() + 1 ) >> 1 ) : ( ( pMv->getHor() + 4 ) >> 3 );
@@ -2157,7 +2356,11 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
   Int x = 0, y = 0, xx = 0, xy = 0;
   Int precShift = std::max(0, (( eType == TEXT_LUMA ) ? g_bitDepthY : g_bitDepthC) - 12);
 
+#if SEC_IC_NEIGHBOR_CLIP_I0080
+  if( pcCU->getPUAbove( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) )
+#else
   if( pcCU->getPUAbove( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) && iCUPelY > 0 && iRefY > 0 )
+#endif
   {
     iRefOffset = iHor + iVer * iRefStride - iRefStride;
     if( eType == TEXT_LUMA )
@@ -2187,8 +2390,11 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     iCountShift += g_aucConvertToBit[ uiWidth ] + 1;
   }
 
-
+#if SEC_IC_NEIGHBOR_CLIP_I0080
+  if( pcCU->getPULeft( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) )
+#else
   if( pcCU->getPULeft( uiTmpPartIdx, pcCU->getZorderIdxInCU() ) && iCUPelX > 0 && iRefX > 0 )
+#endif
   {
     iRefOffset = iHor + iVer * iRefStride - 1;
     if( eType == TEXT_LUMA )

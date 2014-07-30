@@ -408,7 +408,12 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   TComPic* pcPic = rpcBestCU->getPic();
 
 #if H_3D_QTLPC
+#if MTK_I0099_VPS_EX2
+  TComVPS *vps            = pcPic->getSlice(0)->getVPS();
+  Bool  bLimQtPredFalg    = vps->getLimQtPredFlag(pcPic->getSlice(0)->getLayerId()); 
+#else
   TComSPS *sps            = pcPic->getSlice(0)->getSPS();
+#endif
   TComPic *pcTexture      = rpcBestCU->getSlice()->getTexturePic();
 
   Bool  depthMapDetect    = (pcTexture != NULL);
@@ -530,7 +535,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_QTLPC
       //logic for setting bTrySplit using the partition information that is stored of the texture colocated CU
 
+#if MTK_I0099_VPS_EX2
+#if MTK_I0099_FIX
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
+#else
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFalg)
+#endif
+#else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL())
+#endif
       {
         TComDataCU* pcTextureCU = pcTexture->getCU( rpcBestCU->getAddr() ); //Corresponding texture LCU
         UInt uiCUIdx            = rpcBestCU->getZorderIdxInCU();
@@ -684,7 +697,15 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
 
 #if H_3D_QTLPC      
+#if MTK_I0099_VPS_EX2
+#if MTK_I0099_FIX
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
+#else
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFalg)
+#endif
+#else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL())
+#endif
       {
         bTrySplitDQP = bTrySplit;
       }
