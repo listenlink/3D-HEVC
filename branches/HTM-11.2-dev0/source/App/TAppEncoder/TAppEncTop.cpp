@@ -215,11 +215,6 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 #endif
 #endif
-
-#if H_3D_QTLPC
-    m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL               : false );
-    m_cTEncTop.setUsePC                        ( isDepth ? m_bUsePC                : false );
-#endif
     //====== Depth Inter SDC =========
 #if H_3D_INTER_SDC
     m_cTEncTop.setInterSDCEnable               ( isDepth ? m_bDepthInterSDCFlag    : false );

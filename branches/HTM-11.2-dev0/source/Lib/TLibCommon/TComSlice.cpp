@@ -1956,11 +1956,9 @@ TComVPS::TComVPS()
 #else
     m_ivMvScalingFlag = true; 
 #endif
-#endif
 #if SEPARATE_FLAG_I0085
     m_bIVPFlag [i]      = false;
 #endif
-    m_ivMvScalingFlag = true; 
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
