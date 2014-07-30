@@ -2417,6 +2417,10 @@ Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 #if H_3D_DBBP
 Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
+#if SEC_DBBP_EXPLICIT_SIG_I0077
+  PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
+  AOF( ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N );
+#endif
   AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
   AOF( !pcCU->getSlice()->getIsDepth() );
   

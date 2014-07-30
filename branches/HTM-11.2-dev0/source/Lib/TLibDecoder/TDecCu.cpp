@@ -923,7 +923,11 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   
   // reconstruct final prediction signal by combining both segments
+#if SHARP_DBBP_SIMPLE_FLTER_I0109
+  m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0), 0, ePartSize);
+#else
   m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0));
+#endif
   
   // inter recon
   xDecodeInterTexture( pcCU, 0, uiDepth );
