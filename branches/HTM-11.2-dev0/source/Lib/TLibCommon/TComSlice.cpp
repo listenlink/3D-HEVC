@@ -2798,8 +2798,9 @@ TComDLT::TComDLT()
 
     // allocate some memory and initialize with default mapping
     m_iNumDepthmapValues[i] = ((1 << m_uiDepthViewBitDepth)-1)+1;
+#if !FIX_TICKET_77
     m_iBitsPerDepthValue[i] = numBitsForValue(m_iNumDepthmapValues[i]);
-
+#endif
     m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
     m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
 
@@ -2888,7 +2889,9 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
   // update DLT variables
   m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
+#if !FIX_TICKET_77
   m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
+#endif
 }
 
 #if H_3D_DELTA_DLT
