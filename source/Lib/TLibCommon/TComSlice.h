@@ -1206,7 +1206,9 @@ private:
   Bool        m_bUseDLTFlag              [ MAX_NUM_LAYERS ];
   Bool        m_bInterViewDltPredEnableFlag[ MAX_NUM_LAYERS ];
 
+#if !FIX_TICKET_77
   Int         m_iBitsPerDepthValue       [ MAX_NUM_LAYERS ];
+#endif
   Int         m_iNumDepthmapValues       [ MAX_NUM_LAYERS ];
   Int*        m_iDepthValue2Idx          [ MAX_NUM_LAYERS ];
   Int*        m_iIdx2DepthValue          [ MAX_NUM_LAYERS ];
@@ -1233,7 +1235,9 @@ public:
   Void    setDepthViewBitDepth( UInt n )                  { m_uiDepthViewBitDepth = n; }
   UInt    getDepthViewBitDepth()                          { return m_uiDepthViewBitDepth; }
 
+#if !FIX_TICKET_77
   Int     getBitsPerDepthValue( Int layerIdInVps )        { return getUseDLTFlag(layerIdInVps)?m_iBitsPerDepthValue[layerIdInVps]:g_bitDepthY; }
+#endif
   Int     getNumDepthValues( Int layerIdInVps )           { return getUseDLTFlag(layerIdInVps)?m_iNumDepthmapValues[layerIdInVps]:((1 << g_bitDepthY)-1); }
   Int     depthValue2idx( Int layerIdInVps, Pel value )   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
 #if RWTH_DLT_CLIP_I0057
