@@ -5316,13 +5316,14 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 }
 #endif
 
-
+#if !FIX_TICKET_76
 #if H_3D_VSP
 inline Void TComDataCU::xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount, InheritedVSPDisInfo*  inheritedVSPDisInfo)
 {
   inheritedVSPDisInfo[iCount].m_acDvInfo.m_acNBDV   = pcCURef->getDvInfo(uiAbsPartIdx).m_acNBDV;
   inheritedVSPDisInfo[iCount].m_acDvInfo.m_aVIdxCan = pcCURef->getDvInfo(uiAbsPartIdx).m_aVIdxCan;
 }
+#endif
 #endif
 /** Check whether the current PU and a spatial neighboring PU are in a same ME region.
  * \param xN, xN   location of the upper-left corner pixel of a neighboring PU

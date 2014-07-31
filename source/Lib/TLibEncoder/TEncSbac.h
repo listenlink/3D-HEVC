@@ -129,8 +129,10 @@ private:
 #if H_3D_DIM_DMM
   Void  xCodeDmm1WedgeIdx    ( UInt uiTabIdx, Int iNumBit );
 #endif
+#if !FIX_TICKET_76
 #if H_3D_DIM_SDC
   Void  xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment );
+#endif
 #endif
 #endif
   

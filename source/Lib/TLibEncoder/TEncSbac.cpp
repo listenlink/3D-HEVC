@@ -563,6 +563,7 @@ Void TEncSbac::xCodeDmm1WedgeIdx( UInt uiTabIdx, Int iNumBit )
 
 #endif
 
+#if !FIX_TICKET_76
 #if H_3D_DIM_SDC
 Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiSegment )
 {
@@ -649,6 +650,8 @@ Void TEncSbac::xCodeSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 }
 #endif
 #endif
+#endif
+
 
 // SBAC RD
 Void  TEncSbac::load ( TEncSbac* pSrc)

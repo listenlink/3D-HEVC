@@ -283,7 +283,8 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Fixes
-#define FIX_TICKET_62                     1    // layerIdsInSets size check
+#define FIX_TICKET_76                     1    // unused functions
+#define FIX_TICKET_62                     1    // buffer overflow for print
 #define FIX_TICKET_61                     1    // layerIdsInSets size check
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********

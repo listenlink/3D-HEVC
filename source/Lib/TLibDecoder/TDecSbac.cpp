@@ -431,6 +431,7 @@ Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
 }
 #endif
 
+#if !FIX_TICKET_76
 #if H_3D_DIM_SDC
 Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSegment )
 {
@@ -510,7 +511,7 @@ Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt
 }
 #endif
 #endif
-
+#endif
 /** Parse I_PCM information. 
  * \param pcCU
  * \param uiAbsPartIdx 
