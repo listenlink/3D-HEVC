@@ -4244,7 +4244,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                 bSPIVMPFlag = true;
                 TComMv cMv = cDefaultMvField.getMv() + cMvRounding;
                 cMv >>= 2;
+#if !FIX_TICKET_68
                 clipMv( cMv );
+#endif
                 cMvFieldSaved[eCurrRefPicList].setMvField(cMv, iRefPicList) ;
                 break;
               }

@@ -283,6 +283,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Fixes
+#define FIX_TICKET_68                     1    // MV clipping bug in the sub-PU MPI default MV generation
 #define FIX_TICKET_71                     1    // IC parameters is meaningless in HTM when no training samples are available
 #define FIX_TICKET_77                     1    // Unused variable m_iBitsPerDepthValue
 #define FIX_TICKET_76                     1    // unused functions
