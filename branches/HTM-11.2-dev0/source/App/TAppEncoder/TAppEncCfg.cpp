@@ -1414,7 +1414,11 @@ Void TAppEncCfg::xCheckParameter()
     }
     for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
     {
+#if FIX_TICKET_61
+      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx][i] >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than 0 and less than MAX_NUM_LAYER_IDS" ); 
+#else
       xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than MAX_NUM_LAYER_IDS" ); 
+#endif
     }
   }
 

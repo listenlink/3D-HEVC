@@ -282,6 +282,10 @@
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
 
+// Fixes
+#define FIX_TICKET_62                     1    // layerIdsInSets size check
+#define FIX_TICKET_61                     1    // layerIdsInSets size check
+
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
 #define H_3D_VSO_DIST_INT                 1   // Allow negative synthesized view distortion change
