@@ -283,6 +283,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Fixes
+#define FIX_TICKET_71                     1    // IC parameters is meaningless in HTM when no training samples are available
 #define FIX_TICKET_77                     1    // Unused variable m_iBitsPerDepthValue
 #define FIX_TICKET_76                     1    // unused functions
 #define FIX_TICKET_62                     1    // buffer overflow for print

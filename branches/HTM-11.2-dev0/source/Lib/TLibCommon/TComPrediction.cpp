@@ -2428,6 +2428,15 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     iCountShift += iCountShift > 0 ? 1 : ( g_aucConvertToBit[ uiWidth ] + 1 );
   }
 
+#if FIX_TICKET_71
+  if( iCountShift == 0 )
+  {
+    a = ( 1 << IC_CONST_SHIFT );
+    b = 0;
+    return;
+  }
+#endif
+
   xy += xx >> IC_REG_COST_SHIFT;
   xx += xx >> IC_REG_COST_SHIFT;
   Int a1 = ( xy << iCountShift ) - ((y * x) >> precShift);
