@@ -679,7 +679,9 @@ UChar         getNumPartitions       ();
                                             );
 
 #if H_3D_VSP
+#if !FIX_TICKET_76
   inline Void   xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
+#endif
 
 #if H_3D_SPIVMP
   Bool*         getSPIVMPFlag        ()                        { return m_pbSPIVMPFlag;          }
