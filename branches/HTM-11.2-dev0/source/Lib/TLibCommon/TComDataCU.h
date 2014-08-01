@@ -669,7 +669,7 @@ UChar         getNumPartitions       ();
 #else
   Void          getInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #endif
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_79
                                             , InheritedVSPDisInfo*  inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP

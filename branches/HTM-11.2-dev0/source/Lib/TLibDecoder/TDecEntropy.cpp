@@ -310,14 +310,18 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #if H_3D_VSP
           Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
           memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#if !FIX_TICKET_79
           InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#endif
 #if H_3D_SPIVMP
           memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
 #endif
           pcSubCU->initAvailableFlags();
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
           pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours
+#if !FIX_TICKET_79
             , inheritedVSPDisInfo
+#endif
 #if H_3D_SPIVMP
             , pcMvFieldSP, puhInterDirSP
 #endif
@@ -329,10 +333,12 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
             , numValidMergeCand );
           pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
+#if !FIX_TICKET_79
           if(vspFlag[uiMergeIndex])
           {
             pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
           }
+#endif
 #else
 #if H_3D
           pcSubCU->initAvailableFlags();
@@ -353,14 +359,18 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #if H_3D_VSP
         Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
         memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#if !FIX_TICKET_79
         InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#endif
 #if H_3D_SPIVMP
         memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
 #endif
         pcSubCU->initAvailableFlags();
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
         pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours
+#if !FIX_TICKET_79
           , inheritedVSPDisInfo
+#endif
 #if H_3D_SPIVMP
           , pcMvFieldSP, puhInterDirSP
 #endif
@@ -371,10 +381,12 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
           ,numValidMergeCand );
         pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
+#if !FIX_TICKET_79
         if(vspFlag[uiMergeIndex])
         {
           pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
         }
+#endif
 #else
 #if H_3D
         pcSubCU->initAvailableFlags();
@@ -472,7 +484,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
 #endif
     }
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_75
     if ( (pcCU->getInterDir(uiSubPartIdx) == 3) && pcSubCU->isBipredRestriction(uiPartIdx) && (pcCU->getVSPFlag(uiSubPartIdx) == 0))
 #else
     if ( (pcCU->getInterDir(uiSubPartIdx) == 3) && pcSubCU->isBipredRestriction(uiPartIdx) )

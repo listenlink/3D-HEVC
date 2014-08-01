@@ -3920,7 +3920,7 @@ Void TComDataCU::xGetInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TCom
 #else
 Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMvFieldNeighbours, UChar* puhInterDirNeighbours
 #endif
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_79
       , InheritedVSPDisInfo*  inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
@@ -3950,10 +3950,12 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   //////// GET DISPARITIES  ////////
   //////////////////////////////////
   DisInfo cDisInfo = getDvInfo(uiAbsPartIdx);
+#if !FIX_TICKET_79
   for(Int i = 0; i < MRG_MAX_NUM_CANDS_MEM; i++)
   {
     inheritedVSPDisInfo[i].m_acDvInfo = cDisInfo;   // To prevent run-time error, this code must be executed always for merging process.
   }
+#endif
   m_cDefaultDisInfo = cDisInfo;
 
   if (!( getSlice()->getIsDepth() || getSlice()->getViewIndex()>0))  // current slice is not both dependent view or depth

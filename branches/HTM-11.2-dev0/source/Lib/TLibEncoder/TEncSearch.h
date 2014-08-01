@@ -428,7 +428,9 @@ protected:
                                     UChar* uhInterDirNeighbours
 #if H_3D_VSP
                                   , Int* vspFlag
+#if !FIX_TICKET_79
                                   , InheritedVSPDisInfo*  inheritedVSPDisInfo
+#endif
 #endif
 #if H_3D_SPIVMP
                                   , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
@@ -440,7 +442,7 @@ protected:
                                     UInt            puIdx,
                                     TComMvField*    mvFieldNeighbours, 
                                     UChar*          interDirNeighbours, 
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_75
                                     Int* vspFlag,
 #endif
                                     Int             numValidMergeCand );
