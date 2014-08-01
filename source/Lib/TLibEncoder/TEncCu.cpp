@@ -1858,7 +1858,9 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
     rpcTempCU->setDvInfoSubParts(cOrigDisInfo, 0, 0, uhDepth );
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#if !FIX_TICKET_79
     InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#endif
 #if H_3D_SPIVMP
     Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
@@ -1871,7 +1873,9 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
     rpcTempCU->initAvailableFlags();
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
     rpcTempCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
+#if !FIX_TICKET_79
       , inheritedVSPDisInfo
+#endif
 #if H_3D_SPIVMP
       , pcMvFieldSP, puhInterDirSP
 #endif
@@ -1886,8 +1890,13 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
       );
 
 #else
+#if FIX_TICKET_79
+    rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, numValidMergeCand );
+#else
     rpcTempCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, vspFlag, inheritedVSPDisInfo, numValidMergeCand );
 #endif
+#endif
+
 
 #endif
 
@@ -1928,7 +1937,9 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           rpcTempCU->setMergeIndexSubParts( uiMergeCand, 0, 0, uhDepth ); // interprets depth relative to LCU level
 #if H_3D_VSP
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
+#if !FIX_TICKET_79
           rpcTempCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, 0, 0, uhDepth );
+#endif
 #endif
 #if H_3D_DDD
           if( rpcTempCU->getSlice()->getIsDepth() && rpcTempCU->getSlice()->getViewIndex() != 0 && iDDDCand == uiMergeCand )

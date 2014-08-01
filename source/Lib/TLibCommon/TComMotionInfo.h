@@ -78,7 +78,7 @@ typedef struct _IDVCand // IDV
   Bool   m_bFound;                                
 } IDVInfo;
 #endif
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_79
 typedef struct _InheritedVSPDisCand 
 {
   DisInfo m_acDvInfo;

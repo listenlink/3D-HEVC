@@ -4008,7 +4008,9 @@ Void TEncSearch::xGetInterPredictionError( TComDataCU* pcCU, TComYuv* pcYuvOrg, 
 Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUIdx, UInt& uiInterDir, TComMvField* pacMvField, UInt& uiMergeIndex, UInt& ruiCost, TComMvField* cMvFieldNeighbours, UChar* uhInterDirNeighbours
 #if H_3D_VSP
                                  , Int* vspFlag
+#if !FIX_TICKET_79
                                  , InheritedVSPDisInfo*  inheritedVSPDisInfo
+#endif
 #endif
 #if H_3D_SPIVMP
                                  , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
@@ -4068,7 +4070,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       pcCU->initAvailableFlags();
       pcCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
       pcCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours,uhInterDirNeighbours
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_79
                                         , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
@@ -4098,7 +4100,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
     pcCU->initAvailableFlags();
     pcCU->getInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours,uhInterDirNeighbours, numValidMergeCand);
     pcCU->xGetInterMergeCandidates( uiAbsPartIdx, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_79
                                       , inheritedVSPDisInfo
 #endif
 #if H_3D_SPIVMP
@@ -4121,7 +4123,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
                                  );
 #endif
   }
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_75
   xRestrictBipredMergeCand( pcCU, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours,vspFlag, numValidMergeCand );
 #else
   xRestrictBipredMergeCand( pcCU, iPUIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
@@ -4153,7 +4155,9 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 
 #if H_3D_VSP
     pcCU->setVSPFlagSubParts( vspFlag[uiMergeCand], uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+#if !FIX_TICKET_79
     pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeCand].m_acDvInfo, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
+#endif
 #endif
 
 #if H_3D_SPIVMP
@@ -4253,7 +4257,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
  * \param numValidMergeCand
  * \returns Void
  */
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_75
 Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvField* mvFieldNeighbours, UChar* interDirNeighbours, Int* vspFlag, Int numValidMergeCand )
 #else
 Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvField* mvFieldNeighbours, UChar* interDirNeighbours, Int numValidMergeCand )
@@ -4263,7 +4267,7 @@ Void TEncSearch::xRestrictBipredMergeCand( TComDataCU* pcCU, UInt puIdx, TComMvF
   {
     for( UInt mergeCand = 0; mergeCand < numValidMergeCand; ++mergeCand )
     {
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_75
       if ( (interDirNeighbours[mergeCand] == 3) && (vspFlag[mergeCand] == false) )
 #else
       if ( interDirNeighbours[mergeCand] == 3 )
@@ -4889,7 +4893,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #if H_3D_VSP
       Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
       memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#if !FIX_TICKET_79
       InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#endif
       UInt uiAbsPartIdx = 0;
       Int iWidth = 0;
       Int iHeight = 0; 
@@ -4907,7 +4913,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
       xMergeEstimation( pcCU, pcOrgYuv, iPartIdx, uiMRGInterDir, cMRGMvField, uiMRGIndex, uiMRGCost, cMvFieldNeighbours, uhInterDirNeighbours
 #if H_3D_VSP
                       , vspFlag
+#if !FIX_TICKET_79
                       , inheritedVSPDisInfo
+#endif
 #endif
 #if H_3D_SPIVMP
                       , bSPIVMPFlag, pcMvFieldSP, puhInterDirSP
@@ -4921,7 +4929,9 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         pcCU->setMergeIndexSubParts( uiMRGIndex,    uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #if H_3D_VSP
         pcCU->setVSPFlagSubParts( vspFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+#if !FIX_TICKET_79
         pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMRGIndex].m_acDvInfo, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+#endif
 #endif
 #if H_3D_DDD
         if( uiMRGIndex == pcCU->getUseDDDCandIdx() )
