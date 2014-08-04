@@ -67,6 +67,7 @@
 #define NTT_BUG_FIX_TK54    1
 #define BUG_FIX_TK65        1
 
+#define MTK_I0093           1
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +123,8 @@
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
 
+#define SEC_IC_NEIGHBOR_CLIP_I0080        1   // Clipping of neighboring sample position, JCT3V-I0080
+
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -172,6 +175,8 @@
                                               // MTK_DIS_SPBIP8X4_H0205        Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
                                               // SEC_ADAPT_DISABLE_IVMP        Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
 
+#define SEC_SIMP_SHIFTED_DV_I0086         1   // Simplification of Shifted DV candidate, JCT3V-I0086
+
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
 
@@ -214,6 +219,10 @@
                                               // SEC_NO_RESI_DLT_H0105    
                                               // MTK_DLT_CODING_FIX_H0091 
 
+#define MTK_SINGLE_DEPTH_MODE_I0095       1   // Single depth mode proposed in JCT3V-I0095
+#if MTK_SINGLE_DEPTH_MODE_I0095
+#define MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE            2 // size of the sample candidate list
+#endif
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -232,12 +241,17 @@
                                               // MTK_DBBP_SIGNALING_H0094    
                                               // H_3D_FIX_DBBP_IVMP        Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
 
+#define SEC_DBBP_EXPLICIT_SIG_I0077       1   // Remove the partition derivation and signal dbbp_flag only when the partion mode is 2NxN/Nx2N, JCT3V-I0077
+#define SEC_DBBP_DISALLOW_8x8_I0078       1   // Disallow DBBP in 8x8 CU, JCT3V-I0078
+#define SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional dilter for DBBP
+#define SEC_DBBP_DMM4_THRESHOLD_I0076     1   // Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
+
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 
-
+#define SCU_HS_FAST_INTRA_SDC_I0123       1
 
 // OTHERS
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
@@ -249,10 +263,16 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
+#define MTK_I0099_VPS_EX2                 1  ///< JCT3V-I0099, sub-PU size signaling and lim_qt_pred_flag in VPS extension 2
+#define MTK_I0099_FIX                     1  ///< Fix the problem of removing encoder only QTL 
+
 // Rate Control
 #define KWU_FIX_URQ                       1
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
+
+#define SEC_VPS_CLEANUP_I0090             1
+#define SEC_HLS_CLEANUP_I0100             1
 
 #endif // H_3D
 
@@ -261,6 +281,16 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
+
+// Fixes
+#define FIX_TICKET_79                     1    // Unused VSP code
+#define FIX_TICKET_75                     1    // Bi-pred restriction bug in VSP
+#define FIX_TICKET_68                     1    // MV clipping bug in the sub-PU MPI default MV generation
+#define FIX_TICKET_71                     1    // IC parameters is meaningless in HTM when no training samples are available
+#define FIX_TICKET_77                     1    // Unused variable m_iBitsPerDepthValue
+#define FIX_TICKET_76                     1    // unused functions
+#define FIX_TICKET_62                     1    // buffer overflow for print
+#define FIX_TICKET_61                     1    // layerIdsInSets size check
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
@@ -282,6 +312,10 @@
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
+#define QC_I0129_ARP_FIX                  1
+#define QC_I0051_ARP_SIMP                 1
+#define SHARP_ARP_CHROMA_I0104            1
+#define MTK_I0072_IVARP_SCALING_FIX       1
 #endif
 
 ///// ***** DEPTH INTRA MODES *********
@@ -289,13 +323,20 @@
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
+#define HS_DMM_SIGNALLING_I0120  1   
+#define SHARP_DMM1_I0110                  1   // LUT size reduction for DMM1 proposed in JCT3V-I0110 
+#define FIX_WARNING                       1   // fix narrowing conversion of NumPocStCurr0,NumPocStCurr1 at TComSlice.cpp
+#define FAST_SDC_OFFSET_DECISION_I0084    1
+#define SEPARATE_FLAG_I0085               1
 
 #if H_3D_DIM_DLT
 #define H_3D_DELTA_DLT                    1
+#define RWTH_DLT_CLIP_I0057               1
 #endif
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#define HHI_DMM4_ENC_I0066                1
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
@@ -380,7 +421,7 @@
 //#define H_MV_HLS_7_OTHER_P0187_1 0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 
 // OTHERS
-//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows …:// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
+//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows ?// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
 //#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
 //#define H_MV_HLS_7_HRD_P0138_6   0 //     (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
 

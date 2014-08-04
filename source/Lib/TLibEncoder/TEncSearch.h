@@ -179,14 +179,26 @@ public:
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt&       ruiDistC,
-                                  Bool        bLumaOnly );
+                                  Bool        bLumaOnly
+#if HHI_DMM4_ENC_I0066
+                                , Bool        bOnlyIVP
+#endif
+                                );
   Void  estIntraPredChromaQT    ( TComDataCU* pcCU, 
                                   TComYuv*    pcOrgYuv, 
                                   TComYuv*    pcPredYuv, 
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt        uiPreCalcDistC );
-  
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void  estIntraPredSingleDepth  ( TComDataCU* pcCU, 
+                                  TComYuv*    pcOrgYuv, 
+                                  TComYuv*    pcPredYuv, 
+                                  TComYuv*    pcResiYuv, 
+                                  TComYuv*    pcRecoYuv,
+                                  UInt&       ruiDistC,
+                                  Bool        bLumaOnly );
+#endif    
   
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
@@ -341,7 +353,9 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  Void xIntraCodingSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Int iTestDepthIdx, Pel * DepthNeighbor );
+#endif
 #if H_3D_DIM
   // -------------------------------------------------------------------------------------------------------------------
   // Depth intra search
@@ -414,7 +428,9 @@ protected:
                                     UChar* uhInterDirNeighbours
 #if H_3D_VSP
                                   , Int* vspFlag
+#if !FIX_TICKET_79
                                   , InheritedVSPDisInfo*  inheritedVSPDisInfo
+#endif
 #endif
 #if H_3D_SPIVMP
                                   , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
@@ -426,7 +442,7 @@ protected:
                                     UInt            puIdx,
                                     TComMvField*    mvFieldNeighbours, 
                                     UChar*          interDirNeighbours, 
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_75
                                     Int* vspFlag,
 #endif
                                     Int             numValidMergeCand );

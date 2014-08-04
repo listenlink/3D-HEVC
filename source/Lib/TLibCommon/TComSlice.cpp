@@ -138,6 +138,9 @@ TComSlice::TComSlice()
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
 #endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+, m_bApplySingleDepthMode         (false)
+#endif
 #endif
 {
   m_aiNumRefIdx[0] = m_aiNumRefIdx[1] = 0;
@@ -643,7 +646,11 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   Int numPocInterLayer[2] = { getNumActiveRefLayerPics0( ), getNumActiveRefLayerPics1( ) }; 
   
   TComPic**             refPicSetStCurr    [2] = { RefPicSetStCurr0, RefPicSetStCurr1 };
+#if FIX_WARNING
+  Int numPocStCurr[2] = { (Int)NumPocStCurr0, (Int)NumPocStCurr1 }; 
+#else
   Int numPocStCurr[2] = { NumPocStCurr0, NumPocStCurr1 }; 
+#endif
 
   for (Int li = 0; li < ((m_eSliceType==B_SLICE) ? 2 : 1); li++)
   { 
@@ -1090,6 +1097,9 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
   {
     m_interLayerPredLayerIdc[ layer ] = pSrc->m_interLayerPredLayerIdc[ layer ]; 
   }
+#endif
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_bApplySingleDepthMode = pSrc->m_bApplySingleDepthMode;
 #endif
 #if H_3D_IC
   m_bApplyIC = pSrc->m_bApplyIC;
@@ -1941,7 +1951,14 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
+#if SEC_HLS_CLEANUP_I0100
+    m_ivMvScalingFlag[i] = true; 
+#else
     m_ivMvScalingFlag = true; 
+#endif
+#if SEPARATE_FLAG_I0085
+    m_bIVPFlag [i]      = false;
+#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
@@ -1973,6 +1990,9 @@ TComVPS::TComVPS()
     m_iSubPULog2Size       [ i ] = 0;
 #endif
 #endif
+#if MTK_I0099_VPS_EX2
+    m_bLimQtPredFlag       [ i ] = false;
+#endif
 #if H_3D_VSP
     m_viewSynthesisPredFlag[ i ] = false;
 #endif
@@ -1981,6 +2001,9 @@ TComVPS::TComVPS()
 #endif
 #if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
+#endif
+#if SEPARATE_FLAG_I0085
+    m_bIVPFlag             [ i ] = false;
 #endif
 #if H_3D_DBBP
     m_dbbpFlag             [ i ] = false;
@@ -2501,9 +2524,11 @@ TComSPS::TComSPS()
 , m_usePCM                   (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
 , m_bUseQTL                   (false)
 , m_bUsePC                    (false)
+#endif
 #endif
 , m_bitDepthY                 (  8)
 , m_bitDepthC                 (  8)
@@ -2773,8 +2798,9 @@ TComDLT::TComDLT()
 
     // allocate some memory and initialize with default mapping
     m_iNumDepthmapValues[i] = ((1 << m_uiDepthViewBitDepth)-1)+1;
+#if !FIX_TICKET_77
     m_iBitsPerDepthValue[i] = numBitsForValue(m_iNumDepthmapValues[i]);
-
+#endif
     m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
     m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
 
@@ -2863,7 +2889,9 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
   // update DLT variables
   m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
+#if !FIX_TICKET_77
   m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
+#endif
 }
 
 #if H_3D_DELTA_DLT

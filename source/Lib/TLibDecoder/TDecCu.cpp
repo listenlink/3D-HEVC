@@ -419,7 +419,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_VSP
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#if !FIX_TICKET_79
     InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
+#endif
 #if H_3D_SPIVMP
     Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
@@ -431,7 +433,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
     m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours 
+#if !FIX_TICKET_79
       , inheritedVSPDisInfo
+#endif
 #if H_3D_SPIVMP
       , pcMvFieldSP, puhInterDirSP
 #endif
@@ -452,7 +456,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
 #endif
 #endif
-#if H_3D_VSP
+#if H_3D_VSP && !FIX_TICKET_79
     if(vspFlag[uiMergeIndex])
     {
       pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiAbsPartIdx, 0, uiDepth);
@@ -541,7 +545,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
     return;
   }
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  m_pcEntropyDecoder->decodeSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
+  if(!pcCU->getSingleDepthFlag(uiAbsPartIdx))
+  {
+#endif
   m_pcEntropyDecoder->decodePredMode( pcCU, uiAbsPartIdx, uiDepth );
   m_pcEntropyDecoder->decodePartSize( pcCU, uiAbsPartIdx, uiDepth );
 
@@ -571,6 +579,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   Bool bCodeDQP = getdQPFlag();
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
   setdQPFlag( bCodeDQP );
+#if MTK_SINGLE_DEPTH_MODE_I0095
+  }
+#endif
   xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
 #if H_3D_IV_MERGE
   xDecompressCU(pcCU, uiAbsPartIdx, uiDepth );
@@ -670,10 +681,20 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
 #endif
       break;
     case MODE_INTRA:
+#if MTK_SINGLE_DEPTH_MODE_I0095
+      if( m_ppcCU[uiDepth]->getSingleDepthFlag(0) )
+        xReconIntraSingleDepth( m_ppcCU[uiDepth], 0, uiDepth );
+#if H_3D_DIM_SDC
+      else if( m_ppcCU[uiDepth]->getSDCFlag(0) )
+        xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
+#endif
+      else
+#else
 #if H_3D_DIM_SDC
       if( m_ppcCU[uiDepth]->getSDCFlag(0) )
         xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
       else
+#endif
 #endif
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
       break;
@@ -708,7 +729,82 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
     m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
   }
 }
+#if MTK_SINGLE_DEPTH_MODE_I0095
+Void TDecCu::xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  UInt uiWidth        = pcCU->getWidth  ( 0 );
+  UInt uiHeight       = pcCU->getHeight ( 0 );
 
+  TComYuv* pcRecoYuv  = m_ppcYuvReco[uiDepth];
+
+  UInt    uiStride    = pcRecoYuv->getStride  ();
+  Pel*    piReco      = pcRecoYuv->getLumaAddr( uiAbsPartIdx );
+
+
+  AOF( uiWidth == uiHeight );
+  AOF( uiAbsPartIdx == 0 );
+
+  //construction of depth candidates
+  Pel testDepth;
+  Pel DepthNeighbours[5];
+  Int index =0;
+  for( Int i = 0; (i < 5) && (index<MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE) ; i++ )
+  {
+    if(!pcCU->getNeighDepth (0, uiAbsPartIdx, &testDepth, i))
+    {
+      continue;
+    }
+    DepthNeighbours[index]=testDepth;
+    index++;
+    for(Int j=0;j<index-1;j++)
+    {
+     if( (DepthNeighbours[index-1]==DepthNeighbours[j]) )
+     {
+       index--;
+       break;
+     }
+    }
+  }
+
+  if(index==0)
+  {
+    DepthNeighbours[index]=1<<(g_bitDepthY-1);
+    index++;
+  }
+
+  if(index==1)
+  {
+    DepthNeighbours[index]=ClipY(DepthNeighbours[0] + 1 );
+    index++;
+  }
+
+  for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+  {
+    for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+    {
+      piReco[ uiX ] =DepthNeighbours[(Int)pcCU->getSingleDepthValue(uiAbsPartIdx)];
+    }
+    piReco     += uiStride;
+  }
+
+  // clear UV
+  UInt  uiStrideC     = pcRecoYuv->getCStride();
+  Pel   *pRecCb       = pcRecoYuv->getCbAddr();
+  Pel   *pRecCr       = pcRecoYuv->getCrAddr();
+
+  for (Int y=0; y<uiHeight/2; y++)
+  {
+    for (Int x=0; x<uiWidth/2; x++)
+    {
+      pRecCb[x] = 1<<(g_bitDepthC-1);
+      pRecCr[x] = 1<<(g_bitDepthC-1);
+    }
+
+    pRecCb += uiStrideC;
+    pRecCr += uiStrideC;
+  }
+}
+#endif
 #if H_3D_INTER_SDC
 Void TDecCu::xReconInterSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -831,7 +927,11 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   
   // reconstruct final prediction signal by combining both segments
+#if SHARP_DBBP_SIMPLE_FLTER_I0109
+  m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0), 0, ePartSize);
+#else
   m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0));
+#endif
   
   // inter recon
   xDecodeInterTexture( pcCU, 0, uiDepth );
@@ -1205,13 +1305,23 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   if( getDimType( uiLumaPredMode ) == DMM1_IDX )
   {
     Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
-    
+
+#if SHARP_DMM1_I0110
+    WedgeList* pacWedgeList  = pcCU->isDMM1UpscaleMode(uiWidth) ? &g_dmmWedgeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])] :  &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+#else
     WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
+#endif
     TComWedgelet* pcWedgelet = &(pacWedgeList->at( uiTabIdx ));
-    
+
     uiNumSegments = 2;
+
+#if SHARP_DMM1_I0110
+    pbMask       = pcCU->isDMM1UpscaleMode( uiWidth ) ? pcWedgelet->getScaledPattern(uiWidth) : pcWedgelet->getPattern();
+    uiMaskStride = pcCU->isDMM1UpscaleMode( uiWidth ) ? uiWidth : pcWedgelet->getStride();
+#else
     pbMask = pcWedgelet->getPattern();
     uiMaskStride = pcWedgelet->getStride();
+#endif
   }
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
