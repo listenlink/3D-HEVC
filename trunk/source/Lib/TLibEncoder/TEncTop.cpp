@@ -743,9 +743,11 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setUseAMP ( m_useAMP );
 
+#if !MTK_I0099_VPS_EX2
 #if H_3D_QTLPC
   m_cSPS.setUseQTL( m_bUseQTL );
   m_cSPS.setUsePC ( m_bUsePC  );
+#endif
 #endif
 
   for (i = g_uiMaxCUDepth-g_uiAddCUDepth; i < g_uiMaxCUDepth; i++ )

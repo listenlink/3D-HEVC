@@ -377,12 +377,20 @@ namespace df
         std::string cNameBuffer;
         std::string cDescBuffer;
 
+#if !FIX_TICKET_62
         cNameBuffer       .resize( name.size() + 10 );
         cDescBuffer.resize( desc.size() + 10 );
+#endif
 
         storage.resize(uiMaxNum);
         for ( unsigned int uiK = 0; uiK < uiMaxNum; uiK++ )
         {
+
+#if FIX_TICKET_62
+          cNameBuffer       .resize( name.size() + 10 );
+          cDescBuffer.resize( desc.size() + 10 );
+#endif
+
           Bool duplicate = (uiK != 0); 
           // isn't there are sprintf function for string??
           sprintf((char*) cNameBuffer.c_str()       ,name.c_str(),uiK,uiK);

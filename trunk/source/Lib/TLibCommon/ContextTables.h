@@ -50,7 +50,10 @@
 
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+#define NUM_SINGLEDEPTH_FLAG_CTX                     1
+#define NUM_SINGLE_DEPTH_VALUE_DATA_CTX              1       
+#endif
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
 
@@ -149,7 +152,22 @@ INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =
   { 197,  185,  201, }, 
   { CNU,  CNU,  CNU, }, 
 };
-
+#if MTK_SINGLE_DEPTH_MODE_I0095
+static const UChar 
+INIT_SINGLEDEPTH_FLAG[3][NUM_SINGLEDEPTH_FLAG_CTX] =  
+{
+  { 185 }, 
+  { 185 }, 
+  { 185 }, 
+};
+static const UChar
+INIT_SINGLE_DEPTH_VALUE_DATA[3][NUM_SINGLE_DEPTH_VALUE_DATA_CTX] = 
+{
+  { 137 }, 
+  { 137 }, 
+  { 137 }, 
+};
+#endif
 static const UChar
 INIT_MERGE_FLAG_EXT[3][NUM_MERGE_FLAG_EXT_CTX] = 
 {
@@ -431,9 +449,15 @@ INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
 #if H_3D_DBBP
 static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
 {
+#if SEC_DBBP_EXPLICIT_SIG_I0077
+  { CNU },
+  { CNU },
+  { CNU },
+#else
   { 161 },
   { 161 },
   { 161 },
+#endif
 };
 #endif
 
