@@ -3726,7 +3726,11 @@ Void TComSlice::setDepthToDisparityLUTs()
 #endif
 
 #if H_3D_DDD
+#if LGE_FCO_I0116
+  if( getIsDepth() && getViewIndex() > 0 && getVPS()->getMPIFlag(layerIdInVPS))
+#else
   if( getIsDepth() && getViewIndex() > 0 )
+#endif
   {
       TComSlice *pcTextSlice = getTexturePic()->getSlice( 0 );
       memcpy( m_aiDDDInvScale, pcTextSlice->m_aiDDDInvScale, sizeof( Int ) * getViewIndex() );

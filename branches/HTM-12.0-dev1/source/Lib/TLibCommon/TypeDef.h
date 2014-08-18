@@ -250,6 +250,9 @@
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
+#if H_3D_FCO
+#define LGE_FCO_I0116                     1
+#endif
 
 #define SCU_HS_FAST_INTRA_SDC_I0123       1
 

@@ -2125,7 +2125,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
   }
 #if H_3D
+#if LGE_FCO_I0116
+  if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && pcSlice->getIsDepth() )
+#else
   if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && !pcSlice->getIsDepth() )
+#endif
   {
     for( UInt uiId = 0; uiId < pcSlice->getViewIndex(); uiId++ )
     {

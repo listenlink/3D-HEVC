@@ -2636,7 +2636,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   }
 
 #if H_3D
+#if LGE_FCO_I0116
+  if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && rpcSlice->getIsDepth() )
+#else
   if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && !rpcSlice->getIsDepth() )
+#endif
   {
     UInt uiViewIndex = rpcSlice->getViewIndex();
     for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )

@@ -858,7 +858,11 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   // get collocated depth block
   UInt uiDepthStride = 0;
+#if LGE_FCO_I0116
+  Pel* pDepthPels = pcCU->getVirtualDepthBlock(pcCU->getZorderIdxInCU(), pcCU->getWidth(0), pcCU->getHeight(0), uiDepthStride);
+#else
   Pel* pDepthPels = pcCU->getVirtualDepthBlock(0, pcCU->getWidth(0), pcCU->getHeight(0), uiDepthStride);
+#endif
   AOF( pDepthPels != NULL );
   AOF( uiDepthStride != 0 );
   

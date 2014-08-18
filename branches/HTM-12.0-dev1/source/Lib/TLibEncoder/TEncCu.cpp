@@ -537,7 +537,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if MTK_I0099_VPS_EX2
 #if MTK_I0099_FIX
+#if LGE_FCO_I0116
+      if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ) && pcTexture->getReconMark())
+#else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && ( m_pcEncCfg->getUseQTL() || bLimQtPredFalg ))
+#endif
 #else
       if(depthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFalg)
 #endif
@@ -2587,7 +2591,11 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   
   // fetch virtual depth block
   UInt uiDepthStride = 0;
+#if LGE_FCO_I0116
+  Pel* pDepthPels = rpcTempCU->getVirtualDepthBlock(rpcTempCU->getZorderIdxInCU(), uiWidth, uiHeight, uiDepthStride);
+#else
   Pel* pDepthPels = rpcTempCU->getVirtualDepthBlock(0, uiWidth, uiHeight, uiDepthStride);
+#endif
   AOF( pDepthPels != NULL );
   AOF( uiDepthStride != 0 );
   
