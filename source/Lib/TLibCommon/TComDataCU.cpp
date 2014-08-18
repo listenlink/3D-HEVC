@@ -4176,7 +4176,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
     TComPic * pcTexPic = m_pcSlice->getTexturePic();
 #if H_3D_FCO
+#if LGE_FCO_I0116
+    if (pcTexPic && pcTexPic->getReconMark())
+#else
     if (pcTexturePic->getReconMark())
+#endif
     {
 #endif    
       TComPicYuv*   pcTexRec = pcTexPic->getPicYuvRec  ();

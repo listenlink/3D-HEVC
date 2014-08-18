@@ -3211,7 +3211,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         {
 #if H_3D_FCO
             TComPic* picTexture  = pcCU->getSlice()->getIvPic(false, pcCU->getSlice()->getViewIndex() );
+#if LGE_FCO_I0116
+            if ( !picTexture->getReconMark() && (DMM4_IDX == dmmType ) )
+#else
             if ( !picTexture->getReconMark() && (DMM3_IDX == dmmType || DMM4_IDX == dmmType ) )
+#endif
             {
                 continue;
             }
