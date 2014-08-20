@@ -2255,6 +2255,10 @@ private:
 #if MTK_SINGLE_DEPTH_MODE_I0095
   Bool      m_bApplySingleDepthMode;
 #endif
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  Int *m_aICEnableCandidate;
+  Int *m_aICEnableNum;
+#endif
 public:
   TComSlice();
   virtual ~TComSlice(); 
@@ -2565,6 +2569,15 @@ public:
 #if SEPARATE_FLAG_I0085
   Bool getIVPFlag       ()  { return getVPS()->getIVPFlag( getVPS()->getLayerIdInVps( m_layerId ) ); }
 #endif
+#endif
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  Void    setICEnableCandidate( Int* ICEnableCandidate)   { m_aICEnableCandidate = ICEnableCandidate; };
+  Void    setICEnableNum( Int* ICEnableNum)   { m_aICEnableNum = ICEnableNum; };
+  Void    setICEnableCandidate( UInt layer, Int value)   { m_aICEnableCandidate[ layer ] = value; };
+  Void    setICEnableNum( UInt layer, Int value)   { m_aICEnableNum[ layer ] = value; };
+
+  Int    getICEnableCandidate( Int layer){ return  m_aICEnableCandidate[ layer ]; }; 
+  Int    getICEnableNum( Int layer){ return m_aICEnableNum[ layer ]; }; 
 #endif
 #if H_MV
 // Additional slice header syntax elements

@@ -83,6 +83,10 @@ TEncTop::TEncTop()
 #if H_MV
   m_ivPicLists = NULL;
 #endif
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  m_aICEnableCandidate = NULL;
+  m_aICEnableNum = NULL;
+#endif
 }
 
 TEncTop::~TEncTop()
@@ -304,7 +308,16 @@ Void TEncTop::init(Bool isFieldCoding)
   xInitRPS(isFieldCoding);
 
   xInitPPSforTiles();
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  m_aICEnableCandidate = new Int[ 10 ];
+  m_aICEnableNum = new Int[ 10 ];
 
+  for(int i=0;i<10;i++)
+  {
+    m_aICEnableCandidate[i]=0;
+    m_aICEnableNum[i]=0;
+  }
+#endif
   // initialize processing unit classes
   m_cGOPEncoder.  init( this );
   m_cSliceEncoder.init( this );

@@ -3601,6 +3601,25 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
 
       m_bApplyIC = true;
       Int refLayer = curLayer-1;
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+      Int ICEnableCandidate = getICEnableCandidate(refLayer);
+      Int ICEnableNum = getICEnableNum(refLayer);
+      if( (refLayer>=0) && (ICEnableCandidate>0) )
+      {    
+        Double ratio=Double(ICEnableNum/Double(ICEnableCandidate));
+
+        if( ratio > IC_LOW_LATENCY_ENCODING_THRESHOLD)
+        {
+          m_bApplyIC=true;
+        }
+        else
+        {
+          m_bApplyIC=false;
+        }
+      }
+      setICEnableCandidate(curLayer, 0);
+      setICEnableNum(curLayer, 0);
+#else
       if( (refLayer>=0) && (g_aICEnableCANDIDATE[refLayer]>0) )
       {    
         Double ratio=Double(g_aICEnableNUM[refLayer])/Double(g_aICEnableCANDIDATE[refLayer]);
@@ -3617,6 +3636,7 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
       g_aICEnableNUM[curLayer]=0;
       g_aICEnableCANDIDATE[curLayer]=0;
       g_lastlayer=getDepth();
+#endif
     }
   }
   else

@@ -79,6 +79,10 @@ private:
 #if H_MV
   TComPicLists*           m_ivPicLists;                   ///< access to picture lists of other layers 
 #endif
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  Int *m_aICEnableCandidate;
+  Int *m_aICEnableNum;
+#endif
   // encoder search
   TEncSearch              m_cSearch;                      ///< encoder search class
   //TEncEntropy*            m_pcEntropyCoder;                     ///< entropy encoder
@@ -161,6 +165,10 @@ public:
 #if H_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  Int *getICEnableCandidate() { return m_aICEnableCandidate; }
+  Int *getICEnableNum() { return m_aICEnableNum; }
+#endif
   Void      deletePicBuffer ();
 
   Void      createWPPCoders(Int iNumSubstreams);
@@ -219,6 +227,10 @@ public:
   
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
+#endif
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  Void                    setICEnableCandidate         ( Int* ICEnableCandidate) { m_aICEnableCandidate = ICEnableCandidate; }
+  Void                    setICEnableNum         ( Int* ICEnableNum) { m_aICEnableNum = ICEnableNum; }
 #endif
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
