@@ -1,4 +1,4 @@
-﻿/* The copyright in this software is being made available under the BSD
+/*  The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
@@ -4377,7 +4377,7 @@ Void TComVpsVuiBspHrdParameters::checkLayerInBspFlag( TComVPS* vps, Int h )
 
   // When num_bitstream_partitions[ h ] is equal to 1 for any value of h in the range 1 to vps_num_layer_set_minus1, inclusive, 
   // the value of layer_in_bsp_flag[ h ][ 0 ][ j ] should be equal to 0 for at least one value of j in the range 0 to 
-  // NumLayersInIdList[ h ] − 1, inclusive. 
+  // NumLayersInIdList[ h ] ? 1, inclusive. 
 
 
   if ( getNumBitstreamPartitions( h ) == 1 )
@@ -4392,7 +4392,7 @@ Void TComVpsVuiBspHrdParameters::checkLayerInBspFlag( TComVPS* vps, Int h )
 
   
   // For any value of h in the range 1 to vps_num_layer_set_minus1, inclusive, the value of layer_in_bsp_flag[ h ][ i ][ j ] 
-  // shall be equal to 1 for at most one value of i in the range of 0 to num_bitstream_partitions[ h ] − 1, inclusive. 
+  // shall be equal to 1 for at most one value of i in the range of 0 to num_bitstream_partitions[ h ] ? 1, inclusive. 
 
   for ( Int j = 0; j <= vps->getNumLayersInIdList( h ) - 1; j++ )
   {
