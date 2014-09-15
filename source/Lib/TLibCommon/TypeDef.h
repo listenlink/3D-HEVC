@@ -379,6 +379,10 @@
 /////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
+
+//Added by Qualcomm for HLS
+#define DISCARDABLE_PIC_RPS        1      ///< JCTVC-G0131: Inter-layer RPS and temporal RPS should not contain picture with discardable_flag equal to 1
+
 // TBD: Check if integration is necessary. 
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
 
