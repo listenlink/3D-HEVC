@@ -724,8 +724,12 @@ Void TComSlice::setRefPicList( std::vector<TComPic*> rpsCurrList[2], std::vector
         Int orgIdx                    = listModified ? m_RefPicListModification.getRefPicSetIdxL(li, rIdx) : (rIdx % numPocTotalCurr); 
 
         assert( rpsCurrList[li][ orgIdx ] != NULL ); 
+#if DISCARDABLE_PIC_RPS
+        assert( rpsCurrList[li][ orgIdx ]->getSlice(0)->getDiscardableFlag() == 0 );    // Inter-layer RPS shall not contain picture with discardable_flag = 1.
+#endif
         m_apcRefPicList    [li][rIdx] = rpsCurrList    [li][ orgIdx ];
         m_bIsUsedAsLongTerm[li][rIdx] = usedAsLongTerm [li][ orgIdx ] ; 
+
       }
     }
   }
