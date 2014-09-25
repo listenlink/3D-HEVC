@@ -1011,7 +1011,8 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 
 #if H_MV
 Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS ) 
-{  
+{ 
+  //TODO: ADD implementation for PTL. Need to add level info in each layer.
   WRITE_FLAG( pcVPS->getSplittingFlag() ? 1 : 0,             "splitting_flag" );
 
   for( Int type = 0; type < MAX_NUM_SCALABILITY_TYPES; type++ )
@@ -1083,6 +1084,20 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
     }
   }
 
+#if VPS_MISC_UPDATES   //These codes are moved from below.
+  if ( pcVPS->getNumIndependentLayers() > 1 ) 
+  {
+   WRITE_UVLC( pcVPS->getNumAddLayerSets( ), "num_add_layer_sets" );
+  }
+  for (Int i = 0; i < pcVPS->getNumAddLayerSets(); i++)
+  {
+    for (Int j = 0; j < pcVPS->getNumIndependentLayers(); j++)
+    {
+      WRITE_CODE( pcVPS->getHighestLayerIdxPlus1( i, j ), pcVPS->getHighestLayerIdxPlus1Len( j )  , "highest_layer_idx_plus1" );
+    }
+  }
+#endif
+
   WRITE_FLAG( pcVPS->getVpsSubLayersMaxMinus1PresentFlag( ) ? 1 : 0 , "vps_sub_layers_max_minus1_present_flag" );
   if ( pcVPS->getVpsSubLayersMaxMinus1PresentFlag() )
   {
@@ -1124,6 +1139,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
     codePTL( pcVPS->getPTL( i ), pcVPS->getVpsProfilePresentFlag( i ), pcVPS->getMaxTLayers() - 1 );
   }
 
+#if !VPS_MISC_UPDATES
   if ( pcVPS->getNumIndependentLayers() > 1 ) 
   {
    WRITE_UVLC( pcVPS->getNumAddLayerSets( ), "num_add_layer_sets" );
@@ -1135,6 +1151,8 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       WRITE_CODE( pcVPS->getHighestLayerIdxPlus1( i, j ), pcVPS->getHighestLayerIdxPlus1Len( j )  , "highest_layer_idx_plus1" );
     }
   }
+#endif
+
   if (pcVPS->getNumLayerSets() > 1)
   {
     WRITE_UVLC( pcVPS->getNumAddOlss( ), "num_add_olss" );
@@ -1151,10 +1169,18 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
   {
     if( i >= pcVPS->getNumLayerSets( ) )    
     {      
+#if !VPS_MISC_UPDATES
       WRITE_UVLC( pcVPS->getLayerSetIdxForOlsMinus1( i ),      "layer_set_idx_for_ols_minus1[i]" );
+#else
+      WRITE_CODE( pcVPS->getLayerSetIdxForOlsMinus1( i ), pcVPS->getLayerSetIdxForOlsMinus1Len( i ) ,      "layer_set_idx_for_ols_minus1[i]" );
+#endif
     }
 
+#if !VPS_MISC_UPDATES
     if ( i > pcVPS->getVpsNumLayerSetsMinus1() || pcVPS->getDefaultOutputLayerIdc() == 2 )
+#else
+    if ( i > pcVPS->getVpsNumLayerSetsMinus1() || pcVPS->getDefaultOutputLayerIdc() >= 2 ) //according to the flag value 3 shall be treated as 2.
+#endif
     {       
       for( Int j = 0; j < pcVPS->getNumLayersInIdList( pcVPS->olsIdxToLsIdx( i ) ); j++ )
       {
@@ -1370,7 +1396,11 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
   WRITE_FLAG( pcVPSVUI->getPicRatePresentVpsFlag( ) ? 1 : 0 , "pic_rate_present_vps_flag" );
   if( pcVPSVUI->getBitRatePresentVpsFlag( )  ||  pcVPSVUI->getPicRatePresentVpsFlag( ) )
   {
+#if I0045_BR_PR_ADD_LAYER_SET
+    for( Int i = pcVPS->getVpsBaseLayerInternalFlag() ? 0 : 1; i  <  pcVPS->getNumLayerSets(); i++ )
+#else
     for( Int i = pcVPS->getVpsBaseLayerInternalFlag() ? 0 : 1; i  <=  pcVPS->getVpsNumLayerSetsMinus1(); i++ )
+#endif
     {
       for( Int j = 0; j  <=  pcVPS->getMaxSubLayersInLayerSetMinus1( i ); j++ ) 
       {
@@ -1403,7 +1433,11 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
   }
   else
   {
+#if I0045_VPS_VUI_VST_PARAMS
+    pcVPSVUI->setVpsNumVideoSignalInfoMinus1( pcVPS->getMaxLayersMinus1() - pcVPS->getVpsBaseLayerInternalFlag() ? 0 : 1 ); 
+#else
     pcVPSVUI->setVpsNumVideoSignalInfoMinus1( pcVPS->getMaxLayersMinus1() ); 
+#endif
   }
 
   for( Int i = 0; i <= pcVPSVUI->getVpsNumVideoSignalInfoMinus1(); i++ )
@@ -1416,6 +1450,12 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
 
   if( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() && pcVPSVUI->getVpsNumVideoSignalInfoMinus1() > 0 )
   {
+#if I0045_VPS_VUI_VST_PARAMS
+    for( Int i = pcVPS->getVpsBaseLayerInternalFlag() ? 0 : 1; i <=  pcVPS->getMaxLayersMinus1(); i++ )
+    {
+      WRITE_CODE( pcVPSVUI->getVpsVideoSignalInfoIdx( i ), 4, "vps_video_signal_info_idx" );
+    }
+#else
     for( Int i = 1; i <=  pcVPS->getMaxLayersMinus1(); i++ )
     {
       WRITE_CODE( pcVPSVUI->getVpsVideoSignalInfoIdx( i ), 4, "vps_video_signal_info_idx" );
@@ -1428,6 +1468,7 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
     {
       assert( pcVPSVUI->getVpsVideoSignalInfoIdx( i  ) == ( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() ? 0 : i ) ); 
     }
+#endif
   }
   WRITE_FLAG( pcVPSVUI->getTilesNotInUseFlag( ) ? 1 : 0 , "tiles_not_in_use_flag" );
   if( !pcVPSVUI->getTilesNotInUseFlag() ) 
@@ -1732,6 +1773,16 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       esb++; 
       WRITE_FLAG( pcSlice->getDiscardableFlag( ) ? 1 : 0 , "discardable_flag" );
+#if NON_REF_NAL_TYPE_DISCARDABLE
+      if (pcSlice->getDiscardableFlag( ))
+      {
+        assert(pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_TRAIL_R &&
+          pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_TSA_R &&
+          pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_STSA_R &&
+          pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_RADL_R &&
+          pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_RASL_R);
+      }
+#endif
     }
 
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
@@ -1892,7 +1943,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
       if (pcSlice->getSPS()->getTMVPFlagsPresent())
       {
+#if I0044_SLICE_TMVP
+        WRITE_FLAG( pcSlice->getEnableTMVPFlag() ? 1 : 0, "slice_temporal_mvp_enabled_flag" );
+#else
         WRITE_FLAG( pcSlice->getEnableTMVPFlag() ? 1 : 0, "slice_temporal_mvp_enable_flag" );
+#endif
       }
     }
 #if H_MV

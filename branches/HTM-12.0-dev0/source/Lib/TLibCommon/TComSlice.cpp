@@ -102,6 +102,9 @@ TComSlice::TComSlice()
 , m_numEntryPointOffsets          ( 0 )
 , m_temporalLayerNonReferenceFlag ( false )
 , m_enableTMVPFlag                ( true )
+#if I0044_SLICE_TMVP
+, m_availableForTMVPRefFlag       ( true )
+#endif
 #if H_MV
 , m_refPicSetInterLayer0           ( NULL )
 , m_refPicSetInterLayer1           ( NULL )
