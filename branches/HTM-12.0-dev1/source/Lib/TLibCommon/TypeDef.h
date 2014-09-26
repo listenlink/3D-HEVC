@@ -389,6 +389,17 @@
 
 
 
+//Added by Qualcomm for HLS
+#define DISCARDABLE_PIC_RPS              1      ///< JCT3V-G0131: Inter-layer RPS and temporal RPS should not contain picture with discardable_flag equal to 1
+#define VPS_MISC_UPDATES                 1      ///< Misc updates:JCT3V-0240, 
+#define NON_REF_NAL_TYPE_DISCARDABLE     1      ///< JCT3V-G0031: If discardable picture is a non-IRAP, it must be a non-referenced sub-layer picture
+#define INFERENCE_POC_MSB_VAL_PRESENT    1      ///< JCT3V-H0042: poc_msb_val_present_flag shall be equal to 0 when slice_header_extension_length is (inferred to be ) equal to 0
+#define INFERENCE_POC_RESET_INFO_PRESENT 1      ///< JCT3V-H0042: Infer the value of poc_reset_info_present_flag to be equal to 0 when no pps extension / pps extension for multilayer.
+#define I0044_SLICE_TMVP                 1      ///< JCT3V-I0044: Regarding slice_temporal_mvp_enabled_flag
+#define I0045_BR_PR_ADD_LAYER_SET        1      ///< JCT3V-I0045: Signalling of bit-rate and picture rate for additional layer set
+#define I0045_VPS_VUI_VST_PARAMS         1      ///< JCT3V-I0045: Related to signalling of VST parameters of the base layer.
+
+
 #define H_MV_HLS10_GEN                       0  // General changes (not tested)
 
 #define H_MV_HLS10_GEN_FIX                   1

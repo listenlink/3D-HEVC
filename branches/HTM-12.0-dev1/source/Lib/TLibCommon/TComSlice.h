@@ -588,7 +588,7 @@ public:
 
   Void setHrdParametermeters( Int k, TComHRD* val  ) {  m_hrdParameters[k] = val; }; 
   TComHRD* getHrdParametermeters( Int k ) {  return m_hrdParameters[k]; }; 
-#endif;
+#endif
 };
 
 class TComVPSVUI
@@ -1203,6 +1203,9 @@ public:
   
   Void    setLayerSetIdxForOlsMinus1( Int outLayerSetIdx, Int val )        { m_layerSetIdxForOlsMinus1[ outLayerSetIdx ]  = val; } 
   Int     getLayerSetIdxForOlsMinus1( Int outLayerSetIdx )                 { return m_layerSetIdxForOlsMinus1[ outLayerSetIdx ]; } 
+#if VPS_MISC_UPDATES
+  Int     getLayerSetIdxForOlsMinus1Len( Int outLayerSetIdx )              { return gCeilLog2( getNumLayerSets() ); } 
+#endif
 
   Void    setOutputLayerFlag( Int outLayerSetIdx, Int i, Bool flag )       { m_outputLayerFlag[ outLayerSetIdx ][ i ] = flag; } 
   Bool    getOutputLayerFlag( Int outLayerSetIdx, Int i )                  { return m_outputLayerFlag[ outLayerSetIdx ][ i ]; } 
@@ -1420,7 +1423,7 @@ public:
   {
     std::vector<Int> idx; 
     std::vector<Int> num; 
-    std::vector<std::vector<Int>> ptlInfo; 
+    std::vector< std::vector<Int> > ptlInfo; 
 
     std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "PTLI" << std::endl; 
 
@@ -2687,6 +2690,10 @@ private:
   Bool       m_LFCrossSliceBoundaryFlag;
 
   Bool       m_enableTMVPFlag;
+#if I0044_SLICE_TMVP
+  Bool       m_availableForTMVPRefFlag;
+#endif
+
 #if H_MV
   std::vector<TComPic*>* m_refPicSetInterLayer0; 
   std::vector<TComPic*>* m_refPicSetInterLayer1; 
@@ -3023,6 +3030,10 @@ public:
 
   Void      setEnableTMVPFlag     ( Bool   b )    { m_enableTMVPFlag = b; }
   Bool      getEnableTMVPFlag     ()              { return m_enableTMVPFlag;}
+#if I0044_SLICE_TMVP
+  Void      setAvailableForTMVPRefFlag     ( Bool   b )    { m_availableForTMVPRefFlag = b; }
+  Bool      getAvailableForTMVPRefFlag     ()              { return m_availableForTMVPRefFlag;}
+#endif
 
 #if H_MV
   Void      setLayerId            ( Int layerId )    { m_layerId      = layerId; }
