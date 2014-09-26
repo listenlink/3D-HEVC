@@ -1854,7 +1854,6 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
     }
     else
     {
-      Int lsIdx = vps.olsIdxToLsIdx( olsIdx ); 
       if( (Int) m_profileTierLevelIdx[ olsIdx ].size() < vps.getNumLayersInIdList( lsIdx ) )
       {
         fprintf( stderr, "Warning: Not enough profileTierLevelIdx values given for the %d-th OLS. Inferring default values.\n", olsIdx ); 

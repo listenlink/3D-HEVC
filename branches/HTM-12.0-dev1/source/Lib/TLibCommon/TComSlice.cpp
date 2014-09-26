@@ -3206,7 +3206,7 @@ Void TComSPS::checkRpsMaxNumPics( TComVPS* vps, Int currLayerId )
     if ( !rps->getInterRPSPrediction() )
     {
 #if H_MV_HLS10_MAXNUMPICS
-      rps->checkMaxNumPics( vps->getVpsExtensionFlag(), INT_MAX, getLayerId(), getMaxDecPicBuffering( getSpsMaxSubLayersMinus1() ) - 1 );   // INT_MAX to be replaced by DpbSize
+      rps->checkMaxNumPics( vps->getVpsExtensionFlag(), MAX_INT, getLayerId(), getMaxDecPicBuffering( getSpsMaxSubLayersMinus1() ) - 1 );   // INT_MAX to be replaced by DpbSize
 #else
       rps->checkMaxNumPics( vps->getVpsExtensionFlag(), vps->getMaxNumPics( currLayerId ), 
         getLayerId(), getMaxDecPicBuffering( getSpsMaxSubLayersMinus1() ) - 1 );  
