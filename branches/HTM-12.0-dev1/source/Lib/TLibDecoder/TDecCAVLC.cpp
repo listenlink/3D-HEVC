@@ -2471,7 +2471,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
           rps->checkMaxNumPics( 
             vps->getVpsExtensionFlag(), 
 #if H_MV_HLS10_MAXNUMPICS
-            INT_MAX,  // To be replaced by MaxDbpSize
+            MAX_INT,  // To be replaced by MaxDbpSize
 #else
             vps->getMaxNumPics( rpcSlice->getLayerId() ),
 #endif
@@ -2588,7 +2588,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rps->checkMaxNumPics( 
           vps->getVpsExtensionFlag(), 
 #if H_MV_HLS10_MAXNUMPICS
-            INT_MAX,  // To be replaced by MaxDbpsize
+            MAX_INT,  // To be replaced by MaxDbpsize
 #else
           vps->getMaxNumPics( rpcSlice->getLayerId() ),
 #endif

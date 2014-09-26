@@ -144,7 +144,6 @@ Void TAppEncTop::xInitLibCfg()
   xDeriveDltArray          ( vps, dlt );
 #endif
 #if H_MV_HLS10_GEN_FIX
-  Bool wasEmpty = true; 
   if ( m_targetEncLayerIdList.size() == 0 )
   {
     for (Int i = 0; i < m_numberOfLayers; i++ )
