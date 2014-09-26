@@ -668,7 +668,9 @@ Void TDecTop::xActivateParameterSets()
 
 #if H_MV
   sps->inferSpsMaxDecPicBufferingMinus1( vps, m_targetOptLayerSetIdx, getLayerId(), false ); 
+#if !H_MV_HLS10_ADD_LAYERSETS 
   vps->inferDbpSizeLayerSetZero( sps, false ); 
+#endif
   // When the value of vps_num_rep_formats_minus1 in the active VPS is equal to 0
   if ( vps->getVpsNumRepFormatsMinus1() == 0 )
   {
@@ -676,10 +678,34 @@ Void TDecTop::xActivateParameterSets()
     assert( sps->getUpdateRepFormatFlag() == false ); 
   }
   sps->checkRpsMaxNumPics( vps, getLayerId() ); 
+#if H_MV_HLS10_MULTILAYERSPS
+
+  if( sps->getLayerId() != 0 )
+  {
+    sps->inferSpsMaxSubLayersMinus1( true, vps ); 
+  }
+
+#if H_MV_HLS10_MULTILAYERSPS
+  // It is a requirement of bitstream conformance that, when the SPS is referred to by 
+  // any current picture that belongs to an independent non-base layer, the value of 
+  // MultiLayerExtSpsFlag derived from the SPS shall be equal to 0.
+
+  if ( m_layerId > 0 && vps->getNumRefLayers( m_layerId ) == 0 )
+  {  
+    assert( sps->getMultiLayerExtSpsFlag() == 0 ); 
+  }
+#endif
+
+  if( sps->getMultiLayerExtSpsFlag() )
+  {
+    sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
+  }
+#else
   if( m_layerId > 0 )
   {
     sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
   }
+#endif
 #endif
 
   if( pps->getDependentSliceSegmentsEnabledFlag() )
@@ -709,6 +735,7 @@ Void TDecTop::xActivateParameterSets()
   assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, sps->getLayerId() ) );
   sps->inferRepFormat  ( vps , m_layerId ); 
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
+
 #endif
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumColumnsMinus1() + 1) : 1);
@@ -1657,7 +1684,11 @@ Bool TDecTop::xAllRefLayersInitilized()
   TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); 
   for (Int i = 0; i < vps->getNumDirectRefLayers( getLayerId()  ); i++ )
   {
+#if H_MV_HLS10_REF_PRED_LAYERS
+    Int refLayerId = vps->getIdDirectRefLayer( m_layerId, i ); 
+#else
     Int refLayerId = vps->getRefLayerId( m_layerId, i ); 
+#endif
     allRefLayersInitilizedFlag = allRefLayersInitilizedFlag && m_layerInitilizedFlag[ refLayerId ]; 
   }
 
