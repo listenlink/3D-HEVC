@@ -54,7 +54,7 @@
 */
 
 #ifndef HEVC_EXT
-#define HEVC_EXT                    2
+#define HEVC_EXT                    1
 #endif
 
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
@@ -386,7 +386,31 @@
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 // TBD: Check if integration is necessary. 
+
+
+
+#define H_MV_HLS10_GEN                       0  // General changes (not tested)
+
+#define H_MV_HLS10_GEN_FIX                   1
+
+#define H_MV_HLS10_GEN_VSP_CONF_WIN          1  // VPS conformance window
+#define H_MV_HLS10_GEN_VSP_BASE_LAYER_AVAIL  1  // vps_base_layer_available
+#define H_MV_HLS10_REF_PRED_LAYERS           1  // reference and predicted layer derivation
+#define H_MV_HLS10_NESSECARY_LAYER           1  // necessary layers
+#define H_MV_HLS10_ADD_LAYERSETS             1  // additional layer sets
+#define H_MV_HLS10_DBP_SIZE                  1  // dpb size syntax structure
+#define H_MV_HLS10_MAXNUMPICS                1  // constraint on number of pictures in rps  
+#define H_MV_HLS10_PTL                       1  // profile tier level
+#define H_MV_HLS10_MULTILAYERSPS             1  // multilayer SPS extension 
+#define H_MV_HLS10_VPS_VUI                   1  // vsp vui
+#define H_MV_HLS10_VPS_VUI_BSP               1  // vsp vui bsp
+#define H_MV_HLS10_PPS                       1  // PPS modifications
+
+#define H_MV_HLS10_VPS_VUI_BSP_STORE         0  // Currently bsp vui bsp hrd parameters are not stored, some dynamic memory allocation with upper bounds is required. 
+
+
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
+
 
 // POC
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
@@ -462,9 +486,19 @@
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
+#if H_MV_HLS10_VPS_VUI_BSP
+#define MAX_VPS_NUM_HRD_PARAMETERS                1024
+#define MAX_NUM_SUB_LAYERS                        7
+#define MAX_NUM_SIGNALLED_PARTITIONING_SCHEMES    16
+#else
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
+#endif
+
 #define MAX_VPS_OP_SETS_PLUS1                     1024
 #if H_MV
+#if H_MV_HLS10_ADD_LAYERSETS
+#define MAX_VPS_NUM_ADD_LAYER_SETS                1024
+#endif
 #define MAX_VPS_NUH_LAYER_ID_PLUS1  63
 #define MAX_NUM_SCALABILITY_TYPES   16
 #define ENC_CFG_CONSOUT_SPACE       29           
@@ -479,13 +513,19 @@
 #define MAX_NUM_LAYERS                  63
 #define MAX_VPS_PROFILE_TIER_LEVEL      64
 #define MAX_VPS_ADD_OUTPUT_LAYER_SETS   1024
+#if H_MV_HLS10_ADD_LAYERSETS
+#define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 + MAX_VPS_OP_SETS_PLUS1 )
+#else
 #define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 )
+#endif
 #define  MAX_NUM_VIDEO_SIGNAL_INFO      16
 #define MAX_NUM_SCALED_REF_LAYERS       MAX_NUM_LAYERS-1
+#if !H_MV_HLS10_VPS_VUI_BSP
 #define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
 #define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
 #define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
 #define MAX_SUB_STREAMS                 1024
+#endif
 #else
 #define MAX_NUM_LAYER_IDS                64
 #endif
@@ -956,10 +996,18 @@ namespace Profile
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
 #if H_MV
+#if H_MV_HLS10_PTL
+    MULTIVIEWMAIN = 6,
+    MAIN3D = 5,
+#if H_3D
+    MAIN3D = 8, 
+#endif
+#else
     MAINSTEREO = 4,
     MAINMULTIVIEW = 5,
 #if H_3D
     MAIN3D = 6, 
+#endif
 #endif
 #endif
   };

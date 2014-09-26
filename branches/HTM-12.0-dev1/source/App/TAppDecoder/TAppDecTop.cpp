@@ -238,25 +238,33 @@ Void TAppDecTop::decode()
           if ( m_targetDecLayerIdSetFileEmpty )
           {
             TComVPS* vps = m_vps; 
-          if ( m_targetOptLayerSetIdx == -1 )
-          {
-            // Not normative! Corresponds to specification by "External Means". (Should be set equal to 0, when no external means available. ) 
-            m_targetOptLayerSetIdx = vps->getVpsNumLayerSetsMinus1(); 
-          }
+            if ( m_targetOptLayerSetIdx == -1 )
+            {
+              // Not normative! Corresponds to specification by "External Means". (Should be set equal to 0, when no external means available. ) 
+              m_targetOptLayerSetIdx = vps->getVpsNumLayerSetsMinus1(); 
+            }
 
-          for (Int dI = 0; dI < m_numDecoders; dI++ )
-          {
-            m_tDecTop[decIdx]->setTargetOptLayerSetIdx( m_targetOptLayerSetIdx ); 
-          }
+            for (Int dI = 0; dI < m_numDecoders; dI++ )
+            {
+              m_tDecTop[decIdx]->setTargetOptLayerSetIdx( m_targetOptLayerSetIdx ); 
+            }
 
-          if ( m_targetOptLayerSetIdx < 0 || m_targetOptLayerSetIdx >= vps->getNumOutputLayerSets() )
-          {
-            fprintf(stderr, "\ntarget output layer set index must be in the range of 0 to %d, inclusive \n", vps->getNumOutputLayerSets() - 1 );            
-            exit(EXIT_FAILURE);
+            if ( m_targetOptLayerSetIdx < 0 || m_targetOptLayerSetIdx >= vps->getNumOutputLayerSets() )
+            {
+              fprintf(stderr, "\ntarget output layer set index must be in the range of 0 to %d, inclusive \n", vps->getNumOutputLayerSets() - 1 );            
+              exit(EXIT_FAILURE);
+            }
+            m_targetDecLayerIdSet = vps->getTargetDecLayerIdList( m_targetOptLayerSetIdx ); 
           }
-          m_targetDecLayerIdSet = vps->getTargetDecLayerIdList( m_targetOptLayerSetIdx ); 
+#if H_MV_HLS10_GEN_FIX
+          if (m_outputVpsInfo )
+          {
+            m_vps->printLayerDependencies();
+            m_vps->printLayerSets();
+            m_vps->printPTL(); 
+          }
+#endif
         }
-      }
 #if H_3D
         if (nalu.m_nalUnitType == NAL_UNIT_VPS )
         {                  
@@ -568,8 +576,12 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   Int numPicsNotYetDisplayed = 0;
   Int dpbFullness = 0;
 #if H_MV
+#if H_MV_HLS10_ADD_LAYERSETS
+  TComSPS* activeSPS = m_tDecTop[ decIdx ]->getActiveSPS();
+#else
   // preliminary fix
   TComSPS* activeSPS = m_tDecTop[0]->getActiveSPS();
+#endif
 #else
   TComSPS* activeSPS = m_cTDecTop.getActiveSPS();
 #endif

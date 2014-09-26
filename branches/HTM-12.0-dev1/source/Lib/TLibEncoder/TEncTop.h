@@ -149,7 +149,50 @@ protected:
   
   Void  xInitPPSforTiles  ();
   Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
+#if H_MV_HLS10_GEN_FIX
+#if H_MV
 
+  template <class T>     Void  xDelete( Bool ar, T inArray ) 
+  {
+    if( inArray != NULL)
+    {
+      if ( ar )
+      {      
+        delete[] inArray; 
+      }
+      else
+      {
+        delete inArray;
+      }
+    }
+  }
+
+  template <class T>     Void  xDelete( Bool ar, T inArray, Int idx1 ) 
+  {
+    if( inArray != NULL)
+    {
+        xDelete( ar, inArray[idx1]); 
+    }
+  }
+
+  template <class T>     Void  xDelete( Bool ar, T inArray, Int idx1, Int idx2 ) 
+  {
+    if( inArray != NULL )
+    {
+      xDelete( ar, inArray[idx1], idx2 ); 
+    }
+  }
+
+  template <class T>     Void  xDelete( Bool ar, T inArray, Int idx1, Int idx2, Int idx3 ) 
+  {
+    if( inArray != NULL )
+    {
+      xDelete( ar, inArray[idx1], idx2, idx3 ); 
+    }
+  }
+
+#endif
+#endif
 public:
   TEncTop();
   virtual ~TEncTop();
