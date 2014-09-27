@@ -148,7 +148,7 @@ Void TAppEncTop::xInitLibCfg()
   {
     for (Int i = 0; i < m_numberOfLayers; i++ )
     {
-      m_targetEncLayerIdList.push_back( m_layerIdInNuh[ i ] );
+      m_targetEncLayerIdList.push_back( vps.getLayerIdInNuh( i ) );
     }
   }
   for( Int i = (Int) m_targetEncLayerIdList.size()-1 ; i >= 0 ; i--)
@@ -845,7 +845,7 @@ Void TAppEncTop::encode()
     for(Int layer=0; layer < m_numberOfLayers; layer++ )
     {
 #if H_MV_HLS10_GEN_FIX
-      if (!xLayerIdInTargetEncLayerIdList( m_layerIdInNuh[ layer ] ))
+      if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
       {
         continue; 
       }
@@ -891,7 +891,7 @@ Void TAppEncTop::encode()
       for(Int layer=0; layer < m_numberOfLayers; layer++ )
       {
 #if H_MV_HLS10_GEN_FIX
-        if (!xLayerIdInTargetEncLayerIdList( m_layerIdInNuh[ layer ] ))
+        if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
         {
           continue; 
         }
@@ -924,7 +924,7 @@ Void TAppEncTop::encode()
   for(Int layer=0; layer < m_numberOfLayers; layer++ )
   {
 #if H_MV_HLS10_GEN_FIX
-    if (!xLayerIdInTargetEncLayerIdList( m_layerIdInNuh[ layer ] ))
+    if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
     {
       continue; 
     }
