@@ -402,9 +402,9 @@ Bool   g_HLSTraceEnable = true;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
 #if H_MV_ENC_DEC_TRAC
-Bool g_traceCU = true; 
-Bool g_tracePU = true; 
-Bool g_traceTU = true; 
+Bool g_traceCU = false; 
+Bool g_tracePU = false; 
+Bool g_traceTU = false; 
 Bool g_disableHLSTrace = false; 
 UInt64 g_stopAtCounter       = 0; 
 Bool g_traceCopyBack         = false; 
