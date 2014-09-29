@@ -3182,15 +3182,33 @@ Void TComSPS::inferSpsMaxDecPicBufferingMinus1( TComVPS* vps, Int targetOptLayer
     {
       Int maxDecPicBufferingMinus1 = vps->getDpbSize()->getMaxVpsDecPicBufferingMinus1( targetOptLayerSetIdx, layerIdx, i ) ; 
 
+#if H_MV_HLS10_MULTILAYERSPS
+      // This preliminary fix needs to be checked.
+      Int maxNumReorderPics       = vps->getDpbSize()->getMaxVpsNumReorderPics( targetOptLayerSetIdx, i ); 
+      Int maxLatencyIncreasePlus1 = vps->getDpbSize()->getMaxVpsLatencyIncreasePlus1( targetOptLayerSetIdx, i ); 
+#endif
       if ( encoder )      
       {
         assert( getMaxDecPicBuffering( i ) - 1 == maxDecPicBufferingMinus1 ); 
+#if H_MV_HLS10_MULTILAYERSPS
+        // This preliminary fix needs to be checked.
+        assert( getNumReorderPics( i )     == maxNumReorderPics       ); 
+        assert( getMaxLatencyIncrease( i ) == maxLatencyIncreasePlus1 ); 
+#endif    
+
       }
       else
       {
+#if !H_MV_HLS10_MULTILAYERSPS
         setMaxDecPicBuffering(i, maxDecPicBufferingMinus1 + 1 ); 
+#else
+        // This preliminary fix needs to be checked.
+        setMaxDecPicBuffering( maxDecPicBufferingMinus1 + 1 , i); 
+        setNumReorderPics    ( maxNumReorderPics, i );
+        setMaxLatencyIncrease( maxLatencyIncreasePlus1 - 1 , i); 
+#endif
       }
-    }
+    }    
   }
 }
 
