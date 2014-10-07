@@ -802,6 +802,10 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     }
 
     parsePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
+#if H_MV_HLS10_PTL_INFER_FIX
+    pcSPS->getPTL()->inferGeneralValues ( true, 0, NULL ); 
+    pcSPS->getPTL()->inferSubLayerValues( pcSPS->getMaxTLayers() - 1, 0, NULL );
+#endif
 #if H_MV
   }
 #endif
@@ -1145,6 +1149,12 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
 
   READ_CODE( 16, uiCode,  "vps_reserved_ffff_16bits" );           assert(uiCode == 0xffff);
   parsePTL ( pcVPS->getPTL(), true, pcVPS->getMaxTLayers()-1);
+#if H_MV_HLS10_PTL_INFER_FIX
+#if H_MV
+  pcVPS->getPTL()->inferGeneralValues ( true, 0, NULL );
+  pcVPS->getPTL()->inferSubLayerValues( pcVPS->getMaxTLayers() - 1, 0, NULL );
+#endif
+#endif
   UInt subLayerOrderingInfoPresentFlag;
   READ_FLAG(subLayerOrderingInfoPresentFlag, "vps_sub_layer_ordering_info_present_flag");
   for(UInt i = 0; i <= pcVPS->getMaxTLayers()-1; i++)
@@ -1268,10 +1278,15 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   {
     parsePTL( pcVPS->getPTL( 1 ),0, pcVPS->getMaxSubLayersMinus1()  );  
     
+#if !H_MV_HLS10_PTL_INFER_FIX
     // Copy Profile info
     TComPTL temp = *pcVPS->getPTL( 1 );
     *pcVPS->getPTL( 1 ) = *pcVPS->getPTL( 0 );
     pcVPS->getPTL( 1 )->copyLevelFrom( &temp );
+#else
+    pcVPS->getPTL( 1 )->inferGeneralValues ( false, 1, pcVPS->getPTL( 0 ) );
+    pcVPS->getPTL( 1 )->inferSubLayerValues( pcVPS->getMaxSubLayersMinus1(), 1, pcVPS->getPTL( 0 ) );    
+#endif
   }
 #endif 
 
@@ -1403,12 +1418,17 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   {
     READ_FLAG(  uiCode, "vps_profile_present_flag[i]" );    pcVPS->setVpsProfilePresentFlag( i, uiCode == 1 );
     parsePTL ( pcVPS->getPTL( offsetVal ), pcVPS->getVpsProfilePresentFlag( i ), pcVPS->getMaxTLayers()-1);
+#if H_MV_HLS10_PTL_INFER_FIX
+    pcVPS->getPTL( offsetVal )->inferGeneralValues ( pcVPS->getVpsProfilePresentFlag( i ), offsetVal, pcVPS->getPTL( offsetVal - 1 ) );    
+    pcVPS->getPTL( offsetVal )->inferSubLayerValues( pcVPS->getMaxSubLayersMinus1()      , offsetVal, pcVPS->getPTL( offsetVal - 1 ) );    
+#else
     if( !pcVPS->getVpsProfilePresentFlag( i ) )
     {
       TComPTL temp = *pcVPS->getPTL( offsetVal );
       *pcVPS->getPTL( offsetVal ) = *pcVPS->getPTL( offsetVal - 1 );
       pcVPS->getPTL( offsetVal )->copyLevelFrom( &temp );
     }
+#endif
     offsetVal++;
   }
 #else 
@@ -3165,7 +3185,12 @@ Void TDecCavlc::parsePTL( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSu
 #endif
       READ_FLAG( uiCode, "sub_layer_profile_present_flag[i]" ); rpcPTL->setSubLayerProfilePresentFlag(i, uiCode);
 #if H_MV
-    rpcPTL->setSubLayerProfilePresentFlag( i, profilePresentFlag && rpcPTL->getSubLayerProfilePresentFlag(i) );
+#if !H_MV_HLS10_PTL_INFER_FIX
+      rpcPTL->setSubLayerProfilePresentFlag( i, profilePresentFlag && rpcPTL->getSubLayerProfilePresentFlag(i) );
+#else
+      // When profilePresentFlag is equal to 0, sub_layer_profile_present_flag[ i ] shall be equal to 0.
+      assert( profilePresentFlag || !rpcPTL->getSubLayerProfilePresentFlag(i) );
+#endif
 #else
     }
 #endif
@@ -3183,7 +3208,15 @@ Void TDecCavlc::parsePTL( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSu
   
   for(Int i = 0; i < maxNumSubLayersMinus1; i++)
   {
-    if( profilePresentFlag && rpcPTL->getSubLayerProfilePresentFlag(i) )
+#if H_MV_HLS10_PTL_INFER_FIX
+#if H_MV
+    if( rpcPTL->getSubLayerProfilePresentFlag(i) )         
+#else
+    if( profilePresentFlag && rpcPTL->getSubLayerProfilePresentFlag(i) )          
+#endif
+#else
+    if( profilePresentFlag && rpcPTL->getSubLayerProfilePresentFlag(i) )    
+#endif
     {
       parseProfileTier(rpcPTL->getSubLayerPTL(i));
     }
@@ -3217,20 +3250,24 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
   
 #if H_MV_HLS10_PTL
+#if H_MV_HLS10_PTL_INFER_FIX
+  if( ptl->getV2ConstraintsPresentFlag() )
+#else
   if( ptl->getProfileIdc( ) ==  4 || ptl->getProfileCompatibilityFlag( 4 )  ||
       ptl->getProfileIdc( ) ==  5 || ptl->getProfileCompatibilityFlag( 5 )  ||
       ptl->getProfileIdc( ) ==  6 || ptl->getProfileCompatibilityFlag( 6 )  ||
       ptl->getProfileIdc( ) ==  7 || ptl->getProfileCompatibilityFlag( 7 ) ) 
+#endif
   {
-    READ_FLAG( uiCode, "max_12bit_constraint_flag" ); ptl->setMax12bitConstraintFlag( uiCode == 1 );
-    READ_FLAG( uiCode, "max_10bit_constraint_flag" ); ptl->setMax10bitConstraintFlag( uiCode == 1 );
-    READ_FLAG( uiCode, "max_8bit_constraint_flag" ); ptl->setMax8bitConstraintFlag( uiCode == 1 );
-    READ_FLAG( uiCode, "max_422chroma_constraint_flag" ); ptl->setMax422chromaConstraintFlag( uiCode == 1 );
-    READ_FLAG( uiCode, "max_420chroma_constraint_flag" ); ptl->setMax420chromaConstraintFlag( uiCode == 1 );
-    READ_FLAG( uiCode, "max_monochrome_constraint_flag" ); ptl->setMaxMonochromeConstraintFlag( uiCode == 1 );
-    READ_FLAG( uiCode, "intra_constraint_flag" ); ptl->setIntraConstraintFlag( uiCode == 1 );
+    READ_FLAG( uiCode, "max_12bit_constraint_flag" );        ptl->setMax12bitConstraintFlag      ( uiCode == 1 );
+    READ_FLAG( uiCode, "max_10bit_constraint_flag" );        ptl->setMax10bitConstraintFlag      ( uiCode == 1 );
+    READ_FLAG( uiCode, "max_8bit_constraint_flag" );         ptl->setMax8bitConstraintFlag       ( uiCode == 1 );
+    READ_FLAG( uiCode, "max_422chroma_constraint_flag" );    ptl->setMax422chromaConstraintFlag  ( uiCode == 1 );
+    READ_FLAG( uiCode, "max_420chroma_constraint_flag" );    ptl->setMax420chromaConstraintFlag  ( uiCode == 1 );
+    READ_FLAG( uiCode, "max_monochrome_constraint_flag" );   ptl->setMaxMonochromeConstraintFlag ( uiCode == 1 );
+    READ_FLAG( uiCode, "intra_constraint_flag" );            ptl->setIntraConstraintFlag         ( uiCode == 1 );
     READ_FLAG( uiCode, "one_picture_only_constraint_flag" ); ptl->setOnePictureOnlyConstraintFlag( uiCode == 1 );
-    READ_FLAG( uiCode, "lower_bit_rate_constraint_flag" ); ptl->setLowerBitRateConstraintFlag( uiCode == 1 );    
+    READ_FLAG( uiCode, "lower_bit_rate_constraint_flag" );   ptl->setLowerBitRateConstraintFlag  ( uiCode == 1 );    
     READ_CODE(16, uiCode, "XXX_reserved_zero_34bits[0..15]");
     READ_CODE(16, uiCode, "XXX_reserved_zero_34bits[16..31]");
     READ_CODE(2 , uiCode, "XXX_reserved_zero_34bits[32..33]");
@@ -3241,10 +3278,14 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
     READ_CODE(16, uiCode, "XXX_reserved_zero_43bits[16..31]");
     READ_CODE(11, uiCode, "XXX_reserved_zero_43bits[32..42]");
   }
+#if H_MV_HLS10_PTL_INFER_FIX
+  if( ptl->getInbldPresentFlag() )
+#else
   if( ( ptl->getProfileIdc() >= 1 && ptl->getProfileIdc() <= 5 )  ||
     ptl->getProfileCompatibilityFlag( 1 ) || ptl->getProfileCompatibilityFlag( 2 )  ||
     ptl->getProfileCompatibilityFlag( 3 ) || ptl->getProfileCompatibilityFlag( 4 )  ||
     ptl->getProfileCompatibilityFlag( 5 ) )
+#endif
   {
     READ_FLAG( uiCode, "inbld_flag" ); ptl->setInbldFlag( uiCode == 1 );
   }

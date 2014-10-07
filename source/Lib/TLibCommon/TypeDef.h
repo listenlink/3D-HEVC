@@ -413,7 +413,8 @@
 #define H_MV_HLS10_DBP_SIZE                  1  // dpb size syntax structure
 #define H_MV_HLS10_MAXNUMPICS                1  // constraint on number of pictures in rps  
 #define H_MV_HLS10_PTL                       1  // profile tier level
-#define H_MV_HLS10_PTL_FIX                   1  // profile tier level
+#define H_MV_HLS10_PTL_FIX                   1  // profile tier level fix
+#define H_MV_HLS10_PTL_INFER_FIX             1  // fix inference ptl
 #define H_MV_HLS10_MULTILAYERSPS             1  // multilayer SPS extension 
 #define H_MV_HLS10_VPS_VUI                   1  // vsp vui
 #define H_MV_HLS10_VPS_VUI_BSP               1  // vsp vui bsp
