@@ -77,6 +77,9 @@ protected:
   std::vector< std::vector<Int> > m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
   std::vector<Int>       m_viewId;                            ///< view id
   std::vector<Int>       m_viewOrderIndex;                    ///< view order index  
+#if H_MV_HLS10_AUX
+  std::vector<Int>       m_auxId;                             ///< auxiliary id
+#endif
 #if H_3D
   std::vector<Int>       m_depthFlag;                         ///< depth flag
 #endif

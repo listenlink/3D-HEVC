@@ -259,6 +259,9 @@ Void TAppDecTop::decode()
 #if H_MV_HLS10_GEN_FIX
           if (m_outputVpsInfo )
           {
+#if H_MV_HLS10_AUX
+            m_vps->printScalabilityId();
+#endif
             m_vps->printLayerDependencies();
             m_vps->printLayerSets();
             m_vps->printPTL(); 

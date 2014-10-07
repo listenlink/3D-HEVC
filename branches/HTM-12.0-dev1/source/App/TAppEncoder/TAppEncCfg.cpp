@@ -379,13 +379,20 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_MV
   ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
 #if !H_3D
+#if H_MV_HLS10_AUX
+  ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask: 2: Multiview, 8: Auxiliary, 10: Multiview + Auxiliary")    
+#else
   ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask")    
+#endif
 #else
   ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
 #endif  
   ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
   ("ViewOrderIndex",        m_viewOrderIndex     , std::vector<Int>(1,0), "View Order Index per layer")
   ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id per View Order Index")
+#if H_MV_HLS10_AUX
+  ("AuxId",                 m_auxId              , std::vector<Int>(1,0), "AuxId per layer")
+#endif
 #if H_3D
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
@@ -1074,6 +1081,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     } 
   }
   m_iNumberOfViews = (Int) uniqueViewOrderIndices.size(); 
+#if H_MV_HLS10_AUX
+  xResizeVector( m_auxId );
+#endif
 
 #if H_3D
   xResizeVector( m_depthFlag ); 
@@ -1420,7 +1430,11 @@ Void TAppEncCfg::xCheckParameter()
 #if H_3D
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 3, "Scalability Mask must be equal to 2 or 3. ");
 #else
+#if H_MV_HLS10_AUX
+  xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 8 && m_scalabilityMask != 10, "Scalability Mask must be equal to 2, 8 or 10");
+#else
   xConfirmPara( m_scalabilityMask != 2 , "Scalability Mask must be equal to 2. ");
+#endif
 #endif
 
 #if H_3D
@@ -1431,7 +1445,18 @@ Void TAppEncCfg::xCheckParameter()
 #endif
 
   m_dimIds.push_back( m_viewOrderIndex );   
-  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
+#if H_MV_HLS10_AUX
+  for (Int i = 0; i < m_auxId.size(); i++)
+  {
+    xConfirmPara( !( ( m_auxId[i] >= 0 && m_auxId[i] <= 2 ) || ( m_auxId[i] >= 128 && m_auxId[i] <= 159 ) ) , "AuxId shall be in the range of 0 to 2, inclusive, or 128 to 159, inclusive");
+  }
+  if ( m_scalabilityMask & ( 1 << AUX_ID ) )
+  {
+    m_dimIds.push_back ( m_auxId );
+  }
+#endif  
+  xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );
+  Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
 
   dimBitOffset[ 0 ] = 0; 
   for (Int j = 1; j <= ((Int) m_dimIds.size() - m_splittingFlag ? 1 : 0); j++ )
@@ -2482,6 +2507,9 @@ Void TAppEncCfg::xPrintParameter()
 #endif
   xPrintParaVector( "ViewIdVal"     , m_viewId ); 
   xPrintParaVector( "ViewOrderIndex", m_viewOrderIndex ); 
+#if H_MV_HLS10_AUX
+  xPrintParaVector( "AuxId", m_auxId );
+#endif
 #endif
 #if H_3D
   xPrintParaVector( "DepthFlag", m_depthFlag ); 

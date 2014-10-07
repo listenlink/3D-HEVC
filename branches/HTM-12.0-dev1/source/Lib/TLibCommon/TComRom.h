@@ -238,7 +238,7 @@ extern Int  g_lastlayer;
 #endif
 
 #ifndef ENC_DEC_TRACE
-#define ENC_DEC_TRACE   0
+#define ENC_DEC_TRACE   1
 #endif
 
 #if ENC_DEC_TRACE

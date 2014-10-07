@@ -1456,6 +1456,12 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
 #endif 
   pcVPS->deriveTargetLayerIdList( 0 ); 
 
+#if H_MV_HLS10_PTL_FIX
+  if (pcVPS->getVpsBaseLayerInternalFlag() )
+  {  
+    pcVPS->setProfileTierLevelIdx(0,0, pcVPS->inferProfileTierLevelIdx(0,0) );
+  }
+#endif
   for( Int i = 1; i < pcVPS->getNumOutputLayerSets( ); i++ )
   {
     if( i >= pcVPS->getNumLayerSets( ) )    
@@ -1493,6 +1499,12 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
       {
         READ_CODE( pcVPS->getProfileTierLevelIdxLen(), uiCode,"profile_tier_level_idx[ i ][ j ]" );   pcVPS->setProfileTierLevelIdx( i, j, uiCode ); 
       }
+#if H_MV_HLS10_PTL_FIX
+      if (pcVPS->getNecessaryLayerFlag( i, j ) && pcVPS->getVpsNumProfileTierLevelMinus1() == 0 )
+      {
+        pcVPS->setProfileTierLevelIdx( i , j, pcVPS->inferProfileTierLevelIdx( i, j) );
+      }
+#endif
     }
 #else
     if ( pcVPS->getProfileLevelTierIdxLen()  > 0 )
