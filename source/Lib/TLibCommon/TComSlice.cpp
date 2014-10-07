@@ -1914,7 +1914,11 @@ TComVPS::TComVPS()
     for ( Int j = 0; j < MAX_VPS_NUH_LAYER_ID_PLUS1; j++)
     {
 #if H_MV_HLS10_PTL
+#if H_MV_HLS10_PTL_FIX
+      m_profileTierLevelIdx[i][j] = -1; 
+#else
       m_profileTierLevelIdx[i][j] = false; 
+#endif
 #endif
       m_outputLayerFlag[i][j] = false; 
     }

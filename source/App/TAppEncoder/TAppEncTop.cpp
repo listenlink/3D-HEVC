@@ -170,6 +170,9 @@ Void TAppEncTop::xInitLibCfg()
 #if H_MV_HLS10_ADD_LAYERSETS
   if ( m_outputVpsInfo )
   {  
+#if H_MV_HLS10_AUX
+    vps.printScalabilityId();
+#endif
     vps.printLayerDependencies();
     vps.printLayerSets(); 
     vps.printPTL(); 
@@ -1863,8 +1866,17 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
         if( j < (Int) m_profileTierLevelIdx[ olsIdx ].size() )
         {
           vps.setProfileTierLevelIdx(olsIdx, j, m_profileTierLevelIdx[olsIdx][j] );
+#if H_MV_HLS10_PTL_FIX
+          if( !vps.getNecessaryLayerFlag(olsIdx,j) && m_profileTierLevelIdx[ olsIdx ][ j ] != -1 )
+          {
+            fprintf( stderr, "Warning: The %d-th layer in the %d-th OLS is not necessary such that profileTierLevelIdx[%d][%d] will be ignored. Set value to -1 to suppress warning.\n", j,olsIdx,olsIdx,j ); 
+          }          
+        }
+        else if ( vps.getNecessaryLayerFlag(olsIdx,j) )
+#else
         }
         else
+#endif
         {
           // setting default values
           if ( j == 0 || vps.getVpsNumProfileTierLevelMinus1() < 1 )

@@ -1240,6 +1240,12 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
   assert( pcVPS->getLayerSetIdxForOlsMinus1( 0 ) == -1 ); 
 
 
+#if H_MV_HLS10_PTL_FIX
+  if (pcVPS->getVpsBaseLayerInternalFlag() )
+  {  
+    assert( pcVPS->getProfileTierLevelIdx(0,0) == pcVPS->inferProfileTierLevelIdx(0,0) );
+  }
+#endif
 
 
   for( Int i = 1; i < pcVPS->getNumOutputLayerSets( ); i++ )
@@ -1275,6 +1281,13 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
       {
         WRITE_CODE( pcVPS->getProfileTierLevelIdx( i, j ), pcVPS->getProfileTierLevelIdxLen() ,"profile_tier_level_idx[ i ][ j ]" );   
       }
+#if H_MV_HLS10_PTL_FIX
+      if (pcVPS->getNecessaryLayerFlag( i, j ) && pcVPS->getVpsNumProfileTierLevelMinus1() == 0 )
+      {
+        assert( pcVPS->getProfileTierLevelIdx( i , j ) == pcVPS->inferProfileTierLevelIdx( i, j ) );
+      }
+#endif
+
     }
 #else
     if ( pcVPS->getProfileLevelTierIdxLen()  > 0 )

@@ -402,6 +402,7 @@
 
 #define H_MV_HLS10_GEN                       0  // General changes (not tested)
 
+#define H_MV_HLS10_AUX                       1 // Auxiliary pictures
 #define H_MV_HLS10_GEN_FIX                   1
 
 #define H_MV_HLS10_GEN_VSP_CONF_WIN          1  // VPS conformance window
@@ -412,6 +413,7 @@
 #define H_MV_HLS10_DBP_SIZE                  1  // dpb size syntax structure
 #define H_MV_HLS10_MAXNUMPICS                1  // constraint on number of pictures in rps  
 #define H_MV_HLS10_PTL                       1  // profile tier level
+#define H_MV_HLS10_PTL_FIX                   1  // profile tier level
 #define H_MV_HLS10_MULTILAYERSPS             1  // multilayer SPS extension 
 #define H_MV_HLS10_VPS_VUI                   1  // vsp vui
 #define H_MV_HLS10_VPS_VUI_BSP               1  // vsp vui bsp
@@ -1061,6 +1063,10 @@ namespace Level
     DEPTH_ID = 0,    
 #endif    
     VIEW_ORDER_INDEX  = 1,
+#if H_MV_HLS10_AUX
+    DEPENDENCY_ID = 2,
+    AUX_ID = 3,
+#endif    
   };
 #endif
 #if H_3D

@@ -1215,6 +1215,27 @@ public:
 #if H_MV_HLS10_PTL
   Void    setProfileTierLevelIdx( Int i, Int j, Int val )                  { m_profileTierLevelIdx[ i ][ j ] = val; }
   Int     getProfileTierLevelIdx( Int i, Int j )                           { return m_profileTierLevelIdx[ i ][ j ]; } 
+#if H_MV_HLS10_PTL
+  Int     inferProfileTierLevelIdx( Int i, Int j )
+  {
+    Bool inferZero        = ( i == 0 && j == 0 &&  getVpsBaseLayerInternalFlag() );
+    Bool inferGreaterZero = getNecessaryLayerFlag(i,j) && ( getVpsNumProfileTierLevelMinus1() == 0 ); 
+    assert( inferZero || inferGreaterZero );
+
+    Bool ptlIdx = 0; // inference for greaterZero
+    if ( inferZero )
+    {
+      ptlIdx = getMaxLayersMinus1() > 0 ? 1 : 0; 
+      if ( inferGreaterZero )
+      {
+        assert( ptlIdx == 0 );  
+        // This should never happen since :
+        // When vps_max_layers_minus1 is greater than 0, the value of vps_num_profile_tier_level_minus1 shall be greater than or equal to 1.
+      }
+    }
+    return ptlIdx;     
+  }
+#endif
 #else
   Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx ] = val; }
   Int     getProfileLevelTierIdx( Int outLayerSetIdx )                     { return m_profileLevelTierIdx[ outLayerSetIdx ]; } 
@@ -1281,6 +1302,10 @@ public:
   Void    setRefLayers(); 
 
   Int     getViewIndex    ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), VIEW_ORDER_INDEX  ); }    
+#if H_MV_HLS10_AUX
+  Int     getAuxId        ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), AUX_ID  ); }    
+  Int     getDependencyId ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPENDENCY_ID  ); }    
+#endif
   Int     getNumViews();
 
 #if H_MV_HLS10_REF_PRED_LAYERS
@@ -1459,10 +1484,30 @@ public:
   {
     vector<Int> fullArray;
     vector<Int> range; 
+
+#if H_3D
+    vector<Int> depthId; 
+#endif
+
+#if H_MV_HLS10_AUX
+    vector<Int> viewOrderIndex;
+    vector<Int> auxId;
+    vector<Int> dependencyId; 
+    vector<Int> viewId; 
+#endif
     for (Int i = 0; i <= getMaxLayersMinus1(); i++ )
     {
       fullArray.push_back( getMaxLayersMinus1() + 1 ); 
       range.push_back( i ); 
+#if H_MV_HLS10_AUX      
+      viewOrderIndex.push_back( getViewIndex   ( i ) );
+      dependencyId  .push_back( getDependencyId( i ) );
+      auxId         .push_back( getAuxId       ( i ) );      
+      viewId        .push_back( getViewId      ( getLayerIdInNuh( i ) ) );
+#if H_3D  
+      depthId.push_back( getDepthId( i ) );
+#endif
+#endif
     }
     std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "Layer Dependencies" << std::endl; 
     xPrintArray( "direct_dependency_flag", getMaxLayersMinus1()+1, range, fullArray, m_directDependencyFlag, false ); 
@@ -1474,6 +1519,48 @@ public:
     std::cout << std::endl; 
 
   };
+
+#if H_MV_HLS10_AUX
+  Void    printScalabilityId() 
+  {    
+    vector<Int> layerIdxInVps; 
+
+#if H_3D
+    vector<Int> depthId; 
+#endif
+
+    vector<Int> viewOrderIndex;
+    vector<Int> auxId;
+    vector<Int> dependencyId; 
+    vector<Int> viewId; 
+
+    for (Int i = 0; i <= getMaxLayersMinus1(); i++ )
+    {
+      Int layerIdInNuh = getLayerIdInNuh( i );
+      layerIdxInVps  .push_back( i ); 
+      viewOrderIndex.push_back( getViewIndex   ( layerIdInNuh ) );
+      dependencyId  .push_back( getDependencyId( layerIdInNuh ) );
+      auxId         .push_back( getAuxId       ( layerIdInNuh ) );      
+      viewId        .push_back( getViewId      ( layerIdInNuh ) );
+#if H_3D  
+      depthId       .push_back( getDepthId     ( layerIdInNuh ) );
+#endif
+    }
+
+    std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "Scalability Ids" << std::endl; 
+    xPrintArray( "layerIdxInVps"  , getMaxLayersMinus1()+1, layerIdxInVps,          false );
+    xPrintArray( "layer_id_in_nuh", getMaxLayersMinus1()+1, m_layerIdInNuh, false );     
+    
+    xPrintArray( "ViewOrderIndex", getMaxLayersMinus1()+1, viewOrderIndex, false );     
+    xPrintArray( "DependencyId"  , getMaxLayersMinus1()+1, dependencyId  , false );     
+    xPrintArray( "AuxId"         , getMaxLayersMinus1()+1, auxId         , false );     
+    xPrintArray( "ViewId"        , getMaxLayersMinus1()+1, viewId        , false );     
+
+    std::cout << std::endl; 
+  };
+#endif
+
+
 
   Void    printLayerSets() 
   {
