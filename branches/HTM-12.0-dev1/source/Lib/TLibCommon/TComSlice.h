@@ -207,6 +207,7 @@ class ProfileTierLevel
   Bool m_frameOnlyConstraintFlag;
   
 #if H_MV_HLS10_PTL
+#if H_MV
   Bool m_max12bitConstraintFlag;
   Bool m_max10bitConstraintFlag;
   Bool m_max8bitConstraintFlag;
@@ -217,6 +218,7 @@ class ProfileTierLevel
   Bool m_onePictureOnlyConstraintFlag;
   Bool m_lowerBitRateConstraintFlag;
   Bool m_inbldFlag;
+#endif
 #endif
 public:
   ProfileTierLevel();
@@ -248,6 +250,7 @@ public:
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
 
+#if H_MV
 #if H_MV_HLS10_PTL
   Void setMax12bitConstraintFlag( Bool flag ) { m_max12bitConstraintFlag = flag; } 
   Bool getMax12bitConstraintFlag(  ) { return m_max12bitConstraintFlag; } 
@@ -278,6 +281,54 @@ public:
   Void setInbldFlag( Bool flag ) { m_inbldFlag = flag; } 
   Bool getInbldFlag(  ) { return m_inbldFlag; } 
 #endif
+#if H_MV_HLS10_PTL_INFER_FIX
+
+  Bool getV2ConstraintsPresentFlag() 
+  {
+  return ( 
+    getProfileIdc( ) ==  4 || getProfileCompatibilityFlag( 4 ) || getProfileIdc( ) ==  5 || getProfileCompatibilityFlag( 5 )  ||
+    getProfileIdc( ) ==  6 || getProfileCompatibilityFlag( 6 ) || getProfileIdc( ) ==  7 || getProfileCompatibilityFlag( 7 ) 
+    ); 
+  }
+  
+  Bool getInbldPresentFlag() 
+  {
+    return ( 
+      ( getProfileIdc() >= 1 && getProfileIdc() <= 5 )  || getProfileCompatibilityFlag( 1 ) || getProfileCompatibilityFlag( 2 ) || 
+      getProfileCompatibilityFlag( 3 ) || getProfileCompatibilityFlag( 4 )  ||   getProfileCompatibilityFlag( 5 ) 
+      );
+  }
+
+  Void copyV2ConstraintFlags( ProfileTierLevel* ptlRef )
+  {
+    setMax12bitConstraintFlag         ( ptlRef->getMax12bitConstraintFlag       ( ) );
+    setMax10bitConstraintFlag         ( ptlRef->getMax10bitConstraintFlag       ( ) );
+    setMax8bitConstraintFlag          ( ptlRef->getMax8bitConstraintFlag        ( ) );
+    setMax422chromaConstraintFlag     ( ptlRef->getMax422chromaConstraintFlag   ( ) );
+    setMax420chromaConstraintFlag     ( ptlRef->getMax420chromaConstraintFlag   ( ) );
+    setMaxMonochromeConstraintFlag    ( ptlRef->getMaxMonochromeConstraintFlag  ( ) );
+    setIntraConstraintFlag            ( ptlRef->getIntraConstraintFlag          ( ) );
+    setOnePictureOnlyConstraintFlag   ( ptlRef->getOnePictureOnlyConstraintFlag ( ) );
+    setLowerBitRateConstraintFlag     ( ptlRef->getLowerBitRateConstraintFlag   ( ) );   
+  }
+
+  Void copyProfile( ProfileTierLevel* ptlRef )
+  {
+      setProfileSpace            ( ptlRef->getProfileSpace              ( ) );
+      setTierFlag                ( ptlRef->getTierFlag                  ( ) );
+      setProfileIdc              ( ptlRef->getProfileIdc                ( ) );
+      for (Int j = 0; j < 32; j++)
+      {      
+        setProfileCompatibilityFlag(j, ptlRef->getProfileCompatibilityFlag  ( j ) );            
+      }
+      setProgressiveSourceFlag   ( ptlRef->getProgressiveSourceFlag     ( ) );
+      setInterlacedSourceFlag    ( ptlRef->getInterlacedSourceFlag      ( ) );
+      setNonPackedConstraintFlag ( ptlRef->getNonPackedConstraintFlag   ( ) );
+      setFrameOnlyConstraintFlag ( ptlRef->getFrameOnlyConstraintFlag   ( ) );
+      copyV2ConstraintFlags      ( ptlRef );
+  }
+#endif
+#endif
 
 };
 
@@ -300,7 +351,96 @@ public:
   ProfileTierLevel* getGeneralPTL()  { return &m_generalPTL; }
   ProfileTierLevel* getSubLayerPTL(Int i)  { return &m_subLayerPTL[i]; }
 #if H_MV
+#if H_MV_HLS10_PTL_INFER_FIX
+  Void inferGeneralValues( Bool profilePresentFlag, Int k, TComPTL* refPTL )
+  {
+    ProfileTierLevel* refProfileTierLevel = NULL; 
+    if ( k > 0 )
+    {    
+      assert( refPTL != NULL);
+      refProfileTierLevel = refPTL->getGeneralPTL(); 
+    }
+
+    ProfileTierLevel* curProfileTierLevel = getGeneralPTL( ); 
+
+    if( !profilePresentFlag )
+    {
+      assert( k > 0 ); 
+      assert( refProfileTierLevel != NULL ); 
+      curProfileTierLevel->copyProfile( refProfileTierLevel);
+    }
+    else
+    {
+      if ( !curProfileTierLevel->getV2ConstraintsPresentFlag() )
+      {
+        curProfileTierLevel->setMax12bitConstraintFlag         ( false );
+        curProfileTierLevel->setMax10bitConstraintFlag         ( false );
+        curProfileTierLevel->setMax8bitConstraintFlag          ( false );
+        curProfileTierLevel->setMax422chromaConstraintFlag     ( false );
+        curProfileTierLevel->setMax420chromaConstraintFlag     ( false );
+        curProfileTierLevel->setMaxMonochromeConstraintFlag    ( false );
+        curProfileTierLevel->setIntraConstraintFlag            ( false );
+        curProfileTierLevel->setOnePictureOnlyConstraintFlag   ( false );
+        curProfileTierLevel->setLowerBitRateConstraintFlag     ( false );   
+      }
+
+      if ( !curProfileTierLevel->getInbldPresentFlag() )
+      {
+        curProfileTierLevel->setInbldFlag( false ); 
+      }      
+    }         
+  }; 
+
+  Void inferSubLayerValues( Int maxNumSubLayersMinus1, Int k, TComPTL* refPTL )
+  {
+    assert( k == 0 || refPTL != NULL ); 
+
+    for (Int i = maxNumSubLayersMinus1; i >= 0; i--)
+    {
+      ProfileTierLevel* refProfileTierLevel;
+      if ( k != 0 )
+      {
+        refProfileTierLevel = refPTL->getSubLayerPTL( i );
+      }
+      else
+      {
+        if ( i == maxNumSubLayersMinus1)      
+        {
+          refProfileTierLevel = getGeneralPTL();
+        }
+        else
+        {
+          refProfileTierLevel = getSubLayerPTL( i + 1 );
+        }
+      }    
+
+      ProfileTierLevel* curProfileTierLevel = getSubLayerPTL( i ); 
+      if( !getSubLayerLevelPresentFlag( i ) )
+      {
+        curProfileTierLevel->setLevelIdc( refProfileTierLevel->getLevelIdc() ); 
+      }
+
+      if( !getSubLayerProfilePresentFlag( i ) )
+      {
+        curProfileTierLevel->copyProfile( refProfileTierLevel);
+      }
+      else
+      {
+        if ( !curProfileTierLevel->getV2ConstraintsPresentFlag() )
+        {
+          curProfileTierLevel->copyV2ConstraintFlags( refProfileTierLevel ); 
+        }
+
+        if ( !curProfileTierLevel->getInbldPresentFlag() )
+        {
+          curProfileTierLevel->setInbldFlag( refProfileTierLevel->getInbldFlag() ); 
+        }      
+      }     
+    }
+  }; 
+#else
   Void copyLevelFrom( TComPTL* source );
+#endif
 #endif
 };
 /// VPS class

@@ -4438,6 +4438,7 @@ TComPTL::TComPTL()
 }
 
 #if H_MV
+#if !H_MV_HLS10_PTL_INFER_FIX
 Void TComPTL::copyLevelFrom( TComPTL* source )
 {
   getGeneralPTL()->setLevelIdc( source->getGeneralPTL()->getLevelIdc() );
@@ -4447,6 +4448,7 @@ Void TComPTL::copyLevelFrom( TComPTL* source )
     getSubLayerPTL( subLayer )->setLevelIdc( source->getSubLayerPTL( subLayer )->getLevelIdc() );
   }
 }
+#endif
 #endif
 //! \}
 

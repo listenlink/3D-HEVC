@@ -2558,10 +2558,14 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
   
 #if H_MV_HLS10_PTL
+#if H_MV_HLS10_PTL_INFER_FIX
+  if( ptl->getV2ConstraintsPresentFlag() ) 
+#else
   if( ptl->getProfileIdc( ) ==  4 || ptl->getProfileCompatibilityFlag( 4 )  ||
     ptl->getProfileIdc( ) ==  5 || ptl->getProfileCompatibilityFlag( 5 )  ||
     ptl->getProfileIdc( ) ==  6 || ptl->getProfileCompatibilityFlag( 6 )  ||
     ptl->getProfileIdc( ) ==  7 || ptl->getProfileCompatibilityFlag( 7 ) ) 
+#endif
   {
     WRITE_FLAG( ptl->getMax12bitConstraintFlag( ) ? 1 : 0 , "max_12bit_constraint_flag" );
     WRITE_FLAG( ptl->getMax10bitConstraintFlag( ) ? 1 : 0 , "max_10bit_constraint_flag" );
@@ -2582,10 +2586,14 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
     WRITE_CODE( 0, 16, "XXX_reserved_zero_43bits[16..31]");
     WRITE_CODE( 0, 11, "XXX_reserved_zero_43bits[32..42]");
   }
+#if H_MV_HLS10_PTL_INFER_FIX
+    if( ptl->getInbldPresentFlag() )
+#else
   if( ( ptl->getProfileIdc() >= 1 && ptl->getProfileIdc() <= 5 )  ||
     ptl->getProfileCompatibilityFlag( 1 ) || ptl->getProfileCompatibilityFlag( 2 )  ||
     ptl->getProfileCompatibilityFlag( 3 ) || ptl->getProfileCompatibilityFlag( 4 )  ||
     ptl->getProfileCompatibilityFlag( 5 ) )
+#endif
   {
     WRITE_FLAG( ptl->getInbldFlag( ) ? 1 : 0 , "inbld_flag" );
   }
