@@ -729,10 +729,17 @@ Void TDecTop::xActivateParameterSets()
   m_apcSlicePilot->setSPS(sps);
 #if H_MV
   m_apcSlicePilot->setVPS(vps);  
+#if H_MV_HLS10_REF_PRED_LAYERS
+  // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
+  assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, pps->getLayerId() ) );   
+  // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
+  assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, sps->getLayerId() ) );
+#else
   // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, pps->getLayerId() ) );   
   // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, sps->getLayerId() ) );
+#endif
   sps->inferRepFormat  ( vps , m_layerId ); 
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
 

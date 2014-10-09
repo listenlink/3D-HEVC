@@ -1154,7 +1154,11 @@ Void TAppDecTop::xMarkAltOutPic( Int targetOutputLayer, Int pocLastPic )
   {
     Int curLayerId = m_tDecTop[dIdx]->getLayerId();
     Int curLayerIdxInVps = m_vps->getLayerIdInNuh( curLayerId  ); 
+#if H_MV_HLS10_REF_PRED_LAYERS
+    if ( m_vps->getDependencyFlag(optLayerIdxInVps, curLayerIdxInVps ) )
+#else
     if ( m_vps->getInDirectDependencyFlag(optLayerIdxInVps, curLayerIdxInVps ) )
+#endif
     {
       TComPic* curPic = m_ivPicLists.getPic( curLayerId, pocLastPic ); 
       if (curPic != NULL)

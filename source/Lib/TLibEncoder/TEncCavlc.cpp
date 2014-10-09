@@ -933,6 +933,18 @@ Void TEncCavlc::codeSPSExtension( TComSPS* pcSPS )
   }
 #endif
 }
+
+
+#if H_MV_HLS10_PPS
+Void TEncCavlc::codePPSMultilayerExtension(TComPPS* pcPPS)
+{
+  WRITE_FLAG( pcPPS->getPocResetInfoPresentFlag( ) ? 1 : 0 , "poc_reset_info_present_flag" );
+  WRITE_FLAG( pcPPS->getPpsInferScalingListFlag( ) ? 1 : 0 , "pps_infer_scaling_list_flag" );
+  WRITE_CODE( pcPPS->getPpsScalingListRefLayerId( ), 6, "pps_scaling_list_ref_layer_id" );
+  WRITE_UVLC( 0, "num_ref_loc_offsets" );
+}
+#endif
+
 #endif
 
 #if H_3D
@@ -949,7 +961,12 @@ if( depthFlag )
 #endif
 #endif
 }
+
+
 #endif
+
+
+
 
 Void TEncCavlc::codeVPS( TComVPS* pcVPS )
 {

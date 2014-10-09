@@ -1121,6 +1121,18 @@ Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFla
 #endif
 }
 #endif
+
+#if H_MV_HLS10_PPS
+Void TDecCavlc::parsePPSMultilayerExtension(TComPPS* pcPPS)
+{
+  UInt uiCode = 0; 
+  READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
+  READ_FLAG( uiCode, "pps_infer_scaling_list_flag" ); pcPPS->setPpsInferScalingListFlag( uiCode == 1 );
+  READ_CODE( 6, uiCode, "pps_scaling_list_ref_layer_id" ); pcPPS->setPpsScalingListRefLayerId( uiCode );
+  READ_UVLC( uiCode, "num_ref_loc_offsets" ); assert( uiCode == 0 );
+}
+
+#endif
 #endif
 
 Void TDecCavlc::parseVPS(TComVPS* pcVPS)
