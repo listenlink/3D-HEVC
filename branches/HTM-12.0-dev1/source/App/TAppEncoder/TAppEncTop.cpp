@@ -1590,6 +1590,55 @@ Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
 #endif
 }
 
+#if H_MV_HLS10_PTL
+Void TAppEncTop::xSetProfileTierLevel(TComVPS& vps, Int profileTierLevelIdx, Int subLayer, Profile::Name profile, Level::Name level, Level::Tier tier, Bool progressiveSourceFlag, Bool interlacedSourceFlag, Bool nonPackedConstraintFlag, Bool frameOnlyConstraintFlag, Bool inbldFlag)
+{
+  TComPTL* ptlStruct = vps.getPTL( profileTierLevelIdx );    
+  assert( ptlStruct != NULL ); 
+
+  ProfileTierLevel* ptl; 
+  if ( subLayer == -1 )
+  {
+    ptl = ptlStruct->getGeneralPTL();
+  }
+  else
+  {
+    ptl = ptlStruct->getSubLayerPTL(  subLayer );
+  }
+
+  assert( ptl != NULL );
+
+
+  ptl->setProfileIdc( profile );
+  ptl->setTierFlag  ( tier    );
+  ptl->setLevelIdc  ( level   );
+  ptl->setProfileCompatibilityFlag( profile, true );
+
+  switch ( profile )
+  {
+  case Profile::MAIN:
+    break; 
+  case Profile::MULTIVIEWMAIN:
+#if H_3D
+  case Profile::MAIN3D:
+#endif
+    ptl->setMax12bitConstraintFlag      ( true  ); 
+    ptl->setMax12bitConstraintFlag      ( true  );
+    ptl->setMax10bitConstraintFlag      ( true  );
+    ptl->setMax8bitConstraintFlag       ( true  );
+    ptl->setMax422chromaConstraintFlag  ( true  );
+    ptl->setMax420chromaConstraintFlag  ( true  );
+    ptl->setMaxMonochromeConstraintFlag ( false );
+    ptl->setIntraConstraintFlag         ( false ); 
+    ptl->setOnePictureOnlyConstraintFlag( false );
+    ptl->setLowerBitRateConstraintFlag  ( true  );        
+    break; 
+  default:
+    assert( 0 ); // other profiles currently not supported
+    break; 
+  }
+}
+#endif
 
 Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 {
@@ -2071,7 +2120,17 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
     pcVPSVUI->setCrossLayerIrapAlignedFlag   ( false   );
   }
 }
+#if H_MV_HLS10_GEN_FIX
+Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
+{
+  return  ( std::find(m_targetEncLayerIdList.begin(), m_targetEncLayerIdList.end(), nuhLayerId) != m_targetEncLayerIdList.end()) ;
+}
 #endif
+
+
+#endif
+
+
 #if H_3D
 Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 {

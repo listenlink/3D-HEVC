@@ -282,54 +282,12 @@ public:
   Bool getInbldFlag(  ) { return m_inbldFlag; } 
 #endif
 #if H_MV_HLS10_PTL_INFER_FIX
-
-  Bool getV2ConstraintsPresentFlag() 
-  {
-  return ( 
-    getProfileIdc( ) ==  4 || getProfileCompatibilityFlag( 4 ) || getProfileIdc( ) ==  5 || getProfileCompatibilityFlag( 5 )  ||
-    getProfileIdc( ) ==  6 || getProfileCompatibilityFlag( 6 ) || getProfileIdc( ) ==  7 || getProfileCompatibilityFlag( 7 ) 
-    ); 
-  }
-  
-  Bool getInbldPresentFlag() 
-  {
-    return ( 
-      ( getProfileIdc() >= 1 && getProfileIdc() <= 5 )  || getProfileCompatibilityFlag( 1 ) || getProfileCompatibilityFlag( 2 ) || 
-      getProfileCompatibilityFlag( 3 ) || getProfileCompatibilityFlag( 4 )  ||   getProfileCompatibilityFlag( 5 ) 
-      );
-  }
-
-  Void copyV2ConstraintFlags( ProfileTierLevel* ptlRef )
-  {
-    setMax12bitConstraintFlag         ( ptlRef->getMax12bitConstraintFlag       ( ) );
-    setMax10bitConstraintFlag         ( ptlRef->getMax10bitConstraintFlag       ( ) );
-    setMax8bitConstraintFlag          ( ptlRef->getMax8bitConstraintFlag        ( ) );
-    setMax422chromaConstraintFlag     ( ptlRef->getMax422chromaConstraintFlag   ( ) );
-    setMax420chromaConstraintFlag     ( ptlRef->getMax420chromaConstraintFlag   ( ) );
-    setMaxMonochromeConstraintFlag    ( ptlRef->getMaxMonochromeConstraintFlag  ( ) );
-    setIntraConstraintFlag            ( ptlRef->getIntraConstraintFlag          ( ) );
-    setOnePictureOnlyConstraintFlag   ( ptlRef->getOnePictureOnlyConstraintFlag ( ) );
-    setLowerBitRateConstraintFlag     ( ptlRef->getLowerBitRateConstraintFlag   ( ) );   
-  }
-
-  Void copyProfile( ProfileTierLevel* ptlRef )
-  {
-      setProfileSpace            ( ptlRef->getProfileSpace              ( ) );
-      setTierFlag                ( ptlRef->getTierFlag                  ( ) );
-      setProfileIdc              ( ptlRef->getProfileIdc                ( ) );
-      for (Int j = 0; j < 32; j++)
-      {      
-        setProfileCompatibilityFlag(j, ptlRef->getProfileCompatibilityFlag  ( j ) );            
-      }
-      setProgressiveSourceFlag   ( ptlRef->getProgressiveSourceFlag     ( ) );
-      setInterlacedSourceFlag    ( ptlRef->getInterlacedSourceFlag      ( ) );
-      setNonPackedConstraintFlag ( ptlRef->getNonPackedConstraintFlag   ( ) );
-      setFrameOnlyConstraintFlag ( ptlRef->getFrameOnlyConstraintFlag   ( ) );
-      copyV2ConstraintFlags      ( ptlRef );
-  }
+  Bool getV2ConstraintsPresentFlag();  
+  Bool getInbldPresentFlag();
+  Void copyV2ConstraintFlags( ProfileTierLevel* ptlRef );
+  Void copyProfile( ProfileTierLevel* ptlRef );
 #endif
 #endif
-
 };
 
 
@@ -352,92 +310,8 @@ public:
   ProfileTierLevel* getSubLayerPTL(Int i)  { return &m_subLayerPTL[i]; }
 #if H_MV
 #if H_MV_HLS10_PTL_INFER_FIX
-  Void inferGeneralValues( Bool profilePresentFlag, Int k, TComPTL* refPTL )
-  {
-    ProfileTierLevel* refProfileTierLevel = NULL; 
-    if ( k > 0 )
-    {    
-      assert( refPTL != NULL);
-      refProfileTierLevel = refPTL->getGeneralPTL(); 
-    }
-
-    ProfileTierLevel* curProfileTierLevel = getGeneralPTL( ); 
-
-    if( !profilePresentFlag )
-    {
-      assert( k > 0 ); 
-      assert( refProfileTierLevel != NULL ); 
-      curProfileTierLevel->copyProfile( refProfileTierLevel);
-    }
-    else
-    {
-      if ( !curProfileTierLevel->getV2ConstraintsPresentFlag() )
-      {
-        curProfileTierLevel->setMax12bitConstraintFlag         ( false );
-        curProfileTierLevel->setMax10bitConstraintFlag         ( false );
-        curProfileTierLevel->setMax8bitConstraintFlag          ( false );
-        curProfileTierLevel->setMax422chromaConstraintFlag     ( false );
-        curProfileTierLevel->setMax420chromaConstraintFlag     ( false );
-        curProfileTierLevel->setMaxMonochromeConstraintFlag    ( false );
-        curProfileTierLevel->setIntraConstraintFlag            ( false );
-        curProfileTierLevel->setOnePictureOnlyConstraintFlag   ( false );
-        curProfileTierLevel->setLowerBitRateConstraintFlag     ( false );   
-      }
-
-      if ( !curProfileTierLevel->getInbldPresentFlag() )
-      {
-        curProfileTierLevel->setInbldFlag( false ); 
-      }      
-    }         
-  }; 
-
-  Void inferSubLayerValues( Int maxNumSubLayersMinus1, Int k, TComPTL* refPTL )
-  {
-    assert( k == 0 || refPTL != NULL ); 
-
-    for (Int i = maxNumSubLayersMinus1; i >= 0; i--)
-    {
-      ProfileTierLevel* refProfileTierLevel;
-      if ( k != 0 )
-      {
-        refProfileTierLevel = refPTL->getSubLayerPTL( i );
-      }
-      else
-      {
-        if ( i == maxNumSubLayersMinus1)      
-        {
-          refProfileTierLevel = getGeneralPTL();
-        }
-        else
-        {
-          refProfileTierLevel = getSubLayerPTL( i + 1 );
-        }
-      }    
-
-      ProfileTierLevel* curProfileTierLevel = getSubLayerPTL( i ); 
-      if( !getSubLayerLevelPresentFlag( i ) )
-      {
-        curProfileTierLevel->setLevelIdc( refProfileTierLevel->getLevelIdc() ); 
-      }
-
-      if( !getSubLayerProfilePresentFlag( i ) )
-      {
-        curProfileTierLevel->copyProfile( refProfileTierLevel);
-      }
-      else
-      {
-        if ( !curProfileTierLevel->getV2ConstraintsPresentFlag() )
-        {
-          curProfileTierLevel->copyV2ConstraintFlags( refProfileTierLevel ); 
-        }
-
-        if ( !curProfileTierLevel->getInbldPresentFlag() )
-        {
-          curProfileTierLevel->setInbldFlag( refProfileTierLevel->getInbldFlag() ); 
-        }      
-      }     
-    }
-  }; 
+  Void inferGeneralValues ( Bool profilePresentFlag  , Int k, TComPTL* refPTL );; 
+  Void inferSubLayerValues( Int maxNumSubLayersMinus1, Int k, TComPTL* refPTL );; 
 #else
   Void copyLevelFrom( TComPTL* source );
 #endif
@@ -1355,26 +1229,8 @@ public:
 #if H_MV_HLS10_PTL
   Void    setProfileTierLevelIdx( Int i, Int j, Int val )                  { m_profileTierLevelIdx[ i ][ j ] = val; }
   Int     getProfileTierLevelIdx( Int i, Int j )                           { return m_profileTierLevelIdx[ i ][ j ]; } 
-#if H_MV_HLS10_PTL
-  Int     inferProfileTierLevelIdx( Int i, Int j )
-  {
-    Bool inferZero        = ( i == 0 && j == 0 &&  getVpsBaseLayerInternalFlag() );
-    Bool inferGreaterZero = getNecessaryLayerFlag(i,j) && ( getVpsNumProfileTierLevelMinus1() == 0 ); 
-    assert( inferZero || inferGreaterZero );
-
-    Bool ptlIdx = 0; // inference for greaterZero
-    if ( inferZero )
-    {
-      ptlIdx = getMaxLayersMinus1() > 0 ? 1 : 0; 
-      if ( inferGreaterZero )
-      {
-        assert( ptlIdx == 0 );  
-        // This should never happen since :
-        // When vps_max_layers_minus1 is greater than 0, the value of vps_num_profile_tier_level_minus1 shall be greater than or equal to 1.
-      }
-    }
-    return ptlIdx;     
-  }
+#if H_MV_HLS10_PTL_FIX
+  Int     inferProfileTierLevelIdx( Int i, Int j );
 #endif
 #else
   Void    setProfileLevelTierIdx( Int outLayerSetIdx, Int val )            { m_profileLevelTierIdx[ outLayerSetIdx ] = val; }
@@ -1507,253 +1363,35 @@ public:
   Int     getOlsHighestOutputLayerId( Int i )                              { return getTargetOptLayerIdList( i ).back(); };  
 
 #if H_MV_HLS10_ADD_LAYERSETS
-  Void    deriveAddLayerSetLayerIdList( Int i )
-  {  
-    assert( m_layerSetLayerIdList.size() ==  ( getVpsNumLayerSetsMinus1() + 1 + i ) ); 
-    std::vector<Int> layerSetLayerIdList;
-    
-    for( Int treeIdx = 1; treeIdx < getNumIndependentLayers(); treeIdx++ )
-    { 
-      // The value of highest_layer_idx_plus1[ i ][ j ] shall be in the range of 0 to NumLayersInTreePartition[ j ], inclusive.
-      assert( getHighestLayerIdxPlus1( i, treeIdx ) >= 0 && getHighestLayerIdxPlus1( i, treeIdx ) <= getNumLayersInTreePartition( treeIdx ) );
-
-      for( Int layerCnt = 0; layerCnt < getHighestLayerIdxPlus1( i, treeIdx ); layerCnt++ )
-      {
-        layerSetLayerIdList.push_back( getTreePartitionLayerIdList( treeIdx, layerCnt ) );
-      }
-    }
-    m_layerSetLayerIdList.push_back( layerSetLayerIdList ); 
-
-    //It is a requirement of bitstream conformance that 
-    //NumLayersInIdList[ vps_num_layer_sets_minus1 + 1 + i ] shall be greater than 0.
-    assert( getNumLayersInIdList( getVpsNumLayerSetsMinus1() + 1 + i ) > 0 );
-
-  }
+  Void    deriveAddLayerSetLayerIdList( Int i );
 #endif
 #if H_MV_HLS10_NESSECARY_LAYER
-  Void    deriveNecessaryLayerFlags( Int olsIdx )
-  {
-    AOF( olsIdx >= 0 && olsIdx < getNumOutputLayerSets() ); 
-    Int lsIdx = olsIdxToLsIdx( olsIdx );
-    for( Int lsLayerIdx = 0; lsLayerIdx < getNumLayersInIdList( lsIdx) ; lsLayerIdx++ )
-    {
-      m_necessaryLayerFlag[ olsIdx ][ lsLayerIdx ] = 0;
-    }
-    for( Int lsLayerIdx = 0; lsLayerIdx < getNumLayersInIdList( lsIdx ); lsLayerIdx++ )
-    {
-      if( getOutputLayerFlag( olsIdx, lsLayerIdx  ))
-      {
-        m_necessaryLayerFlag[ olsIdx ][ lsLayerIdx ] = 1;
-        Int currLayerId = getLayerSetLayerIdList( lsIdx, lsLayerIdx );
-        for( Int rLsLayerIdx = 0; rLsLayerIdx < lsLayerIdx; rLsLayerIdx++ )
-        {
-          Int refLayerId = getLayerSetLayerIdList( lsIdx, rLsLayerIdx );
-          if( getDependencyFlag( getLayerIdInVps( currLayerId ), getLayerIdInVps( refLayerId ) ) )
-          {
-            m_necessaryLayerFlag[ olsIdx ][ rLsLayerIdx ] = 1;
-          }
-        }
-      }
-    }
-    m_numNecessaryLayers[ olsIdx ] = 0;
-    for( Int lsLayerIdx = 0; lsLayerIdx < getNumLayersInIdList( lsIdx ); lsLayerIdx++ ) 
-    {
-      m_numNecessaryLayers[ olsIdx ]  +=  m_necessaryLayerFlag[ olsIdx ][ lsLayerIdx ];
-    }
-  };
-
-  Int     getNecessaryLayerFlag( Int i, Int j )                                         { AOF( i >= 0 && i < getNumOutputLayerSets() ); AOF( j >= 0 && j < getNumLayersInIdList( olsIdxToLsIdx( i ) )  );  return m_necessaryLayerFlag[i][j]; };
-  
+  Void    deriveNecessaryLayerFlags( Int olsIdx );;
+  Int     getNecessaryLayerFlag( Int i, Int j )                            { AOF( i >= 0 && i < getNumOutputLayerSets() ); AOF( j >= 0 && j < getNumLayersInIdList( olsIdxToLsIdx( i ) )  );  return m_necessaryLayerFlag[i][j]; };  
 #endif
-
 
   Int     getMaxSubLayersInLayerSetMinus1( Int i );
   Int     getHighestLayerIdxPlus1Len( Int j )                                   { return gCeilLog2( getNumLayersInTreePartition( j ) + 1 );   }; 
-
-  Bool     getAltOutputLayerFlagVar( Int i );;
+  Bool    getAltOutputLayerFlagVar( Int i );;
 
   // inference
   Int     inferDimensionId     ( Int i, Int j );
   Int     inferLastDimsionIdLenMinus1();
 
   // helpers
-
+#if !H_MV_HLS10_REF_PRED_LAYERS
   Bool    getInDirectDependencyFlag( Int depLayeridInVps, Int refLayeridInVps, Int depth = 0 );
+#endif
 #if !H_MV_HLS10_MAXNUMPICS
   Int     getMaxNumPics( Int layerId );
 #endif
 #if H_MV_HLS10_ADD_LAYERSETS
-
-  Void    printPTL()
-  {
-    std::vector<Int> idx; 
-    std::vector<Int> num; 
-    std::vector< std::vector<Int> > ptlInfo; 
-
-    std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "PTLI" << std::endl; 
-
-    for ( Int i = 0; i <= getVpsNumProfileTierLevelMinus1(); i++ )
-    {
-      std::vector<Int> curPtlInfo;
-      ProfileTierLevel* ptl = getPTL( i )->getGeneralPTL(); 
-      curPtlInfo.push_back( (Int) ptl->getProfileIdc()  );
-      curPtlInfo.push_back( (Int) ptl->getTierFlag()    );
-      curPtlInfo.push_back( (Int) ptl->getLevelIdc()    );
-      curPtlInfo.push_back( (Int) ptl->getInbldFlag()   );
-      
-      idx.push_back ( i );
-      num.push_back ( 4 ); 
-      ptlInfo.push_back( curPtlInfo );
-    } 
-   
-    xPrintArray( "VpsProfileTierLevel", getVpsNumProfileTierLevelMinus1() + 1, idx, num, ptlInfo, false  ); 
-
-    num.clear(); 
-    idx.clear(); 
-    for (Int i = 0; i < getNumOutputLayerSets(); i++)
-    {
-      num.push_back ( getNumLayersInIdList( olsIdxToLsIdx( i ))  ); 
-      idx.push_back( i ); 
-    }
-   
-   xPrintArray( "profile_tier_level_idx", getNumOutputLayerSets(), idx, num, m_profileTierLevelIdx, true );
-   std::cout << std::endl; 
-  }
-
-  Void    printLayerDependencies() 
-  {
-    vector<Int> fullArray;
-    vector<Int> range; 
-
-#if H_3D
-    vector<Int> depthId; 
-#endif
-
+  Void    printPTL();
+  Void    printLayerDependencies();
 #if H_MV_HLS10_AUX
-    vector<Int> viewOrderIndex;
-    vector<Int> auxId;
-    vector<Int> dependencyId; 
-    vector<Int> viewId; 
+  Void    printScalabilityId();;
 #endif
-    for (Int i = 0; i <= getMaxLayersMinus1(); i++ )
-    {
-      fullArray.push_back( getMaxLayersMinus1() + 1 ); 
-      range.push_back( i ); 
-#if H_MV_HLS10_AUX      
-      viewOrderIndex.push_back( getViewIndex   ( i ) );
-      dependencyId  .push_back( getDependencyId( i ) );
-      auxId         .push_back( getAuxId       ( i ) );      
-      viewId        .push_back( getViewId      ( getLayerIdInNuh( i ) ) );
-#if H_3D  
-      depthId.push_back( getDepthId( i ) );
-#endif
-#endif
-    }
-    std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "Layer Dependencies" << std::endl; 
-    xPrintArray( "direct_dependency_flag", getMaxLayersMinus1()+1, range, fullArray, m_directDependencyFlag, false ); 
-    xPrintArray( "DependencyFlag", getMaxLayersMinus1()+1, range, fullArray, m_dependencyFlag, false ); 
-    xPrintArray( "layer_id_in_nuh", getMaxLayersMinus1()+1, m_layerIdInNuh, true  );     
-    xPrintArray( "IdPredictedLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numPredictedLayers, m_idPredictedLayer, true );
-    xPrintArray( "IdRefLayer"      , getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefLayers, m_idRefLayer, true );
-    xPrintArray( "IdDirectRefLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numDirectRefLayers, m_idDirectRefLayer, true );
-    std::cout << std::endl; 
-
-  };
-
-#if H_MV_HLS10_AUX
-  Void    printScalabilityId() 
-  {    
-    vector<Int> layerIdxInVps; 
-
-#if H_3D
-    vector<Int> depthId; 
-#endif
-
-    vector<Int> viewOrderIndex;
-    vector<Int> auxId;
-    vector<Int> dependencyId; 
-    vector<Int> viewId; 
-
-    for (Int i = 0; i <= getMaxLayersMinus1(); i++ )
-    {
-      Int layerIdInNuh = getLayerIdInNuh( i );
-      layerIdxInVps  .push_back( i ); 
-      viewOrderIndex.push_back( getViewIndex   ( layerIdInNuh ) );
-      dependencyId  .push_back( getDependencyId( layerIdInNuh ) );
-      auxId         .push_back( getAuxId       ( layerIdInNuh ) );      
-      viewId        .push_back( getViewId      ( layerIdInNuh ) );
-#if H_3D  
-      depthId       .push_back( getDepthId     ( layerIdInNuh ) );
-#endif
-    }
-
-    std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "Scalability Ids" << std::endl; 
-    xPrintArray( "layerIdxInVps"  , getMaxLayersMinus1()+1, layerIdxInVps,          false );
-    xPrintArray( "layer_id_in_nuh", getMaxLayersMinus1()+1, m_layerIdInNuh, false );     
-    
-    xPrintArray( "ViewOrderIndex", getMaxLayersMinus1()+1, viewOrderIndex, false );     
-    xPrintArray( "DependencyId"  , getMaxLayersMinus1()+1, dependencyId  , false );     
-    xPrintArray( "AuxId"         , getMaxLayersMinus1()+1, auxId         , false );     
-    xPrintArray( "ViewId"        , getMaxLayersMinus1()+1, viewId        , false );     
-
-    std::cout << std::endl; 
-  };
-#endif
-
-
-
-  Void    printLayerSets() 
-  {
-    vector<Int> fullArray;
-    vector<Int> numLayersInIdList; 
-    vector<Int> rangeLayerSets; 
-    
-
-    for (Int i = 0; i < getNumLayerSets(); i++ )
-    {
-      numLayersInIdList.push_back( getNumLayersInIdList( i ) );       
-      rangeLayerSets.push_back( i ); 
-    }
-
-    vector<Int> rangeOutputLayerSets; 
-    vector<Int> numOutputLayersInOutputLayerSet; 
-    vector<Int> numDecLayer; 
-    vector<Int> numLayersInLayerSetForOutputLayerSet; 
-    vector<Int> vOlsIdxToLsIdx;
-    for (Int i = 0; i < getNumOutputLayerSets(); i++ )
-    {
-      vOlsIdxToLsIdx.push_back( olsIdxToLsIdx(i));
-      numOutputLayersInOutputLayerSet.push_back( getNumOutputLayersInOutputLayerSet( i ) );       
-      numDecLayer.push_back( (Int) m_targetDecLayerIdLists[ i ].size() );
-      rangeOutputLayerSets.push_back( i ); 
-      numLayersInLayerSetForOutputLayerSet.push_back( getNumLayersInIdList( olsIdxToLsIdx( i ) ) );
-    }
-
-    vector<Int> rangeIndependentLayers;
-    for(Int i = 0; i < getNumIndependentLayers(); i++ )
-    {
-      rangeIndependentLayers.push_back( i );    
-    }
-
-    vector<Int> rangeAddLayerSets;
-    vector<Int> numHighestLayerIdxPlus1; 
-    for(Int i = 0; i < getNumAddLayerSets(); i++ )
-    {
-      rangeAddLayerSets.push_back( i );    
-      numHighestLayerIdxPlus1.push_back( getNumIndependentLayers() );
-    }
-
-    std::cout << std::right << std::setw(60) << std::setfill('-') << " " << std::setfill(' ') << std::endl << "Layer Sets" << std::endl;     
-    xPrintArray( "TreePartitionLayerIdList", getNumIndependentLayers(), rangeIndependentLayers, m_numLayersInTreePartition, m_treePartitionLayerIdList, true );
-    xPrintArray( "highest_layer_idx_plus1", getNumAddLayerSets(), rangeAddLayerSets, numHighestLayerIdxPlus1, m_highestLayerIdxPlus1, true ); 
-    xPrintArray( "LayerSetLayerIdList" , (Int) getNumLayerSets()      , rangeLayerSets      , numLayersInIdList, m_layerSetLayerIdList, true );
-    xPrintArray( "OlsIdxToLsIdx", (Int) vOlsIdxToLsIdx.size(), vOlsIdxToLsIdx, true ); 
-    xPrintArray( "OutputLayerFlag"     , getNumOutputLayerSets(), rangeOutputLayerSets, numLayersInLayerSetForOutputLayerSet, m_outputLayerFlag, true );
-    xPrintArray( "TargetOptLayerIdList", getNumOutputLayerSets(), rangeOutputLayerSets, numOutputLayersInOutputLayerSet, m_targetOptLayerIdLists, true );
-    xPrintArray( "NecessaryLayerFlag"  , getNumOutputLayerSets(), rangeOutputLayerSets, numLayersInLayerSetForOutputLayerSet, m_necessaryLayerFlag   , true );
-    xPrintArray( "TargetDecLayerIdList", getNumOutputLayerSets(), rangeOutputLayerSets, numDecLayer,                     m_targetDecLayerIdLists, true );
-    std::cout << endl; 
-};
+  Void    printLayerSets();;
 
 
 
@@ -2411,26 +2049,7 @@ public:
 #if H_MV_HLS10_MULTILAYERSPS
   Void setSpsExtOrMaxSubLayersMinus1( Int  val ) { m_spsExtOrMaxSubLayersMinus1 = val; } 
   Int  getSpsExtOrMaxSubLayersMinus1(  ) { return m_spsExtOrMaxSubLayersMinus1; } 
-  Void inferSpsMaxSubLayersMinus1( Bool atPsActivation, TComVPS* vps  )
-  {     
-    assert( getLayerId() != 0 ); 
-    if ( !atPsActivation   )
-    {
-      assert( vps == NULL );
-      if (getSpsExtOrMaxSubLayersMinus1() != 7)
-      {
-        setSpsMaxSubLayersMinus1( getSpsExtOrMaxSubLayersMinus1() );
-      }
-    }
-    else
-    {
-      assert( vps != NULL );
-      if (getSpsExtOrMaxSubLayersMinus1() == 7)
-      {
-        setSpsMaxSubLayersMinus1( vps->getMaxSubLayersMinus1() );
-      }
-    }
-  }
+  Void inferSpsMaxSubLayersMinus1( Bool atPsActivation, TComVPS* vps  );
 
   Bool getMultiLayerExtSpsFlag()            { return ( getLayerId() != 0  &&  getSpsExtOrMaxSubLayersMinus1() == 7 ); }
 #endif
