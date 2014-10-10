@@ -6163,7 +6163,11 @@ Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDis
 
   TComMv cMv; 
 #if MTK_I0093
-  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ 1 << ( getSlice()->getSPS()->getBitDepthY() - 1 ) ];
+#if H_3D_FIX_64BIT_SHIFT
+  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ (Int64) (1 << ( getSlice()->getSPS()->getBitDepthY() - 1 )) ];
+#else
+  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[  1 << ( getSlice()->getSPS()->getBitDepthY() - 1 ) ];
+#endif
 #else
   Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ 128 ];
 #endif

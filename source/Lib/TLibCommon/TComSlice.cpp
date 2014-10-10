@@ -2308,6 +2308,9 @@ Void TComVPS::createCamPars(Int iNumViews)
   m_aaaiCodedOffset = new Int**[ iNumViews ];
   for ( i = 0; i < iNumViews ; i++ )
   {
+#if H_3D_FIX_UNINIT
+    m_bCamParPresent[i] = false; 
+#endif
     m_bCamParInSliceHeader[i] = false; 
     m_aaaiCodedScale[i] = new Int*[ 2 ];
     m_aaaiCodedOffset[i] = new Int*[ 2 ];

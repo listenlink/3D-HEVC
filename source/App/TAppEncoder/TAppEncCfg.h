@@ -556,6 +556,7 @@ protected:
       val.push_back( profile ); 
       cElement = strtok( NULL, " " );
     }
+    delete[] cString;
   }
 #endif
 
