@@ -428,7 +428,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("AltOutputLayerFlag",    m_altOutputLayerFlag , std::vector<Bool>(1,0), "Alt output layer flag")
   
 #if H_MV_HLS10_PTL
-  ("ProfileTierLevelIdx_%d",  m_profileTierLevelIdx, std::vector<Int>(0), MAX_NUM_LAYERS, "Indices to profile level tier")
+  ("ProfileTierLevelIdx_%d",  m_profileTierLevelIdx, std::vector<Int>(0), MAX_NUM_LAYERS, "Indices to profile level tier for ols")
 #else
   ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
 #endif
@@ -1239,7 +1239,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   if( cfg_profiles.empty() )
   {
 #if H_3D
-    cfg_profiles = string("main main 3D-main");
+    cfg_profiles = string("main main 3d-main");
 #else
     cfg_profiles = string("main main multiview-main");    
 #endif

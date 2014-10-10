@@ -54,7 +54,7 @@
 */
 
 #ifndef HEVC_EXT
-#define HEVC_EXT                    1
+#define HEVC_EXT                    2
 #endif
 
 #if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
@@ -227,6 +227,7 @@
 #define MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE            2 // size of the sample candidate list
 #endif
 
+#define H_3D_FIX_UNINIT                   1   // Fix uninitialized flag
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
                                               // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
@@ -280,6 +281,7 @@
 #define SEC_VPS_CLEANUP_I0090             1
 #define SEC_HLS_CLEANUP_I0100             1
 
+#define H_3D_FIX_64BIT_SHIFT              1
 #endif // H_3D
 
 
@@ -404,6 +406,8 @@
 
 #define H_MV_HLS10_AUX                       1 // Auxiliary pictures
 #define H_MV_HLS10_GEN_FIX                   1
+#define H_MV_FIX_LOOP_GOPSIZE                1
+#define H_MV_FIX_SUB_LAYERS_MAX_MINUS1       1
 
 #define H_MV_HLS10_GEN_VSP_CONF_WIN          1  // VPS conformance window
 #define H_MV_HLS10_GEN_VSP_BASE_LAYER_AVAIL  1  // vps_base_layer_available
@@ -414,6 +418,7 @@
 #define H_MV_HLS10_MAXNUMPICS                1  // constraint on number of pictures in rps  
 #define H_MV_HLS10_PTL                       1  // profile tier level
 #define H_MV_HLS10_PTL_FIX                   1  // profile tier level fix
+#define H_MV_HLS10_PTL_INBL_FIX              1  // profile tier level fix 
 #define H_MV_HLS10_PTL_INFER_FIX             1  // fix inference ptl
 #define H_MV_HLS10_MULTILAYERSPS             1  // multilayer SPS extension 
 #define H_MV_HLS10_VPS_VUI                   1  // vsp vui
@@ -1012,7 +1017,6 @@ namespace Profile
 #if H_MV
 #if H_MV_HLS10_PTL
     MULTIVIEWMAIN = 6,
-    MAIN3D = 5,
 #if H_3D
     MAIN3D = 8, 
 #endif

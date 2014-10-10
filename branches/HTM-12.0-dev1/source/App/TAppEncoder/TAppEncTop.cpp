@@ -1395,10 +1395,12 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
 
   // Max sub layers, + presence flag
   Bool subLayersMaxMinus1PresentFlag = false; 
+#if !H_MV_FIX_SUB_LAYERS_MAX_MINUS1
   Int  subLayersMaxMinus1 = -1; 
+#endif
   for (Int curLayerIdInVps = 0; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++ )
-  {
-    Int curSubLayersMaxMinus1 = -1; 
+  {    
+    Int curSubLayersMaxMinus1 = 0; 
     for( Int i = 0; i < getGOPSize(); i++ ) 
     {
       GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][i];
@@ -1406,6 +1408,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     }  
 
     vps.setSubLayersVpsMaxMinus1( curLayerIdInVps, curSubLayersMaxMinus1 ); 
+#if !H_MV_FIX_SUB_LAYERS_MAX_MINUS1
     if ( subLayersMaxMinus1 == -1 )
     {
       subLayersMaxMinus1 = curSubLayersMaxMinus1; 
@@ -1414,6 +1417,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     {
       subLayersMaxMinus1PresentFlag = subLayersMaxMinus1PresentFlag || ( curSubLayersMaxMinus1 != subLayersMaxMinus1 ); 
     }
+#else
+    subLayersMaxMinus1PresentFlag = subLayersMaxMinus1PresentFlag || ( curSubLayersMaxMinus1 != vps.getMaxSubLayersMinus1() );
+#endif
   }
 
   vps.setVpsSubLayersMaxMinus1PresentFlag( subLayersMaxMinus1PresentFlag ); 
@@ -1422,20 +1428,32 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   // Max temporal id for inter layer reference pictures + presence flag
   Bool maxTidRefPresentFlag = false; 
   for ( Int refLayerIdInVps = 0; refLayerIdInVps < m_numberOfLayers; refLayerIdInVps++)
-    {
+  {
     for ( Int curLayerIdInVps = 1; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++)
-      {
+    {
       Int maxTid = -1; 
+#if H_MV_FIX_LOOP_GOPSIZE
+      for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
+      {        
+        GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+        GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+#else
       for( Int i = 0; i < getGOPSize(); i++ ) 
       {        
         GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][i];
-        GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][i];
-        
+        GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][i];     
+#endif
         for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++)
         {        
           if ( m_directRefLayers[ curLayerIdInVps ][ geCur.m_interLayerPredLayerIdc[ j ]] == refLayerIdInVps )
           {
+#if H_MV_FIX_LOOP_GOPSIZE
+            Bool refAlwaysIntra = ( i == getGOPSize() ) && ( m_iIntraPeriod[ curLayerIdInVps ] % m_iIntraPeriod[ refLayerIdInVps ] == 0 );
+            Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
+            maxTid = std::max( maxTid, ( refAlwaysIntra || refLayerZero ) ? 0 : geRef.m_temporalId ); 
+#else
             maxTid = std::max( maxTid, geRef.m_temporalId ); 
+#endif
           }
         }
       }
@@ -1608,11 +1626,13 @@ Void TAppEncTop::xSetProfileTierLevel(TComVPS& vps, Int profileTierLevelIdx, Int
 
   assert( ptl != NULL );
 
-
   ptl->setProfileIdc( profile );
   ptl->setTierFlag  ( tier    );
   ptl->setLevelIdc  ( level   );
   ptl->setProfileCompatibilityFlag( profile, true );
+#if H_MV_HLS10_PTL_INBL_FIX
+  ptl->setInbldFlag( inbldFlag );
+#endif
 
   switch ( profile )
   {
