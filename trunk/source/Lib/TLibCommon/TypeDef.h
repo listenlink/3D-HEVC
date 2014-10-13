@@ -123,6 +123,9 @@
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
 
+#define MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
+
+
 #define SEC_IC_NEIGHBOR_CLIP_I0080        1   // Clipping of neighboring sample position, JCT3V-I0080
 
 
@@ -224,6 +227,7 @@
 #define MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE            2 // size of the sample candidate list
 #endif
 
+#define H_3D_FIX_UNINIT                   1   // Fix uninitialized flag
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
                                               // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
@@ -250,6 +254,9 @@
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
+#if H_3D_FCO
+#define LGE_FCO_I0116                     1
+#endif
 
 #define SCU_HS_FAST_INTRA_SDC_I0123       1
 
@@ -274,6 +281,7 @@
 #define SEC_VPS_CLEANUP_I0090             1
 #define SEC_HLS_CLEANUP_I0100             1
 
+#define H_3D_FIX_64BIT_SHIFT              1
 #endif // H_3D
 
 
@@ -299,7 +307,7 @@
 #define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
 #define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
-#define H_3D_VSO_FIX                      0   // This fix should be enabled after verification 
+#define H_3D_VSO_FIX                      1   // This fix should be enabled after verification 
 #endif
 
 ////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
@@ -380,7 +388,48 @@
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 // TBD: Check if integration is necessary. 
+
+
+
+//Added by Qualcomm for HLS
+#define DISCARDABLE_PIC_RPS              1      ///< JCT3V-G0131: Inter-layer RPS and temporal RPS should not contain picture with discardable_flag equal to 1
+#define VPS_MISC_UPDATES                 1      ///< Misc updates:JCT3V-0240, 
+#define NON_REF_NAL_TYPE_DISCARDABLE     1      ///< JCT3V-G0031: If discardable picture is a non-IRAP, it must be a non-referenced sub-layer picture
+#define INFERENCE_POC_MSB_VAL_PRESENT    1      ///< JCT3V-H0042: poc_msb_val_present_flag shall be equal to 0 when slice_header_extension_length is (inferred to be ) equal to 0
+#define INFERENCE_POC_RESET_INFO_PRESENT 1      ///< JCT3V-H0042: Infer the value of poc_reset_info_present_flag to be equal to 0 when no pps extension / pps extension for multilayer.
+#define I0044_SLICE_TMVP                 1      ///< JCT3V-I0044: Regarding slice_temporal_mvp_enabled_flag
+#define I0045_BR_PR_ADD_LAYER_SET        1      ///< JCT3V-I0045: Signalling of bit-rate and picture rate for additional layer set
+#define I0045_VPS_VUI_VST_PARAMS         1      ///< JCT3V-I0045: Related to signalling of VST parameters of the base layer.
+
+
+#define H_MV_HLS10_GEN                       0  // General changes (not tested)
+
+#define H_MV_HLS10_AUX                       1 // Auxiliary pictures
+#define H_MV_HLS10_GEN_FIX                   1
+#define H_MV_FIX_LOOP_GOPSIZE                1
+#define H_MV_FIX_SUB_LAYERS_MAX_MINUS1       1
+
+#define H_MV_HLS10_GEN_VSP_CONF_WIN          1  // VPS conformance window
+#define H_MV_HLS10_GEN_VSP_BASE_LAYER_AVAIL  1  // vps_base_layer_available
+#define H_MV_HLS10_REF_PRED_LAYERS           1  // reference and predicted layer derivation
+#define H_MV_HLS10_NESSECARY_LAYER           1  // necessary layers
+#define H_MV_HLS10_ADD_LAYERSETS             1  // additional layer sets
+#define H_MV_HLS10_DBP_SIZE                  1  // dpb size syntax structure
+#define H_MV_HLS10_MAXNUMPICS                1  // constraint on number of pictures in rps  
+#define H_MV_HLS10_PTL                       1  // profile tier level
+#define H_MV_HLS10_PTL_FIX                   1  // profile tier level fix
+#define H_MV_HLS10_PTL_INBL_FIX              1  // profile tier level fix 
+#define H_MV_HLS10_PTL_INFER_FIX             1  // fix inference ptl
+#define H_MV_HLS10_MULTILAYERSPS             1  // multilayer SPS extension 
+#define H_MV_HLS10_VPS_VUI                   1  // vsp vui
+#define H_MV_HLS10_VPS_VUI_BSP               1  // vsp vui bsp
+#define H_MV_HLS10_PPS                       1  // PPS modifications
+
+#define H_MV_HLS10_VPS_VUI_BSP_STORE         0  // Currently bsp vui bsp hrd parameters are not stored, some dynamic memory allocation with upper bounds is required. 
+
+
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
+
 
 // POC
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
@@ -456,9 +505,19 @@
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
+#if H_MV_HLS10_VPS_VUI_BSP
+#define MAX_VPS_NUM_HRD_PARAMETERS                1024
+#define MAX_NUM_SUB_LAYERS                        7
+#define MAX_NUM_SIGNALLED_PARTITIONING_SCHEMES    16
+#else
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
+#endif
+
 #define MAX_VPS_OP_SETS_PLUS1                     1024
 #if H_MV
+#if H_MV_HLS10_ADD_LAYERSETS
+#define MAX_VPS_NUM_ADD_LAYER_SETS                1024
+#endif
 #define MAX_VPS_NUH_LAYER_ID_PLUS1  63
 #define MAX_NUM_SCALABILITY_TYPES   16
 #define ENC_CFG_CONSOUT_SPACE       29           
@@ -473,13 +532,19 @@
 #define MAX_NUM_LAYERS                  63
 #define MAX_VPS_PROFILE_TIER_LEVEL      64
 #define MAX_VPS_ADD_OUTPUT_LAYER_SETS   1024
+#if H_MV_HLS10_ADD_LAYERSETS
+#define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 + MAX_VPS_OP_SETS_PLUS1 )
+#else
 #define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 )
+#endif
 #define  MAX_NUM_VIDEO_SIGNAL_INFO      16
 #define MAX_NUM_SCALED_REF_LAYERS       MAX_NUM_LAYERS-1
+#if !H_MV_HLS10_VPS_VUI_BSP
 #define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
 #define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
 #define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
 #define MAX_SUB_STREAMS                 1024
+#endif
 #else
 #define MAX_NUM_LAYER_IDS                64
 #endif
@@ -950,10 +1015,17 @@ namespace Profile
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
 #if H_MV
+#if H_MV_HLS10_PTL
+    MULTIVIEWMAIN = 6,
+#if H_3D
+    MAIN3D = 8, 
+#endif
+#else
     MAINSTEREO = 4,
     MAINMULTIVIEW = 5,
 #if H_3D
     MAIN3D = 6, 
+#endif
 #endif
 #endif
   };
@@ -996,6 +1068,10 @@ namespace Level
     DEPTH_ID = 0,    
 #endif    
     VIEW_ORDER_INDEX  = 1,
+#if H_MV_HLS10_AUX
+    DEPENDENCY_ID = 2,
+    AUX_ID = 3,
+#endif    
   };
 #endif
 #if H_3D

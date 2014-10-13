@@ -184,11 +184,23 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   }
   else
   {
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+    Int ICEnableCandidate = pcCU->getSlice()->getICEnableCandidate(pcCU->getSlice()->getDepth());
+    Int ICEnableNum = pcCU->getSlice()->getICEnableNum(pcCU->getSlice()->getDepth());
+    ICEnableCandidate++;
+    if(pcCU->getICFlag(uiAbsPartIdx))
+    {
+      ICEnableNum++;
+    }
+    pcCU->getSlice()->setICEnableCandidate(pcCU->getSlice()->getDepth(), ICEnableCandidate);
+    pcCU->getSlice()->setICEnableNum(pcCU->getSlice()->getDepth(), ICEnableNum);
+#else
     g_aICEnableCANDIDATE[pcCU->getSlice()->getDepth()]++;
     if(pcCU->getICFlag(uiAbsPartIdx))
     {
       g_aICEnableNUM[pcCU->getSlice()->getDepth()]++;
     }
+#endif
   }
   if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
   {

@@ -70,6 +70,25 @@ Void initROM()
 
     c <<= 1;
   }  
+
+#if H_MV
+#if H_MV_HLS_PTL_LIMITS 
+ g_generalTierAndLevelLimits[ Level::LEVEL1   ] = TComGeneralTierAndLevelLimits(    36864,     350,  INT_MIN,   16,   1,   1 );
+ g_generalTierAndLevelLimits[ Level::LEVEL2   ] = TComGeneralTierAndLevelLimits(   122880,    1500,  INT_MIN,   16,   1,   1 );
+ g_generalTierAndLevelLimits[ Level::LEVEL2_1 ] = TComGeneralTierAndLevelLimits(   245760,    3000,  INT_MIN,   20,   1,   1 );
+ g_generalTierAndLevelLimits[ Level::LEVEL3   ] = TComGeneralTierAndLevelLimits(   552960,    6000,  INT_MIN,   30,   2,   2 );
+ g_generalTierAndLevelLimits[ Level::LEVEL3_1 ] = TComGeneralTierAndLevelLimits(   983040,   10000,  INT_MIN,   40,   3,   3 );
+ g_generalTierAndLevelLimits[ Level::LEVEL4   ] = TComGeneralTierAndLevelLimits(  2228224,   12000,    30000,   75,   5,   5 );
+ g_generalTierAndLevelLimits[ Level::LEVEL4_1 ] = TComGeneralTierAndLevelLimits(  2228224,   20000,    50000,   75,   5,   5 );
+ g_generalTierAndLevelLimits[ Level::LEVEL5   ] = TComGeneralTierAndLevelLimits(  8912896,   25000,   100000,  200,  11,  10 );
+ g_generalTierAndLevelLimits[ Level::LEVEL5_1 ] = TComGeneralTierAndLevelLimits(  8912896,   40000,   160000,  200,  11,  10 );
+ g_generalTierAndLevelLimits[ Level::LEVEL5_2 ] = TComGeneralTierAndLevelLimits(  8912896,   60000,   240000,  200,  11,  10 );
+ g_generalTierAndLevelLimits[ Level::LEVEL6   ] = TComGeneralTierAndLevelLimits( 35651584,   60000,   240000,  600,  22,  20 );
+ g_generalTierAndLevelLimits[ Level::LEVEL6_1 ] = TComGeneralTierAndLevelLimits( 35651584,  120000,   480000,  600,  22,  20 );
+ g_generalTierAndLevelLimits[ Level::LEVEL6_2 ] = TComGeneralTierAndLevelLimits( 35651584,  240000,   800000,  600,  22,  20 );
+#endif
+#endif
+
 }
 
 Void destroyROM()
@@ -368,11 +387,12 @@ extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
 // ====================================================================================================================
 
 Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
-
+#if !MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
 #if H_3D_IC
 UInt g_aICEnableCANDIDATE[10] = { 0, };
 UInt g_aICEnableNUM[ 10 ] = { 0, };
 Int g_lastlayer=0;
+#endif
 #endif
 #if ENC_DEC_TRACE
 FILE*  g_hTrace = NULL;
@@ -382,9 +402,9 @@ Bool   g_HLSTraceEnable = true;
 Bool   g_bJustDoIt = false;
 UInt64 g_nSymbolCounter = 0;
 #if H_MV_ENC_DEC_TRAC
-Bool g_traceCU = true; 
-Bool g_tracePU = true; 
-Bool g_traceTU = true; 
+Bool g_traceCU = false; 
+Bool g_tracePU = false; 
+Bool g_traceTU = false; 
 Bool g_disableHLSTrace = false; 
 UInt64 g_stopAtCounter       = 0; 
 Bool g_traceCopyBack         = false; 

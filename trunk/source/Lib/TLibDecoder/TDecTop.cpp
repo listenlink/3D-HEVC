@@ -228,10 +228,12 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
     return;
   }
 
+#if !LGE_FCO_I0116
   if ( pcSlice->getIsDepth())
   {
     return;
   }
+#endif
 
   Int curPoc = pcSlice->getPOC();
   if( m_firstReceivedPoc == -2 )
@@ -666,7 +668,9 @@ Void TDecTop::xActivateParameterSets()
 
 #if H_MV
   sps->inferSpsMaxDecPicBufferingMinus1( vps, m_targetOptLayerSetIdx, getLayerId(), false ); 
+#if !H_MV_HLS10_ADD_LAYERSETS 
   vps->inferDbpSizeLayerSetZero( sps, false ); 
+#endif
   // When the value of vps_num_rep_formats_minus1 in the active VPS is equal to 0
   if ( vps->getVpsNumRepFormatsMinus1() == 0 )
   {
@@ -674,10 +678,34 @@ Void TDecTop::xActivateParameterSets()
     assert( sps->getUpdateRepFormatFlag() == false ); 
   }
   sps->checkRpsMaxNumPics( vps, getLayerId() ); 
+#if H_MV_HLS10_MULTILAYERSPS
+
+  if( sps->getLayerId() != 0 )
+  {
+    sps->inferSpsMaxSubLayersMinus1( true, vps ); 
+  }
+
+#if H_MV_HLS10_MULTILAYERSPS
+  // It is a requirement of bitstream conformance that, when the SPS is referred to by 
+  // any current picture that belongs to an independent non-base layer, the value of 
+  // MultiLayerExtSpsFlag derived from the SPS shall be equal to 0.
+
+  if ( m_layerId > 0 && vps->getNumRefLayers( m_layerId ) == 0 )
+  {  
+    assert( sps->getMultiLayerExtSpsFlag() == 0 ); 
+  }
+#endif
+
+  if( sps->getMultiLayerExtSpsFlag() )
+  {
+    sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
+  }
+#else
   if( m_layerId > 0 )
   {
     sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
   }
+#endif
 #endif
 
   if( pps->getDependentSliceSegmentsEnabledFlag() )
@@ -701,12 +729,20 @@ Void TDecTop::xActivateParameterSets()
   m_apcSlicePilot->setSPS(sps);
 #if H_MV
   m_apcSlicePilot->setVPS(vps);  
+#if H_MV_HLS10_REF_PRED_LAYERS
+  // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
+  assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, pps->getLayerId() ) );   
+  // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
+  assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, sps->getLayerId() ) );
+#else
   // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, pps->getLayerId() ) );   
   // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, sps->getLayerId() ) );
+#endif
   sps->inferRepFormat  ( vps , m_layerId ); 
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
+
 #endif
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumColumnsMinus1() + 1) : 1);
@@ -908,6 +944,30 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
      xResetPocInPicBuffer();
    }
 #endif
+   
+#if I0044_SLICE_TMVP
+  if ( m_apcSlicePilot->getTLayer() == 0 && m_apcSlicePilot->getEnableTMVPFlag() == 0 )
+  {
+    //update all pics in the DPB such that they cannot be used for TMPV ref
+    TComList<TComPic*>::iterator  iterRefPic = m_cListPic.begin();  
+    while( iterRefPic != m_cListPic.end() )
+    {
+      TComPic *refPic = *iterRefPic;
+      if( ( refPic->getLayerId() == m_apcSlicePilot->getLayerId() ) && refPic->getReconMark() )
+      {
+        for(Int i = refPic->getNumAllocatedSlice()-1; i >= 0; i--)
+        {
+
+          TComSlice *refSlice = refPic->getSlice(i);
+          refSlice->setAvailableForTMVPRefFlag( false );
+        }
+      }
+      iterRefPic++;
+    }
+  }
+  m_apcSlicePilot->setAvailableForTMVPRefFlag( true );
+#endif
+
   xActivateParameterSets();
 
   if (m_apcSlicePilot->isNextSlice()) 
@@ -1132,6 +1192,17 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif    
 #endif
     // For generalized B
+#if I0044_SLICE_TMVP
+    if( m_layerId > 0 && !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
+    {
+      TComPic* refPic = pcSlice->getRefPic(RefPicList(1 - pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
+
+      assert ( refPic );
+      assert ( refPic->getPicSym()->getSlice(0)->getAvailableForTMVPRefFlag() == true );
+    }
+#endif
+
+    // For generalized B
     // note: maybe not existed case (always L0 is copied to L1 if L1 is empty)
     if (pcSlice->isInterB() && pcSlice->getNumRefIdx(REF_PIC_LIST_1) == 0)
     {
@@ -1200,7 +1271,11 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
 
 #if H_3D_IV_MERGE
+#if LGE_FCO_I0116
+  if( !pcSlice->getIsDepth() && m_pcCamParsCollector )
+#else
   if( pcSlice->getIsDepth() && m_pcCamParsCollector )
+#endif
   {
     m_pcCamParsCollector->copyCamParamForSlice( pcSlice );
   }
@@ -1651,7 +1726,11 @@ Bool TDecTop::xAllRefLayersInitilized()
   TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); 
   for (Int i = 0; i < vps->getNumDirectRefLayers( getLayerId()  ); i++ )
   {
+#if H_MV_HLS10_REF_PRED_LAYERS
+    Int refLayerId = vps->getIdDirectRefLayer( m_layerId, i ); 
+#else
     Int refLayerId = vps->getRefLayerId( m_layerId, i ); 
+#endif
     allRefLayersInitilizedFlag = allRefLayersInitilizedFlag && m_layerInitilizedFlag[ refLayerId ]; 
   }
 

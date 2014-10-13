@@ -4176,7 +4176,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
     TComPic * pcTexPic = m_pcSlice->getTexturePic();
 #if H_3D_FCO
+#if LGE_FCO_I0116
+    if (pcTexPic && pcTexPic->getReconMark())
+#else
     if (pcTexturePic->getReconMark())
+#endif
     {
 #endif    
       TComPicYuv*   pcTexRec = pcTexPic->getPicYuvRec  ();
@@ -6159,7 +6163,11 @@ Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDis
 
   TComMv cMv; 
 #if MTK_I0093
-  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ 1 << ( getSlice()->getSPS()->getBitDepthY() - 1 ) ];
+#if H_3D_FIX_64BIT_SHIFT
+  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ (Int64) (1 << ( getSlice()->getSPS()->getBitDepthY() - 1 )) ];
+#else
+  Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[  1 << ( getSlice()->getSPS()->getBitDepthY() - 1 ) ];
+#endif
 #else
   Int iDisp     = getSlice()->getDepthToDisparityB( 0 )[ 128 ];
 #endif

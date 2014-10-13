@@ -159,7 +159,10 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_isDepth              = pcTEncTop->getIsDepth();
 #endif
 #endif
-
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+  m_aICEnableCandidate           = pcTEncTop->getICEnableCandidate(); 
+  m_aICEnableNum           = pcTEncTop->getICEnableNum(); 
+#endif
 #if KWU_FIX_URQ
   m_pcRateCtrl           = pcTEncTop->getRateCtrl();
 #endif
@@ -966,6 +969,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #if H_3D_IV_MERGE    
     assert( !m_pcEncTop->getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
 #endif    
+#endif
+#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+    pcSlice->setICEnableCandidate( m_aICEnableCandidate );         
+    pcSlice->setICEnableNum( m_aICEnableNum );         
 #endif
     //  Slice info. refinement
 #if H_MV

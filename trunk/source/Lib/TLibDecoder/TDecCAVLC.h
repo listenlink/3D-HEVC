@@ -96,6 +96,13 @@ public:
   Void  parseSPS            ( TComSPS* pcSPS );
 #endif
 
+#if H_MV_HLS10_PPS
+#if H_MV
+  Void  parsePPSMultilayerExtension( TComPPS* pcPPS );
+#endif
+#endif
+
+
 #if H_3D
   Void  parsePPS            ( TComPPS* pcPPS, TComVPS* pcVPS );
   Void  parsePPSExtension   ( TComPPS* pcPPS, TComVPS* pcVPS );

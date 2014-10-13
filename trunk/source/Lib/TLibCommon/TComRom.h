@@ -186,16 +186,55 @@ extern const UChar g_aucDCTDSTMode_Vert[NUM_INTRA_MODE];
 extern const UChar g_aucDCTDSTMode_Hor[NUM_INTRA_MODE];
 // ==========================================
 
+#if H_MV_HLS_PTL_LIMITS
+class TComGeneralTierAndLevelLimits
+{
+public:
+  TComGeneralTierAndLevelLimits::TComGeneralTierAndLevelLimits
+  ( Int maxLumaPs, 
+    Int maxCPBMainTier, 
+    Int maxCPBHighTier, 
+    Int maxSliceSegmentsPerPicture, 
+    Int maxTileRows, 
+    Int maxTileCols )
+  : m_maxLumaPs                 ( maxLumaPs                     ),
+    m_maxCPBMainTier            ( maxCPBMainTier                ),
+    m_maxCPBHighTier            ( maxCPBHighTier                ),
+    m_maxSliceSegmentsPerPicture( maxSliceSegmentsPerPicture    ),
+    m_maxTileRows               ( maxTileRows                   ),
+    m_maxTileCols               ( maxTileCols                   );
+  {};
+
+  Int getMaxLumaPs                 ( ) { return m_maxLumaPs                 ; };
+  Int getMaxCPBMainTier            ( ) { return m_maxCPBMainTier            ; };
+  Int getMaxCPBHighTier            ( ) { return m_maxCPBHighTier            ; };
+  Int getMaxSliceSegmentsPerPicture( ) { return m_maxSliceSegmentsPerPicture; };
+  Int getMaxTileRows               ( ) { return m_maxTileRows               ; };
+  Int getMaxTileCols               ( ) { return m_maxTileCols               ; };
+
+private:
+  const Int m_maxLumaPs;
+  const Int m_maxCPBMainTier; 
+  const Int m_maxCPBHighTier;
+  const Int m_maxSliceSegmentsPerPicture; 
+  const Int m_maxTileRows; 
+  const Int m_maxTileCols; 
+};
+
+extern std::map< Level::Name, TComGeneralTierAndLevelLimits > g_generalTierAndLevelLimits;   
+
+#endif
 // ====================================================================================================================
 // Misc.
 // ====================================================================================================================
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
-
+#if !MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
 #if H_3D_IC
 extern UInt g_aICEnableCANDIDATE[10];
 extern UInt g_aICEnableNUM[ 10 ]; //10 layers
 extern Int  g_lastlayer;
+#endif
 #endif
 
 #ifndef ENC_DEC_TRACE

@@ -793,7 +793,11 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   Bool rapPic = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
 #if MTK_I0099_VPS_EX2
+#if LGE_FCO_I0116
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag && pcTexture->getReconMark())
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag)
+#endif
 #else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
 #endif
@@ -853,7 +857,11 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   Bool depthDependent = false;
   UInt uiTexturePart = uiMode;
 #if MTK_I0099_VPS_EX2
+#if LGE_FCO_I0116
+  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag && pcTexture->getReconMark())
+#else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag )
+#endif
 #else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
 #endif

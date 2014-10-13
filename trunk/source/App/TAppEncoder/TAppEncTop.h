@@ -131,11 +131,22 @@ protected:
   Void xSetDependencies           ( TComVPS& vps );
   Void xSetLayerSets              ( TComVPS& vps );
   Void xSetProfileTierLevel       ( TComVPS& vps );
+
+#if H_MV_HLS10_PTL
+  Void xSetProfileTierLevel( TComVPS& vps, Int profileTierLevelIdx, Int subLayer,                              
+                             Profile::Name profile, Level::Name level, Level::Tier tier, 
+                             Bool progressiveSourceFlag, Bool interlacedSourceFlag, 
+                             Bool nonPackedConstraintFlag, Bool frameOnlyConstraintFlag, 
+                             Bool inbldFlag );
+#endif
   Void xSetRepFormat              ( TComVPS& vps );
   Void xSetDpbSize                ( TComVPS& vps );
   Void xSetVPSVUI                 ( TComVPS& vps );
   GOPEntry* xGetGopEntry( Int layerIdInVps, Int poc );
   Int  xGetMax( std::vector<Int>& vec);
+#if H_MV_HLS10_GEN_FIX
+  Bool xLayerIdInTargetEncLayerIdList( Int nuhLayerId );
+#endif
 #endif
 #if H_3D
   Void xSetVPSExtension2( TComVPS& vps );
