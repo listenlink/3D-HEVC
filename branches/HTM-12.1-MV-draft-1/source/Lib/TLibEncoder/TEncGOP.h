@@ -56,9 +56,6 @@
 
 #include "TEncAnalyze.h"
 #include "TEncRateCtrl.h"
-#if KWU_RC_MADPRED_E0227
-#include "../App/TAppEncoder/TAppEncTop.h"
-#endif
 #include <vector>
 
 //! \ingroup TLibEncoder
@@ -110,14 +107,6 @@ private:
   Int                     m_pocLastCoded;
   Int                     m_layerId;  
   Int                     m_viewId;
-#if H_3D
-  Int                     m_viewIndex; 
-  Bool                    m_isDepth;
-#endif
-#endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-  Int *m_aICEnableCandidate; 
-  Int *m_aICEnableNum; 
 #endif
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
@@ -167,10 +156,6 @@ public:
   Int       getPocLastCoded  ()                 { return m_pocLastCoded; }  
   Int       getLayerId       ()                 { return m_layerId;    }  
   Int       getViewId        ()                 { return m_viewId;    }
-#if H_3D
-  Int       getViewIndex     ()                 { return m_viewIndex;    }
-  Bool      getIsDepth       ()                 { return m_isDepth; }
-#endif
 #endif
 
   Int   getGOPSize()          { return  m_iGopSize;  }
@@ -180,15 +165,8 @@ public:
 #if !H_MV
   Void  printOutSummary      ( UInt uiNumAllPicCoded , bool isField);
 #endif
-#if H_3D_VSO
-  Void  preLoopFilterPicAll  ( TComPic* pcPic, Dist64& ruiDist, UInt64& ruiBits );
-#else
   Void  preLoopFilterPicAll  ( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits );
-#endif
 
-#if KWU_RC_MADPRED_E0227
-  TEncTop* getEncTop() { return m_pcEncTop; }
-#endif
 
   TEncSlice*  getSliceEncoder()   { return m_pcSliceEncoder; }
   NalUnitType getNalUnitType( Int pocCurr, Int lastIdr, Bool isField );
@@ -205,11 +183,7 @@ protected:
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );
   Void  xCalculateInterlacedAddPSNR( TComPic* pcPicOrgTop, TComPic* pcPicOrgBottom, TComPicYuv* pcPicRecTop, TComPicYuv* pcPicRecBottom, const AccessUnit& accessUnit, Double dEncTime );
 
-#if H_3D_VSO
-  Dist64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
-#else  
   UInt64 xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1);
-#endif
 
   Double xCalculateRVM();
 

@@ -156,18 +156,7 @@ Void TEncSlice::init( TEncTop* pcEncTop )
   m_pdRdPicLambda     = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_pdRdPicQp         = (Double*)xMalloc( Double, m_pcCfg->getDeltaQpRD() * 2 + 1 );
   m_piRdPicQp         = (Int*   )xMalloc( Int,    m_pcCfg->getDeltaQpRD() * 2 + 1 );
-#if KWU_RC_MADPRED_E0227
-  if(m_pcCfg->getUseRateCtrl())
-  {
-    m_pcRateCtrl        = pcEncTop->getRateCtrl();
-  }
-  else
-  {
-    m_pcRateCtrl        = NULL;
-  }
-#else
   m_pcRateCtrl        = pcEncTop->getRateCtrl();
-#endif
 }
 
 /**
@@ -203,9 +192,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setLayerId     ( layerId );
   rpcSlice->setViewId      ( pVPS->getViewId      ( layerId ) );    
   rpcSlice->setViewIndex   ( pVPS->getViewIndex   ( layerId ) );
-#if H_3D
-  rpcSlice->setIsDepth     ( pVPS->getDepthId     ( layerId ) != 0 );    
-#endif
 #endif
   rpcSlice->setSPS( pSPS );
   rpcSlice->setPPS( pPPS );
@@ -214,9 +200,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->initSlice();
   rpcSlice->setPicOutputFlag( true );
   rpcSlice->setPOC( pocCurr );
-#if H_3D_IC
-  rpcSlice->setApplyIC( false );
-#endif
   // depth computation based on GOP size
   Int depth;
   {
@@ -436,24 +419,6 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   // store lambda
   m_pcRdCost ->setLambda( dLambda );
 
-#if H_3D_VSO
-  m_pcRdCost->setUseLambdaScaleVSO  ( (m_pcCfg->getUseVSO() ||  m_pcCfg->getForceLambdaScaleVSO()) && m_pcCfg->getIsDepth() );
-  m_pcRdCost->setLambdaVSO          ( dLambda * m_pcCfg->getLambdaScaleVSO() );
-
-  // Should be moved to TEncTop
-  
-  // SAIT_VSO_EST_A0033
-  m_pcRdCost->setDisparityCoeff( m_pcCfg->getDispCoeff() );
-
-  // LGE_WVSO_A0119
-  if( m_pcCfg->getUseWVSO() && m_pcCfg->getIsDepth() )
-  {
-    m_pcRdCost->setDWeight  ( m_pcCfg->getDWeight()   );
-    m_pcRdCost->setVSOWeight( m_pcCfg->getVSOWeight() );
-    m_pcRdCost->setVSDWeight( m_pcCfg->getVSDWeight() );
-  }
-
-#endif
 
 // for RDO
   // in RdCost there is only one lambda because the luma and chroma bits are not separated, instead we weight the distortion of chroma.
@@ -606,18 +571,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceArgument        ( m_pcCfg->getSliceArgument()        );
   rpcSlice->setSliceSegmentMode     ( m_pcCfg->getSliceSegmentMode()     );
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
-#if H_3D_IV_MERGE
-  if(rpcSlice->getIsDepth())
-  {
-    rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getVPS()->getMPIFlag( rpcSlice->getLayerIdInVps() ) || rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ) ? 1 : 0 ) );
-  }
-  else
-  {
-    rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ? 1 : 0 ) );
-  }
-#else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
-#endif
   xStoreWPparam( pPPS->getUseWP(), pPPS->getWPBiPred() );
 }
 
@@ -765,20 +719,13 @@ Void TEncSlice::precompressSlice( TComPic*& rpcPic )
     compressSlice   ( rpcPic );
     
     Double dPicRdCost;
-#if H_3D_VSO
-    Dist64 uiPicDist        = m_uiPicDist;
-#else
     UInt64 uiPicDist        = m_uiPicDist;
-#endif
     UInt64 uiALFBits        = 0;
     
     m_pcGOPEncoder->preLoopFilterPicAll( rpcPic, uiPicDist, uiALFBits );
     
     // compute RD cost and choose the best
     dPicRdCost = m_pcRdCost->calcRdCost64( m_uiPicTotalBits + uiALFBits, uiPicDist, true, DF_SSE_FRAME);
-#if H_3D
-    // Above calculation need to be fixed for VSO, including frameLambda value. 
-#endif
     
     if ( dPicRdCost < dPicRdCostBest )
     {
@@ -924,18 +871,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
   TComBitCounter* pcBitCounters     = pcEncTop->getBitCounters();
   Int  iNumSubstreams = 1;
   UInt uiTilesAcross  = 0;
-#if H_3D_IC
-  if ( pcEncTop->getViewIndex() && pcEncTop->getUseIC() &&
-       !( ( pcSlice->getSliceType() == P_SLICE && pcSlice->getPPS()->getUseWP() ) || ( pcSlice->getSliceType() == B_SLICE && pcSlice->getPPS()->getWPBiPred() ) )
-     )
-  {
-    pcSlice ->xSetApplyIC(pcEncTop->getUseICLowLatencyEnc());
-    if ( pcSlice->getApplyIC() )
-    {
-      pcSlice->setIcSkipParseFlag( pcSlice->getPOC() % m_pcCfg->getIntraPeriod() != 0 );
-    }
-  }
-#endif
     iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
     uiTilesAcross = rpcPic->getPicSym()->getNumColumnsMinus1()+1;
     delete[] m_pcBufferSbacCoders;
@@ -1011,9 +946,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     }
   }
   // for every CU in slice
-#if H_3D
-  Int iLastPosY = -1;
-#endif
   UInt uiEncCUOrder;
   for( uiEncCUOrder = uiStartCUAddr/rpcPic->getNumPartInCU();
        uiEncCUOrder < (uiBoundingCUAddr+(rpcPic->getNumPartInCU()-1))/rpcPic->getNumPartInCU();
@@ -1022,20 +954,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
     // initialize CU encoder
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );
     pcCU->initCU( rpcPic, uiCUAddr );
-#if H_3D_VSO
-    if ( m_pcRdCost->getUseRenModel() )
-    {
-      // updated renderer model if necessary
-      Int iCurPosX;
-      Int iCurPosY; 
-      pcCU->getPosInPic(0, iCurPosX, iCurPosY );
-      if ( iCurPosY != iLastPosY )
-      {
-        iLastPosY = iCurPosY;         
-        pcEncTop->setupRenModel( pcSlice->getPOC() , pcSlice->getViewIndex(), pcSlice->getIsDepth() ? 1 : 0, iCurPosY );
-      }
-    }
-#endif
     // inherit from TR if necessary, select substream to use.
       uiTileCol = rpcPic->getPicSym()->getTileIdxMap(uiCUAddr) % (rpcPic->getPicSym()->getNumColumnsMinus1()+1); // what column of tiles are we in?
       uiTileStartLCU = rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(uiCUAddr))->getFirstCUAddr();
@@ -1118,24 +1036,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         }
         else
         {
-#if KWU_RC_MADPRED_E0227
-          if(pcSlice->getLayerId() != 0 && m_pcCfg->getUseDepthMADPred() && !pcSlice->getIsDepth())
-          {
-            Double zn, zf, focallength, position, camShift;
-            Double basePos;
-            Bool bInterpolated;
-            Int direction = pcSlice->getViewId() - pcCU->getSlice()->getIvPic(false, 0)->getViewId();
-            Int disparity;
-
-            pcEncTop->getCamParam()->xGetZNearZFar(pcEncTop->getCamParam()->getBaseViewNumbers()[pcSlice->getViewIndex()], pcSlice->getPOC(), zn, zf);
-            pcEncTop->getCamParam()->xGetGeometryData(pcEncTop->getCamParam()->getBaseViewNumbers()[0], pcSlice->getPOC(), focallength, basePos, camShift, bInterpolated);
-            pcEncTop->getCamParam()->xGetGeometryData(pcEncTop->getCamParam()->getBaseViewNumbers()[pcSlice->getViewIndex()], pcSlice->getPOC(), focallength, position, camShift, bInterpolated);
-            bpp       = m_pcRateCtrl->getRCPic()->getLCUTargetBppforInterView( m_pcRateCtrl->getPicList(), pcCU,
-              basePos, position, focallength, zn, zf, (direction > 0 ? 1 : -1), &disparity );
-          }
-          else
-          {
-#endif
           bpp = m_pcRateCtrl->getRCPic()->getLCUTargetBpp(pcSlice->getSliceType());
           if ( rpcPic->getSlice( 0 )->getSliceType() == I_SLICE)
           {
@@ -1146,10 +1046,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
             estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp );
             estQP     = m_pcRateCtrl->getRCPic()->getLCUEstQP    ( estLambda, pcSlice->getSliceQp() );
           }
-#if KWU_RC_MADPRED_E0227
-          estLambda = m_pcRateCtrl->getRCPic()->getLCUEstLambda( bpp );
-          estQP     = m_pcRateCtrl->getRCPic()->getLCUEstQP    ( estLambda, pcSlice->getSliceQp() );
-#endif
           estQP     = Clip3( -pcSlice->getSPS()->getQpBDOffsetY(), MAX_QP, estQP );
 
           m_pcRdCost->setLambda(estLambda);
@@ -1203,14 +1099,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
 
       if ( m_pcCfg->getUseRateCtrl() )
       {
-#if KWU_RC_MADPRED_E0227
-        UInt SAD    = m_pcCuEncoder->getLCUPredictionSAD();
-        Int height  = min( pcSlice->getSPS()->getMaxCUHeight(),pcSlice->getSPS()->getPicHeightInLumaSamples() - uiCUAddr / rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUHeight() );
-        Int width   = min( pcSlice->getSPS()->getMaxCUWidth(),pcSlice->getSPS()->getPicWidthInLumaSamples() - uiCUAddr % rpcPic->getFrameWidthInCU() * pcSlice->getSPS()->getMaxCUWidth() );
-        Double MAD = (Double)SAD / (Double)(height * width);
-        MAD = MAD * MAD;
-        ( m_pcRateCtrl->getRCPic()->getLCU(uiCUAddr) ).m_MAD = MAD;
-#endif
 
         Int actualQP        = g_RCInvalidQPValue;
         Double actualLambda = m_pcRdCost->getLambda();
@@ -1467,9 +1355,6 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
       }
     }
 
-#if H_3D_QTLPC
-    rpcPic->setReduceBitsFlag(true);
-#endif
     TComDataCU*& pcCU = rpcPic->getCU( uiCUAddr );    
     if ( pcSlice->getSPS()->getUseSAO() )
     {
@@ -1522,9 +1407,6 @@ Void TEncSlice::encodeSlice   ( TComPic*& rpcPic, TComOutputBitstream* pcSubstre
       {
         m_pcBufferSbacCoders[uiTileCol].loadContexts( &pcSbacCoders[uiSubStrm] );
       }
-#if H_3D_QTLPC
-    rpcPic->setReduceBitsFlag(false);
-#endif
   }
   if( depSliceSegmentsEnabled )
   {

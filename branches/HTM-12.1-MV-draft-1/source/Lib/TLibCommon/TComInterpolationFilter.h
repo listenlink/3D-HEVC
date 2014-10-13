@@ -44,10 +44,6 @@
 //! \ingroup TLibCommon
 //! \{
 
-#if H_3D_ARP
-#define NTAPS_LUMA_ARP    2 ///< Number of taps for luma
-#define NTAPS_CHROMA_ARP  2 ///< Number of taps for chroma
-#endif
 
 #define NTAPS_LUMA        8 ///< Number of taps for luma
 #define NTAPS_CHROMA      4 ///< Number of taps for chroma
@@ -62,10 +58,6 @@ class TComInterpolationFilter
 {
   static const Short m_lumaFilter[4][NTAPS_LUMA];     ///< Luma filter taps
   static const Short m_chromaFilter[8][NTAPS_CHROMA]; ///< Chroma filter taps
-#if H_3D_ARP
-  static const Short m_lumaFilterARP  [4][NTAPS_LUMA_ARP];     ///< Luma filter taps for ARP
-  static const Short m_chromaFilterARP[8][NTAPS_CHROMA_ARP];   ///< Chroma filter taps for ARP
-#endif
   static Void filterCopy(Int bitDepth, const Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Bool isFirst, Bool isLast);
   
   template<Int N, Bool isVertical, Bool isFirst, Bool isLast>
@@ -81,24 +73,12 @@ public:
   ~TComInterpolationFilter() {}
 
   Void filterHorLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast 
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
     );
   Void filterVerLuma  (Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast 
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
     );
   Void filterHorChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac,               Bool isLast 
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
     );
   Void filterVerChroma(Pel *src, Int srcStride, Short *dst, Int dstStride, Int width, Int height, Int frac, Bool isFirst, Bool isLast 
-#if H_3D_ARP
-    , Bool filterType = false
-#endif
     );
 };
 

@@ -77,19 +77,11 @@ Void TEncEntropy::encodePPS( TComPPS* pcPPS )
   return;
 }
 
-#if H_3D
-Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
-{
-  m_pcEntropyCoderIf->codeSPS( pcSPS, viewIndex, depthFlag );
-  return;
-}
-#else
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
 {
   m_pcEntropyCoderIf->codeSPS( pcSPS );
   return;
 }
-#endif
 
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
@@ -118,25 +110,6 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
-#if MTK_SINGLE_DEPTH_MODE_I0095
-Void TEncEntropy::encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if ( !pcCU->getSlice()->getIsDepth() )
-  {
-    return;
-  }
-  if(!pcCU->getSlice()->getApplySingleDepthMode())
-  {
-     return;
-  }
-  
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  m_pcEntropyCoderIf->codeSingleDepthMode( pcCU, uiAbsPartIdx );
-}
-#endif
 /** encode merge flag
  * \param pcCU
  * \param uiAbsPartIdx
@@ -165,68 +138,7 @@ Void TEncEntropy::encodeMergeIndex( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bR
   m_pcEntropyCoderIf->codeMergeIndex( pcCU, uiAbsPartIdx );
 }
 
-#if H_3D_IC
-Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() || pcCU->getARPW( uiAbsPartIdx ) > 0 )
-  {
-    return;
-  }
 
-  if( !pcCU->getSlice()->getApplyIC() )
-  {
-    return;
-  }
-
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  else
-  {
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-    Int ICEnableCandidate = pcCU->getSlice()->getICEnableCandidate(pcCU->getSlice()->getDepth());
-    Int ICEnableNum = pcCU->getSlice()->getICEnableNum(pcCU->getSlice()->getDepth());
-    ICEnableCandidate++;
-    if(pcCU->getICFlag(uiAbsPartIdx))
-    {
-      ICEnableNum++;
-    }
-    pcCU->getSlice()->setICEnableCandidate(pcCU->getSlice()->getDepth(), ICEnableCandidate);
-    pcCU->getSlice()->setICEnableNum(pcCU->getSlice()->getDepth(), ICEnableNum);
-#else
-    g_aICEnableCANDIDATE[pcCU->getSlice()->getDepth()]++;
-    if(pcCU->getICFlag(uiAbsPartIdx))
-    {
-      g_aICEnableNUM[pcCU->getSlice()->getDepth()]++;
-    }
-#endif
-  }
-  if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
-  {
-    m_pcEntropyCoderIf->codeICFlag( pcCU, uiAbsPartIdx );
-  }
-}
-#endif
-
-#if H_3D_ARP
-Void TEncEntropy::encodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx )
-{
-  if( !pcCU->getSlice()->getARPStepNum() || pcCU->isIntra( uiAbsPartIdx ) ) 
-  {
-    return;
-  }
-
-  if ( pcCU->getPartitionSize(uiAbsPartIdx)!=SIZE_2Nx2N )
-  {
-    assert(pcCU->getARPW (uiAbsPartIdx) == 0);
-  }
-  else
-  {
-    m_pcEntropyCoderIf->codeARPW( pcCU, uiAbsPartIdx );
-  }
-}
-#endif
 
 /** encode prediction mode
  * \param pcCU
@@ -272,46 +184,9 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     uiAbsPartIdx = 0;
   }
   
-#if H_3D_DBBP
-#if! SEC_DBBP_EXPLICIT_SIG_I0077
-  PartSize eVirtualPartSize = pcCU->getPartitionSize(uiAbsPartIdx);
-  if( pcCU->getDBBPFlag(uiAbsPartIdx) )
-  {
-    AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
-    
-    // temporarily change partition size for DBBP blocks
-    pcCU->setPartSizeSubParts(RWTH_DBBP_PACK_MODE, uiAbsPartIdx, uiDepth);
-  }
-#endif
-#endif
   
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
-#if H_3D_DBBP
-#if SEC_DBBP_EXPLICIT_SIG_I0077
-#if SEC_DBBP_DISALLOW_8x8_I0078
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 )
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) )
-#endif
-#else
-#if SEC_DBBP_DISALLOW_8x8_I0078
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getWidth(uiAbsPartIdx) > 8 )
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) )
-#endif
-#endif
-  {
-    encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
-#if !SEC_DBBP_EXPLICIT_SIG_I0077
-    if( pcCU->getDBBPFlag(uiAbsPartIdx) )
-    {
-      // restore virtual partition size for DBBP blocks
-      pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
-    }
-#endif
-  }
-#endif
 }
 
 /** Encode I_PCM information. 
@@ -540,9 +415,6 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );
-#if H_3D_DIM_SDC
-    if(!pcCU->getSDCFlag(uiAbsPartIdx))
-#endif
     encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
@@ -714,45 +586,6 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
   UInt uiLumaOffset   = uiMinCoeffSize*uiAbsPartIdx;
   UInt uiChromaOffset = uiLumaOffset>>2;
-#if H_3D_DIM_SDC
-  if( pcCU->getSDCFlag( uiAbsPartIdx ) && pcCU->isIntra( uiAbsPartIdx ) )
-  {
-    assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
-    assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
-  }
-
-  if( pcCU->getSDCFlag( uiAbsPartIdx ) && !pcCU->isIntra( uiAbsPartIdx ) )
-  {
-    assert( !pcCU->isSkipped( uiAbsPartIdx ) );
-    assert( !pcCU->isIntra( uiAbsPartIdx) );
-    assert( pcCU->getSlice()->getIsDepth() );
-  }
-
-  if( pcCU->getSlice()->getIsDepth() && ( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) ) )
-  {
-    Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
-    UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
-    
-    if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
-    {
-      for( Int iPart = 0; iPart < iPartNum; iPart++ )
-      {
-        if( getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx + uiPartOffset*iPart ) ) < DIM_NUM_TYPE ) 
-        {
-          m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx + uiPartOffset*iPart );
-        }
-      }
-    }
-    else
-    {
-      m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx );
-      return;
-    }
-  }
-#endif
 
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
@@ -811,44 +644,4 @@ Void TEncEntropy::encodeScalingList( TComScalingList* scalingList )
   m_pcEntropyCoderIf->codeScalingList( scalingList );
 }
 
-#if H_3D_INTER_SDC
-Void TEncEntropy::encodeDeltaDC  ( TComDataCU* pcCU, UInt absPartIdx )
-{
-  m_pcEntropyCoderIf->codeDeltaDC( pcCU, absPartIdx );
-}
-
-Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) ) || 
-    ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getVpsDepthModesFlag( pcCU->getSlice()->getLayerIdInVps() ) ) )
-  {
-    return;
-  }
-
-  if( !pcCU->getSlice()->getIsDepth() || pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N || pcCU->isSkipped( uiAbsPartIdx ) )
-  {
-    return;
-  }
-
-  assert( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
-
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-
-  m_pcEntropyCoderIf->codeSDCFlag( pcCU, uiAbsPartIdx );
-}
-
-#endif
-#if H_3D_DBBP
-Void TEncEntropy::encodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  m_pcEntropyCoderIf->codeDBBPFlag( pcCU, uiAbsPartIdx );
-}
-#endif
 //! \}

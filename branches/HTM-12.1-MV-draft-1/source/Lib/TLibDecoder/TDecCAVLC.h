@@ -62,10 +62,6 @@ public:
 protected:
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
   
-#if H_3D
-  Int**    m_aaiTempScale;
-  Int**    m_aaiTempOffset;
-#endif
 
 public:
 
@@ -88,13 +84,7 @@ public:
 #if H_MV
   Void  parseSPSExtension   ( TComSPS* pcSPS );  
 #endif
-#if H_3D
-  Void  parseVPSExtension2  ( TComVPS* pcVPS ); 
-  Void  parseSPSExtension2  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
-  Void  parseSPS            ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
-#else
   Void  parseSPS            ( TComSPS* pcSPS );
-#endif
 
 #if H_MV_HLS10_PPS
 #if H_MV
@@ -103,12 +93,7 @@ public:
 #endif
 
 
-#if H_3D
-  Void  parsePPS            ( TComPPS* pcPPS, TComVPS* pcVPS );
-  Void  parsePPSExtension   ( TComPPS* pcPPS, TComVPS* pcVPS );
-#else
   Void  parsePPS            ( TComPPS* pcPPS);
-#endif
 
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
@@ -125,25 +110,9 @@ public:
   Void  parseMVPIdx         ( Int& riMVPIdx );
   
   Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if MTK_SINGLE_DEPTH_MODE_I0095
-  Void  parseSingleDepthMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif  
   Void  parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );
-#if H_3D_ARP 
-  Void parseARPW            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_IC
-  Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_INTER_SDC
-  Void  parseDeltaDC        ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
-  Void  parseSDCFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_DBBP
-  Void  parseDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePartSize        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
