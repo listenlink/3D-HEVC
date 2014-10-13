@@ -77,8 +77,14 @@ protected:
   std::vector< std::vector<Int> > m_dimIds;                   ///< dimension ids ( pointers to m_viewId and m_depthFlag 
   std::vector<Int>       m_viewId;                            ///< view id
   std::vector<Int>       m_viewOrderIndex;                    ///< view order index  
+#if H_MV_HLS10_AUX
+  std::vector<Int>       m_auxId;                             ///< auxiliary id
+#endif
 #if H_3D
   std::vector<Int>       m_depthFlag;                         ///< depth flag
+#endif
+#if H_MV_HLS10_GEN_FIX
+  std::vector<Int>       m_targetEncLayerIdList;              ///< layer Ids in Nuh to be encoded
 #endif
   std::vector<Int>       m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
   Bool                   m_splittingFlag;                     ///< Splitting Flag
@@ -88,11 +94,19 @@ protected:
 // layer sets   
   Int                    m_vpsNumLayerSets;                   ///< Number of layer sets
   std::vector< std::vector<Int> > m_layerIdsInSets;           ///< LayerIds in vps of layer set 
-  Int                    m_defaultOutputLayerIdc;       ///< Specifies output layers of layer sets, 0: output all layers, 1: output highest layers, 2: specified by LayerIdsInDefOuputLayerSet
+#if H_MV_HLS10_ADD_LAYERSETS
+  Int                    m_numAddLayerSets;                    ///< Number of additional layer sets
+  std::vector< std::vector<Int> > m_highestLayerIdxPlus1;      ///< HighestLayerIdxPlus1 for each additional layer set and each independent layer (value with index 0 will be ignored)
+#endif
+  Int                    m_defaultOutputLayerIdc;             ///< Specifies output layers of layer sets, 0: output all layers, 1: output highest layers, 2: specified by LayerIdsInDefOuputLayerSet
   std::vector<Int>       m_outputLayerSetIdx;                 ///< Indices of layer sets used as additional output layer sets  
   std::vector< std::vector<Int> > m_layerIdsInAddOutputLayerSet; ///< LayerIds in vps of additional output layers
   std::vector< std::vector<Int> > m_layerIdsInDefOutputLayerSet; ///< Indices in vps of output layers in layer sets
+#if H_MV_HLS10_ADD_LAYERSETS
+  std::vector< std::vector< Int > > m_profileTierLevelIdx;      ///< Indices of of profile, per layer in layer set
+#else
   std::vector<Int>       m_profileLevelTierIdx;               ///< Indices of of profile level tier
+#endif
   std::vector<Bool>      m_altOutputLayerFlag;                ///< Alt output layer flag
 
   // Dependencies
@@ -123,6 +137,11 @@ protected:
   std::vector< std::vector<Int  > > m_minSpatialSegmentOffsetPlus1;
   std::vector< std::vector<Bool > > m_ctuBasedOffsetEnabledFlag;
   std::vector< std::vector<Int  > > m_minHorizontalCtuOffsetPlus1;
+#if H_MV_HLS10_VPS_VUI
+  Bool m_singleLayerForNonIrapFlag;
+  Bool m_higherLayerIrapSkipFlag;
+#endif // H_MV_HLS10_VPS_VUI
+
 
 #if H_3D_IV_MERGE
   vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
@@ -173,14 +192,23 @@ protected:
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
   
   // profile/level
+#if H_MV_HLS10_PTL
+#if H_MV
+  std::vector< Profile::Name > m_profile;
+  std::vector< Level::Tier   > m_levelTier;
+  std::vector< Level::Name   > m_level;
+  std::vector< Bool          > m_inblFlag; 
+#else
   Profile::Name m_profile;
   Level::Tier   m_levelTier;
   Level::Name   m_level;
+#endif
+#endif
+
   Bool m_progressiveSourceFlag;
   Bool m_interlacedSourceFlag;
   Bool m_nonPackedConstraintFlag;
   Bool m_frameOnlyConstraintFlag;
-  
   // coding structure
 #if H_MV
   std::vector<Int> m_iIntraPeriod;                            ///< period of I-slice (random access period)
@@ -439,6 +467,9 @@ protected:
   std::vector<Int>  m_sbPropHighestSublayerId;
   std::vector<Int>  m_sbPropAvgBitRate;
   std::vector<Int>  m_sbPropMaxBitRate;
+#if H_MV_HLS10_GEN_FIX
+  Bool              m_outputVpsInfo;
+#endif
 #endif
 #if H_3D
   // Camera parameters
@@ -505,6 +536,31 @@ protected:
   Void  xPrintParameter ();                                   ///< print configuration values
   Void  xPrintUsage     ();                                   ///< print usage
 #if H_MV
+
+#if H_MV_HLS10_PTL
+  template<typename T>
+  Void xReadStrToEnum(string in, std::vector<T> &val)
+  {
+    val.clear(); 
+
+    char* cElement = NULL;
+    char* cString = new char[in.size()+1];
+    strcpy(cString, in.c_str());
+
+    cElement = strtok( cString, " " );
+    while ( cElement != NULL )
+    {
+      T profile;       
+      std::istringstream ss( cElement ); 
+      ss >> profile; 
+      val.push_back( profile ); 
+      cElement = strtok( NULL, " " );
+    }
+    delete[] cString;
+  }
+#endif
+
+
   template <typename T>
   Void xResizeVector(  std::vector<T> & rpcVector )
   {

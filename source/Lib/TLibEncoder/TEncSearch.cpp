@@ -3082,11 +3082,15 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if H_3D_VSO_FIX // This fix should be enabled after verification 
         Double dLambda;
         if ( m_pcRdCost->getUseLambdaScaleVSO() )
+        {
           dLambda = m_pcRdCost->getUseRenModel() ? m_pcRdCost->getLambdaVSO() : m_pcRdCost->getSqrtLambdaVSO();
+        }
         else        
+        {
           dLambda = m_pcRdCost->getSqrtLambda();        
+        }
 
-        Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
+        Double cost      = (Double)uiSad + (Double)iModeBits * dLambda;
 #else
         Double cost      = (Double)uiSad + (Double)iModeBits * m_pcRdCost->getSqrtLambda();
 #endif
@@ -3211,7 +3215,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
         {
 #if H_3D_FCO
             TComPic* picTexture  = pcCU->getSlice()->getIvPic(false, pcCU->getSlice()->getViewIndex() );
+#if LGE_FCO_I0116
+            if ( !picTexture->getReconMark() && (DMM4_IDX == dmmType ) )
+#else
             if ( !picTexture->getReconMark() && (DMM3_IDX == dmmType || DMM4_IDX == dmmType ) )
+#endif
             {
                 continue;
             }

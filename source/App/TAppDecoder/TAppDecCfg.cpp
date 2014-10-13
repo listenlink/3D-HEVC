@@ -93,6 +93,11 @@ Bool TAppDecCfg::parseCfg( Int argc, Char* argv[] )
   ("SEIpictureDigest", m_decodedPictureHashSEIEnabled, 1, "deprecated alias for SEIDecodedPictureHash")
   ("TarDecLayerIdSetFile,l", cfg_TargetDecLayerIdSetFile, string(""), "targetDecLayerIdSet file name. The file should include white space separated LayerId values to be decoded. Omitting the option or a value of -1 in the file decodes all layers.")
   ("RespectDefDispWindow,w", m_respectDefDispWindow, 0, "Only output content inside the default display window\n")
+#if H_MV
+#if H_MV_HLS10_GEN_FIX
+  ("OutputVpsInfo,v", m_outputVpsInfo, false, "Output information about the layer dependencies and layer sets")
+#endif
+#endif
   ;
   po::setDefaults(opts);
   const list<const Char*>& argv_unhandled = po::scanArgv(opts, argc, (const Char**) argv);

@@ -106,6 +106,12 @@ public:
 #endif
   Void  codePPS                 ( TComPPS* pcPPS );
 
+#if H_MV_HLS10_PPS
+#if H_MV
+  Void codePPSMultilayerExtension( TComPPS* pcPPS );
+#endif
+#endif
+
 #if H_3D
   Void  codePPSExtension        ( TComPPS* pcPPS );
 #endif
