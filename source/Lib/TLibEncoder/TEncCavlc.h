@@ -97,13 +97,7 @@ public:
 #if H_MV
   Void  codeSPSExtension        ( TComSPS* pcSPS ); 
 #endif
-#if H_3D
-  Void  codeVPSExtension2       ( TComVPS* pcVPS ); 
-  Void  codeSPSExtension2       ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  ); 
-  Void  codeSPS                 ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
-#else
   Void  codeSPS                 ( TComSPS* pcSPS );
-#endif
   Void  codePPS                 ( TComPPS* pcPPS );
 
 #if H_MV_HLS10_PPS
@@ -112,9 +106,6 @@ public:
 #endif
 #endif
 
-#if H_3D
-  Void  codePPSExtension        ( TComPPS* pcPPS );
-#endif
 
   Void  codeSliceHeader         ( TComSlice* pcSlice );
   Void  codePTL                 ( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
@@ -128,25 +119,9 @@ public:
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if MTK_SINGLE_DEPTH_MODE_I0095
-  Void codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
  
-#if H_3D_ARP
-  Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if H_3D_IC
-  Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if H_3D_INTER_SDC
-  Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if H_3D_DBBP
-  Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

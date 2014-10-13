@@ -102,10 +102,6 @@ TEncGOP::TEncGOP()
   m_layerId      = 0;
   m_viewId       = 0;
   m_pocLastCoded = -1; 
-#if H_3D
-  m_viewIndex  =   0; 
-  m_isDepth = false;
-#endif
 #endif
 #if FIX1172
   m_associatedIRAPType = NAL_UNIT_CODED_SLICE_IDR_N_LP;
@@ -154,17 +150,6 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_ivPicLists           = pcTEncTop->getIvPicLists(); 
   m_layerId              = pcTEncTop->getLayerId();
   m_viewId               = pcTEncTop->getViewId();
-#if H_3D
-  m_viewIndex            = pcTEncTop->getViewIndex();
-  m_isDepth              = pcTEncTop->getIsDepth();
-#endif
-#endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-  m_aICEnableCandidate           = pcTEncTop->getICEnableCandidate(); 
-  m_aICEnableNum           = pcTEncTop->getICEnableNum(); 
-#endif
-#if KWU_FIX_URQ
-  m_pcRateCtrl           = pcTEncTop->getRateCtrl();
 #endif
 }
 
@@ -651,15 +636,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPicSetInterLayer ( &m_refPicSetInterLayer0, &m_refPicSetInterLayer1 ); 
     pcPic  ->setLayerId     ( getLayerId()   );
     pcPic  ->setViewId      ( getViewId()    );    
-#if !H_3D
     pcSlice->setLayerId     ( getLayerId() );
     pcSlice->setViewId      ( getViewId()  );    
     pcSlice->setVPS         ( m_pcEncTop->getVPS() );
-#else
-    pcPic  ->setViewIndex   ( getViewIndex() ); 
-    pcPic  ->setIsDepth( getIsDepth() );
-    pcSlice->setCamparaSlice( pcPic->getCodedScale(), pcPic->getCodedOffset() );    
-#endif
 #endif 
     //set default slice level flag to the same as SPS level flag
     pcSlice->setLFCrossSliceBoundaryFlag(  pcSlice->getPPS()->getLoopFilterAcrossSlicesEnabledFlag()  );
@@ -936,44 +915,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
-    TEncTop* pcEncTop = (TEncTop*) m_pcCfg;
-    bool enableSingleDepthMode=false;
-    if(pcEncTop->getUseSingleDepthMode())
-    {
-      if(pcSlice->getIsDepth())
-      {
-        enableSingleDepthMode=true;
-      }
-    }
-    pcSlice->setApplySingleDepthMode(enableSingleDepthMode);
-#endif    
-#if H_3D_ARP
-    //GT: This seems to be broken when layerId in vps is not equal to layerId in nuh
-    pcSlice->setARPStepNum(m_ivPicLists);
-    if(pcSlice->getARPStepNum() > 1)
-    {
-      for(Int iLayerId = 0; iLayerId < getLayerId(); iLayerId ++ )
-      {
-        Int  iViewIdx =   pcSlice->getVPS()->getViewIndex(iLayerId);
-        Bool bIsDepth = ( pcSlice->getVPS()->getDepthId  ( iLayerId ) == 1 );
-        if( iViewIdx<getViewIndex() && !bIsDepth )
-        {
-          pcSlice->setBaseViewRefPicList( m_ivPicLists->getPicList( iLayerId ), iViewIdx );
-        }
-      }
-    }
-#endif
-#if H_3D
-    pcSlice->setIvPicLists( m_ivPicLists );         
-#if H_3D_IV_MERGE    
-    assert( !m_pcEncTop->getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
-#endif    
-#endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-    pcSlice->setICEnableCandidate( m_aICEnableCandidate );         
-    pcSlice->setICEnableNum( m_aICEnableNum );         
-#endif
     //  Slice info. refinement
 #if H_MV
     if ( pcSlice->getSliceType() == B_SLICE )
@@ -1024,10 +965,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPOCList();
 
     pcSlice->setList1IdxToList0Idx();
-#if H_3D_TMVP
-    if(pcSlice->getLayerId())
-      pcSlice->generateAlterRefforTMVP();
-#endif
     if (m_pcEncTop->getTMVPModeId() == 2)
     {
       if (iGOPid == 0) // first picture in SOP (i.e. forward B)
@@ -1058,40 +995,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
 #endif
 
-#if H_3D_VSO
-  // Should be moved to TEncTop !!! 
-  Bool bUseVSO = m_pcEncTop->getUseVSO();
-  
-  TComRdCost* pcRdCost = m_pcEncTop->getRdCost();   
-
-  pcRdCost->setUseVSO( bUseVSO );
-
-  // SAIT_VSO_EST_A0033
-  pcRdCost->setUseEstimatedVSD( m_pcEncTop->getUseEstimatedVSD() );
-
-  if ( bUseVSO )
-  {
-    Int iVSOMode = m_pcEncTop->getVSOMode();
-    pcRdCost->setVSOMode( iVSOMode  );
-    pcRdCost->setAllowNegDist( m_pcEncTop->getAllowNegDist() );
-
-    // SAIT_VSO_EST_A0033
-#if H_3D_FCO
-    Bool flagRec;
-    flagRec =  ((m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), true) == NULL) ? false: true);
-    pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false, pcSlice->getPOC(), flagRec ) );
-    pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true, pcSlice->getPOC(), false ) );
-#else
-    pcRdCost->setVideoRecPicYuv( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), false , pcSlice->getPOC(), true ) );
-    pcRdCost->setDepthPicYuv   ( m_pcEncTop->getIvPicLists()->getPicYuv( pcSlice->getViewIndex(), true  , pcSlice->getPOC(), false ) );
-#endif
-
-    // LGE_WVSO_A0119
-    Bool bUseWVSO  = m_pcEncTop->getUseWVSO();
-    pcRdCost->setUseWVSO( bUseWVSO );
-
-  }
-#endif
     /////////////////////////////////////////////////////////////////////////////////////////////////// Compress a slice
     //  Slice compression
     if (m_pcCfg->getUseASR())
@@ -1140,12 +1043,6 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
       m_pcRateCtrl->initRCPic( frameLevel );
 
-#if KWU_RC_MADPRED_E0227
-      if(m_pcCfg->getLayerId() != 0)
-      {
-        m_pcRateCtrl->getRCPic()->setIVPic( m_pcEncTop->getEncTop()->getTEncTop(0)->getRateCtrl()->getRCPic() );
-      }
-#endif
 
       estimatedBits = m_pcRateCtrl->getRCPic()->getTargetBits();
 
@@ -1181,22 +1078,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
       else    // normal case
       {
-#if KWU_RC_MADPRED_E0227
-        if(m_pcRateCtrl->getLayerID() != 0)
-        {
-          list<TEncRCPic*> listPreviousPicture = m_pcRateCtrl->getPicList();
-          lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambdaIV( listPreviousPicture, pcSlice->getPOC() );
-          sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture );
-        }
-        else
-        {
-#endif
         list<TEncRCPic*> listPreviousPicture = m_pcRateCtrl->getPicList();
         lambda  = m_pcRateCtrl->getRCPic()->estimatePicLambda( listPreviousPicture, pcSlice->getSliceType());
         sliceQP = m_pcRateCtrl->getRCPic()->estimatePicQP( lambda, listPreviousPicture );
-#if KWU_RC_MADPRED_E0227
-        }
-#endif
       }
 
       sliceQP = Clip3( -pcSlice->getSPS()->getQpBDOffsetY(), MAX_QP, sliceQP );
@@ -1324,29 +1208,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     startCUAddrSliceIdx++;
     m_storedStartCUAddrForEncodingSliceSegment.push_back(nextCUAddr);
     startCUAddrSliceSegmentIdx++;
-#if H_3D_NBDV
-      if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
-      {
-        Int iColPoc = pcSlice->getRefPOC(RefPicList(1-pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
-        pcPic->setNumDdvCandPics(pcPic->getDisCandRefPictures(iColPoc));
-      }
-#endif
-#if H_3D
-      pcSlice->setDepthToDisparityLUTs(); 
 
-#endif
-
-#if H_3D_NBDV
-      if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
-      {
-        pcPic->checkTemporalIVRef();
-      }
-
-      if(pcSlice->getIsDepth())
-      {
-        pcPic->checkTextureRef();
-      }
-#endif
     while(nextCUAddr<uiRealEndAddress) // determine slice boundaries
     {
       pcSlice->setNextSlice       ( false );
@@ -1469,11 +1331,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       {
         pcSlice->getSPS()->getVuiParameters()->setHrdParametersPresentFlag( true );
       }
-#if !H_3D
       m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());
-#else
-      m_pcEntropyCoder->encodeSPS(pcSlice->getSPS(), pcSlice->getViewIndex(), pcSlice->getIsDepth() );
-#endif
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
@@ -1483,19 +1341,12 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
       nalu = NALUnit(NAL_UNIT_PPS);
 #endif
-#if PPS_FIX_DEPTH
-      if(!pcSlice->getIsDepth() || !pcSlice->getViewIndex() )
-      {
-#endif
       m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
       m_pcEntropyCoder->encodePPS(pcSlice->getPPS());
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;
       
-#if PPS_FIX_DEPTH
-      }
-#endif
       xCreateLeadingSEIMessages(accessUnit, pcSlice->getSPS());
 
       m_bSeqFirst = false;
@@ -2027,12 +1878,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           }
         }
       } // end iteration over slices
-#if H_3D
-      pcPic->compressMotion(2); 
-#endif
-#if !H_3D
       pcPic->compressMotion(); 
-#endif
 #if H_MV
       m_pocLastCoded = pcPic->getPOC();
 #endif
@@ -2451,11 +2297,7 @@ Void TEncGOP::printOutSummary(UInt uiNumAllPicCoded, bool isField)
   printf("\nRVM: %.3lf\n" , xCalculateRVM());
 }
 #endif
-#if H_3D_VSO
-Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, Dist64& ruiDist, UInt64& ruiBits )
-#else
 Void TEncGOP::preLoopFilterPicAll( TComPic* pcPic, UInt64& ruiDist, UInt64& ruiBits )
-#endif
 {
   TComSlice* pcSlice = pcPic->getSlice(pcPic->getCurrSliceIdx());
   Bool bCalcDist = false;
@@ -2569,11 +2411,7 @@ Void TEncGOP::xGetBuffer( TComList<TComPic*>&      rcListPic,
   return;
 }
 
-#if H_3D_VSO
-Dist64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
-#else
 UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
-#endif
 {
   Int     x, y;
   Pel*  pSrc0   = pcPic0 ->getLumaAddr();
@@ -2585,11 +2423,7 @@ UInt64 TEncGOP::xFindDistortionFrame (TComPicYuv* pcPic0, TComPicYuv* pcPic1)
   Int   iWidth  = pcPic0->getWidth();
   Int   iHeight = pcPic0->getHeight();
   
-#if H_3D_VSO
-  Dist64  uiTotalDiff = 0;
-#else
   UInt64  uiTotalDiff = 0;
-#endif
   
   for( y = 0; y < iHeight; y++ )
   {
@@ -2705,24 +2539,6 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
     pRec += iStride;
   }
   
-#if H_3D_VSO
-#if H_3D_VSO_SYNTH_DIST_OUT
-  if ( m_pcRdCost->getUseRenModel() )
-  {
-    unsigned int maxval = 255 * (1<<(g_uiBitDepth + g_uiBitIncrement -8));
-    Double fRefValueY = (double) maxval * maxval * iSize;
-    Double fRefValueC = fRefValueY / 4.0;
-    TRenModel*  pcRenModel = m_pcEncTop->getEncTop()->getRenModel();
-    Int64 iDistVSOY, iDistVSOU, iDistVSOV;
-    pcRenModel->getTotalSSE( iDistVSOY, iDistVSOU, iDistVSOV );
-    dYPSNR = ( iDistVSOY ? 10.0 * log10( fRefValueY / (Double) iDistVSOY ) : 99.99 );
-    dUPSNR = ( iDistVSOU ? 10.0 * log10( fRefValueC / (Double) iDistVSOU ) : 99.99 );
-    dVPSNR = ( iDistVSOV ? 10.0 * log10( fRefValueC / (Double) iDistVSOV ) : 99.99 );
-  }
-  else
-  {
-#endif
-#endif
     iHeight >>= 1;
   iWidth  >>= 1;
   iStride >>= 1;
@@ -2761,11 +2577,6 @@ Void TEncGOP::xCalculateAddPSNR( TComPic* pcPic, TComPicYuv* pcPicD, const Acces
   dYPSNR            = ( uiSSDY ? 10.0 * log10( fRefValueY / (Double)uiSSDY ) : 99.99 );
   dUPSNR            = ( uiSSDU ? 10.0 * log10( fRefValueC / (Double)uiSSDU ) : 99.99 );
   dVPSNR            = ( uiSSDV ? 10.0 * log10( fRefValueC / (Double)uiSSDV ) : 99.99 );
-#if H_3D_VSO
-#if H_3D_VSO_SYNTH_DIST_OUT
-}
-#endif 
-#endif
   /* calculate the size of the access unit, excluding:
    *  - any AnnexB contributions (start_code_prefix, zero_byte, etc.,)
    *  - SEI NAL units

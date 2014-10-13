@@ -45,13 +45,7 @@
 #include "TLibVideoIO/TVideoIOYuv.h"
 #include "TLibCommon/AccessUnit.h"
 #include "TAppEncCfg.h"
-#if H_3D
-#include "../../Lib/TLibRenderer/TRenTop.h"
-#endif
 
-#if KWU_RC_MADPRED_E0227
-class TEncTop;
-#endif
 //! \ingroup TAppEncoder
 //! \{
 
@@ -89,16 +83,9 @@ private:
   Int                        m_iFrameRcvd;                  ///< number of received frames
 #endif
 
-#if H_3D
-  TComDLT                    m_dlt;                         ///< dlt
-#endif
 
   UInt m_essentialBytes;
   UInt m_totalBytes;
-#if H_3D_VSO
-  TRenTop                     m_cRendererTop; 
-  TRenModel                   m_cRendererModel;   
-#endif
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -147,13 +134,6 @@ protected:
 #if H_MV_HLS10_GEN_FIX
   Bool xLayerIdInTargetEncLayerIdList( Int nuhLayerId );
 #endif
-#endif
-#if H_3D
-  Void xSetVPSExtension2( TComVPS& vps );
-  Void xDeriveDltArray( TComVPS& vps, TComDLT& dlt );
-#endif
-#if H_3D_DIM_DLT
-  Void  xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt);
 #endif
 public:
   TAppEncTop();

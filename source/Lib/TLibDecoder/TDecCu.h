@@ -62,9 +62,6 @@ private:
   TComYuv**           m_ppcYuvReco;       ///< array of prediction & reconstruction buffer
   TComDataCU**        m_ppcCU;            ///< CU data array
   
-#if H_3D_DBBP
-  TComYuv**           m_ppcYuvRecoDBBP;
-#endif
   
   // access channel
   TComTrQuant*        m_pcTrQuant;
@@ -101,9 +98,6 @@ protected:
   
   Void xReconInter              ( TComDataCU* pcCU, UInt uiDepth );
   
-#if H_3D_DBBP
-  Void xReconInterDBBP          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   
   Void  xReconIntraQT           ( TComDataCU* pcCU, UInt uiDepth );
   Void  xIntraRecLumaBlk        ( TComDataCU* pcCU, UInt uiTrDepth, UInt uiAbsPartIdx, TComYuv* pcRecoYuv, TComYuv* pcPredYuv, TComYuv* pcResiYuv );
@@ -122,15 +116,6 @@ protected:
   Bool getdQPFlag               ()                        { return m_bDecodeDQP;        }
   Void setdQPFlag               ( Bool b )                { m_bDecodeDQP = b;           }
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt depth);
-#if MTK_SINGLE_DEPTH_MODE_I0095
-  Void xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_DIM_SDC
-  Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_INTER_SDC
-  Void xReconInterSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
 };
 
 //! \}

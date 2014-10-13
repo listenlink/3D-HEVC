@@ -51,20 +51,6 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
-#if MTK_SINGLE_DEPTH_MODE_I0095
-Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  if ( !pcCU->getSlice()->getIsDepth() )
-  {
-    return;
-  }
-  if(!pcCU->getSlice()->getApplySingleDepthMode())
-  {
-     return;
-  }
-  m_pcEntropyDecoderIf->parseSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
-}
-#endif
 Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );
@@ -99,42 +85,7 @@ Void TDecEntropy::decodeMergeIndex( TComDataCU* pcCU, UInt uiPartIdx, UInt uiAbs
   pcCU->setMergeIndexSubParts( uiMergeIndex, uiAbsPartIdx, uiPartIdx, uiDepth );
 }
 
-#if H_3D_ARP
-Void TDecEntropy::decodeARPW( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  if( !pcCU->getSlice()->getARPStepNum() || pcCU->isIntra( uiAbsPartIdx ) )
-  {
-    return;
-  }
 
-  if( pcCU->getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )
-  {
-    pcCU->setARPWSubParts( 0 , uiAbsPartIdx, uiDepth );
-  }
-  else
-  {
-    m_pcEntropyDecoderIf->parseARPW( pcCU , uiAbsPartIdx , uiDepth );
-  }
-}
-#endif
-
-#if H_3D_IC
-Void TDecEntropy::decodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  pcCU->setICFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
-
-  if ( pcCU->isIntra( uiAbsPartIdx ) || ( pcCU->getSlice()->getViewIndex() == 0 ) || pcCU->getSlice()->getIsDepth() || pcCU->getARPW( uiAbsPartIdx ) > 0 )
-  {
-    return;
-  }
-
-  if( !pcCU->getSlice()->getApplyIC() )
-    return;
-
-  if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
-    m_pcEntropyDecoderIf->parseICFlag( pcCU, uiAbsPartIdx, uiDepth );
-}
-#endif
 
 Void TDecEntropy::decodeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -150,50 +101,6 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
-#if H_3D_DBBP
-
-#if SEC_DBBP_EXPLICIT_SIG_I0077
-#if SEC_DBBP_DISALLOW_8x8_I0078
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 )
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) )
-#endif
-#else
-#if SEC_DBBP_DISALLOW_8x8_I0078
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getWidth(uiAbsPartIdx) > 8 )
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) )
-#endif
-#endif
-  {
-    decodeDBBPFlag(pcCU, uiAbsPartIdx, uiDepth);
-#if !SEC_DBBP_EXPLICIT_SIG_I0077    
-    if( pcCU->getDBBPFlag(uiAbsPartIdx) )
-    {
-      
-      // get collocated depth block
-      UInt uiDepthStride = 0;
-      Pel* pDepthPels = NULL;
-      pDepthPels = pcCU->getVirtualDepthBlock(uiAbsPartIdx, pcCU->getWidth(uiAbsPartIdx), pcCU->getHeight(uiAbsPartIdx), uiDepthStride);
-      
-      AOF( pDepthPels != NULL );
-      AOF( uiDepthStride != 0 );
-      
-      // derive true partitioning for this CU based on depth
-      // (needs to be done in parsing process as motion vector predictors are also derived during parsing)
-      PartSize eVirtualPartSize = m_pcPrediction->getPartitionSizeFromDepth(pDepthPels, uiDepthStride, pcCU->getWidth(uiAbsPartIdx));
-      AOF( eVirtualPartSize != SIZE_NONE );
-      
-      pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
-      
-      // make sure that DBBP flag is set for both segments
-      UInt uiPUOffset = ( g_auiPUOffset[UInt( eVirtualPartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
-      pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx, 0, uiDepth);
-      pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx+uiPUOffset, 1, uiDepth);
-    }
-#endif
-  }
-#endif
 }
 
 Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU )
@@ -201,9 +108,6 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
-#if H_3D_DIM_SDC
-    if(!pcCU->getSDCFlag(uiAbsPartIdx))
-#endif
     decodeIntraDirModeChroma( pcCU, uiAbsPartIdx, uiDepth );
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
@@ -253,20 +157,8 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   UInt uiNumPU = ( ePartSize == SIZE_2Nx2N ? 1 : ( ePartSize == SIZE_NxN ? 4 : 2 ) );
   UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
 
-#if H_3D_IV_MERGE
-  TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS_MEM << 1]; // double length for mv of both lists
-  UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS_MEM];
-#else
   TComMvField cMvFieldNeighbours[MRG_MAX_NUM_CANDS << 1]; // double length for mv of both lists
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
-#endif
-#if H_3D_SPIVMP
-  Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
-  TComMvField*  pcMvFieldSP;
-  UChar* puhInterDirSP;
-  pcMvFieldSP = new TComMvField[pcCU->getPic()->getPicSym()->getNumPartition()*2]; 
-  puhInterDirSP = new UChar[pcCU->getPic()->getPicSym()->getNumPartition()]; 
-#endif
   for ( UInt ui = 0; ui < pcCU->getSlice()->getMaxNumMergeCand(); ui++ )
   {
     uhInterDirNeighbours[ui] = 0;
@@ -276,9 +168,6 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0 );
   pcSubCU->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_1 );
-#if H_3D_IV_MERGE
-  pcSubCU->copyDVInfoFrom( pcCU, uiAbsPartIdx);
-#endif
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
 #if H_MV_ENC_DEC_TRAC
@@ -292,63 +181,12 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
     {
       decodeMergeIndex( pcCU, uiPartIdx, uiSubPartIdx, uiDepth );
       UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
-#if H_3D_ARP
-      decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#if H_3D_IC
-      decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#if H_3D_DBBP
-      if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 && pcCU->getDBBPFlag(uiAbsPartIdx) == false )
-#else
       if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 ) 
-#endif
       {
         pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
         if ( !isMerged )
         {
-#if H_3D_VSP
-          Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
-          memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-#if !FIX_TICKET_79
-          InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-#endif
-#if H_3D_SPIVMP
-          memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
-#endif
-          pcSubCU->initAvailableFlags();
-          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
-          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours
-#if !FIX_TICKET_79
-            , inheritedVSPDisInfo
-#endif
-#if H_3D_SPIVMP
-            , pcMvFieldSP, puhInterDirSP
-#endif
-            , numValidMergeCand );
-          pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
-#if H_3D_SPIVMP
-            , bSPIVMPFlag
-#endif
-            , numValidMergeCand );
-          pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
-
-#if !FIX_TICKET_79
-          if(vspFlag[uiMergeIndex])
-          {
-            pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
-          }
-#endif
-#else
-#if H_3D
-          pcSubCU->initAvailableFlags();
-          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
-          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-
-#else
           pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
-#endif
-#endif
           isMerged = true;
         }
         pcSubCU->setPartSizeSubParts( ePartSize, 0, uiDepth );
@@ -356,61 +194,10 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       else
       {
         uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
-#if H_3D_VSP
-        Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
-        memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-#if !FIX_TICKET_79
-        InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-#endif
-#if H_3D_SPIVMP
-        memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
-#endif
-        pcSubCU->initAvailableFlags();
         pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours
-#if !FIX_TICKET_79
-          , inheritedVSPDisInfo
-#endif
-#if H_3D_SPIVMP
-          , pcMvFieldSP, puhInterDirSP
-#endif
-          ,numValidMergeCand, uiMergeIndex );
-        pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
-#if H_3D_SPIVMP
-          , bSPIVMPFlag
-#endif
-          ,numValidMergeCand );
-        pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
-#if !FIX_TICKET_79
-        if(vspFlag[uiMergeIndex])
-        {
-          pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiSubPartIdx, uiPartIdx, uiDepth);
-        }
-#endif
-#else
-#if H_3D
-        pcSubCU->initAvailableFlags();
-        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-#else
-        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
-#endif
-#endif
       }
       pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
 
-#if H_3D_DDD
-      if( uiMergeIndex == pcSubCU->getUseDDDCandIdx() )
-      {
-          assert( pcCU->getSlice()->getViewIndex() != 0 );
-          pcCU->setUseDDD( true, uiSubPartIdx, uiPartIdx, uiDepth );
-          pcCU->setDDDepthSubParts( pcSubCU->getDDTmpDepth(),uiSubPartIdx, uiPartIdx, uiDepth );
-      }
-      else
-      {
-          pcCU->setUseDDD( false, uiSubPartIdx, uiPartIdx, uiDepth );
-      }
-#endif
 
       TComMv cTmpMv( 0, 0 );
       for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
@@ -421,49 +208,8 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiSubPartIdx, uiPartIdx, uiDepth);
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
           pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
-#if H_3D_VSP
-#if H_3D_DBBP
-          if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 && !pcCU->getDBBPFlag( uiAbsPartIdx ) )
-#else
-          if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 )
-#endif
-          {
-            if ( uhInterDirNeighbours[ uiMergeIndex ] & (1<<uiRefListIdx) )
-            {
-              UInt dummy;
-              Int vspSize;
-              Int width, height;
-              pcCU->getPartIndexAndSize( uiPartIdx, dummy, width, height, uiSubPartIdx, pcCU->getTotalNumPart()==256 );
-              pcCU->setMvFieldPUForVSP( pcCU, uiSubPartIdx, width, height, RefPicList( uiRefListIdx ), cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getRefIdx(), vspSize );
-              pcCU->setVSPFlag( uiSubPartIdx, vspSize );
-            }
-          }
-#endif
         }
       }
-#if H_3D_SPIVMP
-      pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );  
-      if (bSPIVMPFlag[uiMergeIndex] != 0)
-      {
-        Int iWidth, iHeight;
-        UInt uiIdx;
-        pcCU->getPartIndexAndSize( uiPartIdx, uiIdx, iWidth, iHeight, uiSubPartIdx, true );
-
-        UInt uiSPAddr;
-
-        Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
-
-        pcCU->getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
-
-        for (Int iPartitionIdx = 0; iPartitionIdx < iNumSP; iPartitionIdx++)
-        {
-          pcCU->getSPAbsPartIdx(uiSubPartIdx, iSPWidth, iSPHeight, iPartitionIdx, iNumSPInOneLine, uiSPAddr);
-          pcCU->setInterDirSP(puhInterDirSP[iPartitionIdx], uiSPAddr, iSPWidth, iSPHeight);
-          pcCU->getCUMvField( REF_PIC_LIST_0 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx], iSPWidth, iSPHeight);
-          pcCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
-        }
-      }
-#endif
     }
     else
     {
@@ -477,28 +223,14 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           decodeMVPIdxPU   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
         }
       }
-#if H_3D_ARP
-      decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#if H_3D_IC
-      decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
     }
-#if H_3D_VSP && !FIX_TICKET_75
-    if ( (pcCU->getInterDir(uiSubPartIdx) == 3) && pcSubCU->isBipredRestriction(uiPartIdx) && (pcCU->getVSPFlag(uiSubPartIdx) == 0))
-#else
     if ( (pcCU->getInterDir(uiSubPartIdx) == 3) && pcSubCU->isBipredRestriction(uiPartIdx) )
-#endif
     {
       pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( TComMv(0,0), ePartSize, uiSubPartIdx, uiDepth, uiPartIdx);
       pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( -1, ePartSize, uiSubPartIdx, uiDepth, uiPartIdx);
       pcCU->setInterDirSubParts( 1, uiSubPartIdx, uiPartIdx, uiDepth);
     }
   }
-#if H_3D_SPIVMP
-  delete[] pcMvFieldSP;
-  delete[] puhInterDirSP;
-#endif
   return;
 }
 
@@ -823,46 +555,6 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   UInt uiMinCoeffSize = pcCU->getPic()->getMinCUWidth()*pcCU->getPic()->getMinCUHeight();
   UInt uiLumaOffset   = uiMinCoeffSize*uiAbsPartIdx;
   UInt uiChromaOffset = uiLumaOffset>>2;
-#if H_3D_DIM_SDC
-  if( pcCU->getSDCFlag( uiAbsPartIdx ) && pcCU->isIntra( uiAbsPartIdx) )
-  {
-    assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
-    assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
-    assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
-  }
-
-#if H_3D_INTER_SDC
-  if( pcCU->getSDCFlag( uiAbsPartIdx ) && !pcCU->isIntra( uiAbsPartIdx) )
-  {
-    assert( !pcCU->isSkipped( uiAbsPartIdx ) );
-    assert( !pcCU->isIntra( uiAbsPartIdx) );
-    assert( pcCU->getSlice()->getIsDepth() );
-  }
-#endif
-  if( pcCU->getSlice()->getIsDepth() && ( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) ) )
-  {
-    Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
-    UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
-  
-    if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
-    {
-      for( Int iPart = 0; iPart < iPartNum; iPart++ )
-      {
-        if( getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx + uiPartOffset*iPart ) ) < DIM_NUM_TYPE ) 
-        {
-          m_pcEntropyDecoderIf->parseDeltaDC( pcCU, uiAbsPartIdx + uiPartOffset*iPart, uiDepth + ( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) );
-        }
-      }
-    }
-    else
-    {
-      m_pcEntropyDecoderIf->parseDeltaDC( pcCU, uiAbsPartIdx, uiDepth );
-      return;
-    }
-  }
-#endif
 
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
@@ -888,31 +580,5 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   xDecodeTransform( pcCU, uiLumaOffset, uiChromaOffset, uiAbsPartIdx, uiDepth, uiWidth, uiHeight, 0, bCodeDQP, getQuadtreeTULog2MinSizeInCU );
 }
 
-#if H_3D_INTER_SDC
-Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  pcCU->setSDCFlagSubParts( false, uiAbsPartIdx, uiDepth );
-
-  if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) ) || 
-    ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getVpsDepthModesFlag( pcCU->getSlice()->getLayerIdInVps() ) ) )
-  {
-    return;
-  }
-
-  if( !pcCU->getSlice()->getIsDepth() || pcCU->getPartitionSize( uiAbsPartIdx ) != SIZE_2Nx2N || pcCU->isSkipped( uiAbsPartIdx ) )
-  {
-    return;
-  }
-
-  assert( pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N || ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->isSkipped( uiAbsPartIdx ) ) );
-  m_pcEntropyDecoderIf->parseSDCFlag( pcCU, uiAbsPartIdx, uiDepth );
-}
-#endif
-#if H_3D_DBBP
-Void TDecEntropy::decodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  m_pcEntropyDecoderIf->parseDBBPFlag( pcCU, uiAbsPartIdx, uiDepth );
-}
-#endif
 
 //! \}

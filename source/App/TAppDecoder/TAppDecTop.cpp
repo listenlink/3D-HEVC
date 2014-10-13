@@ -66,9 +66,6 @@ TAppDecTop::TAppDecTop()
     m_layerInitilizedFlags[i] = false; 
   }
 #endif
-#if H_3D
-    m_pScaleOffsetFile  = 0;
-#endif
 
 #if H_MV
     m_markedForOutput = false; 
@@ -102,13 +99,6 @@ Void TAppDecTop::destroy()
     free (m_pchReconFile);
     m_pchReconFile = NULL;
   }
-#if H_3D
-  if (m_pchScaleOffsetFile)
-  {
-    free (m_pchScaleOffsetFile);
-    m_pchScaleOffsetFile = NULL; 
-  }
-#endif
 }
 
 // ====================================================================================================================
@@ -138,13 +128,6 @@ Void TAppDecTop::decode()
     exit(EXIT_FAILURE);
   }
 
-#if H_3D
-  if( m_pchScaleOffsetFile ) 
-  { 
-    m_pScaleOffsetFile = ::fopen( m_pchScaleOffsetFile, "wt" ); 
-    AOF( m_pScaleOffsetFile ); 
-  }
-#endif
   InputByteStream bytestream(bitstreamFile);
 
   // create & initialize internal classes
@@ -268,12 +251,6 @@ Void TAppDecTop::decode()
           }
 #endif
         }
-#if H_3D
-        if (nalu.m_nalUnitType == NAL_UNIT_VPS )
-        {                  
-          m_cCamParsCollector.init( m_pScaleOffsetFile, m_tDecTop[decIdx]->getPrefetchedVPS() );
-        }       
-#endif
         bNewPicture       = ( newSliceDiffLayer || newSliceDiffPoc ) && !sliceSkippedFlag; 
         if ( nalu.isSlice() && firstSlice && !sliceSkippedFlag )        
         {
@@ -348,17 +325,6 @@ Void TAppDecTop::decode()
       m_cTDecTop.checkNoOutputPriorPics( pcListPic );
     }
 #endif
-#endif
-#if H_3D
-    if ( allLayersDecoded || !bitstreamFile )
-    {
-      for( Int dI = 0; dI < m_numDecoders; dI++ )
-      {
-        TComPic* picLastCoded = m_ivPicLists.getPic( m_tDecTop[dI]->getLayerId(), pocLastPic );
-        assert( picLastCoded != NULL );        
-        picLastCoded->compressMotion(1);
-      }
-    }
 #endif
 
     if( pcListPic )
@@ -472,12 +438,6 @@ Void TAppDecTop::decode()
     }
   }
 #if H_MV
-#if H_3D
-  if( m_cCamParsCollector.isInitialized() )
-  {
-    m_cCamParsCollector.setSlice( 0 );
-  }
-#endif
   for(UInt decIdx = 0; decIdx < m_numDecoders; decIdx++)
   {
     xFlushOutput( m_tDecTop[decIdx]->getListPic(), decIdx );
@@ -501,9 +461,6 @@ Void TAppDecTop::xCreateDecLib()
 #if H_MV
   // initialize global variables
   initROM();  
-#if H_3D_DIM_DMM
-  initWedgeLists();
-#endif
 #else
   // create decoder class
   m_cTDecTop.create();
@@ -541,13 +498,6 @@ Void TAppDecTop::xDestroyDecLib()
   
   // destroy decoder class
   m_cTDecTop.destroy();
-#endif
-#if H_3D
-  m_cCamParsCollector.uninit();
-  if( m_pScaleOffsetFile ) 
-  { 
-    ::fclose( m_pScaleOffsetFile ); 
-  }
 #endif
 }
 
@@ -1059,9 +1009,6 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     m_tDecTop[ decIdx ]->setLayerInitilizedFlags( m_layerInitilizedFlags );
     m_tDecTop[ decIdx ]->setTargetOptLayerSetIdx( m_targetOptLayerSetIdx );    
 
-#if H_3D
-   m_tDecTop[ decIdx ]->setCamParsCollector( &m_cCamParsCollector );
-#endif
 
     // append pic list of new decoder to PicLists 
     assert( m_ivPicLists.size() == m_numDecoders );
