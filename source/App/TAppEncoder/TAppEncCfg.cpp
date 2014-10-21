@@ -435,10 +435,16 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
   
   // Profile and level
+#if H_MV
   ("Profile", cfg_profiles,   string(""),           "Profile in VpsProfileTierLevel (Indication only)")
   ("Level",   cfg_levels ,    string(""),           "Level indication in VpsProfileTierLevel (Indication only)")
   ("Tier",    cfg_tiers  ,    string(""),           "Tier indication in VpsProfileTierLevel (Indication only)")
   ("InblFlag",m_inblFlag ,    std::vector<Bool>(0), "InblFlags in VpsProfileTierLevel (Indication only)" )
+#else
+  ("Profile", m_profile,   Profile::NONE, "Profile to be used when encoding (Incomplete)")
+  ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1 (Incomplete)")
+  ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level")
+#endif
   ("ProgressiveSource", m_progressiveSourceFlag, false, "Indicate that source is progressive")
   ("InterlacedSource",  m_interlacedSourceFlag,  false, "Indicate that source is interlaced")
   ("NonPackedSource",   m_nonPackedConstraintFlag, false, "Indicate that source does not contain frame packing")

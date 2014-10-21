@@ -698,9 +698,8 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 
   UInt uiSymbol;
-  Bool bParseSplitFlag    = true;
-
 #if H_3D_QTLPC
+  Bool bParseSplitFlag    = true;
 
   TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
   Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());

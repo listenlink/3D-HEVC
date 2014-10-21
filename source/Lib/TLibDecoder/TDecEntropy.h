@@ -131,7 +131,7 @@ public:
   virtual Void parseTransformSkipFlags ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt width, UInt height, UInt uiDepth, TextType eTType) = 0;
   virtual Void updateContextTables( SliceType eSliceType, Int iQp ) = 0;
   
-  virtual ~TDecEntropyIf() {}; 
+  virtual ~TDecEntropyIf() {}
 };
 
 /// entropy decoder class
