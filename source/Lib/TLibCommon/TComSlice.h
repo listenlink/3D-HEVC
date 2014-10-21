@@ -1969,13 +1969,13 @@ private:
   Bool        m_entropyCodingSyncEnabledFlag;  //!< Indicates the presence of wavefronts
   
   Bool     m_loopFilterAcrossTilesEnabledFlag;
-  Int      m_uniformSpacingFlag;
-  Int      m_iNumColumnsMinus1;
-  UInt*    m_puiColumnWidth;
-  Int      m_iNumRowsMinus1;
-  UInt*    m_puiRowHeight;
+  Bool             m_uniformSpacingFlag;
+  Int              m_numTileColumnsMinus1;
+  Int              m_numTileRowsMinus1;
+  std::vector<Int> m_tileColumnWidth;
+  std::vector<Int> m_tileRowHeight;
 
-  Int      m_iNumSubstreams;
+  Int      m_numSubstreams;
 
   Int      m_signHideFlag;
 
@@ -2072,44 +2072,24 @@ public:
   Bool    getLoopFilterAcrossTilesEnabledFlag  ()          { return m_loopFilterAcrossTilesEnabledFlag;   }
   Bool    getDependentSliceSegmentsEnabledFlag() const     { return m_dependentSliceSegmentsEnabledFlag; }
   Void    setDependentSliceSegmentsEnabledFlag(Bool val)   { m_dependentSliceSegmentsEnabledFlag = val; }
-  Bool    getTilesEnabledFlag() const                      { return m_tilesEnabledFlag; }
-  Void    setTilesEnabledFlag(Bool val)                    { m_tilesEnabledFlag = val; }
   Bool    getEntropyCodingSyncEnabledFlag() const          { return m_entropyCodingSyncEnabledFlag; }
   Void    setEntropyCodingSyncEnabledFlag(Bool val)        { m_entropyCodingSyncEnabledFlag = val; }
-  Void     setUniformSpacingFlag            ( Bool b )          { m_uniformSpacingFlag = b; }
-  Bool     getUniformSpacingFlag            ()                  { return m_uniformSpacingFlag; }
-  Void     setNumColumnsMinus1              ( Int i )           { m_iNumColumnsMinus1 = i; }
-  Int      getNumColumnsMinus1              ()                  { return m_iNumColumnsMinus1; }
-  Void     setColumnWidth ( UInt* columnWidth )
-  {
-    if( m_uniformSpacingFlag == 0 && m_iNumColumnsMinus1 > 0 )
-    {
-      m_puiColumnWidth = new UInt[ m_iNumColumnsMinus1 ];
 
-      for(Int i=0; i<m_iNumColumnsMinus1; i++)
-      {
-        m_puiColumnWidth[i] = columnWidth[i];
-      }
-    }
-  }
-  UInt     getColumnWidth  (UInt columnIdx) { return *( m_puiColumnWidth + columnIdx ); }
-  Void     setNumRowsMinus1( Int i )        { m_iNumRowsMinus1 = i; }
-  Int      getNumRowsMinus1()               { return m_iNumRowsMinus1; }
-  Void     setRowHeight    ( UInt* rowHeight )
-  {
-    if( m_uniformSpacingFlag == 0 && m_iNumRowsMinus1 > 0 )
-    {
-      m_puiRowHeight = new UInt[ m_iNumRowsMinus1 ];
+  Void     setTilesEnabledFlag       (Bool val)                             { m_tilesEnabledFlag = val; }
+  Bool     getTilesEnabledFlag       () const                               { return m_tilesEnabledFlag; }
+  Void     setTileUniformSpacingFlag (Bool b)                               { m_uniformSpacingFlag = b; }
+  Bool     getTileUniformSpacingFlag () const                               { return m_uniformSpacingFlag; }
+  Void     setNumTileColumnsMinus1   (Int i)                                { m_numTileColumnsMinus1 = i; }
+  Int      getNumTileColumnsMinus1   () const                               { return m_numTileColumnsMinus1; }
+  Void     setTileColumnWidth        (const std::vector<Int>& columnWidth ) { m_tileColumnWidth = columnWidth; }
+  UInt     getTileColumnWidth        (UInt columnIdx) const                 { return  m_tileColumnWidth[columnIdx]; }
+  Void     setNumTileRowsMinus1      (Int i)                                { m_numTileRowsMinus1 = i; }
+  Int      getTileNumRowsMinus1      () const                               { return m_numTileRowsMinus1; }
+  Void     setTileRowHeight          (const std::vector<Int>& rowHeight)    { m_tileRowHeight = rowHeight;  }
+  UInt     getTileRowHeight          (UInt rowIdx) const                    { return m_tileRowHeight[rowIdx]; }
 
-      for(Int i=0; i<m_iNumRowsMinus1; i++)
-      {
-        m_puiRowHeight[i] = rowHeight[i];
-      }
-    }
-  }
-  UInt     getRowHeight           (UInt rowIdx)    { return *( m_puiRowHeight + rowIdx ); }
-  Void     setNumSubstreams(Int iNumSubstreams)               { m_iNumSubstreams = iNumSubstreams; }
-  Int      getNumSubstreams()                                 { return m_iNumSubstreams; }
+  Void     setNumSubstreams    (Int numSubstreams)                     { m_numSubstreams = numSubstreams; }
+  Int      getNumSubstreams    ()                                      { return m_numSubstreams; }
 
   Void      setSignHideFlag( Int signHideFlag ) { m_signHideFlag = signHideFlag; }
   Int       getSignHideFlag()                    { return m_signHideFlag; }

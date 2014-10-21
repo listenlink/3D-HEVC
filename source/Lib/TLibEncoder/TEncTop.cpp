@@ -853,7 +853,7 @@ Void TEncTop::xInitSPS()
   if (m_cSPS.getVuiParametersPresentFlag())
   {
     TComVUI* pcVUI = m_cSPS.getVuiParameters();
-    pcVUI->setAspectRatioInfoPresentFlag(getAspectRatioIdc() != -1);
+    pcVUI->setAspectRatioInfoPresentFlag(getAspectRatioInfoPresentFlag());
     pcVUI->setAspectRatioIdc(getAspectRatioIdc());
     pcVUI->setSarWidth(getSarWidth());
     pcVUI->setSarHeight(getSarHeight());
@@ -1287,19 +1287,18 @@ Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int 
 
 Void  TEncTop::xInitPPSforTiles()
 {
-  m_cPPS.setUniformSpacingFlag( m_iUniformSpacingIdr );
-  m_cPPS.setNumColumnsMinus1( m_iNumColumnsMinus1 );
-  m_cPPS.setNumRowsMinus1( m_iNumRowsMinus1 );
-  if( m_iUniformSpacingIdr == 0 )
+  m_cPPS.setTileUniformSpacingFlag( m_tileUniformSpacingFlag );
+  m_cPPS.setNumTileColumnsMinus1( m_iNumColumnsMinus1 );
+  m_cPPS.setNumTileRowsMinus1( m_iNumRowsMinus1 );
+  if( !m_tileUniformSpacingFlag )
   {
-    m_cPPS.setColumnWidth( m_puiColumnWidth );
-    m_cPPS.setRowHeight( m_puiRowHeight );
+    m_cPPS.setTileColumnWidth( m_tileColumnWidth );
+    m_cPPS.setTileRowHeight( m_tileRowHeight );
   }
   m_cPPS.setLoopFilterAcrossTilesEnabledFlag( m_loopFilterAcrossTilesEnabledFlag );
 
   // # substreams is "per tile" when tiles are independent.
-  if (m_iWaveFrontSynchro
-    )
+  if (m_iWaveFrontSynchro )
   {
     m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams * (m_iNumColumnsMinus1+1));
   }
@@ -1325,11 +1324,11 @@ Void  TEncCfg::xCheckGSParameters()
     exit( EXIT_FAILURE );
   }
 
-  if( m_iNumColumnsMinus1 && m_iUniformSpacingIdr==0 )
+  if( m_iNumColumnsMinus1 && !m_tileUniformSpacingFlag )
   {
     for(Int i=0; i<m_iNumColumnsMinus1; i++)
     {
-      uiCummulativeColumnWidth += m_puiColumnWidth[i];
+      uiCummulativeColumnWidth += m_tileColumnWidth[i];
     }
 
     if( uiCummulativeColumnWidth >= iWidthInCU )
@@ -1352,10 +1351,10 @@ Void  TEncCfg::xCheckGSParameters()
     exit( EXIT_FAILURE );
   }
 
-  if( m_iNumRowsMinus1 && m_iUniformSpacingIdr==0 )
+  if( m_iNumRowsMinus1 && !m_tileUniformSpacingFlag )
   {
     for(Int i=0; i<m_iNumRowsMinus1; i++)
-      uiCummulativeRowHeight += m_puiRowHeight[i];
+      uiCummulativeRowHeight += m_tileRowHeight[i];
 
     if( uiCummulativeRowHeight >= iHeightInCU )
     {
