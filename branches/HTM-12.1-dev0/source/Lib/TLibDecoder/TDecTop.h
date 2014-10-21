@@ -264,8 +264,7 @@ public:
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay, Bool newLayer );
 #else  
   Bool  decode(InputNALUnit& nalu, Int& iSkipFrame, Int& iPOCLastDisplay);
-#endif
-  
+#endif  
   Void  deletePicBuffer();
 #if H_MV
   TComVPS* getActiveVPS() { return m_parameterSetManagerDecoder.getActiveVPS( ); }

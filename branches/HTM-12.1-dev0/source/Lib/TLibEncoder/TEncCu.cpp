@@ -2271,13 +2271,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
     rpcTempCU->setTrIdxSubParts(0, 0, uhDepth);
   }
 #endif
-
 #if H_3D_VSO // M4
   if( m_pcRdCost->getUseLambdaScaleVSO() )
     rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCostVSO( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
   else
 #endif
-
   rpcTempCU->getTotalCost()  = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
 #if H_3D_INTER_SDC
   TComDataCU *rpcTempCUPre = rpcTempCU;
@@ -2627,15 +2625,13 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
 }
 #endif
-
 #if H_3D_DIM
 Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize, Bool bOnlyIVP )
 #else
 Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize )
 #endif
 {
-  UInt uiDepth = rpcTempCU->getDepth( 0 );
-  
+  UInt uiDepth = rpcTempCU->getDepth( 0 );  
 #if H_3D_VSO // M5
   if( m_pcRdCost->getUseRenModel() )
   {
