@@ -1253,11 +1253,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
   {
     if( i >= pcVPS->getNumLayerSets( ) )    
     {      
-#if !VPS_MISC_UPDATES
-      WRITE_UVLC( pcVPS->getLayerSetIdxForOlsMinus1( i ),      "layer_set_idx_for_ols_minus1[i]" );
-#else
       WRITE_CODE( pcVPS->getLayerSetIdxForOlsMinus1( i ), pcVPS->getLayerSetIdxForOlsMinus1Len( i ) ,      "layer_set_idx_for_ols_minus1[i]" );
-#endif
     }
 
     if ( i > pcVPS->getVpsNumLayerSetsMinus1() || pcVPS->getDefaultOutputLayerIdc() == 2 )
@@ -1579,25 +1575,10 @@ Void TEncCavlc::codeVPSVUI( TComVPS* pcVPS )
 
   if( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() && pcVPSVUI->getVpsNumVideoSignalInfoMinus1() > 0 )
   {
-#if I0045_VPS_VUI_VST_PARAMS
     for( Int i = pcVPS->getVpsBaseLayerInternalFlag() ? 0 : 1; i <=  pcVPS->getMaxLayersMinus1(); i++ )
     {
       WRITE_CODE( pcVPSVUI->getVpsVideoSignalInfoIdx( i ), 4, "vps_video_signal_info_idx" );
     }
-#else
-    for( Int i = 1; i <=  pcVPS->getMaxLayersMinus1(); i++ )
-    {
-      WRITE_CODE( pcVPSVUI->getVpsVideoSignalInfoIdx( i ), 4, "vps_video_signal_info_idx" );
-      assert( pcVPSVUI->getVpsVideoSignalInfoIdx( i ) >= 0 && pcVPSVUI->getVpsVideoSignalInfoIdx( i ) <= pcVPSVUI->getVpsNumVideoSignalInfoMinus1() );
-    }
-  }
-  else
-  {
-    for( Int i = 1; i <=  pcVPS->getMaxLayersMinus1(); i++ )
-    {
-      assert( pcVPSVUI->getVpsVideoSignalInfoIdx( i  ) == ( pcVPSVUI->getVideoSignalInfoIdxPresentFlag() ? 0 : i ) ); 
-    }
-#endif
   }
   WRITE_FLAG( pcVPSVUI->getTilesNotInUseFlag( ) ? 1 : 0 , "tiles_not_in_use_flag" );
   if( !pcVPSVUI->getTilesNotInUseFlag() ) 
@@ -1920,7 +1901,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       esb++; 
       WRITE_FLAG( pcSlice->getDiscardableFlag( ) ? 1 : 0 , "discardable_flag" );
-#if NON_REF_NAL_TYPE_DISCARDABLE
       if (pcSlice->getDiscardableFlag( ))
       {
         assert(pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_TRAIL_R &&
@@ -1929,7 +1909,6 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
           pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_RADL_R &&
           pcSlice->getNalUnitType() != NAL_UNIT_CODED_SLICE_RASL_R);
       }
-#endif
     }
 
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
@@ -2090,7 +2069,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
       if (pcSlice->getSPS()->getTMVPFlagsPresent())
       {
-#if I0044_SLICE_TMVP
+#if H_MV
         WRITE_FLAG( pcSlice->getEnableTMVPFlag() ? 1 : 0, "slice_temporal_mvp_enabled_flag" );
 #else
         WRITE_FLAG( pcSlice->getEnableTMVPFlag() ? 1 : 0, "slice_temporal_mvp_enable_flag" );

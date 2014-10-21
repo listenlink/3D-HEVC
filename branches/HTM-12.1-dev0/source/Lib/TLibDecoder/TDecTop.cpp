@@ -943,10 +943,8 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
    {   
      xResetPocInPicBuffer();
    }
-#endif
-   
-#if I0044_SLICE_TMVP
-  if ( m_apcSlicePilot->getTLayer() == 0 && m_apcSlicePilot->getEnableTMVPFlag() == 0 )
+
+   if ( m_apcSlicePilot->getTLayer() == 0 && m_apcSlicePilot->getEnableTMVPFlag() == 0 )
   {
     //update all pics in the DPB such that they cannot be used for TMPV ref
     TComList<TComPic*>::iterator  iterRefPic = m_cListPic.begin();  
@@ -1192,7 +1190,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif    
 #endif
     // For generalized B
-#if I0044_SLICE_TMVP
+#if H_MV
     if( m_layerId > 0 && !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
     {
       TComPic* refPic = pcSlice->getRefPic(RefPicList(1 - pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
