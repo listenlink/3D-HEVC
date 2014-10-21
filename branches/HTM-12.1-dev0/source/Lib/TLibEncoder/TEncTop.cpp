@@ -88,7 +88,7 @@ TEncTop::TEncTop()
 #if H_MV
   m_ivPicLists = NULL;
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+#if H_3D_IC
   m_aICEnableCandidate = NULL;
   m_aICEnableNum = NULL;
 #endif
@@ -369,7 +369,7 @@ Void TEncTop::init(Bool isFieldCoding)
   xInitRPS(isFieldCoding);
 
   xInitPPSforTiles();
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+#if H_3D_IC
   m_aICEnableCandidate = new Int[ 10 ];
   m_aICEnableNum = new Int[ 10 ];
 
@@ -827,13 +827,6 @@ Void TEncTop::xInitSPS()
   }
 
   m_cSPS.setUseAMP ( m_useAMP );
-
-#if !MTK_I0099_VPS_EX2
-#if H_3D_QTLPC
-  m_cSPS.setUseQTL( m_bUseQTL );
-  m_cSPS.setUsePC ( m_bUsePC  );
-#endif
-#endif
 
   for (i = g_uiMaxCUDepth-g_uiAddCUDepth; i < g_uiMaxCUDepth; i++ )
   {

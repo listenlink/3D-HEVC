@@ -115,9 +115,9 @@ private:
   Bool                    m_isDepth;
 #endif
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-  Int *m_aICEnableCandidate; 
-  Int *m_aICEnableNum; 
+#if H_3D_IC
+  Int*                    m_aICEnableCandidate; 
+  Int*                    m_aICEnableNum; 
 #endif
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;

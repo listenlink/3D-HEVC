@@ -165,9 +165,7 @@ extern const WedgeResolution                                 g_dmmWedgeResolutio
 extern const UChar                                           g_dmm1TabIdxBits     [6];
 extern const UChar                                           g_dmm3IntraTabIdxBits[6];
 
-#if SHARP_DMM1_I0110
 extern Bool                                                  g_wedgePattern[32*32];
-#endif 
 
 extern       std::vector< std::vector<TComWedgelet> >        g_dmmWedgeLists;
 extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
@@ -229,13 +227,6 @@ extern std::map< Level::Name, TComGeneralTierAndLevelLimits > g_generalTierAndLe
 // ====================================================================================================================
 
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
-#if !MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-#if H_3D_IC
-extern UInt g_aICEnableCANDIDATE[10];
-extern UInt g_aICEnableNUM[ 10 ]; //10 layers
-extern Int  g_lastlayer;
-#endif
-#endif
 
 #ifndef ENC_DEC_TRACE
 #define ENC_DEC_TRACE   0

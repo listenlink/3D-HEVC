@@ -51,7 +51,7 @@ TDecSbac::TDecSbac()
 , m_numContextModels          ( 0 )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels )
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
 , m_cCUSingleDepthFlagSCModel        ( 1,             1,               NUM_SINGLEDEPTH_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSingleDepthValueSCModel         ( 1,             1,               NUM_SINGLE_DEPTH_VALUE_DATA_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
@@ -135,7 +135,7 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 
   m_cCUSplitFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SKIP_FLAG );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   m_cCUSingleDepthFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SINGLEDEPTH_FLAG );
   m_cSingleDepthValueSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
 #endif
@@ -206,7 +206,7 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   m_cCUSingleDepthFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SINGLEDEPTH_FLAG );
   m_cSingleDepthValueSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
 #endif
@@ -431,86 +431,7 @@ Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
 }
 #endif
 
-#if !FIX_TICKET_76
-#if H_3D_DIM_SDC
-Void TDecSbac::xParseSDCResidualData ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiSegment )
-{
-  assert( pcCU->getSlice()->getIsDepth() );
-  assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
-  assert( pcCU->getSDCFlag(uiAbsPartIdx) );
-  assert( uiSegment < 2 );
-  
-  UInt uiResidual = 0;
-  UInt uiBit      = 0;
-  UInt uiAbsIdx   = 0;
-  UInt uiSign     = 0;
-  Int  iIdx       = 0;
-  
-#if H_3D_DIM_DLT
-  UInt uiMaxResidualBits = pcCU->getSlice()->getPPS()->getDLT()->getBitsPerDepthValue( pcCU->getSlice()->getLayerIdInVps() );
-#else
-  UInt uiMaxResidualBits = g_bitDepthY;
-#endif
-  assert( uiMaxResidualBits <= g_bitDepthY );
-  
-  m_pcTDecBinIf->decodeBin(uiResidual, m_cSDCResidualFlagSCModel.get( 0, 0, 0 ) );
-  
-#if H_MV_ENC_DEC_TRAC
-  DTRACE_CU("sdc_residual_flag[i]", uiResidual)
-#endif
-  
-  if (uiResidual)
-  {
-    // decode residual sign bit
-    m_pcTDecBinIf->decodeBinEP(uiSign);
-#if H_MV_ENC_DEC_TRAC
-    DTRACE_CU("sdc_residual_sign_flag[i]", uiSign)
-#endif
-    
-    // decode residual magnitude
-    // prefix part
-    UInt uiCount = 0;
-#if H_3D_DIM_DLT
-    UInt uiNumDepthValues = pcCU->getSlice()->getPPS()->getDLT()->getNumDepthValues( pcCU->getSlice()->getLayerIdInVps() );
-#else
-    UInt uiNumDepthValues = ((1 << g_bitDepthY)-1);
-#endif
-    UInt uiPrefixThreshold = ((uiNumDepthValues * 3) >> 2);
-    for ( UInt ui = 0; ui < uiPrefixThreshold; ui++)
-    {
-      m_pcTDecBinIf->decodeBin( uiBit, m_cSDCResidualSCModel.get(0, 0, 0) );
-      if ( uiBit == 0 )
-        break;
-      else
-        uiCount++;
-    }
-    // suffix part
-    if ( uiCount == uiPrefixThreshold )
-    {
-      for ( UInt ui = 0; ui < numBitsForValue(uiNumDepthValues - uiPrefixThreshold); ui++ )
-      {
-        m_pcTDecBinIf->decodeBinEP( uiBit );
-        uiAbsIdx |= uiBit << ui;
-      }
-      uiAbsIdx += uiCount;
-    }
-    else
-    {
-      uiAbsIdx = uiCount;
-    }
-  
-#if H_MV_ENC_DEC_TRAC
-    DTRACE_CU("sdc_residual_abs_minus1[i]", uiAbsIdx)
-#endif
-    
-    uiAbsIdx += 1;
-    iIdx =(Int)(uiSign ? -1 : 1)*uiAbsIdx;
-  }
-  
-  pcCU->setSDCSegmentDCOffset(iIdx, uiSegment, uiAbsPartIdx);
-}
-#endif
-#endif
+
 #endif
 /** Parse I_PCM information. 
  * \param pcCU
@@ -648,7 +569,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   DTRACE_CU("cu_skip_flag", uiSymbol); 
 #endif
 }
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
 Void TDecSbac::parseSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setSingleDepthFlagSubParts( false,        uiAbsPartIdx, uiDepth );
@@ -670,7 +591,7 @@ Void TDecSbac::parseSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     UInt absValDeltaDC = 0;
 
     UInt uiUnaryIdx = 0;
-    UInt uiNumCand = MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE;
+    UInt uiNumCand = SINGLE_DEPTH_MODE_CAND_LIST_SIZE;
     if ( uiNumCand > 1 )
     {
       for( ; uiUnaryIdx < uiNumCand - 1; ++uiUnaryIdx )
@@ -777,29 +698,22 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 
   UInt uiSymbol;
-#if H_3D_QTLPC
   Bool bParseSplitFlag    = true;
 
-#if MTK_I0099_VPS_EX2
+#if H_3D_QTLPC
+
   TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
   Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
-#else
-  TComSPS *sps            = pcCU->getPic()->getSlice(0)->getSPS();
-#endif
   TComPic *pcTexture      = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect    = (pcTexture != NULL);
   Bool bIntraSliceDetect  = (pcCU->getSlice()->getSliceType() == I_SLICE);
 
   Bool rapPic = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
-#if MTK_I0099_VPS_EX2
-#if LGE_FCO_I0116
+#if H_3D_FCO
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag && pcTexture->getReconMark())
 #else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag)
-#endif
-#else
-  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
 #endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
@@ -842,12 +756,8 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
 #if H_3D_QTLPC
   Bool bParsePartSize    = true;
-#if MTK_I0099_VPS_EX2
   TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
   Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
-#else
-  TComSPS *sps           = pcCU->getPic()->getSlice(0)->getSPS();
-#endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -856,14 +766,11 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
   Bool depthDependent = false;
   UInt uiTexturePart = uiMode;
-#if MTK_I0099_VPS_EX2
-#if LGE_FCO_I0116
+
+#if H_3D_FCO
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag && pcTexture->getReconMark())
 #else
   if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && bLimQtPredFlag )
-#endif
-#else
-  if(bDepthMapDetect && !bIntraSliceDetect && !rapPic && sps->getUseQTL() && sps->getUsePC())
 #endif
   {
     TComDataCU *pcTextureCU = pcTexture->getCU(pcCU->getAddr());
@@ -1075,11 +982,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
   for (j=0;j<partNum;j++)
   {
 #if H_3D_DIM
-#if SEPARATE_FLAG_I0085
     if( pcCU->getSlice()->getVpsDepthModesFlag() || pcCU->getSlice()->getIVPFlag() )
-#else
-    if( pcCU->getSlice()->getVpsDepthModesFlag() )
-#endif
     {
       parseIntraDepth( pcCU, absPartIdx+partOffset*j, depth );
     }
@@ -1221,62 +1124,26 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
   //decode DMM index
   if( uiIsDimMode )
   {
-#if SEPARATE_FLAG_I0085
     if( pcCU->getSlice()->getVpsDepthModesFlag() && pcCU->getSlice()->getIVPFlag() )
     {
       m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
       if( !uiSymbol )
       {
-#if HS_DMM_SIGNALLING_I0120
         pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
-#else
-        pcCU->setLumaIntraDirSubParts( ( 2 * DMM1_IDX + DIM_OFFSET ), absPartIdx, depth );
-#endif
       }
       else
       {
-#if HS_DMM_SIGNALLING_I0120
         pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
-#else
-        pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
-#endif
       }
     }
     else if ( pcCU->getSlice()->getVpsDepthModesFlag() )
     {
-#if HS_DMM_SIGNALLING_I0120
       pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
-#else
-      pcCU->setLumaIntraDirSubParts( ( 2 * DMM1_IDX + DIM_OFFSET ), absPartIdx, depth );
-#endif
     }
     else if( pcCU->getSlice()->getIVPFlag() )
     {
-#if HS_DMM_SIGNALLING_I0120
       pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
-#else
-      pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
-#endif
     }
-#else
-    m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
-    if( !uiSymbol )
-    {
-#if HS_DMM_SIGNALLING_I0120
-      pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
-#else
-      pcCU->setLumaIntraDirSubParts( ( 2 * DMM1_IDX + DIM_OFFSET ), absPartIdx, depth );
-#endif
-    }
-    else
-    {
-#if HS_DMM_SIGNALLING_I0120
-      pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
-#else
-      pcCU->setLumaIntraDirSubParts( ( 2 * DMM4_IDX + DIM_OFFSET ), absPartIdx, depth );
-#endif
-    }
-#endif
   }
 }
 #endif
@@ -2189,45 +2056,17 @@ Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
     assert( 0 );
   }
 
-#if HS_DMM_SIGNALLING_I0120
   UInt symbol = 1;
   UInt uiNumSegments = isDimMode( pcCU->getLumaIntraDir( absPartIdx ) ) ? 2 : 1;
-#else
-  UInt symbol = 0;
-  UInt uiNumSegments = 0;
-#endif
 
-#if HS_DMM_SIGNALLING_I0120
   if( pcCU->isIntra( absPartIdx ) && pcCU->getSDCFlag( absPartIdx ))
   {
-#else
-  if( pcCU->isIntra( absPartIdx ) )
-  {
-    UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
-    uiNumSegments = isDimMode( dir ) ? 2 : 1;
-#endif
+
     m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
-#if !HS_DMM_SIGNALLING_I0120
-    if( pcCU->getSDCFlag( absPartIdx ) )
-    {
-#endif
       assert( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N );
       pcCU->setTrIdxSubParts( 0, absPartIdx, depth );
       pcCU->setCbfSubParts( 1, 1, 1, absPartIdx, depth );
     }
-#if !HS_DMM_SIGNALLING_I0120
-    else
-    {
-      pcCU->setLumaIntraDirSubParts( dir + symbol, absPartIdx, depth );
-    }
-  }
-  else
-  {
-    uiNumSegments = 1;
-    symbol = 1;
-  }
-#endif
-
 
   for( UInt segment = 0; segment < uiNumSegments; segment++ )
   {
@@ -2288,20 +2127,11 @@ Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
   
-#if SEC_DBBP_EXPLICIT_SIG_I0077
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   AOF( ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N );
   UInt uiPUOffset = ( g_auiPUOffset[UInt( ePartSize )] << ( ( pcCU->getSlice()->getSPS()->getMaxCUDepth() - uiDepth ) << 1 ) ) >> 4;
   pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx, 0, uiDepth);
   pcCU->setDBBPFlagSubParts(uiSymbol, uiAbsPartIdx+uiPUOffset, 1, uiDepth);
-#else
-  if( uiSymbol )
-  {
-    pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx, 0, uiDepth);
-    UInt uiCurrPartNumQ = (pcCU->getPic()->getNumPartInCU() >> (2 * uiDepth)) >> 2;
-    pcCU->setDBBPFlagSubParts(true, uiAbsPartIdx + 2*uiCurrPartNumQ, 1, uiDepth);
-  }
-#endif
 }
 #endif
 

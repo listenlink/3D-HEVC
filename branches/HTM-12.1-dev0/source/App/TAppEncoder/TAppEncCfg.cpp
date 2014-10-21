@@ -397,9 +397,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
   ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
-#if SEPARATE_FLAG_I0085
   ("IVP",                   m_useIVP,           true,  "intra-view prediction")
-#endif
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
@@ -813,16 +811,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 
 #endif //HHI_VSO
-#if MTK_I0099_VPS_EX2
-  ("LimQtPredFlag",                   m_bLimQtPredFlag          , true          , "Use Predictive Coding with QTL" )
-#endif
-#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
+  ("LimQtPredFlag",                   m_bLimQtPredFlag          , true          , "Use Predictive Coding with QTL" )
   ("QTL",                             m_bUseQTL                 , true          , "Use depth Quadtree Limitation" )
-#if !MTK_I0099_VPS_EX2
-  ("PC",                              m_bUsePC                  , true          , "Use Predictive Coding with QTL" )
-#endif
-#endif
 #endif
 #if H_3D_IV_MERGE
   ("IvMvPred",                        m_ivMvPredFlag            , std::vector<Bool>(2, true)            , "inter view motion prediction " )
@@ -1539,11 +1530,7 @@ Void TAppEncCfg::xCheckParameter()
     }
     for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
     {
-#if FIX_TICKET_61
       xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx][i] >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than 0 and less than MAX_NUM_LAYER_IDS" ); 
-#else
-      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than MAX_NUM_LAYER_IDS" ); 
-#endif
     }
   }
 
@@ -2675,16 +2662,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
 #endif
-#if MTK_I0099_VPS_EX2
-  printf("LimQtPredFlag:%d ", m_bLimQtPredFlag ? 1 : 0);
-#endif
-#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
+  printf("LimQtPredFlag:%d ", m_bLimQtPredFlag ? 1 : 0);
   printf("QTL:%d ", m_bUseQTL);
-#if !MTK_I0099_VPS_EX2
-  printf("PC:%d " , m_bUsePC );
-#endif
-#endif
 #endif
 #if H_3D_IV_MERGE
   printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
@@ -2711,9 +2691,7 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_DIM
   printf("DMM:%d ", m_useDMM );
-#if SEPARATE_FLAG_I0085
   printf("IVP:%d ", m_useIVP );
-#endif
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif
