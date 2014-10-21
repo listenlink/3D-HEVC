@@ -247,6 +247,14 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     }
     calcAndPrintHashStatus(*rpcPic->getPicYuvRec(), hash);
   }
+#if !H_MV
+#if SETTING_PIC_OUTPUT_MARK
+  rpcPic->setOutputMark(rpcPic->getSlice(0)->getPicOutputFlag() ? true : false);
+#else
+  rpcPic->setOutputMark(true);
+#endif
+  rpcPic->setReconMark(true);
+#endif
 }
 
 /**
