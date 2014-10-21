@@ -1,0 +1,1879 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXAggregateTarget section */
+		78C9B17C14DAD3E800989162 /* Package */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 78C9B17F14DAD3E800989162 /* Build configuration list for PBXAggregateTarget "Package" */;
+			buildPhases = (
+			);
+			dependencies = (
+				7885899D15664EAA00982C12 /* PBXTargetDependency */,
+				78C9B18214DAD3F100989162 /* PBXTargetDependency */,
+				78C9B18414DAD3F100989162 /* PBXTargetDependency */,
+				78C9B18614DAD3F100989162 /* PBXTargetDependency */,
+			);
+			name = Package;
+			productName = Package;
+		};
+/* End PBXAggregateTarget section */
+
+/* Begin PBXBuildFile section */
+		7874637E17D5DD900040CFC7 /* encmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462C117D5DD7B0040CFC7 /* encmain.cpp */; };
+		7874637F17D5DD900040CFC7 /* TAppEncCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462C217D5DD7B0040CFC7 /* TAppEncCfg.cpp */; };
+		7874638017D5DD900040CFC7 /* TAppEncTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462C417D5DD7B0040CFC7 /* TAppEncTop.cpp */; };
+		7874638117D5DDA60040CFC7 /* NALwrite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874633F17D5DD840040CFC7 /* NALwrite.cpp */; };
+		7874638217D5DDA60040CFC7 /* SEIwrite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874634117D5DD840040CFC7 /* SEIwrite.cpp */; };
+		7874638317D5DDA60040CFC7 /* SyntaxElementWriter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874634317D5DD840040CFC7 /* SyntaxElementWriter.cpp */; };
+		7874638417D5DDA60040CFC7 /* TEncAnalyze.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874634517D5DD840040CFC7 /* TEncAnalyze.cpp */; };
+		7874638517D5DDA60040CFC7 /* TEncBinCoderCABAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874634817D5DD840040CFC7 /* TEncBinCoderCABAC.cpp */; };
+		7874638617D5DDA60040CFC7 /* TEncBinCoderCABACCounter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874634A17D5DD840040CFC7 /* TEncBinCoderCABACCounter.cpp */; };
+		7874638717D5DDA60040CFC7 /* TEncCavlc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874634C17D5DD840040CFC7 /* TEncCavlc.cpp */; };
+		7874638817D5DDA60040CFC7 /* TEncCu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874634F17D5DD840040CFC7 /* TEncCu.cpp */; };
+		7874638917D5DDA60040CFC7 /* TEncEntropy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635117D5DD840040CFC7 /* TEncEntropy.cpp */; };
+		7874638A17D5DDA60040CFC7 /* TEncGOP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635317D5DD840040CFC7 /* TEncGOP.cpp */; };
+		7874638B17D5DDA60040CFC7 /* TEncPic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635517D5DD840040CFC7 /* TEncPic.cpp */; };
+		7874638C17D5DDA60040CFC7 /* TEncPreanalyzer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635717D5DD840040CFC7 /* TEncPreanalyzer.cpp */; };
+		7874638D17D5DDA60040CFC7 /* TEncRateCtrl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635917D5DD840040CFC7 /* TEncRateCtrl.cpp */; };
+		7874638E17D5DDA60040CFC7 /* TEncSampleAdaptiveOffset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635B17D5DD840040CFC7 /* TEncSampleAdaptiveOffset.cpp */; };
+		7874638F17D5DDA60040CFC7 /* TEncSbac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635D17D5DD840040CFC7 /* TEncSbac.cpp */; };
+		7874639017D5DDA60040CFC7 /* TEncSearch.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874635F17D5DD840040CFC7 /* TEncSearch.cpp */; };
+		7874639117D5DDA60040CFC7 /* TEncSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874636117D5DD840040CFC7 /* TEncSlice.cpp */; };
+		7874639217D5DDA60040CFC7 /* TEncTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874636317D5DD840040CFC7 /* TEncTop.cpp */; };
+		7874639317D5DDA60040CFC7 /* WeightPredAnalysis.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874636517D5DD840040CFC7 /* WeightPredAnalysis.cpp */; };
+		7874639417D5DE070040CFC7 /* TComPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630E17D5DD840040CFC7 /* TComPrediction.cpp */; };
+		7874639517D5DE070040CFC7 /* TComRdCost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631017D5DD840040CFC7 /* TComRdCost.cpp */; };
+		7874639617D5DE070040CFC7 /* TComRdCostWeightPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631217D5DD840040CFC7 /* TComRdCostWeightPrediction.cpp */; };
+		7874639717D5DE070040CFC7 /* TComRom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631417D5DD840040CFC7 /* TComRom.cpp */; };
+		7874639817D5DE070040CFC7 /* TComSampleAdaptiveOffset.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631617D5DD840040CFC7 /* TComSampleAdaptiveOffset.cpp */; };
+		7874639917D5DE070040CFC7 /* TComSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631817D5DD840040CFC7 /* TComSlice.cpp */; };
+		7874639A17D5DE070040CFC7 /* TComTrQuant.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631A17D5DD840040CFC7 /* TComTrQuant.cpp */; };
+		7874639B17D5DE070040CFC7 /* TComWedgelet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631C17D5DD840040CFC7 /* TComWedgelet.cpp */; };
+		7874639C17D5DE070040CFC7 /* TComWeightPrediction.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874631E17D5DD840040CFC7 /* TComWeightPrediction.cpp */; };
+		7874639D17D5DE070040CFC7 /* TComYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874632017D5DD840040CFC7 /* TComYuv.cpp */; };
+		7874639E17D5DE230040CFC7 /* TComMotionInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630217D5DD840040CFC7 /* TComMotionInfo.cpp */; };
+		7874639F17D5DE230040CFC7 /* TComPattern.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630517D5DD840040CFC7 /* TComPattern.cpp */; };
+		787463A017D5DE230040CFC7 /* TComPic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630717D5DD840040CFC7 /* TComPic.cpp */; };
+		787463A117D5DE230040CFC7 /* TComPicSym.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630917D5DD840040CFC7 /* TComPicSym.cpp */; };
+		787463A217D5DE230040CFC7 /* TComPicYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630B17D5DD840040CFC7 /* TComPicYuv.cpp */; };
+		787463A317D5DE230040CFC7 /* TComPicYuvMD5.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630D17D5DD840040CFC7 /* TComPicYuvMD5.cpp */; };
+		787463A417D5DE400040CFC7 /* TComCABACTables.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462F917D5DD840040CFC7 /* TComCABACTables.cpp */; };
+		787463A517D5DE400040CFC7 /* TComDataCU.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462FB17D5DD840040CFC7 /* TComDataCU.cpp */; };
+		787463A617D5DE400040CFC7 /* TComInterpolationFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462FD17D5DD840040CFC7 /* TComInterpolationFilter.cpp */; };
+		787463A717D5DE400040CFC7 /* TComLoopFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874630017D5DD840040CFC7 /* TComLoopFilter.cpp */; };
+		787463A817D5DE4B0040CFC7 /* TComBitStream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462F717D5DD840040CFC7 /* TComBitStream.cpp */; };
+		787463A917D5DE640040CFC7 /* ContextModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462EE17D5DD840040CFC7 /* ContextModel.cpp */; };
+		787463AA17D5DE640040CFC7 /* ContextModel3DBuffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462F017D5DD840040CFC7 /* ContextModel3DBuffer.cpp */; };
+		787463AB17D5DE640040CFC7 /* SEI.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462F417D5DD840040CFC7 /* SEI.cpp */; };
+		787463AC17D5DE8A0040CFC7 /* TVideoIOYuv.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874637C17D5DD840040CFC7 /* TVideoIOYuv.cpp */; };
+		787463AD17D5DE980040CFC7 /* TRenFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874636B17D5DD840040CFC7 /* TRenFilter.cpp */; };
+		787463AE17D5DE980040CFC7 /* TRenImage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874636D17D5DD840040CFC7 /* TRenImage.cpp */; };
+		787463AF17D5DE980040CFC7 /* TRenImagePlane.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874636F17D5DD840040CFC7 /* TRenImagePlane.cpp */; };
+		787463B017D5DE980040CFC7 /* TRenInterpFilter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874637117D5DD840040CFC7 /* TRenInterpFilter.cpp */; };
+		787463B117D5DE9D0040CFC7 /* TRenModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874637317D5DD840040CFC7 /* TRenModel.cpp */; };
+		787463B217D5DE9D0040CFC7 /* TRenModSetupStrParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874637517D5DD840040CFC7 /* TRenModSetupStrParser.cpp */; };
+		787463B317D5DE9D0040CFC7 /* TRenSingleModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874637717D5DD840040CFC7 /* TRenSingleModel.cpp */; };
+		787463B417D5DE9D0040CFC7 /* TRenTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874637917D5DD840040CFC7 /* TRenTop.cpp */; };
+		787463B517D5DEAF0040CFC7 /* program_options_lite.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462E717D5DD840040CFC7 /* program_options_lite.cpp */; };
+		787463B617D5DEAF0040CFC7 /* TAppComCamPara.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462E917D5DD840040CFC7 /* TAppComCamPara.cpp */; };
+		787463B717D5DED40040CFC7 /* libmd5.c in Sources */ = {isa = PBXBuildFile; fileRef = 787462E317D5DD840040CFC7 /* libmd5.c */; };
+		787463B817D5DEE80040CFC7 /* AnnexBread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874632417D5DD840040CFC7 /* AnnexBread.cpp */; };
+		787463B917D5DEE80040CFC7 /* NALread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874632617D5DD840040CFC7 /* NALread.cpp */; };
+		787463BA17D5DEE80040CFC7 /* SEIread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874632817D5DD840040CFC7 /* SEIread.cpp */; };
+		787463BB17D5DEE80040CFC7 /* SyntaxElementParser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874632A17D5DD840040CFC7 /* SyntaxElementParser.cpp */; };
+		787463BC17D5DEE80040CFC7 /* TDecBinCoderCABAC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874632D17D5DD840040CFC7 /* TDecBinCoderCABAC.cpp */; };
+		787463BD17D5DEE80040CFC7 /* TDecCAVLC.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874632F17D5DD840040CFC7 /* TDecCAVLC.cpp */; };
+		787463BE17D5DEE80040CFC7 /* TDecCu.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874633117D5DD840040CFC7 /* TDecCu.cpp */; };
+		787463BF17D5DEE80040CFC7 /* TDecEntropy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874633317D5DD840040CFC7 /* TDecEntropy.cpp */; };
+		787463C017D5DEE80040CFC7 /* TDecGop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874633517D5DD840040CFC7 /* TDecGop.cpp */; };
+		787463C117D5DEE80040CFC7 /* TDecSbac.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874633717D5DD840040CFC7 /* TDecSbac.cpp */; };
+		787463C217D5DEE80040CFC7 /* TDecSlice.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874633917D5DD840040CFC7 /* TDecSlice.cpp */; };
+		787463C317D5DEE80040CFC7 /* TDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874633B17D5DD840040CFC7 /* TDecTop.cpp */; };
+		787463C417D5DEFB0040CFC7 /* decmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462BB17D5DD7B0040CFC7 /* decmain.cpp */; };
+		787463C517D5DEFB0040CFC7 /* TAppDecCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462BC17D5DD7B0040CFC7 /* TAppDecCfg.cpp */; };
+		787463C617D5DEFB0040CFC7 /* TAppDecTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462BE17D5DD7B0040CFC7 /* TAppDecTop.cpp */; };
+		787463C717D5DF080040CFC7 /* extrmain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462C717D5DD7B0040CFC7 /* extrmain.cpp */; };
+		787463C817D5DF080040CFC7 /* TAppExtrCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462C817D5DD7B0040CFC7 /* TAppExtrCfg.cpp */; };
+		787463C917D5DF080040CFC7 /* TAppExtrTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462CA17D5DD7B0040CFC7 /* TAppExtrTop.cpp */; };
+		787463CA17D5DF0E0040CFC7 /* RendererMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462CD17D5DD7B0040CFC7 /* RendererMain.cpp */; };
+		787463CB17D5DF0E0040CFC7 /* TAppRendererCfg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462CE17D5DD7B0040CFC7 /* TAppRendererCfg.cpp */; };
+		787463CC17D5DF0E0040CFC7 /* TAppRendererTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 787462D017D5DD7B0040CFC7 /* TAppRendererTop.cpp */; };
+		787463CD17D5DF220040CFC7 /* TExtrTop.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7874636817D5DD840040CFC7 /* TExtrTop.cpp */; };
+		78C5940D15872233004401C5 /* libTLibCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767959411AD61BB00421804 /* libTLibCommon.a */; };
+		78C5940E15872233004401C5 /* libTLibEncoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767961911AD626F00421804 /* libTLibEncoder.a */; };
+		78C5940F15872233004401C5 /* libTLibVideoIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767964B11AD629200421804 /* libTLibVideoIO.a */; };
+		78C5941015872233004401C5 /* libTLibRenderer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7894E36714890D9A009259F4 /* libTLibRenderer.a */; };
+		78C5941115872233004401C5 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C593B415872152004401C5 /* libTAppCommon.a */; };
+		78C5941B158722B7004401C5 /* libTLibCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767959411AD61BB00421804 /* libTLibCommon.a */; };
+		78C5941C158722BA004401C5 /* libTLibDecoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 676795F411AD621A00421804 /* libTLibDecoder.a */; };
+		78C5941D158722BC004401C5 /* libTLibVideoIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767964B11AD629200421804 /* libTLibVideoIO.a */; };
+		78C5941E158722C0004401C5 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C593B415872152004401C5 /* libTAppCommon.a */; };
+		78C59428158722F2004401C5 /* libTLibCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767959411AD61BB00421804 /* libTLibCommon.a */; };
+		78C59429158722F6004401C5 /* libTLibVideoIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767964B11AD629200421804 /* libTLibVideoIO.a */; };
+		78C5942A158722FA004401C5 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C593B415872152004401C5 /* libTAppCommon.a */; };
+		78C5942B15872300004401C5 /* libTLibRenderer.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7894E36714890D9A009259F4 /* libTLibRenderer.a */; };
+		78C5943A1587234F004401C5 /* libTLibCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767959411AD61BB00421804 /* libTLibCommon.a */; };
+		78C5943B15872352004401C5 /* libTLibDecoder.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 676795F411AD621A00421804 /* libTLibDecoder.a */; };
+		78C5943C15872356004401C5 /* libTLibVideoIO.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 6767964B11AD629200421804 /* libTLibVideoIO.a */; };
+		78C5943D1587235B004401C5 /* libTAppCommon.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C593B415872152004401C5 /* libTAppCommon.a */; };
+		78C5943E1587235E004401C5 /* libTLibExtractor.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7885897D15664E3D00982C12 /* libTLibExtractor.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7885899C15664EAA00982C12 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7885897F15664E6A00982C12;
+			remoteInfo = TAppExtractor;
+		};
+		78C5940315872220004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767959311AD61BB00421804;
+			remoteInfo = TLibCommon;
+		};
+		78C5940515872221004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767961811AD626F00421804;
+			remoteInfo = TLibEncoder;
+		};
+		78C5940715872222004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767964A11AD629200421804;
+			remoteInfo = TLibVideoIO;
+		};
+		78C5940915872226004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7894E34D14890D9A009259F4;
+			remoteInfo = TLibRenderer;
+		};
+		78C5940B15872228004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 78C593AD15872152004401C5;
+			remoteInfo = TAppCommon;
+		};
+		78C59413158722AE004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767959311AD61BB00421804;
+			remoteInfo = TLibCommon;
+		};
+		78C59415158722AF004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 676795F311AD621A00421804;
+			remoteInfo = TLibDecoder;
+		};
+		78C59417158722B1004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767964A11AD629200421804;
+			remoteInfo = TLibVideoIO;
+		};
+		78C59419158722B3004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 78C593AD15872152004401C5;
+			remoteInfo = TAppCommon;
+		};
+		78C59420158722E9004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767959311AD61BB00421804;
+			remoteInfo = TLibCommon;
+		};
+		78C59422158722EB004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7894E34D14890D9A009259F4;
+			remoteInfo = TLibRenderer;
+		};
+		78C59424158722ED004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 78C593AD15872152004401C5;
+			remoteInfo = TAppCommon;
+		};
+		78C59426158722EF004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767964A11AD629200421804;
+			remoteInfo = TLibVideoIO;
+		};
+		78C5943015872345004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7885896E15664E3D00982C12;
+			remoteInfo = TLibExtractor;
+		};
+		78C5943215872347004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767959311AD61BB00421804;
+			remoteInfo = TLibCommon;
+		};
+		78C5943415872348004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 676795F311AD621A00421804;
+			remoteInfo = TLibDecoder;
+		};
+		78C594361587234A004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767964A11AD629200421804;
+			remoteInfo = TLibVideoIO;
+		};
+		78C594381587234B004401C5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 78C593AD15872152004401C5;
+			remoteInfo = TAppCommon;
+		};
+		78C9B18114DAD3F100989162 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6767966911AD635600421804;
+			remoteInfo = TAppEncoder;
+		};
+		78C9B18314DAD3F100989162 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 6782E0DD11AD691A00E8FFB8;
+			remoteInfo = TAppDecoder;
+		};
+		78C9B18514DAD3F100989162 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 08FB7793FE84155DC02AAC07 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7894E37514890DD2009259F4;
+			remoteInfo = TAppRenderer;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		6767959411AD61BB00421804 /* libTLibCommon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibCommon.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		676795F411AD621A00421804 /* libTLibDecoder.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibDecoder.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6767961911AD626F00421804 /* libTLibEncoder.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibEncoder.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6767964B11AD629200421804 /* libTLibVideoIO.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibVideoIO.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		6767966A11AD635600421804 /* TAppEncoder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppEncoder; sourceTree = BUILT_PRODUCTS_DIR; };
+		6782E0DE11AD691A00E8FFB8 /* TAppDecoder */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppDecoder; sourceTree = BUILT_PRODUCTS_DIR; };
+		785E596C17D9AFA8001F6DD1 /* TStatHeader.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TStatHeader.cpp; sourceTree = "<group>"; };
+		785E596D17D9AFA8001F6DD1 /* TStatHeader.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TStatHeader.h; sourceTree = "<group>"; };
+		785E596E17D9AFA8001F6DD1 /* TStatLayer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TStatLayer.cpp; sourceTree = "<group>"; };
+		785E596F17D9AFA8001F6DD1 /* TStatLayer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TStatLayer.h; sourceTree = "<group>"; };
+		785E597017D9AFA8001F6DD1 /* TStatTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TStatTop.cpp; sourceTree = "<group>"; };
+		785E597117D9AFA8001F6DD1 /* TStatTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TStatTop.h; sourceTree = "<group>"; };
+		787462BB17D5DD7B0040CFC7 /* decmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = decmain.cpp; sourceTree = "<group>"; };
+		787462BC17D5DD7B0040CFC7 /* TAppDecCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppDecCfg.cpp; sourceTree = "<group>"; };
+		787462BD17D5DD7B0040CFC7 /* TAppDecCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppDecCfg.h; sourceTree = "<group>"; };
+		787462BE17D5DD7B0040CFC7 /* TAppDecTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppDecTop.cpp; sourceTree = "<group>"; };
+		787462BF17D5DD7B0040CFC7 /* TAppDecTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppDecTop.h; sourceTree = "<group>"; };
+		787462C117D5DD7B0040CFC7 /* encmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = encmain.cpp; sourceTree = "<group>"; };
+		787462C217D5DD7B0040CFC7 /* TAppEncCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppEncCfg.cpp; sourceTree = "<group>"; };
+		787462C317D5DD7B0040CFC7 /* TAppEncCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppEncCfg.h; sourceTree = "<group>"; };
+		787462C417D5DD7B0040CFC7 /* TAppEncTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppEncTop.cpp; sourceTree = "<group>"; };
+		787462C517D5DD7B0040CFC7 /* TAppEncTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppEncTop.h; sourceTree = "<group>"; };
+		787462C717D5DD7B0040CFC7 /* extrmain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = extrmain.cpp; sourceTree = "<group>"; };
+		787462C817D5DD7B0040CFC7 /* TAppExtrCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppExtrCfg.cpp; sourceTree = "<group>"; };
+		787462C917D5DD7B0040CFC7 /* TAppExtrCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppExtrCfg.h; sourceTree = "<group>"; };
+		787462CA17D5DD7B0040CFC7 /* TAppExtrTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppExtrTop.cpp; sourceTree = "<group>"; };
+		787462CB17D5DD7B0040CFC7 /* TAppExtrTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppExtrTop.h; sourceTree = "<group>"; };
+		787462CD17D5DD7B0040CFC7 /* RendererMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = RendererMain.cpp; sourceTree = "<group>"; };
+		787462CE17D5DD7B0040CFC7 /* TAppRendererCfg.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppRendererCfg.cpp; sourceTree = "<group>"; };
+		787462CF17D5DD7B0040CFC7 /* TAppRendererCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppRendererCfg.h; sourceTree = "<group>"; };
+		787462D017D5DD7B0040CFC7 /* TAppRendererTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppRendererTop.cpp; sourceTree = "<group>"; };
+		787462D117D5DD7B0040CFC7 /* TAppRendererTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppRendererTop.h; sourceTree = "<group>"; };
+		787462D317D5DD7B0040CFC7 /* annexBbytecount.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = annexBbytecount.cpp; sourceTree = "<group>"; };
+		787462D517D5DD7B0040CFC7 /* encode.shl */ = {isa = PBXFileReference; lastKnownFileType = text; path = encode.shl; sourceTree = "<group>"; };
+		787462D617D5DD7B0040CFC7 /* encodeCommand.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = encodeCommand.sh; sourceTree = "<group>"; };
+		787462D717D5DD7B0040CFC7 /* ExtractBitrates.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtractBitrates.cpp; sourceTree = "<group>"; };
+		787462D817D5DD7B0040CFC7 /* ExtractBitrates.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExtractBitrates.h; sourceTree = "<group>"; };
+		787462D917D5DD7B0040CFC7 /* ExtractBitratesMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ExtractBitratesMain.cpp; sourceTree = "<group>"; };
+		787462DA17D5DD7B0040CFC7 /* GuessLambdaModifiers.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GuessLambdaModifiers.cpp; sourceTree = "<group>"; };
+		787462DB17D5DD7B0040CFC7 /* GuessLambdaModifiers.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GuessLambdaModifiers.h; sourceTree = "<group>"; };
+		787462DC17D5DD7B0040CFC7 /* GuessLambdaModifiersMain.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = GuessLambdaModifiersMain.cpp; sourceTree = "<group>"; };
+		787462DD17D5DD7B0040CFC7 /* makefile */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		787462DE17D5DD7B0040CFC7 /* QuickStartGuide.pdf */ = {isa = PBXFileReference; lastKnownFileType = image.pdf; path = QuickStartGuide.pdf; sourceTree = "<group>"; };
+		787462DF17D5DD7B0040CFC7 /* RuntimeError.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RuntimeError.h; sourceTree = "<group>"; };
+		787462E017D5DD7B0040CFC7 /* targetBitrates.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = targetBitrates.sh; sourceTree = "<group>"; };
+		787462E117D5DD7B0040CFC7 /* convert_NtoMbit_YCbCr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = convert_NtoMbit_YCbCr.cpp; sourceTree = "<group>"; };
+		787462E317D5DD840040CFC7 /* libmd5.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = libmd5.c; sourceTree = "<group>"; };
+		787462E417D5DD840040CFC7 /* libmd5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = libmd5.h; sourceTree = "<group>"; };
+		787462E517D5DD840040CFC7 /* MD5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MD5.h; sourceTree = "<group>"; };
+		787462E717D5DD840040CFC7 /* program_options_lite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = program_options_lite.cpp; sourceTree = "<group>"; };
+		787462E817D5DD840040CFC7 /* program_options_lite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = program_options_lite.h; sourceTree = "<group>"; };
+		787462E917D5DD840040CFC7 /* TAppComCamPara.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TAppComCamPara.cpp; sourceTree = "<group>"; };
+		787462EA17D5DD840040CFC7 /* TAppComCamPara.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TAppComCamPara.h; sourceTree = "<group>"; };
+		787462EC17D5DD840040CFC7 /* AccessUnit.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AccessUnit.h; sourceTree = "<group>"; };
+		787462ED17D5DD840040CFC7 /* CommonDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CommonDef.h; sourceTree = "<group>"; };
+		787462EE17D5DD840040CFC7 /* ContextModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ContextModel.cpp; sourceTree = "<group>"; };
+		787462EF17D5DD840040CFC7 /* ContextModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel.h; sourceTree = "<group>"; };
+		787462F017D5DD840040CFC7 /* ContextModel3DBuffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ContextModel3DBuffer.cpp; sourceTree = "<group>"; };
+		787462F117D5DD840040CFC7 /* ContextModel3DBuffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextModel3DBuffer.h; sourceTree = "<group>"; };
+		787462F217D5DD840040CFC7 /* ContextTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ContextTables.h; sourceTree = "<group>"; };
+		787462F317D5DD840040CFC7 /* NAL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NAL.h; sourceTree = "<group>"; };
+		787462F417D5DD840040CFC7 /* SEI.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEI.cpp; sourceTree = "<group>"; };
+		787462F517D5DD840040CFC7 /* SEI.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEI.h; sourceTree = "<group>"; };
+		787462F617D5DD840040CFC7 /* TComBitCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComBitCounter.h; sourceTree = "<group>"; };
+		787462F717D5DD840040CFC7 /* TComBitStream.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComBitStream.cpp; sourceTree = "<group>"; };
+		787462F817D5DD840040CFC7 /* TComBitStream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComBitStream.h; sourceTree = "<group>"; };
+		787462F917D5DD840040CFC7 /* TComCABACTables.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComCABACTables.cpp; sourceTree = "<group>"; };
+		787462FA17D5DD840040CFC7 /* TComCABACTables.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComCABACTables.h; sourceTree = "<group>"; };
+		787462FB17D5DD840040CFC7 /* TComDataCU.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComDataCU.cpp; sourceTree = "<group>"; };
+		787462FC17D5DD840040CFC7 /* TComDataCU.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComDataCU.h; sourceTree = "<group>"; };
+		787462FD17D5DD840040CFC7 /* TComInterpolationFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComInterpolationFilter.cpp; sourceTree = "<group>"; };
+		787462FE17D5DD840040CFC7 /* TComInterpolationFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComInterpolationFilter.h; sourceTree = "<group>"; };
+		787462FF17D5DD840040CFC7 /* TComList.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComList.h; sourceTree = "<group>"; };
+		7874630017D5DD840040CFC7 /* TComLoopFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComLoopFilter.cpp; sourceTree = "<group>"; };
+		7874630117D5DD840040CFC7 /* TComLoopFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComLoopFilter.h; sourceTree = "<group>"; };
+		7874630217D5DD840040CFC7 /* TComMotionInfo.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComMotionInfo.cpp; sourceTree = "<group>"; };
+		7874630317D5DD840040CFC7 /* TComMotionInfo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComMotionInfo.h; sourceTree = "<group>"; };
+		7874630417D5DD840040CFC7 /* TComMv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComMv.h; sourceTree = "<group>"; };
+		7874630517D5DD840040CFC7 /* TComPattern.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPattern.cpp; sourceTree = "<group>"; };
+		7874630617D5DD840040CFC7 /* TComPattern.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPattern.h; sourceTree = "<group>"; };
+		7874630717D5DD840040CFC7 /* TComPic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPic.cpp; sourceTree = "<group>"; };
+		7874630817D5DD840040CFC7 /* TComPic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPic.h; sourceTree = "<group>"; };
+		7874630917D5DD840040CFC7 /* TComPicSym.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicSym.cpp; sourceTree = "<group>"; };
+		7874630A17D5DD840040CFC7 /* TComPicSym.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPicSym.h; sourceTree = "<group>"; };
+		7874630B17D5DD840040CFC7 /* TComPicYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuv.cpp; sourceTree = "<group>"; };
+		7874630C17D5DD840040CFC7 /* TComPicYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPicYuv.h; sourceTree = "<group>"; };
+		7874630D17D5DD840040CFC7 /* TComPicYuvMD5.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPicYuvMD5.cpp; sourceTree = "<group>"; };
+		7874630E17D5DD840040CFC7 /* TComPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComPrediction.cpp; sourceTree = "<group>"; };
+		7874630F17D5DD840040CFC7 /* TComPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComPrediction.h; sourceTree = "<group>"; };
+		7874631017D5DD840040CFC7 /* TComRdCost.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCost.cpp; sourceTree = "<group>"; };
+		7874631117D5DD840040CFC7 /* TComRdCost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRdCost.h; sourceTree = "<group>"; };
+		7874631217D5DD840040CFC7 /* TComRdCostWeightPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRdCostWeightPrediction.cpp; sourceTree = "<group>"; };
+		7874631317D5DD840040CFC7 /* TComRdCostWeightPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRdCostWeightPrediction.h; sourceTree = "<group>"; };
+		7874631417D5DD840040CFC7 /* TComRom.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComRom.cpp; sourceTree = "<group>"; };
+		7874631517D5DD840040CFC7 /* TComRom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComRom.h; sourceTree = "<group>"; };
+		7874631617D5DD840040CFC7 /* TComSampleAdaptiveOffset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComSampleAdaptiveOffset.cpp; sourceTree = "<group>"; };
+		7874631717D5DD840040CFC7 /* TComSampleAdaptiveOffset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComSampleAdaptiveOffset.h; sourceTree = "<group>"; };
+		7874631817D5DD840040CFC7 /* TComSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComSlice.cpp; sourceTree = "<group>"; };
+		7874631917D5DD840040CFC7 /* TComSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComSlice.h; sourceTree = "<group>"; };
+		7874631A17D5DD840040CFC7 /* TComTrQuant.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComTrQuant.cpp; sourceTree = "<group>"; };
+		7874631B17D5DD840040CFC7 /* TComTrQuant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComTrQuant.h; sourceTree = "<group>"; };
+		7874631C17D5DD840040CFC7 /* TComWedgelet.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComWedgelet.cpp; sourceTree = "<group>"; };
+		7874631D17D5DD840040CFC7 /* TComWedgelet.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComWedgelet.h; sourceTree = "<group>"; };
+		7874631E17D5DD840040CFC7 /* TComWeightPrediction.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComWeightPrediction.cpp; sourceTree = "<group>"; };
+		7874631F17D5DD840040CFC7 /* TComWeightPrediction.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComWeightPrediction.h; sourceTree = "<group>"; };
+		7874632017D5DD840040CFC7 /* TComYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TComYuv.cpp; sourceTree = "<group>"; };
+		7874632117D5DD840040CFC7 /* TComYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TComYuv.h; sourceTree = "<group>"; };
+		7874632217D5DD840040CFC7 /* TypeDef.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TypeDef.h; sourceTree = "<group>"; };
+		7874632417D5DD840040CFC7 /* AnnexBread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = AnnexBread.cpp; sourceTree = "<group>"; };
+		7874632517D5DD840040CFC7 /* AnnexBread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnnexBread.h; sourceTree = "<group>"; };
+		7874632617D5DD840040CFC7 /* NALread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NALread.cpp; sourceTree = "<group>"; };
+		7874632717D5DD840040CFC7 /* NALread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NALread.h; sourceTree = "<group>"; };
+		7874632817D5DD840040CFC7 /* SEIread.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEIread.cpp; sourceTree = "<group>"; };
+		7874632917D5DD840040CFC7 /* SEIread.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEIread.h; sourceTree = "<group>"; };
+		7874632A17D5DD840040CFC7 /* SyntaxElementParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SyntaxElementParser.cpp; sourceTree = "<group>"; };
+		7874632B17D5DD840040CFC7 /* SyntaxElementParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SyntaxElementParser.h; sourceTree = "<group>"; };
+		7874632C17D5DD840040CFC7 /* TDecBinCoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecBinCoder.h; sourceTree = "<group>"; };
+		7874632D17D5DD840040CFC7 /* TDecBinCoderCABAC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecBinCoderCABAC.cpp; sourceTree = "<group>"; };
+		7874632E17D5DD840040CFC7 /* TDecBinCoderCABAC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecBinCoderCABAC.h; sourceTree = "<group>"; };
+		7874632F17D5DD840040CFC7 /* TDecCAVLC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecCAVLC.cpp; sourceTree = "<group>"; };
+		7874633017D5DD840040CFC7 /* TDecCAVLC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecCAVLC.h; sourceTree = "<group>"; };
+		7874633117D5DD840040CFC7 /* TDecCu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecCu.cpp; sourceTree = "<group>"; };
+		7874633217D5DD840040CFC7 /* TDecCu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecCu.h; sourceTree = "<group>"; };
+		7874633317D5DD840040CFC7 /* TDecEntropy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecEntropy.cpp; sourceTree = "<group>"; };
+		7874633417D5DD840040CFC7 /* TDecEntropy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecEntropy.h; sourceTree = "<group>"; };
+		7874633517D5DD840040CFC7 /* TDecGop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecGop.cpp; sourceTree = "<group>"; };
+		7874633617D5DD840040CFC7 /* TDecGop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecGop.h; sourceTree = "<group>"; };
+		7874633717D5DD840040CFC7 /* TDecSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSbac.cpp; sourceTree = "<group>"; };
+		7874633817D5DD840040CFC7 /* TDecSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSbac.h; sourceTree = "<group>"; };
+		7874633917D5DD840040CFC7 /* TDecSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecSlice.cpp; sourceTree = "<group>"; };
+		7874633A17D5DD840040CFC7 /* TDecSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecSlice.h; sourceTree = "<group>"; };
+		7874633B17D5DD840040CFC7 /* TDecTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TDecTop.cpp; sourceTree = "<group>"; };
+		7874633C17D5DD840040CFC7 /* TDecTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TDecTop.h; sourceTree = "<group>"; };
+		7874633E17D5DD840040CFC7 /* AnnexBwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AnnexBwrite.h; sourceTree = "<group>"; };
+		7874633F17D5DD840040CFC7 /* NALwrite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = NALwrite.cpp; sourceTree = "<group>"; };
+		7874634017D5DD840040CFC7 /* NALwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NALwrite.h; sourceTree = "<group>"; };
+		7874634117D5DD840040CFC7 /* SEIwrite.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SEIwrite.cpp; sourceTree = "<group>"; };
+		7874634217D5DD840040CFC7 /* SEIwrite.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SEIwrite.h; sourceTree = "<group>"; };
+		7874634317D5DD840040CFC7 /* SyntaxElementWriter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SyntaxElementWriter.cpp; sourceTree = "<group>"; };
+		7874634417D5DD840040CFC7 /* SyntaxElementWriter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SyntaxElementWriter.h; sourceTree = "<group>"; };
+		7874634517D5DD840040CFC7 /* TEncAnalyze.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncAnalyze.cpp; sourceTree = "<group>"; };
+		7874634617D5DD840040CFC7 /* TEncAnalyze.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncAnalyze.h; sourceTree = "<group>"; };
+		7874634717D5DD840040CFC7 /* TEncBinCoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoder.h; sourceTree = "<group>"; };
+		7874634817D5DD840040CFC7 /* TEncBinCoderCABAC.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncBinCoderCABAC.cpp; sourceTree = "<group>"; };
+		7874634917D5DD840040CFC7 /* TEncBinCoderCABAC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoderCABAC.h; sourceTree = "<group>"; };
+		7874634A17D5DD840040CFC7 /* TEncBinCoderCABACCounter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncBinCoderCABACCounter.cpp; sourceTree = "<group>"; };
+		7874634B17D5DD840040CFC7 /* TEncBinCoderCABACCounter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncBinCoderCABACCounter.h; sourceTree = "<group>"; };
+		7874634C17D5DD840040CFC7 /* TEncCavlc.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncCavlc.cpp; sourceTree = "<group>"; };
+		7874634D17D5DD840040CFC7 /* TEncCavlc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCavlc.h; sourceTree = "<group>"; };
+		7874634E17D5DD840040CFC7 /* TEncCfg.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCfg.h; sourceTree = "<group>"; };
+		7874634F17D5DD840040CFC7 /* TEncCu.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncCu.cpp; sourceTree = "<group>"; };
+		7874635017D5DD840040CFC7 /* TEncCu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncCu.h; sourceTree = "<group>"; };
+		7874635117D5DD840040CFC7 /* TEncEntropy.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncEntropy.cpp; sourceTree = "<group>"; };
+		7874635217D5DD840040CFC7 /* TEncEntropy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncEntropy.h; sourceTree = "<group>"; };
+		7874635317D5DD840040CFC7 /* TEncGOP.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncGOP.cpp; sourceTree = "<group>"; };
+		7874635417D5DD840040CFC7 /* TEncGOP.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncGOP.h; sourceTree = "<group>"; };
+		7874635517D5DD840040CFC7 /* TEncPic.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncPic.cpp; sourceTree = "<group>"; };
+		7874635617D5DD840040CFC7 /* TEncPic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncPic.h; sourceTree = "<group>"; };
+		7874635717D5DD840040CFC7 /* TEncPreanalyzer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncPreanalyzer.cpp; sourceTree = "<group>"; };
+		7874635817D5DD840040CFC7 /* TEncPreanalyzer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncPreanalyzer.h; sourceTree = "<group>"; };
+		7874635917D5DD840040CFC7 /* TEncRateCtrl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncRateCtrl.cpp; sourceTree = "<group>"; };
+		7874635A17D5DD840040CFC7 /* TEncRateCtrl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncRateCtrl.h; sourceTree = "<group>"; };
+		7874635B17D5DD840040CFC7 /* TEncSampleAdaptiveOffset.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSampleAdaptiveOffset.cpp; sourceTree = "<group>"; };
+		7874635C17D5DD840040CFC7 /* TEncSampleAdaptiveOffset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSampleAdaptiveOffset.h; sourceTree = "<group>"; };
+		7874635D17D5DD840040CFC7 /* TEncSbac.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSbac.cpp; sourceTree = "<group>"; };
+		7874635E17D5DD840040CFC7 /* TEncSbac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSbac.h; sourceTree = "<group>"; };
+		7874635F17D5DD840040CFC7 /* TEncSearch.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSearch.cpp; sourceTree = "<group>"; };
+		7874636017D5DD840040CFC7 /* TEncSearch.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSearch.h; sourceTree = "<group>"; };
+		7874636117D5DD840040CFC7 /* TEncSlice.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncSlice.cpp; sourceTree = "<group>"; };
+		7874636217D5DD840040CFC7 /* TEncSlice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncSlice.h; sourceTree = "<group>"; };
+		7874636317D5DD840040CFC7 /* TEncTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TEncTop.cpp; sourceTree = "<group>"; };
+		7874636417D5DD840040CFC7 /* TEncTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TEncTop.h; sourceTree = "<group>"; };
+		7874636517D5DD840040CFC7 /* WeightPredAnalysis.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WeightPredAnalysis.cpp; sourceTree = "<group>"; };
+		7874636617D5DD840040CFC7 /* WeightPredAnalysis.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = WeightPredAnalysis.h; sourceTree = "<group>"; };
+		7874636817D5DD840040CFC7 /* TExtrTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TExtrTop.cpp; sourceTree = "<group>"; };
+		7874636917D5DD840040CFC7 /* TExtrTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TExtrTop.h; sourceTree = "<group>"; };
+		7874636B17D5DD840040CFC7 /* TRenFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenFilter.cpp; sourceTree = "<group>"; };
+		7874636C17D5DD840040CFC7 /* TRenFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenFilter.h; sourceTree = "<group>"; };
+		7874636D17D5DD840040CFC7 /* TRenImage.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenImage.cpp; sourceTree = "<group>"; };
+		7874636E17D5DD840040CFC7 /* TRenImage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenImage.h; sourceTree = "<group>"; };
+		7874636F17D5DD840040CFC7 /* TRenImagePlane.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenImagePlane.cpp; sourceTree = "<group>"; };
+		7874637017D5DD840040CFC7 /* TRenImagePlane.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenImagePlane.h; sourceTree = "<group>"; };
+		7874637117D5DD840040CFC7 /* TRenInterpFilter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenInterpFilter.cpp; sourceTree = "<group>"; };
+		7874637217D5DD840040CFC7 /* TRenInterpFilter.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenInterpFilter.h; sourceTree = "<group>"; };
+		7874637317D5DD840040CFC7 /* TRenModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenModel.cpp; sourceTree = "<group>"; };
+		7874637417D5DD840040CFC7 /* TRenModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenModel.h; sourceTree = "<group>"; };
+		7874637517D5DD840040CFC7 /* TRenModSetupStrParser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenModSetupStrParser.cpp; sourceTree = "<group>"; };
+		7874637617D5DD840040CFC7 /* TRenModSetupStrParser.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenModSetupStrParser.h; sourceTree = "<group>"; };
+		7874637717D5DD840040CFC7 /* TRenSingleModel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenSingleModel.cpp; sourceTree = "<group>"; };
+		7874637817D5DD840040CFC7 /* TRenSingleModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenSingleModel.h; sourceTree = "<group>"; };
+		7874637917D5DD840040CFC7 /* TRenTop.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TRenTop.cpp; sourceTree = "<group>"; };
+		7874637A17D5DD840040CFC7 /* TRenTop.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TRenTop.h; sourceTree = "<group>"; };
+		7874637C17D5DD840040CFC7 /* TVideoIOYuv.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = TVideoIOYuv.cpp; sourceTree = "<group>"; };
+		7874637D17D5DD840040CFC7 /* TVideoIOYuv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TVideoIOYuv.h; sourceTree = "<group>"; };
+		7885897D15664E3D00982C12 /* libTLibExtractor.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibExtractor.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7885899415664E6A00982C12 /* TAppExtractor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppExtractor; sourceTree = BUILT_PRODUCTS_DIR; };
+		7894E36714890D9A009259F4 /* libTLibRenderer.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTLibRenderer.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		7894E38A14890DD2009259F4 /* TAppRenderer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = TAppRenderer; sourceTree = BUILT_PRODUCTS_DIR; };
+		78C593B415872152004401C5 /* libTAppCommon.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTAppCommon.a; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		6767959211AD61BB00421804 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		676795F211AD621A00421804 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767961711AD626F00421804 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767964911AD629200421804 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767966811AD635600421804 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78C5940D15872233004401C5 /* libTLibCommon.a in Frameworks */,
+				78C5940E15872233004401C5 /* libTLibEncoder.a in Frameworks */,
+				78C5940F15872233004401C5 /* libTLibVideoIO.a in Frameworks */,
+				78C5941015872233004401C5 /* libTLibRenderer.a in Frameworks */,
+				78C5941115872233004401C5 /* libTAppCommon.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6782E0DC11AD691A00E8FFB8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78C5941B158722B7004401C5 /* libTLibCommon.a in Frameworks */,
+				78C5941C158722BA004401C5 /* libTLibDecoder.a in Frameworks */,
+				78C5941E158722C0004401C5 /* libTAppCommon.a in Frameworks */,
+				78C5941D158722BC004401C5 /* libTLibVideoIO.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7885897915664E3D00982C12 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7885898C15664E6A00982C12 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78C5943A1587234F004401C5 /* libTLibCommon.a in Frameworks */,
+				78C5943B15872352004401C5 /* libTLibDecoder.a in Frameworks */,
+				78C5943C15872356004401C5 /* libTLibVideoIO.a in Frameworks */,
+				78C5943D1587235B004401C5 /* libTAppCommon.a in Frameworks */,
+				78C5943E1587235E004401C5 /* libTLibExtractor.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7894E36314890D9A009259F4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7894E38214890DD2009259F4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78C59428158722F2004401C5 /* libTLibCommon.a in Frameworks */,
+				78C59429158722F6004401C5 /* libTLibVideoIO.a in Frameworks */,
+				78C5942A158722FA004401C5 /* libTAppCommon.a in Frameworks */,
+				78C5942B15872300004401C5 /* libTLibRenderer.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78C593B015872152004401C5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* Trinity */ = {
+			isa = PBXGroup;
+			children = (
+				08FB7795FE84155DC02AAC07 /* Source */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = Trinity;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				78C592E7158720BB004401C5 /* App */,
+				78C59310158720BB004401C5 /* Lib */,
+			);
+			indentWidth = 2;
+			name = Source;
+			sourceTree = "<group>";
+			tabWidth = 2;
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				6767959411AD61BB00421804 /* libTLibCommon.a */,
+				676795F411AD621A00421804 /* libTLibDecoder.a */,
+				6767961911AD626F00421804 /* libTLibEncoder.a */,
+				6767964B11AD629200421804 /* libTLibVideoIO.a */,
+				6767966A11AD635600421804 /* TAppEncoder */,
+				6782E0DE11AD691A00E8FFB8 /* TAppDecoder */,
+				7894E36714890D9A009259F4 /* libTLibRenderer.a */,
+				7894E38A14890DD2009259F4 /* TAppRenderer */,
+				7885897D15664E3D00982C12 /* libTLibExtractor.a */,
+				7885899415664E6A00982C12 /* TAppExtractor */,
+				78C593B415872152004401C5 /* libTAppCommon.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		785E596B17D9AFA8001F6DD1 /* TLibStatistics */ = {
+			isa = PBXGroup;
+			children = (
+				785E596C17D9AFA8001F6DD1 /* TStatHeader.cpp */,
+				785E596D17D9AFA8001F6DD1 /* TStatHeader.h */,
+				785E596E17D9AFA8001F6DD1 /* TStatLayer.cpp */,
+				785E596F17D9AFA8001F6DD1 /* TStatLayer.h */,
+				785E597017D9AFA8001F6DD1 /* TStatTop.cpp */,
+				785E597117D9AFA8001F6DD1 /* TStatTop.h */,
+			);
+			path = TLibStatistics;
+			sourceTree = "<group>";
+		};
+		787462BA17D5DD7B0040CFC7 /* TAppDecoder */ = {
+			isa = PBXGroup;
+			children = (
+				787462BB17D5DD7B0040CFC7 /* decmain.cpp */,
+				787462BC17D5DD7B0040CFC7 /* TAppDecCfg.cpp */,
+				787462BD17D5DD7B0040CFC7 /* TAppDecCfg.h */,
+				787462BE17D5DD7B0040CFC7 /* TAppDecTop.cpp */,
+				787462BF17D5DD7B0040CFC7 /* TAppDecTop.h */,
+			);
+			path = TAppDecoder;
+			sourceTree = "<group>";
+		};
+		787462C017D5DD7B0040CFC7 /* TAppEncoder */ = {
+			isa = PBXGroup;
+			children = (
+				787462C117D5DD7B0040CFC7 /* encmain.cpp */,
+				787462C217D5DD7B0040CFC7 /* TAppEncCfg.cpp */,
+				787462C317D5DD7B0040CFC7 /* TAppEncCfg.h */,
+				787462C417D5DD7B0040CFC7 /* TAppEncTop.cpp */,
+				787462C517D5DD7B0040CFC7 /* TAppEncTop.h */,
+			);
+			path = TAppEncoder;
+			sourceTree = "<group>";
+		};
+		787462C617D5DD7B0040CFC7 /* TAppExtractor */ = {
+			isa = PBXGroup;
+			children = (
+				787462C717D5DD7B0040CFC7 /* extrmain.cpp */,
+				787462C817D5DD7B0040CFC7 /* TAppExtrCfg.cpp */,
+				787462C917D5DD7B0040CFC7 /* TAppExtrCfg.h */,
+				787462CA17D5DD7B0040CFC7 /* TAppExtrTop.cpp */,
+				787462CB17D5DD7B0040CFC7 /* TAppExtrTop.h */,
+			);
+			path = TAppExtractor;
+			sourceTree = "<group>";
+		};
+		787462CC17D5DD7B0040CFC7 /* TAppRenderer */ = {
+			isa = PBXGroup;
+			children = (
+				787462CD17D5DD7B0040CFC7 /* RendererMain.cpp */,
+				787462CE17D5DD7B0040CFC7 /* TAppRendererCfg.cpp */,
+				787462CF17D5DD7B0040CFC7 /* TAppRendererCfg.h */,
+				787462D017D5DD7B0040CFC7 /* TAppRendererTop.cpp */,
+				787462D117D5DD7B0040CFC7 /* TAppRendererTop.h */,
+			);
+			path = TAppRenderer;
+			sourceTree = "<group>";
+		};
+		787462D217D5DD7B0040CFC7 /* utils */ = {
+			isa = PBXGroup;
+			children = (
+				787462D317D5DD7B0040CFC7 /* annexBbytecount.cpp */,
+				787462D417D5DD7B0040CFC7 /* BitrateTargeting */,
+				787462E117D5DD7B0040CFC7 /* convert_NtoMbit_YCbCr.cpp */,
+			);
+			path = utils;
+			sourceTree = "<group>";
+		};
+		787462D417D5DD7B0040CFC7 /* BitrateTargeting */ = {
+			isa = PBXGroup;
+			children = (
+				787462D517D5DD7B0040CFC7 /* encode.shl */,
+				787462D617D5DD7B0040CFC7 /* encodeCommand.sh */,
+				787462D717D5DD7B0040CFC7 /* ExtractBitrates.cpp */,
+				787462D817D5DD7B0040CFC7 /* ExtractBitrates.h */,
+				787462D917D5DD7B0040CFC7 /* ExtractBitratesMain.cpp */,
+				787462DA17D5DD7B0040CFC7 /* GuessLambdaModifiers.cpp */,
+				787462DB17D5DD7B0040CFC7 /* GuessLambdaModifiers.h */,
+				787462DC17D5DD7B0040CFC7 /* GuessLambdaModifiersMain.cpp */,
+				787462DD17D5DD7B0040CFC7 /* makefile */,
+				787462DE17D5DD7B0040CFC7 /* QuickStartGuide.pdf */,
+				787462DF17D5DD7B0040CFC7 /* RuntimeError.h */,
+				787462E017D5DD7B0040CFC7 /* targetBitrates.sh */,
+			);
+			path = BitrateTargeting;
+			sourceTree = "<group>";
+		};
+		787462E217D5DD840040CFC7 /* libmd5 */ = {
+			isa = PBXGroup;
+			children = (
+				787462E317D5DD840040CFC7 /* libmd5.c */,
+				787462E417D5DD840040CFC7 /* libmd5.h */,
+				787462E517D5DD840040CFC7 /* MD5.h */,
+			);
+			path = libmd5;
+			sourceTree = "<group>";
+		};
+		787462E617D5DD840040CFC7 /* TAppCommon */ = {
+			isa = PBXGroup;
+			children = (
+				787462E717D5DD840040CFC7 /* program_options_lite.cpp */,
+				787462E817D5DD840040CFC7 /* program_options_lite.h */,
+				787462E917D5DD840040CFC7 /* TAppComCamPara.cpp */,
+				787462EA17D5DD840040CFC7 /* TAppComCamPara.h */,
+			);
+			path = TAppCommon;
+			sourceTree = "<group>";
+		};
+		787462EB17D5DD840040CFC7 /* TLibCommon */ = {
+			isa = PBXGroup;
+			children = (
+				787462EC17D5DD840040CFC7 /* AccessUnit.h */,
+				787462ED17D5DD840040CFC7 /* CommonDef.h */,
+				787462EE17D5DD840040CFC7 /* ContextModel.cpp */,
+				787462EF17D5DD840040CFC7 /* ContextModel.h */,
+				787462F017D5DD840040CFC7 /* ContextModel3DBuffer.cpp */,
+				787462F117D5DD840040CFC7 /* ContextModel3DBuffer.h */,
+				787462F217D5DD840040CFC7 /* ContextTables.h */,
+				787462F317D5DD840040CFC7 /* NAL.h */,
+				787462F417D5DD840040CFC7 /* SEI.cpp */,
+				787462F517D5DD840040CFC7 /* SEI.h */,
+				787462F617D5DD840040CFC7 /* TComBitCounter.h */,
+				787462F717D5DD840040CFC7 /* TComBitStream.cpp */,
+				787462F817D5DD840040CFC7 /* TComBitStream.h */,
+				787462F917D5DD840040CFC7 /* TComCABACTables.cpp */,
+				787462FA17D5DD840040CFC7 /* TComCABACTables.h */,
+				787462FB17D5DD840040CFC7 /* TComDataCU.cpp */,
+				787462FC17D5DD840040CFC7 /* TComDataCU.h */,
+				787462FD17D5DD840040CFC7 /* TComInterpolationFilter.cpp */,
+				787462FE17D5DD840040CFC7 /* TComInterpolationFilter.h */,
+				787462FF17D5DD840040CFC7 /* TComList.h */,
+				7874630017D5DD840040CFC7 /* TComLoopFilter.cpp */,
+				7874630117D5DD840040CFC7 /* TComLoopFilter.h */,
+				7874630217D5DD840040CFC7 /* TComMotionInfo.cpp */,
+				7874630317D5DD840040CFC7 /* TComMotionInfo.h */,
+				7874630417D5DD840040CFC7 /* TComMv.h */,
+				7874630517D5DD840040CFC7 /* TComPattern.cpp */,
+				7874630617D5DD840040CFC7 /* TComPattern.h */,
+				7874630717D5DD840040CFC7 /* TComPic.cpp */,
+				7874630817D5DD840040CFC7 /* TComPic.h */,
+				7874630917D5DD840040CFC7 /* TComPicSym.cpp */,
+				7874630A17D5DD840040CFC7 /* TComPicSym.h */,
+				7874630B17D5DD840040CFC7 /* TComPicYuv.cpp */,
+				7874630C17D5DD840040CFC7 /* TComPicYuv.h */,
+				7874630D17D5DD840040CFC7 /* TComPicYuvMD5.cpp */,
+				7874630E17D5DD840040CFC7 /* TComPrediction.cpp */,
+				7874630F17D5DD840040CFC7 /* TComPrediction.h */,
+				7874631017D5DD840040CFC7 /* TComRdCost.cpp */,
+				7874631117D5DD840040CFC7 /* TComRdCost.h */,
+				7874631217D5DD840040CFC7 /* TComRdCostWeightPrediction.cpp */,
+				7874631317D5DD840040CFC7 /* TComRdCostWeightPrediction.h */,
+				7874631417D5DD840040CFC7 /* TComRom.cpp */,
+				7874631517D5DD840040CFC7 /* TComRom.h */,
+				7874631617D5DD840040CFC7 /* TComSampleAdaptiveOffset.cpp */,
+				7874631717D5DD840040CFC7 /* TComSampleAdaptiveOffset.h */,
+				7874631817D5DD840040CFC7 /* TComSlice.cpp */,
+				7874631917D5DD840040CFC7 /* TComSlice.h */,
+				7874631A17D5DD840040CFC7 /* TComTrQuant.cpp */,
+				7874631B17D5DD840040CFC7 /* TComTrQuant.h */,
+				7874631C17D5DD840040CFC7 /* TComWedgelet.cpp */,
+				7874631D17D5DD840040CFC7 /* TComWedgelet.h */,
+				7874631E17D5DD840040CFC7 /* TComWeightPrediction.cpp */,
+				7874631F17D5DD840040CFC7 /* TComWeightPrediction.h */,
+				7874632017D5DD840040CFC7 /* TComYuv.cpp */,
+				7874632117D5DD840040CFC7 /* TComYuv.h */,
+				7874632217D5DD840040CFC7 /* TypeDef.h */,
+			);
+			path = TLibCommon;
+			sourceTree = "<group>";
+		};
+		7874632317D5DD840040CFC7 /* TLibDecoder */ = {
+			isa = PBXGroup;
+			children = (
+				7874632417D5DD840040CFC7 /* AnnexBread.cpp */,
+				7874632517D5DD840040CFC7 /* AnnexBread.h */,
+				7874632617D5DD840040CFC7 /* NALread.cpp */,
+				7874632717D5DD840040CFC7 /* NALread.h */,
+				7874632817D5DD840040CFC7 /* SEIread.cpp */,
+				7874632917D5DD840040CFC7 /* SEIread.h */,
+				7874632A17D5DD840040CFC7 /* SyntaxElementParser.cpp */,
+				7874632B17D5DD840040CFC7 /* SyntaxElementParser.h */,
+				7874632C17D5DD840040CFC7 /* TDecBinCoder.h */,
+				7874632D17D5DD840040CFC7 /* TDecBinCoderCABAC.cpp */,
+				7874632E17D5DD840040CFC7 /* TDecBinCoderCABAC.h */,
+				7874632F17D5DD840040CFC7 /* TDecCAVLC.cpp */,
+				7874633017D5DD840040CFC7 /* TDecCAVLC.h */,
+				7874633117D5DD840040CFC7 /* TDecCu.cpp */,
+				7874633217D5DD840040CFC7 /* TDecCu.h */,
+				7874633317D5DD840040CFC7 /* TDecEntropy.cpp */,
+				7874633417D5DD840040CFC7 /* TDecEntropy.h */,
+				7874633517D5DD840040CFC7 /* TDecGop.cpp */,
+				7874633617D5DD840040CFC7 /* TDecGop.h */,
+				7874633717D5DD840040CFC7 /* TDecSbac.cpp */,
+				7874633817D5DD840040CFC7 /* TDecSbac.h */,
+				7874633917D5DD840040CFC7 /* TDecSlice.cpp */,
+				7874633A17D5DD840040CFC7 /* TDecSlice.h */,
+				7874633B17D5DD840040CFC7 /* TDecTop.cpp */,
+				7874633C17D5DD840040CFC7 /* TDecTop.h */,
+			);
+			path = TLibDecoder;
+			sourceTree = "<group>";
+		};
+		7874633D17D5DD840040CFC7 /* TLibEncoder */ = {
+			isa = PBXGroup;
+			children = (
+				7874633E17D5DD840040CFC7 /* AnnexBwrite.h */,
+				7874633F17D5DD840040CFC7 /* NALwrite.cpp */,
+				7874634017D5DD840040CFC7 /* NALwrite.h */,
+				7874634117D5DD840040CFC7 /* SEIwrite.cpp */,
+				7874634217D5DD840040CFC7 /* SEIwrite.h */,
+				7874634317D5DD840040CFC7 /* SyntaxElementWriter.cpp */,
+				7874634417D5DD840040CFC7 /* SyntaxElementWriter.h */,
+				7874634517D5DD840040CFC7 /* TEncAnalyze.cpp */,
+				7874634617D5DD840040CFC7 /* TEncAnalyze.h */,
+				7874634717D5DD840040CFC7 /* TEncBinCoder.h */,
+				7874634817D5DD840040CFC7 /* TEncBinCoderCABAC.cpp */,
+				7874634917D5DD840040CFC7 /* TEncBinCoderCABAC.h */,
+				7874634A17D5DD840040CFC7 /* TEncBinCoderCABACCounter.cpp */,
+				7874634B17D5DD840040CFC7 /* TEncBinCoderCABACCounter.h */,
+				7874634C17D5DD840040CFC7 /* TEncCavlc.cpp */,
+				7874634D17D5DD840040CFC7 /* TEncCavlc.h */,
+				7874634E17D5DD840040CFC7 /* TEncCfg.h */,
+				7874634F17D5DD840040CFC7 /* TEncCu.cpp */,
+				7874635017D5DD840040CFC7 /* TEncCu.h */,
+				7874635117D5DD840040CFC7 /* TEncEntropy.cpp */,
+				7874635217D5DD840040CFC7 /* TEncEntropy.h */,
+				7874635317D5DD840040CFC7 /* TEncGOP.cpp */,
+				7874635417D5DD840040CFC7 /* TEncGOP.h */,
+				7874635517D5DD840040CFC7 /* TEncPic.cpp */,
+				7874635617D5DD840040CFC7 /* TEncPic.h */,
+				7874635717D5DD840040CFC7 /* TEncPreanalyzer.cpp */,
+				7874635817D5DD840040CFC7 /* TEncPreanalyzer.h */,
+				7874635917D5DD840040CFC7 /* TEncRateCtrl.cpp */,
+				7874635A17D5DD840040CFC7 /* TEncRateCtrl.h */,
+				7874635B17D5DD840040CFC7 /* TEncSampleAdaptiveOffset.cpp */,
+				7874635C17D5DD840040CFC7 /* TEncSampleAdaptiveOffset.h */,
+				7874635D17D5DD840040CFC7 /* TEncSbac.cpp */,
+				7874635E17D5DD840040CFC7 /* TEncSbac.h */,
+				7874635F17D5DD840040CFC7 /* TEncSearch.cpp */,
+				7874636017D5DD840040CFC7 /* TEncSearch.h */,
+				7874636117D5DD840040CFC7 /* TEncSlice.cpp */,
+				7874636217D5DD840040CFC7 /* TEncSlice.h */,
+				7874636317D5DD840040CFC7 /* TEncTop.cpp */,
+				7874636417D5DD840040CFC7 /* TEncTop.h */,
+				7874636517D5DD840040CFC7 /* WeightPredAnalysis.cpp */,
+				7874636617D5DD840040CFC7 /* WeightPredAnalysis.h */,
+			);
+			path = TLibEncoder;
+			sourceTree = "<group>";
+		};
+		7874636717D5DD840040CFC7 /* TLibExtractor */ = {
+			isa = PBXGroup;
+			children = (
+				7874636817D5DD840040CFC7 /* TExtrTop.cpp */,
+				7874636917D5DD840040CFC7 /* TExtrTop.h */,
+			);
+			path = TLibExtractor;
+			sourceTree = "<group>";
+		};
+		7874636A17D5DD840040CFC7 /* TLibRenderer */ = {
+			isa = PBXGroup;
+			children = (
+				7874636B17D5DD840040CFC7 /* TRenFilter.cpp */,
+				7874636C17D5DD840040CFC7 /* TRenFilter.h */,
+				7874636D17D5DD840040CFC7 /* TRenImage.cpp */,
+				7874636E17D5DD840040CFC7 /* TRenImage.h */,
+				7874636F17D5DD840040CFC7 /* TRenImagePlane.cpp */,
+				7874637017D5DD840040CFC7 /* TRenImagePlane.h */,
+				7874637117D5DD840040CFC7 /* TRenInterpFilter.cpp */,
+				7874637217D5DD840040CFC7 /* TRenInterpFilter.h */,
+				7874637317D5DD840040CFC7 /* TRenModel.cpp */,
+				7874637417D5DD840040CFC7 /* TRenModel.h */,
+				7874637517D5DD840040CFC7 /* TRenModSetupStrParser.cpp */,
+				7874637617D5DD840040CFC7 /* TRenModSetupStrParser.h */,
+				7874637717D5DD840040CFC7 /* TRenSingleModel.cpp */,
+				7874637817D5DD840040CFC7 /* TRenSingleModel.h */,
+				7874637917D5DD840040CFC7 /* TRenTop.cpp */,
+				7874637A17D5DD840040CFC7 /* TRenTop.h */,
+			);
+			path = TLibRenderer;
+			sourceTree = "<group>";
+		};
+		7874637B17D5DD840040CFC7 /* TLibVideoIO */ = {
+			isa = PBXGroup;
+			children = (
+				7874637C17D5DD840040CFC7 /* TVideoIOYuv.cpp */,
+				7874637D17D5DD840040CFC7 /* TVideoIOYuv.h */,
+			);
+			path = TLibVideoIO;
+			sourceTree = "<group>";
+		};
+		78C592E7158720BB004401C5 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				787462BA17D5DD7B0040CFC7 /* TAppDecoder */,
+				787462C017D5DD7B0040CFC7 /* TAppEncoder */,
+				787462C617D5DD7B0040CFC7 /* TAppExtractor */,
+				787462CC17D5DD7B0040CFC7 /* TAppRenderer */,
+				787462D217D5DD7B0040CFC7 /* utils */,
+			);
+			name = App;
+			path = source/App;
+			sourceTree = "<group>";
+		};
+		78C59310158720BB004401C5 /* Lib */ = {
+			isa = PBXGroup;
+			children = (
+				787462E217D5DD840040CFC7 /* libmd5 */,
+				787462E617D5DD840040CFC7 /* TAppCommon */,
+				787462EB17D5DD840040CFC7 /* TLibCommon */,
+				7874632317D5DD840040CFC7 /* TLibDecoder */,
+				7874633D17D5DD840040CFC7 /* TLibEncoder */,
+				7874636717D5DD840040CFC7 /* TLibExtractor */,
+				7874636A17D5DD840040CFC7 /* TLibRenderer */,
+				7874637B17D5DD840040CFC7 /* TLibVideoIO */,
+				785E596B17D9AFA8001F6DD1 /* TLibStatistics */,
+			);
+			name = Lib;
+			path = source/Lib;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		6767959011AD61BB00421804 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		676795F011AD621A00421804 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767961511AD626F00421804 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767964711AD629200421804 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7885896F15664E3D00982C12 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7894E34E14890D9A009259F4 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78C593AE15872152004401C5 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		6767959311AD61BB00421804 /* TLibCommon */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6767959811AD61D700421804 /* Build configuration list for PBXNativeTarget "TLibCommon" */;
+			buildPhases = (
+				6767959011AD61BB00421804 /* Headers */,
+				6767959111AD61BB00421804 /* Sources */,
+				6767959211AD61BB00421804 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TLibCommon;
+			productName = TLibCommon;
+			productReference = 6767959411AD61BB00421804 /* libTLibCommon.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		676795F311AD621A00421804 /* TLibDecoder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 676795F711AD623800421804 /* Build configuration list for PBXNativeTarget "TLibDecoder" */;
+			buildPhases = (
+				676795F011AD621A00421804 /* Headers */,
+				676795F111AD621A00421804 /* Sources */,
+				676795F211AD621A00421804 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TLibDecoder;
+			productName = TLibDecoder;
+			productReference = 676795F411AD621A00421804 /* libTLibDecoder.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6767961811AD626F00421804 /* TLibEncoder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6767964611AD628100421804 /* Build configuration list for PBXNativeTarget "TLibEncoder" */;
+			buildPhases = (
+				6767961511AD626F00421804 /* Headers */,
+				6767961611AD626F00421804 /* Sources */,
+				6767961711AD626F00421804 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TLibEncoder;
+			productName = TLibEncoder;
+			productReference = 6767961911AD626F00421804 /* libTLibEncoder.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6767964A11AD629200421804 /* TLibVideoIO */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6767964F11AD629700421804 /* Build configuration list for PBXNativeTarget "TLibVideoIO" */;
+			buildPhases = (
+				6767964711AD629200421804 /* Headers */,
+				6767964811AD629200421804 /* Sources */,
+				6767964911AD629200421804 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TLibVideoIO;
+			productName = TLibVideoIO;
+			productReference = 6767964B11AD629200421804 /* libTLibVideoIO.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		6767966911AD635600421804 /* TAppEncoder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6767966E11AD637400421804 /* Build configuration list for PBXNativeTarget "TAppEncoder" */;
+			buildPhases = (
+				6767966711AD635600421804 /* Sources */,
+				6767966811AD635600421804 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				78C5940415872220004401C5 /* PBXTargetDependency */,
+				78C5940615872221004401C5 /* PBXTargetDependency */,
+				78C5940815872222004401C5 /* PBXTargetDependency */,
+				78C5940A15872226004401C5 /* PBXTargetDependency */,
+				78C5940C15872228004401C5 /* PBXTargetDependency */,
+			);
+			name = TAppEncoder;
+			productName = TAppEncoder;
+			productReference = 6767966A11AD635600421804 /* TAppEncoder */;
+			productType = "com.apple.product-type.tool";
+		};
+		6782E0DD11AD691A00E8FFB8 /* TAppDecoder */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6782E0E611AD692F00E8FFB8 /* Build configuration list for PBXNativeTarget "TAppDecoder" */;
+			buildPhases = (
+				6782E0DB11AD691A00E8FFB8 /* Sources */,
+				6782E0DC11AD691A00E8FFB8 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				78C59414158722AE004401C5 /* PBXTargetDependency */,
+				78C59416158722AF004401C5 /* PBXTargetDependency */,
+				78C59418158722B1004401C5 /* PBXTargetDependency */,
+				78C5941A158722B3004401C5 /* PBXTargetDependency */,
+			);
+			name = TAppDecoder;
+			productName = TAppDecoder;
+			productReference = 6782E0DE11AD691A00E8FFB8 /* TAppDecoder */;
+			productType = "com.apple.product-type.tool";
+		};
+		7885896E15664E3D00982C12 /* TLibExtractor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7885897A15664E3D00982C12 /* Build configuration list for PBXNativeTarget "TLibExtractor" */;
+			buildPhases = (
+				7885896F15664E3D00982C12 /* Headers */,
+				7885897015664E3D00982C12 /* Sources */,
+				7885897915664E3D00982C12 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TLibExtractor;
+			productName = TLibDecoder;
+			productReference = 7885897D15664E3D00982C12 /* libTLibExtractor.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		7885897F15664E6A00982C12 /* TAppExtractor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7885899115664E6A00982C12 /* Build configuration list for PBXNativeTarget "TAppExtractor" */;
+			buildPhases = (
+				7885898815664E6A00982C12 /* Sources */,
+				7885898C15664E6A00982C12 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				78C5943115872345004401C5 /* PBXTargetDependency */,
+				78C5943315872347004401C5 /* PBXTargetDependency */,
+				78C594391587234B004401C5 /* PBXTargetDependency */,
+				78C594371587234A004401C5 /* PBXTargetDependency */,
+				78C5943515872348004401C5 /* PBXTargetDependency */,
+			);
+			name = TAppExtractor;
+			productName = TAppDecoder;
+			productReference = 7885899415664E6A00982C12 /* TAppExtractor */;
+			productType = "com.apple.product-type.tool";
+		};
+		7894E34D14890D9A009259F4 /* TLibRenderer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7894E36414890D9A009259F4 /* Build configuration list for PBXNativeTarget "TLibRenderer" */;
+			buildPhases = (
+				7894E34E14890D9A009259F4 /* Headers */,
+				7894E35914890D9A009259F4 /* Sources */,
+				7894E36314890D9A009259F4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TLibRenderer;
+			productName = TLibDecoder;
+			productReference = 7894E36714890D9A009259F4 /* libTLibRenderer.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		7894E37514890DD2009259F4 /* TAppRenderer */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7894E38714890DD2009259F4 /* Build configuration list for PBXNativeTarget "TAppRenderer" */;
+			buildPhases = (
+				7894E37E14890DD2009259F4 /* Sources */,
+				7894E38214890DD2009259F4 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				78C59421158722E9004401C5 /* PBXTargetDependency */,
+				78C59423158722EB004401C5 /* PBXTargetDependency */,
+				78C59425158722ED004401C5 /* PBXTargetDependency */,
+				78C59427158722EF004401C5 /* PBXTargetDependency */,
+			);
+			name = TAppRenderer;
+			productName = TAppDecoder;
+			productReference = 7894E38A14890DD2009259F4 /* TAppRenderer */;
+			productType = "com.apple.product-type.tool";
+		};
+		78C593AD15872152004401C5 /* TAppCommon */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 78C593B115872152004401C5 /* Build configuration list for PBXNativeTarget "TAppCommon" */;
+			buildPhases = (
+				78C593AE15872152004401C5 /* Headers */,
+				78C593AF15872152004401C5 /* Sources */,
+				78C593B015872152004401C5 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = TAppCommon;
+			productName = TLibCommon;
+			productReference = 78C593B415872152004401C5 /* libTAppCommon.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 0500;
+			};
+			buildConfigurationList = 1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "HTM" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 08FB7794FE84155DC02AAC07 /* Trinity */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				6767959311AD61BB00421804 /* TLibCommon */,
+				676795F311AD621A00421804 /* TLibDecoder */,
+				6767961811AD626F00421804 /* TLibEncoder */,
+				6767964A11AD629200421804 /* TLibVideoIO */,
+				7894E34D14890D9A009259F4 /* TLibRenderer */,
+				7885896E15664E3D00982C12 /* TLibExtractor */,
+				78C593AD15872152004401C5 /* TAppCommon */,
+				6767966911AD635600421804 /* TAppEncoder */,
+				6782E0DD11AD691A00E8FFB8 /* TAppDecoder */,
+				7894E37514890DD2009259F4 /* TAppRenderer */,
+				7885897F15664E6A00982C12 /* TAppExtractor */,
+				78C9B17C14DAD3E800989162 /* Package */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		6767959111AD61BB00421804 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7874639417D5DE070040CFC7 /* TComPrediction.cpp in Sources */,
+				7874639517D5DE070040CFC7 /* TComRdCost.cpp in Sources */,
+				7874639617D5DE070040CFC7 /* TComRdCostWeightPrediction.cpp in Sources */,
+				7874639717D5DE070040CFC7 /* TComRom.cpp in Sources */,
+				7874639817D5DE070040CFC7 /* TComSampleAdaptiveOffset.cpp in Sources */,
+				7874639917D5DE070040CFC7 /* TComSlice.cpp in Sources */,
+				7874639A17D5DE070040CFC7 /* TComTrQuant.cpp in Sources */,
+				7874639B17D5DE070040CFC7 /* TComWedgelet.cpp in Sources */,
+				7874639C17D5DE070040CFC7 /* TComWeightPrediction.cpp in Sources */,
+				7874639D17D5DE070040CFC7 /* TComYuv.cpp in Sources */,
+				7874639E17D5DE230040CFC7 /* TComMotionInfo.cpp in Sources */,
+				7874639F17D5DE230040CFC7 /* TComPattern.cpp in Sources */,
+				787463A017D5DE230040CFC7 /* TComPic.cpp in Sources */,
+				787463A117D5DE230040CFC7 /* TComPicSym.cpp in Sources */,
+				787463A217D5DE230040CFC7 /* TComPicYuv.cpp in Sources */,
+				787463A317D5DE230040CFC7 /* TComPicYuvMD5.cpp in Sources */,
+				787463A417D5DE400040CFC7 /* TComCABACTables.cpp in Sources */,
+				787463A517D5DE400040CFC7 /* TComDataCU.cpp in Sources */,
+				787463A617D5DE400040CFC7 /* TComInterpolationFilter.cpp in Sources */,
+				787463A717D5DE400040CFC7 /* TComLoopFilter.cpp in Sources */,
+				787463A817D5DE4B0040CFC7 /* TComBitStream.cpp in Sources */,
+				787463A917D5DE640040CFC7 /* ContextModel.cpp in Sources */,
+				787463AA17D5DE640040CFC7 /* ContextModel3DBuffer.cpp in Sources */,
+				787463AB17D5DE640040CFC7 /* SEI.cpp in Sources */,
+				787463B717D5DED40040CFC7 /* libmd5.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		676795F111AD621A00421804 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463B817D5DEE80040CFC7 /* AnnexBread.cpp in Sources */,
+				787463B917D5DEE80040CFC7 /* NALread.cpp in Sources */,
+				787463BA17D5DEE80040CFC7 /* SEIread.cpp in Sources */,
+				787463BB17D5DEE80040CFC7 /* SyntaxElementParser.cpp in Sources */,
+				787463BC17D5DEE80040CFC7 /* TDecBinCoderCABAC.cpp in Sources */,
+				787463BD17D5DEE80040CFC7 /* TDecCAVLC.cpp in Sources */,
+				787463BE17D5DEE80040CFC7 /* TDecCu.cpp in Sources */,
+				787463BF17D5DEE80040CFC7 /* TDecEntropy.cpp in Sources */,
+				787463C017D5DEE80040CFC7 /* TDecGop.cpp in Sources */,
+				787463C117D5DEE80040CFC7 /* TDecSbac.cpp in Sources */,
+				787463C217D5DEE80040CFC7 /* TDecSlice.cpp in Sources */,
+				787463C317D5DEE80040CFC7 /* TDecTop.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767961611AD626F00421804 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7874638117D5DDA60040CFC7 /* NALwrite.cpp in Sources */,
+				7874638217D5DDA60040CFC7 /* SEIwrite.cpp in Sources */,
+				7874638317D5DDA60040CFC7 /* SyntaxElementWriter.cpp in Sources */,
+				7874638417D5DDA60040CFC7 /* TEncAnalyze.cpp in Sources */,
+				7874638517D5DDA60040CFC7 /* TEncBinCoderCABAC.cpp in Sources */,
+				7874638617D5DDA60040CFC7 /* TEncBinCoderCABACCounter.cpp in Sources */,
+				7874638717D5DDA60040CFC7 /* TEncCavlc.cpp in Sources */,
+				7874638817D5DDA60040CFC7 /* TEncCu.cpp in Sources */,
+				7874638917D5DDA60040CFC7 /* TEncEntropy.cpp in Sources */,
+				7874638A17D5DDA60040CFC7 /* TEncGOP.cpp in Sources */,
+				7874638B17D5DDA60040CFC7 /* TEncPic.cpp in Sources */,
+				7874638C17D5DDA60040CFC7 /* TEncPreanalyzer.cpp in Sources */,
+				7874638D17D5DDA60040CFC7 /* TEncRateCtrl.cpp in Sources */,
+				7874638E17D5DDA60040CFC7 /* TEncSampleAdaptiveOffset.cpp in Sources */,
+				7874638F17D5DDA60040CFC7 /* TEncSbac.cpp in Sources */,
+				7874639017D5DDA60040CFC7 /* TEncSearch.cpp in Sources */,
+				7874639117D5DDA60040CFC7 /* TEncSlice.cpp in Sources */,
+				7874639217D5DDA60040CFC7 /* TEncTop.cpp in Sources */,
+				7874639317D5DDA60040CFC7 /* WeightPredAnalysis.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767964811AD629200421804 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463AC17D5DE8A0040CFC7 /* TVideoIOYuv.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6767966711AD635600421804 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7874637E17D5DD900040CFC7 /* encmain.cpp in Sources */,
+				7874637F17D5DD900040CFC7 /* TAppEncCfg.cpp in Sources */,
+				7874638017D5DD900040CFC7 /* TAppEncTop.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		6782E0DB11AD691A00E8FFB8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463C417D5DEFB0040CFC7 /* decmain.cpp in Sources */,
+				787463C517D5DEFB0040CFC7 /* TAppDecCfg.cpp in Sources */,
+				787463C617D5DEFB0040CFC7 /* TAppDecTop.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7885897015664E3D00982C12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463CD17D5DF220040CFC7 /* TExtrTop.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7885898815664E6A00982C12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463C717D5DF080040CFC7 /* extrmain.cpp in Sources */,
+				787463C817D5DF080040CFC7 /* TAppExtrCfg.cpp in Sources */,
+				787463C917D5DF080040CFC7 /* TAppExtrTop.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7894E35914890D9A009259F4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463AD17D5DE980040CFC7 /* TRenFilter.cpp in Sources */,
+				787463AE17D5DE980040CFC7 /* TRenImage.cpp in Sources */,
+				787463AF17D5DE980040CFC7 /* TRenImagePlane.cpp in Sources */,
+				787463B017D5DE980040CFC7 /* TRenInterpFilter.cpp in Sources */,
+				787463B117D5DE9D0040CFC7 /* TRenModel.cpp in Sources */,
+				787463B217D5DE9D0040CFC7 /* TRenModSetupStrParser.cpp in Sources */,
+				787463B317D5DE9D0040CFC7 /* TRenSingleModel.cpp in Sources */,
+				787463B417D5DE9D0040CFC7 /* TRenTop.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7894E37E14890DD2009259F4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463CA17D5DF0E0040CFC7 /* RendererMain.cpp in Sources */,
+				787463CB17D5DF0E0040CFC7 /* TAppRendererCfg.cpp in Sources */,
+				787463CC17D5DF0E0040CFC7 /* TAppRendererTop.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78C593AF15872152004401C5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				787463B517D5DEAF0040CFC7 /* program_options_lite.cpp in Sources */,
+				787463B617D5DEAF0040CFC7 /* TAppComCamPara.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7885899D15664EAA00982C12 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7885897F15664E6A00982C12 /* TAppExtractor */;
+			targetProxy = 7885899C15664EAA00982C12 /* PBXContainerItemProxy */;
+		};
+		78C5940415872220004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767959311AD61BB00421804 /* TLibCommon */;
+			targetProxy = 78C5940315872220004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5940615872221004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767961811AD626F00421804 /* TLibEncoder */;
+			targetProxy = 78C5940515872221004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5940815872222004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767964A11AD629200421804 /* TLibVideoIO */;
+			targetProxy = 78C5940715872222004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5940A15872226004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7894E34D14890D9A009259F4 /* TLibRenderer */;
+			targetProxy = 78C5940915872226004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5940C15872228004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 78C593AD15872152004401C5 /* TAppCommon */;
+			targetProxy = 78C5940B15872228004401C5 /* PBXContainerItemProxy */;
+		};
+		78C59414158722AE004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767959311AD61BB00421804 /* TLibCommon */;
+			targetProxy = 78C59413158722AE004401C5 /* PBXContainerItemProxy */;
+		};
+		78C59416158722AF004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 676795F311AD621A00421804 /* TLibDecoder */;
+			targetProxy = 78C59415158722AF004401C5 /* PBXContainerItemProxy */;
+		};
+		78C59418158722B1004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767964A11AD629200421804 /* TLibVideoIO */;
+			targetProxy = 78C59417158722B1004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5941A158722B3004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 78C593AD15872152004401C5 /* TAppCommon */;
+			targetProxy = 78C59419158722B3004401C5 /* PBXContainerItemProxy */;
+		};
+		78C59421158722E9004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767959311AD61BB00421804 /* TLibCommon */;
+			targetProxy = 78C59420158722E9004401C5 /* PBXContainerItemProxy */;
+		};
+		78C59423158722EB004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7894E34D14890D9A009259F4 /* TLibRenderer */;
+			targetProxy = 78C59422158722EB004401C5 /* PBXContainerItemProxy */;
+		};
+		78C59425158722ED004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 78C593AD15872152004401C5 /* TAppCommon */;
+			targetProxy = 78C59424158722ED004401C5 /* PBXContainerItemProxy */;
+		};
+		78C59427158722EF004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767964A11AD629200421804 /* TLibVideoIO */;
+			targetProxy = 78C59426158722EF004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5943115872345004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7885896E15664E3D00982C12 /* TLibExtractor */;
+			targetProxy = 78C5943015872345004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5943315872347004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767959311AD61BB00421804 /* TLibCommon */;
+			targetProxy = 78C5943215872347004401C5 /* PBXContainerItemProxy */;
+		};
+		78C5943515872348004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 676795F311AD621A00421804 /* TLibDecoder */;
+			targetProxy = 78C5943415872348004401C5 /* PBXContainerItemProxy */;
+		};
+		78C594371587234A004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767964A11AD629200421804 /* TLibVideoIO */;
+			targetProxy = 78C594361587234A004401C5 /* PBXContainerItemProxy */;
+		};
+		78C594391587234B004401C5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 78C593AD15872152004401C5 /* TAppCommon */;
+			targetProxy = 78C594381587234B004401C5 /* PBXContainerItemProxy */;
+		};
+		78C9B18214DAD3F100989162 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6767966911AD635600421804 /* TAppEncoder */;
+			targetProxy = 78C9B18114DAD3F100989162 /* PBXContainerItemProxy */;
+		};
+		78C9B18414DAD3F100989162 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 6782E0DD11AD691A00E8FFB8 /* TAppDecoder */;
+			targetProxy = 78C9B18314DAD3F100989162 /* PBXContainerItemProxy */;
+		};
+		78C9B18614DAD3F100989162 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7894E37514890DD2009259F4 /* TAppRenderer */;
+			targetProxy = 78C9B18514DAD3F100989162 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB923608733DC60010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/source/Lib/";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		1DEB923708733DC60010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_OPTIMIZATION_LEVEL = s;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_NON_VIRTUAL_DESTRUCTOR = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = "$(PROJECT_DIR)/source/Lib/";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		6767959511AD61BC00421804 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibCommon;
+			};
+			name = Debug;
+		};
+		6767959611AD61BC00421804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibCommon;
+			};
+			name = Release;
+		};
+		676795F511AD621A00421804 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibDecoder;
+			};
+			name = Debug;
+		};
+		676795F611AD621A00421804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibDecoder;
+			};
+			name = Release;
+		};
+		6767961A11AD626F00421804 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibEncoder;
+			};
+			name = Debug;
+		};
+		6767961B11AD626F00421804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibEncoder;
+			};
+			name = Release;
+		};
+		6767964C11AD629200421804 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibVideoIO;
+			};
+			name = Debug;
+		};
+		6767964D11AD629200421804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibVideoIO;
+			};
+			name = Release;
+		};
+		6767966C11AD635600421804 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppEncoder;
+			};
+			name = Debug;
+		};
+		6767966D11AD635600421804 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppEncoder;
+			};
+			name = Release;
+		};
+		6782E0E011AD691B00E8FFB8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppDecoder;
+			};
+			name = Debug;
+		};
+		6782E0E111AD691B00E8FFB8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppDecoder;
+			};
+			name = Release;
+		};
+		7885897B15664E3D00982C12 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibExtractor;
+			};
+			name = Debug;
+		};
+		7885897C15664E3D00982C12 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibExtractor;
+			};
+			name = Release;
+		};
+		7885899215664E6A00982C12 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppExtractor;
+			};
+			name = Debug;
+		};
+		7885899315664E6A00982C12 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppExtractor;
+			};
+			name = Release;
+		};
+		7894E36514890D9A009259F4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibRenderer;
+			};
+			name = Debug;
+		};
+		7894E36614890D9A009259F4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TLibRenderer;
+			};
+			name = Release;
+		};
+		7894E38814890DD2009259F4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppRenderer;
+			};
+			name = Debug;
+		};
+		7894E38914890DD2009259F4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/bin;
+				PRODUCT_NAME = TAppRenderer;
+			};
+			name = Release;
+		};
+		78C593B215872152004401C5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TAppCommon;
+			};
+			name = Debug;
+		};
+		78C593B315872152004401C5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				INSTALL_PATH = /usr/local/lib;
+				PRODUCT_NAME = TAppCommon;
+			};
+			name = Release;
+		};
+		78C9B17D14DAD3E800989162 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		78C9B17E14DAD3E800989162 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB923508733DC60010E9CD /* Build configuration list for PBXProject "HTM" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB923608733DC60010E9CD /* Debug */,
+				1DEB923708733DC60010E9CD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6767959811AD61D700421804 /* Build configuration list for PBXNativeTarget "TLibCommon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6767959511AD61BC00421804 /* Debug */,
+				6767959611AD61BC00421804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		676795F711AD623800421804 /* Build configuration list for PBXNativeTarget "TLibDecoder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				676795F511AD621A00421804 /* Debug */,
+				676795F611AD621A00421804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6767964611AD628100421804 /* Build configuration list for PBXNativeTarget "TLibEncoder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6767961A11AD626F00421804 /* Debug */,
+				6767961B11AD626F00421804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6767964F11AD629700421804 /* Build configuration list for PBXNativeTarget "TLibVideoIO" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6767964C11AD629200421804 /* Debug */,
+				6767964D11AD629200421804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6767966E11AD637400421804 /* Build configuration list for PBXNativeTarget "TAppEncoder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6767966C11AD635600421804 /* Debug */,
+				6767966D11AD635600421804 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6782E0E611AD692F00E8FFB8 /* Build configuration list for PBXNativeTarget "TAppDecoder" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6782E0E011AD691B00E8FFB8 /* Debug */,
+				6782E0E111AD691B00E8FFB8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7885897A15664E3D00982C12 /* Build configuration list for PBXNativeTarget "TLibExtractor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7885897B15664E3D00982C12 /* Debug */,
+				7885897C15664E3D00982C12 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7885899115664E6A00982C12 /* Build configuration list for PBXNativeTarget "TAppExtractor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7885899215664E6A00982C12 /* Debug */,
+				7885899315664E6A00982C12 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7894E36414890D9A009259F4 /* Build configuration list for PBXNativeTarget "TLibRenderer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7894E36514890D9A009259F4 /* Debug */,
+				7894E36614890D9A009259F4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7894E38714890DD2009259F4 /* Build configuration list for PBXNativeTarget "TAppRenderer" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7894E38814890DD2009259F4 /* Debug */,
+				7894E38914890DD2009259F4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		78C593B115872152004401C5 /* Build configuration list for PBXNativeTarget "TAppCommon" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				78C593B215872152004401C5 /* Debug */,
+				78C593B315872152004401C5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		78C9B17F14DAD3E800989162 /* Build configuration list for PBXAggregateTarget "Package" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				78C9B17D14DAD3E800989162 /* Debug */,
+				78C9B17E14DAD3E800989162 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}
