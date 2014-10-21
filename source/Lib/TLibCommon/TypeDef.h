@@ -367,19 +367,6 @@
 /////////////////////////////////////////////////////////////////////////////////
 // TBD: Check if integration is necessary. 
 
-
-
-//Added by Qualcomm for HLS
-#define DISCARDABLE_PIC_RPS              1      ///< JCT3V-G0131: Inter-layer RPS and temporal RPS should not contain picture with discardable_flag equal to 1
-#define VPS_MISC_UPDATES                 1      ///< Misc updates:JCT3V-0240, 
-#define NON_REF_NAL_TYPE_DISCARDABLE     1      ///< JCT3V-G0031: If discardable picture is a non-IRAP, it must be a non-referenced sub-layer picture
-#define INFERENCE_POC_MSB_VAL_PRESENT    1      ///< JCT3V-H0042: poc_msb_val_present_flag shall be equal to 0 when slice_header_extension_length is (inferred to be ) equal to 0
-#define INFERENCE_POC_RESET_INFO_PRESENT 1      ///< JCT3V-H0042: Infer the value of poc_reset_info_present_flag to be equal to 0 when no pps extension / pps extension for multilayer.
-#define I0044_SLICE_TMVP                 1      ///< JCT3V-I0044: Regarding slice_temporal_mvp_enabled_flag
-#define I0045_BR_PR_ADD_LAYER_SET        1      ///< JCT3V-I0045: Signalling of bit-rate and picture rate for additional layer set
-#define I0045_VPS_VUI_VST_PARAMS         1      ///< JCT3V-I0045: Related to signalling of VST parameters of the base layer.
-
-
 #define H_MV_HLS10_GEN                       0  // General changes (not tested)
 
 #define H_MV_HLS10_AUX                       1 // Auxiliary pictures
@@ -428,18 +415,6 @@
 //#define H_MV_HLS_8_SEI_Q0045_11  0 // #11 (SEI    /Q0045/Overlay) Proposal for an SEI message on selectable overlays. Decision: Adopt (modified for variable-length strings).
 //#define H_MV_HLS_7_SEI_P0133_28  0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 //#define H_MV_HLS_7_SEI_P0123_25  0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
-
-// Auxiliary picture related
-//#define H_MV_HLS_8_AUX_NODOC_40  0 // #40 (AUX    /NODOC/primary pic) Clarify that an auxiliary picture can be associated with more than one primary picture. Consider if the language associating an alpha auxiliary picture with a primary picture in the semantics of dimension_id[ ][ ] near the AuxId derivation could be moved to the alpha SEI message.
-//#define H_MV_HLS_8_AUX_Q0081_2   0 // #2  (AUX    /Q0081/primary) Decision: Remove the constraint that an alpha picture must be accompanied by a primary picture.
-//#define H_MV_HLS_8_AUX_Q0078_44  0 // #44 (AUX    /Q0078/concepts Auxiliary picture concepts:
-//#define H_MV_HLS_8_AUX_Q0078_39  0 // #39 (AUX    /Q0078/conformance): mechanism for signaling a profile/tier/level conformance point for auxiliary pictures
-
-// Profiles
-//#define H_MV_HLS_8_PRO_NODOC_50  0 // #50 (PROF   /NODOC/Monochrome) Add Monochrome 8-bit profile
-//#define H_MV_HLS_8_PRO_NODOC_31  0 // #31 (PROF   /NODOC/Profile constraint) Add a profile constraint to the Scalable Main, Scalable Main 10, and Stereo Main profiles against allowing layers with duplicate values of DependencyId (or ViewOrderIdx) when AuxId equal to 0.
-//#define H_MV_HLS_8_PRO_H0126_45  0 // #45 (PROF   /H0126/Stereo main) Phrasing used in specifying the Stereo Main profile. 
-//#define H_MV_HLS_8_PRO_Q0160_33  0 // #33 (PROF   /Q0160/alt_output_flag) v2: Add constraint to stereo main profile that it must contain exactly two texture views, and add a note to state that the constraint implies a restriction that alt_output_flag equal to 0. 
 
 // DPB
 //#define H_MV_HLS_8_HRD_Q0102_09  0 // #9  (HRD    /Q0102/NoOutputOfPriorPicsFlag) It was suggested that also the separate_colour_plane_flag should affect inference of NoOutputOfPriorPicsFlag. Decision (Ed.): Agreed (affects RExt text).
