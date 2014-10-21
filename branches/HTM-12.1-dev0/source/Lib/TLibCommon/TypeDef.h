@@ -368,7 +368,7 @@
 // TBD: Check if integration is necessary. 
 #define H_MV_HLS_PTL_LIMITS                  0
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
-
+#define H_MV_ALIGN_HM_15                     1  
 
 // POC
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
@@ -417,6 +417,8 @@
 
 #define SAO_SGN_FUNC 1
 
+#define TILE_SIZE_CHECK 1
+
 #define FIX1172 1 ///< fix ticket #1172
 
 #define SETTING_PIC_OUTPUT_MARK     1
@@ -432,7 +434,11 @@
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
+#if H_MV
 #define MAX_VPS_NUM_HRD_PARAMETERS                1024
+#else
+#define MAX_VPS_NUM_HRD_PARAMETERS                1
+#endif
 #if H_MV
 #define MAX_NUM_SUB_LAYERS                        7
 #define MAX_NUM_SIGNALLED_PARTITIONING_SCHEMES    16

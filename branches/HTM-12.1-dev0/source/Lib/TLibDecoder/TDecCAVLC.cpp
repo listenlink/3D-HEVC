@@ -291,32 +291,30 @@ Void TDecCavlc::parsePPS(TComPPS* pcPPS)
   
   if( pcPPS->getTilesEnabledFlag() )
   {
-    READ_UVLC ( uiCode, "num_tile_columns_minus1" );                pcPPS->setNumColumnsMinus1( uiCode );  
-    READ_UVLC ( uiCode, "num_tile_rows_minus1" );                   pcPPS->setNumRowsMinus1( uiCode );  
-    READ_FLAG ( uiCode, "uniform_spacing_flag" );                   pcPPS->setUniformSpacingFlag( uiCode );
+    READ_UVLC ( uiCode, "num_tile_columns_minus1" );                pcPPS->setNumTileColumnsMinus1( uiCode );  
+    READ_UVLC ( uiCode, "num_tile_rows_minus1" );                   pcPPS->setNumTileRowsMinus1( uiCode );  
+    READ_FLAG ( uiCode, "uniform_spacing_flag" );                   pcPPS->setTileUniformSpacingFlag( uiCode == 1 );
 
-    if( !pcPPS->getUniformSpacingFlag())
+    if( !pcPPS->getTileUniformSpacingFlag())
     {
-      UInt* columnWidth = (UInt*)malloc(pcPPS->getNumColumnsMinus1()*sizeof(UInt));
-      for(UInt i=0; i<pcPPS->getNumColumnsMinus1(); i++)
+      std::vector<Int> columnWidth(pcPPS->getNumTileColumnsMinus1());
+      for(UInt i=0; i<pcPPS->getNumTileColumnsMinus1(); i++)
       { 
         READ_UVLC( uiCode, "column_width_minus1" );  
         columnWidth[i] = uiCode+1;
       }
-      pcPPS->setColumnWidth(columnWidth);
-      free(columnWidth);
+      pcPPS->setTileColumnWidth(columnWidth);
 
-      UInt* rowHeight = (UInt*)malloc(pcPPS->getNumRowsMinus1()*sizeof(UInt));
-      for(UInt i=0; i<pcPPS->getNumRowsMinus1(); i++)
+      std::vector<Int> rowHeight (pcPPS->getTileNumRowsMinus1());
+      for(UInt i=0; i<pcPPS->getTileNumRowsMinus1(); i++)
       {
         READ_UVLC( uiCode, "row_height_minus1" );
         rowHeight[i] = uiCode + 1;
       }
-      pcPPS->setRowHeight(rowHeight);
-      free(rowHeight);  
+      pcPPS->setTileRowHeight(rowHeight);
     }
 
-    if(pcPPS->getNumColumnsMinus1() !=0 || pcPPS->getNumRowsMinus1() !=0)
+    if(pcPPS->getNumTileColumnsMinus1() !=0 || pcPPS->getTileNumRowsMinus1() !=0)
     {
       READ_FLAG ( uiCode, "loop_filter_across_tiles_enabled_flag" );   pcPPS->setLoopFilterAcrossTilesEnabledFlag( uiCode ? true : false );
     }
@@ -1133,6 +1131,11 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
       {
         READ_FLAG( uiCode, "cprms_present_flag[i]" );              pcVPS->setCprmsPresentFlag( uiCode == 1 ? true : false, i );
       }
+      else
+      {
+        pcVPS->setCprmsPresentFlag( true, i );
+      }
+
       parseHrdParameters(pcVPS->getHrdParameters(i), pcVPS->getCprmsPresentFlag( i ), pcVPS->getMaxTLayers() - 1);
     }
   }

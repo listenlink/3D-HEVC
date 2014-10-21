@@ -37,6 +37,7 @@
 
 #include "TComPicSym.h"
 #include "TComSampleAdaptiveOffset.h"
+#include "TComSlice.h"
 
 //! \ingroup TLibCommon
 //! \{
@@ -62,7 +63,6 @@ TComPicSym::TComPicSym()
 ,m_apcTComDataCU (NULL)
 ,m_iNumColumnsMinus1 (0)
 ,m_iNumRowsMinus1(0)
-,m_apcTComTile(NULL)
 ,m_puiCUOrderMap(0)
 ,m_puiTileIdxMap(NULL)
 ,m_puiInverseCUOrderMap(NULL)
@@ -100,7 +100,7 @@ Void TComPicSym::create  ( Int iPicWidth, Int iPicHeight, UInt uiMaxWidth, UInt 
     }
     delete [] m_apcTComSlice;
   }
-  m_apcTComSlice      = new TComSlice*[m_uiNumCUsInFrame*m_uiNumPartitions];  
+  m_apcTComSlice      = new TComSlice*[m_uiNumCUsInFrame];
   m_apcTComSlice[0]   = new TComSlice;
   m_uiNumAllocatedSlice = 1;
   for ( i=0; i<m_uiNumCUsInFrame ; i++ )
@@ -147,14 +147,6 @@ Void TComPicSym::destroy()
   delete [] m_apcTComDataCU;
   m_apcTComDataCU = NULL;
 
-  for(Int i = 0; i < (m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1); i++ )
-  {
-    delete m_apcTComTile[i];
-  }
-  delete [] m_apcTComTile;
-
-  m_apcTComTile = NULL;
-
   delete [] m_puiCUOrderMap;
   m_puiCUOrderMap = NULL;
 
@@ -172,6 +164,7 @@ Void TComPicSym::destroy()
 
 Void TComPicSym::allocateNewSlice()
 {
+  assert ((m_uiNumAllocatedSlice + 1) <= m_uiNumCUsInFrame);
   m_apcTComSlice[m_uiNumAllocatedSlice ++] = new TComSlice;
   if (m_uiNumAllocatedSlice>=2)
   {
@@ -200,73 +193,134 @@ UInt TComPicSym::getPicSCUAddr( UInt SCUEncOrder )
   return getCUOrderMap(SCUEncOrder/m_uiNumPartitions)*m_uiNumPartitions + SCUEncOrder%m_uiNumPartitions;
 }
 
-Void TComPicSym::xCreateTComTileArray()
+Void TComPicSym::initTiles(TComPPS *pps)
 {
-  m_apcTComTile = new TComTile*[(m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1)];
-  for( UInt i=0; i<(m_iNumColumnsMinus1+1)*(m_iNumRowsMinus1+1); i++ )
+  //set NumColumnsMinus1 and NumRowsMinus1
+  setNumColumnsMinus1( pps->getNumTileColumnsMinus1() );
+  setNumRowsMinus1( pps->getTileNumRowsMinus1() );
+
+  const Int numCols = pps->getNumTileColumnsMinus1() + 1;
+  const Int numRows = pps->getTileNumRowsMinus1() + 1;
+  const Int numTiles = numRows * numCols;
+
+  // allocate memory for tile parameters
+  m_tileParameters.resize(numTiles);
+
+  if( pps->getTileUniformSpacingFlag() )
   {
-    m_apcTComTile[i] = new TComTile;
+    //set width and height for each (uniform) tile
+    for(Int row=0; row < numRows; row++)
+    {
+      for(Int col=0; col < numCols; col++)
+      {
+        const Int tileIdx = row * numCols + col;
+        m_tileParameters[tileIdx].setTileWidth( (col+1)*getFrameWidthInCU()/numCols
+                                              - (col*getFrameWidthInCU())/numCols );
+        m_tileParameters[tileIdx].setTileHeight( (row+1)*getFrameHeightInCU()/numRows
+                                               - (row*getFrameHeightInCU())/numRows );
+      }
+    }
   }
+  else
+  {
+    //set the width for each tile
+    for(Int row=0; row < numRows; row++)
+    {
+      Int cumulativeTileWidth = 0;
+      for(Int col=0; col < getNumColumnsMinus1(); col++)
+  {
+  }
+      m_tileParameters[row * numCols + getNumColumnsMinus1()].setTileWidth( getFrameWidthInCU()-cumulativeTileWidth );
 }
 
-Void TComPicSym::xInitTiles()
+    //set the height for each tile
+    for(Int col=0; col < numCols; col++)
 {
-  UInt  uiTileIdx;
-  UInt  uiColumnIdx = 0;
-  UInt  uiRowIdx = 0;
-  UInt  uiRightEdgePosInCU;
-  UInt  uiBottomEdgePosInCU;
-  Int   i, j;
-
-  //initialize each tile of the current picture
-  for( uiRowIdx=0; uiRowIdx < m_iNumRowsMinus1+1; uiRowIdx++ )
-  {
-    for( uiColumnIdx=0; uiColumnIdx < m_iNumColumnsMinus1+1; uiColumnIdx++ )
-    {
-      uiTileIdx = uiRowIdx * (m_iNumColumnsMinus1+1) + uiColumnIdx;
-
-      //initialize the RightEdgePosInCU for each tile
-      uiRightEdgePosInCU = 0;
-      for( i=0; i <= uiColumnIdx; i++ )
+      Int cumulativeTileHeight = 0;
+      for(Int row=0; row < getNumRowsMinus1(); row++)
       {
-        uiRightEdgePosInCU += this->getTComTile(uiRowIdx * (m_iNumColumnsMinus1+1) + i)->getTileWidth();
+        m_tileParameters[row * numCols + col].setTileHeight( pps->getTileRowHeight(row) );
+        cumulativeTileHeight += pps->getTileRowHeight(row);
       }
-      this->getTComTile(uiTileIdx)->setRightEdgePosInCU(uiRightEdgePosInCU-1);
-
-      //initialize the BottomEdgePosInCU for each tile
-      uiBottomEdgePosInCU = 0;
-      for( i=0; i <= uiRowIdx; i++ )
-      {
-        uiBottomEdgePosInCU += this->getTComTile(i * (m_iNumColumnsMinus1+1) + uiColumnIdx)->getTileHeight();
-      }
-      this->getTComTile(uiTileIdx)->setBottomEdgePosInCU(uiBottomEdgePosInCU-1);
-
-      //initialize the FirstCUAddr for each tile
-      this->getTComTile(uiTileIdx)->setFirstCUAddr( (this->getTComTile(uiTileIdx)->getBottomEdgePosInCU() - this->getTComTile(uiTileIdx)->getTileHeight() +1)*m_uiWidthInCU + 
-        this->getTComTile(uiTileIdx)->getRightEdgePosInCU() - this->getTComTile(uiTileIdx)->getTileWidth() + 1);
+      m_tileParameters[getNumRowsMinus1() * numCols + col].setTileHeight( getFrameHeightInCU()-cumulativeTileHeight );
     }
   }
 
-  //initialize the TileIdxMap
-  for( i=0; i<m_uiNumCUsInFrame; i++)
+#if TILE_SIZE_CHECK
+  Int minWidth  = 1;
+  Int minHeight = 1;
+  const Int profileIdc = pps->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc();
+  if (  profileIdc == Profile::MAIN || profileIdc == Profile::MAIN10)
   {
-    for(j=0; j < m_iNumColumnsMinus1+1; j++)
+    if (pps->getTilesEnabledFlag())
     {
-      if(i % m_uiWidthInCU <= this->getTComTile(j)->getRightEdgePosInCU())
+      minHeight = 64  / g_uiMaxCUHeight;
+      minWidth  = 256 / g_uiMaxCUWidth;
+    }
+  }
+  for(Int row=0; row < numRows; row++)
+  {
+    for(Int col=0; col < numCols; col++)
+    {
+      const Int tileIdx = row * numCols + col;
+      assert (m_tileParameters[tileIdx].getTileWidth() >= minWidth);
+      assert (m_tileParameters[tileIdx].getTileHeight() >= minHeight);
+    }
+  }
+#endif
+
+  //initialize each tile of the current picture
+  for( Int row=0; row < numRows; row++ )
+  {
+    for( Int col=0; col < numCols; col++ )
+    {
+      const Int tileIdx = row * numCols + col;
+
+      //initialize the RightEdgePosInCU for each tile
+      Int rightEdgePosInCTU = 0;
+      for( Int i=0; i <= col; i++ )
       {
-        uiColumnIdx = j;
-        j = m_iNumColumnsMinus1+1;
+        rightEdgePosInCTU += m_tileParameters[row * numCols + i].getTileWidth();
+      }
+      m_tileParameters[tileIdx].setRightEdgePosInCU(rightEdgePosInCTU-1);
+
+      //initialize the BottomEdgePosInCU for each tile
+      Int bottomEdgePosInCTU = 0;
+      for( Int i=0; i <= row; i++ )
+      {
+        bottomEdgePosInCTU += m_tileParameters[i * numCols + col].getTileHeight();
+      }
+      m_tileParameters[tileIdx].setBottomEdgePosInCU(bottomEdgePosInCTU-1);
+
+      //initialize the FirstCUAddr for each tile
+      m_tileParameters[tileIdx].setFirstCUAddr( (m_tileParameters[tileIdx].getBottomEdgePosInCU() - m_tileParameters[tileIdx].getTileHeight() + 1) * getFrameWidthInCU() + 
+                                                 m_tileParameters[tileIdx].getRightEdgePosInCU() - m_tileParameters[tileIdx].getTileWidth() + 1);
+    }
+  }
+
+  Int  columnIdx = 0;
+  Int  rowIdx = 0;
+
+  //initialize the TileIdxMap
+  for( Int i=0; i<m_uiNumCUsInFrame; i++)
+  {
+    for( Int col=0; col < numCols; col++)
+    {
+      if(i % getFrameWidthInCU() <= m_tileParameters[col].getRightEdgePosInCU())
+      {
+        columnIdx = col;
+        break;
       }
     }
-    for(j=0; j < m_iNumRowsMinus1+1; j++)
+    for(Int row=0; row < numRows; row++)
     {
-      if(i/m_uiWidthInCU <= this->getTComTile(j*(m_iNumColumnsMinus1 + 1))->getBottomEdgePosInCU())
+      if(i / getFrameWidthInCU() <= m_tileParameters[row*numCols].getBottomEdgePosInCU())
       {
-        uiRowIdx = j;
-        j = m_iNumRowsMinus1 + 1;
+        rowIdx = row;
+        break;
       }
     }
-    m_puiTileIdxMap[i] = uiRowIdx * (m_iNumColumnsMinus1 + 1) + uiColumnIdx;
+    m_puiTileIdxMap[i] = rowIdx * numCols + columnIdx;
   }
 
 }
@@ -416,6 +470,12 @@ Void TComPicSym::deriveLoopFilterBoundaryAvailibility(Int ctu,
 }
 
 TComTile::TComTile()
+: m_uiTileWidth         (0)
+, m_uiTileHeight        (0)
+, m_uiRightEdgePosInCU  (0)
+, m_uiBottomEdgePosInCU (0)
+, m_uiFirstCUAddr       (0)
+
 {
 }
 

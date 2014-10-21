@@ -2872,12 +2872,10 @@ TComPPS::TComPPS()
 , m_tilesEnabledFlag               (false)
 , m_entropyCodingSyncEnabledFlag   (false)
 , m_loopFilterAcrossTilesEnabledFlag  (true)
-, m_uniformSpacingFlag           (0)
-, m_iNumColumnsMinus1            (0)
-, m_puiColumnWidth               (NULL)
-, m_iNumRowsMinus1               (0)
-, m_puiRowHeight                 (NULL)
-, m_iNumSubstreams             (1)
+, m_uniformSpacingFlag           (false)
+, m_numTileColumnsMinus1         (0)
+, m_numTileRowsMinus1            (0)
+, m_numSubstreams               (1)
 , m_signHideFlag(0)
 , m_cabacInitPresentFlag        (false)
 , m_encCABACTableIdx            (I_SLICE)
@@ -2910,16 +2908,6 @@ TComPPS::TComPPS()
 
 TComPPS::~TComPPS()
 {
-  if( m_iNumColumnsMinus1 > 0 && m_uniformSpacingFlag == 0 )
-  {
-    if (m_puiColumnWidth) delete [] m_puiColumnWidth; 
-    m_puiColumnWidth = NULL;
-  }
-  if( m_iNumRowsMinus1 > 0 && m_uniformSpacingFlag == 0 )
-  {
-    if (m_puiRowHeight) delete [] m_puiRowHeight;
-    m_puiRowHeight = NULL;
-  }
   delete m_scalingList;
 }
 

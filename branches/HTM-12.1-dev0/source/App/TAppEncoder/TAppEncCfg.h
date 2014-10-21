@@ -42,6 +42,7 @@
 
 #include "TLibEncoder/TEncCfg.h"
 #include <sstream>
+#include <vector>
 #if H_3D
 #include "TAppCommon/TAppComCamPara.h"
 #include "TLibRenderer/TRenModel.h"
@@ -171,11 +172,11 @@ protected:
   bool      m_isField;                                        ///< enable field coding
   bool      m_isTopFieldFirst;
   
-  Int       m_conformanceMode;
-  Int       m_confLeft;
-  Int       m_confRight;
-  Int       m_confTop;
-  Int       m_confBottom;
+  Int       m_conformanceWindowMode;
+  Int       m_confWinLeft;
+  Int       m_confWinRight;
+  Int       m_confWinTop;
+  Int       m_confWinBottom;
   Int       m_framesToBeEncoded;                              ///< number of encoded frames
   Int       m_aiPad[2];                                       ///< number of padded pixels for width and height
   
@@ -323,13 +324,11 @@ protected:
 
   Bool      m_bLFCrossSliceBoundaryFlag;  ///< 1: filter across slice boundaries 0: do not filter across slice boundaries
   Bool      m_bLFCrossTileBoundaryFlag;   ///< 1: filter across tile boundaries  0: do not filter across tile boundaries
-  Int       m_iUniformSpacingIdr;
-  Int       m_iNumColumnsMinus1;
-  Char*     m_pchColumnWidth;
-  Int       m_iNumRowsMinus1;
-  Char*     m_pchRowHeight;
-  UInt*     m_pColumnWidth;
-  UInt*     m_pRowHeight;
+  Bool      m_tileUniformSpacingFlag;
+  Int       m_numTileColumnsMinus1;
+  Int       m_numTileRowsMinus1;
+  std::vector<Int> m_tileColumnWidth;
+  std::vector<Int> m_tileRowHeight;
   Int       m_iWaveFrontSynchro; //< 0: no WPP. >= 1: WPP is enabled, the "Top right" from which inheritance occurs is this LCU offset in the line above the current.
   Int       m_iWaveFrontSubstreams; //< If iWaveFrontSynchro, this is the number of substreams per frame (dependent tiles) or per tile (independent tiles).
 

@@ -394,7 +394,11 @@ Void TEncGOP::xCreateLeadingSEIMessages (/*SEIMessages seiMessages,*/ AccessUnit
 #if H_MV
 Void TEncGOP::initGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsInGOP)
 {
+#if H_MV_ALIGN_HM_15
+  xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut, false );
+#else
   xInitGOP( iPOCLast, iNumPicRcvd, rcListPic, rcListPicYuvRecOut );
+#endif
   m_iNumPicCoded = 0;
 }
 #endif
@@ -1227,70 +1231,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     UInt uiRealEndAddress = uiExternalAddress*pcPic->getNumPartInCU()+uiInternalAddress;
 
-    UInt uiCummulativeTileWidth;
-    UInt uiCummulativeTileHeight;
     Int  p, j;
     UInt uiEncCUAddr;
 
-    //set NumColumnsMinus1 and NumRowsMinus1
-    pcPic->getPicSym()->setNumColumnsMinus1( pcSlice->getPPS()->getNumColumnsMinus1() );
-    pcPic->getPicSym()->setNumRowsMinus1( pcSlice->getPPS()->getNumRowsMinus1() );
-
-    //create the TComTileArray
-    pcPic->getPicSym()->xCreateTComTileArray();
-
-    if( pcSlice->getPPS()->getUniformSpacingFlag() == 1 )
-    {
-      //set the width for each tile
-      for(j=0; j < pcPic->getPicSym()->getNumRowsMinus1()+1; j++)
-      {
-        for(p=0; p < pcPic->getPicSym()->getNumColumnsMinus1()+1; p++)
-        {
-          pcPic->getPicSym()->getTComTile( j * (pcPic->getPicSym()->getNumColumnsMinus1()+1) + p )->
-            setTileWidth( (p+1)*pcPic->getPicSym()->getFrameWidthInCU()/(pcPic->getPicSym()->getNumColumnsMinus1()+1) 
-            - (p*pcPic->getPicSym()->getFrameWidthInCU())/(pcPic->getPicSym()->getNumColumnsMinus1()+1) );
-        }
-      }
-
-      //set the height for each tile
-      for(j=0; j < pcPic->getPicSym()->getNumColumnsMinus1()+1; j++)
-      {
-        for(p=0; p < pcPic->getPicSym()->getNumRowsMinus1()+1; p++)
-        {
-          pcPic->getPicSym()->getTComTile( p * (pcPic->getPicSym()->getNumColumnsMinus1()+1) + j )->
-            setTileHeight( (p+1)*pcPic->getPicSym()->getFrameHeightInCU()/(pcPic->getPicSym()->getNumRowsMinus1()+1) 
-            - (p*pcPic->getPicSym()->getFrameHeightInCU())/(pcPic->getPicSym()->getNumRowsMinus1()+1) );   
-        }
-      }
-    }
-    else
-    {
-      //set the width for each tile
-      for(j=0; j < pcPic->getPicSym()->getNumRowsMinus1()+1; j++)
-      {
-        uiCummulativeTileWidth = 0;
-        for(p=0; p < pcPic->getPicSym()->getNumColumnsMinus1(); p++)
-        {
-          pcPic->getPicSym()->getTComTile( j * (pcPic->getPicSym()->getNumColumnsMinus1()+1) + p )->setTileWidth( pcSlice->getPPS()->getColumnWidth(p) );
-          uiCummulativeTileWidth += pcSlice->getPPS()->getColumnWidth(p);
-        }
-        pcPic->getPicSym()->getTComTile(j * (pcPic->getPicSym()->getNumColumnsMinus1()+1) + p)->setTileWidth( pcPic->getPicSym()->getFrameWidthInCU()-uiCummulativeTileWidth );
-      }
-
-      //set the height for each tile
-      for(j=0; j < pcPic->getPicSym()->getNumColumnsMinus1()+1; j++)
-      {
-        uiCummulativeTileHeight = 0;
-        for(p=0; p < pcPic->getPicSym()->getNumRowsMinus1(); p++)
-        {
-          pcPic->getPicSym()->getTComTile( p * (pcPic->getPicSym()->getNumColumnsMinus1()+1) + j )->setTileHeight( pcSlice->getPPS()->getRowHeight(p) );
-          uiCummulativeTileHeight += pcSlice->getPPS()->getRowHeight(p);
-        }
-        pcPic->getPicSym()->getTComTile(p * (pcPic->getPicSym()->getNumColumnsMinus1()+1) + j)->setTileHeight( pcPic->getPicSym()->getFrameHeightInCU()-uiCummulativeTileHeight );
-      }
-    }
-    //intialize each tile of the current picture
-    pcPic->getPicSym()->xInitTiles();
+    pcPic->getPicSym()->initTiles(pcSlice->getPPS());
 
     // Allocate some coders, now we know how many tiles there are.
     Int iNumSubstreams = pcSlice->getPPS()->getNumSubstreams();
@@ -1813,6 +1757,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
           m_pcEntropyCoder->setBitstream(&nalu.m_Bitstream);
 
 #if SETTING_NO_OUT_PIC_PRIOR
+          pcSlice->setNoRaslOutputFlag(false);
           if (pcSlice->isIRAP())
           {
             if (pcSlice->getNalUnitType() >= NAL_UNIT_CODED_SLICE_BLA_W_LP && pcSlice->getNalUnitType() <= NAL_UNIT_CODED_SLICE_IDR_N_LP)
@@ -1820,6 +1765,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               pcSlice->setNoRaslOutputFlag(true);
             }
             //the inference for NoOutputPriorPicsFlag
+            // KJS: This cannot happen at the encoder
             if (!m_bFirst && pcSlice->isIRAP() && pcSlice->getNoRaslOutputFlag())
             {
               if (pcSlice->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA)
@@ -2491,22 +2437,6 @@ Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcLis
   }
   assert (m_iGopSize > 0);
   
-  return;
-}
-
-Void TEncGOP::xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut )
-{
-  assert( iNumPicRcvd > 0 );
-  //  Exception for the first frame
-  if ( iPOCLast == 0 )
-  {
-    m_iGopSize    = 1;
-  }
-  else
-    m_iGopSize    = m_pcCfg->getGOPSize();
-  
-  assert (m_iGopSize > 0); 
-
   return;
 }
 
