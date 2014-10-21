@@ -760,9 +760,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     }
 
     parsePTL(pcSPS->getPTL(), 1, pcSPS->getMaxTLayers() - 1);
+#if H_MV
     pcSPS->getPTL()->inferGeneralValues ( true, 0, NULL ); 
     pcSPS->getPTL()->inferSubLayerValues( pcSPS->getMaxTLayers() - 1, 0, NULL );
-#if H_MV
   }
 #endif
   READ_UVLC(     uiCode, "sps_seq_parameter_set_id" );           pcSPS->setSPSId( uiCode );
@@ -2769,13 +2769,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       UInt ignore;
       READ_CODE(8,ignore,"slice_header_extension_data_byte");
     }  
-#endif
   }
   else
   {
     rpcSlice->setSliceSegmentHeaderExtensionLength( 0 );
     rpcSlice->setPocMsbValPresentFlag( false );
   }
+#endif
   m_pcBitstream->readByteAlignment();
 
   if( pps->getTilesEnabledFlag() || pps->getEntropyCodingSyncEnabledFlag() )
@@ -2922,6 +2922,7 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   READ_FLAG(uiCode, "general_frame_only_constraint_flag");
   ptl->setFrameOnlyConstraintFlag(uiCode ? true : false);
   
+#if H_MV
   if( ptl->getV2ConstraintsPresentFlag() )
   {
     READ_FLAG( uiCode, "max_12bit_constraint_flag" );        ptl->setMax12bitConstraintFlag      ( uiCode == 1 );
@@ -2951,6 +2952,11 @@ Void TDecCavlc::parseProfileTier(ProfileTierLevel *ptl)
   {
     READ_FLAG(uiCode, "reserved_zero_bit");
   }
+#else
+  READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[0..15]");
+  READ_CODE(16, uiCode, "XXX_reserved_zero_44bits[16..31]");
+  READ_CODE(12, uiCode, "XXX_reserved_zero_44bits[32..43]");
+#endif
 }
 
 Void TDecCavlc::parseTerminatingBit( UInt& ruiBit )

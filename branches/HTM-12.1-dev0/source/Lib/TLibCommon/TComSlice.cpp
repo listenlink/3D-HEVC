@@ -4381,6 +4381,7 @@ ProfileTierLevel::ProfileTierLevel()
 , m_interlacedSourceFlag   (false)
 , m_nonPackedConstraintFlag(false)
 , m_frameOnlyConstraintFlag(false)
+#if H_MV
   , m_max12bitConstraintFlag      ( false )
   , m_max10bitConstraintFlag      ( false )
   , m_max8bitConstraintFlag       ( false )
@@ -4391,10 +4392,12 @@ ProfileTierLevel::ProfileTierLevel()
   , m_onePictureOnlyConstraintFlag( false )
   , m_lowerBitRateConstraintFlag  ( false )
   , m_inbldFlag                   ( false )
+#endif
 {
   ::memset(m_profileCompatibilityFlag, 0, sizeof(m_profileCompatibilityFlag));
 }
 
+#if H_MV
 Bool ProfileTierLevel::getV2ConstraintsPresentFlag()
 {
   return ( 
@@ -4439,7 +4442,7 @@ Void ProfileTierLevel::copyProfile(ProfileTierLevel* ptlRef)
   setFrameOnlyConstraintFlag ( ptlRef->getFrameOnlyConstraintFlag   ( ) );
   copyV2ConstraintFlags      ( ptlRef );
 }
-
+#endif
 
 TComPTL::TComPTL()
 {

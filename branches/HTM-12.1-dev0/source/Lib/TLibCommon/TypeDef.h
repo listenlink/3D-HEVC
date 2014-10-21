@@ -366,7 +366,7 @@
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 // TBD: Check if integration is necessary. 
-
+#define H_MV_HLS_PTL_LIMITS                  0
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
 
 
@@ -433,9 +433,10 @@
 #define MAX_NESTING_NUM_LAYER       64
 
 #define MAX_VPS_NUM_HRD_PARAMETERS                1024
+#if H_MV
 #define MAX_NUM_SUB_LAYERS                        7
 #define MAX_NUM_SIGNALLED_PARTITIONING_SCHEMES    16
-
+#endif
 #define MAX_VPS_OP_SETS_PLUS1                     1024
 #if H_MV
 #define MAX_VPS_NUM_ADD_LAYER_SETS                1024
