@@ -240,19 +240,11 @@ static const struct MapStrToProfile {
   {"main10", Profile::MAIN10},
   {"main-still-picture", Profile::MAINSTILLPICTURE},
 #if H_MV
-#if H_MV_HLS10_PTL
   {"multiview-main", Profile::MULTIVIEWMAIN},
 #if H_3D
   {"3d-main"       , Profile::MAIN3D},
 #endif
 
-#else
-  {"main-stereo",    Profile::MAINSTEREO},
-  {"main-multiview", Profile::MAINMULTIVIEW},
-#if H_3D
-  {"main-3d"    , Profile::MAIN3D},
-#endif
-#endif
 #endif
 };
 
@@ -340,11 +332,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if H_MV
   vector<Int>   cfg_dimensionLength; 
-#if H_MV_HLS10_PTL
   string        cfg_profiles;
   string        cfg_levels; 
   string        cfg_tiers; 
-#endif
 #if H_3D 
   cfg_dimensionLength.push_back( 2  );  // depth
   cfg_dimensionLength.push_back( 32 );  // texture 
@@ -379,20 +369,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_MV
   ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
 #if !H_3D
-#if H_MV_HLS10_AUX
   ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask: 2: Multiview, 8: Auxiliary, 10: Multiview + Auxiliary")    
-#else
-  ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask")    
-#endif
 #else
   ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
 #endif  
   ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
   ("ViewOrderIndex",        m_viewOrderIndex     , std::vector<Int>(1,0), "View Order Index per layer")
   ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id per View Order Index")
-#if H_MV_HLS10_AUX
   ("AuxId",                 m_auxId              , std::vector<Int>(1,0), "AuxId per layer")
-#endif
 #if H_3D
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
@@ -405,19 +389,15 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SingleDepthMode",    m_useSingleDepthMode, true, "Single depth mode")                         
 #endif
 #endif
-#if H_MV_HLS10_GEN_FIX
   ("TargetEncLayerIdList",  m_targetEncLayerIdList, std::vector<Int>(0,0), "LayerIds in Nuh to be encoded")  
-#endif
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")  
   ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
 
   // Layer Sets + Output Layer Sets + Profile Tier Level
   ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
   ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
-#if H_MV_HLS10_ADD_LAYERSETS
   ("NumAddLayerSets"     , m_numAddLayerSets     , 0                                              , "NumAddLayerSets     ")
   ("HighestLayerIdxPlus1_%d", m_highestLayerIdxPlus1, std::vector< Int  >(0,0)  ,MAX_VPS_NUM_ADD_LAYER_SETS, "HighestLayerIdxPlus1")
-#endif
   ("DefaultTargetOutputLayerIdc"     , m_defaultOutputLayerIdc     , 0, "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
   ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
 
@@ -425,11 +405,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_OP_SETS_PLUS1, "Indices in VPS of output layers in layer set")  
   ("AltOutputLayerFlag",    m_altOutputLayerFlag , std::vector<Bool>(1,0), "Alt output layer flag")
   
-#if H_MV_HLS10_PTL
   ("ProfileTierLevelIdx_%d",  m_profileTierLevelIdx, std::vector<Int>(0), MAX_NUM_LAYERS, "Indices to profile level tier for ols")
-#else
-  ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
-#endif
   // Layer dependencies
   ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIds of direct reference layers")
   ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
@@ -459,16 +435,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
   
   // Profile and level
-#if H_MV_HLS10_PTL
   ("Profile", cfg_profiles,   string(""),           "Profile in VpsProfileTierLevel (Indication only)")
   ("Level",   cfg_levels ,    string(""),           "Level indication in VpsProfileTierLevel (Indication only)")
   ("Tier",    cfg_tiers  ,    string(""),           "Tier indication in VpsProfileTierLevel (Indication only)")
   ("InblFlag",m_inblFlag ,    std::vector<Bool>(0), "InblFlags in VpsProfileTierLevel (Indication only)" )
-#else
-  ("Profile", m_profile,   Profile::NONE, "Profile to be used when encoding (Incomplete)")
-  ("Level",   m_level,     Level::NONE,   "Level limit to be used, eg 5.1 (Incomplete)")
-  ("Tier",    m_levelTier, Level::MAIN,   "Tier to use for interpretation of --Level")
-#endif
   ("ProgressiveSource", m_progressiveSourceFlag, false, "Indicate that source is progressive")
   ("InterlacedSource",  m_interlacedSourceFlag,  false, "Indicate that source is interlaced")
   ("NonPackedSource",   m_nonPackedConstraintFlag, false, "Indicate that source does not contain frame packing")
@@ -647,9 +617,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DepthMADPred, -dm", m_depthMADPred, (UInt)0, "Depth based MAD prediction on/off")
 #endif
 #if H_MV
-#if H_MV_HLS10_GEN_FIX
 // A lot of this stuff could should actually be derived by the encoder.
-#endif // H_MV_HLS10_GEN
   // VPS VUI
   ("VpsVuiPresentFlag"           , m_vpsVuiPresentFlag           , false                                           , "VpsVuiPresentFlag           ")
   ("CrossLayerPicTypeAlignedFlag", m_crossLayerPicTypeAlignedFlag, false                                           , "CrossLayerPicTypeAlignedFlag")  // Could actually be derived by the encoder
@@ -673,10 +641,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MinSpatialSegmentOffsetPlus1", m_minSpatialSegmentOffsetPlus1, std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
   ("CtuBasedOffsetEnabledFlag"   , m_ctuBasedOffsetEnabledFlag   , std::vector< Bool >(1,0)  ,MAX_NUM_LAYERS       , "CtuBasedOffsetEnabledFlag    per direct reference for the N-th layer")
   ("MinHorizontalCtuOffsetPlus1" , m_minHorizontalCtuOffsetPlus1 , std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinHorizontalCtuOffsetPlus1  per direct reference for the N-th layer")
-#if H_MV_HLS10_VPS_VUI
   ("SingleLayerForNonIrapFlag", m_singleLayerForNonIrapFlag, false                                          , "SingleLayerForNonIrapFlag")
   ("HigherLayerIrapSkipFlag"  , m_higherLayerIrapSkipFlag  , false                                          , "HigherLayerIrapSkipFlag  ")
-#endif
 #endif
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
@@ -783,9 +749,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISubBitstreamAvgBitRate",               m_sbPropAvgBitRate,             std::vector< Int  >(1,0)  ,"Specifies average bit rate of the i-th sub-bitstream")
   ("SEISubBitstreamMaxBitRate",               m_sbPropMaxBitRate,             std::vector< Int  >(1,0)  ,"Specifies maximum bit rate of the i-th sub-bitstream")
 
-#if H_MV_HLS10_GEN_FIX
   ("OutputVpsInfo",                           m_outputVpsInfo,                false                     ,"Output information about the layer dependencies and layer sets")
-#endif
 #endif
 #if H_3D
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
@@ -1072,9 +1036,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     } 
   }
   m_iNumberOfViews = (Int) uniqueViewOrderIndices.size(); 
-#if H_MV_HLS10_AUX
   xResizeVector( m_auxId );
-#endif
 
 #if H_3D
   xResizeVector( m_depthFlag ); 
@@ -1108,11 +1070,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   xResizeVector( m_loopFilterNotAcrossTilesFlag ); 
   xResizeVector( m_wppInUseFlag ); 
 
-#if H_MV_HLS10_ADD_LAYERSETS
   for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + m_numAddLayerSets + (Int) m_outputLayerSetIdx.size(); olsIdx++)
-#else
-  for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + (Int) m_outputLayerSetIdx.size(); olsIdx++)
-#endif
   {    
     m_altOutputLayerFlag.push_back( false );      
   }
@@ -1224,7 +1182,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 
 #if H_MV
-#if H_MV_HLS10_PTL
   // parse PTL
   Bool anyEmpty = false; 
   if( cfg_profiles.empty() )
@@ -1271,7 +1228,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   xReadStrToEnum( cfg_profiles, m_profile   ); 
   xReadStrToEnum( cfg_levels,   m_level     ); 
   xReadStrToEnum( cfg_tiers ,   m_levelTier ); 
-#endif
 #endif
 #if H_3D
   // set global varibles
@@ -1389,20 +1345,6 @@ Void TAppEncCfg::xCheckParameter()
   }
 
 
-#if !H_MV_HLS10_PTL
-  if( m_profile==Profile::NONE )
-  {
-    fprintf(stderr, "***************************************************************************\n");
-    fprintf(stderr, "** WARNING: For conforming bitstreams a valid Profile value must be set! **\n");
-    fprintf(stderr, "***************************************************************************\n");
-  }
-  if( m_level==Level::NONE )
-  {
-    fprintf(stderr, "***************************************************************************\n");
-    fprintf(stderr, "** WARNING: For conforming bitstreams a valid Level value must be set!   **\n");
-    fprintf(stderr, "***************************************************************************\n");
-  }
-#endif
 
   Bool check_failed = false; /* abort if there is a fatal configuration problem */
 #define xConfirmPara(a,b) check_failed |= confirmPara(a,b)
@@ -1421,11 +1363,7 @@ Void TAppEncCfg::xCheckParameter()
 #if H_3D
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 3, "Scalability Mask must be equal to 2 or 3. ");
 #else
-#if H_MV_HLS10_AUX
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 8 && m_scalabilityMask != 10, "Scalability Mask must be equal to 2, 8 or 10");
-#else
-  xConfirmPara( m_scalabilityMask != 2 , "Scalability Mask must be equal to 2. ");
-#endif
 #endif
 
 #if H_3D
@@ -1436,7 +1374,6 @@ Void TAppEncCfg::xCheckParameter()
 #endif
 
   m_dimIds.push_back( m_viewOrderIndex );   
-#if H_MV_HLS10_AUX
   for (Int i = 0; i < m_auxId.size(); i++)
   {
     xConfirmPara( !( ( m_auxId[i] >= 0 && m_auxId[i] <= 2 ) || ( m_auxId[i] >= 128 && m_auxId[i] <= 159 ) ) , "AuxId shall be in the range of 0 to 2, inclusive, or 128 to 159, inclusive");
@@ -1445,7 +1382,6 @@ Void TAppEncCfg::xCheckParameter()
   {
     m_dimIds.push_back ( m_auxId );
   }
-#endif  
   xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );
   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
 
@@ -1539,26 +1475,7 @@ Void TAppEncCfg::xCheckParameter()
   for (Int lsIdx = 0; lsIdx < m_outputLayerSetIdx.size(); lsIdx++)
   {   
     Int refLayerSetIdx = m_outputLayerSetIdx[ lsIdx ]; 
-#if H_MV_HLS10_ADD_LAYERSETS
     xConfirmPara(  refLayerSetIdx < 0 || refLayerSetIdx >= m_vpsNumLayerSets + m_numAddLayerSets, "Output layer set idx must be greater or equal to 0 and less than the VpsNumLayerSets plus NumAddLayerSets." );
-#else
-    xConfirmPara(  refLayerSetIdx < 0 || refLayerSetIdx >= m_vpsNumLayerSets, "Output layer set idx must be greater or equal to 0 and less than the VpsNumLayerSets." );
-#endif
-#if !H_MV_HLS10_ADD_LAYERSETS
-    for (Int i = 0; i < m_layerIdsInAddOutputLayerSet[ lsIdx ].size(); i++)
-    {
-      Bool isAlsoInLayerSet = false; 
-      for (Int j = 0; j < m_layerIdsInSets[ refLayerSetIdx ].size(); j++ )
-      {
-        if ( m_layerIdsInSets[ refLayerSetIdx ][ j ] == m_layerIdsInAddOutputLayerSet[ lsIdx ][ i ] )
-        {
-          isAlsoInLayerSet = true; 
-          break; 
-        }        
-      }
-      xConfirmPara( !isAlsoInLayerSet, "All output layers of a output layer set be included in corresponding layer set.");
-    }
-#endif
   }
 
   xConfirmPara( m_defaultOutputLayerIdc < 0 || m_defaultOutputLayerIdc > 2, "Default target output layer idc must greater than or equal to 0 and less than or equal to 2." );  
@@ -1570,14 +1487,10 @@ Void TAppEncCfg::xCheckParameter()
     { 
       anyDefaultOutputFlag = anyDefaultOutputFlag || ( m_layerIdsInDefOutputLayerSet[lsIdx].size() != 0 );
     }    
-#if H_MV_HLS10_ADD_LAYERSETS
     if ( anyDefaultOutputFlag )
     {    
       printf( "\nWarning: Ignoring LayerIdsInDefOutputLayerSet parameters, since defaultTargetOuputLayerIdc is not equal 2.\n" );    
     }
-#else
-    printf( "\nWarning: Ignoring LayerIdsInDefOutputLayerSet parameters, since defaultTargetOuputLayerIdc is not equal 2.\n" );    
-#endif
   }
   else  
   {  
@@ -1599,14 +1512,9 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
 
-#if H_MV_HLS10_ADD_LAYERSETS
   xConfirmPara( m_altOutputLayerFlag.size() < m_vpsNumLayerSets + m_numAddLayerSets + m_outputLayerSetIdx.size(), "The number of alt output layer flags must be equal to the number of layer set additional output layer sets plus the number of output layer set indices" );
-#else
-  xConfirmPara( m_altOutputLayerFlag.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
-#endif
 
   // PTL
-#if H_MV_HLS10_PTL
     xConfirmPara( ( m_profile.size() != m_inblFlag.size() || m_profile.size() != m_level.size()  ||  m_profile.size() != m_levelTier.size() ), "The number of Profiles, Levels, Tiers and InblFlags must be equal." ); 
 
     if ( m_numberOfLayers > 1)
@@ -1619,9 +1527,6 @@ Void TAppEncCfg::xCheckParameter()
         xConfirmPara( m_inblFlag[0] != m_inblFlag[1], "inblFlag in VpsProfileTierLevel[1] must be equal to the inblFlag in VpsProfileTierLevel[0].");
       }
     }
-#else
-    xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
-#endif
 
     // Layer Dependencies  
   for (Int i = 0; i < m_numberOfLayers; i++ )
@@ -2485,18 +2390,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
 #endif
 #if H_MV
-#if H_MV_HLS10_GEN_FIX
   xPrintParaVector( "NuhLayerId"     , m_layerIdInNuh ); 
   if ( m_targetEncLayerIdList.size() > 0)
   {
     xPrintParaVector( "TargetEncLayerIdList"     , m_targetEncLayerIdList ); 
   }
-#endif
   xPrintParaVector( "ViewIdVal"     , m_viewId ); 
   xPrintParaVector( "ViewOrderIndex", m_viewOrderIndex ); 
-#if H_MV_HLS10_AUX
   xPrintParaVector( "AuxId", m_auxId );
-#endif
 #endif
 #if H_3D
   xPrintParaVector( "DepthFlag", m_depthFlag ); 

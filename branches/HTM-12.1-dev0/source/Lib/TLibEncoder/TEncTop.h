@@ -149,7 +149,6 @@ protected:
   
   Void  xInitPPSforTiles  ();
   Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
 
   template <class T>     Void  xDelete( Bool ar, T inArray ) 
@@ -191,7 +190,6 @@ protected:
     }
   }
 
-#endif
 #endif
 public:
   TEncTop();

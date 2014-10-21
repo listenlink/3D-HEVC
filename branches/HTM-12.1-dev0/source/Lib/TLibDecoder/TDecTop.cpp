@@ -668,9 +668,6 @@ Void TDecTop::xActivateParameterSets()
 
 #if H_MV
   sps->inferSpsMaxDecPicBufferingMinus1( vps, m_targetOptLayerSetIdx, getLayerId(), false ); 
-#if !H_MV_HLS10_ADD_LAYERSETS 
-  vps->inferDbpSizeLayerSetZero( sps, false ); 
-#endif
   // When the value of vps_num_rep_formats_minus1 in the active VPS is equal to 0
   if ( vps->getVpsNumRepFormatsMinus1() == 0 )
   {
@@ -678,14 +675,12 @@ Void TDecTop::xActivateParameterSets()
     assert( sps->getUpdateRepFormatFlag() == false ); 
   }
   sps->checkRpsMaxNumPics( vps, getLayerId() ); 
-#if H_MV_HLS10_MULTILAYERSPS
 
   if( sps->getLayerId() != 0 )
   {
     sps->inferSpsMaxSubLayersMinus1( true, vps ); 
   }
 
-#if H_MV_HLS10_MULTILAYERSPS
   // It is a requirement of bitstream conformance that, when the SPS is referred to by 
   // any current picture that belongs to an independent non-base layer, the value of 
   // MultiLayerExtSpsFlag derived from the SPS shall be equal to 0.
@@ -694,18 +689,11 @@ Void TDecTop::xActivateParameterSets()
   {  
     assert( sps->getMultiLayerExtSpsFlag() == 0 ); 
   }
-#endif
 
   if( sps->getMultiLayerExtSpsFlag() )
   {
     sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
   }
-#else
-  if( m_layerId > 0 )
-  {
-    sps->setTemporalIdNestingFlag( (sps->getMaxTLayers() > 1) ? vps->getTemporalNestingFlag() : true );
-  }
-#endif
 #endif
 
   if( pps->getDependentSliceSegmentsEnabledFlag() )
@@ -729,17 +717,10 @@ Void TDecTop::xActivateParameterSets()
   m_apcSlicePilot->setSPS(sps);
 #if H_MV
   m_apcSlicePilot->setVPS(vps);  
-#if H_MV_HLS10_REF_PRED_LAYERS
   // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, pps->getLayerId() ) );   
   // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
   assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getDependencyFlag( m_layerId, sps->getLayerId() ) );
-#else
-  // The nuh_layer_id value of the NAL unit containing the PPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
-  assert( pps->getLayerId() == m_layerId || pps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, pps->getLayerId() ) );   
-  // The nuh_layer_id value of the NAL unit containing the SPS that is activated for a layer layerA with nuh_layer_id equal to nuhLayerIdA shall be equal to 0, or nuhLayerIdA, or the nuh_layer_id of a direct or indirect reference layer of layerA.
-  assert( sps->getLayerId() == m_layerId || sps->getLayerId( ) == 0 || vps->getInDirectDependencyFlag( m_layerId, sps->getLayerId() ) );
-#endif
   sps->inferRepFormat  ( vps , m_layerId ); 
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
 
@@ -1724,11 +1705,7 @@ Bool TDecTop::xAllRefLayersInitilized()
   TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); 
   for (Int i = 0; i < vps->getNumDirectRefLayers( getLayerId()  ); i++ )
   {
-#if H_MV_HLS10_REF_PRED_LAYERS
     Int refLayerId = vps->getIdDirectRefLayer( m_layerId, i ); 
-#else
-    Int refLayerId = vps->getRefLayerId( m_layerId, i ); 
-#endif
     allRefLayersInitilizedFlag = allRefLayersInitilizedFlag && m_layerInitilizedFlag[ refLayerId ]; 
   }
 

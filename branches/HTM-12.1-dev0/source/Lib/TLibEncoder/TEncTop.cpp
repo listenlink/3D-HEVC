@@ -71,10 +71,8 @@ TEncTop::TEncTop()
 #if FAST_BIT_EST
   ContextModel::buildNextStateTable();
 #endif
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
   m_iNumSubstreams         = 0; 
-#endif
 #endif
 
   m_pcSbacCoders           = NULL;
@@ -235,7 +233,6 @@ Void TEncTop::destroy ()
     {
       for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
       {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
         xDelete( false, m_pppcRDSbacCoder, iDepth, iCIIdx);
         xDelete( false, m_pppcBinCoderCABAC, iDepth, iCIIdx);
@@ -243,13 +240,11 @@ Void TEncTop::destroy ()
         delete m_pppcRDSbacCoder[iDepth][iCIIdx];
         delete m_pppcBinCoderCABAC[iDepth][iCIIdx];
 #endif
-#endif
       }
     }
     
     for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
     {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
       xDelete( true, m_pppcRDSbacCoder  , iDepth);
       xDelete( true, m_pppcBinCoderCABAC, iDepth);
@@ -257,10 +252,8 @@ Void TEncTop::destroy ()
       delete [] m_pppcRDSbacCoder[iDepth];
       delete [] m_pppcBinCoderCABAC[iDepth];
 #endif
-#endif
     }
 
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
      xDelete( true, m_pppcRDSbacCoder  );
      xDelete( true, m_pppcBinCoderCABAC);
@@ -268,14 +261,12 @@ Void TEncTop::destroy ()
     delete [] m_pppcRDSbacCoder;
     delete [] m_pppcBinCoderCABAC;
 #endif
-#endif
     for ( UInt ui = 0; ui < m_iNumSubstreams; ui++ )
     {
       for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
       {
         for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
         {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
           xDelete(false, m_ppppcRDSbacCoders  ,ui, iDepth, iCIIdx);
           xDelete(false, m_ppppcBinCodersCABAC,ui, iDepth, iCIIdx);
@@ -283,13 +274,11 @@ Void TEncTop::destroy ()
           delete m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx];
           delete m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx];
 #endif
-#endif
         }
       }
 
       for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
       {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
         xDelete(true, m_ppppcRDSbacCoders  ,ui, iDepth);
         xDelete(true, m_ppppcBinCodersCABAC,ui, iDepth);        
@@ -297,11 +286,9 @@ Void TEncTop::destroy ()
         delete [] m_ppppcRDSbacCoders  [ui][iDepth];
         delete [] m_ppppcBinCodersCABAC[ui][iDepth];
 #endif
-#endif
       }
 
 
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
       xDelete(true, m_ppppcRDSbacCoders,   ui);
       xDelete(true, m_ppppcBinCodersCABAC, ui);      
@@ -309,9 +296,7 @@ Void TEncTop::destroy ()
       delete[] m_ppppcRDSbacCoders  [ui];
       delete[] m_ppppcBinCodersCABAC[ui];
 #endif
-#endif
     }
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
     xDelete(true, m_ppppcRDSbacCoders    ) ;
     xDelete(true, m_ppppcBinCodersCABAC);
@@ -330,7 +315,6 @@ Void TEncTop::destroy ()
   delete[] m_pcRDGoOnBinCodersCABAC;
   delete[] m_pcBitCounters;
   delete[] m_pcRdCosts;
-#endif
 #endif
 
 #if !H_MV
@@ -768,7 +752,6 @@ Void TEncTop::xInitSPS()
 
 #if H_MV  
   m_cSPS.setUpdateRepFormatFlag           ( false );    
-#if H_MV_HLS10_MULTILAYERSPS  
   Bool multiLayerExtensionFlag  = ( getLayerId() > 0 ) && ( m_cVPS->getNumRefLayers( getLayerId() ) > 0 ); 
   
   m_cSPS.setSpsExtOrMaxSubLayersMinus1( multiLayerExtensionFlag ? 7 : m_maxTempLayer - 1 );
@@ -777,10 +760,6 @@ Void TEncTop::xInitSPS()
     m_cSPS.setSpsInferScalingListFlag   ( true ); 
     m_cSPS.setSpsScalingListRefLayerId( m_cVPS->getIdRefLayer( getLayerId(), 0 ) ); 
   }
-#else
-  m_cSPS.setSpsInferScalingListFlag       ( m_layerId > 0 && m_cVPS->getInDirectDependencyFlag( getLayerIdInVps(), 0 ) ); 
-  m_cSPS.setSpsScalingListRefLayerId      ( 0              ); 
-#endif
   m_cSPS.setSpsExtensionPresentFlag       ( true ); 
   m_cSPS.setSpsMultilayerExtensionFlag    ( true ); 
 #if H_3D
@@ -855,19 +834,12 @@ Void TEncTop::xInitSPS()
     const std::vector<Int>& targetDecLayerIdList = m_cVPS->getTargetDecLayerIdList( m_cVPS->olsIdxToLsIdx( ols )); 
     for( Int is = 0; is < targetDecLayerIdList.size(); is++  )
     {
-#if H_MV_HLS10_ADD_LAYERSETS
       if ( m_cVPS->getNecessaryLayerFlag( ols, is ) )
       {      
         m_cSPS.inferSpsMaxDecPicBufferingMinus1( m_cVPS, ols, targetDecLayerIdList[is], true );       
       }
-#else
-      m_cSPS.inferSpsMaxDecPicBufferingMinus1( m_cVPS, ols, targetDecLayerIdList[is], true );       
-#endif
     }
   }
-#if !H_MV_HLS10_ADD_LAYERSETS 
-  m_cVPS->inferDbpSizeLayerSetZero( &m_cSPS, true ); 
-#endif
 #endif
   m_cSPS.setPCMBitDepthLuma (g_uiPCMBitDepthLuma);
   m_cSPS.setPCMBitDepthChroma (g_uiPCMBitDepthChroma);
