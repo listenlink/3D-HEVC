@@ -385,7 +385,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D
   ("SingleDepthMode",    m_useSingleDepthMode, true, "Single depth mode")                         
 #endif
 #endif
@@ -2616,7 +2616,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D
   printf("SingleDepthMode:%d ",    m_useSingleDepthMode);
 #endif
 #if H_3D_INTER_SDC

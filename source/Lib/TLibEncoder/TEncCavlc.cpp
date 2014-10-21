@@ -2299,6 +2299,7 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   WRITE_FLAG(ptl->getNonPackedConstraintFlag(), "general_non_packed_constraint_flag");
   WRITE_FLAG(ptl->getFrameOnlyConstraintFlag(), "general_frame_only_constraint_flag");
   
+#if H_MV
   if( ptl->getV2ConstraintsPresentFlag() ) 
   {
     WRITE_FLAG( ptl->getMax12bitConstraintFlag( ) ? 1 : 0 , "max_12bit_constraint_flag" );
@@ -2328,6 +2329,11 @@ Void TEncCavlc::codeProfileTier( ProfileTierLevel* ptl )
   {
     WRITE_FLAG(0, "reserved_zero_bit");
   }
+#else
+  WRITE_CODE(0 , 16, "XXX_reserved_zero_44bits[0..15]");
+  WRITE_CODE(0 , 16, "XXX_reserved_zero_44bits[16..31]");
+  WRITE_CODE(0 , 12, "XXX_reserved_zero_44bits[32..43]");
+#endif
 }
 
 /**

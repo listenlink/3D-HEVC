@@ -2762,6 +2762,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
      READ_FLAG( uiCode, "slice_segment_header_extension_data_bit" );
     }
     assert( ( m_pcBitstream->getNumBitsRead() - posFollSliceSegHeaderExtLen ) == rpcSlice->getSliceSegmentHeaderExtensionLength() * 8  ); 
+  }
 #else
     READ_UVLC( uiCode, "slice_header_extension_length" );
     for(Int i=0; i<uiCode; i++)
@@ -2769,11 +2770,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       UInt ignore;
       READ_CODE(8,ignore,"slice_header_extension_data_byte");
     }  
-  }
-  else
-  {
-    rpcSlice->setSliceSegmentHeaderExtensionLength( 0 );
-    rpcSlice->setPocMsbValPresentFlag( false );
   }
 #endif
   m_pcBitstream->readByteAlignment();
