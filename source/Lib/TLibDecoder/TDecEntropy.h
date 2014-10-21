@@ -88,7 +88,7 @@ public:
   
 public:
   virtual Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   virtual Void parseSingleDepthMode       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
 #endif
   virtual Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -178,7 +178,7 @@ public:
 public:
   Void decodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   Void decodeSingleDepthMode ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) ;
 #endif
   Void decodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

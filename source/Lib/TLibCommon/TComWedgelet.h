@@ -57,19 +57,12 @@ enum DIM_IDX
 #define DIM_NUM_TYPE   (DMM_NUM_TYPE)
 #define DIM_NO_IDX     MAX_UINT
 
-#if HS_DMM_SIGNALLING_I0120
 __inline UInt getDimType  ( Int intraMode ) 
 { 
     Int dimType = intraMode-DIM_OFFSET; 
     return (dimType >= 0 && dimType < DIM_NUM_TYPE) ? (UInt)dimType : DIM_NO_IDX; 
 }
-#else
-__inline UInt getDimType  ( Int intraMode ) { Int dimType = (intraMode-DIM_OFFSET)/2; return (dimType >= 0 && dimType < DIM_NUM_TYPE) ? (UInt)dimType : DIM_NO_IDX; }
-#endif
 __inline Bool isDimMode   ( Int intraMode ) { return (getDimType( intraMode ) < DIM_NUM_TYPE); }
-#if !HS_DMM_SIGNALLING_I0120
-__inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && ((intraMode-DIM_OFFSET)%2) == 1); }
-#endif
 #endif
 
 #if H_3D_DIM_DMM
@@ -78,9 +71,6 @@ __inline Bool isDimDeltaDC( Int intraMode ) { return (isDimMode( intraMode ) && 
 
 enum WedgeResolution
 {
-#if !SHARP_DMM1_I0110
-  DOUBLE_PEL,
-#endif
   FULL_PEL,
   HALF_PEL
 };
@@ -105,9 +95,7 @@ private:
   UInt  m_uiHeight;
 
   Bool* m_pbPattern;
-#if SHARP_DMM1_I0110
   Bool* m_pbScaledPattern;
-#endif
 
   Void  xGenerateWedgePattern();
   Void  xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, Bool* pbPattern, Int iPatternStride );
@@ -133,9 +121,7 @@ public:
   UChar           getOri     () { return m_uhOri; }
   Bool            getIsCoarse() { return m_bIsCoarse; }
   UInt            getAng     () { return m_uiAng; }
-#if SHARP_DMM1_I0110
   Bool*           getScaledPattern(UInt uiWidth);
-#endif
 
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse = false );
   Void  findClosestAngle();

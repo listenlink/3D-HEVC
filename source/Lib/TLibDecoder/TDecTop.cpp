@@ -228,7 +228,7 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
     return;
   }
 
-#if !LGE_FCO_I0116
+#if !H_3D_FCO
   if ( pcSlice->getIsDepth())
   {
     return;
@@ -1271,7 +1271,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   }
 
 #if H_3D_IV_MERGE
-#if LGE_FCO_I0116
+#if H_3D_FCO
   if( !pcSlice->getIsDepth() && m_pcCamParsCollector )
 #else
   if( pcSlice->getIsDepth() && m_pcCamParsCollector )

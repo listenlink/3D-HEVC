@@ -504,9 +504,6 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
             {
               READ_CODE(8, uiNumDepthValues, "num_depth_values_in_dlt[i]");   // num_entry
 
-#if !H_3D_DELTA_DLT
-              if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )       // Single-view DLT Diff Coding
-#endif
               {
                 // The condition if( pcVPS->getNumDepthValues(i) > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component. 
 
@@ -554,7 +551,6 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
               }
             }
             
-#if H_3D_DELTA_DLT
             if( pcDLT->getInterViewDltPredEnableFlag( i ) )
             {
               // interpret decoded values as delta DLT
@@ -570,10 +566,7 @@ Void TDecCavlc::parsePPSExtension( TComPPS* pcPPS, TComVPS* pcVPS )
               // store final DLT
               pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
             }
-#else
-            // store final DLT
-            pcDLT->setDepthLUTs(i, aiIdx2DepthValue, uiNumDepthValues);
-#endif
+
           }
         }
       }
@@ -1106,19 +1099,7 @@ Void TDecCavlc::parseSPSExtension( TComSPS* pcSPS )
 #if H_3D
 Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 { 
-#if !MTK_I0099_VPS_EX2
-  UInt uiCode; 
-#if H_3D_QTLPC
-  //GT: This has to go to VPS
-  if( depthFlag )
-  {
-    READ_FLAG( uiCode, "use_qtl_flag" );
-    pcSPS->setUseQTL( uiCode );
-    READ_FLAG( uiCode, "use_pc_flag" );
-    pcSPS->setUsePC( uiCode );
-  }
-#endif
-#endif
+
 }
 #endif
 
@@ -2105,11 +2086,7 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
 Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 {
   UInt uiCode; 
-#if SEC_VPS_CLEANUP_I0090
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
-#else
-  for( Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
-#endif
   {
 #if H_3D_ARP
     pcVPS->setUseAdvRP  ( i, 0 );
@@ -2118,22 +2095,14 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_SPIVMP
     pcVPS->setSubPULog2Size(i, 0);
 #endif
-#if !SEC_VPS_CLEANUP_I0090
-    if ( i != 0 )
-#endif
     {
-#if MTK_I0099_VPS_EX2
+#if H_3D_IV_MERGE
       READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
-#if SEC_HLS_CLEANUP_I0100
       READ_FLAG( uiCode, "iv_mv_scaling_flag[i]");       pcVPS->setIvMvScalingFlag         ( i, uiCode == 1 ? true : false );
-#endif
 #endif
       if( !( pcVPS->getDepthId( i ) == 1 ) )
       {
 #if H_3D_IV_MERGE
-#if !MTK_I0099_VPS_EX2
-        READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
-#endif
         if( !pcVPS->getNumDirectRefLayers(i) )
         {
           assert( !uiCode );         
@@ -2165,35 +2134,15 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       }
       else
       {
-#if !MTK_I0099_VPS_EX2
-#if H_3D_IV_MERGE
-        if(i!=1)
-        {
-          READ_FLAG( uiCode, "iv_mv_pred_flag[i]");          pcVPS->setIvMvPredFlag         ( i, uiCode == 1 ? true : false );
-          if( !pcVPS->getNumDirectRefLayers(i) )
-          {
-            assert( !uiCode );         
-          }
-        }
-#endif
-#if H_3D_SPIVMP
-        if (i!=1)
-        {
-          READ_UVLC (uiCode, "log2_sub_PU_size_minus3[i]");     pcVPS->setSubPULog2Size(i, uiCode+3); 
-        }
-#endif
-#endif
 #if H_3D_IV_MERGE
         READ_FLAG( uiCode, "mpi_flag[i]" );             pcVPS->setMPIFlag( i, uiCode == 1 ? true : false );
-#endif
-#if MTK_I0099_VPS_EX2
         READ_UVLC (uiCode, "log2_mpi_sub_PU_size_minus3[i]");     pcVPS->setSubPUMPILog2Size(i, uiCode+3);
 #endif
         READ_FLAG( uiCode, "vps_depth_modes_flag[i]" );             pcVPS->setVpsDepthModesFlag( i, uiCode == 1 ? true : false );
-#if SEPARATE_FLAG_I0085
+#if H_3D
         READ_FLAG( uiCode, "ivp_flag[i]" );                   pcVPS->setIVPFlag( i, uiCode == 1 ? true : false );
 #endif
-#if MTK_I0099_VPS_EX2
+#if H_3D_QTLPC
         READ_FLAG( uiCode, "lim_qt_pred_flag[i]");                  pcVPS->setLimQtPredFlag     ( i, uiCode == 1 ? true : false ); 
 #endif
 #if H_3D_INTER_SDC
@@ -2208,11 +2157,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
   Bool bCamParPresentFlag = false;
 
   READ_UVLC( uiCamParPrecision, "cp_precision" );
-#if SEC_VPS_CLEANUP_I0090
   for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
-#else
-  for (UInt viewIndex=0; viewIndex<pcVPS->getNumViews(); viewIndex++)
-#endif
   {
     pcVPS->setCamParPresent         ( viewIndex, false );
     pcVPS->setHasCamParInSliceHeader( viewIndex, false );
@@ -2234,12 +2179,6 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
     }
   }
-#if !MTK_I0099_VPS_EX2
-  READ_UVLC (uiCode, "log2_sub_PU_MPI_size_minus3");              pcVPS->setSubPUMPILog2Size( uiCode + 3 ); 
-#endif
-#if !SEC_HLS_CLEANUP_I0100
-  READ_FLAG( uiCode, "iv_mv_scaling_flag");                       pcVPS->setIvMvScalingFlag( uiCode == 1 ? true : false ); 
-#endif
 }
 #endif
 #endif
@@ -2864,11 +2803,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
-#if SEC_HLS_CLEANUP_I0100
     else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth() && vps->getNumDirectRefLayers( layerId ) > 0 )
-#else
-    else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth())
-#endif
     {
       UInt uiCodeTmp = 0;
 
@@ -2882,7 +2817,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
     if(rpcSlice->getIsDepth())
     {
       UInt uiCodeTmp = 0;
@@ -3008,7 +2943,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
   }
 
 #if H_3D
-#if LGE_FCO_I0116
+#if H_3D_FCO
   if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && rpcSlice->getIsDepth() )
 #else
   if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && !rpcSlice->getIsDepth() )
@@ -3330,7 +3265,7 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
 {
   assert(0);
 }
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
 Void TDecCavlc::parseSingleDepthMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);

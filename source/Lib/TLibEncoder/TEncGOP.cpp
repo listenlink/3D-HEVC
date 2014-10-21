@@ -159,9 +159,9 @@ Void TEncGOP::init ( TEncTop* pcTEncTop )
   m_isDepth              = pcTEncTop->getIsDepth();
 #endif
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-  m_aICEnableCandidate           = pcTEncTop->getICEnableCandidate(); 
-  m_aICEnableNum           = pcTEncTop->getICEnableNum(); 
+#if H_3D_IC
+  m_aICEnableCandidate   = pcTEncTop->getICEnableCandidate(); 
+  m_aICEnableNum         = pcTEncTop->getICEnableNum(); 
 #endif
 #if KWU_FIX_URQ
   m_pcRateCtrl           = pcTEncTop->getRateCtrl();
@@ -936,7 +936,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
     TEncTop* pcEncTop = (TEncTop*) m_pcCfg;
     bool enableSingleDepthMode=false;
     if(pcEncTop->getUseSingleDepthMode())
@@ -970,7 +970,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     assert( !m_pcEncTop->getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
 #endif    
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+#if H_3D_IC
     pcSlice->setICEnableCandidate( m_aICEnableCandidate );         
     pcSlice->setICEnableNum( m_aICEnableNum );         
 #endif

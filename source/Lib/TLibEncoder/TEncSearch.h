@@ -180,7 +180,7 @@ public:
                                   TComYuv*    pcRecoYuv,
                                   UInt&       ruiDistC,
                                   Bool        bLumaOnly
-#if HHI_DMM4_ENC_I0066
+#if H_3D_DIM
                                 , Bool        bOnlyIVP
 #endif
                                 );
@@ -190,7 +190,7 @@ public:
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt        uiPreCalcDistC );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   Void  estIntraPredSingleDepth  ( TComDataCU* pcCU, 
                                   TComYuv*    pcOrgYuv, 
                                   TComYuv*    pcPredYuv, 
@@ -353,7 +353,7 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   Void xIntraCodingSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Int iTestDepthIdx, Pel * DepthNeighbor );
 #endif
 #if H_3D_DIM
@@ -428,9 +428,6 @@ protected:
                                     UChar* uhInterDirNeighbours
 #if H_3D_VSP
                                   , Int* vspFlag
-#if !FIX_TICKET_79
-                                  , InheritedVSPDisInfo*  inheritedVSPDisInfo
-#endif
 #endif
 #if H_3D_SPIVMP
                                   , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
@@ -442,9 +439,6 @@ protected:
                                     UInt            puIdx,
                                     TComMvField*    mvFieldNeighbours, 
                                     UChar*          interDirNeighbours, 
-#if H_3D_VSP && !FIX_TICKET_75
-                                    Int* vspFlag,
-#endif
                                     Int             numValidMergeCand );
 
   // -------------------------------------------------------------------------------------------------------------------

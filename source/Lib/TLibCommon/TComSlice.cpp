@@ -141,7 +141,7 @@ TComSlice::TComSlice()
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
 , m_bApplySingleDepthMode         (false)
 #endif
 #endif
@@ -649,11 +649,7 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   Int numPocInterLayer[2] = { getNumActiveRefLayerPics0( ), getNumActiveRefLayerPics1( ) }; 
   
   TComPic**             refPicSetStCurr    [2] = { RefPicSetStCurr0, RefPicSetStCurr1 };
-#if FIX_WARNING
   Int numPocStCurr[2] = { (Int)NumPocStCurr0, (Int)NumPocStCurr1 }; 
-#else
-  Int numPocStCurr[2] = { NumPocStCurr0, NumPocStCurr1 }; 
-#endif
 
   for (Int li = 0; li < ((m_eSliceType==B_SLICE) ? 2 : 1); li++)
   { 
@@ -1104,7 +1100,7 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
     m_interLayerPredLayerIdc[ layer ] = pSrc->m_interLayerPredLayerIdc[ layer ]; 
   }
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   m_bApplySingleDepthMode = pSrc->m_bApplySingleDepthMode;
 #endif
 #if H_3D_IC
@@ -1969,14 +1965,8 @@ TComVPS::TComVPS()
 #if H_3D
     m_viewIndex         [i] = -1; 
     m_vpsDepthModesFlag [i] = false;
-#if SEC_HLS_CLEANUP_I0100
     m_ivMvScalingFlag[i] = true; 
-#else
-    m_ivMvScalingFlag = true; 
-#endif
-#if SEPARATE_FLAG_I0085
     m_bIVPFlag [i]      = false;
-#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
@@ -2015,7 +2005,7 @@ TComVPS::TComVPS()
     m_iSubPULog2Size       [ i ] = 0;
 #endif
 #endif
-#if MTK_I0099_VPS_EX2
+#if H_3D_QTLPC
     m_bLimQtPredFlag       [ i ] = false;
 #endif
 #if H_3D_VSP
@@ -2027,7 +2017,7 @@ TComVPS::TComVPS()
 #if H_3D_INTER_SDC
     m_bInterSDCFlag        [ i ] = false;
 #endif
-#if SEPARATE_FLAG_I0085
+#if H_3D
     m_bIVPFlag             [ i ] = false;
 #endif
 #if H_3D_DBBP
@@ -2308,9 +2298,7 @@ Void TComVPS::createCamPars(Int iNumViews)
   m_aaaiCodedOffset = new Int**[ iNumViews ];
   for ( i = 0; i < iNumViews ; i++ )
   {
-#if H_3D_FIX_UNINIT
     m_bCamParPresent[i] = false; 
-#endif
     m_bCamParInSliceHeader[i] = false; 
     m_aaaiCodedScale[i] = new Int*[ 2 ];
     m_aaaiCodedOffset[i] = new Int*[ 2 ];
@@ -2909,12 +2897,6 @@ TComSPS::TComSPS()
 , m_usePCM                   (false)
 , m_pcmLog2MaxSize            (  5)
 , m_uiPCMLog2MinSize          (  7)
-#if !MTK_I0099_VPS_EX2
-#if H_3D_QTLPC
-, m_bUseQTL                   (false)
-, m_bUsePC                    (false)
-#endif
-#endif
 , m_bitDepthY                 (  8)
 , m_bitDepthC                 (  8)
 , m_qpBDOffsetY               (  0)
@@ -3185,9 +3167,6 @@ TComDLT::TComDLT()
 
     // allocate some memory and initialize with default mapping
     m_iNumDepthmapValues[i] = ((1 << m_uiDepthViewBitDepth)-1)+1;
-#if !FIX_TICKET_77
-    m_iBitsPerDepthValue[i] = numBitsForValue(m_iNumDepthmapValues[i]);
-#endif
     m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
     m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
 
@@ -3276,12 +3255,8 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
   // update DLT variables
   m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
-#if !FIX_TICKET_77
-  m_iBitsPerDepthValue[layerIdInVps] = numBitsForValue(m_iNumDepthmapValues[layerIdInVps]);
-#endif
 }
 
-#if H_3D_DELTA_DLT
 Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTOut, UInt *puiDeltaDLTOutNum )
 {
   Bool abBM0[ 256 ];
@@ -3346,7 +3321,6 @@ Void TComDLT::setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum
   // update internal tables
   setDepthLUTs(layerIdInVps, aiIdx2DepthValue, uiNumDepthValues);
 }
-#endif
 
 #endif
 
@@ -4064,7 +4038,7 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
 
       m_bApplyIC = true;
       Int refLayer = curLayer-1;
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+
       Int ICEnableCandidate = getICEnableCandidate(refLayer);
       Int ICEnableNum = getICEnableNum(refLayer);
       if( (refLayer>=0) && (ICEnableCandidate>0) )
@@ -4082,24 +4056,6 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
       }
       setICEnableCandidate(curLayer, 0);
       setICEnableNum(curLayer, 0);
-#else
-      if( (refLayer>=0) && (g_aICEnableCANDIDATE[refLayer]>0) )
-      {    
-        Double ratio=Double(g_aICEnableNUM[refLayer])/Double(g_aICEnableCANDIDATE[refLayer]);
-
-        if( ratio > IC_LOW_LATENCY_ENCODING_THRESHOLD)
-{
-          m_bApplyIC=true;
-        }
-        else
-        {
-          m_bApplyIC=false;
-        }
-      }
-      g_aICEnableNUM[curLayer]=0;
-      g_aICEnableCANDIDATE[curLayer]=0;
-      g_lastlayer=getDepth();
-#endif
     }
   }
   else
@@ -4209,7 +4165,7 @@ Void TComSlice::setDepthToDisparityLUTs()
 #endif
 
 #if H_3D_DDD
-#if LGE_FCO_I0116
+#if H_3D_FCO
   if( getIsDepth() && getViewIndex() > 0 && getVPS()->getMPIFlag(layerIdInVPS))
 #else
   if( getIsDepth() && getViewIndex() > 0 )

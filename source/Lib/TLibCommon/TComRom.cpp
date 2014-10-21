@@ -354,15 +354,9 @@ const WedgeResolution g_dmmWedgeResolution[6] =
   HALF_PEL,    //   4x4
   HALF_PEL,    //   8x8
   FULL_PEL,    //  16x16
-#if SHARP_DMM1_I0110
   FULL_PEL,    //  32x32
   FULL_PEL,    //  64x64
   FULL_PEL     // 128x128
-#else
-  DOUBLE_PEL,  //  32x32
-  DOUBLE_PEL,  //  64x64
-  DOUBLE_PEL   // 128x128
-#endif
 };
 
 const UChar g_dmm1TabIdxBits[6] =
@@ -373,9 +367,7 @@ const UChar g_dmm3IntraTabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
      0,    4,    7,    8,    8,    0 };
 
-#if SHARP_DMM1_I0110
 Bool g_wedgePattern[32*32];
-#endif
 
 extern std::vector< std::vector<TComWedgelet> >   g_dmmWedgeLists;
 extern std::vector< std::vector<TComWedgeRef> >   g_dmmWedgeRefLists;
@@ -387,13 +379,6 @@ extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
 // ====================================================================================================================
 
 Char  g_aucConvertToBit  [ MAX_CU_SIZE+1 ];
-#if !MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-#if H_3D_IC
-UInt g_aICEnableCANDIDATE[10] = { 0, };
-UInt g_aICEnableNUM[ 10 ] = { 0, };
-Int g_lastlayer=0;
-#endif
-#endif
 #if ENC_DEC_TRACE
 FILE*  g_hTrace = NULL;
 const Bool g_bEncDecTraceEnable  = true;
@@ -675,11 +660,7 @@ Void initWedgeLists( Bool initNodeList )
 {
   if( !g_dmmWedgeLists.empty() ) return;
 
-#if SHARP_DMM1_I0110
   for( UInt ui = g_aucConvertToBit[DIM_MIN_SIZE]; ui < (g_aucConvertToBit[DIM_MAX_SIZE]); ui++ )
-#else
-  for( UInt ui = g_aucConvertToBit[DIM_MIN_SIZE]; ui < (g_aucConvertToBit[DIM_MAX_SIZE]+1); ui++ )
-#endif
   {
     UInt uiWedgeBlockSize = ((UInt)DIM_MIN_SIZE)<<ui;
     std::vector<TComWedgelet> acWedgeList;
@@ -763,9 +744,6 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
   UInt uiBlockSize = 0;
   switch( eWedgeRes )
   {
-#if !SHARP_DMM1_I0110
-  case( DOUBLE_PEL ): { uiBlockSize = (uiWidth>>1); break; }
-#endif
   case(   FULL_PEL ): { uiBlockSize =  uiWidth;     break; }
   case(   HALF_PEL ): { uiBlockSize = (uiWidth<<1); break; }
   }

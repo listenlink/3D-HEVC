@@ -109,7 +109,7 @@ private:
   // CU data
   // -------------------------------------------------------------------------------------------------------------------
   Bool*         m_skipFlag;           ///< array of skip flags
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   Bool*         m_singleDepthFlag;           ///< array of single depth flags
   Pel*          m_apSingleDepthValue;
 #endif
@@ -249,9 +249,6 @@ protected:
 #endif
 #if H_3D_IV_MERGE
   Bool          xAddIvMRGCand( Int mrgCandIdx, Int& iCount, Int*   ivCandDir, TComMv* ivCandMv, Int* ivCandRefIdx ); 
-#if! SEC_SIMP_SHIFTED_DV_I0086
-  Bool          xGetPosFirstAvailDmvCand( Int iCount, Int& iFirDispCand );
-#endif
 #endif
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
@@ -352,7 +349,7 @@ public:
   Bool         getSkipFlag            (UInt idx)                { return m_skipFlag[idx];     }
   Void         setSkipFlag           ( UInt idx, Bool skip)     { m_skipFlag[idx] = skip;   }
   Void         setSkipFlagSubParts   ( Bool skip, UInt absPartIdx, UInt depth );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   Bool*        getSingleDepthFlag            ()                        { return m_singleDepthFlag;          }
   Bool         getSingleDepthFlag            (UInt idx)                { return m_singleDepthFlag[idx];     }
   Void         setSingleDepthFlag           ( UInt idx, Bool singleDepth)     { m_singleDepthFlag[idx] = singleDepth;   }
@@ -504,7 +501,7 @@ public:
   Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
    Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
 #endif
 #if H_3D_NBDV_REF
@@ -669,9 +666,6 @@ UChar         getNumPartitions       ();
 #else
   Void          getInterMergeCandidates ( UInt uiAbsPartIdx, UInt uiPUIdx, TComMvField* pcMFieldNeighbours, UChar* puhInterDirNeighbours
 #endif
-#if H_3D_VSP && !FIX_TICKET_79
-                                            , InheritedVSPDisInfo*  inheritedVSPDisInfo
-#endif
 #if H_3D_SPIVMP
                                             , TComMvField* pcMvFieldSP, UChar* puhInterDirSP
 #endif
@@ -679,10 +673,6 @@ UChar         getNumPartitions       ();
                                             );
 
 #if H_3D_VSP
-#if !FIX_TICKET_76
-  inline Void   xInheritVSPDisInfo(TComDataCU* pcCURef, UInt uiAbsPartIdx, Int iCount,  InheritedVSPDisInfo*  inheritedVSPDisInfo);
-#endif
-
 #if H_3D_SPIVMP
   Bool*         getSPIVMPFlag        ()                        { return m_pbSPIVMPFlag;          }
   Bool          getSPIVMPFlag        ( UInt uiIdx )            { return m_pbSPIVMPFlag[uiIdx];   }
@@ -770,7 +760,7 @@ UChar         getNumPartitions       ();
 
 #endif
 
-#if SHARP_DMM1_I0110
+#if H_3D_DIM
   Bool         isDMM1UpscaleMode       ( UInt uiWidth ){ Bool bDMM1UpsampleModeFlag = true; UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ bDMM1UpsampleModeFlag = false; } return bDMM1UpsampleModeFlag; };
   UInt         getDMM1BasePatternWidth ( UInt uiWidth ){ UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ uiBaseWidth =  uiWidth; } return uiBaseWidth; }
 #endif
