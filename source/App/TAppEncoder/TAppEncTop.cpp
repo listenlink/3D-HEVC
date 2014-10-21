@@ -143,7 +143,6 @@ Void TAppEncTop::xInitLibCfg()
   m_ivPicLists.setVPS      ( &vps );
   xDeriveDltArray          ( vps, dlt );
 #endif
-#if H_MV_HLS10_GEN_FIX
   if ( m_targetEncLayerIdList.size() == 0 )
   {
     for (Int i = 0; i < m_numberOfLayers; i++ )
@@ -165,19 +164,14 @@ Void TAppEncTop::xInitLibCfg()
       m_targetEncLayerIdList.erase( m_targetEncLayerIdList.begin() + i  );
     }
   }
-#endif
 
-#if H_MV_HLS10_ADD_LAYERSETS
   if ( m_outputVpsInfo )
   {  
-#if H_MV_HLS10_AUX
     vps.printScalabilityId();
-#endif
     vps.printLayerDependencies();
     vps.printLayerSets(); 
     vps.printPTL(); 
   }
-#endif
 
   for(Int layerIdInVps = 0; layerIdInVps < m_numberOfLayers; layerIdInVps++)
   {
@@ -828,20 +822,14 @@ Void TAppEncTop::encode()
   }
   
 #if H_MV
-#if H_MV_HLS10_GEN_FIX
   while ( (m_targetEncLayerIdList.size() != 0 ) && !allEos )
-#else
-  while ( !allEos )
-#endif
   {
     for(Int layer=0; layer < m_numberOfLayers; layer++ )
     {
-#if H_MV_HLS10_GEN_FIX
       if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
       {
         continue; 
       }
-#endif
 
       Int frmCnt = 0;
       while ( !eos[layer] && !(frmCnt == gopSize))
@@ -882,12 +870,10 @@ Void TAppEncTop::encode()
 #endif
       for(Int layer=0; layer < m_numberOfLayers; layer++ )
       {
-#if H_MV_HLS10_GEN_FIX
         if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
         {
           continue; 
         }
-#endif
 
 #if H_3D_VSO        
           if( m_bUseVSO && m_bUseEstimatedVSD && iNextPoc < m_framesToBeEncoded )
@@ -915,12 +901,10 @@ Void TAppEncTop::encode()
   }
   for(Int layer=0; layer < m_numberOfLayers; layer++ )
   {
-#if H_MV_HLS10_GEN_FIX
     if (!xLayerIdInTargetEncLayerIdList( m_vps->getLayerIdInNuh( layer ) ))
     {
       continue; 
     }
-#endif
     m_acTEncTopList[layer]->printSummary( m_acTEncTopList[layer]->getNumAllPicCoded(), m_isField );
   }
 #else
@@ -1384,9 +1368,6 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
 
   // Max sub layers, + presence flag
   Bool subLayersMaxMinus1PresentFlag = false; 
-#if !H_MV_FIX_SUB_LAYERS_MAX_MINUS1
-  Int  subLayersMaxMinus1 = -1; 
-#endif
   for (Int curLayerIdInVps = 0; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++ )
   {    
     Int curSubLayersMaxMinus1 = 0; 
@@ -1397,18 +1378,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     }  
 
     vps.setSubLayersVpsMaxMinus1( curLayerIdInVps, curSubLayersMaxMinus1 ); 
-#if !H_MV_FIX_SUB_LAYERS_MAX_MINUS1
-    if ( subLayersMaxMinus1 == -1 )
-    {
-      subLayersMaxMinus1 = curSubLayersMaxMinus1; 
-    }
-    else
-    {
-      subLayersMaxMinus1PresentFlag = subLayersMaxMinus1PresentFlag || ( curSubLayersMaxMinus1 != subLayersMaxMinus1 ); 
-    }
-#else
     subLayersMaxMinus1PresentFlag = subLayersMaxMinus1PresentFlag || ( curSubLayersMaxMinus1 != vps.getMaxSubLayersMinus1() );
-#endif
   }
 
   vps.setVpsSubLayersMaxMinus1PresentFlag( subLayersMaxMinus1PresentFlag ); 
@@ -1421,28 +1391,17 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     for ( Int curLayerIdInVps = 1; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++)
     {
       Int maxTid = -1; 
-#if H_MV_FIX_LOOP_GOPSIZE
       for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
       {        
         GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
         GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
-#else
-      for( Int i = 0; i < getGOPSize(); i++ ) 
-      {        
-        GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][i];
-        GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][i];     
-#endif
         for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++)
         {        
           if ( m_directRefLayers[ curLayerIdInVps ][ geCur.m_interLayerPredLayerIdc[ j ]] == refLayerIdInVps )
           {
-#if H_MV_FIX_LOOP_GOPSIZE
             Bool refAlwaysIntra = ( i == getGOPSize() ) && ( m_iIntraPeriod[ curLayerIdInVps ] % m_iIntraPeriod[ refLayerIdInVps ] == 0 );
             Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
             maxTid = std::max( maxTid, ( refAlwaysIntra || refLayerZero ) ? 0 : geRef.m_temporalId ); 
-#else
-            maxTid = std::max( maxTid, geRef.m_temporalId ); 
-#endif
           }
         }
       }
@@ -1568,7 +1527,6 @@ Int TAppEncTop::xGetMax( std::vector<Int>& vec )
 
 Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
 { 
-#if H_MV_HLS10_PTL
 
   // SET PTL
   assert( m_profile.size() == m_level.size() && m_profile.size() == m_levelTier.size() ); 
@@ -1586,18 +1544,8 @@ Void TAppEncTop::xSetProfileTierLevel( TComVPS& vps )
       m_levelTier[ ptlIdx ], m_progressiveSourceFlag, m_interlacedSourceFlag,
       m_nonPackedConstraintFlag, m_frameOnlyConstraintFlag,  m_inblFlag[ptlIdx] );     
   }  
-#else
-  const Int vpsNumProfileTierLevelMinus1 = 0; //TBD
-  vps.setVpsNumProfileTierLevelMinus1( vpsNumProfileTierLevelMinus1 ); 
-  
-  for (Int i = 0; i <= vps.getVpsNumProfileTierLevelMinus1(); i++ )
-  {
-    vps.setVpsProfilePresentFlag( i, true ); 
-  }
-#endif
 }
 
-#if H_MV_HLS10_PTL
 Void TAppEncTop::xSetProfileTierLevel(TComVPS& vps, Int profileTierLevelIdx, Int subLayer, Profile::Name profile, Level::Name level, Level::Tier tier, Bool progressiveSourceFlag, Bool interlacedSourceFlag, Bool nonPackedConstraintFlag, Bool frameOnlyConstraintFlag, Bool inbldFlag)
 {
   TComPTL* ptlStruct = vps.getPTL( profileTierLevelIdx );    
@@ -1619,9 +1567,7 @@ Void TAppEncTop::xSetProfileTierLevel(TComVPS& vps, Int profileTierLevelIdx, Int
   ptl->setTierFlag  ( tier    );
   ptl->setLevelIdc  ( level   );
   ptl->setProfileCompatibilityFlag( profile, true );
-#if H_MV_HLS10_PTL_INBL_FIX
   ptl->setInbldFlag( inbldFlag );
-#endif
 
   switch ( profile )
   {
@@ -1647,7 +1593,6 @@ Void TAppEncTop::xSetProfileTierLevel(TComVPS& vps, Int profileTierLevelIdx, Int
     break; 
   }
 }
-#endif
 
 Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 {
@@ -1665,13 +1610,11 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
   // ToDo not supported yet. 
   //repFormat->setSeparateColourPlaneVpsFlag( );
 
-#if H_MV_HLS10_GEN_VSP_CONF_WIN
   repFormat->setConformanceWindowVpsFlag( true );
   repFormat->setConfWinVpsLeftOffset    ( m_confLeft   / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() ) );
   repFormat->setConfWinVpsRightOffset   ( m_confRight  / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() )  );
   repFormat->setConfWinVpsTopOffset     ( m_confTop    / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() )  );
   repFormat->setConfWinVpsBottomOffset  ( m_confBottom / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() ) ); 
-#endif
 
   assert( vps.getRepFormat( 0 ) == NULL ); 
   vps.setRepFormat( 0 , repFormat );
@@ -1688,20 +1631,13 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
   for( Int i = 0; i < vps.getNumOutputLayerSets(); i++ )
   {  
     Int currLsIdx = vps.olsIdxToLsIdx( i ); 
-#if !H_MV_HLS10_ADD_LAYERSETS
-    std::vector<Int> targetDecLayerIdList = vps.getTargetDecLayerIdList( i ); 
-#endif
     Bool subLayerFlagInfoPresentFlag = false; 
 
     for( Int j = 0; j  <=  vps.getMaxSubLayersInLayerSetMinus1( currLsIdx ); j++ )
     {   
       Bool subLayerDpbInfoPresentFlag = false; 
-#if !H_MV_HLS10_ADD_LAYERSETS
-      assert( vps.getNumLayersInIdList( currLsIdx ) == targetDecLayerIdList.size() ); 
-#endif
       for( Int k = 0; k < vps.getNumLayersInIdList( currLsIdx ); k++ )   
       {
-#if H_MV_HLS10_DBP_SIZE
         Int layerIdInVps = vps.getLayerIdInVps( vps.getLayerSetLayerIdList( currLsIdx, k ) );
         if ( vps.getNecessaryLayerFlag( i,k ) && ( vps.getVpsBaseLayerInternalFlag() || vps.getLayerSetLayerIdList( currLsIdx, k ) != 0 ) )
         {       
@@ -1718,19 +1654,9 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
             dpbSize->setMaxVpsDecPicBufferingMinus1(i, k ,j, 0 ); 
           }
         }
-#else
-        Int layerIdInVps = vps.getLayerIdInVps( targetDecLayerIdList[k] );           
-        dpbSize->setMaxVpsDecPicBufferingMinus1( i, k, j, m_maxDecPicBufferingMvc[ layerIdInVps ][ j ] - 1 );
-
-        if ( j > 0 )
-        {
-          subLayerDpbInfoPresentFlag = subLayerDpbInfoPresentFlag || ( dpbSize->getMaxVpsDecPicBufferingMinus1( i, k, j ) != dpbSize->getMaxVpsDecPicBufferingMinus1( i, k, j - 1 ) );
-        }
-#endif
       }        
 
       Int maxNumReorderPics = MIN_INT;
-#if H_MV_HLS10_DBP_SIZE
       for ( Int idx = 0; idx < vps.getNumLayersInIdList( currLsIdx ); idx++ )
       {
         if (vps.getNecessaryLayerFlag(i, idx ))
@@ -1739,13 +1665,6 @@ Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )
           maxNumReorderPics = std::max( maxNumReorderPics, m_numReorderPicsMvc[ layerIdInVps ][ j ] ); 
         }
       }
-#else
-      for ( Int idx = 0; idx < targetDecLayerIdList.size(); idx++ )
-      {
-        Int layerIdInVps = vps.getLayerIdInVps( targetDecLayerIdList[ idx ] ); 
-        maxNumReorderPics = std::max( maxNumReorderPics, m_numReorderPicsMvc[ layerIdInVps ][ j ] ); 
-      }
-#endif
       assert( maxNumReorderPics != MIN_INT ); 
 
       dpbSize->setMaxVpsNumReorderPics( i, j, maxNumReorderPics );
@@ -1792,7 +1711,6 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
   Int numAddOuputLayerSets = (Int) m_outputLayerSetIdx.size(); 
   // Additional output layer sets + profileLevelTierIdx
   vps.setDefaultOutputLayerIdc      ( m_defaultOutputLayerIdc );   
-#if H_MV_HLS10_ADD_LAYERSETS
   if( vps.getNumIndependentLayers() == 0 && m_numAddLayerSets > 0  )
   {
     fprintf( stderr, "\nWarning: Ignoring additional layer sets since NumIndependentLayers is equal to 0.\n");            
@@ -1826,35 +1744,18 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
       vps.deriveAddLayerSetLayerIdList( i );
     }        
   }  
-#else
-  vps.setNumAddLayerSets            ( 0                             );  
-#endif
   vps.setNumAddOlss                 ( numAddOuputLayerSets          ); 
   vps.initTargetLayerIdLists(); 
 
-#if H_MV_HLS10_ADD_LAYERSETS
   for (Int olsIdx = 0; olsIdx < vps.getNumLayerSets() + numAddOuputLayerSets; olsIdx++)
   {
     Int addOutLsIdx = olsIdx - vps.getNumLayerSets();     
-#else
-  for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + numAddOuputLayerSets; olsIdx++)
-  {
-    Int addOutLsIdx = olsIdx - m_vpsNumLayerSets;     
-#endif    
     vps.setLayerSetIdxForOlsMinus1( olsIdx, ( ( addOutLsIdx < 0 ) ?  olsIdx  : m_outputLayerSetIdx[ addOutLsIdx ] ) - 1 ); 
 
-#if H_MV_HLS10_ADD_LAYERSETS
     Int lsIdx = vps.olsIdxToLsIdx( olsIdx );
-#else
-    std::vector<Int>& layerIdList    = m_layerIdsInSets[ vps.olsIdxToLsIdx( olsIdx ) ];
-#endif
     if (vps.getDefaultOutputLayerIdc() == 2 || addOutLsIdx >= 0 )
     { 
-#if H_MV_HLS10_ADD_LAYERSETS
       for ( Int i = 0; i < vps.getNumLayersInIdList( lsIdx ); i++)
-#else
-      for ( Int i = 0; i < layerIdList.size(); i++)
-#endif
       {
         vps.setOutputLayerFlag( olsIdx, i, ( olsIdx == 0 && i == 0 ) ? vps.inferOutputLayerFlag(olsIdx, i ) : false ); // This is a software only fix for a bug in the spec. In spec outputLayerFlag neither present nor inferred for this case !
       }
@@ -1864,50 +1765,33 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
       Bool outputLayerInLayerSetFlag = false; 
       for (Int j = 0; j < outLayerIdList.size(); j++)
       {   
-#if H_MV_HLS10_ADD_LAYERSETS
         for ( Int i = 0; i < vps.getNumLayersInIdList( lsIdx ); i++)
         {
           if ( vps.getLayerSetLayerIdList( lsIdx, i ) == outLayerIdList[ j ] )
-#else
-        for (Int i = 0; i < layerIdList.size(); i++ )
-        {
-          if ( layerIdList[ i ] == outLayerIdList[ j ] )
-#endif
           {
             vps.setOutputLayerFlag( olsIdx, i, true );       
             outputLayerInLayerSetFlag = true; 
             break; 
           }
         }
-#if H_MV_HLS10_ADD_LAYERSETS
         if ( !outputLayerInLayerSetFlag )
         {
           fprintf(stderr, "Error: Output layer %d in output layer set %d not in corresponding layer set %d \n", outLayerIdList[ j ], olsIdx , lsIdx );
           exit(EXIT_FAILURE);
         }
-#else
-        assert( outputLayerInLayerSetFlag ); // The output layer is not in the layer set.
-#endif
       }
     }
     else
     {
-#if H_MV_HLS10_ADD_LAYERSETS
       for ( Int i = 0; i < vps.getNumLayersInIdList( lsIdx ); i++)
-#else
-      for ( Int i = 0; i < layerIdList.size(); i++)
-#endif
       {
         vps.setOutputLayerFlag( olsIdx, i, vps.inferOutputLayerFlag( olsIdx, i ) );       
       }
     }
 
-#if H_MV_HLS10_NESSECARY_LAYER
     vps.deriveNecessaryLayerFlags( olsIdx ); 
-#endif
     vps.deriveTargetLayerIdList(  olsIdx ); 
 
-#if H_MV_HLS10_PTL
     // SET profile_tier_level_index. 
     if ( olsIdx == 0 )
     {   
@@ -1924,17 +1808,12 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
         if( j < (Int) m_profileTierLevelIdx[ olsIdx ].size() )
         {
           vps.setProfileTierLevelIdx(olsIdx, j, m_profileTierLevelIdx[olsIdx][j] );
-#if H_MV_HLS10_PTL_FIX
           if( !vps.getNecessaryLayerFlag(olsIdx,j) && m_profileTierLevelIdx[ olsIdx ][ j ] != -1 )
           {
             fprintf( stderr, "Warning: The %d-th layer in the %d-th OLS is not necessary such that profileTierLevelIdx[%d][%d] will be ignored. Set value to -1 to suppress warning.\n", j,olsIdx,olsIdx,j ); 
           }          
         }
         else if ( vps.getNecessaryLayerFlag(olsIdx,j) )
-#else
-        }
-        else
-#endif
         {
           // setting default values
           if ( j == 0 || vps.getVpsNumProfileTierLevelMinus1() < 1 )
@@ -1950,12 +1829,6 @@ Void TAppEncTop::xSetLayerSets( TComVPS& vps )
         }
       }
     }
-#else
-    if ( olsIdx > 0 ) 
-    {
-      vps.setProfileLevelTierIdx( olsIdx, m_profileLevelTierIdx[ olsIdx ] ); 
-    }
-#endif
    
     if ( vps.getNumOutputLayersInOutputLayerSet( olsIdx ) == 1 && 
         vps.getNumDirectRefLayers( vps.getOlsHighestOutputLayerId( olsIdx ) ) )
@@ -1993,11 +1866,7 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
 
     if( pcVPSVUI->getBitRatePresentVpsFlag( )  ||  pcVPSVUI->getPicRatePresentVpsFlag( ) )
     {
-#if H_MV_HLS10_VPS_VUI
       for( Int i = 0; i  <  vps.getNumLayerSets(); i++ )
-#else
-      for( Int i = 0; i  <=  vps.getVpsNumLayerSetsMinus1(); i++ )
-#endif
       {
         for( Int j = 0; j  <=  vps.getMaxTLayers(); j++ ) 
         {
@@ -2046,11 +1915,7 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
       {
         for( Int j = 0; j < vps.getNumDirectRefLayers( vps.getLayerIdInNuh( i ) ) ; j++ )
         {  
-#if H_MV_HLS10_REF_PRED_LAYERS
           Int layerIdx = vps.getLayerIdInVps( vps.getIdDirectRefLayer(vps.getLayerIdInNuh( i ) , j  ));  
-#else
-          Int layerIdx = vps.getLayerIdInVps( vps.getRefLayerId(vps.getLayerIdInNuh( i ) , j  ));  
-#endif
           if( pcVPSVUI->getTilesInUseFlag( i )  &&  pcVPSVUI->getTilesInUseFlag( layerIdx ) )  
           {
             pcVPSVUI->setTileBoundariesAlignedFlag( i, j, m_tileBoundariesAlignedFlag[i][j] );
@@ -2069,10 +1934,8 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
       }
     }
 
-#if H_MV_HLS10_VPS_VUI
   pcVPSVUI->setSingleLayerForNonIrapFlag( m_singleLayerForNonIrapFlag );
   pcVPSVUI->setHigherLayerIrapSkipFlag( m_higherLayerIrapSkipFlag );
-#endif
 
     pcVPSVUI->setIlpRestrictedRefLayersFlag( m_ilpRestrictedRefLayersFlag );
 
@@ -2129,12 +1992,10 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
     pcVPSVUI->setCrossLayerIrapAlignedFlag   ( false   );
   }
 }
-#if H_MV_HLS10_GEN_FIX
 Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
 {
   return  ( std::find(m_targetEncLayerIdList.begin(), m_targetEncLayerIdList.end(), nuhLayerId) != m_targetEncLayerIdList.end()) ;
 }
-#endif
 
 
 #endif
