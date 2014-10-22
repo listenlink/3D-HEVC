@@ -229,6 +229,8 @@ Void TComPicSym::initTiles(TComPPS *pps)
       Int cumulativeTileWidth = 0;
       for(Int col=0; col < getNumColumnsMinus1(); col++)
   {
+        m_tileParameters[row * numCols + col].setTileWidth( pps->getTileColumnWidth(col) );
+        cumulativeTileWidth += pps->getTileColumnWidth(col);
   }
       m_tileParameters[row * numCols + getNumColumnsMinus1()].setTileWidth( getFrameWidthInCU()-cumulativeTileWidth );
 }
