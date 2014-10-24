@@ -71,10 +71,8 @@ TEncTop::TEncTop()
 #if FAST_BIT_EST
   ContextModel::buildNextStateTable();
 #endif
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
   m_iNumSubstreams         = 0; 
-#endif
 #endif
 
   m_pcSbacCoders           = NULL;
@@ -88,7 +86,7 @@ TEncTop::TEncTop()
 #if H_MV
   m_ivPicLists = NULL;
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+#if H_3D_IC
   m_aICEnableCandidate = NULL;
   m_aICEnableNum = NULL;
 #endif
@@ -235,7 +233,6 @@ Void TEncTop::destroy ()
     {
       for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
       {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
         xDelete( false, m_pppcRDSbacCoder, iDepth, iCIIdx);
         xDelete( false, m_pppcBinCoderCABAC, iDepth, iCIIdx);
@@ -243,13 +240,11 @@ Void TEncTop::destroy ()
         delete m_pppcRDSbacCoder[iDepth][iCIIdx];
         delete m_pppcBinCoderCABAC[iDepth][iCIIdx];
 #endif
-#endif
       }
     }
     
     for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
     {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
       xDelete( true, m_pppcRDSbacCoder  , iDepth);
       xDelete( true, m_pppcBinCoderCABAC, iDepth);
@@ -257,10 +252,8 @@ Void TEncTop::destroy ()
       delete [] m_pppcRDSbacCoder[iDepth];
       delete [] m_pppcBinCoderCABAC[iDepth];
 #endif
-#endif
     }
 
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
      xDelete( true, m_pppcRDSbacCoder  );
      xDelete( true, m_pppcBinCoderCABAC);
@@ -268,14 +261,12 @@ Void TEncTop::destroy ()
     delete [] m_pppcRDSbacCoder;
     delete [] m_pppcBinCoderCABAC;
 #endif
-#endif
     for ( UInt ui = 0; ui < m_iNumSubstreams; ui++ )
     {
       for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
       {
         for (Int iCIIdx = 0; iCIIdx < CI_NUM; iCIIdx ++ )
         {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
           xDelete(false, m_ppppcRDSbacCoders  ,ui, iDepth, iCIIdx);
           xDelete(false, m_ppppcBinCodersCABAC,ui, iDepth, iCIIdx);
@@ -283,13 +274,11 @@ Void TEncTop::destroy ()
           delete m_ppppcRDSbacCoders  [ui][iDepth][iCIIdx];
           delete m_ppppcBinCodersCABAC[ui][iDepth][iCIIdx];
 #endif
-#endif
         }
       }
 
       for ( iDepth = 0; iDepth < g_uiMaxCUDepth+1; iDepth++ )
       {
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
         xDelete(true, m_ppppcRDSbacCoders  ,ui, iDepth);
         xDelete(true, m_ppppcBinCodersCABAC,ui, iDepth);        
@@ -297,11 +286,9 @@ Void TEncTop::destroy ()
         delete [] m_ppppcRDSbacCoders  [ui][iDepth];
         delete [] m_ppppcBinCodersCABAC[ui][iDepth];
 #endif
-#endif
       }
 
 
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
       xDelete(true, m_ppppcRDSbacCoders,   ui);
       xDelete(true, m_ppppcBinCodersCABAC, ui);      
@@ -309,9 +296,7 @@ Void TEncTop::destroy ()
       delete[] m_ppppcRDSbacCoders  [ui];
       delete[] m_ppppcBinCodersCABAC[ui];
 #endif
-#endif
     }
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
     xDelete(true, m_ppppcRDSbacCoders    ) ;
     xDelete(true, m_ppppcBinCodersCABAC);
@@ -330,7 +315,6 @@ Void TEncTop::destroy ()
   delete[] m_pcRDGoOnBinCodersCABAC;
   delete[] m_pcBitCounters;
   delete[] m_pcRdCosts;
-#endif
 #endif
 
 #if !H_MV
@@ -369,7 +353,7 @@ Void TEncTop::init(Bool isFieldCoding)
   xInitRPS(isFieldCoding);
 
   xInitPPSforTiles();
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+#if H_3D_IC
   m_aICEnableCandidate = new Int[ 10 ];
   m_aICEnableNum = new Int[ 10 ];
 
@@ -768,7 +752,6 @@ Void TEncTop::xInitSPS()
 
 #if H_MV  
   m_cSPS.setUpdateRepFormatFlag           ( false );    
-#if H_MV_HLS10_MULTILAYERSPS  
   Bool multiLayerExtensionFlag  = ( getLayerId() > 0 ) && ( m_cVPS->getNumRefLayers( getLayerId() ) > 0 ); 
   
   m_cSPS.setSpsExtOrMaxSubLayersMinus1( multiLayerExtensionFlag ? 7 : m_maxTempLayer - 1 );
@@ -777,10 +760,6 @@ Void TEncTop::xInitSPS()
     m_cSPS.setSpsInferScalingListFlag   ( true ); 
     m_cSPS.setSpsScalingListRefLayerId( m_cVPS->getIdRefLayer( getLayerId(), 0 ) ); 
   }
-#else
-  m_cSPS.setSpsInferScalingListFlag       ( m_layerId > 0 && m_cVPS->getInDirectDependencyFlag( getLayerIdInVps(), 0 ) ); 
-  m_cSPS.setSpsScalingListRefLayerId      ( 0              ); 
-#endif
   m_cSPS.setSpsExtensionPresentFlag       ( true ); 
   m_cSPS.setSpsMultilayerExtensionFlag    ( true ); 
 #if H_3D
@@ -828,13 +807,6 @@ Void TEncTop::xInitSPS()
 
   m_cSPS.setUseAMP ( m_useAMP );
 
-#if !MTK_I0099_VPS_EX2
-#if H_3D_QTLPC
-  m_cSPS.setUseQTL( m_bUseQTL );
-  m_cSPS.setUsePC ( m_bUsePC  );
-#endif
-#endif
-
   for (i = g_uiMaxCUDepth-g_uiAddCUDepth; i < g_uiMaxCUDepth; i++ )
   {
     m_cSPS.setAMPAcc(i, 0);
@@ -862,19 +834,12 @@ Void TEncTop::xInitSPS()
     const std::vector<Int>& targetDecLayerIdList = m_cVPS->getTargetDecLayerIdList( m_cVPS->olsIdxToLsIdx( ols )); 
     for( Int is = 0; is < targetDecLayerIdList.size(); is++  )
     {
-#if H_MV_HLS10_ADD_LAYERSETS
       if ( m_cVPS->getNecessaryLayerFlag( ols, is ) )
       {      
         m_cSPS.inferSpsMaxDecPicBufferingMinus1( m_cVPS, ols, targetDecLayerIdList[is], true );       
       }
-#else
-      m_cSPS.inferSpsMaxDecPicBufferingMinus1( m_cVPS, ols, targetDecLayerIdList[is], true );       
-#endif
     }
   }
-#if !H_MV_HLS10_ADD_LAYERSETS 
-  m_cVPS->inferDbpSizeLayerSetZero( &m_cSPS, true ); 
-#endif
 #endif
   m_cSPS.setPCMBitDepthLuma (g_uiPCMBitDepthLuma);
   m_cSPS.setPCMBitDepthChroma (g_uiPCMBitDepthChroma);
@@ -888,7 +853,7 @@ Void TEncTop::xInitSPS()
   if (m_cSPS.getVuiParametersPresentFlag())
   {
     TComVUI* pcVUI = m_cSPS.getVuiParameters();
-    pcVUI->setAspectRatioInfoPresentFlag(getAspectRatioIdc() != -1);
+    pcVUI->setAspectRatioInfoPresentFlag(getAspectRatioInfoPresentFlag());
     pcVUI->setAspectRatioIdc(getAspectRatioIdc());
     pcVUI->setSarWidth(getSarWidth());
     pcVUI->setSarHeight(getSarHeight());
@@ -1322,19 +1287,18 @@ Int TEncTop::getReferencePictureSetIdxForSOP(TComSlice* slice, Int POCCurr, Int 
 
 Void  TEncTop::xInitPPSforTiles()
 {
-  m_cPPS.setUniformSpacingFlag( m_iUniformSpacingIdr );
-  m_cPPS.setNumColumnsMinus1( m_iNumColumnsMinus1 );
-  m_cPPS.setNumRowsMinus1( m_iNumRowsMinus1 );
-  if( m_iUniformSpacingIdr == 0 )
+  m_cPPS.setTileUniformSpacingFlag( m_tileUniformSpacingFlag );
+  m_cPPS.setNumTileColumnsMinus1( m_iNumColumnsMinus1 );
+  m_cPPS.setNumTileRowsMinus1( m_iNumRowsMinus1 );
+  if( !m_tileUniformSpacingFlag )
   {
-    m_cPPS.setColumnWidth( m_puiColumnWidth );
-    m_cPPS.setRowHeight( m_puiRowHeight );
+    m_cPPS.setTileColumnWidth( m_tileColumnWidth );
+    m_cPPS.setTileRowHeight( m_tileRowHeight );
   }
   m_cPPS.setLoopFilterAcrossTilesEnabledFlag( m_loopFilterAcrossTilesEnabledFlag );
 
   // # substreams is "per tile" when tiles are independent.
-  if (m_iWaveFrontSynchro
-    )
+  if (m_iWaveFrontSynchro )
   {
     m_cPPS.setNumSubstreams(m_iWaveFrontSubstreams * (m_iNumColumnsMinus1+1));
   }
@@ -1360,11 +1324,11 @@ Void  TEncCfg::xCheckGSParameters()
     exit( EXIT_FAILURE );
   }
 
-  if( m_iNumColumnsMinus1 && m_iUniformSpacingIdr==0 )
+  if( m_iNumColumnsMinus1 && !m_tileUniformSpacingFlag )
   {
     for(Int i=0; i<m_iNumColumnsMinus1; i++)
     {
-      uiCummulativeColumnWidth += m_puiColumnWidth[i];
+      uiCummulativeColumnWidth += m_tileColumnWidth[i];
     }
 
     if( uiCummulativeColumnWidth >= iWidthInCU )
@@ -1387,10 +1351,10 @@ Void  TEncCfg::xCheckGSParameters()
     exit( EXIT_FAILURE );
   }
 
-  if( m_iNumRowsMinus1 && m_iUniformSpacingIdr==0 )
+  if( m_iNumRowsMinus1 && !m_tileUniformSpacingFlag )
   {
     for(Int i=0; i<m_iNumRowsMinus1; i++)
-      uiCummulativeRowHeight += m_puiRowHeight[i];
+      uiCummulativeRowHeight += m_tileRowHeight[i];
 
     if( uiCummulativeRowHeight >= iHeightInCU )
     {

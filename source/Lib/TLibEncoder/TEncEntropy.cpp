@@ -118,7 +118,7 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
 Void TEncEntropy::encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if ( !pcCU->getSlice()->getIsDepth() )
@@ -184,7 +184,6 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   }
   else
   {
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
     Int ICEnableCandidate = pcCU->getSlice()->getICEnableCandidate(pcCU->getSlice()->getDepth());
     Int ICEnableNum = pcCU->getSlice()->getICEnableNum(pcCU->getSlice()->getDepth());
     ICEnableCandidate++;
@@ -194,13 +193,6 @@ Void TEncEntropy::encodeICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
     }
     pcCU->getSlice()->setICEnableCandidate(pcCU->getSlice()->getDepth(), ICEnableCandidate);
     pcCU->getSlice()->setICEnableNum(pcCU->getSlice()->getDepth(), ICEnableNum);
-#else
-    g_aICEnableCANDIDATE[pcCU->getSlice()->getDepth()]++;
-    if(pcCU->getICFlag(uiAbsPartIdx))
-    {
-      g_aICEnableNUM[pcCU->getSlice()->getDepth()]++;
-    }
-#endif
   }
   if( pcCU->isICFlagRequired( uiAbsPartIdx ) )
   {
@@ -272,44 +264,12 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
     uiAbsPartIdx = 0;
   }
   
-#if H_3D_DBBP
-#if! SEC_DBBP_EXPLICIT_SIG_I0077
-  PartSize eVirtualPartSize = pcCU->getPartitionSize(uiAbsPartIdx);
-  if( pcCU->getDBBPFlag(uiAbsPartIdx) )
-  {
-    AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
-    
-    // temporarily change partition size for DBBP blocks
-    pcCU->setPartSizeSubParts(RWTH_DBBP_PACK_MODE, uiAbsPartIdx, uiDepth);
-  }
-#endif
-#endif
-  
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
 #if H_3D_DBBP
-#if SEC_DBBP_EXPLICIT_SIG_I0077
-#if SEC_DBBP_DISALLOW_8x8_I0078
   if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 )
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) )
-#endif
-#else
-#if SEC_DBBP_DISALLOW_8x8_I0078
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && pcCU->getWidth(uiAbsPartIdx) > 8 )
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) )
-#endif
-#endif
   {
     encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
-#if !SEC_DBBP_EXPLICIT_SIG_I0077
-    if( pcCU->getDBBPFlag(uiAbsPartIdx) )
-    {
-      // restore virtual partition size for DBBP blocks
-      pcCU->setPartSizeSubParts(eVirtualPartSize, uiAbsPartIdx, uiDepth);
-    }
-#endif
   }
 #endif
 }

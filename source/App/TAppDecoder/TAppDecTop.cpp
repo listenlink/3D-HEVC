@@ -256,17 +256,13 @@ Void TAppDecTop::decode()
             }
             m_targetDecLayerIdSet = vps->getTargetDecLayerIdList( m_targetOptLayerSetIdx ); 
           }
-#if H_MV_HLS10_GEN_FIX
           if (m_outputVpsInfo )
           {
-#if H_MV_HLS10_AUX
             m_vps->printScalabilityId();
-#endif
             m_vps->printLayerDependencies();
             m_vps->printLayerSets();
             m_vps->printPTL(); 
           }
-#endif
         }
 #if H_3D
         if (nalu.m_nalUnitType == NAL_UNIT_VPS )
@@ -579,12 +575,7 @@ Void TAppDecTop::xWriteOutput( TComList<TComPic*>* pcListPic, UInt tId )
   Int numPicsNotYetDisplayed = 0;
   Int dpbFullness = 0;
 #if H_MV
-#if H_MV_HLS10_ADD_LAYERSETS
   TComSPS* activeSPS = m_tDecTop[ decIdx ]->getActiveSPS();
-#else
-  // preliminary fix
-  TComSPS* activeSPS = m_tDecTop[0]->getActiveSPS();
-#endif
 #else
   TComSPS* activeSPS = m_cTDecTop.getActiveSPS();
 #endif
@@ -1154,11 +1145,7 @@ Void TAppDecTop::xMarkAltOutPic( Int targetOutputLayer, Int pocLastPic )
   {
     Int curLayerId = m_tDecTop[dIdx]->getLayerId();
     Int curLayerIdxInVps = m_vps->getLayerIdInNuh( curLayerId  ); 
-#if H_MV_HLS10_REF_PRED_LAYERS
     if ( m_vps->getDependencyFlag(optLayerIdxInVps, curLayerIdxInVps ) )
-#else
-    if ( m_vps->getInDirectDependencyFlag(optLayerIdxInVps, curLayerIdxInVps ) )
-#endif
     {
       TComPic* curPic = m_ivPicLists.getPic( curLayerId, pocLastPic ); 
       if (curPic != NULL)

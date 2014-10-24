@@ -106,10 +106,8 @@ public:
 #endif
   Void  codePPS                 ( TComPPS* pcPPS );
 
-#if H_MV_HLS10_PPS
 #if H_MV
   Void codePPSMultilayerExtension( TComPPS* pcPPS );
-#endif
 #endif
 
 #if H_3D
@@ -128,7 +126,7 @@ public:
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   Void codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );

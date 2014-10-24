@@ -128,7 +128,7 @@ private:
 public:
   
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if MTK_SINGLE_DEPTH_MODE_I0095  
+#if H_3D_SINGLE_DEPTH  
   Void parseSingleDepthMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif  
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -181,7 +181,7 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   ContextModel3DBuffer m_cCUSingleDepthFlagSCModel;
   ContextModel3DBuffer m_cSingleDepthValueSCModel;
 #endif

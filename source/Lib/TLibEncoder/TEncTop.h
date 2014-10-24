@@ -79,7 +79,7 @@ private:
 #if H_MV
   TComPicLists*           m_ivPicLists;                   ///< access to picture lists of other layers 
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+#if H_3D_IC
   Int *m_aICEnableCandidate;
   Int *m_aICEnableNum;
 #endif
@@ -149,7 +149,6 @@ protected:
   
   Void  xInitPPSforTiles  ();
   Void  xInitRPS          (Bool isFieldCoding);           ///< initialize PPS from encoder options
-#if H_MV_HLS10_GEN_FIX
 #if H_MV
 
   template <class T>     Void  xDelete( Bool ar, T inArray ) 
@@ -192,7 +191,6 @@ protected:
   }
 
 #endif
-#endif
 public:
   TEncTop();
   virtual ~TEncTop();
@@ -208,9 +206,9 @@ public:
 #if H_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-  Int *getICEnableCandidate() { return m_aICEnableCandidate; }
-  Int *getICEnableNum() { return m_aICEnableNum; }
+#if H_3D_IC
+  Int*      getICEnableCandidate() { return m_aICEnableCandidate; }
+  Int*      getICEnableNum() { return m_aICEnableNum; }
 #endif
   Void      deletePicBuffer ();
 
@@ -271,7 +269,7 @@ public:
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
+#if H_3D_IC
   Void                    setICEnableCandidate         ( Int* ICEnableCandidate) { m_aICEnableCandidate = ICEnableCandidate; }
   Void                    setICEnableNum         ( Int* ICEnableNum) { m_aICEnableNum = ICEnableNum; }
 #endif
