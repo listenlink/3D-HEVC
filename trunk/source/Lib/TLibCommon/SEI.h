@@ -160,8 +160,8 @@ public:
 
   UInt m_bpSeqParameterSetId;
   Bool m_rapCpbParamsPresentFlag;
-  Bool m_cpbDelayOffset;
-  Bool m_dpbDelayOffset;
+  UInt m_cpbDelayOffset;
+  UInt m_dpbDelayOffset;
   UInt m_initialCpbRemovalDelay         [MAX_CPB_CNT][2];
   UInt m_initialCpbRemovalDelayOffset   [MAX_CPB_CNT][2];
   UInt m_initialAltCpbRemovalDelay      [MAX_CPB_CNT][2];

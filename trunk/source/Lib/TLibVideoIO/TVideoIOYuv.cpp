@@ -469,6 +469,11 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicYuv, Int confLeft, Int confRight, Int c
   TComPicYuv *dstPicYuv = NULL;
   Bool retval = true;
 
+  if ((width==0)||(height==0))
+  {
+    printf ("\nWarning: writing %d x %d luma sample output picture!", width, height);
+  }
+
   if (m_bitDepthShiftY != 0 || m_bitDepthShiftC != 0)
   {
     dstPicYuv = new TComPicYuv;
@@ -562,6 +567,11 @@ Bool TVideoIOYuv::write( TComPicYuv* pPicTop, TComPicYuv* pPicBottom, Int cropLe
   TComPicYuv *dstPicBottom = NULL;
   
   Bool retval = true;
+  
+  if ((width==0)||(height==0))
+  {
+    printf ("\nWarning: writing %d x %d luma sample output picture!", width, height);
+  }
   
   if (m_bitDepthShiftY != 0 || m_bitDepthShiftC != 0)
   {

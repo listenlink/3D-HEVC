@@ -115,9 +115,9 @@ private:
   Bool                    m_isDepth;
 #endif
 #endif
-#if MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX
-  Int *m_aICEnableCandidate; 
-  Int *m_aICEnableNum; 
+#if H_3D_IC
+  Int*                    m_aICEnableCandidate; 
+  Int*                    m_aICEnableNum; 
 #endif
   //--Adaptive Loop filter
   TEncSampleAdaptiveOffset*  m_pcSAO;
@@ -199,7 +199,6 @@ protected:
 protected:
 
   Void xInitGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, bool isField );
-  Void  xInitGOP          ( Int iPOC, Int iNumPicRcvd, TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut );
   Void  xGetBuffer        ( TComList<TComPic*>& rcListPic, TComList<TComPicYuv*>& rcListPicYuvRecOut, Int iNumPicRcvd, Int iTimeOffset, TComPic*& rpcPic, TComPicYuv*& rpcPicYuvRecOut, Int pocCurr, bool isField );
   
   Void  xCalculateAddPSNR ( TComPic* pcPic, TComPicYuv* pcPicD, const AccessUnit&, Double dEncTime );

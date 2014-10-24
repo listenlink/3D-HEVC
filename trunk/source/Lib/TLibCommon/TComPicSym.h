@@ -44,6 +44,7 @@
 #include "TComSlice.h"
 #include "TComDataCU.h"
 class TComSampleAdaptiveOffset;
+class TComPPS;
 
 //! \ingroup TLibCommon
 //! \{
@@ -101,7 +102,7 @@ private:
     
   Int           m_iNumColumnsMinus1; 
   Int           m_iNumRowsMinus1;
-  TComTile**    m_apcTComTile;
+  std::vector<TComTile> m_tileParameters;
   UInt*         m_puiCUOrderMap;       //the map of LCU raster scan address relative to LCU encoding order 
   UInt*         m_puiTileIdxMap;       //the map of the tile index relative to LCU raster scan address 
   UInt*         m_puiInverseCUOrderMap;
@@ -132,7 +133,7 @@ public:
   Void         setNumRowsMinus1( Int i )                             { m_iNumRowsMinus1 = i; }
   Int          getNumRowsMinus1()                                    { return m_iNumRowsMinus1; }
   Int          getNumTiles()                                         { return (m_iNumRowsMinus1+1)*(m_iNumColumnsMinus1+1); }
-  TComTile*    getTComTile  ( UInt tileIdx )                         { return *(m_apcTComTile + tileIdx); }
+  TComTile*    getTComTile  ( UInt tileIdx )                         { return &(m_tileParameters[tileIdx]); }
   Void         setCUOrderMap( Int encCUOrder, Int cuAddr )           { *(m_puiCUOrderMap + encCUOrder) = cuAddr; }
   UInt         getCUOrderMap( Int encCUOrder )                       { return *(m_puiCUOrderMap + (encCUOrder>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : encCUOrder)); }
   UInt         getTileIdxMap( Int i )                                { return *(m_puiTileIdxMap + i); }
@@ -140,8 +141,7 @@ public:
   UInt         getInverseCUOrderMap( Int cuAddr )                    { return *(m_puiInverseCUOrderMap + (cuAddr>=m_uiNumCUsInFrame ? m_uiNumCUsInFrame : cuAddr)); }
   UInt         getPicSCUEncOrder( UInt SCUAddr );
   UInt         getPicSCUAddr( UInt SCUEncOrder );
-  Void         xCreateTComTileArray();
-  Void         xInitTiles();
+  Void         initTiles(TComPPS *pps);
   UInt         xCalculateNxtCUAddr( UInt uiCurrCUAddr );
   SAOBlkParam* getSAOBlkParam() { return m_saoBlkParams;}
   Void deriveLoopFilterBoundaryAvailibility(Int ctu, Bool& isLeftAvail,Bool& isRightAvail,Bool& isAboveAvail,Bool& isBelowAvail,Bool& isAboveLeftAvail,Bool& isAboveRightAvail,Bool& isBelowLeftAvail,Bool& isBelowRightAvail);

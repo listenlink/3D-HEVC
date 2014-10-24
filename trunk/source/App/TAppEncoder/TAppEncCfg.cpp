@@ -71,8 +71,6 @@ TAppEncCfg::TAppEncCfg()
 , m_pchReconFile()
 #endif
 , m_pchdQPFile()
-, m_pColumnWidth()
-, m_pRowHeight()
 , m_scalingListFile()
 {
 #if !H_MV
@@ -138,8 +136,6 @@ TAppEncCfg::~TAppEncCfg()
   free(m_pchReconFile);
 #endif
   free(m_pchdQPFile);
-  free(m_pColumnWidth);
-  free(m_pRowHeight);
   free(m_scalingListFile);
 #if H_MV
   for( Int i = 0; i < m_GOPListMvc.size(); i++ )
@@ -240,19 +236,11 @@ static const struct MapStrToProfile {
   {"main10", Profile::MAIN10},
   {"main-still-picture", Profile::MAINSTILLPICTURE},
 #if H_MV
-#if H_MV_HLS10_PTL
   {"multiview-main", Profile::MULTIVIEWMAIN},
 #if H_3D
   {"3d-main"       , Profile::MAIN3D},
 #endif
 
-#else
-  {"main-stereo",    Profile::MAINSTEREO},
-  {"main-multiview", Profile::MAINMULTIVIEW},
-#if H_3D
-  {"main-3d"    , Profile::MAIN3D},
-#endif
-#endif
 #endif
 };
 
@@ -340,11 +328,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
 #if H_MV
   vector<Int>   cfg_dimensionLength; 
-#if H_MV_HLS10_PTL
   string        cfg_profiles;
   string        cfg_levels; 
   string        cfg_tiers; 
-#endif
 #if H_3D 
   cfg_dimensionLength.push_back( 2  );  // depth
   cfg_dimensionLength.push_back( 32 );  // texture 
@@ -353,8 +339,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif 
 #endif
   string cfg_dQPFile;
-  string cfg_ColumnWidth;
-  string cfg_RowHeight;
+  string cfgColumnWidth;
+  string cfgRowHeight;
   string cfg_ScalingListFile;
   string cfg_startOfCodedInterval;
   string cfg_codedPivotValue;
@@ -379,47 +365,35 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_MV
   ("NumberOfLayers",        m_numberOfLayers     , 1,                     "Number of layers")
 #if !H_3D
-#if H_MV_HLS10_AUX
   ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask: 2: Multiview, 8: Auxiliary, 10: Multiview + Auxiliary")    
-#else
-  ("ScalabilityMask",       m_scalabilityMask    , 2                    , "Scalability Mask")    
-#endif
 #else
   ("ScalabilityMask",       m_scalabilityMask    , 3                    , "Scalability Mask, 1: Texture 3: Texture + Depth ")    
 #endif  
   ("DimensionIdLen",        m_dimensionIdLen     , cfg_dimensionLength  , "Number of bits used to store dimensions Id")
   ("ViewOrderIndex",        m_viewOrderIndex     , std::vector<Int>(1,0), "View Order Index per layer")
   ("ViewId",                m_viewId             , std::vector<Int>(1,0), "View Id per View Order Index")
-#if H_MV_HLS10_AUX
   ("AuxId",                 m_auxId              , std::vector<Int>(1,0), "AuxId per layer")
-#endif
 #if H_3D
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
   ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
-#if SEPARATE_FLAG_I0085
   ("IVP",                   m_useIVP,           true,  "intra-view prediction")
-#endif
   ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D
   ("SingleDepthMode",    m_useSingleDepthMode, true, "Single depth mode")                         
 #endif
 #endif
-#if H_MV_HLS10_GEN_FIX
   ("TargetEncLayerIdList",  m_targetEncLayerIdList, std::vector<Int>(0,0), "LayerIds in Nuh to be encoded")  
-#endif
   ("LayerIdInNuh",          m_layerIdInNuh       , std::vector<Int>(1,0), "LayerId in Nuh")  
   ("SplittingFlag",         m_splittingFlag      , false                , "Splitting Flag")    
 
   // Layer Sets + Output Layer Sets + Profile Tier Level
   ("VpsNumLayerSets",       m_vpsNumLayerSets    , 1                    , "Number of layer sets")    
   ("LayerIdsInSet_%d",      m_layerIdsInSets     , std::vector<Int>(1,0), MAX_VPS_OP_SETS_PLUS1 ,"LayerIds of Layer set")  
-#if H_MV_HLS10_ADD_LAYERSETS
   ("NumAddLayerSets"     , m_numAddLayerSets     , 0                                              , "NumAddLayerSets     ")
   ("HighestLayerIdxPlus1_%d", m_highestLayerIdxPlus1, std::vector< Int  >(0,0)  ,MAX_VPS_NUM_ADD_LAYER_SETS, "HighestLayerIdxPlus1")
-#endif
   ("DefaultTargetOutputLayerIdc"     , m_defaultOutputLayerIdc     , 0, "Specifies output layers of layer sets, 0: output all layers, 1: output highest layer, 2: specified by LayerIdsInDefOutputLayerSet")
   ("OutputLayerSetIdx",     m_outputLayerSetIdx  , std::vector<Int>(0,0), "Indices of layer sets used as additional output layer sets")  
 
@@ -427,11 +401,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("LayerIdsInDefOutputLayerSet_%d", m_layerIdsInDefOutputLayerSet      , std::vector<Int>(0,0), MAX_VPS_OP_SETS_PLUS1, "Indices in VPS of output layers in layer set")  
   ("AltOutputLayerFlag",    m_altOutputLayerFlag , std::vector<Bool>(1,0), "Alt output layer flag")
   
-#if H_MV_HLS10_PTL
   ("ProfileTierLevelIdx_%d",  m_profileTierLevelIdx, std::vector<Int>(0), MAX_NUM_LAYERS, "Indices to profile level tier for ols")
-#else
-  ("ProfileLevelTierIdx",   m_profileLevelTierIdx, std::vector<Int>(1,0), "Indices to profile level tier")
-#endif
   // Layer dependencies
   ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIds of direct reference layers")
   ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
@@ -445,13 +415,18 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("InputBitDepthC",        m_inputBitDepthC,    0, "As per InputBitDepth but for chroma component. (default:InputBitDepth)")
   ("OutputBitDepthC",       m_outputBitDepthC,   0, "As per OutputBitDepth but for chroma component. (default:InternalBitDepthC)")
   ("InternalBitDepthC",     m_internalBitDepthC, 0, "As per InternalBitDepth but for chroma component. (default:IntrenalBitDepth)")
-  ("ConformanceMode",       m_conformanceMode,     0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
+  ("ConformanceMode",       m_conformanceWindowMode,  0, "Deprecated alias of ConformanceWindowMode")
+  ("ConformanceWindowMode", m_conformanceWindowMode,  0, "Window conformance mode (0: no window, 1:automatic padding, 2:padding, 3:conformance")
   ("HorizontalPadding,-pdx",m_aiPad[0],            0, "Horizontal source padding for conformance window mode 2")
   ("VerticalPadding,-pdy",  m_aiPad[1],            0, "Vertical source padding for conformance window mode 2")
-  ("ConfLeft",              m_confLeft,            0, "Left offset for window conformance mode 3")
-  ("ConfRight",             m_confRight,           0, "Right offset for window conformance mode 3")
-  ("ConfTop",               m_confTop,             0, "Top offset for window conformance mode 3")
-  ("ConfBottom",            m_confBottom,          0, "Bottom offset for window conformance mode 3")
+  ("ConfLeft",              m_confWinLeft,            0, "Deprecated alias of ConfWinLeft")
+  ("ConfRight",             m_confWinRight,           0, "Deprecated alias of ConfWinRight")
+  ("ConfTop",               m_confWinTop,             0, "Deprecated alias of ConfWinTop")
+  ("ConfBottom",            m_confWinBottom,          0, "Deprecated alias of ConfWinBottom")
+  ("ConfWinLeft",           m_confWinLeft,            0, "Left offset for window conformance mode 3")
+  ("ConfWinRight",          m_confWinRight,           0, "Right offset for window conformance mode 3")
+  ("ConfWinTop",            m_confWinTop,             0, "Top offset for window conformance mode 3")
+  ("ConfWinBottom",         m_confWinBottom,          0, "Bottom offset for window conformance mode 3")
   ("FrameRate,-fr",         m_iFrameRate,          0, "Frame rate")
   ("FrameSkip,-fs",         m_FrameSkip,          0u, "Number of frames to skip at start of input YUV")
   ("FramesToBeEncoded,f",   m_framesToBeEncoded,   0, "Number of frames to be encoded (default=all)")
@@ -461,7 +436,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("TopFieldFirst, Tff", m_isTopFieldFirst, false, "In case of field based coding, signals whether if it's a top field first or not")
   
   // Profile and level
-#if H_MV_HLS10_PTL
+#if H_MV
   ("Profile", cfg_profiles,   string(""),           "Profile in VpsProfileTierLevel (Indication only)")
   ("Level",   cfg_levels ,    string(""),           "Level indication in VpsProfileTierLevel (Indication only)")
   ("Tier",    cfg_tiers  ,    string(""),           "Tier indication in VpsProfileTierLevel (Indication only)")
@@ -608,11 +583,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("WeightedPredP,-wpP",          m_useWeightedPred,               false,      "Use weighted prediction in P slices")
   ("WeightedPredB,-wpB",          m_useWeightedBiPred,             false,      "Use weighted (bidirectional) prediction in B slices")
   ("Log2ParallelMergeLevel",      m_log2ParallelMergeLevel,     2u,          "Parallel merge estimation region")
-  ("UniformSpacingIdc",           m_iUniformSpacingIdr,            0,          "Indicates if the column and row boundaries are distributed uniformly")
-  ("NumTileColumnsMinus1",        m_iNumColumnsMinus1,             0,          "Number of columns in a picture minus 1")
-  ("ColumnWidthArray",            cfg_ColumnWidth,                 string(""), "Array containing ColumnWidth values in units of LCU")
-  ("NumTileRowsMinus1",           m_iNumRowsMinus1,                0,          "Number of rows in a picture minus 1")
-  ("RowHeightArray",              cfg_RowHeight,                   string(""), "Array containing RowHeight values in units of LCU")
+
+  //deprecated copies of renamed tile parameters
+  ("UniformSpacingIdc",           m_tileUniformSpacingFlag,        false,      "deprecated alias of TileUniformSpacing")
+  ("ColumnWidthArray",            cfgColumnWidth,                  string(""), "deprecated alias of TileColumnWidthArray")
+  ("RowHeightArray",              cfgRowHeight,                    string(""), "deprecated alias of TileRowHeightArray")
+
+  ("TileUniformSpacing",          m_tileUniformSpacingFlag,        false,      "Indicates that tile columns and rows are distributed uniformly")
+  ("NumTileColumnsMinus1",        m_numTileColumnsMinus1,          0,          "Number of tile columns in a picture minus 1")
+  ("NumTileRowsMinus1",           m_numTileRowsMinus1,             0,          "Number of rows in a picture minus 1")
+  ("TileColumnWidthArray",        cfgColumnWidth,                  string(""), "Array containing tile column width values in units of LCU")
+  ("TileRowHeightArray",          cfgRowHeight,                    string(""), "Array containing tile row height values in units of LCU")
   ("LFCrossTileBoundaryFlag",      m_bLFCrossTileBoundaryFlag,             true,          "1: cross-tile-boundary loop filtering. 0:non-cross-tile-boundary loop filtering")
   ("WaveFrontSynchro",            m_iWaveFrontSynchro,             0,          "0: no synchro; 1 synchro with TR; 2 TRR etc")
   ("ScalingList",                 m_useScalingListId,              0,          "0: no scaling list, 1: default scaling lists, 2: scaling lists specified in ScalingListFile")
@@ -649,9 +630,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DepthMADPred, -dm", m_depthMADPred, (UInt)0, "Depth based MAD prediction on/off")
 #endif
 #if H_MV
-#if H_MV_HLS10_GEN_FIX
 // A lot of this stuff could should actually be derived by the encoder.
-#endif // H_MV_HLS10_GEN
   // VPS VUI
   ("VpsVuiPresentFlag"           , m_vpsVuiPresentFlag           , false                                           , "VpsVuiPresentFlag           ")
   ("CrossLayerPicTypeAlignedFlag", m_crossLayerPicTypeAlignedFlag, false                                           , "CrossLayerPicTypeAlignedFlag")  // Could actually be derived by the encoder
@@ -675,10 +654,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("MinSpatialSegmentOffsetPlus1", m_minSpatialSegmentOffsetPlus1, std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinSpatialSegmentOffsetPlus1 per direct reference for the N-th layer")
   ("CtuBasedOffsetEnabledFlag"   , m_ctuBasedOffsetEnabledFlag   , std::vector< Bool >(1,0)  ,MAX_NUM_LAYERS       , "CtuBasedOffsetEnabledFlag    per direct reference for the N-th layer")
   ("MinHorizontalCtuOffsetPlus1" , m_minHorizontalCtuOffsetPlus1 , std::vector< Int  >(1,0)  ,MAX_NUM_LAYERS       , "MinHorizontalCtuOffsetPlus1  per direct reference for the N-th layer")
-#if H_MV_HLS10_VPS_VUI
   ("SingleLayerForNonIrapFlag", m_singleLayerForNonIrapFlag, false                                          , "SingleLayerForNonIrapFlag")
   ("HigherLayerIrapSkipFlag"  , m_higherLayerIrapSkipFlag  , false                                          , "HigherLayerIrapSkipFlag  ")
-#endif
 #endif
 
   ("TransquantBypassEnableFlag", m_TransquantBypassEnableFlag, false, "transquant_bypass_enable_flag indicator in PPS")
@@ -698,7 +675,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("VideoFullRange",                 m_videoFullRangeFlag,                 false, "Indicates the black level and range of luma and chroma signals")
   ("ColourDescriptionPresent",       m_colourDescriptionPresentFlag,       false, "Signals whether colour_primaries, transfer_characteristics and matrix_coefficients are present")
   ("ColourPrimaries",                m_colourPrimaries,                        2, "Indicates chromaticity coordinates of the source primaries")
-  ("TransferCharateristics",         m_transferCharacteristics,                2, "Indicates the opto-electronic transfer characteristics of the source")
+  ("TransferCharacteristics",        m_transferCharacteristics,                2, "Indicates the opto-electronic transfer characteristics of the source")
   ("MatrixCoefficients",             m_matrixCoefficients,                     2, "Describes the matrix coefficients used in deriving luma and chroma from RGB primaries")
   ("ChromaLocInfoPresent",           m_chromaLocInfoPresentFlag,           false, "Signals whether chroma_sample_loc_type_top_field and chroma_sample_loc_type_bottom_field are present")
   ("ChromaSampleLocTypeTopField",    m_chromaSampleLocTypeTopField,            0, "Specifies the location of chroma samples for top field")
@@ -785,9 +762,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("SEISubBitstreamAvgBitRate",               m_sbPropAvgBitRate,             std::vector< Int  >(1,0)  ,"Specifies average bit rate of the i-th sub-bitstream")
   ("SEISubBitstreamMaxBitRate",               m_sbPropMaxBitRate,             std::vector< Int  >(1,0)  ,"Specifies maximum bit rate of the i-th sub-bitstream")
 
-#if H_MV_HLS10_GEN_FIX
   ("OutputVpsInfo",                           m_outputVpsInfo,                false                     ,"Output information about the layer dependencies and layer sets")
-#endif
 #endif
 #if H_3D
   ("CameraParameterFile,cpf", m_pchCameraParameterFile,    (Char *) 0, "Camera Parameter File Name")
@@ -813,16 +788,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 
 #endif //HHI_VSO
-#if MTK_I0099_VPS_EX2
-  ("LimQtPredFlag",                   m_bLimQtPredFlag          , true          , "Use Predictive Coding with QTL" )
-#endif
-#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
+  ("LimQtPredFlag",                   m_bLimQtPredFlag          , true          , "Use Predictive Coding with QTL" )
   ("QTL",                             m_bUseQTL                 , true          , "Use depth Quadtree Limitation" )
-#if !MTK_I0099_VPS_EX2
-  ("PC",                              m_bUsePC                  , true          , "Use Predictive Coding with QTL" )
-#endif
-#endif
 #endif
 #if H_3D_IV_MERGE
   ("IvMvPred",                        m_ivMvPredFlag            , std::vector<Bool>(2, true)            , "inter view motion prediction " )
@@ -927,26 +895,27 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #endif
   m_pchdQPFile = cfg_dQPFile.empty() ? NULL : strdup(cfg_dQPFile.c_str());
   
-  Char* pColumnWidth = cfg_ColumnWidth.empty() ? NULL: strdup(cfg_ColumnWidth.c_str());
-  Char* pRowHeight = cfg_RowHeight.empty() ? NULL : strdup(cfg_RowHeight.c_str());
-  if( m_iUniformSpacingIdr == 0 && m_iNumColumnsMinus1 > 0 )
+  Char* pColumnWidth = cfgColumnWidth.empty() ? NULL: strdup(cfgColumnWidth.c_str());
+  Char* pRowHeight = cfgRowHeight.empty() ? NULL : strdup(cfgRowHeight.c_str());
+
+  if( !m_tileUniformSpacingFlag && m_numTileColumnsMinus1 > 0 )
   {
-    char *columnWidth;
+    char *str;
     int  i=0;
-    m_pColumnWidth = new UInt[m_iNumColumnsMinus1];
-    columnWidth = strtok(pColumnWidth, " ,-");
-    while(columnWidth!=NULL)
+    m_tileColumnWidth.resize( m_numTileColumnsMinus1 );
+    str = strtok(pColumnWidth, " ,-");
+    while(str!=NULL)
     {
-      if( i>=m_iNumColumnsMinus1 )
+      if( i >= m_numTileColumnsMinus1 )
       {
         printf( "The number of columns whose width are defined is larger than the allowed number of columns.\n" );
         exit( EXIT_FAILURE );
       }
-      *( m_pColumnWidth + i ) = atoi( columnWidth );
-      columnWidth = strtok(NULL, " ,-");
+      m_tileColumnWidth[i] = atoi( str );
+      str = strtok(NULL, " ,-");
       i++;
     }
-    if( i<m_iNumColumnsMinus1 )
+    if( i < m_numTileColumnsMinus1 )
     {
       printf( "The width of some columns is not defined.\n" );
       exit( EXIT_FAILURE );
@@ -954,27 +923,27 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   else
   {
-    m_pColumnWidth = NULL;
+    m_tileColumnWidth.clear();
   }
 
-  if( m_iUniformSpacingIdr == 0 && m_iNumRowsMinus1 > 0 )
+  if( !m_tileUniformSpacingFlag && m_numTileRowsMinus1 > 0 )
   {
-    char *rowHeight;
+    char *str;
     int  i=0;
-    m_pRowHeight = new UInt[m_iNumRowsMinus1];
-    rowHeight = strtok(pRowHeight, " ,-");
-    while(rowHeight!=NULL)
+    m_tileRowHeight.resize(m_numTileRowsMinus1);
+    str = strtok(pRowHeight, " ,-");
+    while(str!=NULL)
     {
-      if( i>=m_iNumRowsMinus1 )
+      if( i>=m_numTileRowsMinus1 )
       {
         printf( "The number of rows whose height are defined is larger than the allowed number of rows.\n" );
         exit( EXIT_FAILURE );
       }
-      *( m_pRowHeight + i ) = atoi( rowHeight );
-      rowHeight = strtok(NULL, " ,-");
+      m_tileRowHeight[i] = atoi( str );
+      str = strtok(NULL, " ,-");
       i++;
     }
-    if( i<m_iNumRowsMinus1 )
+    if( i < m_numTileRowsMinus1 )
     {
       printf( "The height of some rows is not defined.\n" );
       exit( EXIT_FAILURE );
@@ -982,7 +951,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
   else
   {
-    m_pRowHeight = NULL;
+    m_tileRowHeight.clear();
   }
 #if H_MV
   free ( pColumnWidth );
@@ -998,12 +967,12 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   if (!m_outputBitDepthC) { m_outputBitDepthC = m_internalBitDepthC; }
 
   // TODO:ChromaFmt assumes 4:2:0 below
-  switch (m_conformanceMode)
+  switch (m_conformanceWindowMode)
   {
   case 0:
     {
       // no conformance or padding
-      m_confLeft = m_confRight = m_confTop = m_confBottom = 0;
+      m_confWinLeft = m_confWinRight = m_confWinTop = m_confWinBottom = 0;
       m_aiPad[1] = m_aiPad[0] = 0;
       break;
     }
@@ -1013,17 +982,17 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       Int minCuSize = m_uiMaxCUHeight >> (m_uiMaxCUDepth - 1);
       if (m_iSourceWidth % minCuSize)
       {
-        m_aiPad[0] = m_confRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
-        m_iSourceWidth  += m_confRight;
+        m_aiPad[0] = m_confWinRight  = ((m_iSourceWidth / minCuSize) + 1) * minCuSize - m_iSourceWidth;
+        m_iSourceWidth  += m_confWinRight;
       }
       if (m_iSourceHeight % minCuSize)
       {
-        m_aiPad[1] = m_confBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
-        m_iSourceHeight += m_confBottom;
+        m_aiPad[1] = m_confWinBottom = ((m_iSourceHeight / minCuSize) + 1) * minCuSize - m_iSourceHeight;
+        m_iSourceHeight += m_confWinBottom;
         if ( m_isField )
         {
-          m_iSourceHeightOrg += m_confBottom << 1;
-          m_aiPad[1] = m_confBottom << 1;
+          m_iSourceHeightOrg += m_confWinBottom << 1;
+          m_aiPad[1] = m_confWinBottom << 1;
         }
       }
       if (m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0)
@@ -1043,14 +1012,14 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
       //padding
       m_iSourceWidth  += m_aiPad[0];
       m_iSourceHeight += m_aiPad[1];
-      m_confRight  = m_aiPad[0];
-      m_confBottom = m_aiPad[1];
+      m_confWinRight  = m_aiPad[0];
+      m_confWinBottom = m_aiPad[1];
       break;
     }
   case 3:
     {
       // conformance
-      if ((m_confLeft == 0) && (m_confRight == 0) && (m_confTop == 0) && (m_confBottom == 0))
+      if ((m_confWinLeft == 0) && (m_confWinRight == 0) && (m_confWinTop == 0) && (m_confWinBottom == 0))
       {
         fprintf(stderr, "Warning: Conformance window enabled, but all conformance window parameters set to zero\n");
       }
@@ -1081,9 +1050,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
     } 
   }
   m_iNumberOfViews = (Int) uniqueViewOrderIndices.size(); 
-#if H_MV_HLS10_AUX
   xResizeVector( m_auxId );
-#endif
 
 #if H_3D
   xResizeVector( m_depthFlag ); 
@@ -1117,11 +1084,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   xResizeVector( m_loopFilterNotAcrossTilesFlag ); 
   xResizeVector( m_wppInUseFlag ); 
 
-#if H_MV_HLS10_ADD_LAYERSETS
   for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + m_numAddLayerSets + (Int) m_outputLayerSetIdx.size(); olsIdx++)
-#else
-  for (Int olsIdx = 0; olsIdx < m_vpsNumLayerSets + (Int) m_outputLayerSetIdx.size(); olsIdx++)
-#endif
   {    
     m_altOutputLayerFlag.push_back( false );      
   }
@@ -1233,7 +1196,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   }
 
 #if H_MV
-#if H_MV_HLS10_PTL
   // parse PTL
   Bool anyEmpty = false; 
   if( cfg_profiles.empty() )
@@ -1280,7 +1242,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   xReadStrToEnum( cfg_profiles, m_profile   ); 
   xReadStrToEnum( cfg_levels,   m_level     ); 
   xReadStrToEnum( cfg_tiers ,   m_levelTier ); 
-#endif
 #endif
 #if H_3D
   // set global varibles
@@ -1398,7 +1359,7 @@ Void TAppEncCfg::xCheckParameter()
   }
 
 
-#if !H_MV_HLS10_PTL
+#if !H_MV
   if( m_profile==Profile::NONE )
   {
     fprintf(stderr, "***************************************************************************\n");
@@ -1430,11 +1391,7 @@ Void TAppEncCfg::xCheckParameter()
 #if H_3D
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 3, "Scalability Mask must be equal to 2 or 3. ");
 #else
-#if H_MV_HLS10_AUX
   xConfirmPara( m_scalabilityMask != 2 && m_scalabilityMask != 8 && m_scalabilityMask != 10, "Scalability Mask must be equal to 2, 8 or 10");
-#else
-  xConfirmPara( m_scalabilityMask != 2 , "Scalability Mask must be equal to 2. ");
-#endif
 #endif
 
 #if H_3D
@@ -1445,7 +1402,6 @@ Void TAppEncCfg::xCheckParameter()
 #endif
 
   m_dimIds.push_back( m_viewOrderIndex );   
-#if H_MV_HLS10_AUX
   for (Int i = 0; i < m_auxId.size(); i++)
   {
     xConfirmPara( !( ( m_auxId[i] >= 0 && m_auxId[i] <= 2 ) || ( m_auxId[i] >= 128 && m_auxId[i] <= 159 ) ) , "AuxId shall be in the range of 0 to 2, inclusive, or 128 to 159, inclusive");
@@ -1454,7 +1410,6 @@ Void TAppEncCfg::xCheckParameter()
   {
     m_dimIds.push_back ( m_auxId );
   }
-#endif  
   xConfirmPara(  m_dimensionIdLen.size() < m_dimIds.size(), "DimensionIdLen must be given for all dimensions. "   );
   Int dimBitOffset[MAX_NUM_SCALABILITY_TYPES+1]; 
 
@@ -1539,11 +1494,7 @@ Void TAppEncCfg::xCheckParameter()
     }
     for ( Int i = 0; i < m_layerIdsInSets[lsIdx].size(); i++ )
     {
-#if FIX_TICKET_61
       xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx][i] >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than 0 and less than MAX_NUM_LAYER_IDS" ); 
-#else
-      xConfirmPara( m_layerIdsInSets[lsIdx][i] < 0 || m_layerIdsInSets[lsIdx].size() >= MAX_NUM_LAYER_IDS, "LayerIdsInSet must be greater than and less than MAX_NUM_LAYER_IDS" ); 
-#endif
     }
   }
 
@@ -1552,26 +1503,7 @@ Void TAppEncCfg::xCheckParameter()
   for (Int lsIdx = 0; lsIdx < m_outputLayerSetIdx.size(); lsIdx++)
   {   
     Int refLayerSetIdx = m_outputLayerSetIdx[ lsIdx ]; 
-#if H_MV_HLS10_ADD_LAYERSETS
     xConfirmPara(  refLayerSetIdx < 0 || refLayerSetIdx >= m_vpsNumLayerSets + m_numAddLayerSets, "Output layer set idx must be greater or equal to 0 and less than the VpsNumLayerSets plus NumAddLayerSets." );
-#else
-    xConfirmPara(  refLayerSetIdx < 0 || refLayerSetIdx >= m_vpsNumLayerSets, "Output layer set idx must be greater or equal to 0 and less than the VpsNumLayerSets." );
-#endif
-#if !H_MV_HLS10_ADD_LAYERSETS
-    for (Int i = 0; i < m_layerIdsInAddOutputLayerSet[ lsIdx ].size(); i++)
-    {
-      Bool isAlsoInLayerSet = false; 
-      for (Int j = 0; j < m_layerIdsInSets[ refLayerSetIdx ].size(); j++ )
-      {
-        if ( m_layerIdsInSets[ refLayerSetIdx ][ j ] == m_layerIdsInAddOutputLayerSet[ lsIdx ][ i ] )
-        {
-          isAlsoInLayerSet = true; 
-          break; 
-        }        
-      }
-      xConfirmPara( !isAlsoInLayerSet, "All output layers of a output layer set be included in corresponding layer set.");
-    }
-#endif
   }
 
   xConfirmPara( m_defaultOutputLayerIdc < 0 || m_defaultOutputLayerIdc > 2, "Default target output layer idc must greater than or equal to 0 and less than or equal to 2." );  
@@ -1583,14 +1515,10 @@ Void TAppEncCfg::xCheckParameter()
     { 
       anyDefaultOutputFlag = anyDefaultOutputFlag || ( m_layerIdsInDefOutputLayerSet[lsIdx].size() != 0 );
     }    
-#if H_MV_HLS10_ADD_LAYERSETS
     if ( anyDefaultOutputFlag )
     {    
       printf( "\nWarning: Ignoring LayerIdsInDefOutputLayerSet parameters, since defaultTargetOuputLayerIdc is not equal 2.\n" );    
     }
-#else
-    printf( "\nWarning: Ignoring LayerIdsInDefOutputLayerSet parameters, since defaultTargetOuputLayerIdc is not equal 2.\n" );    
-#endif
   }
   else  
   {  
@@ -1612,14 +1540,9 @@ Void TAppEncCfg::xCheckParameter()
     }
   }
 
-#if H_MV_HLS10_ADD_LAYERSETS
   xConfirmPara( m_altOutputLayerFlag.size() < m_vpsNumLayerSets + m_numAddLayerSets + m_outputLayerSetIdx.size(), "The number of alt output layer flags must be equal to the number of layer set additional output layer sets plus the number of output layer set indices" );
-#else
-  xConfirmPara( m_altOutputLayerFlag.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
-#endif
 
   // PTL
-#if H_MV_HLS10_PTL
     xConfirmPara( ( m_profile.size() != m_inblFlag.size() || m_profile.size() != m_level.size()  ||  m_profile.size() != m_levelTier.size() ), "The number of Profiles, Levels, Tiers and InblFlags must be equal." ); 
 
     if ( m_numberOfLayers > 1)
@@ -1632,9 +1555,6 @@ Void TAppEncCfg::xCheckParameter()
         xConfirmPara( m_inblFlag[0] != m_inblFlag[1], "inblFlag in VpsProfileTierLevel[1] must be equal to the inblFlag in VpsProfileTierLevel[0].");
       }
     }
-#else
-    xConfirmPara( m_profileLevelTierIdx.size() < m_vpsNumLayerSets + m_outputLayerSetIdx.size(), "The number of Profile Level Tier indices must be equal to the number of layer set plus the number of output layer set indices" );
-#endif
 
     // Layer Dependencies  
   for (Int i = 0; i < m_numberOfLayers; i++ )
@@ -1767,7 +1687,7 @@ Void TAppEncCfg::xCheckParameter()
     xConfirmPara( m_sliceSegmentArgument < 1 ,         "SliceSegmentArgument should be larger than or equal to 1" );
   }
   
-  Bool tileFlag = (m_iNumColumnsMinus1 > 0 || m_iNumRowsMinus1 > 0 );
+  Bool tileFlag = (m_numTileColumnsMinus1 > 0 || m_numTileRowsMinus1 > 0 );
   xConfirmPara( tileFlag && m_iWaveFrontSynchro,            "Tile and Wavefront can not be applied together");
 
   //TODO:ChromaFmt assumes 4:2:0 below
@@ -1777,10 +1697,20 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_aiPad[0] % TComSPS::getWinUnitX(CHROMA_420) != 0, "Horizontal padding must be an integer multiple of the specified chroma subsampling");
   xConfirmPara( m_aiPad[1] % TComSPS::getWinUnitY(CHROMA_420) != 0, "Vertical padding must be an integer multiple of the specified chroma subsampling");
 
-  xConfirmPara( m_confLeft   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confRight  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confTop    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
-  xConfirmPara( m_confBottom % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinLeft   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinRight  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinTop    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top conformance window offset must be an integer multiple of the specified chroma subsampling");
+  xConfirmPara( m_confWinBottom % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom conformance window offset must be an integer multiple of the specified chroma subsampling");
+
+  xConfirmPara( m_defaultDisplayWindowFlag && !m_vuiParametersPresentFlag, "VUI needs to be enabled for default display window");
+
+  if (m_defaultDisplayWindowFlag)
+  {
+    xConfirmPara( m_defDispWinLeftOffset   % TComSPS::getWinUnitX(CHROMA_420) != 0, "Left default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinRightOffset  % TComSPS::getWinUnitX(CHROMA_420) != 0, "Right default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinTopOffset    % TComSPS::getWinUnitY(CHROMA_420) != 0, "Top default display window offset must be an integer multiple of the specified chroma subsampling");
+    xConfirmPara( m_defDispWinBottomOffset % TComSPS::getWinUnitY(CHROMA_420) != 0, "Bottom default display window offset must be an integer multiple of the specified chroma subsampling");
+  }
 
 #if H_3D
   xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
@@ -2300,50 +2230,50 @@ xConfirmPara( m_iIntraPeriod >=0&&(m_iIntraPeriod%m_iGOPSize!=0), "Intra period 
       Int maxTileHeight = 0;
       Int widthInCU = (m_iSourceWidth % m_uiMaxCUWidth) ? m_iSourceWidth/m_uiMaxCUWidth + 1: m_iSourceWidth/m_uiMaxCUWidth;
       Int heightInCU = (m_iSourceHeight % m_uiMaxCUHeight) ? m_iSourceHeight/m_uiMaxCUHeight + 1: m_iSourceHeight/m_uiMaxCUHeight;
-      if(m_iUniformSpacingIdr)
+      if(m_tileUniformSpacingFlag)
       {
-        maxTileWidth = m_uiMaxCUWidth*((widthInCU+m_iNumColumnsMinus1)/(m_iNumColumnsMinus1+1));
-        maxTileHeight = m_uiMaxCUHeight*((heightInCU+m_iNumRowsMinus1)/(m_iNumRowsMinus1+1));
+        maxTileWidth = m_uiMaxCUWidth*((widthInCU+m_numTileColumnsMinus1)/(m_numTileColumnsMinus1+1));
+        maxTileHeight = m_uiMaxCUHeight*((heightInCU+m_numTileRowsMinus1)/(m_numTileRowsMinus1+1));
         // if only the last tile-row is one treeblock higher than the others 
         // the maxTileHeight becomes smaller if the last row of treeblocks has lower height than the others
-        if(!((heightInCU-1)%(m_iNumRowsMinus1+1)))
+        if(!((heightInCU-1)%(m_numTileRowsMinus1+1)))
         {
           maxTileHeight = maxTileHeight - m_uiMaxCUHeight + (m_iSourceHeight % m_uiMaxCUHeight);
         }     
         // if only the last tile-column is one treeblock wider than the others 
         // the maxTileWidth becomes smaller if the last column of treeblocks has lower width than the others   
-        if(!((widthInCU-1)%(m_iNumColumnsMinus1+1)))
+        if(!((widthInCU-1)%(m_numTileColumnsMinus1+1)))
         {
           maxTileWidth = maxTileWidth - m_uiMaxCUWidth + (m_iSourceWidth % m_uiMaxCUWidth);
         }
       }
       else // not uniform spacing
       {
-        if(m_iNumColumnsMinus1<1)
+        if(m_numTileColumnsMinus1<1)
         {
           maxTileWidth = m_iSourceWidth;
         }
         else
         {
           Int accColumnWidth = 0;
-          for(Int col=0; col<(m_iNumColumnsMinus1); col++)
+          for(Int col=0; col<(m_numTileColumnsMinus1); col++)
           {
-            maxTileWidth = m_pColumnWidth[col]>maxTileWidth ? m_pColumnWidth[col]:maxTileWidth;
-            accColumnWidth += m_pColumnWidth[col];
+            maxTileWidth = m_tileColumnWidth[col]>maxTileWidth ? m_tileColumnWidth[col]:maxTileWidth;
+            accColumnWidth += m_tileColumnWidth[col];
           }
           maxTileWidth = (widthInCU-accColumnWidth)>maxTileWidth ? m_uiMaxCUWidth*(widthInCU-accColumnWidth):m_uiMaxCUWidth*maxTileWidth;
         }
-        if(m_iNumRowsMinus1<1)
+        if(m_numTileRowsMinus1<1)
         {
           maxTileHeight = m_iSourceHeight;
         }
         else
         {
           Int accRowHeight = 0;
-          for(Int row=0; row<(m_iNumRowsMinus1); row++)
+          for(Int row=0; row<(m_numTileRowsMinus1); row++)
           {
-            maxTileHeight = m_pRowHeight[row]>maxTileHeight ? m_pRowHeight[row]:maxTileHeight;
-            accRowHeight += m_pRowHeight[row];
+            maxTileHeight = m_tileRowHeight[row]>maxTileHeight ? m_tileRowHeight[row]:maxTileHeight;
+            accRowHeight += m_tileRowHeight[row];
           }
           maxTileHeight = (heightInCU-accRowHeight)>maxTileHeight ? m_uiMaxCUHeight*(heightInCU-accRowHeight):m_uiMaxCUHeight*maxTileHeight;
         }
@@ -2498,18 +2428,14 @@ Void TAppEncCfg::xPrintParameter()
   printf("Reconstruction File          : %s\n", m_pchReconFile          );
 #endif
 #if H_MV
-#if H_MV_HLS10_GEN_FIX
   xPrintParaVector( "NuhLayerId"     , m_layerIdInNuh ); 
   if ( m_targetEncLayerIdList.size() > 0)
   {
     xPrintParaVector( "TargetEncLayerIdList"     , m_targetEncLayerIdList ); 
   }
-#endif
   xPrintParaVector( "ViewIdVal"     , m_viewId ); 
   xPrintParaVector( "ViewOrderIndex", m_viewOrderIndex ); 
-#if H_MV_HLS10_AUX
   xPrintParaVector( "AuxId", m_auxId );
-#endif
 #endif
 #if H_3D
   xPrintParaVector( "DepthFlag", m_depthFlag ); 
@@ -2520,7 +2446,7 @@ Void TAppEncCfg::xPrintParameter()
   xPrintParaVector( "LoopFilterDisable", m_bLoopFilterDisable ); 
   xPrintParaVector( "SAO"              , m_bUseSAO            ); 
 #endif
-  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confLeft - m_confRight, m_iSourceHeight - m_confTop - m_confBottom, m_iFrameRate );
+  printf("Real     Format              : %dx%d %dHz\n", m_iSourceWidth - m_confWinLeft - m_confWinRight, m_iSourceHeight - m_confWinTop - m_confWinBottom, m_iFrameRate );
   printf("Internal Format              : %dx%d %dHz\n", m_iSourceWidth, m_iSourceHeight, m_iFrameRate );
   if (m_isField)
   {
@@ -2675,16 +2601,9 @@ Void TAppEncCfg::xPrintParameter()
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
 #endif
-#if MTK_I0099_VPS_EX2
-  printf("LimQtPredFlag:%d ", m_bLimQtPredFlag ? 1 : 0);
-#endif
-#if !MTK_I0099_VPS_EX2 || MTK_I0099_FIX
 #if H_3D_QTLPC
+  printf("LimQtPredFlag:%d ", m_bLimQtPredFlag ? 1 : 0);
   printf("QTL:%d ", m_bUseQTL);
-#if !MTK_I0099_VPS_EX2
-  printf("PC:%d " , m_bUsePC );
-#endif
-#endif
 #endif
 #if H_3D_IV_MERGE
   printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
@@ -2711,13 +2630,11 @@ Void TAppEncCfg::xPrintParameter()
 #endif
 #if H_3D_DIM
   printf("DMM:%d ", m_useDMM );
-#if SEPARATE_FLAG_I0085
   printf("IVP:%d ", m_useIVP );
-#endif
   printf("SDC:%d ", m_useSDC );
   printf("DLT:%d ", m_useDLT );
 #endif
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D
   printf("SingleDepthMode:%d ",    m_useSingleDepthMode);
 #endif
 #if H_3D_INTER_SDC

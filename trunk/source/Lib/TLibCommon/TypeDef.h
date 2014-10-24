@@ -110,7 +110,9 @@
                                               // MTK_ARP_FLAG_CABAC_SIMP_G0061 Use 2 context for ARP flag referring to only left neighbor block in JCT3V-G0061
                                               // MTK_ARP_REF_SELECTION_G0053 ARP Reference picture selection in JCT3V-G0053 
                                               // MTK_ALIGN_SW_WD_BI_PRED_ARP_H0085  Align the SW and WD for the bi-prediction ARP PUs by disallowing non-normative fast bi-prediction for ARP PUs, JCT3V-H0085
-
+                                              // QC_I0051_ARP_SIMP          
+                                              // SHARP_ARP_CHROMA_I0104     
+                                              // MTK_I0072_IVARP_SCALING_FIX
 
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
@@ -122,12 +124,8 @@
                                               // MTK_IC_FLAG_CABAC_SIMP_G0061
                                               // SEC_IC_ARP_SIG_G0072, Disabling IC when ARP is enabled, option 1 in JCT3V-G0072, part 2 in JCT3V-G0121
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
-
-#define MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
-
-
-#define SEC_IC_NEIGHBOR_CLIP_I0080        1   // Clipping of neighboring sample position, JCT3V-I0080
-
+                                              // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
+                                              // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -176,9 +174,10 @@
                                               // ETRIKHU_CLEANUP_H0083_MISSING missing guard macros added by GT
                                               // SHARP_SIMPLE_MERGE_H0062      Restrict 3D-HEVC merge cand in small PUs
                                               // MTK_DIS_SPBIP8X4_H0205        Disable bi-prediction for 8x4 and 4x8 sub PU and remove the SPIVMP 2Nx2N restriction
-                                              // SEC_ADAPT_DISABLE_IVMP        Disalbing IVMP merge candidates when IC is enabled, JCT3V-H0070
+                                              // SEC_ADAPT_DISABLE_IVMP        Disabling IVMP merge candidates when IC is enabled, JCT3V-H0070
+                                              // SEC_SIMP_SHIFTED_DV_I0086     Simplification of Shifted DV candidate, JCT3V-I0086
 
-#define SEC_SIMP_SHIFTED_DV_I0086         1   // Simplification of Shifted DV candidate, JCT3V-I0086
+
 
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
@@ -221,13 +220,18 @@
                                               // MTK_SDC_FLAG_FIX_H0095                          Remove conditional check of PCM flag based on SDC flag, JCTVC-H0095
                                               // SEC_NO_RESI_DLT_H0105    
                                               // MTK_DLT_CODING_FIX_H0091 
+                                              // HS_DMM_SIGNALLING_I0120
+                                              // SHARP_DMM1_I0110 // LUT size reduction for DMM1 proposed in JCT3V-I0110 
+                                              // FAST_SDC_OFFSET_DECISION_I0084
+                                              // SEPARATE_FLAG_I0085
+                                              // H_3D_DELTA_DLT
+                                              // RWTH_DLT_CLIP_I0057               1
 
-#define MTK_SINGLE_DEPTH_MODE_I0095       1   // Single depth mode proposed in JCT3V-I0095
-#if MTK_SINGLE_DEPTH_MODE_I0095
-#define MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE            2 // size of the sample candidate list
-#endif
 
-#define H_3D_FIX_UNINIT                   1   // Fix uninitialized flag
+
+#define H_3D_SINGLE_DEPTH                 1   // Single depth mode proposed in JCT3V-I0095
+
+
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
                                               // SEC_INTER_SDC_G0101 Improved inter SDC with multiple DC candidates
@@ -244,21 +248,20 @@
                                               // SEC_DBBP_FILTERING_H0104 
                                               // MTK_DBBP_SIGNALING_H0094    
                                               // H_3D_FIX_DBBP_IVMP        Fix . Enable IVMP is always disabled, when DBBP is enabled. The original intention is to disable Sub-PU IVMP when DBBP is enabled, not to disable IVMP itself. 
-
-#define SEC_DBBP_EXPLICIT_SIG_I0077       1   // Remove the partition derivation and signal dbbp_flag only when the partion mode is 2NxN/Nx2N, JCT3V-I0077
-#define SEC_DBBP_DISALLOW_8x8_I0078       1   // Disallow DBBP in 8x8 CU, JCT3V-I0078
-#define SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional dilter for DBBP
-#define SEC_DBBP_DMM4_THRESHOLD_I0076     1   // Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
+                                              // SEC_DBBP_EXPLICIT_SIG_I0077       1   // Remove the partition derivation and signal dbbp_flag only when the partition mode is 2NxN/Nx2N, JCT3V-I0077
+                                              // Disallow DBBP in 8x8 CU, JCT3V-I0078
+                                              // SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional filter for DBBP
+                                              // SEC_DBBP_DMM4_THRESHOLD_I0076     Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
 
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 #if H_3D_FCO
-#define LGE_FCO_I0116                     1
+#define H_3D_FCO                     1
 #endif
 
-#define SCU_HS_FAST_INTRA_SDC_I0123       1
+#define H_3D_FAST_INTRA_SDC               1   // I0123
 
 // OTHERS
                                               // MTK_SONY_PROGRESSIVE_MV_COMPRESSION_E0170 // Progressive MV Compression, JCT3V-E0170
@@ -270,18 +273,10 @@
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
 #endif
 
-#define MTK_I0099_VPS_EX2                 1  ///< JCT3V-I0099, sub-PU size signaling and lim_qt_pred_flag in VPS extension 2
-#define MTK_I0099_FIX                     1  ///< Fix the problem of removing encoder only QTL 
-
 // Rate Control
 #define KWU_FIX_URQ                       1
 #define KWU_RC_VIEWRC_E0227               0  ///< JCT3V-E0227, view-wise target bitrate allocation
 #define KWU_RC_MADPRED_E0227              0  ///< JCT3V-E0227, inter-view MAD prediction
-
-#define SEC_VPS_CLEANUP_I0090             1
-#define SEC_HLS_CLEANUP_I0100             1
-
-#define H_3D_FIX_64BIT_SHIFT              1
 #endif // H_3D
 
 
@@ -291,14 +286,11 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 // Fixes
-#define FIX_TICKET_79                     1    // Unused VSP code
-#define FIX_TICKET_75                     1    // Bi-pred restriction bug in VSP
-#define FIX_TICKET_68                     1    // MV clipping bug in the sub-PU MPI default MV generation
-#define FIX_TICKET_71                     1    // IC parameters is meaningless in HTM when no training samples are available
-#define FIX_TICKET_77                     1    // Unused variable m_iBitsPerDepthValue
-#define FIX_TICKET_76                     1    // unused functions
-#define FIX_TICKET_62                     1    // buffer overflow for print
-#define FIX_TICKET_61                     1    // layerIdsInSets size check
+
+///// ***** SINGLE DEPTH MODE *********
+#if H_3D_SINGLE_DEPTH
+#define SINGLE_DEPTH_MODE_CAND_LIST_SIZE            2 // size of the sample candidate list
+#endif
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
 #if H_3D_VSO                                  
@@ -307,7 +299,6 @@
 #define H_3D_VSO_EARLY_SKIP               1   // LGE_VSO_EARLY_SKIP_A0093, A0093 modification 4
 #define H_3D_VSO_RM_ASSERTIONS            0   // Output VSO assertions
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
-#define H_3D_VSO_FIX                      1   // This fix should be enabled after verification 
 #endif
 
 ////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
@@ -320,31 +311,18 @@
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
 #if H_3D_ARP
 #define H_3D_ARP_WFNR                     3
-#define QC_I0129_ARP_FIX                  1
-#define QC_I0051_ARP_SIMP                 1
-#define SHARP_ARP_CHROMA_I0104            1
-#define MTK_I0072_IVARP_SCALING_FIX       1
 #endif
 
 ///// ***** DEPTH INTRA MODES *********
 #if H_3D_DIM
+                                              // HHI_DMM4_ENC_I0066
 #define H_3D_DIM_DMM                      1   // Depth Modeling Modes
 #define H_3D_DIM_SDC                      1   // Simplified Depth Coding method
 #define H_3D_DIM_DLT                      1   // Depth Lookup Table
-#define HS_DMM_SIGNALLING_I0120  1   
-#define SHARP_DMM1_I0110                  1   // LUT size reduction for DMM1 proposed in JCT3V-I0110 
-#define FIX_WARNING                       1   // fix narrowing conversion of NumPocStCurr0,NumPocStCurr1 at TComSlice.cpp
-#define FAST_SDC_OFFSET_DECISION_I0084    1
-#define SEPARATE_FLAG_I0085               1
 
-#if H_3D_DIM_DLT
-#define H_3D_DELTA_DLT                    1
-#define RWTH_DLT_CLIP_I0057               1
-#endif
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
-#define HHI_DMM4_ENC_I0066                1
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
@@ -369,7 +347,7 @@
 ///// ***** DEPTH BASED BLOCK PARTITIONING *********
 #if H_3D_DBBP
 #define DBBP_INVALID_SHORT                (-4)
-#define RWTH_DBBP_PACK_MODE               SIZE_2NxN
+#define DBBP_PACK_MODE               SIZE_2NxN
 #endif
 
 
@@ -388,48 +366,9 @@
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 // TBD: Check if integration is necessary. 
-
-
-
-//Added by Qualcomm for HLS
-#define DISCARDABLE_PIC_RPS              1      ///< JCT3V-G0131: Inter-layer RPS and temporal RPS should not contain picture with discardable_flag equal to 1
-#define VPS_MISC_UPDATES                 1      ///< Misc updates:JCT3V-0240, 
-#define NON_REF_NAL_TYPE_DISCARDABLE     1      ///< JCT3V-G0031: If discardable picture is a non-IRAP, it must be a non-referenced sub-layer picture
-#define INFERENCE_POC_MSB_VAL_PRESENT    1      ///< JCT3V-H0042: poc_msb_val_present_flag shall be equal to 0 when slice_header_extension_length is (inferred to be ) equal to 0
-#define INFERENCE_POC_RESET_INFO_PRESENT 1      ///< JCT3V-H0042: Infer the value of poc_reset_info_present_flag to be equal to 0 when no pps extension / pps extension for multilayer.
-#define I0044_SLICE_TMVP                 1      ///< JCT3V-I0044: Regarding slice_temporal_mvp_enabled_flag
-#define I0045_BR_PR_ADD_LAYER_SET        1      ///< JCT3V-I0045: Signalling of bit-rate and picture rate for additional layer set
-#define I0045_VPS_VUI_VST_PARAMS         1      ///< JCT3V-I0045: Related to signalling of VST parameters of the base layer.
-
-
-#define H_MV_HLS10_GEN                       0  // General changes (not tested)
-
-#define H_MV_HLS10_AUX                       1 // Auxiliary pictures
-#define H_MV_HLS10_GEN_FIX                   1
-#define H_MV_FIX_LOOP_GOPSIZE                1
-#define H_MV_FIX_SUB_LAYERS_MAX_MINUS1       1
-
-#define H_MV_HLS10_GEN_VSP_CONF_WIN          1  // VPS conformance window
-#define H_MV_HLS10_GEN_VSP_BASE_LAYER_AVAIL  1  // vps_base_layer_available
-#define H_MV_HLS10_REF_PRED_LAYERS           1  // reference and predicted layer derivation
-#define H_MV_HLS10_NESSECARY_LAYER           1  // necessary layers
-#define H_MV_HLS10_ADD_LAYERSETS             1  // additional layer sets
-#define H_MV_HLS10_DBP_SIZE                  1  // dpb size syntax structure
-#define H_MV_HLS10_MAXNUMPICS                1  // constraint on number of pictures in rps  
-#define H_MV_HLS10_PTL                       1  // profile tier level
-#define H_MV_HLS10_PTL_FIX                   1  // profile tier level fix
-#define H_MV_HLS10_PTL_INBL_FIX              1  // profile tier level fix 
-#define H_MV_HLS10_PTL_INFER_FIX             1  // fix inference ptl
-#define H_MV_HLS10_MULTILAYERSPS             1  // multilayer SPS extension 
-#define H_MV_HLS10_VPS_VUI                   1  // vsp vui
-#define H_MV_HLS10_VPS_VUI_BSP               1  // vsp vui bsp
-#define H_MV_HLS10_PPS                       1  // PPS modifications
-
-#define H_MV_HLS10_VPS_VUI_BSP_STORE         0  // Currently bsp vui bsp hrd parameters are not stored, some dynamic memory allocation with upper bounds is required. 
-
-
+#define H_MV_HLS_PTL_LIMITS                  0
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
-
+#define H_MV_ALIGN_HM_15                     1  
 
 // POC
 // #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
@@ -450,18 +389,6 @@
 //#define H_MV_HLS_8_SEI_Q0045_11  0 // #11 (SEI    /Q0045/Overlay) Proposal for an SEI message on selectable overlays. Decision: Adopt (modified for variable-length strings).
 //#define H_MV_HLS_7_SEI_P0133_28  0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
 //#define H_MV_HLS_7_SEI_P0123_25  0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
-
-// Auxiliary picture related
-//#define H_MV_HLS_8_AUX_NODOC_40  0 // #40 (AUX    /NODOC/primary pic) Clarify that an auxiliary picture can be associated with more than one primary picture. Consider if the language associating an alpha auxiliary picture with a primary picture in the semantics of dimension_id[ ][ ] near the AuxId derivation could be moved to the alpha SEI message.
-//#define H_MV_HLS_8_AUX_Q0081_2   0 // #2  (AUX    /Q0081/primary) Decision: Remove the constraint that an alpha picture must be accompanied by a primary picture.
-//#define H_MV_HLS_8_AUX_Q0078_44  0 // #44 (AUX    /Q0078/concepts Auxiliary picture concepts:
-//#define H_MV_HLS_8_AUX_Q0078_39  0 // #39 (AUX    /Q0078/conformance): mechanism for signaling a profile/tier/level conformance point for auxiliary pictures
-
-// Profiles
-//#define H_MV_HLS_8_PRO_NODOC_50  0 // #50 (PROF   /NODOC/Monochrome) Add Monochrome 8-bit profile
-//#define H_MV_HLS_8_PRO_NODOC_31  0 // #31 (PROF   /NODOC/Profile constraint) Add a profile constraint to the Scalable Main, Scalable Main 10, and Stereo Main profiles against allowing layers with duplicate values of DependencyId (or ViewOrderIdx) when AuxId equal to 0.
-//#define H_MV_HLS_8_PRO_H0126_45  0 // #45 (PROF   /H0126/Stereo main) Phrasing used in specifying the Stereo Main profile. 
-//#define H_MV_HLS_8_PRO_Q0160_33  0 // #33 (PROF   /Q0160/alt_output_flag) v2: Add constraint to stereo main profile that it must contain exactly two texture views, and add a note to state that the constraint implies a restriction that alt_output_flag equal to 0. 
 
 // DPB
 //#define H_MV_HLS_8_HRD_Q0102_09  0 // #9  (HRD    /Q0102/NoOutputOfPriorPicsFlag) It was suggested that also the separate_colour_plane_flag should affect inference of NoOutputOfPriorPicsFlag. Decision (Ed.): Agreed (affects RExt text).
@@ -490,6 +417,8 @@
 
 #define SAO_SGN_FUNC 1
 
+#define TILE_SIZE_CHECK 1
+
 #define FIX1172 1 ///< fix ticket #1172
 
 #define SETTING_PIC_OUTPUT_MARK     1
@@ -505,19 +434,18 @@
 #define MAX_NESTING_NUM_OPS         1024
 #define MAX_NESTING_NUM_LAYER       64
 
-#if H_MV_HLS10_VPS_VUI_BSP
+#if H_MV
 #define MAX_VPS_NUM_HRD_PARAMETERS                1024
-#define MAX_NUM_SUB_LAYERS                        7
-#define MAX_NUM_SIGNALLED_PARTITIONING_SCHEMES    16
 #else
 #define MAX_VPS_NUM_HRD_PARAMETERS                1
 #endif
-
+#if H_MV
+#define MAX_NUM_SUB_LAYERS                        7
+#define MAX_NUM_SIGNALLED_PARTITIONING_SCHEMES    16
+#endif
 #define MAX_VPS_OP_SETS_PLUS1                     1024
 #if H_MV
-#if H_MV_HLS10_ADD_LAYERSETS
 #define MAX_VPS_NUM_ADD_LAYER_SETS                1024
-#endif
 #define MAX_VPS_NUH_LAYER_ID_PLUS1  63
 #define MAX_NUM_SCALABILITY_TYPES   16
 #define ENC_CFG_CONSOUT_SPACE       29           
@@ -532,19 +460,9 @@
 #define MAX_NUM_LAYERS                  63
 #define MAX_VPS_PROFILE_TIER_LEVEL      64
 #define MAX_VPS_ADD_OUTPUT_LAYER_SETS   1024
-#if H_MV_HLS10_ADD_LAYERSETS
 #define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 + MAX_VPS_OP_SETS_PLUS1 )
-#else
-#define MAX_VPS_OUTPUTLAYER_SETS        ( MAX_VPS_ADD_OUTPUT_LAYER_SETS + MAX_VPS_OP_SETS_PLUS1 )
-#endif
 #define  MAX_NUM_VIDEO_SIGNAL_INFO      16
 #define MAX_NUM_SCALED_REF_LAYERS       MAX_NUM_LAYERS-1
-#if !H_MV_HLS10_VPS_VUI_BSP
-#define MAX_NUM_BSP_HRD_PARAMETERS      100 ///< Maximum value is actually not specified
-#define MAX_NUM_BITSTREAM_PARTITIONS    100 ///< Maximum value is actually not specified 
-#define MAX_NUM_BSP_SCHED_COMBINATION   100 ///< Maximum value is actually not specified 
-#define MAX_SUB_STREAMS                 1024
-#endif
 #else
 #define MAX_NUM_LAYER_IDS                64
 #endif
@@ -1015,17 +933,9 @@ namespace Profile
     MAIN10 = 2,
     MAINSTILLPICTURE = 3,
 #if H_MV
-#if H_MV_HLS10_PTL
     MULTIVIEWMAIN = 6,
 #if H_3D
     MAIN3D = 8, 
-#endif
-#else
-    MAINSTEREO = 4,
-    MAINMULTIVIEW = 5,
-#if H_3D
-    MAIN3D = 6, 
-#endif
 #endif
 #endif
   };
@@ -1068,10 +978,8 @@ namespace Level
     DEPTH_ID = 0,    
 #endif    
     VIEW_ORDER_INDEX  = 1,
-#if H_MV_HLS10_AUX
     DEPENDENCY_ID = 2,
     AUX_ID = 3,
-#endif    
   };
 #endif
 #if H_3D

@@ -79,9 +79,7 @@ protected:
   Int           m_respectDefDispWindow;               ///< Only output content inside the default display window 
 
 #if H_MV
-#if H_MV_HLS10_GEN_FIX
   Bool          m_outputVpsInfo;                     ///< Output VPS information 
-#endif
   Void xAppendToFileNameEnd( Char* pchInputFileName, const Char* pchStringToAppend, Char*& rpchOutputFileName); ///< create filenames
 #endif
 public:

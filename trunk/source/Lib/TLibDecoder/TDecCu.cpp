@@ -419,9 +419,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_VSP
     Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
-#if !FIX_TICKET_79
-    InheritedVSPDisInfo inheritedVSPDisInfo[MRG_MAX_NUM_CANDS_MEM];
-#endif
 #if H_3D_SPIVMP
     Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
     memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
@@ -433,9 +430,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
     m_ppcCU[uiDepth]->initAvailableFlags();
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
     m_ppcCU[uiDepth]->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours 
-#if !FIX_TICKET_79
-      , inheritedVSPDisInfo
-#endif
 #if H_3D_SPIVMP
       , pcMvFieldSP, puhInterDirSP
 #endif
@@ -455,12 +449,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #else
     m_ppcCU[uiDepth]->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
 #endif
-#endif
-#if H_3D_VSP && !FIX_TICKET_79
-    if(vspFlag[uiMergeIndex])
-    {
-      pcCU->setDvInfoSubParts(inheritedVSPDisInfo[uiMergeIndex].m_acDvInfo, uiAbsPartIdx, 0, uiDepth);
-    }
 #endif
     pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
 
@@ -545,7 +533,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
     return;
   }
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   m_pcEntropyDecoder->decodeSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
   if(!pcCU->getSingleDepthFlag(uiAbsPartIdx))
   {
@@ -579,7 +567,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   Bool bCodeDQP = getdQPFlag();
   m_pcEntropyDecoder->decodeCoeff( pcCU, uiAbsPartIdx, uiDepth, uiCurrWidth, uiCurrHeight, bCodeDQP );
   setdQPFlag( bCodeDQP );
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
   }
 #endif
   xFinishDecodeCU( pcCU, uiAbsPartIdx, uiDepth, ruiIsLast );
@@ -681,7 +669,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
 #endif
       break;
     case MODE_INTRA:
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
       if( m_ppcCU[uiDepth]->getSingleDepthFlag(0) )
         xReconIntraSingleDepth( m_ppcCU[uiDepth], 0, uiDepth );
 #if H_3D_DIM_SDC
@@ -729,7 +717,7 @@ Void TDecCu::xReconInter( TComDataCU* pcCU, UInt uiDepth )
     m_ppcYuvReco[uiDepth]->copyPartToPartYuv( m_ppcYuvReco[uiDepth],0, pcCU->getWidth( 0 ),pcCU->getHeight( 0 ));
   }
 }
-#if MTK_SINGLE_DEPTH_MODE_I0095
+#if H_3D_SINGLE_DEPTH
 Void TDecCu::xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiWidth        = pcCU->getWidth  ( 0 );
@@ -748,7 +736,7 @@ Void TDecCu::xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
   Pel testDepth;
   Pel DepthNeighbours[5];
   Int index =0;
-  for( Int i = 0; (i < 5) && (index<MTK_SINGLE_DEPTH_MODE_CANDIDATE_LIST_SIZE) ; i++ )
+  for( Int i = 0; (i < 5) && (index<SINGLE_DEPTH_MODE_CAND_LIST_SIZE) ; i++ )
   {
     if(!pcCU->getNeighDepth (0, uiAbsPartIdx, &testDepth, i))
     {
@@ -858,7 +846,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   // get collocated depth block
   UInt uiDepthStride = 0;
-#if LGE_FCO_I0116
+#if H_3D_FCO
   Pel* pDepthPels = pcCU->getVirtualDepthBlock(pcCU->getZorderIdxInCU(), pcCU->getWidth(0), pcCU->getHeight(0), uiDepthStride);
 #else
   Pel* pDepthPels = pcCU->getVirtualDepthBlock(0, pcCU->getWidth(0), pcCU->getHeight(0), uiDepthStride);
@@ -931,12 +919,8 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
   
   // reconstruct final prediction signal by combining both segments
-#if SHARP_DBBP_SIMPLE_FLTER_I0109
   m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0), 0, ePartSize);
-#else
-  m_pcPrediction->combineSegmentsWithMask(apSegPredYuv, m_ppcYuvReco[uiDepth], pMask, pcCU->getWidth(0), pcCU->getHeight(0));
-#endif
-  
+
   // inter recon
   xDecodeInterTexture( pcCU, 0, uiDepth );
   
@@ -1310,22 +1294,13 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
 
-#if SHARP_DMM1_I0110
     WedgeList* pacWedgeList  = pcCU->isDMM1UpscaleMode(uiWidth) ? &g_dmmWedgeLists[(g_aucConvertToBit[pcCU->getDMM1BasePatternWidth(uiWidth)])] :  &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
-#else
-    WedgeList* pacWedgeList = &g_dmmWedgeLists[(g_aucConvertToBit[uiWidth])];
-#endif
     TComWedgelet* pcWedgelet = &(pacWedgeList->at( uiTabIdx ));
 
     uiNumSegments = 2;
 
-#if SHARP_DMM1_I0110
     pbMask       = pcCU->isDMM1UpscaleMode( uiWidth ) ? pcWedgelet->getScaledPattern(uiWidth) : pcWedgelet->getPattern();
     uiMaskStride = pcCU->isDMM1UpscaleMode( uiWidth ) ? uiWidth : pcWedgelet->getStride();
-#else
-    pbMask = pcWedgelet->getPattern();
-    uiMaskStride = pcWedgelet->getStride();
-#endif
   }
   if( getDimType( uiLumaPredMode ) == DMM4_IDX )
   {
