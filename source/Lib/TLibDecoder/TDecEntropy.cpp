@@ -58,10 +58,17 @@ Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   {
     return;
   }
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+  if(!pcCU->getSlice()->getVPS()->getSingleDepthModeFlag(pcCU->getSlice()->getLayerIdInVps()))
+  {
+     return;
+  }
+#else
   if(!pcCU->getSlice()->getApplySingleDepthMode())
   {
      return;
   }
+#endif
   m_pcEntropyDecoderIf->parseSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
 }
 #endif

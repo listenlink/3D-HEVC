@@ -1952,6 +1952,9 @@ TComVPS::TComVPS()
     m_vpsDepthModesFlag [i] = false;
     m_ivMvScalingFlag[i] = true; 
     m_bIVPFlag [i]      = false;
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+    m_singleDepthModeFlag[ i ] = false;
+#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
