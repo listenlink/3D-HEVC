@@ -272,6 +272,7 @@
 #if H_3D_DIM
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
+#define MTK_DMM_SIM_J0035                 1
 #endif
 
 // Rate Control
