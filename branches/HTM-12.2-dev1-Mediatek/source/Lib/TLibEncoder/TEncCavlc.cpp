@@ -2068,7 +2068,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       else
       {
         Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
+#if MTK_MRG_LIST_SIZE_CLEANUP_J0059
+        Bool vspFlag = pcSlice->getVPS()->getViewSynthesisPredFlag( pcSlice->getLayerIdInVps() ) ;
+        WRITE_UVLC( ( ivMvPredFlag || vspFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#else
         WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#endif
       }
 #else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");

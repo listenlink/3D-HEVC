@@ -2579,7 +2579,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       else
       {
         Bool ivMvPredFlag = rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ;
+#if MTK_MRG_LIST_SIZE_CLEANUP_J0059
+        Bool vspFlag = rpcSlice->getVPS()->getViewSynthesisPredFlag( rpcSlice->getLayerIdInVps() ) ;
+        rpcSlice->setMaxNumMergeCand(( ivMvPredFlag || vspFlag? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#else
         rpcSlice->setMaxNumMergeCand(( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#endif
       }
 
 #else
