@@ -4142,7 +4142,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
 #if H_3D_VSP
       }
 #endif
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
       if( uiMergeCand == pcCU->getUseDDDCandIdx() )
       {
@@ -4153,6 +4153,7 @@ Void TEncSearch::xMergeEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPUI
       {
         pcCU->setUseDDD( false, uiAbsPartIdx, iPUIdx, pcCU->getDepth( uiAbsPartIdx ) );
       }
+#endif
 #endif
 
       xGetInterPredictionError( pcCU, pcYuvOrg, iPUIdx, uiCostCand, m_pcEncCfg->getUseHADME() );
@@ -4840,6 +4841,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #if H_3D_VSP
         pcCU->setVSPFlagSubParts( vspFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
 #endif
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
         if( uiMRGIndex == pcCU->getUseDDDCandIdx() )
         {
@@ -4852,6 +4854,7 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
         {
             pcCU->setUseDDD( false, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
         }
+#endif
 #endif
 #if H_3D_SPIVMP
         pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMRGIndex], uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );  
@@ -4929,8 +4932,10 @@ Void TEncSearch::predInterSearch( TComDataCU* pcCU, TComYuv* pcOrgYuv, TComYuv*&
 #if H_3D_SPIVMP        
         pcCU->setSPIVMPFlagSubParts(0, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) ); 
 #endif
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
         pcCU->setUseDDD( false, uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );
+#endif
 #endif
         // set ME result
         pcCU->setMergeFlagSubParts( false,        uiPartAddr, iPartIdx, pcCU->getDepth( uiPartAddr ) );

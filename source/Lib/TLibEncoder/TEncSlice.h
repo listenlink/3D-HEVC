@@ -106,10 +106,12 @@ private:
   TEncRateCtrl*           m_pcRateCtrl;                         ///< Rate control manager
   UInt                    m_uiSliceIdx;
   std::vector<TEncSbac*> CTXMem;
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   Int          m_iDDDScale;
   Int          m_iDDDOffset;
   UInt         m_uiDDDPrecision;
+#endif
 #endif
 public:
   TEncSlice();
@@ -144,9 +146,10 @@ public:
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
   Void      initCtxMem( UInt i );
   Void      setCtxMem( TEncSbac* sb, Int b )   { CTXMem[b] = sb; }
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   Void setDDDPar( Int iScale, Int iOffset, UInt uiPrecision ){ m_iDDDScale = iScale; m_iDDDOffset = iOffset; m_uiDDDPrecision = uiPrecision; }
+#endif
 #endif
 
 private:

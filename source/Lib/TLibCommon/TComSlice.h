@@ -2341,11 +2341,12 @@ private:
   Int**      m_depthToDisparityF; 
 #endif
 #endif
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   Int          m_aiDDDInvScale [MAX_NUM_LAYERS];
   Int          m_aiDDDInvOffset[MAX_NUM_LAYERS];
   UInt         m_aiDDDShift    [MAX_NUM_LAYERS];
+#endif
 #endif
 #if H_3D_SINGLE_DEPTH
   Bool      m_bApplySingleDepthMode;
@@ -2353,6 +2354,10 @@ private:
 #if H_3D_IC
   Int *m_aICEnableCandidate;
   Int *m_aICEnableNum;
+#endif
+#if LGE_DEFAULT_DV_J0046
+  Int       m_iDefaultRefViewIdx;
+  Bool      m_bDefaultRefViewIdxAvailableFlag;
 #endif
 public:
   TComSlice();
@@ -2761,9 +2766,18 @@ public:
   // Inference 
   Bool inferPocMsbValPresentFlag();  
 #endif
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   Void initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx );
   Int  getDepthFromDV( Int iDV, Int iBaseViewIdx );
+#endif
+#endif
+#if LGE_DEFAULT_DV_J0046
+  Int  getDefaultRefViewIdx() { return m_iDefaultRefViewIdx; }
+  Void setDefaultRefViewIdx(Int iViewIdx) { m_iDefaultRefViewIdx = iViewIdx; }
+
+  Bool getDefaultRefViewIdxAvailableFlag() { return m_bDefaultRefViewIdxAvailableFlag; }
+  Void setDefaultRefViewIdxAvailableFlag(Bool bViewIdx) { m_bDefaultRefViewIdxAvailableFlag = bViewIdx; }
 #endif
 
 protected:

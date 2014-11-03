@@ -336,7 +336,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #endif
       }
       pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
       if( uiMergeIndex == pcSubCU->getUseDDDCandIdx() )
       {
@@ -348,6 +348,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       {
           pcCU->setUseDDD( false, uiSubPartIdx, uiPartIdx, uiDepth );
       }
+#endif
 #endif
 
       TComMv cTmpMv( 0, 0 );

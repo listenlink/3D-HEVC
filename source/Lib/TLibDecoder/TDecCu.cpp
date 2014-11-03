@@ -290,10 +290,10 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_unit ===========\n")
 #endif
-
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
       pcCU->setUseDDD( false, uiAbsPartIdx, uiDepth );
+#endif
 #endif
 
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
@@ -451,7 +451,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
 #endif
     pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
     if( uiMergeIndex == m_ppcCU[uiDepth]->getUseDDDCandIdx() )
     {
@@ -459,6 +459,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
         pcCU->setUseDDD( true, uiAbsPartIdx, 0, uiDepth );
         pcCU->setDDDepthSubParts( m_ppcCU[uiDepth]->getDDTmpDepth(),uiAbsPartIdx, 0, uiDepth );
     }
+#endif
 #endif
 
     TComMv cTmpMv( 0, 0 );
