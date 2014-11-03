@@ -714,7 +714,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
 #if H_3D_SINGLE_DEPTH
     rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+    if(rpcBestCU->getSlice()->getVPS()->getSingleDepthModeFlag(rpcBestCU->getSlice()->getLayerIdInVps()))
+#else
     if(rpcBestCU->getSlice()->getApplySingleDepthMode())
+#endif
     {
       xCheckRDCostSingleDepth( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
       rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );

@@ -1095,6 +1095,11 @@ Void TDecSbac::parseIntraDepth( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
     {
       UInt uiTabIdx = 0;
       xParseDmm1WedgeIdx( uiTabIdx, g_dmm1TabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
+
+#if MTK_J0033
+      assert( uiTabIdx < g_dmmWedgeLists[ g_aucConvertToBit[ pcCU->getDMM1BasePatternWidth( pcCU->getWidth( absPartIdx ) )]].size());
+#endif
+
       pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dimType, absPartIdx, depth );
     } break;
   case( DMM4_IDX ): break;
