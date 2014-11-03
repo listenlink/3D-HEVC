@@ -102,6 +102,7 @@
                                               // SEC_SIMPLIFIED_NBDV_E0142 Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
                                               // MTK_NBDV_TN_FIX_E0172     fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
                                               // MTK_TEXTURE_MRGCAND_BUGFIX_E0182  Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
+#define LGE_SIMP_DISP_AVAIL_J0041    1   // Use 2 status for disparity availability - DISP_AVAILABLE and DISP_NONE
 
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
@@ -255,6 +256,7 @@
 
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
+#define LGE_DDD_REMOVAL_J0042_J0030    1   // DDD removal
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 #if H_3D_FCO
@@ -306,6 +308,7 @@
 #define DVFROM_LEFT                       0
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
+#define LGE_DEFAULT_DV_J0046              1
 #endif
 
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
@@ -341,6 +344,7 @@
 #define IC_CONST_SHIFT                    5
 #define IC_SHIFT_DIFF                     12
 #define IC_LOW_LATENCY_ENCODING_THRESHOLD 0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
+#define LGE_CHROMA_IC_J0050_J0034         1
 #endif
 
 

@@ -226,14 +226,14 @@ private:
 #if H_3D
   DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
 #endif
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   UChar*        m_pucDisparityDerivedDepth;
   Bool*         m_pbUseDDD;
   Int           m_iUseDDDCandIdx;
   UChar         m_ucDDTmpDepth;
 #endif
-
+#endif
 #if H_3D_IV_MERGE
   TComMotionCand  m_mergCands[MRG_IVSHIFT+1];
   Int           m_baseListidc;
@@ -742,6 +742,7 @@ UChar         getNumPartitions       ();
 
   UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   UChar*       getDDDepth        ()                        { return m_pucDisparityDerivedDepth;        }
   UChar        getDDDepth        ( UInt uiIdx )            { return m_pucDisparityDerivedDepth[uiIdx]; }
@@ -758,6 +759,7 @@ UChar         getNumPartitions       ();
   UChar        getDDTmpDepth(){ return m_ucDDTmpDepth; }
   Int          getUseDDDCandIdx(){ return m_iUseDDDCandIdx;}
 
+#endif
 #endif
 
 #if H_3D_DIM
