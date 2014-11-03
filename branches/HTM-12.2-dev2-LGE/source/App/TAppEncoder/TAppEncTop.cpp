@@ -884,10 +884,12 @@ Void TAppEncTop::encode()
           }
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
           m_acTEncTopList[ layer ]->getSliceEncoder()->setDDDPar( m_cCameraData.getCodedScale()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
               m_cCameraData.getCodedOffset()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
               m_cCameraData.getCamParsCodedPrecision() );
+#endif
 #endif
         Int   iNumEncoded = 0;
 
