@@ -178,6 +178,10 @@ TComSlice::TComSlice()
     m_interLayerPredLayerIdc[ i ] = -1;
   }
 #endif
+#if LGE_DEFAULT_DV_J0046
+  m_iDefaultRefViewIdx = -1;
+  m_bDefaultRefViewIdxAvailableFlag = false;
+#endif
 }
 
 TComSlice::~TComSlice()
@@ -3653,6 +3657,39 @@ Int TComSlice::getRefPicLayerId( Int i )
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
 }
 
+#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+Void TComSlice::setDefaultRefView( )
+{
+  setDefaultRefViewIdx( -1 );
+  setDefaultRefViewIdxAvailableFlag( false ); 
+
+  Int valid = 0;
+  Int DefaultRefViewIdx = -1;
+  for( UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++ )
+  {
+    for( Int iRefListId = 0; ( iRefListId < (isInterB() ? 2 : 1) ) && !isIntra() && valid == 0; iRefListId++ )
+    {
+      RefPicList eRefPicList = RefPicList( iRefListId );
+      Int        iNumRefPics = getNumRefIdx( eRefPicList );
+      for( Int i = 0; i < iNumRefPics; i++ )
+      { 
+        if(getPOC() == getRefPic( eRefPicList, i )->getPOC() && curViewIdx == getRefPic( eRefPicList, i )->getViewIndex())
+        {
+          valid = 1;
+          DefaultRefViewIdx = curViewIdx;
+          break;
+        }
+      }
+    }
+  }
+  if( valid )
+  {
+    setDefaultRefViewIdx( DefaultRefViewIdx );
+    setDefaultRefViewIdxAvailableFlag( true );   
+  }
+}
+#endif
+
 #if H_3D_ARP
 Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 {
@@ -3685,7 +3722,11 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
         }
       }
     }
+#if SEC_ARP_VIEW_REF_CHECK_J0037
+    tempRefPicInListsFlag = (getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0) && getDefaultRefViewIdxAvailableFlag();
+#else
     tempRefPicInListsFlag = getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0;
+#endif
     m_nARPStepNum = tempRefPicInListsFlag ? getVPS()->getARPStepNum(getLayerId()) : 0;
   }
 
@@ -3882,6 +3923,7 @@ Void TComSlice::setDepthToDisparityLUTs()
   setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
 #if H_3D_FCO
   if( getIsDepth() && getViewIndex() > 0 && getVPS()->getMPIFlag(layerIdInVPS))
@@ -3895,6 +3937,7 @@ Void TComSlice::setDepthToDisparityLUTs()
       memcpy( m_aiDDDShift, pcTextSlice->m_aiDDDShift, sizeof( Int ) * getViewIndex() );             
   }  
 #endif 
+#endif
 
   if( !setupLUT )
     return; 
@@ -3943,15 +3986,17 @@ Void TComSlice::setDepthToDisparityLUTs()
       Int invOffset = ( invCodOffset[ i ] << g_bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
       m_depthToDisparityF[ i ][ d ] = ( invCodScale[ i ] * d + invOffset ) >> log2Div; 
     }
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
     initializeDDDPara( vps->getCamParPrecision(), codScale[ i ], codOffset[ i ], i );
+#endif
 #endif
   }
 }
 #endif
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
 Void TComSlice::initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx )
 {
@@ -4014,6 +4059,7 @@ Void TComSlice::initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScal
 
 
 #endif
+#endif
 
 #if H_MV
 Void TComSlice::checkCrossLayerBlaFlag()
@@ -4047,11 +4093,13 @@ Bool TComSlice::inferPocMsbValPresentFlag()
 
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DBBP
 Int TComSlice::getDepthFromDV( Int iDV, Int iBaseViewIdx )
 {
   return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
 }
+#endif
 #endif
 
 /** get scaling matrix from RefMatrixID

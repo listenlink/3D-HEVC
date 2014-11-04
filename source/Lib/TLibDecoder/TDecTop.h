@@ -82,10 +82,12 @@ public:
   Void  copyCamParamForSlice( TComSlice* pcSlice );
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   Int getCodedScale( Int iBaseView, Int iCureView){ return m_aaiCodedScale[ iBaseView ][ iCureView ];}
   Int getCodedOffset( Int iBaseView, Int iCureView){ return m_aaiCodedOffset[ iBaseView ][ iCureView ];}
   UInt getCamParsCodedPrecision(){ return m_vps->getCamParPrecision(); }
+#endif
 #endif
 
 private:

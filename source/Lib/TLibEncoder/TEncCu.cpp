@@ -604,7 +604,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         }
       }
 #if  H_3D_FAST_TEXTURE_ENCODING
+#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+      if(rpcTempCU->getSlice()->getViewIndex() && !rpcTempCU->getSlice()->getIsDepth() && rpcTempCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#else
       if(rpcTempCU->getSlice()->getViewIndex() && !rpcTempCU->getSlice()->getIsDepth())
+#endif
       {
         PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
         rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth ); 
@@ -667,7 +671,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
           
 #if H_3D_DBBP
+#if SEC_DBBP_VIEW_REF_CHECK_J0037
+          if( m_pcEncCfg->getUseDBBP() && rpcTempCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#else
           if( m_pcEncCfg->getUseDBBP() )
+#endif
           {
             xCheckRDCostInterDBBP( rpcBestCU, rpcTempCU, false );
             rpcTempCU->initEstData( uiDepth, iQP, bIsLosslessMode  );
@@ -1868,11 +1876,12 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
 
 #endif
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
     Int iDDDCand = rpcTempCU->getUseDDDCandIdx(); 
     UChar ucDDDepth = rpcTempCU->getDDTmpDepth();
     rpcTempCU->setUseDDD( false, 0, uhDepth );
+#endif
 #endif
 
   for( UInt uiNoResidual = 0; uiNoResidual < iteration; ++uiNoResidual )
@@ -1907,6 +1916,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 #if H_3D_VSP
           rpcTempCU->setVSPFlagSubParts( vspFlag[uiMergeCand], 0, 0, uhDepth );
 #endif
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
           if( rpcTempCU->getSlice()->getIsDepth() && rpcTempCU->getSlice()->getViewIndex() != 0 && iDDDCand == uiMergeCand )
           {
@@ -1917,6 +1927,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           {
               rpcTempCU->setUseDDD( false, 0, 0, uhDepth );
           }
+#endif
 #endif
 #if H_3D_SPIVMP
           rpcTempCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeCand], 0, 0, uhDepth);
@@ -2203,8 +2214,10 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   rpcTempCU->setUseDDD( false, 0, uhDepth );
+#endif
 #endif
 
 #if H_3D_ARP
