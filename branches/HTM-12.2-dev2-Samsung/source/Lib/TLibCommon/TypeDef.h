@@ -114,6 +114,7 @@
                                               // QC_I0051_ARP_SIMP          
                                               // SHARP_ARP_CHROMA_I0104     
                                               // MTK_I0072_IVARP_SCALING_FIX
+#define SEC_ARP_VIEW_REF_CHECK_J0037      1   // Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
 
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
@@ -255,7 +256,7 @@
                                               // Disallow DBBP in 8x8 CU, JCT3V-I0078
                                               // SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional filter for DBBP
                                               // SEC_DBBP_DMM4_THRESHOLD_I0076     Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
-
+#define SEC_DBBP_VIEW_REF_CHECK_J0037     1   // Signaling dbbp_flag when the current slice has view reference picture(s), JCT3V-J0037 item4
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
 #define LGE_DDD_REMOVAL_J0042_J0030       1   // DDD removal
