@@ -2779,6 +2779,9 @@ public:
   Bool getDefaultRefViewIdxAvailableFlag() { return m_bDefaultRefViewIdxAvailableFlag; }
   Void setDefaultRefViewIdxAvailableFlag(Bool bViewIdx) { m_bDefaultRefViewIdxAvailableFlag = bViewIdx; }
 #endif
+#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+  Void setDefaultRefView( );
+#endif
 
 protected:
   TComPic*  xGetRefPic  (TComList<TComPic*>& rcListPic,

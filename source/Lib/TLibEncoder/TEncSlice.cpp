@@ -1010,7 +1010,7 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       CTXMem[0]->loadContexts(m_pcSbacCoder);
     }
   }
-#if LGE_DEFAULT_DV_J0046
+#if LGE_DEFAULT_DV_J0046 && !SEC_ARP_VIEW_REF_CHECK_J0037 && !SEC_DBBP_VIEW_REF_CHECK_J0037
   pcSlice->setDefaultRefViewIdx( -1 );
   pcSlice->setDefaultRefViewIdxAvailableFlag( false ); 
 

@@ -279,7 +279,7 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
       // Set variables to appropriate values to avoid later code change.
       iNumSubstreamsPerTile = 1;
     }
-#if LGE_DEFAULT_DV_J0046
+#if LGE_DEFAULT_DV_J0046 && !SEC_ARP_VIEW_REF_CHECK_J0037 && !SEC_DBBP_VIEW_REF_CHECK_J0037
     pcSlice->setDefaultRefViewIdx( -1 );
     pcSlice->setDefaultRefViewIdxAvailableFlag( false ); 
 

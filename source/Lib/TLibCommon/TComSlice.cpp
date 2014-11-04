@@ -3657,6 +3657,39 @@ Int TComSlice::getRefPicLayerId( Int i )
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
 }
 
+#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+Void TComSlice::setDefaultRefView( )
+{
+  setDefaultRefViewIdx( -1 );
+  setDefaultRefViewIdxAvailableFlag( false ); 
+
+  Int valid = 0;
+  Int DefaultRefViewIdx = -1;
+  for( UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++ )
+  {
+    for( Int iRefListId = 0; ( iRefListId < (isInterB() ? 2 : 1) ) && !isIntra() && valid == 0; iRefListId++ )
+    {
+      RefPicList eRefPicList = RefPicList( iRefListId );
+      Int        iNumRefPics = getNumRefIdx( eRefPicList );
+      for( Int i = 0; i < iNumRefPics; i++ )
+      { 
+        if(getPOC() == getRefPic( eRefPicList, i )->getPOC() && curViewIdx == getRefPic( eRefPicList, i )->getViewIndex())
+        {
+          valid = 1;
+          DefaultRefViewIdx = curViewIdx;
+          break;
+        }
+      }
+    }
+  }
+  if( valid )
+  {
+    setDefaultRefViewIdx( DefaultRefViewIdx );
+    setDefaultRefViewIdxAvailableFlag( true );   
+  }
+}
+#endif
+
 #if H_3D_ARP
 Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 {
@@ -3689,7 +3722,11 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
         }
       }
     }
+#if SEC_ARP_VIEW_REF_CHECK_J0037
+    tempRefPicInListsFlag = (getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0) && getDefaultRefViewIdxAvailableFlag();
+#else
     tempRefPicInListsFlag = getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0;
+#endif
     m_nARPStepNum = tempRefPicInListsFlag ? getVPS()->getARPStepNum(getLayerId()) : 0;
   }
 
