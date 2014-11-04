@@ -2986,6 +2986,9 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
       i++;
     }
+#if SHARP_DLT_SIMP_J0029
+    iIdxUp = bFound ?  iIdxDown + 1 : iNumDepthValues-1;
+#else
     // iterate over indices to find upper closest depth
     i = iNumDepthValues-2;
     bFound = false;
@@ -3002,6 +3005,7 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
     // assert monotony
     assert(iIdxDown<=iIdxUp);
+#endif
 
     // assign closer depth value/idx
     if( abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxDown]) < abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxUp]) )
