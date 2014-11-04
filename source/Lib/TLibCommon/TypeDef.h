@@ -228,11 +228,11 @@
                                               // RWTH_DLT_CLIP_I0057               1
 
 
-
 #define H_3D_SINGLE_DEPTH                 1   // Single depth mode proposed in JCT3V-I0095
 #define MTK_SINGLE_DEPTH_VPS_FLAG_J0060   1   // Add VPS control flags and remove slice header control flag for single depth, JCT3V-J0060
 
 #define MTK_J0033                         1
+#define SHARP_DLT_SIMP_J0029              1   // DLT(DepthValue2Idx[]) table derivation cleanup
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
