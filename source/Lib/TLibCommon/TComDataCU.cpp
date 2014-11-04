@@ -3890,7 +3890,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       , Int& numValidMergeCand, Int mrgCandIdx
 )
 {
+#if !SEC_A1_BASED_VSP_J0039
   UInt uiAbsPartAddr = m_uiAbsIdxInLCU + uiAbsPartIdx;
+#endif
 #if H_3D_IV_MERGE
   ////////////////////////////
   //////// INIT LISTS ////////
@@ -4007,15 +4009,20 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   }
 
   // above
+#if !SEC_A1_BASED_VSP_J0039
   UInt uiAbovePartIdx = 0;
   TComDataCU* pcCUAbove = 0;
   pcCUAbove = getPUAbove( uiAbovePartIdx, uiPartIdxRT );
+#endif
 
   if (getAvailableFlagB1())
   {
     m_mergCands[MRG_B1].setCand( &pcMvFieldNeighbours[m_baseListidc<<1], puhInterDirNeighbours[m_baseListidc]
 #if H_3D_VSP
     ,
+#if SEC_A1_BASED_VSP_J0039
+      false
+#else
       ( ( ( getAddr() - pcCUAbove->getAddr() ) == 0) && (pcCUAbove->getVSPFlag(uiAbovePartIdx) != 0) 
 #if H_3D_IC
       && !bICFlag
@@ -4028,21 +4035,27 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
       )
 #endif
+#endif
       , false
       ); 
     m_baseListidc++;
   }
 
   // above right
+#if !SEC_A1_BASED_VSP_J0039
   UInt uiAboveRightPartIdx = 0;
   TComDataCU* pcCUAboveRight = 0;
   pcCUAboveRight = getPUAboveRight( uiAboveRightPartIdx, uiPartIdxRT );
+#endif
 
   if (getAvailableFlagB0())
   {
     m_mergCands[MRG_B0].setCand( &pcMvFieldNeighbours[m_baseListidc<<1], puhInterDirNeighbours[m_baseListidc]
 #if H_3D_VSP
     ,
+#if SEC_A1_BASED_VSP_J0039
+      false
+#else
       ( ( ( getAddr() - pcCUAboveRight->getAddr() ) == 0) && (pcCUAboveRight->getVSPFlag(uiAboveRightPartIdx) != 0) 
 #if H_3D_IC
       && !bICFlag
@@ -4055,20 +4068,26 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
       )
 #endif
+#endif
       , false
       ); 
     m_baseListidc++;
   }
 
   // left bottom
+#if !SEC_A1_BASED_VSP_J0039
   UInt uiLeftBottomPartIdx = 0;
   TComDataCU* pcCULeftBottom = getPUBelowLeft( uiLeftBottomPartIdx, uiPartIdxLB );
+#endif
 
   if (getAvailableFlagA0())
   {
     m_mergCands[MRG_A0].setCand( &pcMvFieldNeighbours[m_baseListidc<<1], puhInterDirNeighbours[m_baseListidc]
 #if H_3D_VSP
     ,
+#if SEC_A1_BASED_VSP_J0039
+      false
+#else
       (pcCULeftBottom->getVSPFlag(uiLeftBottomPartIdx) != 0
 #if H_3D_IC
       && !bICFlag
@@ -4081,21 +4100,27 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
       )
 #endif
+#endif
       , false
       ); 
     m_baseListidc++;
   }
 
   // above left
+#if !SEC_A1_BASED_VSP_J0039
   UInt uiAboveLeftPartIdx = 0;
   TComDataCU* pcCUAboveLeft = 0;
   pcCUAboveLeft = getPUAboveLeft( uiAboveLeftPartIdx, uiAbsPartAddr );
+#endif
 
   if (getAvailableFlagB2())
   {
     m_mergCands[MRG_B2].setCand( &pcMvFieldNeighbours[m_baseListidc<<1], puhInterDirNeighbours[m_baseListidc]
 #if H_3D_VSP
     ,
+#if SEC_A1_BASED_VSP_J0039
+      false
+#else
       ( ( ( getAddr() - pcCUAboveLeft->getAddr() ) == 0) && (pcCUAboveLeft->getVSPFlag(uiAboveLeftPartIdx) != 0) 
 #if H_3D_IC
       && !bICFlag
@@ -4107,6 +4132,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
       && !bDBBPFlag
 #endif
       )
+#endif
 #endif
       , false
       ); 
@@ -4485,7 +4511,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 
 #if H_3D
+#if SEC_A1_BASED_VSP_J0039
+  iCount += m_mergCands[MRG_A1].m_bAvailable + m_mergCands[MRG_B1].m_bAvailable;
+#else
   iCount += m_mergCands[MRG_A1].m_bAvailable + m_mergCands[MRG_B1].m_bAvailable + m_mergCands[MRG_B0].m_bAvailable;
+#endif
 #else
   //left
   UInt uiLeftPartIdx = 0;
@@ -4594,6 +4624,48 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #endif
 
+#if SEC_A1_BASED_VSP_J0039
+#if H_3D_VSP
+  /////////////////////////////////////////////////
+  //////// VIEW SYNTHESIS PREDICTION (VSP) ////////
+  /////////////////////////////////////////////////
+  if (iCount<getSlice()->getMaxNumMergeCand())
+  {
+    if (
+      (!getAvailableFlagA1() || !(pcCULeft->getVSPFlag(uiLeftPartIdx) != 0)) &&
+#if H_3D_IC
+      !bICFlag &&
+#endif
+#if H_3D_ARP
+      !bARPFlag &&
+#endif
+#if H_3D
+      (nPSW + nPSH > 12) &&
+#endif
+#if H_3D_DBBP
+      !bDBBPFlag &&
+#endif
+      xAddVspCand( mrgCandIdx, &cDisInfo, iCount ) )
+    {
+      return;
+    }
+
+    // early termination
+    if (iCount == getSlice()->getMaxNumMergeCand())
+    {
+      return;
+    }
+#endif
+#if H_3D_VSP
+  }
+#endif
+
+#if H_3D
+  iCount += m_mergCands[MRG_B0].m_bAvailable;
+#endif
+#endif
+
+
 #if H_3D_IV_MERGE 
   /////////////////////////////////////////////
   //////// INTER VIEW DISP COMP (IvDC) ////////
@@ -4647,6 +4719,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   } 
 #endif // H_3D_IV_MERGE 
 
+#if !SEC_A1_BASED_VSP_J0039
 #if H_3D_VSP
   /////////////////////////////////////////////////
   //////// VIEW SYNTHESIS PREDICTION (VSP) ////////
@@ -4680,6 +4753,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 #endif
 #if H_3D
   }
+#endif
 #endif
 
 #if H_3D
