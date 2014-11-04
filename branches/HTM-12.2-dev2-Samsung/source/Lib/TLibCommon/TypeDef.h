@@ -154,6 +154,8 @@
                                               // LGE_SHARP_VSP_INHERIT_F0104 
                                               // NTT_STORE_SPDV_VSP_G0148 Storing Sub-PU based DV for VSP
                                               // Restricted bi-prediction for VSP
+#define SEC_A1_BASED_VSP_J0039            1   // Removal of redundant VSP in Merge list
+
 
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
                                               // HHI_INTER_VIEW_MOTION_PRED 
@@ -256,11 +258,11 @@
 
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
-#define LGE_DDD_REMOVAL_J0042_J0030    1   // DDD removal
+#define LGE_DDD_REMOVAL_J0042_J0030       1   // DDD removal
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 #if H_3D_FCO
-#define H_3D_FCO                     1
+#define H_3D_FCO                          1
 #endif
 
 #define H_3D_FAST_INTRA_SDC               1   // I0123
@@ -905,6 +907,20 @@ enum MVP_DIR
 #if H_3D
 enum DefaultMergCandOrder
 {
+#if SEC_A1_BASED_VSP_J0039
+  MRG_T = 0,            ///< MPI
+  MRG_D,                ///< DDD
+  MRG_IVMC,             ///< Temporal inter-view
+  MRG_A1,               ///< Left
+  MRG_B1,               ///< Above
+  MRG_VSP,              ///< VSP
+  MRG_B0,               ///< Above right
+  MRG_IVDC,             ///< Disparity inter-view
+  MRG_A0,               ///< Left bottom
+  MRG_B2,               ///< Above left
+  MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
+  MRG_COL               ///< Temporal co-located
+#else
   MRG_T = 0,            ///< MPI
   MRG_D,                ///< DDD
   MRG_IVMC,             ///< Temporal inter-view
@@ -917,6 +933,7 @@ enum DefaultMergCandOrder
   MRG_B2,               ///< Above left
   MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
   MRG_COL               ///< Temporal co-located
+#endif
 };
 #endif
 
