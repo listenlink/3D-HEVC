@@ -1952,6 +1952,9 @@ TComVPS::TComVPS()
     m_vpsDepthModesFlag [i] = false;
     m_ivMvScalingFlag[i] = true; 
     m_bIVPFlag [i]      = false;
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+    m_singleDepthModeFlag[ i ] = false;
+#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
@@ -2983,6 +2986,9 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
       i++;
     }
+#if SHARP_DLT_SIMP_J0029
+    iIdxUp = bFound ?  iIdxDown + 1 : iNumDepthValues-1;
+#else
     // iterate over indices to find upper closest depth
     i = iNumDepthValues-2;
     bFound = false;
@@ -2999,6 +3005,7 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
     // assert monotony
     assert(iIdxDown<=iIdxUp);
+#endif
 
     // assign closer depth value/idx
     if( abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxDown]) < abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxUp]) )

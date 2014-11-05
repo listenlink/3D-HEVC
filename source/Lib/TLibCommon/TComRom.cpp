@@ -361,7 +361,11 @@ const WedgeResolution g_dmmWedgeResolution[6] =
 
 const UChar g_dmm1TabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
+#if MTK_DMM_SIM_J0035 
+     0,    7,   10,   9,    9,   13 };
+#else
      0,    7,   10,   11,   11,   13 };
+#endif
 
 const UChar g_dmm3IntraTabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
@@ -762,6 +766,16 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     case( 5 ): {  uhStartX = (uiBlockSize-1); uhStartY = 0;               uhEndX = 0;               uhEndY = 0;               iStepStartX =  0; iStepStartY = +1; iStepEndX =  0; iStepEndY = +1; break; }
     }
 
+#if MTK_DMM_SIM_J0035
+    for( Int iK = 0; iK < uiBlockSize; iK += (uiWidth>=16 ?2:1))
+    {
+      for( Int iL = 0; iL < uiBlockSize; iL += ((uiWidth>=16 && uiOri<4)?2:1) )
+      {
+        cTempWedgelet.setWedgelet( uhStartX + (iK*iStepStartX) , uhStartY + (iK*iStepStartY), uhEndX + (iL*iStepEndX), uhEndY + (iL*iStepEndY), (UChar)uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
+        addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
+      }
+    }
+#else
     for( Int iK = 0; iK < uiBlockSize; iK++ )
     {
       for( Int iL = 0; iL < uiBlockSize; iL++ )
@@ -770,6 +784,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
         addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
       }
     }
+#endif
   }
 
 

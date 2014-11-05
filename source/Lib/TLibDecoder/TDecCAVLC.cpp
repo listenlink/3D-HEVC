@@ -1902,6 +1902,9 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 #if H_3D_INTER_SDC
             READ_FLAG( uiCode, "depth_inter_SDC_flag" );              pcVPS->setInterSDCFlag( i, uiCode ? true : false );
 #endif
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+        READ_FLAG( uiCode, "single_depth_mode_flag[i]"); pcVPS->setSingleDepthModeFlag( i, uiCode == 1 ? true : false );        
+#endif
       }
     }
   }
@@ -2558,6 +2561,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
     }
 #endif
+#if !MTK_SINGLE_DEPTH_VPS_FLAG_J0060
 #if H_3D_SINGLE_DEPTH
     if(rpcSlice->getIsDepth())
     {
@@ -2565,6 +2569,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_FLAG( uiCodeTmp, "slice_enable_single_depth_mode" );
       rpcSlice->setApplySingleDepthMode(uiCodeTmp);
     }
+#endif
 #endif
     if (!rpcSlice->isIntra())
     {
@@ -2579,7 +2584,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       else
       {
         Bool ivMvPredFlag = rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ;
+#if MTK_MRG_LIST_SIZE_CLEANUP_J0059
+        Bool vspFlag = rpcSlice->getVPS()->getViewSynthesisPredFlag( rpcSlice->getLayerIdInVps() ) ;
+        rpcSlice->setMaxNumMergeCand(( ivMvPredFlag || vspFlag? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#else
         rpcSlice->setMaxNumMergeCand(( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#endif
       }
 
 #else

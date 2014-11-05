@@ -1618,6 +1618,9 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
 #if H_3D_INTER_SDC
         WRITE_FLAG( pcVPS->getInterSDCFlag( i ) ? 1 : 0, "depth_inter_SDC_flag" );
 #endif
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+        WRITE_FLAG( pcVPS->getSingleDepthModeFlag( i ) ? 1 : 0, "single_depth_mode_flag" );
+#endif
       }
     }  
   }
@@ -2045,11 +2048,13 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 #endif
+#if !MTK_SINGLE_DEPTH_VPS_FLAG_J0060
 #if H_3D_SINGLE_DEPTH
     if(pcSlice->getIsDepth())
     {
       WRITE_FLAG( pcSlice->getApplySingleDepthMode() ? 1 : 0, "slice_enable_single_depth_mode" );
     }
+#endif
 #endif
 #if H_3D_IV_MERGE
     assert(pcSlice->getMaxNumMergeCand()<=MRG_MAX_NUM_CANDS_MEM);
@@ -2068,7 +2073,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       else
       {
         Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
+#if MTK_MRG_LIST_SIZE_CLEANUP_J0059
+        Bool vspFlag = pcSlice->getVPS()->getViewSynthesisPredFlag( pcSlice->getLayerIdInVps() ) ;
+        WRITE_UVLC( ( ivMvPredFlag || vspFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#else
         WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#endif
       }
 #else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");

@@ -613,7 +613,11 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   }
   else
   {
+#if MTK_MRG_LIST_SIZE_CLEANUP_J0059
+    rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() )  || rpcSlice->getVPS()->getViewSynthesisPredFlag( rpcSlice->getLayerIdInVps() ) ? 1 : 0 ) );
+#else
     rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ? 1 : 0 ) );
+#endif
   }
 #else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
