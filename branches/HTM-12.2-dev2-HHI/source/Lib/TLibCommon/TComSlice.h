@@ -885,6 +885,13 @@ private:
 
   Int         m_numDirectRefLayers       [MAX_NUM_LAYERS];
   Int         m_idDirectRefLayer         [MAX_NUM_LAYERS][MAX_NUM_LAYERS];  
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  Int         m_numRefListLayers         [MAX_NUM_LAYERS];
+  Int         m_idRefListLayer           [MAX_NUM_LAYERS][MAX_NUM_LAYERS];  
+#endif
+#endif
+
 
   Int         m_numRefLayers             [MAX_NUM_LAYER_IDS]; 
   Int         m_idRefLayer               [MAX_NUM_LAYERS][MAX_NUM_LAYERS];  
@@ -1178,12 +1185,24 @@ public:
 
   Bool    getDependencyFlag( Int i, Int j )                                { return m_dependencyFlag[i][j]; }
   Int     getNumDirectRefLayers( Int layerIdInNuh )                        { return m_numDirectRefLayers[ layerIdInNuh ];  };                               
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  Int     getNumRefListLayers( Int layerIdInNuh )                         { return m_numRefListLayers[ layerIdInNuh ];  };                               
+#endif
+#endif
+
   Int     getNumRefLayers            ( Int i )        { return m_numRefLayers[i]; } 
   Int     getNumPredictedLayers      ( Int i )        { return m_numPredictedLayers[i]; } 
+
 
   Int     getIdRefLayer              ( Int i, Int j ) { assert( j >= 0 && j < getNumRefLayers      ( i )); return m_idRefLayer      [i][j]; } 
   Int     getIdPredictedLayer        ( Int i, Int j ) { assert( j >= 0 && j < getNumPredictedLayers( i )); return m_idPredictedLayer[i][j]; } 
   Int     getIdDirectRefLayer        ( Int i, Int j ) { assert( j >= 0 && j < getNumDirectRefLayers( i )); return m_idDirectRefLayer[i][j]; } 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  Int     getIdRefListLayer          ( Int i, Int j ) { assert( j >= 0 && j < getNumRefListLayers   ( i )); return m_idRefListLayer[i][j]; } 
+#endif
+#endif
   Int     getNumIndependentLayers    (  )             { return m_numIndependentLayers; } 
   Int     getNumLayersInTreePartition( Int i )        { return m_numLayersInTreePartition[i]; } 
   Int     getTreePartitionLayerIdList( Int i, Int j ) { return m_treePartitionLayerIdList[i][j]; } 
@@ -2746,8 +2765,19 @@ public:
 
   // Additional variables derived in slice header semantics 
 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  Int  getNumInterLayerRefPicsMinus1Len( ) { return gCeilLog2(  getVPS()->getNumRefListLayers( getLayerId() )); }
+  Int  getInterLayerPredLayerIdcLen    ( ) { return gCeilLog2(  getVPS()->getNumRefListLayers( getLayerId() )); }
+#else
   Int  getNumInterLayerRefPicsMinus1Len( ) { return gCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerId() )); }
   Int  getInterLayerPredLayerIdcLen    ( ) { return gCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerId() )); }
+#endif
+
+#else
+  Int  getNumInterLayerRefPicsMinus1Len( ) { return gCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerId() )); }
+  Int  getInterLayerPredLayerIdcLen    ( ) { return gCeilLog2(  getVPS()->getNumDirectRefLayers( getLayerId() )); }
+#endif
 
   Int  getRefLayerPicFlag( Int i ); 
   Int  getRefLayerPicIdc ( Int j ); 

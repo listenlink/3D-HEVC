@@ -1946,6 +1946,11 @@ TComVPS::TComVPS()
   {
     m_layerIdInNuh      [i] = ( i == 0 ) ? 0 : -1; 
     m_numDirectRefLayers[i] = 0; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    m_numRefListLayers[i] = 0; 
+#endif
+#endif
     m_vpsRepFormatIdx    [i] = 0; 
     m_pocLsbNotPresentFlag[i] = 0;
     m_repFormat          [i] = NULL; 
@@ -1964,6 +1969,11 @@ TComVPS::TComVPS()
       m_directDependencyType[i][j] = -1; 
       m_dependencyFlag  [i][j]    = false; 
       m_idDirectRefLayer[i][j]    = -1; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+      m_idRefListLayer[i][j]    = -1; 
+#endif
+#endif
       m_idPredictedLayer[i][j]    = -1; 
       m_idRefLayer      [i][j]    = -1; 
       m_maxTidIlRefPicsPlus1[i][j]  = 7;
@@ -2102,8 +2112,14 @@ Void TComVPS::setRefLayers()
   {
     Int iNuhLId = getLayerIdInNuh( i );
     Int d = 0;
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    Int l = 0; 
+#endif
+#endif
     Int r = 0;
     Int p = 0;
+
     for( Int j = 0; j  <=  getMaxLayersMinus1(); j++ )
     {
       Int jNuhLid = getLayerIdInNuh( j );
@@ -2111,6 +2127,15 @@ Void TComVPS::setRefLayers()
       {
         m_idDirectRefLayer[iNuhLId][d++] = jNuhLid;
       }
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+      if( getDirectDependencyFlag( i , j ) && ( getDepthId( iNuhLId ) == getDepthId( jNuhLid ) ))
+      {
+        m_idRefListLayer [iNuhLId][l++] = jNuhLid;
+      }
+#endif
+#endif
+
       if( getDependencyFlag( i , j ) )
       {
         m_idRefLayer      [iNuhLId][r++] = jNuhLid;
@@ -2121,6 +2146,12 @@ Void TComVPS::setRefLayers()
       }
     }
     m_numDirectRefLayers[ iNuhLId ] = d;
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    m_numRefListLayers[ iNuhLId ] = l; 
+#endif
+#endif
+
     m_numRefLayers      [ iNuhLId ] = r;
     m_numPredictedLayers[ iNuhLId ] = p;
   }
@@ -2565,6 +2596,12 @@ Void TComVPS::printLayerDependencies()
   xPrintArray( "IdPredictedLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numPredictedLayers, m_idPredictedLayer, true );
   xPrintArray( "IdRefLayer"      , getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefLayers, m_idRefLayer, true );
   xPrintArray( "IdDirectRefLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numDirectRefLayers, m_idDirectRefLayer, true );
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  xPrintArray( "IdRefListLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefListLayers, m_idRefListLayer, true );
+#endif
+#endif
+
   std::cout << std::endl;
 }
 
@@ -3583,7 +3620,15 @@ TComPic* TComSlice::getPicFromRefPicSetInterLayer(Int setIdc, Int layerId )
 Int  TComSlice::getRefLayerPicFlag( Int i ) 
 {
   TComVPS* vps = getVPS(); 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  Int refLayerIdx = vps->getLayerIdInVps( vps->getIdRefListLayer( getLayerId(), i ) ); 
+#else
   Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
+#endif
+#else
+  Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
+#endif
 
   Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer() )  && ( getTLayer() == 0  ) &&
     ( vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() ); 
@@ -3595,7 +3640,15 @@ Int TComSlice::getRefLayerPicIdc( Int j )
 {  
   Int refLayerPicIdc = -1; 
   Int curj = 0; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
+#else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
+#else
+  for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
   {
     if( getRefLayerPicFlag( i ) )
     {
@@ -3616,7 +3669,15 @@ Int TComSlice::getRefLayerPicIdc( Int j )
 Int  TComSlice::getNumRefLayerPics( )
 {  
   Int numRefLayerPics = 0; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
+#else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
+#else
+  for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
   {
     numRefLayerPics += getRefLayerPicFlag( i ); 
   }
@@ -3641,7 +3702,15 @@ Int TComSlice::getNumActiveRefLayerPics()
   {
     numActiveRefLayerPics = 0; 
   }
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumRefListLayers( getLayerId() ) == 1 )
+#else
   else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
+#endif
+#else
+  else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
+#endif  
   {
     numActiveRefLayerPics = 1; 
   }
@@ -3654,7 +3723,15 @@ Int TComSlice::getNumActiveRefLayerPics()
 
 Int TComSlice::getRefPicLayerId( Int i )
 {
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  return getVPS()->getIdRefListLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
+#else
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
+#endif
+#else
+  return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
+#endif
 }
 
 #if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037

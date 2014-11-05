@@ -2349,16 +2349,40 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 #if H_MV
     Bool interLayerPredLayerIdcPresentFlag = false; 
     Int layerId       = rpcSlice->getLayerId(); 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    if( rpcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumRefListLayers( layerId ) > 0 )
+#else
     if( rpcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#endif
+#else
+    if( rpcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#endif
     {   
       READ_FLAG( uiCode, "inter_layer_pred_enabled_flag" ); rpcSlice->setInterLayerPredEnabledFlag( uiCode == 1 );
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+      if( rpcSlice->getInterLayerPredEnabledFlag() && vps->getNumRefListLayers( layerId ) > 1 )
+#else
       if( rpcSlice->getInterLayerPredEnabledFlag() && vps->getNumDirectRefLayers( layerId ) > 1 )
+#endif
+#else
+      if( rpcSlice->getInterLayerPredEnabledFlag() && vps->getNumDirectRefLayers( layerId ) > 1 )
+#endif
       {            
         if( !vps->getMaxOneActiveRefLayerFlag())  
         {
           READ_CODE( rpcSlice->getNumInterLayerRefPicsMinus1Len( ), uiCode, "num_inter_layer_ref_pics_minus1" ); rpcSlice->setNumInterLayerRefPicsMinus1( uiCode );
         }
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+        if ( rpcSlice->getNumActiveRefLayerPics() != vps->getNumRefListLayers( layerId ) )
+#else
         if ( rpcSlice->getNumActiveRefLayerPics() != vps->getNumDirectRefLayers( layerId ) )
+#endif
+#else
+        if ( rpcSlice->getNumActiveRefLayerPics() != vps->getNumDirectRefLayers( layerId ) )
+#endif
         {
           interLayerPredLayerIdcPresentFlag = true; 
           for( Int idx = 0; idx < rpcSlice->getNumActiveRefLayerPics(); idx++ )   
@@ -2544,7 +2568,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+    else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 )
+#else
     else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#endif
     {
       UInt uiCodeTmp = 0;
 

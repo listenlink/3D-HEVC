@@ -879,7 +879,15 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }    
 
     TComVPS*           vps = pcSlice->getVPS();     
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    Int numDirectRefLayers = vps    ->getNumRefListLayers( getLayerId() ); 
+#else
     Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
+#endif
+#else
+    Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
+#endif
     GOPEntry gopEntry      = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid );     
     
     Bool interLayerPredLayerIdcPresentFlag = false; 
@@ -892,7 +900,15 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {    
           pcSlice->setNumInterLayerRefPicsMinus1( gopEntry.m_numActiveRefLayerPics - 1 ); 
         }
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+        if ( gopEntry.m_numActiveRefLayerPics != vps->getNumRefListLayers( getLayerId() ) )
+#else
         if ( gopEntry.m_numActiveRefLayerPics != vps->getNumDirectRefLayers( getLayerId() ) )
+#endif
+#else
+        if ( gopEntry.m_numActiveRefLayerPics != vps->getNumDirectRefLayers( getLayerId() ) )
+#endif
         {        
           interLayerPredLayerIdcPresentFlag = true; 
           for (Int i = 0; i < gopEntry.m_numActiveRefLayerPics; i++ )
