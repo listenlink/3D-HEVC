@@ -403,7 +403,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   ("ProfileTierLevelIdx_%d",  m_profileTierLevelIdx, std::vector<Int>(0), MAX_NUM_LAYERS, "Indices to profile level tier for ols")
   // Layer dependencies
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+  ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIdx in VPS of direct reference layers")
+#else
   ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIds of direct reference layers")
+#endif
   ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
 #endif
   ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
