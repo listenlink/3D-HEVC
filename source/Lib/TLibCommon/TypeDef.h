@@ -296,6 +296,8 @@
 #if H_3D
 #define HHI_DEPENDENCY_SIGNALLING_I1_J0107     1
 #endif
+#define H_MV_FIX_REF_LAYER_PIC_FLAG            1
+
 
 ///// ***** SINGLE DEPTH MODE *********
 #if H_3D_SINGLE_DEPTH

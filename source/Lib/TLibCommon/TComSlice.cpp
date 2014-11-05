@@ -3630,9 +3630,13 @@ Int  TComSlice::getRefLayerPicFlag( Int i )
   Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
 #endif
 
+#if H_MV_FIX_REF_LAYER_PIC_FLAG
+  Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer()  && ( getTLayer() == 0   ||
+    vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() )); 
+#else
   Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer() )  && ( getTLayer() == 0  ) &&
     ( vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() ); 
-
+#endif
   return refLayerPicFlag;       
 }    
 
