@@ -292,6 +292,11 @@
 
 // Fixes
 
+
+#if H_3D
+#define HHI_DEPENDENCY_SIGNALLING_I1_J0107     1
+#endif
+
 ///// ***** SINGLE DEPTH MODE *********
 #if H_3D_SINGLE_DEPTH
 #define SINGLE_DEPTH_MODE_CAND_LIST_SIZE            2 // size of the sample candidate list

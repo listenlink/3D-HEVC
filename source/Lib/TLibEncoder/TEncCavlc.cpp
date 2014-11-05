@@ -1886,16 +1886,40 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
 #if H_MV
     Bool interLayerPredLayerIdcPresentFlag = false; 
     Int layerId = pcSlice->getLayerId(); 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    if( pcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumRefListLayers( layerId ) > 0 )
+#else
     if( pcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#endif
+#else
+    if( pcSlice->getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#endif
     {   
       WRITE_FLAG( pcSlice->getInterLayerPredEnabledFlag( ) ? 1 : 0 , "inter_layer_pred_enabled_flag" );
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+      if( pcSlice->getInterLayerPredEnabledFlag() && vps->getNumRefListLayers( layerId ) > 1 )
+#else
       if( pcSlice->getInterLayerPredEnabledFlag() && vps->getNumDirectRefLayers( layerId ) > 1 )
+#endif
+#else
+      if( pcSlice->getInterLayerPredEnabledFlag() && vps->getNumDirectRefLayers( layerId ) > 1 )
+#endif
       {            
         if( !vps->getMaxOneActiveRefLayerFlag())  
         {
           WRITE_CODE( pcSlice->getNumInterLayerRefPicsMinus1( ), pcSlice->getNumInterLayerRefPicsMinus1Len( ), "num_inter_layer_ref_pics_minus1" );
         }
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+        if ( pcSlice->getNumActiveRefLayerPics() != vps->getNumRefListLayers( layerId ) )
+#else
         if ( pcSlice->getNumActiveRefLayerPics() != vps->getNumDirectRefLayers( layerId ) )
+#endif
+#else
+        if ( pcSlice->getNumActiveRefLayerPics() != vps->getNumDirectRefLayers( layerId ) )
+#endif
         {        
           interLayerPredLayerIdcPresentFlag = true; 
           for( Int idx = 0; idx < pcSlice->getNumActiveRefLayerPics(); idx++ )   
@@ -2036,7 +2060,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       xCodePredWeightTable( pcSlice );
     }
 #if H_3D_IC
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 )
+#else
     else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth() && vps->getNumDirectRefLayers( layerId ) > 0 )
+#endif
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
       if( pcSlice->getApplyIC() )

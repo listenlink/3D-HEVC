@@ -895,7 +895,16 @@ Void TEncTop::xInitPPS()
 {
 #if H_MV
   m_cPPS.setLayerId( getLayerId() );
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  // Check if this condition is still correct
+  if( getVPS()->getNumRefListLayers( getLayerId() ) > 0 )
+#else
   if( getVPS()->getNumDirectRefLayers( getLayerId() ) > 0 )
+#endif
+#else
+  if( getVPS()->getNumDirectRefLayers( getLayerId() ) > 0 )
+#endif
   {
     m_cPPS.setListsModificationPresentFlag( true );
   }
