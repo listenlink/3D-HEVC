@@ -632,10 +632,10 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
 #if H_3D_QTLPC
-  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
 #if HHI_TOOL_PARAMETERS_I2_J0107
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
 #else
+  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
   Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
 #endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
@@ -1009,10 +1009,11 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 #if H_3D_QTLPC
   Bool bCodeSplitFlag    = true;
 
-  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
+  
 #if HHI_TOOL_PARAMETERS_I2_J0107
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag(); 
 #else
+  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
   Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
 #endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
