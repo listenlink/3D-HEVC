@@ -4025,7 +4025,7 @@ Void TComSlice::setDepthToDisparityLUTs()
 
 #if H_3D_IV_MERGE
 #if HHI_TOOL_PARAMETERS_I2_J0107
-  setupLUT = setupLUT || getIvMvPredFlag() && getIsDepth() ;
+  setupLUT = setupLUT || ( getIvMvPredFlag() && getIsDepth() );
 #else
   setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
 #endif

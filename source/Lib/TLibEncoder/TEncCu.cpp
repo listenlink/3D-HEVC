@@ -408,10 +408,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   TComPic* pcPic = rpcBestCU->getPic();
 
 #if H_3D_QTLPC
-  TComVPS *vps            = pcPic->getSlice(0)->getVPS();
 #if HHI_TOOL_PARAMETERS_I2_J0107
   Bool  bLimQtPredFalg    = pcPic->getSlice(0)->getQtPredFlag(); 
 #else
+    TComVPS *vps            = pcPic->getSlice(0)->getVPS();
   Bool  bLimQtPredFalg    = vps->getLimQtPredFlag(pcPic->getSlice(0)->getLayerId()); 
 #endif
   TComPic *pcTexture      = rpcBestCU->getSlice()->getTexturePic();
@@ -2203,7 +2203,9 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   UChar uhDepth = rpcTempCU->getDepth( 0 );
 #if H_3D_ARP
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   Int iLayerId    = rpcTempCU->getSlice()->getLayerId();
+#endif
   Bool bFirstTime = true;
   Int nARPWMax    = rpcTempCU->getSlice()->getARPStepNum() - 1;
 

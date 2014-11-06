@@ -2655,8 +2655,8 @@ Void TAppEncCfg::xPrintParameter()
   printf( "DLT:%d ", m_useDLT );
 
 
-  printf( "IvMvPred:%d %d "    , m_ivMvPredFlag[0], m_ivMvPredFlag[1] );
-  printf( "IvMvScaling:%d %d "    , m_ivMvScalingFlag[0], m_ivMvScalingFlag[1] );
+  printf( "IvMvPred:%d %d "            , m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1]  ? 1 : 0);
+  printf( "IvMvScaling:%d %d "         , m_ivMvScalingFlag[0] ? 1 : 0 , m_ivMvScalingFlag[1]  ? 1 : 0);
 
   printf( "Log2SubPbSizeMinus3:%d "    , m_log2SubPbSizeMinus3            );
   printf( "IvResPred:%d "              , m_ivResPredFlag          ? 1 : 0 );
