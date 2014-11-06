@@ -98,7 +98,11 @@ public:
   Void  codeSPSExtension        ( TComSPS* pcSPS ); 
 #endif
 #if H_3D
+#if HHI_VPS_3D_EXTENSION_I3_J0107
+  Void  codeVPS3dExtension       ( TComVPS* pcVPS ); 
+#else
   Void  codeVPSExtension2       ( TComVPS* pcVPS ); 
+#endif
 #if HHI_TOOL_PARAMETERS_I2_J0107
   Void  codeSPS3dExtension      ( TComSPS* pcSPS );
   Void  codeSPS                 ( TComSPS* pcSPS );

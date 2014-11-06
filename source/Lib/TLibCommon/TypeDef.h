@@ -296,6 +296,7 @@
 #if H_3D
 #define HHI_DEPENDENCY_SIGNALLING_I1_J0107     1
 #define HHI_TOOL_PARAMETERS_I2_J0107           1
+#define HHI_VPS_3D_EXTENSION_I3_J0107          1
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
 #define H_3D_OUTPUT_ACTIVE_TOOLS               0
