@@ -1193,12 +1193,25 @@ Void TDecCavlc::parseVPS(TComVPS* pcVPS)
     if (uiCode)
     {
 #if H_3D
+#if HHI_VPS_3D_EXTENSION_I3_J0107
+      READ_FLAG( uiCode,  "vps_3d_extension_flag" );
+      if ( uiCode )
+      {
+        m_pcBitstream->readOutTrailingBits();
+        pcVPS->createCamPars(pcVPS->getNumViews());
+        parseVPS3dExtension( pcVPS );   
+      }
+      READ_FLAG( uiCode,  "vps_extension3_flag" );
+      if (uiCode)
+      {      
+#else
       m_pcBitstream->readOutTrailingBits();
       pcVPS->createCamPars(pcVPS->getNumViews());
       parseVPSExtension2( pcVPS );   
       READ_FLAG( uiCode,  "vps_extension3_flag" );
       if (uiCode)
       {      
+#endif
 #endif
 #endif  
         while ( xMoreRbspData() )
@@ -1876,7 +1889,11 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
 }
 
 #if H_3D
+#if HHI_VPS_3D_EXTENSION_I3_J0107
+Void TDecCavlc::parseVPS3dExtension( TComVPS* pcVPS )
+#else
 Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
+#endif
 {
   UInt uiCode; 
 

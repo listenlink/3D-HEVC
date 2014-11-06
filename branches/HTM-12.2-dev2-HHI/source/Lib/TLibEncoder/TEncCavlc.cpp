@@ -1006,9 +1006,15 @@ Void TEncCavlc::codeVPS( TComVPS* pcVPS )
   m_pcBitIf->writeAlignOne();
   codeVPSExtension( pcVPS );                           
 #if H_3D
-  WRITE_FLAG( 1,                     "vps_extension2_flag" );
+  WRITE_FLAG( 1,                     "vps_extension2_flag" );  
+#if HHI_VPS_3D_EXTENSION_I3_J0107
+  WRITE_FLAG( 1,                     "vps_3d_extension_flag" );
+  m_pcBitIf->writeAlignOne();      
+  codeVPS3dExtension( pcVPS ); 
+#else
   m_pcBitIf->writeAlignOne();      
   codeVPSExtension2( pcVPS ); 
+#endif
   WRITE_FLAG( 0,                     "vps_extension3_flag" );
 #else
   WRITE_FLAG( 0,                     "vps_extension2_flag" );
@@ -1612,7 +1618,11 @@ Void TEncCavlc::codeVpsVuiBspHrdParameters( TComVPS* pcVPS )
 #endif
 
 #if H_3D
+#if HHI_VPS_3D_EXTENSION_I3_J0107
+Void TEncCavlc::codeVPS3dExtension( TComVPS* pcVPS )
+#else
 Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
+#endif
 { 
 #if !HHI_TOOL_PARAMETERS_I2_J0107
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
