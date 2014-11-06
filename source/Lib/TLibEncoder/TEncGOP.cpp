@@ -957,6 +957,9 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPicList ( rcListPic );
 #endif
 #if H_3D_SINGLE_DEPTH
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    pcSlice->setApplySingleDepthMode( pcSlice->getIntraSingleFlag() );
+#else
     TEncTop* pcEncTop = (TEncTop*) m_pcCfg;
     bool enableSingleDepthMode=false;
     if(pcEncTop->getUseSingleDepthMode())
@@ -967,6 +970,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
     pcSlice->setApplySingleDepthMode(enableSingleDepthMode);
+#endif
 #endif    
 #if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
     pcSlice->setDefaultRefView();
@@ -1432,10 +1436,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       {
         pcSlice->getSPS()->getVuiParameters()->setHrdParametersPresentFlag( true );
       }
+#if HHI_TOOL_PARAMETERS_I2_J0107
+      m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());
+#else
 #if !H_3D
       m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());
 #else
       m_pcEntropyCoder->encodeSPS(pcSlice->getSPS(), pcSlice->getViewIndex(), pcSlice->getIsDepth() );
+#endif
 #endif
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));

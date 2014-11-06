@@ -533,7 +533,7 @@ void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt heigh
 #if H_MV
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff, Int gopId )
 {
-  assert( 0 ); // Field coding and multiview need to be furhter harmonized. 
+  assert( 0 ); // Field coding and multiview need to be further harmonized. 
 }
 #else
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)

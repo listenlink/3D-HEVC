@@ -3116,12 +3116,16 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #if H_3D_DIM
     }
 #endif
-
+    
 #if H_3D_DIM
     //===== determine set of depth intra modes to be tested =====
     if( m_pcEncCfg->getIsDepth() && uiWidth >= DIM_MIN_SIZE && uiWidth <= DIM_MAX_SIZE && uiWidth == uiHeight )
     {
+#if HHI_TOOL_PARAMETERS_I2_J0107
+      if( bOnlyIVP && pcCU->getSlice()->getIntraContourFlag() )
+#else
       if( bOnlyIVP && m_pcEncCfg->getUseIVP() )
+#endif
       {
         TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
         xPredContourFromTex( pcCU, uiPartOffset, uiWidth, uiHeight, dmm4Segmentation );
@@ -3143,24 +3147,40 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
 #endif
 
 #if H_3D_DIM_DMM
+#if HHI_TOOL_PARAMETERS_I2_J0107
+      if( ( ( m_pcEncCfg->getUseDMM() &&  pcCU->getSlice()->getIntraSdcWedgeFlag() )  || pcCU->getSlice()->getIntraContourFlag() )
+#else
       if( ( m_pcEncCfg->getUseDMM() || m_pcEncCfg->getUseIVP() )
+#endif
 #if H_3D_FAST_DEPTH_INTRA
          && (uiRdModeList[0] != PLANAR_IDX || varCU >= varThreshold)
 #endif
         )
       {
         UInt uiStart, uiEnd;
+#if HHI_TOOL_PARAMETERS_I2_J0107
+        if( ( m_pcEncCfg->getUseDMM() &&  pcCU->getSlice()->getIntraSdcWedgeFlag() ) &&  pcCU->getSlice()->getIntraContourFlag() )
+#else
         if( m_pcEncCfg->getUseDMM() &&  m_pcEncCfg->getUseIVP() )
+#endif
         {
           uiStart = 0;
           uiEnd   = 2;
         }
+#if HHI_TOOL_PARAMETERS_I2_J0107
+        else if( ( m_pcEncCfg->getUseDMM() &&  pcCU->getSlice()->getIntraSdcWedgeFlag() ) )
+#else
         else if( m_pcEncCfg->getUseDMM() )
+#endif
         {
           uiStart = 0;
           uiEnd   = 1;
         }
+#if HHI_TOOL_PARAMETERS_I2_J0107
+        else if( pcCU->getSlice()->getIntraContourFlag() )
+#else
         else if( m_pcEncCfg->getUseIVP() )
+#endif
         {
           uiStart = 1;
           uiEnd   = 2;
@@ -3298,7 +3318,7 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       
 #if H_3D_DIM_SDC
 #if H_3D_FAST_INTRA_SDC
-      Bool bTestSDC = ( m_pcEncCfg->getUseSDC() && pcCU->getSDCAvailable(uiPartOffset) && uiMode >= numModesForFullRD);
+      Bool bTestSDC = ( ( m_pcEncCfg->getUseSDC() &&  pcCU->getSlice()->getIntraSdcWedgeFlag() ) && pcCU->getSDCAvailable(uiPartOffset) && uiMode >= numModesForFullRD);
 #else
       Bool bTestSDC = ( m_pcEncCfg->getUseSDC() && pcCU->getSDCAvailable(uiPartOffset) );
 #endif
@@ -5318,6 +5338,9 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   pcPatternKey->setICFlag( bICFlag );
 #endif
 #if H_3D_INTER_SDC
+#if HHI_TOOL_PARAMETERS_I2_J0107  
+   pcPatternKey->setSDCMRSADFlag( pcCU->getSlice()->getInterSdcFlag() );
+#else
   if ( pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) )
   {
     pcPatternKey->setSDCMRSADFlag( true );
@@ -5326,6 +5349,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   {
     pcPatternKey->setSDCMRSADFlag( false );
   }
+#endif
 #endif
 
   if ( bBi )

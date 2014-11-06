@@ -99,8 +99,13 @@ public:
 #endif
 #if H_3D
   Void  codeVPSExtension2       ( TComVPS* pcVPS ); 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Void  codeSPS3dExtension      ( TComSPS* pcSPS );
+  Void  codeSPS                 ( TComSPS* pcSPS );
+#else
   Void  codeSPSExtension2       ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  ); 
   Void  codeSPS                 ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#endif
 #else
   Void  codeSPS                 ( TComSPS* pcSPS );
 #endif

@@ -391,6 +391,7 @@ protected:
   Bool      m_bUseEstimatedVSD; 
   Double    m_dDispCoeff;
 #endif
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_ARP
   UInt      m_uiUseAdvResPred;
   UInt      m_uiARPStepNum;
@@ -399,28 +400,36 @@ protected:
   Int      m_iSubPULog2Size;
   Int      m_iSubPUMPILog2Size;
 #endif
+#endif
 #if H_3D_IC
   Bool      m_bUseIC;
   Bool      m_bUseICLowLatencyEnc;
 #endif
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_INTER_SDC
   bool      m_bInterSDC;
 #endif
 #if H_3D_DBBP
   Bool      m_bUseDBBP;
 #endif
+#endif
   //====== Depth Intra Modes ======
 #if H_3D_DIM
   Bool      m_useDMM;
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   Bool      m_useIVP;
+#endif
   Bool      m_useSDC;
   Bool      m_useDLT;
 #endif
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_SINGLE_DEPTH
   Bool      m_useSingleDepthMode;
 #endif
+
 #if H_3D_IV_MERGE
   Bool      m_useMPI;
+#endif
 #endif
 #if H_3D_QTLPC
   Bool      m_bUseQTL;
@@ -496,6 +505,7 @@ public:
   Int       getMaxTempLayer                 ()                              { return m_maxTempLayer;              } 
   Void      setMaxTempLayer                 ( Int maxTempLayer )            { m_maxTempLayer = maxTempLayer;      }
 
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_ARP
   UInt       getUseAdvRP                    ( )              { return m_uiUseAdvResPred; }
   Void       setUseAdvRP                    ( UInt  u )      { m_uiUseAdvResPred = u;    }
@@ -509,12 +519,14 @@ public:
   Int        getSubPUMPILog2Size            ()               { return m_iSubPUMPILog2Size;}
   Void       setSubPUMPILog2Size            (Int u)          { m_iSubPUMPILog2Size = u;   }     
 #endif
+#endif
 #if H_3D_IC
   Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
   Bool       getUseIC                       ()               { return m_bUseIC; }
   Void       setUseICLowLatencyEnc          ( Bool bVal )    { m_bUseICLowLatencyEnc = bVal; }
   Bool       getUseICLowLatencyEnc          ()               { return m_bUseICLowLatencyEnc; }
 #endif
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_INTER_SDC
   Void       setInterSDCEnable              ( Bool bVal )    { m_bInterSDC = bVal; }
   Bool       getInterSDCEnable              ()               { return m_bInterSDC; }
@@ -522,6 +534,7 @@ public:
 #if H_3D_DBBP
   Void       setUseDBBP                     ( Bool  b )      { m_bUseDBBP   = b; }
   Bool       getUseDBBP()                                    { return m_bUseDBBP;     }
+#endif
 #endif
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }
@@ -931,6 +944,8 @@ public:
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
 #if H_3D
+
+  // Only flags that are not in the SPS3dExtension should go here. 
   /// 3D Tools 
 
  //==== CAMERA PARAMETERS  ==========
@@ -975,24 +990,31 @@ public:
 #if H_3D_DIM
   Bool      getUseDMM                       ()        { return m_useDMM; }
   Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   Bool      getUseIVP                       ()        { return m_useIVP; }
   Void      setUseIVP                       ( Bool b) { m_useIVP = b;    }
+#endif
   Bool      getUseSDC                       ()        { return m_useSDC; }
   Void      setUseSDC                       ( Bool b) { m_useSDC = b;    }
+
   Bool      getUseDLT                       ()        { return m_useDLT; }
   Void      setUseDLT                       ( Bool b) { m_useDLT = b;    }
 #endif
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_SINGLE_DEPTH
   Void       setUseSingleDepthMode          ( Bool bVal )    { m_useSingleDepthMode = bVal; }
   Bool       getUseSingleDepthMode          ()               { return m_useSingleDepthMode; }
+#endif
 #endif
 #if H_3D_QTLPC
   Void      setUseQTL                       ( Bool b ) { m_bUseQTL = b;    }
   Bool      getUseQTL                       ()         { return m_bUseQTL; }
 #endif
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_IV_MERGE
   Void      setUseMPI                       ( Bool b ) { m_useMPI = b;    }
   Bool      getUseMPI                       ()         { return m_useMPI; }
+#endif
 #endif
 #endif // H_3D
 };

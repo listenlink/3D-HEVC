@@ -90,8 +90,13 @@ public:
 #endif
 #if H_3D
   Void  parseVPSExtension2  ( TComVPS* pcVPS ); 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Void  parseSPS3dExtension ( TComSPS* pcSPS );
+  Void  parseSPS            ( TComSPS* pcSPS );
+#else
   Void  parseSPSExtension2  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
   Void  parseSPS            ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#endif  
 #else
   Void  parseSPS            ( TComSPS* pcSPS );
 #endif
