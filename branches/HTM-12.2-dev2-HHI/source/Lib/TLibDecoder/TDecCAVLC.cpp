@@ -720,10 +720,14 @@ Void TDecCavlc::parseHrdParameters(TComHRD *hrd, Bool commonInfPresentFlag, UInt
   }
 }
 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+Void TDecCavlc::parseSPS(TComSPS* pcSPS)
+#else
 #if H_3D
 Void TDecCavlc::parseSPS(TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 #else
 Void TDecCavlc::parseSPS(TComSPS* pcSPS)
+#endif
 #endif
 {
 #if ENC_DEC_TRACE  
@@ -992,7 +996,11 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
 #if H_3D
   if ( pcSPS->getSps3dExtensionFlag() )
   {
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    parseSPS3dExtension( pcSPS ); 
+#else
     parseSPSExtension2( pcSPS, viewIndex, depthFlag  ); 
+#endif
   }
 
   if ( pcSPS->getSpsExtension5bits() )
@@ -1019,10 +1027,41 @@ Void TDecCavlc::parseSPSExtension( TComSPS* pcSPS )
 }
 
 #if H_3D
+#if HHI_TOOL_PARAMETERS_I2_J0107
+Void TDecCavlc::parseSPS3dExtension( TComSPS* pcSPS )
+{ 
+  TComSps3dExtension* sps3dExt = pcSPS->getSps3dExtension(); 
+  UInt uiCode; 
+  for( Int d = 0; d  <=  1; d++ )
+  {
+    READ_FLAG( uiCode, "iv_mv_pred_flag" ); sps3dExt->setIvMvPredFlag( d, uiCode == 1 );
+    READ_FLAG( uiCode, "iv_mv_scaling_flag" ); sps3dExt->setIvMvScalingFlag( d, uiCode == 1 );
+    if( d  ==  0 )
+    {
+      READ_UVLC( uiCode, "log2_sub_pb_size_minus3" ); sps3dExt->setLog2SubPbSizeMinus3( d, uiCode );
+      READ_FLAG( uiCode, "iv_res_pred_flag" ); sps3dExt->setIvResPredFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "depth_refinement_flag" ); sps3dExt->setDepthRefinementFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "view_synthesis_pred_flag" ); sps3dExt->setViewSynthesisPredFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "depth_based_blk_part_flag" ); sps3dExt->setDepthBasedBlkPartFlag( d, uiCode == 1 );
+    }
+    else 
+    {
+      READ_FLAG( uiCode, "mpi_flag" ); sps3dExt->setMpiFlag( d, uiCode == 1 );
+      READ_UVLC( uiCode, "log2_mpi_sub_pb_size_minus3" ); sps3dExt->setLog2MpiSubPbSizeMinus3( d, uiCode );
+      READ_FLAG( uiCode, "intra_contour_flag" ); sps3dExt->setIntraContourFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "intra_sdc_wedge_flag" ); sps3dExt->setIntraSdcWedgeFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "qt_pred_flag" ); sps3dExt->setQtPredFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "inter_sdc_flag" ); sps3dExt->setInterSdcFlag( d, uiCode == 1 );
+      READ_FLAG( uiCode, "intra_single_flag" ); sps3dExt->setIntraSingleFlag( d, uiCode == 1 );
+    }
+  }
+}
+#else
 Void TDecCavlc::parseSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 { 
 
 }
+#endif
 #endif
 
 Void TDecCavlc::parsePPSMultilayerExtension(TComPPS* pcPPS)
@@ -1840,6 +1879,8 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
 Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
 {
   UInt uiCode; 
+
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
   {
 #if H_3D_ARP
@@ -1905,6 +1946,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       }
     }
   }
+#endif
 
   UInt uiCamParPrecision = 0; 
   Bool bCamParSlice      = false; 
@@ -1993,6 +2035,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 #endif
 #endif
   rpcSlice->setSPS(sps);
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+  rpcSlice->init3dToolParameters();
+#endif
+#endif
   rpcSlice->setPPS(pps);
   if( pps->getDependentSliceSegmentsEnabledFlag() && ( !firstSliceSegmentInPic ))
   {
@@ -2598,6 +2645,9 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
 #if H_3D_IV_MERGE
+#if HHI_TOOL_PARAMETERS_I2_J0107
+      rpcSlice->setMaxNumMergeCand(( ( rpcSlice->getMpiFlag() || rpcSlice->getIvMvPredFlag() ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#else
       if(rpcSlice->getIsDepth())
       {
         Bool bMPIFlag = rpcSlice->getVPS()->getMPIFlag( rpcSlice->getLayerIdInVps() ) ;
@@ -2609,6 +2659,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         Bool ivMvPredFlag = rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ;
         rpcSlice->setMaxNumMergeCand(( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
       }
+#endif
 
 #else
       rpcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);

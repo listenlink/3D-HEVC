@@ -93,10 +93,14 @@ public:
   //--SBAC RD
 
   Void  codeVPS                 ( TComVPS* pcVPS );
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Void  codeSPS                 ( TComSPS* pcSPS     );
+#else
 #if !H_3D
   Void  codeSPS                 ( TComSPS* pcSPS     );
 #else
   Void  codeSPS                 ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
+#endif
 #endif
   Void  codePPS                 ( TComPPS* pcPPS     );
   Void  codeSliceHeader         ( TComSlice* pcSlice );

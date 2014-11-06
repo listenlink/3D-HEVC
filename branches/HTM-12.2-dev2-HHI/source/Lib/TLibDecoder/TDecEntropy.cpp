@@ -152,7 +152,11 @@ Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   
 #if H_3D_DBBP
 #if SEC_DBBP_VIEW_REF_CHECK_J0037
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+  #if HHI_TOOL_PARAMETERS_I2_J0107
+if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#else
+if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#endif
 #else
   if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 )
 #endif
@@ -832,8 +836,13 @@ Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 {
   pcCU->setSDCFlagSubParts( false, uiAbsPartIdx, uiDepth );
 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getInterSdcFlag() ) || 
+    ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getIntraSdcWedgeFlag() ) )
+#else
   if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) ) || 
     ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getVpsDepthModesFlag( pcCU->getSlice()->getLayerIdInVps() ) ) )
+#endif
   {
     return;
   }

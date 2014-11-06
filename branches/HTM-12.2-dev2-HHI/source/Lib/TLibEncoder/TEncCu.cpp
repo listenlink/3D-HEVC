@@ -409,7 +409,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if H_3D_QTLPC
   TComVPS *vps            = pcPic->getSlice(0)->getVPS();
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Bool  bLimQtPredFalg    = pcPic->getSlice(0)->getQtPredFlag(); 
+#else
   Bool  bLimQtPredFalg    = vps->getLimQtPredFlag(pcPic->getSlice(0)->getLayerId()); 
+#endif
   TComPic *pcTexture      = rpcBestCU->getSlice()->getTexturePic();
 
   Bool  depthMapDetect    = (pcTexture != NULL);
@@ -565,7 +569,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       if( rpcTempCU->getSlice()->getSliceType() != I_SLICE )
       {
 #if H_3D_ARP && H_3D_IV_MERGE
+#if HHI_TOOL_PARAMETERS_I2_J0107
+        if( rpcTempCU->getSlice()->getIvResPredFlag() || rpcTempCU->getSlice()->getIvMvPredFlag() )
+#else
         if( rpcTempCU->getSlice()->getVPS()->getUseAdvRP(rpcTempCU->getSlice()->getLayerId()) || rpcTempCU->getSlice()->getVPS()->getIvMvPredFlag(rpcTempCU->getSlice()->getLayerId()) )
+#endif
 #else 
 #if H_3D_ARP
         if( rpcTempCU->getSlice()->getVPS()->getUseAdvRP(rpcTempCU->getSlice()->getLayerId()) )
@@ -589,7 +597,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           {
 #endif 
 #if H_3D_NBDV_REF
+#if HHI_TOOL_PARAMETERS_I2_J0107
+          if( rpcTempCU->getSlice()->getDepthRefinementFlag() )
+#else
           if(rpcTempCU->getSlice()->getVPS()->getDepthRefinementFlag( rpcTempCU->getSlice()->getLayerIdInVps()))
+#endif
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
           else
 #endif 
@@ -672,7 +684,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           
 #if H_3D_DBBP
 #if SEC_DBBP_VIEW_REF_CHECK_J0037
+#if HHI_TOOL_PARAMETERS_I2_J0107
+          if( rpcTempCU->getSlice()->getDepthBasedBlkPartFlag() && rpcTempCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#else
           if( m_pcEncCfg->getUseDBBP() && rpcTempCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#endif
 #else
           if( m_pcEncCfg->getUseDBBP() )
 #endif
@@ -2031,7 +2047,11 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
           xCheckDQP( rpcTempCU );
           xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
 #if H_3D_INTER_SDC
+#if HHI_TOOL_PARAMETERS_I2_J0107
+          if( rpcTempCU->getSlice()->getInterSdcFlag() && !uiNoResidual )
+#else
           if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && !uiNoResidual )
+#endif
           {
             Double dOffsetCost[3] = {MAX_DOUBLE,MAX_DOUBLE,MAX_DOUBLE};
             for( Int uiOffest = 1 ; uiOffest <= 5 ; uiOffest++ )
@@ -2103,7 +2123,11 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
       if( m_pcEncCfg->getUseFastDecisionForMerge() && !bestIsSkip )
       {
 #if H_3D_INTER_SDC
+#if HHI_TOOL_PARAMETERS_I2_J0107
+        if( rpcTempCU->getSlice()->getInterSdcFlag() )
+#else
         if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) )
+#endif
         {
           bestIsSkip = !rpcBestCU->getSDCFlag( 0 ) && ( rpcBestCU->getQtRootCbf(0) == 0 );
         }
@@ -2190,7 +2214,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   for( Int nARPW = 0; nARPW <= nARPWMax; nARPW++ )
   {
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    if( !bFirstTime && rpcTempCU->getSlice()->getIvResPredFlag() )
+#else
     if( bFirstTime == false && rpcTempCU->getSlice()->getVPS()->getUseAdvRP( iLayerId ) )
+#endif
     {
       rpcTempCU->initEstData( rpcTempCU->getDepth(0), rpcTempCU->getQP(0),bTransquantBypassFlag );      
     }
@@ -2296,7 +2324,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uhDepth);
 #if H_3D_INTER_SDC
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  if( rpcTempCU->getSlice()->getInterSdcFlag() && ePartSize == SIZE_2Nx2N)
+#else
   if( rpcTempCU->getSlice()->getVPS()->getInterSDCFlag( rpcTempCU->getSlice()->getLayerIdInVps() ) && rpcTempCU->getSlice()->getIsDepth() && ePartSize == SIZE_2Nx2N)
+#endif
   {
     Double dOffsetCost[3] = {MAX_DOUBLE,MAX_DOUBLE,MAX_DOUBLE};
     for( Int uiOffest = 1 ; uiOffest <= 5 ; uiOffest++ )

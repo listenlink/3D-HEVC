@@ -139,7 +139,9 @@ Void TAppEncTop::xInitLibCfg()
   xSetDpbSize              ( vps ); 
   xSetVPSVUI               ( vps ); 
 #if H_3D
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   xSetVPSExtension2        ( vps ); 
+#endif
   m_ivPicLists.setVPS      ( &vps );
   xDeriveDltArray          ( vps, dlt );
 #endif
@@ -172,6 +174,36 @@ Void TAppEncTop::xInitLibCfg()
     vps.printLayerSets(); 
     vps.printPTL(); 
   }
+
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+  // Set 3d tool parameters
+
+  for (Int d = 0; d < 2; d++)
+  {  
+    m_sps3dExtension.setIvMvPredFlag          ( d, m_ivMvPredFlag[d]       );
+    m_sps3dExtension.setIvMvScalingFlag       ( d, m_ivMvScalingFlag[d]    );
+    if (d == 0 )
+    {    
+      m_sps3dExtension.setLog2SubPbSizeMinus3   ( d, m_log2SubPbSizeMinus3   );
+      m_sps3dExtension.setIvResPredFlag         ( d, m_ivResPredFlag         );
+      m_sps3dExtension.setDepthRefinementFlag   ( d, m_depthRefinementFlag   );
+      m_sps3dExtension.setViewSynthesisPredFlag ( d, m_viewSynthesisPredFlag );
+      m_sps3dExtension.setDepthBasedBlkPartFlag ( d, m_depthBasedBlkPartFlag );
+    }
+    else
+    {    
+      m_sps3dExtension.setMpiFlag               ( d, m_mpiFlag               );
+      m_sps3dExtension.setLog2MpiSubPbSizeMinus3( d, m_log2MpiSubPbSizeMinus3);
+      m_sps3dExtension.setIntraContourFlag      ( d, m_intraContourFlag      );
+      m_sps3dExtension.setIntraSdcWedgeFlag     ( d, m_intraSdcFlag || m_intraWedgeFlag     );
+      m_sps3dExtension.setQtPredFlag            ( d, m_qtPredFlag            );
+      m_sps3dExtension.setInterSdcFlag          ( d, m_interSdcFlag          );
+      m_sps3dExtension.setIntraSingleFlag       ( d, m_intraSingleFlag       );  
+    }
+  }
+#endif
+#endif
 
   for(Int layerIdInVps = 0; layerIdInVps < m_numberOfLayers; layerIdInVps++)
   {
@@ -215,25 +247,39 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_SPIVMP
     m_cTEncTop.setSubPULog2Size                 (( isDepth || 0==layerIdInVps ) ? 0 : m_iSubPULog2Size   );
     m_cTEncTop.setSubPUMPILog2Size              ( !isDepth ? 0 : m_iSubPUMPILog2Size   );
+#endif
 #endif
 #if H_3D_IC
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
     m_cTEncTop.setUseICLowLatencyEnc           ( m_bUseLowLatencyICEnc );
 #endif
-  //========== Depth intra modes ==========
+
+    
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    m_cTEncTop.setUseDMM                       ( isDepth ? m_intraWedgeFlag   : false );
+    m_cTEncTop.setUseSDC                       ( isDepth ? m_intraSdcFlag     : false );
+    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT   : false );
+    m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL  : false );
+#else
+//========== Depth intra modes ==========
 #if H_3D_DIM
     m_cTEncTop.setUseDMM                       ( isDepth ? m_useDMM               : false );
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_FCO
     m_cTEncTop.setUseIVP                       ( vps.getViewIndex( layerId ) == 0 && isDepth ? m_useIVP               : false );
 #else
     m_cTEncTop.setUseIVP                       ( isDepth ? m_useIVP               : false );
 #endif
-    m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
-    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
+    m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
+#endif
+
+    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
+
 #if H_3D_SINGLE_DEPTH
     m_cTEncTop.setUseSingleDepthMode           ( isDepth ? m_useSingleDepthMode   : false );
 #endif
@@ -253,6 +299,12 @@ Void TAppEncTop::xInitLibCfg()
 #else
     m_cTEncTop.setUseMPI                       ( isDepth ? m_bMPIFlag    : false );
 #endif
+#endif
+#endif
+
+
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  m_cTEncTop.setSps3dExtension                 ( m_sps3dExtension );
 #endif
 #endif // H_3D
 
@@ -1435,7 +1487,11 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
         }
         else
         {        
+#if HHI_TOOL_PARAMETERS_I2_J0107
+          if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
+#else
           if( m_depthFlag[ curLayerIdInVps ] && ( m_bMPIFlag || m_bLimQtPredFlag || m_useIVP  ) ) 
+#endif
           {          
             Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
             if ( nuhLayerIdTex == refLayerIdInNuh )
@@ -1443,8 +1499,11 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
               maxTid = std::max( maxTid, vps.getSubLayersVpsMaxMinus1( refLayerIdInVps) + 1 );
             }
           }
-
+#if HHI_TOOL_PARAMETERS_I2_J0107
+          if( !m_depthFlag[ curLayerIdInVps ] && vps.getNumRefListLayers( curLayerIdInNuh) > 0  && ( m_depthRefinementFlag || m_viewSynthesisPredFlag || m_depthBasedBlkPartFlag ) ) 
+#else
           if( !m_depthFlag[ curLayerIdInVps ] && vps.getNumRefListLayers( curLayerIdInNuh) > 0  && ( m_depthRefinementFlag || m_viewSynthesisPredFlag || m_bUseDBBP) ) 
+#endif
           {  
             Int maxPresentTid =-1; 
             Bool allPresent = true; 
@@ -2147,6 +2206,8 @@ Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
 
 
 #if H_3D
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#else
 Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 {
   for ( Int layer = 0; layer <= vps.getMaxLayersMinus1(); layer++ )
@@ -2229,6 +2290,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
   }  
 }
+#endif
 
 Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
 {

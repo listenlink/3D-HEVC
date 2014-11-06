@@ -2424,7 +2424,11 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
     
     Bool depthRefineFlag = false;
 #if H_3D_NBDV_REF
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    depthRefineFlag = m_pcSlice->getDepthRefinementFlag(  );
+#else
     depthRefineFlag = m_pcSlice->getVPS()->getDepthRefinementFlag( m_pcSlice->getLayerIdInVps() );
+#endif
 #endif // H_3D_NBDV_REF
     
     TComMv cDv = depthRefineFlag ? DvInfo.m_acDoNBDV : DvInfo.m_acNBDV;
@@ -3335,7 +3339,11 @@ Bool TComDataCU::hasEqualMotion( UInt uiAbsPartIdx, TComDataCU* pcCandCU, UInt u
  */
 inline Bool TComDataCU::xAddVspCand( Int mrgCandIdx, DisInfo* pDInfo, Int& iCount)
 {
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  if ( m_pcSlice->getViewIndex() == 0 || !m_pcSlice->getViewSynthesisPredFlag( ) || m_pcSlice->getIsDepth() || pDInfo->m_aVIdxCan == -1)
+#else
   if ( m_pcSlice->getViewIndex() == 0 || !m_pcSlice->getVPS()->getViewSynthesisPredFlag( m_pcSlice->getLayerIdInVps() ) || m_pcSlice->getIsDepth() || pDInfo->m_aVIdxCan == -1)
+#endif
   {
     return false;
   }
@@ -3949,7 +3957,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   deriveLeftRightTopIdxGeneral( uiAbsPartIdx, uiPUIdx, uiPartIdxLT, uiPartIdxRT );
   deriveLeftBottomIdxGeneral  ( uiAbsPartIdx, uiPUIdx, uiPartIdxLB );
 #if H_3D
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Bool bMPIFlag   = getSlice()->getMpiFlag(); 
+#else
   Bool bMPIFlag   = getSlice()->getVPS()->getMPIFlag( getSlice()->getLayerIdInVps() );
+#endif
   Bool bIsDepth = getSlice()->getIsDepth();
 #endif 
 
@@ -4428,7 +4440,11 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
   // { IvMC, IvDC, IvMCShift, IvDCShift };  
   Int    ivCandDir   [4] = {0, 0, 0, 0};
 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Bool ivMvPredFlag   = getSlice()->getIvMvPredFlag();
+#else
   Bool ivMvPredFlag   = getSlice()->getVPS()->getIvMvPredFlag( getSlice()->getLayerIdInVps() );
+#endif
 
   ivMvPredFlag &= (nPSW + nPSH > 12);
   if ( ivMvPredFlag && cDisInfo.m_aVIdxCan!=-1)
@@ -5999,7 +6015,11 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
     Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewIndex(); 
     iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    if ( iScale != 4096 && m_pcSlice->getIvMvScalingFlag( ) )
+#else
     if ( iScale != 4096 && m_pcSlice->getVPS()->getIvMvScalingFlag(getSlice()->getLayerIdInVps()) ) 
+#endif
     {
       rcMv = cColMv.scaleMv( iScale );
     }
@@ -6187,7 +6207,11 @@ Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDis
   {
       Int iViewIdx = getSlice()->getDefaultRefViewIdx();
       pDisp->m_aVIdxCan = iViewIdx;
+#if HHI_TOOL_PARAMETERS_I2_J0107
+      Int iDisp     = getSlice()->getDepthToDisparityB( iViewIdx )[ (Int64) (1 << ( getSlice()->getSPS()->getBitDepthY() - 1 )) ];
+#else
       Int iDisp     = getSlice()->getDepthToDisparityB( iViewIdx )[ 1 << ( getSlice()->getSPS()->getBitDepthY() - 1 ) ];
+#endif
 
       cMv.setHor(iDisp);
       cMv.setVer(0);
@@ -6300,7 +6324,11 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     }
   }
 #if H_3D_NBDV_REF
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  if( !m_pcSlice->getDepthRefinementFlag( ) )
+#else
   if( !m_pcSlice->getVPS()->getDepthRefinementFlag( m_pcSlice->getLayerIdInVps() ) )
+#endif
   {
     bDepthRefine = false;
   }
@@ -6803,7 +6831,11 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
 
   Bool depthRefineFlag = false; 
 #if H_3D_NBDV_REF
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  depthRefineFlag = m_pcSlice->getDepthRefinementFlag( ); 
+#else
   depthRefineFlag = m_pcSlice->getVPS()->getDepthRefinementFlag( m_pcSlice->getLayerIdInVps() ); 
+#endif
 #endif // H_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 
@@ -6861,11 +6893,15 @@ TComDataCU::getIVNStatus       ( UInt uiPartIdx,  DisInfo* pDInfo, Bool& bIVFMer
 #if H_3D_SPIVMP
 Void TComDataCU::getSPPara(Int iPUWidth, Int iPUHeight, Int& iNumSP, Int& iNumSPInOneLine, Int& iSPWidth, Int& iSPHeight)
 {
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Int iSubPUSize = ( getSlice()->getIsDepth() ? getSlice()->getMpiSubPbSize() : getSlice()->getSubPbSize() );
+#else
   Int iSubPUSize = 1<<getSlice()->getVPS()->getSubPULog2Size(getSlice()->getLayerId());
   if( getSlice()->getIsDepth() )
   {
     iSubPUSize = 1<<getSlice()->getVPS()->getSubPUMPILog2Size(getSlice()->getLayerId());
   }
+#endif
 
   iNumSPInOneLine = iPUWidth/iSubPUSize;
   iNumSPInOneLine = iNumSPInOneLine < 1 ? 1: iNumSPInOneLine;
@@ -6944,7 +6980,11 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
 
   Bool depthRefineFlag = false; 
 #if H_3D_NBDV_REF
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  depthRefineFlag = m_pcSlice->getDepthRefinementFlag( ); 
+#else
   depthRefineFlag = m_pcSlice->getVPS()->getDepthRefinementFlag( m_pcSlice->getLayerIdInVps() ); 
+#endif
 #endif // H_3D_NBDV_REF
 
   TComMv      cDv = depthRefineFlag ? pDInfo->m_acDoNBDV : pDInfo->m_acNBDV; 

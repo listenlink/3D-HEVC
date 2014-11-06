@@ -214,6 +214,11 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->initSlice();
   rpcSlice->setPicOutputFlag( true );
   rpcSlice->setPOC( pocCurr );
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+  rpcSlice->init3dToolParameters(); 
+#endif
+#endif
 #if H_3D_IC
   rpcSlice->setApplyIC( false );
 #endif
@@ -607,6 +612,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceSegmentMode     ( m_pcCfg->getSliceSegmentMode()     );
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
 #if H_3D_IV_MERGE
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getMpiFlag( ) || rpcSlice->getIvMvPredFlag( ) ) ? 1 : 0 ));
+#else
   if(rpcSlice->getIsDepth())
   {
     rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getVPS()->getMPIFlag( rpcSlice->getLayerIdInVps() ) || rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ) ? 1 : 0 ) );
@@ -615,6 +623,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   {
     rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ? 1 : 0 ) );
   }
+#endif
 #else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
 #endif

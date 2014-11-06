@@ -725,6 +725,11 @@ Void TDecTop::xActivateParameterSets()
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
 
 #endif
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+  m_apcSlicePilot->init3dToolParameters();
+#endif
+#endif
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumTileColumnsMinus1() + 1) : 1);
   pps->setMinCuDQPSize( sps->getMaxCUWidth() >> ( pps->getMaxCuDQPDepth()) );
@@ -1238,7 +1243,11 @@ Void TDecTop::xDecodeSPS()
   // Parsing dependency should be resolved!
   TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); 
   assert( vps != 0 );
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  m_cEntropyDecoder.decodeSPS( sps );
+#else
   m_cEntropyDecoder.decodeSPS( sps, vps->getViewIndex( m_layerId ), ( vps->getDepthId( m_layerId ) == 1 ) );
+#endif
 #else
   m_cEntropyDecoder.decodeSPS( sps );
 #endif

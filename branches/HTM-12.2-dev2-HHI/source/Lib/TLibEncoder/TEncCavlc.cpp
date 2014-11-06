@@ -637,10 +637,14 @@ Void TEncCavlc::codeHrdParameters( TComHRD *hrd, Bool commonInfPresentFlag, UInt
   }
 }
 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+Void TEncCavlc::codeSPS( TComSPS* pcSPS )
+#else
 #if H_3D
 Void TEncCavlc::codeSPS( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 #else
 Void TEncCavlc::codeSPS( TComSPS* pcSPS )
+#endif
 #endif
 {
 #if ENC_DEC_TRACE  
@@ -841,7 +845,11 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
 #if H_3D
   if ( pcSPS->getSps3dExtensionFlag() )
   {
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    codeSPS3dExtension( pcSPS ); 
+#else
     codeSPSExtension2( pcSPS, viewIndex, depthFlag  ); 
+#endif
   }
 
 #endif
@@ -867,10 +875,40 @@ Void TEncCavlc::codePPSMultilayerExtension(TComPPS* pcPPS)
 #endif
 
 #if H_3D
+#if HHI_TOOL_PARAMETERS_I2_J0107
+Void TEncCavlc::codeSPS3dExtension( TComSPS* pcSPS )
+{
+  TComSps3dExtension* sps3dExt = pcSPS->getSps3dExtension();
+  for( Int d = 0; d  <=  1; d++ )
+  {
+    WRITE_FLAG( sps3dExt->getIvMvPredFlag( d ) ? 1 : 0 , "iv_mv_pred_flag" );
+    WRITE_FLAG( sps3dExt->getIvMvScalingFlag( d ) ? 1 : 0 , "iv_mv_scaling_flag" );
+    if( d  ==  0 )
+    {
+      WRITE_UVLC( sps3dExt->getLog2SubPbSizeMinus3( d ), "log2_sub_pb_size_minus3" );
+      WRITE_FLAG( sps3dExt->getIvResPredFlag( d ) ? 1 : 0 , "iv_res_pred_flag" );
+      WRITE_FLAG( sps3dExt->getDepthRefinementFlag( d ) ? 1 : 0 , "depth_refinement_flag" );
+      WRITE_FLAG( sps3dExt->getViewSynthesisPredFlag( d ) ? 1 : 0 , "view_synthesis_pred_flag" );
+      WRITE_FLAG( sps3dExt->getDepthBasedBlkPartFlag( d ) ? 1 : 0 , "depth_based_blk_part_flag" );
+    }
+    else 
+    {
+      WRITE_FLAG( sps3dExt->getMpiFlag( d ) ? 1 : 0 , "mpi_flag" );
+      WRITE_UVLC( sps3dExt->getLog2MpiSubPbSizeMinus3( d ), "log2_mpi_sub_pb_size_minus3" );
+      WRITE_FLAG( sps3dExt->getIntraContourFlag( d ) ? 1 : 0 , "intra_contour_flag" );
+      WRITE_FLAG( sps3dExt->getIntraSdcWedgeFlag( d ) ? 1 : 0 , "intra_sdc_wedge_flag" );
+      WRITE_FLAG( sps3dExt->getQtPredFlag( d ) ? 1 : 0 , "qt_pred_flag" );
+      WRITE_FLAG( sps3dExt->getInterSdcFlag( d ) ? 1 : 0 , "inter_sdc_flag" );
+      WRITE_FLAG( sps3dExt->getIntraSingleFlag( d ) ? 1 : 0 , "intra_single_flag" );
+    }
+  }
+}
+#else
 Void TEncCavlc::codeSPSExtension2( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 {
 
 }
+#endif
 #endif
 
 
@@ -1576,6 +1614,7 @@ Void TEncCavlc::codeVpsVuiBspHrdParameters( TComVPS* pcVPS )
 #if H_3D
 Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
 { 
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
   {
     {
@@ -1621,6 +1660,7 @@ Void TEncCavlc::codeVPSExtension2( TComVPS* pcVPS )
       }
     }  
   }
+#endif
   WRITE_UVLC( pcVPS->getCamParPrecision(), "cp_precision" );
   for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
   {
@@ -2087,6 +2127,9 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     if (!pcSlice->isIntra())
     {
 #if H_3D_IV_MERGE
+#if HHI_TOOL_PARAMETERS_I2_J0107
+      WRITE_UVLC( ( ( pcSlice->getMpiFlag( ) || pcSlice->getIvMvPredFlag( ) ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
+#else
       if(pcSlice->getIsDepth())
       {
         Bool bMPIFlag = pcSlice->getVPS()->getMPIFlag( pcSlice->getLayerIdInVps() ) ;
@@ -2098,6 +2141,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
         Bool ivMvPredFlag = pcSlice->getVPS()->getIvMvPredFlag( pcSlice->getLayerIdInVps() ) ;
         WRITE_UVLC( ( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS ) - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
       }
+#endif
 #else
       WRITE_UVLC(MRG_MAX_NUM_CANDS - pcSlice->getMaxNumMergeCand(), "five_minus_max_num_merge_cand");
 #endif
