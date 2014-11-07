@@ -6117,6 +6117,7 @@ Bool TComDataCU::getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDept
       bDepAvail = true;
     }
     break;
+#if !SINGLE_DEPTH_SIMP_J0115
   case 2: // Above
     if(yP != 0)
     {
@@ -6138,6 +6139,7 @@ Bool TComDataCU::getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDept
       bDepAvail = true;
     }
     break;
+#endif
   default:
       break;
   }

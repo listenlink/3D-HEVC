@@ -293,6 +293,7 @@
 ///// ***** SINGLE DEPTH MODE *********
 #if H_3D_SINGLE_DEPTH
 #define SINGLE_DEPTH_MODE_CAND_LIST_SIZE            2 // size of the sample candidate list
+#define SINGLE_DEPTH_SIMP_J0115           1 
 #endif
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
