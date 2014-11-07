@@ -1329,6 +1329,10 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }
 
+#if H_MV_FIX_NUM_VIEWS
+  pcVPS->initNumViews(); 
+#endif
+
   READ_CODE( 4, uiCode, "view_id_len" ); pcVPS->setViewIdLen( uiCode );
 
   if ( pcVPS->getViewIdLen( ) > 0 )
@@ -2021,8 +2025,14 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
   Bool bCamParPresentFlag = false;
 
   READ_UVLC( uiCamParPrecision, "cp_precision" );
+#if HHI_VIEW_ID_LIST_I5_J0107
+  for (Int n = 1; n < pcVPS->getNumViews(); n++)
+  {
+    Int viewIndex = pcVPS->getViewOIdxList( n ); 
+#else
   for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
   {
+#endif
     pcVPS->setCamParPresent         ( viewIndex, false );
     pcVPS->setHasCamParInSliceHeader( viewIndex, false );
     READ_FLAG( uiCode, "cp_present_flag[i]" );                  bCamParPresentFlag = ( uiCode == 1);
@@ -2031,6 +2041,19 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
       READ_FLAG( uiCode, "cp_in_slice_segment_header_flag[i]" );          bCamParSlice = ( uiCode == 1);
       if ( !bCamParSlice )
       {
+#if HHI_VIEW_ID_LIST_I5_J0107
+        for( UInt m = 0; m < n; n++ )
+        {
+          Int uiBaseIndex = pcVPS->getViewOIdxList ( m ); 
+          Int iCode; 
+          READ_SVLC( iCode, "vps_cp_scale" );                m_aaiTempScale  [ uiBaseIndex ][ viewIndex ]   = iCode;
+          READ_SVLC( iCode, "vps_cp_off" );                  m_aaiTempOffset [ uiBaseIndex ][ viewIndex ]   = iCode;
+          READ_SVLC( iCode, "vps_cp_inv_scale_plus_scale" ); m_aaiTempScale  [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempScale [ uiBaseIndex ][ viewIndex ];
+          READ_SVLC( iCode, "vps_cp_inv_off_plus_off" );     m_aaiTempOffset [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempOffset[ uiBaseIndex ][ viewIndex ];
+        }
+      }
+      pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
+#else
         for( UInt uiBaseIndex = 0; uiBaseIndex < viewIndex; uiBaseIndex++ )
         {
           Int iCode; 
@@ -2041,6 +2064,7 @@ Void TDecCavlc::parseVPSExtension2( TComVPS* pcVPS )
         }
       }
       pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
+#endif
     }
   }
 }

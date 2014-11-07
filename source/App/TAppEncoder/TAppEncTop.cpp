@@ -1373,6 +1373,9 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
     }  
   }
 
+#if H_MV_FIX_NUM_VIEWS
+  vps.initNumViews(); 
+#endif
   Int maxViewId = xGetMax( m_viewId ); 
 
   Int viewIdLen = gCeilLog2( maxViewId + 1 ); 
