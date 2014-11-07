@@ -2205,7 +2205,7 @@ Void TComVPS::setRefLayers()
 #if H_MV_FIX_NUM_VIEWS
 Void     TComVPS::initNumViews( )
 {
-  Int m_numViews = 1; 
+  m_numViews = 1; 
 #if HHI_VIEW_ID_LIST_I5_J0107
 #if H_3D
   AOF( m_viewOIdxList.size() == 0 ); 
