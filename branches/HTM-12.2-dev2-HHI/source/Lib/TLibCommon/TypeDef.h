@@ -297,8 +297,10 @@
 #define HHI_DEPENDENCY_SIGNALLING_I1_J0107     1
 #define HHI_TOOL_PARAMETERS_I2_J0107           1
 #define HHI_VPS_3D_EXTENSION_I3_J0107          1
+#define HHI_VIEW_ID_LIST_I5_J0107              0
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
+#define H_MV_FIX_NUM_VIEWS                     1
 #define H_3D_OUTPUT_ACTIVE_TOOLS               0
 
 ///// ***** SINGLE DEPTH MODE *********

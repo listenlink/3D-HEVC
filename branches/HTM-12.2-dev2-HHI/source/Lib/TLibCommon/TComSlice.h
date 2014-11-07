@@ -883,6 +883,9 @@ private:
   Int         m_layerIdInVps             [MAX_NUM_LAYERS   ];
   Int         m_dependencyFlag           [MAX_NUM_LAYERS][MAX_NUM_LAYERS]; 
 
+#if H_MV_FIX_NUM_VIEWS
+  Int         m_numViews; 
+#endif
   Int         m_numDirectRefLayers       [MAX_NUM_LAYERS];
   Int         m_idDirectRefLayer         [MAX_NUM_LAYERS][MAX_NUM_LAYERS];  
 #if HHI_DEPENDENCY_SIGNALLING_I1_J0107
@@ -948,6 +951,13 @@ private:
   Bool*       m_bCamParPresent;
   Int         ***m_aaaiCodedScale ;
   Int         ***m_aaaiCodedOffset;
+
+#if H_MV_FIX_NUM_VIEWS
+#if HHI_VIEW_ID_LIST_I5_J0107
+  std::vector<Int>  m_viewOIdxList;
+#endif
+#endif
+
 #endif
 #if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_INTER_SDC
@@ -1185,7 +1195,15 @@ public:
   Int     getViewIndex    ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), VIEW_ORDER_INDEX  ); }    
   Int     getAuxId        ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), AUX_ID  ); }    
   Int     getDependencyId ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPENDENCY_ID  ); }    
+#if H_MV_FIX_NUM_VIEWS
+  Int     getNumViews()                                                    { return m_numViews; }
+  Void    initNumViews();
+#if HHI_VIEW_ID_LIST_I5_J0107
+  Int     getViewOIdxList( Int i )                                         { return m_viewOIdxList[i]; }
+#endif
+#else
   Int     getNumViews();
+#endif
 
   Bool    getDependencyFlag( Int i, Int j )                                { return m_dependencyFlag[i][j]; }
   Int     getNumDirectRefLayers( Int layerIdInNuh )                        { return m_numDirectRefLayers[ layerIdInNuh ];  };                               

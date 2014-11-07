@@ -1878,6 +1878,9 @@ TComVPS::TComVPS()
   m_vpsBaseLayerInternalFlag = true; 
   m_vpsBaseLayerAvailableFlag = true; 
 
+#if  H_MV_FIX_NUM_VIEWS
+  m_numViews = 0; 
+#endif
 
 #endif
 
@@ -1923,6 +1926,7 @@ TComVPS::TComVPS()
   m_vpsExtensionFlag = true; 
   m_vpsNonVuiExtensionLength = 0;
   m_splittingFlag    = false;
+
   
   for( Int i = 0; i < MAX_NUM_SCALABILITY_TYPES; i++ )
   {
@@ -2198,6 +2202,45 @@ Void TComVPS::setRefLayers()
 }
 
 
+#if H_MV_FIX_NUM_VIEWS
+Void     TComVPS::initNumViews( )
+{
+  Int m_numViews = 1; 
+#if HHI_VIEW_ID_LIST_I5_J0107
+#if H_3D
+  AOF( m_viewOIdxList.size() == 0 ); 
+  m_viewOIdxList.push_back( 0 );        
+#endif
+#endif
+
+  for( Int i = 0; i <=  getMaxLayersMinus1(); i++ )
+  {
+    Int lId = getLayerIdInNuh( i ); 
+    if( i > 0 )
+    {
+      Bool newViewFlag = true; 
+      for( Int j = 0; j < i; j++ )
+      {
+        if( getViewOrderIdx( lId )  ==  getViewOrderIdx( getLayerIdInNuh( j ) )  )
+        {
+          newViewFlag = false;
+        }
+      }
+      if( newViewFlag )
+      {
+        m_numViews++;
+#if HHI_VIEW_ID_LIST_I5_J0107
+#if H_3D
+        m_viewOIdxList.push_back( getViewOrderIdx( lId ) );        
+#endif
+#endif
+      }
+    }
+  }
+}
+#endif
+
+
 Int TComVPS::getScalabilityId( Int layerIdInVps, ScalabilityType scalType )
 {
   return getScalabilityMaskFlag( scalType ) ? getDimensionId( layerIdInVps, scalTypeToScalIdx( scalType ) ) : 0;
@@ -2356,6 +2399,7 @@ Int    TComVPS::getNumOutputLayerSets()
   return getNumAddOlss() + getNumLayerSets(); 
 }
 
+#if !H_MV_FIX_NUM_VIEWS
 Int TComVPS::getNumViews()
 {
   Int numViews = 1; 
@@ -2367,9 +2411,10 @@ Int TComVPS::getNumViews()
       numViews++; 
     }    
   }
-
   return numViews;
 }
+#endif
+
 
 Void TComVPS::deriveLayerSetLayerIdList()
 {
