@@ -1192,7 +1192,13 @@ public:
   Int     getViewId        ( Int layerIdInNuh )                            { return m_viewIdVal[ getViewIndex( layerIdInNuh )]; }
   Void    setRefLayers(); 
 
+#if H_MV_FIX_NUM_VIEWS
+  // To be aligned with spec naming, getViewIndex will be removed in future versions
+  Int     getViewOrderIdx ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), VIEW_ORDER_INDEX  ); }    
+  Int     getViewIndex    ( Int layerIdInNuh )                             { return getViewOrderIdx( layerIdInNuh ); }    
+#else
   Int     getViewIndex    ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), VIEW_ORDER_INDEX  ); }    
+#endif
   Int     getAuxId        ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), AUX_ID  ); }    
   Int     getDependencyId ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPENDENCY_ID  ); }    
 #if H_MV_FIX_NUM_VIEWS
@@ -1319,11 +1325,12 @@ public:
 
 
   /// VPS EXTENSION 2 SYNTAX ELEMENTS
+
+
 #if H_3D  
   Int     getDepthId      ( Int layerIdInNuh)                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPTH_ID ); }
 #if HHI_TOOL_PARAMETERS_I2_J0107
   Bool    getVpsDepthFlag( Int layerIdInNuh)                              { return (getDepthId( layerIdInNuh ) > 0);  }
-  Int     getViewOrderIdx( Int layerIdInNuh)                              { return getViewIndex( layerIdInNuh ); };   
 #endif
   Int     getLayerIdInNuh( Int viewIndex, Bool depthFlag );   
 
