@@ -1070,7 +1070,50 @@ Void TDecCavlc::parsePPSMultilayerExtension(TComPPS* pcPPS)
   READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
   READ_FLAG( uiCode, "pps_infer_scaling_list_flag" ); pcPPS->setPpsInferScalingListFlag( uiCode == 1 );
   READ_CODE( 6, uiCode, "pps_scaling_list_ref_layer_id" ); pcPPS->setPpsScalingListRefLayerId( uiCode );
+#if H_MV_HLS_FIX
+
+  UInt numRefLocOffsets;; 
+  READ_UVLC( numRefLocOffsets, "num_ref_loc_offsets" );
+
+  // All of the following stuff is not needed, but allowed to be present.
+  for (Int i = 0; i < numRefLocOffsets; i++ )
+  { 
+    Int   iCode = 0; 
+    READ_CODE( 6, uiCode, "ref_loc_offset_layer_id" ); 
+    READ_FLAG( uiCode, "scaled_ref_layer_offset_present_flag" );
+
+    if (uiCode)
+    {    
+      READ_SVLC( iCode, "scaled_ref_layer_left_offset" );   
+      READ_SVLC( iCode, "scaled_ref_layer_top_offset" );    
+      READ_SVLC( iCode, "scaled_ref_layer_right_offset" );  
+      READ_SVLC( iCode, "scaled_ref_layer_bottom_offset" ); 
+    }
+
+    READ_FLAG( uiCode, "ref_region_offset_present_flag" );  
+    if (uiCode)
+    {    
+      READ_SVLC( iCode, "ref_region_left_offset" );     
+      READ_SVLC( iCode, "ref_region_top_offset" );      
+      READ_SVLC( iCode, "ref_region_right_offset" );    
+      READ_SVLC( iCode, "ref_region_bottom_offset" );   
+    }
+
+    READ_FLAG( uiCode, "resample_phase_set_present_flag" );
+    if (uiCode)
+    {      
+      READ_UVLC( uiCode, "phase_hor_luma" );             
+      READ_UVLC( uiCode, "phase_ver_luma" );             
+      READ_UVLC( uiCode, "phase_hor_chroma_plus8" );     
+      READ_UVLC( uiCode, "phase_ver_chroma_plus8" );     
+    }
+  }
+  READ_FLAG( uiCode, "colour_mapping_enabled_flag" );   
+  // This is required to equal to 0 for Multiview Main profile. 
+  assert( uiCode == 0 ); 
+#else
   READ_UVLC( uiCode, "num_ref_loc_offsets" ); assert( uiCode == 0 );
+#endif
 }
 
 #endif
@@ -1393,7 +1436,11 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   }
   for( Int i = 1; i < pcVPS->getNumOutputLayerSets( ); i++ )
   {
+#if H_MV_HLS_FIX
+    if( pcVPS->getNumLayerSets() > 2 && i >= pcVPS->getNumLayerSets( ) )    
+#else
     if( i >= pcVPS->getNumLayerSets( ) )    
+#endif
     {        
       READ_CODE( pcVPS->getLayerSetIdxForOlsMinus1Len( i ), uiCode, "layer_set_idx_for_ols_minus1[i]" ); pcVPS->setLayerSetIdxForOlsMinus1( i, uiCode ); 
     }
@@ -1464,7 +1511,8 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   }
 
   READ_FLAG( uiCode, "max_one_active_ref_layer_flag" ); pcVPS->setMaxOneActiveRefLayerFlag ( uiCode == 1 ); 
-#if H_MV_HLS7_GEN
+
+#if H_MV_HLS7_GEN || H_MV_HLS_FIX
   READ_FLAG( uiCode, "vps_poc_lsb_aligned_flag" ); pcVPS->setVpsPocLsbAlignedFlag( uiCode == 1 );
 #endif
   for( Int i = 1; i  <=  pcVPS->getMaxLayersMinus1(); i++ )
@@ -1514,6 +1562,9 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     m_pcBitstream->readOutTrailingBits(); // vps_vui_alignment_bit_equal_to_one
     parseVPSVUI( pcVPS ); 
   }     
+#if H_MV_HLS_FIX
+  else
+#endif
   {
     TComVPSVUI* pcVPSVUI = pcVPS->getVPSVUI( ); 
     assert( pcVPSVUI ); 
@@ -2128,7 +2179,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     rpcSlice->checkCrossLayerBlaFlag( ); 
 
-#if !H_MV_HLS7_GEN
+#if !H_MV_HLS7_GEN && !H_MV_HLS_FIX
     if ( rpcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
     {
       esb++; 
@@ -2837,11 +2888,17 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->checkPocLsbVal(); 
 
     // Derive the value of PocMs8bValRequiredFlag
+#if !H_MV_HLS_FIX
     rpcSlice->setPocMsbValRequiredFlag( rpcSlice->getCraPicFlag() || rpcSlice->getBlaPicFlag()
                                           /* || TODO related to vps_poc_lsb_aligned_flag */
                                           );
+#endif
 
+#if H_MV_HLS_FIX
+    if( !rpcSlice->getPocMsbValRequiredFlag() && rpcSlice->getVPS()->getVpsPocLsbAlignedFlag() )
+#else
     if( !rpcSlice->getPocMsbValRequiredFlag() /* TODO &&  rpcSlice->getVPS()->getVpsPocLsbAlignedFlag() */ )
+#endif
     {
       READ_FLAG( uiCode, "poc_msb_val_present_flag" ); rpcSlice->setPocMsbValPresentFlag( uiCode == 1 );
     }
