@@ -870,6 +870,10 @@ Void TEncCavlc::codePPSMultilayerExtension(TComPPS* pcPPS)
   WRITE_FLAG( pcPPS->getPpsInferScalingListFlag( ) ? 1 : 0 , "pps_infer_scaling_list_flag" );
   WRITE_CODE( pcPPS->getPpsScalingListRefLayerId( ), 6, "pps_scaling_list_ref_layer_id" );
   WRITE_UVLC( 0, "num_ref_loc_offsets" );
+#if H_MV_HLS_FIX
+  WRITE_FLAG( 0 , "colour_mapping_enabled_flag" );
+#endif
+
 }
 
 #endif
@@ -1184,7 +1188,11 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
 
   for( Int i = 1; i < pcVPS->getNumOutputLayerSets( ); i++ )
   {
+#if H_MV_HLS_FIX
+    if( pcVPS->getNumLayerSets() > 2 && i >= pcVPS->getNumLayerSets( ) )    
+#else
     if( i >= pcVPS->getNumLayerSets( ) )    
+#endif
     {      
       WRITE_CODE( pcVPS->getLayerSetIdxForOlsMinus1( i ), pcVPS->getLayerSetIdxForOlsMinus1Len( i ) ,      "layer_set_idx_for_ols_minus1[i]" );
     }
@@ -1254,7 +1262,7 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
   }
 
   WRITE_FLAG( pcVPS->getMaxOneActiveRefLayerFlag( ) ? 1 : 0, "max_one_active_ref_layer_flag" );
-#if H_MV_HLS7_GEN
+#if H_MV_HLS7_GEN || H_MV_HLS_FIX
   WRITE_FLAG( pcVPS->getVpsPocLsbAlignedFlag( ) ? 1 : 0 , "vps_poc_lsb_aligned_flag" );
 #endif
   for( Int i = 1; i  <=  pcVPS->getMaxLayersMinus1(); i++ )
@@ -1304,6 +1312,9 @@ Void TEncCavlc::codeVPSExtension( TComVPS *pcVPS )
     m_pcBitIf->writeAlignOne();  // vps_vui_alignment_bit_equal_to_one
     codeVPSVUI( pcVPS ); 
   }     
+#if H_MV_HLS_FIX
+  else
+#endif
   {
     TComVPSVUI* pcVPSVUI = pcVPS->getVPSVUI( ); 
     assert( pcVPSVUI ); 
@@ -1774,7 +1785,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_FLAG( pcSlice->getCrossLayerBlaFlag( ) ? 1 : 0 , "cross_layer_bla_flag" );
     }
     pcSlice->checkCrossLayerBlaFlag( ); 
-#if !H_MV_HLS7_GEN
+#if !H_MV_HLS7_GEN && !H_MV_HLS_FIX
     if ( pcSlice->getPPS()->getNumExtraSliceHeaderBits() > esb )
     {
       esb++; 
@@ -2217,9 +2228,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
   if(pcSlice->getPPS()->getSliceHeaderExtensionPresentFlag())
   {
     // Derive the value of PocMsbValRequiredFlag
+#if !H_MV_HLS_FIX
     pcSlice->setPocMsbValRequiredFlag( pcSlice->getCraPicFlag() || pcSlice->getBlaPicFlag()
                                           /* || related to vps_poc_lsb_aligned_flag */
                                           );
+#endif
 
     // Determine value of SH extension length.
     Int shExtnLengthInBit = 0;
@@ -2237,7 +2250,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
 
 
+#if H_MV_HLS_FIX
+    if( !pcSlice->getPocMsbValRequiredFlag() &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag() )
+#else
     if( !pcSlice->getPocMsbValRequiredFlag() /* TODO &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag() */ )
+#endif
     {
       shExtnLengthInBit++;    // For poc_msb_val_present_flag
     }
@@ -2300,7 +2317,11 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }              
     pcSlice->checkPocLsbVal(); 
 
+#if H_MV_HLS_FIX
+    if( !pcSlice->getPocMsbValRequiredFlag() &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag()  )
+#else
     if( !pcSlice->getPocMsbValRequiredFlag() /* TODO &&  pcSlice->getVPS()->getVpsPocLsbAlignedFlag() */ )
+#endif
     {
       WRITE_FLAG( pcSlice->getPocMsbValPresentFlag( ) ? 1 : 0 , "poc_msb_val_present_flag" );
     }

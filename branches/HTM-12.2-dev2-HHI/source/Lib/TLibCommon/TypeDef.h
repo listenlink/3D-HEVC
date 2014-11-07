@@ -382,6 +382,8 @@
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
 // TBD: Check if integration is necessary. 
+
+#define H_MV_HLS_FIX                         1
 #define H_MV_HLS_PTL_LIMITS                  0
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
 #define H_MV_ALIGN_HM_15                     1  

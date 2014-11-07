@@ -860,7 +860,7 @@ private:
   Int         m_vpsRepFormatIdx          [MAX_NUM_LAYERS];
   TComRepFormat* m_repFormat             [MAX_NUM_LAYERS]; 
   Bool        m_maxOneActiveRefLayerFlag;       
-#if H_MV_HLS7_GEN
+#if H_MV_HLS7_GEN || H_MV_HLS_FIX
   Bool        m_vpsPocLsbAlignedFlag;
 #endif
   Bool        m_pocLsbNotPresentFlag     [MAX_NUM_LAYERS];
@@ -1145,7 +1145,7 @@ public:
   Void    setMaxOneActiveRefLayerFlag( Bool flag)                          { m_maxOneActiveRefLayerFlag = flag; } 
   Bool    getMaxOneActiveRefLayerFlag( )                                   { return m_maxOneActiveRefLayerFlag; } 
 
-#if H_MV_HLS7_GEN
+#if H_MV_HLS7_GEN || H_MV_HLS_FIX
   Void    setVpsPocLsbAlignedFlag( Bool flag )                             { m_vpsPocLsbAlignedFlag = flag; } 
   Bool    getVpsPocLsbAlignedFlag(  )                                      { return m_vpsPocLsbAlignedFlag; } 
 #endif
@@ -2879,8 +2879,14 @@ public:
   Void setPocMsbVal( Int  val ) { m_pocMsbVal = val; } 
   Int  getPocMsbVal(  ) { return m_pocMsbVal; } 
 
+#if H_MV_HLS_FIX
+  Bool getCraOrBlaPicFlag() { return ( getCraPicFlag() || getBlaPicFlag() ); } 
+  Bool getPocMsbValRequiredFlag() { return ( getCraOrBlaPicFlag() && ( getVPS()->getVpsPocLsbAlignedFlag() || getVPS()->getNumDirectRefLayers( getLayerIdInVps() ) == 0 ) );  }
+#else
   Bool getPocMsbValRequiredFlag() { return m_pocMsbValRequiredFlag; }
   Void setPocMsbValRequiredFlag(Bool x) { m_pocMsbValRequiredFlag = x; }
+#endif
+
 
   UInt getPocLsbValLen() { return getSPS()->getBitsForPOC(); }; //log2_max_pic_order_cnt_lsb_minus4 + 4  
 

@@ -1877,6 +1877,8 @@ TComVPS::TComVPS()
 #if H_MV
   m_vpsBaseLayerInternalFlag = true; 
   m_vpsBaseLayerAvailableFlag = true; 
+
+
 #endif
 
   for( Int i = 0; i < MAX_TLAYER; i++)
@@ -1912,6 +1914,9 @@ TComVPS::TComVPS()
 
   m_repFormatIdxPresentFlag = false; 
   m_maxOneActiveRefLayerFlag = false; 
+#if H_MV_HLS_FIX
+  m_vpsPocLsbAlignedFlag  = false; 
+#endif
   m_directDepTypeLenMinus2   = 0;         
   
 
@@ -2365,7 +2370,6 @@ Int TComVPS::getNumViews()
 
   return numViews;
 }
-
 
 Void TComVPS::deriveLayerSetLayerIdList()
 {
