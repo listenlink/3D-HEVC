@@ -613,7 +613,11 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
 #if H_3D_IV_MERGE
 #if HHI_TOOL_PARAMETERS_I2_J0107
+#if ALGIN_J0107_J0059
+  rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getMpiFlag( ) || rpcSlice->getIvMvPredFlag( ) || rpcSlice->getViewSynthesisPredFlag( )   ) ? 1 : 0 ));
+#else
   rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getMpiFlag( ) || rpcSlice->getIvMvPredFlag( ) ) ? 1 : 0 ));
+#endif
 #else
   if(rpcSlice->getIsDepth())
   {

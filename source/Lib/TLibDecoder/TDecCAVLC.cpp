@@ -2743,7 +2743,11 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       READ_UVLC( uiCode, "five_minus_max_num_merge_cand");
 #if H_3D_IV_MERGE
 #if HHI_TOOL_PARAMETERS_I2_J0107
+#if ALGIN_J0107_J0059
+      rpcSlice->setMaxNumMergeCand(( ( rpcSlice->getMpiFlag() || rpcSlice->getIvMvPredFlag() || rpcSlice->getViewSynthesisPredFlag() ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#else
       rpcSlice->setMaxNumMergeCand(( ( rpcSlice->getMpiFlag() || rpcSlice->getIvMvPredFlag() ) ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
+#endif
 #else
       if(rpcSlice->getIsDepth())
       {
