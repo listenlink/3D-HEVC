@@ -969,6 +969,9 @@ private:
 #if H_3D_IV_MERGE
   Bool        m_bMPIFlag[MAX_NUM_LAYERS   ];
 #endif
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+  Bool        m_singleDepthModeFlag    [ MAX_NUM_LAYERS ];
+#endif
 #endif
 
 #endif
@@ -1399,6 +1402,10 @@ public:
 #if H_3D_IV_MERGE
   Bool    getMPIFlag      ( Int layerIdInVps )           { return m_bMPIFlag[layerIdInVps]; }
   Void    setMPIFlag      ( Int layerIdInVps, Bool bval ){ m_bMPIFlag[layerIdInVps] = bval; }
+#endif
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+  Void    setSingleDepthModeFlag  ( Int layerIdInVps, Bool val )  { m_singleDepthModeFlag[ layerIdInVps ] = val; }
+  Bool    getSingleDepthModeFlag  ( Int layerIdInVps )            { return m_singleDepthModeFlag[ layerIdInVps ]; }; 
 #endif
 #endif  
 #endif
@@ -2603,9 +2610,11 @@ public:
 #if H_3D
   TComPic*  getTexturePic       ()                              { return  m_ivPicsCurrPoc[0][ m_viewIndex ]; }
 #endif
+#if !MTK_SINGLE_DEPTH_VPS_FLAG_J0060
 #if H_3D_SINGLE_DEPTH
   Void      setApplySingleDepthMode( Bool b )                                { m_bApplySingleDepthMode = b; }
   Bool      getApplySingleDepthMode()                                        { return m_bApplySingleDepthMode; }
+#endif
 #endif
 #if H_3D_IC
   Void      setApplyIC( Bool b )                                { m_bApplyIC = b; }

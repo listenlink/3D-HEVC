@@ -2880,9 +2880,17 @@ TEncSearch::estIntraPredSingleDepth( TComDataCU* pcCU,
 
   Int index=0;
   Pel testDepth;
+#if SINGLE_DEPTH_SIMP_J0115
+  Pel DepthNeighbours[2];
+#else
   Pel DepthNeighbours[5];
+#endif
   //construction of depth candidates
+#if SINGLE_DEPTH_SIMP_J0115
+  for( Int i = 0; (i < 2)  && (index<SINGLE_DEPTH_MODE_CAND_LIST_SIZE) ; i++ )
+#else
   for( Int i = 0; (i < 5)  && (index<SINGLE_DEPTH_MODE_CAND_LIST_SIZE) ; i++ )
+#endif
   {
     if(!pcCU->getNeighDepth (0, 0, &testDepth, i))
     {
@@ -2890,6 +2898,7 @@ TEncSearch::estIntraPredSingleDepth( TComDataCU* pcCU,
     }
     DepthNeighbours[index]=testDepth;
     index++;
+#if !SINGLE_DEPTH_SIMP_J0115
     for(Int j=0;j<index-1;j++)
     {
       if( (DepthNeighbours[index-1]==DepthNeighbours[j]))
@@ -2898,6 +2907,7 @@ TEncSearch::estIntraPredSingleDepth( TComDataCU* pcCU,
         break;
       }
     }
+#endif
   }
 
   if(index==0)

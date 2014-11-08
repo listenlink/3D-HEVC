@@ -2284,6 +2284,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #if H_3D_INTER_SDC
     vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
 #endif
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+    vps.setSingleDepthModeFlag( layer, !isLayerZero && isDepth && m_useSingleDepthMode );         
+#endif
 #if H_3D_IV_MERGE
 #if H_3D_FCO
     vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag && !isDepthFirst );
