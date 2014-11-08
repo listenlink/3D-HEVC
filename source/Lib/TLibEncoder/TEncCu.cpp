@@ -739,7 +739,11 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_SINGLE_DEPTH
     rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
 #if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
-//    if(rpcBestCU->getSlice()->getVPS()->getSingleDepthModeFlag(rpcBestCU->getSlice()->getLayerIdInVps()))
+#if ALIGN_J0060_J0107
+    if( rpcBestCU->getSlice()->getIntraSingleFlag() )
+#else
+    if(rpcBestCU->getSlice()->getVPS()->getSingleDepthModeFlag(rpcBestCU->getSlice()->getLayerIdInVps()))
+#endif
 #else
     if(rpcBestCU->getSlice()->getApplySingleDepthMode())
 #endif

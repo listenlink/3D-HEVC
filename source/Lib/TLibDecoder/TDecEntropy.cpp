@@ -54,12 +54,18 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 #if H_3D_SINGLE_DEPTH
 Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+  if( !pcCU->getSlice()->getIntraSingleFlag() )
+  {
+    return;
+  }  
+#if ALIGN_J0060_J0107
+#else
   if ( !pcCU->getSlice()->getIsDepth() )
   {
     return;
   }
 #if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
-//  if(!pcCU->getSlice()->getVPS()->getSingleDepthModeFlag(pcCU->getSlice()->getLayerIdInVps()))
+  if(!pcCU->getSlice()->getVPS()->getSingleDepthModeFlag(pcCU->getSlice()->getLayerIdInVps()))
   {
      return;
   }
@@ -69,6 +75,8 @@ Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
      return;
   }
 #endif
+#endif
+
   m_pcEntropyDecoderIf->parseSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
 }
 #endif
