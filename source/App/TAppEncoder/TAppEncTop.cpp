@@ -276,9 +276,9 @@ Void TAppEncTop::xInitLibCfg()
 #endif
 #endif
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
+    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
 
-    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 
 #if H_3D_SINGLE_DEPTH
     m_cTEncTop.setUseSingleDepthMode           ( isDepth ? m_useSingleDepthMode   : false );

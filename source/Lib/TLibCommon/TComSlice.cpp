@@ -4062,11 +4062,11 @@ Void TComSlice::setDepthToDisparityLUTs()
 { 
   Bool setupLUT = false; 
   
-#if H_3D_VSP
 #if HHI_TOOL_PARAMETERS_I2_J0107
   setupLUT = setupLUT || getViewSynthesisPredFlag( ); 
 #else
   Int layerIdInVPS = getVPS()->getLayerIdInNuh( m_layerId ); 
+#if H_3D_VSP
   setupLUT = setupLUT || getVPS()->getViewSynthesisPredFlag( layerIdInVPS); 
 #endif
 #endif

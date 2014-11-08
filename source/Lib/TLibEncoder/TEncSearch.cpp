@@ -3328,7 +3328,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
       
 #if H_3D_DIM_SDC
 #if H_3D_FAST_INTRA_SDC
+#if HHI_TOOL_PARAMETERS_I2_J0107
       Bool bTestSDC = ( ( m_pcEncCfg->getUseSDC() &&  pcCU->getSlice()->getIntraSdcWedgeFlag() ) && pcCU->getSDCAvailable(uiPartOffset) && uiMode >= numModesForFullRD);
+#else
+      Bool bTestSDC = ( m_pcEncCfg->getUseSDC() && pcCU->getSDCAvailable(uiPartOffset) && uiMode >= numModesForFullRD);
+#endif
 #else
       Bool bTestSDC = ( m_pcEncCfg->getUseSDC() && pcCU->getSDCAvailable(uiPartOffset) );
 #endif
