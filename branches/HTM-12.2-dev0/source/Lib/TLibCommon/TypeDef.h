@@ -236,7 +236,8 @@
 
 #define H_3D_SINGLE_DEPTH                 1   // Single depth mode proposed in JCT3V-I0095
 #define MTK_SINGLE_DEPTH_VPS_FLAG_J0060   1   // Add VPS control flags and remove slice header control flag for single depth, JCT3V-J0060
-#define ALIGN_J0060_J0107                 1   // Aligment of changed tool parameters
+#define ALIGN_J0060_J0107                 1   // Alignment of changed tool parameters
+#define ALGIN_J0107_J0059                 1   // Alignment of changed tool parameters                
 
 #define MTK_J0033                         1
 #define SHARP_DLT_SIMP_J0029              1   // DLT(DepthValue2Idx[]) table derivation cleanup
