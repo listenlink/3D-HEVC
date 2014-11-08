@@ -956,6 +956,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
+#if !MTK_SINGLE_DEPTH_VPS_FLAG_J0060
 #if H_3D_SINGLE_DEPTH
 #if HHI_TOOL_PARAMETERS_I2_J0107
     pcSlice->setApplySingleDepthMode( pcSlice->getIntraSingleFlag() );
@@ -971,7 +972,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }
     pcSlice->setApplySingleDepthMode(enableSingleDepthMode);
 #endif
-#endif    
+#endif   
+#endif 
 #if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
     pcSlice->setDefaultRefView();
 #endif

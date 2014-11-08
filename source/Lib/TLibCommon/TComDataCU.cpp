@@ -6265,6 +6265,7 @@ Bool TComDataCU::getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDept
       bDepAvail = true;
     }
     break;
+#if !SINGLE_DEPTH_SIMP_J0115
   case 2: // Above
     if(yP != 0)
     {
@@ -6286,6 +6287,7 @@ Bool TComDataCU::getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDept
       bDepAvail = true;
     }
     break;
+#endif
   default:
       break;
   }
@@ -6904,9 +6906,16 @@ Void TComDataCU::getSPPara(Int iPUWidth, Int iPUHeight, Int& iNumSP, Int& iNumSP
 #endif
 
   iNumSPInOneLine = iPUWidth/iSubPUSize;
+#if !HS_SP_SIMP_J0066
   iNumSPInOneLine = iNumSPInOneLine < 1 ? 1: iNumSPInOneLine;
+#endif
   Int iNumSPInOneColumn = iPUHeight/iSubPUSize;
+#if !HS_SP_SIMP_J0066
   iNumSPInOneColumn = iNumSPInOneColumn < 1 ? 1: iNumSPInOneColumn;
+#else
+  iNumSPInOneLine = (iPUHeight % iSubPUSize != 0 || iPUWidth % iSubPUSize != 0 ) ? 1 : iNumSPInOneLine;
+  iNumSPInOneColumn = (iPUHeight % iSubPUSize != 0  || iPUWidth % iSubPUSize != 0 ) ? 1 : iNumSPInOneColumn;
+#endif
   iNumSP = iNumSPInOneLine * iNumSPInOneColumn;
 
   iSPWidth = iNumSPInOneLine == 1 ? iPUWidth: iSubPUSize; 
