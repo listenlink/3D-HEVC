@@ -6709,9 +6709,16 @@ Void TComDataCU::getSPPara(Int iPUWidth, Int iPUHeight, Int& iNumSP, Int& iNumSP
   }
 
   iNumSPInOneLine = iPUWidth/iSubPUSize;
+#if !HS_SP_SIMP_J0066
   iNumSPInOneLine = iNumSPInOneLine < 1 ? 1: iNumSPInOneLine;
+#endif
   Int iNumSPInOneColumn = iPUHeight/iSubPUSize;
+#if !HS_SP_SIMP_J0066
   iNumSPInOneColumn = iNumSPInOneColumn < 1 ? 1: iNumSPInOneColumn;
+#else
+  iNumSPInOneLine = (iPUHeight % iSubPUSize != 0 || iPUWidth % iSubPUSize != 0 ) ? 1 : iNumSPInOneLine;
+  iNumSPInOneColumn = (iPUHeight % iSubPUSize != 0  || iPUWidth % iSubPUSize != 0 ) ? 1 : iNumSPInOneColumn;
+#endif
   iNumSP = iNumSPInOneLine * iNumSPInOneColumn;
 
   iSPWidth = iNumSPInOneLine == 1 ? iPUWidth: iSubPUSize; 
