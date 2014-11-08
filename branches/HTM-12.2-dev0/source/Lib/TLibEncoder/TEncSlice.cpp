@@ -627,6 +627,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
     rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ? 1 : 0 ) );
 #endif
   }
+#endif
 #else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
 #endif

@@ -2761,7 +2761,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rpcSlice->setMaxNumMergeCand(( ivMvPredFlag ? MRG_MAX_NUM_CANDS_MEM : MRG_MAX_NUM_CANDS) - uiCode);
 #endif
       }
-
+#endif
 #else
       rpcSlice->setMaxNumMergeCand(MRG_MAX_NUM_CANDS - uiCode);
 #endif
