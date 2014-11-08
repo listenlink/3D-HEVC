@@ -178,6 +178,10 @@ TComSlice::TComSlice()
     m_interLayerPredLayerIdc[ i ] = -1;
   }
 #endif
+#if LGE_DEFAULT_DV_J0046
+  m_iDefaultRefViewIdx = -1;
+  m_bDefaultRefViewIdxAvailableFlag = false;
+#endif
 }
 
 TComSlice::~TComSlice()
@@ -1873,6 +1877,11 @@ TComVPS::TComVPS()
 #if H_MV
   m_vpsBaseLayerInternalFlag = true; 
   m_vpsBaseLayerAvailableFlag = true; 
+
+#if  H_MV_FIX_NUM_VIEWS
+  m_numViews = 0; 
+#endif
+
 #endif
 
   for( Int i = 0; i < MAX_TLAYER; i++)
@@ -1908,12 +1917,16 @@ TComVPS::TComVPS()
 
   m_repFormatIdxPresentFlag = false; 
   m_maxOneActiveRefLayerFlag = false; 
+#if H_MV_HLS_FIX
+  m_vpsPocLsbAlignedFlag  = false; 
+#endif
   m_directDepTypeLenMinus2   = 0;         
   
 
   m_vpsExtensionFlag = true; 
   m_vpsNonVuiExtensionLength = 0;
   m_splittingFlag    = false;
+
   
   for( Int i = 0; i < MAX_NUM_SCALABILITY_TYPES; i++ )
   {
@@ -1942,6 +1955,11 @@ TComVPS::TComVPS()
   {
     m_layerIdInNuh      [i] = ( i == 0 ) ? 0 : -1; 
     m_numDirectRefLayers[i] = 0; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    m_numRefListLayers[i] = 0; 
+#endif
+#endif
     m_vpsRepFormatIdx    [i] = 0; 
     m_pocLsbNotPresentFlag[i] = 0;
     m_repFormat          [i] = NULL; 
@@ -1949,9 +1967,11 @@ TComVPS::TComVPS()
 
 #if H_3D
     m_viewIndex         [i] = -1; 
+#if !HHI_TOOL_PARAMETERS_I2_J0107
     m_vpsDepthModesFlag [i] = false;
     m_ivMvScalingFlag[i] = true; 
     m_bIVPFlag [i]      = false;
+#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
@@ -1960,6 +1980,11 @@ TComVPS::TComVPS()
       m_directDependencyType[i][j] = -1; 
       m_dependencyFlag  [i][j]    = false; 
       m_idDirectRefLayer[i][j]    = -1; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+      m_idRefListLayer[i][j]    = -1; 
+#endif
+#endif
       m_idPredictedLayer[i][j]    = -1; 
       m_idRefLayer      [i][j]    = -1; 
       m_maxTidIlRefPicsPlus1[i][j]  = 7;
@@ -1970,13 +1995,16 @@ TComVPS::TComVPS()
       m_dimensionId[i][j] = 0;
     }
 #if H_3D_ARP
+#if !HHI_TOOL_PARAMETERS_I2_J0107
     m_uiUseAdvResPred[i]  = 0;
     m_uiARPStepNum[i]     = 1;
+#endif
 #endif
   }
   m_vpsVUI = new TComVPSVUI; 
   m_dpbSize = new TComDpbSize; 
 
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D
   for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
   {
@@ -2009,6 +2037,8 @@ TComVPS::TComVPS()
 #endif
   }  
 #endif
+#endif
+
 #endif
 }
 
@@ -2098,8 +2128,14 @@ Void TComVPS::setRefLayers()
   {
     Int iNuhLId = getLayerIdInNuh( i );
     Int d = 0;
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    Int l = 0; 
+#endif
+#endif
     Int r = 0;
     Int p = 0;
+
     for( Int j = 0; j  <=  getMaxLayersMinus1(); j++ )
     {
       Int jNuhLid = getLayerIdInNuh( j );
@@ -2107,6 +2143,15 @@ Void TComVPS::setRefLayers()
       {
         m_idDirectRefLayer[iNuhLId][d++] = jNuhLid;
       }
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+      if( getDirectDependencyFlag( i , j ) && ( getDepthId( iNuhLId ) == getDepthId( jNuhLid ) ))
+      {
+        m_idRefListLayer [iNuhLId][l++] = jNuhLid;
+      }
+#endif
+#endif
+
       if( getDependencyFlag( i , j ) )
       {
         m_idRefLayer      [iNuhLId][r++] = jNuhLid;
@@ -2117,6 +2162,12 @@ Void TComVPS::setRefLayers()
       }
     }
     m_numDirectRefLayers[ iNuhLId ] = d;
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+    m_numRefListLayers[ iNuhLId ] = l; 
+#endif
+#endif
+
     m_numRefLayers      [ iNuhLId ] = r;
     m_numPredictedLayers[ iNuhLId ] = p;
   }
@@ -2149,6 +2200,45 @@ Void TComVPS::setRefLayers()
   }
   m_numIndependentLayers = k;
 }
+
+
+#if H_MV_FIX_NUM_VIEWS
+Void     TComVPS::initNumViews( )
+{
+  m_numViews = 1; 
+#if HHI_VIEW_ID_LIST_I5_J0107
+#if H_3D
+  AOF( m_viewOIdxList.size() == 0 ); 
+  m_viewOIdxList.push_back( 0 );        
+#endif
+#endif
+
+  for( Int i = 0; i <=  getMaxLayersMinus1(); i++ )
+  {
+    Int lId = getLayerIdInNuh( i ); 
+    if( i > 0 )
+    {
+      Bool newViewFlag = true; 
+      for( Int j = 0; j < i; j++ )
+      {
+        if( getViewOrderIdx( lId )  ==  getViewOrderIdx( getLayerIdInNuh( j ) )  )
+        {
+          newViewFlag = false;
+        }
+      }
+      if( newViewFlag )
+      {
+        m_numViews++;
+#if HHI_VIEW_ID_LIST_I5_J0107
+#if H_3D
+        m_viewOIdxList.push_back( getViewOrderIdx( lId ) );        
+#endif
+#endif
+      }
+    }
+  }
+}
+#endif
 
 
 Int TComVPS::getScalabilityId( Int layerIdInVps, ScalabilityType scalType )
@@ -2309,6 +2399,7 @@ Int    TComVPS::getNumOutputLayerSets()
   return getNumAddOlss() + getNumLayerSets(); 
 }
 
+#if !H_MV_FIX_NUM_VIEWS
 Int TComVPS::getNumViews()
 {
   Int numViews = 1; 
@@ -2320,9 +2411,9 @@ Int TComVPS::getNumViews()
       numViews++; 
     }    
   }
-
   return numViews;
 }
+#endif
 
 
 Void TComVPS::deriveLayerSetLayerIdList()
@@ -2561,6 +2652,12 @@ Void TComVPS::printLayerDependencies()
   xPrintArray( "IdPredictedLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numPredictedLayers, m_idPredictedLayer, true );
   xPrintArray( "IdRefLayer"      , getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefLayers, m_idRefLayer, true );
   xPrintArray( "IdDirectRefLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numDirectRefLayers, m_idDirectRefLayer, true );
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  xPrintArray( "IdRefListLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefListLayers, m_idRefListLayer, true );
+#endif
+#endif
+
   std::cout << std::endl;
 }
 
@@ -3579,11 +3676,23 @@ TComPic* TComSlice::getPicFromRefPicSetInterLayer(Int setIdc, Int layerId )
 Int  TComSlice::getRefLayerPicFlag( Int i ) 
 {
   TComVPS* vps = getVPS(); 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  Int refLayerIdx = vps->getLayerIdInVps( vps->getIdRefListLayer( getLayerId(), i ) ); 
+#else
   Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
+#endif
+#else
+  Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
+#endif
 
+#if H_MV_FIX_REF_LAYER_PIC_FLAG
+  Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer()  && ( getTLayer() == 0   ||
+    vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() )); 
+#else
   Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer() )  && ( getTLayer() == 0  ) &&
     ( vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() ); 
-
+#endif
   return refLayerPicFlag;       
 }    
 
@@ -3591,7 +3700,15 @@ Int TComSlice::getRefLayerPicIdc( Int j )
 {  
   Int refLayerPicIdc = -1; 
   Int curj = 0; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
+#else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
+#else
+  for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
   {
     if( getRefLayerPicFlag( i ) )
     {
@@ -3612,7 +3729,15 @@ Int TComSlice::getRefLayerPicIdc( Int j )
 Int  TComSlice::getNumRefLayerPics( )
 {  
   Int numRefLayerPics = 0; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
+#else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
+#else
+  for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
+#endif
   {
     numRefLayerPics += getRefLayerPicFlag( i ); 
   }
@@ -3637,7 +3762,15 @@ Int TComSlice::getNumActiveRefLayerPics()
   {
     numActiveRefLayerPics = 0; 
   }
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumRefListLayers( getLayerId() ) == 1 )
+#else
   else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
+#endif
+#else
+  else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
+#endif  
   {
     numActiveRefLayerPics = 1; 
   }
@@ -3650,14 +3783,59 @@ Int TComSlice::getNumActiveRefLayerPics()
 
 Int TComSlice::getRefPicLayerId( Int i )
 {
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  return getVPS()->getIdRefListLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
+#else
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
+#endif
+#else
+  return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
+#endif
 }
+
+#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+Void TComSlice::setDefaultRefView( )
+{
+  setDefaultRefViewIdx( -1 );
+  setDefaultRefViewIdxAvailableFlag( false ); 
+
+  Int valid = 0;
+  Int DefaultRefViewIdx = -1;
+  for( UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++ )
+  {
+    for( Int iRefListId = 0; ( iRefListId < (isInterB() ? 2 : 1) ) && !isIntra() && valid == 0; iRefListId++ )
+    {
+      RefPicList eRefPicList = RefPicList( iRefListId );
+      Int        iNumRefPics = getNumRefIdx( eRefPicList );
+      for( Int i = 0; i < iNumRefPics; i++ )
+      { 
+        if(getPOC() == getRefPic( eRefPicList, i )->getPOC() && curViewIdx == getRefPic( eRefPicList, i )->getViewIndex())
+        {
+          valid = 1;
+          DefaultRefViewIdx = curViewIdx;
+          break;
+        }
+      }
+    }
+  }
+  if( valid )
+  {
+    setDefaultRefViewIdx( DefaultRefViewIdx );
+    setDefaultRefViewIdxAvailableFlag( true );   
+  }
+}
+#endif
 
 #if H_3D_ARP
 Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 {
   Bool tempRefPicInListsFlag = false;
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  if( !getIvResPredFlag() || this->isIRAP())
+#else
   if(!getVPS()->getUseAdvRP(getLayerId()) || this->isIRAP())
+#endif
   {
     m_nARPStepNum = 0;
   }
@@ -3685,8 +3863,16 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
         }
       }
     }
+#if SEC_ARP_VIEW_REF_CHECK_J0037
+    tempRefPicInListsFlag = (getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0) && getDefaultRefViewIdxAvailableFlag();
+#else
     tempRefPicInListsFlag = getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0;
+#endif
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    m_nARPStepNum = tempRefPicInListsFlag ?  H_3D_ARP_WFNR : 0;
+#else
     m_nARPStepNum = tempRefPicInListsFlag ? getVPS()->getARPStepNum(getLayerId()) : 0;
+#endif
   }
 
   if (tempRefPicInListsFlag)
@@ -3868,20 +4054,33 @@ Void TComSlice::setIvPicLists( TComPicLists* m_ivPicLists )
 Void TComSlice::setDepthToDisparityLUTs()
 { 
   Bool setupLUT = false; 
-  Int layerIdInVPS = getVPS()->getLayerIdInNuh( m_layerId ); 
-
+  
 #if H_3D_VSP
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  setupLUT = setupLUT || getViewSynthesisPredFlag( ); 
+#else
+  Int layerIdInVPS = getVPS()->getLayerIdInNuh( m_layerId ); 
   setupLUT = setupLUT || getVPS()->getViewSynthesisPredFlag( layerIdInVPS); 
+#endif
 #endif
 
 #if H_3D_NBDV_REF
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  setupLUT = setupLUT || getDepthRefinementFlag( );
+#else
   setupLUT = setupLUT || getVPS()->getDepthRefinementFlag( layerIdInVPS );
+#endif
 #endif 
 
 #if H_3D_IV_MERGE
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  setupLUT = setupLUT || ( getIvMvPredFlag() && getIsDepth() );
+#else
   setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
 #endif
+#endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
 #if H_3D_FCO
   if( getIsDepth() && getViewIndex() > 0 && getVPS()->getMPIFlag(layerIdInVPS))
@@ -3895,6 +4094,7 @@ Void TComSlice::setDepthToDisparityLUTs()
       memcpy( m_aiDDDShift, pcTextSlice->m_aiDDDShift, sizeof( Int ) * getViewIndex() );             
   }  
 #endif 
+#endif
 
   if( !setupLUT )
     return; 
@@ -3943,15 +4143,17 @@ Void TComSlice::setDepthToDisparityLUTs()
       Int invOffset = ( invCodOffset[ i ] << g_bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
       m_depthToDisparityF[ i ][ d ] = ( invCodScale[ i ] * d + invOffset ) >> log2Div; 
     }
-
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
     initializeDDDPara( vps->getCamParPrecision(), codScale[ i ], codOffset[ i ], i );
+#endif
 #endif
   }
 }
 #endif
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
 Void TComSlice::initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx )
 {
@@ -4014,6 +4216,7 @@ Void TComSlice::initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScal
 
 
 #endif
+#endif
 
 #if H_MV
 Void TComSlice::checkCrossLayerBlaFlag()
@@ -4047,12 +4250,114 @@ Bool TComSlice::inferPocMsbValPresentFlag()
 
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DBBP
 Int TComSlice::getDepthFromDV( Int iDV, Int iBaseViewIdx )
 {
   return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
 }
 #endif
+#endif
+
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+
+Void TComSlice::init3dToolParameters()
+{
+  Bool depthFlag = getIsDepth();
+
+  Bool depthOfRefViewsAvailFlag = false; 
+  Bool textOfCurViewAvailFlag = false; 
+
+  TComVPS* vps = getVPS(); 
+
+  if( !depthFlag )
+  {
+    depthOfRefViewsAvailFlag = true;
+    for( Int i = 0; i <= vps->getNumRefListLayers( getLayerId() ) - 1; i++)
+    {
+      Bool curDepthAvailableFlag = false;    
+      for (Int j = 0; j <= vps->getMaxLayersMinus1(); j++ )
+      {
+        if ( vps->getDirectDependencyFlag( vps->getLayerIdInVps( getLayerId() ), j )
+          && vps->getVpsDepthFlag        ( vps->getLayerIdInNuh( j ) ) == 1
+          && vps->getViewOrderIdx( vps->getLayerIdInNuh( j ) ) == vps->getViewOrderIdx( vps->getIdRefListLayer( getLayerId(), i ) )
+          && vps->getDependencyId( vps->getLayerIdInNuh( j ) ) == 0
+          && vps->getAuxId       ( vps->getLayerIdInNuh( j ) ) == 0
+          )
+        {
+          curDepthAvailableFlag = true; 
+        }
+      }
+      if ( !curDepthAvailableFlag )
+      {
+        depthOfRefViewsAvailFlag = false; 
+      }    
+    }
+  }
+  else
+  {
+    for (Int j = 0; j <= vps->getMaxLayersMinus1(); j++ )
+    {
+      if ( vps->getDirectDependencyFlag( vps->getLayerIdInVps( getLayerId() ), j ) 
+        && vps->getVpsDepthFlag( vps->getLayerIdInNuh( j ) ) == 0
+        && vps->getViewOrderIdx( vps->getLayerIdInNuh( j ) ) == getViewIndex() 
+        && vps->getDependencyId( vps->getLayerIdInNuh( j ) ) == 0
+        && vps->getAuxId       ( vps->getLayerIdInNuh( j ) ) == 0
+        )
+      {        
+        textOfCurViewAvailFlag = true; 
+      }
+    }
+  }
+
+  Bool lidG0  = ( getLayerId() > 0 );
+  Bool nRLLG0 =  ( getVPS()->getNumRefListLayers( getLayerId() ) > 0 );     
+
+  TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
+
+  m_ivMvPredFlag           = sps3dExt->getIvMvPredFlag         ( depthFlag ) && lidG0 && nRLLG0                           ;                             
+  m_ivMvScalingFlag        = sps3dExt->getIvMvScalingFlag      ( depthFlag ) && lidG0                                    ;                             
+  m_ivResPredFlag          = sps3dExt->getIvResPredFlag        ( depthFlag ) && lidG0 && nRLLG0                           ;                               
+  m_depthRefinementFlag    = sps3dExt->getDepthRefinementFlag  ( depthFlag ) && lidG0           && depthOfRefViewsAvailFlag;                            
+  m_viewSynthesisPredFlag  = sps3dExt->getViewSynthesisPredFlag( depthFlag ) && lidG0 && nRLLG0 && depthOfRefViewsAvailFlag;                          
+  m_depthBasedBlkPartFlag  = sps3dExt->getDepthBasedBlkPartFlag( depthFlag ) && lidG0           && depthOfRefViewsAvailFlag;                          
+  m_mpiFlag                = sps3dExt->getMpiFlag              ( depthFlag ) && lidG0           &&   textOfCurViewAvailFlag;
+  m_intraContourFlag       = sps3dExt->getIntraContourFlag     ( depthFlag ) && lidG0           &&   textOfCurViewAvailFlag;
+  m_intraSdcWedgeFlag      = sps3dExt->getIntraSdcWedgeFlag    ( depthFlag ) && lidG0                                     ;                          
+  m_qtPredFlag             = sps3dExt->getQtPredFlag           ( depthFlag ) && lidG0           &&   textOfCurViewAvailFlag;
+  m_interSdcFlag           = sps3dExt->getInterSdcFlag         ( depthFlag ) && lidG0                                    ;                               
+  m_intraSingleFlag        = sps3dExt->getIntraSingleFlag      ( depthFlag ) && lidG0                                    ;                          
+
+  m_subPbSize              = lidG0 ? ( 1 << ( sps3dExt->getLog2SubPbSizeMinus3   ( depthFlag ) + 3 ) ) : getSPS()->getMaxCUWidth();  
+  m_mpiSubPbSize           = 1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
+
+#if H_3D_OUTPUT_ACTIVE_TOOLS
+  std::cout << "Layer:                  :" << getLayerId()             << std::endl;
+  std::cout << "DepthFlag:              :" << getIsDepth()             << std::endl;
+  std::cout << "ViewOrderIdx:           :" << getViewIndex()           << std::endl;
+  std::cout << "DepthOfRefViewsAvailFlag:" << depthOfRefViewsAvailFlag << std::endl;
+  std::cout << "TextOfCurViewAvailFlag  :" << textOfCurViewAvailFlag   << std::endl;
+  
+  std::cout << "ivMvPredFlag            :" << m_ivMvPredFlag           << std::endl;
+  std::cout << "ivMvScalingFlag         :" << m_ivMvScalingFlag        << std::endl;
+  std::cout << "ivResPredFlag           :" << m_ivResPredFlag          << std::endl;
+  std::cout << "depthRefinementFlag     :" << m_depthRefinementFlag    << std::endl;
+  std::cout << "viewSynthesisPredFlag   :" << m_viewSynthesisPredFlag  << std::endl;
+  std::cout << "depthBasedBlkPartFlag   :" << m_depthBasedBlkPartFlag  << std::endl;
+  std::cout << "mpiFlag                 :" << m_mpiFlag                << std::endl;
+  std::cout << "intraContourFlag        :" << m_intraContourFlag       << std::endl;
+  std::cout << "intraSdcWedgeFlag       :" << m_intraSdcWedgeFlag      << std::endl;
+  std::cout << "qtPredFlag              :" << m_qtPredFlag             << std::endl;
+  std::cout << "interSdcFlag            :" << m_interSdcFlag           << std::endl;
+  std::cout << "intraSingleFlag         :" << m_intraSingleFlag        << std::endl;    
+  std::cout << "subPbSize               :" << m_subPbSize              << std::endl;
+  std::cout << "mpiSubPbSize            :" << m_mpiSubPbSize           << std::endl;
+#endif
+}
+#endif
+#endif
+
 
 /** get scaling matrix from RefMatrixID
  * \param sizeId size index

@@ -77,6 +77,13 @@ Void TEncEntropy::encodePPS( TComPPS* pcPPS )
   return;
 }
 
+#if HHI_TOOL_PARAMETERS_I2_J0107
+Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
+{
+  m_pcEntropyCoderIf->codeSPS( pcSPS );
+  return;
+}
+#else
 #if H_3D
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
 {
@@ -89,6 +96,7 @@ Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
   m_pcEntropyCoderIf->codeSPS( pcSPS );
   return;
 }
+#endif
 #endif
 
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
@@ -267,7 +275,15 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
 #if H_3D_DBBP
+#if SEC_DBBP_VIEW_REF_CHECK_J0037
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#else
+  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+#endif
+#else
   if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 )
+#endif
   {
     encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
   }
@@ -779,8 +795,13 @@ Void TEncEntropy::encodeDeltaDC  ( TComDataCU* pcCU, UInt absPartIdx )
 
 Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getInterSdcFlag() ) || 
+    ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getIntraSdcWedgeFlag() ) )
+#else
   if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) ) || 
     ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getVpsDepthModesFlag( pcCU->getSlice()->getLayerIdInVps() ) ) )
+#endif
   {
     return;
   }

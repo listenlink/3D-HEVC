@@ -214,6 +214,11 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->initSlice();
   rpcSlice->setPicOutputFlag( true );
   rpcSlice->setPOC( pocCurr );
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+  rpcSlice->init3dToolParameters(); 
+#endif
+#endif
 #if H_3D_IC
   rpcSlice->setApplyIC( false );
 #endif
@@ -607,6 +612,9 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceSegmentMode     ( m_pcCfg->getSliceSegmentMode()     );
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
 #if H_3D_IV_MERGE
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getMpiFlag( ) || rpcSlice->getIvMvPredFlag( ) ) ? 1 : 0 ));
+#else
   if(rpcSlice->getIsDepth())
   {
     rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getVPS()->getMPIFlag( rpcSlice->getLayerIdInVps() ) || rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ) ? 1 : 0 ) );
@@ -615,6 +623,7 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   {
     rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( rpcSlice->getVPS()->getIvMvPredFlag( rpcSlice->getLayerIdInVps() ) ? 1 : 0 ) );
   }
+#endif
 #else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
 #endif
@@ -1010,6 +1019,39 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
       CTXMem[0]->loadContexts(m_pcSbacCoder);
     }
   }
+#if LGE_DEFAULT_DV_J0046 && !SEC_ARP_VIEW_REF_CHECK_J0037 && !SEC_DBBP_VIEW_REF_CHECK_J0037
+  pcSlice->setDefaultRefViewIdx( -1 );
+  pcSlice->setDefaultRefViewIdxAvailableFlag( false ); 
+
+  Int valid = 0;
+  Int viewIndex = 0;
+  for( UInt uiBId = 0; uiBId < pcSlice->getViewIndex() && valid==0; uiBId++ )
+  {
+      UInt        uiBaseId    = uiBId;
+      TComPic*    pcBasePic   = pcSlice->getIvPic( false, uiBaseId );
+      for( Int iRefListId = 0; ( iRefListId < (pcSlice->isInterB()? 2:1) ) && !pcSlice->isIntra() && valid==0; iRefListId++ )
+      {
+          RefPicList  eRefPicListTest = RefPicList( iRefListId );
+          Int         iNumRefPics = pcSlice->getNumRefIdx( eRefPicListTest ) ;
+          for( Int iRefIndex = 0; iRefIndex < iNumRefPics; iRefIndex++ )
+          { 
+              if(pcBasePic->getPOC() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getPOC() 
+                  && pcBasePic->getViewIndex() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getViewIndex())
+              {
+                  valid=1;
+                  viewIndex = uiBaseId;
+                  break;
+              }
+          }
+      }
+  }
+  if( valid )
+  {
+      pcSlice->setDefaultRefViewIdx( viewIndex );
+      pcSlice->setDefaultRefViewIdxAvailableFlag( true );   
+  }
+#endif
+
   // for every CU in slice
 #if H_3D
   Int iLastPosY = -1;
@@ -1168,7 +1210,6 @@ Void TEncSlice::compressSlice( TComPic*& rpcPic )
         pcCU->getSlice()->setSliceQpBase( estQP );
 #endif
       }
-
       // run CU encoder
       m_pcCuEncoder->compressCU( pcCU );
 

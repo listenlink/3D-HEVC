@@ -91,6 +91,9 @@ private:
 
 #if H_3D
   TComDLT                    m_dlt;                         ///< dlt
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  TComSps3dExtension         m_sps3dExtension;              ///< Currently all layers share the same sps 3D Extension  
+#endif
 #endif
 
   UInt m_essentialBytes;
@@ -145,7 +148,9 @@ protected:
   Bool xLayerIdInTargetEncLayerIdList( Int nuhLayerId );
 #endif
 #if H_3D
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   Void xSetVPSExtension2( TComVPS& vps );
+#endif
   Void xDeriveDltArray( TComVPS& vps, TComDLT& dlt );
 #endif
 #if H_3D_DIM_DLT
