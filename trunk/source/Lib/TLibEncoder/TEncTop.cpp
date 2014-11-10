@@ -533,7 +533,7 @@ void separateFields(Pel* org, Pel* dstField, UInt stride, UInt width, UInt heigh
 #if H_MV
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff, Int gopId )
 {
-  assert( 0 ); // Field coding and multiview need to be furhter harmonized. 
+  assert( 0 ); // Field coding and multiview need to be further harmonized. 
 }
 #else
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded, bool isTff)
@@ -895,7 +895,16 @@ Void TEncTop::xInitPPS()
 {
 #if H_MV
   m_cPPS.setLayerId( getLayerId() );
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+  // Check if this condition is still correct
+  if( getVPS()->getNumRefListLayers( getLayerId() ) > 0 )
+#else
   if( getVPS()->getNumDirectRefLayers( getLayerId() ) > 0 )
+#endif
+#else
+  if( getVPS()->getNumDirectRefLayers( getLayerId() ) > 0 )
+#endif
   {
     m_cPPS.setListsModificationPresentFlag( true );
   }

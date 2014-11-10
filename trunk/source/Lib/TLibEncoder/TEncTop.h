@@ -269,6 +269,11 @@ public:
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
 #endif
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+  Void                    setSps3dExtension     ( TComSps3dExtension sps3dExtension ) { m_cSPS.setSps3dExtension( sps3dExtension );  };
+#endif
+#endif
 #if H_3D_IC
   Void                    setICEnableCandidate         ( Int* ICEnableCandidate) { m_aICEnableCandidate = ICEnableCandidate; }
   Void                    setICEnableNum         ( Int* ICEnableNum) { m_aICEnableNum = ICEnableNum; }

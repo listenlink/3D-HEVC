@@ -139,7 +139,9 @@ Void TAppEncTop::xInitLibCfg()
   xSetDpbSize              ( vps ); 
   xSetVPSVUI               ( vps ); 
 #if H_3D
+#if !HHI_TOOL_PARAMETERS_I2_J0107
   xSetVPSExtension2        ( vps ); 
+#endif
   m_ivPicLists.setVPS      ( &vps );
   xDeriveDltArray          ( vps, dlt );
 #endif
@@ -172,6 +174,36 @@ Void TAppEncTop::xInitLibCfg()
     vps.printLayerSets(); 
     vps.printPTL(); 
   }
+
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
+  // Set 3d tool parameters
+
+  for (Int d = 0; d < 2; d++)
+  {  
+    m_sps3dExtension.setIvMvPredFlag          ( d, m_ivMvPredFlag[d]       );
+    m_sps3dExtension.setIvMvScalingFlag       ( d, m_ivMvScalingFlag[d]    );
+    if (d == 0 )
+    {    
+      m_sps3dExtension.setLog2SubPbSizeMinus3   ( d, m_log2SubPbSizeMinus3   );
+      m_sps3dExtension.setIvResPredFlag         ( d, m_ivResPredFlag         );
+      m_sps3dExtension.setDepthRefinementFlag   ( d, m_depthRefinementFlag   );
+      m_sps3dExtension.setViewSynthesisPredFlag ( d, m_viewSynthesisPredFlag );
+      m_sps3dExtension.setDepthBasedBlkPartFlag ( d, m_depthBasedBlkPartFlag );
+    }
+    else
+    {    
+      m_sps3dExtension.setMpiFlag               ( d, m_mpiFlag               );
+      m_sps3dExtension.setLog2MpiSubPbSizeMinus3( d, m_log2MpiSubPbSizeMinus3);
+      m_sps3dExtension.setIntraContourFlag      ( d, m_intraContourFlag      );
+      m_sps3dExtension.setIntraSdcWedgeFlag     ( d, m_intraSdcFlag || m_intraWedgeFlag     );
+      m_sps3dExtension.setQtPredFlag            ( d, m_qtPredFlag            );
+      m_sps3dExtension.setInterSdcFlag          ( d, m_interSdcFlag          );
+      m_sps3dExtension.setIntraSingleFlag       ( d, m_intraSingleFlag       );  
+    }
+  }
+#endif
+#endif
 
   for(Int layerIdInVps = 0; layerIdInVps < m_numberOfLayers; layerIdInVps++)
   {
@@ -215,25 +247,39 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setVSDWeight                    ( isDepth ? m_iVSDWeight           : 0     );
     m_cTEncTop.setDWeight                      ( isDepth ? m_iDWeight             : 0     );
 #endif // H_3D_VSO
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_SPIVMP
     m_cTEncTop.setSubPULog2Size                 (( isDepth || 0==layerIdInVps ) ? 0 : m_iSubPULog2Size   );
     m_cTEncTop.setSubPUMPILog2Size              ( !isDepth ? 0 : m_iSubPUMPILog2Size   );
+#endif
 #endif
 #if H_3D_IC
     m_cTEncTop.setUseIC                        ( vps.getViewIndex( layerId ) == 0 || isDepth ? false : m_abUseIC );
     m_cTEncTop.setUseICLowLatencyEnc           ( m_bUseLowLatencyICEnc );
 #endif
-  //========== Depth intra modes ==========
+
+    
+#if HHI_TOOL_PARAMETERS_I2_J0107
+    m_cTEncTop.setUseDMM                       ( isDepth ? m_intraWedgeFlag   : false );
+    m_cTEncTop.setUseSDC                       ( isDepth ? m_intraSdcFlag     : false );
+    m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT   : false );
+    m_cTEncTop.setUseQTL                       ( isDepth ? m_bUseQTL  : false );
+#else
+//========== Depth intra modes ==========
 #if H_3D_DIM
     m_cTEncTop.setUseDMM                       ( isDepth ? m_useDMM               : false );
+#if !HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D_FCO
     m_cTEncTop.setUseIVP                       ( vps.getViewIndex( layerId ) == 0 && isDepth ? m_useIVP               : false );
 #else
     m_cTEncTop.setUseIVP                       ( isDepth ? m_useIVP               : false );
 #endif
+#endif
     m_cTEncTop.setUseSDC                       ( isDepth ? m_useSDC               : false );
     m_cTEncTop.setUseDLT                       ( isDepth ? m_useDLT               : false );
 #endif
+
+
 #if H_3D_SINGLE_DEPTH
     m_cTEncTop.setUseSingleDepthMode           ( isDepth ? m_useSingleDepthMode   : false );
 #endif
@@ -253,6 +299,12 @@ Void TAppEncTop::xInitLibCfg()
 #else
     m_cTEncTop.setUseMPI                       ( isDepth ? m_bMPIFlag    : false );
 #endif
+#endif
+#endif
+
+
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  m_cTEncTop.setSps3dExtension                 ( m_sps3dExtension );
 #endif
 #endif // H_3D
 
@@ -884,10 +936,12 @@ Void TAppEncTop::encode()
           }
 #endif
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
           m_acTEncTopList[ layer ]->getSliceEncoder()->setDDDPar( m_cCameraData.getCodedScale()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
               m_cCameraData.getCodedOffset()[0][ m_acTEncTopList[layer]->getViewIndex() ], 
               m_cCameraData.getCamParsCodedPrecision() );
+#endif
 #endif
         Int   iNumEncoded = 0;
 
@@ -1319,6 +1373,9 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
     }  
   }
 
+#if H_MV_FIX_NUM_VIEWS
+  vps.initNumViews(); 
+#endif
   Int maxViewId = xGetMax( m_viewId ); 
 
   Int viewIdLen = gCeilLog2( maxViewId + 1 ); 
@@ -1343,7 +1400,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       vps.setDirectDependencyFlag( depLayer, refLayer, false); 
       vps.setDirectDependencyType( depLayer, refLayer,    -1 ); 
     }
-    }
+  }
 
   Int  defaultDirectDependencyType = -1; 
   Bool defaultDirectDependencyFlag = false; 
@@ -1375,6 +1432,10 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   vps.setDefaultDirectDependencyFlag( defaultDirectDependencyFlag );       
   vps.setDefaultDirectDependencyType( defaultDirectDependencyFlag ? defaultDirectDependencyType : -1 );       
 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+  vps.setRefLayers(); 
+#endif
+
   // Max sub layers, + presence flag
   Bool subLayersMaxMinus1PresentFlag = false; 
   for (Int curLayerIdInVps = 0; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++ )
@@ -1392,34 +1453,129 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
 
   vps.setVpsSubLayersMaxMinus1PresentFlag( subLayersMaxMinus1PresentFlag ); 
 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+  // Max temporal id for inter layer reference pictures
+  for ( Int refLayerIdInVps = 0; refLayerIdInVps < m_numberOfLayers; refLayerIdInVps++)
+  {
+    Int refLayerIdInNuh = vps.getLayerIdInNuh( refLayerIdInVps );
+    for ( Int curLayerIdInVps = 1; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++)
+    {
+      Int curLayerIdInNuh = vps.getLayerIdInNuh( curLayerIdInVps );      
+#if H_3D
+      Int maxTid = -1; 
+      if ( vps.getDirectDependencyFlag( curLayerIdInVps, refLayerIdInVps ) )
+      {
+        if ( m_depthFlag[ curLayerIdInVps] == m_depthFlag[ refLayerIdInVps ] )
+        {
+#endif
+          for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
+          {        
+            GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+            GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+            for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++)
+            {
+#if H_3D
+              if ( vps.getIdRefListLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[ j ] ) == refLayerIdInNuh )
+#else
+              if ( vps.getIdDirectRefLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[ j ] ) == refLayerIdInNuh )
+#endif
+              {
+                Bool refAlwaysIntra = ( i == getGOPSize() ) && ( m_iIntraPeriod[ curLayerIdInVps ] % m_iIntraPeriod[ refLayerIdInVps ] == 0 );
+                Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
+                maxTid = std::max( maxTid, ( refAlwaysIntra || refLayerZero ) ? 0 : geRef.m_temporalId ); 
+              }
+            }
+          }              
+#if H_3D
+        }
+        else
+        {        
+#if HHI_TOOL_PARAMETERS_I2_J0107
+          if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
+#else
+          if( m_depthFlag[ curLayerIdInVps ] && ( m_bMPIFlag || m_bLimQtPredFlag || m_useIVP  ) ) 
+#endif
+          {          
+            Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
+            if ( nuhLayerIdTex == refLayerIdInNuh )
+            {
+              maxTid = std::max( maxTid, vps.getSubLayersVpsMaxMinus1( refLayerIdInVps) + 1 );
+            }
+          }
+#if HHI_TOOL_PARAMETERS_I2_J0107
+          if( !m_depthFlag[ curLayerIdInVps ] && vps.getNumRefListLayers( curLayerIdInNuh) > 0  && ( m_depthRefinementFlag || m_viewSynthesisPredFlag || m_depthBasedBlkPartFlag ) ) 
+#else
+          if( !m_depthFlag[ curLayerIdInVps ] && vps.getNumRefListLayers( curLayerIdInNuh) > 0  && ( m_depthRefinementFlag || m_viewSynthesisPredFlag || m_bUseDBBP) ) 
+#endif
+          {  
+            Int maxPresentTid =-1; 
+            Bool allPresent = true; 
+            for (Int i = 0; i < vps.getNumRefListLayers( curLayerIdInNuh); i++ )
+            {
+              Int nuhLayerIdDep = vps.getLayerIdInNuh( vps.getViewIndex( vps.getIdRefListLayer(curLayerIdInNuh, i ) ), true ); 
+              if ( nuhLayerIdDep== refLayerIdInNuh )
+              {
+                maxPresentTid= std::max( maxTid, vps.getSubLayersVpsMaxMinus1( refLayerIdInVps) + 1 );              
+              }
+              else
+              {
+                allPresent = false; 
+              }
+            }
 
+            if ( allPresent )
+            {
+              maxTid= std::max( maxTid, maxPresentTid );              
+            }
+          }        
+        }
+      }
+      vps.setMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps, maxTid + 1 );
+#endif
+    }    
+  }
+
+  // Max temporal id for inter layer reference pictures presence flag
+  Bool maxTidRefPresentFlag = false;   
+  for ( Int refLayerIdInVps = 0; refLayerIdInVps < m_numberOfLayers; refLayerIdInVps++)
+  {
+    for ( Int curLayerIdInVps = 1; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++)
+    {
+        maxTidRefPresentFlag = maxTidRefPresentFlag || ( vps.getMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps ) != 7 );    
+    }
+  }
+  vps.setMaxTidRefPresentFlag( maxTidRefPresentFlag );
+#else
   // Max temporal id for inter layer reference pictures + presence flag
   Bool maxTidRefPresentFlag = false; 
   for ( Int refLayerIdInVps = 0; refLayerIdInVps < m_numberOfLayers; refLayerIdInVps++)
   {
     for ( Int curLayerIdInVps = 1; curLayerIdInVps < m_numberOfLayers; curLayerIdInVps++)
     {
-      Int maxTid = -1; 
-      for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
-      {        
-        GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
-        GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
-        for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++)
+        Int maxTid = -1; 
+        for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
         {        
-          if ( m_directRefLayers[ curLayerIdInVps ][ geCur.m_interLayerPredLayerIdc[ j ]] == refLayerIdInVps )
+          GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+          GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+          for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++)
           {
-            Bool refAlwaysIntra = ( i == getGOPSize() ) && ( m_iIntraPeriod[ curLayerIdInVps ] % m_iIntraPeriod[ refLayerIdInVps ] == 0 );
-            Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
-            maxTid = std::max( maxTid, ( refAlwaysIntra || refLayerZero ) ? 0 : geRef.m_temporalId ); 
+            if ( m_directRefLayers[ curLayerIdInVps ][ geCur.m_interLayerPredLayerIdc[ j ]] == refLayerIdInVps )
+            {
+              Bool refAlwaysIntra = ( i == getGOPSize() ) && ( m_iIntraPeriod[ curLayerIdInVps ] % m_iIntraPeriod[ refLayerIdInVps ] == 0 );
+              Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
+              maxTid = std::max( maxTid, ( refAlwaysIntra || refLayerZero ) ? 0 : geRef.m_temporalId ); 
+            }
           }
         }
-      }
-      vps.setMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps, maxTid + 1 );
-      maxTidRefPresentFlag = maxTidRefPresentFlag || ( maxTid != 6 );    
+        vps.setMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps, maxTid + 1 );
+        maxTidRefPresentFlag = maxTidRefPresentFlag || ( maxTid != 6 );    
     }
   }
 
   vps.setMaxTidRefPresentFlag( maxTidRefPresentFlag );
+#endif  
+
+
   // Max one active ref layer flag
   Bool maxOneActiveRefLayerFlag = true;  
   for ( Int layerIdInVps = 1; layerIdInVps < m_numberOfLayers && maxOneActiveRefLayerFlag; layerIdInVps++)
@@ -1429,7 +1585,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       GOPEntry ge =  m_GOPListMvc[layerIdInVps][ ( i < getGOPSize()  ? i : MAX_GOP ) ]; 
       maxOneActiveRefLayerFlag =  maxOneActiveRefLayerFlag && (ge.m_numActiveRefLayerPics <= 1); 
     }            
-}
+  }
 
   vps.setMaxOneActiveRefLayerFlag( maxOneActiveRefLayerFlag );
   
@@ -1440,22 +1596,41 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
     {    
       vps.setPocLsbNotPresentFlag( layerIdInVps,  true );  
     }
-  }
+  }  
   
   // All Ref layers active flag
   Bool allRefLayersActiveFlag = true; 
   for ( Int layerIdInVps = 1; layerIdInVps < m_numberOfLayers && allRefLayersActiveFlag; layerIdInVps++)
   {    
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+    Int layerIdInNuh = vps.getLayerIdInNuh( layerIdInVps ); 
+#endif
     for( Int i = 0; i < ( getGOPSize() + 1) && allRefLayersActiveFlag; i++ ) 
     {        
       GOPEntry ge =  m_GOPListMvc[layerIdInVps][ ( i < getGOPSize()  ? i : MAX_GOP ) ]; 
       Int tId = ge.m_temporalId;  // Should be equal for all layers. 
       
       // check if all reference layers when allRefLayerActiveFlag is equal to 1 are reference layer pictures specified in the gop entry
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+      for (Int k = 0; k < vps.getNumRefListLayers( layerIdInNuh ) && allRefLayersActiveFlag; k++ )
+      {
+        Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdRefListLayer( layerIdInNuh , k ) ); 
+#else
+      for (Int k = 0; k < vps.getNumDirectRefLayers( layerIdInNuh ) && allRefLayersActiveFlag; k++ )
+      {
+        Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdDirectRefLayer( layerIdInNuh , k ) ); 
+#endif
+#else
       for (Int k = 0; k < m_directRefLayers[ layerIdInVps].size() && allRefLayersActiveFlag; k++ )
       {
         Int refLayerIdInVps = vps.getLayerIdInVps( m_directRefLayers[ layerIdInVps ][ k ] ); 
+#endif
+#if H_MV_FIX_REF_LAYER_PIC_FLAG
+        if ( vps.getSubLayersVpsMaxMinus1(refLayerIdInVps) >= tId  && ( tId == 0 || vps.getMaxTidIlRefPicsPlus1(refLayerIdInVps,layerIdInVps) > tId )  )
+#else
         if ( vps.getMaxTidIlRefPicsPlus1(refLayerIdInVps,layerIdInVps) > tId  && vps.getSubLayersVpsMaxMinus1(refLayerIdInVps) >= tId )
+#endif
         {
           Bool gopEntryFoundFlag = false; 
           for( Int l = 0; l < ge.m_numActiveRefLayerPics && !gopEntryFoundFlag; l++ )
@@ -1472,11 +1647,26 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       for( Int l = 0; l < ge.m_numActiveRefLayerPics; l++ )
       {   
         Bool referenceLayerFoundFlag = false; 
+#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
+#if H_3D
+        for (Int k = 0; k < vps.getNumRefListLayers( layerIdInNuh ); k++ )
+        {
+          Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdRefListLayer( layerIdInNuh, k) );
+#else
+        for (Int k = 0; k < vps.getNumDirectRefLayers( layerIdInNuh ); k++ )
+        {
+          Int refLayerIdInVps = vps.getLayerIdInVps( vps.getIdDirectRefLayer( layerIdInNuh, k) );
+#endif
+#else
         for (Int k = 0; k < m_directRefLayers[ layerIdInVps].size(); k++ )
         {
           Int refLayerIdInVps = vps.getLayerIdInVps( m_directRefLayers[ layerIdInVps ][ k ] ); 
-
+#endif
+#if H_MV_FIX_REF_LAYER_PIC_FLAG
+          if ( vps.getSubLayersVpsMaxMinus1(refLayerIdInVps) >= tId  && ( tId == 0 || vps.getMaxTidIlRefPicsPlus1(refLayerIdInVps,layerIdInVps) > tId )  )
+#else
           if ( vps.getMaxTidIlRefPicsPlus1(refLayerIdInVps,layerIdInVps) > tId  && vps.getSubLayersVpsMaxMinus1(refLayerIdInVps) >= tId )
+#endif
           {          
             referenceLayerFoundFlag = referenceLayerFoundFlag || ( ge.m_interLayerPredLayerIdc[l] == k ); 
           }          
@@ -1488,9 +1678,11 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   }
 
   vps.setAllRefLayersActiveFlag( allRefLayersActiveFlag );
-
+#if !HHI_DEPENDENCY_SIGNALLING_I1_J0107
   vps.setRefLayers(); 
+#endif
 }; 
+
 
 GOPEntry* TAppEncTop::xGetGopEntry( Int layerIdInVps, Int poc )
 {
@@ -2017,6 +2209,8 @@ Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
 
 
 #if H_3D
+#if HHI_TOOL_PARAMETERS_I2_J0107
+#else
 Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 {
   for ( Int layer = 0; layer <= vps.getMaxLayersMinus1(); layer++ )
@@ -2090,6 +2284,9 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #if H_3D_INTER_SDC
     vps.setInterSDCFlag( layer, !isLayerZero && isDepth && m_bDepthInterSDCFlag );
 #endif
+#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
+    vps.setSingleDepthModeFlag( layer, !isLayerZero && isDepth && m_useSingleDepthMode );         
+#endif
 #if H_3D_IV_MERGE
 #if H_3D_FCO
     vps.setMPIFlag( layer, !isLayerZero && isDepth && m_bMPIFlag && !isDepthFirst );
@@ -2099,6 +2296,7 @@ Void TAppEncTop::xSetVPSExtension2( TComVPS& vps )
 #endif
   }  
 }
+#endif
 
 Void TAppEncTop::xDeriveDltArray( TComVPS& vps, TComDLT& dlt )
 {
