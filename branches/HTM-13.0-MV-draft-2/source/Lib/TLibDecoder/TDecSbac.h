@@ -75,20 +75,8 @@ public:
   Void  resetEntropy (TComSlice* pSlice );
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
   Void  parseVPS                  ( TComVPS* /*pcVPS*/ ) {}
-#if HHI_TOOL_PARAMETERS_I2_J0107
   Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
-#else
-#if H_3D
-  Void  parseSPS                  ( TComSPS* /*pcSPS*/ , Int /*viewIndex*/, Bool /*depthFlag*/ ) {}
-#else
-  Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
-#endif
-#endif
-#if H_3D
-  Void  parsePPS                  ( TComPPS* /*pcPPS*/, TComVPS* /*pcVPS*/ ) {}
-#else
   Void  parsePPS                  ( TComPPS* /*pcPPS*/ ) {}
-#endif
 
 #if H_MV
   Void  parseSliceHeader          ( TComSlice*& /*rpcSlice*/, ParameterSetManagerDecoder* /*parameterSetManager*/, Int targetOlsIdx ) {}
@@ -108,23 +96,6 @@ private:
   Void  xReadUnaryMaxSymbol ( UInt& ruiSymbol, ContextModel* pcSCModel, Int iOffset, UInt uiMaxSymbol );
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam );
-#if H_3D_DIM
-  Void  xReadExGolombLevel   ( UInt& ruiSymbol, ContextModel& rcSCModel  );
-  Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt uiNumSeg );
-#if H_3D_DIM_DMM
-  Void  xParseDmm1WedgeIdx   ( UInt& ruiTabIdx, Int iNumBit );
-#endif
-#if H_3D_DIM_SDC
-  Void  xParseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
-#endif
-#endif
-#if H_3D_INTER_SDC
-  Void  parseDeltaDC         ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
-  Void  parseSDCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_DBBP
-  Void parseDBBPFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
 private:
   TComInputBitstream* m_pcBitstream;
   TDecBinIf*        m_pcTDecBinIf;
@@ -132,19 +103,10 @@ private:
 public:
   
   Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D_SINGLE_DEPTH  
-  Void parseSingleDepthMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif  
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex );
-#if H_3D_ARP
-  Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_IC
-  Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
@@ -152,10 +114,6 @@ public:
   
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
-#if H_3D_DIM
-  Void parseIntraDepth     ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
-  Void parseIntraDepthMode ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
-#endif
 
   Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
@@ -185,18 +143,8 @@ private:
   Int                  m_numContextModels;
   ContextModel3DBuffer m_cCUSplitFlagSCModel;
   ContextModel3DBuffer m_cCUSkipFlagSCModel;
-#if H_3D_SINGLE_DEPTH
-  ContextModel3DBuffer m_cCUSingleDepthFlagSCModel;
-  ContextModel3DBuffer m_cSingleDepthValueSCModel;
-#endif
   ContextModel3DBuffer m_cCUMergeFlagExtSCModel;
   ContextModel3DBuffer m_cCUMergeIdxExtSCModel;
-#if H_3D_ARP
-  ContextModel3DBuffer m_cCUPUARPWSCModel;
-#endif
-#if H_3D_IC
-  ContextModel3DBuffer m_cCUICFlagSCModel;
-#endif
   ContextModel3DBuffer m_cCUPartSizeSCModel;
   ContextModel3DBuffer m_cCUPredModeSCModel;
   ContextModel3DBuffer m_cCUIntraPredSCModel;
@@ -223,22 +171,6 @@ private:
   ContextModel3DBuffer m_cTransformSkipSCModel;
   ContextModel3DBuffer m_CUTransquantBypassFlagSCModel;
 
-#if H_3D_DIM
-  ContextModel3DBuffer m_cDepthIntraModeSCModel;
-  ContextModel3DBuffer m_cDdcFlagSCModel;
-  ContextModel3DBuffer m_cDdcDataSCModel;
-  ContextModel3DBuffer m_cAngleFlagSCModel;
-#if H_3D_DIM_SDC  
-  ContextModel3DBuffer m_cSDCResidualFlagSCModel;
-  ContextModel3DBuffer m_cSDCResidualSCModel;
-#endif
-#endif
-#if H_3D_DIM_SDC  
-  ContextModel3DBuffer m_cSDCFlagSCModel;
-#endif
-#if H_3D_DBBP
-  ContextModel3DBuffer m_cDBBPFlagSCModel;
-#endif
 };
 
 //! \}

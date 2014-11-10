@@ -62,9 +62,6 @@ protected:
   std::vector<Char*> m_pchReconFiles;                 ///< array of output reconstruction file name create from output reconstruction file name
 #endif
   Char*         m_pchReconFile;                       ///< output reconstruction file name
-#if H_3D
-  Char*         m_pchScaleOffsetFile;                 ///< output coded scale and offset parameters
-#endif
   Int           m_iSkipFrame;                         ///< counter for frames prior to the random access point to skip
   Int           m_outputBitDepthY;                    ///< bit depth used for writing output (luma)
   Int           m_outputBitDepthC;                    ///< bit depth used for writing output (chroma)t

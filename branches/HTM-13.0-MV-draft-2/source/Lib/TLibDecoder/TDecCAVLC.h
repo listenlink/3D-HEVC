@@ -62,10 +62,6 @@ public:
 protected:
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
   
-#if H_3D
-  Int**    m_aaiTempScale;
-  Int**    m_aaiTempOffset;
-#endif
 
 public:
 
@@ -88,34 +84,14 @@ public:
 #if H_MV
   Void  parseSPSExtension   ( TComSPS* pcSPS );  
 #endif
-#if H_3D
-#if HHI_VPS_3D_EXTENSION_I3_J0107
-  Void  parseVPS3dExtension  ( TComVPS* pcVPS ); 
-#else
-  Void  parseVPSExtension2  ( TComVPS* pcVPS ); 
-#endif
-#if HHI_TOOL_PARAMETERS_I2_J0107
-  Void  parseSPS3dExtension ( TComSPS* pcSPS );
   Void  parseSPS            ( TComSPS* pcSPS );
-#else
-  Void  parseSPSExtension2  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
-  Void  parseSPS            ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag );
-#endif  
-#else
-  Void  parseSPS            ( TComSPS* pcSPS );
-#endif
 
 #if H_MV
   Void  parsePPSMultilayerExtension( TComPPS* pcPPS );
 #endif
 
 
-#if H_3D
-  Void  parsePPS            ( TComPPS* pcPPS, TComVPS* pcVPS );
-  Void  parsePPSExtension   ( TComPPS* pcPPS, TComVPS* pcVPS );
-#else
   Void  parsePPS            ( TComPPS* pcPPS);
-#endif
 
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
@@ -132,25 +108,9 @@ public:
   Void  parseMVPIdx         ( Int& riMVPIdx );
   
   Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D_SINGLE_DEPTH
-  Void  parseSingleDepthMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif  
   Void  parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );
-#if H_3D_ARP 
-  Void parseARPW            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_IC
-  Void  parseICFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_INTER_SDC
-  Void  parseDeltaDC        ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
-  Void  parseSDCFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_DBBP
-  Void  parseDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void parseSplitFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePartSize        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parsePredMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
