@@ -50,110 +50,36 @@
    make             -> HEVC_EXT not defined    
    make HEVC_EXT=0  -> H_MV=0 H_3D=0   --> plain HM
    make HEVC_EXT=1  -> H_MV=1 H_3D=0   --> MV only 
-   make HEVC_EXT=2  -> H_MV=1 H_3D=1   --> full 3D 
+
 */
 
 #ifndef HEVC_EXT
-#define HEVC_EXT                    2
+#define HEVC_EXT                    1
 #endif
 
-#if ( HEVC_EXT < 0 )||( HEVC_EXT > 2 )
-#error HEVC_EXT must be in the range of 0 to 2, inclusive. 
+#if ( HEVC_EXT < 0 )||( HEVC_EXT > 1 )
+#error HEVC_EXT must be in the range of 0 to 1, inclusive. 
 #endif
 
 #define H_MV          ( HEVC_EXT != 0)
-#define H_3D          ( HEVC_EXT == 2)
 
-#define NTT_BUG_FIX_TK54    1
-#define BUG_FIX_TK65        1
-
-#define MTK_I0093           1
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
-
 #if H_MV
 #define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
 #endif
-
-
-
-
-/////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////   DERIVED DEFINES ///////////////////////////////////  
-/////////////////////////////////////////////////////////////////////////////////////////
-
-// Fixes
-
-
-#define H_MV_FIX_REF_LAYER_PIC_FLAG            1
-#define H_MV_FIX_NUM_VIEWS                     1
-#define H_3D_OUTPUT_ACTIVE_TOOLS               0
-
-///// ***** SINGLE DEPTH MODE *********
-
-///// ***** VIEW SYNTHESIS OPTIMIZAION *********
-
-////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
-
-///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
-
-///// ***** DEPTH INTRA MODES *********
-///// ***** VIEW SYNTHESIS PREDICTION *********
-
-
-///// ***** ILLUMATION COMPENSATION *********
-
-
-///// ***** DEPTH BASED BLOCK PARTITIONING *********
-
-
-///// ***** FCO *********
-#define H_3D_FCO_VSP_DONBDV_E0163               0   // Adaptive depth reference for flexible coding order
-
-
-
-
 /////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////
-// TBD: Check if integration is necessary. 
+// Fixes
+#define H_MV_FIX_REF_LAYER_PIC_FLAG            1
+#define H_MV_FIX_NUM_VIEWS                     1
 
 #define H_MV_HLS_FIX                         1
 #define H_MV_HLS_PTL_LIMITS                  0
 #define H_MV_HLS7_GEN                        0  // General changes (not tested)
 #define H_MV_ALIGN_HM_15                     1  
-
-// POC
-// #define H_MV_HLS_7_POC_P0041_3            0 // (POC/P0041/POC reset) #3 It was remarked that we should require each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. This was agreed. Decision: Adopt (with constraint for discardable_flag as described above) 
-// #define H_MV_HLS_7_POC_P0041_FIXES        0 // (POC/P0041/Fixes) For each non-IRAP picture that has discardable_flag equal to 1 to have NUT value indicating that it is a sub-layer non-reference picture. 
-// #define H_MV_HLS_7_POC_P0056_4            0 // (POC/P0056/layer tree poc) #4 Proposal 1: If the POC reset approach is adopted as the basis for multi-layer POC derivation, it is proposed to derive the POC anchor picture from the previous TID0 picture (that is not a RASL picture, a RADL picture or a sub-layer non-reference picture and not with discardable_flag equal to 1) of  the current layer or any of its reference layer. This is asserted to improve loss resilience and reduce bit rate overhead. Decision: Adopt Proposal 1 (with the suggested modifications Ewith text provided as P0297).
-
-// SEI related
-//#define H_MV_HLS_8_SEI_NODOC_53  0 // #53 (SEI    /NODOC/Added Multiview view position SEI message) Plain copy from AVC.
-//#define H_MV_HLS_8_SEI_NODOC_52  0 // #52 (SEI    /NODOC/Added Multiview acquisition information SEI) Plain copy from AVC. 
-//#define H_MV_HLS_8_SEI_NODOC_51  0 // #51 (SEI    /NODOC/Added Multiview scene information SEI message)
-//#define H_MV_HLS_8_SEI_Q0189_35  0 // #35 (SEI    /Q0189/SEI message for indicating constraints on TMVP) Proposal 2.3,  SEI message for indicating constraints on TMVP
-//#define H_MV_HLS_8_EDF_Q0116_29  0 // #29 (ED.FIX /Q0116/Recovery point SEI) , consider adding a note regarding how random accessibility is affected by the recovery point SEI message
-//#define H_MV_HLS_8_GEN_Q0183_23  0 // #23 (GEN    /Q0183/SEI clean-ups) numerous small clean-ups on SEI messages.
-//#define H_MV_HLS_8_MIS_Q0247_49  0 // #49 (MISC   /Q0247/frame-field information SEI message)
-//#define H_MV_HLS_8_MIS_Q0189_34  0 // #34 (MISC   /Q0189/slice temporal mvp enabled flag) Proposal 2.2, clarification of semantics of slice temporal mvp enabled flag
-//#define H_MV_HLS_8_EDF_Q0081_01  0 // #1  (ED.FIX /Q0081/alpha channel persist) On reuse of alpha planes in auxiliary pictures. It was asked why there would not be a presumption that the alpha channel content would simply persist, without needing the flag to indicate it. Decision (Ed.): Delegated to editors to clarify, as necessary, that the alpha channel content persists until cancelled or updated in output order.
-//#define H_MV_HLS_8_SEI_Q0253_37  0 // #37 (SEI    /Q0253/layer not present), modified semantics of layers not present SEI message to correct bug introduced during editing 
-//#define H_MV_HLS_8_SEI_Q0045_11  0 // #11 (SEI    /Q0045/Overlay) Proposal for an SEI message on selectable overlays. Decision: Adopt (modified for variable-length strings).
-//#define H_MV_HLS_7_SEI_P0133_28  0 // (SEI/P0133/Recovery point SEI) #28 Decision: Adopt change to recover point semantics only (-v3)
-//#define H_MV_HLS_7_SEI_P0123_25  0 // (SEI/P0123/Alpha channel info) #25 Add alpha channel information SEI message Decision: Adopt. Constrain the bit depth indicated to be equal to the coded bit depth of the aux picture. 
-
-// DPB
-//#define H_MV_HLS_8_HRD_Q0102_09  0 // #9  (HRD    /Q0102/NoOutputOfPriorPicsFlag) It was suggested that also the separate_colour_plane_flag should affect inference of NoOutputOfPriorPicsFlag. Decision (Ed.): Agreed (affects RExt text).
-//#define H_MV_HLS_8_DBP_Q0154_38  0 // #38 (DBP    /Q0154/VPS DPB) Proposal in C.5.2.1: Add in the decoding process that when a new VPS is activated, all pictures in the DPB are marked as unused for reference
-//#define H_MV_HLS_8_HRD_Q0154_10  0 // #10 (HRD    /Q0154/DPB Flushing and parameters) On picture flushing and DPB parameters Decision: Adopted (some details to be discussed further in BoG).
-//#define H_MV_HLS_7_OTHER_P0187_1 0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
-
-// OTHERS
-//#define H_MV_HLS_8_HSB_Q0041_03  0 // #3  (HS     /Q0041/hybrid scalability) The proposed text was endorsed, with non-editorial open issues considered as follows ?// #define H_MV_HLS_7_OTHER_P0187_1          0 // (OTHER/P0187/NoOutputOfPriorPicsFlag) #1 Inference of NoOutputOfPriorPicsFlag and proposes to take into account colour format and bit depth for the inference in addition to spatial resolution 
-//#define H_MV_HLS_8_MIS_Q0078_24  0 // #24 (MISC   /Q0078/scan and pic type) , Items 3 b,c and 4, clarifying which pictures in an output layer sets are applied the values of general_progressive_source_flag, general_interlaced_source_flag, general_non_packed_constraint_flag and general_frame_only_constraint_flag.
-//#define H_MV_HLS_7_HRD_P0138_6   0 //     (HRD/P0138/HRD parameters for bitstreams excluding) #6 Decision: Adopt (as revised in updated contribution, with the specification of a flag in the BP SEI (HRD/P0192/sub-DPB) #12 Establish sub-DPBs based on the representation format indicated at the VPS level. It was suggested that the expressed shared capacity limit would need to be less than or equal to the sum of the individual capacity limits. Decision: Adopt as modified. Further study is encouraged on profile/level constraint selections. 
 
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   HM RELATED DEFINES ////////////////////////////////
@@ -173,7 +99,7 @@
 
 #define TILE_SIZE_CHECK 1
 
-#define FIX1172 1 ///< fix ticket #1172
+#define FIX1172                     1 ///< fix ticket #1172
 
 #define SETTING_PIC_OUTPUT_MARK     1
 #define SETTING_NO_OUT_PIC_PRIOR    1
