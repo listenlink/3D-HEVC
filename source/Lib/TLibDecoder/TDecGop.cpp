@@ -137,26 +137,6 @@ Void TDecGop::decompressSlice(TComInputBitstream* pcBitstream, TComPic*& rpcPic)
   m_pcEntropyDecoder->setEntropyDecoder ( m_pcSbacDecoder  );
   m_pcEntropyDecoder->setBitstream      ( ppcSubstreams[0] );
   m_pcEntropyDecoder->resetEntropy      (pcSlice);
-#if H_3D_NBDV 
-  if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
-  {
-    Int iColPoc = pcSlice->getRefPOC(RefPicList(1-pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
-    rpcPic->setNumDdvCandPics(rpcPic->getDisCandRefPictures(iColPoc));
-  }
-
-  if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
-  {
-    rpcPic->checkTemporalIVRef();
-  }
-
-  if(pcSlice->getIsDepth())
-  {
-    rpcPic->checkTextureRef();
-  }
-#endif
-#if H_3D
-  pcSlice->setDepthToDisparityLUTs(); 
-#endif
   m_pcSbacDecoders[0].load(m_pcSbacDecoder);
   m_pcSliceDecoder->decompressSlice( ppcSubstreams, rpcPic, m_pcSbacDecoder, m_pcSbacDecoders);
   m_pcEntropyDecoder->setBitstream(  ppcSubstreams[uiNumSubstreams-1] );
@@ -190,12 +170,7 @@ Void TDecGop::filterPicture(TComPic*& rpcPic)
     m_pcSAO->SAOProcess(rpcPic);
     m_pcSAO->PCMLFDisableProcess(rpcPic);
   }
-#if H_3D
-  rpcPic->compressMotion(2); 
-#endif
-#if !H_3D
   rpcPic->compressMotion(); 
-#endif
   Char c = (pcSlice->isIntra() ? 'I' : pcSlice->isInterP() ? 'P' : 'B');
   if (!pcSlice->isReferenced()) c += 32;
 

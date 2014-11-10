@@ -88,22 +88,6 @@ private:
 #if H_MV
   Int                   m_layerId;
   Int                   m_viewId;
-#if H_3D
-  Int                   m_viewIndex;
-  Bool                  m_isDepth;
-  Int**                 m_aaiCodedScale;
-  Int**                 m_aaiCodedOffset;
-#endif
-#endif
-#if H_3D_QTLPC
-  Bool                  m_bReduceBitsQTL;
-#endif
-#if H_3D_NBDV
-  UInt        m_uiRapRefIdx;
-  RefPicList  m_eRapRefList;
-  Int         m_iNumDdvCandPics;
-  Bool        m_abTIVRINCurrRL  [2][2][MAX_NUM_REF]; //whether an inter-view reference picture with the same view index of the inter-view reference picture of temporal reference picture of current picture exists in current reference picture lists
-  Int         m_aiTexToDepRef  [2][MAX_NUM_REF];
 #endif
 public:
   TComPic();
@@ -122,21 +106,6 @@ public:
   Int           getLayerId            ()                 { return m_layerId;    }
   Void          setViewId             ( Int viewId )     { m_viewId = viewId;   }
   Int           getViewId             ()                 { return m_viewId;     }
-#if H_3D
-  Void          setViewIndex          ( Int viewIndex )  { m_viewIndex = viewIndex;   }
-  Int           getViewIndex          ()                 { return m_viewIndex;     }
-
-  Void          setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
-  Bool          getIsDepth            ()                 { return m_isDepth; }
-
-  Void          setScaleOffset( Int** pS, Int** pO )  { m_aaiCodedScale = pS; m_aaiCodedOffset = pO; }
-  Int**         getCodedScale ()                      { return m_aaiCodedScale;  }
-  Int**         getCodedOffset()                      { return m_aaiCodedOffset; }
-#endif
-#endif
-#if H_3D_QTLPC
-  Bool          getReduceBitsFlag ()             { return m_bReduceBitsQTL;     }
-  Void          setReduceBitsFlag ( Bool bFlag ) { m_bReduceBitsQTL = bFlag;    }
 #endif
   Bool          getUsedByCurr()             { return m_bUsedByCurr; }
   Void          setUsedByCurr( Bool bUsed ) { m_bUsedByCurr = bUsed; }
@@ -184,11 +153,7 @@ public:
 
   Void          setNumReorderPics(Int i, UInt tlayer) { m_numReorderPics[tlayer] = i;    }
   Int           getNumReorderPics(UInt tlayer)        { return m_numReorderPics[tlayer]; }
-#if H_3D
-  Void          compressMotion(Int scale); 
-#else   
   Void          compressMotion(); 
-#endif
   UInt          getCurrSliceIdx()            { return m_uiCurrSliceIdx;                }
   Void          setCurrSliceIdx(UInt i)      { m_uiCurrSliceIdx = i;                   }
   UInt          getNumAllocatedSlice()       {return m_apcPicSym->getNumAllocatedSlice();}
@@ -210,19 +175,6 @@ public:
 #if H_MV
   Void          print( Bool legend );
 #endif
-#if H_3D_NBDV
-  Int           getNumDdvCandPics()                    {return m_iNumDdvCandPics;   }
-  Int           getDisCandRefPictures(Int iColPOC);
-  Void          setRapRefIdx(UInt uiRapRefIdx)         {m_uiRapRefIdx = uiRapRefIdx;}
-  Void          setRapRefList(RefPicList eRefPicList)  {m_eRapRefList = eRefPicList;}
-  Void          setNumDdvCandPics (Int i)              {m_iNumDdvCandPics = i;       }
-  UInt          getRapRefIdx()                         {return m_uiRapRefIdx;       }
-  RefPicList    getRapRefList()                        {return m_eRapRefList;       }
-  Void          checkTemporalIVRef();
-  Bool          isTempIVRefValid(Int currCandPic, Int iTempRefDir, Int iTempRefIdx);
-  Void          checkTextureRef(  );
-  Int           isTextRefValid(Int iTextRefDir, Int iTextRefIdx);
-#endif
   /** transfer ownership of seis to this picture */
   void setSEIs(SEIMessages& seis) { m_SEIs = seis; }
 
@@ -243,22 +195,11 @@ class TComPicLists
 {
 private: 
   TComList<TComList<TComPic*>*> m_lists; 
-#if H_3D
-  TComVPS*                     m_vps; 
-#endif
 public: 
   Void        push_back( TComList<TComPic*>* list ) { m_lists.push_back( list );   }
   Int         size     ()                           { return (Int) m_lists.size(); } 
-#if H_3D_ARP
-  TComList<TComPic*>*  getPicList   ( Int layerIdInNuh );
-#endif
   TComPic*    getPic   ( Int layerIdInNuh,              Int poc );    
   TComPicYuv* getPicYuv( Int layerIdInNuh,              Int poc, Bool recon ); 
-#if H_3D
-  Void        setVPS   ( TComVPS* vps ) { m_vps = vps;  }; 
-  TComPic*    getPic   ( Int viewIndex, Bool depthFlag, Int poc );
-  TComPicYuv* getPicYuv( Int viewIndex, Bool depthFlag, Int poc, Bool recon );
-#endif  
 
   Void print( );  
 

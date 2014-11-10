@@ -90,11 +90,7 @@ private:
   TEncSbac***             m_pppcRDSbacCoder;                    ///< storage for SBAC-based RD optimization
   TEncSbac*               m_pcRDGoOnSbacCoder;                  ///< go-on SBAC encoder
   UInt64                  m_uiPicTotalBits;                     ///< total bits for the picture
-#if H_3D_VSO
-  Dist64                  m_uiPicDist;                          ///< total distortion for the picture
-#else
   UInt64                  m_uiPicDist;                          ///< total distortion for the picture
-#endif
   Double                  m_dPicRdCost;                         ///< picture-level RD cost
   Double*                 m_pdRdPicLambda;                      ///< array of lambda candidates
   Double*                 m_pdRdPicQp;                          ///< array of picture QP candidates (double-type for lambda)
@@ -106,13 +102,6 @@ private:
   TEncRateCtrl*           m_pcRateCtrl;                         ///< Rate control manager
   UInt                    m_uiSliceIdx;
   std::vector<TEncSbac*> CTXMem;
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-  Int          m_iDDDScale;
-  Int          m_iDDDOffset;
-  UInt         m_uiDDDPrecision;
-#endif
-#endif
 public:
   TEncSlice();
   virtual ~TEncSlice();
@@ -146,11 +135,6 @@ public:
   Void    setSliceIdx(UInt i)   { m_uiSliceIdx = i;                       }
   Void      initCtxMem( UInt i );
   Void      setCtxMem( TEncSbac* sb, Int b )   { CTXMem[b] = sb; }
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-  Void setDDDPar( Int iScale, Int iOffset, UInt uiPrecision ){ m_iDDDScale = iScale; m_iDDDOffset = iOffset; m_uiDDDPrecision = uiPrecision; }
-#endif
-#endif
 
 private:
   Double  xGetQPValueAccordingToLambda ( Double lambda );

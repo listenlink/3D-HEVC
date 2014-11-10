@@ -98,12 +98,6 @@ private:
   TComPatternParam  m_cPatternY;
   TComPatternParam  m_cPatternCb;
   TComPatternParam  m_cPatternCr;
-#if H_3D_IC
-  Bool              m_bICFlag;
-#endif
-#if H_3D_INTER_SDC
-  Bool              m_bSDCMRSADFlag;
-#endif
   static const UChar m_aucIntraFilter[5];
   
 public:
@@ -114,14 +108,6 @@ public:
   Int   getROIYHeight()           { return m_cPatternY.m_iROIHeight;      }
   Int   getPatternLStride()       { return m_cPatternY.m_iPatternStride;  }
 
-#if H_3D_IC
-  Bool  getICFlag()               { return m_bICFlag; }
-  Void  setICFlag( Bool bICFlag ) { m_bICFlag = bICFlag; }
-#endif
-#if H_3D_INTER_SDC
-  Bool  getSDCMRSADFlag()         { return m_bSDCMRSADFlag; }
-  Void  setSDCMRSADFlag( Bool bSDCMRSADFlag )    { m_bSDCMRSADFlag = bSDCMRSADFlag; }
-#endif
 
   // access functions of ADI buffers
   Int*  getAdiOrgBuf              ( Int iCuWidth, Int iCuHeight, Int* piAdiBuf );

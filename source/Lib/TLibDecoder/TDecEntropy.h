@@ -65,20 +65,8 @@ public:
   virtual Void  setBitstream          ( TComInputBitstream* p )  = 0;
 
   virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
-#if HHI_TOOL_PARAMETERS_I2_J0107
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
-#else
-#if H_3D
-  virtual Void  parseSPS                  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  )                    = 0;
-#else
-  virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
-#endif
-#endif
-#if H_3D
-  virtual Void  parsePPS                  ( TComPPS* pcPPS, TComVPS* pcVPS )                      = 0;
-#else
   virtual Void  parsePPS                  ( TComPPS* pcPPS )                                      = 0;
-#endif
 
 #if H_MV
   virtual Void parseSliceHeader          ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx )       = 0;
@@ -92,26 +80,10 @@ public:
   
 public:
   virtual Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#if H_3D_SINGLE_DEPTH
-  virtual Void parseSingleDepthMode       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#endif
   virtual Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx ) = 0;
   virtual Void parseMergeIndex    ( TComDataCU* pcCU, UInt& ruiMergeIndex ) = 0;
-#if H_3D_ARP
-  virtual Void parseARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#endif
-#if H_3D_IC
-  virtual Void parseICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#endif
-#if H_3D_INTER_SDC
-  virtual Void parseDeltaDC       ( TComDataCU* pcCU, UInt absPartIdx, UInt depth ) = 0;
-  virtual Void parseSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#endif
-#if H_3D_DBBP
-  virtual Void parseDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
-#endif
   virtual Void parsePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parsePredMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   
@@ -160,20 +132,8 @@ public:
   Void    setBitstream                ( TComInputBitstream* p ) { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
-#if HHI_TOOL_PARAMETERS_I2_J0107
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
-#else
-#if H_3D
-  Void    decodeSPS                   ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )    { m_pcEntropyDecoderIf->parseSPS(pcSPS, viewIndex, depthFlag );                    }
-#else
-  Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
-#endif
-#endif
-#if H_3D
-  Void    decodePPS                   ( TComPPS* pcPPS, TComVPS* pcVPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS, pcVPS);                    }
-#else
   Void    decodePPS                   ( TComPPS* pcPPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS);                    }
-#endif
 #if H_MV
   Void    decodeSliceHeader           ( TComSlice*& rpcSlice, ParameterSetManagerDecoder *parameterSetManager, Int targetOlsIdx)  { m_pcEntropyDecoderIf->parseSliceHeader(rpcSlice, parameterSetManager, targetOlsIdx );         }
 #else
@@ -186,27 +146,12 @@ public:
 public:
   Void decodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D_SINGLE_DEPTH
-  Void decodeSingleDepthMode ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) ;
-#endif
   Void decodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeMergeFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void decodeMergeIndex        ( TComDataCU* pcSubCU, UInt uiPartIdx, UInt uiPartAddr, UInt uiDepth );
   Void decodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   
-#if H_3D_ARP
-  Void decodeARPW              ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_IC
-  Void decodeICFlag            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_INTER_SDC
-  Void decodeSDCFlag           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
-#if H_3D_DBBP
-  Void decodeDBBPFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
   Void decodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 
   Void decodePredInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, TComDataCU* pcSubCU );

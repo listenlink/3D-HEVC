@@ -207,9 +207,6 @@ __inline T gCeilLog2( T val )
 #define AMVP_MAX_NUM_CANDS_MEM      3           ///< max number of candidates
 // MERGE
 #define MRG_MAX_NUM_CANDS           5
-#if H_3D_IV_MERGE
-#define MRG_MAX_NUM_CANDS_MEM       (MRG_MAX_NUM_CANDS+1) // one extra for inter-view motion prediction
-#endif
 // Reference memory management
 #define DYN_REF_FREE                0           ///< dynamic free of reference memories
 
@@ -317,24 +314,6 @@ enum NalUnitType
   NAL_UNIT_INVALID,
 };
 
-#if H_3D
-//PICYUV
-#define PICYUV_PAD         16
-
-//RENDERER
-#define REN_LUMA_MARGIN   ( g_uiMaxCUWidth + PICYUV_PAD )
-#define REN_VDWEIGHT_PREC  8
-#define REN_IS_FILLED     ( 1 << REN_VDWEIGHT_PREC )
-#define REN_USED_PEL       ( (1 << g_bitDepthY) - 1 )
-#define REN_UNUSED_PEL     0
-#define REN_IS_HOLE        0
-
-
-// CAMERA PARAMETERS
-#define LOG2_DISP_PREC_LUT           2           ///< log2 of disparity precision used in integer disparity LUTs
-#define STD_CAM_PARAMETERS_PRECISION 5        ///< quarter luma sample accuarcy for derived disparities (as default)
-
-#endif // end of H_3D
 //! \}
 
 #endif // end of #ifndef  __COMMONDEF__
