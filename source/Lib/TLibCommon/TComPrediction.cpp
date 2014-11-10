@@ -1157,6 +1157,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
 
+#if !LGE_DDD_REMOVAL_J0042_J0030
 #if H_3D_DDD
   if( pcCU->getUseDDD( uiPartAddr ) )
   {
@@ -1192,6 +1193,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
 
       //return;
   } else
+#endif
 #endif
 #if H_3D_ARP
   if(pcCU->getARPW( uiPartAddr ) > 0  && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()== pcCU->getSlice()->getPOC())
@@ -1948,6 +1950,7 @@ Void TComPrediction::xPredInterChromaBlk( TComDataCU *cu, TComPicYuv *refPic, UI
   {
     Int a, b, i, j;
     const Int iShift = IC_CONST_SHIFT;
+
     xGetLLSICPrediction( cu, mv, refPic, a, b, TEXT_CHROMA_U ); // Cb
     for ( i = 0; i < cxHeight; i++ )
     {
@@ -2186,8 +2189,15 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     {
       x += pRef[j];
       y += pRec[j];
-      xx += (pRef[j] * pRef[j])>>precShift;
-      xy += (pRef[j] * pRec[j])>>precShift;
+#if LGE_CHROMA_IC_J0050_J0034
+      if ( eType == TEXT_LUMA )
+      {
+#endif
+        xx += (pRef[j] * pRef[j])>>precShift;
+        xy += (pRef[j] * pRec[j])>>precShift;
+#if LGE_CHROMA_IC_J0050_J0034
+      }
+#endif
     }
     iCountShift += g_aucConvertToBit[ uiWidth ] + 1;
   }
@@ -2216,10 +2226,15 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     {
       x += pRef[0];
       y += pRec[0];
-
-      xx += (pRef[0] * pRef[0])>>precShift;
-      xy += (pRef[0] * pRec[0])>>precShift;
-
+#if LGE_CHROMA_IC_J0050_J0034
+      if ( eType == TEXT_LUMA )
+      {
+#endif
+        xx += (pRef[0] * pRef[0])>>precShift;
+        xy += (pRef[0] * pRec[0])>>precShift;
+#if LGE_CHROMA_IC_J0050_J0034
+      }
+#endif      
       pRef += iRefStride*2;
       pRec += iRecStride*2;
     }
@@ -2233,6 +2248,15 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
     return;
   }
 
+#if LGE_CHROMA_IC_J0050_J0034
+  if (  eType != TEXT_LUMA )
+  {
+    a = 32;
+    b = (  y - x + ( 1 << ( iCountShift - 1 ) ) ) >> iCountShift;
+  }
+  else
+  {
+#endif
   xy += xx >> IC_REG_COST_SHIFT;
   xx += xx >> IC_REG_COST_SHIFT;
   Int a1 = ( xy << iCountShift ) - ((y * x) >> precShift);
@@ -2274,6 +2298,9 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
       b = (  y - ( ( a * x ) >> iShift ) + ( 1 << ( iCountShift - 1 ) ) ) >> iCountShift;
     }
   }   
+#if LGE_CHROMA_IC_J0050_J0034
+  }
+#endif
 }
 #endif
 

@@ -75,10 +75,14 @@ public:
   Void  resetEntropy (TComSlice* pSlice );
   Void  setBitstream              ( TComInputBitstream* p  ) { m_pcBitstream = p; m_pcTDecBinIf->init( p ); }
   Void  parseVPS                  ( TComVPS* /*pcVPS*/ ) {}
+#if HHI_TOOL_PARAMETERS_I2_J0107
+  Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
+#else
 #if H_3D
   Void  parseSPS                  ( TComSPS* /*pcSPS*/ , Int /*viewIndex*/, Bool /*depthFlag*/ ) {}
 #else
   Void  parseSPS                  ( TComSPS* /*pcSPS*/ ) {}
+#endif
 #endif
 #if H_3D
   Void  parsePPS                  ( TComPPS* /*pcPPS*/, TComVPS* /*pcVPS*/ ) {}
