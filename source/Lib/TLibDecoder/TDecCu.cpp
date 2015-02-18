@@ -290,11 +290,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_unit ===========\n")
 #endif
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-      pcCU->setUseDDD( false, uiAbsPartIdx, uiDepth );
-#endif
-#endif
 
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
   {
@@ -314,11 +309,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   if(!pcCU->getSlice()->isIntra())
   {
 #if H_3D_ARP && H_3D_IV_MERGE
-#if HHI_TOOL_PARAMETERS_I2_J0107
     if( pcCU->getSlice()->getIvResPredFlag() || pcCU->getSlice()->getIvMvPredFlag() )
-#else
-    if( pcCU->getSlice()->getVPS()->getUseAdvRP( pcCU->getSlice()->getLayerId() ) || pcCU->getSlice()->getVPS()->getIvMvPredFlag( pcCU->getSlice()->getLayerId() ))
-#endif
 #else 
 #if H_3D_ARP
     if( pcCU->getSlice()->getVPS()->getUseAdvRP(pcCU->getSlice()->getLayerId()) )
@@ -348,11 +339,7 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
       {
 #endif
 #if H_3D_NBDV_REF
-#if HHI_TOOL_PARAMETERS_I2_J0107
       if( pcCU->getSlice()->getDepthBasedBlkPartFlag() )  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
-#else
-      if(pcCU->getSlice()->getVPS()->getDepthRefinementFlag( pcCU->getSlice()->getLayerIdInVps() ))  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
-#endif
       {
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo, true);
       }
@@ -459,16 +446,6 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #endif
 #endif
     pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiAbsPartIdx, 0, uiDepth );
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-    if( uiMergeIndex == m_ppcCU[uiDepth]->getUseDDDCandIdx() )
-    {
-        assert( pcCU->getSlice()->getViewIndex() != 0 );
-        pcCU->setUseDDD( true, uiAbsPartIdx, 0, uiDepth );
-        pcCU->setDDDepthSubParts( m_ppcCU[uiDepth]->getDDTmpDepth(),uiAbsPartIdx, 0, uiDepth );
-    }
-#endif
-#endif
 
     TComMv cTmpMv( 0, 0 );
     for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
@@ -743,17 +720,9 @@ Void TDecCu::xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
 
   //construction of depth candidates
   Pel testDepth;
-#if SINGLE_DEPTH_SIMP_J0115
   Pel DepthNeighbours[2];
-#else
-  Pel DepthNeighbours[5];
-#endif
   Int index =0;
-#if SINGLE_DEPTH_SIMP_J0115
   for( Int i = 0; (i < 2) && (index<SINGLE_DEPTH_MODE_CAND_LIST_SIZE) ; i++ )
-#else
-  for( Int i = 0; (i < 5) && (index<SINGLE_DEPTH_MODE_CAND_LIST_SIZE) ; i++ )
-#endif
   {
     if(!pcCU->getNeighDepth (0, uiAbsPartIdx, &testDepth, i))
     {
@@ -761,16 +730,6 @@ Void TDecCu::xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     }
     DepthNeighbours[index]=testDepth;
     index++;
-#if !SINGLE_DEPTH_SIMP_J0115
-    for(Int j=0;j<index-1;j++)
-    {
-     if( (DepthNeighbours[index-1]==DepthNeighbours[j]) )
-     {
-       index--;
-       break;
-     }
-    }
-#endif
   }
 
   if(index==0)

@@ -254,11 +254,7 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cTransformSkipSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
       curCost += m_CUTransquantBypassFlagSCModel.calcCost( curSliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
 #if H_3D_DIM
-#if HHI_TOOL_PARAMETERS_I2_J0107
     if( m_pcSlice->getIntraSdcWedgeFlag() || m_pcSlice->getIntraContourFlag() )
-#else
-    if( m_pcSlice->getVpsDepthModesFlag() || m_pcSlice->getIVPFlag() )
-#endif
     {
       curCost += m_cDepthIntraModeSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
       curCost += m_cDdcFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_FLAG );
@@ -349,15 +345,7 @@ Void TEncSbac::codeVPS( TComVPS* pcVPS )
   return;
 }
 
-#if HHI_TOOL_PARAMETERS_I2_J0107
 Void TEncSbac::codeSPS( TComSPS* pcSPS )
-#else
-#if H_3D
-Void TEncSbac::codeSPS( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
-#else
-Void TEncSbac::codeSPS( TComSPS* pcSPS )
-#endif
-#endif
 {
   assert (0);
   return;
@@ -632,12 +620,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   PartSize eSize         = pcCU->getPartitionSize( uiAbsPartIdx );
 #if H_3D_QTLPC
-#if HHI_TOOL_PARAMETERS_I2_J0107
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
-#else
-  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
-  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
-#endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -1010,12 +993,7 @@ Void TEncSbac::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
   Bool bCodeSplitFlag    = true;
 
   
-#if HHI_TOOL_PARAMETERS_I2_J0107
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag(); 
-#else
-  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
-  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
-#endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -1076,11 +1054,7 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
   {
     dir[j] = pcCU->getLumaIntraDir( absPartIdx+partOffset*j );
 #if H_3D_DIM
-#if HHI_TOOL_PARAMETERS_I2_J0107
     if( pcCU->getSlice()->getIntraSdcWedgeFlag() ||  pcCU->getSlice()->getIntraContourFlag() )
-#else
-    if( pcCU->getSlice()->getVpsDepthModesFlag() ||  pcCU->getSlice()->getIVPFlag() )
-#endif
     {
       codeIntraDepth( pcCU, absPartIdx+partOffset*j );
     }
@@ -1226,11 +1200,7 @@ Void TEncSbac::codeIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx )
     default:                      break;
     }
     //mode coding
-#if HHI_TOOL_PARAMETERS_I2_J0107
     if( pcCU->getSlice()->getIntraSdcWedgeFlag() && pcCU->getSlice()->getIntraContourFlag())
-#else
-    if( pcCU->getSlice()->getVpsDepthModesFlag() && pcCU->getSlice()->getIVPFlag())
-#endif
     {
       m_pcBinIf->encodeBin( uiCodeIdx == 0 ? 0 : 1, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
     }
@@ -2329,11 +2299,7 @@ Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   PartSize ePartSize = pcCU->getPartitionSize( uiAbsPartIdx );
   AOF( ePartSize == SIZE_2NxN || ePartSize == SIZE_Nx2N );
-#if HHI_TOOL_PARAMETERS_I2_J0107
   AOF( pcCU->getSlice()->getDepthBasedBlkPartFlag() ); 
-#else
-  AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
-#endif
   AOF( !pcCU->getSlice()->getIsDepth() );
   
   UInt uiSymbol = pcCU->getDBBPFlag( uiAbsPartIdx ) ? 1 : 0;

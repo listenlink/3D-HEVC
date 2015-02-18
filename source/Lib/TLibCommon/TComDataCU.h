@@ -226,14 +226,6 @@ private:
 #if H_3D
   DisInfo       m_cDefaultDisInfo;    ///< Default disparity information for initializing
 #endif
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-  UChar*        m_pucDisparityDerivedDepth;
-  Bool*         m_pbUseDDD;
-  Int           m_iUseDDDCandIdx;
-  UChar         m_ucDDTmpDepth;
-#endif
-#endif
 #if H_3D_IV_MERGE
   TComMotionCand  m_mergCands[MRG_IVSHIFT+1];
   Int           m_baseListidc;
@@ -742,25 +734,6 @@ UChar         getNumPartitions       ();
 
   UInt          getCoefScanIdx(UInt uiAbsPartIdx, UInt uiWidth, Bool bIsLuma, Bool bIsIntra);
 
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-  UChar*       getDDDepth        ()                        { return m_pucDisparityDerivedDepth;        }
-  UChar        getDDDepth        ( UInt uiIdx )            { return m_pucDisparityDerivedDepth[uiIdx]; }
-  Void         setDDDepth        ( UInt uiIdx, UChar n )   { m_pucDisparityDerivedDepth[uiIdx] = n;    }
-  Void         setDDDepthSubParts( UChar ucDDD, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-
-  Bool*        getUseDDD        ()                        { return m_pbUseDDD;        }
-  Bool         getUseDDD        ( UInt uiIdx )            { return m_pbUseDDD[uiIdx]; }
-  Void         setUseDDD        ( UInt uiIdx, Bool n )     { m_pbUseDDD[uiIdx] = n;    }
-  Void         setUseDDD( Bool bUseDDD, UInt uiAbsPartIdx, UInt uiDepth );
-
-  Void         setUseDDD        ( Bool bUseDDD, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-
-  UChar        getDDTmpDepth(){ return m_ucDDTmpDepth; }
-  Int          getUseDDDCandIdx(){ return m_iUseDDDCandIdx;}
-
-#endif
-#endif
 
 #if H_3D_DIM
   Bool         isDMM1UpscaleMode       ( UInt uiWidth ){ Bool bDMM1UpsampleModeFlag = true; UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ bDMM1UpsampleModeFlag = false; } return bDMM1UpsampleModeFlag; };
