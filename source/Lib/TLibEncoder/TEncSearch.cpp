@@ -3113,7 +3113,11 @@ TEncSearch::estIntraPredQT( TComDataCU* pcCU,
     //===== determine set of depth intra modes to be tested =====
     if( m_pcEncCfg->getIsDepth() && uiWidth >= DIM_MIN_SIZE && uiWidth <= DIM_MAX_SIZE && uiWidth == uiHeight )
     {
+#if TICKET083_IVPFLAG_FIX
+      if( bOnlyIVP )
+#else
       if( bOnlyIVP && pcCU->getSlice()->getIntraContourFlag() )
+#endif
       {
         TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
         xPredContourFromTex( pcCU, uiPartOffset, uiWidth, uiHeight, dmm4Segmentation );
