@@ -1040,6 +1040,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
           {
 #if H_3D_DIM
             Bool bOnlyIVP = false;
+#if TICKET083_IVPFLAG_FIX
+            Bool bUseIVP = true;
+#endif
             if( rpcBestCU->getSlice()->getIsDepth() && !(rpcBestCU->getSlice()->isIRAP()) && 
                 rpcBestCU->getSlice()->getSliceType() != I_SLICE && 
                 rpcBestCU->getCbf( 0, TEXT_LUMA     ) == 0 &&
@@ -1048,7 +1051,14 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               )
             { 
               bOnlyIVP = true;
+#if TICKET083_IVPFLAG_FIX
+              bUseIVP = rpcBestCU->getSlice()->getIntraContourFlag();
+#endif
             }
+#if TICKET083_IVPFLAG_FIX
+            if( bUseIVP )
+            {
+#endif
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bOnlyIVP );
 #else
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
@@ -1082,6 +1092,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               }
 #endif
             }
+#if TICKET083_IVPFLAG_FIX
+          }
+#endif
           }
         // test PCM
         if(pcPic->getSlice(0)->getSPS()->getUsePCM()
