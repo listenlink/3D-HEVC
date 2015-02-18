@@ -77,27 +77,11 @@ Void TEncEntropy::encodePPS( TComPPS* pcPPS )
   return;
 }
 
-#if HHI_TOOL_PARAMETERS_I2_J0107
 Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
 {
   m_pcEntropyCoderIf->codeSPS( pcSPS );
   return;
 }
-#else
-#if H_3D
-Void TEncEntropy::encodeSPS( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )
-{
-  m_pcEntropyCoderIf->codeSPS( pcSPS, viewIndex, depthFlag );
-  return;
-}
-#else
-Void TEncEntropy::encodeSPS( TComSPS* pcSPS )
-{
-  m_pcEntropyCoderIf->codeSPS( pcSPS );
-  return;
-}
-#endif
-#endif
 
 Void TEncEntropy::encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
@@ -129,28 +113,10 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 #if H_3D_SINGLE_DEPTH
 Void TEncEntropy::encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-#if ALIGN_J0060_J0107
   if(!pcCU->getSlice()->getIntraSingleFlag() )
   {
     return;
   }
-#else
-  if ( !pcCU->getSlice()->getIsDepth() )
-  {
-    return;
-  }
-#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
-  if(!pcCU->getSlice()->getVPS()->getSingleDepthModeFlag(pcCU->getSlice()->getLayerIdInVps()))
-  {
-     return;
-  }
-#else
-  if(!pcCU->getSlice()->getApplySingleDepthMode())
-  {
-     return;
-  }
-#endif
-#endif
   if( bRD )
   {
     uiAbsPartIdx = 0;
@@ -288,15 +254,7 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
 #if H_3D_DBBP
-#if SEC_DBBP_VIEW_REF_CHECK_J0037
-#if HHI_TOOL_PARAMETERS_I2_J0107
   if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
-#endif
-#else
-  if( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 )
-#endif
   {
     encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
   }
@@ -808,13 +766,8 @@ Void TEncEntropy::encodeDeltaDC  ( TComDataCU* pcCU, UInt absPartIdx )
 
 Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-#if HHI_TOOL_PARAMETERS_I2_J0107
   if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getInterSdcFlag() ) || 
     ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getIntraSdcWedgeFlag() ) )
-#else
-  if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getInterSDCFlag( pcCU->getSlice()->getLayerIdInVps() ) ) || 
-    ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getVPS()->getVpsDepthModesFlag( pcCU->getSlice()->getLayerIdInVps() ) ) )
-#endif
   {
     return;
   }

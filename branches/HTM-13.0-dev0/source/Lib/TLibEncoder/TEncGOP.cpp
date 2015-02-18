@@ -879,12 +879,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     }    
 
     TComVPS*           vps = pcSlice->getVPS();     
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
     Int numDirectRefLayers = vps    ->getNumRefListLayers( getLayerId() ); 
-#else
-    Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
-#endif
 #else
     Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
 #endif
@@ -900,12 +896,8 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
         {    
           pcSlice->setNumInterLayerRefPicsMinus1( gopEntry.m_numActiveRefLayerPics - 1 ); 
         }
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
         if ( gopEntry.m_numActiveRefLayerPics != vps->getNumRefListLayers( getLayerId() ) )
-#else
-        if ( gopEntry.m_numActiveRefLayerPics != vps->getNumDirectRefLayers( getLayerId() ) )
-#endif
 #else
         if ( gopEntry.m_numActiveRefLayerPics != vps->getNumDirectRefLayers( getLayerId() ) )
 #endif
@@ -956,25 +948,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
-#if !MTK_SINGLE_DEPTH_VPS_FLAG_J0060
-#if H_3D_SINGLE_DEPTH
-#if HHI_TOOL_PARAMETERS_I2_J0107
-    pcSlice->setApplySingleDepthMode( pcSlice->getIntraSingleFlag() );
-#else
-    TEncTop* pcEncTop = (TEncTop*) m_pcCfg;
-    bool enableSingleDepthMode=false;
-    if(pcEncTop->getUseSingleDepthMode())
-    {
-      if(pcSlice->getIsDepth())
-      {
-        enableSingleDepthMode=true;
-      }
-    }
-    pcSlice->setApplySingleDepthMode(enableSingleDepthMode);
-#endif
-#endif   
-#endif 
-#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+#if H_3D
     pcSlice->setDefaultRefView();
 #endif
 #if H_3D_ARP
@@ -1438,15 +1412,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       {
         pcSlice->getSPS()->getVuiParameters()->setHrdParametersPresentFlag( true );
       }
-#if HHI_TOOL_PARAMETERS_I2_J0107
       m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());
-#else
-#if !H_3D
-      m_pcEntropyCoder->encodeSPS(pcSlice->getSPS());
-#else
-      m_pcEntropyCoder->encodeSPS(pcSlice->getSPS(), pcSlice->getViewIndex(), pcSlice->getIsDepth() );
-#endif
-#endif
       writeRBSPTrailingBits(nalu.m_Bitstream);
       accessUnit.push_back(new NALUnitEBSP(nalu));
       actualTotalBits += UInt(accessUnit.back()->m_nalUnitData.str().size()) * 8;

@@ -65,15 +65,7 @@ public:
   virtual Void  setBitstream          ( TComInputBitstream* p )  = 0;
 
   virtual Void  parseVPS                  ( TComVPS* pcVPS )                       = 0;
-#if HHI_TOOL_PARAMETERS_I2_J0107
   virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
-#else
-#if H_3D
-  virtual Void  parseSPS                  ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag  )                    = 0;
-#else
-  virtual Void  parseSPS                  ( TComSPS* pcSPS )                                      = 0;
-#endif
-#endif
 #if H_3D
   virtual Void  parsePPS                  ( TComPPS* pcPPS, TComVPS* pcVPS )                      = 0;
 #else
@@ -160,15 +152,7 @@ public:
   Void    setBitstream                ( TComInputBitstream* p ) { m_pcEntropyDecoderIf->setBitstream(p);                    }
   Void    resetEntropy                ( TComSlice* p)           { m_pcEntropyDecoderIf->resetEntropy(p);                    }
   Void    decodeVPS                   ( TComVPS* pcVPS ) { m_pcEntropyDecoderIf->parseVPS(pcVPS); }
-#if HHI_TOOL_PARAMETERS_I2_J0107
   Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
-#else
-#if H_3D
-  Void    decodeSPS                   ( TComSPS* pcSPS, Int viewIndex, Bool depthFlag )    { m_pcEntropyDecoderIf->parseSPS(pcSPS, viewIndex, depthFlag );                    }
-#else
-  Void    decodeSPS                   ( TComSPS* pcSPS     )    { m_pcEntropyDecoderIf->parseSPS(pcSPS);                    }
-#endif
-#endif
 #if H_3D
   Void    decodePPS                   ( TComPPS* pcPPS, TComVPS* pcVPS )    { m_pcEntropyDecoderIf->parsePPS(pcPPS, pcVPS);                    }
 #else

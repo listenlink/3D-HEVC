@@ -131,40 +131,12 @@ protected:
   Bool m_singleLayerForNonIrapFlag;
   Bool m_higherLayerIrapSkipFlag;
 
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if H_3D_IV_MERGE
-  vector<Bool>           m_ivMvPredFlag;                      ///< Interview motion vector prediction 
-
-#if H_3D_SPIVMP
-  Int                    m_iSubPULog2Size;                    
-  Int                    m_iSubPUMPILog2Size;                    
-#endif
-#endif
-#if H_3D_QTLPC
-  Bool                   m_bLimQtPredFlag;
-#endif
-#if H_3D_ARP                                                  /// < flag and number of weighting factors in ARP
-  UInt                   m_uiUseAdvResPred;
-  UInt                   m_uiARPStepNum;
-#endif
-#endif
 
 #if H_3D_IC
   Bool   m_abUseIC;
   Bool   m_bUseLowLatencyICEnc;
 #endif
 
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if H_3D_NBDV_REF
-  Bool m_depthRefinementFlag;  
-#endif
-#if H_3D_VSP
-  Bool m_viewSynthesisPredFlag;
-#endif
-#if H_3D
-  Bool m_ivMvScalingFlag; 
-#endif
-#endif
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
   // source specification
@@ -491,34 +463,12 @@ protected:
   TRenModSetupStrParser       m_cRenModStrParser;
 #endif
 #if H_3D_DIM
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-  Bool      m_useDMM;                                        ///< flag for using DMM
-  Bool      m_useIVP;
-  Bool      m_useSDC;                                        ///< flag for using SDC
-#endif
   Bool      m_useDLT;                                        ///< flag for using DLT
-#endif
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if H_3D_SINGLE_DEPTH
-  Bool     m_useSingleDepthMode;                          ///< flag for using single depth mode
-#endif
 #endif
 #if H_3D_QTLPC
   Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
 #endif
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if H_3D_INTER_SDC
-  Bool m_bDepthInterSDCFlag;                                ///< flag for inter SDC of depth map coding
-#endif
-#if H_3D_DBBP
-  Bool      m_bUseDBBP;                                     ///< flag for depth-based block partitioning
-#endif
-#if H_3D_IV_MERGE
-  Bool m_bMPIFlag;                                           ///< flag for MPI of depth map coding
-#endif
-#endif
 
-#if HHI_TOOL_PARAMETERS_I2_J0107
   std::vector< Bool >    m_ivMvPredFlag;
   std::vector< Bool >    m_ivMvScalingFlag;
   Int                    m_log2SubPbSizeMinus3;
@@ -534,7 +484,6 @@ protected:
   Bool                   m_qtPredFlag;
   Bool                   m_interSdcFlag;
   Bool                   m_intraSingleFlag;
-#endif
 
 #endif
   // internal member functions

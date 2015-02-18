@@ -73,12 +73,7 @@ Bool TExtrTop::extract( InputNALUnit& nalu, std::set<UInt>& rsuiExtractLayerIds 
      TComSPS     cSPS;
 #if H_3D
 
-#if HHI_TOOL_PARAMETERS_I2_J0107
      m_cEntropyDecoder   .decodeSPS( &cSPS );
-#else
-      Int layerIdInVPS = m_cVPS.getLayerIdInVps( uiLayerId ); 
-     m_cEntropyDecoder   .decodeSPS( &cSPS, m_cVPS.getViewIndex( layerIdInVPS ), ( m_cVPS.getDepthId( layerIdInVPS ) == 1 ) );
-#endif
 #else
      m_cEntropyDecoder   .decodeSPS( &cSPS );
 #endif
