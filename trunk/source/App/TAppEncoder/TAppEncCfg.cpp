@@ -376,17 +376,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 #if H_3D
   ("DepthFlag",             m_depthFlag          , std::vector<Int>(1,0), "Depth Flag")
 #if H_3D_DIM
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-  ("DMM",                   m_useDMM,           true,  "Depth intra model modes")
-  ("IVP",                   m_useIVP,           true,  "intra-view prediction")
-  ("SDC",                   m_useSDC,           true,  "Simplified depth coding")
-#endif
   ("DLT",                   m_useDLT,           true,  "Depth lookup table")
 #endif
 #if H_3D
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-  ("SingleDepthMode",    m_useSingleDepthMode, true, "Single depth mode")                         
-#endif
 #endif
 #endif
   ("TargetEncLayerIdList",  m_targetEncLayerIdList, std::vector<Int>(0,0), "LayerIds in Nuh to be encoded")  
@@ -407,11 +399,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   
   ("ProfileTierLevelIdx_%d",  m_profileTierLevelIdx, std::vector<Int>(0), MAX_NUM_LAYERS, "Indices to profile level tier for ols")
   // Layer dependencies
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
   ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIdx in VPS of direct reference layers")
-#else
-  ("DirectRefLayers_%d",    m_directRefLayers    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "LayerIds of direct reference layers")
-#endif
   ("DependencyTypes_%d",    m_dependencyTypes    , std::vector<Int>(0,0), MAX_NUM_LAYERS, "Dependency types of direct reference layers, 0: Sample 1: Motion 2: Sample+Motion")
 #endif
   ("SourceWidth,-wdt",      m_iSourceWidth,        0, "Source picture width")
@@ -537,29 +525,9 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DeblockingFilterControlPresent", m_DeblockingFilterControlPresent, false )
   ("DeblockingFilterMetric",         m_DeblockingFilterMetric,         false )
 
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if H_3D_ARP
-  ("AdvMultiviewResPred",      m_uiUseAdvResPred,           (UInt)1, "Usage of Advanced Residual Prediction" )
-#endif
-#if H_3D_SPIVMP
-  ("SubPULog2Size", m_iSubPULog2Size, (Int)3, "Sub-PU size index: 2^n")
-  ("SubPUMPILog2Size", m_iSubPUMPILog2Size, (Int)3, "Sub-PU MPI size index: 2^n")
-#endif
-#endif
 #if H_3D_IC
   ("IlluCompEnable",           m_abUseIC, true, "Enable illumination compensation")
   ("IlluCompLowLatencyEnc",    m_bUseLowLatencyICEnc, false, "Enable low-latency illumination compensation encoding")
-#endif
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if H_3D_INTER_SDC
-  ("InterSDC",                 m_bDepthInterSDCFlag,        true, "Enable depth inter SDC")
-#endif
-#if H_3D_DBBP
-  ("DBBP",                     m_bUseDBBP,   true, "Enable depth-based block partitioning" )
-#endif
-#if H_3D_IV_MERGE
-  ("MPI",                      m_bMPIFlag,        true, "Enable MPI")
-#endif
 #endif
   // Coding tools
   ("AMP",                      m_enableAMP,                 true,  "Enable asymmetric motion partitions")
@@ -800,28 +768,8 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("DWeight",                         m_iDWeight                , 1             , "Depth Distortion weight" )
 
 #endif //HHI_VSO
-#if HHI_TOOL_PARAMETERS_I2_J0107
   ("QTL",                             m_bUseQTL                 , true          , "Use depth quad tree limitation (encoder only)" )
-#else
-#if H_3D_QTLPC
-  ("LimQtPredFlag",                   m_bLimQtPredFlag          , true          , "Use Predictive Coding with QTL" )
-  ("QTL",                             m_bUseQTL                 , true          , "Use depth Quadtree Limitation" )
-#endif
-#if H_3D_IV_MERGE
-  ("IvMvPred",                        m_ivMvPredFlag            , std::vector<Bool>(2, true)            , "inter view motion prediction " )
-#endif
-#if H_3D_NBDV_REF
-  ("DepthRefinement",                 m_depthRefinementFlag,    true           , "depth refinement by DoNBDV" )  
-#endif
-#if H_3D_VSP
-  ("ViewSynthesisPred",               m_viewSynthesisPredFlag,  true           , "view synthesis prediction " )  
-#endif
-#if H_3D
-  ("IvMvScaling",                     m_ivMvScalingFlag      ,  true            , "inter view motion vector scaling" )    
-#endif
-#endif
 
-#if HHI_TOOL_PARAMETERS_I2_J0107
   ("IvMvPredFlag"          , m_ivMvPredFlag          , std::vector< Bool >(2,true)                    , "Inter-view motion prediction"              )
   ("IvMvScalingFlag"       , m_ivMvScalingFlag       , std::vector< Bool >(2,true)                    , "Inter-view motion vector scaling"          )
   ("Log2SubPbSizeMinus3"   , m_log2SubPbSizeMinus3   , 0                                              , "Log2 minus 3 of sub Pb size"               )
@@ -837,7 +785,6 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("QtPredFlag"            , m_qtPredFlag            , true                                           , "Quad tree prediction from texture to depth")
   ("InterSdcFlag"          , m_interSdcFlag          , true                                           , "Inter depth DCs"                           )
   ("IntraSingleFlag"       , m_intraSingleFlag       , true                                           , "Intra single mode"                         )
-#endif
 #endif //H_3D
   ;
 
@@ -1679,12 +1626,8 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara(  m_maxNumMergeCand > 5,  "MaxNumMergeCand must be 5 or smaller.");
 
 #if H_3D_ARP
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-  xConfirmPara( ( 0 != m_uiUseAdvResPred ) &&  ( 1 != m_uiUseAdvResPred ), "UseAdvResPred must be 0 or 1." );
-#endif
 #endif
 #if H_3D_SPIVMP
-#if HHI_TOOL_PARAMETERS_I2_J0107
   xConfirmPara( m_log2SubPbSizeMinus3 < 0,                                        "Log2SubPbSizeMinus3 must be equal to 0 or greater.");
   xConfirmPara( m_log2SubPbSizeMinus3 > 3,                                        "Log2SubPbSizeMinus3 must be equal to 3 or smaller.");
   xConfirmPara( (1<< ( m_log2SubPbSizeMinus3 + 3) ) > m_uiMaxCUWidth,              "Log2SubPbSizeMinus3 must be  equal to log2(maxCUSize)-3 or smaller.");
@@ -1692,15 +1635,6 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_log2MpiSubPbSizeMinus3 < 0,                                        "Log2MpiSubPbSizeMinus3 must be equal to 0 or greater.");
   xConfirmPara( m_log2MpiSubPbSizeMinus3 > 3,                                        "Log2MpiSubPbSizeMinus3 must be equal to 3 or smaller.");
   xConfirmPara( (1<< (m_log2MpiSubPbSizeMinus3 + 3)) > m_uiMaxCUWidth,               "Log2MpiSubPbSizeMinus3 must be equal to log2(maxCUSize)-3 or smaller.");
-#else
-  xConfirmPara( m_iSubPULog2Size < 3,                                        "SubPULog2Size must be 3 or greater.");
-  xConfirmPara( m_iSubPULog2Size > 6,                                        "SubPULog2Size must be 6 or smaller.");
-  xConfirmPara( (1<<m_iSubPULog2Size) > m_uiMaxCUWidth,                      "SubPULog2Size must be log2(maxCUSize) or smaller.");
- 
-  xConfirmPara( m_iSubPUMPILog2Size < 3,                                        "SubPUMPILog2Size must be 3 or greater.");
-  xConfirmPara( m_iSubPUMPILog2Size > 6,                                        "SubPUMPILog2Size must be 6 or smaller.");
-  xConfirmPara( ( 1 << m_iSubPUMPILog2Size ) > m_uiMaxCUWidth,                  "SubPUMPILog2Size must be log2(maxCUSize) or smaller.");
-#endif
 #endif
 #if ADAPTIVE_QP_SELECTION
 #if H_MV
@@ -2647,8 +2581,7 @@ Void TAppEncCfg::xPrintParameter()
   printf("VSO:%d ", m_bUseVSO   );
   printf("WVSO:%d ", m_bUseWVSO );  
 #endif
-
-#if HHI_TOOL_PARAMETERS_I2_J0107
+#if H_3D
   printf( "QTL:%d "                  , m_bUseQTL);
   printf( "IlluCompEnable:%d "       , m_abUseIC);
   printf( "IlluCompLowLatencyEnc:%d ",  m_bUseLowLatencyICEnc);
@@ -2671,53 +2604,6 @@ Void TAppEncCfg::xPrintParameter()
   printf( "QtPred:%d "                 , m_qtPredFlag             ? 1 : 0 );
   printf( "InterSdc:%d "               , m_interSdcFlag           ? 1 : 0 );
   printf( "IntraSingle:%d "            , m_intraSingleFlag        ? 1 : 0 );
-
-#else
-#if H_3D_QTLPC
-  printf("LimQtPredFlag:%d ", m_bLimQtPredFlag ? 1 : 0);
-  printf("QTL:%d ", m_bUseQTL);
-#endif
-#if H_3D_IV_MERGE  
-  printf("IvMvPred:%d %d", m_ivMvPredFlag[0] ? 1 : 0, m_ivMvPredFlag[1] ? 1 : 0);
-#if H_3D_SPIVMP
-  printf(" SubPULog2Size:%d  " , m_iSubPULog2Size  );
-  printf(" SubPUMPILog2Size:%d  " , m_iSubPUMPILog2Size  );
-#endif
-#endif
-#if H_3D_ARP
-  printf(" ARP:%d  ", m_uiUseAdvResPred  );
-#endif
-#if H_3D_IC
-  printf( "IlluCompEnable:%d ", m_abUseIC);
-  printf ("IlluCompLowLatencyEnc:%d ",  m_bUseLowLatencyICEnc);
-#endif
-#if H_3D_NBDV_REF
-  printf("DepthRefinement:%d ", m_depthRefinementFlag );  
-#endif
-#if H_3D_VSP
-  printf("ViewSynthesisPred:%d ", m_viewSynthesisPredFlag );
-#endif
-#if H_3D
-  printf("IvMvScaling:%d ", m_ivMvScalingFlag ? 1 : 0  );
-#endif
-#if H_3D_DIM
-  printf("DMM:%d ", m_useDMM );
-  printf("IVP:%d ", m_useIVP );
-  printf("SDC:%d ", m_useSDC );
-  printf("DLT:%d ", m_useDLT );
-#endif
-#if H_3D
-  printf("SingleDepthMode:%d ",    m_useSingleDepthMode);
-#endif
-#if H_3D_INTER_SDC
-  printf( "interSDC:%d ", m_bDepthInterSDCFlag ? 1 : 0 );
-#endif
-#if H_3D_DBBP
-  printf("DBBP:%d ", m_bUseDBBP ? 1 : 0);
-#endif
-#if H_3D_IV_MERGE
-  printf( "MPI:%d ", m_bMPIFlag ? 1 : 0 );
-#endif
 #endif
 
   printf("\n\n");  

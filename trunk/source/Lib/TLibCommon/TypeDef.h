@@ -102,7 +102,7 @@
                                               // SEC_SIMPLIFIED_NBDV_E0142 Simplified NBDV, JCT3V-E0142 and JCT3V-E0190
                                               // MTK_NBDV_TN_FIX_E0172     fix the issue of DV derivation from the temporal neighboring blocks, issue 7 in JCT3V-E0172
                                               // MTK_TEXTURE_MRGCAND_BUGFIX_E0182  Bug fix for TEXTURE MERGING CANDIDATE     , JCT3V-E0182
-#define LGE_SIMP_DISP_AVAIL_J0041    1   // Use 2 status for disparity availability - DISP_AVAILABLE and DISP_NONE
+                                              // LGE_SIMP_DISP_AVAIL_J0041    // Use 2 status for disparity availability - DISP_AVAILABLE and DISP_NONE
 
 #define H_3D_ARP                          1   // Advanced residual prediction (ARP), JCT3V-D0177
                                               // QC_MTK_INTERVIEW_ARP_F0123_F0108 JCT3V-F0123; JCT3V-F0108
@@ -128,6 +128,7 @@
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086  Low-latency IC encoding in JCT3V-H0086
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
                                               // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
+                                              // LGE_CHROMA_IC_J0050_J0034
 
 #if H_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
@@ -155,7 +156,9 @@
                                               // LGE_SHARP_VSP_INHERIT_F0104 
                                               // NTT_STORE_SPDV_VSP_G0148 Storing Sub-PU based DV for VSP
                                               // Restricted bi-prediction for VSP
-#define SEC_A1_BASED_VSP_J0039            1   // Removal of redundant VSP in Merge list
+                                              // MTK_MRG_LIST_SIZE_CLEANUP_J0059   1   // Include VSP for deriving merge candidate list size, JCT3V-J0059
+                                              // SEC_A1_BASED_VSP_J0039            1   // Removal of redundant VSP in Merge list
+
 
 
 #define H_3D_IV_MERGE                     1   // Inter-view motion merge candidate
@@ -181,7 +184,7 @@
                                               // SEC_ADAPT_DISABLE_IVMP        Disabling IVMP merge candidates when IC is enabled, JCT3V-H0070
                                               // SEC_SIMP_SHIFTED_DV_I0086     Simplification of Shifted DV candidate, JCT3V-I0086
 
-#define MTK_MRG_LIST_SIZE_CLEANUP_J0059   1   // Include VSP for deriving merge candidate list size, JCT3V-J0059
+
 
 
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
@@ -230,17 +233,15 @@
                                               // FAST_SDC_OFFSET_DECISION_I0084
                                               // SEPARATE_FLAG_I0085
                                               // H_3D_DELTA_DLT
-                                              // RWTH_DLT_CLIP_I0057               1
-
-
+                                              // RWTH_DLT_CLIP_I0057
+                                              // MTK_DMM_SIM_J0035
+                                              // MTK_J0033
+                                              // SHARP_DLT_SIMP_J0029              1   // DLT(DepthValue2Idx[]) table derivation cleanup
 
 #define H_3D_SINGLE_DEPTH                 1   // Single depth mode proposed in JCT3V-I0095
-#define MTK_SINGLE_DEPTH_VPS_FLAG_J0060   1   // Add VPS control flags and remove slice header control flag for single depth, JCT3V-J0060
-#define ALIGN_J0060_J0107                 1   // Alignment of changed tool parameters
-#define ALGIN_J0107_J0059                 1   // Alignment of changed tool parameters                
-
-#define MTK_J0033                         1
-#define SHARP_DLT_SIMP_J0029              1   // DLT(DepthValue2Idx[]) table derivation cleanup
+                                              // HS_SP_SIMP_J0066
+                                              // SINGLE_DEPTH_SIMP_J0115           1 
+                                              // MTK_SINGLE_DEPTH_VPS_FLAG_J0060   1   // Add VPS control flags and remove slice header control flag for single depth, JCT3V-J0060
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -262,10 +263,10 @@
                                               // Disallow DBBP in 8x8 CU, JCT3V-I0078
                                               // SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional filter for DBBP
                                               // SEC_DBBP_DMM4_THRESHOLD_I0076     Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
-#define SEC_DBBP_VIEW_REF_CHECK_J0037     1   // Signaling dbbp_flag when the current slice has view reference picture(s), JCT3V-J0037 item4
+                                              // SEC_DBBP_VIEW_REF_CHECK_J0037     1   // Signaling dbbp_flag when the current slice has view reference picture(s), JCT3V-J0037 item4
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
-#define LGE_DDD_REMOVAL_J0042_J0030       1   // DDD removal
+                                              // LGE_DDD_REMOVAL_J0042_J0030 DDD removal
 
 #define H_3D_FCO                          0   // Flexible coding order for 3D
 #if H_3D_FCO
@@ -282,8 +283,12 @@
 #if H_3D_DIM
 #define H_3D_FAST_DEPTH_INTRA             1   // Fast DMM and RBC Mode Selection
                                               // SCU_HS_FAST_DEPTH_INTRA_E0238_HHIFIX
-#define MTK_DMM_SIM_J0035                 1
 #endif
+
+//HLS
+//HHI_DEPENDENCY_SIGNALLING_I1_J0107
+//HHI_TOOL_PARAMETERS_I2_J0107
+//HHI_VPS_3D_EXTENSION_I3_J0107
 
 // Rate Control
 #define KWU_FIX_URQ                       1
@@ -301,9 +306,6 @@
 
 
 #if H_3D
-#define HHI_DEPENDENCY_SIGNALLING_I1_J0107     1
-#define HHI_TOOL_PARAMETERS_I2_J0107           1
-#define HHI_VPS_3D_EXTENSION_I3_J0107          1
 #define HHI_VIEW_ID_LIST_I5_J0107              0
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
@@ -313,7 +315,7 @@
 ///// ***** SINGLE DEPTH MODE *********
 #if H_3D_SINGLE_DEPTH
 #define SINGLE_DEPTH_MODE_CAND_LIST_SIZE            2 // size of the sample candidate list
-#define SINGLE_DEPTH_SIMP_J0115           1 
+
 #endif
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
@@ -330,7 +332,6 @@
 #define DVFROM_LEFT                       0
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
-#define LGE_DEFAULT_DV_J0046              1
 #endif
 
 ///// ***** ADVANCED INTERVIEW RESIDUAL PREDICTION *********
@@ -348,6 +349,8 @@
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+
+#define TICKET083_IVPFLAG_FIX             1
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
@@ -366,7 +369,6 @@
 #define IC_CONST_SHIFT                    5
 #define IC_SHIFT_DIFF                     12
 #define IC_LOW_LATENCY_ENCODING_THRESHOLD 0.1 // Threshold for low-latency IC encoding in JCT3V-H0086
-#define LGE_CHROMA_IC_J0050_J0034         1
 #endif
 
 
@@ -388,10 +390,6 @@
 #define PPS_FIX_DEPTH                           1
 #endif
 
-
-#if H_3D_SPIVMP
-#define HS_SP_SIMP_J0066                        1
-#endif
 
 /////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MV_HEVC HLS  //////////////////////////////
@@ -934,7 +932,6 @@ enum MVP_DIR
 #if H_3D
 enum DefaultMergCandOrder
 {
-#if SEC_A1_BASED_VSP_J0039
   MRG_T = 0,            ///< MPI
   MRG_D,                ///< DDD
   MRG_IVMC,             ///< Temporal inter-view
@@ -947,20 +944,6 @@ enum DefaultMergCandOrder
   MRG_B2,               ///< Above left
   MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
   MRG_COL               ///< Temporal co-located
-#else
-  MRG_T = 0,            ///< MPI
-  MRG_D,                ///< DDD
-  MRG_IVMC,             ///< Temporal inter-view
-  MRG_A1,               ///< Left
-  MRG_B1,               ///< Above
-  MRG_B0,               ///< Above right
-  MRG_IVDC,             ///< Disparity inter-view
-  MRG_VSP,              ///< VSP
-  MRG_A0,               ///< Left bottom
-  MRG_B2,               ///< Above left
-  MRG_IVSHIFT,          ///< Shifted IVMC of Shifted IVDC. (These are mutually exclusive)
-  MRG_COL               ///< Temporal co-located
-#endif
 };
 #endif
 

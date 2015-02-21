@@ -702,12 +702,7 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   Bool bParseSplitFlag    = true;
 
   
-#if HHI_TOOL_PARAMETERS_I2_J0107
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
-#else
-  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
-  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
-#endif
   TComPic *pcTexture      = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect    = (pcTexture != NULL);
   Bool bIntraSliceDetect  = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -761,12 +756,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 #if H_3D_QTLPC
   Bool bParsePartSize    = true;
   
-#if HHI_TOOL_PARAMETERS_I2_J0107
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
-#else
-  TComVPS *vps           = pcCU->getPic()->getSlice(0)->getVPS();
-  Bool    bLimQtPredFlag = vps->getLimQtPredFlag(pcCU->getPic()->getSlice(0)->getLayerId());
-#endif
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
@@ -991,11 +981,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
   for (j=0;j<partNum;j++)
   {
 #if H_3D_DIM
-#if HHI_TOOL_PARAMETERS_I2_J0107
     if( pcCU->getSlice()->getIntraSdcWedgeFlag() || pcCU->getSlice()->getIntraContourFlag() )
-#else
-    if( pcCU->getSlice()->getVpsDepthModesFlag() || pcCU->getSlice()->getIVPFlag() )
-#endif
     {
       parseIntraDepth( pcCU, absPartIdx+partOffset*j, depth );
     }
@@ -1110,9 +1096,7 @@ Void TDecSbac::parseIntraDepth( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
       UInt uiTabIdx = 0;
       xParseDmm1WedgeIdx( uiTabIdx, g_dmm1TabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
 
-#if MTK_J0033
       assert( uiTabIdx < g_dmmWedgeLists[ g_aucConvertToBit[ pcCU->getDMM1BasePatternWidth( pcCU->getWidth( absPartIdx ) )]].size());
-#endif
 
       pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dimType, absPartIdx, depth );
     } break;
@@ -1142,11 +1126,7 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
   //decode DMM index
   if( uiIsDimMode )
   {
-#if HHI_TOOL_PARAMETERS_I2_J0107
     if( pcCU->getSlice()->getIntraSdcWedgeFlag() && pcCU->getSlice()->getIntraContourFlag() )
-#else
-    if( pcCU->getSlice()->getVpsDepthModesFlag() && pcCU->getSlice()->getIVPFlag() )
-#endif
     {
       m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
       if( !uiSymbol )
@@ -1158,19 +1138,11 @@ Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt dept
         pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
       }
     }
-#if HHI_TOOL_PARAMETERS_I2_J0107
     else if ( pcCU->getSlice()->getIntraSdcWedgeFlag() )
-#else
-    else if ( pcCU->getSlice()->getVpsDepthModesFlag() )
-#endif
     {
       pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
     }
-#if HHI_TOOL_PARAMETERS_I2_J0107
     else if( pcCU->getSlice()->getIntraContourFlag() )
-#else
-    else if( pcCU->getSlice()->getIVPFlag() )
-#endif
     {
       pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
     }
@@ -2150,11 +2122,7 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D_DBBP
 Void TDecSbac::parseDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if HHI_TOOL_PARAMETERS_I2_J0107
   AOF( pcCU->getSlice()->getDepthBasedBlkPartFlag() );
-#else
-  AOF( pcCU->getSlice()->getVPS()->getUseDBBP(pcCU->getSlice()->getLayerIdInVps()) );
-#endif
   AOF( !pcCU->getSlice()->getIsDepth() );
   
   UInt uiSymbol = 0;

@@ -725,10 +725,8 @@ Void TDecTop::xActivateParameterSets()
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
 
 #endif
-#if HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D
   m_apcSlicePilot->init3dToolParameters();
-#endif
 #endif
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumTileColumnsMinus1() + 1) : 1);
@@ -1086,11 +1084,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     pcSlice->getTempRefPicLists( m_cListPic, m_refPicSetInterLayer0, m_refPicSetInterLayer1, tempRefPicLists, usedAsLongTerm, numPocTotalCurr);
     pcSlice->setRefPicList     ( tempRefPicLists, usedAsLongTerm, numPocTotalCurr, true ); 
-
-#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+#if H_3D
     pcSlice->setDefaultRefView();
 #endif
-
 #if H_3D_ARP
     pcSlice->setARPStepNum(m_ivPicLists);
     if( pcSlice->getARPStepNum() > 1 )
@@ -1243,11 +1239,7 @@ Void TDecTop::xDecodeSPS()
   // Parsing dependency should be resolved!
   TComVPS* vps = m_parameterSetManagerDecoder.getPrefetchedVPS( 0 ); 
   assert( vps != 0 );
-#if HHI_TOOL_PARAMETERS_I2_J0107
   m_cEntropyDecoder.decodeSPS( sps );
-#else
-  m_cEntropyDecoder.decodeSPS( sps, vps->getViewIndex( m_layerId ), ( vps->getDepthId( m_layerId ) == 1 ) );
-#endif
 #else
   m_cEntropyDecoder.decodeSPS( sps );
 #endif
