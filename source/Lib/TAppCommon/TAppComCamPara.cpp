@@ -1202,11 +1202,6 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
   m_uiLastFrameId           = uiStartFrameId + uiNumFrames - 1;
   m_uiCamParsCodedPrecision = uiCodedCamParsPrecision;
   m_iLog2Precision          = iLog2Precision;
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if HHI_INTERVIEW_SKIP
-  m_iCurrentFrameId         = 0 ;
-#endif
-#endif
 
   xReadCameraParameterFile( pchCfgFileName );
 

@@ -178,10 +178,8 @@ TComSlice::TComSlice()
     m_interLayerPredLayerIdc[ i ] = -1;
   }
 #endif
-#if LGE_DEFAULT_DV_J0046
   m_iDefaultRefViewIdx = -1;
   m_bDefaultRefViewIdxAvailableFlag = false;
-#endif
 }
 
 TComSlice::~TComSlice()
@@ -1878,9 +1876,7 @@ TComVPS::TComVPS()
   m_vpsBaseLayerInternalFlag = true; 
   m_vpsBaseLayerAvailableFlag = true; 
 
-#if  H_MV_FIX_NUM_VIEWS
   m_numViews = 0; 
-#endif
 
 #endif
 
@@ -1917,9 +1913,7 @@ TComVPS::TComVPS()
 
   m_repFormatIdxPresentFlag = false; 
   m_maxOneActiveRefLayerFlag = false; 
-#if H_MV_HLS_FIX
   m_vpsPocLsbAlignedFlag  = false; 
-#endif
   m_directDepTypeLenMinus2   = 0;         
   
 
@@ -1955,10 +1949,8 @@ TComVPS::TComVPS()
   {
     m_layerIdInNuh      [i] = ( i == 0 ) ? 0 : -1; 
     m_numDirectRefLayers[i] = 0; 
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
     m_numRefListLayers[i] = 0; 
-#endif
 #endif
     m_vpsRepFormatIdx    [i] = 0; 
     m_pocLsbNotPresentFlag[i] = 0;
@@ -1967,14 +1959,6 @@ TComVPS::TComVPS()
 
 #if H_3D
     m_viewIndex         [i] = -1; 
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-    m_vpsDepthModesFlag [i] = false;
-    m_ivMvScalingFlag[i] = true; 
-    m_bIVPFlag [i]      = false;
-#if MTK_SINGLE_DEPTH_VPS_FLAG_J0060
-    m_singleDepthModeFlag[ i ] = false;
-#endif
-#endif
 #endif
 
     for( Int j = 0; j < MAX_NUM_LAYERS; j++ )
@@ -1983,10 +1967,8 @@ TComVPS::TComVPS()
       m_directDependencyType[i][j] = -1; 
       m_dependencyFlag  [i][j]    = false; 
       m_idDirectRefLayer[i][j]    = -1; 
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
       m_idRefListLayer[i][j]    = -1; 
-#endif
 #endif
       m_idPredictedLayer[i][j]    = -1; 
       m_idRefLayer      [i][j]    = -1; 
@@ -1998,49 +1980,11 @@ TComVPS::TComVPS()
       m_dimensionId[i][j] = 0;
     }
 #if H_3D_ARP
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-    m_uiUseAdvResPred[i]  = 0;
-    m_uiARPStepNum[i]     = 1;
-#endif
 #endif
   }
   m_vpsVUI = new TComVPSVUI; 
   m_dpbSize = new TComDpbSize; 
 
-#if !HHI_TOOL_PARAMETERS_I2_J0107
-#if H_3D
-  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
-  {
-#if H_3D_IV_MERGE
-    m_ivMvPredFlag         [ i ] = false;
-#if H_3D_SPIVMP
-    m_iSubPULog2Size       [ i ] = 0;
-#endif
-#endif
-#if H_3D_QTLPC
-    m_bLimQtPredFlag       [ i ] = false;
-#endif
-#if H_3D_VSP
-    m_viewSynthesisPredFlag[ i ] = false;
-#endif
-#if H_3D_NBDV_REF
-    m_depthRefinementFlag  [ i ] = false;
-#endif
-#if H_3D_INTER_SDC
-    m_bInterSDCFlag        [ i ] = false;
-#endif
-#if H_3D
-    m_bIVPFlag             [ i ] = false;
-#endif
-#if H_3D_DBBP
-    m_dbbpFlag             [ i ] = false;
-#endif
-#if H_3D_IV_MERGE
-    m_bMPIFlag             [ i ] = false;
-#endif
-  }  
-#endif
-#endif
 
 #endif
 }
@@ -2131,10 +2075,8 @@ Void TComVPS::setRefLayers()
   {
     Int iNuhLId = getLayerIdInNuh( i );
     Int d = 0;
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
     Int l = 0; 
-#endif
 #endif
     Int r = 0;
     Int p = 0;
@@ -2146,13 +2088,11 @@ Void TComVPS::setRefLayers()
       {
         m_idDirectRefLayer[iNuhLId][d++] = jNuhLid;
       }
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
       if( getDirectDependencyFlag( i , j ) && ( getDepthId( iNuhLId ) == getDepthId( jNuhLid ) ))
       {
         m_idRefListLayer [iNuhLId][l++] = jNuhLid;
       }
-#endif
 #endif
 
       if( getDependencyFlag( i , j ) )
@@ -2165,10 +2105,8 @@ Void TComVPS::setRefLayers()
       }
     }
     m_numDirectRefLayers[ iNuhLId ] = d;
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
     m_numRefListLayers[ iNuhLId ] = l; 
-#endif
 #endif
 
     m_numRefLayers      [ iNuhLId ] = r;
@@ -2205,7 +2143,6 @@ Void TComVPS::setRefLayers()
 }
 
 
-#if H_MV_FIX_NUM_VIEWS
 Void     TComVPS::initNumViews( )
 {
   m_numViews = 1; 
@@ -2241,7 +2178,6 @@ Void     TComVPS::initNumViews( )
     }
   }
 }
-#endif
 
 
 Int TComVPS::getScalabilityId( Int layerIdInVps, ScalabilityType scalType )
@@ -2402,21 +2338,6 @@ Int    TComVPS::getNumOutputLayerSets()
   return getNumAddOlss() + getNumLayerSets(); 
 }
 
-#if !H_MV_FIX_NUM_VIEWS
-Int TComVPS::getNumViews()
-{
-  Int numViews = 1; 
-  for( Int i = 0; i <=  getMaxLayersMinus1(); i++ )
-  {
-    Int lId = getLayerIdInNuh( i ); 
-    if ( i > 0 && ( getViewIndex( lId ) != getScalabilityId( i - 1, VIEW_ORDER_INDEX ) ) )
-    {
-      numViews++; 
-    }    
-  }
-  return numViews;
-}
-#endif
 
 
 Void TComVPS::deriveLayerSetLayerIdList()
@@ -2655,10 +2576,8 @@ Void TComVPS::printLayerDependencies()
   xPrintArray( "IdPredictedLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numPredictedLayers, m_idPredictedLayer, true );
   xPrintArray( "IdRefLayer"      , getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefLayers, m_idRefLayer, true );
   xPrintArray( "IdDirectRefLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numDirectRefLayers, m_idDirectRefLayer, true );
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
   xPrintArray( "IdRefListLayer", getMaxLayersMinus1() + 1, m_layerIdInNuh, m_numRefListLayers, m_idRefListLayer, true );
-#endif
 #endif
 
   std::cout << std::endl;
@@ -3083,26 +3002,7 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
 
       i++;
     }
-#if SHARP_DLT_SIMP_J0029
     iIdxUp = bFound ?  iIdxDown + 1 : iNumDepthValues-1;
-#else
-    // iterate over indices to find upper closest depth
-    i = iNumDepthValues-2;
-    bFound = false;
-    while(!bFound && i>=0)
-    {
-      if( m_iIdx2DepthValue[layerIdInVps][i] < p )
-      {
-        iIdxUp  = i+1;
-        bFound    = true;
-      }
-
-      i--;
-    }
-
-    // assert monotony
-    assert(iIdxDown<=iIdxUp);
-#endif
 
     // assign closer depth value/idx
     if( abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxDown]) < abs(p-m_iIdx2DepthValue[layerIdInVps][iIdxUp]) )
@@ -3683,23 +3583,14 @@ TComPic* TComSlice::getPicFromRefPicSetInterLayer(Int setIdc, Int layerId )
 Int  TComSlice::getRefLayerPicFlag( Int i ) 
 {
   TComVPS* vps = getVPS(); 
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
   Int refLayerIdx = vps->getLayerIdInVps( vps->getIdRefListLayer( getLayerId(), i ) ); 
 #else
   Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
 #endif
-#else
-  Int refLayerIdx = vps->getLayerIdInVps( vps->getIdDirectRefLayer( getLayerId(), i ) ); 
-#endif
 
-#if H_MV_FIX_REF_LAYER_PIC_FLAG
   Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer()  && ( getTLayer() == 0   ||
     vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() )); 
-#else
-  Bool refLayerPicFlag = ( vps->getSubLayersVpsMaxMinus1( refLayerIdx ) >=  getTLayer() )  && ( getTLayer() == 0  ) &&
-    ( vps->getMaxTidIlRefPicsPlus1( refLayerIdx, vps->getLayerIdInVps( getLayerId() )) > getTLayer() ); 
-#endif
   return refLayerPicFlag;       
 }    
 
@@ -3707,12 +3598,8 @@ Int TComSlice::getRefLayerPicIdc( Int j )
 {  
   Int refLayerPicIdc = -1; 
   Int curj = 0; 
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
   for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
-#else
-  for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
-#endif
 #else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
 #endif
@@ -3736,12 +3623,8 @@ Int TComSlice::getRefLayerPicIdc( Int j )
 Int  TComSlice::getNumRefLayerPics( )
 {  
   Int numRefLayerPics = 0; 
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
   for( Int i = 0;  i < getVPS()->getNumRefListLayers( getLayerId()) ; i++ )
-#else
-  for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
-#endif
 #else
   for( Int i = 0;  i < getVPS()->getNumDirectRefLayers( getLayerId()) ; i++ )
 #endif
@@ -3769,15 +3652,11 @@ Int TComSlice::getNumActiveRefLayerPics()
   {
     numActiveRefLayerPics = 0; 
   }
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
   else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumRefListLayers( getLayerId() ) == 1 )
 #else
   else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
 #endif
-#else
-  else if( getVPS()->getMaxOneActiveRefLayerFlag() || getVPS()->getNumDirectRefLayers( getLayerId() ) == 1 )
-#endif  
   {
     numActiveRefLayerPics = 1; 
   }
@@ -3790,18 +3669,13 @@ Int TComSlice::getNumActiveRefLayerPics()
 
 Int TComSlice::getRefPicLayerId( Int i )
 {
-#if HHI_DEPENDENCY_SIGNALLING_I1_J0107
 #if H_3D
   return getVPS()->getIdRefListLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
 #else
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
 #endif
-#else
-  return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
-#endif
 }
-
-#if SEC_ARP_VIEW_REF_CHECK_J0037 || SEC_DBBP_VIEW_REF_CHECK_J0037
+#if H_3D
 Void TComSlice::setDefaultRefView( )
 {
   setDefaultRefViewIdx( -1 );
@@ -3838,11 +3712,7 @@ Void TComSlice::setDefaultRefView( )
 Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
 {
   Bool tempRefPicInListsFlag = false;
-#if HHI_TOOL_PARAMETERS_I2_J0107
   if( !getIvResPredFlag() || this->isIRAP())
-#else
-  if(!getVPS()->getUseAdvRP(getLayerId()) || this->isIRAP())
-#endif
   {
     m_nARPStepNum = 0;
   }
@@ -3870,16 +3740,8 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
         }
       }
     }
-#if SEC_ARP_VIEW_REF_CHECK_J0037
     tempRefPicInListsFlag = (getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0) && getDefaultRefViewIdxAvailableFlag();
-#else
-    tempRefPicInListsFlag = getFirstTRefIdx(REF_PIC_LIST_0) >= 0 || getFirstTRefIdx(REF_PIC_LIST_1) >= 0;
-#endif
-#if HHI_TOOL_PARAMETERS_I2_J0107
     m_nARPStepNum = tempRefPicInListsFlag ?  H_3D_ARP_WFNR : 0;
-#else
-    m_nARPStepNum = tempRefPicInListsFlag ? getVPS()->getARPStepNum(getLayerId()) : 0;
-#endif
   }
 
   if (tempRefPicInListsFlag)
@@ -4062,46 +3924,16 @@ Void TComSlice::setDepthToDisparityLUTs()
 { 
   Bool setupLUT = false; 
   
-#if HHI_TOOL_PARAMETERS_I2_J0107
   setupLUT = setupLUT || getViewSynthesisPredFlag( ); 
-#else
-  Int layerIdInVPS = getVPS()->getLayerIdInNuh( m_layerId ); 
-#if H_3D_VSP
-  setupLUT = setupLUT || getVPS()->getViewSynthesisPredFlag( layerIdInVPS); 
-#endif
-#endif
 
 #if H_3D_NBDV_REF
-#if HHI_TOOL_PARAMETERS_I2_J0107
   setupLUT = setupLUT || getDepthRefinementFlag( );
-#else
-  setupLUT = setupLUT || getVPS()->getDepthRefinementFlag( layerIdInVPS );
-#endif
 #endif 
 
 #if H_3D_IV_MERGE
-#if HHI_TOOL_PARAMETERS_I2_J0107
   setupLUT = setupLUT || ( getIvMvPredFlag() && getIsDepth() );
-#else
-  setupLUT = setupLUT || ( getVPS()->getIvMvPredFlag(layerIdInVPS ) && getIsDepth() );
-#endif
 #endif
 
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-#if H_3D_FCO
-  if( getIsDepth() && getViewIndex() > 0 && getVPS()->getMPIFlag(layerIdInVPS))
-#else
-  if( getIsDepth() && getViewIndex() > 0 )
-#endif
-  {
-      TComSlice *pcTextSlice = getTexturePic()->getSlice( 0 );
-      memcpy( m_aiDDDInvScale, pcTextSlice->m_aiDDDInvScale, sizeof( Int ) * getViewIndex() );
-      memcpy( m_aiDDDInvOffset, pcTextSlice->m_aiDDDInvOffset, sizeof( Int ) * getViewIndex() );
-      memcpy( m_aiDDDShift, pcTextSlice->m_aiDDDShift, sizeof( Int ) * getViewIndex() );             
-  }  
-#endif 
-#endif
 
   if( !setupLUT )
     return; 
@@ -4150,80 +3982,11 @@ Void TComSlice::setDepthToDisparityLUTs()
       Int invOffset = ( invCodOffset[ i ] << g_bitDepthY ) + ( ( 1 << log2Div ) >> 1 );         
       m_depthToDisparityF[ i ][ d ] = ( invCodScale[ i ] * d + invOffset ) >> log2Div; 
     }
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-    initializeDDDPara( vps->getCamParPrecision(), codScale[ i ], codOffset[ i ], i );
-#endif
-#endif
   }
 }
 #endif
 #endif
 
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DDD
-Void TComSlice::initializeDDDPara( UInt uiCamParsCodedPrecision, Int  iCodedScale,Int  iCodedOffset, Int iBaseViewIdx )
-{
-    UInt uiViewId     = getViewIndex();
-
-    if( uiViewId == 0 )
-    {
-        m_aiDDDInvScale[ iBaseViewIdx ] = m_aiDDDInvOffset[ iBaseViewIdx ] = m_aiDDDShift[ iBaseViewIdx ] = 0;
-        return;
-    }
-
-
-    Int iSign = iCodedScale >= 0 ? 1 : -1;
-    iCodedScale = abs( iCodedScale );
-
-    Int iBitWidth = 0;
-
-    const Int iInvPres = 9;
-
-    while( ((( 1 << iBitWidth ) << 1 ) <= iCodedScale ) )
-    {
-        iBitWidth ++;
-    }
-    iBitWidth += iInvPres;
-    Int iTargetValue =  1 << iBitWidth;
-
-    Int iMinError = MAX_INT;
-    Int iBestD = 1 << ( iInvPres - 1 );
-    for( Int d = 1 << ( iInvPres - 1 ); d < ( 1 << iInvPres ); d++ )
-    {
-        Int iError = abs( iCodedScale * d - iTargetValue );
-        if( iError < iMinError )
-        {
-            iMinError = iError;
-            iBestD = d;
-        }
-        if( iMinError == 0 )
-        {
-            break;
-        }
-    }
-    Int iRoundingDir = 0;
-    if( iCodedScale * iBestD > iTargetValue )
-    {
-        iRoundingDir = -1;
-    }
-    else if( iCodedScale * iBestD < iTargetValue )
-    {
-        iRoundingDir = 1;
-    }
-    Int iCamPres = uiCamParsCodedPrecision - 1;
-    m_aiDDDInvScale [ iBaseViewIdx ] = ( iBestD << ( iCamPres + g_bitDepthY )) * iSign;
-    m_aiDDDInvOffset[ iBaseViewIdx ] = -iSign * iBestD * ( iCodedOffset << g_bitDepthY );
-    m_aiDDDShift    [ iBaseViewIdx ] = iBitWidth;
-    m_aiDDDInvOffset[ iBaseViewIdx ] += 1 << ( m_aiDDDShift[ iBaseViewIdx ] - 1 );
-    m_aiDDDInvOffset[ iBaseViewIdx ] += ( 1 << ( m_aiDDDShift[ iBaseViewIdx ] - 4 ) ) * iRoundingDir;
-
-    return;
-}
-
-
-#endif
-#endif
 
 #if H_MV
 Void TComSlice::checkCrossLayerBlaFlag()
@@ -4257,16 +4020,7 @@ Bool TComSlice::inferPocMsbValPresentFlag()
 
 #endif
 
-#if !LGE_DDD_REMOVAL_J0042_J0030
-#if H_3D_DBBP
-Int TComSlice::getDepthFromDV( Int iDV, Int iBaseViewIdx )
-{
-  return ClipY(( iDV * m_aiDDDInvScale[ iBaseViewIdx ] + m_aiDDDInvOffset[ iBaseViewIdx ] ) >> m_aiDDDShift[ iBaseViewIdx ]);
-}
-#endif
-#endif
 
-#if HHI_TOOL_PARAMETERS_I2_J0107
 #if H_3D
 
 Void TComSlice::init3dToolParameters()
@@ -4362,7 +4116,6 @@ Void TComSlice::init3dToolParameters()
   std::cout << "mpiSubPbSize            :" << m_mpiSubPbSize           << std::endl;
 #endif
 }
-#endif
 #endif
 
 

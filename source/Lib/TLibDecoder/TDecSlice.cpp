@@ -279,38 +279,6 @@ Void TDecSlice::decompressSlice(TComInputBitstream** ppcSubstreams, TComPic*& rp
       // Set variables to appropriate values to avoid later code change.
       iNumSubstreamsPerTile = 1;
     }
-#if LGE_DEFAULT_DV_J0046 && !SEC_ARP_VIEW_REF_CHECK_J0037 && !SEC_DBBP_VIEW_REF_CHECK_J0037
-    pcSlice->setDefaultRefViewIdx( -1 );
-    pcSlice->setDefaultRefViewIdxAvailableFlag( false ); 
-
-    Int valid = 0;
-    Int viewIndex = 0;
-    for( UInt uiBId = 0; uiBId < pcSlice->getViewIndex() && valid==0; uiBId++ )
-    {
-        UInt        uiBaseId    = uiBId;
-        TComPic*    pcBasePic   = pcSlice->getIvPic( false, uiBaseId );
-        for( Int iRefListId = 0; ( iRefListId < (pcSlice->isInterB()? 2:1) ) && !pcSlice->isIntra() && valid==0; iRefListId++ )
-        {
-            RefPicList  eRefPicListTest = RefPicList( iRefListId );
-            Int         iNumRefPics = pcSlice->getNumRefIdx( eRefPicListTest ) ;
-            for( Int iRefIndex = 0; iRefIndex < iNumRefPics; iRefIndex++ )
-            { 
-                if(pcBasePic->getPOC() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getPOC() 
-                    && pcBasePic->getViewIndex() == pcSlice->getRefPic( eRefPicListTest, iRefIndex )->getViewIndex())
-                {
-                    valid=1;
-                    viewIndex = uiBaseId;
-                    break;
-                }
-            }
-        }
-    }
-    if( valid )
-    {
-        pcSlice->setDefaultRefViewIdx( viewIndex );
-        pcSlice->setDefaultRefViewIdxAvailableFlag( true );   
-    }
-#endif
 
     if ( (iCUAddr == rpcPic->getPicSym()->getTComTile(rpcPic->getPicSym()->getTileIdxMap(iCUAddr))->getFirstCUAddr()) && // 1st in tile.
          (iCUAddr!=0) && (iCUAddr!=rpcPic->getPicSym()->getPicSCUAddr(rpcPic->getSlice(rpcPic->getCurrSliceIdx())->getSliceCurStartCUAddr())/rpcPic->getNumPartInCU())
