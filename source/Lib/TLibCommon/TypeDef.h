@@ -186,7 +186,7 @@
                                               // SEC_ADAPT_DISABLE_IVMP        Disabling IVMP merge candidates when IC is enabled, JCT3V-H0070
                                               // SEC_SIMP_SHIFTED_DV_I0086     Simplification of Shifted DV candidate, JCT3V-I0086
 
-
+#define SEC_SHIFTED_IVMC_POS_K0036        1   // Position Derivation for Shifted-IVMC, JCT3V-K0036
 
 
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 

@@ -6866,8 +6866,13 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
       Int         iBaseCUAddr;
       Int         iBaseAbsPartIdx;
 
+#if SEC_SHIFTED_IVMC_POS_K0036
+      Int offsetW = (iLoopCan == 0) ? 0 : ( iWidth  * 2 );
+      Int offsetH = (iLoopCan == 0) ? 0 : ( iHeight * 2 );
+#else
       Int offsetW = (iLoopCan == 0) ? 0 : ( ((iWidth /2)*4) + 4 );
       Int offsetH = (iLoopCan == 0) ? 0 : ( ((iHeight/2)*4) + 4 );
+#endif
 
       Int         iBasePosX   = Clip3( 0, pcBaseRec->getWidth () - 1, iCurrPosX + ( (cDv.getHor() + offsetW + 2 ) >> 2 ) );
       Int         iBasePosY   = Clip3( 0, pcBaseRec->getHeight() - 1, iCurrPosY + ( (cDv.getVer() + offsetH + 2 ) >> 2 ) ); 
