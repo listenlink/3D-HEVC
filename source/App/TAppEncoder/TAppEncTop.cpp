@@ -195,7 +195,11 @@ Void TAppEncTop::xInitLibCfg()
       m_sps3dExtension.setIntraSdcWedgeFlag     ( d, m_intraSdcFlag || m_intraWedgeFlag     );
       m_sps3dExtension.setQtPredFlag            ( d, m_qtPredFlag            );
       m_sps3dExtension.setInterSdcFlag          ( d, m_interSdcFlag          );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+      m_sps3dExtension.setDepthIntraSkipFlag    ( d, m_depthIntraSkipFlag    );  
+#else
       m_sps3dExtension.setIntraSingleFlag       ( d, m_intraSingleFlag       );  
+#endif
     }
   }
 #endif

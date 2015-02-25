@@ -62,7 +62,9 @@ typedef struct _AMVPInfo
 #if H_3D_NBDV
 typedef struct _DisCand 
 {
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   Bool bDV;
+#endif
   TComMv m_acNBDV;              // DV from NBDV
 #if H_3D_NBDV_REF 
   TComMv m_acDoNBDV;            // DV from DoNBDV
