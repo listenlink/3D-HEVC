@@ -123,6 +123,9 @@ public:
   UInt            getAng     () { return m_uiAng; }
   Bool*           getScaledPattern(UInt uiWidth);
 
+#if SHARP_DMM_CLEAN_K0042
+  Void  generateWedgePatternByRotate(const TComWedgelet &rcWedge, Int rotate);
+#endif
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse = false );
   Void  findClosestAngle();
 
