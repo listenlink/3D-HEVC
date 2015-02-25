@@ -351,6 +351,8 @@
                                               // LG_ZEROINTRADEPTHRESI_A0087
 
 #define TICKET083_IVPFLAG_FIX             1
+#define SHARP_SUBBLOCK_CLEAN_K0044        1   // Remove unused bipred restriction
+
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP
