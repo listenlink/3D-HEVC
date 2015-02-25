@@ -4108,6 +4108,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                 pcMvFieldSP[2*iPartition + 1] = cMvFieldSaved[1];
               }
             }
+#if !SHARP_SUBBLOCK_CLEAN_K0044
             if (iPUHeight + iPUWidth == 12)
             {
               if (puhInterDirSP[iPartition] == 3)
@@ -4116,6 +4117,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                 pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
               }
             }
+#endif
 
             iPartition ++;
           }
@@ -6711,6 +6713,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
                 pcMvFieldSP[2*iPartition + 1].setMvField(pacPdmMv[1], paiPdmRefIdx[1]);
 
               }
+#if !SHARP_SUBBLOCK_CLEAN_K0044
               if (iSPHeight + iSPWidth == 12)
               {
                 if (puhInterDirSP[iPartition] == 3)
@@ -6719,6 +6722,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
                   pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
                 }
               }
+#endif
               iPartition ++;
             }
           }
