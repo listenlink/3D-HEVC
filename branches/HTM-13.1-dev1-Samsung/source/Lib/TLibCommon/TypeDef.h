@@ -118,6 +118,8 @@
                                               // MTK_I0072_IVARP_SCALING_FIX
 #define SEC_ARP_VIEW_REF_CHECK_J0037      1   // Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
 
+#define SEC_ARP_REM_ENC_RESTRICT_K0035    1   // Removal of encoder restriction of ARP, JCT3V-K0035
+
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
                                               // Full Pel Interpolation for Depth, HHI_FULL_PEL_DEPTH_MAP_MV_ACC

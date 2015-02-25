@@ -436,7 +436,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if H_3D_VSP
   DisInfo DvInfo; 
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   DvInfo.bDV = false;
+#endif
   DvInfo.m_acNBDV.setZero();
   DvInfo.m_aVIdxCan = 0;
 #if H_3D_NBDV_REF
@@ -582,17 +584,29 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_IV_MERGE
           if (rpcTempCU->getSlice()->getIsDepth() )
           {
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+            rpcTempCU->getDispforDepth(0, 0, &DvInfo);
+#else
             DvInfo.bDV = rpcTempCU->getDispforDepth(0, 0, &DvInfo);
+#endif
           }
           else
           {
 #endif 
 #if H_3D_NBDV_REF
           if( rpcTempCU->getSlice()->getDepthRefinementFlag() )
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+            rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
+#else
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
+#endif
           else
 #endif 
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+            rpcTempCU->getDisMvpCandNBDV(&DvInfo);
+#else
             DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo);
+#endif
 
 #if H_3D_IV_MERGE
           }
@@ -1852,7 +1866,11 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
 #if H_3D_ARP
   Int nARPWMax = rpcTempCU->getSlice()->getARPStepNum() - 1;
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  if( nARPWMax < 0 || bICFlag )
+#else
   if( nARPWMax < 0 || !rpcTempCU->getDvInfo(0).bDV || bICFlag )
+#endif
   {
     nARPWMax = 0;
   }
@@ -2192,8 +2210,11 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if H_3D_ARP
   Bool bFirstTime = true;
   Int nARPWMax    = rpcTempCU->getSlice()->getARPStepNum() - 1;
-
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N || rpcTempCU->getICFlag(0) )
+#else
   if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N || !rpcTempCU->getDvInfo(0).bDV || rpcTempCU->getICFlag(0) )
+#endif
   {
     nARPWMax = 0;
   }

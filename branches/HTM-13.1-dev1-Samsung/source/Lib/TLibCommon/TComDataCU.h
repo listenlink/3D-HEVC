@@ -500,14 +500,22 @@ public:
 #endif
   );
   Bool          xGetColDisMV      ( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  Void          getDisMvpCandNBDV ( DisInfo* pDInfo
+#else
   Bool          getDisMvpCandNBDV ( DisInfo* pDInfo
+#endif
 #if H_3D_NBDV_REF
    , Bool bDepthRefine = false
 #endif
    ); 
    
 #if H_3D
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  Void          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#else
   Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#endif
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
