@@ -84,8 +84,12 @@ public:
   
 public:
   virtual Void parseSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  virtual Void parseDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#else
 #if H_3D_SINGLE_DEPTH
   virtual Void parseSingleDepthMode       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
+#endif
 #endif
   virtual Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   virtual Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -170,8 +174,12 @@ public:
 public:
   Void decodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void decodeDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) ;
+#else
 #if H_3D_SINGLE_DEPTH
   Void decodeSingleDepthMode ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) ;
+#endif
 #endif
   Void decodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void decodeMergeFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );

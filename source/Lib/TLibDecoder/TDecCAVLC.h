@@ -123,9 +123,13 @@ public:
   Void  parseMVPIdx         ( Int& riMVPIdx );
   
   Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void  parseDIS            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#else
 #if H_3D_SINGLE_DEPTH
   Void  parseSingleDepthMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif  
+#endif
+#endif
   Void  parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );

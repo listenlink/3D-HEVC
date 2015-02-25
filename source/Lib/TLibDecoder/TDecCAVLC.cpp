@@ -1039,7 +1039,11 @@ Void TDecCavlc::parseSPS3dExtension( TComSPS* pcSPS )
       READ_FLAG( uiCode, "intra_sdc_wedge_flag" ); sps3dExt->setIntraSdcWedgeFlag( d, uiCode == 1 );
       READ_FLAG( uiCode, "qt_pred_flag" ); sps3dExt->setQtPredFlag( d, uiCode == 1 );
       READ_FLAG( uiCode, "inter_sdc_flag" ); sps3dExt->setInterSdcFlag( d, uiCode == 1 );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+      READ_FLAG( uiCode, "intra_skip_flag" ); sps3dExt->setDepthIntraSkipFlag( d, uiCode == 1 );
+#else
       READ_FLAG( uiCode, "intra_single_flag" ); sps3dExt->setIntraSingleFlag( d, uiCode == 1 );
+#endif
     }
   }
 }
@@ -2983,12 +2987,21 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
 {
   assert(0);
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TDecCavlc::parseDIS( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TDecCavlc::parseSingleDepthMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
 #endif
+#endif
+
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
