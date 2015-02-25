@@ -298,7 +298,9 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   }
 #if H_3D_NBDV 
   DisInfo DvInfo; 
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   DvInfo.bDV = false;
+#endif
   DvInfo.m_acNBDV.setZero();
   DvInfo.m_aVIdxCan = 0;
 #if H_3D_NBDV_REF  
@@ -333,7 +335,11 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_IV_MERGE
       if( pcCU->getSlice()->getIsDepth())
       {
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+        m_ppcCU[uiDepth]->getDispforDepth(0, 0, &DvInfo);
+#else
         DvInfo.bDV = m_ppcCU[uiDepth]->getDispforDepth(0, 0, &DvInfo);
+#endif
       }
       else
       {
@@ -341,12 +347,20 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
 #if H_3D_NBDV_REF
       if( pcCU->getSlice()->getDepthBasedBlkPartFlag() )  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
       {
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+        m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo, true);
+#else
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo, true);
+#endif
       }
       else
 #endif
       {
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+        m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo);
+#else
         DvInfo.bDV = m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo);
+#endif
       }
 #if H_3D_IV_MERGE
       }

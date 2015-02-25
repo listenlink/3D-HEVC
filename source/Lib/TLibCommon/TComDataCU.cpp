@@ -890,7 +890,7 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
   memset( m_puhCbf[1],          0, iSizeInUchar );
   memset( m_puhCbf[2],          0, iSizeInUchar );
   memset( m_puhDepth,     uiDepth, iSizeInUchar );
-#if H_3D_NBDV
+#if H_3D_NBDV && !SEC_ARP_REM_ENC_RESTRICT_K0035
   m_pDvInfo->bDV = false;
 #endif
 #if H_3D_ARP
@@ -5939,7 +5939,11 @@ Void TComDataCU::getPosInPic( UInt uiAbsPartIndex, Int& riPosX, Int& riPosY )
 }
 #endif
 #if H_3D_IV_MERGE
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+Void TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDisp)
+#else
 Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDisp)
+#endif
 {
 
   assert(getPartitionSize( uiPartAddr ) == SIZE_2Nx2N);
@@ -5955,10 +5959,13 @@ Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDis
       cMv.setVer(0);
       pDisp->m_acNBDV = cMv;
       pDisp->m_aVIdxCan = iViewIdx;
-
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
       return true;
+#endif
   }
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   return false;
+#endif
 }
 #endif
 
@@ -6037,7 +6044,11 @@ Bool TComDataCU::getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDept
 //TBD#1: DoNBDV related contributions are just partially integrated under the marco of H_3D_NBDV_REF, remove this comment once DoNBDV and BVSP are done
 //TBD#2: set of DvMCP values need to be done as part of inter-view motion prediction process. Remove this comment once merge related integration is done
 //To be checked: Parallel Merge features for NBDV, related to DV_DERIVATION_PARALLEL_B0096 and LGE_IVMP_PARALLEL_MERGE_B0136 are not integrated. The need of these features due to the adoption of CU-based NBDV is not clear. We need confirmation on this, especially by proponents
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+Void TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
+#else
 Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
+#endif
 #if H_3D_NBDV_REF
 , Bool bDepthRefine
 #endif
@@ -6045,7 +6056,9 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 {
   //// ******* Init variables ******* /////
   // Init disparity struct for results
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   pDInfo->bDV = false;   
+#endif
   pDInfo->m_aVIdxCan = -1;
 
   // Init struct for disparities from MCP neighboring blocks
@@ -6140,7 +6153,11 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
 
         pDInfo->m_acDoNBDV  = cColMv;
 #endif //H_3D_NBDV_REF
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+        return;
+#else
         return true;
+#endif
       }
     }
   } 
@@ -6157,7 +6174,11 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
     , bDepthRefine 
 #endif
     ) )
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+    return;
+#else
     return true;
+#endif
 
   //// ******* Get disparity from above block ******* /////
   pcTmpCU = getPUAbove(uiIdx, uiPartIdxRT, true, false, true);
@@ -6169,7 +6190,11 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
       , bDepthRefine 
 #endif
       ) )
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+      return;
+#else
       return true;
+#endif
   }
 
   //// ******* Search MCP blocks ******* /////
@@ -6215,7 +6240,11 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
           }
           pDInfo->m_acDoNBDV = cDispVec;
 #endif
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+          return;
+#else
           return true;
+#endif
         }
       }
     }
@@ -6251,9 +6280,13 @@ Bool TComDataCU::getDisMvpCandNBDV( DisInfo* pDInfo
       }
       pDInfo->m_acDoNBDV = defaultDV;
 #endif
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
       return true;
+#endif
   }
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   return false; 
+#endif
 }
 
 #if H_3D_NBDV_REF
