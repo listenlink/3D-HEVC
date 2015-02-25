@@ -51,9 +51,14 @@ TDecSbac::TDecSbac()
 , m_numContextModels          ( 0 )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels )
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+, m_cCUDISFlagSCModel         ( 1,             1,               NUM_DIS_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCUDISTypeSCModel         ( 1,             1,               NUM_DIS_TYPE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#else
 #if H_3D_SINGLE_DEPTH
 , m_cCUSingleDepthFlagSCModel        ( 1,             1,               NUM_SINGLEDEPTH_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSingleDepthValueSCModel         ( 1,             1,               NUM_SINGLE_DEPTH_VALUE_DATA_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #endif
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
@@ -135,9 +140,14 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 
   m_cCUSplitFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SKIP_FLAG );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  m_cCUDISFlagSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_DIS_FLAG );
+  m_cCUDISTypeSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_DIS_TYPE );
+#else
 #if H_3D_SINGLE_DEPTH
   m_cCUSingleDepthFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SINGLEDEPTH_FLAG );
   m_cSingleDepthValueSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
+#endif
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
@@ -206,9 +216,14 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
+  m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
+#else
 #if H_3D_SINGLE_DEPTH
   m_cCUSingleDepthFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SINGLEDEPTH_FLAG );
   m_cSingleDepthValueSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
+#endif
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
@@ -569,6 +584,52 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   DTRACE_CU("cu_skip_flag", uiSymbol); 
 #endif
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TDecSbac::parseDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  pcCU->setDISFlagSubParts( false,        uiAbsPartIdx, uiDepth );
+  UInt uiSymbol = 0;
+  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUDISFlagSCModel.get( 0, 0, 0 ) );
+  if( uiSymbol )
+  {
+    pcCU->setDISFlagSubParts( true,        uiAbsPartIdx, uiDepth );
+    pcCU->setSkipFlagSubParts( false,        uiAbsPartIdx, uiDepth );
+    pcCU->setSDCFlagSubParts( false,        uiAbsPartIdx, uiDepth );
+    pcCU->setPredModeSubParts( MODE_INTRA,  uiAbsPartIdx, uiDepth );
+    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
+    pcCU->setLumaIntraDirSubParts (DC_IDX, uiAbsPartIdx, uiDepth );
+    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
+    pcCU->setMergeFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
+    pcCU->setTrIdxSubParts(0, uiAbsPartIdx, uiDepth);
+    pcCU->setCbfSubParts(0, 1, 1, uiAbsPartIdx, uiDepth);
+
+    UInt uiUnaryIdx = 0;
+    UInt uiNumCand  = 4;
+
+    if ( uiNumCand > 1 )
+    {
+      for( ; uiUnaryIdx < uiNumCand - 1; ++uiUnaryIdx )
+      {
+        UInt uiSymbol2 = 0;
+        if ( uiUnaryIdx==0 )
+        {
+          m_pcTDecBinIf->decodeBin( uiSymbol2, m_cCUDISTypeSCModel.get( 0, 0, 0 ) );
+        }
+        else
+        {
+          m_pcTDecBinIf->decodeBinEP( uiSymbol2);
+        }
+        if( uiSymbol2 == 0 )
+        {
+          break;
+        }
+      }
+    }
+    pcCU->setDISTypeSubParts(uiUnaryIdx, uiAbsPartIdx, 0, uiDepth);
+  }
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TDecSbac::parseSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -615,8 +676,9 @@ Void TDecSbac::parseSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt u
     pcCU->setSingleDepthValueSubParts((Pel)absValDeltaDC,uiAbsPartIdx, 0, uiDepth);
   }
 }
-
 #endif
+#endif
+
 /** parse merge flag
  * \param pcCU
  * \param uiAbsPartIdx 

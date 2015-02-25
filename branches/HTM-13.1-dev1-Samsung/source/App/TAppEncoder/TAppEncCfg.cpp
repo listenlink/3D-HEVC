@@ -784,7 +784,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IntraSdcFlag"          , m_intraSdcFlag          , true                                           , "Intra depth DCs"                           )
   ("QtPredFlag"            , m_qtPredFlag            , true                                           , "Quad tree prediction from texture to depth")
   ("InterSdcFlag"          , m_interSdcFlag          , true                                           , "Inter depth DCs"                           )
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  ("DepthIntraSkip"        , m_depthIntraSkipFlag    , true                                           , "Depth intra skip mode"                     )
+#else
   ("IntraSingleFlag"       , m_intraSingleFlag       , true                                           , "Intra single mode"                         )
+#endif
 #endif //H_3D
   ;
 
@@ -2603,7 +2607,11 @@ Void TAppEncCfg::xPrintParameter()
   printf( "IntraSdc:%d "               , m_intraSdcFlag           ? 1 : 0 );
   printf( "QtPred:%d "                 , m_qtPredFlag             ? 1 : 0 );
   printf( "InterSdc:%d "               , m_interSdcFlag           ? 1 : 0 );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  printf( "DepthIntraSkip:%d "         , m_depthIntraSkipFlag     ? 1 : 0 );
+#else
   printf( "IntraSingle:%d "            , m_intraSingleFlag        ? 1 : 0 );
+#endif
 #endif
 
   printf("\n\n");  

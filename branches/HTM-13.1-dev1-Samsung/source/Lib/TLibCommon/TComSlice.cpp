@@ -139,8 +139,12 @@ TComSlice::TComSlice()
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
 #endif
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+, m_bApplyDIS                     (false)
+#else
 #if H_3D_SINGLE_DEPTH
 , m_bApplySingleDepthMode         (false)
+#endif
 #endif
 #endif
 {
@@ -1098,8 +1102,12 @@ Void TComSlice::copySliceInfo(TComSlice *pSrc)
     m_interLayerPredLayerIdc[ layer ] = pSrc->m_interLayerPredLayerIdc[ layer ]; 
   }
 #endif
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  m_bApplyDIS = pSrc->m_bApplyDIS;
+#else
 #if H_3D_SINGLE_DEPTH
   m_bApplySingleDepthMode = pSrc->m_bApplySingleDepthMode;
+#endif
 #endif
 #if H_3D_IC
   m_bApplyIC = pSrc->m_bApplyIC;
@@ -4087,8 +4095,12 @@ Void TComSlice::init3dToolParameters()
   m_intraContourFlag       = sps3dExt->getIntraContourFlag     ( depthFlag ) && lidG0           &&   textOfCurViewAvailFlag;
   m_intraSdcWedgeFlag      = sps3dExt->getIntraSdcWedgeFlag    ( depthFlag ) && lidG0                                     ;                          
   m_qtPredFlag             = sps3dExt->getQtPredFlag           ( depthFlag ) && lidG0           &&   textOfCurViewAvailFlag;
-  m_interSdcFlag           = sps3dExt->getInterSdcFlag         ( depthFlag ) && lidG0                                    ;                               
+  m_interSdcFlag           = sps3dExt->getInterSdcFlag         ( depthFlag ) && lidG0                                    ;  
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  m_depthIntraSkipFlag     = sps3dExt->getDepthIntraSkipFlag   ( depthFlag ) && lidG0                                    ;                          
+#else
   m_intraSingleFlag        = sps3dExt->getIntraSingleFlag      ( depthFlag ) && lidG0                                    ;                          
+#endif
 
   m_subPbSize              = lidG0 ? ( 1 << ( sps3dExt->getLog2SubPbSizeMinus3   ( depthFlag ) + 3 ) ) : getSPS()->getMaxCUWidth();  
   m_mpiSubPbSize           = 1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
@@ -4111,7 +4123,11 @@ Void TComSlice::init3dToolParameters()
   std::cout << "intraSdcWedgeFlag       :" << m_intraSdcWedgeFlag      << std::endl;
   std::cout << "qtPredFlag              :" << m_qtPredFlag             << std::endl;
   std::cout << "interSdcFlag            :" << m_interSdcFlag           << std::endl;
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  std::cout << "depthIntraSkipFlag      :" << m_depthIntraSkipFlag     << std::endl;    
+#else
   std::cout << "intraSingleFlag         :" << m_intraSingleFlag        << std::endl;    
+#endif
   std::cout << "subPbSize               :" << m_subPbSize              << std::endl;
   std::cout << "mpiSubPbSize            :" << m_mpiSubPbSize           << std::endl;
 #endif

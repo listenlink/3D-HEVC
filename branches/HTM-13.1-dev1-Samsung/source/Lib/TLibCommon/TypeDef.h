@@ -77,6 +77,8 @@
 #endif
 
 #if H_3D
+#define SEC_DEPTH_INTRA_SKIP_MODE_K0033   1   // Depth intra skip mode
+
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
                                               // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
@@ -238,10 +240,12 @@
                                               // MTK_J0033
                                               // SHARP_DLT_SIMP_J0029              1   // DLT(DepthValue2Idx[]) table derivation cleanup
 
+#if !SEC_DEPTH_INTRA_SKIP_MODE_K0033
 #define H_3D_SINGLE_DEPTH                 1   // Single depth mode proposed in JCT3V-I0095
                                               // HS_SP_SIMP_J0066
                                               // SINGLE_DEPTH_SIMP_J0115           1 
                                               // MTK_SINGLE_DEPTH_VPS_FLAG_J0060   1   // Add VPS control flags and remove slice header control flag for single depth, JCT3V-J0060
+#endif
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -312,10 +316,12 @@
 #define H_MV_FIX_NUM_VIEWS                     1
 #define H_3D_OUTPUT_ACTIVE_TOOLS               0
 
+#if !SEC_DEPTH_INTRA_SKIP_MODE_K0033
 ///// ***** SINGLE DEPTH MODE *********
 #if H_3D_SINGLE_DEPTH
 #define SINGLE_DEPTH_MODE_CAND_LIST_SIZE            2 // size of the sample candidate list
 
+#endif
 #endif
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********

@@ -110,6 +110,21 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TEncEntropy::encodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
+{
+  if ( !pcCU->getSlice()->getIsDepth() )
+  {
+    return;
+  }
+  if( bRD )
+  {
+    uiAbsPartIdx = 0;
+  }
+  m_pcEntropyCoderIf->codeDIS( pcCU, uiAbsPartIdx );
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TEncEntropy::encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
@@ -124,6 +139,8 @@ Void TEncEntropy::encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bo
   m_pcEntropyCoderIf->codeSingleDepthMode( pcCU, uiAbsPartIdx );
 }
 #endif
+#endif
+
 /** encode merge flag
  * \param pcCU
  * \param uiAbsPartIdx
