@@ -5753,13 +5753,17 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
 #endif
   }
 
-  if ( bIsCurrRefLongTerm || bIsColRefLongTerm )
+  if ( bIsCurrRefLongTerm || bIsColRefLongTerm ) // CY: this condition equals to both bIsCurrRefLongTerm and bIsColRefLongTerm being 1
   {
 #if H_3D_TMVP
     Int iCurrViewId    = m_pcSlice->getViewIndex (); 
     Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewIndex (); 
     Int iColViewId     = pColCU->getSlice()->getViewIndex(); 
     Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewIndex(); 
+#if H_3D_TMVP_SCALING_FIX_K0053
+    iScale = 4096;
+    if ( iCurrRefViewId != iCurrViewId && iColViewId != iColRefViewId )
+#endif
     iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
 
     if ( iScale != 4096 && m_pcSlice->getIvMvScalingFlag( ) )
@@ -5774,7 +5778,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
     }
 #endif
   }
-  else
+  else // CY: both bIsCurrRefLongTerm and bIsColRefLongTerm are 0
   {
     iScale = xGetDistScaleFactor(iCurrPOC, iCurrRefPOC, iColPOC, iColRefPOC);
     if ( iScale == 4096 )
