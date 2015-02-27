@@ -888,7 +888,11 @@ Void TEncCavlc::codeSPS3dExtension( TComSPS* pcSPS )
       WRITE_FLAG( sps3dExt->getIntraSdcWedgeFlag( d ) ? 1 : 0 , "intra_sdc_wedge_flag" );
       WRITE_FLAG( sps3dExt->getQtPredFlag( d ) ? 1 : 0 , "qt_pred_flag" );
       WRITE_FLAG( sps3dExt->getInterSdcFlag( d ) ? 1 : 0 , "inter_sdc_flag" );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+      WRITE_FLAG( sps3dExt->getDepthIntraSkipFlag( d ) ? 1 : 0 , "depth_intra_skip_flag" );
+#else
       WRITE_FLAG( sps3dExt->getIntraSingleFlag( d ) ? 1 : 0 , "intra_single_flag" );
+#endif
     }
   }
 }
@@ -2434,12 +2438,21 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TEncCavlc::codeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TEncCavlc::codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
 #endif
+#endif
+
 Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
