@@ -264,6 +264,7 @@
                                               // SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional filter for DBBP
                                               // SEC_DBBP_DMM4_THRESHOLD_I0076     Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
                                               // SEC_DBBP_VIEW_REF_CHECK_J0037     1   // Signaling dbbp_flag when the current slice has view reference picture(s), JCT3V-J0037 item4
+#define HS_DBBP_CLEAN_K0048     1 
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
                                               // LGE_DDD_REMOVAL_J0042_J0030 DDD removal
