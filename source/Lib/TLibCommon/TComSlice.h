@@ -1573,7 +1573,11 @@ public:
       m_intraSdcWedgeFlag     [d] = false; 
       m_qtPredFlag            [d] = false; 
       m_interSdcFlag          [d] = false; 
-      m_intraSingleFlag       [d] = false;   
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+      m_depthIntraSkipFlag    [d] = false;   
+#else
+      m_intraSingleFlag       [d] = false; 
+#endif
     }
   }
 
@@ -1616,8 +1620,13 @@ public:
   Void setInterSdcFlag( Int d, Bool flag ) { m_interSdcFlag[d] = flag; } 
   Bool getInterSdcFlag( Int d ) { return m_interSdcFlag[d]; } 
 
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void setDepthIntraSkipFlag( Int d, Bool flag ) { m_depthIntraSkipFlag[d] = flag; } 
+  Bool getDepthIntraSkipFlag( Int d ) { return m_depthIntraSkipFlag[d]; } 
+#else
   Void setIntraSingleFlag( Int d, Bool flag ) { m_intraSingleFlag[d] = flag; } 
   Bool getIntraSingleFlag( Int d ) { return m_intraSingleFlag[d]; } 
+#endif
 
 private:
 
@@ -1634,7 +1643,11 @@ private:
   Bool        m_intraSdcWedgeFlag     [2];
   Bool        m_qtPredFlag            [2];
   Bool        m_interSdcFlag          [2];
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool        m_depthIntraSkipFlag    [2];  
+#else
   Bool        m_intraSingleFlag       [2];  
+#endif
 };
 
 #endif
@@ -2376,8 +2389,12 @@ private:
   Int**      m_depthToDisparityF; 
 #endif
 #endif
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool      m_bApplyDIS;
+#else
 #if H_3D_SINGLE_DEPTH
   Bool      m_bApplySingleDepthMode;
+#endif
 #endif
 #if H_3D_IC
   Int *m_aICEnableCandidate;
@@ -2397,8 +2414,11 @@ private:
   Bool m_intraSdcWedgeFlag    ;
   Bool m_qtPredFlag           ;
   Bool m_interSdcFlag         ;
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool m_depthIntraSkipFlag   ;
+#else
   Bool m_intraSingleFlag      ;
-
+#endif
   Int  m_mpiSubPbSize         ; 
   Int  m_subPbSize            ; 
 public:
@@ -2821,7 +2841,11 @@ public:
   Bool getIntraSdcWedgeFlag      ( ) { return m_intraSdcWedgeFlag      ; };
   Bool getQtPredFlag             ( ) { return m_qtPredFlag             ; };
   Bool getInterSdcFlag           ( ) { return m_interSdcFlag           ; };
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool getDepthIntraSkipFlag     ( ) { return m_depthIntraSkipFlag     ; };
+#else
   Bool getIntraSingleFlag        ( ) { return m_intraSingleFlag        ; };
+#endif
 
   Int  getMpiSubPbSize           ( ) { return m_mpiSubPbSize           ; }; 
   Int  getSubPbSize              ( ) { return m_subPbSize              ; }; 
