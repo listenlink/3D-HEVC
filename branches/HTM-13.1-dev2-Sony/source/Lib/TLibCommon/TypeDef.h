@@ -64,6 +64,10 @@
 #define H_MV          ( HEVC_EXT != 0)
 #define H_3D          ( HEVC_EXT == 2)
 
+#if H_MV
+#define SONY_MV_V_CONST_C0078            1   // Control disparity vector search range via configuration file
+#endif
+
 #define NTT_BUG_FIX_TK54    1
 #define BUG_FIX_TK65        1
 

@@ -476,6 +476,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // motion options
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",         m_iSearchRange,              96, "Motion search range")
+#ifdef SONY_MV_V_CONST_C0078
+  ("DispSearchRangeRestriction",  m_bUseDisparitySearchRangeRestriction, false, "restrict disparity search range")
+  ("VerticalDispSearchRange",     m_iVerticalDisparitySearchRange, 56, "vertical disparity search range")
+#endif
   ("BipredSearchRange",       m_bipredSearchRange,          4, "Motion search range for bipred refinement")
   ("HadamardME",              m_bUseHADME,               true, "Hadamard ME for fractional-pel")
   ("ASR",                     m_bUseASR,                false, "Adaptive motion search range")
@@ -1581,6 +1585,9 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
+#ifdef SONY_MV_V_CONST_C0078
+  xConfirmPara( m_iVerticalDisparitySearchRange < 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
+#endif
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
 
@@ -2452,6 +2459,10 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
+#ifdef SONY_MV_V_CONST_C0078
+  printf("Disp search range restriction: %d\n", m_bUseDisparitySearchRangeRestriction );
+  printf("Vertical disp search range   : %d\n", m_iVerticalDisparitySearchRange );
+#endif
 #if H_MV
   xPrintParaVector( "Intra period", m_iIntraPeriod );
 #else
