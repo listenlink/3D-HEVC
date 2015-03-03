@@ -5397,12 +5397,9 @@ Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchR
   
 #ifdef SONY_MV_V_CONST_C0078
   if ( bMv_VRng_Restricted ) {
-    Int iRestrictMvVrange = ( iVerDispSrchRng << iMvShift ) ;
+    Int iRestrictMvVrange = ( iVerDispSrchRng - 1 ) << iMvShift ; // -1 to consider subpel search
     if ( rcMvSrchRngRB.getVer() >= iRestrictMvVrange  ){
-      rcMvSrchRngRB.setVer( iRestrictMvVrange );
-    }
-    if ( rcMvSrchRngLT.getVer() <= -iRestrictMvVrange ){
-      rcMvSrchRngLT.setVer( -iRestrictMvVrange );
+      rcMvSrchRngRB.setVer( iRestrictMvVrange ); //only positive side is restricted
     }
   }
 #endif

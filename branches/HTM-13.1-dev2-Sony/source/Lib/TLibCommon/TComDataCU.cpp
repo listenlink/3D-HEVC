@@ -5340,6 +5340,22 @@ Void TComDataCU::clipMv    (TComMv&  rcMv)
   rcMv.setVer( min (iVerMax, max (iVerMin, rcMv.getVer())) );
 }
 
+#if SONY_MV_V_CONST_C0078
+Void TComDataCU::checkMV_V (TComMv&  rcMv,  RefPicList eRefPicList, int iRefIdx )
+{
+  if ( getSlice()->getSPS()->getInterViewMvVertConstraintFlag() )
+  {
+    if ( getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC() == getSlice()->getPOC() )
+    {
+        //When inter_view_mv_vert_constraint_flag is equal to 1,
+        //the vertical component of the motion vectors used for inter-layer prediction 
+        //shall be equal to or less than 56 in units of luma samples
+        assert ( rcMv.getVer() <= (56<<2) );
+    }
+  }
+}
+#endif
+
 UInt TComDataCU::getIntraSizeIdx(UInt uiAbsPartIdx)
 {
   UInt uiShift = ( m_pePartSize[uiAbsPartIdx]==SIZE_NxN ? 1 : 0 );
