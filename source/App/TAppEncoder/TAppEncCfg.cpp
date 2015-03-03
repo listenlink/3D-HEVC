@@ -1586,7 +1586,7 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
 #ifdef SONY_MV_V_CONST_C0078
-  xConfirmPara( m_iVerticalDisparitySearchRange < 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
+  xConfirmPara( m_iVerticalDisparitySearchRange <= 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
 #endif
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
