@@ -954,6 +954,21 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
   xActivateParameterSets();
 
+#if SONY_MV_V_CONST_C0078
+  //Check Multiview Main profile constraint in G.11.1.1
+  //  When ViewOrderIdx[ i ] derived according to any active VPS is equal to 1 
+  //  for the layer with nuh_layer_id equal to i in subBitstream, 
+  //  inter_view_mv_vert_constraint_flag shall be equal to 1 
+  //  in the sps_multilayer_extension( ) syntax structure in each active SPS for that layer.
+  if( m_apcSlicePilot->getSPS()->getPTL()->getGeneralPTL()->getProfileIdc()==Profile::MULTIVIEWMAIN
+      &&
+      m_apcSlicePilot->getVPS()->getViewOrderIdx(m_apcSlicePilot->getVPS()->getLayerIdInNuh(getLayerId()))==1 
+     )
+  {
+    assert( m_apcSlicePilot->getSPS()->getInterViewMvVertConstraintFlag()==1 );
+  }
+#endif
+
   if (m_apcSlicePilot->isNextSlice()) 
   {
     m_prevPOC = m_apcSlicePilot->getPOC();
