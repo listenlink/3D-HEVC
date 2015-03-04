@@ -5976,7 +5976,60 @@ Bool TComDataCU::getDispforDepth (UInt uiPartIdx, UInt uiPartAddr, DisInfo* pDis
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
 Bool TComDataCU::getNeighDepth ( UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index )
 {
+#if NEIGHBORING_PIX_AVAILABILITY_FIX
+  UInt  uiPartIdxLT, uiPartIdxRT;
+  this->deriveLeftRightTopIdxAdi( uiPartIdxLT, uiPartIdxRT, 0, 0 );
+  UInt uiMidPart, uiPartNeighbor;  
+  TComDataCU* pcCUNeighbor;
+  Bool bDepAvail = false;
+  Pel *pDepth  = this->getPic()->getPicYuvRec()->getLumaAddr();
+  Int iDepStride =  this->getPic()->getPicYuvRec()->getStride();
 
+  Int xP, yP, nPSW, nPSH;
+  this->getPartPosition( uiPartIdx, xP, yP, nPSW, nPSH );
+
+  switch( index )
+  {
+  case 0: // Mid Left
+    uiMidPart = g_auiZscanToRaster[uiPartIdxLT] + (nPSH>>1) / this->getPic()->getMinCUHeight() * this->getPic()->getNumPartInWidth();
+    pcCUNeighbor = this->getPULeft( uiPartNeighbor, g_auiRasterToZscan[uiMidPart] );
+    if ( pcCUNeighbor )
+    {
+      if( !this->getSlice()->getPPS()->getConstrainedIntraPred() )
+      {
+        *pNeighDepth = pDepth[ (yP+(nPSH>>1)) * iDepStride + (xP-1) ];
+        bDepAvail = true;
+      }
+      else if ( pcCUNeighbor->getPredictionMode( uiPartNeighbor ) == MODE_INTRA )
+      {
+        *pNeighDepth = pDepth[ (yP+(nPSH>>1)) * iDepStride + (xP-1) ];
+        bDepAvail = true;
+      }
+    }
+    break;
+  case 1: // Mid Above
+    uiMidPart = g_auiZscanToRaster[uiPartIdxLT] + (nPSW>>1) / this->getPic()->getMinCUWidth();
+    pcCUNeighbor = this->getPUAbove( uiPartNeighbor, g_auiRasterToZscan[uiMidPart] );
+    if( pcCUNeighbor )
+    {
+      if( !this->getSlice()->getPPS()->getConstrainedIntraPred() )
+      {
+        *pNeighDepth = pDepth[ (yP-1) * iDepStride + (xP + (nPSW>>1)) ];
+        bDepAvail = true;
+      }
+      else if ( pcCUNeighbor->getPredictionMode( uiPartNeighbor ) == MODE_INTRA )
+      {
+        *pNeighDepth = pDepth[ (yP-1) * iDepStride + (xP + (nPSW>>1)) ];
+        bDepAvail = true;
+      }
+    }
+    break;
+  default:
+    break;
+  }
+
+  return bDepAvail;
+#else
   Bool bDepAvail = false;
   Pel *pDepth  = this->getPic()->getPicYuvRec()->getLumaAddr();
   Int iDepStride =  this->getPic()->getPicYuvRec()->getStride();
@@ -6005,6 +6058,7 @@ Bool TComDataCU::getNeighDepth ( UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDep
     break;
   }
   return bDepAvail;
+#endif
 }
 #else
 #if H_3D_SINGLE_DEPTH

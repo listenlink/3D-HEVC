@@ -80,6 +80,10 @@
 
 #if H_3D
 #define SEC_DEPTH_INTRA_SKIP_MODE_K0033   1   // Depth intra skip mode
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#define NEIGHBORING_PIX_AVAILABILITY_FIX  1
+#endif
+
 
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
