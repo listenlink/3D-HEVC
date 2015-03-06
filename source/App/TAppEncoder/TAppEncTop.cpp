@@ -347,6 +347,10 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setSearchRange                  ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange            ( m_bipredSearchRange );
 
+#if SONY_MV_V_CONST_C0078
+  m_cTEncTop.setUseDisparitySearchRangeRestriction ( m_bUseDisparitySearchRangeRestriction );
+  m_cTEncTop.setVerticalDisparitySearchRange ( m_iVerticalDisparitySearchRange );
+#endif
   //====== Quality control ========
   m_cTEncTop.setMaxDeltaQP                   ( m_iMaxDeltaQP  );
   m_cTEncTop.setMaxCuDQPDepth                ( m_iMaxCuDQPDepth  );

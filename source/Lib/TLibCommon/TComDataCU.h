@@ -590,6 +590,9 @@ UChar         getNumPartitions       ();
   Void          setMVPNumSubParts     ( Int iMVPNum, RefPicList eRefPicList, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
   
   Void          clipMv                ( TComMv&     rcMv     );
+#if SONY_MV_V_CONST_C0078
+  Void          checkMV_V (TComMv&  rcMv,  RefPicList eRefPicList, int iRefIdx );
+#endif
   Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
   Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }
   Void          getMvPredAboveRight   ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldC.getMv(); }

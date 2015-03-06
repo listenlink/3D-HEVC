@@ -2321,9 +2321,11 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
     
     Int iPictureWidth  = depthPicYuv->getWidth();
     Int iPictureHeight = depthPicYuv->getHeight();
-    
+ 
+#if !HS_DBBP_CLEAN_K0048
     Int iWidth  = uiWidth;
     Int iHeight = uiHeight;
+#endif
     
     Bool depthRefineFlag = false;
 #if H_3D_NBDV_REF
@@ -2336,8 +2338,13 @@ Pel* TComDataCU::getVirtualDepthBlock(UInt uiAbsPartIdx, UInt uiWidth, UInt uiHe
       cDv.setVer(0);
     }
     
+#if HS_DBBP_CLEAN_K0048
+    Int depthPosX = Clip3(0,   iPictureWidth - 1,  iBlkX + ((cDv.getHor()+2)>>2));
+    Int depthPosY = Clip3(0,   iPictureHeight - 1, iBlkY + ((cDv.getVer()+2)>>2));
+#else
     Int depthPosX = Clip3(0,   iPictureWidth - iWidth,  iBlkX + ((cDv.getHor()+2)>>2));
     Int depthPosY = Clip3(0,   iPictureHeight- iHeight, iBlkY + ((cDv.getVer()+2)>>2));
+#endif
     
     pDepthPels = depthPicYuv->getLumaAddr() + depthPosX + depthPosY * uiDepthStride;
   }
@@ -4108,6 +4115,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                 pcMvFieldSP[2*iPartition + 1] = cMvFieldSaved[1];
               }
             }
+#if !SHARP_SUBBLOCK_CLEAN_K0044
             if (iPUHeight + iPUWidth == 12)
             {
               if (puhInterDirSP[iPartition] == 3)
@@ -4116,6 +4124,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
                 pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
               }
             }
+#endif
 
             iPartition ++;
           }
@@ -5330,6 +5339,22 @@ Void TComDataCU::clipMv    (TComMv&  rcMv)
   rcMv.setHor( min (iHorMax, max (iHorMin, rcMv.getHor())) );
   rcMv.setVer( min (iVerMax, max (iVerMin, rcMv.getVer())) );
 }
+
+#if SONY_MV_V_CONST_C0078
+Void TComDataCU::checkMV_V (TComMv&  rcMv,  RefPicList eRefPicList, int iRefIdx )
+{
+  if ( getSlice()->getSPS()->getInterViewMvVertConstraintFlag() )
+  {
+    if ( getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC() == getSlice()->getPOC() )
+    {
+        //When inter_view_mv_vert_constraint_flag is equal to 1,
+        //the vertical component of the motion vectors used for inter-layer prediction 
+        //shall be equal to or less than 56 in units of luma samples
+        assert ( rcMv.getVer() <= (56<<2) );
+    }
+  }
+}
+#endif
 
 UInt TComDataCU::getIntraSizeIdx(UInt uiAbsPartIdx)
 {
@@ -6711,6 +6736,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
                 pcMvFieldSP[2*iPartition + 1].setMvField(pacPdmMv[1], paiPdmRefIdx[1]);
 
               }
+#if !SHARP_SUBBLOCK_CLEAN_K0044
               if (iSPHeight + iSPWidth == 12)
               {
                 if (puhInterDirSP[iPartition] == 3)
@@ -6719,6 +6745,7 @@ TComDataCU::getInterViewMergeCands(UInt uiPartIdx, Int* paiPdmRefIdx, TComMv* pa
                   pcMvFieldSP[2*iPartition + 1].setMvField(TComMv(0,0), -1);
                 }
               }
+#endif
               iPartition ++;
             }
           }

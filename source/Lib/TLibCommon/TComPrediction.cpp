@@ -629,26 +629,64 @@ Bool TComPrediction::xCheckTwoSPMotion ( TComDataCU* pcCU, UInt PartAddr0, UInt 
 #endif
 
 #if H_3D_DBBP
+#if HS_DBBP_CLEAN_K0048
+PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize, TComDataCU*& pcCU)
+#else
 PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize)
+#endif
 {
   // find virtual partitioning for this CU based on depth block
   // segmentation of texture block --> mask IDs
-  Pel*  pDepthBlockStart      = pDepthPels;
+  Pel*  pDepthBlockStart    = pDepthPels;
   
   // first compute average of depth block for thresholding
   Int iSumDepth = 0;
   Int iSubSample = 4;
-  for (Int y=0; y<uiSize; y+=iSubSample)
+#if HS_DBBP_CLEAN_K0048
+  Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth();
+  Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight();
+  TComMv cDv = pcCU->getSlice()->getDepthRefinementFlag(  ) ? pcCU->getDvInfo(0).m_acDoNBDV : pcCU->getDvInfo(0).m_acNBDV;
+  if( pcCU->getSlice()->getDepthRefinementFlag(  ) )
   {
+    cDv.setVer(0);
+  }
+  Int iBlkX = ( pcCU->getAddr() % pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getHor()+2)>>2);
+  Int iBlkY = ( pcCU->getAddr() / pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getVer()+2)>>2);
+  UInt t=0;
+
+  for (Int y=0; y<uiSize; y+=iSubSample)
+   {
     for (Int x=0; x<uiSize; x+=iSubSample)
-    {
-      Int depthPel = pDepthPels[x];
-      
-      iSumDepth += depthPel;
-    }
+   {
+if (iBlkX+x>iPictureWidth)
+{
+    Int depthPel = pDepthPels[t];
+    iSumDepth += depthPel;
+} 
+else
+{
+    Int depthPel = pDepthPels[x];
+    t=x;
+    iSumDepth += depthPel;
+}
+   }
     
     // next row
+    if (!(iBlkY+y+4>iPictureHeight))
     pDepthPels += uiDepthStride*iSubSample;
+#else
+  for (Int y=0; y<uiSize; y+=iSubSample)
+  {
+     for (Int x=0; x<uiSize; x+=iSubSample)
+        {
+                  Int depthPel = pDepthPels[x];
+
+                  iSumDepth += depthPel;
+        }
+
+          // next row
+          pDepthPels += uiDepthStride*iSubSample;
+#endif
   }
   
   Int iSizeInBits = g_aucConvertToBit[uiSize] - g_aucConvertToBit[iSubSample];  // respect sub-sampling factor
@@ -666,7 +704,20 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   {
     for (Int x=0; x<uiSize; x+=iSubSample)
     {
-      Int depthPel = pDepthPels[x];
+#if HS_DBBP_CLEAN_K0048
+      Int depthPel = 0;
+if (iBlkX+x>iPictureWidth)
+{
+    depthPel = pDepthPels[t];
+}
+else
+{ 
+    depthPel = pDepthPels[x];
+     t=x;
+}
+#else
+            Int depthPel = pDepthPels[x];
+#endif
       
       // decide which segment this pixel belongs to
       Int ucSegment = (Int)(depthPel>iMean);
@@ -695,6 +746,9 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
     }
     
     // next row
+#if HS_DBBP_CLEAN_K0048
+    if (!(iBlkY+y+4>iPictureHeight))
+#endif
     pDepthPels += uiDepthStride*iSubSample;
   }
   
@@ -718,7 +772,11 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   return matchedPartSize;
 }
 
-Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask )
+#if HS_DBBP_CLEAN_K0048
+Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask, TComDataCU*& pcCU)
+#else
+Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask)
+#endif
 {
   // segmentation of texture block --> mask IDs
   Pel*  pDepthBlockStart      = pDepthPels;
@@ -727,7 +785,69 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   Int iSumDepth = 0;
   Int uiMinDepth = MAX_INT;
   Int uiMaxDepth = 0;
-
+#if HS_DBBP_CLEAN_K0048
+  uiMinDepth = pDepthPels[ 0 ];
+  uiMaxDepth = pDepthPels[ 0 ];
+  iSumDepth  = pDepthPels[ 0 ];
+    UInt t=0;
+  Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth();
+  Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight();  
+  TComMv cDv = pcCU->getSlice()->getDepthRefinementFlag(  ) ? pcCU->getDvInfo(0).m_acDoNBDV : pcCU->getDvInfo(0).m_acNBDV;
+  if( pcCU->getSlice()->getDepthRefinementFlag(  ) )
+  {
+      cDv.setVer(0);
+  }
+  Int iBlkX = ( pcCU->getAddr() % pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getHor()+2)>>2);
+  Int iBlkY = ( pcCU->getAddr() / pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getVer()+2)>>2);
+if (iBlkX>(Int)(iPictureWidth - uiWidth))
+{
+  iSumDepth += pDepthPels[ iPictureWidth - iBlkX - 1 ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ iPictureWidth - iBlkX - 1 ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ iPictureWidth - iBlkX - 1 ]);
+}
+else
+{
+  iSumDepth += pDepthPels[ uiWidth - 1 ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiWidth - 1 ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiWidth - 1 ]);
+}
+if (iBlkY>(Int)(iPictureHeight - uiHeight))
+{
+  iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ]);
+}
+else
+{
+  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
+}
+if (iBlkY>(Int)(iPictureHeight - uiHeight) && iBlkX>(Int)(iPictureWidth - uiWidth))
+{
+  iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ]);
+}
+else if (iBlkY>(Int)(iPictureHeight - uiHeight))
+{
+  iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ]);
+}
+else if (iBlkX>(Int)(iPictureWidth - uiWidth))
+{
+  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ]);
+}
+else
+{
+  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ];
+  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
+  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
+}
+#else
   iSumDepth  = pDepthPels[ 0 ];
   iSumDepth += pDepthPels[ uiWidth - 1 ];
   iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) ];
@@ -742,7 +862,7 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiWidth - 1 ]);
   uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
   uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
-
+#endif
   
   // don't generate mask for blocks with small depth range (encoder decision)
   if( uiMaxDepth - uiMinDepth < 10 )
@@ -764,7 +884,20 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   {
     for (Int x=0; x<uiHeight; x++)
     {
+#if HS_DBBP_CLEAN_K0048
+      Int depthPel = 0;
+      if (iBlkX+x>iPictureWidth)
+      {
+        depthPel = pDepthPels[t];
+      }
+      else
+      {
+        depthPel = pDepthPels[x];
+         t=x;
+      }
+#else
       Int depthPel = pDepthPels[x];
+#endif
       
       // decide which segment this pixel belongs to
       Int ucSegment = (Int)(depthPel>iMean);
@@ -782,6 +915,9 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
     }
     
     // next row
+#if HS_DBBP_CLEAN_K0048
+    if (!(iBlkY+y+1>iPictureHeight))
+#endif
     pDepthPels += uiDepthStride;
     pMask += MAX_CU_SIZE;
   }
@@ -1156,7 +1292,9 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
-
+#if SONY_MV_V_CONST_C0078
+  pcCU->checkMV_V(cMv, eRefPicList, iRefIdx );
+#endif
 #if H_3D_ARP
   if(pcCU->getARPW( uiPartAddr ) > 0  && pcCU->getSlice()->getRefPic( eRefPicList, iRefIdx )->getPOC()== pcCU->getSlice()->getPOC())
   {

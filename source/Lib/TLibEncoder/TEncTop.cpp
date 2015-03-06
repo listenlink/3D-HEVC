@@ -759,6 +759,12 @@ Void TEncTop::xInitSPS()
   {
     m_cSPS.setSpsInferScalingListFlag   ( true ); 
     m_cSPS.setSpsScalingListRefLayerId( m_cVPS->getIdRefLayer( getLayerId(), 0 ) ); 
+#if SONY_MV_V_CONST_C0078
+    if ( m_bUseDisparitySearchRangeRestriction )
+    {
+      m_cSPS.setInterViewMvVertConstraintFlag ( true ) ;
+    }
+#endif
   }
   m_cSPS.setSpsExtensionPresentFlag       ( true ); 
   m_cSPS.setSpsMultilayerExtensionFlag    ( true ); 
