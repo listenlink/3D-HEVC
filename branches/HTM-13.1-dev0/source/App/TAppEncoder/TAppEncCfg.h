@@ -288,7 +288,7 @@ protected:
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
-#ifdef SONY_MV_V_CONST_C0078
+#if SONY_MV_V_CONST_C0078
   Bool      m_bUseDisparitySearchRangeRestriction;            ///< restrict vertical search range for inter-view prediction
   Int       m_iVerticalDisparitySearchRange;                  ///< ME vertical search range for inter-view prediction
 #endif

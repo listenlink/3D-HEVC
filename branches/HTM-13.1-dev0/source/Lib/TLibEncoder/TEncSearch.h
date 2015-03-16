@@ -479,7 +479,7 @@ protected:
                                     TComMv&       rcMv,
                                     UInt&         ruiSAD );
   
-#ifdef SONY_MV_V_CONST_C0078
+#if SONY_MV_V_CONST_C0078
   Void xSetSearchRange           (  TComDataCU* pcCU, 
                                     TComMv& cMvPred, 
                                     Int iSrchRng, 
