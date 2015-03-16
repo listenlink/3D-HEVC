@@ -179,7 +179,10 @@ protected:
   Int       m_iFastSearch;                      //  0:Full search  1:Diamond  2:PMVFAST
   Int       m_iSearchRange;                     //  0:Full frame
   Int       m_bipredSearchRange;
-
+#ifdef SONY_MV_V_CONST_C0078
+  Bool      m_bUseDisparitySearchRangeRestriction;
+  Int       m_iVerticalDisparitySearchRange;
+#endif
   //====== Quality control ========
   Int       m_iMaxDeltaQP;                      //  Max. absolute delta QP (1:default)
   Int       m_iMaxCuDQPDepth;                   //  Max. depth for a minimum CuDQP (0:default)
@@ -501,6 +504,10 @@ public:
   Void      setFastSearch                   ( Int   i )      { m_iFastSearch = i; }
   Void      setSearchRange                  ( Int   i )      { m_iSearchRange = i; }
   Void      setBipredSearchRange            ( Int   i )      { m_bipredSearchRange = i; }
+#ifdef SONY_MV_V_CONST_C0078
+  Void      setUseDisparitySearchRangeRestriction ( Bool   b )      { m_bUseDisparitySearchRangeRestriction = b; }
+  Void      setVerticalDisparitySearchRange ( Int   i )      { m_iVerticalDisparitySearchRange = i; }
+#endif
 
   //====== Quality control ========
   Void      setMaxDeltaQP                   ( Int   i )      { m_iMaxDeltaQP = i; }
@@ -553,6 +560,10 @@ public:
   //==== Motion search ========
   Int       getFastSearch                   ()      { return  m_iFastSearch; }
   Int       getSearchRange                  ()      { return  m_iSearchRange; }
+#ifdef SONY_MV_V_CONST_C0078
+  Bool      getUseDisparitySearchRangeRestriction ()      { return  m_bUseDisparitySearchRangeRestriction; }
+  Int       getVerticalDisparitySearchRange ()            { return  m_iVerticalDisparitySearchRange; }
+#endif
 
   //==== Quality control ========
   Int       getMaxDeltaQP                   ()      { return  m_iMaxDeltaQP; }
