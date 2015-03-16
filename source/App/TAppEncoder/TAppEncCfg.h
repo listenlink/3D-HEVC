@@ -483,8 +483,11 @@ protected:
   Bool                   m_intraSdcFlag;
   Bool                   m_qtPredFlag;
   Bool                   m_interSdcFlag;
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool                   m_depthIntraSkipFlag; 
+#else
   Bool                   m_intraSingleFlag;
-
+#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables

@@ -340,7 +340,11 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
     }
     else if( eDFunc >= DF_HADS && eDFunc <= DF_HADS16N )
     {
+#if !RWTH_DBBP_NO_SATD_K0028
       rcDistParam.DistFunc = TComRdCost::xGetMaskedHADs;
+#else
+      rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
+#endif
     }
     else if( eDFunc >= DF_VSD && eDFunc <= DF_VSD16N )
     {
@@ -440,7 +444,11 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
 #if H_3D_DBBP
   if( m_bUseMask )
   {
+#if !RWTH_DBBP_NO_SATD_K0028
     rcDistParam.DistFunc = (bHADME)?TComRdCost::xGetMaskedHADs:TComRdCost::xGetMaskedSAD;
+#else
+    rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
+#endif
   }
 #endif
   // initialize
@@ -463,7 +471,11 @@ TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, 
 #if H_3D_DBBP
   if( m_bUseMask )
   {
+#if !RWTH_DBBP_NO_SATD_K0028
     rcDP.DistFunc = (bHadamard)?TComRdCost::xGetMaskedHADs:TComRdCost::xGetMaskedSAD;
+#else
+    rcDP.DistFunc = TComRdCost::xGetMaskedSAD;
+#endif
   }
 #endif
 }
@@ -716,6 +728,7 @@ UInt TComRdCost::xGetMaskedSAD( DistParam* pcDtParam )
   return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
 
+#if !RWTH_DBBP_NO_SATD_K0028
 UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
 {
   AOF(!pcDtParam->bApplyWeight);
@@ -833,6 +846,7 @@ UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
   
   return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
+#endif
 
 UInt TComRdCost::xGetMaskedVSD( DistParam* pcDtParam )
 {
