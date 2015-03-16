@@ -109,9 +109,14 @@ private:
   // CU data
   // -------------------------------------------------------------------------------------------------------------------
   Bool*         m_skipFlag;           ///< array of skip flags
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool*         m_bDISFlag;         
+  UInt*         m_uiDISType;
+#else
 #if H_3D_SINGLE_DEPTH
   Bool*         m_singleDepthFlag;           ///< array of single depth flags
   Pel*          m_apSingleDepthValue;
+#endif
 #endif
   Char*         m_pePartSize;         ///< array of partition sizes
   Char*         m_pePredMode;         ///< array of prediction modes
@@ -341,6 +346,17 @@ public:
   Bool         getSkipFlag            (UInt idx)                { return m_skipFlag[idx];     }
   Void         setSkipFlag           ( UInt idx, Bool skip)     { m_skipFlag[idx] = skip;   }
   Void         setSkipFlagSubParts   ( Bool skip, UInt absPartIdx, UInt depth );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool*        getDISFlag            ()                         { return m_bDISFlag;          }
+  Bool         getDISFlag            ( UInt idx)                { return m_bDISFlag[idx];     }
+  Void         setDISFlag            ( UInt idx, Bool bDIS)     { m_bDISFlag[idx] = bDIS;   }
+  Void         setDISFlagSubParts    ( Bool bDIS, UInt absPartIdx, UInt depth );
+
+  UInt*        getDISType            ()                         { return m_uiDISType; }
+  UInt         getDISType            ( UInt idx)                { return m_uiDISType[idx];     }
+  Void         getDISType            ( UInt idx, UInt uiDISType)     { m_uiDISType[idx] = uiDISType;   }
+  Void         setDISTypeSubParts    ( UInt uiDISType, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth );
+#else
 #if H_3D_SINGLE_DEPTH
   Bool*        getSingleDepthFlag            ()                        { return m_singleDepthFlag;          }
   Bool         getSingleDepthFlag            (UInt idx)                { return m_singleDepthFlag[idx];     }
@@ -352,6 +368,7 @@ public:
   Void         setSingleDepthValue           ( UInt idx, Pel pDepthValue)     { m_apSingleDepthValue[idx] = pDepthValue;   }
   Void         setSingleDepthValueSubParts   (Pel singleDepthValue, UInt uiAbsPartIdx, UInt uiPUIdx, UInt uiDepth );
 #endif  
+#endif
   Char*         getPredictionMode     ()                        { return m_pePredMode;        }
   PredMode      getPredictionMode     ( UInt uiIdx )            { return static_cast<PredMode>( m_pePredMode[uiIdx] ); }
   Bool*         getCUTransquantBypass ()                        { return m_CUTransquantBypass;        }
@@ -483,18 +500,30 @@ public:
 #endif
   );
   Bool          xGetColDisMV      ( Int currCandPic, RefPicList eRefPicList, Int refidx, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int & iTargetViewIdx, Int & iStartViewIdx );
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  Void          getDisMvpCandNBDV ( DisInfo* pDInfo
+#else
   Bool          getDisMvpCandNBDV ( DisInfo* pDInfo
+#endif
 #if H_3D_NBDV_REF
    , Bool bDepthRefine = false
 #endif
    ); 
    
 #if H_3D
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  Void          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#else
   Bool          getDispforDepth  ( UInt uiPartIdx, UInt uiPartAddr, DisInfo* cDisp);
+#endif
   Bool          getDispMvPredCan(UInt uiPartIdx, RefPicList eRefPicList, Int iRefIdx, Int* paiPdmRefIdx, TComMv* pacPdmMv, DisInfo* pDis, Int* iPdm );
 #endif
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+   Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
+#else
 #if H_3D_SINGLE_DEPTH
    Bool          getNeighDepth (UInt uiPartIdx, UInt uiPartAddr, Pel* pNeighDepth, Int index);
+#endif
 #endif
 #if H_3D_NBDV_REF
   Pel           getMcpFromDM(TComPicYuv* pcBaseViewDepthPicYuv, TComMv* mv, Int iBlkX, Int iBlkY, Int iWidth, Int iHeight, Int* aiShiftLUT );

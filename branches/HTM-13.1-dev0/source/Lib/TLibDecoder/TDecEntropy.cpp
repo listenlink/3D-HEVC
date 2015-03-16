@@ -51,6 +51,18 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TDecEntropy::decodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if( !pcCU->getSlice()->getDepthIntraSkipFlag() )
+  {
+    return;
+  }  
+
+  m_pcEntropyDecoderIf->parseDIS( pcCU, uiAbsPartIdx, uiDepth );
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -62,6 +74,8 @@ Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   m_pcEntropyDecoderIf->parseSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
 }
 #endif
+#endif
+
 Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );

@@ -1254,6 +1254,10 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
 #if H_3D_NBDV
   DisInfo cDistparity;
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  cDistparity.m_acNBDV = pcCU->getDvInfo(0).m_acNBDV;
+  cDistparity.m_aVIdxCan = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
+#else
   cDistparity.bDV           = pcCU->getDvInfo(uiPartAddr).bDV;
   if( cDistparity.bDV )
   {
@@ -1261,13 +1265,19 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     assert(pcCU->getDvInfo(uiPartAddr).bDV ==  pcCU->getDvInfo(0).bDV);
     cDistparity.m_aVIdxCan = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
   }
+#endif
 #else
   assert(0); // ARP can be applied only when a DV is available
 #endif
-
+#if SEC_ARP_REM_ENC_RESTRICT_K0035
+  UChar dW = pcCU->getARPW ( uiPartAddr );
+#else
   UChar dW = cDistparity.bDV ? pcCU->getARPW ( uiPartAddr ) : 0;
+#endif
 
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   if( cDistparity.bDV ) 
+#endif
   {
     Int arpRefIdx = pcCU->getSlice()->getFirstTRefIdx(eRefPicList);
     if( dW > 0 && pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC()!= pcCU->getSlice()->getPOC() )
@@ -1319,9 +1329,9 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     {
       pYuvB0->clear(); pYuvB1->clear();
     }
-
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
     assert ( cDistparity.bDV );
-    
+#endif    
     TComMv cNBDV = cDistparity.m_acNBDV;
     pcCU->clipMv( cNBDV );
     
