@@ -5499,7 +5499,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   
   TComMv      cMvPred = *pcMvPred;
   
-#ifdef SONY_MV_V_CONST_C0078
+#if SONY_MV_V_CONST_C0078
   Bool bMv_VRng_Restricted = false;
   if( m_pcEncCfg->getUseDisparitySearchRangeRestriction()
        &&
@@ -5566,7 +5566,7 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 }
 
 
-#ifdef SONY_MV_V_CONST_C0078
+#if SONY_MV_V_CONST_C0078
 Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB, Bool bMv_VRng_Restricted, Int iVerDispSrchRng )
 #else
 Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
@@ -5586,7 +5586,7 @@ Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchR
   rcMvSrchRngRB.setHor( cTmpMvPred.getHor() + (iSrchRng << iMvShift) );
   rcMvSrchRngRB.setVer( cTmpMvPred.getVer() + (iSrchRng << iMvShift) );
   
-#ifdef SONY_MV_V_CONST_C0078
+#if SONY_MV_V_CONST_C0078
   if ( bMv_VRng_Restricted ) {
     Int iRestrictMvVrange = ( iVerDispSrchRng - 1 ) << iMvShift ; // -1 to consider subpel search
     if ( rcMvSrchRngRB.getVer() >= iRestrictMvVrange  ){
