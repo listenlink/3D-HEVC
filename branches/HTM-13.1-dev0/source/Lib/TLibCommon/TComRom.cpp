@@ -738,8 +738,12 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
 {
   assert( uiWidth == uiHeight );
 
+#if SHARP_DMM_CLEAN_K0042
+  Int posStart = 0, posEnd = 0;
+#else
   UChar    uhStartX = 0,    uhStartY = 0,    uhEndX = 0,    uhEndY = 0;
   Int   iStepStartX = 0, iStepStartY = 0, iStepEndX = 0, iStepEndY = 0;
+#endif
 
   UInt uiBlockSize = 0;
   switch( eWedgeRes )
@@ -751,6 +755,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
   TComWedgelet cTempWedgelet( uiWidth, uiHeight );
   for( UInt uiOri = 0; uiOri < 6; uiOri++ )
   {
+#if !SHARP_DMM_CLEAN_K0042
     // init the edge line parameters for each of the 6 wedgelet types
     switch( uiOri )
     {
@@ -761,15 +766,41 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     case( 4 ): {  uhStartX = 0;               uhStartY = 0;               uhEndX = 0;               uhEndY = (uiBlockSize-1); iStepStartX = +1; iStepStartY =  0; iStepEndX = +1; iStepEndY =  0; break; }
     case( 5 ): {  uhStartX = (uiBlockSize-1); uhStartY = 0;               uhEndX = 0;               uhEndY = 0;               iStepStartX =  0; iStepStartY = +1; iStepEndX =  0; iStepEndY = +1; break; }
     }
+#endif
 
+#if SHARP_DMM_CLEAN_K0042
+    posEnd = racWedgeList.size();
+    if (uiOri == 0 || uiOri == 4)
+    {
+#endif
     for( Int iK = 0; iK < uiBlockSize; iK += (uiWidth>=16 ?2:1))
     {
       for( Int iL = 0; iL < uiBlockSize; iL += ((uiWidth>=16 && uiOri<4)?2:1) )
       {
+#if SHARP_DMM_CLEAN_K0042
+        Int xS = iK;
+        Int yS = 0;
+        Int xE = (uiOri == 0) ? 0 : iL;
+        Int yE = (uiOri == 0) ? iL : uiBlockSize - 1;
+        cTempWedgelet.setWedgelet( xS, yS, xE, yE, uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
+#else
         cTempWedgelet.setWedgelet( uhStartX + (iK*iStepStartX) , uhStartY + (iK*iStepStartY), uhEndX + (iL*iStepEndX), uhEndY + (iL*iStepEndY), (UChar)uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
+#endif
         addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
       }
     }
+#if SHARP_DMM_CLEAN_K0042
+    }
+    else
+    {
+      for (Int pos = posStart; pos < posEnd; pos++)
+      {
+        cTempWedgelet.generateWedgePatternByRotate(racWedgeList[pos], uiOri);
+        addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
+      }
+    }
+    posStart = posEnd;
+#endif
   }
 
 

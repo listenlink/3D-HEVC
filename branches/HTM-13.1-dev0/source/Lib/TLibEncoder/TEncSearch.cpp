@@ -5499,8 +5499,21 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
   
   TComMv      cMvPred = *pcMvPred;
   
+#ifdef SONY_MV_V_CONST_C0078
+  Bool bMv_VRng_Restricted = false;
+  if( m_pcEncCfg->getUseDisparitySearchRangeRestriction()
+       &&
+      pcCU->getSlice()->getRefPic( eRefPicList, iRefIdxPred )->getPOC() == pcCU->getSlice()->getPOC()
+    )
+  {
+      bMv_VRng_Restricted = true;
+  }
+  if ( bBi )  xSetSearchRange   ( pcCU, rcMv   , iSrchRng, cMvSrchRngLT, cMvSrchRngRB, bMv_VRng_Restricted, m_pcEncCfg->getVerticalDisparitySearchRange() );
+  else        xSetSearchRange   ( pcCU, cMvPred, iSrchRng, cMvSrchRngLT, cMvSrchRngRB, bMv_VRng_Restricted, m_pcEncCfg->getVerticalDisparitySearchRange() );
+#else
   if ( bBi )  xSetSearchRange   ( pcCU, rcMv   , iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
   else        xSetSearchRange   ( pcCU, cMvPred, iSrchRng, cMvSrchRngLT, cMvSrchRngRB );
+#endif
   
   m_pcRdCost->getMotionCost ( 1, 0 );
   
@@ -5553,7 +5566,11 @@ Void TEncSearch::xMotionEstimation( TComDataCU* pcCU, TComYuv* pcYuvOrg, Int iPa
 }
 
 
+#ifdef SONY_MV_V_CONST_C0078
+Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB, Bool bMv_VRng_Restricted, Int iVerDispSrchRng )
+#else
 Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchRng, TComMv& rcMvSrchRngLT, TComMv& rcMvSrchRngRB )
+#endif
 {
   Int  iMvShift = 2;
 #if H_3D_IC
@@ -5568,6 +5585,16 @@ Void TEncSearch::xSetSearchRange ( TComDataCU* pcCU, TComMv& cMvPred, Int iSrchR
   
   rcMvSrchRngRB.setHor( cTmpMvPred.getHor() + (iSrchRng << iMvShift) );
   rcMvSrchRngRB.setVer( cTmpMvPred.getVer() + (iSrchRng << iMvShift) );
+  
+#ifdef SONY_MV_V_CONST_C0078
+  if ( bMv_VRng_Restricted ) {
+    Int iRestrictMvVrange = ( iVerDispSrchRng - 1 ) << iMvShift ; // -1 to consider subpel search
+    if ( rcMvSrchRngRB.getVer() >= iRestrictMvVrange  ){
+      rcMvSrchRngRB.setVer( iRestrictMvVrange ); //only positive side is restricted
+    }
+  }
+#endif
+
   pcCU->clipMv        ( rcMvSrchRngLT );
   pcCU->clipMv        ( rcMvSrchRngRB );
   

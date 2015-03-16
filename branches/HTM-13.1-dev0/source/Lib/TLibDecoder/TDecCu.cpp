@@ -953,7 +953,11 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   
   // compute mask by segmenting depth block
   Bool pMask[MAX_CU_SIZE*MAX_CU_SIZE];
+#if HS_DBBP_CLEAN_K0048
+  Bool bValidMask = m_pcPrediction->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, pcCU->getWidth(0), pcCU->getHeight(0), pMask, pcCU);
+#else
   Bool bValidMask = m_pcPrediction->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, pcCU->getWidth(0), pcCU->getHeight(0), pMask);
+#endif
   AOF(bValidMask);
   
   DBBPTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();

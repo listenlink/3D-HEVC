@@ -2646,12 +2646,19 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   AOF( pDepthPels != NULL );
   AOF( uiDepthStride != 0 );
   
+#if HS_DBBP_CLEAN_K0048
+  PartSize eVirtualPartSize = m_pcPredSearch->getPartitionSizeFromDepth(pDepthPels, uiDepthStride, uiWidth, rpcTempCU);
+
   // derive partitioning from depth
+  Bool pMask[MAX_CU_SIZE*MAX_CU_SIZE];
+  Bool bValidMask = m_pcPredSearch->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, uiWidth, uiHeight, pMask, rpcTempCU);
+#else
   PartSize eVirtualPartSize = m_pcPredSearch->getPartitionSizeFromDepth(pDepthPels, uiDepthStride, uiWidth);
   
   // derive segmentation mask from depth
   Bool pMask[MAX_CU_SIZE*MAX_CU_SIZE];
   Bool bValidMask = m_pcPredSearch->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, uiWidth, uiHeight, pMask);
+#endif
   
   if( !bValidMask )
   {
