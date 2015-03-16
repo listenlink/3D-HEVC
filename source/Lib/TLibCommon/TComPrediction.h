@@ -174,8 +174,13 @@ public:
 #endif
   
 #if H_3D_DBBP
+#if HS_DBBP_CLEAN_K0048
+  PartSize      getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize, TComDataCU*& pcCU);
+  Bool          getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask, TComDataCU*& pcCU);
+#else
   PartSize      getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize);
   Bool          getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask );
+#endif
   Void          combineSegmentsWithMask( TComYuv* pInYuv[2], TComYuv* pOutYuv, Bool* pMask, UInt uiWidth, UInt uiHeight, UInt uiPartAddr, UInt partSize );
 #endif
 
