@@ -856,7 +856,14 @@ Void TEncCavlc::codePPSMultilayerExtension(TComPPS* pcPPS)
 {
   WRITE_FLAG( pcPPS->getPocResetInfoPresentFlag( ) ? 1 : 0 , "poc_reset_info_present_flag" );
   WRITE_FLAG( pcPPS->getPpsInferScalingListFlag( ) ? 1 : 0 , "pps_infer_scaling_list_flag" );
+#if FIX_TICKET_95
+  if (pcPPS->getPpsInferScalingListFlag())
+  {
+    WRITE_CODE( pcPPS->getPpsScalingListRefLayerId( ), 6, "pps_scaling_list_ref_layer_id" );
+  }
+#else    
   WRITE_CODE( pcPPS->getPpsScalingListRefLayerId( ), 6, "pps_scaling_list_ref_layer_id" );
+#endif
   WRITE_UVLC( 0, "num_ref_loc_offsets" );
   WRITE_FLAG( 0 , "colour_mapping_enabled_flag" );
 
