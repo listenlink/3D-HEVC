@@ -324,6 +324,7 @@
 
 // Fixes
 
+#define FIX_TICKET_95                          1   // pps_scaling_list_ref_layer_id parsing
 
 #if H_3D
 #define HHI_VIEW_ID_LIST_I5_J0107              0
