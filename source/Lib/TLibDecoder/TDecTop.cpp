@@ -1093,6 +1093,10 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
   pcPic->setIsDepth  ( getIsDepth  () );
 #endif
 #endif
+#if HHI_RES_PRED_K0052
+  pcSlice->setIvPicLists( m_ivPicLists );         
+#endif
+
   if (bNextSlice)
   {
     pcSlice->checkCRA(pcSlice->getRPS(), m_pocCRA, m_associatedIRAPType, m_cListPic );
@@ -1128,7 +1132,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 
 #if H_3D
+#if !HHI_RES_PRED_K0052
     pcSlice->setIvPicLists( m_ivPicLists );         
+#endif
 
 #if HHI_INTER_COMP_PRED_K0052
     pcSlice->checkInCompPredRefLayers(); 

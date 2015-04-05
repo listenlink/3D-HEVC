@@ -332,6 +332,7 @@
 #if H_3D
 #define HHI_VIEW_ID_LIST_I5_J0107              0
 #define HHI_INTER_COMP_PRED_K0052              1
+#define HHI_RES_PRED_K0052                     1
 #define H_3D_ANNEX_SELECTION_FIX               1
 
 #endif

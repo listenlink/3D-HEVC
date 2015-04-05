@@ -2432,6 +2432,9 @@ private:
   TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
   UInt                 m_nARPStepNum; 
   Int         m_aiFirstTRefIdx    [2]; 
+#if HHI_RES_PRED_K0052
+  std::vector<Int> m_pocsInCurrRPSs; 
+#endif
 #endif
 #if H_3D_IC
   Bool      m_bApplyIC;
@@ -2780,6 +2783,9 @@ public:
   Int       getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];     }
   Void      setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;      }
   Bool      getArpRefPicAvailable( RefPicList e, Int viewIdx) {return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }
+#if HHI_RES_PRED_K0052
+  std::vector<Int> getPocsInCurrRPSs()                             { return m_pocsInCurrRPSs; }; 
+#endif
 #endif
   Void      setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth            ()                 { return m_isDepth; }
