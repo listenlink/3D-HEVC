@@ -597,6 +597,10 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   UInt NumPocLtCurr = 0;
   Int i;
 
+#if HHI_RES_PRED_K0052
+  m_pocsInCurrRPSs.clear();
+#endif
+
   for(i=0; i < m_pcRPS->getNumberOfNegativePictures(); i++)
   {
     if(m_pcRPS->getUsed(i))
@@ -607,6 +611,9 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
       RefPicSetStCurr0[NumPocStCurr0] = pcRefPic;
       NumPocStCurr0++;
       pcRefPic->setCheckLTMSBPresent(false);  
+#if HHI_RES_PRED_K0052
+      m_pocsInCurrRPSs.push_back( pcRefPic->getPOC() ); 
+#endif
     }
   }
   
@@ -620,6 +627,9 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
       RefPicSetStCurr1[NumPocStCurr1] = pcRefPic;
       NumPocStCurr1++;
       pcRefPic->setCheckLTMSBPresent(false);  
+#if HHI_RES_PRED_K0052
+      m_pocsInCurrRPSs.push_back( pcRefPic->getPOC() ); 
+#endif
     }
   }
   
@@ -632,6 +642,9 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
       pcRefPic->getPicYuvRec()->extendPicBorder();
       RefPicSetLtCurr[NumPocLtCurr] = pcRefPic;
       NumPocLtCurr++;
+#if HHI_RES_PRED_K0052
+      m_pocsInCurrRPSs.push_back( pcRefPic->getPOC() ); 
+#endif
     }
     if(pcRefPic==NULL) 
     {
@@ -641,6 +654,9 @@ Void TComSlice::getTempRefPicLists( TComList<TComPic*>& rcListPic, std::vector<T
   }
 
   Int numPocInterCurr = NumPocStCurr0 + NumPocStCurr1 + NumPocLtCurr; 
+#if HHI_RES_PRED_K0052
+  assert( numPocInterCurr == (Int) m_pocsInCurrRPSs.size() ); 
+#endif
   numPocTotalCurr = numPocInterCurr + getNumActiveRefLayerPics( );
   assert( numPocTotalCurr == getNumRpsCurrTempList() );
 
@@ -3781,9 +3797,26 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
       for( Int i = 0; i < getNumActiveRefLayerPics(); i++ )
       {
         Int layerIdInNuh = getRefPicLayerId( i );
+#if HHI_RES_PRED_K0052
+        TComPic* picV = getIvPic( getIsDepth(), getVPS()->getViewIndex( layerIdInNuh ) );
+        assert( picV != NULL ); 
+        std::vector<Int> pocsInCurrRPSsPicV = picV->getSlice(0)->getPocsInCurrRPSs(); 
+        Bool refRpRefAvailFlag = false; 
+        for (Int idx = 0; idx < pocsInCurrRPSsPicV.size(); idx++)
+        {
+          if ( pocsInCurrRPSsPicV[idx] == prevPOC )
+          {
+            refRpRefAvailFlag = true; 
+            break; 
+          }
+        }
+
+        if (getFirstTRefIdx(eRefPicList) >= 0 && refRpRefAvailFlag )
+#else
         Int viewIdx = getVPS()->getViewId( layerIdInNuh );
         TComPic*pcPicPrev = ivPicLists->getPic(viewIdx, 0, prevPOC);
         if (getFirstTRefIdx(eRefPicList) >= 0 && pcPicPrev && pcPicPrev->getSlice( 0 )->isReferenced())
+#endif
         {
           m_arpRefPicAvailable[eRefPicList][layerIdInNuh] = true;
         }
