@@ -780,7 +780,7 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
 {
   // segmentation of texture block --> mask IDs
   Pel*  pDepthBlockStart      = pDepthPels;
-  
+
   // first compute average of depth block for thresholding
   Int iSumDepth = 0;
   Int uiMinDepth = MAX_INT;
@@ -789,64 +789,64 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   uiMinDepth = pDepthPels[ 0 ];
   uiMaxDepth = pDepthPels[ 0 ];
   iSumDepth  = pDepthPels[ 0 ];
-    UInt t=0;
+  UInt t=0;
   Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth();
   Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight();  
   TComMv cDv = pcCU->getSlice()->getDepthRefinementFlag(  ) ? pcCU->getDvInfo(0).m_acDoNBDV : pcCU->getDvInfo(0).m_acNBDV;
   if( pcCU->getSlice()->getDepthRefinementFlag(  ) )
   {
-      cDv.setVer(0);
+    cDv.setVer(0);
   }
   Int iBlkX = ( pcCU->getAddr() % pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUWidth  + g_auiRasterToPelX[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getHor()+2)>>2);
   Int iBlkY = ( pcCU->getAddr() / pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getFrameWidthInCU() ) * g_uiMaxCUHeight + g_auiRasterToPelY[ g_auiZscanToRaster[ pcCU->getZorderIdxInCU() ] ]+ ((cDv.getVer()+2)>>2);
-if (iBlkX>(Int)(iPictureWidth - uiWidth))
-{
-  iSumDepth += pDepthPels[ iPictureWidth - iBlkX - 1 ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ iPictureWidth - iBlkX - 1 ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ iPictureWidth - iBlkX - 1 ]);
-}
-else
-{
-  iSumDepth += pDepthPels[ uiWidth - 1 ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiWidth - 1 ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiWidth - 1 ]);
-}
-if (iBlkY>(Int)(iPictureHeight - uiHeight))
-{
-  iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ]);
-}
-else
-{
-  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
-}
-if (iBlkY>(Int)(iPictureHeight - uiHeight) && iBlkX>(Int)(iPictureWidth - uiWidth))
-{
-  iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ]);
-}
-else if (iBlkY>(Int)(iPictureHeight - uiHeight))
-{
-  iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ]);
-}
-else if (iBlkX>(Int)(iPictureWidth - uiWidth))
-{
-  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ]);
-}
-else
-{
-  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
-}
+  if (iBlkX>(Int)(iPictureWidth - uiWidth))
+  {
+    iSumDepth += pDepthPels[ iPictureWidth - iBlkX - 1 ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ iPictureWidth - iBlkX - 1 ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ iPictureWidth - iBlkX - 1 ]);
+  }
+  else
+  {
+    iSumDepth += pDepthPels[ uiWidth - 1 ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiWidth - 1 ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiWidth - 1 ]);
+  }
+  if (iBlkY>(Int)(iPictureHeight - uiHeight))
+  {
+    iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) ]);
+  }
+  else
+  {
+    iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
+  }
+  if (iBlkY>(Int)(iPictureHeight - uiHeight) && iBlkX>(Int)(iPictureWidth - uiWidth))
+  {
+    iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + iPictureWidth - iBlkX - 1 ]);
+  }
+  else if (iBlkY>(Int)(iPictureHeight - uiHeight))
+  {
+    iSumDepth += pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (iPictureHeight - iBlkY - 1) + uiWidth - 1 ]);
+  }
+  else if (iBlkX>(Int)(iPictureWidth - uiWidth))
+  {
+    iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + iPictureWidth - iBlkX - 1 ]);
+  }
+  else
+  {
+    iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ];
+    uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
+    uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
+  }
 #else
   iSumDepth  = pDepthPels[ 0 ];
   iSumDepth += pDepthPels[ uiWidth - 1 ];
@@ -863,21 +863,21 @@ else
   uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
   uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
 #endif
-  
+
   // don't generate mask for blocks with small depth range (encoder decision)
   if( uiMaxDepth - uiMinDepth < 10 )
   {
     return false;
   }
-  
+
   AOF(uiWidth==uiHeight);
   Int iMean = iSumDepth >> 2;
-  
+
   // start again for segmentation
   pDepthPels = pDepthBlockStart;
-  
+
   Bool bInvertMask = pDepthPels[0]>iMean; // top-left segment needs to be mapped to partIdx 0
-  
+
   // generate mask
   UInt uiSumPix[2] = {0,0};
   for (Int y=0; y<uiHeight; y++)
@@ -893,35 +893,35 @@ else
       else
       {
         depthPel = pDepthPels[x];
-         t=x;
+        t=x;
       }
 #else
       Int depthPel = pDepthPels[x];
 #endif
-      
+
       // decide which segment this pixel belongs to
       Int ucSegment = (Int)(depthPel>iMean);
-      
+
       if( bInvertMask )
       {
         ucSegment = 1-ucSegment;
       }
-      
+
       // count pixels for each segment
       uiSumPix[ucSegment]++;
-      
+
       // set mask value
       pMask[x] = (Bool)ucSegment;
     }
-    
+
     // next row
 #if HS_DBBP_CLEAN_K0048
     if (!(iBlkY+y+1>iPictureHeight))
 #endif
-    pDepthPels += uiDepthStride;
+      pDepthPels += uiDepthStride;
     pMask += MAX_CU_SIZE;
   }
-  
+
   // don't generate valid mask for tiny segments (encoder decision)
   // each segment needs to cover at least 1/8th of block
   UInt uiMinPixPerSegment = (uiWidth*uiHeight) >> 3;
@@ -929,7 +929,7 @@ else
   {
     return false;
   }
-  
+
   // all good
   return true;
 }

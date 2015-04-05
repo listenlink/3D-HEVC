@@ -923,7 +923,7 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
         if(!pcCU->getSingleDepthFlag(uiAbsPartIdx))
 #endif
 #endif
-        m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
+          m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
       }
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
       else
@@ -947,25 +947,31 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
       {
 #endif
 #endif
-      m_pcEntropyCoder  ->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
+        m_pcEntropyCoder  ->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
 
+#if !HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
-      m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+        m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
 #endif
-      if (pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_2Nx2N )
-      {
-        m_pcEntropyCoder->encodeIPCMInfo( pcCU, 0, true );
-
-        if ( pcCU->getIPCMFlag (0))
+#endif
+        if (pcCU->isIntra(0) && pcCU->getPartitionSize(0) == SIZE_2Nx2N )
         {
-          return;
+          m_pcEntropyCoder->encodeIPCMInfo( pcCU, 0, true );
+          if ( pcCU->getIPCMFlag (0))
+          {
+#if HHI_MOVE_SYN_K0052
+#if H_3D_DIM_SDC
+            m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
+#endif
+            return;
+          }
         }
-      }
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
       }
 #else
 #if H_3D_SINGLE_DEPTH
-    }
+      }
 #endif
 #endif
     }
@@ -974,54 +980,72 @@ TEncSearch::xEncIntraHeader( TComDataCU*  pcCU,
     {
 #else
 #if H_3D_SINGLE_DEPTH
-      if(!pcCU->getSingleDepthFlag(uiAbsPartIdx))
-      {
-#endif
-#endif
-    // luma prediction mode
-    if( pcCU->getPartitionSize(0) == SIZE_2Nx2N )
+    if(!pcCU->getSingleDepthFlag(uiAbsPartIdx))
     {
-      if( uiAbsPartIdx == 0 )
-      {
-        m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 );
-#if H_3D_DIM_SDC
-        if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( 0 ) ) && getDimType( pcCU->getLumaIntraDir( 0 ) ) < DIM_NUM_TYPE ) 
-        {
-          m_pcEntropyCoder->encodeDeltaDC( pcCU, 0 );
-        }
 #endif
-      }
-    }
-    else
-    {
-      UInt uiQNumParts = pcCU->getTotalNumPart() >> 2;
-      if( uiTrDepth == 0 )
+#endif
+      // luma prediction mode
+      if( pcCU->getPartitionSize(0) == SIZE_2Nx2N )
       {
-        assert( uiAbsPartIdx == 0 );
-        for( UInt uiPart = 0; uiPart < 4; uiPart++ )
+        if( uiAbsPartIdx == 0 )
         {
-          m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPart * uiQNumParts );
+          m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, 0 );
 #if H_3D_DIM_SDC
-          if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiPart * uiQNumParts ) ) && getDimType( pcCU->getLumaIntraDir( uiPart * uiQNumParts ) ) < DIM_NUM_TYPE ) 
+#if HHI_MOVE_SYN_K0052
+#if H_3D_DIM_SDC
+          m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
+#endif
+          if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( 0 ) ) && getDimType( pcCU->getLumaIntraDir( 0 ) ) < DIM_NUM_TYPE ) 
           {
-            m_pcEntropyCoder->encodeDeltaDC( pcCU, uiPart * uiQNumParts );
+            m_pcEntropyCoder->encodeDeltaDC( pcCU, 0 );
           }
 #endif
         }
       }
-      else if( ( uiAbsPartIdx % uiQNumParts ) == 0 )
+      else
       {
-        m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiAbsPartIdx );
-#if H_3D_DIM_SDC
-        if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiAbsPartIdx ) ) && getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx ) ) < DIM_NUM_TYPE ) 
+        UInt uiQNumParts = pcCU->getTotalNumPart() >> 2;
+        if( uiTrDepth == 0 )
         {
-          m_pcEntropyCoder->encodeDeltaDC( pcCU, uiAbsPartIdx );
-      }
+          assert( uiAbsPartIdx == 0 );
+          for( UInt uiPart = 0; uiPart < 4; uiPart++ )
+          {
+            m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiPart * uiQNumParts );
+
+#if HHI_MOVE_SYN_K0052
+          }
+          m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+          for( UInt uiPart = 0; uiPart < 4; uiPart++ )
+          {
 #endif
-    }
-  }
+#if H_3D_DIM_SDC
+            if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiPart * uiQNumParts ) ) && getDimType( pcCU->getLumaIntraDir( uiPart * uiQNumParts ) ) < DIM_NUM_TYPE ) 
+            {
+              m_pcEntropyCoder->encodeDeltaDC( pcCU, uiPart * uiQNumParts );
+            }
+#endif
+          }
+        }
+        else if( ( uiAbsPartIdx % uiQNumParts ) == 0 )
+        {
+          m_pcEntropyCoder->encodeIntraDirModeLuma ( pcCU, uiAbsPartIdx );
+#if H_3D_DIM_SDC
+#if HHI_MOVE_SYN_K0052
+          if( uiAbsPartIdx == 0 )  
+          {
+            m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+          }
+#endif
+          if( pcCU->getSlice()->getIsDepth() && ( !pcCU->getSDCFlag( uiAbsPartIdx ) ) && getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx ) ) < DIM_NUM_TYPE ) 
+          {
+            m_pcEntropyCoder->encodeDeltaDC( pcCU, uiAbsPartIdx );
+          }
+#endif
+        }
+      }
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
- }
+    }
 #else
 #if H_3D_SINGLE_DEPTH
     }
@@ -2293,10 +2317,16 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
   }
 
   m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth( 0 ), true );
+#if !HHI_MOVE_SYN_K0052
   m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
 
   // encode pred direction + DC residual data
   m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if HHI_MOVE_SYN_K0052
+  m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
+
   Bool bDummy = false;
   m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth( 0 ), uiWidth, uiHeight, bDummy );
   UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
@@ -7489,15 +7519,25 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
 #endif
     m_pcEntropyCoder->encodePredMode( pcCU, 0, true );
     m_pcEntropyCoder->encodePartSize( pcCU, 0, pcCU->getDepth(0), true );
+#if !HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
     m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
 #endif
+#endif 
     m_pcEntropyCoder->encodePredInfo( pcCU, 0, true );
+#if HHI_MOVE_SYN_K0052
+#if H_3D_DIM_SDC
+    m_pcEntropyCoder->encodeSDCFlag( pcCU, 0, true );
+#endif
+#endif
 #if H_3D_ARP
-    m_pcEntropyCoder->encodeARPW( pcCU , 0 );
+    m_pcEntropyCoder->encodeARPW( pcCU , 0  );
 #endif
 #if H_3D_IC
     m_pcEntropyCoder->encodeICFlag( pcCU, 0, true );
+#endif
+#if HHI_MOVE_SYN_K0052
+    m_pcEntropyCoder->encodeDBBPFlag( pcCU, 0, true );
 #endif
     Bool bDummy = false;
     m_pcEntropyCoder->encodeCoeff   ( pcCU, 0, pcCU->getDepth(0), pcCU->getWidth(0), pcCU->getHeight(0), bDummy );

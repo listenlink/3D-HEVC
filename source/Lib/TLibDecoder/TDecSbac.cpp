@@ -2190,7 +2190,7 @@ Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   UInt uiCtxSDCFlag = pcCU->getCtxSDCFlag( uiAbsPartIdx );
 
   m_pcTDecBinIf->decodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, uiCtxSDCFlag ) );
-
+  DTRACE_CU("dc_only_flag", uiSymbol)
   if( uiSymbol )
   {
     pcCU->setSDCFlagSubParts( true, uiAbsPartIdx, uiDepth );

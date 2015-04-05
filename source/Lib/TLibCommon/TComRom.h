@@ -229,7 +229,7 @@ extern std::map< Level::Name, TComGeneralTierAndLevelLimits > g_generalTierAndLe
 extern       Char   g_aucConvertToBit  [ MAX_CU_SIZE+1 ];   // from width to log2(width)-2
 
 #ifndef ENC_DEC_TRACE
-#define ENC_DEC_TRACE   0 
+#define ENC_DEC_TRACE   0  
 #endif
 
 #if ENC_DEC_TRACE
@@ -265,6 +265,7 @@ extern UInt64 g_nSymbolCounter;
  extern Bool   g_stopAtPos;             // Stop at position
  extern Bool   g_outputPos;             // Output position
  extern Bool   g_traceCameraParameters; // Trace camera parameters
+ extern Bool   g_encNumberOfWrittenBits;// Trace number of written bits
 
 #define DTRACE_CU(x,y)             writeToTraceFile( x,y, g_traceCU );
 #define DTRACE_PU(x,y)             writeToTraceFile( x,y, g_tracePU );

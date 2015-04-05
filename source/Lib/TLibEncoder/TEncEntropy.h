@@ -150,7 +150,16 @@ public:
   Void    setBitstream              ( TComBitIf* p )          { m_pcEntropyCoderIf->setBitstream(p);  }
   Void    resetBits                 ()                        { m_pcEntropyCoderIf->resetBits();      }
   Void    resetCoeffCost            ()                        { m_pcEntropyCoderIf->resetCoeffCost(); }
-  UInt    getNumberOfWrittenBits    ()                        { return m_pcEntropyCoderIf->getNumberOfWrittenBits(); }
+  UInt    getNumberOfWrittenBits    ()
+  {
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+    Bool oldJustDoIt = g_bJustDoIt;
+    g_bJustDoIt = true; 
+    writeToTraceFile( "NumberOfWrittenBits", m_pcEntropyCoderIf->getNumberOfWrittenBits(), g_encNumberOfWrittenBits );
+    g_bJustDoIt = oldJustDoIt; 
+#endif
+    return m_pcEntropyCoderIf->getNumberOfWrittenBits(); 
+  }
   UInt    getCoeffCost              ()                        { return  m_pcEntropyCoderIf->getCoeffCost(); }
   Void    resetEntropy              ()                        { m_pcEntropyCoderIf->resetEntropy();  }
   Void    determineCabacInitIdx     ()                        { m_pcEntropyCoderIf->determineCabacInitIdx(); }
