@@ -398,6 +398,7 @@ TAppComCamPara::xGetSortedViewList( const std::vector<Int>& raiViews, std::vecto
 }
 
 
+#if !HHI_CAM_PARA_K0052
 Void
 TAppComCamPara::xGetViewOrderIndices( const std::vector<Int>& raiId2SortedId, std::vector<Int>& raiVOIdx )
 {
@@ -410,6 +411,7 @@ TAppComCamPara::xGetViewOrderIndices( const std::vector<Int>& raiId2SortedId, st
     raiVOIdx[ iIdx ] -= iOffs;
   }
 }
+#endif
 
 
 Bool
@@ -446,27 +448,27 @@ TAppComCamPara::xGetCamParsChangeFlag()
     }
     else
     {
-    Int     iBaseView  = m_aiBaseViews[ iBaseViewId ];
-    Double  dFL1, dFLX;
-    Double  dCP1, dCPX;
-    Double  dCS1, dCSX;
-    Double  dZN1, dZNX;
-    Double  dZF1, dZFX;
-    Bool    bInterpolated;
-    xGetGeometryData( iBaseView, m_uiFirstFrameId, dFL1, dCP1, dCS1, bInterpolated );  AOT( bInterpolated );
-    xGetZNearZFar   ( iBaseView, m_uiFirstFrameId, dZN1, dZF1 );
+      Int     iBaseView  = m_aiBaseViews[ iBaseViewId ];
+      Double  dFL1, dFLX;
+      Double  dCP1, dCPX;
+      Double  dCS1, dCSX;
+      Double  dZN1, dZNX;
+      Double  dZF1, dZFX;
+      Bool    bInterpolated;
+      xGetGeometryData( iBaseView, m_uiFirstFrameId, dFL1, dCP1, dCS1, bInterpolated );  AOT( bInterpolated );
+      xGetZNearZFar   ( iBaseView, m_uiFirstFrameId, dZN1, dZF1 );
 
-    for( UInt uiFrameId = m_uiFirstFrameId + 1; !bChangeDetected && uiFrameId <= m_uiLastFrameId; uiFrameId++ )
-    {
-      xGetGeometryData( iBaseView, uiFrameId, dFLX, dCPX, dCSX, bInterpolated );  AOT( bInterpolated );
-      xGetZNearZFar   ( iBaseView, uiFrameId, dZNX, dZFX );
-
-      if( dFL1 != dFLX || dCP1 != dCPX || dCS1 != dCSX || dZN1 != dZNX || dZF1 != dZFX )
+      for( UInt uiFrameId = m_uiFirstFrameId + 1; !bChangeDetected && uiFrameId <= m_uiLastFrameId; uiFrameId++ )
       {
-        bChangeDetected = true;
+        xGetGeometryData( iBaseView, uiFrameId, dFLX, dCPX, dCSX, bInterpolated );  AOT( bInterpolated );
+        xGetZNearZFar   ( iBaseView, uiFrameId, dZNX, dZFX );
+
+        if( dFL1 != dFLX || dCP1 != dCPX || dCS1 != dCSX || dZN1 != dZNX || dZF1 != dZFX )
+        {
+          bChangeDetected = true;
+        }
       }
     }
-  }
   }
   return bChangeDetected;
 }
@@ -720,16 +722,15 @@ TAppComCamPara::xGetShiftParameterCoded( UInt uiSourceView, UInt uiTargetView, U
   }
   else
   {
-  Double  dScale, dOffset;
-  Bool    bInterpolated = xGetShiftParameterReal( uiSourceView, uiTargetView, uiFrame, false, bByIdx, dScale, dOffset );
-  AOT(    bInterpolated ); // must be base view
+    Double  dScale, dOffset;
+    Bool    bInterpolated = xGetShiftParameterReal( uiSourceView, uiTargetView, uiFrame, false, bByIdx, dScale, dOffset );
+    AOT(    bInterpolated ); // must be base view
 
-  Double  dMultOffset   = (Double)( 1 << ( m_uiCamParsCodedPrecision + 1 ) );
-  Double  dMultScale    = (Double)( 1 << ( m_uiCamParsCodedPrecision + 1 + m_uiInputBitDepth ) );
-  riOffset              = (Int)floor( dMultOffset * dOffset + .5 );
-  riScale               = (Int)floor( dMultScale  * dScale  + .5 );
-}
-
+    Double  dMultOffset   = (Double)( 1 << ( m_uiCamParsCodedPrecision + 1 ) );
+    Double  dMultScale    = (Double)( 1 << ( m_uiCamParsCodedPrecision + 1 + m_uiInputBitDepth ) );
+    riOffset              = (Int)floor( dMultOffset * dOffset + .5 );
+    riScale               = (Int)floor( dMultScale  * dScale  + .5 );
+  }
 }
 
 
@@ -957,6 +958,8 @@ TAppComCamPara::xGetCameraShifts( UInt uiSourceView, UInt uiTargetView, UInt uiF
 }
 
 
+
+#if !HHI_CAM_PARA_K0052
 Void
 TAppComCamPara::xSetPdmConversionParams()
 {
@@ -994,6 +997,7 @@ TAppComCamPara::xSetPdmConversionParams()
     }
   }
 }
+#endif
 
 
 
@@ -1279,7 +1283,9 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
 
 
   //===== set derived parameters =====
+#if !HHI_CAM_PARA_K0052
   xGetViewOrderIndices( m_aiBaseId2SortedId, m_aiViewOrderIndex );
+#endif
   m_bCamParsVaryOverTime = xGetCamParsChangeFlag();
 
 

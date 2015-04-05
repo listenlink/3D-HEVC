@@ -379,10 +379,12 @@ protected:
   Bool      m_isDepth;
 
   //====== Camera Parameters ======
+#if !HHI_CAM_PARA_K0052
   UInt      m_uiCamParPrecision;
   Bool      m_bCamParInSliceHeader;
   Int**     m_aaiCodedScale;
   Int**     m_aaiCodedOffset;
+#endif
   TAppComCamPara* m_cameraParameters; 
   
 #if H_3D_VSO
@@ -920,10 +922,12 @@ public:
   /// 3D Tools 
 
  //==== CAMERA PARAMETERS  ==========
+#if !HHI_CAM_PARA_K0052
   Void      setCamParPrecision              ( UInt  u )      { m_uiCamParPrecision      = u; }
   Void      setCamParInSliceHeader          ( Bool  b )      { m_bCamParInSliceHeader   = b; }
   Void      setCodedScale                   ( Int** p )      { m_aaiCodedScale          = p; }
   Void      setCodedOffset                  ( Int** p )      { m_aaiCodedOffset         = p; }
+#endif
   Void      setCameraParameters             ( TAppComCamPara* c) { m_cameraParameters   = c; }
 
 #if H_3D_VSO

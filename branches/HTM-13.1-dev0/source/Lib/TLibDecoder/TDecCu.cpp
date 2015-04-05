@@ -289,6 +289,17 @@ Void TDecCu::xDecodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt&
   
 #if H_MV_ENC_DEC_TRAC
   DTRACE_CU_S("=========== coding_unit ===========\n")
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+    stopAtPos  ( pcCU->getSlice()->getPOC(), 
+    pcCU->getSlice()->getLayerId(), 
+    uiLPelX,
+    uiTPelY,
+    uiRPelX-uiLPelX+1, 
+    uiBPelY-uiTPelY+1);
+#endif
+#endif
+
 #endif
 
   if( (g_uiMaxCUWidth>>uiDepth) >= pcCU->getSlice()->getPPS()->getMinCuDQPSize() && pcCU->getSlice()->getPPS()->getUseDQP())
@@ -639,17 +650,6 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   m_ppcYuvResi[uiDepth]->clear();
   
   m_ppcCU[uiDepth]->copySubCU( pcCU, uiAbsPartIdx, uiDepth );
-  
-#if H_MV_ENC_DEC_TRAC
-#if ENC_DEC_TRACE
-  stopAtPos  ( m_ppcCU[uiDepth]->getSlice()->getPOC(), 
-    m_ppcCU[uiDepth]->getSlice()->getLayerId(), 
-    m_ppcCU[uiDepth]->getCUPelX(),
-    m_ppcCU[uiDepth]->getCUPelY(),
-    m_ppcCU[uiDepth]->getWidth(0), 
-    m_ppcCU[uiDepth]->getHeight(0) );
-#endif
-#endif
 
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {

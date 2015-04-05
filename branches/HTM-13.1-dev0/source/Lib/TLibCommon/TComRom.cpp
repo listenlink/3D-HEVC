@@ -399,6 +399,7 @@ Bool g_decTraceMvFromMerge   = false;
 Bool g_decTracePicOutput     = false; 
 Bool g_stopAtPos             = false; 
 Bool g_outputPos             = false; 
+Bool g_traceCameraParameters = true; 
 #endif
 #endif
 // ====================================================================================================================
@@ -600,12 +601,12 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
   }
 
   Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 0 && layerId == 1 )
+  if ( g_stopAtPos && poc == 0 && layerId == 2 )
   {
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 888 ) && ( cuPelY  == 248 ) && ( cuWidth == 8 ) && ( cuHeight == 8); 
+      stopFlag = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 16 ) && ( cuHeight == 16 ); 
     }
     else
     {                     // Stop at specific position 

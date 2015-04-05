@@ -333,8 +333,8 @@
 #define HHI_VIEW_ID_LIST_I5_J0107              0
 #define HHI_INTER_COMP_PRED_K0052              1
 #define HHI_RES_PRED_K0052                     1
+#define HHI_CAM_PARA_K0052                     1
 #define H_3D_ANNEX_SELECTION_FIX               1
-
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
 #define H_MV_FIX_NUM_VIEWS                     1

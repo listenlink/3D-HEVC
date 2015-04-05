@@ -96,7 +96,9 @@ private:
   
   TComVPS* m_vps; 
   Int**    m_receivedIdc; 
+#if!HHI_CAM_PARA_K0052
   Int      m_uiMaxViewIndex; 
+#endif
   Int      m_lastPoc; 
   Int      m_firstReceivedPoc; 
 

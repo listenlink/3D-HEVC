@@ -1613,6 +1613,33 @@ Void TEncCavlc::codeVpsVuiBspHrdParameters( TComVPS* pcVPS )
 #if H_3D
 Void TEncCavlc::codeVPS3dExtension( TComVPS* pcVPS )
 { 
+#if HHI_CAM_PARA_K0052
+  WRITE_UVLC( pcVPS->getCpPrecision( ), "cp_precision" );
+  for (Int n = 1; n < pcVPS->getNumViews(); n++)
+  {
+    Int i      = pcVPS->getViewOIdxList( n );
+    Int iInVps = pcVPS->getVoiInVps( i ); 
+    WRITE_CODE( pcVPS->getNumCp( iInVps ), 6, "num_cp" );
+
+    if( pcVPS->getNumCp( iInVps ) > 0 )
+    {
+      WRITE_FLAG( pcVPS->getCpInSliceSegmentHeaderFlag( iInVps ) ? 1 : 0 , "cp_in_slice_segment_header_flag" );
+      for( Int m = 0; m < pcVPS->getNumCp( iInVps ); m++ )
+      {
+        WRITE_UVLC( pcVPS->getCpRefVoi( iInVps, m ), "cp_ref_voi" );
+        if( !pcVPS->getCpInSliceSegmentHeaderFlag( iInVps ) )
+        {
+          Int j      = pcVPS->getCpRefVoi( iInVps, m );
+          Int jInVps = pcVPS->getVoiInVps( j ); 
+          WRITE_SVLC( pcVPS->getVpsCpScale   ( iInVps, jInVps ), "vps_cp_scale" );
+          WRITE_SVLC( pcVPS->getVpsCpOff     ( iInVps, jInVps ), "vps_cp_off" );
+          WRITE_SVLC( pcVPS->getVpsCpInvScale( iInVps, jInVps ) + pcVPS->getVpsCpScale( iInVps, jInVps ), "vps_cp_inv_scale_plus_scale" );
+          WRITE_SVLC( pcVPS->getVpsCpInvOff  ( iInVps, jInVps ) + pcVPS->getVpsCpOff  ( iInVps, jInVps ), "vps_cp_inv_off_plus_off" );
+        }
+      }
+    }
+  }  
+#else
   WRITE_UVLC( pcVPS->getCamParPrecision(), "cp_precision" );
   for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
   {
@@ -1632,6 +1659,7 @@ Void TEncCavlc::codeVPS3dExtension( TComVPS* pcVPS )
       }
     }
   }
+#endif
 }
 #endif
 
@@ -2119,7 +2147,28 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
     }
+#if HHI_CAM_PARA_K0052
+#if H_3D
+    if (getEncTop()->decProcAnnexI() )
+    {
+      Int voiInVps = vps->getVoiInVps( pcSlice->getViewIndex() ); 
+      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) && !pcSlice->getIsDepth() )
+      {
+        for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
+        {
+          Int jInVps = vps->getVoiInVps( vps->getCpRefVoi( voiInVps, m ));
+          WRITE_SVLC( pcSlice->getCpScale   ( jInVps )   , "cp_scale" );
+          WRITE_SVLC( pcSlice->getCpOff     ( jInVps )   , "cp_off" );
+          WRITE_SVLC( pcSlice->getCpInvScale( jInVps ) + pcSlice->getCpScale( jInVps ) , "cp_inv_scale_plus_scale" );
+          WRITE_SVLC( pcSlice->getCpInvOff  ( jInVps ) + pcSlice->getCpOff  ( jInVps ) , "cp_inv_off_plus_off" );
+        }
+      }
+    }
+#endif
+#endif
   }
+
+#if !HHI_CAM_PARA_K0052  
 #if H_3D
 #if H_3D_FCO
   if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && pcSlice->getIsDepth() )
@@ -2135,6 +2184,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_SVLC( pcSlice->getInvCodedOffset()[ uiId ] + pcSlice->getCodedOffset()[ uiId ], "cp_inv_off_plus_off" );
     }
   }
+#endif
 #endif
 
 
