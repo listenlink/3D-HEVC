@@ -2382,6 +2382,7 @@ Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   
   UInt uiSymbol = pcCU->getDBBPFlag( uiAbsPartIdx ) ? 1 : 0;
   m_pcBinIf->encodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
+  DTRACE_CU("dbbp_flag", uiSymbol)
 }
 #endif
 

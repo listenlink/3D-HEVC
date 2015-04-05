@@ -139,6 +139,11 @@ Void TAppEncTop::xInitLibCfg()
   xSetDpbSize              ( vps ); 
   xSetVPSVUI               ( vps ); 
 #if H_3D
+#if HHI_CAM_PARA_K0052
+  xSetCamPara              ( vps ); 
+#endif
+#endif
+#if H_3D
   m_ivPicLists.setVPS      ( &vps );
   xDeriveDltArray          ( vps, dlt );
 #endif
@@ -223,10 +228,13 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setIsDepth                      ( isDepth );
     //====== Camera Parameters =========
     m_cTEncTop.setCameraParameters             ( &m_cCameraData );     
+#if !HHI_CAM_PARA_K0052
     m_cTEncTop.setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
     m_cTEncTop.setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
+
     m_cTEncTop.setCodedScale                   ( m_cCameraData.getCodedScale             () );
     m_cTEncTop.setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
+#endif
 #if H_3D_VSO
     //====== VSO =========
     m_cTEncTop.setRenderModelParameters        ( &m_cRenModStrParser ); 
@@ -790,11 +798,13 @@ Void TAppEncTop::xDestroyLib()
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
 #if H_3D
+#if !HHI_CAM_PARA_K0052
   for ( Int viewIndex = 0; viewIndex < m_vps->getNumViews(); viewIndex++ )
   {
     m_vps->initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
       m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
   }
+#endif
 #endif
 
 #if H_MV
@@ -2227,6 +2237,45 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
     pcVPSVUI->setCrossLayerIrapAlignedFlag   ( false   );
   }
 }
+
+#if HHI_CAM_PARA_K0052
+#if H_3D
+Void TAppEncTop::xSetCamPara                ( TComVPS& vps )
+{
+  vps.setCpPrecision( m_cCameraData.getCamParsCodedPrecision()); 
+
+  for ( Int n = 1; n < vps.getNumViews(); n++ )
+  {  
+    Int i      = vps.getViewOIdxList( n ); 
+    Int iInVps = vps.getVoiInVps    ( i ); 
+    vps.setNumCp( iInVps,  n);   
+
+    if ( vps.getNumCp( iInVps ) > 0 )
+    {
+      vps.setCpInSliceSegmentHeaderFlag( iInVps, m_cCameraData.getVaryingCameraParameters() );
+
+      for( Int m = 0; m < vps.getNumCp( iInVps ); m++ )
+      {
+        vps.setCpRefVoi( iInVps, m, vps.getViewOIdxList( m ) ); 
+        if( !vps.getCpInSliceSegmentHeaderFlag( iInVps ) ) 
+        {
+          Int j = vps.getCpRefVoi( iInVps, m );
+          Int jInVps = vps.getVoiInVps( j );         
+
+          vps.setVpsCpScale   ( iInVps, jInVps, m_cCameraData.getCodedScale() [ jInVps ][ iInVps ] ) ;
+          vps.setVpsCpInvScale( iInVps, jInVps, m_cCameraData.getCodedScale() [ iInVps ][ jInVps ] ) ;
+          vps.setVpsCpOff     ( iInVps, jInVps, m_cCameraData.getCodedOffset()[ jInVps ][ iInVps ] ) ;
+          vps.setVpsCpInvOff  ( iInVps, jInVps, m_cCameraData.getCodedOffset()[ iInVps ][ jInVps ] ) ;
+        }
+      }
+    }
+  }
+  vps.deriveCpPresentFlag(); 
+}
+#endif
+#endif
+
+
 Bool TAppEncTop::xLayerIdInTargetEncLayerIdList(Int nuhLayerId)
 {
   return  ( std::find(m_targetEncLayerIdList.begin(), m_targetEncLayerIdList.end(), nuhLayerId) != m_targetEncLayerIdList.end()) ;

@@ -913,9 +913,17 @@ private:
   Void        xSetRefLayerFlags( Int currLayerId );
   // VPS EXTENSION 2 SYNTAX ELEMENTS
 #if H_3D
+#if HHI_CAM_PARA_K0052  
+  Int*        m_numCp;  
+  Int**       m_cpRefVoi;
+  Bool**      m_cpPresentFlag; 
+  Int         m_cpPrecision;
+  Bool*       m_cpInSliceSegmentHeaderFlag;
+#else
   UInt        m_uiCamParPrecision;
   Bool*       m_bCamParInSliceHeader;
   Bool*       m_bCamParPresent;
+#endif
   Int         ***m_aaaiCodedScale ;
   Int         ***m_aaaiCodedOffset;
 
@@ -1187,9 +1195,16 @@ public:
 
 #if HHI_VIEW_ID_LIST_I5_J0107 || HHI_INTER_COMP_PRED_K0052
   Int     getViewOIdxList( Int i )                                         { return m_viewOIdxList[i]; }
+#if HHI_CAM_PARA_K0052
+  std::vector<Int> getViewOIdxList( )                                               { return m_viewOIdxList; }
+#endif
 #endif
 #if HHI_INTER_COMP_PRED_K0052
+#if HHI_CAM_PARA_K0052
+  Int     getVoiInVps( Int viewOIdx )                                      
+#else
   Int     getInvViewOIdxList( Int viewOIdx )                                      
+#endif
   {    
     for ( Int i = 0; i < m_viewOIdxList.size(); i++ )
     {
@@ -1201,8 +1216,14 @@ public:
     assert( 0 );   
     return -1; 
   }; 
+
+#if HHI_CAM_PARA_K0052
+  Bool    getViewCompLayerPresentFlag (Int i, Bool d ) { return  m_viewCompLayerPresentFlag[ getVoiInVps(i) ][d]; }
+  Bool    getViewCompLayerId          (Int i, Bool d ) { return  m_viewCompLayerId         [ getVoiInVps(i) ][d]; }
+#else
   Bool    getViewCompLayerPresentFlag (Int i, Bool d ) { return  m_viewCompLayerPresentFlag[ getInvViewOIdxList(i) ][d]; }
   Bool    getViewCompLayerId          (Int i, Bool d ) { return  m_viewCompLayerId         [ getInvViewOIdxList(i) ][d]; }
+#endif
 #endif
   Bool    getDependencyFlag( Int i, Int j )                                { return m_dependencyFlag[i][j]; }
   Int     getNumDirectRefLayers( Int layerIdInNuh )                        { return m_numDirectRefLayers[ layerIdInNuh ];  };                               
@@ -1324,12 +1345,71 @@ public:
 
   Void createCamPars(Int iNumViews);
   Void deleteCamPars();
+#if HHI_CAM_PARA_K0052
+  Void initCamParaVPS( Int vOIdxInVps, Int numCp, Bool cpInSliceSegmentHeaderFlag, Int* cpRefVoi, Int** aaiScale, Int** aaiOffset ); 
+#else
   Void initCamParaVPS      (  UInt uiViewIndex, Bool bCamParPresent = false, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
+#endif
+  
+#if HHI_CAM_PARA_K0052
+
+  Void setCpPrecision( Int  val ) { m_cpPrecision = val; } 
+  Int  getCpPrecision(  ) { return m_cpPrecision; } 
+
+  Void setNumCp( Int i, Int  val ) { m_numCp[i] = val; } 
+  Int  getNumCp( Int i )           { return m_numCp[i]; } 
+
+  Void setCpRefVoi( Int i, Int m, Int  val ) { m_cpRefVoi[i][m] = val; } 
+  Int  getCpRefVoi( Int i, Int m )           { return m_cpRefVoi[i][m]; }   
+  
+  Void setCpInSliceSegmentHeaderFlag( Int i, Bool flag ) { m_cpInSliceSegmentHeaderFlag[i] = flag; } 
+  Bool getCpInSliceSegmentHeaderFlag( Int i )            { return m_cpInSliceSegmentHeaderFlag[i]; } 
+  
+  Void setVpsCpScale( Int i, Int j, Int  val ) { m_aaaiCodedScale [i][0][j] = val; } 
+  Int  getVpsCpScale( Int i, Int j ) { return m_aaaiCodedScale[i][0][j]; } 
+
+  Void setVpsCpOff( Int i, Int j, Int  val ) { m_aaaiCodedOffset[i][0][j] = val; } 
+  Int  getVpsCpOff( Int i, Int j ) { return m_aaaiCodedOffset[i][0][j]; } 
+
+  Void setVpsCpInvScale( Int i, Int j, Int  val ) { m_aaaiCodedScale[i][1][j] = val; } 
+  Int  getVpsCpInvScale( Int i, Int j ) { return m_aaaiCodedScale[i][1][j]; } 
+
+  Void setVpsCpInvOff( Int i, Int j, Int  val ) { m_aaaiCodedOffset[i][1][j] = val; } 
+  Int  getVpsCpInvOff( Int i, Int j ) { return m_aaaiCodedOffset[i][1][j]; } 
+
+// Derived
+  Void deriveCpPresentFlag( )
+  {
+    for( Int nInVps = 0; nInVps < getNumViews(); nInVps++  )
+    {
+      for( Int mInVps = 0; mInVps < getNumViews(); mInVps++ )
+      {
+        m_cpPresentFlag[nInVps][mInVps] = 0; 
+      }
+    }
+
+   for( Int n = 1; n < getNumViews(); n++ )
+   {
+      Int iInVps = getVoiInVps(  getViewOIdxList( n ) );      
+      for( Int m = 0; m < getNumCp( iInVps ); m++ )
+      {
+         m_cpPresentFlag[ iInVps ][ getVoiInVps( getCpRefVoi( iInVps, m ) ) ] = 1;
+      }
+    }
+  }
+
+  Void setCpPresentFlag( Int i, Int m, Bool flag ) { m_cpPresentFlag[i][m] = flag; } 
+  Bool getCpPresentFlag( Int i, Int m )           { return m_cpPresentFlag[i][m]; }   
+
+#else
   UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
   Bool getCamParPresent      ( Int viewIndex )  { return m_bCamParPresent[viewIndex]; }
   Void setCamParPresent      ( Int viewIndex, Bool val )  { m_bCamParPresent[viewIndex] = val; }
   Bool hasCamParInSliceHeader( Int viewIndex )  { return m_bCamParInSliceHeader[viewIndex]; }
   Void setHasCamParInSliceHeader( Int viewIndex, Bool b )  { m_bCamParInSliceHeader[viewIndex] = b; }
+#endif
+
+
   Int* getCodedScale         ( Int viewIndex )  { return m_aaaiCodedScale [viewIndex][0]; }
   Int* getCodedOffset        ( Int viewIndex )  { return m_aaaiCodedOffset[viewIndex][0]; }
   Int* getInvCodedScale      ( Int viewIndex )  { return m_aaaiCodedScale [viewIndex][1]; }
@@ -1801,8 +1881,10 @@ private:
 #endif
 #if H_3D
   TComSps3dExtension m_sps3dExtension; 
+#if !HHI_CAM_PARA_K0052
   UInt        m_uiCamParPrecision;
   Bool        m_bCamParInSliceHeader;
+#endif
   Int         m_aaiCodedScale [2][MAX_NUM_LAYERS];
   Int         m_aaiCodedOffset[2][MAX_NUM_LAYERS];
 #endif
@@ -2446,6 +2528,10 @@ private:
   Bool       m_inCmpPredAvailFlag; 
   Bool       m_inCmpPredFlag; 
 #endif
+#if HHI_CAM_PARA_K0052
+  Bool       m_cpAvailableFlag; 
+  Int        m_numViews; 
+#endif
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
   Int**      m_depthToDisparityB; 
   Int**      m_depthToDisparityF; 
@@ -2550,6 +2636,9 @@ public:
 #if H_3D
 #if HHI_INTER_COMP_PRED_K0052
   Bool      getInCmpPredAvailFlag( )                             { return m_inCmpPredAvailFlag;    } 
+#if HHI_CAM_PARA_K0052
+  Bool      getCpAvailableFlag( )                             { return m_cpAvailableFlag;    } 
+#endif
   Bool      getInCompPredFlag( )                                 { return m_inCmpPredFlag;         }    
   Void      setInCompPredFlag( Bool b )                          { m_inCmpPredFlag = b;            }    
   Int       getInCmpRefViewIdcs( Int i )                         { return m_inCmpRefViewIdcs  [i]; }
@@ -2794,14 +2883,33 @@ public:
   Int*      getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int*      getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
+#if HHI_CAM_PARA_K0052
+  Void      setCpScale( Int j, Int  val ) { m_aaiCodedScale[0][j] = val; } 
+  Int       getCpScale( Int j ) { return m_aaiCodedScale[0][j]; } 
+            
+  Void      setCpOff( Int j, Int  val ) { m_aaiCodedOffset[0][j] = val; } 
+  Int       getCpOff( Int j ) { return m_aaiCodedOffset[0][j]; } 
+            
+  Void      setCpInvScale( Int j, Int  val ) { m_aaiCodedScale[1][j] = val; } 
+  Int       getCpInvScale( Int j ) { return m_aaiCodedScale[1][j]; } 
+            
+  Void      setCpInvOff( Int j, Int  val ) { m_aaiCodedOffset[1][j] = val; } 
+  Int       getCpInvOff( Int j ) { return m_aaiCodedOffset[1][j]; } 
+#endif
+
 #endif
 #endif
 #if H_3D
   Void    setIvPicLists( TComPicLists* m_ivPicLists );
   Void    setDepthToDisparityLUTs();
 
+#if HHI_CAM_PARA_K0052
+  Int* getDepthToDisparityB( Int refViewIdx ) { return m_depthToDisparityB[ getVPS()->getVoiInVps( refViewIdx) ]; }; 
+  Int* getDepthToDisparityF( Int refViewIdx ) { return m_depthToDisparityF[ getVPS()->getVoiInVps( refViewIdx) ]; }; 
+#else
   Int* getDepthToDisparityB( Int refViewIdx ) { return m_depthToDisparityB[ refViewIdx ]; }; 
   Int* getDepthToDisparityF( Int refViewIdx ) { return m_depthToDisparityF[ refViewIdx ]; }; 
+#endif
 #endif
 #if H_3D_IC
   Void    setICEnableCandidate( Int* ICEnableCandidate)   { m_aICEnableCandidate = ICEnableCandidate; };
@@ -2921,16 +3029,21 @@ public:
       }
     }
 
-    // m_cpAvailableFlag = true;
+#if HHI_CAM_PARA_K0052
+    m_cpAvailableFlag = true;
+    m_inCmpRefViewIdcs.clear();
+#endif
     Bool allRefCmpLayersAvailFlag = true;
 
     for( Int i = 0; i <= numCurCmpLIds - 1; i++ )
     {
       m_inCmpRefViewIdcs.push_back( getVPS()->getViewOrderIdx( curCmpLIds[ i ] ));
-      //if( !getVPS()->getCpPresentFlag( getViewIdx(),  inCmpRefViewIdcs( i ) ) )
-      //{
-      //  m_cpAvailableFlag = false;
-      //}
+#if HHI_CAM_PARA_K0052
+      if( !getVPS()->getCpPresentFlag( getVPS()->getVoiInVps( getViewIndex() ),  getVPS()->getVoiInVps( m_inCmpRefViewIdcs[ i ] ) ) )
+      {
+        m_cpAvailableFlag = false;
+      }
+#endif
       Bool refCmpCurLIdAvailFlag = false;
       if( getVPS()->getViewCompLayerPresentFlag( m_inCmpRefViewIdcs[ i ], !getIsDepth() ) )
       {

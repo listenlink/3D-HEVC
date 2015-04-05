@@ -1712,7 +1712,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
   xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
 #if BUG_FIX_TK65
+#if HHI_CAM_PARA_K0052
+  xConfirmPara( m_iNumberOfViews != m_cCameraData.getBaseViewNumbers().size() ,   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#else
   xConfirmPara( ( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size() ) && ( m_numberOfLayers != m_cCameraData.getBaseViewNumbers().size() ),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#endif
 #else
   xConfirmPara( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
 #endif

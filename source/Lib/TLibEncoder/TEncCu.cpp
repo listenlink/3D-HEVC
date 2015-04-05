@@ -2512,8 +2512,14 @@ Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Pa
   UInt uiPreCalcDistC;
   m_pcPredSearch  ->estIntraPredDIS      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, false );
 
-
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+  Int oldTraceCopyBack = g_traceCopyBack; 
+  g_traceCopyBack = false;  
+#endif
   m_ppcRecoYuvTemp[uiDepth]->copyToPicLuma(rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
+  #if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC  
+    g_traceCopyBack = oldTraceCopyBack; 
+  #endif
 
 
   m_pcEntropyCoder->resetBits();

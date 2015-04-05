@@ -416,7 +416,11 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
   pcPicCurr->setLayerId( getLayerId()); 
 #endif
 #if H_3D
+#if HHI_CAM_PARA_K0052
+  pcPicCurr->setScaleOffset( m_cameraParameters->getCodedScale(), m_cameraParameters->getCodedOffset() );
+#else
   pcPicCurr->setScaleOffset( m_aaiCodedScale, m_aaiCodedOffset );
+#endif
 #endif
 }
 #endif

@@ -75,7 +75,11 @@ CamParsCollector::~CamParsCollector()
 
   xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
   xDeleteArray( m_aiBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
+#if HHI_CAM_PARA_K0052
+  xDeleteArray( m_receivedIdc, m_vps->getNumViews() );
+#else
   xDeleteArray( m_receivedIdc, m_uiMaxViewIndex + 1 );
+#endif
 }
 
 
@@ -90,6 +94,46 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile, TComVPS* vps)
   m_lastPoc                 = -1;   
   m_firstReceivedPoc        = -2; 
 
+#if HHI_CAM_PARA_K0052  
+  for (Int i = 0; i <= vps->getMaxLayersMinus1(); i++)
+  {
+    Int curViewIdxInVps = m_vps->getVoiInVps( m_vps->getViewIndex( m_vps->getLayerIdInNuh( i ) ) ) ; 
+    m_bCamParsVaryOverTime = m_bCamParsVaryOverTime || vps->getCpInSliceSegmentHeaderFlag( curViewIdxInVps );    
+  }
+
+  assert( m_receivedIdc == NULL ); 
+  m_receivedIdc = new Int*[ m_vps->getNumViews() ]; 
+  for (Int i = 0; i < m_vps->getNumViews(); i++)
+  {
+    m_receivedIdc[i] = new Int[ m_vps->getNumViews() ]; 
+  }
+
+  xResetReceivedIdc( true ); 
+
+  for (Int voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
+  {
+    if( !m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) ) 
+    {
+      for (Int baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
+      { 
+        if( m_vps->getCpPresentFlag( voiInVps, baseVoiInVps ) )
+        {
+          m_receivedIdc   [ baseVoiInVps ][ voiInVps ] = -1; 
+          m_aaiCodedScale [ baseVoiInVps ][ voiInVps ] = m_vps->getCodedScale    (voiInVps) [ baseVoiInVps ];
+          m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ] = m_vps->getCodedOffset   (voiInVps) [ baseVoiInVps ];
+
+          m_receivedIdc   [ voiInVps ][ baseVoiInVps ] = -1; 
+          m_aaiCodedScale [ voiInVps ][ baseVoiInVps ] = m_vps->getInvCodedScale (voiInVps) [ baseVoiInVps ];
+          m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ] = m_vps->getInvCodedOffset(voiInVps) [ baseVoiInVps ];
+          xInitLUTs( baseVoiInVps, voiInVps, m_aaiCodedScale[ baseVoiInVps ][ voiInVps ], m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+          xInitLUTs( voiInVps, baseVoiInVps, m_aaiCodedScale[ voiInVps ][ baseVoiInVps ], m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
+        }
+      }
+    }
+  }
+}
+
+#else
   m_uiMaxViewIndex            = -1; 
   for (Int i = 0; i <= vps->getMaxLayersMinus1(); i++)
   {
@@ -97,7 +141,6 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile, TComVPS* vps)
     m_bCamParsVaryOverTime = m_bCamParsVaryOverTime || vps->hasCamParInSliceHeader( curViewIdx );
     m_uiMaxViewIndex = std::max( m_uiMaxViewIndex, curViewIdx  ) ; 
   }
-
   assert( m_receivedIdc == NULL ); 
   m_receivedIdc = new Int*[ m_uiMaxViewIndex + 1]; 
   for (Int i = 0; i <= m_uiMaxViewIndex; i++)
@@ -130,13 +173,24 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile, TComVPS* vps)
   }
 }
 
+#endif
+
+
+
 Void
 CamParsCollector::xResetReceivedIdc( Bool overWriteFlag )
 {
+#if HHI_CAM_PARA_K0052
+  for (Int i = 0; i < m_vps->getNumViews(); i++)
+  {  
+    for (Int j = 0; j < m_vps->getNumViews(); j++)
+    {
+#else
   for (Int i = 0; i <= m_uiMaxViewIndex; i++)
   {  
     for (Int j = 0; j <= m_uiMaxViewIndex; j++)
     {
+#endif
       if ( overWriteFlag ||  ( m_receivedIdc[i][j] != -1 ) )
       {
         m_receivedIdc[i][j] = 0; 
@@ -177,7 +231,11 @@ CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetView
 Void 
   CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
 {
+#if HHI_CAM_PARA_K0052
+  Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCpPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
+#else
   Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCamParPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
+#endif
   Int     iLog2DivChroma = iLog2DivLuma + 1;
 
   iOffset <<= m_uiBitDepthForLUT;
@@ -254,6 +312,42 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
     m_lastPoc = pcSlice->getPOC();
   }
 
+#if HHI_CAM_PARA_K0052
+  UInt voiInVps          = m_vps->getVoiInVps(pcSlice->getViewIndex());  
+  if( m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) ) // check consistency of slice parameters here
+  {   
+    for( Int baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
+    {        
+      if ( m_vps->getCpPresentFlag( voiInVps, baseVoiInVps ) )
+      {
+        if ( m_receivedIdc[ voiInVps ][ baseVoiInVps ] != 0 )
+        {      
+          AOF( m_aaiCodedScale [ voiInVps ][ baseVoiInVps ] == pcSlice->getInvCodedScale () [ baseVoiInVps ] );
+          AOF( m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ] == pcSlice->getInvCodedOffset() [ baseVoiInVps ] );
+        }
+        else
+        {          
+          m_receivedIdc   [ voiInVps ][ baseVoiInVps ]  = 1; 
+          m_aaiCodedScale [ voiInVps ][ baseVoiInVps ]  = pcSlice->getInvCodedScale () [ baseVoiInVps ];
+          m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ]  = pcSlice->getInvCodedOffset() [ baseVoiInVps ];
+          xInitLUTs( voiInVps, baseVoiInVps, m_aaiCodedScale[ voiInVps ][ baseVoiInVps ], m_aaiCodedOffset[ voiInVps ][ baseVoiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
+        }
+        if ( m_receivedIdc[ baseVoiInVps ][ voiInVps ] != 0 )
+        {      
+          AOF( m_aaiCodedScale [ baseVoiInVps ][ voiInVps ] == pcSlice->getCodedScale    () [ baseVoiInVps ] );
+          AOF( m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ] == pcSlice->getCodedOffset   () [ baseVoiInVps ] );
+        }
+        else
+        {        
+          m_receivedIdc   [ baseVoiInVps ][ voiInVps ]  = 1; 
+          m_aaiCodedScale [ baseVoiInVps ][ voiInVps ]  = pcSlice->getCodedScale    () [ baseVoiInVps ];
+          m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ]  = pcSlice->getCodedOffset   () [ baseVoiInVps ];
+          xInitLUTs( baseVoiInVps, voiInVps, m_aaiCodedScale[ baseVoiInVps ][ voiInVps ], m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
+        }
+      }
+    }
+  }  
+#else
   UInt uiViewIndex          = pcSlice->getViewIndex();  
   if( m_vps->getCamParPresent( uiViewIndex ) )
   {    
@@ -288,6 +382,9 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
       }
     }
   }
+#endif
+
+
 }
 
 
@@ -310,6 +407,35 @@ CamParsCollector::xOutput( Int iPOC )
   {
     if( iPOC == m_firstReceivedPoc )
     {
+#if HHI_CAM_PARA_K0052
+      fprintf( m_pCodedScaleOffsetFile, "#ViewOrderIdx     ViewIdVal\n" );
+      fprintf( m_pCodedScaleOffsetFile, "#------------ -------------\n" );
+      
+      for( UInt voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
+      {
+        fprintf( m_pCodedScaleOffsetFile, "%13d %13d\n", m_vps->getViewOIdxList( voiInVps ), m_vps->getViewIdVal( m_vps->getViewOIdxList( voiInVps ) ) );
+      }
+      fprintf( m_pCodedScaleOffsetFile, "\n\n");
+      fprintf( m_pCodedScaleOffsetFile, "# StartFrame     EndFrame    TargetVOI      BaseVOI   CodedScale  CodedOffset    Precision\n" );
+      fprintf( m_pCodedScaleOffsetFile, "#----------- ------------ ------------ ------------ ------------ ------------ ------------\n" );
+    }
+    if( iPOC == m_firstReceivedPoc || m_bCamParsVaryOverTime  )
+    {
+      Int iS = iPOC;
+      Int iE = ( m_bCamParsVaryOverTime ? iPOC : ~( 1 << 31 ) );
+      for( UInt voiInVps = 0; voiInVps < m_vps->getNumViews(); voiInVps++ )
+      {
+        for( UInt baseVoiInVps = 0; baseVoiInVps < m_vps->getNumViews(); baseVoiInVps++ )
+        {
+          if( voiInVps != baseVoiInVps )
+          {
+            if ( m_receivedIdc[baseVoiInVps][voiInVps] != 0 )
+            {            
+              fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
+                iS, iE, m_vps->getViewOIdxList( voiInVps ), m_vps->getViewOIdxList( baseVoiInVps ), 
+                m_aaiCodedScale [ baseVoiInVps ][ voiInVps ], 
+                m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_vps->getCpPrecision() );
+#else
       fprintf( m_pCodedScaleOffsetFile, "#  ViewIndex       ViewId\n" );
       fprintf( m_pCodedScaleOffsetFile, "#----------- ------------\n" );
       for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
@@ -324,16 +450,28 @@ CamParsCollector::xOutput( Int iPOC )
     {
       Int iS = iPOC;
       Int iE = ( m_bCamParsVaryOverTime ? iPOC : ~( 1 << 31 ) );
+#if HHI_CAM_PARA_K0052
+      for( UInt uiViewIndex = 0; uiViewIndex < m_vps->getNumViews(); uiViewIndex++ )
+      {
+        for( UInt uiBaseIndex = 0; uiBaseIndex < m_vps->getNumViews(); uiBaseIndex++ )
+#else
       for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
       {
         for( UInt uiBaseIndex = 0; uiBaseIndex <= m_uiMaxViewIndex; uiBaseIndex++ )
+#endif
         {
           if( uiViewIndex != uiBaseIndex )
           {
             if ( m_receivedIdc[uiBaseIndex][uiViewIndex] != 0 )
             {            
+#if HHI_CAM_PARA_K0052
+              fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
+                iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_vps->getCpPrecision() );
+#else
               fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
                 iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_vps->getCamParPrecision() );
+#endif
+#endif
             }            
           }
         }

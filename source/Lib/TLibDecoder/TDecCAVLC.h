@@ -65,9 +65,12 @@ public:
 protected:
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
   
+
+#if !HHI_CAM_PARA_K0052
 #if H_3D
   Int**    m_aaiTempScale;
   Int**    m_aaiTempOffset;
+#endif
 #endif
 #if H_3D_ANNEX_SELECTION_FIX
   TDecTop*  m_decTop;

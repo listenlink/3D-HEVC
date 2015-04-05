@@ -92,6 +92,7 @@ Void  xTraceSliceHeader (TComSlice *pSlice)
 
 TDecCavlc::TDecCavlc()
 {
+#if !HHI_CAM_PARA_K0052
 #if H_3D
   m_aaiTempScale            = new Int* [ MAX_NUM_LAYERS ];
   m_aaiTempOffset           = new Int* [ MAX_NUM_LAYERS ];
@@ -101,10 +102,12 @@ TDecCavlc::TDecCavlc()
     m_aaiTempOffset           [ uiVId ] = new Int [ MAX_NUM_LAYERS ];
   }
 #endif
+#endif
 }
 
 TDecCavlc::~TDecCavlc()
 {
+#if !HHI_CAM_PARA_K0052
 #if H_3D
   for( UInt uiVId = 0; uiVId < MAX_NUM_LAYERS; uiVId++ )
   {
@@ -113,6 +116,7 @@ TDecCavlc::~TDecCavlc()
   }
   delete [] m_aaiTempScale;
   delete [] m_aaiTempOffset;
+#endif
 #endif
 }
 
@@ -1924,8 +1928,38 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
 #if H_3D
 Void TDecCavlc::parseVPS3dExtension( TComVPS* pcVPS )
 {
-  UInt uiCode; 
+#if HHI_CAM_PARA_K0052
+  UInt uiCode;   
+  READ_UVLC( uiCode, "cp_precision"); pcVPS->setCpPrecision( uiCode ) ;
+  
+  for (Int n = 1; n < pcVPS->getNumViews(); n++)
+  {
+    Int i      = pcVPS->getViewOIdxList( n );
+    Int iInVps = pcVPS->getVoiInVps( i ); 
+    READ_CODE( 6, uiCode, "num_cp" ); pcVPS->setNumCp( iInVps, uiCode );
 
+    if( pcVPS->getNumCp( iInVps ) > 0 )
+    {
+      READ_FLAG( uiCode, "cp_in_slice_segment_header_flag" ); pcVPS->setCpInSliceSegmentHeaderFlag( iInVps, uiCode == 1 );
+      for( Int m = 0; m < pcVPS->getNumCp( iInVps ); m++ )
+      {
+        READ_UVLC( uiCode, "cp_ref_voi" ); pcVPS->setCpRefVoi( iInVps, m, uiCode );
+        if( !pcVPS->getCpInSliceSegmentHeaderFlag( iInVps ) )
+        {
+          Int j      = pcVPS->getCpRefVoi( iInVps, m );
+          Int jInVps = pcVPS->getVoiInVps( j ); 
+          Int iCode;
+          READ_SVLC( iCode, "vps_cp_scale" );                pcVPS->setVpsCpScale   ( iInVps, jInVps, iCode );
+          READ_SVLC( iCode, "vps_cp_off" );                  pcVPS->setVpsCpOff     ( iInVps, jInVps, iCode );
+          READ_SVLC( iCode, "vps_cp_inv_scale_plus_scale" ); pcVPS->setVpsCpInvScale( iInVps, jInVps, iCode - pcVPS->getVpsCpScale( iInVps, jInVps ) );
+          READ_SVLC( iCode, "vps_cp_inv_off_plus_off" );     pcVPS->setVpsCpInvOff  ( iInVps, jInVps, iCode - pcVPS->getVpsCpOff  ( iInVps, jInVps ) );
+        }
+      }
+    }    
+  }
+  pcVPS->deriveCpPresentFlag(); 
+#else
+  UInt uiCode; 
 
   UInt uiCamParPrecision = 0; 
   Bool bCamParSlice      = false; 
@@ -1974,6 +2008,7 @@ Void TDecCavlc::parseVPS3dExtension( TComVPS* pcVPS )
 #endif
     }
   }
+#endif
 }
 #endif
 #endif
@@ -2730,6 +2765,25 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     rpcSlice->setLFCrossSliceBoundaryFlag( (uiCode==1)?true:false);
 
+#if HHI_CAM_PARA_K0052
+#if H_3D
+    if ( getDecTop()->decProcAnnexI() )
+    {
+      Int voiInVps = vps->getVoiInVps( rpcSlice->getViewIndex() ); 
+      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) && !rpcSlice->getIsDepth() )
+      {
+        for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
+        {
+          Int jInVps = vps->getVoiInVps( vps->getCpRefVoi( voiInVps, m ));
+          READ_SVLC( iCode, "cp_scale" );                rpcSlice->setCpScale   ( jInVps, iCode );
+          READ_SVLC( iCode, "cp_off" );                  rpcSlice->setCpOff     ( jInVps, iCode );
+          READ_SVLC( iCode, "cp_inv_scale_plus_scale" ); rpcSlice->setCpInvScale( jInVps, iCode - rpcSlice->getCpScale   ( jInVps ));
+          READ_SVLC( iCode, "cp_inv_off_plus_off" );     rpcSlice->setCpInvOff  ( jInVps, iCode - rpcSlice->getCpOff     ( jInVps ));
+        }
+      }
+    }
+#endif
+#endif
   }
   
     UInt *entryPointOffset          = NULL;
@@ -2753,6 +2807,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setNumEntryPointOffsets ( 0 );
   }
 
+#if !HHI_CAM_PARA_K0052
 #if H_3D
 #if H_3D_FCO
   if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && rpcSlice->getIsDepth() )
@@ -2770,6 +2825,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     rpcSlice->setCamparaSlice( m_aaiTempScale, m_aaiTempOffset );
   }
+#endif
 #endif
 
   if(pps->getSliceHeaderExtensionPresentFlag())
