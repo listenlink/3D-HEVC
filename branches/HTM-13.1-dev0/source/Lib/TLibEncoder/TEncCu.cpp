@@ -274,6 +274,10 @@ Void TEncCu::compressCU( TComDataCU*& rpcCU )
   m_ppcBestCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
   m_ppcTempCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
 
+#if H_3D_DISABLE_CHROMA
+  m_ppcWeightedTempCU[0]->initCU( rpcCU->getPic(), rpcCU->getAddr() );
+#endif
+
 #if KWU_RC_MADPRED_E0227
   m_LCUPredictionSAD = 0;
   m_addSADDepth      = 0;
@@ -1248,6 +1252,9 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       TComDataCU* pcSubBestPartCU     = m_ppcBestCU[uhNextDepth];
       TComDataCU* pcSubTempPartCU     = m_ppcTempCU[uhNextDepth];
 
+#if H_3D_DISABLE_CHROMA
+      m_ppcWeightedTempCU[uhNextDepth]->setSlice( m_ppcWeightedTempCU[ uiDepth]->getSlice()); 
+#endif
       for ( UInt uiPartUnitIdx = 0; uiPartUnitIdx < 4; uiPartUnitIdx++ )
       {
         pcSubBestPartCU->initSubCU( rpcTempCU, uiPartUnitIdx, uhNextDepth, iQP );           // clear sub partition datas or init.
@@ -2791,7 +2798,11 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   m_ppcRecoYuvTemp[uiDepth]->copyToPicLuma(rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
   
 #if H_3D_DIM_SDC
+#if 0 // H_3D_DISABLE_CHROMA
+  if( !rpcTempCU->getSDCFlag( 0 ) && !rpcTempCU->getSlice()->getIsDepth() )
+#else
   if( !rpcTempCU->getSDCFlag( 0 ) )
+#endif
 #endif
   m_pcPredSearch  ->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC );
   

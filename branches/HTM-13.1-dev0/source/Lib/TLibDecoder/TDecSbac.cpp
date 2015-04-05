@@ -500,6 +500,11 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       piPCMSample += uiWidth;
     }
 
+
+#if H_3D_DISABLE_CHROMA
+    if( !pcCU->getSlice()->getIsDepth() )
+    {    
+#endif
     piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;
     uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
     uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
@@ -531,6 +536,10 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       }
       piPCMSample += uiWidth;
     }
+#if H_3D_DISABLE_CHROMA
+    }
+#endif
+
 
     m_pcTDecBinIf->start();
   }
@@ -1365,6 +1374,8 @@ Void TDecSbac::parseTransformSubdivFlag( UInt& ruiSubdivFlag, UInt uiLog2Transfo
   DTRACE_CABAC_T( "\tctx=" )
   DTRACE_CABAC_V( uiLog2TransformBlockSize )
   DTRACE_CABAC_T( "\n" )
+#else
+  DTRACE_TU("split_transform_flag", ruiSubdivFlag )
 #endif
 }
 
@@ -1443,6 +1454,19 @@ Void TDecSbac::parseQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, 
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
+#else
+  if ( eType == TEXT_CHROMA_U )
+  {
+    DTRACE_TU("cbf_cb", uiSymbol )
+  }
+  else if ( eType == TEXT_CHROMA_V )
+  {
+    DTRACE_TU("cbf_cr", uiSymbol )
+  }
+  else
+  {
+    DTRACE_TU("cbf_luma", uiSymbol )
+  }
 #endif
   
   pcCU->setCbfSubParts( uiSymbol << uiTrDepth, eType, uiAbsPartIdx, uiDepth );

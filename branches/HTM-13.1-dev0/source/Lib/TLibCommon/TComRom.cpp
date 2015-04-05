@@ -390,6 +390,7 @@ UInt64 g_nSymbolCounter = 0;
 Bool g_traceCU = false; 
 Bool g_tracePU = false; 
 Bool g_traceTU = false; 
+Bool g_disableNumbering = true; 
 Bool g_disableHLSTrace = false; 
 UInt64 g_stopAtCounter       = 0; 
 Bool g_traceCopyBack         = false; 
@@ -632,7 +633,10 @@ Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
     {
       std::cout << "Break point here." << std::endl; 
     }
-    fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+    if ( !g_disableNumbering )
+    {  
+      fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+    }
     fprintf( g_hTrace, "%-50s       : %d\n", symbolName, val );     
     fflush ( g_hTrace );
     g_nSymbolCounter++; 
@@ -769,7 +773,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
 #endif
 
 #if SHARP_DMM_CLEAN_K0042
-    posEnd = racWedgeList.size();
+    posEnd = (Int) racWedgeList.size();
     if (uiOri == 0 || uiOri == 4)
     {
 #endif

@@ -7334,7 +7334,11 @@ Void TEncSearch::xSetResidualQTData( TComDataCU* pcCU, UInt uiQuadrant, UInt uiA
     const UInt uiLog2TrSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth() >> uiDepth]+2;
     const UInt uiQTTempAccessLayer = pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize() - uiLog2TrSize;
 
+#if 0 //H_3D_DISABLE_CHROMA
+    Bool  bCodeChroma   = !pcCU->getSlice()->getIsDepth();
+#else
     Bool  bCodeChroma   = true;
+#endif
     UInt  uiTrModeC     = uiTrMode;
     UInt  uiLog2TrSizeC = uiLog2TrSize-1;
     if( uiLog2TrSize == 2 )

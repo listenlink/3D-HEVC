@@ -1949,6 +1949,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
               );
               m_pcSAO->PCMLFDisableProcess(pcPic);
 
+#if H_3D_DISABLE_CHROMA
+            if (pcSlice->getIsDepth())
+            {
+              sliceEnabled[SAO_Cb] = false; 
+              sliceEnabled[SAO_Cr] = false; 
+            }
+#endif
             //assign SAO slice header
             for(Int s=0; s< uiNumSlices; s++)
             {

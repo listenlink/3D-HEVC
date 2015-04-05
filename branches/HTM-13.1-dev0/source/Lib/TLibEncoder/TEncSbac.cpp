@@ -1094,7 +1094,10 @@ Void TEncSbac::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
   DTRACE_CABAC_T( "\tctx=" )
   DTRACE_CABAC_V( uiCtx )
   DTRACE_CABAC_T( "\n" )
+#else
+  DTRACE_TU("split_transform_flag", uiSymbol )
 #endif
+
 }
 
 Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple)
@@ -1425,6 +1428,19 @@ Void TEncSbac::codeQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, U
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
+#else
+  if ( eType == TEXT_CHROMA_U )
+  {
+    DTRACE_TU("cbf_cb", uiCbf )
+  }
+  else if ( eType == TEXT_CHROMA_V )
+  {
+    DTRACE_TU("cbf_cr", uiCbf )
+  }
+  else
+  {
+    DTRACE_TU("cbf_luma", uiCbf )
+  }
 #endif
 }
 
@@ -1500,6 +1516,10 @@ Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
       piPCMSample += uiWidth;
     }
 
+#if H_3D_DISABLE_CHROMA
+    if( !pcCU->getSlice()->getIsDepth() )
+    {    
+#endif
     piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;
     uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
     uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
@@ -1531,6 +1551,9 @@ Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
       }
       piPCMSample += uiWidth;
     }
+#if H_3D_DISABLE_CHROMA
+    }
+#endif
     m_pcBinIf->resetBac();
   }
 }

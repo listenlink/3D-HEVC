@@ -765,7 +765,7 @@ Void TEncTop::xInitSPS()
       m_cSPS.setInterViewMvVertConstraintFlag ( true ) ;
     }
 #endif
-  }
+  }  
   m_cSPS.setSpsExtensionPresentFlag       ( true ); 
   m_cSPS.setSpsMultilayerExtensionFlag    ( true ); 
 #if H_3D
@@ -778,6 +778,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMaxCUWidth    ( g_uiMaxCUWidth      );
   m_cSPS.setMaxCUHeight   ( g_uiMaxCUHeight     );
   m_cSPS.setMaxCUDepth    ( g_uiMaxCUDepth      );
+#if H_3D_DISABLE_CHROMA
+  m_cSPS.setChromaFormatIdc( getIsDepth() ? CHROMA_400 : CHROMA_420 ); 
+#endif
 
   Int minCUSize = m_cSPS.getMaxCUWidth() >> ( m_cSPS.getMaxCUDepth()-g_uiAddCUDepth );
   Int log2MinCUSize = 0;

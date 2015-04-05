@@ -776,7 +776,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( uiCode );
     assert(uiCode <= 3);
     // in the first version we only support chroma_format_idc equal to 1 (4:2:0), so separate_colour_plane_flag cannot appear in the bitstream
+#if !H_3D_DISABLE_CHROMA
     assert (uiCode == 1);
+#endif
     if( uiCode == 3 )
     {
       READ_FLAG(     uiCode, "separate_colour_plane_flag");        assert(uiCode == 0);
@@ -1476,7 +1478,7 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   {
     for( Int i = pcVPS->getVpsBaseLayerInternalFlag() ? 1 : 0; i <=  pcVPS->getMaxLayersMinus1(); i++ )
     {
-        READ_CODE( pcVPS->getVpsRepFormatIdxLen(), uiCode, "vps_rep_format_idx[i]" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
+      READ_CODE( pcVPS->getVpsRepFormatIdxLen(), uiCode, "vps_rep_format_idx[i]" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
     }
   }
   else
@@ -2118,7 +2120,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPicOutputFlag( true );
     }
     // in the first version chroma_format_idc is equal to one, thus colour_plane_id will not be present
+
+#if H_3D_DISABLE_CHROMA
+    assert (sps->getChromaFormatIdc() == 1 || rpcSlice->getIsDepth() );
+    assert (sps->getChromaFormatIdc() == 0 || !rpcSlice->getIsDepth() );
+#else
     assert (sps->getChromaFormatIdc() == 1 );
+#endif
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
 
@@ -2419,7 +2427,19 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     if(sps->getUseSAO())
     {
       READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
+#if H_3D_DISABLE_CHROMA
+      if( !rpcSlice->getIsDepth() )
+      {
       READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
+    }
+      else
+      {
+        rpcSlice->setSaoEnabledFlagChroma( false );
+      }
+      
+#else
+      READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
+#endif
     }
 
     if (rpcSlice->getIdrPicFlag())
@@ -3164,12 +3184,16 @@ Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
 {
   wpScalingParam  *wp;
+#if H_3D_DISABLE_CHROMA
+  Bool            bChroma     = !pcSlice->getIsDepth();
+#else
   Bool            bChroma     = true; // color always present in HEVC ?
+#endif
   SliceType       eSliceType  = pcSlice->getSliceType();
   Int             iNbRef       = (eSliceType == B_SLICE ) ? (2) : (1);
   UInt            uiLog2WeightDenomLuma, uiLog2WeightDenomChroma;
   UInt            uiTotalSignalledWeightFlags = 0;
-  
+
   Int iDeltaDenom;
   // decode delta_luma_log2_weight_denom :
   READ_UVLC( uiLog2WeightDenomLuma, "luma_log2_weight_denom" );     // ue(v): luma_log2_weight_denom
@@ -3181,6 +3205,13 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
     assert((iDeltaDenom + (Int)uiLog2WeightDenomLuma)<=7);
     uiLog2WeightDenomChroma = (UInt)(iDeltaDenom + uiLog2WeightDenomLuma);
   }
+  else
+#if H_3D_DISABLE_CHROMA
+  { 
+    uiLog2WeightDenomChroma = 0; 
+  }
+#endif
+
 
   for ( Int iNumRef=0 ; iNumRef<iNbRef ; iNumRef++ ) 
   {
