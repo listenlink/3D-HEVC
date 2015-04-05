@@ -214,8 +214,10 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->initSlice();
   rpcSlice->setPicOutputFlag( true );
   rpcSlice->setPOC( pocCurr );
+#if !HHI_INTER_COMP_PRED_K0052
 #if H_3D
-  rpcSlice->init3dToolParameters(); 
+    rpcSlice->init3dToolParameters(); 
+#endif
 #endif
 #if H_3D_IC
   rpcSlice->setApplyIC( false );
@@ -609,10 +611,16 @@ Void TEncSlice::initEncSlice( TComPic* pcPic, Int pocLast, Int pocCurr, Int iNum
   rpcSlice->setSliceArgument        ( m_pcCfg->getSliceArgument()        );
   rpcSlice->setSliceSegmentMode     ( m_pcCfg->getSliceSegmentMode()     );
   rpcSlice->setSliceSegmentArgument ( m_pcCfg->getSliceSegmentArgument() );
+#if !HHI_INTER_COMP_PRED_K0052
 #if H_3D_IV_MERGE
   rpcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( rpcSlice->getMpiFlag( ) || rpcSlice->getIvMvPredFlag( ) || rpcSlice->getViewSynthesisPredFlag( )   ) ? 1 : 0 ));
 #else
   rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
+#endif
+#else
+#if !H_3D
+  rpcSlice->setMaxNumMergeCand        ( m_pcCfg->getMaxNumMergeCand()        );
+#endif
 #endif
   xStoreWPparam( pPPS->getUseWP(), pPPS->getWPBiPred() );
 }

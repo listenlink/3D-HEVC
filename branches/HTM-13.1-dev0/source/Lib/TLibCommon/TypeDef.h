@@ -80,11 +80,12 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #if H_MV
-#define H_MV_ENC_DEC_TRAC                 0  //< CU/PU level tracking
+#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
 #endif
 
 #if H_3D
 #define SEC_DEPTH_INTRA_SKIP_MODE_K0033   1   // Depth intra skip mode
+
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
 #define NEIGHBORING_PIX_AVAILABILITY_FIX  1
 #endif
@@ -330,6 +331,9 @@
 
 #if H_3D
 #define HHI_VIEW_ID_LIST_I5_J0107              0
+#define HHI_INTER_COMP_PRED_K0052              1
+#define H_3D_ANNEX_SELECTION_FIX               1
+
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
 #define H_MV_FIX_NUM_VIEWS                     1

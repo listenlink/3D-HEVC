@@ -39,9 +39,12 @@
 #include "TEncCavlc.h"
 #include "SEIwrite.h"
 #include "../TLibCommon/TypeDef.h"
-
+#if H_3D_ANNEX_SELECTION_FIX
+#include "TEncTop.h"
+#endif
 //! \ingroup TLibEncoder
 //! \{
+
 
 #if ENC_DEC_TRACE
 
@@ -898,7 +901,7 @@ Void TEncCavlc::codeSPS3dExtension( TComSPS* pcSPS )
       WRITE_FLAG( sps3dExt->getQtPredFlag( d ) ? 1 : 0 , "qt_pred_flag" );
       WRITE_FLAG( sps3dExt->getInterSdcFlag( d ) ? 1 : 0 , "inter_sdc_flag" );
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-      WRITE_FLAG( sps3dExt->getDepthIntraSkipFlag( d ) ? 1 : 0 , "depth_intra_skip_flag" );
+      WRITE_FLAG( sps3dExt->getDepthIntraSkipFlag( d ) ? 1 : 0 , "intra_skip_flag" );
 #else
       WRITE_FLAG( sps3dExt->getIntraSingleFlag( d ) ? 1 : 0 , "intra_single_flag" );
 #endif
@@ -1912,6 +1915,18 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 #endif
+
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D      
+  if( getEncTop()->decProcAnnexI() )
+  {
+      if ( pcSlice->getInCmpPredAvailFlag() )
+      {
+        WRITE_FLAG( pcSlice->getInCompPredFlag(), "in_comp_pred_flag" );
+      }
+  }
+#endif
+#endif
     if(pcSlice->getSPS()->getUseSAO())
     {
       if (pcSlice->getSPS()->getUseSAO())
@@ -2042,7 +2057,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       xCodePredWeightTable( pcSlice );
     }
 #if H_3D_IC
+#if H_3D_ANNEX_SELECTION_FIX
+    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE )
+      && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
+      && getEncTop()->decProcAnnexI()       
+      )
+#else
     else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 )
+#endif
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
       if( pcSlice->getApplyIC() )

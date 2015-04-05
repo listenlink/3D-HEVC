@@ -305,6 +305,7 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
 {
 
 #if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
   UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
 
@@ -313,6 +314,7 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
   DTRACE_TU("x1", uiTPelY)
   DTRACE_TU("log2TrafoSize", g_uiMaxCUWidth>>uiDepth)
   DTRACE_TU("trafoDepth"  , uiDepth)
+#endif
 #endif
 
   const UInt uiSubdiv = pcCU->getTransformIdx( uiAbsPartIdx ) + pcCU->getDepth( uiAbsPartIdx ) > uiDepth;

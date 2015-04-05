@@ -203,7 +203,6 @@ Void TAppEncTop::xInitLibCfg()
     }
   }
 #endif
-
   for(Int layerIdInVps = 0; layerIdInVps < m_numberOfLayers; layerIdInVps++)
   {
     m_frameRcvd                 .push_back(0);
@@ -642,6 +641,48 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setLog2MaxMvLengthVertical( m_log2MaxMvLengthVertical );
 #if H_MV
   }
+#endif
+#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
+ /// SET Profiles
+  for(Int layerIdInVps = 0; layerIdInVps < m_numberOfLayers; layerIdInVps++)
+  {
+    Int profileIdc = -1; 
+    for (Int olsIdx = 0; olsIdx < vps.getNumOutputLayerSets(); olsIdx++ )
+    {   
+      Int lsIdx = vps.olsIdxToLsIdx( olsIdx );
+      for(Int i = 0; i < vps.getNumLayersInIdList( lsIdx ); i++ )
+      {
+        if( vps.getLayerIdInNuh( layerIdInVps) == vps.getLayerSetLayerIdList(lsIdx, i) )
+        {
+          Int ptlIdx = vps.getProfileTierLevelIdx( olsIdx, i );
+          if ( ptlIdx != -1 )
+          {
+            Int curProfileIdc = vps.getPTL(ptlIdx)->getGeneralPTL()->getProfileIdc(); 
+            if (profileIdc == -1)   
+            {
+              profileIdc = curProfileIdc; 
+            }
+            else
+            {   
+              if ( profileIdc != curProfileIdc )
+              {              
+                fprintf(stderr, "Error: ProfileIdc for layer with index %d in VPS not equal in all OLSs. \n", layerIdInVps );
+                exit(EXIT_FAILURE);
+              }
+            }
+          }
+        }
+      }
+    }
+    if (profileIdc == -1 )
+    {
+      fprintf(stderr, "Error: No profile given for layer with index %d in VPS not equal in all OLS. \n", layerIdInVps );
+      exit(EXIT_FAILURE);
+    }
+    m_acTEncTopList[ layerIdInVps ]->setProfileIdc( profileIdc ); 
+  }
+#endif
 #endif
 #if H_3D_VSO
   if ( m_bUseVSO )
@@ -1336,6 +1377,13 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
   }
 
   assert( m_iNumberOfViews == vps.getNumViews() ); 
+
+
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+  vps.initViewCompLayer( ); 
+#endif
+#endif
 }
 
 Void TAppEncTop::xSetDependencies( TComVPS& vps )
@@ -1425,9 +1473,17 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
               if ( vps.getIdDirectRefLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[ j ] ) == refLayerIdInNuh )
 #endif
               {
+#if !HHI_INTER_COMP_PRED_K0052                
                 Bool refAlwaysIntra = ( i == getGOPSize() ) && ( m_iIntraPeriod[ curLayerIdInVps ] % m_iIntraPeriod[ refLayerIdInVps ] == 0 );
+#endif
                 Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
+#if HHI_INTER_COMP_PRED_K0052
+                // refAlwaysIntra actually not needed, since TemporalIds need to be aligned within an AU. 
+                // Thus, reference pictures of IRAP pictures have TemporalId equal to 0.
+                maxTid = std::max( maxTid, refLayerZero ? 0 : geRef.m_temporalId ); 
+#else
                 maxTid = std::max( maxTid, ( refAlwaysIntra || refLayerZero ) ? 0 : geRef.m_temporalId ); 
+#endif
               }
             }
           }              
@@ -1435,6 +1491,46 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
         }
         else
         {        
+#if HHI_INTER_COMP_PRED_K0052
+          if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
+          {          
+            Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
+            if ( nuhLayerIdTex == refLayerIdInNuh )
+            {
+              for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
+              {        
+                GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+                GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+                if ( geCur.m_interCompPredFlag )
+                {
+                  Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
+                  maxTid = std::max( maxTid, refLayerZero ? 0 : geRef.m_temporalId ); 
+                }
+              }
+            }
+          }
+          if( !m_depthFlag[ curLayerIdInVps ] && vps.getNumRefListLayers( curLayerIdInNuh) > 0  && ( m_depthRefinementFlag || m_viewSynthesisPredFlag || m_depthBasedBlkPartFlag ) ) 
+          {             
+            for( Int i = 0; i < ( getGOPSize() + 1); i++ ) 
+            {        
+              GOPEntry geCur =  m_GOPListMvc[curLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+              GOPEntry geRef =  m_GOPListMvc[refLayerIdInVps][( i < getGOPSize()  ? i : MAX_GOP )];
+
+              if ( geCur.m_interCompPredFlag )
+              {
+                for (Int j = 0; j < geCur.m_numActiveRefLayerPics; j++ )
+                {
+                  Int nuhLayerIdDep = vps.getLayerIdInNuh( vps.getViewIndex( vps.getIdRefListLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[j] ) ), true ); 
+                  if ( nuhLayerIdDep == refLayerIdInNuh )
+                  {
+                    Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
+                    maxTid = std::max( maxTid, refLayerZero ? 0 : geRef.m_temporalId ); 
+                  }
+                }
+              }
+            }
+          }        
+#else
           if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
           {          
             Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
@@ -1465,12 +1561,13 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
               maxTid= std::max( maxTid, maxPresentTid );              
             }
           }        
+#endif
         }
-      }
+      } // if ( vps.getDirectDependencyFlag( curLayerIdInVps, refLayerIdInVps ) ) 
       vps.setMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps, maxTid + 1 );
 #endif
-    }    
-  }
+    }  // Loop curLayerIdInVps
+  } // Loop refLayerIdInVps
 
   // Max temporal id for inter layer reference pictures presence flag
   Bool maxTidRefPresentFlag = false;   

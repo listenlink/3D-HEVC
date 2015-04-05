@@ -884,7 +884,14 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     Int numDirectRefLayers = vps    ->getNumDirectRefLayers( getLayerId() ); 
 #endif
+#if HHI_INTER_COMP_PRED_K0052
+    pcSlice->setIvPicLists( m_ivPicLists );         
+
+    Int gopNum = (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid;
+    GOPEntry gopEntry      = m_pcCfg->getGOPEntry( gopNum );     
+#else
     GOPEntry gopEntry      = m_pcCfg->getGOPEntry( (pcSlice->getRapPicFlag() && getLayerId() > 0) ? MAX_GOP : iGOPid );     
+#endif
     
     Bool interLayerPredLayerIdcPresentFlag = false; 
     if ( getLayerId() > 0 && !vps->getAllRefLayersActiveFlag() && numDirectRefLayers > 0 )
@@ -921,6 +928,41 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     assert( pcSlice->getNumActiveRefLayerPics() == gopEntry.m_numActiveRefLayerPics ); 
     
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+    if ( m_pcEncTop->decProcAnnexI() )
+    {    
+      pcSlice->deriveInCmpPredAndCpAvailFlag(); 
+      if ( pcSlice->getInCmpPredAvailFlag() )
+      {      
+        pcSlice->setInCompPredFlag( gopEntry.m_interCompPredFlag ); 
+      }
+      else
+      {
+        if (gopEntry.m_interCompPredFlag )
+        {
+          if ( gopNum == MAX_GOP)
+          {
+            printf( "\nError: FrameI_l%d cannot enable inter-component prediction.\n", pcSlice->getVPS()->getLayerIdInVps( getLayerId() ) );
+          }
+          else
+          {
+            printf( "\nError: Frame%d_l%d cannot enable inter-component prediction.\n", gopNum, pcSlice->getVPS()->getLayerIdInVps( getLayerId() ) );
+          }
+          
+          exit(EXIT_FAILURE);
+        }
+      }
+      pcSlice->init3dToolParameters(); 
+      pcSlice->checkInCompPredRefLayers(); 
+    }
+    
+
+    // This needs to be done after initilizaiton of 3D tool parameters.
+    pcSlice->setMaxNumMergeCand      ( m_pcCfg->getMaxNumMergeCand()   + ( ( pcSlice->getMpiFlag( ) || pcSlice->getIvMvPredFlag( ) || pcSlice->getViewSynthesisPredFlag( )   ) ? 1 : 0 ));
+#endif
+#endif
+
     pcSlice->createInterLayerReferencePictureSet( m_ivPicLists, m_refPicSetInterLayer0, m_refPicSetInterLayer1 ); 
     pcSlice->setNumRefIdx(REF_PIC_LIST_0,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer0.size() + (Int) m_refPicSetInterLayer1.size()) ) );
     pcSlice->setNumRefIdx(REF_PIC_LIST_1,min(gopEntry.m_numRefPicsActive,( pcSlice->getRPS()->getNumberOfPictures() + (Int) m_refPicSetInterLayer0.size() + (Int) m_refPicSetInterLayer1.size()) ) );
@@ -967,11 +1009,13 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
       }
     }
 #endif
+#if !HHI_INTER_COMP_PRED_K0052
 #if H_3D
     pcSlice->setIvPicLists( m_ivPicLists );         
 #if H_3D_IV_MERGE    
     assert( !m_pcEncTop->getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
 #endif    
+#endif
 #endif
 #if H_3D_IC
     pcSlice->setICEnableCandidate( m_aICEnableCandidate );         
