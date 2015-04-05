@@ -1680,6 +1680,53 @@ Void TAppEncTop::xSetProfileTierLevel(TComVPS& vps, Int profileTierLevelIdx, Int
 
 Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 {
+
+#if H_3D_DISABLE_CHROMA
+  Bool anyDepth = false; 
+  for ( Int i = 0; i < m_numberOfLayers; i++ )
+  {
+    vps.setVpsRepFormatIdx( i, m_depthFlag[ i ] ? 1 : 0 );
+    anyDepth = anyDepth || m_depthFlag[ i ]; 
+  }  
+
+  vps.setRepFormatIdxPresentFlag( anyDepth ); 
+  vps.setVpsNumRepFormatsMinus1 ( anyDepth ? 1 : 0  ); 
+
+  for ( Int j = 0; j <= vps.getVpsNumRepFormatsMinus1(); j++ )
+  {
+    TComRepFormat* repFormat = new TComRepFormat; 
+
+    repFormat->setBitDepthVpsChromaMinus8   ( g_bitDepthC - 8 ); 
+    repFormat->setBitDepthVpsLumaMinus8     ( g_bitDepthY - 8 );
+    repFormat->setChromaFormatVpsIdc        ( j == 1 ? CHROMA_400 : CHROMA_420 );
+    repFormat->setPicHeightVpsInLumaSamples ( m_iSourceHeight );
+    repFormat->setPicWidthVpsInLumaSamples  ( m_iSourceWidth  );    
+    repFormat->setChromaAndBitDepthVpsPresentFlag( true );    
+    // ToDo not supported yet. 
+    //repFormat->setSeparateColourPlaneVpsFlag( );
+#if H_MV_FIX_CONF_WINDOW
+    Bool conformanceWindowVpsFlag = ( m_confWinBottom != 0 ) || ( m_confWinRight != 0 ) || ( m_confWinTop != 0 ) || ( m_confWinBottom != 0 ); 
+    repFormat->setConformanceWindowVpsFlag( conformanceWindowVpsFlag );
+    if ( conformanceWindowVpsFlag ) 
+    {   
+      repFormat->setConfWinVpsLeftOffset    ( m_confWinLeft   / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() ) );
+      repFormat->setConfWinVpsRightOffset   ( m_confWinRight  / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() )  );
+      repFormat->setConfWinVpsTopOffset     ( m_confWinTop    / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() )  );
+      repFormat->setConfWinVpsBottomOffset  ( m_confWinBottom / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() ) ); 
+    }
+#else
+    repFormat->setConformanceWindowVpsFlag( true );
+    repFormat->setConfWinVpsLeftOffset    ( m_confWinLeft   / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() ) );
+    repFormat->setConfWinVpsRightOffset   ( m_confWinRight  / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() )  );
+    repFormat->setConfWinVpsTopOffset     ( m_confWinTop    / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() )  );
+    repFormat->setConfWinVpsBottomOffset  ( m_confWinBottom / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() ) ); 
+#endif
+    assert( vps.getRepFormat( j ) == NULL ); 
+    vps.setRepFormat( j , repFormat );
+  }; 
+
+
+#else
   vps.setRepFormatIdxPresentFlag( false ); 
   vps.setVpsNumRepFormatsMinus1 ( 0    ); 
 
@@ -1708,6 +1755,7 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
 #endif
   assert( vps.getRepFormat( 0 ) == NULL ); 
   vps.setRepFormat( 0 , repFormat );
+#endif
 }
 
 Void TAppEncTop::xSetDpbSize                ( TComVPS& vps )

@@ -66,6 +66,7 @@
 
 #if H_MV
 #define SONY_MV_V_CONST_C0078            1   // Control disparity vector search range via configuration file
+#define H_MV_FIX_CONF_WINDOW             1   
 #endif
 
 #define NTT_BUG_FIX_TK54    1
@@ -79,7 +80,7 @@
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #if H_MV
-#define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define H_MV_ENC_DEC_TRAC                 0  //< CU/PU level tracking
 #endif
 
 #if H_3D
@@ -325,6 +326,7 @@
 // Fixes
 
 #define FIX_TICKET_95                          1   // pps_scaling_list_ref_layer_id parsing
+#define H_3D_DISABLE_CHROMA                    1 
 
 #if H_3D
 #define HHI_VIEW_ID_LIST_I5_J0107              0

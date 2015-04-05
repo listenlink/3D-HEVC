@@ -312,6 +312,9 @@ public:
   
   TComPic*      getPic                ()                        { return m_pcPic;           }
   TComSlice*    getSlice              ()                        { return m_pcSlice;         }
+#if H_3D_DISABLE_CHROMA
+  Void         setSlice              ( TComSlice* pcSlice)     { m_pcSlice = pcSlice;       }
+#endif
   UInt&         getAddr               ()                        { return m_uiCUAddr;        }
   UInt&         getZorderIdxInCU      ()                        { return m_uiAbsIdxInLCU; }
   UInt          getSCUAddr            ();
@@ -432,10 +435,19 @@ public:
   Pel*&         getPCMSampleCb        ()                        { return m_pcIPCMSampleCb;    }
   Pel*&         getPCMSampleCr        ()                        { return m_pcIPCMSampleCr;    }
 
+#if H_3D_DISABLE_CHROMA
+  UChar         getCbf    ( UInt uiIdx, TextType eType )                  { assert( getSlice() != NULL ); assert(  g_aucConvertTxtTypeToIdx[eType] == 0 || !getSlice()->getIsDepth() || m_puhCbf[g_aucConvertTxtTypeToIdx[eType]][uiIdx] == 0 );  return m_puhCbf[g_aucConvertTxtTypeToIdx[eType]][uiIdx];  }
+  UChar*        getCbf    ( TextType eType )                              { assert( getSlice() != NULL ); assert(  g_aucConvertTxtTypeToIdx[eType] == 0 || !getSlice()->getIsDepth() || m_puhCbf[g_aucConvertTxtTypeToIdx[eType]] );              return m_puhCbf[g_aucConvertTxtTypeToIdx[eType]];         }  
+#else
   UChar         getCbf    ( UInt uiIdx, TextType eType )                  { return m_puhCbf[g_aucConvertTxtTypeToIdx[eType]][uiIdx];  }
   UChar*        getCbf    ( TextType eType )                              { return m_puhCbf[g_aucConvertTxtTypeToIdx[eType]];         }
+#endif
   UChar         getCbf    ( UInt uiIdx, TextType eType, UInt uiTrDepth )  { return ( ( getCbf( uiIdx, eType ) >> uiTrDepth ) & 0x1 ); }
+#if H_3D_DISABLE_CHROMA
+  Void          setCbf    ( UInt uiIdx, TextType eType, UChar uh )        { assert( getSlice() != NULL ); m_puhCbf[g_aucConvertTxtTypeToIdx[eType]][uiIdx] = ( g_aucConvertTxtTypeToIdx[eType] > 0 && getSlice()->getIsDepth() ) ? 0 : uh ;    }
+#else
   Void          setCbf    ( UInt uiIdx, TextType eType, UChar uh )        { m_puhCbf[g_aucConvertTxtTypeToIdx[eType]][uiIdx] = uh;    }
+#endif
   Void          clearCbf  ( UInt uiIdx, TextType eType, UInt uiNumParts );
   UChar         getQtRootCbf          ( UInt uiIdx )                      { return getCbf( uiIdx, TEXT_LUMA, 0 ) || getCbf( uiIdx, TEXT_CHROMA_U, 0 ) || getCbf( uiIdx, TEXT_CHROMA_V, 0 ); }
   

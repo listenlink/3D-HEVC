@@ -303,6 +303,18 @@ Void TEncEntropy::encodeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
 
 Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP )
 {
+
+#if H_MV_ENC_DEC_TRAC
+  UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+
+  DTRACE_TU_S("=========== transform_tree ===========\n")
+  DTRACE_TU("x0", uiLPelX)
+  DTRACE_TU("x1", uiTPelY)
+  DTRACE_TU("log2TrafoSize", g_uiMaxCUWidth>>uiDepth)
+  DTRACE_TU("trafoDepth"  , uiDepth)
+#endif
+
   const UInt uiSubdiv = pcCU->getTransformIdx( uiAbsPartIdx ) + pcCU->getDepth( uiAbsPartIdx ) > uiDepth;
   const UInt uiLog2TrafoSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth()]+2 - uiDepth;
   UInt cbfY = pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA    , uiTrIdx );
@@ -365,6 +377,30 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
   const Bool bFirstCbfOfCU = uiTrDepthCurr == 0;
   if( bFirstCbfOfCU || uiLog2TrafoSize > 2 )
   {
+#if H_3D_DISABLE_CHROMA
+    if (!pcCU->getSlice()->getIsDepth() )
+    {
+      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr - 1 ) )
+      {
+        m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr );
+      }
+      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr - 1 ) )
+      {
+        m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr );
+      }
+    }
+    else
+    {
+      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr - 1 ) )
+      {
+        assert( pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr ) == 0 );
+      }
+      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr - 1 ) )
+      {
+        assert( pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr ) == 0  );
+      }
+    }
+#else
     if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr - 1 ) )
     {
       m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepthCurr );
@@ -373,6 +409,7 @@ Void TEncEntropy::xEncodeTransform( TComDataCU* pcCU,UInt offsetLuma, UInt offse
     {
       m_pcEntropyCoderIf->codeQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepthCurr );
     }
+#endif
   }
   else if( uiLog2TrafoSize == 2 )
   {
@@ -505,7 +542,11 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   {
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );
 #if H_3D_DIM_SDC
+#if H_3D_DISABLE_CHROMA
+    if(!pcCU->getSDCFlag(uiAbsPartIdx) && !pcCU->getSlice()->getIsDepth() )
+#else
     if(!pcCU->getSDCFlag(uiAbsPartIdx))
+#endif
 #endif
     encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
   }
@@ -684,9 +725,18 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
     assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
+#if H_3D_DISABLE_CHROMA
+    if (!pcCU->getSlice()->getIsDepth() )
+    {
+      assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
+      assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+    }
+#else
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+#endif
   }
+
 
   if( pcCU->getSDCFlag( uiAbsPartIdx ) && !pcCU->isIntra( uiAbsPartIdx ) )
   {

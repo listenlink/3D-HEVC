@@ -677,7 +677,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   {
 #endif
   WRITE_UVLC( pcSPS->getChromaFormatIdc (),         "chroma_format_idc" );
+#if !H_3D_DISABLE_CHROMA
   assert(pcSPS->getChromaFormatIdc () == 1);
+#endif
   // in the first version chroma_format_idc can only be equal to 1 (4:2:0)
   if( pcSPS->getChromaFormatIdc () == 3 )
   {
@@ -1375,14 +1377,14 @@ Void TEncCavlc::codeRepFormat( Int i, TComRepFormat* pcRepFormat, TComRepFormat*
 
   if ( pcRepFormat->getChromaAndBitDepthVpsPresentFlag() )
   {  
-  WRITE_CODE( pcRepFormat->getChromaFormatVpsIdc( ), 2, "chroma_format_vps_idc" );
+    WRITE_CODE( pcRepFormat->getChromaFormatVpsIdc( ), 2, "chroma_format_vps_idc" );  
 
-  if ( pcRepFormat->getChromaFormatVpsIdc() == 3 )
-  {
-    WRITE_FLAG( pcRepFormat->getSeparateColourPlaneVpsFlag( ) ? 1 : 0 , "separate_colour_plane_vps_flag" );
-  }
-  WRITE_CODE( pcRepFormat->getBitDepthVpsLumaMinus8( ),      4, "bit_depth_vps_luma_minus8" );
-  WRITE_CODE( pcRepFormat->getBitDepthVpsChromaMinus8( ),    4, "bit_depth_vps_chroma_minus8" );
+    if ( pcRepFormat->getChromaFormatVpsIdc() == 3 )
+    {
+      WRITE_FLAG( pcRepFormat->getSeparateColourPlaneVpsFlag( ) ? 1 : 0 , "separate_colour_plane_vps_flag" );
+    }
+    WRITE_CODE( pcRepFormat->getBitDepthVpsLumaMinus8( ),      4, "bit_depth_vps_luma_minus8" );
+    WRITE_CODE( pcRepFormat->getBitDepthVpsChromaMinus8( ),    4, "bit_depth_vps_chroma_minus8" );
   }
   else
   {
@@ -1731,7 +1733,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
 
     // in the first version chroma_format_idc is equal to one, thus colour_plane_id will not be present
+#if H_3D_DISABLE_CHROMA
+    assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 || pcSlice->getIsDepth() );
+    assert (pcSlice->getSPS()->getChromaFormatIdc() == 0 || !pcSlice->getIsDepth() );
+#else
     assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 );
+#endif
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
 #if H_MV
@@ -1910,7 +1917,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       if (pcSlice->getSPS()->getUseSAO())
       {
          WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
+#if H_3D_DISABLE_CHROMA
+         if ( !pcSlice->getIsDepth() )
+         {
          WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
+      }
+#else
+         WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
+#endif
       }
     }
 
@@ -2563,7 +2577,11 @@ Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height
 Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 {
   wpScalingParam  *wp;
+#if  H_3D_DISABLE_CHROMA
+  Bool            bChroma     = !pcSlice->getIsDepth(); // color always present in HEVC ?
+#else
   Bool            bChroma     = true; // color always present in HEVC ?
+#endif
   Int             iNbRef       = (pcSlice->getSliceType() == B_SLICE ) ? (2) : (1);
   Bool            bDenomCoded  = false;
   UInt            uiMode = 0;
