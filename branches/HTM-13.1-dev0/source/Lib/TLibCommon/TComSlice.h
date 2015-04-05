@@ -1199,6 +1199,7 @@ public:
   std::vector<Int> getViewOIdxList( )                                               { return m_viewOIdxList; }
 #endif
 #endif
+
 #if HHI_INTER_COMP_PRED_K0052
 #if HHI_CAM_PARA_K0052
   Int     getVoiInVps( Int viewOIdx )                                      
@@ -1215,7 +1216,7 @@ public:
     }
     assert( 0 );   
     return -1; 
-  }; 
+  };
 
 #if HHI_CAM_PARA_K0052
   Bool    getViewCompLayerPresentFlag (Int i, Bool d ) { return  m_viewCompLayerPresentFlag[ getVoiInVps(i) ][d]; }
@@ -1403,6 +1404,7 @@ public:
 
 #else
   UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
+
   Bool getCamParPresent      ( Int viewIndex )  { return m_bCamParPresent[viewIndex]; }
   Void setCamParPresent      ( Int viewIndex, Bool val )  { m_bCamParPresent[viewIndex] = val; }
   Bool hasCamParInSliceHeader( Int viewIndex )  { return m_bCamParInSliceHeader[viewIndex]; }
@@ -3036,7 +3038,7 @@ public:
     Bool allRefCmpLayersAvailFlag = true;
 
     for( Int i = 0; i <= numCurCmpLIds - 1; i++ )
-    {
+    {      
       m_inCmpRefViewIdcs.push_back( getVPS()->getViewOrderIdx( curCmpLIds[ i ] ));
 #if HHI_CAM_PARA_K0052
       if( !getVPS()->getCpPresentFlag( getVPS()->getVoiInVps( getViewIndex() ),  getVPS()->getVoiInVps( m_inCmpRefViewIdcs[ i ] ) ) )

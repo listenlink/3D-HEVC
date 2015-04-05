@@ -2366,7 +2366,7 @@ Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiSymbol = pcCU->getSDCFlag( uiAbsPartIdx ) ? 1 : 0;
   UInt uiCtxSDCFlag = pcCU->getCtxSDCFlag( uiAbsPartIdx );
-
+  DTRACE_CU("dc_only_flag", uiSymbol)
   m_pcBinIf->encodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, uiCtxSDCFlag ) );
 }
 

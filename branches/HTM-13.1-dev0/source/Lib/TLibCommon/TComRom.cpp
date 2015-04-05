@@ -390,16 +390,17 @@ UInt64 g_nSymbolCounter = 0;
 Bool g_traceCU = false; 
 Bool g_tracePU = false; 
 Bool g_traceTU = false; 
-Bool g_disableNumbering = true; 
+Bool g_disableNumbering = false; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter       = 0; 
+UInt64 g_stopAtCounter       = 937234; 
 Bool g_traceCopyBack         = false; 
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
 Bool g_decTracePicOutput     = false; 
-Bool g_stopAtPos             = false; 
-Bool g_outputPos             = false; 
-Bool g_traceCameraParameters = true; 
+Bool g_stopAtPos             = true; 
+Bool g_outputPos             = true;   
+Bool g_traceCameraParameters = false; 
+Bool g_encNumberOfWrittenBits     = true; 
 #endif
 #endif
 // ====================================================================================================================
@@ -606,7 +607,7 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 16 ) && ( cuHeight == 16 ); 
+      stopFlag = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 8 ) && ( cuHeight == 8 ); 
     }
     else
     {                     // Stop at specific position 

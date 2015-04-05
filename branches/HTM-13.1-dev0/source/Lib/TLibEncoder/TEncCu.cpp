@@ -1621,15 +1621,21 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
+#if !HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
   m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
+#endif
 #endif
   if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
   {
     m_pcEntropyCoder->encodeIPCMInfo( pcCU, uiAbsPartIdx );
-
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
+#if HHI_MOVE_SYN_K0052
+#if H_3D_DIM_SDC
+      m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
+#endif  
+#endif
       // Encode slice finish
       finishCU(pcCU,uiAbsPartIdx,uiDepth);
       return;
@@ -1638,7 +1644,12 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
-
+#if HHI_MOVE_SYN_K0052
+  m_pcEntropyCoder->encodeDBBPFlag( pcCU, uiAbsPartIdx );
+#if H_3D_DIM_SDC
+  m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
+#endif  
+#endif
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
@@ -2831,11 +2842,18 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
+#if !HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
   m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
 #endif
+#endif
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
+#if HHI_MOVE_SYN_K0052
+#if H_3D_DIM_SDC
+  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
+#endif
+#endif
 
   // Encode Coefficients
   Bool bCodeDQP = getdQPFlag();
@@ -2907,11 +2925,17 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
 #endif
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize ( rpcTempCU, 0, uiDepth, true );
+#if !HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
   m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
 #endif
+#endif
   m_pcEntropyCoder->encodeIPCMInfo ( rpcTempCU, 0, true );
-
+#if HHI_MOVE_SYN_K0052
+#if H_3D_DIM_SDC
+  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
+#endif
+#endif
   m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
 
   rpcTempCU->getTotalBits() = m_pcEntropyCoder->getNumberOfWrittenBits();
