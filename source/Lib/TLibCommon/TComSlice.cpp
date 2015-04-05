@@ -136,6 +136,9 @@ TComSlice::TComSlice()
 , m_icSkipParseFlag               ( false )
 #endif
 #if H_3D
+#if HHI_INTER_COMP_PRED_K0052
+, m_inCmpPredFlag                 ( false )
+#endif
 , m_depthToDisparityB             ( NULL )
 , m_depthToDisparityF             ( NULL )
 #endif
@@ -184,6 +187,22 @@ TComSlice::TComSlice()
 #endif
   m_iDefaultRefViewIdx = -1;
   m_bDefaultRefViewIdxAvailableFlag = false;
+#if HHI_INTER_COMP_PRED_K0052
+  m_ivMvPredFlag           = false;
+  m_ivMvScalingFlag        = false;
+  m_ivResPredFlag          = false;  
+  m_depthRefinementFlag    = false;
+  m_viewSynthesisPredFlag  = false;
+  m_depthBasedBlkPartFlag  = false;
+  m_mpiFlag                = false;
+  m_intraContourFlag       = false;
+  m_intraSdcWedgeFlag      = false;
+  m_qtPredFlag             = false;
+  m_interSdcFlag           = false;
+  m_depthIntraSkipFlag     = false;
+  m_subPbSize              =  1 << 6;
+  m_mpiSubPbSize           =  1 << 6;
+#endif
 }
 
 TComSlice::~TComSlice()
@@ -2154,9 +2173,10 @@ Void TComVPS::setRefLayers()
 Void     TComVPS::initNumViews( )
 {
   m_numViews = 1; 
-#if HHI_VIEW_ID_LIST_I5_J0107
+#if HHI_VIEW_ID_LIST_I5_J0107 || HHI_INTER_COMP_PRED_K0052
 #if H_3D
   AOF( m_viewOIdxList.size() == 0 ); 
+  
   m_viewOIdxList.push_back( 0 );        
 #endif
 #endif
@@ -2177,7 +2197,7 @@ Void     TComVPS::initNumViews( )
       if( newViewFlag )
       {
         m_numViews++;
-#if HHI_VIEW_ID_LIST_I5_J0107
+#if HHI_VIEW_ID_LIST_I5_J0107  || HHI_INTER_COMP_PRED_K0052
 #if H_3D
         m_viewOIdxList.push_back( getViewOrderIdx( lId ) );        
 #endif
@@ -4030,14 +4050,18 @@ Bool TComSlice::inferPocMsbValPresentFlag()
 
 
 #if H_3D
-
 Void TComSlice::init3dToolParameters()
 {
   Bool depthFlag = getIsDepth();
 
+#if !HHI_INTER_COMP_PRED_K0052
   Bool depthOfRefViewsAvailFlag = false; 
   Bool textOfCurViewAvailFlag = false; 
+#endif
 
+  
+
+#if !HHI_INTER_COMP_PRED_K0052
   TComVPS* vps = getVPS(); 
 
   if( !depthFlag )
@@ -4080,6 +4104,7 @@ Void TComSlice::init3dToolParameters()
     }
   }
 
+
   Bool lidG0  = ( getLayerId() > 0 );
   Bool nRLLG0 =  ( getVPS()->getNumRefListLayers( getLayerId() ) > 0 );     
 
@@ -4104,13 +4129,41 @@ Void TComSlice::init3dToolParameters()
 
   m_subPbSize              = lidG0 ? ( 1 << ( sps3dExt->getLog2SubPbSizeMinus3   ( depthFlag ) + 3 ) ) : getSPS()->getMaxCUWidth();  
   m_mpiSubPbSize           = 1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
+#else
+  Bool nRLLG0 =  ( getVPS()->getNumRefListLayers( getLayerId() ) > 0 );     
+
+  TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
+
+  m_ivMvPredFlag           = sps3dExt->getIvMvPredFlag         ( depthFlag ) && nRLLG0                       ;                             
+  m_ivMvScalingFlag        = sps3dExt->getIvMvScalingFlag      ( depthFlag )                                 ;                             
+  m_ivResPredFlag          = sps3dExt->getIvResPredFlag        ( depthFlag ) && nRLLG0                       ;                               
+  m_depthRefinementFlag    = sps3dExt->getDepthRefinementFlag  ( depthFlag )           && getInCompPredFlag();                            
+  m_viewSynthesisPredFlag  = sps3dExt->getViewSynthesisPredFlag( depthFlag ) && nRLLG0 && getInCompPredFlag();                          
+  m_depthBasedBlkPartFlag  = sps3dExt->getDepthBasedBlkPartFlag( depthFlag )           && getInCompPredFlag();                          
+  m_mpiFlag                = sps3dExt->getMpiFlag              ( depthFlag )           && getInCompPredFlag();
+  m_intraContourFlag       = sps3dExt->getIntraContourFlag     ( depthFlag )           && getInCompPredFlag();
+  m_intraSdcWedgeFlag      = sps3dExt->getIntraSdcWedgeFlag    ( depthFlag )                                 ;                          
+  m_qtPredFlag             = sps3dExt->getQtPredFlag           ( depthFlag )           && getInCompPredFlag();
+  m_interSdcFlag           = sps3dExt->getInterSdcFlag         ( depthFlag )                                 ;  
+  m_depthIntraSkipFlag     = sps3dExt->getDepthIntraSkipFlag   ( depthFlag )                                 ;                          
+
+  m_subPbSize              =  1 << ( sps3dExt->getLog2SubPbSizeMinus3   ( depthFlag ) + 3 );  
+  m_mpiSubPbSize           =  1 << ( sps3dExt->getLog2MpiSubPbSizeMinus3( depthFlag ) + 3 );
+
+#endif
 
 #if H_3D_OUTPUT_ACTIVE_TOOLS
   std::cout << "Layer:                  :" << getLayerId()             << std::endl;
   std::cout << "DepthFlag:              :" << getIsDepth()             << std::endl;
   std::cout << "ViewOrderIdx:           :" << getViewIndex()           << std::endl;
+#if HHI_INTER_COMP_PRED_K0052
+  std::cout << "InterCmpPredAvailableFlag:" << getInCmpPredAvailFlag() << std::endl;
+  std::cout << "InterCompPredFlag       :"  << getInCompPredFlag()     << std::endl;
+  //std::cout << "TextOfCurViewAvailFlag  :" << textOfCurViewAvailFlag   << std::endl;
+#else
   std::cout << "DepthOfRefViewsAvailFlag:" << depthOfRefViewsAvailFlag << std::endl;
   std::cout << "TextOfCurViewAvailFlag  :" << textOfCurViewAvailFlag   << std::endl;
+#endif
   
   std::cout << "ivMvPredFlag            :" << m_ivMvPredFlag           << std::endl;
   std::cout << "ivMvScalingFlag         :" << m_ivMvScalingFlag        << std::endl;

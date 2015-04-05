@@ -91,7 +91,7 @@ Void TDecGop::init( TDecEntropy*            pcEntropyDecoder,
   m_pcCavlcDecoder        = pcCavlcDecoder;
   m_pcSliceDecoder        = pcSliceDecoder;
   m_pcLoopFilter          = pcLoopFilter;
-  m_pcSAO  = pcSAO;
+  m_pcSAO  = pcSAO;  
 }
 
 

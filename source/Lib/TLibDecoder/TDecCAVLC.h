@@ -51,6 +51,9 @@
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
+#if H_3D_ANNEX_SELECTION_FIX
+class TDecTop;
+#endif
 
 /// CAVLC decoder class
 class TDecCavlc : public SyntaxElementParser, public TDecEntropyIf
@@ -66,6 +69,10 @@ protected:
   Int**    m_aaiTempScale;
   Int**    m_aaiTempOffset;
 #endif
+#if H_3D_ANNEX_SELECTION_FIX
+  TDecTop*  m_decTop;
+#endif
+
 
 public:
 
@@ -107,7 +114,9 @@ public:
 #else
   Void  parsePPS            ( TComPPS* pcPPS);
 #endif
-
+#if H_3D_ANNEX_SELECTION_FIX
+  Void  setDecTop           ( TDecTop* decTop ) { m_decTop = decTop; }; 
+#endif
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
@@ -169,6 +178,11 @@ public:
   Void xParsePredWeightTable ( TComSlice* pcSlice );
   Void  parseScalingList               ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
+
+#if H_3D_ANNEX_SELECTION_FIX
+  TDecTop*  getDecTop()      { return m_decTop; };
+#endif
+
 protected:
   Bool  xMoreRbspData();
 };

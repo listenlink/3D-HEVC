@@ -38,7 +38,9 @@
 #include "TDecCAVLC.h"
 #include "SEIread.h"
 #include "TDecSlice.h"
-
+#if H_3D_ANNEX_SELECTION_FIX
+#include "TDecTop.h"
+#endif
 //! \ingroup TLibDecoder
 //! \{
 
@@ -1329,6 +1331,11 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }
 
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+  pcVPS->initViewCompLayer( ); 
+#endif
+#endif
 
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
   {
@@ -2027,8 +2034,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 #endif
 #endif
   rpcSlice->setSPS(sps);
+#if !HHI_INTER_COMP_PRED_K0052
 #if H_3D
   rpcSlice->init3dToolParameters();
+#endif
 #endif
   rpcSlice->setPPS(pps);
   if( pps->getDependentSliceSegmentsEnabledFlag() && ( !firstSliceSegmentInPic ))
@@ -2423,6 +2432,19 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rpcSlice->setInterLayerPredLayerIdc( i, rpcSlice->getRefLayerPicIdc( i ) );
       }
     }
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+    if ( getDecTop()->decProcAnnexI() )
+    {    
+      rpcSlice->deriveInCmpPredAndCpAvailFlag();
+      if ( rpcSlice->getInCmpPredAvailFlag() )
+      {
+        READ_FLAG(uiCode, "in_comp_pred_flag");  rpcSlice->setInCompPredFlag((Bool)uiCode);      
+      }
+      rpcSlice->init3dToolParameters(); 
+    }
+#endif
+#endif
 #endif
     if(sps->getUseSAO())
     {
@@ -2604,7 +2626,14 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
+#if H_3D_ANNEX_SELECTION_FIX
+    else if(    rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) 
+             && !rpcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
+             && getDecTop()->decProcAnnexI()
+           )
+#else
     else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 )
+#endif
     {
       UInt uiCodeTmp = 0;
 

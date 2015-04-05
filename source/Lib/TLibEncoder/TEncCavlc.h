@@ -67,7 +67,9 @@ public:
 protected:
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
-
+#if H_3D_ANNEX_SELECTION_FIX
+  TEncTop*      m_encTop; 
+#endif
   Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
   
@@ -184,7 +186,10 @@ public:
   Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
-
+#if H_3D_ANNEX_SELECTION_FIX
+  TEncTop* getEncTop()               { return m_encTop; };
+  Void     setEncTop( TEncTop* et )  {  m_encTop = et; };
+#endif
 };
 
 //! \}

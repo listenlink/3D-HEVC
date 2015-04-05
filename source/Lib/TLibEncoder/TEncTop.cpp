@@ -90,6 +90,9 @@ TEncTop::TEncTop()
   m_aICEnableCandidate = NULL;
   m_aICEnableNum = NULL;
 #endif
+#if H_3D_ANNEX_SELECTION_FIX
+  m_cCavlcCoder.setEncTop(this); 
+#endif
 }
 
 TEncTop::~TEncTop()
@@ -363,6 +366,7 @@ Void TEncTop::init(Bool isFieldCoding)
     m_aICEnableNum[i]=0;
   }
 #endif
+
   // initialize processing unit classes
   m_cGOPEncoder.  init( this );
   m_cSliceEncoder.init( this );

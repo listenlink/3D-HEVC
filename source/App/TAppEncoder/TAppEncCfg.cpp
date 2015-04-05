@@ -224,6 +224,11 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
     in>>entry.m_interViewRefPosL[1][i];
   }
 #endif
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+  in>>entry.m_interCompPredFlag;
+#endif
+#endif
   return in;
 }
 

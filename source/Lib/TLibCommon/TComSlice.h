@@ -919,10 +919,13 @@ private:
   Int         ***m_aaaiCodedScale ;
   Int         ***m_aaaiCodedOffset;
 
-#if HHI_VIEW_ID_LIST_I5_J0107
+#if HHI_VIEW_ID_LIST_I5_J0107 ||  HHI_INTER_COMP_PRED_K0052
   std::vector<Int>  m_viewOIdxList;
 #endif
-
+#if HHI_INTER_COMP_PRED_K0052
+  std::vector< std::vector<Bool> > m_viewCompLayerPresentFlag;
+  std::vector< std::vector<Int>  > m_viewCompLayerId;
+#endif
 #endif
 
 #endif
@@ -1151,10 +1154,56 @@ public:
   Int     getDependencyId ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPENDENCY_ID  ); }    
   Int     getNumViews()                                                    { return m_numViews; }
   Void    initNumViews();
-#if HHI_VIEW_ID_LIST_I5_J0107
-  Int     getViewOIdxList( Int i )                                         { return m_viewOIdxList[i]; }
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+  Void   initViewCompLayer( )
+  { 
+    assert( m_viewCompLayerId.size() == 0 && m_viewCompLayerPresentFlag.size() == 0  );
+    for( Int i = 0; i < getNumViews(); i++ )
+    {
+      m_viewCompLayerId         .push_back( std::vector<Int>(0)  );
+      m_viewCompLayerPresentFlag.push_back( std::vector<Bool>(0) );      
+
+      for( Int depFlag = 0; depFlag  <=  1; depFlag++ )
+      {
+        Int iViewOIdx = getViewOIdxList( i );
+        Int layerId = -1;
+        for( Int j = 0; j  <=  getMaxLayersMinus1(); j++ ) 
+        {
+          Int jNuhLId = getLayerIdInNuh( j );
+          if( getVpsDepthFlag( jNuhLId ) == ( (Bool) depFlag )  &&  getViewOrderIdx( jNuhLId )  ==  iViewOIdx  
+            &&  getDependencyId( jNuhLId )  ==  0  &&  getAuxId( jNuhLId )  ==  0 )
+          {
+            layerId = jNuhLId;
+          }
+        }
+        m_viewCompLayerPresentFlag[ i ].push_back( layerId  !=  -1 );
+        m_viewCompLayerId         [ i ].push_back( layerId );        
+      }
+    }
+  };
+#endif
 #endif
 
+#if HHI_VIEW_ID_LIST_I5_J0107 || HHI_INTER_COMP_PRED_K0052
+  Int     getViewOIdxList( Int i )                                         { return m_viewOIdxList[i]; }
+#endif
+#if HHI_INTER_COMP_PRED_K0052
+  Int     getInvViewOIdxList( Int viewOIdx )                                      
+  {    
+    for ( Int i = 0; i < m_viewOIdxList.size(); i++ )
+    {
+      if  ( m_viewOIdxList[ i ] == viewOIdx )
+      {
+        return i; 
+      }
+    }
+    assert( 0 );   
+    return -1; 
+  }; 
+  Bool    getViewCompLayerPresentFlag (Int i, Bool d ) { return  m_viewCompLayerPresentFlag[ getInvViewOIdxList(i) ][d]; }
+  Bool    getViewCompLayerId          (Int i, Bool d ) { return  m_viewCompLayerId         [ getInvViewOIdxList(i) ][d]; }
+#endif
   Bool    getDependencyFlag( Int i, Int j )                                { return m_dependencyFlag[i][j]; }
   Int     getNumDirectRefLayers( Int layerIdInNuh )                        { return m_numDirectRefLayers[ layerIdInNuh ];  };                               
 #if H_3D
@@ -2389,6 +2438,11 @@ private:
   Bool      m_icSkipParseFlag;
 #endif
 #if H_3D
+#if HHI_INTER_COMP_PRED_K0052
+  std::vector<Int> m_inCmpRefViewIdcs;
+  Bool       m_inCmpPredAvailFlag; 
+  Bool       m_inCmpPredFlag; 
+#endif
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
   Int**      m_depthToDisparityB; 
   Int**      m_depthToDisparityF; 
@@ -2491,6 +2545,13 @@ public:
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
 #if H_3D
+#if HHI_INTER_COMP_PRED_K0052
+  Bool      getInCmpPredAvailFlag( )                             { return m_inCmpPredAvailFlag;    } 
+  Bool      getInCompPredFlag( )                                 { return m_inCmpPredFlag;         }    
+  Void      setInCompPredFlag( Bool b )                          { m_inCmpPredFlag = b;            }    
+  Int       getInCmpRefViewIdcs( Int i )                         { return m_inCmpRefViewIdcs  [i]; }
+  Int       getNumCurCmpLIds( )                                  { return (Int) m_inCmpRefViewIdcs.size(); } 
+#endif
   TComPic*  getIvPic            ( Bool depthFlag, Int viewIndex){ return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ]; }
 #endif
 #if H_3D
@@ -2592,6 +2653,9 @@ public:
 
   UInt getTLayer             ()                            { return m_uiTLayer;                      }
   Void setTLayer             ( UInt uiTLayer )             { m_uiTLayer = uiTLayer;                  }
+#if H_MV
+  Int getTemporalId          ( )                           { return (Int) m_uiTLayer;                }
+#endif
 
   Void setTLayerInfo( UInt uiTLayer );
   Void decodingMarking( TComList<TComPic*>& rcListPic, Int iGOPSIze, Int& iMaxRefPicNum ); 
@@ -2834,7 +2898,92 @@ public:
 
 #if H_3D
   // 3D-HEVC tool parameters
+#if HHI_INTER_COMP_PRED_K0052
+  Void deriveInCmpPredAndCpAvailFlag()
+  { 
+    Int numCurCmpLIds = getIsDepth() ? 1 : getNumActiveRefLayerPics(); 
+    std::vector<Int> curCmpLIds;
+    if ( getIsDepth() )
+    {
+      curCmpLIds.push_back( getLayerId() );
+    }
+    else
+    {
+      for (Int i = 0; i < numCurCmpLIds; i++)
+      {
+        curCmpLIds.push_back( getRefPicLayerId( i ) );
+      }
+    }
+
+    // m_cpAvailableFlag = true;
+    Bool allRefCmpLayersAvailFlag = true;
+
+    for( Int i = 0; i <= numCurCmpLIds - 1; i++ )
+    {
+      m_inCmpRefViewIdcs.push_back( getVPS()->getViewOrderIdx( curCmpLIds[ i ] ));
+      //if( !getVPS()->getCpPresentFlag( getViewIdx(),  inCmpRefViewIdcs( i ) ) )
+      //{
+      //  m_cpAvailableFlag = false;
+      //}
+      Bool refCmpCurLIdAvailFlag = false;
+      if( getVPS()->getViewCompLayerPresentFlag( m_inCmpRefViewIdcs[ i ], !getIsDepth() ) )
+      {
+        Int j = getVPS()->getLayerIdInVps( getVPS()->getViewCompLayerId( m_inCmpRefViewIdcs[ i ],  !getIsDepth() ) );
+        if  ( getVPS()->getDirectDependencyFlag( getVPS()->getLayerIdInVps( getLayerId() ) ,  j ) &&
+          getVPS()->getSubLayersVpsMaxMinus1( j ) >= getTemporalId()   &&
+          ( getTemporalId() == 0 || getVPS()->getMaxTidIlRefPicsPlus1( j , getVPS()->getLayerIdInVps( getLayerId() ) ) > getTemporalId() )        
+          )
+        {
+          refCmpCurLIdAvailFlag = true;
+        }
+      }
+      if( !refCmpCurLIdAvailFlag )
+      {
+        allRefCmpLayersAvailFlag = false;
+      }
+    }
+
+    if( !allRefCmpLayersAvailFlag )
+    {
+      m_inCmpPredAvailFlag = false;
+    }  
+    else 
+    {
+      TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
+      if( !getIsDepth() )
+      {
+        m_inCmpPredAvailFlag = sps3dExt->getViewSynthesisPredFlag( getIsDepth() ) || 
+          sps3dExt->getDepthBasedBlkPartFlag( getIsDepth() ) || 
+          sps3dExt->getDepthRefinementFlag  ( getIsDepth() );                            
+      }
+      else
+      {
+        m_inCmpPredAvailFlag = sps3dExt->getIntraContourFlag( getIsDepth() ) || 
+          sps3dExt->getQtPredFlag( getIsDepth() ) || 
+          sps3dExt->getMpiFlag( getIsDepth() );                                  
+      }
+    }  
+  };
+
+#endif
+
   Void init3dToolParameters();   
+#if HHI_INTER_COMP_PRED_K0052
+  Void checkInCompPredRefLayers()
+  {
+    if ( getInCompPredFlag() )
+    {
+      for (Int i = 0; i < getNumCurCmpLIds(); i++ )
+      {
+        assert( getIvPic(!getIsDepth(), getInCmpRefViewIdcs( i ) ) != NULL );       
+        // It is a requirement of bitstream conformance that there 
+        // is a picture in the DPB with PicOrderCntVal equal to the PicOrderCntVal of the current picture, 
+        // and a nuh_layer_id value equal to ViewCompLayerId[ inCmpRefViewIdcs[ i ] ][ !DepthFlag ].
+      }
+    }
+  };
+
+#endif
   Bool getIvMvPredFlag           ( ) { return m_ivMvPredFlag           ; };
   Bool getIvMvScalingFlag        ( ) { return m_ivMvScalingFlag        ; };
   Bool getIvResPredFlag          ( ) { return m_ivResPredFlag          ; };

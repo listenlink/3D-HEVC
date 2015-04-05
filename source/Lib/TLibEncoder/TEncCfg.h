@@ -77,6 +77,9 @@ struct GOPEntry
   Int m_interLayerPredLayerIdc [MAX_NUM_REF_PICS];
   Int m_interViewRefPosL[2][MAX_NUM_REF_PICS];  
 #endif
+#if HHI_INTER_COMP_PRED_K0052
+  Bool m_interCompPredFlag;
+#endif
   GOPEntry()
   : m_POC(-1)
   , m_QPOffset(0)
@@ -93,6 +96,11 @@ struct GOPEntry
   , m_numRefIdc(0)
 #if H_MV
   , m_numActiveRefLayerPics(0)
+#endif
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+  , m_interCompPredFlag(false)
+#endif
 #endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
@@ -407,6 +415,10 @@ protected:
 #if H_3D_QTLPC
   Bool      m_bUseQTL;
 #endif
+#if H_3D_ANNEX_SELECTION_FIX
+  Int m_profileIdc;
+#endif
+
 #endif
 public:
   TEncCfg()
@@ -420,6 +432,9 @@ public:
 #if H_3D
   , m_isDepth(false)
   , m_bUseVSO(false)
+#if H_3D_ANNEX_SELECTION_FIX
+  , m_profileIdc( -1 )
+#endif
 #endif
 #endif
   {}
@@ -956,6 +971,11 @@ public:
   Void      setUseQTL                       ( Bool b ) { m_bUseQTL = b;    }
   Bool      getUseQTL                       ()         { return m_bUseQTL; }
 #endif
+#if H_3D_ANNEX_SELECTION_FIX
+  Void                    setProfileIdc( Int a )    { assert( a == 1 || a == 6 || a == 8 ); m_profileIdc = a;  }
+  Bool                    decProcAnnexI()           { assert( m_profileIdc != -1 ); return ( m_profileIdc == 8); }    
+#endif
+
 #endif // H_3D
 };
 

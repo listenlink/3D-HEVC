@@ -417,6 +417,9 @@ Void TDecTop::init()
 #if !H_MV
   initROM();
 #endif
+#if H_3D_ANNEX_SELECTION_FIX
+  m_cCavlcDecoder.setDecTop( this ); 
+#endif
   m_cGopDecoder.init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cSAO );
   m_cSliceDecoder.init( &m_cEntropyDecoder, &m_cCuDecoder );
   m_cEntropyDecoder.init(&m_cPrediction);
@@ -726,7 +729,9 @@ Void TDecTop::xActivateParameterSets()
 
 #endif
 #if H_3D
+#if !HHI_INTER_COMP_PRED_K0052
   m_apcSlicePilot->init3dToolParameters();
+#endif
 #endif
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumTileColumnsMinus1() + 1) : 1);
@@ -1124,6 +1129,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
 #if H_3D
     pcSlice->setIvPicLists( m_ivPicLists );         
+
+#if HHI_INTER_COMP_PRED_K0052
+    pcSlice->checkInCompPredRefLayers(); 
 #if H_3D_IV_MERGE
 #if H_3D_FCO
     //assert( !getIsDepth() );
@@ -1131,6 +1139,15 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     assert( !getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
 #endif
 #endif    
+#else
+#if H_3D_IV_MERGE
+#if H_3D_FCO
+    //assert( !getIsDepth() );
+#else
+    assert( !getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
+#endif
+#endif    
+#endif
 #endif
 #if H_MV
     if( m_layerId > 0 && !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
