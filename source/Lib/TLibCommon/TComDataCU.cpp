@@ -5811,9 +5811,12 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
     iScale = 4096;
     if ( iCurrRefViewId != iCurrViewId && iColViewId != iColRefViewId )
 #endif
-    iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
-
+      iScale = xGetDistScaleFactor( iCurrViewId, iCurrRefViewId, iColViewId, iColRefViewId );
+#if H_3D_TMVP_FIX_TICKET_97 
+    if ( bMRG && iScale != 4096 && m_pcSlice->getIvMvScalingFlag( ) ) 
+#else
     if ( iScale != 4096 && m_pcSlice->getIvMvScalingFlag( ) )
+#endif
     {
       rcMv = cColMv.scaleMv( iScale );
     }
