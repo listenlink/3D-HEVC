@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -123,6 +123,9 @@ public:
   UInt            getAng     () { return m_uiAng; }
   Bool*           getScaledPattern(UInt uiWidth);
 
+#if SHARP_DMM_CLEAN_K0042
+  Void  generateWedgePatternByRotate(const TComWedgelet &rcWedge, Int rotate);
+#endif
   Void  setWedgelet( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe, UChar uhOri, WedgeResolution eWedgeRes, Bool bIsCoarse = false );
   Void  findClosestAngle();
 

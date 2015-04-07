@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,9 @@
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
+#if H_3D_ANNEX_SELECTION_FIX
+class TDecTop;
+#endif
 
 /// CAVLC decoder class
 class TDecCavlc : public SyntaxElementParser, public TDecEntropyIf
@@ -62,10 +65,17 @@ public:
 protected:
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
   
+
+#if !HHI_CAM_PARA_K0052
 #if H_3D
   Int**    m_aaiTempScale;
   Int**    m_aaiTempOffset;
 #endif
+#endif
+#if H_3D_ANNEX_SELECTION_FIX
+  TDecTop*  m_decTop;
+#endif
+
 
 public:
 
@@ -107,7 +117,9 @@ public:
 #else
   Void  parsePPS            ( TComPPS* pcPPS);
 #endif
-
+#if H_3D_ANNEX_SELECTION_FIX
+  Void  setDecTop           ( TDecTop* decTop ) { m_decTop = decTop; }; 
+#endif
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
   Void  parseSEI            ( SEIMessages& );
   Void  parsePTL            ( TComPTL *rpcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1 );
@@ -123,9 +135,13 @@ public:
   Void  parseMVPIdx         ( Int& riMVPIdx );
   
   Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void  parseDIS            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#else
 #if H_3D_SINGLE_DEPTH
   Void  parseSingleDepthMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif  
+#endif
+#endif
   Void  parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
   Void parseMergeIndex      ( TComDataCU* pcCU, UInt& ruiMergeIndex );
@@ -165,6 +181,11 @@ public:
   Void xParsePredWeightTable ( TComSlice* pcSlice );
   Void  parseScalingList               ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
+
+#if H_3D_ANNEX_SELECTION_FIX
+  TDecTop*  getDecTop()      { return m_decTop; };
+#endif
+
 protected:
   Bool  xMoreRbspData();
 };

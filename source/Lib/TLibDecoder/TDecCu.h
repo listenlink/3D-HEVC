@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -122,8 +122,12 @@ protected:
   Bool getdQPFlag               ()                        { return m_bDecodeDQP;        }
   Void setdQPFlag               ( Bool b )                { m_bDecodeDQP = b;           }
   Void xFillPCMBuffer           (TComDataCU* pCU, UInt depth);
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void xReconDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#else
 #if H_3D_SINGLE_DEPTH
   Void xReconIntraSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
+#endif
 #endif
 #if H_3D_DIM_SDC
   Void xReconIntraSDC           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );

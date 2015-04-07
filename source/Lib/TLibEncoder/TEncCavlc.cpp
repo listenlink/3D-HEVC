@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,9 +39,12 @@
 #include "TEncCavlc.h"
 #include "SEIwrite.h"
 #include "../TLibCommon/TypeDef.h"
-
+#if H_3D_ANNEX_SELECTION_FIX
+#include "TEncTop.h"
+#endif
 //! \ingroup TLibEncoder
 //! \{
+
 
 #if ENC_DEC_TRACE
 
@@ -677,7 +680,9 @@ Void TEncCavlc::codeSPS( TComSPS* pcSPS )
   {
 #endif
   WRITE_UVLC( pcSPS->getChromaFormatIdc (),         "chroma_format_idc" );
+#if !H_3D_DISABLE_CHROMA
   assert(pcSPS->getChromaFormatIdc () == 1);
+#endif
   // in the first version chroma_format_idc can only be equal to 1 (4:2:0)
   if( pcSPS->getChromaFormatIdc () == 3 )
   {
@@ -856,7 +861,14 @@ Void TEncCavlc::codePPSMultilayerExtension(TComPPS* pcPPS)
 {
   WRITE_FLAG( pcPPS->getPocResetInfoPresentFlag( ) ? 1 : 0 , "poc_reset_info_present_flag" );
   WRITE_FLAG( pcPPS->getPpsInferScalingListFlag( ) ? 1 : 0 , "pps_infer_scaling_list_flag" );
+#if FIX_TICKET_95
+  if (pcPPS->getPpsInferScalingListFlag())
+  {
+    WRITE_CODE( pcPPS->getPpsScalingListRefLayerId( ), 6, "pps_scaling_list_ref_layer_id" );
+  }
+#else    
   WRITE_CODE( pcPPS->getPpsScalingListRefLayerId( ), 6, "pps_scaling_list_ref_layer_id" );
+#endif
   WRITE_UVLC( 0, "num_ref_loc_offsets" );
   WRITE_FLAG( 0 , "colour_mapping_enabled_flag" );
 
@@ -888,7 +900,11 @@ Void TEncCavlc::codeSPS3dExtension( TComSPS* pcSPS )
       WRITE_FLAG( sps3dExt->getIntraSdcWedgeFlag( d ) ? 1 : 0 , "intra_sdc_wedge_flag" );
       WRITE_FLAG( sps3dExt->getQtPredFlag( d ) ? 1 : 0 , "qt_pred_flag" );
       WRITE_FLAG( sps3dExt->getInterSdcFlag( d ) ? 1 : 0 , "inter_sdc_flag" );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+      WRITE_FLAG( sps3dExt->getDepthIntraSkipFlag( d ) ? 1 : 0 , "intra_skip_flag" );
+#else
       WRITE_FLAG( sps3dExt->getIntraSingleFlag( d ) ? 1 : 0 , "intra_single_flag" );
+#endif
     }
   }
 }
@@ -1364,14 +1380,14 @@ Void TEncCavlc::codeRepFormat( Int i, TComRepFormat* pcRepFormat, TComRepFormat*
 
   if ( pcRepFormat->getChromaAndBitDepthVpsPresentFlag() )
   {  
-  WRITE_CODE( pcRepFormat->getChromaFormatVpsIdc( ), 2, "chroma_format_vps_idc" );
+    WRITE_CODE( pcRepFormat->getChromaFormatVpsIdc( ), 2, "chroma_format_vps_idc" );  
 
-  if ( pcRepFormat->getChromaFormatVpsIdc() == 3 )
-  {
-    WRITE_FLAG( pcRepFormat->getSeparateColourPlaneVpsFlag( ) ? 1 : 0 , "separate_colour_plane_vps_flag" );
-  }
-  WRITE_CODE( pcRepFormat->getBitDepthVpsLumaMinus8( ),      4, "bit_depth_vps_luma_minus8" );
-  WRITE_CODE( pcRepFormat->getBitDepthVpsChromaMinus8( ),    4, "bit_depth_vps_chroma_minus8" );
+    if ( pcRepFormat->getChromaFormatVpsIdc() == 3 )
+    {
+      WRITE_FLAG( pcRepFormat->getSeparateColourPlaneVpsFlag( ) ? 1 : 0 , "separate_colour_plane_vps_flag" );
+    }
+    WRITE_CODE( pcRepFormat->getBitDepthVpsLumaMinus8( ),      4, "bit_depth_vps_luma_minus8" );
+    WRITE_CODE( pcRepFormat->getBitDepthVpsChromaMinus8( ),    4, "bit_depth_vps_chroma_minus8" );
   }
   else
   {
@@ -1597,6 +1613,33 @@ Void TEncCavlc::codeVpsVuiBspHrdParameters( TComVPS* pcVPS )
 #if H_3D
 Void TEncCavlc::codeVPS3dExtension( TComVPS* pcVPS )
 { 
+#if HHI_CAM_PARA_K0052
+  WRITE_UVLC( pcVPS->getCpPrecision( ), "cp_precision" );
+  for (Int n = 1; n < pcVPS->getNumViews(); n++)
+  {
+    Int i      = pcVPS->getViewOIdxList( n );
+    Int iInVps = pcVPS->getVoiInVps( i ); 
+    WRITE_CODE( pcVPS->getNumCp( iInVps ), 6, "num_cp" );
+
+    if( pcVPS->getNumCp( iInVps ) > 0 )
+    {
+      WRITE_FLAG( pcVPS->getCpInSliceSegmentHeaderFlag( iInVps ) ? 1 : 0 , "cp_in_slice_segment_header_flag" );
+      for( Int m = 0; m < pcVPS->getNumCp( iInVps ); m++ )
+      {
+        WRITE_UVLC( pcVPS->getCpRefVoi( iInVps, m ), "cp_ref_voi" );
+        if( !pcVPS->getCpInSliceSegmentHeaderFlag( iInVps ) )
+        {
+          Int j      = pcVPS->getCpRefVoi( iInVps, m );
+          Int jInVps = pcVPS->getVoiInVps( j ); 
+          WRITE_SVLC( pcVPS->getVpsCpScale   ( iInVps, jInVps ), "vps_cp_scale" );
+          WRITE_SVLC( pcVPS->getVpsCpOff     ( iInVps, jInVps ), "vps_cp_off" );
+          WRITE_SVLC( pcVPS->getVpsCpInvScale( iInVps, jInVps ) + pcVPS->getVpsCpScale( iInVps, jInVps ), "vps_cp_inv_scale_plus_scale" );
+          WRITE_SVLC( pcVPS->getVpsCpInvOff  ( iInVps, jInVps ) + pcVPS->getVpsCpOff  ( iInVps, jInVps ), "vps_cp_inv_off_plus_off" );
+        }
+      }
+    }
+  }  
+#else
   WRITE_UVLC( pcVPS->getCamParPrecision(), "cp_precision" );
   for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
   {
@@ -1616,6 +1659,7 @@ Void TEncCavlc::codeVPS3dExtension( TComVPS* pcVPS )
       }
     }
   }
+#endif
 }
 #endif
 
@@ -1720,7 +1764,12 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     }
 
     // in the first version chroma_format_idc is equal to one, thus colour_plane_id will not be present
+#if H_3D_DISABLE_CHROMA
+    assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 || pcSlice->getIsDepth() );
+    assert (pcSlice->getSPS()->getChromaFormatIdc() == 0 || !pcSlice->getIsDepth() );
+#else
     assert (pcSlice->getSPS()->getChromaFormatIdc() == 1 );
+#endif
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
 #if H_MV
@@ -1894,12 +1943,31 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       }
     }
 #endif
+
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D      
+  if( getEncTop()->decProcAnnexI() )
+  {
+      if ( pcSlice->getInCmpPredAvailFlag() )
+      {
+        WRITE_FLAG( pcSlice->getInCompPredFlag(), "in_comp_pred_flag" );
+      }
+  }
+#endif
+#endif
     if(pcSlice->getSPS()->getUseSAO())
     {
       if (pcSlice->getSPS()->getUseSAO())
       {
          WRITE_FLAG( pcSlice->getSaoEnabledFlag(), "slice_sao_luma_flag" );
+#if H_3D_DISABLE_CHROMA
+         if ( !pcSlice->getIsDepth() )
+         {
          WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
+      }
+#else
+         WRITE_FLAG( pcSlice->getSaoEnabledFlagChroma(), "slice_sao_chroma_flag" );
+#endif
       }
     }
 
@@ -2017,7 +2085,14 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       xCodePredWeightTable( pcSlice );
     }
 #if H_3D_IC
+#if H_3D_ANNEX_SELECTION_FIX
+    else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE )
+      && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
+      && getEncTop()->decProcAnnexI()       
+      )
+#else
     else if( pcSlice->getViewIndex() && ( pcSlice->getSliceType() == P_SLICE || pcSlice->getSliceType() == B_SLICE ) && !pcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 )
+#endif
     {
       WRITE_FLAG( pcSlice->getApplyIC() ? 1 : 0, "slice_ic_enable_flag" );
       if( pcSlice->getApplyIC() )
@@ -2072,7 +2147,28 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
     {
       WRITE_FLAG(pcSlice->getLFCrossSliceBoundaryFlag()?1:0, "slice_loop_filter_across_slices_enabled_flag");
     }
+#if HHI_CAM_PARA_K0052
+#if H_3D
+    if (getEncTop()->decProcAnnexI() )
+    {
+      Int voiInVps = vps->getVoiInVps( pcSlice->getViewIndex() ); 
+      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) && !pcSlice->getIsDepth() )
+      {
+        for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
+        {
+          Int jInVps = vps->getVoiInVps( vps->getCpRefVoi( voiInVps, m ));
+          WRITE_SVLC( pcSlice->getCpScale   ( jInVps )   , "cp_scale" );
+          WRITE_SVLC( pcSlice->getCpOff     ( jInVps )   , "cp_off" );
+          WRITE_SVLC( pcSlice->getCpInvScale( jInVps ) + pcSlice->getCpScale( jInVps ) , "cp_inv_scale_plus_scale" );
+          WRITE_SVLC( pcSlice->getCpInvOff  ( jInVps ) + pcSlice->getCpOff  ( jInVps ) , "cp_inv_off_plus_off" );
+        }
+      }
+    }
+#endif
+#endif
   }
+
+#if !HHI_CAM_PARA_K0052  
 #if H_3D
 #if H_3D_FCO
   if( pcSlice->getVPS()->hasCamParInSliceHeader( pcSlice->getViewIndex() ) && pcSlice->getIsDepth() )
@@ -2088,6 +2184,7 @@ Void TEncCavlc::codeSliceHeader         ( TComSlice* pcSlice )
       WRITE_SVLC( pcSlice->getInvCodedOffset()[ uiId ] + pcSlice->getCodedOffset()[ uiId ], "cp_inv_off_plus_off" );
     }
   }
+#endif
 #endif
 
 
@@ -2434,12 +2531,21 @@ Void TEncCavlc::codeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TEncCavlc::codeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  assert(0);
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TEncCavlc::codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   assert(0);
 }
 #endif
+#endif
+
 Void TEncCavlc::codeSplitFlag   ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   assert(0);
@@ -2543,7 +2649,11 @@ Void TEncCavlc::estBit( estBitsSbacStruct* pcEstBitsCabac, Int width, Int height
 Void TEncCavlc::xCodePredWeightTable( TComSlice* pcSlice )
 {
   wpScalingParam  *wp;
+#if  H_3D_DISABLE_CHROMA
+  Bool            bChroma     = !pcSlice->getIsDepth(); // color always present in HEVC ?
+#else
   Bool            bChroma     = true; // color always present in HEVC ?
+#endif
   Int             iNbRef       = (pcSlice->getSliceType() == B_SLICE ) ? (2) : (1);
   Bool            bDenomCoded  = false;
   UInt            uiMode = 0;

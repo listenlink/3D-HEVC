@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -319,7 +319,9 @@ private:
 #if H_3D_DBBP
   static UInt xGetMaskedSSE     ( DistParam* pcDtParam );
   static UInt xGetMaskedSAD     ( DistParam* pcDtParam );
+#if !RWTH_DBBP_NO_SATD_K0028
   static UInt xGetMaskedHADs    ( DistParam* pcDtParam );
+#endif
   static UInt xGetMaskedVSD     ( DistParam* pcDtParam );
 #endif
   

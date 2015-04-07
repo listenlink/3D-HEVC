@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -50,9 +50,14 @@
 
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#define NUM_DIS_FLAG_CTX              1
+#define NUM_DIS_TYPE_CTX              1       
+#else
 #if H_3D_SINGLE_DEPTH
 #define NUM_SINGLEDEPTH_FLAG_CTX                     1
 #define NUM_SINGLE_DEPTH_VALUE_DATA_CTX              1       
+#endif
 #endif
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
@@ -152,6 +157,22 @@ INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =
   { 197,  185,  201, }, 
   { CNU,  CNU,  CNU, }, 
 };
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+static const UChar 
+INIT_DIS_FLAG[3][NUM_DIS_FLAG_CTX] =  
+{
+    { 185 }, 
+    { 185 }, 
+    { 185 },
+};
+static const UChar
+INIT_DIS_TYPE[3][NUM_DIS_TYPE_CTX] = 
+{
+    { 137 }, 
+    { 137 }, 
+    { 137 }, 
+};
+#else
 #if H_3D_SINGLE_DEPTH
 static const UChar 
 INIT_SINGLEDEPTH_FLAG[3][NUM_SINGLEDEPTH_FLAG_CTX] =  
@@ -167,6 +188,7 @@ INIT_SINGLE_DEPTH_VALUE_DATA[3][NUM_SINGLE_DEPTH_VALUE_DATA_CTX] =
   { 137 }, 
   { 137 }, 
 };
+#endif
 #endif
 static const UChar
 INIT_MERGE_FLAG_EXT[3][NUM_MERGE_FLAG_EXT_CTX] = 

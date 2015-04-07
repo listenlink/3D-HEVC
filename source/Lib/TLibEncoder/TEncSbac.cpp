@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,9 +57,14 @@ TEncSbac::TEncSbac()
 , m_numContextModels          ( 0 )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels )
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+, m_cCUDISFlagSCModel         ( 1,             1,               NUM_DIS_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cCUDISTypeSCModel         ( 1,             1,               NUM_DIS_TYPE_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
+#else
 #if H_3D_SINGLE_DEPTH
 , m_cCUSingleDepthFlagSCModel        ( 1,             1,               NUM_SINGLEDEPTH_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cSingleDepthValueSCModel         ( 1,             1,               NUM_SINGLE_DEPTH_VALUE_DATA_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
+#endif
 #endif
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
@@ -133,9 +138,14 @@ Void TEncSbac::resetEntropy           ()
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
+  m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
+#else
 #if H_3D_SINGLE_DEPTH
   m_cCUSingleDepthFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SINGLEDEPTH_FLAG );
   m_cSingleDepthValueSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
+#endif
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT);
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
@@ -213,9 +223,14 @@ Void TEncSbac::determineCabacInitIdx()
 
       curCost  = m_cCUSplitFlagSCModel.calcCost       ( curSliceType, qp, (UChar*)INIT_SPLIT_FLAG );
       curCost += m_cCUSkipFlagSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_SKIP_FLAG );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+      curCost += m_cCUDISFlagSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_DIS_FLAG );
+      curCost += m_cCUDISTypeSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_DIS_TYPE );
+#else
 #if H_3D_SINGLE_DEPTH
       curCost += m_cCUSingleDepthFlagSCModel.calcCost        ( curSliceType, qp, (UChar*)INIT_SINGLEDEPTH_FLAG );
       curCost += m_cSingleDepthValueSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
+#endif
 #endif
       curCost += m_cCUMergeFlagExtSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT);
       curCost += m_cCUMergeIdxExtSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_MERGE_IDX_EXT);
@@ -286,10 +301,15 @@ Void TEncSbac::updateContextTables( SliceType eSliceType, Int iQp, Bool bExecute
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
+  m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
+#else
 #if H_3D_SINGLE_DEPTH
   m_cCUSingleDepthFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SINGLEDEPTH_FLAG );
   m_cSingleDepthValueSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
-#endif  
+#endif
+#endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT);
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT);
 #if H_3D_ARP
@@ -445,6 +465,39 @@ Void TEncSbac::xWriteEpExGolomb( UInt uiSymbol, UInt uiCount )
   assert( numBins <= 32 );
   m_pcBinIf->encodeBinsEP( bins, numBins );
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TEncSbac::codeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx )
+{
+  UInt uiSymbol = pcCU->getDISFlag(uiAbsPartIdx ) ? 1 : 0;
+  m_pcBinIf->encodeBin( uiSymbol, m_cCUDISFlagSCModel.get( 0, 0, 0 ) );
+  if(uiSymbol)
+  {
+    UInt uiUnaryIdx = (UInt) pcCU->getDISType(uiAbsPartIdx);
+    UInt uiNumCand  = 4;
+
+    if ( uiNumCand > 1 )
+    {
+      for( UInt ui = 0; ui < uiNumCand - 1; ++ui )
+      {
+        const UInt uiSymbol2 = ui == uiUnaryIdx ? 0 : 1;
+        if ( ui == 0 )
+        {
+          m_pcBinIf->encodeBin( uiSymbol2, m_cCUDISTypeSCModel.get( 0, 0, 0 ) );
+        }
+        else
+        {
+          m_pcBinIf->encodeBinEP( uiSymbol2 );
+        }
+        if( uiSymbol2 == 0 )
+        {
+          break;
+        }
+      }
+    }
+  }
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TEncSbac::codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
@@ -476,6 +529,8 @@ Void TEncSbac::codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx )
   }
 }
 #endif
+#endif
+
 /** Coding of coeff_abs_level_minus3
  * \param uiSymbol value of coeff_abs_level_minus3
  * \param ruiGoRiceParam reference to Rice parameter
@@ -1039,7 +1094,10 @@ Void TEncSbac::codeTransformSubdivFlag( UInt uiSymbol, UInt uiCtx )
   DTRACE_CABAC_T( "\tctx=" )
   DTRACE_CABAC_V( uiCtx )
   DTRACE_CABAC_T( "\n" )
+#else
+  DTRACE_TU("split_transform_flag", uiSymbol )
 #endif
+
 }
 
 Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMultiple)
@@ -1370,6 +1428,19 @@ Void TEncSbac::codeQtCbf( TComDataCU* pcCU, UInt uiAbsPartIdx, TextType eType, U
   DTRACE_CABAC_T( "\tuiAbsPartIdx=" )
   DTRACE_CABAC_V( uiAbsPartIdx )
   DTRACE_CABAC_T( "\n" )
+#else
+  if ( eType == TEXT_CHROMA_U )
+  {
+    DTRACE_TU("cbf_cb", uiCbf )
+  }
+  else if ( eType == TEXT_CHROMA_V )
+  {
+    DTRACE_TU("cbf_cr", uiCbf )
+  }
+  else
+  {
+    DTRACE_TU("cbf_luma", uiCbf )
+  }
 #endif
 }
 
@@ -1445,6 +1516,10 @@ Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
       piPCMSample += uiWidth;
     }
 
+#if H_3D_DISABLE_CHROMA
+    if( pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )
+    {    
+#endif
     piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;
     uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
     uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
@@ -1476,6 +1551,9 @@ Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
       }
       piPCMSample += uiWidth;
     }
+#if H_3D_DISABLE_CHROMA
+    }
+#endif
     m_pcBinIf->resetBac();
   }
 }
@@ -2288,7 +2366,7 @@ Void TEncSbac::codeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
 {
   UInt uiSymbol = pcCU->getSDCFlag( uiAbsPartIdx ) ? 1 : 0;
   UInt uiCtxSDCFlag = pcCU->getCtxSDCFlag( uiAbsPartIdx );
-
+  DTRACE_CU("dc_only_flag", uiSymbol)
   m_pcBinIf->encodeBin( uiSymbol, m_cSDCFlagSCModel.get( 0, 0, uiCtxSDCFlag ) );
 }
 
@@ -2304,6 +2382,7 @@ Void TEncSbac::codeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx )
   
   UInt uiSymbol = pcCU->getDBBPFlag( uiAbsPartIdx ) ? 1 : 0;
   m_pcBinIf->encodeBin( uiSymbol, m_cDBBPFlagSCModel.get( 0, 0, 0 ) );
+  DTRACE_CU("dbbp_flag", uiSymbol)
 }
 #endif
 

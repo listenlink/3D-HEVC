@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,18 @@ Void TDecEntropy::decodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 {
   m_pcEntropyDecoderIf->parseSkipFlag( pcCU, uiAbsPartIdx, uiDepth );
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TDecEntropy::decodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
+{
+  if( !pcCU->getSlice()->getDepthIntraSkipFlag() )
+  {
+    return;
+  }  
+
+  m_pcEntropyDecoderIf->parseDIS( pcCU, uiAbsPartIdx, uiDepth );
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
@@ -62,6 +74,8 @@ Void TDecEntropy::decodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UI
   m_pcEntropyDecoderIf->parseSingleDepthMode( pcCU, uiAbsPartIdx, uiDepth );
 }
 #endif
+#endif
+
 Void TDecEntropy::decodeCUTransquantBypassFlag(TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parseCUTransquantBypassFlag( pcCU, uiAbsPartIdx, uiDepth );
@@ -146,12 +160,13 @@ Void TDecEntropy::decodePredMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 Void TDecEntropy::decodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   m_pcEntropyDecoderIf->parsePartSize( pcCU, uiAbsPartIdx, uiDepth );
-  
+#if !HHI_MOVE_SYN_K0052  
 #if H_3D_DBBP
 if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
   {
     decodeDBBPFlag(pcCU, uiAbsPartIdx, uiDepth);
   }
+#endif
 #endif
 }
 
@@ -160,8 +175,19 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
   if( pcCU->isIntra( uiAbsPartIdx ) )                                 // If it is Intra mode, encode intra prediction mode.
   {
     decodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx, uiDepth );
+#if HHI_MOVE_SYN_K0052
+    decodeSDCFlag   ( pcCU, uiAbsPartIdx, uiDepth );    
+#endif
 #if H_3D_DIM_SDC
+#if H_3D_DISABLE_CHROMA
+#if !HHI_MOVE_SYN_K0052
+    if(!pcCU->getSDCFlag(uiAbsPartIdx) && !pcCU->getSlice()->getIsDepth() )
+#else
+    if(!pcCU->getSDCFlag(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0  )
+#endif
+#else
     if(!pcCU->getSDCFlag(uiAbsPartIdx))
+#endif
 #endif
     decodeIntraDirModeChroma( pcCU, uiAbsPartIdx, uiDepth );
   }
@@ -238,6 +264,203 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
 #if H_3D_IV_MERGE
   pcSubCU->copyDVInfoFrom( pcCU, uiAbsPartIdx);
 #endif
+#if HHI_MOVE_SYN_K0052
+  for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
+  {
+#if H_MV_ENC_DEC_TRAC
+    DTRACE_PU_S("=========== prediction_unit ===========\n")
+    // ToDo: 
+    //DTRACE_PU("x0", uiLPelX)
+    //DTRACE_PU("x1", uiTPelY)
+#endif
+
+    ////// Parse PUs syntax
+    decodeMergeFlag( pcCU, uiSubPartIdx, uiDepth, uiPartIdx );
+    if ( pcCU->getMergeFlag( uiSubPartIdx ) )
+    {
+      decodeMergeIndex( pcCU, uiPartIdx, uiSubPartIdx, uiDepth );      
+    }
+    else
+    {
+      decodeInterDirPU( pcCU, uiSubPartIdx, uiDepth, uiPartIdx );
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {        
+        if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+        {
+          decodeRefFrmIdxPU( pcCU,    uiSubPartIdx,              uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
+          decodeMvdPU      ( pcCU,    uiSubPartIdx,              uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
+          decodeMVPIdxPU   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
+        }
+      }
+    }
+  }
+
+  ////// Parse CUs extension syntax
+  decodeDBBPFlag( pcCU, uiAbsPartIdx, uiDepth ); 
+  decodeSDCFlag ( pcCU, uiAbsPartIdx, uiDepth ); 
+
+#if H_3D_ARP
+  decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+#if H_3D_IC
+  decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
+#endif
+
+  ////// Decode motion vectors
+  for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
+  {
+    if ( pcCU->getMergeFlag( uiSubPartIdx ) )
+    {
+      UInt uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+#if H_3D_DBBP
+      if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 && pcCU->getDBBPFlag(uiAbsPartIdx) == false )
+#else
+      if ( pcCU->getSlice()->getPPS()->getLog2ParallelMergeLevelMinus2() && ePartSize != SIZE_2Nx2N && pcSubCU->getWidth( 0 ) <= 8 ) 
+#endif
+      {
+        pcSubCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
+        if ( !isMerged )
+        {
+#if H_3D_VSP
+          Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
+          memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#if H_3D_SPIVMP
+          memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
+#endif
+          pcSubCU->initAvailableFlags();
+          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
+          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_SPIVMP
+            , pcMvFieldSP, puhInterDirSP
+#endif
+            , numValidMergeCand );
+          pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
+#if H_3D_SPIVMP
+            , bSPIVMPFlag
+#endif
+            , numValidMergeCand );
+          pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
+
+#else
+#if H_3D
+          pcSubCU->initAvailableFlags();
+          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand);
+          pcSubCU->xGetInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+
+#else
+          pcSubCU->getInterMergeCandidates( 0, 0, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand );
+#endif
+#endif
+          isMerged = true;
+        }
+        pcSubCU->setPartSizeSubParts( ePartSize, 0, uiDepth );
+      }
+      else
+      {
+        uiMergeIndex = pcCU->getMergeIndex(uiSubPartIdx);
+#if H_3D_VSP
+        Int vspFlag[MRG_MAX_NUM_CANDS_MEM];
+        memset(vspFlag, 0, sizeof(Int)*MRG_MAX_NUM_CANDS_MEM);
+#if H_3D_SPIVMP
+        memset(bSPIVMPFlag, false, sizeof(Bool)*MRG_MAX_NUM_CANDS_MEM);
+#endif
+        pcSubCU->initAvailableFlags();
+        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours
+#if H_3D_SPIVMP
+          , pcMvFieldSP, puhInterDirSP
+#endif
+          ,numValidMergeCand, uiMergeIndex );
+        pcSubCU->buildMCL( cMvFieldNeighbours, uhInterDirNeighbours, vspFlag
+#if H_3D_SPIVMP
+          , bSPIVMPFlag
+#endif
+          ,numValidMergeCand );
+        pcCU->setVSPFlagSubParts( vspFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
+#else
+#if H_3D
+        pcSubCU->initAvailableFlags();
+        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+        pcSubCU->xGetInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#else
+        pcSubCU->getInterMergeCandidates( uiSubPartIdx-uiAbsPartIdx, uiPartIdx, cMvFieldNeighbours, uhInterDirNeighbours, numValidMergeCand, uiMergeIndex );
+#endif
+#endif
+      }
+      pcCU->setInterDirSubParts( uhInterDirNeighbours[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );
+
+      TComMv cTmpMv( 0, 0 );
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {        
+        if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+        {
+          pcCU->setMVPIdxSubParts( 0, RefPicList( uiRefListIdx ), uiSubPartIdx, uiPartIdx, uiDepth);
+          pcCU->setMVPNumSubParts( 0, RefPicList( uiRefListIdx ), uiSubPartIdx, uiPartIdx, uiDepth);
+          pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvd( cTmpMv, ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
+          pcCU->getCUMvField( RefPicList( uiRefListIdx ) )->setAllMvField( cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ], ePartSize, uiSubPartIdx, uiDepth, uiPartIdx );
+#if H_3D_VSP
+#if H_3D_DBBP
+          if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 && !pcCU->getDBBPFlag( uiAbsPartIdx ) )
+#else
+          if( pcCU->getVSPFlag( uiSubPartIdx ) != 0 )
+#endif
+          {
+            if ( uhInterDirNeighbours[ uiMergeIndex ] & (1<<uiRefListIdx) )
+            {
+              UInt dummy;
+              Int vspSize;
+              Int width, height;
+              pcCU->getPartIndexAndSize( uiPartIdx, dummy, width, height, uiSubPartIdx, pcCU->getTotalNumPart()==256 );
+              pcCU->setMvFieldPUForVSP( pcCU, uiSubPartIdx, width, height, RefPicList( uiRefListIdx ), cMvFieldNeighbours[ 2*uiMergeIndex + uiRefListIdx ].getRefIdx(), vspSize );
+              pcCU->setVSPFlag( uiSubPartIdx, vspSize );
+            }
+          }
+#endif
+        }
+      }
+#if H_3D_SPIVMP
+      pcCU->setSPIVMPFlagSubParts(bSPIVMPFlag[uiMergeIndex], uiSubPartIdx, uiPartIdx, uiDepth );  
+      if (bSPIVMPFlag[uiMergeIndex] != 0)
+      {
+        Int iWidth, iHeight;
+        UInt uiIdx;
+        pcCU->getPartIndexAndSize( uiPartIdx, uiIdx, iWidth, iHeight, uiSubPartIdx, true );
+
+        UInt uiSPAddr;
+
+        Int iNumSPInOneLine, iNumSP, iSPWidth, iSPHeight;
+
+        pcCU->getSPPara(iWidth, iHeight, iNumSP, iNumSPInOneLine, iSPWidth, iSPHeight);
+
+        for (Int iPartitionIdx = 0; iPartitionIdx < iNumSP; iPartitionIdx++)
+        {
+          pcCU->getSPAbsPartIdx(uiSubPartIdx, iSPWidth, iSPHeight, iPartitionIdx, iNumSPInOneLine, uiSPAddr);
+          pcCU->setInterDirSP(puhInterDirSP[iPartitionIdx], uiSPAddr, iSPWidth, iSPHeight);
+          pcCU->getCUMvField( REF_PIC_LIST_0 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx], iSPWidth, iSPHeight);
+          pcCU->getCUMvField( REF_PIC_LIST_1 )->setMvFieldSP(pcCU, uiSPAddr, pcMvFieldSP[2*iPartitionIdx + 1], iSPWidth, iSPHeight);
+        }
+      }
+#endif
+    }
+    else
+    {
+      for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )
+      {        
+        if ( pcCU->getSlice()->getNumRefIdx( RefPicList( uiRefListIdx ) ) > 0 )
+        {
+          decodeMvsAMVP   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
+        }
+      }
+    }
+
+    if ( (pcCU->getInterDir(uiSubPartIdx) == 3) && pcSubCU->isBipredRestriction(uiPartIdx) )
+    {
+      pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllMv( TComMv(0,0), ePartSize, uiSubPartIdx, uiDepth, uiPartIdx);
+      pcCU->getCUMvField( REF_PIC_LIST_1 )->setAllRefIdx( -1, ePartSize, uiSubPartIdx, uiDepth, uiPartIdx);
+      pcCU->setInterDirSubParts( 1, uiSubPartIdx, uiPartIdx, uiDepth);
+    }
+  }
+#else
   for ( UInt uiPartIdx = 0, uiSubPartIdx = uiAbsPartIdx; uiPartIdx < uiNumPU; uiPartIdx++, uiSubPartIdx += uiPUOffset )
   {
 #if H_MV_ENC_DEC_TRAC
@@ -413,6 +636,7 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
       pcCU->setInterDirSubParts( 1, uiSubPartIdx, uiPartIdx, uiDepth);
     }
   }
+#endif
 #if H_3D_SPIVMP
   delete[] pcMvFieldSP;
   delete[] puhInterDirSP;
@@ -481,6 +705,55 @@ Void TDecEntropy::decodeMvdPU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
   }
 }
 
+#if HHI_MOVE_SYN_K0052
+Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList )
+{
+  Int iMVPIdx = -1;
+
+  if ( (pcSubCU->getInterDir(uiPartAddr) & ( 1 << eRefList )) )
+  {
+    m_pcEntropyDecoderIf->parseMVPIdx( iMVPIdx );
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+    if ( eRefList == REF_PIC_LIST_0 )
+    {
+      DTRACE_PU("mvp_l0_flag", iMVPIdx)
+    }
+    else
+    {
+      DTRACE_PU("mvp_l1_flag", iMVPIdx)
+    }
+#endif
+#endif
+  }
+  pcSubCU->setMVPIdxSubParts( iMVPIdx, eRefList, uiPartAddr, uiPartIdx, uiDepth );
+}
+
+Void TDecEntropy::decodeMvsAMVP( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList )
+{
+  TComMv cZeroMv( 0, 0 );
+  TComMv cMv     = cZeroMv;
+  Int    iRefIdx = -1;
+
+  TComCUMvField* pcSubCUMvField = pcSubCU->getCUMvField( eRefList );
+  AMVPInfo* pAMVPInfo = pcSubCUMvField->getAMVPInfo();
+
+  iRefIdx = pcSubCUMvField->getRefIdx(uiPartAddr);
+  cMv = cZeroMv;
+
+  pcSubCU->fillMvpCand(uiPartIdx, uiPartAddr, eRefList, iRefIdx, pAMVPInfo);
+  pcSubCU->setMVPNumSubParts(pAMVPInfo->iN, eRefList, uiPartAddr, uiPartIdx, uiDepth);
+  if ( iRefIdx >= 0 )
+  {
+    m_pcPrediction->getMvPredAMVP( pcSubCU, uiPartIdx, uiPartAddr, eRefList, cMv);
+    cMv += pcSubCUMvField->getMvd( uiPartAddr );
+  }
+
+  PartSize ePartSize = pcSubCU->getPartitionSize( uiPartAddr );
+  pcSubCU->getCUMvField( eRefList )->setAllMv(cMv, ePartSize, uiPartAddr, 0, uiPartIdx);
+}
+
+#else
 Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiDepth, UInt uiPartIdx, RefPicList eRefList )
 {
   Int iMVPIdx = -1;
@@ -523,9 +796,23 @@ Void TDecEntropy::decodeMVPIdxPU( TComDataCU* pcSubCU, UInt uiPartAddr, UInt uiD
   PartSize ePartSize = pcSubCU->getPartitionSize( uiPartAddr );
   pcSubCU->getCUMvField( eRefList )->setAllMv(cMv, ePartSize, uiPartAddr, 0, uiPartIdx);
 }
-
+#endif
 Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP, Int quadtreeTULog2MinSizeInCU)
 {
+
+#if H_MV_ENC_DEC_TRAC
+#if ENC_DEC_TRACE
+  UInt uiLPelX   = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
+  
+  DTRACE_TU_S("=========== transform_tree ===========\n")
+  DTRACE_TU("x0", uiLPelX)
+  DTRACE_TU("x1", uiTPelY)
+  DTRACE_TU("log2TrafoSize", g_uiMaxCUWidth>>uiDepth)
+  DTRACE_TU("trafoDepth"  , uiDepth)
+#endif
+#endif
+
   UInt uiSubdiv;
   const UInt uiLog2TrafoSize = g_aucConvertToBit[pcCU->getSlice()->getSPS()->getMaxCUWidth()]+2 - uiDepth;
 
@@ -578,6 +865,9 @@ Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offs
     }
     if( bFirstCbfOfCU || uiLog2TrafoSize > 2 )
     {
+#if H_3D_DISABLE_CHROMA
+      if (pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )      
+      {
       if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth - 1 ) )
       {
         m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth, uiDepth );
@@ -586,6 +876,28 @@ Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offs
       {
         m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth, uiDepth );
       }
+    }
+    else
+    {
+        if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth - 1 ) )
+        {
+          pcCU->setCbfSubParts( 0, TEXT_CHROMA_U, uiAbsPartIdx, uiTrDepth - 1 );
+        }
+        if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth - 1 ) )
+        {
+          pcCU->setCbfSubParts( 0, TEXT_CHROMA_V, uiAbsPartIdx, uiTrDepth - 1 );
+        }
+      }
+#else
+      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth - 1 ) )
+      {
+        m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth, uiDepth );
+      }
+      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth - 1 ) )
+      {
+        m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth, uiDepth );
+      }
+#endif
     }
     else
     {
@@ -747,8 +1059,16 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N );
     assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
+#if H_3D_DISABLE_CHROMA
+    if (pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )
+    {
+      assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
+      assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+    }
+#else
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
+#endif
   }
 
 #if H_3D_INTER_SDC
@@ -810,6 +1130,13 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setSDCFlagSubParts( false, uiAbsPartIdx, uiDepth );
+#if HHI_MOVE_SYN_K0052
+  if ( pcCU->isSkipped( uiAbsPartIdx ) )
+  {
+    return; 
+  }
+#endif
+
 
   if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getInterSdcFlag() ) || 
     ( pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getIntraSdcWedgeFlag() ) )
@@ -829,7 +1156,14 @@ Void TDecEntropy::decodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDep
 #if H_3D_DBBP
 Void TDecEntropy::decodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  m_pcEntropyDecoderIf->parseDBBPFlag( pcCU, uiAbsPartIdx, uiDepth );
+#if HHI_MOVE_SYN_K0052
+  if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
+  {
+#endif
+    m_pcEntropyDecoderIf->parseDBBPFlag( pcCU, uiAbsPartIdx, uiDepth );
+#if HHI_MOVE_SYN_K0052
+  }
+#endif
 }
 #endif
 
