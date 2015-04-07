@@ -502,7 +502,7 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 
 
 #if H_3D_DISABLE_CHROMA
-    if( !pcCU->getSlice()->getIsDepth() )
+    if( pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )
     {    
 #endif
     piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;

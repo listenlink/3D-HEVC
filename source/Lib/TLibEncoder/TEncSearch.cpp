@@ -2328,7 +2328,11 @@ Void TEncSearch::xIntraCodingSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* 
 #endif
 
   Bool bDummy = false;
+#if H_3D_DISABLE_CHROMA
+  m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth( 0 ), uiWidth, uiHeight, bDummy, true );
+#else
   m_pcEntropyCoder->encodeCoeff( pcCU, 0, pcCU->getDepth( 0 ), uiWidth, uiHeight, bDummy );
+#endif
   UInt uiBits = m_pcEntropyCoder->getNumberOfWrittenBits();
 
 #if H_3D_VSO
@@ -7540,7 +7544,11 @@ Void  TEncSearch::xAddSymbolBitsInter( TComDataCU* pcCU, UInt uiQp, UInt uiTrMod
     m_pcEntropyCoder->encodeDBBPFlag( pcCU, 0, true );
 #endif
     Bool bDummy = false;
+#if H_3D_DISABLE_CHROMA
+    m_pcEntropyCoder->encodeCoeff   ( pcCU, 0, pcCU->getDepth(0), pcCU->getWidth(0), pcCU->getHeight(0), bDummy, true );
+#else
     m_pcEntropyCoder->encodeCoeff   ( pcCU, 0, pcCU->getDepth(0), pcCU->getWidth(0), pcCU->getHeight(0), bDummy );
+#endif
     
     ruiBits += m_pcEntropyCoder->getNumberOfWrittenBits();
   }
