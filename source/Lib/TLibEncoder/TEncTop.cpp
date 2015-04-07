@@ -90,7 +90,7 @@ TEncTop::TEncTop()
   m_aICEnableCandidate = NULL;
   m_aICEnableNum = NULL;
 #endif
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
   m_cCavlcCoder.setEncTop(this); 
 #endif
 }
@@ -416,11 +416,7 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
   pcPicCurr->setLayerId( getLayerId()); 
 #endif
 #if H_3D
-#if HHI_CAM_PARA_K0052
   pcPicCurr->setScaleOffset( m_cameraParameters->getCodedScale(), m_cameraParameters->getCodedOffset() );
-#else
-  pcPicCurr->setScaleOffset( m_aaiCodedScale, m_aaiCodedOffset );
-#endif
 #endif
 }
 #endif
@@ -767,7 +763,7 @@ Void TEncTop::xInitSPS()
   {
     m_cSPS.setSpsInferScalingListFlag   ( true ); 
     m_cSPS.setSpsScalingListRefLayerId( m_cVPS->getIdRefLayer( getLayerId(), 0 ) ); 
-#if SONY_MV_V_CONST_C0078
+#if H_MV
     if ( m_bUseDisparitySearchRangeRestriction )
     {
       m_cSPS.setInterViewMvVertConstraintFlag ( true ) ;

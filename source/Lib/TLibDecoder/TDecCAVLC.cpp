@@ -38,7 +38,7 @@
 #include "TDecCAVLC.h"
 #include "SEIread.h"
 #include "TDecSlice.h"
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
 #include "TDecTop.h"
 #endif
 //! \ingroup TLibDecoder
@@ -92,32 +92,10 @@ Void  xTraceSliceHeader (TComSlice *pSlice)
 
 TDecCavlc::TDecCavlc()
 {
-#if !HHI_CAM_PARA_K0052
-#if H_3D
-  m_aaiTempScale            = new Int* [ MAX_NUM_LAYERS ];
-  m_aaiTempOffset           = new Int* [ MAX_NUM_LAYERS ];
-  for( UInt uiVId = 0; uiVId < MAX_NUM_LAYERS; uiVId++ )
-  {
-    m_aaiTempScale            [ uiVId ] = new Int [ MAX_NUM_LAYERS ];
-    m_aaiTempOffset           [ uiVId ] = new Int [ MAX_NUM_LAYERS ];
-  }
-#endif
-#endif
 }
 
 TDecCavlc::~TDecCavlc()
 {
-#if !HHI_CAM_PARA_K0052
-#if H_3D
-  for( UInt uiVId = 0; uiVId < MAX_NUM_LAYERS; uiVId++ )
-  {
-    delete [] m_aaiTempScale            [ uiVId ];
-    delete [] m_aaiTempOffset           [ uiVId ];
-  }
-  delete [] m_aaiTempScale;
-  delete [] m_aaiTempOffset;
-#endif
-#endif
 }
 
 // ====================================================================================================================
@@ -1047,11 +1025,7 @@ Void TDecCavlc::parseSPS3dExtension( TComSPS* pcSPS )
       READ_FLAG( uiCode, "intra_sdc_wedge_flag" ); sps3dExt->setIntraSdcWedgeFlag( d, uiCode == 1 );
       READ_FLAG( uiCode, "qt_pred_flag" ); sps3dExt->setQtPredFlag( d, uiCode == 1 );
       READ_FLAG( uiCode, "inter_sdc_flag" ); sps3dExt->setInterSdcFlag( d, uiCode == 1 );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
       READ_FLAG( uiCode, "intra_skip_flag" ); sps3dExt->setDepthIntraSkipFlag( d, uiCode == 1 );
-#else
-      READ_FLAG( uiCode, "intra_single_flag" ); sps3dExt->setIntraSingleFlag( d, uiCode == 1 );
-#endif
     }
   }
 }
@@ -1062,14 +1036,10 @@ Void TDecCavlc::parsePPSMultilayerExtension(TComPPS* pcPPS)
   UInt uiCode = 0; 
   READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
   READ_FLAG( uiCode, "pps_infer_scaling_list_flag" ); pcPPS->setPpsInferScalingListFlag( uiCode == 1 );
-#if FIX_TICKET_95
   if (pcPPS->getPpsInferScalingListFlag())
   {
   READ_CODE( 6, uiCode, "pps_scaling_list_ref_layer_id" ); pcPPS->setPpsScalingListRefLayerId( uiCode );
   }
-#else
-  READ_CODE( 6, uiCode, "pps_scaling_list_ref_layer_id" ); pcPPS->setPpsScalingListRefLayerId( uiCode );
-#endif
 
   UInt numRefLocOffsets;; 
   READ_UVLC( numRefLocOffsets, "num_ref_loc_offsets" );
@@ -1335,10 +1305,8 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }
 
-#if HHI_INTER_COMP_PRED_K0052
 #if H_3D
   pcVPS->initViewCompLayer( ); 
-#endif
 #endif
 
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
@@ -1928,7 +1896,6 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
 #if H_3D
 Void TDecCavlc::parseVPS3dExtension( TComVPS* pcVPS )
 {
-#if HHI_CAM_PARA_K0052
   UInt uiCode;   
   READ_UVLC( uiCode, "cp_precision"); pcVPS->setCpPrecision( uiCode ) ;
   
@@ -1958,57 +1925,6 @@ Void TDecCavlc::parseVPS3dExtension( TComVPS* pcVPS )
     }    
   }
   pcVPS->deriveCpPresentFlag(); 
-#else
-  UInt uiCode; 
-
-  UInt uiCamParPrecision = 0; 
-  Bool bCamParSlice      = false; 
-  Bool bCamParPresentFlag = false;
-
-  READ_UVLC( uiCamParPrecision, "cp_precision" );
-#if HHI_VIEW_ID_LIST_I5_J0107
-  for (Int n = 1; n < pcVPS->getNumViews(); n++)
-  {
-    Int viewIndex = pcVPS->getViewOIdxList( n ); 
-#else
-  for (UInt viewIndex=1; viewIndex<pcVPS->getNumViews(); viewIndex++)
-  {
-#endif
-    pcVPS->setCamParPresent         ( viewIndex, false );
-    pcVPS->setHasCamParInSliceHeader( viewIndex, false );
-    READ_FLAG( uiCode, "cp_present_flag[i]" );                  bCamParPresentFlag = ( uiCode == 1);
-    if ( bCamParPresentFlag )
-    {
-      READ_FLAG( uiCode, "cp_in_slice_segment_header_flag[i]" );          bCamParSlice = ( uiCode == 1);
-      if ( !bCamParSlice )
-      {
-#if HHI_VIEW_ID_LIST_I5_J0107
-        for( UInt m = 0; m < n; n++ )
-        {
-          Int uiBaseIndex = pcVPS->getViewOIdxList ( m ); 
-          Int iCode; 
-          READ_SVLC( iCode, "vps_cp_scale" );                m_aaiTempScale  [ uiBaseIndex ][ viewIndex ]   = iCode;
-          READ_SVLC( iCode, "vps_cp_off" );                  m_aaiTempOffset [ uiBaseIndex ][ viewIndex ]   = iCode;
-          READ_SVLC( iCode, "vps_cp_inv_scale_plus_scale" ); m_aaiTempScale  [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempScale [ uiBaseIndex ][ viewIndex ];
-          READ_SVLC( iCode, "vps_cp_inv_off_plus_off" );     m_aaiTempOffset [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempOffset[ uiBaseIndex ][ viewIndex ];
-        }
-      }
-      pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
-#else
-        for( UInt uiBaseIndex = 0; uiBaseIndex < viewIndex; uiBaseIndex++ )
-        {
-          Int iCode; 
-          READ_SVLC( iCode, "vps_cp_scale" );                m_aaiTempScale  [ uiBaseIndex ][ viewIndex ]   = iCode;
-          READ_SVLC( iCode, "vps_cp_off" );                  m_aaiTempOffset [ uiBaseIndex ][ viewIndex ]   = iCode;
-          READ_SVLC( iCode, "vps_cp_inv_scale_plus_scale" ); m_aaiTempScale  [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempScale [ uiBaseIndex ][ viewIndex ];
-          READ_SVLC( iCode, "vps_cp_inv_off_plus_off" );     m_aaiTempOffset [ viewIndex   ][ uiBaseIndex ] = iCode - m_aaiTempOffset[ uiBaseIndex ][ viewIndex ];
-        }
-      }
-      pcVPS->initCamParaVPS( viewIndex, bCamParPresentFlag, uiCamParPrecision, bCamParSlice, m_aaiTempScale, m_aaiTempOffset ); 
-#endif
-    }
-  }
-#endif
 }
 #endif
 #endif
@@ -2069,11 +1985,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 #endif
 #endif
   rpcSlice->setSPS(sps);
-#if !HHI_INTER_COMP_PRED_K0052
-#if H_3D
-  rpcSlice->init3dToolParameters();
-#endif
-#endif
   rpcSlice->setPPS(pps);
   if( pps->getDependentSliceSegmentsEnabledFlag() && ( !firstSliceSegmentInPic ))
   {
@@ -2467,7 +2378,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rpcSlice->setInterLayerPredLayerIdc( i, rpcSlice->getRefLayerPicIdc( i ) );
       }
     }
-#if HHI_INTER_COMP_PRED_K0052
 #if H_3D
     if ( getDecTop()->decProcAnnexI() )
     {    
@@ -2478,7 +2388,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       }
       rpcSlice->init3dToolParameters(); 
     }
-#endif
 #endif
 #endif
     if(sps->getUseSAO())
@@ -2661,14 +2570,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
-#if H_3D_ANNEX_SELECTION_FIX
     else if(    rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) 
              && !rpcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
              && getDecTop()->decProcAnnexI()
            )
-#else
-    else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 )
-#endif
     {
       UInt uiCodeTmp = 0;
 
@@ -2765,7 +2670,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     rpcSlice->setLFCrossSliceBoundaryFlag( (uiCode==1)?true:false);
 
-#if HHI_CAM_PARA_K0052
 #if H_3D
     if ( getDecTop()->decProcAnnexI() )
     {
@@ -2782,7 +2686,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         }
       }
     }
-#endif
 #endif
   }
   
@@ -2807,26 +2710,6 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setNumEntryPointOffsets ( 0 );
   }
 
-#if !HHI_CAM_PARA_K0052
-#if H_3D
-#if H_3D_FCO
-  if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && rpcSlice->getIsDepth() )
-#else
-  if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && !rpcSlice->getIsDepth() )
-#endif
-  {
-    UInt uiViewIndex = rpcSlice->getViewIndex();
-    for( UInt uiBaseIndex = 0; uiBaseIndex < uiViewIndex; uiBaseIndex++ )
-    {
-      READ_SVLC( iCode, "cp_scale" );                m_aaiTempScale [ uiBaseIndex ][ uiViewIndex ] = iCode;
-      READ_SVLC( iCode, "cp_off" );                  m_aaiTempOffset[ uiBaseIndex ][ uiViewIndex ] = iCode;
-      READ_SVLC( iCode, "cp_inv_scale_plus_scale" ); m_aaiTempScale [ uiViewIndex ][ uiBaseIndex ] = iCode - m_aaiTempScale [ uiBaseIndex ][ uiViewIndex ];
-      READ_SVLC( iCode, "cp_inv_off_plus_off" );     m_aaiTempOffset[ uiViewIndex ][ uiBaseIndex ] = iCode - m_aaiTempOffset[ uiBaseIndex ][ uiViewIndex ];
-    }
-    rpcSlice->setCamparaSlice( m_aaiTempScale, m_aaiTempOffset );
-  }
-#endif
-#endif
 
   if(pps->getSliceHeaderExtensionPresentFlag())
   {
@@ -3099,19 +2982,11 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
 {
   assert(0);
 }
-
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
 Void TDecCavlc::parseDIS( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
-#else
-#if H_3D_SINGLE_DEPTH
-Void TDecCavlc::parseSingleDepthMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
-{
-  assert(0);
-}
-#endif
 #endif
 
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )

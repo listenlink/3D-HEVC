@@ -247,7 +247,7 @@ Void TAppDecTop::decode()
             for (Int dI = 0; dI < m_numDecoders; dI++ )
             {
               m_tDecTop[decIdx]->setTargetOptLayerSetIdx( m_targetOptLayerSetIdx ); 
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
               m_tDecTop[decIdx]->setProfileIdc( ); 
 #endif
             }
@@ -1052,7 +1052,7 @@ Int TAppDecTop::xGetDecoderIdx( Int layerId, Bool createFlag /*= false */ )
     m_tDecTop[ decIdx ]->setIvPicLists( &m_ivPicLists ); 
     m_tDecTop[ decIdx ]->setLayerInitilizedFlags( m_layerInitilizedFlags );
     m_tDecTop[ decIdx ]->setTargetOptLayerSetIdx( m_targetOptLayerSetIdx );    
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
     m_tDecTop[ decIdx ]->setProfileIdc           ( );    
 #endif
 

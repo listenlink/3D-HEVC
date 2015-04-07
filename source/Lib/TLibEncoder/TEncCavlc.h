@@ -67,7 +67,7 @@ public:
 protected:
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
   TEncTop*      m_encTop; 
 #endif
   Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
@@ -128,12 +128,8 @@ public:
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   Void codeDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
@@ -186,7 +182,7 @@ public:
   Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
   TEncTop* getEncTop()               { return m_encTop; };
   Void     setEncTop( TEncTop* et )  {  m_encTop = et; };
 #endif

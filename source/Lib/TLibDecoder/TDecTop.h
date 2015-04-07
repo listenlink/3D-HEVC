@@ -96,9 +96,6 @@ private:
   
   TComVPS* m_vps; 
   Int**    m_receivedIdc; 
-#if!HHI_CAM_PARA_K0052
-  Int      m_uiMaxViewIndex; 
-#endif
   Int      m_lastPoc; 
   Int      m_firstReceivedPoc; 
 
@@ -243,8 +240,6 @@ private:
   Int                     m_viewIndex; 
   Bool                    m_isDepth;
   CamParsCollector*       m_pcCamParsCollector;
-#endif
-#if H_3D_ANNEX_SELECTION_FIX
   Int                     m_profileIdc;
 #endif
 #endif
@@ -304,8 +299,7 @@ public:
   Void                    setIsDepth            ( Bool isDepth ) { m_isDepth = isDepth; }
   Bool                    getIsDepth            ()               { return m_isDepth;    }
   Void                    setCamParsCollector( CamParsCollector* pcCamParsCollector ) { m_pcCamParsCollector = pcCamParsCollector; }
-#endif
-#if H_3D_ANNEX_SELECTION_FIX
+
   Void                    setProfileIdc()
   {        
     if (m_targetOptLayerSetIdx != -1 )
@@ -330,7 +324,6 @@ public:
   }
   Bool                    decProcAnnexI()           { assert( m_profileIdc != -1 ); return ( m_profileIdc == 8); }    
 #endif
-
 #endif
 protected:
   Void  xGetNewPicBuffer  (TComSlice* pcSlice, TComPic*& rpcPic);

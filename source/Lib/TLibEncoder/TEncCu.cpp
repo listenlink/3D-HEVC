@@ -440,9 +440,6 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 
 #if H_3D_VSP
   DisInfo DvInfo; 
-#if !SEC_ARP_REM_ENC_RESTRICT_K0035
-  DvInfo.bDV = false;
-#endif
   DvInfo.m_acNBDV.setZero();
   DvInfo.m_aVIdxCan = 0;
 #if H_3D_NBDV_REF
@@ -588,29 +585,17 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #if H_3D_IV_MERGE
           if (rpcTempCU->getSlice()->getIsDepth() )
           {
-#if SEC_ARP_REM_ENC_RESTRICT_K0035
             rpcTempCU->getDispforDepth(0, 0, &DvInfo);
-#else
-            DvInfo.bDV = rpcTempCU->getDispforDepth(0, 0, &DvInfo);
-#endif
           }
           else
           {
 #endif 
 #if H_3D_NBDV_REF
           if( rpcTempCU->getSlice()->getDepthRefinementFlag() )
-#if SEC_ARP_REM_ENC_RESTRICT_K0035
             rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
-#else
-            DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo, true);
-#endif
           else
 #endif 
-#if SEC_ARP_REM_ENC_RESTRICT_K0035
             rpcTempCU->getDisMvpCandNBDV(&DvInfo);
-#else
-            DvInfo.bDV = rpcTempCU->getDisMvpCandNBDV(&DvInfo);
-#endif
 
 #if H_3D_IV_MERGE
           }
@@ -729,22 +714,13 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       earlyDetectionSkipMode = false;
     }
 #endif
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
     rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
     if( rpcBestCU->getSlice()->getDepthIntraSkipFlag() )
     {
       xCheckRDCostDIS( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
       rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
     }
-#else
-#if H_3D_SINGLE_DEPTH
-    rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
-    if( rpcBestCU->getSlice()->getIntraSingleFlag() )
-    {
-      xCheckRDCostSingleDepth( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
-      rpcTempCU->initEstData( uiDepth, iMinQP, isAddLowestQP  );
-    }
-#endif
 #endif
     if(!earlyDetectionSkipMode)
     {
@@ -1057,36 +1033,30 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
        
           // speedup for inter frames
           if( rpcBestCU->getSlice()->getSliceType() == I_SLICE || 
-              rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
-              rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
-              rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     
+            rpcBestCU->getCbf( 0, TEXT_LUMA     ) != 0   ||
+            rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) != 0   ||
+            rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) != 0     
 #if H_3D_DIM_ENC
-              || rpcBestCU->getSlice()->getIsDepth()
+            || rpcBestCU->getSlice()->getIsDepth()
 #endif
             ) // avoid very complex intra if it is unlikely
           {
 #if H_3D_DIM
             Bool bOnlyIVP = false;
-#if TICKET083_IVPFLAG_FIX
             Bool bUseIVP = true;
-#endif
             if( rpcBestCU->getSlice()->getIsDepth() && !(rpcBestCU->getSlice()->isIRAP()) && 
-                rpcBestCU->getSlice()->getSliceType() != I_SLICE && 
-                rpcBestCU->getCbf( 0, TEXT_LUMA     ) == 0 &&
-                rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) == 0 &&
-                rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) == 0 
+              rpcBestCU->getSlice()->getSliceType() != I_SLICE && 
+              rpcBestCU->getCbf( 0, TEXT_LUMA     ) == 0 &&
+              rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) == 0 &&
+              rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) == 0 
               )
             { 
               bOnlyIVP = true;
-#if TICKET083_IVPFLAG_FIX
               bUseIVP = rpcBestCU->getSlice()->getIntraContourFlag();
-#endif
             }
-#if TICKET083_IVPFLAG_FIX
             if( bUseIVP )
             {
-#endif
-            xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bOnlyIVP );
+              xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bOnlyIVP );
 #else
             xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N );
 #endif
@@ -1119,10 +1089,10 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               }
 #endif
             }
-#if TICKET083_IVPFLAG_FIX
+#if H_3D
           }
 #endif
-          }
+        }
         // test PCM
         if(pcPic->getSlice(0)->getSPS()->getUsePCM()
           && rpcTempCU->getWidth(0) <= (1<<pcPic->getSlice(0)->getSPS()->getPCMLog2MaxSize())
@@ -1606,36 +1576,23 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     finishCU(pcCU,uiAbsPartIdx,uiDepth);
     return;
   }
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   m_pcEntropyCoder->encodeDIS( pcCU, uiAbsPartIdx );
   if(!pcCU->getDISFlag(uiAbsPartIdx))
-  {
-#else
-#if H_3D_SINGLE_DEPTH
-  m_pcEntropyCoder->encodeSingleDepthMode( pcCU, uiAbsPartIdx );
-  if(!pcCU->getSingleDepthFlag(uiAbsPartIdx))
-  {
 #endif
-#endif
+  {
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
   
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
-#if !HHI_MOVE_SYN_K0052
-#if H_3D_DIM_SDC
-  m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
-#endif
-#endif
   if (pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_2Nx2N )
   {
     m_pcEntropyCoder->encodeIPCMInfo( pcCU, uiAbsPartIdx );
     if(pcCU->getIPCMFlag(uiAbsPartIdx))
     {
-#if HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
       m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
 #endif  
-#endif
       // Encode slice finish
       finishCU(pcCU,uiAbsPartIdx,uiDepth);
       return;
@@ -1644,12 +1601,10 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
-#if HHI_MOVE_SYN_K0052
   m_pcEntropyCoder->encodeDBBPFlag( pcCU, uiAbsPartIdx );
 #if H_3D_DIM_SDC
   m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
 #endif  
-#endif
 #if H_3D_ARP
   m_pcEntropyCoder->encodeARPW( pcCU , uiAbsPartIdx );
 #endif
@@ -1664,12 +1619,8 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   m_pcEntropyCoder->encodeCoeff( pcCU, uiAbsPartIdx, uiDepth, pcCU->getWidth (uiAbsPartIdx), pcCU->getHeight(uiAbsPartIdx), bCodeDQP );
 #endif
   setdQPFlag( bCodeDQP );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   }
-#else
-#if H_3D_SINGLE_DEPTH
-  }
-#endif
 #endif
   // --- write terminating bit ---
   finishCU(pcCU,uiAbsPartIdx,uiDepth);
@@ -1888,11 +1839,7 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
 
 #if H_3D_ARP
   Int nARPWMax = rpcTempCU->getSlice()->getARPStepNum() - 1;
-#if SEC_ARP_REM_ENC_RESTRICT_K0035
   if( nARPWMax < 0 || bICFlag )
-#else
-  if( nARPWMax < 0 || !rpcTempCU->getDvInfo(0).bDV || bICFlag )
-#endif
   {
     nARPWMax = 0;
   }
@@ -2058,12 +2005,8 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
          }
 
           rpcTempCU->setSkipFlagSubParts( rpcTempCU->getQtRootCbf(0) == 0, 0, uhDepth );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
           rpcTempCU->setDISFlagSubParts( false, 0, uhDepth );
-#else
-#if H_3D_SINGLE_DEPTH
-          rpcTempCU->setSingleDepthFlagSubParts( false, 0, uhDepth );
-#endif
 #endif
 #if H_3D_VSP // possible bug fix
           if( rpcTempCU->getSkipFlag(0) )
@@ -2104,12 +2047,8 @@ for( UInt ui = 0; ui < numValidMergeCand; ++ui )
                 rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
               }
               rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
               rpcTempCU->setDISFlagSubParts( false, 0, uhDepth );
-#else
-#if H_3D_SINGLE_DEPTH
-              rpcTempCU->setSingleDepthFlagSubParts( false, 0, uhDepth );
-#endif
 #endif
               rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
               rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
@@ -2232,11 +2171,7 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #if H_3D_ARP
   Bool bFirstTime = true;
   Int nARPWMax    = rpcTempCU->getSlice()->getARPStepNum() - 1;
-#if SEC_ARP_REM_ENC_RESTRICT_K0035
   if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N || rpcTempCU->getICFlag(0) )
-#else
-  if( nARPWMax < 0 || ePartSize != SIZE_2Nx2N || !rpcTempCU->getDvInfo(0).bDV || rpcTempCU->getICFlag(0) )
-#endif
   {
     nARPWMax = 0;
   }
@@ -2262,12 +2197,8 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   rpcTempCU->setDepthSubParts( uhDepth, 0 );
   
   rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   rpcTempCU->setDISFlagSubParts( false, 0, uhDepth );
-#else
-#if H_3D_SINGLE_DEPTH
-  rpcTempCU->setSingleDepthFlagSubParts( false, 0, uhDepth );
-#endif
 #endif
   rpcTempCU->setPartSizeSubParts  ( ePartSize,  0, uhDepth );
   rpcTempCU->setPredModeSubParts  ( MODE_INTER, 0, uhDepth );
@@ -2376,12 +2307,8 @@ Void TEncCu::xCheckRDCostInter( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
         rpcTempCU->copyPartFrom( rpcBestCU, 0, uhDepth );
       }
       rpcTempCU->setSkipFlagSubParts( false, 0, uhDepth );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
       rpcTempCU->setDISFlagSubParts( false, 0, uhDepth );
-#else
-#if H_3D_SINGLE_DEPTH
-      rpcTempCU->setSingleDepthFlagSubParts( false, 0, uhDepth );
-#endif
 #endif
       rpcTempCU->setTrIdxSubParts( 0, 0, uhDepth );
       rpcTempCU->setCbfSubParts( 1, 1, 1, 0, uhDepth );
@@ -2491,7 +2418,6 @@ Void TEncCu::xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTe
   }
 }
 
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
 Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize )
 {
   UInt uiDepth = rpcTempCU->getDepth( 0 );
@@ -2563,75 +2489,6 @@ Void TEncCu::xCheckRDCostDIS( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Pa
   xCheckDQP( rpcTempCU );
   xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth);
 }
-#else
-#if H_3D_SINGLE_DEPTH
-Void TEncCu::xCheckRDCostSingleDepth( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize )
-{
-  UInt uiDepth = rpcTempCU->getDepth( 0 );
-  if( !rpcBestCU->getSlice()->getIsDepth() || (eSize != SIZE_2Nx2N))
-  {
-    return;
-  }
-  
-#if H_3D_VSO // M5
-  if( m_pcRdCost->getUseRenModel() )
-  {
-    UInt  uiWidth     = m_ppcOrigYuv[uiDepth]->getWidth   ();
-    UInt  uiHeight    = m_ppcOrigYuv[uiDepth]->getHeight  ();
-    Pel*  piSrc       = m_ppcOrigYuv[uiDepth]->getLumaAddr();
-    UInt  uiSrcStride = m_ppcOrigYuv[uiDepth]->getStride  ();
-    m_pcRdCost->setRenModelData( rpcTempCU, 0, piSrc, uiSrcStride, uiWidth, uiHeight );
-  }
-#endif
-
-  rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
-  rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );
-  rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
-  rpcTempCU->setCUTransquantBypassSubParts( rpcTempCU->getCUTransquantBypass(0), 0, uiDepth );
-
-  rpcTempCU->setTrIdxSubParts(0, 0, uiDepth);
-  rpcTempCU->setCbfSubParts(0, 1, 1, 0, uiDepth);
-  rpcTempCU->setSingleDepthFlagSubParts(true, 0, uiDepth);
-  rpcTempCU->setLumaIntraDirSubParts (DC_IDX, 0, uiDepth);
-#if H_3D_DIM_SDC
-  rpcTempCU->setSDCFlagSubParts( false, 0, uiDepth);
-#endif
-
-  UInt uiPreCalcDistC;
-  m_pcPredSearch  ->estIntraPredSingleDepth      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, false );
-
-
-  m_ppcRecoYuvTemp[uiDepth]->copyToPicLuma(rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
-  
- 
-  m_pcEntropyCoder->resetBits();
-  if ( rpcTempCU->getSlice()->getPPS()->getTransquantBypassEnableFlag())
-  {
-    m_pcEntropyCoder->encodeCUTransquantBypassFlag( rpcTempCU, 0,          true );
-  }
-  m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-  m_pcEntropyCoder->encodeSingleDepthMode( rpcTempCU, 0,          true );
-  
-
-  m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
-  
-  rpcTempCU->getTotalBits() = m_pcEntropyCoder->getNumberOfWrittenBits();
-  rpcTempCU->getTotalBins() = ((TEncBinCABAC *)((TEncSbac*)m_pcEntropyCoder->m_pcEntropyCoderIf)->getEncBinIf())->getBinsCoded();
-
-
-#if H_3D_VSO // M6
-  if( m_pcRdCost->getUseLambdaScaleVSO())  
-    rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCostVSO( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );  
-  else
-#endif
-  rpcTempCU->getTotalCost() = m_pcRdCost->calcRdCost( rpcTempCU->getTotalBits(), rpcTempCU->getTotalDistortion() );
- 
-
-  xCheckDQP( rpcTempCU );
-  xCheckBestMode(rpcBestCU, rpcTempCU, uiDepth);
-}
-#endif
-#endif
 
 Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG )
 {
@@ -2674,19 +2531,11 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
   AOF( pDepthPels != NULL );
   AOF( uiDepthStride != 0 );
   
-#if HS_DBBP_CLEAN_K0048
   PartSize eVirtualPartSize = m_pcPredSearch->getPartitionSizeFromDepth(pDepthPels, uiDepthStride, uiWidth, rpcTempCU);
 
   // derive partitioning from depth
   Bool pMask[MAX_CU_SIZE*MAX_CU_SIZE];
   Bool bValidMask = m_pcPredSearch->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, uiWidth, uiHeight, pMask, rpcTempCU);
-#else
-  PartSize eVirtualPartSize = m_pcPredSearch->getPartitionSizeFromDepth(pDepthPels, uiDepthStride, uiWidth);
-  
-  // derive segmentation mask from depth
-  Bool pMask[MAX_CU_SIZE*MAX_CU_SIZE];
-  Bool bValidMask = m_pcPredSearch->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, uiWidth, uiHeight, pMask);
-#endif
   
   if( !bValidMask )
   {
@@ -2795,12 +2644,8 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 #endif
 
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   rpcTempCU->setDISFlagSubParts( false, 0, uiDepth );
-#else
-#if H_3D_SINGLE_DEPTH
-  rpcTempCU->setSingleDepthFlagSubParts( false, 0, uiDepth );
-#endif
 #endif
   rpcTempCU->setPartSizeSubParts( eSize, 0, uiDepth );
   rpcTempCU->setPredModeSubParts( MODE_INTRA, 0, uiDepth );
@@ -2819,11 +2664,7 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
   m_ppcRecoYuvTemp[uiDepth]->copyToPicLuma(rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getAddr(), rpcTempCU->getZorderIdxInCU() );
   
 #if H_3D_DIM_SDC
-#if 0 // H_3D_DISABLE_CHROMA
-  if( !rpcTempCU->getSDCFlag( 0 ) && !rpcTempCU->getSlice()->getIsDepth() )
-#else
   if( !rpcTempCU->getSDCFlag( 0 ) )
-#endif
 #endif
   m_pcPredSearch  ->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC );
   
@@ -2833,30 +2674,17 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
     m_pcEntropyCoder->encodeCUTransquantBypassFlag( rpcTempCU, 0,          true );
   }
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   m_pcEntropyCoder->encodeDIS( rpcTempCU, 0,          true );
   if(!rpcTempCU->getDISFlag(0))
   {
-#else
-#if H_3D_SINGLE_DEPTH
-  m_pcEntropyCoder->encodeSingleDepthMode( rpcTempCU, 0,          true );
-  if(!rpcTempCU->getSingleDepthFlag(0))
-  {
-#endif
 #endif
   m_pcEntropyCoder->encodePredMode( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize( rpcTempCU, 0, uiDepth, true );
-#if !HHI_MOVE_SYN_K0052
-#if H_3D_DIM_SDC
-  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
-#endif
-#endif
   m_pcEntropyCoder->encodePredInfo( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodeIPCMInfo(rpcTempCU, 0, true );
-#if HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
   m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
-#endif
 #endif
 
   // Encode Coefficients
@@ -2869,12 +2697,8 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
 
   setdQPFlag( bCodeDQP );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   }
-#else
-#if H_3D_SINGLE_DEPTH
-  }
-#endif
 #endif
   m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
   
@@ -2903,12 +2727,8 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
   UInt uiDepth = rpcTempCU->getDepth( 0 );
 
   rpcTempCU->setSkipFlagSubParts( false, 0, uiDepth );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   rpcTempCU->setDISFlagSubParts( false, 0, uiDepth );
-#else
-#if H_3D_SINGLE_DEPTH
-  rpcTempCU->setSingleDepthFlagSubParts( false, 0, uiDepth );
-#endif
 #endif
   rpcTempCU->setIPCMFlag(0, true);
   rpcTempCU->setIPCMFlagSubParts (true, 0, rpcTempCU->getDepth(0));
@@ -2926,25 +2746,14 @@ Void TEncCu::xCheckIntraPCM( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU )
     m_pcEntropyCoder->encodeCUTransquantBypassFlag( rpcTempCU, 0,          true );
   }
   m_pcEntropyCoder->encodeSkipFlag ( rpcTempCU, 0,          true );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   m_pcEntropyCoder->encodeDIS( rpcTempCU, 0,          true );
-#else
-#if H_3D_SINGLE_DEPTH
-  m_pcEntropyCoder->encodeSingleDepthMode( rpcTempCU, 0,          true );
-#endif
 #endif
   m_pcEntropyCoder->encodePredMode ( rpcTempCU, 0,          true );
   m_pcEntropyCoder->encodePartSize ( rpcTempCU, 0, uiDepth, true );
-#if !HHI_MOVE_SYN_K0052
-#if H_3D_DIM_SDC
-  m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
-#endif
-#endif
   m_pcEntropyCoder->encodeIPCMInfo ( rpcTempCU, 0, true );
-#if HHI_MOVE_SYN_K0052
 #if H_3D_DIM_SDC
   m_pcEntropyCoder->encodeSDCFlag( rpcTempCU, 0, true );
-#endif
 #endif
   m_pcRDGoOnSbacCoder->store(m_pppcRDSbacCoder[uiDepth][CI_TEMP_BEST]);
 

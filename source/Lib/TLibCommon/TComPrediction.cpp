@@ -629,11 +629,7 @@ Bool TComPrediction::xCheckTwoSPMotion ( TComDataCU* pcCU, UInt PartAddr0, UInt 
 #endif
 
 #if H_3D_DBBP
-#if HS_DBBP_CLEAN_K0048
 PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize, TComDataCU*& pcCU)
-#else
-PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepthStride, UInt uiSize)
-#endif
 {
   // find virtual partitioning for this CU based on depth block
   // segmentation of texture block --> mask IDs
@@ -642,7 +638,6 @@ PartSize TComPrediction::getPartitionSizeFromDepth(Pel* pDepthPels, UInt uiDepth
   // first compute average of depth block for thresholding
   Int iSumDepth = 0;
   Int iSubSample = 4;
-#if HS_DBBP_CLEAN_K0048
   Int iPictureWidth = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getWidth();
   Int iPictureHeight = pcCU->getSlice()->getIvPic (true, pcCU->getDvInfo(0).m_aVIdxCan)->getPicYuvRec()->getHeight();
   TComMv cDv = pcCU->getSlice()->getDepthRefinementFlag(  ) ? pcCU->getDvInfo(0).m_acDoNBDV : pcCU->getDvInfo(0).m_acNBDV;
@@ -674,19 +669,6 @@ else
     // next row
     if (!(iBlkY+y+4>iPictureHeight))
     pDepthPels += uiDepthStride*iSubSample;
-#else
-  for (Int y=0; y<uiSize; y+=iSubSample)
-  {
-    for (Int x=0; x<uiSize; x+=iSubSample)
-    {
-      Int depthPel = pDepthPels[x];
-      
-      iSumDepth += depthPel;
-    }
-    
-    // next row
-    pDepthPels += uiDepthStride*iSubSample;
-#endif
   }
   
   Int iSizeInBits = g_aucConvertToBit[uiSize] - g_aucConvertToBit[iSubSample];  // respect sub-sampling factor
@@ -704,7 +686,6 @@ else
   {
     for (Int x=0; x<uiSize; x+=iSubSample)
     {
-#if HS_DBBP_CLEAN_K0048
       Int depthPel = 0;
 if (iBlkX+x>iPictureWidth)
 {
@@ -715,9 +696,6 @@ else
     depthPel = pDepthPels[x];
      t=x;
 }
-#else
-      Int depthPel = pDepthPels[x];
-#endif
       
       // decide which segment this pixel belongs to
       Int ucSegment = (Int)(depthPel>iMean);
@@ -746,9 +724,7 @@ else
     }
     
     // next row
-#if HS_DBBP_CLEAN_K0048
     if (!(iBlkY+y+4>iPictureHeight))
-#endif
     pDepthPels += uiDepthStride*iSubSample;
   }
   
@@ -772,11 +748,7 @@ else
   return matchedPartSize;
 }
 
-#if HS_DBBP_CLEAN_K0048
 Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask, TComDataCU*& pcCU)
-#else
-Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStride, UInt uiWidth, UInt uiHeight, Bool* pMask )
-#endif
 {
   // segmentation of texture block --> mask IDs
   Pel*  pDepthBlockStart      = pDepthPels;
@@ -785,7 +757,6 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   Int iSumDepth = 0;
   Int uiMinDepth = MAX_INT;
   Int uiMaxDepth = 0;
-#if HS_DBBP_CLEAN_K0048
   uiMinDepth = pDepthPels[ 0 ];
   uiMaxDepth = pDepthPels[ 0 ];
   iSumDepth  = pDepthPels[ 0 ];
@@ -847,22 +818,6 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
     uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
     uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
   }
-#else
-  iSumDepth  = pDepthPels[ 0 ];
-  iSumDepth += pDepthPels[ uiWidth - 1 ];
-  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) ];
-  iSumDepth += pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ];
-
-  uiMinDepth = pDepthPels[ 0 ];
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiWidth - 1 ]);
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
-  uiMinDepth = std::min( uiMinDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
-
-  uiMaxDepth = pDepthPels[ 0 ];
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiWidth - 1 ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) ]);
-  uiMaxDepth = std::max( uiMaxDepth, (Int)pDepthPels[ uiDepthStride * (uiHeight - 1) + uiWidth - 1 ]);
-#endif
 
   // don't generate mask for blocks with small depth range (encoder decision)
   if( uiMaxDepth - uiMinDepth < 10 )
@@ -884,7 +839,6 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
   {
     for (Int x=0; x<uiHeight; x++)
     {
-#if HS_DBBP_CLEAN_K0048
       Int depthPel = 0;
       if (iBlkX+x>iPictureWidth)
       {
@@ -895,9 +849,6 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
         depthPel = pDepthPels[x];
         t=x;
       }
-#else
-      Int depthPel = pDepthPels[x];
-#endif
 
       // decide which segment this pixel belongs to
       Int ucSegment = (Int)(depthPel>iMean);
@@ -915,9 +866,7 @@ Bool TComPrediction::getSegmentMaskFromDepth( Pel* pDepthPels, UInt uiDepthStrid
     }
 
     // next row
-#if HS_DBBP_CLEAN_K0048
     if (!(iBlkY+y+1>iPictureHeight))
-#endif
       pDepthPels += uiDepthStride;
     pMask += MAX_CU_SIZE;
   }
@@ -1292,7 +1241,7 @@ Void TComPrediction::xPredInterUni ( TComDataCU* pcCU, UInt uiPartAddr, Int iWid
   Int         iRefIdx     = pcCU->getCUMvField( eRefPicList )->getRefIdx( uiPartAddr );           assert (iRefIdx >= 0);
   TComMv      cMv         = pcCU->getCUMvField( eRefPicList )->getMv( uiPartAddr );
   pcCU->clipMv(cMv);
-#if SONY_MV_V_CONST_C0078
+#if H_MV
   pcCU->checkMV_V(cMv, eRefPicList, iRefIdx );
 #endif
 #if H_3D_ARP
@@ -1392,30 +1341,13 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
 
 #if H_3D_NBDV
   DisInfo cDistparity;
-#if SEC_ARP_REM_ENC_RESTRICT_K0035
   cDistparity.m_acNBDV = pcCU->getDvInfo(0).m_acNBDV;
   cDistparity.m_aVIdxCan = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
 #else
-  cDistparity.bDV           = pcCU->getDvInfo(uiPartAddr).bDV;
-  if( cDistparity.bDV )
-  {
-    cDistparity.m_acNBDV = pcCU->getDvInfo(0).m_acNBDV;
-    assert(pcCU->getDvInfo(uiPartAddr).bDV ==  pcCU->getDvInfo(0).bDV);
-    cDistparity.m_aVIdxCan = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;
-  }
-#endif
-#else
   assert(0); // ARP can be applied only when a DV is available
 #endif
-#if SEC_ARP_REM_ENC_RESTRICT_K0035
   UChar dW = pcCU->getARPW ( uiPartAddr );
-#else
-  UChar dW = cDistparity.bDV ? pcCU->getARPW ( uiPartAddr ) : 0;
-#endif
 
-#if !SEC_ARP_REM_ENC_RESTRICT_K0035
-  if( cDistparity.bDV ) 
-#endif
   {
     Int arpRefIdx = pcCU->getSlice()->getFirstTRefIdx(eRefPicList);
     if( dW > 0 && pcCU->getSlice()->getRefPic( eRefPicList, arpRefIdx )->getPOC()!= pcCU->getSlice()->getPOC() )
@@ -1467,9 +1399,6 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
     {
       pYuvB0->clear(); pYuvB1->clear();
     }
-#if !SEC_ARP_REM_ENC_RESTRICT_K0035
-    assert ( cDistparity.bDV );
-#endif    
     TComMv cNBDV = cDistparity.m_acNBDV;
     pcCU->clipMv( cNBDV );
     
