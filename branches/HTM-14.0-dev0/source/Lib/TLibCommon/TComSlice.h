@@ -913,27 +913,17 @@ private:
   Void        xSetRefLayerFlags( Int currLayerId );
   // VPS EXTENSION 2 SYNTAX ELEMENTS
 #if H_3D
-#if HHI_CAM_PARA_K0052  
   Int*        m_numCp;  
   Int**       m_cpRefVoi;
   Bool**      m_cpPresentFlag; 
   Int         m_cpPrecision;
   Bool*       m_cpInSliceSegmentHeaderFlag;
-#else
-  UInt        m_uiCamParPrecision;
-  Bool*       m_bCamParInSliceHeader;
-  Bool*       m_bCamParPresent;
-#endif
   Int         ***m_aaaiCodedScale ;
   Int         ***m_aaaiCodedOffset;
 
-#if HHI_VIEW_ID_LIST_I5_J0107 ||  HHI_INTER_COMP_PRED_K0052
   std::vector<Int>  m_viewOIdxList;
-#endif
-#if HHI_INTER_COMP_PRED_K0052
   std::vector< std::vector<Bool> > m_viewCompLayerPresentFlag;
   std::vector< std::vector<Int>  > m_viewCompLayerId;
-#endif
 #endif
 
 #endif
@@ -1162,7 +1152,6 @@ public:
   Int     getDependencyId ( Int layerIdInNuh )                             { return getScalabilityId( getLayerIdInVps(layerIdInNuh), DEPENDENCY_ID  ); }    
   Int     getNumViews()                                                    { return m_numViews; }
   Void    initNumViews();
-#if HHI_INTER_COMP_PRED_K0052
 #if H_3D
   Void   initViewCompLayer( )
   { 
@@ -1190,22 +1179,12 @@ public:
       }
     }
   };
-#endif
-#endif
 
-#if HHI_VIEW_ID_LIST_I5_J0107 || HHI_INTER_COMP_PRED_K0052
+
   Int     getViewOIdxList( Int i )                                         { return m_viewOIdxList[i]; }
-#if HHI_CAM_PARA_K0052
   std::vector<Int> getViewOIdxList( )                                               { return m_viewOIdxList; }
-#endif
-#endif
 
-#if HHI_INTER_COMP_PRED_K0052
-#if HHI_CAM_PARA_K0052
   Int     getVoiInVps( Int viewOIdx )                                      
-#else
-  Int     getInvViewOIdxList( Int viewOIdx )                                      
-#endif
   {    
     for ( Int i = 0; i < m_viewOIdxList.size(); i++ )
     {
@@ -1218,13 +1197,8 @@ public:
     return -1; 
   };
 
-#if HHI_CAM_PARA_K0052
   Bool    getViewCompLayerPresentFlag (Int i, Bool d ) { return  m_viewCompLayerPresentFlag[ getVoiInVps(i) ][d]; }
   Bool    getViewCompLayerId          (Int i, Bool d ) { return  m_viewCompLayerId         [ getVoiInVps(i) ][d]; }
-#else
-  Bool    getViewCompLayerPresentFlag (Int i, Bool d ) { return  m_viewCompLayerPresentFlag[ getInvViewOIdxList(i) ][d]; }
-  Bool    getViewCompLayerId          (Int i, Bool d ) { return  m_viewCompLayerId         [ getInvViewOIdxList(i) ][d]; }
-#endif
 #endif
   Bool    getDependencyFlag( Int i, Int j )                                { return m_dependencyFlag[i][j]; }
   Int     getNumDirectRefLayers( Int layerIdInNuh )                        { return m_numDirectRefLayers[ layerIdInNuh ];  };                               
@@ -1346,13 +1320,8 @@ public:
 
   Void createCamPars(Int iNumViews);
   Void deleteCamPars();
-#if HHI_CAM_PARA_K0052
   Void initCamParaVPS( Int vOIdxInVps, Int numCp, Bool cpInSliceSegmentHeaderFlag, Int* cpRefVoi, Int** aaiScale, Int** aaiOffset ); 
-#else
-  Void initCamParaVPS      (  UInt uiViewIndex, Bool bCamParPresent = false, UInt uiCamParPrecision = 0, Bool bCamParSlice = false, Int** aaiScale = 0, Int** aaiOffset = 0 );
-#endif
   
-#if HHI_CAM_PARA_K0052
 
   Void setCpPrecision( Int  val ) { m_cpPrecision = val; } 
   Int  getCpPrecision(  ) { return m_cpPrecision; } 
@@ -1402,14 +1371,6 @@ public:
   Void setCpPresentFlag( Int i, Int m, Bool flag ) { m_cpPresentFlag[i][m] = flag; } 
   Bool getCpPresentFlag( Int i, Int m )           { return m_cpPresentFlag[i][m]; }   
 
-#else
-  UInt getCamParPrecision    ()  { return m_uiCamParPrecision; }
-
-  Bool getCamParPresent      ( Int viewIndex )  { return m_bCamParPresent[viewIndex]; }
-  Void setCamParPresent      ( Int viewIndex, Bool val )  { m_bCamParPresent[viewIndex] = val; }
-  Bool hasCamParInSliceHeader( Int viewIndex )  { return m_bCamParInSliceHeader[viewIndex]; }
-  Void setHasCamParInSliceHeader( Int viewIndex, Bool b )  { m_bCamParInSliceHeader[viewIndex] = b; }
-#endif
 
 
   Int* getCodedScale         ( Int viewIndex )  { return m_aaaiCodedScale [viewIndex][0]; }
@@ -1704,11 +1665,7 @@ public:
       m_intraSdcWedgeFlag     [d] = false; 
       m_qtPredFlag            [d] = false; 
       m_interSdcFlag          [d] = false; 
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
       m_depthIntraSkipFlag    [d] = false;   
-#else
-      m_intraSingleFlag       [d] = false; 
-#endif
     }
   }
 
@@ -1751,13 +1708,8 @@ public:
   Void setInterSdcFlag( Int d, Bool flag ) { m_interSdcFlag[d] = flag; } 
   Bool getInterSdcFlag( Int d ) { return m_interSdcFlag[d]; } 
 
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   Void setDepthIntraSkipFlag( Int d, Bool flag ) { m_depthIntraSkipFlag[d] = flag; } 
   Bool getDepthIntraSkipFlag( Int d ) { return m_depthIntraSkipFlag[d]; } 
-#else
-  Void setIntraSingleFlag( Int d, Bool flag ) { m_intraSingleFlag[d] = flag; } 
-  Bool getIntraSingleFlag( Int d ) { return m_intraSingleFlag[d]; } 
-#endif
 
 private:
 
@@ -1774,11 +1726,7 @@ private:
   Bool        m_intraSdcWedgeFlag     [2];
   Bool        m_qtPredFlag            [2];
   Bool        m_interSdcFlag          [2];
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   Bool        m_depthIntraSkipFlag    [2];  
-#else
-  Bool        m_intraSingleFlag       [2];  
-#endif
 };
 
 #endif
@@ -1883,10 +1831,6 @@ private:
 #endif
 #if H_3D
   TComSps3dExtension m_sps3dExtension; 
-#if !HHI_CAM_PARA_K0052
-  UInt        m_uiCamParPrecision;
-  Bool        m_bCamParInSliceHeader;
-#endif
   Int         m_aaiCodedScale [2][MAX_NUM_LAYERS];
   Int         m_aaiCodedOffset[2][MAX_NUM_LAYERS];
 #endif
@@ -2516,36 +2460,24 @@ private:
   TComList<TComPic*> * m_pBaseViewRefPicList[MAX_NUM_LAYERS];
   UInt                 m_nARPStepNum; 
   Int         m_aiFirstTRefIdx    [2]; 
-#if HHI_RES_PRED_K0052
   std::vector<Int> m_pocsInCurrRPSs; 
-#endif
 #endif
 #if H_3D_IC
   Bool      m_bApplyIC;
   Bool      m_icSkipParseFlag;
 #endif
 #if H_3D
-#if HHI_INTER_COMP_PRED_K0052
   std::vector<Int> m_inCmpRefViewIdcs;
   Bool       m_inCmpPredAvailFlag; 
   Bool       m_inCmpPredFlag; 
-#endif
-#if HHI_CAM_PARA_K0052
   Bool       m_cpAvailableFlag; 
   Int        m_numViews; 
-#endif
   TComPic*   m_ivPicsCurrPoc [2][MAX_NUM_LAYERS];  
   Int**      m_depthToDisparityB; 
   Int**      m_depthToDisparityF; 
 #endif
 #endif
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   Bool      m_bApplyDIS;
-#else
-#if H_3D_SINGLE_DEPTH
-  Bool      m_bApplySingleDepthMode;
-#endif
-#endif
 #if H_3D_IC
   Int *m_aICEnableCandidate;
   Int *m_aICEnableNum;
@@ -2564,11 +2496,7 @@ private:
   Bool m_intraSdcWedgeFlag    ;
   Bool m_qtPredFlag           ;
   Bool m_interSdcFlag         ;
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   Bool m_depthIntraSkipFlag   ;
-#else
-  Bool m_intraSingleFlag      ;
-#endif
   Int  m_mpiSubPbSize         ; 
   Int  m_subPbSize            ; 
 public:
@@ -2636,16 +2564,12 @@ public:
   TComPic*  getRefPic           ( RefPicList e, Int iRefIdx)    { return  m_apcRefPicList[e][iRefIdx];  }
   Int       getRefPOC           ( RefPicList e, Int iRefIdx)    { return  m_aiRefPOCList[e][iRefIdx];   }
 #if H_3D
-#if HHI_INTER_COMP_PRED_K0052
   Bool      getInCmpPredAvailFlag( )                             { return m_inCmpPredAvailFlag;    } 
-#if HHI_CAM_PARA_K0052
   Bool      getCpAvailableFlag( )                             { return m_cpAvailableFlag;    } 
-#endif
   Bool      getInCompPredFlag( )                                 { return m_inCmpPredFlag;         }    
   Void      setInCompPredFlag( Bool b )                          { m_inCmpPredFlag = b;            }    
   Int       getInCmpRefViewIdcs( Int i )                         { return m_inCmpRefViewIdcs  [i]; }
   Int       getNumCurCmpLIds( )                                  { return (Int) m_inCmpRefViewIdcs.size(); } 
-#endif
   TComPic*  getIvPic            ( Bool depthFlag, Int viewIndex){ return  m_ivPicsCurrPoc[ depthFlag ? 1 : 0 ][ viewIndex ]; }
 #endif
 #if H_3D
@@ -2874,9 +2798,7 @@ public:
   Int       getFirstTRefIdx        ( RefPicList e )                { return  m_aiFirstTRefIdx[e];     }
   Void      setFirstTRefIdx        ( RefPicList e, Int i )         { m_aiFirstTRefIdx[e]    = i;      }
   Bool      getArpRefPicAvailable( RefPicList e, Int viewIdx) {return m_arpRefPicAvailable[e][getVPS()->getLayerIdInNuh(viewIdx, 0)]; }
-#if HHI_RES_PRED_K0052
   std::vector<Int> getPocsInCurrRPSs()                             { return m_pocsInCurrRPSs; }; 
-#endif
 #endif
   Void      setIsDepth            ( Bool isDepth )   { m_isDepth = isDepth; }
   Bool      getIsDepth            ()                 { return m_isDepth; }
@@ -2885,7 +2807,6 @@ public:
   Int*      getCodedOffset        ()  { return m_aaiCodedOffset[0]; }
   Int*      getInvCodedScale      ()  { return m_aaiCodedScale [1]; }
   Int*      getInvCodedOffset     ()  { return m_aaiCodedOffset[1]; }
-#if HHI_CAM_PARA_K0052
   Void      setCpScale( Int j, Int  val ) { m_aaiCodedScale[0][j] = val; } 
   Int       getCpScale( Int j ) { return m_aaiCodedScale[0][j]; } 
             
@@ -2897,7 +2818,6 @@ public:
             
   Void      setCpInvOff( Int j, Int  val ) { m_aaiCodedOffset[1][j] = val; } 
   Int       getCpInvOff( Int j ) { return m_aaiCodedOffset[1][j]; } 
-#endif
 
 #endif
 #endif
@@ -2905,13 +2825,8 @@ public:
   Void    setIvPicLists( TComPicLists* m_ivPicLists );
   Void    setDepthToDisparityLUTs();
 
-#if HHI_CAM_PARA_K0052
   Int* getDepthToDisparityB( Int refViewIdx ) { return m_depthToDisparityB[ getVPS()->getVoiInVps( refViewIdx) ]; }; 
   Int* getDepthToDisparityF( Int refViewIdx ) { return m_depthToDisparityF[ getVPS()->getVoiInVps( refViewIdx) ]; }; 
-#else
-  Int* getDepthToDisparityB( Int refViewIdx ) { return m_depthToDisparityB[ refViewIdx ]; }; 
-  Int* getDepthToDisparityF( Int refViewIdx ) { return m_depthToDisparityF[ refViewIdx ]; }; 
-#endif
 #endif
 #if H_3D_IC
   Void    setICEnableCandidate( Int* ICEnableCandidate)   { m_aICEnableCandidate = ICEnableCandidate; };
@@ -3014,7 +2929,6 @@ public:
 
 #if H_3D
   // 3D-HEVC tool parameters
-#if HHI_INTER_COMP_PRED_K0052
   Void deriveInCmpPredAndCpAvailFlag()
   { 
     Int numCurCmpLIds = getIsDepth() ? 1 : getNumActiveRefLayerPics(); 
@@ -3031,21 +2945,17 @@ public:
       }
     }
 
-#if HHI_CAM_PARA_K0052
     m_cpAvailableFlag = true;
     m_inCmpRefViewIdcs.clear();
-#endif
     Bool allRefCmpLayersAvailFlag = true;
 
     for( Int i = 0; i <= numCurCmpLIds - 1; i++ )
     {      
       m_inCmpRefViewIdcs.push_back( getVPS()->getViewOrderIdx( curCmpLIds[ i ] ));
-#if HHI_CAM_PARA_K0052
       if( !getVPS()->getCpPresentFlag( getVPS()->getVoiInVps( getViewIndex() ),  getVPS()->getVoiInVps( m_inCmpRefViewIdcs[ i ] ) ) )
       {
         m_cpAvailableFlag = false;
       }
-#endif
       Bool refCmpCurLIdAvailFlag = false;
       if( getVPS()->getViewCompLayerPresentFlag( m_inCmpRefViewIdcs[ i ], !getIsDepth() ) )
       {
@@ -3086,10 +2996,8 @@ public:
     }  
   };
 
-#endif
 
   Void init3dToolParameters();   
-#if HHI_INTER_COMP_PRED_K0052
   Void checkInCompPredRefLayers()
   {
     if ( getInCompPredFlag() )
@@ -3104,7 +3012,6 @@ public:
     }
   };
 
-#endif
   Bool getIvMvPredFlag           ( ) { return m_ivMvPredFlag           ; };
   Bool getIvMvScalingFlag        ( ) { return m_ivMvScalingFlag        ; };
   Bool getIvResPredFlag          ( ) { return m_ivResPredFlag          ; };
@@ -3116,11 +3023,7 @@ public:
   Bool getIntraSdcWedgeFlag      ( ) { return m_intraSdcWedgeFlag      ; };
   Bool getQtPredFlag             ( ) { return m_qtPredFlag             ; };
   Bool getInterSdcFlag           ( ) { return m_interSdcFlag           ; };
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   Bool getDepthIntraSkipFlag     ( ) { return m_depthIntraSkipFlag     ; };
-#else
-  Bool getIntraSingleFlag        ( ) { return m_intraSingleFlag        ; };
-#endif
 
   Int  getMpiSubPbSize           ( ) { return m_mpiSubPbSize           ; }; 
   Int  getSubPbSize              ( ) { return m_subPbSize              ; }; 

@@ -139,11 +139,7 @@ Void TAppEncTop::xInitLibCfg()
   xSetDpbSize              ( vps ); 
   xSetVPSVUI               ( vps ); 
 #if H_3D
-#if HHI_CAM_PARA_K0052
   xSetCamPara              ( vps ); 
-#endif
-#endif
-#if H_3D
   m_ivPicLists.setVPS      ( &vps );
   xDeriveDltArray          ( vps, dlt );
 #endif
@@ -200,11 +196,7 @@ Void TAppEncTop::xInitLibCfg()
       m_sps3dExtension.setIntraSdcWedgeFlag     ( d, m_intraSdcFlag || m_intraWedgeFlag     );
       m_sps3dExtension.setQtPredFlag            ( d, m_qtPredFlag            );
       m_sps3dExtension.setInterSdcFlag          ( d, m_interSdcFlag          );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
       m_sps3dExtension.setDepthIntraSkipFlag    ( d, m_depthIntraSkipFlag    );  
-#else
-      m_sps3dExtension.setIntraSingleFlag       ( d, m_intraSingleFlag       );  
-#endif
     }
   }
 #endif
@@ -228,13 +220,6 @@ Void TAppEncTop::xInitLibCfg()
     m_cTEncTop.setIsDepth                      ( isDepth );
     //====== Camera Parameters =========
     m_cTEncTop.setCameraParameters             ( &m_cCameraData );     
-#if !HHI_CAM_PARA_K0052
-    m_cTEncTop.setCamParPrecision              ( m_cCameraData.getCamParsCodedPrecision  () );
-    m_cTEncTop.setCamParInSliceHeader          ( m_cCameraData.getVaryingCameraParameters() );
-
-    m_cTEncTop.setCodedScale                   ( m_cCameraData.getCodedScale             () );
-    m_cTEncTop.setCodedOffset                  ( m_cCameraData.getCodedOffset            () );
-#endif
 #if H_3D_VSO
     //====== VSO =========
     m_cTEncTop.setRenderModelParameters        ( &m_cRenModStrParser ); 
@@ -358,7 +343,7 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
   m_cTEncTop.setSearchRange                  ( m_iSearchRange );
   m_cTEncTop.setBipredSearchRange            ( m_bipredSearchRange );
 
-#if SONY_MV_V_CONST_C0078
+#if H_MV
   m_cTEncTop.setUseDisparitySearchRangeRestriction ( m_bUseDisparitySearchRangeRestriction );
   m_cTEncTop.setVerticalDisparitySearchRange ( m_iVerticalDisparitySearchRange );
 #endif
@@ -650,7 +635,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
 #if H_MV
   }
 #endif
-#if H_3D_ANNEX_SELECTION_FIX
 #if H_3D
  /// SET Profiles
   for(Int layerIdInVps = 0; layerIdInVps < m_numberOfLayers; layerIdInVps++)
@@ -690,7 +674,6 @@ m_cTEncTop.setGopList                      ( m_GOPListMvc[layerIdInVps] );
     }
     m_acTEncTopList[ layerIdInVps ]->setProfileIdc( profileIdc ); 
   }
-#endif
 #endif
 #if H_3D_VSO
   if ( m_bUseVSO )
@@ -798,13 +781,6 @@ Void TAppEncTop::xDestroyLib()
 Void TAppEncTop::xInitLib(Bool isFieldCoding)
 {
 #if H_3D
-#if !HHI_CAM_PARA_K0052
-  for ( Int viewIndex = 0; viewIndex < m_vps->getNumViews(); viewIndex++ )
-  {
-    m_vps->initCamParaVPS( viewIndex, true, m_cCameraData.getCamParsCodedPrecision(), 
-      m_cCameraData.getVaryingCameraParameters(), m_cCameraData.getCodedScale(), m_cCameraData.getCodedOffset() );
-  }
-#endif
 #endif
 
 #if H_MV
@@ -1142,11 +1118,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
 #if H_MV
       if (m_pchReconFileList[layerId])
       {
-#if H_MV_ALIGN_HM_15
         m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRecTop, pcPicYuvRecBottom, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom, m_isTopFieldFirst );
-#else
-        m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRecTop, pcPicYuvRecBottom, m_confLeft, m_confRight, m_confTop, m_confBottom, m_isTopFieldFirst );
-#endif
       }
     }
   }
@@ -1199,11 +1171,7 @@ Void TAppEncTop::xWriteOutput(std::ostream& bitstreamFile, Int iNumEncoded, cons
 #if H_MV
       if (m_pchReconFileList[layerId])
       {
-#if H_MV_ALIGN_HM_15
         m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRec, m_confWinLeft, m_confWinRight, m_confWinTop, m_confWinBottom );
-#else
-        m_acTVideoIOYuvReconFileList[layerId]->write( pcPicYuvRec, m_confLeft, m_confRight, m_confTop, m_confBottom );
-#endif
       }    
     }
   }
@@ -1389,10 +1357,8 @@ Void TAppEncTop::xSetDimensionIdAndLength( TComVPS& vps )
   assert( m_iNumberOfViews == vps.getNumViews() ); 
 
 
-#if HHI_INTER_COMP_PRED_K0052
 #if H_3D
   vps.initViewCompLayer( ); 
-#endif
 #endif
 }
 
@@ -1411,9 +1377,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   Int  defaultDirectDependencyType = -1; 
   Bool defaultDirectDependencyFlag = false; 
 
-#if H_3D_DIRECT_DEP_TYPE
   Int directDepTypeLenMinus2 = 0;  
-#endif
   for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
   {
     Int numRefLayers = (Int) m_directRefLayers[depLayer].size(); 
@@ -1423,9 +1387,7 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       Int refLayer = m_directRefLayers[depLayer][i]; 
       vps.setDirectDependencyFlag( depLayer, refLayer, true); 
       Int curDirectDependencyType = m_dependencyTypes[depLayer][i]; 
-#if H_3D_DIRECT_DEP_TYPE        
       directDepTypeLenMinus2 = std::max( directDepTypeLenMinus2, gCeilLog2( curDirectDependencyType + 1  ) - 2 );  
-#endif
       if ( defaultDirectDependencyType != -1 )    
       {
         defaultDirectDependencyFlag = defaultDirectDependencyFlag && (curDirectDependencyType == defaultDirectDependencyType );         
@@ -1443,10 +1405,8 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   vps.setDefaultDirectDependencyFlag( defaultDirectDependencyFlag );       
   vps.setDefaultDirectDependencyType( defaultDirectDependencyFlag ? defaultDirectDependencyType : -1 );       
 
-#if H_3D_DIRECT_DEP_TYPE        
   assert( directDepTypeLenMinus2 <= 1 ); 
   vps.setDirectDepTypeLenMinus2( directDepTypeLenMinus2 ); 
-#endif
 
 
   vps.setRefLayers(); 
@@ -1494,17 +1454,8 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
               if ( vps.getIdDirectRefLayer( curLayerIdInNuh, geCur.m_interLayerPredLayerIdc[ j ] ) == refLayerIdInNuh )
 #endif
               {
-#if !HHI_INTER_COMP_PRED_K0052                
-                Bool refAlwaysIntra = ( i == getGOPSize() ) && ( m_iIntraPeriod[ curLayerIdInVps ] % m_iIntraPeriod[ refLayerIdInVps ] == 0 );
-#endif
                 Bool refLayerZero   = ( i == getGOPSize() ) && ( refLayerIdInVps == 0 );
-#if HHI_INTER_COMP_PRED_K0052
-                // refAlwaysIntra actually not needed, since TemporalIds need to be aligned within an AU. 
-                // Thus, reference pictures of IRAP pictures have TemporalId equal to 0.
                 maxTid = std::max( maxTid, refLayerZero ? 0 : geRef.m_temporalId ); 
-#else
-                maxTid = std::max( maxTid, ( refAlwaysIntra || refLayerZero ) ? 0 : geRef.m_temporalId ); 
-#endif
               }
             }
           }              
@@ -1512,7 +1463,6 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
         }
         else
         {        
-#if HHI_INTER_COMP_PRED_K0052
           if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
           {          
             Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
@@ -1551,38 +1501,6 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
               }
             }
           }        
-#else
-          if( m_depthFlag[ curLayerIdInVps ] && ( m_mpiFlag|| m_qtPredFlag || m_intraContourFlag ) ) 
-          {          
-            Int nuhLayerIdTex = vps.getLayerIdInNuh( vps.getViewIndex( curLayerIdInNuh ), false ); 
-            if ( nuhLayerIdTex == refLayerIdInNuh )
-            {
-              maxTid = std::max( maxTid, vps.getSubLayersVpsMaxMinus1( refLayerIdInVps) + 1 );
-            }
-          }
-          if( !m_depthFlag[ curLayerIdInVps ] && vps.getNumRefListLayers( curLayerIdInNuh) > 0  && ( m_depthRefinementFlag || m_viewSynthesisPredFlag || m_depthBasedBlkPartFlag ) ) 
-          {  
-            Int maxPresentTid =-1; 
-            Bool allPresent = true; 
-            for (Int i = 0; i < vps.getNumRefListLayers( curLayerIdInNuh); i++ )
-            {
-              Int nuhLayerIdDep = vps.getLayerIdInNuh( vps.getViewIndex( vps.getIdRefListLayer(curLayerIdInNuh, i ) ), true ); 
-              if ( nuhLayerIdDep== refLayerIdInNuh )
-              {
-                maxPresentTid= std::max( maxTid, vps.getSubLayersVpsMaxMinus1( refLayerIdInVps) + 1 );              
-              }
-              else
-              {
-                allPresent = false; 
-              }
-            }
-
-            if ( allPresent )
-            {
-              maxTid= std::max( maxTid, maxPresentTid );              
-            }
-          }        
-#endif
         }
       } // if ( vps.getDirectDependencyFlag( curLayerIdInVps, refLayerIdInVps ) ) 
       vps.setMaxTidIlRefPicsPlus1( refLayerIdInVps, curLayerIdInVps, maxTid + 1 );
@@ -1822,7 +1740,6 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
     repFormat->setChromaAndBitDepthVpsPresentFlag( true );    
     // ToDo not supported yet. 
     //repFormat->setSeparateColourPlaneVpsFlag( );
-#if H_MV_FIX_CONF_WINDOW
     Bool conformanceWindowVpsFlag = ( m_confWinBottom != 0 ) || ( m_confWinRight != 0 ) || ( m_confWinTop != 0 ) || ( m_confWinBottom != 0 ); 
     repFormat->setConformanceWindowVpsFlag( conformanceWindowVpsFlag );
     if ( conformanceWindowVpsFlag ) 
@@ -1832,13 +1749,6 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
       repFormat->setConfWinVpsTopOffset     ( m_confWinTop    / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() )  );
       repFormat->setConfWinVpsBottomOffset  ( m_confWinBottom / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() ) ); 
     }
-#else
-    repFormat->setConformanceWindowVpsFlag( true );
-    repFormat->setConfWinVpsLeftOffset    ( m_confWinLeft   / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() ) );
-    repFormat->setConfWinVpsRightOffset   ( m_confWinRight  / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() )  );
-    repFormat->setConfWinVpsTopOffset     ( m_confWinTop    / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() )  );
-    repFormat->setConfWinVpsBottomOffset  ( m_confWinBottom / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() ) ); 
-#endif
     assert( vps.getRepFormat( j ) == NULL ); 
     vps.setRepFormat( j , repFormat );
   }; 
@@ -1860,17 +1770,10 @@ Void TAppEncTop::xSetRepFormat( TComVPS& vps )
   //repFormat->setSeparateColourPlaneVpsFlag( );
 
   repFormat->setConformanceWindowVpsFlag( true );
-#if H_MV_ALIGN_HM_15
   repFormat->setConfWinVpsLeftOffset    ( m_confWinLeft   / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() ) );
   repFormat->setConfWinVpsRightOffset   ( m_confWinRight  / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() )  );
   repFormat->setConfWinVpsTopOffset     ( m_confWinTop    / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() )  );
   repFormat->setConfWinVpsBottomOffset  ( m_confWinBottom / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() ) ); 
-#else
-  repFormat->setConfWinVpsLeftOffset    ( m_confLeft   / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() ) );
-  repFormat->setConfWinVpsRightOffset   ( m_confRight  / TComSPS::getWinUnitX( repFormat->getChromaFormatVpsIdc() )  );
-  repFormat->setConfWinVpsTopOffset     ( m_confTop    / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() )  );
-  repFormat->setConfWinVpsBottomOffset  ( m_confBottom / TComSPS::getWinUnitY( repFormat->getChromaFormatVpsIdc() ) ); 
-#endif
   assert( vps.getRepFormat( 0 ) == NULL ); 
   vps.setRepFormat( 0 , repFormat );
 #endif
@@ -2249,7 +2152,6 @@ Void TAppEncTop::xSetVPSVUI( TComVPS& vps )
   }
 }
 
-#if HHI_CAM_PARA_K0052
 #if H_3D
 Void TAppEncTop::xSetCamPara                ( TComVPS& vps )
 {
@@ -2283,7 +2185,6 @@ Void TAppEncTop::xSetCamPara                ( TComVPS& vps )
   }
   vps.deriveCpPresentFlag(); 
 }
-#endif
 #endif
 
 
