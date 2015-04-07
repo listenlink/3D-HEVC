@@ -580,7 +580,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     encodeIntraDirModeLuma  ( pcCU, uiAbsPartIdx,true );
 #if H_3D_DIM_SDC
 #if H_3D_DISABLE_CHROMA
-    if(!pcCU->getSDCFlag(uiAbsPartIdx) && ( !pcCU->getSlice()->getIsDepth() || bRD ) ) 
+    if(!pcCU->getSDCFlag(uiAbsPartIdx) && ( pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0  || bRD ) ) 
 #else
     if(!pcCU->getSDCFlag(uiAbsPartIdx))
 #endif
