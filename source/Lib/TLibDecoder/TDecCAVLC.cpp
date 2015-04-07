@@ -3,7 +3,7 @@
 * and contributor rights, including patent rights, and no such rights are
 * granted under this license.  
 *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -3291,11 +3291,10 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
     uiLog2WeightDenomChroma = (UInt)(iDeltaDenom + uiLog2WeightDenomLuma);
   }
   else
-#if H_3D_DISABLE_CHROMA
   { 
+    // For some reasons this is also needed to fix a compiler warning when H_3D_DISABLE_CHROMA is equal to 0.
     uiLog2WeightDenomChroma = 0; 
   }
-#endif
 
 
   for ( Int iNumRef=0 ; iNumRef<iNbRef ; iNumRef++ ) 
