@@ -338,6 +338,7 @@
 #define H_3D_ANNEX_SELECTION_FIX               1
 #define H_3D_TMVP_FIX_TICKET_97                1
 #define H_3D_DIRECT_DEP_TYPE                   1
+#define H_3D_FIX_TMVP_SCALING_VIEW_ID          1
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
 #define H_MV_FIX_NUM_VIEWS                     1
