@@ -183,7 +183,7 @@ Void TDecEntropy::decodePredInfo    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt 
 #if !HHI_MOVE_SYN_K0052
     if(!pcCU->getSDCFlag(uiAbsPartIdx) && !pcCU->getSlice()->getIsDepth() )
 #else
-    if(!pcCU->getSlice()->getIsDepth() )
+    if(!pcCU->getSDCFlag(uiAbsPartIdx) && pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0  )
 #endif
 #else
     if(!pcCU->getSDCFlag(uiAbsPartIdx))
@@ -866,7 +866,7 @@ Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offs
     if( bFirstCbfOfCU || uiLog2TrafoSize > 2 )
     {
 #if H_3D_DISABLE_CHROMA
-      if (!pcCU->getSlice()->getIsDepth() )      
+      if (pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )      
       {
       if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth - 1 ) )
       {
@@ -1060,7 +1060,7 @@ Void TDecEntropy::decodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getTransformIdx(uiAbsPartIdx) == 0 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_LUMA) == 1 );
 #if H_3D_DISABLE_CHROMA
-    if (!pcCU->getSlice()->getIsDepth() )
+    if (pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )
     {
       assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
       assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );

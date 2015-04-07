@@ -1658,7 +1658,11 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #endif
   // Encode Coefficients
   Bool bCodeDQP = getdQPFlag();
+#if H_3D_DISABLE_CHROMA
+  m_pcEntropyCoder->encodeCoeff( pcCU, uiAbsPartIdx, uiDepth, pcCU->getWidth (uiAbsPartIdx), pcCU->getHeight(uiAbsPartIdx), bCodeDQP, false );
+#else
   m_pcEntropyCoder->encodeCoeff( pcCU, uiAbsPartIdx, uiDepth, pcCU->getWidth (uiAbsPartIdx), pcCU->getHeight(uiAbsPartIdx), bCodeDQP );
+#endif
   setdQPFlag( bCodeDQP );
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   }
@@ -2857,7 +2861,13 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, 
 
   // Encode Coefficients
   Bool bCodeDQP = getdQPFlag();
+#if H_3D_DISABLE_CHROMA
+  m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, rpcTempCU->getWidth (0), rpcTempCU->getHeight(0), bCodeDQP, true );
+#else
   m_pcEntropyCoder->encodeCoeff( rpcTempCU, 0, uiDepth, rpcTempCU->getWidth (0), rpcTempCU->getHeight(0), bCodeDQP );
+#endif
+
+
   setdQPFlag( bCodeDQP );
 #if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   }

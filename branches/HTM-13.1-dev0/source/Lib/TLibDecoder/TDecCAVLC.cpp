@@ -2485,7 +2485,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     {
       READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
 #if H_3D_DISABLE_CHROMA
-      if( !rpcSlice->getIsDepth() )
+      if( rpcSlice->getSPS()->getChromaFormatIdc() != 0 )
       {
       READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
     }
@@ -3270,7 +3270,7 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
 {
   wpScalingParam  *wp;
 #if H_3D_DISABLE_CHROMA
-  Bool            bChroma     = !pcSlice->getIsDepth();
+  Bool            bChroma     = ( pcSlice->getSPS()->getChromaFormatIdc() != 0 ); 
 #else
   Bool            bChroma     = true; // color always present in HEVC ?
 #endif
