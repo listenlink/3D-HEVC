@@ -2445,13 +2445,6 @@ UInt TComDataCU::getCtxInterDir( UInt uiAbsPartIdx )
 
 Void TComDataCU::setCbfSubParts( UInt uiCbfY, UInt uiCbfU, UInt uiCbfV, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if H_3D_DISABLE_CHROMA
-  if( this->getSlice()->getIsDepth() )
-  {
-    uiCbfU = 0;
-    uiCbfV = 0;
-  }
-#endif
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
   memset( m_puhCbf[0] + uiAbsPartIdx, uiCbfY, sizeof( UChar ) * uiCurrPartNumb );
   memset( m_puhCbf[1] + uiAbsPartIdx, uiCbfU, sizeof( UChar ) * uiCurrPartNumb );
@@ -2460,13 +2453,6 @@ Void TComDataCU::setCbfSubParts( UInt uiCbfY, UInt uiCbfU, UInt uiCbfV, UInt uiA
 
 Void TComDataCU::setCbfSubParts( UInt uiCbf, TextType eTType, UInt uiAbsPartIdx, UInt uiDepth )
 {
-#if H_3D_DISABLE_CHROMA
-  assert( getSlice() != NULL );
-  if( this->getSlice()->getIsDepth() && g_aucConvertTxtTypeToIdx[eTType] > 0  )
-  {
-    uiCbf = 0;    
-  }
-#endif
 
   UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
   memset( m_puhCbf[g_aucConvertTxtTypeToIdx[eTType]] + uiAbsPartIdx, uiCbf, sizeof( UChar ) * uiCurrPartNumb );
@@ -2482,13 +2468,6 @@ Void TComDataCU::setCbfSubParts( UInt uiCbf, TextType eTType, UInt uiAbsPartIdx,
  */
 Void TComDataCU::setCbfSubParts ( UInt uiCbf, TextType eTType, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth )
 {
-#if H_3D_DISABLE_CHROMA
-  assert( getSlice() != NULL );
-  if( this->getSlice()->getIsDepth() && g_aucConvertTxtTypeToIdx[eTType] > 0  )
-  {
-    uiCbf = 0;    
-  }
-#endif
   setSubPart<UChar>( uiCbf, m_puhCbf[g_aucConvertTxtTypeToIdx[eTType]], uiAbsPartIdx, uiDepth, uiPartIdx );
 }
 
