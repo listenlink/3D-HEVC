@@ -1579,8 +1579,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 #if H_3D
   m_pcEntropyCoder->encodeDIS( pcCU, uiAbsPartIdx );
   if(!pcCU->getDISFlag(uiAbsPartIdx))
-#endif
   {
+#endif
+
   m_pcEntropyCoder->encodePredMode( pcCU, uiAbsPartIdx );
   
   m_pcEntropyCoder->encodePartSize( pcCU, uiAbsPartIdx, uiDepth );
@@ -1601,7 +1602,9 @@ Void TEncCu::xEncodeCU( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
   // prediction Info ( Intra : direction mode, Inter : Mv, reference idx )
   m_pcEntropyCoder->encodePredInfo( pcCU, uiAbsPartIdx );
+#if H_3D
   m_pcEntropyCoder->encodeDBBPFlag( pcCU, uiAbsPartIdx );
+#endif
 #if H_3D_DIM_SDC
   m_pcEntropyCoder->encodeSDCFlag( pcCU, uiAbsPartIdx, false );
 #endif  
