@@ -5803,10 +5803,17 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUni
   if ( bIsCurrRefLongTerm || bIsColRefLongTerm ) // CY: this condition equals to both bIsCurrRefLongTerm and bIsColRefLongTerm being 1
   {
 #if H_3D_TMVP
+#if !H_3D_FIX_TMVP_SCALING_VIEW_ID
     Int iCurrViewId    = m_pcSlice->getViewIndex (); 
     Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewIndex (); 
     Int iColViewId     = pColCU->getSlice()->getViewIndex(); 
     Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewIndex(); 
+#else
+    Int iCurrViewId    = m_pcSlice->getViewId (); 
+    Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewId (); 
+    Int iColViewId     = pColCU->getSlice()->getViewId(); 
+    Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewId(); 
+#endif
 #if H_3D_TMVP_SCALING_FIX_K0053
     iScale = 4096;
     if ( iCurrRefViewId != iCurrViewId && iColViewId != iColRefViewId )
