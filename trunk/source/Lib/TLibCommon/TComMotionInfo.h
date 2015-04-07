@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,9 @@ typedef struct _AMVPInfo
 #if H_3D_NBDV
 typedef struct _DisCand 
 {
+#if !SEC_ARP_REM_ENC_RESTRICT_K0035
   Bool bDV;
+#endif
   TComMv m_acNBDV;              // DV from NBDV
 #if H_3D_NBDV_REF 
   TComMv m_acDoNBDV;            // DV from DoNBDV

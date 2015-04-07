@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -288,6 +288,10 @@ protected:
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
+#if SONY_MV_V_CONST_C0078
+  Bool      m_bUseDisparitySearchRangeRestriction;            ///< restrict vertical search range for inter-view prediction
+  Int       m_iVerticalDisparitySearchRange;                  ///< ME vertical search range for inter-view prediction
+#endif
   Bool      m_bUseFastEnc;                                    ///< flag for using fast encoder setting
   Bool      m_bUseEarlyCU;                                    ///< flag for using Early CU setting
   Bool      m_useFastDecisionForMerge;                        ///< flag for using Fast Decision Merge RD-Cost 
@@ -483,8 +487,11 @@ protected:
   Bool                   m_intraSdcFlag;
   Bool                   m_qtPredFlag;
   Bool                   m_interSdcFlag;
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Bool                   m_depthIntraSkipFlag; 
+#else
   Bool                   m_intraSingleFlag;
-
+#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -81,8 +81,12 @@ public:
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  virtual Void codeDIS          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#else
 #if H_3D_SINGLE_DEPTH
   virtual Void codeSingleDepthMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
+#endif
 #endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -146,7 +150,16 @@ public:
   Void    setBitstream              ( TComBitIf* p )          { m_pcEntropyCoderIf->setBitstream(p);  }
   Void    resetBits                 ()                        { m_pcEntropyCoderIf->resetBits();      }
   Void    resetCoeffCost            ()                        { m_pcEntropyCoderIf->resetCoeffCost(); }
-  UInt    getNumberOfWrittenBits    ()                        { return m_pcEntropyCoderIf->getNumberOfWrittenBits(); }
+  UInt    getNumberOfWrittenBits    ()
+  {
+#if ENC_DEC_TRACE && H_MV_ENC_DEC_TRAC
+    Bool oldJustDoIt = g_bJustDoIt;
+    g_bJustDoIt = true; 
+    writeToTraceFile( "NumberOfWrittenBits", m_pcEntropyCoderIf->getNumberOfWrittenBits(), g_encNumberOfWrittenBits );
+    g_bJustDoIt = oldJustDoIt; 
+#endif
+    return m_pcEntropyCoderIf->getNumberOfWrittenBits(); 
+  }
   UInt    getCoeffCost              ()                        { return  m_pcEntropyCoderIf->getCoeffCost(); }
   Void    resetEntropy              ()                        { m_pcEntropyCoderIf->resetEntropy();  }
   Void    determineCabacInitIdx     ()                        { m_pcEntropyCoderIf->determineCabacInitIdx(); }
@@ -165,8 +178,12 @@ public:
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void encodeDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD=false );
+#else
 #if H_3D_SINGLE_DEPTH
   Void encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD=false );
+#endif
 #endif
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeInterDirPU   ( TComDataCU* pcSubCU, UInt uiAbsPartIdx  );
@@ -208,9 +225,15 @@ public:
   Void encodeScalingList       ( TComScalingList* scalingList );
 
 private:
+#if H_3D_DISABLE_CHROMA
+  Void xEncodeTransform        ( TComDataCU* pcCU,UInt offsetLumaOffset, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP, Bool rd );
+public:
+  Void encodeCoeff             ( TComDataCU* pcCU,                 UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP, Bool rd );
+#else
   Void xEncodeTransform        ( TComDataCU* pcCU,UInt offsetLumaOffset, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP );
 public:
   Void encodeCoeff             ( TComDataCU* pcCU,                 UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP );
+#endif
   
   Void encodeCoeffNxN         ( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPartIdx, UInt uiTrWidth, UInt uiTrHeight, UInt uiDepth, TextType eType );
   

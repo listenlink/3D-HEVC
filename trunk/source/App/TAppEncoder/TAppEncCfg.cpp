@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -223,6 +223,11 @@ std::istringstream &operator>>(std::istringstream &in, GOPEntry &entry)     //in
   {
     in>>entry.m_interViewRefPosL[1][i];
   }
+#endif
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+  in>>entry.m_interCompPredFlag;
+#endif
 #endif
   return in;
 }
@@ -476,6 +481,10 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   // motion options
   ("FastSearch",              m_iFastSearch,                1, "0:Full search  1:Diamond  2:PMVFAST")
   ("SearchRange,-sr",         m_iSearchRange,              96, "Motion search range")
+#if SONY_MV_V_CONST_C0078
+  ("DispSearchRangeRestriction",  m_bUseDisparitySearchRangeRestriction, false, "restrict disparity search range")
+  ("VerticalDispSearchRange",     m_iVerticalDisparitySearchRange, 56, "vertical disparity search range")
+#endif
   ("BipredSearchRange",       m_bipredSearchRange,          4, "Motion search range for bipred refinement")
   ("HadamardME",              m_bUseHADME,               true, "Hadamard ME for fractional-pel")
   ("ASR",                     m_bUseASR,                false, "Adaptive motion search range")
@@ -784,7 +793,11 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
   ("IntraSdcFlag"          , m_intraSdcFlag          , true                                           , "Intra depth DCs"                           )
   ("QtPredFlag"            , m_qtPredFlag            , true                                           , "Quad tree prediction from texture to depth")
   ("InterSdcFlag"          , m_interSdcFlag          , true                                           , "Inter depth DCs"                           )
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  ("DepthIntraSkip"        , m_depthIntraSkipFlag    , true                                           , "Depth intra skip mode"                     )
+#else
   ("IntraSingleFlag"       , m_intraSingleFlag       , true                                           , "Intra single mode"                         )
+#endif
 #endif //H_3D
   ;
 
@@ -1545,7 +1558,11 @@ Void TAppEncCfg::xCheckParameter()
     for (Int j = 0; j < m_directRefLayers[i].size(); j++)
     {
       xConfirmPara( m_directRefLayers[i][j] < 0 || m_directRefLayers[i][j] >= i , "Reference layer id shall be greater than or equal to 0 and less than dependent layer id"); 
-      xConfirmPara( m_dependencyTypes[i][j] < 0 || m_dependencyTypes[i][j] >  2 , "Dependency type shall be greater than or equal to 0 and less than 3"); 
+#if H_3D_DIRECT_DEP_TYPE
+      xConfirmPara( m_dependencyTypes[i][j] < 0 || m_dependencyTypes[i][j] >  6 , "Dependency type shall be greater than or equal to 0 and less than 7");
+#else
+      xConfirmPara( m_dependencyTypes[i][j] < 0 || m_dependencyTypes[i][j] >  2 , "Dependency type shall be greater than or equal to 0 and less than 3");
+#endif 
     }        
   }  
 #endif
@@ -1581,6 +1598,9 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_iFastSearch < 0 || m_iFastSearch > 2,                                     "Fast Search Mode is not supported value (0:Full search  1:Diamond  2:PMVFAST)" );
   xConfirmPara( m_iSearchRange < 0 ,                                                        "Search Range must be more than 0" );
   xConfirmPara( m_bipredSearchRange < 0 ,                                                   "Search Range must be more than 0" );
+#if SONY_MV_V_CONST_C0078
+  xConfirmPara( m_iVerticalDisparitySearchRange <= 0 ,                                      "Vertical Disparity Search Range must be more than 0" );
+#endif
   xConfirmPara( m_iMaxDeltaQP > 7,                                                          "Absolute Delta QP exceeds supported range (0 to 7)" );
   xConfirmPara( m_iMaxCuDQPDepth > m_uiMaxCUDepth - 1,                                          "Absolute depth for a minimum CuDQP exceeds maximum coding unit depth" );
 
@@ -1696,7 +1716,11 @@ Void TAppEncCfg::xCheckParameter()
   xConfirmPara( m_pchCameraParameterFile    == 0                ,   "CameraParameterFile must be given");
   xConfirmPara( m_pchBaseViewCameraNumbers  == 0                ,   "BaseViewCameraNumbers must be given" );
 #if BUG_FIX_TK65
+#if HHI_CAM_PARA_K0052
+  xConfirmPara( m_iNumberOfViews != m_cCameraData.getBaseViewNumbers().size() ,   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#else
   xConfirmPara( ( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size() ) && ( m_numberOfLayers != m_cCameraData.getBaseViewNumbers().size() ),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
+#endif
 #else
   xConfirmPara( ((UInt) m_numberOfLayers >> 1 ) != m_cCameraData.getBaseViewNumbers().size(),   "Number of Views in BaseViewCameraNumbers must be equal to NumberOfViews" );
 #endif
@@ -2452,6 +2476,10 @@ Void TAppEncCfg::xPrintParameter()
   printf("Max RQT depth intra          : %d\n", m_uiQuadtreeTUMaxDepthIntra);
   printf("Min PCM size                 : %d\n", 1 << m_uiPCMLog2MinSize);
   printf("Motion search range          : %d\n", m_iSearchRange );
+#if SONY_MV_V_CONST_C0078
+  printf("Disp search range restriction: %d\n", m_bUseDisparitySearchRangeRestriction );
+  printf("Vertical disp search range   : %d\n", m_iVerticalDisparitySearchRange );
+#endif
 #if H_MV
   xPrintParaVector( "Intra period", m_iIntraPeriod );
 #else
@@ -2603,7 +2631,11 @@ Void TAppEncCfg::xPrintParameter()
   printf( "IntraSdc:%d "               , m_intraSdcFlag           ? 1 : 0 );
   printf( "QtPred:%d "                 , m_qtPredFlag             ? 1 : 0 );
   printf( "InterSdc:%d "               , m_interSdcFlag           ? 1 : 0 );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  printf( "DepthIntraSkip:%d "         , m_depthIntraSkipFlag     ? 1 : 0 );
+#else
   printf( "IntraSingle:%d "            , m_intraSingleFlag        ? 1 : 0 );
+#endif
 #endif
 
   printf("\n\n");  

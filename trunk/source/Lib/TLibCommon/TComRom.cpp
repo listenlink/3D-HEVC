@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -390,14 +390,17 @@ UInt64 g_nSymbolCounter = 0;
 Bool g_traceCU = false; 
 Bool g_tracePU = false; 
 Bool g_traceTU = false; 
+Bool g_disableNumbering = false; 
 Bool g_disableHLSTrace = false; 
-UInt64 g_stopAtCounter       = 0; 
+UInt64 g_stopAtCounter       = 937234; 
 Bool g_traceCopyBack         = false; 
 Bool g_decTraceDispDer       = false; 
 Bool g_decTraceMvFromMerge   = false; 
 Bool g_decTracePicOutput     = false; 
-Bool g_stopAtPos             = false; 
-Bool g_outputPos             = false; 
+Bool g_stopAtPos             = true; 
+Bool g_outputPos             = true;   
+Bool g_traceCameraParameters = false; 
+Bool g_encNumberOfWrittenBits     = true; 
 #endif
 #endif
 // ====================================================================================================================
@@ -599,12 +602,12 @@ Void stopAtPos( Int poc, Int layerId, Int cuPelX, Int cuPelY, Int cuWidth, Int c
   }
 
   Bool stopFlag = false; 
-  if ( g_stopAtPos && poc == 0 && layerId == 1 )
+  if ( g_stopAtPos && poc == 0 && layerId == 2 )
   {
     Bool stopAtCU = true; 
     if ( stopAtCU )        // Stop at CU with specific size
     {    
-      stopFlag = ( cuPelX  == 888 ) && ( cuPelY  == 248 ) && ( cuWidth == 8 ) && ( cuHeight == 8); 
+      stopFlag = ( cuPelX  == 0 ) && ( cuPelY  == 0 ) && ( cuWidth == 8 ) && ( cuHeight == 8 ); 
     }
     else
     {                     // Stop at specific position 
@@ -632,7 +635,10 @@ Void writeToTraceFile( const Char* symbolName, Int val, Bool doIt )
     {
       std::cout << "Break point here." << std::endl; 
     }
-    fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+    if ( !g_disableNumbering )
+    {  
+      fprintf( g_hTrace, "%8lld  ", g_nSymbolCounter++ );
+    }
     fprintf( g_hTrace, "%-50s       : %d\n", symbolName, val );     
     fflush ( g_hTrace );
     g_nSymbolCounter++; 
@@ -738,8 +744,12 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
 {
   assert( uiWidth == uiHeight );
 
+#if SHARP_DMM_CLEAN_K0042
+  Int posStart = 0, posEnd = 0;
+#else
   UChar    uhStartX = 0,    uhStartY = 0,    uhEndX = 0,    uhEndY = 0;
   Int   iStepStartX = 0, iStepStartY = 0, iStepEndX = 0, iStepEndY = 0;
+#endif
 
   UInt uiBlockSize = 0;
   switch( eWedgeRes )
@@ -751,6 +761,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
   TComWedgelet cTempWedgelet( uiWidth, uiHeight );
   for( UInt uiOri = 0; uiOri < 6; uiOri++ )
   {
+#if !SHARP_DMM_CLEAN_K0042
     // init the edge line parameters for each of the 6 wedgelet types
     switch( uiOri )
     {
@@ -761,15 +772,41 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     case( 4 ): {  uhStartX = 0;               uhStartY = 0;               uhEndX = 0;               uhEndY = (uiBlockSize-1); iStepStartX = +1; iStepStartY =  0; iStepEndX = +1; iStepEndY =  0; break; }
     case( 5 ): {  uhStartX = (uiBlockSize-1); uhStartY = 0;               uhEndX = 0;               uhEndY = 0;               iStepStartX =  0; iStepStartY = +1; iStepEndX =  0; iStepEndY = +1; break; }
     }
+#endif
 
+#if SHARP_DMM_CLEAN_K0042
+    posEnd = (Int) racWedgeList.size();
+    if (uiOri == 0 || uiOri == 4)
+    {
+#endif
     for( Int iK = 0; iK < uiBlockSize; iK += (uiWidth>=16 ?2:1))
     {
       for( Int iL = 0; iL < uiBlockSize; iL += ((uiWidth>=16 && uiOri<4)?2:1) )
       {
+#if SHARP_DMM_CLEAN_K0042
+        Int xS = iK;
+        Int yS = 0;
+        Int xE = (uiOri == 0) ? 0 : iL;
+        Int yE = (uiOri == 0) ? iL : uiBlockSize - 1;
+        cTempWedgelet.setWedgelet( xS, yS, xE, yE, uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
+#else
         cTempWedgelet.setWedgelet( uhStartX + (iK*iStepStartX) , uhStartY + (iK*iStepStartY), uhEndX + (iL*iStepEndX), uhEndY + (iL*iStepEndY), (UChar)uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
+#endif
         addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
       }
     }
+#if SHARP_DMM_CLEAN_K0042
+    }
+    else
+    {
+      for (Int pos = posStart; pos < posEnd; pos++)
+      {
+        cTempWedgelet.generateWedgePatternByRotate(racWedgeList[pos], uiOri);
+        addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
+      }
+    }
+    posStart = posEnd;
+#endif
   }
 
 

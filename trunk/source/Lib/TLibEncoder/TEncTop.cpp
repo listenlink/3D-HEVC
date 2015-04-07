@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -89,6 +89,9 @@ TEncTop::TEncTop()
 #if H_3D_IC
   m_aICEnableCandidate = NULL;
   m_aICEnableNum = NULL;
+#endif
+#if H_3D_ANNEX_SELECTION_FIX
+  m_cCavlcCoder.setEncTop(this); 
 #endif
 }
 
@@ -363,6 +366,7 @@ Void TEncTop::init(Bool isFieldCoding)
     m_aICEnableNum[i]=0;
   }
 #endif
+
   // initialize processing unit classes
   m_cGOPEncoder.  init( this );
   m_cSliceEncoder.init( this );
@@ -412,7 +416,11 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
   pcPicCurr->setLayerId( getLayerId()); 
 #endif
 #if H_3D
+#if HHI_CAM_PARA_K0052
+  pcPicCurr->setScaleOffset( m_cameraParameters->getCodedScale(), m_cameraParameters->getCodedOffset() );
+#else
   pcPicCurr->setScaleOffset( m_aaiCodedScale, m_aaiCodedOffset );
+#endif
 #endif
 }
 #endif
@@ -759,7 +767,13 @@ Void TEncTop::xInitSPS()
   {
     m_cSPS.setSpsInferScalingListFlag   ( true ); 
     m_cSPS.setSpsScalingListRefLayerId( m_cVPS->getIdRefLayer( getLayerId(), 0 ) ); 
-  }
+#if SONY_MV_V_CONST_C0078
+    if ( m_bUseDisparitySearchRangeRestriction )
+    {
+      m_cSPS.setInterViewMvVertConstraintFlag ( true ) ;
+    }
+#endif
+  }  
   m_cSPS.setSpsExtensionPresentFlag       ( true ); 
   m_cSPS.setSpsMultilayerExtensionFlag    ( true ); 
 #if H_3D
@@ -772,6 +786,9 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMaxCUWidth    ( g_uiMaxCUWidth      );
   m_cSPS.setMaxCUHeight   ( g_uiMaxCUHeight     );
   m_cSPS.setMaxCUDepth    ( g_uiMaxCUDepth      );
+#if H_3D_DISABLE_CHROMA
+  m_cSPS.setChromaFormatIdc( getIsDepth() ? CHROMA_400 : CHROMA_420 ); 
+#endif
 
   Int minCUSize = m_cSPS.getMaxCUWidth() >> ( m_cSPS.getMaxCUDepth()-g_uiAddCUDepth );
   Int log2MinCUSize = 0;

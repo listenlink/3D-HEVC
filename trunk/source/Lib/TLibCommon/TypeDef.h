@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -64,10 +64,17 @@
 #define H_MV          ( HEVC_EXT != 0)
 #define H_3D          ( HEVC_EXT == 2)
 
+#if H_MV
+#define SONY_MV_V_CONST_C0078            1   // Control disparity vector search range via configuration file
+#define H_MV_FIX_CONF_WINDOW             1   
+#endif
+
 #define NTT_BUG_FIX_TK54    1
 #define BUG_FIX_TK65        1
 
 #define MTK_I0093           1
+
+#define RWTH_DBBP_NO_SATD_K0028       1
 /////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////   MAJOR DEFINES   ///////////////////////////////////  
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -77,6 +84,13 @@
 #endif
 
 #if H_3D
+#define SEC_DEPTH_INTRA_SKIP_MODE_K0033   1   // Depth intra skip mode
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#define NEIGHBORING_PIX_AVAILABILITY_FIX  1
+#endif
+
+
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068
                                               // HHI_QTLPC_RAU_OFF_C0160 JCT3V-C0160 change 2: quadtree limitation and predictive coding switched off in random access units 
                                               // MTK_TEX_DEP_PAR_G0055 Texture-partition-dependent depth partition. JCT3V-G0055
@@ -115,6 +129,8 @@
                                               // SHARP_ARP_CHROMA_I0104     
                                               // MTK_I0072_IVARP_SCALING_FIX
 #define SEC_ARP_VIEW_REF_CHECK_J0037      1   // Signaling iv_res_pred_weight_idx when the current slice has both view and temporal reference picture(s), JCT3V-J0037 item1
+
+#define SEC_ARP_REM_ENC_RESTRICT_K0035    1   // Removal of encoder restriction of ARP, JCT3V-K0035
 
 #define H_3D_IC                           1   // Illumination Compensation, JCT3V-B0045, JCT3V-C0046, JCT3V-D0060
                                               // Unifying rounding offset, for IC part, JCT3V-D0135
@@ -184,11 +200,14 @@
                                               // SEC_ADAPT_DISABLE_IVMP        Disabling IVMP merge candidates when IC is enabled, JCT3V-H0070
                                               // SEC_SIMP_SHIFTED_DV_I0086     Simplification of Shifted DV candidate, JCT3V-I0086
 
-
+#define SEC_SHIFTED_IVMC_POS_K0036        1   // Position Derivation for Shifted-IVMC, JCT3V-K0036
 
 
 #define H_3D_TMVP                         1   // QC_TMVP_C0047 
                                               // Sony_M23639
+#if H_3D_TMVP
+#define H_3D_TMVP_SCALING_FIX_K0053       1   // QC/CY for K0053
+#endif
 
 #define H_3D_DIM                          1   // DIM, Depth intra modes, includes:
                                               // HHI_DMM_WEDGE_INTRA
@@ -238,10 +257,12 @@
                                               // MTK_J0033
                                               // SHARP_DLT_SIMP_J0029              1   // DLT(DepthValue2Idx[]) table derivation cleanup
 
+#if !SEC_DEPTH_INTRA_SKIP_MODE_K0033
 #define H_3D_SINGLE_DEPTH                 1   // Single depth mode proposed in JCT3V-I0095
                                               // HS_SP_SIMP_J0066
                                               // SINGLE_DEPTH_SIMP_J0115           1 
                                               // MTK_SINGLE_DEPTH_VPS_FLAG_J0060   1   // Add VPS control flags and remove slice header control flag for single depth, JCT3V-J0060
+#endif
 
 #define H_3D_INTER_SDC                    1   // INTER SDC, Inter simplified depth coding
                                               // LGE_INTER_SDC_E0156 Enable inter SDC for depth coding
@@ -264,6 +285,7 @@
                                               // SHARP_DBBP_SIMPLE_FLTER_I0109     1   // Simple condition and one dimensional filter for DBBP
                                               // SEC_DBBP_DMM4_THRESHOLD_I0076     Simplification of threshold derivation for DBBP and DMM4, JCT3V-I0076
                                               // SEC_DBBP_VIEW_REF_CHECK_J0037     1   // Signaling dbbp_flag when the current slice has view reference picture(s), JCT3V-J0037 item4
+#define HS_DBBP_CLEAN_K0048     1 
 
 #define H_3D_DDD                          1   // Disparity derived depth coding
                                               // LGE_DDD_REMOVAL_J0042_J0030 DDD removal
@@ -304,18 +326,30 @@
 
 // Fixes
 
+#define FIX_TICKET_95                          1   // pps_scaling_list_ref_layer_id parsing
 
 #if H_3D
+#define H_3D_DISABLE_CHROMA                    1 
 #define HHI_VIEW_ID_LIST_I5_J0107              0
+#define HHI_INTER_COMP_PRED_K0052              1
+#define HHI_RES_PRED_K0052                     1
+#define HHI_CAM_PARA_K0052                     1
+#define HHI_MOVE_SYN_K0052                     1
+#define H_3D_ANNEX_SELECTION_FIX               1
+#define H_3D_TMVP_FIX_TICKET_97                1
+#define H_3D_DIRECT_DEP_TYPE                   1
+#define H_3D_FIX_TMVP_SCALING_VIEW_ID          1
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
 #define H_MV_FIX_NUM_VIEWS                     1
 #define H_3D_OUTPUT_ACTIVE_TOOLS               0
 
+#if !SEC_DEPTH_INTRA_SKIP_MODE_K0033
 ///// ***** SINGLE DEPTH MODE *********
 #if H_3D_SINGLE_DEPTH
 #define SINGLE_DEPTH_MODE_CAND_LIST_SIZE            2 // size of the sample candidate list
 
+#endif
 #endif
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********
@@ -349,8 +383,11 @@
 #define H_3D_DIM_ENC                      1   // Depth Intra encoder optimizations, includes:
                                               // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
                                               // LG_ZEROINTRADEPTHRESI_A0087
+#define SHARP_DMM_CLEAN_K0042             1   // Generate DMM pattern with rotation 
 
 #define TICKET083_IVPFLAG_FIX             1
+#define SHARP_SUBBLOCK_CLEAN_K0044        1   // Remove unused bipred restriction
+
 #endif
 ///// ***** VIEW SYNTHESIS PREDICTION *********
 #if H_3D_VSP

@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -190,6 +190,15 @@ public:
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt        uiPreCalcDistC );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void  estIntraPredDIS        ( TComDataCU* pcCU, 
+                                 TComYuv*    pcOrgYuv, 
+                                 TComYuv*    pcPredYuv, 
+                                 TComYuv*    pcResiYuv, 
+                                 TComYuv*    pcRecoYuv,
+                                 UInt&       ruiDistC,
+                                 Bool        bLumaOnly );
+#else
 #if H_3D_SINGLE_DEPTH
   Void  estIntraPredSingleDepth  ( TComDataCU* pcCU, 
                                   TComYuv*    pcOrgYuv, 
@@ -198,7 +207,8 @@ public:
                                   TComYuv*    pcRecoYuv,
                                   UInt&       ruiDistC,
                                   Bool        bLumaOnly );
-#endif    
+#endif
+#endif
   
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
@@ -353,8 +363,12 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+  Void xIntraCodingDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, UInt uiPredMode );
+#else
 #if H_3D_SINGLE_DEPTH
   Void xIntraCodingSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Int iTestDepthIdx, Pel * DepthNeighbor );
+#endif
 #endif
 #if H_3D_DIM
   // -------------------------------------------------------------------------------------------------------------------
@@ -465,11 +479,21 @@ protected:
                                     TComMv&       rcMv,
                                     UInt&         ruiSAD );
   
+#if SONY_MV_V_CONST_C0078
+  Void xSetSearchRange           (  TComDataCU* pcCU, 
+                                    TComMv& cMvPred, 
+                                    Int iSrchRng, 
+                                    TComMv& rcMvSrchRngLT, 
+                                    TComMv& rcMvSrchRngRB, 
+                                    Bool bMv_VRng_Restricted, 
+                                    Int iVerDispSrchRng );
+#else
   Void xSetSearchRange            ( TComDataCU*   pcCU,
                                     TComMv&       cMvPred,
                                     Int           iSrchRng,
                                     TComMv&       rcMvSrchRngLT,
                                     TComMv&       rcMvSrchRngRB );
+#endif
   
   Void xPatternSearchFast         ( TComDataCU*   pcCU,
                                     TComPattern*  pcPatternKey,

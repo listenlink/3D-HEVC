@@ -3,7 +3,7 @@
 * and contributor rights, including patent rights, and no such rights are
 * granted under this license.  
 *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
 * All rights reserved.
 *
 * Redistribution and use in source and binary forms, with or without
@@ -38,7 +38,9 @@
 #include "TDecCAVLC.h"
 #include "SEIread.h"
 #include "TDecSlice.h"
-
+#if H_3D_ANNEX_SELECTION_FIX
+#include "TDecTop.h"
+#endif
 //! \ingroup TLibDecoder
 //! \{
 
@@ -90,6 +92,7 @@ Void  xTraceSliceHeader (TComSlice *pSlice)
 
 TDecCavlc::TDecCavlc()
 {
+#if !HHI_CAM_PARA_K0052
 #if H_3D
   m_aaiTempScale            = new Int* [ MAX_NUM_LAYERS ];
   m_aaiTempOffset           = new Int* [ MAX_NUM_LAYERS ];
@@ -99,10 +102,12 @@ TDecCavlc::TDecCavlc()
     m_aaiTempOffset           [ uiVId ] = new Int [ MAX_NUM_LAYERS ];
   }
 #endif
+#endif
 }
 
 TDecCavlc::~TDecCavlc()
 {
+#if !HHI_CAM_PARA_K0052
 #if H_3D
   for( UInt uiVId = 0; uiVId < MAX_NUM_LAYERS; uiVId++ )
   {
@@ -111,6 +116,7 @@ TDecCavlc::~TDecCavlc()
   }
   delete [] m_aaiTempScale;
   delete [] m_aaiTempOffset;
+#endif
 #endif
 }
 
@@ -776,7 +782,9 @@ Void TDecCavlc::parseSPS(TComSPS* pcSPS)
     READ_UVLC(     uiCode, "chroma_format_idc" );                  pcSPS->setChromaFormatIdc( uiCode );
     assert(uiCode <= 3);
     // in the first version we only support chroma_format_idc equal to 1 (4:2:0), so separate_colour_plane_flag cannot appear in the bitstream
+#if !H_3D_DISABLE_CHROMA
     assert (uiCode == 1);
+#endif
     if( uiCode == 3 )
     {
       READ_FLAG(     uiCode, "separate_colour_plane_flag");        assert(uiCode == 0);
@@ -1039,7 +1047,11 @@ Void TDecCavlc::parseSPS3dExtension( TComSPS* pcSPS )
       READ_FLAG( uiCode, "intra_sdc_wedge_flag" ); sps3dExt->setIntraSdcWedgeFlag( d, uiCode == 1 );
       READ_FLAG( uiCode, "qt_pred_flag" ); sps3dExt->setQtPredFlag( d, uiCode == 1 );
       READ_FLAG( uiCode, "inter_sdc_flag" ); sps3dExt->setInterSdcFlag( d, uiCode == 1 );
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+      READ_FLAG( uiCode, "intra_skip_flag" ); sps3dExt->setDepthIntraSkipFlag( d, uiCode == 1 );
+#else
       READ_FLAG( uiCode, "intra_single_flag" ); sps3dExt->setIntraSingleFlag( d, uiCode == 1 );
+#endif
     }
   }
 }
@@ -1050,7 +1062,14 @@ Void TDecCavlc::parsePPSMultilayerExtension(TComPPS* pcPPS)
   UInt uiCode = 0; 
   READ_FLAG( uiCode, "poc_reset_info_present_flag" ); pcPPS->setPocResetInfoPresentFlag( uiCode == 1 );
   READ_FLAG( uiCode, "pps_infer_scaling_list_flag" ); pcPPS->setPpsInferScalingListFlag( uiCode == 1 );
+#if FIX_TICKET_95
+  if (pcPPS->getPpsInferScalingListFlag())
+  {
   READ_CODE( 6, uiCode, "pps_scaling_list_ref_layer_id" ); pcPPS->setPpsScalingListRefLayerId( uiCode );
+  }
+#else
+  READ_CODE( 6, uiCode, "pps_scaling_list_ref_layer_id" ); pcPPS->setPpsScalingListRefLayerId( uiCode );
+#endif
 
   UInt numRefLocOffsets;; 
   READ_UVLC( numRefLocOffsets, "num_ref_loc_offsets" );
@@ -1316,6 +1335,11 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
     }
   }
 
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+  pcVPS->initViewCompLayer( ); 
+#endif
+#endif
 
   for( Int i = 1; i <= pcVPS->getMaxLayersMinus1(); i++ )
   {
@@ -1465,7 +1489,7 @@ Void TDecCavlc::parseVPSExtension( TComVPS* pcVPS )
   {
     for( Int i = pcVPS->getVpsBaseLayerInternalFlag() ? 1 : 0; i <=  pcVPS->getMaxLayersMinus1(); i++ )
     {
-        READ_CODE( pcVPS->getVpsRepFormatIdxLen(), uiCode, "vps_rep_format_idx[i]" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
+      READ_CODE( pcVPS->getVpsRepFormatIdxLen(), uiCode, "vps_rep_format_idx[i]" ); pcVPS->setVpsRepFormatIdx( i, uiCode );
     }
   }
   else
@@ -1904,8 +1928,38 @@ Void TDecCavlc::parseDpbSize( TComVPS* vps )
 #if H_3D
 Void TDecCavlc::parseVPS3dExtension( TComVPS* pcVPS )
 {
-  UInt uiCode; 
+#if HHI_CAM_PARA_K0052
+  UInt uiCode;   
+  READ_UVLC( uiCode, "cp_precision"); pcVPS->setCpPrecision( uiCode ) ;
+  
+  for (Int n = 1; n < pcVPS->getNumViews(); n++)
+  {
+    Int i      = pcVPS->getViewOIdxList( n );
+    Int iInVps = pcVPS->getVoiInVps( i ); 
+    READ_CODE( 6, uiCode, "num_cp" ); pcVPS->setNumCp( iInVps, uiCode );
 
+    if( pcVPS->getNumCp( iInVps ) > 0 )
+    {
+      READ_FLAG( uiCode, "cp_in_slice_segment_header_flag" ); pcVPS->setCpInSliceSegmentHeaderFlag( iInVps, uiCode == 1 );
+      for( Int m = 0; m < pcVPS->getNumCp( iInVps ); m++ )
+      {
+        READ_UVLC( uiCode, "cp_ref_voi" ); pcVPS->setCpRefVoi( iInVps, m, uiCode );
+        if( !pcVPS->getCpInSliceSegmentHeaderFlag( iInVps ) )
+        {
+          Int j      = pcVPS->getCpRefVoi( iInVps, m );
+          Int jInVps = pcVPS->getVoiInVps( j ); 
+          Int iCode;
+          READ_SVLC( iCode, "vps_cp_scale" );                pcVPS->setVpsCpScale   ( iInVps, jInVps, iCode );
+          READ_SVLC( iCode, "vps_cp_off" );                  pcVPS->setVpsCpOff     ( iInVps, jInVps, iCode );
+          READ_SVLC( iCode, "vps_cp_inv_scale_plus_scale" ); pcVPS->setVpsCpInvScale( iInVps, jInVps, iCode - pcVPS->getVpsCpScale( iInVps, jInVps ) );
+          READ_SVLC( iCode, "vps_cp_inv_off_plus_off" );     pcVPS->setVpsCpInvOff  ( iInVps, jInVps, iCode - pcVPS->getVpsCpOff  ( iInVps, jInVps ) );
+        }
+      }
+    }    
+  }
+  pcVPS->deriveCpPresentFlag(); 
+#else
+  UInt uiCode; 
 
   UInt uiCamParPrecision = 0; 
   Bool bCamParSlice      = false; 
@@ -1954,6 +2008,7 @@ Void TDecCavlc::parseVPS3dExtension( TComVPS* pcVPS )
 #endif
     }
   }
+#endif
 }
 #endif
 #endif
@@ -2014,8 +2069,10 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 #endif
 #endif
   rpcSlice->setSPS(sps);
+#if !HHI_INTER_COMP_PRED_K0052
 #if H_3D
   rpcSlice->init3dToolParameters();
+#endif
 #endif
   rpcSlice->setPPS(pps);
   if( pps->getDependentSliceSegmentsEnabledFlag() && ( !firstSliceSegmentInPic ))
@@ -2107,7 +2164,13 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->setPicOutputFlag( true );
     }
     // in the first version chroma_format_idc is equal to one, thus colour_plane_id will not be present
+
+#if H_3D_DISABLE_CHROMA
+    assert (sps->getChromaFormatIdc() == 1 || rpcSlice->getIsDepth() );
+    assert (sps->getChromaFormatIdc() == 0 || !rpcSlice->getIsDepth() );
+#else
     assert (sps->getChromaFormatIdc() == 1 );
+#endif
     // if( separate_colour_plane_flag  ==  1 )
     //   colour_plane_id                                      u(2)
 
@@ -2404,11 +2467,36 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
         rpcSlice->setInterLayerPredLayerIdc( i, rpcSlice->getRefLayerPicIdc( i ) );
       }
     }
+#if HHI_INTER_COMP_PRED_K0052
+#if H_3D
+    if ( getDecTop()->decProcAnnexI() )
+    {    
+      rpcSlice->deriveInCmpPredAndCpAvailFlag();
+      if ( rpcSlice->getInCmpPredAvailFlag() )
+      {
+        READ_FLAG(uiCode, "in_comp_pred_flag");  rpcSlice->setInCompPredFlag((Bool)uiCode);      
+      }
+      rpcSlice->init3dToolParameters(); 
+    }
+#endif
+#endif
 #endif
     if(sps->getUseSAO())
     {
       READ_FLAG(uiCode, "slice_sao_luma_flag");  rpcSlice->setSaoEnabledFlag((Bool)uiCode);
+#if H_3D_DISABLE_CHROMA
+      if( rpcSlice->getSPS()->getChromaFormatIdc() != 0 )
+      {
       READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
+    }
+      else
+      {
+        rpcSlice->setSaoEnabledFlagChroma( false );
+      }
+      
+#else
+      READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
+#endif
     }
 
     if (rpcSlice->getIdrPicFlag())
@@ -2573,7 +2661,14 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
       rpcSlice->initWpScaling();
     }
 #if H_3D_IC
+#if H_3D_ANNEX_SELECTION_FIX
+    else if(    rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) 
+             && !rpcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 
+             && getDecTop()->decProcAnnexI()
+           )
+#else
     else if( rpcSlice->getViewIndex() && ( rpcSlice->getSliceType() == P_SLICE || rpcSlice->getSliceType() == B_SLICE ) && !rpcSlice->getIsDepth() && vps->getNumRefListLayers( layerId ) > 0 )
+#endif
     {
       UInt uiCodeTmp = 0;
 
@@ -2670,6 +2765,25 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     rpcSlice->setLFCrossSliceBoundaryFlag( (uiCode==1)?true:false);
 
+#if HHI_CAM_PARA_K0052
+#if H_3D
+    if ( getDecTop()->decProcAnnexI() )
+    {
+      Int voiInVps = vps->getVoiInVps( rpcSlice->getViewIndex() ); 
+      if( vps->getCpInSliceSegmentHeaderFlag( voiInVps ) && !rpcSlice->getIsDepth() )
+      {
+        for( Int m = 0; m < vps->getNumCp( voiInVps ); m++ )
+        {
+          Int jInVps = vps->getVoiInVps( vps->getCpRefVoi( voiInVps, m ));
+          READ_SVLC( iCode, "cp_scale" );                rpcSlice->setCpScale   ( jInVps, iCode );
+          READ_SVLC( iCode, "cp_off" );                  rpcSlice->setCpOff     ( jInVps, iCode );
+          READ_SVLC( iCode, "cp_inv_scale_plus_scale" ); rpcSlice->setCpInvScale( jInVps, iCode - rpcSlice->getCpScale   ( jInVps ));
+          READ_SVLC( iCode, "cp_inv_off_plus_off" );     rpcSlice->setCpInvOff  ( jInVps, iCode - rpcSlice->getCpOff     ( jInVps ));
+        }
+      }
+    }
+#endif
+#endif
   }
   
     UInt *entryPointOffset          = NULL;
@@ -2693,6 +2807,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     rpcSlice->setNumEntryPointOffsets ( 0 );
   }
 
+#if !HHI_CAM_PARA_K0052
 #if H_3D
 #if H_3D_FCO
   if( rpcSlice->getVPS()->hasCamParInSliceHeader( rpcSlice->getViewIndex() )  && rpcSlice->getIsDepth() )
@@ -2710,6 +2825,7 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
     }
     rpcSlice->setCamparaSlice( m_aaiTempScale, m_aaiTempOffset );
   }
+#endif
 #endif
 
   if(pps->getSliceHeaderExtensionPresentFlag())
@@ -2983,12 +3099,21 @@ Void TDecCavlc::parseSkipFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt
 {
   assert(0);
 }
+
+#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+Void TDecCavlc::parseDIS( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
+{
+  assert(0);
+}
+#else
 #if H_3D_SINGLE_DEPTH
 Void TDecCavlc::parseSingleDepthMode( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
 }
 #endif
+#endif
+
 Void TDecCavlc::parseCUTransquantBypassFlag( TComDataCU* /*pcCU*/, UInt /*uiAbsPartIdx*/, UInt /*uiDepth*/ )
 {
   assert(0);
@@ -3144,12 +3269,16 @@ Void TDecCavlc::parseSDCFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
 Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
 {
   wpScalingParam  *wp;
+#if H_3D_DISABLE_CHROMA
+  Bool            bChroma     = ( pcSlice->getSPS()->getChromaFormatIdc() != 0 ); 
+#else
   Bool            bChroma     = true; // color always present in HEVC ?
+#endif
   SliceType       eSliceType  = pcSlice->getSliceType();
   Int             iNbRef       = (eSliceType == B_SLICE ) ? (2) : (1);
   UInt            uiLog2WeightDenomLuma, uiLog2WeightDenomChroma;
   UInt            uiTotalSignalledWeightFlags = 0;
-  
+
   Int iDeltaDenom;
   // decode delta_luma_log2_weight_denom :
   READ_UVLC( uiLog2WeightDenomLuma, "luma_log2_weight_denom" );     // ue(v): luma_log2_weight_denom
@@ -3161,6 +3290,12 @@ Void TDecCavlc::xParsePredWeightTable( TComSlice* pcSlice )
     assert((iDeltaDenom + (Int)uiLog2WeightDenomLuma)<=7);
     uiLog2WeightDenomChroma = (UInt)(iDeltaDenom + uiLog2WeightDenomLuma);
   }
+  else
+  { 
+    // For some reasons this is also needed to fix a compiler warning when H_3D_DISABLE_CHROMA is equal to 0.
+    uiLog2WeightDenomChroma = 0; 
+  }
+
 
   for ( Int iNumRef=0 ; iNumRef<iNbRef ; iNumRef++ ) 
   {

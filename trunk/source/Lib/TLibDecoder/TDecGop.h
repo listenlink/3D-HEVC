@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -55,12 +55,17 @@
 #include "TDecBinCoder.h"
 #include "TDecBinCoderCABAC.h"
 
+
 //! \ingroup TLibDecoder
 //! \{
 
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
+#if H_3D_ANNEX_SELECTION_FIX
+class TDecTop; 
+#endif
+
 
 /// GOP decoder class
 class TDecGop
@@ -77,6 +82,9 @@ private:
   TDecCavlc*            m_pcCavlcDecoder;
   TDecSlice*            m_pcSliceDecoder;
   TComLoopFilter*       m_pcLoopFilter;
+#if H_3D_ANNEX_SELECTION_FIX
+  TDecTop*              m_decTop; 
+#endif
   
   TComSampleAdaptiveOffset*     m_pcSAO;
   Double                m_dDecTime;

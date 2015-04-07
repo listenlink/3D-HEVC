@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -141,6 +141,11 @@ protected:
   Void xSetRepFormat              ( TComVPS& vps );
   Void xSetDpbSize                ( TComVPS& vps );
   Void xSetVPSVUI                 ( TComVPS& vps );
+#if HHI_CAM_PARA_K0052
+#if H_3D
+  Void xSetCamPara                ( TComVPS& vps );
+#endif
+#endif
   GOPEntry* xGetGopEntry( Int layerIdInVps, Int poc );
   Int  xGetMax( std::vector<Int>& vec);
   Bool xLayerIdInTargetEncLayerIdList( Int nuhLayerId );

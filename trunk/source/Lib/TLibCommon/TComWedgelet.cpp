@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
- * Copyright (c) 2010-2011, ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -176,6 +176,41 @@ Bool TComWedgelet::checkInvIdentical( Bool* pbRefPattern )
   return true;
 }
 
+#if SHARP_DMM_CLEAN_K0042
+Void TComWedgelet::generateWedgePatternByRotate(const TComWedgelet &rcWedge, Int rotate)
+{
+  Int stride = m_uiWidth;
+  Int sinc, offsetI, offsetJ;
+  
+  sinc = 1;
+  offsetI = ( sinc) < 0 ? stride-1 : 0; // 0
+  offsetJ = (-sinc) < 0 ? stride-1 : 0; // stride - 1
+
+  for (Int y = 0; y < stride; y++)
+  {
+    for (Int x = 0; x < stride; x++)
+    {
+      Int i = offsetI + sinc * y; // y
+      Int j = offsetJ - sinc * x; // stride - 1 - x
+      m_pbPattern[(y * stride) + x] = !rcWedge.m_pbPattern[(j * stride) + i];
+    }
+  }
+  Int blocksize = rcWedge.m_uiWidth * (rcWedge.m_eWedgeRes == HALF_PEL ? 2 : 1);
+  Int offsetX = (-sinc) < 0 ? blocksize - 1 : 0;
+  Int offsetY = ( sinc) < 0 ? blocksize - 1 : 0;
+  m_uhXs = offsetX - sinc * rcWedge.m_uhYs;
+  m_uhYs = offsetY + sinc * rcWedge.m_uhXs;
+  m_uhXe = offsetX - sinc * rcWedge.m_uhYe;
+  m_uhYe = offsetY + sinc * rcWedge.m_uhXe;
+  m_uhOri = rotate;
+  m_eWedgeRes = rcWedge.m_eWedgeRes;
+  m_bIsCoarse = rcWedge.m_bIsCoarse;
+  m_uiAng = rcWedge.m_uiAng;
+  m_uiWidth  = rcWedge.m_uiWidth;
+  m_uiHeight = rcWedge.m_uiHeight;
+}
+#endif
+
 Void TComWedgelet::xGenerateWedgePattern()
 {
   UInt uiTempBlockSize = 0;
@@ -192,6 +227,21 @@ Void TComWedgelet::xGenerateWedgePattern()
 
   xDrawEdgeLine( uhXs, uhYs, uhXe, uhYe, pbTempPattern, iTempStride );
 
+#if SHARP_DMM_CLEAN_K0042
+  Int shift = (m_eWedgeRes == HALF_PEL) ? 1 : 0;
+  Int endPos = uhYe>>shift;
+  for (Int y = 0; y <= endPos; y++)
+  {
+    for (Int x = 0; x < m_uiWidth && pbTempPattern[(y * m_uiWidth) + x] == 0; x++)
+    {
+      pbTempPattern[(y * m_uiWidth) + x] = true;
+    }
+  }
+  for( UInt k = 0; k < (m_uiWidth * m_uiHeight); k++ )
+  {
+    m_pbPattern[k] = pbTempPattern[k];
+  };
+#else
   switch( m_uhOri )
   {
   case( 0 ): { for( UInt iX = 0;                 iX < uhXs;            iX++ ) { UInt iY = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY++; } } } break;
@@ -251,6 +301,7 @@ Void TComWedgelet::xGenerateWedgePattern()
     }
     break;
   }
+#endif
 
   if( pbTempPattern )
   {
@@ -293,8 +344,15 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
 
   for( Int x = x0; x <= x1; x++ )
   {
+#if SHARP_DMM_CLEAN_K0042
+    Int shift = (m_eWedgeRes == HALF_PEL) ? 1 : 0;
+    Int stride = iPatternStride >> shift;
+    if( steep ) { pbPattern[((x>>shift) * stride) + (y>>shift)] = true; }
+    else        { pbPattern[((y>>shift) * stride) + (x>>shift)] = true; }
+#else
     if( steep ) { pbPattern[(x * iPatternStride) + y] = true; }
     else        { pbPattern[(y * iPatternStride) + x] = true; }
+#endif
 
     error += deltaerr;
     if( error >= deltax )
