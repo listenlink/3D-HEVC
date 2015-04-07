@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1411,6 +1411,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
   Int  defaultDirectDependencyType = -1; 
   Bool defaultDirectDependencyFlag = false; 
 
+#if H_3D_DIRECT_DEP_TYPE
+  Int directDepTypeLenMinus2 = 0;  
+#endif
   for( Int depLayer = 1; depLayer < m_numberOfLayers; depLayer++ )
   {
     Int numRefLayers = (Int) m_directRefLayers[depLayer].size(); 
@@ -1420,7 +1423,9 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
       Int refLayer = m_directRefLayers[depLayer][i]; 
       vps.setDirectDependencyFlag( depLayer, refLayer, true); 
       Int curDirectDependencyType = m_dependencyTypes[depLayer][i]; 
-
+#if H_3D_DIRECT_DEP_TYPE        
+      directDepTypeLenMinus2 = std::max( directDepTypeLenMinus2, gCeilLog2( curDirectDependencyType + 1  ) - 2 );  
+#endif
       if ( defaultDirectDependencyType != -1 )    
       {
         defaultDirectDependencyFlag = defaultDirectDependencyFlag && (curDirectDependencyType == defaultDirectDependencyType );         
@@ -1437,6 +1442,12 @@ Void TAppEncTop::xSetDependencies( TComVPS& vps )
 
   vps.setDefaultDirectDependencyFlag( defaultDirectDependencyFlag );       
   vps.setDefaultDirectDependencyType( defaultDirectDependencyFlag ? defaultDirectDependencyType : -1 );       
+
+#if H_3D_DIRECT_DEP_TYPE        
+  assert( directDepTypeLenMinus2 <= 1 ); 
+  vps.setDirectDepTypeLenMinus2( directDepTypeLenMinus2 ); 
+#endif
+
 
   vps.setRefLayers(); 
 

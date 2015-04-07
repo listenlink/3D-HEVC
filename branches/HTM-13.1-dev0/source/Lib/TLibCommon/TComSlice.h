@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -3097,9 +3097,9 @@ public:
       for (Int i = 0; i < getNumCurCmpLIds(); i++ )
       {
         assert( getIvPic(!getIsDepth(), getInCmpRefViewIdcs( i ) ) != NULL );       
-        // It is a requirement of bitstream conformance that there 
-        // is a picture in the DPB with PicOrderCntVal equal to the PicOrderCntVal of the current picture, 
-        // and a nuh_layer_id value equal to ViewCompLayerId[ inCmpRefViewIdcs[ i ] ][ !DepthFlag ].
+        //  It is a requirement of bitstream conformance that there 
+        //  is a picture in the DPB with PicOrderCntVal equal to the PicOrderCntVal of the current picture, 
+        //  and a nuh_layer_id value equal to ViewCompLayerId[ inCmpRefViewIdcs[ i ] ][ !DepthFlag ].
       }
     }
   };

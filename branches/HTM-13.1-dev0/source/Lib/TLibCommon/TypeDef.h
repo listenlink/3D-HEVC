@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.  
  *
-* Copyright (c) 2010-2014, ITU/ISO/IEC
+* Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -327,9 +327,9 @@
 // Fixes
 
 #define FIX_TICKET_95                          1   // pps_scaling_list_ref_layer_id parsing
-#define H_3D_DISABLE_CHROMA                    1 
 
 #if H_3D
+#define H_3D_DISABLE_CHROMA                    1 
 #define HHI_VIEW_ID_LIST_I5_J0107              0
 #define HHI_INTER_COMP_PRED_K0052              1
 #define HHI_RES_PRED_K0052                     1
@@ -337,7 +337,7 @@
 #define HHI_MOVE_SYN_K0052                     1
 #define H_3D_ANNEX_SELECTION_FIX               1
 #define H_3D_TMVP_FIX_TICKET_97                1
-
+#define H_3D_DIRECT_DEP_TYPE                   1
 #endif
 #define H_MV_FIX_REF_LAYER_PIC_FLAG            1
 #define H_MV_FIX_NUM_VIEWS                     1
