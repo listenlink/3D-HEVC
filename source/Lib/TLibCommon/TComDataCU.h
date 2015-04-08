@@ -71,7 +71,7 @@ typedef struct _DBBPTmpData
   UChar       auhMergeIndex[2];     // for two segments
   PartSize    eVirtualPartSize;
   UInt        uiVirtualPartIndex;
-} DBBPTmpData;
+} DbbpTmpData;
 #endif
 
 // ====================================================================================================================
@@ -172,12 +172,10 @@ private:
   DisInfo*      m_pDvInfo;
 #endif
 #if H_3D_VSP
-  Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not
-                                      ///< 0: non-VSP; 1: VSP
+  Char*         m_piVSPFlag;          ///< array of VSP flags to indicate whehter a block uses VSP or not  ///< 0: non-VSP; 1: VSP
 #endif
 #if H_3D_SPIVMP
-  Bool*         m_pbSPIVMPFlag;       ///< array of sub-PU IVMP flags to indicate whehter a block uses sub-PU IVMP
-                                      ///< 0: non-SPIVMP; 1: SPIVMP
+  Bool*         m_pbSPIVMPFlag;       ///< array of sub-PU IVMP flags to indicate whehter a block uses sub-PU IVMP ///< 0: non-SPIVMP; 1: SPIVMP
 #endif
 #if H_3D_ARP
   UChar*        m_puhARPW;
@@ -193,12 +191,12 @@ private:
 #if H_3D_DIM_SDC
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
-  Pel          m_apDmmPredictor[2];
+  Pel           m_apDmmPredictor[2];
 #endif
 #endif
 #if H_3D_DBBP
   Bool*         m_pbDBBPFlag;        ///< array of DBBP flags
-  DBBPTmpData   m_sDBBPTmpData;
+  DbbpTmpData   m_sDBBPTmpData;
 #endif
 #if H_3D
   Bool          m_bAvailableFlagA1;    ///< A1 available flag
@@ -246,8 +244,7 @@ protected:
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int uiCUAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
 #if H_3D_TMVP
-  ,
-  Bool bMRG = true
+  ,  Bool bMRG = true
 #endif
   );
   
@@ -367,7 +364,7 @@ public:
   Bool          getDBBPFlag           ( UInt uiIdx )            { return m_pbDBBPFlag[uiIdx];        }
   Void          setDBBPFlag           ( UInt uiIdx, Bool b )    { m_pbDBBPFlag[uiIdx] = b;           }
   Void          setDBBPFlagSubParts   ( Bool bDBBPFlag, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth );
-  DBBPTmpData*  getDBBPTmpData        () { return &m_sDBBPTmpData; }
+  DbbpTmpData*  getDBBPTmpData        () { return &m_sDBBPTmpData; }
 #endif
   
   UChar*        getWidth              ()                        { return m_puhWidth;          }
@@ -595,7 +592,7 @@ UChar         getNumPartitions       ();
   
   Void          clipMv                ( TComMv&     rcMv     );
 #if H_MV
-  Void          checkMV_V (TComMv&  rcMv,  RefPicList eRefPicList, int iRefIdx );
+  Void          checkMvVertRest (TComMv&  rcMv,  RefPicList eRefPicList, int iRefIdx );
 #endif
   Void          getMvPredLeft         ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldA.getMv(); }
   Void          getMvPredAbove        ( TComMv&     rcMvPred )   { rcMvPred = m_cMvFieldB.getMv(); }

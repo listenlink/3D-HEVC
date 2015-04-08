@@ -352,7 +352,7 @@ Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst,
   )
 {
   assert(frac >= 0 && frac < 4);
-  
+
   if ( frac == 0 )
   {
     filterCopy(g_bitDepthY, src, srcStride, dst, dstStride, width, height, true, isLast );
@@ -367,7 +367,7 @@ Void TComInterpolationFilter::filterHorLuma(Pel *src, Int srcStride, Short *dst,
     else
     {
 #endif
-    filterHor<NTAPS_LUMA>(g_bitDepthY, src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
+      filterHor<NTAPS_LUMA>(g_bitDepthY, src, srcStride, dst, dstStride, width, height, isLast, m_lumaFilter[frac]);
 #if H_3D_ARP
     }
 #endif
@@ -435,7 +435,7 @@ Void TComInterpolationFilter::filterHorChroma(Pel *src, Int srcStride, Short *ds
   )
 {
   assert(frac >= 0 && frac < 8);
-  
+
   if ( frac == 0 )
   {
     filterCopy(g_bitDepthC, src, srcStride, dst, dstStride, width, height, true, isLast );
@@ -450,7 +450,7 @@ Void TComInterpolationFilter::filterHorChroma(Pel *src, Int srcStride, Short *ds
     else
     {
 #endif
-    filterHor<NTAPS_CHROMA>(g_bitDepthC, src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac]);
+      filterHor<NTAPS_CHROMA>(g_bitDepthC, src, srcStride, dst, dstStride, width, height, isLast, m_chromaFilter[frac]);
 #if H_3D_ARP
     }
 #endif
@@ -477,7 +477,7 @@ Void TComInterpolationFilter::filterVerChroma(Pel *src, Int srcStride, Short *ds
   )
 {
   assert(frac >= 0 && frac < 8);
-  
+
   if ( frac == 0 )
   {
     filterCopy(g_bitDepthC, src, srcStride, dst, dstStride, width, height, isFirst, isLast );
@@ -492,7 +492,7 @@ Void TComInterpolationFilter::filterVerChroma(Pel *src, Int srcStride, Short *ds
     else
     {
 #endif
-    filterVer<NTAPS_CHROMA>(g_bitDepthC, src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac]);
+      filterVer<NTAPS_CHROMA>(g_bitDepthC, src, srcStride, dst, dstStride, width, height, isFirst, isLast, m_chromaFilter[frac]);
 #if H_3D_ARP
     }
 #endif

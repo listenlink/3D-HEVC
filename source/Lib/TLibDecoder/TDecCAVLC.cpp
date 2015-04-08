@@ -2396,13 +2396,12 @@ Void TDecCavlc::parseSliceHeader (TComSlice*& rpcSlice, ParameterSetManagerDecod
 #if H_3D_DISABLE_CHROMA
       if( rpcSlice->getSPS()->getChromaFormatIdc() != 0 )
       {
-      READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
-    }
+        READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
+      }
       else
       {
         rpcSlice->setSaoEnabledFlagChroma( false );
       }
-      
 #else
       READ_FLAG(uiCode, "slice_sao_chroma_flag");  rpcSlice->setSaoEnabledFlagChroma((Bool)uiCode);
 #endif

@@ -254,13 +254,13 @@ Void TEncSbac::determineCabacInitIdx()
       curCost += m_cTransformSkipSCModel.calcCost     ( curSliceType, qp, (UChar*)INIT_TRANSFORMSKIP_FLAG );
       curCost += m_CUTransquantBypassFlagSCModel.calcCost( curSliceType, qp, (UChar*)INIT_CU_TRANSQUANT_BYPASS_FLAG );
 #if H_3D_DIM
-    if( m_pcSlice->getIntraSdcWedgeFlag() || m_pcSlice->getIntraContourFlag() )
-    {
-      curCost += m_cDepthIntraModeSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
-      curCost += m_cDdcFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_FLAG );
-      curCost += m_cDdcDataSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_DATA );
-      curCost += m_cAngleFlagSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_ANGLE_FLAG );  
-    }
+      if( m_pcSlice->getIntraSdcWedgeFlag() || m_pcSlice->getIntraContourFlag() )
+      {
+        curCost += m_cDepthIntraModeSCModel.calcCost    ( curSliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
+        curCost += m_cDdcFlagSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_FLAG );
+        curCost += m_cDdcDataSCModel.calcCost           ( curSliceType, qp, (UChar*)INIT_DDC_DATA );
+        curCost += m_cAngleFlagSCModel.calcCost         ( curSliceType, qp, (UChar*)INIT_ANGLE_FLAG );  
+      }
 #endif
       if (curCost < bestCost)
       {
@@ -625,7 +625,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
   Bool bIntraSliceDetect = (pcCU->getSlice()->getSliceType() == I_SLICE);
- 
+
   Bool rapPic     = (pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_W_RADL || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_IDR_N_LP || pcCU->getSlice()->getNalUnitType() == NAL_UNIT_CODED_SLICE_CRA);
 
   Bool depthDependent = false;
@@ -663,7 +663,7 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     }
     return;
   }
-  
+
 #if H_MV_ENC_DEC_TRAC          
   DTRACE_CU("part_mode", eSize )
 #endif        
@@ -671,72 +671,72 @@ Void TEncSbac::codePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
     {
 #endif
-  switch(eSize)
-  {
-    case SIZE_2Nx2N:
-    {
-      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-      break;
-    }
-    case SIZE_2NxN:
-    case SIZE_2NxnU:
-    case SIZE_2NxnD:
-    {
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-      m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
-      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+      switch(eSize)
       {
-        if (eSize == SIZE_2NxN)
+      case SIZE_2Nx2N:
         {
-          m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
+          m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          break;
         }
-        else
+      case SIZE_2NxN:
+      case SIZE_2NxnU:
+      case SIZE_2NxnD:
         {
-          m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
-          m_pcBinIf->encodeBinEP((eSize == SIZE_2NxnU? 0: 1));
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          {
+            if (eSize == SIZE_2NxN)
+            {
+              m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
+            }
+            else
+            {
+              m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
+              m_pcBinIf->encodeBinEP((eSize == SIZE_2NxnU? 0: 1));
+            }
+          }
+          break;
+        }
+      case SIZE_Nx2N:
+      case SIZE_nLx2N:
+      case SIZE_nRx2N:
+        {
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+          m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+          if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
+          {
+            m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 2) );
+          }
+          if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+          {
+            if (eSize == SIZE_Nx2N)
+            {
+              m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
+            }
+            else
+            {
+              m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
+              m_pcBinIf->encodeBinEP((eSize == SIZE_nLx2N? 0: 1));
+            }
+          }
+          break;
+        }
+      case SIZE_NxN:
+        {
+          if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
+          {
+            m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
+            m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
+            m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 2) );
+          }
+          break;
+        }
+      default:
+        {
+          assert(0);
         }
       }
-      break;
-    }
-    case SIZE_Nx2N:
-    case SIZE_nLx2N:
-    case SIZE_nRx2N:
-    {
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-      m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
-      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
-      {
-        m_pcBinIf->encodeBin( 1, m_cCUPartSizeSCModel.get( 0, 0, 2) );
-      }
-      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
-      {
-        if (eSize == SIZE_Nx2N)
-        {
-          m_pcBinIf->encodeBin(1, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
-        }
-        else
-        {
-          m_pcBinIf->encodeBin(0, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
-          m_pcBinIf->encodeBinEP((eSize == SIZE_nLx2N? 0: 1));
-        }
-      }
-      break;
-    }
-    case SIZE_NxN:
-    {
-      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( pcCU->getWidth(uiAbsPartIdx) == 8 && pcCU->getHeight(uiAbsPartIdx) == 8 ) )
-      {
-        m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 0) );
-        m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 1) );
-        m_pcBinIf->encodeBin( 0, m_cCUPartSizeSCModel.get( 0, 0, 2) );
-      }
-      break;
-    }
-    default:
-    {
-      assert(0);
-    }
-  }
 #if H_3D_QTLPC
     }
     else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
@@ -1088,40 +1088,40 @@ Void TEncSbac::codeIntraDirLumaAng( TComDataCU* pcCU, UInt absPartIdx, Bool isMu
     if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
     {
 #endif
-    if(predIdx[j] != -1)
-    {
-      m_pcBinIf->encodeBinEP( predIdx[j] ? 1 : 0 );
-      if (predIdx[j])
+      if(predIdx[j] != -1)
       {
-        m_pcBinIf->encodeBinEP( predIdx[j]-1 );
-      }
+        m_pcBinIf->encodeBinEP( predIdx[j] ? 1 : 0 );
+        if (predIdx[j])
+        {
+          m_pcBinIf->encodeBinEP( predIdx[j]-1 );
+        }
 #if H_MV_ENC_DEC_TRAC
-      DTRACE_CU("mpm_idx", predIdx[j] ); 
+        DTRACE_CU("mpm_idx", predIdx[j] ); 
 #endif
-    }
-    else
-    {
-      if (preds[j][0] > preds[j][1])
-      { 
-        std::swap(preds[j][0], preds[j][1]); 
       }
-      if (preds[j][0] > preds[j][2])
+      else
       {
-        std::swap(preds[j][0], preds[j][2]);
-      }
-      if (preds[j][1] > preds[j][2])
-      {
-        std::swap(preds[j][1], preds[j][2]);
-      }
-      for(Int i = (predNum[j] - 1); i >= 0; i--)
-      {
-        dir[j] = dir[j] > preds[j][i] ? dir[j] - 1 : dir[j];
-      }
-      m_pcBinIf->encodeBinsEP( dir[j], 5 );
+        if (preds[j][0] > preds[j][1])
+        { 
+          std::swap(preds[j][0], preds[j][1]); 
+        }
+        if (preds[j][0] > preds[j][2])
+        {
+          std::swap(preds[j][0], preds[j][2]);
+        }
+        if (preds[j][1] > preds[j][2])
+        {
+          std::swap(preds[j][1], preds[j][2]);
+        }
+        for(Int i = (predNum[j] - 1); i >= 0; i--)
+        {
+          dir[j] = dir[j] > preds[j][i] ? dir[j] - 1 : dir[j];
+        }
+        m_pcBinIf->encodeBinsEP( dir[j], 5 );
 #if H_MV_ENC_DEC_TRAC
-      DTRACE_CU("rem_intra_luma_pred_mode", dir[j] ); 
+        DTRACE_CU("rem_intra_luma_pred_mode", dir[j] ); 
 #endif
-    }
+      }
 #if H_3D_DIM
     }
 #endif
@@ -1466,37 +1466,37 @@ Void TEncSbac::codeIPCMInfo( TComDataCU* pcCU, UInt uiAbsPartIdx )
     if( pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )
     {    
 #endif
-    piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;
-    uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
-    uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
-    uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
+      piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;
+      uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
+      uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
+      uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
 
-    for(uiY = 0; uiY < uiHeight; uiY++)
-    {
-      for(uiX = 0; uiX < uiWidth; uiX++)
+      for(uiY = 0; uiY < uiHeight; uiY++)
       {
-        UInt uiSample = piPCMSample[uiX];
+        for(uiX = 0; uiX < uiWidth; uiX++)
+        {
+          UInt uiSample = piPCMSample[uiX];
 
-        m_pcBinIf->xWritePCMCode(uiSample, uiSampleBits);
+          m_pcBinIf->xWritePCMCode(uiSample, uiSampleBits);
+        }
+        piPCMSample += uiWidth;
       }
-      piPCMSample += uiWidth;
-    }
 
-    piPCMSample = pcCU->getPCMSampleCr() + uiChromaOffset;
-    uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
-    uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
-    uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
+      piPCMSample = pcCU->getPCMSampleCr() + uiChromaOffset;
+      uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
+      uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
+      uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
 
-    for(uiY = 0; uiY < uiHeight; uiY++)
-    {
-      for(uiX = 0; uiX < uiWidth; uiX++)
+      for(uiY = 0; uiY < uiHeight; uiY++)
       {
-        UInt uiSample = piPCMSample[uiX];
+        for(uiX = 0; uiX < uiWidth; uiX++)
+        {
+          UInt uiSample = piPCMSample[uiX];
 
-        m_pcBinIf->xWritePCMCode(uiSample, uiSampleBits);
+          m_pcBinIf->xWritePCMCode(uiSample, uiSampleBits);
+        }
+        piPCMSample += uiWidth;
       }
-      piPCMSample += uiWidth;
-    }
 #if H_3D_DISABLE_CHROMA
     }
 #endif

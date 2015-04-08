@@ -592,7 +592,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   UInt uiRPelX   = uiLPelX + (g_uiMaxCUWidth>>uiDepth)  - 1;
   UInt uiTPelY   = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiAbsPartIdx] ];
   UInt uiBPelY   = uiTPelY + (g_uiMaxCUHeight>>uiDepth) - 1;
-  
+
   UInt uiCurNumParts    = pcPic->getNumPartInCU() >> (uiDepth<<1);
   TComSlice * pcSlice = pcCU->getPic()->getSlice(pcCU->getPic()->getCurrSliceIdx());
   Bool bStartInCU = pcCU->getSCUAddr()+uiAbsPartIdx+uiCurNumParts>pcSlice->getSliceSegmentCurStartCUAddr()&&pcCU->getSCUAddr()+uiAbsPartIdx<pcSlice->getSliceSegmentCurStartCUAddr();
@@ -600,7 +600,7 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
   {
     bBoundary = true;
   }
-  
+
   if( ( ( uiDepth < pcCU->getDepth( uiAbsPartIdx ) ) && ( uiDepth < g_uiMaxCUDepth - g_uiAddCUDepth ) ) || bBoundary )
   {
     UInt uiNextDepth = uiDepth + 1;
@@ -610,13 +610,13 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
     {
       uiLPelX = pcCU->getCUPelX() + g_auiRasterToPelX[ g_auiZscanToRaster[uiIdx] ];
       uiTPelY = pcCU->getCUPelY() + g_auiRasterToPelY[ g_auiZscanToRaster[uiIdx] ];
-      
+
       Bool binSlice = (pcCU->getSCUAddr()+uiIdx+uiQNumParts>pcSlice->getSliceSegmentCurStartCUAddr())&&(pcCU->getSCUAddr()+uiIdx<pcSlice->getSliceSegmentCurEndCUAddr());
       if(binSlice&&( uiLPelX < pcSlice->getSPS()->getPicWidthInLumaSamples() ) && ( uiTPelY < pcSlice->getSPS()->getPicHeightInLumaSamples() ) )
       {
         xDecompressCU(pcCU, uiIdx, uiNextDepth );
       }
-      
+
       uiIdx += uiQNumParts;
     }
     return;
@@ -624,19 +624,19 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
 #endif  
   // Residual reconstruction
   m_ppcYuvResi[uiDepth]->clear();
-  
+
   m_ppcCU[uiDepth]->copySubCU( pcCU, uiAbsPartIdx, uiDepth );
 
   switch( m_ppcCU[uiDepth]->getPredictionMode(0) )
   {
-    case MODE_INTER:
+  case MODE_INTER:
 #if H_3D_DBBP
-      if( m_ppcCU[uiDepth]->getDBBPFlag(0) )
-      {
-        xReconInterDBBP( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
-      }
-      else
-      {
+    if( m_ppcCU[uiDepth]->getDBBPFlag(0) )
+    {
+      xReconInterDBBP( m_ppcCU[uiDepth], uiAbsPartIdx, uiDepth );
+    }
+    else
+    {
 #endif
 #if H_3D_INTER_SDC
       if( m_ppcCU[uiDepth]->getSDCFlag( 0 ) )
@@ -646,39 +646,39 @@ Void TDecCu::xDecompressCU( TComDataCU* pcCU, UInt uiAbsPartIdx,  UInt uiDepth )
       else
       {
 #endif
-      xReconInter( m_ppcCU[uiDepth], uiDepth );
+        xReconInter( m_ppcCU[uiDepth], uiDepth );
 #if H_3D_INTER_SDC
       }
 #endif
 #if H_3D_DBBP
-      }
+    }
 #endif
-      break;
-    case MODE_INTRA:
+    break;
+  case MODE_INTRA:
 #if H_3D
-      if( m_ppcCU[uiDepth]->getDISFlag(0) )
-      {
-        xReconDIS( m_ppcCU[uiDepth], 0, uiDepth );
-      }
+    if( m_ppcCU[uiDepth]->getDISFlag(0) )
+    {
+      xReconDIS( m_ppcCU[uiDepth], 0, uiDepth );
+    }
 #if H_3D_DIM_SDC
-      else if( m_ppcCU[uiDepth]->getSDCFlag(0) )
-      {
-        xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
-      }
+    else if( m_ppcCU[uiDepth]->getSDCFlag(0) )
+    {
+      xReconIntraSDC( m_ppcCU[uiDepth], 0, uiDepth );
+    }
 #endif
-      else
+    else
 #endif
       xReconIntraQT( m_ppcCU[uiDepth], uiDepth );
-      break;
-    default:
-      assert(0);
-      break;
+    break;
+  default:
+    assert(0);
+    break;
   }
   if ( m_ppcCU[uiDepth]->isLosslessCoded(0) && (m_ppcCU[uiDepth]->getIPCMFlag(0) == false))
   {
     xFillPCMBuffer(m_ppcCU[uiDepth], uiDepth);
   }
-  
+
   xCopyToPic( m_ppcCU[uiDepth], pcPic, uiAbsPartIdx, uiDepth );
 }
 
@@ -846,7 +846,7 @@ Void TDecCu::xReconInterDBBP( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   Bool bValidMask = m_pcPrediction->getSegmentMaskFromDepth(pDepthPels, uiDepthStride, pcCU->getWidth(0), pcCU->getHeight(0), pMask, pcCU);
   AOF(bValidMask);
   
-  DBBPTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();
+  DbbpTmpData* pDBBPTmpData = pcCU->getDBBPTmpData();
   TComYuv* apSegPredYuv[2] = { m_ppcYuvReco[uiDepth], m_ppcYuvRecoDBBP[uiDepth] };
   
   // first, extract the two sets of motion parameters
