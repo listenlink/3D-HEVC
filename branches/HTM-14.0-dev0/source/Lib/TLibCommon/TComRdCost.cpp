@@ -2861,14 +2861,11 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
 //SAIT_VSO_EST_A0033
 UInt TComRdCost::getVSDEstimate( Int dDM, Pel* pOrg, Int iOrgStride,  Pel* pVirRec, Pel* pVirOrg, Int iVirStride, Int x, Int y )
 {
-  Double dD;
-  Int iTemp;
-
-  dD = ( (Double) ( dDM >> DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) ) ) * m_dDisparityCoeff;
+  Double  dD = ( (Double) ( dDM >> DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) ) ) * m_dDisparityCoeff;
 
   Double dDepthWeight = ( pOrg[x] >=  ( (1<<(g_bitDepthY - 3)) + (1<<(g_bitDepthY - 2)) ) ? 4 : pOrg[x] > ((1<<g_bitDepthY) >> 4) ? (Float)(pOrg[x] - ((1<<g_bitDepthY) >> 4))/(Float)((1<<g_bitDepthY) >> 3) + 1 : 1.0 );
   Double dTemp = ( 0.5 * fabs(dD) * dDepthWeight * ( abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x-1+y*iVirStride ] ) + abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x+1+y*iVirStride ] ) ) );
-  iTemp = (Int) (((dTemp) < 0)? (Int)((dTemp) - 0.5) : (Int)((dTemp) + 0.5));
+  Int iTemp = (Int) (((dTemp) < 0)? (Int)((dTemp) - 0.5) : (Int)((dTemp) + 0.5));
 
   return (UInt) ( (iTemp*iTemp)>>1 );
 }

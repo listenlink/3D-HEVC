@@ -414,31 +414,30 @@ Void TComPic::checkTextureRef(  )
   {
 #endif
 
-  TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
+    TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
 
-  for( Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB()? 2:1) ) && !pcTextSlice->isIntra(); iTextRefDir ++ )
-  {
-    for( Int iTextRefIdx =0; iTextRefIdx<pcTextSlice->getNumRefIdx(( RefPicList )iTextRefDir ); iTextRefIdx++)
+    for( Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB()? 2:1) ) && !pcTextSlice->isIntra(); iTextRefDir ++ )
     {
-      Int iTextRefPOC    = pcTextSlice->getRefPOC( ( RefPicList )iTextRefDir, iTextRefIdx);
-      Int iTextRefViewId = pcTextSlice->getRefPic( ( RefPicList )iTextRefDir, iTextRefIdx)->getViewIndex();
-      m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = -1;
-      Int iCurrRefDir = iTextRefDir;
-      for( Int iCurrRefIdx =0; ( iCurrRefIdx<pcCurrSlice->getNumRefIdx(( RefPicList )iCurrRefDir ) ) && ( m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0 ) ; iCurrRefIdx++)
+      for( Int iTextRefIdx =0; iTextRefIdx<pcTextSlice->getNumRefIdx(( RefPicList )iTextRefDir ); iTextRefIdx++)
       {
-        if( pcCurrSlice->getRefPOC( ( RefPicList )iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
-          pcCurrSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId )
-        {  
-          m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = iCurrRefIdx;
+        Int iTextRefPOC    = pcTextSlice->getRefPOC( ( RefPicList )iTextRefDir, iTextRefIdx);
+        Int iTextRefViewId = pcTextSlice->getRefPic( ( RefPicList )iTextRefDir, iTextRefIdx)->getViewIndex();
+        m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = -1;
+        Int iCurrRefDir = iTextRefDir;
+        for( Int iCurrRefIdx =0; ( iCurrRefIdx<pcCurrSlice->getNumRefIdx(( RefPicList )iCurrRefDir ) ) && ( m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0 ) ; iCurrRefIdx++)
+        {
+          if( pcCurrSlice->getRefPOC( ( RefPicList )iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
+            pcCurrSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId )
+          {  
+            m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = iCurrRefIdx;
+          }
         }
       }
-    }
 
-  }
+    }
 #if H_3D_FCO
   }
 #endif
-
 }
 
 Int TComPic::isTextRefValid(Int iTextRefDir, Int iTextRefIdx)

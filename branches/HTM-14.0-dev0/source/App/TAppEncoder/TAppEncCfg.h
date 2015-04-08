@@ -538,14 +538,18 @@ protected:
   {
     Int iSpace = max(1, ENC_CFG_CONSOUT_SPACE - (Int) description.length() ); 
     
-    for ( Int i = 0; i < iSpace; i++ ) 
+    for ( Int i = 0; i < iSpace; i++ )
+    {
       description.append( " " ); 
+    }
       
     description.append( ":" ); 
     printf( "%s", description.c_str() ); 
 
-    for(Int i=0;i<rpcVector.size();i++)                
+    for(Int i=0;i<rpcVector.size();i++)
+    {
       xPrintVectorElem( rpcVector[i] );
+    }
 
     printf("\n");
   }

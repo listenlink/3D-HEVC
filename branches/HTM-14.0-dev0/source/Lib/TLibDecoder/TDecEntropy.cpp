@@ -219,11 +219,9 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
   UChar uhInterDirNeighbours[MRG_MAX_NUM_CANDS];
 #endif
 #if H_3D_SPIVMP
-  Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];
-  TComMvField*  pcMvFieldSP;
-  UChar* puhInterDirSP;
-  pcMvFieldSP = new TComMvField[pcCU->getPic()->getPicSym()->getNumPartition()*2]; 
-  puhInterDirSP = new UChar[pcCU->getPic()->getPicSym()->getNumPartition()]; 
+  Bool bSPIVMPFlag[MRG_MAX_NUM_CANDS_MEM];     
+  TComMvField*  pcMvFieldSP = new TComMvField[pcCU->getPic()->getPicSym()->getNumPartition()*2]; 
+  UChar* puhInterDirSP = new UChar[pcCU->getPic()->getPicSym()->getNumPartition()]; 
 #endif
   for ( UInt ui = 0; ui < pcCU->getSlice()->getMaxNumMergeCand(); ui++ )
   {
@@ -488,12 +486,6 @@ Void TDecEntropy::decodePUWise( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDept
           decodeMVPIdxPU   ( pcSubCU, uiSubPartIdx-uiAbsPartIdx, uiDepth, uiPartIdx, RefPicList( uiRefListIdx ) );
         }
       }
-#if H_3D_ARP
-      decodeARPW  ( pcCU, uiAbsPartIdx, uiDepth );
-#endif
-#if H_3D_IC
-      decodeICFlag( pcCU, uiAbsPartIdx, uiDepth );
-#endif
     }
     if ( (pcCU->getInterDir(uiSubPartIdx) == 3) && pcSubCU->isBipredRestriction(uiPartIdx) )
     {
@@ -734,17 +726,17 @@ Void TDecEntropy::xDecodeTransform( TComDataCU* pcCU, UInt offsetLuma, UInt offs
 #if H_3D_DISABLE_CHROMA
       if (pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )      
       {
-      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth - 1 ) )
-      {
-        m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth, uiDepth );
+        if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth - 1 ) )
+        {
+          m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth, uiDepth );
+        }
+        if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth - 1 ) )
+        {
+          m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth, uiDepth );
+        }
       }
-      if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth - 1 ) )
+      else
       {
-        m_pcEntropyDecoderIf->parseQtCbf( pcCU, uiAbsPartIdx, TEXT_CHROMA_V, uiTrDepth, uiDepth );
-      }
-    }
-    else
-    {
         if( bFirstCbfOfCU || pcCU->getCbf( uiAbsPartIdx, TEXT_CHROMA_U, uiTrDepth - 1 ) )
         {
           pcCU->setCbfSubParts( 0, TEXT_CHROMA_U, uiAbsPartIdx, uiTrDepth - 1 );

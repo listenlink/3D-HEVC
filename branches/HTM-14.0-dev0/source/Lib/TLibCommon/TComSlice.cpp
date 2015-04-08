@@ -2720,6 +2720,67 @@ Void TComVPS::printLayerSets()
   std::cout << endl;
 }
 
+#if H_3D
+Void TComVPS::initViewCompLayer()
+{
+  assert( m_viewCompLayerId.size() == 0 && m_viewCompLayerPresentFlag.size() == 0  );
+  for( Int i = 0; i < getNumViews(); i++ )
+  {
+    m_viewCompLayerId         .push_back( std::vector<Int>(0)  );
+    m_viewCompLayerPresentFlag.push_back( std::vector<Bool>(0) );      
+
+    for( Int depFlag = 0; depFlag  <=  1; depFlag++ )
+    {
+      Int iViewOIdx = getViewOIdxList( i );
+      Int layerId = -1;
+      for( Int j = 0; j  <=  getMaxLayersMinus1(); j++ ) 
+      {
+        Int jNuhLId = getLayerIdInNuh( j );
+        if( getVpsDepthFlag( jNuhLId ) == ( (Bool) depFlag )  &&  getViewOrderIdx( jNuhLId )  ==  iViewOIdx  
+          &&  getDependencyId( jNuhLId )  ==  0  &&  getAuxId( jNuhLId )  ==  0 )
+        {
+          layerId = jNuhLId;
+        }
+      }
+      m_viewCompLayerPresentFlag[ i ].push_back( layerId  !=  -1 );
+      m_viewCompLayerId         [ i ].push_back( layerId );        
+    }
+  }
+}
+
+Int TComVPS::getVoiInVps(Int viewOIdx)
+{
+  for ( Int i = 0; i < m_viewOIdxList.size(); i++ )
+  {
+    if  ( m_viewOIdxList[ i ] == viewOIdx )
+    {
+      return i; 
+    }
+  }
+  assert( 0 );   
+  return -1;
+}
+
+Void TComVPS::deriveCpPresentFlag()
+{
+  for( Int nInVps = 0; nInVps < getNumViews(); nInVps++  )
+  {
+    for( Int mInVps = 0; mInVps < getNumViews(); mInVps++ )
+    {
+      m_cpPresentFlag[nInVps][mInVps] = 0; 
+    }
+  }
+
+  for( Int n = 1; n < getNumViews(); n++ )
+  {
+    Int iInVps = getVoiInVps(  getViewOIdxList( n ) );      
+    for( Int m = 0; m < getNumCp( iInVps ); m++ )
+    {
+      m_cpPresentFlag[ iInVps ][ getVoiInVps( getCpRefVoi( iInVps, m ) ) ] = 1;
+    }
+  }
+}
+#endif
 
 #endif // H_MV
 
@@ -3823,7 +3884,9 @@ Void TComSlice::setARPStepNum( TComPicLists*ivPicLists )
   }
 }
 #endif
+
 #if H_3D_IC
+// This is an encoder only function and should be moved to TEncSlice or TEncSearch!!
 Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
 {
   if(bUseLowLatencyICEnc)
@@ -3887,80 +3950,77 @@ Void TComSlice::xSetApplyIC(Bool bUseLowLatencyICEnc)
     }
   }
   else
-  {
-  Int iMaxPelValue = ( 1 << g_bitDepthY ); 
-  Int *aiRefOrgHist;
-  Int *aiCurrHist;
-  aiRefOrgHist = (Int *) xMalloc( Int,iMaxPelValue );
-  aiCurrHist   = (Int *) xMalloc( Int,iMaxPelValue );
-  memset( aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
-  memset( aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
-  // Reference Idx Number
-  Int iNumRefIdx = getNumRefIdx( REF_PIC_LIST_0 );
-  TComPic* pcCurrPic = NULL;
-  TComPic* pcRefPic = NULL;
-  TComPicYuv* pcCurrPicYuv = NULL;
-  TComPicYuv* pcRefPicYuvOrg = NULL;
-  pcCurrPic = getPic();
-  pcCurrPicYuv = pcCurrPic->getPicYuvOrg();
-  Int iWidth = pcCurrPicYuv->getWidth();
-  Int iHeight = pcCurrPicYuv->getHeight();
+  {        
+    TComPic*    pcCurrPic = getPic();
+    TComPicYuv* pcCurrPicYuv = pcCurrPic->getPicYuvOrg();
+    
+    // Get InterView Reference picture
+    // !!!!! Assume only one Interview Reference Picture in L0
+    // GT: Is this assumption correct?
 
-
-  // Get InterView Reference picture
-  // !!!!! Assume only one Interview Reference Picture in L0
-  for ( Int i = 0; i < iNumRefIdx; i++ )
-  {
-    pcRefPic = getRefPic( REF_PIC_LIST_0, i );
-    if ( pcRefPic != NULL )
+    TComPicYuv* pcRefPicYuvOrg = NULL;
+    for ( Int i = 0; i < getNumRefIdx( REF_PIC_LIST_0 ); i++ )
     {
-      if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
+      TComPic* pcRefPic = getRefPic( REF_PIC_LIST_0, i );
+      if ( pcRefPic != NULL )
       {
-        pcRefPicYuvOrg = pcRefPic->getPicYuvOrg();
+        if ( pcCurrPic->getViewIndex() != pcRefPic->getViewIndex() )
+        {
+          pcRefPicYuvOrg = pcRefPic->getPicYuvOrg();
+        }
       }
     }
-  }
 
-  if ( pcRefPicYuvOrg != NULL )
-  {
-    Pel* pCurrY = pcCurrPicYuv ->getLumaAddr();
-    Pel* pRefOrgY = pcRefPicYuvOrg  ->getLumaAddr();
-    Int iCurrStride = pcCurrPicYuv->getStride();
-    Int iRefStride = pcRefPicYuvOrg->getStride();
-    Int iSumOrgSAD = 0;
-    Double dThresholdOrgSAD = getIsDepth() ? 0.1 : 0.05;
-
-    // Histogram building - luminance
-    for ( Int y = 0; y < iHeight; y++ )
+    if ( pcRefPicYuvOrg != NULL )
     {
-      for ( Int x = 0; x < iWidth; x++ )
+      // Histogram building - luminance
+      Int iMaxPelValue = ( 1 << g_bitDepthY ); 
+      Int *aiRefOrgHist = (Int *) xMalloc( Int,iMaxPelValue );
+      Int *aiCurrHist   = (Int *) xMalloc( Int,iMaxPelValue );
+      memset( aiRefOrgHist, 0, iMaxPelValue*sizeof(Int) );
+      memset( aiCurrHist, 0, iMaxPelValue*sizeof(Int) );
+
+      Int iWidth   = pcCurrPicYuv->getWidth();
+      Int iHeight  = pcCurrPicYuv->getHeight();
+
+      Pel* pCurrY   = pcCurrPicYuv ->getLumaAddr();
+      Pel* pRefOrgY = pcRefPicYuvOrg  ->getLumaAddr();
+      Int iCurrStride = pcCurrPicYuv->getStride();
+      Int iRefStride = pcRefPicYuvOrg->getStride();
+
+      for ( Int y = 0; y < iHeight; y++ )
       {
-        aiCurrHist[pCurrY[x]]++;
-        aiRefOrgHist[pRefOrgY[x]]++;
+        for ( Int x = 0; x < iWidth; x++ )
+        {
+          aiCurrHist[pCurrY[x]]++;
+          aiRefOrgHist[pRefOrgY[x]]++;
+        }
+        pCurrY += iCurrStride;
+        pRefOrgY += iRefStride;
       }
-      pCurrY += iCurrStride;
-      pRefOrgY += iRefStride;
-    }
-    // Histogram SAD
-    for ( Int i = 0; i < iMaxPelValue; i++ )
-    {
-      iSumOrgSAD += abs( aiCurrHist[i] - aiRefOrgHist[i] );
-    }
-    // Setting
-    if ( iSumOrgSAD > Int( dThresholdOrgSAD * iWidth * iHeight ) )
-    {
-      m_bApplyIC = true;
-    }
-    else
-    {
-      m_bApplyIC = false;
-    }
-  }
 
-  xFree( aiCurrHist   );
-  xFree( aiRefOrgHist );
-  aiCurrHist = NULL;
-  aiRefOrgHist = NULL;
+      // Histogram SAD
+      Int iSumOrgSAD = 0;
+      for ( Int i = 0; i < iMaxPelValue; i++ )
+      {
+        iSumOrgSAD += abs( aiCurrHist[i] - aiRefOrgHist[i] );
+      }
+
+      // Setting
+      Double dThresholdOrgSAD = getIsDepth() ? 0.1 : 0.05;
+
+      if ( iSumOrgSAD > Int( dThresholdOrgSAD * iWidth * iHeight ) )
+      {
+        m_bApplyIC = true;
+      }
+      else
+      {
+        m_bApplyIC = false;
+      }
+
+      xFree( aiCurrHist   );
+      xFree( aiRefOrgHist );
+    }
   }//if(bUseLowLatencyICEnc)
 }
 #endif
@@ -4135,6 +4195,88 @@ Void TComSlice::init3dToolParameters()
   std::cout << "mpiSubPbSize            :" << m_mpiSubPbSize           << std::endl;
 #endif
 }
+
+Void TComSlice::deriveInCmpPredAndCpAvailFlag()
+{
+  Int numCurCmpLIds = getIsDepth() ? 1 : getNumActiveRefLayerPics(); 
+  std::vector<Int> curCmpLIds;
+  if ( getIsDepth() )
+  {
+    curCmpLIds.push_back( getLayerId() );
+  }
+  else
+  {
+    for (Int i = 0; i < numCurCmpLIds; i++)
+    {
+      curCmpLIds.push_back( getRefPicLayerId( i ) );
+    }
+  }
+
+  m_cpAvailableFlag = true;
+  m_inCmpRefViewIdcs.clear();
+  Bool allRefCmpLayersAvailFlag = true;
+
+  for( Int i = 0; i <= numCurCmpLIds - 1; i++ )
+  {      
+    m_inCmpRefViewIdcs.push_back( getVPS()->getViewOrderIdx( curCmpLIds[ i ] ));
+    if( !getVPS()->getCpPresentFlag( getVPS()->getVoiInVps( getViewIndex() ),  getVPS()->getVoiInVps( m_inCmpRefViewIdcs[ i ] ) ) )
+    {
+      m_cpAvailableFlag = false;
+    }
+    Bool refCmpCurLIdAvailFlag = false;
+    if( getVPS()->getViewCompLayerPresentFlag( m_inCmpRefViewIdcs[ i ], !getIsDepth() ) )
+    {
+      Int j = getVPS()->getLayerIdInVps( getVPS()->getViewCompLayerId( m_inCmpRefViewIdcs[ i ],  !getIsDepth() ) );
+      if  ( getVPS()->getDirectDependencyFlag( getVPS()->getLayerIdInVps( getLayerId() ) ,  j ) &&
+        getVPS()->getSubLayersVpsMaxMinus1( j ) >= getTemporalId()   &&
+        ( getTemporalId() == 0 || getVPS()->getMaxTidIlRefPicsPlus1( j , getVPS()->getLayerIdInVps( getLayerId() ) ) > getTemporalId() )        
+        )
+      {
+        refCmpCurLIdAvailFlag = true;
+      }
+    }
+    if( !refCmpCurLIdAvailFlag )
+    {
+      allRefCmpLayersAvailFlag = false;
+    }
+  }
+
+  if( !allRefCmpLayersAvailFlag )
+  {
+    m_inCmpPredAvailFlag = false;
+  }  
+  else 
+  {
+    TComSps3dExtension* sps3dExt = getSPS()->getSps3dExtension();
+    if( !getIsDepth() )
+    {
+      m_inCmpPredAvailFlag = sps3dExt->getViewSynthesisPredFlag( getIsDepth() ) || 
+        sps3dExt->getDepthBasedBlkPartFlag( getIsDepth() ) || 
+        sps3dExt->getDepthRefinementFlag  ( getIsDepth() );                            
+    }
+    else
+    {
+      m_inCmpPredAvailFlag = sps3dExt->getIntraContourFlag( getIsDepth() ) || 
+        sps3dExt->getQtPredFlag( getIsDepth() ) || 
+        sps3dExt->getMpiFlag( getIsDepth() );                                  
+    }
+  }
+}
+
+Void TComSlice::checkInCompPredRefLayers()
+{
+  if ( getInCompPredFlag() )
+  {
+    for (Int i = 0; i < getNumCurCmpLIds(); i++ )
+    {
+      assert( getIvPic(!getIsDepth(), getInCmpRefViewIdcs( i ) ) != NULL );       
+      //  It is a requirement of bitstream conformance that there 
+      //  is a picture in the DPB with PicOrderCntVal equal to the PicOrderCntVal of the current picture, 
+      //  and a nuh_layer_id value equal to ViewCompLayerId[ inCmpRefViewIdcs[ i ] ][ !DepthFlag ].
+    }
+  }
+}
+
 #endif
 
 

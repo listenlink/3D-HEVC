@@ -305,6 +305,7 @@
 #if H_3D
 #define H_3D_DISABLE_CHROMA                    1 
 #define H_3D_OUTPUT_ACTIVE_TOOLS               0
+#define H_3D_REN_MAX_DEV_OUT                   0
 #endif
 
 ///// ***** VIEW SYNTHESIS OPTIMIZAION *********

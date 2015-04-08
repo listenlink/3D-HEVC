@@ -289,8 +289,6 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
       }
     }
   }  
-
-
 }
 
 
@@ -348,6 +346,7 @@ CamParsCollector::xOutput( Int iPOC )
   }
 }
 #endif
+
 TDecTop::TDecTop()
 {
   m_pcPic = 0;
@@ -1196,7 +1195,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->setRefPOCList();
 #if  H_3D_TMVP
     if(pcSlice->getLayerId())
+    {
       pcSlice->generateAlterRefforTMVP();
+    }
 #endif
   }
 
@@ -1649,7 +1650,6 @@ Void TDecTop::xResetPocInPicBuffer()
   }
 }
 
-#if H_MV
 Void TDecTop::xCeckNoClrasOutput()
 {
   // This part needs further testing! 
@@ -1682,6 +1682,30 @@ Bool TDecTop::xAllRefLayersInitilized()
   }
 
   return allRefLayersInitilizedFlag;
+}
+
+#if H_3D
+Void TDecTop::setProfileIdc()
+{
+  if (m_targetOptLayerSetIdx != -1 )
+  {    
+    TComVPS* vps = getPrefetchedVPS(); 
+    Int lsIdx = vps->olsIdxToLsIdx( m_targetOptLayerSetIdx );
+    Int lIdx = -1; 
+    for (Int j = 0; j < vps->getNumLayersInIdList( lsIdx ); j++ )
+    {
+      if ( vps->getLayerSetLayerIdList( lsIdx, j ) == getLayerId() )
+      {
+        lIdx = j; 
+        break; 
+      }        
+    }
+    assert( lIdx != -1 ); 
+
+    Int profileIdc = vps->getPTL( vps->getProfileTierLevelIdx( m_targetOptLayerSetIdx, lIdx ) )->getGeneralPTL()->getProfileIdc();
+    assert( profileIdc == 1 || profileIdc == 6 || profileIdc == 8 ); 
+    m_profileIdc = profileIdc;   
+  };
 }
 #endif
 #endif

@@ -560,7 +560,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     if(!pcCU->getSDCFlag(uiAbsPartIdx))
 #endif
 #endif
-    encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
+      encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {

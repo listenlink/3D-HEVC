@@ -103,18 +103,27 @@ Void destroyROM()
 #if H_3D_DIM_DMM
   if( !g_dmmWedgeLists.empty() ) 
   {
-    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ ) { g_dmmWedgeLists[ui].clear(); }
+    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ )
+    { 
+      g_dmmWedgeLists[ui].clear(); 
+    }
     g_dmmWedgeLists.clear();
   }
   if( !g_dmmWedgeRefLists.empty() )
   {
-    for( UInt ui = 0; ui < g_dmmWedgeRefLists.size(); ui++ ) { g_dmmWedgeRefLists[ui].clear(); }
+    for( UInt ui = 0; ui < g_dmmWedgeRefLists.size(); ui++ ) 
+    { 
+      g_dmmWedgeRefLists[ui].clear(); 
+    }
     g_dmmWedgeRefLists.clear();
   }
 
   if( !g_dmmWedgeNodeLists.empty() )
   {
-    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ ) { g_dmmWedgeNodeLists[ui].clear(); }
+    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ )
+    { 
+      g_dmmWedgeNodeLists[ui].clear(); 
+    }
     g_dmmWedgeNodeLists.clear();
   }
 #endif
