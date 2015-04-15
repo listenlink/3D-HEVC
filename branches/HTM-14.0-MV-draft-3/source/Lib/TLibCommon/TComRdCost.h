@@ -45,9 +45,6 @@
 
 #include "TComSlice.h"
 #include "TComRdCostWeightPrediction.h"
-#if H_3D
-#include "../TLibRenderer/TRenModel.h"
-#endif
 
 //! \ingroup TLibCommon
 //! \{
@@ -56,9 +53,6 @@
 
 class DistParam;
 class TComPattern;
-#if H_3D
-class TComRdCost; 
-#endif
 
 // ====================================================================================================================
 // Type definition
@@ -67,11 +61,6 @@ class TComRdCost;
 // for function pointer
 typedef UInt (*FpDistFunc) (DistParam*);
 
-#if H_3D
-#if H_3D_VSO
-typedef Dist (TComRdCost::*FpDistFuncVSO) ( Int, Int, Pel*, Int, Pel*, Int, UInt, UInt, Bool );
-#endif
-#endif
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
@@ -84,18 +73,6 @@ public:
   Pel*  pCur;
   Int   iStrideOrg;
   Int   iStrideCur;
-#if H_3D_VSO
-  // SAIT_VSO_EST_A0033
-  Pel*  pVirRec;
-  Pel*  pVirOrg;
-  Int   iStrideVir;
-#endif
-#if H_3D_IC
-  Bool  bUseIC;
-#endif
-#if H_3D_INTER_SDC
-  Bool  bUseSDCMRSAD;
-#endif
   Int   iRows;
   Int   iCols;
   Int   iStep;
@@ -122,15 +99,6 @@ public:
     DistFunc = NULL;
     iSubShift = 0;
     bitDepth = 0;
-#if H_3D_VSO
-    // SAIT_VSO_EST_A0033
-    pVirRec = NULL;
-    pVirOrg = NULL;
-    iStrideVir = 0;
-#endif
-#if H_3D_INTER_SDC
-    bUseSDCMRSAD = false;
-#endif
   }
 };
 
@@ -154,10 +122,6 @@ private:
   UInt                    m_uiLambdaMotionSAD;
   UInt                    m_uiLambdaMotionSSE;
   Double                  m_dFrameLambda;
-#if H_3D_VSO
-  // SAIT_VSO_EST_A0033
-  static Double           m_dDisparityCoeff;
-#endif
   
   // for motion cost
 #if FIX203
@@ -174,21 +138,13 @@ private:
   Int                     m_iSearchLimit;
 #endif
   
-#if H_3D_DBBP
-  Bool                    m_bUseMask;
-#endif
   
 public:
   TComRdCost();
   virtual ~TComRdCost();
 
-#if H_3D_VSO
-  Double  calcRdCost  ( UInt   uiBits, Dist   uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
-  Double  calcRdCost64( UInt64 uiBits, Dist64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
-#else
   Double  calcRdCost  ( UInt   uiBits, UInt   uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
   Double  calcRdCost64( UInt64 uiBits, UInt64 uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
-#endif
 
   
   Void    setCbDistortionWeight      ( Double cbDistortionWeight) { m_cbDistortionWeight = cbDistortionWeight; };
@@ -197,11 +153,6 @@ public:
   Void    setFrameLambda ( Double dLambda ) { m_dFrameLambda = dLambda; }
   
   Double  getSqrtLambda ()   { return m_sqrtLambda; }
-#if H_3D_VSO
-  // SAIT_VSO_EST_A0033
-  Void    setDisparityCoeff( Double dDisparityCoeff ) { m_dDisparityCoeff = dDisparityCoeff; }
-  Double  getDisparityCoeff()                         { return m_dDisparityCoeff; }
-#endif
 
   Double  getLambda() { return m_dLambda; }
   Double  getChromaWeight () {return((m_cbDistortionWeight+m_crDistortionWeight)/2.0);}
@@ -214,15 +165,9 @@ public:
   Void    setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefStride, Int iStep, DistParam& rcDistParam, Bool bHADME=false );
   Void    setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, Pel* p2, Int iStride2, Int iWidth, Int iHeight, Bool bHadamard = false );
   
-#if H_3D_DBBP
-  Void    setUseMask(Bool b) { m_bUseMask = b; }
-#endif
   
   UInt    calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
   
-#if H_3D_FAST_DEPTH_INTRA
-  UInt    calcVAR(Pel* pi0, Int stride, Int width, Int height, Int cuDepth);
-#endif  
   // for motion cost
 #if !FIX203
   Void    initRateDistortionModel( Int iSubPelSearchLimit );
@@ -268,15 +213,6 @@ private:
   static UInt xGetSSE32         ( DistParam* pcDtParam );
   static UInt xGetSSE64         ( DistParam* pcDtParam );
   static UInt xGetSSE16N        ( DistParam* pcDtParam );
-#if H_3D_IC || H_3D_INTER_SDC
-  static UInt xGetSADic         ( DistParam* pcDtParam );
-  static UInt xGetSAD4ic        ( DistParam* pcDtParam );
-  static UInt xGetSAD8ic        ( DistParam* pcDtParam );
-  static UInt xGetSAD16ic       ( DistParam* pcDtParam );
-  static UInt xGetSAD32ic       ( DistParam* pcDtParam );
-  static UInt xGetSAD64ic       ( DistParam* pcDtParam );
-  static UInt xGetSAD16Nic      ( DistParam* pcDtParam );
-#endif
   static UInt xGetSAD           ( DistParam* pcDtParam );
   static UInt xGetSAD4          ( DistParam* pcDtParam );
   static UInt xGetSAD8          ( DistParam* pcDtParam );
@@ -285,45 +221,20 @@ private:
   static UInt xGetSAD64         ( DistParam* pcDtParam );
   static UInt xGetSAD16N        ( DistParam* pcDtParam );
   
-#if H_3D_VSO
-  static UInt xGetVSD           ( DistParam* pcDtParam );
-  static UInt xGetVSD4          ( DistParam* pcDtParam );
-  static UInt xGetVSD8          ( DistParam* pcDtParam );
-  static UInt xGetVSD16         ( DistParam* pcDtParam );
-  static UInt xGetVSD32         ( DistParam* pcDtParam );
-  static UInt xGetVSD64         ( DistParam* pcDtParam );
-  static UInt xGetVSD16N        ( DistParam* pcDtParam );
-#endif
 
 #if AMP_SAD
-#if H_3D_IC || H_3D_INTER_SDC
-  static UInt xGetSAD12ic       ( DistParam* pcDtParam );
-  static UInt xGetSAD24ic       ( DistParam* pcDtParam );
-  static UInt xGetSAD48ic       ( DistParam* pcDtParam );
-#endif
   static UInt xGetSAD12         ( DistParam* pcDtParam );
   static UInt xGetSAD24         ( DistParam* pcDtParam );
   static UInt xGetSAD48         ( DistParam* pcDtParam );
 
 #endif
 
-#if H_3D_IC || H_3D_INTER_SDC
-  static UInt xGetHADsic          ( DistParam* pcDtParam );
-#endif
   static UInt xGetHADs4         ( DistParam* pcDtParam );
   static UInt xGetHADs8         ( DistParam* pcDtParam );
   static UInt xGetHADs          ( DistParam* pcDtParam );
   static UInt xCalcHADs2x2      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs4x4      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
   static UInt xCalcHADs8x8      ( Pel *piOrg, Pel *piCurr, Int iStrideOrg, Int iStrideCur, Int iStep );
-#if H_3D_DBBP
-  static UInt xGetMaskedSSE     ( DistParam* pcDtParam );
-  static UInt xGetMaskedSAD     ( DistParam* pcDtParam );
-#if !RWTH_DBBP_NO_SATD_K0028
-  static UInt xGetMaskedHADs    ( DistParam* pcDtParam );
-#endif
-  static UInt xGetMaskedVSD     ( DistParam* pcDtParam );
-#endif
   
 public:
   UInt   getDistPart(Int bitDepth, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, TextType eText = TEXT_LUMA, DFunc eDFunc = DF_SSE );
@@ -332,86 +243,6 @@ public:
   UInt   getSADPart ( Int bitDepth, Pel* pelCur, Int curStride,  Pel* pelOrg, Int orgStride, UInt width, UInt height );
 #endif
 
-#if H_3D_VSO
-  // SAIT_VSO_EST_A0033
-  UInt        getDistPartVSD( TComDataCU* pcCu, UInt uiPartOffset, Pel* piCur, Int iCurStride,  Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bHad, DFunc eDFunc = DF_VSD); 
-  static UInt getVSDEstimate( Int dDM, Pel* pOrg, Int iOrgStride,  Pel* pVirRec, Pel* pVirOrg, Int iVirStride, Int x, Int y );
-
-private:
-  Double                  m_dLambdaVSO;
-  Double                  m_dSqrtLambdaVSO;
-  UInt                    m_uiLambdaMotionSADVSO;
-  UInt                    m_uiLambdaMotionSSEVSO;
-  Double                  m_dFrameLambdaVSO;
-  Bool                    m_bAllowNegDist;
-  Bool                    m_bUseVSO;
-  Bool                    m_bUseLambdaScaleVSO;
-  UInt                    m_uiVSOMode;
-
-  FpDistFuncVSO           m_fpDistortFuncVSO;
-  TRenModel*              m_pcRenModel;
-
-
-  // SAIT_VSO_EST_A0033
-  TComPicYuv *            m_pcVideoRecPicYuv;
-  TComPicYuv *            m_pcDepthPicYuv;
-  Bool                    m_bUseEstimatedVSD; 
-
-  // LGE_WVSO_A0119
-  Int                     m_iDWeight;
-  Int                     m_iVSOWeight;
-  Int                     m_iVSDWeight;
-  Bool                    m_bUseWVSO;
-
-public:
-
-  Void    setRenModel       ( TRenModel* pcRenModel ) { m_pcRenModel = pcRenModel; }
-  TRenModel* getRenModel    ( )                       { return m_pcRenModel; }
-  Void    setRenModelData   ( TComDataCU* pcCU, UInt uiAbsPartIndex, Pel* piData, Int iStride, Int iBlkWidth, Int iBlkHeight );
-  Void    setLambdaVSO      ( Double dLambda );
-  Void    setFrameLambdaVSO ( Double dLambda ) { m_dFrameLambdaVSO = dLambda; };
-
-
-  Void    setUseVSO ( Bool bIn )         { m_bUseVSO = bIn; };
-  Bool    getUseVSO ( )                  { return m_bUseVSO;};
-
-  Bool    getUseRenModel ( )             { return (m_bUseVSO && m_uiVSOMode == 4); };
-  Void    setUseLambdaScaleVSO(Bool bIn) { m_bUseLambdaScaleVSO = bIn; };
-  Bool    getUseLambdaScaleVSO( )        { return m_bUseLambdaScaleVSO; };
-
-  Void    setVSOMode( UInt uiIn);
-  UInt    getVSOMode( )                  { return m_uiVSOMode; }
-  Void    setAllowNegDist ( Bool bAllowNegDist );
-
-  Double  getSqrtLambdaVSO ()   { return m_dSqrtLambdaVSO; }
-  Double  getLambdaVSO ()       { return m_dLambdaVSO; }
-
-  Dist   getDistPartVSO( TComDataCU* pcCU, UInt uiAbsPartIndex, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD );
-  Double calcRdCostVSO ( UInt   uiBits, Dist   uiDistortion, Bool bFlag = false, DFunc eDFunc = DF_DEFAULT );
-
-  // SAIT_VSO_EST_A0033
-  Bool    getUseEstimatedVSD( )           { return m_bUseEstimatedVSD; };
-  Void    setUseEstimatedVSD( Bool bIn )  { m_bUseEstimatedVSD = bIn; };
-
-  TComPicYuv* getVideoRecPicYuv ()                               { return m_pcVideoRecPicYuv; };
-  Void        setVideoRecPicYuv ( TComPicYuv* pcVideoRecPicYuv ) { m_pcVideoRecPicYuv = pcVideoRecPicYuv; };
-  TComPicYuv* getDepthPicYuv    ()                               { return m_pcDepthPicYuv; };
-  Void        setDepthPicYuv    ( TComPicYuv* pcDepthPicYuv )    { m_pcDepthPicYuv = pcDepthPicYuv; };
-
-  // LGE_WVSO_A0119
-  Void    setUseWVSO ( Bool bIn )         { m_bUseWVSO = bIn; }; 
-  Bool    getUseWVSO ( )                  { return m_bUseWVSO;};
-  Void    setDWeight   ( Int iDWeight   ) { m_iDWeight = iDWeight; };
-  Int     getDWeight   ()                 { return m_iDWeight; };
-  Void    setVSOWeight ( Int iVSOWeight ) { m_iVSOWeight = iVSOWeight; };
-  Int     getVSOWeight ()                 { return m_iVSOWeight; };
-  Void    setVSDWeight ( Int iVSDWeight ) { m_iVSDWeight = iVSDWeight; };
-  Int     getVSDWeight ()                 { return m_iVSDWeight; };
-
-private:
-  Dist xGetDistVSOMode4( Int iStartPosX, Int iStartPosY, Pel* piCur, Int iCurStride, Pel* piOrg, Int iOrgStride, UInt uiBlkWidth, UInt uiBlkHeight, Bool bSAD );
-
-#endif // H_3D_VSO
 
 };// END CLASS DEFINITION TComRdCost
 

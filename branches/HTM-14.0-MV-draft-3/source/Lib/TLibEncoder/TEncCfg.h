@@ -45,10 +45,6 @@
 #include "TLibCommon/CommonDef.h"
 #include "TLibCommon/TComSlice.h"
 #include <assert.h>
-#if H_3D
-#include "TAppCommon/TAppComCamPara.h"
-#include "TLibRenderer/TRenModSetupStrParser.h"
-#endif
 
 struct GOPEntry
 {
@@ -77,9 +73,6 @@ struct GOPEntry
   Int m_interLayerPredLayerIdc [MAX_NUM_REF_PICS];
   Int m_interViewRefPosL[2][MAX_NUM_REF_PICS];  
 #endif
-#if HHI_INTER_COMP_PRED_K0052
-  Bool m_interCompPredFlag;
-#endif
   GOPEntry()
   : m_POC(-1)
   , m_QPOffset(0)
@@ -96,11 +89,6 @@ struct GOPEntry
   , m_numRefIdc(0)
 #if H_MV
   , m_numActiveRefLayerPics(0)
-#endif
-#if HHI_INTER_COMP_PRED_K0052
-#if H_3D
-  , m_interCompPredFlag(false)
-#endif
 #endif
   {
     ::memset( m_referencePics, 0, sizeof(m_referencePics) );
@@ -320,9 +308,6 @@ protected:
   TComVPS                    m_cVPS;
 #endif
 
-#if H_3D
-  TComDLT*  m_cDLT;
-#endif
 
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message 
@@ -375,53 +360,6 @@ protected:
   Int       m_viewIndex; 
 #endif 
 
-#if H_3D
-  Bool      m_isDepth;
-
-  //====== Camera Parameters ======
-#if !HHI_CAM_PARA_K0052
-  UInt      m_uiCamParPrecision;
-  Bool      m_bCamParInSliceHeader;
-  Int**     m_aaiCodedScale;
-  Int**     m_aaiCodedOffset;
-#endif
-  TAppComCamPara* m_cameraParameters; 
-  
-#if H_3D_VSO
-  //====== View Synthesis Optimization ======
-  TRenModSetupStrParser* m_renderModelParameters; 
-  Bool      m_bUseVSO;
-  Bool      m_bForceLambdaScale;
-  Bool      m_bAllowNegDist;
-  Double    m_dLambdaScaleVSO;
-  UInt      m_uiVSOMode;
-  // LGE_WVSO_A0119
-  Bool      m_bUseWVSO;
-  Int       m_iVSOWeight;
-  Int       m_iVSDWeight;
-  Int       m_iDWeight;
-  // SAIT_VSO_EST_A0033
-  Bool      m_bUseEstimatedVSD; 
-  Double    m_dDispCoeff;
-#endif
-#if H_3D_IC
-  Bool      m_bUseIC;
-  Bool      m_bUseICLowLatencyEnc;
-#endif
-  //====== Depth Intra Modes ======
-#if H_3D_DIM
-  Bool      m_useDMM;
-  Bool      m_useSDC;
-  Bool      m_useDLT;
-#endif
-#if H_3D_QTLPC
-  Bool      m_bUseQTL;
-#endif
-#if H_3D_ANNEX_SELECTION_FIX
-  Int m_profileIdc;
-#endif
-
-#endif
 public:
   TEncCfg()
   : m_tileColumnWidth()
@@ -431,13 +369,6 @@ public:
   , m_layerIdInVps(-1)
   , m_viewId(-1)
   , m_viewIndex(-1)
-#if H_3D
-  , m_isDepth(false)
-  , m_bUseVSO(false)
-#if H_3D_ANNEX_SELECTION_FIX
-  , m_profileIdc( -1 )
-#endif
-#endif
 #endif
   {}
 
@@ -466,10 +397,6 @@ public:
   Int       getViewId                        ()                   { return m_viewId;    }
   Void      setViewIndex                     ( Int viewIndex  )   { m_viewIndex  = viewIndex;  }
   Int       getViewIndex                     ()                   { return m_viewIndex;    }
-#if H_3D
-  Void      setIsDepth                       ( Bool isDepth )   { m_isDepth = isDepth; }
-  Bool      getIsDepth                       ()                 { return m_isDepth; }
-#endif
 #endif
   //====== Coding Structure ========
   Void      setIntraPeriod                  ( Int   i )      { m_uiIntraPeriod = (UInt)i; }
@@ -495,12 +422,6 @@ public:
   Int       getMaxTempLayer                 ()                              { return m_maxTempLayer;              } 
   Void      setMaxTempLayer                 ( Int maxTempLayer )            { m_maxTempLayer = maxTempLayer;      }
 
-#if H_3D_IC
-  Void       setUseIC                       ( Bool bVal )    { m_bUseIC = bVal; }
-  Bool       getUseIC                       ()               { return m_bUseIC; }
-  Void       setUseICLowLatencyEnc          ( Bool bVal )    { m_bUseICLowLatencyEnc = bVal; }
-  Bool       getUseICLowLatencyEnc          ()               { return m_bUseICLowLatencyEnc; }
-#endif
   //======== Transform =============
   Void      setQuadtreeTULog2MaxSize        ( UInt  u )      { m_uiQuadtreeTULog2MaxSize = u; }
   Void      setQuadtreeTULog2MinSize        ( UInt  u )      { m_uiQuadtreeTULog2MinSize = u; }
@@ -831,10 +752,6 @@ public:
   TComVPS *getVPS() { return &m_cVPS; }
 #endif
 
-#if H_3D
-  Void      setDLT           ( TComDLT *p ) { m_cDLT = p; }
-  TComDLT*  getDLT           ()             { return m_cDLT; }
-#endif
 
   Void      setUseRecalculateQPAccordingToLambda ( Bool b ) { m_recalculateQPAccordingToLambda = b;    }
   Bool      getUseRecalculateQPAccordingToLambda ()         { return m_recalculateQPAccordingToLambda; }
@@ -916,71 +833,6 @@ public:
   
   Bool getFrameOnlyConstraintFlag() const { return m_frameOnlyConstraintFlag; }
   Void setFrameOnlyConstraintFlag(Bool b) { m_frameOnlyConstraintFlag = b; }
-#if H_3D
-
-  // Only flags that are not in the SPS3dExtension should go here. 
-  /// 3D Tools 
-
- //==== CAMERA PARAMETERS  ==========
-#if !HHI_CAM_PARA_K0052
-  Void      setCamParPrecision              ( UInt  u )      { m_uiCamParPrecision      = u; }
-  Void      setCamParInSliceHeader          ( Bool  b )      { m_bCamParInSliceHeader   = b; }
-  Void      setCodedScale                   ( Int** p )      { m_aaiCodedScale          = p; }
-  Void      setCodedOffset                  ( Int** p )      { m_aaiCodedOffset         = p; }
-#endif
-  Void      setCameraParameters             ( TAppComCamPara* c) { m_cameraParameters   = c; }
-
-#if H_3D_VSO
- //==== VSO  ==========
-  Void      setRenderModelParameters ( TRenModSetupStrParser* c ) { m_renderModelParameters = c; }
-  Bool      getUseVSO                       ()              { return m_bUseVSO;     }
-  Void      setUseVSO                       ( Bool  b  )    { m_bUseVSO     = b; }
-  UInt      getVSOMode                      ()              { return m_uiVSOMode; }
-  Void      setVSOMode                      ( UInt  ui )    { m_uiVSOMode   = ui; }
-  Bool      getForceLambdaScaleVSO          ()              { return m_bForceLambdaScale; }
-  Void      setForceLambdaScaleVSO          ( Bool   b )    { m_bForceLambdaScale = b; };
-  Double    getLambdaScaleVSO               ()              { return m_dLambdaScaleVSO;   }
-  Void      setLambdaScaleVSO               ( Double d )    { m_dLambdaScaleVSO   = d; };
-  Bool      getAllowNegDist                 ()              { return m_bAllowNegDist;     }
-  Void      setAllowNegDist                 ( Bool   b )    { m_bAllowNegDist     = b; };
-
-  // LGE_WVSO_A0119
-  Bool      getUseWVSO                      ()              { return m_bUseWVSO;     }
-  Void      setUseWVSO                      ( Bool  b )     { m_bUseWVSO   = b; }
-  Int       getVSOWeight                    ()              { return m_iVSOWeight;    }
-  Void      setVSOWeight                    ( Int   i )     { m_iVSOWeight = i; }
-  Int       getVSDWeight                    ()              { return m_iVSDWeight;    }
-  Void      setVSDWeight                    ( Int   i )     { m_iVSDWeight = i; }
-  Int       getDWeight                      ()              { return m_iDWeight;    }
-  Void      setDWeight                      ( Int   i )     { m_iDWeight   = i; }
-
-  // SAIT_VSO_EST_A0033
-  Bool      getUseEstimatedVSD              ()              { return m_bUseEstimatedVSD; }
-  Void      setUseEstimatedVSD              ( Bool  b )     { m_bUseEstimatedVSD = b; }
-  Double    getDispCoeff                    ()              { return m_dDispCoeff;    }
-  Void      setDispCoeff                    ( Double  d )   { m_dDispCoeff  = d; }
-#endif // H_3D_VSO
-
- //==== DIM  ==========
-#if H_3D_DIM
-  Bool      getUseDMM                       ()        { return m_useDMM; }
-  Void      setUseDMM                       ( Bool b) { m_useDMM = b;    }
-  Bool      getUseSDC                       ()        { return m_useSDC; }
-  Void      setUseSDC                       ( Bool b) { m_useSDC = b;    }
-
-  Bool      getUseDLT                       ()        { return m_useDLT; }
-  Void      setUseDLT                       ( Bool b) { m_useDLT = b;    }
-#endif
-#if H_3D_QTLPC
-  Void      setUseQTL                       ( Bool b ) { m_bUseQTL = b;    }
-  Bool      getUseQTL                       ()         { return m_bUseQTL; }
-#endif
-#if H_3D_ANNEX_SELECTION_FIX
-  Void                    setProfileIdc( Int a )    { assert( a == 1 || a == 6 || a == 8 ); m_profileIdc = a;  }
-  Bool                    decProcAnnexI()           { assert( m_profileIdc != -1 ); return ( m_profileIdc == 8); }    
-#endif
-
-#endif // H_3D
 };
 
 //! \}

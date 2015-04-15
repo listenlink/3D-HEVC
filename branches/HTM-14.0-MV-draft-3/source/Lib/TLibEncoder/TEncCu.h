@@ -68,9 +68,6 @@ private:
   
   TComDataCU**            m_ppcBestCU;      ///< Best CUs in each depth
   TComDataCU**            m_ppcTempCU;      ///< Temporary CUs in each depth
-#if H_3D_ARP
-  TComDataCU**            m_ppcWeightedTempCU;
-#endif
   UChar                   m_uhTotalDepth;
   
   TComYuv**               m_ppcPredYuvBest; ///< Best Prediction Yuv for each depth
@@ -81,9 +78,6 @@ private:
   TComYuv**               m_ppcRecoYuvTemp; ///< Temporary Reconstruction Yuv for each depth
   TComYuv**               m_ppcOrigYuv;     ///< Original Yuv for each depth
   
-#if H_3D_DBBP
-  TComYuv**               m_ppcOrigYuvDBBP;
-#endif
   
   //  Data : encoder control
   Bool                    m_bEncodeDQP;
@@ -146,30 +140,11 @@ protected:
   Void  xCheckRDCostMerge2Nx2N( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool *earlyDetectionSkipMode);
 
 #if AMP_MRG
-#if  H_3D_FAST_TEXTURE_ENCODING
-  Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize,  Bool bFMD, Bool bUseMRG = false  ) ;
-#else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bUseMRG = false  );
-#endif
 #else
   Void  xCheckRDCostInter   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
 #endif
-#if H_3D_DBBP
-  Void  xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTemp, Bool* pMask, UInt uiValidSegment );
-  Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG = false );
-#endif
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-  Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void  xCheckRDCostSingleDepth   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#endif
-#endif
-#if H_3D_DIM
-  Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bOnlyIVP );
-#else
   Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#endif
   Void  xCheckDQP           ( TComDataCU*  pcCU );
   
   Void  xCheckIntraPCM      ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU                      );

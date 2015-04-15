@@ -120,9 +120,6 @@ protected:
   const UInt*     m_puiDFilter;
   Int             m_iMaxDeltaQP;
 
-#if H_3D_VSO // M17
-  TComYuv         m_cYuvRecTemp; 
-#endif
   // AMVP cost computation
   // UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS];
   UInt            m_auiMVPIdxCost[AMVP_MAX_NUM_CANDS+1][AMVP_MAX_NUM_CANDS+1]; //th array bounds
@@ -180,9 +177,6 @@ public:
                                   TComYuv*    pcRecoYuv,
                                   UInt&       ruiDistC,
                                   Bool        bLumaOnly
-#if H_3D_DIM
-                                , Bool        bOnlyIVP
-#endif
                                 );
   Void  estIntraPredChromaQT    ( TComDataCU* pcCU, 
                                   TComYuv*    pcOrgYuv, 
@@ -190,25 +184,6 @@ public:
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt        uiPreCalcDistC );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-  Void  estIntraPredDIS        ( TComDataCU* pcCU, 
-                                 TComYuv*    pcOrgYuv, 
-                                 TComYuv*    pcPredYuv, 
-                                 TComYuv*    pcResiYuv, 
-                                 TComYuv*    pcRecoYuv,
-                                 UInt&       ruiDistC,
-                                 Bool        bLumaOnly );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void  estIntraPredSingleDepth  ( TComDataCU* pcCU, 
-                                  TComYuv*    pcOrgYuv, 
-                                  TComYuv*    pcPredYuv, 
-                                  TComYuv*    pcResiYuv, 
-                                  TComYuv*    pcRecoYuv,
-                                  UInt&       ruiDistC,
-                                  Bool        bLumaOnly );
-#endif
-#endif
   
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
@@ -216,9 +191,6 @@ public:
                                   TComYuv*&   rpcPredYuv,
                                   TComYuv*&   rpcResiYuv,
                                   TComYuv*&   rpcRecoYuv,
-#if H_3D_FAST_TEXTURE_ENCODING
-                                  Bool        bFMD,
-#endif
                                   Bool        bUseRes = false
 #if AMP_MRG
                                  ,Bool        bUseMRG = false
@@ -233,15 +205,6 @@ public:
                                   TComYuv*&   rpcYuvResiBest,
                                   TComYuv*&   rpcYuvRec,
                                   Bool        bSkipRes );
-#if H_3D_INTER_SDC
-  Void encodeResAndCalcRdInterSDCCU( TComDataCU* pcCU,
-    TComYuv* pcOrg, 
-    TComYuv* pcPred, 
-    TComYuv* pcResi, 
-    TComYuv* pcRec, 
-    Int      uiOffset,
-    const UInt uiDepth );
-#endif
   /// set ME search range
   Void setAdaptiveSearchRange   ( Int iDir, Int iRefIdx, Int iSearchRange) { m_aaiAdaptSR[iDir][iRefIdx] = iSearchRange; }
   
@@ -287,15 +250,8 @@ protected:
                                     TComYuv*     pcOrgYuv, 
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
-#if H_3D_VSO
-                                    Dist&        ruiDist,
-#else
                                     UInt&        ruiDist,
-#endif
                                     Int         default0Save1Load2 = 0
-#if H_3D_DIM_ENC
-                                  , Bool          zeroResi = false
-#endif
                                     );
   Void  xIntraCodingChromaBlk     ( TComDataCU*  pcCU,
                                     UInt         uiTrDepth,
@@ -314,19 +270,12 @@ protected:
                                     TComYuv*     pcOrgYuv, 
                                     TComYuv*     pcPredYuv, 
                                     TComYuv*     pcResiYuv, 
-#if H_3D_VSO
-                                    Dist&        ruiDistY,
-#else
                                     UInt&        ruiDistY,
-#endif
                                     UInt&        ruiDistC,
 #if HHI_RQT_INTRA_SPEEDUP
                                    Bool         bCheckFirst,
 #endif
                                    Double&      dRDCost
-#if H_3D_DIM_ENC
-                                   , Bool          zeroResi = false
-#endif
                                    );
   
   Void  xSetIntraResultQT         ( TComDataCU*  pcCU,
@@ -363,26 +312,6 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-  Void xIntraCodingDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, UInt uiPredMode );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void xIntraCodingSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Int iTestDepthIdx, Pel * DepthNeighbor );
-#endif
-#endif
-#if H_3D_DIM
-  // -------------------------------------------------------------------------------------------------------------------
-  // Depth intra search
-  // -------------------------------------------------------------------------------------------------------------------
-  Void xCalcBiSegDCs              ( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2 );
-#if H_3D_DIM_DMM
-  Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
-  Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
-#endif
-#if H_3D_DIM_SDC
-  Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bZeroResidual, Int iSDCDeltaResi    );
-#endif
-#endif
 
   // -------------------------------------------------------------------------------------------------------------------
   // Inter search (AMP)
@@ -440,12 +369,6 @@ protected:
                                     UInt&           ruiCost
                                   , TComMvField* cMvFieldNeighbours,  
                                     UChar* uhInterDirNeighbours
-#if H_3D_VSP
-                                  , Int* vspFlag
-#endif
-#if H_3D_SPIVMP
-                                  , Bool* pbSPIVMPFlag, TComMvField* pcMvFieldSP, UChar* puhInterDirSP
-#endif
                                   , Int& numValidMergeCand
                                    );
 
@@ -531,11 +454,7 @@ protected:
   // -------------------------------------------------------------------------------------------------------------------
   
   Void xEncodeResidualQT( TComDataCU* pcCU, UInt uiAbsPartIdx, const UInt uiDepth, Bool bSubdivAndCbf, TextType eType );
-#if H_3D_VSO // M26
-  Void xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx, UInt absTUPartIdx,TComYuv* pcOrg, TComYuv* pcPred, TComYuv* pcResi, const UInt uiDepth, Double &rdCost, UInt &ruiBits, Dist &ruiDist, Dist *puiZeroDist );
-#else
   Void xEstimateResidualQT( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx, UInt absTUPartIdx,TComYuv* pcResi, const UInt uiDepth, Double &rdCost, UInt &ruiBits, UInt &ruiDist, UInt *puiZeroDist );
-#endif
   Void xSetResidualQTData( TComDataCU* pcCU, UInt uiQuadrant, UInt uiAbsPartIdx,UInt absTUPartIdx, TComYuv* pcResi, UInt uiDepth, Bool bSpatial );
   
   UInt  xModeBitsIntra ( TComDataCU* pcCU, UInt uiMode, UInt uiPU, UInt uiPartOffset, UInt uiDepth, UInt uiInitTrDepth );

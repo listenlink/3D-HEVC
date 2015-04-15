@@ -79,10 +79,6 @@ private:
 #if H_MV
   TComPicLists*           m_ivPicLists;                   ///< access to picture lists of other layers 
 #endif
-#if H_3D_IC
-  Int *m_aICEnableCandidate;
-  Int *m_aICEnableNum;
-#endif
   // encoder search
   TEncSearch              m_cSearch;                      ///< encoder search class
   //TEncEntropy*            m_pcEntropyCoder;                     ///< entropy encoder
@@ -206,10 +202,6 @@ public:
 #if H_MV  
   TComPicLists* getIvPicLists() { return m_ivPicLists; }
 #endif
-#if H_3D_IC
-  Int*      getICEnableCandidate() { return m_aICEnableCandidate; }
-  Int*      getICEnableNum() { return m_aICEnableNum; }
-#endif
   Void      deletePicBuffer ();
 
   Void      createWPPCoders(Int iNumSubstreams);
@@ -269,13 +261,6 @@ public:
   TComPic*                getPic                ( Int poc );
   Void                    setIvPicLists         ( TComPicLists* picLists) { m_ivPicLists = picLists; }
 #endif
-#if H_3D
-  Void                    setSps3dExtension     ( TComSps3dExtension sps3dExtension ) { m_cSPS.setSps3dExtension( sps3dExtension );  };
-#endif
-#if H_3D_IC
-  Void                    setICEnableCandidate         ( Int* ICEnableCandidate) { m_aICEnableCandidate = ICEnableCandidate; }
-  Void                    setICEnableNum         ( Int* ICEnableNum) { m_aICEnableNum = ICEnableNum; }
-#endif
   // -------------------------------------------------------------------------------------------------------------------
   // encoder function
   // -------------------------------------------------------------------------------------------------------------------
@@ -303,9 +288,6 @@ public:
   Void printSummary(bool isField) { m_cGOPEncoder.printOutSummary (m_uiNumAllPicCoded, isField); }
 #endif
 
-#if H_3D
-   Void setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset );
-#endif
 };
 
 //! \}

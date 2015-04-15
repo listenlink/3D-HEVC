@@ -62,9 +62,6 @@
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-#if H_3D_ANNEX_SELECTION_FIX
-class TDecTop; 
-#endif
 
 
 /// GOP decoder class
@@ -82,9 +79,6 @@ private:
   TDecCavlc*            m_pcCavlcDecoder;
   TDecSlice*            m_pcSliceDecoder;
   TComLoopFilter*       m_pcLoopFilter;
-#if H_3D_ANNEX_SELECTION_FIX
-  TDecTop*              m_decTop; 
-#endif
   
   TComSampleAdaptiveOffset*     m_pcSAO;
   Double                m_dDecTime;

@@ -66,9 +66,6 @@ private:
   Bool                m_bSetupFromCoded;                      ///< setup from coded parameter file
   Bool                m_bCamParsCodedPrecSet;                 ///< Coded Cam Para precision set for current frame;
   
-#if H_3D_REN_MAX_DEV_OUT
-  Double              m_dMaxShiftDeviation;                   ///< Maximum deviation of shifts with integer precision compare to double precision
-#endif
   //SAIT_VSO_EST_A0033
   Double              m_dDispCoeff;
 
@@ -84,9 +81,7 @@ private:
   Int                 m_iNumberOfSynthViews;                  ///< number of synthesized views
 
   // SPS and slice header related variables
-#if !HHI_CAM_PARA_K0052
   std::vector<Int>    m_aiViewOrderIndex;                     ///< list of view order indices
-#endif
   UInt                m_uiCamParsCodedPrecision;              ///< precision for coding of camera parameters (x: max error in disparity is 2^(-x) luma samples)
   Bool                m_bCamParsVaryOverTime;                 ///< flag specifying whether camera parameters vary for given frame numbers
   Int**               m_aaiCodedScale;                        ///< array of coded scaling parameters [RefView][TargetView]
@@ -146,9 +141,7 @@ protected:
 
   // getting conversion parameters for disparity to virtual depth conversion
   Void  xGetCameraShifts          ( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Double& rdCamPosShift, Double& rdPicPosShift );
-#if !HHI_CAM_PARA_K0052
   Void  xSetPdmConversionParams   ();
-#endif
 
 public:
   // constructor and destructor
@@ -189,15 +182,7 @@ public:
   Int                 getRelDistLeft            ( Int iSynthViewIdx, Int   iLeftViewIdx, Int iRightViewIdx );
   UInt                getCurFrameId             ()  { return m_iCurrentFrameId;   }
   static Void         convertNumberString       ( Char* pchViewNumberString, std::vector<Int>& raiViewNumbers, Double dViewNumPrec );
-#if H_3D_REN_MAX_DEV_OUT
-  Double              getMaxShiftDeviation      () { return m_dMaxShiftDeviation; }; 
-#endif
 
-#if H_3D_VSO
-  // SAIT_VSO_EST_A033
-  Void                setDispCoeff              ( UInt uiStartFrameId, Int iViewIdx );
-  Double              getDispCoeff              () { return m_dDispCoeff; }
-#endif
 
   // function for getting parameters and parameter arrays
   std::vector<Int>&   getBaseViewNumbers        ()  { return m_aiBaseViews;       }
@@ -219,9 +204,7 @@ public:
 
   Bool                getVaryingCameraParameters()  { return m_bCamParsVaryOverTime;    }
   UInt                getCamParsCodedPrecision  ()  { return m_uiCamParsCodedPrecision; }
-#if !HHI_CAM_PARA_K0052
   std::vector<Int>&   getViewOrderIndex         ()  { return m_aiViewOrderIndex;        }
-#endif
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
 
