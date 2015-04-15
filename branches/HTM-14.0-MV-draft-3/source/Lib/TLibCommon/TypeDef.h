@@ -74,6 +74,7 @@
 
 #if H_MV
 #define H_MV_ENC_DEC_TRAC                 1  //< CU/PU level tracking
+#define H_MV_ALIGN_HM_15                  1
 #endif
 
 
