@@ -67,9 +67,6 @@ public:
 protected:
   TComSlice*    m_pcSlice;
   UInt          m_uiCoeffCost;
-#if H_3D_ANNEX_SELECTION_FIX
-  TEncTop*      m_encTop; 
-#endif
   Void codeShortTermRefPicSet              ( TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Bool calledFromSliceHeader, Int idx );
   Bool findMatchingLTRP ( TComSlice* pcSlice, UInt *ltrpsIndex, Int ltrpPOC, Bool usedFlag );
   
@@ -99,22 +96,13 @@ public:
 #if H_MV
   Void  codeSPSExtension        ( TComSPS* pcSPS ); 
 #endif
-#if H_3D
-  Void  codeVPS3dExtension       ( TComVPS* pcVPS ); 
-  Void  codeSPS3dExtension      ( TComSPS* pcSPS );
   Void  codeSPS                 ( TComSPS* pcSPS );
-#else
-  Void  codeSPS                 ( TComSPS* pcSPS );
-#endif
   Void  codePPS                 ( TComPPS* pcPPS );
 
 #if H_MV
   Void codePPSMultilayerExtension( TComPPS* pcPPS );
 #endif
 
-#if H_3D
-  Void  codePPSExtension        ( TComPPS* pcPPS );
-#endif
 
   Void  codeSliceHeader         ( TComSlice* pcSlice );
   Void  codePTL                 ( TComPTL* pcPTL, Bool profilePresentFlag, Int maxNumSubLayersMinus1);
@@ -128,29 +116,9 @@ public:
   Void codeSAOBlkParam(SAOBlkParam& saoBlkParam, Bool* sliceEnabled, Bool leftMergeAvail, Bool aboveMergeAvail, Bool onlyEstMergeInfo = false){printf("only supported in CABAC"); assert(0); exit(-1);}
   Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-  Void codeDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void codeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
  
-#if H_3D_ARP
-  Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if H_3D_IC
-  Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if H_3D_INTER_SDC
-  Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-  Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
-#if H_3D_DBBP
-  Void codeDBBPFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
-#endif
 
   Void codeInterModeFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiEncMode );
   Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
@@ -186,10 +154,6 @@ public:
   Void xCodeScalingList ( TComScalingList* scalingList, UInt sizeId, UInt listId);
   Void codeDFFlag       ( UInt uiCode, const Char *pSymbolName );
   Void codeDFSvlc       ( Int   iCode, const Char *pSymbolName );
-#if H_3D_ANNEX_SELECTION_FIX
-  TEncTop* getEncTop()               { return m_encTop; };
-  Void     setEncTop( TEncTop* et )  {  m_encTop = et; };
-#endif
 };
 
 //! \}

@@ -45,9 +45,6 @@
 #include "TLibVideoIO/TVideoIOYuv.h"
 #include "TLibCommon/AccessUnit.h"
 #include "TAppEncCfg.h"
-#if H_3D
-#include "../../Lib/TLibRenderer/TRenTop.h"
-#endif
 
 #if KWU_RC_MADPRED_E0227
 class TEncTop;
@@ -89,17 +86,9 @@ private:
   Int                        m_iFrameRcvd;                  ///< number of received frames
 #endif
 
-#if H_3D
-  TComDLT                    m_dlt;                         ///< dlt
-  TComSps3dExtension         m_sps3dExtension;              ///< Currently all layers share the same sps 3D Extension  
-#endif
 
   UInt m_essentialBytes;
   UInt m_totalBytes;
-#if H_3D_VSO
-  TRenTop                     m_cRendererTop; 
-  TRenModel                   m_cRendererModel;   
-#endif
 protected:
   // initialization
   Void  xCreateLib        ();                               ///< create files & encoder class
@@ -141,20 +130,9 @@ protected:
   Void xSetRepFormat              ( TComVPS& vps );
   Void xSetDpbSize                ( TComVPS& vps );
   Void xSetVPSVUI                 ( TComVPS& vps );
-#if HHI_CAM_PARA_K0052
-#if H_3D
-  Void xSetCamPara                ( TComVPS& vps );
-#endif
-#endif
   GOPEntry* xGetGopEntry( Int layerIdInVps, Int poc );
   Int  xGetMax( std::vector<Int>& vec);
   Bool xLayerIdInTargetEncLayerIdList( Int nuhLayerId );
-#endif
-#if H_3D
-  Void xDeriveDltArray( TComVPS& vps, TComDLT& dlt );
-#endif
-#if H_3D_DIM_DLT
-  Void  xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt);
 #endif
 public:
   TAppEncTop();

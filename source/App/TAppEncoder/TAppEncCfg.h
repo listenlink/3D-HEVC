@@ -43,11 +43,6 @@
 #include "TLibEncoder/TEncCfg.h"
 #include <sstream>
 #include <vector>
-#if H_3D
-#include "TAppCommon/TAppComCamPara.h"
-#include "TLibRenderer/TRenModel.h"
-#include "TLibRenderer/TRenModSetupStrParser.h"
-#endif
 //! \ingroup TAppEncoder
 //! \{
 
@@ -79,9 +74,6 @@ protected:
   std::vector<Int>       m_viewId;                            ///< view id
   std::vector<Int>       m_viewOrderIndex;                    ///< view order index  
   std::vector<Int>       m_auxId;                             ///< auxiliary id
-#if H_3D
-  std::vector<Int>       m_depthFlag;                         ///< depth flag
-#endif
   std::vector<Int>       m_targetEncLayerIdList;              ///< layer Ids in Nuh to be encoded
   std::vector<Int>       m_layerIdInNuh;                      ///< layer Id in Nuh for each layer 
   Bool                   m_splittingFlag;                     ///< Splitting Flag
@@ -132,10 +124,6 @@ protected:
   Bool m_higherLayerIrapSkipFlag;
 
 
-#if H_3D_IC
-  Bool   m_abUseIC;
-  Bool   m_bUseLowLatencyICEnc;
-#endif
 
 #endif
   Double    m_adLambdaModifier[ MAX_TLAYER ];                 ///< Lambda modifier array for each temporal layer
@@ -435,63 +423,6 @@ protected:
   std::vector<Int>  m_sbPropAvgBitRate;
   std::vector<Int>  m_sbPropMaxBitRate;
   Bool              m_outputVpsInfo;
-#endif
-#if H_3D
-  // Camera parameters
-  Char*     m_pchCameraParameterFile;                         ///< camera parameter file
-  Char*     m_pchBaseViewCameraNumbers;
-  TAppComCamPara m_cCameraData;
-  Int       m_iCodedCamParPrecision;                          ///< precision for coding of camera parameters
-#if H_3D_VSO
-  Char*     m_pchVSOConfig;
-  Bool      m_bUseVSO;                                    ///< flag for using View Synthesis Optimization
-  Bool      m_bVSOLSTable;                                ///< Depth QP dependent Lagrange parameter optimization (m23714)
-  Bool      m_bVSOEarlySkip;                              ///< Early skip of VSO computation (JCT3V-A0093 modification 4)
-
-  //// Used for development by GT, might be removed later
-  Double    m_dLambdaScaleVSO;                            ///< Scaling factor for Lambda in VSO mode
-  Bool      m_bForceLambdaScaleVSO;                       ///< Use Lambda Scale for depth even if VSO is turned off
-  Bool      m_bAllowNegDist;                              ///< Allow negative distortion in VSO
-  UInt      m_uiVSOMode;                                  ///< Number of VSO Mode, 1 = , 2 = simple, org vs. ren, 3 = simple, ren vs. ren, 4 = full  
-
-  // SAIT_VSO_EST_A0033
-  Bool      m_bUseEstimatedVSD;                           ///< Flag for using model based VSD estimation instead of VSO for some encoder decisions (JCT3V-A0033 modification 3)  
-
-  // LGE_WVSO_A0119
-  Bool      m_bUseWVSO;                                    ///< flag for using View Synthesis Optimization  
-  Int       m_iVSOWeight;
-  Int       m_iVSDWeight;
-  Int       m_iDWeight;
-
-  // Ren Model String
-  TRenModSetupStrParser       m_cRenModStrParser;
-#endif
-#if H_3D_DIM
-  Bool      m_useDLT;                                        ///< flag for using DLT
-#endif
-#if H_3D_QTLPC
-  Bool      m_bUseQTL;                                        ///< flag for using depth QuadTree Limitation
-#endif
-
-  std::vector< Bool >    m_ivMvPredFlag;
-  std::vector< Bool >    m_ivMvScalingFlag;
-  Int                    m_log2SubPbSizeMinus3;
-  Bool                   m_ivResPredFlag;
-  Bool                   m_depthRefinementFlag;
-  Bool                   m_viewSynthesisPredFlag;
-  Bool                   m_depthBasedBlkPartFlag;
-  Bool                   m_mpiFlag;
-  Int                    m_log2MpiSubPbSizeMinus3;
-  Bool                   m_intraContourFlag;
-  Bool                   m_intraWedgeFlag;
-  Bool                   m_intraSdcFlag;
-  Bool                   m_qtPredFlag;
-  Bool                   m_interSdcFlag;
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-  Bool                   m_depthIntraSkipFlag; 
-#else
-  Bool                   m_intraSingleFlag;
-#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables

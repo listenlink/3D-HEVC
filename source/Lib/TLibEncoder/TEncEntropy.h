@@ -81,28 +81,8 @@ public:
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-  virtual Void codeDIS          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#else
-#if H_3D_SINGLE_DEPTH
-  virtual Void codeSingleDepthMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if H_3D_ARP
-  virtual Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#if H_3D_IC
-  virtual Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#if H_3D_INTER_SDC
-  virtual Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-  virtual Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
-#if H_3D_DBBP
-  virtual Void codeDBBPFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
   virtual Void codeSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
   
   virtual Void codePartSize      ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth ) = 0;
@@ -178,13 +158,6 @@ public:
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-  Void encodeDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD=false );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD=false );
-#endif
-#endif
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeInterDirPU   ( TComDataCU* pcSubCU, UInt uiAbsPartIdx  );
   Void encodeRefFrmIdxPU  ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
@@ -192,19 +165,6 @@ public:
   Void encodeMVPIdxPU     ( TComDataCU* pcSubCU, UInt uiAbsPartIdx, RefPicList eRefList );
   Void encodeMergeFlag    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void encodeMergeIndex   ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if H_3D_ARP
-  Void encodeARPW         ( TComDataCU* pcCU, UInt uiAbspartIdx );
-#endif
-#if H_3D_IC
-  Void encodeICFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#endif
-#if H_3D_INTER_SDC
-  Void encodeDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx );
-  Void encodeSDCFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#endif
-#if H_3D_DBBP
-  Void encodeDBBPFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#endif
   Void encodePredMode          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodePartSize          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeIPCMInfo          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
@@ -225,15 +185,9 @@ public:
   Void encodeScalingList       ( TComScalingList* scalingList );
 
 private:
-#if H_3D_DISABLE_CHROMA
-  Void xEncodeTransform        ( TComDataCU* pcCU,UInt offsetLumaOffset, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP, Bool rd );
-public:
-  Void encodeCoeff             ( TComDataCU* pcCU,                 UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP, Bool rd );
-#else
   Void xEncodeTransform        ( TComDataCU* pcCU,UInt offsetLumaOffset, UInt offsetChroma, UInt uiAbsPartIdx, UInt uiDepth, UInt width, UInt height, UInt uiTrIdx, Bool& bCodeDQP );
 public:
   Void encodeCoeff             ( TComDataCU* pcCU,                 UInt uiAbsPartIdx, UInt uiDepth, UInt uiWidth, UInt uiHeight, Bool& bCodeDQP );
-#endif
   
   Void encodeCoeffNxN         ( TComDataCU* pcCU, TCoeff* pcCoeff, UInt uiAbsPartIdx, UInt uiTrWidth, UInt uiTrHeight, UInt uiDepth, TextType eType );
   

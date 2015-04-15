@@ -86,13 +86,6 @@ TEncTop::TEncTop()
 #if H_MV
   m_ivPicLists = NULL;
 #endif
-#if H_3D_IC
-  m_aICEnableCandidate = NULL;
-  m_aICEnableNum = NULL;
-#endif
-#if H_3D_ANNEX_SELECTION_FIX
-  m_cCavlcCoder.setEncTop(this); 
-#endif
 }
 
 TEncTop::~TEncTop()
@@ -335,10 +328,6 @@ Void TEncTop::init(Bool isFieldCoding)
 #endif
 {
   // initialize SPS
-#if H_3D
-  // Assuming that all PPS indirectly refer to the same VPS via different SPS
-  m_cSPS.setVPS(m_cVPS);
-#endif
   xInitSPS();
   
   /* set the VPS profile information */
@@ -356,16 +345,6 @@ Void TEncTop::init(Bool isFieldCoding)
   xInitRPS(isFieldCoding);
 
   xInitPPSforTiles();
-#if H_3D_IC
-  m_aICEnableCandidate = new Int[ 10 ];
-  m_aICEnableNum = new Int[ 10 ];
-
-  for(int i=0;i<10;i++)
-  {
-    m_aICEnableCandidate[i]=0;
-    m_aICEnableNum[i]=0;
-  }
-#endif
 
   // initialize processing unit classes
   m_cGOPEncoder.  init( this );
@@ -415,13 +394,6 @@ Void TEncTop::initNewPic( TComPicYuv* pcPicYuvOrg )
 #if H_MV
   pcPicCurr->setLayerId( getLayerId()); 
 #endif
-#if H_3D
-#if HHI_CAM_PARA_K0052
-  pcPicCurr->setScaleOffset( m_cameraParameters->getCodedScale(), m_cameraParameters->getCodedOffset() );
-#else
-  pcPicCurr->setScaleOffset( m_aaiCodedScale, m_aaiCodedOffset );
-#endif
-#endif
 }
 #endif
 Void TEncTop::deletePicBuffer()
@@ -456,13 +428,6 @@ Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>&
 #else
 Void TEncTop::encode(Bool flush, TComPicYuv* pcPicYuvOrg, TComList<TComPicYuv*>& rcListPicYuvRecOut, std::list<AccessUnit>& accessUnitsOut, Int& iNumEncoded )
 {
-#endif
-#if H_3D
-  TComPic* picLastCoded = getPic( getGOPEncoder()->getPocLastCoded() );
-  if( picLastCoded )
-  {
-    picLastCoded->compressMotion(1); 
-  }
 #endif
 #if H_MV
   if( gopId == 0)
@@ -776,9 +741,6 @@ Void TEncTop::xInitSPS()
   }  
   m_cSPS.setSpsExtensionPresentFlag       ( true ); 
   m_cSPS.setSpsMultilayerExtensionFlag    ( true ); 
-#if H_3D
-  m_cSPS.setSps3dExtensionFlag            ( true ); 
-#endif
 #endif
   m_cSPS.setPicWidthInLumaSamples         ( m_iSourceWidth      );
   m_cSPS.setPicHeightInLumaSamples        ( m_iSourceHeight     );
@@ -786,9 +748,6 @@ Void TEncTop::xInitSPS()
   m_cSPS.setMaxCUWidth    ( g_uiMaxCUWidth      );
   m_cSPS.setMaxCUHeight   ( g_uiMaxCUHeight     );
   m_cSPS.setMaxCUDepth    ( g_uiMaxCUDepth      );
-#if H_3D_DISABLE_CHROMA
-  m_cSPS.setChromaFormatIdc( getIsDepth() ? CHROMA_400 : CHROMA_420 ); 
-#endif
 
   Int minCUSize = m_cSPS.getMaxCUWidth() >> ( m_cSPS.getMaxCUDepth()-g_uiAddCUDepth );
   Int log2MinCUSize = 0;
@@ -912,26 +871,15 @@ Void TEncTop::xInitPPS()
 {
 #if H_MV
   m_cPPS.setLayerId( getLayerId() );
-#if H_3D
-  // Check if this condition is still correct
-  if( getVPS()->getNumRefListLayers( getLayerId() ) > 0 )
-#else
   if( getVPS()->getNumDirectRefLayers( getLayerId() ) > 0 )
-#endif
   {
     m_cPPS.setListsModificationPresentFlag( true );
   }
   m_cPPS.setPPSId( getLayerIdInVps() );
   m_cPPS.setSPSId( getLayerIdInVps() );
   m_cPPS.setPpsMultilayerExtensionFlag    ( true ); 
-#if H_3D
-  m_cPPS.setPps3dExtensionFlag            ( true ); 
-#endif
 #endif
 
-#if H_3D
-  m_cPPS.setDLT( getDLT() );
-#endif
   m_cPPS.setConstrainedIntraPred( m_bUseConstrainedIntraPred );
   Bool bUseDQP = (getMaxCuDQPDepth() > 0)? true : false;
 
@@ -1449,103 +1397,4 @@ TComPic* TEncTop::getPic( Int poc )
 }
 #endif
 
-#if H_3D_VSO
-Void TEncTop::setupRenModel( Int iPoc, Int iEncViewIdx, Int iEncContent, Int iHorOffset )
-{
-  TRenModel* rendererModel = m_cRdCost.getRenModel(); 
-  rendererModel->setupPart( iHorOffset, std::min( (Int) g_uiMaxCUHeight, (Int) ( m_iSourceHeight - iHorOffset ) )) ; 
-  
-  Int iEncViewSIdx = m_cameraParameters->getBaseId2SortedId()[ iEncViewIdx ];
-
-  // setup base views
-  Int iNumOfBV = m_renderModelParameters->getNumOfBaseViewsForView( iEncViewSIdx, iEncContent );
-
-  for (Int iCurView = 0; iCurView < iNumOfBV; iCurView++ )
-  {
-    Int iBaseViewSIdx;
-    Int iVideoDistMode;
-    Int iDepthDistMode;
-
-    m_renderModelParameters->getBaseViewData( iEncViewSIdx, iEncContent, iCurView, iBaseViewSIdx, iVideoDistMode, iDepthDistMode );
-
-    AOT( iVideoDistMode < 0 || iVideoDistMode > 2 );
-
-    Int iBaseViewIdx = m_cameraParameters->getBaseSortedId2Id()[ iBaseViewSIdx ];
-
-    TComPicYuv* pcPicYuvVideoRec  = m_ivPicLists->getPicYuv( iBaseViewIdx, false, iPoc, true  );
-    TComPicYuv* pcPicYuvDepthRec  = m_ivPicLists->getPicYuv( iBaseViewIdx, true , iPoc, true  );
-    TComPicYuv* pcPicYuvVideoOrg  = m_ivPicLists->getPicYuv( iBaseViewIdx, false, iPoc, false );
-    TComPicYuv* pcPicYuvDepthOrg  = m_ivPicLists->getPicYuv( iBaseViewIdx, true , iPoc, false );    
-
-    TComPicYuv* pcPicYuvVideoRef  = ( iVideoDistMode == 2 ) ? pcPicYuvVideoOrg  : NULL;
-    TComPicYuv* pcPicYuvDepthRef  = ( iDepthDistMode == 2 ) ? pcPicYuvDepthOrg  : NULL;
-
-    TComPicYuv* pcPicYuvVideoTest = ( iVideoDistMode == 0 ) ? pcPicYuvVideoOrg  : pcPicYuvVideoRec;
-    TComPicYuv* pcPicYuvDepthTest = ( iDepthDistMode == 0 ) ? pcPicYuvDepthOrg  : pcPicYuvDepthRec;
-
-    AOT( (iVideoDistMode == 2) != (pcPicYuvVideoRef != NULL) );
-    AOT( (iDepthDistMode == 2) != (pcPicYuvDepthRef != NULL) );
-    AOT( pcPicYuvDepthTest == NULL );
-    AOT( pcPicYuvVideoTest == NULL );
-
-    rendererModel->setBaseView( iBaseViewSIdx, pcPicYuvVideoTest, pcPicYuvDepthTest, pcPicYuvVideoRef, pcPicYuvDepthRef );
-  }
-
-  rendererModel->setErrorMode( iEncViewSIdx, iEncContent, 0 );
-  // setup virtual views
-  Int iNumOfSV  = m_renderModelParameters->getNumOfModelsForView( iEncViewSIdx, iEncContent );
-  for (Int iCurView = 0; iCurView < iNumOfSV; iCurView++ )
-  {
-    Int iOrgRefBaseViewSIdx;
-    Int iLeftBaseViewSIdx;
-    Int iRightBaseViewSIdx;
-    Int iSynthViewRelNum;
-    Int iModelNum;
-    Int iBlendMode;
-    m_renderModelParameters->getSingleModelData(iEncViewSIdx, iEncContent, iCurView, iModelNum, iBlendMode,iLeftBaseViewSIdx, iRightBaseViewSIdx, iOrgRefBaseViewSIdx, iSynthViewRelNum );
-
-    Int iLeftBaseViewIdx    = -1;
-    Int iRightBaseViewIdx   = -1;
-
-    TComPicYuv* pcPicYuvOrgRef  = NULL;
-    Int**      ppiShiftLUTLeft  = NULL;
-    Int**      ppiShiftLUTRight = NULL;
-    Int**      ppiBaseShiftLUTLeft  = NULL;
-    Int**      ppiBaseShiftLUTRight = NULL;
-
-
-    Int        iDistToLeft      = -1;
-
-    Int iSynthViewIdx = m_cameraParameters->synthRelNum2Idx( iSynthViewRelNum );
-
-    if ( iLeftBaseViewSIdx != -1 )
-    {
-      iLeftBaseViewIdx   = m_cameraParameters->getBaseSortedId2Id()   [ iLeftBaseViewSIdx ];
-      ppiShiftLUTLeft    = m_cameraParameters->getSynthViewShiftLUTI()[ iLeftBaseViewIdx  ][ iSynthViewIdx  ];
-    }
-
-    if ( iRightBaseViewSIdx != -1 )
-    {
-      iRightBaseViewIdx  = m_cameraParameters->getBaseSortedId2Id()   [iRightBaseViewSIdx ];
-      ppiShiftLUTRight   = m_cameraParameters->getSynthViewShiftLUTI()[ iRightBaseViewIdx ][ iSynthViewIdx ];
-    }
-
-    if ( iRightBaseViewSIdx != -1 && iLeftBaseViewSIdx != -1 )
-    {
-      iDistToLeft          = m_cameraParameters->getRelDistLeft(  iSynthViewIdx , iLeftBaseViewIdx, iRightBaseViewIdx);
-      ppiBaseShiftLUTLeft  = m_cameraParameters->getBaseViewShiftLUTI() [ iLeftBaseViewIdx  ][ iRightBaseViewIdx ];
-      ppiBaseShiftLUTRight = m_cameraParameters->getBaseViewShiftLUTI() [ iRightBaseViewIdx ][ iLeftBaseViewIdx  ];
-
-    }
-
-    if ( iOrgRefBaseViewSIdx != -1 )
-    {
-      pcPicYuvOrgRef = m_ivPicLists->getPicYuv(  m_cameraParameters->getBaseSortedId2Id()[ iOrgRefBaseViewSIdx ] , false, iPoc, false );
-      AOF ( pcPicYuvOrgRef );
-    }
-
-    rendererModel->setSingleModel( iModelNum, ppiShiftLUTLeft, ppiBaseShiftLUTLeft, ppiShiftLUTRight, ppiBaseShiftLUTRight, iDistToLeft, pcPicYuvOrgRef );
-  }
-}
-#endif
 //! \}

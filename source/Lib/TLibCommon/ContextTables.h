@@ -50,15 +50,6 @@
 
 #define NUM_SPLIT_FLAG_CTX            3       ///< number of context models for split flag
 #define NUM_SKIP_FLAG_CTX             3       ///< number of context models for skip flag
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-#define NUM_DIS_FLAG_CTX              1
-#define NUM_DIS_TYPE_CTX              1       
-#else
-#if H_3D_SINGLE_DEPTH
-#define NUM_SINGLEDEPTH_FLAG_CTX                     1
-#define NUM_SINGLE_DEPTH_VALUE_DATA_CTX              1       
-#endif
-#endif
 #define NUM_MERGE_FLAG_EXT_CTX        1       ///< number of context models for merge flag of merge extended
 #define NUM_MERGE_IDX_EXT_CTX         1       ///< number of context models for merge index of merge extended
 
@@ -100,34 +91,11 @@
 #define NUM_TRANSFORMSKIP_FLAG_CTX    1       ///< number of context models for transform skipping 
 #define NUM_CU_TRANSQUANT_BYPASS_FLAG_CTX  1 
 
-#if H_3D_ARP
-#define NUM_ARPW_CTX                  3       ///< number of context models for weighting factor index used by advanced residual prediction
-#endif
 
-#if H_3D_IC
-#define NUM_IC_FLAG_CTX               1       ///< number of context models for illumination compensation flag
-#endif
 
 #define CNU                          154      ///< dummy initialization value for unused context models 'Context model Not Used'
 
-#if H_3D_DIM
-#define NUM_DEPTH_INTRA_MODE_CTX      1       ///< number of context models for depth intra modes
-#define NUM_DDC_FLAG_CTX              2       ///< number of context models for deltaDC flag (DMM or RBC)
-#define NUM_DDC_DATA_CTX              1       ///< number of context models for deltaDC data (DMM or RBC)
-#if H_3D_DIM_DMM
-#define NUM_DMM1_DATA_CTX             1       ///< number of context models for DMM1 data
-#endif
-#define NUM_ANGLE_FLAG_CTX            1
-#endif
 
-#if H_3D_DIM_SDC
-#define SDC_NUM_RESIDUAL_FLAG_CTX     1
-#define SDC_NUM_RESIDUAL_CTX          1
-#define NUM_SDC_FLAG_CTX              1      ///< number of context 
-#endif
-#if H_3D_DBBP
-#define DBBP_NUM_FLAG_CTX                 1
-#endif
 // ====================================================================================================================
 // Tables
 // ====================================================================================================================
@@ -157,39 +125,6 @@ INIT_SKIP_FLAG[3][NUM_SKIP_FLAG_CTX] =
   { 197,  185,  201, }, 
   { CNU,  CNU,  CNU, }, 
 };
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
-static const UChar 
-INIT_DIS_FLAG[3][NUM_DIS_FLAG_CTX] =  
-{
-    { 185 }, 
-    { 185 }, 
-    { 185 },
-};
-static const UChar
-INIT_DIS_TYPE[3][NUM_DIS_TYPE_CTX] = 
-{
-    { 137 }, 
-    { 137 }, 
-    { 137 }, 
-};
-#else
-#if H_3D_SINGLE_DEPTH
-static const UChar 
-INIT_SINGLEDEPTH_FLAG[3][NUM_SINGLEDEPTH_FLAG_CTX] =  
-{
-  { 185 }, 
-  { 185 }, 
-  { 185 }, 
-};
-static const UChar
-INIT_SINGLE_DEPTH_VALUE_DATA[3][NUM_SINGLE_DEPTH_VALUE_DATA_CTX] = 
-{
-  { 137 }, 
-  { 137 }, 
-  { 137 }, 
-};
-#endif
-#endif
 static const UChar
 INIT_MERGE_FLAG_EXT[3][NUM_MERGE_FLAG_EXT_CTX] = 
 {
@@ -378,103 +313,9 @@ INIT_TRANSFORMSKIP_FLAG[3][2*NUM_TRANSFORMSKIP_FLAG_CTX] =
   { 139,  139}, 
 };
 
-#if H_3D_ARP
-static const UChar 
-INIT_ARPW[3][NUM_ARPW_CTX] = 
-{
-    { 162, 153, 162 },
-    { 162, 153, 162 },
-    { 162, 153, 162 },
-};
-
-#endif
-#if H_3D_IC
-static const UChar 
-INIT_IC_FLAG[3][NUM_IC_FLAG_CTX] =  
-{
-    { 154 },
-    { 154 },
-    { 154 },
-};
-
-#endif
-#if H_3D_DIM
-static const UChar
-INIT_DEPTH_INTRA_MODE[3][NUM_DEPTH_INTRA_MODE_CTX] =
-{
-  { 154, },
-  { 154, },
-  { 154, }
-};
-
-static const UChar 
-INIT_ANGLE_FLAG[3][NUM_ANGLE_FLAG_CTX] =
-{
-  { 154 },
-  { 141 },
-  { 155 },
-};
-
-static const UChar 
-INIT_DDC_FLAG[3][NUM_DDC_FLAG_CTX] =
-{
-  {0 , CNU},
-  {0 , CNU},
-  {64, CNU}
-};
-static const UChar
-INIT_DDC_DATA[3][NUM_DDC_DATA_CTX] = 
-{
-  { 154 }, 
-  { 154 }, 
-  { 154 }, 
-};
-#if H_3D_DIM_DMM
-static const UChar
-INIT_DMM1_DATA[3][NUM_DMM1_DATA_CTX] = 
-{
-  { CNU }, 
-  { CNU }, 
-  { CNU }, 
-};
-#endif
-#if H_3D_DIM_SDC
-static const UChar
-INIT_SDC_RESIDUAL_FLAG[3][SDC_NUM_RESIDUAL_FLAG_CTX] =
-{
-  { CNU },
-  { CNU },
-  { CNU },
-};
-static const UChar
-INIT_SDC_RESIDUAL[3][SDC_NUM_RESIDUAL_CTX] =
-{
-  { 155 },
-  { 155 },
-  { 155 },
-};
-#endif
-#endif
 
 
 //! \}
-#if H_3D_DIM_SDC
-static const UChar 
-INIT_SDC_FLAG[3][NUM_SDC_FLAG_CTX] =
-{
-  { 154 },  
-  { 154 },
-  { 154 },
-};
-#endif
 
-#if H_3D_DBBP
-static const UChar INIT_DBBP_FLAG[3][DBBP_NUM_FLAG_CTX] =
-{
-  { CNU },
-  { CNU },
-  { CNU },
-};
-#endif
 
 #endif

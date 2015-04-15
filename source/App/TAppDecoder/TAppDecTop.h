@@ -81,10 +81,6 @@ private:
   Int                             m_iPOCLastDisplay;              ///< last POC in display order
 #endif
 
-#if H_3D
-  FILE*                           m_pScaleOffsetFile;
-  CamParsCollector                m_cCamParsCollector;
-#endif
 public:
   TAppDecTop();
   virtual ~TAppDecTop() {}
