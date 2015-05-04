@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@
     \brief    binary entropy decoder of CABAC
 */
 
-#ifndef __TDEC_BIN_CODER_CABAC__
-#define __TDEC_BIN_CODER_CABAC__
+#ifndef __TDECBINCODERCABAC__
+#define __TDECBINCODERCABAC__
 
 #include "TLibCommon/TComCABACTables.h"
 #include "TDecBinCoder.h"
@@ -49,22 +49,34 @@ class TDecBinCABAC : public TDecBinIf
 public:
   TDecBinCABAC ();
   virtual ~TDecBinCABAC();
-  
+
   Void  init              ( TComInputBitstream* pcTComBitstream );
   Void  uninit            ();
-  
+
   Void  start             ();
   Void  finish            ();
-  
+
+#if RExt__DECODER_DEBUG_BIT_STATISTICS
+  Void  decodeBin          ( UInt& ruiBin, ContextModel& rcCtxModel, const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeBinEP        ( UInt& ruiBin                          , const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeBinsEP       ( UInt& ruiBin, Int numBins             , const class TComCodingStatisticsClassType &whichStat );
+  Void  decodeAlignedBinsEP( UInt& ruiBins, Int numBins            , const class TComCodingStatisticsClassType &whichStat );
+#else
   Void  decodeBin         ( UInt& ruiBin, ContextModel& rcCtxModel );
   Void  decodeBinEP       ( UInt& ruiBin                           );
   Void  decodeBinsEP      ( UInt& ruiBin, Int numBins              );
+  Void  decodeAlignedBinsEP( UInt& ruiBins, Int numBins             );
+#endif
+
+  Void  align             ();
+
   Void  decodeBinTrm      ( UInt& ruiBin                           );
-  
+
   Void  xReadPCMCode      ( UInt uiLength, UInt& ruiCode );
-  
-  Void  copyState         ( TDecBinIf* pcTDecBinIf );
-  TDecBinCABAC* getTDecBinCABAC()  { return this; }
+
+  Void  copyState         ( const TDecBinIf* pcTDecBinIf );
+  TDecBinCABAC* getTDecBinCABAC()             { return this; }
+  const TDecBinCABAC* getTDecBinCABAC() const { return this; }
 
 private:
   TComInputBitstream* m_pcTComBitstream;

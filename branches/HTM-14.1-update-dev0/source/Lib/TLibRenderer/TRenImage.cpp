@@ -36,38 +36,38 @@
 #include "TRenImagePlane.h"
 #include "TRenFilter.h"
 #include "assert.h"
-#if H_3D
+#if NH_3D
 
 
 template<typename T>
 TRenImage<T>::TRenImage( TRenImage& rcIn )
-{
+{  
   allocatePlanes( rcIn.getPlane(0)->getWidth(), rcIn.getPlane(0)->getHeight(), rcIn.getNumberOfFullPlanes(), rcIn.getNumberOfQuaterPlanes() ) ; assign(&rcIn);
 }
 
 template<typename T>
 TRenImage<T>::TRenImage( UInt uiWidth, UInt uiHeight, UInt uiNumberOfFullPlanes, UInt uiNumberOfQuaterPlanes )
-{
+{  
   allocatePlanes( uiWidth, uiHeight, uiNumberOfFullPlanes, uiNumberOfQuaterPlanes );
 }
 
 template<typename T>
 TRenImage<T>::TRenImage() : m_uiNumberOfFullPlanes(0), m_uiNumberOfQuaterPlanes(0), m_uiNumberOfPlanes(0), m_apcPlanes(0)
 {
-
+  
 }
 
 
 template<>
 TRenImage<Pel>::TRenImage( TComPicYuv* pcPicYuv, Bool bFirstPlaneOnly )
-{
+{ 
   if (bFirstPlaneOnly) //400
   {
     m_uiNumberOfPlanes       = 1;
     m_uiNumberOfFullPlanes   = 1;
     m_uiNumberOfQuaterPlanes = 0;
     m_apcPlanes    = new TRenImagePlane<Pel>*[ m_uiNumberOfPlanes ];
-    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBufY(), pcPicYuv->getWidth() + (REN_LUMA_MARGIN << 1),   pcPicYuv->getHeight()+ (REN_LUMA_MARGIN << 1), pcPicYuv->getStride (), REN_LUMA_MARGIN );
+    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBuf( COMPONENT_Y ), pcPicYuv->getWidth( COMPONENT_Y  ) + (REN_LUMA_MARGIN << 1),   pcPicYuv->getHeight( COMPONENT_Y  ) + (REN_LUMA_MARGIN << 1), pcPicYuv->getStride( COMPONENT_Y ), REN_LUMA_MARGIN );
   }
   else //420
   {
@@ -76,9 +76,9 @@ TRenImage<Pel>::TRenImage( TComPicYuv* pcPicYuv, Bool bFirstPlaneOnly )
     m_uiNumberOfQuaterPlanes = 2;
 
     m_apcPlanes    = new TRenImagePlane<Pel>*[ m_uiNumberOfPlanes ];
-    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBufY(),   pcPicYuv->getWidth()     + (REN_LUMA_MARGIN << 1),  pcPicYuv->getHeight()      + (REN_LUMA_MARGIN << 1), pcPicYuv->getStride (), REN_LUMA_MARGIN );
-    m_apcPlanes[1] = new TRenImagePlane<Pel>( pcPicYuv->getBufU(),   (pcPicYuv->getWidth()>>1)+  REN_LUMA_MARGIN      ,  (pcPicYuv->getHeight()>>1) +  REN_LUMA_MARGIN      , pcPicYuv->getCStride(), REN_LUMA_MARGIN >> 1 );
-    m_apcPlanes[2] = new TRenImagePlane<Pel>( pcPicYuv->getBufV(),   (pcPicYuv->getWidth()>>1)+  REN_LUMA_MARGIN      ,  (pcPicYuv->getHeight()>>1) +  REN_LUMA_MARGIN      , pcPicYuv->getCStride(), REN_LUMA_MARGIN >> 1 );
+    m_apcPlanes[0] = new TRenImagePlane<Pel>( pcPicYuv->getBuf( COMPONENT_Y  ), pcPicYuv->getWidth( COMPONENT_Y  ) + (REN_LUMA_MARGIN << 1),  pcPicYuv->getHeight( COMPONENT_Y  ) + (REN_LUMA_MARGIN << 1), pcPicYuv->getStride( COMPONENT_Y ), REN_LUMA_MARGIN );
+    m_apcPlanes[1] = new TRenImagePlane<Pel>( pcPicYuv->getBuf( COMPONENT_Cb ), pcPicYuv->getWidth( COMPONENT_Cb ) +  REN_LUMA_MARGIN      ,  pcPicYuv->getHeight( COMPONENT_Cb ) +  REN_LUMA_MARGIN      , pcPicYuv->getStride( COMPONENT_Cb), REN_LUMA_MARGIN >> 1 );
+    m_apcPlanes[2] = new TRenImagePlane<Pel>( pcPicYuv->getBuf( COMPONENT_Cr ), pcPicYuv->getWidth( COMPONENT_Cr ) +  REN_LUMA_MARGIN      ,  pcPicYuv->getHeight( COMPONENT_Cr ) +  REN_LUMA_MARGIN      , pcPicYuv->getStride( COMPONENT_Cr), REN_LUMA_MARGIN >> 1 );
   }
 }
 
@@ -108,7 +108,7 @@ TRenImagePlane<T>** TRenImage<T>::getPlanes() const
 }
 
 template<typename T>
-Void TRenImage<T>::getDataAndStrides( T** pptData, Int* piStrides )
+Void TRenImage<T>::getDataAndStrides( T** pptData, Int* piStrides ) const
 {
   for (UInt uiCurPlane = 0; uiCurPlane < m_uiNumberOfPlanes; uiCurPlane++ )
   {
@@ -119,7 +119,7 @@ Void TRenImage<T>::getDataAndStrides( T** pptData, Int* piStrides )
 
 
 template<typename T>
-Void TRenImage<T>::getWidthAndHeight( Int* ppiWidths, Int* ppiHeights )
+Void TRenImage<T>::getWidthAndHeight( Int* ppiWidths, Int* ppiHeights ) const
 {
   for (UInt uiCurPlane = 0; uiCurPlane < m_uiNumberOfPlanes; uiCurPlane++ )
   {
@@ -232,13 +232,14 @@ Void TRenImage<T>::init()
 
   for (UInt uiCurPlane = 1; uiCurPlane < m_uiNumberOfPlanes; uiCurPlane++)
   {
-    m_apcPlanes[uiCurPlane]->assign( (Pel) ( 1 << ( g_bitDepthC - 1 ) ) );
+    m_apcPlanes[uiCurPlane]->assign( (Pel) ( 1 << ( REN_BIT_DEPTH - 1 ) ) );
   }
 }
 
 
 template<class T>
-TRenImage<T>::~TRenImage() {
+TRenImage<T>::~TRenImage()
+{
   xDeletePlanes();
   delete[] m_apcPlanes;
 }
@@ -271,4 +272,4 @@ template class TRenImage<Bool>;
 
 template Void TRenImage<Pel>::assign<Pel>    (TRenImage<Pel>*   );
 
-#endif // H_3D
+#endif // NH_3D
