@@ -62,7 +62,7 @@
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
 class TDecTop; 
 #endif
 
@@ -82,7 +82,7 @@ private:
   TDecCavlc*            m_pcCavlcDecoder;
   TDecSlice*            m_pcSliceDecoder;
   TComLoopFilter*       m_pcLoopFilter;
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
   TDecTop*              m_decTop; 
 #endif
   

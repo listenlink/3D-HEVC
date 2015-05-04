@@ -75,11 +75,7 @@ CamParsCollector::~CamParsCollector()
 
   xDeleteArray( m_adBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
   xDeleteArray( m_aiBaseViewShiftLUT, MAX_NUM_LAYERS, MAX_NUM_LAYERS, 2 );
-#if HHI_CAM_PARA_K0052
   xDeleteArray( m_receivedIdc, m_vps->getNumViews() );
-#else
-  xDeleteArray( m_receivedIdc, m_uiMaxViewIndex + 1 );
-#endif
 }
 
 
@@ -94,7 +90,6 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile, TComVPS* vps)
   m_lastPoc                 = -1;   
   m_firstReceivedPoc        = -2; 
 
-#if HHI_CAM_PARA_K0052  
   for (Int i = 0; i <= vps->getMaxLayersMinus1(); i++)
   {
     Int curViewIdxInVps = m_vps->getVoiInVps( m_vps->getViewIndex( m_vps->getLayerIdInNuh( i ) ) ) ; 
@@ -133,64 +128,16 @@ CamParsCollector::init( FILE* pCodedScaleOffsetFile, TComVPS* vps)
   }
 }
 
-#else
-  m_uiMaxViewIndex            = -1; 
-  for (Int i = 0; i <= vps->getMaxLayersMinus1(); i++)
-  {
-    Int curViewIdx = m_vps->getViewIndex( m_vps->getLayerIdInNuh( i )); 
-    m_bCamParsVaryOverTime = m_bCamParsVaryOverTime || vps->hasCamParInSliceHeader( curViewIdx );
-    m_uiMaxViewIndex = std::max( m_uiMaxViewIndex, curViewIdx  ) ; 
-  }
-  assert( m_receivedIdc == NULL ); 
-  m_receivedIdc = new Int*[ m_uiMaxViewIndex + 1]; 
-  for (Int i = 0; i <= m_uiMaxViewIndex; i++)
-  {
-    m_receivedIdc[i] = new Int[ m_uiMaxViewIndex + 1 ]; 
-  }
-
-  xResetReceivedIdc( true ); 
-
-  for (Int viewIndex = 0; viewIndex <= m_uiMaxViewIndex ; viewIndex++ )
-  {
-    if (m_vps->getCamParPresent( viewIndex ) )
-    {    
-      if( !m_vps->hasCamParInSliceHeader( viewIndex ) ) 
-      {
-        for (Int baseViewIndex = 0; baseViewIndex < viewIndex ; baseViewIndex++ )
-        { 
-          m_receivedIdc   [ baseViewIndex ][ viewIndex ] = -1; 
-          m_aaiCodedScale [ baseViewIndex ][ viewIndex ] = m_vps->getCodedScale    (viewIndex) [ baseViewIndex ];
-          m_aaiCodedOffset[ baseViewIndex ][ viewIndex ] = m_vps->getCodedOffset   (viewIndex) [ baseViewIndex ];
-
-          m_receivedIdc   [ viewIndex ][ baseViewIndex ] = -1; 
-          m_aaiCodedScale [ viewIndex ][ baseViewIndex ] = m_vps->getInvCodedScale (viewIndex) [ baseViewIndex ];
-          m_aaiCodedOffset[ viewIndex ][ baseViewIndex ] = m_vps->getInvCodedOffset(viewIndex) [ baseViewIndex ];
-          xInitLUTs( baseViewIndex, viewIndex, m_aaiCodedScale[ baseViewIndex ][ viewIndex ], m_aaiCodedOffset[ baseViewIndex ][ viewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-          xInitLUTs( viewIndex, baseViewIndex, m_aaiCodedScale[ viewIndex ][ baseViewIndex ], m_aaiCodedOffset[ viewIndex ][ baseViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT );
-        }
-      }
-    }
-  }
-}
-
-#endif
 
 
 
 Void
 CamParsCollector::xResetReceivedIdc( Bool overWriteFlag )
 {
-#if HHI_CAM_PARA_K0052
   for (Int i = 0; i < m_vps->getNumViews(); i++)
   {  
     for (Int j = 0; j < m_vps->getNumViews(); j++)
     {
-#else
-  for (Int i = 0; i <= m_uiMaxViewIndex; i++)
-  {  
-    for (Int j = 0; j <= m_uiMaxViewIndex; j++)
-    {
-#endif
       if ( overWriteFlag ||  ( m_receivedIdc[i][j] != -1 ) )
       {
         m_receivedIdc[i][j] = 0; 
@@ -231,11 +178,7 @@ CamParsCollector::xCreateLUTs( UInt uiNumberSourceViews, UInt uiNumberTargetView
 Void 
   CamParsCollector::xInitLUTs( UInt uiSourceView, UInt uiTargetView, Int iScale, Int iOffset, Double****& radLUT, Int****& raiLUT)
 {
-#if HHI_CAM_PARA_K0052
   Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCpPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
-#else
-  Int     iLog2DivLuma   = m_uiBitDepthForLUT + m_vps->getCamParPrecision() + 1 - m_iLog2Precision;   AOF( iLog2DivLuma > 0 );
-#endif
   Int     iLog2DivChroma = iLog2DivLuma + 1;
 
   iOffset <<= m_uiBitDepthForLUT;
@@ -312,7 +255,6 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
     m_lastPoc = pcSlice->getPOC();
   }
 
-#if HHI_CAM_PARA_K0052
   UInt voiInVps          = m_vps->getVoiInVps(pcSlice->getViewIndex());  
   if( m_vps->getCpInSliceSegmentHeaderFlag( voiInVps ) ) // check consistency of slice parameters here
   {   
@@ -347,44 +289,6 @@ CamParsCollector::setSlice( TComSlice* pcSlice )
       }
     }
   }  
-#else
-  UInt uiViewIndex          = pcSlice->getViewIndex();  
-  if( m_vps->getCamParPresent( uiViewIndex ) )
-  {    
-    if( m_vps->hasCamParInSliceHeader( uiViewIndex ) ) // check consistency of slice parameters here
-    {   
-      for( UInt uiBaseViewIndex = 0; uiBaseViewIndex < uiViewIndex; uiBaseViewIndex++ )
-      {        
-        if ( m_receivedIdc[ uiViewIndex ][ uiBaseViewIndex ] != 0 )
-        {      
-          AOF( m_aaiCodedScale [ uiViewIndex ][ uiBaseViewIndex ] == pcSlice->getInvCodedScale () [ uiBaseViewIndex ] );
-          AOF( m_aaiCodedOffset[ uiViewIndex ][ uiBaseViewIndex ] == pcSlice->getInvCodedOffset() [ uiBaseViewIndex ] );
-        }
-        else
-        {          
-          m_receivedIdc   [ uiViewIndex ][ uiBaseViewIndex ]  = 1; 
-          m_aaiCodedScale [ uiViewIndex ][ uiBaseViewIndex ]  = pcSlice->getInvCodedScale () [ uiBaseViewIndex ];
-          m_aaiCodedOffset[ uiViewIndex ][ uiBaseViewIndex ]  = pcSlice->getInvCodedOffset() [ uiBaseViewIndex ];
-          xInitLUTs( uiViewIndex, uiBaseViewIndex, m_aaiCodedScale[ uiViewIndex ][ uiBaseViewIndex ], m_aaiCodedOffset[ uiViewIndex ][ uiBaseViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
-        }
-        if ( m_receivedIdc[ uiBaseViewIndex ][ uiViewIndex ] != 0 )
-        {      
-          AOF( m_aaiCodedScale [ uiBaseViewIndex ][ uiViewIndex ] == pcSlice->getCodedScale    () [ uiBaseViewIndex ] );
-          AOF( m_aaiCodedOffset[ uiBaseViewIndex ][ uiViewIndex ] == pcSlice->getCodedOffset   () [ uiBaseViewIndex ] );
-        }
-        else
-        {        
-          m_receivedIdc   [ uiBaseViewIndex ][ uiViewIndex ]  = 1; 
-          m_aaiCodedScale [ uiBaseViewIndex ][ uiViewIndex ]  = pcSlice->getCodedScale    () [ uiBaseViewIndex ];
-          m_aaiCodedOffset[ uiBaseViewIndex ][ uiViewIndex ]  = pcSlice->getCodedOffset   () [ uiBaseViewIndex ];
-          xInitLUTs( uiBaseViewIndex, uiViewIndex, m_aaiCodedScale[ uiBaseViewIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseViewIndex ][ uiViewIndex ], m_adBaseViewShiftLUT, m_aiBaseViewShiftLUT);
-        }
-      }
-    }
-  }
-#endif
-
-
 }
 
 
@@ -407,7 +311,6 @@ CamParsCollector::xOutput( Int iPOC )
   {
     if( iPOC == m_firstReceivedPoc )
     {
-#if HHI_CAM_PARA_K0052
       fprintf( m_pCodedScaleOffsetFile, "#ViewOrderIdx     ViewIdVal\n" );
       fprintf( m_pCodedScaleOffsetFile, "#------------ -------------\n" );
       
@@ -435,43 +338,6 @@ CamParsCollector::xOutput( Int iPOC )
                 iS, iE, m_vps->getViewOIdxList( voiInVps ), m_vps->getViewOIdxList( baseVoiInVps ), 
                 m_aaiCodedScale [ baseVoiInVps ][ voiInVps ], 
                 m_aaiCodedOffset[ baseVoiInVps ][ voiInVps ], m_vps->getCpPrecision() );
-#else
-      fprintf( m_pCodedScaleOffsetFile, "#  ViewIndex       ViewId\n" );
-      fprintf( m_pCodedScaleOffsetFile, "#----------- ------------\n" );
-      for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
-      {
-        fprintf( m_pCodedScaleOffsetFile, "%12d %12d\n", uiViewIndex, m_vps->getViewIdVal( uiViewIndex ) );
-      }
-      fprintf( m_pCodedScaleOffsetFile, "\n\n");
-      fprintf( m_pCodedScaleOffsetFile, "# StartFrame     EndFrame   TargetView     BaseView   CodedScale  CodedOffset    Precision\n" );
-      fprintf( m_pCodedScaleOffsetFile, "#----------- ------------ ------------ ------------ ------------ ------------ ------------\n" );
-    }
-    if( iPOC == m_firstReceivedPoc || m_bCamParsVaryOverTime  )
-    {
-      Int iS = iPOC;
-      Int iE = ( m_bCamParsVaryOverTime ? iPOC : ~( 1 << 31 ) );
-#if HHI_CAM_PARA_K0052
-      for( UInt uiViewIndex = 0; uiViewIndex < m_vps->getNumViews(); uiViewIndex++ )
-      {
-        for( UInt uiBaseIndex = 0; uiBaseIndex < m_vps->getNumViews(); uiBaseIndex++ )
-#else
-      for( UInt uiViewIndex = 0; uiViewIndex <= m_uiMaxViewIndex; uiViewIndex++ )
-      {
-        for( UInt uiBaseIndex = 0; uiBaseIndex <= m_uiMaxViewIndex; uiBaseIndex++ )
-#endif
-        {
-          if( uiViewIndex != uiBaseIndex )
-          {
-            if ( m_receivedIdc[uiBaseIndex][uiViewIndex] != 0 )
-            {            
-#if HHI_CAM_PARA_K0052
-              fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
-                iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_vps->getCpPrecision() );
-#else
-              fprintf( m_pCodedScaleOffsetFile, "%12d %12d %12d %12d %12d %12d %12d\n",
-                iS, iE, uiViewIndex, uiBaseIndex, m_aaiCodedScale[ uiBaseIndex ][ uiViewIndex ], m_aaiCodedOffset[ uiBaseIndex ][ uiViewIndex ], m_vps->getCamParPrecision() );
-#endif
-#endif
             }            
           }
         }
@@ -480,6 +346,7 @@ CamParsCollector::xOutput( Int iPOC )
   }
 }
 #endif
+
 TDecTop::TDecTop()
 {
   m_pcPic = 0;
@@ -555,7 +422,7 @@ Void TDecTop::init()
 #if !H_MV
   initROM();
 #endif
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
   m_cCavlcDecoder.setDecTop( this ); 
 #endif
   m_cGopDecoder.init( &m_cEntropyDecoder, &m_cSbacDecoder, &m_cBinCABAC, &m_cCavlcDecoder, &m_cSliceDecoder, &m_cLoopFilter, &m_cSAO );
@@ -866,11 +733,6 @@ Void TDecTop::xActivateParameterSets()
   sps->inferScalingList( m_parameterSetManagerDecoder.getActiveSPS( sps->getSpsScalingListRefLayerId() ) ); 
 
 #endif
-#if H_3D
-#if !HHI_INTER_COMP_PRED_K0052
-  m_apcSlicePilot->init3dToolParameters();
-#endif
-#endif
   pps->setSPS(sps);
   pps->setNumSubstreams(pps->getEntropyCodingSyncEnabledFlag() ? ((sps->getPicHeightInLumaSamples() + sps->getMaxCUHeight() - 1) / sps->getMaxCUHeight()) * (pps->getNumTileColumnsMinus1() + 1) : 1);
   pps->setMinCuDQPSize( sps->getMaxCUWidth() >> ( pps->getMaxCuDQPDepth()) );
@@ -1097,7 +959,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
   xActivateParameterSets();
 
-#if SONY_MV_V_CONST_C0078
+#if H_MV
   //Check Multiview Main profile constraint in G.11.1.1
   //  When ViewOrderIdx[ i ] derived according to any active VPS is equal to 1 
   //  for the layer with nuh_layer_id equal to i in subBitstream, 
@@ -1229,11 +1091,12 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #if H_3D
   pcPic->setViewIndex( getViewIndex() );
   pcPic->setIsDepth  ( getIsDepth  () );
-#endif
-#endif
-#if HHI_RES_PRED_K0052
   pcSlice->setIvPicLists( m_ivPicLists );         
 #endif
+#endif
+
+
+
 
   if (bNextSlice)
   {
@@ -1270,11 +1133,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 #endif
 
 #if H_3D
-#if !HHI_RES_PRED_K0052
-    pcSlice->setIvPicLists( m_ivPicLists );         
-#endif
-
-#if HHI_INTER_COMP_PRED_K0052
     pcSlice->checkInCompPredRefLayers(); 
 #if H_3D_IV_MERGE
 #if H_3D_FCO
@@ -1283,15 +1141,6 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     assert( !getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
 #endif
 #endif    
-#else
-#if H_3D_IV_MERGE
-#if H_3D_FCO
-    //assert( !getIsDepth() );
-#else
-    assert( !getIsDepth() || ( pcSlice->getTexturePic() != 0 ) );
-#endif
-#endif    
-#endif
 #endif
 #if H_MV
     if( m_layerId > 0 && !pcSlice->isIntra() && pcSlice->getEnableTMVPFlag() )
@@ -1346,7 +1195,9 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
     pcSlice->setRefPOCList();
 #if  H_3D_TMVP
     if(pcSlice->getLayerId())
+    {
       pcSlice->generateAlterRefforTMVP();
+    }
 #endif
   }
 
@@ -1799,7 +1650,6 @@ Void TDecTop::xResetPocInPicBuffer()
   }
 }
 
-#if H_MV
 Void TDecTop::xCeckNoClrasOutput()
 {
   // This part needs further testing! 
@@ -1832,6 +1682,30 @@ Bool TDecTop::xAllRefLayersInitilized()
   }
 
   return allRefLayersInitilizedFlag;
+}
+
+#if H_3D
+Void TDecTop::setProfileIdc()
+{
+  if (m_targetOptLayerSetIdx != -1 )
+  {    
+    TComVPS* vps = getPrefetchedVPS(); 
+    Int lsIdx = vps->olsIdxToLsIdx( m_targetOptLayerSetIdx );
+    Int lIdx = -1; 
+    for (Int j = 0; j < vps->getNumLayersInIdList( lsIdx ); j++ )
+    {
+      if ( vps->getLayerSetLayerIdList( lsIdx, j ) == getLayerId() )
+      {
+        lIdx = j; 
+        break; 
+      }        
+    }
+    assert( lIdx != -1 ); 
+
+    Int profileIdc = vps->getPTL( vps->getProfileTierLevelIdx( m_targetOptLayerSetIdx, lIdx ) )->getGeneralPTL()->getProfileIdc();
+    assert( profileIdc == 1 || profileIdc == 6 || profileIdc == 8 ); 
+    m_profileIdc = profileIdc;   
+  };
 }
 #endif
 #endif

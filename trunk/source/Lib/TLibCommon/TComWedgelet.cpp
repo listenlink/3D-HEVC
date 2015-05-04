@@ -176,7 +176,6 @@ Bool TComWedgelet::checkInvIdentical( Bool* pbRefPattern )
   return true;
 }
 
-#if SHARP_DMM_CLEAN_K0042
 Void TComWedgelet::generateWedgePatternByRotate(const TComWedgelet &rcWedge, Int rotate)
 {
   Int stride = m_uiWidth;
@@ -209,7 +208,6 @@ Void TComWedgelet::generateWedgePatternByRotate(const TComWedgelet &rcWedge, Int
   m_uiWidth  = rcWedge.m_uiWidth;
   m_uiHeight = rcWedge.m_uiHeight;
 }
-#endif
 
 Void TComWedgelet::xGenerateWedgePattern()
 {
@@ -227,7 +225,6 @@ Void TComWedgelet::xGenerateWedgePattern()
 
   xDrawEdgeLine( uhXs, uhYs, uhXe, uhYe, pbTempPattern, iTempStride );
 
-#if SHARP_DMM_CLEAN_K0042
   Int shift = (m_eWedgeRes == HALF_PEL) ? 1 : 0;
   Int endPos = uhYe>>shift;
   for (Int y = 0; y <= endPos; y++)
@@ -241,67 +238,6 @@ Void TComWedgelet::xGenerateWedgePattern()
   {
     m_pbPattern[k] = pbTempPattern[k];
   };
-#else
-  switch( m_uhOri )
-  {
-  case( 0 ): { for( UInt iX = 0;                 iX < uhXs;            iX++ ) { UInt iY = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY++; } } } break;
-  case( 1 ): { for( UInt iY = 0;                 iY < uhYs;            iY++ ) { UInt iX = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX--; } } } break;
-  case( 2 ): { for( UInt iX = uiTempBlockSize-1; iX > uhXs;            iX-- ) { UInt iY = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY--; } } } break;
-  case( 3 ): { for( UInt iY = uiTempBlockSize-1; iY > uhYs;            iY-- ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } } break;
-  case( 4 ): 
-    { 
-      if( (uhXs+uhXe) < uiTempBlockSize ) { for( UInt iY = 0; iY < uiTempBlockSize; iY++ ) { UInt iX = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX++; } } }
-      else                                { for( UInt iY = 0; iY < uiTempBlockSize; iY++ ) { UInt iX = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iX--; } } }
-    }
-    break;
-  case( 5 ): 
-    { 
-      if( (uhYs+uhYe) < uiTempBlockSize ) { for( UInt iX = 0; iX < uiTempBlockSize; iX++ ) { UInt iY = 0;                 while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY++; } } }
-      else                                { for( UInt iX = 0; iX < uiTempBlockSize; iX++ ) { UInt iY = uiTempBlockSize-1; while( pbTempPattern[(iY * iTempStride) + iX] == false ) { pbTempPattern[(iY * iTempStride) + iX] = true; iY--; } } }
-    }
-  }
-
-  clear();
-  switch( m_eWedgeRes )
-  {
-  case(   FULL_PEL ): { for( UInt k = 0; k < (m_uiWidth * m_uiHeight); k++ ) { m_pbPattern[k] = pbTempPattern[k]; }; } break;
-  case(   HALF_PEL ): // sub-sampling by factor 2
-    {
-      Int iStride = getStride();
-
-      UInt uiOffX, uiOffY;
-      switch( m_uhOri )
-      {
-      case( 0 ): { uiOffX = 0; uiOffY = 0; } break;
-      case( 1 ): { uiOffX = 1; uiOffY = 0; } break;
-      case( 2 ): { uiOffX = 1; uiOffY = 1; } break;
-      case( 3 ): { uiOffX = 0; uiOffY = 1; } break;
-      case( 4 ): 
-        { 
-          if( (uhXs+uhXe) < uiTempBlockSize ) { uiOffX = 0; uiOffY = 0; }
-          else                                { uiOffX = 1; uiOffY = 0; }
-        } 
-        break;
-      case( 5 ): 
-        { 
-          if( (uhYs+uhYe) < uiTempBlockSize ) { uiOffX = 0; uiOffY = 0; }
-          else                                { uiOffX = 0; uiOffY = 1; }
-        } 
-        break;
-      default:   { uiOffX = 0; uiOffY = 0; } break;
-      }
-
-      for(Int iY = 0; iY < m_uiHeight; iY++)
-      {
-        for(Int iX = 0; iX < m_uiWidth; iX++)
-        {
-          m_pbPattern[(iY * iStride) + iX] = pbTempPattern[(((iY<<1)+uiOffY) * iTempStride) + ((iX<<1)+uiOffX)];
-        }
-      }
-    }
-    break;
-  }
-#endif
 
   if( pbTempPattern )
   {
@@ -344,15 +280,10 @@ Void TComWedgelet::xDrawEdgeLine( UChar uhXs, UChar uhYs, UChar uhXe, UChar uhYe
 
   for( Int x = x0; x <= x1; x++ )
   {
-#if SHARP_DMM_CLEAN_K0042
     Int shift = (m_eWedgeRes == HALF_PEL) ? 1 : 0;
     Int stride = iPatternStride >> shift;
     if( steep ) { pbPattern[((x>>shift) * stride) + (y>>shift)] = true; }
     else        { pbPattern[((y>>shift) * stride) + (x>>shift)] = true; }
-#else
-    if( steep ) { pbPattern[(x * iPatternStride) + y] = true; }
-    else        { pbPattern[(y * iPatternStride) + x] = true; }
-#endif
 
     error += deltaerr;
     if( error >= deltax )

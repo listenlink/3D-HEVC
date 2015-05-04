@@ -51,10 +51,9 @@
 // ====================================================================================================================
 // Class definition
 // ====================================================================================================================
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
 class TDecTop;
 #endif
-
 /// CAVLC decoder class
 class TDecCavlc : public SyntaxElementParser, public TDecEntropyIf
 {
@@ -65,14 +64,7 @@ public:
 protected:
   void  parseShortTermRefPicSet            (TComSPS* pcSPS, TComReferencePictureSet* pcRPS, Int idx);
   
-
-#if !HHI_CAM_PARA_K0052
 #if H_3D
-  Int**    m_aaiTempScale;
-  Int**    m_aaiTempOffset;
-#endif
-#endif
-#if H_3D_ANNEX_SELECTION_FIX
   TDecTop*  m_decTop;
 #endif
 
@@ -117,7 +109,7 @@ public:
 #else
   Void  parsePPS            ( TComPPS* pcPPS);
 #endif
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
   Void  setDecTop           ( TDecTop* decTop ) { m_decTop = decTop; }; 
 #endif
   Void  parseVUI            ( TComVUI* pcVUI, TComSPS* pcSPS );
@@ -135,12 +127,8 @@ public:
   Void  parseMVPIdx         ( Int& riMVPIdx );
   
   Void  parseSkipFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   Void  parseDIS            ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void  parseSingleDepthMode        ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-#endif
 #endif
   Void  parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
@@ -181,8 +169,7 @@ public:
   Void xParsePredWeightTable ( TComSlice* pcSlice );
   Void  parseScalingList               ( TComScalingList* scalingList );
   Void xDecodeScalingList    ( TComScalingList *scalingList, UInt sizeId, UInt listId);
-
-#if H_3D_ANNEX_SELECTION_FIX
+#if H_3D
   TDecTop*  getDecTop()      { return m_decTop; };
 #endif
 

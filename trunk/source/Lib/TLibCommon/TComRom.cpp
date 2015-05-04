@@ -103,18 +103,27 @@ Void destroyROM()
 #if H_3D_DIM_DMM
   if( !g_dmmWedgeLists.empty() ) 
   {
-    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ ) { g_dmmWedgeLists[ui].clear(); }
+    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ )
+    { 
+      g_dmmWedgeLists[ui].clear(); 
+    }
     g_dmmWedgeLists.clear();
   }
   if( !g_dmmWedgeRefLists.empty() )
   {
-    for( UInt ui = 0; ui < g_dmmWedgeRefLists.size(); ui++ ) { g_dmmWedgeRefLists[ui].clear(); }
+    for( UInt ui = 0; ui < g_dmmWedgeRefLists.size(); ui++ ) 
+    { 
+      g_dmmWedgeRefLists[ui].clear(); 
+    }
     g_dmmWedgeRefLists.clear();
   }
 
   if( !g_dmmWedgeNodeLists.empty() )
   {
-    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ ) { g_dmmWedgeNodeLists[ui].clear(); }
+    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ )
+    { 
+      g_dmmWedgeNodeLists[ui].clear(); 
+    }
     g_dmmWedgeNodeLists.clear();
   }
 #endif
@@ -744,12 +753,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
 {
   assert( uiWidth == uiHeight );
 
-#if SHARP_DMM_CLEAN_K0042
   Int posStart = 0, posEnd = 0;
-#else
-  UChar    uhStartX = 0,    uhStartY = 0,    uhEndX = 0,    uhEndY = 0;
-  Int   iStepStartX = 0, iStepStartY = 0, iStepEndX = 0, iStepEndY = 0;
-#endif
 
   UInt uiBlockSize = 0;
   switch( eWedgeRes )
@@ -761,41 +765,22 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
   TComWedgelet cTempWedgelet( uiWidth, uiHeight );
   for( UInt uiOri = 0; uiOri < 6; uiOri++ )
   {
-#if !SHARP_DMM_CLEAN_K0042
-    // init the edge line parameters for each of the 6 wedgelet types
-    switch( uiOri )
-    {
-    case( 0 ): {  uhStartX = 0;               uhStartY = 0;               uhEndX = 0;               uhEndY = 0;               iStepStartX = +1; iStepStartY =  0; iStepEndX =  0; iStepEndY = +1; break; }
-    case( 1 ): {  uhStartX = (uiBlockSize-1); uhStartY = 0;               uhEndX = (uiBlockSize-1); uhEndY = 0;               iStepStartX =  0; iStepStartY = +1; iStepEndX = -1; iStepEndY =  0; break; }
-    case( 2 ): {  uhStartX = (uiBlockSize-1); uhStartY = (uiBlockSize-1); uhEndX = (uiBlockSize-1); uhEndY = (uiBlockSize-1); iStepStartX = -1; iStepStartY =  0; iStepEndX =  0; iStepEndY = -1; break; }
-    case( 3 ): {  uhStartX = 0;               uhStartY = (uiBlockSize-1); uhEndX = 0;               uhEndY = (uiBlockSize-1); iStepStartX =  0; iStepStartY = -1; iStepEndX = +1; iStepEndY =  0; break; }
-    case( 4 ): {  uhStartX = 0;               uhStartY = 0;               uhEndX = 0;               uhEndY = (uiBlockSize-1); iStepStartX = +1; iStepStartY =  0; iStepEndX = +1; iStepEndY =  0; break; }
-    case( 5 ): {  uhStartX = (uiBlockSize-1); uhStartY = 0;               uhEndX = 0;               uhEndY = 0;               iStepStartX =  0; iStepStartY = +1; iStepEndX =  0; iStepEndY = +1; break; }
-    }
-#endif
 
-#if SHARP_DMM_CLEAN_K0042
     posEnd = (Int) racWedgeList.size();
     if (uiOri == 0 || uiOri == 4)
     {
-#endif
     for( Int iK = 0; iK < uiBlockSize; iK += (uiWidth>=16 ?2:1))
     {
       for( Int iL = 0; iL < uiBlockSize; iL += ((uiWidth>=16 && uiOri<4)?2:1) )
       {
-#if SHARP_DMM_CLEAN_K0042
         Int xS = iK;
         Int yS = 0;
         Int xE = (uiOri == 0) ? 0 : iL;
         Int yE = (uiOri == 0) ? iL : uiBlockSize - 1;
         cTempWedgelet.setWedgelet( xS, yS, xE, yE, uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
-#else
-        cTempWedgelet.setWedgelet( uhStartX + (iK*iStepStartX) , uhStartY + (iK*iStepStartY), uhEndX + (iL*iStepEndX), uhEndY + (iL*iStepEndY), (UChar)uiOri, eWedgeRes, ((iL%2)==0 && (iK%2)==0) );
-#endif
         addWedgeletToList( cTempWedgelet, racWedgeList, racWedgeRefList );
       }
     }
-#if SHARP_DMM_CLEAN_K0042
     }
     else
     {
@@ -806,7 +791,6 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
       }
     }
     posStart = posEnd;
-#endif
   }
 
 

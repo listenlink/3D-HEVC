@@ -51,14 +51,9 @@ TDecSbac::TDecSbac()
 , m_numContextModels          ( 0 )
 , m_cCUSplitFlagSCModel       ( 1,             1,               NUM_SPLIT_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels )
 , m_cCUSkipFlagSCModel        ( 1,             1,               NUM_SKIP_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
 , m_cCUDISFlagSCModel         ( 1,             1,               NUM_DIS_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUDISTypeSCModel         ( 1,             1,               NUM_DIS_TYPE_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-#else
-#if H_3D_SINGLE_DEPTH
-, m_cCUSingleDepthFlagSCModel        ( 1,             1,               NUM_SINGLEDEPTH_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cSingleDepthValueSCModel         ( 1,             1,               NUM_SINGLE_DEPTH_VALUE_DATA_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
-#endif
 #endif
 , m_cCUMergeFlagExtSCModel    ( 1,             1,               NUM_MERGE_FLAG_EXT_CTX        , m_contextModels + m_numContextModels, m_numContextModels)
 , m_cCUMergeIdxExtSCModel     ( 1,             1,               NUM_MERGE_IDX_EXT_CTX         , m_contextModels + m_numContextModels, m_numContextModels)
@@ -140,14 +135,9 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
 
   m_cCUSplitFlagSCModel.initBuffer       ( sliceType, qp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SKIP_FLAG );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   m_cCUDISFlagSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_DIS_FLAG );
   m_cCUDISTypeSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_DIS_TYPE );
-#else
-#if H_3D_SINGLE_DEPTH
-  m_cCUSingleDepthFlagSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SINGLEDEPTH_FLAG );
-  m_cSingleDepthValueSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
-#endif
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( sliceType, qp, (UChar*)INIT_MERGE_IDX_EXT );
@@ -216,14 +206,9 @@ Void TDecSbac::updateContextTables( SliceType eSliceType, Int iQp )
   m_pcBitstream->readOutTrailingBits();
   m_cCUSplitFlagSCModel.initBuffer       ( eSliceType, iQp, (UChar*)INIT_SPLIT_FLAG );
   m_cCUSkipFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SKIP_FLAG );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   m_cCUDISFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_FLAG );
   m_cCUDISTypeSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_DIS_TYPE );
-#else
-#if H_3D_SINGLE_DEPTH
-  m_cCUSingleDepthFlagSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SINGLEDEPTH_FLAG );
-  m_cSingleDepthValueSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_SINGLE_DEPTH_VALUE_DATA );
-#endif
 #endif
   m_cCUMergeFlagExtSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_MERGE_FLAG_EXT );
   m_cCUMergeIdxExtSCModel.initBuffer     ( eSliceType, iQp, (UChar*)INIT_MERGE_IDX_EXT );
@@ -460,13 +445,13 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
 {
   UInt uiSymbol;
 
-    m_pcTDecBinIf->decodeBinTrm(uiSymbol);
+  m_pcTDecBinIf->decodeBinTrm(uiSymbol);
 
 #if H_MV_ENC_DEC_TRAC
-      DTRACE_CU("pcm_flag", uiSymbol)
+  DTRACE_CU("pcm_flag", uiSymbol)
 #endif
-    if (uiSymbol)
-    {
+  if (uiSymbol)
+  {
     Bool bIpcmFlag = true;
 
     pcCU->setPartSizeSubParts  ( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
@@ -499,48 +484,44 @@ Void TDecSbac::parseIPCMInfo ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
       }
       piPCMSample += uiWidth;
     }
-
-
 #if H_3D_DISABLE_CHROMA
     if( pcCU->getSlice()->getSPS()->getChromaFormatIdc() != 0 )
     {    
 #endif
-    piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;
-    uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
-    uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
-    uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
+      piPCMSample = pcCU->getPCMSampleCb() + uiChromaOffset;
+      uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
+      uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
+      uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
 
-    for(uiY = 0; uiY < uiHeight; uiY++)
-    {
-      for(uiX = 0; uiX < uiWidth; uiX++)
+      for(uiY = 0; uiY < uiHeight; uiY++)
       {
-        UInt uiSample;
-        m_pcTDecBinIf->xReadPCMCode(uiSampleBits, uiSample);
-        piPCMSample[uiX] = uiSample;
+        for(uiX = 0; uiX < uiWidth; uiX++)
+        {
+          UInt uiSample;
+          m_pcTDecBinIf->xReadPCMCode(uiSampleBits, uiSample);
+          piPCMSample[uiX] = uiSample;
+        }
+        piPCMSample += uiWidth;
       }
-      piPCMSample += uiWidth;
-    }
 
-    piPCMSample = pcCU->getPCMSampleCr() + uiChromaOffset;
-    uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
-    uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
-    uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
+      piPCMSample = pcCU->getPCMSampleCr() + uiChromaOffset;
+      uiWidth = pcCU->getWidth(uiAbsPartIdx)/2;
+      uiHeight = pcCU->getHeight(uiAbsPartIdx)/2;
+      uiSampleBits = pcCU->getSlice()->getSPS()->getPCMBitDepthChroma();
 
-    for(uiY = 0; uiY < uiHeight; uiY++)
-    {
-      for(uiX = 0; uiX < uiWidth; uiX++)
+      for(uiY = 0; uiY < uiHeight; uiY++)
       {
-        UInt uiSample;
-        m_pcTDecBinIf->xReadPCMCode(uiSampleBits, uiSample);
-        piPCMSample[uiX] = uiSample;
+        for(uiX = 0; uiX < uiWidth; uiX++)
+        {
+          UInt uiSample;
+          m_pcTDecBinIf->xReadPCMCode(uiSampleBits, uiSample);
+          piPCMSample[uiX] = uiSample;
+        }
+        piPCMSample += uiWidth;
       }
-      piPCMSample += uiWidth;
-    }
 #if H_3D_DISABLE_CHROMA
     }
 #endif
-
-
     m_pcTDecBinIf->start();
   }
 }
@@ -593,8 +574,7 @@ Void TDecSbac::parseSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   DTRACE_CU("cu_skip_flag", uiSymbol); 
 #endif
 }
-
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
 Void TDecSbac::parseDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   pcCU->setDISFlagSubParts( false,        uiAbsPartIdx, uiDepth );
@@ -638,56 +618,7 @@ Void TDecSbac::parseDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pcCU->setDISTypeSubParts(uiUnaryIdx, uiAbsPartIdx, 0, uiDepth);
   }
 }
-#else
-#if H_3D_SINGLE_DEPTH
-Void TDecSbac::parseSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
-{
-  pcCU->setSingleDepthFlagSubParts( false,        uiAbsPartIdx, uiDepth );
-  UInt uiSymbol = 0;
-  m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUSingleDepthFlagSCModel.get( 0, 0, 0 ) );
-  if( uiSymbol )
-  {
-    pcCU->setSingleDepthFlagSubParts( true,        uiAbsPartIdx, uiDepth );
-    pcCU->setSkipFlagSubParts( false,        uiAbsPartIdx, uiDepth );
-    pcCU->setSDCFlagSubParts( false,        uiAbsPartIdx, uiDepth );
-    pcCU->setPredModeSubParts( MODE_INTRA,  uiAbsPartIdx, uiDepth );
-    pcCU->setPartSizeSubParts( SIZE_2Nx2N, uiAbsPartIdx, uiDepth );
-    pcCU->setLumaIntraDirSubParts (DC_IDX, uiAbsPartIdx, uiDepth );
-    pcCU->setSizeSubParts( g_uiMaxCUWidth>>uiDepth, g_uiMaxCUHeight>>uiDepth, uiAbsPartIdx, uiDepth );
-    pcCU->setMergeFlagSubParts( false , uiAbsPartIdx, 0, uiDepth );
-    pcCU->setTrIdxSubParts(0, uiAbsPartIdx, uiDepth);
-    pcCU->setCbfSubParts(0, 1, 1, uiAbsPartIdx, uiDepth);
-
-    UInt absValDeltaDC = 0;
-
-    UInt uiUnaryIdx = 0;
-    UInt uiNumCand = SINGLE_DEPTH_MODE_CAND_LIST_SIZE;
-    if ( uiNumCand > 1 )
-    {
-      for( ; uiUnaryIdx < uiNumCand - 1; ++uiUnaryIdx )
-      {
-        UInt uiSymbol2 = 0;
-        if ( uiUnaryIdx==0 )
-        {
-          m_pcTDecBinIf->decodeBin( uiSymbol2, m_cSingleDepthValueSCModel.get( 0, 0, 0 ) );
-        }
-        else
-        {
-          m_pcTDecBinIf->decodeBinEP( uiSymbol2);
-        }
-        if( uiSymbol2 == 0 )
-        {
-          break;
-        }
-      }
-    }
-    absValDeltaDC = uiUnaryIdx;
-    pcCU->setSingleDepthValueSubParts((Pel)absValDeltaDC,uiAbsPartIdx, 0, uiDepth);
-  }
-}
 #endif
-#endif
-
 /** parse merge flag
  * \param pcCU
  * \param uiAbsPartIdx 
@@ -771,8 +702,6 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   UInt uiSymbol;
 #if H_3D_QTLPC
   Bool bParseSplitFlag    = true;
-
-  
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
   TComPic *pcTexture      = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect    = (pcTexture != NULL);
@@ -809,7 +738,7 @@ Void TDecSbac::parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
   }
 #endif
   pcCU->setDepthSubParts( uiDepth + uiSymbol, uiAbsPartIdx );
-  
+
   return;
 }
 
@@ -826,7 +755,7 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
 
 #if H_3D_QTLPC
   Bool bParsePartSize    = true;
-  
+
   Bool    bLimQtPredFlag = pcCU->getPic()->getSlice(0)->getQtPredFlag();
   TComPic *pcTexture     = pcCU->getSlice()->getTexturePic();
   Bool bDepthMapDetect   = (pcTexture != NULL);
@@ -858,14 +787,14 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
   }
 #endif
 
-  
+
   if ( pcCU->isIntra( uiAbsPartIdx ) )
   {
 #if H_3D_QTLPC
     if(bParsePartSize)
     {
 #endif
-     uiSymbol = 1;
+      uiSymbol = 1;
       if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth )
       {
         m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 0) );
@@ -898,42 +827,42 @@ Void TDecSbac::parsePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth 
       if (depthDependent==false || uiTexturePart == SIZE_NxN|| uiTexturePart == SIZE_2Nx2N)
       {
 #endif
-      UInt uiMaxNumBits = 2;
-      if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
-      {
-        uiMaxNumBits ++;
-      }
-      for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
-      {
-        m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
-        if ( uiSymbol )
+        UInt uiMaxNumBits = 2;
+        if( uiDepth == g_uiMaxCUDepth - g_uiAddCUDepth && !( (g_uiMaxCUWidth>>uiDepth) == 8 && (g_uiMaxCUHeight>>uiDepth) == 8 ) )
         {
-          break;
+          uiMaxNumBits ++;
         }
-        uiMode++;
-      }
-      eMode = (PartSize) uiMode;
-      if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
-      {
-        if (eMode == SIZE_2NxN)
+        for ( UInt ui = 0; ui < uiMaxNumBits; ui++ )
         {
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
-          if (uiSymbol == 0)
+          m_pcTDecBinIf->decodeBin( uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, ui) );
+          if ( uiSymbol )
           {
-            m_pcTDecBinIf->decodeBinEP(uiSymbol);
-            eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+            break;
+          }
+          uiMode++;
+        }
+        eMode = (PartSize) uiMode;
+        if ( pcCU->getSlice()->getSPS()->getAMPAcc( uiDepth ) )
+        {
+          if (eMode == SIZE_2NxN)
+          {
+            m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
+            if (uiSymbol == 0)
+            {
+              m_pcTDecBinIf->decodeBinEP(uiSymbol);
+              eMode = (uiSymbol == 0? SIZE_2NxnU : SIZE_2NxnD);
+            }
+          }
+          else if (eMode == SIZE_Nx2N)
+          {
+            m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
+            if (uiSymbol == 0)
+            {
+              m_pcTDecBinIf->decodeBinEP(uiSymbol);
+              eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
+            }
           }
         }
-        else if (eMode == SIZE_Nx2N)
-        {
-        m_pcTDecBinIf->decodeBin(uiSymbol, m_cCUPartSizeSCModel.get( 0, 0, 3 ));
-          if (uiSymbol == 0)
-          {
-            m_pcTDecBinIf->decodeBinEP(uiSymbol);
-            eMode = (uiSymbol == 0? SIZE_nLx2N : SIZE_nRx2N);
-          }
-        }
-      }
 #if H_3D_QTLPC
       }
       else if(uiTexturePart == SIZE_2NxN || uiTexturePart == SIZE_2NxnU || uiTexturePart == SIZE_2NxnD)
@@ -1059,10 +988,10 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
     if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
     {
 #endif
-    m_pcTDecBinIf->decodeBin( symbol, m_cCUIntraPredSCModel.get( 0, 0, 0) );
-    mpmPred[j] = symbol;
+      m_pcTDecBinIf->decodeBin( symbol, m_cCUIntraPredSCModel.get( 0, 0, 0) );
+      mpmPred[j] = symbol;
 #if H_MV_ENC_DEC_TRAC          
-    DTRACE_CU("prev_intra_luma_pred_flag", symbol)
+      DTRACE_CU("prev_intra_luma_pred_flag", symbol)
 #endif
 #if H_3D_DIM
     }
@@ -1074,47 +1003,47 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
     if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
     {
 #endif
-    Int preds[3] = {-1, -1, -1};
-    Int predNum = pcCU->getIntraDirLumaPredictor(absPartIdx+partOffset*j, preds);  
-    if (mpmPred[j])
-    {
-      m_pcTDecBinIf->decodeBinEP( symbol );
-      if (symbol)
+      Int preds[3] = {-1, -1, -1};
+      Int predNum = pcCU->getIntraDirLumaPredictor(absPartIdx+partOffset*j, preds);  
+      if (mpmPred[j])
       {
         m_pcTDecBinIf->decodeBinEP( symbol );
-        symbol++;
-      }
+        if (symbol)
+        {
+          m_pcTDecBinIf->decodeBinEP( symbol );
+          symbol++;
+        }
 #if H_MV_ENC_DEC_TRAC          
-      DTRACE_CU("mpm_idx", symbol)
+        DTRACE_CU("mpm_idx", symbol)
 #endif
-      intraPredMode = preds[symbol];
-    }
-    else
-    {
-      m_pcTDecBinIf->decodeBinsEP( symbol, 5 );
-      intraPredMode = symbol;
+          intraPredMode = preds[symbol];
+      }
+      else
+      {
+        m_pcTDecBinIf->decodeBinsEP( symbol, 5 );
+        intraPredMode = symbol;
 #if H_MV_ENC_DEC_TRAC          
-      DTRACE_CU("rem_intra_luma_pred_mode", symbol)
+        DTRACE_CU("rem_intra_luma_pred_mode", symbol)
 #endif        
-      //postponed sorting of MPMs (only in remaining branch)
-      if (preds[0] > preds[1])
-      { 
-        std::swap(preds[0], preds[1]); 
+          //postponed sorting of MPMs (only in remaining branch)
+          if (preds[0] > preds[1])
+          { 
+            std::swap(preds[0], preds[1]); 
+          }
+          if (preds[0] > preds[2])
+          {
+            std::swap(preds[0], preds[2]);
+          }
+          if (preds[1] > preds[2])
+          {
+            std::swap(preds[1], preds[2]);
+          }
+          for ( Int i = 0; i < predNum; i++ )
+          {
+            intraPredMode += ( intraPredMode >= preds[i] );
+          }
       }
-      if (preds[0] > preds[2])
-      {
-        std::swap(preds[0], preds[2]);
-      }
-      if (preds[1] > preds[2])
-      {
-        std::swap(preds[1], preds[2]);
-      }
-      for ( Int i = 0; i < predNum; i++ )
-      {
-        intraPredMode += ( intraPredMode >= preds[i] );
-      }
-    }
-    pcCU->setLumaIntraDirSubParts( (UChar)intraPredMode, absPartIdx+partOffset*j, depth );
+      pcCU->setLumaIntraDirSubParts( (UChar)intraPredMode, absPartIdx+partOffset*j, depth );
 #if H_3D_DIM
     }
 #endif
@@ -1132,7 +1061,7 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 #if H_MV_ENC_DEC_TRAC          
     DTRACE_CU("intra_chroma_pred_mode", uiSymbol )
 #endif        
-    uiSymbol = DM_CHROMA_IDX;
+      uiSymbol = DM_CHROMA_IDX;
   } 
   else 
   {
@@ -1142,7 +1071,7 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 #if H_MV_ENC_DEC_TRAC          
       DTRACE_CU("intra_chroma_pred_mode", uiIPredMode )
 #endif        
-      UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
+        UInt uiAllowedChromaDir[ NUM_CHROMA_MODE ];
       pcCU->getAllowedChromaDir( uiAbsPartIdx, uiAllowedChromaDir );
       uiSymbol = uiAllowedChromaDir[ uiIPredMode ];
     }

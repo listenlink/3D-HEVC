@@ -289,13 +289,13 @@ extern UInt64 g_nSymbolCounter;
 #define DTRACE_CABAC_N
 
 #if H_MV_ENC_DEC_TRAC
-#define DTRACE_CU(x,y)             
-#define DTRACE_PU(x,y)             
-#define DTRACE_TU(x,y)             
+#define DTRACE_CU(x,y) ;             
+#define DTRACE_PU(x,y) ;            
+#define DTRACE_TU(x,y) ;            
 
-#define DTRACE_CU_S(x)             
-#define DTRACE_PU_S(x)             
-#define DTRACE_TU_S(x)             
+#define DTRACE_CU_S(x) ;            
+#define DTRACE_PU_S(x) ;            
+#define DTRACE_TU_S(x) ;            
 
 #endif
 #endif

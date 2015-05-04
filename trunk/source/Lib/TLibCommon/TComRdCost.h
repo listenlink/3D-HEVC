@@ -319,9 +319,6 @@ private:
 #if H_3D_DBBP
   static UInt xGetMaskedSSE     ( DistParam* pcDtParam );
   static UInt xGetMaskedSAD     ( DistParam* pcDtParam );
-#if !RWTH_DBBP_NO_SATD_K0028
-  static UInt xGetMaskedHADs    ( DistParam* pcDtParam );
-#endif
   static UInt xGetMaskedVSD     ( DistParam* pcDtParam );
 #endif
   

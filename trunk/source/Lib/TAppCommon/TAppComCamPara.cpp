@@ -398,20 +398,6 @@ TAppComCamPara::xGetSortedViewList( const std::vector<Int>& raiViews, std::vecto
 }
 
 
-#if !HHI_CAM_PARA_K0052
-Void
-TAppComCamPara::xGetViewOrderIndices( const std::vector<Int>& raiId2SortedId, std::vector<Int>& raiVOIdx )
-{
-  AOF( raiId2SortedId.size() );
-  raiVOIdx  =      raiId2SortedId;
-  Int iSize = (Int)raiId2SortedId.size();
-  Int iOffs =      raiId2SortedId[ 0 ];
-  for( Int iIdx = 0; iIdx < iSize; iIdx++ )
-  {
-    raiVOIdx[ iIdx ] -= iOffs;
-  }
-}
-#endif
 
 
 Bool
@@ -959,45 +945,6 @@ TAppComCamPara::xGetCameraShifts( UInt uiSourceView, UInt uiTargetView, UInt uiF
 
 
 
-#if !HHI_CAM_PARA_K0052
-Void
-TAppComCamPara::xSetPdmConversionParams()
-{
-  AOF( m_aiViewOrderIndex[ 0 ] == 0 );
-  if ( m_bSetupFromCoded || m_iNumberOfBaseViews    <  2 )
-  {
-    return;
-  }
-
-  //--- determine (virtual) camera parameter shift between view order index 1 and base view (view order index 0) ---
-  Double        dCamPosShift, dPicPosShift;
-  Int           iMinAbsVOI    = (1<<30);
-  Int           iMinAbsVOIId  = 0;
-  for( Int iBaseId = 1; iBaseId < m_iNumberOfBaseViews; iBaseId++ )
-  {
-    Int iAbsVOI = ( m_aiViewOrderIndex[ iBaseId ] < 0 ? -m_aiViewOrderIndex[ iBaseId ] : m_aiViewOrderIndex[ iBaseId ] );
-    if( iAbsVOI < iMinAbsVOI )
-    {
-      iMinAbsVOI   = iAbsVOI;
-      iMinAbsVOIId = iBaseId;
-    }
-  }
-  AOF( iMinAbsVOIId != 0 && iMinAbsVOI != 0 );
-  xGetCameraShifts( 0, iMinAbsVOIId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
-
-  //--- determine maximum absolute camera position shift, precision, and base scale ---
-  Double  dMaxAbsCamPosShift = 0.0;
-  for( Int iTargetId = 1; iTargetId < m_iNumberOfBaseViews; iTargetId++ )
-  {
-    for( Int iBaseId = 0; iBaseId < iTargetId; iBaseId++ )
-    {
-      xGetCameraShifts( (UInt)iBaseId, (UInt)iTargetId, m_uiFirstFrameId, dCamPosShift, dPicPosShift );
-      dCamPosShift        = ( dCamPosShift < 0.0                ? -dCamPosShift : dCamPosShift       );
-      dMaxAbsCamPosShift  = ( dCamPosShift > dMaxAbsCamPosShift ?  dCamPosShift : dMaxAbsCamPosShift );
-    }
-  }
-}
-#endif
 
 
 
@@ -1283,9 +1230,6 @@ TAppComCamPara::init( UInt   uiNumBaseViews,
 
 
   //===== set derived parameters =====
-#if !HHI_CAM_PARA_K0052
-  xGetViewOrderIndices( m_aiBaseId2SortedId, m_aiViewOrderIndex );
-#endif
   m_bCamParsVaryOverTime = xGetCamParsChangeFlag();
 
 
