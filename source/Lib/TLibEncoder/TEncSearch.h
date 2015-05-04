@@ -190,7 +190,7 @@ public:
                                   TComYuv*    pcResiYuv, 
                                   TComYuv*    pcRecoYuv,
                                   UInt        uiPreCalcDistC );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   Void  estIntraPredDIS        ( TComDataCU* pcCU, 
                                  TComYuv*    pcOrgYuv, 
                                  TComYuv*    pcPredYuv, 
@@ -198,18 +198,7 @@ public:
                                  TComYuv*    pcRecoYuv,
                                  UInt&       ruiDistC,
                                  Bool        bLumaOnly );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void  estIntraPredSingleDepth  ( TComDataCU* pcCU, 
-                                  TComYuv*    pcOrgYuv, 
-                                  TComYuv*    pcPredYuv, 
-                                  TComYuv*    pcResiYuv, 
-                                  TComYuv*    pcRecoYuv,
-                                  UInt&       ruiDistC,
-                                  Bool        bLumaOnly );
-#endif
-#endif
-  
+#endif  
   /// encoder estimation - inter prediction (non-skip)
   Void predInterSearch          ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
@@ -363,12 +352,9 @@ protected:
                                     UInt         uiTrDepth,
                                     UInt         uiAbsPartIdx,
                                     UInt         stateU0V1Both2 );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+
+#if H_3D
   Void xIntraCodingDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, UInt uiPredMode );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void xIntraCodingSingleDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Int iTestDepthIdx, Pel * DepthNeighbor );
-#endif
 #endif
 #if H_3D_DIM
   // -------------------------------------------------------------------------------------------------------------------
@@ -479,7 +465,7 @@ protected:
                                     TComMv&       rcMv,
                                     UInt&         ruiSAD );
   
-#if SONY_MV_V_CONST_C0078
+#if H_MV
   Void xSetSearchRange           (  TComDataCU* pcCU, 
                                     TComMv& cMvPred, 
                                     Int iSrchRng, 

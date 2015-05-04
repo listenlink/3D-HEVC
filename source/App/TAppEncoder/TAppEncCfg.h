@@ -288,7 +288,7 @@ protected:
   Int       m_iFastSearch;                                    ///< ME mode, 0 = full, 1 = diamond, 2 = PMVFAST
   Int       m_iSearchRange;                                   ///< ME search range
   Int       m_bipredSearchRange;                              ///< ME search range for bipred refinement
-#if SONY_MV_V_CONST_C0078
+#if H_MV
   Bool      m_bUseDisparitySearchRangeRestriction;            ///< restrict vertical search range for inter-view prediction
   Int       m_iVerticalDisparitySearchRange;                  ///< ME vertical search range for inter-view prediction
 #endif
@@ -487,11 +487,7 @@ protected:
   Bool                   m_intraSdcFlag;
   Bool                   m_qtPredFlag;
   Bool                   m_interSdcFlag;
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
   Bool                   m_depthIntraSkipFlag; 
-#else
-  Bool                   m_intraSingleFlag;
-#endif
 #endif
   // internal member functions
   Void  xSetGlobal      ();                                   ///< set global variables
@@ -542,14 +538,18 @@ protected:
   {
     Int iSpace = max(1, ENC_CFG_CONSOUT_SPACE - (Int) description.length() ); 
     
-    for ( Int i = 0; i < iSpace; i++ ) 
+    for ( Int i = 0; i < iSpace; i++ )
+    {
       description.append( " " ); 
+    }
       
     description.append( ":" ); 
     printf( "%s", description.c_str() ); 
 
-    for(Int i=0;i<rpcVector.size();i++)                
+    for(Int i=0;i<rpcVector.size();i++)
+    {
       xPrintVectorElem( rpcVector[i] );
+    }
 
     printf("\n");
   }

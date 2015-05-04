@@ -158,12 +158,8 @@ protected:
   Void  xInvalidateOriginalSegments( TComYuv* pOrigYuv, TComYuv* pOrigYuvTemp, Bool* pMask, UInt uiValidSegment );
   Void  xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, Bool bUseMRG = false );
 #endif
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   Void  xCheckRDCostDIS   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void  xCheckRDCostSingleDepth   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize  );
-#endif
 #endif
 #if H_3D_DIM
   Void  xCheckRDCostIntra   ( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize ePartSize, Bool bOnlyIVP );

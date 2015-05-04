@@ -334,16 +334,14 @@ Void TComCUMvField::setMvFieldSP( TComDataCU* pcCU, UInt uiAbsPartIdx, TComMvFie
   Int iStartPelX = g_auiRasterToPelX[g_auiZscanToRaster[uiAbsPartIdx]];
   Int iStartPelY = g_auiRasterToPelY[g_auiZscanToRaster[uiAbsPartIdx]];
   Int iEndPelX = iStartPelX + iWidth;
-  Int iEndPelY = iStartPelY + iHeight;
-
-  Int iCurrRaster, uiPartAddr;
+  Int iEndPelY = iStartPelY + iHeight;  
 
   for (Int i=iStartPelY; i<iEndPelY; i+=pcCU->getPic()->getMinCUHeight())
   {
     for (Int j=iStartPelX; j < iEndPelX; j += pcCU->getPic()->getMinCUWidth())
     {
-      iCurrRaster = i / pcCU->getPic()->getMinCUHeight() * pcCU->getPic()->getNumPartInWidth() + j/pcCU->getPic()->getMinCUWidth();
-      uiPartAddr = g_auiRasterToZscan[iCurrRaster];
+      Int iCurrRaster = i / pcCU->getPic()->getMinCUHeight() * pcCU->getPic()->getNumPartInWidth() + j/pcCU->getPic()->getMinCUWidth();
+      Int uiPartAddr = g_auiRasterToZscan[iCurrRaster];
       uiPartAddr -= pcCU->getZorderIdxInCU();  
 
       m_pcMv[uiPartAddr] = cMvField.getMv();

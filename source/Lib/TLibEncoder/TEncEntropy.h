@@ -81,12 +81,8 @@ public:
 public:
   virtual Void codeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeSkipFlag      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   virtual Void codeDIS          ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#else
-#if H_3D_SINGLE_DEPTH
-  virtual Void codeSingleDepthMode      ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
-#endif
 #endif
   virtual Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
   virtual Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx ) = 0;
@@ -178,12 +174,8 @@ public:
   Void encodeSplitFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, Bool bRD = false );
   Void encodeCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeSkipFlag          ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
   Void encodeDIS               ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD=false );
-#else
-#if H_3D_SINGLE_DEPTH
-  Void encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD=false );
-#endif
 #endif
   Void encodePUWise       ( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD = false );
   Void encodeInterDirPU   ( TComDataCU* pcSubCU, UInt uiAbsPartIdx  );

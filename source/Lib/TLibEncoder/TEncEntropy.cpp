@@ -110,8 +110,7 @@ Void TEncEntropy::encodeSkipFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
   }
   m_pcEntropyCoderIf->codeSkipFlag( pcCU, uiAbsPartIdx );
 }
-
-#if SEC_DEPTH_INTRA_SKIP_MODE_K0033
+#if H_3D
 Void TEncEntropy::encodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if ( !pcCU->getSlice()->getIsDepth() )
@@ -124,23 +123,7 @@ Void TEncEntropy::encodeDIS( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
   }
   m_pcEntropyCoderIf->codeDIS( pcCU, uiAbsPartIdx );
 }
-#else
-#if H_3D_SINGLE_DEPTH
-Void TEncEntropy::encodeSingleDepthMode( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
-{
-  if(!pcCU->getSlice()->getIntraSingleFlag() )
-  {
-    return;
-  }
-  if( bRD )
-  {
-    uiAbsPartIdx = 0;
-  }
-  m_pcEntropyCoderIf->codeSingleDepthMode( pcCU, uiAbsPartIdx );
-}
 #endif
-#endif
-
 /** encode merge flag
  * \param pcCU
  * \param uiAbsPartIdx
@@ -270,14 +253,6 @@ Void TEncEntropy::encodePartSize( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDe
   
   m_pcEntropyCoderIf->codePartSize( pcCU, uiAbsPartIdx, uiDepth );
   
-#if !HHI_MOVE_SYN_K0052
-#if H_3D_DBBP
-  if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && (pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && pcCU->getWidth(uiAbsPartIdx) > 8 && pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
-  {
-    encodeDBBPFlag(pcCU, uiAbsPartIdx, bRD);
-  }
-#endif
-#endif
 }
 
 /** Encode I_PCM information. 
@@ -585,7 +560,7 @@ Void TEncEntropy::encodePredInfo( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD 
     if(!pcCU->getSDCFlag(uiAbsPartIdx))
 #endif
 #endif
-    encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
+      encodeIntraDirModeChroma( pcCU, uiAbsPartIdx, bRD );
   }
   else                                                                // if it is Inter mode, encode motion vector and reference index
   {
@@ -903,22 +878,18 @@ Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 #if H_3D_DBBP
 Void TEncEntropy::encodeDBBPFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
-#if HHI_MOVE_SYN_K0052
   if( pcCU->getSlice()->getDepthBasedBlkPartFlag() && 
     ( pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_2NxN || 
       pcCU->getPartitionSize(uiAbsPartIdx) == SIZE_Nx2N) && 
       pcCU->getWidth(uiAbsPartIdx) > 8 && 
       pcCU->getSlice()->getDefaultRefViewIdxAvailableFlag() )
   {
-#endif
     if( bRD )
     {
       uiAbsPartIdx = 0;
     }
     m_pcEntropyCoderIf->codeDBBPFlag( pcCU, uiAbsPartIdx );
-#if HHI_MOVE_SYN_K0052
   }
-#endif
 }
 #endif
 //! \}

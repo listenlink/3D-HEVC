@@ -340,11 +340,7 @@ Void TComRdCost::setDistParam( UInt uiBlkWidth, UInt uiBlkHeight, DFunc eDFunc, 
     }
     else if( eDFunc >= DF_HADS && eDFunc <= DF_HADS16N )
     {
-#if !RWTH_DBBP_NO_SATD_K0028
-      rcDistParam.DistFunc = TComRdCost::xGetMaskedHADs;
-#else
       rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
-#endif
     }
     else if( eDFunc >= DF_VSD && eDFunc <= DF_VSD16N )
     {
@@ -444,11 +440,7 @@ Void TComRdCost::setDistParam( TComPattern* pcPatternKey, Pel* piRefY, Int iRefS
 #if H_3D_DBBP
   if( m_bUseMask )
   {
-#if !RWTH_DBBP_NO_SATD_K0028
-    rcDistParam.DistFunc = (bHADME)?TComRdCost::xGetMaskedHADs:TComRdCost::xGetMaskedSAD;
-#else
     rcDistParam.DistFunc = TComRdCost::xGetMaskedSAD;
-#endif
   }
 #endif
   // initialize
@@ -471,11 +463,7 @@ TComRdCost::setDistParam( DistParam& rcDP, Int bitDepth, Pel* p1, Int iStride1, 
 #if H_3D_DBBP
   if( m_bUseMask )
   {
-#if !RWTH_DBBP_NO_SATD_K0028
-    rcDP.DistFunc = (bHadamard)?TComRdCost::xGetMaskedHADs:TComRdCost::xGetMaskedSAD;
-#else
     rcDP.DistFunc = TComRdCost::xGetMaskedSAD;
-#endif
   }
 #endif
 }
@@ -728,125 +716,6 @@ UInt TComRdCost::xGetMaskedSAD( DistParam* pcDtParam )
   return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
 }
 
-#if !RWTH_DBBP_NO_SATD_K0028
-UInt TComRdCost::xGetMaskedHADs( DistParam* pcDtParam )
-{
-  AOF(!pcDtParam->bApplyWeight);
-#if H_3D_IC
-  AOF(!pcDtParam->bUseIC);
-#endif
-  Pel* piOrg   = pcDtParam->pOrg;
-  Pel* piCur   = pcDtParam->pCur;
-  Int  iRows   = pcDtParam->iRows;
-  Int  iCols   = pcDtParam->iCols;
-  Int  iStrideCur = pcDtParam->iStrideCur;
-  Int  iStrideOrg = pcDtParam->iStrideOrg;
-  Int  iStep  = pcDtParam->iStep;
-  
-  Int  x, y;
-  
-  UInt uiSum = 0;
-  
-#if NS_HAD
-  if( ( ( iRows % 8 == 0) && (iCols % 8 == 0) && ( iRows == iCols ) ) || ( ( iRows % 8 == 0 ) && (iCols % 8 == 0) && !pcDtParam->bUseNSHAD ) )
-#else
-    if( ( iRows % 8 == 0) && (iCols % 8 == 0) )
-#endif
-    {
-      Int  iOffsetOrg = iStrideOrg<<3;
-      Int  iOffsetCur = iStrideCur<<3;
-      for ( y=0; y<iRows; y+= 8 )
-      {
-        for ( x=0; x<iCols; x+= 8 )
-        {
-          if( piOrg[x] != DBBP_INVALID_SHORT )
-          {
-            uiSum += xCalcHADs8x8( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
-          }
-        }
-        piOrg += iOffsetOrg;
-        piCur += iOffsetCur;
-      }
-    }
-#if NS_HAD
-    else if ( ( iCols > 8 ) && ( iCols > iRows ) && pcDtParam->bUseNSHAD )
-    {
-      Int  iOffsetOrg = iStrideOrg<<2;
-      Int  iOffsetCur = iStrideCur<<2;
-      for ( y=0; y<iRows; y+= 4 )
-      {
-        for ( x=0; x<iCols; x+= 16 )
-        {
-          if( piOrg[x] != DBBP_INVALID_SHORT )
-          {
-            uiSum += xCalcHADs16x4( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
-          }
-        }
-        piOrg += iOffsetOrg;
-        piCur += iOffsetCur;
-      }
-    }
-    else if ( ( iRows > 8 ) && ( iCols < iRows ) && pcDtParam->bUseNSHAD )
-    {
-      Int  iOffsetOrg = iStrideOrg<<4;
-      Int  iOffsetCur = iStrideCur<<4;
-      for ( y=0; y<iRows; y+= 16 )
-      {
-        for ( x=0; x<iCols; x+= 4 )
-        {
-          if( piOrg[x] != DBBP_INVALID_SHORT )
-          {
-            uiSum += xCalcHADs4x16( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
-          }
-        }
-        piOrg += iOffsetOrg;
-        piCur += iOffsetCur;
-      }
-    }
-#endif
-    else if( ( iRows % 4 == 0) && (iCols % 4 == 0) )
-    {
-      Int  iOffsetOrg = iStrideOrg<<2;
-      Int  iOffsetCur = iStrideCur<<2;
-      
-      for ( y=0; y<iRows; y+= 4 )
-      {
-        for ( x=0; x<iCols; x+= 4 )
-        {
-          if( piOrg[x] != DBBP_INVALID_SHORT )
-          {
-            uiSum += xCalcHADs4x4( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
-          }
-        }
-        piOrg += iOffsetOrg;
-        piCur += iOffsetCur;
-      }
-    }
-    else if( ( iRows % 2 == 0) && (iCols % 2 == 0) )
-    {
-      Int  iOffsetOrg = iStrideOrg<<1;
-      Int  iOffsetCur = iStrideCur<<1;
-      for ( y=0; y<iRows; y+=2 )
-      {
-        for ( x=0; x<iCols; x+=2 )
-        {
-          if( piOrg[x] != DBBP_INVALID_SHORT )
-          {
-            uiSum += xCalcHADs2x2( &piOrg[x], &piCur[x*iStep], iStrideOrg, iStrideCur, iStep );
-          }
-        }
-        piOrg += iOffsetOrg;
-        piCur += iOffsetCur;
-      }
-    }
-    else
-    {
-      assert(false);
-    }
-  
-  return uiSum >> DISTORTION_PRECISION_ADJUSTMENT(pcDtParam->bitDepth-8);
-}
-#endif
 
 UInt TComRdCost::xGetMaskedVSD( DistParam* pcDtParam )
 {
@@ -2992,14 +2861,11 @@ UInt TComRdCost::xGetSSE64( DistParam* pcDtParam )
 //SAIT_VSO_EST_A0033
 UInt TComRdCost::getVSDEstimate( Int dDM, Pel* pOrg, Int iOrgStride,  Pel* pVirRec, Pel* pVirOrg, Int iVirStride, Int x, Int y )
 {
-  Double dD;
-  Int iTemp;
-
-  dD = ( (Double) ( dDM >> DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) ) ) * m_dDisparityCoeff;
+  Double  dD = ( (Double) ( dDM >> DISTORTION_PRECISION_ADJUSTMENT( g_bitDepthY - 8 ) ) ) * m_dDisparityCoeff;
 
   Double dDepthWeight = ( pOrg[x] >=  ( (1<<(g_bitDepthY - 3)) + (1<<(g_bitDepthY - 2)) ) ? 4 : pOrg[x] > ((1<<g_bitDepthY) >> 4) ? (Float)(pOrg[x] - ((1<<g_bitDepthY) >> 4))/(Float)((1<<g_bitDepthY) >> 3) + 1 : 1.0 );
   Double dTemp = ( 0.5 * fabs(dD) * dDepthWeight * ( abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x-1+y*iVirStride ] ) + abs( (Int) pVirRec[ x+y*iVirStride ] - (Int) pVirRec[ x+1+y*iVirStride ] ) ) );
-  iTemp = (Int) (((dTemp) < 0)? (Int)((dTemp) - 0.5) : (Int)((dTemp) + 0.5));
+  Int iTemp = (Int) (((dTemp) < 0)? (Int)((dTemp) - 0.5) : (Int)((dTemp) + 0.5));
 
   return (UInt) ( (iTemp*iTemp)>>1 );
 }

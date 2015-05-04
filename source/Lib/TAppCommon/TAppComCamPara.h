@@ -84,9 +84,6 @@ private:
   Int                 m_iNumberOfSynthViews;                  ///< number of synthesized views
 
   // SPS and slice header related variables
-#if !HHI_CAM_PARA_K0052
-  std::vector<Int>    m_aiViewOrderIndex;                     ///< list of view order indices
-#endif
   UInt                m_uiCamParsCodedPrecision;              ///< precision for coding of camera parameters (x: max error in disparity is 2^(-x) luma samples)
   Bool                m_bCamParsVaryOverTime;                 ///< flag specifying whether camera parameters vary for given frame numbers
   Int**               m_aaiCodedScale;                        ///< array of coded scaling parameters [RefView][TargetView]
@@ -146,9 +143,6 @@ protected:
 
   // getting conversion parameters for disparity to virtual depth conversion
   Void  xGetCameraShifts          ( UInt uiSourceView, UInt uiTargetView, UInt uiFrame, Double& rdCamPosShift, Double& rdPicPosShift );
-#if !HHI_CAM_PARA_K0052
-  Void  xSetPdmConversionParams   ();
-#endif
 
 public:
   // constructor and destructor
@@ -219,9 +213,6 @@ public:
 
   Bool                getVaryingCameraParameters()  { return m_bCamParsVaryOverTime;    }
   UInt                getCamParsCodedPrecision  ()  { return m_uiCamParsCodedPrecision; }
-#if !HHI_CAM_PARA_K0052
-  std::vector<Int>&   getViewOrderIndex         ()  { return m_aiViewOrderIndex;        }
-#endif
   Int**               getCodedScale             ()  { return m_aaiCodedScale;           }
   Int**               getCodedOffset            ()  { return m_aaiCodedOffset;          }
 
