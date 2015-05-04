@@ -43,7 +43,7 @@
 // Include files
 #include "TLibCommon/CommonDef.h"
 #include "assert.h"
-#if H_3D
+#if NH_3D
 
 // ====================================================================================================================
 // Constants
@@ -59,6 +59,7 @@
 // ====================================================================================================================
 
 /// interpolation filter class
+template<UInt bitDepth>
 class TRenInterpFilter
 {
 public:
@@ -103,6 +104,9 @@ public:
    __inline Int xCTI_Filter_VI04_C_QUA1( Int* pSrc, Int iStride );
    __inline Int xCTI_Filter_VP04_C_OCT3( Pel* pSrc, Int iStride );
    __inline Int xCTI_Filter_VI04_C_OCT3( Int* pSrc, Int iStride );
+private:
+  __inline Int xClipY( Pel x ) { return std::min<Pel>(Pel((1 << bitDepth)-1), std::max<Pel>( Pel(0), x)); } 
+  __inline Int xClipC( Pel x ) { return std::min<Pel>(Pel((1 << bitDepth)-1), std::max<Pel>( Pel(0), x)); }
 
 };
 
@@ -110,11 +114,9 @@ public:
 // ------------------------------------------------------------------------------------------------
 // DCTIF filters
 // ------------------------------------------------------------------------------------------------
-
-__inline Void TRenInterpFilter::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -145,7 +147,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, I
             + (   iTmpA          << 1 )
             -    iTmp0 -  iTmp2;
 
-      piDst   [x * iDstStep] = ClipY( (iSum +  32) >>  6 );
+      piDst   [x * iDstStep] = xClipY( (iSum +  32) >>  6 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -154,10 +156,9 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Pel* piSrc, Int iSrcStride, I
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterHalfHor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterHalfHor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -188,7 +189,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Int* piSrc, Int iSrcStride, I
             + (   iTmpA          << 1 )
             -    iTmp0 -  iTmp2;
       
-      piDst   [x * iDstStep] = ClipY( (iSum +  2048) >>  12 );
+      piDst   [x * iDstStep] = xClipY( (iSum +  2048) >>  12 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -197,9 +198,9 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfHor(Int* piSrc, Int iSrcStride, I
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
-{
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+{  
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -228,7 +229,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStrid
              - ( ( piSrcTmp[iSrcStep2] + iTmp1 ) << 3 )
              + (   piSrcTmp[iSrcStep4]           << 4 );
       
-      piDst   [x * iDstStep] = ClipY(( (iSum +  32) >>  6 )+ piSrcTmp[iSrcStep3]);
+      piDst   [x * iDstStep] = xClipY(( (iSum +  32) >>  6 )+ piSrcTmp[iSrcStep3]);
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -237,10 +238,9 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Pel* piSrc, Int iSrcStrid
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -270,7 +270,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStrid
             + (   piSrcTmp[iSrcStep4]           << 4 )
             + (   piSrcTmp[iSrcStep3]           << 6 );
       
-      piDst   [x * iDstStep] = ClipY( (iSum +  2048) >>  12 );
+      piDst   [x * iDstStep] = xClipY( (iSum +  2048) >>  12 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -279,9 +279,9 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Hor(Int* piSrc, Int iSrcStrid
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -309,7 +309,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStrid
             - ( ( piSrcTmp[iSrcStep5] + iTmp1 ) << 3 )
             + (   piSrcTmp[iSrcStep3]           << 4 );
       
-      piDst   [x * iDstStep] = ClipY( ((iSum +  32) >>  6) + piSrcTmp[iSrcStep4] );
+      piDst   [x * iDstStep] = xClipY( ((iSum +  32) >>  6) + piSrcTmp[iSrcStep4] );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -318,10 +318,9 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Pel* piSrc, Int iSrcStrid
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -350,7 +349,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStrid
             + (   piSrcTmp[iSrcStep3]           << 4 )
             + (   piSrcTmp[iSrcStep4]           << 6 );
       
-      piDst   [x * iDstStep] = ClipY( (iSum +  2048) >>  12 );
+      piDst   [x * iDstStep] = xClipY( (iSum +  2048) >>  12 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -359,9 +358,9 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Hor(Int* piSrc, Int iSrcStrid
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst, Int iDstStridePel, Pel*& rpiDstPel )
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst, Int iDstStridePel, Pel*& rpiDstPel )
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Int*  piDst = rpiDst;
   Pel*  piDstPel = rpiDstPel;
   Int   iSum;
@@ -393,7 +392,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
             -    iTmp0 -  iTmp2;
       
       piDst[x * iDstStep]    = iSum;
-      piDstPel[x * iDstStep] = ClipY( (iSum +  32) >>  6 );
+      piDstPel[x * iDstStep] = xClipY( (iSum +  32) >>  6 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -403,7 +402,8 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
  return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst)
 {
   Int*  piDst = rpiDst;
   Int   iSum;
@@ -443,9 +443,9 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -476,7 +476,7 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
             + (   iTmpA          << 1 )
             -    iTmp0 -  iTmp2;        
       
-      piDst[x * iDstStep] = ClipY( (iSum +  32) >>  6 );
+      piDst[x * iDstStep] = xClipY( (iSum +  32) >>  6 );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -485,7 +485,8 @@ __inline Void TRenInterpFilter::xCTI_FilterHalfVer (Pel* piSrc, Int iSrcStride, 
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst)
 {
   Int*  piDst = rpiDst;
   Int   iSum;
@@ -524,9 +525,9 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStri
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY );  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -555,7 +556,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStri
             - ( ( piSrcTmp[iSrcStride2] + iTmp1 ) << 3 )
             + (   piSrcTmp[iSrcStride4]           << 4 );
       
-      piDst[x * iDstStep] = ClipY( ((iSum +  32) >>  6) + piSrcTmp[iSrcStride3] );
+      piDst[x * iDstStep] = xClipY( ((iSum +  32) >>  6) + piSrcTmp[iSrcStride3] );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -564,7 +565,8 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter0Ver (Pel* piSrc, Int iSrcStri
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Int*& rpiDst)
 {
   Int*  piDst = rpiDst;
   Int   iSum;
@@ -603,10 +605,9 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStri
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStride, Int iSrcStep, Int iWidth, Int iHeight, Int iDstStride, Int iDstStep, Pel*& rpiDst)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -634,7 +635,7 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStri
             - ( ( piSrcTmp[iSrcStride5] + iTmp1 ) << 3 )
             + (   piSrcTmp[iSrcStride3]           << 4 );
             
-      piDst[x * iDstStep] = ClipY( ((iSum +  32) >>  6) +  piSrcTmp[iSrcStride4] );
+      piDst[x * iDstStep] = xClipY( ((iSum +  32) >>  6) +  piSrcTmp[iSrcStride4] );
       piSrcTmp += iSrcStep;
     }
     piSrc += iSrcStride;
@@ -646,7 +647,8 @@ __inline Void TRenInterpFilter::xCTI_FilterQuarter1Ver (Pel* piSrc, Int iSrcStri
 // ------------------------------------------------------------------------------------------------
 // DCTIF filters for Chroma
 // ------------------------------------------------------------------------------------------------
-__inline Void TRenInterpFilter::xCTI_Filter2DVerC (Pel* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Int*& rpiDst, Int iMV)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_Filter2DVerC (Pel* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Int*& rpiDst, Int iMV)
 {
   Int*  piDst = rpiDst;
   Int   iSum;
@@ -773,9 +775,9 @@ __inline Void TRenInterpFilter::xCTI_Filter2DVerC (Pel* piSrc, Int iSrcStride,  
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
   Pel*  piDst    = rpiDst;
   Int   iSum;
   Int*  piSrcTmp;
@@ -790,7 +792,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT0( piSrcTmp, 1 );
-          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
+          piDst   [x ] = xClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -806,7 +808,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_QUA0( piSrcTmp, 1 );
-          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
+          piDst   [x ] = xClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -822,7 +824,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_QUA1( piSrcTmp, 1 );
-          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
+          piDst   [x ] = xClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -838,7 +840,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT1( piSrcTmp, 1 );
-          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
+          piDst   [x ] = xClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -854,7 +856,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT2( piSrcTmp, 1 );
-          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
+          piDst   [x ] = xClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -870,7 +872,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VI04_C_OCT3( piSrcTmp, 1 );
-          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
+          piDst   [x ] = xClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -886,7 +888,7 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VIS04_C_HAL( piSrcTmp, 1 );
-          piDst   [x ] = ClipC ((iSum +  2048) >>  12 );
+          piDst   [x ] = xClipC ((iSum +  2048) >>  12 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -901,10 +903,9 @@ __inline Void TRenInterpFilter::xCTI_Filter2DHorC(Int* piSrc, Int iSrcStride,  I
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Int iDstStride,  Pel*& rpiDst, Int iMV)
 {
-  assert( g_bitDepthC == g_bitDepthY);  // ToDo: Update renderer to work with different luma/chroma bit depth 
-
   Pel*  piDst = rpiDst;
   Int   iSum;
   Pel*  piSrcTmp;
@@ -919,7 +920,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT0( piSrcTmp,  iSrcStride );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -935,7 +936,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_QUA0( piSrcTmp,  iSrcStride );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -951,7 +952,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_QUA1( piSrcTmp,  iSrcStride );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -967,7 +968,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT1( piSrcTmp,  iSrcStride );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -983,7 +984,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT2( piSrcTmp,  iSrcStride );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -999,7 +1000,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VP04_C_OCT3( piSrcTmp,  iSrcStride );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1015,7 +1016,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum      = xCTI_Filter_VPS04_C_HAL( piSrcTmp, iSrcStride );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1029,7 +1030,8 @@ __inline Void TRenInterpFilter::xCTI_Filter1DVerC (Pel* piSrc, Int iSrcStride, I
   return;
 }
 
-__inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Int iDstStride, Pel*& rpiDst, Int iMV)
+template<UInt bitDepth>
+__inline Void TRenInterpFilter<bitDepth>::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, Int iWidth, Int iHeight, Int iDstStride, Pel*& rpiDst, Int iMV)
 {
   Pel*  piDst    = rpiDst;
   Int   iSum;
@@ -1045,7 +1047,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT0( piSrcTmp,  1 );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1061,7 +1063,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_QUA0( piSrcTmp,  1 );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1077,7 +1079,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_QUA1( piSrcTmp,  1 );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1093,7 +1095,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT1( piSrcTmp,  1 );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1109,7 +1111,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT2( piSrcTmp,  1 );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1125,7 +1127,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VP04_C_OCT3( piSrcTmp,  1 );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1141,7 +1143,7 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
         for ( Int x = 0; x < iWidth; x++ )
         {
           iSum         = xCTI_Filter_VPS04_C_HAL( piSrcTmp,  1 );
-          piDst[x ] = ClipC ((iSum +  32) >>  6 );
+          piDst[x ] = xClipC ((iSum +  32) >>  6 );
           piSrcTmp++;
         }
         piSrc += iSrcStride;
@@ -1155,7 +1157,8 @@ __inline Void TRenInterpFilter::xCTI_Filter1DHorC(Pel* piSrc, Int iSrcStride, In
   return;
 }
 
-__inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT0( Pel* pSrc,  Int iStride )
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VP04_C_OCT0( Pel* pSrc,  Int iStride )
 {// {  -3,  60,   8,   -1,} // 1/8
   Int iSum, iIdx = 0;
 
@@ -1167,7 +1170,8 @@ __inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT0( Pel* pSrc,  Int iStride 
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT0( Int* pSrc, Int iStride )
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VI04_C_OCT0( Int* pSrc, Int iStride )
 { // {  -3,  60,   8,   -1,} //1/8
   Int iSum, iIdx = 0;
 
@@ -1179,7 +1183,8 @@ __inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT0( Int* pSrc, Int iStride )
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VP04_C_QUA0( Pel* pSrc,  Int iStride )
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VP04_C_QUA0( Pel* pSrc,  Int iStride )
 {// {  -4,  54,  16,   -2,} // 1/4
   Int iSum, iIdx = 0;
 
@@ -1191,7 +1196,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VP04_C_QUA0( Pel* pSrc,  Int iStride 
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VI04_C_QUA0( Int* pSrc, Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VI04_C_QUA0( Int* pSrc, Int iStride )
 { // {  -4,  54,  16,   -2,} //1/4
   Int iSum, iIdx = 0;
 
@@ -1203,7 +1210,8 @@ __inline Int TRenInterpFilter::xCTI_Filter_VI04_C_QUA0( Int* pSrc, Int iStride )
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VP04_C_QUA1( Pel* pSrc,  Int iStride )
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VP04_C_QUA1( Pel* pSrc,  Int iStride )
 {// {  -2,  16,  54,   -4,}// 3/4
   Int iSum, iIdx = 0;
 
@@ -1215,7 +1223,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VP04_C_QUA1( Pel* pSrc,  Int iStride 
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VI04_C_QUA1( Int* pSrc, Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VI04_C_QUA1( Int* pSrc, Int iStride )
 {// {  -2,  16,  54,   -4,}// 3/4
   Int iSum, iIdx = 0;
 
@@ -1227,7 +1237,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VI04_C_QUA1( Int* pSrc, Int iStride )
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT1( Pel* pSrc,  Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VP04_C_OCT1( Pel* pSrc,  Int iStride )
 {// {  -5,  46,  27,   -4,} // 3/8
   Int iSum, iIdx = 0;
 
@@ -1240,7 +1252,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT1( Pel* pSrc,  Int iStride 
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT1( Int* pSrc, Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VI04_C_OCT1( Int* pSrc, Int iStride )
 { // {  -5,  46,  27,   -4,} //3/8
   Int iSum, iIdx = 0;
 
@@ -1253,7 +1267,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT1( Int* pSrc, Int iStride )
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VPS04_C_HAL( Pel* pSrc, Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VPS04_C_HAL( Pel* pSrc, Int iStride )
 {
   // {  -4,  36,  36,   -4,}, // 1/2
   Int iSum;
@@ -1264,7 +1280,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VPS04_C_HAL( Pel* pSrc, Int iStride )
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VIS04_C_HAL( Int* pSrc, Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VIS04_C_HAL( Int* pSrc, Int iStride )
 {
   // {  -4,  36,  36,   -4,}, //1/2
   Int iSum;
@@ -1275,7 +1293,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VIS04_C_HAL( Int* pSrc, Int iStride )
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT2( Pel* pSrc,  Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VP04_C_OCT2( Pel* pSrc,  Int iStride )
 {// {  -4,  27,  46,   -5,}, // 5/8
   Int iSum, iIdx = 0;
 
@@ -1288,7 +1308,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT2( Pel* pSrc,  Int iStride 
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT2( Int* pSrc, Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VI04_C_OCT2( Int* pSrc, Int iStride )
 { // {  -4,  27,  46,   -5,}, // 5/8
   Int iSum, iIdx = 0;
 
@@ -1301,7 +1323,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT2( Int* pSrc, Int iStride )
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT3( Pel* pSrc,  Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VP04_C_OCT3( Pel* pSrc,  Int iStride )
 {// {  -1,   8,  60,   -3,} // 7/8
   Int iSum, iIdx = 0;
 
@@ -1313,7 +1337,9 @@ __inline Int TRenInterpFilter::xCTI_Filter_VP04_C_OCT3( Pel* pSrc,  Int iStride 
 
   return iSum;
 }
-__inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT3( Int* pSrc, Int iStride )
+
+template<UInt bitDepth>
+__inline Int TRenInterpFilter<bitDepth>::xCTI_Filter_VI04_C_OCT3( Int* pSrc, Int iStride )
 { // {  -1,   8,  60,   -3,} // 7/8
   Int iSum, iIdx = 0;
 
@@ -1325,5 +1351,6 @@ __inline Int TRenInterpFilter::xCTI_Filter_VI04_C_OCT3( Int* pSrc, Int iStride )
 
   return iSum;
 }
-#endif // H_3D
+
+#endif // NH_3D
 #endif // __TRENINTERP__
