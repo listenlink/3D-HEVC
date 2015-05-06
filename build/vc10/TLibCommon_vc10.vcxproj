@@ -143,12 +143,14 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\source\Lib\libmd5\libmd5.c" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\ContextModel3DBuffer.cpp" />
-    <ClCompile Include="..\..\source\Lib\libmd5\libmd5.c" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\Debug.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\SEI.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComBitStream.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComCABACTables.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComChromaFormat.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComDataCU.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComLoopFilter.cpp" />
@@ -165,23 +167,27 @@
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComSlice.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComTrQuant.cpp" />
+    <ClCompile Include="..\..\source\Lib\TLibCommon\TComTU.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComWedgelet.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComWeightPrediction.cpp" />
     <ClCompile Include="..\..\source\Lib\TLibCommon\TComYuv.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\source\Lib\libmd5\libmd5.h" />
+    <ClInclude Include="..\..\source\Lib\libmd5\MD5.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\AccessUnit.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\CommonDef.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\ContextModel.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\ContextModel3DBuffer.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\ContextTables.h" />
-    <ClInclude Include="..\..\source\Lib\libmd5\libmd5.h" />
-    <ClInclude Include="..\..\source\Lib\libmd5\MD5.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\Debug.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\NAL.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\SEI.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComBitCounter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComBitStream.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComCABACTables.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComChromaFormat.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComCodingStatistics.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComDataCU.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComInterpolationFilter.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComList.h" />
@@ -195,10 +201,12 @@
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComPrediction.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRdCost.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRdCostWeightPrediction.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComRectangle.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComRom.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComSampleAdaptiveOffset.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComSlice.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComTrQuant.h" />
+    <ClInclude Include="..\..\source\Lib\TLibCommon\TComTU.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComWedgelet.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComWeightPrediction.h" />
     <ClInclude Include="..\..\source\Lib\TLibCommon\TComYuv.h" />
