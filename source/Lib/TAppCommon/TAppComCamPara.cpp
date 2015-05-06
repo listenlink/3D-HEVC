@@ -48,7 +48,7 @@
 #include <algorithm>
 #include <functional>
 #include <string>
-#if H_3D
+#if NH_3D
 
 
 Void
@@ -1365,7 +1365,7 @@ TAppComCamPara::update( UInt uiFrameId )
   }
 }
 
-#if H_3D_VSO
+#if NH_3D_VSO
 Void
 TAppComCamPara::setDispCoeff( UInt uiFrameId, Int iViewIdx )
 {
