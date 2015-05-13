@@ -732,7 +732,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       m_addSADDepth = uiDepth;
     }
 #endif
-#if H_3D_DIM_ENC
+#if NH_3D_ENC_DEPTH
     if( rpcBestCU->getSlice()->getIsDepth() && rpcBestCU->getSlice()->isIRAP() )
     {
       earlyDetectionSkipMode = false;
@@ -1074,32 +1074,30 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
         Double intraCost = 0.0;
 
         if((rpcBestCU->getSlice()->getSliceType() == I_SLICE)                                     ||
-            ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && (
+           ((!m_pcEncCfg->getDisableIntraPUsInInterSlices()) && ( // avoid very complex intra if it is unlikely
            (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
           ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
-          ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))) 
- // avoid very complex intra if it is unlikely
-#if H_3D_DIM_ENC
+          ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr)) 
+ #if NH_3D_ENC_DEPTH
             || rpcBestCU->getSlice()->getIsDepth()
 #endif
-            ))
+            )))
         {
-#if H_3D_DIM
+#if NH_3D_ENC_DEPTH
             Bool bOnlyIVP = false;
             Bool bUseIVP = true;
-            if( rpcBestCU->getSlice()->getIsDepth() && !(rpcBestCU->getSlice()->isIRAP()) && 
-              rpcBestCU->getSlice()->getSliceType() != I_SLICE && 
-              rpcBestCU->getCbf( 0, TEXT_LUMA     ) == 0 &&
-              rpcBestCU->getCbf( 0, TEXT_CHROMA_U ) == 0 &&
-              rpcBestCU->getCbf( 0, TEXT_CHROMA_V ) == 0 
-              )
+            if( (rpcBestCU->getSlice()->getSliceType() != I_SLICE) && 
+                !( (rpcBestCU->getCbf( 0, COMPONENT_Y  ) != 0)                                            ||
+                  ((rpcBestCU->getCbf( 0, COMPONENT_Cb ) != 0) && (numberValidComponents > COMPONENT_Cb)) ||
+                  ((rpcBestCU->getCbf( 0, COMPONENT_Cr ) != 0) && (numberValidComponents > COMPONENT_Cr))   ) &&
+                  (rpcBestCU->getSlice()->getIsDepth() && !(rpcBestCU->getSlice()->isIRAP())) )
             { 
               bOnlyIVP = true;
               bUseIVP = rpcBestCU->getSlice()->getIntraContourFlag();
             }
             if( bUseIVP )
             {
-              xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_2Nx2N, bOnlyIVP );
+              xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug), bOnlyIVP );
 #else
           xCheckRDCostIntra( rpcBestCU, rpcTempCU, intraCost, SIZE_2Nx2N DEBUG_STRING_PASS_INTO(sDebug) );
 #endif
@@ -1121,8 +1119,8 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
             if( rpcTempCU->getWidth(0) > ( 1 << sps.getQuadtreeTULog2MinSize() ) )
             {
               Double tmpIntraCost;
-#if H_3D_DIM
-              xCheckRDCostIntra( rpcBestCU, rpcTempCU, SIZE_NxN, bOnlyIVP );
+#if NH_3D_ENC_DEPTH
+              xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug), bOnlyIVP );
 #else
               xCheckRDCostIntra( rpcBestCU, rpcTempCU, tmpIntraCost, SIZE_NxN DEBUG_STRING_PASS_INTO(sDebug)   );
 #endif
@@ -1134,7 +1132,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
               }
 #endif
           }
-#if H_3D
+#if NH_3D_ENC_DEPTH
           }
 #endif
         }
@@ -2653,15 +2651,15 @@ Void TEncCu::xCheckRDCostInterDBBP( TComDataCU*& rpcBestCU, TComDataCU*& rpcTemp
 }
 #endif
 
-#if H_3D_DIM
-Void TEncCu::xCheckRDCostIntra( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, PartSize eSize, Bool bOnlyIVP )
-#else
 Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
                                 TComDataCU *&rpcTempCU,
                                 Double      &cost,
                                 PartSize     eSize
-                                DEBUG_STRING_FN_DECLARE(sDebug) )
+                                DEBUG_STRING_FN_DECLARE(sDebug)
+#if NH_3D_ENC_DEPTH
+                              , Bool bOnlyIVP
 #endif
+                              )
 {
   DEBUG_STRING_NEW(sTest)
 
@@ -2689,17 +2687,17 @@ Void TEncCu::xCheckRDCostIntra( TComDataCU *&rpcBestCU,
 
   Pel resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE];
 
-  m_pcPredSearch->estIntraPredLumaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], resiLuma DEBUG_STRING_PASS_INTO(sTest) );
+  m_pcPredSearch->estIntraPredLumaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], resiLuma DEBUG_STRING_PASS_INTO(sTest) 
+#if NH_3D_ENC_DEPTH
+                                    , bOnlyIVP
+#endif
+                                    );
 
   m_ppcRecoYuvTemp[uiDepth]->copyToPicComponent(COMPONENT_Y, rpcTempCU->getPic()->getPicYuvRec(), rpcTempCU->getCtuRsAddr(), rpcTempCU->getZorderIdxInCtu() );
 
   if (rpcBestCU->getPic()->getChromaFormat()!=CHROMA_400)
   {
-#if H_3D_DIM
-    m_pcPredSearch->estIntraPredQT      ( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], uiPreCalcDistC, bSeparateLumaChroma, bOnlyIVP );
-#else
     m_pcPredSearch->estIntraPredChromaQT( rpcTempCU, m_ppcOrigYuv[uiDepth], m_ppcPredYuvTemp[uiDepth], m_ppcResiYuvTemp[uiDepth], m_ppcRecoYuvTemp[uiDepth], resiLuma DEBUG_STRING_PASS_INTO(sTest) );
-#endif
   }
 #if H_3D_DIM_SDC
   if( !rpcTempCU->getSDCFlag( 0 ) )

@@ -721,38 +721,41 @@ Void TEncEntropy::encodeCoeff( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_U) == 1 );
     assert( pcCU->getCbf(uiAbsPartIdx, TEXT_CHROMA_V) == 1 );
   }
-
-
+#endif
+#if H_3D_INTER_SDC
   if( pcCU->getSDCFlag( uiAbsPartIdx ) && !pcCU->isIntra( uiAbsPartIdx ) )
   {
     assert( !pcCU->isSkipped( uiAbsPartIdx ) );
     assert( !pcCU->isIntra( uiAbsPartIdx) );
     assert( pcCU->getSlice()->getIsDepth() );
   }
-
-  if( pcCU->getSlice()->getIsDepth() && ( pcCU->getSDCFlag( uiAbsPartIdx ) || pcCU->isIntra( uiAbsPartIdx ) ) )
+#endif
+#if NH_3D
+  if( pcCU->getSlice()->getIsDepth() )
+  {
+#if H_3D_DIM_SDC || H_3D_INTER_SDC
+    if( pcCU->getSDCFlag( uiAbsPartIdx ) )
+    {
+      m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx );
+      return;
+    }
+#endif
+#if NH_3D_DMM
+    if( pcCU->isIntra(uiAbsPartIdx) )
   {
     Int iPartNum = ( pcCU->isIntra( uiAbsPartIdx ) && pcCU->getPartitionSize( uiAbsPartIdx ) == SIZE_NxN ) ? 4 : 1;
-    UInt uiPartOffset = ( pcCU->getPic()->getNumPartInCU() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
-    
-    if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
-    {
+      UInt uiPartOffset = ( pcCU->getPic()->getNumPartitionsInCtu() >> ( pcCU->getDepth( uiAbsPartIdx ) << 1 ) ) >> 2;
       for( Int iPart = 0; iPart < iPartNum; iPart++ )
       {
-        if( getDimType( pcCU->getLumaIntraDir( uiAbsPartIdx + uiPartOffset*iPart ) ) < DIM_NUM_TYPE ) 
+        if( isDmmMode( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, uiAbsPartIdx + uiPartOffset*iPart ) ) ) 
         {
           m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx + uiPartOffset*iPart );
         }
       }
     }
-    else
-    {
-      m_pcEntropyCoderIf->codeDeltaDC( pcCU, uiAbsPartIdx );
-      return;
-    }
+#endif
   }
 #endif
-
 
   if( pcCU->isIntra(uiAbsPartIdx) )
   {
@@ -839,12 +842,13 @@ Int TEncEntropy::countNonZeroCoeffs( TCoeff* pcCoef, UInt uiSize )
   return count;
 }
 
-#if H_3D_INTER_SDC
+#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
 Void TEncEntropy::encodeDeltaDC  ( TComDataCU* pcCU, UInt absPartIdx )
 {
   m_pcEntropyCoderIf->codeDeltaDC( pcCU, absPartIdx );
 }
-
+#endif
+#if H_3D_INTER_SDC
 Void TEncEntropy::encodeSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, Bool bRD )
 {
   if( ( !pcCU->isIntra( uiAbsPartIdx ) && !pcCU->getSlice()->getInterSdcFlag() ) || 

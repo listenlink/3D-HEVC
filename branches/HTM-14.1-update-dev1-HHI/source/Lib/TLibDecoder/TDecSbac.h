@@ -106,18 +106,19 @@ private:
   Void  xReadEpExGolomb     ( UInt& ruiSymbol, UInt uiCount );
   Void  xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool useLimitedPrefixLength, const Int maxLog2TrDynamicRange );
 #endif
-#if H_3D_DIM
-  Void  xReadExGolombLevel   ( UInt& ruiSymbol, ContextModel& rcSCModel  );
-  Void  xParseDimDeltaDC     ( Pel& rValDeltaDC, UInt uiNumSeg );
-#if H_3D_DIM_DMM
+#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
+  Void  xReadExGolombLevelDdc( UInt& ruiSymbol );
+  Void  xParseDeltaDC        ( Pel& rValDeltaDC, UInt uiNumSeg );
+#endif
+#if NH_3D_DMM
+  Void  xParseIntraDepthMode ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
+  Void  xParseDmmData        ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
   Void  xParseDmm1WedgeIdx   ( UInt& ruiTabIdx, Int iNumBit );
 #endif
 #if H_3D_DIM_SDC
   Void  xParseSDCResidualData     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPart );
 #endif
-#endif
 #if H_3D_INTER_SDC
-  Void  parseDeltaDC         ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
   Void  parseSDCFlag         ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_DBBP
@@ -134,6 +135,9 @@ public:
 #if H_3D
   Void parseDIS          ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
+#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
+  Void  parseDeltaDC      ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
+#endif
   Void parseCUTransquantBypassFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseSplitFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth, UInt uiPUIdx );
@@ -149,12 +153,6 @@ public:
 
   Void parseIntraDirLumaAng( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
   Void parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth );
-
-#if H_3D_DIM
-  Void parseIntraDepth     ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
-  Void parseIntraDepthMode ( TComDataCU* pcCU, UInt absPartIdx, UInt depth );
-#endif
-
   Void parseInterDir      ( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx );
   Void parseRefFrmIdx     ( TComDataCU* pcCU, Int& riRefFrmIdx, RefPicList eRefList );
   Void parseMvd           ( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth, RefPicList eRefList );
@@ -226,18 +224,18 @@ private:
 
   ContextModel3DBuffer m_ChromaQpAdjFlagSCModel;
   ContextModel3DBuffer m_ChromaQpAdjIdcSCModel;
-#if H_3D_DIM
-  ContextModel3DBuffer m_cDepthIntraModeSCModel;
-  ContextModel3DBuffer m_cDdcFlagSCModel;
+#if NH_3D_DMM
+  ContextModel3DBuffer m_cNotDmmFlagSCModel;
+  ContextModel3DBuffer m_cDmmModeSCModel;
+#endif
+#if NH_3D_DMM || NH_3D_SDC
   ContextModel3DBuffer m_cDdcDataSCModel;
-  ContextModel3DBuffer m_cAngleFlagSCModel;
+#endif
 #if H_3D_DIM_SDC  
   ContextModel3DBuffer m_cSDCResidualFlagSCModel;
   ContextModel3DBuffer m_cSDCResidualSCModel;
-#endif
-#endif
-#if H_3D_DIM_SDC  
   ContextModel3DBuffer m_cSDCFlagSCModel;
+  ContextModel3DBuffer m_cDdcFlagSCModel;
 #endif
 #if H_3D_DBBP
   ContextModel3DBuffer m_cDBBPFlagSCModel;

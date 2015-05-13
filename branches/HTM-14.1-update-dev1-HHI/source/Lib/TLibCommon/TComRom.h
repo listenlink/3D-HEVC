@@ -38,7 +38,7 @@
 #include "CommonDef.h"
 #include<stdio.h>
 #include<iostream>
-#if H_3D_DIM
+#if NH_3D_DMM
 #include "TComWedgelet.h"
 #endif
 //! \ingroup TLibCommon
@@ -90,27 +90,29 @@ extern const UInt   g_uiMinInGroup[ LAST_SIGNIFICANT_GROUPS ];
 extern const UChar  g_aucIntraModeNumFast_UseMPM[MAX_CU_DEPTH];
 extern const UChar  g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH];
 extern const UChar  g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE];
-#if H_3D_DIM
+
 // ====================================================================================================================
 // Depth coding modes
 // ====================================================================================================================
-__inline Void mapDepthModeToIntraDir( UInt& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
-__inline Void mapDepthModeToIntraDir(  Int& intraMode ) { if( isDimMode( intraMode ) ) intraMode = DC_IDX; }
-#if H_3D_DIM_SDC || H_3D_DIM_DLT
-__inline UInt numBitsForValue( UInt value ) { UInt bits = 0; while (value != 0) { value >>= 1; bits++; } return bits; };
-#endif
-#if H_3D_DIM_DMM
+#if NH_3D_DMM
 extern const WedgeResolution                                 g_dmmWedgeResolution [6];
 extern const UChar                                           g_dmm1TabIdxBits     [6];
-extern const UChar                                           g_dmm3IntraTabIdxBits[6];
 extern Bool                                                  g_wedgePattern[32*32];
 extern       std::vector< std::vector<TComWedgelet> >        g_dmmWedgeLists;
-extern       std::vector< std::vector<TComWedgeRef> >        g_dmmWedgeRefLists;
 extern       std::vector< std::vector<TComWedgeNode> >       g_dmmWedgeNodeLists;
+
 Void initWedgeLists( Bool initNodeList = false );
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes );
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList );
+
+WedgeList*     getWedgeListScaled    ( UInt blkSize );
+WedgeNodeList* getWedgeNodeListScaled( UInt blkSize );
+
+__inline Void mapDmmToIntraDir( UInt& intraMode ) { if( isDmmMode( intraMode ) ) intraMode = DC_IDX; }
+__inline Void mapDmmToIntraDir(  Int& intraMode ) { if( isDmmMode( intraMode ) ) intraMode = DC_IDX; }
 #endif
+#if H_3D_DIM_SDC || H_3D_DIM_DLT
+__inline UInt numBitsForValue( UInt value ) { UInt bits = 0; while (value != 0) { value >>= 1; bits++; } return bits; };
 #endif
 // ====================================================================================================================
 // Mode-Dependent DST Matrices

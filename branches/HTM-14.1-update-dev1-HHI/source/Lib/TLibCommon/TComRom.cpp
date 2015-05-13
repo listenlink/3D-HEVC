@@ -252,29 +252,16 @@ Void destroyROM()
       }
     }
   }
-#if H_3D_DIM_DMM
+
+#if NH_3D_DMM
   if( !g_dmmWedgeLists.empty() ) 
   {
-    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ )
-    { 
-      g_dmmWedgeLists[ui].clear(); 
-    }
+    for( UInt ui = 0; ui < g_dmmWedgeLists.size(); ui++ ) { g_dmmWedgeLists[ui].clear(); }
     g_dmmWedgeLists.clear();
-  }
-  if( !g_dmmWedgeRefLists.empty() )
-  {
-    for( UInt ui = 0; ui < g_dmmWedgeRefLists.size(); ui++ ) 
-    { 
-      g_dmmWedgeRefLists[ui].clear(); 
-    }
-    g_dmmWedgeRefLists.clear();
   }
   if( !g_dmmWedgeNodeLists.empty() )
   {
-    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ )
-    { 
-      g_dmmWedgeNodeLists[ui].clear(); 
-    }
+    for( UInt ui = 0; ui < g_dmmWedgeNodeLists.size(); ui++ ) { g_dmmWedgeNodeLists[ui].clear(); }
     g_dmmWedgeNodeLists.clear();
   }
 #endif
@@ -522,7 +509,7 @@ const UChar g_aucIntraModeNumFast_NotUseMPM[MAX_CU_DEPTH] =
 const UChar g_chroma422IntraAngleMappingTable[NUM_INTRA_MODE] =
   //0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, DM
   { 0, 1, 2, 2, 2, 2, 3, 5, 7, 8, 10, 12, 13, 15, 17, 18, 19, 20, 21, 22, 23, 23, 24, 24, 25, 25, 26, 27, 27, 28, 28, 29, 29, 30, 31, DM_CHROMA_IDX};
-#if H_3D_DIM_DMM
+#if NH_3D_DMM
 // ====================================================================================================================
 // Depth coding modes
 // ====================================================================================================================
@@ -538,12 +525,9 @@ const WedgeResolution g_dmmWedgeResolution[6] =
 const UChar g_dmm1TabIdxBits[6] =
 { //2x2   4x4   8x8 16x16 32x32 64x64
      0,    7,   10,   9,    9,   13 };
-const UChar g_dmm3IntraTabIdxBits[6] =
-{ //2x2   4x4   8x8 16x16 32x32 64x64
-     0,    4,    7,    8,    8,    0 };
+
 Bool g_wedgePattern[32*32];
 extern std::vector< std::vector<TComWedgelet> >   g_dmmWedgeLists;
-extern std::vector< std::vector<TComWedgeRef> >   g_dmmWedgeRefLists;
 extern std::vector< std::vector<TComWedgeNode> >  g_dmmWedgeNodeLists;
 #endif
 // ====================================================================================================================
@@ -752,21 +736,21 @@ Void writeToTraceFile( const Char* symbolName, Bool doIt )
 }
 #endif
 #endif
-#if H_3D_DIM_DMM
+#if NH_3D_DMM
 std::vector< std::vector<TComWedgelet>  > g_dmmWedgeLists;
-std::vector< std::vector<TComWedgeRef>  > g_dmmWedgeRefLists;
 std::vector< std::vector<TComWedgeNode> > g_dmmWedgeNodeLists;
+
 Void initWedgeLists( Bool initNodeList )
 {
   if( !g_dmmWedgeLists.empty() ) return;
-  for( UInt ui = g_aucConvertToBit[DIM_MIN_SIZE]; ui < (g_aucConvertToBit[DIM_MAX_SIZE]); ui++ )
+  for( UInt ui = g_aucConvertToBit[DMM_MIN_SIZE]; ui < (g_aucConvertToBit[DMM_MAX_SIZE]); ui++ )
   {
-    UInt uiWedgeBlockSize = ((UInt)DIM_MIN_SIZE)<<ui;
+    UInt uiWedgeBlockSize = ((UInt)DMM_MIN_SIZE)<<ui;
     std::vector<TComWedgelet> acWedgeList;
     std::vector<TComWedgeRef> acWedgeRefList;
     createWedgeList( uiWedgeBlockSize, uiWedgeBlockSize, acWedgeList, acWedgeRefList, g_dmmWedgeResolution[ui] );
     g_dmmWedgeLists.push_back( acWedgeList );
-    g_dmmWedgeRefLists.push_back( acWedgeRefList );
+
     if( initNodeList )
     {
       // create WedgeNodeList
@@ -826,6 +810,7 @@ Void initWedgeLists( Bool initNodeList )
     }
   }
 }
+
 Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList, WedgeResolution eWedgeRes )
 {
   assert( uiWidth == uiHeight );
@@ -866,6 +851,7 @@ Void createWedgeList( UInt uiWidth, UInt uiHeight, std::vector<TComWedgelet> &ra
     posStart = posEnd;
   }
 }
+
 Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWedgeList, std::vector<TComWedgeRef> &racWedgeRefList )
 {
   Bool bValid = cWedgelet.checkNotPlain();
@@ -899,12 +885,19 @@ Void addWedgeletToList( TComWedgelet cWedgelet, std::vector<TComWedgelet> &racWe
   }
   if( bValid )
   {
-    cWedgelet.findClosestAngle();
     racWedgeList.push_back( cWedgelet );
     TComWedgeRef cWedgeRef;
     cWedgeRef.setWedgeRef( cWedgelet.getStartX(), cWedgelet.getStartY(), cWedgelet.getEndX(), cWedgelet.getEndY(), (UInt)(racWedgeList.size()-1) );
     racWedgeRefList.push_back( cWedgeRef );
   }
 }
-#endif //H_3D_DIM_DMM
+WedgeList* getWedgeListScaled( UInt blkSize ) 
+{ 
+  return &g_dmmWedgeLists[ g_aucConvertToBit[( 16 >= blkSize ) ? blkSize : 16] ]; 
+}
+WedgeNodeList* getWedgeNodeListScaled( UInt blkSize )
+{
+  return &g_dmmWedgeNodeLists[ g_aucConvertToBit[( 16 >= blkSize ) ? blkSize : 16] ]; 
+}
+#endif //NH_3D_DMM
 //! \}

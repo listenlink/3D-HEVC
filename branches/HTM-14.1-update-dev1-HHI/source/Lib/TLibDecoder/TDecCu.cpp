@@ -1008,17 +1008,16 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
 
 
   //===== get prediction signal =====
-#if H_3D_DIM
-  if( isDimMode( uiLumaPredMode ) )
+#if NH_3D_DMM
+  if( bIsLuma && isDmmMode( uiChFinalMode ) )
   {
-    m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight );
+    m_pcPrediction->predIntraLumaDmm( pcCU, uiAbsPartIdx, getDmmType( uiChFinalMode ), piPred, uiStride, uiWidth, uiHeight );
   }
   else
   {
 #endif
-
   m_pcPrediction->predIntraAng( compID,   uiChFinalMode, 0 /* Decoder does not have an original image */, 0, piPred, uiStride, rTu, bAboveAvail, bLeftAvail, bUseFilteredPredictions );
-#if H_3D_DIM
+#if NH_3D_DMM
   }
 #endif
 
@@ -1039,7 +1038,7 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
   std::string *psDebug=(DebugOptionList::DebugString_InvTran.getInt()&debugPredModeMask) ? &sDebug : 0;
 #endif
 #if H_3D
-  Bool useDltFlag = (isDimMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps());
+  Bool useDltFlag = (isDmmMode( uiLumaPredMode ) || uiLumaPredMode == HOR_IDX || uiLumaPredMode == VER_IDX || uiLumaPredMode == DC_IDX) && pcCU->getSlice()->getIsDepth() && pcCU->getSlice()->getPPS()->getDLT()->getUseDLTFlag(pcCU->getSlice()->getLayerIdInVps());
 
   if ( pcCU->getCbf( uiAbsPartIdx, TEXT_LUMA, uiTrDepth ) || useDltFlag )
 #else
@@ -1157,10 +1156,6 @@ TDecCu::xIntraRecBlk(       TComYuv*    pcRecoYuv,
     pRecIPred += uiRecIPredStride;
   }
 }
-#if H_3D_DIM
-      mapDepthModeToIntraDir( uiChromaPredMode );
-#endif
-
 
 Void
 TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
@@ -1190,6 +1185,145 @@ TDecCu::xReconIntraQT( TComDataCU* pcCU, UInt uiDepth )
 #if H_3D_DIM_SDC
 Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
+#if TEMP_SDC_CLEANUP // PM: consider this cleanup for DMM and SDC
+  TComYuv* pcRecoYuv  = m_ppcYuvReco[uiDepth];
+  TComYuv* pcPredYuv  = m_ppcYuvReco[uiDepth];
+  TComYuv* pcResiYuv  = m_ppcYuvResi[uiDepth];
+
+  Bool bAboveAvail    = false;
+  Bool bLeftAvail     = false;
+  UInt uiWidth        = pcCU->getWidth ( 0 );
+  UInt uiHeight       = pcCU->getHeight( 0 );
+  UInt uiLumaPredMode = pcCU->getIntraDir( CHANNEL_TYPE_LUMA, uiAbsPartIdx );
+
+  UInt sdcDepth = 0;
+  UInt uiStride;
+  Pel* piReco;
+  Pel* piPred;
+  Pel* piResi;
+
+  UInt uiZOrder;        
+  Pel* piRecIPred;      
+  UInt uiRecIPredStride;
+  
+  Pel apDCPredValues[2];
+  UInt uiNumSegments;
+
+  Bool* pbMask = NULL;
+  UInt uiMaskStride = 0;
+
+#if NH_3D_DMM
+  TComWedgelet* dmm4Segmentation = NULL;
+  if( isDmmMode( uiLumaPredMode ) )
+  {
+    assert( uiWidth == uiHeight  );
+    assert( uiWidth >= DMM_MIN_SIZE && uiWidth <= DMM_MAX_SIZE );
+    assert( !((uiWidth >> pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize()) > 1) );
+
+    uiNumSegments     = 2;
+
+    uiStride          = pcRecoYuv->getStride( COMPONENT_Y );
+    piReco            = pcRecoYuv->getAddr  ( COMPONENT_Y, uiAbsPartIdx );
+    piPred            = pcPredYuv->getAddr  ( COMPONENT_Y, uiAbsPartIdx );
+    piResi            = pcResiYuv->getAddr  ( COMPONENT_Y, uiAbsPartIdx );
+
+    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getAddr  ( COMPONENT_Y, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiAbsPartIdx );
+    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride( COMPONENT_Y );
+
+    //===== init availability pattern =====
+#if !TEMP_SDC_CLEANUP // PM: please migrate together with below "initPattern" and remove macro
+    pcCU->getPattern()->initPattern   ( pcCU, sdcDepth, uiAbsPartIdx );
+    pcCU->getPattern()->initAdiPattern( pcCU, uiAbsPartIdx, sdcDepth, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
+#endif
+
+    // get partition
+    pbMask       = new Bool[ uiWidth*uiHeight ];
+    uiMaskStride = uiWidth;
+    switch( getDmmType( uiLumaPredMode ) )
+    {
+    case( DMM1_IDX ): { (getWedgeListScaled( uiWidth )->at( pcCU->getDmm1WedgeTabIdx( uiAbsPartIdx ) )).getPatternScaledCopy( uiWidth, pbMask ); } break;
+    case( DMM4_IDX ): { m_pcPrediction->predContourFromTex( pcCU, uiAbsPartIdx, uiWidth, uiHeight, pbMask );                                     } break;
+    default: assert(0);
+    }
+
+    // get predicted partition values
+    Pel predDC1 = 0, predDC2 = 0;
+    m_pcPrediction->predBiSegDCs( pcCU, uiAbsPartIdx, uiWidth, uiHeight, pbMask, uiMaskStride, predDC1, predDC2 );
+
+    // set prediction signal
+    Pel* pDst = piPred;
+    m_pcPrediction->assignBiSegDCs( pDst, uiStride, pbMask, uiMaskStride, predDC1, predDC2 );
+    apDCPredValues[0] = predDC1;
+    apDCPredValues[1] = predDC2;
+  }
+  else // regular HEVC intra modes
+  {
+#endif
+    uiNumSegments = 1;
+
+    UInt numParts = 1;
+    UInt uiSubPartIdx = uiAbsPartIdx;
+
+    if ((uiWidth >> pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize()) > 1)
+    {
+      numParts = uiWidth * uiWidth >> (2 * pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize());
+      sdcDepth = g_aucConvertToBit[uiWidth] + 2 - pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize();
+      uiWidth = uiHeight = (1 << pcCU->getSlice()->getSPS()->getQuadtreeTULog2MaxSize());
+    }
+
+    for ( Int i = 0; i < numParts; i++ )
+    {
+      uiStride    = pcRecoYuv->getStride  ();
+      piReco      = pcRecoYuv->getLumaAddr( uiSubPartIdx );
+      piPred      = pcPredYuv->getLumaAddr( uiSubPartIdx );
+      piResi      = pcResiYuv->getLumaAddr( uiSubPartIdx );
+
+      uiZOrder          = pcCU->getZorderIdxInCU() + uiSubPartIdx;
+      piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
+      uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
+
+      AOF( uiWidth == uiHeight );
+
+      //===== init availability pattern =====
+      pcCU->getPattern()->initPattern   ( pcCU, sdcDepth, uiSubPartIdx );
+      pcCU->getPattern()->initAdiPattern( pcCU, uiSubPartIdx, sdcDepth, m_pcPrediction->getPredicBuf(), m_pcPrediction->getPredicBufWidth(), m_pcPrediction->getPredicBufHeight(), bAboveAvail, bLeftAvail );
+
+      m_pcPrediction->predIntraLumaAng( pcCU->getPattern(), uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, bAboveAvail, bLeftAvail );
+
+      if ( numParts > 1 )
+      {
+        for( UInt uiY = 0; uiY < uiHeight; uiY++ )
+        {
+          for( UInt uiX = 0; uiX < uiWidth; uiX++ )
+          {
+            piReco        [ uiX ] = ClipY( piPred[ uiX ] );
+            piRecIPred    [ uiX ] = piReco[ uiX ];
+          }
+          piPred     += uiStride;
+          piReco     += uiStride;
+          piRecIPred += uiRecIPredStride;
+        }
+      }
+      uiSubPartIdx += ( (uiWidth * uiWidth) >> 4 );
+    }
+
+    // reset to full block
+    uiWidth  = pcCU->getWidth( 0 );
+    uiHeight = pcCU->getHeight( 0 );
+
+    piReco            = pcRecoYuv->getLumaAddr( uiAbsPartIdx );
+    piPred            = pcPredYuv->getLumaAddr( uiAbsPartIdx );
+    piResi            = pcResiYuv->getLumaAddr( uiAbsPartIdx );
+
+    uiZOrder          = pcCU->getZorderIdxInCU() + uiAbsPartIdx;
+    piRecIPred        = pcCU->getPic()->getPicYuvRec()->getLumaAddr( pcCU->getAddr(), uiZOrder );
+    uiRecIPredStride  = pcCU->getPic()->getPicYuvRec()->getStride  ();
+
+    m_pcPrediction->predConstantSDC( piPred, uiStride, uiWidth, apDCPredValues[0] ); apDCPredValues[1] = 0;
+#if NH_3D_DMM
+  }
+#endif
+#else
   UInt uiWidth        = pcCU->getWidth  ( 0 );
   UInt uiHeight       = pcCU->getHeight ( 0 );
   TComWedgelet* dmm4SegmentationOrg = new TComWedgelet( uiWidth, uiHeight );
@@ -1241,7 +1375,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 
     TComWedgelet* dmm4Segmentation = new TComWedgelet( uiWidth, uiHeight );
     //===== get prediction signal =====
-    if( isDimMode( uiLumaPredMode ) )
+    if( isDmmMode( uiLumaPredMode ) )
     {
       m_pcPrediction->predIntraLumaDepth( pcCU, uiAbsPartIdx, uiLumaPredMode, piPred, uiStride, uiWidth, uiHeight, false, dmm4Segmentation  );
       Bool* dmm4PatternSplit = dmm4Segmentation->getPattern();
@@ -1291,7 +1425,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   Bool* pbMask = NULL;
   UInt uiMaskStride = 0;
   
-  if( getDimType( uiLumaPredMode ) == DMM1_IDX )
+  if( getDmmType( uiLumaPredMode ) == DMM1_IDX )
   {
     Int uiTabIdx = pcCU->getDmmWedgeTabIdx(DMM1_IDX, uiAbsPartIdx);
 
@@ -1303,7 +1437,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pbMask       = pcCU->isDMM1UpscaleMode( uiWidth ) ? pcWedgelet->getScaledPattern(uiWidth) : pcWedgelet->getPattern();
     uiMaskStride = pcCU->isDMM1UpscaleMode( uiWidth ) ? uiWidth : pcWedgelet->getStride();
   }
-  if( getDimType( uiLumaPredMode ) == DMM4_IDX )
+  if( getDmmType( uiLumaPredMode ) == DMM4_IDX )
   {
     uiNumSegments = 2;
     pbMask  = dmm4SegmentationOrg->getPattern();
@@ -1311,7 +1445,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   }
   // get DC prediction for each segment
   Pel apDCPredValues[2];
-  if ( getDimType( uiLumaPredMode ) == DMM1_IDX || getDimType( uiLumaPredMode ) == DMM4_IDX )
+  if ( getDmmType( uiLumaPredMode ) == DMM1_IDX || getDmmType( uiLumaPredMode ) == DMM4_IDX )
   {
     apDCPredValues[0] = pcCU->getDmmPredictor( 0 );
     apDCPredValues[1] = pcCU->getDmmPredictor( 1 );
@@ -1320,6 +1454,7 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
   {
     m_pcPrediction->analyzeSegmentsSDC(piPred, uiStride, uiWidth, apDCPredValues, uiNumSegments, pbMask, uiMaskStride, uiLumaPredMode);
   }
+#endif
   
   // reconstruct residual based on mask + DC residuals
   Pel apDCResiValues[2];
@@ -1378,7 +1513,13 @@ Void TDecCu::xReconIntraSDC( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
     pRecCb += uiStrideC;
     pRecCr += uiStrideC;
   }
+#if NH_3D_DMM
+#if TEMP_SDC_CLEANUP // PM: consider this cleanup for DMM and SDC
+  if( pbMask ) { delete[] pbMask; }
+#else
   dmm4SegmentationOrg->destroy(); delete dmm4SegmentationOrg;
+#endif
+#endif
 }
 #endif
 

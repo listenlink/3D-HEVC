@@ -529,110 +529,51 @@ Void TComPrediction::predIntraAng( const ComponentID compID, UInt uiDirMode, Pel
 
 }
 
-#if H_3D_DIM
-Void TComPrediction::predIntraLumaDepth( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiIntraMode, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight, Bool bFastEnc, TComWedgelet* dmm4Segmentation  )
+#if NH_3D_DMM
+Void TComPrediction::predIntraLumaDmm( TComDataCU* pcCU, UInt uiAbsPartIdx, DmmID dmmType, Pel* piPred, UInt uiStride, Int iWidth, Int iHeight )
 {
   assert( iWidth == iHeight  );
-  assert( iWidth >= DIM_MIN_SIZE && iWidth <= DIM_MAX_SIZE );
-  assert( isDimMode( uiIntraMode ) );
-
-  UInt dimType    = getDimType  ( uiIntraMode );
-  Bool isDmmMode  = (dimType <  DMM_NUM_TYPE);
-
-  Bool* biSegPattern  = NULL;
-  UInt  patternStride = 0;
-
-  // get partiton
-#if H_3D_DIM_DMM
-  TComWedgelet* dmmSegmentation = NULL;
-  if( isDmmMode )
-  {
-    switch( dimType )
-    {
-    case( DMM1_IDX ): 
-      {
-        dmmSegmentation = pcCU->isDMM1UpscaleMode((UInt)iWidth) ? 
-            &(g_dmmWedgeLists[ g_aucConvertToBit[pcCU->getDMM1BasePatternWidth((UInt)iWidth)] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]) : 
-            &(g_dmmWedgeLists[ g_aucConvertToBit[iWidth] ][ pcCU->getDmmWedgeTabIdx( dimType, uiAbsPartIdx ) ]);
-      } break;
-    case( DMM4_IDX ): 
-      {
-        if( dmm4Segmentation == NULL )
-        { 
-          dmmSegmentation = new TComWedgelet( iWidth, iHeight );
-          xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmmSegmentation );
-        }
-        else
-        {
-          xPredContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, dmm4Segmentation );
-          dmmSegmentation = dmm4Segmentation;
-        }
-      } break;
-    default: assert(0);
-    }
-    assert( dmmSegmentation );
-    if( dimType == DMM1_IDX && pcCU->isDMM1UpscaleMode((UInt)iWidth) ) 
-    {
-        biSegPattern = dmmSegmentation->getScaledPattern((UInt)iWidth);
-        patternStride = iWidth;
-    } 
-    else 
-    { 
-        biSegPattern  = dmmSegmentation->getPattern();
-        patternStride = dmmSegmentation->getStride ();
-    }
-  }
+  assert( iWidth >= DMM_MIN_SIZE && iWidth <= DMM_MAX_SIZE );
+#if H_3D_DIM_SDC
+  assert( !pcCU->getSDCFlag( uiAbsPartIdx ) );
 #endif
+
+  // get partition
+  Bool* biSegPattern  = new Bool[ (UInt)(iWidth*iHeight) ];
+  UInt  patternStride = (UInt)iWidth;
+  switch( dmmType )
+  {
+  case( DMM1_IDX ): { (getWedgeListScaled( (UInt)iWidth )->at( pcCU->getDmm1WedgeTabIdx( uiAbsPartIdx ) )).getPatternScaledCopy( (UInt)iWidth, biSegPattern ); } break;
+  case( DMM4_IDX ): { predContourFromTex( pcCU, uiAbsPartIdx, iWidth, iHeight, biSegPattern );                                                                 } break;
+  default: assert(0);
+  }
 
   // get predicted partition values
-  assert( biSegPattern );
-  Int* piMask = NULL;
-  piMask = pcCU->getPattern()->getAdiOrgBuf( iWidth, iHeight, m_piYuvExt ); // no filtering
-  assert( piMask );
-  Int maskStride = 2*iWidth + 1;  
-  Int* ptrSrc = piMask+maskStride+1;
-  Pel predDC1 = 0; Pel predDC2 = 0;
-  xPredBiSegDCs( ptrSrc, maskStride, biSegPattern, patternStride, predDC1, predDC2 );
+  Pel predDC1 = 0, predDC2 = 0;
+  predBiSegDCs( pcCU, uiAbsPartIdx, iWidth, iHeight, biSegPattern, patternStride, predDC1, predDC2 );
 
   // set segment values with deltaDC offsets
-  Pel segDC1 = 0;
-  Pel segDC2 = 0;
-  if( !pcCU->getSDCFlag( uiAbsPartIdx ) )
-  {
-    Pel deltaDC1 = pcCU->getDimDeltaDC( dimType, 0, uiAbsPartIdx );
-    Pel deltaDC2 = pcCU->getDimDeltaDC( dimType, 1, uiAbsPartIdx );
-#if H_3D_DIM_DMM
-    if( isDmmMode )
-    {
+  Pel segDC1 = 0, segDC2 = 0;
+  Pel deltaDC1 = pcCU->getDmmDeltaDC( dmmType, 0, uiAbsPartIdx );
+  Pel deltaDC2 = pcCU->getDmmDeltaDC( dmmType, 1, uiAbsPartIdx );
 #if H_3D_DIM_DLT
-      segDC1 = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 ) + deltaDC1 );
-      segDC2 = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC2 ) + deltaDC2 );
+  segDC1 = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC1 ) + deltaDC1 );
+  segDC2 = pcCU->getSlice()->getPPS()->getDLT()->idx2DepthValue( pcCU->getSlice()->getLayerIdInVps(), pcCU->getSlice()->getPPS()->getDLT()->depthValue2idx( pcCU->getSlice()->getLayerIdInVps(), predDC2 ) + deltaDC2 );
 #else
-      segDC1 = ClipY( predDC1 + deltaDC1 );
-      segDC2 = ClipY( predDC2 + deltaDC2 );
+  segDC1 = ClipBD( predDC1 + deltaDC1, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) );
+  segDC2 = ClipBD( predDC2 + deltaDC2, pcCU->getSlice()->getSPS()->getBitDepth(CHANNEL_TYPE_LUMA) );
 #endif
-    }
-#endif
-  }
-  else
-  {
-    segDC1 = predDC1;
-    segDC2 = predDC2;
-  }
 
   // set prediction signal
   Pel* pDst = piPred;
-  xAssignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
+  assignBiSegDCs( pDst, uiStride, biSegPattern, patternStride, segDC1, segDC2 );
+#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
+#if H_3D_DIM_SDC  
   pcCU->setDmmPredictor(segDC1, 0);
   pcCU->setDmmPredictor(segDC2, 1);
-
-#if H_3D_DIM_DMM
-  if( dimType == DMM4_IDX && dmm4Segmentation == NULL )
-  { 
-    dmmSegmentation->destroy(); 
-    delete dmmSegmentation; 
-  }
 #endif
+#endif
+  delete[] biSegPattern;
 }
 #endif
 
@@ -2446,125 +2387,18 @@ Void TComPrediction::xGetLLSICPrediction( TComDataCU* pcCU, TComMv *pMv, TComPic
 }
 #endif
 
-#if H_3D_DIM
-Void TComPrediction::xPredBiSegDCs( Int* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& predDC1, Pel& predDC2 )
+#if TEMP_SDC_CLEANUP // PM: consider this cleanup for SDC
+#if NH_3D_SDC
+Void TComPrediction::predConstantSDC( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& predDC )
 {
-  Int  refDC1, refDC2;
-  const Int  iTR = (   patternStride - 1        ) - srcStride;
-  const Int  iTM = ( ( patternStride - 1 ) >> 1 ) - srcStride;
-  const Int  iLB = (   patternStride - 1        ) * srcStride - 1;
-  const Int  iLM = ( ( patternStride - 1 ) >> 1 ) * srcStride - 1;
-
-  Bool bL = ( biSegPattern[0] != biSegPattern[(patternStride-1)*patternStride] );
-  Bool bT = ( biSegPattern[0] != biSegPattern[(patternStride-1)]               );
-
-  if( bL == bT )
-  {
-    const Int  iTRR = ( patternStride * 2 - 1  ) - srcStride; 
-    const Int  iLBB = ( patternStride * 2 - 1  ) * srcStride - 1;
-    refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : (abs(ptrSrc[iTRR] - ptrSrc[-(Int)srcStride]) > abs(ptrSrc[iLBB] - ptrSrc[ -1]) ? ptrSrc[iTRR] : ptrSrc[iLBB]);
-    refDC2 =      ( ptrSrc[ -1] + ptrSrc[-(Int)srcStride] )>>1;
-  }
-  else
-  {
-    refDC1 = bL ? ptrSrc[iLB] : ptrSrc[iTR];
-    refDC2 = bL ? ptrSrc[iTM] : ptrSrc[iLM];
-  }
-
-  predDC1 = biSegPattern[0] ? refDC1 : refDC2;
-  predDC2 = biSegPattern[0] ? refDC2 : refDC1;
-}
-
-Void TComPrediction::xAssignBiSegDCs( Pel* ptrDst, UInt dstStride, Bool* biSegPattern, Int patternStride, Pel valDC1, Pel valDC2 )
-{
-  if( dstStride == patternStride )
-  {
-    for( UInt k = 0; k < (patternStride * patternStride); k++ )
-    {
-      if( true == biSegPattern[k] )
-      { 
-        ptrDst[k] = valDC2; 
-      }
-      else                          
-      { 
-        ptrDst[k] = valDC1; 
-      }
-    }
-  }
-  else
-  {
-    Pel* piTemp = ptrDst;
-    for( UInt uiY = 0; uiY < patternStride; uiY++ )
-    {
-      for( UInt uiX = 0; uiX < patternStride; uiX++ )
-      {
-        if( true == biSegPattern[uiX] ) 
-        { 
-          piTemp[uiX] = valDC2; 
-        }
-        else                            
-        { 
-          piTemp[uiX] = valDC1; 
-        }
-      }
-      piTemp       += dstStride;
-      biSegPattern += patternStride;
-    }
-  }
-}
-
-#if H_3D_DIM_DMM
-
-Void TComPrediction::xPredContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, TComWedgelet* pcContourWedge )
-{
-  pcContourWedge->clear();
-
-  // get copy of co-located texture luma block
-  TComYuv cTempYuv;
-  cTempYuv.create( uiWidth, uiHeight ); 
-  cTempYuv.clear();
-  Pel* piRefBlkY = cTempYuv.getLumaAddr();
-  xCopyTextureLumaBlock( pcCU, uiAbsPartIdx, piRefBlkY, uiWidth, uiHeight );
-  piRefBlkY = cTempYuv.getLumaAddr();
-
-  // find contour for texture luma block
-  UInt iDC = 0;
-
-  iDC  = piRefBlkY[ 0 ];
-  iDC += piRefBlkY[ uiWidth - 1 ];
-  iDC += piRefBlkY[ uiWidth * (uiHeight - 1) ];
-  iDC += piRefBlkY[ uiWidth * (uiHeight - 1) + uiWidth - 1 ];
-  iDC = iDC >> 2;
-
-  piRefBlkY = cTempYuv.getLumaAddr();
-
-  Bool* pabContourPattern = pcContourWedge->getPattern();
-  for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
-  { 
-    pabContourPattern[k] = (piRefBlkY[k] > iDC) ? true : false;
-  }
-
-  cTempYuv.destroy();
-}
-
-
-Void TComPrediction::xCopyTextureLumaBlock( TComDataCU* pcCU, UInt uiAbsPartIdx, Pel* piDestBlockY, UInt uiWidth, UInt uiHeight )
-{
-  TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getTexturePic()->getPicYuvRec();
-  assert( pcPicYuvRef != NULL );
-  Int         iRefStride = pcPicYuvRef->getStride();
-  Pel*        piRefY = pcPicYuvRef->getLumaAddr( pcCU->getAddr(), pcCU->getZorderIdxInCU() + uiAbsPartIdx );
-
-  for ( Int y = 0; y < uiHeight; y++ )
-  {
-    ::memcpy(piDestBlockY, piRefY, sizeof(Pel)*uiWidth);
-    piDestBlockY += uiWidth;
-    piRefY += iRefStride;
-  }
+  Pel* pLeftTop     =  ptrSrc;
+  Pel* pRightTop    =  ptrSrc                          + (uiSize-1);
+  Pel* pLeftBottom  = (ptrSrc+ (srcStride*(uiSize-1))              );
+  Pel* pRightBottom = (ptrSrc+ (srcStride*(uiSize-1))  + (uiSize-1));
+  predDC = (*pLeftTop + *pRightTop + *pLeftBottom + *pRightBottom + 2)>>2;
 }
 #endif
-
-
+#else // PM: should be obsolete after cleanup
 #if H_3D_DIM_SDC
 Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize, Pel* rpSegMeans, UInt uiNumSegments, Bool* pMask, UInt uiMaskStride
                                          ,UInt uiIntraMode
@@ -2633,4 +2467,104 @@ Void TComPrediction::analyzeSegmentsSDC( Pel* pOrig, UInt uiStride, UInt uiSize,
 #endif // H_3D_DIM_SDC
 #endif
 
+#if NH_3D_DMM
+Void TComPrediction::predContourFromTex( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool* segPattern )
+{
+  // get copy of co-located texture luma block
+  TComYuv cTempYuv;
+  cTempYuv.create( uiWidth, uiHeight, CHROMA_400 ); 
+  cTempYuv.clear();
+  Pel* piRefBlkY = cTempYuv.getAddr( COMPONENT_Y );
+  TComPicYuv* pcPicYuvRef = pcCU->getSlice()->getTexturePic()->getPicYuvRec();
+  assert( pcPicYuvRef != NULL );
+  Int  iRefStride = pcPicYuvRef->getStride( COMPONENT_Y );
+  Pel* piRefY     = pcPicYuvRef->getAddr  ( COMPONENT_Y, pcCU->getCtuRsAddr(), pcCU->getZorderIdxInCtu() + uiAbsPartIdx );
+
+  for( Int y = 0; y < uiHeight; y++ )
+  {
+    ::memcpy(piRefBlkY, piRefY, sizeof(Pel)*uiWidth);
+    piRefBlkY += uiWidth;
+    piRefY += iRefStride;
+  }
+
+
+  // find contour for texture luma block
+  piRefBlkY = cTempYuv.getAddr( COMPONENT_Y );
+  UInt iDC = 0;
+  iDC  = piRefBlkY[ 0 ];
+  iDC += piRefBlkY[ uiWidth - 1 ];
+  iDC += piRefBlkY[ uiWidth * (uiHeight - 1) ];
+  iDC += piRefBlkY[ uiWidth * (uiHeight - 1) + uiWidth - 1 ];
+  iDC = iDC >> 2;
+
+  piRefBlkY = cTempYuv.getAddr( COMPONENT_Y );
+  for( UInt k = 0; k < (uiWidth*uiHeight); k++ ) 
+  { 
+    segPattern[k] = (piRefBlkY[k] > iDC) ? true : false;
+  }
+
+  cTempYuv.destroy();
+}
+
+Void TComPrediction::predBiSegDCs( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiWidth, UInt uiHeight, Bool* biSegPattern, Int patternStride, Pel& predDC1, Pel& predDC2 )
+{
+  assert( biSegPattern );
+  const Pel *piMask = getPredictorPtr( COMPONENT_Y, false );
+  assert( piMask );
+  Int srcStride = 2*uiWidth + 1;
+  const Pel *ptrSrc = piMask+srcStride+1;
+
+  Int  refDC1, refDC2;
+  const Int  iTR = (   patternStride - 1        ) - srcStride;
+  const Int  iTM = ( ( patternStride - 1 ) >> 1 ) - srcStride;
+  const Int  iLB = (   patternStride - 1        ) * srcStride - 1;
+  const Int  iLM = ( ( patternStride - 1 ) >> 1 ) * srcStride - 1;
+
+  Bool bL = ( biSegPattern[0] != biSegPattern[(patternStride-1)*patternStride] );
+  Bool bT = ( biSegPattern[0] != biSegPattern[(patternStride-1)]               );
+
+  if( bL == bT )
+  {
+    const Int  iTRR = ( patternStride * 2 - 1  ) - srcStride; 
+    const Int  iLBB = ( patternStride * 2 - 1  ) * srcStride - 1;
+    refDC1 = bL ? ( ptrSrc[iTR] + ptrSrc[iLB] )>>1 : (abs(ptrSrc[iTRR] - ptrSrc[-(Int)srcStride]) > abs(ptrSrc[iLBB] - ptrSrc[ -1]) ? ptrSrc[iTRR] : ptrSrc[iLBB]);
+    refDC2 =      ( ptrSrc[ -1] + ptrSrc[-(Int)srcStride] )>>1;
+  }
+  else
+  {
+    refDC1 = bL ? ptrSrc[iLB] : ptrSrc[iTR];
+    refDC2 = bL ? ptrSrc[iTM] : ptrSrc[iLM];
+  }
+
+  predDC1 = biSegPattern[0] ? refDC1 : refDC2;
+  predDC2 = biSegPattern[0] ? refDC2 : refDC1;
+}
+
+Void TComPrediction::assignBiSegDCs( Pel* ptrDst, UInt dstStride, Bool* biSegPattern, Int patternStride, Pel valDC1, Pel valDC2 )
+{
+  assert( biSegPattern );
+  if( dstStride == patternStride )
+  {
+    for( UInt k = 0; k < (patternStride * patternStride); k++ )
+    {
+      if( true == biSegPattern[k] ) { ptrDst[k] = valDC2; }
+      else                          { ptrDst[k] = valDC1; }
+    }
+  }
+  else
+  {
+    Pel* piTemp = ptrDst;
+    for( UInt uiY = 0; uiY < patternStride; uiY++ )
+    {
+      for( UInt uiX = 0; uiX < patternStride; uiX++ )
+      {
+        if( true == biSegPattern[uiX] ) { piTemp[uiX] = valDC2; }
+        else                            { piTemp[uiX] = valDC1; }
+      }
+      piTemp       += dstStride;
+      biSegPattern += patternStride;
+    }
+  }
+}
+#endif
 //! \}

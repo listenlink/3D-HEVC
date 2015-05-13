@@ -510,9 +510,8 @@ Distortion TComRdCost::calcHAD( Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, 
   return ( uiSum >> DISTORTION_PRECISION_ADJUSTMENT(bitDepth-8) );
 }
 
-#if H_3D_FAST_DEPTH_INTRA
-
-UInt TComRdCost::calcVAR (Pel* pi0, Int stride, Int width, Int height, Int cuDepth)
+#if NH_3D_ENC_DEPTH
+UInt TComRdCost::calcVAR (Pel* pi0, Int stride, Int width, Int height, Int cuDepth, UInt maxCuWidth)
 { 
   Int temp = 0;
 
@@ -524,7 +523,7 @@ UInt TComRdCost::calcVAR (Pel* pi0, Int stride, Int width, Int height, Int cuDep
     }
   }
 
-  Int cuMaxLog2Size = g_aucConvertToBit[g_uiMaxCUWidth]+2;
+  Int cuMaxLog2Size = g_aucConvertToBit[maxCuWidth]+2;
   
   if ( width == 4 ) 
   {
