@@ -1772,7 +1772,7 @@ Bool TAppEncCfg::parseCfg( Int argc, Char* argv[] )
 
   // allocate slice-based dQP values
 #if NH_MV
-  for (Int i = m_layerIdInNuh.size(); i < m_numberOfLayers; i++ )
+  for (Int i = (Int)m_layerIdInNuh.size(); i < m_numberOfLayers; i++ )
   {
     m_layerIdInNuh.push_back( i == 0 ? 0 : m_layerIdInNuh[ i - 1 ] + 1 ); 
   }

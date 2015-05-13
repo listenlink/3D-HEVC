@@ -68,7 +68,16 @@
 
 #if NH_3D
 #define NH_3D_VSO                         1
+#define NH_3D_DMM                         1   // Depth modeling modes
+#define NH_3D_SDC                         1   // Segment-wise DC coding for intra and inter
+#define NH_3D_ENC_DEPTH                   1   // Encoder optimizations for depth, incl.
+                                              // HHI_DEPTH_INTRA_SEARCH_RAU_C0160
+                                              // LG_ZEROINTRADEPTHRESI_A0087
+                                              // HHI_DMM4_ENC_I0066
+                                              // H_3D_FAST_DEPTH_INTRA
 #endif
+
+#define TEMP_SDC_CLEANUP                  1   // PM: consider these cleanups for DMM and SDC
 
 #if H_3D
 #define H_3D_QTLPC                        1   // OL_QTLIMIT_PREDCODING_B0068 //JCT3V-B0068

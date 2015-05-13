@@ -211,8 +211,8 @@ public:
 
   Distortion calcHAD(Int bitDepth, Pel* pi0, Int iStride0, Pel* pi1, Int iStride1, Int iWidth, Int iHeight );
 
-#if H_3D_FAST_DEPTH_INTRA
-  UInt    calcVAR(Pel* pi0, Int stride, Int width, Int height, Int cuDepth);
+#if NH_3D_ENC_DEPTH
+  UInt    calcVAR(Pel* pi0, Int stride, Int width, Int height, Int cuDepth, UInt maxCuWidth );
 #endif  
 
   // for motion cost

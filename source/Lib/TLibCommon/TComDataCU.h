@@ -181,14 +181,14 @@ private:
 #if H_3D_IC
   Bool*         m_pbICFlag;           ///< array of IC flags
 #endif
-#if H_3D_DIM
-  Pel*          m_dimDeltaDC[DIM_NUM_TYPE][2];
-#if H_3D_DIM_DMM
-  UInt*         m_dmmWedgeTabIdx[DMM_NUM_TYPE]; 
+#if NH_3D_DMM
+  Pel*          m_dmmDeltaDC[NUM_DMM][2];
+  UInt*         m_dmm1WedgeTabIdx;
 #endif
 #if H_3D_DIM_SDC
   Bool*         m_pbSDCFlag;
   Pel*          m_apSegmentDCOffset[2];
+#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
   Pel           m_apDmmPredictor[2];
 #endif
 #endif
@@ -552,16 +552,15 @@ public:
   UChar         getNumPartitions      ( const UInt uiAbsPartIdx = 0 );
   Bool          isFirstAbsZorderIdxInDepth (UInt uiAbsPartIdx, UInt uiDepth);
 
-#if H_3D_DIM
-  Pel*  getDimDeltaDC                 ( UInt dimType, UInt segId )                      { return m_dimDeltaDC[dimType][segId];        } 
-  Pel   getDimDeltaDC                 ( UInt dimType, UInt segId, UInt uiIdx )          { return m_dimDeltaDC[dimType][segId][uiIdx]; } 
-  Void  setDimDeltaDC                 ( UInt dimType, UInt segId, UInt uiIdx, Pel val ) { m_dimDeltaDC[dimType][segId][uiIdx] = val;  }
-#if H_3D_DIM_DMM
-  UInt* getDmmWedgeTabIdx             ( UInt dmmType )                          { return m_dmmWedgeTabIdx[dmmType];          }        
-  UInt  getDmmWedgeTabIdx             ( UInt dmmType, UInt uiIdx )              { return m_dmmWedgeTabIdx[dmmType][uiIdx];   }
-  Void  setDmmWedgeTabIdx             ( UInt dmmType, UInt uiIdx, UInt tabIdx ) { m_dmmWedgeTabIdx[dmmType][uiIdx] = tabIdx; }
-  Void  setDmmWedgeTabIdxSubParts     ( UInt tabIdx, UInt dmmType, UInt uiAbsPartIdx, UInt uiDepth );
+#if NH_3D_DMM
+  Pel*  getDmmDeltaDC                 ( DmmID dmmType, UInt segId )                      { return m_dmmDeltaDC[dmmType][segId];        } 
+  Pel   getDmmDeltaDC                 ( DmmID dmmType, UInt segId, UInt uiIdx )          { return m_dmmDeltaDC[dmmType][segId][uiIdx]; } 
+  Void  setDmmDeltaDC                 ( DmmID dmmType, UInt segId, UInt uiIdx, Pel val ) { m_dmmDeltaDC[dmmType][segId][uiIdx] = val;  }
 
+  UInt* getDmm1WedgeTabIdx            ()                                                { return m_dmm1WedgeTabIdx;          }        
+  UInt  getDmm1WedgeTabIdx            ( UInt uiIdx )                                    { return m_dmm1WedgeTabIdx[uiIdx];   }
+  Void  setDmm1WedgeTabIdx            ( UInt uiIdx, UInt tabIdx )                       { m_dmm1WedgeTabIdx[uiIdx] = tabIdx; }
+  Void  setDmm1WedgeTabIdxSubParts    ( UInt tabIdx, UInt uiAbsPartIdx, UInt uiDepth );
 #endif
 #if H_3D_DIM_SDC
   Bool*         getSDCFlag          ()                        { return m_pbSDCFlag;               }
@@ -573,10 +572,11 @@ public:
   Pel*          getSDCSegmentDCOffset( UInt uiSeg ) { return m_apSegmentDCOffset[uiSeg]; }
   Pel           getSDCSegmentDCOffset( UInt uiSeg, UInt uiPartIdx ) { return m_apSegmentDCOffset[uiSeg][uiPartIdx]; }
   Void          setSDCSegmentDCOffset( Pel pOffset, UInt uiSeg, UInt uiPartIdx) { m_apSegmentDCOffset[uiSeg][uiPartIdx] = pOffset; }
+#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
   Void          setDmmPredictor ( Pel pOffset, UInt uiSeg) { m_apDmmPredictor[uiSeg] = pOffset; }
   Pel           getDmmPredictor ( UInt uiSeg) { return m_apDmmPredictor[uiSeg]; }
-  UInt          getCtxSDCFlag          ( UInt   uiAbsPartIdx );
 #endif
+  UInt          getCtxSDCFlag          ( UInt   uiAbsPartIdx );
 #endif
   
   // -------------------------------------------------------------------------------------------------------------------
@@ -746,11 +746,12 @@ public:
 
   UInt          getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, const UInt uiHeight, const ComponentID compID) const ;
 
-#if H_3D_DIM
+#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
+#if NH_3D_DMM
   Bool         isDMM1UpscaleMode       ( UInt uiWidth ){ Bool bDMM1UpsampleModeFlag = true; UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ bDMM1UpsampleModeFlag = false; } return bDMM1UpsampleModeFlag; };
   UInt         getDMM1BasePatternWidth ( UInt uiWidth ){ UInt uiBaseWidth = 16; if( uiBaseWidth >= uiWidth ){ uiBaseWidth =  uiWidth; } return uiBaseWidth; }
 #endif
-
+#endif
 };
 
 namespace RasterAddress

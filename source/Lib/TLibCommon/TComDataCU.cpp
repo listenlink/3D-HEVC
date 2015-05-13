@@ -103,23 +103,18 @@ TComDataCU::TComDataCU()
     m_apiMVPNum[i]       = NULL;
   }
 
-#if H_3D_DIM
-  for( Int i = 0; i < DIM_NUM_TYPE; i++ )
+#if NH_3D_DMM
+  for( Int i = 0; i < NUM_DMM; i++ )
   {
-    m_dimDeltaDC[i][0] = NULL; 
-    m_dimDeltaDC[i][1] = NULL;
+    m_dmmDeltaDC[i][0] = NULL; 
+    m_dmmDeltaDC[i][1] = NULL;
   }
-#if H_3D_DIM_DMM
-  for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-  {
-    m_dmmWedgeTabIdx[i] = NULL;
-  }
+  m_dmm1WedgeTabIdx = NULL;
 #endif
 #if H_3D_DIM_SDC
   m_pbSDCFlag             = NULL;
   m_apSegmentDCOffset[0]  = NULL;
   m_apSegmentDCOffset[1]  = NULL;
-#endif
 #endif
 
   m_bDecSubCu          = false;
@@ -254,23 +249,18 @@ Void TComDataCU::create( ChromaFormat chromaFormatIDC, UInt uiNumPartition, UInt
 #if H_3D_IC
     m_pbICFlag           = (Bool* )xMalloc(Bool,   uiNumPartition);
 #endif
-#if H_3D_DIM
-    for( Int i = 0; i < DIM_NUM_TYPE; i++ )
+#if NH_3D_DMM
+    for( Int i = 0; i < NUM_DMM; i++ )
     {
-      m_dimDeltaDC[i][0] = (Pel* )xMalloc(Pel, uiNumPartition); 
-      m_dimDeltaDC[i][1] = (Pel* )xMalloc(Pel, uiNumPartition);
+      m_dmmDeltaDC[i][0] = (Pel* )xMalloc(Pel, uiNumPartition); 
+      m_dmmDeltaDC[i][1] = (Pel* )xMalloc(Pel, uiNumPartition);
     }
-#if H_3D_DIM_DMM
-    for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-    {
-      m_dmmWedgeTabIdx[i]    = (UInt*)xMalloc(UInt, uiNumPartition);
-    }
+    m_dmm1WedgeTabIdx    = (UInt*)xMalloc(UInt, uiNumPartition);
 #endif
 #if H_3D_DIM_SDC
     m_pbSDCFlag             = (Bool*)xMalloc(Bool, uiNumPartition);
     m_apSegmentDCOffset[0]  = (Pel*)xMalloc(Pel, uiNumPartition);
     m_apSegmentDCOffset[1]  = (Pel*)xMalloc(Pel, uiNumPartition);
-#endif
 #endif
 #if H_3D_DBBP
     m_pbDBBPFlag         = (Bool*  )xMalloc(Bool,   uiNumPartition);
@@ -474,23 +464,18 @@ Void TComDataCU::destroy()
     if ( m_pbICFlag           ) { xFree(m_pbICFlag);            m_pbICFlag          = NULL; }
 #endif
 
-#if H_3D_DIM
-    for( Int i = 0; i < DIM_NUM_TYPE; i++ )
+#if NH_3D_DMM
+    for( Int i = 0; i < NUM_DMM; i++ )
     {
-      if ( m_dimDeltaDC[i][0] ) { xFree( m_dimDeltaDC[i][0] ); m_dimDeltaDC[i][0] = NULL; }
-      if ( m_dimDeltaDC[i][1] ) { xFree( m_dimDeltaDC[i][1] ); m_dimDeltaDC[i][1] = NULL; }
+      if ( m_dmmDeltaDC[i][0] ) { xFree( m_dmmDeltaDC[i][0] ); m_dmmDeltaDC[i][0] = NULL; }
+      if ( m_dmmDeltaDC[i][1] ) { xFree( m_dmmDeltaDC[i][1] ); m_dmmDeltaDC[i][1] = NULL; }
     }
-#if H_3D_DIM_DMM
-    for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-    {
-      if ( m_dmmWedgeTabIdx[i] ) { xFree( m_dmmWedgeTabIdx[i] ); m_dmmWedgeTabIdx[i] = NULL; }
-    }
+    if ( m_dmm1WedgeTabIdx    ) { xFree( m_dmm1WedgeTabIdx );  m_dmm1WedgeTabIdx = NULL;  }
 #endif
 #if H_3D_DIM_SDC
     if ( m_pbSDCFlag            ) { xFree(m_pbSDCFlag);             m_pbSDCFlag             = NULL; }
     if ( m_apSegmentDCOffset[0] ) { xFree(m_apSegmentDCOffset[0]);  m_apSegmentDCOffset[0]  = NULL; }
     if ( m_apSegmentDCOffset[1] ) { xFree(m_apSegmentDCOffset[1]);  m_apSegmentDCOffset[1]  = NULL; }
-#endif    
 #endif    
 #if H_3D_DBBP
     if ( m_pbDBBPFlag         ) { xFree(m_pbDBBPFlag);          m_pbDBBPFlag        = NULL; }
@@ -658,25 +643,23 @@ Void TComDataCU::initCtu( TComPic* pcPic, UInt ctuRsAddr )
 #endif
 
 
-#if H_3D_DIM
-    for( Int i = 0; i < DIM_NUM_TYPE; i++ )
-    {
-      memset( m_dimDeltaDC[i][0] + firstElement, 0,                       numElements * sizeof( *m_dimDeltaDC[i][0] ) );
-      memset( m_dimDeltaDC[i][1] + firstElement, 0,                       numElements * sizeof( *m_dimDeltaDC[i][1] ) );
-    }
-#if H_3D_DIM_DMM
-    for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-    {
-      memset( m_dmmWedgeTabIdx[i] + firstElement, 0,                      numElements * sizeof( *m_dmmWedgeTabIdx[i] ) );
-    }
+
+#if NH_3D_DMM
+  for( Int i = 0; i < NUM_DMM; i++ )
+  {
+    memset( m_dmmDeltaDC[i][0], 0,                        m_uiNumPartition * sizeof( *m_dmmDeltaDC[i][0] ) );
+    memset( m_dmmDeltaDC[i][1], 0,                        m_uiNumPartition * sizeof( *m_dmmDeltaDC[i][1] ) );
+  }
+  memset( m_dmm1WedgeTabIdx,    0,                        m_uiNumPartition * sizeof( *m_dmm1WedgeTabIdx   ) );
 #endif
 #if H_3D_DIM_SDC
     memset( m_pbSDCFlag             + firstElement,     0,                numElements * sizeof( *m_pbSDCFlag            ) );
     memset( m_apSegmentDCOffset[0]  + firstElement,     0,                numElements * sizeof( *m_apSegmentDCOffset[0] ) );
     memset( m_apSegmentDCOffset[1]  + firstElement,     0,                numElements * sizeof( *m_apSegmentDCOffset[1] ) );
-#endif
+#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
     m_apDmmPredictor[0] = 0;
     m_apDmmPredictor[1] = 0;
+#endif
 #endif
 #if H_3D_DBBP
     memset( m_pbDBBPFlag        + firstElement, false,                    numElements * sizeof( *m_pbDBBPFlag ) );
@@ -819,25 +802,22 @@ Void TComDataCU::initEstData( const UInt uiDepth, const Int qp, const Bool bTran
 #endif
 
 
-#if H_3D_DIM
-      for( Int i = 0; i < DIM_NUM_TYPE; i++ )
-      {
-        m_dimDeltaDC[i][0] [ui] = 0;
-        m_dimDeltaDC[i][1] [ui] = 0;
-      }
-#if H_3D_DIM_DMM
-      for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-      {
-        m_dmmWedgeTabIdx[i] [ui] = 0;
-      }
+#if NH_3D_DMM
+    for( Int i = 0; i < NUM_DMM; i++ )
+    {
+      m_dmmDeltaDC[i][0] [ui] = 0;
+      m_dmmDeltaDC[i][1] [ui] = 0;
+    }
+    m_dmm1WedgeTabIdx    [ui] = 0;
 #endif
 #if H_3D_DIM_SDC
       m_pbSDCFlag           [ui] = false;
       m_apSegmentDCOffset[0][ui] = 0;
       m_apSegmentDCOffset[1][ui] = 0;
-#endif
+#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
       m_apDmmPredictor[0] = 0;
       m_apDmmPredictor[1] = 0;
+#endif
 #endif
 #if H_3D_DBBP
       m_pbDBBPFlag[ui] = false;
@@ -928,25 +908,22 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #if H_3D_IC
   memset( m_pbICFlag,          0, iSizeInBool  );
 #endif
-#if H_3D_DIM
-  for( Int i = 0; i < DIM_NUM_TYPE; i++ )
+#if NH_3D_DMM
+  for( Int i = 0; i < NUM_DMM; i++ )
   {
-    memset( m_dimDeltaDC[i][0], 0, sizeof(Pel ) * m_uiNumPartition );
-    memset( m_dimDeltaDC[i][1], 0, sizeof(Pel ) * m_uiNumPartition );
+    memset( m_dmmDeltaDC[i][0], 0, sizeof(Pel ) * m_uiNumPartition );
+    memset( m_dmmDeltaDC[i][1], 0, sizeof(Pel ) * m_uiNumPartition );
   }
-#if H_3D_DIM_DMM
-  for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-  {
-    memset( m_dmmWedgeTabIdx[i], 0, sizeof(UInt) * m_uiNumPartition );
-  }
+  memset( m_dmm1WedgeTabIdx,    0, sizeof(UInt) * m_uiNumPartition );
 #endif
 #if H_3D_DIM_SDC
   memset( m_pbSDCFlag,            0, sizeof(Bool) * m_uiNumPartition  );
   memset( m_apSegmentDCOffset[0], 0, sizeof(Pel) * m_uiNumPartition   );
   memset( m_apSegmentDCOffset[1], 0, sizeof(Pel) * m_uiNumPartition   );
-#endif
+#if !TEMP_SDC_CLEANUP // PM: should be obsolete after cleanup
   m_apDmmPredictor[0] = 0;
   m_apDmmPredictor[1] = 0;
+#endif
 #endif
 #if H_3D_DBBP
   memset( m_pbDBBPFlag,         0, iSizeInBool  );
@@ -988,23 +965,18 @@ Void TComDataCU::initSubCU( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, 
 #if H_3D_IC
       m_pbICFlag          [ui] = pcCU->m_pbICFlag[uiPartOffset+ui];
 #endif
-#if H_3D_DIM
-      for( Int i = 0; i < DIM_NUM_TYPE; i++ )
-      {
-        m_dimDeltaDC[i][0] [ui] = pcCU->m_dimDeltaDC[i][0] [uiPartOffset+ui];
-        m_dimDeltaDC[i][1] [ui] = pcCU->m_dimDeltaDC[i][1] [uiPartOffset+ui];
-      }
-#if H_3D_DIM_DMM
-      for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-      {
-        m_dmmWedgeTabIdx[i] [ui] = pcCU->m_dmmWedgeTabIdx[i] [uiPartOffset+ui];
-      }
+#if NH_3D_DMM
+  for( Int i = 0; i < NUM_DMM; i++ )
+  {
+    m_dmmDeltaDC[i][0] [ui] = pcCU->m_dmmDeltaDC[i][0] [uiPartOffset+ui];
+    m_dmmDeltaDC[i][1] [ui] = pcCU->m_dmmDeltaDC[i][1] [uiPartOffset+ui];
+  }
+  m_dmm1WedgeTabIdx    [ui] = pcCU->m_dmm1WedgeTabIdx  [uiPartOffset+ui];
 #endif
 #if H_3D_DIM_SDC
       m_pbSDCFlag           [ui] = pcCU->m_pbSDCFlag            [ uiPartOffset + ui ];
       m_apSegmentDCOffset[0][ui] = pcCU->m_apSegmentDCOffset[0] [ uiPartOffset + ui ];
       m_apSegmentDCOffset[1][ui] = pcCU->m_apSegmentDCOffset[1] [ uiPartOffset + ui ];
-#endif
 #endif
 #if H_3D_DBBP
       m_pbDBBPFlag[ui]=pcCU->m_pbDBBPFlag[uiPartOffset+ui];
@@ -1111,23 +1083,18 @@ Void TComDataCU::copySubCU( TComDataCU* pcCU, UInt uiAbsPartIdx )
     m_puhCbf[comp]                        = pcCU->getCbf(ComponentID(comp))                           + uiPart;
     m_explicitRdpcmMode[comp]             = pcCU->getExplicitRdpcmMode(ComponentID(comp))             + uiPart;
   }
-#if H_3D_DIM
-  for( Int i = 0; i < DIM_NUM_TYPE; i++ )
+#if NH_3D_DMM
+  for( Int i = 0; i < NUM_DMM; i++ )
   {
-    m_dimDeltaDC[i][0] = pcCU->getDimDeltaDC( i, 0 ) + uiPart;
-    m_dimDeltaDC[i][1] = pcCU->getDimDeltaDC( i, 1 ) + uiPart;
+    m_dmmDeltaDC[i][0] = pcCU->getDmmDeltaDC( (DmmID)i, 0 ) + uiPart;
+    m_dmmDeltaDC[i][1] = pcCU->getDmmDeltaDC( (DmmID)i, 1 ) + uiPart;
   }
-#if H_3D_DIM_DMM
-  for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-  {
-    m_dmmWedgeTabIdx[i] = pcCU->getDmmWedgeTabIdx( i ) + uiPart;
-  }
+  m_dmm1WedgeTabIdx    = pcCU->getDmm1WedgeTabIdx()  + uiPart;
 #endif
 #if H_3D_DIM_SDC
   m_pbSDCFlag               = pcCU->getSDCFlag()              + uiPart;
   m_apSegmentDCOffset[0]    = pcCU->getSDCSegmentDCOffset(0)  + uiPart;
   m_apSegmentDCOffset[1]    = pcCU->getSDCSegmentDCOffset(1)  + uiPart;
-#endif  
 #endif  
 #if H_3D_DBBP
   m_pbDBBPFlag              = pcCU->getDBBPFlag()         + uiPart;
@@ -1318,23 +1285,18 @@ Void TComDataCU::copyPartFrom( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDept
     memcpy( m_puhCbf[comp]                        + uiOffset, pcCU->getCbf(ComponentID(comp))                          , iSizeInUchar );
     memcpy( m_explicitRdpcmMode[comp]             + uiOffset, pcCU->getExplicitRdpcmMode(ComponentID(comp))            , iSizeInUchar );
   }
-#if H_3D_DIM
-  for( Int i = 0; i < DIM_NUM_TYPE; i++ )
+#if NH_3D_DMM
+  for( Int i = 0; i < NUM_DMM; i++ )
   {
-    memcpy( m_dimDeltaDC[i][0] + uiOffset, pcCU->getDimDeltaDC( i, 0 ), sizeof(Pel ) * uiNumPartition );
-    memcpy( m_dimDeltaDC[i][1] + uiOffset, pcCU->getDimDeltaDC( i, 1 ), sizeof(Pel ) * uiNumPartition );
+    memcpy( m_dmmDeltaDC[i][0] + uiOffset, pcCU->getDmmDeltaDC( (DmmID)i, 0 ), sizeof(Pel ) * uiNumPartition );
+    memcpy( m_dmmDeltaDC[i][1] + uiOffset, pcCU->getDmmDeltaDC( (DmmID)i, 1 ), sizeof(Pel ) * uiNumPartition );
   }
-#if H_3D_DIM_DMM
-  for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-  {
-    memcpy( m_dmmWedgeTabIdx[i] + uiOffset, pcCU->getDmmWedgeTabIdx( i ), sizeof(UInt) * uiNumPartition );
-  }
+  memcpy( m_dmm1WedgeTabIdx    + uiOffset, pcCU->getDmm1WedgeTabIdx(),         sizeof(UInt) * uiNumPartition );
 #endif
 #if H_3D_DIM_SDC
   memcpy( m_pbSDCFlag             + uiOffset, pcCU->getSDCFlag(),             iSizeInBool  );
   memcpy( m_apSegmentDCOffset[0]  + uiOffset, pcCU->getSDCSegmentDCOffset(0), sizeof( Pel ) * uiNumPartition);
   memcpy( m_apSegmentDCOffset[1]  + uiOffset, pcCU->getSDCSegmentDCOffset(1), sizeof( Pel ) * uiNumPartition);
-#endif
 #endif
 #if H_3D_DBBP
   memcpy( m_pbDBBPFlag          + uiOffset, pcCU->getDBBPFlag(),          iSizeInBool  );
@@ -1446,23 +1408,18 @@ for (UInt ch=0; ch<numValidChan; ch++)
     memcpy( pCtu->getExplicitRdpcmMode(ComponentID(comp))             + m_absZIdxInCtu, m_explicitRdpcmMode[comp],             iSizeInUchar );
   }
 
-#if H_3D_DIM
-  for( Int i = 0; i < DIM_NUM_TYPE; i++ )
+#if NH_3D_DMM
+  for( Int i = 0; i < NUM_DMM; i++ )
   {
-    memcpy( rpcCU->getDimDeltaDC( i, 0 ) + m_uiAbsIdxInLCU, m_dimDeltaDC[i][0], sizeof(Pel ) * m_uiNumPartition );
-    memcpy( rpcCU->getDimDeltaDC( i, 1 ) + m_uiAbsIdxInLCU, m_dimDeltaDC[i][1], sizeof(Pel ) * m_uiNumPartition );
+    memcpy( pCtu->getDmmDeltaDC( (DmmID)i, 0 ) + m_absZIdxInCtu, m_dmmDeltaDC[i][0], sizeof(Pel ) * m_uiNumPartition );
+    memcpy( pCtu->getDmmDeltaDC( (DmmID)i, 1 ) + m_absZIdxInCtu, m_dmmDeltaDC[i][1], sizeof(Pel ) * m_uiNumPartition );
   }
-#if H_3D_DIM_DMM
-  for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-  {
-    memcpy( rpcCU->getDmmWedgeTabIdx( i ) + m_uiAbsIdxInLCU, m_dmmWedgeTabIdx[i], sizeof(UInt) * m_uiNumPartition );
-  }
+  memcpy( pCtu->getDmm1WedgeTabIdx()           + m_absZIdxInCtu, m_dmm1WedgeTabIdx,  sizeof(UInt) * m_uiNumPartition );
 #endif
 #if H_3D_DIM_SDC
   memcpy( rpcCU->getSDCFlag()             + m_uiAbsIdxInLCU, m_pbSDCFlag,      iSizeInBool  );
   memcpy( rpcCU->getSDCSegmentDCOffset(0) + m_uiAbsIdxInLCU, m_apSegmentDCOffset[0], sizeof( Pel ) * m_uiNumPartition);
   memcpy( rpcCU->getSDCSegmentDCOffset(1) + m_uiAbsIdxInLCU, m_apSegmentDCOffset[1], sizeof( Pel ) * m_uiNumPartition);
-#endif
 #endif
 #if H_3D_DBBP
   memcpy( rpcCU->getDBBPFlag()          + m_uiAbsIdxInLCU, m_pbDBBPFlag,          iSizeInBool  );
@@ -1521,23 +1478,10 @@ for (UInt ch=0; ch<numValidChan; ch++)
 #if H_3D_SPIVMP
   memcpy( rpcCU->getSPIVMPFlag()        + uiPartOffset, m_pbSPIVMPFlag,        sizeof(Bool) * uiQNumPart );
 #endif
-#if H_3D_DIM
-  for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-  {
-    memcpy( rpcCU->getDimDeltaDC( i, 0 ) + uiPartOffset, m_dimDeltaDC[i][0], sizeof(Pel ) * uiQNumPart );
-    memcpy( rpcCU->getDimDeltaDC( i, 1 ) + uiPartOffset, m_dimDeltaDC[i][1], sizeof(Pel ) * uiQNumPart );
-  }
-#if H_3D_DIM_DMM
-  for( Int i = 0; i < DMM_NUM_TYPE; i++ )
-  {
-    memcpy( rpcCU->getDmmWedgeTabIdx( i ) + uiPartOffset, m_dmmWedgeTabIdx[i], sizeof(UInt) * uiQNumPart );
-  }
-#endif
 #if H_3D_DIM_SDC
   memcpy( rpcCU->getSDCFlag()             + uiPartOffset, m_pbSDCFlag,      iSizeInBool  );
   memcpy( rpcCU->getSDCSegmentDCOffset(0) + uiPartOffset, m_apSegmentDCOffset[0], sizeof( Pel ) * uiQNumPart);
   memcpy( rpcCU->getSDCSegmentDCOffset(1) + uiPartOffset, m_apSegmentDCOffset[1], sizeof( Pel ) * uiQNumPart);
-#endif
 #endif
 #if H_3D_DBBP
   memcpy( rpcCU->getDBBPFlag()          + uiPartOffset, m_pbDBBPFlag,          iSizeInBool  );
@@ -1951,8 +1895,8 @@ Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM
     LeftPartIdx = getChromasCorrespondingPULumaIdx(LeftPartIdx, chForm, partsPerMinCU);
   }
   iLeftIntraDir  = pcCULeft ? ( pcCULeft->isIntra( LeftPartIdx ) ? pcCULeft->getIntraDir( chType, LeftPartIdx ) : DC_IDX ) : DC_IDX;
-#if H_3D_DIM
-  mapDepthModeToIntraDir( iLeftIntraDir );
+#if NH_3D_DMM
+  mapDmmToIntraDir( iLeftIntraDir );
 #endif
 
   // Get intra direction of above PU
@@ -1963,8 +1907,8 @@ Void TComDataCU::getIntraDirPredictor( UInt uiAbsPartIdx, Int uiIntraDirPred[NUM
     AbovePartIdx = getChromasCorrespondingPULumaIdx(AbovePartIdx, chForm, partsPerMinCU);
   }
   iAboveIntraDir = pcCUAbove ? ( pcCUAbove->isIntra( AbovePartIdx ) ? pcCUAbove->getIntraDir( chType, AbovePartIdx ) : DC_IDX ) : DC_IDX;
-#if H_3D_DIM
-  mapDepthModeToIntraDir( iAboveIntraDir );
+#if NH_3D_DMM
+  mapDmmToIntraDir( iAboveIntraDir );
 #endif
 
 
@@ -2459,13 +2403,24 @@ Void TComDataCU::setSDCFlagSubParts ( Bool bSDCFlag, UInt uiAbsPartIdx, UInt uiD
 
 Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
 {
+#if TEMP_SDC_CLEANUP // PM: consider this cleanup for DMM and SDC
+  if( getSlice()->getIsDepth() && isIntra(uiAbsPartIdx) && getPartitionSize(uiAbsPartIdx) == SIZE_2Nx2N )
+  {
+    UInt lumaPredMode = getIntraDir( CHANNEL_TYPE_LUMA, uiAbsPartIdx );
+    if( lumaPredMode < NUM_INTRA_MODE ) { return true; }
+#if NH_3D_DMM
+    if( isDmmMode( lumaPredMode )     ) { return true; }
+#endif
+  }
+  return false;
+#else
   // check general CU information
   if( !getSlice()->getIsDepth() || !isIntra(uiAbsPartIdx) || getPartitionSize(uiAbsPartIdx) != SIZE_2Nx2N )
   {
     return false;
   }
 
-  if( isDimMode( getLumaIntraDir( uiAbsPartIdx ) ) )
+  if( isDmmMode( getLumaIntraDir( uiAbsPartIdx ) ) )
   {
     return true;
   }
@@ -2478,11 +2433,12 @@ Bool TComDataCU::getSDCAvailable( UInt uiAbsPartIdx )
   return false;
   // check prediction mode
   UInt uiLumaPredMode = getLumaIntraDir( uiAbsPartIdx );  
-  if( uiLumaPredMode == PLANAR_IDX || ( getDimType( uiLumaPredMode ) == DMM1_IDX  ) )
+  if( uiLumaPredMode == PLANAR_IDX || ( getDmmType( uiLumaPredMode ) == DMM1_IDX  ) )
     return true;
   
   // else
   return false;
+#endif
 }
 #endif
 
@@ -5636,9 +5592,8 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
   //otherwise, select the appropriate mode
 
   UInt uiDirMode  = getIntraDir(toChannelType(compID), uiAbsPartIdx);
-
-#if H_3D_DIM
-    mapDepthModeToIntraDir( uiDirMode );
+#if NH_3D_DMM
+  mapDmmToIntraDir( uiDirMode );
 #endif
 
   if (uiDirMode==DM_CHROMA_IDX)
@@ -5646,8 +5601,8 @@ UInt TComDataCU::getCoefScanIdx(const UInt uiAbsPartIdx, const UInt uiWidth, con
     const TComSPS *sps=getSlice()->getSPS();
     const UInt partsPerMinCU = 1<<(2*(sps->getMaxTotalCUDepth() - sps->getLog2DiffMaxMinCodingBlockSize()));
     uiDirMode = getIntraDir(CHANNEL_TYPE_LUMA, getChromasCorrespondingPULumaIdx(uiAbsPartIdx, getPic()->getChromaFormat(), partsPerMinCU));
-#if H_3D_DIM
-      mapDepthModeToIntraDir( uiDirMode );
+#if NH_3D_DMM
+    mapDmmToIntraDir( uiDirMode );
 #endif
   }
 
@@ -6731,14 +6686,11 @@ Bool TComDataCU::isICFlagRequired( UInt uiAbsPartIdx )
   return false;
 }
 #endif
-#if H_3D_DIM_DMM
-Void TComDataCU::setDmmWedgeTabIdxSubParts( UInt tabIdx, UInt dmmType, UInt uiAbsPartIdx, UInt uiDepth )
+#if NH_3D_DMM
+Void TComDataCU::setDmm1WedgeTabIdxSubParts( UInt tabIdx, UInt uiAbsPartIdx, UInt uiDepth )
 {
-  UInt uiCurrPartNumb = m_pcPic->getNumPartInCU() >> (uiDepth << 1);
-  for( UInt ui = 0; ui < uiCurrPartNumb; ui++ )
-  { 
-    m_dmmWedgeTabIdx[dmmType][uiAbsPartIdx+ui] = tabIdx; 
-  }
+  UInt uiCurrPartNumb = m_pcPic->getNumPartitionsInCtu() >> (uiDepth << 1);
+  for( UInt ui = 0; ui < uiCurrPartNumb; ui++ ) { m_dmm1WedgeTabIdx[uiAbsPartIdx+ui] = tabIdx; }
 }
 #endif
 

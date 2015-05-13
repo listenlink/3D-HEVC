@@ -125,14 +125,17 @@ public:
 #endif
   Void codeMergeFlag     ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeMergeIndex    ( TComDataCU* pcCU, UInt uiAbsPartIdx );
+#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
+  Void  codeDeltaDC      ( TComDataCU* /*pcCU*/, UInt /*absPartIdx*/ ) { assert(0); };
+#endif
 #if H_3D_ARP
   Void codeARPW          ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if H_3D_IC
   Void codeICFlag        ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
+
 #if H_3D_INTER_SDC
-  Void codeDeltaDC       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
   Void codeSDCFlag       ( TComDataCU* pcCU, UInt uiAbsPartIdx );
 #endif
 #if H_3D_DBBP

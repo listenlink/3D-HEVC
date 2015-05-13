@@ -105,21 +105,22 @@ TDecSbac::TDecSbac()
 , m_cCrossComponentPredictionSCModel         ( 1,             1,                      NUM_CROSS_COMPONENT_PREDICTION_CTX   , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjFlagSCModel                   ( 1,             1,                      NUM_CHROMA_QP_ADJ_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
 , m_ChromaQpAdjIdcSCModel                    ( 1,             1,                      NUM_CHROMA_QP_ADJ_IDC_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_DIM
-, m_cDepthIntraModeSCModel    ( 1,             1,               NUM_DEPTH_INTRA_MODE_CTX      , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cDdcFlagSCModel           ( 1,             1,               NUM_DDC_FLAG_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cDdcDataSCModel           ( 1,             1,               NUM_DDC_DATA_CTX              , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cAngleFlagSCModel         ( 1,             1,               NUM_ANGLE_FLAG_CTX            , m_contextModels + m_numContextModels, m_numContextModels)
-#if H_3D_DIM_SDC
-, m_cSDCResidualFlagSCModel     ( 1,             1,             SDC_NUM_RESIDUAL_FLAG_CTX     , m_contextModels + m_numContextModels, m_numContextModels)
-, m_cSDCResidualSCModel         ( 1,             1,             SDC_NUM_RESIDUAL_CTX          , m_contextModels + m_numContextModels, m_numContextModels)
+
+#if NH_3D_DMM
+, m_cNotDmmFlagSCModel                       ( 1,             1,                      NUM_NOTDMM_FLAG_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cDmmModeSCModel                          ( 1,             1,                      NUM_DMM_MODE_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
+#if NH_3D_DMM || NH_3D_SDC
+, m_cDdcDataSCModel                          ( 1,             1,                      NUM_DDC_DATA_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if H_3D_DIM_SDC
-, m_cSDCFlagSCModel                  ( 1,             1,  NUM_SDC_FLAG_CTX                 , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCResidualFlagSCModel                  ( 1,             1,                     SDC_NUM_RESIDUAL_FLAG_CTX             , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCResidualSCModel                      ( 1,             1,                     SDC_NUM_RESIDUAL_CTX                  , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cSDCFlagSCModel                          ( 1,             1,                     NUM_SDC_FLAG_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cDdcFlagSCModel                          ( 1,             1,                     NUM_DDC_FLAG_CTX                      , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 #if H_3D_DBBP
-, m_cDBBPFlagSCModel             ( 1,             1,                 DBBP_NUM_FLAG_CTX           , m_contextModels + m_numContextModels, m_numContextModels)
+, m_cDBBPFlagSCModel                         ( 1,             1,                     DBBP_NUM_FLAG_CTX                     , m_contextModels + m_numContextModels, m_numContextModels)
 #endif
 
 {
@@ -196,21 +197,21 @@ Void TDecSbac::resetEntropy(TComSlice* pSlice)
   m_cCrossComponentPredictionSCModel.initBuffer   ( sliceType, qp, (UChar*)INIT_CROSS_COMPONENT_PREDICTION );
   m_ChromaQpAdjFlagSCModel.initBuffer             ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_FLAG );
   m_ChromaQpAdjIdcSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_CHROMA_QP_ADJ_IDC );
-#if H_3D_DIM
-  m_cDepthIntraModeSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_DEPTH_INTRA_MODE );
-  m_cDdcFlagSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DDC_FLAG );
-  m_cDdcDataSCModel.initBuffer           ( sliceType, qp, (UChar*)INIT_DDC_DATA );
-  m_cAngleFlagSCModel.initBuffer         ( sliceType, qp, (UChar*)INIT_ANGLE_FLAG );
-#if H_3D_DIM_SDC
-  m_cSDCResidualFlagSCModel.initBuffer    ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
-  m_cSDCResidualSCModel.initBuffer        ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL );
+#if NH_3D_DMM
+  m_cNotDmmFlagSCModel.initBuffer                 ( sliceType, qp, (UChar*)INIT_NOTDMM_FLAG );
+  m_cDmmModeSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_DMM_MODE );
 #endif
+#if NH_3D_DMM || NH_3D_SDC
+  m_cDdcDataSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_DDC_DATA );
 #endif
 #if H_3D_DIM_SDC
-  m_cSDCFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_SDC_FLAG );
+  m_cSDCResidualFlagSCModel.initBuffer            ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
+  m_cSDCResidualSCModel.initBuffer                ( sliceType, qp, (UChar*)INIT_SDC_RESIDUAL );
+  m_cSDCFlagSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_SDC_FLAG );
+  m_cDdcFlagSCModel.initBuffer                    ( sliceType, qp, (UChar*)INIT_DDC_FLAG );
 #endif
 #if H_3D_DBBP
-  m_cDBBPFlagSCModel.initBuffer              ( sliceType, qp, (UChar*)INIT_DBBP_FLAG );
+  m_cDBBPFlagSCModel.initBuffer                   ( sliceType, qp, (UChar*)INIT_DBBP_FLAG );
 #endif
 
   for (UInt statisticIndex = 0; statisticIndex < RExt__GOLOMB_RICE_ADAPTATION_STATISTICS_SETS ; statisticIndex++)
@@ -246,18 +247,11 @@ Void TDecSbac::parseTerminatingBit( UInt& ruiBit )
 #if H_3D_IC
   m_cCUICFlagSCModel.initBuffer          ( eSliceType, iQp, (UChar*)INIT_IC_FLAG );
 #endif
-#if H_3D_DIM
-  m_cDepthIntraModeSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_DEPTH_INTRA_MODE );
-  m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
-  m_cDdcDataSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_DATA );
-  m_cAngleFlagSCModel.initBuffer         ( eSliceType, iQp, (UChar*)INIT_ANGLE_FLAG );
 #if H_3D_DIM_SDC
   m_cSDCResidualFlagSCModel.initBuffer    ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL_FLAG );
   m_cSDCResidualSCModel.initBuffer        ( eSliceType, iQp, (UChar*)INIT_SDC_RESIDUAL );
-#endif
-#endif
-#if H_3D_DIM_SDC
   m_cSDCFlagSCModel.initBuffer            ( eSliceType, iQp, (UChar*)INIT_SDC_FLAG );
+  m_cDdcFlagSCModel.initBuffer           ( eSliceType, iQp, (UChar*)INIT_DDC_FLAG );
 #endif
 #if H_3D_DBBP
   m_cDBBPFlagSCModel.initBuffer              ( eSliceType, iQp, (UChar*)INIT_DBBP_FLAG );
@@ -432,63 +426,6 @@ Void TDecSbac::xReadCoefRemainExGolomb ( UInt &rSymbol, UInt &rParam, const Bool
     rSymbol = (((1<<(prefix-COEF_REMAIN_BIN_REDUCTION))+COEF_REMAIN_BIN_REDUCTION-1)<<rParam)+codeWord;
   }
 }
-
-#if H_3D_DIM
-Void TDecSbac::xReadExGolombLevel( UInt& ruiSymbol, ContextModel& rcSCModel  )
-{
-  UInt uiSymbol;
-  UInt uiCount = 0;
-  do
-  {
-    m_pcTDecBinIf->decodeBin( uiSymbol, rcSCModel );
-    uiCount++;
-  }
-  while( uiSymbol && ( uiCount != 3 ) );
-  ruiSymbol = uiCount - 1;
-
-  if( uiSymbol )
-  {
-    xReadEpExGolomb( uiSymbol, 0 );
-    ruiSymbol += uiSymbol + 1;
-  }
-
-  return;
-}
-
-Void TDecSbac::xParseDimDeltaDC( Pel& rValDeltaDC, UInt uiNumSeg )
-{
-  UInt absValDeltaDC = 0;
-  xReadExGolombLevel( absValDeltaDC, m_cDdcDataSCModel.get(0, 0, 0) );
-  rValDeltaDC = (Pel)absValDeltaDC + ( uiNumSeg > 1 ? 0 : 1 );
-
-  if( rValDeltaDC != 0 )
-  {
-    UInt uiSign;
-    m_pcTDecBinIf->decodeBinEP( uiSign );
-    if ( uiSign )
-    {
-      rValDeltaDC = -rValDeltaDC;
-    }
-  }
-}
-
-
-#if H_3D_DIM_DMM
-Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
-{
-  UInt uiSymbol, uiIdx = 0;
-  for( Int i = 0; i < iNumBit; i++ )
-  {
-    m_pcTDecBinIf->decodeBinEP( uiSymbol );
-    uiIdx += uiSymbol << i;
-  }
-  ruiTabIdx = uiIdx;
-}
-#endif
-
-
-#endif
-
 
 /** Parse I_PCM information.
  * \param pcCU
@@ -1018,12 +955,13 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
 #endif
   for (j=0;j<partNum;j++)
   {
-#if H_3D_DIM
+#if NH_3D_DMM
     if( pcCU->getSlice()->getIntraSdcWedgeFlag() || pcCU->getSlice()->getIntraContourFlag() )
     {
-      parseIntraDepth( pcCU, absPartIdx+partOffset*j, depth );
+      xParseIntraDepthMode( pcCU, absPartIdx+partOffset*j, depth );
+      xParseDmmData       ( pcCU, absPartIdx+partOffset*j, depth );
     }
-    if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
+    if( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
     {
 #endif
     m_pcTDecBinIf->decodeBin( symbol, m_cCUIntraPredSCModel.get( 0, 0, 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(ctype) );
@@ -1031,14 +969,14 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
 #if H_MV_ENC_DEC_TRAC          
       DTRACE_CU("prev_intra_luma_pred_flag", symbol)
 #endif
-#if H_3D_DIM
+#if NH_3D_DMM
     }
 #endif
   }
   for (j=0;j<partNum;j++)
   {
-#if H_3D_DIM
-    if( pcCU->getLumaIntraDir( absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
+#if NH_3D_DMM
+    if( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, absPartIdx+partOffset*j ) < NUM_INTRA_MODE )
     {
 #endif
     Int preds[NUM_MOST_PROBABLE_MODES] = {-1, -1, -1};
@@ -1083,7 +1021,7 @@ Void TDecSbac::parseIntraDirLumaAng  ( TComDataCU* pcCU, UInt absPartIdx, UInt d
       }
     }
     pcCU->setIntraDirSubParts(CHANNEL_TYPE_LUMA, (UChar)intraPredMode, absPartIdx+partOffset*j, depth );
-#if H_3D_DIM
+#if NH_3D_DMM
     }
 #endif
   }
@@ -1119,76 +1057,6 @@ Void TDecSbac::parseIntraDirChroma( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt ui
 
   pcCU->setIntraDirSubParts( CHANNEL_TYPE_CHROMA, uiSymbol, uiAbsPartIdx, uiDepth );
 }
-
-#if H_3D_DIM
-Void TDecSbac::parseIntraDepth( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
-{
-  parseIntraDepthMode( pcCU, absPartIdx, depth );
-
-  UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
-  UInt dimType = getDimType( dir );
-
-  switch( dimType )
-  {
-#if H_3D_DIM_DMM
-  case( DMM1_IDX ):
-    {
-      UInt uiTabIdx = 0;
-      xParseDmm1WedgeIdx( uiTabIdx, g_dmm1TabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
-
-      assert( uiTabIdx < g_dmmWedgeLists[ g_aucConvertToBit[ pcCU->getDMM1BasePatternWidth( pcCU->getWidth( absPartIdx ) )]].size());
-
-      pcCU->setDmmWedgeTabIdxSubParts( uiTabIdx, dimType, absPartIdx, depth );
-    } break;
-  case( DMM4_IDX ): break;
-#endif
-  default: break;
-  }
-
-  pcCU->setLumaIntraDirSubParts( (UChar)dir, absPartIdx, depth );
-}
-
-Void TDecSbac::parseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
-{
-  UInt uiSymbol, uiIsDimMode;
-
-  if( ( pcCU->getSlice()->getSPS()->getMaxCUWidth() >> pcCU->getDepth( absPartIdx ) ) < 64 ) //DMM and HEVC intra modes are both allowed
-  {
-    m_pcTDecBinIf->decodeBin( uiSymbol, m_cAngleFlagSCModel.get( 0, 0, 0 ) );
-  }
-  else
-  {
-    uiSymbol = 1;
-  }
-  uiIsDimMode = uiSymbol ? 0 : 1;
-  pcCU->setLumaIntraDirSubParts( 0, absPartIdx, depth );
-
-  //decode DMM index
-  if( uiIsDimMode )
-  {
-    if( pcCU->getSlice()->getIntraSdcWedgeFlag() && pcCU->getSlice()->getIntraContourFlag() )
-    {
-      m_pcTDecBinIf->decodeBin( uiSymbol, m_cDepthIntraModeSCModel.get( 0, 0, 0 ) );
-      if( !uiSymbol )
-      {
-        pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
-      }
-      else
-      {
-        pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
-      }
-    }
-    else if ( pcCU->getSlice()->getIntraSdcWedgeFlag() )
-    {
-      pcCU->setLumaIntraDirSubParts( DIM_OFFSET, absPartIdx, depth );
-    }
-    else if( pcCU->getSlice()->getIntraContourFlag() )
-    {
-      pcCU->setLumaIntraDirSubParts( ( 1+ DIM_OFFSET ), absPartIdx, depth );
-    }
-  }
-}
-#endif
 
 Void TDecSbac::parseInterDir( TComDataCU* pcCU, UInt& ruiInterDir, UInt uiAbsPartIdx )
 {
@@ -2471,54 +2339,174 @@ Void TDecSbac::parseICFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 }
 #endif
 
-#if H_3D_INTER_SDC
+#if NH_3D_DMM || H_3D_DIM_SDC || H_3D_INTER_SDC
 Void TDecSbac::parseDeltaDC( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
 {
-  if( ! ( pcCU->getSDCFlag( absPartIdx ) || ( pcCU->isIntra( absPartIdx ) && getDimType( pcCU->getLumaIntraDir( absPartIdx ) ) < DIM_NUM_TYPE ) ) )
-  {
+#if H_3D_DIM_SDC || H_3D_INTER_SDC
+  if( !(pcCU->getSDCFlag( absPartIdx )) )
+#endif
+#if NH_3D_DMM
+  if( !(pcCU->isIntra( absPartIdx ) && isDmmMode( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, absPartIdx ) )) )
+#endif
     assert( 0 );
-  }
 
   UInt symbol = 1;
-  UInt uiNumSegments = isDimMode( pcCU->getLumaIntraDir( absPartIdx ) ) ? 2 : 1;
-
+#if H_3D_DIM_SDC
   if( pcCU->isIntra( absPartIdx ) && pcCU->getSDCFlag( absPartIdx ))
   {
-
     m_pcTDecBinIf->decodeBin( symbol, m_cDdcFlagSCModel.get( 0, 0, 0 ) );
       assert( pcCU->getPartitionSize( absPartIdx ) == SIZE_2Nx2N );
       pcCU->setTrIdxSubParts( 0, absPartIdx, depth );
       pcCU->setCbfSubParts( 1, 1, 1, absPartIdx, depth );
     }
+#endif
+  UInt uiNumSegments = 1;
+#if NH_3D_DMM
+  uiNumSegments = isDmmMode( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, absPartIdx ) ) ? 2 : 1;
+#endif
 
   for( UInt segment = 0; segment < uiNumSegments; segment++ )
   {
     Pel valDeltaDC = 0;
     if( symbol )
     {
-      xParseDimDeltaDC( valDeltaDC, uiNumSegments );
+      xParseDeltaDC( valDeltaDC, uiNumSegments );
     }
 
     if( pcCU->isIntra( absPartIdx ) )
     {
-      UInt dir     = pcCU->getLumaIntraDir( absPartIdx );
-
+#if H_3D_DIM_SDC
       if( pcCU->getSDCFlag( absPartIdx ) )
       {
         pcCU->setSDCSegmentDCOffset( valDeltaDC, segment, absPartIdx );
       }
       else
       {
-        pcCU->setDimDeltaDC( getDimType( dir ), segment, absPartIdx, valDeltaDC );
+#endif
+#if NH_3D_DMM
+        pcCU->setDmmDeltaDC( getDmmType( pcCU->getIntraDir( CHANNEL_TYPE_LUMA, absPartIdx ) ), segment, absPartIdx, valDeltaDC );
+#endif
+#if H_3D_DIM_SDC
       }
+#endif
     }
+#if H_3D_INTER_SDC
     else
     {
       pcCU->setSDCSegmentDCOffset( valDeltaDC, segment, absPartIdx );
     }
+#endif
   }
 }
 
+Void TDecSbac::xParseDeltaDC( Pel& rValDeltaDC, UInt uiNumSeg )
+{
+  UInt absValDeltaDC = 0;
+  xReadExGolombLevelDdc( absValDeltaDC );
+  rValDeltaDC = (Pel)absValDeltaDC + ( uiNumSeg > 1 ? 0 : 1 );
+
+  if( rValDeltaDC != 0 )
+  {
+    UInt uiSign;
+    m_pcTDecBinIf->decodeBinEP( uiSign RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__DELTADC_SIGN_EP) );
+    if ( uiSign )
+    {
+      rValDeltaDC = -rValDeltaDC;
+    }
+  }
+}
+
+Void TDecSbac::xReadExGolombLevelDdc( UInt& ruiSymbol )
+{
+  UInt uiSymbol;
+  UInt uiCount = 0;
+  do
+  {
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cDdcDataSCModel.get(0, 0, 0) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__DELTADC_PREFIX) );
+    uiCount++;
+  }
+  while( uiSymbol && ( uiCount != 3 ) );
+  ruiSymbol = uiCount - 1;
+
+  if( uiSymbol )
+  {
+    xReadEpExGolomb( uiSymbol, 0 RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__DELTADC_SUFFIX_EP) );
+    ruiSymbol += uiSymbol + 1;
+  }
+
+  return;
+}
+#endif
+#if NH_3D_DMM
+Void TDecSbac::xParseIntraDepthMode( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
+{
+  pcCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, 0, absPartIdx, depth );
+
+  UInt uiSymbol;
+  if( ( pcCU->getSlice()->getSPS()->getMaxCUWidth() >> pcCU->getDepth( absPartIdx ) ) < 64 ) //DMM and HEVC intra modes are both allowed
+  {
+    m_pcTDecBinIf->decodeBin( uiSymbol, m_cNotDmmFlagSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__NOTDMM_FLAG) );
+  }
+  else
+  {
+    uiSymbol = 1;
+  }
+
+  //decode DMM mode index
+  if( !uiSymbol )
+  {
+    if( pcCU->getSlice()->getIntraSdcWedgeFlag() && pcCU->getSlice()->getIntraContourFlag() )
+    {
+      m_pcTDecBinIf->decodeBin( uiSymbol, m_cDmmModeSCModel.get( 0, 0, 0 ) RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__DMMMODE) );
+      if( !uiSymbol )
+      {
+        pcCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, DMM_OFFSET, absPartIdx, depth );
+      }
+      else
+      {
+        pcCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, ( 1+ DMM_OFFSET ), absPartIdx, depth );
+      }
+    }
+    else if( pcCU->getSlice()->getIntraSdcWedgeFlag() )
+    {
+      pcCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, DMM_OFFSET, absPartIdx, depth );
+    }
+    else if( pcCU->getSlice()->getIntraContourFlag() )
+    {
+      pcCU->setIntraDirSubParts( CHANNEL_TYPE_LUMA, ( 1+ DMM_OFFSET ), absPartIdx, depth );
+    }
+  }
+}
+
+Void TDecSbac::xParseDmmData( TComDataCU* pcCU, UInt absPartIdx, UInt depth )
+{
+  UInt dir = pcCU->getIntraDir( CHANNEL_TYPE_LUMA, absPartIdx );
+  switch( getDmmType( dir ) )
+  {
+  case( DMM1_IDX ):
+    {
+      UInt uiTabIdx = 0;
+      xParseDmm1WedgeIdx( uiTabIdx, g_dmm1TabIdxBits[pcCU->getIntraSizeIdx(absPartIdx)] );
+      assert( uiTabIdx < getWedgeListScaled( pcCU->getWidth( absPartIdx ) )->size() );
+      pcCU->setDmm1WedgeTabIdxSubParts( uiTabIdx, absPartIdx, depth );
+    } break;
+  case( DMM4_IDX ): break;
+  default: break;
+  }
+}
+
+Void TDecSbac::xParseDmm1WedgeIdx( UInt& ruiTabIdx, Int iNumBit )
+{
+  UInt uiSymbol, uiIdx = 0;
+  for( Int i = 0; i < iNumBit; i++ )
+  {
+    m_pcTDecBinIf->decodeBinEP( uiSymbol RExt__DECODER_DEBUG_BIT_STATISTICS_PASS_OPT_ARG(STATS__CABAC_BITS__DMM1_BITS_EP) );
+    uiIdx += uiSymbol << i;
+  }
+  ruiTabIdx = uiIdx;
+}
+#endif
+#if H_3D_INTER_SDC
 Void TDecSbac::parseSDCFlag( TComDataCU* pcCU, UInt uiAbsPartIdx, UInt uiDepth )
 {
   UInt uiSymbol = 0;

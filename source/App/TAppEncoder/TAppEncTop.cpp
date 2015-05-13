@@ -810,7 +810,7 @@ Void TAppEncTop::xCreateLib()
 #if NH_MV
   // initialize global variables
   initROM();
-#if H_3D_DIM_DMM
+#if NH_3D_DMM
   initWedgeLists( true );
 #endif
 

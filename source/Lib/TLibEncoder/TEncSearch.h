@@ -178,10 +178,11 @@ public:
                                   TComYuv*    pcResiYuv,
                                   TComYuv*    pcRecoYuv,
                                   Pel         resiLuma[NUMBER_OF_STORED_RESIDUAL_TYPES][MAX_CU_SIZE * MAX_CU_SIZE]
-#if H_3D_DIM
+                                  DEBUG_STRING_FN_DECLARE(sDebug)
+#if NH_3D_ENC_DEPTH
                                 , Bool        bOnlyIVP
 #endif
-                                  DEBUG_STRING_FN_DECLARE(sDebug));
+                                );
 
   Void  estIntraPredChromaQT    ( TComDataCU* pcCU,
                                   TComYuv*    pcOrgYuv,
@@ -281,8 +282,8 @@ const ComponentID   compID,
                                           TComTU        &rTu
                                     DEBUG_STRING_FN_DECLARE(sTest)
                                          ,Int           default0Save1Load2 = 0
-#if H_3D_DIM_ENC
-                                  , Bool          zeroResi = false
+#if NH_3D_ENC_DEPTH
+                                  , Bool          zeroResiFlag = false
 #endif
                                    );
 
@@ -299,11 +300,12 @@ const ComponentID   compID,
                                     Bool         bCheckFirst,
 #endif
                                     Double&      dRDCost,
-#if H_3D_DIM_ENC
-                                   , Bool          zeroResi = false
-#endif
                                     TComTU      &rTu
-                                    DEBUG_STRING_FN_DECLARE(sDebug));
+                                    DEBUG_STRING_FN_DECLARE(sDebug)
+#if NH_3D_ENC_DEPTH
+                                  , Bool        zeroResiFlag = false
+#endif
+                                  );
 
   Void  xSetIntraResultLumaQT     ( TComYuv*     pcRecoYuv,
                                     TComTU &rTu);
@@ -344,17 +346,21 @@ const ComponentID   compID,
 #if H_3D
   Void xIntraCodingDIS           ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, UInt uiPredMode );
 #endif
-#if H_3D_DIM
+
   // -------------------------------------------------------------------------------------------------------------------
   // Depth intra search
   // -------------------------------------------------------------------------------------------------------------------
-  Void xCalcBiSegDCs              ( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2 );
-#if H_3D_DIM_DMM
+#if NH_3D_DMM
+  Void xCalcBiSegDCs              ( Pel* ptrSrc, UInt srcStride, Bool* biSegPattern, Int patternStride, Pel& valDC1, Pel& valDC2, Pel defaultVal, Bool subSamp = false );
   Void xSearchDmmDeltaDCs         ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piOrig, Pel* piPredic, UInt uiStride, Bool* biSegPattern, Int patternStride, UInt uiWidth, UInt uiHeight, Pel& rDeltaDC1, Pel& rDeltaDC2 );
   Void xSearchDmm1Wedge           ( TComDataCU* pcCU, UInt uiAbsPtIdx, Pel* piRef, UInt uiRefStride, UInt uiWidth, UInt uiHeight, UInt& ruiTabIdx );
 #endif
 #if H_3D_DIM_SDC
   Void xIntraCodingSDC            ( TComDataCU* pcCU, UInt uiAbsPartIdx, TComYuv* pcOrgYuv, TComYuv* pcPredYuv, Dist& ruiDist, Double& dRDCost, Bool bZeroResidual, Int iSDCDeltaResi    );
+#endif
+#if TEMP_SDC_CLEANUP // PM: consider this cleanup for SDC
+#if NH_3D_SDC
+  Void xCalcConstantSDC           ( Pel* ptrSrc, UInt srcStride, UInt uiSize, Pel& valDC );
 #endif
 #endif
 
