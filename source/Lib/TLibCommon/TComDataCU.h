@@ -166,7 +166,7 @@ private:
   Char*         m_apiMVPIdx[NUM_REF_PIC_LIST_01];       ///< array of motion vector predictor candidates
   Char*         m_apiMVPNum[NUM_REF_PIC_LIST_01];       ///< array of number of possible motion vectors predictors
   Bool*         m_pbIPCMFlag;         ///< array of intra_pcm flags
-#if H_3D_NBDV
+#if NH_3D_NBDV
   DisInfo*      m_pDvInfo;
 #endif
 #if H_3D_VSP
@@ -281,13 +281,13 @@ public:
   Void          initEstData           ( const UInt uiDepth, const Int qp, const Bool bTransquantBypass );
   Void          initSubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx, UInt uiDepth, Int qp );
   Void          setOutsideCUPart      ( UInt uiAbsPartIdx, UInt uiDepth );
-#if H_3D_NBDV
-  Void          copyDVInfoFrom (TComDataCU* pcCU, UInt uiAbsPartIdx);
+#if NH_3D_NBDV
+  Void          copyDVInfoFrom        (TComDataCU* pcCU, UInt uiAbsPartIdx);
 #endif
 
   Void          copySubCU             ( TComDataCU* pcCU, UInt uiPartUnitIdx );
   Void          copyInterPredInfoFrom ( TComDataCU* pcCU, UInt uiAbsPartIdx, RefPicList eRefPicList 
-#if H_3D_NBDV
+#if NH_3D_NBDV
   , Bool bNBDV = false
 #endif
 );
@@ -479,13 +479,13 @@ public:
   Bool          getIPCMFlag           (UInt uiIdx )             { return m_pbIPCMFlag[uiIdx];        }
   Void          setIPCMFlag           (UInt uiIdx, Bool b )     { m_pbIPCMFlag[uiIdx] = b;           }
   Void          setIPCMFlagSubParts   (Bool bIpcmFlag, UInt uiAbsPartIdx, UInt uiDepth);
-#if H_3D_NBDV
+#if NH_3D_NBDV
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiDepth );
   Void          setDvInfoSubParts     ( DisInfo cDvInfo, UInt uiAbsPartIdx, UInt uiPartIdx, UInt uiDepth);
   DisInfo*      getDvInfo             ()                        { return m_pDvInfo;                 }
   DisInfo       getDvInfo             (UInt uiIdx)              { return m_pDvInfo[uiIdx];          }
 #endif
-#if H_3D_NBDV
+#if NH_3D_NBDV
   Void          xDeriveRightBottomNbIdx(Int &uiLCUIdxRBNb, Int &uiPartIdxRBNb );
   Bool          xCheckSpatialNBDV (TComDataCU* pcTmpCU, UInt uiIdx, DisInfo* pNbDvInfo, Bool bSearchForMvpDv, IDVInfo* paMvpDvInfo,
                                    UInt uiMvpDvPos

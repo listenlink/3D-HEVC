@@ -3072,6 +3072,14 @@ public:
 
   Int                         getMpiSubPbSize           ( )                          { return m_mpiSubPbSize           ;                             };
   Int                         getSubPbSize              ( )                          { return m_subPbSize              ;                             };
+#if NH_3D_NBDV
+  Int                         getDefaultRefViewIdx()                                 { return m_iDefaultRefViewIdx;                                  }
+  Void                        setDefaultRefViewIdx(Int iViewIdx)                     { m_iDefaultRefViewIdx = iViewIdx;                              }
+
+  Bool                        getDefaultRefViewIdxAvailableFlag()                    { return m_bDefaultRefViewIdxAvailableFlag;                     }
+  Void                        setDefaultRefViewIdxAvailableFlag(Bool bViewIdx)       { m_bDefaultRefViewIdxAvailableFlag = bViewIdx;                 }
+  Void                        setDefaultRefView( );
+#endif
 #endif
   // Inference 
   Bool                        inferPocMsbValPresentFlag();

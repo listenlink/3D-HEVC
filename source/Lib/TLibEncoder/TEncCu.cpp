@@ -440,7 +440,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
   Bool    doNotBlockPu = true;
   Bool    earlyDetectionSkipMode = false;
 
-#if H_3D_VSP
+#if NH_3D_NBDV
   DisInfo DvInfo; 
   DvInfo.m_acNBDV.setZero();
   DvInfo.m_aVIdxCan = 0;
@@ -583,7 +583,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
       }
 #endif
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
       if( rpcTempCU->getSlice()->getSliceType() != I_SLICE )
       {
 #if H_3D_ARP && H_3D_IV_MERGE
@@ -601,7 +601,7 @@ Void TEncCu::xCompressCU( TComDataCU*& rpcBestCU, TComDataCU*& rpcTempCU, UInt u
 #endif
         {
           PartSize ePartTemp = rpcTempCU->getPartitionSize(0);
-          rpcTempCU->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+          rpcTempCU->setPartSizeSubParts(SIZE_2Nx2N, 0, uiDepth);
 #if H_3D_IV_MERGE
           if (rpcTempCU->getSlice()->getIsDepth() )
           {

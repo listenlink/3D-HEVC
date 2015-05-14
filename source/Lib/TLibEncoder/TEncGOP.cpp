@@ -1470,7 +1470,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 #else
     pcSlice->setRefPicList ( rcListPic );
 #endif
-#if H_3D
+#if NH_3D_NBDV
     pcSlice->setDefaultRefView();
 #endif
 #if H_3D_ARP
@@ -1730,10 +1730,10 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
     UInt uiNumSliceSegments = 1;
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {
-        Int iColPoc = pcSlice->getRefPOC(RefPicList(1-pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
+        Int iColPoc = pcSlice->getRefPOC(RefPicList(1 - pcSlice->getColFromL0Flag()), pcSlice->getColRefIdx());
         pcPic->setNumDdvCandPics(pcPic->getDisCandRefPictures(iColPoc));
       }
 #endif
@@ -1742,7 +1742,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
 
 #endif
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
       if(pcSlice->getViewIndex() && !pcSlice->getIsDepth() && !pcSlice->isIntra()) //Notes from QC: this condition shall be changed once the configuration is completed, e.g. in pcSlice->getSPS()->getMultiviewMvPredMode() || ARP in prev. HTM. Remove this comment once it is done.
       {
         pcPic->checkTemporalIVRef();

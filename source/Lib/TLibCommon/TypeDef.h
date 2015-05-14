@@ -68,6 +68,7 @@
 
 #if NH_3D
 #define NH_3D_VSO                         1
+#define NH_3D_NBDV                        1
 #endif
 
 #if H_3D
@@ -121,7 +122,7 @@
                                               // MTK_LOW_LATENCY_IC_ENCODING_H0086_FIX  1  // Remove the global variables used in JCT3V-H0086
                                               // SEC_IC_NEIGHBOR_CLIP_I0080    // Clipping of neighboring sample position, JCT3V-I0080
                                               // LGE_CHROMA_IC_J0050_J0034
-#if H_3D_NBDV
+#if NH_3D_NBDV
 #define H_3D_NBDV_REF                     1   // Depth oriented neighboring block disparity derivation
                                               // MTK_D0156
                                               // MERL_D0166: Reference view selection in NBDV & Bi-VSP
@@ -286,7 +287,7 @@
 #define H_3D_VSO_SYNTH_DIST_OUT           0   // Output of synthesized view distortion instead of depth distortion in encoder output
 #endif
 ////   ****** NEIGHBOURING BLOCK-BASED DISPARITY VECTOR  *********
-#if H_3D_NBDV
+#if NH_3D_NBDV
 #define DVFROM_LEFT                       0
 #define DVFROM_ABOVE                      1
 #define IDV_CANDS                         2
