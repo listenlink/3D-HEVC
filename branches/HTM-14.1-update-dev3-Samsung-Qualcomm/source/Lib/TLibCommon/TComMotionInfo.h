@@ -59,7 +59,7 @@ typedef struct _AMVPInfo
   Int    iN;                                ///< number of motion vector predictor candidates
 } AMVPInfo;
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
 typedef struct _DisCand 
 {
   TComMv m_acNBDV;              // DV from NBDV

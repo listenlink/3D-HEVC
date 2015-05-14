@@ -77,7 +77,7 @@ TComPic::TComPic()
 #if H_3D_QTLPC
   m_bReduceBitsQTL    = 0;
 #endif
-#if H_3D_NBDV
+#if NH_3D_NBDV
   m_iNumDdvCandPics   = 0;
   m_eRapRefList       = REF_PIC_LIST_0;
   m_uiRapRefIdx       = 0;
@@ -302,35 +302,37 @@ TComList<TComPic*>* TComPicLists::getPicList( Int layerIdInNuh )
 #endif
 #endif // NH_MV
 
-#if H_3D_NBDV 
-Int TComPic::getDisCandRefPictures( Int iColPOC )
+#if NH_3D_NBDV 
+Int TComPic::getDisCandRefPictures(Int iColPOC)
 {
   UInt       uiTempLayerCurr = 7;
   TComSlice* currSlice       = getSlice(getCurrSliceIdx());
   UInt       numDdvCandPics  = 0;
 
-  if ( !currSlice->getEnableTMVPFlag() )
+  if(!currSlice->getEnableTMVPFlag())
+  {
     return numDdvCandPics;
+  }
 
   numDdvCandPics += 1;
 
   UInt pocCurr = currSlice->getPOC();
   UInt pocDiff = 255;
 
-  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr ++)
+  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr++)
   {
-    UInt x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
+    Bool x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
 
-    for (UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
+    for(UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
     {
       if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() 
-        && (x == currSlice->getColFromL0Flag()||currSlice->getRefPOC((RefPicList)x, i)!= iColPOC) && numDdvCandPics!=2)
+         && (x == currSlice->getColFromL0Flag() || currSlice->getRefPOC((RefPicList)x, i) != iColPOC) && numDdvCandPics != 2)
       {
         TComSlice* refSlice    = currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx());
-        Bool       bRAP        = (refSlice->getViewIndex() && refSlice->isIRAP())? 1: 0; 
+        Bool       bRAP        = (refSlice->getViewIndex() && refSlice->isIRAP()) ? 1 : 0; 
         UInt       uiTempLayer = currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer(); 
         
-        if( bRAP )
+        if(bRAP)
         {
           this->setRapRefIdx(i);
           this->setRapRefList((RefPicList)x);
@@ -349,17 +351,17 @@ Int TComPic::getDisCandRefPictures( Int iColPOC )
   UInt z   = -1; // GT: Added to make code compile needs to be checked!
   UInt idx = 0;
   
-  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2: 1); lpNr ++)
+  for(UInt lpNr = 0; lpNr < (currSlice->isInterB() ? 2 : 1); lpNr++)
   {
-    UInt x = lpNr? currSlice->getColFromL0Flag() : 1-currSlice->getColFromL0Flag();
+    Bool x = lpNr ? currSlice->getColFromL0Flag() : 1 - currSlice->getColFromL0Flag();
     
-    for (UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
+    for(UInt i = 0; i < currSlice->getNumRefIdx(RefPicList(x)); i++)
     {
       Int iTempPoc = currSlice->getRefPic((RefPicList)x, i)->getPOC();
-      Int iTempDiff = (iTempPoc > pocCurr) ? (iTempPoc - pocCurr): (pocCurr - iTempPoc);
+      Int iTempDiff = (iTempPoc > pocCurr) ? (iTempPoc - pocCurr) : (pocCurr - iTempPoc);
       
-      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() &&  (x == currSlice->getColFromL0Flag()||currSlice->getRefPOC((RefPicList)x, i)!= iColPOC) 
-        && currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer() == uiTempLayerCurr && pocDiff > iTempDiff)
+      if(currSlice->getViewIndex() == currSlice->getRefPic((RefPicList)x, i)->getViewIndex() && (x == currSlice->getColFromL0Flag() || currSlice->getRefPOC((RefPicList)x, i) != iColPOC) 
+         && currSlice->getRefPic((RefPicList)x, i)->getSlice(getCurrSliceIdx())->getTLayer() == uiTempLayerCurr && pocDiff > iTempDiff)
       {
         pocDiff = iTempDiff;
         z       = x;
@@ -368,10 +370,10 @@ Int TComPic::getDisCandRefPictures( Int iColPOC )
     }
   }
 
-  if( pocDiff < 255 )
+  if(pocDiff < 255)
   {
     this->setRapRefIdx(idx);
-    this->setRapRefList((RefPicList) z );
+    this->setRapRefList((RefPicList) z);
     numDdvCandPics = 2;
   }
 
@@ -382,13 +384,14 @@ Void TComPic::checkTemporalIVRef()
 {
   TComSlice* currSlice = getSlice(getCurrSliceIdx());
   const Int numCandPics = this->getNumDdvCandPics();
+
   for(Int curCandPic = 0; curCandPic < numCandPics; curCandPic++)
   {
     RefPicList eCurRefPicList   = REF_PIC_LIST_0 ;
     Int        curCandPicRefIdx = 0;
-    if( curCandPic == 0 ) 
+    if(curCandPic == 0) 
     { 
-      eCurRefPicList   = RefPicList(currSlice->isInterB() ? 1-currSlice->getColFromL0Flag() : 0);
+      eCurRefPicList   = RefPicList(currSlice->isInterB() ? 1 - currSlice->getColFromL0Flag() : 0);
       curCandPicRefIdx = currSlice->getColRefIdx();
     }
     else                 
@@ -396,26 +399,29 @@ Void TComPic::checkTemporalIVRef()
       eCurRefPicList   = this->getRapRefList();
       curCandPicRefIdx = this->getRapRefIdx();
     }
-    TComPic* pcCandColPic = currSlice->getRefPic( eCurRefPicList, curCandPicRefIdx);
-    TComSlice* pcCandColSlice = pcCandColPic->getSlice(0);// currently only support single slice
+
+    TComPic* pcCandColPic = currSlice->getRefPic(eCurRefPicList, curCandPicRefIdx);
+    TComSlice* pcCandColSlice = pcCandColPic->getSlice(0); // currently only support single slice
 
     if(!pcCandColSlice->isIntra())
     {
-      for( Int iColRefDir = 0; iColRefDir < (pcCandColSlice->isInterB() ? 2: 1); iColRefDir ++ )
+      for(Int iColRefDir = 0; iColRefDir < (pcCandColSlice->isInterB() ? 2 : 1); iColRefDir++)
       {
-        for( Int iColRefIdx =0; iColRefIdx < pcCandColSlice->getNumRefIdx(( RefPicList )iColRefDir ); iColRefIdx++)
+        for(Int iColRefIdx = 0; iColRefIdx < pcCandColSlice->getNumRefIdx((RefPicList)iColRefDir); iColRefIdx++)
         {
           m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = false;
           Int iColViewIdx    = pcCandColSlice->getViewIndex();
-          Int iColRefViewIdx = pcCandColSlice->getRefPic( ( RefPicList )iColRefDir, iColRefIdx)->getViewIndex();
+          Int iColRefViewIdx = pcCandColSlice->getRefPic((RefPicList)iColRefDir, iColRefIdx)->getViewIndex();
           if(iColViewIdx == iColRefViewIdx)
-            continue;
-
-          for(Int iCurrRefDir = 0;(iCurrRefDir < (currSlice->isInterB() ? 2: 1)) && (m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] == false ); iCurrRefDir++)
           {
-            for( Int iCurrRefIdx =0; iCurrRefIdx < currSlice->getNumRefIdx(( RefPicList )iCurrRefDir ); iCurrRefIdx++)
+            continue;
+          }
+
+          for(Int iCurrRefDir = 0; (iCurrRefDir < (currSlice->isInterB() ? 2 : 1)) && (m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] == false); iCurrRefDir++)
+          {
+            for(Int iCurrRefIdx = 0; iCurrRefIdx < currSlice->getNumRefIdx((RefPicList)iCurrRefDir); iCurrRefIdx++)
             {
-              if( currSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx )->getViewIndex() == iColRefViewIdx )
+              if(currSlice->getRefPic((RefPicList)iCurrRefDir, iCurrRefIdx)->getViewIndex() == iColRefViewIdx)
               {  
                 m_abTIVRINCurrRL[curCandPic][iColRefDir][iColRefIdx] = true;
                 break;
@@ -427,40 +433,40 @@ Void TComPic::checkTemporalIVRef()
     }
   }
 }
+
 Bool TComPic::isTempIVRefValid(Int currCandPic, Int iColRefDir, Int iColRefIdx)
 {
   return m_abTIVRINCurrRL[currCandPic][iColRefDir][iColRefIdx];
 }
 
-Void TComPic::checkTextureRef(  )
+Void TComPic::checkTextureRef()
 {
   TComSlice* pcCurrSlice = getSlice(getCurrSliceIdx());
-  TComPic* pcTextPic = pcCurrSlice->getTexturePic();
+  TComPic* pcTextPic = pcCurrSlice->getIvPic(0, getViewIndex());
 #if H_3D_FCO
   if ( pcTextPic )
   {
 #endif
-
     TComSlice* pcTextSlice = pcTextPic->getSlice(0); // currently only support single slice
 
-    for( Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB()? 2:1) ) && !pcTextSlice->isIntra(); iTextRefDir ++ )
+    for(Int iTextRefDir = 0; (iTextRefDir < (pcTextSlice->isInterB() ? 2 :1) ) && !pcTextSlice->isIntra(); iTextRefDir++)
     {
-      for( Int iTextRefIdx =0; iTextRefIdx<pcTextSlice->getNumRefIdx(( RefPicList )iTextRefDir ); iTextRefIdx++)
+      for(Int iTextRefIdx =0; iTextRefIdx < pcTextSlice->getNumRefIdx((RefPicList)iTextRefDir); iTextRefIdx++)
       {
-        Int iTextRefPOC    = pcTextSlice->getRefPOC( ( RefPicList )iTextRefDir, iTextRefIdx);
-        Int iTextRefViewId = pcTextSlice->getRefPic( ( RefPicList )iTextRefDir, iTextRefIdx)->getViewIndex();
+        Int iTextRefPOC    = pcTextSlice->getRefPOC((RefPicList)iTextRefDir, iTextRefIdx);
+        Int iTextRefViewId = pcTextSlice->getRefPic((RefPicList)iTextRefDir, iTextRefIdx)->getViewIndex();
         m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = -1;
         Int iCurrRefDir = iTextRefDir;
-        for( Int iCurrRefIdx =0; ( iCurrRefIdx<pcCurrSlice->getNumRefIdx(( RefPicList )iCurrRefDir ) ) && ( m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0 ) ; iCurrRefIdx++)
+
+        for(Int iCurrRefIdx = 0; (iCurrRefIdx<pcCurrSlice->getNumRefIdx((RefPicList)iCurrRefDir)) && (m_aiTexToDepRef[iTextRefDir][iTextRefIdx] < 0); iCurrRefIdx++)
         {
-          if( pcCurrSlice->getRefPOC( ( RefPicList )iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
-            pcCurrSlice->getRefPic( ( RefPicList )iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId )
+          if(pcCurrSlice->getRefPOC((RefPicList)iCurrRefDir, iCurrRefIdx ) == iTextRefPOC && 
+             pcCurrSlice->getRefPic((RefPicList)iCurrRefDir, iCurrRefIdx)->getViewIndex() == iTextRefViewId)
           {  
             m_aiTexToDepRef[iTextRefDir][iTextRefIdx] = iCurrRefIdx;
           }
         }
       }
-
     }
 #if H_3D_FCO
   }

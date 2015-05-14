@@ -1479,7 +1479,7 @@ Void TComPrediction::xPredInterUniARP( TComDataCU* pcCU, UInt uiPartAddr, Int iW
   TComPic* pcPicYuvBaseCol = NULL;
   TComPic* pcPicYuvBaseRef = NULL;
 
-#if H_3D_NBDV
+#if NH_3D_NBDV
   DisInfo cDistparity;
   cDistparity.m_acNBDV = pcCU->getDvInfo(0).m_acNBDV;
   cDistparity.m_aVIdxCan = pcCU->getDvInfo(uiPartAddr).m_aVIdxCan;

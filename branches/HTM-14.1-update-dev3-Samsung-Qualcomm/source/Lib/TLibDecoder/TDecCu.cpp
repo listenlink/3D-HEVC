@@ -282,7 +282,7 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
     setdQPFlag(true);
     pcCU->setQPSubParts( pcCU->getRefQP(uiAbsPartIdx), uiAbsPartIdx, uiDepth ); // set QP to default QP
   }
-#if H_3D_NBDV 
+#if NH_3D_NBDV 
   DisInfo DvInfo; 
   DvInfo.m_acNBDV.setZero();
   DvInfo.m_aVIdxCan = 0;
@@ -306,14 +306,14 @@ if(!pcCU->getSlice()->isIntra())
 #endif
 #endif
     {
-      m_ppcCU[uiDepth]->copyInterPredInfoFrom( pcCU, uiAbsPartIdx, REF_PIC_LIST_0, true );
-      m_ppcCU[uiDepth]->copyDVInfoFrom( pcCU, uiAbsPartIdx);
+      m_ppcCU[uiDepth]->copyInterPredInfoFrom(pcCU, uiAbsPartIdx, REF_PIC_LIST_0, true);
+      m_ppcCU[uiDepth]->copyDVInfoFrom(pcCU, uiAbsPartIdx);
       PartSize ePartTemp = m_ppcCU[uiDepth]->getPartitionSize(0);
       UChar cWidTemp     = m_ppcCU[uiDepth]->getWidth(0);
       UChar cHeightTemp  = m_ppcCU[uiDepth]->getHeight(0);
-      m_ppcCU[uiDepth]->setWidth  ( 0, pcCU->getSlice()->getSPS()->getMaxCUWidth ()/(1<<uiDepth)  );
-      m_ppcCU[uiDepth]->setHeight ( 0, pcCU->getSlice()->getSPS()->getMaxCUHeight()/(1<<uiDepth)  );
-      m_ppcCU[uiDepth]->setPartSizeSubParts( SIZE_2Nx2N, 0, uiDepth );     
+      m_ppcCU[uiDepth]->setWidth (0, pcCU->getSlice()->getSPS()->getMaxCUWidth () / (1 << uiDepth));
+      m_ppcCU[uiDepth]->setHeight(0, pcCU->getSlice()->getSPS()->getMaxCUHeight() / (1 << uiDepth));
+      m_ppcCU[uiDepth]->setPartSizeSubParts(SIZE_2Nx2N, 0, uiDepth);     
 #if H_3D_IV_MERGE
       if( pcCU->getSlice()->getIsDepth())
       {
@@ -345,11 +345,10 @@ if(!pcCU->getSlice()->isIntra())
         DTRACE_CU( "MvRefinedDisp[y]", DvInfo.m_acDoNBDV.getVer() );
       }
 #endif
-
       pcCU->setDvInfoSubParts(DvInfo, uiAbsPartIdx, uiDepth);
-      m_ppcCU[uiDepth]->setPartSizeSubParts( ePartTemp, 0, uiDepth );
-      m_ppcCU[uiDepth]->setWidth  ( 0, cWidTemp );
-      m_ppcCU[uiDepth]->setHeight ( 0, cHeightTemp );
+      m_ppcCU[uiDepth]->setPartSizeSubParts(ePartTemp, 0, uiDepth);
+      m_ppcCU[uiDepth]->setWidth(0, cWidTemp);
+      m_ppcCU[uiDepth]->setHeight(0, cHeightTemp);
      }
   }
 #endif

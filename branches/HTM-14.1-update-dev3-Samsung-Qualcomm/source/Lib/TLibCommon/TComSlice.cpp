@@ -3584,23 +3584,25 @@ Int TComSlice::getRefPicLayerId( Int i ) const
   return getVPS()->getIdDirectRefLayer( getLayerId(), getInterLayerPredLayerIdc( i ) );
 #endif
 }
-#if H_3D
-Void TComSlice::setDefaultRefView( )
+#if NH_3D_NBDV
+Void TComSlice::setDefaultRefView()
 {
-  setDefaultRefViewIdx( -1 );
-  setDefaultRefViewIdxAvailableFlag( false ); 
+  setDefaultRefViewIdx(-1);
+  setDefaultRefViewIdxAvailableFlag(false); 
 
   Int valid = 0;
   Int DefaultRefViewIdx = -1;
-  for( UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++ )
+
+  for(UInt curViewIdx = 0; curViewIdx < getViewIndex() && valid == 0; curViewIdx++)
   {
-    for( Int iRefListId = 0; ( iRefListId < (isInterB() ? 2 : 1) ) && !isIntra() && valid == 0; iRefListId++ )
+    for(Int iRefListId = 0; (iRefListId < (isInterB() ? 2 : 1)) && !isIntra() && valid == 0; iRefListId++)
     {
-      RefPicList eRefPicList = RefPicList( iRefListId );
-      Int        iNumRefPics = getNumRefIdx( eRefPicList );
-      for( Int i = 0; i < iNumRefPics; i++ )
+      RefPicList eRefPicList = RefPicList(iRefListId);
+      Int        iNumRefPics = getNumRefIdx(eRefPicList);
+
+      for(Int i = 0; i < iNumRefPics; i++)
       { 
-        if(getPOC() == getRefPic( eRefPicList, i )->getPOC() && curViewIdx == getRefPic( eRefPicList, i )->getViewIndex())
+        if(getPOC() == getRefPic(eRefPicList, i)->getPOC() && curViewIdx == getRefPic(eRefPicList, i)->getViewIndex())
         {
           valid = 1;
           DefaultRefViewIdx = curViewIdx;
@@ -3609,10 +3611,11 @@ Void TComSlice::setDefaultRefView( )
       }
     }
   }
-  if( valid )
+
+  if(valid)
   {
-    setDefaultRefViewIdx( DefaultRefViewIdx );
-    setDefaultRefViewIdxAvailableFlag( true );   
+    setDefaultRefViewIdx(DefaultRefViewIdx);
+    setDefaultRefViewIdxAvailableFlag(true);
   }
 }
 #endif
