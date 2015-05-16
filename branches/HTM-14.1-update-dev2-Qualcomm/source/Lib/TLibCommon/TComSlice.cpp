@@ -223,10 +223,6 @@ TComSlice::TComSlice()
     m_aaiCodedOffset[i].resize(MAX_NUM_LAYERS);
     m_aaiCodedScale [i].resize(MAX_NUM_LAYERS);
   }
-#if 0 //NH_3D_TMVP
-  m_aiAlterRefIdx[0]                  = -1;
-  m_aiAlterRefIdx[1]                  = -1;  
-#endif
 #endif
 
 }
