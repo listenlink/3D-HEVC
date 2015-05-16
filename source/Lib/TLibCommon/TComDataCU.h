@@ -243,7 +243,7 @@ protected:
 
   Void          deriveRightBottomIdx        ( UInt uiPartIdx, UInt& ruiPartIdxRB );
   Bool          xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx
-#if H_3D_TMVP
+#if NH_3D_TMVP
   ,  Bool bMRG = true
 #endif
  );

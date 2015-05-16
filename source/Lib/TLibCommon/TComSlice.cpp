@@ -223,7 +223,10 @@ TComSlice::TComSlice()
     m_aaiCodedOffset[i].resize(MAX_NUM_LAYERS);
     m_aaiCodedScale [i].resize(MAX_NUM_LAYERS);
   }
-  
+#if 0 //NH_3D_TMVP
+  m_aiAlterRefIdx[0]                  = -1;
+  m_aiAlterRefIdx[1]                  = -1;  
+#endif
 #endif
 
 }
@@ -288,7 +291,7 @@ Void TComSlice::initSlice()
   m_substreamSizes.clear();
   m_cabacInitFlag        = false;
   m_enableTMVPFlag = true;
-#if H_3D_TMVP
+#if NH_3D_TMVP
   m_aiAlterRefIdx[0]                  = -1;
   m_aiAlterRefIdx[1]                  = -1;
 #endif
@@ -823,8 +826,8 @@ Void TComSlice::initEqualRef()
     }
   }
 }
-#if H_3D
-#if H_3D_TMVP
+#if NH_3D
+#if NH_3D_TMVP
 Void TComSlice::generateAlterRefforTMVP()
 {
   for ( UInt uiRefListIdx = 0; uiRefListIdx < 2; uiRefListIdx++ )

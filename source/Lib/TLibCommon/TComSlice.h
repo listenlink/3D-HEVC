@@ -2590,7 +2590,7 @@ private:
   IntAry2d   m_aaiCodedScale ;
   IntAry2d   m_aaiCodedOffset;
 #endif
-#if H_3D_TMVP
+#if NH_3D_TMVP
   Int        m_aiAlterRefIdx   [2]; 
 #endif
 #if H_3D_ARP
@@ -2919,7 +2919,7 @@ public:
   Void                        setViewIndex   ( Int viewIndex )                       { m_viewIndex = viewIndex;                                      }
   Int                         getViewIndex   ()                 const                { return m_viewIndex;                                           }
 #if NH_3D
-#if H_3D_TMVP
+#if NH_3D_TMVP
   Void                        generateAlterRefforTMVP ();   
   Void                        setAlterRefIdx          ( RefPicList e, Int i )        { m_aiAlterRefIdx[e]    = i;                                    }
   Int                         getAlterRefIdx          ( RefPicList e )               { return  m_aiAlterRefIdx[e];                                   }

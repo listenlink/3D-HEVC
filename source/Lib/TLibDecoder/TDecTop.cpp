@@ -1225,7 +1225,7 @@ Bool TDecTop::xDecodeSlice(InputNALUnit &nalu, Int &iSkipFrame, Int iPOCLastDisp
 
     //---------------
     pcSlice->setRefPOCList();
-#if  H_3D_TMVP
+#if  NH_3D_TMVP
     if(pcSlice->getLayerId())
     {
       pcSlice->generateAlterRefforTMVP();
