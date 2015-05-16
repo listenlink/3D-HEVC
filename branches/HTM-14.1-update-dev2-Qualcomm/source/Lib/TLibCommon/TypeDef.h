@@ -68,6 +68,9 @@
 
 #if NH_3D
 #define NH_3D_VSO                         1
+#define NH_3D_TMVP                        1   // QC_TMVP_C0047 
+                                              // Sony_M23639
+                                              // H_3D_TMVP_SCALING_FIX_K0053       1   // QC/CY for K0053
 #endif
 
 #if H_3D

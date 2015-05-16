@@ -1546,7 +1546,7 @@ Void TEncGOP::compressGOP( Int iPOCLast, Int iNumPicRcvd, TComList<TComPic*>& rc
     pcSlice->setRefPOCList();
 
     pcSlice->setList1IdxToList0Idx();
-#if H_3D_TMVP
+#if NH_3D_TMVP
     if(pcSlice->getLayerId())
       pcSlice->generateAlterRefforTMVP();
 #endif

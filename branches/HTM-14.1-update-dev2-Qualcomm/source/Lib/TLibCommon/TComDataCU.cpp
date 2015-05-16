@@ -3519,7 +3519,7 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
     if ( getSlice()->isInterB() )
     {
-#if H_3D_TMVP
+#if NH_3D_TMVP //to be changed to NH_3D_TMVP in future migration
       iRefIdx = 0;
 #endif
       bExistMV = uiLCUIdx >= 0 && xGetColMVP( REF_PIC_LIST_1, uiLCUIdx, uiAbsPartAddr, cColMv, iRefIdx);
@@ -4766,6 +4766,9 @@ Void TComDataCU::getInterMergeCandidates( UInt uiAbsPartIdx, UInt uiPUIdx, TComM
 
     if ( getSlice()->isInterB() )
     {
+#if NH_3D_TMVP
+      iRefIdx =0; 
+#endif
       bExistMV = ctuRsAddr >= 0 && xGetColMVP( REF_PIC_LIST_1, ctuRsAddr, uiAbsPartAddr, cColMv, iRefIdx);
       if( bExistMV == false )
       {
@@ -5082,7 +5085,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       }
     }
     if ( ctuRsAddr >= 0 && xGetColMVP( eRefPicList, ctuRsAddr, uiAbsPartAddr, cColMv, iRefIdx_Col
-#if H_3D_TMVP
+#if NH_3D_TMVP
          , 0
 #endif
  ) )
@@ -5094,7 +5097,7 @@ Void TComDataCU::fillMvpCand ( UInt uiPartIdx, UInt uiPartAddr, RefPicList eRefP
       UInt uiPartIdxCenter;
       xDeriveCenterIdx( uiPartIdx, uiPartIdxCenter );
       if (xGetColMVP( eRefPicList, getCtuRsAddr(), uiPartIdxCenter,  cColMv, iRefIdx_Col 
-#if H_3D_TMVP
+#if NH_3D_TMVP
          , 0
 #endif
 ))
@@ -5446,7 +5449,7 @@ Bool TComDataCU::xAddMVPCandOrder( AMVPInfo* pInfo, RefPicList eRefPicList, Int 
 }
 
 Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUnitIdx, TComMv& rcMv, Int& riRefIdx 
-#if H_3D_TMVP
+#if NH_3D_TMVP
   , Bool bMRG
 #endif
 )
@@ -5498,7 +5501,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUn
 
   if ( bIsCurrRefLongTerm != bIsColRefLongTerm )
   {
-#if H_3D_TMVP
+#if NH_3D_TMVP
     Int iAlterRefIdx  = m_pcSlice->getAlterRefIdx(eRefPicList);
     if(bMRG && iAlterRefIdx > 0)
     {
@@ -5511,18 +5514,18 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUn
     {
 #endif
     return false;
-#if H_3D_TMVP
+#if NH_3D_TMVP
     }
 #endif
   }
 
   if ( bIsCurrRefLongTerm || bIsColRefLongTerm )
   {
-#if H_3D_TMVP
+#if NH_3D_TMVP
     Int iCurrViewId    = m_pcSlice->getViewId (); 
     Int iCurrRefViewId = m_pcSlice->getRefPic(eRefPicList, riRefIdx)->getViewId (); 
-    Int iColViewId     = pColCU->getSlice()->getViewId(); 
-    Int iColRefViewId  = pColCU->getSlice()->getRefPic( eColRefPicList, pColCU->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewId(); 
+    Int iColViewId     = pColCtu->getSlice()->getViewId(); 
+    Int iColRefViewId  = pColCtu->getSlice()->getRefPic( eColRefPicList, pColCtu->getCUMvField(eColRefPicList)->getRefIdx(uiAbsPartAddr))->getViewId(); 
     iScale = 4096;
     if ( iCurrRefViewId != iCurrViewId && iColViewId != iColRefViewId )
     {
@@ -5536,7 +5539,7 @@ Bool TComDataCU::xGetColMVP( RefPicList eRefPicList, Int ctuRsAddr, Int uiPartUn
     {
 #endif
     rcMv = cColMv;
-#if H_3D_TMVP
+#if NH_3D_TMVP
     }
 #endif
   }
