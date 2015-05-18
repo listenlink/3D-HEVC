@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
- * Copyright (c) 2010-2014, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -31,8 +31,8 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CALCULATE_LAMBDA_MODIFIER_H
-#define CALCULATE_LAMBDA_MODIFIER_H
+#ifndef __GUESSLAMBDAMODIFIERS__
+#define __GUESSLAMBDAMODIFIERS__
 
 #include "RuntimeError.h"
 #include <vector>
@@ -93,7 +93,7 @@ struct Point
 };
 
 /// Performs interpolation/extrapolation to guess a single Lambda-modifier
-/// \param target The target bitrate value that this Lambda-modifier is trying to reach
+/// \param targetBitrate The target bitrate value that this Lambda-modifier is trying to reach
 /// \param point1 One of the two previously tried points where first is the Lambda-modifier and second is the obtained bitrate
 /// \param point2 One of the two previously tried points where first is the Lambda-modifier and second is the obtained bitrate
 /// \return The interpolated Lambda-modifier guess
@@ -133,7 +133,7 @@ std::vector< double > guessLambdaModifiers(
 /// This function performs all of the necessary input parsing.  It ends up calling the other guessLambdaModifiers overload to perform the actual calculations.
 /// \param o The output stream to write the guessed Lambda-modifiers to
 /// \param initialAdjustmentParameterIstream The input stream that contains the initial adjustment parameter
-/// \param targetIstream The input stream that contains the target bitrates
+/// \param targetsIstream The input stream that contains the target bitrates
 /// \param metaLogIstream The input stream that contains the meta-log
 /// \throw InitialAdjustmentParameterParseException if there is an error parsing the initial adjustment parameter
 /// \throw TargetsParseException if there is an error parsing the target bitrates

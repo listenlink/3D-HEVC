@@ -3,7 +3,7 @@ CONFIG 			= LIBRARY
 
 # set pathes to the correct directories
 SRC_DIR			= ../../../../source/Lib/TLibExtractor
-INC_DIR			= ../../../../source/Lib/TLibExtractor
+INC_DIR			= ../../../../source/Lib
 LIB_DIR			= ../../../../lib
 BIN_DIR			= ../../../../bin
 
@@ -16,11 +16,17 @@ SRC_DIR4		=
 USER_INC_DIRS	= -I$(SRC_DIR)
 USER_LIB_DIRS	=
 
+ifeq ($(HIGHBITDEPTH), 1)
+HBD=HighBitDepth
+else
+HBD=
+endif
+
 # intermediate directory for object files
-OBJ_DIR			= ./objects
+OBJ_DIR			= ./objects$(HBD)
 
 # the library name
-PRJ_NAME	 	= TLibExtractor
+PRJ_NAME	 	= TLibExtractor$(HBD)
 
 # version information
 MAJOR_VER		= 0
