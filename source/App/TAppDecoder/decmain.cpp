@@ -1,9 +1,9 @@
 /* The copyright in this software is being made available under the BSD
  * License, included below. This software may be subject to other third party
  * and contributor rights, including patent rights, and no such rights are
- * granted under this license.  
+ * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,22 +43,21 @@
 //! \ingroup TAppDecoder
 //! \{
 
-bool g_md5_mismatch = false; ///< top level flag that indicates if there has been a decoding mismatch
-
 // ====================================================================================================================
 // Main function
 // ====================================================================================================================
 
 int main(int argc, char* argv[])
 {
+  Int returnCode = EXIT_SUCCESS;
   TAppDecTop  cTAppDecTop;
 
   // print information
   fprintf( stdout, "\n" );
-#if H_MV
+#if NH_MV
   fprintf( stdout, "3D-HTM Software: Decoder Version [%s] based on HM Version [%s]", NV_VERSION, HM_VERSION );  
 #else
-  fprintf( stdout, "HM software: Decoder Version [%s]", NV_VERSION );
+  fprintf( stdout, "HM software: Decoder Version [%s] (including RExt)", NV_VERSION );
 #endif
   fprintf( stdout, NVM_ONOS );
   fprintf( stdout, NVM_COMPILEDBY );
@@ -72,29 +71,31 @@ int main(int argc, char* argv[])
   if(!cTAppDecTop.parseCfg( argc, argv ))
   {
     cTAppDecTop.destroy();
-    return 1;
+    returnCode = EXIT_FAILURE;
+    return returnCode;
   }
 
   // starting time
-  double dResult;
-  long lBefore = clock();
+  Double dResult;
+  clock_t lBefore = clock();
 
   // call decoding function
   cTAppDecTop.decode();
 
-  if (g_md5_mismatch)
+  if (cTAppDecTop.getNumberOfChecksumErrorsDetected() != 0)
   {
     printf("\n\n***ERROR*** A decoding mismatch occured: signalled md5sum does not match\n");
+    returnCode = EXIT_FAILURE;
   }
 
   // ending time
-  dResult = (double)(clock()-lBefore) / CLOCKS_PER_SEC;
+  dResult = (Double)(clock()-lBefore) / CLOCKS_PER_SEC;
   printf("\n Total Time: %12.3f sec.\n", dResult);
 
   // destroy application decoder class
   cTAppDecTop.destroy();
 
-  return g_md5_mismatch ? EXIT_FAILURE : EXIT_SUCCESS;
+  return returnCode;
 }
 
 //! \}

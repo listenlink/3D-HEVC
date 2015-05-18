@@ -40,7 +40,7 @@
 
 #include "TAppRendererTop.h"
 
-#if H_3D
+#if NH_3D
 
 // ====================================================================================================================
 // Constructor / destructor / initialization / destroy
@@ -66,10 +66,12 @@ Void TAppRendererTop::xCreateLib()
     TVideoIOYuv* pcVideoInput = new TVideoIOYuv;
     TVideoIOYuv* pcDepthInput = new TVideoIOYuv;
 
-    pcVideoInput->open( m_pchVideoInputFileList[iViewIdx], false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC);  // read mode
-    pcDepthInput->open( m_pchDepthInputFileList[iViewIdx], false, m_inputBitDepthY, m_inputBitDepthC, m_internalBitDepthY, m_internalBitDepthC  );  // read mode
-    pcVideoInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight  );
-    pcDepthInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight  );
+//    ( Char* pchFile, Bool bWriteMode, const Int fileBitDepth[MAX_NUM_CHANNEL_TYPE], const Int MSBExtendedBitDepth[MAX_NUM_CHANNEL_TYPE], const Int internalBitDepth[MAX_NUM_CHANNEL_TYPE] )
+
+    pcVideoInput->open( m_pchVideoInputFileList[iViewIdx], false, m_inputBitDepth, m_internalBitDepth, m_internalBitDepth );  // read mode
+    pcDepthInput->open( m_pchDepthInputFileList[iViewIdx], false, m_inputBitDepth, m_internalBitDepth, m_internalBitDepth );  // read mode
+    pcVideoInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight, CHROMA_420 );
+    pcDepthInput->skipFrames(m_iFrameSkip, m_iSourceWidth, m_iSourceHeight, CHROMA_420 );
 
     m_apcTVideoIOYuvVideoInput.push_back( pcVideoInput );
     m_apcTVideoIOYuvDepthInput.push_back( pcDepthInput );
@@ -78,7 +80,7 @@ Void TAppRendererTop::xCreateLib()
   for(Int iViewIdx=0; iViewIdx<m_iNumberOfOutputViews; iViewIdx++)
   {
     TVideoIOYuv* pcSynthOutput = new TVideoIOYuv;
-    pcSynthOutput->open( m_pchSynthOutputFileList[iViewIdx], true, m_outputBitDepthY, m_outputBitDepthC, m_internalBitDepthY, m_internalBitDepthC );  // write mode
+    pcSynthOutput->open( m_pchSynthOutputFileList[iViewIdx], true, m_outputBitDepth, m_internalBitDepth, m_internalBitDepth );  // write mode
     m_apcTVideoIOYuvSynthOutput.push_back( pcSynthOutput );
   }
 }
@@ -147,15 +149,18 @@ Void TAppRendererTop::render()
 
   Int aiPad[2] = { 0, 0 };
 
+  TComPicYuv* pcNewOrg = new TComPicYuv;
+  pcNewOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
+
   for ( UInt uiBaseView = 0; uiBaseView < m_iNumberOfInputViews; uiBaseView++ )
   {
     TComPicYuv* pcNewVideoPic = new TComPicYuv;
     TComPicYuv* pcNewDepthPic = new TComPicYuv;
 
-    pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+    pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
     apcPicYuvBaseVideo.push_back(pcNewVideoPic);
 
-    pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+    pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true);
     apcPicYuvBaseDepth.push_back(pcNewDepthPic);
 
     //Temporal improvement Filter
@@ -164,17 +169,17 @@ Void TAppRendererTop::render()
       pcNewVideoPic = new TComPicYuv;
       pcNewDepthPic = new TComPicYuv;
 
-      pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+      pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
       apcPicYuvLastBaseVideo.push_back(pcNewVideoPic);
 
-      pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+      pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
       apcPicYuvLastBaseDepth.push_back(pcNewDepthPic);
     }
   }
 
   // Create Buffer for synthesized View
   TComPicYuv* pcPicYuvSynthOut = new TComPicYuv;
-  pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+  pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
 
   Bool bAnyEOS = false;
 
@@ -188,13 +193,13 @@ Void TAppRendererTop::render()
       // read in depth and video
       for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
       {
-        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx],pcNewOrg, IPCOLOURSPACE_UNCHANGED, aiPad, CHROMA_420  ) ;
 
         apcPicYuvBaseVideo[iBaseViewIdx]->extendPicBorder();
 
         bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
 
-        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx],pcNewOrg, IPCOLOURSPACE_UNCHANGED, aiPad, CHROMA_420  ) ;
         apcPicYuvBaseDepth[iBaseViewIdx]->extendPicBorder();
         bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
 
@@ -427,13 +432,16 @@ Void TAppRendererTop::render()
 
       // Write Output
 
-      m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, 0, 0, 0, 0 );
+      m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, IPCOLOURSPACE_UNCHANGED, 0, 0, 0, 0, CHROMA_420 );
     }
     iFrame++;
     iNumOfRenderedFrames++;
   }
 
   // Delete Buffers
+  pcNewOrg->destroy(); 
+  delete pcNewOrg; 
+
   for ( UInt uiBaseView = 0; uiBaseView < m_iNumberOfInputViews; uiBaseView++ )
   {
     apcPicYuvBaseVideo[uiBaseView]->destroy();
@@ -467,7 +475,7 @@ Void TAppRendererTop::go()
   case 0:
     render();
     break;
-#if H_3D_VSO
+#if NH_3D_VSO
   case 1:
     renderModel();
     break;
@@ -489,7 +497,7 @@ Void TAppRendererTop::go()
 #endif
 }
 
-#if H_3D_VSO
+#if NH_3D_VSO
 Void TAppRendererTop::renderModel()
 {
   if ( m_bUseSetupString )
@@ -519,14 +527,16 @@ Void TAppRendererTop::xRenderModelFromString()
       TComPicYuv* pcNewVideoPic = new TComPicYuv;
       TComPicYuv* pcNewDepthPic = new TComPicYuv;
 
-      pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+      pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
       apcPicYuvBaseVideo.push_back(pcNewVideoPic);
 
-      pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+      pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
       apcPicYuvBaseDepth.push_back(pcNewDepthPic);
     }
 
     Int aiPad[2] = { 0, 0 };
+    TComPicYuv* pcNewOrg = new TComPicYuv;
+    pcNewOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
 
     // Init Model
     TRenModel cCurModel;
@@ -549,13 +559,12 @@ Void TAppRendererTop::xRenderModelFromString()
         Int iModelNum; Int iLeftViewNum; Int iRightViewNum; Int iDump; Int iOrgRefNum; Int iBlendMode;
         m_cRenModStrParser.getSingleModelData  ( iViewIdx, 1, iCurModel, iModelNum, iBlendMode, iLeftViewNum, iRightViewNum, iOrgRefNum, iDump ) ;
         cCurModel         .createSingleModel   ( iViewIdx, 1, iModelNum, iLeftViewNum, iRightViewNum, false, iBlendMode );
-
       }
     }
 
     // Create Buffer for synthesized View
     TComPicYuv* pcPicYuvSynthOut = new TComPicYuv;
-    pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+    pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
 
     Bool bAnyEOS = false;
 
@@ -570,10 +579,10 @@ Void TAppRendererTop::xRenderModelFromString()
         // read in depth and video
         for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
         {
-          m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+          m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], pcNewOrg, IPCOLOURSPACE_UNCHANGED, aiPad, CHROMA_420  ) ;
           bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
 
-          m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+          m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], pcNewOrg, IPCOLOURSPACE_UNCHANGED, aiPad, CHROMA_420  ) ;
           bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
         }
       }
@@ -671,7 +680,7 @@ Void TAppRendererTop::xRenderModelFromString()
           cCurModel.getSynthVideo ( iModelNum, iViewPos, pcPicYuvSynthOut );
 
           // Write Output
-          m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iModelNum]->write( pcPicYuvSynthOut, 0 ,0 ,0, 0 );
+          m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iModelNum]->write( pcPicYuvSynthOut, IPCOLOURSPACE_UNCHANGED,  0 ,0 ,0, 0, CHROMA_420 );
         }
       }
       iFrame++;
@@ -705,27 +714,31 @@ Void TAppRendererTop::xRenderModelFromNums()
 
 
   Int aiPad[2] = { 0, 0 };
+  TComPicYuv* pcNewOrg = new TComPicYuv;
+  pcNewOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
+
 
   // Init Model
   TRenModel cCurModel;
 
   AOT( m_iLog2SamplingFactor != 0 );
-  cCurModel.setupPart( 0, m_iSourceHeight  ); 
+
 #if H_3D_VSO_EARLY_SKIP
   cCurModel.create( m_iNumberOfInputViews, m_iNumberOfOutputViews, m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin, false );
 #else
   cCurModel.create( m_iNumberOfInputViews, m_iNumberOfOutputViews, m_iSourceWidth, m_iSourceHeight, m_iShiftPrecision, m_iBlendHoleMargin );
 #endif
+  cCurModel.setupPart( 0, m_iSourceHeight  ); 
 
   for ( UInt uiBaseView = 0; uiBaseView < m_iNumberOfInputViews; uiBaseView++ )
   {
     TComPicYuv* pcNewVideoPic = new TComPicYuv;
     TComPicYuv* pcNewDepthPic = new TComPicYuv;
 
-    pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+    pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
     apcPicYuvBaseVideo.push_back(pcNewVideoPic);
 
-    pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+    pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
     apcPicYuvBaseDepth.push_back(pcNewDepthPic);
   }
 
@@ -767,7 +780,7 @@ Void TAppRendererTop::xRenderModelFromNums()
 
   // Create Buffer for synthesized View
   TComPicYuv* pcPicYuvSynthOut = new TComPicYuv;
-  pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+  pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
 
   Bool bAnyEOS = false;
 
@@ -782,10 +795,10 @@ Void TAppRendererTop::xRenderModelFromNums()
       // read in depth and video
       for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
       {
-        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], pcNewOrg, IPCOLOURSPACE_UNCHANGED, aiPad, CHROMA_420  ) ;
         bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
 
-        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], pcNewOrg, IPCOLOURSPACE_UNCHANGED, aiPad, CHROMA_420  ) ;
         bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
 
         if ( iFrame >= m_iFrameSkip )
@@ -870,7 +883,7 @@ Void TAppRendererTop::xRenderModelFromNums()
       }
 
       // Write Output
-      m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, 0, 0, 0, 0 );
+      m_apcTVideoIOYuvSynthOutput[m_bSweep ? 0 : iSynthViewIdx]->write( pcPicYuvSynthOut, IPCOLOURSPACE_UNCHANGED,  0 ,0 ,0, 0, CHROMA_420 );
     }
     iFrame++;
     iNumOfRenderedFrames++;
@@ -908,16 +921,20 @@ Void TAppRendererTop::renderUsedPelsMap( )
 
   Int aiPad[2] = { 0, 0 };
 
+  TComPicYuv* pcNewOrg = new TComPicYuv;
+  pcNewOrg->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
+
   for ( UInt uiBaseView = 0; uiBaseView < m_iNumberOfInputViews; uiBaseView++ )
   {
     TComPicYuv* pcNewVideoPic = new TComPicYuv;
     TComPicYuv* pcNewDepthPic = new TComPicYuv;
 
-    pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+    pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight,CHROMA_420, 1, 1, 1, true );
     apcPicYuvBaseVideo.push_back(pcNewVideoPic);
 
-    pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+    pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1, true );
     apcPicYuvBaseDepth.push_back(pcNewDepthPic);
+
 
     //Temporal improvement Filter
     if ( m_bTempDepthFilter )
@@ -925,17 +942,17 @@ Void TAppRendererTop::renderUsedPelsMap( )
       pcNewVideoPic = new TComPicYuv;
       pcNewDepthPic = new TComPicYuv;
 
-      pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+      pcNewVideoPic->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1, 1 , true);
       apcPicYuvLastBaseVideo.push_back(pcNewVideoPic);
 
-      pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+      pcNewDepthPic->create( m_iSourceWidth, m_iSourceHeight,CHROMA_420, 1, 1, 1 , true);
       apcPicYuvLastBaseDepth.push_back(pcNewDepthPic);
     }
   }
 
   // Create Buffer for synthesized View
   TComPicYuv* pcPicYuvSynthOut = new TComPicYuv;
-  pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, 1, 1, 1 );
+  pcPicYuvSynthOut->create( m_iSourceWidth, m_iSourceHeight, CHROMA_420, 1, 1 ,1, true);
 
   Bool bAnyEOS = false;
 
@@ -949,11 +966,11 @@ Void TAppRendererTop::renderUsedPelsMap( )
       // read in depth and video
       for(Int iBaseViewIdx=0; iBaseViewIdx < m_iNumberOfInputViews; iBaseViewIdx++ )
       {
-        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], aiPad  ) ;
+        m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->read( apcPicYuvBaseVideo[iBaseViewIdx], pcNewOrg, IPCOLOURSPACE_UNCHANGED,  aiPad, CHROMA_420  ) ;
         apcPicYuvBaseVideo[iBaseViewIdx]->extendPicBorder();
         bAnyEOS |= m_apcTVideoIOYuvVideoInput[iBaseViewIdx]->isEof();
 
-        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], aiPad  ) ;
+        m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->read( apcPicYuvBaseDepth[iBaseViewIdx], pcNewOrg, IPCOLOURSPACE_UNCHANGED,  aiPad, CHROMA_420  ) ;
         apcPicYuvBaseDepth[iBaseViewIdx]->extendPicBorder();
         bAnyEOS |= m_apcTVideoIOYuvDepthInput[iBaseViewIdx]->isEof();
 
@@ -996,7 +1013,7 @@ Void TAppRendererTop::renderUsedPelsMap( )
       m_pcRenTop->getUsedSamplesMap( apcPicYuvBaseDepth[0], pcPicYuvSynthOut, bFirstIsLeft );
 
       // Write Output
-      m_apcTVideoIOYuvSynthOutput[iViewIdx-1]->write( pcPicYuvSynthOut, 0, 0, 0 );
+      m_apcTVideoIOYuvSynthOutput[iViewIdx-1]->write( pcPicYuvSynthOut,  IPCOLOURSPACE_UNCHANGED, 0, 0, 0, 0, CHROMA_420 );
 
     }
     iFrame++;
@@ -1004,6 +1021,10 @@ Void TAppRendererTop::renderUsedPelsMap( )
   }
 
   // Delete Buffers
+
+  pcNewOrg->destroy(); 
+  delete pcNewOrg; 
+
   for ( UInt uiBaseView = 0; uiBaseView < m_iNumberOfInputViews; uiBaseView++ )
   {
     apcPicYuvBaseVideo[uiBaseView]->destroy();

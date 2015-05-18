@@ -38,10 +38,11 @@
 #include "TLibCommon/CommonDef.h"
 #include "TRenImage.h"
 #include "TRenInterpFilter.h"
-#if H_3D
+#if NH_3D
 
-typedef Int (TRenInterpFilter::*FpChromaIntFilt) ( Pel*, Int );
+typedef Int (TRenInterpFilter<REN_BIT_DEPTH>::*FpChromaIntFilt) ( Pel*, Int );
 
+template<UInt bitDepthLuma>
 class TRenFilter
 {
 public:
@@ -52,7 +53,7 @@ public:
   static Void filledToUsedPelMap( PelImage* pcFilledImage, PelImage* pcUsedPelsImage, Int iUsedPelMapMarExt  );
 
   /////////// Copy ///////////
-  static Void copy( Pel* pcInputPlaneData, Int iInputStride, Int iWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride);
+  static Void copy( const Pel* pcInputPlaneData, Int iInputStride, Int iWidth, Int iHeight, Pel* pcOutputPlaneData, Int iOutputStride);
 
   /////////// Horizontal Mirroring ///////////
   template <typename T> static Void mirrorHor(        TRenImage<T> *pcInputImage );
@@ -128,7 +129,7 @@ private:
   // Up sampling (8/4-Tap HEVC)
   static Void xInterpVerChroma(Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter);
   static Void xInterpHorChroma(Pel* piSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* piDst, Int iDstStride, Int iDstStepX, Int iDstStepY, FpChromaIntFilt fpFilter);
-  static Void xDistributeArray(Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* pcDst, Int iDstStride, Int iDstStepX, Int iDstStepY );
+  static Void xDistributeArray(const Pel* pcSrc, Int iSrcStride, Int iSrcStepX, Int iSrcStepY, Int iWidth, Int iHeight, Pel* pcDst, Int iDstStride, Int iDstStepX, Int iDstStepY );
 
   // Binominal Filtering
   static Pel  xFiltBinom3     (Pel* pcInputData, Int iStride );

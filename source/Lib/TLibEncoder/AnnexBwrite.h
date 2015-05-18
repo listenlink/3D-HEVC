@@ -3,7 +3,7 @@
  * and contributor rights, including patent rights, and no such rights are
  * granted under this license.
  *
-* Copyright (c) 2010-2015, ITU/ISO/IEC
+ * Copyright (c) 2010-2015, ITU/ISO/IEC
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,6 +32,9 @@
  */
 
 #pragma once
+
+#ifndef __ANNEXBWRITE__
+#define __ANNEXBWRITE__
 
 #include <ostream>
 #include "TLibCommon/AccessUnit.h"
@@ -84,3 +87,5 @@ static std::vector<UInt> writeAnnexB(std::ostream& out, const AccessUnit& au)
   return annexBsizes;
 }
 //! \}
+
+#endif
