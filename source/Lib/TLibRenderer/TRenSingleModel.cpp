@@ -35,12 +35,12 @@
 #include "TRenFilter.h"
 #include "TRenSingleModel.h"
 
-#if H_3D_VSO
+#if NH_3D_VSO
 
 ////////////// TRENSINGLE MODEL ///////////////
 template <BlenMod iBM, Bool bBitInc>
 TRenSingleModelC<iBM,bBitInc>::TRenSingleModelC()
-:  m_iDistShift ( ( g_bitDepthY - 8) << 1 )
+:  m_iDistShift ( ( ENC_INTERNAL_BIT_DEPTH  - REN_BIT_DEPTH) << 1 )
 {
   m_iWidth  = -1;
   m_iHeight = -1;
@@ -258,9 +258,11 @@ TRenSingleModelC<iBM,bBitInc>::setup( TComPicYuv* pcOrgVideo, Int** ppiShiftLutL
 
   if ( pcOrgVideo && !bKeepReference )
   {
-    TRenFilter::copy(             pcOrgVideo->getLumaAddr() +  m_iHorOffset       * pcOrgVideo->getStride() , pcOrgVideo->getStride() , m_iWidth,      m_iUsedHeight,      m_aapiRefVideoPel[0], m_aiRefVideoStrides[0]);
-    TRenFilter::sampleCUpHorUp(0, pcOrgVideo->getCbAddr()   + (m_iHorOffset >> 1) * pcOrgVideo->getCStride(), pcOrgVideo->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiRefVideoPel[1], m_aiRefVideoStrides[1]);
-    TRenFilter::sampleCUpHorUp(0, pcOrgVideo->getCrAddr()   + (m_iHorOffset >> 1) * pcOrgVideo->getCStride(), pcOrgVideo->getCStride(), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiRefVideoPel[2], m_aiRefVideoStrides[2]);    
+    assert( pcOrgVideo->getChromaFormat() != CHROMA_420 );     
+
+    TRenFilter<REN_BIT_DEPTH>::copy(             pcOrgVideo->getAddr( COMPONENT_Y  ) +  m_iHorOffset       * pcOrgVideo->getStride( COMPONENT_Y  ), pcOrgVideo->getStride( COMPONENT_Y  ), m_iWidth,      m_iUsedHeight,      m_aapiRefVideoPel[0], m_aiRefVideoStrides[0]);
+    TRenFilter<REN_BIT_DEPTH>::sampleCUpHorUp(0, pcOrgVideo->getAddr( COMPONENT_Cb ) + (m_iHorOffset >> 1) * pcOrgVideo->getStride( COMPONENT_Cb ), pcOrgVideo->getStride( COMPONENT_Cb ), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiRefVideoPel[1], m_aiRefVideoStrides[1]);
+    TRenFilter<REN_BIT_DEPTH>::sampleCUpHorUp(0, pcOrgVideo->getAddr( COMPONENT_Cr ) + (m_iHorOffset >> 1) * pcOrgVideo->getStride( COMPONENT_Cr ), pcOrgVideo->getStride( COMPONENT_Cr ), m_iWidth >> 1, m_iUsedHeight >> 1, m_aapiRefVideoPel[2], m_aiRefVideoStrides[2]);    
     xSetStructRefView();
   }
 
@@ -284,7 +286,7 @@ TRenSingleModelC<iBM,bBitInc>::setup( TComPicYuv* pcOrgVideo, Int** ppiShiftLutL
 #endif
     break;
   case 2:
-    TRenFilter::setupZLUT( true, 30, iDistToLeft, ppiBaseShiftLutLeft, ppiBaseShiftLutRight, m_iBlendZThres, m_iBlendDistWeight, m_piInvZLUTLeft, m_piInvZLUTRight );
+    TRenFilter<REN_BIT_DEPTH>::setupZLUT( true, 30, iDistToLeft, ppiBaseShiftLutLeft, ppiBaseShiftLutRight, m_iBlendZThres, m_iBlendDistWeight, m_piInvZLUTLeft, m_piInvZLUTRight );
 #if H_3D_VSO_EARLY_SKIP
     xRenderL<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[0], m_apiBaseDepthPel[0],false);
     xRenderR<true>( 0, 0, m_iWidth, m_iUsedHeight, m_aiBaseDepthStrides[1], m_apiBaseDepthPel[1],false);
@@ -451,14 +453,14 @@ TRenSingleModelC<iBM,bBitInc>::xInitSampleStructs()
       pcOutSampleRow[iPosX].iYBlended     = 0;
 #if H_3D_VSO_COLOR_PLANES             
       // U Planes                    
-      pcOutSampleRow[iPosX].iULeft        = 1 << (g_bitDepthC - 1);
-      pcOutSampleRow[iPosX].iURight       = 1 << (g_bitDepthC - 1);
-      pcOutSampleRow[iPosX].iUBlended     = 1 << (g_bitDepthC - 1);
-                                     
-      // V Planes                    
-      pcOutSampleRow[iPosX].iVLeft        = 1 << (g_bitDepthC - 1);
-      pcOutSampleRow[iPosX].iVRight       = 1 << (g_bitDepthC - 1);
-      pcOutSampleRow[iPosX].iVBlended     = 1 << (g_bitDepthC - 1);
+      pcOutSampleRow[iPosX].iULeft        = 1 << (REN_BIT_DEPTH  - 1);
+      pcOutSampleRow[iPosX].iURight       = 1 << (REN_BIT_DEPTH  - 1);
+      pcOutSampleRow[iPosX].iUBlended     = 1 << (REN_BIT_DEPTH  - 1);
+                                                  
+      // V Planes                                  
+      pcOutSampleRow[iPosX].iVLeft        = 1 << (REN_BIT_DEPTH  - 1);
+      pcOutSampleRow[iPosX].iVRight       = 1 << (REN_BIT_DEPTH  - 1);
+      pcOutSampleRow[iPosX].iVBlended     = 1 << (REN_BIT_DEPTH  - 1);
 #endif
       //// Input Samples
       pcLeftInSampleRow [iPosX].bOccluded = false;
@@ -474,10 +476,10 @@ TRenSingleModelC<iBM,bBitInc>::xInitSampleStructs()
 
 #if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> RMDist
-TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData , Pel * piOrgData, Int iOrgStride )
+TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData , const Pel * piOrgData, Int iOrgStride )
 #else
 template <BlenMod iBM, Bool bBitInc> RMDist
-TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )
+TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData )
 #endif
 {
   RMDist iSSE = 0;
@@ -516,10 +518,10 @@ TRenSingleModelC<iBM,bBitInc>::getDistDepth( Int iViewPos, Int iStartPosX, Int i
 }
 #if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> Void
-TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Pel* piOrgData, Int iOrgStride )
+TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel* piOrgData, Int iOrgStride )
 #else
 template <BlenMod iBM, Bool bBitInc> Void
-TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )
+TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData )
 #endif
 {
 #ifdef  H_3D_VSO_EARLY_SKIP
@@ -557,8 +559,10 @@ TRenSingleModelC<iBM,bBitInc>::setDepth( Int iViewPos, Int iStartPosX, Int iStar
 template <BlenMod iBM, Bool bBitInc> Void
 TRenSingleModelC<iBM,bBitInc>::getSynthVideo( Int iViewPos, TComPicYuv* pcPicYuv )
 {  
-  AOT( pcPicYuv->getWidth() != m_iWidth );
-  AOT( pcPicYuv->getHeight() < m_iUsedHeight + m_iHorOffset );
+  AOT( pcPicYuv->getWidth( COMPONENT_Y  )  != m_iWidth );
+  AOT( pcPicYuv->getChromaFormat()         != CHROMA_420 ); 
+
+  AOT( pcPicYuv->getHeight( COMPONENT_Y ) < m_iUsedHeight + m_iHorOffset );
 
 #if H_3D_VSO_COLOR_PLANES
   Pel RenModelOutPels::* piText[3] = { NULL, NULL, NULL };
@@ -589,21 +593,23 @@ template <BlenMod iBM, Bool bBitInc> Void
 TRenSingleModelC<iBM,bBitInc>::getSynthDepth( Int iViewPos, TComPicYuv* pcPicYuv )
 {  
   AOT( iViewPos != 0 && iViewPos != 1); 
-  AOT( pcPicYuv->getWidth()  != m_iWidth  );
-  AOT( pcPicYuv->getHeight() < m_iUsedHeight + m_iHorOffset );
+  AOT( pcPicYuv->getWidth( COMPONENT_Y)  != m_iWidth  );
+  AOT( pcPicYuv->getChromaFormat( )  != CHROMA_420 );
+  AOT( pcPicYuv->getHeight( COMPONENT_Y ) < m_iUsedHeight + m_iHorOffset );
 
   Pel RenModelOutPels::* piD = 0;
   xGetSampleStrDepthPtrs(iViewPos, piD); 
-  xCopyFromSampleStruct( m_pcOutputSamples, m_iOutputSamplesStride, piD, pcPicYuv->getLumaAddr() + pcPicYuv->getStride() * m_iHorOffset, pcPicYuv->getStride(), m_iWidth, m_iUsedHeight );
-  pcPicYuv->setChromaTo( 1 << (g_bitDepthC - 1) );   
+  xCopyFromSampleStruct( m_pcOutputSamples, m_iOutputSamplesStride, piD, pcPicYuv->getAddr( COMPONENT_Y ) + pcPicYuv->getStride( COMPONENT_Y ) * m_iHorOffset, pcPicYuv->getStride( COMPONENT_Y ), m_iWidth, m_iUsedHeight );
+  pcPicYuv->setChromaTo( 1 << (REN_BIT_DEPTH - 1) );   
 }
 
 
 template <BlenMod iBM, Bool bBitInc> Void
 TRenSingleModelC<iBM,bBitInc>::getRefVideo ( Int iViewPos, TComPicYuv* pcPicYuv )
 {  
-  AOT( pcPicYuv->getWidth()  != m_iWidth  );
-  AOT( pcPicYuv->getHeight() <  m_iUsedHeight + m_iHorOffset);
+  AOT( pcPicYuv->getChromaFormat( ) != CHROMA_420 );
+  AOT( pcPicYuv->getWidth( COMPONENT_Y )  != m_iWidth  );
+  AOT( pcPicYuv->getHeight( COMPONENT_Y ) <  m_iUsedHeight + m_iHorOffset);
 
 #if H_3D_VSO_COLOR_PLANES
   Pel RenModelOutPels::* piText[3];
@@ -632,14 +638,14 @@ TRenSingleModelC<iBM,bBitInc>::getRefVideo ( Int iViewPos, TComPicYuv* pcPicYuv 
 }
 
 template <BlenMod iBM, Bool bBitInc> RMDist
-TRenSingleModelC<iBM,bBitInc>::getDistVideo( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )
+TRenSingleModelC<iBM,bBitInc>::getDistVideo( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData )
 {
   AOF(false);
   return 0;
 }
 
 template <BlenMod iBM, Bool bBitInc> Void
-TRenSingleModelC<iBM,bBitInc>::setVideo( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )
+TRenSingleModelC<iBM,bBitInc>::setVideo( Int iViewPos, Int iPlane, Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData )
 {
   AOF(false);
 }
@@ -664,10 +670,10 @@ TRenSingleModelC<iBM,bBitInc>::xIncViewRow( )
 }
 #if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline RMDist 
-TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData, Bool bFast)
+TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, Bool bFast)
 #else
 template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline RMDist 
-TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData)
+TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData)
 #endif
 {
   const Int iCurViewPos   = 0;
@@ -788,10 +794,10 @@ TRenSingleModelC<iBM,bBitInc>::xRenderL( Int iStartPosX, Int iStartPosY, Int iWi
 
 #ifdef  H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline RMDist
-TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData , Bool bFast)
+TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData , Bool bFast)
 #else
 template <BlenMod iBM, Bool bBitInc> template<Bool bSet> __inline RMDist
-TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData )
+TRenSingleModelC<iBM,bBitInc>::xRenderR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData )
 #endif
 {
 
@@ -1876,9 +1882,9 @@ TRenSingleModelC<iBM,bBitInc>::xBlend( Pel pVal1, Pel pVal2, Int iWeightVal2 )
 template <BlenMod iBM, Bool bBitInc> Void
 TRenSingleModelC<iBM,bBitInc>::xCopy2PicYuv( Pel** ppiSrcVideoPel, Int* piStrides, TComPicYuv* rpcPicYuvTarget )
 {
-  TRenFilter::copy            ( ppiSrcVideoPel[0], piStrides[0], m_iWidth, m_iUsedHeight, rpcPicYuvTarget->getLumaAddr() +  m_iHorOffset       * rpcPicYuvTarget->getStride() , rpcPicYuvTarget->getStride () );
-  TRenFilter::sampleDown2Tap13( ppiSrcVideoPel[1], piStrides[1], m_iWidth, m_iUsedHeight, rpcPicYuvTarget->getCbAddr  () + (m_iHorOffset >> 1) * rpcPicYuvTarget->getCStride(), rpcPicYuvTarget->getCStride() );
-  TRenFilter::sampleDown2Tap13( ppiSrcVideoPel[2], piStrides[2], m_iWidth, m_iUsedHeight, rpcPicYuvTarget->getCrAddr  () + (m_iHorOffset >> 1) * rpcPicYuvTarget->getCStride(), rpcPicYuvTarget->getCStride() );
+  TRenFilter<REN_BIT_DEPTH>::copy            ( ppiSrcVideoPel[0], piStrides[0], m_iWidth, m_iUsedHeight, rpcPicYuvTarget->getAddr( COMPONENT_Y  ) +  m_iHorOffset       * rpcPicYuvTarget->getStride( COMPONENT_Y  ), rpcPicYuvTarget->getStride( COMPONENT_Y ) );
+  TRenFilter<REN_BIT_DEPTH>::sampleDown2Tap13( ppiSrcVideoPel[1], piStrides[1], m_iWidth, m_iUsedHeight, rpcPicYuvTarget->getAddr( COMPONENT_Cb ) + (m_iHorOffset >> 1) * rpcPicYuvTarget->getStride( COMPONENT_Cb ), rpcPicYuvTarget->getStride( COMPONENT_Cb) );
+  TRenFilter<REN_BIT_DEPTH>::sampleDown2Tap13( ppiSrcVideoPel[2], piStrides[2], m_iWidth, m_iUsedHeight, rpcPicYuvTarget->getAddr( COMPONENT_Cr ) + (m_iHorOffset >> 1) * rpcPicYuvTarget->getStride( COMPONENT_Cr ), rpcPicYuvTarget->getStride( COMPONENT_Cr) );
 }
 
 template class TRenSingleModelC<BLEND_NONE ,true>;
@@ -1894,7 +1900,7 @@ template class TRenSingleModelC<BLEND_RIGHT,false>;
 #if H_3D_VSO_EARLY_SKIP
 template <BlenMod iBM, Bool bBitInc> 
 __inline Bool
-TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData,Pel* piOrgData, Int iOrgStride)
+TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipL( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel* piOrgData, Int iOrgStride)
 {
   RM_AOF( m_bEarlySkip ); 
   const Int iCurViewPos = 0;
@@ -1926,7 +1932,7 @@ TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipL( Int iStartPosX, Int iStartPosY
 
 template <BlenMod iBM, Bool bBitInc> 
 __inline Bool
-TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, Pel* piNewData,Pel* piOrgData, Int iOrgStride)
+TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipR( Int iStartPosX, Int iStartPosY, Int iWidth, Int iHeight, Int iStride, const Pel* piNewData, const Pel* piOrgData, Int iOrgStride)
 {
   RM_AOF( m_bEarlySkip ); 
   Bool bNoDiff  = true;
@@ -1957,5 +1963,5 @@ TRenSingleModelC<iBM,bBitInc>::xDetectEarlySkipR( Int iStartPosX, Int iStartPosY
   return bNoDiff;
 }
 #endif
-#endif // H_3D
+#endif // NH_3D
 
