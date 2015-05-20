@@ -69,6 +69,7 @@
 #if NH_3D
 #define NH_3D_VSO                         1
 #define NH_3D_NBDV                        1
+#define NH_3D_NBDV_REF                    1
 #endif
 
 #if H_3D

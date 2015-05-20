@@ -286,7 +286,7 @@ Void TDecCu::xDecodeCU( TComDataCU*const pcCU, const UInt uiAbsPartIdx, const UI
   DisInfo DvInfo; 
   DvInfo.m_acNBDV.setZero();
   DvInfo.m_aVIdxCan = 0;
-#if H_3D_NBDV_REF  
+#if NH_3D_NBDV_REF  
   DvInfo.m_acDoNBDV.setZero();
 #endif
  
@@ -322,7 +322,7 @@ if(!pcCU->getSlice()->isIntra())
       else
       {
 #endif
-#if H_3D_NBDV_REF
+#if NH_3D_NBDV_REF
       if( pcCU->getSlice()->getDepthBasedBlkPartFlag() )  //Notes from QC: please check the condition for DoNBDV. Remove this comment once it is done.
       {
         m_ppcCU[uiDepth]->getDisMvpCandNBDV(&DvInfo, true);
