@@ -89,7 +89,7 @@ private:
   Int                        m_iFrameRcvd;                  ///< number of received frames
 #endif
 
-#if H_3D
+#if NH_3D_DLT
   TComDLT                    m_dlt;                         ///< dlt
 #endif
 #if NH_3D
@@ -153,11 +153,9 @@ protected:
   Int  xGetMax( std::vector<Int>& vec);
   Bool xLayerIdInTargetEncLayerIdList( Int nuhLayerId );
 #endif
-#if H_3D
+#if NH_3D_DLT
   Void xDeriveDltArray( TComVPS& vps, TComDLT& dlt );
-#endif
-#if H_3D_DIM_DLT
-  Void  xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt);
+  Void xAnalyzeInputBaseDepth(UInt layer, UInt uiNumFrames, TComVPS* vps, TComDLT* dlt);
 #endif
 
 public:

@@ -111,9 +111,6 @@ WedgeNodeList* getWedgeNodeListScaled( UInt blkSize );
 __inline Void mapDmmToIntraDir( UInt& intraMode ) { if( isDmmMode( intraMode ) ) intraMode = DC_IDX; }
 __inline Void mapDmmToIntraDir(  Int& intraMode ) { if( isDmmMode( intraMode ) ) intraMode = DC_IDX; }
 #endif
-#if H_3D_DIM_SDC || H_3D_DIM_DLT
-__inline UInt numBitsForValue( UInt value ) { UInt bits = 0; while (value != 0) { value >>= 1; bits++; } return bits; };
-#endif
 // ====================================================================================================================
 // Mode-Dependent DST Matrices
 // ====================================================================================================================

@@ -2826,9 +2826,6 @@ TComPPS::TComPPS()
 , m_ppsInferScalingListFlag          (false)
 , m_ppsScalingListRefLayerId         (0)
 , m_pocResetInfoPresentFlag          (false)
-#if H_3D
-, m_pcDLT(NULL)
-#endif
 #endif
 
 {
@@ -2845,14 +2842,12 @@ TComPPS::~TComPPS()
 {
 }
 
-#if H_3D
+#if NH_3D_DLT
 TComDLT::TComDLT()
 : m_bDltPresentFlag(false)
 , m_iNumDepthViews(0)
 , m_uiDepthViewBitDepth(8)
 {
-  m_uiDepthViewBitDepth = g_bitDepthY; 
-
   for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
   {
     m_bUseDLTFlag                 [i] = false;
@@ -2860,8 +2855,8 @@ TComDLT::TComDLT()
 
     // allocate some memory and initialize with default mapping
     m_iNumDepthmapValues[i] = ((1 << m_uiDepthViewBitDepth)-1)+1;
-    m_iDepthValue2Idx[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
-    m_iIdx2DepthValue[i]    = (Int*) xMalloc(Int, m_iNumDepthmapValues[i]);
+    m_iDepthValue2Idx[i]    = std::vector<Int>(m_iNumDepthmapValues[i]);
+    m_iIdx2DepthValue[i]    = std::vector<Int>(m_iNumDepthmapValues[i]);
 
     //default mapping
     for (Int d=0; d<m_iNumDepthmapValues[i]; d++)
@@ -2874,31 +2869,18 @@ TComDLT::TComDLT()
 
 TComDLT::~TComDLT()
 {
-  for( Int i = 0; i < MAX_NUM_LAYERS; i++ )
-  {
-    if ( m_iDepthValue2Idx[i] != NULL ) 
-    {
-      xFree( m_iDepthValue2Idx[i] );
-      m_iDepthValue2Idx[i] = NULL; 
-    }
-
-    if ( m_iIdx2DepthValue[i] != NULL ) 
-    {
-      xFree( m_iIdx2DepthValue[i] );
-      m_iIdx2DepthValue[i] = NULL; 
-    }
-  }
+  
 }
 
-Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNumDepthValues)
+Void TComDLT::setDepthLUTs(Int layerIdInVps, std::vector<Int> idxToDepthValueTable, Int iNumDepthValues)
 {
-  if( idxToDepthValueTable == NULL || iNumDepthValues == 0 ) // default mapping only
+  if( iNumDepthValues == 0 ) // default mapping only
     return;
 
   // copy idx2DepthValue to internal array
-  memcpy(m_iIdx2DepthValue[layerIdInVps], idxToDepthValueTable, iNumDepthValues*sizeof(UInt));
+  m_iIdx2DepthValue[layerIdInVps] = idxToDepthValueTable;
 
-  UInt uiMaxDepthValue = ((1 << g_bitDepthY)-1);
+  UInt uiMaxDepthValue = ((1 << m_uiDepthViewBitDepth)-1);
   for(Int p=0; p<=uiMaxDepthValue; p++)
   {
     Int iIdxDown    = 0;
@@ -2935,7 +2917,7 @@ Void TComDLT::setDepthLUTs(Int layerIdInVps, Int* idxToDepthValueTable, Int iNum
   m_iNumDepthmapValues[layerIdInVps] = iNumDepthValues;
 }
 
-Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTOut, UInt *puiDeltaDLTOutNum )
+Void TComDLT::getDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int>& riDeltaDLTOut, UInt&ruiDeltaDLTOutNum ) const
 {
   Bool abBM0[ 256 ];
   Bool abBM1[ 256 ];
@@ -2954,18 +2936,17 @@ Void TComDLT::getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum
     abBM1[ m_iIdx2DepthValue[ layerIdInVps ][ i ] ] = true;
   }
   
-  *puiDeltaDLTOutNum = 0;
+  ruiDeltaDLTOutNum = 0;
   for( Int i = 0; i < 256; i++ )
   {
     if( abBM0[ i ] ^ abBM1[ i ] )
     {
-      piDeltaDLTOut[ *puiDeltaDLTOutNum ] = i;
-      *puiDeltaDLTOutNum = *puiDeltaDLTOutNum + 1;
+      riDeltaDLTOut[ ruiDeltaDLTOutNum++ ] = i;
     }
   }
 }
 
-Void TComDLT::setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTIn, UInt uiDeltaDLTInNum )
+Void TComDLT::setDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int> piDeltaDLTIn, UInt uiDeltaDLTInNum )
 {
   Bool abBM0[ 256 ];
   Bool abBM1[ 256 ];
@@ -2984,9 +2965,9 @@ Void TComDLT::setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum
     abBM1[ piDeltaDLTIn[ i ] ] = true;
   }
   
-  Int aiIdx2DepthValue[256];
+  std::vector<Int> aiIdx2DepthValue(256, 0);
   UInt uiNumDepthValues = 0;
-  memset( aiIdx2DepthValue, 0, sizeof( aiIdx2DepthValue ));
+  std::fill(aiIdx2DepthValue.begin(), aiIdx2DepthValue.end(), 0);
   
   for( Int i = 0; i < 256; i++ )
   {

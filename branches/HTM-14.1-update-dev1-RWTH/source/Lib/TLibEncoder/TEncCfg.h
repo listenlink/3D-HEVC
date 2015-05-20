@@ -382,8 +382,8 @@ protected:
   TComVPS   m_cVPS;
 #endif
 
-#if H_3D
-  TComDLT*  m_cDLT;
+#if NH_3D_DLT
+  TComDLT   m_cDLT;
 #endif
   Bool      m_recalculateQPAccordingToLambda;                 ///< recalculate QP value according to the lambda value
   Int       m_activeParameterSetsSEIEnabled;                  ///< enable active parameter set SEI message
@@ -1010,9 +1010,9 @@ public:
   TComVPS *    getVPS()                                              { return &m_cVPS; }
 #endif
 
-#if H_3D
-  Void         setDLT( TComDLT *p )                                  s{ m_cDLT = p; }
-  TComDLT*     getDLT()                                              s{ return m_cDLT; }
+#if NH_3D_DLT
+  Void         setDLT( TComDLT p )                                   { m_cDLT = p; }
+  TComDLT*     getDLT()                                              { return &m_cDLT; }
 #endif
   Void         setUseRecalculateQPAccordingToLambda (Bool b)         { m_recalculateQPAccordingToLambda = b;    }
   Bool         getUseRecalculateQPAccordingToLambda ()               { return m_recalculateQPAccordingToLambda; }

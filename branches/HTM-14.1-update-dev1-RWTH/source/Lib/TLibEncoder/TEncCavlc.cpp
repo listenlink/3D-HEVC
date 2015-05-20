@@ -383,164 +383,120 @@ Void  TEncCavlc::codePps3dExtension        ( const TComPPS* pcPPS )
   // GT: Moreover this function should only carry out the coding of the DLT and NO rate based decisions.
   // GT: Please add a function e.g. xSetDLT in e.g. TEncSlice to find the best DLT syntax representation and do ONLY the coding of the DLT here !!
 
-#if H_3D
-  WRITE_FLAG( pcDLT->getDltPresentFlag() ? 1 : 0, "dlt_present_flag" );
+#if NH_3D_DLT
+  WRITE_FLAG( pcPPS->getDLT()->getDltPresentFlag() ? 1 : 0, "dlt_present_flag" );
 
-  if ( pcDLT->getDltPresentFlag() )
+  if ( pcPPS->getDLT()->getDltPresentFlag() )
   {
-    WRITE_CODE(pcDLT->getNumDepthViews(), 6, "pps_depth_layers_minus1");
-    WRITE_CODE((pcDLT->getDepthViewBitDepth() - 8), 4, "pps_bit_depth_for_depth_views_minus8");
-
-    for( Int i = 0; i <= pcVPS->getMaxLayersMinus1(); i++ )
+    WRITE_CODE(pcPPS->getDLT()->getNumDepthViews() - 1, 6, "pps_depth_layers_minus1");
+    WRITE_CODE((pcPPS->getDLT()->getDepthViewBitDepth() - 8), 4, "pps_bit_depth_for_depth_views_minus8");
+    
+    for( Int i = 0; i <= pcPPS->getDLT()->getNumDepthViews(); i++ )
     {
-      if ( i != 0 )
+      Int layerId = pcPPS->getDLT()->getDepthIdxToLayerId(i);
+      
+      WRITE_FLAG( pcPPS->getDLT()->getUseDLTFlag( layerId ) ? 1 : 0, "dlt_flag[layerId]" );
+      
+      if ( pcPPS->getDLT()->getUseDLTFlag( layerId ) )
       {
-        if ( pcVPS->getDepthId( i ) == 1 )
+        std::vector<Int> aiIdx2DepthValue_coded(256, 0);
+        UInt uiNumDepthValues_coded = pcPPS->getDLT()->getNumDepthValues(layerId);
+        
+        // ----------------------------- Actual coding -----------------------------
+        WRITE_FLAG( pcPPS->getDLT()->getInterViewDltPredEnableFlag( layerId ) ? 1 : 0, "inter_view_dlt_pred_enable_flag[ layerId ]");
+        if ( pcPPS->getDLT()->getInterViewDltPredEnableFlag( layerId ) == false )
         {
-          WRITE_FLAG( pcDLT->getUseDLTFlag( i ) ? 1 : 0, "dlt_flag[i]" );
-
-          if ( pcDLT->getUseDLTFlag( i ) )
+          WRITE_FLAG( pcPPS->getDLT()->getUseBitmapRep( layerId ) ? 1 : 0, "dlt_bit_map_rep_flag[ layerId ]" );
+          
+          for( UInt ui = 0; ui<uiNumDepthValues_coded; ui++ )
           {
-            WRITE_FLAG( pcDLT->getInterViewDltPredEnableFlag( i ) ? 1 : 0, "inter_view_dlt_pred_enable_flag[ i ]");
-
-            // ----------------------------- determine whether to use bit-map -----------------------------
-            Bool bDltBitMapRepFlag       = false;
-            UInt uiNumBitsNonBitMap      = 0;
-            UInt uiNumBitsBitMap         = 0;
-
-            UInt uiMaxDiff               = 0;
-            UInt uiMinDiff               = 0xffffffff;
-            UInt uiLengthMinDiff         = 0;
-            UInt uiLengthDltDiffMinusMin = 0;
-
-            UInt* puiDltDiffValues       = NULL;
+            aiIdx2DepthValue_coded[ui] = pcPPS->getDLT()->idx2DepthValue(layerId, ui);
+          }
+        }
+        else
+        {
+          AOF( layerId > 1 );
+          // assumes ref layer id to be 1
+          std::vector<Int> viRefDLT = pcPPS->getDLT()->idx2DepthValue( 1 );
+          UInt uiRefNum = pcPPS->getDLT()->getNumDepthValues( 1 );
+          pcPPS->getDLT()->getDeltaDLT(layerId, viRefDLT, uiRefNum, aiIdx2DepthValue_coded, uiNumDepthValues_coded);
+        }
+        
+        // bit map coding
+        if ( pcPPS->getDLT()->getUseBitmapRep( layerId ) )
+        {
+          UInt uiDltArrayIndex = 0;
+          for (UInt d=0; d < 256; d++)
+          {
+            if ( d == aiIdx2DepthValue_coded[uiDltArrayIndex] )
+            {
+              WRITE_FLAG(1, "dlt_bit_map_flag[ layerId ][ j ]");
+              uiDltArrayIndex++;
+            }
+            else
+            {
+              WRITE_FLAG(0, "dlt_bit_map_flag[ layerId ][ j ]");
+            }
+          }
+        }
+        // Diff Coding
+        else
+        {
+          UInt uiMaxDiff               = 0;
+          UInt uiMinDiff               = INT_MAX;
+          UInt uiLengthMinDiff         = 0;
+          UInt uiLengthDltDiffMinusMin = 0;
+          
+          std::vector<UInt> puiDltDiffValues(uiNumDepthValues_coded, 0);
+          
+          for (UInt d = 1; d < uiNumDepthValues_coded; d++)
+          {
+            puiDltDiffValues[d] = aiIdx2DepthValue_coded[d] - aiIdx2DepthValue_coded[d-1];
             
-            Int aiIdx2DepthValue_coded[256];
-            UInt uiNumDepthValues_coded = 0;
-            
-            uiNumDepthValues_coded = pcDLT->getNumDepthValues(i);
-            for( UInt ui = 0; ui<uiNumDepthValues_coded; ui++ )
+            if ( uiMaxDiff < puiDltDiffValues[d] )
             {
-              aiIdx2DepthValue_coded[ui] = pcDLT->idx2DepthValue(i, ui);
+              uiMaxDiff = puiDltDiffValues[d];
             }
             
-            if( pcDLT->getInterViewDltPredEnableFlag( i ) )
+            if ( uiMinDiff > puiDltDiffValues[d] )
             {
-              AOF( pcVPS->getDepthId( 1 ) == 1 );
-              AOF( i > 1 );
-              // assumes ref layer id to be 1
-              Int* piRefDLT = pcDLT->idx2DepthValue( 1 );
-              UInt uiRefNum = pcDLT->getNumDepthValues( 1 );
-              pcDLT->getDeltaDLT(i, piRefDLT, uiRefNum, aiIdx2DepthValue_coded, &uiNumDepthValues_coded);
+              uiMinDiff = puiDltDiffValues[d];
             }
-
-            if ( NULL == (puiDltDiffValues = (UInt *)calloc(uiNumDepthValues_coded, sizeof(UInt))) )
-            {
-              // This should be changed to an assertion. 
-              exit(-1);
-            }
-
-            for (UInt d = 1; d < uiNumDepthValues_coded; d++)
-            {
-              puiDltDiffValues[d] = aiIdx2DepthValue_coded[d] - aiIdx2DepthValue_coded[d-1];
-
-              if ( uiMaxDiff < puiDltDiffValues[d] )
-              {
-                uiMaxDiff = puiDltDiffValues[d];
-              }
-
-              if ( uiMinDiff > puiDltDiffValues[d] )
-              {
-                uiMinDiff = puiDltDiffValues[d];
-              }
-            }
-
-            // counting bits
-            // diff coding branch
-            uiNumBitsNonBitMap += 8;                          // u(v) bits for num_depth_values_in_dlt[layerId] (i.e. num_entry[ layerId ])
-
+          }
+          
+          if ( uiNumDepthValues_coded > 2 )
+          {
+            uiLengthMinDiff    = (UInt) gCeilLog2(uiMaxDiff + 1);
+          }
+          if (uiMaxDiff > uiMinDiff)
+          {
+            uiLengthDltDiffMinusMin = (UInt) gCeilLog2(uiMaxDiff - uiMinDiff + 1);
+          }
+          
+          WRITE_CODE(uiNumDepthValues_coded, 8, "num_depth_values_in_dlt[layerId]");    // num_entry
+          {
+            // The condition if( uiNumDepthValues_coded > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component.
             if ( uiNumDepthValues_coded > 1 )
             {
-              uiNumBitsNonBitMap += 8;                        // u(v) bits for max_diff[ layerId ]
+              WRITE_CODE(uiMaxDiff, 8, "max_diff[ layerId ]");        // max_diff
             }
-
+            
             if ( uiNumDepthValues_coded > 2 )
             {
-              uiLengthMinDiff    = (UInt) ceil(Log2(uiMaxDiff + 1));
-              uiNumBitsNonBitMap += uiLengthMinDiff;          // u(v)  bits for min_diff[ layerId ]
+              WRITE_CODE((uiMinDiff - 1), uiLengthMinDiff, "min_diff_minus1[ layerId ]");     // min_diff_minus1
             }
-
-            uiNumBitsNonBitMap += 8;                          // u(v) bits for dlt_depth_value0[ layerId ]
-
+            
+            WRITE_CODE(aiIdx2DepthValue_coded[0], 8, "dlt_depth_value0[layerId]");          // entry0
+            
             if (uiMaxDiff > uiMinDiff)
             {
-              uiLengthDltDiffMinusMin = (UInt) ceil(Log2(uiMaxDiff - uiMinDiff + 1));
-              uiNumBitsNonBitMap += uiLengthDltDiffMinusMin * (uiNumDepthValues_coded - 1);  // u(v) bits for dlt_depth_value_diff_minus_min[ layerId ][ j ]
-            }
-
-            // bit map branch
-            uiNumBitsBitMap = 256;   // uiNumBitsBitMap = 1 << pcDLT->getDepthViewBitDepth(); 
-
-            // determine bDltBitMapFlag
-            bDltBitMapRepFlag = (uiNumBitsBitMap > uiNumBitsNonBitMap) ? false : true;
-
-            // ----------------------------- Actual coding -----------------------------
-            if ( pcDLT->getInterViewDltPredEnableFlag( i ) == false )
-            {
-              WRITE_FLAG( bDltBitMapRepFlag ? 1 : 0, "dlt_bit_map_rep_flag[ layerId ]" );
-            }
-            else
-            {
-              bDltBitMapRepFlag = false;
-            }
-
-            // bit map coding
-            if ( bDltBitMapRepFlag )
-            {
-              UInt uiDltArrayIndex = 0; 
-              for (UInt d=0; d < 256; d++)
+              for (UInt d=1; d < uiNumDepthValues_coded; d++)
               {
-                if ( d == aiIdx2DepthValue_coded[uiDltArrayIndex] )
-                {                  
-                  WRITE_FLAG(1, "dlt_bit_map_flag[ layerId ][ j ]");
-                  uiDltArrayIndex++;
-                }
-                else
-                {
-                  WRITE_FLAG(0, "dlt_bit_map_flag[ layerId ][ j ]");
-                }
+                WRITE_CODE( (puiDltDiffValues[d] - uiMinDiff), uiLengthDltDiffMinusMin, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");    // entry_value_diff_minus_min[ k ]
               }
             }
-            // Diff Coding
-            else
-            {
-              WRITE_CODE(uiNumDepthValues_coded, 8, "num_depth_values_in_dlt[i]");    // num_entry
-              {
-                // The condition if( uiNumDepthValues_coded > 0 ) is always true since for Single-view Diff Coding, there is at least one depth value in depth component.
-                if ( uiNumDepthValues_coded > 1 )
-                {
-                  WRITE_CODE(uiMaxDiff, 8, "max_diff[ layerId ]");        // max_diff
-                }
-
-                if ( uiNumDepthValues_coded > 2 )
-                {
-                  WRITE_CODE((uiMinDiff - 1), uiLengthMinDiff, "min_diff_minus1[ layerId ]");     // min_diff_minus1
-                }
-
-                WRITE_CODE(aiIdx2DepthValue_coded[0], 8, "dlt_depth_value0[layerId]");          // entry0
-
-                if (uiMaxDiff > uiMinDiff)
-                {
-                  for (UInt d=1; d < uiNumDepthValues_coded; d++)
-                  {
-                    WRITE_CODE( (puiDltDiffValues[d] - uiMinDiff), uiLengthDltDiffMinusMin, "dlt_depth_value_diff_minus_min[ layerId ][ j ]");    // entry_value_diff_minus_min[ k ]
-                  }
-                }
-              }
-            }
-
-            free(puiDltDiffValues);
           }
+          
         }
       }
     }

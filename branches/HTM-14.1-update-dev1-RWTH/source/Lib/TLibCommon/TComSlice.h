@@ -1356,47 +1356,59 @@ public:
 #endif
 };
 
-#if H_3D
+#if NH_3D_DLT
 class TComDLT
 {
 private:
-  Bool        m_bDltPresentFlag;
-  Bool        m_bUseDLTFlag              [ MAX_NUM_LAYERS ];
-  Bool        m_bInterViewDltPredEnableFlag[ MAX_NUM_LAYERS ];
+  Bool              m_bDltPresentFlag;
+  Bool              m_bUseDLTFlag                 [ MAX_NUM_LAYERS ];
+  Bool              m_bInterViewDltPredEnableFlag [ MAX_NUM_LAYERS ];
+  Bool              m_bDltBitMapRepFlag           [ MAX_NUM_LAYERS ];
 
-  Int         m_iNumDepthmapValues       [ MAX_NUM_LAYERS ];
-  Int*        m_iDepthValue2Idx          [ MAX_NUM_LAYERS ];
-  Int*        m_iIdx2DepthValue          [ MAX_NUM_LAYERS ];
+  Int               m_iNumDepthmapValues          [ MAX_NUM_LAYERS ];
+  std::vector<Int>  m_iDepthValue2Idx [ MAX_NUM_LAYERS ];
+  std::vector<Int>  m_iIdx2DepthValue [ MAX_NUM_LAYERS ];
 
-  Int         m_iNumDepthViews;
-  UInt        m_uiDepthViewBitDepth;
+  Int               m_iNumDepthViews;
+  UInt              m_uiDepthViewBitDepth;
+  
+  // mapping
+  Int     m_iDepthIdxToLayerId          [ MAX_NUM_LAYERS ];
+  
+  // these are only needed at the encoder to decide on coding
 
 public:
   TComDLT();
-  ~TComDLT(); 
+  ~TComDLT();
+  
+  Int     getDepthIdxToLayerId(Int depthIdx) const        { return m_iDepthIdxToLayerId[depthIdx]; }
+  Void    setDepthIdxToLayerId(Int depthIdx, Int layerId) { m_iDepthIdxToLayerId[depthIdx] = layerId; }
 
-  Bool    getDltPresentFlag  ()                           { return m_bDltPresentFlag; }
+  Bool    getDltPresentFlag  ()                           const   { return m_bDltPresentFlag; }
   Void    setDltPresentFlag  ( Bool b )                   { m_bDltPresentFlag = b;    }
 
-  Bool    getUseDLTFlag      ( Int layerIdInVps )         { return m_bUseDLTFlag[ layerIdInVps ]; }
+  Bool    getUseDLTFlag      ( Int layerIdInVps )         const   { return m_bUseDLTFlag[ layerIdInVps ]; }
   Void    setUseDLTFlag      ( Int layerIdInVps, Bool b ) { m_bUseDLTFlag[ layerIdInVps ]  = b;   }
   
-  Bool    getInterViewDltPredEnableFlag( Int layerIdInVps )         { return m_bInterViewDltPredEnableFlag[ layerIdInVps ]; }
+  Bool    getInterViewDltPredEnableFlag( Int layerIdInVps )         const   { return m_bInterViewDltPredEnableFlag[ layerIdInVps ]; }
   Void    setInterViewDltPredEnableFlag( Int layerIdInVps, Bool b ) { m_bInterViewDltPredEnableFlag[ layerIdInVps ] = b;    }
+  
+  Bool    getUseBitmapRep      ( Int layerIdInVps )         const   { return m_bDltBitMapRepFlag[ layerIdInVps ]; }
+  Void    setUseBitmapRep      ( Int layerIdInVps, Bool b ) { m_bDltBitMapRepFlag[ layerIdInVps ]  = b;   }
 
   Void    setNumDepthViews   ( Int n )                    { m_iNumDepthViews = n; }
-  Int     getNumDepthViews   ()                           { return m_iNumDepthViews; }
+  Int     getNumDepthViews   ()                           const   { return m_iNumDepthViews; }
 
   Void    setDepthViewBitDepth( UInt n )                  { m_uiDepthViewBitDepth = n; }
-  UInt    getDepthViewBitDepth()                          { return m_uiDepthViewBitDepth; }
+  UInt    getDepthViewBitDepth()                          const   { return m_uiDepthViewBitDepth; }
 
-  Int     getNumDepthValues( Int layerIdInVps )           { return getUseDLTFlag(layerIdInVps)?m_iNumDepthmapValues[layerIdInVps]:((1 << g_bitDepthY)-1); }
-  Int     depthValue2idx( Int layerIdInVps, Pel value )   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
-  Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][ClipY(uiIdx)]:uiIdx; }
-  Void    setDepthLUTs( Int layerIdInVps, Int* idx2DepthValue = NULL, Int iNumDepthValues = 0 );
-  Int*    idx2DepthValue( Int layerIdInVps )  { return m_iIdx2DepthValue[layerIdInVps]; }
-  Void    getDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTOut, UInt *puiDeltaDLTOutNum );
-  Void    setDeltaDLT( Int layerIdInVps, Int* piDLTInRef, UInt uiDLTInRefNum, Int* piDeltaDLTIn, UInt uiDeltaDLTInNum );
+  Int     getNumDepthValues( Int layerIdInVps )           const   { return getUseDLTFlag(layerIdInVps)?m_iNumDepthmapValues[layerIdInVps]:(1 << m_uiDepthViewBitDepth); }
+  Int     depthValue2idx( Int layerIdInVps, Pel value )   const   { return getUseDLTFlag(layerIdInVps)?m_iDepthValue2Idx[layerIdInVps][value]:value; }
+  Pel     idx2DepthValue( Int layerIdInVps, UInt uiIdx )  const   { return getUseDLTFlag(layerIdInVps)?m_iIdx2DepthValue[layerIdInVps][ClipBD(uiIdx,m_uiDepthViewBitDepth)]:uiIdx; }
+  Void    setDepthLUTs( Int layerIdInVps, std::vector<Int> idx2DepthValue, Int iNumDepthValues = 0 );
+  std::vector<Int>    idx2DepthValue( Int layerIdInVps )  const   { return m_iIdx2DepthValue[layerIdInVps]; }
+  Void    getDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int>& riDeltaDLTOut, UInt& ruiDeltaDLTOutNum ) const;
+  Void    setDeltaDLT( Int layerIdInVps, std::vector<Int> piDLTInRef, UInt uiDLTInRefNum, std::vector<Int> piDeltaDLTIn, UInt uiDeltaDLTInNum );
 };
 #endif
 
@@ -2255,8 +2267,8 @@ private:
   Bool             m_pocResetInfoPresentFlag;
 #endif
 
-#if H_3D
-  TComDLT*         m_pcDLT; 
+#if NH_3D_DLT
+  TComDLT                m_cDLT;
 #endif
 
 public:
@@ -2280,9 +2292,10 @@ public:
   Void                   setMaxCuDQPDepth( UInt u )                                       { m_uiMaxCuDQPDepth = u;                        }
   UInt                   getMaxCuDQPDepth() const                                         { return m_uiMaxCuDQPDepth;                     }
 
-#if H_3D
-  Void                   setDLT( TComDLT* pcDLT )                                         { m_pcDLT = pcDLT;                             }
-  TComDLT*               getDLT()                                                         { return m_pcDLT;                              }
+#if NH_3D_DLT
+  Void                   setDLT( TComDLT cDLT )                                           { m_cDLT = cDLT;                                }
+  const TComDLT*         getDLT() const                                                   { return &m_cDLT;                               }
+  TComDLT*               getDLT()                                                         { return &m_cDLT;                               }
 #endif
 
 
